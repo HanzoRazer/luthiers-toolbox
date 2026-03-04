@@ -1,0 +1,39 @@
+<!-- Example Herringbone Pattern - Replace with your actual artwork -->
+<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+  <!-- This is a placeholder - replace with your actual rosette artwork -->
+  <circle cx="50" cy="50" r="48" fill="#f8fafc"/>
+
+  <!-- 24 alternating segments -->
+  <g>
+    <!-- Light segments -->
+    <path d="M 50 50 L 50 2 A 48 48 0 0 1 62.5 3.2 Z" fill="#f5deb3"/>
+    <path d="M 50 50 L 74.5 13.4 A 48 48 0 0 1 84.1 20.9 Z" fill="#f5deb3"/>
+    <path d="M 50 50 L 91.9 35.1 A 48 48 0 0 1 96.8 43.7 Z" fill="#f5deb3"/>
+    <path d="M 50 50 L 98 50 A 48 48 0 0 1 96.8 56.3 Z" fill="#f5deb3"/>
+    <path d="M 50 50 L 91.9 64.9 A 48 48 0 0 1 84.1 79.1 Z" fill="#f5deb3"/>
+    <path d="M 50 50 L 74.5 86.6 A 48 48 0 0 1 62.5 96.8 Z" fill="#f5deb3"/>
+    <path d="M 50 50 L 50 98 A 48 48 0 0 1 37.5 96.8 Z" fill="#f5deb3"/>
+    <path d="M 50 50 L 25.5 86.6 A 48 48 0 0 1 15.9 79.1 Z" fill="#f5deb3"/>
+    <path d="M 50 50 L 8.1 64.9 A 48 48 0 0 1 3.2 56.3 Z" fill="#f5deb3"/>
+    <path d="M 50 50 L 2 50 A 48 48 0 0 1 3.2 43.7 Z" fill="#f5deb3"/>
+    <path d="M 50 50 L 8.1 35.1 A 48 48 0 0 1 15.9 20.9 Z" fill="#f5deb3"/>
+    <path d="M 50 50 L 25.5 13.4 A 48 48 0 0 1 37.5 3.2 Z" fill="#f5deb3"/>
+
+    <!-- Dark segments -->
+    <path d="M 50 50 L 62.5 3.2 A 48 48 0 0 1 74.5 13.4 Z" fill="#3e2723"/>
+    <path d="M 50 50 L 84.1 20.9 A 48 48 0 0 1 91.9 35.1 Z" fill="#3e2723"/>
+    <path d="M 50 50 L 96.8 43.7 A 48 48 0 0 1 98 50 Z" fill="#3e2723"/>
+    <path d="M 50 50 L 96.8 56.3 A 48 48 0 0 1 91.9 64.9 Z" fill="#3e2723"/>
+    <path d="M 50 50 L 84.1 79.1 A 48 48 0 0 1 74.5 86.6 Z" fill="#3e2723"/>
+    <path d="M 50 50 L 62.5 96.8 A 48 48 0 0 1 50 98 Z" fill="#3e2723"/>
+    <path d="M 50 50 L 37.5 96.8 A 48 48 0 0 1 25.5 86.6 Z" fill="#3e2723"/>
+    <path d="M 50 50 L 15.9 79.1 A 48 48 0 0 1 8.1 64.9 Z" fill="#3e2723"/>
+    <path d="M 50 50 L 3.2 56.3 A 48 48 0 0 1 2 50 Z" fill="#3e2723"/>
+    <path d="M 50 50 L 3.2 43.7 A 48 48 0 0 1 8.1 35.1 Z" fill="#3e2723"/>
+    <path d="M 50 50 L 15.9 20.9 A 48 48 0 0 1 25.5 13.4 Z" fill="#3e2723"/>
+    <path d="M 50 50 L 37.5 3.2 A 48 48 0 0 1 50 2 Z" fill="#3e2723"/>
+  </g>
+
+  <!-- Border -->
+  <circle cx="50" cy="50" r="47" fill="none" stroke="#cbd5e1" stroke-width="1"/>
+</svg>

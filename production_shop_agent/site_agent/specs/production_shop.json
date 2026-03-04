@@ -1,0 +1,113 @@
+{
+  "site_name": "The Production Shop",
+  "description": "An ERP and CAM platform for professional instrument makers. Combines design tools, CNC machining workflows, and business operations into one cohesive system built for luthiers.",
+
+  "colors": {
+    "primary":         "#2563eb",
+    "primary-dark":    "#1d4ed8",
+    "primary-light":   "#dbeafe",
+    "accent":          "#0d9488",
+    "accent-dark":     "#0f766e",
+    "surface":         "#ffffff",
+    "surface-alt":     "#f8fafc",
+    "surface-dark":    "#0f172a",
+    "text":            "#1e293b",
+    "text-muted":      "#64748b",
+    "text-light":      "#94a3b8",
+    "border":          "#e2e8f0",
+    "success":         "#10b981",
+    "warning":         "#f59e0b",
+    "danger":          "#ef4444"
+  },
+
+  "typography": {
+    "family-sans":  "system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
+    "family-mono":  "ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, monospace",
+    "size-xs":      "0.75rem",
+    "size-sm":      "0.875rem",
+    "size-base":    "1rem",
+    "size-lg":      "1.125rem",
+    "size-xl":      "1.25rem",
+    "size-2xl":     "1.5rem",
+    "size-3xl":     "1.875rem",
+    "size-4xl":     "2.25rem",
+    "size-5xl":     "3rem"
+  },
+
+  "js_features": [
+    "mobile nav toggle",
+    "smooth scroll to anchor sections",
+    "sticky header on scroll",
+    "feature tab switcher on features page",
+    "contact form validation"
+  ],
+
+  "pages": [
+    {
+      "name": "Home",
+      "filename": "index.html",
+      "description": "Landing page that establishes The Production Shop as the all-in-one platform for professional luthiers. Communicates the value prop clearly: design tools + CAM + business operations in one place. Tone is professional but craft-forward — this is a tool built by a luthier, for luthiers.",
+      "sections": [
+        "Hero: bold headline, subhead, two CTAs (Get Started, Watch Demo). Background has a subtle dark-wood grain texture via CSS gradient.",
+        "Social proof bar: logos or text callouts — 'Used in production shops across the US'",
+        "Feature overview: 3-column icon cards — Design Studio, CAM Pipeline, Business Tools",
+        "How it works: numbered 3-step flow — Design → Machine → Ship",
+        "Testimonial: one featured quote from a guitar builder",
+        "CTA banner: full-width dark section, 'Start building smarter' with email signup input",
+        "Footer: logo, nav links, copyright"
+      ]
+    },
+    {
+      "name": "Features",
+      "filename": "features.html",
+      "description": "Deep-dive into the three main module domains. Uses a tab or accordion layout to show Design, CAM, and Business features separately. Each feature has an icon, title, and 2-sentence description.",
+      "sections": [
+        "Page header: 'Everything a production shop needs'",
+        "Tab switcher: Design | CAM | Production | Business",
+        "Design tab: Guitar Dimensions, Scale Length Designer, Rosette Designer, Art Studio, Blueprint Importer",
+        "CAM tab: Quick Cut, Adaptive Lab, Saw Lab, Bridge Lab, Drilling Lab, G-code Explainer",
+        "Production tab: RMOS Manufacturing Candidates, Live Monitor, CNC History, Compare Runs",
+        "Business tab: Instrument Costing, CNC ROI Calculator, Cash Flow Planner, Engineering Estimator",
+        "Footer"
+      ]
+    },
+    {
+      "name": "Pricing",
+      "filename": "pricing.html",
+      "description": "Simple, honest pricing page. Single plan or tiered options. Emphasize value for solo luthiers and small shops. Include a FAQ section below the pricing cards.",
+      "sections": [
+        "Page header: 'Simple pricing for serious builders'",
+        "Pricing cards: Free (explore tools, no CNC export), Pro ($49/mo — full CAM pipeline, unlimited exports, RMOS), Shop ($149/mo — multi-user, priority support, custom post-processors). Highlight Pro as recommended.",
+        "Feature comparison table: rows are key features, columns are tiers",
+        "FAQ: 6 questions — What is a post-processor? Can I cancel anytime? Does it work with my CNC brand? Is my data secure? Can I export G-code without a subscription? Do you offer a student discount?",
+        "Bottom CTA: 'Start your free trial — no credit card required'",
+        "Footer"
+      ]
+    },
+    {
+      "name": "About",
+      "filename": "about.html",
+      "description": "The story behind The Production Shop. Written from the perspective of a licensed engineer and luthier who built this to solve real problems in his own shop. Human, specific, credible.",
+      "sections": [
+        "Page header: 'Built by a luthier, engineered for production'",
+        "Story section: The founder's background — P.E. license, CNC machining, guitar building, the gap he saw between traditional craft and modern manufacturing tools",
+        "Mission: one clear paragraph on what The Production Shop exists to do",
+        "Technology: brief callout — Vue 3, Python backend, EPANET-grade engineering precision applied to lutherie",
+        "Values: 3 values — Craft First, Engineering Precision, Builder Community",
+        "Contact teaser: 'Have a question or want to talk shop?'",
+        "Footer"
+      ]
+    },
+    {
+      "name": "Contact",
+      "filename": "contact.html",
+      "description": "Simple contact page with a form and direct contact info. Professional but approachable.",
+      "sections": [
+        "Page header: 'Get in touch'",
+        "Two-column layout: left column has contact form (Name, Email, Subject dropdown: General / Support / Partnership / Feature Request, Message, Submit button). Right column has direct info: email, response time promise, links to docs and community.",
+        "Below form: 'Looking for documentation?' with link",
+        "Footer"
+      ]
+    }
+  ]
+}

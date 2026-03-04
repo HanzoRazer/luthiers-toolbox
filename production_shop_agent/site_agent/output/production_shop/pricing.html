@@ -1,0 +1,1348 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Pricing – The Production Shop</title>
+  <meta name="description" content="Simple, honest pricing for solo luthiers and small shops. Choose Free, Pro, or Shop plans for the Production Shop ERP and CAM platform.">
+  <style>
+    /* ─── Design Tokens ─────────────────────────────────── */
+    :root {
+      --color-primary: #2563eb;
+      --color-primary-dark: #1d4ed8;
+      --color-primary-light: #dbeafe;
+      --color-accent: #0d9488;
+      --color-accent-dark: #0f766e;
+      --color-surface: #ffffff;
+      --color-surface-alt: #f8fafc;
+      --color-surface-dark: #0f172a;
+      --color-text: #1e293b;
+      --color-text-muted: #64748b;
+      --color-text-light: #94a3b8;
+      --color-border: #e2e8f0;
+      --color-success: #10b981;
+      --color-warning: #f59e0b;
+      --color-danger: #ef4444;
+
+      --font-family-sans: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      --font-family-mono: ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, monospace;
+
+      --font-size-xs: 0.75rem;
+      --font-size-sm: 0.875rem;
+      --font-size-base: 1rem;
+      --font-size-lg: 1.125rem;
+      --font-size-xl: 1.25rem;
+      --font-size-2xl: 1.5rem;
+      --font-size-3xl: 1.875rem;
+      --font-size-4xl: 2.25rem;
+      --font-size-5xl: 3rem;
+
+      --radius-sm: 0.375rem;
+      --radius-md: 0.5rem;
+      --radius-lg: 0.75rem;
+      --radius-xl: 1rem;
+
+      --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+      --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+      --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+      --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
+
+      --space-1: 0.25rem;
+      --space-2: 0.5rem;
+      --space-3: 0.75rem;
+      --space-4: 1rem;
+      --space-5: 1.25rem;
+      --space-6: 1.5rem;
+      --space-8: 2rem;
+      --space-10: 2.5rem;
+      --space-12: 3rem;
+      --space-16: 4rem;
+      --space-20: 5rem;
+      --space-24: 6rem;
+
+      --nav-height: 4rem;
+    }
+
+    /* ─── Reset & Base ──────────────────────────────────── */
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    body {
+      font-family: var(--font-family-sans);
+      font-size: var(--font-size-base);
+      color: var(--color-text);
+      background-color: var(--color-surface);
+      line-height: 1.6;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    img {
+      max-width: 100%;
+      display: block;
+    }
+
+    a {
+      color: inherit;
+      text-decoration: none;
+    }
+
+    ul {
+      list-style: none;
+    }
+
+    button {
+      cursor: pointer;
+      border: none;
+      background: none;
+      font-family: inherit;
+    }
+
+    /* ─── Navigation ────────────────────────────────────── */
+    .nav {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      height: var(--nav-height);
+      background-color: var(--color-surface);
+      border-bottom: 1px solid var(--color-border);
+      box-shadow: var(--shadow-sm);
+    }
+
+    .nav__inner {
+      max-width: 72rem;
+      margin: 0 auto;
+      padding: 0 var(--space-6);
+      height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .nav__logo {
+      display: flex;
+      align-items: center;
+      gap: var(--space-3);
+      font-weight: 700;
+      font-size: var(--font-size-lg);
+      color: var(--color-text);
+    }
+
+    /* Simple woodgrain icon mark */
+    .nav__logo-mark {
+      width: 2rem;
+      height: 2rem;
+      background: var(--color-primary);
+      border-radius: var(--radius-md);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .nav__logo-mark svg {
+      width: 1.25rem;
+      height: 1.25rem;
+      fill: white;
+    }
+
+    .nav__links {
+      display: flex;
+      align-items: center;
+      gap: var(--space-1);
+    }
+
+    .nav__link {
+      padding: var(--space-2) var(--space-3);
+      border-radius: var(--radius-md);
+      font-size: var(--font-size-sm);
+      font-weight: 500;
+      color: var(--color-text-muted);
+      transition: color 0.15s, background-color 0.15s;
+    }
+
+    .nav__link:hover {
+      color: var(--color-text);
+      background-color: var(--color-surface-alt);
+    }
+
+    .nav__link--active {
+      color: var(--color-primary);
+      background-color: var(--color-primary-light);
+    }
+
+    .nav__cta {
+      display: inline-flex;
+      align-items: center;
+      gap: var(--space-2);
+      padding: var(--space-2) var(--space-5);
+      background-color: var(--color-primary);
+      color: white;
+      border-radius: var(--radius-md);
+      font-size: var(--font-size-sm);
+      font-weight: 600;
+      transition: background-color 0.15s, transform 0.1s;
+    }
+
+    .nav__cta:hover {
+      background-color: var(--color-primary-dark);
+      transform: translateY(-1px);
+    }
+
+    /* Hamburger (mobile) */
+    .nav__hamburger {
+      display: none;
+      flex-direction: column;
+      gap: 5px;
+      padding: var(--space-2);
+      cursor: pointer;
+    }
+
+    .nav__hamburger span {
+      display: block;
+      width: 22px;
+      height: 2px;
+      background-color: var(--color-text);
+      border-radius: 2px;
+      transition: transform 0.2s, opacity 0.2s;
+    }
+
+    .nav__mobile-menu {
+      display: none;
+      position: absolute;
+      top: var(--nav-height);
+      left: 0;
+      right: 0;
+      background-color: var(--color-surface);
+      border-bottom: 1px solid var(--color-border);
+      padding: var(--space-4) var(--space-6);
+      flex-direction: column;
+      gap: var(--space-2);
+    }
+
+    .nav__mobile-menu.is-open {
+      display: flex;
+    }
+
+    .nav__mobile-link {
+      padding: var(--space-3) var(--space-4);
+      border-radius: var(--radius-md);
+      font-weight: 500;
+      color: var(--color-text-muted);
+      transition: color 0.15s, background-color 0.15s;
+    }
+
+    .nav__mobile-link:hover,
+    .nav__mobile-link--active {
+      color: var(--color-primary);
+      background-color: var(--color-primary-light);
+    }
+
+    /* ─── Page Header ───────────────────────────────────── */
+    .page-header {
+      background: linear-gradient(135deg, var(--color-surface-dark) 0%, #1e3a5f 100%);
+      padding: var(--space-20) var(--space-6) var(--space-16);
+      text-align: center;
+    }
+
+    .page-header__eyebrow {
+      display: inline-block;
+      font-size: var(--font-size-xs);
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--color-accent);
+      background-color: rgb(13 148 136 / 0.15);
+      border: 1px solid rgb(13 148 136 / 0.3);
+      padding: var(--space-1) var(--space-3);
+      border-radius: 999px;
+      margin-bottom: var(--space-5);
+    }
+
+    .page-header__title {
+      font-size: clamp(var(--font-size-3xl), 5vw, var(--font-size-5xl));
+      font-weight: 800;
+      color: white;
+      line-height: 1.15;
+      letter-spacing: -0.02em;
+      margin-bottom: var(--space-5);
+    }
+
+    .page-header__subtitle {
+      max-width: 38rem;
+      margin: 0 auto var(--space-8);
+      color: var(--color-text-light);
+      font-size: var(--font-size-lg);
+      line-height: 1.7;
+    }
+
+    /* Billing toggle */
+    .billing-toggle {
+      display: inline-flex;
+      align-items: center;
+      gap: var(--space-4);
+      background-color: rgb(255 255 255 / 0.08);
+      border: 1px solid rgb(255 255 255 / 0.12);
+      border-radius: 999px;
+      padding: var(--space-1) var(--space-2);
+    }
+
+    .billing-toggle__label {
+      font-size: var(--font-size-sm);
+      font-weight: 500;
+      color: var(--color-text-light);
+      padding: var(--space-2) var(--space-3);
+      border-radius: 999px;
+      transition: color 0.15s, background-color 0.15s;
+      cursor: pointer;
+    }
+
+    .billing-toggle__label.is-active {
+      color: white;
+      background-color: var(--color-primary);
+    }
+
+    .billing-toggle__badge {
+      font-size: var(--font-size-xs);
+      font-weight: 700;
+      color: var(--color-success);
+      background-color: rgb(16 185 129 / 0.15);
+      border: 1px solid rgb(16 185 129 / 0.3);
+      padding: 2px var(--space-2);
+      border-radius: 999px;
+      margin-left: var(--space-1);
+    }
+
+    /* ─── Layout Container ──────────────────────────────── */
+    .container {
+      max-width: 72rem;
+      margin: 0 auto;
+      padding: 0 var(--space-6);
+    }
+
+    /* ─── Pricing Section ───────────────────────────────── */
+    .pricing-section {
+      padding: var(--space-16) var(--space-6);
+      background-color: var(--color-surface-alt);
+    }
+
+    .pricing-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: var(--space-6);
+      max-width: 72rem;
+      margin: 0 auto;
+      align-items: start;
+    }
+
+    /* Pricing Card */
+    .pricing-card {
+      background-color: var(--color-surface);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-xl);
+      padding: var(--space-8);
+      position: relative;
+      transition: box-shadow 0.2s, transform 0.2s;
+    }
+
+    .pricing-card:hover {
+      box-shadow: var(--shadow-lg);
+    }
+
+    /* Recommended (Pro) card highlight */
+    .pricing-card--featured {
+      border-color: var(--color-primary);
+      box-shadow: 0 0 0 2px var(--color-primary), var(--shadow-xl);
+      transform: translateY(-8px);
+    }
+
+    .pricing-card--featured:hover {
+      box-shadow: 0 0 0 2px var(--color-primary), var(--shadow-xl);
+    }
+
+    .pricing-card__badge {
+      position: absolute;
+      top: -0.875rem;
+      left: 50%;
+      transform: translateX(-50%);
+      white-space: nowrap;
+      background: linear-gradient(90deg, var(--color-primary), var(--color-accent));
+      color: white;
+      font-size: var(--font-size-xs);
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      padding: var(--space-1) var(--space-4);
+      border-radius: 999px;
+    }
+
+    .pricing-card__tier {
+      font-size: var(--font-size-xs);
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--color-text-muted);
+      margin-bottom: var(--space-3);
+    }
+
+    .pricing-card--featured .pricing-card__tier {
+      color: var(--color-primary);
+    }
+
+    .pricing-card__name {
+      font-size: var(--font-size-2xl);
+      font-weight: 800;
+      color: var(--color-text);
+      margin-bottom: var(--space-2);
+    }
+
+    .pricing-card__tagline {
+      font-size: var(--font-size-sm);
+      color: var(--color-text-muted);
+      margin-bottom: var(--space-6);
+      line-height: 1.5;
+    }
+
+    .pricing-card__price {
+      display: flex;
+      align-items: baseline;
+      gap: var(--space-1);
+      margin-bottom: var(--space-6);
+    }
+
+    .pricing-card__currency {
+      font-size: var(--font-size-xl);
+      font-weight: 600;
+      color: var(--color-text-muted);
+    }
+
+    .pricing-card__amount {
+      font-size: clamp(var(--font-size-4xl), 5vw, var(--font-size-5xl));
+      font-weight: 800;
+      color: var(--color-text);
+      letter-spacing: -0.03em;
+      line-height: 1;
+    }
+
+    .pricing-card__period {
+      font-size: var(--font-size-sm);
+      color: var(--color-text-muted);
+    }
+
+    /* Annual price note */
+    .pricing-card__annual-note {
+      font-size: var(--font-size-xs);
+      color: var(--color-success);
+      font-weight: 600;
+      margin-top: -var(--space-4);
+      margin-bottom: var(--space-5);
+    }
+
+    .pricing-card__divider {
+      border: none;
+      border-top: 1px solid var(--color-border);
+      margin-bottom: var(--space-6);
+    }
+
+    .pricing-card__features {
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-3);
+      margin-bottom: var(--space-8);
+    }
+
+    .pricing-card__feature {
+      display: flex;
+      align-items: flex-start;
+      gap: var(--space-3);
+      font-size: var(--font-size-sm);
+      color: var(--color-text);
+      line-height: 1.4;
+    }
+
+    .pricing-card__feature-icon {
+      flex-shrink: 0;
+      width: 1.125rem;
+      height: 1.125rem;
+      margin-top: 1px;
+    }
+
+    .feature-check {
+      color: var(--color-success);
+    }
+
+    .feature-cross {
+      color: var(--color-text-light);
+    }
+
+    .pricing-card__btn {
+      display: block;
+      width: 100%;
+      text-align: center;
+      padding: var(--space-3) var(--space-6);
+      border-radius: var(--radius-md);
+      font-size: var(--font-size-sm);
+      font-weight: 600;
+      transition: all 0.15s;
+    }
+
+    .pricing-card__btn--primary {
+      background-color: var(--color-primary);
+      color: white;
+    }
+
+    .pricing-card__btn--primary:hover {
+      background-color: var(--color-primary-dark);
+      transform: translateY(-1px);
+      box-shadow: var(--shadow-md);
+    }
+
+    .pricing-card__btn--outline {
+      background-color: transparent;
+      color: var(--color-text);
+      border: 1px solid var(--color-border);
+    }
+
+    .pricing-card__btn--outline:hover {
+      border-color: var(--color-primary);
+      color: var(--color-primary);
+      background-color: var(--color-primary-light);
+    }
+
+    .pricing-card__btn--accent {
+      background-color: var(--color-accent);
+      color: white;
+    }
+
+    .pricing-card__btn--accent:hover {
+      background-color: var(--color-accent-dark);
+      transform: translateY(-1px);
+      box-shadow: var(--shadow-md);
+    }
+
+    /* ─── Comparison Table ──────────────────────────────── */
+    .comparison-section {
+      padding: var(--space-16) var(--space-6);
+      background-color: var(--color-surface);
+    }
+
+    .section-header {
+      text-align: center;
+      margin-bottom: var(--space-12);
+    }
+
+    .section-header__title {
+      font-size: var(--font-size-3xl);
+      font-weight: 800;
+      color: var(--color-text);
+      letter-spacing: -0.02em;
+      margin-bottom: var(--space-3);
+    }
+
+    .section-header__subtitle {
+      font-size: var(--font-size-lg);
+      color: var(--color-text-muted);
+      max-width: 36rem;
+      margin: 0 auto;
+    }
+
+    .comparison-table-wrap {
+      max-width: 64rem;
+      margin: 0 auto;
+      overflow-x: auto;
+      border-radius: var(--radius-xl);
+      border: 1px solid var(--color-border);
+      box-shadow: var(--shadow-md);
+    }
+
+    .comparison-table {
+      width: 100%;
+      border-collapse: collapse;
+      min-width: 36rem;
+    }
+
+    .comparison-table thead tr {
+      background-color: var(--color-surface-dark);
+    }
+
+    .comparison-table thead th {
+      padding: var(--space-5) var(--space-6);
+      font-size: var(--font-size-sm);
+      font-weight: 700;
+      text-align: center;
+      color: white;
+    }
+
+    .comparison-table thead th:first-child {
+      text-align: left;
+      color: var(--color-text-light);
+      font-weight: 500;
+      font-size: var(--font-size-xs);
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+    }
+
+    .comparison-table thead th.col-featured {
+      color: var(--color-primary-light);
+      position: relative;
+    }
+
+    .comparison-table thead th.col-featured::after {
+      content: 'Recommended';
+      position: absolute;
+      top: var(--space-2);
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 9px;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      background: linear-gradient(90deg, var(--color-primary), var(--color-accent));
+      color: white;
+      padding: 1px 8px;
+      border-radius: 999px;
+    }
+
+    /* Category header rows */
+    .comparison-table .cat-row td {
+      background-color: var(--color-surface-alt);
+      padding: var(--space-3) var(--space-6);
+      font-size: var(--font-size-xs);
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--color-text-muted);
+      border-top: 1px solid var(--color-border);
+    }
+
+    .comparison-table tbody tr:not(.cat-row) {
+      border-top: 1px solid var(--color-border);
+    }
+
+    .comparison-table tbody tr:not(.cat-row):hover {
+      background-color: var(--color-surface-alt);
+    }
+
+    .comparison-table tbody td {
+      padding: var(--space-4) var(--space-6);
+      font-size: var(--font-size-sm);
+      color: var(--color-text);
+      vertical-align: middle;
+    }
+
+    .comparison-table tbody td:first-child {
+      font-weight: 500;
+    }
+
+    .comparison-table tbody td:not(:first-child) {
+      text-align: center;
+    }
+
+    /* Featured column highlight */
+    .comparison-table tbody td.col-featured {
+      background-color: rgb(37 99 235 / 0.04);
+    }
+
+    .comparison-table tbody tr:hover td.col-featured {
+      background-color: rgb(37 99 235 / 0.08);
+    }
+
+    /* Check / cross icons in table */
+    .tbl-check {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 1.25rem;
+      height: 1.25rem;
+      background-color: rgb(16 185 129 / 0.12);
+      color: var(--color-success);
+      border-radius: 999px;
+    }
+
+    .tbl-cross {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 1.25rem;
+      height: 1.25rem;
+      color: var(--color-text-light);
+    }
+
+    .tbl-text {
+      font-size: var(--font-size-xs);
+      font-weight: 600;
+      color: var(--color-text-muted);
+    }
+
+    /* ─── FAQ Section ───────────────────────────────────── */
+    .faq-section {
+      padding: var(--space-16) var(--space-6);
+      background-color: var(--color-surface-alt);
+    }
+
+    .faq-grid {
+      max-width: 56rem;
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: var(--space-6);
+    }
+
+    .faq-item {
+      background-color: var(--color-surface);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+    }
+
+    .faq-item__question {
+      width: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: var(--space-4);
+      padding: var(--space-5) var(--space-6);
+      font-size: var(--font-size-base);
+      font-weight: 600;
+      color: var(--color-text);
+      text-align: left;
+      cursor: pointer;
+      transition: background-color 0.15s;
+    }
+
+    .faq-item__question:hover {
+      background-color: var(--color-surface-alt);
+    }
+
+    .faq-item__chevron {
+      flex-shrink: 0;
+      width: 1rem;
+      height: 1rem;
+      color: var(--color-text-muted);
+      transition: transform 0.2s;
+    }
+
+    .faq-item.is-open .faq-item__chevron {
+      transform: rotate(180deg);
+    }
+
+    .faq-item__answer {
+      max-height: 0;
+      overflow: hidden;
+      transition: max-height 0.3s ease;
+    }
+
+    .faq-item.is-open .faq-item__answer {
+      max-height: 20rem;
+    }
+
+    .faq-item__answer-inner {
+      padding: 0 var(--space-6) var(--space-5);
+      font-size: var(--font-size-sm);
+      color: var(--color-text-muted);
+      line-height: 1.7;
+      border-top: 1px solid var(--color-border);
+      padding-top: var(--space-4);
+    }
+
+    /* ─── Bottom CTA ─────────────────────────────────────── */
+    .cta-section {
+      padding: var(--space-20) var(--space-6);
+      background: linear-gradient(135deg, var(--color-primary-dark) 0%, var(--color-surface-dark) 100%);
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+    }
+
+    /* Decorative circles */
+    .cta-section::before,
+    .cta-section::after {
+      content: '';
+      position: absolute;
+      border-radius: 50%;
+      background: rgb(255 255 255 / 0.04);
+    }
+
+    .cta-section::before {
+      width: 32rem;
+      height: 32rem;
+      top: -10rem;
+      right: -8rem;
+    }
+
+    .cta-section::after {
+      width: 20rem;
+      height: 20rem;
+      bottom: -8rem;
+      left: -4rem;
+    }
+
+    .cta-section__inner {
+      position: relative;
+      z-index: 1;
+      max-width: 40rem;
+      margin: 0 auto;
+    }
+
+    .cta-section__eyebrow {
+      display: inline-block;
+      font-size: var(--font-size-xs);
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--color-accent);
+      background-color: rgb(13 148 136 / 0.2);
+      border: 1px solid rgb(13 148 136 / 0.35);
+      padding: var(--space-1) var(--space-3);
+      border-radius: 999px;
+      margin-bottom: var(--space-5);
+    }
+
+    .cta-section__title {
+      font-size: clamp(var(--font-size-3xl), 4vw, var(--font-size-4xl));
+      font-weight: 800;
+      color: white;
+      letter-spacing: -0.02em;
+      line-height: 1.2;
+      margin-bottom: var(--space-4);
+    }
+
+    .cta-section__body {
+      color: var(--color-text-light);
+      font-size: var(--font-size-lg);
+      margin-bottom: var(--space-8);
+      line-height: 1.6;
+    }
+
+    .cta-section__actions {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: var(--space-4);
+      flex-wrap: wrap;
+    }
+
+    .btn-cta-primary {
+      display: inline-flex;
+      align-items: center;
+      gap: var(--space-2);
+      padding: var(--space-4) var(--space-8);
+      background-color: white;
+      color: var(--color-primary-dark);
+      border-radius: var(--radius-md);
+      font-size: var(--font-size-base);
+      font-weight: 700;
+      transition: all 0.15s;
+      box-shadow: var(--shadow-lg);
+    }
+
+    .btn-cta-primary:hover {
+      background-color: var(--color-primary-light);
+      transform: translateY(-2px);
+      box-shadow: var(--shadow-xl);
+    }
+
+    .btn-cta-secondary {
+      display: inline-flex;
+      align-items: center;
+      gap: var(--space-2);
+      padding: var(--space-4) var(--space-8);
+      background-color: rgb(255 255 255 / 0.1);
+      color: white;
+      border: 1px solid rgb(255 255 255 / 0.25);
+      border-radius: var(--radius-md);
+      font-size: var(--font-size-base);
+      font-weight: 600;
+      transition: all 0.15s;
+    }
+
+    .btn-cta-secondary:hover {
+      background-color: rgb(255 255 255 / 0.18);
+      border-color: rgb(255 255 255 / 0.4);
+    }
+
+    .cta-section__note {
+      margin-top: var(--space-5);
+      font-size: var(--font-size-xs);
+      color: var(--color-text-light);
+    }
+
+    /* ─── Footer ─────────────────────────────────────────── */
+    .footer {
+      background-color: var(--color-surface-dark);
+      color: var(--color-text-light);
+      padding: var(--space-12) var(--space-6) var(--space-8);
+    }
+
+    .footer__inner {
+      max-width: 72rem;
+      margin: 0 auto;
+    }
+
+    .footer__top {
+      display: grid;
+      grid-template-columns: 2fr repeat(3, 1fr);
+      gap: var(--space-10);
+      margin-bottom: var(--space-10);
+    }
+
+    .footer__brand-name {
+      font-size: var(--font-size-lg);
+      font-weight: 700;
+      color: white;
+      margin-bottom: var(--space-3);
+      display: flex;
+      align-items: center;
+      gap: var(--space-2);
+    }
+
+    .footer__brand-mark {
+      width: 1.75rem;
+      height: 1.75rem;
+      background: var(--color-primary);
+      border-radius: var(--radius-sm);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .footer__brand-mark svg {
+      width: 1rem;
+      height: 1rem;
+      fill: white;
+    }
+
+    .footer__tagline {
+      font-size: var(--font-size-sm);
+      color: var(--color-text-light);
+      line-height: 1.6;
+      max-width: 18rem;
+      margin-bottom: var(--space-5);
+    }
+
+    .footer__social {
+      display: flex;
+      gap: var(--space-3);
+    }
+
+    .footer__social-link {
+      width: 2rem;
+      height: 2rem;
+      background-color: rgb(255 255 255 / 0.07);
+      border-radius: var(--radius-sm);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--color-text-light);
+      transition: background-color 0.15s, color 0.15s;
+    }
+
+    .footer__social-link:hover {
+      background-color: var(--color-primary);
+      color: white;
+    }
+
+    .footer__social-link svg {
+      width: 0.9rem;
+      height: 0.9rem;
+      fill: currentColor;
+    }
+
+    .footer__col-title {
+      font-size: var(--font-size-xs);
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: white;
+      margin-bottom: var(--space-4);
+    }
+
+    .footer__col-links {
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-3);
+    }
+
+    .footer__col-link {
+      font-size: var(--font-size-sm);
+      color: var(--color-text-light);
+      transition: color 0.15s;
+    }
+
+    .footer__col-link:hover {
+      color: white;
+    }
+
+    .footer__bottom {
+      border-top: 1px solid rgb(255 255 255 / 0.08);
+      padding-top: var(--space-6);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: var(--space-4);
+      flex-wrap: wrap;
+    }
+
+    .footer__copyright {
+      font-size: var(--font-size-xs);
+      color: var(--color-text-light);
+    }
+
+    .footer__legal {
+      display: flex;
+      gap: var(--space-5);
+    }
+
+    .footer__legal-link {
+      font-size: var(--font-size-xs);
+      color: var(--color-text-light);
+      transition: color 0.15s;
+    }
+
+    .footer__legal-link:hover {
+      color: white;
+    }
+
+    /* ─── Responsive ─────────────────────────────────────── */
+    @media (max-width: 900px) {
+      .pricing-grid {
+        grid-template-columns: 1fr;
+        max-width: 26rem;
+      }
+
+      .pricing-card--featured {
+        transform: none;
+        order: -1; /* Show recommended first on mobile */
+      }
+
+      .faq-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .footer__top {
+        grid-template-columns: 1fr 1fr;
+        gap: var(--space-8);
+      }
+
+      .comparison-table thead th.col-featured::after {
+        display: none;
+      }
+    }
+
+    @media (max-width: 640px) {
+      .nav__links,
+      .nav__cta {
+        display: none;
+      }
+
+      .nav__hamburger {
+        display: flex;
+      }
+
+      .footer__top {
+        grid-template-columns: 1fr;
+      }
+
+      .footer__bottom {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+
+      .cta-section__actions {
+        flex-direction: column;
+        align-items: stretch;
+      }
+
+      .btn-cta-primary,
+      .btn-cta-secondary {
+        justify-content: center;
+      }
+    }
+
+    /* ─── Utilities ──────────────────────────────────────── */
+    .visually-hidden {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      overflow: hidden;
+      clip: rect(0,0,0,0);
+      white-space: nowrap;
+    }
+
+    /* Billing period data attribute — shows/hides prices */
+    .price-monthly { display: flex; }
+    .price-annual  { display: none; }
+
+    [data-billing="annual"] .price-monthly { display: none; }
+    [data-billing="annual"] .price-annual  { display: flex; }
+
+    [data-billing="annual"] .annual-note { display: block; }
+    .annual-note { display: none; }
+  </style>
+</head>
+<body>
+
+  <!-- ═══════════════════════════════════════════════
+       NAVIGATION
+  ═══════════════════════════════════════════════ -->
+  <nav class="nav" role="navigation" aria-label="Main navigation">
+    <div class="nav__inner">
+
+      <!-- Logo -->
+      <a href="index.html" class="nav__logo" aria-label="The Production Shop — Home">
+        <div class="nav__logo-mark" aria-hidden="true">
+          <!-- Simple router-plane icon mark -->
+          <svg viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+            <path d="M3 10 Q5 5 10 5 L17 5 L17 8 L10 8 Q8 8 7 10 Q8 12 10 12 L17 12 L17 15 L10 15 Q5 15 3 10 Z"/>
+            <rect x="1" y="9" width="3" height="2" rx="1"/>
+          </svg>
+        </div>
+        The Production Shop
+      </a>
+
+      <!-- Desktop links -->
+      <ul class="nav__links" role="list">
+        <li><a href="index.html"    class="nav__link">Home</a></li>
+        <li><a href="features.html" class="nav__link">Features</a></li>
+        <li><a href="pricing.html"  class="nav__link nav__link--active" aria-current="page">Pricing</a></li>
+        <li><a href="about.html"    class="nav__link">About</a></li>
+        <li><a href="contact.html"  class="nav__link">Contact</a></li>
+      </ul>
+
+      <a href="contact.html" class="nav__cta">
+        Get Started
+        <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">
+          <path d="M3 8h10M9 4l4 4-4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+        </svg>
+      </a>
+
+      <!-- Mobile hamburger -->
+      <button class="nav__hamburger" id="hamburger" aria-label="Open navigation menu" aria-expanded="false" aria-controls="mobileMenu">
+        <span></span>
+        <span></span>
+        <span></span>
+      </button>
+    </div>
+
+    <!-- Mobile menu -->
+    <div class="nav__mobile-menu" id="mobileMenu" role="menu">
+      <a href="index.html"    class="nav__mobile-link" role="menuitem">Home</a>
+      <a href="features.html" class="nav__mobile-link" role="menuitem">Features</a>
+      <a href="pricing.html"  class="nav__mobile-link nav__mobile-link--active" role="menuitem" aria-current="page">Pricing</a>
+      <a href="about.html"    class="nav__mobile-link" role="menuitem">About</a>
+      <a href="contact.html"  class="nav__mobile-link" role="menuitem">Contact</a>
+    </div>
+  </nav>
+
+  <main id="main-content">
+
+    <!-- ═══════════════════════════════════════════════
+         PAGE HEADER
+    ═══════════════════════════════════════════════ -->
+    <header class="page-header" id="pricing">
+      <div class="page-header__eyebrow">Pricing</div>
+      <h1 class="page-header__title">Simple pricing for<br>serious builders</h1>
+      <p class="page-header__subtitle">
+        Every plan starts with the design tools you know. Upgrade when you're ready to push G-code and run a real shop.
+      </p>
+
+      <!-- Billing toggle — controls data-billing attribute on body via JS -->
+      <div class="billing-toggle" role="group" aria-label="Billing period">
+        <button
+          class="billing-toggle__label is-active"
+          id="toggleMonthly"
+          aria-pressed="true"
+          type="button"
+        >Monthly</button>
+        <button
+          class="billing-toggle__label"
+          id="toggleAnnual"
+          aria-pressed="false"
+          type="button"
+        >
+          Annual
+          <span class="billing-toggle__badge">Save 20%</span>
+        </button>
+      </div>
+    </header>
+
+    <!-- ═══════════════════════════════════════════════
+         PRICING CARDS
+    ═══════════════════════════════════════════════ -->
+    <section class="pricing-section" aria-labelledby="plans-heading">
+      <h2 id="plans-heading" class="visually-hidden">Pricing plans</h2>
+
+      <div class="pricing-grid" data-billing="monthly" id="pricingGrid">
+
+        <!-- ── FREE ─────────────────────────────── -->
+        <article class="pricing-card" aria-label="Free plan">
+          <div class="pricing-card__tier">Starter</div>
+          <div class="pricing-card__name">Free</div>
+          <p class="pricing-card__tagline">Explore the design tools. No commitment, no credit card.</p>
+
+          <!-- Monthly price -->
+          <div class="pricing-card__price price-monthly">
+            <span class="pricing-card__currency">$</span>
+            <span class="pricing-card__amount">0</span>
+            <span class="pricing-card__period">/ mo</span>
+          </div>
+          <!-- Annual price (same) -->
+          <div class="pricing-card__price price-annual">
+            <span class="pricing-card__currency">$</span>
+            <span class="pricing-card__amount">0</span>
+            <span class="pricing-card__period">/ mo</span>
+          </div>
+
+          <hr class="pricing-card__divider" aria-hidden="true">
+
+          <ul class="pricing-card__features" aria-label="Free plan features">
+            <li class="pricing-card__feature">
+              <svg class="pricing-card__feature-icon feature-check" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path fill-rule="evenodd" d="M16.704 4.153a.75.75 0 01.143 1.052l-8 10.5a.75.75 0 01-1.127.075l-4.5-4.5a.75.75 0 011.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 011.05-.143z" clip-rule="evenodd"/></svg>
+              <span>Full parametric body designer</span>
+            </li>
+            <li class="pricing-card__feature">
+              <svg class="pricing-card__feature-icon feature-check" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path fill-rule="evenodd" d="M16.704 4.153a.75.75 0 01.143 1.052l-8 10.5a.75.75 0 01-1.127.075l-4.5-4.5a.75.75 0 011.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 011.05-.143z" clip-rule="evenodd"/></svg>
+              <span>5 saved projects</span>
+            </li>
+            <li class="pricing-card__feature">
+              <svg class="pricing-card__feature-icon feature-check" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path fill-rule="evenodd" d="M16.704 4.153a.75.75 0 01.143 1.052l-8 10.5a.75.75 0 01-1.127.075l-4.5-4.5a.75.75 0 011.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 011.05-.143z" clip-rule="evenodd"/></svg>
+              <span>Toolpath preview (viewer only)</span>
+            </li>
+            <li class="pricing-card__feature">
+              <svg class="pricing-card__feature-icon feature-check" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path fill-rule="evenodd" d="M16.704 4.153a.75.75 0 01.143 1.052l-8 10.5a.75.75 0 01-1.127.075l-4.5-4.5a.75.75 0 011.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 011.05-.143z" clip-rule="evenodd"/></svg>
+              <span>Community forum access</span>
+            </li>
+            <li class="pricing-card__feature">
+              <svg class="pricing-card__feature-icon feature-cross" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path d="M6.28 5.22a.75.75 0 00-1.06 1.06L8.94 10l-3.72 3.72a.75.75 0 101.06 1.06L10 11.06l3.72 3.72a.75.75 0 101.06-1.06L11.06 10l3.72-3.72a.75.75 0 00-1.06-1.06L10 8.94 6.28 5.22z"/></svg>
+              <span style="color: var(--color-text-light);">CNC G-code export</span>
+            </li>
+            <li class="pricing-card__feature">
+              <svg class="pricing-card__feature-icon feature-cross" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path d="M6.28 5.22a.75.75 0 00-1.06 1.06L8.94 10l-3.72 3.72a.75.75 0 101.06 1.06L10 11.06l3.72 3.72a.75.75 0 101.06-1.06L11.06 10l3.72-3.72a.75.75 0 00-1.06-1.06L10 8.94 6.28 5.22z"/></svg>
+              <span style="color: var(--color-text-light);">RMOS routing & scheduling</span>
+            </li>
+            <li class="pricing-card__feature">
+              <svg class="pricing-card__feature-icon feature-cross" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path d="M6.28 5.22a.75.75 0 00-1.06 1.06L8.94 10l-3.72 3.72a.75.75 0 101.06 1.06L10 11.06l3.72 3.72a.75.75 0 101.06-1.06L11.06 10l3.72-3.72a.75.75 0 00-1.06-1.06L10 8.94 6.28 5.22z"/></svg>
+              <span style="color: var(--color-text-light);">Business operations module</span>
+            </li>
+          </ul>
+
+          <a href="contact.html" class="pricing-card__btn pricing-card__btn--outline">
+            Create free account
+          </a>
+        </article>
+
+        <!-- ── PRO (Featured) ─────────────────── -->
+        <article class="pricing-card pricing-card--featured" aria-label="Pro plan — recommended">
+          <div class="pricing-card__badge" aria-label="Recommended plan">⭐ Most Popular</div>
+
+          <div class="pricing-card__tier">Professional</div>
+          <div class="pricing-card__name">Pro</div>
+          <p class="pricing-card__tagline">Everything a solo luthier needs — from concept to cut file.</p>
+
+          <!-- Monthly price -->
+          <div class="pricing-card__price price-monthly">
+            <span class="pricing-card__currency">$</span>
+            <span class="pricing-card__amount">49</span>
+            <span class="pricing-card__period">/ mo</span>
+          </div>
+          <!-- Annual price -->
+          <div class="pricing-card__price price-annual">
+            <span class="pricing-card__currency">$</span>
+            <span class="pricing-card__amount">39</span>
+            <span class="pricing-card__period">/ mo</span>
+          </div>
+          <p class="annual-note pricing-card__annual-note">Billed $468 / year — you save $120</p>
+
+          <hr class="pricing-card__divider" aria-hidden="true">
+
+          <ul class="pricing-card__features" aria-label="Pro plan features">
+            <li class="pricing-card__feature">
+              <svg class="pricing-card__feature-icon feature-check" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path fill-rule="evenodd" d="M16.704 4.153a.75.75 0 01.143 1.052l-8 10.5a.75.75 0 01-1.127.075l-4.5-4.5a.75.75 0 011.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 011.05-.143z" clip-rule="evenodd"/></svg>
+              <span>Everything in Free</span>
+            </li>
+            <li class="pricing-card__feature">
+              <svg class="pricing-card__feature-icon feature-check" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path fill-rule="evenodd" d="M16.704 4.153a.75.75 0 01.143 1.052l-8 10.5a.75.75 0 01-1.127.075l-4.5-4.5a.75.75 0 011.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 011.05-.143z" clip-rule="evenodd"/></svg>
+              <span>Unlimited G-code exports</span>
+            </li>
+            <li class="pricing-card__feature">
+              <svg class="pricing-card__feature-icon feature-check" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path fill-rule="evenodd" d="M16.704 4.153a.75.75 0 01.143 1.052l-8 10.5a.75.75 0 01-1.127.075l-4.5-4.5a.75.75 0 011.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 011.05-.143z" clip-rule="evenodd"/></svg>
+              <span>Full CAM pipeline with simulation</span>
+            </li>
+            <li class="pricing-card__feature">
+              <svg class="pricing-card__feature-icon feature-check" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path fill-rule="evenodd" d="M16.704 4.153a.75.75 0 01.143 1.052l-8 10.5a.75.75 0 01-1.127.075l-4.5-4.5a.75.75 0 011.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 011.05-.143z" clip-rule="evenodd"/></svg>
+              <span>RMOS machine routing &amp; scheduling</span>
+            </li>
+            <li class="pricing-card__feature">
+              <svg class="pricing-card__feature-icon feature-check" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path fill-rule="evenodd" d="M16.704 4.153a.75.75 0 01.143 1.052l-8 10.5a.75.75 0 01-1.127.075l-4.5-4.5a.75.75 0 011.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 011.05-.143z" clip-rule="evenodd"/></svg>
+              <span>Unlimited projects &amp; templates</span>
+            </li>
+            <li class="pricing-card__feature">
+              <svg class="pricing-card__feature-icon feature-check" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path fill-rule="evenodd" d="M16.704 4.153a.75.75 0 01.143 1.052l-8 10.5a.75.75 0 01-1.127.075l-4.5-4.5a.75.75 0 011.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 011.05-.143z" clip-rule="evenodd"/></svg>
+              <span>50+ built-in post-processors</span>
+            </li>
+            <li class="pricing-card__feature">
+              <svg class="pricing-card__feature-icon feature-cross" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path d="M6.28 5.22a.75.75 0 00-1.06 1.06L8.94 10l-3.72 3.72a.75.75 0 101.06 1.06L10 11.06l3.72 3.72a.75.75 0 101.06-1.06L11.06 10l3.72-3.72a.75.75 0 00-1.06-1.06L10 8.94 6.28 5.22z"/></svg>
+              <span style="color: var(--color-text-light);">Multi-user seats</span>
+            </li>
+          </ul>
+
+          <a target="_blank" rel="noopener" href="contact.html" class="pricing-card__btn pricing-card__btn--primary">
+            Start 14-day free trial
+          </a>
+        </article>
+
+        <!-- ── SHOP ──────────────────────────── -->
+        <article class="pricing-card" aria-label="Shop plan">
+          <div class="pricing-card__tier">Business</div>
+          <div class="pricing-card__name">Shop</div>
+          <p class="pricing-card__tagline">For growing operations with multiple builders and custom workflows.</p>
+
+          <!-- Monthly price -->
+          <div class="pricing-card__price price-monthly">
+            <span class="pricing-card__currency">$</span>
+            <span class="pricing-card__amount">149</span>
+            <span class="pricing-card__period">/ mo</span>
+          </div>
+          <!-- Annual price -->
+          <div class="pricing-card__price price-annual">
+            <span class="pricing-card__currency">$</span>
+            <span class="pricing-card__amount">119</span>
+            <span class="pricing-card__period">/ mo</span>
+          </div>
+          <p class="annual-note pricing-card__annual-note">Billed $1,428 / year — you save $360</p>
+
+          <hr class="pricing-card__divider" aria-hidden="true">
+
+          <ul class="pricing-card__features" aria-label="Shop plan features">
+            <li class="pricing-card__feature">
+              <svg class="pricing-card__feature-icon feature-check" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path fill-rule="evenodd" d="M16.704 4.153a.75.75 0 01.143 1.052l-8 10.5a.75.75 0 01-1.127.075l-4.5-4.5a.75.75 0 011.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 011.05-.143z" clip-rule="evenodd"/></svg>
+              <span>Everything in Pro</span>
+            </li>
+            <li class="pricing-card__feature">
+              <svg class="pricing-card__feature-icon feature-check" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path fill-rule="evenodd" d="M16.704 4.153a.75.75 0 01.143 1.052l-8 10.5a.75.75 0 01-1.127.075l-4.5-4.5a.75.75 0 011.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 011.05-.143z" clip-rule="evenodd"/></svg>
+              <span>Up to 10 user seats</span>
+            </li>
+            <li class="pricing-card__feature">
+              <svg class="pricing-card__feature-icon feature-check" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path fill-rule="evenodd" d="M16.704 4.153a.75.75 0 01.143 1.052l-8 10.5a.75.75 0 01-1.127.075l-4.5-4.5a.75.75 0 011.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 011.05-.143z" clip-rule="evenodd"/></svg>
+              <span>Custom post-processor builder</span>
+            </li>
+            <li class="pricing-card__feature">
+              <svg class="pricing-card__feature-icon feature-check" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path fill-rule="evenodd" d="M16.704 4.153a.75.75 0 01.143 1.052l-8 10.5a.75.75 0 01-1.127.075l-4.5-4.5a.75.75 0 011.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 011.05-.143z" clip-rule="evenodd"/></svg>
+              <span>Priority support (2-hr SLA)</span>
+            </li>
+            <li class="pricing-card__feature">
+              <svg class="pricing-card__feature-icon feature-check" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path fill-rule="evenodd" d="M16.704 4.153a.75.75 0 01.143 1.052l-8 10.5a.75.75 0 01-1.127.075l-4.5-4.5a.75.75 0 011.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 011.05-.143z" clip-rule="evenodd"/></svg>
+              <span>Inventory &amp; BOM management</span>
+            </li>
+            <li class="pricing-card__feature">
+              <svg class="pricing-card__feature-icon feature-check" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path fill-rule="evenodd" d="M16.704 4.153a.75.75 0 01.143 1.052l-8 10.5a.75.75 0 01-1.127.075l-4.5-4.5a.75.75 0 011.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 011.05-.143z" clip-rule="evenodd"/></svg>
+              <span>Full ERP &amp; invoicing dashboard</span>
+            </li>
+            <li class="pricing-card__feature">
+              <svg class="pricing-card__feature-icon feature-check" viewBox

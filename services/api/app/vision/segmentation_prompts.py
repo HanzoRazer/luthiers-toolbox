@@ -125,6 +125,52 @@ If no instrument body is visible or the image is too unclear:
 }"""
 
 # ---------------------------------------------------------------------------
+# Blueprint/Technical Drawing Prompt
+# ---------------------------------------------------------------------------
+
+BLUEPRINT_BODY_PROMPT = """Analyze this TECHNICAL DRAWING / BLUEPRINT of an electric guitar body.
+
+CRITICAL DISTINCTION - THIS IS A TECHNICAL DRAWING, NOT A PHOTO:
+- Technical drawings show the body outline PLUS internal routing cavities
+- You must trace ONLY the OUTERMOST perimeter - the external silhouette
+- The outermost line is the LARGEST continuous closed curve in the drawing
+
+WHAT TO TRACE (the outer body silhouette):
+- The single continuous line forming the guitar body's external shape
+- This is typically a thick black line forming the body perimeter
+- It should be approximately 340-500mm in one dimension
+
+WHAT TO IGNORE (internal features):
+- Pickup routing cavities (rectangular cutouts)
+- Control cavity routing (irregular shapes)
+- Tremolo/bridge pocket (rectangular or curved cutout)
+- Neck pocket (rectangular cutout at top)
+- Screw holes (small circles)
+- Jack hole (small circle)
+- Dimension lines (lines with arrows and measurements)
+- Radius callouts (R4, R8, etc.)
+- Centerlines (dashed lines)
+- Title blocks and text
+- Pickguard outlines (if shown separately)
+
+COORDINATES:
+- Use image coordinates: origin is TOP-LEFT
+- x increases rightward, y increases downward
+- Provide 60-100 points for smooth curves
+- Go CLOCKWISE starting from top-center (neck pocket area)
+
+RESPOND WITH JSON ONLY:
+{
+  "body_outline": [[x1, y1], [x2, y2], ...],
+  "image_width": <pixels>,
+  "image_height": <pixels>,
+  "confidence": <0.0-1.0>,
+  "guitar_type": "jazzmaster" | "jaguar" | "stratocaster" | "telecaster" | "les_paul" | "sg" | "other",
+  "notes": "<what was identified>"
+}"""
+
+
+# ---------------------------------------------------------------------------
 # Prompt Selection
 # ---------------------------------------------------------------------------
 
@@ -136,7 +182,7 @@ def get_segmentation_prompt(
     Get the appropriate segmentation prompt.
 
     Args:
-        guitar_category: "acoustic", "electric", "other", or "auto"
+        guitar_category: "acoustic", "electric", "blueprint", "other", or "auto"
         detail_level: "minimal", "standard", or "detailed"
 
     Returns:
@@ -146,6 +192,8 @@ def get_segmentation_prompt(
         return ACOUSTIC_BODY_PROMPT
     elif guitar_category == "electric":
         return ELECTRIC_BODY_PROMPT
+    elif guitar_category == "blueprint":
+        return BLUEPRINT_BODY_PROMPT
     elif guitar_category == "other":
         return OTHER_INSTRUMENT_PROMPT
     else:

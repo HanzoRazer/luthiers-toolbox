@@ -1,0 +1,615 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Site Generator Admin</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: system-ui, -apple-system, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 2rem;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .header {
+            background: white;
+            padding: 2rem;
+            border-radius: 12px;
+            margin-bottom: 2rem;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        h1 {
+            color: #1e293b;
+            margin-bottom: 0.5rem;
+        }
+
+        .subtitle {
+            color: #64748b;
+        }
+
+        .card {
+            background: white;
+            padding: 2rem;
+            border-radius: 12px;
+            margin-bottom: 2rem;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        .card h2 {
+            color: #1e293b;
+            margin-bottom: 1rem;
+            font-size: 1.5rem;
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: #475569;
+            font-weight: 500;
+        }
+
+        input, textarea, select {
+            width: 100%;
+            padding: 0.75rem;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-family: inherit;
+            transition: border-color 0.2s;
+        }
+
+        input:focus, textarea:focus, select:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        textarea {
+            min-height: 300px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.875rem;
+        }
+
+        button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .btn-secondary {
+            background: #64748b;
+            margin-left: 0.5rem;
+        }
+
+        .btn-danger {
+            background: #ef4444;
+        }
+
+        .status {
+            padding: 1rem;
+            border-radius: 8px;
+            margin-top: 1rem;
+            display: none;
+        }
+
+        .status.show {
+            display: block;
+        }
+
+        .status.success {
+            background: #d1fae5;
+            color: #065f46;
+            border: 2px solid #10b981;
+        }
+
+        .status.error {
+            background: #fee2e2;
+            color: #991b1b;
+            border: 2px solid #ef4444;
+        }
+
+        .status.info {
+            background: #dbeafe;
+            color: #1e40af;
+            border: 2px solid #3b82f6;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 30px;
+            background: #e2e8f0;
+            border-radius: 15px;
+            overflow: hidden;
+            margin: 1rem 0;
+            display: none;
+        }
+
+        .progress-bar.show {
+            display: block;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+            transition: width 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 600;
+        }
+
+        .jobs-list {
+            display: grid;
+            gap: 1rem;
+        }
+
+        .job-item {
+            background: #f8fafc;
+            padding: 1rem;
+            border-radius: 8px;
+            border-left: 4px solid #667eea;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .job-info h3 {
+            color: #1e293b;
+            margin-bottom: 0.25rem;
+        }
+
+        .job-info p {
+            color: #64748b;
+            font-size: 0.875rem;
+        }
+
+        .job-actions {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .job-actions button {
+            padding: 0.5rem 1rem;
+            font-size: 0.875rem;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.5rem;
+        }
+
+        .badge-pending { background: #fef3c7; color: #92400e; }
+        .badge-running { background: #dbeafe; color: #1e40af; }
+        .badge-complete { background: #d1fae5; color: #065f46; }
+        .badge-failed { background: #fee2e2; color: #991b1b; }
+
+        .grid-2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1.5rem;
+        }
+
+        @media (max-width: 768px) {
+            .grid-2 {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🎸 Site Generator Admin</h1>
+            <p class="subtitle">Production Shop Website Generation API</p>
+        </div>
+
+        <div class="grid-2">
+            <div class="card">
+                <h2>API Configuration</h2>
+                <div class="form-group">
+                    <label for="apiUrl">API URL</label>
+                    <input type="text" id="apiUrl" value="http://localhost:8000/api/site-generator" placeholder="http://localhost:8000/api/site-generator">
+                </div>
+                <div class="form-group">
+                    <label for="apiKey">API Key</label>
+                    <input type="password" id="apiKey" placeholder="your-api-key">
+                </div>
+                <button onclick="testConnection()">Test Connection</button>
+            </div>
+
+            <div class="card">
+                <h2>Quick Stats</h2>
+                <div id="stats">
+                    <p>Click "Refresh Jobs" to load statistics</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <h2>Generate New Site</h2>
+
+            <div class="form-group">
+                <label for="specSelect">Load Spec Template</label>
+                <select id="specSelect" onchange="loadSpec()">
+                    <option value="">-- Select a template --</option>
+                    <option value="production_shop">The Production Shop</option>
+                    <option value="hartwell">Hartwell Guitars Portfolio</option>
+                    <option value="custom">Custom (edit below)</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="specJson">Site Specification (JSON)</label>
+                <textarea id="specJson" placeholder='{"site_name": "My Site", "description": "...", "pages": [...]}'></textarea>
+            </div>
+
+            <div class="form-group">
+                <label for="jobLabel">Job Label (optional)</label>
+                <input type="text" id="jobLabel" placeholder="My Custom Site">
+            </div>
+
+            <button onclick="generateSite()" id="generateBtn">Generate Site</button>
+            <button onclick="clearForm()" class="btn-secondary">Clear</button>
+
+            <div class="progress-bar" id="progressBar">
+                <div class="progress-fill" id="progressFill">0%</div>
+            </div>
+
+            <div class="status" id="generateStatus"></div>
+        </div>
+
+        <div class="card">
+            <h2>Jobs</h2>
+            <button onclick="refreshJobs()">Refresh Jobs</button>
+            <button onclick="refreshJobs('running')" class="btn-secondary">Running Only</button>
+            <button onclick="refreshJobs('complete')" class="btn-secondary">Completed Only</button>
+
+            <div class="jobs-list" id="jobsList" style="margin-top: 1.5rem;">
+                <p>Click "Refresh Jobs" to load jobs</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = () => document.getElementById('apiUrl').value;
+        const API_KEY = () => document.getElementById('apiKey').value;
+
+        const specs = {
+            production_shop: {
+                site_name: "The Production Shop",
+                description: "An ERP and CAM platform for professional instrument makers.",
+                colors: {
+                    primary: "#2563eb",
+                    surface: "#ffffff",
+                    text: "#1e293b"
+                },
+                typography: {
+                    "family-sans": "system-ui, sans-serif"
+                },
+                js_features: ["mobile nav toggle", "smooth scroll", "contact form validation"],
+                pages: [
+                    {
+                        name: "Home",
+                        filename: "index.html",
+                        description: "Landing page for The Production Shop platform",
+                        sections: ["Hero", "Features", "CTA", "Footer"]
+                    },
+                    {
+                        name: "Features",
+                        filename: "features.html",
+                        description: "Detailed features page",
+                        sections: ["Page header", "Feature tabs", "Footer"]
+                    }
+                ]
+            },
+            hartwell: {
+                site_name: "Hartwell Guitars",
+                description: "A boutique lutherie studio specializing in handcrafted acoustic guitars.",
+                colors: {
+                    primary: "#92400e",
+                    surface: "#fffbf7",
+                    text: "#1c1917"
+                },
+                typography: {
+                    "family-sans": "Georgia, serif"
+                },
+                js_features: ["mobile nav toggle", "image lightbox"],
+                pages: [
+                    {
+                        name: "Home",
+                        filename: "index.html",
+                        description: "Elegant landing page for boutique guitar builder",
+                        sections: ["Hero", "Featured builds", "Process", "Footer"]
+                    }
+                ]
+            }
+        };
+
+        function loadSpec() {
+            const selected = document.getElementById('specSelect').value;
+            if (selected && specs[selected]) {
+                document.getElementById('specJson').value = JSON.stringify(specs[selected], null, 2);
+            }
+        }
+
+        function clearForm() {
+            document.getElementById('specJson').value = '';
+            document.getElementById('jobLabel').value = '';
+            document.getElementById('specSelect').value = '';
+            hideProgress();
+            hideStatus();
+        }
+
+        function showStatus(message, type) {
+            const status = document.getElementById('generateStatus');
+            status.textContent = message;
+            status.className = `status show ${type}`;
+        }
+
+        function hideStatus() {
+            document.getElementById('generateStatus').className = 'status';
+        }
+
+        function showProgress(percent) {
+            const bar = document.getElementById('progressBar');
+            const fill = document.getElementById('progressFill');
+            bar.classList.add('show');
+            fill.style.width = percent + '%';
+            fill.textContent = percent + '%';
+        }
+
+        function hideProgress() {
+            document.getElementById('progressBar').classList.remove('show');
+        }
+
+        async function testConnection() {
+            try {
+                const response = await fetch(`${API_BASE()}/health`);
+                const data = await response.json();
+                showStatus(`✅ Connected! Version ${data.version} - ${data.jobs.total} total jobs`, 'success');
+
+                // Update stats
+                document.getElementById('stats').innerHTML = `
+                    <p><strong>Total Jobs:</strong> ${data.jobs.total}</p>
+                    <p><strong>Running:</strong> ${data.jobs.running}</p>
+                    <p><strong>Complete:</strong> ${data.jobs.complete}</p>
+                    <p><strong>Failed:</strong> ${data.jobs.failed}</p>
+                    <p><strong>Rate Limit:</strong> ${data.config.rate_limit_per_hour || 'Disabled'} req/hour</p>
+                `;
+            } catch (error) {
+                showStatus(`❌ Connection failed: ${error.message}`, 'error');
+            }
+        }
+
+        async function generateSite() {
+            const specText = document.getElementById('specJson').value.trim();
+            const jobLabel = document.getElementById('jobLabel').value.trim();
+
+            if (!specText) {
+                showStatus('Please provide a site specification', 'error');
+                return;
+            }
+
+            if (!API_KEY()) {
+                showStatus('Please provide an API key', 'error');
+                return;
+            }
+
+            let spec;
+            try {
+                spec = JSON.parse(specText);
+            } catch (e) {
+                showStatus(`Invalid JSON: ${e.message}`, 'error');
+                return;
+            }
+
+            const generateBtn = document.getElementById('generateBtn');
+            generateBtn.disabled = true;
+            hideStatus();
+            showProgress(0);
+
+            try {
+                // Start generation
+                const response = await fetch(`${API_BASE()}/generate`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-API-Key': API_KEY()
+                    },
+                    body: JSON.stringify({
+                        spec,
+                        job_label: jobLabel || spec.site_name
+                    })
+                });
+
+                if (!response.ok) {
+                    const error = await response.json();
+                    throw new Error(error.detail || 'Generation failed');
+                }
+
+                const job = await response.json();
+                showStatus(`Job started: ${job.job_id}`, 'info');
+
+                // Poll for progress
+                await pollJob(job.job_id);
+
+            } catch (error) {
+                showStatus(`❌ Error: ${error.message}`, 'error');
+            } finally {
+                generateBtn.disabled = false;
+            }
+        }
+
+        async function pollJob(jobId) {
+            while (true) {
+                await new Promise(resolve => setTimeout(resolve, 2000));
+
+                try {
+                    const response = await fetch(`${API_BASE()}/status/${jobId}`);
+                    const job = await response.json();
+
+                    showProgress(job.progress);
+
+                    if (job.status === 'complete') {
+                        showStatus(`✅ Complete! Downloading...`, 'success');
+
+                        // Auto-download
+                        const downloadUrl = `${API_BASE()}/download/${jobId}`;
+                        const a = document.createElement('a');
+                        a.href = downloadUrl;
+                        a.download = `${job.label}.zip`;
+                        a.click();
+
+                        // Refresh jobs list
+                        refreshJobs();
+                        break;
+
+                    } else if (job.status === 'failed') {
+                        showStatus(`❌ Failed: ${job.error}`, 'error');
+                        break;
+                    }
+
+                } catch (error) {
+                    showStatus(`❌ Error checking status: ${error.message}`, 'error');
+                    break;
+                }
+            }
+        }
+
+        async function refreshJobs(statusFilter = null) {
+            const listDiv = document.getElementById('jobsList');
+            listDiv.innerHTML = '<p>Loading...</p>';
+
+            try {
+                let url = `${API_BASE()}/jobs?limit=20`;
+                if (statusFilter) url += `&status=${statusFilter}`;
+
+                const response = await fetch(url, {
+                    headers: { 'X-API-Key': API_KEY() }
+                });
+
+                if (!response.ok) throw new Error('Failed to fetch jobs');
+
+                const data = await response.json();
+
+                if (data.jobs.length === 0) {
+                    listDiv.innerHTML = '<p>No jobs found</p>';
+                    return;
+                }
+
+                listDiv.innerHTML = data.jobs.map(job => `
+                    <div class="job-item">
+                        <div class="job-info">
+                            <h3>
+                                ${job.label}
+                                <span class="badge badge-${job.status}">${job.status}</span>
+                            </h3>
+                            <p>
+                                ID: ${job.job_id} |
+                                Progress: ${job.progress}% |
+                                Started: ${new Date(job.started_at).toLocaleString()}
+                            </p>
+                        </div>
+                        <div class="job-actions">
+                            ${job.status === 'complete' ?
+                                `<button onclick="downloadJob('${job.job_id}', '${job.label}')">Download</button>` : ''}
+                            ${job.status === 'running' ?
+                                `<button onclick="cancelJob('${job.job_id}')" class="btn-danger">Cancel</button>` : ''}
+                            ${job.status !== 'running' ?
+                                `<button onclick="deleteJob('${job.job_id}')" class="btn-danger">Delete</button>` : ''}
+                        </div>
+                    </div>
+                `).join('');
+
+            } catch (error) {
+                listDiv.innerHTML = `<p style="color: #ef4444;">Error: ${error.message}</p>`;
+            }
+        }
+
+        async function downloadJob(jobId, label) {
+            const url = `${API_BASE()}/download/${jobId}`;
+            window.open(url, '_blank');
+        }
+
+        async function cancelJob(jobId) {
+            if (!confirm('Cancel this job?')) return;
+
+            try {
+                const response = await fetch(`${API_BASE()}/jobs/${jobId}/cancel`, {
+                    method: 'POST',
+                    headers: { 'X-API-Key': API_KEY() }
+                });
+
+                if (!response.ok) throw new Error('Failed to cancel job');
+
+                alert('Job cancelled');
+                refreshJobs();
+
+            } catch (error) {
+                alert(`Error: ${error.message}`);
+            }
+        }
+
+        async function deleteJob(jobId) {
+            if (!confirm('Delete this job and all its files?')) return;
+
+            try {
+                const response = await fetch(`${API_BASE()}/jobs/${jobId}`, {
+                    method: 'DELETE',
+                    headers: { 'X-API-Key': API_KEY() }
+                });
+
+                if (!response.ok) throw new Error('Failed to delete job');
+
+                alert('Job deleted');
+                refreshJobs();
+
+            } catch (error) {
+                alert(`Error: ${error.message}`);
+            }
+        }
+    </script>
+</body>
+</html>

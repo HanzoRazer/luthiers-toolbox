@@ -66,24 +66,34 @@ def extract_outline_with_vision(image_base64: str) -> list:
     """Use OpenAI Vision to extract body outline coordinates."""
     client = OpenAI()
 
-    prompt = """You are a CAD data annotation assistant creating training data for CNC routing systems.
+    # Use the system's blueprint-specific prompt
+    try:
+        from vision.segmentation_prompts import get_segmentation_prompt
+        prompt = get_segmentation_prompt("blueprint")
+        print("  Using system blueprint prompt")
+    except ImportError:
+        # Fallback prompt
+        prompt = """Analyze this TECHNICAL DRAWING of an electric guitar body.
 
-TASK: Trace the outer body outline of this guitar body as a closed polygon.
+Trace ONLY the OUTERMOST perimeter - the external body silhouette.
+This is the LARGEST continuous closed curve in the drawing.
 
-REQUIREMENTS:
-1. Return ONLY the outer perimeter/silhouette of the body shape
-2. Start at the neck pocket (top center) and trace clockwise
-3. Use normalized coordinates where:
-   - X: 0.0 = left edge, 1.0 = right edge
-   - Y: 0.0 = bottom, 1.0 = top
-4. Provide 40-60 points for smooth curves
-5. Ignore all internal features (pickups, controls, routing cavities)
+IGNORE all internal features: pickup cavities, control routing, screw holes,
+dimension lines, radius callouts, centerlines, and text.
 
-OUTPUT FORMAT (JSON only, no other text):
+Return pixel coordinates (origin TOP-LEFT, x right, y down).
+Provide 60-100 points, going CLOCKWISE from top-center.
+
+JSON ONLY:
 {
-  "points": [[x1, y1], [x2, y2], ...],
-  "confidence": 0.0-1.0
+  "body_outline": [[x1, y1], [x2, y2], ...],
+  "image_width": <pixels>,
+  "image_height": <pixels>,
+  "confidence": <0.0-1.0>,
+  "guitar_type": "jazzmaster",
+  "notes": "<what was traced>"
 }"""
+        print("  Using fallback prompt")
 
     response = client.chat.completions.create(
         model="gpt-4o",
@@ -101,34 +111,58 @@ OUTPUT FORMAT (JSON only, no other text):
     )
 
     content = response.choices[0].message.content.strip()
+    print(f"  Raw response length: {len(content)} chars")
 
     # Extract JSON from response
     if "```json" in content:
-        content = content.split("```json")[1].split("```")[0]
+        content = content.split("```json")[1].split("```")[0].strip()
     elif "```" in content:
-        content = content.split("```")[1].split("```")[0]
+        content = content.split("```")[1].split("```")[0].strip()
 
-    return json.loads(content)
+    # Debug: show first 500 chars if parsing fails
+    try:
+        return json.loads(content)
+    except json.JSONDecodeError as e:
+        print(f"  JSON parse error: {e}")
+        print(f"  Content preview: {content[:500] if content else '(empty)'}")
+        raise
 
 
-def normalize_to_mm(points: list, target_width: float, target_height: float) -> list:
+def pixel_to_mm(points: list, image_width: int, image_height: int,
+                target_width: float, target_height: float) -> list:
     """
-    Convert normalized [0,1] coordinates to millimeters.
-    Centers the body at origin (0, 0).
+    Convert pixel coordinates to millimeters.
+
+    Args:
+        points: List of [x, y] pixel coordinates
+        image_width: Source image width in pixels
+        image_height: Source image height in pixels
+        target_width: Target width in mm
+        target_height: Target height in mm
+
+    Returns:
+        List of (x, y) tuples in mm, centered at origin
     """
     mm_points = []
-    for x_norm, y_norm in points:
+    for x_px, y_px in points:
+        # Normalize to 0-1 range
+        x_norm = x_px / image_width
+        y_norm = y_px / image_height
+
         # Scale to target dimensions
         x_mm = x_norm * target_width
         y_mm = y_norm * target_height
 
-        # Center at origin
-        x_mm -= target_width / 2
-        y_mm -= target_height / 2
-
         mm_points.append((x_mm, y_mm))
 
-    return mm_points
+    # Center at origin
+    xs = [p[0] for p in mm_points]
+    ys = [p[1] for p in mm_points]
+    cx = (min(xs) + max(xs)) / 2
+    cy = (min(ys) + max(ys)) / 2
+
+    centered = [(x - cx, -(y - cy)) for x, y in mm_points]  # Flip Y for CAD
+    return centered
 
 
 def create_dxf_with_ezdxf(points: list, output_path: str, version: str = 'R12'):
@@ -176,14 +210,30 @@ def main():
     print("\nExtracting outline with GPT-4o Vision...")
     result = extract_outline_with_vision(image_b64)
 
-    points_norm = result['points']
-    confidence = result.get('confidence', 0.0)
-    print(f"  Extracted {len(points_norm)} points")
-    print(f"  Confidence: {confidence:.0%}")
+    # Handle both response formats (body_outline or points)
+    if 'body_outline' in result:
+        points_px = result['body_outline']
+        image_w = result.get('image_width', 1654)  # Default A4 @ 200dpi
+        image_h = result.get('image_height', 2339)
+    else:
+        points_px = result.get('points', [])
+        image_w = 1654
+        image_h = 2339
 
-    # Step 3: Convert to real-world mm coordinates
+    confidence = result.get('confidence', 0.0)
+    guitar_type = result.get('guitar_type', 'unknown')
+    notes = result.get('notes', '')
+
+    print(f"  Extracted {len(points_px)} points")
+    print(f"  Confidence: {confidence:.0%}")
+    print(f"  Type: {guitar_type}")
+    if notes:
+        print(f"  Notes: {notes}")
+
+    # Step 3: Convert pixel coordinates to mm
     print("\nConverting to millimeters...")
-    points_mm = normalize_to_mm(points_norm, JAZZMASTER_WIDTH_MM, JAZZMASTER_HEIGHT_MM)
+    points_mm = pixel_to_mm(points_px, image_w, image_h,
+                           JAZZMASTER_WIDTH_MM, JAZZMASTER_HEIGHT_MM)
 
     # Calculate actual bounding box
     xs = [p[0] for p in points_mm]

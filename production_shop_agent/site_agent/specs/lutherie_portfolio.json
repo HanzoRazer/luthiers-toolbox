@@ -1,0 +1,74 @@
+{
+  "site_name": "Hartwell Guitars",
+  "description": "A boutique lutherie studio specializing in handcrafted acoustic guitars. Each instrument is built to order using responsibly sourced tonewoods and traditional joinery techniques.",
+
+  "colors": {
+    "primary":       "#92400e",
+    "primary-dark":  "#78350f",
+    "primary-light": "#fef3c7",
+    "accent":        "#1c1917",
+    "surface":       "#fffbf7",
+    "surface-alt":   "#f5f0eb",
+    "text":          "#1c1917",
+    "text-muted":    "#78716c",
+    "border":        "#e7e0d8"
+  },
+
+  "typography": {
+    "family-sans":   "'Georgia', 'Times New Roman', serif",
+    "family-mono":   "ui-monospace, monospace",
+    "size-base":     "1rem",
+    "size-lg":       "1.125rem",
+    "size-xl":       "1.25rem",
+    "size-2xl":      "1.5rem",
+    "size-3xl":      "1.875rem",
+    "size-4xl":      "2.25rem"
+  },
+
+  "js_features": [
+    "mobile nav toggle",
+    "smooth scroll",
+    "image lightbox for gallery",
+    "contact form validation"
+  ],
+
+  "pages": [
+    {
+      "name": "Home",
+      "filename": "index.html",
+      "description": "Elegant landing page for a boutique guitar builder. Warm, crafted aesthetic. Lead with the instruments, not the builder.",
+      "sections": [
+        "Hero: full-width with guitar photography placeholder, headline 'Instruments built to last a lifetime', CTA: View Current Builds",
+        "Intro: 2-3 sentence studio description, warm tone",
+        "Featured builds: 3 instrument cards with name, woods, and price",
+        "Process: 4-step craft process with icons",
+        "Testimonial from a musician client",
+        "Instagram/portfolio CTA",
+        "Footer"
+      ]
+    },
+    {
+      "name": "Gallery",
+      "filename": "gallery.html",
+      "description": "Portfolio of completed instruments. Grid layout with lightbox on click.",
+      "sections": [
+        "Page header: 'The Work'",
+        "Filter buttons: All | Steel String | Classical | 12-String | Electric",
+        "Masonry or uniform grid of instrument cards: photo placeholder, model name, woods, year",
+        "Footer"
+      ]
+    },
+    {
+      "name": "Contact",
+      "filename": "contact.html",
+      "description": "Commission inquiry form. Friendly, detailed. Sets expectations about lead time.",
+      "sections": [
+        "Page header: 'Commission an Instrument'",
+        "Lead time notice: 'Current build queue: 14-18 months'",
+        "Commission form: Name, Email, Phone (optional), Instrument Type, Top Wood preference, Back/Sides preference, Scale Length, Budget Range, Message",
+        "What happens next: 3-step process after form submit",
+        "Footer"
+      ]
+    }
+  ]
+}

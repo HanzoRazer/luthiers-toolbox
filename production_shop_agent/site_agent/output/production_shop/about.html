@@ -1,0 +1,1319 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>About – The Production Shop</title>
+  <meta name="description" content="The story behind The Production Shop — built by a licensed engineer and luthier to solve real problems in a real guitar shop." />
+  <style>
+    /* ─── Design Tokens ─────────────────────────────────────────── */
+    :root {
+      --color-primary: #2563eb;
+      --color-primary-dark: #1d4ed8;
+      --color-primary-light: #dbeafe;
+      --color-accent: #0d9488;
+      --color-accent-dark: #0f766e;
+      --color-surface: #ffffff;
+      --color-surface-alt: #f8fafc;
+      --color-surface-dark: #0f172a;
+      --color-text: #1e293b;
+      --color-text-muted: #64748b;
+      --color-text-light: #94a3b8;
+      --color-border: #e2e8f0;
+      --color-success: #10b981;
+      --color-warning: #f59e0b;
+      --color-danger: #ef4444;
+
+      --font-family-sans: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      --font-family-mono: ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, monospace;
+
+      --font-size-xs: 0.75rem;
+      --font-size-sm: 0.875rem;
+      --font-size-base: 1rem;
+      --font-size-lg: 1.125rem;
+      --font-size-xl: 1.25rem;
+      --font-size-2xl: 1.5rem;
+      --font-size-3xl: 1.875rem;
+      --font-size-4xl: 2.25rem;
+      --font-size-5xl: 3rem;
+
+      --space-1: 0.25rem;
+      --space-2: 0.5rem;
+      --space-3: 0.75rem;
+      --space-4: 1rem;
+      --space-5: 1.25rem;
+      --space-6: 1.5rem;
+      --space-8: 2rem;
+      --space-10: 2.5rem;
+      --space-12: 3rem;
+      --space-16: 4rem;
+      --space-20: 5rem;
+      --space-24: 6rem;
+
+      --radius-sm: 0.25rem;
+      --radius-md: 0.5rem;
+      --radius-lg: 0.75rem;
+      --radius-xl: 1rem;
+      --radius-full: 9999px;
+
+      --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+      --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.07), 0 2px 4px -2px rgb(0 0 0 / 0.05);
+      --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.08), 0 4px 6px -4px rgb(0 0 0 / 0.05);
+
+      --max-width: 1120px;
+      --nav-height: 64px;
+    }
+
+    /* ─── Reset & Base ───────────────────────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: var(--font-family-sans);
+      font-size: var(--font-size-base);
+      color: var(--color-text);
+      background: var(--color-surface);
+      line-height: 1.6;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    img { display: block; max-width: 100%; }
+    a { color: inherit; text-decoration: none; }
+
+    /* ─── Layout Helpers ─────────────────────────────────────────── */
+    .container {
+      width: 100%;
+      max-width: var(--max-width);
+      margin-inline: auto;
+      padding-inline: var(--space-6);
+    }
+
+    .section {
+      padding-block: var(--space-20);
+    }
+
+    .section--alt {
+      background: var(--color-surface-alt);
+    }
+
+    /* ─── Navigation ─────────────────────────────────────────────── */
+    .nav {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      height: var(--nav-height);
+      background: var(--color-surface);
+      border-bottom: 1px solid var(--color-border);
+      box-shadow: var(--shadow-sm);
+    }
+
+    .nav__inner {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      height: 100%;
+    }
+
+    .nav__brand {
+      display: flex;
+      align-items: center;
+      gap: var(--space-3);
+      font-weight: 700;
+      font-size: var(--font-size-lg);
+      color: var(--color-text);
+    }
+
+    /* Small logo icon built from CSS */
+    .nav__logo {
+      width: 32px;
+      height: 32px;
+      background: var(--color-primary);
+      border-radius: var(--radius-md);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .nav__logo svg {
+      width: 18px;
+      height: 18px;
+      fill: none;
+      stroke: #fff;
+      stroke-width: 2;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+
+    .nav__links {
+      display: flex;
+      align-items: center;
+      gap: var(--space-1);
+      list-style: none;
+    }
+
+    .nav__links a {
+      display: block;
+      padding: var(--space-2) var(--space-3);
+      border-radius: var(--radius-md);
+      font-size: var(--font-size-sm);
+      font-weight: 500;
+      color: var(--color-text-muted);
+      transition: color 0.15s, background 0.15s;
+    }
+
+    .nav__links a:hover {
+      color: var(--color-text);
+      background: var(--color-surface-alt);
+    }
+
+    .nav__links a.active {
+      color: var(--color-primary);
+      background: var(--color-primary-light);
+    }
+
+    .nav__cta {
+      display: inline-flex;
+      align-items: center;
+      gap: var(--space-2);
+      padding: var(--space-2) var(--space-5);
+      background: var(--color-primary);
+      color: #fff;
+      font-size: var(--font-size-sm);
+      font-weight: 600;
+      border-radius: var(--radius-md);
+      transition: background 0.15s;
+    }
+
+    .nav__cta:hover { background: var(--color-primary-dark); }
+
+    /* Mobile hamburger */
+    .nav__toggle {
+      display: none;
+      flex-direction: column;
+      gap: 5px;
+      background: none;
+      border: none;
+      cursor: pointer;
+      padding: var(--space-2);
+    }
+
+    .nav__toggle span {
+      display: block;
+      width: 22px;
+      height: 2px;
+      background: var(--color-text);
+      border-radius: var(--radius-full);
+      transition: transform 0.2s, opacity 0.2s;
+    }
+
+    /* ─── Page Header ────────────────────────────────────────────── */
+    .page-header {
+      background: var(--color-surface-dark);
+      padding-block: var(--space-20) var(--space-16);
+      position: relative;
+      overflow: hidden;
+    }
+
+    /* Subtle decorative grid overlay */
+    .page-header::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background-image:
+        linear-gradient(rgba(37, 99, 235, 0.07) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(37, 99, 235, 0.07) 1px, transparent 1px);
+      background-size: 40px 40px;
+      pointer-events: none;
+    }
+
+    .page-header__inner {
+      position: relative;
+      z-index: 1;
+    }
+
+    .page-header__eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: var(--space-2);
+      font-size: var(--font-size-sm);
+      font-weight: 600;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      color: var(--color-accent);
+      margin-bottom: var(--space-5);
+    }
+
+    .page-header__eyebrow::before {
+      content: '';
+      display: block;
+      width: 20px;
+      height: 2px;
+      background: var(--color-accent);
+      border-radius: var(--radius-full);
+    }
+
+    .page-header__title {
+      font-size: clamp(var(--font-size-3xl), 5vw, var(--font-size-5xl));
+      font-weight: 800;
+      line-height: 1.15;
+      color: #fff;
+      max-width: 700px;
+      margin-bottom: var(--space-6);
+    }
+
+    .page-header__title em {
+      font-style: normal;
+      color: var(--color-primary-light);
+    }
+
+    .page-header__subtitle {
+      font-size: var(--font-size-lg);
+      color: var(--color-text-light);
+      max-width: 560px;
+      line-height: 1.7;
+    }
+
+    /* ─── Story Section ──────────────────────────────────────────── */
+    .story {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: var(--space-16);
+      align-items: start;
+    }
+
+    .story__text h2 {
+      font-size: var(--font-size-3xl);
+      font-weight: 800;
+      line-height: 1.25;
+      color: var(--color-text);
+      margin-bottom: var(--space-6);
+    }
+
+    .story__text p {
+      font-size: var(--font-size-lg);
+      color: var(--color-text-muted);
+      line-height: 1.8;
+      margin-bottom: var(--space-5);
+    }
+
+    .story__text p:last-child { margin-bottom: 0; }
+
+    /* Credentials card */
+    .story__card {
+      background: var(--color-surface);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-xl);
+      padding: var(--space-8);
+      box-shadow: var(--shadow-md);
+      position: sticky;
+      top: calc(var(--nav-height) + var(--space-6));
+    }
+
+    .story__card-avatar {
+      width: 72px;
+      height: 72px;
+      border-radius: var(--radius-full);
+      background: linear-gradient(135deg, var(--color-primary-light), var(--color-primary));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: var(--space-5);
+      font-size: var(--font-size-2xl);
+    }
+
+    .story__card-name {
+      font-size: var(--font-size-xl);
+      font-weight: 700;
+      color: var(--color-text);
+      margin-bottom: var(--space-1);
+    }
+
+    .story__card-title {
+      font-size: var(--font-size-sm);
+      color: var(--color-text-muted);
+      margin-bottom: var(--space-6);
+    }
+
+    .story__card-stats {
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-4);
+      border-top: 1px solid var(--color-border);
+      padding-top: var(--space-6);
+    }
+
+    .story__stat {
+      display: flex;
+      align-items: center;
+      gap: var(--space-3);
+    }
+
+    .story__stat-icon {
+      width: 36px;
+      height: 36px;
+      border-radius: var(--radius-md);
+      background: var(--color-primary-light);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .story__stat-icon svg {
+      width: 16px;
+      height: 16px;
+      stroke: var(--color-primary);
+      fill: none;
+      stroke-width: 2;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+
+    .story__stat-label {
+      font-size: var(--font-size-sm);
+      color: var(--color-text-muted);
+      line-height: 1.4;
+    }
+
+    .story__stat-label strong {
+      display: block;
+      font-weight: 700;
+      color: var(--color-text);
+      font-size: var(--font-size-base);
+    }
+
+    /* ─── Mission Section ────────────────────────────────────────── */
+    .mission__inner {
+      max-width: 760px;
+      margin-inline: auto;
+      text-align: center;
+    }
+
+    .section-label {
+      display: inline-flex;
+      align-items: center;
+      gap: var(--space-2);
+      font-size: var(--font-size-sm);
+      font-weight: 600;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: var(--color-accent);
+      margin-bottom: var(--space-4);
+    }
+
+    .section-label::before,
+    .section-label::after {
+      content: '';
+      display: block;
+      width: 16px;
+      height: 2px;
+      background: var(--color-accent);
+      border-radius: var(--radius-full);
+    }
+
+    .mission__headline {
+      font-size: var(--font-size-4xl);
+      font-weight: 800;
+      line-height: 1.2;
+      color: var(--color-text);
+      margin-bottom: var(--space-8);
+    }
+
+    .mission__body {
+      font-size: var(--font-size-xl);
+      color: var(--color-text-muted);
+      line-height: 1.8;
+      border-left: 4px solid var(--color-primary);
+      padding-left: var(--space-6);
+      text-align: left;
+      border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+    }
+
+    /* ─── Technology Callout ─────────────────────────────────────── */
+    .tech {
+      background: var(--color-surface-dark);
+      border-radius: var(--radius-xl);
+      padding: var(--space-12);
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: var(--space-10);
+      align-items: center;
+    }
+
+    .tech__text .section-label {
+      color: var(--color-accent);
+    }
+
+    .tech__text .section-label::before,
+    .tech__text .section-label::after {
+      background: var(--color-accent);
+    }
+
+    .tech__headline {
+      font-size: var(--font-size-3xl);
+      font-weight: 800;
+      color: #fff;
+      line-height: 1.25;
+      margin-bottom: var(--space-5);
+    }
+
+    .tech__body {
+      font-size: var(--font-size-base);
+      color: var(--color-text-light);
+      line-height: 1.75;
+    }
+
+    .tech__stack {
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-4);
+    }
+
+    .tech__item {
+      display: flex;
+      align-items: flex-start;
+      gap: var(--space-4);
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: var(--radius-lg);
+      padding: var(--space-5);
+      transition: background 0.15s, border-color 0.15s;
+    }
+
+    .tech__item:hover {
+      background: rgba(255,255,255,0.07);
+      border-color: rgba(37, 99, 235, 0.4);
+    }
+
+    .tech__item-badge {
+      font-family: var(--font-family-mono);
+      font-size: var(--font-size-xs);
+      font-weight: 700;
+      padding: var(--space-1) var(--space-3);
+      border-radius: var(--radius-full);
+      flex-shrink: 0;
+      margin-top: 2px;
+    }
+
+    .tech__item-badge--blue {
+      background: var(--color-primary);
+      color: #fff;
+    }
+
+    .tech__item-badge--green {
+      background: var(--color-accent);
+      color: #fff;
+    }
+
+    .tech__item-badge--amber {
+      background: var(--color-warning);
+      color: #fff;
+    }
+
+    .tech__item-label {
+      font-size: var(--font-size-base);
+      font-weight: 600;
+      color: #fff;
+      margin-bottom: var(--space-1);
+    }
+
+    .tech__item-desc {
+      font-size: var(--font-size-sm);
+      color: var(--color-text-light);
+      line-height: 1.6;
+    }
+
+    /* ─── Values Section ─────────────────────────────────────────── */
+    .values__header {
+      text-align: center;
+      margin-bottom: var(--space-12);
+    }
+
+    .values__headline {
+      font-size: var(--font-size-4xl);
+      font-weight: 800;
+      line-height: 1.2;
+      color: var(--color-text);
+      margin-bottom: var(--space-4);
+    }
+
+    .values__sub {
+      font-size: var(--font-size-lg);
+      color: var(--color-text-muted);
+      max-width: 520px;
+      margin-inline: auto;
+    }
+
+    .values__grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: var(--space-6);
+    }
+
+    .value-card {
+      background: var(--color-surface);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-xl);
+      padding: var(--space-8);
+      transition: box-shadow 0.2s, border-color 0.2s, transform 0.2s;
+    }
+
+    .value-card:hover {
+      box-shadow: var(--shadow-lg);
+      border-color: var(--color-primary-light);
+      transform: translateY(-3px);
+    }
+
+    .value-card__icon {
+      width: 52px;
+      height: 52px;
+      border-radius: var(--radius-lg);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: var(--space-6);
+    }
+
+    .value-card__icon svg {
+      width: 24px;
+      height: 24px;
+      fill: none;
+      stroke-width: 1.75;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+
+    .value-card__icon--primary {
+      background: var(--color-primary-light);
+    }
+
+    .value-card__icon--primary svg { stroke: var(--color-primary); }
+
+    .value-card__icon--accent {
+      background: rgba(13, 148, 136, 0.1);
+    }
+
+    .value-card__icon--accent svg { stroke: var(--color-accent); }
+
+    .value-card__icon--amber {
+      background: rgba(245, 158, 11, 0.1);
+    }
+
+    .value-card__icon--amber svg { stroke: var(--color-warning); }
+
+    .value-card__number {
+      font-size: var(--font-size-xs);
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--color-text-light);
+      margin-bottom: var(--space-2);
+      font-family: var(--font-family-mono);
+    }
+
+    .value-card__title {
+      font-size: var(--font-size-xl);
+      font-weight: 800;
+      color: var(--color-text);
+      margin-bottom: var(--space-4);
+    }
+
+    .value-card__body {
+      font-size: var(--font-size-base);
+      color: var(--color-text-muted);
+      line-height: 1.75;
+    }
+
+    /* ─── Contact Teaser ─────────────────────────────────────────── */
+    .contact-teaser {
+      background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-dark) 60%, #1e3a5f 100%);
+      border-radius: var(--radius-xl);
+      padding: var(--space-16) var(--space-12);
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+    }
+
+    /* Decorative circle accents */
+    .contact-teaser::before {
+      content: '';
+      position: absolute;
+      top: -80px;
+      right: -80px;
+      width: 300px;
+      height: 300px;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.05);
+      pointer-events: none;
+    }
+
+    .contact-teaser::after {
+      content: '';
+      position: absolute;
+      bottom: -60px;
+      left: -60px;
+      width: 220px;
+      height: 220px;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.04);
+      pointer-events: none;
+    }
+
+    .contact-teaser__inner {
+      position: relative;
+      z-index: 1;
+    }
+
+    .contact-teaser__eyebrow {
+      font-size: var(--font-size-sm);
+      font-weight: 600;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: var(--color-primary-light);
+      margin-bottom: var(--space-4);
+    }
+
+    .contact-teaser__title {
+      font-size: clamp(var(--font-size-2xl), 4vw, var(--font-size-4xl));
+      font-weight: 800;
+      color: #fff;
+      line-height: 1.2;
+      margin-bottom: var(--space-5);
+    }
+
+    .contact-teaser__body {
+      font-size: var(--font-size-lg);
+      color: rgba(255,255,255,0.75);
+      max-width: 500px;
+      margin-inline: auto;
+      line-height: 1.7;
+      margin-bottom: var(--space-10);
+    }
+
+    .contact-teaser__actions {
+      display: flex;
+      justify-content: center;
+      gap: var(--space-4);
+      flex-wrap: wrap;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: var(--space-2);
+      padding: var(--space-3) var(--space-8);
+      border-radius: var(--radius-md);
+      font-size: var(--font-size-base);
+      font-weight: 600;
+      cursor: pointer;
+      border: none;
+      transition: background 0.15s, color 0.15s, box-shadow 0.15s, transform 0.1s;
+      text-decoration: none;
+    }
+
+    .btn:active { transform: scale(0.98); }
+
+    .btn--white {
+      background: #fff;
+      color: var(--color-primary-dark);
+    }
+
+    .btn--white:hover {
+      background: var(--color-primary-light);
+    }
+
+    .btn--outline-white {
+      background: transparent;
+      color: #fff;
+      border: 2px solid rgba(255,255,255,0.5);
+    }
+
+    .btn--outline-white:hover {
+      background: rgba(255,255,255,0.1);
+      border-color: rgba(255,255,255,0.8);
+    }
+
+    /* ─── Footer ─────────────────────────────────────────────────── */
+    .footer {
+      background: var(--color-surface-dark);
+      padding-block: var(--space-12) var(--space-8);
+      color: var(--color-text-light);
+    }
+
+    .footer__grid {
+      display: grid;
+      grid-template-columns: 1.5fr 1fr 1fr 1fr;
+      gap: var(--space-10);
+      margin-bottom: var(--space-12);
+    }
+
+    .footer__brand-name {
+      font-size: var(--font-size-base);
+      font-weight: 700;
+      color: #fff;
+      margin-bottom: var(--space-3);
+    }
+
+    .footer__brand-desc {
+      font-size: var(--font-size-sm);
+      line-height: 1.7;
+      color: var(--color-text-light);
+      max-width: 260px;
+    }
+
+    .footer__col-title {
+      font-size: var(--font-size-sm);
+      font-weight: 600;
+      color: #fff;
+      margin-bottom: var(--space-4);
+      letter-spacing: 0.03em;
+    }
+
+    .footer__links {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-3);
+    }
+
+    .footer__links a {
+      font-size: var(--font-size-sm);
+      color: var(--color-text-light);
+      transition: color 0.15s;
+    }
+
+    .footer__links a:hover { color: #fff; }
+
+    .footer__bottom {
+      border-top: 1px solid rgba(255,255,255,0.07);
+      padding-top: var(--space-6);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: var(--space-4);
+    }
+
+    .footer__copy {
+      font-size: var(--font-size-xs);
+      color: var(--color-text-light);
+    }
+
+    .footer__bottom-links {
+      display: flex;
+      gap: var(--space-5);
+      list-style: none;
+    }
+
+    .footer__bottom-links a {
+      font-size: var(--font-size-xs);
+      color: var(--color-text-light);
+      transition: color 0.15s;
+    }
+
+    .footer__bottom-links a:hover { color: #fff; }
+
+    /* ─── Responsive ─────────────────────────────────────────────── */
+    @media (max-width: 1024px) {
+      .story {
+        grid-template-columns: 1fr;
+        gap: var(--space-10);
+      }
+
+      .story__card {
+        position: static;
+        max-width: 480px;
+      }
+
+      .tech {
+        grid-template-columns: 1fr;
+      }
+
+      .footer__grid {
+        grid-template-columns: 1fr 1fr;
+        gap: var(--space-8);
+      }
+    }
+
+    @media (max-width: 768px) {
+      .section { padding-block: var(--space-16); }
+
+      .nav__links, .nav__cta { display: none; }
+
+      .nav__toggle { display: flex; }
+
+      /* Mobile nav open state */
+      .nav__links.open {
+        display: flex;
+        flex-direction: column;
+        position: absolute;
+        top: var(--nav-height);
+        left: 0;
+        right: 0;
+        background: var(--color-surface);
+        border-bottom: 1px solid var(--color-border);
+        padding: var(--space-4);
+        gap: var(--space-1);
+        z-index: 99;
+      }
+
+      .values__grid {
+        grid-template-columns: 1fr;
+        gap: var(--space-5);
+      }
+
+      .tech {
+        padding: var(--space-8);
+      }
+
+      .contact-teaser {
+        padding: var(--space-10) var(--space-6);
+      }
+
+      .footer__grid {
+        grid-template-columns: 1fr;
+        gap: var(--space-8);
+      }
+
+      .footer__bottom {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+    }
+
+    @media (max-width: 640px) {
+      .story__text h2 { font-size: var(--font-size-2xl); }
+      .mission__body { font-size: var(--font-size-lg); }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ─── Navigation ──────────────────────────────────────────────── -->
+  <header>
+    <nav class="nav" role="navigation" aria-label="Main navigation">
+      <div class="container nav__inner">
+
+        <!-- Brand -->
+        <a href="index.html" class="nav__brand" aria-label="The Production Shop home">
+          <div class="nav__logo" aria-hidden="true">
+            <!-- Simple tool/gear icon -->
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z"/>
+              <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1Z"/>
+            </svg>
+          </div>
+          The Production Shop
+        </a>
+
+        <!-- Desktop links -->
+        <ul class="nav__links" id="navLinks">
+          <li><a href="index.html">Home</a></li>
+          <li><a href="features.html">Features</a></li>
+          <li><a href="pricing.html">Pricing</a></li>
+          <li><a href="about.html" class="active" aria-current="page">About</a></li>
+          <li><a href="contact.html">Contact</a></li>
+        </ul>
+
+        <!-- CTA + mobile toggle -->
+        <a target="_blank" rel="noopener" href="contact.html" class="nav__cta">Get Early Access</a>
+        <button class="nav__toggle" id="navToggle" aria-expanded="false" aria-controls="navLinks" aria-label="Toggle navigation">
+          <span></span>
+          <span></span>
+          <span></span>
+        </button>
+
+      </div>
+    </nav>
+  </header>
+
+
+  <main>
+
+    <!-- ─── Page Header ──────────────────────────────────────────── -->
+    <section class="page-header" aria-labelledby="page-title">
+      <div class="container page-header__inner">
+        <p class="page-header__eyebrow">About Us</p>
+        <h1 class="page-header__title" id="page-title">
+          Built by a luthier,<br>
+          <em>engineered for production.</em>
+        </h1>
+        <p class="page-header__subtitle">
+          This isn't software built by someone who read about guitar making. It was written late at night, in a shop full of sawdust and G-code, by someone who needed it to actually work.
+        </p>
+      </div>
+    </section>
+
+
+    <!-- ─── Story Section ────────────────────────────────────────── -->
+    <section class="section" aria-labelledby="story-heading">
+      <div class="container">
+        <div class="story">
+
+          <!-- Narrative text -->
+          <div class="story__text">
+            <h2 id="story-heading">How it started — and why it matters.</h2>
+
+            <p>
+              I spent the first decade of my career as a licensed Professional Engineer doing hydraulic modeling — fluid dynamics, pipeline networks, the kind of work where the math has to be exactly right or something breaks. I used tools like EPANET, ran simulations, validated outputs. Precision wasn't a preference; it was a professional requirement.
+            </p>
+
+            <p>
+              Then I started building guitars. What started as a weekend hobby became an obsession, and the obsession turned into a small production operation. I was running a CNC router, managing a parts inventory, quoting custom orders, and trying to keep track of which neck profile went with which body blank for which customer. The craft side of things felt natural. The business side was chaos.
+            </p>
+
+            <p>
+              I looked at every tool on the market. ERP systems designed for furniture factories — overkill and completely ignorant of instrument geometry. Lutherie-specific apps — beautifully designed for one-off builds, totally useless at 10 or 20 guitars a month. CAM software — powerful, but completely siloed from my order list, my wood stock, or my customer records.
+            </p>
+
+            <p>
+              So I built my own. The Production Shop started as a collection of Python scripts duct-taped together with spreadsheets. Over two years, it became something I'd actually want to sell to another builder. It speaks the language of lutherie — neck relief, scale length, fret slot geometry — while also handling the language of production: job costing, machine scheduling, material yield, margin tracking.
+            </p>
+
+            <p>
+              If you've ever quoted a guitar order on the back of a sticky note, you'll understand why this exists.
+            </p>
+          </div>
+
+          <!-- Credentials card -->
+          <aside class="story__card" aria-label="Founder credentials">
+            <div class="story__card-avatar" aria-hidden="true">🎸</div>
+            <p class="story__card-name">The Founder</p>
+            <p class="story__card-title">Licensed P.E. · Luthier · CNC Operator · Software Builder</p>
+
+            <div class="story__card-stats">
+
+              <div class="story__stat">
+                <div class="story__stat-icon" aria-hidden="true">
+                  <svg viewBox="0 0 24 24">
+                    <path d="M12 2L2 7l10 5 10-5-10-5Z"/>
+                    <path d="M2 17l10 5 10-5"/>
+                    <path d="M2 12l10 5 10-5"/>
+                  </svg>
+                </div>
+                <div class="story__stat-label">
+                  <strong>Professional Engineer (P.E.)</strong>
+                  Licensed in hydraulic &amp; civil engineering
+                </div>
+              </div>
+
+              <div class="story__stat">
+                <div class="story__stat-icon" aria-hidden="true">
+                  <svg viewBox="0 0 24 24">
+                    <rect x="3" y="3" width="18" height="18" rx="2"/>
+                    <path d="M3 9h18M9 21V9"/>
+                  </svg>
+                </div>
+                <div class="story__stat-label">
+                  <strong>CNC Machining</strong>
+                  Router, spindle work, G-code authoring
+                </div>
+              </div>
+
+              <div class="story__stat">
+                <div class="story__stat-icon" aria-hidden="true">
+                  <svg viewBox="0 0 24 24">
+                    <path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"/>
+                  </svg>
+                </div>
+                <div class="story__stat-label">
+                  <strong>Guitar Builder</strong>
+                  Electrics, acoustics, production &amp; custom
+                </div>
+              </div>
+
+              <div class="story__stat">
+                <div class="story__stat-icon" aria-hidden="true">
+                  <svg viewBox="0 0 24 24">
+                    <polyline points="16 18 22 12 16 6"/>
+                    <polyline points="8 6 2 12 8 18"/>
+                  </svg>
+                </div>
+                <div class="story__stat-label">
+                  <strong>Software Developer</strong>
+                  Vue 3 frontend · Python backend
+                </div>
+              </div>
+
+            </div>
+          </aside>
+
+        </div>
+      </div>
+    </section>
+
+
+    <!-- ─── Mission Section ──────────────────────────────────────── -->
+    <section class="section section--alt" aria-labelledby="mission-heading">
+      <div class="container">
+        <div class="mission__inner">
+          <p class="section-label">Our Mission</p>
+          <h2 class="mission__headline" id="mission-heading">
+            One platform for the<br>whole instrument business.
+          </h2>
+          <blockquote class="mission__body">
+            The Production Shop exists to give independent instrument makers the same operational discipline as a modern manufacturing company — without making them think like one. We believe that craft and precision aren't in conflict. When a luthier has clear visibility into their costs, their machine time, and their material stock, they make better guitars, price them more confidently, and build a business that sustains the work they love. That's what we're here for.
+          </blockquote>
+        </div>
+      </div>
+    </section>
+
+
+    <!-- ─── Technology Section ───────────────────────────────────── -->
+    <section class="section" aria-labelledby="tech-heading">
+      <div class="container">
+        <div class="tech">
+
+          <div class="tech__text">
+            <p class="section-label">Under the Hood</p>
+            <h2 class="tech__headline" id="tech-heading">Engineering-grade precision, applied to lutherie.</h2>
+            <p class="tech__body">
+              The computational backbone of The Production Shop draws directly from the methods I used in hydraulic engineering — iterative solvers, tolerance-aware calculations, and validation layers that flag inconsistencies before they reach the shop floor. The same rigor that models a water distribution network is what ensures your fret slot positions are correct to four decimal places.
+            </p>
+          </div>
+
+          <div class="tech__stack" aria-label="Technology stack">
+
+            <div class="tech__item">
+              <span class="tech__item-badge tech__item-badge--blue">Vue 3</span>
+              <div>
+                <p class="tech__item-label">Reactive Frontend</p>
+                <p class="tech__item-desc">Composable, fast, and designed for complex interactive workflows like CNC path previews and real-time job cost modeling.</p>
+              </div>
+            </div>
+
+            <div class="tech__item">
+              <span class="tech__item-badge tech__item-badge--green">Python</span>
+              <div>
+                <p class="tech__item-label">Engineering Backend</p>
+                <p class="tech__item-desc">A Python backend handles all geometric computation, G-code generation, and business logic with the same rigor as professional engineering software.</p>
+              </div>
+            </div>
+
+            <div class="tech__item">
+              <span class="tech__item-badge tech__item-badge--amber">EPANET</span>
+              <div>
+                <p class="tech__item-label">Precision Philosophy</p>
+                <p class="tech__item-desc">EPANET-grade methodology applied to lutherie calculations — iterative solvers, validated tolerances, and results you can machine from directly.</p>
+              </div>
+            </div>
+
+          </div>
+
+        </div>
+      </div>
+    </section>
+
+
+    <!-- ─── Values Section ───────────────────────────────────────── -->
+    <section class="section section--alt" aria-labelledby="values-heading">
+      <div class="container">
+
+        <div class="values__header">
+          <p class="section-label">What We Stand For</p>
+          <h2 class="values__headline" id="values-heading">Built on three ideas.</h2>
+          <p class="values__sub">
+            These aren't marketing words. They're the principles that shaped every product decision we've made.
+          </p>
+        </div>
+
+        <div class="values__grid">
+
+          <!-- Value 1: Craft First -->
+          <article class="value-card">
+            <div class="value-card__icon value-card__icon--primary" aria-hidden="true">
+              <svg viewBox="0 0 24 24">
+                <!-- Hand tool / plane icon -->
+                <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76Z"/>
+              </svg>
+            </div>
+            <p class="value-card__number">01</p>
+            <h3 class="value-card__title">Craft First</h3>
+            <p class="value-card__body">
+              The software serves the build, not the other way around. Every UI decision starts with the question: does this make the work of instrument making easier, or does it just make the software look busier? We build for builders, which means we hold the tool to the same standard you'd apply to a hand plane — it should do exactly what it's supposed to do, without fighting you.
+            </p>
+          </article>
+
+          <!-- Value 2: Engineering Precision -->
+          <article class="value-card">
+            <div class="value-card__icon value-card__icon--accent" aria-hidden="true">
+              <svg viewBox="0 0 24 24">
+                <!-- Precision/target icon -->
+                <circle cx="12" cy="12" r="10"/>
+                <circle cx="12" cy="12" r="6"/>
+                <circle cx="12" cy="12" r="2"/>
+              </svg>
+            </div>
+            <p class="value-card__number">02</p>
+            <h3 class="value-card__title">Engineering Precision</h3>
+            <p class="value-card__body">
+              Tolerances matter. Whether it's a fret slot at the 22nd position or a material cost variance in a job costing report, approximate isn't good enough. We apply the same computational discipline to lutherie that civil engineers apply to infrastructure — not because we're showing off, but because imprecision has a cost, and that cost usually lands on the builder.
+            </p>
+          </article>
+
+          <!-- Value 3: Builder Community -->
+          <article class="value-card">
+            <div class="value-card__icon value-card__icon--amber" aria-hidden="true">
+              <svg viewBox="0 0 24 24">
+                <!-- People/community icon -->
+                <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+                <circle cx="9" cy="7" r="4"/>
+                <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+                <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+              </svg>
+            </div>
+            <p class="value-card__number">03</p>
+            <h3 class="value-card__title">Builder Community</h3>
+            <p class="value-card__body">
+              The best ideas in this platform came from conversations with other builders — people I've met at trade shows, in online forums, or who emailed me after reading a post I wrote about jig design. The Production Shop isn't developed in isolation. If you have a workflow problem, a feature idea, or a better way to think about something, we genuinely want to hear it. That feedback loop is how good tools get made.
+            </p>
+          </article>
+
+        </div>
+      </div>
+    </section>
+
+
+    <!-- ─── Contact Teaser ───────────────────────────────────────── -->
+    <section class="section" aria-labelledby="contact-teaser-heading">
+      <div class="container">
+        <div class="contact-teaser">
+          <div class="contact-teaser__inner">
+            <p class="contact-teaser__eyebrow">Get in Touch</p>
+            <h2 class="contact-teaser__title" id="contact-teaser-heading">
+              Have a question or want<br>to talk shop?
+            </h2>
+            <p class="contact-teaser__body">
+              I'm still in the shop most days. Whether you're curious about early access, have a workflow question, or just want to geek out about neck angles — reach out. I read every message myself.
+            </p>
+            <div class="contact-teaser__actions">
+              <a href="contact.html" class="btn btn--white">Send a Message</a>
+              <a href="features.html" class="btn btn--outline-white">Explore Features</a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+
+  <!-- ─── Footer ──────────────────────────────────────────────────── -->
+  <footer class="footer" role="contentinfo">
+    <div class="container">
+
+      <div class="footer__grid">
+
+        <!-- Brand column -->
+        <div>
+          <p class="footer__brand-name">The Production Shop</p>
+          <p class="footer__brand-desc">
+            ERP and CAM platform for professional instrument makers. Design, machine, and run your business — all in one place.
+          </p>
+        </div>
+
+        <!-- Product links -->
+        <div>
+          <p class="footer__col-title">Product</p>
+          <ul class="footer__links">
+            <li><a href="features.html">Features</a></li>
+            <li><a href="pricing.html">Pricing</a></li>
+            <li><a href="index.html#how-it-works">How It Works</a></li>
+          </ul>
+        </div>
+
+        <!-- Company links -->
+        <div>
+          <p class="footer__col-title">Company</p>
+          <ul class="footer__links">
+            <li><a href="about.html">About</a></li>
+            <li><a href="contact.html">Contact</a></li>
+          </ul>
+        </div>
+
+        <!-- Contact info -->
+        <div>
+          <p class="footer__col-title">Stay Updated</p>
+          <ul class="footer__links">
+            <li><a href="contact.html">Early Access List</a></li>
+            <li><a href="contact.html">Send Feedback</a></li>
+          </ul>
+        </div>
+
+      </div>
+
+      <!-- Bottom bar -->
+      <div class="footer__bottom">
+        <p class="footer__copy">
+          &copy; <span id="footerYear"></span> The Production Shop. All rights reserved.
+        </p>
+        <ul class="footer__bottom-links">
+          <li><a href="#">Privacy Policy</a></li>
+          <li><a href="#">Terms of Service</a></li>
+        </ul>
+      </div>
+
+    </div>
+  </footer>
+
+
+  <!-- ─── JavaScript ───────────────────────────────────────────────── -->
+  <script>
+    // ── Dynamic copyright year
+    document.getElementById('footerYear').textContent = new Date().getFullYear();
+
+    // ── Mobile nav toggle
+    const navToggle = document.getElementById('navToggle');
+    const navLinks  = document.getElementById('navLinks');
+
+    navToggle.addEventListener('click', function () {
+      const isOpen = navLinks.classList.toggle('open');
+      navToggle.setAttribute('aria-expanded', isOpen);
+    });
+
+    // Close mobile nav when a link is clicked
+    navLinks.querySelectorAll('a').forEach(function (link) {
+      link.addEventListener('click', function () {
+        navLinks.classList.remove('open');
+        navToggle.setAttribute('aria-expanded', 'false');
+      });
+    });
+
+    // Close mobile nav on outside click
+    document.addEventListener('click', function (e) {
+      if (!navToggle.contains(e.target) && !navLinks.contains(e.target)) {
+        navLinks.classList.remove('open');
+        navToggle.setAttribute('aria-expanded', 'false');
+      }
+    });
+
+    // ── Subtle scroll-reveal for value cards
+    // Uses IntersectionObserver; gracefully degrades if unsupported
+    if ('IntersectionObserver' in window) {
+      const cards = document.querySelectorAll('.value-card, .tech__item');
+
+      // Initially hide the elements slightly
+      cards.forEach(function (card) {
+        card.style.opacity = '0';
+        card.style.transform = 'translateY(20px)';
+        card.style.transition = 'opacity 0.45s ease, transform 0.45s ease';
+      });
+
+      const observer = new IntersectionObserver(function (entries) {
+        entries.forEach(function (entry) {
+          if (entry.isIntersecting) {
+            entry.target.style.opacity = '1';
+            entry.target.style.transform = 'translateY(0)';
+            observer.unobserve(entry.target);
+          }
+        });
+      }, { threshold: 0.12 });
+
+      cards.forEach(function (card) { observer.observe(card); });
+    }
+  </script>
+
+</body>
+</html>
