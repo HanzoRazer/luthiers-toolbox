@@ -203,12 +203,12 @@
       "name": "Fender Jazzmaster",
       "category": "electric",
       "dimensions_mm": {
-        "width": 340.0,
-        "height": 470.0
+        "width": 272.0,
+        "height": 423.0
       },
-      "points": 16,
+      "points": 48,
       "dxf": "electric/jazzmaster_body.dxf",
-      "source": "AI vision extraction from PDF plans"
+      "source": "AI vision extraction (ezdxf R12 LINE format)"
     },
     "mustang": {
       "name": "Fender Mustang",
