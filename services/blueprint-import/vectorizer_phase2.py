@@ -333,35 +333,86 @@ class GuitarFeatureClassifier:
 
     ACOUSTIC_FEATURES = {
         'BODY_OUTLINE': {
-            'max_range': (480, 560),
-            'min_range': (350, 450),
+            'max_range': (450, 560),
+            'min_range': (320, 450),
             'description': 'Acoustic guitar body outline'
         },
+        'D_HOLE': {
+            # Selmer/Maccaferri D-shaped soundhole: ~200x100mm
+            'max_range': (180, 230),
+            'min_range': (80, 120),
+            'description': 'D-shaped soundhole (Selmer/Maccaferri)'
+        },
         'SOUNDHOLE': {
-            'max_range': (90, 110),
-            'min_range': (90, 110),
-            'description': 'Soundhole (circular)'
+            # Standard round soundhole: ~100mm diameter
+            'max_range': (90, 120),
+            'min_range': (90, 120),
+            'description': 'Round soundhole'
+        },
+        'F_HOLE': {
+            # Archtop F-holes: ~150x40mm each
+            'max_range': (130, 180),
+            'min_range': (30, 55),
+            'description': 'F-hole (archtop)'
+        },
+        'NECK_PROFILE': {
+            # Neck side views: ~180-200mm long, 80-120mm wide area
+            'max_range': (160, 210),
+            'min_range': (70, 130),
+            'description': 'Neck profile/cross-section'
+        },
+        'TAILPIECE': {
+            # Selmer/archtop tailpiece: ~130-150mm long
+            'max_range': (120, 160),
+            'min_range': (35, 60),
+            'description': 'Tailpiece area'
+        },
+        'BRIDGE': {
+            # Acoustic bridge: ~80-100mm wide, 60-90mm area
+            'max_range': (80, 110),
+            'min_range': (55, 90),
+            'description': 'Bridge'
+        },
+        'ROSETTE': {
+            # Decorative rosette ring: ~65-80mm
+            'max_range': (60, 90),
+            'min_range': (60, 90),
+            'description': 'Rosette decoration'
+        },
+        'PICKGUARD': {
+            # Floating or attached pickguard
+            'max_range': (100, 160),
+            'min_range': (60, 100),
+            'description': 'Pickguard'
+        },
+        'BRACING': {
+            # X-bracing, ladder bracing, etc: long thin pieces
+            'max_range': (200, 400),
+            'min_range': (10, 45),
+            'description': 'Bracing pattern'
         },
         'BRIDGE_PLATE': {
             'max_range': (140, 180),
             'min_range': (30, 50),
-            'description': 'Bridge plate area'
+            'description': 'Bridge plate reinforcement'
         },
-        'BRACING': {
-            'max_range': (200, 400),
-            'min_range': (10, 30),
-            'description': 'Bracing pattern'
+        'HEEL_BLOCK': {
+            'max_range': (60, 100),
+            'min_range': (40, 70),
+            'description': 'Neck heel block'
         }
     }
 
-    def __init__(self, instrument_type: str = 'electric'):
+    def __init__(self, instrument_type: str = 'electric', strict: bool = False):
         """
         Initialize classifier for specific instrument type.
 
         Args:
             instrument_type: 'electric', 'acoustic', or 'auto'
+            strict: If True, classify into specific features. If False, use broad size categories.
         """
         self.instrument_type = instrument_type
+        self.strict = strict
         self.features = self.ELECTRIC_FEATURES if instrument_type == 'electric' else self.ACOUSTIC_FEATURES
 
     def classify_contour(
@@ -401,7 +452,20 @@ class GuitarFeatureClassifier:
         aspect_ratio = max_dim / min_dim if min_dim > 0 else 1.0
         metadata['aspect_ratio'] = aspect_ratio
 
-        # Check against feature definitions
+        # Non-strict mode: use broad size categories to capture ALL features
+        if not self.strict:
+            if max_dim > 400:
+                return 'BODY', metadata
+            elif max_dim > 150:
+                return 'LARGE_FEATURE', metadata
+            elif max_dim > 80:
+                return 'MEDIUM_FEATURE', metadata
+            elif max_dim > 40:
+                return 'SMALL_FEATURE', metadata
+            else:
+                return 'DETAIL', metadata
+
+        # Strict mode: try to match specific feature definitions
         for feature_name, ranges in self.features.items():
             max_range = ranges['max_range']
             min_range = ranges['min_range']
@@ -420,7 +484,7 @@ class GuitarFeatureClassifier:
             metadata['description'] = ranges['description']
             return feature_name, metadata
 
-        # Classify unknown by size
+        # Strict mode fallback: classify unknown by size
         if max_dim > 300:
             return 'LARGE_UNKNOWN', metadata
         elif max_dim > 100:
@@ -1102,7 +1166,8 @@ class Phase2Vectorizer:
         instrument_type: str = 'electric',
         dark_threshold: int = 100,
         simplify_tolerance: float = 0.1,
-        gap_close_size: int = 0
+        gap_close_size: int = 0,
+        strict_classification: bool = False
     ) -> Dict[str, Dict]:
         """
         Extract and classify guitar-specific features from blueprint.
@@ -1123,6 +1188,8 @@ class Phase2Vectorizer:
             dark_threshold: Threshold for dark line extraction (0-255)
             simplify_tolerance: Douglas-Peucker simplification tolerance in mm
             gap_close_size: Morphological closing kernel size (0 = disabled, 5 = recommended for broken lines)
+            strict_classification: If False (default), use broad size categories to capture all features.
+                                   If True, attempt specific feature classification (may miss some features).
 
         Returns:
             Dict mapping layer names to geometry data
@@ -1146,7 +1213,7 @@ class Phase2Vectorizer:
         logger.info(f"Found {len(contours)} raw contours")
 
         # Classify contours
-        classifier = GuitarFeatureClassifier(instrument_type=instrument_type)
+        classifier = GuitarFeatureClassifier(instrument_type=instrument_type, strict=strict_classification)
         classified = classifier.classify_all(contours, mm_per_px, min_area=500)
 
         logger.info("Feature classification:")
@@ -1168,7 +1235,15 @@ class Phase2Vectorizer:
         layers_geometry = {}
 
         # Feature to layer mapping with max counts
+        # Feature to layer mapping with max counts per feature type
         feature_config = {
+            # Broad size categories (non-strict mode) - captures everything
+            'BODY': {'layer': 'BODY', 'max_count': 2},
+            'LARGE_FEATURE': {'layer': 'LARGE_FEATURE', 'max_count': 10},
+            'MEDIUM_FEATURE': {'layer': 'MEDIUM_FEATURE', 'max_count': 15},
+            'SMALL_FEATURE': {'layer': 'SMALL_FEATURE', 'max_count': 20},
+            'DETAIL': {'layer': 'DETAIL', 'max_count': 20},
+            # Electric guitar features (strict mode)
             'BODY_OUTLINE': {'layer': 'BODY_OUTLINE', 'max_count': 1},
             'PICKGUARD': {'layer': 'PICKGUARD', 'max_count': 1},
             'NECK_POCKET': {'layer': 'NECK_POCKET', 'max_count': 2},
@@ -1177,9 +1252,17 @@ class Phase2Vectorizer:
             'BRIDGE_ROUTE': {'layer': 'BRIDGE_ROUTE', 'max_count': 2},
             'JACK_ROUTE': {'layer': 'JACK_ROUTE', 'max_count': 1},
             'RHYTHM_CIRCUIT': {'layer': 'RHYTHM_CIRCUIT', 'max_count': 1},
+            # Acoustic guitar features (strict mode)
+            'D_HOLE': {'layer': 'D_HOLE', 'max_count': 1},
             'SOUNDHOLE': {'layer': 'SOUNDHOLE', 'max_count': 1},
-            'BRIDGE_PLATE': {'layer': 'BRIDGE_PLATE', 'max_count': 1},
+            'F_HOLE': {'layer': 'F_HOLE', 'max_count': 2},
+            'NECK_PROFILE': {'layer': 'NECK_PROFILE', 'max_count': 4},
+            'TAILPIECE': {'layer': 'TAILPIECE', 'max_count': 1},
+            'BRIDGE': {'layer': 'BRIDGE', 'max_count': 2},
+            'ROSETTE': {'layer': 'ROSETTE', 'max_count': 2},
             'BRACING': {'layer': 'BRACING', 'max_count': 10},
+            'BRIDGE_PLATE': {'layer': 'BRIDGE_PLATE', 'max_count': 1},
+            'HEEL_BLOCK': {'layer': 'HEEL_BLOCK', 'max_count': 1},
         }
 
         for feature_name, config in feature_config.items():
