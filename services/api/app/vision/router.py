@@ -194,7 +194,7 @@ async def segment_guitar(
     file: UploadFile = File(..., description="Guitar image (PNG, JPG, WebP)"),
     target_width_mm: float = Form(400.0, description="Target body width in mm"),
     simplify_tolerance_mm: float = Form(1.0, description="Simplification tolerance in mm"),
-    guitar_category: str = Form("auto", description="Guitar type: auto, acoustic, electric"),
+    guitar_category: str = Form("auto", description="Guitar type: auto, acoustic, electric, other"),
     output_format: str = Form("json", description="Output: json, dxf, svg, all"),
 ) -> SegmentResponse:
     """Segment guitar body from uploaded image using AI vision."""
