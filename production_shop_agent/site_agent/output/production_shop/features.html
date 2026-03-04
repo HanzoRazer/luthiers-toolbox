@@ -1,0 +1,1892 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Features – The Production Shop</title>
+  <meta name="description" content="Explore the full feature set of The Production Shop: Design tools, CAM workflows, Production monitoring, and Business operations for professional luthiers." />
+  <style>
+    /* ─── Design Tokens ─────────────────────────────────────────── */
+    :root {
+      --color-primary: #2563eb;
+      --color-primary-dark: #1d4ed8;
+      --color-primary-light: #dbeafe;
+      --color-accent: #0d9488;
+      --color-accent-dark: #0f766e;
+      --color-surface: #ffffff;
+      --color-surface-alt: #f8fafc;
+      --color-surface-dark: #0f172a;
+      --color-text: #1e293b;
+      --color-text-muted: #64748b;
+      --color-text-light: #94a3b8;
+      --color-border: #e2e8f0;
+      --color-success: #10b981;
+      --color-warning: #f59e0b;
+      --color-danger: #ef4444;
+
+      --font-family-sans: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      --font-family-mono: ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, monospace;
+
+      --font-size-xs:   0.75rem;
+      --font-size-sm:   0.875rem;
+      --font-size-base: 1rem;
+      --font-size-lg:   1.125rem;
+      --font-size-xl:   1.25rem;
+      --font-size-2xl:  1.5rem;
+      --font-size-3xl:  1.875rem;
+      --font-size-4xl:  2.25rem;
+      --font-size-5xl:  3rem;
+
+      --space-1:  0.25rem;
+      --space-2:  0.5rem;
+      --space-3:  0.75rem;
+      --space-4:  1rem;
+      --space-5:  1.25rem;
+      --space-6:  1.5rem;
+      --space-8:  2rem;
+      --space-10: 2.5rem;
+      --space-12: 3rem;
+      --space-16: 4rem;
+      --space-20: 5rem;
+      --space-24: 6rem;
+
+      --radius-sm: 0.375rem;
+      --radius-md: 0.5rem;
+      --radius-lg: 0.75rem;
+      --radius-xl: 1rem;
+
+      --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+      --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.07), 0 2px 4px -2px rgb(0 0 0 / 0.05);
+      --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.08), 0 4px 6px -4px rgb(0 0 0 / 0.05);
+    }
+
+    /* ─── Reset ─────────────────────────────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+    body {
+      font-family: var(--font-family-sans);
+      font-size: var(--font-size-base);
+      color: var(--color-text);
+      background: var(--color-surface);
+      line-height: 1.6;
+    }
+    img { display: block; max-width: 100%; }
+    a { color: inherit; text-decoration: none; }
+    ul { list-style: none; }
+
+    /* ─── Utility ────────────────────────────────────────────────── */
+    .container {
+      width: 100%;
+      max-width: 1140px;
+      margin-inline: auto;
+      padding-inline: var(--space-6);
+    }
+
+    /* ─── Navigation ─────────────────────────────────────────────── */
+    .nav {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      background: var(--color-surface);
+      border-bottom: 1px solid var(--color-border);
+      box-shadow: var(--shadow-sm);
+    }
+    .nav__inner {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      height: 64px;
+    }
+    .nav__logo {
+      font-size: var(--font-size-lg);
+      font-weight: 700;
+      color: var(--color-text);
+      letter-spacing: -0.02em;
+      display: flex;
+      align-items: center;
+      gap: var(--space-2);
+    }
+    .nav__logo-mark {
+      width: 32px;
+      height: 32px;
+      background: var(--color-primary);
+      border-radius: var(--radius-sm);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .nav__logo-mark svg { width: 18px; height: 18px; }
+    .nav__links {
+      display: flex;
+      align-items: center;
+      gap: var(--space-1);
+    }
+    .nav__links a {
+      font-size: var(--font-size-sm);
+      font-weight: 500;
+      color: var(--color-text-muted);
+      padding: var(--space-2) var(--space-3);
+      border-radius: var(--radius-sm);
+      transition: color 0.15s, background 0.15s;
+    }
+    .nav__links a:hover { color: var(--color-text); background: var(--color-surface-alt); }
+    .nav__links a.active { color: var(--color-primary); background: var(--color-primary-light); }
+    .nav__cta {
+      background: var(--color-primary);
+      color: var(--color-surface) !important;
+      padding: var(--space-2) var(--space-5) !important;
+      border-radius: var(--radius-md) !important;
+      font-weight: 600 !important;
+      transition: background 0.15s !important;
+    }
+    .nav__cta:hover { background: var(--color-primary-dark) !important; color: var(--color-surface) !important; }
+
+    /* Mobile nav toggle */
+    .nav__toggle {
+      display: none;
+      background: none;
+      border: none;
+      cursor: pointer;
+      padding: var(--space-2);
+      color: var(--color-text);
+    }
+    .nav__toggle svg { width: 22px; height: 22px; }
+
+    @media (max-width: 768px) {
+      .nav__toggle { display: flex; }
+      .nav__links {
+        display: none;
+        position: absolute;
+        top: 64px;
+        left: 0;
+        right: 0;
+        background: var(--color-surface);
+        border-bottom: 1px solid var(--color-border);
+        flex-direction: column;
+        align-items: stretch;
+        padding: var(--space-4);
+        gap: var(--space-1);
+      }
+      .nav__links.open { display: flex; }
+      .nav__links a { padding: var(--space-3) var(--space-4); }
+    }
+
+    /* ─── Page Header ────────────────────────────────────────────── */
+    .page-header {
+      background: linear-gradient(135deg, var(--color-surface-dark) 0%, #1e3a5f 100%);
+      color: var(--color-surface);
+      padding: var(--space-20) 0 var(--space-16);
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+    }
+    /* Decorative grid overlay */
+    .page-header::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background-image:
+        linear-gradient(rgb(255 255 255 / 0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgb(255 255 255 / 0.03) 1px, transparent 1px);
+      background-size: 40px 40px;
+      pointer-events: none;
+    }
+    .page-header__eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: var(--space-2);
+      font-size: var(--font-size-sm);
+      font-weight: 600;
+      color: var(--color-accent);
+      background: rgb(13 148 136 / 0.15);
+      border: 1px solid rgb(13 148 136 / 0.3);
+      padding: var(--space-1) var(--space-4);
+      border-radius: 99px;
+      margin-bottom: var(--space-6);
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+    }
+    .page-header h1 {
+      font-size: clamp(var(--font-size-3xl), 5vw, var(--font-size-5xl));
+      font-weight: 800;
+      line-height: 1.15;
+      letter-spacing: -0.03em;
+      margin-bottom: var(--space-6);
+    }
+    .page-header p {
+      font-size: var(--font-size-lg);
+      color: var(--color-text-light);
+      max-width: 560px;
+      margin-inline: auto;
+    }
+
+    /* ─── Tab System ─────────────────────────────────────────────── */
+    .tabs-section {
+      background: var(--color-surface-alt);
+      padding: var(--space-16) 0 var(--space-24);
+    }
+
+    .tab-switcher {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: var(--space-2);
+      background: var(--color-surface);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-xl);
+      padding: var(--space-2);
+      width: fit-content;
+      margin-inline: auto;
+      margin-bottom: var(--space-12);
+      box-shadow: var(--shadow-sm);
+      flex-wrap: wrap;
+    }
+
+    .tab-btn {
+      display: flex;
+      align-items: center;
+      gap: var(--space-2);
+      padding: var(--space-3) var(--space-5);
+      border: none;
+      background: none;
+      border-radius: var(--radius-lg);
+      font-size: var(--font-size-sm);
+      font-weight: 600;
+      color: var(--color-text-muted);
+      cursor: pointer;
+      transition: all 0.2s;
+      white-space: nowrap;
+    }
+    .tab-btn svg { width: 16px; height: 16px; flex-shrink: 0; }
+    .tab-btn:hover { color: var(--color-text); background: var(--color-surface-alt); }
+    .tab-btn.active {
+      background: var(--color-primary);
+      color: var(--color-surface);
+      box-shadow: var(--shadow-md);
+    }
+    /* Per-tab accent colors when active */
+    .tab-btn[data-tab="calculators"].active { background: #10b981; }
+    .tab-btn[data-tab="cam"].active    { background: var(--color-accent); }
+    .tab-btn[data-tab="production"].active { background: #7c3aed; }
+    .tab-btn[data-tab="business"].active { background: var(--color-warning); color: var(--color-text); }
+
+    /* ─── Tab Panel ──────────────────────────────────────────────── */
+    .tab-panel { display: none; }
+    .tab-panel.active { display: block; }
+
+    /* ─── Panel Intro ────────────────────────────────────────────── */
+    .panel-intro {
+      text-align: center;
+      margin-bottom: var(--space-12);
+    }
+    .panel-intro__badge {
+      display: inline-flex;
+      align-items: center;
+      gap: var(--space-2);
+      font-size: var(--font-size-xs);
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      padding: var(--space-1) var(--space-3);
+      border-radius: 99px;
+      margin-bottom: var(--space-4);
+    }
+    /* Badge color variants */
+    .panel-intro__badge--design {
+      background: var(--color-primary-light);
+      color: var(--color-primary-dark);
+    }
+    .panel-intro__badge--calculators {
+      background: rgb(16 185 129 / 0.12);
+      color: #059669;
+    }
+    .panel-intro__badge--cam {
+      background: rgb(13 148 136 / 0.12);
+      color: var(--color-accent-dark);
+    }
+    .panel-intro__badge--production {
+      background: rgb(124 58 237 / 0.1);
+      color: #6d28d9;
+    }
+    .panel-intro__badge--business {
+      background: rgb(245 158 11 / 0.12);
+      color: #b45309;
+    }
+    .panel-intro h2 {
+      font-size: var(--font-size-3xl);
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      margin-bottom: var(--space-4);
+    }
+    .panel-intro p {
+      font-size: var(--font-size-lg);
+      color: var(--color-text-muted);
+      max-width: 520px;
+      margin-inline: auto;
+    }
+
+    /* ─── Feature Grid ───────────────────────────────────────────── */
+    .feature-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      gap: var(--space-6);
+    }
+
+    .feature-card {
+      background: var(--color-surface);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-xl);
+      padding: var(--space-8);
+      transition: box-shadow 0.2s, transform 0.2s;
+      position: relative;
+      overflow: hidden;
+    }
+    .feature-card::after {
+      /* Subtle top-edge accent line */
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 3px;
+      background: var(--card-accent, var(--color-primary));
+      opacity: 0;
+      transition: opacity 0.2s;
+    }
+    .feature-card:hover {
+      box-shadow: var(--shadow-lg);
+      transform: translateY(-2px);
+    }
+    .feature-card:hover::after { opacity: 1; }
+
+    .feature-card__icon {
+      width: 48px;
+      height: 48px;
+      border-radius: var(--radius-lg);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: var(--space-5);
+      flex-shrink: 0;
+    }
+    .feature-card__icon svg { width: 24px; height: 24px; }
+
+    /* Icon bg variants */
+    .icon--design    { background: var(--color-primary-light); color: var(--color-primary); }
+    .icon--cam       { background: rgb(13 148 136 / 0.12); color: var(--color-accent); }
+    .icon--production { background: rgb(124 58 237 / 0.1); color: #7c3aed; }
+    .icon--business  { background: rgb(245 158 11 / 0.12); color: #d97706; }
+
+    .feature-card__title {
+      font-size: var(--font-size-lg);
+      font-weight: 700;
+      margin-bottom: var(--space-3);
+      color: var(--color-text);
+    }
+    .feature-card__desc {
+      font-size: var(--font-size-sm);
+      color: var(--color-text-muted);
+      line-height: 1.7;
+    }
+    .feature-card__cta {
+      display: inline-flex;
+      align-items: center;
+      gap: var(--space-2);
+      margin-top: var(--space-4);
+      font-size: var(--font-size-sm);
+      font-weight: 600;
+      color: var(--color-primary);
+      text-decoration: none;
+      transition: gap 0.2s, color 0.2s;
+    }
+    .feature-card__cta:hover {
+      gap: var(--space-3);
+      color: var(--color-primary-dark);
+    }
+    .feature-card__cta svg {
+      width: 14px;
+      height: 14px;
+      flex-shrink: 0;
+    }
+
+    /* CAM accent override */
+    [data-panel="cam"]    .feature-card { --card-accent: var(--color-accent); }
+    [data-panel="production"] .feature-card { --card-accent: #7c3aed; }
+    [data-panel="business"]   .feature-card { --card-accent: var(--color-warning); }
+
+    /* ─── Footer ─────────────────────────────────────────────────── */
+    .footer {
+      background: var(--color-surface-dark);
+      color: var(--color-text-light);
+      padding: var(--space-16) 0 var(--space-8);
+    }
+    .footer__grid {
+      display: grid;
+      grid-template-columns: 2fr 1fr 1fr 1fr;
+      gap: var(--space-10);
+      margin-bottom: var(--space-12);
+    }
+    .footer__brand-name {
+      font-size: var(--font-size-lg);
+      font-weight: 700;
+      color: var(--color-surface);
+      margin-bottom: var(--space-3);
+      display: flex;
+      align-items: center;
+      gap: var(--space-2);
+    }
+    .footer__brand-logo {
+      width: 28px;
+      height: 28px;
+      background: var(--color-primary);
+      border-radius: var(--radius-sm);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .footer__brand-logo svg { width: 16px; height: 16px; }
+    .footer__brand-desc {
+      font-size: var(--font-size-sm);
+      line-height: 1.7;
+      max-width: 260px;
+    }
+    .footer__col-title {
+      font-size: var(--font-size-sm);
+      font-weight: 600;
+      color: var(--color-surface);
+      margin-bottom: var(--space-4);
+    }
+    .footer__col ul { display: flex; flex-direction: column; gap: var(--space-3); }
+    .footer__col ul li a {
+      font-size: var(--font-size-sm);
+      color: var(--color-text-light);
+      transition: color 0.15s;
+    }
+    .footer__col ul li a:hover { color: var(--color-surface); }
+    .footer__bottom {
+      border-top: 1px solid rgb(255 255 255 / 0.08);
+      padding-top: var(--space-8);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: var(--space-4);
+    }
+    .footer__bottom p { font-size: var(--font-size-sm); }
+    .footer__bottom-links { display: flex; gap: var(--space-6); }
+    .footer__bottom-links a {
+      font-size: var(--font-size-sm);
+      color: var(--color-text-light);
+      transition: color 0.15s;
+    }
+    .footer__bottom-links a:hover { color: var(--color-surface); }
+
+    @media (max-width: 900px) {
+      .footer__grid { grid-template-columns: 1fr 1fr; }
+    }
+    @media (max-width: 580px) {
+      .footer__grid { grid-template-columns: 1fr; }
+      .tab-switcher { gap: var(--space-1); }
+      .tab-btn { padding: var(--space-2) var(--space-3); font-size: var(--font-size-xs); }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ─── Navigation ───────────────────────────────────────────── -->
+  <nav class="nav" role="navigation" aria-label="Main navigation">
+    <div class="container nav__inner">
+      <a href="index.html" class="nav__logo" aria-label="The Production Shop home">
+        <span class="nav__logo-mark" aria-hidden="true">
+          <svg viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M3 14.5L9 3.5L15 14.5H3Z" fill="white" opacity="0.9"/>
+            <rect x="7" y="10" width="4" height="4.5" fill="white" opacity="0.5"/>
+          </svg>
+        </span>
+        The Production Shop
+      </a>
+
+      <button class="nav__toggle" id="navToggle" aria-label="Toggle navigation" aria-expanded="false">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <line x1="3" y1="6"  x2="21" y2="6"/>
+          <line x1="3" y1="12" x2="21" y2="12"/>
+          <line x1="3" y1="18" x2="21" y2="18"/>
+        </svg>
+      </button>
+
+      <ul class="nav__links" id="navLinks" role="list">
+        <li><a href="index.html">Home</a></li>
+        <li><a href="features.html" class="active" aria-current="page">Features</a></li>
+        <li><a href="pricing.html">Pricing</a></li>
+        <li><a href="about.html">About</a></li>
+        <li><a href="contact.html">Contact</a></li>
+        <li><a target="_blank" rel="noopener" href="contact.html" class="nav__cta">Get Started</a></li>
+      </ul>
+    </div>
+  </nav>
+
+  <main>
+
+    <!-- ─── Page Header ────────────────────────────────────────── -->
+    <header class="page-header">
+      <div class="container">
+        <div class="page-header__eyebrow" aria-label="Platform overview">
+          <svg width="12" height="12" viewBox="0 0 12 12" fill="currentColor" aria-hidden="true">
+            <circle cx="6" cy="6" r="5"/>
+          </svg>
+          Full Platform
+        </div>
+        <h1>Everything a production<br/>shop needs</h1>
+        <p>Four tightly integrated module domains—design, machining, production, and business—built specifically for professional instrument makers.</p>
+      </div>
+    </header>
+
+    <!-- ─── Tabs Section ────────────────────────────────────────── -->
+    <section class="tabs-section" aria-label="Feature modules">
+      <div class="container">
+
+        <!-- Tab Switcher -->
+        <div class="tab-switcher" role="tablist" aria-label="Feature domains">
+
+          <button class="tab-btn active"
+                  role="tab"
+                  data-tab="design"
+                  aria-selected="true"
+                  aria-controls="panel-design"
+                  id="tab-design">
+            <!-- Pencil icon -->
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+              <path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/>
+              <path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/>
+            </svg>
+            Design
+          </button>
+
+          <button class="tab-btn"
+                  role="tab"
+                  data-tab="calculators"
+                  aria-selected="false"
+                  aria-controls="panel-calculators"
+                  id="tab-calculators">
+            <!-- Calculator icon -->
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+              <rect x="4" y="2" width="16" height="20" rx="2"/>
+              <line x1="8" y1="6" x2="16" y2="6"/>
+              <line x1="8" y1="10" x2="16" y2="10"/>
+              <line x1="8" y1="14" x2="12" y2="14"/>
+              <line x1="8" y1="18" x2="12" y2="18"/>
+              <rect x="14" y="14" width="4" height="4" rx="1"/>
+            </svg>
+            Calculators
+          </button>
+
+          <button class="tab-btn"
+                  role="tab"
+                  data-tab="cam"
+                  aria-selected="false"
+                  aria-controls="panel-cam"
+                  id="tab-cam">
+            <!-- Cpu/gear icon -->
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+              <rect x="9" y="9" width="6" height="6" rx="1"/>
+              <path d="M9 3H7a2 2 0 00-2 2v2M9 21H7a2 2 0 01-2-2v-2M15 3h2a2 2 0 012 2v2M15 21h2a2 2 0 002-2v-2"/>
+              <line x1="12" y1="3" x2="12" y2="5"/>
+              <line x1="12" y1="19" x2="12" y2="21"/>
+              <line x1="3" y1="12" x2="5" y2="12"/>
+              <line x1="19" y1="12" x2="21" y2="12"/>
+            </svg>
+            CAM
+          </button>
+
+          <button class="tab-btn"
+                  role="tab"
+                  data-tab="production"
+                  aria-selected="false"
+                  aria-controls="panel-production"
+                  id="tab-production">
+            <!-- Activity icon -->
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+              <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
+            </svg>
+            Production
+          </button>
+
+          <button class="tab-btn"
+                  role="tab"
+                  data-tab="business"
+                  aria-selected="false"
+                  aria-controls="panel-business"
+                  id="tab-business">
+            <!-- Briefcase icon -->
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+              <rect x="2" y="7" width="20" height="14" rx="2"/>
+              <path d="M16 7V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v2"/>
+              <line x1="12" y1="12" x2="12" y2="16"/>
+              <line x1="2" y1="12" x2="22" y2="12"/>
+            </svg>
+            Business
+          </button>
+
+        </div><!-- /tab-switcher -->
+
+        <!-- ── DESIGN PANEL ──────────────────────────────────────── -->
+        <div class="tab-panel active"
+             role="tabpanel"
+             id="panel-design"
+             aria-labelledby="tab-design"
+             data-panel="design">
+
+          <div class="panel-intro">
+            <div class="panel-intro__badge panel-intro__badge--design">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+              Design Module
+            </div>
+            <h2>Precision design, built for luthiers</h2>
+            <p>From raw dimensions to production-ready blueprints, the Design module covers every stage of instrument planning.</p>
+          </div>
+
+          <div class="feature-grid">
+
+            <article class="feature-card">
+              <div class="feature-card__icon icon--design" aria-hidden="true">
+                <!-- Ruler icon -->
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M3 7l18 0M3 12l6 0M3 17l18 0M9 7l0 5"/>
+                </svg>
+              </div>
+              <h3 class="feature-card__title">Guitar Dimensions</h3>
+              <p class="feature-card__desc">Define and store every critical body, neck, and headstock dimension in a single structured form. Instantly propagate changes across linked templates and cut files to keep your spec sheets always in sync.</p>
+              <a href="http://localhost:5173/instrument-geometry" class="feature-card__cta">
+                Try it
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                  <line x1="5" y1="12" x2="19" y2="12"/>
+                  <polyline points="12 5 19 12 12 19"/>
+                </svg>
+              </a>
+            </article>
+
+            <article class="feature-card">
+              <div class="feature-card__icon icon--design" aria-hidden="true">
+                <!-- Scale / balance icon -->
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <line x1="12" y1="3" x2="12" y2="20"/>
+                  <path d="M5 8l7-5 7 5"/>
+                  <path d="M3 14c0 2.2 1.8 4 4 4s4-1.8 4-4l-4-6-4 6z"/>
+                  <path d="M13 14c0 2.2 1.8 4 4 4s4-1.8 4-4l-4-6-4 6z"/>
+                </svg>
+              </div>
+              <h3 class="feature-card__title">Scale Length Designer</h3>
+              <p class="feature-card__desc">Calculate fret positions, intonation offsets, and compensation values for any target scale length with mathematical accuracy. Export slotting data directly to your CAM workflow or generate printable fretboard templates.</p>
+              <a href="http://localhost:5173/instrument-geometry" class="feature-card__cta">
+                Try it
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                  <line x1="5" y1="12" x2="19" y2="12"/>
+                  <polyline points="12 5 19 12 12 19"/>
+                </svg>
+              </a>
+            </article>
+
+            <article class="feature-card">
+              <div class="feature-card__icon icon--design" aria-hidden="true">
+                <!-- Circle / mandala icon -->
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <circle cx="12" cy="12" r="9"/>
+                  <circle cx="12" cy="12" r="4"/>
+                  <line x1="12" y1="3" x2="12" y2="8"/>
+                  <line x1="12" y1="16" x2="12" y2="21"/>
+                  <line x1="3" y1="12" x2="8" y2="12"/>
+                  <line x1="16" y1="12" x2="21" y2="12"/>
+                </svg>
+              </div>
+              <h3 class="feature-card__title">Rosette Designer</h3>
+              <p class="feature-card__desc">Build intricate soundhole rosette patterns using a parametric ring-and-tile editor that preserves symmetry at any radius. Preview designs in real time and export clean SVG toolpaths ready for router or laser engraver.</p>
+              <a href="http://localhost:5173/rosette" class="feature-card__cta">
+                Try it
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                  <line x1="5" y1="12" x2="19" y2="12"/>
+                  <polyline points="12 5 19 12 12 19"/>
+                </svg>
+              </a>
+            </article>
+
+            <article class="feature-card">
+              <div class="feature-card__icon icon--design" aria-hidden="true">
+                <!-- Brush icon -->
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L11 6.67l-8 8 4 4 8-8 2.06-2.06a5.5 5.5 0 000-7.78v0z"/>
+                  <path d="M7 13c-2 0-4 2-4 6 0 0 2-1 4-1s4 1 4 1c0-4-2-6-4-6z"/>
+                </svg>
+              </div>
+              <h3 class="feature-card__title">Art Studio</h3>
+              <p class="feature-card__desc">Compose custom headstock inlays, body art, and label artwork using a vector-first canvas optimised for woodworking tolerances. Layer raster references beneath vector paths for accurate trace-to-cut artwork workflows.</p>
+              <a href="http://localhost:5173/art-studio" class="feature-card__cta">
+                Try it
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                  <line x1="5" y1="12" x2="19" y2="12"/>
+                  <polyline points="12 5 19 12 12 19"/>
+                </svg>
+              </a>
+            </article>
+
+            <article class="feature-card">
+              <div class="feature-card__icon icon--design" aria-hidden="true">
+                <!-- File import icon -->
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/>
+                  <polyline points="14 2 14 8 20 8"/>
+                  <line x1="12" y1="18" x2="12" y2="12"/>
+                  <line x1="9" y1="15" x2="15" y2="15"/>
+                </svg>
+              </div>
+              <h3 class="feature-card__title">Blueprint Importer</h3>
+              <p class="feature-card__desc">Import DXF, PDF, or SVG blueprints and auto-detect dimensions using reference-scale calibration so existing plans are never wasted. Align imported geometry to a shared coordinate origin and merge it with native dimension specs in one click.</p>
+              <a href="http://localhost:5173/blueprint" class="feature-card__cta">
+                Try it
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                  <line x1="5" y1="12" x2="19" y2="12"/>
+                  <polyline points="12 5 19 12 12 19"/>
+                </svg>
+              </a>
+            </article>
+
+            <article class="feature-card">
+              <div class="feature-card__icon icon--design" aria-hidden="true">
+                <!-- Arc icon -->
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M21 10c0-4.97-4.03-9-9-9"/>
+                  <path d="M3 10c0-4.97 4.03-9 9-9"/>
+                  <line x1="12" y1="1" x2="12" y2="10"/>
+                  <circle cx="12" cy="10" r="3"/>
+                </svg>
+              </div>
+              <h3 class="feature-card__title">Compound Radius Calculator</h3>
+              <p class="feature-card__desc">Design conical or compound-radius fretboards with precise geometry for optimal playability. Calculate radius transitions from nut to body and generate CNC-ready sanding dish profiles for accurate board shaping.</p>
+              <a href="http://localhost:5173/calculators" class="feature-card__cta">
+                Try it
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                  <line x1="5" y1="12" x2="19" y2="12"/>
+                  <polyline points="12 5 19 12 12 19"/>
+                </svg>
+              </a>
+            </article>
+
+            <article class="feature-card">
+              <div class="feature-card__icon icon--design" aria-hidden="true">
+                <!-- Disc icon -->
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <circle cx="12" cy="12" r="10"/>
+                  <circle cx="12" cy="12" r="6"/>
+                  <line x1="12" y1="2" x2="12" y2="6"/>
+                  <line x1="12" y1="18" x2="12" y2="22"/>
+                </svg>
+              </div>
+              <h3 class="feature-card__title">Radius Dish Designer</h3>
+              <p class="feature-card__desc">Generate precise radius dish templates for fretboard sanding. Input target radius and board dimensions to create CNC toolpaths for MDF or aluminum dish blanks with exact curvature specifications.</p>
+              <a href="http://localhost:5173/calculators" class="feature-card__cta">
+                Try it
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                  <line x1="5" y1="12" x2="19" y2="12"/>
+                  <polyline points="12 5 19 12 12 19"/>
+                </svg>
+              </a>
+            </article>
+
+            <article class="feature-card">
+              <div class="feature-card__icon icon--design" aria-hidden="true">
+                <!-- Mountain/arch icon -->
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M3 20L9 4L15 12L21 6V20H3Z"/>
+                  <line x1="3" y1="20" x2="21" y2="20"/>
+                </svg>
+              </div>
+              <h3 class="feature-card__title">Archtop Calculator</h3>
+              <p class="feature-card__desc">Calculate carved top geometry for archtop guitars and mandolins. Define crown height, edge thickness, and graduation curves to generate reference cross-sections and CNC roughing strategies.</p>
+              <a href="http://localhost:5173/calculators" class="feature-card__cta">
+                Try it
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                  <line x1="5" y1="12" x2="19" y2="12"/>
+                  <polyline points="12 5 19 12 12 19"/>
+                </svg>
+              </a>
+            </article>
+
+            <article class="feature-card">
+              <div class="feature-card__icon icon--design" aria-hidden="true">
+                <!-- Grid pattern icon -->
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <line x1="12" y1="4" x2="12" y2="20"/>
+                  <line x1="4" y1="12" x2="20" y2="12"/>
+                  <line x1="7" y1="7" x2="17" y2="17"/>
+                  <line x1="17" y1="7" x2="7" y2="17"/>
+                </svg>
+              </div>
+              <h3 class="feature-card__title">Bracing Calculator</h3>
+              <p class="feature-card__desc">Design X-bracing, ladder bracing, or fan bracing patterns with accurate scalloping profiles and positioning. Calculate brace heights, tapers, and dome radii for optimal tone and structural integrity.</p>
+              <a href="http://localhost:5173/calculators" class="feature-card__cta">
+                Try it
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                  <line x1="5" y1="12" x2="19" y2="12"/>
+                  <polyline points="12 5 19 12 12 19"/>
+                </svg>
+              </a>
+            </article>
+
+            <article class="feature-card">
+              <div class="feature-card__icon icon--design" aria-hidden="true">
+                <!-- Bridge icon -->
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <rect x="2" y="10" width="20" height="4" rx="1"/>
+                  <line x1="7" y1="10" x2="7" y2="6"/>
+                  <line x1="12" y1="10" x2="12" y2="4"/>
+                  <line x1="17" y1="10" x2="17" y2="6"/>
+                </svg>
+              </div>
+              <h3 class="feature-card__title">Bridge Calculator</h3>
+              <p class="feature-card__desc">Calculate saddle slot positioning, pin hole spacing, and intonation compensation for acoustic and electric bridges. Automatically adjust for scale length, action height, and string gauge variations.</p>
+              <a href="http://localhost:5173/calculators" class="feature-card__cta">
+                Try it
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                  <line x1="5" y1="12" x2="19" y2="12"/>
+                  <polyline points="12 5 19 12 12 19"/>
+                </svg>
+              </a>
+            </article>
+
+
+          </div><!-- /feature-grid design -->
+
+
+            <article class="feature-card">
+              <div class="feature-card__icon icon--design" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M12 2L2 7l10 5 10-5-10-5z"/>
+                  <path d="M2 17l10 5 10-5"/>
+                  <path d="M2 12l10 5 10-5"/>
+                </svg>
+              </div>
+              <h3 class="feature-card__title">3D Relief Carving</h3>
+              <p class="feature-card__desc">Design and machine stunning 3D relief carvings for soundhole rosettes, headstock logos, and decorative elements. Full toolpath generation with depth control and risk analysis for relief operations.</p>
+              <a href="http://localhost:5173/art-studio/relief" class="feature-card__cta">
+                Try it
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                  <line x1="5" y1="12" x2="19" y2="12"/>
+                  <polyline points="12 5 19 12 12 19"/>
+                </svg>
+              </a>
+            </article>
+
+
+            <article class="feature-card">
+              <div class="feature-card__icon icon--design" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <rect x="3" y="3" width="18" height="18" rx="2"/>
+                  <path d="M3 9h18M9 3v18"/>
+                  <circle cx="12" cy="12" r="2"/>
+                </svg>
+              </div>
+              <h3 class="feature-card__title">Inlay Designer</h3>
+              <p class="feature-card__desc">Design intricate inlays, purfling, and binding with pixel-perfect accuracy. Generate CNC toolpaths for routing channels with exact depth control. Perfect for decorative borders and complex multi-layer inlay work.</p>
+              <a href="http://localhost:5173/art-studio/inlay" class="feature-card__cta">
+                Try it
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                  <line x1="5" y1="12" x2="19" y2="12"/>
+                  <polyline points="12 5 19 12 12 19"/>
+                </svg>
+              </a>
+            </article>
+
+          <!-- Instrument Library Showcase -->
+          <div class="section__divider" style="margin: 4rem 0 3rem; height: 1px; background: var(--color-border);"></div>
+
+          <div class="panel-intro" style="margin-bottom: 2rem;">
+            <div class="panel-intro__badge panel-intro__badge--design">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true">
+                <path d="M12 2L2 7l10 5 10-5-10-5z"/>
+                <path d="M2 17l10 5 10-5"/>
+                <path d="M2 12l10 5 10-5"/>
+              </svg>
+              Instrument Library
+            </div>
+            <h2>20+ Classic Guitar Designs Ready to Build</h2>
+            <p>From legendary electric guitars to precision archtops, access production-ready templates with full parametric control.</p>
+          </div>
+
+          <div class="feature-grid">
+
+            <!-- Smart Guitar - COMPLETE -->
+            <article class="feature-card" style="grid-column: span 2; background: linear-gradient(135deg, rgba(37,99,235,0.05) 0%, rgba(13,148,136,0.05) 100%); border: 2px solid var(--color-primary-light);">
+              <div class="feature-card__badge" style="display: inline-flex; align-items: center; gap: 0.375rem; padding: 0.25rem 0.625rem; background: var(--color-success); color: white; border-radius: 999px; font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 1rem;">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" aria-hidden="true">
+                  <polyline points="20 6 9 17 4 12"/>
+                </svg>
+                Complete
+              </div>
+              <h3 class="feature-card__title" style="font-size: 1.5rem; margin-bottom: 0.75rem;">
+                <span style="display: flex; align-items: center; gap: 0.5rem;">
+                  Smart Guitar
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                    <rect x="2" y="2" width="20" height="8" rx="2" ry="2"/>
+                    <rect x="2" y="14" width="20" height="8" rx="2" ry="2"/>
+                    <line x1="6" y1="6" x2="6.01" y2="6"/>
+                    <line x1="6" y1="18" x2="6.01" y2="18"/>
+                  </svg>
+                </span>
+              </h3>
+              <p class="feature-card__desc" style="font-size: 1rem; line-height: 1.6; margin-bottom: 1.25rem;">
+                IoT-enabled electric guitar with embedded Raspberry Pi 5 computing. Full specs, 4 DXF design files, and complete build documentation. Features real-time pitch detection, 19+ temperament systems, RGB LED frets, onboard effects, and wireless connectivity.
+              </p>
+              <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 0.75rem; margin-bottom: 1.25rem; font-size: 0.875rem;">
+                <div style="display: flex; align-items: center; gap: 0.5rem; color: var(--color-text-muted);">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="2" width="20" height="8" rx="2"/><rect x="2" y="14" width="20" height="8" rx="2"/></svg>
+                  Raspberry Pi 5 (8GB)
+                </div>
+                <div style="display: flex; align-items: center; gap: 0.5rem; color: var(--color-text-muted);">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+                  BLE 5.0 + Wi-Fi 6
+                </div>
+                <div style="display: flex; align-items: center; gap: 0.5rem; color: var(--color-text-muted);">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>
+                  24-bit/96kHz Audio
+                </div>
+                <div style="display: flex; align-items: center; gap: 0.5rem; color: var(--color-text-muted);">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+                  6 Piezo Pickups + IMU
+                </div>
+              </div>
+              <div style="display: flex; gap: 0.75rem; flex-wrap: wrap;">
+                <a href="http://localhost:5173/instrument-geometry" class="feature-card__cta" style="background: var(--color-primary); color: white; padding: 0.625rem 1.25rem; border-radius: var(--radius-md); font-weight: 600;">
+                  View Design Files
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                    <line x1="5" y1="12" x2="19" y2="12"/>
+                    <polyline points="12 5 19 12 12 19"/>
+                  </svg>
+                </a>
+                <a href="http://localhost:5173/instrument-geometry" class="feature-card__cta">
+                  Technical Specs
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                    <line x1="5" y1="12" x2="19" y2="12"/>
+                    <polyline points="12 5 19 12 12 19"/>
+                  </svg>
+                </a>
+              </div>
+            </article>
+
+            <!-- Benedetto 17" Archtop - COMPLETE -->
+            <article class="feature-card">
+              <div class="feature-card__badge" style="display: inline-flex; align-items: center; gap: 0.375rem; padding: 0.25rem 0.625rem; background: var(--color-success); color: white; border-radius: 999px; font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 1rem;">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" aria-hidden="true">
+                  <polyline points="20 6 9 17 4 12"/>
+                </svg>
+                Complete
+              </div>
+              <div class="feature-card__icon icon--design" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M21 15V6M18.5 18a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5ZM12 12a6 6 0 1 0 0-12 6 6 0 0 0 0 12Z"/>
+                </svg>
+              </div>
+              <h3 class="feature-card__title">Benedetto 17" Archtop</h3>
+              <p class="feature-card__desc">Premium jazz archtop with carved top, precision f-holes, and graduation map. Includes body outline, f-hole templates, and thickness graduation data.</p>
+              <a href="http://localhost:5173/instrument-geometry" class="feature-card__cta">
+                View Files
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                  <line x1="5" y1="12" x2="19" y2="12"/>
+                  <polyline points="12 5 19 12 12 19"/>
+                </svg>
+              </a>
+            </article>
+
+            <!-- Flying V - ASSETS ONLY -->
+            <article class="feature-card">
+              <div class="feature-card__badge" style="display: inline-flex; align-items: center; gap: 0.375rem; padding: 0.25rem 0.625rem; background: var(--color-warning); color: white; border-radius: 999px; font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 1rem;">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true">
+                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                  <polyline points="14 2 14 8 20 8"/>
+                </svg>
+                Assets
+              </div>
+              <div class="feature-card__icon icon--design" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M12 2l8 18-8-4-8 4 8-18z"/>
+                </svg>
+              </div>
+              <h3 class="feature-card__title">Flying V</h3>
+              <p class="feature-card__desc">Iconic Gibson design with 3 DWG files covering '58, '59, and '83 models. 24.75" scale length.</p>
+              <a href="http://localhost:5173/instrument-geometry" class="feature-card__cta">
+                View Plans
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                  <line x1="5" y1="12" x2="19" y2="12"/>
+                  <polyline points="12 5 19 12 12 19"/>
+                </svg>
+              </a>
+            </article>
+
+            <!-- J-200 Jumbo - ASSETS ONLY -->
+            <article class="feature-card">
+              <div class="feature-card__badge" style="display: inline-flex; align-items: center; gap: 0.375rem; padding: 0.25rem 0.625rem; background: var(--color-warning); color: white; border-radius: 999px; font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 1rem;">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true">
+                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                  <polyline points="14 2 14 8 20 8"/>
+                </svg>
+                Assets
+              </div>
+              <div class="feature-card__icon icon--design" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M12 2C8 2 4 4 4 7v10c0 3 4 5 8 5s8-2 8-5V7c0-3-4-5-8-5z"/>
+                </svg>
+              </div>
+              <h3 class="feature-card__title">J-200 Jumbo Acoustic</h3>
+              <p class="feature-card__desc">Super jumbo acoustic guitar with 1 PDF plan. 25.4" scale length.</p>
+              <a href="http://localhost:5173/instrument-geometry" class="feature-card__cta">
+                View Plans
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                  <line x1="5" y1="12" x2="19" y2="12"/>
+                  <polyline points="12 5 19 12 12 19"/>
+                </svg>
+              </a>
+            </article>
+
+            <!-- Gibson L-00 - ASSETS ONLY -->
+            <article class="feature-card">
+              <div class="feature-card__badge" style="display: inline-flex; align-items: center; gap: 0.375rem; padding: 0.25rem 0.625rem; background: var(--color-warning); color: white; border-radius: 999px; font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 1rem;">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true">
+                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                  <polyline points="14 2 14 8 20 8"/>
+                </svg>
+                Assets
+              </div>
+              <div class="feature-card__icon icon--design" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <ellipse cx="12" cy="12" rx="8" ry="10"/>
+                </svg>
+              </div>
+              <h3 class="feature-card__title">Gibson L-00</h3>
+              <p class="feature-card__desc">Small-body acoustic with 1 PDF plan. 24.75" scale length, perfect for fingerstyle players.</p>
+              <a href="http://localhost:5173/instrument-geometry" class="feature-card__cta">
+                View Plans
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                  <line x1="5" y1="12" x2="19" y2="12"/>
+                  <polyline points="12 5 19 12 12 19"/>
+                </svg>
+              </a>
+            </article>
+
+            <!-- Soprano Ukulele - ASSETS ONLY -->
+            <article class="feature-card">
+              <div class="feature-card__badge" style="display: inline-flex; align-items: center; gap: 0.375rem; padding: 0.25rem 0.625rem; background: var(--color-warning); color: white; border-radius: 999px; font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 1rem;">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true">
+                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                  <polyline points="14 2 14 8 20 8"/>
+                </svg>
+                Assets
+              </div>
+              <div class="feature-card__icon icon--design" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M9 18c-4.51 2-5-2-7-2M15 18c4.51 2 5-2 7-2M12 2v20"/>
+                  <path d="M8 6c-2-1-3-3-3-3h14s-1 2-3 3"/>
+                </svg>
+              </div>
+              <h3 class="feature-card__title">Soprano Ukulele</h3>
+              <p class="feature-card__desc">Hawaiian soprano ukulele with 3 DXF files. 13" scale length.</p>
+              <a href="http://localhost:5173/instrument-geometry" class="feature-card__cta">
+                View Files
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                  <line x1="5" y1="12" x2="19" y2="12"/>
+                  <polyline points="12 5 19 12 12 19"/>
+                </svg>
+              </a>
+            </article>
+
+            <!-- Parametric Templates - COMING SOON -->
+            <article class="feature-card" style="grid-column: span 3; background: var(--color-surface-alt); border: 2px dashed var(--color-border);">
+              <div class="feature-card__badge" style="display: inline-flex; align-items: center; gap: 0.375rem; padding: 0.25rem 0.625rem; background: var(--color-primary-light); color: var(--color-primary); border-radius: 999px; font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 1rem;">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true">
+                  <circle cx="12" cy="12" r="10"/>
+                  <polyline points="12 6 12 12 16 14"/>
+                </svg>
+                Coming Soon
+              </div>
+              <h3 class="feature-card__title" style="font-size: 1.25rem;">15+ Parametric Templates</h3>
+              <p class="feature-card__desc" style="font-size: 0.95rem;">
+                Customizable designs for Stratocaster, Telecaster, Les Paul, SG, ES-335, Dreadnought, OM, J-45, Classical, Jazz Bass, and more. Each template includes editable constraints for body dimensions, scale length, cutaways, and hardware routing.
+              </p>
+              <div style="display: flex; gap: 1rem; flex-wrap: wrap; margin-top: 1rem;">
+                <span style="padding: 0.375rem 0.75rem; background: white; border: 1px solid var(--color-border); border-radius: var(--radius-sm); font-size: 0.8125rem; color: var(--color-text-muted); font-weight: 500;">Stratocaster</span>
+                <span style="padding: 0.375rem 0.75rem; background: white; border: 1px solid var(--color-border); border-radius: var(--radius-sm); font-size: 0.8125rem; color: var(--color-text-muted); font-weight: 500;">Telecaster</span>
+                <span style="padding: 0.375rem 0.75rem; background: white; border: 1px solid var(--color-border); border-radius: var(--radius-sm); font-size: 0.8125rem; color: var(--color-text-muted); font-weight: 500;">Les Paul</span>
+                <span style="padding: 0.375rem 0.75rem; background: white; border: 1px solid var(--color-border); border-radius: var(--radius-sm); font-size: 0.8125rem; color: var(--color-text-muted); font-weight: 500;">SG</span>
+                <span style="padding: 0.375rem 0.75rem; background: white; border: 1px solid var(--color-border); border-radius: var(--radius-sm); font-size: 0.8125rem; color: var(--color-text-muted); font-weight: 500;">ES-335</span>
+                <span style="padding: 0.375rem 0.75rem; background: white; border: 1px solid var(--color-border); border-radius: var(--radius-sm); font-size: 0.8125rem; color: var(--color-text-muted); font-weight: 500;">Dreadnought</span>
+                <span style="padding: 0.375rem 0.75rem; background: white; border: 1px solid var(--color-border); border-radius: var(--radius-sm); font-size: 0.8125rem; color: var(--color-text-muted); font-weight: 500;">+9 more</span>
+              </div>
+            </article>
+
+
+        </div><!-- /panel-design -->
+
+        <!-- ── CALCULATORS PANEL ─────────────────────────────────── -->
+        <div class="tab-panel"
+             role="tabpanel"
+             id="panel-calculators"
+             aria-labelledby="tab-calculators"
+             data-panel="calculators">
+
+          <div class="panel-intro">
+            <div class="panel-intro__badge panel-intro__badge--calculators">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><rect x="4" y="2" width="16" height="20" rx="2"/><line x1="8" y1="6" x2="16" y2="6"/><line x1="8" y1="10" x2="16" y2="10"/></svg>
+              Calculators
+            </div>
+            <h2>Essential calculation tools for lutherie</h2>
+            <p>From basic math to specialized woodworking calculations, these tools handle the numbers so you can focus on building.</p>
+          </div>
+
+          <div class="feature-grid">
+
+            <article class="feature-card">
+              <div class="feature-card__icon icon--calculators" aria-hidden="true" style="color: #10b981; background: rgb(16 185 129 / 0.15);">
+                <!-- Calculator icon -->
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <rect x="4" y="2" width="16" height="20" rx="2"/>
+                  <line x1="8" y1="6" x2="16" y2="6"/>
+                  <line x1="8" y1="10" x2="16" y2="10"/>
+                  <line x1="8" y1="14" x2="12" y2="14"/>
+                  <line x1="8" y1="18" x2="12" y2="18"/>
+                  <rect x="14" y="14" width="4" height="4" rx="1"/>
+                </svg>
+              </div>
+              <h3 class="feature-card__title">Basic Calculator</h3>
+              <p class="feature-card__desc">Standard arithmetic calculator with memory functions and history. Perfect for quick shop calculations, measurements, and on-the-fly conversions without leaving your workflow.</p>
+              <a href="http://localhost:5173/calculators" class="feature-card__cta">
+                Try it
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                  <line x1="5" y1="12" x2="19" y2="12"/>
+                  <polyline points="12 5 19 12 12 19"/>
+                </svg>
+              </a>
+            </article>
+
+            <article class="feature-card">
+              <div class="feature-card__icon icon--calculators" aria-hidden="true" style="color: #10b981; background: rgb(16 185 129 / 0.15);">
+                <!-- Function icon -->
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M4 6h16M4 12h16M4 18h7"/>
+                  <circle cx="18" cy="18" r="3"/>
+                  <line x1="18" y1="15" x2="18" y2="21"/>
+                </svg>
+              </div>
+              <h3 class="feature-card__title">Scientific Calculator</h3>
+              <p class="feature-card__desc">Advanced mathematics including trigonometry, logarithms, exponents, and statistical functions. Essential for precise angle calculations, curved surface geometry, and advanced lutherie engineering.</p>
+              <a href="http://localhost:5173/calculators" class="feature-card__cta">
+                Try it
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                  <line x1="5" y1="12" x2="19" y2="12"/>
+                  <polyline points="12 5 19 12 12 19"/>
+                </svg>
+              </a>
+            </article>
+
+            <article class="feature-card">
+              <div class="feature-card__icon icon--calculators" aria-hidden="true" style="color: #10b981; background: rgb(16 185 129 / 0.15);">
+                <!-- Fraction icon -->
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <line x1="4" y1="4" x2="20" y2="20"/>
+                  <circle cx="8" cy="8" r="2"/>
+                  <circle cx="16" cy="16" r="2"/>
+                </svg>
+              </div>
+              <h3 class="feature-card__title">Fraction Calculator</h3>
+              <p class="feature-card__desc">Add, subtract, multiply, and divide fractions with automatic simplification. Handles mixed numbers and converts between fractions and decimals for working with imperial measurements.</p>
+              <a href="http://localhost:5173/calculators" class="feature-card__cta">
+                Try it
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                  <line x1="5" y1="12" x2="19" y2="12"/>
+                  <polyline points="12 5 19 12 12 19"/>
+                </svg>
+              </a>
+            </article>
+
+            <article class="feature-card">
+              <div class="feature-card__icon icon--calculators" aria-hidden="true" style="color: #10b981; background: rgb(16 185 129 / 0.15);">
+                <!-- Wood plank icon -->
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <rect x="3" y="6" width="18" height="12" rx="1"/>
+                  <line x1="7" y1="6" x2="7" y2="18"/>
+                  <line x1="12" y1="6" x2="12" y2="18"/>
+                  <line x1="17" y1="6" x2="17" y2="18"/>
+                </svg>
+              </div>
+              <h3 class="feature-card__title">Woodworking Calculator</h3>
+              <p class="feature-card__desc">Calculate board feet, wood volume, weight estimates, and material costs. Includes density tables for common tonewoods and automatically factors in waste percentages for accurate purchasing.</p>
+              <a href="http://localhost:5173/calculators" class="feature-card__cta">
+                Try it
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                  <line x1="5" y1="12" x2="19" y2="12"/>
+                  <polyline points="12 5 19 12 12 19"/>
+                </svg>
+              </a>
+            </article>
+
+          </div><!-- /feature-grid calculators -->
+        </div><!-- /panel-calculators -->
+
+        <!-- ── CAM PANEL ─────────────────────────────────────────── -->
+        <div class="tab-panel"
+             role="tabpanel"
+             id="panel-cam"
+             aria-labelledby="tab-cam"
+             data-panel="cam">
+
+          <div class="panel-intro">
+            <div class="panel-intro__badge panel-intro__badge--cam">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><rect x="9" y="9" width="6" height="6" rx="1"/><path d="M9 3H7a2 2 0 00-2 2v2M9 21H7a2 2 0 01-2-2v-2M15 3h2a2 2 0 012 2v2M15 21h2a2 2 0 002-2v-2"/></svg>
+              CAM Module
+            </div>
+            <h2>CNC machining, simplified and smart</h2>
+            <p>Six specialised labs handle every machining scenario a luthier encounters—from quick profile cuts to complex bridge pocketing.</p>
+          </div>
+
+          <div class="feature-grid">
+
+            <article class="feature-card">
+              <div class="feature-card__icon icon--cam" aria-hidden="true">
+                <!-- Zap icon -->
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
+                </svg>
+              </div>
+              <h3 class="feature-card__title">Quick Cut</h3>
+              <p class="feature-card__desc">Generate a complete G-code file for standard instrument profiles in under sixty seconds using guided presets for common guitar and bass shapes. Adjust feeds, speeds, and depth-of-cut on a single screen—no CAM experience required.</p>
+              <a href="http://localhost:5173/quick-cut" class="feature-card__cta">
+                Try it
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                  <line x1="5" y1="12" x2="19" y2="12"/>
+                  <polyline points="12 5 19 12 12 19"/>
+                </svg>
+              </a>
+            </article>
+
+            <article class="feature-card">
+              <div class="feature-card__icon icon--cam" aria-hidden="true">
+                <!-- Layers icon -->
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <polygon points="12 2 2 7 12 12 22 7 12 2"/>
+                  <polyline points="2 17 12 22 22 17"/>
+                  <polyline points="2 12 12 17 22 12"/>
+                </svg>
+              </div>
+              <h3 class="feature-card__title">Adaptive Lab</h3>
+              <p class="feature-card__desc">Plan adaptive clearing and finish passes for complex 3D surfaces like carved tops and arched backs using trochoidal toolpath intelligence. Reduce tool load, extend bit life, and achieve surface finishes that need minimal hand sanding.</p>
+              <a href="http://localhost:5173/lab/adaptive" class="feature-card__cta">
+                Try it
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                  <line x1="5" y1="12" x2="19" y2="12"/>
+                  <polyline points="12 5 19 12 12 19"/>
+                </svg>
+              </a>
+            </article>
+
+            <article class="feature-card">
+              <div class="feature-card__icon icon--cam" aria-hidden="true">
+                <!-- Scissors icon -->
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <circle cx="6" cy="6" r="3"/>
+                  <circle cx="6" cy="18" r="3"/>
+                  <line x1="20" y1="4" x2="8.12" y2="15.88"/>
+                  <line x1="14.47" y1="14.48" x2="20" y2="20"/>
+                  <line x1="8.12" y1="8.12" x2="12" y2="12"/>
+                </svg>
+              </div>
+              <h3 class="feature-card__title">Saw Lab</h3>
+              <p class="feature-card__desc">Configure CNC band saw and scroll saw toolpaths for rough body blanks, headstock profiles, and binding channel pre-cuts with kerf compensation built in. Stack multiple cuts into a sequenced job queue to maximise material utilisation per sheet.</p>
+              <a href="http://localhost:5173/lab/saw/slice" class="feature-card__cta">
+                Try it
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                  <line x1="5" y1="12" x2="19" y2="12"/>
+                  <polyline points="12 5 19 12 12 19"/>
+                </svg>
+              </a>
+            </article>
+
+            <article class="feature-card">
+              <div class="feature-card__icon icon--cam" aria-hidden="true">
+                <!-- Music / bridge icon -->
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M4 18V9a4 4 0 014-4h8a4 4 0 014 4v9"/>
+                  <line x1="2" y1="18" x2="22" y2="18"/>
+                  <line x1="7" y1="14" x2="7" y2="18"/>
+                  <line x1="12" y1="12" x2="12" y2="18"/>
+                  <line x1="17" y1="14" x2="17" y2="18"/>
+                </svg>
+              </div>
+              <h3 class="feature-card__title">Bridge Lab</h3>
+              <p class="feature-card__desc">Design saddle slots, pin holes, and intonation offsets for any bridge style—acoustic, classical, or bass—and generate the matching pocket machining strategy. Preview the full toolpath sequence in an interactive 3D viewport before committing to a cut.</p>
+              <a href="http://localhost:5173/lab/bridge" class="feature-card__cta">
+                Try it
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                  <line x1="5" y1="12" x2="19" y2="12"/>
+                  <polyline points="12 5 19 12 12 19"/>
+                </svg>
+              </a>
+            </article>
+
+            <article class="feature-card">
+              <div class="feature-card__icon icon--cam" aria-hidden="true">
+                <!-- Target / drill icon -->
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <circle cx="12" cy="12" r="10"/>
+                  <circle cx="12" cy="12" r="6"/>
+                  <circle cx="12" cy="12" r="2"/>
+                  <line x1="12" y1="2" x2="12" y2="4"/>
+                  <line x1="12" y1="20" x2="12" y2="22"/>
+                </svg>
+              </div>
+              <h3 class="feature-card__title">Drilling Lab</h3>
+              <p class="feature-card__desc">Map and sequence all hole operations—tuner bushings, strap buttons, input jacks, and nut slots—with peck drilling cycles and spot-drill lead-ins automatically applied. Output a single peck-and-plunge G-code file that covers your entire drilling schedule.</p>
+              <a href="http://localhost:5173/lab/bridge" class="feature-card__cta">
+                Try it
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                  <line x1="5" y1="12" x2="19" y2="12"/>
+                  <polyline points="12 5 19 12 12 19"/>
+                </svg>
+              </a>
+            </article>
+
+            <article class="feature-card">
+              <div class="feature-card__icon icon--cam" aria-hidden="true">
+                <!-- Code icon -->
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <polyline points="16 18 22 12 16 6"/>
+                  <polyline points="8 6 2 12 8 18"/>
+                </svg>
+              </div>
+              <h3 class="feature-card__title">G-code Explainer</h3>
+              <p class="feature-card__desc">Paste any G-code file and receive a plain-English line-by-line breakdown that explains what each motion block actually does. Identify errors, feed-rate spikes, or unsafe Z-height moves before the program ever reaches your controller.</p>
+              <a href="http://localhost:5173/cam/advisor" class="feature-card__cta">
+                Try it
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                  <line x1="5" y1="12" x2="19" y2="12"/>
+                  <polyline points="12 5 19 12 12 19"/>
+                </svg>
+              </a>
+            </article>
+
+
+            <article class="feature-card">
+              <div class="feature-card__icon icon--cam" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M12 2L4 20h16L12 2z"/>
+                  <path d="M12 8v6M12 18h.01"/>
+                </svg>
+              </div>
+              <h3 class="feature-card__title">V-Carve Toolpaths</h3>
+              <p class="feature-card__desc">Generate V-bit carving toolpaths for decorative elements, text, and ornamental details. Variable-depth carving for headstock logos, custom branding, and artistic embellishments. V-bit specific strategies included.</p>
+              <a href="http://localhost:5173/art-studio/vcarve" class="feature-card__cta">
+                Try it
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                  <line x1="5" y1="12" x2="19" y2="12"/>
+                  <polyline points="12 5 19 12 12 19"/>
+                </svg>
+              </a>
+            </article>
+
+          </div><!-- /feature-grid cam -->
+        </div><!-- /panel-cam -->
+
+        <!-- ── PRODUCTION PANEL ──────────────────────────────────── -->
+        <div class="tab-panel"
+             role="tabpanel"
+             id="panel-production"
+             aria-labelledby="tab-production"
+             data-panel="production">
+
+          <div class="panel-intro">
+            <div class="panel-intro__badge panel-intro__badge--production">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+              Production Module
+            </div>
+            <h2>Real-time visibility across the shop floor</h2>
+            <p>Monitor, compare, and optimise every CNC run from scheduling through completion with live operational data.</p>
+          </div>
+
+          <div class="feature-grid">
+
+            <article class="feature-card">
+              <div class="feature-card__icon icon--production" aria-hidden="true">
+                <!-- List check icon -->
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <line x1="9" y1="6" x2="20" y2="6"/>
+                  <line x1="9" y1="12" x2="20" y2="12"/>
+                  <line x1="9" y1="18" x2="20" y2="18"/>
+                  <polyline points="4 6 5 7 7 5"/>
+                  <polyline points="4 12 5 13 7 11"/>
+                  <polyline points="4 18 5 19 7 17"/>
+                </svg>
+              </div>
+              <h3 class="feature-card__title">RMOS Manufacturing Candidates</h3>
+              <p class="feature-card__desc">The RMOS engine analyses your order backlog, material stock, and machine availability to surface the most valuable set of instruments to manufacture next. Drag-and-drop candidate priorities and watch the schedule recalculate in real time to maximise throughput and minimise idle tool time.</p>
+              <a href="http://localhost:5173/rmos" class="feature-card__cta">
+                Try it
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                  <line x1="5" y1="12" x2="19" y2="12"/>
+                  <polyline points="12 5 19 12 12 19"/>
+                </svg>
+              </a>
+            </article>
+
+            <article class="feature-card">
+              <div class="feature-card__icon icon--production" aria-hidden="true">
+                <!-- Monitor icon -->
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <rect x="2" y="3" width="20" height="14" rx="2"/>
+                  <line x1="8" y1="21" x2="16" y2="21"/>
+                  <line x1="12" y1="17" x2="12" y2="21"/>
+                  <polyline points="6 9 9 12 13 8 17 11"/>
+                </svg>
+              </div>
+              <h3 class="feature-card__title">Live Monitor</h3>
+              <p class="feature-card__desc">Stream machine-controller data directly into a dashboard showing feed-rate adherence, spindle load, and estimated time-to-completion for every active job. Receive push alerts the moment a job deviates from expected performance thresholds so you can intervene before scrap occurs.</p>
+              <a href="http://localhost:5173/rmos/live-monitor" class="feature-card__cta">
+                Try it
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                  <line x1="5" y1="12" x2="19" y2="12"/>
+                  <polyline points="12 5 19 12 12 19"/>
+                </svg>
+              </a>
+            </article>
+
+            <article class="feature-card">
+              <div class="feature-card__icon icon--production" aria-hidden="true">
+                <!-- Clock history icon -->
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <circle cx="12" cy="12" r="10"/>
+                  <polyline points="12 6 12 12 16 14"/>
+                  <path d="M3.05 11a9 9 0 110 2"/>
+                  <polyline points="1 11 3 13 5 11"/>
+                </svg>
+              </div>
+              <h3 class="feature-card__title">CNC History</h3>
+              <p class="feature-card__desc">Access a searchable log of every past job including operator notes, actual vs. estimated cycle times, and any mid-run parameter changes that were made. Use historical run data to automatically refine cycle-time estimates for future quotes and scheduling decisions.</p>
+              <a href="http://localhost:5173/rmos/runs" class="feature-card__cta">
+                Try it
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                  <line x1="5" y1="12" x2="19" y2="12"/>
+                  <polyline points="12 5 19 12 12 19"/>
+                </svg>
+              </a>
+            </article>
+
+            <article class="feature-card">
+              <div class="feature-card__icon icon--production" aria-hidden="true">
+                <!-- Bar chart icon -->
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <line x1="18" y1="20" x2="18" y2="10"/>
+                  <line x1="12" y1="20" x2="12" y2="4"/>
+                  <line x1="6"  y1="20" x2="6"  y2="14"/>
+                  <line x1="2"  y1="20" x2="22" y2="20"/>
+                </svg>
+              </div>
+              <h3 class="feature-card__title">Compare Runs</h3>
+              <p class="feature-card__desc">Select any two or more historical jobs and render a side-by-side comparison of cycle time, tooling consumption, feed rates, and surface quality scores. Pinpoint which toolpath revision or fixture change produced the measurable improvement so you can lock it in as your new standard.</p>
+              <a href="http://localhost:5173/compare" class="feature-card__cta">
+                Try it
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                  <line x1="5" y1="12" x2="19" y2="12"/>
+                  <polyline points="12 5 19 12 12 19"/>
+                </svg>
+              </a>
+            </article>
+
+            <article class="feature-card">
+              <div class="feature-card__icon icon--production" aria-hidden="true">
+                <!-- Layout grid icon -->
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <rect x="3" y="3" width="7" height="7" rx="1"/>
+                  <rect x="14" y="3" width="7" height="7" rx="1"/>
+                  <rect x="3" y="14" width="7" height="7" rx="1"/>
+                  <rect x="14" y="14" width="7" height="7" rx="1"/>
+                </svg>
+              </div>
+              <h3 class="feature-card__title">Hardware Layout</h3>
+              <p class="feature-card__desc">Design pickup routing templates, control cavity layouts, and output jack positioning with precision spacing guides. Generate CNC toolpaths for perfect hardware fit and professional cavity finishing.</p>
+              <a href="http://localhost:5173/art-studio" class="feature-card__cta">
+                Try it
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                  <line x1="5" y1="12" x2="19" y2="12"/>
+                  <polyline points="12 5 19 12 12 19"/>
+                </svg>
+              </a>
+            </article>
+
+            <article class="feature-card">
+              <div class="feature-card__icon icon--production" aria-hidden="true">
+                <!-- Circuit/wiring icon -->
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/>
+                  <circle cx="12" cy="12" r="3"/>
+                </svg>
+              </div>
+              <h3 class="feature-card__title">Wiring Workbench</h3>
+              <p class="feature-card__desc">Create electronics diagrams for pickups, pots, switches, and output jacks with automatic wire gauge and shielding recommendations. Plan control cavity layouts that accommodate your wiring scheme efficiently.</p>
+              <a href="http://localhost:5173/art-studio" class="feature-card__cta">
+                Try it
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                  <line x1="5" y1="12" x2="19" y2="12"/>
+                  <polyline points="12 5 19 12 12 19"/>
+                </svg>
+              </a>
+            </article>
+
+            <article class="feature-card">
+              <div class="feature-card__icon icon--production" aria-hidden="true">
+                <!-- Droplet/finish icon -->
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M12 2.69l5.66 5.66a8 8 0 11-11.31 0z"/>
+                </svg>
+              </div>
+              <h3 class="feature-card__title">Finish Planner</h3>
+              <p class="feature-card__desc">Schedule multi-coat finishing processes with automatic drying time calculations, temperature compensation, and humidity alerts. Track grain filling, sealer coats, and final finish applications with built-in checklist workflows.</p>
+              <a href="http://localhost:5173/rmos/runs" class="feature-card__cta">
+                Try it
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                  <line x1="5" y1="12" x2="19" y2="12"/>
+                  <polyline points="12 5 19 12 12 19"/>
+                </svg>
+              </a>
+            </article>
+
+            <article class="feature-card">
+              <div class="feature-card__icon icon--production" aria-hidden="true">
+                <!-- Clean/eraser icon -->
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M20 20H7L3 16l5-5 9 9z"/>
+                  <path d="M6.5 11.5L10 15"/>
+                  <line x1="20" y1="20" x2="7" y2="20"/>
+                </svg>
+              </div>
+              <h3 class="feature-card__title">DXF Cleaner</h3>
+              <p class="feature-card__desc">Automatically fix common DXF geometry issues including duplicate vertices, unclosed polylines, zero-length segments, and overlapping entities. Prepare imported files for reliable CAM processing with one-click cleanup.</p>
+              <a href="http://localhost:5173/blueprint" class="feature-card__cta">
+                Try it
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                  <line x1="5" y1="12" x2="19" y2="12"/>
+                  <polyline points="12 5 19 12 12 19"/>
+                </svg>
+              </a>
+            </article>
+
+
+            <article class="feature-card">
+              <div class="feature-card__icon icon--production" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <rect x="3" y="3" width="7" height="7" rx="1"/>
+                  <rect x="14" y="3" width="7" height="7" rx="1"/>
+                  <rect x="3" y="14" width="7" height="7" rx="1"/>
+                  <rect x="14" y="14" width="7" height="7" rx="1"/>
+                </svg>
+              </div>
+              <h3 class="feature-card__title">Preset Hub</h3>
+              <p class="feature-card__desc">Unified management for all your workflows. Organize and reuse CAM strategies, export settings, neck profiles, machine configs, and post-processors. Search, tag, and filter hundreds of presets in one centralized hub.</p>
+              <a href="http://localhost:5173/preset-hub" class="feature-card__cta">
+                Try it
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                  <line x1="5" y1="12" x2="19" y2="12"/>
+                  <polyline points="12 5 19 12 12 19"/>
+                </svg>
+              </a>
+            </article>
+
+
+            <article class="feature-card">
+              <div class="feature-card__icon icon--production" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <rect x="2" y="6" width="20" height="12" rx="2"/>
+                  <circle cx="7" cy="12" r="2"/>
+                  <circle cx="17" cy="12" r="2"/>
+                  <path d="M12 8v8M9 12h6"/>
+                </svg>
+              </div>
+              <h3 class="feature-card__title">Machine Manager</h3>
+              <p class="feature-card__desc">Inspect configured CNC machines, envelopes, and CAM defaults. View machine details, controller types, and work area dimensions for every router in your shop. Essential for multi-machine operations and configuration management.</p>
+              <a href="http://localhost:5173/lab/machines" class="feature-card__cta">
+                Try it
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                  <line x1="5" y1="12" x2="19" y2="12"/>
+                  <polyline points="12 5 19 12 12 19"/>
+                </svg>
+              </a>
+            </article>
+
+                      <article class="feature-card">              <div class="feature-card__icon icon--production" aria-hidden="true">                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 003 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>              </div>              <h3 class="feature-card__title">Material Analytics</h3>              <p class="feature-card__desc">Track strip consumption, material efficiency, and supplier patterns across your shop. Analyse dimensional characteristics and inventory status to optimise material purchasing.</p>              <a href="http://localhost:5173/rmos/material-analytics" class="feature-card__cta">Try it<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></a>            </article>            <article class="feature-card">              <div class="feature-card__icon icon--production" aria-hidden="true">                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>              </div>              <h3 class="feature-card__title">Strip Family Optimizer</h3>              <p class="feature-card__desc">Optimize cutting patterns for mixed-material strip families to maximize yield and minimize waste through intelligent nesting algorithms.</p>              <a href="http://localhost:5173/rmos/strip-family-lab" class="feature-card__cta">Try it<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></a>            </article>            <article class="feature-card">              <div class="feature-card__icon icon--production" aria-hidden="true">                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>              </div>              <h3 class="feature-card__title">Risk Timeline Lab</h3>              <p class="feature-card__desc">Browse recent jobs and CAM risk analytics including severity counts and risk scores. Identify problematic toolpaths before they cause issues.</p>              <a href="http://localhost:5173/lab/risk-timeline" class="feature-card__cta">Try it<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></a>            </article>            <article class="feature-card">              <div class="feature-card__icon icon--production" aria-hidden="true">                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>              </div>              <h3 class="feature-card__title">AI Visual Analyzer</h3>              <p class="feature-card__desc">Generate AI-powered guitar design visualizations. Use computer vision for visual inspection, defect detection, and design iteration tracking.</p>              <a href="http://localhost:5173/ai-images" class="feature-card__cta">Try it<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></a>            </article>            <article class="feature-card">              <div class="feature-card__icon icon--production" aria-hidden="true">                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>              </div>              <h3 class="feature-card__title">Acoustic Analyzer</h3>              <p class="feature-card__desc">Record, analyze, and compare instrument acoustics with spectral analysis. Track tonal consistency and document the sound of every instrument.</p>              <a href="http://localhost:5173/tools/audio-analyzer" class="feature-card__cta">Try it<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></a>            </article>          </div><!-- /feature-grid production -->
+        </div><!-- /panel-production -->
+
+        <!-- ── BUSINESS PANEL ────────────────────────────────────── -->
+        <div class="tab-panel"
+             role="tabpanel"
+             id="panel-business"
+             aria-labelledby="tab-business"
+             data-panel="business">
+
+          <div class="panel-intro">
+            <div class="panel-intro__badge panel-intro__badge--business">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v2"/></svg>
+              Business Module
+            </div>
+            <h2>Financial clarity for every instrument you build</h2>
+            <p>Know your true costs, predict cash flow, and prove the ROI of every capital decision before you commit.</p>
+          </div>
+
+          <div class="feature-grid">
+
+            <article class="feature-card">
+              <div class="feature-card__icon icon--business" aria-hidden="true">
+                <!-- Tag / price icon -->
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M20.59 13.41l-7.17 7.17a2 2 0 01-2.83 0L2 12V2h10l8.59 8.59a2 2 0 010 2.82z"/>
+                  <line x1="7" y1="7" x2="7.01" y2="7"/>
+                </svg>
+              </div>
+              <h3 class="feature-card__title">Instrument Costing</h3>
+              <p class="feature-card__desc">Itemise every cost component—tonewood, hardware, tooling wear, finishing consumables, and labour hours—into a per-instrument cost card that updates automatically when supplier prices change. Set target margin and watch the minimum viable sell price recalculate instantly so no quote ever leaves money on the table.</p>
+              <a href="http://localhost:5173/business/estimator" class="feature-card__cta">
+                Try it
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                  <line x1="5" y1="12" x2="19" y2="12"/>
+                  <polyline points="12 5 19 12 12 19"/>
+                </svg>
+              </a>
+            </article>
+
+            <article class="feature-card">
+              <div class="feature-card__icon icon--business" aria-hidden="true">
+                <!-- TrendingUp icon -->
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/>
+                  <polyline points="17 6 23 6 23 12"/>
+                </svg>
+              </div>
+              <h3 class="feature-card__title">CNC ROI Calculator</h3>
+              <p class="feature-card__desc">Input machine purchase price, financing terms, annual maintenance costs, and projected utilisation to generate a full payback-period and net-present-value analysis for any CNC investment. Compare scenarios side-by-side—buy vs. lease, or router vs. five-axis—to make capital allocation decisions with confidence.</p>
+              <a href="http://localhost:5173/calculators" class="feature-card__cta">
+                Try it
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                  <line x1="5" y1="12" x2="19" y2="12"/>
+                  <polyline points="12 5 19 12 12 19"/>
+                </svg>
+              </a>
+            </article>
+
+            <article class="feature-card">
+              <div class="feature-card__icon icon--business" aria-hidden="true">
+                <!-- Calendar / cash icon -->
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <rect x="2" y="5" width="20" height="14" rx="2"/>
+                  <circle cx="12" cy="12" r="3"/>
+                  <path d="M2 10h20M2 14h20"/>
+                </svg>
+              </div>
+              <h3 class="feature-card__title">Cash Flow Planner</h3>
+              <p class="feature-card__desc">Project weekly and monthly cash positions by combining your order pipeline, payment terms, material purchasing schedule, and fixed overhead into a rolling 12-month forecast. Flag weeks where outflows exceed projected inflows so you can negotiate deposits or defer purchases before a shortfall becomes a crisis.</p>
+              <a href="http://localhost:5173/business/estimator" class="feature-card__cta">
+                Try it
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                  <line x1="5" y1="12" x2="19" y2="12"/>
+                  <polyline points="12 5 19 12 12 19"/>
+                </svg>
+              </a>
+            </article>
+
+            <article class="feature-card">
+              <div class="feature-card__icon icon--business" aria-hidden="true">
+                <!-- Calculator icon -->
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <rect x="4" y="2" width="16" height="20" rx="2"/>
+                  <line x1="8" y1="6" x2="16" y2="6"/>
+                  <line x1="8" y1="10" x2="10" y2="10"/>
+                  <line x1="12" y1="10" x2="14" y2="10"/>
+                  <line x1="16" y1="10" x2="16" y2="10"/>
+                  <line x1="8" y1="14" x2="10" y2="14"/>
+                  <line x1="12" y1="14" x2="14" y2="14"/>
+                  <line x1="16" y1="14" x2="16" y2="14"/>
+                  <line x1="8" y1="18" x2="10" y2="18"/>
+                  <line x1="12" y1="18" x2="14" y2="18"/>
+                  <line x1="16" y1="18" x2="16" y2="18"/>
+                </svg>
+              </div>
+              <h3 class="feature-card__title">Engineering Estimator</h3>
+              <p class="feature-card__desc">Generate a binding quote for bespoke commissions by entering design complexity, custom feature list, and delivery timeline—the estimator draws on your historical job data to produce a labour-hour range with a configurable confidence interval. Attach the estimate directly to a customer proposal with one click, complete with your branding and payment schedule.</p>
+              <a href="http://localhost:5173/business/estimator" class="feature-card__cta">
+                Try it
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                  <line x1="5" y1="12" x2="19" y2="12"/>
+                  <polyline points="12 5 19 12 12 19"/>
+                </svg>
+              </a>
+            </article>
+
+          </div><!-- /feature-grid business -->
+        </div><!-- /panel-business -->
+
+      </div><!-- /container -->
+    </section><!-- /tabs-section -->
+
+  </main>
+
+  <!-- ─── Footer ────────────────────────────────────────────────── -->
+  <footer class="footer" role="contentinfo">
+    <div class="container">
+      <div class="footer__grid">
+
+        <!-- Brand -->
+        <div class="footer__brand">
+          <div class="footer__brand-name">
+            <span class="footer__brand-logo" aria-hidden="true">
+              <svg viewBox="0 0 18 18" fill="none">
+                <path d="M3 14.5L9 3.5L15 14.5H3Z" fill="white" opacity="0.9"/>
+                <rect x="7" y="10" width="4" height="4.5" fill="white" opacity="0.5"/>
+              </svg>
+            </span>
+            The Production Shop
+          </div>
+          <p class="footer__brand-desc">An ERP and CAM platform for professional instrument makers. Design, machine, monitor, and grow—from one cohesive system built for luthiers.</p>
+        </div>
+
+        <!-- Platform links -->
+        <div class="footer__col">
+          <p class="footer__col-title">Platform</p>
+          <ul>
+            <li><a href="features.html">Features</a></li>
+            <li><a href="pricing.html">Pricing</a></li>
+            <li><a href="features.html#panel-design">Design Module</a></li>
+            <li><a href="features.html#panel-calculators">Calculators</a></li>
+            <li><a href="features.html#panel-cam">CAM Module</a></li>
+            <li><a href="features.html#panel-production">Production</a></li>
+            <li><a href="features.html#panel-business">Business</a></li>
+          </ul>
+        </div>
+
+        <!-- Company links -->
+        <div class="footer__col">
+          <p class="footer__col-title">Company</p>
+          <ul>
+            <li><a href="about.html">About</a></li>
+            <li><a href="contact.html">Contact</a></li>
+            <li><a href="about.html#mission">Mission</a></li>
+            <li><a href="contact.html#support">Support</a></li>
+          </ul>
+        </div>
+
+        <!-- Legal -->
+        <div class="footer__col">
+          <p class="footer__col-title">Legal</p>
+          <ul>
+            <li><a href="#">Privacy Policy</a></li>
+            <li><a href="#">Terms of Service</a></li>
+            <li><a href="#">Cookie Policy</a></li>
+          </ul>
+        </div>
+
+      </div><!-- /footer__grid -->
+
+      <div class="footer__bottom">
+        <p>&copy; <span id="year"></span> The Production Shop. All rights reserved.</p>
+        <nav class="footer__bottom-links" aria-label="Footer navigation">
+          <a href="index.html">Home</a>
+          <a href="features.html">Features</a>
+          <a href="pricing.html">Pricing</a>
+          <a href="about.html">About</a>
+          <a href="contact.html">Contact</a>
+        </nav>
+      </div>
+    </div>
+  </footer>
+
+  <!-- ─── JavaScript ────────────────────────────────────────────── -->
+  <script>
+    /* ── Mobile nav toggle ─────────────────────────────────────── */
+    (function () {
+      const toggle = document.getElementById('navToggle');
+      const links  = document.getElementById('navLinks');
+
+      toggle.addEventListener('click', function () {
+        const isOpen = links.classList.toggle('open');
+        toggle.setAttribute('aria-expanded', isOpen);
+      });
+
+      /* Close nav when a link is clicked (mobile) */
+      links.querySelectorAll('a').forEach(function (a) {
+        a.addEventListener('click', function () {
+          links.classList.remove('open');
+          toggle.setAttribute('aria-expanded', 'false');
+        });
+      });
+    }());
+
+    /* ── Tab switcher ──────────────────────────────────────────── */
+    (function () {
+      const buttons = document.querySelectorAll('.tab-btn');
+      const panels  = document.querySelectorAll('.tab-panel');
+
+      function activateTab(targetId) {
+        /* Update buttons */
+        buttons.forEach(function (btn) {
+          const isActive = btn.dataset.tab === targetId;
+          btn.classList.toggle('active', isActive);
+          btn.setAttribute('aria-selected', isActive);
+        });
+
+        /* Update panels */
+        panels.forEach(function (panel) {
+          const isActive = panel.id === 'panel-' + targetId;
+          panel.classList.toggle('active', isActive);
+        });
+      }
+
+      buttons.forEach(function (btn) {
+        btn.addEventListener('click', function () {
+          activateTab(btn.dataset.tab);
+        });
+
+        /* Keyboard navigation: arrow keys move between tabs */
+        btn.addEventListener('keydown', function (e) {
+          const tabList = Array.from(buttons);
+          const idx     = tabList.indexOf(btn);
+
+          if (e.key === 'ArrowRight' || e.key === 'ArrowDown') {
+            e.preventDefault();
+            const next = tabList[(idx + 1) % tabList.length];
+            next.focus();
+            activateTab(next.dataset.tab);
+          } else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') {
+            e.preventDefault();
+            const prev = tabList[(idx - 1 + tabList.length) % tabList.length];
+            prev.focus();
+            activateTab(prev.dataset.tab);
+          } else if (e.key === 'Home') {
+            e.preventDefault();
+            tabList[0].focus();
+            activateTab(tabList[0].dataset.tab);
+          } else if (e.key === 'End') {
+            e.preventDefault();
+            const last = tabList[tabList.length - 1];
+            last.focus();
+            activateTab(last.dataset.tab);
+          }
+        });
+      });
+
+      /* Support deep-linking to a panel via hash, e.g. #panel-cam */
+      const hash = window.location.hash.replace('#panel-', '');
+      const validTabs = Array.from(buttons).map(function (b) { return b.dataset.tab; });
+      if (hash && validTabs.includes(hash)) {
+        activateTab(hash);
+        /* Scroll past the sticky nav */
+        setTimeout(function () {
+          const section = document.querySelector('.tabs-section');
+          if (section) section.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }, 100);
+      }
+    }());
+
+    /* ── Footer year ───────────────────────────────────────────── */
+    document.getElementById('year').textContent = new Date().getFullYear();
+  </script>
+
+</body>
+</html>
