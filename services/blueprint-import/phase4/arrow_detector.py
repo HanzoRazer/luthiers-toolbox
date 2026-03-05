@@ -4,15 +4,18 @@ Arrow Detection for Blueprint Dimension Association
 
 Hybrid arrow detection system using:
 1. Contour analysis (primary) - Works for all blueprint styles
-2. Template matching (fallback) - Standard arrow shapes
+2. Template matching (secondary) - Standard arrow shapes
+3. Image-based detection (fallback) - Line + triangle pattern matching
 
 Author: Luthier's Toolbox
-Version: 4.0.0-alpha
+Version: 4.0.0
 """
 
 import logging
+import math
 from dataclasses import dataclass, field
 from typing import List, Tuple, Optional, Dict, Any
+from enum import Enum
 import numpy as np
 
 try:
@@ -21,6 +24,14 @@ except ImportError:
     cv2 = None
 
 logger = logging.getLogger(__name__)
+
+
+class ArrowOrientation(Enum):
+    """Expected arrow orientations in dimension drawings."""
+    HORIZONTAL = "horizontal"  # 0° or 180°
+    VERTICAL = "vertical"      # 90° or 270°
+    DIAGONAL = "diagonal"      # 45°, 135°, etc.
+    ANY = "any"
 
 
 @dataclass
@@ -62,8 +73,11 @@ class ArrowDetectionStats:
     """Statistics from arrow detection run."""
     contour_detections: int = 0
     template_matches: int = 0
+    image_detections: int = 0
     total_arrows: int = 0
     processing_time_ms: float = 0.0
+    filtered_by_angle: int = 0
+    filtered_by_size: int = 0
 
 
 class ArrowDetector:
@@ -102,14 +116,30 @@ class ArrowDetector:
     TRIANGULAR_DEFECT_THRESHOLD = 20  # convexity defect depth
     TEMPLATE_MATCH_THRESHOLD = 0.7
 
-    def __init__(self, debug_mode: bool = False):
+    # Angle tolerance for axis-aligned arrows (degrees)
+    AXIS_ANGLE_TOLERANCE = 15.0
+
+    # Arrowhead geometry thresholds
+    MIN_TIP_ANGLE = 20.0   # degrees - too sharp is noise
+    MAX_TIP_ANGLE = 90.0   # degrees - too blunt isn't an arrow
+
+    def __init__(
+        self,
+        debug_mode: bool = False,
+        orientation_filter: ArrowOrientation = ArrowOrientation.ANY,
+        prefer_axis_aligned: bool = True
+    ):
         """
         Initialize arrow detector.
 
         Args:
             debug_mode: If True, return mock arrows for testing
+            orientation_filter: Filter arrows by expected orientation
+            prefer_axis_aligned: Boost confidence for horizontal/vertical arrows
         """
         self.debug_mode = debug_mode
+        self.orientation_filter = orientation_filter
+        self.prefer_axis_aligned = prefer_axis_aligned
         self.stats = ArrowDetectionStats()
         self._template_cache = {}
 
@@ -165,6 +195,14 @@ class ArrowDetector:
         # Remove duplicate detections
         arrows = self._remove_duplicates(arrows)
 
+        # Apply orientation filter
+        if self.orientation_filter != ArrowOrientation.ANY:
+            arrows = self._filter_by_orientation(arrows)
+
+        # Boost confidence for axis-aligned arrows
+        if self.prefer_axis_aligned:
+            arrows = self._boost_axis_aligned(arrows)
+
         self.stats.total_arrows = len(arrows)
         self.stats.processing_time_ms = (time.time() - start_time) * 1000
 
@@ -173,6 +211,282 @@ class ArrowDetector:
                    f"template: {self.stats.template_matches})")
 
         return arrows
+
+    def detect_arrows_in_image(
+        self,
+        image: np.ndarray,
+        min_confidence: float = 0.5
+    ) -> List[Arrow]:
+        """
+        Detect arrows directly from image using line detection.
+
+        This is a fallback method when contour detection misses arrows
+        that are part of the line work (not separate contours).
+
+        Args:
+            image: Grayscale or BGR image
+            min_confidence: Minimum confidence threshold
+
+        Returns:
+            List of detected Arrow objects
+        """
+        if cv2 is None:
+            return []
+
+        import time
+        start_time = time.time()
+
+        # Convert to grayscale if needed
+        if len(image.shape) == 3:
+            gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+        else:
+            gray = image
+
+        # Edge detection
+        edges = cv2.Canny(gray, 50, 150, apertureSize=3)
+
+        # Detect lines using probabilistic Hough transform
+        lines = cv2.HoughLinesP(
+            edges,
+            rho=1,
+            theta=np.pi/180,
+            threshold=30,
+            minLineLength=self.MIN_ARROW_LENGTH,
+            maxLineGap=5
+        )
+
+        if lines is None:
+            return []
+
+        arrows = []
+
+        # Group nearby line endpoints to find potential arrowheads
+        endpoints = []
+        for line in lines:
+            x1, y1, x2, y2 = line[0]
+            endpoints.append(((x1, y1), (x2, y2), line[0]))
+
+        # Find clusters of 3+ lines meeting at a point (arrowhead pattern)
+        for i, (ep1, ep2, line) in enumerate(endpoints):
+            for point in [ep1, ep2]:
+                nearby_lines = self._find_lines_near_point(
+                    point, endpoints, radius=15
+                )
+
+                if len(nearby_lines) >= 2:
+                    # Potential arrowhead - analyze angles
+                    arrow = self._analyze_arrowhead_cluster(
+                        point, nearby_lines, i
+                    )
+                    if arrow and arrow.confidence >= min_confidence:
+                        arrows.append(arrow)
+                        self.stats.image_detections += 1
+
+        arrows = self._remove_duplicates(arrows)
+        self.stats.processing_time_ms += (time.time() - start_time) * 1000
+
+        return arrows
+
+    def _find_lines_near_point(
+        self,
+        point: Tuple[float, float],
+        endpoints: List[Tuple],
+        radius: float
+    ) -> List[Tuple]:
+        """Find lines with endpoints near a given point."""
+        nearby = []
+        px, py = point
+
+        for ep1, ep2, line in endpoints:
+            for ep in [ep1, ep2]:
+                dist = math.sqrt((ep[0] - px)**2 + (ep[1] - py)**2)
+                if dist < radius:
+                    nearby.append((ep1, ep2, line, ep))
+                    break
+
+        return nearby
+
+    def _analyze_arrowhead_cluster(
+        self,
+        center: Tuple[float, float],
+        lines: List[Tuple],
+        contour_idx: int
+    ) -> Optional[Arrow]:
+        """
+        Analyze a cluster of lines meeting at a point.
+
+        An arrowhead has:
+        - 2-3 lines meeting at the tip
+        - Lines at symmetric angles (30-60 degrees from shaft)
+        - One longer line (the shaft)
+        """
+        if len(lines) < 2:
+            return None
+
+        # Calculate angles of all lines from the center point
+        angles_and_lengths = []
+        for ep1, ep2, line, near_ep in lines:
+            # Get the far endpoint
+            far_ep = ep2 if near_ep == ep1 else ep1
+
+            dx = far_ep[0] - center[0]
+            dy = far_ep[1] - center[1]
+            angle = math.degrees(math.atan2(dy, dx))
+            length = math.sqrt(dx**2 + dy**2)
+
+            angles_and_lengths.append({
+                'angle': angle,
+                'length': length,
+                'far_point': far_ep,
+                'line': line
+            })
+
+        # Find the shaft (longest line)
+        shaft = max(angles_and_lengths, key=lambda x: x['length'])
+        others = [a for a in angles_and_lengths if a != shaft]
+
+        if not others:
+            return None
+
+        # Check if other lines form symmetric arrowhead barbs
+        shaft_angle = shaft['angle']
+        barb_angles = [a['angle'] for a in others]
+
+        # Normalize angles relative to shaft
+        relative_angles = []
+        for ba in barb_angles:
+            rel = (ba - shaft_angle + 180) % 360 - 180
+            relative_angles.append(abs(rel))
+
+        # Arrowhead barbs should be 20-80 degrees from shaft
+        valid_barbs = [a for a in relative_angles
+                       if self.MIN_TIP_ANGLE <= a <= self.MAX_TIP_ANGLE]
+
+        if len(valid_barbs) < 1:
+            return None
+
+        # Calculate confidence based on symmetry and angle
+        if len(valid_barbs) >= 2:
+            # Check symmetry
+            angle_diff = abs(valid_barbs[0] - valid_barbs[1])
+            symmetry_score = 1.0 - min(angle_diff / 30.0, 1.0)
+            confidence = 0.7 + 0.3 * symmetry_score
+        else:
+            confidence = 0.6
+
+        # Arrow tip is the center, tail is end of shaft
+        tip = center
+        tail = shaft['far_point']
+
+        dx = tip[0] - tail[0]
+        dy = tip[1] - tail[1]
+        length = math.sqrt(dx**2 + dy**2)
+
+        if length < self.MIN_ARROW_LENGTH:
+            return None
+
+        direction = (dx / length, dy / length)
+
+        return Arrow(
+            tip_point=(float(tip[0]), float(tip[1])),
+            tail_point=(float(tail[0]), float(tail[1])),
+            direction=direction,
+            confidence=confidence,
+            contour_index=contour_idx,
+            detection_method="image"
+        )
+
+    def _filter_by_orientation(self, arrows: List[Arrow]) -> List[Arrow]:
+        """Filter arrows by expected orientation."""
+        filtered = []
+
+        for arrow in arrows:
+            angle = abs(arrow.angle_degrees)
+
+            if self.orientation_filter == ArrowOrientation.HORIZONTAL:
+                # 0° or 180° (±tolerance)
+                if angle <= self.AXIS_ANGLE_TOLERANCE or \
+                   abs(angle - 180) <= self.AXIS_ANGLE_TOLERANCE:
+                    filtered.append(arrow)
+                else:
+                    self.stats.filtered_by_angle += 1
+
+            elif self.orientation_filter == ArrowOrientation.VERTICAL:
+                # 90° or 270° (±tolerance)
+                if abs(angle - 90) <= self.AXIS_ANGLE_TOLERANCE or \
+                   abs(angle - 270) <= self.AXIS_ANGLE_TOLERANCE:
+                    filtered.append(arrow)
+                else:
+                    self.stats.filtered_by_angle += 1
+
+            elif self.orientation_filter == ArrowOrientation.DIAGONAL:
+                # 45°, 135°, 225°, 315° (±tolerance)
+                for target in [45, 135, 225, 315]:
+                    if abs(angle - target) <= self.AXIS_ANGLE_TOLERANCE:
+                        filtered.append(arrow)
+                        break
+                else:
+                    self.stats.filtered_by_angle += 1
+
+            else:
+                filtered.append(arrow)
+
+        return filtered
+
+    def _boost_axis_aligned(self, arrows: List[Arrow]) -> List[Arrow]:
+        """Boost confidence for axis-aligned arrows (common in dimensions)."""
+        boosted = []
+
+        for arrow in arrows:
+            angle = abs(arrow.angle_degrees)
+
+            # Check if close to 0°, 90°, 180°, 270°
+            is_axis_aligned = False
+            for target in [0, 90, 180, 270]:
+                if abs(angle - target) <= self.AXIS_ANGLE_TOLERANCE:
+                    is_axis_aligned = True
+                    break
+
+            if is_axis_aligned:
+                # Boost confidence by 10%
+                boosted_confidence = min(arrow.confidence * 1.1, 1.0)
+                boosted.append(Arrow(
+                    tip_point=arrow.tip_point,
+                    tail_point=arrow.tail_point,
+                    direction=arrow.direction,
+                    confidence=boosted_confidence,
+                    contour_index=arrow.contour_index,
+                    detection_method=arrow.detection_method
+                ))
+            else:
+                boosted.append(arrow)
+
+        return boosted
+
+    def validate_arrow_geometry(self, arrow: Arrow) -> Tuple[bool, str]:
+        """
+        Validate arrow geometry for dimension association.
+
+        Returns:
+            (is_valid, reason) tuple
+        """
+        # Check length
+        if arrow.length < self.MIN_ARROW_LENGTH:
+            return False, f"Too short: {arrow.length:.1f}px < {self.MIN_ARROW_LENGTH}px"
+
+        if arrow.length > self.MAX_ARROW_LENGTH:
+            return False, f"Too long: {arrow.length:.1f}px > {self.MAX_ARROW_LENGTH}px"
+
+        # Check confidence
+        if arrow.confidence < 0.3:
+            return False, f"Low confidence: {arrow.confidence:.2f}"
+
+        # Check for degenerate direction
+        dir_length = math.sqrt(arrow.direction[0]**2 + arrow.direction[1]**2)
+        if abs(dir_length - 1.0) > 0.01:
+            return False, f"Invalid direction vector: length={dir_length:.3f}"
+
+        return True, "OK"
 
     def _detect_arrow_from_contour(
         self,
