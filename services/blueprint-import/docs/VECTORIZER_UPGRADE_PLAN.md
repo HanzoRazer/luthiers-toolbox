@@ -1,9 +1,9 @@
 # Vectorizer Upgrade Plan
 ## Blueprint-to-DXF Conversion System
 
-**Document Version:** 1.0.0
-**Last Updated:** 2024
-**Current Vectorizer Version:** 3.6.0
+**Document Version:** 1.1.0
+**Last Updated:** 2025
+**Current Vectorizer Version:** 4.0.0-alpha
 
 ---
 
@@ -13,7 +13,7 @@ This document chronicles the evolution of the Luthier's Toolbox blueprint vector
 
 ---
 
-## Current Rating: 7.2 / 10
+## Current Rating: 7.5 / 10
 
 ### Capability Assessment
 
@@ -28,7 +28,8 @@ This document chronicles the evolution of the Luthier's Toolbox blueprint vector
 | DXF export | ✅ Complete | 9/10 |
 | Processing tiers system | ✅ Complete | 9/10 |
 | Latin American classifiers | ✅ Complete | 8/10 |
-| Phase 4.0 Leader Lines | 🔶 Scaffold only | 3/10 |
+| Annotation Layer Architecture | ✅ Complete | 9/10 |
+| Phase 4.0 Leader Lines | 🔶 Partial | 5/10 |
 | Parametric constraints | ❌ Not started | 0/10 |
 | Multi-page extraction | ❌ Not started | 0/10 |
 | Neural boost | ❌ Not started | 0/10 |
@@ -40,10 +41,10 @@ This document chronicles the evolution of the Luthier's Toolbox blueprint vector
 | Core extraction | 25% | 9.0 | 2.25 |
 | Classification | 20% | 8.0 | 1.60 |
 | OCR/Dimensions | 15% | 7.0 | 1.05 |
-| Leader line association | 15% | 3.0 | 0.45 |
-| Architecture/Config | 10% | 9.0 | 0.90 |
-| Advanced features | 15% | 2.0 | 0.30 |
-| **Total** | | | **7.2** |
+| Leader line association | 15% | 5.0 | 0.75 |
+| Architecture/Config | 10% | 9.5 | 0.95 |
+| Advanced features | 15% | 3.5 | 0.53 |
+| **Total** | | | **7.5** |
 
 ### Rating History
 
@@ -53,6 +54,7 @@ This document chronicles the evolution of the Luthier's Toolbox blueprint vector
 | v3.5.0 | 5.5 | ML classification, primitives, scale detection |
 | v3.6.0 | 6.5 | OCR dimension extraction |
 | v3.6.0 + Phase 4 scaffold | 7.2 | Tiered processing, classifiers, leader line framework |
+| v4.0.0-alpha | 7.5 | Annotation Layer Architecture, witness line detection, JSON sidecar |
 
 ### Path to Higher Ratings
 
@@ -65,10 +67,10 @@ This document chronicles the evolution of the Luthier's Toolbox blueprint vector
 
 ### Critical Gaps
 
-1. **Leader Line Implementation** - Scaffold exists but no real detection
+1. **Leader Line Implementation** - Scaffold exists, witness detection added, needs end-to-end integration
 2. **Parametric Constraints** - No constraint extraction or export
 3. **Cross-Reference Validation** - OCR dimensions not validated against geometry
-4. **Annotation Layer Separation** - Text/arrows mixed with geometry in DXF
+4. ~~**Annotation Layer Separation**~~ - ✅ RESOLVED: Separate DIMENSIONS layer, XDATA, JSON sidecar
 
 ---
 
@@ -130,7 +132,12 @@ This document chronicles the evolution of the Luthier's Toolbox blueprint vector
 | ArrowDetector | Scaffold | Hybrid contour + template matching |
 | LeaderLineAssociator | Scaffold | Multi-factor ranking algorithm |
 | DimensionLinker | Scaffold | Orchestrator with adaptive radius |
-| WitnessLineDetector | Scaffold | Extension line grouping |
+| WitnessLineDetector | ✅ Complete | Extension line grouping, returns (point1, point2) |
+| **Annotation Architecture** | ✅ Complete | Base classes, exporters, layer separation |
+| AnnotationAwareExporter | ✅ Complete | DXF export with XDATA, R12 fallback |
+| AnnotationJSONExporter | ✅ Complete | JSON sidecar for CI/CD validation |
+| LinearDimension | ✅ Complete | Modern DXF dimensions + R12 fallback |
+| RadialDimension | ✅ Complete | Radius/diameter with leader lines |
 | End-to-end integration | Not started | Connect OCR → arrows → geometry |
 | Testing on real blueprints | Not started | Need diverse test set |
 
@@ -322,20 +329,20 @@ The following enhancements were identified during Phase 4.0 implementation but w
 
 ## Implementation Priority Matrix
 
-| Adaptation | Impact | Effort | Priority |
-|------------|--------|--------|----------|
-| Cross-Reference Validation | High | Medium | P1 |
-| Annotation Layer Separation | High | Low | P1 |
-| Contour Confidence Propagation | High | Low | P1 |
-| Hybrid Scale Detection | High | High | P2 |
-| Instrument Family Detection | Medium | Medium | P2 |
-| Blueprint Quality Scoring | Medium | Medium | P2 |
-| ROI Extraction | Medium | Low | P3 |
-| Progressive Extraction API | Medium | High | P3 |
-| Batch Comparison Reports | Medium | Medium | P3 |
-| Template Matching | Low | High | P4 |
-| Export Format Extensions | Low | Medium | P4 |
-| Localization Support | Low | Low | P4 |
+| Adaptation | Impact | Effort | Priority | Status |
+|------------|--------|--------|----------|--------|
+| Cross-Reference Validation | High | Medium | P1 | Pending |
+| ~~Annotation Layer Separation~~ | High | Low | P1 | ✅ Done |
+| Contour Confidence Propagation | High | Low | P1 | Pending |
+| Hybrid Scale Detection | High | High | P2 | Pending |
+| Instrument Family Detection | Medium | Medium | P2 | Pending |
+| Blueprint Quality Scoring | Medium | Medium | P2 | Pending |
+| ROI Extraction | Medium | Low | P3 | Pending |
+| Progressive Extraction API | Medium | High | P3 | Pending |
+| Batch Comparison Reports | Medium | Medium | P3 | Pending |
+| Template Matching | Low | High | P4 | Pending |
+| Export Format Extensions | Low | Medium | P4 | Pending |
+| Localization Support | Low | Low | P4 | Pending |
 
 ---
 
@@ -377,7 +384,18 @@ The following enhancements were identified during Phase 4.0 implementation but w
 
 ## Changelog
 
-### v3.6.0 (Current)
+### v4.0.0-alpha (Current)
+- Added Annotation Layer Architecture
+  - LinearDimension and RadialDimension classes
+  - AnnotationAwareExporter with layer separation
+  - AnnotationJSONExporter for CI/CD validation
+  - XDATA storage for machine readability
+  - R12 fallback with user warning
+- Added WitnessLineDetector integration
+- Added shop_config.yaml layer configuration
+- 19 annotation layer tests
+
+### v3.6.0
 - Added OCR dimension extraction
 - Added processing tiers system
 - Added Latin American instrument classifiers
