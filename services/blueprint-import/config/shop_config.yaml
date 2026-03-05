@@ -1,0 +1,172 @@
+# =============================================================================
+# Shop Configuration Template
+# =============================================================================
+#
+# Configure blueprint processing defaults for your shop/workflow.
+# Copy this file and customize for your specific needs.
+#
+# Priority: Runtime flags > Config file > Auto-detection
+#
+# Author: Luthier's Toolbox
+# Version: 4.0.0
+
+# -----------------------------------------------------------------------------
+# Processing Tier Defaults
+# -----------------------------------------------------------------------------
+# Tiers: express, standard, premium, batch
+#
+# express:  <30 sec  - Basic contours, preview/batch operations
+# standard: 1-2 min  - ML classification, daily production use
+# premium:  3-5 min  - All features, final production drawings
+# batch:    10-20 min - Maximum quality, overnight processing
+
+default_tier: standard
+
+# -----------------------------------------------------------------------------
+# Tier-specific overrides
+# -----------------------------------------------------------------------------
+# Override default settings for each tier
+
+tiers:
+  express:
+    dual_pass: false
+    use_ml: false
+    detect_primitives: false
+    scale_detection: false
+    enable_ocr: false
+    max_contours: 500
+    simplify_tolerance: 0.5  # mm
+
+  standard:
+    dual_pass: true
+    use_ml: true
+    detect_primitives: true
+    scale_detection: true
+    enable_ocr: true
+    max_contours: 2000
+    simplify_tolerance: 0.2  # mm
+
+  premium:
+    dual_pass: true
+    use_ml: true
+    detect_primitives: true
+    scale_detection: true
+    leader_lines: true
+    parametric: true
+    neural_boost: true
+    enable_ocr: true
+    max_contours: 5000
+    simplify_tolerance: 0.1  # mm
+    ocr_min_confidence: 0.2
+
+  batch:
+    dual_pass: true
+    use_ml: true
+    detect_primitives: true
+    scale_detection: true
+    leader_lines: true
+    parametric: true
+    neural_boost: true
+    enable_ocr: true
+    extract_all_pages: true
+    max_contours: 10000
+    simplify_tolerance: 0.05  # mm
+    ocr_min_confidence: 0.15
+
+# -----------------------------------------------------------------------------
+# OCR Settings
+# -----------------------------------------------------------------------------
+ocr:
+  enabled: true
+  min_confidence: 0.3
+  languages:
+    - en
+
+  # Unit preferences for dimension parsing
+  preferred_units: mm  # mm, inch, or auto
+
+  # Label patterns to recognize (beyond defaults)
+  custom_patterns: []
+  #  - pattern: 'my_dimension:\s*(\d+\.?\d*)'
+  #    name: custom_label
+
+# -----------------------------------------------------------------------------
+# Output Settings
+# -----------------------------------------------------------------------------
+output:
+  # DXF export settings
+  dxf:
+    version: R2018  # R12, R2000, R2004, R2007, R2010, R2013, R2018
+    units: mm       # mm, inch
+    layer_prefix: "BLUEPRINT_"
+
+    # Include OCR dimensions in DXF
+    include_ocr_annotations: true
+
+    # Parametric constraints (premium/batch only)
+    export_constraints: true
+    constraint_format: both  # xdata, json, or both
+
+  # JSON metadata export
+  json:
+    pretty_print: true
+    include_contour_points: false  # Large file if true
+    include_ocr_raw: false
+
+# -----------------------------------------------------------------------------
+# Classification Settings
+# -----------------------------------------------------------------------------
+classification:
+  enabled: true
+
+  # Classifier families to enable
+  families:
+    - latin_american
+    # - acoustic_guitar  # Coming soon
+    # - electric_guitar  # Coming soon
+
+  # Confidence threshold for auto-classification
+  min_confidence: 0.7
+
+  # Always show alternatives within this confidence of primary
+  alternative_threshold: 0.15
+
+# -----------------------------------------------------------------------------
+# Hardware Settings
+# -----------------------------------------------------------------------------
+hardware:
+  # Auto-detect GPU for premium/batch tiers
+  auto_detect_gpu: true
+
+  # Force GPU usage (requires CUDA)
+  force_gpu: false
+
+  # Batch size for neural operations
+  batch_size: 8  # Increase to 32 if GPU available
+
+# -----------------------------------------------------------------------------
+# Logging Settings
+# -----------------------------------------------------------------------------
+logging:
+  level: INFO  # DEBUG, INFO, WARNING, ERROR
+
+  # Log performance metrics
+  log_performance: true
+
+  # Save debug images during extraction
+  save_debug_images: false
+  debug_image_path: ./debug_output/
+
+# -----------------------------------------------------------------------------
+# Task Mapping
+# -----------------------------------------------------------------------------
+# Map task types to processing tiers
+task_mapping:
+  preview: express
+  quick: express
+  daily: standard
+  normal: standard
+  production: premium
+  final: premium
+  archive: batch
+  overnight: batch

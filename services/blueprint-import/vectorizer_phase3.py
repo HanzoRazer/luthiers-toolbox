@@ -2,6 +2,8 @@
 Phase 3.6 Vectorizer - Production-Grade Blueprint Extraction with ML + OCR
 ===========================================================================
 
+Production-ready blueprint vectorizer with tiered processing and enhanced features.
+
 Enhanced blueprint vectorizer with:
 - Dual-pass extraction (aggressive for body, lighter for details)
 - Text/annotation filtering using shape heuristics
@@ -2005,10 +2007,12 @@ class Phase3Vectorizer:
         enable_scale_detection: bool = True,
         enable_feedback: bool = False,
         feedback_dir: str = ".feedback",
-        enable_ocr: bool = False
+        enable_ocr: bool = False,
+        tier: Optional[str] = None,
+        tier_config_path: Optional[str] = None
     ):
         """
-        Initialize Phase 3.5 Vectorizer.
+        Initialize Phase 3.6 Vectorizer.
 
         Args:
             dpi: Resolution for PDF rasterization
@@ -2020,7 +2024,28 @@ class Phase3Vectorizer:
             enable_feedback: Enable feedback collection
             feedback_dir: Directory for feedback storage
             enable_ocr: Enable OCR dimension extraction (requires easyocr)
+            tier: Processing tier ('express', 'standard', 'premium', 'batch')
+            tier_config_path: Path to tier configuration file (JSON or YAML)
         """
+        # Apply tier configuration if specified
+        self._tier_processor = None
+        if tier:
+            try:
+                from config.processing_tiers import TieredProcessor
+                self._tier_processor = TieredProcessor(
+                    tier=tier,
+                    config_path=tier_config_path
+                )
+                # Override parameters from tier config
+                tier_kwargs = self._tier_processor.get_vectorizer_kwargs()
+                enable_primitives = tier_kwargs.get('enable_primitives', enable_primitives)
+                enable_scale_detection = tier_kwargs.get('enable_scale_detection', enable_scale_detection)
+                enable_ocr = tier_kwargs.get('enable_ocr', enable_ocr)
+                simplify_tolerance = tier_kwargs.get('simplify_tolerance', simplify_tolerance)
+                logger.info(f"Using {tier} tier configuration")
+            except ImportError:
+                logger.warning("Tier configuration not available, using defaults")
+
         self.dpi = dpi
         self.mm_per_px = 25.4 / dpi
         self.enable_ocr = enable_ocr
@@ -2028,7 +2053,7 @@ class Phase3Vectorizer:
         self.default_instrument = default_instrument
         self.simplify_tolerance = simplify_tolerance
 
-        # Phase 3.5 components
+        # Phase 3.6 components
         self.color_filter = ColorFilter()
         self.ml_classifier = MLContourClassifier(ml_model_path) if ml_model_path else None
         self.enable_primitives = enable_primitives
@@ -2036,7 +2061,67 @@ class Phase3Vectorizer:
 
         self.feedback = FeedbackSystem(feedback_dir) if enable_feedback else None
 
-        logger.info(f"Phase 3.5 Vectorizer initialized (ML: {self.ml_classifier is not None})")
+        logger.info(f"Phase 3.6 Vectorizer initialized (ML: {self.ml_classifier is not None})")
+
+    @classmethod
+    def from_tier(
+        cls,
+        tier: str,
+        config_path: Optional[str] = None,
+        **kwargs
+    ) -> 'Phase3Vectorizer':
+        """
+        Create a vectorizer configured for a specific processing tier.
+
+        Args:
+            tier: Processing tier ('express', 'standard', 'premium', 'batch')
+            config_path: Optional path to configuration file
+            **kwargs: Additional arguments passed to __init__
+
+        Returns:
+            Configured Phase3Vectorizer instance
+
+        Example:
+            # Quick preview extraction
+            vectorizer = Phase3Vectorizer.from_tier('express')
+
+            # Production quality with all features
+            vectorizer = Phase3Vectorizer.from_tier('premium')
+
+            # With custom config
+            vectorizer = Phase3Vectorizer.from_tier(
+                'standard',
+                config_path='config/shop_config.yaml'
+            )
+        """
+        return cls(tier=tier, tier_config_path=config_path, **kwargs)
+
+    @classmethod
+    def for_task(cls, task_type: str, **kwargs) -> 'Phase3Vectorizer':
+        """
+        Create a vectorizer configured for a specific task type.
+
+        Args:
+            task_type: Task type ('preview', 'daily', 'production', 'archive')
+            **kwargs: Additional arguments passed to __init__
+
+        Returns:
+            Configured Phase3Vectorizer instance
+
+        Example:
+            # For quick preview
+            vectorizer = Phase3Vectorizer.for_task('preview')
+
+            # For final production output
+            vectorizer = Phase3Vectorizer.for_task('production')
+        """
+        try:
+            from config.processing_tiers import get_tier_for_task
+            tier = get_tier_for_task(task_type)
+            return cls(tier=tier.value, **kwargs)
+        except ImportError:
+            logger.warning("Tier configuration not available, using defaults")
+            return cls(**kwargs)
 
     def extract(
         self,
