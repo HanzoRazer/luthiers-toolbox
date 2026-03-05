@@ -557,3 +557,170 @@ class WitnessLineDetector:
             return cv2
         except ImportError:
             raise ImportError("OpenCV required for witness line detection")
+
+    def detect_witness_lines(
+        self,
+        dimension_text: TextRegion,
+        geometry: List[Any],
+        contours: List[np.ndarray]
+    ) -> Tuple[Optional[Tuple[float, float]], Optional[Tuple[float, float]]]:
+        """
+        Detect witness lines and return geometry contact points.
+
+        This method is used by DimensionLinker to populate LinearDimension
+        point1 and point2 fields.
+
+        Args:
+            dimension_text: TextRegion from OCR
+            geometry: List of ContourInfo objects
+            contours: Raw contours for line detection
+
+        Returns:
+            (point1, point2) where witness lines touch geometry,
+            or (None, None) if not detected
+        """
+        cv2 = self._cv2_import()
+
+        # Find perpendicular lines near dimension text
+        text_center = dimension_text.center
+        candidates = self._find_witness_candidates(contours)
+
+        # Filter candidates near the text region
+        nearby_candidates = []
+        search_radius = 100  # pixels
+
+        for contour in candidates:
+            centroid = contour.mean(axis=0)[0]
+            dist = np.sqrt(
+                (centroid[0] - text_center[0])**2 +
+                (centroid[1] - text_center[1])**2
+            )
+            if dist < search_radius:
+                nearby_candidates.append(contour)
+
+        if len(nearby_candidates) < 2:
+            return None, None
+
+        # Find the two most likely witness lines (parallel, similar length)
+        witness_pair = self._find_parallel_pair(nearby_candidates)
+
+        if not witness_pair:
+            return None, None
+
+        # Trace each witness line to nearest geometry intersection
+        point1 = self._trace_to_geometry(witness_pair[0], geometry)
+        point2 = self._trace_to_geometry(witness_pair[1], geometry)
+
+        return point1, point2
+
+    def _find_parallel_pair(
+        self,
+        candidates: List[np.ndarray]
+    ) -> Optional[Tuple[np.ndarray, np.ndarray]]:
+        """Find the most likely parallel pair of witness lines."""
+        if len(candidates) < 2:
+            return None
+
+        cv2 = self._cv2_import()
+        best_pair = None
+        best_score = float('inf')
+
+        for i in range(len(candidates)):
+            for j in range(i + 1, len(candidates)):
+                # Get line angles
+                angle1 = self._get_line_angle(candidates[i])
+                angle2 = self._get_line_angle(candidates[j])
+
+                # Angular difference (should be near 0 for parallel)
+                angle_diff = abs(angle1 - angle2)
+                if angle_diff > 90:
+                    angle_diff = 180 - angle_diff
+
+                # Length similarity
+                len1 = cv2.arcLength(candidates[i], False)
+                len2 = cv2.arcLength(candidates[j], False)
+                len_ratio = min(len1, len2) / max(len1, len2) if max(len1, len2) > 0 else 0
+
+                # Score: lower is better (parallel + similar length)
+                score = angle_diff + (1 - len_ratio) * 45  # Weight length similarity
+
+                if score < best_score:
+                    best_score = score
+                    best_pair = (candidates[i], candidates[j])
+
+        # Only accept if reasonably parallel (within 15 degrees)
+        if best_score > 20:
+            return None
+
+        return best_pair
+
+    def _get_line_angle(self, contour: np.ndarray) -> float:
+        """Get the angle of a line contour in degrees."""
+        pts = contour.reshape(-1, 2)
+        if len(pts) < 2:
+            return 0
+
+        # Use first and last points
+        dx = pts[-1][0] - pts[0][0]
+        dy = pts[-1][1] - pts[0][1]
+
+        return np.degrees(np.arctan2(dy, dx))
+
+    def _trace_to_geometry(
+        self,
+        witness_line: np.ndarray,
+        geometry: List[Any]
+    ) -> Optional[Tuple[float, float]]:
+        """
+        Trace witness line to find geometry intersection.
+
+        Args:
+            witness_line: Witness line contour
+            geometry: List of geometry objects (ContourInfo)
+
+        Returns:
+            Intersection point or endpoint if no intersection found
+        """
+        pts = witness_line.reshape(-1, 2)
+        if len(pts) < 2:
+            return None
+
+        # Get line endpoints
+        p1 = tuple(pts[0])
+        p2 = tuple(pts[-1])
+
+        # Try to find intersection with geometry
+        for geom in geometry:
+            if hasattr(geom, 'contour'):
+                intersection = self._find_line_contour_intersection(
+                    p1, p2, geom.contour
+                )
+                if intersection:
+                    return intersection
+
+        # If no intersection, return the endpoint further from text center
+        # (likely the geometry contact point)
+        return tuple(float(x) for x in p2)
+
+    def _find_line_contour_intersection(
+        self,
+        line_p1: Tuple[float, float],
+        line_p2: Tuple[float, float],
+        contour: np.ndarray
+    ) -> Optional[Tuple[float, float]]:
+        """Find intersection point between line and contour."""
+        cv2 = self._cv2_import()
+
+        # Check if line endpoints are near contour
+        for point in contour:
+            pt = point[0] if len(point.shape) > 1 else point
+            dist1 = np.sqrt((pt[0] - line_p1[0])**2 + (pt[1] - line_p1[1])**2)
+            dist2 = np.sqrt((pt[0] - line_p2[0])**2 + (pt[1] - line_p2[1])**2)
+
+            # If either endpoint is very close to contour, that's our intersection
+            if dist1 < 5:
+                return (float(line_p1[0]), float(line_p1[1]))
+            if dist2 < 5:
+                return (float(line_p2[0]), float(line_p2[1]))
+
+        return None
