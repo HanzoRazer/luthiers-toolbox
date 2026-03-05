@@ -1,0 +1,116 @@
+{
+  "model_id": "melody_maker",
+  "display_name": "Gibson Melody Maker (1959-1970)",
+  "description": "Gibson student model single-cutaway electric guitar with slab mahogany body, bolt-on or set neck depending on year. Simple, affordable design that became iconic.",
+
+  "blueprint_source": {
+    "file": "Guitar Plans/Gibson-Melody-Maker.pdf",
+    "extraction_method": "Phase 3.5 vectorizer",
+    "extraction_date": "2026-03-04",
+    "dpi": 400,
+    "scale_reference": "neck_pocket (56mm standard)"
+  },
+
+  "body": {
+    "type": "solid_slab",
+    "material": "mahogany",
+    "body_length_mm": 434.3,
+    "body_width_mm": 325.4,
+    "body_thickness_mm": 44.5,
+    "upper_bout_width_mm": null,
+    "lower_bout_width_mm": 325.4,
+    "waist_width_mm": null,
+    "weight_kg_typical": 2.7,
+    "contours": "flat_slab",
+    "binding": "none"
+  },
+
+  "neck": {
+    "construction": "set_neck",
+    "material": "mahogany",
+    "nut_width_mm": 41.3,
+    "nut_width_in": 1.625,
+    "width_at_12th_mm": 51.0,
+    "thickness_at_1st_mm": 20.6,
+    "thickness_at_12th_mm": 22.2,
+    "profile": "slim_taper",
+    "fingerboard_material": "rosewood",
+    "fingerboard_radius_mm": 304.8,
+    "fingerboard_radius_in": 12.0,
+    "fret_count": 22,
+    "fret_wire": "small_vintage"
+  },
+
+  "neck_joint": {
+    "type": "set_neck",
+    "body_join_fret": 16,
+    "pocket_width_mm": 56.0,
+    "pocket_length_mm": 76.0,
+    "pocket_depth_mm": 16.0,
+    "neck_angle_degrees": 4.0,
+    "heel_shape": "rounded"
+  },
+
+  "scale": {
+    "scale_length_mm": 628.65,
+    "scale_length_in": 24.75,
+    "fret_count": 22,
+    "joint_fret": 16
+  },
+
+  "bridge": {
+    "type": "wraparound_compensated",
+    "material": "aluminum",
+    "bridge_position_from_nut_mm": 628.65,
+    "stud_spacing_mm": 82.5,
+    "post_diameter_mm": 8.0,
+    "post_hole_depth_mm": 18.0
+  },
+
+  "pickups": {
+    "configuration": "single_p90_or_single_coil",
+    "routes": [
+      {
+        "position": "neck",
+        "type": "melody_maker_single",
+        "length_mm": 85.0,
+        "width_mm": 38.0,
+        "depth_mm": 19.0,
+        "corner_radius_mm": 6.0
+      }
+    ]
+  },
+
+  "electronics_cavity": {
+    "rear_routed": true,
+    "length_mm": 89.0,
+    "width_mm": 51.0,
+    "depth_mm": 35.0,
+    "cover_plate": true
+  },
+
+  "hardware": {
+    "tuners": "3x3_kluson_style",
+    "tuner_hole_diameter_mm": 8.7,
+    "strap_button_locations": ["heel", "lower_bout_edge"],
+    "jack_location": "side",
+    "jack_hole_diameter_mm": 12.0
+  },
+
+  "headstock": {
+    "style": "gibson_open_book",
+    "angle_degrees": 17.0,
+    "thickness_mm": 14.0,
+    "length_mm": 190.0,
+    "width_mm": 165.0
+  },
+
+  "notes": [
+    "Dimensions extracted from PDF blueprint via Phase 3.5 vectorizer",
+    "Body dimensions confirmed: 434.3 x 325.4 mm",
+    "Neck pocket width validated against 56mm Gibson standard",
+    "Early models (1959-1961) had set necks, later (1965+) had bolt-on",
+    "Pickup configuration varied: single coil, P-90, or mini-humbucker",
+    "Some dimensions (thickness, cavity depths) are standard Gibson specs, not extracted"
+  ]
+}

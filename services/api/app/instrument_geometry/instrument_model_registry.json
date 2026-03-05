@@ -411,7 +411,9 @@
       "assets": [
         "electric/Gibson-Melody-Maker_phase3.dxf",
         "electric/Gibson-Melody-Maker_phase3_primitives.dxf"
-      ]
+      ],
+      "specs_file": "models/gibson_melody_maker.json",
+      "has_detailed_specs": true
     },
     "cuatro": {
       "id": "cuatro",
@@ -439,7 +441,9 @@
           },
           "assets": [
             "folk/Cuatro_Venezolano_body.dxf"
-          ]
+          ],
+          "specs_file": "models/cuatro_venezolano.json",
+          "has_detailed_specs": true
         },
         "puertorriqueno": {
           "id": "cuatro_puertorriqueno",
@@ -458,7 +462,9 @@
             "Cuatro/El Cuatro 1.pdf",
             "Cuatro/El Cuatro 2.pdf",
             "Cuatro/El Cuatro 3.pdf"
-          ]
+          ],
+          "specs_file": "models/cuatro_puertorriqueno.json",
+          "has_detailed_specs": true
         }
       },
       "assets": [

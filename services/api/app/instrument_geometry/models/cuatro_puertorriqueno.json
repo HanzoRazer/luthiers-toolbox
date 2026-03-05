@@ -1,0 +1,130 @@
+{
+  "model_id": "cuatro_puertorriqueno",
+  "display_name": "Cuatro Puertorriqueño (Traditional)",
+  "description": "Traditional Puerto Rican cuatro - 10 strings in 5 double courses, violin-shaped body, national instrument of Puerto Rico. Larger than Venezuelan cuatro.",
+
+  "blueprint_source": {
+    "files": [
+      "Cuatro/cuatro puertoriqueño.pdf",
+      "Cuatro/El Cuatro 1.pdf",
+      "Cuatro/El Cuatro 2.pdf",
+      "Cuatro/El Cuatro 3.pdf",
+      "Cuatro/El Cuatro 4.pdf",
+      "Cuatro/El Cuatro 5.pdf",
+      "Cuatro/El Cuatro 6.pdf",
+      "Cuatro/El Cuatro 7.pdf",
+      "Cuatro/El Cuatro 8.pdf"
+    ],
+    "extraction_status": "partial",
+    "extraction_notes": "El Cuatro 1-8 are letter-sized instruction sheets, not full-scale plans. Main PDF has fragmented linework.",
+    "dimensions_source": "traditional_reference"
+  },
+
+  "body": {
+    "type": "acoustic_violin_shaped",
+    "material": {
+      "top": "spruce_or_cedar",
+      "back_sides": "mahogany_laurel_or_yagrumo"
+    },
+    "body_length_mm": 380.0,
+    "body_width_mm": 280.0,
+    "body_depth_mm": 85.0,
+    "upper_bout_width_mm": 200.0,
+    "lower_bout_width_mm": 280.0,
+    "waist_width_mm": 180.0,
+    "soundhole_diameter_mm": 85.0,
+    "soundhole_position_from_nut_mm": 320.0,
+    "binding": "wood_or_plastic",
+    "shape_notes": "violin-inspired curves, more pronounced waist than Venezuelan"
+  },
+
+  "neck": {
+    "construction": "spanish_heel",
+    "material": "yagrumo_or_mahogany",
+    "nut_width_mm": 42.0,
+    "width_at_12th_mm": 52.0,
+    "thickness_at_1st_mm": 20.0,
+    "thickness_at_12th_mm": 22.0,
+    "profile": "D_shape",
+    "fingerboard_material": "rosewood",
+    "fingerboard_radius_mm": null,
+    "fingerboard_radius_in": "flat",
+    "fret_count": 19,
+    "fret_wire": "medium"
+  },
+
+  "neck_joint": {
+    "type": "spanish_heel",
+    "body_join_fret": 12,
+    "heel_block_length_mm": 75.0,
+    "heel_block_width_mm": 55.0,
+    "neck_angle_degrees": 1.5
+  },
+
+  "scale": {
+    "scale_length_mm": 520.0,
+    "scale_length_in": 20.5,
+    "fret_count": 19,
+    "joint_fret": 12
+  },
+
+  "bridge": {
+    "type": "classical_tie_block",
+    "material": "rosewood",
+    "bridge_length_mm": 130.0,
+    "bridge_width_mm": 32.0,
+    "bridge_height_mm": 10.0,
+    "saddle_material": "bone",
+    "saddle_height_mm": 3.5,
+    "bridge_position_from_nut_mm": 520.0,
+    "string_spacing_at_bridge_mm": 50.0
+  },
+
+  "bracing": {
+    "pattern": "x_brace_or_fan",
+    "top_thickness_mm": 2.8,
+    "brace_height_mm": 10.0,
+    "brace_count": 5
+  },
+
+  "strings": {
+    "count": 10,
+    "courses": 5,
+    "strings_per_course": 2,
+    "tuning_courses": ["B3", "E4", "A3", "D4", "G4"],
+    "tuning_name": "standard_puertorriqueno",
+    "string_type": "nylon_and_wound",
+    "course_layout": [
+      {"course": 1, "strings": ["B3", "B3"], "type": "unison"},
+      {"course": 2, "strings": ["E4", "E3"], "type": "octave"},
+      {"course": 3, "strings": ["A3", "A3"], "type": "unison"},
+      {"course": 4, "strings": ["D4", "D3"], "type": "octave"},
+      {"course": 5, "strings": ["G4", "G4"], "type": "unison"}
+    ],
+    "string_spacing_nut_mm": 7.0,
+    "string_spacing_bridge_mm": 9.0
+  },
+
+  "headstock": {
+    "style": "slotted_classical",
+    "angle_degrees": 14.0,
+    "slot_length_mm": 40.0,
+    "slots": 5,
+    "tuner_type": "geared_classical"
+  },
+
+  "hardware": {
+    "tuners": "5_geared_classical",
+    "tuner_hole_diameter_mm": 6.0
+  },
+
+  "notes": [
+    "Dimensions are traditional reference values - PDF extraction was partial",
+    "10 strings in 5 double courses is characteristic of PR cuatro",
+    "Courses 2 and 4 are typically octave pairs for fullness",
+    "Scale length 520mm (20.5\") larger than Venezuelan cuatro",
+    "Violin-shaped body is distinctive from guitar-shaped Venezuelan cuatro",
+    "El Cuatro PDFs 1-8 are construction instruction sheets",
+    "Total instrument length approximately 850mm"
+  ]
+}
