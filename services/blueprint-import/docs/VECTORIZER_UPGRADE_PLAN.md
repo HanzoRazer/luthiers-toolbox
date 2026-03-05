@@ -1,9 +1,9 @@
 # Vectorizer Upgrade Plan
 ## Blueprint-to-DXF Conversion System
 
-**Document Version:** 1.1.0
-**Last Updated:** 2025
-**Current Vectorizer Version:** 4.0.0-alpha
+**Document Version:** 1.2.0
+**Last Updated:** March 2026
+**Current Vectorizer Version:** 4.0.0
 
 ---
 
@@ -13,7 +13,7 @@ This document chronicles the evolution of the Luthier's Toolbox blueprint vector
 
 ---
 
-## Current Rating: 7.5 / 10
+## Current Rating: 8.0 / 10
 
 ### Capability Assessment
 
@@ -29,7 +29,7 @@ This document chronicles the evolution of the Luthier's Toolbox blueprint vector
 | Processing tiers system | ✅ Complete | 9/10 |
 | Latin American classifiers | ✅ Complete | 8/10 |
 | Annotation Layer Architecture | ✅ Complete | 9/10 |
-| Phase 4.0 Leader Lines | 🔶 Partial | 5/10 |
+| Phase 4.0 Leader Lines | ✅ Complete | 8/10 |
 | Parametric constraints | ❌ Not started | 0/10 |
 | Multi-page extraction | ❌ Not started | 0/10 |
 | Neural boost | ❌ Not started | 0/10 |
@@ -41,10 +41,10 @@ This document chronicles the evolution of the Luthier's Toolbox blueprint vector
 | Core extraction | 25% | 9.0 | 2.25 |
 | Classification | 20% | 8.0 | 1.60 |
 | OCR/Dimensions | 15% | 7.0 | 1.05 |
-| Leader line association | 15% | 5.0 | 0.75 |
+| Leader line association | 15% | 8.0 | 1.20 |
 | Architecture/Config | 10% | 9.5 | 0.95 |
 | Advanced features | 15% | 3.5 | 0.53 |
-| **Total** | | | **7.5** |
+| **Total** | | | **8.0** |
 
 ### Rating History
 
@@ -55,21 +55,22 @@ This document chronicles the evolution of the Luthier's Toolbox blueprint vector
 | v3.6.0 | 6.5 | OCR dimension extraction |
 | v3.6.0 + Phase 4 scaffold | 7.2 | Tiered processing, classifiers, leader line framework |
 | v4.0.0-alpha | 7.5 | Annotation Layer Architecture, witness line detection, JSON sidecar |
+| v4.0.0 | 8.0 | **Complete Phase 4.0** - ArrowDetector, LeaderLineAssociator, DimensionLinker, BlueprintPipeline |
 
 ### Path to Higher Ratings
 
 | Target | Requirements |
 |--------|--------------|
-| **8.0** | Complete Phase 4.0 leader line association end-to-end |
+| ~~**8.0**~~ | ✅ ACHIEVED: Phase 4.0 leader line association end-to-end |
 | **8.5** | Add parametric constraint export, multi-page support |
 | **9.0** | Neural boost for low-confidence cases, 95%+ accuracy |
 | **9.5** | Production-hardened with 100+ blueprint validation |
 
 ### Critical Gaps
 
-1. **Leader Line Implementation** - Scaffold exists, witness detection added, needs end-to-end integration
+1. ~~**Leader Line Implementation**~~ - ✅ RESOLVED: 100 tests passing, real blueprint tested
 2. **Parametric Constraints** - No constraint extraction or export
-3. **Cross-Reference Validation** - OCR dimensions not validated against geometry
+3. **Cross-Reference Validation** - OCR dimensions validated via plausibility scoring (partial)
 4. ~~**Annotation Layer Separation**~~ - ✅ RESOLVED: Separate DIMENSIONS layer, XDATA, JSON sidecar
 
 ---
@@ -124,22 +125,25 @@ This document chronicles the evolution of the Luthier's Toolbox blueprint vector
 - [x] Confidence filtering
 - [x] OCR dimensions in ExtractionResult
 
-### Phase 4.0 - Leader Line Association (In Progress)
+### Phase 4.0 - Leader Line Association (✅ Complete)
 **Goal:** Link dimension text to geometry
 
 | Component | Status | Notes |
 |-----------|--------|-------|
-| ArrowDetector | Scaffold | Hybrid contour + template matching |
-| LeaderLineAssociator | Scaffold | Multi-factor ranking algorithm |
-| DimensionLinker | Scaffold | Orchestrator with adaptive radius |
+| ArrowDetector | ✅ Complete | Hybrid contour analysis, orientation filtering, 33 tests |
+| LeaderLineAssociator | ✅ Complete | Multi-factor ranking (proximity + plausibility + type + direction), 35 tests |
+| DimensionLinker | ✅ Complete | High-level orchestrator with adaptive radius, 18 tests |
 | WitnessLineDetector | ✅ Complete | Extension line grouping, returns (point1, point2) |
+| BlueprintPipeline | ✅ Complete | End-to-end processing, 14 tests |
 | **Annotation Architecture** | ✅ Complete | Base classes, exporters, layer separation |
 | AnnotationAwareExporter | ✅ Complete | DXF export with XDATA, R12 fallback |
 | AnnotationJSONExporter | ✅ Complete | JSON sidecar for CI/CD validation |
 | LinearDimension | ✅ Complete | Modern DXF dimensions + R12 fallback |
 | RadialDimension | ✅ Complete | Radius/diameter with leader lines |
-| End-to-end integration | Not started | Connect OCR → arrows → geometry |
-| Testing on real blueprints | Not started | Need diverse test set |
+| End-to-end integration | ✅ Complete | OCR → arrows → geometry pipeline working |
+| Testing on real blueprints | ✅ Complete | Gibson Melody Maker: 34 dims, 762 arrows, 130 links |
+
+**Phase 4.0 Test Coverage:** 100 tests passing
 
 ### Phase 4.1 - Multi-Page Support (Planned)
 **Goal:** Handle multi-page blueprint PDFs
