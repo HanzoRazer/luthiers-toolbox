@@ -114,6 +114,82 @@ output:
     include_ocr_raw: false
 
 # -----------------------------------------------------------------------------
+# DXF Layer Configuration
+# -----------------------------------------------------------------------------
+# Configure layer properties for DXF export
+# Each layer can specify: color (ACI), lineweight, plot, linetype
+#
+# Color codes (ACI):
+#   1=Red, 2=Yellow, 3=Green, 4=Cyan, 5=Blue, 6=Magenta, 7=White/Black
+#
+# Plot: 1=plot layer, 0=don't plot (non-printing)
+#
+layers:
+  # Annotation layer - dimensions, leaders, notes
+  DIMENSIONS:
+    color: 2          # Yellow - stands out from geometry
+    lineweight: 25
+    linetype: CONTINUOUS
+    plot: 1           # Set to 1 for luthier shop use (visible on prints)
+                      # Set to 0 to hide dimensions from prints
+
+  # Geometry layers
+  BODY_OUTLINE:
+    color: 1          # Red
+    lineweight: 35
+    plot: 1
+
+  PICKGUARD:
+    color: 3          # Green
+    lineweight: 25
+    plot: 1
+
+  NECK_POCKET:
+    color: 4          # Cyan
+    lineweight: 25
+    plot: 1
+
+  PICKUP_ROUTE:
+    color: 5          # Blue
+    lineweight: 25
+    plot: 1
+
+  CONTROL_CAVITY:
+    color: 6          # Magenta
+    lineweight: 25
+    plot: 1
+
+  BRIDGE_ROUTE:
+    color: 7          # White/Black
+    lineweight: 25
+    plot: 1
+
+  SOUNDHOLE:
+    color: 30         # Orange
+    lineweight: 25
+    plot: 1
+
+  ROSETTE:
+    color: 40         # Light orange
+    lineweight: 15
+    plot: 1
+
+  BRACING:
+    color: 50         # Light blue
+    lineweight: 15
+    plot: 1
+
+  F_HOLE:
+    color: 31         # Brown-orange
+    lineweight: 25
+    plot: 1
+
+  D_HOLE:
+    color: 32         # Tan
+    lineweight: 25
+    plot: 1
+
+# -----------------------------------------------------------------------------
 # Classification Settings
 # -----------------------------------------------------------------------------
 classification:
