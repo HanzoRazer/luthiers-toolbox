@@ -587,11 +587,20 @@ class LeaderLineAssociator:
         if hasattr(feature, 'width_mm') and hasattr(feature, 'height_mm'):
             # Return the larger dimension
             return max(feature.width_mm, feature.height_mm)
-        elif hasattr(feature, 'contour'):
-            # Measure from contour
-            rect = self._cv2_import().minAreaRect(feature.contour)
-            w, h = rect[1]
-            return max(w, h) * self.mm_per_px
+        elif hasattr(feature, 'max_dim'):
+            # Mock or simplified feature
+            return feature.max_dim
+        elif hasattr(feature, 'contour') and feature.contour is not None:
+            # Measure from contour - ensure it's a valid numpy array
+            try:
+                import numpy as np
+                contour = feature.contour
+                if isinstance(contour, np.ndarray) and len(contour) >= 3:
+                    rect = self._cv2_import().minAreaRect(contour)
+                    w, h = rect[1]
+                    return max(w, h) * self.mm_per_px
+            except Exception:
+                pass
         return None
 
     def _is_appropriate_feature(self, text: str, category: Any) -> bool:
