@@ -5,17 +5,28 @@ Leader Line Association for Blueprint Dimensions
 Links detected arrows and leader lines to dimension text and geometry.
 
 Author: Luthier's Toolbox
-Version: 4.0.0-alpha
+Version: 4.0.0
 """
 
 import logging
+import math
 from dataclasses import dataclass, field
 from typing import List, Tuple, Optional, Dict, Any, Callable
+from enum import Enum
 import numpy as np
 
 from .arrow_detector import Arrow
 
 logger = logging.getLogger(__name__)
+
+
+class AssociationMethod(Enum):
+    """How a dimension was associated with geometry."""
+    LEADER = "leader"           # Via arrow/leader line
+    WITNESS = "witness"         # Via witness/extension lines
+    PROXIMITY = "proximity"     # Direct proximity match
+    PAIRED_ARROWS = "paired"    # Dimension line with arrows at both ends
+    INFERENCE = "inference"     # Inferred from context
 
 
 @dataclass
@@ -84,14 +95,26 @@ class LeaderLineAssociator:
     """
 
     # Scoring weights for multi-factor ranking
-    WEIGHT_PROXIMITY = 50
+    WEIGHT_PROXIMITY = 40
     WEIGHT_PLAUSIBILITY = 30
-    WEIGHT_TYPE_MATCH = 20
+    WEIGHT_TYPE_MATCH = 15
+    WEIGHT_DIRECTION = 15  # New: directional alignment
+
+    # Unit conversion factors to mm
+    UNIT_TO_MM = {
+        'mm': 1.0,
+        'cm': 10.0,
+        'inch': 25.4,
+        'in': 25.4,
+        '"': 25.4,
+        'ft': 304.8,
+    }
 
     def __init__(
         self,
         search_radius_calculator: Optional[Callable] = None,
-        mm_per_px: float = 0.0635  # Default 400 DPI
+        mm_per_px: float = 0.0635,  # Default 400 DPI
+        dimension_tolerance: float = 0.05  # 5% tolerance for dimension matching
     ):
         """
         Initialize leader line associator.
@@ -99,9 +122,11 @@ class LeaderLineAssociator:
         Args:
             search_radius_calculator: Function to calculate adaptive search radius
             mm_per_px: Millimeters per pixel for measurements
+            dimension_tolerance: Tolerance for dimension matching (0.05 = 5%)
         """
         self.calc_radius = search_radius_calculator or self._default_radius
         self.mm_per_px = mm_per_px
+        self.dimension_tolerance = dimension_tolerance
 
     def associate(
         self,
@@ -131,9 +156,16 @@ class LeaderLineAssociator:
         logger.info(f"Associating {len(text_regions)} text regions with "
                    f"{len(arrows)} arrows (radius: {search_radius:.1f}mm)")
 
-        # Strategy 1: Arrow-based association
+        # Strategy 0: Paired arrows (dimension line with arrows at both ends)
+        paired_associations = self._find_paired_arrow_dimensions(
+            arrows, text_regions, geometry, search_radius
+        )
+        associations.extend(paired_associations)
+        matched_texts = {a.text_region.text for a in associations}
+
+        # Strategy 1: Arrow-based association (single arrows)
         for arrow in arrows:
-            # Find text region near arrow tip
+            # Find text region near arrow tip (text is usually at arrow head)
             text = self._find_text_near_point(
                 arrow.tip_point,
                 text_regions,
@@ -141,9 +173,18 @@ class LeaderLineAssociator:
             )
 
             if text is None:
+                # Try finding text near tail (some dimension styles)
+                text = self._find_text_near_point(
+                    arrow.tail_point,
+                    text_regions,
+                    max_distance=search_radius / self.mm_per_px * 0.5
+                )
+
+            if text is None or text.text in matched_texts:
                 continue
 
-            # Find geometry near arrow tail (where it points to)
+            # Find geometry in the direction the arrow points
+            # Arrow points from tail to tip, so geometry is near tail
             candidates = self._find_geometry_near_point(
                 arrow.tail_point,
                 geometry,
@@ -151,20 +192,30 @@ class LeaderLineAssociator:
             )
 
             if not candidates:
+                # Try other end
+                candidates = self._find_geometry_near_point(
+                    arrow.tip_point,
+                    geometry,
+                    max_distance=search_radius / self.mm_per_px * 2
+                )
+
+            if not candidates:
                 continue
 
-            # Rank candidates
-            ranked = self._rank_candidates(text, candidates)
+            # Rank candidates with directional awareness
+            ranked = self._rank_candidates(text, candidates, arrow=arrow)
 
             if ranked:
                 best_feature, score = ranked[0]
-                associations.append(AssociatedDimension(
-                    text_region=text,
-                    target_feature=best_feature,
-                    arrow=arrow,
-                    association_confidence=score / 100.0,
-                    association_method="leader"
-                ))
+                if score > 20:  # Minimum score threshold
+                    associations.append(AssociatedDimension(
+                        text_region=text,
+                        target_feature=best_feature,
+                        arrow=arrow,
+                        association_confidence=score / 100.0,
+                        association_method="leader"
+                    ))
+                    matched_texts.add(text.text)
 
         # Strategy 2: Proximity-based for unmatched text
         matched_texts = {a.text_region.text for a in associations}
@@ -191,11 +242,180 @@ class LeaderLineAssociator:
                         association_method="proximity"
                     ))
 
-        logger.info(f"Created {len(associations)} dimension associations "
-                   f"(leader: {sum(1 for a in associations if a.arrow)}, "
-                   f"proximity: {sum(1 for a in associations if not a.arrow)})")
+        # Count by method
+        method_counts = {}
+        for a in associations:
+            method_counts[a.association_method] = method_counts.get(a.association_method, 0) + 1
+
+        logger.info(f"Created {len(associations)} dimension associations: {method_counts}")
 
         return associations
+
+    def _find_paired_arrow_dimensions(
+        self,
+        arrows: List[Arrow],
+        text_regions: List[TextRegion],
+        geometry: Dict[str, List[Any]],
+        search_radius: float
+    ) -> List[AssociatedDimension]:
+        """
+        Find dimension lines with arrows pointing at both ends.
+
+        These are the classic dimension line pattern:
+        <-------- 24.625 -------->
+
+        Args:
+            arrows: Detected arrows
+            text_regions: OCR text regions
+            geometry: Categorized contours
+            search_radius: Search radius in mm
+
+        Returns:
+            List of associated dimensions from paired arrows
+        """
+        associations = []
+
+        # Find arrow pairs (pointing in opposite directions, roughly collinear)
+        for i, arrow1 in enumerate(arrows):
+            for arrow2 in arrows[i + 1:]:
+                if not self._are_opposing_arrows(arrow1, arrow2):
+                    continue
+
+                # Found a pair - find text between them
+                midpoint = (
+                    (arrow1.tip_point[0] + arrow2.tip_point[0]) / 2,
+                    (arrow1.tip_point[1] + arrow2.tip_point[1]) / 2
+                )
+
+                text = self._find_text_near_point(
+                    midpoint,
+                    text_regions,
+                    max_distance=search_radius / self.mm_per_px
+                )
+
+                if text is None:
+                    continue
+
+                # Calculate dimension span
+                span_px = math.sqrt(
+                    (arrow1.tip_point[0] - arrow2.tip_point[0])**2 +
+                    (arrow1.tip_point[1] - arrow2.tip_point[1])**2
+                )
+                span_mm = span_px * self.mm_per_px
+
+                # Find geometry at both ends
+                candidates1 = self._find_geometry_near_point(
+                    arrow1.tip_point, geometry,
+                    max_distance=search_radius / self.mm_per_px
+                )
+                candidates2 = self._find_geometry_near_point(
+                    arrow2.tip_point, geometry,
+                    max_distance=search_radius / self.mm_per_px
+                )
+
+                # Pick the best overall match
+                all_candidates = candidates1 + candidates2
+                if all_candidates:
+                    ranked = self._rank_candidates(text, all_candidates)
+                    if ranked:
+                        best_feature, score = ranked[0]
+
+                        # Boost confidence for paired arrows
+                        confidence = min(score / 100.0 * 1.2, 1.0)
+
+                        associations.append(AssociatedDimension(
+                            text_region=text,
+                            target_feature=best_feature,
+                            arrow=arrow1,  # Store one of the arrows
+                            association_confidence=confidence,
+                            association_method="paired"
+                        ))
+
+        return associations
+
+    def _are_opposing_arrows(
+        self,
+        arrow1: Arrow,
+        arrow2: Arrow,
+        angle_tolerance: float = 30.0,
+        max_perpendicular_dist: float = 20.0
+    ) -> bool:
+        """
+        Check if two arrows are opposing (pointing at each other on same line).
+
+        Args:
+            arrow1: First arrow
+            arrow2: Second arrow
+            angle_tolerance: Maximum angle deviation from opposite (degrees)
+            max_perpendicular_dist: Maximum perpendicular distance between arrow lines
+
+        Returns:
+            True if arrows appear to be a dimension line pair
+        """
+        # Calculate angle between directions
+        dot = (arrow1.direction[0] * arrow2.direction[0] +
+               arrow1.direction[1] * arrow2.direction[1])
+
+        # For opposing arrows, dot product should be close to -1
+        # cos(180°) = -1, so angles near 180° have dot near -1
+        if dot > -0.5:  # More than 60° from opposing
+            return False
+
+        # Check collinearity: distance from arrow2's tip to arrow1's line
+        # should be small
+        perp_dist = self._point_to_line_distance(
+            arrow2.tip_point,
+            arrow1.tail_point,
+            arrow1.tip_point
+        )
+
+        if perp_dist > max_perpendicular_dist:
+            return False
+
+        # Check that tips are pointing toward each other
+        # Vector from arrow1 tip to arrow2 tip
+        tip_vec = (
+            arrow2.tip_point[0] - arrow1.tip_point[0],
+            arrow2.tip_point[1] - arrow1.tip_point[1]
+        )
+
+        # Normalize
+        tip_len = math.sqrt(tip_vec[0]**2 + tip_vec[1]**2)
+        if tip_len < 1:
+            return False
+
+        tip_dir = (tip_vec[0] / tip_len, tip_vec[1] / tip_len)
+
+        # Arrow1 should point toward arrow2 (in direction of tip_vec)
+        dot1 = arrow1.direction[0] * tip_dir[0] + arrow1.direction[1] * tip_dir[1]
+
+        # Arrow2 should point away from arrow1 (opposite of tip_vec)
+        dot2 = arrow2.direction[0] * (-tip_dir[0]) + arrow2.direction[1] * (-tip_dir[1])
+
+        return dot1 > 0.5 and dot2 > 0.5
+
+    def _point_to_line_distance(
+        self,
+        point: Tuple[float, float],
+        line_start: Tuple[float, float],
+        line_end: Tuple[float, float]
+    ) -> float:
+        """Calculate perpendicular distance from point to line segment."""
+        px, py = point
+        x1, y1 = line_start
+        x2, y2 = line_end
+
+        # Line vector
+        dx, dy = x2 - x1, y2 - y1
+        line_len_sq = dx * dx + dy * dy
+
+        if line_len_sq < 1e-8:
+            # Degenerate line
+            return math.sqrt((px - x1)**2 + (py - y1)**2)
+
+        # Perpendicular distance
+        dist = abs(dy * px - dx * py + x2 * y1 - y2 * x1) / math.sqrt(line_len_sq)
+        return dist
 
     def _find_text_near_point(
         self,
@@ -253,15 +473,17 @@ class LeaderLineAssociator:
     def _rank_candidates(
         self,
         text: TextRegion,
-        candidates: List[Tuple[Any, float]]
+        candidates: List[Tuple[Any, float]],
+        arrow: Optional[Arrow] = None
     ) -> List[Tuple[Any, float]]:
         """
         Rank geometry candidates for a dimension text.
 
         Scoring factors:
-        1. Proximity to leader line endpoint (0-50 points)
+        1. Proximity to leader line endpoint (0-40 points)
         2. Dimensional plausibility (0-30 points)
-        3. Feature type appropriateness (0-20 points)
+        3. Feature type appropriateness (0-15 points)
+        4. Directional alignment with arrow (0-15 points)
         """
         scored = []
 
@@ -280,12 +502,17 @@ class LeaderLineAssociator:
             if text.parsed_value is not None:
                 measured = self._measure_feature(feature)
                 if measured is not None:
-                    diff_ratio = abs(measured - text.parsed_value) / (text.parsed_value + 0.001)
-                    if diff_ratio < 0.02:  # Within 2%
+                    # Convert text value to mm if needed
+                    text_value_mm = self._convert_to_mm(
+                        text.parsed_value, text.unit
+                    )
+
+                    diff_ratio = abs(measured - text_value_mm) / (text_value_mm + 0.001)
+                    if diff_ratio < self.dimension_tolerance / 2:  # Very close
                         score += self.WEIGHT_PLAUSIBILITY
-                    elif diff_ratio < 0.05:  # Within 5%
+                    elif diff_ratio < self.dimension_tolerance:
                         score += self.WEIGHT_PLAUSIBILITY * 0.7
-                    elif diff_ratio < 0.10:  # Within 10%
+                    elif diff_ratio < self.dimension_tolerance * 2:
                         score += self.WEIGHT_PLAUSIBILITY * 0.3
 
             # Factor 3: Feature type appropriateness
@@ -295,9 +522,65 @@ class LeaderLineAssociator:
                 if appropriate:
                     score += self.WEIGHT_TYPE_MATCH
 
+            # Factor 4: Directional alignment (if arrow provided)
+            if arrow is not None:
+                direction_score = self._score_direction_alignment(
+                    arrow, text.center, feature
+                )
+                score += direction_score * self.WEIGHT_DIRECTION
+
             scored.append((feature, score))
 
         return sorted(scored, key=lambda x: -x[1])
+
+    def _convert_to_mm(self, value: float, unit: str) -> float:
+        """Convert a value to millimeters."""
+        unit_lower = unit.lower().strip()
+        factor = self.UNIT_TO_MM.get(unit_lower, 1.0)
+        return value * factor
+
+    def _score_direction_alignment(
+        self,
+        arrow: Arrow,
+        text_center: Tuple[float, float],
+        feature: Any
+    ) -> float:
+        """
+        Score how well arrow direction aligns text to feature.
+
+        Arrow should point from text toward feature (or vice versa).
+
+        Returns:
+            Score from 0 to 1
+        """
+        # Get feature center
+        if hasattr(feature, 'bbox'):
+            x, y, w, h = feature.bbox
+            feature_center = (x + w / 2, y + h / 2)
+        elif hasattr(feature, 'contour'):
+            feature_center = self._contour_centroid(feature.contour)
+        else:
+            return 0.5  # Neutral score
+
+        # Vector from arrow tail to feature
+        to_feature = (
+            feature_center[0] - arrow.tail_point[0],
+            feature_center[1] - arrow.tail_point[1]
+        )
+
+        # Normalize
+        length = math.sqrt(to_feature[0]**2 + to_feature[1]**2)
+        if length < 1:
+            return 0.5
+
+        to_feature_norm = (to_feature[0] / length, to_feature[1] / length)
+
+        # Arrow should point toward feature (or opposite)
+        dot = (arrow.direction[0] * to_feature_norm[0] +
+               arrow.direction[1] * to_feature_norm[1])
+
+        # abs(dot) because either direction is valid
+        return abs(dot)
 
     def _measure_feature(self, feature: Any) -> Optional[float]:
         """Measure a feature's primary dimension in mm."""
