@@ -1,0 +1,109 @@
+{
+  "model_id": "cuatro_venezolano",
+  "display_name": "Cuatro Venezolano (Traditional)",
+  "description": "Traditional Venezuelan cuatro - small 4-string guitar used in joropo and other Venezuelan folk music. National instrument of Venezuela.",
+
+  "blueprint_source": {
+    "file": "Cuatro/plano cuatro venezolano.pdf",
+    "extraction_method": "OpenCV contour analysis",
+    "extraction_date": "2026-03-04",
+    "dpi": 300,
+    "scale_reference": "body_outline"
+  },
+
+  "body": {
+    "type": "acoustic_small",
+    "material": {
+      "top": "cedar_or_spruce",
+      "back_sides": "mahogany_or_cedro"
+    },
+    "body_length_mm": 321.6,
+    "body_width_mm": 234.6,
+    "body_depth_mm": 70.0,
+    "upper_bout_width_mm": 165.0,
+    "lower_bout_width_mm": 234.6,
+    "waist_width_mm": 155.0,
+    "soundhole_diameter_mm": 75.0,
+    "soundhole_position_from_nut_mm": 280.0,
+    "binding": "simple_wood"
+  },
+
+  "neck": {
+    "construction": "spanish_heel",
+    "material": "cedro_or_mahogany",
+    "nut_width_mm": 36.0,
+    "width_at_12th_mm": 44.0,
+    "thickness_at_1st_mm": 18.0,
+    "thickness_at_12th_mm": 20.0,
+    "profile": "C_shape",
+    "fingerboard_material": "rosewood_or_ebony",
+    "fingerboard_radius_mm": null,
+    "fingerboard_radius_in": "flat",
+    "fret_count": 17,
+    "fret_wire": "small_traditional"
+  },
+
+  "neck_joint": {
+    "type": "spanish_heel",
+    "body_join_fret": 12,
+    "heel_block_length_mm": 65.0,
+    "heel_block_width_mm": 50.0,
+    "neck_angle_degrees": 0.0
+  },
+
+  "scale": {
+    "scale_length_mm": 420.0,
+    "scale_length_in": 16.5,
+    "fret_count": 17,
+    "joint_fret": 12
+  },
+
+  "bridge": {
+    "type": "classical_tie_block",
+    "material": "rosewood",
+    "bridge_length_mm": 100.0,
+    "bridge_width_mm": 28.0,
+    "bridge_height_mm": 8.0,
+    "saddle_material": "bone",
+    "saddle_height_mm": 3.0,
+    "bridge_position_from_nut_mm": 420.0,
+    "string_spacing_at_bridge_mm": 38.0
+  },
+
+  "bracing": {
+    "pattern": "fan_or_ladder",
+    "top_thickness_mm": 2.5,
+    "brace_height_mm": 8.0,
+    "brace_count": 3
+  },
+
+  "strings": {
+    "count": 4,
+    "tuning": ["A4", "D4", "F#4", "B3"],
+    "tuning_name": "standard_venezuelan",
+    "string_type": "nylon",
+    "string_spacing_nut_mm": 7.5,
+    "string_spacing_bridge_mm": 9.5
+  },
+
+  "headstock": {
+    "style": "slotted_classical",
+    "angle_degrees": 12.0,
+    "slot_length_mm": 35.0,
+    "tuner_type": "friction_or_geared"
+  },
+
+  "hardware": {
+    "tuners": "2x2_classical",
+    "tuner_hole_diameter_mm": 6.0
+  },
+
+  "notes": [
+    "Body dimensions extracted from PDF: 234.6 x 321.6 mm",
+    "Scale length ~420mm is traditional for Venezuelan cuatro",
+    "Standard tuning: A4-D4-F#4-B3 (re-entrant, high to low)",
+    "Often played with rasgueo (strumming) technique",
+    "Some dimensions (depths, bracing) are typical traditional specs",
+    "Total instrument length approximately 700mm"
+  ]
+}
