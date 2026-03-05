@@ -106,6 +106,23 @@ class DimensionParser:
         (r'(\d+\.?\d*)', 'number'),
     ]
 
+    # Label patterns - dimensions that follow descriptive labels
+    # e.g., "Girth: 3.30", "Scale length is 24.625", "Waist: 5.40"
+    LABEL_PATTERNS = [
+        # "Label: value" pattern
+        (r'(?:scale\s*length|body\s*length|width|girth|waist|depth|thickness|radius|diameter|height|length|nut|bridge|fret|bout)\s*[:\s]+(\d+\.?\d*)', 'labeled'),
+        # "Label is value" pattern
+        (r'(?:scale\s*length|body\s*length|width|girth|waist|depth|thickness|radius|diameter|height|length)\s+is\s+(\d+\.?\d*)', 'labeled_is'),
+        # "value" after "nut to bridge" type phrases
+        (r'(?:nut\s+to\s+bridge|scale)\s*[:\s]+(\d+\.?\d*)', 'labeled_scale'),
+        # "value Nut to Bridge" - reversed order
+        (r'(\d+\.?\d*)\s+(?:nut\s+to\s+bridge|scale\s+length)', 'value_first'),
+        # Semicolon separated: "Label; value"
+        (r'(?:cover|plate|thickness|depth|width)\s*[;:]\s*(\d+\.?\d*)', 'semicolon'),
+        # Leading text before dimension: "text 0.039" at end
+        (r'\w+\s*[;:]\s*(\d+\.?\d*)\s*$', 'trailing_value'),
+    ]
+
     MM_PER_INCH = 25.4
 
     def parse(self, text: str) -> Optional[Tuple[float, str]]:
@@ -149,7 +166,65 @@ class DimensionParser:
             unit = self._detect_unit(unit_char, value)
             return self._to_mm(value, unit), unit
 
+        # Leading decimal: ".010" or ".5mm"
+        match = re.match(r'^\.(\d+)\s*(mm|cm|in|inch|inches|"|\')?\s*$', text)
+        if match:
+            value = float('0.' + match.group(1))
+            unit_char = match.group(2) or ''
+            unit = self._detect_unit(unit_char, value)
+            return self._to_mm(value, unit), unit
+
         return None
+
+    def parse_contextual(self, text: str) -> List[Tuple[float, str, str]]:
+        """
+        Extract dimensions from contextual text (e.g., "Scale length is 24.625").
+
+        Args:
+            text: Full text that may contain embedded dimensions
+
+        Returns:
+            List of (value_mm, unit, label) tuples
+        """
+        results = []
+        text_lower = text.lower()
+
+        # Try labeled patterns first - these extract meaningful dimensions with context
+        for pattern, ptype in self.LABEL_PATTERNS:
+            for match in re.finditer(pattern, text_lower, re.IGNORECASE):
+                try:
+                    value = float(match.group(1))
+                    # Extract label from the matched portion
+                    full_match = match.group(0)
+                    label = full_match.split(':')[0] if ':' in full_match else full_match.rsplit(None, 1)[0]
+                    label = label.strip()
+
+                    unit = self._detect_unit('', value)
+                    value_mm = self._to_mm(value, unit)
+
+                    if self.MIN_DIMENSION_MM <= value_mm <= self.MAX_DIMENSION_MM:
+                        results.append((value_mm, unit, label))
+                except (ValueError, IndexError):
+                    continue
+
+        # Also look for standalone fraction patterns in text
+        # e.g., '1/4" Jack' -> 1/4"
+        fraction_pattern = r'(\d+)/(\d+)\s*(["\'])'
+        for match in re.finditer(fraction_pattern, text):
+            try:
+                num = int(match.group(1))
+                denom = int(match.group(2))
+                unit_char = match.group(3)
+                value = num / denom
+                unit = self._detect_unit(unit_char, value)
+                value_mm = self._to_mm(value, unit)
+
+                if self.MIN_DIMENSION_MM <= value_mm <= self.MAX_DIMENSION_MM:
+                    results.append((value_mm, unit, 'fraction'))
+            except (ValueError, ZeroDivisionError):
+                continue
+
+        return results
 
     def _detect_unit(self, unit_char: str, value: float) -> str:
         """Detect unit from character or infer from value magnitude"""
@@ -278,7 +353,13 @@ class DimensionExtractor:
             if confidence < min_confidence:
                 continue
 
-            # Try to parse as dimension
+            # Calculate bounding box once
+            pts = np.array(bbox)
+            x, y = pts.min(axis=0).astype(int)
+            x2, y2 = pts.max(axis=0).astype(int)
+            dim_bbox = (int(x), int(y), int(x2 - x), int(y2 - y))
+
+            # Try to parse as simple dimension first
             parsed = self.parser.parse(text)
             if parsed:
                 value_mm, unit = parsed
@@ -287,21 +368,31 @@ class DimensionExtractor:
                 if not self.parser.is_valid_dimension(text, value_mm):
                     continue
 
-                # Calculate bounding box
-                pts = np.array(bbox)
-                x, y = pts.min(axis=0).astype(int)
-                x2, y2 = pts.max(axis=0).astype(int)
-
                 dim = ExtractedDimension(
                     raw_text=text,
                     value_mm=value_mm,
                     value_inches=value_mm / 25.4,
                     unit=unit,
                     confidence=float(confidence),
-                    bbox=(int(x), int(y), int(x2 - x), int(y2 - y))
+                    bbox=dim_bbox
                 )
                 dimensions.dimensions.append(dim)
                 logger.debug(f"Parsed: '{text}' -> {value_mm:.2f}mm ({unit})")
+            else:
+                # Try contextual parsing for text like "Scale length is 24.625"
+                contextual = self.parser.parse_contextual(text)
+                for value_mm, unit, label in contextual:
+                    dim = ExtractedDimension(
+                        raw_text=text,
+                        value_mm=value_mm,
+                        value_inches=value_mm / 25.4,
+                        unit=unit,
+                        confidence=float(confidence),
+                        bbox=dim_bbox,
+                        context=label
+                    )
+                    dimensions.dimensions.append(dim)
+                    logger.debug(f"Contextual: '{text}' -> {value_mm:.2f}mm ({unit}, label={label})")
 
         logger.info(f"Extracted {len(dimensions.dimensions)} valid dimensions")
 
