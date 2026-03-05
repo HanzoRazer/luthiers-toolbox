@@ -1,11 +1,11 @@
 {
   "version": "1.0.0",
   "generated": "2026-03-04",
-  "total_bodies": 21,
+  "total_bodies": 23,
   "categories": {
-    "electric": 9,
+    "electric": 10,
     "acoustic": 8,
-    "other": 4
+    "other": 5
   },
   "bodies": {
     "stratocaster": {
@@ -242,6 +242,29 @@
       "points": 39,
       "dxf": "acoustic/carlos_jumbo_body.dxf",
       "source": "AI vision extraction from PDF plans"
+    },
+    "melody_maker": {
+      "name": "Gibson Melody Maker",
+      "category": "electric",
+      "dimensions_mm": {
+        "width": 434.3,
+        "height": 325.4
+      },
+      "points": 950,
+      "dxf": "electric/Gibson-Melody-Maker_phase3.dxf",
+      "dxf_primitives": "electric/Gibson-Melody-Maker_phase3_primitives.dxf",
+      "source": "Phase 3.5 vectorizer extraction from PDF blueprint"
+    },
+    "cuatro_venezolano": {
+      "name": "Cuatro Venezolano",
+      "category": "other",
+      "dimensions_mm": {
+        "width": 234.6,
+        "height": 321.6
+      },
+      "points": 150,
+      "dxf": "other/Cuatro_Venezolano_body.dxf",
+      "source": "Extracted from plano cuatro venezolano.pdf"
     }
   },
   "pending": [
