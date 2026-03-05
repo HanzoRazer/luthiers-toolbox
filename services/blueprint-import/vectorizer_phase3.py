@@ -1,6 +1,6 @@
 """
-Phase 3.5 Vectorizer - Production-Grade Blueprint Extraction with ML
-=====================================================================
+Phase 3.6 Vectorizer - Production-Grade Blueprint Extraction with ML + OCR
+===========================================================================
 
 Enhanced blueprint vectorizer with:
 - Dual-pass extraction (aggressive for body, lighter for details)
@@ -15,9 +15,10 @@ Enhanced blueprint vectorizer with:
 - User feedback system for continuous improvement
 - Image caching for performance
 - Color filtering for blueprint types
+- OCR dimension extraction with contextual parsing (Phase 3.6)
 
 Author: Luthier's Toolbox
-Version: 3.5.0
+Version: 3.6.0
 """
 import logging
 import hashlib
