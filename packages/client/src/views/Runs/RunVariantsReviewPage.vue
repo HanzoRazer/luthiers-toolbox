@@ -324,7 +324,7 @@ watch(runId, () => {
 
       <!-- Manufacturing candidates -->
       <div class="panel wide">
-        <ManufacturingCandidateList
+        <ManufacturingCandidatesSimple
           :run-id="runId"
           :current-operator="currentOperator"
         />
