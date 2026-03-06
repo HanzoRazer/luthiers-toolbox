@@ -23,6 +23,14 @@ except ImportError:
 
 from pdf2image import convert_from_bytes
 from PIL import Image
+# Optional DXF support
+try:
+    from .dxf_parser import DXFParser, is_dxf_file
+    HAS_DXF_PARSER = True
+except ImportError:
+    HAS_DXF_PARSER = False
+    def is_dxf_file(file_bytes, filename):
+        return filename.lower().endswith(".dxf")
 
 # Disable PIL decompression bomb protection for large blueprints
 # High-resolution blueprint PDFs (300 DPI A2/A1 size) can exceed default 89M pixel limit
@@ -170,6 +178,13 @@ class BlueprintAnalyzer:
             - notes: General observations
         """
         try:
+            # Handle DXF files directly (no AI analysis needed - contains vector geometry)
+            if is_dxf_file(file_bytes, filename):
+                if not HAS_DXF_PARSER:
+                    raise ImportError("ezdxf package required for DXF files. Install with: pip install ezdxf")
+                parser = DXFParser()
+                return parser.parse_from_bytes(file_bytes, filename)
+
             # Convert PDF to image if needed
             if filename.lower().endswith('.pdf'):
                 # Use adaptive DPI based on file size
@@ -231,6 +246,9 @@ class BlueprintAnalyzer:
                 detected_media_type = 'image/gif'
             elif image_bytes[:4] == b'RIFF' and image_bytes[8:12] == b'WEBP':
                 detected_media_type = 'image/webp'
+            elif image_bytes[:2] == b'BM':
+                # BMP file detected - will be converted to PNG
+                detected_media_type = 'image/png'
             else:
                 # Fallback to filename extension
                 ext = filename.lower().split('.')[-1] if '.' in filename else 'png'
@@ -240,6 +258,7 @@ class BlueprintAnalyzer:
                     'jpeg': 'image/jpeg',
                     'gif': 'image/gif',
                     'webp': 'image/webp',
+                    'bmp': 'image/png',  # BMP converted to PNG
                     'pdf': 'image/png',  # PDF converted to PNG
                 }
                 detected_media_type = media_type_map.get(ext, 'image/png')

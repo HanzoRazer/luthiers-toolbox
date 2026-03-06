@@ -244,6 +244,13 @@ const routes: RouteRecordRaw[] = [
     component: () => import("@/views/DxfToGcodeView.vue"),
   },
 
+  // Guitar Design Hub - Body Outline Generator, Bracing, Archtop, etc.
+  {
+    path: "/design-hub",
+    name: "GuitarDesignHub",
+    component: () => import("@/views/GuitarDesignHubView.vue"),
+  },
+
   // Waves 15-16 — Instrument Geometry Designer (Fretboard CAM)
   {
     path: "/instrument-geometry",

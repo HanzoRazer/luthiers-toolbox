@@ -104,6 +104,7 @@
 </template>
 
 <script setup lang="ts">
+import { onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useBlueprintWorkflow } from '@/composables/useBlueprintWorkflow'
 import BlueprintUploadZone from '@/components/blueprint/BlueprintUploadZone.vue'
@@ -157,6 +158,39 @@ const {
   clearError,
 } = useBlueprintWorkflow({
   onError: (msg) => console.error('Workflow error:', msg),
+})
+
+// Check for pending image from AI Images (sessionStorage handoff)
+onMounted(async () => {
+  const pendingImageJson = sessionStorage.getItem('blueprintLab.pendingImage')
+  if (!pendingImageJson) return
+
+  try {
+    const pendingImage = JSON.parse(pendingImageJson)
+    sessionStorage.removeItem('blueprintLab.pendingImage') // Clear immediately
+
+    if (!pendingImage.url) {
+      console.warn('Pending image has no URL')
+      return
+    }
+
+    // Fetch the image from the URL
+    const response = await fetch(pendingImage.url)
+    if (!response.ok) {
+      throw new Error(`Failed to fetch image: ${response.status}`)
+    }
+
+    const blob = await response.blob()
+    const filename = pendingImage.filename || 'ai-generated.png'
+    const file = new File([blob], filename, { type: blob.type || 'image/png' })
+
+    // Load into workflow
+    validateAndSetFile(file)
+    console.log('Loaded pending image from AI Images:', filename)
+  } catch (e) {
+    console.error('Failed to load pending image:', e)
+    sessionStorage.removeItem('blueprintLab.pendingImage')
+  }
 })
 
 // File selection handler
