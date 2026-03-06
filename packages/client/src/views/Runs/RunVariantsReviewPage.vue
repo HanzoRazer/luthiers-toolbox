@@ -21,7 +21,7 @@ import { useRoute } from "vue-router";
 import BulkRejectModal from "@/components/rmos/BulkRejectModal.vue";
 import BulkPromoteModal from "@/components/rmos/BulkPromoteModal.vue";
 import SvgPathDiffViewer from "@/components/rmos/SvgPathDiffViewer.vue";
-import ManufacturingCandidateList from "@/components/rmos/ManufacturingCandidateList.vue";
+import ManufacturingCandidatesSimple from "@/components/rmos/ManufacturingCandidatesSimple.vue";
 import VariantListPanel from "./run_variants_review/VariantListPanel.vue";
 import SelectedVariantPanel from "./run_variants_review/SelectedVariantPanel.vue";
 import {
