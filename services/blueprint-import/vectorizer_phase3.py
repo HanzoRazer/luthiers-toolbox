@@ -91,6 +91,13 @@ class ContourCategory(Enum):
     PAGE_BORDER = "page_border"
     SMALL_FEATURE = "small_feature"
     UNKNOWN = "unknown"
+    # Grid zone categories (Phase 4.0)
+    UPPER_BOUT = "upper_bout"
+    LOWER_BOUT = "lower_bout"
+    WAIST = "waist"
+    BODY_WING_LIMIT = "body_wing_limit"
+    HEADSTOCK_ZONE = "headstock_zone"
+    CENTERLINE = "centerline"
 
 
 class PrimitiveType(Enum):
