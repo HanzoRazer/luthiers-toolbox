@@ -83,3 +83,24 @@ try:
     PHASE2_AVAILABLE = True
 except ImportError:
     pass
+
+
+# =============================================================================
+# CALIBRATION MODULE (PIXEL-TO-INCH CONVERSION)
+# =============================================================================
+
+CALIBRATION_AVAILABLE = False
+create_calibration_pipeline = None  # type: ignore
+
+try:
+    from calibration_integration import EnhancedCalibrationPipeline
+
+    def create_calibration_pipeline():
+        """Create a calibration pipeline instance."""
+        return EnhancedCalibrationPipeline()
+
+    CALIBRATION_AVAILABLE = True
+    logger.info("Calibration module loaded successfully")
+except ImportError as e:
+    logger.warning(f"Calibration module not available: {e}")
+    pass
