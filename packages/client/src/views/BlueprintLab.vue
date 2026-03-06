@@ -5,6 +5,7 @@
       <h1>Blueprint Lab</h1>
       <div class="phase-badges">
         <span class="phase-badge phase-1">Phase 1: AI Analysis</span>
+        <span class="phase-badge phase-cal">Calibration</span>
         <span class="phase-badge phase-2">Phase 2: OpenCV Vectorization</span>
       </div>
     </div>
@@ -33,9 +34,21 @@
         @edit-dimensions="editDimensions"
       />
 
+      <!-- Calibration Panel (after analysis, before vectorization) -->
+      <CalibrationPanel
+        v-if="analysis"
+        :calibration="calibration"
+        :is-calibrating="isCalibrating"
+        :accepted="calibrationAccepted"
+        @calibrate="handleCalibrate"
+        @manual-calibrate="handleManualCalibrate"
+        @accept="acceptCalibration"
+        @recalibrate="resetCalibration"
+      />
+
       <!-- Phase 2: Geometry Vectorization -->
       <Phase2VectorizationPanel
-        v-if="analysis"
+        v-if="analysis && calibrationAccepted"
         :vectorized-geometry="vectorizedGeometry"
         :vector-params="vectorParams"
         :is-vectorizing="isVectorizing"
@@ -92,9 +105,10 @@
 
 <script setup lang="ts">
 import { useRouter } from 'vue-router'
-import { useBlueprintWorkflow } from '@/composables/useBlueprintWorkflow'
+import { useBlueprintWorkflow, type CalibrationOptions, type ManualCalibrationPoints } from '@/composables/useBlueprintWorkflow'
 import BlueprintUploadZone from '@/components/blueprint/BlueprintUploadZone.vue'
 import Phase1AnalysisPanel from '@/components/blueprint/Phase1AnalysisPanel.vue'
+import CalibrationPanel from '@/components/blueprint/CalibrationPanel.vue'
 import Phase2VectorizationPanel from '@/components/blueprint/Phase2VectorizationPanel.vue'
 import Phase3CamPanel from '@/components/blueprint/Phase3CamPanel.vue'
 
@@ -109,6 +123,10 @@ const {
   isAnalyzing,
   analysis,
   analysisProgress,
+  // Calibration
+  isCalibrating,
+  calibration,
+  calibrationAccepted,
   // Phase 2
   isVectorizing,
   vectorizedGeometry,
@@ -124,6 +142,10 @@ const {
   // Actions
   validateAndSetFile,
   analyzeBlueprint,
+  calibrateBlueprint,
+  manualCalibrate,
+  acceptCalibration,
+  resetCalibration,
   vectorizeGeometry,
   sendToCAM,
   exportSVGBasic,
@@ -145,6 +167,30 @@ function onFileSelected(file: File) {
 // Error setter (from child component)
 function setError(msg: string) {
   error.value = msg
+}
+
+// Calibration handlers
+function handleCalibrate(opts: CalibrationOptions) {
+  calibrateBlueprint(opts)
+}
+
+// Transform CalibrationPanel's emitted format to composable's expected format
+interface ManualCalibrationData {
+  point1_x: number
+  point1_y: number
+  point2_x: number
+  point2_y: number
+  real_dimension: number
+  dimension_name: string
+}
+
+function handleManualCalibrate(data: ManualCalibrationData) {
+  manualCalibrate({
+    point1: { x: data.point1_x, y: data.point1_y },
+    point2: { x: data.point2_x, y: data.point2_y },
+    realDimension: data.real_dimension,
+    dimensionName: data.dimension_name,
+  })
 }
 
 // Export handlers with blob download
@@ -269,6 +315,11 @@ function downloadBlob(blob: Blob, filename: string) {
 
 .phase-1 {
   background: #3b82f6;
+  color: white;
+}
+
+.phase-cal {
+  background: #f59e0b;
   color: white;
 }
 
