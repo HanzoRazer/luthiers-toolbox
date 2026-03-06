@@ -1,8 +1,14 @@
 <script setup lang="ts">
 /**
  * VectorizationControls.vue - Pre-vectorization controls and action button
- * Extracted from Phase2VectorizationPanel.vue
+ *
+ * Controls:
+ * - Scale Factor: Manual override if calibration was incorrect
+ * - Instrument Type: Electric vs Acoustic (affects contour scoring)
+ * - Dark Threshold: Line extraction sensitivity (auto or 0-255)
+ * - Gap Close Size: Morphological closing to connect broken lines
  */
+import { computed } from "vue";
 import type { VectorParams } from "@/composables/useBlueprintWorkflow";
 
 const props = defineProps<{
@@ -18,6 +24,23 @@ const emit = defineEmits<{
 function updateParam<K extends keyof VectorParams>(key: K, value: VectorParams[K]) {
   emit("update:vectorParams", { ...props.vectorParams, [key]: value });
 }
+
+// Handle dark threshold mode (auto vs manual)
+const darkThresholdMode = computed(() =>
+  props.vectorParams.darkThreshold === 'auto' ? 'auto' : 'manual'
+);
+
+function setDarkThresholdMode(mode: 'auto' | 'manual') {
+  if (mode === 'auto') {
+    updateParam('darkThreshold', 'auto');
+  } else {
+    updateParam('darkThreshold', 128); // Default manual value
+  }
+}
+
+function setDarkThresholdValue(value: number) {
+  updateParam('darkThreshold', value);
+}
 </script>
 
 <template>
@@ -28,6 +51,7 @@ function updateParam<K extends keyof VectorParams>(key: K, value: VectorParams[K
 
     <!-- Vectorization Controls -->
     <div class="controls-grid">
+      <!-- Scale Factor -->
       <div class="control-group">
         <label>Scale Factor:</label>
         <input
@@ -38,40 +62,76 @@ function updateParam<K extends keyof VectorParams>(key: K, value: VectorParams[K
           max="10"
           @input="updateParam('scaleFactor', parseFloat(($event.target as HTMLInputElement).value))"
         >
-        <span class="control-hint">Adjust if scale detection was incorrect</span>
+        <span class="control-hint">Override if calibration was incorrect</span>
       </div>
+
+      <!-- Instrument Type -->
       <div class="control-group">
-        <label>Edge Threshold (Low):</label>
-        <input
-          :value="vectorParams.lowThreshold"
-          type="number"
-          min="10"
-          max="200"
-          @input="updateParam('lowThreshold', parseInt(($event.target as HTMLInputElement).value))"
+        <label>Instrument Type:</label>
+        <select
+          :value="vectorParams.instrumentType"
+          @change="updateParam('instrumentType', ($event.target as HTMLSelectElement).value as 'electric' | 'acoustic')"
         >
-        <span class="control-hint">Lower = more edges detected</span>
+          <option value="electric">Electric Guitar</option>
+          <option value="acoustic">Acoustic Guitar</option>
+        </select>
+        <span class="control-hint">Affects contour scoring heuristics</span>
       </div>
+
+      <!-- Dark Threshold -->
       <div class="control-group">
-        <label>Edge Threshold (High):</label>
-        <input
-          :value="vectorParams.highThreshold"
-          type="number"
-          min="50"
-          max="300"
-          @input="updateParam('highThreshold', parseInt(($event.target as HTMLInputElement).value))"
-        >
-        <span class="control-hint">Higher = stricter edge detection</span>
+        <label>Line Detection:</label>
+        <div class="threshold-controls">
+          <label class="radio-label">
+            <input
+              type="radio"
+              name="darkThreshold"
+              value="auto"
+              :checked="darkThresholdMode === 'auto'"
+              @change="setDarkThresholdMode('auto')"
+            >
+            Auto
+          </label>
+          <label class="radio-label">
+            <input
+              type="radio"
+              name="darkThreshold"
+              value="manual"
+              :checked="darkThresholdMode === 'manual'"
+              @change="setDarkThresholdMode('manual')"
+            >
+            Manual
+          </label>
+          <input
+            v-if="darkThresholdMode === 'manual'"
+            :value="typeof vectorParams.darkThreshold === 'number' ? vectorParams.darkThreshold : 128"
+            type="range"
+            min="0"
+            max="255"
+            class="threshold-slider"
+            @input="setDarkThresholdValue(parseInt(($event.target as HTMLInputElement).value))"
+          >
+          <span v-if="darkThresholdMode === 'manual'" class="threshold-value">
+            {{ vectorParams.darkThreshold }}
+          </span>
+        </div>
+        <span class="control-hint">Lower = detect lighter lines</span>
       </div>
+
+      <!-- Gap Close Size -->
       <div class="control-group">
-        <label>Min Contour Area (px):</label>
-        <input
-          :value="vectorParams.minArea"
-          type="number"
-          min="10"
-          max="1000"
-          @input="updateParam('minArea', parseInt(($event.target as HTMLInputElement).value))"
-        >
-        <span class="control-hint">Filter small noise</span>
+        <label>Gap Closing:</label>
+        <div class="gap-controls">
+          <input
+            :value="vectorParams.gapCloseSize"
+            type="range"
+            min="0"
+            max="10"
+            @input="updateParam('gapCloseSize', parseInt(($event.target as HTMLInputElement).value))"
+          >
+          <span class="gap-value">{{ vectorParams.gapCloseSize || 'Off' }}</span>
+        </div>
+        <span class="control-hint">Connect broken lines (5 recommended)</span>
       </div>
     </div>
 
@@ -129,7 +189,8 @@ function updateParam<K extends keyof VectorParams>(key: K, value: VectorParams[K
   font-size: 0.875rem;
 }
 
-.control-group input {
+.control-group input[type="number"],
+.control-group select {
   padding: 0.5rem;
   border: 1px solid #d1d5db;
   border-radius: 0.375rem;
@@ -139,6 +200,53 @@ function updateParam<K extends keyof VectorParams>(key: K, value: VectorParams[K
 .control-hint {
   color: #9ca3af;
   font-size: 0.75rem;
+}
+
+/* Threshold controls */
+.threshold-controls {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.radio-label {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  font-weight: normal;
+  font-size: 0.875rem;
+  cursor: pointer;
+}
+
+.threshold-slider {
+  flex: 1;
+  min-width: 80px;
+}
+
+.threshold-value {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #374151;
+  min-width: 30px;
+}
+
+/* Gap controls */
+.gap-controls {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.gap-controls input[type="range"] {
+  flex: 1;
+}
+
+.gap-value {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #374151;
+  min-width: 30px;
 }
 
 .btn-primary {
