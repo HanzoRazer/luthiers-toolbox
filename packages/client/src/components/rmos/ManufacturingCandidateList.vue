@@ -518,27 +518,9 @@ function setStatusFilter(v: string) {
         @cycle-audit-sort="cycleAuditSort"
       />
 
-      <!-- Bulk decision bar -->
-      <BulkDecisionBar
-        v-if="candidates.length > 0"
-        :selected-count="selectedIds.size"
-        :disabled="saving || exporting || undoBusy"
-        :undo-stack-length="undoStack.length"
-        :undo-busy="undoBusy"
-        :last-undo-label="undoStack.length ? undoStackHover(undoStack[0]) : undefined"
-        @bulk-green="bulkSetDecision('GREEN')"
-        @bulk-yellow="bulkSetDecision('YELLOW')"
-        @bulk-red="bulkSetDecision('RED')"
-        @clear-decision="bulkClearDecision"
-        @undo-last="undoLast"
-      />
+<!-- Bulk bar removed for cleaner UI -->
 
-      <!-- Undo history display -->
-      <UndoHistoryPanel
-        v-if="undoStack.length > 0"
-        :history="undoStack"
-        :max-items="5"
-      />
+
 
       <!-- Bulk decision v2 controls -->
       <BulkDecisionControlsV2
@@ -562,11 +544,7 @@ function setStatusFilter(v: string) {
         @undo="undoLastBulkAction"
       />
 
-      <!-- Bulk history panel -->
-      <BulkHistoryPanel
-        v-if="showBulkHistory && bulkHistory.length > 0"
-        :history="bulkHistory as BulkHistoryRecord[]"
-      />
+
 
       <CandidateRowItem
         v-for="c in filteredCandidates"
@@ -588,8 +566,7 @@ function setStatusFilter(v: string) {
       />
     </div>
 
-    <!-- Export policy explainers (visible, not just hover) -->
-    <ExportPolicyCard v-if="candidates.length > 0" />
+
 
     <!-- Copy toast -->
     <div
