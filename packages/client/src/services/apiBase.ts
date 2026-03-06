@@ -10,9 +10,12 @@
  */
 
 // Environment-based API URL - supports both env var names for compatibility
+// NOTE: When running on localhost, we use empty string to let Vite proxy handle /api/* requests.
+// This avoids CORS issues since Vite proxies to localhost:8000 with changeOrigin: true.
+// Only use explicit http://localhost:8000 if you need to bypass the proxy (e.g., in tests).
 export const API_BASE = import.meta.env.VITE_API_BASE
   || import.meta.env.VITE_API_URL
-  || (typeof window !== 'undefined' && window.location.hostname === 'localhost' ? 'http://localhost:8000' : '');
+  || '';
 
 /**
  * Resolve a URL path to a full URL with API_BASE prefix.

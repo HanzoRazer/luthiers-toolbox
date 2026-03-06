@@ -128,9 +128,14 @@ async def analyze_blueprint(file: UploadFile = File(...)):
         )
     except HTTPException:
         raise
-    except (RuntimeError, KeyError, TypeError, OSError) as e:  # WP-1: AI analysis
-        logger.error(f"Error analyzing blueprint: {e}")
-        raise HTTPException(status_code=500, detail=f"Analysis failed: {str(e)}")
+    except Exception as e:  # WP-1: AI analysis - catch all for better error messages
+        error_type = type(e).__name__
+        error_msg = str(e)
+        logger.error(f"Error analyzing blueprint: {error_type}: {error_msg}")
+        # Check for specific API error types
+        if "image exceeds" in error_msg or "dimension" in error_msg:
+            raise HTTPException(status_code=400, detail=f"Image too large for AI analysis: {error_msg}")
+        raise HTTPException(status_code=500, detail=f"Analysis failed: {error_type}: {error_msg}")
 
 
 @router.post("/to-svg")
