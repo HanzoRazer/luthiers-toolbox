@@ -109,6 +109,17 @@ class PrimitiveType(Enum):
     POLYLINE = "polyline"
 
 
+class ExtractionMode(Enum):
+    """
+    Extraction mode for blueprint vectorization.
+
+    SMART: ML-based classification, optimized for guitars (default)
+    SIMPLE: Raw contour extraction without filtering - works for any instrument
+    """
+    SMART = "smart"
+    SIMPLE = "simple"
+
+
 @dataclass
 class GeometricPrimitive:
     """Detected geometric primitive."""
@@ -2016,7 +2027,8 @@ class Phase3Vectorizer:
         feedback_dir: str = ".feedback",
         enable_ocr: bool = False,
         tier: Optional[str] = None,
-        tier_config_path: Optional[str] = None
+        tier_config_path: Optional[str] = None,
+        extraction_mode: ExtractionMode = ExtractionMode.SMART
     ):
         """
         Initialize Phase 3.6 Vectorizer.
@@ -2033,6 +2045,7 @@ class Phase3Vectorizer:
             enable_ocr: Enable OCR dimension extraction (requires easyocr)
             tier: Processing tier ('express', 'standard', 'premium', 'batch')
             tier_config_path: Path to tier configuration file (JSON or YAML)
+            extraction_mode: SMART (ML-filtered, guitar-optimized) or SIMPLE (all contours, any instrument)
         """
         # Apply tier configuration if specified
         self._tier_processor = None
@@ -2067,8 +2080,9 @@ class Phase3Vectorizer:
         self.enable_scale_detection = enable_scale_detection
 
         self.feedback = FeedbackSystem(feedback_dir) if enable_feedback else None
+        self.extraction_mode = extraction_mode
 
-        logger.info(f"Phase 3.6 Vectorizer initialized (ML: {self.ml_classifier is not None})")
+        logger.info(f"Phase 3.6 Vectorizer initialized (ML: {self.ml_classifier is not None}, Mode: {extraction_mode.value})")
 
     @classmethod
     def from_tier(
@@ -2143,7 +2157,9 @@ class Phase3Vectorizer:
         detail_gap_close: int = 0,
         export_svg: bool = False,
         use_ml: bool = True,
-        detect_primitives: bool = True
+        detect_primitives: bool = True,
+        extraction_mode: Optional[ExtractionMode] = None,
+        simple_min_area: int = 50
     ) -> ExtractionResult:
         """
         Extract geometry from a blueprint.
@@ -2161,6 +2177,8 @@ class Phase3Vectorizer:
             export_svg: Also export SVG
             use_ml: Use ML classification if available
             detect_primitives: Detect geometric primitives
+            extraction_mode: Override instance extraction mode (SMART or SIMPLE)
+            simple_min_area: Minimum contour area in pixels for SIMPLE mode
 
         Returns:
             ExtractionResult with paths and statistics
@@ -2173,8 +2191,10 @@ class Phase3Vectorizer:
             output_path = str(source.with_suffix('.dxf'))
 
         instrument = instrument_type or self.default_instrument
+        mode = extraction_mode or self.extraction_mode
 
         logger.info(f"Phase 3.5 extraction: {source.name}")
+        logger.info(f"  Mode: {mode.value}")
         logger.info(f"  Instrument: {instrument.value}")
         logger.info(f"  Dual-pass: {dual_pass}")
 
@@ -2184,32 +2204,45 @@ class Phase3Vectorizer:
         img_width_mm = width * self.mm_per_px
         img_height_mm = height * self.mm_per_px
 
-        # Extract lines
-        if dual_pass:
-            body_mask, detail_mask = dual_pass_extraction(
-                image,
-                body_gap_close=body_gap_close,
-                detail_gap_close=detail_gap_close
+        # Initialize ML classifier reference (may be None in SIMPLE mode)
+        ml_clf = None
+
+        # Branch on extraction mode
+        if mode == ExtractionMode.SIMPLE:
+            # SIMPLE mode: Extract ALL contours without ML filtering
+            # Works for any instrument (cuatros, mandolins, etc.)
+            classified, all_contours = self._simple_extraction(
+                image, height, simple_min_area
             )
-            combined_mask = cv2.bitwise_or(body_mask, detail_mask)
+            logger.info(f"Simple extraction: {len(all_contours)} contours")
         else:
-            combined_mask = extract_auto(image, gap_close=body_gap_close)
+            # SMART mode: ML-based extraction optimized for guitars
+            # Extract lines
+            if dual_pass:
+                body_mask, detail_mask = dual_pass_extraction(
+                    image,
+                    body_gap_close=body_gap_close,
+                    detail_gap_close=detail_gap_close
+                )
+                combined_mask = cv2.bitwise_or(body_mask, detail_mask)
+            else:
+                combined_mask = extract_auto(image, gap_close=body_gap_close)
 
-        # Classify with hierarchy
-        ml_clf = self.ml_classifier if use_ml else None
-        classified = extract_with_hierarchy(
-            combined_mask,
-            self.mm_per_px,
-            img_width_mm,
-            img_height_mm,
-            instrument,
-            ml_classifier=ml_clf
-        )
+            # Classify with hierarchy
+            ml_clf = self.ml_classifier if use_ml else None
+            classified = extract_with_hierarchy(
+                combined_mask,
+                self.mm_per_px,
+                img_width_mm,
+                img_height_mm,
+                instrument,
+                ml_classifier=ml_clf
+            )
 
-        # Flatten contours for additional processing
-        all_contours = []
-        for cat_list in classified.values():
-            all_contours.extend(cat_list)
+            # Flatten contours for additional processing
+            all_contours = []
+            for cat_list in classified.values():
+                all_contours.extend(cat_list)
 
         # Detect primitives
         primitives = []
@@ -2358,6 +2391,90 @@ class Phase3Vectorizer:
                 os.unlink(temp_path)
             except OSError:
                 pass
+
+    def _simple_extraction(
+        self,
+        image: np.ndarray,
+        height: int,
+        min_area: int = 50
+    ) -> Tuple[Dict[ContourCategory, List], List]:
+        """
+        Simple contour extraction without ML filtering.
+
+        Extracts ALL contours above min_area threshold using adaptive thresholding.
+        Works for any instrument type (cuatros, mandolins, etc.) that may not be
+        recognized by the guitar-trained ML classifier.
+
+        Args:
+            image: OpenCV image (BGR)
+            height: Image height in pixels
+            min_area: Minimum contour area in pixels (default 50)
+
+        Returns:
+            Tuple of (classified dict, all_contours list)
+        """
+        # Convert to grayscale
+        gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+
+        # Handle inverted images (white on black)
+        if np.mean(gray) < 127:
+            gray = 255 - gray
+
+        # Adaptive threshold for clean line extraction
+        binary = cv2.adaptiveThreshold(
+            gray, 255,
+            cv2.ADAPTIVE_THRESH_GAUSSIAN_C,
+            cv2.THRESH_BINARY_INV,
+            21, 10
+        )
+
+        # Find all contours
+        contours, _ = cv2.findContours(
+            binary,
+            cv2.RETR_LIST,
+            cv2.CHAIN_APPROX_SIMPLE
+        )
+
+        # Filter and simplify contours
+        all_contours = []
+        for cnt in contours:
+            area = cv2.contourArea(cnt)
+            if area < min_area:
+                continue
+
+            # Simplify the contour
+            epsilon = 0.001 * cv2.arcLength(cnt, True)
+            approx = cv2.approxPolyDP(cnt, epsilon, True)
+
+            if len(approx) < 3:
+                continue
+
+            # Calculate contour properties
+            x, y, w, h = cv2.boundingRect(approx)
+            perimeter = cv2.arcLength(approx, True)
+            circularity = 4 * np.pi * area / (perimeter ** 2) if perimeter > 0 else 0
+
+            # Create ContourInfo with UNKNOWN category (no ML classification)
+            info = ContourInfo(
+                contour=approx,
+                category=ContourCategory.UNKNOWN,
+                width_mm=w * self.mm_per_px,
+                height_mm=h * self.mm_per_px,
+                area_px=area,
+                perimeter_px=perimeter,
+                circularity=circularity,
+                aspect_ratio=w / h if h > 0 else 1.0,
+                point_count=len(approx),
+                bbox=(x, y, w, h),
+                hierarchy_level=0,
+                ml_confidence=0.0
+            )
+            all_contours.append(info)
+
+        # Group all under UNKNOWN category for DXF export
+        classified = {ContourCategory.UNKNOWN: all_contours}
+
+        return classified, all_contours
 
     def batch_extract(
         self,
