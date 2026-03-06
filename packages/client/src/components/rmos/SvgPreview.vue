@@ -13,7 +13,7 @@ const props = defineProps<{
   apiBase?: string;
 }>();
 
-const apiBase = computed(() => props.apiBase ?? "/api");
+const apiBase = computed(() => props.apiBase ?? "/api/rmos");
 const loading = ref(false);
 const error = ref<string | null>(null);
 const svg = ref<string | null>(null);
@@ -37,7 +37,7 @@ async function load() {
 
   try {
     // Use the authoritative blob download endpoint
-    const url = `${apiBase.value}/rmos/runs/${encodeURIComponent(props.runId)}/advisory/blobs/${encodeURIComponent(props.advisoryId)}/download`;
+    const url = `${apiBase.value}/runs/${encodeURIComponent(props.runId)}/advisory/blobs/${encodeURIComponent(props.advisoryId)}/download`;
     const res = await fetch(url);
     if (!res.ok) throw new Error(`Download failed (${res.status})`);
 

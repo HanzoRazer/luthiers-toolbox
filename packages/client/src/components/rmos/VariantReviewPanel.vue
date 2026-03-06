@@ -3,7 +3,7 @@
  * VariantReviewPanel.vue
  *
  * Panel for reviewing, rating, and promoting advisory variants.
- * Integrates with the /api/rmos/runs/{run_id}/advisory/variants API.
+ * Integrates with the /api/runs/{run_id}/advisory/variants API.
  */
 import { computed, onMounted, ref, watch } from "vue";
 import { VariantCard, type Variant } from "./variant-review";
@@ -13,7 +13,7 @@ const props = defineProps<{
   apiBase?: string;
 }>();
 
-const apiBase = computed(() => props.apiBase ?? "/api");
+const apiBase = computed(() => props.apiBase ?? "/api/rmos");
 
 const loading = ref(false);
 const error = ref<string | null>(null);
@@ -36,7 +36,7 @@ async function refresh() {
   loading.value = true;
   error.value = null;
   try {
-    const res = await fetch(`${apiBase.value}/rmos/runs/${encodeURIComponent(props.runId)}/advisory/variants`);
+    const res = await fetch(`${apiBase.value}/runs/${encodeURIComponent(props.runId)}/advisory/variants`);
     if (!res.ok) throw new Error(`Load variants failed (${res.status})`);
     const data = await res.json();
     items.value = Array.isArray(data?.items) ? data.items : [];
@@ -53,7 +53,7 @@ async function saveReview(v: Variant) {
   error.value = null;
   try {
     const res = await fetch(
-      `${apiBase.value}/rmos/runs/${encodeURIComponent(props.runId)}/advisory/${encodeURIComponent(v.advisory_id)}/review`,
+      `${apiBase.value}/runs/${encodeURIComponent(props.runId)}/advisory/${encodeURIComponent(v.advisory_id)}/review`,
       {
         method: "POST",
         headers: roleHeaders(),
@@ -73,7 +73,7 @@ async function promote(v: Variant) {
   error.value = null;
   try {
     const res = await fetch(
-      `${apiBase.value}/rmos/runs/${encodeURIComponent(props.runId)}/advisory/${encodeURIComponent(v.advisory_id)}/promote`,
+      `${apiBase.value}/runs/${encodeURIComponent(props.runId)}/advisory/${encodeURIComponent(v.advisory_id)}/promote`,
       {
         method: "POST",
         headers: roleHeaders(),

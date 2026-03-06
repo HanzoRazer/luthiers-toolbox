@@ -14,7 +14,7 @@ const props = defineProps<{
   apiBase?: string;
 }>();
 
-const apiBase = computed(() => props.apiBase ?? "/api");
+const apiBase = computed(() => props.apiBase ?? "/api/rmos");
 const rating = ref<number | null>(null);
 const notes = ref("");
 const saving = ref(false);
@@ -43,7 +43,7 @@ async function save() {
 
   try {
     const res = await fetch(
-      `${apiBase.value}/rmos/runs/${encodeURIComponent(props.runId)}/advisory/${encodeURIComponent(
+      `${apiBase.value}/runs/${encodeURIComponent(props.runId)}/advisory/${encodeURIComponent(
         props.advisoryId
       )}/review`,
       {

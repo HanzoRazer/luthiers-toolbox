@@ -32,14 +32,14 @@ function handleDownload() {
 function diffWithLastSelected() {
   if (!store.lastSelectedRunId) return;
   router.push({
-    path: "/rmos/runs/diff",
+    path: "/runs/diff",
     query: { a: store.lastSelectedRunId, b: props.artifact.run_id },
   });
 }
 
 function setAsA() {
   router.push({
-    path: "/rmos/runs/diff",
+    path: "/runs/diff",
     query: { a: props.artifact.run_id },
   });
 }
@@ -68,7 +68,7 @@ function formatDate(iso: string): string {
 
       <div class="actions">
         <router-link
-          :to="`/rmos/runs/${artifact.run_id}`"
+          :to="`/runs/${artifact.run_id}`"
           class="btn"
           title="Open full page viewer"
         >

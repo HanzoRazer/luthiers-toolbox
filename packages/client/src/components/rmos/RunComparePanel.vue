@@ -5,7 +5,7 @@ import { computed, ref, watch } from "vue"
 type ComparePayload = any
 
 const props = defineProps<{
-  /** The run currently being viewed (typically from /rmos/runs/:id route) */
+  /** The run currently being viewed (typically from /runs/:id route) */
   currentRunId: string
   /** Optional default for the "other" run id */
   defaultOtherRunId?: string | null
