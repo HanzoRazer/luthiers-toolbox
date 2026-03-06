@@ -1,8 +1,10 @@
-# Luthier's ToolBox
+# Production Shop
 
-**The complete toolkit for luthiers and guitar builders.**
+**CNC Manufacturing Platform with RMOS Decision Authority**
 
-Luthier's ToolBox provides everything you need to design, calculate, and manufacture stringed instruments with precision CNC workflows.
+*Formerly: Luthier's Toolbox*
+
+Production Shop provides everything you need to design, validate, and manufacture precision parts with verified geometry and pre-cut safety checks. Originally built for luthiers and guitar builders, now expanded to serve any CNC woodworking shop.
 
 ---
 

@@ -1,6 +1,6 @@
 # Client Package
 
-Vue 3 + TypeScript client for Luthier's Tool Box.
+Vue 3 + TypeScript client for Production Shop (formerly Luthier's Tool Box).
 
 ## Components
 

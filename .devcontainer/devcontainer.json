@@ -1,5 +1,5 @@
 {
-  "name": "Luthier's Toolbox - CNC Guitar Lutherie Platform",
+  "name": "Production Shop - CNC Manufacturing Platform",
   "image": "mcr.microsoft.com/devcontainers/python:3.11-bullseye",
   
   "features": {
