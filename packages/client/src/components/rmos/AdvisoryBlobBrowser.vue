@@ -183,7 +183,7 @@ type PreviewStatus = {
 };
 
 const props = defineProps<{ runId: string; apiBase?: string }>();
-const apiBase = computed(() => props.apiBase ?? "/api");
+const apiBase = computed(() => props.apiBase ?? "/api/rmos");
 
 const loading = ref(false);
 const error = ref<string | null>(null);

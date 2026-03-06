@@ -13,7 +13,7 @@ const props = defineProps<{
   apiBase?: string;
 }>();
 
-const apiBase = computed(() => props.apiBase ?? "/api");
+const apiBase = computed(() => props.apiBase ?? "/api/rmos");
 const loading = ref(false);
 const error = ref<string | null>(null);
 const lineage = ref<any>(null);
@@ -28,7 +28,7 @@ async function loadLineage() {
     // TODO: Replace with actual lineage API when available
     // For now, try to fetch from advisory metadata
     const res = await fetch(
-      `${apiBase.value}/rmos/runs/${encodeURIComponent(props.runId)}/advisory/blobs/${encodeURIComponent(
+      `${apiBase.value}/runs/${encodeURIComponent(props.runId)}/advisory/blobs/${encodeURIComponent(
         props.advisoryId
       )}/metadata`,
       { credentials: "include" }

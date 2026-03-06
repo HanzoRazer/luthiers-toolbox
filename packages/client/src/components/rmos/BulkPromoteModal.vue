@@ -18,7 +18,7 @@ const emit = defineEmits<{
   (e: "done"): void;
 }>();
 
-const apiBase = computed(() => props.apiBase ?? "/api");
+const apiBase = computed(() => props.apiBase ?? "/api/rmos");
 
 const busy = ref(false);
 const error = ref<string | null>(null);
