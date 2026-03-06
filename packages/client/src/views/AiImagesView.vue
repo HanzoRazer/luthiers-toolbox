@@ -9,11 +9,13 @@ import { api } from '@/services/apiBase';
  * Route: /ai-images
  */
 import { ref, computed, onMounted } from "vue";
+import { useRouter } from "vue-router";
 import { useAiImageStore, VisionAttachToRunWidget } from "@/features/ai_images";
 import GenerateTabPanel from "./ai_images/GenerateTabPanel.vue";
 import AiContextPanel from "./ai_images/AiContextPanel.vue";
 
 const store = useAiImageStore();
+const router = useRouter();
 const projectId = ref("default-project");
 const activeTab = ref<"generate" | "attach" | "context">("generate");
 
@@ -69,6 +71,20 @@ async function handleRate(rating: number) {
 function handleAttached(payload: { runId: string; advisoryId: string }) {
   console.log("Image attached to run:", payload);
   // Could show toast or navigate
+}
+// Send selected image to Blueprint Lab for vectorization
+function handleVectorize() {
+  if (!store.selectedImage) return;
+  // Store the image URL in sessionStorage for Blueprint Lab to pick up
+  const imageUrl = store.selectedImage.url;
+  sessionStorage.setItem("blueprintLab.pendingImage", JSON.stringify({
+    url: imageUrl,
+    source: "ai-images",
+    filename: `ai-generated-${store.selectedId}.png`,
+    prompt: store.selectedImage.userPrompt,
+  }));
+  // Navigate to Blueprint Lab
+  router.push("/blueprint");
 }
 
 // AI Context functions
@@ -160,6 +176,7 @@ function copyAiContext() {
         @regenerate="handleRegenerate"
         @delete="handleDelete"
         @rate="handleRate"
+        @vectorize="handleVectorize"
       />
     </div>
 

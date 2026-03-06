@@ -27,6 +27,7 @@
         @regenerate="$emit('regenerate')"
         @delete="$emit('delete')"
         @rate="$emit('rate', $event)"
+        @vectorize="$emit('vectorize')"
       />
       <div
         v-else
@@ -59,6 +60,7 @@ defineEmits<{
   regenerate: []
   delete: []
   rate: [rating: number]
+  vectorize: []
 }>()
 </script>
 

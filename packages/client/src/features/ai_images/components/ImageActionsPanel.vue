@@ -8,6 +8,7 @@ defineEmits<{
   download: []
   regenerate: []
   delete: []
+  vectorize: []  // Send to Blueprint Lab for vectorization
 }>()
 </script>
 
@@ -29,6 +30,13 @@ defineEmits<{
     >
       <span>⬇️</span>
       <span>Download PNG</span>
+    </button>
+    <button
+      class="action-btn accent"
+      @click="$emit('vectorize')"
+    >
+      <span>📐</span>
+      <span>Send to Blueprint Lab</span>
     </button>
 
     <button
@@ -100,5 +108,14 @@ defineEmits<{
   border-color: #f44336;
   background: rgba(244, 67, 54, 0.1);
   color: #f44336;
+}
+.action-btn.accent {
+  border-color: #9c27b0;
+  color: #ce93d8;
+}
+
+.action-btn.accent:hover {
+  border-color: #ba68c8;
+  background: rgba(156, 39, 176, 0.15);
 }
 </style>

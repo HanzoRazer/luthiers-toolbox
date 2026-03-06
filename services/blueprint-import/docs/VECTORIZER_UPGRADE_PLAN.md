@@ -479,3 +479,107 @@ The **vectorizer itself** (Phase 2) still has 0% good detections on the 33-bluep
 ### Rating Unchanged: 8.0 / 10
 
 This session fixed infrastructure (image ingestion) but did not improve the core vectorization algorithms. Rating remains at 8.0 pending Phase 4.1/4.2 work.
+
+---
+
+## Session Update: March 6, 2026 (Multi-Format Ingestion)
+
+### Multi-Format Support Added
+
+**Supported Input Formats:**
+
+| Format | Support | Notes |
+|--------|---------|-------|
+| PDF | ✅ Full | Converted to PNG via pdf2image with adaptive DPI |
+| PNG | ✅ Full | Direct Claude vision analysis |
+| JPEG | ✅ Full | Direct Claude vision analysis |
+| GIF | ✅ Full | Magic byte detection |
+| WebP | ✅ Full | Magic byte detection |
+| BMP | ✅ New | Magic byte detection, converted to PNG |
+| DXF | ✅ New | Direct ezdxf parsing (no AI needed) |
+
+### DXF Direct Parsing
+
+DXF files are handled differently from image-based blueprints:
+- **No AI analysis needed** - DXF contains actual vector geometry
+- Uses `ezdxf` library to extract entities directly
+- Supported entities: LINE, CIRCLE, ARC, LWPOLYLINE, POLYLINE, SPLINE, ELLIPSE, POINT
+- Extracts units from DXF header ($INSUNITS)
+- Calculates bounds and dimensions from geometry
+
+**New Files:**
+- `dxf_parser.py` - DXF entity extraction and parsing
+- Updated `analyzer.py` - BMP magic byte detection, DXF routing
+
+### Updated Pipeline Status
+
+| Phase | Status | Notes |
+|-------|--------|-------|
+| Phase 1: AI Analysis | ✅ Working | Now supports PDF, PNG, JPEG, GIF, WebP, BMP |
+| Phase 1: DXF Parsing | ✅ New | Direct vector extraction (bypasses AI) |
+| Phase 1.5: Calibration | ✅ Working | CalibrationPanel shows after analysis |
+| Phase 2: Vectorization | ⚠️ 0% accuracy | Still needs upgrade |
+| Phase 3: CAM | ✅ Working | Ready when vectorization improves |
+
+### Rating: 8.0 / 10 (unchanged)
+
+Multi-format ingestion is infrastructure improvement. Core vectorization accuracy unchanged.
+
+---
+
+## Session Update: AI Images → Blueprint Lab Pipeline
+
+**Date:** 2026-03-06
+
+### Problem
+AI Design Studio generates instrument concept images but had "nowhere to go" - no continuation to vectorization pipeline.
+
+### Solution
+Added direct pipeline continuation from AI Images to Blueprint Lab:
+
+1. **New Button: "Send to Blueprint Lab"**
+   - Added to `ImageActionsPanel.vue`
+   - Accent-styled purple button with 📐 icon
+   - Visible when an image is selected
+
+2. **Event Chain Wiring**
+   - `ImageActionsPanel.vue` → emits `vectorize`
+   - `AiImageProperties.vue` → forwards `vectorize`
+   - `GenerateTabPanel.vue` → forwards `vectorize`
+   - `AiImagesView.vue` → handles with `handleVectorize()`
+
+3. **SessionStorage Handoff**
+   ```javascript
+   sessionStorage.setItem("blueprintLab.pendingImage", JSON.stringify({
+     url: imageUrl,
+     source: "ai-images",
+     filename: `ai-generated-${store.selectedId}.png`,
+     prompt: store.selectedImage.userPrompt,
+   }));
+   router.push("/blueprint");
+   ```
+
+4. **BlueprintLab.vue Receiver**
+   - Added `onMounted` hook to check for pending images
+   - Fetches image from URL, creates File object
+   - Calls `validateAndSetFile(file)` to enter workflow
+   - Clears sessionStorage after loading
+
+### Modified Files
+- `packages/client/src/features/ai_images/components/ImageActionsPanel.vue`
+- `packages/client/src/features/ai_images/AiImageProperties.vue`
+- `packages/client/src/views/ai_images/GenerateTabPanel.vue`
+- `packages/client/src/views/AiImagesView.vue`
+- `packages/client/src/views/BlueprintLab.vue`
+
+### User Flow
+```
+AI Design Studio → Generate Image → Select Image → "Send to Blueprint Lab"
+    ↓
+Blueprint Lab (auto-loads image) → Analyze → Calibrate → Vectorize → CAM
+```
+
+### Impact
+- Creates seamless workflow: AI concept → CAM-ready vectors
+- No manual file download/upload required
+- Preserves prompt metadata for traceability

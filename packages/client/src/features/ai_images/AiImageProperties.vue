@@ -28,6 +28,7 @@ const emit = defineEmits<{
   (e: 'regenerate'): void;
   (e: 'delete'): void;
   (e: 'rate', rating: number): void;
+  (e: 'vectorize'): void;
 }>();
 
 // =============================================================================
@@ -211,6 +212,7 @@ function copyPrompt(): void {
         @download="emit('download')"
         @regenerate="emit('regenerate')"
         @delete="emit('delete')"
+        @vectorize="emit('vectorize')"
       />
 
       <!-- Session Stats -->
