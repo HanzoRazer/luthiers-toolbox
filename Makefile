@@ -1,10 +1,10 @@
-# Makefile for Luthier's Toolbox
-# CNC lutherie CAD/CAM platform
+# Makefile for Production Shop (formerly Luthier's Toolbox)
+# CNC Manufacturing Platform with RMOS Decision Authority
 
 .PHONY: help
 help:
-	@echo "Luthier's Toolbox - Makefile Targets"
-	@echo "====================================="
+	@echo "Production Shop - Makefile Targets"
+	@echo "==================================="
 	@echo "smoke-helix-posts       Test helical ramping with all post-processor presets"
 	@echo "test-api                Run API smoke tests"
 	@echo "start-api               Start FastAPI dev server"

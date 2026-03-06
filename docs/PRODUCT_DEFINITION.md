@@ -1,6 +1,8 @@
-# Luthiers-ToolBox: Product Definition
+# Production Shop: Product Definition
 
-**Date:** 2026-02-23
+*Formerly: Luthiers-ToolBox*
+
+**Date:** 2026-02-23 (Updated: 2026-03-06)
 **Status:** Authoritative
 **Owner:** Product
 
@@ -8,7 +10,7 @@
 
 ## The ONE Core Job
 
-**Luthiers-ToolBox converts guitar design files (DXF) into safe, machine-ready G-code for CNC routers.**
+**Production Shop converts design files (DXF/PDF) into safe, machine-ready G-code for CNC routers with verified geometry and pre-cut validation.**
 
 Everything else is secondary.
 

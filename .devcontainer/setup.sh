@@ -1,7 +1,7 @@
 #!/bin/bash
 set -e
 
-echo "🔧 Setting up Luthier's Toolbox Codespace..."
+echo "🔧 Setting up Production Shop Codespace..."
 
 # Update system packages
 echo "📦 Updating system packages..."
