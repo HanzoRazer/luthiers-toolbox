@@ -1,7 +1,8 @@
 /**
- * useBlueprintWorkflow - Composable for Blueprint Lab 3-phase workflow
+ * useBlueprintWorkflow - Composable for Blueprint Lab 4-phase workflow
  *
  * Phase 1: AI Analysis (Claude Sonnet 4)
+ * Phase 1.5: Calibration (PPI detection)
  * Phase 2: Geometry Vectorization (OpenCV)
  * Phase 3: CAM Integration (GRBL)
  */
@@ -25,11 +26,39 @@ export interface AnalysisResult {
   dimensions?: Dimension[]
 }
 
+export interface CalibrationResult {
+  calibration_id: string
+  method: string
+  ppi: number
+  ppmm: number
+  confidence: number
+  reference_name?: string
+  reference_value_inches?: number
+  reference_pixels?: number
+  notes: string[]
+}
+
+export interface CalibrationOptions {
+  knownScaleLength?: number
+  paperSize?: string
+  preferMethod?: string
+}
+
+export interface ManualCalibrationPoints {
+  point1: { x: number; y: number }
+  point2: { x: number; y: number }
+  realDimension: number
+  dimensionName: string
+}
+
 export interface VectorParams {
   scaleFactor: number
   lowThreshold: number
   highThreshold: number
   minArea: number
+  instrumentType?: 'electric' | 'acoustic'
+  darkThreshold?: number | 'auto'
+  gapCloseSize?: number
 }
 
 export interface VectorizedGeometry {
@@ -85,6 +114,11 @@ export function useBlueprintWorkflow(options: BlueprintWorkflowOptions = {}) {
   const analysisProgress = ref(0)
   let analysisInterval: ReturnType<typeof setInterval> | null = null
 
+  // Phase 1.5: Calibration
+  const isCalibrating = ref(false)
+  const calibration = ref<CalibrationResult | null>(null)
+  const calibrationAccepted = ref(false)
+
   // Phase 2: Vectorization
   const isVectorizing = ref(false)
   const vectorizedGeometry = ref<VectorizedGeometry | null>(null)
@@ -93,6 +127,9 @@ export function useBlueprintWorkflow(options: BlueprintWorkflowOptions = {}) {
     lowThreshold: 50,
     highThreshold: 150,
     minArea: 100,
+    instrumentType: 'electric',
+    darkThreshold: 'auto',
+    gapCloseSize: 0,
   })
 
   // Phase 3: CAM
@@ -125,6 +162,7 @@ export function useBlueprintWorkflow(options: BlueprintWorkflowOptions = {}) {
   const currentPhase = computed(() => {
     if (!uploadedFile.value) return 0
     if (!analysis.value) return 1
+    if (!calibrationAccepted.value) return 1.5 // Calibration phase
     if (!vectorizedGeometry.value) return 2
     return 3
   })
@@ -201,6 +239,92 @@ export function useBlueprintWorkflow(options: BlueprintWorkflowOptions = {}) {
     }
   }
 
+  // Phase 1.5: Calibration
+  const calibrateBlueprint = async (opts: CalibrationOptions = {}): Promise<boolean> => {
+    if (!uploadedFile.value) return false
+
+    try {
+      isCalibrating.value = true
+      error.value = null
+
+      const formData = new FormData()
+      formData.append('file', uploadedFile.value)
+      if (opts.knownScaleLength) {
+        formData.append('known_scale_length', opts.knownScaleLength.toString())
+      }
+      formData.append('paper_size', opts.paperSize || 'letter')
+      formData.append('prefer_method', opts.preferMethod || 'auto')
+
+      const response = await api('/api/blueprint/calibrate', {
+        method: 'POST',
+        body: formData,
+      })
+
+      if (!response.ok) {
+        const errorData = await response.json()
+        throw new Error(errorData.detail || 'Calibration failed')
+      }
+
+      calibration.value = await response.json()
+      return true
+    } catch (err: any) {
+      console.error('Calibration error:', err)
+      setError(err.message || 'Failed to calibrate blueprint')
+      return false
+    } finally {
+      isCalibrating.value = false
+    }
+  }
+
+  const manualCalibrate = async (points: ManualCalibrationPoints): Promise<boolean> => {
+    if (!uploadedFile.value) return false
+
+    try {
+      isCalibrating.value = true
+      error.value = null
+
+      const formData = new FormData()
+      formData.append('file', uploadedFile.value)
+      formData.append('point1_x', points.point1.x.toString())
+      formData.append('point1_y', points.point1.y.toString())
+      formData.append('point2_x', points.point2.x.toString())
+      formData.append('point2_y', points.point2.y.toString())
+      formData.append('real_dimension', points.realDimension.toString())
+      formData.append('dimension_name', points.dimensionName)
+
+      const response = await api('/api/blueprint/calibrate/manual', {
+        method: 'POST',
+        body: formData,
+      })
+
+      if (!response.ok) {
+        const errorData = await response.json()
+        throw new Error(errorData.detail || 'Manual calibration failed')
+      }
+
+      calibration.value = await response.json()
+      calibrationAccepted.value = true // Manual calibration is authoritative
+      return true
+    } catch (err: any) {
+      console.error('Manual calibration error:', err)
+      setError(err.message || 'Failed to perform manual calibration')
+      return false
+    } finally {
+      isCalibrating.value = false
+    }
+  }
+
+  const acceptCalibration = () => {
+    if (calibration.value) {
+      calibrationAccepted.value = true
+    }
+  }
+
+  const resetCalibration = () => {
+    calibration.value = null
+    calibrationAccepted.value = false
+  }
+
   // Phase 2: Vectorization
   const vectorizeGeometry = async (): Promise<boolean> => {
     if (!uploadedFile.value || !analysis.value) return false
@@ -213,9 +337,16 @@ export function useBlueprintWorkflow(options: BlueprintWorkflowOptions = {}) {
       formData.append('file', uploadedFile.value)
       formData.append('analysis_data', JSON.stringify(analysis.value))
       formData.append('scale_factor', vectorParams.value.scaleFactor.toString())
-      formData.append('low_threshold', vectorParams.value.lowThreshold.toString())
-      formData.append('high_threshold', vectorParams.value.highThreshold.toString())
-      formData.append('min_area', vectorParams.value.minArea.toString())
+
+      // Use calibration if available
+      if (calibration.value?.calibration_id) {
+        formData.append('calibration_id', calibration.value.calibration_id)
+      }
+
+      // Use new endpoint parameters
+      formData.append('instrument_type', vectorParams.value.instrumentType || 'electric')
+      formData.append('dark_threshold', vectorParams.value.darkThreshold?.toString() || 'auto')
+      formData.append('gap_close_size', (vectorParams.value.gapCloseSize || 0).toString())
 
       const response = await api('/api/blueprint/vectorize-geometry', {
         method: 'POST',
@@ -362,6 +493,8 @@ export function useBlueprintWorkflow(options: BlueprintWorkflowOptions = {}) {
   const resetWorkflow = () => {
     uploadedFile.value = null
     analysis.value = null
+    calibration.value = null
+    calibrationAccepted.value = false
     vectorizedGeometry.value = null
     rmosResult.value = null
     error.value = null
@@ -394,6 +527,11 @@ export function useBlueprintWorkflow(options: BlueprintWorkflowOptions = {}) {
     analysis,
     analysisProgress,
 
+    // Phase 1.5: Calibration
+    isCalibrating,
+    calibration,
+    calibrationAccepted,
+
     // Phase 2
     isVectorizing,
     vectorizedGeometry,
@@ -414,6 +552,10 @@ export function useBlueprintWorkflow(options: BlueprintWorkflowOptions = {}) {
     // Actions
     validateAndSetFile,
     analyzeBlueprint,
+    calibrateBlueprint,
+    manualCalibrate,
+    acceptCalibration,
+    resetCalibration,
     vectorizeGeometry,
     sendToCAM,
     exportSVGBasic,
