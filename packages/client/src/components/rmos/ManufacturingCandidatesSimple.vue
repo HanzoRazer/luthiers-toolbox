@@ -21,6 +21,20 @@ const error = ref<string | null>(null);
 const candidates = ref<ManufacturingCandidate[]>([]);
 const deciding = ref<string | null>(null);
 
+function authHeaders(): Record<string, string> {
+  const token = localStorage.getItem("LTB_JWT") || "";
+  const role = localStorage.getItem("LTB_USER_ROLE") || "";
+  const uid = localStorage.getItem("LTB_USER_ID") || "";
+  const h: Record<string, string> = {};
+  if (token) {
+    h["Authorization"] = \;
+  } else {
+    h["x-user-role"] = role || "operator";
+    h["x-user-id"] = uid || "dev-user";
+  }
+  return h;
+}
+
 const summary = computed(() => {
   const g = candidates.value.filter(c => c.decision === 'GREEN').length;
   const y = candidates.value.filter(c => c.decision === 'YELLOW').length;
@@ -36,7 +50,7 @@ async function load() {
   loading.value = true;
   error.value = null;
   try {
-    const res = await listManufacturingCandidates(props.runId);
+    const res = await listManufacturingCandidates(props.runId, { headers: authHeaders() });
     candidates.value = res.items ?? [];
   } catch (e: any) {
     error.value = e?.message ?? String(e);
@@ -53,7 +67,7 @@ async function decide(c: ManufacturingCandidate, decision: RiskLevel) {
       decision,
       note: null,
       decided_by: "operator",
-    });
+    }, { headers: authHeaders() });
     // Update local state
     const idx = candidates.value.findIndex(x => x.candidate_id === c.candidate_id);
     if (idx !== -1) {
