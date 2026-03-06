@@ -105,7 +105,7 @@
 
 <script setup lang="ts">
 import { useRouter } from 'vue-router'
-import { useBlueprintWorkflow, type CalibrationOptions, type ManualCalibrationPoints } from '@/composables/useBlueprintWorkflow'
+import { useBlueprintWorkflow } from '@/composables/useBlueprintWorkflow'
 import BlueprintUploadZone from '@/components/blueprint/BlueprintUploadZone.vue'
 import Phase1AnalysisPanel from '@/components/blueprint/Phase1AnalysisPanel.vue'
 import CalibrationPanel from '@/components/blueprint/CalibrationPanel.vue'
@@ -170,8 +170,11 @@ function setError(msg: string) {
 }
 
 // Calibration handlers
-function handleCalibrate(opts: CalibrationOptions) {
-  calibrateBlueprint(opts)
+function handleCalibrate(opts: { knownScaleLength: number | null; paperSize: string }) {
+  calibrateBlueprint({
+    knownScaleLength: opts.knownScaleLength ?? undefined,
+    paperSize: opts.paperSize,
+  })
 }
 
 // Transform CalibrationPanel's emitted format to composable's expected format
