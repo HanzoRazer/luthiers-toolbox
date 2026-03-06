@@ -27,7 +27,7 @@ function authHeaders(): Record<string, string> {
   const uid = localStorage.getItem("LTB_USER_ID") || "";
   const h: Record<string, string> = {};
   if (token) {
-    h["Authorization"] = \;
+    h["Authorization"] = "Bearer " + token;
   } else {
     h["x-user-role"] = role || "operator";
     h["x-user-id"] = uid || "dev-user";
