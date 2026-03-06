@@ -130,7 +130,15 @@ export function useAssetAttachment(
       await refreshVariants()
       toastOk('Promoted to manufacturing.')
     } catch (e: any) {
-      toastErr(e?.message || 'Promote failed.')
+      // Handle 404 errors with clear guidance
+      const status = e?.response?.status ?? e?.status
+      if (status === 404) {
+        // Clear stale state
+        window.localStorage.removeItem('tb.visionAttach.selectedRunId')
+        toastErr('Run not found. Please select a valid run and try again.')
+      } else {
+        toastErr(e?.message || 'Promote failed.')
+      }
     } finally {
       isPromoting.value = null
     }

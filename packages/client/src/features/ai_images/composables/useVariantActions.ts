@@ -105,7 +105,15 @@ export function useVariantActions(
       await refreshVariants()
       toastOk(`Promoted.${res.requestId ? ` req:${res.requestId}` : ''}`)
     } catch (e: any) {
-      toastErr(e?.message || 'Promote failed.')
+      // Handle 404 errors with clear guidance
+      const status = e?.response?.status ?? e?.status
+      if (status === 404) {
+        // Clear stale state
+        window.localStorage.removeItem('tb.visionAttach.selectedRunId')
+        toastErr('Run not found. Please select a valid run and try again.')
+      } else {
+        toastErr(e?.message || 'Promote failed.')
+      }
     } finally {
       setBusy(advisoryId, null)
     }
