@@ -1,0 +1,106 @@
+{
+  "schema_version": "1.0.0",
+  "instrument": {
+    "name": "Smart Guitar",
+    "version": "v1.0",
+    "type": "electric_solidbody",
+    "design_date": "2026-03-06",
+    "design_style": "Explorer-Klein hybrid angular",
+    "target_market": ["progressive_rock", "metal", "fusion"]
+  },
+  "body": {
+    "dimensions": {
+      "length_inches": 17.5,
+      "length_mm": 444.5,
+      "width_max_inches": 14.5,
+      "width_max_mm": 368.3,
+      "thickness_inches": 1.75,
+      "thickness_mm": 44.45
+    },
+    "lower_bout": {
+      "style": "V-shaped",
+      "width_inches": 12.0,
+      "width_mm": 304.8
+    },
+    "upper_section": {
+      "style": "asymmetric_pointed_horn",
+      "width_inches": 10.0,
+      "width_mm": 254.0
+    },
+    "cutaways": [
+      {
+        "name": "upper_left_void",
+        "type": "negative_space",
+        "purpose": "ergonomic_arm_relief"
+      },
+      {
+        "name": "lower_left_void",
+        "type": "negative_space",
+        "purpose": "ergonomic_ribcage_relief"
+      }
+    ],
+    "materials": {
+      "primary": ["maple", "ash"],
+      "finish": "natural_blonde_amber"
+    },
+    "weight_estimate_lbs": 7.5
+  },
+  "neck": {
+    "scale_length_inches": 25.5,
+    "scale_length_mm": 647.7,
+    "fret_count": 24,
+    "nut_width_inches": 1.6875,
+    "nut_width_mm": 42.86,
+    "fretboard_material": "ebony",
+    "inlay_style": "dot",
+    "profile": "modern_C"
+  },
+  "hardware": {
+    "pickups": [
+      {
+        "position": "neck",
+        "type": "humbucker",
+        "mounting": "direct"
+      },
+      {
+        "position": "bridge",
+        "type": "humbucker",
+        "mounting": "direct"
+      }
+    ],
+    "bridge": {
+      "type": "hardtail",
+      "style": "tune-o-matic"
+    },
+    "controls": {
+      "knobs": 2,
+      "knob_style": "gold_dome",
+      "switches": 1,
+      "switch_type": "rotary_selector"
+    },
+    "pickguard": {
+      "material": "black_acrylic",
+      "style": "asymmetric_control_plate"
+    }
+  },
+  "smart_features": {
+    "control_plate_area_sq_inches": 12.0,
+    "expansion_ready": true,
+    "notes": "Control plate designed for expanded electronics integration"
+  },
+  "overall": {
+    "total_length_inches": 39.0,
+    "total_length_mm": 990.6
+  },
+  "source_images": [
+    "ChatGPT Image Mar 6, 2026, 01_41_42 AM.png",
+    "ChatGPT Image Mar 6, 2026, 01_41_28 AM.png",
+    "ChatGPT Image Mar 6, 2026, 01_40_50 AM.png"
+  ],
+  "notes": [
+    "First mockup - dimensions are approximate estimates from visual analysis",
+    "Grid reference image used for proportional scaling",
+    "Explorer-influenced angularity with Klein-style negative space cutaways",
+    "Natural finish softens aggressive angular aesthetics"
+  ]
+}
