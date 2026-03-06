@@ -428,3 +428,54 @@ The following enhancements were identified during Phase 4.0 implementation but w
 ---
 
 *This document should be updated with each significant version release.*
+
+---
+
+## Session Log: March 6, 2026
+
+### Issue Resolved: Large PDF Image Resize
+
+**Problem:** Blueprint Lab pipeline was blocked - large PDFs (e.g., Les Paul at 14044x9934 pixels) exceeded Claude API's 5MB base64 image limit, causing 500 errors.
+
+**Root Cause:** The `_resize_image_if_needed()` function wasn't aggressive enough for high-resolution blueprint PDFs that produce 7MB+ PNG files after rasterization.
+
+**Fix Applied (`analyzer.py`):**
+- Added `MAX_TOTAL_PIXELS = 16,000,000` constraint
+- Smart initial scale estimation for images >2x the size limit
+- Extended quality levels: [85, 70, 55, 40, 30, 20]
+- Extended scale factors: [0.75, 0.6, 0.5, 0.4, 0.3, 0.25, 0.2, 0.15, 0.1]
+- Last resort: 0.05 scale
+- Adaptive DPI for PDF conversion (150-300 based on file size)
+- Detect media type from magic bytes instead of filename
+- Disabled PIL decompression bomb protection for large blueprints
+
+**Test Result:**
+```
+Input:  7,074,113 bytes, 14044x9934 pixels (139M pixels)
+Output: 1,389,298 bytes, 4756x3364 pixels, quality=85
+Result: HTTP 200, 18 dimensions detected, "Gibson Les Paul Standard"
+```
+
+**Commit:** `bc1f8c2a fix(blueprint): handle large PDFs exceeding Claude 5MB image limit`
+
+### Current Pipeline Status
+
+| Phase | Status | Notes |
+|-------|--------|-------|
+| Phase 1: AI Analysis | ✅ Working | Large PDFs now resize properly |
+| Phase 1.5: Calibration | ✅ Working | CalibrationPanel shows after analysis |
+| Phase 2: Vectorization | ⚠️ 0% accuracy | Needs upgrade per this document |
+| Phase 3: CAM | ✅ Working | Ready when vectorization improves |
+
+### Next Priority
+
+The **vectorizer itself** (Phase 2) still has 0% good detections on the 33-blueprint test suite. The AI Analysis phase is now unblocked, but the core vectorization logic needs the upgrades outlined in this document to reach 8.5+ rating:
+
+1. **Multi-view detection** - Use GridZoneClassifier (already built)
+2. **Contour scoring** - Replace "largest contour" with smart selection
+3. **Aspect ratio filtering** - Filter for guitar-like proportions (1.1-1.6)
+4. **Calibration integration** - Export at real-world scale
+
+### Rating Unchanged: 8.0 / 10
+
+This session fixed infrastructure (image ingestion) but did not improve the core vectorization algorithms. Rating remains at 8.0 pending Phase 4.1/4.2 work.
