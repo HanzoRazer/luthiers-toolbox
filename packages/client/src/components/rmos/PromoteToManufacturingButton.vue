@@ -13,7 +13,7 @@ const props = defineProps<{
   apiBase?: string;
 }>();
 
-const apiBase = computed(() => props.apiBase ?? "/api");
+const apiBase = computed(() => props.apiBase ?? "/api/rmos");
 const promoting = ref(false);
 const error = ref<string | null>(null);
 const success = ref<string | null>(null);
@@ -40,7 +40,7 @@ async function promote() {
 
   try {
     const res = await fetch(
-      `${apiBase.value}/rmos/runs/${encodeURIComponent(props.runId)}/advisory/${encodeURIComponent(
+      `${apiBase.value}/runs/${encodeURIComponent(props.runId)}/advisory/${encodeURIComponent(
         props.advisoryId
       )}/promote`,
       {
@@ -53,7 +53,13 @@ async function promote() {
 
     if (res.status === 401) throw new Error("Not authenticated");
     if (res.status === 403) throw new Error("Forbidden: requires role admin/operator/engineer");
-    if (res.status === 409) throw new Error("Already promoted");
+    if (res.status === 404) throw new Error("Run or advisory not found. The variant may have been deleted or needs to be re-attached.");
+    if (res.status === 409) {
+      // Parse actual server message (could be "already promoted" or "must review first")
+      const errData = await res.json().catch(() => ({}));
+      const detail = errData.detail || "Conflict";
+      throw new Error(detail);
+    }
     if (!res.ok) throw new Error(`Promotion failed (${res.status})`);
 
     const data = await res.json();

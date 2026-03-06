@@ -88,10 +88,22 @@ export function useRunSelection(
       // 1) explicit prop
       // 2) localStorage remembered selection (if present in list)
       // 3) newest (first)
+      // IMPORTANT: Clear stale localStorage if run no longer exists to prevent 404 errors
+      const remembered = window.localStorage.getItem(LS_SELECTED_RUN)
+      if (remembered && runs.value.length > 0) {
+        const inList = runs.value.some((r) => r.run_id === remembered)
+        if (!inList) {
+          // Stale run ID - clear it to prevent 404 errors on promote/attach
+          window.localStorage.removeItem(LS_SELECTED_RUN)
+          // Also clear selectedRunId if it was the stale value
+          if (selectedRunId.value === remembered) {
+            selectedRunId.value = null
+          }
+        }
+      }
       if (!selectedRunId.value && runs.value.length > 0) {
-        const remembered = window.localStorage.getItem(LS_SELECTED_RUN)
-        const inList = remembered && runs.value.some((r) => r.run_id === remembered)
-        selectedRunId.value = inList ? remembered : runs.value[0].run_id
+        const inListNow = remembered && runs.value.some((r) => r.run_id === remembered)
+        selectedRunId.value = inListNow ? remembered : runs.value[0].run_id
       }
 
       return {}
