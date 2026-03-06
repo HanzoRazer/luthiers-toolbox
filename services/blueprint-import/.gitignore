@@ -1,2 +1,6 @@
 *.joblib
 *.scaler
+
+# Test result files
+*_results.json
+blueprint_dimensions.json
