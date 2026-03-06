@@ -432,3 +432,9 @@ __REFERENCE__/
 .archive_*/
 *_phase[0-9]*_[0-9]*.vue
 *_phase[0-9]*_[0-9]*.py
+
+# Cuatro DXF output directories
+Cuatro/regenerated_v3/
+Cuatro/simple_extract/
+Cuatro/test_raw/
+Cuatro/*.zip
