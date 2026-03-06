@@ -53,12 +53,9 @@ export interface ManualCalibrationPoints {
 
 export interface VectorParams {
   scaleFactor: number
-  lowThreshold: number
-  highThreshold: number
-  minArea: number
-  instrumentType?: 'electric' | 'acoustic'
-  darkThreshold?: number | 'auto'
-  gapCloseSize?: number
+  instrumentType: 'electric' | 'acoustic'
+  darkThreshold: number | 'auto'
+  gapCloseSize: number
 }
 
 export interface VectorizedGeometry {
@@ -124,9 +121,6 @@ export function useBlueprintWorkflow(options: BlueprintWorkflowOptions = {}) {
   const vectorizedGeometry = ref<VectorizedGeometry | null>(null)
   const vectorParams = ref<VectorParams>({
     scaleFactor: 1.0,
-    lowThreshold: 50,
-    highThreshold: 150,
-    minArea: 100,
     instrumentType: 'electric',
     darkThreshold: 'auto',
     gapCloseSize: 0,
@@ -343,10 +337,10 @@ export function useBlueprintWorkflow(options: BlueprintWorkflowOptions = {}) {
         formData.append('calibration_id', calibration.value.calibration_id)
       }
 
-      // Use new endpoint parameters
-      formData.append('instrument_type', vectorParams.value.instrumentType || 'electric')
-      formData.append('dark_threshold', vectorParams.value.darkThreshold?.toString() || 'auto')
-      formData.append('gap_close_size', (vectorParams.value.gapCloseSize || 0).toString())
+      // Vectorization parameters
+      formData.append('instrument_type', vectorParams.value.instrumentType)
+      formData.append('dark_threshold', vectorParams.value.darkThreshold.toString())
+      formData.append('gap_close_size', vectorParams.value.gapCloseSize.toString())
 
       const response = await api('/api/blueprint/vectorize-geometry', {
         method: 'POST',
