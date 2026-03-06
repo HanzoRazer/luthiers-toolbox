@@ -19,35 +19,10 @@ const error = ref<string | null>(null);
 const lineage = ref<any>(null);
 
 async function loadLineage() {
-  if (!props.runId || !props.advisoryId) return;
-
-  loading.value = true;
-  error.value = null;
-
-  try {
-    // TODO: Replace with actual lineage API when available
-    // For now, try to fetch from advisory metadata
-    const res = await fetch(
-      `${apiBase.value}/runs/${encodeURIComponent(props.runId)}/advisory/blobs/${encodeURIComponent(
-        props.advisoryId
-      )}/metadata`,
-      { credentials: "include" }
-    );
-
-    if (res.status === 404) {
-      // No lineage available - this is fine
-      lineage.value = null;
-      return;
-    }
-
-    if (!res.ok) throw new Error(`Load lineage failed (${res.status})`);
-    lineage.value = await res.json();
-  } catch (e: any) {
-    // Silently handle - lineage is optional
-    lineage.value = null;
-  } finally {
-    loading.value = false;
-  }
+  // TODO: Enable when backend /metadata endpoint is implemented
+  // The endpoint doesn't exist yet, so skip fetch to avoid 404 console noise
+  lineage.value = null;
+  loading.value = false;
 }
 
 onMounted(loadLineage);
