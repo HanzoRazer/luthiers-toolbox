@@ -153,6 +153,9 @@ const riskClass = computed(() => {
   if (r === "RED") return "risk-red";
   return "";
 });
+
+const isPromoted = computed(() => props.variantStatus?.toUpperCase() === "PROMOTED");
+const isRejected = computed(() => props.variantStatus?.toUpperCase() === "REJECTED");
 </script>
 
 <template>
@@ -190,14 +193,16 @@ const riskClass = computed(() => {
 
       <!-- Promote checkbox -->
       <label class="action-item">
-        <input type="checkbox" v-model="doPromote" :disabled="saving || doReject" />
+        <input type="checkbox" v-model="doPromote" :disabled="saving || doReject || isPromoted" />
         <span>Promote to Manufacturing</span>
+        <span v-if="isPromoted" class="already-done">(already promoted)</span>
       </label>
 
       <!-- Reject checkbox -->
       <label class="action-item">
-        <input type="checkbox" v-model="doReject" :disabled="saving || doPromote" />
+        <input type="checkbox" v-model="doReject" :disabled="saving || doPromote || isRejected" />
         <span>Reject</span>
+        <span v-if="isRejected" class="already-done">(already rejected)</span>
       </label>
 
       <!-- Reject reason (shows when reject checked) -->
@@ -373,5 +378,11 @@ const riskClass = computed(() => {
 .apply-btn:disabled {
   opacity: 0.6;
   cursor: not-allowed;
+}
+
+.already-done {
+  font-size: 0.75rem;
+  color: #666;
+  font-style: italic;
 }
 </style>
