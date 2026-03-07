@@ -4,11 +4,15 @@ RMOS Acoustics Router (Wave 22)
 Provides endpoints for the Acoustics Library UI:
 - /runs - Browse runs with session/batch filters
 - /runs/{run_id} - Get run detail with attachments
+- /import-zip - Import viewer_pack ZIP (proxied to real router_import)
 - /ingest/events - Browse ingest events
 - /ingest/events/{event_id} - Get ingest event detail
 - /index/attachment_meta/* - Attachment index endpoints
 
 H7.2.2.1 compliance: signed URLs, no-path disclosure, attachment meta index.
+
+WIRED to real implementations:
+- /import-zip - See app.rmos.acoustics.router_import.import_acoustics_zip
 """
 
 from __future__ import annotations
@@ -23,6 +27,12 @@ from typing import Any, Dict, List, Optional
 from fastapi import APIRouter, File, HTTPException, Query, UploadFile, Form
 from fastapi.responses import FileResponse
 from pydantic import BaseModel
+
+# Import real implementation for wiring
+from ..acoustics.router_import import (
+    import_acoustics_zip as _import_acoustics_zip_real,
+    ImportResponse as _RealImportResponse,
+)
 
 
 router = APIRouter(tags=["rmos", "acoustics"])
@@ -87,7 +97,7 @@ class ImportResponse(BaseModel):
 
 
 # =============================================================================
-# Import Endpoint
+# Import Endpoint (proxy to real implementation)
 # =============================================================================
 
 @router.post("/import-zip", response_model=ImportResponse)
@@ -98,39 +108,26 @@ async def import_zip(
 ) -> ImportResponse:
     """
     Import a viewer_pack ZIP containing manifest.json + attachments.
-    Creates a new run with the imported attachments.
+    
+    Proxies to the real implementation at app.rmos.acoustics.router_import.
+    See that module for full documentation on:
+    - Validation requirements (validation_report.json with passed=true)
+    - ZIP structure (manifest.json + attachments/)
+    - Status codes (400=malformed, 422=validation_failed)
     """
-    runs_root = _get_runs_root()
-    runs_root.mkdir(parents=True, exist_ok=True)
-
-    # Generate run ID
-    run_id = f"acoustics_{uuid.uuid4().hex[:12]}"
-    date_str = datetime.utcnow().strftime("%Y-%m-%d")
-    date_dir = runs_root / date_str
-    date_dir.mkdir(parents=True, exist_ok=True)
-
-    # For now, create a stub run file (full ZIP extraction would go here)
-    run_data = {
-        "run_id": run_id,
-        "session_id": session_id,
-        "batch_label": batch_label,
-        "created_at_utc": datetime.utcnow().isoformat() + "Z",
-        "mode": "acoustics",
-        "attachments": [],
-        "meta": {
-            "source_filename": file.filename,
-            "import_status": "stub",
-        },
-    }
-
-    run_file = date_dir / f"run_{run_id}.json"
-    run_file.write_text(json.dumps(run_data, indent=2), encoding="utf-8")
-
+    # Proxy to real implementation
+    real_response = await _import_acoustics_zip_real(
+        file=file,
+        session_id=session_id,
+        batch_label=batch_label,
+    )
+    
+    # Map real response to our response model
     return ImportResponse(
         ok=True,
-        run_id=run_id,
-        attachment_count=0,
-        message=f"Stub import created for {file.filename}. Full ZIP extraction not yet implemented.",
+        run_id=real_response.run_id,
+        attachment_count=real_response.attachments_written,
+        message=f"Imported {real_response.attachments_written} attachments (deduped: {real_response.attachments_deduped})",
     )
 
 
@@ -374,5 +371,11 @@ def check_attachment_exists(sha256: str) -> Dict[str, Any]:
 
 @router.post("/index/rebuild_attachment_meta")
 def rebuild_attachment_index() -> Dict[str, Any]:
-    """Rebuild the attachment meta index from all runs."""
-    return {"ok": True, "message": "Index rebuild not yet implemented", "entries_indexed": 0}
+    """Rebuild the attachment meta index from all runs (proxied to real store)."""
+    from .store import RunStoreV2
+    
+    runs_root = _get_runs_root()
+    store = RunStoreV2(runs_root)
+    count = store.rebuild_index()
+    
+    return {"ok": True, "message": f"Rebuilt index with {count} entries", "entries_indexed": count}

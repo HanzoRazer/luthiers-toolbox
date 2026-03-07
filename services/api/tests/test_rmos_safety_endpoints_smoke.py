@@ -121,13 +121,13 @@ def test_safety_mode_default_standard(client):
 # Safety Create Override Endpoint
 # =============================================================================
 
-def test_safety_create_override_returns_stub_message(client):
-    """POST /api/rmos/safety/create-override returns stub message with redirect."""
+def test_safety_create_override_returns_token(client):
+    """POST /api/rmos/safety/create-override returns functional token."""
     response = client.post("/api/rmos/safety/create-override", json={
-        "run_id": "test_run",
-        "reason": "Test override",
+        "action": "test_action",
     })
     assert response.status_code == 200
     data = response.json()
-    assert data["ok"] is True
-    assert "runs_v2" in data["message"].lower() or "override" in data["message"].lower()
+    assert "token" in data
+    assert len(data["token"]) == 8  # 4 bytes hex = 8 chars
+    assert "expires_at" in data
