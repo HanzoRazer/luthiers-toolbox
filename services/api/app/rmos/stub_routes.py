@@ -5,66 +5,29 @@ Provides stub endpoints for frontend paths that don't have backend implementatio
 These return empty/default responses to prevent 404 errors while features are being built.
 
 Endpoints covered:
-- /analytics/* - Lane analytics and risk timeline
 - /rosette/* - Rosette designer operations
 - /live-monitor/* - Live monitoring drilldown
 - /wrap/mvp/* - DXF to G-code MVP wrapper
 - /safety/* - Safety evaluation endpoints
+
+REMOVED (real implementations exist):
+- /analytics/* - See app.rmos.analytics.router
 """
 
 from __future__ import annotations
 
-from datetime import datetime
 from typing import Any, Dict, List, Optional
 
 from fastapi import APIRouter, Query
-from pydantic import BaseModel
 
 
 router = APIRouter(tags=["rmos", "stubs"])
 
 
 # =============================================================================
-# Analytics Stubs
+# Analytics - REMOVED: Real implementations exist in app.rmos.analytics.router
+# See: /api/rmos/analytics/lane-analytics, /api/rmos/analytics/risk-timeline/*
 # =============================================================================
-
-class LaneAnalyticsResponse(BaseModel):
-    lanes: List[Dict[str, Any]] = []
-    total_runs: int = 0
-    period_start: Optional[str] = None
-    period_end: Optional[str] = None
-
-
-class RiskTimelineResponse(BaseModel):
-    preset_id: str
-    events: List[Dict[str, Any]] = []
-    total: int = 0
-
-
-@router.get("/analytics/lane-analytics", response_model=LaneAnalyticsResponse)
-def get_lane_analytics(
-    _limit_recent: int = Query(default=100, ge=1, le=1000),
-) -> LaneAnalyticsResponse:
-    """Get lane-level analytics for RMOS operations."""
-    return LaneAnalyticsResponse(
-        lanes=[],
-        total_runs=0,
-        period_start=datetime.utcnow().isoformat() + "Z",
-        period_end=datetime.utcnow().isoformat() + "Z",
-    )
-
-
-@router.get("/analytics/risk-timeline/{preset_id}", response_model=RiskTimelineResponse)
-def get_risk_timeline(
-    preset_id: str,
-    limit: int = Query(default=50, ge=1, le=500),
-) -> RiskTimelineResponse:
-    """Get risk timeline events for a preset."""
-    return RiskTimelineResponse(
-        preset_id=preset_id,
-        events=[],
-        total=0,
-    )
 
 
 # =============================================================================
