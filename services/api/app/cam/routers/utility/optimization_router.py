@@ -1,7 +1,7 @@
 """
 CAM Optimization Router
 
-API endpoints for what-if optimization and cycle time estimation.
+API endpoints for what-if optimization, cycle time estimation, and feeds/speeds.
 
 Migrated from: routers/cam_opt_router.py
 
@@ -9,7 +9,8 @@ Architecture Layer: ROUTER (Layer 6)
 See: docs/governance/ARCHITECTURE_INVARIANTS.md
 
 Endpoints:
-    POST /what_if    - What-if optimizer for feed/stepover/RPM parameters
+    POST /what_if      - What-if optimizer for feed/stepover/RPM parameters
+    POST /feeds-speeds - Calculate optimal feeds and speeds for tool/material/strategy
 """
 
 from __future__ import annotations
@@ -22,9 +23,14 @@ from pydantic import BaseModel, Field
 from ...time_estimator_v2 import estimate_cycle_time_v2
 from ...whatif_opt import optimize_feed_stepover
 from ....routers.machines_consolidated_router import get_profile
+from ....cam_core.feeds_speeds import calculate_feed_plan
 
 router = APIRouter()
 
+
+# =============================================================================
+# Request/Response Models
+# =============================================================================
 
 class LoopIn(BaseModel):
     pts: List[List[float]]
@@ -52,6 +58,36 @@ class OptIn(BaseModel):
     )
     grid: List[int] = Field(default=[6, 6])
 
+
+class FeedsSpeedsRequest(BaseModel):
+    """Request model for feeds/speeds calculation."""
+    tool_id: str = Field(..., description="Tool identifier (e.g., 'upcut_1_4', 'ballnose_1_8')")
+    material: str = Field(..., description="Material type (e.g., 'hardwood', 'softwood', 'mdf')")
+    strategy: str = Field(default="roughing", description="Machining strategy (roughing, finishing, parallel, contour)")
+    flutes: Optional[int] = Field(default=None, description="Number of flutes (overrides tool default)")
+    diameter_mm: Optional[float] = Field(default=None, description="Tool diameter in mm (overrides default)")
+    stickout_mm: Optional[float] = Field(default=None, description="Tool stickout in mm (overrides default)")
+
+
+class FeedsSpeedsResponse(BaseModel):
+    """Response model for feeds/speeds calculation."""
+    tool_id: str
+    material: str
+    strategy: str
+    feed_xy: float = Field(..., description="XY feed rate in mm/min")
+    feed_z: float = Field(..., description="Z feed rate in mm/min (typically 50% of XY)")
+    rpm: int = Field(..., description="Spindle speed in RPM")
+    stepdown_mm: float = Field(..., description="Depth per pass in mm")
+    stepover_mm: float = Field(..., description="Lateral step in mm")
+    chipload_mm: float = Field(..., description="Calculated chipload in mm per tooth")
+    heat_rating: str = Field(..., description="Heat risk assessment (COOL, WARM, HOT)")
+    deflection_mm: float = Field(..., description="Estimated tool deflection in mm")
+    notes: str = Field(..., description="Calculation source notes")
+
+
+# =============================================================================
+# Endpoints
+# =============================================================================
 
 @router.post("/what_if")
 def what_if_opt(body: OptIn) -> Dict[str, Any]:
@@ -120,3 +156,49 @@ def what_if_opt(body: OptIn) -> Dict[str, Any]:
     )
 
     return {"baseline": baseline, "opt": res}
+
+
+@router.post("/feeds-speeds", response_model=FeedsSpeedsResponse)
+def calculate_feeds_speeds(body: FeedsSpeedsRequest) -> FeedsSpeedsResponse:
+    """
+    Calculate optimal feeds and speeds for a tool/material/strategy combination.
+
+    Uses preset lookup tables when available, falls back to physics-based
+    calculation from tool geometry when no preset exists.
+
+    The calculation considers:
+    - Material hardness and cutting characteristics
+    - Tool geometry (diameter, flutes, stickout)
+    - Strategy requirements (roughing vs finishing)
+    - Chipload targets for tool longevity
+    - Heat generation estimates
+    - Tool deflection under cutting load
+
+    Args:
+        body: FeedsSpeedsRequest with tool_id, material, strategy, and optional overrides
+
+    Returns:
+        FeedsSpeedsResponse with calculated parameters:
+        - feed_xy: XY feed rate (mm/min)
+        - feed_z: Z feed rate (mm/min)
+        - rpm: Spindle speed
+        - stepdown_mm: Depth per pass
+        - stepover_mm: Lateral step
+        - chipload_mm: Chip thickness per tooth
+        - heat_rating: Thermal risk level
+        - deflection_mm: Expected tool deflection
+        - notes: Source of calculation (preset or geometry-based)
+    """
+    # Build tool dict with optional overrides
+    tool: Dict[str, Any] = {"id": body.tool_id}
+    if body.flutes is not None:
+        tool["flutes"] = body.flutes
+    if body.diameter_mm is not None:
+        tool["diameter_mm"] = body.diameter_mm
+    if body.stickout_mm is not None:
+        tool["stickout_mm"] = body.stickout_mm
+
+    # Calculate using cam_core engine
+    result = calculate_feed_plan(tool, body.material, body.strategy)
+
+    return FeedsSpeedsResponse(**result)
