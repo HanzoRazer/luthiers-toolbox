@@ -8,7 +8,7 @@ Endpoints covered:
 - /job-int/* - Job intelligence
 - /job_log/insights/* - Job log insights
 - /probe/* - Probe operations (proxied to real setup_router)
-- /posts/* - Post processors
+- /posts/* - Post processors (proxied to real posts_consolidated_router)
 - /bridge/* - Bridge export
 - /logs/* - Log writing
 - /risk/* - Risk reports index
@@ -111,19 +111,27 @@ async def get_probe_setup_sheet(req: ProbeSetupSheetRequest):
 
 
 # =============================================================================
-# Posts Stubs
+# Posts Proxies (delegating to real posts_consolidated_router implementation)
 # =============================================================================
 
+from ...routers.posts_consolidated_router import (
+    list_posts as real_list_posts,
+    get_post as real_get_post,
+    PostConfig,
+    PostListItem,
+)
+
+
 @router.get("/posts")
-def list_posts() -> List[Dict[str, Any]]:
-    """List available post processors."""
-    return []
+def list_posts() -> Dict[str, List[PostListItem]]:
+    """List available post processors (proxy to real implementation)."""
+    return real_list_posts()
 
 
 @router.get("/posts/{post_id}")
-def get_post(post_id: str) -> Dict[str, Any]:
-    """Get post processor details."""
-    return {"post_id": post_id, "name": post_id, "config": {}}
+def get_post(post_id: str) -> PostConfig:
+    """Get post processor details (proxy to real implementation)."""
+    return real_get_post(post_id)
 
 
 # =============================================================================
