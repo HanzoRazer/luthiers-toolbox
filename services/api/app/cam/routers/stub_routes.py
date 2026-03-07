@@ -5,7 +5,7 @@ Provides stub endpoints for CAM frontend paths that don't have backend implement
 These return empty/default responses to prevent 404 errors while features are being built.
 
 Endpoints covered:
-- /job-int/* - Job intelligence
+- /job-int/* - Job intelligence (proxied to real job_int_log service)
 - /job_log/insights/* - Job log insights
 - /probe/* - Probe operations (proxied to real setup_router)
 - /posts/* - Post processors (proxied to real posts_consolidated_router)
@@ -34,27 +34,94 @@ router = APIRouter(tags=["cam", "stubs"])
 
 
 # =============================================================================
-# Job Intelligence Stubs
+# Job Intelligence Proxies (using real job_int_log service)
 # =============================================================================
 
-@router.post("/job-int/log")
-def log_job_intelligence(payload: Dict[str, Any] = None) -> Dict[str, Any]:
-    """Log job intelligence event."""
-    if payload is None:
-        payload = {}
-    return {"ok": True, "event_id": None}
+from fastapi import Query, HTTPException
+from pydantic import BaseModel
+
+from app.services.job_int_log import (
+    load_all_job_logs,
+    find_job_log_by_run_id,
+    append_job_log_entry,
+)
 
 
-@router.get("/job-int/log/{job_id}")
-def get_job_intelligence_log(job_id: str) -> Dict[str, Any]:
-    """Get job intelligence log."""
-    return {"job_id": job_id, "events": []}
+class FavoriteUpdateIn(BaseModel):
+    """Request body for favorite toggle."""
+    favorite: bool
 
 
-@router.get("/job-int/favorites/{category}")
-def get_job_favorites(category: str) -> Dict[str, Any]:
-    """Get job favorites by category."""
-    return {"category": category, "favorites": []}
+@router.get("/job-int/log")
+def list_job_intelligence_logs(
+    machine_id: Optional[str] = Query(None),
+    post_id: Optional[str] = Query(None),
+    helical_only: Optional[bool] = Query(None),
+    favorites_only: Optional[bool] = Query(None),
+    limit: int = Query(default=100, le=500),
+    offset: int = Query(default=0, ge=0),
+) -> Dict[str, Any]:
+    """List job intelligence logs with filtering (proxy to real service)."""
+    all_logs = load_all_job_logs()
+    
+    # Apply filters
+    filtered = all_logs
+    if machine_id:
+        filtered = [e for e in filtered if e.get("machine_id") == machine_id]
+    if post_id:
+        filtered = [e for e in filtered if e.get("post_id") == post_id]
+    if helical_only:
+        filtered = [e for e in filtered if e.get("use_helical")]
+    if favorites_only:
+        filtered = [e for e in filtered if e.get("favorite")]
+    
+    # Sort by created_at descending (most recent first)
+    filtered.sort(key=lambda x: x.get("created_at", ""), reverse=True)
+    
+    total = len(filtered)
+    items = filtered[offset:offset + limit]
+    
+    return {"total": total, "items": items}
+
+
+@router.get("/job-int/log/{run_id}")
+def get_job_intelligence_log(run_id: str) -> Dict[str, Any]:
+    """Get job intelligence log by run_id (proxy to real service)."""
+    entry = find_job_log_by_run_id(run_id)
+    if not entry:
+        raise HTTPException(status_code=404, detail=f"Job log '{run_id}' not found")
+    return entry
+
+
+@router.post("/job-int/favorites/{run_id}")
+def update_job_favorite(run_id: str, body: FavoriteUpdateIn) -> Dict[str, Any]:
+    """Update favorite status for a job log (proxy to real service)."""
+    import json
+    import os
+    from app.services.job_int_log import DEFAULT_LOG_PATH
+    
+    # Find and update the entry
+    all_logs = load_all_job_logs()
+    found_idx = None
+    for i, entry in enumerate(all_logs):
+        if entry.get("run_id") == run_id:
+            found_idx = i
+            break
+    
+    if found_idx is None:
+        raise HTTPException(status_code=404, detail=f"Job log '{run_id}' not found")
+    
+    # Update the favorite status
+    all_logs[found_idx]["favorite"] = body.favorite
+    
+    # Rewrite the file
+    path = DEFAULT_LOG_PATH
+    if os.path.exists(path):
+        with open(path, "w", encoding="utf-8") as f:
+            for entry in all_logs:
+                f.write(json.dumps(entry, ensure_ascii=False) + "\n")
+    
+    return all_logs[found_idx]
 
 
 # =============================================================================
