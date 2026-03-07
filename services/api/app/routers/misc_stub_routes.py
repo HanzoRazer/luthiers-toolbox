@@ -1,17 +1,15 @@
 """
 Miscellaneous Stub Routes
 
-Provides stub endpoints for frontend paths that don't have backend implementations yet.
-These return empty/default responses to prevent 404 errors.
-
-Endpoints covered:
-- /art/rosette/compare/snapshot - Single snapshot GET (list endpoint is real)
+This file previously contained stub endpoints. All stubs have been wired to real
+implementations or removed as vestigial.
 
 WIRED to real implementations:
 - /ai/advisories/request - See app.rmos.ai_advisory.service.request_advisory
 
 REMOVED (real implementations exist):
 - /blueprint/* - See app.routers.blueprint (phase1_router, phase2_router)
+- /art/rosette/compare/snapshot - GET was never used (POST exists in rosette_compare_routes)
 """
 
 from __future__ import annotations
@@ -123,13 +121,3 @@ def request_advisory_endpoint(
             "message": f"Unexpected error: {type(e).__name__}",
             "error_code": "INTERNAL_ERROR",
         }
-
-
-# =============================================================================
-# Art Rosette Stubs
-# =============================================================================
-
-@router.get("/art/rosette/compare/snapshot")
-def get_rosette_compare_snapshot() -> Dict[str, Any]:
-    """Get rosette comparison snapshot."""
-    return {"snapshot": None}
