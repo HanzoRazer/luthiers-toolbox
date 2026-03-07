@@ -67,6 +67,7 @@ async def vectorize_geometry(
     instrument_type: str = Form("electric"),
     dark_threshold: str = Form("auto"),
     gap_close_size: int = Form(0),
+    extraction_mode: str = Form("smart"),
 ):
     """
     Phase 2: Intelligent geometry detection from blueprint image using OpenCV.
@@ -83,6 +84,7 @@ async def vectorize_geometry(
         instrument_type: "electric" or "acoustic" for feature classification
         dark_threshold: "auto" or 0-255 for line extraction threshold
         gap_close_size: Morphological closing kernel (0=disabled, 5=recommended)
+        extraction_mode: "smart" (ML-filtered) or "simple" (all contours, any instrument)
 
     Returns:
         VectorizeResponse with svg_path, dxf_path, contours_detected, lines_detected
@@ -171,12 +173,15 @@ async def vectorize_geometry(
 
         # Run Phase 2 vectorization with guitar feature extraction
         vectorizer = create_phase2_vectorizer()
+        # Map frontend extraction_mode to vectorizer mode
+        vectorizer_mode = "simple" if extraction_mode == "simple" else "guitar"
+        
         result = vectorizer.analyze_and_vectorize(
             source_path=tmp_path,
             analysis_data=analysis_dict,
             output_dir=output_dir,
             scale_factor=effective_scale,
-            extraction_mode="guitar",
+            extraction_mode=vectorizer_mode,
             instrument_type=instrument_type,
             dark_threshold=threshold_value,
             gap_close_size=gap_close_size,
