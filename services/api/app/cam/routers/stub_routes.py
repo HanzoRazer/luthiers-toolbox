@@ -230,13 +230,25 @@ def write_cam_log(body: RunWithSegmentsIn) -> Dict[str, Any]:
 
 
 # =============================================================================
-# Risk Stubs
+# Risk Proxies (delegating to real cam_risk_router implementation)
 # =============================================================================
 
+from ...routers.cam_risk_router import get_risk_reports as real_get_risk_reports
+
+
 @router.get("/risk/reports_index")
-def get_risk_reports_index() -> Dict[str, Any]:
-    """Get risk reports index."""
-    return {"reports": [], "total": 0}
+def get_risk_reports_index(
+    lane: Optional[str] = Query(None),
+    preset: Optional[str] = Query(None),
+    limit: int = Query(default=100, le=500),
+) -> Dict[str, Any]:
+    """Get risk reports index (proxy to real implementation)."""
+    reports = real_get_risk_reports(
+        lane=lane,
+        preset=preset,
+        limit=limit,
+    )
+    return {"reports": reports, "total": len(reports)}
 
 
 # =============================================================================
