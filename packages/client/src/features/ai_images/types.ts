@@ -339,7 +339,7 @@ export interface AiImageState {
 export interface QuickTag {
   label: string;
   value: string;
-  category: 'body' | 'finish' | 'hardware' | 'wood' | 'style';
+  category: 'body' | 'finish' | 'hardware' | 'wood' | 'style' | 'instrument';
 }
 
 /**

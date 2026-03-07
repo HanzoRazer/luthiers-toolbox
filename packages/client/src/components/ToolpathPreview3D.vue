@@ -15,7 +15,6 @@ async function boot(){
   el.value!.appendChild(renderer.domElement)
   camera = new THREE.PerspectiveCamera(45, el.value!.clientWidth/(props.height ?? 420), 0.1, 10000)
   camera.position.set(0,0,300)
-  // @ts-expect-error OrbitControls types may not match
   controls = new OrbitControls(camera, renderer.domElement)
   scene = new THREE.Scene(); scene.background = new THREE.Color(0xffffff)
   const amb = new THREE.AmbientLight(0xffffff,1.0); scene.add(amb)

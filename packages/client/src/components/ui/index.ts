@@ -6,6 +6,7 @@
 
 // Feedback
 export { default as ErrorRecovery } from './ErrorRecovery.vue'
+export { default as HelpTooltip } from './HelpTooltip.vue'
 export { default as LoadingSpinner } from './LoadingSpinner.vue'
 export { default as SkeletonLoader } from './SkeletonLoader.vue'
 export { default as ToastHost } from './ToastHost.vue'
