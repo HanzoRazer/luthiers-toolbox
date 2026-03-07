@@ -10,7 +10,7 @@ Endpoints covered:
 - /probe/* - Probe operations (proxied to real setup_router)
 - /posts/* - Post processors (proxied to real posts_consolidated_router)
 - /bridge/* - Bridge export
-- /logs/* - Log writing
+- /logs/* - Log writing (proxied to real logs_router)
 - /risk/* - Risk reports index
 - /fret_slots/* - Fret slot preview
 - /adaptive2/* - Adaptive v2 operations (proxied to real benchmark_router)
@@ -147,15 +147,19 @@ def export_bridge_dxf(payload: Dict[str, Any] = None) -> Dict[str, Any]:
 
 
 # =============================================================================
-# Logs Stubs
+# Logs Proxies (delegating to real logs_router implementation)
 # =============================================================================
 
+from .monitoring.logs_router import (
+    write_log as real_write_log,
+    RunWithSegmentsIn,
+)
+
+
 @router.post("/logs/write")
-def write_cam_log(payload: Dict[str, Any] = None) -> Dict[str, Any]:
-    """Write CAM log entry."""
-    if payload is None:
-        payload = {}
-    return {"ok": True, "log_id": None}
+def write_cam_log(body: RunWithSegmentsIn) -> Dict[str, Any]:
+    """Write CAM log entry (proxy to real implementation)."""
+    return real_write_log(body)
 
 
 # =============================================================================
