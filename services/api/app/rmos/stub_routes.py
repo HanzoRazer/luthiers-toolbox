@@ -83,24 +83,71 @@ def export_rosette_cnc(payload: Dict[str, Any] = None) -> Dict[str, Any]:
     }
 
 
+# =============================================================================
+# Rosette CNC Proxies (delegating to real art_jobs_store)
+# =============================================================================
+
+from ..services.art_jobs_store import get_art_job, _load_jobs
+from datetime import datetime
+
+
 @router.get("/rosette/cnc-history")
 def get_cnc_history(
     limit: int = Query(default=50, ge=1, le=200),
+    job_type: Optional[str] = Query(None, description="Filter by job type"),
 ) -> Dict[str, Any]:
-    """Get CNC job history for rosettes."""
+    """Get CNC job history for rosettes (proxy to real art_jobs_store)."""
+    all_jobs = _load_jobs()
+
+    # Filter by job_type if specified (default: rosette_cam)
+    if job_type:
+        filtered = [j for j in all_jobs if j.get("job_type") == job_type]
+    else:
+        # Default to rosette jobs
+        filtered = [j for j in all_jobs if j.get("job_type", "").startswith("rosette")]
+
+    # Sort by created_at descending (most recent first)
+    filtered.sort(key=lambda x: x.get("created_at", 0), reverse=True)
+
+    # Apply limit
+    jobs = filtered[:limit]
+
+    # Format timestamps for frontend
+    for job in jobs:
+        if "created_at" in job and isinstance(job["created_at"], (int, float)):
+            job["created_at"] = datetime.fromtimestamp(job["created_at"]).isoformat() + "Z"
+
     return {
-        "jobs": [],
-        "total": 0,
+        "jobs": jobs,
+        "total": len(filtered),
     }
 
 
 @router.get("/rosette/cnc-job/{job_id}")
 def get_cnc_job(job_id: str) -> Dict[str, Any]:
-    """Get CNC job details."""
+    """Get CNC job details (proxy to real art_jobs_store)."""
+    from fastapi import HTTPException
+
+    job = get_art_job(job_id)
+    if not job:
+        raise HTTPException(status_code=404, detail=f"Job ''{job_id}'' not found")
+
+    # Format timestamp for frontend
+    created_at = job.created_at
+    if isinstance(created_at, (int, float)):
+        created_at = datetime.fromtimestamp(created_at).isoformat() + "Z"
+
     return {
-        "job_id": job_id,
-        "status": "not_found",
-        "message": "Stub: job lookup not yet implemented",
+        "job_id": job.id,
+        "job_type": job.job_type,
+        "created_at": created_at,
+        "post_preset": job.post_preset,
+        "rings": job.rings,
+        "z_passes": job.z_passes,
+        "length_mm": job.length_mm,
+        "gcode_lines": job.gcode_lines,
+        "meta": job.meta,
+        "status": "complete",
     }
 
 
