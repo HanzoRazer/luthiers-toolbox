@@ -51,11 +51,14 @@ export interface ManualCalibrationPoints {
   dimensionName: string
 }
 
+export type ExtractionMode = 'smart' | 'simple'
+
 export interface VectorParams {
   scaleFactor: number
   instrumentType: 'electric' | 'acoustic'
   darkThreshold: number | 'auto'
   gapCloseSize: number
+  extractionMode: ExtractionMode
 }
 
 export interface VectorizedGeometry {
@@ -124,6 +127,7 @@ export function useBlueprintWorkflow(options: BlueprintWorkflowOptions = {}) {
     instrumentType: 'electric',
     darkThreshold: 'auto',
     gapCloseSize: 0,
+    extractionMode: 'smart',
   })
 
   // Phase 3: CAM
@@ -341,6 +345,7 @@ export function useBlueprintWorkflow(options: BlueprintWorkflowOptions = {}) {
       formData.append('instrument_type', vectorParams.value.instrumentType)
       formData.append('dark_threshold', vectorParams.value.darkThreshold.toString())
       formData.append('gap_close_size', vectorParams.value.gapCloseSize.toString())
+      formData.append('extraction_mode', vectorParams.value.extractionMode)
 
       const response = await api('/api/blueprint/vectorize-geometry', {
         method: 'POST',

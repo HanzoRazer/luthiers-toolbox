@@ -9,7 +9,7 @@
  * - Gap Close Size: Morphological closing to connect broken lines
  */
 import { computed } from "vue";
-import type { VectorParams } from "@/composables/useBlueprintWorkflow";
+import type { VectorParams, ExtractionMode } from "@/composables/useBlueprintWorkflow";
 
 const props = defineProps<{
   vectorParams: VectorParams;
@@ -76,6 +76,19 @@ function setDarkThresholdValue(value: number) {
           <option value="acoustic">Acoustic Guitar</option>
         </select>
         <span class="control-hint">Affects contour scoring heuristics</span>
+      </div>
+
+      <!-- Extraction Mode -->
+      <div class="control-group">
+        <label>Extraction Mode:</label>
+        <select
+          :value="vectorParams.extractionMode"
+          @change="updateParam('extractionMode', ($event.target as HTMLSelectElement).value as ExtractionMode)"
+        >
+          <option value="smart">Smart (ML-filtered)</option>
+          <option value="simple">Simple (All contours)</option>
+        </select>
+        <span class="control-hint">Simple mode works for non-guitar instruments</span>
       </div>
 
       <!-- Dark Threshold -->
