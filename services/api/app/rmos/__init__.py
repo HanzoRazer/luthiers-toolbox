@@ -82,6 +82,7 @@ from .profile_history import (
 
 # Routers
 from .api_routes import router as rmos_router  # Existing core RMOS router
+from .analytics.router import router as analytics_router  # Analytics endpoints
 
 # Runs Module (Phase D - Audit Trail)
 # Feature flag: RMOS_RUNS_V2_ENABLED controls v1/v2 implementation
@@ -351,6 +352,7 @@ __all__ = [
     # Routers
     "rmos_router",
     "runs_router",
+    "analytics_router",
     # Runs Module (Phase D - v1/v2 conditional)
     "RunArtifact",
     "RunAttachment",
