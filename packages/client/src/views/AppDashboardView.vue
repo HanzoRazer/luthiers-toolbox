@@ -135,6 +135,34 @@
               <span class="quick-link-label">Quick Cut</span>
             </RouterLink>
             <RouterLink
+              to="/design-hub"
+              class="quick-link-card"
+            >
+              <span class="quick-link-icon">🎸</span>
+              <span class="quick-link-label">Design Hub</span>
+            </RouterLink>
+            <RouterLink
+              to="/ai/assistant"
+              class="quick-link-card"
+            >
+              <span class="quick-link-icon">🤖</span>
+              <span class="quick-link-label">AI Assistant</span>
+            </RouterLink>
+            <RouterLink
+              to="/art-studio"
+              class="quick-link-card"
+            >
+              <span class="quick-link-icon">🎨</span>
+              <span class="quick-link-label">Art Studio</span>
+            </RouterLink>
+            <RouterLink
+              to="/cam/simulator"
+              class="quick-link-card"
+            >
+              <span class="quick-link-icon">🎥</span>
+              <span class="quick-link-label">Toolpath Simulator</span>
+            </RouterLink>
+            <RouterLink
               to="/rmos/runs"
               class="quick-link-card"
             >
