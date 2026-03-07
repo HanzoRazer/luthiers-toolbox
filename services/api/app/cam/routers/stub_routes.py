@@ -7,7 +7,7 @@ These return empty/default responses to prevent 404 errors while features are be
 Endpoints covered:
 - /job-int/* - Job intelligence
 - /job_log/insights/* - Job log insights
-- /probe/* - Probe operations
+- /probe/* - Probe operations (proxied to real setup_router)
 - /posts/* - Post processors
 - /bridge/* - Bridge export
 - /logs/* - Log writing
@@ -74,13 +74,40 @@ def get_job_insight(insight_id: str) -> Dict[str, Any]:
 
 
 # =============================================================================
-# Probe Stubs
+# Probe Proxy (delegating to real setup_router implementation)
 # =============================================================================
 
-@router.get("/probe/svg_setup_sheet")
-def get_probe_setup_sheet() -> str:
-    """Get probe setup sheet as SVG."""
-    return "<svg></svg>"
+from pydantic import BaseModel
+from typing import Optional
+
+from ...routers.probe.setup_router import generate_setup_sheet as real_generate_setup_sheet
+from ...schemas.probe_schemas import SetupSheetIn
+
+
+class ProbeSetupSheetRequest(BaseModel):
+    """Frontend request format for probe setup sheet."""
+    pattern: str
+    estimated_diameter: Optional[float] = 50.0
+
+
+@router.post("/probe/svg_setup_sheet")
+async def get_probe_setup_sheet(req: ProbeSetupSheetRequest):
+    """Get probe setup sheet as SVG (proxy to real implementation)."""
+    from fastapi import HTTPException
+    from pydantic import ValidationError
+    
+    try:
+        # Map frontend format to real implementation format
+        setup_req = SetupSheetIn(
+            pattern=req.pattern,
+            feature_diameter=req.estimated_diameter,
+            part_width=100.0,
+            part_height=60.0,
+        )
+    except ValidationError as e:
+        raise HTTPException(status_code=422, detail=str(e))
+    
+    return await real_generate_setup_sheet(setup_req)
 
 
 # =============================================================================
