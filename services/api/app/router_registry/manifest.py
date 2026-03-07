@@ -134,6 +134,12 @@ ROUTER_MANIFEST: List[RouterSpec] = [
         tags=["RMOS", "Stubs"],
         category="rmos",
     ),
+    RouterSpec(
+        module="app.rmos.analytics.router",
+        prefix="/api/rmos",
+        tags=["RMOS", "Analytics"],
+        category="rmos",
+    ),
     # -------------------------------------------------------------------------
     # CAM SUBSYSTEM
     # -------------------------------------------------------------------------
