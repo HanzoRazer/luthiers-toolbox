@@ -376,14 +376,87 @@ def get_safety_mode() -> Dict[str, Any]:
     }
 
 
+# =============================================================================
+# Override Token Generator (apprenticeship mode)
+# =============================================================================
+
+import secrets
+from datetime import datetime, timezone, timedelta
+
+# In-memory token store (ephemeral - cleared on restart)
+# Format: {token: {"action": str, "created_by": str, "expires_at": str, "used": bool}}
+_override_tokens: Dict[str, Dict[str, Any]] = {}
+
+
+def _generate_token() -> str:
+    """Generate a short, human-readable override token."""
+    return secrets.token_hex(4).upper()  # e.g., "A1B2C3D4"
+
+
+def _clean_expired_tokens() -> None:
+    """Remove expired tokens from store."""
+    now = datetime.now(timezone.utc)
+    expired = []
+    for token, data in _override_tokens.items():
+        try:
+            expires = datetime.fromisoformat(data["expires_at"].replace("Z", "+00:00"))
+            if expires < now:
+                expired.append(token)
+        except (ValueError, KeyError):
+            expired.append(token)
+    for token in expired:
+        del _override_tokens[token]
+
+
 @router.post("/safety/create-override")
 def create_safety_override(payload: Dict[str, Any] = None) -> Dict[str, Any]:
-    """Create a safety override for a blocked operation."""
+    """
+    Create a one-time override token for apprenticeship mode.
+
+    Mentors generate these tokens for apprentices to bypass safety checks
+    on specific actions. Tokens are single-use and time-limited.
+
+    Request body:
+    - action: str - Action this token authorizes (e.g., "start_job", "promote_preset")
+    - created_by: str (optional) - Mentor identifier
+    - ttl_minutes: int (optional, default 15) - Token expiration time
+
+    Returns:
+    - token: str - The override token to share with apprentice
+    - action: str - Action this token authorizes
+    - created_by: str - Mentor identifier
+    - expires_at: str - RFC3339 expiration timestamp
+    """
     if payload is None:
         payload = {}
+
+    # Clean up expired tokens periodically
+    _clean_expired_tokens()
+
+    action = payload.get("action", "unknown_action")
+    created_by = payload.get("created_by") or "anonymous"
+    ttl_minutes = int(payload.get("ttl_minutes", 15))
+
+    # Clamp TTL to reasonable bounds
+    ttl_minutes = max(1, min(120, ttl_minutes))
+
+    # Generate token
+    token = _generate_token()
+    expires_at = datetime.now(timezone.utc) + timedelta(minutes=ttl_minutes)
+    expires_at_str = expires_at.strftime("%Y-%m-%dT%H:%M:%SZ")
+
+    # Store token
+    _override_tokens[token] = {
+        "action": action,
+        "created_by": created_by,
+        "expires_at": expires_at_str,
+        "used": False,
+    }
+
     return {
-        "ok": True,
-        "override_id": None,
-        "message": "Stub: override creation not yet implemented. Use /api/rmos/runs_v2/runs/{id}/override instead.",
+        "token": token,
+        "action": action,
+        "created_by": created_by,
+        "expires_at": expires_at_str,
     }
 
