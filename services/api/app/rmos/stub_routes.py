@@ -31,43 +31,117 @@ router = APIRouter(tags=["rmos", "stubs"])
 
 
 # =============================================================================
-# Rosette Designer Stubs
+# Rosette Designer Proxies (delegating to real cam.rosette engines)
 # =============================================================================
+
+from ..cam.rosette.models import RosetteRingConfig, SegmentationResult, SliceBatch
+from ..cam.rosette.segmentation_engine import compute_tile_segmentation
+from ..cam.rosette.slice_engine import generate_slices_for_ring
+from ..cam.rosette.preview_engine import build_preview_snapshot
+from dataclasses import asdict
+
+
+def _parse_ring_config(data: Dict[str, Any]) -> RosetteRingConfig:
+    """Parse ring config from request payload."""
+    return RosetteRingConfig(
+        ring_id=data.get("ring_id", 0),
+        radius_mm=float(data.get("radius_mm", 50.0)),
+        width_mm=float(data.get("width_mm", 5.0)),
+        tile_length_mm=float(data.get("tile_length_mm", 10.0)),
+        kerf_mm=float(data.get("kerf_mm", 0.3)),
+        herringbone_angle_deg=float(data.get("herringbone_angle_deg", 0.0)),
+        twist_angle_deg=float(data.get("twist_angle_deg", 0.0)),
+    )
+
 
 @router.post("/rosette/segment-ring")
 def generate_segment_ring(payload: Dict[str, Any] = None) -> Dict[str, Any]:
-    """Generate rosette segment ring geometry."""
+    """Generate rosette segment ring geometry (proxy to real engine)."""
     if payload is None:
         payload = {}
-    return {
-        "ok": True,
-        "segments": [],
-        "message": "Stub: segment-ring generation not yet implemented",
-    }
+    
+    try:
+        ring = _parse_ring_config(payload.get("ring", payload))
+        tile_count_override = payload.get("tile_count")
+        
+        result = compute_tile_segmentation(ring, tile_count_override)
+        
+        return {
+            "ok": True,
+            "segmentation_id": result.segmentation_id,
+            "ring_id": result.ring_id,
+            "tile_count": result.tile_count,
+            "tile_length_mm": result.tile_length_mm,
+            "segments": [asdict(t) for t in result.tiles],
+        }
+    except Exception as e:
+        return {"ok": False, "error": str(e), "segments": []}
 
 
 @router.post("/rosette/generate-slices")
 def generate_slices(payload: Dict[str, Any] = None) -> Dict[str, Any]:
-    """Generate rosette slices for manufacturing."""
+    """Generate rosette slices for manufacturing (proxy to real engine)."""
     if payload is None:
         payload = {}
-    return {
-        "ok": True,
-        "slices": [],
-        "message": "Stub: slice generation not yet implemented",
-    }
+    
+    try:
+        ring = _parse_ring_config(payload.get("ring", payload))
+        tile_count_override = payload.get("tile_count")
+        
+        # First compute segmentation
+        segmentation = compute_tile_segmentation(ring, tile_count_override)
+        
+        # Then generate slices
+        batch = generate_slices_for_ring(ring, segmentation)
+        
+        return {
+            "ok": True,
+            "batch_id": batch.batch_id,
+            "ring_id": batch.ring_id,
+            "slices": [asdict(s) for s in batch.slices],
+        }
+    except Exception as e:
+        return {"ok": False, "error": str(e), "slices": []}
 
 
 @router.post("/rosette/preview")
 def preview_rosette(payload: Dict[str, Any] = None) -> Dict[str, Any]:
-    """Generate rosette preview image."""
+    """Generate rosette preview data (proxy to real engine)."""
     if payload is None:
         payload = {}
-    return {
-        "ok": True,
-        "preview_url": None,
-        "message": "Stub: preview generation not yet implemented",
-    }
+    
+    try:
+        pattern_id = payload.get("pattern_id")
+        rings_data = payload.get("rings", [])
+        
+        # Handle single ring case
+        if not rings_data and any(k in payload for k in ["ring_id", "radius_mm"]):
+            rings_data = [payload]
+        
+        rings = [_parse_ring_config(r) for r in rings_data]
+        
+        # Compute segmentations and slices for all rings
+        segmentations = {}
+        slice_batches = {}
+        
+        for ring in rings:
+            seg = compute_tile_segmentation(ring)
+            segmentations[ring.ring_id] = seg
+            
+            batch = generate_slices_for_ring(ring, seg)
+            slice_batches[ring.ring_id] = batch
+        
+        # Build preview
+        snapshot = build_preview_snapshot(pattern_id, rings, segmentations, slice_batches)
+        
+        return {
+            "ok": True,
+            "pattern_id": snapshot.pattern_id,
+            "preview": snapshot.payload,
+            "rings": [asdict(r) for r in snapshot.rings],
+        }
+    except Exception as e:
+        return {"ok": False, "error": str(e), "preview": None}
 
 
 @router.post("/rosette/export-cnc")
@@ -79,7 +153,7 @@ def export_rosette_cnc(payload: Dict[str, Any] = None) -> Dict[str, Any]:
         "ok": True,
         "gcode": None,
         "job_id": None,
-        "message": "Stub: CNC export not yet implemented",
+        "message": "Stub: CNC export not yet implemented (requires full N12 ring engine)",
     }
 
 
