@@ -430,6 +430,15 @@ ROUTER_MANIFEST: List[RouterSpec] = [
         category="cam",
     ),
     # -------------------------------------------------------------------------
+    # CAM DRILLING (Modal G81/G83 cycles)
+    # -------------------------------------------------------------------------
+    RouterSpec(
+        module="app.cam.routers.drilling",
+        prefix="/api/cam/drilling",
+        tags=["CAM", "Drilling"],
+        category="cam",
+    ),
+    # -------------------------------------------------------------------------
     # CAM STUBS (for missing frontend endpoints)
     # -------------------------------------------------------------------------
     RouterSpec(
