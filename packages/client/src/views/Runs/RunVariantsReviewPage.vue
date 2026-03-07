@@ -304,8 +304,8 @@ watch(runId, () => {
         :run-id="runId"
         :advisory-id="selected"
         :is-rejected="selectedIsRejected"
-        :variant-status="selectedVariant?.status"
-        :risk-level="selectedVariant?.risk_level"
+        :variant-status="selectedVariant?.status ?? undefined"
+        :risk-level="selectedVariant?.risk_level ?? undefined"
         @refresh="load"
       />
 

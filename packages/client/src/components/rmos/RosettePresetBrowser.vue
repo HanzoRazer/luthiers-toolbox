@@ -69,7 +69,7 @@
                 :src="getSvgPath(variation.svgFile)"
                 :alt="variation.name"
                 class="preview-svg-img"
-                @error="handleImageError($event, variation)"
+                @error="handleImageError($event)"
               >
 
               <!-- Fallback: Programmatic SVG (always render, hide if image loads successfully) -->
@@ -206,7 +206,7 @@ const expandedFamilies = ref<Set<string>>(new Set(['repeating_single'])) // Defa
 const selectedPreset = ref<{ family: PatternFamily; variation: PatternVariation } | null>(null)
 
 const filteredFamilies = computed(() => {
-  let families = []
+  let families: PatternFamily[] = []
   if (selectedCategory.value === 'all') {
     families = catalog.families
   } else {
