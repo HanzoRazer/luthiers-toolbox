@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import List
+from typing import List, Optional
 
 
 @dataclass
@@ -11,6 +11,9 @@ class ToolpathSegment:
     """
     A single linear tool motion from (x_start, y_start, z_start) to
     (x_end, y_end, z_end) at a given feed rate.
+
+    Optional traceability fields (ring_id, segment_index) added for
+    N16.0+ ring toolpath generators.
     """
     x_start_mm: float
     y_start_mm: float
@@ -19,6 +22,9 @@ class ToolpathSegment:
     y_end_mm: float
     z_end_mm: float
     feed_mm_per_min: float
+    # Traceability fields (optional for backward compatibility)
+    ring_id: Optional[int] = None
+    segment_index: Optional[int] = None
 
 
 @dataclass

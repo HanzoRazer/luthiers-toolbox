@@ -5,10 +5,12 @@ Provides stub endpoints for frontend paths that don't have backend implementatio
 These return empty/default responses to prevent 404 errors while features are being built.
 
 Endpoints covered:
-- /rosette/* - Rosette designer operations
-- /live-monitor/* - Live monitoring drilldown
-- /wrap/mvp/* - DXF to G-code MVP wrapper
-- /safety/* - Safety evaluation endpoints
+- /rosette/segment-ring, /rosette/generate-slices, /rosette/preview - Real implementations
+- /rosette/export-cnc - WIRED to cam.rosette.cnc (N16.3 G-code export)
+- /rosette/cnc-history, /rosette/cnc-job/{job_id} - WIRED to art_jobs_store
+- /live-monitor/* - Live monitoring drilldown (stub)
+- /wrap/mvp/* - DXF to G-code MVP wrapper (stub)
+- /safety/* - WIRED to real RMOS feasibility engine
 
 REMOVED (real implementations exist):
 - /analytics/* - See app.rmos.analytics.router
@@ -38,6 +40,15 @@ from ..cam.rosette.models import RosetteRingConfig, SegmentationResult, SliceBat
 from ..cam.rosette.segmentation_engine import compute_tile_segmentation
 from ..cam.rosette.slice_engine import generate_slices_for_ring
 from ..cam.rosette.preview_engine import build_preview_snapshot
+from ..cam.rosette.rosette_cnc_wiring import build_ring_cnc_export
+from ..cam.rosette.cnc import (
+    MaterialType,
+    JigAlignment,
+    MachineEnvelope,
+    MachineProfile,
+    GCodePostConfig,
+    generate_gcode_from_toolpaths,
+)
 from dataclasses import asdict
 
 
@@ -146,15 +157,120 @@ def preview_rosette(payload: Dict[str, Any] = None) -> Dict[str, Any]:
 
 @router.post("/rosette/export-cnc")
 def export_rosette_cnc(payload: Dict[str, Any] = None) -> Dict[str, Any]:
-    """Export rosette to CNC-ready format."""
+    """
+    Export rosette to CNC-ready G-code format (proxy to real CNC wiring).
+    
+    Request body:
+    - ring: Dict with ring config (ring_id, radius_mm, width_mm, tile_length_mm, kerf_mm)
+    - tile_count: Optional[int] - Override tile count
+    - material: str - Material type (hardwood, softwood, composite) - default: hardwood
+    - machine_profile: str - Machine G-code profile (grbl, fanuc) - default: grbl
+    - spindle_rpm: int - Spindle speed (default: 12000)
+    - safe_z_mm: float - Safe retract height (default: 5.0)
+    - origin_x_mm, origin_y_mm: Jig alignment origin (default: 0, 0)
+    - rotation_deg: Jig rotation in degrees (default: 0)
+    
+    Returns:
+    - ok: bool
+    - gcode: str - G-code program text
+    - job_id: str - Generated job ID for traceability
+    - ring_id: int
+    - segment_count: int
+    - estimated_runtime_sec: float
+    - safety: Dict with safety decision details
+    """
     if payload is None:
         payload = {}
-    return {
-        "ok": True,
-        "gcode": None,
-        "job_id": None,
-        "message": "Stub: CNC export not yet implemented (requires full N12 ring engine)",
-    }
+    
+    try:
+        import uuid
+        from datetime import datetime
+        
+        # Parse ring config
+        ring = _parse_ring_config(payload.get("ring", payload))
+        tile_count_override = payload.get("tile_count")
+        
+        # Compute segmentation and slices
+        segmentation = compute_tile_segmentation(ring, tile_count_override)
+        slice_batch = generate_slices_for_ring(ring, segmentation)
+        
+        # Parse material type
+        material_str = payload.get("material", "hardwood").lower()
+        material_map = {
+            "hardwood": MaterialType.HARDWOOD,
+            "softwood": MaterialType.SOFTWOOD,
+            "composite": MaterialType.COMPOSITE,
+        }
+        material = material_map.get(material_str, MaterialType.HARDWOOD)
+        
+        # Parse jig alignment
+        jig_alignment = JigAlignment(
+            origin_x_mm=float(payload.get("origin_x_mm", 0.0)),
+            origin_y_mm=float(payload.get("origin_y_mm", 0.0)),
+            rotation_deg=float(payload.get("rotation_deg", 0.0)),
+        )
+        
+        # Default machine envelope (conservative)
+        envelope = MachineEnvelope(
+            x_min_mm=-200.0,
+            x_max_mm=200.0,
+            y_min_mm=-200.0,
+            y_max_mm=200.0,
+            z_min_mm=-50.0,
+            z_max_mm=50.0,
+        )
+        
+        # Build CNC export bundle with toolpaths
+        export_bundle, simulation = build_ring_cnc_export(
+            ring=ring,
+            slice_batch=slice_batch,
+            material=material,
+            jig_alignment=jig_alignment,
+            envelope=envelope,
+        )
+        
+        # Parse machine profile
+        profile_str = payload.get("machine_profile", "grbl").lower()
+        profile_map = {
+            "grbl": MachineProfile.GRBL,
+            "fanuc": MachineProfile.FANUC,
+        }
+        profile = profile_map.get(profile_str, MachineProfile.GRBL)
+        
+        # Generate G-code
+        post_config = GCodePostConfig(
+            profile=profile,
+            safe_z_mm=float(payload.get("safe_z_mm", 5.0)),
+            spindle_rpm=int(payload.get("spindle_rpm", 12000)),
+            tool_id=int(payload.get("tool_id", 1)),
+        )
+        gcode = generate_gcode_from_toolpaths(export_bundle.toolpaths, post_config)
+        
+        # Generate job ID
+        job_id = f"JOB-ROSETTE-{datetime.utcnow().strftime('%Y%m%d-%H%M%S')}-{uuid.uuid4().hex[:8]}"
+        
+        return {
+            "ok": True,
+            "gcode": gcode,
+            "job_id": job_id,
+            "ring_id": ring.ring_id,
+            "segment_count": len(export_bundle.toolpaths.segments),
+            "estimated_runtime_sec": simulation.estimated_runtime_sec,
+            "safety": {
+                "decision": export_bundle.safety_decision.decision,
+                "risk_level": export_bundle.safety_decision.risk_level,
+                "requires_override": export_bundle.safety_decision.requires_override,
+                "reasons": export_bundle.safety_decision.reasons,
+            },
+            "metadata": export_bundle.metadata,
+        }
+    except Exception as e:
+        return {
+            "ok": False,
+            "gcode": None,
+            "job_id": None,
+            "error": str(e),
+        }
 
 
 # =============================================================================
