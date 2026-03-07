@@ -2,19 +2,18 @@
 CAM Risk Reports Router
 
 Provides endpoints for risk report storage and timeline browsing.
-Stub implementation for Phase 18.0.
+WIRED to persistent JSONL storage (risk_reports_store).
 
 Endpoints:
-    POST /jobs/risk_report - Submit a new risk report
+    POST /jobs/risk_report - Submit a new risk report (persisted to JSONL)
     GET  /jobs/recent      - Get recent risk report summaries
     GET  /jobs/{job_id}/risk_timeline - Get risk timeline for a job
+    GET  /risk/reports     - Browse reports with filters
 """
 
 from __future__ import annotations
 
-from datetime import datetime
 from typing import Any, Dict, List, Optional
-from uuid import uuid4
 
 from fastapi import APIRouter, Query
 from pydantic import BaseModel
@@ -22,9 +21,12 @@ from pydantic import BaseModel
 
 router = APIRouter(prefix="/cam", tags=["cam", "risk"])
 
-
-# In-memory store for stub
-_risk_reports: List[Dict[str, Any]] = []
+from app.services.risk_reports_store import (
+    append_risk_report,
+    get_recent_reports,
+    get_reports_by_job_id,
+    browse_reports,
+)
 
 
 class RiskIssue(BaseModel):
@@ -62,23 +64,19 @@ class RiskReportIn(BaseModel):
 @router.post("/jobs/risk_report")
 def submit_risk_report(report: RiskReportIn) -> Dict[str, Any]:
     """
-    Submit a new CAM risk report.
-    Stub implementation stores in memory.
+    Submit a new CAM risk report (wired to persistent JSONL storage).
     """
-    report_id = uuid4().hex[:12]
-    created_at = datetime.utcnow().isoformat() + "Z"
-    
-    stored = {
-        "id": report_id,
-        "created_at": created_at,
-        **report.model_dump()
-    }
-    _risk_reports.append(stored)
-    
-    # Keep only last 100 reports in memory
-    if len(_risk_reports) > 100:
-        _risk_reports.pop(0)
-    
+    stored = append_risk_report(
+        job_id=report.job_id,
+        pipeline_id=report.pipeline_id,
+        op_id=report.op_id,
+        machine_profile_id=report.machine_profile_id,
+        post_preset=report.post_preset,
+        design_source=report.design_source,
+        design_path=report.design_path,
+        issues=[i.model_dump() for i in report.issues],
+        analytics=report.analytics.model_dump(),
+    )
     return stored
 
 
@@ -87,31 +85,9 @@ def get_recent_risk_reports(
     limit: int = Query(default=100, le=500)
 ) -> List[Dict[str, Any]]:
     """
-    Get recent risk report summaries.
+    Get recent risk report summaries (from persistent JSONL storage).
     """
-    # Return summaries of recent reports
-    summaries = []
-    for r in _risk_reports[-limit:]:
-        analytics = r.get("analytics", {})
-        severity_counts = analytics.get("severity_counts", {})
-        summaries.append({
-            "id": r.get("id"),
-            "created_at": r.get("created_at"),
-            "job_id": r.get("job_id"),
-            "pipeline_id": r.get("pipeline_id"),
-            "op_id": r.get("op_id"),
-            "machine_profile_id": r.get("machine_profile_id"),
-            "post_preset": r.get("post_preset"),
-            "total_issues": analytics.get("total_issues", 0),
-            "critical_count": severity_counts.get("critical", 0),
-            "high_count": severity_counts.get("high", 0),
-            "medium_count": severity_counts.get("medium", 0),
-            "low_count": severity_counts.get("low", 0),
-            "info_count": severity_counts.get("info", 0),
-            "risk_score": analytics.get("risk_score", 0),
-            "total_extra_time_s": analytics.get("total_extra_time_s", 0),
-        })
-    return list(reversed(summaries))
+    return get_recent_reports(limit=limit)
 
 
 @router.get("/jobs/{job_id}/risk_timeline")
@@ -120,11 +96,9 @@ def get_job_risk_timeline(
     limit: int = Query(default=50, le=200)
 ) -> List[Dict[str, Any]]:
     """
-    Get risk timeline for a specific job.
+    Get risk timeline for a specific job (from persistent JSONL storage).
     """
-    # Filter reports by job_id
-    job_reports = [r for r in _risk_reports if r.get("job_id") == job_id]
-    return list(reversed(job_reports[-limit:]))
+    return get_reports_by_job_id(job_id=job_id, limit=limit)
 
 
 @router.get("/risk/reports")
@@ -136,32 +110,12 @@ def get_risk_reports(
     end_ts: Optional[float] = None,
 ) -> List[Dict[str, Any]]:
     """
-    Browse risk reports with optional filters.
+    Browse risk reports with optional filters (from persistent JSONL storage).
     """
-    results = []
-    for r in _risk_reports:
-        # Apply filters
-        if preset and r.get("post_preset") != preset:
-            continue
-        # Convert to timeline format
-        try:
-            created_ts = datetime.fromisoformat(r.get("created_at", "").replace("Z", "+00:00")).timestamp()
-        except (ValueError, AttributeError):
-            created_ts = 0
-        
-        if start_ts and created_ts < start_ts:
-            continue
-        if end_ts and created_ts > end_ts:
-            continue
-            
-        results.append({
-            "id": r.get("id"),
-            "created_at": created_ts,
-            "lane": lane or "default",
-            "job_id": r.get("job_id"),
-            "preset": r.get("post_preset"),
-            "source": r.get("design_source"),
-            "summary": r.get("analytics", {}),
-        })
-    
-    return list(reversed(results[-limit:]))
+    return browse_reports(
+        lane=lane,
+        preset=preset,
+        start_ts=start_ts,
+        end_ts=end_ts,
+        limit=limit,
+    )
