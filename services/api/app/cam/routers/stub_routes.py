@@ -5,7 +5,6 @@ Provides stub endpoints for CAM frontend paths that don't have backend implement
 These return empty/default responses to prevent 404 errors while features are being built.
 
 Endpoints covered:
-- /drilling/* - Drilling operations
 - /job-int/* - Job intelligence
 - /job_log/insights/* - Job log insights
 - /opt/* - Optimization
@@ -19,6 +18,7 @@ Endpoints covered:
 
 REMOVED (real implementations exist):
 - /backup/* - See cam/routers/utility/backup_router.py
+- /drilling/* - See cam/routers/drilling/drill_router.py
 - /pocket/adaptive/* - See routers/adaptive/*.py
 - /blueprint/preflight, to-adaptive, reconstruct-contours - See routers/blueprint_cam/*.py
 """
@@ -31,24 +31,6 @@ from fastapi import APIRouter
 
 
 router = APIRouter(tags=["cam", "stubs"])
-
-
-# =============================================================================
-# Drilling Stubs
-# =============================================================================
-
-@router.post("/drilling/gcode")
-def generate_drilling_gcode(payload: Dict[str, Any] = None) -> Dict[str, Any]:
-    """Generate drilling G-code."""
-    if payload is None:
-        payload = {}
-    return {"ok": True, "gcode": None, "message": "Stub: drilling not yet implemented"}
-
-
-@router.get("/drilling/gcode/download")
-def download_drilling_gcode() -> Dict[str, Any]:
-    """Download drilling G-code file."""
-    return {"ok": False, "message": "Stub: drilling download not yet implemented"}
 
 
 # =============================================================================
