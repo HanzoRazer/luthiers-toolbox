@@ -258,6 +258,13 @@ const routes: RouteRecordRaw[] = [
     component: () => import("@/views/InstrumentGeometryView.vue"),
   },
 
+  // Guitar Body Dimensions (Parametric Designer from Blueprint Lab)
+  {
+    path: "/guitar-dimensions",
+    name: "GuitarDimensions",
+    component: () => import("@/views/GuitarDimensionsView.vue"),
+  },
+
   // Run Artifacts Browser
   {
     path: "/rmos/runs",
