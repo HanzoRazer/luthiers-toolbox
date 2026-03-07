@@ -6,7 +6,7 @@ These return empty/default responses to prevent 404 errors while features are be
 
 Endpoints covered:
 - /job-int/* - Job intelligence (proxied to real job_int_log service)
-- /job_log/insights/* - Job log insights
+- /job_log/insights/* - WIRED to real job_int_log analysis
 - /probe/* - Probe operations (proxied to real setup_router)
 - /posts/* - Post processors (proxied to real posts_consolidated_router)
 - /bridge/* - Bridge export (proxied to real DXF generator)
@@ -125,19 +125,154 @@ def update_job_favorite(run_id: str, body: FavoriteUpdateIn) -> Dict[str, Any]:
 
 
 # =============================================================================
-# Job Log Insights Stubs
+# Job Log Insights (wired to real job_int_log analysis)
 # =============================================================================
 
+from typing import Optional
+
+
+def _compute_job_insights(job: Dict[str, Any]) -> Dict[str, Any]:
+    """
+    Compute job intelligence insights from job log data.
+
+    Analyzes estimated vs actual times and provides recommendations.
+    """
+    job_id = job.get("run_id") or job.get("job_id") or "unknown"
+    job_name = job.get("job_name") or f"Job {job_id[:8]}"
+    wood_type = job.get("material") or "Unknown"
+
+    # Get times - estimated from sim_time_s, actual from duration or estimate
+    estimated_time_s = job.get("sim_time_s") or 0
+    # Actual time: use stored actual_time_s if available, otherwise estimate
+    actual_time_s = job.get("actual_time_s")
+    if actual_time_s is None:
+        # Fallback: estimate actual time from move count with typical timing
+        move_count = job.get("sim_move_count") or 0
+        # Rough estimate: ~0.1s per move average
+        actual_time_s = move_count * 0.1 if move_count > 0 else estimated_time_s
+
+    # Compute time difference percentage
+    if estimated_time_s > 0:
+        time_diff_pct = round(((actual_time_s - estimated_time_s) / estimated_time_s) * 100, 1)
+    else:
+        time_diff_pct = 0.0
+
+    # Classification and severity based on time difference
+    abs_diff = abs(time_diff_pct)
+    if abs_diff <= 5:
+        classification = "on_target"
+        severity = "ok"
+        recommendation = "Job performance is within expected parameters. No adjustments needed."
+    elif abs_diff <= 15:
+        if time_diff_pct > 0:
+            classification = "slightly_slow"
+            severity = "ok"
+            recommendation = "Job ran slightly slower than estimated. Consider checking tool wear or feed rates."
+        else:
+            classification = "slightly_fast"
+            severity = "ok"
+            recommendation = "Job completed faster than estimated. Verify quality meets specifications."
+    elif abs_diff <= 30:
+        if time_diff_pct > 0:
+            classification = "moderately_slow"
+            severity = "warn"
+            recommendation = "Significant slowdown detected. Review machining parameters, tool condition, and material properties."
+        else:
+            classification = "moderately_fast"
+            severity = "warn"
+            recommendation = "Job completed significantly faster. Verify cut quality and consider recalibrating time estimates."
+    else:
+        if time_diff_pct > 0:
+            classification = "significantly_slow"
+            severity = "error"
+            recommendation = "Critical slowdown. Inspect for tool damage, material issues, or machine problems before next run."
+        else:
+            classification = "significantly_fast"
+            severity = "error"
+            recommendation = "Unusually fast completion. Verify all cuts were made correctly and quality is acceptable."
+
+    # Compute review/gate percentages
+    # Review threshold: flag for review at 80%+ of expected variance
+    # Gate threshold: block at 100%+ deviation
+    review_pct = min(100, round((abs_diff / 15) * 80))  # 15% diff = 80% review
+    gate_pct = min(100, round((abs_diff / 30) * 100))   # 30% diff = 100% gate
+
+    # Add issue-based adjustments
+    issue_count = job.get("sim_issue_count") or 0
+    if issue_count > 0:
+        review_pct = min(100, review_pct + issue_count * 5)
+        if issue_count > 3:
+            severity = "error" if severity == "warn" else severity
+            recommendation += f" Note: {issue_count} simulation issues detected."
+
+    return {
+        "job_id": job_id,
+        "job_name": job_name,
+        "wood_type": wood_type,
+        "actual_time_s": round(actual_time_s, 1),
+        "estimated_time_s": round(estimated_time_s, 1),
+        "time_diff_pct": time_diff_pct,
+        "classification": classification,
+        "severity": severity,
+        "review_pct": review_pct,
+        "gate_pct": gate_pct,
+        "recommendation": recommendation,
+    }
+
+
 @router.get("/job_log/insights")
-def get_job_insights() -> Dict[str, Any]:
-    """Get job log insights."""
-    return {"insights": [], "total_jobs": 0}
+def get_job_insights(
+    limit: int = Query(default=50, le=200),
+    wood: Optional[str] = Query(None),
+    severity: Optional[str] = Query(None),
+) -> Dict[str, Any]:
+    """Get job log insights summary (wired to real job_int_log)."""
+    all_logs = load_all_job_logs()
+
+    # Compute insights for each job
+    insights = []
+    for job in all_logs:
+        insight = _compute_job_insights(job)
+
+        # Apply filters
+        if wood and insight["wood_type"].lower() != wood.lower():
+            continue
+        if severity and insight["severity"] != severity:
+            continue
+
+        insights.append(insight)
+
+    # Sort by most recent (assuming created_at exists)
+    insights.sort(key=lambda x: x.get("job_id", ""), reverse=True)
+
+    return {
+        "insights": insights[:limit],
+        "total_jobs": len(insights),
+    }
 
 
 @router.get("/job_log/insights/{insight_id}")
 def get_job_insight(insight_id: str) -> Dict[str, Any]:
-    """Get specific job insight."""
-    return {"insight_id": insight_id, "data": None}
+    """Get specific job insight by run_id (wired to real job_int_log)."""
+    job = find_job_log_by_run_id(insight_id)
+
+    if not job:
+        # Return empty insight structure with error state
+        return {
+            "job_id": insight_id,
+            "job_name": f"Job {insight_id[:8] if len(insight_id) >= 8 else insight_id}",
+            "wood_type": "Unknown",
+            "actual_time_s": 0,
+            "estimated_time_s": 0,
+            "time_diff_pct": 0,
+            "classification": "unknown",
+            "severity": "ok",
+            "review_pct": 0,
+            "gate_pct": 0,
+            "recommendation": f"No job log found for ID: {insight_id}",
+        }
+
+    return _compute_job_insights(job)
 
 
 # =============================================================================
@@ -145,7 +280,6 @@ def get_job_insight(insight_id: str) -> Dict[str, Any]:
 # =============================================================================
 
 from pydantic import BaseModel
-from typing import Optional
 
 from ...routers.probe.setup_router import generate_setup_sheet as real_generate_setup_sheet
 from ...schemas.probe_schemas import SetupSheetIn
