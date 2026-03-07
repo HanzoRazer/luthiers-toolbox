@@ -13,7 +13,7 @@ Endpoints covered:
 - /logs/* - Log writing
 - /risk/* - Risk reports index
 - /fret_slots/* - Fret slot preview
-- /adaptive2/* - Adaptive v2 operations
+- /adaptive2/* - Adaptive v2 operations (proxied to real benchmark_router)
 
 REMOVED (real implementations exist):
 - /backup/* - See cam/routers/utility/backup_router.py
@@ -146,24 +146,32 @@ def preview_fret_slots(payload: Dict[str, Any] = None) -> Dict[str, Any]:
 
 
 # =============================================================================
-# Adaptive v2 Stubs
+# Adaptive v2 Proxies (delegating to real benchmark_router implementations)
 # =============================================================================
 
+from .utility.benchmark_router import (
+    BenchReq,
+    SpiralReq,
+    TrochReq,
+    bench as real_bench,
+    offset_spiral as real_offset_spiral,
+    trochoid_corners as real_trochoid_corners,
+)
+
+
 @router.post("/adaptive2/bench")
-def run_adaptive_bench(payload: Dict[str, Any] = None) -> Dict[str, Any]:
-    """Run adaptive v2 benchmark."""
-    if payload is None:
-        payload = {}
-    return {"ok": True, "results": {}, "message": "Stub: benchmark not yet implemented"}
+def run_adaptive_bench(req: BenchReq) -> Dict[str, Any]:
+    """Run adaptive v2 benchmark (proxy to real implementation)."""
+    return real_bench(req)
 
 
-@router.get("/adaptive2/offset_spiral.svg")
-def get_offset_spiral_svg() -> str:
-    """Get offset spiral preview as SVG."""
-    return "<svg></svg>"
+@router.post("/adaptive2/offset_spiral.svg")
+def get_offset_spiral_svg(req: SpiralReq):
+    """Get offset spiral preview as SVG (proxy to real implementation)."""
+    return real_offset_spiral(req)
 
 
-@router.get("/adaptive2/trochoid_corners.svg")
-def get_trochoid_corners_svg() -> str:
-    """Get trochoid corners preview as SVG."""
-    return "<svg></svg>"
+@router.post("/adaptive2/trochoid_corners.svg")
+def get_trochoid_corners_svg(req: TrochReq):
+    """Get trochoid corners preview as SVG (proxy to real implementation)."""
+    return real_trochoid_corners(req)
