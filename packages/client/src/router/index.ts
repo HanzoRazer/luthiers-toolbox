@@ -126,6 +126,28 @@ const routes: RouteRecordRaw[] = [
     component: () => import("@/views/RmosStripFamilyLabView.vue"),
   },
 
+  // RMOS Management Views
+  {
+    path: "/rmos/inventory",
+    name: "RmosInventory",
+    component: () => import("@/views/rmos/InventoryView.vue"),
+  },
+  {
+    path: "/rmos/quality",
+    name: "RmosQualityControl",
+    component: () => import("@/views/rmos/QualityControlView.vue"),
+  },
+  {
+    path: "/rmos/time",
+    name: "RmosTimeTracking",
+    component: () => import("@/views/rmos/TimeTrackingView.vue"),
+  },
+  {
+    path: "/rmos/orders",
+    name: "RmosOrders",
+    component: () => import("@/views/rmos/OrdersView.vue"),
+  },
+
   // MM-4 Material-Aware Analytics Dashboard
   {
     path: "/rmos/material-analytics",
@@ -172,6 +194,31 @@ const routes: RouteRecordRaw[] = [
     path: "/art-studio/vcarve",
     name: "ArtStudioVCarve",
     component: () => import("@/views/art-studio/VCarveView.vue"),
+  },
+  {
+    path: "/art-studio/binding",
+    name: "ArtStudioBinding",
+    component: () => import("@/views/art-studio/BindingDesignerView.vue"),
+  },
+  {
+    path: "/art-studio/headstock",
+    name: "ArtStudioHeadstock",
+    component: () => import("@/views/art-studio/HeadstockDesignerView.vue"),
+  },
+  {
+    path: "/art-studio/purfling",
+    name: "ArtStudioPurfling",
+    component: () => import("@/views/art-studio/PurflingDesignerView.vue"),
+  },
+  {
+    path: "/art-studio/soundhole",
+    name: "ArtStudioSoundhole",
+    component: () => import("@/views/art-studio/SoundholeDesignerView.vue"),
+  },
+  {
+    path: "/art-studio/fret-markers",
+    name: "ArtStudioFretMarkers",
+    component: () => import("@/views/art-studio/FretMarkersView.vue"),
   },
 
   // Preset Hub
@@ -244,11 +291,51 @@ const routes: RouteRecordRaw[] = [
     component: () => import("@/views/DxfToGcodeView.vue"),
   },
 
+  // CAM Operations
+  {
+    path: "/cam/pocket",
+    name: "CamPocketClearing",
+    component: () => import("@/views/cam/PocketClearingView.vue"),
+  },
+  {
+    path: "/cam/contour",
+    name: "CamContourCutting",
+    component: () => import("@/views/cam/ContourCuttingView.vue"),
+  },
+  {
+    path: "/cam/surfacing",
+    name: "CamSurfacing",
+    component: () => import("@/views/cam/SurfacingView.vue"),
+  },
+  {
+    path: "/cam/drilling",
+    name: "CamDrilling",
+    component: () => import("@/views/cam/DrillingView.vue"),
+  },
+  {
+    path: "/cam/fret-slots",
+    name: "CamFretSlotting",
+    component: () => import("@/views/cam/FretSlottingView.vue"),
+  },
+  {
+    path: "/cam/simulator",
+    name: "CamToolpathSimulator",
+    component: () => import("@/views/cam/ToolpathSimulatorView.vue"),
+  },
+
   // Guitar Design Hub - Body Outline Generator, Bracing, Archtop, etc.
   {
     path: "/design-hub",
     name: "GuitarDesignHub",
     component: () => import("@/views/GuitarDesignHubView.vue"),
+  },
+
+  // Individual Instrument Design (dynamic route for /design/stratocaster, /design/les-paul, etc.)
+  {
+    path: "/design/:instrumentId",
+    name: "InstrumentDesign",
+    component: () => import("@/views/InstrumentDesignView.vue"),
+    props: true,
   },
 
   // Waves 15-16 — Instrument Geometry Designer (Fretboard CAM)
@@ -335,6 +422,28 @@ const routes: RouteRecordRaw[] = [
     path: "/ai-images",
     name: "AiImages",
     component: () => import("@/views/AiImagesView.vue"),
+  },
+
+  // AI Tools
+  {
+    path: "/ai/wood-grading",
+    name: "AiWoodGrading",
+    component: () => import("@/views/ai/WoodGradingView.vue"),
+  },
+  {
+    path: "/ai/recommendations",
+    name: "AiRecommendations",
+    component: () => import("@/views/ai/RecommendationsView.vue"),
+  },
+  {
+    path: "/ai/assistant",
+    name: "AiAssistant",
+    component: () => import("@/views/ai/AssistantView.vue"),
+  },
+  {
+    path: "/ai/defect-detection",
+    name: "AiDefectDetection",
+    component: () => import("@/views/ai/DefectDetectionView.vue"),
   },
 
   // Dev: Vision Attach Widget Test
