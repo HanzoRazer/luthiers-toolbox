@@ -259,30 +259,120 @@ def dxf_to_grbl(payload: Dict[str, Any] = None) -> Dict[str, Any]:
 
 
 # =============================================================================
-# Safety Evaluation Stubs
+# Safety Evaluation Proxies (delegating to real RMOS feasibility engine)
 # =============================================================================
+
+import os
+from .feasibility.engine import compute_feasibility
+from .feasibility.schemas import FeasibilityInput, MaterialHardness
+
+
+def _parse_feasibility_input(payload: Dict[str, Any]) -> FeasibilityInput:
+    """Parse payload into FeasibilityInput with sensible defaults."""
+    
+    # Parse material hardness if provided
+    hardness = payload.get("material_hardness")
+    if hardness and isinstance(hardness, str):
+        try:
+            hardness = MaterialHardness(hardness.lower())
+        except ValueError:
+            hardness = None
+    
+    return FeasibilityInput(
+        # Identity
+        pipeline_id=payload.get("pipeline_id", "safety_evaluate_v1"),
+        post_id=payload.get("post_id", "GRBL"),
+        units=payload.get("units", "mm"),
+        
+        # CAM params (with sensible defaults)
+        tool_d=float(payload.get("tool_diameter_mm", payload.get("tool_d", 6.0))),
+        # stepover_percent is 0-100, but FeasibilityInput expects 0-1 decimal
+        stepover=float(payload.get("stepover_percent", payload.get("stepover", 40.0))) / 100.0,
+        stepdown=float(payload.get("depth_of_cut_mm", payload.get("stepdown", 3.0))),
+        z_rough=float(payload.get("z_rough", payload.get("final_depth_mm", -10.0))),
+        feed_xy=float(payload.get("feed_xy_mm_min", payload.get("feed_xy", 1000.0))),
+        feed_z=float(payload.get("feed_z_mm_min", payload.get("feed_z", 200.0))),
+        rapid=float(payload.get("rapid", 3000.0)),
+        safe_z=float(payload.get("safe_z", 5.0)),
+        strategy=payload.get("strategy", payload.get("operation", "profile")),
+        layer_name=payload.get("layer_name", "0"),
+        climb=payload.get("climb", True),
+        smoothing=float(payload.get("smoothing", 0.0)),
+        margin=float(payload.get("margin", 0.0)),
+        
+        # Geometry summary
+        has_closed_paths=payload.get("has_closed_paths"),
+        loop_count_hint=payload.get("loop_count_hint"),
+        entity_count=payload.get("entity_count"),
+        bbox=payload.get("bbox"),
+        
+        # Material properties (Schema v2)
+        material_id=payload.get("material", payload.get("material_id")),
+        material_hardness=hardness,
+        material_thickness_mm=payload.get("material_thickness_mm"),
+        material_resinous=payload.get("material_resinous"),
+        
+        # Geometry dimensions
+        geometry_width_mm=payload.get("geometry_width_mm"),
+        geometry_depth_mm=payload.get("geometry_depth_mm"),
+        wall_thickness_mm=payload.get("wall_thickness_mm"),
+        
+        # Tool properties
+        tool_flute_length_mm=payload.get("tool_flute_length_mm"),
+        tool_stickout_mm=payload.get("tool_stickout_mm"),
+        
+        # Process
+        coolant_enabled=payload.get("coolant_enabled"),
+    )
+
 
 @router.post("/safety/evaluate")
 def evaluate_safety(payload: Dict[str, Any] = None) -> Dict[str, Any]:
-    """Evaluate safety constraints for an operation."""
+    """Evaluate safety constraints using real RMOS feasibility engine."""
     if payload is None:
         payload = {}
-    return {
-        "ok": True,
-        "decision": "ALLOW",
-        "risk_level": "GREEN",
-        "warnings": [],
-        "blocks": [],
-    }
+    
+    try:
+        fi = _parse_feasibility_input(payload)
+        result = compute_feasibility(fi)
+        
+        # Map FeasibilityResult to expected response format
+        decision = "BLOCK" if result.blocking else "ALLOW"
+        
+        return {
+            "ok": True,
+            "decision": decision,
+            "risk_level": result.risk_level.value,
+            "warnings": result.warnings,
+            "blocks": result.blocking_reasons,
+            "rules_triggered": result.rules_triggered,
+            "engine_version": result.engine_version,
+        }
+    except Exception as e:
+        return {
+            "ok": False,
+            "decision": "ERROR",
+            "risk_level": "UNKNOWN",
+            "warnings": [],
+            "blocks": [str(e)],
+            "error": str(e),
+        }
 
 
 @router.get("/safety/mode")
 def get_safety_mode() -> Dict[str, Any]:
-    """Get current safety mode settings."""
+    """Get current safety mode settings from environment."""
+    # Read mode from environment, defaulting to standard
+    mode = os.environ.get("RMOS_SAFETY_MODE", "standard")
+    strict = os.environ.get("RMOS_STRICT_MODE", "false").lower() in ("1", "true", "yes")
+    allow_overrides = os.environ.get("RMOS_ALLOW_OVERRIDES", "true").lower() in ("1", "true", "yes")
+    allow_red_override = os.environ.get("RMOS_ALLOW_RED_OVERRIDE", "false").lower() in ("1", "true", "yes")
+    
     return {
-        "mode": "standard",
-        "strict_mode": False,
-        "allow_overrides": True,
+        "mode": mode,
+        "strict_mode": strict,
+        "allow_overrides": allow_overrides,
+        "allow_red_override": allow_red_override,
     }
 
 
@@ -294,6 +384,6 @@ def create_safety_override(payload: Dict[str, Any] = None) -> Dict[str, Any]:
     return {
         "ok": True,
         "override_id": None,
-        "message": "Stub: override creation not yet implemented",
+        "message": "Stub: override creation not yet implemented. Use /api/rmos/runs_v2/runs/{id}/override instead.",
     }
 
