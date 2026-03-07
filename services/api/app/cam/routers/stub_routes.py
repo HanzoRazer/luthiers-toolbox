@@ -7,7 +7,6 @@ These return empty/default responses to prevent 404 errors while features are be
 Endpoints covered:
 - /job-int/* - Job intelligence
 - /job_log/insights/* - Job log insights
-- /opt/* - Optimization
 - /probe/* - Probe operations
 - /posts/* - Post processors
 - /bridge/* - Bridge export
@@ -21,6 +20,7 @@ REMOVED (real implementations exist):
 - /drilling/* - See cam/routers/drilling/drill_router.py
 - /pocket/adaptive/* - See routers/adaptive/*.py
 - /blueprint/preflight, to-adaptive, reconstruct-contours - See routers/blueprint_cam/*.py
+- /opt/what_if, /opt/feeds-speeds - See cam/routers/utility/optimization_router.py
 """
 
 from __future__ import annotations
@@ -71,18 +71,6 @@ def get_job_insights() -> Dict[str, Any]:
 def get_job_insight(insight_id: str) -> Dict[str, Any]:
     """Get specific job insight."""
     return {"insight_id": insight_id, "data": None}
-
-
-# =============================================================================
-# Optimization Stubs
-# =============================================================================
-
-@router.post("/opt/what_if")
-def run_what_if(payload: Dict[str, Any] = None) -> Dict[str, Any]:
-    """Run what-if optimization scenario."""
-    if payload is None:
-        payload = {}
-    return {"ok": True, "results": [], "message": "Stub: what-if not yet implemented"}
 
 
 # =============================================================================
