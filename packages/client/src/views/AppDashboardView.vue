@@ -85,7 +85,7 @@
               ⚙️
             </div>
             <div class="stat-value">
-              6
+              8
             </div>
             <div class="stat-label">
               Modules
@@ -96,7 +96,7 @@
               🛠️
             </div>
             <div class="stat-value">
-              24
+              46
             </div>
             <div class="stat-label">
               Tools
