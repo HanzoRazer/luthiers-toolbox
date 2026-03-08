@@ -1,6 +1,6 @@
 {
   "threshold": 15,
-  "violation_count": 140,
+  "violation_count": 146,
   "violations": [
     {
       "file": "app/rmos/runs_v2/batch_summary.py",
@@ -101,6 +101,13 @@
       "letter": "F"
     },
     {
+      "file": "app/rmos/stub_routes.py",
+      "function": "dxf_to_grbl",
+      "complexity": 25,
+      "line": 487,
+      "letter": "F"
+    },
+    {
       "file": "app/saw_lab/batch_router.py",
       "function": "create_batch_plan",
       "complexity": 25,
@@ -154,6 +161,13 @@
       "function": "cam_settings_import",
       "complexity": 25,
       "line": 199,
+      "letter": "F"
+    },
+    {
+      "file": "app/business/estimator_service.py",
+      "function": "compute_estimate",
+      "complexity": 24,
+      "line": 51,
       "letter": "F"
     },
     {
@@ -472,6 +486,13 @@
       "letter": "M"
     },
     {
+      "file": "app/cam/routers/stub_routes.py",
+      "function": "_compute_job_insights",
+      "complexity": 20,
+      "line": 134,
+      "letter": "F"
+    },
+    {
       "file": "app/art_studio/services/design_snapshot_store.py",
       "function": "list_recent",
       "complexity": 20,
@@ -482,7 +503,7 @@
       "file": "app/routers/neck_router.py",
       "function": "export_neck_dxf",
       "complexity": 19,
-      "line": 252,
+      "line": 262,
       "letter": "F"
     },
     {
@@ -497,6 +518,13 @@
       "function": "generate_toolpaths_from_decision",
       "complexity": 19,
       "line": 85,
+      "letter": "F"
+    },
+    {
+      "file": "app/services/risk_reports_store.py",
+      "function": "list_risk_reports",
+      "complexity": 19,
+      "line": 80,
       "letter": "F"
     },
     {
@@ -588,6 +616,13 @@
       "function": "learn_overrides_from_samples",
       "complexity": 18,
       "line": 282,
+      "letter": "F"
+    },
+    {
+      "file": "tests/test_art_presets_aggregate_endpoint_smoke.py",
+      "function": "test_presets_aggregate_fields_when_presets_exist",
+      "complexity": 18,
+      "line": 53,
       "letter": "F"
     },
     {
@@ -794,6 +829,13 @@
       "letter": "M"
     },
     {
+      "file": "app/routers/blueprint/phase2_router.py",
+      "function": "vectorize_geometry",
+      "complexity": 17,
+      "line": 62,
+      "letter": "F"
+    },
+    {
       "file": "app/routers/geometry/import_router.py",
       "function": "_svg_path_to_segments",
       "complexity": 17,
@@ -892,6 +934,13 @@
       "letter": "F"
     },
     {
+      "file": "app/rmos/stub_routes.py",
+      "function": "_synthesize_subjobs_from_run",
+      "complexity": 16,
+      "line": 356,
+      "letter": "F"
+    },
+    {
       "file": "app/saw_lab/execution_lifecycle_router.py",
       "function": "complete_execution",
       "complexity": 16,
@@ -973,13 +1022,6 @@
       "function": "generate",
       "complexity": 16,
       "line": 291,
-      "letter": "M"
-    },
-    {
-      "file": "app/business/estimator/estimator_service.py",
-      "function": "_calculate_all_factors",
-      "complexity": 16,
-      "line": 256,
       "letter": "M"
     }
   ]
