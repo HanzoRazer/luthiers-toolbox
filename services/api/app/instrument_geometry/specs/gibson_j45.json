@@ -1,0 +1,126 @@
+{
+  "model": "Gibson J-45",
+  "year": "circa 1942-present",
+  "source": "J45 DIMS.dxf (AutoCAD construction drawing)",
+  "source_dxf": "Guitar Plans/J 45 Plans/J45 DIMS.dxf",
+  "extracted_dxf": {
+    "layered": "Guitar Plans/J 45 Plans/J45_DIMS_Layered.dxf",
+    "bracing_only": "Guitar Plans/J 45 Plans/J45_Bracing_Only.dxf"
+  },
+  "units_note": "All values in mm. Original drawing in inches, converted x25.4.",
+  "dimensions": {
+    "body_width_mm": 398.5,
+    "body_length_mm": 504.8,
+    "lower_bout_mm": 412.0,
+    "upper_bout_mm": 292.0,
+    "waist_mm": 267.0,
+    "body_depth_at_tail_mm": 123.82,
+    "body_depth_at_neck_mm": 98.43,
+    "scale_length_mm": 628.65,
+    "scale_length_inches": 24.75,
+    "soundhole_diameter_mm": 101.6,
+    "soundhole_radius_mm": 50.8,
+    "frets": 20
+  },
+  "back_braces": {
+    "note": "All back braces are 1/4\" x 1/2\" (6.35 x 12.70 mm) cross-section",
+    "cross_section": {
+      "width_mm": 6.35,
+      "height_mm": 12.70,
+      "width_inches": 0.25,
+      "height_inches": 0.5,
+      "profile": "rectangular"
+    },
+    "BB-1": {
+      "position_from_endpin_mm": 22.23,
+      "position_from_endpin_inches": 0.875,
+      "description": "Near endpin, lower bout"
+    },
+    "BB-2": {
+      "position_from_endpin_mm": 101.60,
+      "position_from_endpin_inches": 4.0,
+      "description": "Lower bout"
+    },
+    "BB-3": {
+      "position_from_endpin_mm": 200.02,
+      "position_from_endpin_inches": 7.875,
+      "description": "Near waist"
+    },
+    "BB-4": {
+      "position_from_endpin_mm": 298.45,
+      "position_from_endpin_inches": 11.75,
+      "description": "Upper bout"
+    },
+    "additional_marker": {
+      "position_from_endpin_mm": 396.87,
+      "position_from_endpin_inches": 15.625,
+      "note": "Reference line, near neck block"
+    }
+  },
+  "top_bracing": {
+    "pattern": "X-brace",
+    "note": "8 top braces (TB-1 through TB-8), scalloped X-brace pattern",
+    "cross_section": {
+      "width_mm": 6.35,
+      "height_mm": 12.70,
+      "width_inches": 0.25,
+      "height_inches": 0.5,
+      "profile": "rectangular"
+    },
+    "braces": {
+      "TB-1": {"description": "X-brace left arm"},
+      "TB-2": {"description": "X-brace right arm"},
+      "TB-3": {"description": "Upper transverse brace"},
+      "TB-4": {"description": "Tone bar, bass side"},
+      "TB-5": {"description": "Tone bar, treble side"},
+      "TB-6": {"description": "Lower face brace, bass"},
+      "TB-7": {"description": "Lower face brace, treble"},
+      "TB-8": {"description": "Upper face brace / finger brace"}
+    },
+    "span_mm": 152.40,
+    "span_inches": 6.0
+  },
+  "cross_section": {
+    "purfling": {
+      "material": "wood or plastic",
+      "thickness_mm": 3.18,
+      "thickness_inches": 0.125
+    },
+    "kerf_lining": {
+      "material": "mahogany or basswood",
+      "all_around": true,
+      "depth_at_tail_mm": 123.82,
+      "depth_at_tail_inches": 4.875,
+      "depth_at_neck_mm": 98.43,
+      "depth_at_neck_inches": 3.875
+    },
+    "binding": {
+      "note": "Single-ply ivoroid, top and back"
+    }
+  },
+  "fret_positions": {
+    "scale_length_mm": 628.65,
+    "scale_length_inches": 24.75,
+    "fret_count": 20,
+    "positions_from_nut_mm": [
+      35.28, 68.55, 99.90, 129.41, 157.17,
+      183.26, 207.77, 230.76, 252.33, 272.52,
+      291.41, 309.06, 325.51, 340.83, 355.06,
+      368.26, 380.47, 391.73, 402.10, 411.60
+    ],
+    "note": "Standard equal-temperament fret spacing, 12th fret at half scale length (314.33 mm)"
+  },
+  "dxf_assets": {
+    "body_outline": "acoustic/J45_body_outline.dxf",
+    "body_outline_dense": "acoustic/J45_body_outline_dense.dxf",
+    "construction_layered": "Guitar Plans/J 45 Plans/J45_DIMS_Layered.dxf",
+    "bracing_only": "Guitar Plans/J 45 Plans/J45_Bracing_Only.dxf"
+  },
+  "notes": [
+    "Back braces are lateral (perpendicular to centerline)",
+    "Top bracing is scalloped X-brace with 8 braces total",
+    "Soundhole R2.000\" = 50.80mm radius = 101.6mm diameter",
+    "Body outline available as 30-point CNC-accurate data with arc bulge in j45_bulge.py",
+    "All bracing geometry extracted from J45 DIMS.dxf on 2026-03-07"
+  ]
+}

@@ -1,0 +1,324 @@
+{
+  "model_id": "explorer",
+  "display_name": "1958 Gibson Explorer",
+  "source": "Gibson factory drawings and measured specifications. Body outline from DXF (gibson_explorer_body.dxf, 24-point coarse polygon). Model stub from guitars/explorer.py (Wave 14). Hardware and construction references from Gibson '58 Explorer reissue specs and Guitar Plans archive.",
+  "units": "mm",
+  "variants": {
+    "original_1958": {
+      "description": "1958 Gibson Explorer — original korina (African limba) body, PAF humbuckers, gold hardware. Only ~19 original examples were shipped in 1958–59, making it one of the rarest production guitars ever made.",
+      "year_range": "1958–1959",
+      "scale_length_mm": 628.65,
+      "fret_count": 22,
+      "neck": {
+        "nut_width_mm": 43.0,
+        "heel_width_mm": 55.0,
+        "depth_1st_fret_mm": 22.5,
+        "depth_12th_fret_mm": 24.5,
+        "profile_shape": "thick_C_to_D",
+        "fretboard_radius_mm": 304.8,
+        "compound_radius": false,
+        "fretboard_wood": "rosewood",
+        "neck_wood": "korina_limba",
+        "binding": "single_ply_cream",
+        "body_join_fret": 22,
+        "neck_angle_deg": 4.5,
+        "truss_rod": "single_action",
+        "truss_rod_access": "headstock_bell_cover",
+        "inlays": "dot_pearloid",
+        "fret_wire": "medium_vintage",
+        "note": "The '58 Explorer has a long set-neck tenon extending to the 22nd fret area. The neck joins at or near the end of the fretboard. Rosewood fretboard with dot inlays."
+      },
+      "headstock": {
+        "style": "explorer_split_V",
+        "angle_deg": 17.0,
+        "length_mm": 215.0,
+        "width_mm": 105.0,
+        "thickness_mm": 14.0,
+        "tuner_layout": "6-inline_split",
+        "tuner_hole_diameter_mm": 10.0,
+        "tuner_hole_spacing_mm": 25.4,
+        "veneer": "none",
+        "note": "Distinctive split-V headstock design. All 6 tuners on one side in a split arrangement. The headstock shape echoes the angular body design."
+      }
+    },
+    "reissue_76": {
+      "description": "1976 Gibson Explorer reissue — mahogany body, updated headstock shape, standard dot inlays. The Explorer that popularized the shape for rock and metal guitarists.",
+      "year_range": "1976–present",
+      "scale_length_mm": 628.65,
+      "fret_count": 22,
+      "neck": {
+        "nut_width_mm": 43.0,
+        "heel_width_mm": 55.0,
+        "depth_1st_fret_mm": 21.5,
+        "depth_12th_fret_mm": 23.5,
+        "profile_shape": "slim_D",
+        "fretboard_radius_mm": 304.8,
+        "compound_radius": false,
+        "fretboard_wood": "rosewood",
+        "neck_wood": "mahogany",
+        "binding": "none",
+        "body_join_fret": 22,
+        "neck_angle_deg": 4.5
+      },
+      "headstock": {
+        "style": "explorer_pointed",
+        "angle_deg": 17.0,
+        "length_mm": 220.0,
+        "width_mm": 110.0,
+        "thickness_mm": 14.0,
+        "tuner_layout": "6-inline_split",
+        "tuner_hole_diameter_mm": 10.0,
+        "tuner_hole_spacing_mm": 25.4,
+        "note": "Revised pointed headstock introduced with the 1976 reissue."
+      }
+    }
+  },
+  "body": {
+    "shape": "angular_explorer",
+    "material": "korina_limba",
+    "material_alternative": "mahogany",
+    "construction": "solid_body_flat_top",
+    "length_mm": 460.0,
+    "width_mm": 475.0,
+    "thickness_mm": 44.45,
+    "thickness_inches": 1.75,
+    "outline_points": 24,
+    "outline_source": "body/dxf/electric/gibson_explorer_body.dxf (24-point coarse polygon, needs refinement)",
+    "outline_dxf_dimensions": {
+      "width_mm": 556.5,
+      "height_mm": 434.7,
+      "note": "DXF extents are larger than true body due to coordinate space. The actual Explorer body is approximately 475mm wide (horn tip to horn tip) x 460mm long (base to neck joint). DXF is AC1024 format — should be converted to R12 (AC1009) per project conventions."
+    },
+    "contour": "angular_asymmetric",
+    "belly_cut": false,
+    "forearm_contour": false,
+    "neck_joint_type": "set_neck_long_tenon",
+    "note": "The Explorer body is a dramatically angular design with two pointed horns extending from a central mass. The upper horn (treble side) extends further than the lower horn (bass side), creating the distinctive asymmetric silhouette. Flat top and flat back — no carved top. Original '58 was korina (African limba wood); reissues typically use mahogany."
+  },
+  "pickups": {
+    "layout": "HH",
+    "neck": {
+      "type": "PAF_humbucker",
+      "route_length_mm": 71.0,
+      "route_width_mm": 40.0,
+      "route_depth_mm": 19.05,
+      "center_from_bridge_mm": 152.4,
+      "pickup_ring": "cream_plastic",
+      "mounting": "pickup_ring_screws",
+      "body_position_mm": {
+        "x_center": 0.0,
+        "y_from_top": 155.2
+      },
+      "note": "Neck humbucker routed from rear. PAF on '58 original, various humbuckers on reissues."
+    },
+    "bridge": {
+      "type": "PAF_humbucker",
+      "route_length_mm": 71.0,
+      "route_width_mm": 40.0,
+      "route_depth_mm": 19.05,
+      "center_from_bridge_mm": 25.4,
+      "pickup_ring": "cream_plastic",
+      "mounting": "pickup_ring_screws",
+      "body_position_mm": {
+        "x_center": 0.0,
+        "y_from_top": 282.2
+      },
+      "note": "Bridge humbucker. Angled slightly for treble response on Gibson models."
+    }
+  },
+  "bridge": {
+    "type": "ABR-1_tune-o-matic",
+    "style": "tune_o_matic_with_stoptail",
+    "bridge_position_from_nut_mm": 628.65,
+    "y_from_top": 307.6,
+    "stud_spacing_mm": 74.0,
+    "stud_diameter_mm": 11.1,
+    "stud_depth_mm": 19.05,
+    "string_spacing_mm": 52.5,
+    "bridge_height_above_body_mm": 8.0,
+    "saddle_radius_mm": 304.8,
+    "body_position_mm": {
+      "x_center": 0.0,
+      "y_from_top": 307.6
+    },
+    "note": "ABR-1 Tune-O-Matic bridge. Stud holes drilled through body. Bridge position calculated: body_length (460) - scale_length (628.65) + neck_length_to_body_join (~476.25) = 307.6mm from top of body."
+  },
+  "tailpiece": {
+    "type": "stoptail",
+    "stud_spacing_mm": 82.5,
+    "stud_diameter_mm": 7.14,
+    "stud_depth_mm": 15.88,
+    "position_behind_bridge_mm": 25.4,
+    "body_position_mm": {
+      "x_center": 0.0,
+      "y_from_top": 333.0
+    },
+    "note": "Lightweight aluminum stoptail bar, same as Les Paul. Positioned 25.4mm behind bridge centerline."
+  },
+  "neck_pocket": {
+    "joint_type": "set_neck_long_tenon",
+    "tenon_width_mm": 55.0,
+    "tenon_length_mm": 95.0,
+    "tenon_depth_mm": 16.0,
+    "mortise_tolerance_mm": 0.15,
+    "body_join_fret": 22,
+    "neck_angle_deg": 4.5,
+    "glue_surface_optimization": true,
+    "body_position_mm": {
+      "x_center": 0.0,
+      "y_from_top": 0.0
+    },
+    "note": "Explorer neck joint is at the very top of the body. Long tenon set neck — the tenon extends deep into the body for strength. The neck angle is approximately 4.5 degrees. Wider tenon than Les Paul due to Explorer body geometry."
+  },
+  "control_cavity": {
+    "shape": "irregular_rounded_rectangle",
+    "length_mm": 108.0,
+    "width_mm": 64.0,
+    "depth_mm": 31.75,
+    "cover_plate": true,
+    "cover_screw_count": 4,
+    "location": "rear_lower_body",
+    "body_position_mm": {
+      "x_center": 0.0,
+      "y_from_top": 370.0
+    },
+    "contents": [
+      "volume_neck",
+      "volume_bridge",
+      "tone"
+    ],
+    "pot_shaft_holes": {
+      "count": 3,
+      "diameter_mm": 9.53,
+      "depth": "through_body",
+      "note": "Three 3/8 inch holes drilled through body for pot shafts — 2 volume + 1 tone (Explorer uses 3-knob layout unlike Les Paul 4-knob)."
+    },
+    "toggle_switch": {
+      "location": "upper_horn_treble_side",
+      "hole_diameter_mm": 12.7,
+      "depth": "through_body",
+      "body_position_mm": {
+        "x_center": 50.0,
+        "y_from_top": 90.0
+      },
+      "note": "Toggle switch mounted on upper (treble) horn, separate from control cavity. Connected by wiring channel. Distinctive Explorer feature — switch is easily accessible during playing."
+    },
+    "note": "Rear-routed control cavity in lower body area. Explorer uses a simplified 3-knob control layout: 2 volume + 1 master tone. The toggle switch is located on the treble-side upper horn."
+  },
+  "wiring_channels": {
+    "main_channel": {
+      "from": "control_cavity",
+      "to": "toggle_switch_cavity",
+      "width_mm": 7.62,
+      "depth_mm": 12.7,
+      "note": "Connects main control cavity to toggle switch on upper horn. Long channel running diagonally through the body."
+    },
+    "pickup_channels": {
+      "from": "pickup_cavities",
+      "to": "control_cavity",
+      "width_mm": 7.62,
+      "depth_mm": 12.7,
+      "note": "Lead wires from each pickup route to the main control cavity."
+    },
+    "output_jack_channel": {
+      "from": "control_cavity",
+      "to": "output_jack",
+      "width_mm": 7.62,
+      "depth_mm": 12.7,
+      "note": "Short channel from control cavity to output jack on lower body edge."
+    }
+  },
+  "output_jack": {
+    "type": "quarter_inch_mono",
+    "location": "lower_body_edge",
+    "bore_diameter_mm": 12.7,
+    "bore_depth_mm": 25.0,
+    "body_position_mm": {
+      "x_center": 0.0,
+      "y_from_top": 420.0
+    },
+    "note": "Standard 1/4 inch mono output jack mounted on bottom edge of body."
+  },
+  "cover_recess": {
+    "description": "Back cavity cover plate recess",
+    "depth_mm": 3.175,
+    "screw_count": 4,
+    "note": "Shallow recess around the control cavity opening to seat the plastic cover plate flush with the body back."
+  },
+  "hardware": {
+    "tuners": "Kluson Deluxe 3+3 split (original) or Grover Rotomatic (reissue)",
+    "bridge": "ABR-1 Tune-O-Matic (gold plated '58, nickel reissue)",
+    "tailpiece": "Lightweight aluminum stoptail bar",
+    "nut_material": "nylon (Delrin)",
+    "nut_width_mm": 43.0,
+    "pickguard": "black_pickguard_angular",
+    "knobs": "gold_top_hat_with_pointers",
+    "switch": "Switchcraft 3-way toggle, upper horn",
+    "jack": "Switchcraft 1/4 inch mono, lower body edge",
+    "finish_1958": "natural_korina_nitrocellulose",
+    "finish_reissue": "various"
+  },
+  "cnc_operations": {
+    "tool_library": {
+      "T1": {"name": "10mm Flat End Mill", "diameter_mm": 10.0, "rpm": 18000, "use": "Roughing pockets (OP20–OP22)"},
+      "T2": {"name": "6mm Flat End Mill", "diameter_mm": 6.0, "rpm": 18000, "use": "Finishing pockets (OP25–OP31), cover recess (OP35), body perimeter (OP50)"},
+      "T3": {"name": "3mm Flat/Drill", "diameter_mm": 3.0, "rpm": 20000, "use": "Wiring channels (OP40), all drilling (OP60–OP65)"}
+    },
+    "operations": [
+      {"op": "OP10", "name": "Fixture / Registration Holes", "tool": "T3", "depth_mm": 10.0},
+      {"op": "OP20", "name": "Neck Pocket Rough", "tool": "T1", "depth_mm": 16.0},
+      {"op": "OP21", "name": "Neck Pickup Cavity Rough", "tool": "T1", "depth_mm": 19.05},
+      {"op": "OP22", "name": "Bridge Pickup Cavity Rough", "tool": "T1", "depth_mm": 19.05},
+      {"op": "OP23", "name": "Control Cavity Rough", "tool": "T1", "depth_mm": 31.75},
+      {"op": "OP25", "name": "Neck Pocket Finish", "tool": "T2", "depth_mm": 16.0},
+      {"op": "OP26", "name": "Neck Pickup Cavity Finish", "tool": "T2", "depth_mm": 19.05},
+      {"op": "OP27", "name": "Bridge Pickup Cavity Finish", "tool": "T2", "depth_mm": 19.05},
+      {"op": "OP28", "name": "Control Cavity Finish", "tool": "T2", "depth_mm": 31.75},
+      {"op": "OP35", "name": "Cover Plate Recess", "tool": "T2", "depth_mm": 3.175},
+      {"op": "OP40", "name": "Wiring Channels", "tool": "T3", "depth_mm": 12.7},
+      {"op": "OP50", "name": "Body Perimeter Contour", "tool": "T2", "depth_mm": 44.45, "tabs": 8},
+      {"op": "OP60", "name": "Pot Shaft Holes 3x (3/8 inch through)", "tool": "T3", "depth_mm": 44.45},
+      {"op": "OP61", "name": "Bridge Post Holes 2x (11.1mm)", "tool": "T3", "depth_mm": 19.05},
+      {"op": "OP62", "name": "Tailpiece Stud Holes 2x (7.14mm)", "tool": "T3", "depth_mm": 15.88},
+      {"op": "OP63", "name": "Toggle Switch Hole (12.7mm)", "tool": "T3", "depth_mm": 44.45},
+      {"op": "OP64", "name": "Output Jack Bore (12.7mm)", "tool": "T3", "depth_mm": 25.0},
+      {"op": "OP65", "name": "Cover Screw Pilot Holes 4x", "tool": "T3", "depth_mm": 12.7}
+    ]
+  },
+  "stock": {
+    "main_blank": {
+      "thickness_mm": 44.45,
+      "thickness_inches": 1.75,
+      "material": "korina_limba",
+      "material_alternative": "mahogany",
+      "width_mm": 490.0,
+      "length_mm": 475.0,
+      "note": "Single slab body blank. All routing operations applied to this blank. Stock slightly oversized to allow fixture pins and perimeter waste."
+    }
+  },
+  "fret_positions": {
+    "scale_length_mm": 628.65,
+    "fret_count": 22,
+    "positions_from_nut_mm": [
+      35.29, 68.55, 99.91, 129.47, 157.32, 183.56, 208.27, 231.54,
+      253.43, 274.02, 293.36, 311.50, 328.50, 344.39, 359.24, 373.08,
+      385.96, 397.92, 409.02, 419.29, 428.77, 437.50
+    ]
+  },
+  "dxf_assets": {
+    "body_outline": "body/dxf/electric/gibson_explorer_body.dxf",
+    "body_outline_status": "coarse_24_point_polygon_needs_refinement",
+    "body_outline_format": "AC1024_needs_R12_conversion",
+    "note": "DXF contains a 24-vertex approximation. Should be refined with higher-resolution outline and converted to R12 (AC1009) format per project conventions."
+  },
+  "notes": [
+    "The Gibson Explorer was introduced in 1958 alongside the Flying V as part of Gibson's Modernistic series.",
+    "Only approximately 19 original Explorer guitars were shipped from the factory in 1958-59.",
+    "The original body material was korina (African limba wood), prized for its resonance and light weight.",
+    "The Explorer body is dramatically angular with asymmetric horns — the treble horn extends further than the bass horn.",
+    "The control layout differs from Les Paul: 3 knobs (2 volume, 1 master tone) instead of 4 knobs.",
+    "The toggle switch is uniquely positioned on the treble-side upper horn for easy access.",
+    "Body dimensions may vary between original '58 and reissue versions. This spec uses the original '58 dimensions.",
+    "The 24-point DXF outline is a coarse approximation — production CNC would require a higher-resolution outline with proper curves."
+  ]
+}

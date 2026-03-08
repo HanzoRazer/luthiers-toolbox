@@ -1,0 +1,136 @@
+{
+  "model_id": "om_000",
+  "display_name": "Martin OM-28",
+  "source": "Martin OM-28 production specs, verified against acoustic_body_volume.py calculator data and om_000.py model stub",
+  "units": "mm",
+  "variants": {
+    "standard": {
+      "description": "Martin OM-28 / 000 standard production spec",
+      "scale_length_mm": 645.16,
+      "fret_count": 20,
+      "neck": {
+        "nut_width_mm": 44.5,
+        "heel_width_mm": 57.0,
+        "depth_1st_fret_mm": 21.3,
+        "depth_12th_fret_mm": 23.8,
+        "profile_shape": "low_oval",
+        "fretboard_radius_mm": 406.4,
+        "compound_radius": false,
+        "fretboard_wood": "ebony",
+        "neck_wood": "mahogany",
+        "body_join_fret": 14
+      },
+      "headstock": {
+        "style": "martin_slotted_solid",
+        "angle_deg": 14.0,
+        "length_mm": 190.0,
+        "width_mm": 82.0,
+        "thickness_mm": 15.0,
+        "tuner_layout": "3+3_open_gear",
+        "tuner_hole_diameter_mm": 10.0,
+        "tuner_hole_spacing_mm": 35.0
+      }
+    },
+    "modern_deluxe": {
+      "description": "Martin OM-28 Modern Deluxe — updated specs",
+      "scale_length_mm": 645.16,
+      "fret_count": 20,
+      "neck": {
+        "nut_width_mm": 44.5,
+        "heel_width_mm": 57.0,
+        "depth_1st_fret_mm": 20.8,
+        "depth_12th_fret_mm": 22.9,
+        "profile_shape": "modified_low_oval",
+        "fretboard_radius_mm": 406.4,
+        "compound_radius": false,
+        "fretboard_wood": "ebony",
+        "neck_wood": "select_hardwood",
+        "body_join_fret": 14
+      },
+      "headstock": {
+        "style": "martin_solid",
+        "angle_deg": 14.0,
+        "length_mm": 190.0,
+        "width_mm": 82.0,
+        "thickness_mm": 15.0,
+        "tuner_layout": "3+3_enclosed",
+        "tuner_hole_diameter_mm": 10.0,
+        "tuner_hole_spacing_mm": 35.0
+      }
+    }
+  },
+  "body": {
+    "lower_bout_mm": 384.0,
+    "upper_bout_mm": 286.0,
+    "waist_mm": 241.0,
+    "body_length_mm": 495.0,
+    "body_width_mm": 384.0,
+    "contour": "single_cutaway_none",
+    "top_wood": "sitka_spruce",
+    "back_sides_wood": "east_indian_rosewood"
+  },
+  "side_profile": {
+    "depth_endblock_mm": 108.0,
+    "depth_neck_mm": 102.0,
+    "note": "Martin OM is shallower than dreadnought (D-28: 121mm)"
+  },
+  "soundhole": {
+    "diameter_mm": 101.6,
+    "center_offset_from_bridge_mm": 280.0,
+    "rosette_style": "concentric_rings"
+  },
+  "bracing": {
+    "pattern": "X-brace",
+    "scalloped": true,
+    "material": "sitka_spruce",
+    "x_brace_intersection": "below_soundhole"
+  },
+  "bridge": {
+    "type": "pin",
+    "material": "ebony",
+    "string_spacing_mm": 55.5,
+    "saddle_compensation": true,
+    "pin_spacing_mm": 55.5,
+    "width_mm": 152.4,
+    "height_mm": 9.5
+  },
+  "binding": {
+    "style": "herringbone",
+    "top_binding": {
+      "material": "ivoroid",
+      "width_mm": 1.5,
+      "purfling_layers": ["black", "white", "herringbone", "white", "black"],
+      "purfling_total_width_mm": 6.0
+    },
+    "back_binding": {
+      "material": "ivoroid",
+      "width_mm": 1.5,
+      "purfling_layers": ["black", "white", "black"],
+      "purfling_total_width_mm": 3.0
+    }
+  },
+  "rosette": {
+    "style": "herringbone",
+    "inner_diameter_mm": 101.6,
+    "outer_diameter_mm": 115.0,
+    "ring_stack": [
+      {"type": "solid", "material": "black", "width_mm": 0.5},
+      {"type": "solid", "material": "white", "width_mm": 0.5},
+      {"type": "herringbone", "material_a": "black", "material_b": "white", "width_mm": 4.0, "angle_deg": 45.0, "piece_width_mm": 1.0},
+      {"type": "solid", "material": "white", "width_mm": 0.5},
+      {"type": "solid", "material": "black", "width_mm": 0.5}
+    ],
+    "total_width_mm": 6.0
+  },
+  "notes": [
+    "All dimensions in mm",
+    "Scale length: 645.16mm (25.4 inches)",
+    "OM and 000 share the same body shape; OM has 25.4 scale, 000 has 24.9",
+    "Body dimensions from acoustic_body_volume.py calculator (martin_om28 entry)",
+    "OM was introduced by Martin in 1929 — first 14-fret flat-top guitar design",
+    "Shallower body than dreadnought (108mm vs 121mm at endblock)",
+    "Herringbone binding is the OM-28 signature — black/white chevron pattern",
+    "Standard OM-28 uses slotted or solid headstock depending on era",
+    "Catalog references om_000_body.dxf (5451 points) but DXF file is missing from disk"
+  ]
+}

@@ -1,0 +1,461 @@
+{
+  "model_id": "les_paul",
+  "display_name": "1956–1959 Gibson Les Paul Standard",
+  "source": "Gibson factory drawings and measured specifications. Body outline from catalog.json (383.5×269.2mm, 669 points). Neck/headstock geometry from neck_profiles.py (Tier 1) and neck_headstock_config.py. CNC operations from lespaul_gcode/ (OP20–OP63). Hardware and construction specs from Guitar Plans archive (14 PDFs + 2 CAM DXFs). Carved top profile from Les-Paul-Isolines.pdf and Les-Paul-Front-Front-Side-Profile-Carved-Top.pdf.",
+  "units": "mm",
+  "variants": {
+    "standard_1959": {
+      "description": "1959 Gibson Les Paul Standard — figured maple top, mahogany back, PAF humbuckers, cherry sunburst. The most sought-after solid body electric guitar ever made.",
+      "year_range": "1958–1960",
+      "scale_length_mm": 628.65,
+      "fret_count": 22,
+      "neck": {
+        "nut_width_mm": 43.0,
+        "heel_width_mm": 54.0,
+        "depth_1st_fret_mm": 22.0,
+        "depth_12th_fret_mm": 24.0,
+        "profile_shape": "fat_C",
+        "fretboard_radius_mm": 304.8,
+        "compound_radius": false,
+        "fretboard_wood": "brazilian_rosewood",
+        "neck_wood": "mahogany",
+        "binding": "single_ply_cream",
+        "body_join_fret": 16,
+        "neck_angle_deg": 4.0,
+        "truss_rod": "single_action",
+        "truss_rod_access": "headstock_bell_cover",
+        "inlays": "trapezoid_pearloid",
+        "fret_wire": "medium_vintage",
+        "note": "The '59 is known for its thick, rounded 'baseball bat' C profile. Brazilian rosewood fretboard with single-ply cream binding and pearloid trapezoid inlays."
+      },
+      "headstock": {
+        "style": "gibson_open",
+        "angle_deg": 17.0,
+        "length_mm": 190.5,
+        "width_mm": 94.0,
+        "thickness_mm": 14.0,
+        "tuner_layout": "3+3",
+        "tuner_hole_diameter_mm": 10.0,
+        "tuner_hole_spacing_mm": 25.4,
+        "veneer": "holly_or_maple",
+        "headstock_outline_points": 21,
+        "headstock_outline_source": "neck_headstock_config.py (GIBSON_OPEN, 21-point outline)",
+        "note": "Open-book headstock with 'Les Paul Model' silkscreen. 17° angled scarf joint. Holly or maple veneer with bell-shaped truss rod cover."
+      }
+    },
+    "goldtop_1956": {
+      "description": "1956 Gibson Les Paul Goldtop — P-90 pickups, Tune-O-Matic bridge (first year with ABR-1), gold metallic finish. Transitional model between the original 1952 trapeze tailpiece design and the later PAF humbucker Standards.",
+      "year_range": "1956–1957",
+      "scale_length_mm": 628.65,
+      "fret_count": 22,
+      "neck": {
+        "nut_width_mm": 43.0,
+        "heel_width_mm": 54.0,
+        "depth_1st_fret_mm": 23.0,
+        "depth_12th_fret_mm": 25.0,
+        "profile_shape": "chunky_C_to_V",
+        "fretboard_radius_mm": 304.8,
+        "compound_radius": false,
+        "fretboard_wood": "brazilian_rosewood",
+        "neck_wood": "mahogany",
+        "binding": "single_ply_cream",
+        "body_join_fret": 16,
+        "neck_angle_deg": 4.0,
+        "truss_rod": "single_action",
+        "truss_rod_access": "headstock_bell_cover",
+        "inlays": "trapezoid_pearloid",
+        "fret_wire": "medium_vintage",
+        "note": "Mid-50s necks tend thicker than '59, often described as chunky C transitioning to soft V in upper positions."
+      },
+      "headstock": {
+        "style": "gibson_open",
+        "angle_deg": 17.0,
+        "length_mm": 190.5,
+        "width_mm": 94.0,
+        "thickness_mm": 14.0,
+        "tuner_layout": "3+3",
+        "tuner_hole_diameter_mm": 10.0,
+        "tuner_hole_spacing_mm": 25.4,
+        "veneer": "holly_or_maple"
+      }
+    }
+  },
+  "body": {
+    "shape": "single_cutaway",
+    "material_back": "honduran_mahogany",
+    "material_top": "figured_maple",
+    "construction": "maple_cap_glued_to_mahogany_slab",
+    "length_mm": 444.0,
+    "width_mm": 330.0,
+    "thickness_total_mm": 50.8,
+    "outline_points": 669,
+    "outline_source": "body_outlines.json (les_paul entry, 669-point polygon)",
+    "outline_dxf_dimensions": {
+      "width_mm": 383.5,
+      "height_mm": 269.2,
+      "note": "DXF is oriented horizontally — DXF 'width' corresponds to body length, DXF 'height' to body width. True body proportions: ~444mm long × ~330mm wide."
+    },
+    "contour": "single_cutaway",
+    "belly_cut": false,
+    "forearm_contour": false,
+    "neck_joint_type": "set_neck_long_tenon",
+    "note": "Mahogany back slab is approximately 38mm (1.5\") thick. Maple cap is approximately 12.7mm (0.5\") thick before carving. Total assembled body thickness ~50.8mm (2.0\")."
+  },
+  "carved_top": {
+    "type": "maple_cap",
+    "cap_thickness_before_carving_mm": 12.7,
+    "cap_thickness_after_carving_edge_mm": 5.0,
+    "cap_thickness_after_carving_peak_mm": 12.7,
+    "peak_height_above_back_mm": 50.8,
+    "edge_height_above_back_mm": 43.0,
+    "total_rise_mm": 7.8,
+    "carve_profile": "compound_radius",
+    "major_radius_mm": 508.0,
+    "minor_radius_mm": 381.0,
+    "carve_slope": {
+      "average_degrees": 3.2,
+      "range_degrees": [1.5, 6.0],
+      "steepest_at": "cutaway_horn_and_lower_bout_waist",
+      "shallowest_at": "center_top_between_pickups",
+      "note": "The carved top slope is NOT constant — it is a compound curve. The average slope from binding edge to peak is approximately 3.2°. The carve is shallowest at the crown (center, between pickups) where it is nearly flat, and steepest at the transitions near the cutaway horn and lower bout edges where the surface drops to the binding. The rise is ~7.8mm over roughly 140mm (half body width), giving tan⁻¹(7.8/140) ≈ 3.19°. Near the cutaway, the slope increases to ~6° as the curve tightens. At the crown plateau, slope is under 1.5°."
+    },
+    "binding_ledge_mm": 1.5,
+    "isoline_source": "Les-Paul-Isolines.pdf (Guitar Plans archive)",
+    "profile_source": "Les-Paul-Front-Front-Side-Profile-Carved-Top.pdf",
+    "note": "The 1956–59 Les Paul carved top is a compound-radius dome — neither a simple sphere nor a cylinder. The cross-sectional profile is roughly elliptical, wider across the waist and narrower along the length. The peak is offset slightly toward the neck. Factory carving was done on a copy carver using a master pattern. For CNC, this requires 3D surfacing with ball-nose endmill on at least a 3-axis machine."
+  },
+  "mahogany_back": {
+    "thickness_mm": 38.1,
+    "thickness_inches": 1.5,
+    "weight_relief": {
+      "1956_1959": "none",
+      "modern_standard": "traditional_chambering",
+      "modern_classic": "9_hole_weight_relief",
+      "note": "Original 1956–59 Les Pauls had NO weight relief — solid mahogany slab. Modern Gibson Standards use traditional chambering or 9-hole weight relief."
+    },
+    "note": "Mahogany back receives all routing: neck pocket, pickup cavities, electronics cavity, wiring channels, bridge/tailpiece stud holes. Maple cap is carved on top face only."
+  },
+  "pickups": {
+    "layout": "HH",
+    "neck": {
+      "type_1959": "PAF_humbucker",
+      "type_1956": "P-90_soapbar",
+      "route_length_mm": 71.0,
+      "route_width_mm": 40.0,
+      "route_depth_mm": 19.05,
+      "route_depth_inches": 0.75,
+      "center_from_bridge_mm": 155.0,
+      "pickup_ring": "cream_plastic",
+      "mounting": "pickup_ring_screws",
+      "note": "Pickup cavity routed into mahogany back, under the maple cap. CNC operation OP21 (rough, T1 10mm) + OP31 (finish, T2 6mm)."
+    },
+    "bridge": {
+      "type_1959": "PAF_humbucker",
+      "type_1956": "P-90_soapbar",
+      "route_length_mm": 71.0,
+      "route_width_mm": 40.0,
+      "route_depth_mm": 19.05,
+      "route_depth_inches": 0.75,
+      "center_from_bridge_mm": 20.0,
+      "pickup_ring": "cream_plastic",
+      "mounting": "pickup_ring_screws"
+    }
+  },
+  "bridge": {
+    "type": "ABR-1_tune-o-matic",
+    "style": "tune_o_matic_with_stoptail",
+    "bridge_position_from_nut_mm": 628.65,
+    "stud_spacing_mm": 74.0,
+    "stud_diameter_mm": 11.1,
+    "stud_depth_mm": 19.05,
+    "stud_depth_inches": 0.75,
+    "string_spacing_mm": 52.5,
+    "bridge_height_above_body_mm": 8.0,
+    "saddle_radius_mm": 304.8,
+    "note": "ABR-1 Tune-O-Matic bridge introduced 1955. Stud holes drilled through maple cap into mahogany — CNC operation OP61."
+  },
+  "tailpiece": {
+    "type": "stoptail",
+    "stud_spacing_mm": 82.5,
+    "stud_diameter_mm": 7.14,
+    "stud_diameter_inches": 0.28125,
+    "stud_depth_mm": 15.88,
+    "stud_depth_inches": 0.625,
+    "position_behind_bridge_mm": 25.4,
+    "note": "Lightweight aluminum stoptail bar. Stud holes — CNC operation OP62."
+  },
+  "neck_pocket": {
+    "joint_type": "set_neck_long_tenon",
+    "tenon_width_mm": 53.0,
+    "tenon_length_mm": 89.0,
+    "tenon_depth_mm": 16.0,
+    "mortise_tolerance_mm": 0.15,
+    "body_join_fret": 16,
+    "neck_angle_deg": 4.0,
+    "glue_surface_optimization": true,
+    "mortise_depth_inches": 0.75,
+    "note": "The 1956–59 neck tenon extends deep into the body (long tenon, ~89mm). Mortise is CNC operation OP20 (rough, T1 10mm) + OP30 (finish, T2 6mm). The 4° neck angle is critical for correct string action over the carved top."
+  },
+  "control_cavity": {
+    "shape": "irregular_rounded_rectangle",
+    "length_mm": 108.0,
+    "width_mm": 64.0,
+    "depth_mm": 31.75,
+    "depth_inches": 1.25,
+    "cover_plate": true,
+    "cover_screw_count": 4,
+    "location": "rear_lower_bout",
+    "contents": [
+      "volume_neck",
+      "volume_bridge",
+      "tone_neck",
+      "tone_bridge",
+      "3way_toggle_switch_upper_bout"
+    ],
+    "pot_shaft_holes": {
+      "count": 4,
+      "diameter_mm": 9.53,
+      "diameter_inches": 0.375,
+      "depth": "through_body",
+      "note": "Four 3/8\" holes drilled through body — CNC operation OP60"
+    },
+    "toggle_switch_route": {
+      "location": "upper_bout_treble_side",
+      "hole_diameter_mm": 12.7,
+      "depth": "through_body",
+      "note": "Toggle switch is mounted in the upper bout, separate from the main control cavity. Connected by wiring channel."
+    },
+    "note": "Main electronics cavity routed into rear of mahogany back. CNC operation OP22 (rough, T1 10mm, 1.25\" deep). Contains 4 pots (2 volume, 2 tone). Toggle switch is in a separate cavity in the upper bout, connected by a wiring channel."
+  },
+  "wiring_channels": {
+    "main_channel": {
+      "from": "control_cavity",
+      "to": "toggle_switch_cavity",
+      "width_mm": 7.62,
+      "depth_mm": 12.7,
+      "depth_inches": 0.5,
+      "note": "CNC operation OP40 (T3 3mm). Routes along the body interior connecting the electronics cavity to the toggle switch and pickup cavities."
+    },
+    "pickup_channels": {
+      "from": "pickup_cavities",
+      "to": "control_cavity",
+      "width_mm": 7.62,
+      "depth_mm": 12.7,
+      "note": "Lead wires from each pickup route to the main control cavity."
+    }
+  },
+  "cover_recess": {
+    "description": "Back cavity cover plate recess",
+    "depth_mm": 3.175,
+    "depth_inches": 0.125,
+    "screw_count": 4,
+    "note": "CNC operation OP25 (T2 6mm). Shallow recess around the control cavity opening to seat the plastic cover plate flush with the body back."
+  },
+  "binding_and_purfling": {
+    "design": "two_tier_purfling_stack",
+    "applies_to": ["top", "back"],
+    "note": "Spanish wave + green wood purfling stack on both top and back. Two-tier routing channel system: a deep primary channel for the tall Spanish wave strip, then a shallow inner ledge for the green wood accent. This keeps structural load off the top/back plates and gives clean visual separation.",
+    "stack_order_outside_in": [
+      "outer_wall (body rim)",
+      "primary_channel (Spanish wave purfling)",
+      "inner_ledge (green wood purfling)",
+      "top_or_back_surface"
+    ],
+    "purfling_materials": {
+      "spanish_wave": {
+        "description": "Spanish wave decorative purfling strip",
+        "material_width_mm": 2.2,
+        "material_height_mm": 6.0,
+        "note": "Tall decorative strip — nearly binding height. Sits in the primary (deep) channel."
+      },
+      "green_wood": {
+        "description": "Green-dyed wood accent purfling",
+        "material_width_mm": 1.5,
+        "material_height_mm": 1.3,
+        "note": "Thin accent strip. Sits in the shallow inner ledge, just proud before final leveling."
+      }
+    },
+    "routing_channels": {
+      "primary_channel": {
+        "purpose": "Holds the Spanish wave purfling",
+        "width_mm": 2.375,
+        "width_range_mm": [2.35, 2.40],
+        "depth_mm": 6.2,
+        "clearance_added_width_mm": 0.175,
+        "sanding_margin_depth_mm": 0.2,
+        "note": "Purfling width 2.2mm + 0.15-0.20mm clearance = 2.35-2.40mm channel. Depth 6.0mm + 0.2mm sanding margin = 6.2mm. Full-depth channel for the tall Spanish wave strip — clearance prevents crushing the pattern during glue-up."
+      },
+      "inner_ledge": {
+        "purpose": "Holds the green wood purfling",
+        "width_mm": 1.6,
+        "depth_mm": 1.5,
+        "clearance_added_width_mm": 0.1,
+        "sanding_margin_depth_mm": 0.2,
+        "note": "Purfling width 1.5mm + 0.1mm clearance = 1.6mm channel. Depth 1.3mm + 0.2mm sanding margin = 1.5mm. Shallow ledge sits toward the top/back surface, inside the primary channel. The green wood purfling sits just proud at 1.5mm depth before final leveling."
+      }
+    },
+    "total_channel_width_mm": 3.975,
+    "total_channel_note": "Primary 2.375mm + inner ledge 1.6mm = 3.975mm total radial depth into rim from outer edge.",
+    "scrap_test": {
+      "required": true,
+      "steps": [
+        "Route primary channel: 2.35-2.40mm x 6.2mm deep on side offcut",
+        "Route inner ledge: 1.6mm x 1.5mm deep",
+        "Dry-fit both purflings"
+      ],
+      "adjustments": {
+        "spanish_wave_too_tight": "Widen primary channel by +0.05mm",
+        "green_purfling_floats": "Deepen inner ledge by +0.1mm",
+        "gaps_visible": "Reduce width by -0.05mm"
+      }
+    },
+    "top": {
+      "channel_design": "two_tier_purfling_stack",
+      "note": "Same two-tier channel on top edge. Primary channel (Spanish wave) + inner ledge (green wood)."
+    },
+    "back": {
+      "channel_design": "two_tier_purfling_stack",
+      "note": "Same two-tier channel on back edge. Identical routing geometry to top."
+    },
+    "neck": {
+      "material": "single_ply_cream_plastic",
+      "width_mm": 1.5,
+      "note": "Standard fretboard edge binding — installed after fretting. Not part of the purfling stack."
+    },
+    "headstock": {
+      "material": "none",
+      "note": "No headstock binding on 1956-59 Standards. Les Paul Custom has multi-ply binding."
+    }
+  },
+  "hardware": {
+    "tuners": "Kluson Deluxe 3+3 (single-line, single-ring)",
+    "bridge": "ABR-1 Tune-O-Matic (nickel plated)",
+    "tailpiece": "Lightweight aluminum stoptail bar",
+    "nut_material": "nylon (Delrin)",
+    "nut_width_mm": 43.0,
+    "pickguard": "cream_5_ply_elevated",
+    "knobs": "gold_top_hat_with_pointers",
+    "switch": "Switchcraft 3-way toggle, upper bout",
+    "jack": "Switchcraft 1/4\" mono, lower bout rim",
+    "finish_1959": "cherry_sunburst_nitrocellulose",
+    "finish_1956": "gold_metallic_nitrocellulose"
+  },
+  "cnc_operations": {
+    "source": "lespaul_gcode/ (5 modules: generator.py, primitives.py, perimeter.py, pockets.py, drilling.py)",
+    "tool_library": {
+      "T1": {"name": "10mm Flat End Mill", "diameter_mm": 10.0, "diameter_in": 0.394, "rpm": 18000, "use": "Roughing pockets (OP20–OP22)"},
+      "T2": {"name": "6mm Flat End Mill", "diameter_mm": 6.0, "diameter_in": 0.236, "rpm": 18000, "use": "Finishing pockets (OP30–OP31), cover recess (OP25), body perimeter (OP50)"},
+      "T3": {"name": "3mm Flat/Drill", "diameter_mm": 3.0, "diameter_in": 0.118, "rpm": 20000, "use": "Wiring channels (OP40), all drilling (OP60–OP63)"}
+    },
+    "operations": [
+      {"op": "OP20", "name": "Neck Pocket Rough", "tool": "T1", "depth_in": 0.75},
+      {"op": "OP21", "name": "Pickup Cavity Rough", "tool": "T1", "depth_in": 0.75},
+      {"op": "OP22", "name": "Electronics Cavity Rough", "tool": "T1", "depth_in": 1.25},
+      {"op": "OP25", "name": "Cover Recess", "tool": "T2", "depth_in": 0.125},
+      {"op": "OP30", "name": "Neck Pocket Finish", "tool": "T2", "depth_in": 0.75},
+      {"op": "OP31", "name": "Pickup Cavity Finish", "tool": "T2", "depth_in": 0.75},
+      {"op": "OP40", "name": "Wiring Channel", "tool": "T3", "depth_in": 0.5},
+      {"op": "OP50", "name": "Body Perimeter", "tool": "T2", "depth_in": 1.75, "tabs": 6},
+      {"op": "OP60", "name": "Pot Shaft Holes (3/8\" through)", "tool": "T3", "depth_in": 1.75},
+      {"op": "OP61", "name": "Bridge Post Holes (7/16\")", "tool": "T3", "depth_in": 0.75},
+      {"op": "OP62", "name": "Tailpiece Stud Holes (9/32\")", "tool": "T3", "depth_in": 0.625},
+      {"op": "OP63", "name": "Screw Pilot Holes (#8)", "tool": "T3", "depth_in": 0.5}
+    ],
+    "gcode_stats": {
+      "lines": 18394,
+      "cut_distance_in": 1586.1,
+      "estimated_cut_time_min": 10.6,
+      "note": "Stats from LesPaul_Body_Summary.json. Time is cutting only — add setup and tool change time."
+    },
+    "machine_targets": ["TXRX Labs Router (48×48×4 in)", "BCAMCNC 2030CA (48×24×4 in)", "Mach4_Router_4x8"],
+    "dxf_layers_mapped": [
+      "Cutout → Body perimeter (OP50)",
+      "Neck Mortise → Neck pocket (OP20, OP30)",
+      "Pickup Cavity → Humbucker routes (OP21, OP31)",
+      "Electronic Cavities → Control cavity (OP22)",
+      "Wiring Channel → Wire routes (OP40)",
+      "Pot Holes → Pot shaft drilling (OP60)",
+      "Studs → Bridge/tailpiece stud holes (OP61, OP62)",
+      "Screws → Screw pilot holes (OP63)"
+    ]
+  },
+  "stock": {
+    "mahogany_back": {
+      "thickness_in": 1.75,
+      "thickness_mm": 44.45,
+      "material": "honduran_mahogany",
+      "note": "Main body blank. Receives all CNC routing operations."
+    },
+    "maple_top": {
+      "thickness_in": 0.75,
+      "thickness_mm": 19.05,
+      "material": "figured_maple",
+      "note": "Bookmatched maple cap. Glued to mahogany, then carved (3D surfacing). Not part of the flat CNC body routing program — carved separately."
+    }
+  },
+  "fret_positions": {
+    "scale_length_mm": 628.65,
+    "scale_length_inches": 24.75,
+    "fret_count": 22,
+    "positions_from_nut_mm": [
+      35.28, 68.55, 99.90, 129.41, 157.17,
+      183.26, 207.77, 230.76, 252.33, 272.52,
+      291.41, 309.06, 325.51, 340.83, 355.06,
+      368.26, 380.47, 391.73, 402.10, 411.60,
+      420.26, 428.12
+    ],
+    "note": "Standard equal-temperament fret spacing, 12th fret at half scale length (314.33mm). 22 frets on Les Paul (vs 20 on J-45)."
+  },
+  "dxf_assets": {
+    "body_outline": "electric/LesPaul_body.dxf",
+    "body_outline_recovered": "Recovered_DXF_Assets_2026-03-07/electric/LesPaul_body.dxf",
+    "cam_closed": "Les Paul_Project/LesPaul_CAM_Closed.dxf",
+    "cam_closed_all": "Les Paul_Project/LesPaul_CAM_Closed_ALL.dxf",
+    "verification_packet": "Les Paul_Project/LesPaul_DXF_Verification_Packet.pdf"
+  },
+  "reference_plans": {
+    "note": "14 PDFs + 2 CAM DXFs in Guitar Plans archive",
+    "plans": [
+      "Gibson-Les-Paul-1950s.pdf",
+      "Gibson-Les-Paul-59-Complete.pdf",
+      "Gibson-Les-Paul-59-Front-Body-Headstock.pdf",
+      "Gibson-Les-Paul-Custom.pdf",
+      "Gibson-Les-Paul-Isolines.pdf",
+      "Gibson-Les-Paul-Junior-Double-Cut.pdf",
+      "Gibson-Les-Paul-Junior-Single-Cut.pdf",
+      "Les-Paul-Body-Neck-Iso.pdf",
+      "Les-Paul-Front-Front-Side-Profile-Carved-Top.pdf",
+      "Les-Paul-Heel-Profile-Template.pdf",
+      "Les-Paul-Heel-Shape-59.pdf",
+      "Les-Paul-Neck-Angle-Cut-4degrees.pdf",
+      "Les-Paul-Neck-Radius.pdf",
+      "Les-Paul-Neck-Tenon-Routing-Template.pdf"
+    ],
+    "cam_dxfs": [
+      "LesPaul_CAM_Closed.dxf",
+      "LesPaul_CAM_Closed_ALL.dxf"
+    ]
+  },
+  "vectorizer_spec": {
+    "body_length_range_mm": [430, 470],
+    "body_width_range_mm": [320, 360],
+    "scale_length_mm": 629,
+    "neck_pocket_range": null,
+    "note": "Set neck — no bolt-on pocket detection. From vectorizer_phase3.py INSTRUMENT_SPECS."
+  },
+  "notes": [
+    "All dimensions in mm unless noted",
+    "Scale length: 628.65mm (24.75 inches) — Gibson standard since 1952",
+    "Body outline: 669-point polygon from body_outlines.json, DXF-oriented 383.5×269.2mm (rotated 90° for CNC)",
+    "Carved top is a compound-radius dome — requires 3D surfacing, not flat CNC routing",
+    "CNC body routing (OP20-OP63) operates on the mahogany back ONLY — maple cap is carved separately",
+    "Original 1956–59 models had no weight relief — full solid mahogany",
+    "1956 Goldtop used P-90 soapbar pickups; 1957–59 Standards used PAF humbuckers",
+    "ABR-1 Tune-O-Matic bridge introduced 1955 on Les Paul models",
+    "Neck angle: 4° — critical spec. See Les-Paul-Neck-Angle-Cut-4degrees.pdf",
+    "Trapezoid inlays: pearloid, Les Paul Standard signature feature",
+    "Long tenon neck joint: tenon extends ~89mm into body for maximum sustain",
+    "Finish: nitrocellulose lacquer — cherry sunburst (1959), gold metallic (1956)",
+    "Machine profiles from lespaul_config.py: TXRX Labs Router, BCAMCNC 2030CA"
+  ]
+}
