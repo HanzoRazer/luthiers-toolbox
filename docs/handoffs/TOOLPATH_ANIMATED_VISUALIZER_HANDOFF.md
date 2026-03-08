@@ -528,4 +528,302 @@ export { simulate } from './simulate'
 
 ---
 
+## GAP REGISTRY — Trackable Code & Architecture Deficits
+
+> **Purpose:** Each gap has a unique ID, the exact file and line range where the problem lives, what's broken, what "fixed" looks like, dependencies on other gaps, and test expectations. A remediation team can work through these top-to-bottom.
+
+### Summary Dashboard
+
+| ID | Area | Severity | Effort | Status | Blocks |
+|----|------|----------|--------|--------|--------|
+| VIS-01 | Per-segment simulate function | **Critical** | Medium | ❌ Missing | VIS-02, VIS-03, VIS-04 |
+| VIS-02 | Simulate API endpoint + router | **Critical** | Low | ❌ Missing | VIS-03, VIS-04 |
+| VIS-03 | Frontend SDK simulate caller | **High** | Low | ❌ Missing | VIS-04, VIS-05 |
+| VIS-04 | Toolpath player Pinia store | **High** | Medium | ❌ Missing | VIS-05, VIS-06 |
+| VIS-05 | Canvas renderer component | **High** | Medium | ❌ Missing | VIS-06 |
+| VIS-06 | Player wrapper + controls | **Medium** | Low | ❌ Missing | — |
+| VIS-07 | Main.py router registration | **Low** | Trivial | ❌ Missing | — |
+
+---
+
+### VIS-01: `simulate_segments()` — Per-Segment Simulation Function
+
+**Severity:** Critical — all downstream components depend on this data  
+**Status:** Does not exist in production code. An implementation plan exists in `TOOLPATH_VISUALIZER_IMPLEMENTATION_PLAN/gcode_parser.py` line 534, but production code only has the aggregate `simulate()`.  
+
+**Where the problem is:**
+- **File:** `services/api/app/util/gcode_parser.py`
+- **Function:** `simulate()` at line ~327
+- **Current signature:**
+```python
+def simulate(
+    gcode: str,
+    *,
+    rapid_mm_min: float = 3000.0,
+    default_feed_mm_min: float = 500.0,
+    units: str = "mm"
+) -> Dict[str, Any]:
+```
+- **Returns:** `{travel_mm, cut_mm, t_rapid_min, t_feed_min, t_total_min, points_xy}` — aggregates only. No per-segment move type, no per-segment duration, no line number tracking.
+
+**What "fixed" looks like:**
+Add a sibling function `simulate_segments()` (do NOT modify existing `simulate()`):
+```python
+def simulate_segments(
+    gcode: str,
+    *,
+    rapid_mm_min: float = 3000.0,
+    default_feed_mm_min: float = 500.0,
+    units: str = "mm",
+    arc_resolution_deg: float = 5.0,
+) -> Dict[str, Any]:
+    """Returns per-segment move data for animation.
+    
+    Returns:
+        {
+            "segments": [{"type": "rapid"|"cut"|"arc_cw"|"arc_ccw",
+                         "from_pos": [x,y,z], "to_pos": [x,y,z],
+                         "feed": float, "duration_ms": float,
+                         "line_number": int, "line_text": str}, ...],
+            "bounds": {"x_min": ..., "x_max": ..., ...},
+            "totals": {"rapid_mm": ..., "cut_mm": ..., "time_min": ..., "segment_count": ...}
+        }
+    """
+```
+
+Shares the same state-machine parsing loop as `simulate()` but emits per-move dicts instead of accumulating totals. For G2/G3 arcs, interpolate into N linear sub-segments (N = sweep_angle / arc_resolution_deg), each emitted as type `"arc_cw"` or `"arc_ccw"`.
+
+**Test expectations:**
+- `simulate_segments("G0 X10\nG1 X20 F500")` returns 2 segments — first `type:"rapid"`, second `type:"cut"`
+- `sum(seg["duration_ms"] for seg in result["segments"])` matches `simulate()["t_total_min"] * 60000` within 1ms tolerance
+- `result["totals"]["rapid_mm"] + result["totals"]["cut_mm"]` matches `simulate()` totals
+- Arc G2/G3 code produces multiple sub-segments, all with correct `type`
+- Each segment has `line_number` mapping back to the correct source line (1-indexed)
+- Bounding box `bounds` encompasses all segment endpoints
+- Empty G-code returns `{"segments": [], "bounds": {...zero...}, "totals": {...zero...}}`
+
+**Dependencies:** Blocks VIS-02, VIS-03, VIS-04 (everything consumes this data)  
+**Blocked by:** Nothing — pure Python function, no external dependencies. **Start here.**
+
+---
+
+### VIS-02: `gcode_simulate_router.py` — API Endpoint
+
+**Severity:** Critical — frontend cannot access simulation data without this  
+**Status:** Does not exist in production. Plan file exists at `TOOLPATH_VISUALIZER_IMPLEMENTATION_PLAN/gcode_simulate_router.py`.  
+
+**Where the problem is:**
+- **Expected file:** `services/api/app/routers/gcode_simulate_router.py` — does not exist
+- **Router manifest:** `services/api/app/router_registry/manifest.py` — no entry for `gcode_simulate_router`
+- **Existing related router:** `services/api/app/routers/gcode_backplot_router.py` — returns static SVG + aggregates (model for the new router)
+
+**What "fixed" looks like:**
+```python
+# services/api/app/routers/gcode_simulate_router.py
+router = APIRouter()
+
+class SimulateRequest(BaseModel):
+    gcode: str
+    units: str = "mm"
+    rapid_mm_min: float = 3000.0
+    default_feed_mm_min: float = 500.0
+    arc_resolution_deg: float = 5.0
+
+@router.post("/api/cam/gcode/simulate")
+def simulate_gcode(req: SimulateRequest) -> dict:
+    from app.util.gcode_parser import simulate_segments
+    return simulate_segments(
+        req.gcode,
+        rapid_mm_min=req.rapid_mm_min,
+        default_feed_mm_min=req.default_feed_mm_min,
+        units=req.units,
+        arc_resolution_deg=req.arc_resolution_deg,
+    )
+```
+
+**Lane:** UTILITY (stateless preview, no governance). Same pattern as existing backplot router.
+
+**Test expectations:**
+- `POST /api/cam/gcode/simulate` with valid G-code returns 200 with `segments[]`, `bounds{}`, `totals{}`
+- Empty gcode string returns 200 with empty segments
+- Invalid `units` value returns 422 validation error
+- Response includes `X-Request-Id` header (per project convention)
+
+**Dependencies:** Blocks VIS-03 (SDK needs an endpoint to call)  
+**Blocked by:** VIS-01 (`simulate_segments()` must exist)
+
+---
+
+### VIS-03: Frontend SDK `simulate.ts`
+
+**Severity:** High — SDK is the only allowed way to call backend (never raw `fetch()`)  
+**Status:** Does not exist. No `simulate.ts` in `packages/client/src/sdk/endpoints/cam/`.  
+
+**Where the problem is:**
+- **Expected file:** `packages/client/src/sdk/endpoints/cam/simulate.ts` — does not exist
+- **SDK aggregator:** `packages/client/src/sdk/endpoints/cam/cam.ts` — currently exports `roughing`, `pipeline` — no `simulate`
+
+**What "fixed" looks like:**
+1. Create `packages/client/src/sdk/endpoints/cam/simulate.ts` with typed request/response interfaces and a `simulate()` function using the SDK HTTP helpers (follow pattern in `roughing.ts`)
+2. Re-export from `packages/client/src/sdk/endpoints/cam/cam.ts`
+
+**Test expectations:**
+- `import { cam } from "@/sdk/endpoints"` — `cam.simulate` is defined
+- `cam.simulate({ gcode: "G0 X10" })` calls `POST /api/cam/gcode/simulate`
+- Response is typed as `SimulateResponse`
+
+**Dependencies:** Blocks VIS-04, VIS-05  
+**Blocked by:** VIS-02 (endpoint must exist)
+
+---
+
+### VIS-04: `useToolpathPlayerStore.ts` — Playback State Store
+
+**Severity:** High — animation logic and interpolation live here  
+**Status:** Does not exist. No toolpath player store in `packages/client/src/stores/`.  
+
+**Where the problem is:**
+- **Expected file:** `packages/client/src/stores/useToolpathPlayerStore.ts` — does not exist
+- **Existing reference store:** `packages/client/src/stores/camAdvisorStore.ts` — composition API setup store pattern to follow
+
+**What "fixed" looks like:**
+Pinia composition API store with:
+- **State:** `segments`, `bounds`, `playState` (`idle|playing|paused`), `currentTimeMs`, `speed` (0.5–10x)
+- **Computed:** `totalDurationMs`, `currentSegmentIndex`, `toolPosition` (XYZ interpolated), `progress` (0–1)
+- **Actions:** `loadGcode(gcode)`, `play()`, `pause()`, `stop()`, `setSpeed(n)`, `seek(progress)`, `stepForward()`, `stepBackward()`
+- **Animation:** `requestAnimationFrame` loop that advances `currentTimeMs += deltaTime * speed` each frame
+
+**Critical interpolation logic:**
+```
+Walk segments array, accumulate duration. When accumulated > currentTimeMs,
+interpolate position: t = (currentTimeMs - accumulated_before) / segment.duration_ms
+position = lerp(segment.from_pos, segment.to_pos, t)
+```
+
+**Test expectations:**
+- `loadGcode()` calls SDK, populates segments with correct count
+- `play()` sets playState to `'playing'`; `pause()` sets to `'paused'`; `stop()` resets time to 0
+- `seek(0.5)` sets `currentTimeMs` to half of `totalDurationMs`
+- `toolPosition` returns correct interpolated XYZ for a known `currentTimeMs` value
+- Segment boundary crossing (end of one segment, start of next) produces smooth position transition
+
+**Dependencies:** Blocks VIS-05, VIS-06  
+**Blocked by:** VIS-03 (loads data via SDK)
+
+---
+
+### VIS-05: `ToolpathCanvas.vue` — Canvas Renderer
+
+**Severity:** High — the visual output  
+**Status:** Does not exist. No `packages/client/src/components/cam/` directory. A view stub `ToolpathSimulatorView.vue` exists in `packages/client/src/views/cam/` but is not the canvas renderer.  
+
+**Where the problem is:**
+- **Expected file:** `packages/client/src/components/cam/ToolpathCanvas.vue` — does not exist
+- **Expected directory:** `packages/client/src/components/cam/` — does not exist
+
+**What "fixed" looks like:**
+`<script setup lang="ts">` component with:
+- `<canvas>` element, 2D context (no Three.js in v1)
+- `requestAnimationFrame` render loop reading from `useToolpathPlayerStore`
+- Viewport transform: mm → pixels, Y-axis flip, fit-all with 10% padding
+- Color-coded trail: gray dashed = rapid, blue = cut, green = arc (depth-shaded)
+- Tool dot: red circle at interpolated position
+- Interaction: mouse wheel zoom, click+drag pan, double-click reset
+
+**Test expectations:**
+- Component renders a `<canvas>` element
+- Canvas draws without errors when store has segments loaded
+- Zoom/pan state is local to component (not in Pinia)
+
+**Dependencies:** Blocks VIS-06  
+**Blocked by:** VIS-04 (reads from player store)
+
+---
+
+### VIS-06: `ToolpathPlayer.vue` — Controls + HUD Wrapper
+
+**Severity:** Medium — user-facing wrapper  
+**Status:** Does not exist  
+
+**Where the problem is:**
+- **Expected file:** `packages/client/src/components/cam/ToolpathPlayer.vue` — does not exist
+
+**What "fixed" looks like:**
+Wrapper component composing `ToolpathCanvas.vue` with:
+- Playback controls: play/pause, step forward/back, scrub bar, speed selector (0.5x–10x)
+- HUD overlay: current G-code line text, XYZ position, feed rate, elapsed/total time
+- Props: `gcode?`, `showHud?`, `showControls?`, `autoPlay?`, `height?`
+
+**Test expectations:**
+- Play/pause/stop buttons call correct store actions
+- Speed buttons update `store.speed`
+- Scrub bar `@input` calls `store.seek()`
+- HUD displays data from store computed values
+
+**Dependencies:** None downstream  
+**Blocked by:** VIS-04 (store), VIS-05 (canvas)
+
+---
+
+### VIS-07: Main.py Router Registration
+
+**Severity:** Low — one line addition, but endpoint won't work without it  
+**Status:** Not registered  
+
+**Where the problem is:**
+- **File:** `services/api/app/main.py`
+- **Current state:** `gcode_backplot_router` is registered; `gcode_simulate_router` is not
+
+**What "fixed" looks like:**
+```python
+from app.routers.gcode_simulate_router import router as gcode_simulate_router
+app.include_router(gcode_simulate_router, tags=["cam", "gcode"])
+```
+
+**Test expectations:**
+- `GET /openapi.json` includes `/api/cam/gcode/simulate` endpoint
+- Endpoint is accessible and returns expected response
+
+**Dependencies:** None  
+**Blocked by:** VIS-02 (router module must exist first)
+
+---
+
+### REMEDIATION SEQUENCE
+
+```
+Phase 1: Backend Core
+├── VIS-01: Add simulate_segments() to gcode_parser.py      ← START HERE
+├── VIS-02: Create gcode_simulate_router.py
+└── VIS-07: Register router in main.py
+
+Phase 2: Frontend SDK
+└── VIS-03: Create simulate.ts + re-export from cam.ts
+
+Phase 3: Frontend Application
+├── VIS-04: Create useToolpathPlayerStore.ts (interpolation logic)
+├── VIS-05: Create ToolpathCanvas.vue (renderer)
+└── VIS-06: Create ToolpathPlayer.vue (controls + HUD)
+```
+
+### Files to Create
+
+| File | Gap(s) |
+|------|--------|
+| `services/api/app/routers/gcode_simulate_router.py` | VIS-02 |
+| `packages/client/src/sdk/endpoints/cam/simulate.ts` | VIS-03 |
+| `packages/client/src/stores/useToolpathPlayerStore.ts` | VIS-04 |
+| `packages/client/src/components/cam/ToolpathCanvas.vue` | VIS-05 |
+| `packages/client/src/components/cam/ToolpathPlayer.vue` | VIS-06 |
+
+### Files to Modify
+
+| File | Gap(s) | Change |
+|------|--------|--------|
+| `services/api/app/util/gcode_parser.py` | VIS-01 | Add `simulate_segments()` function |
+| `services/api/app/main.py` | VIS-07 | Register simulate router |
+| `packages/client/src/sdk/endpoints/cam/cam.ts` | VIS-03 | Re-export `simulate` |
+
+---
+
 *End of handoff. All measurements in mm. All coordinates in CNC convention (Y-up). All API calls through the SDK.*
