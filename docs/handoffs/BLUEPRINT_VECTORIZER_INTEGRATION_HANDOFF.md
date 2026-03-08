@@ -247,4 +247,124 @@ Insert between Phase1 and Phase2:
 
 ---
 
+## Vectorizer Pipeline Process Path Gaps (2026-03-07)
+
+A full audit of the blueprint-to-CNC pipeline was conducted during OM purfling G-code generation. The recovered DXF scan data (`om_000_body.dxf` BODY_POINTS layer) was found unusable as a CNC contour — 5,451 scattered vectorized segments, not an ordered perimeter — which exposed the deeper issue: **Phase 3 and Phase 4 are completely disconnected from the API and CAM pipeline.**
+
+### Pipeline Map
+
+```
+                    ┌──────────────────────────────────────────────────┐
+                    │              CONNECTED (working)                 │
+ Image ──→ Phase 1 ──→ /analyze ──→ AI dims + scale                  │
+   │         (Claude)      │                   │                      │
+   │                       ↓                   ↓                      │
+   │               /to-svg (SVG)          (NOT passed to P3)  ← GAP  │
+   │                                                                  │
+   ├──→ Calibration ──→ /calibrate ──→ PPI ──→ Phase 2 scale fix     │
+   │                                                                  │
+   ├──→ Phase 2 ──→ /vectorize-geometry ──→ DXF ──→ CAM bridge ──→ G │
+   │    (OpenCV)         ✅ endpoint            ✅ /to-adaptive       │
+   │                                                                  │
+   │              ┌──────────────────────────────────────────────────┐ │
+   │              │              DISCONNECTED                       │ │
+   ├──→ Phase 3.6 ──→ ❌ no endpoint ──→ DXF (never reaches CAM)  │ │
+   │    (ML+OCR+                                                    │ │
+   │     prims)   ──→ OCR dims ──→ ❌ dead end                     │ │
+   │              ──→ primitives ──→ ❌ dead end                    │ │
+   │                                                                │ │
+   └──→ Phase 4 ──→ ❌ CLI only ──→ PipelineResult ──→ ❌ dead end │ │
+        (dimension       (run_phase4.py)                            │ │
+         linking)                                                    │ │
+                  └──────────────────────────────────────────────────┘ │
+ Frontend                                                             │
+   └──→ BlueprintImporter.vue ──→ /analyze only ← GAP (no P2/P3 UI) │
+   └──→ BlueprintLab.vue ──→ Phase 1 + Phase 2 panels (no Phase 3)  │
+                    └─────────────────────────────────────────────────┘
+```
+
+### Gap Registry
+
+| ID | Component | Issue | Severity |
+|----|-----------|-------|----------|
+| VEC-GAP-01 | Phase 3.6 API | `Phase3Vectorizer` (ML classification, OCR, geometric primitives, scale detection) in `vectorizer_phase3.py` has **zero HTTP endpoints**. Not imported in `constants.py`. Only accessible via direct Python or Phase 4 CLI. | Critical |
+| VEC-GAP-02 | Phase 4 API | `phase4/pipeline.py` orchestrator exists but only exposed via `run_phase4.py` CLI script. No `/api/blueprint/phase4` or `/api/blueprint/link-dimensions` route. | High |
+| VEC-GAP-03 | Phase 4 sink | `PipelineResult` (arrow detection, dimension-to-feature linking) has **no downstream consumer**. Nothing in CAM, frontend, or any other module reads this output. | High |
+| VEC-GAP-04 | Phase 3 → CAM | CAM bridge (`blueprint_cam/extraction.py`) parses LWPOLYLINE on "GEOMETRY" layer. Phase 3 also writes to "GEOMETRY", so compatibility is likely — but no integration test exists to confirm. | Medium |
+| VEC-GAP-05 | Phase 1 → Phase 3 | Phase 1 (Claude AI) returns scale factor + instrument dimensions. Phase 3 has independent `ScaleDetector`. No code passes Phase 1's AI-detected scale into Phase 3 as a calibration seed, causing redundant computation and potential disagreement. | Medium |
+| VEC-GAP-06 | Frontend gaps | `BlueprintImporter.vue` calls `/analyze` only (Phase 1). `BlueprintLab.vue` has Phase 1 + Phase 2 panels but no Phase 3 panel. No UI for Phase 3 ML-classified features, OCR dimensions, or geometric primitives. | Medium |
+| VEC-GAP-07 | constants.py | `app/routers/blueprint/constants.py` has `ANALYZER_AVAILABLE`, `VECTORIZER_AVAILABLE`, `PHASE2_AVAILABLE`, `CALIBRATION_AVAILABLE` — but no `PHASE3_AVAILABLE` flag or `Phase3Vectorizer` import. | Medium |
+| VEC-GAP-08 | OCR dead end | Phase 3.6 OCR extracts dimension text into `ExtractionResult.ocr_dimensions` and `ocr_raw_texts`. No downstream consumer processes these values for calibration, validation, or display. | Low |
+
+### Closure Plan (Priority Order)
+
+1. **Phase 3 router** — Create `app/routers/blueprint/phase3_router.py` wrapping `Phase3Vectorizer.extract()` as `POST /extract-advanced`. Add `PHASE3_AVAILABLE` flag to `constants.py`. Register in `__init__.py`.
+2. **Phase 1 → Phase 3 scale bridge** — Pass AI-detected scale factor from `/analyze` response into Phase 3 as initial `mm_per_px` hint, eliminating redundant scale detection.
+3. **Phase 3 → CAM integration test** — Confirm Phase 3 DXF output parses correctly through `extract_loops_from_dxf()`. Add integration test to `services/api/tests/`.
+4. **Phase 4 router** — Create `app/routers/blueprint/phase4_router.py` wrapping `BlueprintPipeline.process()` as `POST /link-dimensions`.
+5. **Phase 4 → CAM consumer** — Feed linked dimensions (e.g., auto-detected neck pocket width) into toolpath planning parameters.
+6. **Frontend Phase 3 panel** — Add `Phase3ExtractionPanel.vue` to `BlueprintLab.vue` showing ML-classified contours, OCR dimensions, and detected primitives.
+7. **OCR pipeline** — Route `ocr_dimensions` into calibration validation (cross-check OCR-read "25.5 inch" against Phase 1 AI scale detection).
+
+### Evidence: OM Purfling Case Study
+
+The OM purfling binding work (see `docs/handoffs/OM_PURFLING_CNC_HANDOFF.md`) demonstrated the gap concretely:
+- `om_000_body.dxf` BODY_POINTS layer: 5,451 scattered scan segments (not a usable contour)
+- `om_000_body.dxf` BODY_OUTLINE layer: 10-point bounding polygon (too coarse for CNC)
+- **Workaround required:** Parametric Bézier outline generated from `martin_om28.json` spec dimensions
+- **If pipeline were connected:** Phase 3 ML classification → clean closed BODY_OUTLINE polyline → offset toolpath → G-code
+
+---
+
+## Recovered DXF Assets (2026-03-07)
+
+During the WP-3 store decomposition refactor (commit `543f7401`), **19 vectorized body outline DXF files** were accidentally deleted from `services/api/app/instrument_geometry/body/dxf/`. These files were originally committed in `8d06e1ab` (Dec 14, 2025) as part of the instrument geometry recovery.
+
+All 19 files have been **recovered from git history** and restored to both their original working location and an archive copy.
+
+### Archive Location
+
+```
+Guitar Plans/Recovered_DXF_Assets_2026-03-07/
+├── acoustic/          (9 files, ~1.7 MB)
+│   ├── J45_body_outline.dxf
+│   ├── J45_body_outline_dense.dxf
+│   ├── Jumbo_body.dxf
+│   ├── classical_body.dxf
+│   ├── dreadnought_body.dxf
+│   ├── gibson_l_00_body.dxf
+│   ├── om_000_body.dxf
+│   ├── orchestra_model_body_view.dxf
+│   └── orchestra_model_clean.dxf
+├── electric/          (7 files, ~276 KB)
+│   ├── JS1000_body.dxf
+│   ├── LesPaul_body.dxf
+│   ├── Stratocaster_body.dxf
+│   ├── flying_v_body.dxf
+│   ├── flying_v_full.dxf
+│   ├── gibson_explorer_body.dxf
+│   └── harmony_h44_body.dxf
+└── other/             (3 files, ~118 KB)
+    ├── concert_ukulele_body.dxf
+    ├── octave_mandolin_body.dxf
+    └── soprano_ukulele_body.dxf
+```
+
+### Working Location (Restored)
+
+All files also restored to their original paths under:
+```
+services/api/app/instrument_geometry/body/dxf/{acoustic,electric,other}/
+```
+
+### Format Note
+
+These DXFs are **AC1024 (AutoCAD 2010)** format, not the project-standard AC1009 (R12). They are fully readable by `ezdxf` and usable for CNC toolpath generation. If strict R12 compliance is needed, the Vectorizer Phase 2 pipeline can re-export them from the source DWGs in the Guitar Plans archive.
+
+### Available for Re-vectorization
+
+If any recovered file is found to be incomplete or needs refinement, the source DWGs and PDFs remain available in `Guitar Plans/` for re-processing through the Blueprint Vectorizer pipeline (Phase 2: OpenCV + DXF export).
+
+---
+
 *Production Shop - Blueprint Vectorizer Integration Handoff*
