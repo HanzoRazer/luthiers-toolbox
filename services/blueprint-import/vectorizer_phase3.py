@@ -54,6 +54,15 @@ except ImportError:
 
 from dxf_compat import create_document, add_polyline, DxfVersion
 
+# Grid zone classifier for body outline detection enhancement
+try:
+    from classifiers.grid_zone import GridZoneClassifier, ELECTRIC_GUITAR_GRID
+    GRID_CLASSIFIER_AVAILABLE = True
+except ImportError:
+    GridZoneClassifier = None
+    ELECTRIC_GUITAR_GRID = None
+    GRID_CLASSIFIER_AVAILABLE = False
+
 logger = logging.getLogger(__name__)
 
 
@@ -293,6 +302,41 @@ INSTRUMENT_SPECS = {
         body_length_range=(470, 510),
         body_width_range=(350, 390),
         neck_pocket_range=(55, 62),
+        scale_length=650
+    ),
+    "explorer": InstrumentSpec(
+        name="Gibson Explorer",
+        body_length_range=(450, 480),
+        body_width_range=(460, 495),
+        neck_pocket_range=(None, None),  # Set neck
+        scale_length=629
+    ),
+    "flying_v": InstrumentSpec(
+        name="Gibson Flying V",
+        body_length_range=(590, 620),
+        body_width_range=(470, 500),
+        neck_pocket_range=(None, None),  # Set neck
+        scale_length=629
+    ),
+    "smart_guitar": InstrumentSpec(
+        name="Smart Guitar",
+        body_length_range=(430, 460),
+        body_width_range=(350, 385),
+        neck_pocket_range=(54, 58),
+        scale_length=629
+    ),
+    "klein": InstrumentSpec(
+        name="Klein Guitar",
+        body_length_range=(340, 370),
+        body_width_range=(215, 245),
+        neck_pocket_range=(54, 58),
+        scale_length=648
+    ),
+    "jumbo": InstrumentSpec(
+        name="Jumbo Acoustic",
+        body_length_range=(490, 540),
+        body_width_range=(400, 445),
+        neck_pocket_range=(None, None),
         scale_length=650
     ),
 }
@@ -1633,6 +1677,186 @@ def classify_contour(
 
 
 # =============================================================================
+# Grid-Enhanced Body Scoring
+# =============================================================================
+
+def score_body_candidate(
+    info: ContourInfo,
+    image_width: int,
+    image_height: int,
+    grid_classifier=None,
+) -> float:
+    """
+    Multi-factor scoring to identify the true body outline contour.
+
+    Addresses the 0% detection rate by combining positional, geometric,
+    and grid zone analysis instead of relying on dimension ranges alone.
+
+    Factors:
+        1. Aspect ratio (guitar bodies typically 1.0-1.8 height/width)
+        2. Solidity (compact filled shapes, not text or logos)
+        3. Size relative to image (body occupies 5-70% of image area)
+        4. Position (body tends toward center, not page corners)
+        5. Grid zone overlap (BODY_CANVAS from STEM Guitar grid)
+        6. Symmetry about centerline (bodies are bilaterally symmetric)
+
+    Returns:
+        Score 0-100, higher = more likely to be the true body outline.
+    """
+    score = 0.0
+    x, y, w, h = info.bbox
+
+    # Factor 1: Aspect ratio
+    # Guitar bodies (height > width) have aspect ratio 1.0-1.8
+    aspect = max(w, h) / min(w, h) if min(w, h) > 0 else 999
+    if 1.0 <= aspect <= 1.8:
+        # Peak at ~1.3 (typical electric guitar body)
+        aspect_score = 25.0 * (1.0 - min(abs(aspect - 1.3) / 0.5, 1.0))
+        score += max(0.0, aspect_score)
+
+    # Factor 2: Solidity (filled compact shape, not text/wireframe/logo)
+    if info.solidity > 0.7:
+        score += 20.0 * min(info.solidity, 1.0)
+    elif info.solidity > 0.5:
+        score += 10.0
+
+    # Factor 3: Size relative to image
+    image_area = image_width * image_height
+    area_ratio = info.area_px / image_area if image_area > 0 else 0
+    if 0.05 <= area_ratio <= 0.70:
+        if 0.10 <= area_ratio <= 0.50:
+            score += 20.0  # Sweet spot
+        else:
+            score += 10.0  # Plausible but outside typical range
+
+    # Factor 4: Position (body should be roughly centered)
+    cx = (x + w / 2) / image_width if image_width > 0 else 0.5
+    cy = (y + h / 2) / image_height if image_height > 0 else 0.5
+    center_dist = ((cx - 0.5) ** 2 + (cy - 0.5) ** 2) ** 0.5
+    if center_dist < 0.35:
+        score += 15.0 * (1.0 - center_dist / 0.35)
+
+    # Factor 5 & 6: Grid zone overlap + symmetry (if classifier available)
+    if grid_classifier is not None:
+        nx_min = x / image_width if image_width > 0 else 0
+        ny_min = y / image_height if image_height > 0 else 0
+        nx_max = (x + w) / image_width if image_width > 0 else 1
+        ny_max = (y + h) / image_height if image_height > 0 else 1
+
+        zone_result = grid_classifier.classify_bbox(nx_min, ny_min, nx_max, ny_max)
+
+        # Body canvas overlap (the main body area in the STEM grid)
+        for zone_match in zone_result.all_zones:
+            if zone_match.zone.zone_type.value == "body_canvas":
+                score += 20.0 * zone_match.overlap
+                break
+
+        # Symmetry bonus (real bodies are bilaterally symmetric)
+        if zone_result.symmetry_score > 0.7:
+            score += 10.0 * zone_result.symmetry_score
+
+        # Proportion validation bonus
+        if zone_result.proportion_valid:
+            score += 5.0
+
+    return min(score, 100.0)
+
+
+def rerank_body_candidates(
+    classified: Dict[ContourCategory, List[ContourInfo]],
+    image_width: int,
+    image_height: int,
+    grid_classifier=None,
+    min_body_score: float = 30.0,
+) -> Dict[ContourCategory, List[ContourInfo]]:
+    """
+    Re-rank body outline candidates using multi-factor scoring.
+
+    After initial rule-based classification, this function:
+    1. Scores all BODY_OUTLINE candidates
+    2. Checks UNKNOWN contours that might be missed bodies
+    3. Demotes low-scoring "bodies" and promotes high-scoring unknowns
+
+    This is the primary fix for the 0% accuracy problem — the old rule-based
+    classify_contour() picks logos and borders because it only checks dimension
+    ranges. This re-ranker adds shape, position, and grid zone analysis.
+    """
+    # Gather all body candidates (current + potential from UNKNOWN)
+    body_candidates = []
+
+    # Existing BODY_OUTLINE contours
+    for info in classified.get(ContourCategory.BODY_OUTLINE, []):
+        body_score = score_body_candidate(info, image_width, image_height, grid_classifier)
+        body_candidates.append((body_score, info, 'existing'))
+
+    # Check UNKNOWN contours — some may be misclassified bodies
+    unknowns_to_remove = []
+    for info in classified.get(ContourCategory.UNKNOWN, []):
+        body_score = score_body_candidate(info, image_width, image_height, grid_classifier)
+        if body_score >= min_body_score:
+            body_candidates.append((body_score, info, 'promoted'))
+            unknowns_to_remove.append(info)
+
+    # Also check PICKGUARD — large pickguards sometimes misclassify as the body
+    pickguards_to_remove = []
+    for info in classified.get(ContourCategory.PICKGUARD, []):
+        body_score = score_body_candidate(info, image_width, image_height, grid_classifier)
+        if body_score >= 60.0:  # High threshold to steal from pickguard
+            body_candidates.append((body_score, info, 'promoted'))
+            pickguards_to_remove.append(info)
+
+    if not body_candidates:
+        return classified
+
+    # Sort by score descending
+    body_candidates.sort(key=lambda x: x[0], reverse=True)
+
+    best_score, best_info, best_source = body_candidates[0]
+    logger.info(
+        f"Body re-ranking: best candidate score={best_score:.1f} "
+        f"({best_source}, {best_info.width_mm:.0f}x{best_info.height_mm:.0f}mm)"
+    )
+
+    if best_score < min_body_score:
+        logger.warning(f"Best body candidate scored only {best_score:.1f} — below threshold {min_body_score}")
+        return classified
+
+    # Rebuild BODY_OUTLINE with the best candidate
+    new_bodies = [best_info]
+
+    # Demote other previous body candidates to UNKNOWN
+    demoted = []
+    for score, info, source in body_candidates[1:]:
+        if source == 'existing':
+            demoted.append(info)
+
+    # Apply changes
+    classified[ContourCategory.BODY_OUTLINE] = new_bodies
+
+    # Remove promoted contours from their original categories
+    unknowns_to_remove_ids = {id(c) for c in unknowns_to_remove}
+    pickguards_to_remove_ids = {id(c) for c in pickguards_to_remove}
+
+    if unknowns_to_remove_ids and ContourCategory.UNKNOWN in classified:
+        classified[ContourCategory.UNKNOWN] = [
+            c for c in classified[ContourCategory.UNKNOWN] if id(c) not in unknowns_to_remove_ids
+        ]
+    if pickguards_to_remove_ids and ContourCategory.PICKGUARD in classified:
+        classified[ContourCategory.PICKGUARD] = [
+            c for c in classified[ContourCategory.PICKGUARD] if id(c) not in pickguards_to_remove_ids
+        ]
+
+    # Add demoted bodies to UNKNOWN
+    if demoted:
+        if ContourCategory.UNKNOWN not in classified:
+            classified[ContourCategory.UNKNOWN] = []
+        classified[ContourCategory.UNKNOWN].extend(demoted)
+        logger.info(f"Demoted {len(demoted)} false body candidates to UNKNOWN")
+
+    return classified
+
+
+# =============================================================================
 # Hierarchy-Aware Extraction
 # =============================================================================
 
@@ -1643,7 +1867,8 @@ def extract_with_hierarchy(
     img_height_mm: float,
     instrument_type: InstrumentType = InstrumentType.ELECTRIC_GUITAR,
     min_area: float = 100,
-    ml_classifier: Optional[MLContourClassifier] = None
+    ml_classifier: Optional[MLContourClassifier] = None,
+    grid_classifier=None
 ) -> Dict[ContourCategory, List[ContourInfo]]:
     """
     Extract contours with hierarchy information.
@@ -1653,6 +1878,9 @@ def extract_with_hierarchy(
     - Cavities/pockets inside body (level 1)
     - Details inside cavities (level 2+)
 
+    When grid_classifier is provided, applies multi-factor body re-ranking
+    after initial classification to fix the 0% body detection problem.
+
     Args:
         mask: Binary mask
         mm_per_px: Pixels to mm conversion
@@ -1661,6 +1889,7 @@ def extract_with_hierarchy(
         instrument_type: Instrument type for classification context
         min_area: Minimum contour area in pixels
         ml_classifier: Optional ML classifier
+        grid_classifier: Optional GridZoneClassifier for body re-ranking
 
     Returns:
         Dict mapping categories to lists of ContourInfo
@@ -1707,11 +1936,19 @@ def extract_with_hierarchy(
     for cat in classified:
         classified[cat].sort(key=lambda x: x.area_px, reverse=True)
 
-    # Log summary
+    # Log summary (before re-ranking)
     for cat, items in classified.items():
         if items and cat not in (ContourCategory.TEXT, ContourCategory.PAGE_BORDER,
                                   ContourCategory.SMALL_FEATURE, ContourCategory.UNKNOWN):
             logger.info(f"  {cat.value}: {len(items)}")
+
+    # Re-rank body candidates using grid zone + multi-factor scoring
+    if grid_classifier is not None:
+        image_height_px = int(img_height_mm / mm_per_px) if mm_per_px > 0 else 0
+        image_width_px = int(img_width_mm / mm_per_px) if mm_per_px > 0 else 0
+        classified = rerank_body_candidates(
+            classified, image_width_px, image_height_px, grid_classifier
+        )
 
     return classified
 
@@ -2082,7 +2319,13 @@ class Phase3Vectorizer:
         self.feedback = FeedbackSystem(feedback_dir) if enable_feedback else None
         self.extraction_mode = extraction_mode
 
-        logger.info(f"Phase 3.6 Vectorizer initialized (ML: {self.ml_classifier is not None}, Mode: {extraction_mode.value})")
+        # Grid zone classifier for body outline re-ranking
+        self.grid_classifier = None
+        if GRID_CLASSIFIER_AVAILABLE:
+            self.grid_classifier = GridZoneClassifier(ELECTRIC_GUITAR_GRID)
+            logger.info("GridZoneClassifier loaded for body outline re-ranking")
+
+        logger.info(f"Phase 3.6 Vectorizer initialized (ML: {self.ml_classifier is not None}, Grid: {self.grid_classifier is not None}, Mode: {extraction_mode.value})")
 
     @classmethod
     def from_tier(
@@ -2228,7 +2471,7 @@ class Phase3Vectorizer:
             else:
                 combined_mask = extract_auto(image, gap_close=body_gap_close)
 
-            # Classify with hierarchy
+            # Classify with hierarchy + grid-enhanced body re-ranking
             ml_clf = self.ml_classifier if use_ml else None
             classified = extract_with_hierarchy(
                 combined_mask,
@@ -2236,7 +2479,8 @@ class Phase3Vectorizer:
                 img_width_mm,
                 img_height_mm,
                 instrument,
-                ml_classifier=ml_clf
+                ml_classifier=ml_clf,
+                grid_classifier=self.grid_classifier
             )
 
             # Flatten contours for additional processing
