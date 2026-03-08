@@ -1,76 +1,72 @@
 """
 Art Studio - Preset Aggregate Router
-Provides /api/art/presets_aggregate endpoint for Tuning Tree and Compare Mode
+
+Provides /api/art/presets_aggregate endpoint for Tuning Tree and Compare Mode.
+WIRED to art_presets_store.py for persistent preset storage.
+
+Endpoints:
+    GET /art/presets_aggregate - List presets with aggregate stats
 """
-from fastapi import APIRouter
+from fastapi import APIRouter, Query
 from typing import List, Dict, Any, Optional
+
+from app.services.art_presets_store import list_presets, get_preset
 
 router = APIRouter()
 
-@router.get("/presets_aggregate")
-async def get_presets_aggregate() -> List[Dict[str, Any]]:
+
+def _convert_to_aggregate(preset: Dict[str, Any]) -> Dict[str, Any]:
+    """
+    Convert a stored preset to the aggregate format expected by the UI.
+
+    Stats fields (job_count, risk_count, etc.) default to 0/neutral since
+    job-to-preset associations are not yet tracked. These will be enriched
+    when job history linking is implemented.
+    """
+    params = preset.get("params", {})
+
+    # Extract lineage info from params if present
+    parent_id = params.get("parent_id")
+    parent_name = params.get("parent_name")
+    diff_summary = params.get("diff_summary")
+    rationale = params.get("rationale", "User created")
+    source = params.get("source", "manual")
+
+    return {
+        "preset_id": preset.get("id", ""),
+        "preset_name": preset.get("name", "Unnamed Preset"),
+        "lane": preset.get("lane", "all"),
+        "parent_id": parent_id,
+        "parent_name": parent_name,
+        "diff_summary": diff_summary,
+        "rationale": rationale,
+        "source": source,
+        # Stats default to 0/neutral - will be enriched when job tracking is wired
+        "job_count": 0,
+        "risk_count": 0,
+        "critical_count": 0,
+        "avg_total_length": 0.0,
+        "avg_total_lines": 0,
+        "health_color": "green",
+        "trend_direction": "flat",
+        "trend_delta": 0.0,
+    }
+
+
+@router.get("/art/presets_aggregate")
+async def get_presets_aggregate(
+    lane: Optional[str] = Query(default=None, description="Filter by lane (rosette/adaptive/relief)")
+) -> List[Dict[str, Any]]:
     """
     Return aggregated preset data with health, trend, risk counts, and lineage.
-    
+
+    Reads from persistent art_presets_store. Stats fields (job_count, risk_count, etc.)
+    are placeholder values until job-to-preset tracking is implemented.
+
     Used by:
     - ArtPresetTuningTree.vue
     - ArtPresetCompareAB.vue
     - ArtStudioRosetteCompare.vue
     """
-    # Mock data for Phase 30.5 - replace with actual preset aggregation logic
-    return [
-        {
-            "preset_id": "rosette_preset_001",
-            "preset_name": "Rosette Base (12-petal)",
-            "lane": "rosette",
-            "parent_id": None,
-            "parent_name": None,
-            "diff_summary": None,
-            "rationale": "Initial design",
-            "source": "manual",
-            "job_count": 45,
-            "risk_count": 3,
-            "critical_count": 0,
-            "avg_total_length": 2450.5,
-            "avg_total_lines": 1850,
-            "health_color": "green",
-            "trend_direction": "flat",
-            "trend_delta": 0.0
-        },
-        {
-            "preset_id": "rosette_preset_002",
-            "preset_name": "Rosette Tuned (tighter spacing)",
-            "lane": "rosette",
-            "parent_id": "rosette_preset_001",
-            "parent_name": "Rosette Base (12-petal)",
-            "diff_summary": "Reduced petal_spacing by 15%",
-            "rationale": "Reduce risk of overload in tight curves",
-            "source": "auto_tune",
-            "job_count": 12,
-            "risk_count": 1,
-            "critical_count": 0,
-            "avg_total_length": 2320.8,
-            "avg_total_lines": 1780,
-            "health_color": "green",
-            "trend_direction": "down",
-            "trend_delta": -5.3
-        },
-        {
-            "preset_id": "adaptive_preset_001",
-            "preset_name": "Adaptive Standard",
-            "lane": "adaptive",
-            "parent_id": None,
-            "parent_name": None,
-            "diff_summary": None,
-            "rationale": "Default adaptive pocketing",
-            "source": "manual",
-            "job_count": 28,
-            "risk_count": 8,
-            "critical_count": 2,
-            "avg_total_length": 5800.2,
-            "avg_total_lines": 3200,
-            "health_color": "yellow",
-            "trend_direction": "up",
-            "trend_delta": 12.5
-        }
-    ]
+    presets = list_presets(lane=lane)
+    return [_convert_to_aggregate(p) for p in presets]
