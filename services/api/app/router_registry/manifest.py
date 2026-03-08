@@ -471,6 +471,20 @@ ROUTER_MANIFEST: List[RouterSpec] = [
     # -------------------------------------------------------------------------
     # DEAD CODE RECOVERY (Wave 27.1 - Restored Routers)
     # -------------------------------------------------------------------------
+    # Guitar CAM router - archtop, OM, stratocaster, registry (Wave 27.2)
+    RouterSpec(
+        module="app.routers.cam.guitar",
+        prefix="/api/cam/guitar",
+        tags=["CAM", "Guitar"],
+        category="cam",
+    ),
+    # Post-processor V155 - CRC, lead-in/out, corner smoothing (Wave 27.2)
+    RouterSpec(
+        module="app.routers.cam_post_v155_router",
+        prefix="/api/cam/post",
+        tags=["CAM", "Post", "GCode"],
+        category="cam",
+    ),
     # DXF -> Adaptive Pocket workflow (P1-HIGH)
     RouterSpec(
         module="app.routers.cam_dxf_adaptive_router",
