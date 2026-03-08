@@ -339,6 +339,13 @@ INSTRUMENT_SPECS = {
         neck_pocket_range=(None, None),
         scale_length=650
     ),
+    "jumbo_archtop": InstrumentSpec(
+        name="Jumbo Archtop",
+        body_length_range=(490, 540),
+        body_width_range=(400, 445),
+        neck_pocket_range=(None, None),  # Dovetail joint
+        scale_length=648
+    ),
 }
 
 
