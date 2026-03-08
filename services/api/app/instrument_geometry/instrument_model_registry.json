@@ -42,21 +42,76 @@
       "year_introduced": 1952,
       "spec": "specs/gibson_les_paul.json",
       "assets": [
-        {"type": "body_outline", "path": "body/body_outlines.json", "key": "les_paul", "points": 669},
-        {"type": "body_dxf", "path": "body/dxf/electric/LesPaul_body.dxf"},
-        {"type": "body_catalog", "path": "body/catalog.json", "key": "les_paul"},
-        {"type": "neck_profile", "path": "neck/neck_profiles.py", "tier": 1, "description": "59 style fat C, 12\" radius"},
-        {"type": "headstock", "path": "generators/neck_headstock_config.py", "style": "GIBSON_OPEN", "points": 21},
-        {"type": "cnc_generator", "path": "generators/lespaul_gcode/", "operations": "OP20-OP63"},
-        {"type": "cnc_config", "path": "generators/lespaul_config.py", "tools": 3, "machines": 2},
-        {"type": "cnc_example", "path": "generators/examples/LesPaul_Body_Summary.json"},
-        {"type": "cnc_gcode", "path": "generators/examples/LesPaul_Body_Complete.nc"},
-        {"type": "cam_dxf", "path": "Les Paul_Project/LesPaul_CAM_Closed.dxf"},
-        {"type": "cam_dxf_all", "path": "Les Paul_Project/LesPaul_CAM_Closed_ALL.dxf"},
-        {"type": "frontend_generator", "path": "packages/client/src/components/generators/neck/LesPaulNeckGenerator.vue"},
-        {"type": "spec", "path": "specs/gibson_les_paul.json"},
-        {"type": "vectorizer_spec", "path": "services/blueprint-import/vectorizer_phase3.py", "key": "les_paul"}
-      ]
+        {
+          "type": "body_outline",
+          "path": "body/body_outlines.json",
+          "key": "les_paul",
+          "points": 669
+        },
+        {
+          "type": "body_dxf",
+          "path": "body/dxf/electric/LesPaul_body.dxf"
+        },
+        {
+          "type": "body_catalog",
+          "path": "body/catalog.json",
+          "key": "les_paul"
+        },
+        {
+          "type": "neck_profile",
+          "path": "neck/neck_profiles.py",
+          "tier": 1,
+          "description": "59 style fat C, 12\" radius"
+        },
+        {
+          "type": "headstock",
+          "path": "generators/neck_headstock_config.py",
+          "style": "GIBSON_OPEN",
+          "points": 21
+        },
+        {
+          "type": "cnc_generator",
+          "path": "generators/lespaul_gcode/",
+          "operations": "OP20-OP63"
+        },
+        {
+          "type": "cnc_config",
+          "path": "generators/lespaul_config.py",
+          "tools": 3,
+          "machines": 2
+        },
+        {
+          "type": "cnc_example",
+          "path": "generators/examples/LesPaul_Body_Summary.json"
+        },
+        {
+          "type": "cnc_gcode",
+          "path": "generators/examples/LesPaul_Body_Complete.nc"
+        },
+        {
+          "type": "cam_dxf",
+          "path": "Les Paul_Project/LesPaul_CAM_Closed.dxf"
+        },
+        {
+          "type": "cam_dxf_all",
+          "path": "Les Paul_Project/LesPaul_CAM_Closed_ALL.dxf"
+        },
+        {
+          "type": "frontend_generator",
+          "path": "packages/client/src/components/generators/neck/LesPaulNeckGenerator.vue"
+        },
+        {
+          "type": "spec",
+          "path": "specs/gibson_les_paul.json"
+        },
+        {
+          "type": "vectorizer_spec",
+          "path": "services/blueprint-import/vectorizer_phase3.py",
+          "key": "les_paul"
+        }
+      ],
+      "_phantom_assets": true,
+      "_note": "Some referenced assets do not exist on disk"
     },
     "sg": {
       "id": "sg",
@@ -100,7 +155,9 @@
         "Guitar Plans/Gibson Plans/Flying V/Flying V 59.dwg",
         "Guitar Plans/Gibson Plans/Flying V/Flying V 83.dwg",
         "specs/gibson_flying_v_1958.json"
-      ]
+      ],
+      "_phantom_assets": true,
+      "_note": "Some referenced assets do not exist on disk"
     },
     "explorer": {
       "id": "explorer",
@@ -122,7 +179,7 @@
         {
           "type": "dxf",
           "path": "body/dxf/electric/gibson_explorer_body.dxf",
-          "note": "24-point coarse polygon, AC1024 — needs R12 conversion and refinement to 200+ points"
+          "note": "24-point coarse polygon, AC1024 \u2014 needs R12 conversion and refinement to 200+ points"
         },
         {
           "type": "build_script",
@@ -132,17 +189,17 @@
         {
           "type": "gcode",
           "path": "../../../../exports/explorer_1958/Explorer_1958_Phase1_RearRouting.nc",
-          "note": "Phase 1 rear face routing — 8,480 lines, 17 operations"
+          "note": "Phase 1 rear face routing \u2014 8,480 lines, 17 operations"
         },
         {
           "type": "gcode",
           "path": "../../../../exports/explorer_1958/Explorer_1958_Phase2_Perimeter.nc",
-          "note": "Phase 2 perimeter profile — 921 lines, 8 tabs"
+          "note": "Phase 2 perimeter profile \u2014 921 lines, 8 tabs"
         },
         {
           "type": "build_macro",
           "path": "../../../../exports/explorer_1958/Explorer_1958_BuildMacro.json",
-          "note": "Standalone macro — 2 phases, 18 ops, 3 tools, 10 gap annotations"
+          "note": "Standalone macro \u2014 2 phases, 18 ops, 3 tools, 10 gap annotations"
         },
         {
           "type": "handoff",
@@ -265,7 +322,9 @@
       "description": "Orchestra Model / 000 body size acoustic guitar",
       "manufacturer": "Martin",
       "year_introduced": 1929,
-      "assets": ["specs/martin_om28.json"]
+      "assets": [
+        "specs/martin_om28.json"
+      ]
     },
     "j_45": {
       "id": "j_45",
@@ -330,32 +389,32 @@
         {
           "type": "source_pdf",
           "path": "../../../../Guitar Plans/Jumbo Carlos/JUMBO-CARLOS-1-3.pdf",
-          "note": "Plan page 1/3 — construction details, bracing layout (1.1MB)"
+          "note": "Plan page 1/3 \u2014 construction details, bracing layout (1.1MB)"
         },
         {
           "type": "source_pdf",
           "path": "../../../../Guitar Plans/Jumbo Carlos/JUMBO-CARLOS-2-3.pdf",
-          "note": "Plan page 2/3 — section views, neck details (946KB)"
+          "note": "Plan page 2/3 \u2014 section views, neck details (946KB)"
         },
         {
           "type": "source_pdf",
           "path": "../../../../Guitar Plans/Jumbo Carlos/JUMBO-CARLOS-3-3.pdf",
-          "note": "Plan page 3/3 — body outline, f-holes (564KB)"
+          "note": "Plan page 3/3 \u2014 body outline, f-holes (564KB)"
         },
         {
           "type": "dxf",
           "path": "../../../../exports/jumbo_carlos_vectorizer/JUMBO-CARLOS-1-3_phase3.dxf",
-          "note": "Vectorizer page 1 — 944 primitives, 20 bracing features"
+          "note": "Vectorizer page 1 \u2014 944 primitives, 20 bracing features"
         },
         {
           "type": "dxf",
           "path": "../../../../exports/jumbo_carlos_vectorizer/JUMBO-CARLOS-2-3_phase3.dxf",
-          "note": "Vectorizer page 2 — 741 primitives, section views"
+          "note": "Vectorizer page 2 \u2014 741 primitives, section views"
         },
         {
           "type": "dxf",
           "path": "../../../../exports/jumbo_carlos_vectorizer/JUMBO-CARLOS-3-3_phase3.dxf",
-          "note": "Vectorizer page 3 — 326 primitives, validated body (422x498mm)"
+          "note": "Vectorizer page 3 \u2014 326 primitives, validated body (422x498mm)"
         }
       ],
       "vectorizer_analysis": {
@@ -364,7 +423,7 @@
         "total_processing_time_ms": 124367,
         "validated_page": 3,
         "bracing_features_total": 35,
-        "f_hole_detections": "2 (misclassified — Carlos Jumbo is a flat-top, not an archtop)"
+        "f_hole_detections": "2 (misclassified \u2014 Carlos Jumbo is a flat-top, not an archtop)"
       }
     },
     "gibson_l_00": {
@@ -380,7 +439,9 @@
       "year_introduced": 1926,
       "assets": [
         "Guitar Plans/Gibson Plans/L-00/Gibson L-00.pdf"
-      ]
+      ],
+      "_phantom_assets": true,
+      "_note": "Some referenced assets do not exist on disk"
     },
     "classical": {
       "id": "classical",
@@ -420,10 +481,11 @@
       "manufacturer": "Various",
       "year_introduced": 1879,
       "assets": [
-        "Soprano Ukuele/Body_Outline.dxf",
-        "Soprano Ukuele/Fret_Slots.dxf",
-        "Soprano Ukuele/Headstock_Outline.dxf"
-      ]
+        "Soprano Ukulele/Body_Outline.dxf",
+        "Soprano Ukulele/Fret_Slots.dxf",
+        "Soprano Ukulele/Headstock_Outline.dxf"
+      ],
+      "_note": "Assets path corrected (Ukuele->Ukulele); verify files exist"
     },
     "smart_guitar": {
       "id": "smart_guitar",
@@ -438,9 +500,9 @@
       "year_introduced": 2025,
       "body_style": "explorer_klein_hybrid_angular",
       "iot": {
-        "signal_processor": "Arduino Uno (ATmega328P @ 16MHz) — near pickups, own 9V battery",
-        "compute": "Raspberry Pi 5 (ARM Cortex-A76 @ 2.4GHz) — main rear cavity",
-        "signal_chain": "Pickups → Arduino (44.1kHz ADC, 9V) → Pi 5 (USB serial, Li-ion)",
+        "signal_processor": "Arduino Uno (ATmega328P @ 16MHz) \u2014 near pickups, own 9V battery",
+        "compute": "Raspberry Pi 5 (ARM Cortex-A76 @ 2.4GHz) \u2014 main rear cavity",
+        "signal_chain": "Pickups \u2192 Arduino (44.1kHz ADC, 9V) \u2192 Pi 5 (USB serial, Li-ion)",
         "memory_gb": 8,
         "storage_gb": 128,
         "storage_type": "NVMe SSD (M.2 2280)",
@@ -559,12 +621,12 @@
         {
           "type": "source_pdf",
           "path": "../../../../Guitar Plans/Klein/Klein-Guitar-Template.pdf",
-          "note": "Klein template PDF (375 KB), small-scale reference sheet — vectorizer validation failed"
+          "note": "Klein template PDF (375 KB), small-scale reference sheet \u2014 vectorizer validation failed"
         },
         {
           "type": "dxf",
           "path": "../../../../exports/klein_vectorizer/Klein-Guitar-Plan_phase3.dxf",
-          "note": "Phase 3.6 vectorizer output — body outline with classified features, R12 format"
+          "note": "Phase 3.6 vectorizer output \u2014 body outline with classified features, R12 format"
         },
         {
           "type": "dxf_primitives",
@@ -670,7 +732,7 @@
     },
     "jumbo_archtop": {
       "id": "jumbo_archtop",
-      "display_name": "Jumbo Archtop — Carlos Body Scale + Benedetto Construction",
+      "display_name": "Jumbo Archtop \u2014 Carlos Body Scale + Benedetto Construction",
       "status": "PARTIAL",
       "category": "archtop_guitar",
       "scale_length_mm": 648.0,
@@ -704,7 +766,7 @@
         {
           "type": "dxf",
           "path": "body/dxf/acoustic/carlos_jumbo_body.dxf",
-          "note": "Shared body outline from Carlos Jumbo (39-point AI vision extraction) — reused as archtop plate outline"
+          "note": "Shared body outline from Carlos Jumbo (39-point AI vision extraction) \u2014 reused as archtop plate outline"
         },
         {
           "type": "knowledge_base",
@@ -713,10 +775,10 @@
         }
       ],
       "pending_assets": [
-        "jumbo_archtop/f_holes.dxf — f-hole design (traditional archtop 110x28mm)",
-        "jumbo_archtop/top_contours.dxf — Mottola contour rings for CNC top carving",
-        "jumbo_archtop/back_contours.dxf — Mottola contour rings for CNC back carving",
-        "jumbo_archtop/graduation_map.json — target plate thicknesses at measurement stations"
+        "jumbo_archtop/f_holes.dxf \u2014 f-hole design (traditional archtop 110x28mm)",
+        "jumbo_archtop/top_contours.dxf \u2014 Mottola contour rings for CNC top carving",
+        "jumbo_archtop/back_contours.dxf \u2014 Mottola contour rings for CNC back carving",
+        "jumbo_archtop/graduation_map.json \u2014 target plate thicknesses at measurement stations"
       ]
     }
   }
