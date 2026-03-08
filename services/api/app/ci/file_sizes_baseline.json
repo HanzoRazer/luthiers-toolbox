@@ -1,11 +1,46 @@
 {
   "threshold": 500,
-  "violation_count": 11,
+  "violation_count": 23,
   "violations": [
     {
       "file": "tests/test_architecture_scan.py",
       "lines": 891,
       "over_by": 391
+    },
+    {
+      "file": "app/rmos/stub_routes.py",
+      "lines": 886,
+      "over_by": 386
+    },
+    {
+      "file": "tests/test_saw_lab_endpoint_smoke.py",
+      "lines": 852,
+      "over_by": 352
+    },
+    {
+      "file": "tests/test_retract_endpoint_smoke.py",
+      "lines": 799,
+      "over_by": 299
+    },
+    {
+      "file": "tests/test_remaining_routers_endpoint_smoke.py",
+      "lines": 747,
+      "over_by": 247
+    },
+    {
+      "file": "tests/test_business_endpoint_smoke.py",
+      "lines": 717,
+      "over_by": 217
+    },
+    {
+      "file": "tests/test_rmos_endpoint_smoke.py",
+      "lines": 688,
+      "over_by": 188
+    },
+    {
+      "file": "app/cam/routers/stub_routes.py",
+      "lines": 662,
+      "over_by": 162
     },
     {
       "file": "tests/conftest.py",
@@ -18,9 +53,34 @@
       "over_by": 155
     },
     {
+      "file": "app/routers/neck_router.py",
+      "lines": 655,
+      "over_by": 155
+    },
+    {
+      "file": "tests/test_dxf_preflight_endpoint_smoke.py",
+      "lines": 629,
+      "over_by": 129
+    },
+    {
+      "file": "tests/test_workflow_sessions_endpoint_smoke.py",
+      "lines": 606,
+      "over_by": 106
+    },
+    {
+      "file": "app/router_registry/manifest.py",
+      "lines": 597,
+      "over_by": 97
+    },
+    {
       "file": "app/generators/bezier_body.py",
       "lines": 595,
       "over_by": 95
+    },
+    {
+      "file": "app/cam/rosette/presets.py",
+      "lines": 578,
+      "over_by": 78
     },
     {
       "file": "app/saw_lab/toolpaths_validate_service.py",
@@ -28,19 +88,19 @@
       "over_by": 68
     },
     {
-      "file": "app/business/estimator/estimator_service.py",
-      "lines": 565,
-      "over_by": 65
-    },
-    {
       "file": "tests/rmos/test_acoustics_hardening.py",
       "lines": 559,
       "over_by": 59
     },
     {
-      "file": "app/router_registry/manifest.py",
-      "lines": 528,
-      "over_by": 28
+      "file": "tests/test_art_studio_api_endpoint_smoke.py",
+      "lines": 547,
+      "over_by": 47
+    },
+    {
+      "file": "app/business/router.py",
+      "lines": 546,
+      "over_by": 46
     },
     {
       "file": "tests/test_adaptive_router.py",
