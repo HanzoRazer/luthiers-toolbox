@@ -346,5 +346,13 @@
     "bare_except": 6,
     "large_files": 6,
     "god_objects": 9
+  },
+  {
+    "timestamp": "2026-03-08T16:44:31.835842",
+    "endpoints": 619,
+    "bare_except": 6,
+    "large_files": 6,
+    "god_objects": 9,
+    "note": "Wave 27.2: restored guitar CAM routers + post V155 (+26 endpoints from decomposition recovery)"
   }
 ]
