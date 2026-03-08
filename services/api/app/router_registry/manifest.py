@@ -56,6 +56,12 @@ ROUTER_MANIFEST: List[RouterSpec] = [
         category="cam_core",
     ),
     RouterSpec(
+        module="app.routers.material_router",
+        prefix="/api",
+        tags=["Material", "Energy Model"],
+        category="cam_core",
+    ),
+    RouterSpec(
         module="app.routers.adaptive",
         prefix="/api",
         tags=["Adaptive Pocketing"],
