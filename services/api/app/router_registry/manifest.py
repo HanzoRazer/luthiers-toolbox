@@ -354,6 +354,12 @@ ROUTER_MANIFEST: List[RouterSpec] = [
         tags=["Neck", "Generator"],
         category="instrument",
     ),
+    RouterSpec(
+        module="app.routers.music",
+        prefix="/api/music",
+        tags=["Music", "Temperaments"],
+        category="instrument",
+    ),
     # -------------------------------------------------------------------------
     # OPTIONAL/EXPERIMENTAL
     # -------------------------------------------------------------------------
