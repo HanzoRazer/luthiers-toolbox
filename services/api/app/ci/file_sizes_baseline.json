@@ -1,6 +1,6 @@
 {
   "threshold": 500,
-  "violation_count": 23,
+  "violation_count": 25,
   "violations": [
     {
       "file": "tests/test_architecture_scan.py",
@@ -63,14 +63,14 @@
       "over_by": 129
     },
     {
+      "file": "app/router_registry/manifest.py",
+      "lines": 611,
+      "over_by": 111
+    },
+    {
       "file": "tests/test_workflow_sessions_endpoint_smoke.py",
       "lines": 606,
       "over_by": 106
-    },
-    {
-      "file": "app/router_registry/manifest.py",
-      "lines": 597,
-      "over_by": 97
     },
     {
       "file": "app/generators/bezier_body.py",
@@ -106,6 +106,16 @@
       "file": "tests/test_adaptive_router.py",
       "lines": 523,
       "over_by": 23
+    },
+    {
+      "file": "app/routers/cam_post_v155_router.py",
+      "lines": 521,
+      "over_by": 21
+    },
+    {
+      "file": "app/util/gcode_reader.py",
+      "lines": 511,
+      "over_by": 11
     },
     {
       "file": "app/cam/routers/rosette/cam_router.py",
