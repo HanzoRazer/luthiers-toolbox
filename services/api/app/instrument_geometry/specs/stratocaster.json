@@ -1,0 +1,93 @@
+{
+  "model_id": "stratocaster",
+  "display_name": "Fender Stratocaster",
+  "source": "Fender American Standard specifications, verified against blueprint scans (Fender-Stratocaster-62.pdf, Strat-Body-Front.pdf)",
+  "units": "mm",
+  "variants": {
+    "vintage": {
+      "description": "1950s-1960s Fender Stratocaster (pre-CBS)",
+      "scale_length_mm": 648.0,
+      "fret_count": 21,
+      "neck": {
+        "nut_width_mm": 41.3,
+        "heel_width_mm": 55.0,
+        "depth_1st_fret_mm": 20.8,
+        "depth_12th_fret_mm": 23.4,
+        "profile_shape": "C",
+        "fretboard_radius_mm": 184.15,
+        "compound_radius": false
+      },
+      "headstock": {
+        "style": "fender_strat",
+        "angle_deg": 0.0,
+        "length_mm": 178.0,
+        "width_mm": 89.0,
+        "thickness_mm": 14.0,
+        "tuner_layout": "6_inline",
+        "tuner_hole_diameter_mm": 9.5,
+        "tuner_hole_spacing_mm": 22.86,
+        "string_trees": 1
+      }
+    },
+    "modern": {
+      "description": "Fender American Standard / Professional series",
+      "scale_length_mm": 648.0,
+      "fret_count": 22,
+      "neck": {
+        "nut_width_mm": 42.9,
+        "heel_width_mm": 57.0,
+        "depth_1st_fret_mm": 19.8,
+        "depth_12th_fret_mm": 22.4,
+        "profile_shape": "modern_c",
+        "fretboard_radius_start_mm": 241.3,
+        "fretboard_radius_end_mm": 304.8,
+        "compound_radius": true
+      },
+      "headstock": {
+        "style": "fender_strat",
+        "angle_deg": 0.0,
+        "length_mm": 178.0,
+        "width_mm": 89.0,
+        "thickness_mm": 14.0,
+        "tuner_layout": "6_inline",
+        "tuner_hole_diameter_mm": 9.5,
+        "tuner_hole_spacing_mm": 22.86,
+        "string_trees": 2
+      }
+    }
+  },
+  "body": {
+    "length_mm_range": [390, 420],
+    "width_mm_range": [310, 340],
+    "thickness_mm": 44.45,
+    "contour": "double_cutaway",
+    "belly_cut": true,
+    "forearm_contour": true
+  },
+  "pickups": {
+    "layout": "SSS",
+    "neck_route_mm": [85.0, 18.0],
+    "middle_route_mm": [85.0, 18.0],
+    "bridge_route_mm": [85.0, 18.0]
+  },
+  "bridge": {
+    "type": "tremolo",
+    "trem_route_length_mm": 89.0,
+    "trem_route_width_mm": 56.0,
+    "string_spacing_mm": 55.5
+  },
+  "neck_pocket": {
+    "width_mm": 56.0,
+    "length_mm": 76.2,
+    "depth_mm": 15.88,
+    "tolerance_mm": 0.2
+  },
+  "notes": [
+    "All dimensions in mm",
+    "Scale length: 648mm (25.5 inches)",
+    "Headstock dimensions from All-Fender-Headstocks.pdf reference",
+    "Body contour verified against vectorizer InstrumentSpec (390-420mm L x 310-340mm W)",
+    "Vintage variant: 7.25-inch single radius fretboard",
+    "Modern variant: 9.5-14 inch compound radius fretboard"
+  ]
+}

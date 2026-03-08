@@ -6,7 +6,7 @@
     "stratocaster": {
       "id": "stratocaster",
       "display_name": "Fender Stratocaster",
-      "status": "STUB",
+      "status": "PARTIAL",
       "category": "electric_guitar",
       "scale_length_mm": 648.0,
       "fret_count": 22,
@@ -32,15 +32,31 @@
     "les_paul": {
       "id": "les_paul",
       "display_name": "Gibson Les Paul",
-      "status": "STUB",
+      "status": "COMPLETE",
       "category": "electric_guitar",
       "scale_length_mm": 628.65,
       "fret_count": 22,
       "string_count": 6,
-      "description": "Classic Gibson single-cutaway electric guitar with 24.75\" scale",
+      "description": "1956-59 Gibson Les Paul (Goldtop / Standard). Carved maple top, mahogany back, set neck, 24.75\" scale. Full CNC body generator (OP20-OP63), Tier 1 neck profile, 669-point body outline, headstock geometry.",
       "manufacturer": "Gibson",
       "year_introduced": 1952,
-      "assets": []
+      "spec": "specs/gibson_les_paul.json",
+      "assets": [
+        {"type": "body_outline", "path": "body/body_outlines.json", "key": "les_paul", "points": 669},
+        {"type": "body_dxf", "path": "body/dxf/electric/LesPaul_body.dxf"},
+        {"type": "body_catalog", "path": "body/catalog.json", "key": "les_paul"},
+        {"type": "neck_profile", "path": "neck/neck_profiles.py", "tier": 1, "description": "59 style fat C, 12\" radius"},
+        {"type": "headstock", "path": "generators/neck_headstock_config.py", "style": "GIBSON_OPEN", "points": 21},
+        {"type": "cnc_generator", "path": "generators/lespaul_gcode/", "operations": "OP20-OP63"},
+        {"type": "cnc_config", "path": "generators/lespaul_config.py", "tools": 3, "machines": 2},
+        {"type": "cnc_example", "path": "generators/examples/LesPaul_Body_Summary.json"},
+        {"type": "cnc_gcode", "path": "generators/examples/LesPaul_Body_Complete.nc"},
+        {"type": "cam_dxf", "path": "Les Paul_Project/LesPaul_CAM_Closed.dxf"},
+        {"type": "cam_dxf_all", "path": "Les Paul_Project/LesPaul_CAM_Closed_ALL.dxf"},
+        {"type": "frontend_generator", "path": "packages/client/src/components/generators/neck/LesPaulNeckGenerator.vue"},
+        {"type": "spec", "path": "specs/gibson_les_paul.json"},
+        {"type": "vectorizer_spec", "path": "services/blueprint-import/vectorizer_phase3.py", "key": "les_paul"}
+      ]
     },
     "sg": {
       "id": "sg",
@@ -71,7 +87,7 @@
     "flying_v": {
       "id": "flying_v",
       "display_name": "Gibson Flying V",
-      "status": "ASSETS_ONLY",
+      "status": "PARTIAL",
       "category": "electric_guitar",
       "scale_length_mm": 628.65,
       "fret_count": 22,
@@ -82,13 +98,14 @@
       "assets": [
         "Guitar Plans/Gibson Plans/Flying V/Flying V 58.dwg",
         "Guitar Plans/Gibson Plans/Flying V/Flying V 59.dwg",
-        "Guitar Plans/Gibson Plans/Flying V/Flying V 83.dwg"
+        "Guitar Plans/Gibson Plans/Flying V/Flying V 83.dwg",
+        "specs/gibson_flying_v_1958.json"
       ]
     },
     "explorer": {
       "id": "explorer",
       "display_name": "Gibson Explorer",
-      "status": "STUB",
+      "status": "PARTIAL",
       "category": "electric_guitar",
       "scale_length_mm": 628.65,
       "fret_count": 22,
@@ -96,7 +113,43 @@
       "description": "Gibson angular solid body electric guitar",
       "manufacturer": "Gibson",
       "year_introduced": 1958,
-      "assets": []
+      "assets": [
+        {
+          "type": "spec_json",
+          "path": "specs/gibson_explorer.json",
+          "note": "Full instrument spec with 2 variants (original_1958, reissue_76), 18 CNC operations"
+        },
+        {
+          "type": "dxf",
+          "path": "body/dxf/electric/gibson_explorer_body.dxf",
+          "note": "24-point coarse polygon, AC1024 — needs R12 conversion and refinement to 200+ points"
+        },
+        {
+          "type": "build_script",
+          "path": "../../../../scripts/generate_explorer_full_build.py",
+          "note": "2-phase G-code generator (rear routing + perimeter profile), 9,401 lines output"
+        },
+        {
+          "type": "gcode",
+          "path": "../../../../exports/explorer_1958/Explorer_1958_Phase1_RearRouting.nc",
+          "note": "Phase 1 rear face routing — 8,480 lines, 17 operations"
+        },
+        {
+          "type": "gcode",
+          "path": "../../../../exports/explorer_1958/Explorer_1958_Phase2_Perimeter.nc",
+          "note": "Phase 2 perimeter profile — 921 lines, 8 tabs"
+        },
+        {
+          "type": "build_macro",
+          "path": "../../../../exports/explorer_1958/Explorer_1958_BuildMacro.json",
+          "note": "Standalone macro — 2 phases, 18 ops, 3 tools, 10 gap annotations"
+        },
+        {
+          "type": "handoff",
+          "path": "../../../../docs/handoffs/GIBSON_EXPLORER_1958_CNC_HANDOFF.md",
+          "note": "8-part CNC handoff document with gap registry and remediation roadmap"
+        }
+      ]
     },
     "firebird": {
       "id": "firebird",
@@ -162,7 +215,8 @@
           "assets": [
             "benedetto_17/body_outline.dxf",
             "benedetto_17/f_holes.dxf",
-            "benedetto_17/graduation_map.json"
+            "benedetto_17/graduation_map.json",
+            "specs/benedetto_archtop_rope.json"
           ]
         },
         "l5": {
@@ -203,7 +257,7 @@
     "om_000": {
       "id": "om_000",
       "display_name": "OM/000 Acoustic",
-      "status": "STUB",
+      "status": "PARTIAL",
       "category": "acoustic_guitar",
       "scale_length_mm": 645.16,
       "fret_count": 20,
@@ -211,7 +265,7 @@
       "description": "Orchestra Model / 000 body size acoustic guitar",
       "manufacturer": "Martin",
       "year_introduced": 1929,
-      "assets": []
+      "assets": ["specs/martin_om28.json"]
     },
     "j_45": {
       "id": "j_45",
@@ -240,6 +294,78 @@
       "assets": [
         "Guitar Plans/Jumbo/J-200 Plans.pdf"
       ]
+    },
+    "carlos_jumbo": {
+      "id": "carlos_jumbo",
+      "display_name": "Carlos Jumbo Acoustic Guitar",
+      "status": "PARTIAL",
+      "category": "acoustic_guitar",
+      "scale_length_mm": 650.0,
+      "fret_count": 20,
+      "string_count": 6,
+      "description": "Spanish-style jumbo acoustic with wide body and rich bass response. Classical and steel-string variants. Fan or X-bracing.",
+      "manufacturer": "Carlos",
+      "body_style": "jumbo_spanish",
+      "body_dimensions_mm": {
+        "lower_bout": 430.0,
+        "upper_bout": 310.0,
+        "waist": 270.0,
+        "length": 520.0,
+        "width": 430.0,
+        "depth_tail": 125.0,
+        "depth_neck": 105.0,
+        "source": "Body catalog (400x520mm) + Vectorizer page 3 (422x498mm at 0.946x)"
+      },
+      "assets": [
+        {
+          "type": "spec_json",
+          "path": "specs/carlos_jumbo.json",
+          "note": "Full acoustic spec with 2 variants (standard classical, steel_string), CNC operations for top/back/sides/neck"
+        },
+        {
+          "type": "dxf",
+          "path": "body/dxf/acoustic/carlos_jumbo_body.dxf",
+          "note": "39-point body outline from AI vision extraction"
+        },
+        {
+          "type": "source_pdf",
+          "path": "../../../../Guitar Plans/Jumbo Carlos/JUMBO-CARLOS-1-3.pdf",
+          "note": "Plan page 1/3 — construction details, bracing layout (1.1MB)"
+        },
+        {
+          "type": "source_pdf",
+          "path": "../../../../Guitar Plans/Jumbo Carlos/JUMBO-CARLOS-2-3.pdf",
+          "note": "Plan page 2/3 — section views, neck details (946KB)"
+        },
+        {
+          "type": "source_pdf",
+          "path": "../../../../Guitar Plans/Jumbo Carlos/JUMBO-CARLOS-3-3.pdf",
+          "note": "Plan page 3/3 — body outline, f-holes (564KB)"
+        },
+        {
+          "type": "dxf",
+          "path": "../../../../exports/jumbo_carlos_vectorizer/JUMBO-CARLOS-1-3_phase3.dxf",
+          "note": "Vectorizer page 1 — 944 primitives, 20 bracing features"
+        },
+        {
+          "type": "dxf",
+          "path": "../../../../exports/jumbo_carlos_vectorizer/JUMBO-CARLOS-2-3_phase3.dxf",
+          "note": "Vectorizer page 2 — 741 primitives, section views"
+        },
+        {
+          "type": "dxf",
+          "path": "../../../../exports/jumbo_carlos_vectorizer/JUMBO-CARLOS-3-3_phase3.dxf",
+          "note": "Vectorizer page 3 — 326 primitives, validated body (422x498mm)"
+        }
+      ],
+      "vectorizer_analysis": {
+        "pages_processed": 3,
+        "total_primitives": 2011,
+        "total_processing_time_ms": 124367,
+        "validated_page": 3,
+        "bracing_features_total": 35,
+        "f_hole_detections": "2 (misclassified — Carlos Jumbo is a flat-top, not an archtop)"
+      }
     },
     "gibson_l_00": {
       "id": "gibson_l_00",
@@ -304,17 +430,20 @@
       "display_name": "Smart Guitar",
       "status": "COMPLETE",
       "category": "electric_guitar",
-      "scale_length_mm": 648.0,
+      "scale_length_mm": 628.65,
       "fret_count": 24,
       "string_count": 6,
-      "description": "IoT-enabled electric guitar with embedded computing, real-time DSP, and DAW integration",
+      "description": "IoT-enabled headless electric guitar with embedded computing, real-time DSP, and DAW integration. Gibson 24.75 scale, 24 frets, headless bridge with integrated fine tuners.",
       "manufacturer": "Luthier's ToolBox",
       "year_introduced": 2025,
-      "body_style": "stratocaster_derivative",
+      "body_style": "explorer_klein_hybrid_angular",
       "iot": {
-        "processor": "Raspberry Pi 5",
+        "signal_processor": "Arduino Uno (ATmega328P @ 16MHz) — near pickups, own 9V battery",
+        "compute": "Raspberry Pi 5 (ARM Cortex-A76 @ 2.4GHz) — main rear cavity",
+        "signal_chain": "Pickups → Arduino (44.1kHz ADC, 9V) → Pi 5 (USB serial, Li-ion)",
         "memory_gb": 8,
-        "storage_gb": 64,
+        "storage_gb": 128,
+        "storage_type": "NVMe SSD (M.2 2280)",
         "os": "Linux (custom Buildroot)"
       },
       "connectivity": {
@@ -382,16 +511,83 @@
         }
       },
       "cam_features": {
-        "electronics_cavity": "Custom routed for Pi 5 + battery",
-        "control_panel": "3D printed or CNC aluminum",
+        "electronics_cavity": "Rear-access interior cavity houses Raspberry Pi 5, Li-ion 18650 battery, NVMe SSD, and controls. Klein-style rear plate. 95x65x22mm.",
+        "arduino_preamp_pocket": "Active-preamp style pocket near neck pickup for Arduino Uno ADC board + 9V battery. 80x60x20mm.",
+        "usb_c_port": "Edge-mount USB-C slot on bass-side lower bout. PD 20W charging + data. 12x6.5mm slot with silicone dust plug.",
+        "antenna_recess": "Shallow rear-face pocket (50x30x2mm) for dual-band PCB antenna under 2mm wood window. WiFi 6 + BLE 5.0. Invisible from front.",
+        "control_panel": "3D printed or CNC aluminum, top-mount asymmetric plate",
         "pcb_mounting": "M2.5 standoffs, vibration dampened"
       },
       "assets": [
-        "smart_guitar/body_outline.dxf",
+        "electric/Smart-Guitar-v1_preliminary.dxf"
+      ],
+      "planned_assets": [
         "smart_guitar/electronics_cavity.dxf",
         "smart_guitar/control_panel.dxf",
         "smart_guitar/pcb_mounting.dxf"
       ]
+    },
+    "klein": {
+      "id": "klein",
+      "display_name": "Klein eTR Electric Guitar",
+      "status": "PARTIAL",
+      "category": "electric_guitar",
+      "scale_length_mm": 648.0,
+      "fret_count": 24,
+      "string_count": 6,
+      "description": "Steve Klein's revolutionary ergonomic headless electric guitar with negative-space cutaways, rear-access electronics, and Steinberger TransTrem bridge. Bolt-on graphite neck, direct-mount pickups.",
+      "manufacturer": "Klein Guitars",
+      "year_introduced": 1988,
+      "body_style": "ergonomic_offset_cutaway",
+      "body_dimensions_mm": {
+        "length": 354.0,
+        "width": 229.0,
+        "thickness": 38.0,
+        "source": "Vectorizer Phase 3.6 (0.891x scale, neck pocket 62.9mm to 56.0mm)"
+      },
+      "assets": [
+        {
+          "type": "spec_json",
+          "path": "specs/klein_guitar.json",
+          "note": "Full instrument spec with 2 variants (etr_original, standard_electric), 20 CNC operations, vectorizer-measured dimensions"
+        },
+        {
+          "type": "source_pdf",
+          "path": "../../../../Guitar Plans/Klein/Klein-Guitar-Plan.pdf",
+          "note": "Original Klein guitar plan PDF (597 KB), vectorizer primary source"
+        },
+        {
+          "type": "source_pdf",
+          "path": "../../../../Guitar Plans/Klein/Klein-Guitar-Template.pdf",
+          "note": "Klein template PDF (375 KB), small-scale reference sheet — vectorizer validation failed"
+        },
+        {
+          "type": "dxf",
+          "path": "../../../../exports/klein_vectorizer/Klein-Guitar-Plan_phase3.dxf",
+          "note": "Phase 3.6 vectorizer output — body outline with classified features, R12 format"
+        },
+        {
+          "type": "dxf_primitives",
+          "path": "../../../../exports/klein_vectorizer/Klein-Guitar-Plan_phase3_primitives.dxf",
+          "note": "All 964 detected geometric primitives from vectorizer run"
+        }
+      ],
+      "vectorizer_analysis": {
+        "processing_time_ms": 44827,
+        "scale_factor": 0.891,
+        "primitives_detected": 964,
+        "body_validation": "PASSED",
+        "symmetry_score": 0.519,
+        "features_detected": {
+          "body_outline": 1,
+          "neck_pocket": 2,
+          "pickup_route": 3,
+          "control_cavity": 1,
+          "jack_route": 13,
+          "pickguard": 2,
+          "small_feature": 258
+        }
+      }
     },
     "melody_maker": {
       "id": "melody_maker",

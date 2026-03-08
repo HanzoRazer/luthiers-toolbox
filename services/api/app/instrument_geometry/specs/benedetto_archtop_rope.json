@@ -1,0 +1,292 @@
+{
+  "model_id": "benedetto_17",
+  "display_name": "Benedetto 17\" Archtop — Spanish Rope Binding",
+  "source": "Custom design spec. Body/neck geometry from models/benedetto_17.json (AI-extracted Benedetto blueprints). Spanish rope binding added as custom trim package. Binding runs body perimeter, up the neck, and around the headstock.",
+  "units": "mm",
+  "variants": {
+    "venetian_cutaway": {
+      "description": "Benedetto 17\" with Venetian cutaway and full-wrap Spanish rope binding",
+      "scale_length_mm": 647.7,
+      "fret_count": 22,
+      "neck": {
+        "nut_width_mm": 43.0,
+        "heel_width_mm": 56.0,
+        "depth_1st_fret_mm": 21.0,
+        "depth_12th_fret_mm": 23.0,
+        "profile_shape": "medium_C",
+        "fretboard_radius_mm": 304.8,
+        "compound_radius": false,
+        "fretboard_wood": "ebony",
+        "neck_wood": "maple",
+        "body_join_fret": 14,
+        "neck_angle_deg": 3.5,
+        "binding": {
+          "style": "spanish_rope",
+          "material_a": "ebony",
+          "material_b": "maple",
+          "rope_pattern_preset": "classic_rope_5x9",
+          "width_mm": 2.5,
+          "depth_mm": 1.5,
+          "runs_full_length": true,
+          "sides": "both",
+          "note": "Rope binding runs both edges of the fretboard from nut to body joint and continues along the neck heel"
+        }
+      },
+      "headstock": {
+        "style": "archtop_classical",
+        "angle_deg": 14.0,
+        "length_mm": 200.0,
+        "width_mm": 88.0,
+        "thickness_mm": 16.0,
+        "tuner_layout": "3+3_open_back",
+        "tuner_hole_diameter_mm": 10.0,
+        "tuner_hole_spacing_mm": 36.0,
+        "overlay": "ebony",
+        "binding": {
+          "style": "spanish_rope",
+          "material_a": "ebony",
+          "material_b": "maple",
+          "rope_pattern_preset": "classic_rope_5x9",
+          "width_mm": 2.5,
+          "depth_mm": 1.5,
+          "wrap_perimeter": true,
+          "note": "Rope binding wraps the full headstock perimeter, continuous with neck binding through the nut transition"
+        }
+      }
+    },
+    "non_cutaway": {
+      "description": "Benedetto 17\" symmetrical (no cutaway) with full-wrap Spanish rope binding",
+      "scale_length_mm": 647.7,
+      "fret_count": 20,
+      "neck": {
+        "nut_width_mm": 43.0,
+        "heel_width_mm": 56.0,
+        "depth_1st_fret_mm": 21.0,
+        "depth_12th_fret_mm": 23.0,
+        "profile_shape": "medium_C",
+        "fretboard_radius_mm": 304.8,
+        "compound_radius": false,
+        "fretboard_wood": "ebony",
+        "neck_wood": "maple",
+        "body_join_fret": 14,
+        "neck_angle_deg": 3.5,
+        "binding": {
+          "style": "spanish_rope",
+          "material_a": "ebony",
+          "material_b": "maple",
+          "rope_pattern_preset": "classic_rope_5x9",
+          "width_mm": 2.5,
+          "depth_mm": 1.5,
+          "runs_full_length": true,
+          "sides": "both"
+        }
+      },
+      "headstock": {
+        "style": "archtop_classical",
+        "angle_deg": 14.0,
+        "length_mm": 200.0,
+        "width_mm": 88.0,
+        "thickness_mm": 16.0,
+        "tuner_layout": "3+3_open_back",
+        "tuner_hole_diameter_mm": 10.0,
+        "tuner_hole_spacing_mm": 36.0,
+        "overlay": "ebony",
+        "binding": {
+          "style": "spanish_rope",
+          "material_a": "ebony",
+          "material_b": "maple",
+          "rope_pattern_preset": "classic_rope_5x9",
+          "width_mm": 2.5,
+          "depth_mm": 1.5,
+          "wrap_perimeter": true
+        }
+      }
+    }
+  },
+  "body": {
+    "type": "archtop_jazz",
+    "lower_bout_mm": 431.8,
+    "upper_bout_mm": 279.4,
+    "waist_mm": 228.6,
+    "body_length_mm": 482.6,
+    "body_width_mm": 431.8,
+    "body_depth_rim_mm": 82.55,
+    "contour": "venetian_cutaway",
+    "cutaway": {
+      "type": "venetian",
+      "depth_mm": 76.2,
+      "access_fret": 22
+    },
+    "top_wood": "european_spruce",
+    "back_sides_wood": "european_maple",
+    "top_carving": {
+      "method": "hand_graduated",
+      "apex_thickness_mm": 7.0,
+      "edge_thickness_mm": 3.5,
+      "recurve_depth_mm": 1.5,
+      "graduation_map_ref": "benedetto_17/graduation_map.json"
+    },
+    "back_carving": {
+      "method": "hand_graduated",
+      "apex_thickness_mm": 5.5,
+      "edge_thickness_mm": 3.0,
+      "recurve_depth_mm": 1.0
+    },
+    "f_holes": {
+      "style": "traditional_archtop",
+      "length_mm": 101.6,
+      "width_mm": 25.4,
+      "dxf_ref": "benedetto_17/f_holes.dxf"
+    }
+  },
+  "binding": {
+    "style": "spanish_rope",
+    "note": "Spanish rope binding is continuous: body perimeter -> up the neck edges -> around the headstock. Traditional rope pattern uses alternating ebony/maple veneers cut at angle to create twisted rope illusion.",
+    "top_binding": {
+      "outer_material": "maple",
+      "outer_width_mm": 1.5,
+      "rope_layer": {
+        "pattern_preset": "classic_rope_5x9",
+        "material_a": "ebony",
+        "material_b": "maple",
+        "strip_width_mm": 1.0,
+        "strip_thickness_mm": 0.6,
+        "chip_length_mm": 2.0,
+        "width_mm": 4.0
+      },
+      "inner_material": "ebony",
+      "inner_width_mm": 0.5,
+      "purfling_layers": ["maple", "rope_5x9", "ebony"],
+      "purfling_total_width_mm": 6.0
+    },
+    "back_binding": {
+      "outer_material": "maple",
+      "outer_width_mm": 1.5,
+      "rope_layer": {
+        "pattern_preset": "classic_rope_5x9",
+        "material_a": "ebony",
+        "material_b": "maple",
+        "strip_width_mm": 1.0,
+        "strip_thickness_mm": 0.6,
+        "chip_length_mm": 2.0,
+        "width_mm": 4.0
+      },
+      "inner_material": "ebony",
+      "inner_width_mm": 0.5,
+      "purfling_layers": ["maple", "rope_5x9", "ebony"],
+      "purfling_total_width_mm": 6.0
+    },
+    "side_binding": {
+      "material": "maple",
+      "width_mm": 1.5,
+      "note": "Plain maple side binding connecting top and back rope purfling"
+    },
+    "continuity": {
+      "body_to_neck": {
+        "transition_point": "neck_heel",
+        "method": "miter_joint",
+        "note": "Rope binding miters at the heel joint where body binding meets neck binding. Requires precise 45-degree miter at the heel cap."
+      },
+      "neck_to_headstock": {
+        "transition_point": "nut",
+        "method": "miter_joint",
+        "note": "Rope binding transitions at the nut from fretboard edge to headstock perimeter. Miter joint masked by nut overhang."
+      }
+    }
+  },
+  "rosette": null,
+  "rosette_note": "Archtop guitars do not have rosettes — soundholes are F-holes, not round soundholes",
+  "bridge": {
+    "type": "floating_archtop",
+    "material": "ebony",
+    "base_width_mm": 120.0,
+    "base_height_mm": 30.0,
+    "saddle_profile": "adjustable_thumbwheel",
+    "string_spacing_mm": 52.0,
+    "compensation": {
+      "treble_mm": 1.8,
+      "bass_mm": 3.2
+    }
+  },
+  "tailpiece": {
+    "type": "archtop_trapeze",
+    "material": "nickel",
+    "width_mm": 80.0,
+    "length_mm": 140.0,
+    "mounting": "endpin_block"
+  },
+  "pickguard": {
+    "type": "floating_elevated",
+    "material": "tortoiseshell_celluloid",
+    "attachment": "bracket_mounted",
+    "shape": "benedetto_teardrop"
+  },
+  "pickups": {
+    "configuration": "single_floating_humbucker",
+    "position": "neck",
+    "type": "floating_mini_humbucker",
+    "mounting": "pickguard_suspended",
+    "note": "Classic Benedetto configuration — single floating humbucker on pickguard bracket, no body routing required"
+  },
+  "strings": {
+    "string_set_id": "jazz_012_052",
+    "description": "Jazz flatwound set, .012–.052",
+    "strings": [
+      {"index": 1, "name": "E1", "gauge_in": 0.012, "wound": false},
+      {"index": 2, "name": "B2", "gauge_in": 0.016, "wound": false},
+      {"index": 3, "name": "G3", "gauge_in": 0.024, "wound": true},
+      {"index": 4, "name": "D4", "gauge_in": 0.032, "wound": true},
+      {"index": 5, "name": "A5", "gauge_in": 0.042, "wound": true},
+      {"index": 6, "name": "E6", "gauge_in": 0.052, "wound": true}
+    ]
+  },
+  "dxf_assets": {
+    "body_outline": "benedetto_17/body_outline.dxf",
+    "f_holes": "benedetto_17/f_holes.dxf",
+    "graduation_map": "benedetto_17/graduation_map.json",
+    "note": "DXF assets from Benedetto blueprint vectorizer extraction (AI vision, 2026-01-30)"
+  },
+  "spanish_rope_binding_fabrication": {
+    "overview": "Spanish rope binding is fabricated using the traditional matrix method. Alternating strips of ebony and maple veneer are glued in a stack, cross-cut into chips, then reassembled with column offsets to create the twisted rope illusion. The binding strip is then bent to follow the body contour, neck edges, and headstock perimeter.",
+    "steps": [
+      "1. Prepare veneer strips: 5 rows per classic_rope_5x9 matrix — ebony and maple, 1.0mm wide, 0.6mm thick",
+      "2. Glue strip stack in order defined by matrix rows",
+      "3. Cross-cut cured stack into chips at 2.0mm intervals (chip_length_mm)",
+      "4. Reassemble chips following column_sequence [1,2,2,1,3,4,5,4,3] to produce rope twist",
+      "5. Glue reassembled strip onto backing tape for handling",
+      "6. Heat-bend the rope strip to conform to body perimeter curve (soak + bending iron)",
+      "7. Rout purfling channel: 6.0mm wide × 2.0mm deep along body top/back perimeter",
+      "8. Glue rope strip + outer maple + inner ebony into channel",
+      "9. Repeat for neck edges: narrower channel (2.5mm wide × 1.5mm deep), miter at heel joint",
+      "10. Continue around headstock perimeter: miter at nut transition, follow headstock outline",
+      "11. Final: scrape and level binding flush with body/neck/headstock surfaces"
+    ],
+    "critical_joints": [
+      {"location": "heel_cap", "type": "45_degree_miter", "note": "Where body binding meets neck binding at the heel"},
+      {"location": "nut", "type": "45_degree_miter", "note": "Where neck binding transitions to headstock binding"},
+      {"location": "cutaway_horn", "type": "tight_radius_bend", "note": "Venetian cutaway requires bending the rope strip to ~15mm radius"},
+      {"location": "waist", "type": "compound_bend", "note": "Body waist has tightest standard curve, ~50mm radius"},
+      {"location": "headstock_tip", "type": "tight_radius_bend", "note": "Headstock tip curve, ~20mm radius"}
+    ],
+    "tools_required": [
+      "Bending iron or heat blanket",
+      "Purfling channel router with 6.0mm and 2.5mm straight bits",
+      "CNC router for precise channel following body DXF outline",
+      "Veneer saw for strip cutting",
+      "Cross-cut sled for chip cutting at 2.0mm intervals"
+    ]
+  },
+  "notes": [
+    "All dimensions in mm",
+    "Scale length: 647.7mm (25.5 inches) — Benedetto standard",
+    "Body dimensions from AI-extracted Benedetto blueprints (models/benedetto_17.json)",
+    "DXF body outline and F-holes extracted from vectorizer scan (COMPLETE status)",
+    "Spanish rope binding is continuous from body to neck to headstock — 3 miter joints total",
+    "Rope pattern uses classic_rope_5x9 preset from traditional pattern library",
+    "Archtop has no rosette — uses F-holes instead of round soundhole",
+    "Floating bridge and tailpiece — no bridge pin holes or saddle slot routing needed",
+    "Floating pickup on pickguard bracket — no pickup routing in body",
+    "Top and back are hand-graduated carved arches — CNC rough carving possible, final graduation by hand",
+    "European spruce top / European maple back and sides — traditional Benedetto wood selection"
+  ]
+}

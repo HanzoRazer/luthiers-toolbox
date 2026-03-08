@@ -1,0 +1,261 @@
+{
+  "model_id": "flying_v",
+  "display_name": "1958 Gibson Flying V — Korina Original",
+  "source": "Gibson 1958 Flying V original production specifications. Body outline from catalog.json (486x607mm, 48 points). Scale/fret geometry from Flying V model stub (flying_v.py). Hardware specs from Gibson historical records and Guitar Plans DWG references (Flying V 58.dwg).",
+  "units": "mm",
+  "variants": {
+    "original_1958": {
+      "description": "1958 Gibson Flying V — Korina body, PAF humbuckers, string-through-body, V-shaped headstock",
+      "scale_length_mm": 628.65,
+      "fret_count": 22,
+      "neck": {
+        "nut_width_mm": 43.0,
+        "heel_width_mm": 54.0,
+        "depth_1st_fret_mm": 21.5,
+        "depth_12th_fret_mm": 24.0,
+        "profile_shape": "thick_D",
+        "fretboard_radius_mm": 304.8,
+        "compound_radius": false,
+        "fretboard_wood": "rosewood",
+        "neck_wood": "korina",
+        "body_join_fret": 22,
+        "neck_angle_deg": 1.5,
+        "truss_rod": "single_action",
+        "truss_rod_access": "headstock"
+      },
+      "headstock": {
+        "style": "flying_v_split",
+        "angle_deg": 17.0,
+        "length_mm": 190.0,
+        "width_mm": 82.0,
+        "thickness_mm": 14.0,
+        "tuner_layout": "3+3_banjo",
+        "tuner_hole_diameter_mm": 10.0,
+        "tuner_hole_spacing_mm": 28.0,
+        "veneer": "none",
+        "note": "1958 split-V headstock with straight string pull, Kluson Deluxe banjo-style tuners"
+      }
+    },
+    "reissue_2023": {
+      "description": "Gibson 1958 Korina Flying V Reissue — modern reproduction with period-correct specs",
+      "scale_length_mm": 628.65,
+      "fret_count": 22,
+      "neck": {
+        "nut_width_mm": 43.0,
+        "heel_width_mm": 54.0,
+        "depth_1st_fret_mm": 22.0,
+        "depth_12th_fret_mm": 24.5,
+        "profile_shape": "rounded_v",
+        "fretboard_radius_mm": 304.8,
+        "compound_radius": false,
+        "fretboard_wood": "dark_rosewood",
+        "neck_wood": "korina",
+        "body_join_fret": 22,
+        "neck_angle_deg": 1.5,
+        "truss_rod": "two_way_adjustable",
+        "truss_rod_access": "headstock"
+      },
+      "headstock": {
+        "style": "flying_v_split",
+        "angle_deg": 17.0,
+        "length_mm": 190.0,
+        "width_mm": 82.0,
+        "thickness_mm": 14.0,
+        "tuner_layout": "3+3_vintage_kluson",
+        "tuner_hole_diameter_mm": 10.0,
+        "tuner_hole_spacing_mm": 28.0,
+        "veneer": "none"
+      }
+    }
+  },
+  "body": {
+    "shape": "flying_v",
+    "material": "korina",
+    "length_mm": 607.0,
+    "width_mm": 486.0,
+    "thickness_mm": 44.45,
+    "outline_points": 48,
+    "outline_source": "catalog.json (flying_v entry, 48-point polygon)",
+    "contour": "v_symmetric",
+    "belly_cut": false,
+    "forearm_contour": false,
+    "wing_angle_deg": 66.0,
+    "center_section_width_mm": 95.0,
+    "v_apex_y_mm": 0.0,
+    "neck_joint_type": "set_neck_long_tenon",
+    "note": "Symmetric V body — two triangular wings meeting at a center spine. No ergonomic contours on the 1958 original."
+  },
+  "pickups": {
+    "layout": "HH",
+    "neck": {
+      "type": "PAF_humbucker",
+      "route_length_mm": 71.0,
+      "route_width_mm": 40.0,
+      "route_depth_mm": 19.0,
+      "center_from_bridge_mm": 155.0,
+      "mounting": "direct_mount",
+      "note": "Gibson PAF humbucker — direct-mount to body, no pickup ring on 1958 original"
+    },
+    "bridge": {
+      "type": "PAF_humbucker",
+      "route_length_mm": 71.0,
+      "route_width_mm": 40.0,
+      "route_depth_mm": 19.0,
+      "center_from_bridge_mm": 20.0,
+      "mounting": "direct_mount"
+    }
+  },
+  "bridge": {
+    "type": "string_through_body",
+    "style": "v_tailpiece_stoptail",
+    "stud_spacing_mm": 74.0,
+    "string_spacing_mm": 52.5,
+    "bridge_position_from_nut_mm": 628.65,
+    "ferrule_diameter_mm": 10.0,
+    "ferrule_depth_mm": 6.0,
+    "through_hole_diameter_mm": 3.5,
+    "through_holes": 6,
+    "note": "1958 Flying V uses a combination of raised stoptail bridge and string-through-body ferrules on the back"
+  },
+  "neck_pocket": {
+    "joint_type": "set_neck_long_tenon",
+    "tenon_width_mm": 38.0,
+    "tenon_length_mm": 76.0,
+    "tenon_depth_mm": 19.0,
+    "mortise_tolerance_mm": 0.15,
+    "glue_surface_optimization": true,
+    "note": "Deep-set long tenon for maximum sustain. Tight tolerance required — 0.15mm for proper glue joint."
+  },
+  "control_cavity": {
+    "shape": "irregular_v_lower_bout",
+    "length_mm": 95.0,
+    "width_mm": 60.0,
+    "depth_mm": 35.0,
+    "cover_plate": true,
+    "cover_screw_count": 4,
+    "location": "rear_lower_wing",
+    "contents": ["volume_1", "volume_2", "3way_toggle_switch"],
+    "note": "Controls mounted on V-shaped pickguard; cavity routed in the lower wing behind the bridge"
+  },
+  "hardware": {
+    "tuners": "Kluson Deluxe banjo-style (3+3)",
+    "bridge": "ABR-1 style tune-o-matic + stoptail",
+    "nut_material": "bone",
+    "nut_width_mm": 43.0,
+    "pickguard": "black_v_shaped",
+    "knobs": "gold_bonnet",
+    "switch": "3way_toggle_rhythm_treble",
+    "jack": "side_mount_lower_wing",
+    "finish": "natural_korina"
+  },
+  "cnc_notes": {
+    "machine_profile": "Mach4_Router_4x8",
+    "post_processor": "Mach4",
+    "recommended_bits": {
+      "body_perimeter_profiling": {
+        "diameter_mm": 6.35,
+        "diameter_inch": "1/4",
+        "type": "upcut_spiral",
+        "flutes": 2,
+        "feed_rate_mm_min": 2500,
+        "plunge_rate_mm_min": 800,
+        "stepdown_mm": 6.0,
+        "rpm": 18000,
+        "note": "Two-flute upcut spiral for clean edge in korina. 6mm stepdown through 44.45mm body = 8 passes."
+      },
+      "pickup_cavities": {
+        "roughing": {
+          "diameter_mm": 6.35,
+          "diameter_inch": "1/4",
+          "type": "upcut_spiral",
+          "flutes": 2,
+          "feed_rate_mm_min": 2500,
+          "plunge_rate_mm_min": 600,
+          "stepdown_mm": 5.0,
+          "stepover_mm": 3.8,
+          "rpm": 18000
+        },
+        "finishing": {
+          "diameter_mm": 3.175,
+          "diameter_inch": "1/8",
+          "type": "upcut_spiral",
+          "flutes": 2,
+          "feed_rate_mm_min": 1800,
+          "plunge_rate_mm_min": 400,
+          "stepdown_mm": 3.0,
+          "stepover_mm": 1.5,
+          "rpm": 20000,
+          "note": "1/8 inch for tight corners of humbucker cavities"
+        }
+      },
+      "neck_pocket_mortise": {
+        "roughing": {
+          "diameter_mm": 12.7,
+          "diameter_inch": "1/2",
+          "type": "upcut_spiral",
+          "flutes": 2,
+          "feed_rate_mm_min": 3000,
+          "plunge_rate_mm_min": 800,
+          "stepdown_mm": 6.0,
+          "stepover_mm": 7.6,
+          "rpm": 16000,
+          "note": "1/2 inch for bulk removal of mortise material"
+        },
+        "finishing": {
+          "diameter_mm": 6.35,
+          "diameter_inch": "1/4",
+          "type": "downcut_spiral",
+          "flutes": 2,
+          "feed_rate_mm_min": 2000,
+          "plunge_rate_mm_min": 600,
+          "stepdown_mm": 4.0,
+          "stepover_mm": 3.0,
+          "rpm": 18000,
+          "note": "1/4 inch downcut for clean top edge on mortise walls — critical for tight tenon fit"
+        }
+      },
+      "control_cavity": {
+        "diameter_mm": 6.35,
+        "diameter_inch": "1/4",
+        "type": "upcut_spiral",
+        "flutes": 2,
+        "feed_rate_mm_min": 2500,
+        "plunge_rate_mm_min": 600,
+        "stepdown_mm": 5.0,
+        "stepover_mm": 3.8,
+        "rpm": 18000
+      },
+      "string_through_holes": {
+        "diameter_mm": 3.5,
+        "diameter_inch": "9/64",
+        "type": "brad_point_drill",
+        "feed_rate_mm_min": 400,
+        "rpm": 12000,
+        "peck_depth_mm": 6.0,
+        "note": "Peck drilling through full body thickness. Brad point for clean entry/exit in korina."
+      },
+      "ferrule_counterbore": {
+        "diameter_mm": 10.0,
+        "diameter_inch": "25/64",
+        "type": "forstner",
+        "depth_mm": 6.0,
+        "rpm": 8000,
+        "note": "Counterbore on the back face for string ferrules. Forstner for flat-bottomed hole."
+      }
+    }
+  },
+  "notes": [
+    "All dimensions in mm",
+    "Scale length: 628.65mm (24.75 inches) — Gibson standard",
+    "Body outline: 486mm wide x 607mm long, 48-point polygon from catalog.json",
+    "Body thickness: 44.45mm (1.75 inches) — solid korina slab",
+    "CRITICAL GAP: flying_v_body.dxf referenced in catalog.json but DOES NOT EXIST on disk",
+    "DWG source files exist: Flying V 58.dwg, Flying V 59.dwg, Flying V 83.dwg (Guitar Plans/Gibson Plans/Flying V/)",
+    "Vectorizer Phase 2 needed to convert DWG -> DXF for CNC-ready body outline",
+    "1958 model used limba/korina wood (Terminalia superba) — extremely rare today",
+    "Only 81 original Flying V guitars produced in 1958-1959 production run",
+    "Wing angle approximately 66 degrees from centerline",
+    "Neck joins body at the 22nd fret — effectively a neck-through design ergonomically",
+    "Machine profile: Mach4_Router_4x8 (2440x1220x150mm bed, 24000 RPM max)"
+  ]
+}

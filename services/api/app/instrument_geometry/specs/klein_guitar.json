@@ -1,0 +1,369 @@
+{
+  "model_id": "klein",
+  "display_name": "Klein eTR Electric Guitar",
+  "source": "Klein Guitar Plans archive (Klein-Guitar-Plan.pdf). Vectorizer Phase 3.6 analysis: 354x229mm body, 0.891x scale factor (neck pocket 62.9mm to 56.0mm), 964 primitives, 280 features classified. Smart Guitar v1 design heritage reference (reference_scale_mm 779.0, aspect_ratio 0.92). Batch classification: symmetry 0.519 (asymmetric ergonomic design).",
+  "units": "mm",
+  "variants": {
+    "etr_original": {
+      "description": "Klein eTR (Electric TransTrem) — Steve Klein's revolutionary ergonomic headless electric guitar. Designed in collaboration with Ned Steinberger. The body features dramatic negative-space cutaways that reduce weight and improve ergonomics. Rear-access electronics with no front control cavity. One of the most influential ergonomic guitar designs ever created.",
+      "year_range": "1988–2000",
+      "scale_length_mm": 648.0,
+      "fret_count": 24,
+      "neck": {
+        "nut_width_mm": 43.0,
+        "heel_width_mm": 56.0,
+        "depth_1st_fret_mm": 20.0,
+        "depth_12th_fret_mm": 22.0,
+        "profile_shape": "modern_C",
+        "fretboard_radius_mm": 254.0,
+        "compound_radius": false,
+        "fretboard_wood": "ebony",
+        "neck_wood": "graphite_composite",
+        "neck_manufacturer": "Moses Graphite",
+        "binding": "none",
+        "body_join_fret": 19,
+        "neck_angle_deg": 0.0,
+        "truss_rod": "none_graphite_neck",
+        "truss_rod_access": "none",
+        "inlays": "dot_side_only",
+        "fret_wire": "medium_jumbo",
+        "note": "Moses graphite composite neck — no truss rod needed. Zero neck angle (bolt-on flat mount). Headless design: tuning is done at the bridge via Steinberger mechanism. Body join at 19th fret allows full upper register access."
+      },
+      "headstock": {
+        "style": "headless",
+        "angle_deg": 0.0,
+        "length_mm": 0.0,
+        "width_mm": 0.0,
+        "thickness_mm": 0.0,
+        "tuner_layout": "none_bridge_tuning",
+        "note": "No headstock. Klein eTR is a headless design. All tuning is handled by the Steinberger TransTrem bridge mechanism at the body end. The nut is a zero-fret or locking nut."
+      }
+    },
+    "standard_electric": {
+      "description": "Klein Electric — later production model sometimes fitted with a conventional headstock and standard bridge/tailpiece. Same ergonomic body with negative-space cutaways. Wood neck option.",
+      "year_range": "1995–2010",
+      "scale_length_mm": 648.0,
+      "fret_count": 24,
+      "neck": {
+        "nut_width_mm": 43.0,
+        "heel_width_mm": 56.0,
+        "depth_1st_fret_mm": 21.0,
+        "depth_12th_fret_mm": 23.0,
+        "profile_shape": "modern_C",
+        "fretboard_radius_mm": 254.0,
+        "compound_radius": false,
+        "fretboard_wood": "rosewood",
+        "neck_wood": "maple",
+        "binding": "none",
+        "body_join_fret": 19,
+        "neck_angle_deg": 0.0,
+        "truss_rod": "dual_action",
+        "truss_rod_access": "headstock",
+        "inlays": "dot_pearloid",
+        "fret_wire": "medium_jumbo"
+      },
+      "headstock": {
+        "style": "klein_compact",
+        "angle_deg": 13.0,
+        "length_mm": 175.0,
+        "width_mm": 85.0,
+        "thickness_mm": 14.0,
+        "tuner_layout": "3+3",
+        "tuner_hole_diameter_mm": 10.0,
+        "tuner_hole_spacing_mm": 25.4,
+        "note": "Compact headstock design on later Klein models with conventional tuning. Some models retain headless configuration."
+      }
+    }
+  },
+  "body": {
+    "shape": "ergonomic_offset_cutaway",
+    "material": "alder",
+    "material_alternative": "swamp_ash",
+    "construction": "solid_body_flat_top",
+    "length_mm": 354.0,
+    "width_mm": 229.0,
+    "vectorizer_scale_factor": 0.891,
+    "vectorizer_raw_neck_pocket_mm": 62.9,
+    "thickness_mm": 38.0,
+    "thickness_inches": 1.5,
+    "outline_points": "vectorized",
+    "outline_source": "Klein-Guitar-Plan_phase3.dxf (964 primitives, Phase 3.6 vectorizer)",
+    "outline_dxf_dimensions": {
+      "width_mm": 354.0,
+      "height_mm": 229.0,
+      "note": "Vectorizer Phase 3.6 output after 0.891x scale normalization from neck pocket reference. Plan PDF detected body at 354x229mm. Features: 1 body_outline, 2 neck_pocket, 3 pickup_route, 1 control_cavity, 13 jack_route, 2 pickguard-class (ergonomic cutaway areas). Symmetry score 0.519 (intentionally asymmetric ergonomic design)."
+    },
+    "contour": "ergonomic_negative_space",
+    "belly_cut": true,
+    "forearm_contour": true,
+    "negative_space_cutaways": true,
+    "neck_joint_type": "bolt_on",
+    "note": "The Klein body is defined by its dramatic negative-space cutaways — large sections of the body are removed to create an ergonomic playing shape. The upper cutaway allows forearm comfort while the lower provides belly relief. This results in an extremely lightweight instrument with excellent upper fret access. The body shape is deeply asymmetric (symmetry score 0.519). Rear-access only for all electronics — no front control cavity, keeping the top surface clean. Body-mounted pickups (no pickup rings or pickguard). The aspect ratio of the original design is approximately 0.92 (per Smart Guitar v1 design heritage reference)."
+  },
+  "pickups": {
+    "layout": "HH",
+    "neck": {
+      "type": "humbucker_direct_mount",
+      "route_length_mm": 71.0,
+      "route_width_mm": 40.0,
+      "route_depth_mm": 19.0,
+      "center_from_bridge_mm": 165.0,
+      "pickup_ring": "none_direct_mount",
+      "mounting": "body_screws_direct",
+      "body_position_mm": {
+        "x_center": 0.0,
+        "y_from_top": 120.0
+      },
+      "note": "Direct-mounted neck humbucker. No pickup ring — screws directly into body. Bartolini or Seymour Duncan typically. Rear-routed wiring."
+    },
+    "bridge": {
+      "type": "humbucker_direct_mount",
+      "route_length_mm": 71.0,
+      "route_width_mm": 40.0,
+      "route_depth_mm": 19.0,
+      "center_from_bridge_mm": 25.0,
+      "pickup_ring": "none_direct_mount",
+      "mounting": "body_screws_direct",
+      "body_position_mm": {
+        "x_center": 0.0,
+        "y_from_top": 260.0
+      },
+      "note": "Direct-mounted bridge humbucker. Same direct-mount configuration as neck pickup."
+    }
+  },
+  "bridge": {
+    "type": "steinberger_transtrem",
+    "style": "headless_bridge_tuner",
+    "bridge_position_from_nut_mm": 648.0,
+    "y_from_top": 285.0,
+    "mounting_holes": 4,
+    "mounting_hole_diameter_mm": 4.0,
+    "mounting_hole_depth_mm": 25.0,
+    "string_spacing_mm": 52.0,
+    "bridge_height_above_body_mm": 12.0,
+    "body_position_mm": {
+      "x_center": 0.0,
+      "y_from_top": 285.0
+    },
+    "note": "Steinberger TransTrem or R-Trem bridge with integrated tuners. The headless bridge handles all string tension and tuning. Standard Klein eTR bridge mounting pattern. The TransTrem allows all strings to be transposed simultaneously via the tremolo arm."
+  },
+  "tailpiece": {
+    "type": "integrated_with_bridge",
+    "note": "No separate tailpiece. The Steinberger bridge system integrates bridge and tailpiece/tuner functions into a single unit. Strings are locked at both the nut end and bridge end."
+  },
+  "neck_pocket": {
+    "joint_type": "bolt_on",
+    "pocket_width_mm": 56.0,
+    "pocket_length_mm": 76.0,
+    "pocket_depth_mm": 19.0,
+    "bolt_count": 4,
+    "bolt_diameter_mm": 4.5,
+    "bolt_pattern": "fender_4bolt",
+    "mortise_tolerance_mm": 0.15,
+    "body_join_fret": 19,
+    "neck_angle_deg": 0.0,
+    "body_position_mm": {
+      "x_center": 0.0,
+      "y_from_top": 0.0
+    },
+    "note": "Standard bolt-on neck pocket. Vectorizer detected neck pocket at 62.9mm raw (scaled to 56.0mm with 0.891x factor). The Klein uses a tight-tolerance bolt-on joint for easy neck removal and replacement. Flat mount — no neck angle."
+  },
+  "control_cavity": {
+    "shape": "rounded_rectangle",
+    "length_mm": 90.0,
+    "width_mm": 55.0,
+    "depth_mm": 25.0,
+    "cover_plate": true,
+    "cover_screw_count": 4,
+    "location": "rear_center",
+    "body_position_mm": {
+      "x_center": 0.0,
+      "y_from_top": 200.0
+    },
+    "contents": [
+      "volume",
+      "tone"
+    ],
+    "pot_shaft_holes": {
+      "count": 2,
+      "diameter_mm": 9.53,
+      "depth": "through_body",
+      "note": "Two 3/8 inch holes for volume and tone pots. Klein's minimalist control layout — one volume, one tone."
+    },
+    "toggle_switch": {
+      "location": "rear_upper_body",
+      "hole_diameter_mm": 12.7,
+      "depth": "through_body",
+      "body_position_mm": {
+        "x_center": 20.0,
+        "y_from_top": 140.0
+      },
+      "note": "3-way toggle switch accessed from the top surface but mounted through the body. Minimal footprint on the playing surface."
+    },
+    "note": "Rear-access only control cavity. This is the defining feature of Klein's electronics layout — no front control cavity keeps the top surface completely clean. Minimalist 2-knob + toggle configuration. Cover plate on back."
+  },
+  "wiring_channels": {
+    "pickup_channels": {
+      "from": "pickup_cavities",
+      "to": "control_cavity",
+      "width_mm": 7.0,
+      "depth_mm": 12.0,
+      "note": "Short, direct routing from pickup cavities to rear control cavity. Klein's compact body keeps wire runs short."
+    },
+    "output_jack_channel": {
+      "from": "control_cavity",
+      "to": "output_jack",
+      "width_mm": 7.0,
+      "depth_mm": 12.0,
+      "note": "Channel from control cavity to side-mounted output jack."
+    }
+  },
+  "output_jack": {
+    "type": "quarter_inch_mono",
+    "location": "side_body_lower",
+    "bore_diameter_mm": 12.7,
+    "bore_depth_mm": 25.0,
+    "body_position_mm": {
+      "x_center": -115.0,
+      "y_from_top": 250.0
+    },
+    "note": "Side-mounted 1/4 inch mono output jack. Positioned on the lower bout side for cable management during playing."
+  },
+  "cover_recess": {
+    "description": "Rear control cavity cover plate recess",
+    "depth_mm": 3.0,
+    "screw_count": 4,
+    "note": "Flush-mount cover plate recess on the back for the electronics cavity."
+  },
+  "ergonomic_voids": {
+    "description": "Klein's signature negative-space cutaways",
+    "upper_cutaway": {
+      "type": "forearm_relief",
+      "approximate_area_mm2": 8000,
+      "depth": "through_body",
+      "note": "Large section removed from upper body for forearm comfort. This is a through-body cutaway (not a contour) — material is completely removed."
+    },
+    "lower_cutaway": {
+      "type": "belly_relief",
+      "approximate_area_mm2": 6000,
+      "depth": "through_body",
+      "note": "Lower body section removed for belly relief and weight reduction. Results in the Klein's distinctive minimal-contact body design."
+    },
+    "note": "The negative-space cutaways are Klein's most distinctive design feature. Unlike traditional body contours which reduce thickness, Klein removes entire sections of the body. This dramatically reduces weight and creates an ergonomic playing position with minimal body contact. The vectorizer classified these areas as 'pickguard' class due to their large enclosed shapes."
+  },
+  "hardware": {
+    "tuners": "Steinberger gearless bridge tuners (headless) or Schaller Mini (headed variant)",
+    "bridge": "Steinberger TransTrem or R-Trem (headless) or ABM fixed bridge (headed)",
+    "nut_material": "graphite_locking (headless) or bone (headed)",
+    "nut_width_mm": 43.0,
+    "pickguard": "none",
+    "knobs": "mini_dome_black",
+    "switch": "3-way toggle, body-mounted",
+    "jack": "Switchcraft 1/4 inch mono, side-mounted",
+    "finish": "various_nitrocellulose_or_oil",
+    "strap_buttons": "Dunlop_straplock"
+  },
+  "cnc_operations": {
+    "tool_library": {
+      "T1": {"name": "10mm Flat End Mill", "diameter_mm": 10.0, "rpm": 18000, "use": "Roughing pockets (OP20-OP23), ergonomic cutaway rough (OP30-OP31)"},
+      "T2": {"name": "6mm Flat End Mill", "diameter_mm": 6.0, "rpm": 18000, "use": "Finishing pockets (OP25-OP28), cover recess (OP35), body perimeter (OP50), cutaway finish (OP32)"},
+      "T3": {"name": "3mm Flat/Drill", "diameter_mm": 3.0, "rpm": 20000, "use": "Wiring channels (OP40), all drilling (OP60-OP64)"}
+    },
+    "operations": [
+      {"op": "OP10", "name": "Fixture / Registration Holes", "tool": "T3", "depth_mm": 10.0},
+      {"op": "OP20", "name": "Neck Pocket Rough", "tool": "T1", "depth_mm": 19.0},
+      {"op": "OP21", "name": "Neck Pickup Cavity Rough", "tool": "T1", "depth_mm": 19.0},
+      {"op": "OP22", "name": "Bridge Pickup Cavity Rough", "tool": "T1", "depth_mm": 19.0},
+      {"op": "OP23", "name": "Control Cavity Rough", "tool": "T1", "depth_mm": 25.0},
+      {"op": "OP25", "name": "Neck Pocket Finish", "tool": "T2", "depth_mm": 19.0},
+      {"op": "OP26", "name": "Neck Pickup Cavity Finish", "tool": "T2", "depth_mm": 19.0},
+      {"op": "OP27", "name": "Bridge Pickup Cavity Finish", "tool": "T2", "depth_mm": 19.0},
+      {"op": "OP28", "name": "Control Cavity Finish", "tool": "T2", "depth_mm": 25.0},
+      {"op": "OP30", "name": "Upper Ergonomic Cutaway Rough", "tool": "T1", "depth_mm": 38.0},
+      {"op": "OP31", "name": "Lower Ergonomic Cutaway Rough", "tool": "T1", "depth_mm": 38.0},
+      {"op": "OP32", "name": "Ergonomic Cutaways Finish", "tool": "T2", "depth_mm": 38.0},
+      {"op": "OP35", "name": "Cover Plate Recess", "tool": "T2", "depth_mm": 3.0},
+      {"op": "OP40", "name": "Wiring Channels", "tool": "T3", "depth_mm": 12.0},
+      {"op": "OP50", "name": "Body Perimeter Contour", "tool": "T2", "depth_mm": 38.0, "tabs": 6},
+      {"op": "OP60", "name": "Pot Shaft Holes 2x (3/8 inch through)", "tool": "T3", "depth_mm": 38.0},
+      {"op": "OP61", "name": "Bridge Mounting Holes 4x", "tool": "T3", "depth_mm": 25.0},
+      {"op": "OP62", "name": "Toggle Switch Hole", "tool": "T3", "depth_mm": 38.0},
+      {"op": "OP63", "name": "Output Jack Bore (12.7mm)", "tool": "T3", "depth_mm": 25.0},
+      {"op": "OP64", "name": "Cover Screw Pilot Holes 4x", "tool": "T3", "depth_mm": 12.0}
+    ]
+  },
+  "stock": {
+    "main_blank": {
+      "thickness_mm": 38.0,
+      "thickness_inches": 1.5,
+      "material": "alder",
+      "material_alternative": "swamp_ash",
+      "width_mm": 245.0,
+      "length_mm": 370.0,
+      "note": "Compact single slab body blank. Klein's body is significantly smaller than conventional guitars due to the negative-space cutaway design. Stock slightly oversized for fixture pins and perimeter waste. Thinner than typical (1.5 inches vs 1.75 inches), contributing to lightweight feel."
+    }
+  },
+  "fret_positions": {
+    "scale_length_mm": 648.0,
+    "fret_count": 24,
+    "positions_from_nut_mm": [
+      36.37, 70.70, 103.10, 133.68, 162.55, 189.79, 215.51, 239.79,
+      262.70, 284.32, 304.73, 324.00, 342.18, 359.35, 375.55, 390.84,
+      405.27, 418.90, 431.76, 443.89, 455.35, 466.16, 476.37, 486.00
+    ]
+  },
+  "dxf_assets": {
+    "body_outline": "exports/klein_vectorizer/Klein-Guitar-Plan_phase3.dxf",
+    "body_outline_primitives": "exports/klein_vectorizer/Klein-Guitar-Plan_phase3_primitives.dxf",
+    "body_outline_status": "vectorizer_phase3_output",
+    "body_outline_format": "R12_AC1009",
+    "vectorizer_run": {
+      "source_pdf": "Guitar Plans/Klein/Klein-Guitar-Plan.pdf",
+      "source_pdf_size_kb": 597,
+      "processing_time_ms": 44827,
+      "scale_factor": 0.891,
+      "body_dimensions_mm": "354x229",
+      "primitives_detected": 964,
+      "features": {
+        "body_outline": 1,
+        "neck_pocket": 2,
+        "pickup_route": 3,
+        "control_cavity": 1,
+        "jack_route": 13,
+        "pickguard": 2,
+        "small_feature": 258
+      },
+      "validation": "PASSED",
+      "note": "Phase 3.6 vectorizer with ML classification. Scale normalized from neck pocket detection (62.9mm to 56.0mm). The 2 pickguard detections correspond to the large ergonomic cutaway voids. Template PDF (Klein-Guitar-Template.pdf) failed validation — 53x39mm body detected (small-scale reference sheet, not full-size plan)."
+    },
+    "note": "DXF generated by Phase 3.6 vectorizer from Klein-Guitar-Plan.pdf. Contains full body outline with categorized features. The primitives DXF contains all 964 detected geometric elements."
+  },
+  "design_heritage": {
+    "designer": "Steve Klein",
+    "company": "Klein Guitars",
+    "location": "Oakland / Sonoma County, California",
+    "collaboration": "Ned Steinberger (TransTrem / headless system), Lorenzo German (later production)",
+    "influence_on": ["smart_guitar_v1"],
+    "influence_from": ["steinberger", "parker_fly"],
+    "key_innovations": [
+      "rear_electronics_cavity",
+      "no_front_control_cavity",
+      "ergonomic_negative_space_voids",
+      "minimal_body_contact_design",
+      "body_mounted_pickups_direct"
+    ],
+    "note": "The Klein guitar pioneered ergonomic electric guitar design with its negative-space approach. Rather than shaping a traditional body for comfort, Klein removed entire sections to achieve minimal body contact while maintaining structural rigidity. This design philosophy directly influenced the Smart Guitar v1 hybrid design."
+  },
+  "notes": [
+    "The Klein guitar was designed by Steve Klein in the late 1980s as a radically ergonomic instrument.",
+    "The body features dramatic negative-space cutaways that remove large sections of the body for weight and ergonomic benefits.",
+    "Original Klein eTR models used Moses graphite composite necks for stability and headless Steinberger TransTrem bridges.",
+    "The rear-access-only electronics layout eliminates any control cavities on the playing surface — a key innovation adopted by the Smart Guitar v1.",
+    "Klein's asymmetric body design has a symmetry score of 0.519 (batch classification) — intentionally far from symmetric.",
+    "Body dimensions from vectorizer analysis: 354x229mm after 0.891x scale normalization from neck pocket reference.",
+    "The Klein-Guitar-Plan.pdf yielded 964 primitives and a validated body outline; Klein-Guitar-Template.pdf is a small-scale reference (53x39mm, validation failed).",
+    "Scale length is 25.5 inches (648mm) for the standard eTR model. The Smart Guitar v1 design heritage references 779mm (30.67 inch) for a baritone-influenced variant.",
+    "Construction is bolt-on neck with a tight-tolerance pocket — unusual for a handmade luthier instrument but chosen for serviceability.",
+    "Klein guitars are highly collectible and no longer in regular production, making CNC reproduction from these plans particularly valuable for lutherie study."
+  ]
+}
