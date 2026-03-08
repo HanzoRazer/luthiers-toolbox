@@ -5,6 +5,9 @@
 		},
 		{
 			"path": "../code-analysis-tool"
+		},
+		{
+			"path": "../sg-spec"
 		}
 	],
 	"settings": {

@@ -438,3 +438,7 @@ Cuatro/regenerated_v3/
 Cuatro/simple_extract/
 Cuatro/test_raw/
 Cuatro/*.zip
+
+# Large binary reference files
+Guitar Plans/
+Cuatro/Cuatro_DXF_Simple_Package/

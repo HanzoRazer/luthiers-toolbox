@@ -1043,43 +1043,6 @@
       "note": "Machine-executable output appears to be returned directly without persistence/hash trail."
     },
     {
-      "id": "F-081",
-      "type": "INVARIANT_VIOLATION",
-      "file": "services/api/app/routers/cam/guitar/om_cam_router.py",
-      "signals": [
-        "DIRECT_RESPONSE",
-        "DXF"
-      ],
-      "risk": "high",
-      "invariant_violated": "GCODE_TRACEABLE",
-      "note": "Machine-executable output appears to be returned directly without persistence/hash trail."
-    },
-    {
-      "id": "F-082",
-      "type": "INVARIANT_VIOLATION",
-      "file": "services/api/app/routers/cam/guitar/registry_cam_router.py",
-      "signals": [
-        "DIRECT_RESPONSE",
-        "DXF",
-        "GCODE"
-      ],
-      "risk": "high",
-      "invariant_violated": "GCODE_TRACEABLE",
-      "note": "Machine-executable output appears to be returned directly without persistence/hash trail."
-    },
-    {
-      "id": "F-083",
-      "type": "INVARIANT_VIOLATION",
-      "file": "services/api/app/routers/cam/guitar/stratocaster_cam_router.py",
-      "signals": [
-        "DIRECT_RESPONSE",
-        "DXF"
-      ],
-      "risk": "high",
-      "invariant_violated": "GCODE_TRACEABLE",
-      "note": "Machine-executable output appears to be returned directly without persistence/hash trail."
-    },
-    {
       "id": "F-084",
       "type": "INVARIANT_VIOLATION",
       "file": "services/api/app/rmos/acoustics/router.py",

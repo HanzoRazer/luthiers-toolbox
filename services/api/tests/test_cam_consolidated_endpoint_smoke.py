@@ -121,30 +121,30 @@ def test_tooling_library_validate_returns_200(client):
 
 
 # =============================================================================
-# MATERIAL ROUTER - /api/materials
+# MATERIAL ROUTER - /api/material (singular prefix)
 # =============================================================================
 
-def test_materials_list_endpoint_exists(client):
-    """GET /api/materials/list endpoint exists."""
-    response = client.get("/api/materials/list")
+def test_material_list_endpoint_exists(client):
+    """GET /api/material/list endpoint exists."""
+    response = client.get("/api/material/list")
     assert response.status_code != 404
 
 
-def test_materials_list_returns_200(client):
-    """GET /api/materials/list returns 200."""
-    response = client.get("/api/materials/list")
+def test_material_list_returns_200(client):
+    """GET /api/material/list returns 200."""
+    response = client.get("/api/material/list")
     assert response.status_code == 200
 
 
-def test_materials_get_by_id_endpoint_exists(client):
-    """GET /api/materials/get/{mid} endpoint exists."""
-    response = client.get("/api/materials/get/nonexistent-material")
+def test_material_get_by_id_endpoint_exists(client):
+    """GET /api/material/get/{mid} endpoint exists."""
+    response = client.get("/api/material/get/nonexistent-material")
     assert response.status_code in [200, 404]
 
 
-def test_materials_upsert_endpoint_exists(client):
-    """POST /api/materials/upsert endpoint exists."""
-    response = client.post("/api/materials/upsert", json={})
+def test_material_upsert_endpoint_exists(client):
+    """POST /api/material/upsert endpoint exists."""
+    response = client.post("/api/material/upsert", json={})
     assert response.status_code != 404
 
 
@@ -170,22 +170,7 @@ def test_toolpath_biarc_info_returns_200(client):
     assert response.status_code == 200
 
 
-def test_toolpath_helical_entry_endpoint_exists(client):
-    """POST /api/cam/toolpath/helical/helical_entry endpoint exists."""
-    response = client.post("/api/cam/toolpath/helical/helical_entry", json={})
-    assert response.status_code != 404
-
-
-def test_toolpath_helical_health_endpoint_exists(client):
-    """GET /api/cam/toolpath/helical/helical_health endpoint exists."""
-    response = client.get("/api/cam/toolpath/helical/helical_health")
-    assert response.status_code != 404
-
-
-def test_toolpath_helical_health_returns_200(client):
-    """GET /api/cam/toolpath/helical/helical_health returns 200."""
-    response = client.get("/api/cam/toolpath/helical/helical_health")
-    assert response.status_code == 200
+# NOTE: helical_router is NOT mounted in toolpath aggregator (only roughing, biarc, vcarve, relief)
 
 
 def test_toolpath_roughing_gcode_endpoint_exists(client):
