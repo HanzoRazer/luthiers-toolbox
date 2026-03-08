@@ -24,7 +24,7 @@ from pydantic import BaseModel
 
 from ..util.gcode_parser import simulate, svg_from_points
 
-router = APIRouter(prefix="/api/cam/gcode", tags=["cam", "gcode"])
+router = APIRouter(prefix="/cam/gcode", tags=["cam", "gcode"])
 
 
 class PlotReq(BaseModel):
