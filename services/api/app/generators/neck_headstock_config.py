@@ -122,6 +122,8 @@ NECK_PRESETS: Dict[str, NeckDimensions] = {
         depth_at_12th_in=0.92,
         scale_length_in=25.5,
         headstock_angle_deg=0.0,  # Flat headstock
+        headstock_length_in=7.0,
+        headstock_thickness_in=0.55,
     ),
     "fender_modern": NeckDimensions(
         nut_width_in=1.6875,
@@ -129,6 +131,8 @@ NECK_PRESETS: Dict[str, NeckDimensions] = {
         depth_at_12th_in=0.88,
         scale_length_in=25.5,
         headstock_angle_deg=0.0,
+        headstock_length_in=7.0,
+        headstock_thickness_in=0.55,
     ),
     "prs": NeckDimensions(
         nut_width_in=1.6875,
@@ -194,28 +198,40 @@ def generate_headstock_outline(
         ]
 
     elif style == HeadstockStyle.FENDER_STRAT:
-        # Fender 6-in-line
-        half_width = dims.nut_width_in / 2
+        # Fender 6-in-line Stratocaster headstock
+        # Reference: All-Fender-Headstocks.pdf, Fender-Stratocaster-62.pdf
+        # Dimensions: ~178mm (7.0") long × ~89mm (3.5") wide, asymmetric
+        # Tuner side (bass) is wider than treble side
+        # Flat headstock (0° angle), no scarf joint
+        half_nut = dims.nut_width_in / 2
 
         points = [
-            (0.0, half_width),
-            (-0.25, half_width),
-            (-0.5, half_width + 0.25),
-            (-1.0, half_width + 0.5),
-            # Upper edge (tuner side)
-            (-2.0, 1.5),
+            # Start at nut, treble side
+            (0.0, -half_nut),
+            # Treble edge - slight flare then narrow taper
+            (-0.3, -half_nut - 0.05),
+            (-0.8, -half_nut - 0.10),
+            (-1.5, -0.60),
+            (-3.0, -0.55),
+            (-5.0, -0.50),
+            (-6.5, -0.42),
+            # Tip - rounded asymmetric
+            (-7.0, -0.30),
+            (-7.15, -0.10),
+            (-7.20, 0.10),
+            (-7.15, 0.35),
+            (-7.0, 0.60),
+            # Bass/tuner edge - wider, gentle curve back
+            (-6.5, 1.05),
+            (-5.5, 1.30),
             (-4.0, 1.45),
-            (-6.0, 1.35),
-            (-7.0, 1.2),
-            # Tip
-            (-7.5, 0.8),
-            (-7.5, -0.4),  # Asymmetric
-            # Lower edge
-            (-7.0, -0.7),
-            (-5.0, -0.65),
-            (-3.0, -0.6),
-            (-1.0, -half_width),
-            (0.0, -half_width),
+            (-2.5, 1.55),
+            (-1.5, 1.55),
+            (-1.0, 1.50),
+            (-0.5, half_nut + 0.35),
+            (-0.2, half_nut + 0.10),
+            # Back to nut, bass side
+            (0.0, half_nut),
         ]
 
     elif style == HeadstockStyle.PADDLE:

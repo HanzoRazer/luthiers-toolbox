@@ -91,4 +91,34 @@ J45_DIMENSIONS = {
     "lower_bout_width_mm": 398.5,  # Widest point
     "upper_bout_width_mm": 287.0,  # Approximate
     "waist_width_mm": 270.0,       # Approximate
+    "body_depth_at_tail_mm": 123.82,
+    "body_depth_at_neck_mm": 98.43,
+    "scale_length_mm": 628.65,
+    "soundhole_diameter_mm": 101.6,
+    "frets": 20,
+}
+
+# Back bracing — all 1/4" x 1/2" (6.35 x 12.70 mm), positions from endpin
+# Source: J45 DIMS.dxf extraction (2026-03-07)
+J45_BACK_BRACES = {
+    "cross_section": {"width_mm": 6.35, "height_mm": 12.70, "profile": "rectangular"},
+    "BB-1": {"position_from_endpin_mm": 22.23},
+    "BB-2": {"position_from_endpin_mm": 101.60},
+    "BB-3": {"position_from_endpin_mm": 200.02},
+    "BB-4": {"position_from_endpin_mm": 298.45},
+}
+
+# Top bracing — scalloped X-brace, 8 braces (TB-1 through TB-8)
+J45_TOP_BRACES = {
+    "pattern": "scalloped_x",
+    "cross_section": {"width_mm": 6.35, "height_mm": 12.70, "profile": "rectangular"},
+    "brace_count": 8,
+    "span_mm": 152.40,
+}
+
+# Cross-section construction detail
+J45_CROSS_SECTION = {
+    "purfling": {"material": "wood or plastic", "thickness_mm": 3.18},
+    "kerf_lining": {"material": "mahogany or basswood", "all_around": True},
+    "binding": {"style": "single-ply ivoroid", "top_and_back": True},
 }

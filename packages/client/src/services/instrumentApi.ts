@@ -226,7 +226,7 @@ export async function generateFretboard(
  * NOT the source of truth - always try API first.
  */
 export const FALLBACK_MODELS: InstrumentModel[] = [
-  { model_id: 'stratocaster', display_name: 'Fender Stratocaster', category: 'electric_guitar', status: 'STUB' },
+  { model_id: 'stratocaster', display_name: 'Fender Stratocaster', category: 'electric_guitar', status: 'PARTIAL' },
   { model_id: 'telecaster', display_name: 'Fender Telecaster', category: 'electric_guitar', status: 'STUB' },
   { model_id: 'les_paul', display_name: 'Gibson Les Paul', category: 'electric_guitar', status: 'STUB' },
   { model_id: 'benedetto_17', display_name: 'Benedetto 17"', category: 'archtop', status: 'COMPLETE' },

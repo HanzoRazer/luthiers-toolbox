@@ -151,3 +151,105 @@ def get_jumbo_bracing() -> BracePattern:
         bridge_y_mm=370.0,
         scalloped=True,
     )
+
+
+def get_j45_bracing() -> BracePattern:
+    """
+    Get X-bracing pattern for Gibson J-45 round-shoulder dreadnought.
+
+    Derived from J45 DIMS.dxf construction drawing (2026-03-07 extraction).
+    8 top braces (TB-1..TB-8), scalloped X-brace pattern.
+    Brace cross-section: 6.35mm x 12.70mm (1/4" x 1/2").
+    Soundhole: 101.6mm diameter (R2.000").
+
+    Returns:
+        BracePattern configured for Gibson J-45 body.
+    """
+    half_w = 398.5 / 2.0  # J45 lower bout width
+    body_len = 504.8
+    sh_y = 180.0  # soundhole center from top (approx)
+    bridge_y = 330.0
+
+    x_cross_y = sh_y + 50.0
+    x_spread = half_w * 0.7
+
+    braces = [
+        # TB-1: X-brace left arm
+        {
+            "name": "x_brace_left",
+            "start": (half_w - x_spread, sh_y - 25),
+            "end": (half_w + x_spread, bridge_y + 50),
+            "width_mm": 6.35,
+            "height_mm": 12.70,
+            "scalloped": True,
+        },
+        # TB-2: X-brace right arm
+        {
+            "name": "x_brace_right",
+            "start": (half_w + x_spread, sh_y - 25),
+            "end": (half_w - x_spread, bridge_y + 50),
+            "width_mm": 6.35,
+            "height_mm": 12.70,
+            "scalloped": True,
+        },
+        # TB-3: Upper transverse brace
+        {
+            "name": "upper_transverse",
+            "start": (half_w * 0.2, sh_y - 70),
+            "end": (half_w * 1.8, sh_y - 70),
+            "width_mm": 6.35,
+            "height_mm": 12.70,
+            "scalloped": False,
+        },
+        # TB-4: Tone bar, bass side
+        {
+            "name": "tone_bar_bass",
+            "start": (half_w * 0.3, bridge_y + 15),
+            "end": (half_w * 0.15, body_len * 0.9),
+            "width_mm": 6.35,
+            "height_mm": 12.70,
+            "scalloped": True,
+        },
+        # TB-5: Tone bar, treble side
+        {
+            "name": "tone_bar_treble",
+            "start": (half_w * 1.7, bridge_y + 15),
+            "end": (half_w * 1.85, body_len * 0.9),
+            "width_mm": 6.35,
+            "height_mm": 12.70,
+            "scalloped": True,
+        },
+        # TB-6: Lower face brace, bass
+        {
+            "name": "lower_face_bass",
+            "start": (half_w * 0.25, bridge_y + 60),
+            "end": (half_w * 0.1, body_len * 0.85),
+            "width_mm": 6.35,
+            "height_mm": 12.70,
+            "scalloped": True,
+        },
+        # TB-7: Lower face brace, treble
+        {
+            "name": "lower_face_treble",
+            "start": (half_w * 1.75, bridge_y + 60),
+            "end": (half_w * 1.9, body_len * 0.85),
+            "width_mm": 6.35,
+            "height_mm": 12.70,
+            "scalloped": True,
+        },
+        # TB-8: Upper face / finger brace
+        {
+            "name": "finger_brace",
+            "start": (half_w * 0.3, sh_y - 40),
+            "end": (half_w * 1.7, sh_y - 40),
+            "width_mm": 6.35,
+            "height_mm": 12.70,
+            "scalloped": False,
+        },
+    ]
+
+    return BracePattern(
+        name="j45_scalloped_x",
+        braces=braces,
+        soundhole_diameter_mm=101.6,
+    )

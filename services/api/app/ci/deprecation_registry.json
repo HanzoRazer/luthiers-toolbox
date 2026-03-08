@@ -9,7 +9,7 @@
       "description": "Legacy guitar model route redirects (archtop, om, strat, smart)",
       "module": "app.routers.legacy.guitar_legacy_router",
       "old_prefix": "/api/guitar/{model}/cam/{model}/*",
-      "new_prefix": "/api/cam/guitar/{model}/*",
+      "new_prefix": "(deleted — target never implemented)",
       "deprecated_date": "2025-12-01",
       "sunset_date": "2026-03-01",
       "status": "removed",
