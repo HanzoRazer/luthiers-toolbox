@@ -84,8 +84,12 @@
       "points": 30,
       "dxf": "acoustic/J45_body_outline.dxf",
       "dxf_dense": "acoustic/J45_body_outline_dense.dxf",
+      "dxf_bracing": "Guitar Plans/J 45 Plans/J45_Bracing_Only.dxf",
+      "dxf_construction": "Guitar Plans/J 45 Plans/J45_DIMS_Layered.dxf",
       "has_bulge_data": true,
-      "source": "DXF extraction with arc bulge"
+      "has_bracing_data": true,
+      "spec": "specs/gibson_j45.json",
+      "source": "DXF extraction with arc bulge + J45 DIMS.dxf bracing extraction"
     },
     "jumbo": {
       "name": "Jumbo Acoustic",

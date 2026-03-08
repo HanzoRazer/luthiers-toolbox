@@ -398,6 +398,47 @@ PRESET_MATRICES: Dict[str, MatrixFormula] = {
     ),
 
     # =========================================================================
+    # MARTIN HERRINGBONE PATTERNS (American, c. 1930s–present)
+    # =========================================================================
+    "martin_herringbone_bw_6x9": MatrixFormula(
+        name="Martin Herringbone B/W",
+        rows=[
+            {"black": 1, "white": 5},
+            {"black": 2, "white": 4},
+            {"black": 3, "white": 3},
+            {"black": 3, "white": 3},
+            {"black": 2, "white": 4},
+            {"black": 1, "white": 5},
+        ],
+        column_sequence=[1, 2, 3, 4, 5, 4, 3, 2, 1],
+        strip_width_mm=0.8,
+        strip_thickness_mm=0.5,
+        chip_length_mm=1.0,
+        notes="Martin-style herringbone, black & white. Symmetric V-chevron at ~45 deg. "
+              "Classic OM-28, D-28 rosette ring. Short chip length gives tight zigzag."
+    ),
+
+    "martin_herringbone_bw_fine_8x13": MatrixFormula(
+        name="Martin Fine Herringbone B/W",
+        rows=[
+            {"black": 1, "white": 7},
+            {"black": 2, "white": 6},
+            {"black": 3, "white": 5},
+            {"black": 4, "white": 4},
+            {"black": 4, "white": 4},
+            {"black": 3, "white": 5},
+            {"black": 2, "white": 6},
+            {"black": 1, "white": 7},
+        ],
+        column_sequence=[1, 2, 3, 4, 5, 6, 7, 8, 7, 6, 5, 4, 3],
+        strip_width_mm=0.6,
+        strip_thickness_mm=0.4,
+        chip_length_mm=0.8,
+        notes="Fine Martin herringbone with tighter weave. Higher row/column count for "
+              "premium builds. Used on Style 45 and custom shop instruments."
+    ),
+
+    # =========================================================================
     # THREE-COLOR PATTERNS (Advanced)
     # =========================================================================
     "tricolor_spanish_6x9": MatrixFormula(
@@ -476,5 +517,62 @@ PRESET_MATRICES: Dict[str, MatrixFormula] = {
         strip_thickness_mm=0.6,
         chip_length_mm=5.0,
         notes="Basic alternating light/dark pattern. Any two contrasting woods. Simplest rosette design."
+    ),
+
+    # =========================================================================
+    # BINDING-SPECIFIC ROPE PATTERNS (thinner for bending around body/neck)
+    # =========================================================================
+    "spanish_rope_binding_5x9": MatrixFormula(
+        name="Spanish Rope Binding",
+        rows=[
+            {"black": 5, "white": 2},
+            {"black": 5, "white": 2},
+            {"black": 5, "white": 2},
+            {"black": 4, "white": 3},
+            {"black": 4, "white": 3},
+        ],
+        column_sequence=[1, 2, 2, 1, 3, 4, 5, 4, 3],
+        strip_width_mm=0.8,
+        strip_thickness_mm=0.4,
+        chip_length_mm=1.5,
+        notes="Spanish rope for body/neck/headstock binding. Same matrix as classic_rope_5x9 "
+              "but thinner strips (0.8mm wide, 0.4mm thick) for tight-radius bending around "
+              "waist, cutaway horn, and headstock curves. Ebony/maple is the classic archtop combo."
+    ),
+
+    "spanish_rope_binding_fine_4x7": MatrixFormula(
+        name="Spanish Rope Binding (Fine)",
+        rows=[
+            {"black": 4, "white": 2},
+            {"black": 3, "white": 3},
+            {"black": 3, "white": 3},
+            {"black": 4, "white": 2},
+        ],
+        column_sequence=[1, 2, 3, 4, 3, 2, 1],
+        strip_width_mm=0.6,
+        strip_thickness_mm=0.35,
+        chip_length_mm=1.2,
+        notes="Fine Spanish rope for narrow binding channels. 4-row matrix produces a "
+              "narrower rope strip (~2.4mm) suitable for neck edges and headstock binding "
+              "where space is limited. Very flexible for tight bends."
+    ),
+
+    "spanish_rope_binding_bold_6x9": MatrixFormula(
+        name="Spanish Rope Binding (Bold)",
+        rows=[
+            {"black": 6, "white": 1},
+            {"black": 5, "white": 2},
+            {"black": 4, "white": 3},
+            {"black": 4, "white": 3},
+            {"black": 5, "white": 2},
+            {"black": 6, "white": 1},
+        ],
+        column_sequence=[1, 2, 3, 4, 5, 6, 5, 4, 3],
+        strip_width_mm=0.8,
+        strip_thickness_mm=0.4,
+        chip_length_mm=1.5,
+        notes="Bold Spanish rope binding with high contrast. 6-row symmetric matrix gives a "
+              "wider rope (~4.8mm) with strong visual impact. Suited for archtop body binding "
+              "where the wider rim depth allows a broader purfling channel."
     ),
 }

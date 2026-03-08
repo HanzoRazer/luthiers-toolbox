@@ -402,8 +402,7 @@ def get_model_info(model_id: str) -> InstrumentInfo:
         endpoints={
             "spec": f"/api/instruments/guitar/{model_id}/spec",
             "geometry": f"/api/instruments/guitar/{model_id}/geometry",
-            "assets": f"/api/instruments/guitar/{model_id}/assets" if has_assets else None,
-            "cam": f"/api/cam/guitar/{model_id}/health"
+            "assets": f"/api/instruments/guitar/{model_id}/assets" if has_assets else None
         }
     )
 

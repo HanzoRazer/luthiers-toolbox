@@ -8,10 +8,11 @@ Modules:
 - fan_brace: Fan bracing patterns (classical, flamenco)
 """
 
-from .x_brace import get_x_brace_pattern
+from .x_brace import get_x_brace_pattern, get_j45_bracing
 from .fan_brace import get_fan_brace_pattern
 
 __all__ = [
     "get_x_brace_pattern",
+    "get_j45_bracing",
     "get_fan_brace_pattern",
 ]

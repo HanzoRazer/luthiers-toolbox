@@ -31,12 +31,12 @@
     },
     "les_paul": {
       "id": "les_paul",
-      "name": "Les Paul Style",
+      "name": "Gibson Les Paul (1956-59)",
       "type": "solid_body",
       "dimensions": {
         "length_mm": 444,
         "width_mm": 330,
-        "thickness_mm": 50,
+        "thickness_mm": 50.8,
         "weight_typical_kg": 4.0
       },
       "features": {
@@ -46,17 +46,22 @@
       },
       "top_carve": {
         "type": "maple_cap",
-        "thickness_mm": 12,
-        "radius_mm": 305
+        "cap_thickness_mm": 12.7,
+        "carve_rise_mm": 7.8,
+        "major_radius_mm": 508,
+        "minor_radius_mm": 381,
+        "average_slope_deg": 3.2
       },
       "scale_length_mm": 628.65,
       "neck_pocket": {
         "width_mm": 53,
         "length_mm": 89,
         "depth_mm": 16,
-        "type": "set_neck"
+        "type": "set_neck",
+        "neck_angle_deg": 4.0
       },
-      "outline_available": true
+      "outline_available": true,
+      "spec": "instrument_geometry/specs/gibson_les_paul.json"
     },
     "telecaster": {
       "id": "telecaster",
@@ -89,15 +94,26 @@
         "lower_bout_mm": 412,
         "upper_bout_mm": 292,
         "waist_mm": 267,
-        "body_depth_mm": 121,
-        "length_mm": 508
+        "body_depth_at_tail_mm": 123.82,
+        "body_depth_at_neck_mm": 98.43,
+        "length_mm": 504.8
       },
       "features": {
         "bracing": "x_bracing",
-        "soundhole_diameter_mm": 100,
-        "pickguard": true
+        "soundhole_diameter_mm": 101.6,
+        "pickguard": true,
+        "purfling_thickness_mm": 3.18,
+        "kerf_lining": "mahogany or basswood"
+      },
+      "bracing": {
+        "pattern": "scalloped_x",
+        "top_brace_count": 8,
+        "back_brace_count": 4,
+        "brace_cross_section": {"width_mm": 6.35, "height_mm": 12.70},
+        "spec": "instrument_geometry/specs/gibson_j45.json"
       },
       "scale_length_mm": 628.65,
+      "frets": 20,
       "outline_available": true
     },
     "dreadnought": {

@@ -68,5 +68,38 @@
       "work": 0.1
     },
     "sce_j_per_mm3": 0.53
+  },
+  {
+    "id": "test"
+  },
+  {
+    "id": "test_smoke_material_create",
+    "title": "Test Smoke Material",
+    "sce_j_per_mm3": 0.42,
+    "heat_partition": {
+      "chip": 0.6,
+      "tool": 0.25,
+      "work": 0.15
+    }
+  },
+  {
+    "id": "test_smoke_material_update",
+    "title": "Updated Title",
+    "sce_j_per_mm3": 0.55,
+    "heat_partition": {
+      "chip": 0.65,
+      "tool": 0.25,
+      "work": 0.1
+    }
+  },
+  {
+    "id": "test_smoke_material_id",
+    "title": "ID Test",
+    "sce_j_per_mm3": 0.4,
+    "heat_partition": {
+      "chip": 0.7,
+      "tool": 0.2,
+      "work": 0.1
+    }
   }
 ]
