@@ -1,7 +1,14 @@
 {
   "threshold": 15,
-  "violation_count": 146,
+  "violation_count": 150,
   "violations": [
+    {
+      "file": "app/util/gcode_reader.py",
+      "function": "parse_gcode",
+      "complexity": 39,
+      "line": 174,
+      "letter": "F"
+    },
     {
       "file": "app/rmos/runs_v2/batch_summary.py",
       "function": "build_batch_summary",
@@ -654,6 +661,13 @@
       "letter": "F"
     },
     {
+      "file": "app/util/gcode_reader.py",
+      "function": "validate_gcode",
+      "complexity": 18,
+      "line": 131,
+      "letter": "F"
+    },
+    {
       "file": "app/saw_lab/calculators/saw_heat.py",
       "function": "SawHeatCalculator",
       "complexity": 18,
@@ -780,6 +794,13 @@
       "letter": "F"
     },
     {
+      "file": "app/routers/cam_post_v155_router.py",
+      "function": "_axis_modal_emit",
+      "complexity": 17,
+      "line": 142,
+      "letter": "F"
+    },
+    {
       "file": "app/saw_lab/decision_intelligence_router.py",
       "function": "approve_suggestion",
       "complexity": 17,
@@ -805,6 +826,13 @@
       "function": "plan_relief_finishing",
       "complexity": 17,
       "line": 245,
+      "letter": "F"
+    },
+    {
+      "file": "app/util/gcode_reader.py",
+      "function": "print_report",
+      "complexity": 17,
+      "line": 342,
       "letter": "F"
     },
     {
