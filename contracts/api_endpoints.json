@@ -84,6 +84,16 @@
       "methods": ["GET"],
       "description": "Get acoustics facets for filtering",
       "category": "acoustics"
+    },
+    "/api/instrument/geometry/catalog": {
+      "methods": ["GET"],
+      "description": "List instrument geometry catalog",
+      "category": "instrument"
+    },
+    "/api/instrument/geometry/body/{instrument_id}/preview.svg": {
+      "methods": ["GET"],
+      "description": "Get instrument body preview SVG",
+      "category": "instrument"
     }
   },
   "frontend_patterns": {
@@ -92,7 +102,8 @@
       "/api/cam/machines",
       "/api/cam/bridge/presets",
       "/api/posts/",
-      "/api/health"
+      "/api/health",
+      "/api/instrument/geometry/catalog"
     ],
     "parameterized": [
       {
@@ -106,6 +117,10 @@
       {
         "pattern": "/api/rmos/runs_v2/runs/{id}",
         "endpoint": "/api/rmos/runs_v2/runs/{run_id}"
+      },
+      {
+        "pattern": "/api/instrument/geometry/body/{id}/preview.svg",
+        "endpoint": "/api/instrument/geometry/body/{instrument_id}/preview.svg"
       }
     ]
   }
