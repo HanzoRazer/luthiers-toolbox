@@ -93,14 +93,14 @@ jobs:
           curl -fsS http://127.0.0.1:${SERVER_PORT}/api/tooling/library/materials | jq '.[0:3]'
           
           echo "Testing feeds/speeds calculation..."
-          curl -fsS -X POST http://127.0.0.1:${SERVER_PORT}/api/feeds/calculate \
+          curl -fsS -X POST http://127.0.0.1:${SERVER_PORT}/api/tooling/feeds/calculate \
             -H 'Content-Type: application/json' \
             -d '{"tool_d":6.0,"chipload":0.15,"flutes":2,"rpm":15000}' | jq .
 
       - name: Smoke - Client container
         run: |
           echo "Testing client container..."
-          curl -fsS http://127.0.0.1:${CLIENT_PORT}/ | grep "Luthier's Tool Box"
+          curl -fsS http://127.0.0.1:${CLIENT_PORT}/ | grep "Production Shop"
           
           echo "Testing API proxy through client..."
           curl -fsS http://127.0.0.1:${CLIENT_PORT}/health | jq .
