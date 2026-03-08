@@ -24,6 +24,7 @@ jobs:
           CLIENT_IMAGE=toolbox/client:ci
           PROXY_IMAGE=toolbox/proxy:ci
           ART_STUDIO_DB_PATH=/tmp/art_studio.db
+          RMOS_RUNS_DIR=/tmp/runs
           EOF
 
       - name: Build API
