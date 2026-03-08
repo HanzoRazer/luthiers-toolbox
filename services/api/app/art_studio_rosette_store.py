@@ -265,61 +265,65 @@ def get_compare_snapshots(
 ) -> List[Dict[str, Any]]:
     """
     Retrieve comparison snapshots with optional filtering.
-    
+
     Args:
         job_id_a: Filter by first job ID
         job_id_b: Filter by second job ID
         lane: Filter by lane
         limit: Max results
-    
+
     Returns:
-        List of snapshot records
+        List of snapshot records (empty if table doesn't exist yet)
     """
-    with get_conn() as conn:
-        cur = conn.cursor()
-        
-        # Build query dynamically based on filters
-        where_clauses = []
-        params = []
-        
-        if job_id_a:
-            where_clauses.append("job_id_a = ?")
-            params.append(job_id_a)
-        if job_id_b:
-            where_clauses.append("job_id_b = ?")
-            params.append(job_id_b)
-        if lane:
-            where_clauses.append("lane = ?")
-            params.append(lane)
-        
-        where_sql = " AND ".join(where_clauses) if where_clauses else "1=1"
-        params.append(limit)
-        
-        cur.execute(
-            f"""
-            SELECT id, job_id_a, job_id_b, lane, risk_score, diff_json, note, created_at
-            FROM rosette_compare_risk
-            WHERE {where_sql}
-            ORDER BY created_at DESC
-            LIMIT ?
-            """,
-            tuple(params),
-        )
-        rows = cur.fetchall()
-        snapshots: List[Dict[str, Any]] = []
-        for r in rows:
-            snapshots.append(
-                {
-                    "id": r["id"],
-                    "job_id_a": r["job_id_a"],
-                    "job_id_b": r["job_id_b"],
-                    "lane": r["lane"],
-                    "risk_score": r["risk_score"],
-                    "diff_summary": json.loads(r["diff_json"]),
-                    "note": r["note"],
-                    "created_at": r["created_at"],
-                }
+    try:
+        with get_conn() as conn:
+            cur = conn.cursor()
+
+            # Build query dynamically based on filters
+            where_clauses = []
+            params = []
+
+            if job_id_a:
+                where_clauses.append("job_id_a = ?")
+                params.append(job_id_a)
+            if job_id_b:
+                where_clauses.append("job_id_b = ?")
+                params.append(job_id_b)
+            if lane:
+                where_clauses.append("lane = ?")
+                params.append(lane)
+
+            where_sql = " AND ".join(where_clauses) if where_clauses else "1=1"
+            params.append(limit)
+
+            cur.execute(
+                f"""
+                SELECT id, job_id_a, job_id_b, lane, risk_score, diff_json, note, created_at
+                FROM rosette_compare_risk
+                WHERE {where_sql}
+                ORDER BY created_at DESC
+                LIMIT ?
+                """,
+                tuple(params),
             )
-        return snapshots
+            rows = cur.fetchall()
+            snapshots: List[Dict[str, Any]] = []
+            for r in rows:
+                snapshots.append(
+                    {
+                        "id": r["id"],
+                        "job_id_a": r["job_id_a"],
+                        "job_id_b": r["job_id_b"],
+                        "lane": r["lane"],
+                        "risk_score": r["risk_score"],
+                        "diff_summary": json.loads(r["diff_json"]),
+                        "note": r["note"],
+                        "created_at": r["created_at"],
+                    }
+                )
+            return snapshots
+    except sqlite3.OperationalError:
+        # Table doesn't exist yet (no snapshots recorded) - return empty list
+        return []
 
 
