@@ -1,0 +1,485 @@
+{
+  "model_id": "jumbo_archtop",
+  "display_name": "Jumbo Archtop — Carlos Body Scale + Benedetto Construction",
+  "source": "Hybrid design combining Carlos Jumbo body scale (430mm lower bout, 520mm body length) with Benedetto 17\" archtop construction methods (carved plates, f-holes, floating bridge/tailpiece). Archtop Measurements knowledge base (Mottola contour method, D'Aquisto graduation data, plate deflection testing) integrated as engineering reference. This is a NEW design, not a reproduction.",
+  "units": "mm",
+  "design_lineage": {
+    "body_scale": "carlos_jumbo (430mm lower bout, 520mm body length — largest standard acoustic body)",
+    "construction_method": "benedetto_17 (carved archtop: spruce top, maple back/sides, f-holes, floating bridge)",
+    "engineering_reference": "Archtop Measurements knowledge base (Mottola contour specification, D'Aquisto graduation data, plate deflection testing, contour generator tooling)",
+    "rationale": "The Carlos Jumbo body produces exceptional bass response and projection at 430mm lower bout. Adapting this to archtop construction — carved graduated plates, f-holes, floating bridge — combines the jumbo's volume with the focused, articulate voice of an archtop. The result targets a jazz instrument with more body and projection than the standard 17\" Benedetto, suitable for unamplifed big-band work."
+  },
+  "variants": {
+    "venetian_cutaway": {
+      "description": "Jumbo Archtop with Venetian cutaway — full archtop construction at jumbo scale. Carved spruce top and maple back, f-holes, floating bridge and tailpiece. Cutaway provides access to 22nd fret.",
+      "scale_length_mm": 648.0,
+      "fret_count": 22,
+      "neck": {
+        "nut_width_mm": 44.0,
+        "heel_width_mm": 58.0,
+        "depth_1st_fret_mm": 21.5,
+        "depth_12th_fret_mm": 23.5,
+        "profile_shape": "medium_C",
+        "fretboard_radius_mm": 304.8,
+        "compound_radius": false,
+        "fretboard_wood": "ebony",
+        "neck_wood": "maple",
+        "body_join_fret": 14,
+        "neck_angle_deg": 4.0,
+        "truss_rod": "dual_action",
+        "truss_rod_access": "headstock",
+        "binding": {
+          "style": "multi_ply",
+          "layers": ["maple", "black", "maple"],
+          "width_mm": 2.0,
+          "depth_mm": 1.5,
+          "sides": "both"
+        },
+        "inlays": "block_pearloid",
+        "fret_wire": "medium_vintage",
+        "note": "Neck angle increased to 4.0 degrees (vs Benedetto 3.5) to compensate for deeper jumbo body depth. 44mm nut width is a compromise between classical comfort and jazz playability."
+      },
+      "headstock": {
+        "style": "archtop_classical",
+        "angle_deg": 14.0,
+        "length_mm": 205.0,
+        "width_mm": 90.0,
+        "thickness_mm": 16.0,
+        "tuner_layout": "3+3_open_back",
+        "tuner_hole_diameter_mm": 10.0,
+        "tuner_hole_spacing_mm": 36.0,
+        "overlay": "ebony",
+        "binding": {
+          "style": "multi_ply",
+          "layers": ["maple", "black", "maple"],
+          "width_mm": 2.0,
+          "depth_mm": 1.5,
+          "wrap_perimeter": true
+        }
+      }
+    },
+    "non_cutaway": {
+      "description": "Jumbo Archtop symmetrical (no cutaway) — maximum air volume for unamplifed jazz and rhythm work. Traditional archtop construction at jumbo scale.",
+      "scale_length_mm": 648.0,
+      "fret_count": 20,
+      "neck": {
+        "nut_width_mm": 44.0,
+        "heel_width_mm": 58.0,
+        "depth_1st_fret_mm": 21.5,
+        "depth_12th_fret_mm": 23.5,
+        "profile_shape": "medium_C",
+        "fretboard_radius_mm": 304.8,
+        "compound_radius": false,
+        "fretboard_wood": "ebony",
+        "neck_wood": "maple",
+        "body_join_fret": 14,
+        "neck_angle_deg": 4.0,
+        "truss_rod": "dual_action",
+        "truss_rod_access": "headstock",
+        "binding": {
+          "style": "multi_ply",
+          "layers": ["maple", "black", "maple"],
+          "width_mm": 2.0,
+          "depth_mm": 1.5,
+          "sides": "both"
+        },
+        "inlays": "dot_pearloid",
+        "fret_wire": "medium_vintage"
+      },
+      "headstock": {
+        "style": "archtop_classical",
+        "angle_deg": 14.0,
+        "length_mm": 205.0,
+        "width_mm": 90.0,
+        "thickness_mm": 16.0,
+        "tuner_layout": "3+3_open_back",
+        "tuner_hole_diameter_mm": 10.0,
+        "tuner_hole_spacing_mm": 36.0,
+        "overlay": "ebony",
+        "binding": {
+          "style": "multi_ply",
+          "layers": ["maple", "black", "maple"],
+          "width_mm": 2.0,
+          "depth_mm": 1.5,
+          "wrap_perimeter": true
+        }
+      }
+    }
+  },
+  "body": {
+    "type": "archtop_jumbo",
+    "construction": "carved_archtop",
+    "lower_bout_mm": 430.0,
+    "upper_bout_mm": 310.0,
+    "waist_mm": 270.0,
+    "body_length_mm": 520.0,
+    "body_width_mm": 430.0,
+    "body_depth_rim_mm": 95.0,
+    "body_depth_at_tail_mm": 100.0,
+    "body_depth_at_neck_mm": 90.0,
+    "contour": "rounded_jumbo",
+    "cutaway": {
+      "type": "venetian",
+      "depth_mm": 80.0,
+      "access_fret": 22,
+      "note": "Venetian cutaway only on cutaway variant. Non-cutaway variant is fully symmetrical."
+    },
+    "top_wood": "european_spruce",
+    "top_wood_alternative": "sitka_spruce",
+    "back_sides_wood": "european_maple",
+    "back_sides_alternative": "big_leaf_maple",
+    "rim_wood": "european_maple",
+    "rim_thickness_mm": 2.0,
+    "top_carving": {
+      "method": "cnc_rough_hand_finish",
+      "apex_thickness_mm": 7.5,
+      "edge_thickness_mm": 3.5,
+      "recurve_depth_mm": 1.5,
+      "arch_height_at_apex_mm": 22.0,
+      "arch_profile": "compound_curve",
+      "contour_method": "mottola_scaled_rings",
+      "contour_interval_mm": 3.175,
+      "contour_scale_factors": [0.89, 0.78, 0.66, 0.54, 0.37],
+      "graduation_map": {
+        "source": "D'Aquisto reference adapted to jumbo scale",
+        "stations": {
+          "upper_bout": {"thickness_mm": 3.5, "arch_height_mm": 19.0, "recurve_depth_mm": 3.0},
+          "waist": {"thickness_mm": 3.0, "arch_height_mm": 16.5, "recurve_depth_mm": 2.8},
+          "bridge_line": {"thickness_mm": 4.2, "arch_height_mm": 22.0, "recurve_depth_mm": 4.0},
+          "lower_bout": {"thickness_mm": 3.2, "arch_height_mm": 17.0, "recurve_depth_mm": 3.2}
+        },
+        "note": "Graduation values adapted from D'Aquisto measurements (field manual example): upper bout 3.2→3.5mm, bridge line 4.0→4.2mm scaled for jumbo body mass. Thicker bridge-area graduation compensates for increased string tension over larger air volume. Contour intervals follow Mottola method (American Lutherie #69, 2002)."
+      },
+      "dxf_ref": "jumbo_archtop/top_contours.dxf",
+      "note": "CNC rough carving to contour map, leaving 1mm for hand-finishing. Contour specification follows Mottola method: outline scaled at 5 intervals (89%, 78%, 66%, 54%, 37%) with valley/peak smoothing per the published method. Final graduation by hand with Hacklinger gauge verification."
+    },
+    "back_carving": {
+      "method": "cnc_rough_hand_finish",
+      "apex_thickness_mm": 6.0,
+      "edge_thickness_mm": 3.0,
+      "recurve_depth_mm": 1.0,
+      "arch_height_at_apex_mm": 18.0,
+      "arch_profile": "compound_curve",
+      "contour_method": "mottola_scaled_rings",
+      "contour_interval_mm": 3.175,
+      "contour_scale_factors": [0.89, 0.78, 0.66, 0.54, 0.37],
+      "graduation_map": {
+        "source": "D'Aquisto reference adapted to jumbo scale",
+        "stations": {
+          "upper_bout": {"thickness_mm": 3.0, "arch_height_mm": 14.0},
+          "waist": {"thickness_mm": 2.8, "arch_height_mm": 12.0},
+          "bridge_line": {"thickness_mm": 3.5, "arch_height_mm": 18.0},
+          "lower_bout": {"thickness_mm": 3.0, "arch_height_mm": 15.0}
+        },
+        "note": "Back arching is flatter and thinner than top. Back apex 18mm vs top 22mm. Looser graduation promotes bass response — critical for jumbo-scale archtop where air volume already provides strong fundamental."
+      },
+      "dxf_ref": "jumbo_archtop/back_contours.dxf"
+    },
+    "f_holes": {
+      "style": "traditional_archtop",
+      "length_mm": 110.0,
+      "width_mm": 28.0,
+      "position_from_centerline_mm": 85.0,
+      "position_from_top_mm": 230.0,
+      "dxf_ref": "jumbo_archtop/f_holes.dxf",
+      "note": "F-holes scaled proportionally from Benedetto 17\" (101.6×25.4mm on 431.8mm bout) to jumbo scale (110×28mm on 430mm bout). Nearly identical lower bout width means f-holes are similar size but positioned to account for deeper body and different upper architecture."
+    },
+    "binding_top": {
+      "material": "ivoroid",
+      "width_mm": 2.0,
+      "purfling": true,
+      "purfling_layers": ["black", "white", "black"],
+      "purfling_total_width_mm": 4.0
+    },
+    "binding_back": {
+      "material": "ivoroid",
+      "width_mm": 2.0,
+      "purfling": true,
+      "purfling_layers": ["black", "white", "black"],
+      "purfling_total_width_mm": 4.0
+    },
+    "neck_joint_type": "dovetail",
+    "kerfed_lining": {
+      "material": "spruce",
+      "width_mm": 12.0,
+      "height_mm": 18.0,
+      "note": "Kerfed lining glued to inside of rim. Top and back plates glued to kerfed lining. Standard archtop box construction."
+    },
+    "note": "The Jumbo Archtop body takes the Carlos Jumbo outline (430×520mm) and applies full archtop construction: carved graduated plates, f-holes, floating bridge. Body depth is 90-100mm (rim only, excluding plate arching) — deeper than Benedetto 17\" (82.55mm) to maximize air volume for the jumbo scale. The combination of jumbo air volume with arched plates produces a voice with strong bass fundamentals and the focused projection characteristic of the archtop family."
+  },
+  "bridge": {
+    "type": "floating_archtop",
+    "material": "ebony",
+    "base_width_mm": 130.0,
+    "base_height_mm": 32.0,
+    "foot_profile": "carved_to_top_arch",
+    "saddle_profile": "adjustable_thumbwheel",
+    "string_spacing_mm": 53.0,
+    "compensation": {
+      "treble_mm": 2.0,
+      "bass_mm": 3.5
+    },
+    "position_from_nut_mm": 648.0,
+    "note": "Floating bridge with ebony base carved to match top arch. Adjustable thumbwheel saddles. Wider than Benedetto (130mm vs 120mm) to span the jumbo body's wider string spacing zone."
+  },
+  "tailpiece": {
+    "type": "archtop_trapeze",
+    "material": "nickel",
+    "width_mm": 85.0,
+    "length_mm": 150.0,
+    "mounting": "endpin_block",
+    "note": "Trapeze tailpiece scaled up from Benedetto (80mm→85mm, 140mm→150mm) for jumbo body width."
+  },
+  "pickguard": {
+    "type": "floating_elevated",
+    "material": "tortoiseshell_celluloid",
+    "attachment": "bracket_mounted",
+    "shape": "teardrop_jumbo",
+    "note": "Floating pickguard — no contact with top plate to avoid damping. Bracket mounts to neck and side of body."
+  },
+  "pickups": {
+    "configuration": "single_floating_humbucker",
+    "position": "neck",
+    "type": "floating_mini_humbucker",
+    "mounting": "pickguard_suspended",
+    "note": "Optional floating humbucker on pickguard bracket. No body routing. Can be removed for fully acoustic use."
+  },
+  "strings": {
+    "string_set_id": "jazz_013_056",
+    "description": "Jazz flatwound set, .013–.056 — heavier gauge to drive the larger body",
+    "strings": [
+      {"index": 1, "name": "E1", "gauge_in": 0.013, "wound": false},
+      {"index": 2, "name": "B2", "gauge_in": 0.017, "wound": false},
+      {"index": 3, "name": "G3", "gauge_in": 0.026, "wound": true},
+      {"index": 4, "name": "D4", "gauge_in": 0.036, "wound": true},
+      {"index": 5, "name": "A5", "gauge_in": 0.046, "wound": true},
+      {"index": 6, "name": "E6", "gauge_in": 0.056, "wound": true}
+    ],
+    "note": "Heavier gauge set (.013-.056) vs Benedetto (.012-.052) to provide adequate driving force for the larger jumbo body volume. Flatwound for traditional jazz tone."
+  },
+  "soundhole": null,
+  "soundhole_note": "Archtop — uses f-holes, not a round soundhole. No rosette.",
+  "rosette": null,
+  "rosette_note": "Archtop guitars do not have rosettes — soundholes are f-holes.",
+  "archtop_measurements_knowledge_base": {
+    "description": "Engineering reference data from Archtop Measurements knowledge base, adapted to jumbo scale for this design.",
+    "mottola_contour_method": {
+      "reference": "R.M. Mottola, 'A Method for Specifying Contours of an Arched Plate', American Lutherie #69, Spring 2002",
+      "method": "Parametric contour specification via scaled outline rings. Full-size plate outline is reduced by scale factors derived from the nominal horizontal arching profile and contour interval. Preliminary rings are smoothed (valley concavities reduced progressively toward center, peaks rounded progressively) to produce the final contour map.",
+      "parameters_for_this_design": {
+        "outline": "Carlos Jumbo body outline (430×520mm, acoustic/carlos_jumbo_body.dxf)",
+        "apex_location": "bridge_area_center",
+        "edge_thickness_in": 0.138,
+        "apex_height_in": 0.866,
+        "contour_interval_in": 0.125,
+        "scale_factors": [0.8933, 0.7816, 0.6640, 0.5346, 0.3735],
+        "note": "Edge thickness 3.5mm (0.138in), apex height 22mm (0.866in). Contour interval 3.175mm (0.125in) yields 5 contour rings. Scale factors from Mottola method: measure arching profile intersection with each elevation line, divide distance-from-center by total edge-to-apex distance."
+      },
+      "smoothing_rules": {
+        "valleys": "Waist concavities smoothed progressively — outermost ring retains 4/5 depth, each inner ring loses 1/5. Innermost ring shows no waist indentation. Cutaway (if present) smoothed same way.",
+        "peaks": "Cutaway horns rounded progressively from innermost ring outward. Innermost gets large radius arc (~halfway to adjacent peak), each outer ring gets smaller radius (step = innermost_radius / num_rings).",
+        "check": "Straight-edge from apex to outline: contour spacing must continuously increase toward center. Equal spacing = flat spot. Decreasing spacing = hollow."
+      }
+    },
+    "daquisto_graduation_reference": {
+      "raw_measurements": {
+        "upper_bout": {"thickness_mm": 3.2, "arch_height_mm": 19.0, "recurve_depth_mm": 3.0},
+        "waist": {"thickness_mm": 2.8, "arch_height_mm": 16.5, "recurve_depth_mm": 2.8},
+        "bridge_line": {"thickness_mm": 4.0, "arch_height_mm": 22.0, "recurve_depth_mm": 4.0},
+        "lower_bout": {"thickness_mm": 3.0, "arch_height_mm": 17.0, "recurve_depth_mm": 3.2}
+      },
+      "arch_profile_cross_section": {
+        "description": "D'Aquisto example arch profile from field manual — measurements at 5cm intervals from centerline",
+        "centerline_mm": {"distance_from_center_cm": 0, "arch_height_mm": 20.0},
+        "5cm": {"distance_from_center_cm": 5, "arch_height_mm": 18.5},
+        "10cm": {"distance_from_center_cm": 10, "arch_height_mm": 15.0},
+        "15cm": {"distance_from_center_cm": 15, "arch_height_mm": 10.5},
+        "20cm": {"distance_from_center_cm": 20, "arch_height_mm": 6.0}
+      },
+      "adaptation_for_jumbo": "Graduation thicknesses increased 5–10% across all stations to account for jumbo body's larger plate surface area and higher string tension from heavier gauge set. Bridge-line area thickened most (4.0→4.2mm) as primary tone-bearing zone."
+    },
+    "plate_deflection_testing": {
+      "method": "Dial indicator on padded support blocks. Probe at bridge area, apply known weight, record deflection.",
+      "target_deflection_range_mm": {
+        "top_plate": {"min": 0.5, "max": 1.2, "weight_g": 500},
+        "back_plate": {"min": 0.3, "max": 0.8, "weight_g": 500}
+      },
+      "stations": ["center_bridge_area", "bass_side_lower_bout", "treble_side_lower_bout", "upper_bout_center"],
+      "note": "Deflection testing validates graduation. Top should deflect 0.5–1.2mm under 500g at bridge. Back stiffer: 0.3–0.8mm. If outside range, adjust graduation. Test before final finishing."
+    },
+    "contour_generator_tooling": {
+      "script": "archtop_contour_generator.py",
+      "modes": {
+        "csv": "Feed measured points (x, y, height) from physical arch measurements → IDW interpolation → contour rings at specified heights → DXF/SVG/PNG output",
+        "outline": "Feed body outline DXF + apex origin + Mottola scale factors → scaled ring DXF/SVG/PNG output"
+      },
+      "usage_for_this_design": {
+        "step_1": "Use 'outline' mode with carlos_jumbo_body.dxf, apex at bridge center, scales 0.89,0.78,0.66,0.54,0.37",
+        "step_2": "CNC rough-carve to contour rings (leave 1mm surplus for hand-finishing)",
+        "step_3": "Hand-graduate with Hacklinger gauge to target thicknesses from graduation map",
+        "step_4": "Validate with plate deflection test before closing box"
+      }
+    },
+    "measurement_kit": {
+      "required_tools": [
+        "Contour gauge (profile gauge) — capture arch cross-sections at key stations",
+        "Flexible curve ruler — map longitudinal and transverse arches",
+        "Graduation calipers / Hacklinger gauge — measure plate thicknesses",
+        "Dial indicator on stand — plate deflection testing",
+        "Dial calipers — nut, bridge, and brace dimensions",
+        "Steel ruler 24 inch — overall body and reference measurements",
+        "Inspection mirror and light — internal bracing and plate observation"
+      ]
+    }
+  },
+  "cnc_operations": {
+    "note": "Archtop CNC operations cover carved top plate, carved back plate, rim bending form, f-hole cutting, neck, and bridge foot carving. The contour generator tooling provides the DXF contour rings that drive the CNC rough-carving passes.",
+    "tool_library": {
+      "T1": {"name": "6mm Flat End Mill", "diameter_mm": 6.0, "rpm": 18000, "use": "Plate perimeter, f-holes, rim form, neck profile"},
+      "T2": {"name": "3mm Flat End Mill", "diameter_mm": 3.0, "rpm": 20000, "use": "Binding ledge, purfling channel, detail routing"},
+      "T3": {"name": "6mm Ball Nose", "diameter_mm": 6.0, "rpm": 18000, "use": "Arch carving (rough passes following contour rings)"},
+      "T4": {"name": "3mm Ball Nose", "diameter_mm": 3.0, "rpm": 20000, "use": "Arch carving (finish passes), recurve detail"},
+      "T5": {"name": "1.5mm Drill", "diameter_mm": 1.5, "rpm": 20000, "use": "Tuner holes, pilot holes"}
+    },
+    "top_plate_operations": [
+      {"op": "OP10", "name": "Top Plate Perimeter", "tool": "T1", "depth_mm": 4.0, "note": "Cut spruce top blank to jumbo body outline, 2mm oversize for binding ledge"},
+      {"op": "OP11", "name": "Top Arch Rough Carving", "tool": "T3", "depth_mm": "variable", "note": "Rough-carve top arch following Mottola contour rings. Step-down in 3.175mm increments to each ring, leave 1mm for hand-finishing. Apex target: 22mm arch height."},
+      {"op": "OP12", "name": "Top Arch Finish Pass", "tool": "T4", "depth_mm": "variable", "note": "Ball-nose finish pass with 1mm stepover for smooth surface. Final graduation by hand."},
+      {"op": "OP13", "name": "F-Hole Cutting", "tool": "T1", "depth_mm": "through", "note": "Cut f-holes through carved top plate. 110×28mm traditional archtop pattern from f_holes.dxf"},
+      {"op": "OP14", "name": "Binding Ledge Top", "tool": "T2", "depth_mm": 2.0, "note": "Stepped ledge around top perimeter for binding (2.0mm wide × 2.0mm deep)"},
+      {"op": "OP15", "name": "Purfling Channel Top", "tool": "T2", "depth_mm": 1.5, "note": "Purfling channel inside binding ledge (4.0mm wide × 1.5mm deep)"}
+    ],
+    "back_plate_operations": [
+      {"op": "OP20", "name": "Back Plate Perimeter", "tool": "T1", "depth_mm": 4.0, "note": "Cut maple back blank to jumbo body outline, 2mm oversize"},
+      {"op": "OP21", "name": "Back Arch Rough Carving", "tool": "T3", "depth_mm": "variable", "note": "Rough-carve back arch following contour rings. Flatter arch than top: 18mm apex height. Step-down in 3.175mm increments."},
+      {"op": "OP22", "name": "Back Arch Finish Pass", "tool": "T4", "depth_mm": "variable", "note": "Ball-nose finish pass. Back requires less aggressive graduation than top."},
+      {"op": "OP23", "name": "Binding Ledge Back", "tool": "T2", "depth_mm": 2.0, "note": "Stepped ledge for back binding"},
+      {"op": "OP24", "name": "Purfling Channel Back", "tool": "T2", "depth_mm": 1.5, "note": "Purfling channel for back plate"}
+    ],
+    "rim_operations": [
+      {"op": "OP30", "name": "Rim Bending Form Male", "tool": "T1", "depth_mm": 25.0, "note": "Male mold for side bending from MDF — jumbo outline. 430mm lower bout requires large bending form."},
+      {"op": "OP31", "name": "Rim Bending Form Female", "tool": "T1", "depth_mm": 25.0, "note": "Female mold offset by rim thickness (2mm) from male form"}
+    ],
+    "neck_operations": [
+      {"op": "OP40", "name": "Neck Blank Profile", "tool": "T1", "depth_mm": 25.0, "note": "Cut maple neck blank to heel/shaft profile"},
+      {"op": "OP41", "name": "Headstock Angle Cut", "tool": "T1", "depth_mm": "variable", "note": "14-degree headstock scarf joint or carved angle"},
+      {"op": "OP42", "name": "Truss Rod Channel", "tool": "T2", "depth_mm": 10.0, "note": "6mm × 10mm dual-action truss rod channel"},
+      {"op": "OP43", "name": "Heel Dovetail Tenon", "tool": "T2", "depth_mm": 18.0, "note": "Precision dovetail tenon — deeper than Benedetto to lock into jumbo body's thicker rim assembly"},
+      {"op": "OP44", "name": "Fret Slot Cutting", "tool": "T2", "depth_mm": 1.5, "note": "22 fret slots (cutaway) or 20 (non-cutaway) — CNC ensures accurate spacing for 648mm scale"},
+      {"op": "OP45", "name": "Neck Binding Channel", "tool": "T2", "depth_mm": 1.5, "note": "2.0mm × 1.5mm channel on both fretboard edges for neck binding"}
+    ],
+    "bridge_operations": [
+      {"op": "OP50", "name": "Bridge Foot Carving", "tool": "T4", "depth_mm": "variable", "note": "Carve ebony bridge base to match top arch profile at bridge position. Requires arch measurement data from finished top plate."}
+    ]
+  },
+  "stock": {
+    "top_plate": {
+      "material": "european_spruce",
+      "material_alternative": "sitka_spruce",
+      "thickness_mm": 30.0,
+      "width_mm": 450.0,
+      "length_mm": 540.0,
+      "bookmatched": true,
+      "note": "30mm thick blank for carved archtop top (22mm arch height + 3.5mm edge + margin). Bookmatched European spruce for tone quality."
+    },
+    "back_plate": {
+      "material": "european_maple",
+      "material_alternative": "big_leaf_maple",
+      "thickness_mm": 25.0,
+      "width_mm": 450.0,
+      "length_mm": 540.0,
+      "bookmatched": true,
+      "note": "25mm thick blank for carved back (18mm arch height + 3mm edge + margin). Flamed maple preferred for visual impact."
+    },
+    "sides": {
+      "material": "european_maple",
+      "material_alternative": "big_leaf_maple",
+      "thickness_mm": 2.0,
+      "width_mm": 105.0,
+      "length_mm": 1000.0,
+      "note": "Two side pieces, bent to jumbo body shape. Longer than standard archtop (1000mm vs ~850mm) to wrap the larger body perimeter."
+    },
+    "neck_blank": {
+      "material": "maple",
+      "thickness_mm": 100.0,
+      "width_mm": 70.0,
+      "length_mm": 520.0,
+      "note": "Maple neck for stiffness. Extra length for headstock angle."
+    }
+  },
+  "fret_positions": {
+    "scale_length_mm": 648.0,
+    "fret_count": 22,
+    "positions_from_nut_mm": [
+      36.37, 70.73, 103.17, 133.78, 162.66, 189.90, 215.60, 239.84,
+      262.71, 284.27, 304.60, 323.76, 341.83, 358.86, 374.91, 390.04,
+      404.30, 417.73, 430.39, 442.30, 453.53, 464.10
+    ]
+  },
+  "dxf_assets": {
+    "body_outline": "acoustic/carlos_jumbo_body.dxf",
+    "body_outline_status": "existing_39_point_ai_extraction",
+    "f_holes": "jumbo_archtop/f_holes.dxf",
+    "f_holes_status": "pending_design",
+    "top_contours": "jumbo_archtop/top_contours.dxf",
+    "top_contours_status": "pending_generation",
+    "back_contours": "jumbo_archtop/back_contours.dxf",
+    "back_contours_status": "pending_generation",
+    "graduation_map": "jumbo_archtop/graduation_map.json",
+    "graduation_map_status": "pending_generation",
+    "note": "Body outline reuses Carlos Jumbo DXF. F-holes, contour rings, and graduation map need to be generated. Contour rings can be produced by archtop_contour_generator.py in outline mode."
+  },
+  "build_workflow": {
+    "phase_1_plates": [
+      "1. Joint and thickness spruce top blank to 30mm",
+      "2. Joint and thickness maple back blank to 25mm",
+      "3. Generate contour DXFs using archtop_contour_generator.py (outline mode, carlos_jumbo_body.dxf, Mottola scale factors)",
+      "4. CNC rough-carve top arch (OP11) following contour rings — leave 1mm surplus",
+      "5. CNC rough-carve back arch (OP21) following contour rings — leave 1mm surplus",
+      "6. Hand-graduate both plates using Hacklinger gauge to target thicknesses",
+      "7. Plate deflection test: top 0.5–1.2mm under 500g, back 0.3–0.8mm under 500g",
+      "8. Cut plate perimeters to body outline (OP10, OP20)"
+    ],
+    "phase_2_f_holes_and_bracing": [
+      "1. Mark and cut f-holes through carved top plate (OP13)",
+      "2. Install X-bracing on top plate underside — cross below soundhole position",
+      "3. Install tone bars flanking f-holes",
+      "4. Install back braces (4 lateral + center strip)",
+      "5. Tap-tune: adjust brace heights to tune plate resonances"
+    ],
+    "phase_3_rim_and_assembly": [
+      "1. CNC rim bending forms (OP30, OP31)",
+      "2. Heat-bend maple sides to jumbo body shape",
+      "3. Install end blocks and neck block",
+      "4. Glue kerfed lining to inside of rim",
+      "5. Glue top plate to rim assembly",
+      "6. Glue back plate to rim assembly",
+      "7. Binding and purfling installation"
+    ],
+    "phase_4_neck_and_setup": [
+      "1. CNC neck profile (OP40–OP45)",
+      "2. Install truss rod",
+      "3. Glue fretboard, install frets",
+      "4. Fit dovetail neck joint",
+      "5. Finish: nitrocellulose lacquer or French polish",
+      "6. Carve floating bridge foot to match top arch (OP50)",
+      "7. Final setup: string height, intonation, pickup if desired"
+    ]
+  },
+  "notes": [
+    "All dimensions in mm.",
+    "NEW DESIGN: Jumbo body scale (Carlos Jumbo 430×520mm) + full archtop construction (Benedetto method).",
+    "Scale length 648mm — between Benedetto 647.7mm and Carlos Jumbo 650mm, chosen as compromise.",
+    "Neck angle 4.0 degrees (increased from Benedetto 3.5) to accommodate deeper jumbo body depth.",
+    "String gauge .013-.056 (heavier than standard jazz .012-.052) to drive larger body volume.",
+    "Graduation data adapted from D'Aquisto measurements, scaled up 5-10% for larger plate area.",
+    "Contour specification follows Mottola method (American Lutherie #69) — scalable rings from body outline.",
+    "CNC workflow: rough-carve plates to contour rings, hand-finish graduation, deflection-test before closing.",
+    "Archtop contour generator script (archtop_contour_generator.py) produces CNC-ready contour DXFs.",
+    "F-holes, contour DXFs, and graduation map are pending generation — body outline exists from Carlos Jumbo.",
+    "Body depth 90-100mm (rim only) — deeper than Benedetto 82.55mm rim for maximum air volume.",
+    "Floating bridge and tailpiece — no routing through top plate. Optional floating pickup on pickguard.",
+    "Ivoroid binding with B/W/B purfling — clean, traditional appearance.",
+    "This design targets unamplified jazz with more body and projection than a standard 17\" archtop."
+  ]
+}

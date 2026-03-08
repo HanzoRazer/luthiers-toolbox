@@ -667,6 +667,57 @@
         "Cuatro/plano cuatro venezolano.pdf",
         "Cuatro/cuatro puertorique\u00f1o.pdf"
       ]
+    },
+    "jumbo_archtop": {
+      "id": "jumbo_archtop",
+      "display_name": "Jumbo Archtop — Carlos Body Scale + Benedetto Construction",
+      "status": "PARTIAL",
+      "category": "archtop_guitar",
+      "scale_length_mm": 648.0,
+      "fret_count": 22,
+      "string_count": 6,
+      "description": "NEW hybrid design: Carlos Jumbo body scale (430mm lower bout, 520mm body length) with full Benedetto archtop construction (carved spruce top, carved maple back, f-holes, floating bridge/tailpiece). Archtop Measurements knowledge base integrated (Mottola contour method, D'Aquisto graduation data, plate deflection testing). Targets unamplified jazz with exceptional bass and projection.",
+      "manufacturer": "custom_design",
+      "body_style": "archtop_jumbo",
+      "body_dimensions_mm": {
+        "lower_bout": 430.0,
+        "upper_bout": 310.0,
+        "waist": 270.0,
+        "length": 520.0,
+        "width": 430.0,
+        "depth_rim": 95.0,
+        "depth_tail": 100.0,
+        "depth_neck": 90.0,
+        "source": "Carlos Jumbo body outline (430x520mm) adapted for archtop construction"
+      },
+      "design_lineage": {
+        "body_scale": "carlos_jumbo",
+        "construction_method": "benedetto_17",
+        "engineering_reference": "archtop_measurements_knowledge_base"
+      },
+      "assets": [
+        {
+          "type": "spec_json",
+          "path": "specs/jumbo_archtop.json",
+          "note": "Full archtop spec with 2 variants (venetian_cutaway, non_cutaway), Mottola contour engineering, D'Aquisto graduation data, plate deflection targets, CNC operations for carved plates"
+        },
+        {
+          "type": "dxf",
+          "path": "body/dxf/acoustic/carlos_jumbo_body.dxf",
+          "note": "Shared body outline from Carlos Jumbo (39-point AI vision extraction) — reused as archtop plate outline"
+        },
+        {
+          "type": "knowledge_base",
+          "path": "../../../../Guitar Plans/Archtop Measurements/",
+          "note": "Archtop Measurements knowledge base: field manuals, contour kits, graduation maps, D'Aquisto measurements, plate deflection guides, contour generator tooling"
+        }
+      ],
+      "pending_assets": [
+        "jumbo_archtop/f_holes.dxf — f-hole design (traditional archtop 110x28mm)",
+        "jumbo_archtop/top_contours.dxf — Mottola contour rings for CNC top carving",
+        "jumbo_archtop/back_contours.dxf — Mottola contour rings for CNC back carving",
+        "jumbo_archtop/graduation_map.json — target plate thicknesses at measurement stations"
+      ]
     }
   }
 }
