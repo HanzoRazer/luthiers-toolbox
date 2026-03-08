@@ -423,7 +423,7 @@ def download_retract_gcode(body: RetractStrategyIn) -> Response:
         f"(Features: {len(body.features)})",
         ""
     ]
-    gcode_lines.extend(result.gcode)
+    gcode_lines.extend(result["gcode"])
     gcode_lines.append("")
     gcode_lines.append("M30")
     gcode_lines.append("(End of program)")
