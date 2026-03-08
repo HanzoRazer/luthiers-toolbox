@@ -39,8 +39,8 @@ COPY services/api /app/services/api
 # Create non-root user first (needed for chown below)
 RUN useradd -m app
 
-# Ensure data directory exists and is writable by app user
-RUN mkdir -p /app/services/api/app/data && chown -R app:app /app/services/api/app/data
+# Ensure data directories exist and are writable by app user
+RUN mkdir -p /app/services/api/app/data/runs && chown -R app:app /app/services/api/app/data
 
 # Switch to non-root user
 USER app
