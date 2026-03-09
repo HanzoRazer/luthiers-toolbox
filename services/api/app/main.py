@@ -125,8 +125,22 @@ app.add_middleware(RequestIdMiddleware)
 # Must specify explicit origins for cross-origin deployments (Railway, etc.)
 CORS_ORIGINS = [
     "http://localhost:5173",  # Vite dev server
+    "http://localhost:5174",  # Vite fallback
+    "http://localhost:5175",  # Vite fallback
+    "http://localhost:5176",  # Vite fallback
+    "http://localhost:5177",  # Vite fallback
+    "http://localhost:5178",  # Vite fallback
+    "http://localhost:5179",  # Vite fallback
+    "http://localhost:5180",  # Vite fallback
     "http://localhost:4173",  # Vite preview
     "http://127.0.0.1:5173",
+    "http://127.0.0.1:5174",
+    "http://127.0.0.1:5175",
+    "http://127.0.0.1:5176",
+    "http://127.0.0.1:5177",
+    "http://127.0.0.1:5178",
+    "http://127.0.0.1:5179",
+    "http://127.0.0.1:5180",
     "http://127.0.0.1:4173",
     "https://luthiers-toolboxclient-production-309d.up.railway.app",  # Railway client
 ]

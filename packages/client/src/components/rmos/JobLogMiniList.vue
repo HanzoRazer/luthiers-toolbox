@@ -88,8 +88,9 @@ function formatDate(iso: string) {
   }
 }
 
-function truncateId(id: string, len = 24) {
-  return id.length > len ? id.slice(0, len) + '…' : id;
+function truncateId(id: string | undefined | null, len = 24) {
+  if (!id) return "-";
+  return id.length > len ? id.slice(0, len) + "..." : id;
 }
 
 function badgeClass(jobType: string) {
