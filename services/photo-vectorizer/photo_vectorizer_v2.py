@@ -44,6 +44,8 @@ from xml.etree.ElementTree import Element, SubElement, ElementTree
 import cv2
 import numpy as np
 
+from grid_classify import PhotoGridClassifier, merge_classifications
+
 # ── Optional deps (graceful fallback) ──────────────────────────────────────────
 try:
     import fitz  # PyMuPDF
@@ -156,6 +158,9 @@ class FeatureContour:
     bbox_px: Tuple[int, int, int, int] = (0, 0, 0, 0)
     hash_id: str = ""
     manually_corrected: bool = False
+    grid_zone: Optional[str] = None
+    grid_confidence: float = 0.0
+    grid_notes: List[str] = field(default_factory=list)
 
 
 @dataclass
@@ -177,6 +182,8 @@ class PhotoExtractionResult:
     assembly_method: str = "direct"
     warnings: List[str] = field(default_factory=list)
     processing_time_ms: float = 0.0
+    grid_reclassified: int = 0
+    grid_overlay_path: Optional[str] = None
     debug_images: Dict[str, str] = field(default_factory=dict)
 
     def summary(self) -> Dict[str, Any]:
@@ -219,7 +226,7 @@ INSTRUMENT_SPECS: Dict[str, Dict[str, Any]] = {
     "dreadnought": {"body": (520, 400), "features": {
         "soundhole": (100.0, 100.0), "bridge_route": (180.0, 30.0),
     }},
-    "smart_guitar": {"body": (500, 370), "features": {
+    "smart_guitar": {"body": (444.5, 368.3), "features": {
         "pickup_route": [(85.0, 35.0)], "neck_pocket": (56.0, 76.0),
         "bridge_route": (100.0, 40.0), "control_cavity": (120.0, 80.0),
     }},
@@ -1034,6 +1041,49 @@ class PhotoVectorizerV2:
             body_fc = max(feature_contours, key=lambda c: c.area_px)
             body_fc.feature_type = FeatureType.BODY_OUTLINE
             body_fc.confidence = 0.7
+
+        # ── Stage 8.5: Grid zone re-classification ───────────────────────
+        body_bbox_px = body_fc.bbox_px if body_fc else None
+        if body_bbox_px:
+            grid_clf = PhotoGridClassifier()
+            reclassified = 0
+            for fc in feature_contours:
+                if fc is body_fc:
+                    fc.grid_zone = "BODY_OUTLINE"
+                    fc.grid_confidence = 1.0
+                    continue
+                gc = grid_clf.classify_contour_px(fc.bbox_px, body_bbox_px)
+                fc.grid_zone = gc.primary_category
+                fc.grid_notes = gc.notes
+
+                # Merge grid + dimension classification
+                final_feat, final_conf, reason = merge_classifications(
+                    fc.feature_type.value, fc.confidence, gc)
+                try:
+                    new_type = FeatureType(final_feat)
+                except ValueError:
+                    new_type = fc.feature_type
+
+                if new_type != fc.feature_type:
+                    logger.info(f"Grid reclassify: {fc.feature_type.value} -> {new_type.value} ({reason})")
+                    fc.feature_type = new_type
+                    reclassified += 1
+                fc.confidence = final_conf
+                fc.grid_confidence = gc.grid_confidence
+
+            result.grid_reclassified = reclassified
+            logger.info(f"Grid re-classification: {reclassified}/{len(feature_contours)} changed")
+
+            if debug_images:
+                contour_bboxes = [fc.bbox_px for fc in feature_contours if fc is not body_fc]
+                classifications = [grid_clf.classify_contour_px(fc.bbox_px, body_bbox_px)
+                                   for fc in feature_contours if fc is not body_fc]
+                overlay = grid_clf.draw_grid_overlay(image, body_bbox_px,
+                                                    contour_bboxes, classifications)
+                overlay_path = str(out_dir / f"{source.stem}_05_grid_overlay.jpg")
+                cv2.imwrite(overlay_path, overlay)
+                debug_paths["grid_overlay"] = overlay_path
+                result.grid_overlay_path = overlay_path
 
         # If calibration was from spec, refine using body contour
         if calibration.source == ScaleSource.INSTRUMENT_SPEC and spec_name:
