@@ -19,7 +19,7 @@ export const useRosettePatternStore = defineStore('rosettePattern', () => {
     loading.value = true;
     error.value = null;
     try {
-      const res = await api('/api/rosette-patterns');
+      const res = await api('/api/art/patterns');
       if (!res.ok) throw new Error(`Failed to fetch patterns: ${res.status}`);
       patterns.value = await res.json();
     } catch (err: any) {
@@ -33,7 +33,7 @@ export const useRosettePatternStore = defineStore('rosettePattern', () => {
     loading.value = true;
     error.value = null;
     try {
-      const res = await api('/api/rosette-patterns', {
+      const res = await api('/api/art/patterns', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(pattern),
@@ -55,7 +55,7 @@ export const useRosettePatternStore = defineStore('rosettePattern', () => {
     loading.value = true;
     error.value = null;
     try {
-      const res = await api(`/api/rosette-patterns/${patternId}`, {
+      const res = await api(`/api/art/patterns/${patternId}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(updates),
@@ -79,7 +79,7 @@ export const useRosettePatternStore = defineStore('rosettePattern', () => {
     loading.value = true;
     error.value = null;
     try {
-      const res = await api(`/api/rosette-patterns/${patternId}`, {
+      const res = await api(`/api/art/patterns/${patternId}`, {
         method: 'DELETE',
       });
       if (!res.ok) throw new Error(`Failed to delete pattern: ${res.status}`);

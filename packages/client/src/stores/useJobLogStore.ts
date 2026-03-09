@@ -10,7 +10,7 @@ export const useJobLogStore = defineStore('jobLog', () => {
 
   const { loading, error, execute: fetchJobLog } = useAsyncAction(
     async () => {
-      const res = await api('/api/joblog');
+      const res = await api('/api/joblog/saw_runs');
       if (!res.ok) throw new Error(`Failed to fetch joblog: ${res.status}`);
       const data: JobLogEntry[] = await res.json();
       entries.value = data;

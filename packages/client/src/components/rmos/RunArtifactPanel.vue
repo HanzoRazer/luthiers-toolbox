@@ -120,7 +120,7 @@ function handleRefresh() {
 
       <template v-else>
         <RunArtifactRow
-          v-for="r in store.items"
+          v-for="r in store.items.filter(i => i && i.run_id)"
           :key="r.run_id"
           :run="r"
           :selected="store.selected?.run_id === r.run_id"
