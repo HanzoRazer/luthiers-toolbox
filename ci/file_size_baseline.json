@@ -10,7 +10,7 @@
   "services/api/app/rmos/stub_routes.py": 886,
   "services/api/app/router_registry/manifest.py": 611,
   "services/api/app/routers/cam_post_v155_router.py": 521,
-  "services/api/app/routers/neck_router.py": 655,
+  "services/api/app/routers/neck_router.py": 683,
   "services/api/app/saw_lab/toolpaths_validate_service.py": 568,
   "services/api/app/tests/test_e2e_workflow_integration.py": 504,
   "services/api/app/util/gcode_reader.py": 511
