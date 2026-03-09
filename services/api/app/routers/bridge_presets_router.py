@@ -120,3 +120,26 @@ def get_bridge_presets() -> BridgePresetsResponse:
         gauges=GAUGE_PRESETS,
         actions=ACTION_PRESETS,
     )
+
+
+# ---------------------------------------------------------------------------
+# Break angle calculator endpoint
+# ---------------------------------------------------------------------------
+
+from ..calculators.bridge_break_angle import (
+    BreakAngleInput,
+    BreakAngleResult,
+    calculate_break_angle,
+)
+
+
+@router.post("/break-angle", response_model=BreakAngleResult)
+def compute_break_angle(req: BreakAngleInput) -> BreakAngleResult:
+    """
+    Calculate string break angle over the saddle crown.
+
+    Given pin-to-saddle distance and saddle protrusion height, returns
+    the break angle in degrees, an energy coupling rating, and risk flags
+    for geometries outside the optimal 23-31 degree range.
+    """
+    return calculate_break_angle(req)
