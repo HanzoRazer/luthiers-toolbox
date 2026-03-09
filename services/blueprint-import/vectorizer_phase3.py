@@ -2628,18 +2628,16 @@ class Phase3Vectorizer:
             logger.info(f"  Input type: {detected_input_type}")
 
             if detected_input_type == InputType.PHOTO.value and self.photo_processor:
-                processed = self.photo_processor.preprocess_for_extraction(
-                    image,
-                    correct_perspective=correct_perspective
-                )
-                if processed is not None:
-                    image = processed
+                photo_result = self.photo_processor.preprocess_for_extraction(image)
+                if photo_result is not None:
+                    processed_img, photo_meta = photo_result
+                    image = processed_img
                     height, width = image.shape[:2]
                     img_width_mm = width * self.mm_per_px
                     img_height_mm = height * self.mm_per_px
-                    perspective_corrected = correct_perspective
-                    bg_method_used = self.photo_processor.last_bg_method if hasattr(self.photo_processor, 'last_bg_method') else "auto"
-                    logger.info(f"  Photo pre-processed (perspective: {correct_perspective})")
+                    perspective_corrected = photo_meta.get('perspective_corrected', False)
+                    bg_method_used = photo_meta.get('bg_method', 'auto')
+                    logger.info(f"  Photo pre-processed (perspective: {perspective_corrected}, bg: {bg_method_used})")
 
         # Initialize ML classifier reference (may be None in SIMPLE mode)
         ml_clf = None
@@ -2695,15 +2693,35 @@ class Phase3Vectorizer:
 
         # Phase 3.7: Contour completion — fill gaps if no body found
         if self.contour_completer and not classified.get(ContourCategory.BODY_OUTLINE):
-            completed = self.contour_completer.complete_body_outline(
-                classified, image.shape[:2], gap_px=assembly_gap_px
-            )
-            if completed:
-                classified = completed
-                all_contours = []
-                for cat_list in classified.values():
-                    all_contours.extend(cat_list)
-                logger.info("Contour completion recovered body outline")
+            # Extract raw contour arrays from all non-trivial categories
+            raw_contours = [
+                info.contour for info in all_contours
+                if info.category not in (ContourCategory.TEXT, ContourCategory.PAGE_BORDER,
+                                         ContourCategory.UNKNOWN, ContourCategory.SMALL_FEATURE)
+            ]
+            if len(raw_contours) >= 2:
+                merged = self.contour_completer.complete_body_outline(
+                    raw_contours, image.shape[:2]
+                )
+                if merged is not None and len(merged) >= 3:
+                    # Wrap the recovered outline as a ContourInfo and inject into classified
+                    pts = merged.reshape(-1, 2)
+                    x, y, bw, bh = cv2.boundingRect(merged)
+                    body_info = ContourInfo(
+                        contour=merged,
+                        category=ContourCategory.BODY_OUTLINE,
+                        width_mm=bw * self.mm_per_px,
+                        height_mm=bh * self.mm_per_px,
+                        area_px=float(cv2.contourArea(merged)),
+                        perimeter_px=float(cv2.arcLength(merged, True)),
+                        circularity=0.0,
+                        aspect_ratio=bw / max(bh, 1),
+                        point_count=len(pts),
+                        bbox=(x, y, bw, bh)
+                    )
+                    classified[ContourCategory.BODY_OUTLINE] = [body_info]
+                    all_contours.append(body_info)
+                    logger.info(f"Contour completion recovered body outline ({len(pts)} points)")
 
         # Phase 3.7: Apply manual overrides
         if self.manual_override:
@@ -2727,9 +2745,9 @@ class Phase3Vectorizer:
         if self.scale_calibrator and (user_dimension_mm or image_dpi):
             # Phase 3.7: Enhanced scale calibration
             calibration_result = self.scale_calibrator.calibrate(
-                all_contours, instrument,
-                user_dimension_mm=user_dimension_mm,
-                user_dimension_px=user_dimension_px,
+                image, all_contours,
+                user_mm=user_dimension_mm,
+                user_px=user_dimension_px,
                 spec_name=spec_name,
                 image_dpi=image_dpi
             )
@@ -2821,10 +2839,16 @@ class Phase3Vectorizer:
         validation_passed = True
         enhanced_validation = None
         if self.enhanced_validator and validate and body_w > 0:
-            # Phase 3.7: Enhanced validation (includes spec checking)
-            enhanced_validation = self.enhanced_validator.validate(
-                classified, body_w, body_h, spec_name=spec_name
+            # Phase 3.7: Enhanced validation — build a minimal result-like object
+            from types import SimpleNamespace
+            _partial = SimpleNamespace(
+                contours_by_category={cat.value: infos for cat, infos in classified.items()},
+                dimensions_mm=(body_w, body_h),
+                scale_source=scale_source,
+                scale_factor=scale_factor,
+                instrument_type=instrument
             )
+            enhanced_validation = self.enhanced_validator.validate(_partial)
             validation_passed = enhanced_validation.get("passed", True)
             warnings = enhanced_validation.get("warnings", [])
             for w in warnings:
@@ -2840,9 +2864,8 @@ class Phase3Vectorizer:
         # Phase 3.7: Debug report generation
         debug_report_path = None
         if generate_debug_report and self.debug_visualizer:
-            debug_report_path = self.debug_visualizer.create_report(
-                image, classified, source_path
-            )
+            report_title = f"Debug: {Path(source_path).stem}"
+            debug_report_path = str(self.debug_visualizer.create_report(report_title))
             if debug_report_path:
                 logger.info(f"Debug report: {debug_report_path}")
 
