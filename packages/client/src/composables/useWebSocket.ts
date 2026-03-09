@@ -28,7 +28,10 @@ export function useWebSocket() {
   let reconnectTimer: ReturnType<typeof setTimeout> | null = null
 
   const connect = async (baseUrl?: string) => {
-    const wsUrl = baseUrl || `ws://${window.location.hostname}:8000/ws/monitor`
+    // Use API base URL from env, converting http(s) to ws(s)
+    const apiBase = import.meta.env.VITE_API_BASE || 'http://localhost:8011'
+    const wsBase = apiBase.replace(/^http/, 'ws')
+    const wsUrl = baseUrl || `${wsBase}/ws/monitor`
     
     try {
       ws.value = new WebSocket(wsUrl)
