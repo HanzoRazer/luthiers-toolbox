@@ -339,13 +339,6 @@ INSTRUMENT_SPECS = {
         neck_pocket_range=(None, None),
         scale_length=650
     ),
-    "jumbo_archtop": InstrumentSpec(
-        name="Jumbo Archtop",
-        body_length_range=(490, 540),
-        body_width_range=(400, 445),
-        neck_pocket_range=(None, None),  # Dovetail joint
-        scale_length=648
-    ),
 }
 
 
@@ -1605,7 +1598,7 @@ def classify_contour(
 
     # Pickguard: medium-large, curved
     elif 150 < max_dim < 400 and 100 < min_dim < 350:
-        if instrument_type == InstrumentType.ELECTRIC_GUITAR:
+        if instrument_type in (InstrumentType.ELECTRIC_GUITAR, InstrumentType.ACOUSTIC_GUITAR):
             category = ContourCategory.PICKGUARD
 
     # Rhythm circuit (Jazzmaster/Jaguar style)
@@ -1826,6 +1819,31 @@ def rerank_body_candidates(
 
     if best_score < min_body_score:
         logger.warning(f"Best body candidate scored only {best_score:.1f} — below threshold {min_body_score}")
+        return classified
+
+    # Minimum body size sanity check — a real guitar body is at least 300mm
+    # in its largest dimension. Anything smaller is a component (pickguard,
+    # neck profile, etc.) that was falsely promoted.
+    best_max_dim = max(best_info.width_mm, best_info.height_mm)
+    if best_max_dim < 300:
+        logger.info(
+            f"Best body candidate is only {best_max_dim:.0f}mm — too small for a body. "
+            f"Treating as component-only sheet (pickguard, neck profile, etc.)"
+        )
+        # Reclassify all body candidates back to their proper categories
+        for score, info, source in body_candidates:
+            max_d = max(info.width_mm, info.height_mm)
+            min_d = min(info.width_mm, info.height_mm)
+            if 100 < max_d < 400 and 50 < min_d < 350:
+                if ContourCategory.PICKGUARD not in classified:
+                    classified[ContourCategory.PICKGUARD] = []
+                classified[ContourCategory.PICKGUARD].append(info)
+            else:
+                if ContourCategory.UNKNOWN not in classified:
+                    classified[ContourCategory.UNKNOWN] = []
+                classified[ContourCategory.UNKNOWN].append(info)
+        # Clear body outline — this sheet has no body
+        classified[ContourCategory.BODY_OUTLINE] = []
         return classified
 
     # Rebuild BODY_OUTLINE with the best candidate
@@ -2546,6 +2564,21 @@ class Phase3Vectorizer:
 
             export_primitives_to_dxf(primitives, prim_path, (center_x, center_y))
 
+        # Detect component-only sheets (no body found)
+        sheet_type = "body"
+        if body_w == 0 and body_h == 0:
+            # Count what we actually found
+            pickguard_count = len(classified.get(ContourCategory.PICKGUARD, []))
+            if pickguard_count > 0:
+                sheet_type = "pickguard_sheet"
+                logger.info(f"Component sheet detected: {pickguard_count} pickguard(s), no body outline")
+            else:
+                sheet_type = "component_sheet"
+                total = sum(len(v) for k, v in classified.items()
+                            if k not in (ContourCategory.TEXT, ContourCategory.PAGE_BORDER,
+                                         ContourCategory.UNKNOWN, ContourCategory.SMALL_FEATURE))
+                logger.info(f"Component sheet detected: {total} feature(s), no body outline")
+
         # Validate dimensions
         warnings = []
         validation_passed = True
@@ -2553,6 +2586,9 @@ class Phase3Vectorizer:
             validation_passed, warnings = validate_dimensions(body_w, body_h, spec_name)
             for w in warnings:
                 logger.warning(w)
+        elif validate and sheet_type != "body":
+            # Component sheets pass validation — no body to validate
+            validation_passed = True
 
         # Record feedback if enabled
         if self.feedback and ml_clf:
