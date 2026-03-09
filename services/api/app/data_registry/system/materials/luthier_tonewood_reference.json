@@ -1,0 +1,1801 @@
+{
+  "_meta": {
+    "tier": "system",
+    "category": "materials",
+    "version": "1.0.0",
+    "description": "Curated tonewood reference for luthiers. Two tiers: Tier 1 (primary + established) are proven guitar woods with full tonal and application data. Tier 2 (emerging picks) are species gaining traction with builders, included for exploration. All data derived from wood_species.json \u2014 this file is a curated view, not a separate source of truth.",
+    "derived_from": "wood_species.json v4.0.0",
+    "tiers": {
+      "tier_1": "Proven tonewoods (primary + established) \u2014 full lutherie characterization",
+      "tier_2": "Emerging picks \u2014 real builder interest, lutherie data may be partial"
+    }
+  },
+  "tier_1": {
+    "alder": {
+      "id": "alder",
+      "name": "Red Alder",
+      "scientific_name": "Alnus rubra",
+      "guitar_relevance": "primary",
+      "density_kg_m3": 420,
+      "specific_gravity": 0.41,
+      "janka_hardness_lbf": 590,
+      "modulus_of_elasticity_gpa": null,
+      "modulus_of_rupture_mpa": null,
+      "grain": "straight",
+      "speed_of_sound_m_s": null,
+      "acoustic_impedance": null,
+      "tone_character": "balanced, slightly bright, clear",
+      "typical_uses": [
+        "body"
+      ],
+      "sustainability": "sustainable, abundant",
+      "machining_notes": {
+        "burn_risk": "low",
+        "tearout_risk": "medium",
+        "dust_hazard": "low",
+        "notes": "Very easy to machine. Excellent for guitar bodies."
+      }
+    },
+    "ash_swamp": {
+      "id": "ash_swamp",
+      "name": "Swamp Ash",
+      "scientific_name": "Fraxinus spp.",
+      "guitar_relevance": "primary",
+      "density_kg_m3": 500,
+      "specific_gravity": 0.48,
+      "janka_hardness_lbf": 1010,
+      "modulus_of_elasticity_gpa": null,
+      "modulus_of_rupture_mpa": null,
+      "grain": "prominent, open pore",
+      "speed_of_sound_m_s": null,
+      "acoustic_impedance": null,
+      "tone_character": "bright, twangy, scooped mids",
+      "typical_uses": [
+        "body"
+      ],
+      "sustainability": "declining (emerald ash borer)",
+      "machining_notes": {
+        "burn_risk": "low",
+        "tearout_risk": "high",
+        "dust_hazard": "medium",
+        "notes": "Open grain can tear. Use downcut or compression bits for edges."
+      }
+    },
+    "ash_white": {
+      "id": "ash_white",
+      "name": "White Ash",
+      "scientific_name": "Fraxinus americana",
+      "guitar_relevance": "established",
+      "density_kg_m3": 670,
+      "specific_gravity": 0.63,
+      "janka_hardness_lbf": 1320,
+      "modulus_of_elasticity_gpa": null,
+      "modulus_of_rupture_mpa": null,
+      "grain": "prominent, open pore",
+      "speed_of_sound_m_s": null,
+      "acoustic_impedance": null,
+      "tone_character": "bright, aggressive, strong mids",
+      "typical_uses": [
+        "body"
+      ],
+      "sustainability": "declining (emerald ash borer)",
+      "machining_notes": {
+        "burn_risk": "low",
+        "tearout_risk": "high",
+        "dust_hazard": "medium",
+        "notes": "Ring-porous. Tearout at pore boundaries. Downcut recommended."
+      }
+    },
+    "basswood": {
+      "id": "basswood",
+      "name": "American Basswood",
+      "scientific_name": "Tilia americana",
+      "guitar_relevance": "primary",
+      "density_kg_m3": 415,
+      "specific_gravity": 0.38,
+      "janka_hardness_lbf": 410,
+      "modulus_of_elasticity_gpa": 10.07,
+      "modulus_of_rupture_mpa": 60.0,
+      "grain": "straight, fine",
+      "speed_of_sound_m_s": 4926,
+      "acoustic_impedance": 2.04,
+      "tone_character": "warm, even, pickup-forward",
+      "typical_uses": [
+        "body"
+      ],
+      "sustainability": "sustainable",
+      "machining_notes": {
+        "burn_risk": "low",
+        "tearout_risk": "low",
+        "dust_hazard": "low",
+        "notes": "Very soft, machines like butter. Watch for fuzzing on end grain."
+      }
+    },
+    "beech_american": {
+      "id": "beech_american",
+      "name": "American Beech",
+      "scientific_name": "Fagus grandifolia",
+      "guitar_relevance": "established",
+      "density_kg_m3": 720,
+      "specific_gravity": 0.68,
+      "janka_hardness_lbf": 1300,
+      "modulus_of_elasticity_gpa": null,
+      "modulus_of_rupture_mpa": null,
+      "grain": "straight, fine",
+      "speed_of_sound_m_s": null,
+      "acoustic_impedance": null,
+      "tone_character": "bright, even, good projection",
+      "typical_uses": [
+        "back_sides"
+      ],
+      "sustainability": "sustainable",
+      "machining_notes": {
+        "burn_risk": "medium",
+        "tearout_risk": "low",
+        "dust_hazard": "low",
+        "notes": "Dense, uniform grain. Good for steam bending sides."
+      }
+    },
+    "birch_yellow": {
+      "id": "birch_yellow",
+      "name": "Yellow Birch",
+      "scientific_name": "Betula alleghaniensis",
+      "guitar_relevance": "established",
+      "density_kg_m3": 690,
+      "specific_gravity": 0.66,
+      "janka_hardness_lbf": 1260,
+      "modulus_of_elasticity_gpa": null,
+      "modulus_of_rupture_mpa": null,
+      "grain": "straight to wavy",
+      "speed_of_sound_m_s": null,
+      "acoustic_impedance": null,
+      "tone_character": "bright, articulate, maple-like",
+      "typical_uses": [
+        "body",
+        "back_sides"
+      ],
+      "sustainability": "sustainable",
+      "machining_notes": {
+        "burn_risk": "medium",
+        "tearout_risk": "low",
+        "dust_hazard": "low",
+        "notes": ""
+      }
+    },
+    "bocote": {
+      "id": "bocote",
+      "name": "Bocote",
+      "scientific_name": "Cordia elaeagnoides",
+      "guitar_relevance": "established",
+      "density_kg_m3": 775,
+      "specific_gravity": 0.75,
+      "janka_hardness_lbf": 2200,
+      "modulus_of_elasticity_gpa": 12.19,
+      "modulus_of_rupture_mpa": 114.4,
+      "grain": "straight to wild, dramatic figure",
+      "speed_of_sound_m_s": 3966,
+      "acoustic_impedance": 3.07,
+      "tone_character": "bright, snappy, great visual impact",
+      "typical_uses": [
+        "fretboard",
+        "body_top",
+        "accent"
+      ],
+      "sustainability": "not threatened",
+      "machining_notes": {
+        "burn_risk": "low",
+        "tearout_risk": "medium",
+        "dust_hazard": "medium",
+        "notes": "Oily wood with dramatic figure. Machines well with sharp tooling."
+      }
+    },
+    "bubinga": {
+      "id": "bubinga",
+      "name": "Bubinga",
+      "scientific_name": "Guibourtia demeusei",
+      "guitar_relevance": "established",
+      "density_kg_m3": 890,
+      "specific_gravity": 0.86,
+      "janka_hardness_lbf": 2410,
+      "modulus_of_elasticity_gpa": 18.41,
+      "modulus_of_rupture_mpa": 168.3,
+      "grain": "interlocked, often pommel\u00c3\u00a9 figure",
+      "speed_of_sound_m_s": 4548,
+      "acoustic_impedance": 4.05,
+      "tone_character": "warm, rich bass, articulate mids \u00e2\u20ac\u201d prized for bass guitars",
+      "typical_uses": [
+        "body_top",
+        "body",
+        "back_sides",
+        "neck_laminate"
+      ],
+      "sustainability": "CITES Appendix II since 2017",
+      "machining_notes": {
+        "burn_risk": "low",
+        "tearout_risk": "medium",
+        "dust_hazard": "high",
+        "notes": "Hard but machines cleanly. Figured pieces tear \u00e2\u20ac\u201d use climb cuts."
+      }
+    },
+    "cedar_spanish": {
+      "id": "cedar_spanish",
+      "name": "Spanish Cedar",
+      "scientific_name": "Cedrela odorata",
+      "guitar_relevance": "established",
+      "density_kg_m3": 450,
+      "specific_gravity": 0.43,
+      "janka_hardness_lbf": 600,
+      "modulus_of_elasticity_gpa": 9.7,
+      "modulus_of_rupture_mpa": 78.0,
+      "grain": "straight, medium to coarse",
+      "speed_of_sound_m_s": 4643,
+      "acoustic_impedance": 2.09,
+      "tone_character": "warm \u00e2\u20ac\u201d traditional classical guitar neck wood",
+      "typical_uses": [
+        "neck"
+      ],
+      "sustainability": "CITES Appendix III \u00e2\u20ac\u201d plantation-grown available",
+      "machining_notes": {
+        "burn_risk": "low",
+        "tearout_risk": "medium",
+        "dust_hazard": "low",
+        "notes": "Aromatic, easy to machine. Can be fuzzy on end grain. Traditional classical guitar neck."
+      }
+    },
+    "cedar_western_red": {
+      "id": "cedar_western_red",
+      "name": "Western Red Cedar",
+      "scientific_name": "Thuja plicata",
+      "guitar_relevance": "primary",
+      "density_kg_m3": 370,
+      "specific_gravity": 0.33,
+      "janka_hardness_lbf": 350,
+      "modulus_of_elasticity_gpa": 7.78,
+      "modulus_of_rupture_mpa": 53.1,
+      "grain": "straight",
+      "speed_of_sound_m_s": 4586,
+      "acoustic_impedance": 1.7,
+      "tone_character": "warm, dark, immediate response",
+      "typical_uses": [
+        "soundboard"
+      ],
+      "sustainability": "sustainable",
+      "machining_notes": {
+        "burn_risk": "low",
+        "tearout_risk": "medium",
+        "dust_hazard": "medium",
+        "notes": "Aromatic dust can be irritating. Very soft \u00e2\u20ac\u201d light clamping pressure."
+      }
+    },
+    "cherry_black": {
+      "id": "cherry_black",
+      "name": "Black Cherry",
+      "scientific_name": "Prunus serotina",
+      "guitar_relevance": "established",
+      "density_kg_m3": 560,
+      "specific_gravity": 0.53,
+      "janka_hardness_lbf": 950,
+      "modulus_of_elasticity_gpa": 10.24,
+      "modulus_of_rupture_mpa": 78.0,
+      "grain": "straight, fine",
+      "speed_of_sound_m_s": 4276,
+      "acoustic_impedance": 2.39,
+      "tone_character": "warm, sweet mids, similar to mahogany",
+      "typical_uses": [
+        "body",
+        "back_sides"
+      ],
+      "sustainability": "sustainable",
+      "machining_notes": {
+        "burn_risk": "medium",
+        "tearout_risk": "low",
+        "dust_hazard": "low",
+        "notes": "Burns easily with dull tools. Beautiful darkening patina."
+      }
+    },
+    "cocobolo": {
+      "id": "cocobolo",
+      "name": "Cocobolo",
+      "scientific_name": "Dalbergia retusa",
+      "guitar_relevance": "primary",
+      "density_kg_m3": 1095,
+      "specific_gravity": 1.1,
+      "janka_hardness_lbf": 2960,
+      "modulus_of_elasticity_gpa": null,
+      "modulus_of_rupture_mpa": null,
+      "grain": "irregular, fine texture, striking figure",
+      "speed_of_sound_m_s": null,
+      "acoustic_impedance": null,
+      "tone_character": "warm, rich, complex \u00e2\u20ac\u201d among finest rosewoods",
+      "typical_uses": [
+        "body_top",
+        "back_sides",
+        "fretboard",
+        "bridge"
+      ],
+      "sustainability": "CITES Appendix II \u00e2\u20ac\u201d restricted",
+      "machining_notes": {
+        "burn_risk": "low",
+        "tearout_risk": "low",
+        "dust_hazard": "high",
+        "notes": "Severe sensitizer for many people. Full dust extraction required. Oils lubricate cut."
+      }
+    },
+    "cypress_bald": {
+      "id": "cypress_bald",
+      "name": "Bald Cypress",
+      "scientific_name": "Taxodium distichum",
+      "guitar_relevance": "established",
+      "density_kg_m3": 510,
+      "specific_gravity": 0.46,
+      "janka_hardness_lbf": 510,
+      "modulus_of_elasticity_gpa": 9.93,
+      "modulus_of_rupture_mpa": 73.1,
+      "grain": "straight",
+      "speed_of_sound_m_s": 4413,
+      "acoustic_impedance": 2.25,
+      "tone_character": "dry, percussive, bright \u00e2\u20ac\u201d quintessential flamenco tonewood",
+      "typical_uses": [
+        "back_sides"
+      ],
+      "sustainability": "sustainable",
+      "machining_notes": {
+        "burn_risk": "low",
+        "tearout_risk": "low",
+        "dust_hazard": "low",
+        "notes": "Naturally rot-resistant. Easy to machine. Light clamping pressure."
+      }
+    },
+    "douglas_fir": {
+      "id": "douglas_fir",
+      "name": "Douglas-Fir",
+      "scientific_name": "Pseudotsuga menziesii",
+      "guitar_relevance": "established",
+      "density_kg_m3": 530,
+      "specific_gravity": 0.51,
+      "janka_hardness_lbf": 660,
+      "modulus_of_elasticity_gpa": 10.0,
+      "modulus_of_rupture_mpa": 75.3,
+      "grain": "straight, pronounced growth rings",
+      "speed_of_sound_m_s": 4344,
+      "acoustic_impedance": 2.3,
+      "tone_character": "strong, clear, good for steel-string",
+      "typical_uses": [
+        "soundboard",
+        "bracing"
+      ],
+      "sustainability": "sustainable, abundant",
+      "machining_notes": {
+        "burn_risk": "low",
+        "tearout_risk": "medium",
+        "dust_hazard": "low",
+        "notes": "Resinous \u00e2\u20ac\u201d gums up tooling. Clean cutters frequently."
+      }
+    },
+    "ebony_african": {
+      "id": "ebony_african",
+      "name": "African Ebony",
+      "scientific_name": "Diospyros crassiflora",
+      "guitar_relevance": "primary",
+      "density_kg_m3": 1030,
+      "specific_gravity": 1.03,
+      "janka_hardness_lbf": 3080,
+      "modulus_of_elasticity_gpa": null,
+      "modulus_of_rupture_mpa": null,
+      "grain": "straight",
+      "speed_of_sound_m_s": null,
+      "acoustic_impedance": null,
+      "tone_character": "bright, articulate, percussive",
+      "typical_uses": [
+        "fretboard",
+        "bridge",
+        "nuts"
+      ],
+      "sustainability": "endangered, use alternatives",
+      "machining_notes": {
+        "burn_risk": "high",
+        "tearout_risk": "high",
+        "dust_hazard": "high",
+        "notes": "Extremely hard. Use sharp carbide, light cuts. Dust is hazardous."
+      }
+    },
+    "ebony_macassar": {
+      "id": "ebony_macassar",
+      "name": "Macassar Ebony",
+      "scientific_name": "Diospyros celebica",
+      "guitar_relevance": "primary",
+      "density_kg_m3": 1120,
+      "specific_gravity": 1.09,
+      "janka_hardness_lbf": 3220,
+      "modulus_of_elasticity_gpa": null,
+      "modulus_of_rupture_mpa": null,
+      "grain": "striped",
+      "speed_of_sound_m_s": null,
+      "acoustic_impedance": null,
+      "tone_character": "bright, defined",
+      "typical_uses": [
+        "fretboard",
+        "bridge",
+        "decorative"
+      ],
+      "sustainability": "vulnerable",
+      "machining_notes": {
+        "burn_risk": "high",
+        "tearout_risk": "high",
+        "dust_hazard": "high",
+        "notes": "Hardest wood in registry. Extreme tool wear. Carbide only."
+      }
+    },
+    "granadillo": {
+      "id": "granadillo",
+      "name": "Granadillo",
+      "scientific_name": "Platymiscium yucatanum",
+      "guitar_relevance": "established",
+      "density_kg_m3": 925,
+      "specific_gravity": 0.9,
+      "janka_hardness_lbf": 2790,
+      "modulus_of_elasticity_gpa": null,
+      "modulus_of_rupture_mpa": null,
+      "grain": "straight, fine",
+      "speed_of_sound_m_s": null,
+      "acoustic_impedance": null,
+      "tone_character": "warm, complex, true rosewood character",
+      "typical_uses": [
+        "fretboard",
+        "back_sides",
+        "bridge"
+      ],
+      "sustainability": "limited supply",
+      "machining_notes": {
+        "burn_risk": "low",
+        "tearout_risk": "low",
+        "dust_hazard": "high",
+        "notes": "Dense but machines well. Similar working properties to cocobolo minus the allergen risk."
+      }
+    },
+    "ipe": {
+      "id": "ipe",
+      "name": "Ipe (Brazilian Walnut)",
+      "scientific_name": "Handroanthus spp.",
+      "guitar_relevance": "established",
+      "density_kg_m3": 1100,
+      "specific_gravity": 1.08,
+      "janka_hardness_lbf": 3510,
+      "modulus_of_elasticity_gpa": 16.7,
+      "modulus_of_rupture_mpa": 168.6,
+      "grain": "fine, interlocked",
+      "speed_of_sound_m_s": 3896,
+      "acoustic_impedance": 4.29,
+      "tone_character": "bright, bell-like, extreme sustain",
+      "typical_uses": [
+        "bridge",
+        "accent"
+      ],
+      "sustainability": "threatened in some regions",
+      "machining_notes": {
+        "burn_risk": "high",
+        "tearout_risk": "low",
+        "dust_hazard": "high",
+        "notes": "Extreme tool wear \u00e2\u20ac\u201d carbide only. Lapachol in dust is irritating. Pre-drill everything."
+      }
+    },
+    "iroko": {
+      "id": "iroko",
+      "name": "Iroko",
+      "scientific_name": "Milicia excelsa",
+      "guitar_relevance": "established",
+      "density_kg_m3": 660,
+      "specific_gravity": 0.63,
+      "janka_hardness_lbf": 1260,
+      "modulus_of_elasticity_gpa": 10.9,
+      "modulus_of_rupture_mpa": 97.1,
+      "grain": "interlocked",
+      "speed_of_sound_m_s": 4064,
+      "acoustic_impedance": 2.68,
+      "tone_character": "warm, midrange focus, mahogany-like character",
+      "typical_uses": [
+        "body"
+      ],
+      "sustainability": "not threatened \u00e2\u20ac\u201d teak substitute",
+      "machining_notes": {
+        "burn_risk": "medium",
+        "tearout_risk": "medium",
+        "dust_hazard": "medium",
+        "notes": "Interlocked grain can tear. Contains calcium carbonate deposits \u00e2\u20ac\u201d dulls tools."
+      }
+    },
+    "jatoba": {
+      "id": "jatoba",
+      "name": "Jatoba (Brazilian Cherry)",
+      "scientific_name": "Hymenaea courbaril",
+      "guitar_relevance": "established",
+      "density_kg_m3": 910,
+      "specific_gravity": 0.83,
+      "janka_hardness_lbf": 2690,
+      "modulus_of_elasticity_gpa": 14.07,
+      "modulus_of_rupture_mpa": 126.9,
+      "grain": "interlocked",
+      "speed_of_sound_m_s": 3932,
+      "acoustic_impedance": 3.58,
+      "tone_character": "bright, percussive, similar to rosewood but less complex",
+      "typical_uses": [
+        "fretboard"
+      ],
+      "sustainability": "not threatened \u00e2\u20ac\u201d common budget rosewood alternative",
+      "machining_notes": {
+        "burn_risk": "medium",
+        "tearout_risk": "medium",
+        "dust_hazard": "medium",
+        "notes": "Very hard \u00e2\u20ac\u201d carbide tooling essential. Common budget fretboard wood."
+      }
+    },
+    "katalox": {
+      "id": "katalox",
+      "name": "Katalox (Mexican Ebony)",
+      "scientific_name": "Swartzia cubensis",
+      "guitar_relevance": "established",
+      "density_kg_m3": 1050,
+      "specific_gravity": 1.05,
+      "janka_hardness_lbf": 3650,
+      "modulus_of_elasticity_gpa": null,
+      "modulus_of_rupture_mpa": null,
+      "grain": "straight, very fine",
+      "speed_of_sound_m_s": null,
+      "acoustic_impedance": null,
+      "tone_character": "bright, bell-like \u00e2\u20ac\u201d ebony alternative",
+      "typical_uses": [
+        "fretboard",
+        "bridge"
+      ],
+      "sustainability": "not threatened \u00e2\u20ac\u201d ebony substitute",
+      "machining_notes": {
+        "burn_risk": "low",
+        "tearout_risk": "low",
+        "dust_hazard": "high",
+        "notes": "Among hardest commercial woods. Carbide only. Pre-drill all fastener holes."
+      }
+    },
+    "koa": {
+      "id": "koa",
+      "name": "Hawaiian Koa",
+      "scientific_name": "Acacia koa",
+      "guitar_relevance": "primary",
+      "density_kg_m3": 625,
+      "specific_gravity": 0.6,
+      "janka_hardness_lbf": 1170,
+      "modulus_of_elasticity_gpa": 10.37,
+      "modulus_of_rupture_mpa": 87.0,
+      "grain": "interlocked, often highly figured",
+      "speed_of_sound_m_s": 4073,
+      "acoustic_impedance": 2.55,
+      "tone_character": "warm, balanced, opens up with age like rosewood",
+      "typical_uses": [
+        "body",
+        "back_sides",
+        "soundboard"
+      ],
+      "sustainability": "limited supply, plantation-grown increasing",
+      "machining_notes": {
+        "burn_risk": "medium",
+        "tearout_risk": "medium",
+        "dust_hazard": "low",
+        "notes": "Interlocked grain tears on figured areas. Expensive \u00e2\u20ac\u201d test on scrap."
+      }
+    },
+    "mahogany_african": {
+      "id": "mahogany_african",
+      "name": "African Mahogany (Khaya)",
+      "scientific_name": "Khaya spp.",
+      "guitar_relevance": "primary",
+      "density_kg_m3": 530,
+      "specific_gravity": 0.5,
+      "janka_hardness_lbf": 830,
+      "modulus_of_elasticity_gpa": null,
+      "modulus_of_rupture_mpa": null,
+      "grain": "interlocked",
+      "speed_of_sound_m_s": null,
+      "acoustic_impedance": null,
+      "tone_character": "similar to honduran, slightly brighter",
+      "typical_uses": [
+        "body",
+        "neck"
+      ],
+      "sustainability": "sustainable alternative",
+      "machining_notes": {
+        "burn_risk": "low",
+        "tearout_risk": "medium",
+        "dust_hazard": "medium",
+        "notes": ""
+      }
+    },
+    "mahogany_honduran": {
+      "id": "mahogany_honduran",
+      "name": "Honduran Mahogany",
+      "scientific_name": "Swietenia macrophylla",
+      "guitar_relevance": "primary",
+      "density_kg_m3": 545,
+      "specific_gravity": 0.52,
+      "janka_hardness_lbf": 800,
+      "modulus_of_elasticity_gpa": 11.97,
+      "modulus_of_rupture_mpa": 98.4,
+      "grain": "interlocked",
+      "speed_of_sound_m_s": 4687,
+      "acoustic_impedance": 2.55,
+      "tone_character": "warm, balanced, good sustain",
+      "typical_uses": [
+        "body",
+        "neck",
+        "back_sides"
+      ],
+      "sustainability": "CITES Appendix II",
+      "machining_notes": {
+        "burn_risk": "low",
+        "tearout_risk": "medium",
+        "dust_hazard": "medium",
+        "notes": "Watch for tearout on interlocked grain areas"
+      }
+    },
+    "maple_hard": {
+      "id": "maple_hard",
+      "name": "Hard Maple (Sugar Maple)",
+      "scientific_name": "Acer saccharum",
+      "guitar_relevance": "primary",
+      "density_kg_m3": 705,
+      "specific_gravity": 0.66,
+      "janka_hardness_lbf": 1450,
+      "modulus_of_elasticity_gpa": 13.49,
+      "modulus_of_rupture_mpa": 118.5,
+      "grain": "straight to figured",
+      "speed_of_sound_m_s": 4374,
+      "acoustic_impedance": 3.08,
+      "tone_character": "bright, articulate, snappy",
+      "typical_uses": [
+        "neck",
+        "top",
+        "fretboard"
+      ],
+      "sustainability": "sustainable",
+      "machining_notes": {
+        "burn_risk": "high",
+        "tearout_risk": "low",
+        "dust_hazard": "low",
+        "notes": "Very prone to burning. Keep sharp tools, adequate feed rate."
+      }
+    },
+    "maple_soft": {
+      "id": "maple_soft",
+      "name": "Soft Maple (Red Maple)",
+      "scientific_name": "Acer rubrum",
+      "guitar_relevance": "primary",
+      "density_kg_m3": 610,
+      "specific_gravity": 0.56,
+      "janka_hardness_lbf": 950,
+      "modulus_of_elasticity_gpa": null,
+      "modulus_of_rupture_mpa": null,
+      "grain": "straight to figured",
+      "speed_of_sound_m_s": null,
+      "acoustic_impedance": null,
+      "tone_character": "warm maple tone, less bright than hard",
+      "typical_uses": [
+        "body",
+        "back_sides"
+      ],
+      "sustainability": "sustainable",
+      "machining_notes": {
+        "burn_risk": "medium",
+        "tearout_risk": "low",
+        "dust_hazard": "low",
+        "notes": ""
+      }
+    },
+    "merbau": {
+      "id": "merbau",
+      "name": "Merbau (Kwila)",
+      "scientific_name": "Intsia bijuga",
+      "guitar_relevance": "established",
+      "density_kg_m3": 830,
+      "specific_gravity": 0.8,
+      "janka_hardness_lbf": 2460,
+      "modulus_of_elasticity_gpa": 15.93,
+      "modulus_of_rupture_mpa": 145.2,
+      "grain": "interlocked, coarse",
+      "speed_of_sound_m_s": 4381,
+      "acoustic_impedance": 3.64,
+      "tone_character": "warm, rosewood-like with stronger mids",
+      "typical_uses": [
+        "fretboard",
+        "body"
+      ],
+      "sustainability": "vulnerable in some regions",
+      "machining_notes": {
+        "burn_risk": "low",
+        "tearout_risk": "medium",
+        "dust_hazard": "medium",
+        "notes": "Yellow sulfur deposits in pores can stain. Blunts tools faster than expected."
+      }
+    },
+    "oak_red": {
+      "id": "oak_red",
+      "name": "Northern Red Oak",
+      "scientific_name": "Quercus rubra",
+      "guitar_relevance": "established",
+      "density_kg_m3": 700,
+      "specific_gravity": 0.65,
+      "janka_hardness_lbf": 1290,
+      "modulus_of_elasticity_gpa": 13.82,
+      "modulus_of_rupture_mpa": 123.1,
+      "grain": "prominent, ring-porous",
+      "speed_of_sound_m_s": 4443,
+      "acoustic_impedance": 3.11,
+      "tone_character": "bright, raw, open-grain character",
+      "typical_uses": [
+        "body"
+      ],
+      "sustainability": "sustainable",
+      "machining_notes": {
+        "burn_risk": "medium",
+        "tearout_risk": "high",
+        "dust_hazard": "medium",
+        "notes": "More porous than white oak. Not ideal for finishing but popular for Telecaster builds."
+      }
+    },
+    "oak_white": {
+      "id": "oak_white",
+      "name": "White Oak",
+      "scientific_name": "Quercus alba",
+      "guitar_relevance": "established",
+      "density_kg_m3": 770,
+      "specific_gravity": 0.72,
+      "janka_hardness_lbf": 1360,
+      "modulus_of_elasticity_gpa": 15.26,
+      "modulus_of_rupture_mpa": 144.7,
+      "grain": "prominent, ring-porous",
+      "speed_of_sound_m_s": 4452,
+      "acoustic_impedance": 3.43,
+      "tone_character": "bright, aggressive, pronounced highs",
+      "typical_uses": [
+        "body"
+      ],
+      "sustainability": "sustainable",
+      "machining_notes": {
+        "burn_risk": "medium",
+        "tearout_risk": "high",
+        "dust_hazard": "medium",
+        "notes": "Ring-porous grain tears easily. Compression bits recommended."
+      }
+    },
+    "ovangkol": {
+      "id": "ovangkol",
+      "name": "Ovangkol (Shedua)",
+      "scientific_name": "Guibourtia ehie",
+      "guitar_relevance": "established",
+      "density_kg_m3": 810,
+      "specific_gravity": 0.78,
+      "janka_hardness_lbf": 1890,
+      "modulus_of_elasticity_gpa": 18.6,
+      "modulus_of_rupture_mpa": 140.3,
+      "grain": "interlocked, figure common",
+      "speed_of_sound_m_s": 4792,
+      "acoustic_impedance": 3.88,
+      "tone_character": "warm, complex \u00e2\u20ac\u201d rosewood family character",
+      "typical_uses": [
+        "back_sides",
+        "body"
+      ],
+      "sustainability": "not threatened",
+      "machining_notes": {
+        "burn_risk": "low",
+        "tearout_risk": "medium",
+        "dust_hazard": "medium",
+        "notes": "Interlocked grain tears easily. Related to bubinga."
+      }
+    },
+    "pau_ferro": {
+      "id": "pau_ferro",
+      "name": "Pau Ferro (Bolivian Rosewood)",
+      "scientific_name": "Machaerium scleroxylon",
+      "guitar_relevance": "established",
+      "density_kg_m3": 880,
+      "specific_gravity": 0.85,
+      "janka_hardness_lbf": 2030,
+      "modulus_of_elasticity_gpa": 14.0,
+      "modulus_of_rupture_mpa": 131.0,
+      "grain": "straight to irregular, fine texture",
+      "speed_of_sound_m_s": 3989,
+      "acoustic_impedance": 3.51,
+      "tone_character": "bright, rosewood-like, slightly more mid-forward",
+      "typical_uses": [
+        "fretboard",
+        "back_sides"
+      ],
+      "sustainability": "not CITES listed \u00e2\u20ac\u201d popular rosewood substitute",
+      "machining_notes": {
+        "burn_risk": "low",
+        "tearout_risk": "medium",
+        "dust_hazard": "high",
+        "notes": "Oily wood. Clean tools frequently. Common Fender fretboard wood since 2017."
+      }
+    },
+    "pine_eastern_white": {
+      "id": "pine_eastern_white",
+      "name": "Eastern White Pine",
+      "scientific_name": "Pinus strobus",
+      "guitar_relevance": "established",
+      "density_kg_m3": 385,
+      "specific_gravity": 0.37,
+      "janka_hardness_lbf": 380,
+      "modulus_of_elasticity_gpa": null,
+      "modulus_of_rupture_mpa": null,
+      "grain": "straight",
+      "speed_of_sound_m_s": null,
+      "acoustic_impedance": null,
+      "tone_character": "warm, resonant when aged \u00e2\u20ac\u201d cigar box guitar tradition",
+      "typical_uses": [
+        "body"
+      ],
+      "sustainability": "sustainable, abundant",
+      "machining_notes": {
+        "burn_risk": "low",
+        "tearout_risk": "medium",
+        "dust_hazard": "low",
+        "notes": "Resin pockets catch on cutter. Economical for test cuts."
+      }
+    },
+    "poplar_yellow": {
+      "id": "poplar_yellow",
+      "name": "Yellow Poplar (Tulipwood)",
+      "scientific_name": "Liriodendron tulipifera",
+      "guitar_relevance": "established",
+      "density_kg_m3": 450,
+      "specific_gravity": 0.46,
+      "janka_hardness_lbf": 540,
+      "modulus_of_elasticity_gpa": null,
+      "modulus_of_rupture_mpa": null,
+      "grain": "straight",
+      "speed_of_sound_m_s": null,
+      "acoustic_impedance": null,
+      "tone_character": "neutral, similar to alder but less defined",
+      "typical_uses": [
+        "body"
+      ],
+      "sustainability": "sustainable, abundant",
+      "machining_notes": {
+        "burn_risk": "low",
+        "tearout_risk": "low",
+        "dust_hazard": "low",
+        "notes": "Excellent for templates, jigs, and practice bodies. Very economical."
+      }
+    },
+    "purpleheart": {
+      "id": "purpleheart",
+      "name": "Purpleheart",
+      "scientific_name": "Peltogyne paniculata",
+      "guitar_relevance": "established",
+      "density_kg_m3": 880,
+      "specific_gravity": 0.86,
+      "janka_hardness_lbf": 2520,
+      "modulus_of_elasticity_gpa": 16.7,
+      "modulus_of_rupture_mpa": 168.6,
+      "grain": "straight to interlocked",
+      "speed_of_sound_m_s": 4356,
+      "acoustic_impedance": 3.83,
+      "tone_character": "bright, strong sustain, mid-forward",
+      "typical_uses": [
+        "neck_laminate",
+        "accent",
+        "fretboard"
+      ],
+      "sustainability": "not threatened",
+      "machining_notes": {
+        "burn_risk": "medium",
+        "tearout_risk": "low",
+        "dust_hazard": "medium",
+        "notes": "Heat turns wood brown \u00e2\u20ac\u201d keep feeds up to maintain purple color. Gummy at high temps."
+      }
+    },
+    "redwood": {
+      "id": "redwood",
+      "name": "Redwood (Old Growth)",
+      "scientific_name": "Sequoia sempervirens",
+      "guitar_relevance": "established",
+      "density_kg_m3": 420,
+      "specific_gravity": 0.41,
+      "janka_hardness_lbf": 420,
+      "modulus_of_elasticity_gpa": 8.55,
+      "modulus_of_rupture_mpa": 60.3,
+      "grain": "straight, fine",
+      "speed_of_sound_m_s": 4512,
+      "acoustic_impedance": 1.9,
+      "tone_character": "warm, dark, cedar-like response",
+      "typical_uses": [
+        "soundboard",
+        "body"
+      ],
+      "sustainability": "old growth restricted \u00e2\u20ac\u201d salvage/reclaimed only",
+      "machining_notes": {
+        "burn_risk": "low",
+        "tearout_risk": "low",
+        "dust_hazard": "low",
+        "notes": "Soft, stable, beautiful. Old growth salvage only."
+      }
+    },
+    "rosewood_brazilian": {
+      "id": "rosewood_brazilian",
+      "name": "Brazilian Rosewood",
+      "scientific_name": "Dalbergia nigra",
+      "guitar_relevance": "primary",
+      "density_kg_m3": 835,
+      "specific_gravity": 0.82,
+      "janka_hardness_lbf": 2790,
+      "modulus_of_elasticity_gpa": null,
+      "modulus_of_rupture_mpa": null,
+      "grain": "interlocked",
+      "speed_of_sound_m_s": null,
+      "acoustic_impedance": null,
+      "tone_character": "rich, complex, legendary",
+      "typical_uses": [
+        "fretboard",
+        "back_sides"
+      ],
+      "sustainability": "CITES Appendix I - highly restricted",
+      "machining_notes": {
+        "burn_risk": "medium",
+        "tearout_risk": "medium",
+        "dust_hazard": "high",
+        "notes": "Extremely rare and expensive. Test on scrap first. Dust is sensitizing."
+      }
+    },
+    "rosewood_east_indian": {
+      "id": "rosewood_east_indian",
+      "name": "East Indian Rosewood",
+      "scientific_name": "Dalbergia latifolia",
+      "guitar_relevance": "primary",
+      "density_kg_m3": 830,
+      "specific_gravity": 0.8,
+      "janka_hardness_lbf": 2440,
+      "modulus_of_elasticity_gpa": null,
+      "modulus_of_rupture_mpa": null,
+      "grain": "interlocked",
+      "speed_of_sound_m_s": null,
+      "acoustic_impedance": null,
+      "tone_character": "warm, complex overtones, sustain",
+      "typical_uses": [
+        "fretboard",
+        "back_sides",
+        "bridge"
+      ],
+      "sustainability": "CITES regulated",
+      "machining_notes": {
+        "burn_risk": "medium",
+        "tearout_risk": "medium",
+        "dust_hazard": "high",
+        "notes": "Oily wood dulls tools fast. Dust is sensitizing - use extraction."
+      }
+    },
+    "sapele": {
+      "id": "sapele",
+      "name": "Sapele",
+      "scientific_name": "Entandrophragma cylindricum",
+      "guitar_relevance": "established",
+      "density_kg_m3": 640,
+      "specific_gravity": 0.62,
+      "janka_hardness_lbf": 1510,
+      "modulus_of_elasticity_gpa": 12.04,
+      "modulus_of_rupture_mpa": 99.4,
+      "grain": "interlocked, ribbon figure",
+      "speed_of_sound_m_s": 4337,
+      "acoustic_impedance": 2.78,
+      "tone_character": "like mahogany but brighter, good midrange definition",
+      "typical_uses": [
+        "body",
+        "neck",
+        "back_sides"
+      ],
+      "sustainability": "sustainable \u00e2\u20ac\u201d most common mahogany alternative",
+      "machining_notes": {
+        "burn_risk": "medium",
+        "tearout_risk": "medium",
+        "dust_hazard": "medium",
+        "notes": "Interlocked grain tears on ribbon figure areas. Climb cut helps."
+      }
+    },
+    "spruce_adirondack": {
+      "id": "spruce_adirondack",
+      "name": "Adirondack Spruce (Red Spruce)",
+      "scientific_name": "Picea rubens",
+      "guitar_relevance": "primary",
+      "density_kg_m3": 435,
+      "specific_gravity": 0.43,
+      "janka_hardness_lbf": 560,
+      "modulus_of_elasticity_gpa": 11.2,
+      "modulus_of_rupture_mpa": 74.0,
+      "grain": "straight, tight",
+      "speed_of_sound_m_s": 5074,
+      "acoustic_impedance": 2.21,
+      "tone_character": "powerful, headroom, loud \u00e2\u20ac\u201d the pre-war dreadnought tonewood",
+      "typical_uses": [
+        "soundboard"
+      ],
+      "sustainability": "limited supply \u00e2\u20ac\u201d slow-growing",
+      "machining_notes": {
+        "burn_risk": "low",
+        "tearout_risk": "medium",
+        "dust_hazard": "low",
+        "notes": "Stiffest North American spruce. Premium soundboard wood."
+      }
+    },
+    "spruce_engelmann": {
+      "id": "spruce_engelmann",
+      "name": "Engelmann Spruce",
+      "scientific_name": "Picea engelmannii",
+      "guitar_relevance": "primary",
+      "density_kg_m3": 385,
+      "specific_gravity": 0.37,
+      "janka_hardness_lbf": 390,
+      "modulus_of_elasticity_gpa": null,
+      "modulus_of_rupture_mpa": null,
+      "grain": "straight, fine",
+      "speed_of_sound_m_s": null,
+      "acoustic_impedance": null,
+      "tone_character": "warm, responsive, lower overtones than Sitka",
+      "typical_uses": [
+        "soundboard"
+      ],
+      "sustainability": "sustainable",
+      "machining_notes": {
+        "burn_risk": "low",
+        "tearout_risk": "high",
+        "dust_hazard": "low",
+        "notes": "Softer than Sitka. Preferred for fingerstyle guitars. Very fragile \u00e2\u20ac\u201d light cuts only."
+      }
+    },
+    "spruce_european": {
+      "id": "spruce_european",
+      "name": "European Spruce (Alpine/German)",
+      "scientific_name": "Picea abies",
+      "guitar_relevance": "primary",
+      "density_kg_m3": 405,
+      "specific_gravity": 0.4,
+      "janka_hardness_lbf": 490,
+      "modulus_of_elasticity_gpa": 9.5,
+      "modulus_of_rupture_mpa": 65.0,
+      "grain": "straight, very tight, stiff",
+      "speed_of_sound_m_s": 4843,
+      "acoustic_impedance": 1.96,
+      "tone_character": "warm, complex, refined \u00e2\u20ac\u201d the classical luthier's choice",
+      "typical_uses": [
+        "soundboard"
+      ],
+      "sustainability": "sustainable \u00e2\u20ac\u201d European plantations",
+      "machining_notes": {
+        "burn_risk": "low",
+        "tearout_risk": "high",
+        "dust_hazard": "low",
+        "notes": "Very stiff for its weight. Quartersawn essential for soundboards."
+      }
+    },
+    "spruce_sitka": {
+      "id": "spruce_sitka",
+      "name": "Sitka Spruce",
+      "scientific_name": "Picea sitchensis",
+      "guitar_relevance": "primary",
+      "density_kg_m3": 425,
+      "specific_gravity": 0.42,
+      "janka_hardness_lbf": 510,
+      "modulus_of_elasticity_gpa": null,
+      "modulus_of_rupture_mpa": null,
+      "grain": "straight, tight",
+      "speed_of_sound_m_s": null,
+      "acoustic_impedance": null,
+      "tone_character": "versatile, strong fundamental",
+      "typical_uses": [
+        "soundboard"
+      ],
+      "sustainability": "sustainable",
+      "machining_notes": {
+        "burn_risk": "low",
+        "tearout_risk": "high",
+        "dust_hazard": "low",
+        "notes": "Softwood tears easily across grain. Sharp tools essential."
+      }
+    },
+    "spruce_white": {
+      "id": "spruce_white",
+      "name": "White Spruce",
+      "scientific_name": "Picea glauca",
+      "guitar_relevance": "established",
+      "density_kg_m3": 410,
+      "specific_gravity": 0.4,
+      "janka_hardness_lbf": 480,
+      "modulus_of_elasticity_gpa": 9.7,
+      "modulus_of_rupture_mpa": 65.5,
+      "grain": "straight, tight",
+      "speed_of_sound_m_s": 4864,
+      "acoustic_impedance": 1.99,
+      "tone_character": "bright, even \u00e2\u20ac\u201d common bracing wood",
+      "typical_uses": [
+        "bracing",
+        "soundboard"
+      ],
+      "sustainability": "sustainable, abundant",
+      "machining_notes": {
+        "burn_risk": "low",
+        "tearout_risk": "high",
+        "dust_hazard": "low",
+        "notes": "Softwood, tears across grain. Sharp tools essential."
+      }
+    },
+    "tasmanian_blackwood": {
+      "id": "tasmanian_blackwood",
+      "name": "Tasmanian Blackwood",
+      "scientific_name": "Acacia melanoxylon",
+      "guitar_relevance": "established",
+      "density_kg_m3": 640,
+      "specific_gravity": 0.58,
+      "janka_hardness_lbf": 1160,
+      "modulus_of_elasticity_gpa": 11.82,
+      "modulus_of_rupture_mpa": 96.5,
+      "grain": "straight to wavy, often highly figured",
+      "speed_of_sound_m_s": 4298,
+      "acoustic_impedance": 2.75,
+      "tone_character": "warm, balanced, opens up with age \u00e2\u20ac\u201d koa alternative",
+      "typical_uses": [
+        "body",
+        "back_sides"
+      ],
+      "sustainability": "sustainable, plantation-grown in Tasmania and Australia",
+      "machining_notes": {
+        "burn_risk": "low",
+        "tearout_risk": "low",
+        "dust_hazard": "low",
+        "notes": "Machines beautifully. Premium koa alternative at lower cost."
+      }
+    },
+    "teak": {
+      "id": "teak",
+      "name": "Teak",
+      "scientific_name": "Tectona grandis",
+      "guitar_relevance": "established",
+      "density_kg_m3": 655,
+      "specific_gravity": 0.63,
+      "janka_hardness_lbf": 1155,
+      "modulus_of_elasticity_gpa": 12.28,
+      "modulus_of_rupture_mpa": 97.1,
+      "grain": "straight, oily",
+      "speed_of_sound_m_s": 4330,
+      "acoustic_impedance": 2.84,
+      "tone_character": "warm, dry, tight low end",
+      "typical_uses": [
+        "body",
+        "fretboard"
+      ],
+      "sustainability": "plantation-grown widely available",
+      "machining_notes": {
+        "burn_risk": "low",
+        "tearout_risk": "low",
+        "dust_hazard": "medium",
+        "notes": "Natural oils lubricate cuts but gum up tooling. Clean bits frequently."
+      }
+    },
+    "walnut_black": {
+      "id": "walnut_black",
+      "name": "Black Walnut",
+      "scientific_name": "Juglans nigra",
+      "guitar_relevance": "primary",
+      "density_kg_m3": 610,
+      "specific_gravity": 0.56,
+      "janka_hardness_lbf": 1010,
+      "modulus_of_elasticity_gpa": 11.34,
+      "modulus_of_rupture_mpa": 90.7,
+      "grain": "straight to figured",
+      "speed_of_sound_m_s": 4312,
+      "acoustic_impedance": 2.63,
+      "tone_character": "warm, rich mids, mahogany-like",
+      "typical_uses": [
+        "body",
+        "back_sides"
+      ],
+      "sustainability": "sustainable",
+      "machining_notes": {
+        "burn_risk": "low",
+        "tearout_risk": "low",
+        "dust_hazard": "medium",
+        "notes": "Excellent machining properties. Similar to mahogany."
+      }
+    },
+    "wenge": {
+      "id": "wenge",
+      "name": "Wenge",
+      "scientific_name": "Millettia laurentii",
+      "guitar_relevance": "established",
+      "density_kg_m3": 870,
+      "specific_gravity": 0.81,
+      "janka_hardness_lbf": 1930,
+      "modulus_of_elasticity_gpa": 14.75,
+      "modulus_of_rupture_mpa": 136.9,
+      "grain": "straight, very coarse open pore",
+      "speed_of_sound_m_s": 4118,
+      "acoustic_impedance": 3.58,
+      "tone_character": "dark, emphasized bass, warm with controlled highs",
+      "typical_uses": [
+        "neck",
+        "fretboard"
+      ],
+      "sustainability": "endangered \u00e2\u20ac\u201d IUCN listed",
+      "machining_notes": {
+        "burn_risk": "low",
+        "tearout_risk": "high",
+        "dust_hazard": "high",
+        "notes": "Extremely splintery \u00e2\u20ac\u201d large open pores shatter. Dust is sensitizing. Sharp carbide only."
+      }
+    },
+    "zebrawood": {
+      "id": "zebrawood",
+      "name": "Zebrawood",
+      "scientific_name": "Microberlinia brazzavillensis",
+      "guitar_relevance": "established",
+      "density_kg_m3": 785,
+      "specific_gravity": 0.75,
+      "janka_hardness_lbf": 1575,
+      "modulus_of_elasticity_gpa": 13.88,
+      "modulus_of_rupture_mpa": 124.1,
+      "grain": "interlocked, distinctive striped figure",
+      "speed_of_sound_m_s": 4205,
+      "acoustic_impedance": 3.3,
+      "tone_character": "bright, articulate, distinctive appearance",
+      "typical_uses": [
+        "body_top",
+        "body",
+        "back_sides"
+      ],
+      "sustainability": "vulnerable \u00e2\u20ac\u201d limited supply",
+      "machining_notes": {
+        "burn_risk": "medium",
+        "tearout_risk": "medium",
+        "dust_hazard": "medium",
+        "notes": "Interlocked grain requires care. Dramatic visual result worth the effort."
+      }
+    },
+    "ziricote": {
+      "id": "ziricote",
+      "name": "Ziricote",
+      "scientific_name": "Cordia dodecandra",
+      "guitar_relevance": "established",
+      "density_kg_m3": 815,
+      "specific_gravity": 0.79,
+      "janka_hardness_lbf": 1900,
+      "modulus_of_elasticity_gpa": null,
+      "modulus_of_rupture_mpa": null,
+      "grain": "irregular, spider-web figure",
+      "speed_of_sound_m_s": null,
+      "acoustic_impedance": null,
+      "tone_character": "warm, complex, rosewood-like with unique character",
+      "typical_uses": [
+        "body_top",
+        "back_sides",
+        "fretboard"
+      ],
+      "sustainability": "limited supply \u00e2\u20ac\u201d slow-growing",
+      "machining_notes": {
+        "burn_risk": "medium",
+        "tearout_risk": "low",
+        "dust_hazard": "medium",
+        "notes": "Dramatic spider-web figure. Machines well. Related to bocote."
+      }
+    }
+  },
+  "tier_2": {
+    "african_blackwood": {
+      "id": "african_blackwood",
+      "name": "African Blackwood",
+      "scientific_name": "Dalbergia melanoxylon",
+      "guitar_relevance": "emerging",
+      "density_kg_m3": 1270,
+      "specific_gravity": 1.27,
+      "janka_hardness_lbf": 1960,
+      "modulus_of_elasticity_gpa": 17.95,
+      "modulus_of_rupture_mpa": 213.6,
+      "grain": "",
+      "speed_of_sound_m_s": 3760,
+      "acoustic_impedance": 4.78,
+      "tone_character": "",
+      "typical_uses": [],
+      "sustainability": "",
+      "machining_notes": {
+        "burn_risk": "medium",
+        "tearout_risk": "medium",
+        "dust_hazard": "high",
+        "notes": ""
+      }
+    },
+    "african_padauk": {
+      "id": "african_padauk",
+      "name": "African Padauk",
+      "scientific_name": "Pterocarpus soyauxii",
+      "guitar_relevance": "emerging",
+      "density_kg_m3": 745,
+      "specific_gravity": 0.74,
+      "janka_hardness_lbf": 731,
+      "modulus_of_elasticity_gpa": 13.07,
+      "modulus_of_rupture_mpa": 126.7,
+      "grain": "",
+      "speed_of_sound_m_s": 4189,
+      "acoustic_impedance": 3.12,
+      "tone_character": "",
+      "typical_uses": [],
+      "sustainability": "",
+      "machining_notes": {
+        "burn_risk": "low",
+        "tearout_risk": "low",
+        "dust_hazard": "medium",
+        "notes": ""
+      }
+    },
+    "australian_blackwood": {
+      "id": "australian_blackwood",
+      "name": "Australian Blackwood",
+      "scientific_name": "",
+      "guitar_relevance": "emerging",
+      "density_kg_m3": 640,
+      "specific_gravity": 0.64,
+      "janka_hardness_lbf": 552,
+      "modulus_of_elasticity_gpa": 14.82,
+      "modulus_of_rupture_mpa": 103.6,
+      "grain": "",
+      "speed_of_sound_m_s": 4812,
+      "acoustic_impedance": 3.08,
+      "tone_character": "",
+      "typical_uses": [],
+      "sustainability": "",
+      "machining_notes": {
+        "burn_risk": "low",
+        "tearout_risk": "low",
+        "dust_hazard": "medium",
+        "notes": ""
+      }
+    },
+    "bloodwood": {
+      "id": "bloodwood",
+      "name": "Bloodwood",
+      "scientific_name": "Brosimum rubescens",
+      "guitar_relevance": "emerging",
+      "density_kg_m3": 1050,
+      "specific_gravity": 1.05,
+      "janka_hardness_lbf": 1379,
+      "modulus_of_elasticity_gpa": 20.78,
+      "modulus_of_rupture_mpa": 174.4,
+      "grain": "",
+      "speed_of_sound_m_s": 4449,
+      "acoustic_impedance": 4.67,
+      "tone_character": "",
+      "typical_uses": [],
+      "sustainability": "",
+      "machining_notes": {
+        "burn_risk": "medium",
+        "tearout_risk": "medium",
+        "dust_hazard": "high",
+        "notes": ""
+      }
+    },
+    "english_walnut": {
+      "id": "english_walnut",
+      "name": "English Walnut",
+      "scientific_name": "Juglans regia",
+      "guitar_relevance": "emerging",
+      "density_kg_m3": 640,
+      "specific_gravity": 0.64,
+      "janka_hardness_lbf": 552,
+      "modulus_of_elasticity_gpa": 10.81,
+      "modulus_of_rupture_mpa": 111.5,
+      "grain": "",
+      "speed_of_sound_m_s": 4110,
+      "acoustic_impedance": 2.63,
+      "tone_character": "",
+      "typical_uses": [],
+      "sustainability": "",
+      "machining_notes": {
+        "burn_risk": "low",
+        "tearout_risk": "low",
+        "dust_hazard": "medium",
+        "notes": ""
+      }
+    },
+    "european_ash": {
+      "id": "european_ash",
+      "name": "European Ash",
+      "scientific_name": "Fraxinus excelsior",
+      "guitar_relevance": "emerging",
+      "density_kg_m3": 680,
+      "specific_gravity": 0.68,
+      "janka_hardness_lbf": 617,
+      "modulus_of_elasticity_gpa": 12.31,
+      "modulus_of_rupture_mpa": 103.6,
+      "grain": "",
+      "speed_of_sound_m_s": 4255,
+      "acoustic_impedance": 2.89,
+      "tone_character": "",
+      "typical_uses": [],
+      "sustainability": "",
+      "machining_notes": {
+        "burn_risk": "low",
+        "tearout_risk": "low",
+        "dust_hazard": "medium",
+        "notes": ""
+      }
+    },
+    "goncalo_alves": {
+      "id": "goncalo_alves",
+      "name": "Goncalo Alves",
+      "scientific_name": "Astronium graveolens",
+      "guitar_relevance": "emerging",
+      "density_kg_m3": 905,
+      "specific_gravity": 0.91,
+      "janka_hardness_lbf": 1047,
+      "modulus_of_elasticity_gpa": 16.56,
+      "modulus_of_rupture_mpa": 117.0,
+      "grain": "",
+      "speed_of_sound_m_s": 4278,
+      "acoustic_impedance": 3.87,
+      "tone_character": "",
+      "typical_uses": [],
+      "sustainability": "",
+      "machining_notes": {
+        "burn_risk": "low",
+        "tearout_risk": "low",
+        "dust_hazard": "high",
+        "notes": ""
+      }
+    },
+    "honey_mesquite": {
+      "id": "honey_mesquite",
+      "name": "Honey Mesquite",
+      "scientific_name": "Prosopis glandulosa",
+      "guitar_relevance": "emerging",
+      "density_kg_m3": 950,
+      "specific_gravity": 0.86,
+      "janka_hardness_lbf": 2345,
+      "modulus_of_elasticity_gpa": 11.58,
+      "modulus_of_rupture_mpa": 117.0,
+      "grain": "interlocked, often wildly figured",
+      "speed_of_sound_m_s": 3491,
+      "acoustic_impedance": 3.32,
+      "tone_character": "bright, dense, crystalline highs with strong sustain \u00e2\u20ac\u201d similar to rosewood but more percussive",
+      "typical_uses": [
+        "body",
+        "body_top",
+        "fretboard",
+        "bridge",
+        "accent"
+      ],
+      "sustainability": "abundant in Texas/Southwest US, invasive species \u00e2\u20ac\u201d harvest is ecologically beneficial",
+      "machining_notes": {
+        "burn_risk": "high",
+        "tearout_risk": "high",
+        "dust_hazard": "high",
+        "notes": "Extremely hard \u00e2\u20ac\u201d dulls HSS quickly, use carbide. Interlocked grain tears easily on figured stock. Dust is irritating. Small blanks common due to tree form."
+      }
+    },
+    "huon_pine": {
+      "id": "huon_pine",
+      "name": "Huon Pine",
+      "scientific_name": "Lagarostrobos franklinii",
+      "guitar_relevance": "emerging",
+      "density_kg_m3": 560,
+      "specific_gravity": 0.56,
+      "janka_hardness_lbf": 431,
+      "modulus_of_elasticity_gpa": 9.23,
+      "modulus_of_rupture_mpa": 76.3,
+      "grain": "",
+      "speed_of_sound_m_s": 4060,
+      "acoustic_impedance": 2.27,
+      "tone_character": "",
+      "typical_uses": [],
+      "sustainability": "",
+      "machining_notes": {
+        "burn_risk": "low",
+        "tearout_risk": "low",
+        "dust_hazard": "low",
+        "notes": ""
+      }
+    },
+    "imbuia": {
+      "id": "imbuia",
+      "name": "Imbuia",
+      "scientific_name": "Ocotea porosa",
+      "guitar_relevance": "emerging",
+      "density_kg_m3": 660,
+      "specific_gravity": 0.66,
+      "janka_hardness_lbf": 584,
+      "modulus_of_elasticity_gpa": 9.61,
+      "modulus_of_rupture_mpa": 84.8,
+      "grain": "",
+      "speed_of_sound_m_s": 3816,
+      "acoustic_impedance": 2.52,
+      "tone_character": "",
+      "typical_uses": [],
+      "sustainability": "",
+      "machining_notes": {
+        "burn_risk": "low",
+        "tearout_risk": "low",
+        "dust_hazard": "medium",
+        "notes": ""
+      }
+    },
+    "madagascar_rosewood": {
+      "id": "madagascar_rosewood",
+      "name": "Madagascar Rosewood",
+      "scientific_name": "Dalbergia baronii",
+      "guitar_relevance": "emerging",
+      "density_kg_m3": 935,
+      "specific_gravity": 0.94,
+      "janka_hardness_lbf": 1112,
+      "modulus_of_elasticity_gpa": 12.01,
+      "modulus_of_rupture_mpa": 165.7,
+      "grain": "",
+      "speed_of_sound_m_s": 3584,
+      "acoustic_impedance": 3.35,
+      "tone_character": "",
+      "typical_uses": [],
+      "sustainability": "",
+      "machining_notes": {
+        "burn_risk": "low",
+        "tearout_risk": "medium",
+        "dust_hazard": "high",
+        "notes": ""
+      }
+    },
+    "mango": {
+      "id": "mango",
+      "name": "Mango",
+      "scientific_name": "Mangifera indica",
+      "guitar_relevance": "emerging",
+      "density_kg_m3": 675,
+      "specific_gravity": 0.68,
+      "janka_hardness_lbf": 609,
+      "modulus_of_elasticity_gpa": 11.53,
+      "modulus_of_rupture_mpa": 88.5,
+      "grain": "",
+      "speed_of_sound_m_s": 4133,
+      "acoustic_impedance": 2.79,
+      "tone_character": "",
+      "typical_uses": [],
+      "sustainability": "",
+      "machining_notes": {
+        "burn_risk": "low",
+        "tearout_risk": "low",
+        "dust_hazard": "medium",
+        "notes": ""
+      }
+    },
+    "mopane": {
+      "id": "mopane",
+      "name": "Mopane",
+      "scientific_name": "Colophospermum mopane",
+      "guitar_relevance": "emerging",
+      "density_kg_m3": 1075,
+      "specific_gravity": 1.07,
+      "janka_hardness_lbf": 1440,
+      "modulus_of_elasticity_gpa": 13.22,
+      "modulus_of_rupture_mpa": 114.0,
+      "grain": "",
+      "speed_of_sound_m_s": 3507,
+      "acoustic_impedance": 3.77,
+      "tone_character": "",
+      "typical_uses": [],
+      "sustainability": "",
+      "machining_notes": {
+        "burn_risk": "medium",
+        "tearout_risk": "medium",
+        "dust_hazard": "high",
+        "notes": ""
+      }
+    },
+    "mulberry": {
+      "id": "mulberry",
+      "name": "Mulberry",
+      "scientific_name": "Morus spp.",
+      "guitar_relevance": "emerging",
+      "density_kg_m3": 690,
+      "specific_gravity": 0.69,
+      "janka_hardness_lbf": 634,
+      "modulus_of_elasticity_gpa": 9.32,
+      "modulus_of_rupture_mpa": 80.6,
+      "grain": "",
+      "speed_of_sound_m_s": 3675,
+      "acoustic_impedance": 2.54,
+      "tone_character": "",
+      "typical_uses": [],
+      "sustainability": "",
+      "machining_notes": {
+        "burn_risk": "low",
+        "tearout_risk": "low",
+        "dust_hazard": "medium",
+        "notes": ""
+      }
+    },
+    "new_zealand_kauri": {
+      "id": "new_zealand_kauri",
+      "name": "New Zealand Kauri",
+      "scientific_name": "Agathis australis",
+      "guitar_relevance": "emerging",
+      "density_kg_m3": 540,
+      "specific_gravity": 0.54,
+      "janka_hardness_lbf": 403,
+      "modulus_of_elasticity_gpa": 11.87,
+      "modulus_of_rupture_mpa": 86.6,
+      "grain": "",
+      "speed_of_sound_m_s": 4688,
+      "acoustic_impedance": 2.53,
+      "tone_character": "",
+      "typical_uses": [],
+      "sustainability": "",
+      "machining_notes": {
+        "burn_risk": "low",
+        "tearout_risk": "low",
+        "dust_hazard": "low",
+        "notes": ""
+      }
+    },
+    "olive": {
+      "id": "olive",
+      "name": "Olive",
+      "scientific_name": "Olea europaea",
+      "guitar_relevance": "emerging",
+      "density_kg_m3": 980,
+      "specific_gravity": 0.98,
+      "janka_hardness_lbf": 1213,
+      "modulus_of_elasticity_gpa": 12.39,
+      "modulus_of_rupture_mpa": 143.0,
+      "grain": "",
+      "speed_of_sound_m_s": 3556,
+      "acoustic_impedance": 3.48,
+      "tone_character": "",
+      "typical_uses": [],
+      "sustainability": "",
+      "machining_notes": {
+        "burn_risk": "low",
+        "tearout_risk": "medium",
+        "dust_hazard": "high",
+        "notes": ""
+      }
+    },
+    "osage_orange": {
+      "id": "osage_orange",
+      "name": "Osage Orange",
+      "scientific_name": "Maclura pomifera",
+      "guitar_relevance": "emerging",
+      "density_kg_m3": 855,
+      "specific_gravity": 0.85,
+      "janka_hardness_lbf": 943,
+      "modulus_of_elasticity_gpa": 11.64,
+      "modulus_of_rupture_mpa": 128.6,
+      "grain": "",
+      "speed_of_sound_m_s": 3690,
+      "acoustic_impedance": 3.15,
+      "tone_character": "",
+      "typical_uses": [],
+      "sustainability": "",
+      "machining_notes": {
+        "burn_risk": "low",
+        "tearout_risk": "low",
+        "dust_hazard": "high",
+        "notes": ""
+      }
+    },
+    "pink_ivory": {
+      "id": "pink_ivory",
+      "name": "Pink Ivory",
+      "scientific_name": "Berchemia zeyheri",
+      "guitar_relevance": "emerging",
+      "density_kg_m3": 1035,
+      "specific_gravity": 1.03,
+      "janka_hardness_lbf": 1342,
+      "modulus_of_elasticity_gpa": 15.12,
+      "modulus_of_rupture_mpa": 138.1,
+      "grain": "",
+      "speed_of_sound_m_s": 3822,
+      "acoustic_impedance": 3.96,
+      "tone_character": "",
+      "typical_uses": [],
+      "sustainability": "",
+      "machining_notes": {
+        "burn_risk": "low",
+        "tearout_risk": "medium",
+        "dust_hazard": "high",
+        "notes": ""
+      }
+    },
+    "siamese_rosewood": {
+      "id": "siamese_rosewood",
+      "name": "Siamese Rosewood",
+      "scientific_name": "Dalbergia cochinchinensis",
+      "guitar_relevance": "emerging",
+      "density_kg_m3": 1035,
+      "specific_gravity": 1.03,
+      "janka_hardness_lbf": 1342,
+      "modulus_of_elasticity_gpa": 16.38,
+      "modulus_of_rupture_mpa": 171.0,
+      "grain": "",
+      "speed_of_sound_m_s": 3978,
+      "acoustic_impedance": 4.12,
+      "tone_character": "",
+      "typical_uses": [],
+      "sustainability": "",
+      "machining_notes": {
+        "burn_risk": "low",
+        "tearout_risk": "medium",
+        "dust_hazard": "high",
+        "notes": ""
+      }
+    },
+    "snakewood": {
+      "id": "snakewood",
+      "name": "Snakewood",
+      "scientific_name": "Brosimum guianense",
+      "guitar_relevance": "emerging",
+      "density_kg_m3": 1210,
+      "specific_gravity": 1.21,
+      "janka_hardness_lbf": 1792,
+      "modulus_of_elasticity_gpa": 23.2,
+      "modulus_of_rupture_mpa": 195.0,
+      "grain": "",
+      "speed_of_sound_m_s": 4379,
+      "acoustic_impedance": 5.3,
+      "tone_character": "",
+      "typical_uses": [],
+      "sustainability": "",
+      "machining_notes": {
+        "burn_risk": "medium",
+        "tearout_risk": "medium",
+        "dust_hazard": "high",
+        "notes": ""
+      }
+    },
+    "texas_ebony": {
+      "id": "texas_ebony",
+      "name": "Texas Ebony",
+      "scientific_name": "Ebenopsis ebano",
+      "guitar_relevance": "emerging",
+      "density_kg_m3": 965,
+      "specific_gravity": 0.96,
+      "janka_hardness_lbf": 1179,
+      "modulus_of_elasticity_gpa": 16.54,
+      "modulus_of_rupture_mpa": 152.3,
+      "grain": "",
+      "speed_of_sound_m_s": 4140,
+      "acoustic_impedance": 4.0,
+      "tone_character": "",
+      "typical_uses": [],
+      "sustainability": "",
+      "machining_notes": {
+        "burn_risk": "low",
+        "tearout_risk": "medium",
+        "dust_hazard": "high",
+        "notes": ""
+      }
+    },
+    "yucatan_rosewood": {
+      "id": "yucatan_rosewood",
+      "name": "Yucatan Rosewood",
+      "scientific_name": "",
+      "guitar_relevance": "emerging",
+      "density_kg_m3": 680,
+      "specific_gravity": 0.68,
+      "janka_hardness_lbf": 617,
+      "modulus_of_elasticity_gpa": 7.76,
+      "modulus_of_rupture_mpa": 70.1,
+      "grain": "",
+      "speed_of_sound_m_s": 3378,
+      "acoustic_impedance": 2.3,
+      "tone_character": "",
+      "typical_uses": [],
+      "sustainability": "",
+      "machining_notes": {
+        "burn_risk": "low",
+        "tearout_risk": "low",
+        "dust_hazard": "medium",
+        "notes": ""
+      }
+    }
+  }
+}

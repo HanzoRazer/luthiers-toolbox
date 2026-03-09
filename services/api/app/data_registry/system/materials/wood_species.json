@@ -16637,6 +16637,77 @@
       },
       "_source_url": "https://www.wood-database.com/honey-locust/"
     },
+    "honey_mesquite": {
+      "id": "honey_mesquite",
+      "name": "Honey Mesquite",
+      "scientific_name": "Prosopis glandulosa",
+      "category": "hardwood",
+      "guitar_relevance": "emerging",
+      "physical": {
+        "specific_gravity": 0.86,
+        "density_kg_m3": 950,
+        "janka_hardness_lbf": 2345,
+        "janka_hardness_n": 10431,
+        "grain": "interlocked, often wildly figured",
+        "workability": "difficult — very hard, dulls cutters, but finishes beautifully",
+        "resinous": false,
+        "modulus_of_rupture_mpa": 117.0,
+        "modulus_of_elasticity_gpa": 11.58
+      },
+      "thermal": {
+        "thermal_conductivity_w_per_mk": 0.37,
+        "specific_heat_capacity_j_per_kgk": 1450,
+        "specific_cutting_energy_j_per_mm3": 0.78,
+        "heat_partition": {
+          "chip": 0.60,
+          "tool": 0.25,
+          "work": 0.15
+        },
+        "_note": "All thermal values estimated from density/SG. North American species — no FPL thermal data."
+      },
+      "machining": {
+        "hardness_scale": 0.70,
+        "burn_tendency": 0.45,
+        "tearout_tendency": 0.55,
+        "chipload_multiplier": 0.80,
+        "feed_clamp": {
+          "roughing_max_mm_min": 2800,
+          "finishing_max_mm_min": 1800,
+          "plunge_max_mm_min": 700
+        },
+        "speed_clamp": {
+          "min_rpm": 16000,
+          "max_rpm": 24000,
+          "optimal_sfm": 650
+        },
+        "doc_limits": {
+          "max_doc_mm": 8,
+          "optimal_doc_ratio": 0.40
+        },
+        "woc_limits": {
+          "max_woc_ratio": 0.40,
+          "finishing_woc_ratio": 0.10
+        },
+        "warnings": {
+          "burn_risk": "high",
+          "tearout_risk": "high",
+          "dust_hazard": "high",
+          "notes": "Extremely hard — dulls HSS quickly, use carbide. Interlocked grain tears easily on figured stock. Dust is irritating. Small blanks common due to tree form."
+        }
+      },
+      "lutherie": {
+        "typical_uses": [
+          "body",
+          "body_top",
+          "fretboard",
+          "bridge",
+          "accent"
+        ],
+        "tone_character": "bright, dense, crystalline highs with strong sustain — similar to rosewood but more percussive",
+        "sustainability": "abundant in Texas/Southwest US, invasive species — harvest is ecologically beneficial"
+      },
+      "_source_url": "https://www.wood-database.com/honey-mesquite/"
+    },
     "hoop_pine": {
       "id": "hoop_pine",
       "name": "Hoop Pine",
