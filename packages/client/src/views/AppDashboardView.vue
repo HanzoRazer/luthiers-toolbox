@@ -288,6 +288,8 @@ const domains = [
     links: [
       { icon: '📈', label: 'CAM Dashboard',   to: '/saw' },
       { icon: '🔬', label: 'Audio Analyzer',  to: '/tools/audio-analyzer' },
+      { icon: '📚', label: 'Acoustics Library', to: '/tools/audio-analyzer/library' },
+      { icon: '🎵', label: 'Acoustics Runs',  to: '/tools/audio-analyzer/runs' },
       { icon: '⚠️', label: 'Risk Timeline',   to: '/lab/risk-timeline' },
     ],
   },
