@@ -403,6 +403,246 @@ def simulate(
 
 
 # =============================================================================
+# ARC INTERPOLATION HELPERS (shared by simulate_segments)
+# =============================================================================
+
+def _arc_center_from_r(
+    sx: float, sy: float,
+    ex: float, ey: float,
+    r: float,
+    cw: bool,
+) -> Optional[Tuple[float, float]]:
+    """
+    Compute arc center point from R-mode G2/G3.
+
+    Returns (cx, cy) center, or None if radius is geometrically invalid.
+    """
+    dx, dy = ex - sx, ey - sy
+    chord = math.hypot(dx, dy)
+
+    if chord < 1e-6:
+        # Full circle: offset perpendicular to an arbitrary direction
+        return (sx + abs(r), sy)
+
+    half_chord = chord / 2.0
+    if abs(r) < half_chord - 1e-6:
+        return None  # Radius too small to bridge the chord
+
+    h = math.sqrt(max(0.0, r * r - half_chord * half_chord))
+
+    # Perpendicular unit vector (90° CCW from chord)
+    ux, uy = -dy / chord, dx / chord
+    mx, my = (sx + ex) / 2.0, (sy + ey) / 2.0
+
+    c1 = (mx + h * ux, my + h * uy)
+    c2 = (mx - h * ux, my - h * uy)
+
+    def _sweep_for(c: Tuple[float, float]) -> float:
+        a_start = math.atan2(sy - c[1], sx - c[0])
+        a_end = math.atan2(ey - c[1], ex - c[0])
+        s = a_end - a_start
+        if cw:
+            if s > 0:
+                s -= 2 * math.pi
+        else:
+            if s < 0:
+                s += 2 * math.pi
+        return s
+
+    s1 = _sweep_for(c1)
+    want_minor = r > 0
+    c1_is_minor = abs(s1) <= math.pi + 1e-6
+
+    return c1 if (want_minor == c1_is_minor) else c2
+
+
+def _interpolate_arc_points(
+    from_pos: Tuple[float, float, float],
+    to_pos: Tuple[float, float, float],
+    center: Tuple[float, float],
+    cw: bool,
+    arc_resolution_deg: float,
+) -> List[Tuple[float, float, float]]:
+    """
+    Interpolate an XY arc into a list of 3D waypoints.
+    Z is linearly interpolated from from_pos[2] to to_pos[2] across the sweep.
+    """
+    sx, sy, sz = from_pos
+    ex, ey, ez = to_pos
+    cx, cy = center
+
+    r = math.hypot(sx - cx, sy - cy)
+    if r < 1e-6:
+        return [to_pos]
+
+    a_start = math.atan2(sy - cy, sx - cx)
+    a_end   = math.atan2(ey - cy, ex - cx)
+
+    is_full_circle = math.hypot(ex - sx, ey - sy) < 1e-6 and r > 1e-6
+
+    if is_full_circle:
+        sweep = -(2 * math.pi) if cw else (2 * math.pi)
+    else:
+        sweep = a_end - a_start
+        if cw:
+            if sweep > 0:
+                sweep -= 2 * math.pi
+        else:
+            if sweep < 0:
+                sweep += 2 * math.pi
+
+    num_steps = max(1, int(abs(math.degrees(sweep)) / max(0.1, arc_resolution_deg)))
+
+    points: List[Tuple[float, float, float]] = []
+    for k in range(1, num_steps + 1):
+        t = k / num_steps
+        angle = a_start + sweep * t
+        wx = cx + r * math.cos(angle)
+        wy = cy + r * math.sin(angle)
+        wz = sz + (ez - sz) * t
+        points.append((wx, wy, wz))
+
+    return points
+
+
+# =============================================================================
+# SEGMENTED SIMULATOR (animation / per-move data)
+# =============================================================================
+
+def simulate_segments(
+    gcode: str,
+    *,
+    rapid_mm_min: float = 3000.0,
+    default_feed_mm_min: float = 500.0,
+    units: str = "mm",
+    arc_resolution_deg: float = 5.0,
+) -> Dict[str, Any]:
+    """
+    Simulate G-code and return per-segment move data for animation.
+
+    Unlike simulate(), which returns aggregate totals, this function emits one
+    segment dict per atomic G-code motion command. G2/G3 arcs are pre-interpolated
+    into linear sub-segments at arc_resolution_deg granularity so the frontend
+    renderer only needs lineTo() calls.
+
+    Returns:
+        Dict with:
+        - segments: list of MoveSegment dicts
+        - bounds: {x_min, x_max, y_min, y_max, z_min, z_max}
+        - totals: {rapid_mm, cut_mm, time_min, segment_count}
+    """
+    u = 1.0 if units.lower().startswith("mm") else 25.4
+    prog = parse_lines(gcode)
+
+    modal: Modal = {"G": 0, "F": default_feed_mm_min, "units": u, "plane": 17}
+    pos: Tuple[float, float, float] = (0.0, 0.0, 0.0)
+
+    segs: List[Dict[str, Any]] = []
+    rapid_mm = cut_mm = 0.0
+
+    bb: Dict[str, float] = {
+        "x_min": 0.0, "x_max": 0.0,
+        "y_min": 0.0, "y_max": 0.0,
+        "z_min": 0.0, "z_max": 0.0,
+    }
+
+    def _expand_bb(x: float, y: float, z: float) -> None:
+        bb["x_min"] = min(bb["x_min"], x)
+        bb["x_max"] = max(bb["x_max"], x)
+        bb["y_min"] = min(bb["y_min"], y)
+        bb["y_max"] = max(bb["y_max"], y)
+        bb["z_min"] = min(bb["z_min"], z)
+        bb["z_max"] = max(bb["z_max"], z)
+
+    def _emit_segment(
+        seg_type: str,
+        from_p: Tuple[float, float, float],
+        to_p:   Tuple[float, float, float],
+        feed:   float,
+        line_number: int,
+        line_text:   str,
+    ) -> None:
+        dist = math.hypot(to_p[0] - from_p[0], to_p[1] - from_p[1])
+        duration_ms = (dist / max(1e-6, feed)) * 60_000.0
+        segs.append({
+            "type":        seg_type,
+            "from_pos":    list(from_p),
+            "to_pos":      list(to_p),
+            "feed":        feed,
+            "duration_ms": duration_ms,
+            "line_number": line_number,
+            "line_text":   line_text,
+        })
+        _expand_bb(*to_p)
+
+    for line_idx, blk in enumerate(prog):
+        w = _parse_block_words(blk, u)
+        _update_modal_state(modal, w["g"], w["f"])
+        u = modal["units"]
+
+        nx = pos[0] if w["x"] is None else w["x"]
+        ny = pos[1] if w["y"] is None else w["y"]
+        nz = pos[2] if w["z"] is None else w["z"]
+
+        code = modal["G"]
+        has_arc_params = (w["i"] is not None and w["j"] is not None) or (w["r"] is not None)
+        position_changed = (nx != pos[0] or ny != pos[1] or nz != pos[2])
+
+        line_number = line_idx + 1
+        line_text   = blk["raw"].strip()
+
+        if code in (0, 1) and position_changed:
+            seg_type = "rapid" if code == 0 else "cut"
+            feed = rapid_mm_min if code == 0 else modal["F"]
+            _emit_segment(seg_type, pos, (nx, ny, nz), feed, line_number, line_text)
+            dist_xy = math.hypot(nx - pos[0], ny - pos[1])
+            if code == 0:
+                rapid_mm += dist_xy
+            else:
+                cut_mm += dist_xy
+            pos = (nx, ny, nz)
+
+        elif code in (2, 3) and modal["plane"] == 17 and (position_changed or has_arc_params):
+            cw = code == 2
+            seg_type = "arc_cw" if cw else "arc_ccw"
+
+            center: Optional[Tuple[float, float]] = None
+            if w["i"] is not None and w["j"] is not None:
+                center = (pos[0] + w["i"], pos[1] + w["j"])
+            elif w["r"] is not None:
+                center = _arc_center_from_r(pos[0], pos[1], nx, ny, w["r"], cw)
+
+            if center is not None:
+                waypoints = _interpolate_arc_points(
+                    pos, (nx, ny, nz), center, cw, arc_resolution_deg
+                )
+                cur = pos
+                for wp in waypoints:
+                    _emit_segment(seg_type, cur, wp, modal["F"], line_number, line_text)
+                    cut_mm += math.hypot(wp[0] - cur[0], wp[1] - cur[1])
+                    cur = wp
+            else:
+                # Fallback: treat degenerate arc as straight cut
+                _emit_segment("cut", pos, (nx, ny, nz), modal["F"], line_number, line_text)
+                cut_mm += math.hypot(nx - pos[0], ny - pos[1])
+
+            pos = (nx, ny, nz)
+
+    total_time_min = sum(s["duration_ms"] for s in segs) / 60_000.0
+
+    return {
+        "segments": segs,
+        "bounds":   bb,
+        "totals": {
+            "rapid_mm":      rapid_mm,
+            "cut_mm":        cut_mm,
+            "time_min":      total_time_min,
+            "segment_count": len(segs),
+        },
+    }
+
+
+# =============================================================================
 # SVG RENDERING (BACKPLOT VISUALIZATION)
 # =============================================================================
 

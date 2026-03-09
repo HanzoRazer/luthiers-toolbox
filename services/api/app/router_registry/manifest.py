@@ -164,6 +164,12 @@ ROUTER_MANIFEST: List[RouterSpec] = [
         category="cam",
     ),
     RouterSpec(
+        module="app.routers.gcode_simulate_router",
+        prefix="/api",
+        tags=["G-code", "Simulate"],
+        category="cam",
+    ),
+    RouterSpec(
         module="app.routers.adaptive_preview_router",
         prefix="/api",
         tags=["Adaptive", "Preview"],
