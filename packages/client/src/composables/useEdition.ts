@@ -4,6 +4,10 @@
  * Provides edition-aware feature gating for Vue components.
  * Wraps the registry store with convenient helpers for UI components.
  *
+ * Integrates with Supabase auth tier:
+ * - Authenticated Pro users get Pro features regardless of local edition
+ * - Falls back to local edition when not authenticated
+ *
  * @module composables/useEdition
  *
  * @example
@@ -25,6 +29,7 @@
 
 import { computed, ref } from "vue";
 import { useRegistryStore } from "@/stores/useRegistryStore";
+import { useAuthStore } from "@/stores/useAuthStore";
 import type { Edition } from "@/api/registry";
 
 // Feature to minimum edition mapping
@@ -73,6 +78,7 @@ const EDITION_RANK: Record<Edition, number> = {
 
 export function useEdition() {
   const store = useRegistryStore();
+  const authStore = useAuthStore();
 
   // Upgrade modal state
   const showingUpgradeModal = ref(false);
@@ -80,9 +86,33 @@ export function useEdition() {
   const upgradeRequiredEdition = ref<Edition | null>(null);
 
   /**
-   * Check if current edition can access a feature
+   * Check if current edition can access a feature.
+   * 
+   * Priority:
+   * 1. If authenticated and auth store has feature info, use that
+   * 2. If authenticated Pro user, grant Pro-tier features
+   * 3. Fall back to local edition-based check
    */
   function canAccess(feature: string): boolean {
+    // Check 1: If auth store has feature flags loaded, use server truth
+    if (authStore.isAuthenticated && authStore.tierInfo?.features) {
+      const serverFeature = authStore.tierInfo.features.find(
+        (f) => f.feature_key === feature
+      );
+      if (serverFeature !== undefined) {
+        return serverFeature.available;
+      }
+    }
+
+    // Check 2: Authenticated Pro users get Pro features
+    if (authStore.isAuthenticated && authStore.isPro) {
+      const required = FEATURE_REQUIREMENTS[feature];
+      if (required && EDITION_RANK[required] <= EDITION_RANK["pro"]) {
+        return true;
+      }
+    }
+
+    // Check 3: Fall back to local edition check
     const required = FEATURE_REQUIREMENTS[feature];
     if (!required) {
       // Unknown feature - allow by default
@@ -175,7 +205,7 @@ export function useEdition() {
   // Computed convenience getters
   const edition = computed(() => store.edition);
   const isExpress = computed(() => store.isExpress);
-  const isPro = computed(() => store.isPro);
+  const isPro = computed(() => store.isPro || authStore.isPro);
   const isEnterprise = computed(() => store.isEnterprise);
   const isStandalone = computed(() => store.isStandalone);
 
