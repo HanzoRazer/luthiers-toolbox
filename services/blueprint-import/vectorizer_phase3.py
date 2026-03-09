@@ -195,6 +195,7 @@ class ExtractionResult:
     # Phase 3.6: OCR dimensions
     ocr_dimensions: List[Dict[str, Any]] = field(default_factory=list)
     ocr_raw_texts: List[str] = field(default_factory=list)
+    sheet_type: str = "body"  # "body", "pickguard_sheet", "component_sheet"
 
     def summary(self) -> Dict[str, Any]:
         return {
@@ -202,6 +203,7 @@ class ExtractionResult:
             "dxf": self.output_dxf,
             "instrument": self.instrument_type.value,
             "body_size_mm": self.dimensions_mm,
+            "sheet_type": self.sheet_type,
             "validation_passed": self.validation_passed,
             "features": {cat: len(items) for cat, items in self.contours_by_category.items()},
             "primitives_count": len(self.primitives),
@@ -223,6 +225,8 @@ class InstrumentSpec:
     body_width_range: Tuple[float, float]   # mm
     neck_pocket_range: Tuple[float, float]  # mm (width)
     scale_length: Optional[float] = None    # mm
+    min_body_dim: float = 300.0             # mm — minimum largest dimension to qualify as body
+    max_body_aspect_ratio: float = 2.0      # aspect ratio ceiling for body outlines
 
 
 # Known instrument specifications for validation
@@ -330,7 +334,36 @@ INSTRUMENT_SPECS = {
         body_length_range=(340, 370),
         body_width_range=(215, 245),
         neck_pocket_range=(54, 58),
-        scale_length=648
+        scale_length=648,
+        min_body_dim=210.0,  # Klein bodies are compact
+        max_body_aspect_ratio=2.0
+    ),
+    "ukulele_soprano": InstrumentSpec(
+        name="Soprano Ukulele",
+        body_length_range=(230, 260),
+        body_width_range=(160, 185),
+        neck_pocket_range=(None, None),
+        scale_length=345,
+        min_body_dim=155.0,
+        max_body_aspect_ratio=1.8
+    ),
+    "ukulele_concert": InstrumentSpec(
+        name="Concert Ukulele",
+        body_length_range=(260, 290),
+        body_width_range=(180, 205),
+        neck_pocket_range=(None, None),
+        scale_length=381,
+        min_body_dim=175.0,
+        max_body_aspect_ratio=1.8
+    ),
+    "ukulele_tenor": InstrumentSpec(
+        name="Tenor Ukulele",
+        body_length_range=(290, 320),
+        body_width_range=(200, 225),
+        neck_pocket_range=(None, None),
+        scale_length=432,
+        min_body_dim=195.0,
+        max_body_aspect_ratio=1.8
     ),
     "jumbo": InstrumentSpec(
         name="Jumbo Acoustic",
@@ -1768,6 +1801,8 @@ def rerank_body_candidates(
     image_height: int,
     grid_classifier=None,
     min_body_score: float = 30.0,
+    min_body_dim: float = 300.0,
+    max_body_aspect_ratio: float = 2.0,
 ) -> Dict[ContourCategory, List[ContourInfo]]:
     """
     Re-rank body outline candidates using multi-factor scoring.
@@ -1821,14 +1856,30 @@ def rerank_body_candidates(
         logger.warning(f"Best body candidate scored only {best_score:.1f} — below threshold {min_body_score}")
         return classified
 
-    # Minimum body size sanity check — a real guitar body is at least 300mm
-    # in its largest dimension. Anything smaller is a component (pickguard,
-    # neck profile, etc.) that was falsely promoted.
+    # Body geometry sanity check — reject candidates that can't be a real body.
+    # Two checks: (1) minimum dimension, (2) aspect ratio.
+    # Both thresholds are configurable via InstrumentSpec for small instruments.
     best_max_dim = max(best_info.width_mm, best_info.height_mm)
-    if best_max_dim < 300:
+    best_min_dim = min(best_info.width_mm, best_info.height_mm)
+    best_aspect = best_max_dim / best_min_dim if best_min_dim > 0 else 999.0
+
+    reject_body = False
+    reject_reason = ""
+    if best_max_dim < min_body_dim:
+        reject_body = True
+        reject_reason = (f"only {best_max_dim:.0f}mm — below {min_body_dim:.0f}mm minimum")
+    elif best_aspect > max_body_aspect_ratio:
+        reject_body = True
+        reject_reason = (
+            f"aspect ratio {best_aspect:.2f} exceeds {max_body_aspect_ratio:.1f} "
+            f"({best_info.width_mm:.0f}x{best_info.height_mm:.0f}mm) — "
+            f"likely a neck, pickguard, or component strip"
+        )
+
+    if reject_body:
         logger.info(
-            f"Best body candidate is only {best_max_dim:.0f}mm — too small for a body. "
-            f"Treating as component-only sheet (pickguard, neck profile, etc.)"
+            f"Best body candidate rejected: {reject_reason}. "
+            f"Treating as component-only sheet."
         )
         # Reclassify all body candidates back to their proper categories
         for score, info, source in body_candidates:
@@ -1893,7 +1944,9 @@ def extract_with_hierarchy(
     instrument_type: InstrumentType = InstrumentType.ELECTRIC_GUITAR,
     min_area: float = 100,
     ml_classifier: Optional[MLContourClassifier] = None,
-    grid_classifier=None
+    grid_classifier=None,
+    min_body_dim: float = 300.0,
+    max_body_aspect_ratio: float = 2.0
 ) -> Dict[ContourCategory, List[ContourInfo]]:
     """
     Extract contours with hierarchy information.
@@ -1915,6 +1968,8 @@ def extract_with_hierarchy(
         min_area: Minimum contour area in pixels
         ml_classifier: Optional ML classifier
         grid_classifier: Optional GridZoneClassifier for body re-ranking
+        min_body_dim: Minimum largest dimension for body candidates (mm)
+        max_body_aspect_ratio: Maximum aspect ratio for body candidates
 
     Returns:
         Dict mapping categories to lists of ContourInfo
@@ -1972,7 +2027,9 @@ def extract_with_hierarchy(
         image_height_px = int(img_height_mm / mm_per_px) if mm_per_px > 0 else 0
         image_width_px = int(img_width_mm / mm_per_px) if mm_per_px > 0 else 0
         classified = rerank_body_candidates(
-            classified, image_width_px, image_height_px, grid_classifier
+            classified, image_width_px, image_height_px, grid_classifier,
+            min_body_dim=min_body_dim,
+            max_body_aspect_ratio=max_body_aspect_ratio
         )
 
     return classified
@@ -2498,6 +2555,15 @@ class Phase3Vectorizer:
 
             # Classify with hierarchy + grid-enhanced body re-ranking
             ml_clf = self.ml_classifier if use_ml else None
+
+            # Resolve spec-aware body thresholds
+            _min_body_dim = 300.0
+            _max_body_aspect = 2.0
+            if spec_name and spec_name in INSTRUMENT_SPECS:
+                _spec = INSTRUMENT_SPECS[spec_name]
+                _min_body_dim = _spec.min_body_dim
+                _max_body_aspect = _spec.max_body_aspect_ratio
+
             classified = extract_with_hierarchy(
                 combined_mask,
                 self.mm_per_px,
@@ -2505,7 +2571,9 @@ class Phase3Vectorizer:
                 img_height_mm,
                 instrument,
                 ml_classifier=ml_clf,
-                grid_classifier=self.grid_classifier
+                grid_classifier=self.grid_classifier,
+                min_body_dim=_min_body_dim,
+                max_body_aspect_ratio=_max_body_aspect
             )
 
             # Flatten contours for additional processing
@@ -2621,10 +2689,11 @@ class Phase3Vectorizer:
             processing_time_ms=processing_time,
             ml_used=ml_clf is not None and ml_clf.using_ml,
             ocr_dimensions=ocr_dimensions,
-            ocr_raw_texts=ocr_raw_texts
+            ocr_raw_texts=ocr_raw_texts,
+            sheet_type=sheet_type
         )
 
-        logger.info(f"Complete: {body_w:.0f}x{body_h:.0f}mm body in {processing_time:.0f}ms")
+        logger.info(f"Complete: {body_w:.0f}x{body_h:.0f}mm {sheet_type} in {processing_time:.0f}ms")
 
         return result
 
