@@ -35,7 +35,7 @@ jobs:
         working-directory: services/api
         run: |
           python -m pip install --upgrade pip
-          pip install pydantic pytest
+          pip install pydantic pytest fastapi httpx
 
       - name: Validate JSON Schema is valid
         run: |
