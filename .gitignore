@@ -442,3 +442,8 @@ Cuatro/*.zip
 # Large binary reference files
 Guitar Plans/
 Cuatro/Cuatro_DXF_Simple_Package/
+
+# Runtime data
+services/api/data/cam_risk_reports.json
+services/api/data/compare/
+services/blueprint-import/output/
