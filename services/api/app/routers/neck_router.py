@@ -448,7 +448,7 @@ def export_dxf(params: NeckParameters):
         raise HTTPException(500, detail=f"Error exporting DXF: {str(e)}")
 
 
-@router.get("/neck/presets")
+@router.get("/presets")
 def get_neck_presets():
     """
     Get standard neck presets.

@@ -105,6 +105,9 @@ export interface FetchRunsParams {
 
 /**
  * List run artifacts with optional filtering.
+ *
+ * NOTE: The backend returns a paginated envelope { items: [...], total, limit, offset }
+ * but this function extracts just the items array for backward compatibility.
  */
 export async function fetchRuns(params: FetchRunsParams = {}): Promise<RunIndexItem[]> {
   const query = new URLSearchParams();
@@ -121,7 +124,18 @@ export async function fetchRuns(params: FetchRunsParams = {}): Promise<RunIndexI
   if (!response.ok) {
     throw new Error(`Failed to fetch runs: ${response.statusText}`);
   }
-  return response.json();
+  const data = await response.json();
+
+  // Handle both paginated envelope { items: [...] } and raw array responses
+  if (Array.isArray(data)) {
+    return data;
+  }
+  if (data && Array.isArray(data.items)) {
+    return data.items;
+  }
+  // Fallback: return empty array if unexpected response shape
+  console.warn("[fetchRuns] Unexpected response shape, returning empty array:", data);
+  return [];
 }
 
 /**
