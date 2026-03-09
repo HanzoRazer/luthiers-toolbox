@@ -5,11 +5,17 @@
  * Master list panel for browsing run artifacts.
  * Includes filtering controls and delegates row rendering to RunArtifactRow.
  */
-import { onMounted, watch } from "vue";
+import { onMounted, watch, computed } from "vue";
 import { useRmosRunsStore } from "@/stores/rmosRunsStore";
 import RunArtifactRow from "./RunArtifactRow.vue";
 
 const store = useRmosRunsStore();
+
+// Defensive: ensure items is always an array
+const safeItems = computed(() => {
+  if (!store.items || !Array.isArray(store.items)) return [];
+  return store.items.filter(i => i && i.run_id);
+});
 
 // Load runs on mount
 onMounted(() => {
@@ -100,7 +106,7 @@ function handleRefresh() {
 
     <!-- Run List -->
     <div class="run-list">
-      <template v-if="store.loading && store.items.length === 0">
+      <template v-if="store.loading && safeItems.length === 0">
         <div class="loading">
           Loading runs…
         </div>
@@ -112,7 +118,7 @@ function handleRefresh() {
         </div>
       </template>
 
-      <template v-else-if="store.items.length === 0">
+      <template v-else-if="safeItems.length === 0">
         <div class="empty">
           No run artifacts found.
         </div>
@@ -120,7 +126,7 @@ function handleRefresh() {
 
       <template v-else>
         <RunArtifactRow
-          v-for="r in store.items.filter(i => i && i.run_id)"
+          v-for="r in safeItems"
           :key="r.run_id"
           :run="r"
           :selected="store.selected?.run_id === r.run_id"
@@ -131,7 +137,7 @@ function handleRefresh() {
 
     <!-- Status Bar -->
     <div class="status-bar">
-      <span>{{ store.items.length }} run(s)</span>
+      <span>{{ safeItems.length }} run(s)</span>
       <span
         v-if="store.lastSelectedRunId"
         class="last-selected"
