@@ -54,6 +54,30 @@ except ImportError:
 
 from dxf_compat import create_document, add_polyline, DxfVersion
 
+# Phase 3.7 enhancement modules (optional — graceful fallback)
+try:
+    from vectorizer_enhancements import (
+        InputType, ScaleSource, CalibrationResult,
+        GuitarPhotoProcessor, AdaptiveLineExtractor, ScaleCalibrator,
+        ContourCompleter, DebugVisualizer, ManualOverride, ValidationReport,
+        classify_input_type
+    )
+    ENHANCEMENTS_AVAILABLE = True
+except ImportError:
+    ENHANCEMENTS_AVAILABLE = False
+
+try:
+    from export_svg import export_to_svg
+    SVG_EXPORT_AVAILABLE = True
+except ImportError:
+    SVG_EXPORT_AVAILABLE = False
+
+try:
+    from dxf_postprocessor import export_cam_ready_dxf
+    CAM_EXPORT_AVAILABLE = True
+except ImportError:
+    CAM_EXPORT_AVAILABLE = False
+
 # Grid zone classifier for body outline detection enhancement
 try:
     from classifiers.grid_zone import GridZoneClassifier, ELECTRIC_GUITAR_GRID
@@ -196,9 +220,17 @@ class ExtractionResult:
     ocr_dimensions: List[Dict[str, Any]] = field(default_factory=list)
     ocr_raw_texts: List[str] = field(default_factory=list)
     sheet_type: str = "body"  # "body", "pickguard_sheet", "component_sheet"
+    # Phase 3.7 additions
+    input_type: str = "unknown"
+    calibration_result: Optional[Any] = None
+    debug_report_path: Optional[str] = None
+    validation_report: Optional[Dict[str, Any]] = None
+    perspective_corrected: bool = False
+    bg_method_used: str = "none"
+    assembly_method: str = "direct"
 
     def summary(self) -> Dict[str, Any]:
-        return {
+        base = {
             "source": self.source_path,
             "dxf": self.output_dxf,
             "instrument": self.instrument_type.value,
@@ -213,8 +245,21 @@ class ExtractionResult:
             "ml_used": self.ml_used,
             "ocr_dimensions_count": len(self.ocr_dimensions),
             "ocr_raw_texts_count": len(self.ocr_raw_texts),
-            "warnings": self.warnings
+            "warnings": self.warnings,
+            "input_type": self.input_type,
+            "perspective_corrected": self.perspective_corrected,
+            "bg_method": self.bg_method_used,
+            "assembly_method": self.assembly_method,
+            "debug_report": self.debug_report_path,
         }
+        if self.calibration_result and hasattr(self.calibration_result, 'mm_per_px'):
+            base["calibration"] = {
+                "mm_per_px": self.calibration_result.mm_per_px,
+                "source": self.calibration_result.source.value,
+                "confidence": self.calibration_result.confidence,
+                "message": self.calibration_result.message,
+            }
+        return base
 
 
 @dataclass
@@ -2106,7 +2151,8 @@ def export_to_dxf(
     simplify_tolerance: float = 0.2,
     excluded_categories: Optional[List[ContourCategory]] = None,
     max_per_category: Optional[Dict[ContourCategory, int]] = None,
-    dxf_version: DxfVersion = 'R12'
+    dxf_version: DxfVersion = 'R12',
+    scale_factor: float = 1.0
 ) -> Tuple[float, float]:
     """
     Export classified contours to DXF with semantic layers.
@@ -2121,6 +2167,7 @@ def export_to_dxf(
         excluded_categories: Categories to skip
         max_per_category: Max contours per category
         dxf_version: DXF version to export
+        scale_factor: Scale multiplier (from calibration, default 1.0)
 
     Returns:
         Tuple of (body_width_mm, body_height_mm)
@@ -2159,8 +2206,8 @@ def export_to_dxf(
         if body_list:
             body = body_list[0]  # Largest body
             pts = body.contour.reshape(-1, 2)
-            xs = [p[0] * mm_per_px for p in pts]
-            ys = [(image_height - p[1]) * mm_per_px for p in pts]
+            xs = [p[0] * mm_per_px * scale_factor for p in pts]
+            ys = [(image_height - p[1]) * mm_per_px * scale_factor for p in pts]
             center_x = (min(xs) + max(xs)) / 2
             center_y = (min(ys) + max(ys)) / 2
             body_width = max(xs) - min(xs)
@@ -2202,8 +2249,8 @@ def export_to_dxf(
             pts = info.contour.reshape(-1, 2)
             mm_pts = []
             for px, py in pts:
-                x_mm = px * mm_per_px - center_x
-                y_mm = (image_height - py) * mm_per_px - center_y
+                x_mm = px * mm_per_px * scale_factor - center_x
+                y_mm = (image_height - py) * mm_per_px * scale_factor - center_y
                 mm_pts.append([x_mm, y_mm])
 
             # Simplify
@@ -2347,7 +2394,13 @@ class Phase3Vectorizer:
         enable_ocr: bool = False,
         tier: Optional[str] = None,
         tier_config_path: Optional[str] = None,
-        extraction_mode: ExtractionMode = ExtractionMode.SMART
+        extraction_mode: ExtractionMode = ExtractionMode.SMART,
+        # Phase 3.7 additions
+        enable_photo_processing: bool = True,
+        enable_debug: bool = False,
+        debug_output_dir: str = "debug_output",
+        corrections_file: Optional[str] = None,
+        use_rembg: bool = True
     ):
         """
         Initialize Phase 3.6 Vectorizer.
@@ -2408,6 +2461,28 @@ class Phase3Vectorizer:
             logger.info("GridZoneClassifier loaded for body outline re-ranking")
 
         logger.info(f"Phase 3.6 Vectorizer initialized (ML: {self.ml_classifier is not None}, Grid: {self.grid_classifier is not None}, Mode: {extraction_mode.value})")
+
+        # Phase 3.7 enhancement components (optional)
+        self.photo_processor = None
+        self.adaptive_extractor = None
+        self.scale_calibrator = None
+        self.contour_completer = None
+        self.debug_visualizer = None
+        self.manual_override = None
+        self.enhanced_validator = None
+        self.enable_photo_processing = enable_photo_processing
+
+        if ENHANCEMENTS_AVAILABLE:
+            if enable_photo_processing:
+                self.photo_processor = GuitarPhotoProcessor(use_rembg=use_rembg)
+            self.adaptive_extractor = AdaptiveLineExtractor()
+            self.scale_calibrator = ScaleCalibrator(mm_per_px_default=self.mm_per_px)
+            self.contour_completer = ContourCompleter()
+            self.debug_visualizer = DebugVisualizer(debug_output_dir, enabled=enable_debug)
+            if corrections_file:
+                self.manual_override = ManualOverride(corrections_file)
+            self.enhanced_validator = ValidationReport(INSTRUMENT_SPECS)
+            logger.info(f"Phase 3.7 enhancements loaded (Photo: {enable_photo_processing}, Debug: {enable_debug})")
 
     @classmethod
     def from_tier(
@@ -2484,7 +2559,15 @@ class Phase3Vectorizer:
         use_ml: bool = True,
         detect_primitives: bool = True,
         extraction_mode: Optional[ExtractionMode] = None,
-        simple_min_area: int = 50
+        simple_min_area: int = 50,
+        # Phase 3.7 additions
+        user_dimension_mm: Optional[float] = None,
+        user_dimension_px: Optional[float] = None,
+        image_dpi: Optional[float] = None,
+        correct_perspective: bool = True,
+        assembly_gap_px: int = 50,
+        generate_debug_report: bool = False,
+        cam_ready: bool = False
     ) -> ExtractionResult:
         """
         Extract geometry from a blueprint.
@@ -2504,6 +2587,13 @@ class Phase3Vectorizer:
             detect_primitives: Detect geometric primitives
             extraction_mode: Override instance extraction mode (SMART or SIMPLE)
             simple_min_area: Minimum contour area in pixels for SIMPLE mode
+            user_dimension_mm: Known dimension in mm for scale calibration
+            user_dimension_px: Corresponding dimension in pixels
+            image_dpi: Known image DPI for scale calibration
+            correct_perspective: Apply perspective correction (photos)
+            assembly_gap_px: Gap tolerance for assembly contour joining
+            generate_debug_report: Generate debug visualization report
+            cam_ready: Export CAM-ready DXF (R2000, arcs, LWPOLYLINE)
 
         Returns:
             ExtractionResult with paths and statistics
@@ -2528,6 +2618,28 @@ class Phase3Vectorizer:
         height, width = image.shape[:2]
         img_width_mm = width * self.mm_per_px
         img_height_mm = height * self.mm_per_px
+
+        # Phase 3.7: Input classification + photo pre-processing
+        detected_input_type = "unknown"
+        perspective_corrected = False
+        bg_method_used = "none"
+        if ENHANCEMENTS_AVAILABLE:
+            detected_input_type = classify_input_type(image).value
+            logger.info(f"  Input type: {detected_input_type}")
+
+            if detected_input_type == InputType.PHOTO.value and self.photo_processor:
+                processed = self.photo_processor.preprocess_for_extraction(
+                    image,
+                    correct_perspective=correct_perspective
+                )
+                if processed is not None:
+                    image = processed
+                    height, width = image.shape[:2]
+                    img_width_mm = width * self.mm_per_px
+                    img_height_mm = height * self.mm_per_px
+                    perspective_corrected = correct_perspective
+                    bg_method_used = self.photo_processor.last_bg_method if hasattr(self.photo_processor, 'last_bg_method') else "auto"
+                    logger.info(f"  Photo pre-processed (perspective: {correct_perspective})")
 
         # Initialize ML classifier reference (may be None in SIMPLE mode)
         ml_clf = None
@@ -2581,6 +2693,25 @@ class Phase3Vectorizer:
             for cat_list in classified.values():
                 all_contours.extend(cat_list)
 
+        # Phase 3.7: Contour completion — fill gaps if no body found
+        if self.contour_completer and not classified.get(ContourCategory.BODY_OUTLINE):
+            completed = self.contour_completer.complete_body_outline(
+                classified, image.shape[:2], gap_px=assembly_gap_px
+            )
+            if completed:
+                classified = completed
+                all_contours = []
+                for cat_list in classified.values():
+                    all_contours.extend(cat_list)
+                logger.info("Contour completion recovered body outline")
+
+        # Phase 3.7: Apply manual overrides
+        if self.manual_override:
+            classified = self.manual_override.apply_corrections(classified)
+            all_contours = []
+            for cat_list in classified.values():
+                all_contours.extend(cat_list)
+
         # Detect primitives
         primitives = []
         if detect_primitives and self.enable_primitives:
@@ -2592,7 +2723,20 @@ class Phase3Vectorizer:
         # Scale detection
         scale_factor = 1.0
         scale_source = "none"
-        if self.enable_scale_detection:
+        calibration_result = None
+        if self.scale_calibrator and (user_dimension_mm or image_dpi):
+            # Phase 3.7: Enhanced scale calibration
+            calibration_result = self.scale_calibrator.calibrate(
+                all_contours, instrument,
+                user_dimension_mm=user_dimension_mm,
+                user_dimension_px=user_dimension_px,
+                spec_name=spec_name,
+                image_dpi=image_dpi
+            )
+            scale_factor = calibration_result.mm_per_px / self.mm_per_px if calibration_result.mm_per_px > 0 else 1.0
+            scale_source = calibration_result.source.value
+            logger.info(f"Enhanced calibration: {scale_factor:.3f}x ({scale_source}, confidence: {calibration_result.confidence:.2f})")
+        elif self.enable_scale_detection:
             scale_detector = ScaleDetector(self.mm_per_px)
             scale_factor, scale_source = scale_detector.detect_scale(all_contours, instrument)
             if scale_source != "none":
@@ -2609,13 +2753,38 @@ class Phase3Vectorizer:
                 logger.warning(f"OCR extraction failed: {e}")
 
         # Export to DXF
+        dxf_version_to_use = 'R2000' if cam_ready else 'R12'
         body_w, body_h = export_to_dxf(
             classified,
             output_path,
             height,
             self.mm_per_px,
-            simplify_tolerance=self.simplify_tolerance
+            simplify_tolerance=self.simplify_tolerance,
+            dxf_version=dxf_version_to_use,
+            scale_factor=scale_factor
         )
+
+        # Phase 3.7: CAM-ready DXF export (arc fitting, LWPOLYLINE)
+        cam_dxf_path = None
+        if cam_ready and CAM_EXPORT_AVAILABLE:
+            cam_dxf_path = str(Path(output_path).with_stem(Path(output_path).stem + "_cam"))
+            export_cam_ready_dxf(
+                classified, cam_dxf_path, height, self.mm_per_px,
+                scale_factor=scale_factor,
+                simplify_tolerance=self.simplify_tolerance
+            )
+            logger.info(f"CAM-ready DXF exported to {cam_dxf_path}")
+
+        # Phase 3.7: SVG export
+        svg_output_path = None
+        if export_svg and SVG_EXPORT_AVAILABLE:
+            svg_output_path = str(Path(output_path).with_suffix('.svg'))
+            export_to_svg(
+                classified, svg_output_path, height, self.mm_per_px,
+                scale_factor=scale_factor,
+                simplify_tolerance=self.simplify_tolerance
+            )
+            logger.info(f"SVG exported to {svg_output_path}")
 
         # Export primitives if any
         if primitives:
@@ -2650,13 +2819,32 @@ class Phase3Vectorizer:
         # Validate dimensions
         warnings = []
         validation_passed = True
-        if validate and body_w > 0:
+        enhanced_validation = None
+        if self.enhanced_validator and validate and body_w > 0:
+            # Phase 3.7: Enhanced validation (includes spec checking)
+            enhanced_validation = self.enhanced_validator.validate(
+                classified, body_w, body_h, spec_name=spec_name
+            )
+            validation_passed = enhanced_validation.get("passed", True)
+            warnings = enhanced_validation.get("warnings", [])
+            for w in warnings:
+                logger.warning(w)
+        elif validate and body_w > 0:
             validation_passed, warnings = validate_dimensions(body_w, body_h, spec_name)
             for w in warnings:
                 logger.warning(w)
         elif validate and sheet_type != "body":
             # Component sheets pass validation — no body to validate
             validation_passed = True
+
+        # Phase 3.7: Debug report generation
+        debug_report_path = None
+        if generate_debug_report and self.debug_visualizer:
+            debug_report_path = self.debug_visualizer.create_report(
+                image, classified, source_path
+            )
+            if debug_report_path:
+                logger.info(f"Debug report: {debug_report_path}")
 
         # Record feedback if enabled
         if self.feedback and ml_clf:
@@ -2677,7 +2865,7 @@ class Phase3Vectorizer:
         result = ExtractionResult(
             source_path=source_path,
             output_dxf=output_path,
-            output_svg=None,
+            output_svg=svg_output_path,
             instrument_type=instrument,
             contours_by_category={cat.value: infos for cat, infos in classified.items()},
             warnings=warnings,
@@ -2690,7 +2878,14 @@ class Phase3Vectorizer:
             ml_used=ml_clf is not None and ml_clf.using_ml,
             ocr_dimensions=ocr_dimensions,
             ocr_raw_texts=ocr_raw_texts,
-            sheet_type=sheet_type
+            sheet_type=sheet_type,
+            input_type=detected_input_type,
+            calibration_result=calibration_result,
+            debug_report_path=debug_report_path,
+            validation_report=enhanced_validation,
+            perspective_corrected=perspective_corrected,
+            bg_method_used=bg_method_used,
+            assembly_method="contour_completion" if self.contour_completer and not classified.get(ContourCategory.BODY_OUTLINE) else "direct"
         )
 
         logger.info(f"Complete: {body_w:.0f}x{body_h:.0f}mm {sheet_type} in {processing_time:.0f}ms")
