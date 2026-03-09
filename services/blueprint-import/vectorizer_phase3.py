@@ -228,6 +228,7 @@ class ExtractionResult:
     perspective_corrected: bool = False
     bg_method_used: str = "none"
     assembly_method: str = "direct"
+    dark_background_inverted: bool = False
 
     def summary(self) -> Dict[str, Any]:
         base = {
@@ -250,6 +251,7 @@ class ExtractionResult:
             "perspective_corrected": self.perspective_corrected,
             "bg_method": self.bg_method_used,
             "assembly_method": self.assembly_method,
+            "dark_background_inverted": self.dark_background_inverted,
             "debug_report": self.debug_report_path,
         }
         if self.calibration_result and hasattr(self.calibration_result, 'mm_per_px'):
@@ -1439,6 +1441,47 @@ def extract_canny_adaptive(image: np.ndarray, gap_close: int = 0) -> np.ndarray:
     return combined
 
 
+# =============================================================================
+# Dark Background Detection
+# =============================================================================
+
+def detect_dark_background(image: np.ndarray, border_px: int = 20, dark_threshold: float = 0.65) -> bool:
+    """
+    Detect if the image has a dark background (e.g. white-on-black blueprints).
+
+    Samples a border strip around all four edges and checks whether the
+    majority of border pixels are dark (< 80 intensity).
+
+    Args:
+        image: BGR or grayscale image
+        border_px: Width of border strip to sample (pixels)
+        dark_threshold: Fraction of dark border pixels required (0-1)
+
+    Returns:
+        True if background is dark
+    """
+    if len(image.shape) == 3:
+        gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+    else:
+        gray = image
+
+    h, w = gray.shape[:2]
+    border_px = min(border_px, h // 4, w // 4)
+
+    # Sample four border strips
+    top = gray[:border_px, :]
+    bottom = gray[h - border_px:, :]
+    left = gray[border_px:h - border_px, :border_px]
+    right = gray[border_px:h - border_px, w - border_px:]
+
+    border_pixels = np.concatenate([top.ravel(), bottom.ravel(), left.ravel(), right.ravel()])
+    dark_ratio = np.mean(border_pixels < 80)
+
+    is_dark = dark_ratio >= dark_threshold
+    logger.info(f"Dark background detection: {dark_ratio:.1%} dark border pixels → {'DARK' if is_dark else 'LIGHT'}")
+    return is_dark
+
+
 def extract_dark_lines(
     image: np.ndarray,
     threshold: int = 100,
@@ -2567,7 +2610,8 @@ class Phase3Vectorizer:
         correct_perspective: bool = True,
         assembly_gap_px: int = 50,
         generate_debug_report: bool = False,
-        cam_ready: bool = False
+        cam_ready: bool = False,
+        dark_background: Optional[bool] = None
     ) -> ExtractionResult:
         """
         Extract geometry from a blueprint.
@@ -2594,6 +2638,7 @@ class Phase3Vectorizer:
             assembly_gap_px: Gap tolerance for assembly contour joining
             generate_debug_report: Generate debug visualization report
             cam_ready: Export CAM-ready DXF (R2000, arcs, LWPOLYLINE)
+            dark_background: Dark background handling (None=auto-detect, True=force invert, False=off)
 
         Returns:
             ExtractionResult with paths and statistics
@@ -2618,6 +2663,19 @@ class Phase3Vectorizer:
         height, width = image.shape[:2]
         img_width_mm = width * self.mm_per_px
         img_height_mm = height * self.mm_per_px
+
+        # Dark background detection and inversion
+        # Auto-detect unless explicitly set by caller
+        image_inverted = False
+        if dark_background is None:
+            dark_bg_detected = detect_dark_background(image)
+        else:
+            dark_bg_detected = dark_background
+
+        if dark_bg_detected:
+            image = cv2.bitwise_not(image)
+            image_inverted = True
+            logger.info("  Dark background detected — image inverted to light background")
 
         # Phase 3.7: Input classification + photo pre-processing
         detected_input_type = "unknown"
@@ -2908,7 +2966,8 @@ class Phase3Vectorizer:
             validation_report=enhanced_validation,
             perspective_corrected=perspective_corrected,
             bg_method_used=bg_method_used,
-            assembly_method="contour_completion" if self.contour_completer and not classified.get(ContourCategory.BODY_OUTLINE) else "direct"
+            assembly_method="contour_completion" if self.contour_completer and not classified.get(ContourCategory.BODY_OUTLINE) else "direct",
+            dark_background_inverted=image_inverted
         )
 
         logger.info(f"Complete: {body_w:.0f}x{body_h:.0f}mm {sheet_type} in {processing_time:.0f}ms")
