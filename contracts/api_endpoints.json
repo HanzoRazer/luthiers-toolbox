@@ -2,7 +2,7 @@
   "$schema": "./api_endpoints.schema.json",
   "version": "1.0.0",
   "description": "API endpoint contract - single source of truth for frontend-backend integration",
-  "generated": "2026-02-14",
+  "generated": "2026-03-09",
   "endpoints": {
     "/api/health": {
       "methods": ["GET"],
@@ -40,6 +40,11 @@
       "description": "Machine profiles CRUD",
       "category": "config"
     },
+    "/api/machines": {
+      "methods": ["GET"],
+      "description": "List machines",
+      "category": "config"
+    },
     "/api/cam/dxf_adaptive_plan_run": {
       "methods": ["POST"],
       "description": "Run adaptive toolpath planning on DXF",
@@ -55,6 +60,21 @@
       "description": "Simulate G-code file",
       "category": "cam"
     },
+    "/api/cam/guitar/archtop/fit": {
+      "methods": ["POST"],
+      "description": "Calculate archtop bridge fit parameters",
+      "category": "cam"
+    },
+    "/api/cam/job_log/insights": {
+      "methods": ["GET"],
+      "description": "Get job log insights",
+      "category": "cam"
+    },
+    "/api/cam/risk/reports_index": {
+      "methods": ["GET"],
+      "description": "Get CAM risk reports index",
+      "category": "cam"
+    },
     "/api/geometry/dxf/preflight": {
       "methods": ["POST"],
       "description": "DXF preflight validation",
@@ -68,6 +88,16 @@
     "/api/rmos/runs_v2/runs/{run_id}": {
       "methods": ["GET"],
       "description": "Get specific RMOS run",
+      "category": "rmos"
+    },
+    "/api/rmos/runs": {
+      "methods": ["GET"],
+      "description": "RMOS runs list (legacy)",
+      "category": "rmos"
+    },
+    "/api/rmos/wrap/mvp/dxf-to-grbl": {
+      "methods": ["POST"],
+      "description": "MVP DXF to GRBL G-code conversion",
       "category": "rmos"
     },
     "/api/rmos/acoustics/import-zip": {
@@ -94,6 +124,61 @@
       "methods": ["GET"],
       "description": "Get instrument body preview SVG",
       "category": "instrument"
+    },
+    "/api/art/jobs": {
+      "methods": ["GET", "POST"],
+      "description": "Art jobs list and create",
+      "category": "art"
+    },
+    "/api/art/jobs/{job_id}": {
+      "methods": ["GET", "DELETE"],
+      "description": "Get or delete specific art job",
+      "category": "art"
+    },
+    "/api/art/presets": {
+      "methods": ["GET", "POST"],
+      "description": "Art presets list and create",
+      "category": "art"
+    },
+    "/api/art/presets/{preset_id}": {
+      "methods": ["GET", "PUT", "DELETE"],
+      "description": "Art preset CRUD",
+      "category": "art"
+    },
+    "/api/art/rosette/compare/snapshot": {
+      "methods": ["POST"],
+      "description": "Compare rosette snapshots",
+      "category": "art"
+    },
+    "/api/compare/baselines": {
+      "methods": ["GET", "POST"],
+      "description": "Compare baselines list and create",
+      "category": "compare"
+    },
+    "/api/compare/baselines/{baseline_id}": {
+      "methods": ["GET", "DELETE"],
+      "description": "Get or delete specific baseline",
+      "category": "compare"
+    },
+    "/api/compare/risk_bucket_export": {
+      "methods": ["GET", "POST"],
+      "description": "Export risk bucket data",
+      "category": "compare"
+    },
+    "/api/compare/risk_bucket_report": {
+      "methods": ["GET", "POST"],
+      "description": "Get risk bucket report",
+      "category": "compare"
+    },
+    "/api/compare/risk_snapshot": {
+      "methods": ["GET", "POST"],
+      "description": "Get or create risk snapshot",
+      "category": "compare"
+    },
+    "/api/vision/generate": {
+      "methods": ["POST"],
+      "description": "Generate vision/AI image",
+      "category": "vision"
     }
   },
   "frontend_patterns": {
@@ -103,7 +188,12 @@
       "/api/cam/bridge/presets",
       "/api/posts/",
       "/api/health",
-      "/api/instrument/geometry/catalog"
+      "/api/instrument/geometry/catalog",
+      "/api/art/jobs",
+      "/api/art/presets",
+      "/api/compare/baselines",
+      "/api/machines",
+      "/api/rmos/runs"
     ],
     "parameterized": [
       {
@@ -121,6 +211,18 @@
       {
         "pattern": "/api/instrument/geometry/body/{id}/preview.svg",
         "endpoint": "/api/instrument/geometry/body/{instrument_id}/preview.svg"
+      },
+      {
+        "pattern": "/api/art/jobs/{id}",
+        "endpoint": "/api/art/jobs/{job_id}"
+      },
+      {
+        "pattern": "/api/art/presets/{id}",
+        "endpoint": "/api/art/presets/{preset_id}"
+      },
+      {
+        "pattern": "/api/compare/baselines/{id}",
+        "endpoint": "/api/compare/baselines/{baseline_id}"
       }
     ]
   }
