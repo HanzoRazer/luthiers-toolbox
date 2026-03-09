@@ -391,6 +391,7 @@ const routes: RouteRecordRaw[] = [
   // Run Artifact Diff Viewer
   {
     path: "/rmos/runs/diff",
+    alias: "/runs/diff",
     name: "RmosRunsDiff",
     component: () => import("@/views/RmosRunsDiffView.vue"),
   },
@@ -398,6 +399,7 @@ const routes: RouteRecordRaw[] = [
   // Run Artifact Viewer (single run detail page)
   {
     path: "/rmos/runs/:id",
+    alias: "/runs/:id",
     name: "RmosRunViewer",
     component: () => import("@/views/RmosRunViewerView.vue"),
     props: true,
