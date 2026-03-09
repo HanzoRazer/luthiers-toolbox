@@ -6,7 +6,7 @@
 
 ## Executive Summary
 
-The Gibson Explorer build completes the CNC program for the third Gibson body in the Luthier's ToolBox fleet (after Les Paul and Flying V). This is the **first 1958 Modernistic-series build** — the Explorer and Flying V were launched together as Gibson's futuristic line and share the same korina material, hardware platform (ABR-1 + stoptail + PAF humbuckers), and Gibson 24.75" scale. This session created the authoritative spec JSON with 2 variants and 18 CNC operations, the full-build G-code generator script, and produced **9,401 lines of G-code** across two phases covering the complete body routing and perimeter profile.
+The Gibson Explorer build completes the CNC program for the third Gibson body in the The Production Shop fleet (after Les Paul and Flying V). This is the **first 1958 Modernistic-series build** — the Explorer and Flying V were launched together as Gibson's futuristic line and share the same korina material, hardware platform (ABR-1 + stoptail + PAF humbuckers), and Gibson 24.75" scale. This session created the authoritative spec JSON with 2 variants and 18 CNC operations, the full-build G-code generator script, and produced **9,401 lines of G-code** across two phases covering the complete body routing and perimeter profile.
 
 **What works:** Body outline DXF exists (24-point polygon), authoritative spec with all operations/tools/variants, 2-phase G-code generation (rear cavity routing + perimeter profile), 3-tool library, build summary manifest, standalone build macro JSON with 10 gap annotations.
 

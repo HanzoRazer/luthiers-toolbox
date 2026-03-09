@@ -11,7 +11,7 @@ This package hosts routes and services that support the Art Studio frontend:
 - VCarve SVG → G-code toolpaths (Wave 1)
 - Relief SVG → DXF export (Wave 3)
 
-The Art Studio is the visual design workspace of the Luthier's ToolBox,
+The Art Studio is the visual design workspace of the The Production Shop,
 providing interactive tools for guitar component design with real-time
 physics calculations and CAM export capabilities.
 

@@ -1,4 +1,4 @@
-# Luthier's Tool Box - Coding Policy & Developer Handoff Guide
+# The Production Shop - Coding Policy & Developer Handoff Guide
 
 **Project:** CNC Guitar Lutherie CAD/CAM Toolbox  
 **Repository:** `HanzoRazer/luthiers-toolbox`  

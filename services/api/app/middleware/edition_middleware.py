@@ -1,5 +1,5 @@
 """
-Edition Middleware - Luthier's ToolBox
+Edition Middleware - The Production Shop
 ======================================
 
 Provides edition-aware dependency injection for FastAPI endpoints.

@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-echo "🚀 Luthier's Tool Box - Monorepo Quick Start"
+echo "🚀 The Production Shop - Monorepo Quick Start"
 echo ""
 
 # Check if we're in the right directory

@@ -1,6 +1,6 @@
 # Configuration
 
-Customize Luthier's ToolBox for your workflow.
+Customize The Production Shop for your workflow.
 
 ---
 

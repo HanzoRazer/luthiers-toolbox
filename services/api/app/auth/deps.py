@@ -3,12 +3,16 @@
 Authentication dependencies for FastAPI.
 
 Supports:
+- Supabase JWT (AUTH_MODE=supabase) - Production auth with Supabase
 - JWT Bearer (Authorization: Bearer ...)
 - Session cookie (server-side session)
 - Legacy header-based auth (x-user-role, x-user-id) for dev/testing
 
 Configure via environment variables:
-- AUTH_MODE: "jwt", "session", "header", or "hybrid" (default: "header" for dev)
+- AUTH_MODE: "supabase", "jwt", "session", "header", or "hybrid" (default: "header" for dev)
+
+Supabase Configuration (AUTH_MODE=supabase):
+- SUPABASE_JWT_SECRET: JWT secret from Supabase project settings
 
 JWT Configuration (when AUTH_MODE includes jwt):
 - JWT_SECRET: shared secret for HS256
@@ -190,12 +194,26 @@ async def get_current_principal(
     Extract authenticated Principal from request.
 
     Tries authentication methods in order based on AUTH_MODE:
+    - "supabase": Supabase JWT only (production)
     - "jwt": JWT Bearer only
     - "session": Session cookie only
     - "header": Legacy headers only (for dev)
     - "hybrid": Try JWT -> session -> headers (default for flexibility)
     """
     mode = AUTH_MODE
+
+    # 0) Try Supabase JWT if enabled
+    if mode == "supabase":
+        if creds and creds.scheme.lower() == "bearer" and creds.credentials:
+            try:
+                from .supabase_provider import decode_supabase_jwt, principal_from_supabase_claims
+                claims = decode_supabase_jwt(creds.credentials)
+                return principal_from_supabase_claims(claims)
+            except HTTPException:
+                raise
+            except Exception:
+                raise HTTPException(status_code=401, detail="Invalid Supabase token")
+        raise HTTPException(status_code=401, detail="Not authenticated")
 
     # 1) Try JWT if enabled
     if mode in ("jwt", "hybrid"):

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Les Paul Body CNC Generator - Luthier's ToolBox
+"""Les Paul Body CNC Generator - The Production Shop
 
 WP-3: Config moved to lespaul_config.py, generator to lespaul_gcode/ package.
 This module retains the LesPaulBodyGenerator facade and re-exports for

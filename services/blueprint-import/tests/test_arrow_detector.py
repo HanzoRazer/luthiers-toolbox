@@ -4,7 +4,7 @@ Tests for Arrow Detector
 
 Tests for Phase 4.0 arrow detection functionality.
 
-Author: Luthier's Toolbox
+Author: The Production Shop
 Version: 4.0.0
 """
 

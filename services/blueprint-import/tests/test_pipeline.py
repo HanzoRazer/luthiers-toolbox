@@ -4,7 +4,7 @@ Tests for Phase 4.0 Pipeline
 
 Tests for end-to-end dimension linking pipeline.
 
-Author: Luthier's Toolbox
+Author: The Production Shop
 Version: 4.0.0
 """
 

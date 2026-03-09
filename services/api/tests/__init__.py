@@ -1,3 +1,3 @@
 """
-Test suite for Luthier's ToolBox API.
+Test suite for The Production Shop API.
 """

@@ -1,4 +1,4 @@
-"""Fraction Calculator CLI & tests — Luthier's ToolBox."""
+"""Fraction Calculator CLI & tests — The Production Shop."""
 
 from .fraction_calculator import LTBFractionCalculator
 
@@ -178,7 +178,7 @@ def calculator_repl():
     calc = LTBFractionCalculator()
 
     print("=" * 55)
-    print("Fraction Calculator - Luthier's ToolBox")
+    print("Fraction Calculator - The Production Shop")
     print("=" * 55)
     print()
     print("Fraction input: 3/4, 2-3/8, 1 1/2, 4'6-1/2\"")

@@ -2,7 +2,7 @@
 .SYNOPSIS
     Developer Mode Firewall Setup
 .DESCRIPTION
-    Creates firewall rules for the Luthier's Tool Box development stack.
+    Creates firewall rules for the The Production Shop development stack.
     Opens ports for RMOS, ToolBox API, Saw Lab, and frontend dev servers.
     
     Port allocation:
@@ -64,7 +64,7 @@ function Get-DevFirewallRules {
 }
 
 function Show-Status {
-    Write-Host "`n=== Luthier's ToolBox - Developer Firewall Status ===" -ForegroundColor Cyan
+    Write-Host "`n=== The Production Shop - Developer Firewall Status ===" -ForegroundColor Cyan
     Write-Host "Rule Group: $RuleGroupName`n"
 
     $existingRules = Get-DevFirewallRules
@@ -109,7 +109,7 @@ function Enable-DevFirewall {
 
     foreach ($port in $DevPorts.Keys | Sort-Object) {
         $ruleName = "$RulePrefix$port"
-        $description = "$($DevPorts[$port]) - Luthier's ToolBox Development"
+        $description = "$($DevPorts[$port]) - The Production Shop Development"
 
         $existing = Get-NetFirewallRule -DisplayName $ruleName -ErrorAction SilentlyContinue
 

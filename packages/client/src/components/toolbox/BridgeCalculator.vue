@@ -1,5 +1,5 @@
 <!--
-Luthier's Tool Box - CNC Guitar Lutherie CAD/CAM Toolbox
+The Production Shop - CNC Guitar Lutherie CAD/CAM
 Bridge Calculator - Acoustic bridge geometry calculator
 
 Part of Phase P2.3: Bridge Calculator Integration

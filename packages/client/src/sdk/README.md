@@ -1,4 +1,4 @@
-# Luthier's Tool Box SDK
+# The Production Shop SDK
 
 **H8.2.1: Frontend SDK skeleton + request wrapper**
 

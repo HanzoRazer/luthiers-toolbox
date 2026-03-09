@@ -1,4 +1,4 @@
-"""Luthier's ToolBox - Hybrid Data Registry"""
+"""The Production Shop - Hybrid Data Registry"""
 
 import json
 import os

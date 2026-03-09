@@ -122,7 +122,7 @@ try {
     Write-Info "Creating GitHub repository: $FullRepoName"
     gh repo create $FullRepoName `
         --public `
-        --description "Test dummy for validating Luthier's ToolBox repo creation workflow" `
+        --description "Test dummy for validating The Production Shop repo creation workflow" `
         --clone
     
     if ($LASTEXITCODE -ne 0) {
@@ -220,7 +220,7 @@ EDITION=TEST_DUMMY
         $readmeContent = @"
 # ltb-test-dummy
 
-Test dummy repository for validating Luthier's ToolBox repo creation workflow.
+Test dummy repository for validating The Production Shop repo creation workflow.
 
 ## Purpose
 

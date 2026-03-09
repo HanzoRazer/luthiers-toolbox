@@ -1,11 +1,11 @@
-# Luthier's ToolBox Router Roadmap
+# The Production Shop Router Roadmap
 
 **Last Updated:** 2026-01-30
 **Total Routers:** **~95** working routers organized across 22 waves (down from 116)
 **Status:** All previously-broken routers (9) fixed; 84 phantom imports removed; **19 legacy routers deleted**
 **Governance:** Legacy routes removed (2026-01-30) - all migrated to consolidated aggregators  
 
-This document maps all FastAPI routers in the Luthier's ToolBox API, organized by deployment waves. Each wave represents a feature rollout with related routers grouped for easier navigation and understanding.
+This document maps all FastAPI routers in the The Production Shop API, organized by deployment waves. Each wave represents a feature rollout with related routers grouped for easier navigation and understanding.
 
 ---
 

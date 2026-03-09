@@ -7,7 +7,7 @@ Extracts dimensional information from guitar blueprint PDFs using:
 2. Contour measurement with scale detection
 3. Common guitar dimension pattern matching
 
-Author: Luthier's Toolbox
+Author: The Production Shop
 Version: 4.0.0
 """
 

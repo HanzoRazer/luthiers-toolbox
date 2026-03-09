@@ -11,7 +11,7 @@
 
 ### 1. Purpose
 
-This contract defines **how machine-executing operations must behave** inside Luthier's ToolBox.
+This contract defines **how machine-executing operations must behave** inside The Production Shop.
 
 Its goal is to ensure:
 
@@ -608,7 +608,7 @@ docs/CNC_SAW_LAB_DEVELOPER_GUIDE.md               # Developer guide
 
 ## Appendix D: Execution Classes (Binding)
 
-All executable operations within Luthier's ToolBox MUST declare an execution class.
+All executable operations within The Production Shop MUST declare an execution class.
 This classification governs orchestration, feasibility, advisory generation, and CI enforcement.
 
 ### Execution Class A - Planning Operations

@@ -4,7 +4,7 @@ Dimension Linker - High-Level Orchestrator
 
 Orchestrates the complete dimension-to-geometry association pipeline.
 
-Author: Luthier's Toolbox
+Author: The Production Shop
 Version: 4.0.0-alpha
 """
 

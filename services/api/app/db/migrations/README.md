@@ -1,6 +1,6 @@
 # Database Migrations
 
-Alembic migrations for Luthier's ToolBox.
+Alembic migrations for The Production Shop.
 
 ## Quick Start
 

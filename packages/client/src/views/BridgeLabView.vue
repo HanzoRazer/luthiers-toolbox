@@ -1,5 +1,5 @@
 <!--
-Luthier's Tool Box - CNC Guitar Lutherie CAD/CAM Toolbox
+The Production Shop - CNC Guitar Lutherie CAD/CAM
 Bridge Lab View - Complete DXF → CAM Workflow
 
 Enhanced in Phase 24.5: Machine Envelope Integration

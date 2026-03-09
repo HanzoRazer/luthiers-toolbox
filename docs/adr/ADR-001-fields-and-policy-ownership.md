@@ -8,7 +8,7 @@ Accepted
 
 ## Context
 
-The Luthier's ToolBox provides design, geometry, and CAM capabilities for
+The The Production Shop provides design, geometry, and CAM capabilities for
 instrument building. It needs to interpret measurement data and produce
 actionable manufacturing guidance.
 

@@ -8,7 +8,7 @@ This module integrates:
 - Phase 3.x vectorizer (OCR + geometry extraction)
 - Phase 4.0 dimension linker (leader line association)
 
-Author: Luthier's Toolbox
+Author: The Production Shop
 Version: 4.0.0
 """
 

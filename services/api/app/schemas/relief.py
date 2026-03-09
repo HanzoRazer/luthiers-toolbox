@@ -1,5 +1,5 @@
 """
-Luthier's Tool Box - CNC Guitar Lutherie CAD/CAM Toolbox
+The Production Shop - CNC Guitar Lutherie CAD/CAM Toolbox
 Relief carving schemas for heightmap-based 3D toolpath generation
 
 Part of Phase 24.0-24.3: Relief Carving System

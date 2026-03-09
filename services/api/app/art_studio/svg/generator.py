@@ -410,7 +410,7 @@ def _embed_metadata(
     <rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
              xmlns:dc="http://purl.org/dc/elements/1.1/">
       <rdf:Description>
-        <dc:creator>Luthier's ToolBox AI</dc:creator>
+        <dc:creator>The Production Shop AI</dc:creator>
         <dc:description>{html.escape(prompt[:200])}</dc:description>
         <dc:source>{provider}/{model}</dc:source>
       </rdf:Description>

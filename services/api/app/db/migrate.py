@@ -1,5 +1,5 @@
 """
-Lightweight SQL migration system for Luthier's ToolBox.
+Lightweight SQL migration system for The Production Shop.
 
 DEPRECATED: Use Alembic instead.
     cd services/api

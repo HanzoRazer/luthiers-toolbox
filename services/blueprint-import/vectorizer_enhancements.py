@@ -19,7 +19,7 @@ Bug fixes applied vs original design:
     - ManualOverride.apply_corrections collects moves before mutating (was mutating during iteration)
     - ValidationReport uses string category keys consistently (was mixing enum/string)
 
-Author: Luthier's Toolbox
+Author: The Production Shop
 Version: 3.7.0
 """
 import logging

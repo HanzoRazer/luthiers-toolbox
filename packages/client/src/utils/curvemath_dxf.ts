@@ -1,5 +1,5 @@
 /**
- * DXF Export Utilities for Luthier's Tool Box
+ * DXF Export Utilities for The Production Shop
  * 
  * Client-side utilities for downloading polylines and bi-arcs as DXF files
  * from the FastAPI backend. Uses fetch API to POST geometry data and trigger

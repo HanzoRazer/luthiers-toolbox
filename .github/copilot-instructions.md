@@ -1,4 +1,4 @@
-# Luthier's Tool Box - AI Agent Instructions
+# The Production Shop - AI Agent Instructions
 
 > CNC guitar lutherie platform: Vue 3 + FastAPI monorepo. **All geometry in mm. DXF R12 (AC1009).**
 
@@ -93,7 +93,7 @@ await fetch("/api/cam/roughing/gcode", {...});  // WRONG -- use SDK helpers
 
 ## Product Family Architecture
 
-This repo is the **Golden Master** for the Luthier's ToolBox product family. Spin-off products use **clean-slate extraction** (copy specific files, strip extras, adapt imports) -- never runtime imports from this repo.
+This repo is the **Golden Master** for The Production Shop product family. Spin-off products use **clean-slate extraction** (copy specific files, strip extras, adapt imports) -- never runtime imports from this repo.
 
 | Tier | Repo | Description |
 |------|------|-------------|

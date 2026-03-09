@@ -1,5 +1,5 @@
 """
-DXF/SVG Export Package for Luthier's Tool Box API
+DXF/SVG Export Package for The Production Shop API
 Provides utilities for generating DXF files and export history tracking.
 Migrated from legacy ./server directory.
 """

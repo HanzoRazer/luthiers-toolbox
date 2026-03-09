@@ -1,5 +1,5 @@
 """
-DXF Generation Helpers for Luthier's Tool Box
+DXF Generation Helpers for The Production Shop
 Provides utilities for generating DXF files in ASCII R12 format (fallback)
 and native ezdxf format (preferred when available)
 

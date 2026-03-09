@@ -1,5 +1,5 @@
 """
-Luthier's Tool Box - CNC Guitar Lutherie CAD/CAM Toolbox
+The Production Shop - CNC Guitar Lutherie CAD/CAM Toolbox
 Helical Core Module - Production-grade helical Z-ramping algorithm
 
 Part of Art Studio v16.1: Helical Z-Ramping

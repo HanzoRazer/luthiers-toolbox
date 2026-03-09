@@ -1,5 +1,5 @@
 """
-Selmer-Maccaferri D-hole Specifications for Luthier's ToolBox
+Selmer-Maccaferri D-hole Specifications for The Production Shop
 Source: French luthier plans "Guitare jazz manouche dans le style Maccaferri"
 
 All dimensions in mm unless noted.

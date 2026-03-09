@@ -8,7 +8,7 @@ Usage:
     python run_phase4.py <blueprint.pdf> --debug
     python run_phase4.py <blueprint.pdf> --json
 
-Author: Luthier's Toolbox
+Author: The Production Shop
 Version: 4.0.0
 """
 

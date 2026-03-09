@@ -12,7 +12,7 @@ Supported Instruments:
 - Charango (10 strings, 5 courses, Andean)
 - Bandola (various configurations)
 
-Author: Luthier's Toolbox
+Author: The Production Shop
 Version: 4.0.0-alpha
 """
 

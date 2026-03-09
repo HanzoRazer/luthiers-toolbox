@@ -1,7 +1,7 @@
 {
   "version": "1.0.0",
   "generated": "2025-12-07",
-  "description": "Instrument model registry for Luthier's Tool Box Wave 14",
+  "description": "Instrument model registry for The Production Shop Wave 14",
   "models": {
     "stratocaster": {
       "id": "stratocaster",
@@ -496,7 +496,7 @@
       "fret_count": 24,
       "string_count": 6,
       "description": "IoT-enabled headless electric guitar with embedded computing, real-time DSP, and DAW integration. Gibson 24.75 scale, 24 frets, headless bridge with integrated fine tuners.",
-      "manufacturer": "Luthier's ToolBox",
+      "manufacturer": "The Production Shop",
       "year_introduced": 2025,
       "body_style": "explorer_klein_hybrid_angular",
       "iot": {

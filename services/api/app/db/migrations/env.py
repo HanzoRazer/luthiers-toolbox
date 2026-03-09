@@ -1,5 +1,5 @@
 """
-Alembic Migration Environment for Luthier's ToolBox
+Alembic Migration Environment for The Production Shop
 
 Database-agnostic: Works with SQLite (dev) and Postgres (prod).
 Uses RMOS_DB_URL environment variable or falls back to SQLite.
@@ -27,6 +27,11 @@ from app.db.base import Base
 
 # Workflow models (governance)
 from app.workflow.db.models import WorkflowSessionRow  # noqa: F401
+
+# Auth models (Phase 3 SaaS)
+from app.db.models.user_profile import UserProfile  # noqa: F401
+from app.db.models.project import Project  # noqa: F401
+from app.db.models.feature_flag import FeatureFlag  # noqa: F401
 
 # Add future models here as they're created:
 # from app.rmos.db.models import RunArtifactRow  # noqa: F401
@@ -56,15 +61,16 @@ def get_database_url() -> str:
     Get database URL from environment or config.
 
     Priority:
-    1. RMOS_DB_URL environment variable
-    2. sqlalchemy.url from alembic.ini
+    1. DATABASE_URL environment variable (production/Supabase)
+    2. RMOS_DB_URL environment variable
+    3. sqlalchemy.url from alembic.ini
 
     Examples:
         SQLite:   sqlite:///data/rmos.sqlite3
         Postgres: postgresql://user:pass@localhost:5432/rmos
     """
     # Check environment first (allows runtime override)
-    url = os.getenv("RMOS_DB_URL")
+    url = os.getenv("DATABASE_URL") or os.getenv("RMOS_DB_URL")
     if url:
         return url
 

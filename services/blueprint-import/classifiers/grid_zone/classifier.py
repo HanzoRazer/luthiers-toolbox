@@ -23,7 +23,7 @@ Usage:
     # Or classify by centroid
     result = classifier.classify_point(0.5, 0.3)
 
-Author: Luthier's Toolbox
+Author: The Production Shop
 Version: 4.0.0
 """
 

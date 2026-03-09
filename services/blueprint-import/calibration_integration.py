@@ -9,7 +9,7 @@ Provides:
 - Dimension extraction pipeline
 - Quality assessment for calibration results
 
-Author: Luthier's Toolbox
+Author: The Production Shop
 Version: 4.0.0
 """
 

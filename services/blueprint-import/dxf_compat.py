@@ -1,6 +1,6 @@
 """
 DXF Compatibility Layer - R12 through R18 Support
-The genesis of Luthier's ToolBox: R12 doesn't support LWPOLYLINE.
+The genesis of The Production Shop: R12 doesn't support LWPOLYLINE.
 
 This module provides version-aware DXF entity creation:
 - R12: Uses LINE segments for polylines (maximum CAM compatibility)
@@ -116,7 +116,7 @@ def add_polyline(
             close=closed
         )
     else:
-        # R12: Use LINE segments (the genesis of Luthier's ToolBox)
+        # R12: Use LINE segments (the genesis of The Production Shop)
         n = len(points)
         end = n if closed else n - 1
         for i in range(end):

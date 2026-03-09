@@ -235,7 +235,7 @@ def calculator_repl():
     calc = LTBFinancialCalculator()
 
     print("=" * 55)
-    print("Financial Calculator - Luthier's ToolBox")
+    print("Financial Calculator - The Production Shop")
     print("=" * 55)
     print("TVM Registers: n, i_y (rate%), pv, pmt, fv")
     print("Solve: fv, pv, pmt, n, rate")

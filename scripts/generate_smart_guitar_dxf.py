@@ -4,7 +4,7 @@ Generate Smart Guitar v1 DXF from mockup analysis.
 Creates an approximate body outline based on the visual analysis of the
 Smart Guitar mockup images.
 
-Author: Luthier's Toolbox
+Author: The Production Shop
 Date: 2026-03-06
 """
 
@@ -206,7 +206,7 @@ def create_smart_guitar_dxf(output_path: Path):
     )
 
     msp.add_text(
-        "Luthier's Toolbox - 2026-03-06",
+        "The Production Shop - 2026-03-06",
         dxfattribs={
             "layer": "ANNOTATIONS",
             "height": 3,

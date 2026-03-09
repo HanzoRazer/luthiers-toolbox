@@ -582,7 +582,7 @@ Get-ChildItem .\test_*.ps1 | ForEach-Object { & $_ }
 
 ## 🎸 Vision
 
-**RMOS represents the next evolution of Luthier's Tool Box:**
+**RMOS represents the next evolution of The Production Shop:**
 
 Moving beyond basic CAM operations into **domain-specific manufacturing intelligence**. The "thinner than a toothpick" problem is just the beginning.
 

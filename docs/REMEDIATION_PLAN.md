@@ -1,4 +1,4 @@
-# Luthier's ToolBox — Remediation Plan
+# The Production Shop — Remediation Plan
 
 **Date:** 2026-02-05
 **Last Updated:** 2026-02-09

@@ -1,5 +1,5 @@
 """
-Luthier's Tool Box - CNC Guitar Lutherie CAD/CAM Toolbox
+The Production Shop - CNC Guitar Lutherie CAD/CAM Toolbox
 CAM Pipeline Preset Router - CRUD + Execute saved pipeline presets
 
 Part of Phase 25.0: Pipeline Preset Integration

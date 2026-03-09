@@ -4,7 +4,7 @@
 **Created:** 2026-03-07  
 **Status:** Assessment Complete — Partially Deliverable Now  
 **Priority:** High  
-**Context:** User wants to design and CNC-produce a 24-fret Stratocaster guitar using the Luthier's Toolbox  
+**Context:** User wants to design and CNC-produce a 24-fret Stratocaster guitar using the The Production Shop  
 
 ---
 
@@ -12,7 +12,7 @@
 
 A 24-fret Stratocaster is a standard 25.5" (648mm) scale guitar with the fretboard extended ~20mm beyond the typical 22-fret endpoint. **The scale length does not change.** The nut, bridge, and neck pocket heel position remain identical to a 22-fret Strat. The only structural changes are fretboard overhang, neck pickup relocation, and pickguard modification.
 
-The Luthier's Toolbox can **produce the neck today** — fret positions, taper outline, fret slot G-code, compound radius data, and inlay pockets are all parameterized and accept `fret_count=24` with no code changes. The **body modifications** (pickup shift, pickguard redesign, overhang clearance channel) require the adaptive pocket routing engine, which exists but needs the 24-fret body geometry defined as input.
+The The Production Shop can **produce the neck today** — fret positions, taper outline, fret slot G-code, compound radius data, and inlay pockets are all parameterized and accept `fret_count=24` with no code changes. The **body modifications** (pickup shift, pickguard redesign, overhang clearance channel) require the adaptive pocket routing engine, which exists but needs the 24-fret body geometry defined as input.
 
 > **Annotation:** This is not a "new instrument" problem — it's a parameter change on the neck side and a body cavity layout adjustment. The math, CAM, and export systems are production-grade. The user brings strong luthier knowledge about why 24-fret Strats differ from standard ones.
 

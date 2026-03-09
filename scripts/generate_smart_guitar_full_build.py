@@ -215,7 +215,7 @@ class GCodeBuilder:
         now = datetime.now().strftime("%Y-%m-%d %H:%M")
         self.emit(f"; {program_name}")
         self.emit(f"; Generated: {now}")
-        self.emit(f"; Generator: Luthier's ToolBox - Smart Guitar Full Build")
+        self.emit(f"; Generator: The Production Shop - Smart Guitar Full Build")
         self.emit(f"; Machine: {machine}")
         self.emit(f"; Stock: {stock}")
         self.emit(f"; Phase: {phase}")
@@ -925,7 +925,7 @@ def generate_build_summary(spec: Dict, phase1_lines: int, phase2_lines: int) -> 
         "model": "Smart Guitar v1.1",
         "spec_file": "instrument_geometry/body/specs/smart_guitar_v1.json",
         "generated": datetime.now().isoformat(),
-        "generator": "Luthier's ToolBox - Smart Guitar Full Build Generator",
+        "generator": "The Production Shop - Smart Guitar Full Build Generator",
         "design": {
             "body_style": "Explorer-Klein hybrid angular",
             "neck": "headless",

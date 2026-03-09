@@ -4,7 +4,7 @@
   Can fetch from a URL or read from STDIN pipe.
 
 .DESCRIPTION
-  Utility script for formatting JSON responses from the Luthier's Tool Box API.
+  Utility script for formatting JSON responses from The Production Shop API.
   Useful for debugging and manual testing of endpoints.
 
 .PARAMETER Url

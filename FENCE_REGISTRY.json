@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "repo_name": "luthiers-toolbox",
   "last_updated": "2026-01-26",
-  "description": "Architectural boundary enforcement registry for Luthier's ToolBox",
+  "description": "Architectural boundary enforcement registry for The Production Shop",
   
   "profiles": {
     "external_boundary": {

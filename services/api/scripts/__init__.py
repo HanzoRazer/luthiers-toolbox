@@ -1,5 +1,5 @@
 """
-CLI Scripts for Luthier's Toolbox
+CLI Scripts for The Production Shop
 
 Offline tools for data enrichment, migration, and maintenance.
 """

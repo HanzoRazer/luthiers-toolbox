@@ -11,7 +11,7 @@ Usage:
     python acoustic_body_volume.py --model D-18
     python acoustic_body_volume.py --compare D-28 D-18
 
-Author: Luthier's Toolbox
+Author: The Production Shop
 Version: 1.0.0
 """
 

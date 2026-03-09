@@ -47,3 +47,6 @@ defusedxml>=0.7.1
 
 # Schema Validation (Telemetry Contract Gates)
 jsonschema>=4.20.0
+
+# Authentication (Phase 3 SaaS)
+PyJWT>=2.8.0  # Supabase JWT verification

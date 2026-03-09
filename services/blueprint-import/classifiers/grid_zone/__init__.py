@@ -12,7 +12,7 @@ The grid defines semantic regions that map to contour categories:
 - Gray zone: Bridge placement area
 - Centerline: Symmetry axis
 
-Author: Luthier's Toolbox
+Author: The Production Shop
 Version: 4.0.0
 """
 

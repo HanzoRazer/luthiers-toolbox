@@ -1,6 +1,6 @@
 # Quick Start
 
-Get productive with Luthier's ToolBox in 5 minutes.
+Get productive with The Production Shop in 5 minutes.
 
 ---
 

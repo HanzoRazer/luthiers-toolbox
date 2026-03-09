@@ -1,5 +1,5 @@
 <!--
-Luthier's Tool Box - CNC Guitar Lutherie CAD/CAM Toolbox
+The Production Shop - CNC Guitar Lutherie CAD/CAM
 Relief Kernel Lab - Development Prototyping
 
 Phase 24.6: Dynamic scallop (slope-aware spacing)

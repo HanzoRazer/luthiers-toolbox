@@ -1,4 +1,4 @@
-# Luthier's Tool Box
+# The Production Shop
 
 A CNC guitar lutherie platform with parametric design tools, CAM workflows, and manufacturing safety controls.
 

@@ -9,7 +9,7 @@ Classification Strategy:
 2. ML boost: Feature extraction + neural classification when confidence < 0.7
 3. Multi-factor scoring: Scale + body + features
 
-Author: Luthier's Toolbox
+Author: The Production Shop
 Version: 4.0.0-alpha
 """
 

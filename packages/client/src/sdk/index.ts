@@ -1,5 +1,5 @@
 /**
- * Luthier's Toolbox Frontend SDK
+ * The Production Shop Frontend SDK
  *
  * Canonical, type-safe API client for frontend applications.
  *

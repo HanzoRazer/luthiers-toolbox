@@ -1,4 +1,4 @@
-# Luthier's Tool Box API Makefile
+# The Production Shop API Makefile
 # Cross-platform venv management for macOS/Linux
 #
 # Usage:
@@ -156,7 +156,7 @@ test-spine: test-contracts test-moments test-policy test-replay
 	@echo "✅ Agentic spine test suite passed"
 
 help:
-	@echo "Luthier's Tool Box API Makefile"
+	@echo "The Production Shop API Makefile"
 	@echo ""
 	@echo "Targets:"
 	@echo "  api-env          Create venv and install dependencies"

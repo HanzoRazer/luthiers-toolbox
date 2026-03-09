@@ -19,7 +19,7 @@ Enhanced blueprint vectorizer with:
 - Color filtering for blueprint types
 - OCR dimension extraction with contextual parsing (Phase 3.6)
 
-Author: Luthier's Toolbox
+Author: The Production Shop
 Version: 3.6.0
 """
 import logging

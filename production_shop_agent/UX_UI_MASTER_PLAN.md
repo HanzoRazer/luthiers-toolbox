@@ -1,4 +1,4 @@
-# Luthier's ToolBox - UX/UI Master Plan
+# The Production Shop - UX/UI Master Plan
 
 **Created:** March 3, 2026
 **Purpose:** Comprehensive documentation to prevent build setbacks and guide feature consolidation

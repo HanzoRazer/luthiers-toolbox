@@ -2,7 +2,7 @@
 
 **Last Updated:** February 2026
 
-This document outlines the testing strategy for Luthier's ToolBox.
+This document outlines the testing strategy for The Production Shop.
 
 ---
 

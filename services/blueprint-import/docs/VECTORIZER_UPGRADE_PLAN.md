@@ -9,7 +9,7 @@
 
 ## Executive Summary
 
-This document chronicles the evolution of the Luthier's Toolbox blueprint vectorizer from initial concept through planned future enhancements. It serves as both a historical record and a roadmap for continued development.
+This document chronicles the evolution of the The Production Shop blueprint vectorizer from initial concept through planned future enhancements. It serves as both a historical record and a roadmap for continued development.
 
 ---
 
@@ -421,7 +421,7 @@ The following enhancements were identified during Phase 4.0 implementation but w
 
 ## Contributors
 
-- Luthier's Toolbox Development Team
+- The Production Shop Development Team
 - Consulting Engineer Evaluation (Phase 4.0 roadmap)
 - Claude Code (Implementation assistance)
 

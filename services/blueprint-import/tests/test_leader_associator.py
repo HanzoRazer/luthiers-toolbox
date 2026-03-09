@@ -4,7 +4,7 @@ Tests for Leader Line Associator
 
 Tests for Phase 4.0 leader line association functionality.
 
-Author: Luthier's Toolbox
+Author: The Production Shop
 Version: 4.0.0
 """
 

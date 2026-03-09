@@ -1,6 +1,6 @@
 # Architecture Invariants
 
-**Luthier's Toolbox - Placement Constitution**
+**The Production Shop - Placement Constitution**
 **Version:** 1.0
 **Date:** December 20, 2025
 

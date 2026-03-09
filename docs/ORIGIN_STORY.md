@@ -38,7 +38,7 @@ The traditional workflow:
 
 ## The Solution: Production Shop
 
-What started as "Luthier's Toolbox" - a collection of calculators and converters - evolved into something more ambitious: **a manufacturing authority for the shop floor**.
+What started as "The Production Shop" - a collection of calculators and converters - evolved into something more ambitious: **a manufacturing authority for the shop floor**.
 
 ### Core Principles
 
@@ -68,8 +68,8 @@ What started as "Luthier's Toolbox" - a collection of calculators and converters
 
 | Phase | Name | Focus |
 |-------|------|-------|
-| v1 | Luthier's Toolbox | Calculators, converters, reference tools |
-| v2 | Luthier's Toolbox + RMOS | Add manufacturing decision authority |
+| v1 | The Production Shop | Calculators, converters, reference tools |
+| v2 | The Production Shop + RMOS | Add manufacturing decision authority |
 | v3 | **Production Shop** | Full ERP integration, shop floor authority |
 
 The pivot to "Production Shop" reflects the expanded scope:
@@ -149,4 +149,4 @@ If you've been burned by bad vendor files, you understand why this exists.
 
 *Production Shop - Because "CNC-ready" should actually mean ready.*
 
-*Formerly: Luthier's Toolbox*
+*Formerly: The Production Shop*

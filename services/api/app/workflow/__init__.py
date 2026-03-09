@@ -1,5 +1,5 @@
 """
-Workflow package for Luthier's Tool Box.
+Workflow package for The Production Shop.
 
 This package implements directional workflow modes for Art Studio integration:
 - design_first: Full artistic freedom, then machine constraints

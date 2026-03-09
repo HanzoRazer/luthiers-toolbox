@@ -4,7 +4,7 @@ Dimension Annotation Classes
 
 Linear and Radial dimension implementations for Phase 4.0.
 
-Author: Luthier's Toolbox
+Author: The Production Shop
 Version: 4.0.0
 """
 

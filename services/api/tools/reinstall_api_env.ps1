@@ -1,4 +1,4 @@
-# Luthier's Tool Box API Environment Reinstaller
+# The Production Shop API Environment Reinstaller
 # Safely recreates your Python venv with pinned geometry stack
 # Supports Python 3.11+ (3.13 recommended for latest fixes)
 

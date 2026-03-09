@@ -1,4 +1,4 @@
-# Security Policy — Luthier's ToolBox / RMOS
+# Security Policy — The Production Shop / RMOS
 
 ## Core Security Principle
 

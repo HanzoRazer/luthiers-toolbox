@@ -1,4 +1,4 @@
-# Luthier's ToolBox: Path to 7/10
+# The Production Shop: Path to 7/10
 
 **Goal**: Raise overall score from 5.9/10 to >7.0/10
 **Strategy**: Focus on highest-impact improvements in weakest categories

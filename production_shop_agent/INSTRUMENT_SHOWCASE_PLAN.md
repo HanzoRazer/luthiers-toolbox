@@ -29,7 +29,7 @@ services/api/app/instrument_geometry/instrument_model_registry.json
 
 | Model | Manufacturer | Status | Scale | Assets |
 |-------|-------------|--------|-------|--------|
-| **Smart Guitar** | Luthier's ToolBox | ✅ COMPLETE | 25.5" | 4 DXF files + full IoT spec |
+| **Smart Guitar** | The Production Shop | ✅ COMPLETE | 25.5" | 4 DXF files + full IoT spec |
 | Stratocaster | Fender | STUB | 25.5" | None |
 | Telecaster | Fender | STUB | 25.5" | None |
 | Les Paul | Gibson | STUB | 24.75" | None |

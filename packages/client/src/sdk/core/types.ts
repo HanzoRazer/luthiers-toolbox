@@ -14,6 +14,8 @@ export type ApiFetchOptions = {
   headers?: Record<string, string>;
   /** AbortSignal for cancellation */
   signal?: AbortSignal;
+  /** Skip auth header injection (for public endpoints) */
+  skipAuth?: boolean;
 };
 
 /** Standard paginated list response */

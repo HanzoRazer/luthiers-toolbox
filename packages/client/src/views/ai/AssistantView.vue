@@ -1,6 +1,6 @@
 <script setup lang="ts">
 /**
- * AssistantView - AI Luthier's Assistant Chat Interface
+ * AssistantView - AI Production Assistant Chat Interface
  * Ask questions about lutherie, get guidance on builds
  *
  * Connected to API endpoints:
@@ -20,7 +20,7 @@ const messages = ref<Message[]>([
   {
     id: 1,
     role: 'assistant',
-    content: "Hello! I'm your AI Luthier's Assistant. I can help with questions about guitar building, wood selection, techniques, troubleshooting, and more. What would you like to know?",
+    content: "Hello! I'm your AI Production Assistant. I can help with questions about guitar building, wood selection, techniques, troubleshooting, and more. What would you like to know?",
     timestamp: new Date(),
   },
 ])

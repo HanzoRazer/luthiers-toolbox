@@ -1,4 +1,4 @@
-# Luthier's ToolBox — Chief Engineer Handoff
+# The Production Shop — Chief Engineer Handoff
 
 **Classification:** Internal — Engineering Leadership
 **Date:** 2026-02-05
@@ -13,7 +13,7 @@
 
 ## 1. Executive Summary
 
-Luthier's ToolBox is a FastAPI + Vue 3 monorepo that generates CNC G-code for guitar manufacturing. The core domain logic — fret mathematics, chipload physics, multi-post G-code generation, and CNC safety gates — is sound engineering built by someone who actually builds guitars.
+The Production Shop is a FastAPI + Vue 3 monorepo that generates CNC G-code for guitar manufacturing. The core domain logic — fret mathematics, chipload physics, multi-post G-code generation, and CNC safety gates — is sound engineering built by someone who actually builds guitars.
 
 The codebase has a growth problem. An independent design review scored it 5.15/10. Our own verification found the review was **systematically generous** — the corrected score is **4.7/10**. Every aggregate metric the review undercounted favors the project: the real API surface is 46% larger, the exception handling problem is 2.3x worse, and the bare `except:` count the review praised as "only 1" is actually 97.
 

@@ -130,7 +130,7 @@ All marketing website links now point to functional application routes instead o
 
 2. **Verify App is Running:**
    - Open browser to http://localhost:5173
-   - You should see the Luthier's Toolbox application dashboard
+   - You should see the The Production Shop application dashboard
 
 3. **Keep Marketing Site Running:**
    - The test server is already running at http://localhost:8080

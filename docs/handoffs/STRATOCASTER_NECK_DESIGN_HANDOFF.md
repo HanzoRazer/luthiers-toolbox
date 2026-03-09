@@ -10,7 +10,7 @@
 
 ## Executive Summary
 
-The Luthier's Toolbox has **substantial neck design infrastructure** already in place — geometry models, fret math, taper generators, G-code emitters, DXF exporters, and a working Les Paul neck UI. The Stratocaster is **registered in the model enum** and has **Fender presets defined** in the config, but the pieces are not connected into a dedicated workflow.
+The The Production Shop has **substantial neck design infrastructure** already in place — geometry models, fret math, taper generators, G-code emitters, DXF exporters, and a working Les Paul neck UI. The Stratocaster is **registered in the model enum** and has **Fender presets defined** in the config, but the pieces are not connected into a dedicated workflow.
 
 **Current capability:** A developer who knows the system can manually hit 3–4 API endpoints with Strat-specific parameters and produce **CNC-ready fret slot G-code + neck taper DXF** today. No new code required.
 

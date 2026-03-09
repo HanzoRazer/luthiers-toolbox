@@ -198,7 +198,7 @@ class GCodeBuilder:
         now = datetime.now().strftime("%Y-%m-%d %H:%M")
         self.emit(f"; {program_name}")
         self.emit(f"; Generated: {now}")
-        self.emit(f"; Generator: Luthier's ToolBox — Les Paul Full Build")
+        self.emit(f"; Generator: The Production Shop — Les Paul Full Build")
         self.emit(f"; Machine: {machine}")
         self.emit(f"; Stock: {stock}")
         self.emit(";")
@@ -1052,7 +1052,7 @@ def generate_build_summary(spec: Dict, phase1_lines: int, phase2_lines: int,
         "model": spec["display_name"],
         "spec_file": "instrument_geometry/specs/gibson_les_paul.json",
         "generated": datetime.now().isoformat(),
-        "generator": "Luthier's ToolBox — Les Paul Full Build Generator",
+        "generator": "The Production Shop — Les Paul Full Build Generator",
         "phases": {
             "phase1_mahogany_back": {
                 "file": "LesPaul_1959_Phase1_MahoganyBack.nc",

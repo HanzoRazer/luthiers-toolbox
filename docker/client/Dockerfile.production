@@ -41,7 +41,7 @@ HEALTHCHECK --interval=10s --timeout=3s --retries=3 \
 EXPOSE 80
 
 # Labels for metadata
-LABEL org.opencontainers.image.title="Luthier's Tool Box - Client"
+LABEL org.opencontainers.image.title="The Production Shop - Client"
 LABEL org.opencontainers.image.description="Vue 3 + Vite frontend with nginx"
 LABEL org.opencontainers.image.source="https://github.com/yourorg/luthiers-toolbox"
 

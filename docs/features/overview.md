@@ -1,6 +1,6 @@
 # Features Overview
 
-Luthier's ToolBox provides a comprehensive suite of tools for instrument design and CNC manufacturing.
+The Production Shop provides a comprehensive suite of tools for instrument design and CNC manufacturing.
 
 ---
 

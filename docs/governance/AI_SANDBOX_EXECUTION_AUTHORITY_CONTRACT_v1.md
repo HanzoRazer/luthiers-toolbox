@@ -10,7 +10,7 @@
 
 ## Governance Statement
 
-This document defines the **canonical separation of authority** between AI advisory systems and RMOS execution authority within the Luthier's ToolBox platform. This separation is **non-negotiable** and enforced at compile-time, CI-time, and runtime.
+This document defines the **canonical separation of authority** between AI advisory systems and RMOS execution authority within the The Production Shop platform. This separation is **non-negotiable** and enforced at compile-time, CI-time, and runtime.
 
 ### Core Principle
 

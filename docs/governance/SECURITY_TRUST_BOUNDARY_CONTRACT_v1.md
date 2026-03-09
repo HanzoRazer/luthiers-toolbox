@@ -11,7 +11,7 @@
 
 ## Governance Statement
 
-This document establishes the **canonical security trust boundaries** for the Luthier's ToolBox platform. These boundaries are **non-negotiable security requirements** that protect manufacturing integrity, audit trails, and system safety.
+This document establishes the **canonical security trust boundaries** for the The Production Shop platform. These boundaries are **non-negotiable security requirements** that protect manufacturing integrity, audit trails, and system safety.
 
 ### Core Security Principle
 

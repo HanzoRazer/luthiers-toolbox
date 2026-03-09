@@ -11,6 +11,7 @@
 import { ApiError } from "./errors";
 import { handleDeprecationHeaders, generateRequestId } from "./headers";
 import { assertRequestIdHeader } from "./assertRequestId";
+import { getAuthHeader, shouldSkipAuth } from "./auth";
 import type { ApiFetchOptions } from "./types";
 
 const DEFAULT_BASE =
@@ -54,6 +55,14 @@ export async function apiFetch<T>(
   // Add or generate request ID
   const requestId = opts.requestId ?? generateRequestId();
   headers["X-Request-Id"] = requestId;
+
+  // Add auth header if authenticated and not explicitly skipped
+  if (!opts.skipAuth && !shouldSkipAuth(path)) {
+    const authHeader = await getAuthHeader();
+    if (authHeader) {
+      headers["Authorization"] = authHeader;
+    }
+  }
 
   const res = await fetch(url, {
     ...init,

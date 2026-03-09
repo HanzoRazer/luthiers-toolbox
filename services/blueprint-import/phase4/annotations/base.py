@@ -4,7 +4,7 @@ Annotation Base Classes
 
 Base classes for all annotation types.
 
-Author: Luthier's Toolbox
+Author: The Production Shop
 Version: 4.0.0
 """
 

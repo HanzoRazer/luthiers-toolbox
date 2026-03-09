@@ -1,7 +1,7 @@
 # services/api/app/calculators/bracing_calc.py
 
 """
-Bracing calculator façade for the Luthier's ToolBox.
+Bracing calculator façade for the The Production Shop.
 
 This module centralizes access to bracing physics that currently
 lives in `pipelines.bracing.bracing_calc`.

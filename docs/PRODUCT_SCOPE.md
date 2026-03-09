@@ -1,4 +1,4 @@
-# Luthier's ToolBox - Product Scope
+# The Production Shop - Product Scope
 
 **Last Updated:** 2026-02-18
 

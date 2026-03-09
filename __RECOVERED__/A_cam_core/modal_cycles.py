@@ -2,7 +2,7 @@
 Modal drilling cycle generation (G81-G89).
 Supports both canned cycles and expanded G0/G1 moves.
 
-Luthier's Tool Box - CNC Guitar Lutherie CAD/CAM Toolbox
+The Production Shop - CNC Guitar Lutherie CAD/CAM Toolbox
 Phase 5 Part 3: N.06 Modal Cycles
 """
 

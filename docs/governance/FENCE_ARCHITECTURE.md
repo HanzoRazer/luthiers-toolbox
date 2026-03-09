@@ -29,7 +29,7 @@ Each fence has:
 
 ### 1. External Boundary (Cross-Repo)
 
-**Separates**: Luthier's ToolBox ↔ Tap Tone Analyzer
+**Separates**: The Production Shop ↔ Tap Tone Analyzer
 
 ```json
 {

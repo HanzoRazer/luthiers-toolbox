@@ -1,4 +1,4 @@
-"""Fraction Calculator - Luthier's ToolBox"""
+"""Fraction Calculator - The Production Shop"""
 
 from __future__ import annotations
 from dataclasses import dataclass

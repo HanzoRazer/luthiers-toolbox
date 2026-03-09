@@ -5,7 +5,7 @@ CAM Console Notifier Utility Module
 
 PURPOSE:
 --------
-Bridges external systems (CAD plugins, CI/CD pipelines) to Luthier's Tool Box
+Bridges external systems (CAD plugins, CI/CD pipelines) to The Production Shop
 CAM endpoints for simulation, optimization, and energy metrics calculation.
 Enables programmatic access to CAM pipeline from external automation.
 
@@ -207,7 +207,7 @@ import os
 # Internal API base URL (overridable via environment variable)
 INTERNAL_API_BASE: str = os.environ.get("LTB_INTERNAL_API_BASE", "http://localhost:8000")
 
-# Exact endpoints in your Luthier's Tool Box API
+# Exact endpoints in your The Production Shop API
 EXACT_ENDPOINTS: Dict[str, str] = {
     "simulate": "/api/cam_sim/simulate_gcode",
     "optimize": "/api/cam_opt/what_if",

@@ -10,7 +10,7 @@
 
 ## Governance Statement
 
-This document establishes the **canonical contract** for server-side feasibility enforcement within the Luthier's ToolBox RMOS (Rosette Manufacturing Orchestration System). All toolpath generation implementations MUST conform to the specifications herein. Deviation from this contract is prohibited without formal amendment through the governance review process.
+This document establishes the **canonical contract** for server-side feasibility enforcement within the The Production Shop RMOS (Rosette Manufacturing Orchestration System). All toolpath generation implementations MUST conform to the specifications herein. Deviation from this contract is prohibited without formal amendment through the governance review process.
 
 ### Governing Principles
 

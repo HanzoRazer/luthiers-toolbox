@@ -10,7 +10,7 @@ Methods:
 3. Known dimension calibration (user provides reference)
 4. Standard paper size detection (A4, Letter, etc.)
 
-Author: Luthier's Toolbox
+Author: The Production Shop
 Version: 4.0.0
 """
 

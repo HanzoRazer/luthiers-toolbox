@@ -1,4 +1,4 @@
-# Getting Started with Luthier's Tool Box
+# Getting Started with The Production Shop
 
 > Complete setup instructions for running the integrated scaffold locally.
 
@@ -173,7 +173,7 @@ VITE v5.1.3  ready in ### ms
 1. **Open your browser**: Navigate to `http://localhost:5173`
 
 2. **You should see**: 
-   - Header: "🎸 Luthier's Tool Box"
+   - Header: "🎸 The Production Shop"
    - Navigation menu with 6 buttons
    - Welcome screen with feature list
 
@@ -466,7 +466,7 @@ docker compose up --build
 - [ ] Node.js 20+ installed
 - [ ] Backend server running on port 8000
 - [ ] Frontend client running on port 5173
-- [ ] Browser shows "Luthier's Tool Box" header
+- [ ] Browser shows "The Production Shop" header
 - [ ] Rosette Designer calculates channel dimensions
 - [ ] DXF export downloads successfully
 - [ ] G-code export downloads successfully

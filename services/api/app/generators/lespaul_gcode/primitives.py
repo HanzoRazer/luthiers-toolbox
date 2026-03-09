@@ -31,7 +31,7 @@ class GCodePrimitivesMixin:
 
         self._emit(f"; {program_name}")
         self._emit(f"; Generated: {now}")
-        self._emit(f"; Generator: Luthier's ToolBox - Les Paul Body Generator")
+        self._emit(f"; Generator: The Production Shop - Les Paul Body Generator")
         self._emit(f"; Machine: {self.machine.name}")
         self._emit(f"; Stock: {self.stock_thickness}\" thick")
         self._emit(";")

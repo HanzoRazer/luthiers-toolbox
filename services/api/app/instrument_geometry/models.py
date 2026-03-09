@@ -4,7 +4,7 @@ Instrument Geometry: Model Enumerations
 Wave 14 Module - Instrument Geometry Core
 
 Defines the canonical 19-model enum and status tracking for all supported
-guitar/bass/ukulele models in the Luthier's Tool Box.
+guitar/bass/ukulele models in the The Production Shop.
 
 Usage:
     from instrument_geometry.models import InstrumentModelId, InstrumentModelStatus

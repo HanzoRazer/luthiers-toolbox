@@ -10,7 +10,7 @@ Detection methods:
 3. Fret position pattern analysis
 4. Centerline measurement
 
-Author: Luthier's Toolbox
+Author: The Production Shop
 Version: 4.0.0
 """
 

@@ -2,7 +2,7 @@
 
 **Last Updated:** February 2026
 
-This guide documents the strategy for decomposing large Vue components ("god objects") in Luthier's ToolBox.
+This guide documents the strategy for decomposing large Vue components ("god objects") in The Production Shop.
 
 ---
 

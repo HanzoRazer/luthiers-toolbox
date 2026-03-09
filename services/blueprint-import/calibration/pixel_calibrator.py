@@ -12,7 +12,7 @@ Calibration Methods:
 4. KNOWN_DIMENSION - User-provided reference
 5. GRID - Use STEM Guitar grid (known cell size)
 
-Author: Luthier's Toolbox
+Author: The Production Shop
 Version: 4.0.0
 """
 

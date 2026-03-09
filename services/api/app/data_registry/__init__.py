@@ -1,5 +1,5 @@
 """
-Luthier's ToolBox - Hybrid Data Registry
+The Production Shop - Hybrid Data Registry
 =========================================
 
 Three-tier data architecture for multi-product SaaS delivery.
