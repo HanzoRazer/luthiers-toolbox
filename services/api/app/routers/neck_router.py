@@ -653,3 +653,31 @@ def get_stratocaster_presets():
             }
         ]
     }
+
+
+# ============================================================================
+# NUT BREAK ANGLE CALCULATOR
+# ============================================================================
+
+from ..calculators.headstock_break_angle import (
+    HeadstockBreakAngleInput,
+    HeadstockBreakAngleResult,
+    calculate_headstock_break_angle,
+)
+
+
+@router.post("/break-angle", response_model=HeadstockBreakAngleResult)
+def compute_nut_break_angle(req: HeadstockBreakAngleInput) -> HeadstockBreakAngleResult:
+    """
+    Calculate string break angle at the nut.
+
+    For angled headstocks (Gibson/PRS), computes the effective angle from
+    the headstock pitch, nut-to-tuner distance, and tuner post height.
+
+    For flat headstocks (Fender), computes the angle from string tree
+    depression or returns 0 if no tree is present (with a recommendation
+    to add one).
+
+    Optimal nut break angle: 5-10 degrees.
+    """
+    return calculate_headstock_break_angle(req)
