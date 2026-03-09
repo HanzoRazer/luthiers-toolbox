@@ -1,5 +1,5 @@
 /**
- * TypeScript type definitions for Luthier's Tool Box API
+ * TypeScript type definitions for The Production Shop API
  */
 
 // ==================== Rosette Types ====================

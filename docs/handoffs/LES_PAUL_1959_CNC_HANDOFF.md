@@ -6,7 +6,7 @@
 
 ## Executive Summary
 
-The Les Paul is the **most fully implemented instrument** in the Luthier's ToolBox codebase. This session created the authoritative spec JSON, upgraded the registry from `STUB` to `COMPLETE`, added custom binding/purfling routing specifications (Spanish wave + green wood two-tier system), and generated **452,840 lines of G-code** across three phases covering the entire body build process.
+The Les Paul is the **most fully implemented instrument** in the The Production Shop codebase. This session created the authoritative spec JSON, upgraded the registry from `STUB` to `COMPLETE`, added custom binding/purfling routing specifications (Spanish wave + green wood two-tier system), and generated **452,840 lines of G-code** across three phases covering the entire body build process.
 
 **What works:** Body outline DXF (669-point R12 polygon), authoritative spec with all operations/tools/variants, complete 3-phase G-code generation (mahogany back routing, purfling channel routing, compound-radius carved top 3D surfacing), 7-tool library, build summary manifest.
 

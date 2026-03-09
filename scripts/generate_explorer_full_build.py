@@ -251,7 +251,7 @@ class GCodeBuilder:
         now = datetime.now().strftime("%Y-%m-%d %H:%M")
         self.emit(f"; {program_name}")
         self.emit(f"; Generated: {now}")
-        self.emit(f"; Generator: Luthier's ToolBox - Explorer 1958 Full Build")
+        self.emit(f"; Generator: The Production Shop - Explorer 1958 Full Build")
         self.emit(f"; Machine: {machine}")
         self.emit(f"; Stock: {stock}")
         self.emit(f"; Phase: {phase}")
@@ -878,7 +878,7 @@ def generate_build_summary(spec: Dict[str, Any], phase1_lines: int,
         "model": "1958 Gibson Explorer",
         "spec_file": "instrument_geometry/specs/gibson_explorer.json",
         "generated": datetime.now().isoformat(),
-        "generator": "Luthier's ToolBox - Explorer 1958 Full Build Generator",
+        "generator": "The Production Shop - Explorer 1958 Full Build Generator",
         "design": {
             "body_style": "angular_explorer_asymmetric",
             "neck": "set_neck_long_tenon",
@@ -943,7 +943,7 @@ def generate_build_summary(spec: Dict[str, Any], phase1_lines: int,
 def main():
     print("=" * 70)
     print("  Gibson Explorer 1958 — Full CNC Build Generator")
-    print("  Luthier's ToolBox")
+    print("  The Production Shop")
     print("=" * 70)
     print()
 

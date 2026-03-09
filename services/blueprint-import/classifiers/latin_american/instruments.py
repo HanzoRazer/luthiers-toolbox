@@ -4,7 +4,7 @@ Latin American Instrument Profiles
 
 Defines characteristic measurements and features for each instrument type.
 
-Author: Luthier's Toolbox
+Author: The Production Shop
 Version: 4.0.0-alpha
 """
 

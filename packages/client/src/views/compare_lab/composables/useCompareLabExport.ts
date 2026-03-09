@@ -42,7 +42,7 @@ export function useCompareLabExport(
    */
   async function exportSvg(): Promise<void> {
     const svg = `<?xml version="1.0" encoding="UTF-8"?>
-<!-- Luthier's Tool Box - Compare Lab Export -->
+<!-- The Production Shop - Compare Lab Export -->
 <!-- Baseline: ${diffResult.value?.baseline_name || 'baseline'} -->
 <!-- Generated: ${new Date().toISOString()} -->
 <svg xmlns="http://www.w3.org/2000/svg" width="1600" height="800" viewBox="0 0 1600 800">

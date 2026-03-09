@@ -1,5 +1,5 @@
 /**
- * Analytics Utility for Luthier's Tool Box
+ * Analytics Utility for The Production Shop
  * Integrates Google Analytics 4 and PostHog for user tracking
  */
 import { PERF_TRACK_DELAY_MS } from '@/constants/timing'

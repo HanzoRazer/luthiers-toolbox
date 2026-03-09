@@ -2,7 +2,7 @@
 
 **Date:** 2026-02-22
 **Reviewer:** GitHub Copilot (Claude Opus 4.6)
-**Project:** Luthier's ToolBox (CNC Guitar Manufacturing Platform)
+**Project:** The Production Shop (CNC Guitar Manufacturing Platform)
 **Previous Review:** 2026-02-18 (Score: 4.2/10)
 **Interim Evaluation:** 2026-02-22 (Score: 7.5/10, Claude Opus 4.5 — overstated)
 
@@ -434,7 +434,7 @@ Request → Feasibility Engine → Decision (GREEN/YELLOW/RED) → Gated Export
 
 ## Conclusion
 
-**Luthier's ToolBox has made significant, verifiable progress since Feb 18.** The main.py decomposition (915→237 LOC), Vue god object elimination (25→0 files >800 LOC), dead code purge (200→2 `.bak` files), and router registry architecture are genuine improvements backed by measurable data.
+**The Production Shop has made significant, verifiable progress since Feb 18.** The main.py decomposition (915→237 LOC), Vue god object elimination (25→0 files >800 LOC), dead code purge (200→2 `.bak` files), and router registry architecture are genuine improvements backed by measurable data.
 
 **However, the system has one critical safety gap that caps the score:** 191 `except Exception` handlers in safety-critical modules (147 in RMOS alone). The `@safety_critical` decorator exists and works correctly — but it's applied to only ~6 functions while RMOS contains hundreds. Until the exception handling in the feasibility evaluation chain is hardened, the safety architecture's design excellence is undermined by its implementation.
 

@@ -1,7 +1,7 @@
 # services/api/app/calculators/rosette_calc.py
 
 """
-Rosette calculator façade for the Luthier's ToolBox.
+Rosette calculator façade for the The Production Shop.
 
 This module centralizes access to rosette channel dimension calculations
 that currently live in `pipelines.rosette.rosette_calc`.

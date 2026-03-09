@@ -1,5 +1,5 @@
 /**
- * API Client for Luthier's Tool Box
+ * API Client for The Production Shop
  * 
  * Provides typed SDK for all backend endpoints.
  */

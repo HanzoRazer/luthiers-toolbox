@@ -4,7 +4,7 @@ Annotation-Aware DXF Exporter
 
 DXF exporter that keeps annotations separate from geometry.
 
-Author: Luthier's Toolbox
+Author: The Production Shop
 Version: 4.0.0
 """
 

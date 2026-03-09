@@ -1,5 +1,5 @@
 """
-Database layer for Luthier's ToolBox.
+Database layer for The Production Shop.
 
 Provides SQLAlchemy ORM infrastructure for workflow sessions
 and related persistence needs.

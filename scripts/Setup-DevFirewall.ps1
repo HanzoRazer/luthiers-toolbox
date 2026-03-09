@@ -1,5 +1,5 @@
 # scripts/Setup-DevFirewall.ps1
-# Developer Firewall Rules for Luthier's Tool Box Stack
+# Developer Firewall Rules for The Production Shop Stack
 # 
 # This script creates firewall rules for all development ports used by:
 # - RMOS API (8000, 8010)
@@ -24,7 +24,7 @@ $ErrorActionPreference = "Stop"
 $DEV_PORTS = @(
     @{ Port = 8000;  Name = "RMOS-API";           Desc = "FastAPI RMOS 2.0 main server" },
     @{ Port = 8010;  Name = "RMOS-Alt";           Desc = "RMOS alternate/test instance" },
-    @{ Port = 8100;  Name = "ToolBox-API";        Desc = "Luthier's ToolBox API server" },
+    @{ Port = 8100;  Name = "ToolBox-API";        Desc = "The Production Shop API server" },
     @{ Port = 5173;  Name = "Vite-Dev";           Desc = "Vue/Vite development server" },
     @{ Port = 3000;  Name = "Node-Dev";           Desc = "Node.js dev server" },
     @{ Port = 5000;  Name = "Flask-Dev";          Desc = "Flask/Python alt server" },
@@ -39,7 +39,7 @@ $RULE_PREFIX = "LTB-Dev"
 function Show-Help {
     Write-Host @"
 
-Luthier's Tool Box - Developer Firewall Setup
+The Production Shop - Developer Firewall Setup
 ==============================================
 
 This script manages Windows Firewall rules for local development.
@@ -75,7 +75,7 @@ function Get-DevRules {
 }
 
 function Show-RuleStatus {
-    Write-Host "`n=== Luthier's ToolBox Developer Firewall Rules ===" -ForegroundColor Cyan
+    Write-Host "`n=== The Production Shop Developer Firewall Rules ===" -ForegroundColor Cyan
     Write-Host ""
     
     $existingRules = Get-DevRules
@@ -119,7 +119,7 @@ function Add-DevFirewallRules {
         try {
             New-NetFirewallRule `
                 -DisplayName $ruleName `
-                -Description "$($p.Desc) - Luthier's ToolBox Developer Mode" `
+                -Description "$($p.Desc) - The Production Shop Developer Mode" `
                 -Direction Inbound `
                 -Action Allow `
                 -Protocol TCP `

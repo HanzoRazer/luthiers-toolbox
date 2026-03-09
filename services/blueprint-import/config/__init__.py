@@ -9,7 +9,7 @@ Components:
 - TierConfig: Dataclass with tier-specific settings
 - TieredProcessor: Configuration manager with 3-layer priority
 
-Author: Luthier's Toolbox
+Author: The Production Shop
 Version: 4.0.0
 """
 

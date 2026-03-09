@@ -34,6 +34,14 @@ ROUTER_MANIFEST: List[RouterSpec] = [
         required=True,  # CI routing truth validation
         category="core",
     ),
+    # Auth Router (Phase 3 SaaS)
+    RouterSpec(
+        module="app.routers.auth_router",
+        prefix="",  # router has /api/auth prefix
+        tags=["Auth"],
+        required=True,
+        category="core",
+    ),
     # -------------------------------------------------------------------------
     # CAM CORE (11 routers)
     # -------------------------------------------------------------------------

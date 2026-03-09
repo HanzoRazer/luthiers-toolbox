@@ -1,5 +1,5 @@
 """
-Utility modules for the Luthier's ToolBox API.
+Utility modules for the The Production Shop API.
 
 Contains shared infrastructure:
 - request_context: ContextVar for request ID propagation

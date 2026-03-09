@@ -1,5 +1,5 @@
 # GitHub Repository Creation Script
-# Automates creation of all 9 product repositories for Luthier's ToolBox ecosystem
+# Automates creation of all 9 product repositories for The Production Shop ecosystem
 # Requires: GitHub CLI (gh) installed and authenticated
 
 <#
@@ -45,21 +45,21 @@ $ProductsBasePath = Split-Path $PSScriptRoot -Parent
 $Products = @(
     @{
         Name = "ltb-express"
-        Description = "Luthier's ToolBox Express Edition - Design-focused tools for hobbyists and guitar players"
+        Description = "The Production Shop Express Edition - Design-focused tools for hobbyists and guitar players"
         Edition = "EXPRESS"
         Template = "express"
         Topics = @("guitar", "luthier", "cad", "design-tools", "express-edition")
     },
     @{
         Name = "ltb-pro"
-        Description = "Luthier's ToolBox Pro Edition - Full CAM workstation for professional luthiers"
+        Description = "The Production Shop Pro Edition - Full CAM workstation for professional luthiers"
         Edition = "PRO"
         Template = "pro"
         Topics = @("guitar", "luthier", "cam", "cnc", "pro-edition")
     },
     @{
         Name = "ltb-enterprise"
-        Description = "Luthier's ToolBox Enterprise Edition - Complete shop operating system for guitar businesses"
+        Description = "The Production Shop Enterprise Edition - Complete shop operating system for guitar businesses"
         Edition = "ENTERPRISE"
         Template = "enterprise"
         Topics = @("guitar", "luthier", "erp", "business", "enterprise")
@@ -375,7 +375,7 @@ npm run dev
 
 ## License
 
-Copyright © 2025 Luthier's ToolBox Project
+Copyright © 2025 The Production Shop Project
 "@
             
             $readmeContent | Out-File -FilePath "README.md" -Encoding UTF8
@@ -465,7 +465,7 @@ Write-Host @"
 
 ╔═══════════════════════════════════════════════════════════════════╗
 ║                                                                   ║
-║   Luthier's ToolBox Product Repository Creator                   ║
+║   The Production Shop Product Repository Creator                   ║
 ║                                                                   ║
 ║   Creates 9 product repositories with initial scaffolding        ║
 ║                                                                   ║

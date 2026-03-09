@@ -1,5 +1,5 @@
 <!--
-Luthier's Tool Box - CNC Guitar Lutherie CAD/CAM Toolbox
+The Production Shop - CNC Guitar Lutherie CAD/CAM
 PipelinePresetRunner - Standalone preset runner for saved pipeline configurations
 
 Part of Phase 25.0: Pipeline Preset Integration

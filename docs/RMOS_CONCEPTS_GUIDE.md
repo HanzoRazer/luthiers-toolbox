@@ -134,4 +134,4 @@ Artifacts (G-code, DXF) are stored by their SHA256 hash. This ensures:
 
 ---
 
-*This guide is part of Luthier's ToolBox documentation.*
+*This guide is part of The Production Shop documentation.*

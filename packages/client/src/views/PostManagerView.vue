@@ -1,5 +1,5 @@
 <!--
-Luthier's Tool Box - CNC Guitar Lutherie CAD/CAM Toolbox
+The Production Shop - CNC Guitar Lutherie CAD/CAM
 PostManagerView - Post processor CRUD manager (N.0 Smart Post Configurator)
 
 Repository: HanzoRazer/luthiers-toolbox

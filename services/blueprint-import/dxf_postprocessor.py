@@ -15,7 +15,7 @@ Usage:
     from dxf_postprocessor import postprocess_dxf
     postprocess_dxf("input.dxf", "output.dxf", version='R2000', fit_arcs=True)
 
-Author: Luthier's Toolbox
+Author: The Production Shop
 Version: 1.0.0
 """
 import logging

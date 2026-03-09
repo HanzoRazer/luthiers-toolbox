@@ -4,7 +4,7 @@ Test Pixel Calibration on Blueprint Collection
 
 Tests the CalibratedDimensionExtractor on all guitar blueprints.
 
-Author: Luthier's Toolbox
+Author: The Production Shop
 """
 
 import sys

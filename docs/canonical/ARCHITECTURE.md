@@ -1,4 +1,4 @@
-# Luthier's Tool Box - Architecture
+# The Production Shop - Architecture
 
 > System design, data flows, and integration patterns for the CNC guitar lutherie platform.
 

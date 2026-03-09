@@ -43,7 +43,7 @@ Industry references:
     - Below 3° → poor nut contact, buzzing, sitar-like tone
     - Above 15° → excessive slot wear, tuning friction, string pinching
 
-Author: Luthier's Toolbox
+Author: The Production Shop
 Version: 1.0.0
 """
 

@@ -1,4 +1,4 @@
-"""Scientific Calculator - Luthier's ToolBox"""
+"""Scientific Calculator - The Production Shop"""
 
 from __future__ import annotations
 import ast

@@ -1,5 +1,5 @@
 """
-1937 Martin D-28 Specifications for Luthier's ToolBox
+1937 Martin D-28 Specifications for The Production Shop
 Source: John Arnold technical drawings, Serial #65260
 
 All dimensions in inches unless noted.

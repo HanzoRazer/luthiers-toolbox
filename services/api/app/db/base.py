@@ -1,5 +1,5 @@
 """
-SQLAlchemy declarative base for Luthier's ToolBox.
+SQLAlchemy declarative base for The Production Shop.
 
 All ORM models inherit from this Base class.
 """

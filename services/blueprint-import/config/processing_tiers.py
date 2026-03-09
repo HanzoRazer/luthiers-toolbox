@@ -10,7 +10,7 @@ Tiers:
 - PREMIUM:  3-5 min, final production with all features
 - BATCH:    10-20 min/file, overnight processing
 
-Author: Luthier's Toolbox
+Author: The Production Shop
 Version: 4.0.0
 """
 

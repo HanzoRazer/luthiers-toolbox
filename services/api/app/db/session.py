@@ -1,8 +1,13 @@
 """
-Database session management for Luthier's ToolBox.
+Database session management for The Production Shop.
 
-Provides SQLite connection with file-backed storage.
-Environment variable RMOS_DB_URL can override default path.
+Supports:
+- SQLite: file-backed storage (default for dev)
+- PostgreSQL: production database with Supabase
+
+Environment variables:
+- DATABASE_URL: PostgreSQL connection string (takes precedence)
+- RMOS_DB_URL: SQLite fallback for local development
 """
 from __future__ import annotations
 
@@ -12,17 +17,45 @@ from typing import Generator
 
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, Session
+from sqlalchemy.pool import NullPool, QueuePool
 
 
-# File-backed SQLite by default
-DATABASE_URL = os.getenv("RMOS_DB_URL", "sqlite:///data/rmos.sqlite3")
+# Database URL priority: DATABASE_URL (production) > RMOS_DB_URL (dev) > default SQLite
+DATABASE_URL = os.getenv("DATABASE_URL") or os.getenv("RMOS_DB_URL", "sqlite:///data/rmos.sqlite3")
 
-# For SQLite: check_same_thread=False is needed when FastAPI runs with threads
-engine = create_engine(
-    DATABASE_URL,
-    connect_args={"check_same_thread": False} if DATABASE_URL.startswith("sqlite") else {},
-    future=True,
-)
+# Determine database type
+_is_postgres = DATABASE_URL.startswith("postgresql")
+_is_sqlite = DATABASE_URL.startswith("sqlite")
+
+# Connection pooling configuration
+# - PostgreSQL with pgbouncer: use NullPool (pgbouncer manages pooling)
+# - PostgreSQL without pgbouncer: use QueuePool
+# - SQLite: no pooling needed
+_use_pgbouncer = os.getenv("USE_PGBOUNCER", "").lower() in ("1", "true", "yes")
+
+if _is_postgres:
+    # PostgreSQL engine configuration
+    engine = create_engine(
+        DATABASE_URL,
+        poolclass=NullPool if _use_pgbouncer else QueuePool,
+        pool_size=5 if not _use_pgbouncer else None,
+        max_overflow=10 if not _use_pgbouncer else None,
+        pool_pre_ping=True,  # Verify connections before use
+        future=True,
+    )
+elif _is_sqlite:
+    # SQLite engine configuration
+    engine = create_engine(
+        DATABASE_URL,
+        connect_args={"check_same_thread": False},  # FastAPI runs with threads
+        future=True,
+    )
+else:
+    # Generic fallback (MySQL, etc.)
+    engine = create_engine(
+        DATABASE_URL,
+        future=True,
+    )
 
 SessionLocal = sessionmaker(bind=engine, autocommit=False, autoflush=False, future=True)
 

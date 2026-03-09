@@ -1,5 +1,5 @@
 """
-Luthier's ToolBox Generator Suite
+The Production Shop Generator Suite
 
 G-code generators for guitar building CNC operations.
 

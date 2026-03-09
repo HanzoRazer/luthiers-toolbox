@@ -1,5 +1,5 @@
 <!--
-Luthier's Tool Box - CNC Guitar Lutherie CAD/CAM Toolbox
+The Production Shop - CNC Guitar Lutherie CAD/CAM
 Finish Planner - Finish schedule planning and tracking tool
 
 Part of Phase P2.3: Utility Tools Integration

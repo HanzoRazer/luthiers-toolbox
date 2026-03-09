@@ -4,7 +4,36 @@ import { createRouter, createWebHistory, RouteRecordRaw } from "vue-router";
 // Lazy load RosettePipelineView to prevent it from breaking other routes if it has runtime errors
 const RosettePipelineView = () => import("@/views/RosettePipelineView.vue");
 
+// Import route guards
+import { requireGuest } from "./guards";
+
 const routes: RouteRecordRaw[] = [
+  // ============================================================================
+  // AUTH ROUTES
+  // ============================================================================
+  {
+    path: "/auth/login",
+    name: "Login",
+    component: () => import("@/views/auth/LoginView.vue"),
+    beforeEnter: requireGuest,
+  },
+  {
+    path: "/auth/signup",
+    name: "Signup",
+    component: () => import("@/views/auth/SignupView.vue"),
+    beforeEnter: requireGuest,
+  },
+  {
+    path: "/auth/callback",
+    name: "AuthCallback",
+    component: () => import("@/views/auth/CallbackView.vue"),
+  },
+  {
+    path: "/upgrade",
+    name: "Upgrade",
+    component: () => import("@/views/auth/UpgradeView.vue"),
+  },
+
   // Dashboard - New home page showing all domains
   {
     path: "/",

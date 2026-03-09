@@ -1,6 +1,6 @@
 # Documentation Site
 
-This directory contains the MkDocs documentation for Luthier's ToolBox.
+This directory contains the MkDocs documentation for The Production Shop.
 
 ---
 

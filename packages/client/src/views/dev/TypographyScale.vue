@@ -141,7 +141,7 @@
 </template>
 
 <script setup lang="ts">
-const sampleText = 'Luthier\'s ToolBox — Production Shop'
+const sampleText = 'The Production Shop — Guitar Manufacturing'
 
 const typeScale = [
   { name: '--font-size-xs',   value: '12px' },

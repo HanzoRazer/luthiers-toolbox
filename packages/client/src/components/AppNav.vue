@@ -3,7 +3,7 @@
     <div class="max-w-6xl mx-auto flex items-center justify-between px-4 py-2">
       <div class="flex items-center gap-3">
         <span class="font-semibold text-sm">
-          Luthier's Tool Box
+          The Production Shop
         </span>
         <span class="text-[10px] text-gray-400 uppercase tracking-wide">
           CAM / LAB
@@ -197,6 +197,12 @@
             </RouterLink>
           </div>
         </div>
+
+        <!-- Separator -->
+        <div class="h-4 w-px bg-gray-200 mx-1"></div>
+
+        <!-- User Menu / Sign In -->
+        <UserMenu />
       </nav>
     </div>
   </header>
@@ -205,6 +211,7 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue'
 import { RouterLink, useRoute } from 'vue-router'
+import { UserMenu } from '@/components/auth'
 
 const showSawMenu = ref(false)
 const showAcousticsMenu = ref(false)

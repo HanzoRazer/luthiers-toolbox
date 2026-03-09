@@ -17,7 +17,7 @@ Industry reference:
     - Below 18 deg → poor energy coupling, buzzing risk
     - Above 38 deg → excessive tension, binding risk, premature breakage
 
-Author: Luthier's Toolbox
+Author: The Production Shop
 Version: 1.0.0
 """
 

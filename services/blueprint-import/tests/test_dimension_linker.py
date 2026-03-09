@@ -4,7 +4,7 @@ Tests for Dimension Linker
 
 Tests for Phase 4.0 DimensionLinker orchestrator.
 
-Author: Luthier's Toolbox
+Author: The Production Shop
 Version: 4.0.0
 """
 

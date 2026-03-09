@@ -4,7 +4,7 @@ Batch Blueprint Classification Test
 
 Tests the GridZoneClassifier on a diverse collection of electric guitar blueprints.
 
-Author: Luthier's Toolbox
+Author: The Production Shop
 Version: 4.0.0
 """
 

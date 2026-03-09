@@ -1,6 +1,6 @@
 # services/api/app/calculators/inlay_calc.py
 
-"""Inlay calculator for the Luthier's ToolBox."""
+"""Inlay calculator for the The Production Shop."""
 
 from __future__ import annotations
 

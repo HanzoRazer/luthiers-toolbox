@@ -1,4 +1,4 @@
-# Luthier's Toolbox - Guitar Plans Archive Reference
+# The Production Shop - Guitar Plans Archive Reference
 
 ## Executive Summary
 
@@ -13,7 +13,7 @@ This document catalogs **200+ instrument plan files** discovered across the arch
 - **Reference Materials**: Archtop measurement kits, graduation maps, construction guides
 
 ### Current Catalog Status
-The Luthier's Toolbox application currently has **21 instruments** in its catalog with DXF body outlines ready for CNC. Many more can be extracted from these archives using AI vision processing.
+The The Production Shop application currently has **21 instruments** in its catalog with DXF body outlines ready for CNC. Many more can be extracted from these archives using AI vision processing.
 
 ---
 
@@ -387,7 +387,7 @@ Pickguard/
 
 ## INSTRUMENTS NOT YET IN CATALOG
 
-These instruments have plans available but are not yet extracted to the Luthier's Toolbox catalog:
+These instruments have plans available but are not yet extracted to the The Production Shop catalog:
 
 ### Electric (High Priority)
 - Gibson SG (DXF available)
@@ -447,4 +447,4 @@ These instruments have plans available but are not yet extracted to the Luthier'
 ---
 
 *Document generated: March 2026*
-*Luthier's Toolbox - The Production Shop*
+*The Production Shop - The Production Shop*

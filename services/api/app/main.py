@@ -1,4 +1,4 @@
-"""Luthier's ToolBox API - Main Application
+"""The Production Shop API - Main Application
 
 Simplified entry point using router_registry for centralized router loading.
 Phase 9 god-object decomposition reduced this from 915+ lines to <200 lines.
@@ -103,7 +103,7 @@ class RequestIdMiddleware(BaseHTTPMiddleware):
 # =============================================================================
 
 app = FastAPI(
-    title="Luthier's ToolBox API",
+    title="The Production Shop API",
     description="CAM system for guitar builders - DXF templates, G-code generation, manufacturing orchestration",
     version="2.0.0-clean",
     docs_url="/docs",

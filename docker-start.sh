@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-echo "🐳 Luthier's Tool Box - Docker Compose Setup"
+echo "🐳 The Production Shop - Docker Compose Setup"
 echo ""
 
 # Check if .env exists

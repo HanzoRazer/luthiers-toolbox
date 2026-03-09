@@ -11,7 +11,7 @@ Classifier Families:
 - (future) electric_guitar: Stratocaster, Telecaster, Les Paul, etc.
 - (future) mandolin: A-style, F-style, Bouzouki
 
-Author: Luthier's Toolbox
+Author: The Production Shop
 Version: 4.0.0
 """
 

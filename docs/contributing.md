@@ -1,6 +1,6 @@
 # Contributing
 
-Thank you for your interest in contributing to Luthier's ToolBox!
+Thank you for your interest in contributing to The Production Shop!
 
 ---
 
@@ -277,4 +277,4 @@ If you have questions about contributing:
 2. Open a new discussion
 3. Ask in a related issue
 
-Thank you for helping make Luthier's ToolBox better!
+Thank you for helping make The Production Shop better!

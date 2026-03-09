@@ -7,7 +7,7 @@ Tests the Phase 3.6 improvements:
   2. Configurable min_body_dim / max_body_aspect_ratio via InstrumentSpec
   3. sheet_type propagated to ExtractionResult and summary()
 
-Author: Luthier's Toolbox
+Author: The Production Shop
 Version: 3.6.0
 """
 

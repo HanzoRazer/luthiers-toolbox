@@ -4,7 +4,7 @@ Tests for Annotation Layer Architecture
 
 Tests for Phase 4.0 annotation separation functionality.
 
-Author: Luthier's Toolbox
+Author: The Production Shop
 Version: 4.0.0
 """
 

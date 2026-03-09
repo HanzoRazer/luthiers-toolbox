@@ -1,5 +1,5 @@
 <!--
-Luthier's Tool Box - CNC Guitar Lutherie CAD/CAM Toolbox
+The Production Shop - CNC Guitar Lutherie CAD/CAM
 MachineManagerView - Machine list + detail viewer
 
 Repository: HanzoRazer/luthiers-toolbox

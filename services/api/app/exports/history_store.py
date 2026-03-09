@@ -1,5 +1,5 @@
 """
-Export History Store for Luthier's Tool Box API
+Export History Store for The Production Shop API
 Manages persistent storage of all DXF/SVG exports with metadata
 
 Migrated from legacy ./server/history_store.py

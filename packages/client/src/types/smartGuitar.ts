@@ -241,6 +241,6 @@ export const SMART_GUITAR_DEFAULTS: Partial<SmartGuitarSpec> = {
   scale_length_mm: 648.0,
   fret_count: 24,
   string_count: 6,
-  manufacturer: "Luthier's ToolBox",
+  manufacturer: "The Production Shop",
   year_introduced: 2025,
 };

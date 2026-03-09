@@ -9,7 +9,7 @@ Sprint 2 (Phase 4.1): AngularDimension, LeaderNote
 Sprint 3 (Phase 4.2): DatumFeature, GeometricTolerance
 Future: SurfaceFinish, WeldSymbol, DatumTarget
 
-Author: Luthier's Toolbox
+Author: The Production Shop
 Version: 4.0.0
 """
 

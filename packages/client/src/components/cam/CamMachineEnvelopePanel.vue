@@ -1,5 +1,5 @@
 <!--
-Luthier's Tool Box - CNC Guitar Lutherie CAD/CAM Toolbox
+The Production Shop - CNC Guitar Lutherie CAD/CAM
 Machine Envelope Panel Component
 
 Part of Phase 24.5: Machine Envelope Integration

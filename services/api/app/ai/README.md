@@ -1,6 +1,6 @@
 # AI Platform Layer
 
-This directory contains the **platform layer** for AI capabilities in Luthier's Toolbox. It provides transport, safety, cost estimation, and observability for AI operations, but **does not contain domain-specific logic**.
+This directory contains the **platform layer** for AI capabilities in The Production Shop. It provides transport, safety, cost estimation, and observability for AI operations, but **does not contain domain-specific logic**.
 
 ## Architecture
 

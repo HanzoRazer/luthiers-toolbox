@@ -11,7 +11,7 @@
 
 ## Governance Statement
 
-This document establishes the **canonical contract** for run artifact persistence within the Luthier's ToolBox RMOS. Every toolpath generation attempt MUST create an immutable audit trail. Deviation from this contract is prohibited without formal amendment through the governance review process.
+This document establishes the **canonical contract** for run artifact persistence within the The Production Shop RMOS. Every toolpath generation attempt MUST create an immutable audit trail. Deviation from this contract is prohibited without formal amendment through the governance review process.
 
 ### Governing Principles
 

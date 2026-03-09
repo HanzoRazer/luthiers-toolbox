@@ -1,4 +1,4 @@
-"""Luthier & Woodworking Calculator - Luthier's ToolBox"""
+"""Luthier & Woodworking Calculator - The Production Shop"""
 
 from __future__ import annotations
 from dataclasses import dataclass

@@ -16,7 +16,7 @@ Zone coordinate system:
 - Y increases downward (top=0, bottom=1)
 - X increases rightward (left=0, right=1)
 
-Author: Luthier's Toolbox
+Author: The Production Shop
 Version: 4.0.0
 """
 

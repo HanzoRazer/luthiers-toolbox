@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Neck & Headstock CNC Generator - Luthier's ToolBox
+Neck & Headstock CNC Generator - The Production Shop
 
 Config/data layer and geometry helpers live in neck_headstock_config.py.
 """
@@ -87,7 +87,7 @@ class NeckGCodeGenerator:
         lines = [
             f"; {job_name} - Neck Program",
             f"; Generated: {now}",
-            f"; Generator: Luthier's ToolBox - Neck Generator",
+            f"; Generator: The Production Shop - Neck Generator",
             f"; Scale: {self.dims.scale_length_in}\"",
             f"; Headstock: {self.headstock_style.value}",
             f"; Profile: {self.profile.value}",

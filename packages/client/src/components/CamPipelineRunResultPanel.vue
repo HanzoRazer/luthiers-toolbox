@@ -1,5 +1,5 @@
 <!--
-Luthier's Tool Box - CNC Guitar Lutherie CAD/CAM Toolbox
+The Production Shop - CNC Guitar Lutherie CAD/CAM
 CamPipelineRunResultPanel - Per-op status chips + JSON payload viewer
 
 Repository: HanzoRazer/luthiers-toolbox

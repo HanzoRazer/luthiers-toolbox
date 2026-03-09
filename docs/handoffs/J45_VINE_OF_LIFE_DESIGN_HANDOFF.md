@@ -10,7 +10,7 @@
 
 ## Executive Summary
 
-This build is a **full-stack integration test** for the Luthier's Toolbox. A custom Gibson J-45 round-shoulder dreadnought with a 51-piece mother-of-pearl and abalone vine-of-life inlay that flows continuously from fret 1 through the nut and onto the headstock.
+This build is a **full-stack integration test** for the The Production Shop. A custom Gibson J-45 round-shoulder dreadnought with a 51-piece mother-of-pearl and abalone vine-of-life inlay that flows continuously from fret 1 through the nut and onto the headstock.
 
 **What works today:** The J45 body outline is production-ready (30-point CNC-accurate data with arc bulge). Fret position math, fretboard width interpolation, and inlay shape DXF export are all functional. The rosette and soundhole boring pipelines go from design to G-code in a single governed flow. The SVG art generator can create vine artwork from AI prompts.
 

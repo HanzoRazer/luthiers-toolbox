@@ -2,7 +2,7 @@
 
 **CNC Manufacturing Platform with RMOS Decision Authority**
 
-*Formerly: Luthier's Toolbox*
+*Formerly: The Production Shop*
 
 Production Shop provides everything you need to design, validate, and manufacture precision parts with verified geometry and pre-cut safety checks. Originally built for luthiers and guitar builders, now expanded to serve any CNC woodworking shop.
 

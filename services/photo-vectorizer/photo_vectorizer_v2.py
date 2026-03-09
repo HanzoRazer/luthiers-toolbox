@@ -20,7 +20,7 @@ Pipeline:
   11. Export (SVG, DXF, JSON)
   12. Batch processing
 
-Author: Luthier's Toolbox
+Author: The Production Shop
 Version: 2.0.0
 """
 

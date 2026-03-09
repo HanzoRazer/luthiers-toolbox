@@ -1,5 +1,5 @@
 """
-Pytest configuration and shared fixtures for Luthier's Toolbox API tests.
+Pytest configuration and shared fixtures for The Production Shop API tests.
 
 This module provides test fixtures for FastAPI testing, including:
 - TestClient for API endpoint testing

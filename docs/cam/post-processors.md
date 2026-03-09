@@ -61,7 +61,7 @@ Post for Mach3 and Mach4 controllers.
 **Example Output:**
 
 ```gcode
-(Luthier's ToolBox)
+(The Production Shop)
 G20 ; inches
 G90 G40 G49 G80
 T1 M6

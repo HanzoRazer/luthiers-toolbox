@@ -92,7 +92,7 @@ References:
 
 Version: Classic (Instant Acceleration)
 Status: ✅ Production Ready
-Author: Luthier's Tool Box Team
+Author: The Production Shop Team
 Date: November 2025
 """
 import math

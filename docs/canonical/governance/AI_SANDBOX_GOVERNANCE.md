@@ -2,7 +2,7 @@
 
 ## Summary
 
-This document defines the trust boundaries and enforcement rules for AI code in the Luthier's ToolBox. AI operates in a sandbox with strict limitations to prevent it from becoming an execution authority.
+This document defines the trust boundaries and enforcement rules for AI code in the The Production Shop. AI operates in a sandbox with strict limitations to prevent it from becoming an execution authority.
 
 ## Trust Boundary Diagram
 

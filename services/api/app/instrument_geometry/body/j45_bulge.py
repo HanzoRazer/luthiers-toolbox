@@ -3,7 +3,7 @@ Gibson J-45 Body Outline Data
 Extracted from ag_45_dxf_040409.dxf
 Size: 398.5mm × 504.8mm (15.7" × 19.9")
 
-To integrate into Luthier's ToolBox:
+To integrate into The Production Shop:
 1. Add J45_BODY_OUTLINE to instrument_geometry/body/outlines.py
 2. Replace the placeholder rectangle in _BODY_OUTLINES["j_45"]
 

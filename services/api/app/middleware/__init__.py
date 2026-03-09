@@ -1,5 +1,5 @@
 """
-Middleware package for Luthier's ToolBox API
+Middleware package for The Production Shop API
 """
 
 from .edition_middleware import (

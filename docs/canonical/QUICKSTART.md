@@ -1,4 +1,4 @@
-# 🎸 Luthier's Tool Box - Quick Start Guide
+# 🎸 The Production Shop - Quick Start Guide
 
 **Welcome!** This guide will get you from zero to running the full stack in **10 minutes**.
 
@@ -80,7 +80,7 @@ npm run dev
 Open browser to **http://localhost:5173**
 
 You should see:
-- 🎸 Luthier's Tool Box home page
+- 🎸 The Production Shop home page
 - Navigation: Design, Calculator, Export, CurveLab
 - No console errors
 

@@ -5,7 +5,7 @@ Annotation JSON Exporter
 Export annotations as JSON for non-CAD tooling, web viewers,
 and CI/CD validation pipelines.
 
-Author: Luthier's Toolbox
+Author: The Production Shop
 Version: 4.0.0
 """
 

@@ -309,7 +309,7 @@ def export_bracing_dxf(req: BracingDxfExportRequest):
     
     Supports DXF versions R12 through R18 (R2010).
     R12 is recommended for maximum CAM software compatibility
-    (the genesis of Luthier's ToolBox).
+    (the genesis of The Production Shop).
     
     The export includes:
     - BRACES layer: Brace outline rectangles

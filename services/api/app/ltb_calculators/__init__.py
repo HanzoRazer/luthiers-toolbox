@@ -1,5 +1,5 @@
 """
-Luthier's ToolBox Calculator Suite
+The Production Shop Calculator Suite
 
 Clean, tested calculators with proper separation of concerns.
 These are pure calculators (input → output), NOT CAM geometry.

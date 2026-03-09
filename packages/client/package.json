@@ -16,6 +16,7 @@
     "css:audit:strict": "node scripts/audit-dead-css.mjs --fail-on-dead --verbose"
   },
   "dependencies": {
+    "@supabase/supabase-js": "^2.45.0",
     "axios": "^1.13.2",
     "chart.js": "^4.5.1",
     "html2canvas": "^1.4.1",

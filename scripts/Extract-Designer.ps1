@@ -41,7 +41,7 @@ $ErrorActionPreference = "Stop"
 
 $Products = @{
     "neck" = @{
-        Name = "Luthier's ToolBox Neck Designer"
+        Name = "The Production Shop Neck Designer"
         Edition = "NECK_DESIGNER"
         RepoName = "ltb-neck-designer"
         Description = "Parametric neck profile generator with Fender/Gibson presets"
@@ -61,7 +61,7 @@ $Products = @{
     }
     
     "headstock" = @{
-        Name = "Luthier's ToolBox Headstock Designer"
+        Name = "The Production Shop Headstock Designer"
         Edition = "HEADSTOCK_DESIGNER"
         RepoName = "ltb-headstock-designer"
         Description = "Headstock outline and tuner layout generator"
@@ -74,7 +74,7 @@ $Products = @{
     }
     
     "fingerboard" = @{
-        Name = "Luthier's ToolBox Fingerboard Designer"
+        Name = "The Production Shop Fingerboard Designer"
         Edition = "FINGERBOARD_DESIGNER"
         RepoName = "ltb-fingerboard-designer"
         Description = "Fret position calculator with temperament systems"
@@ -91,7 +91,7 @@ $Products = @{
     }
     
     "bridge" = @{
-        Name = "Luthier's ToolBox Bridge Designer"
+        Name = "The Production Shop Bridge Designer"
         Edition = "BRIDGE_DESIGNER"
         RepoName = "ltb-bridge-designer"
         Description = "Bridge geometry and saddle compensation calculator"
@@ -185,7 +185,7 @@ function Adapt-Imports {
 # =============================================================================
 
 Write-Host "`n╔════════════════════════════════════════════════════════════╗" -ForegroundColor Magenta
-Write-Host "║  Luthier's ToolBox Feature Extractor                        ║" -ForegroundColor Magenta
+Write-Host "║  The Production Shop Feature Extractor                        ║" -ForegroundColor Magenta
 Write-Host "╚════════════════════════════════════════════════════════════╝" -ForegroundColor Magenta
 
 Write-Host "`nExtracting: " -NoNewline
@@ -286,7 +286,7 @@ $mainPyContent = @"
 $($Config.Name) - Standalone API Server
 
 Edition: $($Config.Edition)
-Extracted from: Luthier's ToolBox Golden Master
+Extracted from: The Production Shop Golden Master
 """
 
 from fastapi import FastAPI

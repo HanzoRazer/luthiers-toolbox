@@ -59,7 +59,7 @@ CAD Design → CAM Processing → G-code → CNC Machine → Finished Part
 
 ## Safety System
 
-Luthier's ToolBox includes RMOS (Run Management & Operations System) for manufacturing safety:
+The Production Shop includes RMOS (Run Management & Operations System) for manufacturing safety:
 
 ### Feasibility Analysis
 
@@ -87,7 +87,7 @@ Common checks include:
 
 ## Supported Machines
 
-Luthier's ToolBox generates G-code for various CNC controllers:
+The Production Shop generates G-code for various CNC controllers:
 
 ### Hobby/Prosumer
 

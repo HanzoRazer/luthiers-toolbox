@@ -1,6 +1,6 @@
 # API Overview
 
-Luthier's ToolBox provides a RESTful API for programmatic access to all features.
+The Production Shop provides a RESTful API for programmatic access to all features.
 
 ---
 

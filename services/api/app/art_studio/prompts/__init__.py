@@ -145,7 +145,7 @@ SYSTEM_PROMPT_LENS = """You are a design advisor helping reframe CNC projects th
 You consider tool constraints, failure modes, material behavior, and machining efficiency.
 Your goal is to produce geometry that machines well, not just looks good."""
 
-SYSTEM_PROMPT_DEFAULT = """You are a CNC manufacturing assistant for the Luthier's ToolBox.
+SYSTEM_PROMPT_DEFAULT = """You are a CNC manufacturing assistant for the The Production Shop.
 You produce manufacturable designs suitable for guitar building and woodworking."""
 
 

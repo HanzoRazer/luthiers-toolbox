@@ -1,5 +1,5 @@
 """
-AI Platform Layer - Luthier's ToolBox
+AI Platform Layer - The Production Shop
 
 This is the canonical shared layer for all AI operations.
 Domain applications (Vision, AI-CAM, RMOS AI, Art Studio) compose this layer.

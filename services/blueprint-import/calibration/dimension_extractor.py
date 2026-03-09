@@ -11,7 +11,7 @@ Measures:
 - Neck pocket dimensions
 - Control cavity areas
 
-Author: Luthier's Toolbox
+Author: The Production Shop
 Version: 4.0.0
 """
 

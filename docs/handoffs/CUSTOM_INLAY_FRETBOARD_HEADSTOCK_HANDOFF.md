@@ -10,7 +10,7 @@
 
 ## Executive Summary
 
-The Luthier's Toolbox has a **production-ready fretboard inlay designer** with 8 pattern types, 6 presets, SVG preview, and DXF R12 export. It also has two separate CAM systems (V-Carve and Relief) that can convert custom SVG artwork into CNC pocket-routing programs.
+The The Production Shop has a **production-ready fretboard inlay designer** with 8 pattern types, 6 presets, SVG preview, and DXF R12 export. It also has two separate CAM systems (V-Carve and Relief) that can convert custom SVG artwork into CNC pocket-routing programs.
 
 **What works today:** A user can design standard fretboard inlays (dots, blocks, diamonds, crowns) and export CNC-ready DXF files. Separately, they can feed custom SVG artwork through the V-Carve or Relief pipeline to produce headstock inlay pocket G-code.
 

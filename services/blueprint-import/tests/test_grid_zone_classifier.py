@@ -4,7 +4,7 @@ Grid Zone Classifier Tests
 
 Unit tests for the GridZoneClassifier and related zone functionality.
 
-Author: Luthier's Toolbox
+Author: The Production Shop
 Version: 4.0.0
 """
 

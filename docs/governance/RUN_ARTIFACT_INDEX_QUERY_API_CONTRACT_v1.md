@@ -11,7 +11,7 @@
 
 ## Governance Statement
 
-This document establishes the **canonical contract** for querying and retrieving Run Artifacts within the Luthier's ToolBox RMOS. All query endpoints MUST conform to the specifications herein. Deviation from this contract is prohibited without formal amendment through the governance review process.
+This document establishes the **canonical contract** for querying and retrieving Run Artifacts within the The Production Shop RMOS. All query endpoints MUST conform to the specifications herein. Deviation from this contract is prohibited without formal amendment through the governance review process.
 
 ### Governing Principles
 

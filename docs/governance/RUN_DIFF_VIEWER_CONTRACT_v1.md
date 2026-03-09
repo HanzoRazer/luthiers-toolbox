@@ -11,7 +11,7 @@
 
 ## Governance Statement
 
-This document establishes the **canonical contract** for the Run Diff Viewer within the Luthier's ToolBox client application. All implementations for comparing run artifacts MUST conform to the specifications herein. Deviation from this contract is prohibited without formal amendment through the governance review process.
+This document establishes the **canonical contract** for the Run Diff Viewer within the The Production Shop client application. All implementations for comparing run artifacts MUST conform to the specifications herein. Deviation from this contract is prohibited without formal amendment through the governance review process.
 
 ### Governing Principles
 

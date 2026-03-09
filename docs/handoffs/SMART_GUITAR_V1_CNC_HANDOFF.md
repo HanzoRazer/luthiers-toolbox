@@ -6,7 +6,7 @@
 
 ## Executive Summary
 
-The Smart Guitar is the **first IoT-enabled instrument** in the Luthier's ToolBox codebase. This session created the authoritative v1.1 spec JSON with all 12 cavity definitions, updated the registry from `STUB` to `COMPLETE`, designed the full dual-board separated electronics architecture (Arduino Uno + Raspberry Pi 5), and generated **11,967 lines of G-code** across two phases covering the entire body build process.
+The Smart Guitar is the **first IoT-enabled instrument** in the The Production Shop codebase. This session created the authoritative v1.1 spec JSON with all 12 cavity definitions, updated the registry from `STUB` to `COMPLETE`, designed the full dual-board separated electronics architecture (Arduino Uno + Raspberry Pi 5), and generated **11,967 lines of G-code** across two phases covering the entire body build process.
 
 **What works:** Body outline DXF (21-point R12 polygon), authoritative spec with all 12 cavities mapped to STEM grid 24×32 normalized coordinates, 2-phase G-code generation (front face routing + rear face electronics cavities), 3-tool library, build summary manifest, complete IoT cavity system (Pi 5 cavity, Arduino pocket, antenna recess, USB-C edge slot, 4 wiring channels).
 

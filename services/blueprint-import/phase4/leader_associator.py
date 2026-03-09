@@ -4,7 +4,7 @@ Leader Line Association for Blueprint Dimensions
 
 Links detected arrows and leader lines to dimension text and geometry.
 
-Author: Luthier's Toolbox
+Author: The Production Shop
 Version: 4.0.0
 """
 

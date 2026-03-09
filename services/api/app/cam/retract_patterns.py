@@ -1,7 +1,7 @@
 """
 Advanced retract strategies and tool path optimization.
 
-Luthier's Tool Box - CNC Guitar Lutherie CAD/CAM Toolbox
+The Production Shop - CNC Guitar Lutherie CAD/CAM Toolbox
 Phase 5 Part 3: N.08 Retract Patterns
 """
 

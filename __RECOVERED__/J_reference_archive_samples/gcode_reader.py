@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-gcode_reader.py ΓÇö Enhanced GΓÇæcode (.nc/.gcode) reader & summarizer for Luthier's ToolBox.
+gcode_reader.py ΓÇö Enhanced GΓÇæcode (.nc/.gcode) reader & summarizer for The Production Shop.
 
 Features
 - Parses common FanucΓÇæstyle GΓÇæcode (G0/G1/G2/G3, G20/G21, G90/G91, M3/M5, S, F, T, G17/18/19).
@@ -22,9 +22,9 @@ Notes
   This is conservative; if your arcs sweep past extrema, bbox may be slightly underΓÇæestimated.
 - Supports absolute (G90) and incremental (G91) modes; default is absolute.
 - Units default to mm unless overridden by G20 (inch) / G21 (mm).
-- Integrated with Luthier's ToolBox CNC pipeline for guitar lutherie projects.
+- Integrated with The Production Shop CNC pipeline for guitar lutherie projects.
 
-Part of: Luthier's ToolBox - CNC Guitar Lutherie CAD/CAM System
+Part of: The Production Shop - CNC Guitar Lutherie CAD/CAM System
 """
 
 from __future__ import annotations
@@ -342,7 +342,7 @@ def fmt_num(v: Optional[float], units: str = "", none: str = "ΓÇö") -> str:
 def print_report(summary: Summary, moves: List[Move], pretty: bool = False) -> None:
     u = "in" if summary.units == "inch" else "mm"
     print("ΓòöΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòù")
-    print("Γòæ         GΓÇæcode Summary - Luthier's ToolBox                Γòæ")
+    print("Γòæ         GΓÇæcode Summary - The Production Shop                Γòæ")
     print("ΓòÜΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓò¥")
     print()
     print(f"≡ƒôä File:           {summary.filename}")
@@ -451,7 +451,7 @@ Examples:
   %(prog)s program.nc --validate --json summary.json
   %(prog)s program.nc --csv moves.csv --json summary.json
   
-Integration with Luthier's ToolBox:
+Integration with The Production Shop:
   This tool is integrated into server/pipelines/gcode_explainer/ for
   automated G-code analysis in CAM workflows.
         """

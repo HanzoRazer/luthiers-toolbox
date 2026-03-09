@@ -7,7 +7,7 @@ Hybrid arrow detection system using:
 2. Template matching (secondary) - Standard arrow shapes
 3. Image-based detection (fallback) - Line + triangle pattern matching
 
-Author: Luthier's Toolbox
+Author: The Production Shop
 Version: 4.0.0
 """
 
