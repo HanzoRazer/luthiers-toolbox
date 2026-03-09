@@ -308,7 +308,6 @@ const domains = [
     description: 'Design sandbox, component gallery, nav prototype',
     links: [
       { icon: '🎨', label: 'UI Sandbox',      to: '/dev/sandbox' },
-      { icon: '🌐', label: 'Site Generator',  to: '/tools/site-generator' },
     ],
   },
 ]
