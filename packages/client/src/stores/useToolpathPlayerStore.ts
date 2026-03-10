@@ -132,6 +132,10 @@ export const useToolpathPlayerStore = defineStore("toolpathPlayer", () => {
   const currentTimeMs = ref(0);
   const speed = ref(1);
 
+  // ── P5: Segment selection for G-code line sync ───────────────────────────
+  const selectedSegmentIndex = ref<number | null>(null);
+  const sourceGcode = ref<string>("");
+
   // ── RAF internals ────────────────────────────────────────────────────────
   let _rafHandle = 0;
   let _lastTimestamp = 0;
@@ -186,6 +190,31 @@ export const useToolpathPlayerStore = defineStore("toolpathPlayer", () => {
   const currentSegment = computed<MoveSegment | null>(
     () => segments.value[currentSegmentIndex.value] ?? null,
   );
+
+  // ── P5: Selected segment computed ──────────────────────────────────────────
+  const selectedSegment = computed<MoveSegment | null>(
+    () => selectedSegmentIndex.value !== null
+      ? segments.value[selectedSegmentIndex.value] ?? null
+      : null,
+  );
+
+  /** Extract G-code source line for a segment (uses line_number if available) */
+  const selectedGcodeLine = computed<{ lineNumber: number; text: string } | null>(() => {
+    const seg = selectedSegment.value;
+    if (!seg || !sourceGcode.value) return null;
+
+    // MoveSegment may have line_number from simulation
+    const lineNum = (seg as MoveSegment & { line_number?: number }).line_number;
+    if (lineNum === undefined) return null;
+
+    const lines = sourceGcode.value.split('\n');
+    if (lineNum < 1 || lineNum > lines.length) return null;
+
+    return {
+      lineNumber: lineNum,
+      text: lines[lineNum - 1] || '',
+    };
+  });
 
   // ── RAF animation tick ────────────────────────────────────────────────────
 
@@ -258,6 +287,10 @@ export const useToolpathPlayerStore = defineStore("toolpathPlayer", () => {
     parseProgress.value = { percent: 10, stage: "uploading" };
 
     try {
+      // P5: Store source G-code for line sync
+      sourceGcode.value = gcode;
+      selectedSegmentIndex.value = null;
+
       const cacheKey = _cacheKey(gcode, options as Record<string, unknown>);
       const cached = _readCache(cacheKey);
 
@@ -329,6 +362,26 @@ export const useToolpathPlayerStore = defineStore("toolpathPlayer", () => {
     speed.value = s;
   }
 
+  // ── P5: Segment selection actions ──────────────────────────────────────────
+  function selectSegment(index: number | null): void {
+    if (index !== null && (index < 0 || index >= segments.value.length)) {
+      selectedSegmentIndex.value = null;
+      return;
+    }
+    selectedSegmentIndex.value = index;
+  }
+
+  function clearSelection(): void {
+    selectedSegmentIndex.value = null;
+  }
+
+  /** Jump playback to selected segment */
+  function jumpToSelected(): void {
+    if (selectedSegmentIndex.value === null) return;
+    const idx = selectedSegmentIndex.value;
+    currentTimeMs.value = idx > 0 ? _cumulativeMs[idx - 1] ?? 0 : 0;
+  }
+
   function stepForward(): void {
     const next = currentSegmentIndex.value + 1;
     if (next < segments.value.length) {
@@ -376,12 +429,20 @@ export const useToolpathPlayerStore = defineStore("toolpathPlayer", () => {
     parseProgress,
     memoryInfo,
 
+    // P5: Selection state
+    selectedSegmentIndex,
+    sourceGcode,
+
     // Computed
     totalDurationMs,
     progress,
     currentSegmentIndex,
     toolPosition,
     currentSegment,
+
+    // P5: Selection computed
+    selectedSegment,
+    selectedGcodeLine,
 
     // Actions
     loadGcode,
@@ -394,5 +455,10 @@ export const useToolpathPlayerStore = defineStore("toolpathPlayer", () => {
     stepBackward,
     setResolution,
     dispose,
+
+    // P5: Selection actions
+    selectSegment,
+    clearSelection,
+    jumpToSelected,
   };
 });

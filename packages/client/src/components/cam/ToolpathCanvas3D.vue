@@ -72,6 +72,12 @@ let upcomingLines: THREE.Group;
 let toolMesh: THREE.Mesh;
 let stockMesh: THREE.Mesh;
 let gridHelper: THREE.GridHelper;
+let selectedLine: THREE.Line | null = null;
+
+// P5: Raycasting for segment selection
+const raycaster = new THREE.Raycaster();
+raycaster.params.Line = { threshold: 3 }; // Click tolerance in world units
+const mouse = new THREE.Vector2();
 
 // Colors
 const COLORS = {
@@ -82,6 +88,7 @@ const COLORS = {
   stock: 0x8b4513,
   grid: 0x444466,
   background: 0x1e1e2e,
+  selected: 0xffd700, // Gold for selected segment
 };
 
 // ---------------------------------------------------------------------------
@@ -222,15 +229,18 @@ function buildToolpath(): void {
 
   // Build completed segments
   for (let i = 0; i <= currentIdx && i < store.segments.length; i++) {
-    const line = createSegmentLine(store.segments[i], false);
+    const line = createSegmentLine(store.segments[i], false, i);
     if (line) completedLines.add(line);
   }
 
   // Build upcoming segments (faded)
   for (let i = currentIdx + 1; i < store.segments.length; i++) {
-    const line = createSegmentLine(store.segments[i], true);
+    const line = createSegmentLine(store.segments[i], true, i);
     if (line) upcomingLines.add(line);
   }
+
+  // P5: Highlight selected segment
+  updateSelectedSegment();
 
   // Update tool position
   updateToolPosition();
@@ -244,7 +254,8 @@ function buildToolpath(): void {
   }
 }
 
-function createSegmentLine(segment: MoveSegment, isUpcoming: boolean): THREE.Line | null {
+// Store segment index in line userData for raycasting
+function createSegmentLine(segment: MoveSegment, isUpcoming: boolean, segmentIndex: number): THREE.Line | null {
   const points = [
     new THREE.Vector3(segment.from_pos[0], segment.from_pos[1], segment.from_pos[2]),
     new THREE.Vector3(segment.to_pos[0], segment.to_pos[1], segment.to_pos[2]),
@@ -286,10 +297,13 @@ function createSegmentLine(segment: MoveSegment, isUpcoming: boolean): THREE.Lin
     });
     const line = new THREE.Line(geometry, dashedMaterial);
     line.computeLineDistances();
+    line.userData.segmentIndex = segmentIndex; // P5: Store for raycasting
     return line;
   }
 
-  return new THREE.Line(geometry, material);
+  const line = new THREE.Line(geometry, material);
+  line.userData.segmentIndex = segmentIndex; // P5: Store for raycasting
+  return line;
 }
 
 function updateToolPosition(): void {
@@ -297,6 +311,65 @@ function updateToolPosition(): void {
 
   const pos = store.toolPosition;
   toolMesh.position.set(pos[0], pos[1], pos[2] + props.toolLength / 2);
+}
+
+// ---------------------------------------------------------------------------
+// P5: Selection Handling
+// ---------------------------------------------------------------------------
+
+function updateSelectedSegment(): void {
+  // Remove old selected line
+  if (selectedLine) {
+    scene.remove(selectedLine);
+    selectedLine.geometry.dispose();
+    (selectedLine.material as THREE.Material).dispose();
+    selectedLine = null;
+  }
+
+  const idx = store.selectedSegmentIndex;
+  if (idx === null || idx < 0 || idx >= store.segments.length) return;
+
+  const segment = store.segments[idx];
+  const points = [
+    new THREE.Vector3(segment.from_pos[0], segment.from_pos[1], segment.from_pos[2]),
+    new THREE.Vector3(segment.to_pos[0], segment.to_pos[1], segment.to_pos[2]),
+  ];
+
+  const geometry = new THREE.BufferGeometry().setFromPoints(points);
+  const material = new THREE.LineBasicMaterial({
+    color: COLORS.selected,
+    linewidth: 3,
+    transparent: false,
+  });
+
+  selectedLine = new THREE.Line(geometry, material);
+  selectedLine.name = "selectedSegment";
+  selectedLine.renderOrder = 999; // Render on top
+  scene.add(selectedLine);
+}
+
+function onCanvasClick(event: MouseEvent): void {
+  if (!containerRef.value || !canvasRef.value) return;
+
+  const rect = canvasRef.value.getBoundingClientRect();
+  mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
+  mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
+
+  raycaster.setFromCamera(mouse, camera);
+
+  // Check intersections with both groups
+  const allLines = [...completedLines.children, ...upcomingLines.children];
+  const intersects = raycaster.intersectObjects(allLines, false);
+
+  if (intersects.length > 0) {
+    const hit = intersects[0].object;
+    const segmentIndex = hit.userData.segmentIndex;
+    if (typeof segmentIndex === "number") {
+      store.selectSegment(segmentIndex);
+    }
+  } else {
+    store.selectSegment(null);
+  }
 }
 
 function clearGroup(group: THREE.Group): void {
@@ -486,6 +559,14 @@ watch(
   },
   { deep: true }
 );
+
+// P5: Watch for selection changes
+watch(
+  () => store.selectedSegmentIndex,
+  () => {
+    updateSelectedSegment();
+  }
+);
 </script>
 
 <template>
@@ -493,7 +574,10 @@ watch(
     ref="containerRef"
     class="toolpath-canvas-3d"
   >
-    <canvas ref="canvasRef" />
+    <canvas
+      ref="canvasRef"
+      @click="onCanvasClick"
+    />
 
     <!-- View controls overlay -->
     <div class="view-controls">
