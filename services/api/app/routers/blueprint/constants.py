@@ -102,6 +102,23 @@ except ImportError as e:
 
 
 # =============================================================================
+# PHASE 4 DIMENSION LINKER
+# =============================================================================
+
+PHASE4_AVAILABLE = False
+process_blueprint = None  # type: ignore
+BlueprintPipeline = None  # type: ignore
+PipelineResult = None  # type: ignore
+
+try:
+    from phase4 import process_blueprint, BlueprintPipeline, PipelineResult
+    PHASE4_AVAILABLE = True
+    logger.info("Phase 4 dimension linker loaded successfully")
+except ImportError as e:
+    logger.warning(f"Phase 4 dimension linker not available: {e}")
+
+
+# =============================================================================
 # CALIBRATION MODULE (PIXEL-TO-INCH CONVERSION)
 # =============================================================================
 
