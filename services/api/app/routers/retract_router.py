@@ -6,6 +6,8 @@ from fastapi import APIRouter, HTTPException
 from fastapi.responses import Response
 from pydantic import BaseModel, Field
 
+from app.safety import safety_critical
+
 from ..cam.retract_patterns import (
     LeadInConfig,
     RetractConfig,
@@ -265,6 +267,7 @@ def estimate_time_savings(body: TimeSavingsIn) -> Dict[str, Any]:
     return savings
 
 @router.post("/gcode", response_class=Response)
+@safety_critical
 def generate_simple_retract_gcode(
     strategy: str = "direct",
     current_z: float = -10.0,
@@ -325,6 +328,7 @@ def generate_simple_retract_gcode(
 # =============================================================================
 
 @router.post("/gcode_governed", response_class=Response)
+@safety_critical
 def generate_simple_retract_gcode_governed(
     strategy: str = "direct",
     current_z: float = -10.0,
@@ -407,6 +411,7 @@ def generate_simple_retract_gcode_governed(
     return resp
 
 @router.post("/gcode/download")
+@safety_critical
 def download_retract_gcode(body: RetractStrategyIn) -> Response:
     """
     Generate and download G-code with retract optimization.
@@ -442,6 +447,7 @@ def download_retract_gcode(body: RetractStrategyIn) -> Response:
     return resp
 
 @router.post("/gcode/download_governed")
+@safety_critical
 def download_retract_gcode_governed(body: RetractStrategyIn) -> Response:
     """Generate and download G-code with retract optimization (GOVERNED lane)."""
     # Apply strategy (reuse apply endpoint logic)

@@ -5,7 +5,7 @@ import { createRouter, createWebHistory, RouteRecordRaw } from "vue-router";
 const RosettePipelineView = () => import("@/views/RosettePipelineView.vue");
 
 // Import route guards
-import { requireGuest } from "./guards";
+import { requireGuest, requireAuth, requireTier, initAuthGuard } from "./guards";
 
 const routes: RouteRecordRaw[] = [
   // ============================================================================
@@ -445,7 +445,8 @@ const routes: RouteRecordRaw[] = [
     path: "/business/estimator",
     name: "EngineeringEstimator",
     component: () => import("@/views/business/EngineeringEstimatorView.vue"),
-    meta: { requiresPro: true },
+    beforeEnter: requireTier("pro"),
+    meta: { requiresPro: true, featureName: "Engineering Cost Estimator" },
   },
 
   // AI Images — Visual Analyzer (Production)
@@ -503,5 +504,9 @@ const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
   routes,
 });
+
+// Initialize auth state on every navigation
+// This ensures auth is loaded before any route guard checks
+router.beforeEach(initAuthGuard);
 
 export default router;

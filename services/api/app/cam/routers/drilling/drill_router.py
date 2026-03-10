@@ -20,6 +20,8 @@ from typing import Any, Dict, List, Optional
 from fastapi import APIRouter, Response
 from pydantic import BaseModel
 
+from app.safety import safety_critical
+
 try:
     from ....util.post_injection_helpers import build_post_context_v2, wrap_with_post_v2
     HAS_POST_HELPERS = True
@@ -63,6 +65,7 @@ def _f(n: float) -> str:
 
 
 @router.post("/gcode", response_class=Response)
+@safety_critical
 def drill_gcode(req: DrillReq) -> Response:
     """Generate drilling G-code using modal cycles."""
     cyc = req.cycle.upper().strip()
