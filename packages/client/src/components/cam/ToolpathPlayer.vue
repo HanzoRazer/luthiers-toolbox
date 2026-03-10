@@ -28,6 +28,8 @@ import { buildMachineStates, type MachineState } from "@/util/mcodeTracker";
 // P4 imports
 import { CollisionDetector, type CollisionReport, type Fixture } from "@/util/collisionDetector";
 import { GcodeOptimizer, type OptimizationReport } from "@/util/gcodeOptimizer";
+// P5 imports
+import { AnimationExporter, downloadExport, type ExportConfig, type ExportProgress } from "@/util/animationExporter";
 
 // ---------------------------------------------------------------------------
 // Props
@@ -88,6 +90,19 @@ const showGcodePanel = ref(false);
 
 // P5: Heatmap mode
 const showHeatmap = ref(false);
+
+// P5: Export animation
+const showExportPanel = ref(false);
+const isExporting = ref(false);
+const exportProgress = ref<ExportProgress | null>(null);
+const exportConfig = ref<Partial<ExportConfig>>({
+  format: "webm",
+  fps: 30,
+  quality: 0.8,
+  duration: null,
+});
+const canvas2DRef = ref<InstanceType<typeof ToolpathCanvas> | null>(null);
+let exporter: AnimationExporter | null = null;
 
 // ---------------------------------------------------------------------------
 // Machine state array (P3 M-code tracking)
@@ -232,6 +247,97 @@ function runOptimizationAnalysis(): void {
 }
 
 // ---------------------------------------------------------------------------
+// P5: Export Animation
+// ---------------------------------------------------------------------------
+async function startExport(): Promise<void> {
+  if (isExporting.value) return;
+
+  // Get the canvas element - need to access the actual canvas from the component
+  let canvasEl: HTMLCanvasElement | null = null;
+
+  if (viewMode.value === "2d" && canvas2DRef.value) {
+    // Access the canvas element from ToolpathCanvas component
+    canvasEl = (canvas2DRef.value as unknown as { $el: HTMLElement }).$el?.querySelector("canvas");
+  } else if (viewMode.value === "3d" && canvas3DRef.value) {
+    // Access the canvas element from ToolpathCanvas3D component
+    canvasEl = (canvas3DRef.value as unknown as { $el: HTMLElement }).$el?.querySelector("canvas");
+  }
+
+  if (!canvasEl) {
+    console.error("Cannot find canvas element for export");
+    return;
+  }
+
+  isExporting.value = true;
+  showExportPanel.value = false;
+
+  exporter = new AnimationExporter(exportConfig.value);
+
+  // Calculate duration - full animation or custom
+  const durationMs = exportConfig.value.duration
+    ? exportConfig.value.duration * 1000
+    : store.totalDurationMs;
+
+  // Reset playback to start
+  store.stop();
+
+  // Wait a frame for reset
+  await new Promise(r => setTimeout(r, 50));
+
+  // Start playback
+  store.play();
+
+  const result = await exporter.exportFromCanvas(
+    canvasEl,
+    durationMs,
+    (progress) => {
+      exportProgress.value = progress;
+    },
+    () => {
+      // Frame callback - advance animation
+      // The store's play() handles animation, we just let it run
+    }
+  );
+
+  isExporting.value = false;
+  store.pause();
+
+  if (result.success) {
+    downloadExport(result);
+    exportProgress.value = {
+      phase: "complete",
+      percent: 100,
+      message: `Exported ${result.filename}`,
+      framesCaptured: exportProgress.value?.totalFrames ?? 0,
+      totalFrames: exportProgress.value?.totalFrames ?? 0,
+    };
+
+    // Clear progress after 3 seconds
+    setTimeout(() => {
+      exportProgress.value = null;
+    }, 3000);
+  } else {
+    exportProgress.value = {
+      phase: "error",
+      percent: 0,
+      message: result.error || "Export failed",
+      framesCaptured: 0,
+      totalFrames: 0,
+    };
+  }
+}
+
+function cancelExport(): void {
+  if (exporter) {
+    exporter.cancel();
+    exporter = null;
+  }
+  isExporting.value = false;
+  exportProgress.value = null;
+  store.pause();
+}
+
+// ---------------------------------------------------------------------------
 // Lifecycle
 // ---------------------------------------------------------------------------
 onMounted(async () => {
@@ -254,6 +360,7 @@ onUnmounted(() => {
     <!-- ── Canvas (2D or 3D based on viewMode) ─────────────────── -->
     <ToolpathCanvas
       v-if="viewMode === '2d'"
+      ref="canvas2DRef"
       class="canvas-area"
       :show-heatmap="showHeatmap"
       :tool-diameter="toolDiameter"
@@ -397,6 +504,17 @@ onUnmounted(() => {
         @click="showHeatmap = !showHeatmap"
       >
         🔥
+      </button>
+
+      <!-- P5: Export button -->
+      <button
+        class="export-btn"
+        :class="{ active: showExportPanel }"
+        :disabled="store.segments.length === 0 || isExporting"
+        title="Export animation"
+        @click="showExportPanel = !showExportPanel"
+      >
+        📹
       </button>
 
       <!-- Memory badge -->
@@ -681,6 +799,120 @@ onUnmounted(() => {
         :show-line-numbers="true"
         :auto-scroll="true"
       />
+    </div>
+
+    <!-- P5: Export Panel -->
+    <div
+      v-if="showExportPanel && !isExporting"
+      class="export-panel"
+    >
+      <div class="panel-header">
+        <span>📹 Export Animation</span>
+        <button @click="showExportPanel = false">✕</button>
+      </div>
+      <div class="export-options">
+        <div class="export-row">
+          <label>Format:</label>
+          <select v-model="exportConfig.format" class="export-select">
+            <option value="webm">WebM Video</option>
+            <option value="gif">GIF Animation</option>
+          </select>
+        </div>
+        <div class="export-row">
+          <label>FPS:</label>
+          <select v-model.number="exportConfig.fps" class="export-select">
+            <option :value="15">15 fps</option>
+            <option :value="24">24 fps</option>
+            <option :value="30">30 fps</option>
+            <option :value="60">60 fps</option>
+          </select>
+        </div>
+        <div class="export-row">
+          <label>Quality:</label>
+          <input
+            v-model.number="exportConfig.quality"
+            type="range"
+            min="0.3"
+            max="1"
+            step="0.1"
+            class="export-slider"
+          >
+          <span class="export-val">{{ Math.round((exportConfig.quality ?? 0.8) * 100) }}%</span>
+        </div>
+        <div class="export-row">
+          <label>Duration:</label>
+          <div class="export-duration">
+            <input
+              v-model.number="exportConfig.duration"
+              type="number"
+              min="1"
+              max="300"
+              step="1"
+              placeholder="Full"
+              class="export-input"
+            >
+            <span class="export-hint">sec (blank = full animation)</span>
+          </div>
+        </div>
+        <div class="export-info">
+          <span v-if="exportConfig.format === 'webm'">
+            📼 WebM: High quality, smaller file, plays in browsers
+          </span>
+          <span v-else>
+            🎞️ GIF: Universal support, larger file, limited colors
+          </span>
+        </div>
+        <button
+          class="export-start-btn"
+          @click="startExport"
+        >
+          Start Export
+        </button>
+      </div>
+    </div>
+
+    <!-- P5: Export Progress Overlay -->
+    <div
+      v-if="isExporting && exportProgress"
+      class="export-overlay"
+    >
+      <div class="export-progress-box">
+        <div class="export-progress-header">
+          <span>{{ exportProgress.phase === 'recording' ? '🔴 Recording' : exportProgress.phase === 'encoding' ? '⚙️ Encoding' : '📹 Exporting' }}</span>
+          <button
+            class="export-cancel-btn"
+            @click="cancelExport"
+          >
+            Cancel
+          </button>
+        </div>
+        <div class="export-progress-info">
+          {{ exportProgress.message }}
+        </div>
+        <div class="export-progress-track">
+          <div
+            class="export-progress-fill"
+            :style="{ width: exportProgress.percent + '%' }"
+          />
+        </div>
+        <div class="export-progress-stats">
+          {{ exportProgress.framesCaptured }} / {{ exportProgress.totalFrames }} frames
+        </div>
+      </div>
+    </div>
+
+    <!-- P5: Export Complete Toast -->
+    <div
+      v-if="!isExporting && exportProgress?.phase === 'complete'"
+      class="export-toast success"
+    >
+      ✅ {{ exportProgress.message }}
+    </div>
+    <div
+      v-if="!isExporting && exportProgress?.phase === 'error'"
+      class="export-toast error"
+    >
+      ❌ {{ exportProgress.message }}
     </div>
   </div>
 </template>
@@ -1131,5 +1363,262 @@ onUnmounted(() => {
   background: linear-gradient(135deg, #5c2a1a 0%, #5c4a1a 50%, #1a4a3a 100%);
   border-color: #e67e22;
   color: #fff;
+}
+
+/* ── P5: Export button ───────────────────────────────────────────── */
+.export-btn {
+  background: #252538;
+  border: 1px solid #3a3a5c;
+  color: #666;
+  border-radius: 4px;
+  width: 30px;
+  height: 28px;
+  font-size: 14px;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
+  flex-shrink: 0;
+}
+
+.export-btn:hover {
+  background: #33334a;
+  color: #e74c3c;
+}
+
+.export-btn.active {
+  background: #3a1a1a;
+  border-color: #e74c3c;
+  color: #e74c3c;
+}
+
+.export-btn:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+/* ── P5: Export Panel ────────────────────────────────────────────── */
+.export-panel {
+  position: absolute;
+  right: 10px;
+  top: 10px;
+  width: 280px;
+  background: #1a1a2e;
+  border: 1px solid #3a3a5c;
+  border-radius: 8px;
+  overflow: hidden;
+  z-index: 15;
+  font-size: 12px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+}
+
+.export-options {
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.export-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.export-row label {
+  min-width: 60px;
+  color: #888;
+  font-size: 11px;
+}
+
+.export-select {
+  flex: 1;
+  padding: 4px 8px;
+  background: #252538;
+  border: 1px solid #3a3a5c;
+  border-radius: 4px;
+  color: #ccc;
+  font-size: 11px;
+  cursor: pointer;
+}
+
+.export-select:hover {
+  border-color: #4a90d9;
+}
+
+.export-slider {
+  flex: 1;
+  accent-color: #4a90d9;
+  height: 4px;
+}
+
+.export-val {
+  min-width: 35px;
+  text-align: right;
+  color: #4a90d9;
+  font-size: 11px;
+}
+
+.export-duration {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex: 1;
+}
+
+.export-input {
+  width: 50px;
+  padding: 4px 6px;
+  background: #252538;
+  border: 1px solid #3a3a5c;
+  border-radius: 4px;
+  color: #ccc;
+  font-size: 11px;
+}
+
+.export-input:focus {
+  outline: none;
+  border-color: #4a90d9;
+}
+
+.export-hint {
+  color: #666;
+  font-size: 10px;
+}
+
+.export-info {
+  padding: 8px;
+  background: #252538;
+  border-radius: 4px;
+  color: #888;
+  font-size: 10px;
+  text-align: center;
+}
+
+.export-start-btn {
+  width: 100%;
+  padding: 8px 16px;
+  background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+  border: none;
+  border-radius: 4px;
+  color: #fff;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: transform 0.1s, box-shadow 0.15s;
+}
+
+.export-start-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(231, 76, 60, 0.4);
+}
+
+/* ── P5: Export Progress Overlay ─────────────────────────────────── */
+.export-overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.85);
+  z-index: 20;
+}
+
+.export-progress-box {
+  width: 320px;
+  background: #1a1a2e;
+  border: 1px solid #3a3a5c;
+  border-radius: 8px;
+  padding: 20px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+}
+
+.export-progress-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+  font-size: 14px;
+  font-weight: 600;
+  color: #e74c3c;
+}
+
+.export-cancel-btn {
+  padding: 4px 12px;
+  background: #252538;
+  border: 1px solid #3a3a5c;
+  border-radius: 4px;
+  color: #888;
+  font-size: 11px;
+  cursor: pointer;
+}
+
+.export-cancel-btn:hover {
+  background: #5c1a1a;
+  border-color: #e74c3c;
+  color: #e74c3c;
+}
+
+.export-progress-info {
+  color: #aaa;
+  font-size: 12px;
+  margin-bottom: 12px;
+  text-align: center;
+}
+
+.export-progress-track {
+  width: 100%;
+  height: 6px;
+  background: #252538;
+  border-radius: 3px;
+  overflow: hidden;
+  margin-bottom: 10px;
+}
+
+.export-progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #e74c3c, #f39c12);
+  transition: width 0.2s ease;
+}
+
+.export-progress-stats {
+  color: #666;
+  font-size: 11px;
+  text-align: center;
+}
+
+/* ── P5: Export Toast ────────────────────────────────────────────── */
+.export-toast {
+  position: absolute;
+  bottom: 100px;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 10px 20px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 500;
+  z-index: 15;
+  animation: toast-slide-up 0.3s ease;
+}
+
+.export-toast.success {
+  background: #1a4a3a;
+  border: 1px solid #2ecc71;
+  color: #2ecc71;
+}
+
+.export-toast.error {
+  background: #5c1a1a;
+  border: 1px solid #e74c3c;
+  color: #e74c3c;
+}
+
+@keyframes toast-slide-up {
+  from {
+    opacity: 0;
+    transform: translateX(-50%) translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
 }
 </style>
