@@ -19,6 +19,7 @@
 | 2026-03-10 | `ba9574fd` | Add drilling CAM module (G83 peck cycle, patterns) | FV-GAP-06 |
 | 2026-03-10 | `64f1a87f` | Add production V-carve module (chipload, stepdown, corner slowdown) | VINE-03 |
 | 2026-03-10 | `49aac7d0` | Mount CAM modules via routers (profiling, binding, vcarve production) | Category 5 API coverage |
+| 2026-03-10 | `611addfa` | Add headstock inlay prompt router (11 templates, AI prompt generation) | INLAY-01 |
 
 ---
 
