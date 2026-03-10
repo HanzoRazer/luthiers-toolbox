@@ -11,6 +11,7 @@
 | 2026-03-10 | `eafaead0` | Wire auth guards (`initAuthGuard`, `requireAuth`, `requireTier`) + add `@safety_critical` to 8 CNC endpoints | P0 blockers (not gap IDs) |
 | 2026-03-10 | `eafaead0` | TypeScript fix: add `PARTIAL` to instrument status union type in `instrumentApi.ts:55` | Build blocker — enables `npm run build` |
 | 2026-03-10 | `14260731` | Commit 7 documentation files including this gap analysis | Documentation |
+| 2026-03-10 | `d80b0799` | Refactor auth store to use SDK instead of raw fetch() | SDK convention compliance |
 
 ---
 
