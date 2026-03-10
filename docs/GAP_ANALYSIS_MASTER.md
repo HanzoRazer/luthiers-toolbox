@@ -24,6 +24,7 @@
 | 2026-03-10 | — | **False positive:** Neck router already mounted in manifest.py line 372 | VINE-04, OM-GAP-07 (already resolved) |
 | 2026-03-10 | `fe2b4e62` | Add SVG-to-DXF `/convert` endpoint in geometry router | VINE-02 |
 | 2026-03-10 | `6cfe4d12` | Add inlay pocket G-code `/export-gcode` endpoint | VINE-01 |
+| 2026-03-10 | `08a7db0d` | Add Phase 3 vectorizer API endpoint `/blueprint/phase3/vectorize` | VEC-GAP-01 |
 
 ---
 
