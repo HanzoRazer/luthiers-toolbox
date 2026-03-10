@@ -15,6 +15,7 @@
 | 2026-03-10 | `7826e6ef` | Add CNC pre-flight validation gate (`preflight_gate.py`) — blocking safety check before G-code execution | CAM safety |
 | 2026-03-10 | `8f74f599` | Add perimeter profiling toolpath generator (`app/cam/profiling/`) | OM-GAP-02, BEN-GAP-03, VINE-07, FV-GAP-03 |
 | 2026-03-10 | `e60e2df0` | Add binding/purfling channel CAM module (`app/cam/binding/`) | OM-GAP-03, OM-GAP-04, OM-PURF-01, OM-PURF-02, BEN-GAP-01 |
+| 2026-03-10 | `bc81f7c5` | Add DXF validation gate (CI check for format, geometry, bounds) | LP-GAP-01, EX-GAP-01, EX-GAP-02, SG-GAP-01 |
 
 ---
 
