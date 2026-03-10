@@ -22,7 +22,7 @@
 | 2026-03-10 | `611addfa` | Add headstock inlay prompt router (11 templates, AI prompt generation) | INLAY-01 |
 | 2026-03-10 | — | **False positive:** Bracing router already mounted in manifest.py line 266 | VINE-08 (already resolved) |
 | 2026-03-10 | — | **False positive:** Neck router already mounted in manifest.py line 372 | VINE-04, OM-GAP-07 (already resolved) |
-| 2026-03-10 | TBD | Add SVG-to-DXF `/convert` endpoint in geometry router | VINE-02 |
+| 2026-03-10 | `fe2b4e62` | Add SVG-to-DXF `/convert` endpoint in geometry router | VINE-02 |
 
 ---
 
