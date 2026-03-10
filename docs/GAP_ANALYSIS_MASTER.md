@@ -1,6 +1,16 @@
 # Gap Analysis Master — All Instrument Build Handoffs
 
-> **Generated:** 2026-03-09 | **Updated:** 2026-03-09 | **Sources:** 11 build handoff documents | **Total Gaps:** 113
+> **Generated:** 2026-03-09 | **Updated:** 2026-03-10 | **Sources:** 11 build handoff documents | **Total Gaps:** 113
+
+---
+
+## Remediation Log
+
+| Date | Commit | Fix | Gaps Resolved |
+|------|--------|-----|---------------|
+| 2026-03-10 | `eafaead0` | Wire auth guards (`initAuthGuard`, `requireAuth`, `requireTier`) + add `@safety_critical` to 8 CNC endpoints | P0 blockers (not gap IDs) |
+| 2026-03-10 | `eafaead0` | TypeScript fix: add `PARTIAL` to instrument status union type in `instrumentApi.ts:55` | Build blocker — enables `npm run build` |
+| 2026-03-10 | `14260731` | Commit 7 documentation files including this gap analysis | Documentation |
 
 ---
 
