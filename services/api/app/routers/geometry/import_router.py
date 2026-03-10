@@ -269,6 +269,72 @@ async def import_geometry(request: Request):
         raise HTTPException(400, "Provide either JSON geometry or a file (.svg/.dxf)")
 
 
+@router.post("/convert")
+async def convert_svg_to_dxf(request: Request):
+    """
+    Convert SVG file to DXF format in a single step.
+
+    This is a convenience endpoint that chains /import (SVG parse) and /export (DXF write)
+    for Art Studio workflows where SVG output needs to feed into CAM pipelines.
+
+    Accepts:
+        - multipart/form-data with .svg file
+
+    Returns:
+        DXF file as attachment
+
+    Resolves: VINE-02 (SVG -> DXF format converter missing)
+    """
+    from ...util.exporters import export_dxf
+    from fastapi import Response
+
+    content_type = request.headers.get("content-type", "")
+
+    if "multipart/form-data" not in content_type:
+        raise HTTPException(400, "Upload an SVG file as multipart/form-data")
+
+    form = await request.form()
+    file = form.get("file")
+
+    if not file or not isinstance(file, UploadFile):
+        raise HTTPException(400, "Provide an SVG file to convert")
+
+    data = await file.read()
+
+    # Validate file size
+    if len(data) > MAX_FILE_SIZE_BYTES:
+        raise HTTPException(400, f"File exceeds {MAX_FILE_SIZE_BYTES / 1024 / 1024:.0f}MB limit")
+
+    name = (file.filename or "").lower()
+    if not name.endswith(".svg"):
+        raise HTTPException(415, "Only .svg files supported for conversion to DXF")
+
+    # Parse SVG to canonical geometry
+    segs = _svg_path_to_segments(data.decode(errors='ignore'))
+
+    # Validate segment count
+    if len(segs) > MAX_SEGMENTS:
+        raise HTTPException(400, f"Geometry exceeds {MAX_SEGMENTS} segment limit")
+
+    if not segs:
+        raise HTTPException(400, "SVG contains no valid path geometry")
+
+    # Build canonical geometry
+    geom = {"units": "mm", "paths": segs}
+
+    # Export to DXF
+    dxf_content = export_dxf(geom, meta="; Converted from SVG via /convert endpoint")
+
+    # Derive output filename
+    stem = name.rsplit(".", 1)[0] if "." in name else "converted"
+
+    return Response(
+        content=dxf_content,
+        media_type="application/dxf",
+        headers={"Content-Disposition": f'attachment; filename="{stem}.dxf"'},
+    )
+
+
 @router.post("/parity")
 def parity(body: ParityRequest) -> Dict[str, Any]:
     """

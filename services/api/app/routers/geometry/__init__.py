@@ -6,6 +6,7 @@ Aggregates all geometry routers for import/export operations.
 
 Endpoints:
   POST /import           - Parse DXF/SVG/JSON to canonical format
+  POST /convert          - Convert SVG file to DXF (one-step, VINE-02)
   POST /parity           - Validate design vs toolpath accuracy
   POST /export           - Single format export (DXF or SVG)
   POST /export_gcode     - G-code with post-processor headers/footers
