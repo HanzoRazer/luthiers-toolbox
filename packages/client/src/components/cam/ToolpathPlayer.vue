@@ -21,6 +21,7 @@ import ToolpathCanvas from "./ToolpathCanvas.vue";
 import ToolpathCanvas3D from "./ToolpathCanvas3D.vue";
 import GcodeViewer from "./GcodeViewer.vue";
 import MemoryWarning from "./MemoryWarning.vue";
+import ToolpathStats from "./ToolpathStats.vue";
 import { useToolpathPlayerStore } from "@/stores/useToolpathPlayerStore";
 import { useTimeEstimates } from "@/composables/useTimeEstimates";
 import { validateGcode, type ValidationResult } from "@/util/gcodeValidator";
@@ -130,6 +131,9 @@ const showHeatmap = ref(false);
 
 // P5: Measurements panel
 const showMeasurementsPanel = ref(true);
+
+// P5: Statistics panel
+const showStatsPanel = ref(false);
 
 // P5: Export animation
 const showExportPanel = ref(false);
@@ -578,6 +582,17 @@ onUnmounted(() => {
         ⌨️
       </button>
 
+      <!-- P5: Statistics panel toggle -->
+      <button
+        class="stats-btn"
+        :class="{ active: showStatsPanel }"
+        :disabled="store.segments.length === 0"
+        title="Toolpath statistics"
+        @click="showStatsPanel = !showStatsPanel"
+      >
+        📊
+      </button>
+
       <!-- Memory badge -->
       <div
         v-if="store.memoryInfo.segmentCount > 0"
@@ -1022,6 +1037,18 @@ onUnmounted(() => {
           </div>
         </div>
       </div>
+    </div>
+
+    <!-- P5: Statistics Panel -->
+    <div
+      v-if="showStatsPanel && store.segments.length > 0"
+      class="stats-panel-container"
+    >
+      <div class="panel-header">
+        <span>📊 Toolpath Statistics</span>
+        <button @click="showStatsPanel = false">✕</button>
+      </div>
+      <ToolpathStats :segments="store.segments" />
     </div>
 
     <!-- P5: Measurements Panel -->
@@ -2072,5 +2099,78 @@ onUnmounted(() => {
 .shortcut-desc {
   color: #aaa;
   flex: 1;
+}
+
+/* ── P5: Stats button ────────────────────────────────────────────────── */
+.stats-btn {
+  background: #252538;
+  border: 1px solid #3a3a5c;
+  color: #666;
+  border-radius: 4px;
+  width: 30px;
+  height: 28px;
+  font-size: 14px;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
+  flex-shrink: 0;
+}
+
+.stats-btn:hover {
+  background: #33334a;
+  color: #3498db;
+}
+
+.stats-btn.active {
+  background: #1a2a4a;
+  border-color: #3498db;
+  color: #3498db;
+}
+
+.stats-btn:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+/* ── P5: Stats Panel ─────────────────────────────────────────────────── */
+.stats-panel-container {
+  position: absolute;
+  left: 10px;
+  top: 10px;
+  width: 380px;
+  max-height: calc(100% - 120px);
+  background: #1a1a2e;
+  border: 1px solid #3498db;
+  border-radius: 8px;
+  overflow: hidden;
+  z-index: 12;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 4px 20px rgba(52, 152, 219, 0.2);
+}
+
+.stats-panel-container .panel-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 12px;
+  background: linear-gradient(135deg, #1a2a4a 0%, #1a1a2e 100%);
+  border-bottom: 1px solid #3498db;
+  color: #3498db;
+  font-size: 12px;
+  font-weight: 600;
+  flex-shrink: 0;
+}
+
+.stats-panel-container .panel-header button {
+  background: transparent;
+  border: none;
+  color: #666;
+  cursor: pointer;
+  font-size: 14px;
+  padding: 0 4px;
+}
+
+.stats-panel-container .panel-header button:hover {
+  color: #3498db;
 }
 </style>
