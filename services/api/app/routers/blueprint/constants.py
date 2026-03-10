@@ -86,6 +86,22 @@ except ImportError:
 
 
 # =============================================================================
+# PHASE 3 VECTORIZER (PRODUCTION ML + OCR)
+# =============================================================================
+
+PHASE3_AVAILABLE = False
+extract_guitar_blueprint = None  # type: ignore
+Phase3Vectorizer = None  # type: ignore
+
+try:
+    from vectorizer_phase3 import extract_guitar_blueprint, Phase3Vectorizer
+    PHASE3_AVAILABLE = True
+    logger.info("Phase 3 vectorizer loaded successfully")
+except ImportError as e:
+    logger.warning(f"Phase 3 vectorizer not available: {e}")
+
+
+# =============================================================================
 # CALIBRATION MODULE (PIXEL-TO-INCH CONVERSION)
 # =============================================================================
 
@@ -103,4 +119,3 @@ try:
     logger.info("Calibration module loaded successfully")
 except ImportError as e:
     logger.warning(f"Calibration module not available: {e}")
-    pass
