@@ -17,6 +17,7 @@
 | 2026-03-10 | `e60e2df0` | Add binding/purfling channel CAM module (`app/cam/binding/`) | OM-GAP-03, OM-GAP-04, OM-PURF-01, OM-PURF-02, BEN-GAP-01 |
 | 2026-03-10 | `bc81f7c5` | Add DXF validation gate (CI check for format, geometry, bounds) | LP-GAP-01, EX-GAP-01, EX-GAP-02, SG-GAP-01 |
 | 2026-03-10 | `ba9574fd` | Add drilling CAM module (G83 peck cycle, patterns) | FV-GAP-06 |
+| 2026-03-10 | `64f1a87f` | Add production V-carve module (chipload, stepdown, corner slowdown) | VINE-03 |
 
 ---
 
