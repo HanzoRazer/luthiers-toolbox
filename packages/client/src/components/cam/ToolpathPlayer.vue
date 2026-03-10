@@ -86,6 +86,9 @@ const canvas3DRef = ref<InstanceType<typeof ToolpathCanvas3D> | null>(null);
 // P5: G-code viewer panel
 const showGcodePanel = ref(false);
 
+// P5: Heatmap mode
+const showHeatmap = ref(false);
+
 // ---------------------------------------------------------------------------
 // Machine state array (P3 M-code tracking)
 // ---------------------------------------------------------------------------
@@ -252,6 +255,8 @@ onUnmounted(() => {
     <ToolpathCanvas
       v-if="viewMode === '2d'"
       class="canvas-area"
+      :show-heatmap="showHeatmap"
+      :tool-diameter="toolDiameter"
     />
     <ToolpathCanvas3D
       v-else
@@ -260,6 +265,7 @@ onUnmounted(() => {
       :tool-diameter="toolDiameter"
       :show-stock="true"
       :show-grid="true"
+      :show-heatmap="showHeatmap"
     />
 
     <!-- ── Loading overlay with progress (P1) ────────────────── -->
@@ -382,6 +388,16 @@ onUnmounted(() => {
           3D
         </button>
       </div>
+
+      <!-- P5: Heatmap toggle -->
+      <button
+        class="heatmap-btn"
+        :class="{ active: showHeatmap }"
+        title="Toggle engagement heatmap"
+        @click="showHeatmap = !showHeatmap"
+      >
+        🔥
+      </button>
 
       <!-- Memory badge -->
       <div
@@ -1090,5 +1106,30 @@ onUnmounted(() => {
 .clear-selection-btn:hover {
   background: #33334a !important;
   color: #ffd700 !important;
+}
+
+/* ── P5: Heatmap toggle ──────────────────────────────────────────── */
+.heatmap-btn {
+  background: #252538;
+  border: 1px solid #3a3a5c;
+  color: #666;
+  border-radius: 4px;
+  width: 30px;
+  height: 28px;
+  font-size: 14px;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
+  flex-shrink: 0;
+}
+
+.heatmap-btn:hover {
+  background: #33334a;
+  color: #e67e22;
+}
+
+.heatmap-btn.active {
+  background: linear-gradient(135deg, #5c2a1a 0%, #5c4a1a 50%, #1a4a3a 100%);
+  border-color: #e67e22;
+  color: #fff;
 }
 </style>
