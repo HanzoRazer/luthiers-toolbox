@@ -88,3 +88,6 @@ export type {
 
 export { useCommandPalette } from './useCommandPalette'
 export type { Command } from './useCommandPalette'
+
+export { useGcodeFetcher } from './useGcodeFetcher'
+export type { GcodeResult, UseGcodeFetcherReturn } from './useGcodeFetcher'
