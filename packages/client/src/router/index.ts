@@ -490,6 +490,13 @@ const routes: RouteRecordRaw[] = [
     name: "DevSandbox",
     component: () => import("@/views/dev/SandboxView.vue"),
   },
+
+  // Dev: CAD Layout Demo — VCarve/Fusion 360 style component showcase
+  {
+    path: "/dev/cad-layout-demo",
+    name: "DevCadLayoutDemo",
+    component: () => import("@/views/dev/CadLayoutDemo.vue"),
+  },
 ];
 
 const router = createRouter({
