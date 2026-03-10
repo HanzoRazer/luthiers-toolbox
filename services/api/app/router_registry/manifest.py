@@ -621,5 +621,14 @@ ROUTER_MANIFEST: List[RouterSpec] = [
         tags=["Business", "Estimator"],
         category="business",
     ),
+    # -------------------------------------------------------------------------
+    # HEADSTOCK INLAY (AI prompt generation)
+    # -------------------------------------------------------------------------
+    RouterSpec(
+        module="app.cam.headstock.router",
+        prefix="",  # router has /api/cam/headstock/inlay prefix
+        tags=["CAM", "Headstock", "Inlay"],
+        category="cam",
+    ),
 
 ]
