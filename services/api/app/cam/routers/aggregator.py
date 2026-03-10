@@ -97,6 +97,24 @@ try:
 except ImportError:
     rosette_router = None
 
+# Phase 4.1: Profiling (perimeter with tabs)
+try:
+    from .profiling import router as profiling_router
+except ImportError:
+    profiling_router = None
+
+# Phase 4.2: Binding/Purfling
+try:
+    from .binding import router as binding_router
+except ImportError:
+    binding_router = None
+
+# Phase 4.3: Production V-Carve (chipload-based)
+try:
+    from .vcarve import router as vcarve_production_router
+except ImportError:
+    vcarve_production_router = None
+
 
 # =============================================================================
 # AGGREGATOR ROUTER
@@ -137,6 +155,16 @@ if pipeline_router:
 
 if utility_router:
     cam_router.include_router(utility_router, prefix="/utility", tags=["CAM Utility"])
+
+
+if profiling_router:
+    cam_router.include_router(profiling_router, prefix="/profiling", tags=["CAM Profiling"])
+
+if binding_router:
+    cam_router.include_router(binding_router, prefix="/binding", tags=["CAM Binding"])
+
+if vcarve_production_router:
+    cam_router.include_router(vcarve_production_router, prefix="/vcarve", tags=["CAM V-Carve"])
 
 
 __all__ = ["cam_router"]
