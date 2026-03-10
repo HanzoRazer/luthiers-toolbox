@@ -41,6 +41,10 @@ except ImportError:
     def validate_version(v: str) -> str:
         return "R12"
 
+# Import G-code generation for VINE-01
+from ._inlay_gcode_addon import InlayGcodeRequest, generate_inlay_gcode
+from ..core.safety import safety_critical
+
 router = APIRouter(
     prefix="/art-studio/inlay",
     tags=["Art Studio - Inlay"],
@@ -373,3 +377,29 @@ def _generate_preview_svg(result: InlayCalcResult, scale_length_mm: float) -> st
 </svg>'''
     
     return svg
+
+# --------------------------------------------------------------------- #
+# G-code Export Endpoint (VINE-01)
+# --------------------------------------------------------------------- #
+
+@router.post("/export-gcode")
+@safety_critical
+def export_inlay_gcode(req: InlayGcodeRequest) -> Response:
+    """
+    Generate pocket milling G-code for inlay cavities.
+    
+    This endpoint bridges inlay design to CNC machining by:
+    1. Calculating inlay shape positions
+    2. Converting each shape to a pocket boundary
+    3. Generating adaptive clearing toolpaths
+    4. Emitting G-code with proper headers/footers
+    
+    Resolves: VINE-01 (Inlay DXF -> pocket milling G-code bridge)
+    """
+    try:
+        return generate_inlay_gcode(req, logger)
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.exception("Inlay G-code export failed")
+        raise HTTPException(status_code=500, detail=str(e))
