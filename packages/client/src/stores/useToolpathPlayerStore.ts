@@ -13,6 +13,7 @@ import { defineStore } from "pinia";
 import { ref, computed } from "vue";
 import { simulate } from "@/sdk/endpoints/cam/simulate";
 import type { MoveSegment, SimulateBounds } from "@/sdk/endpoints/cam/simulate";
+import { MeasurementTool, type Measurement, type Point3D } from "@/util/measurementTool";
 
 // ---------------------------------------------------------------------------
 // Constants
@@ -135,6 +136,12 @@ export const useToolpathPlayerStore = defineStore("toolpathPlayer", () => {
   // ── P5: Segment selection for G-code line sync ───────────────────────────
   const selectedSegmentIndex = ref<number | null>(null);
   const sourceGcode = ref<string>("");
+
+  // ── P5: Measurement tool ────────────────────────────────────────────────
+  const measureMode = ref(false);
+  const measureTool = new MeasurementTool();
+  const measurements = ref<Measurement[]>([]);
+  const pendingMeasureStart = ref<Point3D | null>(null);
 
   // ── RAF internals ────────────────────────────────────────────────────────
   let _rafHandle = 0;
@@ -382,6 +389,48 @@ export const useToolpathPlayerStore = defineStore("toolpathPlayer", () => {
     currentTimeMs.value = idx > 0 ? _cumulativeMs[idx - 1] ?? 0 : 0;
   }
 
+  // ── P5: Measurement actions ───────────────────────────────────────────────
+  function toggleMeasureMode(): void {
+    measureMode.value = !measureMode.value;
+    if (!measureMode.value) {
+      measureTool.cancel();
+      pendingMeasureStart.value = null;
+    }
+  }
+
+  function addMeasurePoint(point: Point3D): Measurement | null {
+    if (!measureMode.value) return null;
+
+    if (!measureTool.hasPendingStart()) {
+      measureTool.setStart(point);
+      pendingMeasureStart.value = point;
+      return null;
+    } else {
+      const measurement = measureTool.complete(point);
+      pendingMeasureStart.value = null;
+      if (measurement) {
+        measurements.value = measureTool.getMeasurements();
+      }
+      return measurement;
+    }
+  }
+
+  function cancelMeasurement(): void {
+    measureTool.cancel();
+    pendingMeasureStart.value = null;
+  }
+
+  function removeMeasurement(id: string): void {
+    measureTool.remove(id);
+    measurements.value = measureTool.getMeasurements();
+  }
+
+  function clearMeasurements(): void {
+    measureTool.clear();
+    measurements.value = [];
+    pendingMeasureStart.value = null;
+  }
+
   function stepForward(): void {
     const next = currentSegmentIndex.value + 1;
     if (next < segments.value.length) {
@@ -433,6 +482,12 @@ export const useToolpathPlayerStore = defineStore("toolpathPlayer", () => {
     selectedSegmentIndex,
     sourceGcode,
 
+    // P5: Measurement state
+    measureMode,
+    measurements,
+    pendingMeasureStart,
+    measureTool,
+
     // Computed
     totalDurationMs,
     progress,
@@ -460,5 +515,12 @@ export const useToolpathPlayerStore = defineStore("toolpathPlayer", () => {
     selectSegment,
     clearSelection,
     jumpToSelected,
+
+    // P5: Measurement actions
+    toggleMeasureMode,
+    addMeasurePoint,
+    cancelMeasurement,
+    removeMeasurement,
+    clearMeasurements,
   };
 });

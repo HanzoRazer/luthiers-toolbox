@@ -91,6 +91,9 @@ const showGcodePanel = ref(false);
 // P5: Heatmap mode
 const showHeatmap = ref(false);
 
+// P5: Measurements panel
+const showMeasurementsPanel = ref(true);
+
 // P5: Export animation
 const showExportPanel = ref(false);
 const isExporting = ref(false);
@@ -517,6 +520,17 @@ onUnmounted(() => {
         📹
       </button>
 
+      <!-- P5: Measure button -->
+      <button
+        class="measure-btn"
+        :class="{ active: store.measureMode }"
+        :disabled="store.segments.length === 0"
+        title="Measure distance (click two points)"
+        @click="store.toggleMeasureMode()"
+      >
+        📏
+      </button>
+
       <!-- Memory badge -->
       <div
         v-if="store.memoryInfo.segmentCount > 0"
@@ -913,6 +927,65 @@ onUnmounted(() => {
       class="export-toast error"
     >
       ❌ {{ exportProgress.message }}
+    </div>
+
+    <!-- P5: Measure mode indicator -->
+    <div
+      v-if="store.measureMode"
+      class="measure-indicator"
+    >
+      <span v-if="!store.pendingMeasureStart">📏 Click first point</span>
+      <span v-else>📏 Click second point</span>
+      <button
+        class="measure-cancel"
+        @click="store.cancelMeasurement()"
+      >
+        Cancel
+      </button>
+    </div>
+
+    <!-- P5: Measurements Panel -->
+    <div
+      v-if="store.measurements.length > 0"
+      class="measurements-panel"
+    >
+      <div class="panel-header">
+        <span>📏 Measurements</span>
+        <div class="panel-header-actions">
+          <button
+            title="Clear all"
+            @click="store.clearMeasurements()"
+          >
+            Clear
+          </button>
+          <button @click="showMeasurementsPanel = !showMeasurementsPanel">
+            {{ showMeasurementsPanel ? '▼' : '▲' }}
+          </button>
+        </div>
+      </div>
+      <ul
+        v-if="showMeasurementsPanel"
+        class="measurements-list"
+      >
+        <li
+          v-for="m in store.measurements"
+          :key="m.id"
+        >
+          <span class="measure-dist">{{ store.measureTool.formatDistance(m.distance) }}</span>
+          <span class="measure-details">
+            ΔX: {{ m.deltaX.toFixed(2) }}
+            ΔY: {{ m.deltaY.toFixed(2) }}
+            ΔZ: {{ m.deltaZ.toFixed(2) }}
+          </span>
+          <button
+            class="measure-remove"
+            title="Remove"
+            @click="store.removeMeasurement(m.id)"
+          >
+            ✕
+          </button>
+        </li>
+      </ul>
     </div>
   </div>
 </template>
@@ -1620,5 +1693,166 @@ onUnmounted(() => {
     opacity: 1;
     transform: translateX(-50%) translateY(0);
   }
+}
+
+/* ── P5: Measure button ──────────────────────────────────────────── */
+.measure-btn {
+  background: #252538;
+  border: 1px solid #3a3a5c;
+  color: #666;
+  border-radius: 4px;
+  width: 30px;
+  height: 28px;
+  font-size: 14px;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
+  flex-shrink: 0;
+}
+
+.measure-btn:hover {
+  background: #33334a;
+  color: #00ffff;
+}
+
+.measure-btn.active {
+  background: #1a3a4a;
+  border-color: #00ffff;
+  color: #00ffff;
+  box-shadow: 0 0 8px rgba(0, 255, 255, 0.3);
+}
+
+.measure-btn:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+/* ── P5: Measure mode indicator ──────────────────────────────────── */
+.measure-indicator {
+  position: absolute;
+  top: 10px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 16px;
+  background: rgba(0, 255, 255, 0.15);
+  border: 1px solid #00ffff;
+  border-radius: 6px;
+  font-size: 12px;
+  color: #00ffff;
+  z-index: 15;
+  animation: pulse-border 1.5s ease-in-out infinite;
+}
+
+@keyframes pulse-border {
+  0%, 100% { box-shadow: 0 0 5px rgba(0, 255, 255, 0.3); }
+  50% { box-shadow: 0 0 15px rgba(0, 255, 255, 0.6); }
+}
+
+.measure-cancel {
+  padding: 3px 10px;
+  background: transparent;
+  border: 1px solid #00ffff;
+  border-radius: 4px;
+  color: #00ffff;
+  font-size: 11px;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.measure-cancel:hover {
+  background: rgba(0, 255, 255, 0.2);
+}
+
+/* ── P5: Measurements Panel ──────────────────────────────────────── */
+.measurements-panel {
+  position: absolute;
+  right: 10px;
+  top: 10px;
+  width: 260px;
+  background: #1a1a2e;
+  border: 1px solid #00ffff;
+  border-radius: 8px;
+  overflow: hidden;
+  z-index: 12;
+  font-size: 11px;
+  box-shadow: 0 4px 20px rgba(0, 255, 255, 0.15);
+}
+
+.measurements-panel .panel-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 12px;
+  background: rgba(0, 255, 255, 0.1);
+  border-bottom: 1px solid #00ffff;
+  color: #00ffff;
+}
+
+.measurements-panel .panel-header-actions {
+  display: flex;
+  gap: 6px;
+}
+
+.measurements-panel .panel-header-actions button {
+  background: transparent;
+  border: 1px solid #3a3a5c;
+  border-radius: 3px;
+  color: #888;
+  padding: 2px 6px;
+  font-size: 10px;
+  cursor: pointer;
+}
+
+.measurements-panel .panel-header-actions button:hover {
+  border-color: #00ffff;
+  color: #00ffff;
+}
+
+.measurements-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+.measurements-list li {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  border-bottom: 1px solid #252538;
+  color: #ccc;
+}
+
+.measurements-list li:last-child {
+  border-bottom: none;
+}
+
+.measure-dist {
+  color: #00ffff;
+  font-weight: 600;
+  min-width: 70px;
+}
+
+.measure-details {
+  flex: 1;
+  color: #666;
+  font-size: 10px;
+}
+
+.measure-remove {
+  background: transparent;
+  border: none;
+  color: #666;
+  font-size: 12px;
+  cursor: pointer;
+  padding: 2px 6px;
+}
+
+.measure-remove:hover {
+  color: #e74c3c;
 }
 </style>
