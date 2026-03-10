@@ -25,6 +25,8 @@ import ToolpathStats from "./ToolpathStats.vue";
 import ToolpathFilter from "./ToolpathFilter.vue";
 import ToolpathAnnotations from "./ToolpathAnnotations.vue";
 import ToolpathComparePanel from "./ToolpathComparePanel.vue";
+import ToolpathAudioPanel from "./ToolpathAudioPanel.vue";
+import { getAudioEngine, type MoveSegment as AudioMoveSegment } from "@/util/toolpathAudio";
 import { useToolpathPlayerStore } from "@/stores/useToolpathPlayerStore";
 import { annotationManager, type Annotation } from "@/util/toolpathAnnotations";
 import type { MoveSegment as CompareMoveSegment } from "@/util/toolpathComparison";
@@ -152,6 +154,7 @@ const showComparePanel = ref(false);
 const compareSegments = ref<CompareMoveSegment[]>([]);
 const showCompareOverlay = ref(false);
 
+// P5: Audio panelconst showAudioPanel = ref(false);const audioEngine = getAudioEngine();
 // P5: Export animation
 const showExportPanel = ref(false);
 const isExporting = ref(false);
@@ -422,6 +425,7 @@ function handleCompareSegments(segments: CompareMoveSegment[]): void {
 function handleCompareOverlayToggle(enabled: boolean): void {
   showCompareOverlay.value = enabled;
 }
+// ---------------------------------------------------------------------------// P5: Audio// ---------------------------------------------------------------------------// Initialize audio engine bounds when segments loadwatch(  () => store.bounds,  (bounds) => {    if (bounds) {      audioEngine.setBounds(bounds.z_min, bounds.z_max, 100, 3000);    }  });// Sync audio with playback statewatch(  () => store.playState,  (state) => {    if (state === "playing") {      audioEngine.start();    } else {      audioEngine.stop();    }  });// Update audio based on current segmentwatch(  () => [store.currentSegmentIndex, store.progress] as const,  ([segIdx, progress]) => {    const seg = store.segments[segIdx];    if (seg && store.playState === "playing") {      const segProgress = (progress * store.totalDurationMs - getSegmentStartTime(segIdx)) / seg.duration_ms;      audioEngine.updateForSegment(seg as AudioMoveSegment, Math.max(0, Math.min(1, segProgress)));    }  });// Helper to get segment start timefunction getSegmentStartTime(idx: number): number {  let time = 0;  for (let i = 0; i < idx; i++) {    time += store.segments[i].duration_ms;  }  return time;}
 
 // ---------------------------------------------------------------------------
 // Lifecycle
@@ -667,6 +671,7 @@ onUnmounted(() => {
       >
         🔀
       </button>
+<!-- P5: Audio panel toggle -->      <button        class="audio-btn"        :class="{ active: showAudioPanel }"        :disabled="store.segments.length === 0"        title="Machine sounds"        @click="showAudioPanel = !showAudioPanel"      >        🔊      </button>
 
       <!-- Memory badge -->
       <div
@@ -1177,6 +1182,7 @@ onUnmounted(() => {
         @overlay-toggle="handleCompareOverlayToggle"
       />
     </div>
+<!-- P5: Audio Panel -->    <div      v-if="showAudioPanel && store.segments.length > 0"      class="audio-panel-container"    >      <ToolpathAudioPanel        @close="showAudioPanel = false"      />    </div>
 
     <!-- P5: Measurements Panel -->
     <div
@@ -2515,4 +2521,5 @@ onUnmounted(() => {
   overflow: hidden;
   border: 1px solid #9b59b6;
 }
+/* ── P5: Audio button ───────────────────────────────────────────────── */.audio-btn {  display: flex;  align-items: center;  justify-content: center;  width: 30px;  height: 26px;  padding: 0;  background: #2a2a3a;  border: 1px solid #444;  border-radius: 4px;  color: #888;  font-size: 14px;  cursor: pointer;  transition: all 0.15s ease;}.audio-btn:hover {  background: #3a3a4a;  color: #e9a840;  border-color: #555;}.audio-btn.active {  background: rgba(233, 168, 64, 0.2);  border-color: #e9a840;  color: #e9a840;}.audio-btn:disabled {  opacity: 0.4;  cursor: not-allowed;}/* ── P5: Audio Panel ────────────────────────────────────────────────── */.audio-panel-container {  position: absolute;  right: 10px;  top: 10px;  width: 320px;  max-height: calc(100% - 120px);  z-index: 15;  display: flex;  flex-direction: column;  box-shadow: 0 4px 20px rgba(233, 168, 64, 0.2);}.audio-panel-container > :deep(.audio-panel) {  flex: 1;  overflow: hidden;  border: 1px solid #e9a840;  border-radius: 8px;}
 </style>
