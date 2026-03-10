@@ -13,6 +13,7 @@
 import { defineStore } from "pinia";
 import { ref, computed } from "vue";
 import { supabase, isSupabaseConfigured, getAccessToken } from "@/auth/supabase";
+import { auth } from "@/sdk/endpoints";
 import type {
   UserProfile,
   TierInfo,
@@ -218,15 +219,7 @@ export const useAuthStore = defineStore("auth", () => {
     if (!token) return;
 
     try {
-      const res = await fetch("/api/auth/me", {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-
-      if (res.ok) {
-        user.value = await res.json();
-      }
+      user.value = await auth.getProfile(token);
     } catch (e) {
       console.error("[auth] Failed to fetch profile:", e);
     }
@@ -240,15 +233,7 @@ export const useAuthStore = defineStore("auth", () => {
     if (!token) return;
 
     try {
-      const res = await fetch("/api/auth/tier", {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-
-      if (res.ok) {
-        tierInfo.value = await res.json();
-      }
+      tierInfo.value = await auth.getTierInfo(token);
     } catch (e) {
       console.error("[auth] Failed to fetch tier info:", e);
     }
@@ -265,23 +250,8 @@ export const useAuthStore = defineStore("auth", () => {
     error.value = null;
 
     try {
-      const res = await fetch("/api/auth/me", {
-        method: "PATCH",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify(updates),
-      });
-
-      if (res.ok) {
-        user.value = await res.json();
-        return true;
-      }
-
-      const data = await res.json();
-      error.value = data.detail ?? "Failed to update profile";
-      return false;
+      user.value = await auth.updateProfile(token, updates);
+      return true;
     } catch (e) {
       error.value = e instanceof Error ? e.message : "Update failed";
       return false;

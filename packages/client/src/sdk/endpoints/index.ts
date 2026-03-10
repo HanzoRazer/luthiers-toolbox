@@ -11,6 +11,7 @@
  *   const { result, requestId } = await cam.runPipeline(formData);
  */
 
+export * as auth from "./auth";
 export * as cam from "./cam/cam";
 export * as artDesignFirstWorkflow from "./artDesignFirstWorkflow";
 export * as rmosAcoustics from "./rmosAcoustics";
