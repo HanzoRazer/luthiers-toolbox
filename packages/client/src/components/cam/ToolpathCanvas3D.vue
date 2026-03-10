@@ -20,6 +20,7 @@ import * as THREE from "three";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
 import { useToolpathPlayerStore } from "@/stores/useToolpathPlayerStore";
 import { EngagementAnalyzer, type EngagementReport } from "@/util/engagementAnalyzer";
+import { MEASUREMENT_COLORS, type Measurement, type Point3D } from "@/util/measurementTool";
 import type { MoveSegment } from "@/sdk/endpoints/cam";
 
 // ---------------------------------------------------------------------------
@@ -77,6 +78,11 @@ let toolMesh: THREE.Mesh;
 let stockMesh: THREE.Mesh;
 let gridHelper: THREE.GridHelper;
 let selectedLine: THREE.Line | null = null;
+
+// P5: Measurement objects
+let measurementGroup: THREE.Group;
+let pendingMeasureLine: THREE.Line | null = null;
+let pendingMeasureStartSphere: THREE.Mesh | null = null;
 
 // P5: Raycasting for segment selection
 const raycaster = new THREE.Raycaster();
@@ -168,6 +174,9 @@ function initThree(): void {
   if (props.showGrid) {
     createGrid();
   }
+
+  // P5: Measurement group
+  initMeasurementGroup();
 
   // Start animation loop
   animate();
@@ -418,6 +427,31 @@ function onCanvasClick(event: MouseEvent): void {
   const allLines = [...completedLines.children, ...upcomingLines.children];
   const intersects = raycaster.intersectObjects(allLines, false);
 
+  // P5: Handle measure mode
+  if (store.measureMode) {
+    let measurePoint: Point3D;
+
+    if (intersects.length > 0) {
+      // Snap to intersection point
+      const point = intersects[0].point;
+      measurePoint = { x: point.x, y: point.y, z: point.z };
+    } else {
+      // Try to find a point on the XY plane (Z=0)
+      const plane = new THREE.Plane(new THREE.Vector3(0, 0, 1), 0);
+      const intersectPoint = new THREE.Vector3();
+      raycaster.ray.intersectPlane(plane, intersectPoint);
+      if (intersectPoint) {
+        measurePoint = { x: intersectPoint.x, y: intersectPoint.y, z: 0 };
+      } else {
+        return;
+      }
+    }
+
+    store.addMeasurePoint(measurePoint);
+    buildMeasurements();
+    return;
+  }
+
   if (intersects.length > 0) {
     const hit = intersects[0].object;
     const segmentIndex = hit.userData.segmentIndex;
@@ -436,8 +470,130 @@ function clearGroup(group: THREE.Group): void {
       child.geometry.dispose();
       (child.material as THREE.Material).dispose();
     }
+    if (child instanceof THREE.Mesh) {
+      child.geometry.dispose();
+      (child.material as THREE.Material).dispose();
+    }
     group.remove(child);
   }
+}
+
+// ---------------------------------------------------------------------------
+// P5: Measurement Rendering
+// ---------------------------------------------------------------------------
+
+function initMeasurementGroup(): void {
+  measurementGroup = new THREE.Group();
+  measurementGroup.name = "measurements";
+  scene.add(measurementGroup);
+}
+
+function createMeasurementSphere(point: Point3D, color: number): THREE.Mesh {
+  const geometry = new THREE.SphereGeometry(2, 16, 16);
+  const material = new THREE.MeshBasicMaterial({ color });
+  const sphere = new THREE.Mesh(geometry, material);
+  sphere.position.set(point.x, point.y, point.z);
+  return sphere;
+}
+
+function createMeasurementLine(start: Point3D, end: Point3D, color: number): THREE.Line {
+  const points = [
+    new THREE.Vector3(start.x, start.y, start.z),
+    new THREE.Vector3(end.x, end.y, end.z),
+  ];
+  const geometry = new THREE.BufferGeometry().setFromPoints(points);
+  const material = new THREE.LineDashedMaterial({
+    color,
+    dashSize: 3,
+    gapSize: 2,
+    linewidth: 2,
+  });
+  const line = new THREE.Line(geometry, material);
+  line.computeLineDistances();
+  return line;
+}
+
+function buildMeasurements(): void {
+  clearGroup(measurementGroup);
+
+  // Draw completed measurements
+  for (const m of store.measurements) {
+    // Start sphere
+    const startSphere = createMeasurementSphere(m.start, MEASUREMENT_COLORS.pointHex);
+    measurementGroup.add(startSphere);
+
+    // End sphere
+    const endSphere = createMeasurementSphere(m.end, MEASUREMENT_COLORS.pointHex);
+    measurementGroup.add(endSphere);
+
+    // Line
+    const line = createMeasurementLine(m.start, m.end, MEASUREMENT_COLORS.lineHex);
+    measurementGroup.add(line);
+
+    // Label sprite (text in 3D)
+    const label = createMeasurementLabel(m);
+    measurementGroup.add(label);
+  }
+
+  // Draw pending measurement
+  updatePendingMeasurement();
+}
+
+function createMeasurementLabel(m: Measurement): THREE.Sprite {
+  const canvas = document.createElement("canvas");
+  const ctx = canvas.getContext("2d")!;
+  canvas.width = 128;
+  canvas.height = 32;
+
+  // Draw background
+  ctx.fillStyle = "rgba(0, 0, 0, 0.7)";
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+  // Draw text
+  const label = store.measureTool.formatDistance(m.distance);
+  ctx.font = "bold 14px Arial";
+  ctx.fillStyle = "#ffffff";
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
+  ctx.fillText(label, canvas.width / 2, canvas.height / 2);
+
+  // Create sprite
+  const texture = new THREE.CanvasTexture(canvas);
+  const material = new THREE.SpriteMaterial({ map: texture });
+  const sprite = new THREE.Sprite(material);
+
+  // Position at midpoint
+  sprite.position.set(
+    (m.start.x + m.end.x) / 2,
+    (m.start.y + m.end.y) / 2,
+    (m.start.z + m.end.z) / 2 + 5
+  );
+  sprite.scale.set(20, 5, 1);
+
+  return sprite;
+}
+
+function updatePendingMeasurement(): void {
+  // Clear pending objects
+  if (pendingMeasureLine) {
+    scene.remove(pendingMeasureLine);
+    pendingMeasureLine.geometry.dispose();
+    (pendingMeasureLine.material as THREE.Material).dispose();
+    pendingMeasureLine = null;
+  }
+  if (pendingMeasureStartSphere) {
+    scene.remove(pendingMeasureStartSphere);
+    pendingMeasureStartSphere.geometry.dispose();
+    (pendingMeasureStartSphere.material as THREE.Material).dispose();
+    pendingMeasureStartSphere = null;
+  }
+
+  const pendingStart = store.pendingMeasureStart;
+  if (!pendingStart) return;
+
+  // Draw pending start sphere
+  pendingMeasureStartSphere = createMeasurementSphere(pendingStart, MEASUREMENT_COLORS.pendingHex);
+  scene.add(pendingMeasureStartSphere);
 }
 
 // ---------------------------------------------------------------------------
@@ -634,6 +790,15 @@ watch(
     }
     buildToolpath();
   }
+);
+
+// P5: Watch for measurement changes
+watch(
+  () => [store.measurements, store.pendingMeasureStart],
+  () => {
+    buildMeasurements();
+  },
+  { deep: true }
 );
 </script>
 

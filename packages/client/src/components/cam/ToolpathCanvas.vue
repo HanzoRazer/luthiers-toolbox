@@ -16,6 +16,7 @@ import { ref, watch, onMounted, onUnmounted, computed } from "vue";
 import { useToolpathPlayerStore } from "@/stores/useToolpathPlayerStore";
 import { ToolVisualizer } from "@/util/toolVisualization";
 import { EngagementAnalyzer, type EngagementReport } from "@/util/engagementAnalyzer";
+import { MEASUREMENT_COLORS, type Measurement, type Point3D } from "@/util/measurementTool";
 import type { MoveSegment } from "@/sdk/endpoints/cam/simulate";
 
 // ---------------------------------------------------------------------------
@@ -303,6 +304,98 @@ function drawHeatmapLegend(ctx: CanvasRenderingContext2D, W: number, H: number):
 }
 
 // ---------------------------------------------------------------------------
+// P5: Measurement rendering
+// ---------------------------------------------------------------------------
+function drawMeasurementPoint(ctx: CanvasRenderingContext2D, x: number, y: number, color: string): void {
+  ctx.beginPath();
+  ctx.arc(x, y, 6, 0, Math.PI * 2);
+  ctx.fillStyle = color;
+  ctx.fill();
+  ctx.strokeStyle = "#fff";
+  ctx.lineWidth = 2;
+  ctx.stroke();
+}
+
+function drawMeasurement(ctx: CanvasRenderingContext2D, m: Measurement, canvasH: number): void {
+  const x0 = toCanvasX(m.start.x);
+  const y0 = toCanvasY(m.start.y, canvasH);
+  const x1 = toCanvasX(m.end.x);
+  const y1 = toCanvasY(m.end.y, canvasH);
+
+  // Draw line
+  ctx.beginPath();
+  ctx.moveTo(x0, y0);
+  ctx.lineTo(x1, y1);
+  ctx.strokeStyle = MEASUREMENT_COLORS.line;
+  ctx.lineWidth = 2;
+  ctx.setLineDash([6, 4]);
+  ctx.stroke();
+  ctx.setLineDash([]);
+
+  // Draw endpoints
+  drawMeasurementPoint(ctx, x0, y0, MEASUREMENT_COLORS.point);
+  drawMeasurementPoint(ctx, x1, y1, MEASUREMENT_COLORS.point);
+
+  // Draw label at midpoint
+  const midX = (x0 + x1) / 2;
+  const midY = (y0 + y1) / 2;
+  const label = store.measureTool.formatDistance(m.distance);
+
+  // Label background
+  ctx.font = "bold 11px 'JetBrains Mono', monospace";
+  const textWidth = ctx.measureText(label).width;
+  const padding = 4;
+
+  ctx.fillStyle = "rgba(0, 0, 0, 0.75)";
+  ctx.fillRect(midX - textWidth / 2 - padding, midY - 8 - padding, textWidth + padding * 2, 16 + padding);
+
+  // Label text
+  ctx.fillStyle = MEASUREMENT_COLORS.text;
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
+  ctx.fillText(label, midX, midY);
+}
+
+function drawPendingMeasurement(ctx: CanvasRenderingContext2D, start: Point3D, mouseX: number, mouseY: number, canvasH: number): void {
+  const x0 = toCanvasX(start.x);
+  const y0 = toCanvasY(start.y, canvasH);
+
+  // Draw line to mouse
+  ctx.beginPath();
+  ctx.moveTo(x0, y0);
+  ctx.lineTo(mouseX, mouseY);
+  ctx.strokeStyle = MEASUREMENT_COLORS.pending;
+  ctx.lineWidth = 2;
+  ctx.setLineDash([4, 4]);
+  ctx.stroke();
+  ctx.setLineDash([]);
+
+  // Draw start point
+  drawMeasurementPoint(ctx, x0, y0, MEASUREMENT_COLORS.pending);
+
+  // Draw pending cursor point
+  ctx.beginPath();
+  ctx.arc(mouseX, mouseY, 4, 0, Math.PI * 2);
+  ctx.fillStyle = MEASUREMENT_COLORS.pending;
+  ctx.fill();
+}
+
+function drawAllMeasurements(ctx: CanvasRenderingContext2D, canvasH: number): void {
+  // Draw completed measurements
+  for (const m of store.measurements) {
+    drawMeasurement(ctx, m, canvasH);
+  }
+
+  // Draw pending measurement
+  if (store.pendingMeasureStart && lastMousePos.x !== -1) {
+    drawPendingMeasurement(ctx, store.pendingMeasureStart, lastMousePos.x, lastMousePos.y, canvasH);
+  }
+}
+
+// Track mouse position for pending measurement
+const lastMousePos = { x: -1, y: -1 };
+
+// ---------------------------------------------------------------------------
 // Full frame draw (with LOD)
 // ---------------------------------------------------------------------------
 function drawFrame(): void {
@@ -377,6 +470,9 @@ function drawFrame(): void {
   ctx.textAlign = "left";
   ctx.fillText(`Z${zVal.toFixed(2)}`, px + 10, py - 4);
 
+  // P5: Draw measurements on top
+  drawAllMeasurements(ctx, H);
+
   // Dev FPS overlay
   if (import.meta.env.DEV) {
     ctx.font = "10px monospace";
@@ -418,6 +514,13 @@ watch(
 watch(
   () => store.selectedSegmentIndex,
   () => requestAnimationFrame(drawFrame),
+);
+
+// P5: Redraw when measurements change
+watch(
+  () => [store.measurements, store.pendingMeasureStart, store.measureMode],
+  () => requestAnimationFrame(drawFrame),
+  { deep: true }
 );
 
 // ---------------------------------------------------------------------------
@@ -467,6 +570,18 @@ function onMouseDown(e: MouseEvent): void {
 }
 
 function onMouseMove(e: MouseEvent): void {
+  const el = canvasEl.value;
+  if (el) {
+    const rect = el.getBoundingClientRect();
+    lastMousePos.x = e.clientX - rect.left;
+    lastMousePos.y = e.clientY - rect.top;
+
+    // P5: Redraw if we have a pending measurement (to show the line to cursor)
+    if (store.pendingMeasureStart) {
+      requestAnimationFrame(drawFrame);
+    }
+  }
+
   if (!isPanning) return;
 
   // P5: Check if we've moved enough to consider it a drag
@@ -562,6 +677,38 @@ function onClick(e: MouseEvent): void {
   const screenY = e.clientY - rect.top;
 
   const [worldX, worldY] = screenToWorld(screenX, screenY, el.height);
+
+  // P5: Handle measure mode
+  if (store.measureMode) {
+    // Find nearest segment to snap to, or use raw click position
+    const maxDistWorld = 8 / viewScale.value;
+    const segIdx = findNearestSegment(worldX, worldY, maxDistWorld);
+
+    let measurePoint: Point3D;
+    if (segIdx !== null) {
+      // Snap to segment endpoint
+      const seg = store.segments[segIdx];
+      // Use the endpoint closer to click
+      const distToStart = Math.sqrt(
+        (worldX - seg.from_pos[0]) ** 2 + (worldY - seg.from_pos[1]) ** 2
+      );
+      const distToEnd = Math.sqrt(
+        (worldX - seg.to_pos[0]) ** 2 + (worldY - seg.to_pos[1]) ** 2
+      );
+      if (distToStart < distToEnd) {
+        measurePoint = { x: seg.from_pos[0], y: seg.from_pos[1], z: seg.from_pos[2] };
+      } else {
+        measurePoint = { x: seg.to_pos[0], y: seg.to_pos[1], z: seg.to_pos[2] };
+      }
+    } else {
+      // Use raw click position
+      measurePoint = { x: worldX, y: worldY, z: 0 };
+    }
+
+    store.addMeasurePoint(measurePoint);
+    requestAnimationFrame(drawFrame);
+    return;
+  }
 
   // Convert max click distance from screen pixels to world units
   const maxDistWorld = 8 / viewScale.value;
