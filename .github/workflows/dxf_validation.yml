@@ -1,0 +1,47 @@
+name: DXF Asset Validation
+
+on:
+  push:
+    paths:
+      - 'services/api/app/instrument_geometry/**/*.dxf'
+      - 'scripts/validate_dxf_assets.py'
+      - '.github/workflows/dxf_validation.yml'
+  pull_request:
+    paths:
+      - 'services/api/app/instrument_geometry/**/*.dxf'
+      - 'scripts/validate_dxf_assets.py'
+  workflow_dispatch:
+
+jobs:
+  validate-dxf:
+    name: Validate DXF Assets
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install ezdxf
+        run: pip install ezdxf
+
+      - name: Run DXF validation
+        run: |
+          python scripts/validate_dxf_assets.py --root services/api/app/instrument_geometry
+
+      - name: Generate JSON report
+        if: always()
+        run: |
+          python scripts/validate_dxf_assets.py --root services/api/app/instrument_geometry --json > dxf_validation_report.json
+
+      - name: Upload validation report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: dxf-validation-report
+          path: dxf_validation_report.json
+          retention-days: 30
