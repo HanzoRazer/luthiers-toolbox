@@ -18,6 +18,7 @@
 | 2026-03-10 | `bc81f7c5` | Add DXF validation gate (CI check for format, geometry, bounds) | LP-GAP-01, EX-GAP-01, EX-GAP-02, SG-GAP-01 |
 | 2026-03-10 | `ba9574fd` | Add drilling CAM module (G83 peck cycle, patterns) | FV-GAP-06 |
 | 2026-03-10 | `64f1a87f` | Add production V-carve module (chipload, stepdown, corner slowdown) | VINE-03 |
+| 2026-03-10 | `49aac7d0` | Mount CAM modules via routers (profiling, binding, vcarve production) | Category 5 API coverage |
 
 ---
 
