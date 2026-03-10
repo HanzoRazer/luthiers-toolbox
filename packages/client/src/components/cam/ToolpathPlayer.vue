@@ -1,6 +1,6 @@
 <script setup lang="ts">
 /**
- * ToolpathPlayer — P1-P3 Full Integration
+ * ToolpathPlayer — P1-P4 Full Integration
  *
  * Drop-in animated G-code toolpath player. Composes:
  *   - ToolpathCanvas  (LOD canvas renderer + tool viz)
@@ -11,15 +11,19 @@
  * P1: Memory management, progress indicator, G-code validation
  * P2: Caching (sessionStorage), LOD (in canvas)
  * P3: M-code HUD, tool viz (in canvas), time estimates
+ * P4: Collision detection, optimization suggestions, stock simulation
  */
 
-import { onMounted, onUnmounted, computed, ref } from "vue";
+import { onMounted, onUnmounted, computed, ref, watch } from "vue";
 import ToolpathCanvas from "./ToolpathCanvas.vue";
 import MemoryWarning from "./MemoryWarning.vue";
 import { useToolpathPlayerStore } from "@/stores/useToolpathPlayerStore";
 import { useTimeEstimates } from "@/composables/useTimeEstimates";
 import { validateGcode, type ValidationResult } from "@/util/gcodeValidator";
 import { buildMachineStates, type MachineState } from "@/util/mcodeTracker";
+// P4 imports
+import { CollisionDetector, type CollisionReport, type Fixture } from "@/util/collisionDetector";
+import { GcodeOptimizer, type OptimizationReport } from "@/util/gcodeOptimizer";
 
 // ---------------------------------------------------------------------------
 // Props
@@ -30,6 +34,12 @@ interface Props {
   showControls?: boolean;
   autoPlay?: boolean;
   height?: string;
+  // P4 props
+  enableCollisionDetection?: boolean;
+  enableOptimization?: boolean;
+  toolDiameter?: number;
+  fixtures?: Fixture[];
+  safeZ?: number;
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -38,6 +48,12 @@ const props = withDefaults(defineProps<Props>(), {
   showControls: true,
   autoPlay: false,
   height: "500px",
+  // P4 defaults
+  enableCollisionDetection: true,
+  enableOptimization: true,
+  toolDiameter: 6,
+  fixtures: () => [],
+  safeZ: 5,
 });
 
 // ---------------------------------------------------------------------------
@@ -64,6 +80,36 @@ const currentMachine = computed<MachineState | null>(() => {
   if (idx < 0 || idx >= machineStates.value.length) return null;
   return machineStates.value[idx];
 });
+
+// ---------------------------------------------------------------------------
+// P4: Collision Detection
+// ---------------------------------------------------------------------------
+const collisionReport = ref<CollisionReport | null>(null);
+const showCollisionPanel = ref(false);
+
+const hasCollisions = computed(() =>
+  collisionReport.value && collisionReport.value.collisions.length > 0
+);
+const hasCriticalCollisions = computed(() =>
+  collisionReport.value && collisionReport.value.criticalCount > 0
+);
+
+// Active collisions at current segment
+const activeCollisions = computed(() => {
+  if (!collisionReport.value) return [];
+  const idx = store.currentSegmentIndex;
+  return collisionReport.value.collisions.filter(c => c.segmentIndex <= idx);
+});
+
+// ---------------------------------------------------------------------------
+// P4: Optimization Suggestions
+// ---------------------------------------------------------------------------
+const optimizationReport = ref<OptimizationReport | null>(null);
+const showOptPanel = ref(false);
+
+const hasOptimizations = computed(() =>
+  optimizationReport.value && optimizationReport.value.suggestions.length > 0
+);
 
 // ---------------------------------------------------------------------------
 // Computed
@@ -116,7 +162,53 @@ async function doLoad(): Promise<void> {
   if (!props.gcode) return;
   await store.loadGcode(props.gcode, { arc_resolution_deg: 5 });
   machineStates.value = buildMachineStates(store.segments);
+
+  // P4: Run collision detection
+  if (props.enableCollisionDetection && store.segments.length > 0) {
+    runCollisionDetection();
+  }
+
+  // P4: Run optimization analysis
+  if (props.enableOptimization && store.segments.length > 0) {
+    runOptimizationAnalysis();
+  }
+
   if (props.autoPlay) store.play();
+}
+
+// ---------------------------------------------------------------------------
+// P4: Collision Detection
+// ---------------------------------------------------------------------------
+function runCollisionDetection(): void {
+  const detector = new CollisionDetector({
+    toolDiameter: props.toolDiameter,
+    safeZ: props.safeZ,
+    fixtures: props.fixtures,
+    stock: store.bounds ? {
+      bounds: store.bounds,
+      resolution: 1,
+      width: 100,
+      height: 100,
+      thickness: Math.abs(store.bounds.z_min) + 5,
+      voxels: new Uint8Array(10000).fill(255),
+      originalVoxels: new Uint8Array(10000).fill(255),
+    } : undefined,
+  });
+
+  collisionReport.value = detector.checkAll(store.segments);
+}
+
+// ---------------------------------------------------------------------------
+// P4: Optimization Analysis
+// ---------------------------------------------------------------------------
+function runOptimizationAnalysis(): void {
+  const optimizer = new GcodeOptimizer({
+    safeZ: props.safeZ,
+    stockTopZ: 0,
+    originalTime: store.totalDurationMs,
+  });
+
+  optimizationReport.value = optimizer.analyze(store.segments);
 }
 
 // ---------------------------------------------------------------------------
@@ -391,6 +483,88 @@ onUnmounted(() => {
       >
         ⏱️ {{ estimates.realistic.formatted }}
       </span>
+
+      <!-- P4: Collision warning badge -->
+      <button
+        v-if="hasCollisions"
+        class="hud-collision"
+        :class="{ critical: hasCriticalCollisions }"
+        :title="collisionReport?.summary"
+        @click="showCollisionPanel = !showCollisionPanel"
+      >
+        {{ hasCriticalCollisions ? '⛔' : '⚠️' }}
+        {{ collisionReport?.collisions.length }}
+      </button>
+
+      <!-- P4: Optimization badge -->
+      <button
+        v-if="hasOptimizations"
+        class="hud-opt"
+        :title="optimizationReport?.summary"
+        @click="showOptPanel = !showOptPanel"
+      >
+        💡 {{ optimizationReport?.suggestions.length }}
+      </button>
+    </div>
+
+    <!-- P4: Collision Panel -->
+    <div
+      v-if="showCollisionPanel && collisionReport"
+      class="p4-panel collision-panel"
+    >
+      <div class="panel-header">
+        <span>{{ collisionReport.summary }}</span>
+        <button @click="showCollisionPanel = false">✕</button>
+      </div>
+      <ul class="panel-list">
+        <li
+          v-for="(coll, i) in collisionReport.collisions.slice(0, 10)"
+          :key="i"
+          :class="'severity-' + coll.severity"
+        >
+          <span class="coll-type">{{ coll.type }}</span>
+          <span class="coll-line">L{{ coll.lineNumber }}</span>
+          <span class="coll-msg">{{ coll.message }}</span>
+        </li>
+      </ul>
+      <div
+        v-if="collisionReport.collisions.length > 10"
+        class="panel-more"
+      >
+        +{{ collisionReport.collisions.length - 10 }} more...
+      </div>
+    </div>
+
+    <!-- P4: Optimization Panel -->
+    <div
+      v-if="showOptPanel && optimizationReport"
+      class="p4-panel opt-panel"
+    >
+      <div class="panel-header">
+        <span>{{ optimizationReport.summary }}</span>
+        <button @click="showOptPanel = false">✕</button>
+      </div>
+      <div class="opt-stats">
+        <span>Potential savings: {{ formatTime(optimizationReport.totalTimeSavings) }}</span>
+        <span>({{ optimizationReport.percentImprovement }}%)</span>
+      </div>
+      <ul class="panel-list">
+        <li
+          v-for="(sugg, i) in optimizationReport.suggestions.slice(0, 8)"
+          :key="i"
+          :class="'severity-' + sugg.severity"
+        >
+          <span class="opt-cat">{{ sugg.category }}</span>
+          <span class="opt-save">-{{ formatTime(sugg.timeSavings) }}</span>
+          <span class="opt-msg">{{ sugg.message }}</span>
+        </li>
+      </ul>
+      <div
+        v-if="optimizationReport.suggestions.length > 8"
+        class="panel-more"
+      >
+        +{{ optimizationReport.suggestions.length - 8 }} more...
+      </div>
     </div>
   </div>
 </template>
@@ -560,5 +734,132 @@ onUnmounted(() => {
   border-radius: 4px;
   cursor: help;
   flex-shrink: 0;
+}
+
+/* ── P4: Collision & Optimization badges ───────────────────────── */
+.hud-collision, .hud-opt {
+  font-size: 11px;
+  padding: 1px 8px;
+  border-radius: 4px;
+  cursor: pointer;
+  border: none;
+  flex-shrink: 0;
+  transition: background 0.15s;
+}
+
+.hud-collision {
+  background: #5c4a1a;
+  color: #f39c12;
+}
+.hud-collision.critical {
+  background: #5c1a1a;
+  color: #e74c3c;
+}
+.hud-collision:hover { background: #6c5a2a; }
+.hud-collision.critical:hover { background: #7c2a2a; }
+
+.hud-opt {
+  background: #1a4a3a;
+  color: #2ecc71;
+}
+.hud-opt:hover { background: #2a5a4a; }
+
+/* ── P4: Panels ───────────────────────────────────────────────── */
+.p4-panel {
+  position: absolute;
+  right: 10px;
+  bottom: 90px;
+  width: 360px;
+  max-height: 280px;
+  background: #1a1a2e;
+  border: 1px solid #3a3a5c;
+  border-radius: 8px;
+  overflow: hidden;
+  z-index: 10;
+  font-size: 11px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+}
+
+.panel-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 12px;
+  background: #252538;
+  border-bottom: 1px solid #3a3a5c;
+  font-weight: 600;
+  color: #ddd;
+}
+
+.panel-header button {
+  background: transparent;
+  border: none;
+  color: #666;
+  cursor: pointer;
+  font-size: 14px;
+  padding: 0 4px;
+}
+.panel-header button:hover { color: #e74c3c; }
+
+.panel-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+.panel-list li {
+  display: flex;
+  gap: 8px;
+  padding: 6px 12px;
+  border-bottom: 1px solid #252538;
+  color: #aaa;
+}
+.panel-list li:last-child { border-bottom: none; }
+
+.panel-list li.severity-critical { background: rgba(231, 76, 60, 0.1); }
+.panel-list li.severity-high { background: rgba(231, 76, 60, 0.1); }
+.panel-list li.severity-warning { background: rgba(243, 156, 18, 0.1); }
+.panel-list li.severity-medium { background: rgba(243, 156, 18, 0.1); }
+.panel-list li.severity-low { background: transparent; }
+.panel-list li.severity-info { background: transparent; }
+
+.coll-type, .opt-cat {
+  color: #4a90d9;
+  font-weight: 600;
+  min-width: 90px;
+  white-space: nowrap;
+}
+.coll-line {
+  color: #666;
+  min-width: 40px;
+}
+.coll-msg, .opt-msg {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.opt-save {
+  color: #2ecc71;
+  min-width: 50px;
+  text-align: right;
+}
+
+.opt-stats {
+  display: flex;
+  gap: 8px;
+  padding: 6px 12px;
+  background: #1a2a1a;
+  color: #2ecc71;
+  border-bottom: 1px solid #2a4a2a;
+}
+
+.panel-more {
+  padding: 6px 12px;
+  color: #666;
+  text-align: center;
+  background: #13131f;
 }
 </style>
