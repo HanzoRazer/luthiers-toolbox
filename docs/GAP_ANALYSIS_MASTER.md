@@ -26,6 +26,7 @@
 | 2026-03-10 | `6cfe4d12` | Add inlay pocket G-code `/export-gcode` endpoint | VINE-01 |
 | 2026-03-10 | `08a7db0d` | Add Phase 3 vectorizer API endpoint `/blueprint/phase3/vectorize` | VEC-GAP-01 |
 | 2026-03-10 | `b8ba05b3` | Add Phase 4 dimension linking API endpoint `/blueprint/phase4/link` | VEC-GAP-02 |
+| 2026-03-10 | `03acbb4f` | Add PipelineResult to CAM adapter `/cam/blueprint/pipeline-adapter/from-pipeline` | VEC-GAP-03 |
 
 ---
 
@@ -174,6 +175,7 @@
 | VINE-01 | J45 Vine | Inlay DXF → pocket milling G-code bridge missing — pipeline dead-ends at DXF | CRITICAL |
 | INLAY-01 | Custom Inlay | No headstock inlay router — `inlay_prompts.py` has 11 styles but no API | CRITICAL |
 | VEC-GAP-02 | OM Purfling | Phase 4 Dimension Linking is CLI-only — no `/api/blueprint/phase4` route | HIGH |
+| 2026-03-10 | `03acbb4f` | Add PipelineResult to CAM adapter `/cam/blueprint/pipeline-adapter/from-pipeline` | VEC-GAP-03 |
 | VINE-04 | J45 Vine | Neck G-code generator class exists but no HTTP endpoint | HIGH |
 | OM-GAP-07 | OM-28 | Neck G-code generator has no HTTP endpoint (same as VINE-04) | HIGH |
 | NECK-04 | Strat Neck | Strat-specific API endpoint missing — neck router defaults to Les Paul | HIGH |
@@ -185,6 +187,7 @@
 
 1. **Mount existing routers** — In `main.py`, mount: bracing router (VINE-08), neck G-code router (VINE-04/OM-GAP-07), headstock inlay router (INLAY-01). These are code-complete modules that just need `app.include_router()`.
 2. **Vectorizer Phase 3/4 routers** — Create `app/routers/blueprint_phase3_router.py` and `blueprint_phase4_router.py` wrapping existing CLI logic. Resolves VEC-GAP-01, VEC-GAP-02.
+| 2026-03-10 | `03acbb4f` | Add PipelineResult to CAM adapter `/cam/blueprint/pipeline-adapter/from-pipeline` | VEC-GAP-03 |
 3. **Inlay→CAM orchestrator** — Create endpoint that takes inlay DXF output and feeds it to adaptive milling with correct depth/tool parameters. Resolves VINE-01.
 4. **Fret slot integration** — Wire `fret_slots_cam.py` into neck build pipeline as a step. Resolves LP-GAP-04.
 5. **Strat neck preset** — Add Strat preset to neck router with Fender scale/profile defaults. Resolves NECK-04.
@@ -294,6 +297,7 @@
 |--------|-----------|-------------|----------|
 | VEC-GAP-01 | OM Purfling | Phase 3.6 Vectorizer has no API endpoint | CRITICAL |
 | VEC-GAP-02 | OM Purfling | Phase 4 Dimension Linking is CLI-only | HIGH |
+| 2026-03-10 | `03acbb4f` | Add PipelineResult to CAM adapter `/cam/blueprint/pipeline-adapter/from-pipeline` | VEC-GAP-03 |
 | VEC-GAP-03 | OM Purfling | Phase 4 `PipelineResult` has no consumer | HIGH |
 | VEC-GAP-04 | OM Purfling | Phase 3 → CAM bridge has no integration test | MEDIUM |
 | VEC-GAP-05 | OM Purfling | Phase 1 scale detection not passed to Phase 3 | MEDIUM |
@@ -305,6 +309,7 @@
 
 1. **Phase 3 API router** — `app/routers/blueprint_phase3_router.py`: POST accepts image + config, returns vectorized DXF. Resolves VEC-GAP-01.
 2. **Phase 4 API router** — `app/routers/blueprint_phase4_router.py`: POST accepts Phase 3 output, returns dimension-linked PipelineResult. Resolves VEC-GAP-02.
+| 2026-03-10 | `03acbb4f` | Add PipelineResult to CAM adapter `/cam/blueprint/pipeline-adapter/from-pipeline` | VEC-GAP-03 |
 3. **PipelineResult → CAM adapter** — Service that reads PipelineResult, extracts geometry + dimensions, outputs CAM-ready spec. Resolves VEC-GAP-03.
 4. **Integration tests** — Phase 3 → DXF → CAM bridge round-trip test. Resolves VEC-GAP-04.
 5. **Phase handoff wiring** — Pass Phase 1 `detected_scale` as Phase 3 `calibration_hint`. Add `PHASE3_AVAILABLE` flag. Resolves VEC-GAP-05, VEC-GAP-07.
