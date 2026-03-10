@@ -22,6 +22,7 @@ import ToolpathCanvas3D from "./ToolpathCanvas3D.vue";
 import GcodeViewer from "./GcodeViewer.vue";
 import MemoryWarning from "./MemoryWarning.vue";
 import ToolpathStats from "./ToolpathStats.vue";
+import ToolpathFilter from "./ToolpathFilter.vue";
 import { useToolpathPlayerStore } from "@/stores/useToolpathPlayerStore";
 import { useTimeEstimates } from "@/composables/useTimeEstimates";
 import { validateGcode, type ValidationResult } from "@/util/gcodeValidator";
@@ -134,6 +135,10 @@ const showMeasurementsPanel = ref(true);
 
 // P5: Statistics panel
 const showStatsPanel = ref(false);
+
+// P5: Filter panel
+const showFilterPanel = ref(false);
+const filterPanelRef = ref<InstanceType<typeof ToolpathFilter> | null>(null);
 
 // P5: Export animation
 const showExportPanel = ref(false);
@@ -593,6 +598,17 @@ onUnmounted(() => {
         📊
       </button>
 
+      <!-- P5: Filter panel toggle -->
+      <button
+        class="filter-btn"
+        :class="{ active: showFilterPanel, filtering: filterPanelRef?.hasActiveFilter }"
+        :disabled="store.segments.length === 0"
+        title="Filter segments"
+        @click="showFilterPanel = !showFilterPanel"
+      >
+        🔍
+      </button>
+
       <!-- Memory badge -->
       <div
         v-if="store.memoryInfo.segmentCount > 0"
@@ -1049,6 +1065,30 @@ onUnmounted(() => {
         <button @click="showStatsPanel = false">✕</button>
       </div>
       <ToolpathStats :segments="store.segments" />
+    </div>
+
+    <!-- P5: Filter Panel -->
+    <div
+      v-if="showFilterPanel && store.segments.length > 0"
+      class="filter-panel-container"
+    >
+      <div class="panel-header">
+        <span>🔍 Segment Filter</span>
+        <div class="panel-header-actions">
+          <button
+            v-if="filterPanelRef?.hasActiveFilter"
+            class="reset-filter-btn"
+            @click="filterPanelRef?.resetFilter()"
+          >
+            Reset
+          </button>
+          <button @click="showFilterPanel = false">✕</button>
+        </div>
+      </div>
+      <ToolpathFilter
+        ref="filterPanelRef"
+        :segments="store.segments"
+      />
     </div>
 
     <!-- P5: Measurements Panel -->
@@ -2172,5 +2212,112 @@ onUnmounted(() => {
 
 .stats-panel-container .panel-header button:hover {
   color: #3498db;
+}
+
+/* ── P5: Filter button ───────────────────────────────────────────────── */
+.filter-btn {
+  background: #252538;
+  border: 1px solid #3a3a5c;
+  color: #666;
+  border-radius: 4px;
+  width: 30px;
+  height: 28px;
+  font-size: 14px;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
+  flex-shrink: 0;
+}
+
+.filter-btn:hover {
+  background: #33334a;
+  color: #f39c12;
+}
+
+.filter-btn.active {
+  background: #3a2a1a;
+  border-color: #f39c12;
+  color: #f39c12;
+}
+
+.filter-btn.filtering {
+  animation: filter-pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes filter-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(243, 156, 18, 0.4); }
+  50% { box-shadow: 0 0 8px 2px rgba(243, 156, 18, 0.6); }
+}
+
+.filter-btn:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+  animation: none;
+}
+
+/* ── P5: Filter Panel ────────────────────────────────────────────────── */
+.filter-panel-container {
+  position: absolute;
+  right: 10px;
+  top: 10px;
+  width: 340px;
+  max-height: calc(100% - 120px);
+  background: #1a1a2e;
+  border: 1px solid #f39c12;
+  border-radius: 8px;
+  overflow: hidden;
+  z-index: 13;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 4px 20px rgba(243, 156, 18, 0.2);
+}
+
+.filter-panel-container .panel-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 12px;
+  background: linear-gradient(135deg, #3a2a1a 0%, #1a1a2e 100%);
+  border-bottom: 1px solid #f39c12;
+  color: #f39c12;
+  font-size: 12px;
+  font-weight: 600;
+  flex-shrink: 0;
+}
+
+.filter-panel-container .panel-header-actions {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.filter-panel-container .panel-header button {
+  background: transparent;
+  border: none;
+  color: #666;
+  cursor: pointer;
+  font-size: 14px;
+  padding: 0 4px;
+}
+
+.filter-panel-container .panel-header button:hover {
+  color: #f39c12;
+}
+
+.reset-filter-btn {
+  font-size: 10px !important;
+  padding: 2px 8px !important;
+  background: #f39c12 !important;
+  border-radius: 4px;
+  color: #1a1a2e !important;
+  font-weight: 600;
+}
+
+.reset-filter-btn:hover {
+  background: #e67e22 !important;
+}
+
+.filter-panel-container > :deep(.toolpath-filter) {
+  flex: 1;
+  overflow-y: auto;
 }
 </style>
