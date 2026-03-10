@@ -23,7 +23,9 @@ import GcodeViewer from "./GcodeViewer.vue";
 import MemoryWarning from "./MemoryWarning.vue";
 import ToolpathStats from "./ToolpathStats.vue";
 import ToolpathFilter from "./ToolpathFilter.vue";
+import ToolpathAnnotations from "./ToolpathAnnotations.vue";
 import { useToolpathPlayerStore } from "@/stores/useToolpathPlayerStore";
+import { annotationManager, type Annotation } from "@/util/toolpathAnnotations";
 import { useTimeEstimates } from "@/composables/useTimeEstimates";
 import { validateGcode, type ValidationResult } from "@/util/gcodeValidator";
 import { buildMachineStates, type MachineState } from "@/util/mcodeTracker";
@@ -140,6 +142,9 @@ const showStatsPanel = ref(false);
 const showFilterPanel = ref(false);
 const filterPanelRef = ref<InstanceType<typeof ToolpathFilter> | null>(null);
 
+// P5: Annotations panel
+const showAnnotationsPanel = ref(false);
+
 // P5: Export animation
 const showExportPanel = ref(false);
 const isExporting = ref(false);
@@ -246,6 +251,9 @@ async function doLoad(): Promise<void> {
   if (!props.gcode) return;
   await store.loadGcode(props.gcode, { arc_resolution_deg: 5 });
   machineStates.value = buildMachineStates(store.segments);
+
+  // P5: Initialize annotations for this G-code
+  annotationManager.init(props.gcode);
 
   // P4: Run collision detection
   if (props.enableCollisionDetection && store.segments.length > 0) {
@@ -384,6 +392,17 @@ function cancelExport(): void {
   isExporting.value = false;
   exportProgress.value = null;
   store.pause();
+}
+
+// ---------------------------------------------------------------------------
+// P5: Annotations
+// ---------------------------------------------------------------------------
+function handleAnnotationGoto(annotation: Annotation): void {
+  if (annotation.segmentIndex !== null) {
+    // Jump to the segment
+    const progress = annotation.segmentIndex / Math.max(1, store.segments.length - 1);
+    store.seek(Math.min(1, Math.max(0, progress)));
+  }
 }
 
 // ---------------------------------------------------------------------------
@@ -607,6 +626,17 @@ onUnmounted(() => {
         @click="showFilterPanel = !showFilterPanel"
       >
         🔍
+      </button>
+
+      <!-- P5: Annotations panel toggle -->
+      <button
+        class="annotations-btn"
+        :class="{ active: showAnnotationsPanel }"
+        :disabled="store.segments.length === 0"
+        title="Annotations & bookmarks"
+        @click="showAnnotationsPanel = !showAnnotationsPanel"
+      >
+        📝
       </button>
 
       <!-- Memory badge -->
@@ -1088,6 +1118,20 @@ onUnmounted(() => {
       <ToolpathFilter
         ref="filterPanelRef"
         :segments="store.segments"
+      />
+    </div>
+
+    <!-- P5: Annotations Panel -->
+    <div
+      v-if="showAnnotationsPanel && store.segments.length > 0"
+      class="annotations-panel-container"
+    >
+      <ToolpathAnnotations
+        :current-segment="store.currentSegmentIndex"
+        :current-position="store.toolPosition as [number, number, number]"
+        :current-line-number="store.currentSegment?.line_number ?? null"
+        @close="showAnnotationsPanel = false"
+        @goto="handleAnnotationGoto"
       />
     </div>
 
@@ -2319,5 +2363,54 @@ onUnmounted(() => {
 .filter-panel-container > :deep(.toolpath-filter) {
   flex: 1;
   overflow-y: auto;
+}
+
+/* ── P5: Annotations button ──────────────────────────────────────────── */
+.annotations-btn {
+  background: #252538;
+  border: 1px solid #3a3a5c;
+  color: #666;
+  border-radius: 4px;
+  width: 30px;
+  height: 28px;
+  font-size: 14px;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
+  flex-shrink: 0;
+}
+
+.annotations-btn:hover {
+  background: #33334a;
+  color: #4a90d9;
+}
+
+.annotations-btn.active {
+  background: #1a2a4a;
+  border-color: #4a90d9;
+  color: #4a90d9;
+}
+
+.annotations-btn:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+/* ── P5: Annotations Panel ───────────────────────────────────────────── */
+.annotations-panel-container {
+  position: absolute;
+  right: 10px;
+  top: 10px;
+  width: 320px;
+  max-height: calc(100% - 120px);
+  z-index: 14;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 4px 20px rgba(74, 144, 217, 0.2);
+}
+
+.annotations-panel-container > :deep(.toolpath-annotations) {
+  flex: 1;
+  overflow: hidden;
+  border: 1px solid #4a90d9;
 }
 </style>

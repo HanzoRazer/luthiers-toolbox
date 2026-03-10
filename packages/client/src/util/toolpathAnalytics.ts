@@ -15,7 +15,7 @@
 // ---------------------------------------------------------------------------
 
 export interface MoveSegment {
-  type: "rapid" | "linear" | "arc_cw" | "arc_ccw";
+  type: "rapid" | "linear" | "cut" | "arc_cw" | "arc_ccw";
   from_pos: [number, number, number];
   to_pos: [number, number, number];
   feed: number;
@@ -245,6 +245,7 @@ export function analyzeToolpath(segments: MoveSegment[]): ToolpathStatistics {
         rapidCount++;
         break;
       case "linear":
+      case "cut":
         cutDist += dist;
         cutTime += seg.duration_ms;
         linearCount++;

@@ -17,7 +17,7 @@ import type { Ref } from "vue";
 // ---------------------------------------------------------------------------
 
 export interface MoveSegment {
-  type: "rapid" | "linear" | "arc_cw" | "arc_ccw";
+  type: "rapid" | "linear" | "cut" | "arc_cw" | "arc_ccw";
   from_pos: [number, number, number];
   to_pos: [number, number, number];
   feed: number;
@@ -252,6 +252,7 @@ export function useSegmentFilter(segments: Ref<MoveSegment[]>) {
         if (!state.showRapid) return false;
         break;
       case "linear":
+      case "cut":
         if (!state.showLinear) return false;
         break;
       case "arc_cw":
