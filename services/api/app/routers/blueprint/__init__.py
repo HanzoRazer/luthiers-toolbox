@@ -30,6 +30,7 @@ from fastapi import APIRouter
 from .phase1_router import router as phase1_router
 from .phase2_router import router as phase2_router
 from .phase3_router import router as phase3_router
+from .phase4_router import router as phase4_router
 from .calibration_router import router as calibration_router
 
 # Aggregate router with common prefix and tags
@@ -39,6 +40,7 @@ router = APIRouter(prefix="/blueprint", tags=["blueprint"])
 router.include_router(phase1_router)
 router.include_router(phase2_router)
 router.include_router(phase3_router)
+router.include_router(phase4_router)
 router.include_router(calibration_router)
 
 # Re-export feature flags for external use
@@ -47,6 +49,7 @@ from .constants import (
     VECTORIZER_AVAILABLE,
     PHASE2_AVAILABLE,
     PHASE3_AVAILABLE,
+    PHASE4_AVAILABLE,
     CALIBRATION_AVAILABLE,
 )
 
@@ -56,5 +59,6 @@ __all__ = [
     "VECTORIZER_AVAILABLE",
     "PHASE2_AVAILABLE",
     "PHASE3_AVAILABLE",
+    "PHASE4_AVAILABLE",
     "CALIBRATION_AVAILABLE",
 ]
