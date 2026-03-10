@@ -134,6 +134,7 @@ function drawSegment(
   isPast: boolean,
   zRange: number,
   canvasH: number,
+  isSelected: boolean = false,
 ): void {
   const zMin = store.bounds?.z_min ?? 0;
   const zNorm = zRange > 0.001 ? (seg.to_pos[2] - zMin) / zRange : 1;
@@ -146,6 +147,17 @@ function drawSegment(
   ctx.beginPath();
   ctx.moveTo(x0, y0);
   ctx.lineTo(x1, y1);
+
+  // P5: Highlight selected segment
+  if (isSelected) {
+    ctx.globalAlpha = 1;
+    ctx.strokeStyle = "#FFD700"; // Gold highlight
+    ctx.setLineDash([]);
+    ctx.lineWidth = 4;
+    ctx.stroke();
+    ctx.globalAlpha = 1;
+    return;
+  }
 
   if (isPast) {
     ctx.globalAlpha = 0.4 + (1 - zNorm) * 0.6;
@@ -204,11 +216,13 @@ function drawFrame(): void {
   const step = lodStep();
   let drawn = 0;
 
+  const selectedIdx = store.selectedSegmentIndex;
+
   for (let i = 0; i < segs.length; i += step) {
     const seg = segs[i];
     // Viewport cull
     if (!isSegVisible(seg, W, H)) continue;
-    drawSegment(ctx, seg, i <= currentIdx, zRange, H);
+    drawSegment(ctx, seg, i <= currentIdx, zRange, H, i === selectedIdx);
     drawn++;
   }
 
@@ -219,8 +233,16 @@ function drawFrame(): void {
     for (let i = lo; i <= hi; i++) {
       if (i % step === 0) continue; // already drawn
       if (!isSegVisible(segs[i], W, H)) continue;
-      drawSegment(ctx, segs[i], i <= currentIdx, zRange, H);
+      drawSegment(ctx, segs[i], i <= currentIdx, zRange, H, i === selectedIdx);
       drawn++;
+    }
+  }
+
+  // P5: Draw selected segment on top for visibility
+  if (selectedIdx !== null && selectedIdx >= 0 && selectedIdx < segs.length) {
+    const seg = segs[selectedIdx];
+    if (isSegVisible(seg, W, H)) {
+      drawSegment(ctx, seg, selectedIdx <= currentIdx, zRange, H, true);
     }
   }
 
@@ -266,10 +288,17 @@ watch(
   },
 );
 
+// P5: Redraw when selection changes
+watch(
+  () => store.selectedSegmentIndex,
+  () => requestAnimationFrame(drawFrame),
+);
+
 // ---------------------------------------------------------------------------
 // Mouse interaction — zoom (around cursor), pan, double-click reset
 // ---------------------------------------------------------------------------
 let isPanning = false;
+let hasDragged = false; // P5: Track if we actually dragged (vs just clicked)
 let panStartX = 0;
 let panStartY = 0;
 let panOffXStart = 0;
@@ -304,6 +333,7 @@ function onWheel(e: WheelEvent): void {
 
 function onMouseDown(e: MouseEvent): void {
   isPanning = true;
+  hasDragged = false;
   panStartX = e.clientX;
   panStartY = e.clientY;
   panOffXStart = viewOffX.value;
@@ -312,8 +342,16 @@ function onMouseDown(e: MouseEvent): void {
 
 function onMouseMove(e: MouseEvent): void {
   if (!isPanning) return;
-  viewOffX.value = panOffXStart + (e.clientX - panStartX);
-  viewOffY.value = panOffYStart - (e.clientY - panStartY);
+
+  // P5: Check if we've moved enough to consider it a drag
+  const dx = e.clientX - panStartX;
+  const dy = e.clientY - panStartY;
+  if (Math.abs(dx) > 3 || Math.abs(dy) > 3) {
+    hasDragged = true;
+  }
+
+  viewOffX.value = panOffXStart + dx;
+  viewOffY.value = panOffYStart - dy;
   requestAnimationFrame(drawFrame);
 }
 
@@ -323,6 +361,88 @@ function onMouseUp(): void {
 
 function onDblClick(): void {
   fitToView();
+  requestAnimationFrame(drawFrame);
+}
+
+// ---------------------------------------------------------------------------
+// P5: Click to select segment
+// ---------------------------------------------------------------------------
+function screenToWorld(screenX: number, screenY: number, canvasH: number): [number, number] {
+  const b = store.bounds;
+  if (!b) return [0, 0];
+  const worldX = (screenX - viewOffX.value) / viewScale.value + b.x_min;
+  const worldY = (canvasH - screenY - viewOffY.value) / viewScale.value + b.y_min;
+  return [worldX, worldY];
+}
+
+/** Distance from point to line segment (2D) */
+function pointToSegmentDist(
+  px: number, py: number,
+  x1: number, y1: number,
+  x2: number, y2: number
+): number {
+  const dx = x2 - x1;
+  const dy = y2 - y1;
+  const lenSq = dx * dx + dy * dy;
+
+  if (lenSq === 0) {
+    // Segment is a point
+    return Math.sqrt((px - x1) ** 2 + (py - y1) ** 2);
+  }
+
+  // Project point onto line, clamped to segment
+  let t = ((px - x1) * dx + (py - y1) * dy) / lenSq;
+  t = Math.max(0, Math.min(1, t));
+
+  const projX = x1 + t * dx;
+  const projY = y1 + t * dy;
+
+  return Math.sqrt((px - projX) ** 2 + (py - projY) ** 2);
+}
+
+function findNearestSegment(worldX: number, worldY: number, maxDist: number = 5): number | null {
+  const segs = store.segments;
+  if (segs.length === 0) return null;
+
+  let bestIdx: number | null = null;
+  let bestDist = maxDist; // Max selection distance in world units (mm)
+
+  for (let i = 0; i < segs.length; i++) {
+    const seg = segs[i];
+    const dist = pointToSegmentDist(
+      worldX, worldY,
+      seg.from_pos[0], seg.from_pos[1],
+      seg.to_pos[0], seg.to_pos[1]
+    );
+
+    if (dist < bestDist) {
+      bestDist = dist;
+      bestIdx = i;
+    }
+  }
+
+  return bestIdx;
+}
+
+function onClick(e: MouseEvent): void {
+  const el = canvasEl.value;
+  if (!el || !store.bounds) return;
+
+  // Don't select if we were dragging (panning)
+  if (hasDragged) return;
+
+  const rect = el.getBoundingClientRect();
+  const screenX = e.clientX - rect.left;
+  const screenY = e.clientY - rect.top;
+
+  const [worldX, worldY] = screenToWorld(screenX, screenY, el.height);
+
+  // Convert max click distance from screen pixels to world units
+  const maxDistWorld = 8 / viewScale.value;
+
+  const segIdx = findNearestSegment(worldX, worldY, maxDistWorld);
+  store.selectSegment(segIdx);
+
   requestAnimationFrame(drawFrame);
 }
 
@@ -362,6 +482,7 @@ onUnmounted(() => {
     @mouseup="onMouseUp"
     @mouseleave="onMouseUp"
     @dblclick="onDblClick"
+    @click="onClick"
   />
 </template>
 

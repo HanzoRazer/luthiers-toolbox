@@ -19,6 +19,7 @@
 import { onMounted, onUnmounted, computed, ref, watch } from "vue";
 import ToolpathCanvas from "./ToolpathCanvas.vue";
 import ToolpathCanvas3D from "./ToolpathCanvas3D.vue";
+import GcodeViewer from "./GcodeViewer.vue";
 import MemoryWarning from "./MemoryWarning.vue";
 import { useToolpathPlayerStore } from "@/stores/useToolpathPlayerStore";
 import { useTimeEstimates } from "@/composables/useTimeEstimates";
@@ -81,6 +82,9 @@ const validation = ref<ValidationResult | null>(null);
 // P5: 3D view mode
 const viewMode = ref<"2d" | "3d">(props.default3D ? "3d" : "2d");
 const canvas3DRef = ref<InstanceType<typeof ToolpathCanvas3D> | null>(null);
+
+// P5: G-code viewer panel
+const showGcodePanel = ref(false);
 
 // ---------------------------------------------------------------------------
 // Machine state array (P3 M-code tracking)
@@ -552,6 +556,29 @@ onUnmounted(() => {
       >
         💡 {{ optimizationReport?.suggestions.length }}
       </button>
+
+      <!-- P5: Selection info -->
+      <span
+        v-if="store.selectedSegmentIndex !== null"
+        class="hud-selection"
+        :title="'Click to jump to segment ' + store.selectedSegmentIndex"
+        @click="store.jumpToSelected()"
+      >
+        📍 Seg {{ store.selectedSegmentIndex }}
+        <template v-if="store.selectedGcodeLine">
+          (L{{ store.selectedGcodeLine.lineNumber }})
+        </template>
+      </span>
+
+      <!-- P5: G-code panel toggle -->
+      <button
+        class="hud-gcode-toggle"
+        :class="{ active: showGcodePanel }"
+        title="Toggle G-code source panel"
+        @click="showGcodePanel = !showGcodePanel"
+      >
+        { }
+      </button>
     </div>
 
     <!-- P4: Collision Panel -->
@@ -612,6 +639,32 @@ onUnmounted(() => {
       >
         +{{ optimizationReport.suggestions.length - 8 }} more...
       </div>
+    </div>
+
+    <!-- P5: G-code Source Panel -->
+    <div
+      v-if="showGcodePanel && store.sourceGcode"
+      class="gcode-panel"
+    >
+      <div class="panel-header">
+        <span>G-code Source</span>
+        <div class="panel-header-actions">
+          <button
+            v-if="store.selectedSegmentIndex !== null"
+            class="clear-selection-btn"
+            title="Clear selection"
+            @click="store.clearSelection()"
+          >
+            Clear
+          </button>
+          <button @click="showGcodePanel = false">✕</button>
+        </div>
+      </div>
+      <GcodeViewer
+        max-height="250px"
+        :show-line-numbers="true"
+        :auto-scroll="true"
+      />
     </div>
   </div>
 </template>
@@ -942,5 +995,100 @@ onUnmounted(() => {
   color: #666;
   text-align: center;
   background: #13131f;
+}
+
+/* ── P5: Selection indicator ─────────────────────────────────────── */
+.hud-selection {
+  color: #ffd700;
+  font-size: 11px;
+  padding: 1px 8px;
+  background: rgba(255, 215, 0, 0.15);
+  border: 1px solid rgba(255, 215, 0, 0.3);
+  border-radius: 4px;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: background 0.15s;
+}
+.hud-selection:hover {
+  background: rgba(255, 215, 0, 0.25);
+}
+
+/* ── P5: G-code toggle button ────────────────────────────────────── */
+.hud-gcode-toggle {
+  font-size: 11px;
+  font-weight: 600;
+  padding: 1px 8px;
+  border-radius: 4px;
+  cursor: pointer;
+  border: 1px solid #3a3a5c;
+  background: #252538;
+  color: #888;
+  flex-shrink: 0;
+  transition: background 0.15s, color 0.15s;
+}
+.hud-gcode-toggle:hover {
+  background: #33334a;
+  color: #ccc;
+}
+.hud-gcode-toggle.active {
+  background: #1a3a6b;
+  border-color: #4a90d9;
+  color: #4a90d9;
+}
+
+/* ── P5: G-code panel ────────────────────────────────────────────── */
+.gcode-panel {
+  position: absolute;
+  left: 10px;
+  bottom: 90px;
+  width: 400px;
+  max-height: 320px;
+  background: #1a1a2e;
+  border: 1px solid #3a3a5c;
+  border-radius: 8px;
+  overflow: hidden;
+  z-index: 10;
+  font-size: 11px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+}
+
+.gcode-panel .panel-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 12px;
+  background: #252538;
+  border-bottom: 1px solid #3a3a5c;
+  font-weight: 600;
+  color: #ddd;
+}
+
+.panel-header-actions {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.panel-header-actions button {
+  background: transparent;
+  border: none;
+  color: #666;
+  cursor: pointer;
+  font-size: 14px;
+  padding: 0 4px;
+}
+.panel-header-actions button:hover { color: #e74c3c; }
+
+.clear-selection-btn {
+  font-size: 10px !important;
+  padding: 2px 6px !important;
+  background: #252538 !important;
+  border: 1px solid #3a3a5c !important;
+  border-radius: 3px;
+  color: #888 !important;
+}
+.clear-selection-btn:hover {
+  background: #33334a !important;
+  color: #ffd700 !important;
 }
 </style>
