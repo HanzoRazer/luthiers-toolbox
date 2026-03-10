@@ -19,6 +19,7 @@ import { ref, onMounted, onUnmounted, watch, computed } from "vue";
 import * as THREE from "three";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
 import { useToolpathPlayerStore } from "@/stores/useToolpathPlayerStore";
+import { EngagementAnalyzer, type EngagementReport } from "@/util/engagementAnalyzer";
 import type { MoveSegment } from "@/sdk/endpoints/cam";
 
 // ---------------------------------------------------------------------------
@@ -36,6 +37,8 @@ interface Props {
   toolLength?: number;
   /** Background color */
   backgroundColor?: string;
+  /** P5: Enable heatmap mode */
+  showHeatmap?: boolean;
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -44,6 +47,7 @@ const props = withDefaults(defineProps<Props>(), {
   toolDiameter: 6,
   toolLength: 50,
   backgroundColor: "#1e1e2e",
+  showHeatmap: false,
 });
 
 // ---------------------------------------------------------------------------
@@ -78,6 +82,20 @@ let selectedLine: THREE.Line | null = null;
 const raycaster = new THREE.Raycaster();
 raycaster.params.Line = { threshold: 3 }; // Click tolerance in world units
 const mouse = new THREE.Vector2();
+
+// P5: Engagement analyzer for heatmap
+let engagementReport: EngagementReport | null = null;
+
+function updateEngagement(): void {
+  if (store.segments.length === 0) {
+    engagementReport = null;
+    return;
+  }
+  const analyzer = new EngagementAnalyzer({
+    toolDiameter: props.toolDiameter,
+  });
+  engagementReport = analyzer.analyze(store.segments);
+}
 
 // Colors
 const COLORS = {
@@ -225,6 +243,11 @@ function buildToolpath(): void {
 
   if (store.segments.length === 0) return;
 
+  // P5: Update engagement data for heatmap
+  if (props.showHeatmap && !engagementReport) {
+    updateEngagement();
+  }
+
   const currentIdx = store.currentSegmentIndex;
 
   // Build completed segments
@@ -263,7 +286,41 @@ function createSegmentLine(segment: MoveSegment, isUpcoming: boolean, segmentInd
 
   const geometry = new THREE.BufferGeometry().setFromPoints(points);
 
-  // Color based on move type
+  // P5: Heatmap mode - color by engagement
+  if (props.showHeatmap && engagementReport) {
+    const engData = engagementReport.segments[segmentIndex];
+    const heatColor = engData
+      ? EngagementAnalyzer.getColorInterpolatedHex(engData.engagement)
+      : 0x333333;
+
+    const material = new THREE.LineBasicMaterial({
+      color: heatColor,
+      transparent: true,
+      opacity: isUpcoming ? 0.15 : segment.type === "rapid" ? 0.3 : 0.9,
+      linewidth: 1,
+    });
+
+    // For rapids in heatmap mode
+    if (segment.type === "rapid" && !isUpcoming) {
+      const dashedMaterial = new THREE.LineDashedMaterial({
+        color: 0x333333,
+        dashSize: 2,
+        gapSize: 1,
+        transparent: true,
+        opacity: 0.3,
+      });
+      const line = new THREE.Line(geometry, dashedMaterial);
+      line.computeLineDistances();
+      line.userData.segmentIndex = segmentIndex;
+      return line;
+    }
+
+    const line = new THREE.Line(geometry, material);
+    line.userData.segmentIndex = segmentIndex;
+    return line;
+  }
+
+  // Normal mode: Color based on move type
   let color: number;
   if (segment.type === "rapid") {
     color = COLORS.rapid;
@@ -567,6 +624,17 @@ watch(
     updateSelectedSegment();
   }
 );
+
+// P5: Watch for heatmap toggle
+watch(
+  () => props.showHeatmap,
+  (show) => {
+    if (show) {
+      updateEngagement();
+    }
+    buildToolpath();
+  }
+);
 </script>
 
 <template>
@@ -607,8 +675,11 @@ watch(
       </button>
     </div>
 
-    <!-- Legend -->
-    <div class="legend">
+    <!-- Legend (normal mode) -->
+    <div
+      v-if="!showHeatmap"
+      class="legend"
+    >
       <span class="legend-item rapid">
         <span class="swatch" />
         Rapid
@@ -621,6 +692,19 @@ watch(
         <span class="swatch" />
         Arc
       </span>
+    </div>
+
+    <!-- P5: Heatmap legend -->
+    <div
+      v-if="showHeatmap"
+      class="heatmap-legend"
+    >
+      <span class="legend-title">Engagement</span>
+      <div class="gradient-bar" />
+      <div class="gradient-labels">
+        <span>Low</span>
+        <span>High</span>
+      </div>
     </div>
   </div>
 </template>
@@ -702,5 +786,47 @@ watch(
 
 .legend-item.arc .swatch {
   background: #2ecc71;
+}
+
+/* P5: Heatmap legend */
+.heatmap-legend {
+  position: absolute;
+  bottom: 10px;
+  left: 10px;
+  padding: 8px 12px;
+  background: rgba(30, 30, 46, 0.9);
+  border-radius: 4px;
+  font-size: 11px;
+  color: #aaa;
+}
+
+.legend-title {
+  display: block;
+  margin-bottom: 6px;
+  color: #888;
+  font-weight: 600;
+}
+
+.gradient-bar {
+  width: 100px;
+  height: 10px;
+  border-radius: 2px;
+  background: linear-gradient(
+    to right,
+    #333333 0%,
+    #1a4a9e 20%,
+    #2ecc71 40%,
+    #f1c40f 60%,
+    #e67e22 80%,
+    #e74c3c 100%
+  );
+}
+
+.gradient-labels {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 4px;
+  font-size: 9px;
+  color: #666;
 }
 </style>

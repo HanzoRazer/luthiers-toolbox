@@ -12,10 +12,27 @@
  * - FPS counter in dev mode
  */
 
-import { ref, watch, onMounted, onUnmounted } from "vue";
+import { ref, watch, onMounted, onUnmounted, computed } from "vue";
 import { useToolpathPlayerStore } from "@/stores/useToolpathPlayerStore";
 import { ToolVisualizer } from "@/util/toolVisualization";
+import { EngagementAnalyzer, type EngagementReport } from "@/util/engagementAnalyzer";
 import type { MoveSegment } from "@/sdk/endpoints/cam/simulate";
+
+// ---------------------------------------------------------------------------
+// Props
+// ---------------------------------------------------------------------------
+
+interface Props {
+  /** Enable heatmap mode */
+  showHeatmap?: boolean;
+  /** Tool diameter for engagement calculation */
+  toolDiameter?: number;
+}
+
+const props = withDefaults(defineProps<Props>(), {
+  showHeatmap: false,
+  toolDiameter: 6,
+});
 
 // ---------------------------------------------------------------------------
 // Store
@@ -26,6 +43,25 @@ const store = useToolpathPlayerStore();
 // Tool visualizer (P3)
 // ---------------------------------------------------------------------------
 const toolViz = new ToolVisualizer();
+
+// ---------------------------------------------------------------------------
+// P5: Engagement analyzer for heatmap
+// ---------------------------------------------------------------------------
+const engagementReport = ref<EngagementReport | null>(null);
+
+const engagementAnalyzer = computed(() => {
+  return new EngagementAnalyzer({
+    toolDiameter: props.toolDiameter,
+  });
+});
+
+function updateEngagement(): void {
+  if (store.segments.length === 0) {
+    engagementReport.value = null;
+    return;
+  }
+  engagementReport.value = engagementAnalyzer.value.analyze(store.segments);
+}
 
 // ---------------------------------------------------------------------------
 // Canvas element ref
@@ -135,6 +171,7 @@ function drawSegment(
   zRange: number,
   canvasH: number,
   isSelected: boolean = false,
+  segmentIndex: number = -1,
 ): void {
   const zMin = store.bounds?.z_min ?? 0;
   const zNorm = zRange > 0.001 ? (seg.to_pos[2] - zMin) / zRange : 1;
@@ -157,6 +194,21 @@ function drawSegment(
     ctx.stroke();
     ctx.globalAlpha = 1;
     return;
+  }
+
+  // P5: Heatmap mode - color by engagement
+  if (props.showHeatmap && engagementReport.value && segmentIndex >= 0) {
+    const engData = engagementReport.value.segments[segmentIndex];
+    if (engData) {
+      ctx.globalAlpha = isPast ? 0.9 : 0.2;
+      ctx.strokeStyle = EngagementAnalyzer.getColorInterpolated(engData.engagement);
+      ctx.setLineDash(seg.type === "rapid" ? [4, 4] : []);
+      ctx.lineWidth = seg.type === "rapid" ? 1 : 2 + engData.engagement * 2;
+      ctx.stroke();
+      ctx.setLineDash([]);
+      ctx.globalAlpha = 1;
+      return;
+    }
   }
 
   if (isPast) {
@@ -194,6 +246,63 @@ function drawSegment(
 }
 
 // ---------------------------------------------------------------------------
+// P5: Heatmap legend
+// ---------------------------------------------------------------------------
+function drawHeatmapLegend(ctx: CanvasRenderingContext2D, W: number, H: number): void {
+  const legendW = 120;
+  const legendH = 16;
+  const padding = 10;
+  const x = W - legendW - padding;
+  const y = H - legendH - padding - 20;
+
+  // Background
+  ctx.fillStyle = "rgba(19, 19, 31, 0.85)";
+  ctx.fillRect(x - 8, y - 20, legendW + 16, legendH + 36);
+
+  // Title
+  ctx.font = "10px 'JetBrains Mono', monospace";
+  ctx.fillStyle = "#888";
+  ctx.textAlign = "left";
+  ctx.fillText("Engagement", x, y - 6);
+
+  // Gradient bar
+  const gradient = ctx.createLinearGradient(x, y, x + legendW, y);
+  gradient.addColorStop(0, "#333333");
+  gradient.addColorStop(0.2, "#1a4a9e");
+  gradient.addColorStop(0.4, "#2ecc71");
+  gradient.addColorStop(0.6, "#f1c40f");
+  gradient.addColorStop(0.8, "#e67e22");
+  gradient.addColorStop(1, "#e74c3c");
+
+  ctx.fillStyle = gradient;
+  ctx.fillRect(x, y, legendW, legendH);
+
+  // Border
+  ctx.strokeStyle = "#3a3a5c";
+  ctx.lineWidth = 1;
+  ctx.strokeRect(x, y, legendW, legendH);
+
+  // Labels
+  ctx.fillStyle = "#666";
+  ctx.font = "9px 'JetBrains Mono', monospace";
+  ctx.textAlign = "left";
+  ctx.fillText("Low", x, y + legendH + 10);
+  ctx.textAlign = "right";
+  ctx.fillText("High", x + legendW, y + legendH + 10);
+
+  // Hotspot count
+  if (engagementReport.value && engagementReport.value.stats.hotspotCount > 0) {
+    ctx.fillStyle = "#e74c3c";
+    ctx.textAlign = "center";
+    ctx.fillText(
+      `${engagementReport.value.stats.hotspotCount} hotspots`,
+      x + legendW / 2,
+      y + legendH + 10
+    );
+  }
+}
+
+// ---------------------------------------------------------------------------
 // Full frame draw (with LOD)
 // ---------------------------------------------------------------------------
 function drawFrame(): void {
@@ -222,7 +331,7 @@ function drawFrame(): void {
     const seg = segs[i];
     // Viewport cull
     if (!isSegVisible(seg, W, H)) continue;
-    drawSegment(ctx, seg, i <= currentIdx, zRange, H, i === selectedIdx);
+    drawSegment(ctx, seg, i <= currentIdx, zRange, H, i === selectedIdx, i);
     drawn++;
   }
 
@@ -233,7 +342,7 @@ function drawFrame(): void {
     for (let i = lo; i <= hi; i++) {
       if (i % step === 0) continue; // already drawn
       if (!isSegVisible(segs[i], W, H)) continue;
-      drawSegment(ctx, segs[i], i <= currentIdx, zRange, H, i === selectedIdx);
+      drawSegment(ctx, segs[i], i <= currentIdx, zRange, H, i === selectedIdx, i);
       drawn++;
     }
   }
@@ -242,8 +351,13 @@ function drawFrame(): void {
   if (selectedIdx !== null && selectedIdx >= 0 && selectedIdx < segs.length) {
     const seg = segs[selectedIdx];
     if (isSegVisible(seg, W, H)) {
-      drawSegment(ctx, seg, selectedIdx <= currentIdx, zRange, H, true);
+      drawSegment(ctx, seg, selectedIdx <= currentIdx, zRange, H, true, selectedIdx);
     }
+  }
+
+  // P5: Draw heatmap legend when in heatmap mode
+  if (props.showHeatmap && engagementReport.value) {
+    drawHeatmapLegend(ctx, W, H);
   }
 
   // Tool visualization (P3)
@@ -284,6 +398,18 @@ watch(
   () => store.segments,
   () => {
     fitToView();
+    updateEngagement();
+    requestAnimationFrame(drawFrame);
+  },
+);
+
+// P5: Recompute engagement when heatmap toggled
+watch(
+  () => props.showHeatmap,
+  (show) => {
+    if (show && !engagementReport.value) {
+      updateEngagement();
+    }
     requestAnimationFrame(drawFrame);
   },
 );
