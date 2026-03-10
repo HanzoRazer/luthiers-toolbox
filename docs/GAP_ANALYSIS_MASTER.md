@@ -12,6 +12,7 @@
 | 2026-03-10 | `eafaead0` | TypeScript fix: add `PARTIAL` to instrument status union type in `instrumentApi.ts:55` | Build blocker — enables `npm run build` |
 | 2026-03-10 | `14260731` | Commit 7 documentation files including this gap analysis | Documentation |
 | 2026-03-10 | `d80b0799` | Refactor auth store to use SDK instead of raw fetch() | SDK convention compliance |
+| 2026-03-10 | `7826e6ef` | Add CNC pre-flight validation gate (`preflight_gate.py`) — blocking safety check before G-code execution | CAM safety |
 
 ---
 
