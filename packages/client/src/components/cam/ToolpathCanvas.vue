@@ -17,6 +17,7 @@ import { useToolpathPlayerStore } from "@/stores/useToolpathPlayerStore";
 import { ToolVisualizer } from "@/util/toolVisualization";
 import { EngagementAnalyzer, type EngagementReport } from "@/util/engagementAnalyzer";
 import { MEASUREMENT_COLORS, type Measurement, type Point3D } from "@/util/measurementTool";
+import { getToolColor } from "@/util/toolpathTools";
 import type { MoveSegment } from "@/sdk/endpoints/cam/simulate";
 
 // ---------------------------------------------------------------------------
@@ -28,11 +29,17 @@ interface Props {
   showHeatmap?: boolean;
   /** Tool diameter for engagement calculation */
   toolDiameter?: number;
+  /** P6: Enable multi-tool color coding (by tool number) */
+  colorByTool?: boolean;
+  /** P6: Filter to show only this tool (null = show all) */
+  toolFilter?: number | null;
 }
 
 const props = withDefaults(defineProps<Props>(), {
   showHeatmap: false,
   toolDiameter: 6,
+  colorByTool: false,
+  toolFilter: null,
 });
 
 // ---------------------------------------------------------------------------
@@ -212,33 +219,45 @@ function drawSegment(
     }
   }
 
+  // P6: Tool filter — dim segments for other tools
+  const segTool = seg.tool_number ?? 1;
+  const isFilteredOut = props.toolFilter !== null && segTool !== props.toolFilter;
+
   if (isPast) {
-    ctx.globalAlpha = 0.4 + (1 - zNorm) * 0.6;
+    ctx.globalAlpha = isFilteredOut ? 0.1 : 0.4 + (1 - zNorm) * 0.6;
   } else {
-    ctx.globalAlpha = 0.12;
+    ctx.globalAlpha = isFilteredOut ? 0.05 : 0.12;
   }
 
-  switch (seg.type) {
-    case "rapid":
-      ctx.strokeStyle = "#999999";
-      ctx.setLineDash([4, 4]);
-      ctx.lineWidth = 1;
-      break;
-    case "cut":
-      ctx.strokeStyle = lerpColour("#4A90D9", "#1B3A6B", 1 - zNorm);
-      ctx.setLineDash([]);
-      ctx.lineWidth = 1 + (1 - zNorm) * 3;
-      break;
-    case "arc_cw":
-    case "arc_ccw":
-      ctx.strokeStyle = lerpColour("#2ECC71", "#1A7A42", 1 - zNorm);
-      ctx.setLineDash([]);
-      ctx.lineWidth = 1 + (1 - zNorm) * 3;
-      break;
-    default:
-      ctx.strokeStyle = "#888";
-      ctx.setLineDash([]);
-      ctx.lineWidth = 1;
+  // P6: Color by tool number when enabled
+  if (props.colorByTool && seg.type !== "rapid") {
+    const toolColor = getToolColor(segTool);
+    ctx.strokeStyle = toolColor;
+    ctx.setLineDash([]);
+    ctx.lineWidth = isFilteredOut ? 1 : 1 + (1 - zNorm) * 3;
+  } else {
+    switch (seg.type) {
+      case "rapid":
+        ctx.strokeStyle = "#999999";
+        ctx.setLineDash([4, 4]);
+        ctx.lineWidth = 1;
+        break;
+      case "cut":
+        ctx.strokeStyle = lerpColour("#4A90D9", "#1B3A6B", 1 - zNorm);
+        ctx.setLineDash([]);
+        ctx.lineWidth = 1 + (1 - zNorm) * 3;
+        break;
+      case "arc_cw":
+      case "arc_ccw":
+        ctx.strokeStyle = lerpColour("#2ECC71", "#1A7A42", 1 - zNorm);
+        ctx.setLineDash([]);
+        ctx.lineWidth = 1 + (1 - zNorm) * 3;
+        break;
+      default:
+        ctx.strokeStyle = "#888";
+        ctx.setLineDash([]);
+        ctx.lineWidth = 1;
+    }
   }
 
   ctx.stroke();
@@ -521,6 +540,12 @@ watch(
   () => [store.measurements, store.pendingMeasureStart, store.measureMode],
   () => requestAnimationFrame(drawFrame),
   { deep: true }
+);
+
+// P6: Redraw when tool coloring or filter changes
+watch(
+  () => [props.colorByTool, props.toolFilter],
+  () => requestAnimationFrame(drawFrame),
 );
 
 // ---------------------------------------------------------------------------

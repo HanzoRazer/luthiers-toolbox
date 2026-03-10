@@ -56,6 +56,12 @@ export interface MoveSegment {
   line_number: number;
   /** Raw G-code text — displayed in the HUD */
   line_text: string;
+  /** P6: Tool number for this segment (from T-code) */
+  tool_number?: number;
+  /** P6: Spindle RPM for this segment (from S-code) */
+  spindle_rpm?: number;
+  /** P6: Whether spindle is on (M3/M4 vs M5) */
+  spindle_on?: boolean;
 }
 
 /** XYZ bounding box of the entire toolpath */
@@ -76,11 +82,35 @@ export interface SimulateTotals {
   segment_count: number;
 }
 
+/** P6: Tool change event */
+export interface ToolChange {
+  /** Line number where tool change occurred */
+  line_number: number;
+  /** Previous tool number */
+  from_tool: number;
+  /** New tool number */
+  to_tool: number;
+  /** Position at tool change [x, y, z] */
+  position: [number, number, number];
+}
+
+/** P6: Multi-tool tracking summary */
+export interface ToolsInfo {
+  /** List of unique tool numbers used */
+  used: number[];
+  /** Count of unique tools */
+  count: number;
+  /** Tool change events */
+  changes: ToolChange[];
+}
+
 /** Full simulation response */
 export interface SimulateResponse {
   segments: MoveSegment[];
   bounds: SimulateBounds;
   totals: SimulateTotals;
+  /** P6: Multi-tool tracking (optional for backwards compatibility) */
+  tools?: ToolsInfo;
 }
 
 // ---------------------------------------------------------------------------

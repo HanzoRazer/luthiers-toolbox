@@ -39,6 +39,17 @@ import { GcodeOptimizer, type OptimizationReport } from "@/util/gcodeOptimizer";
 // P5 imports
 import { AnimationExporter, downloadExport, type ExportConfig, type ExportProgress } from "@/util/animationExporter";
 import { useToolpathShortcuts } from "@/composables/useToolpathShortcuts";
+// P6 imports: Multi-tool support
+import ToolLegendPanel from "./ToolLegendPanel.vue";
+import { analyzeToolUsage, type ToolChangeMarker } from "@/util/toolpathTools";
+// P6 Step 14: Feed optimization hints
+import FeedAnalysisPanel from "./FeedAnalysisPanel.vue";
+import type { FeedHint } from "@/util/feedOptimizer";
+// P6 Step 15: Stock simulation preview
+import StockSimulationPanel from "./StockSimulationPanel.vue";
+// P6 Step 16: Chip load analysis
+import ChipLoadPanel from "./ChipLoadPanel.vue";
+import type { ChipLoadIssue } from "@/util/chipLoadAnalyzer";
 
 // ---------------------------------------------------------------------------
 // Props
@@ -154,7 +165,9 @@ const showComparePanel = ref(false);
 const compareSegments = ref<CompareMoveSegment[]>([]);
 const showCompareOverlay = ref(false);
 
-// P5: Audio panelconst showAudioPanel = ref(false);const audioEngine = getAudioEngine();
+// P5: Audio panel
+const showAudioPanel = ref(false);
+const audioEngine = getAudioEngine();
 // P5: Export animation
 const showExportPanel = ref(false);
 const isExporting = ref(false);
@@ -167,6 +180,23 @@ const exportConfig = ref<Partial<ExportConfig>>({
 });
 const canvas2DRef = ref<InstanceType<typeof ToolpathCanvas> | null>(null);
 let exporter: AnimationExporter | null = null;
+
+// P6: Multi-tool legend panel
+const showToolLegendPanel = ref(false);
+const selectedToolFilter = ref<number | null>(null);
+const hasMultipleTools = computed(() => {
+  const tools = analyzeToolUsage(store.segments);
+  return tools.length > 1;
+});
+
+// P6 Step 14: Feed analysis panel
+const showFeedAnalysisPanel = ref(false);
+
+// P6 Step 15: Stock simulation panel
+const showStockSimulationPanel = ref(false);
+
+// P6 Step 16: Chip load analysis panel
+const showChipLoadPanel = ref(false);
 
 // ---------------------------------------------------------------------------
 // Machine state array (P3 M-code tracking)
@@ -425,7 +455,107 @@ function handleCompareSegments(segments: CompareMoveSegment[]): void {
 function handleCompareOverlayToggle(enabled: boolean): void {
   showCompareOverlay.value = enabled;
 }
-// ---------------------------------------------------------------------------// P5: Audio// ---------------------------------------------------------------------------// Initialize audio engine bounds when segments loadwatch(  () => store.bounds,  (bounds) => {    if (bounds) {      audioEngine.setBounds(bounds.z_min, bounds.z_max, 100, 3000);    }  });// Sync audio with playback statewatch(  () => store.playState,  (state) => {    if (state === "playing") {      audioEngine.start();    } else {      audioEngine.stop();    }  });// Update audio based on current segmentwatch(  () => [store.currentSegmentIndex, store.progress] as const,  ([segIdx, progress]) => {    const seg = store.segments[segIdx];    if (seg && store.playState === "playing") {      const segProgress = (progress * store.totalDurationMs - getSegmentStartTime(segIdx)) / seg.duration_ms;      audioEngine.updateForSegment(seg as AudioMoveSegment, Math.max(0, Math.min(1, segProgress)));    }  });// Helper to get segment start timefunction getSegmentStartTime(idx: number): number {  let time = 0;  for (let i = 0; i < idx; i++) {    time += store.segments[i].duration_ms;  }  return time;}
+
+// ---------------------------------------------------------------------------
+// P6: Multi-tool support
+// ---------------------------------------------------------------------------
+function handleToolSelect(toolNumber: number | null): void {
+  selectedToolFilter.value = toolNumber;
+  // Could emit to canvas to highlight/filter by tool
+}
+
+function handleToolChangeClick(marker: ToolChangeMarker): void {
+  // Jump to the segment where tool change occurred
+  if (marker.segmentIndex >= 0 && marker.segmentIndex < store.segments.length) {
+    // Calculate cumulative time up to this segment
+    let time = 0;
+    for (let i = 0; i < marker.segmentIndex; i++) {
+      time += store.segments[i].duration_ms;
+    }
+    store.seek(time / store.totalDurationMs);
+  }
+}
+
+// ---------------------------------------------------------------------------
+// P6 Step 14: Feed Analysis
+// ---------------------------------------------------------------------------
+function handleFeedHintClick(hint: FeedHint): void {
+  // Jump to the first segment in the hint range
+  const [startIdx] = hint.segmentRange;
+  if (startIdx >= 0 && startIdx < store.segments.length) {
+    let time = 0;
+    for (let i = 0; i < startIdx; i++) {
+      time += store.segments[i].duration_ms;
+    }
+    store.seek(time / store.totalDurationMs);
+    // Pause so user can inspect
+    store.pause();
+  }
+}
+
+// ---------------------------------------------------------------------------
+// P6 Step 16: Chip Load Analysis
+// ---------------------------------------------------------------------------
+function handleChipLoadIssueClick(issue: ChipLoadIssue): void {
+  // Jump to the first segment in the issue range
+  const [startIdx] = issue.segmentRange;
+  if (startIdx >= 0 && startIdx < store.segments.length) {
+    let time = 0;
+    for (let i = 0; i < startIdx; i++) {
+      time += store.segments[i].duration_ms;
+    }
+    store.seek(time / store.totalDurationMs);
+    // Pause so user can inspect
+    store.pause();
+  }
+}
+
+// ---------------------------------------------------------------------------
+// P5: Audio
+// ---------------------------------------------------------------------------
+
+// Initialize audio engine bounds when segments load
+watch(
+  () => store.bounds,
+  (bounds) => {
+    if (bounds) {
+      audioEngine.setBounds(bounds.z_min, bounds.z_max, 100, 3000);
+    }
+  }
+);
+
+// Sync audio with playback state
+watch(
+  () => store.playState,
+  (state) => {
+    if (state === "playing") {
+      audioEngine.start();
+    } else {
+      audioEngine.stop();
+    }
+  }
+);
+
+// Update audio based on current segment
+watch(
+  () => [store.currentSegmentIndex, store.progress] as const,
+  ([segIdx, progress]) => {
+    const seg = store.segments[segIdx];
+    if (seg && store.playState === "playing") {
+      const segProgress = (progress * store.totalDurationMs - getSegmentStartTime(segIdx)) / seg.duration_ms;
+      audioEngine.updateForSegment(seg as AudioMoveSegment, Math.max(0, Math.min(1, segProgress)));
+    }
+  }
+);
+
+// Helper to get segment start time
+function getSegmentStartTime(idx: number): number {
+  let time = 0;
+  for (let i = 0; i < idx; i++) {
+    time += store.segments[i].duration_ms;
+  }
+  return time;
+}
 
 // ---------------------------------------------------------------------------
 // Lifecycle
@@ -454,6 +584,8 @@ onUnmounted(() => {
       class="canvas-area"
       :show-heatmap="showHeatmap"
       :tool-diameter="toolDiameter"
+      :color-by-tool="hasMultipleTools"
+      :tool-filter="selectedToolFilter"
     />
     <ToolpathCanvas3D
       v-else
@@ -671,7 +803,61 @@ onUnmounted(() => {
       >
         🔀
       </button>
-<!-- P5: Audio panel toggle -->      <button        class="audio-btn"        :class="{ active: showAudioPanel }"        :disabled="store.segments.length === 0"        title="Machine sounds"        @click="showAudioPanel = !showAudioPanel"      >        🔊      </button>
+      <!-- P5: Audio panel toggle -->
+      <button
+        class="audio-btn"
+        :class="{ active: showAudioPanel }"
+        :disabled="store.segments.length === 0"
+        title="Machine sounds"
+        @click="showAudioPanel = !showAudioPanel"
+      >
+        🔊
+      </button>
+
+      <!-- P6: Tool legend panel toggle (only show if multiple tools) -->
+      <button
+        v-if="hasMultipleTools"
+        class="tools-btn"
+        :class="{ active: showToolLegendPanel }"
+        :disabled="store.segments.length === 0"
+        title="Tool legend"
+        @click="showToolLegendPanel = !showToolLegendPanel"
+      >
+        🔧
+      </button>
+
+      <!-- P6 Step 14: Feed analysis panel toggle -->
+      <button
+        class="feed-btn"
+        :class="{ active: showFeedAnalysisPanel }"
+        :disabled="store.segments.length === 0"
+        title="Feed rate analysis"
+        @click="showFeedAnalysisPanel = !showFeedAnalysisPanel"
+      >
+        ⚡
+      </button>
+
+      <!-- P6 Step 15: Stock simulation panel toggle -->
+      <button
+        class="stock-btn"
+        :class="{ active: showStockSimulationPanel }"
+        :disabled="store.segments.length === 0 || !store.bounds"
+        title="Stock simulation"
+        @click="showStockSimulationPanel = !showStockSimulationPanel"
+      >
+        🪵
+      </button>
+
+      <!-- P6 Step 16: Chip Load Analysis -->
+      <button
+        class="chipload-btn"
+        :class="{ active: showChipLoadPanel }"
+        :disabled="store.segments.length === 0"
+        title="Chip load analysis"
+        @click="showChipLoadPanel = !showChipLoadPanel"
+      >
+        ⚙️
+      </button>
 
       <!-- Memory badge -->
       <div
@@ -1182,7 +1368,71 @@ onUnmounted(() => {
         @overlay-toggle="handleCompareOverlayToggle"
       />
     </div>
-<!-- P5: Audio Panel -->    <div      v-if="showAudioPanel && store.segments.length > 0"      class="audio-panel-container"    >      <ToolpathAudioPanel        @close="showAudioPanel = false"      />    </div>
+    <!-- P5: Audio Panel -->
+    <div
+      v-if="showAudioPanel && store.segments.length > 0"
+      class="audio-panel-container"
+    >
+      <ToolpathAudioPanel
+        @close="showAudioPanel = false"
+      />
+    </div>
+
+    <!-- P6: Tool Legend Panel -->
+    <div
+      v-if="showToolLegendPanel && store.segments.length > 0"
+      class="tool-legend-container"
+    >
+      <ToolLegendPanel
+        :segments="store.segments"
+        :current-segment-index="store.currentSegmentIndex"
+        @tool-select="handleToolSelect"
+        @tool-change-click="handleToolChangeClick"
+        @close="showToolLegendPanel = false"
+      />
+    </div>
+
+    <!-- P6 Step 14: Feed Analysis Panel -->
+    <div
+      v-if="showFeedAnalysisPanel && store.segments.length > 0"
+      class="feed-analysis-container"
+    >
+      <FeedAnalysisPanel
+        :segments="store.segments"
+        :tool-diameter="toolDiameter"
+        @hint-click="handleFeedHintClick"
+        @close="showFeedAnalysisPanel = false"
+      />
+    </div>
+
+    <!-- P6 Step 15: Stock Simulation Panel -->
+    <div
+      v-if="showStockSimulationPanel && store.segments.length > 0 && store.bounds"
+      class="stock-simulation-container"
+    >
+      <StockSimulationPanel
+        :segments="store.segments"
+        :current-segment-index="store.currentSegmentIndex"
+        :bounds="store.bounds"
+        :tool-diameter="toolDiameter"
+        @close="showStockSimulationPanel = false"
+      />
+    </div>
+
+    <!-- P6 Step 16: Chip Load Panel -->
+    <div
+      v-if="showChipLoadPanel && store.segments.length > 0"
+      class="chipload-panel-container"
+    >
+      <ChipLoadPanel
+        :segments="store.segments"
+        :tool-diameter="toolDiameter"
+        :flute-count="2"
+        :default-rpm="18000"
+        @issue-click="handleChipLoadIssueClick"
+        @close="showChipLoadPanel = false"
+      />
+    </div>
 
     <!-- P5: Measurements Panel -->
     <div
@@ -2521,5 +2771,268 @@ onUnmounted(() => {
   overflow: hidden;
   border: 1px solid #9b59b6;
 }
-/* ── P5: Audio button ───────────────────────────────────────────────── */.audio-btn {  display: flex;  align-items: center;  justify-content: center;  width: 30px;  height: 26px;  padding: 0;  background: #2a2a3a;  border: 1px solid #444;  border-radius: 4px;  color: #888;  font-size: 14px;  cursor: pointer;  transition: all 0.15s ease;}.audio-btn:hover {  background: #3a3a4a;  color: #e9a840;  border-color: #555;}.audio-btn.active {  background: rgba(233, 168, 64, 0.2);  border-color: #e9a840;  color: #e9a840;}.audio-btn:disabled {  opacity: 0.4;  cursor: not-allowed;}/* ── P5: Audio Panel ────────────────────────────────────────────────── */.audio-panel-container {  position: absolute;  right: 10px;  top: 10px;  width: 320px;  max-height: calc(100% - 120px);  z-index: 15;  display: flex;  flex-direction: column;  box-shadow: 0 4px 20px rgba(233, 168, 64, 0.2);}.audio-panel-container > :deep(.audio-panel) {  flex: 1;  overflow: hidden;  border: 1px solid #e9a840;  border-radius: 8px;}
+/* ── P5: Audio button ───────────────────────────────────────────────── */
+.audio-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 26px;
+  padding: 0;
+  background: #2a2a3a;
+  border: 1px solid #444;
+  border-radius: 4px;
+  color: #888;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.audio-btn:hover {
+  background: #3a3a4a;
+  color: #e9a840;
+  border-color: #555;
+}
+
+.audio-btn.active {
+  background: rgba(233, 168, 64, 0.2);
+  border-color: #e9a840;
+  color: #e9a840;
+}
+
+.audio-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* ── P5: Audio Panel ────────────────────────────────────────────────── */
+.audio-panel-container {
+  position: absolute;
+  right: 10px;
+  top: 10px;
+  width: 320px;
+  max-height: calc(100% - 120px);
+  z-index: 15;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 4px 20px rgba(233, 168, 64, 0.2);
+}
+
+.audio-panel-container > :deep(.audio-panel) {
+  flex: 1;
+  overflow: hidden;
+  border: 1px solid #e9a840;
+  border-radius: 8px;
+}
+
+/* ── P6: Tools button ────────────────────────────────────────────────── */
+.tools-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 26px;
+  padding: 0;
+  background: #2a2a3a;
+  border: 1px solid #444;
+  border-radius: 4px;
+  color: #888;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.tools-btn:hover {
+  background: #3a3a4a;
+  color: #4a90d9;
+  border-color: #555;
+}
+
+.tools-btn.active {
+  background: rgba(74, 144, 217, 0.2);
+  border-color: #4a90d9;
+  color: #4a90d9;
+}
+
+.tools-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* ── P6: Tool Legend Panel ───────────────────────────────────────────── */
+.tool-legend-container {
+  position: absolute;
+  left: 10px;
+  top: 10px;
+  width: 280px;
+  max-height: calc(100% - 120px);
+  z-index: 15;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 4px 20px rgba(74, 144, 217, 0.2);
+}
+
+.tool-legend-container > :deep(.tool-legend-panel) {
+  flex: 1;
+  overflow: hidden;
+  border: 1px solid #4a90d9;
+  border-radius: 8px;
+}
+
+/* ── P6 Step 14: Feed button ─────────────────────────────────────────────── */
+.feed-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 26px;
+  padding: 0;
+  background: #2a2a3a;
+  border: 1px solid #444;
+  border-radius: 4px;
+  color: #888;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.feed-btn:hover {
+  background: #3a3a4a;
+  color: #f39c12;
+  border-color: #555;
+}
+
+.feed-btn.active {
+  background: rgba(243, 156, 18, 0.2);
+  border-color: #f39c12;
+  color: #f39c12;
+}
+
+.feed-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* ── P6 Step 14: Feed Analysis Panel ─────────────────────────────────────── */
+.feed-analysis-container {
+  position: absolute;
+  right: 10px;
+  top: 10px;
+  width: 360px;
+  max-height: calc(100% - 120px);
+  z-index: 16;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 4px 20px rgba(243, 156, 18, 0.2);
+}
+
+.feed-analysis-container > :deep(.feed-analysis-panel) {
+  flex: 1;
+  overflow: hidden;
+  border: 1px solid #f39c12;
+  border-radius: 8px;
+}
+
+/* ── P6 Step 15: Stock button ────────────────────────────────────────────── */
+.stock-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 26px;
+  padding: 0;
+  background: #2a2a3a;
+  border: 1px solid #444;
+  border-radius: 4px;
+  color: #888;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.stock-btn:hover {
+  background: #3a3a4a;
+  color: #8B4513;
+  border-color: #555;
+}
+
+.stock-btn.active {
+  background: rgba(139, 69, 19, 0.2);
+  border-color: #8B4513;
+  color: #8B4513;
+}
+
+.stock-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* ── P6 Step 15: Stock Simulation Panel ──────────────────────────────────── */
+.stock-simulation-container {
+  position: absolute;
+  left: 10px;
+  top: 10px;
+  width: 320px;
+  max-height: calc(100% - 120px);
+  z-index: 17;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 4px 20px rgba(139, 69, 19, 0.2);
+}
+
+.stock-simulation-container > :deep(.stock-simulation-panel) {
+  flex: 1;
+  overflow: hidden;
+  border: 1px solid #8B4513;
+  border-radius: 8px;
+}
+
+/* ── P6 Step 16: Chip Load Panel ──────────────────────────────────────────── */
+.chipload-btn {
+  background: #252538;
+  border: 1px solid #3a3a5c;
+  border-radius: 4px;
+  color: #888;
+  width: 32px;
+  height: 32px;
+  font-size: 16px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.chipload-btn:hover:not(:disabled) {
+  background: #33334a;
+  border-color: #f39c12;
+  color: #f39c12;
+}
+
+.chipload-btn.active {
+  background: rgba(243, 156, 18, 0.2);
+  border-color: #f39c12;
+  color: #f39c12;
+}
+
+.chipload-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.chipload-panel-container {
+  position: absolute;
+  right: 10px;
+  top: 10px;
+  width: 340px;
+  max-height: calc(100% - 120px);
+  z-index: 18;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 4px 20px rgba(243, 156, 18, 0.2);
+}
+
+.chipload-panel-container > :deep(.chip-load-panel) {
+  flex: 1;
+  overflow: hidden;
+  border: 1px solid #f39c12;
+  border-radius: 8px;
+}
 </style>

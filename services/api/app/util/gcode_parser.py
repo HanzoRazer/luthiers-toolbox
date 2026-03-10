@@ -263,9 +263,14 @@ def _arc_len(center: Tuple[float, float], a: Tuple[float, float], b: Tuple[float
 # =============================================================================
 
 def _parse_block_words(blk: Dict[str, Any], u: float) -> Dict[str, Any]:
-    """Extract typed values from a parsed block, applying unit factor *u*."""
+    """Extract typed values from a parsed block, applying unit factor *u*.
+
+    P6 Extension: Now extracts T (tool), S (spindle), M (misc) codes for
+    multi-tool visualization and chip load analysis.
+    """
     out: Dict[str, Any] = {'g': None, 'x': None, 'y': None, 'z': None,
-                            'f': None, 'i': None, 'j': None, 'r': None}
+                            'f': None, 'i': None, 'j': None, 'r': None,
+                            't': None, 's': None, 'm': None}
     for letter, val in blk["words"]:
         if letter == 'G':
             out['g'] = int(val)
@@ -273,11 +278,32 @@ def _parse_block_words(blk: Dict[str, Any], u: float) -> Dict[str, Any]:
             out[letter.lower()] = val * u
         elif letter == 'F':
             out['f'] = val * (u / 1.0)
+        elif letter == 'T':
+            out['t'] = int(val)
+        elif letter == 'S':
+            out['s'] = float(val)
+        elif letter == 'M':
+            out['m'] = int(val)
     return out
 
 
-def _update_modal_state(modal: Modal, g: int | None, f: float | None) -> None:
-    """Apply G/F words to modal state in-place."""
+def _update_modal_state(
+    modal: Modal,
+    g: int | None,
+    f: float | None,
+    t: int | None = None,
+    s: float | None = None,
+    m: int | None = None,
+) -> None:
+    """Apply G/F/T/S/M words to modal state in-place.
+
+    P6 Extension: Added T (tool), S (spindle RPM), M (misc) code handling
+    for multi-tool visualization and chip load analysis.
+
+    Tool changes: T1, T2, etc. (actual change happens on M6)
+    Spindle: M3 = CW, M4 = CCW, M5 = stop
+    Spindle speed: S-code sets RPM
+    """
     if f is not None:
         modal["F"] = max(0.1, float(f))
     if g is not None:
@@ -289,6 +315,28 @@ def _update_modal_state(modal: Modal, g: int | None, f: float | None) -> None:
             modal["units"] = 1.0
         elif g in (17, 18, 19):
             modal["plane"] = g
+
+    # P6: Tool change (T-code sets pending tool, M6 activates it)
+    if t is not None:
+        modal["pending_tool"] = t
+
+    # P6: Spindle speed
+    if s is not None:
+        modal["S"] = max(0.0, float(s))
+
+    # P6: M-codes for spindle control and tool change
+    if m is not None:
+        if m == 3:  # Spindle CW
+            modal["spindle_on"] = True
+            modal["spindle_dir"] = "cw"
+        elif m == 4:  # Spindle CCW
+            modal["spindle_on"] = True
+            modal["spindle_dir"] = "ccw"
+        elif m == 5:  # Spindle stop
+            modal["spindle_on"] = False
+        elif m == 6:  # Tool change - activate pending tool
+            if "pending_tool" in modal:
+                modal["T"] = modal["pending_tool"]
 
 
 def _sim_linear(pos: Tuple[float, float, float],
@@ -534,11 +582,25 @@ def simulate_segments(
     u = 1.0 if units.lower().startswith("mm") else 25.4
     prog = parse_lines(gcode)
 
-    modal: Modal = {"G": 0, "F": default_feed_mm_min, "units": u, "plane": 17}
+    # P6 Extension: Initialize modal with tool/spindle tracking
+    modal: Modal = {
+        "G": 0,
+        "F": default_feed_mm_min,
+        "units": u,
+        "plane": 17,
+        # P6: Tool state
+        "T": 1,              # Current tool number (default T1)
+        "pending_tool": 1,   # Pending tool (set by T-code, activated by M6)
+        # P6: Spindle state
+        "S": 0.0,            # Spindle RPM
+        "spindle_on": False,
+        "spindle_dir": "cw",
+    }
     pos: Tuple[float, float, float] = (0.0, 0.0, 0.0)
 
     segs: List[Dict[str, Any]] = []
     rapid_mm = cut_mm = 0.0
+    tool_changes: List[Dict[str, Any]] = []  # P6: Track tool change points
 
     bb: Dict[str, float] = {
         "x_min": 0.0, "x_max": 0.0,
@@ -572,13 +634,28 @@ def simulate_segments(
             "duration_ms": duration_ms,
             "line_number": line_number,
             "line_text":   line_text,
+            # P6 Extension: Tool and spindle state for multi-tool visualization
+            "tool_number":  modal.get("T", 1),
+            "spindle_rpm":  modal.get("S", 0.0),
+            "spindle_on":   modal.get("spindle_on", False),
         })
         _expand_bb(*to_p)
 
     for line_idx, blk in enumerate(prog):
         w = _parse_block_words(blk, u)
-        _update_modal_state(modal, w["g"], w["f"])
+        prev_tool = modal.get("T", 1)
+        _update_modal_state(modal, w["g"], w["f"], w["t"], w["s"], w["m"])
         u = modal["units"]
+
+        # P6: Track tool changes
+        curr_tool = modal.get("T", 1)
+        if curr_tool != prev_tool:
+            tool_changes.append({
+                "line_number": line_idx + 1,
+                "from_tool": prev_tool,
+                "to_tool": curr_tool,
+                "position": list(pos),
+            })
 
         nx = pos[0] if w["x"] is None else w["x"]
         ny = pos[1] if w["y"] is None else w["y"]
@@ -630,6 +707,9 @@ def simulate_segments(
 
     total_time_min = sum(s["duration_ms"] for s in segs) / 60_000.0
 
+    # P6: Collect unique tools used
+    tools_used = sorted(set(s.get("tool_number", 1) for s in segs))
+
     return {
         "segments": segs,
         "bounds":   bb,
@@ -638,6 +718,12 @@ def simulate_segments(
             "cut_mm":        cut_mm,
             "time_min":      total_time_min,
             "segment_count": len(segs),
+        },
+        # P6 Extension: Multi-tool tracking
+        "tools": {
+            "used": tools_used,
+            "count": len(tools_used),
+            "changes": tool_changes,
         },
     }
 
