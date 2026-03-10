@@ -1,9 +1,10 @@
 <script setup lang="ts">
 /**
- * ToolpathPlayer — P1-P4 Full Integration
+ * ToolpathPlayer — P1-P5 Full Integration
  *
  * Drop-in animated G-code toolpath player. Composes:
  *   - ToolpathCanvas  (LOD canvas renderer + tool viz)
+ *   - ToolpathCanvas3D (Three.js 3D renderer) [P5]
  *   - MemoryWarning   (large-file alert banner)
  *   - Controls bar    (play/pause, scrub, speed, resolution slider)
  *   - HUD bar         (G-code line, Z, feed, time, M-code state, estimate)
@@ -12,10 +13,12 @@
  * P2: Caching (sessionStorage), LOD (in canvas)
  * P3: M-code HUD, tool viz (in canvas), time estimates
  * P4: Collision detection, optimization suggestions, stock simulation
+ * P5: 3D Three.js visualization with orbit controls
  */
 
 import { onMounted, onUnmounted, computed, ref, watch } from "vue";
 import ToolpathCanvas from "./ToolpathCanvas.vue";
+import ToolpathCanvas3D from "./ToolpathCanvas3D.vue";
 import MemoryWarning from "./MemoryWarning.vue";
 import { useToolpathPlayerStore } from "@/stores/useToolpathPlayerStore";
 import { useTimeEstimates } from "@/composables/useTimeEstimates";
@@ -40,6 +43,9 @@ interface Props {
   toolDiameter?: number;
   fixtures?: Fixture[];
   safeZ?: number;
+  // P5 props
+  enable3D?: boolean;
+  default3D?: boolean;
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -54,6 +60,9 @@ const props = withDefaults(defineProps<Props>(), {
   toolDiameter: 6,
   fixtures: () => [],
   safeZ: 5,
+  // P5 defaults
+  enable3D: true,
+  default3D: false,
 });
 
 // ---------------------------------------------------------------------------
@@ -68,6 +77,10 @@ const { estimates } = useTimeEstimates(computed(() => store.segments));
 const memDismissed = ref(false);
 const resSlider = ref(100);
 const validation = ref<ValidationResult | null>(null);
+
+// P5: 3D view mode
+const viewMode = ref<"2d" | "3d">(props.default3D ? "3d" : "2d");
+const canvas3DRef = ref<InstanceType<typeof ToolpathCanvas3D> | null>(null);
 
 // ---------------------------------------------------------------------------
 // Machine state array (P3 M-code tracking)
@@ -231,8 +244,19 @@ onUnmounted(() => {
     class="toolpath-player"
     :style="{ height: props.height }"
   >
-    <!-- ── Canvas ─────────────────────────────────────────────── -->
-    <ToolpathCanvas class="canvas-area" />
+    <!-- ── Canvas (2D or 3D based on viewMode) ─────────────────── -->
+    <ToolpathCanvas
+      v-if="viewMode === '2d'"
+      class="canvas-area"
+    />
+    <ToolpathCanvas3D
+      v-else
+      ref="canvas3DRef"
+      class="canvas-area"
+      :tool-diameter="toolDiameter"
+      :show-stock="true"
+      :show-grid="true"
+    />
 
     <!-- ── Loading overlay with progress (P1) ────────────────── -->
     <div
@@ -332,6 +356,29 @@ onUnmounted(() => {
       v-if="props.showControls"
       class="controls-bar"
     >
+      <!-- P5: 2D/3D toggle -->
+      <div
+        v-if="props.enable3D"
+        class="view-toggle"
+      >
+        <button
+          class="view-btn"
+          :class="{ active: viewMode === '2d' }"
+          title="2D View"
+          @click="viewMode = '2d'"
+        >
+          2D
+        </button>
+        <button
+          class="view-btn"
+          :class="{ active: viewMode === '3d' }"
+          title="3D View"
+          @click="viewMode = '3d'"
+        >
+          3D
+        </button>
+      </div>
+
       <!-- Memory badge -->
       <div
         v-if="store.memoryInfo.segmentCount > 0"
@@ -627,6 +674,40 @@ onUnmounted(() => {
 .controls-bar {
   display: flex; align-items: center; gap: 6px; padding: 7px 10px;
   background: #13131f; border-top: 1px solid #2a2a4a; flex-shrink: 0;
+}
+
+/* ── P5: View mode toggle ──────────────────────────────────────── */
+.view-toggle {
+  display: flex;
+  border: 1px solid #3a3a5c;
+  border-radius: 4px;
+  overflow: hidden;
+  margin-right: 4px;
+}
+
+.view-btn {
+  background: #252538;
+  border: none;
+  color: #888;
+  padding: 3px 8px;
+  font-size: 10px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+
+.view-btn:first-child {
+  border-right: 1px solid #3a3a5c;
+}
+
+.view-btn:hover {
+  background: #33334a;
+  color: #ccc;
+}
+
+.view-btn.active {
+  background: #1a3a6b;
+  color: #4a90d9;
 }
 
 .mem-badge {
