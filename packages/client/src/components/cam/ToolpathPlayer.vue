@@ -24,8 +24,10 @@ import MemoryWarning from "./MemoryWarning.vue";
 import ToolpathStats from "./ToolpathStats.vue";
 import ToolpathFilter from "./ToolpathFilter.vue";
 import ToolpathAnnotations from "./ToolpathAnnotations.vue";
+import ToolpathComparePanel from "./ToolpathComparePanel.vue";
 import { useToolpathPlayerStore } from "@/stores/useToolpathPlayerStore";
 import { annotationManager, type Annotation } from "@/util/toolpathAnnotations";
+import type { MoveSegment as CompareMoveSegment } from "@/util/toolpathComparison";
 import { useTimeEstimates } from "@/composables/useTimeEstimates";
 import { validateGcode, type ValidationResult } from "@/util/gcodeValidator";
 import { buildMachineStates, type MachineState } from "@/util/mcodeTracker";
@@ -144,6 +146,11 @@ const filterPanelRef = ref<InstanceType<typeof ToolpathFilter> | null>(null);
 
 // P5: Annotations panel
 const showAnnotationsPanel = ref(false);
+
+// P5: Compare panel
+const showComparePanel = ref(false);
+const compareSegments = ref<CompareMoveSegment[]>([]);
+const showCompareOverlay = ref(false);
 
 // P5: Export animation
 const showExportPanel = ref(false);
@@ -406,6 +413,17 @@ function handleAnnotationGoto(annotation: Annotation): void {
 }
 
 // ---------------------------------------------------------------------------
+// P5: Compare
+// ---------------------------------------------------------------------------
+function handleCompareSegments(segments: CompareMoveSegment[]): void {
+  compareSegments.value = segments;
+}
+
+function handleCompareOverlayToggle(enabled: boolean): void {
+  showCompareOverlay.value = enabled;
+}
+
+// ---------------------------------------------------------------------------
 // Lifecycle
 // ---------------------------------------------------------------------------
 onMounted(async () => {
@@ -637,6 +655,17 @@ onUnmounted(() => {
         @click="showAnnotationsPanel = !showAnnotationsPanel"
       >
         📝
+      </button>
+
+      <!-- P5: Compare panel toggle -->
+      <button
+        class="compare-btn"
+        :class="{ active: showComparePanel, comparing: showCompareOverlay }"
+        :disabled="store.segments.length === 0"
+        title="Compare toolpaths"
+        @click="showComparePanel = !showComparePanel"
+      >
+        🔀
       </button>
 
       <!-- Memory badge -->
@@ -1132,6 +1161,20 @@ onUnmounted(() => {
         :current-line-number="store.currentSegment?.line_number ?? null"
         @close="showAnnotationsPanel = false"
         @goto="handleAnnotationGoto"
+      />
+    </div>
+
+    <!-- P5: Compare Panel -->
+    <div
+      v-if="showComparePanel && store.segments.length > 0"
+      class="compare-panel-container"
+    >
+      <ToolpathComparePanel
+        :base-segments="store.segments as CompareMoveSegment[]"
+        :base-gcode="store.sourceGcode"
+        @close="showComparePanel = false"
+        @compare-segments="handleCompareSegments"
+        @overlay-toggle="handleCompareOverlayToggle"
       />
     </div>
 
@@ -2412,5 +2455,64 @@ onUnmounted(() => {
   flex: 1;
   overflow: hidden;
   border: 1px solid #4a90d9;
+}
+
+/* ── P5: Compare button ──────────────────────────────────────────────── */
+.compare-btn {
+  background: #252538;
+  border: 1px solid #3a3a5c;
+  color: #666;
+  border-radius: 4px;
+  width: 30px;
+  height: 28px;
+  font-size: 14px;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
+  flex-shrink: 0;
+}
+
+.compare-btn:hover {
+  background: #33334a;
+  color: #9b59b6;
+}
+
+.compare-btn.active {
+  background: #2a1a3a;
+  border-color: #9b59b6;
+  color: #9b59b6;
+}
+
+.compare-btn.comparing {
+  animation: compare-pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes compare-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(155, 89, 182, 0.4); }
+  50% { box-shadow: 0 0 8px 2px rgba(155, 89, 182, 0.6); }
+}
+
+.compare-btn:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+  animation: none;
+}
+
+/* ── P5: Compare Panel ───────────────────────────────────────────────── */
+.compare-panel-container {
+  position: absolute;
+  left: 10px;
+  top: 10px;
+  width: 360px;
+  max-height: calc(100% - 120px);
+  z-index: 15;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 4px 20px rgba(155, 89, 182, 0.2);
+}
+
+.compare-panel-container > :deep(.toolpath-compare-panel) {
+  flex: 1;
+  overflow: hidden;
+  border: 1px solid #9b59b6;
 }
 </style>
