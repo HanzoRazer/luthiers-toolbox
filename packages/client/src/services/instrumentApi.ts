@@ -27,7 +27,7 @@ export interface InstrumentModel {
   model_id: string;
   display_name: string;
   category: string;
-  status: 'STUB' | 'ASSETS_ONLY' | 'COMPLETE';
+  status: 'STUB' | 'PARTIAL' | 'ASSETS_ONLY' | 'COMPLETE';
 }
 
 export interface InstrumentModelList {

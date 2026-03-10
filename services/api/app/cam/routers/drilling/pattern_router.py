@@ -38,6 +38,8 @@ from typing import Any, Dict, List, Literal, Optional
 from fastapi import APIRouter, HTTPException, Response
 from pydantic import BaseModel
 
+from app.safety import safety_critical
+
 try:
     from ....util.post_injection_helpers import build_post_context_v2, wrap_with_post_v2
     HAS_POST_HELPERS = True
@@ -135,6 +137,7 @@ def _generate_points(p: Pattern) -> List[tuple]:
 
 
 @router.post("/gcode", response_class=Response)
+@safety_critical
 def drill_pattern_gcode(pat: Pattern, prm: DrillParams) -> Response:
     """
     Generate drilling G-code from pattern specification.

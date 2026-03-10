@@ -22,6 +22,8 @@ import os
 from fastapi import APIRouter, Body, HTTPException, Response
 from datetime import timezone
 
+from app.safety import safety_critical
+
 logger = logging.getLogger(__name__)
 
 # Simulation gate enforcement (default: enabled)
@@ -161,6 +163,7 @@ def export_geometry(fmt: str = "dxf", body: ExportRequest = Body(...)):
 
 
 @router.post("/export_gcode")
+@safety_critical
 def export_gcode(body: GcodeExportIn) -> Response:
     """
     Export G-code with post-processor headers/footers and metadata.
@@ -215,6 +218,7 @@ def export_gcode(body: GcodeExportIn) -> Response:
 
 
 @router.post("/export_gcode_governed")
+@safety_critical
 def export_gcode_governed(body: GcodeExportIn) -> Response:
     """
     Export G-code with post-processor headers/footers and metadata (GOVERNED lane).
