@@ -31,6 +31,8 @@ from app.saw_lab.batch_router_schemas import (
     BatchPlanResponse,
     BatchApproveRequest,
     BatchApproveResponse,
+    BatchToolpathsFromDecisionRequest,
+    BatchToolpathsFromDecisionResponse,
 )
 
 
@@ -250,3 +252,36 @@ def approve_batch_plan(req: BatchApproveRequest) -> BatchApproveResponse:
 # Note: batch_router_toolpaths.py was deleted as dormant code.
 # If choose_batch_plan functionality is needed, restore from git history.
 
+
+# ---------------------------------------------------------------------------
+# Toolpath Generation from Decision (restored 2026-03-11 for P1-SAW fix)
+# ---------------------------------------------------------------------------
+
+
+@router.post("/toolpaths/from-decision", response_model=BatchToolpathsFromDecisionResponse)
+def toolpaths_from_decision(
+    req: BatchToolpathsFromDecisionRequest,
+) -> BatchToolpathsFromDecisionResponse:
+    """
+    Generate toolpaths from an approved decision.
+
+    This is the critical link between DECISION and EXECUTE stages.
+    Toolpaths artifact is parented to the decision and inherits lineage stamps.
+    """
+    from .saw_lab_toolpaths_from_decision_service import generate_toolpaths_from_decision
+
+    out = generate_toolpaths_from_decision(
+        batch_decision_artifact_id=req.batch_decision_artifact_id,
+        include_gcode=bool(req.include_gcode),
+    )
+    if not out.get("batch_toolpaths_artifact_id"):
+        raise HTTPException(
+            status_code=500, detail=out.get("error") or "toolpaths generation failed"
+        )
+    return BatchToolpathsFromDecisionResponse(
+        batch_toolpaths_artifact_id=str(out["batch_toolpaths_artifact_id"]),
+        status=str(out.get("status") or "UNKNOWN"),
+        error=out.get("error"),
+        decision_apply_stamp=out.get("decision_apply_stamp"),
+        preview=out.get("preview"),
+    )
