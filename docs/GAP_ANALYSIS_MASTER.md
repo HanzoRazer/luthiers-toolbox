@@ -70,7 +70,7 @@
 | SG-GAP-02 | Smart Guitar | DXF X-axis asymmetric — centerline 22.2mm off-center, all cavities shifted | **Resolved** (638b7578) |
 | OM-PURF-05 | OM Purfling | Scan data has 5,451 scattered points, not a contour — parametric regen required | MEDIUM |
 | VINE-12 | J45 Vine | Extracted DXFs are R2000 not R12 — LWPolyline necessity but violates convention | LOW |
-| VINE-09 | J45 Vine | Bracing DXF has raw lines/arcs, not closed contours — 460 entities, 0 closed polylines | CRITICAL |
+| VINE-09 | J45 Vine | Bracing DXF has raw lines/arcs, not closed contours — 460 entities, 0 closed polylines | **Resolved** (30e50bb3) |
 
 ### Fixes
 
@@ -401,7 +401,7 @@
 
 | Fix | Resolves | Impact |
 |-----|----------|--------|
-| DXF regeneration pipeline | LP-GAP-01, EX-GAP-01/02/03, SG-GAP-01/02, VINE-09 | **7 critical** — every build blocked |
+| DXF regeneration pipeline | LP-GAP-01, EX-GAP-01/02/03, SG-GAP-01/02, ~~VINE-09~~ | **6 critical** (VINE-09 resolved) — remaining builds blocked |
 | Body perimeter profiling module | OM-GAP-02, BEN-GAP-03, VINE-07, FV-GAP-03 | **4 high** — 4 instruments can't cut outlines |
 | Binding/purfling CAM module | OM-GAP-03/04, BEN-GAP-01/02, OM-PURF-01/02 | **4 critical + 2 high** — acoustics blocked |
 | SVG→DXF converter | VINE-02 | **1 critical** — all art→CAM blocked |
