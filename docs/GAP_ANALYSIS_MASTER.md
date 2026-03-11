@@ -29,6 +29,7 @@
 | 2026-03-10 | `03acbb4f` | Add PipelineResult to CAM adapter `/cam/blueprint/pipeline-adapter/from-pipeline` | VEC-GAP-03 |
 | 2026-03-10 | `4a0af084` | Add Blueprint → CAM integration tests (20 tests) | VEC-GAP-04 |
 | 2026-03-10 | `f8e4dded` | Add Phase 1 → Phase 3 scale handoff `scale_hint_mm_per_pixel` | VEC-GAP-05 |
+| 2026-03-10 | ec003681 | Add Flying V CAM-ready DXF with closed LWPOLYLINE | FV-GAP-04 |
 ---
 
 ## Summary by Category
@@ -207,7 +208,7 @@
 | VEC-GAP-04 | OM Purfling | Phase 3 → CAM bridge — same layer but no integration test | MEDIUM |
 | INLAY-04 | Custom Inlay | No unified coordinate space — fretboard and headstock use disconnected systems | MEDIUM |
 | VINE-11 | J45 Vine | Bracing presets disconnected from instrument specs — generic, not instrument-aware | MEDIUM |
-| FV-GAP-04 | Flying V | Vectorizer Phase 2 never processed Flying V DWGs — DWG→DXF conversion not run | HIGH |
+| FV-GAP-04 | Flying V | Vectorizer Phase 2 never processed Flying V DWGs — DWG→DXF conversion not run | **Resolved** (ec003681) |
 | VEC-GAP-08 | OM Purfling | OCR dimensions from Phase 3.6 unused downstream | LOW |
 
 ### Fixes
