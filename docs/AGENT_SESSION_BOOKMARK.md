@@ -2,7 +2,7 @@
 
 **Date:** 2026-03-11
 **Session:** GAP_ANALYSIS Remediation Sprint
-**Last Commit:** 53f9a02e docs: add CORRUPT-GAP-01 to remediation log
+**Last Commit:** c9ac19ec fix(saw-lab): restore POST /toolpaths/from-decision endpoint (P1-SAW pipeline fix)
 **Branch:** main
 **Pushed:** Yes (origin/main up to date)
 
@@ -28,6 +28,7 @@ Working through infrastructure gaps identified in `docs/GAP_ANALYSIS_MASTER.md`.
 | SAW-LAB-GAP-01 | Duplicate artifact helpers across 7 files | 6dd8280a | Centralized 8 helpers into artifact_helpers.py |
 | RMOS-GAP-01 | Duplicate artifact helpers in runs_v2/ (3 files) | 528f577d | Moved helpers to rmos/, centralized across saw_lab + runs_v2 |
 | CORRUPT-GAP-01 | 8 Python files in app/services/ with corrupted formatting | 8f530691 | Reconstructed all 8 files with proper Python formatting |
+| **P1-SAW** | DECISION → TOOLPATHS pipeline break (endpoint deleted during cleanup) | c9ac19ec | Restored POST /api/saw/batch/toolpaths/from-decision + 8 schemas |
 
 ---
 
@@ -123,4 +124,4 @@ All remediation phases complete. WP-3 god-object decomposition committed. Tagged
 
 ---
 
-*Updated: 2026-03-11 — CORRUPT-GAP-01 complete, ready for next gap*
+*Updated: 2026-03-11 — P1-SAW pipeline fix complete, Saw Lab batch workflow operational*

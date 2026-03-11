@@ -33,6 +33,7 @@
 | 2026-03-10 | 461caebc | Add Les Paul 8-layer CAM DXF (26 entities) | LP-GAP-01 |
 | 2026-03-10 | a7a9ee24 | Add DXF preprocessor pipeline (format normalize, curve densify, dimension validate) | EX-GAP-01, EX-GAP-02, EX-GAP-03 |
 | 2026-03-10 | 638b7578 | Add DXF geometry correction pipeline (dimension scaling, centerline alignment) | SG-GAP-01, SG-GAP-02 |
+| 2026-03-11 | c9ac19ec | Restore POST /api/saw/batch/toolpaths/from-decision endpoint + 8 schemas (P1-SAW fix) | P1-SAW (pipeline break) |
 ---
 
 ## Summary by Category
