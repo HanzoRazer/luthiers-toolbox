@@ -12,6 +12,7 @@ These functions:
 """
 from __future__ import annotations
 
+import inspect
 import logging
 import functools
 from typing import Callable, TypeVar, Any
@@ -59,6 +60,10 @@ def safety_critical(func: F) -> F:
     # Mark function for fence checker detection
     wrapper._is_safety_critical = True
     wrapper._original_func = func
+
+    # CRITICAL: Preserve function signature for FastAPI dependency injection
+    # FastAPI uses inspect.signature() which checks __signature__ first
+    wrapper.__signature__ = inspect.signature(func)
 
     return wrapper  # type: ignore[return-value]
 
