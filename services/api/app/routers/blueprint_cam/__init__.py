@@ -30,6 +30,7 @@ from .preflight_router import router as preflight_router
 from .adaptive_router import router as adaptive_router
 from .pipeline_adapter_router import router as pipeline_adapter_router
 from .preprocessor_router import router as preprocessor_router
+from .geometry_correction_router import router as geometry_correction_router
 
 # Aggregate router with common prefix and tags
 router = APIRouter(prefix="/cam/blueprint", tags=["blueprint-cam-bridge"])
@@ -40,6 +41,7 @@ router.include_router(preflight_router)
 router.include_router(adaptive_router)
 router.include_router(pipeline_adapter_router)
 router.include_router(preprocessor_router)
+router.include_router(geometry_correction_router)
 
 # Re-export extraction utility for external use
 from .extraction import extract_loops_from_dxf
