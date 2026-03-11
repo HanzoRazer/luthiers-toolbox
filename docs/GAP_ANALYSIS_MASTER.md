@@ -72,6 +72,7 @@
 | VINE-12 | J45 Vine | Extracted DXFs are R2000 not R12 — LWPolyline necessity but violates convention | LOW |
 | VINE-09 | J45 Vine | Bracing DXF has raw lines/arcs, not closed contours — 460 entities, 0 closed polylines | **Resolved** (30e50bb3) |
 | SAW-LAB-GAP-01 | Duplicate artifact helpers across 7 files | refactor(saw-lab): SAW-LAB-GAP-01 | 6dd8280a | Centralized 8 helpers into artifact_helpers.py |
+| RMOS-GAP-01 | Duplicate artifact helpers in runs_v2/ (3 files) | refactor(rmos): RMOS-GAP-01 | 528f577d | Moved helpers to rmos/, centralized across saw_lab + runs_v2 |
 
 ### Fixes
 
