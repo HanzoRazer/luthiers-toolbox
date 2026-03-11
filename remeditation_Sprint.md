@@ -10,7 +10,7 @@
 ## 🔖 SYSTEM RESET BOOKMARK (2026-03-11)
 
 **Last Session:** GAP_ANALYSIS Remediation Sprint  
-**Last Commit:** `53f9a02e` docs: add CORRUPT-GAP-01 to remediation log  
+**Last Commit:** `c9ac19ec` fix(saw-lab): restore POST /toolpaths/from-decision endpoint (P1-SAW)  
 **Branch:** main (pushed to origin)
 
 ### Completed This Sprint
@@ -20,6 +20,7 @@
 | SAW-LAB-GAP-01 | Duplicate artifact helpers across 7 files | `6dd8280a` |
 | RMOS-GAP-01 | Duplicate artifact helpers in runs_v2/ (3 files) | `528f577d` |
 | CORRUPT-GAP-01 | 8 corrupted Python files in app/services/ | `8f530691` |
+| **P1-SAW** | **DECISION → TOOLPATHS pipeline break — restored endpoint + 8 schemas** | `c9ac19ec` |
 
 ### Test Status
 ```
@@ -290,7 +291,7 @@ These must be fixed before anything else works in production.
 
 > **Discovered:** 2026-03-10 via live API integration test (parquet herringbone rosette cut job)
 > **Severity:** P1 — Blocks all Saw Lab batch production jobs from reaching machine execution
-> **Status:** ❌ OPEN
+> **Status:** ✅ **FIXED** (2026-03-11) — Commit `c9ac19ec`
 
 ### What Was Tested
 
@@ -298,8 +299,8 @@ We ran a full 6-stage Saw Lab pipeline using a real job: cutting the wood pieces
 
 **Pipeline stages:**
 ```
-SPEC ──→ PLAN ──→ DECISION ──→ [TOOLPATHS] ──→ EXECUTE ──→ EXPORT/FEEDBACK
-  ✅        ✅        ✅           ❌ BROKEN         ⛔          ⛔
+SPEC ──→ PLAN ──→ DECISION ──→ TOOLPATHS ──→ EXECUTE ──→ EXPORT/FEEDBACK
+  ✅        ✅        ✅           ✅ FIXED       ✅ UNBLOCKED  ✅
 ```
 
 **API calls that succeeded:**
