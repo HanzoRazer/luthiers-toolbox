@@ -89,10 +89,83 @@ class BatchApproveResponse(BaseModel):
     batch_decision_artifact_id: str
 
 
-# NOTE: Removed 2026-02-26 (dead code cleanup):
-# - BatchPlanChooseRequest, BatchPlanChooseResponse (no endpoint wired)
-# - BatchToolpathsFromDecisionRequest/Response (not imported)
-# - BatchToolpathsRequest, BatchOpResult, BatchToolpathsResponse (not imported)
+# ---------------------------------------------------------------------------
+# Plan Choose Schemas (restored 2026-03-11 for P1-SAW pipeline fix)
+# ---------------------------------------------------------------------------
+
+
+class BatchPlanChooseRequest(BaseModel):
+    """
+    Operator approval: select ops from a plan, optionally apply recommended patch.
+    """
+
+    batch_plan_artifact_id: str
+    selected_setup_key: str
+    selected_op_ids: List[str]
+    apply_recommended_patch: bool = False
+    operator_note: str = ""
+
+
+class BatchPlanChooseResponse(BaseModel):
+    """
+    Result of operator approval. If apply_recommended_patch=True,
+    includes the advisory source decision artifact ID.
+    """
+
+    batch_decision_artifact_id: str
+    selected_setup_key: str
+    applied_context_patch: Optional[Dict[str, Any]] = None
+    applied_multipliers: Optional[Dict[str, float]] = None
+    advisory_source_decision_artifact_id: Optional[str] = None
+
+
+# ---------------------------------------------------------------------------
+# Toolpaths Schemas (restored 2026-03-11 for P1-SAW pipeline fix)
+# ---------------------------------------------------------------------------
+
+
+class BatchToolpathsFromDecisionRequest(BaseModel):
+    batch_decision_artifact_id: str
+    include_gcode: bool = True
+
+
+class BatchToolpathsFromDecisionResponse(BaseModel):
+    batch_toolpaths_artifact_id: str
+    status: str
+    error: Optional[str] = None
+    decision_apply_stamp: Optional[Dict[str, Any]] = None
+    preview: Optional[Dict[str, Any]] = None
+
+
+class BatchToolpathsRequest(BaseModel):
+    batch_decision_artifact_id: str
+
+
+class BatchOpResult(BaseModel):
+    op_id: str
+    setup_key: str = ""
+    status: str = "OK"
+    risk_bucket: str = "GREEN"
+    score: float = 1.0
+    toolpaths_artifact_id: str
+    warnings: List[str] = []
+
+
+class BatchToolpathsResponse(BaseModel):
+    batch_execution_artifact_id: str
+    batch_decision_artifact_id: Optional[str] = None
+    batch_plan_artifact_id: Optional[str] = None
+    batch_spec_artifact_id: Optional[str] = None
+    batch_label: Optional[str] = None
+    session_id: Optional[str] = None
+    status: str = "OK"
+    op_count: int = 0
+    ok_count: int = 0
+    blocked_count: int = 0
+    error_count: int = 0
+    results: List[BatchOpResult] = []
+    gcode_lines: int = 0
+    learning: Optional["LearningInfo"] = None
 
 
 class BatchToolpathsByDecisionResponse(BaseModel):
