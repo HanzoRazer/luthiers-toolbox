@@ -3,22 +3,11 @@ from __future__ import annotations
 import logging
 from typing import Any, Dict, Optional, Tuple
 
+from .artifact_helpers import as_dict as _as_dict
+
 from .decision_apply_service import apply_decision_to_context
 
 logger = logging.getLogger(__name__)
-
-
-def _as_dict(x: Any) -> Dict[str, Any]:
-    return x if isinstance(x, dict) else {}
-
-
-def _extract_created_utc(art: Dict[str, Any]) -> str:
-    p = _as_dict(art.get("payload") or art.get("data"))
-    if isinstance(p.get("created_utc"), str):
-        return p["created_utc"]
-    if isinstance(art.get("created_utc"), str):
-        return art["created_utc"]
-    return ""
 
 
 def _required_str(d: Dict[str, Any], key: str) -> str:
