@@ -28,7 +28,7 @@
 | 2026-03-10 | `b8ba05b3` | Add Phase 4 dimension linking API endpoint `/blueprint/phase4/link` | VEC-GAP-02 |
 | 2026-03-10 | `03acbb4f` | Add PipelineResult to CAM adapter `/cam/blueprint/pipeline-adapter/from-pipeline` | VEC-GAP-03 |
 | 2026-03-10 | `4a0af084` | Add Blueprint → CAM integration tests (20 tests) | VEC-GAP-04 |
-
+| 2026-03-10 | `f8e4dded` | Add Phase 1 → Phase 3 scale handoff `scale_hint_mm_per_pixel` | VEC-GAP-05 |
 ---
 
 ## Summary by Category
