@@ -2,34 +2,23 @@ from __future__ import annotations
 
 from typing import Any, Dict, List, Optional, Tuple
 
-
-def _as_dict(x: Any) -> Dict[str, Any]:
-    return x if isinstance(x, dict) else {}
-
-
-def _as_list(x: Any) -> List[Any]:
-    return x if isinstance(x, list) else []
-
-
-def _kind(n: Dict[str, Any]) -> str:
-    return str(n.get("kind") or _as_dict(n.get("index_meta")).get("kind") or "")
-
-
-def _created_utc(n: Dict[str, Any]) -> str:
-    if isinstance(n.get("created_utc"), str):
-        return n["created_utc"]
-    p = _as_dict(n.get("payload") or n.get("data"))
-    if isinstance(p.get("created_utc"), str):
-        return p["created_utc"]
-    return ""
+from app.rmos.artifact_helpers import (
+    as_dict as _as_dict,
+    as_list as _as_list,
+    get_kind as _kind,
+    extract_created_utc as _created_utc,
+    get_artifact_id as _id_raw,
+)
 
 
 def _id(n: Dict[str, Any]) -> str:
-    v = n.get("id") or n.get("artifact_id")
+    """Wrapper to ensure string return (artifact_helpers returns Optional[str])."""
+    v = _id_raw(n)
     return str(v) if v else ""
 
 
 def _group_key_from_kind(kind: str) -> str:
+
     k = (kind or "").lower()
     # major batch lifecycle
     if "batch_spec" in k:
