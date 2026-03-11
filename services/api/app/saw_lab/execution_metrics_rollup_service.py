@@ -2,31 +2,13 @@ from __future__ import annotations
 
 from typing import Any, Dict, List, Optional, Tuple
 
-
-def _as_dict(x: Any) -> Dict[str, Any]:
-    return x if isinstance(x, dict) else {}
-
-
-def _as_list(x: Any) -> List[Any]:
-    return x if isinstance(x, list) else []
-
-
-def _kind(a: Dict[str, Any]) -> str:
-    return str(a.get("kind") or _as_dict(a.get("index_meta")).get("kind") or "")
-
-
-def _id(a: Dict[str, Any]) -> Optional[str]:
-    v = a.get("id") or a.get("artifact_id")
-    return str(v) if v else None
-
-
-def _created_utc(a: Dict[str, Any]) -> str:
-    if isinstance(a.get("created_utc"), str):
-        return a["created_utc"]
-    p = _as_dict(a.get("payload") or a.get("data"))
-    if isinstance(p.get("created_utc"), str):
-        return p["created_utc"]
-    return ""
+from .artifact_helpers import (
+    as_dict as _as_dict,
+    as_list as _as_list,
+    get_kind as _kind,
+    get_artifact_id as _id,
+    extract_created_utc as _created_utc,
+)
 
 
 def _note_text(payload: Dict[str, Any]) -> str:

@@ -2,34 +2,12 @@ from __future__ import annotations
 
 from typing import Any, Dict, List, Optional, Tuple
 
-
-def _as_dict(x: Any) -> Dict[str, Any]:
-    return x if isinstance(x, dict) else {}
-
-
-def _created_utc(art: Dict[str, Any]) -> str:
-    p = _as_dict(art.get("payload") or art.get("data"))
-    if isinstance(p.get("created_utc"), str):
-        return p["created_utc"]
-    if isinstance(art.get("created_utc"), str):
-        return art["created_utc"]
-    return ""
-
-
-def _artifact_id(a: Dict[str, Any]) -> Optional[str]:
-    v = a.get("id") or a.get("artifact_id")
-    return str(v) if v else None
-
-
-def _matches_parent_decision(a: Dict[str, Any], decision_id: str) -> bool:
-    p = _as_dict(a.get("payload") or a.get("data"))
-    m = _as_dict(a.get("index_meta"))
-    for src in (p, m):
-        v = src.get("parent_batch_decision_artifact_id") or src.get("parent_decision_artifact_id")
-        if v and str(v) == decision_id:
-            return True
-    pid = a.get("parent_id") or a.get("parent_artifact_id")
-    return bool(pid and str(pid) == decision_id)
+from .artifact_helpers import (
+    as_dict as _as_dict,
+    extract_created_utc as _created_utc,
+    get_artifact_id as _artifact_id,
+    matches_parent_decision as _matches_parent_decision,
+)
 
 
 def _is_execution_kind(a: Dict[str, Any]) -> bool:
