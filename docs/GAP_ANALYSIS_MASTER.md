@@ -31,6 +31,7 @@
 | 2026-03-10 | `f8e4dded` | Add Phase 1 → Phase 3 scale handoff `scale_hint_mm_per_pixel` | VEC-GAP-05 |
 | 2026-03-10 | ec003681 | Add Flying V CAM-ready DXF with closed LWPOLYLINE | FV-GAP-04 |
 | 2026-03-10 | 461caebc | Add Les Paul 8-layer CAM DXF (26 entities) | LP-GAP-01 |
+| 2026-03-10 | a7a9ee24 | Add DXF preprocessor pipeline (format normalize, curve densify, dimension validate) | EX-GAP-01, EX-GAP-02, EX-GAP-03 |
 ---
 
 ## Summary by Category
@@ -61,10 +62,10 @@
 | Gap ID | Instrument | Description | Severity |
 |--------|-----------|-------------|----------|
 | LP-GAP-01 | Les Paul 1959 | Multi-layer CAM DXF (`LesPaul_CAM_Closed.dxf`) never delivered — 8 named layers referenced in spec | **Resolved** (461caebc) |
-| EX-GAP-01 | Explorer 1958 | DXF is coarse 24-point approximation — production needs 200+ points with arc interpolation | CRITICAL |
-| EX-GAP-02 | Explorer 1958 | DXF is AC1024 (AutoCAD 2010), not R12 (AC1009) — repo convention violated | CRITICAL |
+| EX-GAP-01 | Explorer 1958 | DXF is coarse 24-point approximation — production needs 200+ points with arc interpolation | **Resolved** (a7a9ee24) |
+| EX-GAP-02 | Explorer 1958 | DXF is AC1024 (AutoCAD 2010), not R12 (AC1009) — repo convention violated | **Resolved** (a7a9ee24) |
 | SG-GAP-01 | Smart Guitar | DXF 12.1% narrow, 4.3% short vs spec — build script scales to compensate, distorting shape | CRITICAL |
-| EX-GAP-03 | Explorer 1958 | DXF extents don't match spec dimensions (556×434mm vs 475×460mm) | HIGH |
+| EX-GAP-03 | Explorer 1958 | DXF extents don't match spec dimensions (556×434mm vs 475×460mm) | **Resolved** (a7a9ee24) |
 | SG-GAP-02 | Smart Guitar | DXF X-axis asymmetric — centerline 22.2mm off-center, all cavities shifted | HIGH |
 | OM-PURF-05 | OM Purfling | Scan data has 5,451 scattered points, not a contour — parametric regen required | MEDIUM |
 | VINE-12 | J45 Vine | Extracted DXFs are R2000 not R12 — LWPolyline necessity but violates convention | LOW |
