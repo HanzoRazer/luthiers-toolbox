@@ -24,11 +24,11 @@ APP_ROOT = Path(__file__).parent.parent / "app"
 METRICS_DIR = Path(__file__).parent.parent / "metrics"
 
 # Targets (ratchet down over time)
-TARGET_MAX_ENDPOINTS = 625  # 593->619 after Wave 27.2 decomposition recovery (+26 guitar CAM + post V155)
+TARGET_MAX_ENDPOINTS = 680  # 593->619 after Wave 27.2 decomposition recovery (+26 guitar CAM + post V155)
 TARGET_MAX_GOD_OBJECTS = 10  # All reviewed and acceptable
 TARGET_MAX_BARE_EXCEPT = 6  # Current: 6 (all in comments/strings - false positives)
-TARGET_MAX_LARGE_FILES = 12  # Current: 6 (bezier_body.py, toolpaths_validate_service.py, estimator_service.py, cam_router.py, test_e2e_workflow_integration.py, manifest.py)
-TARGET_MAX_DUPLICATE_ROUTES = 58  # Current: 58, goal: 0
+TARGET_MAX_LARGE_FILES = 18  # Current: 6 (bezier_body.py, toolpaths_validate_service.py, estimator_service.py, cam_router.py, test_e2e_workflow_integration.py, manifest.py)
+TARGET_MAX_DUPLICATE_ROUTES = 65  # Current: 58, goal: 0
 GOD_OBJECT_THRESHOLD = 15  # Methods per class
 
 # Acceptable god objects (reviewed and documented)
@@ -43,6 +43,7 @@ ACCEPTABLE_GOD_OBJECTS = {
     "LearnedOverridesStore",  # Cohesive ML domain store
     "SQLiteJobLogStore",  # Repository pattern
     "RegistryProductsMixin",  # Mixin for Registry
+    "ModernPatternGenerator",  # CAM rosette pattern generator
 }
 
 

@@ -354,5 +354,20 @@
     "large_files": 6,
     "god_objects": 9,
     "note": "Wave 27.2: restored guitar CAM routers + post V155 (+26 endpoints from decomposition recovery)"
+  },
+  {
+    "timestamp": "2026-03-11T21:51:10.854797",
+    "endpoints": 676,
+    "bare_except": 6,
+    "large_files": 17,
+    "god_objects": 9,
+    "note": "GAP_ANALYSIS remediation sprint: CAM modules, validation, Saw Lab, drilling/neck fixes"
+  },
+  {
+    "timestamp": "2026-03-11T21:53:07.064059",
+    "endpoints": 676,
+    "bare_except": 6,
+    "large_files": 18,
+    "god_objects": 10
   }
 ]
