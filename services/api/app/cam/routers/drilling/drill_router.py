@@ -13,11 +13,10 @@ Endpoints:
     GET  /info     - Get drilling operation info
 """
 
-from __future__ import annotations
 
 from typing import Any, Dict, List, Optional
 
-from fastapi import APIRouter, Response
+from fastapi import APIRouter, Body, Response
 from pydantic import BaseModel
 
 from app.safety import safety_critical
@@ -66,7 +65,7 @@ def _f(n: float) -> str:
 
 @router.post("/gcode", response_class=Response)
 @safety_critical
-def drill_gcode(req: DrillReq) -> Response:
+def drill_gcode(req: DrillReq = Body(...)) -> Response:
     """Generate drilling G-code using modal cycles."""
     cyc = req.cycle.upper().strip()
     if cyc not in ("G81", "G83"):
