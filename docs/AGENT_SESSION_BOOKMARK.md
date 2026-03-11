@@ -2,7 +2,7 @@
 
 **Date:** 2026-03-11
 **Session:** GAP_ANALYSIS Remediation Sprint
-**Last Commit:** c9ac19ec fix(saw-lab): restore POST /toolpaths/from-decision endpoint (P1-SAW pipeline fix)
+**Last Commit:** c0569a49 fix(cam): resolve drilling smoke test failures (FastAPI Body() resolution)
 **Branch:** main
 **Pushed:** Yes (origin/main up to date)
 
@@ -29,40 +29,28 @@ Working through infrastructure gaps identified in `docs/GAP_ANALYSIS_MASTER.md`.
 | RMOS-GAP-01 | Duplicate artifact helpers in runs_v2/ (3 files) | 528f577d | Moved helpers to rmos/, centralized across saw_lab + runs_v2 |
 | CORRUPT-GAP-01 | 8 Python files in app/services/ with corrupted formatting | 8f530691 | Reconstructed all 8 files with proper Python formatting |
 | **P1-SAW** | DECISION → TOOLPATHS pipeline break (endpoint deleted during cleanup) | c9ac19ec | Restored POST /api/saw/batch/toolpaths/from-decision + 8 schemas |
-
----
-
-## Corrupted Files Fixed (CORRUPT-GAP-01)
-
-These 8 files had all code on a single line (newlines stripped):
-1. `app/services/job_int_favorites.py`
-2. `app/services/job_risk_store.py`
-3. `app/services/pipeline_spec_validator.py`
-4. `app/services/saw_lab_decision_metrics_rollup_service.py`
-5. `app/services/saw_lab_learning_apply_service.py`
-6. `app/services/saw_lab_learning_hook_config.py`
-7. `app/services/saw_lab_metrics_rollup_hook_config.py`
-8. `app/services/saw_lab_operator_feedback_learning_hook.py`
-
-All verified with `python3 -m py_compile` - syntax OK.
+| NECK-GAP-01 | Neck endpoint 404 errors (6 tests) | c57d6474 | Router was not registered in manifest |
+| DRILLING-GAP-01 | Drilling endpoint 422 errors (2 tests) | c0569a49 | FastAPI Body() annotation + signature preservation |
 
 ---
 
 ## Test Status
 
 ```
-2390 passed, 28 failed, 37 skipped, 19 xfailed
+2391 passed, 20 failed, 37 skipped, 19 xfailed
 ```
 
-The 28 failures are PRE-EXISTING (not caused by sprint changes):
-- `test_cam_drilling_smoke.py` (2) - 422 errors
+Remaining failures (pre-existing, not caused by sprint changes):
 - `test_execution_lookup_by_decision_unit.py` (1)
 - `test_executions_list_by_decision_unit.py` (1)
 - `test_feature_hunt_smoke.py` (1)
 - `test_manufacturing_candidates.py` (12) - auth/decision tests
-- `test_neck_endpoint_smoke.py` (6) - 404 errors
 - `test_technical_debt_gates.py` (4) - endpoint count exceeded baselines
 - `test_toolpaths_lookup_by_decision_unit.py` (1)
+
+**FIXED this session:**
+- `test_cam_drilling_smoke.py` (2) - ✓ resolved (c0569a49)
+- `test_neck_endpoint_smoke.py` (6) - ✓ resolved (c57d6474)
 
 ---
 
@@ -87,6 +75,20 @@ The 28 failures are PRE-EXISTING (not caused by sprint changes):
 | `docs/GAP_ANALYSIS_MASTER.md` | Master gap tracking document |
 | `services/api/app/rmos/artifact_helpers.py` | Centralized artifact helpers (created in this sprint) |
 | `services/api/app/services/*.py` | Recently reconstructed service files |
+| `services/api/app/safety/__init__.py` | @safety_critical decorator with signature preservation |
+
+---
+
+## Technical Notes
+
+### Drilling Test Fix (c0569a49)
+
+Root cause: The `@safety_critical` decorator broke FastAPI's parameter detection when combined with `from __future__ import annotations`. The annotation was stored as a string `'DrillReq'` instead of the actual class, causing FastAPI to treat it as a Query param instead of Body.
+
+Fixes applied:
+1. `drill_router.py`: Remove `from __future__ import annotations`, add explicit `Body()` annotation
+2. `manifest.py`: Comment out duplicate drilling router registration
+3. `safety/__init__.py`: Add `__signature__` preservation for FastAPI compatibility
 
 ---
 
@@ -124,4 +126,4 @@ All remediation phases complete. WP-3 god-object decomposition committed. Tagged
 
 ---
 
-*Updated: 2026-03-11 — P1-SAW pipeline fix complete, Saw Lab batch workflow operational*
+*Updated: 2026-03-11 — Drilling + Neck test fixes complete, 8 fewer test failures*
