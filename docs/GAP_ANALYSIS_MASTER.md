@@ -71,6 +71,7 @@
 | OM-PURF-05 | OM Purfling | Scan data has 5,451 scattered points, not a contour — parametric regen required | MEDIUM |
 | VINE-12 | J45 Vine | Extracted DXFs are R2000 not R12 — LWPolyline necessity but violates convention | LOW |
 | VINE-09 | J45 Vine | Bracing DXF has raw lines/arcs, not closed contours — 460 entities, 0 closed polylines | **Resolved** (30e50bb3) |
+| SAW-LAB-GAP-01 | Duplicate artifact helpers across 7 files | refactor(saw-lab): SAW-LAB-GAP-01 | 6dd8280a | Centralized 8 helpers into artifact_helpers.py |
 
 ### Fixes
 
