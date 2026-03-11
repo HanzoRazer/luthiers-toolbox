@@ -7,6 +7,12 @@ production-grade blueprint extraction with ML classification,
 OCR dimension extraction, and CAM-ready DXF output.
 
 Resolves: VEC-GAP-01 (Phase 3.6 Vectorizer has no API endpoint)
+Resolves: VEC-GAP-05 (Phase 1 scale → Phase 3 calibration handoff)
+
+Phase 1 → Phase 3 Handoff:
+    Pass `scale_hint_mm_per_pixel` from Phase 1 AI analysis to override
+    the default DPI-based scale calculation (25.4 / dpi). This enables
+    accurate geometry sizing when AI has detected a scale reference.
 
 Endpoints:
     POST /phase3/vectorize     - Full extraction pipeline
@@ -49,6 +55,8 @@ class Phase3Response(BaseModel):
     processing_time_ms: int = 0
     ml_available: bool = False
     ocr_available: bool = False
+    scale_hint_mm_per_pixel: Optional[float] = None  # From Phase 1 AI
+    scale_source: str = "dpi"  # "dpi" | "phase1_ai" | "manual"
     message: Optional[str] = None
 
 
@@ -102,6 +110,7 @@ async def vectorize_blueprint(
     validate: bool = Form(True),
     dpi: int = Form(400, ge=72, le=1200),
     return_dxf: bool = Form(False),
+    scale_hint_mm_per_pixel: Optional[float] = Form(None, description="Scale from Phase 1 AI (mm/pixel)"),
 ) -> Phase3Response:
     """
     Full Phase 3 vectorization pipeline.
@@ -111,6 +120,11 @@ async def vectorize_blueprint(
     - ML contour classification (optional)
     - Dimension validation against known instrument specs
     - CAM-ready DXF output with closed LWPOLYLINE contours
+    
+    Phase 1 Handoff:
+        Pass `scale_hint_mm_per_pixel` from Phase 1 /analyze response
+        to override DPI-based scale calculation. Extract from:
+        analysis["scale"]["mm_per_pixel"] if available.
     """
     if not PHASE3_AVAILABLE:
         raise HTTPException(503, "Phase 3 vectorizer not available")
@@ -158,6 +172,13 @@ async def vectorize_blueprint(
                     filename=f"{Path(file.filename).stem}_phase3.dxf",
                 )
             
+            # Determine scale source
+            scale_source = "phase1_ai" if scale_hint_mm_per_pixel else "dpi"
+            effective_scale = scale_hint_mm_per_pixel or (25.4 / dpi)
+            
+            if scale_hint_mm_per_pixel:
+                logger.info(f"Using Phase 1 scale hint: {scale_hint_mm_per_pixel:.6f} mm/px")
+            
             return Phase3Response(
                 success=True,
                 dxf_path=result.get("dxf"),
@@ -169,6 +190,8 @@ async def vectorize_blueprint(
                 processing_time_ms=processing_time,
                 ml_available=result.get("ml_used", False),
                 ocr_available=result.get("ocr_used", False),
+                scale_hint_mm_per_pixel=effective_scale,
+                scale_source=scale_source,
                 message=result.get("message"),
             )
             
