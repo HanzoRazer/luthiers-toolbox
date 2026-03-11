@@ -5,25 +5,15 @@ from dataclasses import dataclass
 from typing import Any, Dict, List, Optional, Tuple
 
 from .batch_tree import list_batch_tree, resolve_batch_root
+from app.rmos.artifact_helpers import (
+    as_dict as _as_dict,
+    get_kind as _kind,
+    extract_created_utc as _created_utc,
+    get_artifact_id as _artifact_id,
+    pick_latest as _pick_latest,
+)
 
 logger = logging.getLogger(__name__)
-
-
-def _as_dict(x: Any) -> Dict[str, Any]:
-    return x if isinstance(x, dict) else {}
-
-
-def _kind(art: Dict[str, Any]) -> str:
-    return str(art.get("kind") or _as_dict(art.get("index_meta")).get("kind") or "")
-
-
-def _created_utc(art: Dict[str, Any]) -> str:
-    p = _as_dict(art.get("payload") or art.get("data"))
-    if isinstance(p.get("created_utc"), str):
-        return p["created_utc"]
-    if isinstance(art.get("created_utc"), str):
-        return art["created_utc"]
-    return ""
 
 
 def _status(art: Dict[str, Any]) -> Optional[str]:
@@ -45,22 +35,6 @@ def _risk_bucket(art: Dict[str, Any]) -> Optional[str]:
             if v:
                 return str(v).upper()
     return None
-
-
-def _artifact_id(art: Dict[str, Any]) -> Optional[str]:
-    v = art.get("id") or art.get("artifact_id")
-    return str(v) if v else None
-
-
-def _pick_latest(arts: List[Dict[str, Any]]) -> Optional[Dict[str, Any]]:
-    if not arts:
-        return None
-    arts = [a for a in arts if isinstance(a, dict)]
-    arts.sort(
-        key=lambda a: (_created_utc(a) or "9999", str(_artifact_id(a) or "")),
-        reverse=True,
-    )
-    return arts[0]
 
 
 def _type_bucket(kind: str) -> str:

@@ -3,7 +3,7 @@ from __future__ import annotations
 import logging
 from typing import Any, Dict, Optional, Tuple
 
-from .artifact_helpers import as_dict as _as_dict
+from app.rmos.artifact_helpers import as_dict as _as_dict
 
 from .decision_apply_service import apply_decision_to_context
 

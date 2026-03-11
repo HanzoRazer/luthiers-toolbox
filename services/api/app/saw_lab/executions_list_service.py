@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import Any, Dict, List, Optional, Tuple
 
-from .artifact_helpers import (
+from app.rmos.artifact_helpers import (
     as_dict as _as_dict,
     extract_created_utc as _created_utc,
     get_artifact_id as _artifact_id,

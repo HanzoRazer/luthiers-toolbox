@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import Any, Dict, List, Optional, Tuple
 
-from .artifact_helpers import as_dict as _as_dict, as_list as _as_list, extract_created_utc as _created_utc, get_kind as _kind, get_artifact_id as _id
+from app.rmos.artifact_helpers import as_dict as _as_dict, as_list as _as_list, extract_created_utc as _created_utc, get_kind as _kind, get_artifact_id as _id
 
 def _links(a: Dict[str, Any]) -> Dict[str, Any]:
     return _as_dict(_as_dict(a.get("index_meta")).get("links"))
