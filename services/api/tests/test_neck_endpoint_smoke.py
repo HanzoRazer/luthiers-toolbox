@@ -28,8 +28,8 @@ def test_export_dxf_endpoint_exists(client):
 
 
 def test_presets_endpoint_exists(client):
-    """GET /api/neck/neck/presets endpoint exists."""
-    response = client.get("/api/neck/neck/presets")
+    """GET /api/neck/presets endpoint exists."""
+    response = client.get("/api/neck/presets")
     assert response.status_code != 404
 
 
@@ -218,14 +218,14 @@ def test_export_dxf_mm_units(client):
 # =============================================================================
 
 def test_presets_returns_200(client):
-    """GET /api/neck/neck/presets returns 200."""
-    response = client.get("/api/neck/neck/presets")
+    """GET /api/neck/presets returns 200."""
+    response = client.get("/api/neck/presets")
     assert response.status_code == 200
 
 
 def test_presets_has_list(client):
     """Presets response has presets list."""
-    response = client.get("/api/neck/neck/presets")
+    response = client.get("/api/neck/presets")
     data = response.json()
 
     assert "presets" in data
@@ -234,7 +234,7 @@ def test_presets_has_list(client):
 
 def test_presets_has_items(client):
     """Presets list has at least one item."""
-    response = client.get("/api/neck/neck/presets")
+    response = client.get("/api/neck/presets")
     data = response.json()
 
     assert len(data["presets"]) >= 1
@@ -242,7 +242,7 @@ def test_presets_has_items(client):
 
 def test_preset_has_required_fields(client):
     """Preset objects have required fields."""
-    response = client.get("/api/neck/neck/presets")
+    response = client.get("/api/neck/presets")
     data = response.json()
 
     preset = data["presets"][0]
@@ -253,7 +253,7 @@ def test_preset_has_required_fields(client):
 
 def test_presets_includes_les_paul_standard(client):
     """Presets include Les Paul Standard."""
-    response = client.get("/api/neck/neck/presets")
+    response = client.get("/api/neck/presets")
     data = response.json()
 
     names = [p["name"] for p in data["presets"]]
