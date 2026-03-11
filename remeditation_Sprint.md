@@ -5,6 +5,40 @@
 > **Score Progress:** 4.7/10 → 6.68/10 → Target 7.0+
 
 ---
+---
+
+## 🔖 SYSTEM RESET BOOKMARK (2026-03-11)
+
+**Last Session:** GAP_ANALYSIS Remediation Sprint  
+**Last Commit:** `53f9a02e` docs: add CORRUPT-GAP-01 to remediation log  
+**Branch:** main (pushed to origin)
+
+### Completed This Sprint
+
+| Gap ID | Description | Commit |
+|--------|-------------|--------|
+| SAW-LAB-GAP-01 | Duplicate artifact helpers across 7 files | `6dd8280a` |
+| RMOS-GAP-01 | Duplicate artifact helpers in runs_v2/ (3 files) | `528f577d` |
+| CORRUPT-GAP-01 | 8 corrupted Python files in app/services/ | `8f530691` |
+
+### Test Status
+```
+2390 passed, 28 failed (pre-existing), 37 skipped, 19 xfailed
+```
+
+### Resume Instructions
+```bash
+cd "C:/Users/thepr/Downloads/luthiers-toolbox"
+git pull origin main
+cat docs/GAP_ANALYSIS_MASTER.md | head -100
+cd services/api && .venv/Scripts/python.exe -m pytest tests/ --tb=no -q
+```
+
+### Next Steps
+1. Continue scanning `docs/GAP_ANALYSIS_MASTER.md` for infrastructure gaps
+2. Priority: Code duplication, DRY violations, orphaned modules
+3. Reference `docs/AGENT_SESSION_BOOKMARK.md` for detailed session state
+
 
 ## P0 — Critical System Blockers
 
@@ -249,3 +283,192 @@ These must be fixed before anything else works in production.
 | DXF Files | Need CAD fixes | No (WAITING) |
 
 **Bottom line:** ~~Fix the frontend build~~, ~~wire auth guards~~, add safety decorators, and migrate stores. Then we're forced into the Shop.
+
+---
+
+## P1-SAW — CNC Saw Lab Pipeline Break: DECISION → EXECUTE
+
+> **Discovered:** 2026-03-10 via live API integration test (parquet herringbone rosette cut job)
+> **Severity:** P1 — Blocks all Saw Lab batch production jobs from reaching machine execution
+> **Status:** ❌ OPEN
+
+### What Was Tested
+
+We ran a full 6-stage Saw Lab pipeline using a real job: cutting the wood pieces for a parquet herringbone rosette (596 ebony tiles, 602 koa tiles, 1 maple disc, 1 green spruce strip).
+
+**Pipeline stages:**
+```
+SPEC ──→ PLAN ──→ DECISION ──→ [TOOLPATHS] ──→ EXECUTE ──→ EXPORT/FEEDBACK
+  ✅        ✅        ✅           ❌ BROKEN         ⛔          ⛔
+```
+
+**API calls that succeeded:**
+| Stage | Endpoint | Artifact ID |
+|-------|----------|-------------|
+| SPEC | `POST /api/saw/batch/spec` | `saw_batch_spec_3dc1f3fdbdf8` |
+| PLAN | `POST /api/saw/batch/plan` | `saw_batch_plan_608853bc52bc` |
+| DECISION | `POST /api/saw/batch/approve` | `saw_batch_decision_8307d7fa40dd` |
+
+**What broke:** After approval, querying the decision returned `batch_toolpaths_artifact_id: null`. No toolpaths were generated, and the execution stage requires them.
+
+### Root Cause Analysis
+
+The pipeline has a **severed link between stages 3 (DECISION) and 4 (EXECUTE)**. The code to generate toolpaths from a decision *exists* but has no HTTP endpoint wiring it into the batch workflow.
+
+#### The Approval Endpoint Does Not Trigger Toolpath Generation
+
+[batch_router.py](services/api/app/saw_lab/batch_router.py) — The `/approve` endpoint:
+1. Reads the plan artifact
+2. Creates a `saw_batch_decision` artifact (approved_by, reason, setup_order, op_order)
+3. Returns `BatchApproveResponse` with **only** `batch_decision_artifact_id`
+4. **STOPS** — no call to any toolpath generation service
+
+[batch_router_schemas.py](services/api/app/saw_lab/batch_router_schemas.py) — The response schema:
+```python
+class BatchApproveResponse(BaseModel):
+    batch_decision_artifact_id: str    # ← This is ALL it returns
+```
+There is no `batch_toolpaths_artifact_id` field on the approval response.
+
+#### The Toolpath Generation Service Exists But Is Orphaned
+
+**Two copies exist** (neither is called from the batch workflow):
+
+| File | Function | Called By |
+|------|----------|-----------|
+| [saw_lab/saw_lab_toolpaths_from_decision_service.py](services/api/app/saw_lab/saw_lab_toolpaths_from_decision_service.py) | `generate_toolpaths_from_decision(batch_decision_artifact_id=...)` | **Nothing** (orphaned) |
+| [services/saw_lab_toolpaths_from_decision_service.py](services/api/app/services/saw_lab_toolpaths_from_decision_service.py) | `generate_toolpaths_from_decision(decision_artifact_id=...)` | `compare_router.py` only |
+
+The `app/saw_lab/` version (lines 85–232) is the **batch-aware** implementation:
+- Takes a `batch_decision_artifact_id`
+- Loads decision → plan → spec artifacts
+- Builds base context from spec+plan
+- Applies decision tuning patches via `apply_decision_to_context()`
+- Calls `plan_saw_toolpaths_for_design()` from [saw_lab_run_service.py](services/api/app/saw_lab_run_service.py)
+- Persists a `saw_batch_toolpaths` artifact (OK/ERROR) parented to the decision
+- Returns `batch_toolpaths_artifact_id` + preview
+
+But **no router endpoint calls this function**. It was written, then never wired.
+
+The `app/services/` version is a separate implementation that only handles `saw_compare_decision` artifacts (the feasibility comparison workflow, not batch production). It is used by [compare_router.py](services/api/app/saw_lab/compare_router.py) at line 123.
+
+#### The Schemas Were Deleted As "Dead Code"
+
+[batch_router_schemas.py](services/api/app/saw_lab/batch_router_schemas.py) lines 92–95 contains this comment:
+```python
+# NOTE: Removed 2026-02-26 (dead code cleanup):
+# - BatchPlanChooseRequest, BatchPlanChooseResponse (no endpoint wired)
+# - BatchToolpathsFromDecisionRequest/Response (not imported)
+# - BatchToolpathsRequest, BatchOpResult, BatchToolpathsResponse (not imported)
+```
+
+The request/response schemas for the toolpath generation endpoint were **deleted on 2026-02-26** because they weren't imported by any router. The schemas were "dead code" only because the endpoint that needed them was never written — a classic chicken-and-egg gap.
+
+#### The Execution Stage Assumes Toolpaths Already Exist
+
+[execution_lifecycle_router.py](services/api/app/saw_lab/execution_lifecycle_router.py) — `POST /api/saw/batch/execution/start-from-toolpaths`:
+```python
+class ExecutionStartFromToolpathsRequest(BaseModel):
+    session_id: str
+    batch_label: str
+    toolpaths_artifact_id: str      # ← REQUIRED, not Optional
+    decision_artifact_id: Optional[str] = None
+```
+This expects a `toolpaths_artifact_id` that **cannot be produced** by the current batch workflow.
+
+#### The Toolpath Query/Validate/Lint Endpoints Are Read-Only
+
+[toolpaths_router.py](services/api/app/saw_lab/toolpaths_router.py) has:
+- `GET /toolpaths/latest` — fetch existing toolpaths
+- `GET /toolpaths/latest-by-batch` — fetch by batch label
+- `POST /toolpaths/validate` — validate existing toolpaths
+- `POST /toolpaths/lint` — lint existing toolpaths
+
+**No POST endpoint generates toolpaths.** All assume artifacts already exist.
+
+#### The Compare Router Has a Working (But Different) Path
+
+[compare_router.py](services/api/app/saw_lab/compare_router.py) line 117:
+```python
+@router.post("/compare/toolpaths")
+def toolpaths_from_decision(req: SawDecisionToolpathsRequest):
+    out = generate_toolpaths_from_decision(decision_artifact_id=req.decision_artifact_id)
+    return SawDecisionToolpathsResponse(**out)
+```
+This works, but it uses `saw_compare_decision` artifacts (feasibility workflow), NOT `saw_batch_decision` artifacts (production workflow). Different artifact kinds, different service files.
+
+### Downstream Toolpath Generation Chain
+
+When the endpoint gap is fixed, the generation chain is:
+
+```
+[New Endpoint] 
+    → saw_lab/saw_lab_toolpaths_from_decision_service.generate_toolpaths_from_decision()
+        → decision_apply_service.apply_decision_to_context()     # tuning patches
+        → saw_lab_run_service.plan_saw_toolpaths_for_design()    # segment planning
+            → saw_lab/path_planner.build_segments_from_plan()    # segment adapter
+            → saw_lab/toolpath_builder.SawToolpathBuilder.build()# toolpath math
+        → store.persist artifact (kind="saw_batch_toolpaths")    # traceability
+```
+
+**Key files in the generation chain:**
+
+| File | Role |
+|------|------|
+| [saw_lab/saw_lab_toolpaths_from_decision_service.py](services/api/app/saw_lab/saw_lab_toolpaths_from_decision_service.py) | Orchestrator — load decision/plan/spec, apply tuning, call generator, persist artifact |
+| [saw_lab/decision_apply_service.py](services/api/app/saw_lab/decision_apply_service.py) | Apply decision intelligence patches to base context |
+| [saw_lab_run_service.py](services/api/app/saw_lab_run_service.py) | Single choke point for toolpath generation (boundary-safe) |
+| [saw_lab/path_planner.py](services/api/app/saw_lab/path_planner.py) | Convert plan ops to cut segments |
+| [saw_lab/toolpath_builder.py](services/api/app/saw_lab/toolpath_builder.py) | Low-level toolpath math (SawToolpathBuilder.build()) |
+| [saw_lab/models.py](services/api/app/saw_lab/models.py) | SawContext, SawToolpathPlan data models |
+
+### What Needs to Happen (Fix Plan)
+
+**1. New endpoint: `POST /api/saw/batch/toolpaths/generate`**
+- Input: `batch_decision_artifact_id: str`, `include_gcode: bool = True`
+- Calls: `saw_lab.saw_lab_toolpaths_from_decision_service.generate_toolpaths_from_decision()`
+- Returns: `batch_toolpaths_artifact_id`, `status`, `preview`
+- Register in [batch_router.py](services/api/app/saw_lab/batch_router.py) or a new `batch_toolpaths_generate_router.py`
+
+**2. Restore or re-create request/response schemas**
+- `BatchToolpathsGenerateRequest(batch_decision_artifact_id: str, include_gcode: bool = True)`
+- `BatchToolpathsGenerateResponse(batch_toolpaths_artifact_id: str, status: str, preview: Optional[dict])`
+- Add to [batch_router_schemas.py](services/api/app/saw_lab/batch_router_schemas.py)
+
+**3. Verify the generation chain compiles**
+- `saw_lab_run_service.plan_saw_toolpaths_for_design()` calls `path_planner.build_segments_from_plan()` via lazy import — confirm this module exists and works
+- `SawToolpathBuilder.build()` needs `segments` + `SawContext` — confirm the context is populated correctly from spec/plan payloads
+
+**4. Add integration test**
+- Full chain: SPEC → PLAN → APPROVE → GENERATE_TOOLPATHS → START_EXECUTION
+- Verify `batch_toolpaths_artifact_id` is non-null after generation
+- Verify the toolpaths artifact is persisted with correct parent linkage
+
+**5. Consider auto-generation on approval (optional enhancement)**
+- The `/approve` endpoint could optionally trigger toolpath generation inline
+- Return both `batch_decision_artifact_id` and `batch_toolpaths_artifact_id`
+- Keeps the pipeline one-click for operators
+
+### Why Smoke Tests Didn't Catch This
+
+The smoke test suite (`tests/test_saw_lab_endpoint_smoke.py`) passed **74/74** because it tests:
+- ✅ Endpoint existence (routes respond to HTTP methods)
+- ✅ Parameter validation (missing params return 422)
+- ✅ Individual endpoint behavior in isolation
+
+It does **NOT** test:
+- ❌ End-to-end artifact flow across stages
+- ❌ Whether stage N's output satisfies stage N+1's input
+- ❌ Whether the toolpath generation service is reachable from any endpoint
+
+The `BatchToolpathsByDecisionResponse` schema (lines 97–104 of [batch_router_schemas.py](services/api/app/saw_lab/batch_router_schemas.py)) exists but is defined-not-used — a dead schema referencing the artifact that can never be produced.
+
+### Duplicate Service File Issue
+
+There are **two** `saw_lab_toolpaths_from_decision_service.py` files:
+1. `app/saw_lab/saw_lab_toolpaths_from_decision_service.py` — Batch-aware (uses `batch_decision` artifacts)
+2. `app/services/saw_lab_toolpaths_from_decision_service.py` — Compare-only (uses `saw_compare_decision` artifacts)
+
+These have **different function signatures** (`batch_decision_artifact_id` vs `decision_artifact_id`) and different internal logic. The `app/services/` version is the only one actively called (by `compare_router.py`). The `app/saw_lab/` version is the one needed for batch production but is completely orphaned.
+
+This duplication should be reconciled during the fix — either merge into one service with a `kind` parameter, or keep them separate but wire both.
