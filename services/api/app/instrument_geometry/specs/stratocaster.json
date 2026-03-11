@@ -54,11 +54,46 @@
         "tuner_hole_spacing_mm": 22.86,
         "string_trees": 2
       }
+    },
+    "24fret": {
+      "description": "Extended range 24-fret Stratocaster (Charvel, Jackson, Ibanez style)",
+      "scale_length_mm": 648.0,
+      "fret_count": 24,
+      "neck": {
+        "nut_width_mm": 42.9,
+        "heel_width_mm": 57.0,
+        "depth_1st_fret_mm": 19.8,
+        "depth_12th_fret_mm": 22.4,
+        "profile_shape": "modern_c",
+        "fretboard_radius_start_mm": 304.8,
+        "fretboard_radius_end_mm": 406.4,
+        "compound_radius": true,
+        "note": "Flatter radius for easier bending at high frets"
+      },
+      "headstock": {
+        "style": "fender_strat",
+        "angle_deg": 0.0,
+        "length_mm": 178.0,
+        "width_mm": 89.0,
+        "thickness_mm": 14.0,
+        "tuner_layout": "6_inline",
+        "tuner_hole_diameter_mm": 9.5,
+        "tuner_hole_spacing_mm": 22.86,
+        "string_trees": 2
+      },
+      "pickup_neck_clearance_mm": 12.0,
+      "note": "24th fret at 161.73mm from bridge; neck pickup shifted 12mm toward bridge to avoid collision"
     }
   },
   "body": {
-    "length_mm_range": [390, 420],
-    "width_mm_range": [310, 340],
+    "length_mm_range": [
+      390,
+      420
+    ],
+    "width_mm_range": [
+      310,
+      340
+    ],
     "thickness_mm": 44.45,
     "contour": "double_cutaway",
     "belly_cut": true,
@@ -66,9 +101,18 @@
   },
   "pickups": {
     "layout": "SSS",
-    "neck_route_mm": [85.0, 18.0],
-    "middle_route_mm": [85.0, 18.0],
-    "bridge_route_mm": [85.0, 18.0]
+    "neck_route_mm": [
+      85.0,
+      18.0
+    ],
+    "middle_route_mm": [
+      85.0,
+      18.0
+    ],
+    "bridge_route_mm": [
+      85.0,
+      18.0
+    ]
   },
   "bridge": {
     "type": "tremolo",

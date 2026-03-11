@@ -149,6 +149,18 @@ NECK_PRESETS: Dict[str, NeckDimensions] = {
         headstock_angle_deg=15.0,
         blank_width_in=4.0,  # Wider for slotted
     ),
+    "strat_24fret": NeckDimensions(
+        # 24-fret Stratocaster - extended fretboard, modern compound radius
+        # Resolves GAP-02: No 24-fret Stratocaster preset
+        nut_width_in=1.6875,       # 1-11/16" modern width
+        depth_at_1st_in=0.78,      # Slim modern profile
+        depth_at_12th_in=0.88,
+        scale_length_in=25.5,      # Fender 648mm scale
+        headstock_angle_deg=0.0,   # Flat Fender headstock
+        headstock_length_in=7.0,
+        headstock_thickness_in=0.55,
+        blank_length_in=27.0,      # Longer blank for 24 frets
+    ),
 }
 
 
