@@ -636,5 +636,14 @@ ROUTER_MANIFEST: List[RouterSpec] = [
         tags=["CAM", "Headstock", "Inlay"],
         category="cam",
     ),
+    # -------------------------------------------------------------------------
+    # PICKUP POSITION CALCULATOR (GAP-04)
+    # -------------------------------------------------------------------------
+    RouterSpec(
+        module="app.routers.instruments.guitar.pickup_calculator_router",
+        prefix="/api",
+        tags=["Instruments", "Guitar", "Calculators"],
+        category="instrument_geometry",
+    ),
 
 ]
