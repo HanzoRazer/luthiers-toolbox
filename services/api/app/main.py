@@ -173,8 +173,11 @@ app.add_middleware(EndpointGovernanceMiddleware)
 
 # Route analytics middleware - captures usage metrics for router consolidation
 # Access via /api/_analytics/summary, /api/_analytics/export
-# TODO: Remove before production or gate behind ENABLE_ROUTE_ANALYTICS env var
-app.add_middleware(RouteAnalyticsMiddleware)
+# DISABLED by default in production. Set ENABLE_ROUTE_ANALYTICS=1 to enable.
+_ANALYTICS_ENABLED = os.getenv("ENABLE_ROUTE_ANALYTICS", "").lower() in ("1", "true", "yes")
+if _ANALYTICS_ENABLED:
+    app.add_middleware(RouteAnalyticsMiddleware)
+    _log.info("Route analytics middleware ENABLED (ENABLE_ROUTE_ANALYTICS=1)")
 
 
 # =============================================================================
@@ -222,9 +225,10 @@ for router, prefix, tags in load_all_routers():
 # Prometheus metrics endpoint - no prefix, accessible at /metrics
 app.include_router(metrics_router)
 
-# Route analytics endpoints - for router consolidation analysis
+# Route analytics endpoints - for router consolidation analysis (only if enabled)
 # Access: /api/_analytics/summary, /api/_analytics/export, /api/_analytics/reset
-app.include_router(analytics_router, prefix="/api/_analytics", tags=["internal"])
+if _ANALYTICS_ENABLED:
+    app.include_router(analytics_router, prefix="/api/_analytics", tags=["internal"])
 
 # Curated API v1 - stable, documented endpoints for golden path workflows
 from .api_v1 import router as api_v1_router
