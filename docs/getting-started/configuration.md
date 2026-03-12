@@ -132,6 +132,52 @@ response = requests.post(
 
 ---
 
+## GitHub Secrets (CI/CD)
+
+Required secrets for GitHub Actions workflows:
+
+| Secret | Required | Purpose |
+|--------|----------|---------|
+| `SG_SPEC_TOKEN` | Yes | PAT with read access to private `sg-spec` repo |
+| `RAILWAY_TOKEN` | For deploy | Railway API token for deployment |
+| `SLACK_WEBHOOK_URL` | Optional | Slack notifications for CI failures |
+
+### Email Alerting (Optional)
+
+For email notifications on CI failures:
+
+| Secret | Purpose |
+|--------|---------|
+| `SMTP_HOST` | SMTP server hostname |
+| `SMTP_PORT` | SMTP port (default: 587) |
+| `SMTP_USERNAME` | SMTP auth username |
+| `SMTP_PASSWORD` | SMTP auth password |
+| `MAIL_TO` | Alert recipient email |
+| `MAIL_FROM` | Sender email address |
+
+### Creating SG_SPEC_TOKEN
+
+1. Go to GitHub → Settings → Developer settings → Personal access tokens
+2. Create token with `repo` scope (read access to private repos)
+3. Add to repository: Settings → Secrets → Actions → New repository secret
+
+---
+
+## Supabase (Optional)
+
+For authentication features:
+
+```env
+# === Supabase Auth ===
+SUPABASE_URL=https://your-project.supabase.co
+SUPABASE_ANON_KEY=eyJ...
+SUPABASE_SERVICE_ROLE_KEY=eyJ...  # Server-side only
+```
+
+See [Supabase Auth Setup](../SUPABASE_AUTH_SETUP.md) for details.
+
+---
+
 ## Next Steps
 
 - [Machine Profiles](../cam/machine-profiles.md) - Detailed machine setup
