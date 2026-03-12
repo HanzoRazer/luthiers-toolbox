@@ -2,7 +2,7 @@
 
 **Date:** 2026-03-11
 **Session:** GAP_ANALYSIS Remediation Sprint
-**Last Commit:** 5e91e514 fix(tests): update technical debt gate baselines for GAP_ANALYSIS sprint
+**Last Commit:** b83feeb2 feat(geometry): add Strat 24-fret preset and link spec to registry
 **Branch:** main
 **Pushed:** Yes (origin/main up to date)
 
@@ -32,6 +32,7 @@ Working through infrastructure gaps identified in `docs/GAP_ANALYSIS_MASTER.md`.
 | NECK-GAP-01 | Neck endpoint 404 errors (6 tests) | c57d6474 | Router was not registered in manifest |
 | DRILLING-GAP-01 | Drilling endpoint 422 errors (2 tests) | c0569a49 | FastAPI Body() annotation + signature preservation |
 | DEBT-GATES | Technical debt gate baselines exceeded (4 tests) | 5e91e514 | Updated baselines + added ModernPatternGenerator to acceptable list |
+| GAP-02/NECK-02/03 | No 24-fret Strat preset, spec not linked | b83feeb2 | Added strat_24fret preset, 24fret variant, linked spec to registry |
 
 ---
 
@@ -61,7 +62,7 @@ Remaining failures (pre-existing, not caused by sprint changes):
 |--------|-------|---------|-------|
 | Tests passed | 2390 | 2395 | +5 |
 | Tests failed | 28 | 16 | -12 |
-| Commits | 0 | 7 | +7 |
+| Commits | 0 | 8 | +8 |
 
 ---
 
@@ -73,7 +74,7 @@ Remaining failures (pre-existing, not caused by sprint changes):
    - Category 2: CAM Toolpath Generation (neck CNC pipeline, carving)
    - Category 3: Spec & Data Completeness (SG-GAP-* spec fields)
    - Category 4: Geometry & Shape Generators (headstock outlines, Strat body)
-   - Category 11: Config, Presets & Registry (Strat preset/spec)
+   - Category 11: Config, Presets & Registry (other presets - Strat done)
    - Category 12: Accuracy & Position Validation
 
 ---
@@ -145,4 +146,4 @@ All remediation phases complete. WP-3 god-object decomposition committed. Tagged
 
 ---
 
-*Updated: 2026-03-11 — 12 test failures resolved this session (drilling, neck, debt gates)*
+*Updated: 2026-03-11 — 12 test failures resolved, Strat 24-fret preset added*
