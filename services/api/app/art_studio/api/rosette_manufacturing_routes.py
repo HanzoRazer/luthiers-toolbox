@@ -1,14 +1,16 @@
 """
-Rosette Manufacturing Routes — Phase 2 Consolidation
+Rosette Manufacturing Routes — Phase 2 + Phase 3 Consolidation
 
-Wires the orphaned rosette_planner (manufacturing plan generator) and
-TraditionalBuilder (craftsman project sheets) to the Art Studio API.
+Wires the orphaned rosette_planner (manufacturing plan generator),
+TraditionalBuilder (craftsman project sheets), and the unified
+RosetteProject envelope to the Art Studio API.
 
 Endpoints:
     POST /api/art/rosette/manufacturing-plan   — Generate multi-family manufacturing plan
     GET  /api/art/rosette/traditional/masters   — List patterns grouped by master luthier
     GET  /api/art/rosette/traditional/patterns/{pattern_id} — Get pattern info
     POST /api/art/rosette/traditional/project   — Generate full traditional rosette project
+    POST /api/art/rosette/project               — Unified project envelope (Phase 3)
 """
 
 from __future__ import annotations
@@ -212,4 +214,178 @@ def create_traditional_project(req: TraditionalProjectRequest) -> TraditionalPro
         estimated_time_hours=project.estimated_time_hours,
         notes=project.notes,
         project_sheet=project.print_project_sheet(),
+    )
+
+
+# ── Unified Project Envelope (Phase 3) ─────────────────────────────────────
+
+from ...schemas.rosette_project import (
+    RosetteProjectRequest,
+    RosetteProjectResponse,
+    ManufacturingPlanSummary,
+    CamSummary,
+    ring_band_to_cam_dict,
+)
+
+# Optional CAM modules — degrade gracefully
+CAM_BRIDGE_AVAILABLE = False
+try:
+    from ...services.rosette_cam_bridge import (
+        RosetteGeometry,
+        CamParams,
+        plan_rosette_toolpath,
+    )
+    CAM_BRIDGE_AVAILABLE = True
+except ImportError:
+    logger.warning("rosette_cam_bridge unavailable — CAM features disabled")
+
+MODERN_GENERATOR_AVAILABLE = False
+try:
+    from ...cam.rosette.pattern_generator import RosettePatternEngine
+    MODERN_GENERATOR_AVAILABLE = True
+except ImportError:
+    logger.warning("RosettePatternEngine unavailable — preview features disabled")
+
+
+@router.post("/project", response_model=RosetteProjectResponse)
+def assemble_rosette_project(req: RosetteProjectRequest) -> RosetteProjectResponse:
+    """
+    Assemble a unified rosette project from a pattern definition.
+
+    Returns manufacturing plan, optional CAM geometry, and optional
+    modern parametric ring previews — all in a single response.
+    """
+    pattern = req.pattern
+
+    # ── 1. Manufacturing plan (always) ──────────────────────────────────
+    try:
+        plan = generate_manufacturing_plan(
+            pattern=pattern,
+            guitars=req.guitars,
+            tile_length_mm=req.tile_length_mm,
+            scrap_factor=req.scrap_factor,
+        )
+    except (ValueError, TypeError) as exc:
+        raise HTTPException(status_code=422, detail=str(exc)) from exc
+
+    mfg_summary = ManufacturingPlanSummary(
+        guitars=plan.guitars,
+        total_rings=len(plan.ring_requirements),
+        total_families=len(plan.strip_plans),
+        total_tiles=sum(sp.total_tiles_needed for sp in plan.strip_plans),
+        total_sticks=sum(sp.sticks_needed for sp in plan.strip_plans),
+        strip_plans=[
+            {
+                "family": sp.strip_family_id,
+                "tiles": sp.total_tiles_needed,
+                "sticks": sp.sticks_needed,
+                "strip_length_m": round(sp.total_strip_length_m, 2),
+                "rings": sp.ring_indices,
+            }
+            for sp in plan.strip_plans
+        ],
+        notes=plan.notes,
+    )
+
+    # ── 2. Ring mapping (always) ────────────────────────────────────────
+    ring_mapping = []
+    for band in pattern.ring_bands:
+        cam_dict = ring_band_to_cam_dict(band)
+        ring_mapping.append({
+            "band_id": band.id,
+            "band_index": band.index,
+            "strip_family_id": band.strip_family_id,
+            "cam_pattern_type": cam_dict["pattern_type"],
+            "radius_mm": band.radius_mm,
+            "width_mm": band.width_mm,
+            "inner_diameter_mm": cam_dict["inner_diameter_mm"],
+            "outer_diameter_mm": cam_dict["outer_diameter_mm"],
+        })
+
+    # ── 3. CAM geometry (optional) ──────────────────────────────────────
+    cam_summary = None
+    if req.include_cam:
+        if not CAM_BRIDGE_AVAILABLE:
+            raise HTTPException(
+                status_code=503,
+                detail="CAM bridge module is not available",
+            )
+
+        overrides = req.cam_overrides
+        if overrides is None:
+            from ...schemas.rosette_project import CamOverrides
+            overrides = CamOverrides()
+
+        # Use outermost/innermost ring radii for channel geometry
+        radii = [b.radius_mm for b in pattern.ring_bands]
+        widths = [b.width_mm for b in pattern.ring_bands]
+        if not radii:
+            raise HTTPException(status_code=422, detail="Pattern has no ring bands")
+
+        outer_r = max(r + w / 2 for r, w in zip(radii, widths))
+        inner_r = min(r - w / 2 for r, w in zip(radii, widths))
+
+        geom = RosetteGeometry(
+            center_x_mm=pattern.center_x_mm,
+            center_y_mm=pattern.center_y_mm,
+            inner_radius_mm=max(inner_r, 0.0),
+            outer_radius_mm=outer_r,
+        )
+        cam_params = CamParams(
+            tool_diameter_mm=overrides.tool_diameter_mm,
+            stepover_pct=overrides.stepover_pct,
+            stepdown_mm=overrides.stepdown_mm,
+            feed_xy_mm_min=overrides.feed_xy_mm_min,
+            safe_z_mm=overrides.safe_z_mm,
+            cut_depth_mm=pattern.default_slice_thickness_mm,
+        )
+        moves, stats = plan_rosette_toolpath(geom, cam_params)
+        cam_summary = CamSummary(
+            rings_count=stats.get("rings", 0),
+            z_passes=stats.get("z_passes", 0),
+            move_count=stats.get("move_count", len(moves)),
+            estimated_length_mm=round(stats.get("length_mm", 0.0), 1),
+        )
+
+    # ── 4. Modern parametric preview (optional) ─────────────────────────
+    preview_svg = None
+    preview_dxf = None
+    if req.include_modern_preview:
+        if not MODERN_GENERATOR_AVAILABLE:
+            raise HTTPException(
+                status_code=503,
+                detail="Pattern generator module is not available",
+            )
+
+        cam_rings = [ring_band_to_cam_dict(b) for b in pattern.ring_bands]
+        engine = RosettePatternEngine()
+        try:
+            result = engine.generate_modern(
+                rings=cam_rings,
+                name=pattern.name,
+                soundhole_diameter_mm=pattern.ring_bands[0].radius_mm * 2 if pattern.ring_bands else 100.0,
+                include_dxf="dxf" in req.preview_formats,
+                include_svg="svg" in req.preview_formats,
+            )
+            preview_svg = result.svg_content
+            preview_dxf = result.dxf_content
+        except (ValueError, TypeError) as exc:
+            logger.warning("Modern preview generation failed: %s", exc)
+
+    # ── Compute soundhole diameter from innermost ring ──────────────────
+    if pattern.ring_bands:
+        sh_diameter = min(b.radius_mm for b in pattern.ring_bands) * 2
+    else:
+        sh_diameter = 100.0
+
+    return RosetteProjectResponse(
+        project_name=pattern.name,
+        pattern_id=pattern.id,
+        soundhole_diameter_mm=round(sh_diameter, 2),
+        ring_count=len(pattern.ring_bands),
+        ring_mapping=ring_mapping,
+        manufacturing=mfg_summary,
+        cam=cam_summary,
+        preview_svg=preview_svg,
+        preview_dxf=preview_dxf,
     )
