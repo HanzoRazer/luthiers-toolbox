@@ -16,8 +16,59 @@
       "new_scale": 0.95,
       "operator": null,
       "reason": "run_id=test123; risk=0.30; delta=-0.050; prev=1.000"
+    },
+    {
+      "timestamp": "2026-03-11T19:45:24.335515",
+      "lane_key": {
+        "tool_id": "test_tool",
+        "material": "test_mat",
+        "mode": "test_mode",
+        "machine_profile": "test_machine"
+      },
+      "param_name": "lane_scale",
+      "source": "auto_learn",
+      "prev_value": 1.0,
+      "new_value": 0.95,
+      "prev_scale": 1.0,
+      "new_scale": 0.95,
+      "operator": null,
+      "reason": null
+    },
+    {
+      "timestamp": "2026-03-11T21:57:46.409020",
+      "lane_key": {
+        "tool_id": "test_tool",
+        "material": "test_mat",
+        "mode": "test_mode",
+        "machine_profile": "test_machine"
+      },
+      "param_name": "lane_scale",
+      "source": "auto_learn",
+      "prev_value": 0.95,
+      "new_value": 0.95,
+      "prev_scale": 0.95,
+      "new_scale": 0.95,
+      "operator": null,
+      "reason": null
+    },
+    {
+      "timestamp": "2026-03-11T22:11:35.900770",
+      "lane_key": {
+        "tool_id": "test_tool",
+        "material": "test_mat",
+        "mode": "test_mode",
+        "machine_profile": "test_machine"
+      },
+      "param_name": "lane_scale",
+      "source": "auto_learn",
+      "prev_value": 0.95,
+      "new_value": 0.95,
+      "prev_scale": 0.95,
+      "new_scale": 0.95,
+      "operator": null,
+      "reason": null
     }
   ],
-  "last_updated": "2026-01-30T16:49:56.563711",
-  "entry_count": 1
+  "last_updated": "2026-03-11T22:11:35.900770",
+  "entry_count": 4
 }
