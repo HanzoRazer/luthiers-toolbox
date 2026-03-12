@@ -170,7 +170,7 @@ async def calibrate_blueprint(
             paper_size=paper_size,
             prefer_method=prefer_method if prefer_method != "auto" else None,
         )
-    except Exception as e:
+    except Exception as e:  # WP-2: API endpoint catch-all
         logger.exception("Calibration failed")
         raise HTTPException(status_code=500, detail=f"Calibration failed: {str(e)}")
 
@@ -352,7 +352,7 @@ async def extract_dimensions(
             name=name,
             source_file=file.filename or "",
         )
-    except Exception as e:
+    except Exception as e:  # WP-2: API endpoint catch-all
         logger.exception("Dimension extraction failed")
         raise HTTPException(status_code=500, detail=f"Extraction failed: {str(e)}")
 

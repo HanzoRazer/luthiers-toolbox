@@ -183,7 +183,7 @@ def normalize_dxf_format(dxf_bytes: bytes) -> Tuple[bytes, str, str, List[str]]:
                 else:
                     pass  # Silently skip unsupported types
 
-            except Exception as e:
+            except Exception as e:  # WP-2: API endpoint catch-all
                 warnings.append(f"Error copying {entity.dxftype()}: {str(e)}")
 
         # Save to bytes
@@ -463,7 +463,7 @@ def preprocess_dxf(dxf_bytes: bytes,
             result.original_version = orig_ver
             result.normalized_version = new_ver
             result.warnings.extend(warnings)
-        except Exception as e:
+        except Exception as e:  # WP-2: API endpoint catch-all
             result.errors.append(f"Format normalization failed: {str(e)}")
             result.success = False
             return result
@@ -477,7 +477,7 @@ def preprocess_dxf(dxf_bytes: bytes,
             result.original_point_count = orig_pts
             result.densified_point_count = new_pts
             result.warnings.extend(warnings)
-        except Exception as e:
+        except Exception as e:  # WP-2: API endpoint catch-all
             result.errors.append(f"Curve densification failed: {str(e)}")
             result.success = False
             return result
@@ -501,7 +501,7 @@ def preprocess_dxf(dxf_bytes: bytes,
 
             if not dim_result.valid:
                 result.warnings.append(dim_result.message)
-        except Exception as e:
+        except Exception as e:  # WP-2: API endpoint catch-all
             result.errors.append(f"Dimension validation failed: {str(e)}")
             # Don't fail the whole pipeline for validation errors
 

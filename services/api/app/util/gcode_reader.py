@@ -314,7 +314,7 @@ def parse_gcode(path: str, pretty: bool = False, validate: bool = False) -> Tupl
     
     except UnicodeDecodeError as e:
         raise ValueError(f"Failed to decode G-code file (encoding issue): {e}")
-    except Exception as e:
+    except (ValueError, TypeError, IndexError, KeyError, AttributeError) as e:  # WP-1: narrowed from except Exception
         raise ValueError(f"Error parsing G-code file at line {summary.line_count}: {e}")
 
     # normalize empty bbox (no motion)

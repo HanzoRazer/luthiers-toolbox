@@ -107,7 +107,7 @@ def _load_preset(name: str) -> Dict[str, Any]:
         return data["presets"][name]
     except HTTPException:
         raise
-    except Exception as e:
+    except Exception as e:  # WP-2: API endpoint catch-all
         raise HTTPException(status_code=500, detail=f"Preset load failed: {e}")
 
 

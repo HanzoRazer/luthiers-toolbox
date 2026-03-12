@@ -455,7 +455,7 @@ async def simulate_build(body: BuildSimulationRequest):
         return result
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
-    except Exception as e:
+    except Exception as e:  # WP-2: API endpoint catch-all
         logger.exception("Build simulation failed for preset %s", body.preset_key)
         raise HTTPException(
             status_code=500,

@@ -211,7 +211,7 @@ async def get_current_principal(
                 return principal_from_supabase_claims(claims)
             except HTTPException:
                 raise
-            except Exception:
+            except Exception:  # WP-2: auth boundary - intentionally broad for security
                 raise HTTPException(status_code=401, detail="Invalid Supabase token")
         raise HTTPException(status_code=401, detail="Not authenticated")
 

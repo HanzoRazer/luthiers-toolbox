@@ -380,7 +380,7 @@ def generate_prompt(req: HeadstockPromptRequest) -> HeadstockPromptResponse:
 
     except HTTPException:
         raise
-    except Exception as e:
+    except Exception as e:  # WP-2: HTTP endpoint catch-all with logging
         logger.exception("Headstock prompt generation failed")
         raise HTTPException(status_code=500, detail=str(e))
 
@@ -408,7 +408,7 @@ def generate_isolated_inlay_prompt(req: InlayOnlyPromptRequest) -> Dict[str, Any
             "prompt_length": len(prompt),
         }
 
-    except Exception as e:
+    except Exception as e:  # WP-2: HTTP endpoint catch-all with logging
         logger.exception("Inlay prompt generation failed")
         raise HTTPException(status_code=500, detail=str(e))
 

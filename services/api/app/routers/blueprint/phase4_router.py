@@ -159,7 +159,7 @@ async def link_dimensions(
                 linked_dimensions=linked_dims,
             )
             
-        except Exception as e:
+        except Exception as e:  # WP-2: API endpoint catch-all
             logger.exception("Phase 4 dimension linking failed")
             raise HTTPException(500, f"Dimension linking failed: {e}")
 
@@ -199,6 +199,6 @@ async def link_dimensions_json(
             
             return JSONResponse(content=result.to_dict())
             
-        except Exception as e:
+        except Exception as e:  # WP-2: API endpoint catch-all
             logger.exception("Phase 4 dimension linking failed")
             raise HTTPException(500, f"Dimension linking failed: {e}")

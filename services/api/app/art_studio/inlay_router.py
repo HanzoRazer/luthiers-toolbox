@@ -400,6 +400,6 @@ def export_inlay_gcode(req: InlayGcodeRequest) -> Response:
         return generate_inlay_gcode(req, logger)
     except HTTPException:
         raise
-    except Exception as e:
+    except Exception as e:  # WP-2: HTTP endpoint catch-all with logging
         logger.exception("Inlay G-code export failed")
         raise HTTPException(status_code=500, detail=str(e))

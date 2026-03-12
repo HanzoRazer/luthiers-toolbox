@@ -93,7 +93,7 @@ def generate_segment_ring(payload: Dict[str, Any] = None) -> Dict[str, Any]:
             "tile_length_mm": result.tile_length_mm,
             "segments": [asdict(t) for t in result.tiles],
         }
-    except Exception as e:
+    except Exception as e:  # WP-2: API stub catch-all with structured error response
         return {"ok": False, "error": str(e), "segments": []}
 
 
@@ -119,7 +119,7 @@ def generate_slices(payload: Dict[str, Any] = None) -> Dict[str, Any]:
             "ring_id": batch.ring_id,
             "slices": [asdict(s) for s in batch.slices],
         }
-    except Exception as e:
+    except Exception as e:  # WP-2: API stub catch-all with structured error response
         return {"ok": False, "error": str(e), "slices": []}
 
 
@@ -159,7 +159,7 @@ def preview_rosette(payload: Dict[str, Any] = None) -> Dict[str, Any]:
             "preview": snapshot.payload,
             "rings": [asdict(r) for r in snapshot.rings],
         }
-    except Exception as e:
+    except Exception as e:  # WP-2: API stub catch-all with structured error response
         return {"ok": False, "error": str(e), "preview": None}
 
 
@@ -272,7 +272,7 @@ def export_rosette_cnc(payload: Dict[str, Any] = None) -> Dict[str, Any]:
             },
             "metadata": export_bundle.metadata,
         }
-    except Exception as e:
+    except Exception as e:  # WP-2: API stub catch-all with structured error response
         return {
             "ok": False,
             "gcode": None,
@@ -673,7 +673,7 @@ async def dxf_to_grbl(
             "stats": plan_result.get("stats", {}),
         }
 
-    except Exception as e:
+    except Exception as e:  # WP-2: API stub catch-all with structured error response
         return {
             "ok": False,
             "run_id": run_id,
@@ -772,7 +772,7 @@ def evaluate_safety(payload: Dict[str, Any] = None) -> Dict[str, Any]:
             "rules_triggered": result.rules_triggered,
             "engine_version": result.engine_version,
         }
-    except Exception as e:
+    except Exception as e:  # WP-2: API stub catch-all with structured error response
         return {
             "ok": False,
             "decision": "ERROR",

@@ -195,7 +195,7 @@ async def vectorize_blueprint(
                 message=result.get("message"),
             )
             
-        except Exception as e:
+        except Exception as e:  # WP-2: API endpoint catch-all
             logger.exception("Phase 3 vectorization failed")
             raise HTTPException(500, f"Vectorization failed: {e}")
 
