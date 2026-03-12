@@ -34,8 +34,8 @@
 | 20 | RMOS Runs v1→v2 migration incomplete | `rmos/__init__.py`, `fix_imports.py` | 🟡 v2 default, v1 still loadable | HIGH |
 | 21 | 9 Skipped tests for missing features | `test_cam_fret_slots_export.py`, etc. | ❌ Routes/modules absent | HIGH |
 | 22 | 7+ `NotImplementedError` functions shipping | `pipeline_operations.py`, `archtop_cam_router.py` | ❌ Raise at runtime | HIGH |
-| 23 | 3 Broken CI workflows (dead paths) | `cam_gcode_smoke.yml`, `helical_badges.yml`, `lpmd-inventory.yml` | 🔴 Will fail if triggered | CRITICAL |
-| 24 | 27 Phantom references to deleted code | `__RECOVERED__/README.md` | ❌ Contracts/specs point to deleted files | CRITICAL |
+| 23 | 3 Broken CI workflows (dead paths) | `cam_gcode_smoke.yml`, `helical_badges.yml`, `lpmd-inventory.yml` | ✅ Resolved (6d21e96b) | ~~CRITICAL~~ |
+| 24 | 27 Phantom references to deleted code | `__RECOVERED__/README.md` | ✅ Resolved (ba9db4b6) | ~~CRITICAL~~ |
 | 25 | `_experimental/` — 8+ half-built modules | `ai_cam/`, `ai_core/`, `infra/`, `analytics/` | 🟡 Partial stubs | MEDIUM |
 | 26 | 4 Frontend TODOs blocking features | Rosette PDF export, DXF export, risk override API, job detail nav | ❌ Not started | MEDIUM |
 | 27 | Abandoned service (no CI, no tests) | `blueprint-import/` | 🟡 Code exists, not integrated | MEDIUM |
