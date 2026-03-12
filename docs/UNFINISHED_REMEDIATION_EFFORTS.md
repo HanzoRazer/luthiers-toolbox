@@ -11,7 +11,7 @@
 | # | Effort | Source Document | Status | Severity |
 |---|--------|----------------|--------|----------|
 | 1 | Exception Hardening — broad catches | REMEDIATION_PLAN.md / v2 | ✅ 100% complete (6e397cb6) | ~~HIGH~~ |
-| 2 | God-Object Decomposition — 14 Python files >500 LOC | REMEDIATION_PLAN_v2.md (Phase 13) | ❌ Not started | HIGH |
+| 2 | God-Object Decomposition — 14 Python files >500 LOC | REMEDIATION_PLAN_v2.md (Phase 13) | ✅ ~90% done (most decomposed to subdirs) | ~~HIGH~~ |
 | 3 | Router Consolidation — 132 → <100 files | ROUTER_CONSOLIDATION_ROADMAP.md | ❌ Not started | MEDIUM |
 | 4 | 69 Stub Endpoints — 15+ high-priority | STUB_DEBT_REPORT.md | ✅ Wired (see #17) | ~~HIGH~~ |
 | 5 | 113 Instrument Build Gaps — 4 CRITICAL DXFs | GAP_ANALYSIS_MASTER.md | 🟡 Partial | CRITICAL |
@@ -70,23 +70,23 @@
 
 **Source:** [REMEDIATION_PLAN_v2.md](REMEDIATION_PLAN_v2.md) (Phase 13)
 
-| File | Lines | Priority |
-|------|-------|----------|
-| `adaptive_router.py` | 1,244 | HIGH |
-| `blueprint_router.py` | 1,236 | HIGH |
-| `geometry_router.py` | 1,100 | MEDIUM |
-| `blueprint_cam_bridge.py` | 937 | MEDIUM |
-| `dxf_preflight_router.py` | 792 | MEDIUM |
-| `probe_router.py` | 782 | MEDIUM |
-| `business/router.py` | 546 | LOW |
-| `cam/rosette/presets.py` | 578 | LOW |
-| `cam/routers/stub_routes.py` | 662 | LOW |
-| `routers/neck_router.py` | 683 | LOW |
-| *(4 more files 507–611 lines)* | | LOW |
+**Status: ~90% COMPLETE** - Most large routers decomposed to subdirectories.
 
-**Strategy:** Extract sub-routers by domain (e.g., `adaptive_pocket_router`, `adaptive_contour_router`).
+| File | Original Lines | Status |
+|------|----------------|--------|
+| `adaptive_router.py` | 1,244 | ✅ Decomposed → `routers/adaptive/` |
+| `blueprint_router.py` | 1,236 | ✅ Decomposed → `routers/blueprint/` |
+| `geometry_router.py` | 1,100 | ✅ Decomposed → `routers/geometry/` |
+| `blueprint_cam_bridge.py` | 937 | ✅ Decomposed → `routers/blueprint_cam/` |
+| `probe_router.py` | 782 | ✅ Decomposed → `routers/probe/` |
+| `routers/neck_router.py` | 1,139 | ✅ Decomposed → `routers/neck/` (51ed4f6b) - 205 LOC now |
+| `dxf_preflight_router.py` | 792 | 🟡 Still ~350 LOC after shrink |
+| `business/router.py` | 546 | 🟡 Remaining target |
+| `cam/rosette/presets.py` | 578 | 🟡 Config data, low priority |
+| `cam/routers/stub_routes.py` | 662 | 🟡 Stub debt (#4) |
+| `rmos/stub_routes.py` | 886 | 🟡 Stub debt (#4) |
 
-**Effort estimate:** 8–16 hours
+**Remaining work:** 3-4 files still >500 LOC but lower priority. Strategy successful.
 
 ---
 
