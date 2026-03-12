@@ -2,7 +2,7 @@
 
 **Date:** 2026-03-11
 **Session:** GAP_ANALYSIS Remediation Sprint
-**Last Commit:** a8739d63 docs: document Les Paul inch mode + mark NECK-01/GAP-01 resolved (LP-GAP-10)
+**Last Commit:** c6f3bbb5 docs: mark NECK-04 as resolved
 **Branch:** main
 **Pushed:** Yes (origin/main up to date)
 
@@ -70,7 +70,7 @@ Remaining failures (pre-existing, not caused by sprint changes):
 |--------|-------|---------|-------|
 | Tests passed | 2390 | 2395 | +5 |
 | Tests failed | 28 | 16 | -12 |
-| Commits | 0 | 16 | +16 |
+| Commits | 0 | 20 | +20 |
 
 ---
 
@@ -154,4 +154,4 @@ All remediation phases complete. WP-3 god-object decomposition committed. Tagged
 
 ---
 
-*Updated: 2026-03-12 — LP-GAP-10 unit documentation + NECK-01/GAP-01 resolved*
+*Updated: 2026-03-12 — Gap cleanup: marked 5 already-resolved gaps*
