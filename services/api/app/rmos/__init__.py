@@ -27,6 +27,10 @@ Phase C Additions:
 # api_profile_history: removed
 """
 
+import logging
+
+_log = logging.getLogger(__name__)
+
 # Core API contracts
 from .api_contracts import (
     RiskBucket,
@@ -141,8 +145,8 @@ try:
         get_engine_version,
         register_engine,
     )
-except ImportError:
-    pass
+except ImportError as e:
+    _log.debug("Optional import failed: %s", e)
 
 # Gates Policy
 try:
@@ -151,8 +155,8 @@ try:
         ReplayGateResult,
         check_replay_gate,
     )
-except ImportError:
-    pass
+except ImportError as e:
+    _log.debug("Optional import failed: %s", e)
 
 # Canonical Moves (Phase 3 - ADR-003)
 try:
@@ -170,8 +174,8 @@ try:
         ccw_arc,
         dwell,
     )
-except ImportError:
-    pass
+except ImportError as e:
+    _log.debug("Optional import failed: %s", e)
 
 # Post-Processors (Phase 3 - ADR-003)
 try:
@@ -184,8 +188,8 @@ try:
         render_fanuc,
         render_linuxcnc,
     )
-except ImportError:
-    pass
+except ImportError as e:
+    _log.debug("Optional import failed: %s", e)
 
 # Pipeline Infrastructure (Phase 4 - ADR-003)
 try:
@@ -227,8 +231,8 @@ try:
         create_decision_artifact,
         create_execution_artifact,
     )
-except ImportError:
-    pass
+except ImportError as e:
+    _log.debug("Optional import failed: %s", e)
 
 # Feedback Loop Infrastructure (Phase 5 - ADR-003)
 try:
@@ -279,8 +283,8 @@ try:
         get_latest_rollup,
         list_rollup_history,
     )
-except ImportError:
-    pass
+except ImportError as e:
+    _log.debug("Optional import failed: %s", e)
 
 # Re-export from existing modules for convenience
 try:
@@ -289,8 +293,8 @@ try:
         log_ai_constraint_attempt,
         log_ai_constraint_run_summary,
     )
-except ImportError:
-    pass
+except ImportError as e:
+    _log.debug("Optional import failed: %s", e)
 
 try:
     from .schemas_logs_ai import (
@@ -298,8 +302,8 @@ try:
         AiRunSummaryLogView,
         AiLogQueryParams,
     )
-except ImportError:
-    pass
+except ImportError as e:
+    _log.debug("Optional import failed: %s", e)
 
 try:
     from .ai_policy import (
@@ -307,8 +311,8 @@ try:
         validate_request_against_policy,
         clamp_budget_to_policy,
     )
-except ImportError:
-    pass
+except ImportError as e:
+    _log.debug("Optional import failed: %s", e)
 
 __all__ = [
     # API Contracts
