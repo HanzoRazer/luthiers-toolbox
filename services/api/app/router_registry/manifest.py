@@ -321,6 +321,12 @@ ROUTER_MANIFEST: List[RouterSpec] = [
         category="art_studio",
     ),
     RouterSpec(
+        module="app.art_studio.api.rosette_manufacturing_routes",
+        prefix="",
+        tags=["Art Studio", "Rosette Manufacturing"],
+        category="art_studio",
+    ),
+    RouterSpec(
         module="app.art_studio.api.preview_routes",
         prefix="/api",
         tags=["Art Studio", "Preview"],
