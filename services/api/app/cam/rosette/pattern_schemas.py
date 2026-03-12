@@ -23,6 +23,9 @@ class PatternType(str, Enum):
     CHECKERBOARD = "checkerboard"
     SOLID = "solid"
     CUSTOM_MATRIX = "custom_matrix"
+    WAVE = "wave"
+    SPANISH = "spanish"
+    CELTIC_KNOT = "celtic_knot"
 
 
 class MaterialType(str, Enum):
@@ -88,6 +91,82 @@ class MatrixFormula:
         """Calculate pattern height from row count."""
         max_strips = max(sum(row.values()) for row in self.rows)
         return max_strips * self.strip_thickness_mm
+
+    @property
+    def col_widths(self) -> List[float]:
+        """
+        Per-column width array for BOM strip-width calculations.
+
+        Used by veneer cutting bill breakdowns to calculate material needed
+        for each column position in the pattern. Returns uniform strip_width_mm
+        for each column since traditional rope patterns use equal-width strips.
+
+        Returns:
+            List of widths in mm, one per column in column_sequence
+        """
+        return [self.strip_width_mm] * len(self.column_sequence)
+
+    def get_col_widths_by_material(self) -> Dict[str, List[float]]:
+        """
+        Per-material column width breakdown for veneer cutting bills.
+
+        Groups column widths by which material is used at each position,
+        based on the row referenced by column_sequence.
+
+        Returns:
+            Dict mapping material name to list of widths where that material appears
+        """
+        result: Dict[str, List[float]] = {}
+        for col_idx, row_ref in enumerate(self.column_sequence):
+            row = self.rows[row_ref - 1]  # column_sequence is 1-indexed
+            for material in row.keys():
+                if material not in result:
+                    result[material] = []
+                result[material].append(self.strip_width_mm)
+        return result
+
+    def get_veneer_cut_bill(self, strip_length_mm: float = 200.0) -> Dict[str, Any]:
+        """
+        Generate veneer cutting bill breakdown for this pattern.
+
+        The mothership used this for calculating veneer panel requirements
+        by column width. Each material needs strips cut to:
+        - Width: strip_width_mm
+        - Length: strip_length_mm (default 200mm, typical veneer panel)
+        - Quantity: based on row definitions
+
+        Args:
+            strip_length_mm: Length of veneer strips to cut (panel dimension)
+
+        Returns:
+            Dict with cut_list, total_area, col_widths summary
+        """
+        material_totals = self.get_material_totals()
+        cut_list = []
+        total_area_mm2 = 0.0
+
+        for material, count in material_totals.items():
+            area = count * self.strip_width_mm * strip_length_mm
+            total_area_mm2 += area
+            cut_list.append({
+                "material": material,
+                "quantity": count,
+                "width_mm": self.strip_width_mm,
+                "length_mm": strip_length_mm,
+                "thickness_mm": self.strip_thickness_mm,
+                "area_mm2": area,
+            })
+
+        return {
+            "preset_name": self.name,
+            "col_widths": self.col_widths,
+            "total_pattern_width_mm": self.get_pattern_width_mm(),
+            "column_count": self.column_count,
+            "cut_list": cut_list,
+            "total_area_mm2": total_area_mm2,
+            "waste_allowance_pct": 15.0,
+            "adjusted_area_mm2": total_area_mm2 * 1.15,
+        }
 
     def validate(self) -> List[str]:
         """Validate the matrix formula."""
@@ -171,6 +250,9 @@ class RingSpec:
     secondary_color: str = "white"
     tile_width_mm: float = 2.0
     tile_angle_deg: float = 45.0
+    grid: Optional[List[List[int]]] = None  # For grid-based patterns (wave, spanish, celtic)
+    grid_repeats: Optional[int] = None      # How many times grid tiles around annulus
+    mirror_alternation: bool = False         # Alternate mirrored grid each repeat (rope twist)
     notes: Optional[str] = None
 
     @property
