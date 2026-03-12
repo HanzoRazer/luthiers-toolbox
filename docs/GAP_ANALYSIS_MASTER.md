@@ -41,6 +41,7 @@
 | 2026-03-12 | 6b947186 | Smart Guitar spec coordinate system fixes | SG-GAP-03, SG-GAP-04, SG-GAP-05, SG-GAP-06, SG-GAP-07 |
 | 2026-03-12 | 289b4ac4 | FENDER_STRAT headstock was already implemented | NECK-01, GAP-01 |
 | 2026-03-12 | a8739d63 | Document inch mode in Les Paul generator, add dual-unit comments | LP-GAP-10 |
+| 2026-03-12 | 06d28e5c | Add pickup position calculator with SSS/HH/HSS configs + 24-fret support | GAP-04 |
 ---
 
 ## Summary by Category
@@ -160,7 +161,7 @@
 | Gap ID | Instrument | Description | Severity |
 |--------|-----------|-------------|----------|
 | GAP-07 | 24-Fret Strat | Strat body outline generator does not exist — only Les Paul generator exists | CRITICAL |
-| GAP-04 | 24-Fret Strat | Pickup position calculator does not exist anywhere in the codebase | CRITICAL |
+| GAP-04 | 24-Fret Strat | Pickup position calculator | **Resolved** (06d28e5c) |
 | NECK-01 | Strat Neck | Strat headstock outline generator — `FENDER_STRAT` enum falls through to paddle headstock | **Resolved** (289b4ac4) |
 | GAP-01 | 24-Fret Strat | Stratocaster headstock outline is incomplete stub (same as NECK-01) | **Resolved** (289b4ac4) |
 | GAP-05 | 24-Fret Strat | Fretboard overhang channel — no geometry or preset for 24-fret bolt-on | HIGH |
