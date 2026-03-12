@@ -284,9 +284,15 @@ Applied to: top perimeter, back perimeter. Side binding is plain ivoroid (1.5 mm
 - **Severity:** Medium
 - **Category:** API
 - **Description:** The neck G-code generation class exists in `app/cam/` but has no router endpoint. All other CAM operations (rosette, drilling, roughing) have API routes. This gap is shared with the J45 build (VINE-GAP-04).
-- **Resolution:** Create a neck CAM router in `app/routers/` that wraps the existing neck G-code class. Register in `manifest.py`.
+- **Resolution:** ✅ **Resolved (3d1b23dc)** - Added G-code generation endpoints to `app/routers/neck_router.py`:
+  - `POST /api/neck/gcode/generate` - Generate G-code with JSON response
+  - `POST /api/neck/gcode/download` - Download as .nc file
+  - `GET /api/neck/gcode/styles` - List headstock styles
+  - `GET /api/neck/gcode/profiles` - List neck profiles
+  - `GET /api/neck/gcode/tools` - List tool library
+  - 11 smoke tests in `tests/test_neck_gcode_smoke.py`
 - **Blocked by:** Nothing
-- **Blocks:** API-driven neck CNC manufacturing
+- **Blocks:** ~~API-driven neck CNC manufacturing~~ (unblocked)
 
 ### OM-GAP-08: Herringbone Strip Fabrication Instructions Missing
 
@@ -326,7 +332,7 @@ Applied to: top perimeter, back perimeter. Side binding is plain ivoroid (1.5 mm
 |-----|------|--------|
 | OM-GAP-03 | Build binding geometry backend (offset curves, layer stack) | High |
 | OM-GAP-04 | Build purfling channel routing CAM | High |
-| OM-GAP-07 | Wrap neck G-code class in API router | Low |
+| OM-GAP-07 | ~~Wrap neck G-code class in API router~~ ✅ Resolved | Low |
 
 ### Cross-References
 
