@@ -20,12 +20,44 @@ from pydantic import BaseModel, Field
 # Import the migrated rosette functions
 try:
     from ..pipelines.rosette import rosette_calc as legacy
-    from ..pipelines.rosette import rosette_to_dxf
 except ImportError as exc:
     raise ImportError(
         "Rosette calculator module `pipelines.rosette.rosette_calc` "
         "was not found. Ensure the migration placed it correctly."
     ) from exc
+
+
+# ── Inlined DXF helpers (formerly pipelines.rosette.rosette_to_dxf) ──────
+
+def _dxf_circle(x: float, y: float, r: float, layer: str = "0") -> str:
+    return f"0\nCIRCLE\n8\n{layer}\n10\n{x:.4f}\n20\n{y:.4f}\n40\n{r:.4f}\n"
+
+
+_DXF_HEADER = (
+    "0\nSECTION\n2\nHEADER\n9\n$ACADVER\n1\nAC1009\n"
+    "9\n$INSUNITS\n70\n4\n0\nENDSEC\n0\nSECTION\n2\nENTITIES\n"
+)
+_DXF_FOOTER = "0\nENDSEC\n0\nEOF\n"
+
+
+def _generate_rosette_dxf(
+    soundhole_r: float,
+    channel_inner_r: float,
+    channel_outer_r: float,
+    center_x: float = 0.0,
+    center_y: float = 0.0,
+    purfling_rings: Optional[list] = None,
+) -> str:
+    """Generate DXF R12 content for rosette channel outline circles."""
+    dxf = _DXF_HEADER
+    dxf += _dxf_circle(center_x, center_y, soundhole_r, "SOUNDHOLE")
+    dxf += _dxf_circle(center_x, center_y, channel_inner_r, "CHANNEL_INNER")
+    dxf += _dxf_circle(center_x, center_y, channel_outer_r, "CHANNEL_OUTER")
+    if purfling_rings:
+        for i, r in enumerate(purfling_rings):
+            dxf += _dxf_circle(center_x, center_y, r, f"PURFLING_{i+1}")
+    dxf += _DXF_FOOTER
+    return dxf
 
 
 class PurflingBand(BaseModel):
@@ -181,7 +213,7 @@ def generate_rosette_dxf_string(
         # This is a simplified approach - actual purfling ring radii
         # would need more detailed calculation from the stack
     
-    return rosette_to_dxf.generate_rosette_dxf(
+    return _generate_rosette_dxf(
         soundhole_r=result.soundhole_radius_mm,
         channel_inner_r=result.channel_inner_radius_mm,
         channel_outer_r=result.channel_outer_radius_mm,
