@@ -74,8 +74,10 @@ from .firebird import get_spec as get_firebird_spec, MODEL_INFO as FIREBIRD_INFO
 from .moderne import get_spec as get_moderne_spec, MODEL_INFO as MODERNE_INFO
 
 # Registry of all model specs by ID
-MODEL_SPECS = {
-    InstrumentModelId.STRAT: get_strat_spec,
+# Guard against InstrumentModelId being None (import fallback)
+if InstrumentModelId is not None:
+    MODEL_SPECS = {
+        InstrumentModelId.STRAT: get_strat_spec,
     InstrumentModelId.TELE: get_tele_spec,
     InstrumentModelId.LES_PAUL: get_les_paul_spec,
     InstrumentModelId.DREADNOUGHT: get_dreadnought_spec,
@@ -93,11 +95,11 @@ MODEL_SPECS = {
     InstrumentModelId.ES_335: get_es_335_spec,
     InstrumentModelId.EXPLORER: get_explorer_spec,
     InstrumentModelId.FIREBIRD: get_firebird_spec,
-    InstrumentModelId.MODERNE: get_moderne_spec,
-}
+        InstrumentModelId.MODERNE: get_moderne_spec,
+    }
 
-# Registry of all model info dicts by ID
-MODEL_INFOS = {
+    # Registry of all model info dicts by ID
+    MODEL_INFOS = {
     InstrumentModelId.STRAT: STRAT_INFO,
     InstrumentModelId.TELE: TELE_INFO,
     InstrumentModelId.LES_PAUL: LES_PAUL_INFO,
@@ -116,8 +118,11 @@ MODEL_INFOS = {
     InstrumentModelId.ES_335: ES_335_INFO,
     InstrumentModelId.EXPLORER: EXPLORER_INFO,
     InstrumentModelId.FIREBIRD: FIREBIRD_INFO,
-    InstrumentModelId.MODERNE: MODERNE_INFO,
-}
+        InstrumentModelId.MODERNE: MODERNE_INFO,
+    }
+else:
+    MODEL_SPECS = {}
+    MODEL_INFOS = {}
 
 
 def get_spec_by_model_id(model_id: InstrumentModelId):
