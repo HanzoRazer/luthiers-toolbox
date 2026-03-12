@@ -645,5 +645,14 @@ ROUTER_MANIFEST: List[RouterSpec] = [
         tags=["Instruments", "Guitar", "Calculators"],
         category="instrument_geometry",
     ),
+    # -------------------------------------------------------------------------
+    # ELECTRIC BODY OUTLINE GENERATOR (GAP-07)
+    # -------------------------------------------------------------------------
+    RouterSpec(
+        module="app.routers.instruments.guitar.electric_body_router",
+        prefix="/api",
+        tags=["Instruments", "Guitar", "Generators"],
+        category="instrument_geometry",
+    ),
 
 ]
