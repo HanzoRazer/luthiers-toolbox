@@ -10,7 +10,7 @@
 
 | # | Effort | Source Document | Status | Severity |
 |---|--------|----------------|--------|----------|
-| 1 | Exception Hardening — broad catches | REMEDIATION_PLAN.md / v2 | 🟡 ~60% done | HIGH |
+| 1 | Exception Hardening — broad catches | REMEDIATION_PLAN.md / v2 | ✅ 100% complete (6e397cb6) | ~~HIGH~~ |
 | 2 | God-Object Decomposition — 14 Python files >500 LOC | REMEDIATION_PLAN_v2.md (Phase 13) | ❌ Not started | HIGH |
 | 3 | Router Consolidation — 132 → <100 files | ROUTER_CONSOLIDATION_ROADMAP.md | ❌ Not started | MEDIUM |
 | 4 | 69 Stub Endpoints — 15+ high-priority | STUB_DEBT_REPORT.md | ✅ Wired (see #17) | ~~HIGH~~ |
