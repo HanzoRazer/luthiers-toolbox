@@ -90,7 +90,7 @@ def preflight_dxf_bytes(
     try:
         preflight = DXFPreflight(dxf_bytes)
         report = preflight.run_all_checks()
-    except Exception as e:
+    except (ValueError, TypeError, AttributeError, KeyError, OSError) as e:  # WP-1: narrowed from except Exception
         logger.warning("DXF preflight parse error: %s", e)
         raise PreflightParseError(f"Failed to parse DXF: {e}")
 

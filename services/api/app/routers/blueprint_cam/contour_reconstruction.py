@@ -314,7 +314,7 @@ def reconstruct_contours(
 
     try:
         doc = ezdxf.readfile(tmp_path)
-    except Exception as e:
+    except Exception as e:  # WP-2: API endpoint catch-all
         result.errors.append(f"Failed to read DXF: {e}")
         return result
     finally:
@@ -426,7 +426,7 @@ def reconstruct_bracing_dxf(
 
     try:
         doc = ezdxf.readfile(tmp_path)
-    except Exception as e:
+    except Exception as e:  # WP-2: API endpoint catch-all
         result.errors.append(f"Failed to read DXF: {e}")
         return result
     finally:

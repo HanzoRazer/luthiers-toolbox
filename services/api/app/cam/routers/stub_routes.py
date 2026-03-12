@@ -547,7 +547,7 @@ def preview_fret_slots(req: FretSlotsPreviewRequest) -> FretSlotsPreviewResponse
         # Default fretboard widths if not in spec
         nut_width_mm = 42.0
         heel_width_mm = 56.0
-    except Exception as e:
+    except Exception as e:  # WP-2: API stub catch-all with structured error response
         # Fall back to common defaults
         messages.append(RmosMessageOut(
             code="MODEL_NOT_FOUND",
@@ -580,7 +580,7 @@ def preview_fret_slots(req: FretSlotsPreviewRequest) -> FretSlotsPreviewResponse
             slot_width_mm=req.slot_width_mm,
         )
         statistics = compute_cam_statistics(toolpaths)
-    except Exception as e:
+    except Exception as e:  # WP-2: API stub catch-all with structured error response
         messages.append(RmosMessageOut(
             code="CALCULATION_ERROR",
             severity="error",

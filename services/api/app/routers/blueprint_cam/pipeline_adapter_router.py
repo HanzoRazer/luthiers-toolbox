@@ -75,7 +75,7 @@ def convert_pipeline_to_cam(data: PipelineResultInput) -> CamSpecResponse:
             success=True,
             **spec.to_dict()
         )
-    except Exception as e:
+    except Exception as e:  # WP-2: API endpoint catch-all
         logger.exception("Pipeline to CAM conversion failed")
         raise HTTPException(500, f"Conversion failed: {e}")
 
@@ -90,6 +90,6 @@ def convert_pipeline_raw(data: Dict[str, Any]) -> JSONResponse:
     try:
         spec = adapt_dict_to_cam(data)
         return JSONResponse(content=spec.to_dict())
-    except Exception as e:
+    except Exception as e:  # WP-2: API endpoint catch-all
         logger.exception("Pipeline to CAM conversion failed")
         raise HTTPException(500, f"Conversion failed: {e}")

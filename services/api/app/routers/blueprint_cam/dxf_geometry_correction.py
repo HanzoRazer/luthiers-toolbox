@@ -246,7 +246,7 @@ def correct_dxf_geometry(
         corrected_bytes = _apply_transformations(
             dxf_bytes, scale_x, scale_y, translate_x, translate_y
         )
-    except Exception as e:
+    except Exception as e:  # WP-2: API endpoint catch-all
         result.errors.append(f"Transformation failed: {e}")
         return result
 

@@ -112,7 +112,7 @@ def request_advisory_endpoint(
             "message": str(e),
             "error_code": "AI_INTEGRATOR_ERROR",
         }
-    except Exception as e:
+    except Exception as e:  # WP-2: API endpoint catch-all
         # Unexpected error - log and return generic message
         return {
             "ok": False,
