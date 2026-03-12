@@ -114,7 +114,10 @@
     "minor_radius_mm": 381.0,
     "carve_slope": {
       "average_degrees": 3.2,
-      "range_degrees": [1.5, 6.0],
+      "range_degrees": [
+        1.5,
+        6.0
+      ],
       "steepest_at": "cutaway_horn_and_lower_bout_waist",
       "shallowest_at": "center_top_between_pickups",
       "note": "The carved top slope is NOT constant — it is a compound curve. The average slope from binding edge to peak is approximately 3.2°. The carve is shallowest at the crown (center, between pickups) where it is nearly flat, and steepest at the transitions near the cutaway horn and lower bout edges where the surface drops to the binding. The rise is ~7.8mm over roughly 140mm (half body width), giving tan⁻¹(7.8/140) ≈ 3.19°. Near the cutaway, the slope increases to ~6° as the curve tightens. At the crown plateau, slope is under 1.5°."
@@ -253,7 +256,10 @@
   },
   "binding_and_purfling": {
     "design": "two_tier_purfling_stack",
-    "applies_to": ["top", "back"],
+    "applies_to": [
+      "top",
+      "back"
+    ],
     "note": "Spanish wave + green wood purfling stack on both top and back. Two-tier routing channel system: a deep primary channel for the tall Spanish wave strip, then a shallow inner ledge for the green wood accent. This keeps structural load off the top/back plates and gives clean visual separation.",
     "stack_order_outside_in": [
       "outer_wall (body rim)",
@@ -279,7 +285,10 @@
       "primary_channel": {
         "purpose": "Holds the Spanish wave purfling",
         "width_mm": 2.375,
-        "width_range_mm": [2.35, 2.40],
+        "width_range_mm": [
+          2.35,
+          2.4
+        ],
         "depth_mm": 6.2,
         "clearance_added_width_mm": 0.175,
         "sanding_margin_depth_mm": 0.2,
@@ -343,23 +352,102 @@
   "cnc_operations": {
     "source": "lespaul_gcode/ (5 modules: generator.py, primitives.py, perimeter.py, pockets.py, drilling.py)",
     "tool_library": {
-      "T1": {"name": "10mm Flat End Mill", "diameter_mm": 10.0, "diameter_in": 0.394, "rpm": 18000, "use": "Roughing pockets (OP20–OP22)"},
-      "T2": {"name": "6mm Flat End Mill", "diameter_mm": 6.0, "diameter_in": 0.236, "rpm": 18000, "use": "Finishing pockets (OP30–OP31), cover recess (OP25), body perimeter (OP50)"},
-      "T3": {"name": "3mm Flat/Drill", "diameter_mm": 3.0, "diameter_in": 0.118, "rpm": 20000, "use": "Wiring channels (OP40), all drilling (OP60–OP63)"}
+      "T1": {
+        "name": "10mm Flat End Mill",
+        "diameter_mm": 10.0,
+        "diameter_in": 0.394,
+        "rpm": 18000,
+        "use": "Roughing pockets (OP20–OP22)"
+      },
+      "T2": {
+        "name": "6mm Flat End Mill",
+        "diameter_mm": 6.0,
+        "diameter_in": 0.236,
+        "rpm": 18000,
+        "use": "Finishing pockets (OP30–OP31), cover recess (OP25), body perimeter (OP50)"
+      },
+      "T3": {
+        "name": "3mm Flat/Drill",
+        "diameter_mm": 3.0,
+        "diameter_in": 0.118,
+        "rpm": 20000,
+        "use": "Wiring channels (OP40), all drilling (OP60–OP63)"
+      }
     },
     "operations": [
-      {"op": "OP20", "name": "Neck Pocket Rough", "tool": "T1", "depth_in": 0.75},
-      {"op": "OP21", "name": "Pickup Cavity Rough", "tool": "T1", "depth_in": 0.75},
-      {"op": "OP22", "name": "Electronics Cavity Rough", "tool": "T1", "depth_in": 1.25},
-      {"op": "OP25", "name": "Cover Recess", "tool": "T2", "depth_in": 0.125},
-      {"op": "OP30", "name": "Neck Pocket Finish", "tool": "T2", "depth_in": 0.75},
-      {"op": "OP31", "name": "Pickup Cavity Finish", "tool": "T2", "depth_in": 0.75},
-      {"op": "OP40", "name": "Wiring Channel", "tool": "T3", "depth_in": 0.5},
-      {"op": "OP50", "name": "Body Perimeter", "tool": "T2", "depth_in": 1.75, "tabs": 6},
-      {"op": "OP60", "name": "Pot Shaft Holes (3/8\" through)", "tool": "T3", "depth_in": 1.75},
-      {"op": "OP61", "name": "Bridge Post Holes (7/16\")", "tool": "T3", "depth_in": 0.75},
-      {"op": "OP62", "name": "Tailpiece Stud Holes (9/32\")", "tool": "T3", "depth_in": 0.625},
-      {"op": "OP63", "name": "Screw Pilot Holes (#8)", "tool": "T3", "depth_in": 0.5}
+      {
+        "op": "OP20",
+        "name": "Neck Pocket Rough",
+        "tool": "T1",
+        "depth_in": 0.75
+      },
+      {
+        "op": "OP21",
+        "name": "Pickup Cavity Rough",
+        "tool": "T1",
+        "depth_in": 0.75
+      },
+      {
+        "op": "OP22",
+        "name": "Electronics Cavity Rough",
+        "tool": "T1",
+        "depth_in": 1.25
+      },
+      {
+        "op": "OP25",
+        "name": "Cover Recess",
+        "tool": "T2",
+        "depth_in": 0.125
+      },
+      {
+        "op": "OP30",
+        "name": "Neck Pocket Finish",
+        "tool": "T2",
+        "depth_in": 0.75
+      },
+      {
+        "op": "OP31",
+        "name": "Pickup Cavity Finish",
+        "tool": "T2",
+        "depth_in": 0.75
+      },
+      {
+        "op": "OP40",
+        "name": "Wiring Channel",
+        "tool": "T3",
+        "depth_in": 0.5
+      },
+      {
+        "op": "OP50",
+        "name": "Body Perimeter",
+        "tool": "T2",
+        "depth_in": 1.75,
+        "tabs": 6
+      },
+      {
+        "op": "OP60",
+        "name": "Pot Shaft Holes (3/8\" through)",
+        "tool": "T3",
+        "depth_in": 1.75
+      },
+      {
+        "op": "OP61",
+        "name": "Bridge Post Holes (7/16\")",
+        "tool": "T3",
+        "depth_in": 0.75
+      },
+      {
+        "op": "OP62",
+        "name": "Tailpiece Stud Holes (9/32\")",
+        "tool": "T3",
+        "depth_in": 0.625
+      },
+      {
+        "op": "OP63",
+        "name": "Screw Pilot Holes (#8)",
+        "tool": "T3",
+        "depth_in": 0.5
+      }
     ],
     "gcode_stats": {
       "lines": 18394,
@@ -367,7 +455,11 @@
       "estimated_cut_time_min": 10.6,
       "note": "Stats from LesPaul_Body_Summary.json. Time is cutting only — add setup and tool change time."
     },
-    "machine_targets": ["TXRX Labs Router (48×48×4 in)", "BCAMCNC 2030CA (48×24×4 in)", "Mach4_Router_4x8"],
+    "machine_targets": [
+      "TXRX Labs Router (48×48×4 in)",
+      "BCAMCNC 2030CA (48×24×4 in)",
+      "Mach4_Router_4x8"
+    ],
     "dxf_layers_mapped": [
       "Cutout → Body perimeter (OP50)",
       "Neck Mortise → Neck pocket (OP20, OP30)",
@@ -398,11 +490,28 @@
     "scale_length_inches": 24.75,
     "fret_count": 22,
     "positions_from_nut_mm": [
-      35.28, 68.55, 99.90, 129.41, 157.17,
-      183.26, 207.77, 230.76, 252.33, 272.52,
-      291.41, 309.06, 325.51, 340.83, 355.06,
-      368.26, 380.47, 391.73, 402.10, 411.60,
-      420.26, 428.12
+      35.28,
+      68.55,
+      99.9,
+      129.41,
+      157.17,
+      183.26,
+      207.77,
+      230.76,
+      252.33,
+      272.52,
+      291.41,
+      309.06,
+      325.51,
+      340.83,
+      355.06,
+      368.26,
+      380.47,
+      391.73,
+      402.1,
+      411.6,
+      420.26,
+      428.12
     ],
     "note": "Standard equal-temperament fret spacing, 12th fret at half scale length (314.33mm). 22 frets on Les Paul (vs 20 on J-45)."
   },
@@ -411,7 +520,13 @@
     "body_outline_recovered": "Recovered_DXF_Assets_2026-03-07/electric/LesPaul_body.dxf",
     "cam_closed": "Les Paul_Project/LesPaul_CAM_Closed.dxf",
     "cam_closed_all": "Les Paul_Project/LesPaul_CAM_Closed_ALL.dxf",
-    "verification_packet": "Les Paul_Project/LesPaul_DXF_Verification_Packet.pdf"
+    "verification_packet": "Les Paul_Project/LesPaul_DXF_Verification_Packet.pdf",
+    "_phantom_assets": {
+      "cam_closed": true,
+      "cam_closed_all": true,
+      "verification_packet": true
+    },
+    "_note": "LesPaul_body.dxf exists at body/dxf/electric/. Les Paul_Project/ CAM DXFs are phantom (never committed)."
   },
   "reference_plans": {
     "note": "14 PDFs + 2 CAM DXFs in Guitar Plans archive",
@@ -434,11 +549,20 @@
     "cam_dxfs": [
       "LesPaul_CAM_Closed.dxf",
       "LesPaul_CAM_Closed_ALL.dxf"
-    ]
+    ],
+    "_status": "external_documentation",
+    "_on_disk": false,
+    "_note": "PDF blueprints from Guitar Plans archive. Used for measurement reference only."
   },
   "vectorizer_spec": {
-    "body_length_range_mm": [430, 470],
-    "body_width_range_mm": [320, 360],
+    "body_length_range_mm": [
+      430,
+      470
+    ],
+    "body_width_range_mm": [
+      320,
+      360
+    ],
     "scale_length_mm": 629,
     "neck_pocket_range": null,
     "note": "Set neck — no bolt-on pocket detection. From vectorizer_phase3.py INSTRUMENT_SPECS."

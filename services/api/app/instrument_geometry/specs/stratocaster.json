@@ -132,6 +132,16 @@
     "Headstock dimensions from All-Fender-Headstocks.pdf reference",
     "Body contour verified against vectorizer InstrumentSpec (390-420mm L x 310-340mm W)",
     "Vintage variant: 7.25-inch single radius fretboard",
-    "Modern variant: 9.5-14 inch compound radius fretboard"
-  ]
+    "Modern variant: 9.5-14 inch compound radius fretboard",
+    "PDF references are external documentation sources, not assets in this repository."
+  ],
+  "_reference_docs": {
+    "pdfs": [
+      "Fender-Stratocaster-62.pdf",
+      "Strat-Body-Front.pdf",
+      "All-Fender-Headstocks.pdf"
+    ],
+    "_note": "Reference documents used for measurement verification. Not on disk - external blueprint archive.",
+    "_status": "documentation_only"
+  }
 }
