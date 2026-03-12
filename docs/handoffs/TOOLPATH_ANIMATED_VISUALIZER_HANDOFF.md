@@ -538,10 +538,10 @@ export { simulate } from './simulate'
 |----|------|----------|--------|--------|--------|
 | VIS-01 | Per-segment simulate function | **Critical** | Medium | ✅ Resolved | VIS-02, VIS-03, VIS-04 |
 | VIS-02 | Simulate API endpoint + router | **Critical** | Low | ✅ Resolved | VIS-03, VIS-04 |
-| VIS-03 | Frontend SDK simulate caller | **High** | Low | ❌ Missing | VIS-04, VIS-05 |
-| VIS-04 | Toolpath player Pinia store | **High** | Medium | ❌ Missing | VIS-05, VIS-06 |
-| VIS-05 | Canvas renderer component | **High** | Medium | ❌ Missing | VIS-06 |
-| VIS-06 | Player wrapper + controls | **Medium** | Low | ❌ Missing | — |
+| VIS-03 | Frontend SDK simulate caller | **High** | Low | ✅ Resolved | VIS-04, VIS-05 |
+| VIS-04 | Toolpath player Pinia store | **High** | Medium | ✅ Resolved | VIS-05, VIS-06 |
+| VIS-05 | Canvas renderer component | **High** | Medium | ✅ Resolved | VIS-06 |
+| VIS-06 | Player wrapper + controls | **Medium** | Low | ✅ Resolved | — |
 | VIS-07 | Main.py router registration | **Low** | Trivial | ✅ Resolved | — |
 
 ---
