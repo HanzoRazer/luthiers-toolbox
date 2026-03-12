@@ -42,7 +42,7 @@
 | 28 | Route analytics middleware left in prod | `main.py` TODO comment | ✅ Resolved (c4a4788f) | ~~HIGH~~ |
 | 29 | `rmos/__init__.py` — 8+ bare `pass` in except blocks | Lines 145–311 | ✅ Resolved (75907e0f) | ~~HIGH~~ |
 | 30 | Missing secrets documentation | Railway, SG_SPEC_TOKEN, etc. | ✅ Resolved (4a73ecc4) | ~~MEDIUM~~ |
-| 31 | `data_registry` module deleted, schema orphaned | `user_data` table + skipped test | ❌ Dead schema | LOW |
+| 31 | `data_registry` module deleted, schema orphaned | `user_data` table + skipped test | ✅ Module exists, skip marker removed (16dec69b) | ~~LOW~~ |
 
 ---
 
