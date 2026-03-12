@@ -339,7 +339,7 @@ POST /api/frets/slots
 | GAP-04 | Pickup position calculator | **Critical** | Medium | ❌ Does not exist | GAP-05, GAP-07 |
 | GAP-05 | Fretboard overhang channel | **High** | Low | ❌ Does not exist | — |
 | GAP-06 | CAM advisor 24-fret warnings | **Low** | Low | ⚠️ Infrastructure present | GAP-04 |
-| GAP-07 | Strat body outline generator | **Critical** | High | ❌ Does not exist | GAP-04, GAP-05 |
+| GAP-07 | Strat body outline generator | **Critical** | High | ✅ Resolved (69439800) | GAP-04, GAP-05 |
 | GAP-08 | Strat model hardcoded fret count | **Medium** | Low | ❌ Hardcoded | — |
 | GAP-09 | Parametric pickguard generator | **Medium** | High | ❌ Does not exist | GAP-04 |
 
@@ -638,10 +638,21 @@ def check_instrument_design(
 
 ---
 
-### GAP-07: Strat Body Outline Generator — Does Not Exist
+### GAP-07: Strat Body Outline Generator — ✅ RESOLVED
 
 **Severity:** Critical — without this, the toolbox cannot produce a complete Strat from parameter input  
-**Status:** Only Les Paul body generator exists  
+**Status:** ✅ Resolved in commit 69439800
+
+**Resolution:**
+- Created `electric_body_generator.py` - generic electric body outline generator supporting Strat, Les Paul, Telecaster, etc.
+- Created `electric_body_router.py` - 6 API endpoints for body generation
+- Uses existing DXF-extracted detailed outlines from `instrument_geometry.body`
+- Endpoints: POST /generate, POST /generate/strat, GET /styles, GET /styles/{id}, GET /styles/{id}/svg, GET /presets/24fret-strat
+- 8 smoke tests added and passing
+
+**Original analysis (for historical reference):**
+**Severity (original):** Critical — without this, the toolbox cannot produce a complete Strat from parameter input  
+**Status (original):** Only Les Paul body generator exists  
 
 **Where the problem is:**
 - **Existing:** `services/api/app/generators/lespaul_body_generator.py` (fully implemented for LP)
