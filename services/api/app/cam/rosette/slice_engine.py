@@ -1,8 +1,8 @@
-# Patch N12.0 - Slice geometry engine (skeleton)
+# Slice geometry engine — converts tiles into saw-slice records.
 #
-# Responsible for turning tiles into slices with raw angles. The full
-# N12 engine will compute actual geometry and incorporate twist,
-# herringbone, and kerf. Here we just provide a structured placeholder.
+# Maturity: SKELETON (sets angles to tile center, no twist/kerf yet).
+# Full implementation will compute angles from tangent + 90° and
+# incorporate kerf, twist, and herringbone via downstream engines.
 
 from __future__ import annotations
 
@@ -18,11 +18,11 @@ def generate_slices_for_ring(
     """
     Generate slice records for each tile in the segmentation.
 
-    N12 final behavior:
+    Full implementation:
       - compute raw angles based on tangent + 90°
       - incorporate radius, width, etc.
 
-    N12.0 skeleton behavior:
+    Current behavior:
       - sets angle_raw_deg to tile center
       - angle_final_deg initially equals angle_raw_deg
     """

@@ -1,8 +1,7 @@
-# Patch N12.0 - Preview engine skeleton
+# Preview engine — builds preview payloads from ring geometry.
 #
-# This will eventually build SVG/Canvas-ready preview payloads from
-# ring configs, segmentations, and slices. For now it just assembles
-# a simple summary dict.
+# Maturity: SKELETON (returns tile/slice count summary per ring).
+# Full implementation will generate SVG paths and drawing instructions.
 
 from __future__ import annotations
 
@@ -25,11 +24,11 @@ def build_preview_snapshot(
     """
     Build a preview snapshot.
 
-    N12 final behavior:
+    Full implementation:
       - generate SVG paths / drawing instructions
       - optionally produce a downsampled raster
 
-    N12.0 skeleton behavior:
+    Current behavior:
       - return a minimal summary of tile and slice counts per ring
     """
     payload: Dict[str, Any] = {

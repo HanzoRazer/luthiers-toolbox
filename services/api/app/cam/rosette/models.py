@@ -1,8 +1,10 @@
-# Patch N12.0 - Core RMOS Rosette math models (skeleton)
+# RMOS Rosette math models — canonical in-memory representation.
 #
-# These dataclasses define the canonical in-memory representation for
-# rosette rings, tiles, slices, and batches. N12 will implement the
-# real geometry using these types.
+# Maturity: STABLE TYPES / SKELETON LOGIC
+# These dataclasses define the ring, tile, slice, and batch shapes used
+# across segmentation, slice, kerf, twist, and preview engines.
+# The types are production-stable; computed values are approximate until
+# ROSETTE_ENGINE_N12_ENABLED=true activates full geometry math.
 
 from __future__ import annotations
 
@@ -77,8 +79,10 @@ class SliceBatch:
 @dataclass
 class MultiRingAssembly:
     """
-    Placeholder for multi-ring rosette assembly geometry.
-    N12 will fill this with complete, cross-ring alignment behavior.
+    Multi-ring rosette assembly geometry.
+
+    Collects per-ring segmentation and slice results into a single
+    assembly for cross-ring alignment and preview rendering.
     """
 
     pattern_id: Optional[str] = None
@@ -90,10 +94,11 @@ class MultiRingAssembly:
 @dataclass
 class PreviewSnapshot:
     """
-    High-level container for preview data.
+    Container for preview data — carries per-ring tile/slice summaries.
 
-    For N12 core skeleton, this is opaque (dict). Later it will carry
-    SVG path data, sampled points, etc.
+    When full geometry is enabled (ROSETTE_ENGINE_N12_ENABLED), the payload
+    will include SVG path data and sampled points.  Currently returns a
+    summary dict with tile and slice counts per ring.
     """
 
     pattern_id: Optional[str] = None

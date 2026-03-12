@@ -1,8 +1,8 @@
-# Patch N12.0 - Twist & herringbone engine skeleton
+# Twist & herringbone engine — angle offsets and alternating direction.
 #
-# This module will eventually implement twist offsets and herringbone
-# alternation in angle_final_deg. For now, we just mark flags and keep
-# angles unchanged.
+# Maturity: SKELETON (copies metadata, sets herringbone_flip flag).
+# Full implementation will apply twist_angle_deg to angle_final_deg
+# and alternate herringbone_angle_deg sign on odd/even slices.
 
 from __future__ import annotations
 
@@ -18,11 +18,11 @@ def apply_twist(
     """
     Apply twist offset to slices.
 
-    N12 final behavior:
+    Full implementation:
       - angle_final_deg += ring.twist_angle_deg
       - possibly clamp or normalize angles into [0, 360)
 
-    N12.0 skeleton behavior:
+    Current behavior:
       - keep angles unchanged
       - ensure twist_angle_deg is copied into the slice
     """
@@ -41,11 +41,11 @@ def apply_herringbone(
     """
     Apply herringbone alternation to slices.
 
-    N12 final behavior:
+    Full implementation:
       - alternate sign of herringbone_angle_deg on slices
       - adjust angle_final_deg accordingly
 
-    N12.0 skeleton behavior:
+    Current behavior:
       - set herringbone_flip = odd/even index
       - ensure herringbone_angle_deg is copied
     """

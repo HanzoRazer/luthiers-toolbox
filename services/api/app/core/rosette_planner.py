@@ -1,3 +1,17 @@
+"""
+Rosette manufacturing planner — multi-strip-family tile and stick calculator.
+
+Given a RosettePatternInDB (with ring bands grouped by strip_family_id),
+computes tile counts, strip lengths, and stick requirements per family.
+
+Tile length uses ring.tile_length_override_mm when set, falling back to the
+default tile_length_mm parameter. Scrap factor is applied per-family.
+
+Usage::
+
+    from app.core.rosette_planner import generate_manufacturing_plan
+    plan = generate_manufacturing_plan(pattern, guitars=10, tile_length_mm=8.0)
+"""
 # server/app/core/rosette_planner.py
 from __future__ import annotations
 
