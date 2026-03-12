@@ -160,6 +160,14 @@ class CamSummary(BaseModel):
     move_count: int
     estimated_length_mm: float
     gcode_preview_lines: int = 0
+    pattern_aware: bool = Field(
+        default=False,
+        description="True when per-ring pattern strategies were used",
+    )
+    per_ring: Optional[List[Dict]] = Field(
+        default=None,
+        description="Per-ring stats when pattern_aware is True",
+    )
 
 
 class RosetteProjectResponse(BaseModel):

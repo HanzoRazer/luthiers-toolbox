@@ -1,16 +1,20 @@
 """
-Rosette Manufacturing Routes — Phase 2 + Phase 3 Consolidation
+Rosette Manufacturing Routes — Phase 2 + Phase 3 + Phase 4 Consolidation
 
 Wires the orphaned rosette_planner (manufacturing plan generator),
 TraditionalBuilder (craftsman project sheets), and the unified
 RosetteProject envelope to the Art Studio API.
+
+Phase 4 adds per-ring, pattern-aware CAM toolpath generation —
+different ring pattern types (rope, herringbone, checkerboard, wave, etc.)
+produce different cutting strategies instead of uniform concentric sweeps.
 
 Endpoints:
     POST /api/art/rosette/manufacturing-plan   — Generate multi-family manufacturing plan
     GET  /api/art/rosette/traditional/masters   — List patterns grouped by master luthier
     GET  /api/art/rosette/traditional/patterns/{pattern_id} — Get pattern info
     POST /api/art/rosette/traditional/project   — Generate full traditional rosette project
-    POST /api/art/rosette/project               — Unified project envelope (Phase 3)
+    POST /api/art/rosette/project               — Unified project envelope (Phase 3+4)
 """
 
 from __future__ import annotations
@@ -229,15 +233,27 @@ from ...schemas.rosette_project import (
 
 # Optional CAM modules — degrade gracefully
 CAM_BRIDGE_AVAILABLE = False
+PER_RING_CAM_AVAILABLE = False
 try:
     from ...services.rosette_cam_bridge import (
         RosetteGeometry,
         CamParams,
+        RingCamSpec,
         plan_rosette_toolpath,
+        plan_per_ring_toolpath,
     )
     CAM_BRIDGE_AVAILABLE = True
+    PER_RING_CAM_AVAILABLE = True
 except ImportError:
-    logger.warning("rosette_cam_bridge unavailable — CAM features disabled")
+    try:
+        from ...services.rosette_cam_bridge import (
+            RosetteGeometry,
+            CamParams,
+            plan_rosette_toolpath,
+        )
+        CAM_BRIDGE_AVAILABLE = True
+    except ImportError:
+        logger.warning("rosette_cam_bridge unavailable — CAM features disabled")
 
 MODERN_GENERATOR_AVAILABLE = False
 try:
@@ -302,7 +318,7 @@ def assemble_rosette_project(req: RosetteProjectRequest) -> RosetteProjectRespon
             "outer_diameter_mm": cam_dict["outer_diameter_mm"],
         })
 
-    # ── 3. CAM geometry (optional) ──────────────────────────────────────
+    # ── 3. CAM geometry (optional — per-ring pattern-aware in Phase 4) ────
     cam_summary = None
     if req.include_cam:
         if not CAM_BRIDGE_AVAILABLE:
@@ -316,21 +332,11 @@ def assemble_rosette_project(req: RosetteProjectRequest) -> RosetteProjectRespon
             from ...schemas.rosette_project import CamOverrides
             overrides = CamOverrides()
 
-        # Use outermost/innermost ring radii for channel geometry
         radii = [b.radius_mm for b in pattern.ring_bands]
         widths = [b.width_mm for b in pattern.ring_bands]
         if not radii:
             raise HTTPException(status_code=422, detail="Pattern has no ring bands")
 
-        outer_r = max(r + w / 2 for r, w in zip(radii, widths))
-        inner_r = min(r - w / 2 for r, w in zip(radii, widths))
-
-        geom = RosetteGeometry(
-            center_x_mm=pattern.center_x_mm,
-            center_y_mm=pattern.center_y_mm,
-            inner_radius_mm=max(inner_r, 0.0),
-            outer_radius_mm=outer_r,
-        )
         cam_params = CamParams(
             tool_diameter_mm=overrides.tool_diameter_mm,
             stepover_pct=overrides.stepover_pct,
@@ -339,13 +345,56 @@ def assemble_rosette_project(req: RosetteProjectRequest) -> RosetteProjectRespon
             safe_z_mm=overrides.safe_z_mm,
             cut_depth_mm=pattern.default_slice_thickness_mm,
         )
-        moves, stats = plan_rosette_toolpath(geom, cam_params)
-        cam_summary = CamSummary(
-            rings_count=stats.get("rings", 0),
-            z_passes=stats.get("z_passes", 0),
-            move_count=stats.get("move_count", len(moves)),
-            estimated_length_mm=round(stats.get("length_mm", 0.0), 1),
-        )
+
+        # Phase 4: per-ring pattern-aware toolpaths
+        if PER_RING_CAM_AVAILABLE and pattern.ring_bands:
+            ring_specs = []
+            for band in pattern.ring_bands:
+                cam_dict = ring_band_to_cam_dict(band)
+                inner_r = band.radius_mm - band.width_mm / 2.0
+                outer_r = band.radius_mm + band.width_mm / 2.0
+                ring_specs.append(RingCamSpec(
+                    inner_radius_mm=max(inner_r, 0.0),
+                    outer_radius_mm=outer_r,
+                    pattern_type=cam_dict["pattern_type"],
+                    tile_angle_deg=cam_dict.get("tile_angle_deg", 45.0),
+                    tile_width_mm=cam_dict.get("tile_width_mm", 2.0),
+                    ring_index=band.index,
+                ))
+
+            moves, stats = plan_per_ring_toolpath(
+                rings=ring_specs,
+                center_x_mm=pattern.center_x_mm,
+                center_y_mm=pattern.center_y_mm,
+                params=cam_params,
+            )
+            cam_summary = CamSummary(
+                rings_count=stats.get("rings", 0),
+                z_passes=stats.get("z_passes", 0),
+                move_count=stats.get("move_count", len(moves)),
+                estimated_length_mm=round(stats.get("length_mm", 0.0), 1),
+                pattern_aware=True,
+                per_ring=stats.get("per_ring"),
+            )
+        else:
+            # Fallback: single-geometry concentric sweep
+            outer_r = max(r + w / 2 for r, w in zip(radii, widths))
+            inner_r = min(r - w / 2 for r, w in zip(radii, widths))
+
+            geom = RosetteGeometry(
+                center_x_mm=pattern.center_x_mm,
+                center_y_mm=pattern.center_y_mm,
+                inner_radius_mm=max(inner_r, 0.0),
+                outer_radius_mm=outer_r,
+            )
+            moves, stats = plan_rosette_toolpath(geom, cam_params)
+            cam_summary = CamSummary(
+                rings_count=stats.get("rings", 0),
+                z_passes=stats.get("z_passes", 0),
+                move_count=stats.get("move_count", len(moves)),
+                estimated_length_mm=round(stats.get("length_mm", 0.0), 1),
+                pattern_aware=False,
+            )
 
     # ── 4. Modern parametric preview (optional) ─────────────────────────
     preview_svg = None
