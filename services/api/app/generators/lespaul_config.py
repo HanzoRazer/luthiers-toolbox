@@ -1,6 +1,17 @@
 """WP-3: Les Paul CNC configuration — tool library and machine profiles.
 
 Extracted from lespaul_body_generator.py to reduce god-object size.
+
+UNIT SYSTEM NOTE (LP-GAP-10):
+This module uses INCHES internally for G-code generation (G20 mode).
+Tool names reference metric sizes (e.g., "10mm") for human readability,
+but all dimensional values (_in suffix) are in inches.
+
+Conversion: 1 inch = 25.4 mm
+
+The repo convention is mm (G21), but this legacy generator uses inches
+to maintain compatibility with existing toolpath verification data.
+Future refactoring should convert to mm throughout.
 """
 from __future__ import annotations
 

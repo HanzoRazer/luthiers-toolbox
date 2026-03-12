@@ -43,7 +43,9 @@ class GCodePrimitivesMixin:
         self._emit(";")
         self._emit("")
         self._emit("( SAFE START )")
-        self._emit("G20         ; Inches")
+        # LP-GAP-10: This generator uses inches (G20) for legacy compatibility.
+        # All config values use _in suffix. See lespaul_config.py for details.
+        self._emit("G20         ; Inches (see LP-GAP-10 note in lespaul_config.py)")
         self._emit("G17         ; XY plane")
         self._emit("G90         ; Absolute")
         self._emit("G94         ; Feed per minute")

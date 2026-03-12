@@ -39,6 +39,8 @@
 | 2026-03-11 | (pending) | Add cover plate screw positions + clarify antenna depth | SG-GAP-08, SG-GAP-10 |
 | 2026-03-11 | 289b4ac4 | GIBSON_SOLID headstock already added | VINE-06 |
 | 2026-03-11 | (pending) | Smart Guitar spec coordinate system fixes | SG-GAP-03, SG-GAP-04, SG-GAP-05, SG-GAP-06, SG-GAP-07 |
+| 2026-03-12 | 289b4ac4 | FENDER_STRAT headstock was already implemented | NECK-01, GAP-01 |
+| 2026-03-12 | (pending) | Document inch mode in Les Paul generator, add dual-unit comments | LP-GAP-10 |
 ---
 
 ## Summary by Category
@@ -140,7 +142,7 @@
 | SG-GAP-08 | Smart Guitar | Cover plate screw positions undefined for both rear cavities | **Resolved** (pending) |
 | SG-GAP-10 | Smart Guitar | Antenna recess depth geometry ambiguous (2mm wood cover vs 20.45mm remaining) | **Resolved** (pending) |
 | SG-GAP-12 | Smart Guitar | No `corner_radius` on any pocket — hardware has sharp corners, CNC has fillets | **Resolved** (pending) |
-| LP-GAP-10 | Les Paul 1959 | Mixed unit systems: Phase 1-2 use G20 (inches), Phase 3 uses G21 (mm) | LOW |
+| LP-GAP-10 | Les Paul 1959 | Mixed unit systems: Phase 1-2 use G20 (inches), Phase 3 uses G21 (mm) | **Resolved** (documented) |
 | SG-GAP-11 | Smart Guitar | Generator has stale scale length comment ("25.5 Fender" instead of 24.75 Gibson) | LOW |
 
 ### Fixes
@@ -159,8 +161,8 @@
 |--------|-----------|-------------|----------|
 | GAP-07 | 24-Fret Strat | Strat body outline generator does not exist — only Les Paul generator exists | CRITICAL |
 | GAP-04 | 24-Fret Strat | Pickup position calculator does not exist anywhere in the codebase | CRITICAL |
-| NECK-01 | Strat Neck | Strat headstock outline generator — `FENDER_STRAT` enum falls through to paddle headstock | CRITICAL |
-| GAP-01 | 24-Fret Strat | Stratocaster headstock outline is incomplete stub (same as NECK-01) | HIGH |
+| NECK-01 | Strat Neck | Strat headstock outline generator — `FENDER_STRAT` enum falls through to paddle headstock | **Resolved** (289b4ac4) |
+| GAP-01 | 24-Fret Strat | Stratocaster headstock outline is incomplete stub (same as NECK-01) | **Resolved** (289b4ac4) |
 | GAP-05 | 24-Fret Strat | Fretboard overhang channel — no geometry or preset for 24-fret bolt-on | HIGH |
 | BEN-GAP-04 | Benedetto | Neck binding geometry missing — must account for fretboard taper and radius | HIGH |
 | BEN-GAP-05 | Benedetto | Headstock binding geometry missing — tightest bend at ~20mm tip radius | HIGH |
