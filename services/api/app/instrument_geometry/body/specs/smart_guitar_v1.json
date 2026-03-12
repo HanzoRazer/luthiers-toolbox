@@ -254,6 +254,31 @@
         "material": "black_abs",
         "screw_count": 4,
         "screw_type": "M3_countersunk"
+      },
+      "cover_plate_screws": {
+        "count": 4,
+        "screw_spec": "#4 x 1/2\" flat head wood screw",
+        "pilot_hole_mm": 2.8,
+        "countersink_mm": 5.5,
+        "positions_from_center_mm": [
+          {
+            "x": -41.5,
+            "y": -26.5
+          },
+          {
+            "x": 41.5,
+            "y": -26.5
+          },
+          {
+            "x": -41.5,
+            "y": 26.5
+          },
+          {
+            "x": 41.5,
+            "y": 26.5
+          }
+        ],
+        "notes": "6mm inset from cavity edge, countersunk flush with cover plate"
       }
     },
     "arduino_preamp_pocket": {
@@ -315,6 +340,31 @@
         "material": "black_abs",
         "screw_count": 2,
         "screw_type": "M3_countersunk"
+      },
+      "cover_plate_screws": {
+        "count": 4,
+        "screw_spec": "#4 x 1/2\" flat head wood screw",
+        "pilot_hole_mm": 2.8,
+        "countersink_mm": 5.5,
+        "positions_from_center_mm": [
+          {
+            "x": -35.0,
+            "y": -25.0
+          },
+          {
+            "x": 35.0,
+            "y": -25.0
+          },
+          {
+            "x": -35.0,
+            "y": 25.0
+          },
+          {
+            "x": 35.0,
+            "y": 25.0
+          }
+        ],
+        "notes": "5mm inset from cavity edge, countersunk flush with cover plate"
       }
     },
     "rear_wiring_channel": {
@@ -407,10 +457,17 @@
       "dimensions_mm": {
         "length": 50.0,
         "width": 30.0,
-        "depth": 2.0,
-        "wood_cover_remaining_mm": 2.0,
-        "notes": "Shallow rear-face pocket leaves ~2mm wood window. 2.4/5GHz signals pass through thin wood with minimal attenuation (<3dB). Pocket houses dual-band PCB antenna (WiFi 6 + BLE 5.0).",
-        "corner_radius": 3.0
+        "shelf_step_depth_mm": 2.0,
+        "corner_radius": 3.0,
+        "geometry_clarification": {
+          "description": "Stepped shelf milled into floor of rear_electronics_cavity",
+          "parent_cavity": "rear_electronics_cavity",
+          "parent_cavity_depth_mm": 22.0,
+          "total_depth_from_rear_mm": 24.0,
+          "structural_floor_to_front_mm": 20.45,
+          "rf_window_thickness_mm": 2.0,
+          "notes": "The 2mm RF window is the thin wood between antenna pocket and rear cavity. The 20.45mm is structural floor to front face. Antenna sees 2mm wood, not 20.45mm."
+        }
       },
       "grid_position": {
         "zone": "BODY_CANVAS (rear face, upper region of electronics cavity)",
@@ -429,7 +486,15 @@
         "5GHz (WiFi 6)"
       ],
       "connection": "U.FL pigtail to Pi 5 M.2 WiFi module",
-      "signal_notes": "2mm wood cover attenuates ~1-3dB at 2.4GHz, acceptable for room-scale range (10-15m). No external hardware visible."
+      "signal_notes": "2mm wood cover attenuates ~1-3dB at 2.4GHz, acceptable for room-scale range (10-15m). No external hardware visible.",
+      "structural_analysis": {
+        "body_thickness_mm": 44.45,
+        "total_depth_from_rear_mm": 24.0,
+        "floor_remaining_to_front_mm": 20.45,
+        "rf_window_mm": 2.0,
+        "floor_verdict": "safe",
+        "rf_verdict": "optimal (2mm wood = ~1-3dB attenuation at 2.4GHz)"
+      }
     },
     "control_plate_surface": {
       "type": "top_mount_plate",
