@@ -12,8 +12,7 @@ Tests for:
 
 import pytest
 
-# Skip: Module app.data_registry does not exist
-pytestmark = pytest.mark.skip(reason="Module app.data_registry does not exist")
+# Module app.data_registry was restored - skip marker removed March 2026
 from fastapi.testclient import TestClient
 
 from app.main import app
