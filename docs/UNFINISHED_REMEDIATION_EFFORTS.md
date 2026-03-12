@@ -26,7 +26,7 @@
 | 14 | Singleton Store Refactor | SYSTEM_EVALUATION.md | ✅ Resolved (c79dd1a7) | ~~CRITICAL~~ |
 | 15 | Frontend Tailwind/UX Fixes | SYSTEM_EVALUATION.md | 🟡 Tailwind fixed (bc9042aa) | CRITICAL |
 | 16 | CNC Safety Fail-Closed Mode | SYSTEM_EVALUATION.md | ✅ Resolved (6f86018b) | ~~HIGH~~ |
-| 17 | Phase 2/3 SaaS Implementation Plan | PHASE_2_3_IMPLEMENTATION_PLAN.md | 🟡 ~25% (stubs done) | CRITICAL |
+| 17 | Phase 2/3 SaaS Implementation Plan | PHASE_2_3_IMPLEMENTATION_PLAN.md | 🟡 ~35% (stubs+auth done) | CRITICAL |
 | | | | | |
 | **— Code-Level Findings (not in any planning doc) —** | | | | |
 | 18 | Agentic Spine — pure stubs | `agentic/spine/replay.py`, `moments.py` | ❌ `IMPLEMENTED = False` | MEDIUM |
@@ -395,12 +395,14 @@ Code review of remaining stub files reveals ALL are now wired to real implementa
 - `misc_stub_routes.py` — AI advisories wired to `rmos.ai_advisory`
 
 **Remaining work is Phase 3 SaaS infrastructure:**
-- 3.1 Auth (Clerk/Supabase) — NOT STARTED
-- 3.2 Payments (Stripe) — NOT STARTED  
-- 3.3 Project persistence — NOT STARTED
-- 3.4 Multi-tenancy — NOT STARTED
+- 3.1 Auth (Clerk/Supabase) — ✅ COMPLETE (useAuthStore, tier_gate middleware, 20 tests)
+- 3.2 Payments (Stripe) — NOT STARTED (checkout, webhooks, customer portal)
+- 3.3 Project persistence — NOT STARTED (S3/R2 sync)
+- 3.4 Multi-tenancy — NOT STARTED (workspaces, roles)
 
-**Effort estimate:** 10–14 weeks remaining (stub wiring complete)
+Auth requires: Set VITE_SUPABASE_URL + VITE_SUPABASE_ANON_KEY env vars
+
+**Effort estimate:** 8–12 weeks remaining (auth + stubs complete)
 
 ---
 
