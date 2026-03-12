@@ -38,6 +38,7 @@
 | 2026-03-11 | (pending) | Add corner_radius to 7 Smart Guitar cavities | SG-GAP-12 |
 | 2026-03-11 | (pending) | Add cover plate screw positions + clarify antenna depth | SG-GAP-08, SG-GAP-10 |
 | 2026-03-11 | 289b4ac4 | GIBSON_SOLID headstock already added | VINE-06 |
+| 2026-03-11 | (pending) | Smart Guitar spec coordinate system fixes | SG-GAP-03, SG-GAP-04, SG-GAP-05, SG-GAP-06, SG-GAP-07 |
 ---
 
 ## Summary by Category
@@ -131,11 +132,11 @@
 
 | Gap ID | Instrument | Description | Severity |
 |--------|-----------|-------------|----------|
-| SG-GAP-04 | Smart Guitar | Pickups use `y_from_bridge` while 9 other cavities use `y_from_top` — mixed system | HIGH |
-| SG-GAP-05 | Smart Guitar | Control plate has NO `body_position_mm` — only grid_position (0–1 normalized) | HIGH |
-| SG-GAP-06 | Smart Guitar | Wiring channels have from/to labels but zero XYZ coordinate pairs | HIGH |
-| SG-GAP-07 | Smart Guitar | Neck pocket bolt pattern undefined — no positions, diameters, count, spacing | HIGH |
-| SG-GAP-03 | Smart Guitar | Output jack bore angle undefined — spec says "angled" but no angle_degrees field | HIGH |
+| SG-GAP-04 | Smart Guitar | Pickups use `y_from_bridge` while 9 other cavities use `y_from_top` — mixed system | **Resolved** (pending) |
+| SG-GAP-05 | Smart Guitar | Control plate has NO `body_position_mm` — only grid_position (0–1 normalized) | **Resolved** (pending) |
+| SG-GAP-06 | Smart Guitar | Wiring channels have from/to labels but zero XYZ coordinate pairs | **Resolved** (pending) |
+| SG-GAP-07 | Smart Guitar | Neck pocket bolt pattern undefined — no positions, diameters, count, spacing | **Resolved** (pending) |
+| SG-GAP-03 | Smart Guitar | Output jack bore angle undefined — spec says "angled" but no angle_degrees field | **Resolved** (pending) |
 | SG-GAP-08 | Smart Guitar | Cover plate screw positions undefined for both rear cavities | **Resolved** (pending) |
 | SG-GAP-10 | Smart Guitar | Antenna recess depth geometry ambiguous (2mm wood cover vs 20.45mm remaining) | **Resolved** (pending) |
 | SG-GAP-12 | Smart Guitar | No `corner_radius` on any pocket — hardware has sharp corners, CNC has fillets | **Resolved** (pending) |

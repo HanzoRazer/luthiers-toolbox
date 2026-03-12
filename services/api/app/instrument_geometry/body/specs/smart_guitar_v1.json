@@ -105,6 +105,38 @@
         "x_center": 0.0,
         "y_from_top": 53.3,
         "notes": "Centered on body axis, 53mm from top of body"
+      },
+      "bolt_pattern": {
+        "type": "rectangular_4_bolt",
+        "count": 4,
+        "bolt_spec": "#8-32 x 1.5 inch machine screw",
+        "pilot_hole_mm": 4.0,
+        "counterbore_mm": 9.5,
+        "counterbore_depth_mm": 5.0,
+        "positions_from_pocket_center_mm": [
+          {
+            "x": -22.0,
+            "y": -28.0,
+            "notes": "top-left"
+          },
+          {
+            "x": 22.0,
+            "y": -28.0,
+            "notes": "top-right"
+          },
+          {
+            "x": -22.0,
+            "y": 28.0,
+            "notes": "bottom-left"
+          },
+          {
+            "x": 22.0,
+            "y": 28.0,
+            "notes": "bottom-right"
+          }
+        ],
+        "torque_spec": "3-4 Nm, tighten in cross pattern",
+        "notes": "4-bolt pattern for bolt-on neck. 44mm x 56mm spacing. Counterbored for flat-head screws."
       }
     },
     "neck_pickup_route": {
@@ -127,8 +159,9 @@
       },
       "body_position_mm": {
         "x_center": 0.0,
-        "y_from_bridge": 152.4,
-        "notes": "6 inches from bridge saddle, centered on axis"
+        "notes": "Converted from y_from_bridge=152.4mm. 167.6mm from top, 6 inches from bridge saddle, centered on axis",
+        "y_from_top": 167.6,
+        "y_from_bridge_original": 152.4
       }
     },
     "bridge_pickup_route": {
@@ -151,8 +184,9 @@
       },
       "body_position_mm": {
         "x_center": 0.0,
-        "y_from_bridge": 25.4,
-        "notes": "1 inch from bridge saddle, centered on axis"
+        "notes": "Converted from y_from_bridge=25.4mm. 294.6mm from top, 1 inch from bridge saddle, centered on axis",
+        "y_from_top": 294.6,
+        "y_from_bridge_original": 25.4
       }
     },
     "bridge_route": {
@@ -381,21 +415,51 @@
           "from": "neck_pickup_route",
           "to": "arduino_preamp_pocket",
           "route_description": "Short analog lead from pickup cavities to Arduino ADC, ~20mm",
-          "length_mm": 20.0
+          "length_mm": 20.0,
+          "start_mm": {
+            "x": 0.0,
+            "y": 167.6,
+            "z": -15.0
+          },
+          "end_mm": {
+            "x": 44.4,
+            "y": 133.3,
+            "z": -15.0
+          }
         },
         {
           "name": "arduino_to_pi5_usb_serial",
           "from": "arduino_preamp_pocket",
           "to": "rear_electronics_cavity",
           "route_description": "USB serial cable from Arduino to Pi 5 via rear channel, runs alongside pickup wiring, ~140mm",
-          "length_mm": 140.0
+          "length_mm": 140.0,
+          "start_mm": {
+            "x": 44.4,
+            "y": 133.3,
+            "z": -15.0
+          },
+          "end_mm": {
+            "x": 44.4,
+            "y": 275.6,
+            "z": -15.0
+          }
         },
         {
           "name": "bridge_pickup_to_arduino",
           "from": "bridge_pickup_route",
           "to": "arduino_preamp_pocket",
           "route_description": "Bridge pickup lead routed up to Arduino preamp pocket via rear channel, ~130mm",
-          "length_mm": 130.0
+          "length_mm": 130.0,
+          "start_mm": {
+            "x": 0.0,
+            "y": 294.6,
+            "z": -15.0
+          },
+          "end_mm": {
+            "x": 44.4,
+            "y": 133.3,
+            "z": -15.0
+          }
         },
         {
           "name": "output_jack_channel",
@@ -412,7 +476,9 @@
       "dimensions_mm": {
         "bore_diameter": 12.7,
         "bore_depth": 25.0,
-        "corner_radius": 0
+        "corner_radius": 0,
+        "angle_degrees": 15.0,
+        "angle_notes": "15 deg inward angle toward body center for comfortable cable routing"
       },
       "grid_position": {
         "zone": "LOWER_BOUT (right side)",
@@ -532,6 +598,11 @@
         "diameter": 9.5,
         "count": 3,
         "depth": "through_body_to_rear_cavity"
+      },
+      "body_position_mm": {
+        "x_center": 55.2,
+        "y_from_top": 346.7,
+        "notes": "Derived from grid_position (x=0.65, y=0.78). 55.2mm right of centerline, 346.7mm from top"
       }
     }
   },
