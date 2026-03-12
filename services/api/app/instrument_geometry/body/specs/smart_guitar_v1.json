@@ -10,17 +10,28 @@
     "design_heritage": {
       "explorer": {
         "influence": "Angular body silhouette, dual humbucker layout, V-shaped lower bout, Tune-o-Matic bridge placement",
-        "reference_body_mm": { "width": 420.0, "length": 460.0 },
+        "reference_body_mm": {
+          "width": 420.0,
+          "length": 460.0
+        },
         "reference_scale_mm": 628.65
       },
       "klein": {
         "influence": "Ergonomic negative-space cutaways, rear-access electronics, compact wiring, body-mounted pickups",
         "reference_scale_mm": 779.0,
         "reference_aspect_ratio": 0.92,
-        "key_innovations": ["rear_electronics_cavity", "no_front_control_cavity", "ergonomic_voids"]
+        "key_innovations": [
+          "rear_electronics_cavity",
+          "no_front_control_cavity",
+          "ergonomic_voids"
+        ]
       }
     },
-    "target_market": ["progressive_rock", "metal", "fusion"]
+    "target_market": [
+      "progressive_rock",
+      "metal",
+      "fusion"
+    ]
   },
   "body": {
     "dimensions": {
@@ -59,9 +70,13 @@
     ],
     "materials": {
       "prototype": "khaya (African Mahogany)",
-      "primary": ["khaya", "maple", "ash"],
+      "primary": [
+        "khaya",
+        "maple",
+        "ash"
+      ],
       "finish": "natural_blonde_amber",
-      "notes": "Prototype body is Khaya (African Mahogany) — warm tone, stable, easy to machine, ~0.50 g/cm³. Production may use maple or ash depending on tonal goals."
+      "notes": "Prototype body is Khaya (African Mahogany) \u00e2\u20ac\u201d warm tone, stable, easy to machine, ~0.50 g/cm\u00c2\u00b3. Production may use maple or ash depending on tonal goals."
     },
     "weight_estimate_lbs": 7.5,
     "weight_notes": "Headless saves ~0.4 lb (no headstock/tuners). Klein cutaways remove ~0.6 lb of body wood. Electronics add back ~0.5 lb (Pi 5, Arduino, batteries, SSD, wiring). Net: comparable to a standard solid-body despite embedded computing."
@@ -70,15 +85,16 @@
     "_design_notes": "Hybrid approach: Explorer dual-humbucker front layout with Klein rear-access electronics. All cavity positions mapped to the STEM Guitar 24x32 grid (normalized 0-1 coordinates, origin top-left, Y increases downward).",
     "neck_pocket": {
       "type": "bolt_on",
-      "heritage": "Standard — both Explorer (set-neck) and Klein (bolt-on) inform this; Smart Guitar uses bolt-on for serviceability",
+      "heritage": "Standard \u00e2\u20ac\u201d both Explorer (set-neck) and Klein (bolt-on) inform this; Smart Guitar uses bolt-on for serviceability",
       "dimensions_mm": {
         "length": 76.2,
         "width": 55.9,
-        "depth": 15.9
+        "depth": 15.9,
+        "corner_radius": 6.35
       },
       "grid_position": {
         "zone": "NECK_POCKET",
-        "x_center_norm": 0.50,
+        "x_center_norm": 0.5,
         "y_center_norm": 0.12,
         "x_min_norm": 0.424,
         "x_max_norm": 0.576,
@@ -93,7 +109,7 @@
     },
     "neck_pickup_route": {
       "type": "humbucker",
-      "heritage": "Explorer dual-humbucker layout — neck position",
+      "heritage": "Explorer dual-humbucker layout \u00e2\u20ac\u201d neck position",
       "dimensions_mm": {
         "length": 92.0,
         "width": 40.0,
@@ -102,7 +118,7 @@
       },
       "grid_position": {
         "zone": "BODY_CANVAS (upper)",
-        "x_center_norm": 0.50,
+        "x_center_norm": 0.5,
         "y_center_norm": 0.35,
         "x_min_norm": 0.446,
         "x_max_norm": 0.554,
@@ -117,7 +133,7 @@
     },
     "bridge_pickup_route": {
       "type": "humbucker",
-      "heritage": "Explorer dual-humbucker layout — bridge position",
+      "heritage": "Explorer dual-humbucker layout \u00e2\u20ac\u201d bridge position",
       "dimensions_mm": {
         "length": 92.0,
         "width": 40.0,
@@ -126,8 +142,8 @@
       },
       "grid_position": {
         "zone": "BODY_CANVAS (lower) / BRIDGE_ZONE border",
-        "x_center_norm": 0.50,
-        "y_center_norm": 0.60,
+        "x_center_norm": 0.5,
+        "y_center_norm": 0.6,
         "x_min_norm": 0.446,
         "x_max_norm": 0.554,
         "y_min_norm": 0.559,
@@ -141,7 +157,7 @@
     },
     "bridge_route": {
       "type": "headless_bridge",
-      "heritage": "Headless bridge with integrated fine tuners — Steinberger / Hipshot / ABM lineage. Replaces traditional TOM + tailpiece and headstock tuners. All tuning happens here.",
+      "heritage": "Headless bridge with integrated fine tuners \u00e2\u20ac\u201d Steinberger / Hipshot / ABM lineage. Replaces traditional TOM + tailpiece and headstock tuners. All tuning happens here.",
       "dimensions_mm": {
         "bridge_length": 95.0,
         "bridge_width": 42.0,
@@ -151,11 +167,12 @@
         "mounting_hole_diameter": 3.5,
         "mounting_hole_depth": 15.0,
         "string_spacing_mm": 10.5,
-        "notes": "Headless bridge unit: saddles with individual fine tuners for each string. Mounts flat to body surface with 4 screws. No tailpiece needed — strings anchor and tune at bridge."
+        "notes": "Headless bridge unit: saddles with individual fine tuners for each string. Mounts flat to body surface with 4 screws. No tailpiece needed \u00e2\u20ac\u201d strings anchor and tune at bridge.",
+        "corner_radius": 3.175
       },
       "grid_position": {
         "zone": "BRIDGE_ZONE",
-        "x_center_norm": 0.50,
+        "x_center_norm": 0.5,
         "y_center_norm": 0.72,
         "x_min_norm": 0.393,
         "x_max_norm": 0.607,
@@ -170,12 +187,43 @@
     },
     "rear_electronics_cavity": {
       "type": "rear_access",
-      "heritage": "Klein rear-access electronics — no front control cavity. Pi 5 compute module housed in rear-routed chamber with main battery, SSD, and controls. Arduino ADC module separated near pickups (active-preamp style) with its own 9V battery",
+      "heritage": "Klein rear-access electronics \u00e2\u20ac\u201d no front control cavity. Pi 5 compute module housed in rear-routed chamber with main battery, SSD, and controls. Arduino ADC module separated near pickups (active-preamp style) with its own 9V battery",
       "contains": [
-        {"component": "Raspberry Pi 5", "soc": "ARM Cortex-A76 @ 2.4GHz", "ram_gb": 8, "role": "engine, coaching, bundle generation", "board_mm": [85.0, 56.0, 17.0]},
-        {"component": "Li-ion 18650 battery", "capacity_mah": 6000, "cell_mm": [65.0, 18.3], "charging": "USB-C PD 20W", "position": "beside Pi 5"},
-        {"component": "NVMe SSD (optional)", "form_factor": "M.2 2280", "board_mm": [80.0, 22.0, 3.5], "capacity_gb": 128, "position": "under Pi 5"},
-        "wiring harness", "pots", "rotary switch"
+        {
+          "component": "Raspberry Pi 5",
+          "soc": "ARM Cortex-A76 @ 2.4GHz",
+          "ram_gb": 8,
+          "role": "engine, coaching, bundle generation",
+          "board_mm": [
+            85.0,
+            56.0,
+            17.0
+          ]
+        },
+        {
+          "component": "Li-ion 18650 battery",
+          "capacity_mah": 6000,
+          "cell_mm": [
+            65.0,
+            18.3
+          ],
+          "charging": "USB-C PD 20W",
+          "position": "beside Pi 5"
+        },
+        {
+          "component": "NVMe SSD (optional)",
+          "form_factor": "M.2 2280",
+          "board_mm": [
+            80.0,
+            22.0,
+            3.5
+          ],
+          "capacity_gb": 128,
+          "position": "under Pi 5"
+        },
+        "wiring harness",
+        "pots",
+        "rotary switch"
       ],
       "dimensions_mm": {
         "length": 95.0,
@@ -190,7 +238,7 @@
       },
       "grid_position": {
         "zone": "BODY_CANVAS (lower-right quadrant)",
-        "x_center_norm": 0.60,
+        "x_center_norm": 0.6,
         "y_center_norm": 0.62,
         "x_min_norm": 0.517,
         "x_max_norm": 0.683,
@@ -200,7 +248,7 @@
       "body_position_mm": {
         "x_center": 36.8,
         "y_from_top": 275.7,
-        "notes": "Offset right (bass side). Pi 5 only — 40% less wood removed vs dual-board cavity"
+        "notes": "Offset right (bass side). Pi 5 only \u00e2\u20ac\u201d 40% less wood removed vs dual-board cavity"
       },
       "cover_plate": {
         "material": "black_abs",
@@ -210,13 +258,36 @@
     },
     "arduino_preamp_pocket": {
       "type": "rear_access",
-      "heritage": "Active-preamp style — Arduino ADC board mounted near pickups for shortest analog signal path, like EMG/Fishman active pickup systems. Own 9V battery for independent operation",
+      "heritage": "Active-preamp style \u00e2\u20ac\u201d Arduino ADC board mounted near pickups for shortest analog signal path, like EMG/Fishman active pickup systems. Own 9V battery for independent operation",
       "contains": [
-        {"component": "Arduino Uno", "mcu": "ATmega328P @ 16MHz", "role": "audio signal capture (44.1kHz ADC), timing detection, MIDI conversion", "board_mm": [68.6, 53.4, 15.0]},
-        {"component": "9V battery (PP3)", "type": "alkaline or rechargeable NiMH", "cell_mm": [48.5, 26.5, 17.5], "runtime_hours": 40, "position": "beside Arduino board"}
+        {
+          "component": "Arduino Uno",
+          "mcu": "ATmega328P @ 16MHz",
+          "role": "audio signal capture (44.1kHz ADC), timing detection, MIDI conversion",
+          "board_mm": [
+            68.6,
+            53.4,
+            15.0
+          ]
+        },
+        {
+          "component": "9V battery (PP3)",
+          "type": "alkaline or rechargeable NiMH",
+          "cell_mm": [
+            48.5,
+            26.5,
+            17.5
+          ],
+          "runtime_hours": 40,
+          "position": "beside Arduino board"
+        }
       ],
-      "signal_chain": "Guitar Pickups → Arduino Uno (44.1kHz ADC) → USB serial cable → Raspberry Pi 5",
-      "latency_targets_ms": {"hard_max": 20, "target": 10, "ideal": 5},
+      "signal_chain": "Guitar Pickups \u00e2\u2020\u2019 Arduino Uno (44.1kHz ADC) \u00e2\u2020\u2019 USB serial cable \u00e2\u2020\u2019 Raspberry Pi 5",
+      "latency_targets_ms": {
+        "hard_max": 20,
+        "target": 10,
+        "ideal": 5
+      },
       "independent_operation": "Arduino runs standalone on 9V via Vin pin (7-12V input). If Pi 5 is off, Arduino still passes analog signal through and can output MIDI over USB",
       "dimensions_mm": {
         "length": 80.0,
@@ -231,8 +302,8 @@
       },
       "grid_position": {
         "zone": "BODY_CANVAS (upper, near neck pickup)",
-        "x_center_norm": 0.60,
-        "y_center_norm": 0.30,
+        "x_center_norm": 0.6,
+        "y_center_norm": 0.3,
         "notes": "Adjacent to neck pickup route, treble side. Short analog wire path to pickups"
       },
       "body_position_mm": {
@@ -248,10 +319,11 @@
     },
     "rear_wiring_channel": {
       "type": "rear_routed_channel",
-      "heritage": "Klein rear-wiring philosophy — all pickup leads run through rear-routed channels, no front wiring trenches",
+      "heritage": "Klein rear-wiring philosophy \u00e2\u20ac\u201d all pickup leads run through rear-routed channels, no front wiring trenches",
       "dimensions_mm": {
         "width": 10.0,
-        "depth": 15.0
+        "depth": 15.0,
+        "corner_radius": 3.175
       },
       "paths": [
         {
@@ -289,11 +361,12 @@
       "heritage": "Explorer-style side-mount barrel jack on lower bout",
       "dimensions_mm": {
         "bore_diameter": 12.7,
-        "bore_depth": 25.0
+        "bore_depth": 25.0,
+        "corner_radius": 0
       },
       "grid_position": {
         "zone": "LOWER_BOUT (right side)",
-        "x_center_norm": 0.80,
+        "x_center_norm": 0.8,
         "y_center_norm": 0.88,
         "notes": "Bass-side lower bout edge, accessible when playing"
       },
@@ -305,23 +378,24 @@
     },
     "usb_c_port": {
       "type": "edge_slot",
-      "heritage": "Modern edge-mount port — Strandberg / Lava ME style side-access charging",
+      "heritage": "Modern edge-mount port \u00e2\u20ac\u201d Strandberg / Lava ME style side-access charging",
       "dimensions_mm": {
         "slot_width": 12.0,
         "slot_height": 6.5,
         "slot_depth": 7.0,
-        "notes": "Rectangular slot accommodates USB-C receptacle with waterproof gasket. Routed from body edge inward."
+        "notes": "Rectangular slot accommodates USB-C receptacle with waterproof gasket. Routed from body edge inward.",
+        "corner_radius": 1.5
       },
       "grid_position": {
         "zone": "LOWER_BOUT (right edge)",
         "x_center_norm": 0.99,
         "y_center_norm": 0.65,
-        "notes": "Bass-side body edge, same Y-band as rear electronics cavity — short internal cable to Pi 5 USB-C. Below arm contour, won't interfere with playing."
+        "notes": "Bass-side body edge, same Y-band as rear electronics cavity \u00e2\u20ac\u201d short internal cable to Pi 5 USB-C. Below arm contour, won't interfere with playing."
       },
       "body_position_mm": {
         "x_center": 216.0,
         "y_from_top": 239.4,
-        "notes": "Edge-routed slot perpendicular to body surface. Body half-width ~219mm at this Y — slot opens at edge, extends 7mm inward. ~60mm cable to Pi 5."
+        "notes": "Edge-routed slot perpendicular to body surface. Body half-width ~219mm at this Y \u00e2\u20ac\u201d slot opens at edge, extends 7mm inward. ~60mm cable to Pi 5."
       },
       "function": "USB-C PD 20W charging for Li-ion 18650 + optional USB data connection to Pi 5",
       "internal_cable_mm": 60.0,
@@ -329,37 +403,42 @@
     },
     "antenna_recess": {
       "type": "shallow_pocket",
-      "heritage": "IoT best practice — PCB antenna under thin wood window, invisible from outside. Used in smart furniture, acoustic wireless systems (e.g., Taylor ES2), and IoT enclosures.",
+      "heritage": "IoT best practice \u00e2\u20ac\u201d PCB antenna under thin wood window, invisible from outside. Used in smart furniture, acoustic wireless systems (e.g., Taylor ES2), and IoT enclosures.",
       "dimensions_mm": {
         "length": 50.0,
         "width": 30.0,
         "depth": 2.0,
         "wood_cover_remaining_mm": 2.0,
-        "notes": "Shallow rear-face pocket leaves ~2mm wood window. 2.4/5GHz signals pass through thin wood with minimal attenuation (<3dB). Pocket houses dual-band PCB antenna (WiFi 6 + BLE 5.0)."
+        "notes": "Shallow rear-face pocket leaves ~2mm wood window. 2.4/5GHz signals pass through thin wood with minimal attenuation (<3dB). Pocket houses dual-band PCB antenna (WiFi 6 + BLE 5.0).",
+        "corner_radius": 3.0
       },
       "grid_position": {
         "zone": "BODY_CANVAS (rear face, upper region of electronics cavity)",
         "x_center_norm": 0.55,
         "y_center_norm": 0.55,
-        "notes": "Centered near top of rear cavity area. Maximizes distance from copper shielding paint in pickup routes. Rear face only — invisible from front."
+        "notes": "Centered near top of rear cavity area. Maximizes distance from copper shielding paint in pickup routes. Rear face only \u00e2\u20ac\u201d invisible from front."
       },
       "body_position_mm": {
         "x_center": 22.2,
         "y_from_top": 202.6,
-        "notes": "Rear face of body. Milled from inside the rear electronics cavity as a stepped shelf — no separate external routing needed."
+        "notes": "Rear face of body. Milled from inside the rear electronics cavity as a stepped shelf \u00e2\u20ac\u201d no separate external routing needed."
       },
       "antenna_type": "dual-band PCB ceramic chip antenna",
-      "frequency_bands": ["2.4GHz (WiFi 6 / BLE 5.0)", "5GHz (WiFi 6)"],
+      "frequency_bands": [
+        "2.4GHz (WiFi 6 / BLE 5.0)",
+        "5GHz (WiFi 6)"
+      ],
       "connection": "U.FL pigtail to Pi 5 M.2 WiFi module",
       "signal_notes": "2mm wood cover attenuates ~1-3dB at 2.4GHz, acceptable for room-scale range (10-15m). No external hardware visible."
     },
     "control_plate_surface": {
       "type": "top_mount_plate",
-      "heritage": "Hybrid — Explorer top-mount controls simplified with Klein minimalism. 2 knobs + 1 rotary switch mounted on asymmetric plate, no deep front cavity needed",
+      "heritage": "Hybrid \u00e2\u20ac\u201d Explorer top-mount controls simplified with Klein minimalism. 2 knobs + 1 rotary switch mounted on asymmetric plate, no deep front cavity needed",
       "dimensions_mm": {
         "length": 100.0,
         "width": 50.0,
-        "thickness": 3.0
+        "thickness": 3.0,
+        "corner_radius": 6.35
       },
       "grid_position": {
         "zone": "BODY_CANVAS (lower-right)",
@@ -368,9 +447,21 @@
         "notes": "Below and right of bridge, accessible control cluster"
       },
       "components": {
-        "volume_knob": { "x_offset_mm": -20.0, "y_offset_mm": -15.0, "shaft_diameter_mm": 9.5 },
-        "tone_knob": { "x_offset_mm": 20.0, "y_offset_mm": -15.0, "shaft_diameter_mm": 9.5 },
-        "rotary_switch": { "x_offset_mm": 0.0, "y_offset_mm": 15.0, "shaft_diameter_mm": 9.5 }
+        "volume_knob": {
+          "x_offset_mm": -20.0,
+          "y_offset_mm": -15.0,
+          "shaft_diameter_mm": 9.5
+        },
+        "tone_knob": {
+          "x_offset_mm": 20.0,
+          "y_offset_mm": -15.0,
+          "shaft_diameter_mm": 9.5
+        },
+        "rotary_switch": {
+          "x_offset_mm": 0.0,
+          "y_offset_mm": 15.0,
+          "shaft_diameter_mm": 9.5
+        }
       },
       "pot_holes_mm": {
         "diameter": 9.5,
@@ -387,7 +478,7 @@
     "nut_width_inches": 1.6875,
     "nut_width_mm": 42.86,
     "nut_type": "locking_clamp",
-    "nut_notes": "Headless locking nut — strings clamped at nut end, tuned at bridge. No headstock, no tuning pegs.",
+    "nut_notes": "Headless locking nut \u00e2\u20ac\u201d strings clamped at nut end, tuned at bridge. No headstock, no tuning pegs.",
     "fretboard_material": "ebony",
     "inlay_style": "dot",
     "profile": "modern_C",
@@ -414,7 +505,7 @@
       "style": "headless_fixed_with_fine_tuners",
       "cavity_ref": "bridge_route",
       "tuning": "integrated_fine_tuners",
-      "notes": "Headless bridge unit — all tuning at bridge. Locking nut clamps strings at neck end."
+      "notes": "Headless bridge unit \u00e2\u20ac\u201d all tuning at bridge. Locking nut clamps strings at neck end."
     },
     "controls": {
       "knobs": 2,
@@ -436,7 +527,10 @@
   "stem_grid_mapping": {
     "_description": "All cavity positions mapped to the STEM Guitar 24x32 grid system. Grid origin is top-left, coordinates normalized 0-1. The grid centerline is at x=0.5. This mapping enables the GridZoneClassifier to validate cavity placement against standard guitar anatomy zones.",
     "grid_version": "1.0.0",
-    "grid_dimensions": [24, 32],
+    "grid_dimensions": [
+      24,
+      32
+    ],
     "centerline_x": 0.5,
     "zone_usage": {
       "NECK_POCKET": "neck_pocket (bolt-on, centered)",
@@ -446,14 +540,17 @@
       "BODY_CANVAS_lower_right": "rear_electronics_cavity + control_plate_surface",
       "LOWER_BOUT_right": "output_jack (barrel, edge-mount)",
       "WAIST_LEFT": "occupied by Klein-style upper void (negative space)",
-      "UNUSED_zones": ["UPPER_BOUT_LEFT (void cutaway)", "WING_LIMIT_LEFT (void cutaway)"]
+      "UNUSED_zones": [
+        "UPPER_BOUT_LEFT (void cutaway)",
+        "WING_LIMIT_LEFT (void cutaway)"
+      ]
     },
     "routing_philosophy": "Klein rear-access: no front control cavity. All wiring in rear-routed channels. Front surface has only pickup rings, bridge hardware, and control plate mounting holes"
   },
   "overall": {
     "total_length_inches": 32.0,
     "total_length_mm": 812.8,
-    "notes": "Headless design — no headstock. Overall length is body (368.3mm) + neck extension to nut (~315mm) + short clamping stub (~30mm). ~180mm shorter than headed equivalent."
+    "notes": "Headless design \u00e2\u20ac\u201d no headstock. Overall length is body (368.3mm) + neck extension to nut (~315mm) + short clamping stub (~30mm). ~180mm shorter than headed equivalent."
   },
   "source_images": [
     "ChatGPT Image Mar 6, 2026, 01_41_42 AM.png",
