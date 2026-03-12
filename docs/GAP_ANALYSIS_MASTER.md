@@ -193,7 +193,7 @@
 | VEC-GAP-02 | OM Purfling | Phase 4 Dimension Linking is CLI-only — no `/api/blueprint/phase4` route | HIGH |
 | VINE-04 | J45 Vine | Neck G-code generator class exists but no HTTP endpoint | HIGH |
 | OM-GAP-07 | OM-28 | Neck G-code generator has no HTTP endpoint (same as VINE-04) | HIGH |
-| NECK-04 | Strat Neck | Strat-specific API endpoint missing — neck router defaults to Les Paul | HIGH |
+| NECK-04 | Strat Neck | Strat-specific API endpoint added | **Resolved** (65669faf) |
 | VINE-08 | J45 Vine | Bracing router mounted via router_registry manifest.py:330 | **Resolved** |
 | LP-GAP-04 | Les Paul 1959 | Fret slot CAM exists (934 lines) but not wired into build pipeline | MEDIUM |
 | INLAY-05 | Custom Inlay | `inlay_prompts.py` imported by headstock/router.py | **Resolved** |
