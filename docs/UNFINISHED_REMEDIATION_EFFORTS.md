@@ -13,7 +13,7 @@
 | 1 | Exception Hardening — broad catches | REMEDIATION_PLAN.md / v2 | 🟡 ~60% done | HIGH |
 | 2 | God-Object Decomposition — 14 Python files >500 LOC | REMEDIATION_PLAN_v2.md (Phase 13) | ❌ Not started | HIGH |
 | 3 | Router Consolidation — 132 → <100 files | ROUTER_CONSOLIDATION_ROADMAP.md | ❌ Not started | MEDIUM |
-| 4 | 69 Stub Endpoints — 15+ high-priority | STUB_DEBT_REPORT.md | ❌ Not started | HIGH |
+| 4 | 69 Stub Endpoints — 15+ high-priority | STUB_DEBT_REPORT.md | ✅ Wired (see #17) | ~~HIGH~~ |
 | 5 | 113 Instrument Build Gaps — 4 CRITICAL DXFs | GAP_ANALYSIS_MASTER.md | 🟡 Partial | CRITICAL |
 | 6 | Vue Component Decomposition — 2 files remain | VUE_DECOMPOSITION_GUIDE.md | 🟡 ~85% done | MEDIUM |
 | 7 | Score 7 Plan — Phases 1.3–4.3 | SCORE_7_PLAN.md | 🟡 ~25% done | HIGH |
@@ -26,7 +26,7 @@
 | 14 | Singleton Store Refactor | SYSTEM_EVALUATION.md | ✅ Resolved (c79dd1a7) | ~~CRITICAL~~ |
 | 15 | Frontend Tailwind/UX Fixes | SYSTEM_EVALUATION.md | 🟡 Tailwind fixed (bc9042aa) | CRITICAL |
 | 16 | CNC Safety Fail-Closed Mode | SYSTEM_EVALUATION.md | ✅ Resolved (6f86018b) | ~~HIGH~~ |
-| 17 | Phase 2/3 SaaS Implementation Plan | PHASE_2_3_IMPLEMENTATION_PLAN.md | 🟡 ~10% done | CRITICAL |
+| 17 | Phase 2/3 SaaS Implementation Plan | PHASE_2_3_IMPLEMENTATION_PLAN.md | 🟡 ~25% (stubs done) | CRITICAL |
 | | | | | |
 | **— Code-Level Findings (not in any planning doc) —** | | | | |
 | 18 | Agentic Spine — pure stubs | `agentic/spine/replay.py`, `moments.py` | ❌ `IMPLEMENTED = False` | MEDIUM |
@@ -387,9 +387,20 @@ The largest single planned effort in the repo. Targets converting the single-use
 - 11 endpoints proxied to real implementations, 21 smoke tests added
 - ~39 dead code stubs removed entirely
 - Total stubs: 73 → 23 (68% reduction)
-- 23 stubs remain: 13 HIGH (RMOS analytics/rosette), 6 MEDIUM (AI advisories), 4 LOW (CAM misc)
 
-**Effort estimate:** 12–16 weeks remaining
+**March 12, 2026 — Verification Analysis:**
+Code review of remaining stub files reveals ALL are now wired to real implementations:
+- `cam/routers/stub_routes.py` — job-int, insights, probe, posts, bridge, logs, risk, fret_slots, adaptive2 ALL proxy to real services
+- `rmos/stub_routes.py` — rosette, live-monitor, safety, DXF-to-GRBL ALL wired
+- `misc_stub_routes.py` — AI advisories wired to `rmos.ai_advisory`
+
+**Remaining work is Phase 3 SaaS infrastructure:**
+- 3.1 Auth (Clerk/Supabase) — NOT STARTED
+- 3.2 Payments (Stripe) — NOT STARTED  
+- 3.3 Project persistence — NOT STARTED
+- 3.4 Multi-tenancy — NOT STARTED
+
+**Effort estimate:** 10–14 weeks remaining (stub wiring complete)
 
 ---
 
