@@ -340,7 +340,7 @@ POST /api/frets/slots
 | GAP-05 | Fretboard overhang channel | **High** | Low | ✅ Resolved | — |
 | GAP-06 | CAM advisor 24-fret warnings | **Low** | Low | ⚠️ Infrastructure present | GAP-04 |
 | GAP-07 | Strat body outline generator | **Critical** | High | ✅ Resolved (69439800) | GAP-04, GAP-05 |
-| GAP-08 | Strat model hardcoded fret count | **Medium** | Low | ❌ Hardcoded | — |
+| GAP-08 | Strat model hardcoded fret count | **Medium** | Low | ✅ Resolved | — |
 | GAP-09 | Parametric pickguard generator | **Medium** | High | ❌ Does not exist | GAP-04 |
 
 ---
