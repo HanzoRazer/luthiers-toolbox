@@ -47,25 +47,25 @@ class LesPaulGCodeGenerator(
 
         self._header(program_name)
 
-        # OP20: Pocket rough - T1 (10mm)
+        # OP20: Pocket rough - T1 (10mm / 0.394")
         self.generate_pocket("Neck Mortise", 1, 0.75, "OP20: Neck Pocket Rough")
         self.generate_pocket("Pickup Cavity", 1, 0.75, "OP21: Pickup Cavity Rough")
         self.generate_pocket("Electronic Cavities", 1, 1.25, "OP22: Electronics Cavity Rough")
 
-        # OP25: Cover recess (back) - T2 (6mm)
+        # OP25: Cover recess (back) - T2 (6mm / 0.236")
         self.generate_cover_recess(tool_num=2, depth_in=0.125)
 
-        # OP30: Pocket finish - T2 (6mm)
+        # OP30: Pocket finish - T2 (6mm / 0.236")
         self.generate_pocket("Neck Mortise", 2, 0.75, "OP30: Neck Pocket Finish")
         self.generate_pocket("Pickup Cavity", 2, 0.75, "OP31: Pickup Cavity Finish")
 
-        # OP40: Channels - T3 (3mm)
+        # OP40: Channels - T3 (3mm / 0.118")
         self.generate_pocket("Wiring Channel", 3, 0.5, "OP40: Wiring Channel")
 
         # OP50: Perimeter
         self.generate_body_perimeter(tool_num=2, tab_count=6)
 
-        # OP60: Drilling operations - T3 (3mm drill)
+        # OP60: Drilling operations - T3 (3mm / 0.118" drill)
         # Extract holes from DXF layers
         pot_holes = self._extract_holes_from_layer('Pot Holes')
         if pot_holes:
