@@ -113,13 +113,8 @@ def test_bridge_location_with_manual_compensation(client):
     assert data["bridge_location_mm"] == 650.5
 
 
-@pytest.mark.skip(reason="compute_compensation_estimate signature mismatch - needs fix in router")
 def test_bridge_location_with_automatic_compensation(client):
-    """Bridge location calculates automatic compensation.
-
-    NOTE: Currently broken due to compute_compensation_estimate() not accepting
-    scale_length_mm parameter. Router needs update.
-    """
+    """Bridge location calculates automatic compensation."""
     response = client.post("/api/instrument/geometry/bridge", json={
         "scale_length_mm": 648.0,
         "string_gauge_mm": 0.46,

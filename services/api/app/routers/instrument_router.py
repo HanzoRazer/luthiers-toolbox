@@ -123,12 +123,14 @@ def get_bridge_location(payload: BridgeLocationRequest) -> BridgeLocationRespons
         notes = f"Manual compensation: {compensation:.2f}mm"
     elif payload.string_gauge_mm is not None and payload.action_height_mm is not None:
         # Use compute_compensation_estimate for automatic calculation
+        # Heuristic: strings >= 0.4mm are typically wound
+        is_wound = payload.string_gauge_mm >= 0.4
         compensation = compute_compensation_estimate(
             string_gauge_mm=payload.string_gauge_mm,
+            is_wound=is_wound,
             action_mm=payload.action_height_mm,
-            scale_length_mm=payload.scale_length_mm,
         )
-        notes = f"Calculated compensation for {payload.string_gauge_mm}mm string, {payload.action_height_mm}mm action"
+        notes = f"Calculated compensation for {payload.string_gauge_mm}mm {'wound' if is_wound else 'plain'} string, {payload.action_height_mm}mm action"
     
     return BridgeLocationResponse(
         scale_length_mm=payload.scale_length_mm,
