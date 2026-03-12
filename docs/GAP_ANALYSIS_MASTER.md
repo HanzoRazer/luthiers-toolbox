@@ -190,7 +190,7 @@
 |--------|-----------|-------------|----------|
 | VEC-GAP-01 | OM Purfling | Phase 3.6 Vectorizer has no API endpoint — only accessible via Python import | CRITICAL |
 | VINE-01 | J45 Vine | Inlay DXF → pocket milling G-code bridge missing — pipeline dead-ends at DXF | CRITICAL |
-| INLAY-01 | Custom Inlay | No headstock inlay router — `inlay_prompts.py` has 11 styles but no API | CRITICAL |
+| INLAY-01 | Custom Inlay | Headstock inlay router has 10 endpoints | **Resolved** |
 | VEC-GAP-02 | OM Purfling | Phase 4 Dimension Linking is CLI-only — no `/api/blueprint/phase4` route | HIGH |
 | VINE-04 | J45 Vine | Neck G-code generator class exists but no HTTP endpoint | HIGH |
 | OM-GAP-07 | OM-28 | Neck G-code generator has no HTTP endpoint (same as VINE-04) | HIGH |
@@ -310,7 +310,7 @@
 
 | Gap ID | Instrument | Description | Severity |
 |--------|-----------|-------------|----------|
-| VEC-GAP-01 | OM Purfling | Phase 3.6 Vectorizer has no API endpoint | CRITICAL |
+| VEC-GAP-01 | OM Purfling | Phase 3 Vectorizer at /blueprint/phase3/vectorize | **Resolved** (08a7db0d) |
 | VEC-GAP-02 | OM Purfling | Phase 4 Dimension Linking is CLI-only | HIGH |
 | VEC-GAP-03 | OM Purfling | Phase 4 `PipelineResult` has no consumer | HIGH |
 | VEC-GAP-04 | OM Purfling | Phase 3 → CAM bridge has no integration test | MEDIUM |
