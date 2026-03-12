@@ -1,0 +1,17 @@
+/**
+ * Main CSS Entry Point - The Production Shop
+ *
+ * This file imports Tailwind CSS and project design tokens.
+ * Import this in main.ts.
+ */
+
+/* Tailwind CSS base, components, and utilities */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Project design tokens (CSS variables) */
+@import './design-tokens.css';
+
+/* CAD theme styles */
+@import './cad-theme.css';

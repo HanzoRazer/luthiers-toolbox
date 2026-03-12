@@ -4,6 +4,9 @@ import { createPinia } from 'pinia'
 import App from './App.vue'
 import router from './router'
 
+// Global styles - Tailwind CSS + design tokens
+import './styles/main.css'
+
 // =============================================================================
 // GLOBAL FETCH INTERCEPTOR
 // Automatically prepends VITE_API_BASE to all /api/* requests
