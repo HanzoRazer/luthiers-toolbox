@@ -2,7 +2,7 @@
 
 **Date:** 2026-03-11
 **Session:** GAP_ANALYSIS Remediation Sprint
-**Last Commit: 6fa4d61b fix(spec): add corner_radius to Smart Guitar cavities (SG-GAP-12)
+**Last Commit: 892ed3dd fix(spec): add screw positions + clarify antenna depth (SG-GAP-08, SG-GAP-10)
 **Branch:** main
 **Pushed:** Yes (origin/main up to date)
 
@@ -38,6 +38,7 @@ Working through infrastructure gaps identified in `docs/GAP_ANALYSIS_MASTER.md`.
 | BOM-GAP-01 | COL_WIDTHS arrays for veneer cutting bills | 4c6764bc | Added col_widths property + rosette_bom.py module |
 | OM-GAP-06/BEN-GAP-06 | Martin + Benedetto headstock outlines | 5cd6c2ba | Added 2 headstock styles + tuner positions + neck presets |
 | SG-GAP-12 | Smart Guitar corner_radius missing | 6fa4d61b | Added corner_radius to 7 cavities in spec JSON |
+| SG-GAP-08/10, VINE-06 | Screw positions, antenna depth, Gibson headstock | 892ed3dd | Spec completeness fixes |
 
 ---
 
@@ -67,7 +68,7 @@ Remaining failures (pre-existing, not caused by sprint changes):
 |--------|-------|---------|-------|
 | Tests passed | 2390 | 2395 | +5 |
 | Tests failed | 28 | 16 | -12 |
-| Commits | 0 | 13 | +13 |
+| Commits | 0 | 14 | +14 |
 
 ---
 
@@ -151,4 +152,4 @@ All remediation phases complete. WP-3 god-object decomposition committed. Tagged
 
 ---
 
-*Updated: 2026-03-11 — Smart Guitar corner_radius (SG-GAP-12)*
+*Updated: 2026-03-11 — Screw positions + antenna depth (SG-GAP-08, SG-GAP-10)*
