@@ -23,7 +23,7 @@
 | 11 | Vulture Dead Code | vulture_report.txt | ❌ Not resolved | LOW |
 | 12 | Radon Complexity Hotspots | radon_complexity_report.txt | ❌ Not resolved | LOW |
 | 13 | File Size Baseline Violations | ci/file_size_baseline.json | 🟡 Ratcheted | MEDIUM |
-| 14 | Singleton Store Refactor | SYSTEM_EVALUATION.md | ❌ Not started | CRITICAL |
+| 14 | Singleton Store Refactor | SYSTEM_EVALUATION.md | ✅ Resolved (c79dd1a7) | ~~CRITICAL~~ |
 | 15 | Frontend Tailwind/UX Fixes | SYSTEM_EVALUATION.md | 🟡 Tailwind fixed (bc9042aa) | CRITICAL |
 | 16 | CNC Safety Fail-Closed Mode | SYSTEM_EVALUATION.md | ✅ Resolved (6f86018b) | ~~HIGH~~ |
 | 17 | Phase 2/3 SaaS Implementation Plan | PHASE_2_3_IMPLEMENTATION_PLAN.md | 🟡 ~10% done | CRITICAL |
