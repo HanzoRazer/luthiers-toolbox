@@ -29,9 +29,23 @@ def ring_band_to_cam_dict(band: RosetteRingBand) -> Dict:
         strip_family_id       →  pattern_type (best-effort heuristic)
         slice_angle_deg       →  tile_angle_deg
         color_hint            →  primary_color
+
+    Raises:
+        ValueError: if radius_mm or width_mm produce invalid geometry.
     """
+    if band.radius_mm < 0:
+        raise ValueError(f"ring_band_to_cam_dict: radius_mm must be >= 0, got {band.radius_mm}")
+    if band.width_mm < 0:
+        raise ValueError(f"ring_band_to_cam_dict: width_mm must be >= 0, got {band.width_mm}")
+
     inner_d = 2.0 * (band.radius_mm - band.width_mm / 2.0)
     outer_d = 2.0 * (band.radius_mm + band.width_mm / 2.0)
+
+    if inner_d < 0:
+        raise ValueError(
+            f"ring_band_to_cam_dict: width_mm ({band.width_mm}) exceeds "
+            f"2× radius_mm ({band.radius_mm}), producing negative inner diameter"
+        )
 
     pattern_type = _family_to_pattern_type(band.strip_family_id)
 
@@ -60,9 +74,23 @@ def cam_ring_to_band(
         pattern_type          →  strip_family_id
         primary_color         →  color_hint
         tile_angle_deg        →  slice_angle_deg
+
+    Raises:
+        KeyError: if required keys are missing from ring_dict.
+        ValueError: if diameters produce invalid geometry.
     """
     inner_d = float(ring_dict["inner_diameter_mm"])
     outer_d = float(ring_dict["outer_diameter_mm"])
+
+    if inner_d < 0 or outer_d < 0:
+        raise ValueError(
+            f"cam_ring_to_band: diameters must be >= 0, got inner={inner_d}, outer={outer_d}"
+        )
+    if outer_d < inner_d:
+        raise ValueError(
+            f"cam_ring_to_band: outer_diameter ({outer_d}) < inner_diameter ({inner_d})"
+        )
+
     radius = (inner_d + outer_d) / 4.0  # midpoint radius
     width = (outer_d - inner_d) / 2.0
 

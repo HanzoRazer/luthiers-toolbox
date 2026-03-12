@@ -1,8 +1,8 @@
-# Patch N12.0 - Ring-level engine skeleton
+# Ring-level engine — orchestrates segmentation + slice + kerf + twist
+# for a single ring.
 #
-# This orchestrates segmentation + slice generation + kerf + twist +
-# herringbone for a SINGLE ring. Multi-ring stitching is handled by
-# MultiRingAssembly in a later patch.
+# Maturity: SKELETON (calls through to skeleton sub-engines).
+# Multi-ring stitching is handled by MultiRingAssembly separately.
 
 from __future__ import annotations
 
@@ -19,14 +19,14 @@ def compute_ring_geometry(
     """
     Compute the full geometry for a single ring.
 
-    N12 final behavior:
-      - full segmentation based on ring geometry
+    Full implementation:
+      - segmentation based on ring geometry (circumference ÷ tile_length)
       - slices with kerf, twist, and herringbone applied correctly
 
-    N12.0 skeleton behavior:
+    Current behavior:
       - uses segmentation_engine's fixed tile count segmentation
       - builds slices at tile centers
-      - runs "no-op" kerf & twist/herringbone modifications
+      - runs pass-through kerf & twist/herringbone modifications
     """
     seg = compute_tile_segmentation(ring)
     batch = generate_slices_for_ring(ring, seg)

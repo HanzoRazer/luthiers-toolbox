@@ -1,4 +1,5 @@
-# Patch N11.2 - Herringbone scaffolding
+# Herringbone stub — N11 scaffolding (dict-based, used by legacy API).
+# Production code should prefer twist_engine.apply_herringbone (dataclass-based).
 
 from typing import Any, Dict, List
 

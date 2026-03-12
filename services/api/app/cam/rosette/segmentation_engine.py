@@ -1,10 +1,8 @@
-# Patch N12.0 - Tile segmentation engine (skeleton implementation)
+# Tile segmentation engine — computes tile layout for a ring.
 #
-# This replaces the ad-hoc stub with a structured interface that N12
-# can later fill with the full math described in N12_ROSETTE_ENGINE_PLAN.md.
-#
-# For now, it uses the same "8 tiles equally spaced" behavior as the
-# N11 stub, but returns proper dataclasses.
+# Maturity: SKELETON (returns proper dataclasses, uses fixed tile count).
+# When ROSETTE_ENGINE_N12_ENABLED=true, this should derive tile_count from
+# circumference ÷ tile_length_mm instead of using the fixed default of 8.
 
 from __future__ import annotations
 
@@ -21,11 +19,11 @@ def compute_tile_segmentation(
     """
     Compute a ring segmentation into tiles.
 
-    N12 final behavior:
+    Full implementation (ROSETTE_ENGINE_N12_ENABLED):
       - derive tile_count from circumference and tile_length_mm
       - compute effective tile length, etc.
 
-    N12.0 skeleton behavior:
+    Current behavior:
       - keep a fixed tile count (8) or tile_count_override
       - equally spaced tiles around 360 degrees
     """

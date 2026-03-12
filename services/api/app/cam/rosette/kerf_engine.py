@@ -1,8 +1,8 @@
-# Patch N12.0 - Kerf physics engine (skeleton)
+# Kerf physics engine — angular compensation for saw blade kerf.
 #
-# In the final N12 implementation, this will compute angular drift and
-# adjust slice angles accordingly. Here we just provide the interface
-# and attach metadata.
+# Maturity: SKELETON (attaches kerf_mm metadata, no angle adjustment).
+# Full implementation: kerf_angle_deg = (kerf_mm / radius_mm) × (180/π),
+# applied cumulatively to angle_final_deg with drift tracking.
 
 from __future__ import annotations
 
@@ -18,12 +18,12 @@ def apply_kerf_physics(
     """
     Apply kerf correction to slice angles.
 
-    N12 final behavior:
-      - compute kerf_angle_deg = (kerf_mm / radius_mm) * (180 / pi)
+    Full implementation:
+      - compute kerf_angle_deg = (kerf_mm / radius_mm) × (180 / π)
       - adjust angle_final_deg for each slice
       - track drift accumulation and enforce constraints
 
-    N12.0 skeleton behavior:
+    Current behavior:
       - leaves angle_final_deg unchanged
       - ensures Slice.kerf_mm reflects the ring kerf
     """

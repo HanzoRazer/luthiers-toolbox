@@ -1,8 +1,9 @@
 """
 Rosette Prototypes — Reference implementations from AI design sessions.
 
-These standalone scripts contain working algorithms for pattern types
-not yet covered by the main engine (ModernPatternGenerator).
+BOUNDARY: These are standalone validation and reference scripts.
+Production code must NEVER import from this package.
+Run individual prototypes via ``python -m app.cam.rosette.prototypes.<name>``.
 
 Original prototypes:
     generate_wave_rosette.py       — Crashing wave (asymmetric arch formula)

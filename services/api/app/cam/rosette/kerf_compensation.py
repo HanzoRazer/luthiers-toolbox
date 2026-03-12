@@ -1,4 +1,5 @@
-# Patch N11.2 - Kerf compensation scaffolding
+# Kerf compensation stub — N11 scaffolding (dict-based, used by legacy API).
+# Production code should prefer kerf_engine.apply_kerf_physics (dataclass-based).
 
 from typing import Any, Dict, List
 
