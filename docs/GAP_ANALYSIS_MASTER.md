@@ -143,7 +143,7 @@
 | SG-GAP-10 | Smart Guitar | Antenna recess depth geometry ambiguous (2mm wood cover vs 20.45mm remaining) | **Resolved** (pending) |
 | SG-GAP-12 | Smart Guitar | No `corner_radius` on any pocket — hardware has sharp corners, CNC has fillets | **Resolved** (pending) |
 | LP-GAP-10 | Les Paul 1959 | Mixed unit systems: Phase 1-2 use G20 (inches), Phase 3 uses G21 (mm) | **Resolved** (documented) |
-| SG-GAP-11 | Smart Guitar | Generator has stale scale length comment ("25.5 Fender" instead of 24.75 Gibson) | LOW |
+| SG-GAP-11 | Smart Guitar | Generator has stale scale length comment ("25.5 Fender" instead of 24.75 Gibson) | **Resolved** (spec has 24.75 Gibson) |
 
 ### Fixes
 
@@ -196,7 +196,7 @@
 | NECK-04 | Strat Neck | Strat-specific API endpoint missing — neck router defaults to Les Paul | HIGH |
 | VINE-08 | J45 Vine | Bracing router has 4 endpoints but is not mounted in `main.py` — dead code | HIGH |
 | LP-GAP-04 | Les Paul 1959 | Fret slot CAM exists (934 lines) but not wired into build pipeline | MEDIUM |
-| INLAY-05 | Custom Inlay | `inlay_prompts.py` is orphaned — zero imports, unreachable from any endpoint | LOW |
+| INLAY-05 | Custom Inlay | `inlay_prompts.py` imported by headstock/router.py | **Resolved** |
 
 ### Fixes
 
