@@ -334,7 +334,7 @@ POST /api/frets/slots
 | ID | Area | Severity | Effort | Status | Blocks |
 |----|------|----------|--------|--------|--------|
 | GAP-01 | Strat headstock outline | **High** | Medium | ⚠️ Incomplete stub | GAP-03 |
-| GAP-02 | 24-fret neck preset | **Medium** | Low | ❌ Missing | — |
+| GAP-02 | 24-fret neck preset | **Medium** | Low | ✅ Resolved | — |
 | GAP-03 | Neck profile carving (overhang) | **High** | Medium | ⚠️ Generic only | GAP-01 |
 | GAP-04 | Pickup position calculator | **Critical** | Medium | ❌ Does not exist | GAP-05, GAP-07 |
 | GAP-05 | Fretboard overhang channel | **High** | Low | ❌ Does not exist | — |

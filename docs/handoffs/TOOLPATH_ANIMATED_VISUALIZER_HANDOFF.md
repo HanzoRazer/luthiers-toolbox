@@ -536,8 +536,8 @@ export { simulate } from './simulate'
 
 | ID | Area | Severity | Effort | Status | Blocks |
 |----|------|----------|--------|--------|--------|
-| VIS-01 | Per-segment simulate function | **Critical** | Medium | ❌ Missing | VIS-02, VIS-03, VIS-04 |
-| VIS-02 | Simulate API endpoint + router | **Critical** | Low | ❌ Missing | VIS-03, VIS-04 |
+| VIS-01 | Per-segment simulate function | **Critical** | Medium | ✅ Resolved | VIS-02, VIS-03, VIS-04 |
+| VIS-02 | Simulate API endpoint + router | **Critical** | Low | ✅ Resolved | VIS-03, VIS-04 |
 | VIS-03 | Frontend SDK simulate caller | **High** | Low | ❌ Missing | VIS-04, VIS-05 |
 | VIS-04 | Toolpath player Pinia store | **High** | Medium | ❌ Missing | VIS-05, VIS-06 |
 | VIS-05 | Canvas renderer component | **High** | Medium | ❌ Missing | VIS-06 |

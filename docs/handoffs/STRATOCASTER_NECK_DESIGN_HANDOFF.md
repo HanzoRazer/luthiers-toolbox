@@ -456,7 +456,7 @@ Phase 4 (frontend UI) ← needs API endpoint to call
 | NECK-01 | Strat headstock outline generator | **Critical** | Medium | ⚠️ Incomplete stub | NECK-04, NECK-05 |
 | NECK-02 | Stratocaster JSON spec file | **Medium** | Low | ❌ Missing | NECK-03 |
 | NECK-03 | Strat model status in registry | **Low** | Trivial | ⚠️ Enum only (STUB) | — |
-| NECK-04 | Strat-specific API endpoint | **High** | Low | ❌ Missing | NECK-05 |
+| NECK-04 | Strat-specific API endpoint | **High** | Low | ✅ Resolved | NECK-05 |
 | NECK-05 | Strat frontend UI components | **High** | Medium | ❌ Missing | — |
 
 ---

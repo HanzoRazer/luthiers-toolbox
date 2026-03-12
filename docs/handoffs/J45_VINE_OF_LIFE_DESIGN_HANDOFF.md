@@ -324,14 +324,14 @@ Soundhole     → (rosette)         → helical CAM  → helical_router    → G
 
 | ID | Area | Severity | Effort | Status | Blocks |
 |----|------|----------|--------|--------|--------|
-| VINE-01 | Inlay DXF → pocket G-code bridge | **Critical** | Medium | ❌ Missing | VINE-03 |
-| VINE-02 | SVG → DXF format converter | **Critical** | Medium | ❌ Missing | VINE-01 |
+| VINE-01 | Inlay DXF → pocket G-code bridge | **Critical** | Medium | ✅ Resolved | VINE-03 |
+| VINE-02 | SVG → DXF format converter | **Critical** | Medium | ✅ Resolved | VINE-01 |
 | VINE-03 | Production V-carve (cutter comp) | **High** | High | ⚠️ Demo only | — |
-| VINE-04 | Neck G-code generator HTTP endpoint | **High** | Low | ⚠️ Class exists, no router | — |
+| VINE-04 | Neck G-code generator HTTP endpoint | **High** | Low | ✅ Resolved | — |
 | VINE-05 | Unified fretboard↔headstock canvas | **High** | High | ❌ Missing | VINE-06 |
 | VINE-06 | Gibson acoustic solid headstock outline | **Medium** | Medium | ⚠️ Stub | VINE-05 |
 | VINE-07 | Body perimeter profiling mode | **Medium** | Medium | ❌ Missing | — |
-| VINE-08 | Bracing router not mounted in main.py | **High** | Low | ❌ Dead code | — |
+| VINE-08 | Bracing router not mounted in main.py | **High** | Low | ✅ Resolved | — |
 | VINE-09 | Bracing DXF has raw lines, not closed contours | **Critical** | Medium | ❌ Missing | VINE-01 |
 | VINE-10 | No back bracing geometry module | **Medium** | Medium | ❌ Missing | VINE-09 |
 | VINE-11 | Bracing presets disconnected from instrument specs | **Medium** | Low | ⚠️ Hardcoded | VINE-08 |
