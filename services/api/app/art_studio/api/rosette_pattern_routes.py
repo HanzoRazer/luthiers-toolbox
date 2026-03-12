@@ -380,3 +380,84 @@ async def export_pattern(body: PatternExportRequest):
         "data": body.pattern_data,
         "message": "Export functionality - full implementation pending"
     }
+
+
+# ============================================================================
+# BUILD + CNC SIMULATION
+# ============================================================================
+
+class BuildSimulationRequest(BaseModel):
+    """Request to simulate billet assembly and CNC channel routing."""
+    preset_key: str = Field(
+        ...,
+        description="Herringbone preset key: 'spanish', 'rope', or 'wave'",
+    )
+    strip_thickness_mm: float = Field(0.6, gt=0, description="Veneer strip thickness")
+    strip_length_mm: float = Field(200.0, gt=0, description="Veneer strip length (panel dimension)")
+    chip_length_mm: float = Field(2.0, gt=0, description="Crosswise slice thickness")
+    tool_diameter_mm: float = Field(1.5, gt=0, description="CNC tool diameter")
+    stepover_pct: float = Field(0.4, ge=0.1, le=0.9, description="Stepover fraction")
+    stepdown_mm: float = Field(0.3, gt=0, description="Depth per Z pass")
+    feed_xy_mm_min: float = Field(600.0, gt=0, description="XY feed rate (mm/min)")
+    plunge_f_mm_min: float = Field(150.0, gt=0, description="Plunge feed rate (mm/min)")
+    rapid_f_mm_min: float = Field(3000.0, gt=0, description="Rapid traverse (mm/min)")
+    safe_z_mm: float = Field(5.0, gt=0, description="Safe retract height")
+    cut_depth_mm: float = Field(1.2, gt=0, description="Total channel depth")
+    spindle_rpm: float = Field(12000.0, gt=0, description="Spindle speed")
+
+
+@router.post("/simulate-build")
+async def simulate_build(body: BuildSimulationRequest):
+    """
+    Simulate the full rosette build pipeline.
+
+    Phase 1 — Billet Assembly: Uses col_widths to compute strip
+    dimensions, lamination order, and chip yield.
+
+    Phase 2 — CNC Channel Routing: Concentric-ring toolpath with
+    estimated cycle time.
+
+    Returns preset metadata, billet plan, CNC stats, and material summary.
+    """
+    try:
+        from ...cam.rosette.prototypes.herringbone_parametric import (
+            simulate_build_and_cnc,
+            PRESETS,
+        )
+    except ImportError as e:
+        raise HTTPException(
+            status_code=501,
+            detail=f"Simulation module not available: {e}",
+        )
+
+    if body.preset_key not in PRESETS:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Unknown preset '{body.preset_key}'. Available: {list(PRESETS.keys())}",
+        )
+
+    try:
+        result = simulate_build_and_cnc(
+            body.preset_key,
+            strip_thickness_mm=body.strip_thickness_mm,
+            strip_length_mm=body.strip_length_mm,
+            chip_length_mm=body.chip_length_mm,
+            tool_diameter_mm=body.tool_diameter_mm,
+            stepover_pct=body.stepover_pct,
+            stepdown_mm=body.stepdown_mm,
+            feed_xy_mm_min=body.feed_xy_mm_min,
+            plunge_f_mm_min=body.plunge_f_mm_min,
+            rapid_f_mm_min=body.rapid_f_mm_min,
+            safe_z_mm=body.safe_z_mm,
+            cut_depth_mm=body.cut_depth_mm,
+            spindle_rpm=body.spindle_rpm,
+        )
+        return result
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except Exception as e:
+        logger.exception("Build simulation failed for preset %s", body.preset_key)
+        raise HTTPException(
+            status_code=500,
+            detail=f"Simulation failed: {str(e)}",
+        )
