@@ -1,7 +1,9 @@
 /**
  * Rosette Store - Bundle 31.0.5, 31.0.6
+ * Phase 5: consolidated with useRosettePatternStore (mfg pattern CRUD)
  *
- * Pinia store for Design-First Mode rosette editor state.
+ * Pinia store for Design-First Mode rosette editor state,
+ * plus manufacturing pattern library CRUD (formerly useRosettePatternStore).
  */
 
 import { defineStore } from "pinia";
@@ -11,12 +13,14 @@ import type { GeneratorDescriptor } from "../types/generators";
 import type { RosettePreviewSvgResponse } from "../types/preview";
 import type { DesignSnapshot, SnapshotSummary } from "../types/designSnapshot";
 import type { RosetteFeasibilitySummary, RiskBucket } from "../types/feasibility";
+import type { RosettePattern } from "../models/rmos";
 
 import { artPatternsClient } from "../api/artPatternsClient";
 import { artGeneratorsClient } from "../api/artGeneratorsClient";
 import { artPreviewClient } from "../api/artPreviewClient";
 import { artSnapshotsClient } from "../api/artSnapshotsClient";
 import { artFeasibilityClient } from "../api/artFeasibilityClient";
+import { api } from "../services/apiBase";
 import { useToastStore } from "./toastStore";
 import { useUiToastStore } from "./uiToastStore";
 import { debounce } from "../utils/debounce";
@@ -41,11 +45,17 @@ export const useRosetteStore = defineStore("rosette", {
     // Canonical design
     currentParams: defaultSpec() as RosetteParamSpec,
 
-    // Pattern library
+    // Pattern library (design-first templates)
     patterns: [] as PatternSummary[],
     selectedPattern: null as PatternRecord | null,
     patternsLoading: false,
     patternsError: "" as string,
+
+    // Manufacturing pattern library (Phase 5 — absorbed from useRosettePatternStore)
+    mfgPatterns: [] as RosettePattern[],
+    selectedMfgPatternId: null as string | null,
+    mfgPatternsLoading: false,
+    mfgPatternsError: null as string | null,
 
     // Generators
     generators: [] as GeneratorDescriptor[],
@@ -96,6 +106,12 @@ export const useRosetteStore = defineStore("rosette", {
   getters: {
     feasibilityRisk(): RiskBucket | null {
       return this.lastFeasibility?.risk_bucket || null;
+    },
+
+    /** Selected manufacturing pattern by ID (Phase 5) */
+    selectedMfgPattern(): RosettePattern | null {
+      if (!this.selectedMfgPatternId) return null;
+      return this.mfgPatterns.find((p) => p.id === this.selectedMfgPatternId) ?? null;
     },
 
     isRedBlocked(): boolean {
@@ -244,6 +260,91 @@ export const useRosetteStore = defineStore("rosette", {
       } catch (e: any) {
         toast.error( e?.message || "Failed to delete pattern");
       }
+    },
+
+    // -------------------------
+    // Manufacturing Patterns (Phase 5 — absorbed from useRosettePatternStore)
+    // -------------------------
+    async fetchMfgPatterns() {
+      this.mfgPatternsLoading = true;
+      this.mfgPatternsError = null;
+      try {
+        const res = await api("/api/art/patterns");
+        if (!res.ok) throw new Error(`Failed to fetch patterns: ${res.status}`);
+        this.mfgPatterns = await res.json();
+      } catch (err: any) {
+        this.mfgPatternsError = err?.message ?? String(err);
+      } finally {
+        this.mfgPatternsLoading = false;
+      }
+    },
+
+    async createMfgPattern(pattern: RosettePattern) {
+      this.mfgPatternsLoading = true;
+      this.mfgPatternsError = null;
+      try {
+        const res = await api("/api/art/patterns", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(pattern),
+        });
+        if (!res.ok) throw new Error(`Failed to create pattern: ${res.status}`);
+        const created = await res.json();
+        this.mfgPatterns.push(created);
+        this.selectedMfgPatternId = created.id;
+        return created;
+      } catch (err: any) {
+        this.mfgPatternsError = err?.message ?? String(err);
+        throw err;
+      } finally {
+        this.mfgPatternsLoading = false;
+      }
+    },
+
+    async updateMfgPattern(patternId: string, updates: Partial<RosettePattern>) {
+      this.mfgPatternsLoading = true;
+      this.mfgPatternsError = null;
+      try {
+        const res = await api(`/api/art/patterns/${encodeURIComponent(patternId)}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(updates),
+        });
+        if (!res.ok) throw new Error(`Failed to update pattern: ${res.status}`);
+        const updated = await res.json();
+        const idx = this.mfgPatterns.findIndex((p) => p.id === patternId);
+        if (idx >= 0) this.mfgPatterns[idx] = updated;
+        return updated;
+      } catch (err: any) {
+        this.mfgPatternsError = err?.message ?? String(err);
+        throw err;
+      } finally {
+        this.mfgPatternsLoading = false;
+      }
+    },
+
+    async deleteMfgPattern(patternId: string) {
+      this.mfgPatternsLoading = true;
+      this.mfgPatternsError = null;
+      try {
+        const res = await api(`/api/art/patterns/${encodeURIComponent(patternId)}`, {
+          method: "DELETE",
+        });
+        if (!res.ok) throw new Error(`Failed to delete pattern: ${res.status}`);
+        this.mfgPatterns = this.mfgPatterns.filter((p) => p.id !== patternId);
+        if (this.selectedMfgPatternId === patternId) {
+          this.selectedMfgPatternId = null;
+        }
+      } catch (err: any) {
+        this.mfgPatternsError = err?.message ?? String(err);
+        throw err;
+      } finally {
+        this.mfgPatternsLoading = false;
+      }
+    },
+
+    selectMfgPattern(patternId: string) {
+      this.selectedMfgPatternId = patternId;
     },
 
     // -------------------------
