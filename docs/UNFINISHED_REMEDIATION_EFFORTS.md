@@ -16,7 +16,7 @@
 | 4 | 69 Stub Endpoints — 15+ high-priority | STUB_DEBT_REPORT.md | ✅ Wired (see #17) | ~~HIGH~~ |
 | 5 | 113 Instrument Build Gaps — 4 CRITICAL DXFs | GAP_ANALYSIS_MASTER.md | 🟡 Partial | CRITICAL |
 | 6 | Vue Component Decomposition — 2 files remain | VUE_DECOMPOSITION_GUIDE.md | 🟡 ~85% done | MEDIUM |
-| 7 | Score 7 Plan — Phases 1.3–4.3 | SCORE_7_PLAN.md | 🟡 ~25% done | HIGH |
+| 7 | Score 7 Plan — Phases 1.3–4.3 | SCORE_7_PLAN.md | 🟡 ~50% done (1a2880a5) | HIGH |
 | 8 | Vectorizer Upgrade — 3 features not started | VECTORIZER_UPGRADE_PLAN.md | 🟡 Partial | MEDIUM |
 | 9 | Frontend Test Coverage | TESTING_STRATEGY.md / SYSTEM_EVALUATION.md | ❌ Minimal | HIGH |
 | 10 | Bandit Security Findings | bandit_report.txt | ❌ Not resolved | MEDIUM |
