@@ -29,6 +29,7 @@ from ..util.dxf_compat import (
     create_document, add_polyline, add_rectangle,
     validate_version, DxfVersion, DXF_VERSIONS
 )
+from .bracing_presets_bridge import get_instrument_presets
 
 router = APIRouter(
     prefix="/art-studio/bracing",
@@ -90,11 +91,15 @@ class BracingBatchResponse(BaseModel):
 
 class BracingPreset(BaseModel):
     """A bracing preset configuration."""
-    
+
     id: str
     name: str
     description: str
     braces: List[BracingPreviewRequest]
+    source: str = Field(
+        default="generic",
+        description="Preset source: 'generic' or 'instrument-spec'"
+    )
 
 
 # --- Endpoints ---
@@ -152,15 +157,20 @@ def batch_bracing(req: BracingBatchRequest) -> BracingBatchResponse:
 def get_bracing_presets() -> List[BracingPreset]:
     """
     Get common bracing presets.
-    
+
     Returns pre-configured brace sets for common patterns.
     These can be used as starting points for custom designs.
+
+    VINE-11: Now includes instrument-specific presets from construction
+    drawings (source="instrument-spec") alongside generic presets.
     """
-    return [
+    # Generic presets (starting points for custom designs)
+    generic_presets = [
         BracingPreset(
             id="x-brace-standard",
             name="Standard X-Brace",
             description="Classic Martin-style X-bracing for steel string acoustic",
+            source="generic",
             braces=[
                 BracingPreviewRequest(
                     profile_type="parabolic",
@@ -182,6 +192,7 @@ def get_bracing_presets() -> List[BracingPreset]:
             id="ladder-classical",
             name="Classical Ladder Bracing",
             description="Traditional fan-style bracing for classical guitar",
+            source="generic",
             braces=[
                 BracingPreviewRequest(
                     profile_type="rectangular",
@@ -210,6 +221,7 @@ def get_bracing_presets() -> List[BracingPreset]:
             id="scalloped-x",
             name="Scalloped X-Brace",
             description="Lighter scalloped X-bracing for improved resonance",
+            source="generic",
             braces=[
                 BracingPreviewRequest(
                     profile_type="scalloped",
@@ -228,6 +240,11 @@ def get_bracing_presets() -> List[BracingPreset]:
             ]
         ),
     ]
+
+    # VINE-11: Add instrument-specific presets from construction drawings
+    instrument_presets = get_instrument_presets()
+
+    return generic_presets + instrument_presets
 
 
 # --- DXF Export Models ---
