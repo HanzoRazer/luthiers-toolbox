@@ -336,7 +336,7 @@ POST /api/frets/slots
 | GAP-01 | Strat headstock outline | **High** | Medium | ⚠️ Incomplete stub | GAP-03 |
 | GAP-02 | 24-fret neck preset | **Medium** | Low | ✅ Resolved | — |
 | GAP-03 | Neck profile carving (overhang) | **High** | Medium | ⚠️ Generic only | GAP-01 |
-| GAP-04 | Pickup position calculator | **Critical** | Medium | ❌ Does not exist | GAP-05, GAP-07 |
+| GAP-04 | Pickup position calculator | **Critical** | Medium | ✅ Resolved | GAP-05, GAP-07 |
 | GAP-05 | Fretboard overhang channel | **High** | Low | ❌ Does not exist | — |
 | GAP-06 | CAM advisor 24-fret warnings | **Low** | Low | ⚠️ Infrastructure present | GAP-04 |
 | GAP-07 | Strat body outline generator | **Critical** | High | ✅ Resolved (69439800) | GAP-04, GAP-05 |
