@@ -542,7 +542,7 @@ export { simulate } from './simulate'
 | VIS-04 | Toolpath player Pinia store | **High** | Medium | ❌ Missing | VIS-05, VIS-06 |
 | VIS-05 | Canvas renderer component | **High** | Medium | ❌ Missing | VIS-06 |
 | VIS-06 | Player wrapper + controls | **Medium** | Low | ❌ Missing | — |
-| VIS-07 | Main.py router registration | **Low** | Trivial | ❌ Missing | — |
+| VIS-07 | Main.py router registration | **Low** | Trivial | ✅ Resolved | — |
 
 ---
 
