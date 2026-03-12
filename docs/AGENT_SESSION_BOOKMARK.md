@@ -2,7 +2,7 @@
 
 **Date:** 2026-03-11
 **Session:** GAP_ANALYSIS Remediation Sprint
-**Last Commit:** 65669faf feat(geometry): add Telecaster and PRS neck endpoints + Strat 24fret
+**Last Commit: 4c6764bc feat(rosette): add COL_WIDTHS arrays for per-preset BOM strip-width calculations
 **Branch:** main
 **Pushed:** Yes (origin/main up to date)
 
@@ -35,6 +35,7 @@ Working through infrastructure gaps identified in `docs/GAP_ANALYSIS_MASTER.md`.
 | GAP-02/NECK-02/03 | No 24-fret Strat preset, spec not linked | b83feeb2 | Added strat_24fret preset, 24fret variant, linked spec to registry |
 | NECK-01/GAP-01/VINE-06 | Missing headstock outlines (5 styles) | 289b4ac4 | Added GIBSON_SOLID, FENDER_TELE, PRS, CLASSICAL + tuner positions |
 | NECK-04/GAP-01 | Telecaster/PRS neck endpoints + Strat 24fret | 65669faf | Added 4 endpoints: generate/telecaster, telecaster/presets, generate/prs, prs/presets |
+| BOM-GAP-01 | COL_WIDTHS arrays for veneer cutting bills | 4c6764bc | Added col_widths property + rosette_bom.py module |
 
 ---
 
@@ -64,7 +65,7 @@ Remaining failures (pre-existing, not caused by sprint changes):
 |--------|-------|---------|-------|
 | Tests passed | 2390 | 2395 | +5 |
 | Tests failed | 28 | 16 | -12 |
-| Commits | 0 | 10 | +10 |
+| Commits | 0 | 11 | +11 |
 
 ---
 
@@ -148,4 +149,4 @@ All remediation phases complete. WP-3 god-object decomposition committed. Tagged
 
 ---
 
-*Updated: 2026-03-11 — Telecaster + PRS endpoints added, Strat 24fret variant*
+*Updated: 2026-03-11 — COL_WIDTHS arrays for per-preset BOM strip-width calculations*
