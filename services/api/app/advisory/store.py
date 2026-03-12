@@ -425,64 +425,49 @@ class PromptHistoryStore:
         return results
 
 
-# Module singletons
-_store: Optional[AdvisoryAssetStore] = None
-_prompt_store: Optional[PromptHistoryStore] = None
-_budget_tracker: Optional[BudgetTracker] = None
-_request_store: Optional[RequestRecordStore] = None
+# =============================================================================
+# Store Access (delegated to centralized registry)
+# =============================================================================
+# DEPRECATED: Module-level singletons have been moved to app.core.store_registry
+# for horizontal scaling support. These functions delegate for backward compatibility.
 
+from app.core.store_registry import (
+    get_advisory_store,
+    get_prompt_history_store,
+    get_budget_tracker,
+    get_request_record_store as get_request_store,  # Alias for backward compat
+    reset_store,
+    StoreKeys,
+)
 
-def get_advisory_store() -> AdvisoryAssetStore:
-    """Get or create the advisory asset store singleton."""
-    global _store
-    if _store is None:
-        _store = AdvisoryAssetStore()
-    return _store
-
-
-def get_prompt_history_store() -> PromptHistoryStore:
-    """Get or create the prompt history store singleton."""
-    global _prompt_store
-    if _prompt_store is None:
-        _prompt_store = PromptHistoryStore()
-    return _prompt_store
-
-
-def get_budget_tracker() -> BudgetTracker:
-    """Get or create the budget tracker singleton."""
-    global _budget_tracker
-    if _budget_tracker is None:
-        _budget_tracker = BudgetTracker()
-    return _budget_tracker
-
-
-def get_request_store() -> RequestRecordStore:
-    """Get or create the request record store singleton."""
-    global _request_store
-    if _request_store is None:
-        _request_store = RequestRecordStore()
-    return _request_store
+# Re-export with original names
+__all__ = [
+    "AdvisoryAssetStore",
+    "PromptHistoryStore",
+    "get_advisory_store",
+    "get_prompt_history_store",
+    "get_budget_tracker",
+    "get_request_store",
+    "compute_prompt_hash",
+    "compute_content_hash",
+]
 
 
 def reset_advisory_store() -> None:
     """Reset singleton (for testing)."""
-    global _store
-    _store = None
+    reset_store(StoreKeys.ADVISORY_ASSET)
 
 
 def reset_prompt_store() -> None:
     """Reset singleton (for testing)."""
-    global _prompt_store
-    _prompt_store = None
+    reset_store(StoreKeys.PROMPT_HISTORY)
 
 
 def reset_budget_tracker() -> None:
     """Reset singleton (for testing)."""
-    global _budget_tracker
-    _budget_tracker = None
+    reset_store(StoreKeys.BUDGET_TRACKER)
 
 
 def reset_request_store() -> None:
     """Reset singleton (for testing)."""
-    global _request_store
-    _request_store = None
+    reset_store(StoreKeys.REQUEST_RECORD)

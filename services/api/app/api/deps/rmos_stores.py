@@ -1,46 +1,42 @@
 # services/api/app/api/deps/rmos_stores.py
 """
 RMOS Stores Dependency Injection.
-Provides access to pattern, job log, and strip family stores.
 
-Wired to real SQLite stores for production run tracking.
+DEPRECATED: Use app.core.store_registry or app.api.deps directly.
+
+This module now delegates to the centralized StoreRegistry for singleton management.
+The old module-level globals have been removed to support horizontal scaling.
+
+Migration:
+    # Old (still works for backward compatibility)
+    from app.api.deps.rmos_stores import get_pattern_store
+    store = get_pattern_store()
+
+    # New (preferred)
+    from fastapi import Depends
+    from app.api.deps import get_pattern_store
+
+    @router.get("/patterns")
+    def list_patterns(store = Depends(get_pattern_store)):
+        return store.list_all()
 """
 
 from __future__ import annotations
 
-from typing import Optional
+# Re-export from centralized registry for backward compatibility
+from app.core.store_registry import (
+    get_pattern_store,
+    get_joblog_store,
+    get_strip_family_store,
+)
 
-# Import real SQLite store implementations
+# Type hints for IDE support
 from app.stores.sqlite_pattern_store import SQLitePatternStore
 from app.stores.sqlite_joblog_store import SQLiteJobLogStore
 from app.stores.sqlite_strip_family_store import SQLiteStripFamilyStore
 
-
-# Singleton instances
-_pattern_store: Optional[SQLitePatternStore] = None
-_joblog_store: Optional[SQLiteJobLogStore] = None
-_strip_family_store: Optional[SQLiteStripFamilyStore] = None
-
-
-def get_pattern_store() -> SQLitePatternStore:
-    """Get singleton pattern store instance."""
-    global _pattern_store
-    if _pattern_store is None:
-        _pattern_store = SQLitePatternStore()
-    return _pattern_store
-
-
-def get_joblog_store() -> SQLiteJobLogStore:
-    """Get singleton job log store instance."""
-    global _joblog_store
-    if _joblog_store is None:
-        _joblog_store = SQLiteJobLogStore()
-    return _joblog_store
-
-
-def get_strip_family_store() -> SQLiteStripFamilyStore:
-    """Get singleton strip family store instance."""
-    global _strip_family_store
-    if _strip_family_store is None:
-        _strip_family_store = SQLiteStripFamilyStore()
-    return _strip_family_store
+__all__ = [
+    "get_pattern_store",
+    "get_joblog_store",
+    "get_strip_family_store",
+]

@@ -1,12 +1,72 @@
-# services/api/app/api/deps.py
+# services/api/app/api/deps/__init__.py
 """
 API Dependencies - FastAPI dependency injection helpers.
-Provides database sessions, authentication, and common dependencies.
+Provides database sessions, authentication, store access, and common dependencies.
+
+Store Dependencies (use with Depends()):
+    - get_pattern_store() -> SQLitePatternStore
+    - get_joblog_store() -> SQLiteJobLogStore
+    - get_strip_family_store() -> SQLiteStripFamilyStore
+    - get_profile_store() -> ProfileStore
+    - get_advisory_store() -> AdvisoryAssetStore
+    - get_prompt_history_store() -> PromptHistoryStore
+    - get_budget_tracker() -> BudgetTracker
+    - get_request_record_store() -> RequestRecordStore
+    - get_learned_overrides_store() -> LearnedOverridesStore
+
+Example:
+    from fastapi import Depends
+    from app.api.deps import get_pattern_store
+
+    @router.get("/patterns")
+    def list_patterns(store = Depends(get_pattern_store)):
+        return store.list_all()
 """
 
 from __future__ import annotations
 
 from typing import Any, Generator, Optional
+
+# Re-export store dependencies from centralized registry
+from app.core.store_registry import (
+    get_pattern_store,
+    get_joblog_store,
+    get_strip_family_store,
+    get_profile_store,
+    get_advisory_store,
+    get_prompt_history_store,
+    get_budget_tracker,
+    get_request_record_store,
+    get_learned_overrides_store,
+    reset_all_stores,
+    reset_store,
+    StoreKeys,
+)
+
+__all__ = [
+    # Database
+    "get_db_session",
+    # Auth
+    "get_current_user",
+    "get_optional_user",
+    # Pagination
+    "Pagination",
+    "get_pagination",
+    # Stores
+    "get_pattern_store",
+    "get_joblog_store",
+    "get_strip_family_store",
+    "get_profile_store",
+    "get_advisory_store",
+    "get_prompt_history_store",
+    "get_budget_tracker",
+    "get_request_record_store",
+    "get_learned_overrides_store",
+    # Testing utilities
+    "reset_all_stores",
+    "reset_store",
+    "StoreKeys",
+]
 
 
 def get_db_session() -> Generator[Any, None, None]:

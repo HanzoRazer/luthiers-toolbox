@@ -437,14 +437,18 @@ class LearnedOverridesStore:
 
 
 # ============================================================================
-# Singleton Instance
+# Store Access (delegated to centralized registry)
 # ============================================================================
+# DEPRECATED: Module-level singleton moved to app.core.store_registry
+# for horizontal scaling support. This function delegates for backward compatibility.
 
-_store_instance = None
+from app.core.store_registry import (
+    get_learned_overrides_store,
+    reset_store,
+    StoreKeys,
+)
 
-def get_learned_overrides_store() -> LearnedOverridesStore:
-    """Get singleton store instance."""
-    global _store_instance
-    if _store_instance is None:
-        _store_instance = LearnedOverridesStore()
-    return _store_instance
+
+def reset_learned_overrides_store() -> None:
+    """Reset singleton (for testing)."""
+    reset_store(StoreKeys.LEARNED_OVERRIDES)

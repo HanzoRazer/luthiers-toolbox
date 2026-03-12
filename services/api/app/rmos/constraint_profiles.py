@@ -347,17 +347,21 @@ class ProfileStore:
 
 
 # ======================
-# Global Instance
+# Store Access (delegated to centralized registry)
 # ======================
+# DEPRECATED: Module-level singleton moved to app.core.store_registry
+# for horizontal scaling support. This function delegates for backward compatibility.
 
-_store: Optional[ProfileStore] = None
+from app.core.store_registry import (
+    get_profile_store,
+    reset_store,
+    StoreKeys,
+)
 
-def get_profile_store() -> ProfileStore:
-    """Get or create the global profile store."""
-    global _store
-    if _store is None:
-        _store = ProfileStore()
-    return _store
+
+def reset_profile_store() -> None:
+    """Reset singleton (for testing)."""
+    reset_store(StoreKeys.PROFILE)
 
 
 # ======================
