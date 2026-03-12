@@ -53,6 +53,8 @@ class HeadstockStyle(str, Enum):
     FENDER_TELE = "fender_tele"
     PRS = "prs"
     CLASSICAL = "classical"
+    MARTIN = "martin"           # Martin acoustic slotted headstock (OM-GAP-06)
+    BENEDETTO = "benedetto"     # Benedetto archtop headstock (BEN-GAP-06)
     PADDLE = "paddle"
 
 
@@ -160,6 +162,29 @@ NECK_PRESETS: Dict[str, NeckDimensions] = {
         headstock_length_in=7.0,
         headstock_thickness_in=0.55,
         blank_length_in=27.0,      # Longer blank for 24 frets
+    ),
+    "martin_om": NeckDimensions(
+        # Martin OM (Orchestra Model) acoustic neck
+        # Resolves OM-GAP-06: Martin headstock + neck preset
+        nut_width_in=1.75,         # 44.5mm standard Martin width
+        depth_at_1st_in=0.84,      # Medium C profile
+        depth_at_12th_in=0.94,
+        scale_length_in=25.4,      # 645mm Martin OM scale
+        headstock_angle_deg=15.0,  # Martin slotted angle
+        headstock_length_in=7.5,
+        headstock_thickness_in=0.55,
+        blank_width_in=4.0,        # Wider for slotted headstock
+    ),
+    "benedetto_archtop": NeckDimensions(
+        # Benedetto archtop neck (17", La Venezia style)
+        # Resolves BEN-GAP-06: Benedetto headstock + neck preset
+        nut_width_in=1.6875,       # 1-11/16" jazz width
+        depth_at_1st_in=0.85,      # Full C profile for jazz
+        depth_at_12th_in=0.95,
+        scale_length_in=25.0,      # 635mm Benedetto scale
+        headstock_angle_deg=14.0,  # Archtop headstock angle
+        headstock_length_in=6.9,
+        headstock_thickness_in=0.58,
     ),
 }
 
@@ -392,6 +417,84 @@ def generate_headstock_outline(
             (0.0, -half_width),
         ]
 
+
+    elif style == HeadstockStyle.MARTIN:
+        # Martin acoustic slotted headstock (OM-GAP-06)
+        # Reference: Martin D-28, OM-28 headstock
+        # Dimensions: ~190mm (7.5") long × ~85mm (3.35") wide
+        # 3+3 slotted configuration, distinctive squared shoulders
+        half_width = dims.nut_width_in / 2
+
+        points = [
+            # Start at nut, right side
+            (0.0, half_width),
+            # Transition - Martin has subtle flare
+            (-0.3, half_width + 0.08),
+            (-0.8, 1.15),
+            # Squared shoulders - distinctive Martin shape
+            (-1.5, 1.35),
+            (-2.5, 1.42),
+            (-4.0, 1.45),
+            (-5.5, 1.42),
+            # Top - rounded but less than Gibson
+            (-6.5, 1.30),
+            (-7.0, 1.05),
+            (-7.3, 0.70),
+            (-7.5, 0.35),
+            (-7.5, 0.0),   # Center point
+            # Mirror for left side
+            (-7.5, -0.35),
+            (-7.3, -0.70),
+            (-7.0, -1.05),
+            (-6.5, -1.30),
+            (-5.5, -1.42),
+            (-4.0, -1.45),
+            (-2.5, -1.42),
+            (-1.5, -1.35),
+            (-0.8, -1.15),
+            (-0.3, -half_width - 0.08),
+            (0.0, -half_width),
+        ]
+
+    elif style == HeadstockStyle.BENEDETTO:
+        # Benedetto archtop headstock (BEN-GAP-06)
+        # Reference: Benedetto 17", Bravo, La Venezia
+        # Dimensions: ~175mm (6.9") long × ~90mm (3.55") wide
+        # 3+3 configuration, elegant curved shape, slightly swept back
+        # Distinguished by graceful curves and pointed tip
+        half_width = dims.nut_width_in / 2
+
+        points = [
+            # Start at nut, right side
+            (0.0, half_width),
+            # Transition - elegant S-curve
+            (-0.4, half_width + 0.12),
+            (-1.0, 1.25),
+            (-1.8, 1.50),
+            # Upper bout - flowing curves
+            (-2.8, 1.62),
+            (-3.8, 1.68),
+            (-4.8, 1.65),
+            # Tip - pointed and elegant (Benedetto signature)
+            (-5.5, 1.50),
+            (-6.0, 1.20),
+            (-6.3, 0.85),
+            (-6.5, 0.45),
+            (-6.6, 0.0),   # Pointed center
+            # Mirror for left side
+            (-6.5, -0.45),
+            (-6.3, -0.85),
+            (-6.0, -1.20),
+            (-5.5, -1.50),
+            (-4.8, -1.65),
+            (-3.8, -1.68),
+            (-2.8, -1.62),
+            (-1.8, -1.50),
+            (-1.0, -1.25),
+            (-0.4, -half_width - 0.12),
+            (0.0, -half_width),
+        ]
+
     else:
         # Default to paddle if not implemented
         return generate_headstock_outline(HeadstockStyle.PADDLE, dims)
@@ -476,6 +579,35 @@ def generate_tuner_positions(
             (-2.0, -1.05),
             (-4.0, -1.10),
             (-6.0, -1.05),
+        ])
+
+
+    elif style == HeadstockStyle.MARTIN:
+        # 3+3 slotted configuration (Martin acoustic)
+        # Tuner holes are in the slots, positioned for Grover/Waverly style tuners
+        positions.extend([
+            (-2.0, 1.10),
+            (-4.0, 1.15),
+            (-6.0, 1.10),
+        ])
+        positions.extend([
+            (-2.0, -1.10),
+            (-4.0, -1.15),
+            (-6.0, -1.10),
+        ])
+
+    elif style == HeadstockStyle.BENEDETTO:
+        # 3+3 configuration (Benedetto archtop)
+        # Tuner positions for Gotoh/Schaller style tuners
+        positions.extend([
+            (-1.8, 1.22),
+            (-3.5, 1.40),
+            (-5.2, 1.35),
+        ])
+        positions.extend([
+            (-1.8, -1.22),
+            (-3.5, -1.40),
+            (-5.2, -1.35),
         ])
 
     return positions
