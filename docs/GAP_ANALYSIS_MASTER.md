@@ -35,12 +35,12 @@
 | 2026-03-10 | 638b7578 | Add DXF geometry correction pipeline (dimension scaling, centerline alignment) | SG-GAP-01, SG-GAP-02 |
 | 2026-03-11 | c9ac19ec | Restore POST /api/saw/batch/toolpaths/from-decision endpoint + 8 schemas (P1-SAW fix) | P1-SAW (pipeline break) |
 | 2026-03-11 | 5cd6c2ba | Add Martin + Benedetto headstock outlines + neck presets | OM-GAP-06, BEN-GAP-06 |
-| 2026-03-11 | (pending) | Add corner_radius to 7 Smart Guitar cavities | SG-GAP-12 |
-| 2026-03-11 | (pending) | Add cover plate screw positions + clarify antenna depth | SG-GAP-08, SG-GAP-10 |
+| 2026-03-11 | 6fa4d61b | Add corner_radius to 7 Smart Guitar cavities | SG-GAP-12 |
+| 2026-03-11 | 892ed3dd | Add cover plate screw positions + clarify antenna depth | SG-GAP-08, SG-GAP-10 |
 | 2026-03-11 | 289b4ac4 | GIBSON_SOLID headstock already added | VINE-06 |
-| 2026-03-11 | (pending) | Smart Guitar spec coordinate system fixes | SG-GAP-03, SG-GAP-04, SG-GAP-05, SG-GAP-06, SG-GAP-07 |
+| 2026-03-12 | 6b947186 | Smart Guitar spec coordinate system fixes | SG-GAP-03, SG-GAP-04, SG-GAP-05, SG-GAP-06, SG-GAP-07 |
 | 2026-03-12 | 289b4ac4 | FENDER_STRAT headstock was already implemented | NECK-01, GAP-01 |
-| 2026-03-12 | (pending) | Document inch mode in Les Paul generator, add dual-unit comments | LP-GAP-10 |
+| 2026-03-12 | a8739d63 | Document inch mode in Les Paul generator, add dual-unit comments | LP-GAP-10 |
 ---
 
 ## Summary by Category
