@@ -258,6 +258,140 @@ def generate_headstock_outline(
             (0.0, -half_width),
         ]
 
+    elif style == HeadstockStyle.GIBSON_SOLID:
+        # Gibson solid headstock (acoustic J-45, Hummingbird, etc.)
+        # Resolves VINE-06: Gibson acoustic solid headstock outline missing
+        # Similar to open-book but without center notch, slightly narrower
+        # Reference: Gibson acoustic headstock ~170mm long × ~95mm wide
+        half_width = dims.nut_width_in / 2
+
+        points = [
+            # Start at nut, right side
+            (0.0, half_width),
+            # Transition to headstock width
+            (-0.5, half_width + 0.10),
+            (-1.0, 1.40),
+            # Upper bout - slightly narrower than electric
+            (-2.0, 1.60),
+            (-3.5, 1.70),
+            # Top curve - rounded, no center notch
+            (-5.0, 1.65),
+            (-6.0, 1.50),
+            (-6.5, 1.20),
+            (-6.8, 0.80),
+            (-7.0, 0.40),
+            (-7.1, 0.0),   # Center point (smooth, no notch)
+            # Mirror for left side
+            (-7.0, -0.40),
+            (-6.8, -0.80),
+            (-6.5, -1.20),
+            (-6.0, -1.50),
+            (-5.0, -1.65),
+            (-3.5, -1.70),
+            (-2.0, -1.60),
+            (-1.0, -1.40),
+            (-0.5, -half_width - 0.10),
+            (0.0, -half_width),
+        ]
+
+    elif style == HeadstockStyle.FENDER_TELE:
+        # Fender Telecaster 6-in-line headstock
+        # Similar to Strat but with squared-off tip
+        # Reference: Fender-Telecaster.pdf, ~178mm long × ~89mm wide
+        half_nut = dims.nut_width_in / 2
+
+        points = [
+            # Start at nut, treble side
+            (0.0, -half_nut),
+            # Treble edge
+            (-0.3, -half_nut - 0.05),
+            (-1.0, -0.65),
+            (-3.0, -0.55),
+            (-5.0, -0.48),
+            (-6.5, -0.40),
+            # Tip - more squared than Strat
+            (-7.0, -0.35),
+            (-7.1, -0.20),
+            (-7.1, 0.20),
+            (-7.0, 0.50),
+            # Bass/tuner edge
+            (-6.5, 1.00),
+            (-5.0, 1.30),
+            (-3.0, 1.48),
+            (-1.5, 1.52),
+            (-1.0, 1.48),
+            (-0.5, half_nut + 0.30),
+            # Back to nut
+            (0.0, half_nut),
+        ]
+
+    elif style == HeadstockStyle.PRS:
+        # PRS headstock - 3+3 configuration, distinctive curved shape
+        # Reference: PRS Custom 24, ~165mm long × ~95mm wide
+        half_width = dims.nut_width_in / 2
+
+        points = [
+            # Start at nut, right side
+            (0.0, half_width),
+            # Transition - gentle S-curve
+            (-0.5, half_width + 0.15),
+            (-1.0, 1.30),
+            (-2.0, 1.55),
+            # Upper section - characteristic PRS curve
+            (-3.0, 1.65),
+            (-4.0, 1.68),
+            (-5.0, 1.60),
+            # Tip - rounded
+            (-5.8, 1.35),
+            (-6.3, 0.95),
+            (-6.5, 0.50),
+            (-6.5, 0.0),   # Center
+            # Mirror for left side
+            (-6.5, -0.50),
+            (-6.3, -0.95),
+            (-5.8, -1.35),
+            (-5.0, -1.60),
+            (-4.0, -1.68),
+            (-3.0, -1.65),
+            (-2.0, -1.55),
+            (-1.0, -1.30),
+            (-0.5, -half_width - 0.15),
+            (0.0, -half_width),
+        ]
+
+    elif style == HeadstockStyle.CLASSICAL:
+        # Classical guitar slotted headstock
+        # Resolves: classical guitar support
+        # Reference: ~190mm long × ~80mm wide, with tuner slots
+        half_width = dims.nut_width_in / 2  # Classical is wider (2.0")
+
+        points = [
+            # Start at nut, right side
+            (0.0, half_width),
+            # Transition
+            (-0.3, half_width + 0.05),
+            (-0.8, 1.20),
+            # Straight-ish sides typical of classical
+            (-2.0, 1.35),
+            (-4.0, 1.40),
+            (-6.0, 1.35),
+            # Rounded top
+            (-7.0, 1.15),
+            (-7.4, 0.80),
+            (-7.5, 0.40),
+            (-7.5, 0.0),   # Center
+            # Mirror
+            (-7.5, -0.40),
+            (-7.4, -0.80),
+            (-7.0, -1.15),
+            (-6.0, -1.35),
+            (-4.0, -1.40),
+            (-2.0, -1.35),
+            (-0.8, -1.20),
+            (-0.3, -half_width - 0.05),
+            (0.0, -half_width),
+        ]
+
     else:
         # Default to paddle if not implemented
         return generate_headstock_outline(HeadstockStyle.PADDLE, dims)
@@ -289,12 +423,60 @@ def generate_tuner_positions(
         ])
 
     elif style == HeadstockStyle.FENDER_STRAT:
-        # 6-in-line
+        # 6-in-line Strat
         spacing = 0.9
         y_offset = 0.9
         for i in range(6):
             x = -1.5 - (i * spacing)
             positions.append((x, y_offset))
+
+    elif style == HeadstockStyle.GIBSON_SOLID:
+        # 3+3 configuration (same as open, slightly different positions)
+        positions.extend([
+            (-1.7, 1.15),
+            (-3.4, 1.35),
+            (-5.1, 1.25),
+        ])
+        positions.extend([
+            (-1.7, -1.15),
+            (-3.4, -1.35),
+            (-5.1, -1.25),
+        ])
+
+    elif style == HeadstockStyle.FENDER_TELE:
+        # 6-in-line Tele (same pattern as Strat)
+        spacing = 0.9
+        y_offset = 0.9
+        for i in range(6):
+            x = -1.5 - (i * spacing)
+            positions.append((x, y_offset))
+
+    elif style == HeadstockStyle.PRS:
+        # 3+3 configuration with PRS spacing
+        positions.extend([
+            (-1.6, 1.20),
+            (-3.2, 1.40),
+            (-4.8, 1.30),
+        ])
+        positions.extend([
+            (-1.6, -1.20),
+            (-3.2, -1.40),
+            (-4.8, -1.30),
+        ])
+
+    elif style == HeadstockStyle.CLASSICAL:
+        # 3+3 slotted configuration
+        # Tuner holes are in the slots, not on face
+        positions.extend([
+            (-2.0, 1.05),
+            (-4.0, 1.10),
+            (-6.0, 1.05),
+        ])
+        positions.extend([
+            (-2.0, -1.05),
+            (-4.0, -1.10),
+            (-6.0, -1.05),
+        ])
 
     return positions
 
