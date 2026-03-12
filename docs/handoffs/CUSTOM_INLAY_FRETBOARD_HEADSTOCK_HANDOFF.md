@@ -481,7 +481,7 @@ The user's request — a continuous inlay flowing from fretboard onto headstock 
 
 | ID | Area | Severity | Effort | Status | Blocks |
 |----|------|----------|--------|--------|--------|
-| INLAY-01 | Headstock inlay backend route | **Critical** | Low | ❌ Missing | INLAY-02 |
+| INLAY-01 | Headstock inlay backend route | **Critical** | Low | ✅ Resolved (bd75c058) | INLAY-02 |
 | INLAY-02 | HeadstockDesignerView.vue wiring | **High** | Low | ⚠️ Stub (no API calls) | — |
 | INLAY-03 | FretMarkersView.vue overlap | **Medium** | Low | ⚠️ Stub overlaps InlayDesignerView | — |
 | INLAY-04 | Unified coordinate space model | **Medium** | Medium | ❌ Missing | INLAY-06 |
@@ -490,10 +490,19 @@ The user's request — a continuous inlay flowing from fretboard onto headstock 
 
 ---
 
-### INLAY-01: No Headstock Inlay Router
+### INLAY-01: No Headstock Inlay Router — ✅ RESOLVED
 
 **Severity:** Critical — the entire headstock inlay workflow has no API surface  
-**Status:** `inlay_prompts.py` contains 11 headstock styles and 20+ inlay designs, but no router exposes them. The file is orphaned.  
+**Status:** ✅ Resolved in commit bd75c058
+
+**Resolution:**
+- Created `headstock_inlay_router.py` with 13 API endpoints
+- Exposes all data from `inlay_prompts.py` (11 headstock styles, 20+ inlay designs, 15+ materials, 11 templates)
+- Added prompt generation endpoints for AI image generation
+- 14 smoke tests added and passing
+
+**Original analysis (for historical reference):**
+**Status (original):** `inlay_prompts.py` contains 11 headstock styles and 20+ inlay designs, but no router exposes them. The file is orphaned.  
 
 **Where the problem is:**
 - **Expected file:** `services/api/app/art_studio/headstock_inlay_router.py` — does not exist
