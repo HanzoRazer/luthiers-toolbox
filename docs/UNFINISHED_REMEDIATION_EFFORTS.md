@@ -39,7 +39,7 @@
 | 25 | `_experimental/` — 8+ half-built modules | `ai_cam/`, `ai_core/`, `infra/`, `analytics/` | 🟡 Partial stubs | MEDIUM |
 | 26 | 4 Frontend TODOs blocking features | Rosette PDF export, DXF export, risk override API, job detail nav | ❌ Not started | MEDIUM |
 | 27 | Abandoned service (no CI, no tests) | `blueprint-import/` | 🟡 Code exists, not integrated | MEDIUM |
-| 28 | Route analytics middleware left in prod | `main.py` TODO comment | ❌ Debug code in production | HIGH |
+| 28 | Route analytics middleware left in prod | `main.py` TODO comment | ✅ Resolved (c4a4788f) | ~~HIGH~~ |
 | 29 | `rmos/__init__.py` — 8+ bare `pass` in except blocks | Lines 145–311 | ❌ Swallowed errors | HIGH |
 | 30 | Missing secrets documentation | Railway, SG_SPEC_TOKEN, etc. | ❌ Not documented | MEDIUM |
 | 31 | `data_registry` module deleted, schema orphaned | `user_data` table + skipped test | ❌ Dead schema | LOW |
