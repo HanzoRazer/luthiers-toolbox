@@ -2,7 +2,7 @@
 
 **Date:** 2026-03-11
 **Session:** GAP_ANALYSIS Remediation Sprint
-**Last Commit: 6b947186 fix(spec): Smart Guitar coordinate system fixes (SG-GAP-03 thru 07)
+**Last Commit:** a8739d63 docs: document Les Paul inch mode + mark NECK-01/GAP-01 resolved (LP-GAP-10)
 **Branch:** main
 **Pushed:** Yes (origin/main up to date)
 
@@ -40,6 +40,7 @@ Working through infrastructure gaps identified in `docs/GAP_ANALYSIS_MASTER.md`.
 | SG-GAP-12 | Smart Guitar corner_radius missing | 6fa4d61b | Added corner_radius to 7 cavities in spec JSON |
 | SG-GAP-08/10, VINE-06 | Screw positions, antenna depth, Gibson headstock | 892ed3dd | Spec completeness fixes |
 | SG-GAP-03/04/05/06/07 | Smart Guitar coordinate system standardization | 6b947186 | All cavities now use y_from_top |
+| LP-GAP-10/NECK-01/GAP-01 | Les Paul unit docs + headstock marks | a8739d63 | Documented G20 inch mode in LP generator |
 
 ---
 
@@ -69,7 +70,7 @@ Remaining failures (pre-existing, not caused by sprint changes):
 |--------|-------|---------|-------|
 | Tests passed | 2390 | 2395 | +5 |
 | Tests failed | 28 | 16 | -12 |
-| Commits | 0 | 15 | +15 |
+| Commits | 0 | 16 | +16 |
 
 ---
 
@@ -153,4 +154,4 @@ All remediation phases complete. WP-3 god-object decomposition committed. Tagged
 
 ---
 
-*Updated: 2026-03-12 — Smart Guitar coordinate system fixes (SG-GAP-03 thru 07)*
+*Updated: 2026-03-12 — LP-GAP-10 unit documentation + NECK-01/GAP-01 resolved*
