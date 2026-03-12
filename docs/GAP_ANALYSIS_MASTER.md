@@ -42,6 +42,7 @@
 | 2026-03-12 | 289b4ac4 | FENDER_STRAT headstock was already implemented | NECK-01, GAP-01 |
 | 2026-03-12 | a8739d63 | Document inch mode in Les Paul generator, add dual-unit comments | LP-GAP-10 |
 | 2026-03-12 | 06d28e5c | Add pickup position calculator with SSS/HH/HSS configs + 24-fret support | GAP-04 |
+| 2026-03-12 | 703be846 | Add bracing presets bridge connecting to instrument specs (J-45, Dreadnought, Jumbo) | VINE-11 |
 ---
 
 ## Summary by Category
@@ -222,7 +223,7 @@
 | VEC-GAP-05 | OM Purfling | Phase 1 AI scale detection not passed to Phase 3 as calibration hint | MEDIUM |
 | VEC-GAP-04 | OM Purfling | Phase 3 → CAM bridge — same layer but no integration test | MEDIUM |
 | INLAY-04 | Custom Inlay | No unified coordinate space — fretboard and headstock use disconnected systems | MEDIUM |
-| VINE-11 | J45 Vine | Bracing presets disconnected from instrument specs — generic, not instrument-aware | MEDIUM |
+| VINE-11 | J45 Vine | Bracing presets connected to instrument specs (J-45, Dreadnought, Jumbo) | **Resolved** (703be846) |
 | FV-GAP-04 | Flying V | Vectorizer Phase 2 never processed Flying V DWGs — DWG→DXF conversion not run | **Resolved** (ec003681) |
 | VEC-GAP-08 | OM Purfling | OCR dimensions from Phase 3.6 unused downstream | LOW |
 
