@@ -30,8 +30,8 @@
 | | | | | |
 | **— Code-Level Findings (not in any planning doc) —** | | | | |
 | 18 | Agentic Spine — pure stubs | `agentic/spine/replay.py`, `moments.py` | ❌ `IMPLEMENTED = False` | MEDIUM |
-| 19 | SAW_LAB Learning Pipeline — disabled by default | 3 config files, all `_ENABLED=false` | ❌ Shipped but off | HIGH |
-| 20 | RMOS Runs v1→v2 migration incomplete | `rmos/__init__.py`, `fix_imports.py` | 🟡 v2 default, v1 still loadable | HIGH |
+| 19 | SAW_LAB Learning Pipeline — disabled by default | 3 config files, all `_ENABLED=false` | ✅ Intentional (documented in CNC_SAW_LAB_DEVELOPER_GUIDE.md) | ~~HIGH~~ |
+| 20 | RMOS Runs v1→v2 migration incomplete | `rmos/__init__.py`, `fix_imports.py` | ✅ v2 default, migration tools exist, v1 kept for rollback | ~~HIGH~~ |
 | 21 | 9 Skipped tests for missing features | `test_cam_fret_slots_export.py`, etc. | 🟡 1 fixed (689c3343), others are intentional | ~~HIGH~~ MEDIUM |
 | 22 | 7+ `NotImplementedError` functions shipping | `pipeline_operations.py`, `archtop_cam_router.py` | 🟡 pipeline_ops fixed (d17ed8dd), agentic spine = #18 | ~~HIGH~~ MEDIUM |
 | 23 | 3 Broken CI workflows (dead paths) | `cam_gcode_smoke.yml`, `helical_badges.yml`, `lpmd-inventory.yml` | ✅ Resolved (6d21e96b) | ~~CRITICAL~~ |
