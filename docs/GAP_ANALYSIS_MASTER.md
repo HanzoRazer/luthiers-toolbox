@@ -36,6 +36,8 @@
 | 2026-03-11 | c9ac19ec | Restore POST /api/saw/batch/toolpaths/from-decision endpoint + 8 schemas (P1-SAW fix) | P1-SAW (pipeline break) |
 | 2026-03-11 | 5cd6c2ba | Add Martin + Benedetto headstock outlines + neck presets | OM-GAP-06, BEN-GAP-06 |
 | 2026-03-11 | (pending) | Add corner_radius to 7 Smart Guitar cavities | SG-GAP-12 |
+| 2026-03-11 | (pending) | Add cover plate screw positions + clarify antenna depth | SG-GAP-08, SG-GAP-10 |
+| 2026-03-11 | 289b4ac4 | GIBSON_SOLID headstock already added | VINE-06 |
 ---
 
 ## Summary by Category
@@ -134,8 +136,8 @@
 | SG-GAP-06 | Smart Guitar | Wiring channels have from/to labels but zero XYZ coordinate pairs | HIGH |
 | SG-GAP-07 | Smart Guitar | Neck pocket bolt pattern undefined — no positions, diameters, count, spacing | HIGH |
 | SG-GAP-03 | Smart Guitar | Output jack bore angle undefined — spec says "angled" but no angle_degrees field | HIGH |
-| SG-GAP-08 | Smart Guitar | Cover plate screw positions undefined for both rear cavities | MEDIUM |
-| SG-GAP-10 | Smart Guitar | Antenna recess depth geometry ambiguous (2mm wood cover vs 20.45mm remaining) | MEDIUM |
+| SG-GAP-08 | Smart Guitar | Cover plate screw positions undefined for both rear cavities | **Resolved** (pending) |
+| SG-GAP-10 | Smart Guitar | Antenna recess depth geometry ambiguous (2mm wood cover vs 20.45mm remaining) | **Resolved** (pending) |
 | SG-GAP-12 | Smart Guitar | No `corner_radius` on any pocket — hardware has sharp corners, CNC has fillets | **Resolved** (pending) |
 | LP-GAP-10 | Les Paul 1959 | Mixed unit systems: Phase 1-2 use G20 (inches), Phase 3 uses G21 (mm) | LOW |
 | SG-GAP-11 | Smart Guitar | Generator has stale scale length comment ("25.5 Fender" instead of 24.75 Gibson) | LOW |
@@ -163,7 +165,7 @@
 | BEN-GAP-05 | Benedetto | Headstock binding geometry missing — tightest bend at ~20mm tip radius | HIGH |
 | OM-GAP-06 | OM-28 | Martin headstock outline missing — neither slotted nor solid | **Resolved** (5cd6c2ba) |
 | BEN-GAP-06 | Benedetto | Archtop/Benedetto headstock outline missing in `neck_headstock_config.py` | **Resolved** (5cd6c2ba) |
-| VINE-06 | J45 Vine | Gibson acoustic solid headstock outline missing — current is electric open-book | MEDIUM |
+| VINE-06 | J45 Vine | Gibson acoustic solid headstock outline missing — current is electric open-book | **Resolved** (289b4ac4) |
 | BEN-GAP-07 | Benedetto | Miter joint geometry computation missing — no module for angle/cut/joint geometry | MEDIUM |
 
 ### Fixes
