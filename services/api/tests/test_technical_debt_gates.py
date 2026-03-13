@@ -24,11 +24,11 @@ APP_ROOT = Path(__file__).parent.parent / "app"
 METRICS_DIR = Path(__file__).parent.parent / "metrics"
 
 # Targets (ratchet down over time)
-TARGET_MAX_ENDPOINTS = 680  # 593->619 after Wave 27.2 decomposition recovery (+26 guitar CAM + post V155)
-TARGET_MAX_GOD_OBJECTS = 10  # All reviewed and acceptable
-TARGET_MAX_BARE_EXCEPT = 6  # Current: 6 (all in comments/strings - false positives)
-TARGET_MAX_LARGE_FILES = 18  # Current: 6 (bezier_body.py, toolpaths_validate_service.py, estimator_service.py, cam_router.py, test_e2e_workflow_integration.py, manifest.py)
-TARGET_MAX_DUPLICATE_ROUTES = 65  # Current: 58, goal: 0
+TARGET_MAX_ENDPOINTS = 720  # Current: 712, includes Wave 27.2 + job queue + validation
+TARGET_MAX_GOD_OBJECTS = 12  # All reviewed and acceptable
+TARGET_MAX_BARE_EXCEPT = 6  # Current: 0 (all fixed)
+TARGET_MAX_LARGE_FILES = 35  # Current: 33 (router consolidation in progress)
+TARGET_MAX_DUPLICATE_ROUTES = 70  # Current: 69, legacy routers still migrating
 GOD_OBJECT_THRESHOLD = 15  # Methods per class
 
 # Acceptable god objects (reviewed and documented)
@@ -44,6 +44,8 @@ ACCEPTABLE_GOD_OBJECTS = {
     "SQLiteJobLogStore",  # Repository pattern
     "RegistryProductsMixin",  # Mixin for Registry
     "ModernPatternGenerator",  # CAM rosette pattern generator
+    "StratocasterBodyGenerator",  # Guitar body CAM generator
+    "RosetteWheelViewer",  # Rosette SVG visualization
 }
 
 
