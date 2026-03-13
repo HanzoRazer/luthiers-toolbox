@@ -3,7 +3,7 @@ RMOS AI Search Engine
 Constraint-first search loop for generating manufacturable rosette designs.
 
 This module implements the core search algorithm that:
-1. Generates candidate designs via ai_core generators
+1. Generates candidate designs via rmos.ai generators
 2. Scores each candidate via feasibility_scorer
 3. Tracks best results and respects budget constraints
 4. Returns the best manufacturable design found
@@ -53,10 +53,9 @@ try:
 except (ImportError, AttributeError, ModuleNotFoundError):
     score_design_feasibility = None  # type: ignore
 
-# Lazy imports for ai_core to prevent circular dependencies
+# Import from canonical rmos.ai module
 try:
-    from ..ai_core.generators import make_candidate_generator_for_request, CandidateGenerator
-    from ..ai_core.safety import coerce_to_rosette_spec
+    from .ai import make_candidate_generator_for_request, CandidateGenerator, coerce_to_rosette_spec  # combined
 except (ImportError, AttributeError, ModuleNotFoundError):
     make_candidate_generator_for_request = None  # type: ignore
     coerce_to_rosette_spec = None  # type: ignore
