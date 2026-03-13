@@ -43,6 +43,8 @@
 | 2026-03-12 | a8739d63 | Document inch mode in Les Paul generator, add dual-unit comments | LP-GAP-10 |
 | 2026-03-12 | 06d28e5c | Add pickup position calculator with SSS/HH/HSS configs + 24-fret support | GAP-04 |
 | 2026-03-12 | 703be846 | Add bracing presets bridge connecting to instrument specs (J-45, Dreadnought, Jumbo) | VINE-11 |
+| 2026-03-12 | 0642b77c | Add Stratocaster body outline generator (SSS/HSS/HSH/HH, 22/24-fret, tremolo styles) | GAP-07 |
+| 2026-03-12 | — | Verified existing Strat presets and spec file | GAP-02, GAP-08, NECK-02, NECK-03 |
 ---
 
 ## Summary by Category
@@ -161,7 +163,7 @@
 
 | Gap ID | Instrument | Description | Severity |
 |--------|-----------|-------------|----------|
-| GAP-07 | 24-Fret Strat | Strat body outline generator does not exist — only Les Paul generator exists | CRITICAL |
+| GAP-07 | 24-Fret Strat | Strat body outline generator does not exist — only Les Paul generator exists | **Resolved** (0642b77c) |
 | GAP-04 | 24-Fret Strat | Pickup position calculator | **Resolved** (06d28e5c) |
 | NECK-01 | Strat Neck | Strat headstock outline generator — `FENDER_STRAT` enum falls through to paddle headstock | **Resolved** (289b4ac4) |
 | GAP-01 | 24-Fret Strat | Stratocaster headstock outline is incomplete stub (same as NECK-01) | **Resolved** (289b4ac4) |
@@ -336,15 +338,15 @@
 
 | Gap ID | Instrument | Description | Severity |
 |--------|-----------|-------------|----------|
-| GAP-02 | 24-Fret Strat | No 24-fret Stratocaster preset in `NECK_PRESETS` | MEDIUM |
-| GAP-08 | 24-Fret Strat | Strat model hardcodes `fret_count=22` — no parameterization | MEDIUM |
-| NECK-02 | Strat Neck | No canonical `stratocaster.json` spec file | MEDIUM |
-| NECK-03 | Strat Neck | Strat registry status is STUB — enum only, no linked spec | LOW |
+| GAP-02 | 24-Fret Strat | No 24-fret Stratocaster preset in `NECK_PRESETS` | **Resolved** (strat_24fret in neck_headstock_config.py) |
+| GAP-08 | 24-Fret Strat | Strat model hardcodes `fret_count=22` — no parameterization | **Resolved** (StratBodySpec.fret_count parameterized) |
+| NECK-02 | Strat Neck | No canonical `stratocaster.json` spec file | **Resolved** (specs/stratocaster.json exists) |
+| NECK-03 | Strat Neck | Strat registry status is STUB — enum only, no linked spec | **Resolved** (registry status=PARTIAL, spec linked) |
 | EX-GAP-11 | Explorer 1958 | No `body_outlines.json` entry for Explorer | LOW |
 
 ### Fixes
 
-1. **Strat preset + spec** — Create `stratocaster.json` spec, add 22-fret and 24-fret presets to `NECK_PRESETS`, parameterize `fret_count`. Resolves GAP-02, GAP-08, NECK-02, NECK-03.
+1. **Strat preset + spec** — ~~Create `stratocaster.json` spec, add 22-fret and 24-fret presets to `NECK_PRESETS`, parameterize `fret_count`.~~ **RESOLVED** — `specs/stratocaster.json` exists with 3 variants (vintage, modern, 24fret), `strat_24fret` preset in NECK_PRESETS, `StratBodySpec` has parameterized fret_count.
 2. **Explorer outline entry** — Extract 200+ point contour from DXF, add to `body_outlines.json`. Resolves EX-GAP-11.
 
 ---
