@@ -1,7 +1,7 @@
 # Session Status — 2026-03-13
 
 **Branch:** main
-**Last Commit:** `a7228c89` feat(inlay): session 4-5 — 5 new generators, BOM, frontend view with undo/redo + measure tool
+**Last Commit:** `108b8cad` feat(inlay): port 3 generators from amsterdam_spiro_engine prototype
 **Pushed:** Yes (origin/main up to date)
 
 ---
@@ -142,27 +142,65 @@ Built the complete frontend for the 22-generator inlay pattern engine.
 
 ---
 
+## Session 6 — Amsterdam Spiro Engine Port (2026-03-13)
+
+**Commit:** `108b8cad` — 4 files changed, 2,245 insertions, 2 deletions
+**Tests:** 141 → 158 passing
+
+Analyzed the 1,525-line `amsterdam_spiro_engine.html` standalone prototype and ported its remaining generators into the Python backend.
+
+### HTML Prototype Fixes
+- Fixed typo: `exportSraySVG()` → `exportSpraySVG()` onclick handler
+- Fixed flower tab: second button now calls `exportFlowerOSCAD()` (was `exportFlowerSVG()`)
+- Added missing JS functions: `exportSpraySVG()`, `exportSprayOSCAD()`, `exportFlowerOSCAD()`
+
+### 3 New Generators (inlay_patterns.py)
+
+| Generator | Description | Key Math |
+|-----------|-------------|----------|
+| `oak_medallion` | N-fold kite-ring medallion with 1–3 concentric layers | 4-cubic-Bézier kite approximation, multi-ring offsets |
+| `floral_spray` | Cubic Bézier stem with tangent-following lens petals | `_cubic_bezier_eval/tangent`, `_lens_polygon` |
+| `open_flower_oval` | Hook/comma petals around elliptical frame with pip accents | `_hook_petal_polygon`, ellipse-adjusted petal placement |
+
+### Helper Functions Added
+- `_kite_path()` — 4-cubic-Bézier kite as closed polygon with configurable curvature
+- `_cubic_bezier_eval()` / `_cubic_bezier_tangent()` — generic cubic Bézier evaluation
+- `_lens_polygon()` — eye/lens shape from two Bézier arcs
+- `_hook_petal_polygon()` — hook/comma petal with curl depth control
+
+### Schema & Registry
+- `InlayShape` Literal expanded 22→25
+- `INLAY_GENERATORS` dict: 22→25 entries
+- 17 new tests across `TestOakMedallion` (7), `TestFloralSpray` (5), `TestOpenFlowerOval` (5)
+
+### Material Palette Note
+- HTML prototype has 12 materials (`blk_mop` key)
+- Python backend has 14 materials (`black_mop` key, plus `bone`, `cedar`)
+- Backend is the superset — no reconciliation needed
+
+---
+
 ## Current State
 
 ### Repos
 | Repo | Branch | Status |
 |------|--------|--------|
-| luthiers-toolbox | main | 1 untracked (`amsterdam_spiro_engine.html` — prototype) |
+| luthiers-toolbox | main | Clean (amsterdam_spiro_engine.html now tracked) |
 | code-analysis-tool | main | Separate work in progress |
 | sg-spec | main | Clean |
 
 ### Test Status
 ```
-Inlay tests: 141 passed (0 failed)
+Inlay tests: 158 passed (0 failed)
 Full suite: not re-run since session 2
 ```
 
 ### Inlay Engine Summary
-- **22 generators** across geometric, rope, floral, and utility categories
+- **25 generators** across geometric, rope, floral, medallion, and utility categories
 - **14 wood materials** with grain color data
 - **BOM calculator** with area estimation
 - **Full frontend** with undo/redo, measure tool, export
-- **141 tests** covering all generators, geometry math, BOM, spacing utilities
+- **158 tests** covering all generators, geometry math, BOM, spacing utilities
 
 ---
 
@@ -178,6 +216,7 @@ Full suite: not re-run since session 2
 - [x] Geo band & rope generator integration — 7 new generators (Session 3)
 - [x] 5 more generators + BOM + blueprint bridge (Session 4)
 - [x] Frontend InlayPatternView with undo/redo + measure tool (Session 5)
+- [x] Amsterdam spiro engine analysis + 3 generator port (Session 6)
 
 ### Open
 - [ ] File 8 JSX rosette prototypes into `docs/rosette-prototypes/jsx/` (from Session 1)
