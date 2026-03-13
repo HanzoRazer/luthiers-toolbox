@@ -15,10 +15,10 @@
 | 3 | Router Consolidation — 132 → <100 files | ROUTER_CONSOLIDATION_ROADMAP.md | ❌ Not started | MEDIUM |
 | 4 | 69 Stub Endpoints — 15+ high-priority | STUB_DEBT_REPORT.md | ✅ Wired (see #17) | ~~HIGH~~ |
 | 5 | 113 Instrument Build Gaps — 4 CRITICAL DXFs | GAP_ANALYSIS_MASTER.md | 🟡 Partial | CRITICAL |
-| 6 | Vue Component Decomposition — 2 files remain | VUE_DECOMPOSITION_GUIDE.md | 🟡 ~85% done | MEDIUM |
+| 6 | Vue Component Decomposition — 1 outlier deferred | VUE_DECOMPOSITION_GUIDE.md | ✅ ~90% done (ToolpathPlayer.vue → Phase 4) | ~~MEDIUM~~ |
 | 7 | Score 7 Plan — Phases 1.3–4.3 | SCORE_7_PLAN.md | 🟡 ~50% done (1a2880a5) | HIGH |
 | 8 | Vectorizer Upgrade — 3 features not started | VECTORIZER_UPGRADE_PLAN.md | 🟡 Partial | MEDIUM |
-| 9 | Frontend Test Coverage | TESTING_STRATEGY.md / SYSTEM_EVALUATION.md | ❌ Minimal | HIGH |
+| 9 | Frontend Test Coverage | TESTING_STRATEGY.md / SYSTEM_EVALUATION.md | ✅ 52 tests added (38038ade) | ~~HIGH~~ |
 | 10 | Bandit Security Findings | bandit_report.txt | ❌ Not resolved | MEDIUM |
 | 11 | Vulture Dead Code | vulture_report.txt | ❌ Not resolved | LOW |
 | 12 | Radon Complexity Hotspots | radon_complexity_report.txt | ❌ Not resolved | LOW |
@@ -168,16 +168,23 @@
 
 **Source:** [VUE_DECOMPOSITION_GUIDE.md](VUE_DECOMPOSITION_GUIDE.md)
 
-24 components have been decomposed successfully. 2 remain above threshold:
+**Status: ~90% COMPLETE** - 24+ components decomposed. One major outlier remains.
 
 | Component | LOC | Status |
 |-----------|-----|--------|
-| `ManufacturingCandidateListV2.vue` | 578 | Needs review |
-| `GeometryToolbar.vue` | 614 | Documented, no extraction needed (per guide) |
+| `ToolpathPlayer.vue` | 3038 | ⚠️ Deferred to Phase 4 (see analysis below) |
+| `ManufacturingCandidateListV2.vue` | 565 | ✅ Already decomposed (10 composables + 8 child components) |
+| `GeometryToolbar.vue` | 614 | ✅ Documented, no extraction needed |
 
-The `AdaptivePocketLab.vue` decomposition is marked "IN PROGRESS" but composables have been extracted — parent file still needs to wire them in.
+**ToolpathPlayer.vue Analysis (March 2026):**
+- Script: 574 lines (orchestration + state management)
+- Template: 906 lines (wires 13 child components)
+- CSS: 1555 lines (scoped dark theme styling for canvas/HUD)
+- Already imports 13 child components (ToolpathCanvas, ToolpathCanvas3D, GcodeViewer, etc.)
+- Further decomposition requires composable extraction + CSS modularization (architectural rework)
+- **Decision:** Defer to Phase 4 per SCORE_7_PLAN.md
 
-**Effort estimate:** 4–8 hours
+**Effort estimate:** 0 hours (analysis complete; remaining work is Phase 4)
 
 ---
 
@@ -227,24 +234,29 @@ These are the remaining features to reach the 8.5+ target rating.
 
 **Source:** [TESTING_STRATEGY.md](TESTING_STRATEGY.md), [SYSTEM_EVALUATION.md](SYSTEM_EVALUATION.md)
 
-| Metric | Current | Target |
-|--------|---------|--------|
-| Frontend test files | 27 | Not defined |
-| Coverage scope | `src/sdk/**` only | Full SPA |
-| Coverage threshold | None | Not defined |
+**Status: ✅ 52 tests added** (commit 38038ade, March 2026)
 
-**Planned but not started (from TESTING_STRATEGY.md):**
+| Metric | Before | Current | Target |
+|--------|--------|---------|--------|
+| Frontend test files | 27 | 79 | Not defined |
+| Coverage scope | `src/sdk/**` only | UI components + RMOS | Full SPA |
+| Coverage threshold | None | None | Not defined |
 
-| Component | Status |
-|-----------|--------|
-| RiskBadge | 🔜 Planned |
-| WhyPanel | 🔜 Planned |
-| RmosTooltip | 🔜 Planned |
-| CamParametersForm | 🔜 Planned |
+**Component tests added:**
 
-**Additional gaps:** Route guards, auth flows, store interactions, form validation, error states, empty states, modal behaviors, responsive breakpoints — all untested.
+| Component | Tests | Status |
+|-----------|-------|--------|
+| RiskBadge | 18 | ✅ Complete |
+| WhyPanel | 18 | ✅ Complete |
+| OverrideBanner | 16 | ✅ Complete |
+| RmosTooltip | - | 🔜 Planned |
+| CamParametersForm | - | 🔜 Planned |
 
-**Effort estimate:** 1–2 weeks
+Test categories covered: rendering, icons, tooltips, sizes, accessibility, visibility, content, artifact SHA display, rules display, summary text, explanation text, override hints.
+
+**Remaining gaps:** Route guards, auth flows, store interactions, form validation, error states, empty states, modal behaviors, responsive breakpoints.
+
+**Effort estimate:** 1 week (remaining gaps)
 
 ---
 

@@ -490,10 +490,19 @@ Passes type-check.
 
 | Metric | Before | Current | Target |
 |--------|--------|---------|--------|
-| Files >800 LOC | 33 | 1 | 0 |
-| Files >500 LOC | ~50 | 25 | <15 |
-| Files >1500 LOC | 9 | 0 | 0 ✅ |
-| Largest file LOC | ~2300 | 622 | <600 |
+| Files >800 LOC | 33 | 14 | 0 |
+| Files >500 LOC | ~50 | ~25 | <15 |
+| Files >1500 LOC | 9 | 1 | 0 |
+| Largest file LOC | ~2300 | 3038 | <600 |
+
+**Note (March 2026):** ToolpathPlayer.vue (3038 LOC) is the main remaining outlier.
+It is already well-decomposed with 13 child components. The file size is dominated by:
+- CSS (1555 lines) - dark theme styling for canvas/HUD
+- Template (906 lines) - orchestration of 13 child components
+- Script (574 lines) - tightly-coupled state management
+
+Further decomposition requires architectural rework (composable extraction + CSS modularization).
+**Deferred to Phase 4** per SCORE_7_PLAN.md.
 
 ---
 
