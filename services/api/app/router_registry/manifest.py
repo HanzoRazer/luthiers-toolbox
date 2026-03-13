@@ -43,6 +43,14 @@ ROUTER_MANIFEST: List[RouterSpec] = [
         required=True,
         category="core",
     ),
+    # Job Queue (Phase 3.3 Async)
+    RouterSpec(
+        module="app.core.job_queue.router",
+        prefix="",  # router has /api/jobs prefix
+        tags=["Jobs", "Async"],
+        required=False,
+        category="core",
+    ),
     # -------------------------------------------------------------------------
     # CAM CORE (11 routers)
     # -------------------------------------------------------------------------
