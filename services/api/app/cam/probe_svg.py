@@ -5,7 +5,7 @@ Creates visual documentation showing probe points, dimensions, and setup instruc
 """
 
 from typing import List, Tuple, Optional
-from xml.etree import ElementTree as ET
+from xml.etree import ElementTree as ET  # nosec B405 - only generates SVG, no parsing
 
 class ProbeSetupSheet:
     """Generate SVG setup sheets for CNC probing operations."""

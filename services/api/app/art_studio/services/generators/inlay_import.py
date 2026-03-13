@@ -16,7 +16,7 @@ import csv
 import io
 import math
 import re
-import xml.etree.ElementTree as ET
+import defusedxml.ElementTree as ET  # Secure XML parsing - prevents XXE attacks
 from typing import Any, Dict, List, Optional, Tuple
 
 from .inlay_geometry import (
