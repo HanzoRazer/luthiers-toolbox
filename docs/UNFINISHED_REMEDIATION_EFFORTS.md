@@ -447,7 +447,28 @@ This is a three-part learning system (emit events → rollup metrics → apply l
 
 **Source:** `services/api/app/rmos/__init__.py` (lines 88–94), `services/api/fix_imports.py`
 
-Both v1 and v2 run store implementations coexist, switched by `RMOS_RUNS_V2_ENABLED` (defaults to `true`). An import migration script (`fix_imports.py`) exists but evidently wasn't run everywhere — old `from app.rmos.run_artifacts.store` imports may still exist. The v1 path is dead weight unless you need rollback capability.
+**Status: ✅ Functionally Complete** - v2 is default, v1 retained for specific services.
+
+| Metric | Count |
+|--------|-------|
+| Files using v2 imports | 62 |
+| Files using v1 imports | 5 |
+| v2 enabled by default | Yes (`RMOS_RUNS_V2_ENABLED=true`) |
+
+**Files still using v1 directly (by design):**
+- `app/rmos/api/rmos_runs_router.py` - imports from `run_artifacts.index`
+- `app/services/saw_lab_decision_metrics_rollup_service.py`
+- `app/services/saw_lab_gcode_emit_service.py`
+- `app/services/saw_lab_metrics_trends_service.py`
+- `app/services/saw_lab_operator_feedback_learning_hook.py`
+
+**Why v1 is retained:** The v1 `read_run_artifact()` raises `FileNotFoundError` on missing
+artifacts, while v2's `get_run()` returns `None`. These services depend on the raise behavior
+for error propagation. Full migration would require adding v1-compatible wrappers to v2.
+
+**Recommendation:** Keep v1 for these 5 files until wrapper functions are added to v2.
+The v1 store (`run_artifacts/`) uses separate storage (`data/run_artifacts/`) from v2
+(`data/runs/rmos/`), so there's no data collision.
 
 ### 21. 9 Skipped Tests for Missing Features
 
@@ -612,7 +633,7 @@ Several efforts overlap and should be coordinated:
 | **P1** | #22 — 7+ NotImplementedError functions | Raise at runtime if hit |
 | **P1** | #21 — 9 skipped tests for missing features | Represent 9 abandoned features |
 | **P1** | #19 — SAW_LAB learning pipeline off | Built and tested but never enabled |
-| **P2** | #20 — RMOS v1→v2 migration | Old implementation still loadable; migration script incomplete |
+| ~~**P2**~~ | ~~#20 — RMOS v1→v2 migration~~ | ✅ v2 default; 5 files use v1 by design (different error semantics) |
 | **P2** | #25 — 8+ experimental stubs | `_experimental/` half-built modules |
 | **P2** | #26 — 4 frontend TODOs | Button handlers that do nothing |
 | **P3** | #27 — abandoned blueprint-import service | No CI, no integration with main API |
