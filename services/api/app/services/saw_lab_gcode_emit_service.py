@@ -8,7 +8,12 @@ ArtifactReader = Callable[[str], Any]
 
 
 def _default_artifact_reader() -> ArtifactReader:
-    """Return the default RMOS artifact reader."""
+    """Return the default RMOS artifact reader.
+
+    Note: Uses v1 store for backward compatibility. v1 raises FileNotFoundError
+    on missing artifacts, while v2's get_run returns None. Services depend on
+    the raise behavior for error handling.
+    """
     from app.rmos.run_artifacts.store import read_run_artifact
     return read_run_artifact
 
