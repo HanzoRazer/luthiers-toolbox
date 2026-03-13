@@ -344,6 +344,12 @@ ROUTER_MANIFEST: List[RouterSpec] = [
         tags=["Art Studio", "Inlay"],
         category="art_studio",
     ),
+    RouterSpec(
+        module="app.art_studio.api.inlay_pattern_routes",
+        prefix="",
+        tags=["Art Studio", "Inlay Patterns"],
+        category="art_studio",
+    ),
     # -------------------------------------------------------------------------
     # HEADSTOCK INLAY ROUTER (INLAY-01)
     # -------------------------------------------------------------------------
