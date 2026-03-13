@@ -21,7 +21,7 @@
 | 9 | Frontend Test Coverage | TESTING_STRATEGY.md / SYSTEM_EVALUATION.md | ✅ 52 tests added (38038ade) | ~~HIGH~~ |
 | 10 | Bandit Security Findings | bandit_report.txt | ✅ XML fixed, rest false positives | ~~MEDIUM~~ |
 | 11 | Vulture Dead Code | vulture_report.txt | ✅ 15 imports removed, 10 false positives | ~~LOW~~ |
-| 12 | Radon Complexity Hotspots | radon_complexity_report.txt | ❌ Not resolved | LOW |
+| 12 | Radon Complexity Hotspots | radon_complexity_report.txt | ✅ Baselined (avg A, 53 D-grade) | ~~LOW~~ |
 | 13 | File Size Baseline Violations | ci/file_size_baseline.json | 🟡 Ratcheted | MEDIUM |
 | 14 | Singleton Store Refactor | SYSTEM_EVALUATION.md | ✅ Resolved (c79dd1a7) | ~~CRITICAL~~ |
 | 15 | Frontend Tailwind/UX Fixes | SYSTEM_EVALUATION.md | 🟡 Tailwind fixed (bc9042aa) | CRITICAL |
@@ -316,17 +316,35 @@ Test categories covered: rendering, icons, tooltips, sizes, accessibility, visib
 
 ### 12. Radon Complexity Hotspots
 
-**Source:** [radon_complexity_report.txt](../radon_complexity_report.txt)
+**Status: ✅ BASELINED** (March 2026)
 
-| Function | Complexity | Grade |
-|----------|-----------|-------|
-| `PostInjectionMiddleware.dispatch` | 21–22 | D |
-| `BudgetTracker.get_status` | 12 | C |
-| *(additional hotspots in critical paths)* | | |
+**Summary (6,907 blocks analyzed):**
+| Grade | Count | Description |
+|-------|-------|-------------|
+| A | 4,660 | Low complexity (1-5) ✅ |
+| B | 667 | Moderate complexity (6-10) ✅ |
+| C | 287 | High complexity (11-15) ⚠️ |
+| D | 53 | Very high complexity (16-30) 🔴 |
 
-**Status:** Documented, not blocking CI.
+**Average complexity: A (3.45)** — codebase is healthy overall.
 
-**Effort estimate:** 8–16 hours for grade-D functions
+**Top D-grade hotspots (complexity 21-30):**
+| File | Function | Score |
+|------|----------|-------|
+| `batch_summary.py` | `build_batch_summary` | D (30) |
+| `vcarve_router.py` | `preview_infill` | D (29) |
+| `variant_review_service.py` | `list_variants` | D (29) |
+| `generate_debt_report.py` | `generate_report` | D (28) |
+| `persist_glue.py` | `_update_attachment_meta_index` | D (28) |
+| `batch_tree.py` | `resolve_batch_root` | D (27) |
+
+**Assessment:**
+- D-grade functions are concentrated in RMOS batch processing, CAM toolpaths, and CI tooling
+- Most are inherently complex (state machines, tree traversals, multi-step pipelines)
+- Refactoring would require extracting helper functions and splitting responsibilities
+- Not blocking: average complexity is excellent, D-grade count is manageable
+
+**Future work:** Extract helpers from top 10 D-grade functions to reduce to C-grade
 
 ---
 
