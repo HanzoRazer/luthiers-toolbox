@@ -31,12 +31,16 @@ from .inlay_geometry import (
     GeometryElement,
     Polyline,
     Pt,
+    build_centerline,
     catmull_rom,
+    compute_tangent_normal_arclen,
+    generate_strand_paths,
     make_poly,
     offset_polygon,
     offset_polyline,
     offset_polyline_strip,
     sample_spline,
+    split_strand_at_crossings,
     tessellate_path_d,
 )
 
@@ -889,6 +893,534 @@ def binding_flow(params: Dict[str, Any]) -> GeometryCollection:
 
 
 # ---------------------------------------------------------------------------
+# 11. Hex Chain (gallery motif — vertical hex chain band)
+# ---------------------------------------------------------------------------
+
+# Pre-computed hex chain unit cell (from reference SVG 01_hex_chain_vertical)
+# viewBox 300×1000, one repeat tile is 300×250 (4 tiles in the SVG)
+_HEX_CHAIN_CELL: List[Tuple[List[Pt], int]] = [
+    # Outer hexagon (mat 0)
+    ([(75, 0), (150, 43), (150, 130), (75, 173), (0, 130), (0, 43)], 0),
+    # Inner hexagon cutout (mat 1)
+    ([(75, 30), (125, 59), (125, 114), (75, 143), (25, 114), (25, 59)], 1),
+    # Vertical connector bar (mat 0)
+    ([(55, 173), (95, 173), (95, 250), (55, 250)], 0),
+]
+
+
+def hex_chain(params: Dict[str, Any]) -> GeometryCollection:
+    """Vertical hex chain band pattern.
+
+    Params
+    ------
+    cell_h_mm : float — height of one hex cell (mm), default 25
+    count     : int   — number of cells vertically, default 4
+    material  : int   — primary material index, default 0
+    """
+    cell_h = float(params.get("cell_h_mm", 25))
+    count = int(params.get("count", 4))
+
+    # Source cell is 300×250 in viewBox coords
+    sf = cell_h / 250.0
+    cell_w = 300.0 * sf
+
+    elements: List[GeometryElement] = []
+    for ci in range(count):
+        dy = ci * cell_h
+        for pts_src, mat in _HEX_CHAIN_CELL:
+            scaled = [(x * sf, y * sf + dy) for x, y in pts_src]
+            elements.append(GeometryElement(
+                kind="polygon", points=scaled,
+                material_index=mat, stroke_width=0.25,
+            ))
+
+    return GeometryCollection(
+        elements=elements,
+        width_mm=cell_w,
+        height_mm=cell_h * count,
+        radial=False,
+        tile_w=cell_w,
+        tile_h=cell_h,
+    )
+
+
+# ---------------------------------------------------------------------------
+# 12. Chevron Panel (gallery motif — nested chevrons)
+# ---------------------------------------------------------------------------
+
+def chevron_panel(params: Dict[str, Any]) -> GeometryCollection:
+    """Nested chevron band pattern.
+
+    Params
+    ------
+    band_h_mm : float — height of one chevron unit (mm), default 20
+    count     : int   — number of chevron units vertically, default 4
+    apex_frac : float — how far the apex extends (0–1), default 0.5
+    """
+    band_h = float(params.get("band_h_mm", 20))
+    count = int(params.get("count", 4))
+    apex = float(params.get("apex_frac", 0.5))
+
+    band_w = band_h * 0.45  # aspect ratio from SVG reference (450:1000)
+    layers = 4  # 4 nested chevrons per unit
+
+    elements: List[GeometryElement] = []
+    for ci in range(count):
+        base_y = ci * band_h
+        for li in range(layers):
+            inset = li * band_w * 0.08
+            shrink = li * band_h * 0.06
+            x0, x1 = inset, band_w - inset
+            mid_x = (x0 + x1) * 0.5
+            y_top = base_y + shrink
+            y_apex = base_y + band_h * apex
+            y_bot = base_y + band_h - shrink
+
+            pts: List[Pt] = [
+                (x0, y_top), (mid_x, y_apex), (x1, y_top),
+                (x1, y_bot), (mid_x, y_bot - band_h * (apex - 0.1)), (x0, y_bot),
+            ]
+            elements.append(GeometryElement(
+                kind="polygon", points=pts,
+                material_index=li % 2, stroke_width=0.25,
+            ))
+
+    return GeometryCollection(
+        elements=elements,
+        width_mm=band_w,
+        height_mm=band_h * count,
+        radial=False,
+        tile_w=band_w,
+        tile_h=band_h,
+    )
+
+
+# ---------------------------------------------------------------------------
+# 13. Parquet Panel (concentric diamonds with radiating wedges)
+# ---------------------------------------------------------------------------
+
+def parquet_panel(params: Dict[str, Any]) -> GeometryCollection:
+    """Parquet diamond panel.
+
+    Params
+    ------
+    size_mm  : float — panel height (mm), default 40
+    layers   : int   — number of concentric diamond layers, default 4
+    """
+    size_mm = float(params.get("size_mm", 40))
+    layers = int(params.get("layers", 4))
+
+    w = size_mm * 0.8  # 800:1000 aspect from SVG ref
+    h = size_mm
+    cx, cy = w / 2, h / 2
+
+    elements: List[GeometryElement] = []
+    for li in range(layers):
+        frac = 1.0 - li * 0.2
+        hw = w * 0.45 * frac
+        hh = h * 0.45 * frac
+        pts: List[Pt] = [
+            (cx, cy - hh), (cx + hw, cy), (cx, cy + hh), (cx - hw, cy),
+        ]
+        elements.append(GeometryElement(
+            kind="polygon", points=pts,
+            material_index=li % 2, stroke_width=0.25,
+        ))
+
+    # Cross-hatching wedges (4 quadrant fills)
+    for qi in range(4):
+        a0 = qi * math.pi / 2 + math.pi / 4
+        a1 = a0 + math.pi / 6
+        r_outer = min(w, h) * 0.44
+        pts_q: List[Pt] = [(cx, cy)]
+        for s in range(7):
+            a = a0 + (a1 - a0) * s / 6
+            pts_q.append((cx + r_outer * math.cos(a), cy + r_outer * math.sin(a)))
+        elements.append(GeometryElement(
+            kind="polygon", points=pts_q,
+            material_index=0, stroke_width=0.25,
+        ))
+
+    return GeometryCollection(
+        elements=elements, width_mm=w, height_mm=h,
+        radial=False,
+    )
+
+
+# ---------------------------------------------------------------------------
+# 14. Nested Diamond (band of concentric diamond groups)
+# ---------------------------------------------------------------------------
+
+def nested_diamond(params: Dict[str, Any]) -> GeometryCollection:
+    """Band of nested diamond groups with corner accents.
+
+    Params
+    ------
+    band_w_mm  : float — total band width (mm), default 60
+    diamonds   : int   — number of diamond groups, default 4
+    nest_depth : int   — concentric layers per group, default 3
+    """
+    band_w = float(params.get("band_w_mm", 60))
+    diamonds = int(params.get("diamonds", 4))
+    nest_depth = int(params.get("nest_depth", 3))
+
+    cell_w = band_w / diamonds
+    band_h = cell_w * 0.32  # aspect from SVG ref (1300:420 ≈ 3:1)
+
+    elements: List[GeometryElement] = []
+    for di in range(diamonds):
+        cx = di * cell_w + cell_w / 2
+        cy = band_h / 2
+        for ni in range(nest_depth):
+            frac = 1.0 - ni * 0.25
+            hw = cell_w * 0.4 * frac
+            hh = band_h * 0.42 * frac
+            pts: List[Pt] = [
+                (cx, cy - hh), (cx + hw, cy), (cx, cy + hh), (cx - hw, cy),
+            ]
+            elements.append(GeometryElement(
+                kind="polygon", points=pts,
+                material_index=ni % 2, stroke_width=0.25,
+            ))
+
+        # Corner accent diamonds (small, at 4 corners of the group)
+        accent_r = cell_w * 0.06
+        for ax_off, ay_off in [(-0.38, -0.35), (0.38, -0.35),
+                                (-0.38, 0.35), (0.38, 0.35)]:
+            ax = cx + cell_w * ax_off
+            ay = cy + band_h * ay_off
+            pts_a: List[Pt] = [
+                (ax, ay - accent_r), (ax + accent_r, ay),
+                (ax, ay + accent_r), (ax - accent_r, ay),
+            ]
+            elements.append(GeometryElement(
+                kind="polygon", points=pts_a,
+                material_index=0, stroke_width=0.2,
+            ))
+
+    return GeometryCollection(
+        elements=elements, width_mm=band_w, height_mm=band_h,
+        radial=False, tile_w=cell_w, tile_h=band_h,
+    )
+
+
+# ---------------------------------------------------------------------------
+# 15. Rope Border Motif (static S-curve weave from SVG reference)
+# ---------------------------------------------------------------------------
+
+def rope_border_motif(params: Dict[str, Any]) -> GeometryCollection:
+    """Static rope border motif — interleaving S-curve strands.
+
+    For parametric twisted rope see the ``twisted_rope`` generator.
+
+    Params
+    ------
+    band_w_mm : float — band width (mm), default 60
+    repeats   : int   — horizontal repeats, default 4
+    material  : int   — material index, default 0
+    """
+    band_w = float(params.get("band_w_mm", 60))
+    repeats = int(params.get("repeats", 4))
+    material = int(params.get("material", 0))
+
+    # One repeat unit: 2 interleaving S-curves, ~2 strands
+    unit_w = band_w / repeats
+    unit_h = unit_w * 0.22  # 1200:260 aspect from SVG ref
+
+    elements: List[GeometryElement] = []
+    n_pts = 30
+    for ri in range(repeats):
+        ox = ri * unit_w
+        for strand in range(2):
+            phase = strand * math.pi
+            pts: Polyline = []
+            for i in range(n_pts):
+                t = i / (n_pts - 1)
+                x = ox + t * unit_w
+                y = unit_h * 0.5 + math.sin(t * 2 * math.pi + phase) * unit_h * 0.35
+                pts.append((x, y))
+            # Create strand outline via strip
+            strip = offset_polyline_strip(pts, unit_h * 0.08)
+            elements.append(GeometryElement(
+                kind="polygon", points=strip,
+                material_index=(material + strand) % 3, stroke_width=0.25,
+            ))
+
+    return GeometryCollection(
+        elements=elements, width_mm=band_w, height_mm=unit_h,
+        radial=False, tile_w=unit_w, tile_h=unit_h,
+    )
+
+
+# ---------------------------------------------------------------------------
+# 16. Twisted Rope (parametric N-strand weaving)
+# ---------------------------------------------------------------------------
+
+ROPE_PRESETS: Dict[str, Dict[str, Any]] = {
+    "purfling": {
+        "num_strands": 3, "rope_width": 4, "twist_per_mm": 0.40,
+        "strand_width": 0.5, "taper": 0.1, "shape": "straight",
+        "length_mm": 100, "strand_mats": [0, 1, 2],
+    },
+    "binding": {
+        "num_strands": 3, "rope_width": 7, "twist_per_mm": 0.22,
+        "strand_width": 0.58, "taper": 0.0, "shape": "swave",
+        "length_mm": 180, "strand_mats": [2, 1, 0],
+    },
+    "headstock": {
+        "num_strands": 2, "rope_width": 5, "twist_per_mm": 0.30,
+        "strand_width": 0.6, "taper": 0.2, "shape": "cscroll",
+        "length_mm": 90, "strand_mats": [0, 1],
+    },
+    "fret": {
+        "num_strands": 4, "rope_width": 3, "twist_per_mm": 0.55,
+        "strand_width": 0.45, "taper": 0.3, "shape": "straight",
+        "length_mm": 45, "strand_mats": [0, 1, 2, 3],
+    },
+}
+
+
+def twisted_rope(params: Dict[str, Any]) -> GeometryCollection:
+    """Parametric twisted rope inlay band.
+
+    Params
+    ------
+    preset       : str   — preset name (purfling/binding/headstock/fret)
+    num_strands  : int   — 2–5, default 3
+    rope_width   : float — total rope width (mm), default 6
+    twist_per_mm : float — angular frequency omega (rad/mm), default 0.25
+    strand_width : float — fraction of rope width per strand, 0.2–0.9, default 0.55
+    taper        : float — depth-based width taper, 0–0.5, default 0
+    shape        : str   — centerline shape, default "straight"
+    length_mm    : float — band length, default 120
+    amplitude    : float — S-wave amplitude (mm), default 10
+    strand_mats  : list  — material_index per strand, default [0,1,2]
+    custom_pts   : list  — custom centerline points [[x,y], ...]
+    """
+    # Apply preset as base, then override with explicit params
+    preset_name = params.get("preset")
+    base: Dict[str, Any] = {}
+    if preset_name and preset_name in ROPE_PRESETS:
+        base = dict(ROPE_PRESETS[preset_name])
+    base.update({k: v for k, v in params.items() if k != "preset"})
+
+    num_strands = max(2, min(5, int(base.get("num_strands", 3))))
+    rope_width = float(base.get("rope_width", 6))
+    twist_per_mm = float(base.get("twist_per_mm", 0.25))
+    strand_width_frac = max(0.2, min(0.9, float(base.get("strand_width", 0.55))))
+    taper_val = max(0.0, min(0.5, float(base.get("taper", 0))))
+    shape = str(base.get("shape", "straight"))
+    length_mm = float(base.get("length_mm", 120))
+    amplitude = float(base.get("amplitude", 10))
+    raw_custom = base.get("custom_pts")
+    custom_pts: Polyline | None = None
+    if raw_custom and len(raw_custom) >= 2:
+        custom_pts = [(float(p[0]), float(p[1])) for p in raw_custom]
+    strand_mats = base.get("strand_mats", list(range(num_strands)))
+
+    rope_radius = rope_width / 2
+    strand_w_mm = rope_width * strand_width_frac / num_strands
+
+    # Build centerline
+    centerline = build_centerline(
+        shape, length_mm, amplitude=amplitude,
+        custom_pts=custom_pts,
+    )
+
+    # Generate strand paths
+    strands = generate_strand_paths(
+        centerline, num_strands, rope_radius,
+        twist_per_mm, strand_width_frac, taper_val,
+    )
+
+    elements: List[GeometryElement] = []
+
+    # Centerline as construction polyline (material_index -1 convention)
+    elements.append(GeometryElement(
+        kind="polyline", points=centerline,
+        material_index=0, stroke_width=0.15,
+    ))
+
+    # Strand outlines
+    for k, (strand_pts, depths, widths) in enumerate(strands):
+        mat_idx = strand_mats[k % len(strand_mats)]
+        avg_w = sum(widths) / len(widths) if widths else strand_w_mm
+        half_w = avg_w * rope_radius * 0.5
+
+        # Full strand outline via strip
+        strip = offset_polyline_strip(strand_pts, half_w)
+        elements.append(GeometryElement(
+            kind="polygon", points=strip,
+            material_index=mat_idx, stroke_width=0.25,
+        ))
+
+    # Envelope (true geometric pocket boundary — follows curve, not a rect)
+    envelope = offset_polyline_strip(centerline, rope_radius * 1.05)
+    elements.append(GeometryElement(
+        kind="polygon", points=envelope,
+        material_index=0, stroke_width=0.15,
+    ))
+
+    # Bounding box
+    all_x = [p[0] for e in elements for p in e.points]
+    all_y = [p[1] for e in elements for p in e.points]
+    min_x = min(all_x, default=0)
+    max_x = max(all_x, default=0)
+    min_y = min(all_y, default=0)
+    max_y = max(all_y, default=0)
+    w = max_x - min_x
+    h = max_y - min_y
+
+    return GeometryCollection(
+        elements=elements,
+        width_mm=w,
+        height_mm=h,
+        origin_x=-min_x,
+        origin_y=-min_y,
+        radial=False,
+    )
+
+
+# ---------------------------------------------------------------------------
+# 17. Band Compositor (multi-layer stacking)
+# ---------------------------------------------------------------------------
+
+BAND_PRESETS: Dict[str, Dict[str, Any]] = {
+    "rosette": {
+        "layers": [
+            {"shape": "nested_diamond", "params": {"band_w_mm": 150}, "weight": 1},
+            {"shape": "rope_border_motif", "params": {"band_w_mm": 150}, "weight": 0.5},
+        ],
+        "band_width_mm": 150, "band_height_mm": 25, "gap_mm": 0.5, "repeats": 4,
+    },
+    "body_binding": {
+        "layers": [
+            {"shape": "twisted_rope", "params": {"length_mm": 150, "preset": "purfling"}, "weight": 1},
+            {"shape": "diamond", "params": {"tile_w": 8}, "weight": 0.8},
+            {"shape": "twisted_rope", "params": {"length_mm": 150, "preset": "purfling"}, "weight": 1},
+        ],
+        "band_width_mm": 180, "band_height_mm": 20, "gap_mm": 0.3, "repeats": 1,
+    },
+    "fretboard": {
+        "layers": [
+            {"shape": "hex_chain", "params": {"cell_h_mm": 10}, "weight": 1},
+            {"shape": "chevron_panel", "params": {"band_h_mm": 15}, "weight": 1},
+        ],
+        "band_width_mm": 150, "band_height_mm": 30, "gap_mm": 0.5, "repeats": 4,
+    },
+    "headstock_band": {
+        "layers": [
+            {"shape": "parquet_panel", "params": {"size_mm": 40}, "weight": 1},
+            {"shape": "nested_diamond", "params": {"band_w_mm": 100}, "weight": 0.7},
+        ],
+        "band_width_mm": 120, "band_height_mm": 35, "gap_mm": 0.5, "repeats": 2,
+    },
+}
+
+
+def compose_band(params: Dict[str, Any]) -> GeometryCollection:
+    """Stack multiple inlay patterns into a composite band.
+
+    Params
+    ------
+    preset         : str   — preset name (rosette/body_binding/fretboard/headstock_band)
+    layers         : list  — layer dicts: [{shape, params, weight}, ...]
+    band_width_mm  : float — total width (mm), default 150
+    band_height_mm : float — total height (mm), default 25
+    gap_mm         : float — gap between layers (mm), default 0.5
+    repeats        : int   — horizontal repeats, default 1
+    mirror         : bool  — mirror alternate tiles, default False
+    """
+    preset_name = params.get("preset")
+    base: Dict[str, Any] = {}
+    if preset_name and preset_name in BAND_PRESETS:
+        base = dict(BAND_PRESETS[preset_name])
+    base.update({k: v for k, v in params.items() if k != "preset"})
+
+    layers_spec = base.get("layers", [])
+    if not layers_spec:
+        # Default: simple two-layer herringbone + diamond band
+        layers_spec = [
+            {"shape": "herringbone", "params": {}, "weight": 1},
+            {"shape": "diamond", "params": {}, "weight": 1},
+        ]
+
+    band_w = float(base.get("band_width_mm", 150))
+    band_h = float(base.get("band_height_mm", 25))
+    gap_mm = float(base.get("gap_mm", 0.5))
+    repeats = max(1, int(base.get("repeats", 1)))
+    mirror = bool(base.get("mirror", False))
+
+    # Calculate layer heights from weights
+    total_weight = sum(float(l.get("weight", 1)) for l in layers_spec)
+    total_gap = gap_mm * max(0, len(layers_spec) - 1)
+    usable_h = band_h - total_gap
+
+    tile_w = band_w / repeats
+    elements: List[GeometryElement] = []
+    y_cursor = 0.0
+
+    for li, layer_def in enumerate(layers_spec):
+        weight = float(layer_def.get("weight", 1))
+        layer_h = usable_h * weight / total_weight
+        shape_key = layer_def.get("shape", "herringbone")
+        layer_params = dict(layer_def.get("params", {}))
+
+        # Generate the layer pattern
+        gen_entry = INLAY_GENERATORS.get(shape_key)
+        if gen_entry is None:
+            continue
+        layer_geo = gen_entry["fn"](layer_params)
+
+        # Scale to fit tile_w × layer_h
+        if layer_geo.width_mm > 0 and layer_geo.height_mm > 0:
+            sx = tile_w / layer_geo.width_mm
+            sy = layer_h / layer_geo.height_mm
+        else:
+            sx, sy = 1.0, 1.0
+
+        for rep in range(repeats):
+            rep_ox = rep * tile_w
+            flip_x = mirror and rep % 2 == 1
+
+            for el in layer_geo.elements:
+                new_pts: List[Pt] = []
+                for px, py in el.points:
+                    nx = px * sx
+                    ny = py * sy + y_cursor
+                    if flip_x:
+                        nx = tile_w - nx
+                    nx += rep_ox
+                    new_pts.append((nx, ny))
+                elements.append(GeometryElement(
+                    kind=el.kind, points=new_pts,
+                    radius=el.radius * min(sx, sy),
+                    material_index=el.material_index,
+                    stroke_width=el.stroke_width,
+                ))
+
+        y_cursor += layer_h
+
+        # Gap line (thin rectangle representing ebony purfling line)
+        if li < len(layers_spec) - 1 and gap_mm > 0:
+            gap_rect_pts: List[Pt] = [
+                (0, y_cursor), (band_w, y_cursor + gap_mm),
+            ]
+            elements.append(GeometryElement(
+                kind="rect", points=gap_rect_pts,
+                material_index=1, stroke_width=0.1,  # ebony gap line
+            ))
+            y_cursor += gap_mm
+
+    return GeometryCollection(
+        elements=elements,
+        width_mm=band_w,
+        height_mm=band_h,
+        radial=False,
+    )
+
+
+# ---------------------------------------------------------------------------
 # Tile repeat engine (for linear patterns)
 # ---------------------------------------------------------------------------
 
@@ -996,6 +1528,48 @@ INLAY_GENERATORS: Dict[str, Any] = {
         "fn": binding_flow,
         "name": "Binding Flow",
         "description": "Catmull-Rom contour with vine wrapping for binding channels",
+        "linear": False,
+    },
+    "hex_chain": {
+        "fn": hex_chain,
+        "name": "Hex Chain",
+        "description": "Vertical hex chain band pattern with cutouts and connectors",
+        "linear": True,
+    },
+    "chevron_panel": {
+        "fn": chevron_panel,
+        "name": "Chevron Panel",
+        "description": "Nested chevron band pattern",
+        "linear": True,
+    },
+    "parquet_panel": {
+        "fn": parquet_panel,
+        "name": "Parquet Panel",
+        "description": "Concentric diamond panel with radiating wedges",
+        "linear": False,
+    },
+    "nested_diamond": {
+        "fn": nested_diamond,
+        "name": "Nested Diamond",
+        "description": "Band of nested diamond groups with corner accents",
+        "linear": True,
+    },
+    "rope_border_motif": {
+        "fn": rope_border_motif,
+        "name": "Rope Border Motif",
+        "description": "Static S-curve interleaving rope border band",
+        "linear": True,
+    },
+    "twisted_rope": {
+        "fn": twisted_rope,
+        "name": "Twisted Rope",
+        "description": "Parametric N-strand twisted rope with crossing detection",
+        "linear": False,
+    },
+    "compose_band": {
+        "fn": compose_band,
+        "name": "Band Compositor",
+        "description": "Multi-layer composite band stacking multiple patterns",
         "linear": False,
     },
 }
