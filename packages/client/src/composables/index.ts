@@ -91,3 +91,6 @@ export type { Command } from './useCommandPalette'
 
 export { useGcodeFetcher } from './useGcodeFetcher'
 export type { GcodeResult, UseGcodeFetcherReturn } from './useGcodeFetcher'
+
+export { useRetryQueue, useGlobalRetryQueue } from './useRetryQueue'
+export type { QueuedOperation, UseRetryQueueOptions } from './useRetryQueue'

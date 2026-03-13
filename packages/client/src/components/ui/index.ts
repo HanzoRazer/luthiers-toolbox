@@ -4,8 +4,11 @@
  * Reusable, accessible components for consistent UX.
  */
 
-// Feedback
+// Feedback & Error Handling
 export { default as ErrorRecovery } from './ErrorRecovery.vue'
+export { default as ErrorBoundary } from './ErrorBoundary.vue'
+export { default as GlobalErrorHandler } from './GlobalErrorHandler.vue'
+export { default as NetworkStatusBanner } from './NetworkStatusBanner.vue'
 export { default as HelpTooltip } from './HelpTooltip.vue'
 export { default as LoadingSpinner } from './LoadingSpinner.vue'
 export { default as SkeletonLoader } from './SkeletonLoader.vue'
