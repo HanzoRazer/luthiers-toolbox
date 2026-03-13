@@ -5,6 +5,7 @@ G-code generators for guitar building CNC operations.
 
 Modules:
     body_generator - Electric guitar body (Les Paul, etc.)
+    stratocaster_body_generator - Stratocaster body with pickup configs (GAP-07)
     neck_headstock_generator - Neck and headstock machining
     bezier_body - Parametric acoustic guitar body outlines
 
@@ -18,6 +19,12 @@ Usage:
     # Body from DXF
     body_gen = LesPaulBodyGenerator("les_paul.dxf")
     body_gen.generate("output.nc")
+
+    # Stratocaster body (parametric)
+    from app.generators import StratocasterBodyGenerator, StratBodySpec, PickupConfig
+    spec = StratBodySpec(pickup_config=PickupConfig.HSS, fret_count=22)
+    gen = StratocasterBodyGenerator(spec)
+    gen.generate("strat_output.nc")
 
     # Neck from parameters
     neck_gen = NeckGenerator(scale_length=25.5, headstock_style="gibson_open")
@@ -68,6 +75,28 @@ from .bezier_body import (
     BODY_PRESETS,
 )
 
+# Stratocaster body generator (GAP-07)
+from .stratocaster_body_generator import (
+    StratocasterBodyGenerator,
+    StratBodySpec,
+    StratGCodeStats,
+    generate_strat_body,
+)
+from .stratocaster_config import (
+    PickupConfig,
+    StratToolConfig,
+    StratMachineConfig,
+    STRAT_TOOLS,
+    STRAT_MACHINES,
+    STRAT_BODY_DIMS,
+    NECK_POCKET,
+    SINGLE_COIL_CAVITY,
+    HUMBUCKER_CAVITY,
+    TREMOLO_CAVITY,
+    SPRING_CAVITY,
+    CONTROL_CAVITY,
+)
+
 __all__ = [
     # Body (Les Paul / DXF-based)
     'LesPaulBodyGenerator',
@@ -98,4 +127,21 @@ __all__ = [
     'get_body_preset',
     'list_body_presets',
     'BODY_PRESETS',
+    # Stratocaster body (GAP-07)
+    'StratocasterBodyGenerator',
+    'StratBodySpec',
+    'StratGCodeStats',
+    'generate_strat_body',
+    'PickupConfig',
+    'StratToolConfig',
+    'StratMachineConfig',
+    'STRAT_TOOLS',
+    'STRAT_MACHINES',
+    'STRAT_BODY_DIMS',
+    'NECK_POCKET',
+    'SINGLE_COIL_CAVITY',
+    'HUMBUCKER_CAVITY',
+    'TREMOLO_CAVITY',
+    'SPRING_CAVITY',
+    'CONTROL_CAVITY',
 ]
