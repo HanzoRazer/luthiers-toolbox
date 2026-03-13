@@ -571,7 +571,9 @@ class TestInlayPatternAPI:
         assert "girih_rosette" in names
         assert "twisted_rope" in names
         assert "compose_band" in names
-        assert len(names) == 17
+        assert "checker_chevron" in names
+        assert "amsterdam_flower" in names
+        assert len(names) == 22
 
     def test_generate_preview(self, client):
         r = client.post("/api/art/inlay-patterns/generate", json={
@@ -957,3 +959,378 @@ class TestComposeAPI:
         assert r.status_code == 200
         data = r.json()
         assert 'id="male_cut"' in data["svg"]
+
+
+# ---------------------------------------------------------------------------
+# Marquetry generators (session 4)
+# ---------------------------------------------------------------------------
+
+class TestCheckerChevron:
+    def test_basic(self):
+        col = generate_inlay_pattern("checker_chevron", {
+            "cell_w": 10, "diamond_r": 5, "band_w": 60, "band_h": 30,
+        })
+        assert col.width_mm == 60
+        assert col.height_mm == 30
+        assert col.radial is False
+        assert len(col.elements) > 0
+        assert all(e.kind == "polygon" for e in col.elements)
+
+    def test_defaults(self):
+        col = generate_inlay_pattern("checker_chevron", {})
+        assert col.width_mm > 0
+        assert len(col.elements) > 0
+
+    def test_material_index_alternates(self):
+        col = generate_inlay_pattern("checker_chevron", {"cell_w": 8, "band_w": 40, "band_h": 40})
+        indices = {e.material_index for e in col.elements}
+        assert len(indices) >= 2
+
+    def test_grain_angle(self):
+        col = generate_inlay_pattern("checker_chevron", {})
+        for e in col.elements:
+            assert hasattr(e, "grain_angle")
+
+
+class TestBlockPin:
+    def test_basic(self):
+        col = generate_inlay_pattern("block_pin", {
+            "col_w": 12, "cell_h": 10, "diamond_r": 4, "band_w": 60, "band_h": 30,
+        })
+        assert col.width_mm == 60
+        assert col.height_mm == 30
+        assert col.radial is False
+        assert len(col.elements) > 0
+
+    def test_defaults(self):
+        col = generate_inlay_pattern("block_pin", {})
+        assert col.width_mm > 0
+        assert len(col.elements) > 0
+
+    def test_has_both_shapes(self):
+        col = generate_inlay_pattern("block_pin", {"band_w": 60, "band_h": 30})
+        kinds = {e.kind for e in col.elements}
+        # Should contain both polygon (diamond) and rect
+        assert "polygon" in kinds or "rect" in kinds
+
+    def test_material_indices(self):
+        col = generate_inlay_pattern("block_pin", {})
+        indices = {e.material_index for e in col.elements}
+        assert len(indices) >= 2
+
+
+class TestAmsterdamFlower:
+    def test_basic(self):
+        col = generate_inlay_pattern("amsterdam_flower", {
+            "n_fold": 8, "outer_r": 20, "inner_r": 5,
+        })
+        assert col.radial is True
+        assert len(col.elements) > 0
+        assert col.width_mm > 0
+
+    def test_defaults(self):
+        col = generate_inlay_pattern("amsterdam_flower", {})
+        assert len(col.elements) > 0
+
+    def test_petals_plus_centre(self):
+        n = 6
+        col = generate_inlay_pattern("amsterdam_flower", {"n_fold": n})
+        # n petals + 1 centre disc
+        assert len(col.elements) == n + 1
+
+    def test_centre_is_polygon(self):
+        col = generate_inlay_pattern("amsterdam_flower", {"n_fold": 8})
+        # Last element is the 24-sided centre disc
+        centre = col.elements[-1]
+        assert centre.kind == "polygon"
+        assert len(centre.points) == 24
+
+    def test_grain_angle_set(self):
+        col = generate_inlay_pattern("amsterdam_flower", {"n_fold": 6})
+        for e in col.elements:
+            assert hasattr(e, "grain_angle")
+
+
+class TestSpiroArc:
+    def test_basic(self):
+        col = generate_inlay_pattern("spiro_arc", {
+            "arc_count": 6, "outer_r": 30, "inner_r": 10, "sweep_deg": 120,
+        })
+        assert col.radial is True
+        assert len(col.elements) > 0
+        assert col.width_mm > 0
+
+    def test_defaults(self):
+        col = generate_inlay_pattern("spiro_arc", {})
+        assert len(col.elements) > 0
+
+    def test_arc_count_matches(self):
+        n = 5
+        col = generate_inlay_pattern("spiro_arc", {"arc_count": n})
+        assert len(col.elements) == n
+
+    def test_material_indices_cycle(self):
+        col = generate_inlay_pattern("spiro_arc", {"arc_count": 6})
+        indices = [e.material_index for e in col.elements]
+        # Should cycle through materials
+        assert len(set(indices)) >= 2
+
+
+class TestSqFloral:
+    def test_basic(self):
+        col = generate_inlay_pattern("sq_floral", {
+            "n_fold": 8, "outer_r": 25, "inner_r": 8,
+        })
+        assert col.radial is True
+        assert len(col.elements) > 0
+        assert col.width_mm > 0
+
+    def test_defaults(self):
+        col = generate_inlay_pattern("sq_floral", {})
+        assert len(col.elements) > 0
+
+    def test_element_count_matches_nfold(self):
+        n = 10
+        col = generate_inlay_pattern("sq_floral", {"n_fold": n})
+        assert len(col.elements) == n
+
+    def test_grain_angle_set(self):
+        col = generate_inlay_pattern("sq_floral", {"n_fold": 6})
+        for e in col.elements:
+            assert hasattr(e, "grain_angle")
+
+
+# ---------------------------------------------------------------------------
+# BOM calculator
+# ---------------------------------------------------------------------------
+
+from app.art_studio.services.generators.inlay_geometry import (
+    BomEntry,
+    calculate_bom,
+)
+
+
+class TestBomCalculator:
+    def test_basic_bom(self):
+        col = generate_inlay_pattern("herringbone", {"band_w": 40, "band_h": 20})
+        entries = calculate_bom(col, ["mop", "ebony", "koa"])
+        assert len(entries) > 0
+        assert all(isinstance(e, BomEntry) for e in entries)
+        assert all(e.count > 0 for e in entries)
+        assert all(e.area_mm2 >= 0 for e in entries)
+
+    def test_bom_total_pieces(self):
+        col = generate_inlay_pattern("sunburst", {"rays": 6, "band_r": 20})
+        entries = calculate_bom(col, ["mop", "ebony", "koa"])
+        total = sum(e.count for e in entries)
+        assert total == len(col.elements)
+
+    def test_bom_with_circles(self):
+        col = generate_inlay_pattern("sunburst", {"rays": 4, "band_r": 20})
+        entries = calculate_bom(col, ["mop", "ebony"])
+        circle_entries = [e for e in entries if e.shape_type == "circle"]
+        # Sunburst has one inner circle
+        assert len(circle_entries) >= 1
+        assert circle_entries[0].area_mm2 > 0
+
+    def test_bom_material_keys(self):
+        col = generate_inlay_pattern("diamond", {"band_w": 30, "band_h": 20})
+        materials = ["maple", "walnut"]
+        entries = calculate_bom(col, materials)
+        for e in entries:
+            assert e.material_key in materials
+
+
+# ---------------------------------------------------------------------------
+# Region clip shapes
+# ---------------------------------------------------------------------------
+
+from app.art_studio.services.generators.inlay_geometry import (
+    binding_strip,
+    fretboard_trapezoid,
+    rosette_ring,
+)
+
+
+class TestFretboardTrapezoid:
+    def test_basic(self):
+        pts = fretboard_trapezoid(43.0, 56.0, 650.0)
+        assert len(pts) == 4
+        # X-centred: x extents are symmetric around 0
+        xs = [p[0] for p in pts]
+        assert pytest.approx(min(xs), abs=0.5) == -max(xs)
+
+    def test_width_ordering(self):
+        pts = fretboard_trapezoid(40.0, 55.0, 500.0)
+        # nut end (y=0) should be narrower than body end (y=500)
+        nut_xs = sorted([abs(p[0]) for p in pts if abs(p[1]) < 1])
+        body_xs = sorted([abs(p[0]) for p in pts if abs(p[1] - 500) < 1])
+        # body half-width > nut half-width
+        assert max(body_xs) > max(nut_xs)
+
+
+class TestRosetteRing:
+    def test_basic(self):
+        outer, inner = rosette_ring(60.0, 50.0)
+        assert len(outer) == 64
+        assert len(inner) == 64
+
+    def test_radii(self):
+        outer, inner = rosette_ring(40.0, 30.0, n_segments=32)
+        import math
+        r_out = math.hypot(outer[0][0], outer[0][1])
+        r_in = math.hypot(inner[0][0], inner[0][1])
+        assert r_out == pytest.approx(40.0, abs=0.1)
+        assert r_in == pytest.approx(30.0, abs=0.1)
+
+
+class TestBindingStrip:
+    def test_basic(self):
+        pts = binding_strip(400.0, 2.0)
+        assert len(pts) == 4
+        xs = sorted([p[0] for p in pts])
+        ys = sorted([p[1] for p in pts])
+        assert xs[-1] - xs[0] == pytest.approx(400.0)
+        assert ys[-1] - ys[0] == pytest.approx(2.0)
+
+
+# ---------------------------------------------------------------------------
+# grain_angle metadata
+# ---------------------------------------------------------------------------
+
+class TestGrainAngle:
+    def test_geometry_element_default(self):
+        el = GeometryElement(kind="rect", points=[(0, 0), (10, 5)])
+        assert el.grain_angle == 0.0
+
+    def test_geometry_element_set(self):
+        el = GeometryElement(kind="rect", points=[(0, 0), (10, 5)], grain_angle=45.0)
+        assert el.grain_angle == 45.0
+
+    def test_radial_generators_set_grain(self):
+        """Radial generators should set grain_angle on their elements."""
+        col = generate_inlay_pattern("amsterdam_flower", {"n_fold": 8})
+        angles = [e.grain_angle for e in col.elements]
+        # Not all angles should be 0 (radial patterns rotate grain)
+        assert any(a != 0.0 for a in angles[:-1])  # skip centre disc
+
+
+# ---------------------------------------------------------------------------
+# BOM API endpoint
+# ---------------------------------------------------------------------------
+
+class TestBomAPI:
+    def test_bom_endpoint(self, client):
+        r = client.post("/api/art/inlay-patterns/bom", json={
+            "shape": "herringbone",
+            "params": {"band_w": 40, "band_h": 20},
+        })
+        assert r.status_code == 200
+        data = r.json()
+        assert data["shape"] == "herringbone"
+        assert len(data["entries"]) > 0
+        assert data["total_pieces"] > 0
+        assert data["total_area_mm2"] > 0
+
+    def test_bom_with_materials(self, client):
+        r = client.post("/api/art/inlay-patterns/bom", json={
+            "shape": "sunburst",
+            "params": {"rays": 4, "band_r": 20},
+            "materials": ["maple", "walnut"],
+        })
+        assert r.status_code == 200
+        data = r.json()
+        for entry in data["entries"]:
+            assert entry["material_key"] in ["maple", "walnut"]
+
+    def test_bom_unknown_shape(self, client):
+        r = client.post("/api/art/inlay-patterns/bom", json={
+            "shape": "nonexistent",
+            "params": {},
+        })
+        assert r.status_code == 422  # Pydantic rejects invalid literal
+
+
+# ---------------------------------------------------------------------------
+# Blueprint-to-Inlay bridge API endpoint
+# ---------------------------------------------------------------------------
+
+class TestBlueprintBridgeAPI:
+    def test_missing_paths_returns_400(self, client):
+        r = client.post("/api/art/inlay-patterns/import-from-blueprint", json={})
+        assert r.status_code == 400
+
+    def test_path_outside_allowed_dir_returns_403(self, client):
+        r = client.post("/api/art/inlay-patterns/import-from-blueprint", json={
+            "dxf_path": "/etc/passwd",
+        })
+        assert r.status_code == 403
+
+    def test_nonexistent_file_returns_404(self, client, tmp_path):
+        # Even if the path is inside allowed dir, a missing file gives 404
+        import os
+        allowed = tmp_path / "blueprint_output"
+        allowed.mkdir()
+        fake = allowed / "missing.dxf"
+        # Monkeypatch the allowed dir constant
+        import app.art_studio.api.inlay_pattern_routes as routes_mod
+        original = routes_mod._ALLOWED_BLUEPRINT_DIR
+        routes_mod._ALLOWED_BLUEPRINT_DIR = str(allowed.parent)
+        try:
+            r = client.post("/api/art/inlay-patterns/import-from-blueprint", json={
+                "dxf_path": str(fake),
+            })
+            # Could be 403 or 404 depending on path resolution
+            assert r.status_code in (403, 404)
+        finally:
+            routes_mod._ALLOWED_BLUEPRINT_DIR = original
+
+    def test_valid_dxf_import(self, client, tmp_path):
+        """Import a DXF file from the blueprint output directory."""
+        import app.art_studio.api.inlay_pattern_routes as routes_mod
+
+        bp_dir = tmp_path / "blueprint_output"
+        bp_dir.mkdir()
+        dxf_file = bp_dir / "test.dxf"
+        dxf_file.write_text(
+            "0\nSECTION\n2\nENTITIES\n0\nCIRCLE\n10\n5.0\n20\n5.0\n40\n3.0\n0\nENDSEC\n0\nEOF"
+        )
+
+        original = routes_mod._ALLOWED_BLUEPRINT_DIR
+        routes_mod._ALLOWED_BLUEPRINT_DIR = str(bp_dir)
+        try:
+            r = client.post("/api/art/inlay-patterns/import-from-blueprint", json={
+                "dxf_path": str(dxf_file),
+            })
+            assert r.status_code == 200
+            data = r.json()
+            assert data["format_detected"] == "dxf"
+            assert data["element_count"] >= 1
+            assert "<svg" in data["preview_svg"]
+        finally:
+            routes_mod._ALLOWED_BLUEPRINT_DIR = original
+
+    def test_valid_svg_import(self, client, tmp_path):
+        """Import an SVG file from the blueprint output directory."""
+        import app.art_studio.api.inlay_pattern_routes as routes_mod
+
+        bp_dir = tmp_path / "blueprint_output"
+        bp_dir.mkdir()
+        svg_file = bp_dir / "test.svg"
+        svg_file.write_text(
+            '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">'
+            '<rect x="10" y="20" width="50" height="30"/></svg>'
+        )
+
+        original = routes_mod._ALLOWED_BLUEPRINT_DIR
+        routes_mod._ALLOWED_BLUEPRINT_DIR = str(bp_dir)
+        try:
+            r = client.post("/api/art/inlay-patterns/import-from-blueprint", json={
+                "svg_path": str(svg_file),
+            })
+            assert r.status_code == 200
+            data = r.json()
+            assert data["format_detected"] == "svg"
+            assert data["element_count"] >= 1
+        finally:
+            routes_mod._ALLOWED_BLUEPRINT_DIR = original

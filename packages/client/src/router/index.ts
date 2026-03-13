@@ -249,6 +249,11 @@ const routes: RouteRecordRaw[] = [
     name: "ArtStudioFretMarkers",
     component: () => import("@/views/art-studio/FretMarkersView.vue"),
   },
+  {
+    path: "/art-studio/inlay-patterns",
+    name: "ArtStudioInlayPatterns",
+    component: () => import("@/views/art-studio/InlayPatternView.vue"),
+  },
 
   // Preset Hub
   {
