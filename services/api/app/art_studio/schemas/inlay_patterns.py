@@ -17,6 +17,8 @@ from pydantic import BaseModel, ConfigDict, Field
 InlayShape = Literal[
     "herringbone", "diamond", "greek_key", "spiral", "sunburst", "feather",
     "celtic_motif", "vine_scroll", "girih_rosette", "binding_flow",
+    "hex_chain", "chevron_panel", "parquet_panel", "nested_diamond",
+    "rope_border_motif", "twisted_rope", "compose_band",
 ]
 
 ExportFormat = Literal["svg", "dxf", "layered_svg"]
@@ -98,6 +100,27 @@ class InlayExportRequest(BaseModel):
 # ---------------------------------------------------------------------------
 # Import response
 # ---------------------------------------------------------------------------
+
+class ComposeBandRequest(BaseModel):
+    """Request to generate a composite multi-layer band."""
+    model_config = ConfigDict(extra="forbid")
+
+    preset: Optional[str] = Field(default=None, description="Preset name")
+    layers: List[Dict[str, Any]] = Field(
+        default_factory=list,
+        description="Layer dicts: [{shape, params, weight}, ...]",
+    )
+    band_width_mm: float = Field(default=150, gt=0)
+    band_height_mm: float = Field(default=25, gt=0)
+    gap_mm: float = Field(default=0.5, ge=0)
+    repeats: int = Field(default=1, ge=1)
+    mirror: bool = False
+    materials: List[str] = Field(default=["mop", "ebony", "koa"])
+    bg_material: str = "ebony"
+    include_offsets: bool = False
+    male_offset_mm: float = Field(default=0.10, ge=0)
+    pocket_offset_mm: float = Field(default=0.10, ge=0)
+
 
 class InlayImportResponse(BaseModel):
     """Response after importing a DXF/SVG/CSV file."""

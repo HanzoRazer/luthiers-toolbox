@@ -9,10 +9,13 @@ Integrates all three prototype layers:
 """
 from __future__ import annotations
 
+from typing import Any, Dict
+
 from fastapi import APIRouter, HTTPException, UploadFile, File
 from fastapi.responses import Response
 
 from ..schemas.inlay_patterns import (
+    ComposeBandRequest,
     ExportFormat,
     InlayExportRequest,
     InlayGenerateRequest,
@@ -158,6 +161,55 @@ async def export_inlay(req: InlayExportRequest) -> Response:
             media_type="image/svg+xml",
             headers={"Content-Disposition": f'attachment; filename="{filename}.svg"'},
         )
+
+
+# ---------------------------------------------------------------------------
+# Compose (multi-layer band)
+# ---------------------------------------------------------------------------
+
+@router.post("/compose", response_model=InlayGenerateResponse)
+async def compose_band_endpoint(req: ComposeBandRequest) -> InlayGenerateResponse:
+    """Generate a composite multi-layer band from stacked patterns."""
+    compose_params: Dict[str, Any] = {}
+    if req.preset:
+        compose_params["preset"] = req.preset
+    if req.layers:
+        compose_params["layers"] = req.layers
+    compose_params["band_width_mm"] = req.band_width_mm
+    compose_params["band_height_mm"] = req.band_height_mm
+    compose_params["gap_mm"] = req.gap_mm
+    compose_params["repeats"] = req.repeats
+    compose_params["mirror"] = req.mirror
+
+    try:
+        geo = generate_inlay_pattern("compose_band", compose_params)
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+
+    if req.include_offsets:
+        svg = collection_to_layered_svg(
+            geo,
+            male_offset_mm=req.male_offset_mm,
+            pocket_offset_mm=req.pocket_offset_mm,
+            materials=req.materials,
+            bg_material=req.bg_material,
+        )
+    else:
+        svg = collection_to_svg(
+            geo,
+            materials=req.materials,
+            bg_material=req.bg_material,
+            for_export=False,
+        )
+
+    return InlayGenerateResponse(
+        shape="compose_band",
+        svg=svg,
+        width_mm=geo.width_mm,
+        height_mm=geo.height_mm,
+        element_count=len(geo.elements),
+        is_radial=geo.radial,
+    )
 
 
 # ---------------------------------------------------------------------------
