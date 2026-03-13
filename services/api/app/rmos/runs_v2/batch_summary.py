@@ -92,6 +92,123 @@ class BatchSummaryPorts:
     get_run: Any
 
 
+# --- Helper functions extracted for complexity reduction ---
+
+
+def _load_artifacts(
+    ports: BatchSummaryPorts,
+    tree: Dict[str, Any],
+    session_id: str,
+    batch_label: str,
+    tool_kind: Optional[str],
+    max_nodes: int,
+) -> List[Dict[str, Any]]:
+    """Load artifacts from tree nodes, with fallback to flat listing."""
+    nodes = tree.get("nodes") or []
+    ids = [n.get("id") for n in nodes if isinstance(n, dict) and n.get("id")]
+
+    artifacts: List[Dict[str, Any]] = []
+    for aid in ids:
+        art = ports.get_run(aid)
+        if isinstance(art, dict):
+            artifacts.append(art)
+
+    if artifacts:
+        return artifacts
+
+    # Fallback: tree had no nodes but batch might exist flat
+    flat = ports.list_runs_filtered(
+        session_id=session_id,
+        batch_label=batch_label,
+        tool_kind=tool_kind,
+        limit=max_nodes,
+    )
+    items = flat.get("items") if isinstance(flat, dict) else flat
+    if isinstance(items, list):
+        return [a for a in items if isinstance(a, dict)]
+    return []
+
+
+def _compute_type_buckets(
+    artifacts: List[Dict[str, Any]],
+) -> Tuple[Dict[str, int], Dict[str, Optional[str]]]:
+    """Group artifacts by type, compute counts and latest IDs."""
+    by_type: Dict[str, List[Dict[str, Any]]] = {}
+    for a in artifacts:
+        t = _type_bucket(_kind(a))
+        by_type.setdefault(t, []).append(a)
+
+    counts = {t: len(v) for t, v in by_type.items()}
+    latest = {t: _pick_latest(v) for t, v in by_type.items()}
+    latest_ids = {t: _artifact_id(a) if a else None for t, a in latest.items()}
+
+    return counts, latest_ids
+
+
+def _compute_time_bounds(
+    artifacts: List[Dict[str, Any]],
+) -> Tuple[Optional[str], Optional[str]]:
+    """Compute first_seen and last_seen timestamps."""
+    created = [c for c in (_created_utc(a) for a in artifacts) if c]
+    if not created:
+        return None, None
+    created.sort()
+    return created[0], created[-1]
+
+
+def _compute_rollups(
+    artifacts: List[Dict[str, Any]],
+) -> Tuple[str, Optional[str]]:
+    """Compute overall status and risk rollups."""
+    statuses = [s for s in (_status(a) for a in artifacts) if s]
+    risks = [r for r in (_risk_bucket(a) for a in artifacts) if r]
+    return _rollup_status(statuses), _rollup_risk(risks)
+
+
+def _resolve_root_id(
+    ports: BatchSummaryPorts,
+    tree: Dict[str, Any],
+    session_id: str,
+    batch_label: str,
+    tool_kind: Optional[str],
+) -> Optional[str]:
+    """Resolve batch root ID with fallback to resolver."""
+    root_id = tree.get("root_artifact_id")
+    if root_id:
+        return root_id
+
+    try:
+        return resolve_batch_root(
+            list_runs_filtered=ports.list_runs_filtered,
+            session_id=session_id,
+            batch_label=batch_label,
+            tool_kind=tool_kind,
+        )
+    except (ValueError, TypeError, KeyError, AttributeError) as e:
+        logger.warning(
+            "Failed to resolve batch root for session=%s batch=%s: %s",
+            session_id, batch_label, e,
+        )
+        return None
+
+
+_STAGE_KEYS = ("spec", "plan", "decision", "toolpaths", "execution", "job_log", "learning_event", "other")
+
+
+def _build_stages_dict(
+    counts: Dict[str, int],
+    latest_ids: Dict[str, Optional[str]],
+) -> Dict[str, Dict[str, Any]]:
+    """Build stages dict for UI cards."""
+    return {
+        key: {"latest_id": latest_ids.get(key), "count": counts.get(key, 0)}
+        for key in _STAGE_KEYS
+    }
+
+
+# --- Main function (now orchestrates helpers) ---
+
+
 def build_batch_summary(
     ports: BatchSummaryPorts,
     *,
@@ -115,71 +232,13 @@ def build_batch_summary(
         tool_kind=tool_kind,
         limit=max_nodes,
     )
-    nodes = tree.get("nodes") or []
-    ids = [n.get("id") for n in nodes if isinstance(n, dict) and n.get("id")]
 
-    artifacts: List[Dict[str, Any]] = []
-    for aid in ids:
-        art = ports.get_run(aid)
-        if isinstance(art, dict):
-            artifacts.append(art)
-
-    # fallback if tree had no nodes but batch exists flat
-    if not artifacts:
-        flat = ports.list_runs_filtered(session_id=session_id, batch_label=batch_label, tool_kind=tool_kind, limit=max_nodes)
-        items = flat.get("items") if isinstance(flat, dict) else flat
-        if isinstance(items, list):
-            artifacts = [a for a in items if isinstance(a, dict)]
-
-    # counts + buckets
-    by_type: Dict[str, List[Dict[str, Any]]] = {}
-    for a in artifacts:
-        t = _type_bucket(_kind(a))
-        by_type.setdefault(t, []).append(a)
-
-    counts = {t: len(v) for t, v in by_type.items()}
-
-    latest = {t: _pick_latest(v) for t, v in by_type.items()}
-    latest_ids = {t: _artifact_id(a) if a else None for t, a in latest.items()}
-
-    # time bounds
-    created = [c for c in (_created_utc(a) for a in artifacts) if c]
-    created.sort()
-    first_seen = created[0] if created else None
-    last_seen = created[-1] if created else None
-
-    # rollups across all artifacts (or key types if you want to be stricter later)
-    statuses = [s for s in (_status(a) for a in artifacts) if s]
-    risks = [r for r in (_risk_bucket(a) for a in artifacts) if r]
-
-    overall_status = _rollup_status(statuses)
-    overall_risk = _rollup_risk(risks)
-
-    # root resolution (prefer resolver, but keep tree root if present)
-    root_id = tree.get("root_artifact_id")
-    if not root_id:
-        try:
-            root_id = resolve_batch_root(
-                list_runs_filtered=ports.list_runs_filtered,
-                session_id=session_id,
-                batch_label=batch_label,
-                tool_kind=tool_kind,
-            )
-        except (ValueError, TypeError, KeyError, AttributeError) as e:  # WP-1: narrowed from except Exception
-            logger.warning("Failed to resolve batch root for session=%s batch=%s: %s", session_id, batch_label, e)
-            root_id = None
-
-    # small "stage" surface for UI cards
-    stages = {
-        "spec": {"latest_id": latest_ids.get("spec"), "count": counts.get("spec", 0)},
-        "plan": {"latest_id": latest_ids.get("plan"), "count": counts.get("plan", 0)},
-        "decision": {"latest_id": latest_ids.get("decision"), "count": counts.get("decision", 0)},
-        "toolpaths": {"latest_id": latest_ids.get("toolpaths"), "count": counts.get("toolpaths", 0)},
-        "execution": {"latest_id": latest_ids.get("execution"), "count": counts.get("execution", 0)},
-        "job_log": {"latest_id": latest_ids.get("job_log"), "count": counts.get("job_log", 0)},
-        "learning_event": {"latest_id": latest_ids.get("learning_event"), "count": counts.get("learning_event", 0)},
-        "other": {"latest_id": latest_ids.get("other"), "count": counts.get("other", 0)},
-    }
+    artifacts = _load_artifacts(ports, tree, session_id, batch_label, tool_kind, max_nodes)
+    counts, latest_ids = _compute_type_buckets(artifacts)
+    first_seen, last_seen = _compute_time_bounds(artifacts)
+    overall_status, overall_risk = _compute_rollups(artifacts)
+    root_id = _resolve_root_id(ports, tree, session_id, batch_label, tool_kind)
+    stages = _build_stages_dict(counts, latest_ids)
 
     return {
         "session_id": session_id,
