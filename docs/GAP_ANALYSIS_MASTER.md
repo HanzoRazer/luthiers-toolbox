@@ -167,7 +167,7 @@
 | GAP-04 | 24-Fret Strat | Pickup position calculator | **Resolved** (06d28e5c) |
 | NECK-01 | Strat Neck | Strat headstock outline generator — `FENDER_STRAT` enum falls through to paddle headstock | **Resolved** (289b4ac4) |
 | GAP-01 | 24-Fret Strat | Stratocaster headstock outline is incomplete stub (same as NECK-01) | **Resolved** (289b4ac4) |
-| GAP-05 | 24-Fret Strat | Fretboard overhang channel — no geometry or preset for 24-fret bolt-on | HIGH |
+| GAP-05 | 24-Fret Strat | Fretboard overhang channel — no geometry or preset for 24-fret bolt-on | **Resolved** (overhang_channel_calc.py) |
 | BEN-GAP-04 | Benedetto | Neck binding geometry missing — must account for fretboard taper and radius | HIGH |
 | BEN-GAP-05 | Benedetto | Headstock binding geometry missing — tightest bend at ~20mm tip radius | HIGH |
 | OM-GAP-06 | OM-28 | Martin headstock outline missing — neither slotted nor solid | **Resolved** (5cd6c2ba) |
@@ -181,7 +181,7 @@
 2. **`generators/body_outline/stratocaster.py`** — Strat body outline generator with parametric contour cuts, horn geometry, belly cut. Resolves GAP-07.
 3. **`calculators/pickup_position.py`** — Pickup position calculator: takes scale length, pickup count, pickup type → returns XY positions. Resolves GAP-04.
 4. **`calculators/binding_geometry.py`** — Offset curve generation for body/neck/headstock binding paths, with bend-radius constraints and miter joint angle computation. Resolves BEN-GAP-04, BEN-GAP-05, BEN-GAP-07.
-5. **24-fret extensions** — Fretboard overhang channel geometry preset, neck profile stations extended to 19.14". Resolves GAP-05.
+5. **24-fret extensions** — ~~Fretboard overhang channel geometry preset, neck profile stations extended to 19.14".~~ **RESOLVED** — `calculators/overhang_channel_calc.py` exists with `calculate_24fret_strat_overhang()` + `generate_channel_outline()`.
 
 ---
 
