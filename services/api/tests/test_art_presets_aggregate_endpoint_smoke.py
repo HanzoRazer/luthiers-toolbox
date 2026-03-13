@@ -67,7 +67,7 @@ def test_presets_aggregate_fields_when_presets_exist(client, monkeypatch):
         }
     ]
     monkeypatch.setattr(
-        "app.routers.art_presets_router.list_presets",
+        "app.routers.art.root_art_router.list_presets",
         lambda lane=None: mock_presets
     )
 
@@ -110,7 +110,7 @@ def test_presets_aggregate_stats_are_numeric(client, monkeypatch):
         }
     ]
     monkeypatch.setattr(
-        "app.routers.art_presets_router.list_presets",
+        "app.routers.art.root_art_router.list_presets",
         lambda lane=None: mock_presets
     )
 
@@ -140,7 +140,7 @@ def test_presets_aggregate_health_color_valid(client, monkeypatch):
         }
     ]
     monkeypatch.setattr(
-        "app.routers.art_presets_router.list_presets",
+        "app.routers.art.root_art_router.list_presets",
         lambda lane=None: mock_presets
     )
 
@@ -164,7 +164,7 @@ def test_presets_aggregate_trend_direction_valid(client, monkeypatch):
         }
     ]
     monkeypatch.setattr(
-        "app.routers.art_presets_router.list_presets",
+        "app.routers.art.root_art_router.list_presets",
         lambda lane=None: mock_presets
     )
 
@@ -194,7 +194,7 @@ def test_presets_aggregate_lane_filter_works(client, monkeypatch):
         return mock_presets_all
 
     monkeypatch.setattr(
-        "app.routers.art_presets_router.list_presets",
+        "app.routers.art.root_art_router.list_presets",
         mock_list_presets
     )
 
@@ -219,7 +219,7 @@ def test_presets_aggregate_lane_filter_works(client, monkeypatch):
 def test_presets_aggregate_empty_when_no_presets(client, monkeypatch):
     """Returns empty list when no presets exist."""
     monkeypatch.setattr(
-        "app.routers.art_presets_router.list_presets",
+        "app.routers.art.root_art_router.list_presets",
         lambda lane=None: []
     )
 
@@ -250,7 +250,7 @@ def test_presets_aggregate_lineage_fields(client, monkeypatch):
         }
     ]
     monkeypatch.setattr(
-        "app.routers.art_presets_router.list_presets",
+        "app.routers.art.root_art_router.list_presets",
         lambda lane=None: mock_presets
     )
 
