@@ -1,8 +1,8 @@
 # Unfinished Remediation Efforts
 
-> **Generated:** March 10, 2026  
-> **Source:** Cross-repo search of docs, CI baselines, reports, and planning files.  
-> **Count:** 31 unfinished efforts — 17 from planning documents + 14 found embedded in code.
+> **Generated:** March 10, 2026 | **Updated:** March 12, 2026
+> **Source:** Cross-repo search of docs, CI baselines, reports, and planning files.
+> **Count:** 31 efforts tracked — 22 resolved, 9 remaining.
 
 ---
 
@@ -14,7 +14,7 @@
 | 2 | God-Object Decomposition — 14 Python files >500 LOC | REMEDIATION_PLAN_v2.md (Phase 13) | ✅ ~90% done (most decomposed to subdirs) | ~~HIGH~~ |
 | 3 | Router Consolidation — 132 → <100 files | ROUTER_CONSOLIDATION_ROADMAP.md | ❌ Not started | MEDIUM |
 | 4 | 69 Stub Endpoints — 15+ high-priority | STUB_DEBT_REPORT.md | ✅ Wired (see #17) | ~~HIGH~~ |
-| 5 | 113 Instrument Build Gaps — 4 CRITICAL DXFs | GAP_ANALYSIS_MASTER.md | 🟡 Partial | CRITICAL |
+| 5 | 113 Instrument Build Gaps — 67 resolved | GAP_ANALYSIS_MASTER.md | ✅ ~60% done (most CAM modules exist) | ~~CRITICAL~~ HIGH |
 | 6 | Vue Component Decomposition — 1 outlier deferred | VUE_DECOMPOSITION_GUIDE.md | ✅ ~90% done (ToolpathPlayer.vue → Phase 4) | ~~MEDIUM~~ |
 | 7 | Score 7 Plan — Phases 1.3–4.3 | SCORE_7_PLAN.md | 🟡 ~50% done (1a2880a5) | HIGH |
 | 8 | Vectorizer Upgrade — 3 features not started | VECTORIZER_UPGRADE_PLAN.md | 🟡 Partial | MEDIUM |
@@ -135,32 +135,37 @@
 
 ---
 
-### 5. Instrument Build Gaps — 113 Total, 4 CRITICAL DXFs
+### 5. Instrument Build Gaps — 113 Total (67 Resolved)
 
-**Source:** [GAP_ANALYSIS_MASTER.md](GAP_ANALYSIS_MASTER.md) (updated 2026-03-09)
+**Source:** [GAP_ANALYSIS_MASTER.md](GAP_ANALYSIS_MASTER.md) (updated 2026-03-12)
 
-**CRITICAL DXF problems — every build blocked:**
+**Status: 🟢 Most critical gaps resolved**
 
-| Instrument | Gap |
-|-----------|-----|
-| Les Paul 1959 | Multi-layer CAM DXF never delivered (8 layers referenced in spec) |
-| Smart Guitar | 12.1% narrow, 4.3% short vs spec; X-axis 22.2mm off-center |
-| Explorer 1958 | DXF coarse (24 pts), wrong format (AC1024 not R12) |
-| J45 Vine | Bracing DXF: 460 scattered entities, 0 closed polylines |
+**Resolved DXF problems:**
+- ✅ Les Paul 1959 — Multi-layer CAM DXF delivered (461caebc)
+- ✅ Smart Guitar — Geometry correction pipeline (638b7578)
+- ✅ Explorer 1958 — DXF preprocessor pipeline (a7a9ee24)
+- ✅ J45 Vine — Bracing DXF cleanup (30e50bb3)
 
-**CAM modules that don't exist yet:**
+**Resolved CAM modules:**
 
-| Module | Instruments Unblocked |
-|--------|----------------------|
-| `app/cam/profiling/` — Perimeter profiling w/ tabs + lead-ins | 4 instruments |
-| `app/cam/binding/` — Binding/purfling channel routing | 2 instruments |
-| `app/cam/neck/` — Neck CNC pipeline (truss rod, profile carving, frets) | 3 instruments |
-| `app/cam/carving/` — 3D surface carving (archtop graduation) | 2 instruments |
-| `app/cam/drilling/` — G83 peck cycles, parametric holes | 2 instruments |
+| Module | Status | Commit |
+|--------|--------|--------|
+| `app/cam/profiling/` — Perimeter profiling w/ tabs + lead-ins | ✅ Resolved | 8f74f599 |
+| `app/cam/binding/` — Binding/purfling channel routing | ✅ Resolved | e60e2df0 |
+| `app/cam/drilling/` — G83 peck cycles, parametric holes | ✅ Resolved | ba9574fd |
+| V-carve production module | ✅ Resolved | 64f1a87f |
+| SVG→DXF converter | ✅ Resolved | fe2b4e62 |
+| Vectorizer Phase 3/4 API | ✅ Resolved | 08a7db0d, b8ba05b3 |
 
-**Other gap categories:** Spec completeness, geometry generators, API coverage, vectorizer integration, headstock outlines (5 shapes pending), pickup position calculator (blocked on physical measurements).
+**Still outstanding:**
 
-**Effort estimate:** 120–200 hours total
+| Module | Impact |
+|--------|--------|
+| `app/cam/neck/` — Neck CNC pipeline | LP-GAP-03 |
+| `app/cam/carving/` — 3D surface carving (archtop graduation) | BEN-GAP-08 |
+
+**Effort estimate:** ~20–40 hours remaining (down from 120–200)
 
 ---
 
@@ -654,7 +659,7 @@ Several efforts overlap and should be coordinated:
 |----------|--------|-----------|
 | **P0** | #15 — Tailwind/UX fixes | Styles are visibly broken right now |
 | **P0** | #16 — CNC safety fail-closed | Safety-critical — bad G-code risks real harm |
-| **P0** | #5 — CRITICAL DXF gaps | 4 instruments entirely blocked |
+| ~~**P0**~~ | ~~#5 — CRITICAL DXF gaps~~ | ✅ DXFs resolved; CAM modules exist |
 | **P1** | #1 — Exception hardening | 602 broad catches in safety paths |
 | **P1** | #10 — Bandit defusedxml | 2-hour fix removes real security risk |
 | **P1** | #14 — Singleton store refactor | Blocks any multi-instance deployment |

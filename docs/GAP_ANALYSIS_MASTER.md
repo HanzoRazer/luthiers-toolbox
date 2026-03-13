@@ -1,6 +1,6 @@
 # Gap Analysis Master — All Instrument Build Handoffs
 
-> **Generated:** 2026-03-09 | **Updated:** 2026-03-10 | **Sources:** 11 build handoff documents | **Total Gaps:** 113
+> **Generated:** 2026-03-09 | **Updated:** 2026-03-12 | **Sources:** 11 build handoff documents | **Total Gaps:** 113 (67 resolved)
 
 ---
 
@@ -102,21 +102,21 @@
 
 | Gap ID | Instrument | Description | Severity |
 |--------|-----------|-------------|----------|
-| OM-GAP-03 | OM-28 | No binding geometry backend at all — no offset curve generator, no channel calculator | CRITICAL |
-| OM-GAP-04 | OM-28 | No purfling channel CAM module — even with binding geometry, no toolpath generation | CRITICAL |
-| BEN-GAP-01 | Benedetto | No binding channel routing CAM — archtop curved surface adds complexity | CRITICAL |
-| OM-GAP-02 | OM-28 | Body perimeter profiling toolpath missing — only interior pocket clearing exists | HIGH |
-| BEN-GAP-03 | Benedetto | Body perimeter profiling missing (duplicate of OM-GAP-02) | HIGH |
-| VINE-07 | J45 Vine | Body perimeter profiling missing — no outside-contour routing with tabs | HIGH |
-| FV-GAP-03 | Flying V | No `ProfileToolpath` class — body perimeter is hand-generated | HIGH |
+| OM-GAP-03 | OM-28 | Binding geometry backend — offset curve generator, channel calculator | **Resolved** (e60e2df0) |
+| OM-GAP-04 | OM-28 | Purfling channel CAM module | **Resolved** (e60e2df0) |
+| BEN-GAP-01 | Benedetto | Binding channel routing CAM | **Resolved** (e60e2df0) |
+| OM-GAP-02 | OM-28 | Body perimeter profiling toolpath | **Resolved** (8f74f599) |
+| BEN-GAP-03 | Benedetto | Body perimeter profiling | **Resolved** (8f74f599) |
+| VINE-07 | J45 Vine | Body perimeter profiling with tabs | **Resolved** (8f74f599) |
+| FV-GAP-03 | Flying V | `ProfileToolpath` class | **Resolved** (8f74f599) |
 | BEN-GAP-08 | Benedetto | Archtop top/back carving CAM missing — graduation map exists, no toolpath gen | HIGH |
 | BEN-GAP-09 | Benedetto | F-hole routing CAM missing — DXFs exist but no CAM module | MEDIUM |
 | LP-GAP-03 | Les Paul 1959 | No neck CNC pipeline — only 2D geometry exists, no G-code for neck profile/truss rod/fret slots | HIGH |
-| OM-PURF-01 | OM Purfling | No binding channel CAM module — standalone script only | HIGH |
-| OM-PURF-02 | OM Purfling | No purfling ledge operation — needs dedicated CAM step | HIGH |
+| OM-PURF-01 | OM Purfling | Binding channel CAM module | **Resolved** (e60e2df0) |
+| OM-PURF-02 | OM Purfling | Purfling ledge operation | **Resolved** (e60e2df0) |
 | FV-GAP-05 | Flying V | No pocket toolpath generator that consumes outline data for parametric cavity placement | MEDIUM |
-| FV-GAP-06 | Flying V | String-through drilling has no backend API — G83 peck cycle hand-generated | MEDIUM |
-| VINE-03 | J45 Vine | V-carve G-code is demo quality — ignores cutter comp, chipload, stepdown | HIGH |
+| FV-GAP-06 | Flying V | String-through drilling backend API (G83 peck cycle) | **Resolved** (ba9574fd) |
+| VINE-03 | J45 Vine | Production V-carve G-code | **Resolved** (64f1a87f) |
 | OM-PURF-03 | OM Purfling | No neck purfling routing — requires neck-specific fixture | MEDIUM |
 | LP-GAP-05 | Les Paul 1959 | Carved top uses elliptical paraboloid approximation vs real asymmetric carve | MEDIUM |
 | OM-PURF-06 | OM Purfling | No material-aware feed rates — generic 600mm/min for all materials | LOW |
@@ -191,14 +191,14 @@
 
 | Gap ID | Instrument | Description | Severity |
 |--------|-----------|-------------|----------|
-| VEC-GAP-01 | OM Purfling | Phase 3.6 Vectorizer has no API endpoint — only accessible via Python import | CRITICAL |
-| VINE-01 | J45 Vine | Inlay DXF → pocket milling G-code bridge missing — pipeline dead-ends at DXF | CRITICAL |
-| INLAY-01 | Custom Inlay | Headstock inlay router has 10 endpoints | **Resolved** |
-| VEC-GAP-02 | OM Purfling | Phase 4 Dimension Linking is CLI-only — no `/api/blueprint/phase4` route | HIGH |
-| VINE-04 | J45 Vine | Neck G-code generator class exists but no HTTP endpoint | HIGH |
-| OM-GAP-07 | OM-28 | Neck G-code generator has no HTTP endpoint (same as VINE-04) | HIGH |
+| VEC-GAP-01 | OM Purfling | Phase 3 Vectorizer API endpoint `/blueprint/phase3/vectorize` | **Resolved** (08a7db0d) |
+| VINE-01 | J45 Vine | Inlay pocket G-code `/export-gcode` endpoint | **Resolved** (6cfe4d12) |
+| INLAY-01 | Custom Inlay | Headstock inlay router has 10 endpoints | **Resolved** (611addfa) |
+| VEC-GAP-02 | OM Purfling | Phase 4 Dimension Linking API `/blueprint/phase4/link` | **Resolved** (b8ba05b3) |
+| VINE-04 | J45 Vine | Neck router mounted in manifest.py:372 | **Resolved** (false positive) |
+| OM-GAP-07 | OM-28 | Neck router mounted in manifest.py:372 | **Resolved** (false positive) |
 | NECK-04 | Strat Neck | Strat-specific API endpoint added | **Resolved** (65669faf) |
-| VINE-08 | J45 Vine | Bracing router mounted via router_registry manifest.py:330 | **Resolved** |
+| VINE-08 | J45 Vine | Bracing router mounted via router_registry manifest.py:330 | **Resolved** (false positive) |
 | LP-GAP-04 | Les Paul 1959 | Fret slot CAM exists (934 lines) but not wired into build pipeline | MEDIUM |
 | INLAY-05 | Custom Inlay | `inlay_prompts.py` imported by headstock/router.py | **Resolved** |
 
@@ -218,15 +218,15 @@
 
 | Gap ID | Instrument | Description | Severity |
 |--------|-----------|-------------|----------|
-| VINE-02 | J45 Vine | SVG → DXF format converter missing — Art Studio outputs SVG, CAM consumes DXF | CRITICAL |
-| VINE-01 | J45 Vine | Inlay DXF → pocket milling G-code bridge missing (also in Cat 5) | CRITICAL |
+| VINE-02 | J45 Vine | SVG→DXF `/convert` endpoint in geometry router | **Resolved** (fe2b4e62) |
+| VINE-01 | J45 Vine | Inlay→pocket milling bridge | **Resolved** (6cfe4d12) |
 | VINE-05 | J45 Vine | Unified fretboard↔headstock coordinate canvas missing — separate coord systems | HIGH |
-| VEC-GAP-03 | OM Purfling | Phase 4 `PipelineResult` has no consumer — nothing in CAM or frontend reads it | HIGH |
-| VEC-GAP-05 | OM Purfling | Phase 1 AI scale detection not passed to Phase 3 as calibration hint | MEDIUM |
-| VEC-GAP-04 | OM Purfling | Phase 3 → CAM bridge — same layer but no integration test | MEDIUM |
+| VEC-GAP-03 | OM Purfling | PipelineResult CAM adapter `/cam/blueprint/pipeline-adapter/from-pipeline` | **Resolved** (03acbb4f) |
+| VEC-GAP-05 | OM Purfling | Phase 1 → Phase 3 scale handoff `scale_hint_mm_per_pixel` | **Resolved** (f8e4dded) |
+| VEC-GAP-04 | OM Purfling | Blueprint → CAM integration tests (20 tests) | **Resolved** (4a0af084) |
 | INLAY-04 | Custom Inlay | No unified coordinate space — fretboard and headstock use disconnected systems | MEDIUM |
 | VINE-11 | J45 Vine | Bracing presets connected to instrument specs (J-45, Dreadnought, Jumbo) | **Resolved** (703be846) |
-| FV-GAP-04 | Flying V | Vectorizer Phase 2 never processed Flying V DWGs — DWG→DXF conversion not run | **Resolved** (ec003681) |
+| FV-GAP-04 | Flying V | Flying V CAM-ready DXF with closed LWPOLYLINE | **Resolved** (ec003681) |
 | VEC-GAP-08 | OM Purfling | OCR dimensions from Phase 3.6 unused downstream | LOW |
 
 ### Fixes
@@ -314,10 +314,10 @@
 | Gap ID | Instrument | Description | Severity |
 |--------|-----------|-------------|----------|
 | VEC-GAP-01 | OM Purfling | Phase 3 Vectorizer at /blueprint/phase3/vectorize | **Resolved** (08a7db0d) |
-| VEC-GAP-02 | OM Purfling | Phase 4 Dimension Linking is CLI-only | HIGH |
-| VEC-GAP-03 | OM Purfling | Phase 4 `PipelineResult` has no consumer | HIGH |
-| VEC-GAP-04 | OM Purfling | Phase 3 → CAM bridge has no integration test | MEDIUM |
-| VEC-GAP-05 | OM Purfling | Phase 1 scale detection not passed to Phase 3 | MEDIUM |
+| VEC-GAP-02 | OM Purfling | Phase 4 Dimension Linking API `/blueprint/phase4/link` | **Resolved** (b8ba05b3) |
+| VEC-GAP-03 | OM Purfling | PipelineResult CAM adapter | **Resolved** (03acbb4f) |
+| VEC-GAP-04 | OM Purfling | Phase 3 → CAM integration tests (20 tests) | **Resolved** (4a0af084) |
+| VEC-GAP-05 | OM Purfling | Phase 1 → Phase 3 scale handoff | **Resolved** (f8e4dded) |
 | VEC-GAP-06 | OM Purfling | Frontend covers Phase 1 only | MEDIUM |
 | VEC-GAP-07 | OM Purfling | Phase 3 `constants.py` missing `PHASE3_AVAILABLE` flag | MEDIUM |
 | VEC-GAP-08 | OM Purfling | OCR dimensions from Phase 3.6 unused downstream | LOW |
@@ -416,28 +416,28 @@
 
 | Fix | Resolves | Impact |
 |-----|----------|--------|
-| DXF regeneration pipeline | LP-GAP-01, EX-GAP-01/02/03, SG-GAP-01/02, ~~VINE-09~~ | **6 critical** (VINE-09 resolved) — remaining builds blocked |
-| Body perimeter profiling module | OM-GAP-02, BEN-GAP-03, VINE-07, FV-GAP-03 | **4 high** — 4 instruments can't cut outlines |
-| Binding/purfling CAM module | OM-GAP-03/04, BEN-GAP-01/02, OM-PURF-01/02 | **4 critical + 2 high** — acoustics blocked |
-| SVG→DXF converter | VINE-02 | **1 critical** — all art→CAM blocked |
-| Pickup position calculator | GAP-04, PHYS-01 | **1 critical** — all Strat work blocked ⏸️ (physical deps) |
+| ~~DXF regeneration pipeline~~ | ~~LP-GAP-01, EX-GAP-01/02/03, SG-GAP-01/02~~ | ✅ **Resolved** |
+| ~~Body perimeter profiling module~~ | ~~OM-GAP-02, BEN-GAP-03, VINE-07, FV-GAP-03~~ | ✅ **Resolved** (8f74f599) |
+| ~~Binding/purfling CAM module~~ | ~~OM-GAP-03/04, BEN-GAP-01, OM-PURF-01/02~~ | ✅ **Resolved** (e60e2df0) |
+| ~~SVG→DXF converter~~ | ~~VINE-02~~ | ✅ **Resolved** (fe2b4e62) |
+| ~~Pickup position calculator~~ | ~~GAP-04~~ | ✅ **Resolved** (06d28e5c) |
 
 ### Phase 2 — Complete Core Generators
 
 | Fix | Resolves | Impact |
 |-----|----------|--------|
-| Headstock outlines (5 shapes) | NECK-01, GAP-01, OM-GAP-06, BEN-GAP-06, VINE-06 | 5 instruments unblocked |
-| Strat body outline generator | GAP-07 | Strat production enabled |
+| ~~Headstock outlines (5 shapes)~~ | ~~NECK-01, GAP-01, OM-GAP-06, BEN-GAP-06, VINE-06~~ | ✅ **Resolved** (5cd6c2ba, 289b4ac4) |
+| ~~Strat body outline generator~~ | ~~GAP-07~~ | ✅ **Resolved** (0642b77c) |
 | Neck CNC pipeline | LP-GAP-03 | Full-instrument builds enabled |
-| Mount existing routers | VINE-08, VINE-04, INLAY-01 | 3 modules go live with zero new code |
+| ~~Mount existing routers~~ | ~~VINE-08, VINE-04, INLAY-01~~ | ✅ **Resolved** (already mounted) |
 | Post-processor G43/G41 | LP-GAP-06, EX-GAP-13, SG-GAP-14, OM-PURF-07, FV-GAP-07 | Safety + automation for all builds |
 
 ### Phase 3 — Polish & Validation
 
 | Fix | Resolves | Impact |
 |-----|----------|--------|
-| Spec JSON validator | SG-GAP-03 through SG-GAP-12 | Data quality |
+| ~~Spec JSON validator~~ | ~~SG-GAP-03 through SG-GAP-12~~ | ✅ **Resolved** (6b947186, 892ed3dd, 6fa4d61b) |
 | Reference measurement DB | LP-GAP-02, EX-GAP-04 through EX-GAP-10 | Position accuracy |
-| Vectorizer Phase 3/4 API | VEC-GAP-01 through VEC-GAP-08 | Blueprint→CAM pipeline |
+| ~~Vectorizer Phase 3/4 API~~ | ~~VEC-GAP-01 through VEC-GAP-05~~ | ✅ **Resolved** (08a7db0d, b8ba05b3, etc.) |
 | Frontend wiring | INLAY-02/06, NECK-05, VEC-GAP-06 | UI completeness |
 | G-code depth validator | LP-GAP-08, EX-GAP-12, SG-GAP-13 | Build safety |
