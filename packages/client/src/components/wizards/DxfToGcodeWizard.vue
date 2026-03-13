@@ -37,7 +37,7 @@
           <div v-if="!file" class="drop-prompt">
             <span class="icon">📁</span>
             <p>Drag and drop DXF file here</p>
-            <button @click="$refs.fileInput.click()" class="btn btn-secondary">
+            <button @click="fileInput?.click()" class="btn btn-secondary">
               Or click to browse
             </button>
           </div>
@@ -189,6 +189,9 @@
 
 <script setup lang="ts">
 import { ref, computed } from 'vue'
+
+// Template refs
+const fileInput = ref<HTMLInputElement | null>(null)
 
 const steps = [
   { label: 'Upload' },
