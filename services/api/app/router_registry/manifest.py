@@ -24,11 +24,12 @@ ROUTER_MANIFEST: List[RouterSpec] = [
         module="app.governance.metrics_router",
         prefix="",  # /metrics at root
         tags=["Metrics"],
-        required=True,
+        enabled=False,  # TODO: implement metrics router
+        required=False,
         category="core",
     ),
     RouterSpec(
-        module="app.governance.meta_router",
+        module="app.governance.governance_consolidated_router",
         prefix="",  # router has /api/_meta prefix
         tags=["Meta", "Governance"],
         required=True,  # CI routing truth validation
@@ -171,10 +172,10 @@ ROUTER_MANIFEST: List[RouterSpec] = [
     ),
     RouterSpec(
         module="app.routers.dxf_adaptive_consolidated_router",
-        attr="router",
+        router_attr="router",
         prefix="/api",
         tags=["cam", "dxf", "adaptive"],
-        governance={"lane": "mvp"},
+        category="cam",
     ),
     RouterSpec(
         module="app.routers.dxf_preflight_router",
