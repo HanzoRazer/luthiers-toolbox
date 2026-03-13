@@ -43,7 +43,6 @@ from pydantic import BaseModel
 from app.services.job_int_log import (
     load_all_job_logs,
     find_job_log_by_run_id,
-    append_job_log_entry,
 )
 
 

@@ -27,9 +27,6 @@ from ..cam.biarc_math import (
     vec_len,
     vec_dot,
     fillet_between,
-    angle_to_point,
-    arc_center_from_radius,
-    arc_tessellate,
 )
 
 router = APIRouter(tags=["cam_gcode"])

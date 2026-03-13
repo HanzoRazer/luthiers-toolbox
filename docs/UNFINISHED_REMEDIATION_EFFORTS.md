@@ -20,7 +20,7 @@
 | 8 | Vectorizer Upgrade — 3 features not started | VECTORIZER_UPGRADE_PLAN.md | 🟡 Partial | MEDIUM |
 | 9 | Frontend Test Coverage | TESTING_STRATEGY.md / SYSTEM_EVALUATION.md | ✅ 52 tests added (38038ade) | ~~HIGH~~ |
 | 10 | Bandit Security Findings | bandit_report.txt | ✅ XML fixed, rest false positives | ~~MEDIUM~~ |
-| 11 | Vulture Dead Code | vulture_report.txt | ❌ Not resolved | LOW |
+| 11 | Vulture Dead Code | vulture_report.txt | ✅ 15 imports removed, 10 false positives | ~~LOW~~ |
 | 12 | Radon Complexity Hotspots | radon_complexity_report.txt | ❌ Not resolved | LOW |
 | 13 | File Size Baseline Violations | ci/file_size_baseline.json | 🟡 Ratcheted | MEDIUM |
 | 14 | Singleton Store Refactor | SYSTEM_EVALUATION.md | ✅ Resolved (c79dd1a7) | ~~CRITICAL~~ |
@@ -287,11 +287,30 @@ Test categories covered: rendering, icons, tooltips, sizes, accessibility, visib
 
 ### 11. Vulture Dead Code
 
-**Source:** [vulture_report.txt](../vulture_report.txt)
+**Status: ✅ RESOLVED** (March 2026)
 
-35+ unused imports, variables, and class attributes detected at 90–100% confidence. Includes: `grace_period_ms`, `moments`, `BOMInstrumentType`, `round_joints`, and others.
+**Summary (at 90%+ confidence):**
+| Before | After | Notes |
+|--------|-------|-------|
+| 25 findings | 10 remaining | 15 fixed, 10 false positives |
 
-**Effort estimate:** 3–4 hours (audit + delete)
+**Fixed (15 unused imports removed):**
+- `OutputFormat` from rosette_pattern_routes.py
+- `add_rectangle` from bracing_router.py
+- `LaborRate` from cogs_service.py
+- `ImageFilter` from pattern_renderer.py
+- `Type` from store_registry.py
+- `_RealImportResponse` from acoustics_router.py
+- `append_job_log_entry` from stub_routes.py
+- `corner_radius_for_vbit` from toolpath.py
+- `angle_to_point`, `arc_center_from_radius`, `arc_tessellate` from cam_post_v155_router.py
+- `get_scale_length_mm` from pickup_calculator_router.py
+- + function params marked as reserved with `_` prefix
+
+**Remaining (10 false positives):**
+- Blueprint re-exports (5): `Phase3Vectorizer`, `BlueprintPipeline`, `PipelineResult` - dynamically imported, re-exported for other modules
+- Prototype files (3): `prng`, `mpatches`, `selected_wood` - experimental code
+- Reserved params (2): `pickup_dcr_kohm`, `base_units` - API params for future use
 
 ---
 

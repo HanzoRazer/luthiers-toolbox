@@ -23,7 +23,6 @@ from .geometry import (
     vbit_depth_for_width,
     vbit_width_at_depth,
     calculate_stepdown,
-    corner_radius_for_vbit,
 )
 from .chipload import (
     calculate_feed_rate,

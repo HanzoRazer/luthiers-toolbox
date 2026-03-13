@@ -26,7 +26,7 @@ from pydantic import BaseModel, Field
 from ..calculators import bracing_calc
 from ..calculators.bracing_calc import BracingCalcInput, BraceSectionResult
 from ..util.dxf_compat import (
-    create_document, add_polyline, add_rectangle,
+    create_document, add_polyline,
     validate_version, DxfVersion, DXF_VERSIONS
 )
 from .bracing_presets_bridge import get_instrument_presets

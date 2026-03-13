@@ -42,7 +42,6 @@ try:
         RingSpec,
         PatternType,
         MaterialType,
-        OutputFormat,
     )
     GENERATOR_AVAILABLE = True
 except ImportError as e:  # WP-1: narrowed from except Exception

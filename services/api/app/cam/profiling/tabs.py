@@ -68,14 +68,14 @@ class TabGenerator:
     def generate_tabs(
         self,
         points: List[Pt],
-        perimeter_length_mm: float,
+        _perimeter_length_mm: float,  # Reserved for future spacing algorithm
     ) -> List[Tab]:
         """
         Generate tabs along the perimeter.
 
         Args:
             points: Closed polygon points (perimeter toolpath)
-            perimeter_length_mm: Total perimeter length
+            _perimeter_length_mm: Total perimeter length (reserved)
 
         Returns:
             List of Tab objects with positions and indices

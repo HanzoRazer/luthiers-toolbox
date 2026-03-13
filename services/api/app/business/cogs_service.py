@@ -12,7 +12,6 @@ from .schemas import (
     LaborEstimate,
     LaborEntry,
     LaborCategory,
-    LaborRate,
     OverheadItem,
     InstrumentType,
 )
