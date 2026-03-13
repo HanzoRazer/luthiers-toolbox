@@ -15,7 +15,8 @@ from pydantic import BaseModel, ConfigDict, Field
 # ---------------------------------------------------------------------------
 
 InlayShape = Literal[
-    "herringbone", "diamond", "greek_key", "spiral", "sunburst", "feather"
+    "herringbone", "diamond", "greek_key", "spiral", "sunburst", "feather",
+    "celtic_motif", "vine_scroll", "girih_rosette", "binding_flow",
 ]
 
 ExportFormat = Literal["svg", "dxf", "layered_svg"]

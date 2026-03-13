@@ -397,6 +397,164 @@ class TestCSVImport:
 
 
 # ---------------------------------------------------------------------------
+# New math infrastructure
+# ---------------------------------------------------------------------------
+
+class TestLineLineIntersect:
+    def test_perpendicular(self):
+        from app.art_studio.services.generators.inlay_geometry import line_line_intersect
+        pt = line_line_intersect((0, 0), (10, 0), (5, -5), (5, 5))
+        assert pt is not None
+        assert abs(pt[0] - 5) < 0.01
+        assert abs(pt[1] - 0) < 0.01
+
+    def test_parallel_returns_none(self):
+        from app.art_studio.services.generators.inlay_geometry import line_line_intersect
+        pt = line_line_intersect((0, 0), (10, 0), (0, 5), (10, 5))
+        assert pt is None
+
+
+class TestSubdivideCubic:
+    def test_straight_line_few_points(self):
+        from app.art_studio.services.generators.inlay_geometry import subdivide_cubic
+        pts = subdivide_cubic((0, 0), (10, 0), (20, 0), (30, 0), tol=0.5)
+        assert len(pts) >= 2
+        assert abs(pts[0][0]) < 0.01
+        assert abs(pts[-1][0] - 30) < 0.01
+
+    def test_curve_has_more_points(self):
+        from app.art_studio.services.generators.inlay_geometry import subdivide_cubic
+        pts = subdivide_cubic((0, 0), (0, 50), (50, 50), (50, 0), tol=0.5)
+        assert len(pts) > 4
+
+
+class TestTessellatePath:
+    def test_moveto_lineto(self):
+        from app.art_studio.services.generators.inlay_geometry import tessellate_path_d
+        paths = tessellate_path_d("M 0 0 L 10 0 L 10 10 Z", tol=0.5)
+        assert len(paths) >= 1
+        assert len(paths[0]) >= 3
+
+    def test_cubic_bezier(self):
+        from app.art_studio.services.generators.inlay_geometry import tessellate_path_d
+        paths = tessellate_path_d("M 0 0 C 0 50 50 50 50 0", tol=0.5)
+        assert len(paths) >= 1
+        assert len(paths[0]) > 3
+
+
+class TestCatmullRom:
+    def test_midpoint(self):
+        from app.art_studio.services.generators.inlay_geometry import catmull_rom
+        pts = [(0, 0), (0, 0), (10, 0), (10, 0)]
+        mid = catmull_rom(pts, 0.5)
+        assert abs(mid[0] - 5) < 0.5
+        assert abs(mid[1]) < 0.5
+
+
+class TestSampleSpline:
+    def test_returns_enough_points(self):
+        from app.art_studio.services.generators.inlay_geometry import sample_spline
+        pts = [(0, 0), (5, 10), (10, 0), (15, 10), (20, 0)]
+        sampled = sample_spline(pts, 20)
+        assert len(sampled) == 21
+
+
+class TestMakePoly:
+    def test_square(self):
+        from app.art_studio.services.generators.inlay_geometry import make_poly
+        verts = make_poly([90, 90, 90, 90])
+        assert len(verts) == 4
+        # All edges should be unit length
+        for i in range(4):
+            dx = verts[(i + 1) % 4][0] - verts[i][0]
+            dy = verts[(i + 1) % 4][1] - verts[i][1]
+            edge = (dx ** 2 + dy ** 2) ** 0.5
+            assert abs(edge - 1.0) < 0.01
+
+
+class TestOffsetPolylineStrip:
+    def test_strip_has_dual_rails(self):
+        from app.art_studio.services.generators.inlay_geometry import offset_polyline_strip
+        line = [(0, 0), (10, 0), (20, 0)]
+        strip = offset_polyline_strip(line, 1.0)
+        assert len(strip) >= 6  # outer + inner reversed
+        # Strip should form a closed loop (first outer ≈ last inner)
+        dx = strip[0][0] - strip[-1][0]
+        dy = strip[0][1] - strip[-1][1]
+        dist = (dx**2 + dy**2) ** 0.5
+        assert dist < 3.0  # ends near each other (within 1 offset width)
+
+
+# ---------------------------------------------------------------------------
+# New generators
+# ---------------------------------------------------------------------------
+
+class TestCelticMotif:
+    def test_lotus(self):
+        col = generate_inlay_pattern("celtic_motif", {"motif_id": "lotus", "scale_mm": 20})
+        assert len(col.elements) > 0
+        assert col.width_mm > 0
+        assert col.height_mm > 0
+
+    def test_unknown_motif_raises(self):
+        import pytest
+        with pytest.raises(ValueError, match="Unknown motif"):
+            generate_inlay_pattern("celtic_motif", {"motif_id": "nonexistent"})
+
+    def test_custom_svg_paths(self):
+        col = generate_inlay_pattern("celtic_motif", {
+            "svg_paths": ["M 0 0 L 100 0 L 100 100 L 0 100 Z"],
+            "vb_w": 100, "vb_h": 100, "scale_mm": 10,
+        })
+        assert len(col.elements) >= 1
+        assert col.width_mm > 0
+
+
+class TestVineScroll:
+    def test_basic(self):
+        col = generate_inlay_pattern("vine_scroll", {
+            "curl": 3, "leaves": 6, "length_mm": 80,
+        })
+        assert len(col.elements) >= 7  # 1 stem + 6 leaves
+        assert col.width_mm > 0
+
+    def test_no_leaves(self):
+        col = generate_inlay_pattern("vine_scroll", {"leaves": 0, "length_mm": 50})
+        # stem only
+        assert len(col.elements) >= 1
+
+
+class TestGirihRosette:
+    def test_basic(self):
+        col = generate_inlay_pattern("girih_rosette", {"edge_mm": 10})
+        assert len(col.elements) == 26  # 1 + 10 + 5 + 5 + 5
+        assert col.width_mm > 0
+        assert col.radial is True
+
+    def test_rotation(self):
+        col0 = generate_inlay_pattern("girih_rosette", {"edge_mm": 10, "rotation_deg": 0})
+        col45 = generate_inlay_pattern("girih_rosette", {"edge_mm": 10, "rotation_deg": 45})
+        # Same count, different positions
+        assert len(col0.elements) == len(col45.elements)
+        assert col0.elements[0].points[0] != col45.elements[0].points[0]
+
+
+class TestBindingFlow:
+    def test_default_oval(self):
+        col = generate_inlay_pattern("binding_flow", {"leaves": 8, "band_width": 3})
+        # 1 outline + 1 binding strip + 8 leaves
+        assert len(col.elements) >= 10
+        assert col.width_mm > 100  # oval is 380mm wide
+
+    def test_custom_contour(self):
+        contour = [[0, 0], [50, 0], [50, 50], [0, 50]]
+        col = generate_inlay_pattern("binding_flow", {
+            "contour": contour, "leaves": 4,
+        })
+        assert len(col.elements) >= 6
+
+
+# ---------------------------------------------------------------------------
 # Integration: API endpoints
 # ---------------------------------------------------------------------------
 
@@ -409,7 +567,9 @@ class TestInlayPatternAPI:
         names = {g["shape"] for g in data["generators"]}
         assert "herringbone" in names
         assert "spiral" in names
-        assert len(names) == 6
+        assert "celtic_motif" in names
+        assert "girih_rosette" in names
+        assert len(names) == 10
 
     def test_generate_preview(self, client):
         r = client.post("/api/art/inlay-patterns/generate", json={
