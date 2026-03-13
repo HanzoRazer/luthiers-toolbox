@@ -31,7 +31,6 @@ from pydantic import BaseModel
 # Import real implementation for wiring
 from ..acoustics.router_import import (
     import_acoustics_zip as _import_acoustics_zip_real,
-    ImportResponse as _RealImportResponse,
 )
 
 

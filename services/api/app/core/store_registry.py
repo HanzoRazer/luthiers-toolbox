@@ -31,7 +31,7 @@ from __future__ import annotations
 
 import logging
 import threading
-from typing import Optional, TypeVar, Type, Dict, Any, Callable
+from typing import Optional, TypeVar, Dict, Any, Callable
 
 logger = logging.getLogger(__name__)
 

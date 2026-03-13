@@ -22,7 +22,6 @@ from ....calculators.pickup_position_calc import (
     calculate_pickup_layout,
     CONFIGURATIONS,
     SCALE_LENGTHS_MM,
-    get_scale_length_mm,
     PickupLayoutResult,
 )
 
