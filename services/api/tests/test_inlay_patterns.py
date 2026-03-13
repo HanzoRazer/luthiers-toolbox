@@ -573,7 +573,10 @@ class TestInlayPatternAPI:
         assert "compose_band" in names
         assert "checker_chevron" in names
         assert "amsterdam_flower" in names
-        assert len(names) == 22
+        assert "oak_medallion" in names
+        assert "floral_spray" in names
+        assert "open_flower_oval" in names
+        assert len(names) == 25
 
     def test_generate_preview(self, client):
         r = client.post("/api/art/inlay-patterns/generate", json={
@@ -1096,6 +1099,120 @@ class TestSqFloral:
 
     def test_grain_angle_set(self):
         col = generate_inlay_pattern("sq_floral", {"n_fold": 6})
+        for e in col.elements:
+            assert hasattr(e, "grain_angle")
+
+
+class TestOakMedallion:
+    def test_basic(self):
+        col = generate_inlay_pattern("oak_medallion", {
+            "n_fold": 12, "outer_r": 30, "inner_r": 6,
+        })
+        assert col.radial is True
+        assert len(col.elements) > 0
+        assert col.width_mm > 0
+
+    def test_defaults(self):
+        col = generate_inlay_pattern("oak_medallion", {})
+        assert len(col.elements) > 0
+
+    def test_single_ring_element_count(self):
+        n = 8
+        col = generate_inlay_pattern("oak_medallion", {
+            "n_fold": n, "ring_count": 1,
+        })
+        # n primary kites + 1 centre disc
+        assert len(col.elements) == n + 1
+
+    def test_double_ring_element_count(self):
+        n = 8
+        col = generate_inlay_pattern("oak_medallion", {
+            "n_fold": n, "ring_count": 2,
+        })
+        # n primary kites + n inner kites + 1 centre disc
+        assert len(col.elements) == 2 * n + 1
+
+    def test_triple_ring_element_count(self):
+        n = 8
+        col = generate_inlay_pattern("oak_medallion", {
+            "n_fold": n, "ring_count": 3,
+        })
+        # n primary + n inner + n accent + 1 centre disc
+        assert len(col.elements) == 3 * n + 1
+
+    def test_centre_disc_is_polygon(self):
+        col = generate_inlay_pattern("oak_medallion", {"n_fold": 8})
+        centre = col.elements[-1]
+        assert centre.kind == "polygon"
+        assert len(centre.points) == 24
+
+    def test_grain_angle_set(self):
+        col = generate_inlay_pattern("oak_medallion", {"n_fold": 6})
+        for e in col.elements:
+            assert hasattr(e, "grain_angle")
+
+
+class TestFloralSpray:
+    def test_basic(self):
+        col = generate_inlay_pattern("floral_spray", {
+            "n_petals": 4, "petal_l": 10, "petal_w": 4,
+        })
+        assert col.radial is False
+        assert len(col.elements) > 0
+        assert col.width_mm > 0
+
+    def test_defaults(self):
+        col = generate_inlay_pattern("floral_spray", {})
+        assert len(col.elements) > 0
+
+    def test_has_stem_polyline(self):
+        col = generate_inlay_pattern("floral_spray", {"n_petals": 3})
+        stems = [e for e in col.elements if e.kind == "polyline"]
+        assert len(stems) == 1
+
+    def test_petal_count_with_alternate(self):
+        n = 4
+        col = generate_inlay_pattern("floral_spray", {
+            "n_petals": n, "alternate": True,
+        })
+        # 1 stem + n primary petals + n secondary petals + 3 base leaves
+        assert len(col.elements) == 1 + 2 * n + 3
+
+    def test_material_indices_diversity(self):
+        col = generate_inlay_pattern("floral_spray", {"n_petals": 5})
+        indices = {e.material_index for e in col.elements}
+        assert len(indices) >= 2
+
+
+class TestOpenFlowerOval:
+    def test_basic(self):
+        col = generate_inlay_pattern("open_flower_oval", {
+            "n_petals": 12, "rx": 30, "ry": 40,
+        })
+        assert col.radial is True
+        assert len(col.elements) > 0
+        assert col.width_mm > 0
+
+    def test_defaults(self):
+        col = generate_inlay_pattern("open_flower_oval", {})
+        assert len(col.elements) > 0
+
+    def test_element_count(self):
+        n = 10
+        col = generate_inlay_pattern("open_flower_oval", {"n_petals": n})
+        # 2 ellipse rings + n petals + n pips
+        assert len(col.elements) == 2 + 2 * n
+
+    def test_has_ellipse_rings(self):
+        col = generate_inlay_pattern("open_flower_oval", {"n_petals": 8})
+        # First two elements are the ellipse rings
+        assert col.elements[0].kind == "polygon"
+        assert col.elements[1].kind == "polygon"
+        # Outer ring should have 64 points
+        assert len(col.elements[0].points) == 64
+
+    def test_grain_angle_set(self):
+        col = generate_inlay_pattern("open_flower_oval", {"n_petals": 6})
         for e in col.elements:
             assert hasattr(e, "grain_angle")
 

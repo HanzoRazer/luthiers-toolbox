@@ -20,6 +20,7 @@ InlayShape = Literal[
     "hex_chain", "chevron_panel", "parquet_panel", "nested_diamond",
     "rope_border_motif", "twisted_rope", "compose_band",
     "checker_chevron", "block_pin", "amsterdam_flower", "spiro_arc", "sq_floral",
+    "oak_medallion", "floral_spray", "open_flower_oval",
 ]
 
 ExportFormat = Literal["svg", "dxf", "layered_svg"]
