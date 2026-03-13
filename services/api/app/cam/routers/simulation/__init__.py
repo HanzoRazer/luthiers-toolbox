@@ -1,25 +1,15 @@
 """
-CAM Simulation Routers
+CAM Simulation Routers (Consolidated)
 
 G-code parsing and toolpath simulation.
 
-Migrated from:
-    - routers/cam_sim_router.py      → gcode_sim_router.py
-    - routers/cam_simulate_router.py → upload_router.py
+Consolidated from 2 separate routers into simulation_consolidated_router.py:
+    - gcode_sim_router (1 route)
+    - upload_router (1 route)
 
-Endpoints (under /api/cam/simulation):
-    POST /simulate_gcode    - Simulate inline G-code
-    POST /upload            - Upload and simulate G-code file
+Total: 2 routes under /api/cam/simulation
 """
 
-from fastapi import APIRouter
+from .simulation_consolidated_router import router
 
-from .gcode_sim_router import router as gcode_sim_router
-from .upload_router import router as upload_router
-
-# Aggregate all simulation routers
-router = APIRouter()
-router.include_router(gcode_sim_router)
-router.include_router(upload_router)
-
-__all__ = ["router", "gcode_sim_router", "upload_router"]
+__all__ = ["router"]

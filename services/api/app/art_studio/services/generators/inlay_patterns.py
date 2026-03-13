@@ -10,16 +10,21 @@ language-agnostic (the math is the source of truth).
 
 Shapes
 ------
-1. herringbone    — alternating rectangular tiles (linear, tileable)
-2. diamond        — wave/lean diamond marquetry (linear, tileable)
-3. greek_key      — meander border pattern (linear, tileable)
-4. spiral         — Archimedean spiral with true normal-vector offsets (radial)
-5. sunburst       — wedge rays between inner/outer radii (radial)
-6. feather        — layered fan blades (radial)
-7. celtic_motif   — SVG motif library (11 motifs) → tessellated geometry
-8. vine_scroll    — freq-modulated sine backbone with teardrop leaves
-9. girih_rosette  — 5-tile Girih rosette (Decagon+Pentagon+Rhombus+Bowtie+Hexagon)
-10. binding_flow  — Catmull-Rom spline contour with vine wrapping
+1. herringbone      — alternating rectangular tiles (linear, tileable)
+2. diamond          — wave/lean diamond marquetry (linear, tileable)
+3. greek_key        — meander border pattern (linear, tileable)
+4. spiral           — Archimedean spiral with true normal-vector offsets (radial)
+5. sunburst         — wedge rays between inner/outer radii (radial)
+6. feather          — layered fan blades (radial)
+7. celtic_motif     — SVG motif library (11 motifs) → tessellated geometry
+8. vine_scroll      — freq-modulated sine backbone with teardrop leaves
+9. girih_rosette    — 5-tile Girih rosette (Decagon+Pentagon+Rhombus+Bowtie+Hexagon)
+10. binding_flow    — Catmull-Rom spline contour with vine wrapping
+17. checker_chevron — diamond grid with alternating material slots (linear)
+18. block_pin       — diamond + rect pin alternating columns (linear)
+19. amsterdam_flower— N kite-petal medallion with centre disc (radial)
+20. spiro_arc       — overlapping thick arc segments with Z-order (radial)
+21. sq_floral       — radial narrow kite ring (radial)
 """
 from __future__ import annotations
 
@@ -1282,7 +1287,318 @@ def twisted_rope(params: Dict[str, Any]) -> GeometryCollection:
 
 
 # ---------------------------------------------------------------------------
-# 17. Band Compositor (multi-layer stacking)
+# 17. Checker Chevron — diamond grid with alternating material slots
+#     Ported from marquetry_engine.html checkerChevTiles()
+# ---------------------------------------------------------------------------
+
+def checker_chevron(params: Dict[str, Any]) -> GeometryCollection:
+    """Diamond grid with alternating material slots per (col+row)%2.
+
+    Params
+    ------
+    cell_w  : float — cell width (mm), default 10
+    diamond_r : float — diamond half-diagonal (mm), default 8
+    band_w  : float — total band width (mm), default 120
+    band_h  : float — total band height (mm), default 40
+    """
+    cell_w = float(params.get("cell_w", 10))
+    diamond_r = float(params.get("diamond_r", 8))
+    band_w = float(params.get("band_w", 120))
+    band_h = float(params.get("band_h", 40))
+
+    cols = math.ceil(band_w / cell_w) + 1
+    rows = math.ceil(band_h / cell_w) + 1
+
+    elements: List[GeometryElement] = []
+    for row in range(rows):
+        for col in range(cols):
+            cx = col * cell_w + cell_w / 2
+            cy = row * cell_w + cell_w / 2
+            r = min(diamond_r, cell_w * 0.48)
+            pts: List[Pt] = [
+                (cx, cy - r),
+                (cx + r, cy),
+                (cx, cy + r),
+                (cx - r, cy),
+            ]
+            mat_slot = (col + row) % 2
+            grain = 0.0 if mat_slot == 0 else 45.0
+            elements.append(GeometryElement(
+                kind="polygon",
+                points=pts,
+                material_index=mat_slot,
+                stroke_width=0.25,
+                grain_angle=grain,
+            ))
+
+    return GeometryCollection(
+        elements=elements,
+        width_mm=band_w,
+        height_mm=band_h,
+        radial=False,
+        tile_w=cell_w * 2,
+        tile_h=cell_w * 2,
+    )
+
+
+# ---------------------------------------------------------------------------
+# 18. Block-Pin Column — diamond + rect pin alternating columns
+#     Ported from marquetry_engine.html blockPinTiles()
+# ---------------------------------------------------------------------------
+
+def block_pin(params: Dict[str, Any]) -> GeometryCollection:
+    """Alternating columns of diamond accents and rectangular pins.
+
+    Params
+    ------
+    col_w      : float — column width (mm), default 15
+    cell_h     : float — cell height (mm), default 22
+    diamond_r  : float — diamond half-diagonal (mm), default 6
+    band_w     : float — total band width (mm), default 120
+    band_h     : float — total band height (mm), default 40
+    """
+    col_w = float(params.get("col_w", 15))
+    cell_h = float(params.get("cell_h", 22))
+    diamond_r = float(params.get("diamond_r", 6))
+    band_w = float(params.get("band_w", 120))
+    band_h = float(params.get("band_h", 40))
+
+    rect_h = cell_h * 0.35
+    cols = math.ceil(band_w / col_w) + 1
+    rows = math.ceil(band_h / cell_h) + 1
+
+    elements: List[GeometryElement] = []
+    for col in range(cols):
+        cx = col * col_w + col_w / 2
+        is_diamond_col = col % 2 == 0
+        y_offset = cell_h / 2 if col % 2 == 1 else 0.0
+
+        for row in range(rows + 1):
+            cy = row * cell_h + y_offset
+            if cy > band_h + cell_h:
+                break
+
+            if is_diamond_col:
+                # Diamond accent
+                r = min(diamond_r, col_w * 0.4)
+                pts: List[Pt] = [
+                    (cx, cy - r),
+                    (cx + r, cy),
+                    (cx, cy + r),
+                    (cx - r, cy),
+                ]
+                elements.append(GeometryElement(
+                    kind="polygon",
+                    points=pts,
+                    material_index=0,
+                    stroke_width=0.25,
+                    grain_angle=0.0,
+                ))
+            else:
+                # Rectangular pin
+                hw = col_w * 0.35
+                hh = rect_h / 2
+                pts = [
+                    (cx - hw, cy - hh),
+                    (cx + hw, cy + hh),
+                ]
+                elements.append(GeometryElement(
+                    kind="rect",
+                    points=pts,
+                    material_index=1,
+                    stroke_width=0.25,
+                    grain_angle=90.0,
+                ))
+
+    return GeometryCollection(
+        elements=elements,
+        width_mm=band_w,
+        height_mm=band_h,
+        radial=False,
+        tile_w=col_w * 2,
+        tile_h=cell_h,
+    )
+
+
+# ---------------------------------------------------------------------------
+# 19. Amsterdam Flower — N kite-shaped petals with centre disc
+#     Ported from marquetry_engine.html amsterdamFlowerTiles()
+# ---------------------------------------------------------------------------
+
+def amsterdam_flower(params: Dict[str, Any]) -> GeometryCollection:
+    """N-fold kite-petal medallion with optional centre disc.
+
+    Params
+    ------
+    n_fold         : int   — number of petals, default 8
+    outer_r        : float — outer radius (mm), default 40
+    inner_r        : float — inner radius / disc region (mm), default 12
+    mid_frac       : float — mid-radius fraction 0–1, default 0.6
+    inner_half_frac: float — petal angular width fraction, default 0.8
+    """
+    n_fold = max(3, int(params.get("n_fold", 8)))
+    outer_r = float(params.get("outer_r", 40))
+    inner_r = float(params.get("inner_r", 12))
+    mid_frac = float(params.get("mid_frac", 0.6))
+    inner_half_frac = float(params.get("inner_half_frac", 0.8))
+
+    step = 2 * math.pi / n_fold
+    half_a = step / 2
+    mid_r = inner_r + (outer_r - inner_r) * mid_frac
+    inner_half = half_a * inner_half_frac
+
+    elements: List[GeometryElement] = []
+
+    for k in range(n_fold):
+        th = k * step
+        p0 = (inner_r * math.cos(th - inner_half), inner_r * math.sin(th - inner_half))
+        p1 = (outer_r * math.cos(th), outer_r * math.sin(th))
+        p2 = (inner_r * math.cos(th + inner_half), inner_r * math.sin(th + inner_half))
+        p3 = (mid_r * math.cos(th + half_a), mid_r * math.sin(th + half_a))
+
+        elements.append(GeometryElement(
+            kind="polygon",
+            points=[p0, p1, p2, p3],
+            material_index=k % 2,
+            stroke_width=0.25,
+            grain_angle=math.degrees(th),
+        ))
+
+    # Centre disc (24-sided polygon)
+    disc_r = inner_r * 0.55
+    disc_pts: List[Pt] = [
+        (disc_r * math.cos(i * 2 * math.pi / 24),
+         disc_r * math.sin(i * 2 * math.pi / 24))
+        for i in range(24)
+    ]
+    elements.append(GeometryElement(
+        kind="polygon",
+        points=disc_pts,
+        material_index=0,
+        stroke_width=0.25,
+        grain_angle=0.0,
+    ))
+
+    return GeometryCollection(
+        elements=elements,
+        width_mm=outer_r * 2,
+        height_mm=outer_r * 2,
+        origin_x=outer_r,
+        origin_y=outer_r,
+        radial=True,
+    )
+
+
+# ---------------------------------------------------------------------------
+# 20. Spiro Arc Medallion — overlapping thick arc segments with Z-order
+#     Ported from marquetry_engine.html spiroArcTiles()
+# ---------------------------------------------------------------------------
+
+def spiro_arc(params: Dict[str, Any]) -> GeometryCollection:
+    """Spirograph-style overlapping thick arc medallion.
+
+    Params
+    ------
+    arc_count : int   — number of arcs, default 12
+    outer_r   : float — outer radius (mm), default 40
+    inner_r   : float — inner radius (mm), default 12
+    sweep_deg : float — arc sweep angle (degrees), default 65
+    """
+    arc_count = max(3, int(params.get("arc_count", 12)))
+    outer_r = float(params.get("outer_r", 40))
+    inner_r = float(params.get("inner_r", 12))
+    sweep_deg = float(params.get("sweep_deg", 65))
+
+    full_sweep = math.radians(sweep_deg)
+    step = 2 * math.pi / arc_count
+    n_pts = 24
+
+    elements: List[GeometryElement] = []
+
+    for k in range(arc_count):
+        theta = k * step
+        start_a = theta - full_sweep / 2
+        end_a = theta + full_sweep / 2
+
+        pts: List[Pt] = []
+        # Outer arc (forward)
+        for i in range(n_pts + 1):
+            a = start_a + (end_a - start_a) * i / n_pts
+            pts.append((outer_r * math.cos(a), outer_r * math.sin(a)))
+        # Inner arc (reverse)
+        for i in range(n_pts, -1, -1):
+            a = start_a + (end_a - start_a) * i / n_pts
+            pts.append((inner_r * math.cos(a), inner_r * math.sin(a)))
+
+        elements.append(GeometryElement(
+            kind="polygon",
+            points=pts,
+            material_index=k % 2,
+            stroke_width=0.25,
+            grain_angle=math.degrees(theta),
+        ))
+
+    # Sort: even arcs (mat 0) behind, odd arcs (mat 1) on top
+    elements.sort(key=lambda e: e.material_index)
+
+    return GeometryCollection(
+        elements=elements,
+        width_mm=outer_r * 2,
+        height_mm=outer_r * 2,
+        origin_x=outer_r,
+        origin_y=outer_r,
+        radial=True,
+    )
+
+
+# ---------------------------------------------------------------------------
+# 21. Square Floral — radial narrow kite ring
+#     Ported from marquetry_engine.html sqFloralTiles()
+# ---------------------------------------------------------------------------
+
+def sq_floral(params: Dict[str, Any]) -> GeometryCollection:
+    """Radial ring of narrow kite petals.
+
+    Params
+    ------
+    n_fold  : int   — number of petals, default 12
+    outer_r : float — outer radius (mm), default 40
+    inner_r : float — inner radius (mm), default 14
+    """
+    n_fold = max(3, int(params.get("n_fold", 12)))
+    outer_r = float(params.get("outer_r", 40))
+    inner_r = float(params.get("inner_r", 14))
+
+    step = 2 * math.pi / n_fold
+    half_a = step / 2
+
+    elements: List[GeometryElement] = []
+    for k in range(n_fold):
+        th = k * step
+        p0 = (inner_r * math.cos(th - half_a * 0.7), inner_r * math.sin(th - half_a * 0.7))
+        p1 = (outer_r * math.cos(th), outer_r * math.sin(th))
+        p2 = (inner_r * math.cos(th + half_a * 0.7), inner_r * math.sin(th + half_a * 0.7))
+
+        elements.append(GeometryElement(
+            kind="polygon",
+            points=[p0, p1, p2],
+            material_index=k % 2,
+            stroke_width=0.25,
+            grain_angle=math.degrees(th),
+        ))
+
+    return GeometryCollection(
+        elements=elements,
+        width_mm=outer_r * 2,
+        height_mm=outer_r * 2,
+        origin_x=outer_r,
+        origin_y=outer_r,
+        radial=True,
+    )
+
+
+# ---------------------------------------------------------------------------
+# 22. Band Compositor (multi-layer stacking)
 # ---------------------------------------------------------------------------
 
 BAND_PRESETS: Dict[str, Dict[str, Any]] = {
@@ -1570,6 +1886,36 @@ INLAY_GENERATORS: Dict[str, Any] = {
         "fn": compose_band,
         "name": "Band Compositor",
         "description": "Multi-layer composite band stacking multiple patterns",
+        "linear": False,
+    },
+    "checker_chevron": {
+        "fn": checker_chevron,
+        "name": "Checker Chevron",
+        "description": "Diamond grid with alternating material slots",
+        "linear": True,
+    },
+    "block_pin": {
+        "fn": block_pin,
+        "name": "Block-Pin Column",
+        "description": "Alternating columns of diamond accents and rectangular pins",
+        "linear": True,
+    },
+    "amsterdam_flower": {
+        "fn": amsterdam_flower,
+        "name": "Amsterdam Flower",
+        "description": "N-fold kite-petal medallion with centre disc",
+        "linear": False,
+    },
+    "spiro_arc": {
+        "fn": spiro_arc,
+        "name": "Spiro Arc Medallion",
+        "description": "Spirograph-style overlapping thick arc segments",
+        "linear": False,
+    },
+    "sq_floral": {
+        "fn": sq_floral,
+        "name": "Square Floral",
+        "description": "Radial ring of narrow kite-shaped petals",
         "linear": False,
     },
 }

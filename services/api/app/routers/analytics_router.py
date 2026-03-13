@@ -6,7 +6,7 @@ REST endpoints for pattern, material, and job analytics.
 
 import logging
 from typing import Optional
-from fastapi import APIRouter, HTTPException, Query
+from fastapi import Body, APIRouter, HTTPException, Query
 
 from .._experimental.analytics.pattern_analytics import get_pattern_analytics
 from .._experimental.analytics.material_analytics import get_material_analytics
@@ -387,4 +387,66 @@ def get_recent_jobs(limit: int = Query(10, ge=1, le=100)):
         raise
     except (KeyError, ValueError, TypeError, ZeroDivisionError, OSError) as e:
         logger.error(f"Error getting recent jobs: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+# ============================================================================
+# ADVANCED ANALYTICS ENDPOINTS (merged from advanced_analytics_router.py)
+# ============================================================================
+
+@router.get("/advanced/correlation")
+def correlation(x: Optional[str] = None, y: Optional[str] = None):
+    """Get Pearson correlation between two metrics."""
+    from .._experimental.analytics.advanced_analytics import get_advanced_analytics
+    if not x or not y:
+        raise HTTPException(status_code=400, detail="Query parameters 'x' and 'y' are required (e.g. job.duration_seconds, pattern.complexity_score)")
+    try:
+        analytics = get_advanced_analytics()
+        return analytics.pearson_correlation(x, y)
+    except HTTPException:
+        raise
+    except (ValueError, KeyError, ZeroDivisionError, TypeError) as e:
+        logger.exception("correlation error")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.get("/advanced/anomalies/durations")
+def duration_anomalies(z: Optional[float] = 3.0):
+    """Detect duration anomalies using z-score threshold."""
+    from .._experimental.analytics.advanced_analytics import get_advanced_analytics
+    try:
+        analytics = get_advanced_analytics()
+        return analytics.detect_duration_anomalies(z_thresh=float(z))
+    except HTTPException:
+        raise
+    except (ValueError, KeyError, ZeroDivisionError, TypeError) as e:
+        logger.exception("duration anomaly error")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.get("/advanced/anomalies/success")
+def success_anomalies(z: Optional[float] = 3.0, window_days: Optional[int] = 30):
+    """Detect success rate anomalies."""
+    from .._experimental.analytics.advanced_analytics import get_advanced_analytics
+    try:
+        analytics = get_advanced_analytics()
+        return analytics.detect_success_rate_anomalies(window_days=int(window_days), z_thresh=float(z))
+    except HTTPException:
+        raise
+    except (ValueError, KeyError, ZeroDivisionError, TypeError) as e:
+        logger.exception("success anomaly error")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.post("/advanced/predict")
+def predict_failure(body: dict = Body(...)):
+    """Predict failure risk based on input parameters."""
+    from .._experimental.analytics.advanced_analytics import get_advanced_analytics
+    try:
+        analytics = get_advanced_analytics()
+        return analytics.predict_failure_risk(body)
+    except HTTPException:
+        raise
+    except (ValueError, KeyError, ZeroDivisionError, TypeError) as e:
+        logger.exception("predict error")
         raise HTTPException(status_code=500, detail=str(e))

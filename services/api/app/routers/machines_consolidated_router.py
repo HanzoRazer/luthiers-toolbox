@@ -320,3 +320,52 @@ def import_tools_csv(mid: str, file: UploadFile = File(...)) -> Dict[str, Any]:
     _save_machines(data)
 
     return {"ok": True, "count": len(tools), "skipped": skipped, "tools": machine["tools"]}
+
+
+# ============================================================================
+# CAM Machine List Endpoints (merged from machines_router.py)
+# ============================================================================
+
+def _convert_profile_to_simple(profile):
+    """Convert full machine profile to simplified CAM profile."""
+    limits = profile.get("limits", {})
+    axes = profile.get("axes", {})
+    travel = axes.get("travel_mm", [0, 0, 0])
+
+    # Default safe_z to 10% of Z travel or 5.0mm, whichever is smaller
+    z_travel = travel[2] if len(travel) > 2 else 50.0
+    safe_z = min(z_travel * 0.1, 5.0)
+
+    return {
+        "id": profile.get("id", ""),
+        "name": profile.get("title", profile.get("id", "Unknown")),
+        "max_feed_xy": limits.get("feed_xy"),
+        "rapid": limits.get("rapid"),
+        "accel": limits.get("accel"),
+        "jerk": limits.get("jerk"),
+        "safe_z_default": safe_z,
+    }
+
+
+# Create a sub-router for CAM integration endpoints
+cam_machines_router = APIRouter(prefix="/cam/machines", tags=["cam", "machines"])
+
+
+@cam_machines_router.get("", response_model=List[Dict[str, Any]])
+def list_cam_machines():
+    """List available machine profiles (simplified for CAM integration)."""
+    profiles = _load_profiles()
+    return [_convert_profile_to_simple(p) for p in profiles]
+
+
+@cam_machines_router.get("/{machine_id}", response_model=Dict[str, Any])
+def get_cam_machine(machine_id: str):
+    """Get a single machine profile by ID (simplified for CAM integration)."""
+    profiles = _load_profiles()
+    for p in profiles:
+        if p.get("id") == machine_id:
+            return _convert_profile_to_simple(p)
+    raise HTTPException(status_code=404, detail="Machine not found")
+
+
+__all__ = ["router", "cam_machines_router", "_load_profiles"]

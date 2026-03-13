@@ -2,9 +2,7 @@
 Neck router package - decomposed from monolithic neck_router.py
 
 Sub-routers:
-- strat_router: Stratocaster-specific endpoints
-- tele_router: Telecaster-specific endpoints
-- prs_router: PRS-specific endpoints
+- guitar_models_router: Stratocaster, Telecaster, PRS (consolidated)
 - gcode_router: G-code generation endpoints
 """
 from fastapi import APIRouter
@@ -23,10 +21,8 @@ from .geometry import (
 )
 from .export import export_neck_dxf
 
-# Import sub-routers
-from . import strat_router
-from . import tele_router
-from . import prs_router
+# Import sub-routers (consolidated)
+from . import guitar_models_router
 from . import gcode_router
 
 __all__ = [
@@ -43,8 +39,6 @@ __all__ = [
     "convert_points",
     "convert_value",
     "export_neck_dxf",
-    "strat_router",
-    "tele_router",
-    "prs_router",
+    "guitar_models_router",
     "gcode_router",
 ]
