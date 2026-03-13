@@ -19,6 +19,7 @@ InlayShape = Literal[
     "celtic_motif", "vine_scroll", "girih_rosette", "binding_flow",
     "hex_chain", "chevron_panel", "parquet_panel", "nested_diamond",
     "rope_border_motif", "twisted_rope", "compose_band",
+    "checker_chevron", "block_pin", "amsterdam_flower", "spiro_arc", "sq_floral",
 ]
 
 ExportFormat = Literal["svg", "dxf", "layered_svg"]
@@ -131,3 +132,45 @@ class InlayImportResponse(BaseModel):
     width_mm: float
     height_mm: float
     preview_svg: str = Field(description="SVG preview of imported geometry")
+
+
+# ---------------------------------------------------------------------------
+# BOM response
+# ---------------------------------------------------------------------------
+
+class InlayBomEntry(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    shape_type: str
+    material_key: str
+    count: int
+    area_mm2: float
+
+
+class InlayBomResponse(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    shape: str
+    entries: List[InlayBomEntry]
+    total_pieces: int
+    total_area_mm2: float
+
+
+# ---------------------------------------------------------------------------
+# Blueprint bridge request
+# ---------------------------------------------------------------------------
+
+class BlueprintToInlayRequest(BaseModel):
+    """Request to import geometry from a Blueprint Reader vectorisation result."""
+    model_config = ConfigDict(extra="forbid")
+
+    dxf_path: Optional[str] = Field(
+        default=None,
+        description="Server-side path to vectorised DXF from Blueprint Reader",
+    )
+    svg_path: Optional[str] = Field(
+        default=None,
+        description="Server-side path to vectorised SVG from Blueprint Reader",
+    )
+    layer_filter: Optional[str] = Field(
+        default=None,
+        description="DXF layer name to extract (e.g. 'ROSETTE', 'BODY_OUTLINE')",
+    )

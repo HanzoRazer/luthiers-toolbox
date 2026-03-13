@@ -38,7 +38,7 @@ from .ai.availability import get_ai_status
 
 # Endpoint governance (H4 - canonical endpoint registry + safety rails)
 from .governance.endpoint_middleware import EndpointGovernanceMiddleware
-from .governance.metrics_router import router as metrics_router
+from .governance.governance_consolidated_router import router as governance_router
 
 # Route analytics middleware (for router consolidation analysis)
 from .middleware.route_analytics_middleware import RouteAnalyticsMiddleware, analytics_router
@@ -223,7 +223,7 @@ for router, prefix, tags in load_all_routers():
         app.include_router(router, tags=tags)
 
 # Prometheus metrics endpoint - no prefix, accessible at /metrics
-app.include_router(metrics_router)
+app.include_router(governance_router)
 
 # Route analytics endpoints - for router consolidation analysis (only if enabled)
 # Access: /api/_analytics/summary, /api/_analytics/export, /api/_analytics/reset

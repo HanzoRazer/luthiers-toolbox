@@ -1,31 +1,24 @@
 """
-CAM Drill Pattern Router
+CAM Drilling Routers (Consolidated)
+====================================
 
-LANE: OPERATION (for /gcode endpoint)
-LANE: UTILITY (for /info endpoint)
+Modal drilling (G81, G83) and pattern drilling operations.
+
+Consolidated from:
+    - drill_router.py (3 routes)
+    - pattern_router.py (2 routes)
+
+Total: 5 routes under /api/cam/drilling
+
+LANE: OPERATION (for /gcode endpoints)
+LANE: UTILITY (for /info endpoints)
 Reference: docs/OPERATION_EXECUTION_GOVERNANCE_v1.md
-Execution Class: B (Deterministic) - generates G-code from explicit parameters
-
-Generate drilling patterns (grid, circle, line) with modal cycles.
-
-Migrated from: routers/cam_drill_pattern_router.py
-
-Architecture Layer: ROUTER (Layer 6)
-See: docs/governance/ARCHITECTURE_INVARIANTS.md
-
-GOVERNANCE INVARIANTS:
-1. Client feasibility is ALWAYS ignored and recomputed server-side
-2. RED/UNKNOWN risk levels result in HTTP 409 (blocked)
-3. EVERY request creates a run artifact (OK, BLOCKED, or ERROR)
-4. All outputs are SHA256 hashed for provenance
-
-ARTIFACT KINDS:
-- drill_pattern_gcode_execution (OK/ERROR) - from /gcode
-- drill_pattern_gcode_blocked (BLOCKED) - from /gcode when safety policy blocks
 
 Endpoints:
-    POST /gcode    - Generate pattern drilling G-code (OPERATION)
-    GET  /info     - Get pattern info (UTILITY)
+    POST /gcode          - Generate drilling G-code
+    GET  /info           - Get drilling operation info
+    POST /pattern/gcode  - Generate pattern drilling G-code
+    GET  /pattern/info   - Get pattern info
 """
 
 from __future__ import annotations
@@ -35,7 +28,7 @@ from datetime import datetime, timezone
 from math import cos, pi, sin
 from typing import Any, Dict, List, Literal, Optional
 
-from fastapi import APIRouter, HTTPException, Response
+from fastapi import APIRouter, Body, HTTPException, Response
 from pydantic import BaseModel
 
 from app.safety import safety_critical
@@ -63,8 +56,127 @@ from ....rmos.policies import SafetyPolicy
 
 logger = logging.getLogger(__name__)
 
-router = APIRouter()
 
+# ===========================================================================
+# Sub-routers with prefixes
+# ===========================================================================
+
+drill_router = APIRouter()
+pattern_router = APIRouter(prefix="/pattern")
+
+
+# ===========================================================================
+# Shared utilities
+# ===========================================================================
+
+def _f(n: float) -> str:
+    """Format float to 3 decimal places"""
+    return f"{n:.3f}"
+
+
+# ===========================================================================
+# Drill Router Models
+# ===========================================================================
+
+class Hole(BaseModel):
+    """Single hole definition"""
+    x: float
+    y: float
+    z: float
+    feed: float
+
+
+class DrillReq(BaseModel):
+    """Request model for drilling operation"""
+    holes: List[Hole]
+    r_clear: Optional[float] = None
+    peck_q: Optional[float] = None
+    dwell_p: Optional[float] = None
+    cycle: str = "G81"
+    safe_z: float = 5.0
+    units: str = "mm"
+
+    # Post-processor parameters
+    post: Optional[str] = None
+    post_mode: Optional[str] = None
+    machine_id: Optional[str] = None
+    rpm: Optional[float] = None
+    program_no: Optional[str] = None
+    work_offset: Optional[str] = None
+    tool: Optional[int] = None
+
+
+# ===========================================================================
+# Drill Router Endpoints
+# ===========================================================================
+
+@drill_router.post("/gcode", response_class=Response)
+@safety_critical
+def drill_gcode(req: DrillReq = Body(...)) -> Response:
+    """Generate drilling G-code using modal cycles."""
+    cyc = req.cycle.upper().strip()
+    if cyc not in ("G81", "G83"):
+        cyc = "G81"
+
+    if HAS_POST_HELPERS:
+        ctx = build_post_context_v2(
+            post=req.post,
+            post_mode=req.post_mode,
+            units=req.units,
+            machine_id=req.machine_id,
+            RPM=req.rpm,
+            PROGRAM_NO=req.program_no,
+            WORK_OFFSET=req.work_offset,
+            TOOL=req.tool,
+            SAFE_Z=req.safe_z,
+            DWELL_P=req.dwell_p,
+            PECK_Q=req.peck_q,
+            R_CLEAR=req.r_clear
+        )
+
+    r_clear = _f(req.r_clear if req.r_clear is not None else 5.0)
+
+    lines = [
+        "G90",
+        f"G0 Z{_f(req.safe_z)}",
+    ]
+
+    for h in req.holes:
+        if cyc == "G81":
+            dwell = f" P{_f(req.dwell_p)}" if req.dwell_p is not None else ""
+            lines.append(f"G81 X{_f(h.x)} Y{_f(h.y)} Z{_f(h.z)} R{r_clear} F{_f(h.feed)}{dwell}")
+        else:
+            peck = _f(req.peck_q if req.peck_q is not None else 1.0)
+            dwell = f" P{_f(req.dwell_p)}" if req.dwell_p is not None else ""
+            lines.append(f"G83 X{_f(h.x)} Y{_f(h.y)} Z{_f(h.z)} R{r_clear} Q{peck} F{_f(h.feed)}{dwell}")
+
+    lines.append("G80")
+    body = "\n".join(lines) + "\n"
+    resp = Response(content=body, media_type="text/plain; charset=utf-8")
+
+    if HAS_POST_HELPERS:
+        resp = wrap_with_post_v2(resp, ctx)
+
+    return resp
+
+
+@drill_router.get("/info")
+def drill_info() -> Dict[str, Any]:
+    """Get drilling operation information"""
+    return {
+        "operation": "drilling",
+        "description": "Modal drilling cycles (G81 simple, G83 peck drilling)",
+        "supports_post_processors": HAS_POST_HELPERS,
+        "cycles": {
+            "G81": "Simple drilling with optional dwell at bottom",
+            "G83": "Peck drilling with incremental depth (chip breaking)"
+        },
+    }
+
+
+# ===========================================================================
+# Pattern Router Models
+# ===========================================================================
 
 class GridSpec(BaseModel):
     cols: int
@@ -112,10 +224,6 @@ class DrillParams(BaseModel):
     tool: Optional[int] = None
 
 
-def _f(n: float) -> str:
-    return f"{n:.3f}"
-
-
 def _generate_points(p: Pattern) -> List[tuple]:
     pts = []
     ox, oy = p.origin_x, p.origin_y
@@ -136,7 +244,11 @@ def _generate_points(p: Pattern) -> List[tuple]:
     return pts
 
 
-@router.post("/gcode", response_class=Response)
+# ===========================================================================
+# Pattern Router Endpoints
+# ===========================================================================
+
+@pattern_router.post("/gcode", response_class=Response)
 @safety_critical
 def drill_pattern_gcode(pat: Pattern, prm: DrillParams) -> Response:
     """
@@ -283,7 +395,7 @@ def drill_pattern_gcode(pat: Pattern, prm: DrillParams) -> Response:
         )
 
 
-@router.get("/info")
+@pattern_router.get("/info")
 def pattern_info() -> Dict[str, Any]:
     """
     Get drill pattern information.
@@ -295,3 +407,14 @@ def pattern_info() -> Dict[str, Any]:
         "description": "Generate drilling patterns (grid, circle, line) with modal cycles",
         "supports_post_processors": HAS_POST_HELPERS,
     }
+
+
+# ===========================================================================
+# Aggregate Router
+# ===========================================================================
+
+router = APIRouter()
+router.include_router(drill_router)
+router.include_router(pattern_router)
+
+__all__ = ["router", "drill_router", "pattern_router"]

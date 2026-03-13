@@ -8,9 +8,7 @@ Decomposed from 1,139 LOC monolith:
 - neck/schemas.py: Pydantic models
 - neck/geometry.py: Pure geometry functions
 - neck/export.py: DXF export
-- neck/strat_router.py: Stratocaster endpoints
-- neck/tele_router.py: Telecaster endpoints
-- neck/prs_router.py: PRS endpoints
+- neck/guitar_models_router.py: Stratocaster, Telecaster, PRS (consolidated)
 - neck/gcode_router.py: G-code generation
 """
 
@@ -45,8 +43,8 @@ from ..calculators.headstock_break_angle import (
     calculate_headstock_break_angle,
 )
 
-# Import sub-routers
-from .neck import strat_router, tele_router, prs_router, gcode_router
+# Import sub-routers (guitar_models_router consolidates strat, tele, prs)
+from .neck import guitar_models_router, gcode_router
 
 
 # ============================================================================
@@ -56,9 +54,7 @@ from .neck import strat_router, tele_router, prs_router, gcode_router
 router = APIRouter(prefix="/neck", tags=["neck"])
 
 # Include sub-routers for different neck styles
-router.include_router(strat_router.router)
-router.include_router(tele_router.router)
-router.include_router(prs_router.router)
+router.include_router(guitar_models_router.router)  # Strat, Tele, PRS consolidated
 router.include_router(gcode_router.router)
 
 

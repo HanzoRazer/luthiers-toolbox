@@ -25,6 +25,12 @@ from .toolpaths_router import router as toolpaths_router
 #           execution_metrics, execution_start_from_toolpaths, execution_status
 from .execution_lifecycle_router import router as execution_lifecycle_router
 
+# Consolidated decision intelligence router (4 routes)
+# Replaces: decision_intelligence_router, decision_intel_apply_router
+from .decision_router import router as decision_router
+# Compare router
+from .compare_router import router as compare_router
+
 
 router = APIRouter()
 router.include_router(batch_router)
@@ -35,3 +41,5 @@ router.include_router(batch_gcode_router)
 router.include_router(metrics_lookup_consolidated_router)
 router.include_router(toolpaths_router)
 router.include_router(execution_lifecycle_router)
+router.include_router(decision_router)
+router.include_router(compare_router)

@@ -9,26 +9,21 @@ Endpoints (mounted at /cam/blueprint):
 - POST /reconstruct-contours: Chain LINE + SPLINE into closed loops
 - POST /preflight: DXF validation before CAM processing
 - POST /to-adaptive: Convert DXF to adaptive pocket toolpath
-
-Module Structure:
-- extraction.py: DXF loop extraction utilities
-- contour_router.py: Contour reconstruction endpoint
-- preflight_router.py: DXF validation endpoint
-- adaptive_router.py: Adaptive pocket integration endpoint
-
-Data Flow (DXF -> G-code):
-1. Phase 2 vectorization -> DXF with LWPOLYLINE entities
-2. extract_loops_from_dxf() -> Parse closed polylines
-3. Pass to Module L.1 -> plan_adaptive_l1() for toolpath
-4. to_toolpath() -> Convert to G-code moves
+- GET/POST /pipeline-adapter/*: Pipeline to CAM conversion
+- POST /preprocess/*: DXF preprocessing pipeline
+- POST /geometry-correction/*: DXF dimension correction
+- POST /contour-reconstruction/*: LINE/ARC to contour conversion
 """
 
 from fastapi import APIRouter
 
-from .contour_router import router as contour_router
-from .preflight_router import router as preflight_router
-from .adaptive_router import router as adaptive_router
-from .pipeline_adapter_router import router as pipeline_adapter_router
+from .blueprint_cam_core_router import (
+    router as core_router,
+    contour_router,
+    preflight_router,
+    pipeline_adapter_router,
+    adaptive_router,
+)
 from .preprocessor_router import router as preprocessor_router
 from .geometry_correction_router import router as geometry_correction_router
 from .contour_reconstruction_router import router as contour_reconstruction_router
@@ -37,10 +32,7 @@ from .contour_reconstruction_router import router as contour_reconstruction_rout
 router = APIRouter(prefix="/cam/blueprint", tags=["blueprint-cam-bridge"])
 
 # Include all sub-routers
-router.include_router(contour_router)
-router.include_router(preflight_router)
-router.include_router(adaptive_router)
-router.include_router(pipeline_adapter_router)
+router.include_router(core_router)
 router.include_router(preprocessor_router)
 router.include_router(geometry_correction_router)
 router.include_router(contour_reconstruction_router)

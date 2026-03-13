@@ -38,8 +38,7 @@ pipelines/*/*.py (legacy math implementations)
 - `bracing_router`: Bracing section calculations, mass estimation, DXF export
 - `rosette_router`: Rosette channel calculations and DXF export
 - `inlay_router`: Fretboard inlay pattern design and DXF export
-- `vcarve_router`: SVG → toolpath → G-code conversion (Wave 1)
-- `relief_router`: Relief SVG → DXF export with feasibility (Wave 3)
+- `preview_router`: Consolidated SVG preview (relief + vcarve)
 - `svg`: Prompt→SVG generation using AI Platform (AI Realignment)
 - `prompts`: CNC prompt library with modes, validators, and design lenses
 """
@@ -48,16 +47,20 @@ from . import bracing_router
 from . import svg  # AI-powered SVG generation (Option 2 architecture)
 # REMOVED: rosette_router consolidated into /api/art/rosette (January 2026)
 from . import inlay_router
-from . import vcarve_router
-from . import relief_router
+from .preview_consolidated_router import (
+    router as preview_router,
+    relief_router,
+    vcarve_router,
+)
 from . import prompts  # CNC prompt library (create, transform, optimize, validate)
 
 __all__ = [
     "bracing_router",
     # "rosette_router",  # REMOVED: consolidated
     "inlay_router",
-    "vcarve_router",
+    "preview_router",  # Consolidated relief + vcarve preview
     "relief_router",
+    "vcarve_router",
     "svg",  # AI-powered Prompt→SVG generation
     "prompts",  # CNC prompt library with modes and validators
 ]

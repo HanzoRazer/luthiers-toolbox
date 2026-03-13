@@ -15,8 +15,11 @@ from fastapi import APIRouter, HTTPException, UploadFile, File
 from fastapi.responses import Response
 
 from ..schemas.inlay_patterns import (
+    BlueprintToInlayRequest,
     ComposeBandRequest,
     ExportFormat,
+    InlayBomEntry,
+    InlayBomResponse,
     InlayExportRequest,
     InlayGenerateRequest,
     InlayGenerateResponse,
@@ -29,6 +32,8 @@ from ..services.generators.inlay_patterns import (
     generate_inlay_pattern,
 )
 from ..services.generators.inlay_geometry import (
+    MATERIAL_KEYS,
+    calculate_bom,
     collection_to_layered_svg,
     collection_to_svg,
 )
@@ -260,6 +265,95 @@ async def import_inlay_file(
 
     return InlayImportResponse(
         format_detected=fmt,
+        element_count=len(geo.elements),
+        width_mm=geo.width_mm,
+        height_mm=geo.height_mm,
+        preview_svg=preview,
+    )
+
+
+# ---------------------------------------------------------------------------
+# BOM (Bill of Materials)
+# ---------------------------------------------------------------------------
+
+@router.post("/bom", response_model=InlayBomResponse)
+async def inlay_bom(req: InlayGenerateRequest) -> InlayBomResponse:
+    """Calculate a bill of materials for a generated inlay pattern.
+
+    Returns piece count and area per (shape_type, material) group.
+    """
+    try:
+        geo = generate_inlay_pattern(req.shape, req.params)
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+
+    materials = req.materials if req.materials else MATERIAL_KEYS[:3]
+    entries = calculate_bom(geo, materials)
+
+    bom_entries = [
+        InlayBomEntry(
+            shape_type=e.shape_type,
+            material_key=e.material_key,
+            count=e.count,
+            area_mm2=round(e.area_mm2, 4),
+        )
+        for e in entries
+    ]
+
+    return InlayBomResponse(
+        shape=req.shape,
+        entries=bom_entries,
+        total_pieces=sum(e.count for e in bom_entries),
+        total_area_mm2=round(sum(e.area_mm2 for e in bom_entries), 4),
+    )
+
+
+# ---------------------------------------------------------------------------
+# Blueprint-to-Inlay Bridge (dual input portal #2)
+# ---------------------------------------------------------------------------
+
+_ALLOWED_BLUEPRINT_DIR = "blueprint_output"
+
+
+@router.post("/import-from-blueprint", response_model=InlayImportResponse)
+async def import_from_blueprint(req: BlueprintToInlayRequest) -> InlayImportResponse:
+    """Import geometry from a Blueprint Reader vectorisation result.
+
+    Reads a server-side DXF or SVG file produced by the Blueprint Reader
+    pipeline and converts it into the inlay geometry IR.  This is the
+    second input portal — the first is the direct ``/import`` upload.
+    """
+    from pathlib import Path
+
+    chosen_path: str | None = req.dxf_path or req.svg_path
+    if not chosen_path:
+        raise HTTPException(
+            status_code=400,
+            detail="Provide either dxf_path or svg_path",
+        )
+
+    # Resolve and validate the path stays inside the allowed directory
+    resolved = Path(chosen_path).resolve()
+    allowed_root = Path(_ALLOWED_BLUEPRINT_DIR).resolve()
+    if not str(resolved).startswith(str(allowed_root)):
+        raise HTTPException(
+            status_code=403,
+            detail="Path must be inside the blueprint output directory",
+        )
+    if not resolved.is_file():
+        raise HTTPException(status_code=404, detail="File not found")
+
+    text = resolved.read_text(encoding="utf-8", errors="replace")
+
+    if req.dxf_path:
+        geo = parse_dxf(text)
+    else:
+        geo = parse_svg(text)
+
+    preview = collection_to_svg(geo, for_export=False)
+
+    return InlayImportResponse(
+        format_detected="dxf" if req.dxf_path else "svg",
         element_count=len(geo.elements),
         width_mm=geo.width_mm,
         height_mm=geo.height_mm,

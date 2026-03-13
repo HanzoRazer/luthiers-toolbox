@@ -231,11 +231,10 @@ def include_decision_intel_router(app) -> None:
     Call from app.main after Saw routers are mounted.
     Kept here so Saw Lab owns its own router wiring.
     """
-    from .decision_intelligence_router import router as decision_intel_router
-    from .decision_intel_apply_router import router as decision_intel_apply_router
+    # Consolidated router (merged decision_intelligence + decision_intel_apply)
+    from .decision_router import router as decision_router
 
-    app.include_router(decision_intel_router)
-    app.include_router(decision_intel_apply_router)
+    app.include_router(decision_router)
 
 
 # Execution Metrics Rollup

@@ -67,3 +67,45 @@ async def create_art_preset(req: ArtPresetCreateIn):
 async def delete_art_preset(preset_id: str):
     ok = delete_preset(preset_id)
     return {"ok": ok, "preset_id": preset_id}
+
+
+# ============================================================================
+# Presets Aggregate Endpoint (merged from art_presets_router.py)
+# ============================================================================
+
+from app.services.art_presets_store import get_preset as get_single_preset
+
+def _convert_to_aggregate(preset: Dict[str, Any]) -> Dict[str, Any]:
+    """Convert a stored preset to the aggregate format expected by the UI."""
+    params = preset.get("params", {})
+    parent_id = params.get("parent_id")
+    parent_name = params.get("parent_name")
+    diff_summary = params.get("diff_summary")
+    rationale = params.get("rationale", "User created")
+    source = params.get("source", "manual")
+
+    return {
+        "preset_id": preset.get("id", ""),
+        "preset_name": preset.get("name", "Unnamed Preset"),
+        "lane": preset.get("lane", "all"),
+        "parent_id": parent_id,
+        "parent_name": parent_name,
+        "diff_summary": diff_summary,
+        "rationale": rationale,
+        "source": source,
+        "job_count": 0,
+        "risk_count": 0,
+        "critical_count": 0,
+        "avg_total_length": 0.0,
+        "avg_total_lines": 0,
+        "health_color": "green",
+        "trend_direction": "flat",
+        "trend_delta": 0.0,
+    }
+
+
+@router.get("/presets_aggregate")
+async def get_presets_aggregate(lane: Optional[str] = None) -> list[Dict[str, Any]]:
+    """Return aggregated preset data with health, trend, risk counts, and lineage."""
+    presets = list_presets(lane=lane)
+    return [_convert_to_aggregate(p) for p in presets]

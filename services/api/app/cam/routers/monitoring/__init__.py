@@ -1,11 +1,7 @@
 """
-CAM Monitoring Routers
+CAM Monitoring Routers (Consolidated)
 
 CAM metrics and logging.
-
-Migrated from:
-    - routers/cam_metrics_router.py → metrics_router.py
-    - routers/cam_logs_router.py   → logs_router.py
 
 Endpoints (under /api/cam/monitoring):
     POST /metrics/energy              - Calculate cutting energy
@@ -18,14 +14,12 @@ Endpoints (under /api/cam/monitoring):
     GET  /logs/caps/{machine_id}      - Get bottleneck distribution
 """
 
-from fastapi import APIRouter
+from .monitoring_consolidated_router import (
+    router,
+    metrics_router,
+    logs_router,
+    ThermalBudget,
+    ThermalReportIn,
+)
 
-from .metrics_router import router as metrics_router
-from .logs_router import router as logs_router
-
-# Aggregate all monitoring routers
-router = APIRouter()
-router.include_router(metrics_router, prefix="/metrics")
-router.include_router(logs_router, prefix="/logs")
-
-__all__ = ["router", "metrics_router", "logs_router"]
+__all__ = ["router", "metrics_router", "logs_router", "ThermalBudget", "ThermalReportIn"]

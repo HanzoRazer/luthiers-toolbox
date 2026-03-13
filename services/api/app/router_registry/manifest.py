@@ -158,15 +158,9 @@ ROUTER_MANIFEST: List[RouterSpec] = [
     # CAM SUBSYSTEM
     # -------------------------------------------------------------------------
     RouterSpec(
-        module="app.routers.gcode_backplot_router",
+        module="app.routers.gcode_consolidated_router",
         prefix="/api",
-        tags=["G-code", "Backplot"],
-        category="cam",
-    ),
-    RouterSpec(
-        module="app.routers.gcode_simulate_router",
-        prefix="/api",
-        tags=["G-code", "Simulate"],
+        tags=["G-code", "CAM"],
         category="cam",
     ),
     RouterSpec(
@@ -176,10 +170,11 @@ ROUTER_MANIFEST: List[RouterSpec] = [
         category="cam",
     ),
     RouterSpec(
-        module="app.routers.dxf_plan_router",
+        module="app.routers.dxf_adaptive_consolidated_router",
+        attr="router",
         prefix="/api",
-        tags=["DXF", "Plan"],
-        category="cam",
+        tags=["cam", "dxf", "adaptive"],
+        governance={"lane": "mvp"},
     ),
     RouterSpec(
         module="app.routers.dxf_preflight_router",
@@ -224,12 +219,6 @@ ROUTER_MANIFEST: List[RouterSpec] = [
         category="config",
     ),
     RouterSpec(
-        module="app.routers.machines_router",
-        prefix="/api",
-        tags=["CAM Machines"],
-        category="config",
-    ),
-    RouterSpec(
         module="app.routers.machines_consolidated_router",
         prefix="/api/machines",
         tags=["Machines"],
@@ -270,12 +259,6 @@ ROUTER_MANIFEST: List[RouterSpec] = [
         module="app.routers.art.root_art_router",
         prefix="",
         tags=["Art Studio", "Root"],
-        category="art_studio",
-    ),
-    RouterSpec(
-        module="app.routers.art_presets_router",
-        prefix="/api",
-        tags=["Art", "Presets"],
         category="art_studio",
     ),
     RouterSpec(
@@ -434,12 +417,6 @@ ROUTER_MANIFEST: List[RouterSpec] = [
         tags=["Analytics"],
         category="analytics",
     ),
-    RouterSpec(
-        module="app.routers.advanced_analytics_router",
-        prefix="/api",
-        tags=["Analytics", "Advanced"],
-        category="analytics",
-    ),
     # -------------------------------------------------------------------------
     # MISC ROUTERS
     # -------------------------------------------------------------------------
@@ -527,12 +504,7 @@ ROUTER_MANIFEST: List[RouterSpec] = [
         category="cam",
     ),
     # DXF -> Adaptive Pocket workflow (P1-HIGH)
-    RouterSpec(
-        module="app.routers.cam_dxf_adaptive_router",
-        prefix="/api",  # Router has /cam prefix
-        tags=["CAM", "DXF", "Adaptive"],
-        category="cam",
-    ),
+
     # Relief CAM router - heightmap, roughing, finishing, simulation (P1-HIGH)
     RouterSpec(
         module="app.routers.cam_relief_router",
