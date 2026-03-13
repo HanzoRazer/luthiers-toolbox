@@ -1598,7 +1598,473 @@ def sq_floral(params: Dict[str, Any]) -> GeometryCollection:
 
 
 # ---------------------------------------------------------------------------
-# 22. Band Compositor (multi-layer stacking)
+# 22. Oak Medallion — N-fold kite ring with multi-layer concentric rings
+#     Ported from amsterdam_spiro_engine.html medalState / kitePath()
+# ---------------------------------------------------------------------------
+
+def _kite_path(
+    cx: float, cy: float,
+    ri: float, ro: float,
+    half_w: float, tan_frac: float,
+    angle_rad: float,
+    n_pts_per_arc: int = 12,
+) -> List[Pt]:
+    """Build a kite shape as a closed polygon approximating 4 cubic Bézier arcs.
+
+    Tips at radii *ri* (inner) and *ro* (outer) along *angle_rad*.
+    Half-width *half_w* at the midpoint.  *tan_frac* controls curvature.
+    """
+    mid = (ri + ro) / 2
+    arm = (ro - ri) * tan_frac / 2
+    cos_a = math.cos(angle_rad)
+    sin_a = math.sin(angle_rad)
+
+    def _rotate(lx: float, ly: float) -> Pt:
+        return (cx + lx * cos_a - ly * sin_a,
+                cy + lx * sin_a + ly * cos_a)
+
+    inner_tip = _rotate(ri, 0)
+    outer_tip = _rotate(ro, 0)
+    mid_top = _rotate(mid, -half_w)
+    mid_bot = _rotate(mid, half_w)
+
+    c1a = _rotate(ri, -arm)
+    c1b = _rotate(mid - arm, -half_w)
+    c2a = _rotate(mid + arm, -half_w)
+    c2b = _rotate(ro, -arm)
+    c3a = _rotate(ro, arm)
+    c3b = _rotate(mid + arm, half_w)
+    c4a = _rotate(mid - arm, half_w)
+    c4b = _rotate(ri, arm)
+
+    def _bezier_pts(
+        p0: Pt, p1: Pt, p2: Pt, p3: Pt, n: int,
+    ) -> List[Pt]:
+        pts: List[Pt] = []
+        for i in range(n + 1):
+            t = i / n
+            u = 1 - t
+            x = (u**3 * p0[0] + 3 * u**2 * t * p1[0] +
+                 3 * u * t**2 * p2[0] + t**3 * p3[0])
+            y = (u**3 * p0[1] + 3 * u**2 * t * p1[1] +
+                 3 * u * t**2 * p2[1] + t**3 * p3[1])
+            pts.append((x, y))
+        return pts
+
+    n = n_pts_per_arc
+    pts: List[Pt] = []
+    pts.extend(_bezier_pts(inner_tip, c1a, c1b, mid_top, n))
+    pts.extend(_bezier_pts(mid_top, c2a, c2b, outer_tip, n)[1:])
+    pts.extend(_bezier_pts(outer_tip, c3a, c3b, mid_bot, n)[1:])
+    pts.extend(_bezier_pts(mid_bot, c4a, c4b, inner_tip, n)[1:])
+    return pts
+
+
+def oak_medallion(params: Dict[str, Any]) -> GeometryCollection:
+    """N-fold kite-ring medallion with concentric layers.
+
+    Params
+    ------
+    n_fold      : int   — number of kite pairs, default 16
+    inner_r     : float — inner radius (mm), default 8
+    outer_r     : float — outer radius (mm), default 35
+    kite_w      : float — kite half-width (mm), default 8
+    tan_frac    : float — tangent arm ratio 0–1, default 0.55
+    ring_count  : int   — 1–3 concentric rings, default 2
+    inner_scale : float — inner kite scale factor, default 0.38
+    mid_r       : float — mid-radius for inner kites (mm), default 13
+    """
+    n_fold = max(4, int(params.get("n_fold", 16)))
+    inner_r = float(params.get("inner_r", 8))
+    outer_r = float(params.get("outer_r", 35))
+    kite_w = float(params.get("kite_w", 8))
+    tan_frac = float(params.get("tan_frac", 0.55))
+    ring_count = max(1, min(3, int(params.get("ring_count", 2))))
+    inner_scale = float(params.get("inner_scale", 0.38))
+    mid_r = float(params.get("mid_r", 13))
+
+    step = 2 * math.pi / n_fold
+    elements: List[GeometryElement] = []
+
+    for k in range(n_fold):
+        angle = k * step
+
+        # Primary kite
+        pts = _kite_path(0, 0, inner_r, outer_r, kite_w, tan_frac, angle)
+        elements.append(GeometryElement(
+            kind="polygon", points=pts,
+            material_index=k % 2,
+            stroke_width=0.25,
+            grain_angle=math.degrees(angle),
+        ))
+
+        # Inner kite (ring 2) — placed at half-angle offset
+        if ring_count >= 2:
+            r2_w = kite_w * inner_scale
+            rl = inner_r + (mid_r - inner_r) * 0.4
+            rr = inner_r + (mid_r - inner_r) * 1.3
+            inner_angle = angle + step / 2
+            pts2 = _kite_path(0, 0, rl, rr, r2_w, tan_frac * 0.8, inner_angle)
+            elements.append(GeometryElement(
+                kind="polygon", points=pts2,
+                material_index=(k + 1) % 2,
+                stroke_width=0.25,
+                grain_angle=math.degrees(inner_angle),
+            ))
+
+        # Outer accent kite (ring 3)
+        if ring_count >= 3:
+            r3_w = kite_w * inner_scale * 0.5
+            pts3 = _kite_path(0, 0, outer_r * 0.85, outer_r * 1.05,
+                              r3_w, tan_frac * 0.6, angle)
+            elements.append(GeometryElement(
+                kind="polygon", points=pts3,
+                material_index=2,
+                stroke_width=0.25,
+                grain_angle=math.degrees(angle),
+            ))
+
+    # Centre disc (24-sided polygon)
+    disc_r = inner_r * 0.52
+    disc_pts: List[Pt] = [
+        (disc_r * math.cos(i * 2 * math.pi / 24),
+         disc_r * math.sin(i * 2 * math.pi / 24))
+        for i in range(24)
+    ]
+    elements.append(GeometryElement(
+        kind="polygon", points=disc_pts,
+        material_index=2,
+        stroke_width=0.25,
+        grain_angle=0.0,
+    ))
+
+    bbox = outer_r * (1.05 if ring_count >= 3 else 1.0)
+    return GeometryCollection(
+        elements=elements,
+        width_mm=bbox * 2,
+        height_mm=bbox * 2,
+        origin_x=bbox,
+        origin_y=bbox,
+        radial=True,
+    )
+
+
+# ---------------------------------------------------------------------------
+# 23. Floral Spray — cubic Bézier stem with tangent-following petals
+#     Ported from amsterdam_spiro_engine.html sprayState / drawSpray()
+# ---------------------------------------------------------------------------
+
+def _cubic_bezier_eval(
+    p0: Pt, p1: Pt, p2: Pt, p3: Pt, t: float,
+) -> Pt:
+    """Evaluate a cubic Bézier curve at parameter *t*."""
+    u = 1 - t
+    return (
+        u**3 * p0[0] + 3 * u**2 * t * p1[0] + 3 * u * t**2 * p2[0] + t**3 * p3[0],
+        u**3 * p0[1] + 3 * u**2 * t * p1[1] + 3 * u * t**2 * p2[1] + t**3 * p3[1],
+    )
+
+
+def _cubic_bezier_tangent(
+    p0: Pt, p1: Pt, p2: Pt, p3: Pt, t: float,
+) -> Pt:
+    """Tangent vector of a cubic Bézier at *t* (unnormalized)."""
+    u = 1 - t
+    return (
+        3 * (u**2 * (p1[0] - p0[0]) + 2 * u * t * (p2[0] - p1[0]) + t**2 * (p3[0] - p2[0])),
+        3 * (u**2 * (p1[1] - p0[1]) + 2 * u * t * (p2[1] - p1[1]) + t**2 * (p3[1] - p2[1])),
+    )
+
+
+def _lens_polygon(
+    cx: float, cy: float,
+    angle_deg: float,
+    length: float, width: float,
+    n_pts: int = 16,
+) -> List[Pt]:
+    """Lens / eye shape as polygon — two cubic Bézier arcs forming an eye."""
+    a = math.radians(angle_deg)
+    cos_a = math.cos(a)
+    sin_a = math.sin(a)
+    hl = length / 2
+    hw = width / 2
+
+    def _rotate(x: float, y: float) -> Pt:
+        return (cx + x * cos_a - y * sin_a,
+                cy + x * sin_a + y * cos_a)
+
+    left = _rotate(-hl, 0)
+    right = _rotate(hl, 0)
+    c_upper_l = _rotate(-hl, -hw)
+    c_upper_r = _rotate(hl, -hw)
+    c_lower_r = _rotate(hl, hw)
+    c_lower_l = _rotate(-hl, hw)
+
+    def _bez(p0: Pt, p1: Pt, p2: Pt, p3: Pt) -> List[Pt]:
+        pts: List[Pt] = []
+        for i in range(n_pts + 1):
+            t = i / n_pts
+            u = 1 - t
+            x = (u**3 * p0[0] + 3 * u**2 * t * p1[0] +
+                 3 * u * t**2 * p2[0] + t**3 * p3[0])
+            y = (u**3 * p0[1] + 3 * u**2 * t * p1[1] +
+                 3 * u * t**2 * p2[1] + t**3 * p3[1])
+            pts.append((x, y))
+        return pts
+
+    pts: List[Pt] = []
+    pts.extend(_bez(left, c_upper_l, c_upper_r, right))
+    pts.extend(_bez(right, c_lower_r, c_lower_l, left)[1:])
+    return pts
+
+
+def floral_spray(params: Dict[str, Any]) -> GeometryCollection:
+    """Cubic Bézier stem with tangent-following lens petals.
+
+    Params
+    ------
+    n_petals   : int   — petal pairs along stem, default 5
+    petal_l    : float — petal length (mm), default 12
+    petal_w    : float — petal width (mm), default 5
+    stem_wave  : float — stem S-curve amplitude (mm), default 12
+    leaf_l     : float — base leaf length (mm), default 18
+    leaf_w     : float — base leaf width (mm), default 7
+    alternate  : bool  — alternate petals left/right, default True
+    width_mm   : float — canvas width (mm), default 80
+    height_mm  : float — canvas height (mm), default 50
+    """
+    n_petals = max(1, int(params.get("n_petals", 5)))
+    petal_l = float(params.get("petal_l", 12))
+    petal_w = float(params.get("petal_w", 5))
+    stem_wave = float(params.get("stem_wave", 12))
+    leaf_l = float(params.get("leaf_l", 18))
+    leaf_w = float(params.get("leaf_w", 7))
+    alternate = bool(params.get("alternate", True))
+    W = float(params.get("width_mm", 80))
+    H = float(params.get("height_mm", 50))
+
+    pad = 8
+    x0, y0 = pad, H - pad
+    x3, y3 = W - pad, pad
+    cp1 = (x0 + stem_wave, y0 - (H - 2 * pad) * 0.35)
+    cp2 = (x3 - stem_wave, y3 + (H - 2 * pad) * 0.35)
+
+    elements: List[GeometryElement] = []
+
+    # Stem as polyline (sampled from cubic Bézier)
+    stem_pts: List[Pt] = []
+    for i in range(51):
+        t = i / 50
+        stem_pts.append(_cubic_bezier_eval((x0, y0), cp1, cp2, (x3, y3), t))
+    elements.append(GeometryElement(
+        kind="polyline", points=stem_pts,
+        material_index=2,
+        stroke_width=1.5,
+    ))
+
+    # Petals along stem
+    for i in range(n_petals):
+        t = (i + 0.5) / n_petals
+        pt = _cubic_bezier_eval((x0, y0), cp1, cp2, (x3, y3), t)
+        tan = _cubic_bezier_tangent((x0, y0), cp1, cp2, (x3, y3), t)
+        stem_angle = math.degrees(math.atan2(tan[1], tan[0]))
+
+        side = (1 if i % 2 else -1) if alternate else 1
+        petal_angle = stem_angle + side * 30
+
+        pts = _lens_polygon(pt[0], pt[1], petal_angle, petal_l, petal_w)
+        elements.append(GeometryElement(
+            kind="polygon", points=pts,
+            material_index=0,
+            stroke_width=0.25,
+            grain_angle=petal_angle,
+        ))
+
+        # Secondary smaller petal opposite side
+        if alternate:
+            petal_angle2 = stem_angle - side * 20
+            pts2 = _lens_polygon(pt[0], pt[1], petal_angle2,
+                                 petal_l * 0.7, petal_w * 0.7)
+            elements.append(GeometryElement(
+                kind="polygon", points=pts2,
+                material_index=1,
+                stroke_width=0.25,
+                grain_angle=petal_angle2,
+            ))
+
+    # Base leaves at lower portion of stem
+    base_ts = [0.15, 0.28, 0.44]
+    for i, t in enumerate(base_ts):
+        pt = _cubic_bezier_eval((x0, y0), cp1, cp2, (x3, y3), t)
+        tan = _cubic_bezier_tangent((x0, y0), cp1, cp2, (x3, y3), t)
+        sa = math.degrees(math.atan2(tan[1], tan[0]))
+        leaf_angle = sa + (1 if i % 2 else -1) * 55
+
+        pts = _lens_polygon(pt[0], pt[1], leaf_angle, leaf_l, leaf_w)
+        elements.append(GeometryElement(
+            kind="polygon", points=pts,
+            material_index=1,
+            stroke_width=0.25,
+            grain_angle=leaf_angle,
+        ))
+
+    return GeometryCollection(
+        elements=elements,
+        width_mm=W,
+        height_mm=H,
+        radial=False,
+    )
+
+
+# ---------------------------------------------------------------------------
+# 24. Open Flower Oval — hook/comma petals around elliptical frame
+#     Ported from amsterdam_spiro_engine.html flowerState / hookPetalPath()
+# ---------------------------------------------------------------------------
+
+def _hook_petal_polygon(
+    cx: float, cy: float,
+    angle_deg: float,
+    petal_r: float, petal_w: float,
+    hook_depth: float,
+    n_pts: int = 24,
+) -> List[Pt]:
+    """Hook/comma shaped petal as a closed polygon.
+
+    The petal starts at an inner ring and arcs outward with a curl.
+    """
+    a = math.radians(angle_deg)
+    tip_r = petal_r * 0.35
+    far_r = tip_r + petal_r
+
+    tip = (cx + tip_r * math.cos(a), cy + tip_r * math.sin(a))
+    far = (cx + far_r * math.cos(a), cy + far_r * math.sin(a))
+
+    # Perpendicular direction for width
+    pa = a + math.pi / 2
+    hook_r = tip_r + petal_r * hook_depth
+    w_pt = (cx + hook_r * math.cos(a) + petal_w * math.cos(pa),
+            cy + hook_r * math.sin(a) + petal_w * math.sin(pa))
+
+    # Two cubic Bézier arcs: tip→far (outward) and far→w→tip (hook back)
+    c1 = ((tip[0] + far[0] * 2) / 3, (tip[1] + far[1] * 2) / 3)
+    c2 = (far[0], (far[1] + w_pt[1]) / 2)
+    c3 = (far[0], far[1])
+    c4 = (w_pt[0], w_pt[1])
+
+    def _bez(p0: Pt, p1: Pt, p2: Pt, p3: Pt, n: int) -> List[Pt]:
+        pts: List[Pt] = []
+        for i in range(n + 1):
+            t = i / n
+            u = 1 - t
+            x = u**3*p0[0] + 3*u**2*t*p1[0] + 3*u*t**2*p2[0] + t**3*p3[0]
+            y = u**3*p0[1] + 3*u**2*t*p1[1] + 3*u*t**2*p2[1] + t**3*p3[1]
+            pts.append((x, y))
+        return pts
+
+    pts: List[Pt] = []
+    pts.extend(_bez(tip, c1, c2, far, n_pts))
+    pts.extend(_bez(far, c3, c4, tip, n_pts)[1:])
+    return pts
+
+
+def open_flower_oval(params: Dict[str, Any]) -> GeometryCollection:
+    """N hook/comma petals arranged radially around an elliptical frame.
+
+    Params
+    ------
+    n_petals    : int   — number of petals, default 18
+    rx          : float — ellipse X-radius (mm), default 35
+    ry          : float — ellipse Y-radius (mm), default 45
+    petal_r     : float — petal reach (mm), default 14
+    petal_w     : float — petal width (mm), default 8
+    hook_depth  : float — hook curl depth 0–1, default 0.55
+    pip_r       : float — inner pip radius (mm), default 2
+    pip_l       : float — inner pip length (mm), default 5
+    """
+    n_petals = max(4, int(params.get("n_petals", 18)))
+    rx = float(params.get("rx", 35))
+    ry = float(params.get("ry", 45))
+    petal_r = float(params.get("petal_r", 14))
+    petal_w = float(params.get("petal_w", 8))
+    hook_depth = float(params.get("hook_depth", 0.55))
+    pip_r = float(params.get("pip_r", 2))
+    pip_l = float(params.get("pip_l", 5))
+
+    elements: List[GeometryElement] = []
+
+    # Outer ellipse ring (approximated as polygon)
+    n_ring = 64
+    ring_pts: List[Pt] = [
+        (rx * math.cos(i * 2 * math.pi / n_ring),
+         ry * math.sin(i * 2 * math.pi / n_ring))
+        for i in range(n_ring)
+    ]
+    elements.append(GeometryElement(
+        kind="polygon", points=ring_pts,
+        material_index=2,
+        stroke_width=rx * 0.055,
+        grain_angle=0.0,
+    ))
+
+    # Inner ellipse ring
+    inner_rx = rx * 0.16
+    inner_ry = ry * 0.15
+    inner_ring_pts: List[Pt] = [
+        (inner_rx * math.cos(i * 2 * math.pi / n_ring),
+         inner_ry * math.sin(i * 2 * math.pi / n_ring))
+        for i in range(n_ring)
+    ]
+    elements.append(GeometryElement(
+        kind="polygon", points=inner_ring_pts,
+        material_index=2,
+        stroke_width=rx * 0.055,
+        grain_angle=0.0,
+    ))
+
+    for k in range(n_petals):
+        angle = k * 360 / n_petals
+        a_rad = math.radians(angle)
+        px = rx * 0.72 * math.cos(a_rad)
+        py = ry * 0.72 * math.sin(a_rad)
+        adjusted_angle = math.degrees(math.atan2(py, px))
+
+        pts = _hook_petal_polygon(0, 0, adjusted_angle,
+                                  petal_r * 0.72, petal_w, hook_depth)
+        elements.append(GeometryElement(
+            kind="polygon", points=pts,
+            material_index=k % 2,
+            stroke_width=0.25,
+            grain_angle=adjusted_angle,
+        ))
+
+        # Inner pip accent (lens shape at half-angle offset)
+        if pip_r > 0:
+            pip_frac = rx * 0.1
+            pip_a = a_rad + math.pi / n_petals
+            pip_x = pip_frac * math.cos(pip_a)
+            pip_y = pip_frac * math.sin(pip_a)
+            pip_pts = _lens_polygon(pip_x, pip_y, angle + 90, pip_l, pip_r)
+            elements.append(GeometryElement(
+                kind="polygon", points=pip_pts,
+                material_index=(k + 1) % 2,
+                stroke_width=0.25,
+                grain_angle=angle + 90,
+            ))
+
+    bbox_x = rx * 1.1
+    bbox_y = ry * 1.1
+    return GeometryCollection(
+        elements=elements,
+        width_mm=bbox_x * 2,
+        height_mm=bbox_y * 2,
+        origin_x=bbox_x,
+        origin_y=bbox_y,
+        radial=True,
+    )
+
+
+# ---------------------------------------------------------------------------
+# 25. Band Compositor (multi-layer stacking)
 # ---------------------------------------------------------------------------
 
 BAND_PRESETS: Dict[str, Dict[str, Any]] = {
@@ -1916,6 +2382,24 @@ INLAY_GENERATORS: Dict[str, Any] = {
         "fn": sq_floral,
         "name": "Square Floral",
         "description": "Radial ring of narrow kite-shaped petals",
+        "linear": False,
+    },
+    "oak_medallion": {
+        "fn": oak_medallion,
+        "name": "Oak Medallion",
+        "description": "N-fold kite ring medallion with concentric layers",
+        "linear": False,
+    },
+    "floral_spray": {
+        "fn": floral_spray,
+        "name": "Floral Spray",
+        "description": "Cubic Bézier stem with tangent-following lens petals",
+        "linear": False,
+    },
+    "open_flower_oval": {
+        "fn": open_flower_oval,
+        "name": "Open Flower Oval",
+        "description": "Hook/comma petals around elliptical frame with pip accents",
         "linear": False,
     },
 }
