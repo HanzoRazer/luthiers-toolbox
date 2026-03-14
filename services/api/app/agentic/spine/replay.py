@@ -41,7 +41,7 @@ class ReplayConfig:
     shadow_mode: bool = True
     strict_order: bool = True
     grace_period_ms: int = FIRST_SIGNAL_GRACE_MS
-    mode: str = "M1"  # M0 = shadow only (no emit), M1 = emit directives
+    mode: Optional[str] = None  # None=auto (from shadow_mode), M0=no emit, M1=emit
     verbose: bool = False
     apply_grace_selection: bool = True
 
@@ -104,16 +104,20 @@ def _make_directive(moment: DetectedMoment) -> AttentionDirective:
     )
 
 
-def _make_decision(moment: Optional[DetectedMoment], emit: bool) -> Dict[str, Any]:
+def _make_decision(moment: Optional[DetectedMoment], emit: bool, shadow_mode: bool = False) -> Dict[str, Any]:
     """Create a policy decision dict."""
     if moment is None:
         return None
     directive = _make_directive(moment)
+    diagnostic = {"rule_id": "replay"}
+    # In shadow mode, track what would have been emitted
+    if shadow_mode:
+        diagnostic["would_have_emitted"] = directive.action
     return {
         "attention_action": directive.action,
         "emit_directive": emit,
         "directive": {"action": directive.action, "title": directive.title, "detail": directive.detail},
-        "diagnostic": {"rule_id": "replay"},
+        "diagnostic": diagnostic,
     }
 
 
@@ -124,13 +128,23 @@ def run_shadow_replay(
     """
     Run shadow replay on a sequence of events.
     
-    Returns a dict with sessions keyed by session_id.
+    Returns a dict with sessions keyed by session_id, plus summary.
     """
     if config is None:
         config = ReplayConfig()
 
     sessions = group_by_session(events)
     result = {"sessions": {}}
+
+    # Determine effective mode:
+    # - Explicit mode setting (M0/M1) takes precedence
+    # - If mode=None (auto), derive from shadow_mode
+    if config.mode is not None:
+        effective_mode = config.mode
+    elif config.shadow_mode:
+        effective_mode = "M0"
+    else:
+        effective_mode = "M1"
 
     for session_id, session_events in sessions.items():
         moments: List[DetectedMoment] = []
@@ -147,15 +161,22 @@ def run_shadow_replay(
             else:
                 selected_moment = moments[0]
 
-        # Determine if we should emit (M1 emits, M0 does not)
-        emit = config.mode == "M1" and selected_moment is not None
+        # Determine if we should emit (M1 emits, M0/shadow does not)
+        emit = effective_mode == "M1" and selected_moment is not None
 
         result["sessions"][session_id] = {
-            "events_processed": len(session_events),
+            "event_count": len(session_events),
             "moments": moments,
             "moment": selected_moment,
-            "decision": _make_decision(selected_moment, emit),
+            "decision": _make_decision(selected_moment, emit, shadow_mode=config.shadow_mode),
         }
+
+    # Add summary
+    result["mode"] = effective_mode
+    result["summary"] = {
+        "total_sessions": len(result["sessions"]),
+        "total_events": sum(s["event_count"] for s in result["sessions"].values()),
+    }
 
     return result
 
