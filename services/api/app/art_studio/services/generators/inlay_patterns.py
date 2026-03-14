@@ -1,420 +1,40 @@
 """
-Inlay Pattern Generators — Ten Pure-Function Generators
+Inlay Pattern Generators — Engine-Based Architecture
 
-Ported from the V1/V2/V3 React prototypes plus Vine/Girih/Celtic HTML
-prototypes.  Each generator is a pure function:
-    (params: dict) → GeometryCollection
+This module provides a unified registry for all inlay patterns,
+delegating to four core engines:
+- GridEngine: Tile repetition on 2D grids
+- RadialEngine: N-fold patterns around a center
+- PathEngine: Patterns along backbone curves
+- MedallionEngine: Concentric layered patterns
 
-All coordinates in mm.  Generators are stateless, deterministic, and
-language-agnostic (the math is the source of truth).
-
-Shapes
-------
-1. herringbone      — alternating rectangular tiles (linear, tileable)
-2. diamond          — wave/lean diamond marquetry (linear, tileable)
-3. greek_key        — meander border pattern (linear, tileable)
-4. spiral           — Archimedean spiral with true normal-vector offsets (radial)
-5. sunburst         — wedge rays between inner/outer radii (radial)
-6. feather          — layered fan blades (radial)
-7. celtic_motif     — SVG motif library (11 motifs) → tessellated geometry
-8. vine_scroll      — freq-modulated sine backbone with teardrop leaves
-9. girih_rosette    — 5-tile Girih rosette (Decagon+Pentagon+Rhombus+Bowtie+Hexagon)
-10. binding_flow    — Catmull-Rom spline contour with vine wrapping
-17. checker_chevron — diamond grid with alternating material slots (linear)
-18. block_pin       — diamond + rect pin alternating columns (linear)
-19. amsterdam_flower— N kite-petal medallion with centre disc (radial)
-20. spiro_arc       — overlapping thick arc segments with Z-order (radial)
-21. sq_floral       — radial narrow kite ring (radial)
+Each generator is a pure function: (params: dict) → GeometryCollection
+All coordinates in mm.
 """
 from __future__ import annotations
 
 import math
-from typing import Any, Dict, List, Tuple
+from typing import Any, Dict, List
 
 from .inlay_geometry import (
     GeometryCollection,
     GeometryElement,
     Polyline,
     Pt,
-    build_centerline,
-    catmull_rom,
-    compute_tangent_normal_arclen,
-    generate_strand_paths,
-    make_poly,
-    offset_polygon,
-    offset_polyline,
-    offset_polyline_strip,
-    sample_spline,
-    split_strand_at_crossings,
     tessellate_path_d,
+)
+from .inlay_engines import (
+    GridEngine,
+    MedallionEngine,
+    PathEngine,
+    RadialEngine,
 )
 
 
 # ---------------------------------------------------------------------------
-# 1. Herringbone
+# Celtic Motif — SVG library (special case, not engine-based)
 # ---------------------------------------------------------------------------
 
-def herringbone(params: Dict[str, Any]) -> GeometryCollection:
-    """Alternating rectangular tile pattern.
-
-    Params
-    ------
-    tooth_w : float  — tile width (mm), default 10
-    tooth_h : float  — tile height (mm), default 20
-    band_w  : float  — total band width (mm), default 120
-    band_h  : float  — total band height (mm), default 22
-    """
-    tw = float(params.get("tooth_w", 10))
-    th = float(params.get("tooth_h", 20))
-    band_w = float(params.get("band_w", 120))
-    band_h = float(params.get("band_h", 22))
-
-    cols = math.ceil(band_w / tw) + 1
-    rows = math.ceil(band_h / th) + 1
-
-    elements: List[GeometryElement] = []
-    for row in range(rows):
-        for col in range(cols):
-            mi = (row + col) % 2
-            vert = mi == 0
-            w = tw if vert else th
-            h = th if vert else tw
-            cx = col * tw + tw / 2
-            cy = row * th + th / 2
-            x0, y0 = cx - w / 2, cy - h / 2
-            elements.append(GeometryElement(
-                kind="rect",
-                points=[(x0, y0), (x0 + w, y0 + h)],
-                material_index=mi,
-                stroke_width=0.25,
-            ))
-
-    return GeometryCollection(
-        elements=elements,
-        width_mm=band_w,
-        height_mm=band_h,
-        radial=False,
-        tile_w=tw * 2,
-        tile_h=th,
-    )
-
-
-# ---------------------------------------------------------------------------
-# 2. Diamond
-# ---------------------------------------------------------------------------
-
-def diamond(params: Dict[str, Any]) -> GeometryCollection:
-    """Wave/lean diamond marquetry.
-
-    Params
-    ------
-    tile_w : float  — diamond tile width (mm), default 14
-    tile_h : float  — diamond tile height (mm), default 22
-    wave   : float  — vertical wave factor 0–1, default 0.35
-    lean   : float  — horizontal lean factor 0–1, default 0.1
-    band_w : float  — total band width (mm), default 120
-    band_h : float  — total band height (mm), default 22
-    """
-    tw = float(params.get("tile_w", 14))
-    th = float(params.get("tile_h", 22))
-    wave = float(params.get("wave", 0.35))
-    lean = float(params.get("lean", 0.1))
-    band_w = float(params.get("band_w", 120))
-    band_h = float(params.get("band_h", 22))
-
-    cols = math.ceil(band_w / tw) + 1
-    rows = math.ceil(band_h / th) + 1
-
-    elements: List[GeometryElement] = []
-    for row in range(rows):
-        for col in range(cols):
-            cx = col * tw + tw / 2
-            cy = row * th + th / 2
-            dy = wave * th * 0.4 * math.sin((col * 0.5 + row * 0.3) * math.pi)
-            lx = lean * tw * 0.3
-            pts: List[Pt] = [
-                (cx + lx, cy - th / 2 + dy),
-                (cx + tw / 2, cy + dy),
-                (cx + lx, cy + th / 2 + dy),
-                (cx - tw / 2, cy + dy),
-            ]
-            elements.append(GeometryElement(
-                kind="polygon",
-                points=pts,
-                material_index=(row + col) % 2,
-                stroke_width=0.25,
-            ))
-
-    return GeometryCollection(
-        elements=elements,
-        width_mm=band_w,
-        height_mm=band_h,
-        radial=False,
-        tile_w=tw,
-        tile_h=th,
-    )
-
-
-# ---------------------------------------------------------------------------
-# 3. Greek Key
-# ---------------------------------------------------------------------------
-
-def greek_key(params: Dict[str, Any]) -> GeometryCollection:
-    """Greek key / meander border.
-
-    Params
-    ------
-    cell_size  : float — unit cell dimension (mm), default 10
-    key_width  : float — stroke width of the meander (mm), default 1.2
-    band_w     : float — total band width (mm), default 120
-    band_h     : float — total band height (mm), default 22
-    """
-    cs = float(params.get("cell_size", 10))
-    kw = float(params.get("key_width", 1.2))
-    band_w = float(params.get("band_w", 120))
-    band_h = float(params.get("band_h", 22))
-
-    uw = cs * 4
-    uh = cs * 4
-    cols = math.ceil(band_w / uw) + 1
-    rows = math.ceil(band_h / uh) + 1
-
-    elements: List[GeometryElement] = []
-    for row in range(rows):
-        for col in range(cols):
-            ox = col * uw
-            oy = row * uh
-            # Meander key outline as a closed polygon
-            pts: List[Pt] = [
-                (ox, oy),
-                (ox + cs * 3, oy),
-                (ox + cs * 3, oy + cs * 3),
-                (ox + cs, oy + cs * 3),
-                (ox + cs, oy + cs),
-                (ox + cs * 2, oy + cs),
-                (ox + cs * 2, oy + cs * 2),
-                (ox, oy + cs * 2),
-            ]
-            elements.append(GeometryElement(
-                kind="polygon",
-                points=pts,
-                material_index=0,
-                stroke_width=kw,
-            ))
-
-    return GeometryCollection(
-        elements=elements,
-        width_mm=band_w,
-        height_mm=band_h,
-        radial=False,
-        tile_w=uw,
-        tile_h=uh,
-    )
-
-
-# ---------------------------------------------------------------------------
-# 4. Spiral (Archimedean) — with true normal-vector offset paths
-# ---------------------------------------------------------------------------
-
-def spiral(params: Dict[str, Any]) -> GeometryCollection:
-    """Archimedean spiral with optional symmetry arms.
-
-    Params
-    ------
-    arm_dist   : float — distance between arms (mm), default 12
-    circles    : float — number of full turns, default 3
-    thickness  : float — arm thickness / stroke width (mm), default 1.5
-    sym_count  : int   — rotational symmetry copies, default 1
-    point_dist : float — spacing between sample points (mm), default 0.25
-    """
-    arm_dist = float(params.get("arm_dist", 12))
-    circles = float(params.get("circles", 3))
-    thickness = float(params.get("thickness", 1.5))
-    sym_count = int(params.get("sym_count", 1))
-    point_dist = float(params.get("point_dist", 0.25))
-
-    b = arm_dist / 360.0
-    angle_step = point_dist / b if b > 0 else 1.0
-    max_pts = min(2000, int(circles * 360 / angle_step))
-
-    base_pts: List[Pt] = []
-    theta = 0.0
-    for _ in range(max_pts):
-        theta += angle_step
-        r = b * theta
-        rad = theta * math.pi / 180.0
-        base_pts.append((r * math.cos(rad), r * math.sin(rad)))
-
-    max_r = b * circles * 360
-    elements: List[GeometryElement] = []
-
-    for s in range(sym_count):
-        ang = s * 360.0 / sym_count * math.pi / 180.0
-        ca, sa = math.cos(ang), math.sin(ang)
-        flip = s % 2 == 1 and sym_count > 1
-
-        rotated: List[Pt] = []
-        for px, py in base_pts:
-            fy = -py if flip else py
-            rotated.append((px * ca - fy * sa, px * sa + fy * ca))
-
-        # Centre polyline
-        elements.append(GeometryElement(
-            kind="polyline",
-            points=rotated,
-            material_index=s % 2,
-            stroke_width=thickness,
-        ))
-
-    return GeometryCollection(
-        elements=elements,
-        width_mm=max_r * 2,
-        height_mm=max_r * 2,
-        origin_x=max_r,
-        origin_y=max_r,
-        radial=True,
-    )
-
-
-# ---------------------------------------------------------------------------
-# 5. Sunburst
-# ---------------------------------------------------------------------------
-
-def sunburst(params: Dict[str, Any]) -> GeometryCollection:
-    """Sunburst wedge rays between inner and outer radii.
-
-    Params
-    ------
-    rays       : int   — number of ray wedges, default 16
-    inner_frac : float — inner radius as fraction of band_r, default 0.22
-    outer_frac : float — outer radius as fraction of band_r, default 0.92
-    alt_rays   : bool  — alternate wide/narrow rays, default True
-    twist      : float — rotation offset in degrees, default 0
-    band_r     : float — overall radius (mm), default 55
-    """
-    rays = int(params.get("rays", 16))
-    inner_frac = float(params.get("inner_frac", 0.22))
-    outer_frac = float(params.get("outer_frac", 0.92))
-    alt_rays = bool(params.get("alt_rays", True))
-    twist = float(params.get("twist", 0))
-    band_r = float(params.get("band_r", 55))
-
-    o_r = outer_frac * band_r
-    i_r = inner_frac * band_r
-    a_step = math.pi * 2 / rays
-
-    elements: List[GeometryElement] = []
-    for r_idx in range(rays):
-        a0 = r_idx * a_step + twist * math.pi / 180.0
-        w = 0.56 if (alt_rays and r_idx % 2 == 0) else 0.44
-        a1 = a0 + a_step * w
-
-        pts: List[Pt] = []
-        # Outer arc
-        for i in range(11):
-            t = a0 + (a1 - a0) * i / 10
-            pts.append((math.cos(t) * o_r, math.sin(t) * o_r))
-        # Inner arc (reversed)
-        for i in range(10, -1, -1):
-            t = a0 + (a1 - a0) * i / 10
-            pts.append((math.cos(t) * i_r, math.sin(t) * i_r))
-
-        elements.append(GeometryElement(
-            kind="polygon",
-            points=pts,
-            material_index=r_idx % 3,
-            stroke_width=0.25,
-        ))
-
-    # Inner circle
-    elements.append(GeometryElement(
-        kind="circle",
-        points=[(0.0, 0.0)],
-        radius=i_r,
-        material_index=2,
-        stroke_width=0.3,
-    ))
-
-    return GeometryCollection(
-        elements=elements,
-        width_mm=o_r * 2,
-        height_mm=o_r * 2,
-        origin_x=o_r,
-        origin_y=o_r,
-        radial=True,
-    )
-
-
-# ---------------------------------------------------------------------------
-# 6. Feather Fan
-# ---------------------------------------------------------------------------
-
-def feather(params: Dict[str, Any]) -> GeometryCollection:
-    """Layered feather fan blades.
-
-    Params
-    ------
-    blades  : int   — blades per layer, default 14
-    layers  : int   — number of concentric layers, default 2
-    spread  : float — angular spread in degrees, default 270
-    taper   : float — inner-to-outer radius taper 0–1, default 0.42
-    band_r  : float — overall radius (mm), default 55
-    """
-    blades = int(params.get("blades", 14))
-    layers = int(params.get("layers", 2))
-    spread = float(params.get("spread", 270))
-    taper = float(params.get("taper", 0.42))
-    band_r = float(params.get("band_r", 55))
-
-    elements: List[GeometryElement] = []
-    for layer in range(layers - 1, -1, -1):
-        o_r = band_r * (1 - (layer / layers) * 0.65)
-        i_r = o_r * (1 - taper * 0.8)
-        a_step = spread * math.pi / 180.0 / blades
-        base_a = -spread * 0.5 * math.pi / 180.0 + layer * (
-            spread * 0.5 * math.pi / 180.0 / layers
-        )
-
-        for b_idx in range(blades):
-            a0 = base_a + b_idx * a_step
-            a1 = a0 + a_step * 0.9
-
-            pts: List[Pt] = []
-            # Outer arc
-            for i in range(13):
-                t = a0 + (a1 - a0) * i / 12
-                pts.append((math.cos(t) * o_r, math.sin(t) * o_r))
-            # Inner arc (reversed)
-            for i in range(12, -1, -1):
-                t = a0 + (a1 - a0) * i / 12
-                pts.append((math.cos(t) * i_r, math.sin(t) * i_r))
-
-            elements.append(GeometryElement(
-                kind="polygon",
-                points=pts,
-                material_index=(b_idx + layer) % 3,
-                stroke_width=0.2,
-            ))
-
-    return GeometryCollection(
-        elements=elements,
-        width_mm=band_r * 2,
-        height_mm=band_r * 2,
-        origin_x=band_r,
-        origin_y=band_r,
-        radial=True,
-    )
-
-
-# ---------------------------------------------------------------------------
-# 7. Celtic Motif (SVG motif library → tessellated geometry)
-# ---------------------------------------------------------------------------
-
-# Built-in motif metadata.  Each entry has:
-#   paths: list of SVG path 'd' strings
-#   vb_w, vb_h: viewBox dimensions (unitless, for scaling)
-#   recommend_mm: suggested physical size
-#   name / use_case: descriptive
 _CELTIC_MOTIFS: Dict[str, Dict[str, Any]] = {
     "lotus": {
         "name": "Lotus Flower",
@@ -481,7 +101,6 @@ def celtic_motif(params: Dict[str, Any]) -> GeometryCollection:
 
     svg_paths: List[str] | None = params.get("svg_paths")
     if svg_paths is not None:
-        # Custom SVG paths supplied directly
         vb_w = float(params.get("vb_w", 1000))
         vb_h = float(params.get("vb_h", 1000))
         scale_mm = float(params.get("scale_mm", 20))
@@ -497,7 +116,6 @@ def celtic_motif(params: Dict[str, Any]) -> GeometryCollection:
         vb_h = motif["vb_h"]
         scale_mm = float(params.get("scale_mm", motif["recommend_mm"]))
 
-    # Scale factor: fit the larger viewBox axis to scale_mm
     vb_max = max(vb_w, vb_h, 1)
     sf = scale_mm / vb_max
 
@@ -508,13 +126,10 @@ def celtic_motif(params: Dict[str, Any]) -> GeometryCollection:
             if len(sp) < 2:
                 continue
             scaled: List[Pt] = [(x * sf, y * sf) for x, y in sp]
-            # Detect closed (first ≈ last)
-            closed = (
-                math.hypot(
-                    scaled[-1][0] - scaled[0][0],
-                    scaled[-1][1] - scaled[0][1],
-                ) < 0.5
-            )
+            closed = math.hypot(
+                scaled[-1][0] - scaled[0][0],
+                scaled[-1][1] - scaled[0][1],
+            ) < 0.5
             elements.append(GeometryElement(
                 kind="polygon" if closed else "polyline",
                 points=scaled[:-1] if closed else scaled,
@@ -535,1567 +150,34 @@ def celtic_motif(params: Dict[str, Any]) -> GeometryCollection:
 
 
 # ---------------------------------------------------------------------------
-# 8. Vine Scroll (parametric freq-modulated sine with teardrop leaves)
-# ---------------------------------------------------------------------------
-
-def vine_scroll(params: Dict[str, Any]) -> GeometryCollection:
-    """Parametric vine scroll with alternating teardrop leaves.
-
-    Params
-    ------
-    curl      : float — frequency modulation amplitude, default 3.0
-    leaves    : int   — number of leaves, default 8
-    growth    : float — growth factor 0.5–2, default 1.0
-    phase     : float — starting phase offset (radians), default 0
-    vwidth    : float — vine stem width (mm), default 1.5
-    leafsize  : float — leaf scale (mm), default 6
-    length_mm : float — total length of the vine (mm), default 120
-    segments  : int   — backbone segments, default 28
-    """
-    curl = float(params.get("curl", 3.0))
-    n_leaves = int(params.get("leaves", 8))
-    growth_f = float(params.get("growth", 1.0))
-    phase = float(params.get("phase", 0))
-    vwidth = float(params.get("vwidth", 1.5))
-    leafsize = float(params.get("leafsize", 6))
-    length_mm = float(params.get("length_mm", 120))
-    segments = int(params.get("segments", 28))
-
-    # Build backbone (freq-modulated sine curve)
-    seg_len = length_mm / segments
-    backbone: Polyline = [(-length_mm / 2, 0.0)]
-    heading = math.pi / 2 + phase
-    x, y = backbone[0]
-    for i in range(segments):
-        step = seg_len * growth_f
-        x += math.cos(heading) * step
-        y += math.sin(heading) * step
-        backbone.append((x, y))
-        heading += math.sin(i * 0.38) * curl * 0.4
-
-    elements: List[GeometryElement] = []
-
-    # Stem as dual-rail strip
-    stem_strip = offset_polyline_strip(backbone, vwidth / 2)
-    elements.append(GeometryElement(
-        kind="polygon",
-        points=stem_strip,
-        material_index=0,
-        stroke_width=0.25,
-    ))
-
-    # Leaves — teardrop shape at intervals along backbone
-    if n_leaves > 0:
-        leaf_step = max(1, segments // n_leaves)
-    for li in range(n_leaves):
-        idx = min((li + 1) * leaf_step, len(backbone) - 2)
-        px, py = backbone[idx]
-        nx_pt, ny_pt = backbone[min(idx + 1, len(backbone) - 1)]
-        tang = math.atan2(ny_pt - py, nx_pt - px)
-        side = 1 if li % 2 == 0 else -1
-        leaf_angle = tang + side * 1.4
-
-        # Teardrop: base, tip, and two bulge points
-        ls = leafsize
-        tip = (px + math.cos(leaf_angle) * ls, py + math.sin(leaf_angle) * ls)
-        perp = leaf_angle + math.pi / 2
-        mid_x = px + math.cos(leaf_angle) * ls * 0.4
-        mid_y = py + math.sin(leaf_angle) * ls * 0.4
-        bulge = ls * 0.35
-        b1 = (mid_x + math.cos(perp) * bulge, mid_y + math.sin(perp) * bulge)
-        b2 = (mid_x - math.cos(perp) * bulge, mid_y - math.sin(perp) * bulge)
-        leaf_pts: List[Pt] = [(px, py), b1, tip, b2]
-        elements.append(GeometryElement(
-            kind="polygon",
-            points=leaf_pts,
-            material_index=1,
-            stroke_width=0.2,
-        ))
-
-    # Bounding box
-    all_x = [p[0] for e in elements for p in e.points]
-    all_y = [p[1] for e in elements for p in e.points]
-    min_x, max_x = min(all_x, default=0), max(all_x, default=0)
-    min_y, max_y = min(all_y, default=0), max(all_y, default=0)
-    w = max_x - min_x
-    h = max_y - min_y
-
-    return GeometryCollection(
-        elements=elements,
-        width_mm=w,
-        height_mm=h,
-        origin_x=-min_x,
-        origin_y=-min_y,
-        radial=False,
-    )
-
-
-# ---------------------------------------------------------------------------
-# 9. Girih Rosette (5-tile Islamic geometry)
-# ---------------------------------------------------------------------------
-
-# Girih tile definitions (unit edge = 1)
-_GIRIH_TILES: Dict[str, Dict[str, Any]] = {}
-
-
-def _init_girih_tiles() -> None:
-    """Build Girih tile vertex data on first use (lazy)."""
-    if _GIRIH_TILES:
-        return
-
-    sin_pi10 = math.sin(math.pi / 10)
-    sin_pi5 = math.sin(math.pi / 5)
-
-    # Decagon — regular 10-gon, circumradius = 1/(2*sin(π/10))
-    r_dec = 1.0 / (2.0 * sin_pi10)
-    dec_verts: Polyline = []
-    for i in range(10):
-        a = 2 * math.pi * i / 10
-        dec_verts.append((r_dec * math.cos(a), r_dec * math.sin(a)))
-    _GIRIH_TILES["decagon"] = {"verts": dec_verts, "r": r_dec}
-
-    # Pentagon — regular 5-gon
-    r_pent = 1.0 / (2.0 * sin_pi5)
-    pent_verts: Polyline = []
-    for i in range(5):
-        a = 2 * math.pi * i / 5
-        pent_verts.append((r_pent * math.cos(a), r_pent * math.sin(a)))
-    _GIRIH_TILES["pentagon"] = {"verts": pent_verts, "r": r_pent}
-
-    # Hexagon (108, 108, 144, 108, 108, 144)
-    _GIRIH_TILES["hexagon"] = {
-        "verts": make_poly([108, 108, 144, 108, 108, 144]),
-        "r": 0.0,  # computed from verts
-    }
-
-    # Rhombus (72, 108, 72, 108)
-    _GIRIH_TILES["rhombus"] = {
-        "verts": make_poly([72, 108, 72, 108]),
-        "r": 0.0,
-    }
-
-    # Bowtie — non-convex 6-gon
-    _GIRIH_TILES["bowtie"] = {
-        "verts": make_poly([72, 72, 216, 72, 72, 216]),
-        "r": 0.0,
-    }
-
-
-def _place_tile(
-    tile_key: str,
-    edge_mm: float,
-    cx: float, cy: float,
-    rot_deg: float,
-    mat_idx: int,
-) -> GeometryElement:
-    """Place a Girih tile scaled and rotated at (cx, cy)."""
-    _init_girih_tiles()
-    tile = _GIRIH_TILES[tile_key]
-    a = math.radians(rot_deg)
-    ca, sa = math.cos(a), math.sin(a)
-    pts: List[Pt] = []
-    for vx, vy in tile["verts"]:
-        sx, sy = vx * edge_mm, vy * edge_mm
-        pts.append((cx + sx * ca - sy * sa, cy + sx * sa + sy * ca))
-    return GeometryElement(
-        kind="polygon", points=pts, material_index=mat_idx, stroke_width=0.25,
-    )
-
-
-def girih_rosette(params: Dict[str, Any]) -> GeometryCollection:
-    """Five-tile Girih rosette (Decagon → Pentagon → Rhombus → Bowtie → Hexagon).
-
-    Params
-    ------
-    edge_mm      : float — tile edge length (mm), default 10
-    rotation_deg : float — global rotation (degrees), default 0
-    """
-    edge_mm = float(params.get("edge_mm", 10))
-    rot_deg = float(params.get("rotation_deg", 0))
-
-    _init_girih_tiles()
-    sin_pi10 = math.sin(math.pi / 10)
-    sin_pi5 = math.sin(math.pi / 5)
-
-    r_dec = edge_mm / (2.0 * sin_pi10)
-    r_pent = edge_mm / (2.0 * sin_pi5)
-
-    # Apothem = circumradius * cos(π/n)
-    a_dec = r_dec * math.cos(math.pi / 10)
-    a_pent = r_pent * math.cos(math.pi / 5)
-
-    elements: List[GeometryElement] = []
-
-    # Layer 0: central decagon
-    elements.append(_place_tile("decagon", edge_mm, 0, 0, rot_deg, 0))
-
-    # Layer 1: 10 pentagons around the decagon
-    pent_dist = a_dec + a_pent
-    for i in range(10):
-        a = rot_deg + i * 36
-        rad = math.radians(a)
-        px = pent_dist * math.cos(rad)
-        py = pent_dist * math.sin(rad)
-        elements.append(_place_tile("pentagon", edge_mm, px, py, a + 180, 1))
-
-    # Layer 2: 5 rhombuses
-    rhomb_dist = pent_dist + r_pent * 0.95
-    for i in range(5):
-        a = rot_deg + i * 72 + 18
-        rad = math.radians(a)
-        rx = rhomb_dist * math.cos(rad)
-        ry = rhomb_dist * math.sin(rad)
-        elements.append(_place_tile("rhombus", edge_mm, rx, ry, a, 2))
-
-    # Layer 3: 5 bowties
-    bow_dist = pent_dist + r_pent * 1.4
-    for i in range(5):
-        a = rot_deg + i * 72 + 54
-        rad = math.radians(a)
-        bx = bow_dist * math.cos(rad)
-        by = bow_dist * math.sin(rad)
-        elements.append(_place_tile("bowtie", edge_mm, bx, by, a, 3 % 4))
-
-    # Layer 4: 5 hexagons
-    hex_dist = pent_dist + r_pent * 1.1
-    for i in range(5):
-        a = rot_deg + i * 72
-        rad = math.radians(a)
-        hx = hex_dist * math.cos(rad)
-        hy = hex_dist * math.sin(rad)
-        elements.append(_place_tile("hexagon", edge_mm, hx, hy, a + 36, 0))
-
-    # Bounding box
-    all_x = [p[0] for e in elements for p in e.points]
-    all_y = [p[1] for e in elements for p in e.points]
-    r_outer = max(
-        max(abs(v) for v in all_x) if all_x else 0,
-        max(abs(v) for v in all_y) if all_y else 0,
-    )
-    size = r_outer * 2
-
-    return GeometryCollection(
-        elements=elements,
-        width_mm=size,
-        height_mm=size,
-        origin_x=r_outer,
-        origin_y=r_outer,
-        radial=True,
-    )
-
-
-# ---------------------------------------------------------------------------
-# 10. Binding Flow (Catmull-Rom contour with vine wrapping)
-# ---------------------------------------------------------------------------
-
-# Built-in guitar contour (40-point oval approximation, 380 × 280 mm)
-_OVAL_CONTOUR: Polyline = []
-
-
-def _init_oval_contour() -> None:
-    if _OVAL_CONTOUR:
-        return
-    hw, hh = 190.0, 140.0  # half-width, half-height
-    n = 40
-    for i in range(n):
-        a = 2 * math.pi * i / n
-        _OVAL_CONTOUR.append((hw * math.cos(a), hh * math.sin(a)))
-
-
-def binding_flow(params: Dict[str, Any]) -> GeometryCollection:
-    """Vine wrapping along a guitar body contour (Catmull-Rom spline).
-
-    Params
-    ------
-    contour      : list  — optional list of [x,y] points for the body contour
-    density      : int   — spline sample density, default 200
-    band_width   : float — binding band width (mm), default 3
-    leaves       : int   — number of leaves along contour, default 12
-    leafsize     : float — leaf scale (mm), default 4
-    """
-    raw_contour = params.get("contour")
-    density = int(params.get("density", 200))
-    band_w = float(params.get("band_width", 3))
-    n_leaves = int(params.get("leaves", 12))
-    leafsize = float(params.get("leafsize", 4))
-
-    if raw_contour and len(raw_contour) >= 4:
-        contour: Polyline = [(float(p[0]), float(p[1])) for p in raw_contour]
-    else:
-        _init_oval_contour()
-        contour = list(_OVAL_CONTOUR)
-
-    # Close the contour for spline
-    closed_contour = contour + contour[:3]
-    sampled = sample_spline(closed_contour, density)
-
-    elements: List[GeometryElement] = []
-
-    # Body outline
-    elements.append(GeometryElement(
-        kind="polygon",
-        points=sampled,
-        material_index=0,
-        stroke_width=0.3,
-    ))
-
-    # Binding strip (outer offset)
-    binding_strip = offset_polyline_strip(sampled, band_w / 2)
-    elements.append(GeometryElement(
-        kind="polygon",
-        points=binding_strip,
-        material_index=1,
-        stroke_width=0.2,
-    ))
-
-    # Leaves along contour
-    n_pts = len(sampled)
-    leaf_step = max(1, n_pts // n_leaves)
-    for li in range(n_leaves):
-        idx = (li * leaf_step) % n_pts
-        px, py = sampled[idx]
-        nx_idx = (idx + 1) % n_pts
-        nx_pt, ny_pt = sampled[nx_idx]
-        tang = math.atan2(ny_pt - py, nx_pt - px)
-        # Outward normal
-        normal = tang + math.pi / 2
-        side = 1 if li % 2 == 0 else -1
-        leaf_angle = normal * side
-
-        ls = leafsize
-        tip = (
-            px + math.cos(leaf_angle) * ls,
-            py + math.sin(leaf_angle) * ls,
-        )
-        perp = leaf_angle + math.pi / 2
-        mid_x = px + math.cos(leaf_angle) * ls * 0.4
-        mid_y = py + math.sin(leaf_angle) * ls * 0.4
-        bulge = ls * 0.3
-        b1 = (mid_x + math.cos(perp) * bulge, mid_y + math.sin(perp) * bulge)
-        b2 = (mid_x - math.cos(perp) * bulge, mid_y - math.sin(perp) * bulge)
-        elements.append(GeometryElement(
-            kind="polygon",
-            points=[(px, py), b1, tip, b2],
-            material_index=2,
-            stroke_width=0.2,
-        ))
-
-    all_x = [p[0] for e in elements for p in e.points]
-    all_y = [p[1] for e in elements for p in e.points]
-    min_x, max_x = min(all_x, default=0), max(all_x, default=0)
-    min_y, max_y = min(all_y, default=0), max(all_y, default=0)
-    w = max_x - min_x
-    h = max_y - min_y
-
-    return GeometryCollection(
-        elements=elements,
-        width_mm=w,
-        height_mm=h,
-        origin_x=(max_x + min_x) / 2,
-        origin_y=(max_y + min_y) / 2,
-        radial=True,
-    )
-
-
-# ---------------------------------------------------------------------------
-# 11. Hex Chain (gallery motif — vertical hex chain band)
-# ---------------------------------------------------------------------------
-
-# Pre-computed hex chain unit cell (from reference SVG 01_hex_chain_vertical)
-# viewBox 300×1000, one repeat tile is 300×250 (4 tiles in the SVG)
-_HEX_CHAIN_CELL: List[Tuple[List[Pt], int]] = [
-    # Outer hexagon (mat 0)
-    ([(75, 0), (150, 43), (150, 130), (75, 173), (0, 130), (0, 43)], 0),
-    # Inner hexagon cutout (mat 1)
-    ([(75, 30), (125, 59), (125, 114), (75, 143), (25, 114), (25, 59)], 1),
-    # Vertical connector bar (mat 0)
-    ([(55, 173), (95, 173), (95, 250), (55, 250)], 0),
-]
-
-
-def hex_chain(params: Dict[str, Any]) -> GeometryCollection:
-    """Vertical hex chain band pattern.
-
-    Params
-    ------
-    cell_h_mm : float — height of one hex cell (mm), default 25
-    count     : int   — number of cells vertically, default 4
-    material  : int   — primary material index, default 0
-    """
-    cell_h = float(params.get("cell_h_mm", 25))
-    count = int(params.get("count", 4))
-
-    # Source cell is 300×250 in viewBox coords
-    sf = cell_h / 250.0
-    cell_w = 300.0 * sf
-
-    elements: List[GeometryElement] = []
-    for ci in range(count):
-        dy = ci * cell_h
-        for pts_src, mat in _HEX_CHAIN_CELL:
-            scaled = [(x * sf, y * sf + dy) for x, y in pts_src]
-            elements.append(GeometryElement(
-                kind="polygon", points=scaled,
-                material_index=mat, stroke_width=0.25,
-            ))
-
-    return GeometryCollection(
-        elements=elements,
-        width_mm=cell_w,
-        height_mm=cell_h * count,
-        radial=False,
-        tile_w=cell_w,
-        tile_h=cell_h,
-    )
-
-
-# ---------------------------------------------------------------------------
-# 12. Chevron Panel (gallery motif — nested chevrons)
-# ---------------------------------------------------------------------------
-
-def chevron_panel(params: Dict[str, Any]) -> GeometryCollection:
-    """Nested chevron band pattern.
-
-    Params
-    ------
-    band_h_mm : float — height of one chevron unit (mm), default 20
-    count     : int   — number of chevron units vertically, default 4
-    apex_frac : float — how far the apex extends (0–1), default 0.5
-    """
-    band_h = float(params.get("band_h_mm", 20))
-    count = int(params.get("count", 4))
-    apex = float(params.get("apex_frac", 0.5))
-
-    band_w = band_h * 0.45  # aspect ratio from SVG reference (450:1000)
-    layers = 4  # 4 nested chevrons per unit
-
-    elements: List[GeometryElement] = []
-    for ci in range(count):
-        base_y = ci * band_h
-        for li in range(layers):
-            inset = li * band_w * 0.08
-            shrink = li * band_h * 0.06
-            x0, x1 = inset, band_w - inset
-            mid_x = (x0 + x1) * 0.5
-            y_top = base_y + shrink
-            y_apex = base_y + band_h * apex
-            y_bot = base_y + band_h - shrink
-
-            pts: List[Pt] = [
-                (x0, y_top), (mid_x, y_apex), (x1, y_top),
-                (x1, y_bot), (mid_x, y_bot - band_h * (apex - 0.1)), (x0, y_bot),
-            ]
-            elements.append(GeometryElement(
-                kind="polygon", points=pts,
-                material_index=li % 2, stroke_width=0.25,
-            ))
-
-    return GeometryCollection(
-        elements=elements,
-        width_mm=band_w,
-        height_mm=band_h * count,
-        radial=False,
-        tile_w=band_w,
-        tile_h=band_h,
-    )
-
-
-# ---------------------------------------------------------------------------
-# 13. Parquet Panel (concentric diamonds with radiating wedges)
-# ---------------------------------------------------------------------------
-
-def parquet_panel(params: Dict[str, Any]) -> GeometryCollection:
-    """Parquet diamond panel.
-
-    Params
-    ------
-    size_mm  : float — panel height (mm), default 40
-    layers   : int   — number of concentric diamond layers, default 4
-    """
-    size_mm = float(params.get("size_mm", 40))
-    layers = int(params.get("layers", 4))
-
-    w = size_mm * 0.8  # 800:1000 aspect from SVG ref
-    h = size_mm
-    cx, cy = w / 2, h / 2
-
-    elements: List[GeometryElement] = []
-    for li in range(layers):
-        frac = 1.0 - li * 0.2
-        hw = w * 0.45 * frac
-        hh = h * 0.45 * frac
-        pts: List[Pt] = [
-            (cx, cy - hh), (cx + hw, cy), (cx, cy + hh), (cx - hw, cy),
-        ]
-        elements.append(GeometryElement(
-            kind="polygon", points=pts,
-            material_index=li % 2, stroke_width=0.25,
-        ))
-
-    # Cross-hatching wedges (4 quadrant fills)
-    for qi in range(4):
-        a0 = qi * math.pi / 2 + math.pi / 4
-        a1 = a0 + math.pi / 6
-        r_outer = min(w, h) * 0.44
-        pts_q: List[Pt] = [(cx, cy)]
-        for s in range(7):
-            a = a0 + (a1 - a0) * s / 6
-            pts_q.append((cx + r_outer * math.cos(a), cy + r_outer * math.sin(a)))
-        elements.append(GeometryElement(
-            kind="polygon", points=pts_q,
-            material_index=0, stroke_width=0.25,
-        ))
-
-    return GeometryCollection(
-        elements=elements, width_mm=w, height_mm=h,
-        radial=False,
-    )
-
-
-# ---------------------------------------------------------------------------
-# 14. Nested Diamond (band of concentric diamond groups)
-# ---------------------------------------------------------------------------
-
-def nested_diamond(params: Dict[str, Any]) -> GeometryCollection:
-    """Band of nested diamond groups with corner accents.
-
-    Params
-    ------
-    band_w_mm  : float — total band width (mm), default 60
-    diamonds   : int   — number of diamond groups, default 4
-    nest_depth : int   — concentric layers per group, default 3
-    """
-    band_w = float(params.get("band_w_mm", 60))
-    diamonds = int(params.get("diamonds", 4))
-    nest_depth = int(params.get("nest_depth", 3))
-
-    cell_w = band_w / diamonds
-    band_h = cell_w * 0.32  # aspect from SVG ref (1300:420 ≈ 3:1)
-
-    elements: List[GeometryElement] = []
-    for di in range(diamonds):
-        cx = di * cell_w + cell_w / 2
-        cy = band_h / 2
-        for ni in range(nest_depth):
-            frac = 1.0 - ni * 0.25
-            hw = cell_w * 0.4 * frac
-            hh = band_h * 0.42 * frac
-            pts: List[Pt] = [
-                (cx, cy - hh), (cx + hw, cy), (cx, cy + hh), (cx - hw, cy),
-            ]
-            elements.append(GeometryElement(
-                kind="polygon", points=pts,
-                material_index=ni % 2, stroke_width=0.25,
-            ))
-
-        # Corner accent diamonds (small, at 4 corners of the group)
-        accent_r = cell_w * 0.06
-        for ax_off, ay_off in [(-0.38, -0.35), (0.38, -0.35),
-                                (-0.38, 0.35), (0.38, 0.35)]:
-            ax = cx + cell_w * ax_off
-            ay = cy + band_h * ay_off
-            pts_a: List[Pt] = [
-                (ax, ay - accent_r), (ax + accent_r, ay),
-                (ax, ay + accent_r), (ax - accent_r, ay),
-            ]
-            elements.append(GeometryElement(
-                kind="polygon", points=pts_a,
-                material_index=0, stroke_width=0.2,
-            ))
-
-    return GeometryCollection(
-        elements=elements, width_mm=band_w, height_mm=band_h,
-        radial=False, tile_w=cell_w, tile_h=band_h,
-    )
-
-
-# ---------------------------------------------------------------------------
-# 15. Rope Border Motif (static S-curve weave from SVG reference)
-# ---------------------------------------------------------------------------
-
-def rope_border_motif(params: Dict[str, Any]) -> GeometryCollection:
-    """Static rope border motif — interleaving S-curve strands.
-
-    For parametric twisted rope see the ``twisted_rope`` generator.
-
-    Params
-    ------
-    band_w_mm : float — band width (mm), default 60
-    repeats   : int   — horizontal repeats, default 4
-    material  : int   — material index, default 0
-    """
-    band_w = float(params.get("band_w_mm", 60))
-    repeats = int(params.get("repeats", 4))
-    material = int(params.get("material", 0))
-
-    # One repeat unit: 2 interleaving S-curves, ~2 strands
-    unit_w = band_w / repeats
-    unit_h = unit_w * 0.22  # 1200:260 aspect from SVG ref
-
-    elements: List[GeometryElement] = []
-    n_pts = 30
-    for ri in range(repeats):
-        ox = ri * unit_w
-        for strand in range(2):
-            phase = strand * math.pi
-            pts: Polyline = []
-            for i in range(n_pts):
-                t = i / (n_pts - 1)
-                x = ox + t * unit_w
-                y = unit_h * 0.5 + math.sin(t * 2 * math.pi + phase) * unit_h * 0.35
-                pts.append((x, y))
-            # Create strand outline via strip
-            strip = offset_polyline_strip(pts, unit_h * 0.08)
-            elements.append(GeometryElement(
-                kind="polygon", points=strip,
-                material_index=(material + strand) % 3, stroke_width=0.25,
-            ))
-
-    return GeometryCollection(
-        elements=elements, width_mm=band_w, height_mm=unit_h,
-        radial=False, tile_w=unit_w, tile_h=unit_h,
-    )
-
-
-# ---------------------------------------------------------------------------
-# 16. Twisted Rope (parametric N-strand weaving)
-# ---------------------------------------------------------------------------
-
-ROPE_PRESETS: Dict[str, Dict[str, Any]] = {
-    "purfling": {
-        "num_strands": 3, "rope_width": 4, "twist_per_mm": 0.40,
-        "strand_width": 0.5, "taper": 0.1, "shape": "straight",
-        "length_mm": 100, "strand_mats": [0, 1, 2],
-    },
-    "binding": {
-        "num_strands": 3, "rope_width": 7, "twist_per_mm": 0.22,
-        "strand_width": 0.58, "taper": 0.0, "shape": "swave",
-        "length_mm": 180, "strand_mats": [2, 1, 0],
-    },
-    "headstock": {
-        "num_strands": 2, "rope_width": 5, "twist_per_mm": 0.30,
-        "strand_width": 0.6, "taper": 0.2, "shape": "cscroll",
-        "length_mm": 90, "strand_mats": [0, 1],
-    },
-    "fret": {
-        "num_strands": 4, "rope_width": 3, "twist_per_mm": 0.55,
-        "strand_width": 0.45, "taper": 0.3, "shape": "straight",
-        "length_mm": 45, "strand_mats": [0, 1, 2, 3],
-    },
-}
-
-
-def twisted_rope(params: Dict[str, Any]) -> GeometryCollection:
-    """Parametric twisted rope inlay band.
-
-    Params
-    ------
-    preset       : str   — preset name (purfling/binding/headstock/fret)
-    num_strands  : int   — 2–5, default 3
-    rope_width   : float — total rope width (mm), default 6
-    twist_per_mm : float — angular frequency omega (rad/mm), default 0.25
-    strand_width : float — fraction of rope width per strand, 0.2–0.9, default 0.55
-    taper        : float — depth-based width taper, 0–0.5, default 0
-    shape        : str   — centerline shape, default "straight"
-    length_mm    : float — band length, default 120
-    amplitude    : float — S-wave amplitude (mm), default 10
-    strand_mats  : list  — material_index per strand, default [0,1,2]
-    custom_pts   : list  — custom centerline points [[x,y], ...]
-    """
-    # Apply preset as base, then override with explicit params
-    preset_name = params.get("preset")
-    base: Dict[str, Any] = {}
-    if preset_name and preset_name in ROPE_PRESETS:
-        base = dict(ROPE_PRESETS[preset_name])
-    base.update({k: v for k, v in params.items() if k != "preset"})
-
-    num_strands = max(2, min(5, int(base.get("num_strands", 3))))
-    rope_width = float(base.get("rope_width", 6))
-    twist_per_mm = float(base.get("twist_per_mm", 0.25))
-    strand_width_frac = max(0.2, min(0.9, float(base.get("strand_width", 0.55))))
-    taper_val = max(0.0, min(0.5, float(base.get("taper", 0))))
-    shape = str(base.get("shape", "straight"))
-    length_mm = float(base.get("length_mm", 120))
-    amplitude = float(base.get("amplitude", 10))
-    raw_custom = base.get("custom_pts")
-    custom_pts: Polyline | None = None
-    if raw_custom and len(raw_custom) >= 2:
-        custom_pts = [(float(p[0]), float(p[1])) for p in raw_custom]
-    strand_mats = base.get("strand_mats", list(range(num_strands)))
-
-    rope_radius = rope_width / 2
-    strand_w_mm = rope_width * strand_width_frac / num_strands
-
-    # Build centerline
-    centerline = build_centerline(
-        shape, length_mm, amplitude=amplitude,
-        custom_pts=custom_pts,
-    )
-
-    # Generate strand paths
-    strands = generate_strand_paths(
-        centerline, num_strands, rope_radius,
-        twist_per_mm, strand_width_frac, taper_val,
-    )
-
-    elements: List[GeometryElement] = []
-
-    # Centerline as construction polyline (material_index -1 convention)
-    elements.append(GeometryElement(
-        kind="polyline", points=centerline,
-        material_index=0, stroke_width=0.15,
-    ))
-
-    # Strand outlines
-    for k, (strand_pts, depths, widths) in enumerate(strands):
-        mat_idx = strand_mats[k % len(strand_mats)]
-        avg_w = sum(widths) / len(widths) if widths else strand_w_mm
-        half_w = avg_w * rope_radius * 0.5
-
-        # Full strand outline via strip
-        strip = offset_polyline_strip(strand_pts, half_w)
-        elements.append(GeometryElement(
-            kind="polygon", points=strip,
-            material_index=mat_idx, stroke_width=0.25,
-        ))
-
-    # Envelope (true geometric pocket boundary — follows curve, not a rect)
-    envelope = offset_polyline_strip(centerline, rope_radius * 1.05)
-    elements.append(GeometryElement(
-        kind="polygon", points=envelope,
-        material_index=0, stroke_width=0.15,
-    ))
-
-    # Bounding box
-    all_x = [p[0] for e in elements for p in e.points]
-    all_y = [p[1] for e in elements for p in e.points]
-    min_x = min(all_x, default=0)
-    max_x = max(all_x, default=0)
-    min_y = min(all_y, default=0)
-    max_y = max(all_y, default=0)
-    w = max_x - min_x
-    h = max_y - min_y
-
-    return GeometryCollection(
-        elements=elements,
-        width_mm=w,
-        height_mm=h,
-        origin_x=-min_x,
-        origin_y=-min_y,
-        radial=False,
-    )
-
-
-# ---------------------------------------------------------------------------
-# 17. Checker Chevron — diamond grid with alternating material slots
-#     Ported from marquetry_engine.html checkerChevTiles()
-# ---------------------------------------------------------------------------
-
-def checker_chevron(params: Dict[str, Any]) -> GeometryCollection:
-    """Diamond grid with alternating material slots per (col+row)%2.
-
-    Params
-    ------
-    cell_w  : float — cell width (mm), default 10
-    diamond_r : float — diamond half-diagonal (mm), default 8
-    band_w  : float — total band width (mm), default 120
-    band_h  : float — total band height (mm), default 40
-    """
-    cell_w = float(params.get("cell_w", 10))
-    diamond_r = float(params.get("diamond_r", 8))
-    band_w = float(params.get("band_w", 120))
-    band_h = float(params.get("band_h", 40))
-
-    cols = math.ceil(band_w / cell_w) + 1
-    rows = math.ceil(band_h / cell_w) + 1
-
-    elements: List[GeometryElement] = []
-    for row in range(rows):
-        for col in range(cols):
-            cx = col * cell_w + cell_w / 2
-            cy = row * cell_w + cell_w / 2
-            r = min(diamond_r, cell_w * 0.48)
-            pts: List[Pt] = [
-                (cx, cy - r),
-                (cx + r, cy),
-                (cx, cy + r),
-                (cx - r, cy),
-            ]
-            mat_slot = (col + row) % 2
-            grain = 0.0 if mat_slot == 0 else 45.0
-            elements.append(GeometryElement(
-                kind="polygon",
-                points=pts,
-                material_index=mat_slot,
-                stroke_width=0.25,
-                grain_angle=grain,
-            ))
-
-    return GeometryCollection(
-        elements=elements,
-        width_mm=band_w,
-        height_mm=band_h,
-        radial=False,
-        tile_w=cell_w * 2,
-        tile_h=cell_w * 2,
-    )
-
-
-# ---------------------------------------------------------------------------
-# 18. Block-Pin Column — diamond + rect pin alternating columns
-#     Ported from marquetry_engine.html blockPinTiles()
-# ---------------------------------------------------------------------------
-
-def block_pin(params: Dict[str, Any]) -> GeometryCollection:
-    """Alternating columns of diamond accents and rectangular pins.
-
-    Params
-    ------
-    col_w      : float — column width (mm), default 15
-    cell_h     : float — cell height (mm), default 22
-    diamond_r  : float — diamond half-diagonal (mm), default 6
-    band_w     : float — total band width (mm), default 120
-    band_h     : float — total band height (mm), default 40
-    """
-    col_w = float(params.get("col_w", 15))
-    cell_h = float(params.get("cell_h", 22))
-    diamond_r = float(params.get("diamond_r", 6))
-    band_w = float(params.get("band_w", 120))
-    band_h = float(params.get("band_h", 40))
-
-    rect_h = cell_h * 0.35
-    cols = math.ceil(band_w / col_w) + 1
-    rows = math.ceil(band_h / cell_h) + 1
-
-    elements: List[GeometryElement] = []
-    for col in range(cols):
-        cx = col * col_w + col_w / 2
-        is_diamond_col = col % 2 == 0
-        y_offset = cell_h / 2 if col % 2 == 1 else 0.0
-
-        for row in range(rows + 1):
-            cy = row * cell_h + y_offset
-            if cy > band_h + cell_h:
-                break
-
-            if is_diamond_col:
-                # Diamond accent
-                r = min(diamond_r, col_w * 0.4)
-                pts: List[Pt] = [
-                    (cx, cy - r),
-                    (cx + r, cy),
-                    (cx, cy + r),
-                    (cx - r, cy),
-                ]
-                elements.append(GeometryElement(
-                    kind="polygon",
-                    points=pts,
-                    material_index=0,
-                    stroke_width=0.25,
-                    grain_angle=0.0,
-                ))
-            else:
-                # Rectangular pin
-                hw = col_w * 0.35
-                hh = rect_h / 2
-                pts = [
-                    (cx - hw, cy - hh),
-                    (cx + hw, cy + hh),
-                ]
-                elements.append(GeometryElement(
-                    kind="rect",
-                    points=pts,
-                    material_index=1,
-                    stroke_width=0.25,
-                    grain_angle=90.0,
-                ))
-
-    return GeometryCollection(
-        elements=elements,
-        width_mm=band_w,
-        height_mm=band_h,
-        radial=False,
-        tile_w=col_w * 2,
-        tile_h=cell_h,
-    )
-
-
-# ---------------------------------------------------------------------------
-# 19. Amsterdam Flower — N kite-shaped petals with centre disc
-#     Ported from marquetry_engine.html amsterdamFlowerTiles()
-# ---------------------------------------------------------------------------
-
-def amsterdam_flower(params: Dict[str, Any]) -> GeometryCollection:
-    """N-fold kite-petal medallion with optional centre disc.
-
-    Params
-    ------
-    n_fold         : int   — number of petals, default 8
-    outer_r        : float — outer radius (mm), default 40
-    inner_r        : float — inner radius / disc region (mm), default 12
-    mid_frac       : float — mid-radius fraction 0–1, default 0.6
-    inner_half_frac: float — petal angular width fraction, default 0.8
-    """
-    n_fold = max(3, int(params.get("n_fold", 8)))
-    outer_r = float(params.get("outer_r", 40))
-    inner_r = float(params.get("inner_r", 12))
-    mid_frac = float(params.get("mid_frac", 0.6))
-    inner_half_frac = float(params.get("inner_half_frac", 0.8))
-
-    step = 2 * math.pi / n_fold
-    half_a = step / 2
-    mid_r = inner_r + (outer_r - inner_r) * mid_frac
-    inner_half = half_a * inner_half_frac
-
-    elements: List[GeometryElement] = []
-
-    for k in range(n_fold):
-        th = k * step
-        p0 = (inner_r * math.cos(th - inner_half), inner_r * math.sin(th - inner_half))
-        p1 = (outer_r * math.cos(th), outer_r * math.sin(th))
-        p2 = (inner_r * math.cos(th + inner_half), inner_r * math.sin(th + inner_half))
-        p3 = (mid_r * math.cos(th + half_a), mid_r * math.sin(th + half_a))
-
-        elements.append(GeometryElement(
-            kind="polygon",
-            points=[p0, p1, p2, p3],
-            material_index=k % 2,
-            stroke_width=0.25,
-            grain_angle=math.degrees(th),
-        ))
-
-    # Centre disc (24-sided polygon)
-    disc_r = inner_r * 0.55
-    disc_pts: List[Pt] = [
-        (disc_r * math.cos(i * 2 * math.pi / 24),
-         disc_r * math.sin(i * 2 * math.pi / 24))
-        for i in range(24)
-    ]
-    elements.append(GeometryElement(
-        kind="polygon",
-        points=disc_pts,
-        material_index=0,
-        stroke_width=0.25,
-        grain_angle=0.0,
-    ))
-
-    return GeometryCollection(
-        elements=elements,
-        width_mm=outer_r * 2,
-        height_mm=outer_r * 2,
-        origin_x=outer_r,
-        origin_y=outer_r,
-        radial=True,
-    )
-
-
-# ---------------------------------------------------------------------------
-# 20. Spiro Arc Medallion — overlapping thick arc segments with Z-order
-#     Ported from marquetry_engine.html spiroArcTiles()
-# ---------------------------------------------------------------------------
-
-def spiro_arc(params: Dict[str, Any]) -> GeometryCollection:
-    """Spirograph-style overlapping thick arc medallion.
-
-    Params
-    ------
-    arc_count : int   — number of arcs, default 12
-    outer_r   : float — outer radius (mm), default 40
-    inner_r   : float — inner radius (mm), default 12
-    sweep_deg : float — arc sweep angle (degrees), default 65
-    """
-    arc_count = max(3, int(params.get("arc_count", 12)))
-    outer_r = float(params.get("outer_r", 40))
-    inner_r = float(params.get("inner_r", 12))
-    sweep_deg = float(params.get("sweep_deg", 65))
-
-    full_sweep = math.radians(sweep_deg)
-    step = 2 * math.pi / arc_count
-    n_pts = 24
-
-    elements: List[GeometryElement] = []
-
-    for k in range(arc_count):
-        theta = k * step
-        start_a = theta - full_sweep / 2
-        end_a = theta + full_sweep / 2
-
-        pts: List[Pt] = []
-        # Outer arc (forward)
-        for i in range(n_pts + 1):
-            a = start_a + (end_a - start_a) * i / n_pts
-            pts.append((outer_r * math.cos(a), outer_r * math.sin(a)))
-        # Inner arc (reverse)
-        for i in range(n_pts, -1, -1):
-            a = start_a + (end_a - start_a) * i / n_pts
-            pts.append((inner_r * math.cos(a), inner_r * math.sin(a)))
-
-        elements.append(GeometryElement(
-            kind="polygon",
-            points=pts,
-            material_index=k % 2,
-            stroke_width=0.25,
-            grain_angle=math.degrees(theta),
-        ))
-
-    # Sort: even arcs (mat 0) behind, odd arcs (mat 1) on top
-    elements.sort(key=lambda e: e.material_index)
-
-    return GeometryCollection(
-        elements=elements,
-        width_mm=outer_r * 2,
-        height_mm=outer_r * 2,
-        origin_x=outer_r,
-        origin_y=outer_r,
-        radial=True,
-    )
-
-
-# ---------------------------------------------------------------------------
-# 21. Square Floral — radial narrow kite ring
-#     Ported from marquetry_engine.html sqFloralTiles()
-# ---------------------------------------------------------------------------
-
-def sq_floral(params: Dict[str, Any]) -> GeometryCollection:
-    """Radial ring of narrow kite petals.
-
-    Params
-    ------
-    n_fold  : int   — number of petals, default 12
-    outer_r : float — outer radius (mm), default 40
-    inner_r : float — inner radius (mm), default 14
-    """
-    n_fold = max(3, int(params.get("n_fold", 12)))
-    outer_r = float(params.get("outer_r", 40))
-    inner_r = float(params.get("inner_r", 14))
-
-    step = 2 * math.pi / n_fold
-    half_a = step / 2
-
-    elements: List[GeometryElement] = []
-    for k in range(n_fold):
-        th = k * step
-        p0 = (inner_r * math.cos(th - half_a * 0.7), inner_r * math.sin(th - half_a * 0.7))
-        p1 = (outer_r * math.cos(th), outer_r * math.sin(th))
-        p2 = (inner_r * math.cos(th + half_a * 0.7), inner_r * math.sin(th + half_a * 0.7))
-
-        elements.append(GeometryElement(
-            kind="polygon",
-            points=[p0, p1, p2],
-            material_index=k % 2,
-            stroke_width=0.25,
-            grain_angle=math.degrees(th),
-        ))
-
-    return GeometryCollection(
-        elements=elements,
-        width_mm=outer_r * 2,
-        height_mm=outer_r * 2,
-        origin_x=outer_r,
-        origin_y=outer_r,
-        radial=True,
-    )
-
-
-# ---------------------------------------------------------------------------
-# 22. Oak Medallion — N-fold kite ring with multi-layer concentric rings
-#     Ported from amsterdam_spiro_engine.html medalState / kitePath()
-# ---------------------------------------------------------------------------
-
-def _kite_path(
-    cx: float, cy: float,
-    ri: float, ro: float,
-    half_w: float, tan_frac: float,
-    angle_rad: float,
-    n_pts_per_arc: int = 12,
-) -> List[Pt]:
-    """Build a kite shape as a closed polygon approximating 4 cubic Bézier arcs.
-
-    Tips at radii *ri* (inner) and *ro* (outer) along *angle_rad*.
-    Half-width *half_w* at the midpoint.  *tan_frac* controls curvature.
-    """
-    mid = (ri + ro) / 2
-    arm = (ro - ri) * tan_frac / 2
-    cos_a = math.cos(angle_rad)
-    sin_a = math.sin(angle_rad)
-
-    def _rotate(lx: float, ly: float) -> Pt:
-        return (cx + lx * cos_a - ly * sin_a,
-                cy + lx * sin_a + ly * cos_a)
-
-    inner_tip = _rotate(ri, 0)
-    outer_tip = _rotate(ro, 0)
-    mid_top = _rotate(mid, -half_w)
-    mid_bot = _rotate(mid, half_w)
-
-    c1a = _rotate(ri, -arm)
-    c1b = _rotate(mid - arm, -half_w)
-    c2a = _rotate(mid + arm, -half_w)
-    c2b = _rotate(ro, -arm)
-    c3a = _rotate(ro, arm)
-    c3b = _rotate(mid + arm, half_w)
-    c4a = _rotate(mid - arm, half_w)
-    c4b = _rotate(ri, arm)
-
-    def _bezier_pts(
-        p0: Pt, p1: Pt, p2: Pt, p3: Pt, n: int,
-    ) -> List[Pt]:
-        pts: List[Pt] = []
-        for i in range(n + 1):
-            t = i / n
-            u = 1 - t
-            x = (u**3 * p0[0] + 3 * u**2 * t * p1[0] +
-                 3 * u * t**2 * p2[0] + t**3 * p3[0])
-            y = (u**3 * p0[1] + 3 * u**2 * t * p1[1] +
-                 3 * u * t**2 * p2[1] + t**3 * p3[1])
-            pts.append((x, y))
-        return pts
-
-    n = n_pts_per_arc
-    pts: List[Pt] = []
-    pts.extend(_bezier_pts(inner_tip, c1a, c1b, mid_top, n))
-    pts.extend(_bezier_pts(mid_top, c2a, c2b, outer_tip, n)[1:])
-    pts.extend(_bezier_pts(outer_tip, c3a, c3b, mid_bot, n)[1:])
-    pts.extend(_bezier_pts(mid_bot, c4a, c4b, inner_tip, n)[1:])
-    return pts
-
-
-def oak_medallion(params: Dict[str, Any]) -> GeometryCollection:
-    """N-fold kite-ring medallion with concentric layers.
-
-    Params
-    ------
-    n_fold      : int   — number of kite pairs, default 16
-    inner_r     : float — inner radius (mm), default 8
-    outer_r     : float — outer radius (mm), default 35
-    kite_w      : float — kite half-width (mm), default 8
-    tan_frac    : float — tangent arm ratio 0–1, default 0.55
-    ring_count  : int   — 1–3 concentric rings, default 2
-    inner_scale : float — inner kite scale factor, default 0.38
-    mid_r       : float — mid-radius for inner kites (mm), default 13
-    """
-    n_fold = max(4, int(params.get("n_fold", 16)))
-    inner_r = float(params.get("inner_r", 8))
-    outer_r = float(params.get("outer_r", 35))
-    kite_w = float(params.get("kite_w", 8))
-    tan_frac = float(params.get("tan_frac", 0.55))
-    ring_count = max(1, min(3, int(params.get("ring_count", 2))))
-    inner_scale = float(params.get("inner_scale", 0.38))
-    mid_r = float(params.get("mid_r", 13))
-
-    step = 2 * math.pi / n_fold
-    elements: List[GeometryElement] = []
-
-    for k in range(n_fold):
-        angle = k * step
-
-        # Primary kite
-        pts = _kite_path(0, 0, inner_r, outer_r, kite_w, tan_frac, angle)
-        elements.append(GeometryElement(
-            kind="polygon", points=pts,
-            material_index=k % 2,
-            stroke_width=0.25,
-            grain_angle=math.degrees(angle),
-        ))
-
-        # Inner kite (ring 2) — placed at half-angle offset
-        if ring_count >= 2:
-            r2_w = kite_w * inner_scale
-            rl = inner_r + (mid_r - inner_r) * 0.4
-            rr = inner_r + (mid_r - inner_r) * 1.3
-            inner_angle = angle + step / 2
-            pts2 = _kite_path(0, 0, rl, rr, r2_w, tan_frac * 0.8, inner_angle)
-            elements.append(GeometryElement(
-                kind="polygon", points=pts2,
-                material_index=(k + 1) % 2,
-                stroke_width=0.25,
-                grain_angle=math.degrees(inner_angle),
-            ))
-
-        # Outer accent kite (ring 3)
-        if ring_count >= 3:
-            r3_w = kite_w * inner_scale * 0.5
-            pts3 = _kite_path(0, 0, outer_r * 0.85, outer_r * 1.05,
-                              r3_w, tan_frac * 0.6, angle)
-            elements.append(GeometryElement(
-                kind="polygon", points=pts3,
-                material_index=2,
-                stroke_width=0.25,
-                grain_angle=math.degrees(angle),
-            ))
-
-    # Centre disc (24-sided polygon)
-    disc_r = inner_r * 0.52
-    disc_pts: List[Pt] = [
-        (disc_r * math.cos(i * 2 * math.pi / 24),
-         disc_r * math.sin(i * 2 * math.pi / 24))
-        for i in range(24)
-    ]
-    elements.append(GeometryElement(
-        kind="polygon", points=disc_pts,
-        material_index=2,
-        stroke_width=0.25,
-        grain_angle=0.0,
-    ))
-
-    bbox = outer_r * (1.05 if ring_count >= 3 else 1.0)
-    return GeometryCollection(
-        elements=elements,
-        width_mm=bbox * 2,
-        height_mm=bbox * 2,
-        origin_x=bbox,
-        origin_y=bbox,
-        radial=True,
-    )
-
-
-# ---------------------------------------------------------------------------
-# 23. Floral Spray — cubic Bézier stem with tangent-following petals
-#     Ported from amsterdam_spiro_engine.html sprayState / drawSpray()
-# ---------------------------------------------------------------------------
-
-def _cubic_bezier_eval(
-    p0: Pt, p1: Pt, p2: Pt, p3: Pt, t: float,
-) -> Pt:
-    """Evaluate a cubic Bézier curve at parameter *t*."""
-    u = 1 - t
-    return (
-        u**3 * p0[0] + 3 * u**2 * t * p1[0] + 3 * u * t**2 * p2[0] + t**3 * p3[0],
-        u**3 * p0[1] + 3 * u**2 * t * p1[1] + 3 * u * t**2 * p2[1] + t**3 * p3[1],
-    )
-
-
-def _cubic_bezier_tangent(
-    p0: Pt, p1: Pt, p2: Pt, p3: Pt, t: float,
-) -> Pt:
-    """Tangent vector of a cubic Bézier at *t* (unnormalized)."""
-    u = 1 - t
-    return (
-        3 * (u**2 * (p1[0] - p0[0]) + 2 * u * t * (p2[0] - p1[0]) + t**2 * (p3[0] - p2[0])),
-        3 * (u**2 * (p1[1] - p0[1]) + 2 * u * t * (p2[1] - p1[1]) + t**2 * (p3[1] - p2[1])),
-    )
-
-
-def _lens_polygon(
-    cx: float, cy: float,
-    angle_deg: float,
-    length: float, width: float,
-    n_pts: int = 16,
-) -> List[Pt]:
-    """Lens / eye shape as polygon — two cubic Bézier arcs forming an eye."""
-    a = math.radians(angle_deg)
-    cos_a = math.cos(a)
-    sin_a = math.sin(a)
-    hl = length / 2
-    hw = width / 2
-
-    def _rotate(x: float, y: float) -> Pt:
-        return (cx + x * cos_a - y * sin_a,
-                cy + x * sin_a + y * cos_a)
-
-    left = _rotate(-hl, 0)
-    right = _rotate(hl, 0)
-    c_upper_l = _rotate(-hl, -hw)
-    c_upper_r = _rotate(hl, -hw)
-    c_lower_r = _rotate(hl, hw)
-    c_lower_l = _rotate(-hl, hw)
-
-    def _bez(p0: Pt, p1: Pt, p2: Pt, p3: Pt) -> List[Pt]:
-        pts: List[Pt] = []
-        for i in range(n_pts + 1):
-            t = i / n_pts
-            u = 1 - t
-            x = (u**3 * p0[0] + 3 * u**2 * t * p1[0] +
-                 3 * u * t**2 * p2[0] + t**3 * p3[0])
-            y = (u**3 * p0[1] + 3 * u**2 * t * p1[1] +
-                 3 * u * t**2 * p2[1] + t**3 * p3[1])
-            pts.append((x, y))
-        return pts
-
-    pts: List[Pt] = []
-    pts.extend(_bez(left, c_upper_l, c_upper_r, right))
-    pts.extend(_bez(right, c_lower_r, c_lower_l, left)[1:])
-    return pts
-
-
-def floral_spray(params: Dict[str, Any]) -> GeometryCollection:
-    """Cubic Bézier stem with tangent-following lens petals.
-
-    Params
-    ------
-    n_petals   : int   — petal pairs along stem, default 5
-    petal_l    : float — petal length (mm), default 12
-    petal_w    : float — petal width (mm), default 5
-    stem_wave  : float — stem S-curve amplitude (mm), default 12
-    leaf_l     : float — base leaf length (mm), default 18
-    leaf_w     : float — base leaf width (mm), default 7
-    alternate  : bool  — alternate petals left/right, default True
-    width_mm   : float — canvas width (mm), default 80
-    height_mm  : float — canvas height (mm), default 50
-    """
-    n_petals = max(1, int(params.get("n_petals", 5)))
-    petal_l = float(params.get("petal_l", 12))
-    petal_w = float(params.get("petal_w", 5))
-    stem_wave = float(params.get("stem_wave", 12))
-    leaf_l = float(params.get("leaf_l", 18))
-    leaf_w = float(params.get("leaf_w", 7))
-    alternate = bool(params.get("alternate", True))
-    W = float(params.get("width_mm", 80))
-    H = float(params.get("height_mm", 50))
-
-    pad = 8
-    x0, y0 = pad, H - pad
-    x3, y3 = W - pad, pad
-    cp1 = (x0 + stem_wave, y0 - (H - 2 * pad) * 0.35)
-    cp2 = (x3 - stem_wave, y3 + (H - 2 * pad) * 0.35)
-
-    elements: List[GeometryElement] = []
-
-    # Stem as polyline (sampled from cubic Bézier)
-    stem_pts: List[Pt] = []
-    for i in range(51):
-        t = i / 50
-        stem_pts.append(_cubic_bezier_eval((x0, y0), cp1, cp2, (x3, y3), t))
-    elements.append(GeometryElement(
-        kind="polyline", points=stem_pts,
-        material_index=2,
-        stroke_width=1.5,
-    ))
-
-    # Petals along stem
-    for i in range(n_petals):
-        t = (i + 0.5) / n_petals
-        pt = _cubic_bezier_eval((x0, y0), cp1, cp2, (x3, y3), t)
-        tan = _cubic_bezier_tangent((x0, y0), cp1, cp2, (x3, y3), t)
-        stem_angle = math.degrees(math.atan2(tan[1], tan[0]))
-
-        side = (1 if i % 2 else -1) if alternate else 1
-        petal_angle = stem_angle + side * 30
-
-        pts = _lens_polygon(pt[0], pt[1], petal_angle, petal_l, petal_w)
-        elements.append(GeometryElement(
-            kind="polygon", points=pts,
-            material_index=0,
-            stroke_width=0.25,
-            grain_angle=petal_angle,
-        ))
-
-        # Secondary smaller petal opposite side
-        if alternate:
-            petal_angle2 = stem_angle - side * 20
-            pts2 = _lens_polygon(pt[0], pt[1], petal_angle2,
-                                 petal_l * 0.7, petal_w * 0.7)
-            elements.append(GeometryElement(
-                kind="polygon", points=pts2,
-                material_index=1,
-                stroke_width=0.25,
-                grain_angle=petal_angle2,
-            ))
-
-    # Base leaves at lower portion of stem
-    base_ts = [0.15, 0.28, 0.44]
-    for i, t in enumerate(base_ts):
-        pt = _cubic_bezier_eval((x0, y0), cp1, cp2, (x3, y3), t)
-        tan = _cubic_bezier_tangent((x0, y0), cp1, cp2, (x3, y3), t)
-        sa = math.degrees(math.atan2(tan[1], tan[0]))
-        leaf_angle = sa + (1 if i % 2 else -1) * 55
-
-        pts = _lens_polygon(pt[0], pt[1], leaf_angle, leaf_l, leaf_w)
-        elements.append(GeometryElement(
-            kind="polygon", points=pts,
-            material_index=1,
-            stroke_width=0.25,
-            grain_angle=leaf_angle,
-        ))
-
-    return GeometryCollection(
-        elements=elements,
-        width_mm=W,
-        height_mm=H,
-        radial=False,
-    )
-
-
-# ---------------------------------------------------------------------------
-# 24. Open Flower Oval — hook/comma petals around elliptical frame
-#     Ported from amsterdam_spiro_engine.html flowerState / hookPetalPath()
-# ---------------------------------------------------------------------------
-
-def _hook_petal_polygon(
-    cx: float, cy: float,
-    angle_deg: float,
-    petal_r: float, petal_w: float,
-    hook_depth: float,
-    n_pts: int = 24,
-) -> List[Pt]:
-    """Hook/comma shaped petal as a closed polygon.
-
-    The petal starts at an inner ring and arcs outward with a curl.
-    """
-    a = math.radians(angle_deg)
-    tip_r = petal_r * 0.35
-    far_r = tip_r + petal_r
-
-    tip = (cx + tip_r * math.cos(a), cy + tip_r * math.sin(a))
-    far = (cx + far_r * math.cos(a), cy + far_r * math.sin(a))
-
-    # Perpendicular direction for width
-    pa = a + math.pi / 2
-    hook_r = tip_r + petal_r * hook_depth
-    w_pt = (cx + hook_r * math.cos(a) + petal_w * math.cos(pa),
-            cy + hook_r * math.sin(a) + petal_w * math.sin(pa))
-
-    # Two cubic Bézier arcs: tip→far (outward) and far→w→tip (hook back)
-    c1 = ((tip[0] + far[0] * 2) / 3, (tip[1] + far[1] * 2) / 3)
-    c2 = (far[0], (far[1] + w_pt[1]) / 2)
-    c3 = (far[0], far[1])
-    c4 = (w_pt[0], w_pt[1])
-
-    def _bez(p0: Pt, p1: Pt, p2: Pt, p3: Pt, n: int) -> List[Pt]:
-        pts: List[Pt] = []
-        for i in range(n + 1):
-            t = i / n
-            u = 1 - t
-            x = u**3*p0[0] + 3*u**2*t*p1[0] + 3*u*t**2*p2[0] + t**3*p3[0]
-            y = u**3*p0[1] + 3*u**2*t*p1[1] + 3*u*t**2*p2[1] + t**3*p3[1]
-            pts.append((x, y))
-        return pts
-
-    pts: List[Pt] = []
-    pts.extend(_bez(tip, c1, c2, far, n_pts))
-    pts.extend(_bez(far, c3, c4, tip, n_pts)[1:])
-    return pts
-
-
-def open_flower_oval(params: Dict[str, Any]) -> GeometryCollection:
-    """N hook/comma petals arranged radially around an elliptical frame.
-
-    Params
-    ------
-    n_petals    : int   — number of petals, default 18
-    rx          : float — ellipse X-radius (mm), default 35
-    ry          : float — ellipse Y-radius (mm), default 45
-    petal_r     : float — petal reach (mm), default 14
-    petal_w     : float — petal width (mm), default 8
-    hook_depth  : float — hook curl depth 0–1, default 0.55
-    pip_r       : float — inner pip radius (mm), default 2
-    pip_l       : float — inner pip length (mm), default 5
-    """
-    n_petals = max(4, int(params.get("n_petals", 18)))
-    rx = float(params.get("rx", 35))
-    ry = float(params.get("ry", 45))
-    petal_r = float(params.get("petal_r", 14))
-    petal_w = float(params.get("petal_w", 8))
-    hook_depth = float(params.get("hook_depth", 0.55))
-    pip_r = float(params.get("pip_r", 2))
-    pip_l = float(params.get("pip_l", 5))
-
-    elements: List[GeometryElement] = []
-
-    # Outer ellipse ring (approximated as polygon)
-    n_ring = 64
-    ring_pts: List[Pt] = [
-        (rx * math.cos(i * 2 * math.pi / n_ring),
-         ry * math.sin(i * 2 * math.pi / n_ring))
-        for i in range(n_ring)
-    ]
-    elements.append(GeometryElement(
-        kind="polygon", points=ring_pts,
-        material_index=2,
-        stroke_width=rx * 0.055,
-        grain_angle=0.0,
-    ))
-
-    # Inner ellipse ring
-    inner_rx = rx * 0.16
-    inner_ry = ry * 0.15
-    inner_ring_pts: List[Pt] = [
-        (inner_rx * math.cos(i * 2 * math.pi / n_ring),
-         inner_ry * math.sin(i * 2 * math.pi / n_ring))
-        for i in range(n_ring)
-    ]
-    elements.append(GeometryElement(
-        kind="polygon", points=inner_ring_pts,
-        material_index=2,
-        stroke_width=rx * 0.055,
-        grain_angle=0.0,
-    ))
-
-    for k in range(n_petals):
-        angle = k * 360 / n_petals
-        a_rad = math.radians(angle)
-        px = rx * 0.72 * math.cos(a_rad)
-        py = ry * 0.72 * math.sin(a_rad)
-        adjusted_angle = math.degrees(math.atan2(py, px))
-
-        pts = _hook_petal_polygon(0, 0, adjusted_angle,
-                                  petal_r * 0.72, petal_w, hook_depth)
-        elements.append(GeometryElement(
-            kind="polygon", points=pts,
-            material_index=k % 2,
-            stroke_width=0.25,
-            grain_angle=adjusted_angle,
-        ))
-
-        # Inner pip accent (lens shape at half-angle offset)
-        if pip_r > 0:
-            pip_frac = rx * 0.1
-            pip_a = a_rad + math.pi / n_petals
-            pip_x = pip_frac * math.cos(pip_a)
-            pip_y = pip_frac * math.sin(pip_a)
-            pip_pts = _lens_polygon(pip_x, pip_y, angle + 90, pip_l, pip_r)
-            elements.append(GeometryElement(
-                kind="polygon", points=pip_pts,
-                material_index=(k + 1) % 2,
-                stroke_width=0.25,
-                grain_angle=angle + 90,
-            ))
-
-    bbox_x = rx * 1.1
-    bbox_y = ry * 1.1
-    return GeometryCollection(
-        elements=elements,
-        width_mm=bbox_x * 2,
-        height_mm=bbox_y * 2,
-        origin_x=bbox_x,
-        origin_y=bbox_y,
-        radial=True,
-    )
-
-
-# ---------------------------------------------------------------------------
-# 25. Band Compositor (multi-layer stacking)
+# Band Presets
 # ---------------------------------------------------------------------------
 
 BAND_PRESETS: Dict[str, Dict[str, Any]] = {
     "rosette": {
         "layers": [
-            {"shape": "nested_diamond", "params": {"band_w_mm": 150}, "weight": 1},
-            {"shape": "rope_border_motif", "params": {"band_w_mm": 150}, "weight": 0.5},
+            {"shape": "herringbone", "params": {"tooth_w": 6, "tooth_h": 12}, "weight": 1},
+            {"shape": "diamond", "params": {"tile_w": 8, "tile_h": 14}, "weight": 1},
         ],
-        "band_width_mm": 150, "band_height_mm": 25, "gap_mm": 0.5, "repeats": 4,
+        "band_width_mm": 120, "band_height_mm": 18, "gap_mm": 0.5,
     },
     "body_binding": {
         "layers": [
-            {"shape": "twisted_rope", "params": {"length_mm": 150, "preset": "purfling"}, "weight": 1},
-            {"shape": "diamond", "params": {"tile_w": 8}, "weight": 0.8},
-            {"shape": "twisted_rope", "params": {"length_mm": 150, "preset": "purfling"}, "weight": 1},
+            {"shape": "checker_chevron", "params": {"cell_w": 8}, "weight": 1},
         ],
-        "band_width_mm": 180, "band_height_mm": 20, "gap_mm": 0.3, "repeats": 1,
+        "band_width_mm": 150, "band_height_mm": 10, "gap_mm": 0.3,
     },
     "fretboard": {
         "layers": [
-            {"shape": "hex_chain", "params": {"cell_h_mm": 10}, "weight": 1},
-            {"shape": "chevron_panel", "params": {"band_h_mm": 15}, "weight": 1},
+            {"shape": "greek_key", "params": {"cell_size": 5}, "weight": 1},
         ],
-        "band_width_mm": 150, "band_height_mm": 30, "gap_mm": 0.5, "repeats": 4,
+        "band_width_mm": 50, "band_height_mm": 8, "gap_mm": 0.2,
     },
     "headstock_band": {
         "layers": [
-            {"shape": "parquet_panel", "params": {"size_mm": 40}, "weight": 1},
-            {"shape": "nested_diamond", "params": {"band_w_mm": 100}, "weight": 0.7},
+            {"shape": "vine_scroll", "params": {"leafsize": 4, "leaves": 5}, "weight": 1},
         ],
-        "band_width_mm": 120, "band_height_mm": 35, "gap_mm": 0.5, "repeats": 2,
+        "band_width_mm": 80, "band_height_mm": 12, "gap_mm": 0.4,
     },
 }
 
@@ -2121,7 +203,6 @@ def compose_band(params: Dict[str, Any]) -> GeometryCollection:
 
     layers_spec = base.get("layers", [])
     if not layers_spec:
-        # Default: simple two-layer herringbone + diamond band
         layers_spec = [
             {"shape": "herringbone", "params": {}, "weight": 1},
             {"shape": "diamond", "params": {}, "weight": 1},
@@ -2133,8 +214,7 @@ def compose_band(params: Dict[str, Any]) -> GeometryCollection:
     repeats = max(1, int(base.get("repeats", 1)))
     mirror = bool(base.get("mirror", False))
 
-    # Calculate layer heights from weights
-    total_weight = sum(float(l.get("weight", 1)) for l in layers_spec)
+    total_weight = sum(float(layer.get("weight", 1)) for layer in layers_spec)
     total_gap = gap_mm * max(0, len(layers_spec) - 1)
     usable_h = band_h - total_gap
 
@@ -2148,13 +228,11 @@ def compose_band(params: Dict[str, Any]) -> GeometryCollection:
         shape_key = layer_def.get("shape", "herringbone")
         layer_params = dict(layer_def.get("params", {}))
 
-        # Generate the layer pattern
         gen_entry = INLAY_GENERATORS.get(shape_key)
         if gen_entry is None:
             continue
         layer_geo = gen_entry["fn"](layer_params)
 
-        # Scale to fit tile_w × layer_h
         if layer_geo.width_mm > 0 and layer_geo.height_mm > 0:
             sx = tile_w / layer_geo.width_mm
             sy = layer_h / layer_geo.height_mm
@@ -2183,14 +261,11 @@ def compose_band(params: Dict[str, Any]) -> GeometryCollection:
 
         y_cursor += layer_h
 
-        # Gap line (thin rectangle representing ebony purfling line)
         if li < len(layers_spec) - 1 and gap_mm > 0:
-            gap_rect_pts: List[Pt] = [
-                (0, y_cursor), (band_w, y_cursor + gap_mm),
-            ]
+            gap_rect_pts: List[Pt] = [(0, y_cursor), (band_w, y_cursor + gap_mm)]
             elements.append(GeometryElement(
                 kind="rect", points=gap_rect_pts,
-                material_index=1, stroke_width=0.1,  # ebony gap line
+                material_index=1, stroke_width=0.1,
             ))
             y_cursor += gap_mm
 
@@ -2203,7 +278,7 @@ def compose_band(params: Dict[str, Any]) -> GeometryCollection:
 
 
 # ---------------------------------------------------------------------------
-# Tile repeat engine (for linear patterns)
+# Tile Repeat Utility
 # ---------------------------------------------------------------------------
 
 def apply_tile(
@@ -2248,158 +323,167 @@ def apply_tile(
 
 
 # ---------------------------------------------------------------------------
-# Generator registry integration
+# Generator Registry — Maps pattern names to engine methods
 # ---------------------------------------------------------------------------
 
 INLAY_GENERATORS: Dict[str, Any] = {
+    # Grid-based patterns
     "herringbone": {
-        "fn": herringbone,
+        "fn": GridEngine.herringbone,
         "name": "Herringbone",
         "description": "Alternating rectangular tiles (parquet pattern)",
         "linear": True,
     },
     "diamond": {
-        "fn": diamond,
+        "fn": GridEngine.diamond,
         "name": "Diamond Wave",
         "description": "Wave/lean diamond marquetry tiles",
         "linear": True,
     },
     "greek_key": {
-        "fn": greek_key,
+        "fn": GridEngine.greek_key,
         "name": "Greek Key",
         "description": "Greek key / meander border pattern",
         "linear": True,
     },
+    "checker_chevron": {
+        "fn": GridEngine.checker_chevron,
+        "name": "Checker Chevron",
+        "description": "Diamond grid with alternating material slots",
+        "linear": True,
+    },
+    "hex_chain": {
+        "fn": GridEngine.hex_chain,
+        "name": "Hex Chain",
+        "description": "Vertical hex chain band pattern with cutouts and connectors",
+        "linear": True,
+    },
+    "chevron_panel": {
+        "fn": GridEngine.chevron_panel,
+        "name": "Chevron Panel",
+        "description": "Nested chevron band pattern",
+        "linear": True,
+    },
+    "nested_diamond": {
+        "fn": GridEngine.nested_diamond,
+        "name": "Nested Diamond",
+        "description": "Band of nested diamond groups with corner accents",
+        "linear": True,
+    },
+    "block_pin": {
+        "fn": GridEngine.block_pin,
+        "name": "Block-Pin Column",
+        "description": "Alternating columns of diamond accents and rectangular pins",
+        "linear": True,
+    },
+
+    # Radial patterns
     "spiral": {
-        "fn": spiral,
+        "fn": RadialEngine.spiral,
         "name": "Archimedean Spiral",
         "description": "Archimedean spiral with true normal-vector CNC offsets",
         "linear": False,
     },
     "sunburst": {
-        "fn": sunburst,
+        "fn": RadialEngine.sunburst,
         "name": "Sunburst",
         "description": "Wedge rays between inner and outer radii",
         "linear": False,
     },
     "feather": {
-        "fn": feather,
+        "fn": RadialEngine.feather,
         "name": "Feather Fan",
         "description": "Layered fan blade pattern",
         "linear": False,
     },
+    "amsterdam_flower": {
+        "fn": RadialEngine.amsterdam_flower,
+        "name": "Amsterdam Flower",
+        "description": "N-fold kite-petal medallion with centre disc",
+        "linear": False,
+    },
+    "spiro_arc": {
+        "fn": RadialEngine.spiro_arc,
+        "name": "Spiro Arc Medallion",
+        "description": "Spirograph-style overlapping thick arc segments",
+        "linear": False,
+    },
+    "sq_floral": {
+        "fn": RadialEngine.sq_floral,
+        "name": "Square Floral",
+        "description": "Radial ring of narrow kite-shaped petals",
+        "linear": False,
+    },
+    "open_flower_oval": {
+        "fn": RadialEngine.open_flower_oval,
+        "name": "Open Flower Oval",
+        "description": "Hook/comma petals around elliptical frame with pip accents",
+        "linear": False,
+    },
+
+    # Path-based patterns
+    "vine_scroll": {
+        "fn": PathEngine.vine_scroll,
+        "name": "Vine Scroll",
+        "description": "Parametric freq-modulated vine with teardrop leaves",
+        "linear": False,
+    },
+    "floral_spray": {
+        "fn": PathEngine.floral_spray,
+        "name": "Floral Spray",
+        "description": "Cubic Bézier stem with tangent-following lens petals",
+        "linear": False,
+    },
+    "binding_flow": {
+        "fn": PathEngine.binding_flow,
+        "name": "Binding Flow",
+        "description": "Catmull-Rom contour with vine wrapping for binding channels",
+        "linear": False,
+    },
+    "rope_border_motif": {
+        "fn": PathEngine.rope_border_motif,
+        "name": "Rope Border Motif",
+        "description": "Static S-curve interleaving rope border band",
+        "linear": True,
+    },
+    "twisted_rope": {
+        "fn": PathEngine.twisted_rope,
+        "name": "Twisted Rope",
+        "description": "Parametric N-strand twisted rope with crossing detection",
+        "linear": False,
+    },
+
+    # Medallion patterns
+    "oak_medallion": {
+        "fn": MedallionEngine.oak_medallion,
+        "name": "Oak Medallion",
+        "description": "N-fold kite ring medallion with concentric layers",
+        "linear": False,
+    },
+    "girih_rosette": {
+        "fn": MedallionEngine.girih_rosette,
+        "name": "Girih Rosette",
+        "description": "Five-tile Islamic geometry rosette",
+        "linear": False,
+    },
+    "parquet_panel": {
+        "fn": MedallionEngine.parquet_panel,
+        "name": "Parquet Panel",
+        "description": "Concentric diamond panel with radiating wedges",
+        "linear": False,
+    },
+
+    # Special patterns (not engine-based)
     "celtic_motif": {
         "fn": celtic_motif,
         "name": "Celtic Motif",
         "description": "SVG motif library (lotus, celtic cross, triquetra, etc.)",
         "linear": False,
     },
-    "vine_scroll": {
-        "fn": vine_scroll,
-        "name": "Vine Scroll",
-        "description": "Parametric freq-modulated vine with teardrop leaves",
-        "linear": False,
-    },
-    "girih_rosette": {
-        "fn": girih_rosette,
-        "name": "Girih Rosette",
-        "description": "Five-tile Islamic geometry rosette",
-        "linear": False,
-    },
-    "binding_flow": {
-        "fn": binding_flow,
-        "name": "Binding Flow",
-        "description": "Catmull-Rom contour with vine wrapping for binding channels",
-        "linear": False,
-    },
-    "hex_chain": {
-        "fn": hex_chain,
-        "name": "Hex Chain",
-        "description": "Vertical hex chain band pattern with cutouts and connectors",
-        "linear": True,
-    },
-    "chevron_panel": {
-        "fn": chevron_panel,
-        "name": "Chevron Panel",
-        "description": "Nested chevron band pattern",
-        "linear": True,
-    },
-    "parquet_panel": {
-        "fn": parquet_panel,
-        "name": "Parquet Panel",
-        "description": "Concentric diamond panel with radiating wedges",
-        "linear": False,
-    },
-    "nested_diamond": {
-        "fn": nested_diamond,
-        "name": "Nested Diamond",
-        "description": "Band of nested diamond groups with corner accents",
-        "linear": True,
-    },
-    "rope_border_motif": {
-        "fn": rope_border_motif,
-        "name": "Rope Border Motif",
-        "description": "Static S-curve interleaving rope border band",
-        "linear": True,
-    },
-    "twisted_rope": {
-        "fn": twisted_rope,
-        "name": "Twisted Rope",
-        "description": "Parametric N-strand twisted rope with crossing detection",
-        "linear": False,
-    },
     "compose_band": {
         "fn": compose_band,
         "name": "Band Compositor",
         "description": "Multi-layer composite band stacking multiple patterns",
-        "linear": False,
-    },
-    "checker_chevron": {
-        "fn": checker_chevron,
-        "name": "Checker Chevron",
-        "description": "Diamond grid with alternating material slots",
-        "linear": True,
-    },
-    "block_pin": {
-        "fn": block_pin,
-        "name": "Block-Pin Column",
-        "description": "Alternating columns of diamond accents and rectangular pins",
-        "linear": True,
-    },
-    "amsterdam_flower": {
-        "fn": amsterdam_flower,
-        "name": "Amsterdam Flower",
-        "description": "N-fold kite-petal medallion with centre disc",
-        "linear": False,
-    },
-    "spiro_arc": {
-        "fn": spiro_arc,
-        "name": "Spiro Arc Medallion",
-        "description": "Spirograph-style overlapping thick arc segments",
-        "linear": False,
-    },
-    "sq_floral": {
-        "fn": sq_floral,
-        "name": "Square Floral",
-        "description": "Radial ring of narrow kite-shaped petals",
-        "linear": False,
-    },
-    "oak_medallion": {
-        "fn": oak_medallion,
-        "name": "Oak Medallion",
-        "description": "N-fold kite ring medallion with concentric layers",
-        "linear": False,
-    },
-    "floral_spray": {
-        "fn": floral_spray,
-        "name": "Floral Spray",
-        "description": "Cubic Bézier stem with tangent-following lens petals",
-        "linear": False,
-    },
-    "open_flower_oval": {
-        "fn": open_flower_oval,
-        "name": "Open Flower Oval",
-        "description": "Hook/comma petals around elliptical frame with pip accents",
         "linear": False,
     },
 }
@@ -2420,3 +504,122 @@ def generate_inlay_pattern(
             f"Available: {', '.join(INLAY_GENERATORS)}"
         )
     return entry["fn"](params)
+
+
+# ---------------------------------------------------------------------------
+# Re-export backward-compatible function signatures
+# ---------------------------------------------------------------------------
+
+def herringbone(params: Dict[str, Any]) -> GeometryCollection:
+    """Alternating rectangular tile pattern."""
+    return GridEngine.herringbone(params)
+
+
+def diamond(params: Dict[str, Any]) -> GeometryCollection:
+    """Wave/lean diamond marquetry."""
+    return GridEngine.diamond(params)
+
+
+def greek_key(params: Dict[str, Any]) -> GeometryCollection:
+    """Greek key / meander border."""
+    return GridEngine.greek_key(params)
+
+
+def spiral(params: Dict[str, Any]) -> GeometryCollection:
+    """Archimedean spiral with optional symmetry arms."""
+    return RadialEngine.spiral(params)
+
+
+def sunburst(params: Dict[str, Any]) -> GeometryCollection:
+    """Sunburst wedge rays between inner and outer radii."""
+    return RadialEngine.sunburst(params)
+
+
+def feather(params: Dict[str, Any]) -> GeometryCollection:
+    """Layered feather fan blades."""
+    return RadialEngine.feather(params)
+
+
+def vine_scroll(params: Dict[str, Any]) -> GeometryCollection:
+    """Parametric vine scroll with alternating teardrop leaves."""
+    return PathEngine.vine_scroll(params)
+
+
+def girih_rosette(params: Dict[str, Any]) -> GeometryCollection:
+    """Five-tile Girih rosette (Islamic geometry)."""
+    return MedallionEngine.girih_rosette(params)
+
+
+def binding_flow(params: Dict[str, Any]) -> GeometryCollection:
+    """Catmull-Rom contour with vine wrapping."""
+    return PathEngine.binding_flow(params)
+
+
+def checker_chevron(params: Dict[str, Any]) -> GeometryCollection:
+    """Diamond grid with alternating material slots."""
+    return GridEngine.checker_chevron(params)
+
+
+def block_pin(params: Dict[str, Any]) -> GeometryCollection:
+    """Alternating columns of diamond accents and rectangular pins."""
+    return GridEngine.block_pin(params)
+
+
+def amsterdam_flower(params: Dict[str, Any]) -> GeometryCollection:
+    """N-fold kite-petal medallion with centre disc."""
+    return RadialEngine.amsterdam_flower(params)
+
+
+def spiro_arc(params: Dict[str, Any]) -> GeometryCollection:
+    """Spirograph-style overlapping thick arc medallion."""
+    return RadialEngine.spiro_arc(params)
+
+
+def sq_floral(params: Dict[str, Any]) -> GeometryCollection:
+    """Radial ring of narrow kite petals."""
+    return RadialEngine.sq_floral(params)
+
+
+def oak_medallion(params: Dict[str, Any]) -> GeometryCollection:
+    """N-fold kite-ring medallion with concentric layers."""
+    return MedallionEngine.oak_medallion(params)
+
+
+def floral_spray(params: Dict[str, Any]) -> GeometryCollection:
+    """Cubic Bézier stem with tangent-following lens petals."""
+    return PathEngine.floral_spray(params)
+
+
+def open_flower_oval(params: Dict[str, Any]) -> GeometryCollection:
+    """N hook/comma petals arranged radially around an elliptical frame."""
+    return RadialEngine.open_flower_oval(params)
+
+
+def hex_chain(params: Dict[str, Any]) -> GeometryCollection:
+    """Vertical hex chain band pattern."""
+    return GridEngine.hex_chain(params)
+
+
+def chevron_panel(params: Dict[str, Any]) -> GeometryCollection:
+    """Nested chevron band pattern."""
+    return GridEngine.chevron_panel(params)
+
+
+def parquet_panel(params: Dict[str, Any]) -> GeometryCollection:
+    """Parquet diamond panel with concentric layers."""
+    return MedallionEngine.parquet_panel(params)
+
+
+def nested_diamond(params: Dict[str, Any]) -> GeometryCollection:
+    """Band of nested diamond groups with corner accents."""
+    return GridEngine.nested_diamond(params)
+
+
+def rope_border_motif(params: Dict[str, Any]) -> GeometryCollection:
+    """Static rope border motif — interleaving S-curve strands."""
+    return PathEngine.rope_border_motif(params)
+
+
+def twisted_rope(params: Dict[str, Any]) -> GeometryCollection:
+    """Parametric twisted rope inlay band."""
+    return PathEngine.twisted_rope(params)

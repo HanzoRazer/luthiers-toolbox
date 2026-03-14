@@ -127,7 +127,8 @@ class TestHerringbone:
         assert geo.radial is False
         assert geo.tile_w is not None
         assert len(geo.elements) > 0
-        assert all(e.kind == "rect" for e in geo.elements)
+        assert all(e.kind == "polygon" for e in geo.elements)
+        assert all(len(e.points) == 4 for e in geo.elements)  # Rectangles have 4 points
 
     def test_defaults(self):
         geo = herringbone({})
