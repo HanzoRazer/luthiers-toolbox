@@ -2,22 +2,22 @@
 
 > **Generated:** March 10, 2026 | **Updated:** March 13, 2026
 > **Source:** Cross-repo search of docs, CI baselines, reports, and planning files.
-> **Count:** 31 efforts tracked — **7 major efforts NOT STARTED**.
+> **Count:** 31 efforts tracked — **5 major efforts remaining**.
 
 
 ## ⚠️ Honest Status (2026-03-13)
 
 Previous updates overstated progress. This section corrects the record.
 
-### Actually NOT Done — 7 Major Efforts
+### Actually Remaining — 5 Efforts
 
 | # | Effort | Actual Status |
 |---|--------|---------------|
-| 3 | Router Consolidation (132→<100 files) | ❌ **Not started** |
+| 3 | Router Consolidation (132→<100 files) | 🟡 **Partial** (127 files, down from 132) |
 | 7 | Score 7 Plan — 9 phases | 🟡 **~30% done** (was claimed 50%) |
 | 8 | Vectorizer — 3 features (parametric, multi-page, neural) | ❌ **Not started** |
-| 17 | Phase 2/3 SaaS — sections 2.2-2.4, 3.1-3.6 | ❌ **90% untouched** (only auth done) |
-| 18 | Agentic Spine — `IMPLEMENTED = False` | ❌ **Pure stubs** |
+| 17 | Phase 2/3 SaaS (3.2-3.6) | 🟡 **3.1 Auth DONE**, payments+sync untouched |
+| 18 | Agentic Spine | ✅ **DONE** (`IMPLEMENTED = True` in all modules) |
 | 26 | 4 Frontend TODOs (PDF export, DXF export, risk override, job nav) | ❌ **Not started** |
 | 30 | 5 secrets undocumented | ❌ **Not fixed** |
 
@@ -36,7 +36,7 @@ Previous updates overstated progress. This section corrects the record.
 |---|--------|----------------|--------|----------|
 | 1 | Exception Hardening — broad catches | REMEDIATION_PLAN.md / v2 | ✅ 100% complete (6e397cb6) | ~~HIGH~~ |
 | 2 | God-Object Decomposition — 14 Python files >500 LOC | REMEDIATION_PLAN_v2.md (Phase 13) | ✅ ~90% done (most decomposed to subdirs) | ~~HIGH~~ |
-| 3 | Router Consolidation — 132 → <100 files | ROUTER_CONSOLIDATION_ROADMAP.md | ❌ Not started | MEDIUM |
+| 3 | Router Consolidation (132→<100 files) | 🟡 **Partial** (127 files, -5) | MEDIUM |
 | 4 | 69 Stub Endpoints — 15+ high-priority | STUB_DEBT_REPORT.md | ✅ Wired (see #17) | ~~HIGH~~ |
 | 5 | 113 Instrument Build Gaps — 67 resolved | GAP_ANALYSIS_MASTER.md | ✅ ~60% done (most CAM modules exist) | ~~CRITICAL~~ HIGH |
 | 6 | Vue Component Decomposition — 1 outlier deferred | VUE_DECOMPOSITION_GUIDE.md | ✅ ~90% done (ToolpathPlayer.vue → Phase 4) | ~~MEDIUM~~ |
