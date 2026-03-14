@@ -1,72 +1,151 @@
-# services/api/app/business/estimator_router.py
-"""Estimator Router - API endpoints for cost estimation."""
+"""Engineering Estimator Router — Endpoints for parametric cost estimation.
+
+Provides:
+- POST /parametric - Create parametric estimate
+- POST /quote - Generate customer quote
+- GET /factors - List complexity factors
+- GET /wbs/{instrument_type} - Get WBS template
+- GET /learning-curve - Preview learning curve
+
+LANE: UTILITY (business planning operations)
+"""
 from __future__ import annotations
-from typing import Optional
-from fastapi import APIRouter, HTTPException
-from pydantic import BaseModel
-from .estimator.schemas import EstimateRequest, EstimateResult
-from .schemas import GoalCreateRequest, GoalUpdateRequest, Goal, GoalResponse, GoalListResponse
-from .estimator_service import compute_estimate
+
+from fastapi import APIRouter, HTTPException, Query
+
+from .estimator import (
+    EngineeringEstimatorService,
+    EstimateRequest,
+    EstimateResult,
+)
+from .estimator.schemas import (
+    InstrumentType as EstimatorInstrumentType,
+    QuoteRequest,
+    QuoteResult,
+)
+from .estimator.work_breakdown import get_wbs_template, get_wbs_by_phase
+
+router = APIRouter(tags=["Estimator", "Business"])
+
+# Service (singleton instance)
+estimator_service = EngineeringEstimatorService()
 
 
-class EstimateResponse(BaseModel):
-    """Response wrapper for estimate results."""
-    ok: bool
-    estimate: Optional[EstimateResult] = None
-    error: Optional[str] = None
-from .goals_service import goals_store
+@router.post("/parametric", response_model=EstimateResult, summary="Create parametric estimate")
+async def create_parametric_estimate(request: EstimateRequest) -> EstimateResult:
+    """
+    Create a parametric cost estimate for an instrument build.
 
-router = APIRouter(prefix="/api/business/estimator", tags=["business"])
+    Uses engineering estimation techniques:
+    - Work Breakdown Structure (WBS) templates
+    - Complexity factors for design choices
+    - Learning curve adjustments for batch production
+    - Material yield/waste factors
 
-@router.post("/estimate", response_model=EstimateResponse)
-async def create_estimate(request: EstimateRequest) -> EstimateResponse:
-    """Generate a cost estimate for an instrument build."""
-    try:
-        result = compute_estimate(request)
-        return EstimateResponse(ok=True, estimate=result)
-    except (ValueError, TypeError, KeyError, AttributeError) as e:  # WP-1: narrowed from except Exception
-        raise HTTPException(status_code=400, detail=str(e))
+    The estimate includes labor hours, material costs, and
+    recommended pricing based on experience level and design complexity.
+    """
+    return estimator_service.estimate(request)
 
-@router.get("/goals", response_model=GoalListResponse)
-async def list_goals() -> GoalListResponse:
-    """List all pricing goals."""
-    goals = goals_store.list_goals()
-    return GoalListResponse(ok=True, goals=goals, total=len(goals))
 
-@router.post("/goals", response_model=GoalResponse)
-async def create_goal(request: GoalCreateRequest) -> GoalResponse:
-    """Create a new pricing goal."""
-    goal = goals_store.create_goal(request)
-    return GoalResponse(ok=True, goal=goal)
+@router.post("/quote", response_model=QuoteResult, summary="Generate customer quote")
+async def generate_customer_quote(request: QuoteRequest) -> QuoteResult:
+    """
+    Generate a customer-facing quote from an estimate.
 
-@router.get("/goals/{goal_id}", response_model=GoalResponse)
-async def get_goal(goal_id: str) -> GoalResponse:
-    """Get a specific goal by ID."""
-    goal = goals_store.get_goal(goal_id)
-    if not goal:
-        raise HTTPException(status_code=404, detail="Goal not found")
-    return GoalResponse(ok=True, goal=goal)
+    Wraps the parametric estimate with:
+    - Professional formatting
+    - Margin calculations
+    - Payment terms
+    - Validity period
+    """
+    return estimator_service.generate_quote(request)
 
-@router.patch("/goals/{goal_id}", response_model=GoalResponse)
-async def update_goal(goal_id: str, request: GoalUpdateRequest) -> GoalResponse:
-    """Update a pricing goal."""
-    goal = goals_store.update_goal(goal_id, request)
-    if not goal:
-        raise HTTPException(status_code=404, detail="Goal not found")
-    return GoalResponse(ok=True, goal=goal)
 
-@router.delete("/goals/{goal_id}")
-async def delete_goal(goal_id: str) -> dict:
-    """Delete a pricing goal."""
-    if not goals_store.delete_goal(goal_id):
-        raise HTTPException(status_code=404, detail="Goal not found")
-    return {"ok": True}
+@router.get("/factors", summary="List complexity factors")
+async def list_complexity_factors():
+    """
+    List all complexity factors and their multipliers.
 
-@router.post("/goals/{goal_id}/link-estimate/{estimate_id}", response_model=GoalResponse)
-async def link_estimate_to_goal(goal_id: str, estimate_id: str) -> GoalResponse:
-    """Link an estimate to a goal for progress tracking."""
-    goal = goals_store.link_estimate(goal_id, estimate_id)
-    if not goal:
-        raise HTTPException(status_code=404, detail="Goal not found")
-    return GoalResponse(ok=True, goal=goal)
+    Useful for understanding how design choices affect build time:
+    - Body complexity (cutaway, carved top, etc.)
+    - Binding complexity (none, simple, multi-ply, etc.)
+    - Neck complexity (bolt-on, set-neck, etc.)
+    - Fretboard inlay (dots, blocks, custom, etc.)
+    - Finish type (oil, nitro, french polish, etc.)
+    - Rosette complexity (simple, multi-ring, inlaid, etc.)
+    """
+    return estimator_service.get_factors_summary()
 
+
+@router.get("/wbs/{instrument_type}", summary="Get WBS template")
+async def get_wbs_for_instrument(instrument_type: EstimatorInstrumentType):
+    """
+    Get the Work Breakdown Structure template for an instrument type.
+
+    Returns all tasks with baseline hours, organized by phase:
+    - Design & Planning
+    - Body Construction
+    - Neck Construction
+    - Assembly
+    - Finishing
+    - Setup & Quality Control
+    """
+    template = get_wbs_template(instrument_type)
+    if not template:
+        raise HTTPException(
+            status_code=404,
+            detail=f"No WBS template for instrument type: {instrument_type.value}",
+        )
+
+    by_phase = get_wbs_by_phase(instrument_type)
+    total_hours = sum(t.base_hours for t in template)
+
+    return {
+        "instrument_type": instrument_type.value,
+        "total_baseline_hours": round(total_hours, 1),
+        "task_count": len(template),
+        "phases": {
+            phase: [
+                {
+                    "task_id": t.task_id,
+                    "name": t.task_name,
+                    "base_hours": t.base_hours,
+                    "complexity_group": t.complexity_group,
+                }
+                for t in tasks
+            ]
+            for phase, tasks in by_phase.items()
+        },
+    }
+
+
+@router.get("/learning-curve", summary="Preview learning curve")
+async def preview_learning_curve(
+    first_unit_hours: float = Query(..., ge=1, description="Hours for first unit"),
+    quantity: int = Query(..., ge=1, le=100, description="Batch size"),
+    learning_rate: float = Query(0.85, ge=0.7, le=0.95, description="Learning rate"),
+    hourly_rate: float = Query(45.0, ge=0, description="Labor rate for cost calc"),
+):
+    """
+    Preview learning curve effect for batch production.
+
+    Shows how build time decreases with repetition:
+    - Unit-by-unit time projection
+    - Cumulative hours and cost
+    - Efficiency gain vs no learning
+
+    Learning rate of 0.85 means each doubling of quantity
+    reduces per-unit time by 15%.
+    """
+    from .estimator.learning_curve import generate_learning_curve_projection
+
+    return generate_learning_curve_projection(
+        first_unit_hours=first_unit_hours,
+        quantity=quantity,
+        learning_rate=learning_rate,
+        hourly_rate=hourly_rate,
+    )
+
+
+__all__ = ["router", "estimator_service"]
