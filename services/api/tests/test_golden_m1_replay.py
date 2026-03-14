@@ -76,7 +76,7 @@ def test_golden_m1_detects_finding(replay_module, events):
     # FINDING (priority 4) is highest priority in the list.
     moments = detect_moments(session_events)
     assert len(moments) >= 1
-    assert moments[0]["moment"] == "FINDING"
+    assert moments[0].moment == "FINDING"
 
 
 def test_first_signal_pure_session(replay_module, events):
@@ -89,7 +89,7 @@ def test_first_signal_pure_session(replay_module, events):
     # This session ONLY has view_rendered, no artifacts.
     moments = detect_moments(session_events)
     assert len(moments) == 1
-    assert moments[0]["moment"] == "FIRST_SIGNAL"
+    assert moments[0].moment == "FIRST_SIGNAL"
 
 
 def test_overload_detects_undo_spike(replay_module, events):
@@ -101,7 +101,7 @@ def test_overload_detects_undo_spike(replay_module, events):
 
     moments = detect_moments(session_events)
     assert len(moments) >= 1
-    assert moments[0]["moment"] == "OVERLOAD"
+    assert moments[0].moment == "OVERLOAD"
 
 
 def test_error_session_detects_error(replay_module, events):
@@ -113,7 +113,7 @@ def test_error_session_detects_error(replay_module, events):
     
     moments = detect_moments(session_events)
     assert len(moments) == 1
-    assert moments[0]["moment"] == "ERROR"
+    assert moments[0].moment == "ERROR"
 
 
 def test_finding_session_detects_finding(replay_module, events):
@@ -125,7 +125,7 @@ def test_finding_session_detects_finding(replay_module, events):
     
     moments = detect_moments(session_events)
     assert len(moments) == 1
-    assert moments[0]["moment"] == "FINDING"
+    assert moments[0].moment == "FINDING"
 
 
 def test_m1_emits_correct_directives(replay_module, events):
@@ -195,7 +195,7 @@ def test_noncritical_suppressed_session_detects_hesitation(replay_module, events
     # (Frontend gate would suppress this after first directive)
     moments = detect_moments(session_events)
     assert len(moments) >= 1
-    assert moments[0]["moment"] == "HESITATION"
+    assert moments[0].moment == "HESITATION"
 
 
 def test_critical_allowed_session_detects_overload(replay_module, events):
@@ -214,7 +214,7 @@ def test_critical_allowed_session_detects_overload(replay_module, events):
     # (Frontend gate would allow this — OVERLOAD is critical)
     moments = detect_moments(session_events)
     assert len(moments) >= 1
-    assert moments[0]["moment"] == "OVERLOAD"
+    assert moments[0].moment == "OVERLOAD"
 
 
 def test_noncritical_not_in_critical_set():
@@ -264,7 +264,7 @@ def test_grace_raw_detection_includes_both_moments(replay_module, grace_events):
     moments = detect_moments(session_events)
 
     # Should have at least 2 moments (FINDING and FIRST_SIGNAL)
-    moment_types = [m["moment"] for m in moments]
+    moment_types = [m.moment for m in moments]
     assert "FINDING" in moment_types, f"Missing FINDING in {moment_types}"
     assert "FIRST_SIGNAL" in moment_types, f"Missing FIRST_SIGNAL in {moment_types}"
 
@@ -280,7 +280,7 @@ def test_grace_finding_is_raw_priority_winner(replay_module, grace_events):
 
     # FINDING (priority 4) beats FIRST_SIGNAL (priority 6) in raw detection
     # So moments[0] should be FINDING
-    assert moments[0]["moment"] == "FINDING", (
+    assert moments[0].moment == "FINDING", (
         f"Expected FINDING as raw winner, got {moments[0]['moment']}"
     )
 
@@ -301,8 +301,8 @@ def test_grace_selector_prefers_first_signal(replay_module, grace_events):
     )
 
     assert selected is not None
-    assert selected["moment"] == "FIRST_SIGNAL", (
-        f"Grace selector should prefer FIRST_SIGNAL, got {selected['moment']}"
+    assert selected.moment == "FIRST_SIGNAL", (
+        f"Grace selector should prefer FIRST_SIGNAL, got {selected.moment}"
     )
 
 
@@ -318,7 +318,7 @@ def test_grace_replay_selects_first_signal(replay_module, grace_events):
     session = report["sessions"]["session_first_signal_grace_wins"]
 
     # With grace selection, FIRST_SIGNAL should be chosen
-    assert session["moment"]["moment"] == "FIRST_SIGNAL", (
+    assert session["moment"].moment == "FIRST_SIGNAL", (
         f"Expected FIRST_SIGNAL with grace, got {session['moment']['moment']}"
     )
 
@@ -339,19 +339,21 @@ def test_grace_replay_emits_inspect_directive(replay_module, grace_events):
 
 def test_grace_one_shot_suppresses_second_first_signal(replay_module):
     """After FIRST_SIGNAL shown, grace selector should never return it again."""
-    # Create fake moments list
+    from app.agentic.spine.schemas import DetectedMoment
+
+    # Create fake moments list using DetectedMoment objects
     moments = [
-        {"moment": "FIRST_SIGNAL", "confidence": 0.8, "priority": 6},
-        {"moment": "HESITATION", "confidence": 0.5, "priority": 5},
+        DetectedMoment(moment="FIRST_SIGNAL", confidence=0.8, trigger_events=["ev1"]),
+        DetectedMoment(moment="HESITATION", confidence=0.5, trigger_events=["ev2"]),
     ]
 
     # First selection: FIRST_SIGNAL wins
     selected = replay_module.select_moment_with_grace(moments, first_signal_shown=False)
-    assert selected["moment"] == "FIRST_SIGNAL"
+    assert selected.moment == "FIRST_SIGNAL"
 
     # Second selection with first_signal_shown=True: should skip FIRST_SIGNAL
     selected = replay_module.select_moment_with_grace(moments, first_signal_shown=True)
     assert selected is not None
-    assert selected["moment"] == "HESITATION", (
-        f"One-shot: expected HESITATION after FIRST_SIGNAL shown, got {selected['moment']}"
+    assert selected.moment == "HESITATION", (
+        f"One-shot: expected HESITATION after FIRST_SIGNAL shown, got {selected.moment}"
     )
