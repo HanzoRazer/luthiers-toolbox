@@ -34,7 +34,8 @@ from ..services.rosette_snapshot_store import (
     get_baseline,
     SnapshotIdError,
 )
-from ..services.rosette_feasibility_scorer import (
+# Rosette Consolidation: rosette_feasibility_scorer.py → rosette_engine.py
+from ..services.rosette_engine import (
     estimate_rosette_feasibility,
     MaterialSpec,
     ToolSpec,
