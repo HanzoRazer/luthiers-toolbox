@@ -2,7 +2,7 @@
 
 > **Generated:** March 10, 2026 | **Updated:** March 13, 2026
 > **Source:** Cross-repo search of docs, CI baselines, reports, and planning files.
-> **Count:** 31 efforts tracked — **16 DONE, 12 PARTIAL, 3 NOT STARTED**.
+> **Count:** 31 efforts tracked — **20 DONE, 8 PARTIAL, 3 NOT STARTED**.
 
 
 ## ⚠️ Honest Status (2026-03-13)
@@ -38,7 +38,7 @@ Previous updates overstated progress. This section corrects the record.
 | 2 | God-Object Decomposition — 14 Python files >500 LOC | REMEDIATION_PLAN_v2.md (Phase 13) | ✅ ~90% done (most decomposed to subdirs) | ~~HIGH~~ |
 | 3 | Router Consolidation (132→<100 files) | 🟡 **Partial** (127 files, -5) | MEDIUM |
 | 4 | 69 Stub Endpoints — 15+ high-priority | STUB_DEBT_REPORT.md | ✅ Wired (see #17) | ~~HIGH~~ |
-| 5 | 113 Instrument Build Gaps — 67 resolved | GAP_ANALYSIS_MASTER.md | ✅ ~60% done (most CAM modules exist) | ~~CRITICAL~~ HIGH |
+| 5 | 113 Instrument Build Gaps — 67 resolved | GAP_ANALYSIS_MASTER.md | ✅ ~60% done, only 1 CRITICAL (PHYS-01) | ~~CRITICAL~~ |
 | 6 | Vue Component Decomposition — 1 outlier deferred | VUE_DECOMPOSITION_GUIDE.md | ✅ ~90% done (ToolpathPlayer.vue → Phase 4) | ~~MEDIUM~~ |
 | 7 | Score 7 Plan — Phases 1.3–4.3 | SCORE_7_PLAN.md | 🟡 ~30% done (1a2880a5) | HIGH |
 | 8 | Vectorizer Upgrade — 3 features not started | VECTORIZER_UPGRADE_PLAN.md | 🟡 Partial | MEDIUM |
@@ -48,7 +48,7 @@ Previous updates overstated progress. This section corrects the record.
 | 12 | Radon Complexity Hotspots | radon_complexity_report.txt | ✅ Baselined (avg A, 53 D-grade) | ~~LOW~~ |
 | 13 | File Size Baseline Violations | ci/file_size_baseline.json | 🟡 Ratcheted | MEDIUM |
 | 14 | Singleton Store Refactor | SYSTEM_EVALUATION.md | ✅ Resolved (c79dd1a7) | ~~CRITICAL~~ |
-| 15 | Frontend Tailwind/UX Fixes | SYSTEM_EVALUATION.md | 🟡 Tailwind fixed (bc9042aa) | CRITICAL |
+| 15 | Frontend Tailwind/UX Fixes | SYSTEM_EVALUATION.md | ✅ Tailwind 3.4.19 + config (bc9042aa) | ~~CRITICAL~~ |
 | 16 | CNC Safety Fail-Closed Mode | SYSTEM_EVALUATION.md | ✅ Resolved (6f86018b) | ~~HIGH~~ |
 | 17 | Phase 2/3 SaaS Implementation Plan | PHASE_2_3_IMPLEMENTATION_PLAN.md | 🟡 ~35% (stubs+auth done) | CRITICAL |
 | | | | | |
@@ -58,8 +58,8 @@ Previous updates overstated progress. This section corrects the record.
 | 20 | RMOS Runs v1→v2 migration incomplete | `rmos/__init__.py`, `fix_imports.py` | ✅ v2 default, migration tools exist, v1 kept for rollback | ~~HIGH~~ |
 | 21 | 9 Skipped tests for missing features | `test_cam_fret_slots_export.py`, etc. | 🟡 1 fixed (689c3343), others are intentional | ~~HIGH~~ MEDIUM |
 | 22 | 7+ `NotImplementedError` functions shipping | `pipeline_operations.py`, `archtop_cam_router.py` | 🟡 pipeline_ops fixed (d17ed8dd), agentic spine = #18 | ~~HIGH~~ MEDIUM |
-| 23 | 3 Broken CI workflows (dead paths) | `cam_gcode_smoke.yml`, `helical_badges.yml`, `lpmd-inventory.yml` | ✅ Resolved (6d21e96b) | ~~CRITICAL~~ |
-| 24 | 27 Phantom references to deleted code | `__RECOVERED__/README.md` | ✅ Resolved (ba9db4b6) | ~~CRITICAL~~ |
+| 23 | 3 Broken CI workflows (dead paths) | `cam_gcode_smoke.yml`, `helical_badges.yml`, `lpmd-inventory.yml` | ✅ DELETED (6d21e96b) | ~~CRITICAL~~ |
+| 24 | 27 Phantom references to deleted code | `__RECOVERED__/README.md` | ✅ Refs fixed (ba9db4b6), __RECOVERED__ is archive | ~~CRITICAL~~ |
 | 25 | `_experimental/` — 8+ half-built modules | `ai_cam/`, `ai_core/`, `infra/`, `analytics/` | 🟡 Partial stubs | MEDIUM |
 | 26 | 4 Frontend TODOs blocking features | Rosette PDF export, DXF export, risk override API, job detail nav | ❌ Not started | MEDIUM |
 | 27 | Abandoned service (no CI, no tests) | `blueprint-import/` | 🟡 Code exists, not integrated | MEDIUM |

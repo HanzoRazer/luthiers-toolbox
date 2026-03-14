@@ -23,15 +23,15 @@
 
 | Status | Count | Items |
 |--------|-------|-------|
-| ✅ DONE | 16 | #1, #2, #4, #5, #6, #9, #10, #11, #12, #14, #16, #18, #19, #20, #23, #24, #28, #29, #30, #31 |
-| 🟡 PARTIAL | 12 | #3, #7, #8, #13, #15, #17, #21, #22, #25, #27 |
+| ✅ DONE | 20 | #1, #2, #4, #5, #6, #9, #10, #11, #12, #14, #15, #16, #18, #19, #20, #23, #24, #28, #29, #30, #31 |
+| 🟡 PARTIAL | 8 | #3, #7, #8, #13, #17, #21, #22, #25, #27 |
 | ❌ NOT STARTED | 3 | #26 (4 frontend TODOs) |
 
 ---
 
 ## Effort Details
 
-### ✅ DONE (16 items)
+### ✅ DONE (20 items)
 
 | # | Effort | Evidence |
 |---|--------|----------|
@@ -45,6 +45,7 @@
 | 11 | Vulture Dead Code | 15 imports removed |
 | 12 | Radon Complexity | Baselined (avg A grade) |
 | 14 | Singleton Store Refactor | Resolved (c79dd1a7) |
+| 15 | Frontend Tailwind/UX | Tailwind 3.4.19 installed + tailwind.config.js |
 | 16 | CNC Safety Fail-Closed | Resolved (6f86018b) |
 | **18** | **Agentic Spine** | **DONE: `IMPLEMENTED = True` in all modules, 773+ lines real code, 14 tests** |
 | 19 | SAW_LAB Learning Pipeline | Intentional disable, documented |
