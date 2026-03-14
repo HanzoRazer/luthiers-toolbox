@@ -369,12 +369,13 @@ ROUTER_MANIFEST: List[RouterSpec] = [
     ),
     # -------------------------------------------------------------------------
     # HEADSTOCK INLAY ROUTER (INLAY-01)
+    # Moved from art_studio to instruments/guitar (host geometry context)
     # -------------------------------------------------------------------------
     RouterSpec(
-        module="app.art_studio.headstock_inlay_router",
+        module="app.routers.instruments.guitar.headstock_inlay_router",
         prefix="/api",
-        tags=["Art Studio", "Headstock Inlay"],
-        category="art_studio",
+        tags=["Instruments", "Headstock Inlay"],
+        category="instruments",
     ),
     RouterSpec(
         module="app.art_studio.relief_router",

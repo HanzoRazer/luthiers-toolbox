@@ -1,11 +1,13 @@
-# services/api/app/art_studio/headstock_inlay_router.py
+# services/api/app/routers/instruments/guitar/headstock_inlay_router.py
 
 """
-Art Studio Headstock Inlay Router
+Headstock Inlay Router
 
 INLAY-01: Provides API endpoints for headstock inlay design and AI prompt generation.
 Exposes headstock styles, inlay designs, materials, and pre-built templates from
-the orphaned inlay_prompts.py module.
+the inlay_prompts module.
+
+Moved from art_studio to instruments/guitar since headstock is host geometry.
 """
 
 from __future__ import annotations
@@ -16,7 +18,7 @@ from typing import Dict, List, Optional, Any
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel, Field
 
-from ..cam.headstock.inlay_prompts import (
+from ....cam.headstock.inlay_prompts import (
     HeadstockStyle,
     InlayDesign,
     HEADSTOCK_SHAPES,
@@ -33,8 +35,8 @@ from ..cam.headstock.inlay_prompts import (
 logger = logging.getLogger(__name__)
 
 router = APIRouter(
-    prefix="/art-studio/headstock-inlay",
-    tags=["Art Studio - Headstock Inlay"],
+    prefix="/instruments/guitar/headstock-inlay",
+    tags=["Instruments - Headstock Inlay"],
 )
 
 
