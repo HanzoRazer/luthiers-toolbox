@@ -13,9 +13,9 @@
 | Metric | Snap 15 | Snap 16 | Current | Target | Gap |
 |--------|---------|---------|---------|--------|-----|
 | Root directory items | 38 | 40 | **40** | <25 | -15 |
-| Files >500 lines (app/) | 16 | 16 | **16** | <10 | -6 |
-| Broad `except Exception` | 725 | 602 | **602** | <200 | -402 |
-| Route decorators | ~992 | 1,004 | **1,004** | <500 | -504 |
+| Files >500 lines (app/) | 16 | 16 | **18** | <10 | -8 |
+| Broad `except Exception` | 725 | 602 | **315** | <200 | -115 |
+| Route decorators | ~992 | 1,004 | **715** | <500 | -215 |
 | @safety_critical sites | 0 | 13 | **26** | 20+ | ✅ |
 | .txt/.jpg at root | 22+14MB | 0 | **0** | 0 | ✅ |
 
