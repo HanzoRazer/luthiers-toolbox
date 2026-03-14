@@ -102,24 +102,25 @@ def detect_moments(events: List[Dict[str, Any]]) -> List[DetectedMoment]:
                 detected.append(("HESITATION", 0.8, [idle_event.get("event_id", "")]))
 
     # --- FIRST_SIGNAL Detection (initial engagement) ---
-    if not detected:
-        view_event = next(
-            (
-                ev for ev in sorted_events
-                if ev.get("event_type") == "user_action"
-                and ev.get("payload", {}).get("action") == "view_rendered"
-            ),
+    # Always check for FIRST_SIGNAL - it can coexist with other moments
+    # (grace selector will prefer FIRST_SIGNAL over FINDING if not yet shown)
+    view_event = next(
+        (
+            ev for ev in sorted_events
+            if ev.get("event_type") == "user_action"
+            and ev.get("payload", {}).get("action") == "view_rendered"
+        ),
+        None,
+    )
+    if view_event:
+        detected.append(("FIRST_SIGNAL", 0.75, [view_event.get("event_id", "")]))
+    else:
+        comp_event = next(
+            (ev for ev in sorted_events if ev.get("event_type") == "analysis_completed"),
             None,
         )
-        if view_event:
-            detected.append(("FIRST_SIGNAL", 0.75, [view_event.get("event_id", "")]))
-        else:
-            comp_event = next(
-                (ev for ev in sorted_events if ev.get("event_type") == "analysis_completed"),
-                None,
-            )
-            if comp_event:
-                detected.append(("FIRST_SIGNAL", 0.65, [comp_event.get("event_id", "")]))
+        if comp_event:
+            detected.append(("FIRST_SIGNAL", 0.65, [comp_event.get("event_id", "")]))
 
     if not detected:
         return []
@@ -127,14 +128,14 @@ def detect_moments(events: List[Dict[str, Any]]) -> List[DetectedMoment]:
     # Sort by priority (lower number = higher priority)
     detected.sort(key=lambda x: MOMENT_PRIORITY.get(x[0], 999))
 
-    # Return only the highest priority moment
-    best = detected[0]
+    # Return ALL detected moments (sorted by priority)
     return [
         DetectedMoment(
-            moment=best[0],
-            confidence=best[1],
-            trigger_events=best[2],
+            moment=d[0],
+            confidence=d[1],
+            trigger_events=d[2],
         )
+        for d in detected
     ]
 
 

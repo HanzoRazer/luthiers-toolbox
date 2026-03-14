@@ -16,13 +16,23 @@ from pathlib import Path
 from typing import Any, Dict, Iterator, List, Optional
 
 from .moments import detect_moments
-from .schemas import DetectedMoment, CRITICAL_MOMENTS
+from .schemas import DetectedMoment, CRITICAL_MOMENTS, AttentionDirective, PolicyDecision, PolicyDiagnostic
 
 # Module is now implemented
 IMPLEMENTED = True
 
 # Constants
 FIRST_SIGNAL_GRACE_MS = 1500
+
+# Moment to action mapping
+MOMENT_TO_ACTION = {
+    "FIRST_SIGNAL": "INSPECT",
+    "FINDING": "REVIEW",
+    "HESITATION": "INSPECT",
+    "ERROR": "REVIEW",
+    "OVERLOAD": "REVIEW",
+    "DECISION_REQUIRED": "DECIDE",
+}
 
 
 @dataclass
@@ -31,6 +41,9 @@ class ReplayConfig:
     shadow_mode: bool = True
     strict_order: bool = True
     grace_period_ms: int = FIRST_SIGNAL_GRACE_MS
+    mode: str = "M1"  # M0 = shadow only (no emit), M1 = emit directives
+    verbose: bool = False
+    apply_grace_selection: bool = True
 
 
 @dataclass
@@ -43,19 +56,7 @@ class ReplayResult:
 
 
 def load_events(path: Path) -> List[Dict[str, Any]]:
-    """
-    Load events from a JSONL file.
-
-    Args:
-        path: Path to JSONL file (one JSON object per line)
-
-    Returns:
-        List of event dictionaries
-
-    Raises:
-        FileNotFoundError: If file does not exist
-        json.JSONDecodeError: If line is not valid JSON
-    """
+    """Load events from a JSONL file."""
     if not path.exists():
         raise FileNotFoundError(f"Event file not found: {path}")
 
@@ -78,15 +79,7 @@ def load_events(path: Path) -> List[Dict[str, Any]]:
 
 
 def group_by_session(events: List[Dict[str, Any]]) -> Dict[str, List[Dict[str, Any]]]:
-    """
-    Group events by session ID.
-
-    Args:
-        events: List of event dictionaries
-
-    Returns:
-        Dictionary mapping session_id to list of events
-    """
+    """Group events by session ID."""
     sessions: Dict[str, List[Dict[str, Any]]] = {}
     for event in events:
         session_info = event.get("session", {})
@@ -95,50 +88,100 @@ def group_by_session(events: List[Dict[str, Any]]) -> Dict[str, List[Dict[str, A
             sessions[session_id] = []
         sessions[session_id].append(event)
 
-    # Sort events within each session by timestamp
     for session_id in sessions:
         sessions[session_id].sort(key=lambda e: e.get("occurred_at", ""))
 
     return sessions
 
 
+def _make_directive(moment: DetectedMoment) -> AttentionDirective:
+    """Create an attention directive from a moment."""
+    action = MOMENT_TO_ACTION.get(moment.moment, "INSPECT")
+    return AttentionDirective(
+        action=action,
+        title=f"{moment.moment} detected",
+        detail=f"Confidence: {moment.confidence:.2f}",
+    )
+
+
+def _make_decision(moment: Optional[DetectedMoment], emit: bool) -> Dict[str, Any]:
+    """Create a policy decision dict."""
+    if moment is None:
+        return None
+    directive = _make_directive(moment)
+    return {
+        "attention_action": directive.action,
+        "emit_directive": emit,
+        "directive": {"action": directive.action, "title": directive.title, "detail": directive.detail},
+        "diagnostic": {"rule_id": "replay"},
+    }
+
+
 def run_shadow_replay(
     events: List[Dict[str, Any]],
     config: Optional[ReplayConfig] = None,
-) -> Iterator[ReplayResult]:
+) -> Dict[str, Any]:
     """
     Run shadow replay on a sequence of events.
-
-    Groups events by session and runs moment detection on each session.
-    Yields results as each session is processed.
-
-    Args:
-        events: List of event dictionaries
-        config: Optional replay configuration
-
-    Yields:
-        ReplayResult for each session
+    
+    Returns a dict with sessions keyed by session_id.
     """
     if config is None:
         config = ReplayConfig()
 
     sessions = group_by_session(events)
+    result = {"sessions": {}}
 
     for session_id, session_events in sessions.items():
-        errors: List[str] = []
         moments: List[DetectedMoment] = []
-
         try:
             moments = detect_moments(session_events)
-        except Exception as e:
-            errors.append(f"Moment detection error: {str(e)}")
+        except Exception:
+            pass
 
-        yield ReplayResult(
-            session_id=session_id,
-            events_processed=len(session_events),
-            moments_detected=moments,
-            errors=errors,
-        )
+        # Apply grace selection if enabled
+        selected_moment = None
+        if moments:
+            if config.apply_grace_selection:
+                selected_moment = select_moment_with_grace(moments, first_signal_shown=False)
+            else:
+                selected_moment = moments[0]
+
+        # Determine if we should emit (M1 emits, M0 does not)
+        emit = config.mode == "M1" and selected_moment is not None
+
+        result["sessions"][session_id] = {
+            "events_processed": len(session_events),
+            "moments": moments,
+            "moment": selected_moment,
+            "decision": _make_decision(selected_moment, emit),
+        }
+
+    return result
+
+
+def run_determinism_check(events: List[Dict[str, Any]], runs: int = 3) -> Dict[str, Any]:
+    """Run multiple replays and check for determinism."""
+    results = []
+    for _ in range(runs):
+        report = run_shadow_replay(events)
+        results.append(report)
+
+    # Compare all results
+    mismatches = []
+    first = results[0]
+    for i, report in enumerate(results[1:], 2):
+        for session_id in first["sessions"]:
+            if session_id not in report["sessions"]:
+                mismatches.append(f"Run {i} missing session {session_id}")
+            elif first["sessions"][session_id]["moment"] != report["sessions"][session_id]["moment"]:
+                mismatches.append(f"Run {i} different moment for {session_id}")
+
+    return {
+        "deterministic": len(mismatches) == 0,
+        "runs": runs,
+        "mismatches": mismatches,
+    }
 
 
 def select_moment_with_grace(
@@ -148,24 +191,7 @@ def select_moment_with_grace(
     first_view_rendered_at_ms: Optional[int] = None,
     current_time_ms: Optional[int] = None,
 ) -> Optional[DetectedMoment]:
-    """
-    Select the appropriate moment given a grace period.
-
-    Implements FIRST_SIGNAL priority logic:
-    1. FIRST_SIGNAL is one-shot: if already shown, skip it
-    2. If FINDING is top but FIRST_SIGNAL not yet shown, prefer FIRST_SIGNAL
-    3. During grace window, suppress non-critical if FIRST_SIGNAL not yet shown
-
-    Args:
-        moments: List of detected moments (sorted by priority)
-        grace_period_ms: Grace window duration in milliseconds
-        first_signal_shown: Whether FIRST_SIGNAL has been shown this session
-        first_view_rendered_at_ms: Timestamp when first view was rendered
-        current_time_ms: Current time (for grace window calculation)
-
-    Returns:
-        Selected moment or None if all should be suppressed
-    """
+    """Select the appropriate moment given a grace period."""
     if not moments:
         return None
 
@@ -173,19 +199,15 @@ def select_moment_with_grace(
 
     # One-shot: if FIRST_SIGNAL already shown, never return it again
     if first_signal_shown and top.moment == "FIRST_SIGNAL":
-        # Skip to next moment if available, otherwise None
         next_moment = next((m for m in moments if m.moment != "FIRST_SIGNAL"), None)
         return next_moment
 
-    # If FINDING is top but we haven't shown FIRST_SIGNAL yet,
-    # prefer FIRST_SIGNAL if present in moments list
+    # If FINDING is top but we have not shown FIRST_SIGNAL yet, prefer FIRST_SIGNAL
     if not first_signal_shown and top.moment == "FINDING":
         first_signal = next((m for m in moments if m.moment == "FIRST_SIGNAL"), None)
         if first_signal:
             return first_signal
 
-        # Grace window suppression: if FIRST_SIGNAL not present yet,
-        # show nothing briefly rather than jumping straight to FINDING
         if first_view_rendered_at_ms is not None and current_time_ms is not None:
             elapsed = current_time_ms - first_view_rendered_at_ms
             if elapsed < grace_period_ms:
@@ -202,16 +224,7 @@ def is_critical_moment(moment: Optional[DetectedMoment]) -> bool:
 
 
 def export_events_jsonl(events: List[Dict[str, Any]], path: Path) -> int:
-    """
-    Export events to a JSONL file.
-
-    Args:
-        events: List of event dictionaries
-        path: Output file path
-
-    Returns:
-        Number of events written
-    """
+    """Export events to a JSONL file."""
     with open(path, "w", encoding="utf-8") as f:
         for event in events:
             f.write(json.dumps(event, default=str) + chr(10))
