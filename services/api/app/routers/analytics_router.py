@@ -1,452 +1,50 @@
 """
-Analytics API Router (N9.0)
+Analytics API Router (Consolidated Wrapper)
+============================================
 
-REST endpoints for pattern, material, and job analytics.
+DEPRECATED: This module is a thin wrapper for backward compatibility.
+Prefer importing directly from focused sub-modules:
+
+    from app.routers.analytics_patterns_router import router as patterns_router
+    from app.routers.analytics_materials_router import router as materials_router
+    from app.routers.analytics_jobs_router import router as jobs_router
+    from app.routers.analytics_advanced_router import router as advanced_router
+
+Sub-modules:
+- analytics_patterns_router.py (6 routes: complexity, rings, geometry, families, popularity, details)
+- analytics_materials_router.py (6 routes: distribution, consumption, efficiency, dimensions, suppliers, inventory)
+- analytics_jobs_router.py (7 routes: success-trends, duration, status, throughput, failures, types, recent)
+- analytics_advanced_router.py (4 routes: correlation, anomalies/durations, anomalies/success, predict)
+
+Total: 23 routes for analytics
+
+LANE: UTILITY
 """
 
-import logging
-from typing import Optional
-from fastapi import Body, APIRouter, HTTPException, Query
+from fastapi import APIRouter
 
-from .._experimental.analytics.pattern_analytics import get_pattern_analytics
-from .._experimental.analytics.material_analytics import get_material_analytics
-from .._experimental.analytics.job_analytics import get_job_analytics
+# Import sub-routers
+from .analytics_patterns_router import router as patterns_router
+from .analytics_materials_router import router as materials_router
+from .analytics_jobs_router import router as jobs_router
+from .analytics_advanced_router import router as advanced_router
 
-logger = logging.getLogger(__name__)
-
+# Aggregate router
 router = APIRouter()
 
-
-# ============================================================================
-# PATTERN ANALYTICS ENDPOINTS
-# ============================================================================
-
-@router.get("/patterns/complexity")
-def get_pattern_complexity_distribution():
-    """
-    Get distribution of patterns by complexity score.
-    
-    Categorizes patterns as Simple, Medium, Complex, or Expert.
-    
-    Returns:
-        JSON with counts and percentages per category
-    """
-    try:
-        analytics = get_pattern_analytics()
-        return analytics.get_complexity_distribution()
-    except HTTPException:  # WP-1: pass through HTTPException
-        raise
-    except (KeyError, ValueError, TypeError, ZeroDivisionError, OSError) as e:
-        logger.error(f"Error getting complexity distribution: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+# Mount sub-routers (no additional prefix - endpoints already have paths)
+router.include_router(patterns_router)
+router.include_router(materials_router)
+router.include_router(jobs_router)
+router.include_router(advanced_router)
 
 
-@router.get("/patterns/rings")
-def get_pattern_ring_statistics():
-    """
-    Get ring count statistics across all patterns.
-    
-    Returns:
-        Min, max, avg, median ring counts with distribution
-    """
-    try:
-        analytics = get_pattern_analytics()
-        return analytics.get_ring_statistics()
-    except HTTPException:  # WP-1: pass through HTTPException
-        raise
-    except (KeyError, ValueError, TypeError, ZeroDivisionError, OSError) as e:
-        logger.error(f"Error getting ring statistics: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
-
-
-@router.get("/patterns/geometry")
-def get_pattern_geometry_metrics():
-    """
-    Get geometry metrics (radius, segments, density).
-    
-    Returns:
-        Radius ranges, segment counts, ring density analysis
-    """
-    try:
-        analytics = get_pattern_analytics()
-        return analytics.get_geometry_metrics()
-    except HTTPException:  # WP-1: pass through HTTPException
-        raise
-    except (KeyError, ValueError, TypeError, ZeroDivisionError, OSError) as e:
-        logger.error(f"Error getting geometry metrics: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
-
-
-@router.get("/patterns/families")
-def get_pattern_strip_family_usage():
-    """
-    Get strip family usage across patterns.
-    
-    Returns:
-        Which material families are used most frequently
-    """
-    try:
-        analytics = get_pattern_analytics()
-        return analytics.get_strip_family_usage()
-    except HTTPException:  # WP-1: pass through HTTPException
-        raise
-    except (KeyError, ValueError, TypeError, ZeroDivisionError, OSError) as e:
-        logger.error(f"Error getting strip family usage: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
-
-
-@router.get("/patterns/popularity")
-def get_pattern_popularity(limit: int = Query(10, ge=1, le=100)):
-    """
-    Get most popular patterns by job usage.
-    
-    Args:
-        limit: Max patterns to return (default 10)
-        
-    Returns:
-        Top patterns ranked by job count
-    """
-    try:
-        analytics = get_pattern_analytics()
-        return analytics.get_pattern_popularity(limit=limit)
-    except HTTPException:  # WP-1: pass through HTTPException
-        raise
-    except (KeyError, ValueError, TypeError, ZeroDivisionError, OSError) as e:
-        logger.error(f"Error getting pattern popularity: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
-
-
-@router.get("/patterns/{pattern_id}/details")
-def get_pattern_details_with_analytics(pattern_id: str):
-    """
-    Get detailed analytics for a specific pattern.
-    
-    Args:
-        pattern_id: Pattern UUID
-        
-    Returns:
-        Pattern with complexity, usage count, success rate, avg duration
-    """
-    try:
-        analytics = get_pattern_analytics()
-        result = analytics.get_pattern_details_with_analytics(pattern_id)
-        
-        if not result:
-            raise HTTPException(status_code=404, detail=f"Pattern {pattern_id} not found")
-        
-        return result
-    except HTTPException:  # WP-1: pass through HTTPException
-        raise
-    except (KeyError, ValueError, TypeError, ZeroDivisionError, OSError) as e:
-        logger.error(f"Error getting pattern details: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
-
-
-# ============================================================================
-# MATERIAL ANALYTICS ENDPOINTS
-# ============================================================================
-
-@router.get("/materials/distribution")
-def get_material_type_distribution():
-    """
-    Get distribution of material types.
-    
-    Returns:
-        Count and percentage per material type
-    """
-    try:
-        analytics = get_material_analytics()
-        return analytics.get_material_type_distribution()
-    except HTTPException:  # WP-1: pass through HTTPException
-        raise
-    except (KeyError, ValueError, TypeError, ZeroDivisionError, OSError) as e:
-        logger.error(f"Error getting material distribution: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
-
-
-@router.get("/materials/consumption")
-def get_material_consumption():
-    """
-    Get strip consumption metrics by material.
-    
-    Returns:
-        Total strips, length, dimensions per material
-    """
-    try:
-        analytics = get_material_analytics()
-        return analytics.get_strip_consumption_by_material()
-    except HTTPException:  # WP-1: pass through HTTPException
-        raise
-    except (KeyError, ValueError, TypeError, ZeroDivisionError, OSError) as e:
-        logger.error(f"Error getting material consumption: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
-
-
-@router.get("/materials/efficiency")
-def get_material_efficiency():
-    """
-    Get material efficiency metrics.
-    
-    Returns:
-        Waste percentage, success rates, efficiency scores per material
-    """
-    try:
-        analytics = get_material_analytics()
-        return analytics.get_material_efficiency()
-    except HTTPException:  # WP-1: pass through HTTPException
-        raise
-    except (KeyError, ValueError, TypeError, ZeroDivisionError, OSError) as e:
-        logger.error(f"Error getting material efficiency: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
-
-
-@router.get("/materials/dimensions")
-def get_material_dimensional_analysis():
-    """
-    Get dimensional analysis (width, thickness ranges).
-    
-    Returns:
-        Min/max/avg/median dimensions, common sizes
-    """
-    try:
-        analytics = get_material_analytics()
-        return analytics.get_dimensional_analysis()
-    except HTTPException:  # WP-1: pass through HTTPException
-        raise
-    except (KeyError, ValueError, TypeError, ZeroDivisionError, OSError) as e:
-        logger.error(f"Error getting dimensional analysis: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
-
-
-@router.get("/materials/suppliers")
-def get_material_supplier_analytics():
-    """
-    Get supplier quality metrics from metadata.
-    
-    Returns:
-        Supplier performance with success rates
-    """
-    try:
-        analytics = get_material_analytics()
-        return analytics.get_supplier_analytics()
-    except HTTPException:  # WP-1: pass through HTTPException
-        raise
-    except (KeyError, ValueError, TypeError, ZeroDivisionError, OSError) as e:
-        logger.error(f"Error getting supplier analytics: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
-
-
-@router.get("/materials/inventory")
-def get_material_inventory_status():
-    """
-    Get current inventory status summary.
-    
-    Returns:
-        Total strips, length, material types in inventory
-    """
-    try:
-        analytics = get_material_analytics()
-        return analytics.get_material_inventory_status()
-    except HTTPException:  # WP-1: pass through HTTPException
-        raise
-    except (KeyError, ValueError, TypeError, ZeroDivisionError, OSError) as e:
-        logger.error(f"Error getting inventory status: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
-
-
-# ============================================================================
-# JOB ANALYTICS ENDPOINTS
-# ============================================================================
-
-@router.get("/jobs/success-trends")
-def get_job_success_trends(days: int = Query(30, ge=1, le=365)):
-    """
-    Get success rate trends over time.
-    
-    Args:
-        days: Number of days to analyze (default 30)
-        
-    Returns:
-        Daily success rates and overall trend
-    """
-    try:
-        analytics = get_job_analytics()
-        return analytics.get_success_rate_trends(days=days)
-    except HTTPException:  # WP-1: pass through HTTPException
-        raise
-    except (KeyError, ValueError, TypeError, ZeroDivisionError, OSError) as e:
-        logger.error(f"Error getting success trends: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
-
-
-@router.get("/jobs/duration")
-def get_job_duration_analysis():
-    """
-    Get duration analysis by job type.
-    
-    Returns:
-        Min, max, avg, median duration per job type
-    """
-    try:
-        analytics = get_job_analytics()
-        return analytics.get_duration_analysis_by_job_type()
-    except HTTPException:  # WP-1: pass through HTTPException
-        raise
-    except (KeyError, ValueError, TypeError, ZeroDivisionError, OSError) as e:
-        logger.error(f"Error getting duration analysis: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
-
-
-@router.get("/jobs/status")
-def get_job_status_distribution():
-    """
-    Get distribution of job statuses.
-    
-    Returns:
-        Count and percentage per status
-    """
-    try:
-        analytics = get_job_analytics()
-        return analytics.get_status_distribution()
-    except HTTPException:  # WP-1: pass through HTTPException
-        raise
-    except (KeyError, ValueError, TypeError, ZeroDivisionError, OSError) as e:
-        logger.error(f"Error getting status distribution: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
-
-
-@router.get("/jobs/throughput")
-def get_job_throughput_metrics():
-    """
-    Get throughput metrics (jobs per day/week/month).
-    
-    Returns:
-        Average jobs per time period, peak days
-    """
-    try:
-        analytics = get_job_analytics()
-        return analytics.get_throughput_metrics()
-    except HTTPException:  # WP-1: pass through HTTPException
-        raise
-    except (KeyError, ValueError, TypeError, ZeroDivisionError, OSError) as e:
-        logger.error(f"Error getting throughput metrics: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
-
-
-@router.get("/jobs/failures")
-def get_job_failure_analysis():
-    """
-    Get failure analysis for failed jobs.
-    
-    Returns:
-        Failure rates by job type, pattern, material
-    """
-    try:
-        analytics = get_job_analytics()
-        return analytics.get_failure_analysis()
-    except HTTPException:  # WP-1: pass through HTTPException
-        raise
-    except (KeyError, ValueError, TypeError, ZeroDivisionError, OSError) as e:
-        logger.error(f"Error getting failure analysis: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
-
-
-@router.get("/jobs/types")
-def get_job_type_distribution():
-    """
-    Get distribution of job types.
-    
-    Returns:
-        Count and percentage per job type
-    """
-    try:
-        analytics = get_job_analytics()
-        return analytics.get_job_type_distribution()
-    except HTTPException:  # WP-1: pass through HTTPException
-        raise
-    except (KeyError, ValueError, TypeError, ZeroDivisionError, OSError) as e:
-        logger.error(f"Error getting job type distribution: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
-
-
-@router.get("/analytics/jobs/recent")
-def get_recent_jobs(limit: int = Query(10, ge=1, le=100)):
-    """
-    Get summary of recent jobs.
-    
-    Args:
-        limit: Max jobs to return (default 10)
-        
-    Returns:
-        Recent jobs with key metrics
-    """
-    try:
-        analytics = get_job_analytics()
-        return analytics.get_recent_job_summary(limit=limit)
-    except HTTPException:  # WP-1: pass through HTTPException
-        raise
-    except (KeyError, ValueError, TypeError, ZeroDivisionError, OSError) as e:
-        logger.error(f"Error getting recent jobs: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
-
-
-# ============================================================================
-# ADVANCED ANALYTICS ENDPOINTS (merged from advanced_analytics_router.py)
-# ============================================================================
-
-@router.get("/advanced/correlation")
-def correlation(x: Optional[str] = None, y: Optional[str] = None):
-    """Get Pearson correlation between two metrics."""
-    from .._experimental.analytics.advanced_analytics import get_advanced_analytics
-    if not x or not y:
-        raise HTTPException(status_code=400, detail="Query parameters 'x' and 'y' are required (e.g. job.duration_seconds, pattern.complexity_score)")
-    try:
-        analytics = get_advanced_analytics()
-        return analytics.pearson_correlation(x, y)
-    except HTTPException:
-        raise
-    except (ValueError, KeyError, ZeroDivisionError, TypeError) as e:
-        logger.exception("correlation error")
-        raise HTTPException(status_code=500, detail=str(e))
-
-
-@router.get("/advanced/anomalies/durations")
-def duration_anomalies(z: Optional[float] = 3.0):
-    """Detect duration anomalies using z-score threshold."""
-    from .._experimental.analytics.advanced_analytics import get_advanced_analytics
-    try:
-        analytics = get_advanced_analytics()
-        return analytics.detect_duration_anomalies(z_thresh=float(z))
-    except HTTPException:
-        raise
-    except (ValueError, KeyError, ZeroDivisionError, TypeError) as e:
-        logger.exception("duration anomaly error")
-        raise HTTPException(status_code=500, detail=str(e))
-
-
-@router.get("/advanced/anomalies/success")
-def success_anomalies(z: Optional[float] = 3.0, window_days: Optional[int] = 30):
-    """Detect success rate anomalies."""
-    from .._experimental.analytics.advanced_analytics import get_advanced_analytics
-    try:
-        analytics = get_advanced_analytics()
-        return analytics.detect_success_rate_anomalies(window_days=int(window_days), z_thresh=float(z))
-    except HTTPException:
-        raise
-    except (ValueError, KeyError, ZeroDivisionError, TypeError) as e:
-        logger.exception("success anomaly error")
-        raise HTTPException(status_code=500, detail=str(e))
-
-
-@router.post("/advanced/predict")
-def predict_failure(body: dict = Body(...)):
-    """Predict failure risk based on input parameters."""
-    from .._experimental.analytics.advanced_analytics import get_advanced_analytics
-    try:
-        analytics = get_advanced_analytics()
-        return analytics.predict_failure_risk(body)
-    except HTTPException:
-        raise
-    except (ValueError, KeyError, ZeroDivisionError, TypeError) as e:
-        logger.exception("predict error")
-        raise HTTPException(status_code=500, detail=str(e))
+__all__ = [
+    # Router
+    "router",
+    # Sub-routers
+    "patterns_router",
+    "materials_router",
+    "jobs_router",
+    "advanced_router",
+]
