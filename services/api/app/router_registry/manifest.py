@@ -151,10 +151,29 @@ ROUTER_MANIFEST: List[RouterSpec] = [
         tags=["RMOS", "Logs v2"],
         category="rmos",
     ),
+    # Decomposed from stub_routes.py
     RouterSpec(
-        module="app.rmos.stub_routes",
+        module="app.rmos.rosette_cam_router",
         prefix="/api/rmos",
-        tags=["RMOS", "Stubs"],
+        tags=["RMOS", "Rosette", "CAM"],
+        category="rmos",
+    ),
+    RouterSpec(
+        module="app.rmos.safety_router",
+        prefix="/api/rmos",
+        tags=["RMOS", "Safety"],
+        category="rmos",
+    ),
+    RouterSpec(
+        module="app.rmos.live_monitor_router",
+        prefix="/api/rmos",
+        tags=["RMOS", "Live Monitor"],
+        category="rmos",
+    ),
+    RouterSpec(
+        module="app.rmos.mvp_router",
+        prefix="/api/rmos",
+        tags=["RMOS", "MVP"],
         category="rmos",
     ),
     RouterSpec(
@@ -340,6 +359,12 @@ ROUTER_MANIFEST: List[RouterSpec] = [
         module="app.art_studio.api.inlay_pattern_routes",
         prefix="",
         tags=["Art Studio", "Inlay Patterns"],
+        category="art_studio",
+    ),
+    RouterSpec(
+        module="app.art_studio.api.rosette_designer_routes",
+        prefix="/api/art/rosette-designer",
+        tags=["Art Studio", "Rosette Designer"],
         category="art_studio",
     ),
     # -------------------------------------------------------------------------
