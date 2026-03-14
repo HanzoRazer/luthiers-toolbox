@@ -1,40 +1,44 @@
 # Patch N14.0 - RMOS Rosette CNC core skeleton
+# Rosette Consolidation: absorbed micro-files into receiver modules
 #
 # This package defines the CNC toolchain interfaces for RMOS Studio.
 # Implementations are intentionally simple placeholders; N14.x patches
 # will flesh out real kerf physics, safety checks, and G-code output.
 
-from .cnc_blade_model import (
+# Tool models + material types (absorbed cnc_blade_model + cnc_feed_table)
+from .cnc_materials import (
     SawBladeModel,
     RouterBitModel,
+    ToolMode,
+    MaterialType,
+    BasicFeedRule,
+    select_basic_feed_rule,
+    HARDWOOD_RULE,
+    SOFTWOOD_RULE,
+    COMPOSITE_RULE,
 )
+# Jig geometry (kept separate to avoid circular imports)
 from .cnc_jig_geometry import (
     JigAlignment,
     MachineEnvelope,
 )
-from .cnc_kerf_physics import (
+# Kerf physics (absorbed into safety validator)
+from .cnc_safety_validator import (
     KerfPhysicsResult,
     compute_kerf_physics,
+    CNCSafetyDecision,
+    evaluate_cnc_safety,
 )
-from .cnc_feed_table import (
-    MaterialType,
-    FeedRule,
-    select_feed_rule,
-)
+# Toolpaths
 from .cnc_toolpath import (
     ToolpathSegment,
     ToolpathPlan,
     build_linear_toolpaths,
 )
-from .cnc_safety_validator import (
-    CNCSafetyDecision,
-    evaluate_cnc_safety,
-)
+# Export bundle + simulation (absorbed cnc_simulation)
 from .cnc_exporter import (
     CNCExportBundle,
     build_export_bundle_skeleton,
-)
-from .cnc_simulation import (
     CNCSimulationResult,
     simulate_toolpaths,
 )
@@ -57,21 +61,38 @@ from .cnc_machine_profiles import (
     list_machine_configs,
 )
 
+# Backward compatibility aliases (absorbed from cnc_feed_table)
+FeedRule = BasicFeedRule
+select_feed_rule = select_basic_feed_rule
+
 __all__ = [
+    # Tool models (absorbed from cnc_blade_model)
     "SawBladeModel",
     "RouterBitModel",
+    "ToolMode",
+    # Jig geometry
     "JigAlignment",
     "MachineEnvelope",
+    # Kerf physics (absorbed from cnc_kerf_physics)
     "KerfPhysicsResult",
     "compute_kerf_physics",
+    # Material types (absorbed from cnc_feed_table)
     "MaterialType",
-    "FeedRule",
-    "select_feed_rule",
+    "BasicFeedRule",
+    "select_basic_feed_rule",
+    "FeedRule",  # alias for BasicFeedRule (backward compat)
+    "select_feed_rule",  # alias for select_basic_feed_rule (backward compat)
+    "HARDWOOD_RULE",
+    "SOFTWOOD_RULE",
+    "COMPOSITE_RULE",
+    # Toolpaths
     "ToolpathSegment",
     "ToolpathPlan",
     "build_linear_toolpaths",
+    # Safety
     "CNCSafetyDecision",
     "evaluate_cnc_safety",
+    # Export + simulation (absorbed from cnc_simulation)
     "CNCExportBundle",
     "build_export_bundle_skeleton",
     "CNCSimulationResult",
@@ -85,7 +106,7 @@ __all__ = [
     # N16.5 - Machine profiles
     "MachineProfile",
     "GCodePostConfig",
-    # N16.4 - Material-specific presets
+    # N16.4 - Material-specific presets (extended feed rules)
     "MaterialFeedRule",
     "select_material_feed_rule",
     # N16.7 - Hardware-tuned machine profiles

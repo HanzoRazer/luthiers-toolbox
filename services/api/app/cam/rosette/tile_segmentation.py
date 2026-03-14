@@ -363,6 +363,150 @@ def compute_tile_segmentation(ring: Dict[str, Any]) -> Dict[str, Any]:
 compute_tile_segmentation_stub = compute_tile_segmentation
 
 
+# ─────────────────────────────────────────────────────────────────────────────
+# Slice Generation (absorbed from slice_engine.py)
+# ─────────────────────────────────────────────────────────────────────────────
+
+from .models import SegmentationResult, Slice, SliceBatch, RosetteRingConfig
+
+
+def generate_slices_for_ring(
+    ring: RosetteRingConfig,
+    segmentation: SegmentationResult,
+) -> SliceBatch:
+    """
+    Generate slice records for each tile in the segmentation.
+
+    Full implementation:
+      - compute raw angles based on tangent + 90°
+      - incorporate radius, width, etc.
+
+    Current behavior:
+      - sets angle_raw_deg to tile center
+      - angle_final_deg initially equals angle_raw_deg
+    """
+    slices: List[Slice] = []
+
+    for tile in segmentation.tiles:
+        center_angle = 0.5 * (tile.theta_start_deg + tile.theta_end_deg)
+
+        s = Slice(
+            slice_index=tile.tile_index,
+            tile_index=tile.tile_index,
+            angle_raw_deg=center_angle,
+            angle_final_deg=center_angle,
+            theta_start_deg=tile.theta_start_deg,
+            theta_end_deg=tile.theta_end_deg,
+            kerf_mm=ring.kerf_mm,
+            herringbone_flip=False,
+            herringbone_angle_deg=ring.herringbone_angle_deg,
+            twist_angle_deg=ring.twist_angle_deg,
+        )
+        slices.append(s)
+
+    batch_id = f"slice_batch_ring_{ring.ring_id}"
+    return SliceBatch(batch_id=batch_id, ring_id=ring.ring_id, slices=slices)
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Twist & Herringbone (absorbed from twist_engine.py)
+# ─────────────────────────────────────────────────────────────────────────────
+
+def apply_twist(
+    ring: RosetteRingConfig,
+    slices: List[Slice],
+) -> List[Slice]:
+    """
+    Apply twist offset to slices.
+
+    Full implementation:
+      - angle_final_deg += ring.twist_angle_deg
+      - possibly clamp or normalize angles into [0, 360)
+
+    Current behavior:
+      - keep angles unchanged
+      - ensure twist_angle_deg is copied into the slice
+    """
+    out: List[Slice] = []
+    for s in slices:
+        s2 = Slice(**vars(s))
+        s2.twist_angle_deg = ring.twist_angle_deg
+        out.append(s2)
+    return out
+
+
+def apply_herringbone(
+    ring: RosetteRingConfig,
+    slices: List[Slice],
+) -> List[Slice]:
+    """
+    Apply herringbone alternation to slices.
+
+    Full implementation:
+      - alternate sign of herringbone_angle_deg on slices
+      - adjust angle_final_deg accordingly
+
+    Current behavior:
+      - set herringbone_flip = odd/even index
+      - ensure herringbone_angle_deg is copied
+    """
+    out: List[Slice] = []
+    for idx, s in enumerate(slices):
+        s2 = Slice(**vars(s))
+        s2.herringbone_angle_deg = ring.herringbone_angle_deg
+        s2.herringbone_flip = (idx % 2 == 1)
+        out.append(s2)
+    return out
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Preview Snapshot (absorbed from preview_engine.py)
+# ─────────────────────────────────────────────────────────────────────────────
+
+from .models import PreviewSnapshot
+
+
+def build_preview_snapshot(
+    pattern_id: Optional[str],
+    rings: List[RosetteRingConfig],
+    segmentations: Dict[int, SegmentationResult],
+    slice_batches: Dict[int, SliceBatch],
+) -> PreviewSnapshot:
+    """
+    Build a preview snapshot.
+
+    Full implementation:
+      - generate SVG paths / drawing instructions
+      - optionally produce a downsampled raster
+
+    Current behavior:
+      - return a minimal summary of tile and slice counts per ring
+    """
+    payload: Dict[str, Any] = {
+        "rings": [],
+    }
+
+    for ring in rings:
+        seg = segmentations.get(ring.ring_id)
+        batch = slice_batches.get(ring.ring_id)
+
+        payload["rings"].append(
+            {
+                "ring_id": ring.ring_id,
+                "radius_mm": ring.radius_mm,
+                "width_mm": ring.width_mm,
+                "tile_count": seg.tile_count if seg else 0,
+                "slice_count": len(batch.slices) if batch else 0,
+            }
+        )
+
+    return PreviewSnapshot(
+        pattern_id=pattern_id,
+        rings=list(rings),
+        payload=payload,
+    )
+
+
 if __name__ == "__main__":
     # Test the implementation
     test_ring = {
