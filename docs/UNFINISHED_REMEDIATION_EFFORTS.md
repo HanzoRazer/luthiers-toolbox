@@ -1,8 +1,32 @@
 # Unfinished Remediation Efforts
 
-> **Generated:** March 10, 2026 | **Updated:** March 12, 2026
+> **Generated:** March 10, 2026 | **Updated:** March 13, 2026
 > **Source:** Cross-repo search of docs, CI baselines, reports, and planning files.
-> **Count:** 31 efforts tracked — 22 resolved, 9 remaining.
+> **Count:** 31 efforts tracked — **7 major efforts NOT STARTED**.
+
+
+## ⚠️ Honest Status (2026-03-13)
+
+Previous updates overstated progress. This section corrects the record.
+
+### Actually NOT Done — 7 Major Efforts
+
+| # | Effort | Actual Status |
+|---|--------|---------------|
+| 3 | Router Consolidation (132→<100 files) | ❌ **Not started** |
+| 7 | Score 7 Plan — 9 phases | 🟡 **~30% done** (was claimed 50%) |
+| 8 | Vectorizer — 3 features (parametric, multi-page, neural) | ❌ **Not started** |
+| 17 | Phase 2/3 SaaS — sections 2.2-2.4, 3.1-3.6 | ❌ **90% untouched** (only auth done) |
+| 18 | Agentic Spine — `IMPLEMENTED = False` | ❌ **Pure stubs** |
+| 26 | 4 Frontend TODOs (PDF export, DXF export, risk override, job nav) | ❌ **Not started** |
+| 30 | 5 secrets undocumented | ❌ **Not fixed** |
+
+### What Was Misrepresented
+
+- "67 resolved" counts items marked resolved in previous sessions, not verified implementations
+- Phase 2/3 SaaS plan is 90% untouched — only 3.1 Auth completed
+- Score 7 Plan is ~30% done, not 50% as previously claimed
+- Router consolidation (132→<100) has zero progress
 
 ---
 
@@ -16,7 +40,7 @@
 | 4 | 69 Stub Endpoints — 15+ high-priority | STUB_DEBT_REPORT.md | ✅ Wired (see #17) | ~~HIGH~~ |
 | 5 | 113 Instrument Build Gaps — 67 resolved | GAP_ANALYSIS_MASTER.md | ✅ ~60% done (most CAM modules exist) | ~~CRITICAL~~ HIGH |
 | 6 | Vue Component Decomposition — 1 outlier deferred | VUE_DECOMPOSITION_GUIDE.md | ✅ ~90% done (ToolpathPlayer.vue → Phase 4) | ~~MEDIUM~~ |
-| 7 | Score 7 Plan — Phases 1.3–4.3 | SCORE_7_PLAN.md | 🟡 ~50% done (1a2880a5) | HIGH |
+| 7 | Score 7 Plan — Phases 1.3–4.3 | SCORE_7_PLAN.md | 🟡 ~30% done (1a2880a5) | HIGH |
 | 8 | Vectorizer Upgrade — 3 features not started | VECTORIZER_UPGRADE_PLAN.md | 🟡 Partial | MEDIUM |
 | 9 | Frontend Test Coverage | TESTING_STRATEGY.md / SYSTEM_EVALUATION.md | ✅ 52 tests added (38038ade) | ~~HIGH~~ |
 | 10 | Bandit Security Findings | bandit_report.txt | ✅ XML fixed, rest false positives | ~~MEDIUM~~ |
