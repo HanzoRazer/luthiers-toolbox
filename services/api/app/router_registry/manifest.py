@@ -503,12 +503,24 @@ ROUTER_MANIFEST: List[RouterSpec] = [
     #     category="cam",
     # ),
     # -------------------------------------------------------------------------
-    # CAM STUBS (for missing frontend endpoints)
+    # CAM DOMAIN ROUTERS (decomposed from stub_routes.py)
     # -------------------------------------------------------------------------
     RouterSpec(
-        module="app.cam.routers.stub_routes",
+        module="app.cam.routers.job_intelligence_router",
         prefix="/api/cam",
-        tags=["CAM", "Stubs"],
+        tags=["CAM", "Job Intelligence"],
+        category="cam",
+    ),
+    RouterSpec(
+        module="app.cam.routers.bridge_export_router",
+        prefix="/api/cam",
+        tags=["CAM", "Bridge"],
+        category="cam",
+    ),
+    RouterSpec(
+        module="app.cam.routers.fret_slots_router",
+        prefix="/api/cam",
+        tags=["CAM", "Fret Slots"],
         category="cam",
     ),
     # -------------------------------------------------------------------------
