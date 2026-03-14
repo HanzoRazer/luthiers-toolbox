@@ -254,6 +254,12 @@ const routes: RouteRecordRaw[] = [
     name: "ArtStudioInlayPatterns",
     component: () => import("@/views/art-studio/InlayPatternView.vue"),
   },
+  {
+    path: "/art-studio/rosette-designer",
+    name: "ArtStudioRosetteDesigner",
+    component: () =>
+      import("@/views/art-studio/RosetteWheelView.vue"),
+  },
 
   // Preset Hub
   {

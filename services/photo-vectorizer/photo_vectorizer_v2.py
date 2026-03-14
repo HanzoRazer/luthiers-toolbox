@@ -34,7 +34,6 @@ import os
 import sys
 import time
 from collections import defaultdict
-from concurrent.futures import ProcessPoolExecutor
 from dataclasses import dataclass, field
 from enum import Enum
 from pathlib import Path
@@ -108,6 +107,8 @@ class ScaleSource(Enum):
     REFERENCE_OBJECT = "reference_object"
     MULTI_REFERENCE = "multi_reference"
     EXIF_DPI = "exif_dpi"
+    FEATURE_SCALE = "feature_scale"
+    ESTIMATED_RENDER_DPI = "estimated_render_dpi"
     ASSUMED_DPI = "assumed_dpi"
     NONE = "none"
 
@@ -140,6 +141,59 @@ class CalibrationResult:
     references: List[Dict[str, float]] = field(default_factory=list)
     confidence: float = 0.0
     message: str = ""
+
+
+@dataclass
+class BodyRegion:
+    """Bounding box of the isolated instrument body (excludes neck/headstock)."""
+    x: int
+    y: int
+    width: int
+    height: int
+    confidence: float
+    neck_end_row: int
+    max_body_width_px: int
+    notes: List[str] = field(default_factory=list)
+
+    @property
+    def bbox(self) -> Tuple[int, int, int, int]:
+        return (self.x, self.y, self.width, self.height)
+
+    @property
+    def height_px(self) -> int:
+        return self.height
+
+
+@dataclass
+class OrientationResult:
+    """Result of instrument orientation detection."""
+    orientation: str              # "portrait" | "landscape"
+    coarse_angle: float           # 0 or 90 (CCW degrees)
+    tilt_angle: float             # residual tilt after coarse rotation
+    total_rotation: float         # coarse + tilt
+    rotated_image: np.ndarray     # image after rotation
+    original_shape: Tuple[int, int]  # (h, w) of original
+    canvas_shape: Tuple[int, int]    # (h, w) after rotation
+    inverse_matrix: Optional[np.ndarray] = None
+    notes: List[str] = field(default_factory=list)
+
+
+@dataclass
+class SplitResult:
+    """Result of multi-instrument detection and splitting."""
+    crops: List[Tuple[int, int, int, int]] = field(default_factory=list)
+    split_axis: Optional[str] = None
+    gap_positions: List[int] = field(default_factory=list)
+    confidence: float = 0.0
+    notes: List[str] = field(default_factory=list)
+
+    @property
+    def count(self) -> int:
+        return len(self.crops)
+
+    @property
+    def is_multi(self) -> bool:
+        return len(self.crops) > 1
 
 
 @dataclass
@@ -230,11 +284,98 @@ INSTRUMENT_SPECS: Dict[str, Dict[str, Any]] = {
         "pickup_route": [(85.0, 35.0)], "neck_pocket": (56.0, 76.0),
         "bridge_route": (100.0, 40.0), "control_cavity": (120.0, 80.0),
     }},
+    "jumbo_archtop": {"body": (520, 430), "features": {
+        "f_hole": [(160.0, 45.0)], "bridge_route": (130.0, 30.0),
+        "pickup_route": [(71.5, 38.0)], "control_cavity": (120.0, 80.0),
+    }},
     "reference_objects": {
         "us_quarter": (24.26, 24.26), "credit_card": (85.6, 53.98),
         "business_card": (88.9, 50.8),
     },
 }
+
+
+# =============================================================================
+# Multi-Instrument Detection
+# =============================================================================
+
+class MultiInstrumentSplitter:
+    """Detects whether an image contains multiple instruments and returns crop coordinates."""
+
+    def __init__(self, bg_brightness_threshold: int = 190,
+                 min_gap_width_pct: float = 0.03,
+                 margin_px: int = 10, max_instruments: int = 4):
+        self.bg_thresh = bg_brightness_threshold
+        self.min_gap_pct = min_gap_width_pct
+        self.margin = margin_px
+        self.max_instruments = max_instruments
+
+    def detect_and_split(self, image: np.ndarray) -> SplitResult:
+        """Returns a SplitResult with crop boxes for each instrument."""
+        h, w = image.shape[:2]
+        gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY) if len(image.shape) == 3 else image
+
+        for axis in ("vertical", "horizontal"):
+            result = self._find_gaps(gray, axis)
+            if result.is_multi:
+                logger.info(
+                    f"MultiInstrumentSplitter: {result.count} instruments ({axis} split)")
+                return result
+
+        return SplitResult(
+            crops=[(0, 0, w, h)], split_axis=None, confidence=0.9,
+            notes=["No gap detected — single instrument"])
+
+    def _find_gaps(self, gray: np.ndarray, axis: str) -> SplitResult:
+        h, w = gray.shape[:2]
+        dim = w if axis == "vertical" else h
+        min_gap_px = max(3, int(dim * self.min_gap_pct))
+
+        profile = gray.mean(axis=0) if axis == "vertical" else gray.mean(axis=1)
+        is_bg = (profile >= self.bg_thresh).astype(np.uint8)
+
+        gaps = self._find_runs(is_bg, value=1, min_length=min_gap_px)
+        if not gaps:
+            return SplitResult(crops=[], confidence=0.0)
+
+        fg_regions = self._find_runs(is_bg, value=0, min_length=min_gap_px * 2)
+        if len(fg_regions) < 2:
+            return SplitResult(crops=[], confidence=0.0)
+
+        fg_regions = fg_regions[:self.max_instruments]
+        crops: List[Tuple[int, int, int, int]] = []
+        for start, end in fg_regions:
+            s = max(0, start - self.margin)
+            e = min(dim - 1, end + self.margin)
+            if axis == "vertical":
+                crops.append((s, 0, e - s, h))
+            else:
+                crops.append((0, s, w, e - s))
+
+        return SplitResult(
+            crops=crops, split_axis=axis,
+            gap_positions=[(s + e) // 2 for s, e in gaps],
+            confidence=min(1.0, 0.5 + 0.1 * len(gaps)),
+            notes=[f"{len(gaps)} gap(s) along {axis} axis, {len(crops)} instruments"])
+
+    @staticmethod
+    def _find_runs(arr: np.ndarray, value: int,
+                   min_length: int) -> List[Tuple[int, int]]:
+        """Return (start, end) index pairs for contiguous runs of `value`."""
+        runs: List[Tuple[int, int]] = []
+        in_run = False
+        start = 0
+        for i, v in enumerate(arr):
+            if v == value and not in_run:
+                in_run = True
+                start = i
+            elif v != value and in_run:
+                in_run = False
+                if (i - start) >= min_length:
+                    runs.append((start, i - 1))
+        if in_run and (len(arr) - start) >= min_length:
+            runs.append((start, len(arr) - 1))
+        return runs
 
 
 # =============================================================================
@@ -261,6 +402,45 @@ def detect_dark_background(image: np.ndarray, border_px: int = 20,
     is_dark = dark_ratio >= dark_threshold
     logger.info(f"Dark background: {dark_ratio:.1%} dark border pixels -> {'DARK' if is_dark else 'LIGHT'}")
     return is_dark
+
+
+class BackgroundTypeDetector:
+    """Distinguishes solid-dark (safe to invert) from textured-dark (do NOT invert)."""
+
+    def detect(self, image: np.ndarray,
+               border_px: int = 60,
+               dark_threshold: float = 0.65,
+               texture_variance_threshold: float = 350.0) -> str:
+        """Returns: 'solid_dark', 'textured_dark', 'solid_light', or 'gradient'."""
+        gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY) if len(image.shape) == 3 else image
+        h, w = gray.shape[:2]
+        border_px = min(border_px, h // 4, w // 4)
+
+        top = gray[:border_px, :]
+        bottom = gray[h - border_px:, :]
+        left = gray[border_px:h - border_px, :border_px]
+        right = gray[border_px:h - border_px, w - border_px:]
+
+        border_pixels = np.concatenate([
+            top.ravel(), bottom.ravel(), left.ravel(), right.ravel()])
+        dark_ratio = float(np.mean(border_pixels < 80))
+
+        if dark_ratio < dark_threshold:
+            brightness_range = float(border_pixels.max() - border_pixels.min())
+            bg_type = "gradient" if brightness_range > 80 else "solid_light"
+            logger.info(f"BackgroundTypeDetector: dark_ratio={dark_ratio:.1%} -> {bg_type}")
+            return bg_type
+
+        # Dark background confirmed — check texture via border patch variance
+        patches = [top, bottom, left.T, right.T]
+        variances = [float(np.var(p)) for p in patches if p.size > 0]
+        mean_variance = float(np.mean(variances)) if variances else 0.0
+
+        bg_type = "solid_dark" if mean_variance < texture_variance_threshold else "textured_dark"
+        logger.info(
+            f"BackgroundTypeDetector: dark_ratio={dark_ratio:.1%}, "
+            f"border_variance={mean_variance:.0f} -> {bg_type}")
+        return bg_type
 
 
 # =============================================================================
@@ -313,6 +493,8 @@ class InputClassifier:
         if white_ratio < 0.40 and color_variance > 800:
             return InputType.PHOTO, min(1.0, (1 - white_ratio) * color_variance / 1000), metadata
         if white_ratio > 0.50:
+            if color_variance > 1500:
+                return InputType.PHOTO, 0.65, metadata
             return InputType.SCAN, 0.6, metadata
         return InputType.PHOTO, 0.5, metadata
 
@@ -494,14 +676,281 @@ class BackgroundRemover:
 
 
 # =============================================================================
+# Stage 4.5 — Body Isolation
+# =============================================================================
+
+class BodyIsolator:
+    """Identifies the body region by profiling row-wise instrument pixel width."""
+
+    def __init__(self, body_width_min_pct: float = 0.40,
+                 smooth_window: int = 15,
+                 use_adaptive: bool = False):
+        self.body_width_min = body_width_min_pct
+        self.smooth_window = smooth_window
+        self.use_adaptive = use_adaptive
+
+    def isolate(self, image: np.ndarray,
+                fg_mask: Optional[np.ndarray] = None,
+                original_image: Optional[np.ndarray] = None) -> BodyRegion:
+        """Analyse the image and return a BodyRegion for the guitar body.
+
+        Priority for row-width profiling:
+          1. fg_mask (most reliable — BG already removed)
+          2. original_image (pre-inversion) dark pixel threshold
+          3. image (current, possibly inverted) — warns if used on inverted image
+        """
+        h, w = image.shape[:2]
+        notes: List[str] = []
+
+        if fg_mask is not None and np.sum(fg_mask > 0) > (h * w * 0.05):
+            row_widths = np.sum(fg_mask > 0, axis=1).astype(float)
+            source = "fg_mask"
+            notes.append("Row widths from fg_mask (Stage 4 output)")
+        elif original_image is not None:
+            gray = cv2.cvtColor(original_image, cv2.COLOR_BGR2GRAY) \
+                if len(original_image.shape) == 3 else original_image
+            row_widths = np.sum(gray < 150, axis=1).astype(float)
+            source = "original_image"
+            notes.append("Row widths from pre-inversion image")
+        else:
+            gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY) if len(image.shape) == 3 else image
+            mean_val = float(gray.mean())
+            row_widths = np.sum(gray < 150, axis=1).astype(float)
+            source = "image_raw"
+            if mean_val > 160:
+                notes.append("Warning: using raw (possibly inverted) image for body isolation")
+            else:
+                notes.append("Row widths from raw image threshold")
+
+        kernel = np.ones(self.smooth_window) / self.smooth_window
+        smoothed = np.convolve(row_widths, kernel, mode='same')
+
+        if self.use_adaptive:
+            body_min_px = adaptive_body_threshold(smoothed)
+            notes.append(f"Using adaptive body threshold: {body_min_px:.0f}px")
+        else:
+            body_min_px = w * self.body_width_min
+        body_rows = np.where(smoothed >= body_min_px)[0]
+
+        if len(body_rows) == 0:
+            body_start = int(h * 0.45)
+            body_end = int(h * 0.97)
+            confidence = 0.30
+            notes.append(f"No body rows at {body_min_px:.0f}px threshold (source={source}) — fallback")
+        else:
+            body_start = int(body_rows[0])
+            body_end = int(body_rows[-1])
+            confidence = min(1.0, 0.50 + 0.005 * len(body_rows))
+            notes.append(
+                f"Body rows {body_start}-{body_end} "
+                f"({len(body_rows)} rows >= {body_min_px:.0f}px, source={source})")
+
+        body_h = body_end - body_start
+        max_body_w = int(smoothed[body_start:body_end].max()) if body_h > 0 else 0
+
+        # Column extent — use best available source
+        if fg_mask is not None and source == "fg_mask":
+            body_strip = fg_mask[body_start:body_end, :]
+        else:
+            ref = original_image if original_image is not None else image
+            gray = cv2.cvtColor(ref, cv2.COLOR_BGR2GRAY) if len(ref.shape) == 3 else ref
+            body_strip = (gray[body_start:body_end, :] < 150).astype(np.uint8)
+
+        col_widths = np.sum(body_strip > 0, axis=0)
+        body_cols = np.where(col_widths > 0)[0]
+        x_start = int(body_cols[0]) if len(body_cols) else 0
+        x_end = int(body_cols[-1]) if len(body_cols) else w
+
+        logger.info(
+            f"BodyIsolator: body region x={x_start}-{x_end}, "
+            f"y={body_start}-{body_end}, "
+            f"size={x_end - x_start}x{body_h}px, conf={confidence:.2f}, src={source}")
+
+        return BodyRegion(
+            x=x_start, y=body_start, width=x_end - x_start, height=body_h,
+            confidence=confidence, neck_end_row=body_start,
+            max_body_width_px=max_body_w, notes=notes)
+
+
+# =============================================================================
+# Stage 5a — Gated Adaptive Close (Patch 14)
+# =============================================================================
+
+# Constants for GatedAdaptiveCloser
+_GAC_TARGET_BRIDGE_MM = 6.0
+_GAC_MIN_KERNEL = 11
+_GAC_MAX_KERNEL = 25
+_GAC_EXTERIOR_RING_PX = 15
+_GAC_INTERIOR_KERNEL = 5
+
+
+@dataclass
+class GatedCloseResult:
+    """Diagnostic output from GatedAdaptiveCloser."""
+    exterior_kernel_size: int
+    interior_kernel_size: int
+    bridge_distance_mm: float
+    body_region_used: bool
+    contour_count_before: int
+    contour_count_after: int
+    notes: List[str]
+
+
+class GatedAdaptiveCloser:
+    """
+    Apply morphological close with a large kernel on the body silhouette
+    boundary and a small kernel on interior features.
+
+    Closes cutaway gaps in the body perimeter without merging
+    interior features (f-holes, soundhole, pickup routes) into the body.
+    """
+
+    def __init__(
+        self,
+        target_bridge_mm: float = _GAC_TARGET_BRIDGE_MM,
+        min_kernel: int = _GAC_MIN_KERNEL,
+        max_kernel: int = _GAC_MAX_KERNEL,
+        ring_px: int = _GAC_EXTERIOR_RING_PX,
+        interior_kernel: int = _GAC_INTERIOR_KERNEL,
+    ):
+        self.target_bridge_mm = target_bridge_mm
+        self.min_kernel = min_kernel
+        self.max_kernel = max_kernel
+        self.ring_px = ring_px
+        self.interior_kernel = interior_kernel
+
+    def compute_kernel_size(self, mpp: float) -> int:
+        """Compute adaptive exterior kernel size targeting self.target_bridge_mm gap bridging."""
+        if mpp <= 0:
+            return self.min_kernel
+        raw = self.target_bridge_mm / mpp
+        k = int(raw / 2) * 2 + 1
+        return max(self.min_kernel, min(self.max_kernel, k))
+
+    def close(
+        self,
+        edge_image: np.ndarray,
+        fg_mask: np.ndarray,
+        mpp: float,
+        body_region: Optional[BodyRegion] = None,
+        input_type_str: str = "photo",
+    ) -> Tuple[np.ndarray, GatedCloseResult]:
+        """Apply gated adaptive morphological close to an edge image."""
+        h, w = edge_image.shape[:2]
+
+        # For blueprints/SVG: use small kernel only
+        if input_type_str in ("blueprint", "svg"):
+            k = np.ones((self.interior_kernel, self.interior_kernel), np.uint8)
+            result = cv2.morphologyEx(edge_image, cv2.MORPH_CLOSE, k, iterations=2)
+            result = cv2.bitwise_and(result, result, mask=fg_mask)
+            return result, GatedCloseResult(
+                exterior_kernel_size=self.interior_kernel,
+                interior_kernel_size=self.interior_kernel,
+                bridge_distance_mm=self.interior_kernel * mpp,
+                body_region_used=False,
+                contour_count_before=self._count_contours(edge_image),
+                contour_count_after=self._count_contours(result),
+                notes=["Blueprint input -- small kernel only"])
+
+        ext_k_size = self.compute_kernel_size(mpp)
+        bridge_mm = ext_k_size * mpp
+
+        cnts_before = self._count_contours(edge_image)
+        notes = [
+            f"mpp={mpp:.4f} -> exterior kernel {ext_k_size}x{ext_k_size} "
+            f"(bridges {bridge_mm:.1f}mm)",
+            f"Interior kernel: {self.interior_kernel}x{self.interior_kernel}",
+        ]
+
+        # Build body-region-restricted fg_mask
+        if body_region is not None:
+            body_mask = np.zeros((h, w), np.uint8)
+            by = body_region.y
+            bh = body_region.height
+            body_mask[max(0, by):min(h, by + bh), :] = 255
+            fg_body = cv2.bitwise_and(fg_mask, fg_mask, mask=body_mask)
+            notes.append(f"Body region restricted to rows {by}-{by + bh}")
+        else:
+            fg_body = fg_mask.copy()
+            notes.append("No body_region supplied -- using full fg_mask")
+
+        body_region_used = body_region is not None
+
+        # Extract exterior boundary ring
+        ring_kernel = np.ones(
+            (self.ring_px * 2 + 1, self.ring_px * 2 + 1), np.uint8)
+        eroded_body = cv2.erode(fg_body, ring_kernel)
+        exterior_ring = cv2.subtract(fg_body, eroded_body)
+
+        # Add fg_mask thin boundary as exterior signal
+        thin_k = np.ones((3, 3), np.uint8)
+        fg_boundary = cv2.subtract(fg_body, cv2.erode(fg_body, thin_k))
+        exterior_ring = cv2.bitwise_or(exterior_ring, fg_boundary)
+
+        # Split edge_image into exterior and interior
+        not_exterior = cv2.bitwise_not(exterior_ring)
+        exterior_edges = cv2.bitwise_and(edge_image, edge_image, mask=exterior_ring)
+        interior_edges = cv2.bitwise_and(edge_image, edge_image, mask=not_exterior)
+
+        # Apply different close kernels
+        k_ext = np.ones((ext_k_size, ext_k_size), np.uint8)
+        k_int = np.ones((self.interior_kernel, self.interior_kernel), np.uint8)
+
+        exterior_closed = cv2.morphologyEx(
+            exterior_edges, cv2.MORPH_CLOSE, k_ext, iterations=2)
+        interior_closed = cv2.morphologyEx(
+            interior_edges, cv2.MORPH_CLOSE, k_int, iterations=2)
+
+        # Combine and mask to fg
+        combined = cv2.bitwise_or(exterior_closed, interior_closed)
+        combined = cv2.bitwise_and(combined, combined, mask=fg_mask)
+
+        # Final light cleanup pass
+        k_clean = np.ones((2, 2), np.uint8)
+        combined = cv2.morphologyEx(combined, cv2.MORPH_CLOSE, k_clean)
+
+        cnts_after = self._count_contours(combined)
+        notes.append(
+            f"Contours: {cnts_before} -> {cnts_after} "
+            f"({'unified' if cnts_after < cnts_before else 'unchanged'})")
+
+        logger.info(
+            f"GatedAdaptiveCloser: ext={ext_k_size}x{ext_k_size} "
+            f"({bridge_mm:.1f}mm), int={self.interior_kernel}x{self.interior_kernel}, "
+            f"contours {cnts_before}->{cnts_after}")
+
+        return combined, GatedCloseResult(
+            exterior_kernel_size=ext_k_size,
+            interior_kernel_size=self.interior_kernel,
+            bridge_distance_mm=bridge_mm,
+            body_region_used=body_region_used,
+            contour_count_before=cnts_before,
+            contour_count_after=cnts_after,
+            notes=notes,
+        )
+
+    @staticmethod
+    def _count_contours(edge_image: np.ndarray) -> int:
+        cnts, _ = cv2.findContours(
+            edge_image, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+        return len([c for c in cnts if cv2.contourArea(c) > 500])
+
+
+# =============================================================================
 # Stage 5 — Edge Detection (Multi-method fusion)
 # =============================================================================
 
 class PhotoEdgeDetector:
     """Fuses Canny, Sobel, and Laplacian edges for robust outline extraction."""
 
+    def __init__(self):
+        self._gated_closer = GatedAdaptiveCloser()
+
     def detect(self, fg_image: np.ndarray, alpha_mask: np.ndarray,
-               canny_sigma: float = 0.33, close_kernel: int = 5) -> np.ndarray:
+               canny_sigma: float = 0.33, close_kernel: int = 5,
+               input_type: Optional[str] = None,
+               mpp: Optional[float] = None,
+               body_region: Optional[BodyRegion] = None) -> np.ndarray:
         gray = cv2.cvtColor(fg_image, cv2.COLOR_BGR2GRAY) if len(fg_image.shape) == 3 else fg_image
 
         # Apply mask
@@ -536,14 +985,22 @@ class PhotoEdgeDetector:
         # Mask to alpha region
         combined = cv2.bitwise_and(combined, combined, mask=alpha_mask)
 
-        # Close gaps
-        if close_kernel > 0:
-            k = np.ones((close_kernel, close_kernel), np.uint8)
-            combined = cv2.morphologyEx(combined, cv2.MORPH_CLOSE, k, iterations=2)
-
-        # Light cleanup
-        k_small = np.ones((2, 2), np.uint8)
-        combined = cv2.morphologyEx(combined, cv2.MORPH_CLOSE, k_small)
+        # Close gaps — use gated adaptive closer when mpp is available
+        if mpp is not None and mpp > 0:
+            combined, close_info = self._gated_closer.close(
+                combined, alpha_mask,
+                mpp=mpp,
+                body_region=body_region,
+                input_type_str=input_type or "photo",
+            )
+            for note in close_info.notes:
+                logger.debug(f"  GatedClose: {note}")
+        else:
+            if close_kernel > 0:
+                k = np.ones((close_kernel, close_kernel), np.uint8)
+                combined = cv2.morphologyEx(combined, cv2.MORPH_CLOSE, k, iterations=2)
+            k_small = np.ones((2, 2), np.uint8)
+            combined = cv2.morphologyEx(combined, cv2.MORPH_CLOSE, k_small)
 
         logger.info(f"Edge detection: {cv2.countNonZero(combined)} edge pixels")
         return combined
@@ -553,29 +1010,218 @@ class PhotoEdgeDetector:
 # Stage 6 — Reference Object Detection
 # =============================================================================
 
+# Coin size + color sanity constants
+MAX_COIN_DIAMETER_FRACTION = 0.15   # of min(image_w, image_h)
+MIN_COIN_DIAMETER_PX = 12           # below this it's noise
+MAX_COIN_SATURATION = 40            # HSV S channel; grey coins < 40
+WARM_HUE_LOW = 5                    # HSV H (0-179); gold/wood/amber range
+WARM_HUE_HIGH = 35
+
+# Coin edge-sharpness constants
+MIN_COIN_EDGE_SHARPNESS = 25.0      # Sobel magnitude on perimeter ring
+COIN_PERIMETER_WIDTH = 4            # annular ring half-width in pixels
+
+# Known coin diameters (mm) for size-match scoring
+KNOWN_COIN_DIAMETERS_MM = [24.26, 21.21, 19.05, 17.91]  # quarter, nickel, penny, dime
+
+
+@dataclass
+class CoinCandidate:
+    """Scored coin detection candidate."""
+    x: int = 0
+    y: int = 0
+    r: int = 0
+    sharpness: float = 0.0
+    circularity: float = 0.0
+    size_score: float = 0.0
+    position_score: float = 1.0
+    total_score: float = 0.0
+
+
+def _compute_coin_sharpness(gray: np.ndarray, cx: int, cy: int, r: int,
+                            ring_width: int = COIN_PERIMETER_WIDTH) -> float:
+    """Compute edge sharpness on the annular ring around a circle's perimeter.
+
+    Real coins have a machined raised rim that produces a strong Sobel response.
+    Hardware (tuning pegs, knobs) has softer edges.
+    """
+    h, w = gray.shape[:2]
+    y_coords, x_coords = np.ogrid[:h, :w]
+    dist = np.sqrt((x_coords - cx) ** 2 + (y_coords - cy) ** 2)
+    ring_mask = ((dist >= r - ring_width) & (dist <= r + ring_width)).astype(np.uint8)
+
+    sobelx = cv2.Sobel(gray, cv2.CV_64F, 1, 0, ksize=3)
+    sobely = cv2.Sobel(gray, cv2.CV_64F, 0, 1, ksize=3)
+    mag = np.sqrt(sobelx ** 2 + sobely ** 2)
+
+    ring_pixels = mag[ring_mask > 0]
+    return float(ring_pixels.mean()) if ring_pixels.size > 0 else 0.0
+
+
+def score_coin_candidates(
+    circles: np.ndarray,
+    image: np.ndarray,
+    gray: Optional[np.ndarray] = None,
+    rough_mpp: float = 0.27,
+) -> List[CoinCandidate]:
+    """Score and rank coin candidates on sharpness, circularity, size match, and position."""
+    if gray is None:
+        gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY) if len(image.shape) == 3 else image
+    h, w = gray.shape[:2]
+
+    candidates = []
+    for entry in circles:
+        x, y, r = int(entry[0]), int(entry[1]), int(entry[2])
+        c = CoinCandidate(x=x, y=y, r=r)
+
+        # Edge sharpness
+        c.sharpness = _compute_coin_sharpness(gray, x, y, r)
+
+        # Circularity from binarised patch
+        y0, y1 = max(0, y - r), min(h, y + r)
+        x0, x1 = max(0, x - r), min(w, x + r)
+        patch = gray[y0:y1, x0:x1]
+        if patch.size > 0:
+            _, bin_patch = cv2.threshold(patch, 0, 255,
+                                          cv2.THRESH_BINARY_INV + cv2.THRESH_OTSU)
+            cnts, _ = cv2.findContours(bin_patch, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+            if cnts:
+                cnt = max(cnts, key=cv2.contourArea)
+                area = cv2.contourArea(cnt)
+                peri = cv2.arcLength(cnt, True)
+                c.circularity = (4 * np.pi * area / (peri ** 2)) if peri > 0 else 0.0
+
+        # Size match to known coin diameters
+        diam_mm = 2 * r * rough_mpp
+        size_diffs = [abs(diam_mm - known) / known for known in KNOWN_COIN_DIAMETERS_MM]
+        best_diff = min(size_diffs)
+        c.size_score = max(0.0, 1.0 - best_diff * 4)
+
+        # Position (penalise instrument-centre locations)
+        in_centre_x = (0.25 * w) < x < (0.75 * w)
+        in_centre_y = (0.25 * h) < y < (0.75 * h)
+        c.position_score = 0.6 if (in_centre_x and in_centre_y) else 1.0
+
+        # Weighted total
+        c.total_score = (
+            0.35 * min(1.0, c.sharpness / 60.0) +
+            0.30 * c.circularity +
+            0.20 * c.size_score +
+            0.15 * c.position_score
+        )
+        candidates.append(c)
+
+    candidates.sort(key=lambda c: c.total_score, reverse=True)
+    return candidates
+
+
+def select_best_coin(
+    circles: np.ndarray,
+    image: np.ndarray,
+    gray: Optional[np.ndarray] = None,
+    min_score: float = 0.25,
+) -> Optional[Dict[str, Any]]:
+    """Return the best coin detection dict, or None if no candidate scores above min_score."""
+    if len(circles) == 0:
+        return None
+    ranked = score_coin_candidates(circles, image, gray)
+    if not ranked or ranked[0].total_score < min_score:
+        logger.info(
+            f"CoinSelector: best score {ranked[0].total_score:.3f} < {min_score} "
+            f"— no coin accepted")
+        return None
+    best = ranked[0]
+    logger.info(
+        f"CoinSelector: best coin r={best.r}px at ({best.x},{best.y}) "
+        f"score={best.total_score:.3f} "
+        f"(sharpness={best.sharpness:.1f}, circ={best.circularity:.2f}, "
+        f"size={best.size_score:.2f}, pos={best.position_score:.2f})")
+    return {
+        "name": "us_quarter",
+        "type": "coin",
+        "diameter_px": 2 * best.r,
+        "confidence": min(0.7, best.total_score),
+    }
+
+
+def filter_coin_detections(circles: np.ndarray, image_shape: Tuple[int, int],
+                           image: Optional[np.ndarray] = None,
+                           min_px: int = MIN_COIN_DIAMETER_PX,
+                           max_fraction: float = MAX_COIN_DIAMETER_FRACTION,
+                           max_sat: int = MAX_COIN_SATURATION,
+                           warm_hue_low: int = WARM_HUE_LOW,
+                           warm_hue_high: int = WARM_HUE_HIGH,
+                           ) -> np.ndarray:
+    """Remove implausibly large, small, or colored circles from HoughCircles output."""
+    h, w = image_shape
+    max_diameter = min(h, w) * max_fraction
+
+    hsv_image = None
+    if image is not None and len(image.shape) == 3:
+        hsv_image = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
+
+    filtered = []
+    rejected_size = 0
+    rejected_color = 0
+    for entry in circles:
+        x, y, r = int(entry[0]), int(entry[1]), int(entry[2])
+        diameter = 2 * r
+        if diameter < min_px or diameter > max_diameter:
+            rejected_size += 1
+            continue
+        # HSV color check — real coins are silver-grey (low saturation)
+        if hsv_image is not None:
+            y0, y1 = max(0, y - r), min(h, y + r)
+            x0, x1 = max(0, x - r), min(w, x + r)
+            patch = hsv_image[y0:y1, x0:x1]
+            if patch.size > 0:
+                mean_s = float(patch[:, :, 1].mean())
+                mean_h = float(patch[:, :, 0].mean())
+                if mean_s > max_sat:
+                    rejected_color += 1
+                    continue
+                if warm_hue_low <= mean_h <= warm_hue_high:
+                    rejected_color += 1
+                    continue
+        filtered.append([float(x), float(y), float(r)])
+    # Edge-sharpness check
+    rejected_sharpness = 0
+    if image is not None:
+        gray_img = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY) if len(image.shape) == 3 else image
+        sharp_filtered = []
+        for entry in filtered:
+            x, y, r = int(entry[0]), int(entry[1]), int(entry[2])
+            sharpness = _compute_coin_sharpness(gray_img, x, y, r)
+            if sharpness >= MIN_COIN_EDGE_SHARPNESS:
+                sharp_filtered.append(entry)
+            else:
+                rejected_sharpness += 1
+        filtered = sharp_filtered
+    logger.info(f"Coin filter: {len(circles)} raw -> -{rejected_size} size "
+                f"-> -{rejected_color} color -> -{rejected_sharpness} sharpness "
+                f"-> {len(filtered)} accepted")
+    return np.array(filtered, dtype=np.float32) if filtered else np.empty((0, 3))
+
+
 class ReferenceObjectDetector:
     def __init__(self):
         self.specs = INSTRUMENT_SPECS.get("reference_objects", {})
 
     def detect(self, image: np.ndarray) -> List[Dict[str, Any]]:
         detections = []
+        h, w = image.shape[:2]
         gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
 
-        # Coin detection via Hough circles
-        circles = cv2.HoughCircles(
+        # Coin detection via Hough circles (with size sanity filter)
+        raw_circles = cv2.HoughCircles(
             gray, cv2.HOUGH_GRADIENT, dp=1.2, minDist=50,
             param1=50, param2=30, minRadius=20, maxRadius=200)
-        if circles is not None:
-            for x, y, r in np.round(circles[0]).astype(int):
-                if x - r < 0 or y - r < 0:
-                    continue
-                for name, (diam_mm, _) in self.specs.items():
-                    if "quarter" in name or "card" not in name:
-                        detections.append({
-                            "name": name, "type": "coin",
-                            "diameter_px": 2 * r, "confidence": 0.5,
-                        })
-                        break
+        if raw_circles is not None:
+            raw = np.round(raw_circles[0]).astype(int)
+            filtered = filter_coin_detections(raw, (h, w), image=image)
+            best = select_best_coin(filtered, image, gray)
+            if best is not None:
+                detections.append(best)
 
         # Card detection via rectangles
         edges = cv2.Canny(gray, 50, 150)
@@ -586,17 +1232,54 @@ class ReferenceObjectDetector:
             peri = cv2.arcLength(cnt, True)
             approx = cv2.approxPolyDP(cnt, 0.02 * peri, True)
             if len(approx) == 4:
-                x, y, w, h = cv2.boundingRect(cnt)
-                aspect = max(w, h) / max(1, min(w, h))
+                x, y, cw, ch = cv2.boundingRect(cnt)
+                aspect = max(cw, ch) / max(1, min(cw, ch))
                 for card_name, (wm, hm) in [("credit_card", (85.6, 53.98))]:
                     expected = max(wm, hm) / min(wm, hm)
                     if abs(aspect - expected) / expected < 0.2:
                         detections.append({
                             "name": card_name, "type": "card",
-                            "width_px": w, "height_px": h, "confidence": 0.7,
+                            "width_px": cw, "height_px": ch, "confidence": 0.7,
                         })
                         break
+
+        logger.info(f"ReferenceObjectDetector: {len(detections)} detections after filtering")
         return detections
+
+
+# =============================================================================
+# Stage 6.5 — Render DPI Estimation
+# =============================================================================
+
+def estimate_render_dpi(image: np.ndarray,
+                        fg_mask: Optional[np.ndarray] = None) -> float:
+    """
+    Heuristic: estimate whether an image was rendered at screen (~96 dpi)
+    or scanned at print (~300 dpi) by looking at fine-detail edge density.
+    Returns estimated DPI.  Use only when no authoritative source is available.
+    """
+    gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY) if len(image.shape) == 3 else image
+    roi = cv2.bitwise_and(gray, gray, mask=fg_mask) if fg_mask is not None else gray
+    blurred = cv2.GaussianBlur(roi, (3, 3), 0)
+    edges = cv2.Canny(blurred, 30, 90)
+    if fg_mask is not None:
+        edges = cv2.bitwise_and(edges, edges, mask=fg_mask)
+
+    edge_px = int(np.sum(edges > 0))
+    total_px = int(np.sum(fg_mask > 0)) if fg_mask is not None else gray.size
+    edge_ratio = edge_px / max(total_px, 1)
+
+    if edge_ratio > 0.10:
+        est_dpi = 300.0
+    elif edge_ratio > 0.06:
+        est_dpi = 150.0
+    else:
+        est_dpi = 96.0
+
+    logger.info(
+        f"DPI estimation: edge_ratio={edge_ratio:.4f} -> est_dpi={est_dpi:.0f} "
+        f"({image.shape[1]}x{image.shape[0]}, {edge_px}/{total_px} edge px)")
+    return est_dpi
 
 
 # =============================================================================
@@ -607,23 +1290,31 @@ class ScaleCalibrator:
     def __init__(self, default_dpi: float = 300.0):
         self.default_dpi = default_dpi
         self.ref_detector = ReferenceObjectDetector()
+        self._feature_calibrator = FeatureScaleCalibrator()
 
     def calibrate(self, image: np.ndarray,
                   known_mm: Optional[float] = None,
                   known_px: Optional[float] = None,
                   spec_name: Optional[str] = None,
                   image_dpi: Optional[float] = None,
-                  unit: Unit = Unit.MM) -> CalibrationResult:
+                  unit: Unit = Unit.MM,
+                  fg_mask: Optional[np.ndarray] = None,
+                  body_height_px: Optional[float] = None,
+                  family_classification: Optional[FamilyClassification] = None,
+                  feature_contours: Optional[List[FeatureContour]] = None,
+                  edge_image: Optional[np.ndarray] = None,
+                  ) -> CalibrationResult:
 
         # Priority 1: User dimension
         if known_mm and known_px and known_px > 0:
+            mm = known_mm
             if unit == Unit.INCH:
-                known_mm = known_mm * 25.4
+                mm = known_mm * 25.4
             elif unit == Unit.CM:
-                known_mm = known_mm * 10
+                mm = known_mm * 10
             return CalibrationResult(
-                mm_per_px=known_mm / known_px, source=ScaleSource.USER_DIMENSION,
-                confidence=1.0, message=f"User: {known_mm:.1f}mm / {known_px:.1f}px")
+                mm_per_px=mm / known_px, source=ScaleSource.USER_DIMENSION,
+                confidence=1.0, message=f"User: {mm:.1f}mm / {known_px:.1f}px")
 
         # Priority 2: Reference objects
         refs = self.ref_detector.detect(image)
@@ -639,25 +1330,46 @@ class ScaleCalibrator:
                             confidence=det["confidence"],
                             message=f"Reference: {name} ({diam_mm}mm)")
 
-        # Priority 3: EXIF DPI
+        # Priority 3: EXIF DPI (authoritative from scanner/camera)
         if image_dpi and image_dpi > 0:
             return CalibrationResult(
                 mm_per_px=25.4 / image_dpi, source=ScaleSource.EXIF_DPI,
-                confidence=0.7, message=f"EXIF: {image_dpi:.0f} DPI")
+                confidence=0.85, message=f"EXIF: {image_dpi:.0f} DPI")
 
-        # Priority 4: Instrument spec (estimate from body)
-        if spec_name and spec_name in INSTRUMENT_SPECS:
+        # Priority 4: Instrument spec + body contour height
+        if spec_name and spec_name in INSTRUMENT_SPECS and body_height_px and body_height_px > 0:
             body_h_mm = INSTRUMENT_SPECS[spec_name]["body"][0]
+            mpp = body_h_mm / body_height_px
             return CalibrationResult(
-                mm_per_px=0.0, source=ScaleSource.INSTRUMENT_SPEC,
+                mm_per_px=mpp, source=ScaleSource.INSTRUMENT_SPEC,
                 confidence=0.6,
-                message=f"Spec: {spec_name} (body ~{body_h_mm}mm, needs contour match)",
-                references=[{"spec": spec_name, "body_h_mm": body_h_mm}])
+                message=f"Spec: {spec_name} body {body_h_mm}mm / {body_height_px:.0f}px")
 
-        # Priority 5: Assumed
+        # Priority 4.5: Feature-based scale (Patch 13B)
+        if family_classification and family_classification.family != InstrumentFamily.UNKNOWN:
+            feat_result = self._feature_calibrator.calibrate_from_features(
+                family_classification,
+                feature_contours=feature_contours,
+                edge_image=edge_image,
+            )
+            if feat_result and feat_result.confidence > 0.35:
+                return feat_result
+
+        # Priority 5: Render DPI estimation from edge density
+        est_dpi = estimate_render_dpi(image, fg_mask)
+        if est_dpi != self.default_dpi:
+            return CalibrationResult(
+                mm_per_px=25.4 / est_dpi, source=ScaleSource.ESTIMATED_RENDER_DPI,
+                confidence=0.4,
+                message=f"Estimated render DPI: {est_dpi:.0f}")
+
+        # Priority 6: Assumed DPI (last resort)
+        mpp = 25.4 / self.default_dpi
+        msg = f"Assumed {self.default_dpi:.0f} DPI — supply --mm/--px for accuracy"
+        logger.warning(f"Scale fallback: {msg} (mm/px={mpp:.4f})")
         return CalibrationResult(
-            mm_per_px=25.4 / self.default_dpi, source=ScaleSource.ASSUMED_DPI,
-            confidence=0.2, message=f"Assumed {self.default_dpi:.0f} DPI")
+            mm_per_px=mpp, source=ScaleSource.ASSUMED_DPI,
+            confidence=0.2, message=msg)
 
 
 # =============================================================================
@@ -704,6 +1416,543 @@ class FeatureClassifier:
             return FeatureType.JACK_ROUTE, 0.6
 
         return FeatureType.UNKNOWN, 0.3
+
+
+# =============================================================================
+# Stage 8 (Patch 13A) — Instrument Family Classifier
+# =============================================================================
+
+class InstrumentFamily:
+    ARCHTOP = "archtop"
+    ACOUSTIC = "acoustic"
+    SOLID_BODY = "solid_body"
+    SEMI_HOLLOW = "semi_hollow"
+    UNKNOWN = "unknown"
+
+
+@dataclass
+class FamilyClassification:
+    family: str
+    confidence: float
+    pixel_aspect: float
+    f_hole_detected: bool
+    soundhole_detected: bool
+    notes: List[str] = field(default_factory=list)
+
+
+class InstrumentFamilyClassifier:
+    """
+    Classify instrument family from body region geometry.
+    Operates entirely in pixel space -- no mm conversion required.
+    """
+
+    def __init__(
+        self,
+        f_hole_circularity_max: float = 0.30,
+        soundhole_circularity_min: float = 0.65,
+    ):
+        self.f_hole_circ_max = f_hole_circularity_max
+        self.soundhole_circ_min = soundhole_circularity_min
+
+    def classify(
+        self,
+        body_region: BodyRegion,
+        edge_image: Optional[np.ndarray] = None,
+        feature_contours: Optional[list] = None,
+    ) -> FamilyClassification:
+        notes: List[str] = []
+
+        bw = max(body_region.width, 1)
+        bh = max(body_region.height, 1)
+        pixel_aspect = bh / bw
+        notes.append(f"Body pixel aspect (h/w): {pixel_aspect:.3f}")
+
+        f_hole_detected = False
+        soundhole_detected = False
+
+        if feature_contours:
+            for fc in feature_contours:
+                try:
+                    ft_val = fc.feature_type.value if hasattr(fc.feature_type, 'value') \
+                             else str(fc.feature_type)
+                    if ft_val == "f_hole":
+                        f_hole_detected = True
+                    elif ft_val == "soundhole":
+                        soundhole_detected = True
+                except AttributeError:
+                    pass
+
+        if not feature_contours and edge_image is not None:
+            f_hole_detected, soundhole_detected = self._scan_for_holes(
+                edge_image, body_region)
+
+        notes.append(f"f-hole detected: {f_hole_detected}")
+        notes.append(f"soundhole detected: {soundhole_detected}")
+
+        family, confidence = self._decide(
+            pixel_aspect, f_hole_detected, soundhole_detected, notes,
+            feature_contours=feature_contours)
+
+        return FamilyClassification(
+            family=family,
+            confidence=confidence,
+            pixel_aspect=pixel_aspect,
+            f_hole_detected=f_hole_detected,
+            soundhole_detected=soundhole_detected,
+            notes=notes,
+        )
+
+    def _decide(
+        self,
+        aspect: float,
+        f_hole: bool,
+        soundhole: bool,
+        notes: List[str],
+        feature_contours: Optional[list] = None,
+    ) -> Tuple[str, float]:
+        if soundhole and not f_hole:
+            notes.append("Decision: soundhole present -> ACOUSTIC")
+            return InstrumentFamily.ACOUSTIC, 0.85
+
+        if f_hole:
+            if aspect < 1.25:
+                notes.append("Decision: f-holes + low aspect -> ARCHTOP")
+                return InstrumentFamily.ARCHTOP, 0.80
+            else:
+                notes.append("Decision: f-holes + higher aspect -> SEMI_HOLLOW")
+                return InstrumentFamily.SEMI_HOLLOW, 0.72
+
+        for fc in (feature_contours or []):
+            try:
+                ft_val = fc.feature_type.value if hasattr(fc.feature_type, 'value') \
+                         else str(fc.feature_type)
+                if ft_val in ("pickup_route", "control_cavity", "neck_pocket"):
+                    notes.append(f"Decision: electric feature ({ft_val}) -> SOLID_BODY")
+                    return InstrumentFamily.SOLID_BODY, 0.70
+            except AttributeError:
+                pass
+
+        if aspect > 1.26:
+            notes.append(f"Decision: high aspect ({aspect:.3f}) -> ACOUSTIC")
+            return InstrumentFamily.ACOUSTIC, 0.55
+        if aspect < 1.20:
+            notes.append(f"Decision: low aspect ({aspect:.3f}), no holes -> SOLID_BODY")
+            return InstrumentFamily.SOLID_BODY, 0.50
+
+        notes.append(f"Decision: ambiguous aspect ({aspect:.3f}) -> UNKNOWN")
+        return InstrumentFamily.UNKNOWN, 0.30
+
+    def _scan_for_holes(
+        self,
+        edge_image: np.ndarray,
+        body_region: BodyRegion,
+    ) -> Tuple[bool, bool]:
+        """Quick scan of edge image within body region for hole signatures."""
+        h, w = edge_image.shape[:2]
+        y0 = max(0, body_region.y)
+        y1 = min(h, body_region.y + body_region.height)
+        x0 = max(0, body_region.x)
+        x1 = min(w, body_region.x + body_region.width)
+        crop = edge_image[y0:y1, x0:x1]
+
+        if crop.size == 0:
+            return False, False
+
+        contours, _ = cv2.findContours(crop, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+        f_hole = False
+        soundhole = False
+
+        for cnt in contours:
+            area = cv2.contourArea(cnt)
+            if area < 200:
+                continue
+            peri = cv2.arcLength(cnt, True)
+            if peri == 0:
+                continue
+            circ = 4 * math.pi * area / (peri ** 2)
+            _, (cw, ch), _ = cv2.minAreaRect(cnt)
+            aspect = max(cw, ch) / max(min(cw, ch), 1)
+
+            if circ < self.f_hole_circ_max and aspect > 3.0:
+                f_hole = True
+            if circ > self.soundhole_circ_min and 0.8 < aspect < 1.3:
+                if 500 < area < 30000:
+                    soundhole = True
+
+        return f_hole, soundhole
+
+
+# =============================================================================
+# Stage 7.5 (Patch 13B) — Feature Scale Calibrator
+# =============================================================================
+
+_FEATURE_SIZE_TABLE: List[Tuple[str, float, float, List[str]]] = [
+    ("single_coil_pickup_w", 85.0, 0.08,
+     [InstrumentFamily.SOLID_BODY, InstrumentFamily.SEMI_HOLLOW]),
+    ("humbucker_pickup_w", 70.0, 0.08,
+     [InstrumentFamily.SOLID_BODY, InstrumentFamily.SEMI_HOLLOW,
+      InstrumentFamily.ARCHTOP]),
+    ("dreadnought_soundhole", 100.0, 0.06,
+     [InstrumentFamily.ACOUSTIC]),
+    ("auditorium_soundhole", 88.0, 0.07,
+     [InstrumentFamily.ACOUSTIC]),
+    ("archtop_f_hole_length", 165.0, 0.10,
+     [InstrumentFamily.ARCHTOP, InstrumentFamily.SEMI_HOLLOW]),
+    ("acoustic_bridge_length", 175.0, 0.08,
+     [InstrumentFamily.ACOUSTIC]),
+]
+
+
+@dataclass
+class FeatureScaleHypothesis:
+    feature_name: str
+    measured_px: float
+    known_mm: float
+    mm_per_px: float
+    confidence: float
+    family: str
+
+
+class FeatureScaleCalibrator:
+    """
+    Calibrates scale from known instrument feature sizes, gated by
+    instrument family. Priority 4.5 in the calibration chain.
+    """
+
+    def __init__(self, min_feature_px: int = 50, max_hypotheses: int = 5):
+        self.min_px = min_feature_px
+        self.max_hyp = max_hypotheses
+
+    def calibrate_from_features(
+        self,
+        family: FamilyClassification,
+        feature_contours: Optional[List[FeatureContour]] = None,
+        edge_image: Optional[np.ndarray] = None,
+    ) -> Optional[CalibrationResult]:
+        if family.family == InstrumentFamily.UNKNOWN:
+            logger.info("FeatureScaleCalibrator: unknown family -- skipping")
+            return None
+
+        hypotheses: List[FeatureScaleHypothesis] = []
+
+        if feature_contours:
+            hypotheses = self._measure_from_contours(feature_contours, family)
+
+        if not hypotheses and edge_image is not None:
+            hypotheses = self._measure_from_edges(edge_image, family)
+
+        if not hypotheses:
+            logger.info(
+                f"FeatureScaleCalibrator: no matching features for {family.family}")
+            return None
+
+        combined = self._combine_hypotheses(hypotheses, family)
+        if combined is None:
+            return None
+
+        logger.info(
+            f"FeatureScaleCalibrator: {len(hypotheses)} feature(s) -> "
+            f"mpp={combined.mm_per_px:.4f} conf={combined.confidence:.2f} "
+            f"[{family.family}]")
+        return combined
+
+    def _measure_from_contours(
+        self,
+        feature_contours: List[FeatureContour],
+        family: FamilyClassification,
+    ) -> List[FeatureScaleHypothesis]:
+        hypotheses: List[FeatureScaleHypothesis] = []
+        family_str = family.family
+
+        for fc in feature_contours:
+            if len(hypotheses) >= self.max_hyp:
+                break
+            try:
+                ft_val = fc.feature_type.value if hasattr(fc.feature_type, 'value') \
+                         else str(fc.feature_type)
+            except AttributeError:
+                continue
+
+            _, _, bw_px, bh_px = fc.bbox_px
+            max_dim_px = max(bw_px, bh_px)
+            min_dim_px = min(bw_px, bh_px)
+
+            if max_dim_px < self.min_px:
+                continue
+
+            for feat_name, feat_mm, tol, families in _FEATURE_SIZE_TABLE:
+                if family_str not in families:
+                    continue
+
+                if ft_val in ("pickup_route", "bridge_route"):
+                    measured_px = max_dim_px
+                elif ft_val in ("soundhole", "rosette"):
+                    measured_px = (bw_px + bh_px) / 2.0
+                elif ft_val == "f_hole":
+                    measured_px = max_dim_px
+                else:
+                    continue
+
+                if measured_px < self.min_px:
+                    continue
+
+                mpp = feat_mm / measured_px
+                feat_conf = 0.45 * family.confidence
+                hypotheses.append(FeatureScaleHypothesis(
+                    feature_name=feat_name,
+                    measured_px=measured_px,
+                    known_mm=feat_mm,
+                    mm_per_px=mpp,
+                    confidence=feat_conf,
+                    family=family_str,
+                ))
+
+        return hypotheses
+
+    def _measure_from_edges(
+        self,
+        edge_image: np.ndarray,
+        family: FamilyClassification,
+    ) -> List[FeatureScaleHypothesis]:
+        hypotheses: List[FeatureScaleHypothesis] = []
+        contours, _ = cv2.findContours(
+            edge_image, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+
+        for cnt in contours:
+            if len(hypotheses) >= self.max_hyp:
+                break
+            area = cv2.contourArea(cnt)
+            if area < self.min_px * self.min_px:
+                continue
+            peri = cv2.arcLength(cnt, True)
+            circ = 4 * math.pi * area / max(peri ** 2, 1e-9)
+            x, y, w, h = cv2.boundingRect(cnt)
+            asp = max(w, h) / max(min(w, h), 1)
+
+            family_str = family.family
+
+            if (family_str == InstrumentFamily.ACOUSTIC and
+                    circ > 0.65 and 0.8 < asp < 1.3):
+                diam_px = (w + h) / 2.0
+                for feat_name, feat_mm, _, families in _FEATURE_SIZE_TABLE:
+                    if family_str in families and "soundhole" in feat_name:
+                        hypotheses.append(FeatureScaleHypothesis(
+                            feature_name=feat_name,
+                            measured_px=diam_px,
+                            known_mm=feat_mm,
+                            mm_per_px=feat_mm / diam_px,
+                            confidence=0.35 * family.confidence,
+                            family=family_str,
+                        ))
+                        break
+
+        return hypotheses
+
+    def _combine_hypotheses(
+        self,
+        hypotheses: List[FeatureScaleHypothesis],
+        family: FamilyClassification,
+    ) -> Optional[CalibrationResult]:
+        if not hypotheses:
+            return None
+
+        hypotheses.sort(key=lambda h: h.confidence, reverse=True)
+        best = hypotheses[0]
+
+        if len(hypotheses) == 1:
+            return CalibrationResult(
+                mm_per_px=best.mm_per_px,
+                source=ScaleSource.FEATURE_SCALE,
+                confidence=best.confidence * 0.90,
+                message=(
+                    f"Feature scale: {best.feature_name} "
+                    f"({best.known_mm}mm / {best.measured_px:.0f}px) "
+                    f"[{family.family}]"),
+            )
+
+        second = hypotheses[1]
+        disagreement = abs(best.mm_per_px - second.mm_per_px) / max(best.mm_per_px, 1e-9)
+
+        if disagreement > 0.50:
+            conf = best.confidence * 0.75
+            logger.info(
+                f"FeatureScaleCalibrator: hypotheses disagree by {disagreement:.0%} "
+                f"-> using best only (conf penalized to {conf:.2f})")
+            return CalibrationResult(
+                mm_per_px=best.mm_per_px,
+                source=ScaleSource.FEATURE_SCALE,
+                confidence=conf,
+                message=(
+                    f"Feature scale (best of {len(hypotheses)}): "
+                    f"{best.feature_name} = {best.mm_per_px:.4f}mm/px "
+                    f"[{family.family}], disagreement={disagreement:.0%}"),
+            )
+
+        agreement_bonus = max(0.0, 1.0 - disagreement) * 0.10
+        total_w = sum(h.confidence for h in hypotheses)
+        weighted_mpp = sum(h.mm_per_px * h.confidence for h in hypotheses) / total_w
+        conf = min(0.55, best.confidence + agreement_bonus)
+
+        return CalibrationResult(
+            mm_per_px=weighted_mpp,
+            source=ScaleSource.FEATURE_SCALE,
+            confidence=conf,
+            message=(
+                f"Feature scale ({len(hypotheses)} hypotheses, "
+                f"agreement={1 - disagreement:.0%}): "
+                f"mpp={weighted_mpp:.4f} [{family.family}]"),
+        )
+
+
+# =============================================================================
+# Batch Calibration Smoother (Patch 13C)
+# =============================================================================
+
+class BatchCalibrationSmoother:
+    """
+    Detects and corrects calibration outliers in batch processing sessions
+    using median-based z-score analysis, bucketed by instrument family.
+    """
+
+    def __init__(
+        self,
+        window_size: int = 7,
+        z_threshold: float = 3.0,
+        min_history: int = 3,
+    ):
+        self.window_size = window_size
+        self.z_threshold = z_threshold
+        self.min_history = min_history
+        self._history: Dict[str, List[float]] = {}
+
+    def smooth(self, extraction_result: PhotoExtractionResult) -> PhotoExtractionResult:
+        cal = extraction_result.calibration
+        if cal is None:
+            return extraction_result
+
+        current_mpp = cal.mm_per_px
+        source_str = cal.source.value if hasattr(cal.source, 'value') \
+                     else str(cal.source)
+
+        family = self._infer_family(extraction_result)
+        bucket = self._history.setdefault(family, [])
+
+        if len(bucket) >= self.min_history:
+            from statistics import median as _median
+            batch_median = _median(bucket[-self.window_size:])
+            values = bucket[-self.window_size:]
+            mad = _median([abs(v - batch_median) for v in values])
+            robust_std = mad * 1.4826
+
+            if robust_std > 0:
+                z_score = abs(current_mpp - batch_median) / robust_std
+            else:
+                z_score = float('inf') if current_mpp != batch_median else 0.0
+
+            if z_score > self.z_threshold:
+                old_mpp = current_mpp
+                cal.mm_per_px = batch_median
+                cal.confidence = 0.55
+                cal.message = (
+                    f"Batch corrected: {old_mpp:.4f} -> {batch_median:.4f} "
+                    f"(z={z_score:.1f}, family={family}, n={len(values)})")
+                extraction_result.warnings.append(
+                    f"Scale outlier corrected: mpp was {old_mpp:.4f} "
+                    f"(z={z_score:.1f}x from batch median {batch_median:.4f}). "
+                    f"Verify dimensions before cutting.")
+                logger.warning(cal.message)
+                bucket.append(batch_median)
+                return extraction_result
+
+        bucket.append(current_mpp)
+        return extraction_result
+
+    def session_summary(self) -> str:
+        from statistics import median as _median
+        lines = ["BatchCalibrationSmoother -- session summary:"]
+        for family, values in self._history.items():
+            if not values:
+                continue
+            med = _median(values)
+            lines.append(
+                f"  {family}: n={len(values)} median={med:.4f} "
+                f"range=[{min(values):.4f}, {max(values):.4f}]")
+        return "\n".join(lines)
+
+    def reset(self) -> None:
+        self._history.clear()
+
+    @staticmethod
+    def _infer_family(result: PhotoExtractionResult) -> str:
+        features = result.features
+        for ft, contours in features.items():
+            if not contours:
+                continue
+            ft_val = ft.value if hasattr(ft, 'value') else str(ft)
+            if ft_val == "f_hole":
+                return InstrumentFamily.ARCHTOP
+            if ft_val == "soundhole":
+                return InstrumentFamily.ACOUSTIC
+            if ft_val in ("pickup_route", "control_cavity"):
+                return InstrumentFamily.SOLID_BODY
+        return "unknown"
+
+
+# =============================================================================
+# Rough MPP Estimate (Patch 15 Fix B)
+# =============================================================================
+
+_ROUGH_SPEC_HEIGHTS = {
+    "stratocaster": 406,
+    "telecaster": 406,
+    "les_paul": 450,
+    "es335": 500,
+    "dreadnought": 520,
+    "smart_guitar": 444,
+    "jumbo_archtop": 520,
+    "archtop": 520,
+    "acoustic": 500,
+    "solid_body": 430,
+}
+_DEFAULT_BODY_HEIGHT_MM = 490.0
+
+
+def compute_rough_mpp(
+    body_region: Optional[BodyRegion],
+    spec_name: Optional[str] = None,
+    family_hint: Optional[str] = None,
+) -> float:
+    """
+    Compute a rough mm/px estimate for GatedAdaptiveCloser kernel sizing
+    BEFORE full calibration runs. Not used as final calibration result.
+    """
+    if body_region is None or body_region.height_px <= 0:
+        logger.debug("compute_rough_mpp: no body_region -> using 0.30")
+        return 0.30
+
+    body_h_px = float(body_region.height_px)
+
+    if spec_name and spec_name.lower() in _ROUGH_SPEC_HEIGHTS:
+        h_mm = _ROUGH_SPEC_HEIGHTS[spec_name.lower()]
+        rough = h_mm / body_h_px
+        logger.debug(
+            f"compute_rough_mpp: spec={spec_name} -> {h_mm}mm/{body_h_px:.0f}px "
+            f"= {rough:.4f}")
+        return rough
+
+    if family_hint and family_hint.lower() in _ROUGH_SPEC_HEIGHTS:
+        h_mm = _ROUGH_SPEC_HEIGHTS[family_hint.lower()]
+        rough = h_mm / body_h_px
+        logger.debug(
+            f"compute_rough_mpp: family={family_hint} -> {h_mm}mm/{body_h_px:.0f}px "
+            f"= {rough:.4f}")
+        return rough
+
+    rough = _DEFAULT_BODY_HEIGHT_MM / body_h_px
+    logger.debug(
+        f"compute_rough_mpp: no spec/family -> "
+        f"{_DEFAULT_BODY_HEIGHT_MM}mm/{body_h_px:.0f}px = {rough:.4f}")
+    return rough
 
 
 # =============================================================================
@@ -897,6 +2146,271 @@ def write_features_json(features: Dict[FeatureType, List[FeatureContour]],
 
 
 # =============================================================================
+# Stage -1 — Orientation Detection
+# =============================================================================
+
+LANDSCAPE_ASPECT_THRESHOLD = 1.8
+TILT_THRESHOLD_DEG = 5.0
+BG_THRESH_LIGHT = 200
+BG_THRESH_DARK = 80
+
+
+class OrientationDetector:
+    """Detects instrument orientation and returns a rotation-corrected image."""
+
+    def __init__(self, landscape_aspect: float = LANDSCAPE_ASPECT_THRESHOLD,
+                 tilt_threshold: float = TILT_THRESHOLD_DEG,
+                 bg_fill: tuple = (245, 245, 245)):
+        self.landscape_aspect = landscape_aspect
+        self.tilt_threshold = tilt_threshold
+        self.bg_fill = bg_fill
+
+    def detect_and_correct(self, image: np.ndarray,
+                           is_dark_bg: bool = False,
+                           fg_mask: Optional[np.ndarray] = None) -> OrientationResult:
+        orig_h, orig_w = image.shape[:2]
+        notes = []
+
+        # Step 1: binary silhouette
+        if fg_mask is not None and np.sum(fg_mask > 0) > (orig_h * orig_w * 0.05):
+            thresh = fg_mask.copy()
+            notes.append("Silhouette from fg_mask")
+        else:
+            gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY) \
+                if len(image.shape) == 3 else image
+            if is_dark_bg:
+                _, thresh = cv2.threshold(gray, BG_THRESH_DARK, 255, cv2.THRESH_BINARY)
+            else:
+                _, thresh = cv2.threshold(gray, BG_THRESH_LIGHT, 255, cv2.THRESH_BINARY_INV)
+
+        kernel = np.ones((9, 9), np.uint8)
+        thresh = cv2.morphologyEx(thresh, cv2.MORPH_CLOSE, kernel, iterations=3)
+        thresh = cv2.morphologyEx(thresh, cv2.MORPH_OPEN, kernel, iterations=1)
+
+        contours, _ = cv2.findContours(thresh, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+        if not contours:
+            notes.append("No silhouette found — returning image unchanged")
+            return OrientationResult(
+                orientation="portrait", coarse_angle=0, tilt_angle=0,
+                total_rotation=0, rotated_image=image.copy(),
+                original_shape=(orig_h, orig_w), canvas_shape=(orig_h, orig_w),
+                notes=notes)
+
+        largest = max(contours, key=cv2.contourArea)
+        rect = cv2.minAreaRect(largest)
+        center, (rw, rh), angle = rect
+
+        # Step 2: determine coarse orientation
+        long_dim = max(rw, rh)
+        short_dim = min(rw, rh)
+        aspect = long_dim / max(short_dim, 1)
+        notes.append(f"Silhouette minAreaRect: {rw:.0f}x{rh:.0f} at {angle:.1f} deg, aspect={aspect:.2f}")
+
+        if aspect > self.landscape_aspect and rw > rh:
+            orientation = "landscape"
+            coarse_angle = 90.0
+            notes.append(f"Landscape detected (aspect {aspect:.2f} > {self.landscape_aspect}) -> 90 deg CCW")
+        else:
+            orientation = "portrait"
+            coarse_angle = 0.0
+            notes.append("Portrait orientation")
+
+        # Step 3: apply coarse rotation
+        if coarse_angle == 90:
+            working = cv2.rotate(image, cv2.ROTATE_90_COUNTERCLOCKWISE)
+        else:
+            working = image.copy()
+
+        wh, ww = working.shape[:2]
+
+        # Step 4: measure residual tilt on coarse-corrected image
+        gray_w = cv2.cvtColor(working, cv2.COLOR_BGR2GRAY) if len(working.shape) == 3 else working
+        if is_dark_bg:
+            _, thresh_w = cv2.threshold(gray_w, BG_THRESH_DARK, 255, cv2.THRESH_BINARY)
+        else:
+            _, thresh_w = cv2.threshold(gray_w, BG_THRESH_LIGHT, 255, cv2.THRESH_BINARY_INV)
+        thresh_w = cv2.morphologyEx(thresh_w, cv2.MORPH_CLOSE, kernel, iterations=3)
+        contours_w, _ = cv2.findContours(thresh_w, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+
+        tilt_angle = 0.0
+        if contours_w:
+            lw = max(contours_w, key=cv2.contourArea)
+            rect_w = cv2.minAreaRect(lw)
+            _, (rw2, rh2), angle_w = rect_w
+            if rw2 < rh2:
+                tilt_angle = angle_w
+            else:
+                tilt_angle = angle_w + 90.0
+
+            if abs(tilt_angle) > self.tilt_threshold:
+                notes.append(f"Residual tilt: {tilt_angle:.1f} deg -> applying affine correction")
+            else:
+                notes.append(f"Tilt {tilt_angle:.1f} deg below threshold ({self.tilt_threshold} deg) — skipped")
+                tilt_angle = 0.0
+
+        # Step 5: apply tilt correction
+        inv_matrix = None
+        if abs(tilt_angle) > self.tilt_threshold:
+            cx, cy = ww // 2, wh // 2
+            M = cv2.getRotationMatrix2D((cx, cy), tilt_angle, 1.0)
+            cos_a = abs(np.cos(np.radians(tilt_angle)))
+            sin_a = abs(np.sin(np.radians(tilt_angle)))
+            new_w = int(wh * sin_a + ww * cos_a)
+            new_h = int(wh * cos_a + ww * sin_a)
+            M[0, 2] += (new_w / 2) - cx
+            M[1, 2] += (new_h / 2) - cy
+            working = cv2.warpAffine(working, M, (new_w, new_h),
+                                     borderValue=self.bg_fill)
+            M_inv = cv2.getRotationMatrix2D((new_w / 2, new_h / 2), -tilt_angle, 1.0)
+            M_inv[0, 2] += cx - (new_w / 2)
+            M_inv[1, 2] += cy - (new_h / 2)
+            inv_matrix = M_inv
+
+        total_rotation = coarse_angle + tilt_angle
+        canvas_h, canvas_w = working.shape[:2]
+        notes.append(f"Total rotation applied: {total_rotation:.1f} deg")
+
+        logger.info(
+            f"OrientationDetector: {orientation}, coarse={coarse_angle} deg, "
+            f"tilt={tilt_angle:.1f} deg, total={total_rotation:.1f} deg, "
+            f"canvas={canvas_w}x{canvas_h}")
+
+        return OrientationResult(
+            orientation=orientation, coarse_angle=coarse_angle,
+            tilt_angle=tilt_angle, total_rotation=total_rotation,
+            rotated_image=working, original_shape=(orig_h, orig_w),
+            canvas_shape=(canvas_h, canvas_w), inverse_matrix=inv_matrix,
+            notes=notes)
+
+
+def adaptive_body_threshold(row_widths: np.ndarray) -> float:
+    """Estimate body-row threshold from the row-width profile.
+
+    Uses lower-quartile-of-nonzero * 2.5 to separate neck from body rows.
+    Capped at 85% of max row width to prevent exceeding actual widths.
+    """
+    nonzero = row_widths[row_widths > 20]
+    if len(nonzero) == 0:
+        return float(row_widths.max() * 0.4)
+    neck_px = float(np.percentile(nonzero, 25))
+    raw_threshold = neck_px * 2.5
+    cap = float(row_widths.max()) * 0.85
+    return min(raw_threshold, cap)
+
+
+def _apply_orientation_to_original(
+    original_image: np.ndarray,
+    orient: OrientationResult,
+    bg_fill: Tuple[int, int, int] = (245, 245, 245),
+) -> np.ndarray:
+    """Apply the same rotation+tilt correction to original_image
+    that was applied to the working image during orientation detection."""
+    result = original_image
+
+    # Step 1: coarse 90 deg rotation
+    if orient.coarse_angle == 90:
+        result = cv2.rotate(result, cv2.ROTATE_90_COUNTERCLOCKWISE)
+
+    # Step 2: tilt correction
+    if abs(orient.tilt_angle) > 0 and orient.inverse_matrix is not None:
+        wh, ww = result.shape[:2]
+        tilt = orient.tilt_angle
+        cos_a = abs(np.cos(np.radians(tilt)))
+        sin_a = abs(np.sin(np.radians(tilt)))
+        new_w = int(wh * sin_a + ww * cos_a)
+        new_h = int(wh * cos_a + ww * sin_a)
+        cx, cy = ww // 2, wh // 2
+        M = cv2.getRotationMatrix2D((cx, cy), tilt, 1.0)
+        M[0, 2] += (new_w / 2) - cx
+        M[1, 2] += (new_h / 2) - cy
+        result = cv2.warpAffine(result, M, (new_w, new_h),
+                                borderValue=bg_fill)
+
+    return result
+
+
+def emit_calibration_guidance(
+    calibration,
+    spec_name: Optional[str],
+    body_h_px: Optional[float],
+    result,
+) -> None:
+    """Append actionable calibration warnings when confidence is low."""
+    src = calibration.source.value if hasattr(calibration.source, 'value') \
+        else str(calibration.source)
+
+    if calibration.confidence >= 0.5:
+        return
+
+    available_specs = [k for k in INSTRUMENT_SPECS.keys() if k != "reference_objects"]
+
+    msgs = [
+        f"Low scale confidence ({calibration.confidence:.2f}) "
+        f"— source: {src}. Dimensions may be inaccurate."
+    ]
+
+    if not spec_name:
+        msgs.append(
+            f"   Improve calibration: add  --spec <name>  "
+            f"to enable body-height calibration.")
+        msgs.append(
+            f"   Available specs: {', '.join(available_specs)}")
+    elif spec_name and (not body_h_px or body_h_px <= 0):
+        msgs.append(
+            f"   --spec '{spec_name}' supplied but body height could not be "
+            f"detected (body_height_px={body_h_px}). "
+            f"Try --bg rembg for better background removal.")
+
+    if src == "feature_scale":
+        msgs.append(
+            "   Scale estimated from detected instrument features "
+            "(pickup/soundhole/f-hole dimensions). "
+            "Verify before cutting expensive material.")
+
+    if not any("--mm" in m for m in result.warnings):
+        msgs.append(
+            f"   Or supply  --mm <body_height_mm> --px <body_height_pixels>  "
+            f"for direct measurement (highest accuracy).")
+
+    for msg in msgs:
+        result.warnings.append(msg)
+        logger.warning(msg)
+
+
+def rotate_contours_back(contours: Dict[str, List[np.ndarray]],
+                         orient_result: OrientationResult) -> Dict[str, List[np.ndarray]]:
+    """Rotate SVG/DXF contour point arrays back to the original image frame."""
+    if orient_result.total_rotation == 0:
+        return contours
+
+    all_pts = []
+    for pts_list in contours.values():
+        for pts in pts_list:
+            all_pts.append(pts)
+    if not all_pts:
+        return contours
+
+    combined = np.vstack(all_pts)
+    cx = float(combined[:, 0].mean())
+    cy = float(combined[:, 1].mean())
+
+    angle_rad = np.radians(-orient_result.total_rotation)
+    cos_a = np.cos(angle_rad)
+    sin_a = np.sin(angle_rad)
+
+    rotated: Dict[str, List[np.ndarray]] = {}
+    for layer, pts_list in contours.items():
+        rotated[layer] = []
+        for pts in pts_list:
+            dx = pts[:, 0] - cx
+            dy = pts[:, 1] - cy
+            rx = cx + dx * cos_a - dy * sin_a
+            ry = cy + dx * sin_a + dy * cos_a
+            rotated[layer].append(np.stack([rx, ry], axis=1))
+    return rotated
+
+
+# =============================================================================
 # Main Vectorizer
 # =============================================================================
 
@@ -928,6 +2442,11 @@ class PhotoVectorizerV2:
         self.assembler = ContourAssembler(self.feature_classifier, min_contour_area_px)
         self.calibrator = ScaleCalibrator(default_dpi)
         self.exif = EXIFExtractor()
+        self.body_isolator = BodyIsolator()
+        self.splitter = MultiInstrumentSplitter()
+        self.orientation_detector = OrientationDetector()
+        self.family_classifier = InstrumentFamilyClassifier()
+        self.batch_smoother = BatchCalibrationSmoother()
 
         logger.info(f"PhotoVectorizerV2 initialized (BG: {bg_method.value})")
 
@@ -942,7 +2461,7 @@ class PhotoVectorizerV2:
                 export_svg: bool = True,
                 export_json: bool = False,
                 debug_images: bool = False,
-                ) -> PhotoExtractionResult:
+                ) -> Union[PhotoExtractionResult, List[PhotoExtractionResult]]:
 
         start_time = time.time()
         source = Path(source_path)
@@ -965,12 +2484,54 @@ class PhotoVectorizerV2:
             cv2.imwrite(p, image)
             debug_paths["original"] = p
 
+        # ── Multi-instrument detection ──────────────────────────────────────
+        split = self.splitter.detect_and_split(image)
+        if split.is_multi:
+            all_results: List[PhotoExtractionResult] = []
+            for idx, (cx, cy, cw, ch) in enumerate(split.crops):
+                crop_img = image[cy:cy+ch, cx:cx+cw]
+                crop_stem = f"{source.stem}_instrument_{idx+1}"
+                crop_path = out_dir / f"{crop_stem}.png"
+                cv2.imwrite(str(crop_path), crop_img)
+                r = self.extract(
+                    str(crop_path), output_dir=str(out_dir),
+                    spec_name=spec_name,
+                    known_dimension_mm=known_dimension_mm,
+                    known_dimension_px=known_dimension_px,
+                    known_unit=known_unit,
+                    correct_perspective=correct_perspective,
+                    export_dxf=export_dxf, export_svg=export_svg,
+                    export_json=export_json, debug_images=debug_images)
+                if isinstance(r, list):
+                    all_results.extend(r)
+                else:
+                    all_results.append(r)
+            return all_results
+
         # ── Stage 0: Dark background detection ──────────────────────────────
-        is_dark_bg = detect_dark_background(image)
-        result.dark_background_detected = is_dark_bg
-        if is_dark_bg:
+        original_image = image.copy()  # preserve pre-inversion for BodyIsolator
+        bg_type = BackgroundTypeDetector().detect(image)
+        is_dark_bg = (bg_type == "solid_dark")
+        result.dark_background_detected = (bg_type in ("solid_dark", "textured_dark"))
+        if bg_type == "solid_dark":
             image = cv2.bitwise_not(image)
-            logger.info("Dark background -> image inverted")
+            logger.info("Solid dark background -> image inverted")
+        elif bg_type == "textured_dark":
+            logger.info("Textured dark background detected — NOT inverting")
+            result.warnings.append(
+                f"Textured dark background ({bg_type}) — consider using --bg rembg for best results")
+
+        # ── Stage 0.5: Orientation detection ─────────────────────────────────
+        orient = self.orientation_detector.detect_and_correct(image, is_dark_bg=is_dark_bg)
+        if orient.total_rotation != 0:
+            image = orient.rotated_image
+            original_image = _apply_orientation_to_original(original_image, orient)
+            self.body_isolator.use_adaptive = True
+            result.warnings.append(
+                f"Orientation corrected: {orient.orientation}, "
+                f"{orient.total_rotation:.1f} deg rotation applied")
+        else:
+            self.body_isolator.use_adaptive = False
 
         # ── Stage 1: EXIF DPI ───────────────────────────────────────────────
         exif_dpi = self.exif.get_dpi(source)
@@ -1007,21 +2568,44 @@ class PhotoVectorizerV2:
             debug_paths["foreground"] = str(out_dir / f"{source.stem}_02_foreground.jpg")
             debug_paths["alpha"] = str(out_dir / f"{source.stem}_03_alpha.png")
 
+        # ── Stage 4.5: Body isolation ───────────────────────────────────────
+        body_region = self.body_isolator.isolate(
+            image, fg_mask=alpha_mask, original_image=original_image)
+
+        # ── Stage 4.6: Rough mpp estimate for adaptive kernel sizing ────────
+        rough_mpp = compute_rough_mpp(body_region, spec_name)
+        logger.info(f"Rough mpp for kernel sizing: {rough_mpp:.4f}")
+
         # ── Stage 5: Edge detection ─────────────────────────────────────────
-        edges = self.edge_detector.detect(fg_image, alpha_mask)
+        edges = self.edge_detector.detect(
+            fg_image, alpha_mask,
+            input_type=result.input_type.value,
+            mpp=rough_mpp,
+            body_region=body_region,
+        )
 
         if debug_images:
             p = str(out_dir / f"{source.stem}_04_edges.png")
             cv2.imwrite(p, edges)
             debug_paths["edges"] = p
 
-        # ── Stage 7: Initial calibration ────────────────────────────────────
+        # ── Stage 6.5: Instrument family classification ─────────────────
+        instrument_family = self.family_classifier.classify(body_region)
+        logger.info(f"Instrument family: {instrument_family.family} (conf={instrument_family.confidence:.2f})")
+
+        # ── Stage 7: Calibration (with body isolation + DPI estimation) ───
+        body_h_px = float(body_region.height_px) if body_region.height_px > 0 else None
         calibration = self.calibrator.calibrate(
             image, known_mm=known_dimension_mm, known_px=known_dimension_px,
             spec_name=spec_name, image_dpi=exif_dpi,
-            unit=known_unit or self.default_unit)
+            unit=known_unit or self.default_unit,
+            fg_mask=alpha_mask, body_height_px=body_h_px,
+            family_classification=instrument_family,
+            edge_image=edges)
         mpp = calibration.mm_per_px
         logger.info(f"Scale: {calibration.message} (mpp={mpp:.4f})")
+
+        emit_calibration_guidance(calibration, spec_name, body_h_px, result)
 
         # ── Stage 8: Contour assembly + classification ──────────────────────
         feature_contours = self.assembler.assemble(edges, alpha_mask, mpp)
@@ -1085,17 +2669,6 @@ class PhotoVectorizerV2:
                 debug_paths["grid_overlay"] = overlay_path
                 result.grid_overlay_path = overlay_path
 
-        # If calibration was from spec, refine using body contour
-        if calibration.source == ScaleSource.INSTRUMENT_SPEC and spec_name:
-            body_h_px = body_fc.bbox_px[3]  # height in pixels
-            if body_h_px > 0 and spec_name in INSTRUMENT_SPECS:
-                body_h_mm = INSTRUMENT_SPECS[spec_name]["body"][0]
-                mpp = body_h_mm / body_h_px
-                calibration = CalibrationResult(
-                    mm_per_px=mpp, source=ScaleSource.INSTRUMENT_SPEC,
-                    confidence=0.6,
-                    message=f"Spec: {spec_name} body {body_h_mm}mm / {body_h_px}px")
-
         result.calibration = calibration
         mpp = calibration.mm_per_px
 
@@ -1131,6 +2704,10 @@ class PhotoVectorizerV2:
             h_mm = float(ys.max() - ys.min())
             result.body_dimensions_mm = (w_mm, h_mm)
             result.body_dimensions_inch = (w_mm / 25.4, h_mm / 25.4)
+
+        # ── Back-project orientation if rotated ───────────────────────────
+        if orient.total_rotation != 0:
+            export_contours = rotate_contours_back(export_contours, orient)
 
         # ── Determine SVG/DXF viewbox from contours ─────────────────────────
         all_pts = []
@@ -1170,11 +2747,51 @@ class PhotoVectorizerV2:
         result.debug_images = debug_paths
         result.processing_time_ms = (time.time() - start_time) * 1000
 
+        # ── Batch calibration smoothing ─────────────────────────────────────
+        result = self.batch_smoother.smooth(result)
+
         logger.info(
             f"Done in {result.processing_time_ms:.0f}ms: "
             f"{result.body_dimensions_mm[0]:.1f} x {result.body_dimensions_mm[1]:.1f} mm")
 
         return result
+
+    def batch_extract(
+        self,
+        source_paths: List[Union[str, Path]],
+        output_dir: Optional[Union[str, Path]] = None,
+        **kwargs,
+    ) -> List[PhotoExtractionResult]:
+        """Process multiple images sequentially.
+
+        Parameters
+        ----------
+        source_paths : list of image file paths
+        output_dir   : output directory (defaults to each file's parent)
+        **kwargs     : passed to extract() — spec_name, known_dimension_mm, etc.
+
+        Returns
+        -------
+        Flat list of PhotoExtractionResult (multi-instrument images expand to N results)
+        """
+        all_results: List[PhotoExtractionResult] = []
+        for i, path in enumerate(source_paths):
+            logger.info(f"Batch [{i+1}/{len(source_paths)}]: {path}")
+            try:
+                r = self.extract(str(path), output_dir=output_dir, **kwargs)
+                if isinstance(r, list):
+                    all_results.extend(r)
+                else:
+                    all_results.append(r)
+            except (OSError, cv2.error, ValueError) as e:
+                logger.error(f"Batch error on {path}: {e}")
+                fail = PhotoExtractionResult(source_path=str(path))
+                fail.warnings.append(f"Processing failed: {e}")
+                all_results.append(fail)
+        logger.info(f"Batch complete: {len(all_results)} results from "
+                    f"{len(source_paths)} inputs")
+        logger.info(self.batch_smoother.session_summary())
+        return all_results
 
     def _to_mm(self, contour: np.ndarray, mpp: float, img_h: int,
                cx: float, cy: float, tol: float) -> Optional[np.ndarray]:
@@ -1219,7 +2836,9 @@ def main():
         description="Photo Vectorizer V2 - Extract outlines from instrument photos")
     parser.add_argument("source", help="Photo path (JPG, PNG, TIFF, PDF)")
     parser.add_argument("-o", "--output", default=None, help="Output directory")
-    parser.add_argument("-s", "--spec", default=None, help="Instrument spec name")
+    _spec_names = [k for k in INSTRUMENT_SPECS.keys() if k != "reference_objects"]
+    parser.add_argument("-s", "--spec", default=None,
+                        help=f"Instrument spec: {', '.join(_spec_names)}")
     parser.add_argument("--mm", type=float, help="Known dimension in mm")
     parser.add_argument("--px", type=float, help="Pixel span of known dimension")
     parser.add_argument("--bg", default="auto",
@@ -1228,6 +2847,8 @@ def main():
     parser.add_argument("--formats", nargs="+", default=["svg", "dxf"],
                         choices=["svg", "dxf", "json"])
     parser.add_argument("--debug", action="store_true", help="Save debug images")
+    parser.add_argument("--bom", action="store_true",
+                        help="Generate material BOM (bill of materials) after extraction")
     parser.add_argument("-v", "--verbose", action="store_true")
     args = parser.parse_args()
 
@@ -1249,23 +2870,47 @@ def main():
         export_json="json" in args.formats,
         debug_images=args.debug)
 
-    print(f"\nInput: {result.input_type.value}")
-    print(f"Background: {result.bg_method_used}")
-    print(f"Dark background: {result.dark_background_detected}")
-    print(f"Perspective: {'corrected' if result.perspective_corrected else 'no'}")
-    if result.calibration:
-        print(f"Scale: {result.calibration.message}")
-    print(f"Body: {result.body_dimensions_mm[0]:.1f} x {result.body_dimensions_mm[1]:.1f} mm")
-    print(f"       {result.body_dimensions_inch[0]:.2f} x {result.body_dimensions_inch[1]:.2f} in")
-    print(f"Features: {', '.join(f'{ft.value}={len(c)}' for ft, c in result.features.items() if c)}")
-    if result.output_svg:
-        print(f"SVG: {result.output_svg}")
-    if result.output_dxf:
-        print(f"DXF: {result.output_dxf}")
-    if result.warnings:
-        for w in result.warnings:
-            print(f"  Warning: {w}")
-    print(f"Time: {result.processing_time_ms:.0f}ms")
+    results = result if isinstance(result, list) else [result]
+    for i, result in enumerate(results):
+        if len(results) > 1:
+            print(f"\n--- Instrument {i + 1} ---")
+        print(f"\nInput: {result.input_type.value}")
+        print(f"Background: {result.bg_method_used}")
+        print(f"Dark background: {result.dark_background_detected}")
+        print(f"Perspective: {'corrected' if result.perspective_corrected else 'no'}")
+        if result.calibration:
+            print(f"Scale: {result.calibration.message}")
+            if result.calibration.confidence < 0.5:
+                print(f"  Warning: Low calibration confidence ({result.calibration.confidence:.2f})")
+        print(f"Body: {result.body_dimensions_mm[0]:.1f} x {result.body_dimensions_mm[1]:.1f} mm")
+        print(f"       {result.body_dimensions_inch[0]:.2f} x {result.body_dimensions_inch[1]:.2f} in")
+        print(f"Features: {', '.join(f'{ft.value}={len(c)}' for ft, c in result.features.items() if c)}")
+        if result.output_svg:
+            print(f"SVG: {result.output_svg}")
+        if result.output_dxf:
+            print(f"DXF: {result.output_dxf}")
+        if result.warnings:
+            for w in result.warnings:
+                print(f"  Warning: {w}")
+        print(f"Time: {result.processing_time_ms:.0f}ms")
+
+        # BOM generation
+        if args.bom:
+            try:
+                from material_bom import MaterialBOMGenerator
+                bom_gen = MaterialBOMGenerator()
+                bom = bom_gen.generate(result)
+                print(f"\n{bom.summary()}")
+                out_dir = args.output or str(Path(args.source).parent)
+                stem = Path(result.source_path).stem
+                if len(results) > 1:
+                    stem = f"{stem}_instrument_{i + 1}"
+                bom.to_json(str(Path(out_dir) / f"{stem}_bom.json"))
+                bom.to_csv(str(Path(out_dir) / f"{stem}_bom.csv"))
+                print(f"BOM JSON: {Path(out_dir) / f'{stem}_bom.json'}")
+                print(f"BOM CSV:  {Path(out_dir) / f'{stem}_bom.csv'}")
+            except ImportError:
+                print("  Warning: material_bom module not found — skipping BOM")
 
 
 if __name__ == "__main__":
