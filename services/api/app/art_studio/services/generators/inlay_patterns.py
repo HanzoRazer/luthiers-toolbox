@@ -40,7 +40,7 @@ _CELTIC_MOTIFS: Dict[str, Dict[str, Any]] = {
         "name": "Lotus Flower",
         "vb_w": 1000, "vb_h": 1000,
         "recommend_mm": 18,
-        "use_case": "Fret dot, headstock logo",
+        "use_case": "Fret dot, headstock logo",  # SCOPE_ALLOW: HOST_GEOMETRY descriptive use-case
         "paths": [
             "M 443.76,176.41 Q 422.20,114.76 500.00,40.00 Q 577.80,114.76 556.24,176.41 Z",
             "M 573.09,180.92 Q 585.24,116.75 690.00,90.91 Q 720.00,194.56 670.50,237.16 Z",
@@ -60,7 +60,7 @@ _CELTIC_MOTIFS: Dict[str, Dict[str, Any]] = {
         "name": "Celtic Cross",
         "vb_w": 544, "vb_h": 548,
         "recommend_mm": 25,
-        "use_case": "Headstock, body inlay",
+        "use_case": "Headstock, body inlay",  # SCOPE_ALLOW: HOST_GEOMETRY descriptive use-case
         "paths": [
             "M 269.0 8.0 L 244.0 21.0 L 197.0 26.0 L 190.0 39.0 L 136.0 63.0 L 87.0 105.0 "
             "L 52.0 155.0 L 35.0 203.0 L 21.0 211.0 L 23.0 249.0 L 8.0 273.0 L 23.0 295.0 "
@@ -173,7 +173,7 @@ BAND_PRESETS: Dict[str, Dict[str, Any]] = {
         ],
         "band_width_mm": 50, "band_height_mm": 8, "gap_mm": 0.2,
     },
-    "headstock_band": {
+    "headstock_band": {  # SCOPE_ALLOW: HOST_GEOMETRY preset name for inlay placement
         "layers": [
             {"shape": "vine_scroll", "params": {"leafsize": 4, "leaves": 5}, "weight": 1},
         ],
@@ -187,7 +187,7 @@ def compose_band(params: Dict[str, Any]) -> GeometryCollection:
 
     Params
     ------
-    preset         : str   — preset name (rosette/body_binding/fretboard/headstock_band)
+    preset         : str   — preset name (rosette/body_binding/fretboard/headstock_band)  # SCOPE_ALLOW: HOST_GEOMETRY
     layers         : list  — layer dicts: [{shape, params, weight}, ...]
     band_width_mm  : float — total width (mm), default 150
     band_height_mm : float — total height (mm), default 25
