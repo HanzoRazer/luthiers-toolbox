@@ -14,6 +14,7 @@
 export * as auth from "./auth";
 export * as cam from "./cam/cam";
 export * as artDesignFirstWorkflow from "./artDesignFirstWorkflow";
+export * as artRosetteWheel from "./artRosetteWheel";
 export * as rmosAcoustics from "./rmosAcoustics";
 export * as rmosAcousticsIngest from "./rmosAcousticsIngest";
 export * as businessEstimator from "./businessEstimator";
