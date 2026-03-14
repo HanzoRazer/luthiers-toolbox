@@ -1,17 +1,13 @@
 """
-Retract Router (Re-export Wrapper)
-==================================
+Retract Routers (Consolidated)
+==============================
 
-DEPRECATED: This module re-exports from the new retract package.
+DEPRECATED: This module is a thin wrapper for backward compatibility.
 Prefer importing directly from focused sub-modules:
 
     from app.routers.retract.retract_info_router import router as info_router
     from app.routers.retract.retract_apply_router import router as apply_router
     from app.routers.retract.retract_gcode_router import router as gcode_router
-
-Or from the package:
-
-    from app.routers.retract import router
 
 Sub-modules:
 - retract_info_router.py (2 routes: /strategies, /estimate)
@@ -20,31 +16,33 @@ Sub-modules:
 
 Total: 8 routes under /api/retract
 """
-# Re-export everything from the new package
-from .retract import (
-    router,
-    info_router,
-    apply_router,
-    gcode_router,
-    # Models
+from fastapi import APIRouter
+
+# Import sub-routers
+from .retract_info_router import router as info_router
+from .retract_apply_router import router as apply_router
+from .retract_gcode_router import router as gcode_router
+
+# Re-export models for backward compatibility
+from .retract_info_router import (
     StrategyListOut,
     TimeSavingsIn,
     TimeSavingsOut,
+)
+from .retract_apply_router import (
     RetractStrategyIn,
     RetractStrategyOut,
     LeadInPatternIn,
     LeadInPatternOut,
 )
 
-# Also re-export Point3DModel for backward compatibility (was in original file)
-from pydantic import BaseModel
+# Aggregate router
+router = APIRouter(tags=["Retract"])
 
-
-class Point3DModel(BaseModel):
-    """3D point model."""
-    x: float
-    y: float
-    z: float
+# Mount sub-routers (no additional prefix - endpoints already have paths)
+router.include_router(info_router)
+router.include_router(apply_router)
+router.include_router(gcode_router)
 
 
 __all__ = [
@@ -54,8 +52,7 @@ __all__ = [
     "info_router",
     "apply_router",
     "gcode_router",
-    # Models
-    "Point3DModel",
+    # Models (backward compat)
     "StrategyListOut",
     "TimeSavingsIn",
     "TimeSavingsOut",
