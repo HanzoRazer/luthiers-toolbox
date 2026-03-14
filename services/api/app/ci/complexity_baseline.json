@@ -1,19 +1,61 @@
 {
   "threshold": 15,
-  "violation_count": 150,
+  "violation_count": 179,
   "violations": [
     {
-      "file": "app/util/gcode_reader.py",
-      "function": "parse_gcode",
-      "complexity": 39,
-      "line": 174,
+      "file": "app/art_studio/services/generators/inlay_import.py",
+      "function": "parse_dxf",
+      "complexity": 50,
+      "line": 33,
       "letter": "F"
     },
     {
-      "file": "app/rmos/runs_v2/batch_summary.py",
-      "function": "build_batch_summary",
-      "complexity": 30,
-      "line": 121,
+      "file": "app/art_studio/services/rosette/rosette_manufacturing.py",
+      "function": "run_manufacturing_checks",
+      "complexity": 50,
+      "line": 183,
+      "letter": "F"
+    },
+    {
+      "file": "app/art_studio/services/generators/inlay_geometry_svg.py",
+      "function": "tessellate_path_d",
+      "complexity": 42,
+      "line": 131,
+      "letter": "F"
+    },
+    {
+      "file": "app/services/saw_lab_operator_feedback_learning_hook.py",
+      "function": "record_operator_feedback_event",
+      "complexity": 41,
+      "line": 49,
+      "letter": "F"
+    },
+    {
+      "file": "app/cam/rosette/prototypes/__archived__/generative_explorer_viewer.py",
+      "function": "render_rosette",
+      "complexity": 40,
+      "line": 213,
+      "letter": "F"
+    },
+    {
+      "file": "app/util/gcode/reader.py",
+      "function": "parse_gcode",
+      "complexity": 39,
+      "line": 97,
+      "letter": "F"
+    },
+    {
+      "file": "app/agentic/spine/moments.py",
+      "function": "detect_moments",
+      "complexity": 38,
+      "line": 27,
+      "letter": "F"
+    },
+    {
+      "file": "app/cam/rosette/prototypes/rosette_jsx_eval.py",
+      "function": "main",
+      "complexity": 34,
+      "line": 159,
       "letter": "F"
     },
     {
@@ -42,6 +84,13 @@
       "function": "generate_report",
       "complexity": 28,
       "line": 74,
+      "letter": "F"
+    },
+    {
+      "file": "app/util/gcode/simulator.py",
+      "function": "simulate_segments",
+      "complexity": 28,
+      "line": 207,
       "letter": "F"
     },
     {
@@ -76,14 +125,21 @@
       "file": "app/rmos/ai_search.py",
       "function": "run_constraint_first_search",
       "complexity": 26,
-      "line": 131,
+      "line": 130,
+      "letter": "F"
+    },
+    {
+      "file": "app/safety/cnc_preflight.py",
+      "function": "validate_cnc_params",
+      "complexity": 26,
+      "line": 81,
       "letter": "F"
     },
     {
       "file": "app/saw_lab/executions_lookup_service.py",
       "function": "get_latest_execution_for_decision",
       "complexity": 26,
-      "line": 43,
+      "line": 14,
       "letter": "F"
     },
     {
@@ -108,38 +164,45 @@
       "letter": "F"
     },
     {
-      "file": "app/rmos/stub_routes.py",
+      "file": "app/rmos/mvp_router.py",
       "function": "dxf_to_grbl",
       "complexity": 25,
-      "line": 487,
+      "line": 25,
       "letter": "F"
     },
     {
       "file": "app/saw_lab/batch_router.py",
       "function": "create_batch_plan",
       "complexity": 25,
-      "line": 60,
+      "line": 62,
       "letter": "F"
     },
     {
       "file": "app/saw_lab/toolpaths_lookup_service.py",
       "function": "get_latest_toolpaths_for_decision",
       "complexity": 25,
-      "line": 46,
+      "line": 15,
+      "letter": "F"
+    },
+    {
+      "file": "app/services/saw_lab_decision_metrics_rollup_service.py",
+      "function": "compute_decision_metrics_rollup",
+      "complexity": 25,
+      "line": 28,
       "letter": "F"
     },
     {
       "file": "app/services/saw_lab_gcode_emit_service.py",
       "function": "export_execution_gcode",
       "complexity": 25,
-      "line": 111,
+      "line": 116,
       "letter": "F"
     },
     {
-      "file": "app/vision/router.py",
+      "file": "app/vision/segmentation_router.py",
       "function": "photo_to_gcode",
       "complexity": 25,
-      "line": 297,
+      "line": 137,
       "letter": "F"
     },
     {
@@ -167,7 +230,7 @@
       "file": "app/cam/routers/utility/settings_router.py",
       "function": "cam_settings_import",
       "complexity": 25,
-      "line": 199,
+      "line": 173,
       "letter": "F"
     },
     {
@@ -189,6 +252,13 @@
       "function": "parse_imports_and_symbols",
       "complexity": 24,
       "line": 87,
+      "letter": "F"
+    },
+    {
+      "file": "app/art_studio/api/rosette_manufacturing_routes.py",
+      "function": "assemble_rosette_project",
+      "complexity": 24,
+      "line": 267,
       "letter": "F"
     },
     {
@@ -269,6 +339,13 @@
       "letter": "F"
     },
     {
+      "file": "app/cam/rosette/prototypes/__archived__/diamond_chevron_viewer.py",
+      "function": "render_rosette",
+      "complexity": 23,
+      "line": 225,
+      "letter": "F"
+    },
+    {
       "file": "app/post_injection_dropin.py",
       "function": "PostInjectionMiddleware",
       "complexity": 22,
@@ -304,6 +381,13 @@
       "letter": "M"
     },
     {
+      "file": "app/routers/blueprint_cam/dxf_geometry_correction.py",
+      "function": "correct_dxf_geometry",
+      "complexity": 22,
+      "line": 166,
+      "letter": "F"
+    },
+    {
       "file": "app/routers/blueprint_cam/extraction.py",
       "function": "extract_loops_from_dxf",
       "complexity": 22,
@@ -314,7 +398,14 @@
       "file": "app/rmos/runs_v2/batch_dashboard.py",
       "function": "_group_key_from_kind",
       "complexity": 22,
-      "line": 32,
+      "line": 20,
+      "letter": "F"
+    },
+    {
+      "file": "app/cam/rosette/prototypes/__archived__/rosette_studio_viewer.py",
+      "function": "generate_grid",
+      "complexity": 22,
+      "line": 54,
       "letter": "F"
     },
     {
@@ -336,6 +427,13 @@
       "function": "curve_preflight_report",
       "complexity": 21,
       "line": 33,
+      "letter": "F"
+    },
+    {
+      "file": "app/services/pipeline_spec_validator.py",
+      "function": "_validate_ops",
+      "complexity": 21,
+      "line": 139,
       "letter": "F"
     },
     {
@@ -381,6 +479,13 @@
       "letter": "M"
     },
     {
+      "file": "app/core/job_queue/queue.py",
+      "function": "get_stats",
+      "complexity": 21,
+      "line": 362,
+      "letter": "M"
+    },
+    {
       "file": "app/cam/routers/toolpath/helical_router.py",
       "function": "helical_gcode",
       "complexity": 21,
@@ -399,6 +504,13 @@
       "function": "render_rosette_preview_svg",
       "complexity": 21,
       "line": 27,
+      "letter": "F"
+    },
+    {
+      "file": "app/art_studio/services/rosette/rosette_svg.py",
+      "function": "render_preview_svg",
+      "complexity": 21,
+      "line": 100,
       "letter": "F"
     },
     {
@@ -493,10 +605,10 @@
       "letter": "M"
     },
     {
-      "file": "app/cam/routers/stub_routes.py",
+      "file": "app/cam/routers/job_intelligence_router.py",
       "function": "_compute_job_insights",
       "complexity": 20,
-      "line": 134,
+      "line": 100,
       "letter": "F"
     },
     {
@@ -507,10 +619,17 @@
       "letter": "M"
     },
     {
-      "file": "app/routers/neck_router.py",
-      "function": "export_neck_dxf",
+      "file": "app/art_studio/services/generators/inlay_import.py",
+      "function": "parse_svg",
+      "complexity": 20,
+      "line": 244,
+      "letter": "F"
+    },
+    {
+      "file": "app/auth/deps.py",
+      "function": "get_current_principal",
       "complexity": 19,
-      "line": 262,
+      "line": 189,
       "letter": "F"
     },
     {
@@ -524,7 +643,7 @@
       "file": "app/saw_lab/saw_lab_toolpaths_from_decision_service.py",
       "function": "generate_toolpaths_from_decision",
       "complexity": 19,
-      "line": 85,
+      "line": 74,
       "letter": "F"
     },
     {
@@ -570,6 +689,20 @@
       "letter": "C"
     },
     {
+      "file": "app/routers/blueprint_cam/contour_reconstruction.py",
+      "function": "reconstruct_contours",
+      "complexity": 19,
+      "line": 288,
+      "letter": "F"
+    },
+    {
+      "file": "app/routers/neck/export.py",
+      "function": "export_neck_dxf",
+      "complexity": 19,
+      "line": 19,
+      "letter": "F"
+    },
+    {
       "file": "app/rmos/engines/feasibility_baseline_v1.py",
       "function": "compute",
       "complexity": 19,
@@ -602,6 +735,13 @@
       "function": "_match_filters",
       "complexity": 19,
       "line": 120,
+      "letter": "F"
+    },
+    {
+      "file": "app/cam/rosette/prototypes/__archived__/hyperbolic_viewer.py",
+      "function": "render_rosette",
+      "complexity": 19,
+      "line": 137,
       "letter": "F"
     },
     {
@@ -650,21 +790,21 @@
       "file": "app/saw_lab/executions_list_service.py",
       "function": "list_executions_for_decision",
       "complexity": 18,
-      "line": 59,
+      "line": 37,
       "letter": "F"
     },
     {
-      "file": "app/util/gcode_parser.py",
-      "function": "simulate",
-      "complexity": 18,
-      "line": 327,
-      "letter": "F"
-    },
-    {
-      "file": "app/util/gcode_reader.py",
+      "file": "app/util/gcode/reader.py",
       "function": "validate_gcode",
       "complexity": 18,
-      "line": 131,
+      "line": 54,
+      "letter": "F"
+    },
+    {
+      "file": "app/util/gcode/simulator.py",
+      "function": "simulate",
+      "complexity": 18,
+      "line": 133,
       "letter": "F"
     },
     {
@@ -689,10 +829,24 @@
       "letter": "F"
     },
     {
+      "file": "app/routers/blueprint_cam/contour_reconstruction.py",
+      "function": "reconstruct_bracing_dxf",
+      "complexity": 18,
+      "line": 404,
+      "letter": "F"
+    },
+    {
+      "file": "app/routers/blueprint_cam/dxf_preprocessor.py",
+      "function": "normalize_dxf_format",
+      "complexity": 18,
+      "line": 95,
+      "letter": "F"
+    },
+    {
       "file": "app/routers/geometry/import_router.py",
       "function": "parity",
       "complexity": 18,
-      "line": 273,
+      "line": 339,
       "letter": "F"
     },
     {
@@ -752,6 +906,13 @@
       "letter": "M"
     },
     {
+      "file": "app/art_studio/services/generators/inlay_patterns.py",
+      "function": "compose_band",
+      "complexity": 18,
+      "line": 185,
+      "letter": "F"
+    },
+    {
       "file": "scripts/check_routing_truth.py",
       "function": "main",
       "complexity": 17,
@@ -797,14 +958,7 @@
       "file": "app/routers/cam_post_v155_router.py",
       "function": "_axis_modal_emit",
       "complexity": 17,
-      "line": 142,
-      "letter": "F"
-    },
-    {
-      "file": "app/saw_lab/decision_intelligence_router.py",
-      "function": "approve_suggestion",
-      "complexity": 17,
-      "line": 89,
+      "line": 139,
       "letter": "F"
     },
     {
@@ -812,6 +966,13 @@
       "function": "_extract_signals_from_job_log",
       "complexity": 17,
       "line": 80,
+      "letter": "F"
+    },
+    {
+      "file": "app/saw_lab/decision_router.py",
+      "function": "approve_suggestion",
+      "complexity": 17,
+      "line": 109,
       "letter": "F"
     },
     {
@@ -829,13 +990,6 @@
       "letter": "F"
     },
     {
-      "file": "app/util/gcode_reader.py",
-      "function": "print_report",
-      "complexity": 17,
-      "line": 342,
-      "letter": "F"
-    },
-    {
       "file": "app/_experimental/ai_cam/optimize.py",
       "function": "_score_physics",
       "complexity": 17,
@@ -847,6 +1001,13 @@
       "function": "workflow_advisory_summary",
       "complexity": 17,
       "line": 261,
+      "letter": "F"
+    },
+    {
+      "file": "app/util/gcode/report.py",
+      "function": "print_report",
+      "complexity": 17,
+      "line": 24,
       "letter": "F"
     },
     {
@@ -899,11 +1060,32 @@
       "letter": "M"
     },
     {
+      "file": "app/cam/rosette/prototypes/herringbone_parametric.py",
+      "function": "main",
+      "complexity": 17,
+      "line": 488,
+      "letter": "F"
+    },
+    {
+      "file": "app/cam/rosette/prototypes/rope_twist_rosette_v2.py",
+      "function": "build_csv",
+      "complexity": 17,
+      "line": 227,
+      "letter": "F"
+    },
+    {
       "file": "scripts/saw_lab_enhance_blades_and_overrides.py",
       "function": "_extract_training_samples_from_artifacts",
       "complexity": 16,
       "line": 210,
       "letter": "F"
+    },
+    {
+      "file": "tests/test_inlay_patterns.py",
+      "function": "test_list_generators",
+      "complexity": 16,
+      "line": 563,
+      "letter": "M"
     },
     {
       "file": "tests/test_runs_v2_delete_audit.py",
@@ -955,17 +1137,17 @@
       "letter": "F"
     },
     {
+      "file": "app/rmos/live_monitor_router.py",
+      "function": "_synthesize_subjobs_from_run",
+      "complexity": 16,
+      "line": 21,
+      "letter": "F"
+    },
+    {
       "file": "app/rmos/moves.py",
       "function": "move_to_gcode",
       "complexity": 16,
       "line": 151,
-      "letter": "F"
-    },
-    {
-      "file": "app/rmos/stub_routes.py",
-      "function": "_synthesize_subjobs_from_run",
-      "complexity": 16,
-      "line": 356,
       "letter": "F"
     },
     {
@@ -979,7 +1161,7 @@
       "file": "app/saw_lab/execution_metrics_rollup_service.py",
       "function": "write_execution_metrics_rollup_artifact",
       "complexity": 16,
-      "line": 112,
+      "line": 94,
       "letter": "F"
     },
     {
@@ -987,6 +1169,13 @@
       "function": "test_promote_succeeds_when_approved",
       "complexity": 16,
       "line": 86,
+      "letter": "F"
+    },
+    {
+      "file": "app/routers/blueprint_cam/geometry_correction_router.py",
+      "function": "correct_geometry",
+      "complexity": 16,
+      "line": 148,
       "letter": "F"
     },
     {
@@ -1014,7 +1203,7 @@
       "file": "app/rmos/runs_v2/batch_dashboard.py",
       "function": "_try_extract_metrics_for_execution",
       "complexity": 16,
-      "line": 118,
+      "line": 107,
       "letter": "F"
     },
     {
@@ -1044,6 +1233,20 @@
       "complexity": 16,
       "line": 251,
       "letter": "M"
+    },
+    {
+      "file": "app/art_studio/services/generators/inlay_import.py",
+      "function": "_svg_path_d_to_pts",
+      "complexity": 16,
+      "line": 193,
+      "letter": "F"
+    },
+    {
+      "file": "app/art_studio/services/rosette/rosette_manufacturing.py",
+      "function": "compute_bom",
+      "complexity": 16,
+      "line": 39,
+      "letter": "F"
     },
     {
       "file": "app/ai/transport/image_client.py",
