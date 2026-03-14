@@ -45,9 +45,12 @@ router = APIRouter(tags=["rmos", "stubs"])
 # =============================================================================
 
 from ..cam.rosette.models import RosetteRingConfig, SegmentationResult, SliceBatch
-from ..cam.rosette.segmentation_engine import compute_tile_segmentation
-from ..cam.rosette.slice_engine import generate_slices_for_ring
-from ..cam.rosette.preview_engine import build_preview_snapshot
+# Rosette Consolidation: absorbed into tile_segmentation.py
+from ..cam.rosette.tile_segmentation import (
+    compute_tile_segmentation,
+    generate_slices_for_ring,
+    build_preview_snapshot,
+)
 from ..cam.rosette.rosette_cnc_wiring import build_ring_cnc_export
 from ..cam.rosette.cnc import (
     MaterialType,
