@@ -1,19 +1,41 @@
 """
-CAM Drilling Routers (Consolidated)
+CAM Drilling Routers Package
+============================
 
 Modal drilling (G81, G83) and pattern drilling operations.
 
-Consolidated from 2 separate routers into drilling_consolidated_router.py:
-    - drill_router (3 routes)
-    - pattern_router (2 routes)
+Sub-modules:
+- drill_modal_router.py (2 routes: /gcode, /info)
+- drill_pattern_router.py (2 routes: /pattern/gcode, /pattern/info)
 
-Total: 5 routes under /api/cam/drilling
+Total: 4 routes under /api/cam/drilling
 """
-
 from .drilling_consolidated_router import (
     router,
     drill_router,
     pattern_router,
+    # Re-export models
+    Hole,
+    DrillReq,
+    GridSpec,
+    CircleSpec,
+    LineSpec,
+    Pattern,
+    DrillParams,
 )
 
-__all__ = ["router", "drill_router", "pattern_router"]
+__all__ = [
+    # Main router
+    "router",
+    # Sub-routers
+    "drill_router",
+    "pattern_router",
+    # Models (backward compat)
+    "Hole",
+    "DrillReq",
+    "GridSpec",
+    "CircleSpec",
+    "LineSpec",
+    "Pattern",
+    "DrillParams",
+]
