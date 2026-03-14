@@ -361,7 +361,7 @@ class JobAnalytics:
                 "job_type": job.get("job_type"),
                 "pattern_name": pattern_name,
                 "status": job.get("status"),
-                "duration_minutes": job.get("duration_seconds", 0) / 60,
+                "duration_minutes": (job.get("duration_seconds") or 0) / 60,
                 "created_at": job.get("created_at")
             })
         
