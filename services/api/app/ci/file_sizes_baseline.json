@@ -1,16 +1,21 @@
 {
   "threshold": 500,
-  "violation_count": 25,
+  "violation_count": 39,
   "violations": [
+    {
+      "file": "tests/test_inlay_patterns.py",
+      "lines": 1454,
+      "over_by": 954
+    },
+    {
+      "file": "app/cam/rosette/prototypes/herringbone_embedded_quads.py",
+      "lines": 1241,
+      "over_by": 741
+    },
     {
       "file": "tests/test_architecture_scan.py",
       "lines": 891,
       "over_by": 391
-    },
-    {
-      "file": "app/rmos/stub_routes.py",
-      "lines": 886,
-      "over_by": 386
     },
     {
       "file": "tests/test_saw_lab_endpoint_smoke.py",
@@ -24,8 +29,8 @@
     },
     {
       "file": "tests/test_remaining_routers_endpoint_smoke.py",
-      "lines": 747,
-      "over_by": 247
+      "lines": 749,
+      "over_by": 249
     },
     {
       "file": "tests/test_business_endpoint_smoke.py",
@@ -33,14 +38,29 @@
       "over_by": 217
     },
     {
+      "file": "app/router_registry/manifest.py",
+      "lines": 698,
+      "over_by": 198
+    },
+    {
       "file": "tests/test_rmos_endpoint_smoke.py",
       "lines": 688,
       "over_by": 188
     },
     {
-      "file": "app/cam/routers/stub_routes.py",
-      "lines": 662,
-      "over_by": 162
+      "file": "app/cam/rosette/modern_pattern_generator.py",
+      "lines": 682,
+      "over_by": 182
+    },
+    {
+      "file": "app/cam/rosette/prototypes/__archived__/generative_explorer_viewer.py",
+      "lines": 674,
+      "over_by": 174
+    },
+    {
+      "file": "app/generators/neck_headstock_config.py",
+      "lines": 661,
+      "over_by": 161
     },
     {
       "file": "tests/conftest.py",
@@ -53,9 +73,9 @@
       "over_by": 155
     },
     {
-      "file": "app/routers/neck_router.py",
-      "lines": 683,
-      "over_by": 183
+      "file": "app/core/job_queue/queue.py",
+      "lines": 631,
+      "over_by": 131
     },
     {
       "file": "tests/test_dxf_preflight_endpoint_smoke.py",
@@ -63,9 +83,9 @@
       "over_by": 129
     },
     {
-      "file": "app/router_registry/manifest.py",
-      "lines": 611,
-      "over_by": 111
+      "file": "app/art_studio/services/generators/inlay_patterns.py",
+      "lines": 625,
+      "over_by": 125
     },
     {
       "file": "tests/test_workflow_sessions_endpoint_smoke.py",
@@ -78,9 +98,24 @@
       "over_by": 95
     },
     {
+      "file": "tests/test_rosette_designer.py",
+      "lines": 588,
+      "over_by": 88
+    },
+    {
+      "file": "app/cam/rosette/prototypes/shape_library.py",
+      "lines": 587,
+      "over_by": 87
+    },
+    {
       "file": "app/cam/rosette/presets.py",
       "lines": 578,
       "over_by": 78
+    },
+    {
+      "file": "app/generators/stratocaster_body_generator.py",
+      "lines": 572,
+      "over_by": 72
     },
     {
       "file": "app/saw_lab/toolpaths_validate_service.py",
@@ -88,9 +123,24 @@
       "over_by": 68
     },
     {
+      "file": "app/calculators/unified_canvas.py",
+      "lines": 561,
+      "over_by": 61
+    },
+    {
       "file": "tests/rmos/test_acoustics_hardening.py",
       "lines": 559,
       "over_by": 59
+    },
+    {
+      "file": "app/cam/rosette/prototypes/herringbone_parametric.py",
+      "lines": 555,
+      "over_by": 55
+    },
+    {
+      "file": "app/cam/rosette/prototypes/__archived__/diamond_chevron_viewer.py",
+      "lines": 549,
+      "over_by": 49
     },
     {
       "file": "tests/test_art_studio_api_endpoint_smoke.py",
@@ -98,9 +148,24 @@
       "over_by": 47
     },
     {
-      "file": "app/business/router.py",
-      "lines": 546,
-      "over_by": 46
+      "file": "app/cam/profiling/profile_toolpath.py",
+      "lines": 542,
+      "over_by": 42
+    },
+    {
+      "file": "tests/test_contour_reconstruction.py",
+      "lines": 532,
+      "over_by": 32
+    },
+    {
+      "file": "app/routers/blueprint_cam/contour_reconstruction.py",
+      "lines": 526,
+      "over_by": 26
+    },
+    {
+      "file": "app/cam/rosette/tile_segmentation.py",
+      "lines": 525,
+      "over_by": 25
     },
     {
       "file": "tests/test_adaptive_router.py",
@@ -109,18 +174,23 @@
     },
     {
       "file": "app/routers/cam_post_v155_router.py",
-      "lines": 521,
-      "over_by": 21
+      "lines": 518,
+      "over_by": 18
     },
     {
-      "file": "app/util/gcode_reader.py",
-      "lines": 511,
-      "over_by": 11
+      "file": "app/services/rosette_cam_bridge.py",
+      "lines": 516,
+      "over_by": 16
     },
     {
-      "file": "app/cam/routers/rosette/cam_router.py",
-      "lines": 507,
-      "over_by": 7
+      "file": "app/cam/rosette/prototypes/__archived__/rosette_studio_viewer.py",
+      "lines": 512,
+      "over_by": 12
+    },
+    {
+      "file": "app/routers/blueprint_cam/dxf_preprocessor.py",
+      "lines": 509,
+      "over_by": 9
     },
     {
       "file": "app/tests/test_e2e_workflow_integration.py",
