@@ -28,7 +28,9 @@
       "methods": ["GET"],
       "description": "List post-processors",
       "category": "config",
-      "response_format": {"posts": "array"}
+      "response_format": {
+        "posts": "array"
+      }
     },
     "/api/posts/{post_id}": {
       "methods": ["GET", "PUT", "DELETE"],
@@ -179,6 +181,21 @@
       "methods": ["POST"],
       "description": "Generate vision/AI image",
       "category": "vision"
+    },
+    "/api/v1/jobs/create": {
+      "methods": ["POST"],
+      "description": "Create a new manufacturing job",
+      "category": "jobs"
+    },
+    "/api/v1/frets/positions": {
+      "methods": ["POST"],
+      "description": "Calculate fret positions from scale length",
+      "category": "frets"
+    },
+    "/api/v1/dxf/upload": {
+      "methods": ["POST"],
+      "description": "Upload and parse a DXF file",
+      "category": "dxf"
     }
   },
   "frontend_patterns": {
