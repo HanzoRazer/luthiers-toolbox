@@ -1,3 +1,6 @@
+> ⚠️ **SUPERSEDED** — This document is from February 2026 and contains outdated metrics. See `REMEDIATION_STATUS_MARCH_2026.md` for current status.
+>
+
 # Remediation Plan v2
 
 **Date:** 2026-02-09

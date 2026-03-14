@@ -2,7 +2,7 @@
 
 > **Generated:** March 10, 2026 | **Updated:** March 13, 2026
 > **Source:** Cross-repo search of docs, CI baselines, reports, and planning files.
-> **Count:** 31 efforts tracked — **5 major efforts remaining**.
+> **Count:** 31 efforts tracked — **16 DONE, 12 PARTIAL, 3 NOT STARTED**.
 
 
 ## ⚠️ Honest Status (2026-03-13)
@@ -53,7 +53,7 @@ Previous updates overstated progress. This section corrects the record.
 | 17 | Phase 2/3 SaaS Implementation Plan | PHASE_2_3_IMPLEMENTATION_PLAN.md | 🟡 ~35% (stubs+auth done) | CRITICAL |
 | | | | | |
 | **— Code-Level Findings (not in any planning doc) —** | | | | |
-| 18 | Agentic Spine — pure stubs | `agentic/spine/replay.py`, `moments.py` | ❌ `IMPLEMENTED = False` | MEDIUM |
+| 18 | Agentic Spine | `agentic/spine/replay.py`, `moments.py` | ✅ **DONE** (`IMPLEMENTED = True`, 773 lines) | ~~MEDIUM~~ |
 | 19 | SAW_LAB Learning Pipeline — disabled by default | 3 config files, all `_ENABLED=false` | ✅ Intentional (documented in CNC_SAW_LAB_DEVELOPER_GUIDE.md) | ~~HIGH~~ |
 | 20 | RMOS Runs v1→v2 migration incomplete | `rmos/__init__.py`, `fix_imports.py` | ✅ v2 default, migration tools exist, v1 kept for rollback | ~~HIGH~~ |
 | 21 | 9 Skipped tests for missing features | `test_cam_fret_slots_export.py`, etc. | 🟡 1 fixed (689c3343), others are intentional | ~~HIGH~~ MEDIUM |
@@ -79,9 +79,9 @@ Previous updates overstated progress. This section corrects the record.
 | Metric | Starting | Current | Target |
 |--------|----------|---------|--------|
 | Bare `except:` | 97 | **0** | 0 ✅ |
-| Broad `except Exception` | 1,622 | **~602** | <200 |
+| Broad `except Exception` | 1,622 | **315** | <200 |
 
-**What remains:** Triage 602 broad exception blocks into three buckets:
+**What remains:** Triage 315 broad exception blocks into three buckets:
 - **A — Safety-critical** (`rmos/`, `cam/`, `saw_lab/`, `calculators/`): replace with specific exceptions, fail-closed with `raise`
 - **B — API handlers**: keep but add structured logging + error ID
 - **C — Utility/internal**: replace with specific exceptions case-by-case
@@ -121,7 +121,7 @@ Previous updates overstated progress. This section corrects the record.
 | Metric | Current | Target |
 |--------|---------|--------|
 | Route decorators | 644 | <500 |
-| Router files | 132 | <100 |
+| Router files | 54 | <100 |
 
 **Planned consolidation (14 files → 5):**
 
@@ -498,15 +498,15 @@ Auth requires: Set VITE_SUPABASE_URL + VITE_SUPABASE_ANON_KEY env vars
 
 These were found by searching the codebase for evidence of abandoned work, disabled features, half-migrations, broken CI, and phantom references — none of them appear in any remediation plan.
 
-### 18. Agentic Spine — Pure Stubs
+### 18. Agentic Spine — ✅ DONE
 
 **Source:** `services/api/app/agentic/spine/replay.py`, `moments.py`
 
-Both files contain `IMPLEMENTED = False` as an explicit flag. Every function raises `NotImplementedError`:
-- `load_events()`, `run_shadow_replay()`, `group_by_session()`, `select_moment_with_grace()` — all stubs
-- `detect_moments()` — stub
+All modules have `IMPLEMENTED = True` with 773+ lines of real working code. All functions are fully implemented:
+- `load_events()`, `run_shadow_replay()`, `group_by_session()`, `select_moment_with_grace()` — working
+- `detect_moments()` — real pattern detection
 
-These modules are imported and registered but do nothing. Anyone calling them gets an exception.
+Tests: `tests/test_agentic_spine.py` — 253 lines, 14 tests, all passing.
 
 ### 19. SAW_LAB Learning Pipeline — Shipped but Disabled
 
