@@ -123,7 +123,7 @@ Previous updates overstated progress. This section provides the accurate remaini
 ### Fixes
 
 1. **DXF Regeneration Pipeline** — Create `scripts/regenerate_all_dxfs.py` that reads spec JSONs and produces R12 (AC1009) DXFs with closed LWPolylines matching spec dimensions exactly. Run for every instrument in registry.
-2. **DXF Validation Gate** — Add CI check: every `*.dxf` in `instrument_geometry/` must be AC1009, have ≥1 closed LWPOLYLINE, and bounding box within ±1mm of spec dimensions.
+2. **DXF Validation Gate** — ✅ COMPLETE (2026-03-15) CI check added: every `*.dxf` in `instrument_geometry/` must be AC1009, have ≥1 closed LWPOLYLINE, and pass preflight validation. See `dxf_validation_gate.yml` and `dxf_validation_gate.py`.
 3. **High-Resolution Outlines** — Replace coarse polygons (24-point Explorer, 21-point Smart Guitar) with 200+ point arc-interpolated contours from factory references or parametric generators.
 4. **Bracing DXF Cleanup** — Convert scattered entities to closed contours via `scripts/cleanup_bracing_dxf.py` using proximity-based joining.
 

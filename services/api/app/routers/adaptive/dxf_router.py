@@ -4,11 +4,15 @@ Adaptive Pocketing DXF Upload Router
 
 DXF file upload endpoint for adaptive pocket toolpath generation.
 
-LANE: OPERATION
+LANE: OPERATION (GOVERNED)
 Reference: docs/OPERATION_EXECUTION_GOVERNANCE_v1.md
 
 Endpoints:
 - POST /plan_from_dxf: Upload DXF → extract geometry → generate toolpath
+
+Security:
+- Mandatory DXF validation before G-code export (dxf_validation_gate.py)
+- Fails closed: invalid geometry blocks export
 """
 
 import os
@@ -20,6 +24,9 @@ from fastapi import APIRouter, File, Form, HTTPException, UploadFile
 
 from ..adaptive_schemas import Loop, PlanIn
 from .plan_router import plan
+
+# Import validation gate for mandatory pre-export validation
+from ...cam.dxf_validation_gate import enforce_dxf_validation
 
 router = APIRouter(tags=["cam-adaptive"])
 
@@ -146,6 +153,11 @@ async def plan_from_dxf(
         - Uses existing /plan logic for consistent results
     """
     data = await file.read()
+
+    # MANDATORY: Validate DXF geometry before G-code export
+    # This is FAIL-CLOSED: invalid geometry blocks export (no bypass)
+    enforce_dxf_validation(data, file.filename or "upload.dxf")
+
     loops = _dxf_to_loops_from_bytes(data, layer_name="GEOMETRY")
 
     body = PlanIn(

@@ -56,8 +56,12 @@ async def plan_from_dxf(
     Returns loops JSON + adaptive parameters ready for /api/cam/pocket/adaptive/plan.
     """
     from app.cam.dxf_upload_guard import read_dxf_with_validation
+from app.cam.dxf_validation_gate import enforce_dxf_validation
 
     dxf_bytes = await read_dxf_with_validation(file)
+
+    # MANDATORY: Validate DXF geometry before G-code export (FAIL-CLOSED)
+    enforce_dxf_validation(dxf_bytes, file.filename or "upload.dxf")
 
     # Optional preflight for debug info
     preflight_debug: Optional[Dict[str, Any]] = None

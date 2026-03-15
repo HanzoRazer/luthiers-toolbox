@@ -1,0 +1,61 @@
+# DXF Validation Gate
+#
+# Validates all DXF files in instrument_geometry/ directory.
+# This ensures geometry files meet CAM requirements before merge.
+#
+# Triggered by:
+# - Pushes to main
+# - Pull requests touching DXF files or instrument_geometry/
+#
+# Requirements (from GAP_ANALYSIS_MASTER.md):
+# 1. Must be AC1009 or later (AutoCAD R12+)
+# 2. Must have at least 1 closed LWPOLYLINE
+# 3. Bounding box must be within reasonable dimensions
+
+name: DXF Validation Gate
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'services/api/app/instrument_geometry/**/*.dxf'
+      - 'services/api/app/cam/dxf_*.py'
+      - 'services/api/app/ci/check_dxf_files.py'
+  pull_request:
+    paths:
+      - 'services/api/app/instrument_geometry/**/*.dxf'
+      - 'services/api/app/cam/dxf_*.py'
+      - 'services/api/app/ci/check_dxf_files.py'
+
+jobs:
+  validate-dxf:
+    name: Validate DXF Files
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: services/api
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: |
+          pip install ezdxf shapely
+
+      - name: Run DXF validation gate
+        run: |
+          python -m app.ci.check_dxf_files
+
+      - name: Upload validation report (on failure)
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: dxf-validation-report
+          path: services/api/dxf_validation_report.json
+          retention-days: 7

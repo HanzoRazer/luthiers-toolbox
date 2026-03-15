@@ -436,7 +436,7 @@ The CNC toolpath system currently "fails open" — it always produces G-code reg
 | Zero RPM accepted | Tool drags through material without cutting |
 | Zero flutes accepted | Division-by-zero in chipload calculation |
 | Min > max feed rates not rejected | Nonsensical clamped values |
-| DXF validation optional before export | Unchecked geometry → unsafe toolpaths |
+| DXF validation optional before export | ✅ RESOLVED (2026-03-15) - enforce_dxf_validation() gate added |
 | No "refuse to generate" mode | Dangerous configs still produce G-code |
 
 **Effort estimate:** 4–8 hours
