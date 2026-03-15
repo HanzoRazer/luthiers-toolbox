@@ -190,37 +190,37 @@ def test_materials_inventory_returns_response(client):
 
 def test_jobs_success_trends_endpoint_exists(client):
     """GET /api/jobs/success-trends endpoint exists."""
-    response = client.get("/api/jobs/success-trends")
+    response = client.get("/api/analytics/jobs/success-trends")
     assert response.status_code != 404
 
 
 def test_jobs_duration_endpoint_exists(client):
     """GET /api/jobs/duration endpoint exists."""
-    response = client.get("/api/jobs/duration")
+    response = client.get("/api/analytics/jobs/duration")
     assert response.status_code != 404
 
 
 def test_jobs_status_endpoint_exists(client):
     """GET /api/jobs/status endpoint exists."""
-    response = client.get("/api/jobs/status")
+    response = client.get("/api/analytics/jobs/status")
     assert response.status_code != 404
 
 
 def test_jobs_throughput_endpoint_exists(client):
     """GET /api/jobs/throughput endpoint exists."""
-    response = client.get("/api/jobs/throughput")
+    response = client.get("/api/analytics/jobs/throughput")
     assert response.status_code != 404
 
 
 def test_jobs_failures_endpoint_exists(client):
     """GET /api/jobs/failures endpoint exists."""
-    response = client.get("/api/jobs/failures")
+    response = client.get("/api/analytics/jobs/failures")
     assert response.status_code != 404
 
 
 def test_jobs_types_endpoint_exists(client):
     """GET /api/jobs/types endpoint exists."""
-    response = client.get("/api/jobs/types")
+    response = client.get("/api/analytics/jobs/types")
     assert response.status_code != 404
 
 
@@ -236,49 +236,49 @@ def test_jobs_recent_endpoint_exists(client):
 
 def test_jobs_success_trends_returns_response(client):
     """Jobs success trends returns valid response."""
-    response = client.get("/api/jobs/success-trends")
+    response = client.get("/api/analytics/jobs/success-trends")
     assert response.status_code in [200, 500]
 
 
 def test_jobs_success_trends_with_days(client):
     """Jobs success trends accepts days parameter."""
-    response = client.get("/api/jobs/success-trends", params={"days": 7})
+    response = client.get("/api/analytics/jobs/success-trends", params={"days": 7})
     assert response.status_code in [200, 500]
 
 
 def test_jobs_success_trends_max_days(client):
     """Jobs success trends accepts max days."""
-    response = client.get("/api/jobs/success-trends", params={"days": 365})
+    response = client.get("/api/analytics/jobs/success-trends", params={"days": 365})
     assert response.status_code in [200, 500]
 
 
 def test_jobs_duration_returns_response(client):
     """Jobs duration returns valid response."""
-    response = client.get("/api/jobs/duration")
+    response = client.get("/api/analytics/jobs/duration")
     assert response.status_code in [200, 500]
 
 
 def test_jobs_status_returns_response(client):
     """Jobs status returns valid response."""
-    response = client.get("/api/jobs/status")
+    response = client.get("/api/analytics/jobs/status")
     assert response.status_code in [200, 500]
 
 
 def test_jobs_throughput_returns_response(client):
     """Jobs throughput returns valid response."""
-    response = client.get("/api/jobs/throughput")
+    response = client.get("/api/analytics/jobs/throughput")
     assert response.status_code in [200, 500]
 
 
 def test_jobs_failures_returns_response(client):
     """Jobs failures returns valid response."""
-    response = client.get("/api/jobs/failures")
+    response = client.get("/api/analytics/jobs/failures")
     assert response.status_code in [200, 500]
 
 
 def test_jobs_types_returns_response(client):
     """Jobs types returns valid response."""
-    response = client.get("/api/jobs/types")
+    response = client.get("/api/analytics/jobs/types")
     assert response.status_code in [200, 500]
 
 
@@ -320,7 +320,7 @@ def test_materials_distribution_returns_dict(client):
 
 def test_jobs_status_returns_dict(client):
     """Jobs status returns dict."""
-    response = client.get("/api/jobs/status")
+    response = client.get("/api/analytics/jobs/status")
     if response.status_code == 200:
         assert isinstance(response.json(), dict)
 
@@ -361,12 +361,12 @@ def test_all_material_endpoints_exist(client):
 def test_all_job_endpoints_exist(client):
     """All job analytics endpoints exist."""
     endpoints = [
-        "/api/jobs/success-trends",
-        "/api/jobs/duration",
-        "/api/jobs/status",
-        "/api/jobs/throughput",
-        "/api/jobs/failures",
-        "/api/jobs/types",
+        "/api/analytics/jobs/success-trends",
+        "/api/analytics/jobs/duration",
+        "/api/analytics/jobs/status",
+        "/api/analytics/jobs/throughput",
+        "/api/analytics/jobs/failures",
+        "/api/analytics/jobs/types",
         "/api/analytics/jobs/recent",
     ]
     for path in endpoints:

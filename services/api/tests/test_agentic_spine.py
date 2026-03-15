@@ -57,7 +57,7 @@ class TestMomentDetection:
         assert moments[0].confidence == 0.65
 
     def test_error_moment_highest_priority(self):
-        """ERROR moment has highest priority."""
+        """ERROR moment has highest priority (coexists with FIRST_SIGNAL)."""
         events = [
             {
                 "event_id": "evt_1",
@@ -73,8 +73,9 @@ class TestMomentDetection:
             },
         ]
         moments = detect_moments(events)
-        assert len(moments) == 1
-        assert moments[0].moment == "ERROR"
+        # detect_moments returns all moments; FIRST_SIGNAL can coexist
+        assert len(moments) >= 1
+        assert moments[0].moment == "ERROR"  # ERROR has highest priority
         assert moments[0].confidence == 0.95
 
     def test_overload_too_much_feedback(self):
