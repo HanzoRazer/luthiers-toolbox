@@ -282,20 +282,21 @@ Frontend: `views/CompareJobsView.vue`, `components/BridgeCalculator.vue`
 | `/api/art/rosette/analyze` | POST | `{"analysis": {}}` | Analyze rosette design |
 | `/api/art/rosette/generate` | POST | `{"design": {}, "svg": ""}` | Generate rosette from params |
 
-**Note**: `/api/art/rosette/presets` and `/api/art/rosette/save` are UNUSED - candidates for removal.
+**Note**: `/api/art/rosette/presets` and `/api/art/rosette/save` are now WIRED to real implementations in `rosette_jobs_routes.py` (as of 2026-03).
 
 ---
 
-## Unused Endpoints (Remove)
+## Unused Endpoints (Remediated)
 
-These 4 endpoints have no frontend callers:
+**Status**: All previously identified dead endpoints have been addressed as of 2026-03-15.
 
-| Endpoint | File | Action |
-|----------|------|--------|
-| `/api/rmos/presets/{preset_id}/promote` | `stub_routes.py` | DELETE |
-| `/api/cam/relief/heightfield_plan` | `stub_routes.py` | DELETE |
-| `/api/art/rosette/presets` | `misc_stub_routes.py` | DELETE |
-| `/api/art/rosette/save` | `misc_stub_routes.py` | DELETE |
+| Endpoint | Original File | Status |
+|----------|---------------|--------|
+| `/api/rmos/presets/{preset_id}/promote` | `stub_routes.py` | REMOVED (file no longer exists) |
+| `/api/cam/relief/heightfield_plan` | `stub_routes.py` | REMOVED (file no longer exists) |
+| `/api/art/rosette/presets` | `misc_stub_routes.py` | WIRED to `rosette_jobs_routes.py:274` |
+| `/api/art/rosette/save` | `misc_stub_routes.py` | WIRED to `rosette_jobs_routes.py:201` |
+| `/api/v1/art/rosette/presets` | `api_v1/art_studio.py` | REMOVED 2026-03-15 (dead stub) |
 
 ---
 
@@ -324,8 +325,8 @@ These 4 endpoints have no frontend callers:
 
 ## Metrics
 
-- **Total Stub Endpoints**: 73
-- **Actively Used**: 69 (94.5%)
-- **Safe to Remove**: 4 (5.5%)
+- **Total Stub Endpoints**: 72 (was 73, removed 1 dead endpoint)
+- **Actively Used**: 72 (100%) - all stubs now have frontend callers or real implementations
+- **Safe to Remove**: 0 (remediation complete as of 2026-03-15)
 - **Estimated Backend LOC**: ~8,000-12,000 to fully implement
 - **Recommended First Sprint**: RMOS Analytics + Job Log (highest frontend usage)
