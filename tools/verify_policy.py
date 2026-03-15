@@ -72,7 +72,7 @@ def verify_session(path: Path) -> None:
         decision = session_data.get("decision")
 
         # Extract moment type
-        moment = moment_data["moment"] if moment_data else "NONE"
+        moment = moment_data.moment if moment_data else "NONE"
 
         # Check directive action
         if decision and decision.get("emit_directive"):
@@ -92,8 +92,8 @@ def verify_session(path: Path) -> None:
         if all_moments:
             # Grace selector should prefer FIRST_SIGNAL over FINDING
             # when FIRST_SIGNAL hasn't been shown yet
-            first_signal_present = any(m["moment"] == "FIRST_SIGNAL" for m in all_moments)
-            finding_is_top = all_moments[0]["moment"] == "FINDING"
+            first_signal_present = any(m.moment == "FIRST_SIGNAL" for m in all_moments)
+            finding_is_top = all_moments[0].moment == "FINDING"
 
             if first_signal_present and finding_is_top:
                 # Grace selector should have chosen FIRST_SIGNAL
@@ -125,7 +125,7 @@ def verify_critical_only_after_first(path: Path) -> None:
         first_signal_shown = False
 
         for moment in moments:
-            m = moment["moment"]
+            m = moment.moment
 
             # Apply grace selection
             if not first_signal_shown and m == "FIRST_SIGNAL":
