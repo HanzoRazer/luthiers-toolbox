@@ -14,7 +14,7 @@ import logging
 
 logger = logging.getLogger(__name__)
 DEFAULT_DB_PATH = Path(__file__).parent.parent.parent / "data" / "rmos.db"
-SCHEMA_VERSION = 2
+SCHEMA_VERSION = 3  # Added art_jobs, art_presets tables
 
 
 def _is_postgresql_url(url: str) -> bool:
@@ -111,6 +111,13 @@ class RMOSDatabase:
             c.execute("CREATE INDEX IF NOT EXISTS idx_joblogs_pattern ON joblogs(pattern_id)")
             c.execute("CREATE INDEX IF NOT EXISTS idx_joblogs_status ON joblogs(status)")
             c.execute("CREATE INDEX IF NOT EXISTS idx_joblogs_created ON joblogs(created_at DESC)")
+            # Art Studio tables (v3)
+            c.execute("CREATE TABLE IF NOT EXISTS art_jobs (id TEXT PRIMARY KEY, job_type TEXT NOT NULL, post_preset TEXT, rings INTEGER, z_passes INTEGER, length_mm REAL, gcode_lines INTEGER, meta_json TEXT, created_at TEXT DEFAULT CURRENT_TIMESTAMP, updated_at TEXT DEFAULT CURRENT_TIMESTAMP)")
+            c.execute("CREATE TABLE IF NOT EXISTS art_presets (id TEXT PRIMARY KEY, lane TEXT NOT NULL, name TEXT NOT NULL, params_json TEXT NOT NULL, created_at TEXT DEFAULT CURRENT_TIMESTAMP, updated_at TEXT DEFAULT CURRENT_TIMESTAMP)")
+            c.execute("CREATE INDEX IF NOT EXISTS idx_art_jobs_type ON art_jobs(job_type)")
+            c.execute("CREATE INDEX IF NOT EXISTS idx_art_jobs_created ON art_jobs(created_at DESC)")
+            c.execute("CREATE INDEX IF NOT EXISTS idx_art_presets_lane ON art_presets(lane)")
+            c.execute("CREATE INDEX IF NOT EXISTS idx_art_presets_name ON art_presets(name)")
             c.execute("INSERT OR IGNORE INTO schema_version (version) VALUES (?)", (SCHEMA_VERSION,))
             conn.commit()
 
@@ -127,6 +134,13 @@ class RMOSDatabase:
             c.execute("CREATE INDEX IF NOT EXISTS idx_joblogs_pattern ON joblogs(pattern_id)")
             c.execute("CREATE INDEX IF NOT EXISTS idx_joblogs_status ON joblogs(status)")
             c.execute("CREATE INDEX IF NOT EXISTS idx_joblogs_created ON joblogs(created_at DESC)")
+            # Art Studio tables (v3)
+            c.execute("CREATE TABLE IF NOT EXISTS art_jobs (id TEXT PRIMARY KEY, job_type TEXT NOT NULL, post_preset TEXT, rings INTEGER, z_passes INTEGER, length_mm DOUBLE PRECISION, gcode_lines INTEGER, meta_json TEXT, created_at TIMESTAMPTZ DEFAULT NOW(), updated_at TIMESTAMPTZ DEFAULT NOW())")
+            c.execute("CREATE TABLE IF NOT EXISTS art_presets (id TEXT PRIMARY KEY, lane TEXT NOT NULL, name TEXT NOT NULL, params_json TEXT NOT NULL, created_at TIMESTAMPTZ DEFAULT NOW(), updated_at TIMESTAMPTZ DEFAULT NOW())")
+            c.execute("CREATE INDEX IF NOT EXISTS idx_art_jobs_type ON art_jobs(job_type)")
+            c.execute("CREATE INDEX IF NOT EXISTS idx_art_jobs_created ON art_jobs(created_at DESC)")
+            c.execute("CREATE INDEX IF NOT EXISTS idx_art_presets_lane ON art_presets(lane)")
+            c.execute("CREATE INDEX IF NOT EXISTS idx_art_presets_name ON art_presets(name)")
             c.execute("INSERT INTO schema_version (version) VALUES (%s) ON CONFLICT (version) DO NOTHING", (SCHEMA_VERSION,))
             conn.commit()
 

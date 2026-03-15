@@ -115,6 +115,8 @@ class StoreKeys:
     PATTERN = "sqlite_pattern"
     JOBLOG = "sqlite_joblog"
     STRIP_FAMILY = "sqlite_strip_family"
+    ART_JOBS = "sqlite_art_jobs"
+    ART_PRESETS = "sqlite_art_presets"
     PROFILE = "constraint_profile"
     ADVISORY_ASSET = "advisory_asset"
     PROMPT_HISTORY = "prompt_history"
@@ -145,6 +147,15 @@ def _register_default_factories_impl(registry: StoreRegistry) -> None:
     def _strip_family_factory():
         from app.stores.sqlite_strip_family_store import SQLiteStripFamilyStore
         return SQLiteStripFamilyStore()
+
+    # Art Studio stores (migrated from JSON file stores)
+    def _art_jobs_factory():
+        from app.stores.sqlite_art_jobs_store import SQLiteArtJobsStore
+        return SQLiteArtJobsStore()
+
+    def _art_presets_factory():
+        from app.stores.sqlite_art_presets_store import SQLiteArtPresetsStore
+        return SQLiteArtPresetsStore()
 
     # Constraint profiles
     def _profile_factory():
@@ -177,6 +188,8 @@ def _register_default_factories_impl(registry: StoreRegistry) -> None:
     registry.register_factory(StoreKeys.PATTERN, _pattern_factory)
     registry.register_factory(StoreKeys.JOBLOG, _joblog_factory)
     registry.register_factory(StoreKeys.STRIP_FAMILY, _strip_family_factory)
+    registry.register_factory(StoreKeys.ART_JOBS, _art_jobs_factory)
+    registry.register_factory(StoreKeys.ART_PRESETS, _art_presets_factory)
     registry.register_factory(StoreKeys.PROFILE, _profile_factory)
     registry.register_factory(StoreKeys.ADVISORY_ASSET, _advisory_asset_factory)
     registry.register_factory(StoreKeys.PROMPT_HISTORY, _prompt_history_factory)
@@ -209,6 +222,16 @@ def get_joblog_store():
 def get_strip_family_store():
     """FastAPI dependency for strip family store."""
     return get_registry().get(StoreKeys.STRIP_FAMILY)
+
+
+def get_art_jobs_store():
+    """FastAPI dependency for art jobs store."""
+    return get_registry().get(StoreKeys.ART_JOBS)
+
+
+def get_art_presets_store():
+    """FastAPI dependency for art presets store."""
+    return get_registry().get(StoreKeys.ART_PRESETS)
 
 
 def get_profile_store():
