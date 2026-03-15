@@ -20,7 +20,7 @@ class TestHeadstockInlayEndpoints:
 
     def test_list_styles(self):
         """GET /styles returns available headstock styles."""
-        response = client.get("/api/art-studio/headstock-inlay/styles")
+        response = client.get("/api/instruments/guitar/headstock-inlay/styles")
         assert response.status_code == 200
         data = response.json()
         assert len(data) >= 10  # At least 10 styles defined in HeadstockStyle
@@ -31,7 +31,7 @@ class TestHeadstockInlayEndpoints:
 
     def test_get_style_info(self):
         """GET /styles/{id} returns specific style details."""
-        response = client.get("/api/art-studio/headstock-inlay/styles/les_paul")
+        response = client.get("/api/instruments/guitar/headstock-inlay/styles/les_paul")
         assert response.status_code == 200
         data = response.json()
         assert data["id"] == "les_paul"
@@ -40,12 +40,12 @@ class TestHeadstockInlayEndpoints:
 
     def test_get_invalid_style(self):
         """GET /styles/{id} returns 404 for unknown style."""
-        response = client.get("/api/art-studio/headstock-inlay/styles/nonexistent")
+        response = client.get("/api/instruments/guitar/headstock-inlay/styles/nonexistent")
         assert response.status_code == 404
 
     def test_list_designs(self):
         """GET /designs returns available inlay designs."""
-        response = client.get("/api/art-studio/headstock-inlay/designs")
+        response = client.get("/api/instruments/guitar/headstock-inlay/designs")
         assert response.status_code == 200
         data = response.json()
         assert len(data) >= 20  # Many designs defined
@@ -56,7 +56,7 @@ class TestHeadstockInlayEndpoints:
 
     def test_get_design_info(self):
         """GET /designs/{id} returns specific design details."""
-        response = client.get("/api/art-studio/headstock-inlay/designs/hummingbird")
+        response = client.get("/api/instruments/guitar/headstock-inlay/designs/hummingbird")
         assert response.status_code == 200
         data = response.json()
         assert data["id"] == "hummingbird"
@@ -65,7 +65,7 @@ class TestHeadstockInlayEndpoints:
 
     def test_list_materials(self):
         """GET /materials returns wood species and materials."""
-        response = client.get("/api/art-studio/headstock-inlay/materials")
+        response = client.get("/api/instruments/guitar/headstock-inlay/materials")
         assert response.status_code == 200
         data = response.json()
         assert len(data) >= 15  # Many materials defined
@@ -80,7 +80,7 @@ class TestHeadstockInlayEndpoints:
 
     def test_list_templates(self):
         """GET /templates returns pre-built templates."""
-        response = client.get("/api/art-studio/headstock-inlay/templates")
+        response = client.get("/api/instruments/guitar/headstock-inlay/templates")
         assert response.status_code == 200
         data = response.json()
         assert len(data) >= 10  # Many templates defined
@@ -90,7 +90,7 @@ class TestHeadstockInlayEndpoints:
 
     def test_get_template(self):
         """GET /templates/{id} returns template with generated prompt."""
-        response = client.get("/api/art-studio/headstock-inlay/templates/gibson_hummingbird")
+        response = client.get("/api/instruments/guitar/headstock-inlay/templates/gibson_hummingbird")
         assert response.status_code == 200
         data = response.json()
         assert data["id"] == "gibson_hummingbird"
@@ -100,13 +100,13 @@ class TestHeadstockInlayEndpoints:
 
     def test_get_invalid_template(self):
         """GET /templates/{id} returns 404 for unknown template."""
-        response = client.get("/api/art-studio/headstock-inlay/templates/nonexistent")
+        response = client.get("/api/instruments/guitar/headstock-inlay/templates/nonexistent")
         assert response.status_code == 404
 
     def test_generate_prompt(self):
         """POST /generate-prompt returns AI prompt."""
         response = client.post(
-            "/api/art-studio/headstock-inlay/generate-prompt",
+            "/api/instruments/guitar/headstock-inlay/generate-prompt",
             json={
                 "style": "les_paul",
                 "headstock_wood": "mahogany",
@@ -126,7 +126,7 @@ class TestHeadstockInlayEndpoints:
     def test_generate_prompt_invalid_style(self):
         """POST /generate-prompt returns 422 for invalid style."""
         response = client.post(
-            "/api/art-studio/headstock-inlay/generate-prompt",
+            "/api/instruments/guitar/headstock-inlay/generate-prompt",
             json={
                 "style": "invalid_style",
                 "headstock_wood": "mahogany",
@@ -139,7 +139,7 @@ class TestHeadstockInlayEndpoints:
     def test_generate_inlay_prompt(self):
         """POST /generate-inlay-prompt returns isolated inlay prompt."""
         response = client.post(
-            "/api/art-studio/headstock-inlay/generate-inlay-prompt",
+            "/api/instruments/guitar/headstock-inlay/generate-inlay-prompt",
             json={
                 "design": "eagle",
                 "material": "abalone",
@@ -153,7 +153,7 @@ class TestHeadstockInlayEndpoints:
 
     def test_get_all_options(self):
         """GET /options returns all available options."""
-        response = client.get("/api/art-studio/headstock-inlay/options")
+        response = client.get("/api/instruments/guitar/headstock-inlay/options")
         assert response.status_code == 200
         data = response.json()
         assert "headstock_styles" in data
@@ -165,7 +165,7 @@ class TestHeadstockInlayEndpoints:
 
     def test_list_inlay_templates(self):
         """GET /inlay-templates returns isolated inlay templates."""
-        response = client.get("/api/art-studio/headstock-inlay/inlay-templates")
+        response = client.get("/api/instruments/guitar/headstock-inlay/inlay-templates")
         assert response.status_code == 200
         data = response.json()
         assert len(data) >= 5
