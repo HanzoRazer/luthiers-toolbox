@@ -15,8 +15,10 @@ The golden path for converting DXF designs to machine-ready G-code:
 import binascii
 from typing import Any, Dict, List, Optional
 
-from fastapi import APIRouter, File, HTTPException, UploadFile
+from fastapi import APIRouter, File, HTTPException, Request, UploadFile
 from pydantic import BaseModel, Field
+
+from app.middleware.rate_limit import limiter, rate_limit_tier
 
 from app.core.safety import safety_critical
 
@@ -120,7 +122,8 @@ class GcodeResponse(V1Response):
 # =============================================================================
 
 @router.post("/upload", response_model=DxfUploadResponse)
-async def upload_dxf(file: UploadFile = File(...)) -> DxfUploadResponse:
+@limiter.limit(rate_limit_tier("upload"))
+async def upload_dxf(request: Request, file: UploadFile = File(...)) -> DxfUploadResponse:
     """
     Upload and parse a DXF file.
 

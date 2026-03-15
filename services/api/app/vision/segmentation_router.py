@@ -8,7 +8,9 @@ LANE: PRODUCER (analyzes images via AI, writes to CAS)
 """
 from __future__ import annotations
 
-from fastapi import APIRouter, HTTPException, UploadFile, File, Form
+from fastapi import APIRouter, HTTPException, UploadFile, File, Form, Request
+
+from app.middleware.rate_limit import limiter, rate_limit_tier
 
 from app.ai.transport import get_vision_client
 from app.rmos.runs_v2.attachments import put_bytes_attachment
@@ -30,7 +32,9 @@ def _blob_download_url(sha256: str) -> str:
 
 
 @router.post("/segment", response_model=SegmentResponse, summary="Segment guitar body from image")
+@limiter.limit(rate_limit_tier("ai"))
 async def segment_guitar(
+    request: Request,
     file: UploadFile = File(..., description="Guitar image (PNG, JPG, WebP)"),
     target_width_mm: float = Form(400.0, description="Target body width in mm"),
     simplify_tolerance_mm: float = Form(1.0, description="Simplification tolerance in mm"),

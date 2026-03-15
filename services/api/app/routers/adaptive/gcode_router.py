@@ -13,8 +13,10 @@ Endpoints:
 
 from datetime import datetime, timezone
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Request
 from fastapi.responses import StreamingResponse
+
+from app.middleware.rate_limit import limiter, rate_limit_tier
 
 from ..adaptive_schemas import GcodeIn
 from ..geometry_schemas import GcodeExportIn
@@ -42,7 +44,8 @@ router = APIRouter(tags=["cam-adaptive"])
 
 
 @router.post("/gcode")
-def gcode(body: GcodeIn) -> StreamingResponse:
+@limiter.limit(rate_limit_tier("cam"))
+def gcode(request: Request, body: GcodeIn) -> StreamingResponse:
     """
     Generate post-processor aware G-code for adaptive pocket (GOVERNED lane).
 

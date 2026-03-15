@@ -50,3 +50,6 @@ jsonschema>=4.20.0
 
 # Authentication (Phase 3 SaaS)
 PyJWT>=2.8.0  # Supabase JWT verification
+
+# API Rate Limiting
+slowapi>=0.1.9  # Rate limiting middleware for FastAPI/Starlette
