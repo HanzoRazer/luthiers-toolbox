@@ -1207,7 +1207,8 @@ class ReferenceObjectDetector:
     def __init__(self):
         self.specs = INSTRUMENT_SPECS.get("reference_objects", {})
 
-    def detect(self, image: np.ndarray) -> List[Dict[str, Any]]:
+    def detect(self, image: np.ndarray,
+               fg_mask: Optional[np.ndarray] = None) -> List[Dict[str, Any]]:
         detections = []
         h, w = image.shape[:2]
         gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
@@ -1219,6 +1220,8 @@ class ReferenceObjectDetector:
         if raw_circles is not None:
             raw = np.round(raw_circles[0]).astype(int)
             filtered = filter_coin_detections(raw, (h, w), image=image)
+            # Patch 17 Fix 3: reject coins inside the instrument body
+            filtered = filter_coin_by_position(filtered, fg_mask, (h, w))
             best = select_best_coin(filtered, image, gray)
             if best is not None:
                 detections.append(best)
@@ -1317,7 +1320,7 @@ class ScaleCalibrator:
                 confidence=1.0, message=f"User: {mm:.1f}mm / {known_px:.1f}px")
 
         # Priority 2: Reference objects
-        refs = self.ref_detector.detect(image)
+        refs = self.ref_detector.detect(image, fg_mask=fg_mask)
         if refs:
             for det in refs:
                 if "diameter_px" in det and det["diameter_px"] > 0:
@@ -1956,6 +1959,300 @@ def compute_rough_mpp(
 
 
 # =============================================================================
+# Stage 8 (Patch 17 Fix 1) — Body Contour Merger
+# =============================================================================
+
+@dataclass
+class MergeResult:
+    """Result from ContourMerger."""
+    merged_contour: np.ndarray
+    n_fragments: int
+    fragment_areas: List[float]
+    close_kernel_px: int
+    bbox_px: Tuple[int, int, int, int]
+    notes: List[str] = field(default_factory=list)
+
+
+class ContourMerger:
+    """
+    Merges fragmented body contours into a single unified outline.
+
+    Fills all body-candidate contour areas onto a binary mask, applies
+    morphological close to bridge inter-fragment gaps, then re-detects
+    as a single merged contour.  Operates on filled silhouette masks,
+    not edge pixels (unlike GatedAdaptiveCloser).
+    """
+
+    def __init__(
+        self,
+        max_close_px: int = 120,
+        min_fragment_area: float = 2000.0,
+        max_fragments: int = 8,
+        body_overlap_min: float = 0.40,
+    ):
+        self.max_close_px = max_close_px
+        self.min_fragment_area = min_fragment_area
+        self.max_fragments = max_fragments
+        self.body_overlap_min = body_overlap_min
+
+    def merge(
+        self,
+        feature_contours: List[FeatureContour],
+        image_shape: Tuple[int, int],
+        body_region: Optional[BodyRegion] = None,
+        mpp: float = 0.3,
+    ) -> Optional[MergeResult]:
+        """
+        Find all body-candidate fragments, fill them onto a mask, close,
+        re-detect as a single merged contour.
+
+        Returns MergeResult with merged contour, or None if merging unnecessary.
+        """
+        h, w = image_shape
+        notes: List[str] = []
+
+        candidates = self._collect_candidates(
+            feature_contours, body_region, notes)
+
+        if len(candidates) <= 1:
+            notes.append(f"Only {len(candidates)} candidate(s) -- no merge needed")
+            logger.info(f"ContourMerger: {notes[-1]}")
+            return None
+
+        notes.append(f"Found {len(candidates)} body fragments to merge")
+
+        gap_px = self._estimate_gap_px(candidates)
+        notes.append(f"Max vertical gap: {gap_px}px ({gap_px * mpp:.1f}mm)")
+
+        k_size = min(self.max_close_px, int(gap_px * 1.5 / 2) * 2 + 1)
+        k_size = max(11, k_size)
+        notes.append(f"Close kernel: {k_size}x{k_size}")
+
+        mask = np.zeros((h, w), np.uint8)
+        fragment_areas: List[float] = []
+        for fc in candidates:
+            pts = fc.points_px
+            pts_draw = pts if pts.ndim == 3 else pts.reshape(-1, 1, 2)
+            cv2.fillPoly(mask, [pts_draw], 255)
+            fragment_areas.append(float(fc.area_px))
+
+        kernel = np.ones((k_size, k_size), np.uint8)
+        closed = cv2.morphologyEx(mask, cv2.MORPH_CLOSE, kernel, iterations=2)
+
+        cnts, _ = cv2.findContours(
+            closed, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
+        if not cnts:
+            notes.append("No contours after merge")
+            return None
+
+        merged = max(cnts, key=cv2.contourArea)
+        bbox = cv2.boundingRect(merged)
+
+        notes.append(
+            f"Merged: {len(candidates)} fragments -> 1 contour "
+            f"({bbox[2]}x{bbox[3]}px)")
+        logger.info(
+            f"ContourMerger: {len(candidates)} fragments merged with "
+            f"k={k_size}x{k_size}, gap={gap_px}px -> "
+            f"bbox {bbox[2]}x{bbox[3]}px")
+
+        return MergeResult(
+            merged_contour=merged,
+            n_fragments=len(candidates),
+            fragment_areas=fragment_areas,
+            close_kernel_px=k_size,
+            bbox_px=bbox,
+            notes=notes,
+        )
+
+    def _collect_candidates(
+        self,
+        feature_contours: List[FeatureContour],
+        body_region: Optional[BodyRegion],
+        notes: List[str],
+    ) -> List[FeatureContour]:
+        candidates: List[FeatureContour] = []
+        for fc in feature_contours:
+            if fc.area_px < self.min_fragment_area:
+                continue
+            if body_region is not None:
+                _, cy, _, ch = fc.bbox_px
+                b_top = body_region.y
+                b_bot = body_region.y + body_region.height
+                overlap = max(0, min(cy + ch, b_bot) - max(cy, b_top))
+                ov_frac = overlap / max(ch, 1)
+                if ov_frac < self.body_overlap_min:
+                    continue
+            candidates.append(fc)
+        candidates.sort(key=lambda fc: fc.area_px, reverse=True)
+        return candidates[:self.max_fragments]
+
+    @staticmethod
+    def _estimate_gap_px(candidates: List[FeatureContour]) -> int:
+        if len(candidates) < 2:
+            return 0
+        extents = []
+        for fc in candidates:
+            _, cy, _, ch = fc.bbox_px
+            extents.append((cy, cy + ch))
+        extents.sort()
+        max_gap = 0
+        for i in range(len(extents) - 1):
+            gap = extents[i + 1][0] - extents[i][1]
+            max_gap = max(max_gap, gap)
+        return max(0, max_gap)
+
+
+# =============================================================================
+# Stage 8 (Patch 17 Fix 2) — Body Contour Election with X-Extent Guard
+# =============================================================================
+
+def elect_body_contour_v2(
+    contours: List[FeatureContour],
+    body_region_hint: Optional[BodyRegion] = None,
+    min_overlap: float = 0.50,
+    max_width_factor: float = 1.30,
+) -> int:
+    """
+    Elect body contour with vertical overlap AND X-extent guard.
+
+    Returns index of elected body contour, or -1 if empty.
+    """
+    if not contours:
+        return -1
+
+    if body_region_hint is None:
+        return max(range(len(contours)), key=lambda i: contours[i].area_px)
+
+    body_w = max(body_region_hint.width, 1)
+    body_h = max(body_region_hint.height, 1)
+    max_w = body_w * max_width_factor
+
+    scored: List[Tuple[int, float, float, int]] = []
+    rejected_overlap = 0
+    rejected_width = 0
+
+    for i, fc in enumerate(contours):
+        cx, cy, cw, ch = fc.bbox_px
+
+        b_top = body_region_hint.y
+        b_bot = body_region_hint.y + body_h
+        overlap = max(0, min(cy + ch, b_bot) - max(cy, b_top))
+        ov_frac = overlap / max(ch, 1)
+
+        if ov_frac < min_overlap:
+            rejected_overlap += 1
+            continue
+
+        if cw > max_w:
+            logger.debug(
+                f"X-extent guard: contour[{i}] width={cw}px > "
+                f"max={max_w:.0f}px -- rejected")
+            rejected_width += 1
+            continue
+
+        score = ov_frac * fc.area_px
+        scored.append((i, score, ov_frac, cw))
+
+    logger.info(
+        f"elect_body_contour_v2: {len(scored)} candidates pass "
+        f"(rejected overlap={rejected_overlap}, width={rejected_width})")
+
+    if scored:
+        scored.sort(key=lambda x: x[1], reverse=True)
+        best_idx = scored[0][0]
+        logger.info(
+            f"  Elected idx={best_idx}: overlap={scored[0][2]:.0%}, "
+            f"width={scored[0][3]}px, area={contours[best_idx].area_px:.0f}px2")
+        return best_idx
+
+    # Fallback: no contour passed both filters -- overlap only
+    logger.warning(
+        "elect_body_contour_v2: no contour passed X-extent guard "
+        "-- falling back to overlap-only")
+    fallback_candidates = [
+        i for i, fc in enumerate(contours)
+        if _body_vertical_overlap(fc.bbox_px, body_region_hint) >= min_overlap
+    ]
+    if fallback_candidates:
+        return max(fallback_candidates, key=lambda i: contours[i].area_px)
+    return max(range(len(contours)), key=lambda i: contours[i].area_px)
+
+
+def _body_vertical_overlap(
+    contour_bbox: Tuple[int, int, int, int],
+    body_region: BodyRegion,
+) -> float:
+    _, cy, _, ch = contour_bbox
+    b_top = body_region.y
+    b_bot = body_region.y + body_region.height
+    overlap = max(0, min(cy + ch, b_bot) - max(cy, b_top))
+    return overlap / max(ch, 1)
+
+
+# =============================================================================
+# Stage 7 (Patch 17 Fix 3) — Coin Position Filter
+# =============================================================================
+
+def filter_coin_by_position(
+    circles: np.ndarray,
+    fg_mask: Optional[np.ndarray],
+    image_shape: Tuple[int, int],
+    margin_px: int = 15,
+) -> np.ndarray:
+    """
+    Reject coin candidates whose centre is inside the instrument silhouette.
+
+    Real reference coins are placed BESIDE the instrument, not on top of it.
+    """
+    if fg_mask is None or len(circles) == 0:
+        return circles
+
+    h, w = image_shape
+    accepted = []
+    rejected = 0
+
+    if margin_px > 0:
+        kernel = np.ones((margin_px * 2 + 1, margin_px * 2 + 1), np.uint8)
+        fg_check = cv2.erode(fg_mask, kernel)
+    else:
+        fg_check = fg_mask
+
+    for entry in circles:
+        x, y, r = int(entry[0]), int(entry[1]), int(entry[2])
+        x = max(0, min(w - 1, x))
+        y = max(0, min(h - 1, y))
+
+        if fg_check[y, x] > 0:
+            logger.debug(
+                f"Coin position filter: rejected ({x},{y}) r={r}px "
+                f"-- centre inside fg_mask")
+            rejected += 1
+            continue
+
+        y0, y1 = max(0, y - r), min(h, y + r)
+        x0, x1 = max(0, x - r), min(w, x + r)
+        patch = fg_check[y0:y1, x0:x1]
+        if patch.size > 0:
+            inside_frac = float(np.sum(patch > 0)) / patch.size
+            if inside_frac > 0.30:
+                logger.debug(
+                    f"Coin position filter: rejected ({x},{y}) r={r}px "
+                    f"-- {inside_frac:.0%} inside fg_mask")
+                rejected += 1
+                continue
+
+        accepted.append(entry)
+
+    logger.info(
+        f"CoinPositionFilter: {len(circles)} -> {len(accepted)} "
+        f"({rejected} inside body rejected)")
+
+    return np.array(accepted, dtype=np.float32) if accepted \
+        else np.empty((0, 3))
+
+
+# =============================================================================
 # Stage 8b — Contour Assembly with Hierarchy
 # =============================================================================
 
@@ -2447,6 +2744,7 @@ class PhotoVectorizerV2:
         self.orientation_detector = OrientationDetector()
         self.family_classifier = InstrumentFamilyClassifier()
         self.batch_smoother = BatchCalibrationSmoother()
+        self.contour_merger = ContourMerger()
 
         logger.info(f"PhotoVectorizerV2 initialized (BG: {bg_method.value})")
 
@@ -2615,13 +2913,37 @@ class PhotoVectorizerV2:
             result.processing_time_ms = (time.time() - start_time) * 1000
             return result
 
-        # Find body contour
-        body_fc = None
-        for fc in feature_contours:
-            if fc.feature_type == FeatureType.BODY_OUTLINE:
-                body_fc = fc
-                break
-        if body_fc is None:
+        # Patch 17 Fix 1: merge fragmented body contours
+        merge_result = self.contour_merger.merge(
+            feature_contours, (img_h, img_w),
+            body_region=body_region, mpp=mpp)
+
+        if merge_result is not None:
+            merged_fc = FeatureContour(
+                points_px=merge_result.merged_contour,
+                feature_type=FeatureType.BODY_OUTLINE,
+                confidence=0.85,
+                area_px=float(cv2.contourArea(merge_result.merged_contour)),
+                bbox_px=merge_result.bbox_px,
+                hash_id=hashlib.md5(
+                    merge_result.merged_contour.tobytes()).hexdigest()[:12],
+            )
+            feature_contours.append(merged_fc)
+            result.warnings.append(
+                f"Body fragmented into {merge_result.n_fragments} parts "
+                f"-- merged with {merge_result.close_kernel_px}x"
+                f"{merge_result.close_kernel_px}px kernel")
+
+        # Patch 17 Fix 2: elect body contour with X-extent guard
+        body_idx = elect_body_contour_v2(
+            feature_contours, body_region,
+            min_overlap=0.50, max_width_factor=1.30)
+        if body_idx >= 0:
+            body_fc = feature_contours[body_idx]
+            if body_fc.feature_type != FeatureType.BODY_OUTLINE:
+                body_fc.feature_type = FeatureType.BODY_OUTLINE
+                body_fc.confidence = 0.7
+        else:
             body_fc = max(feature_contours, key=lambda c: c.area_px)
             body_fc.feature_type = FeatureType.BODY_OUTLINE
             body_fc.confidence = 0.7
