@@ -293,6 +293,9 @@ class ContourStageResult:
     best_score: float = 0.0
     export_blocked: bool = False
     block_reason: Optional[str] = None
+    export_block_issues: List[str] = field(default_factory=list)
+    export_block_score_breakdown: Dict[str, float] = field(default_factory=dict)
+    recommended_next_action: Optional[str] = None
     diagnostics: Dict[str, Any] = field(default_factory=dict)
 
 
@@ -3041,6 +3044,10 @@ class PhotoVectorizerV2:
         self.contour_merger = ContourMerger()
         self.plausibility_scorer = ContourPlausibilityScorer()
 
+        # Lazy import to avoid circular dependency
+        from contour_stage import ContourStage
+        self._contour_stage = ContourStage()
+
         logger.info(f"PhotoVectorizerV2 initialized (BG: {bg_method.value})")
 
     def extract(self, source_path: Union[str, Path],
@@ -3200,149 +3207,60 @@ class PhotoVectorizerV2:
 
         emit_calibration_guidance(calibration, spec_name, body_h_px, result)
 
-        # ── Stage 8: Contour assembly + classification ──────────────────────
-        feature_contours = self.assembler.assemble(edges, alpha_mask, mpp)
+        # ── Stage 8: Contour assembly + classification (delegated) ──────────
+        family = instrument_family.family if instrument_family else InstrumentFamily.UNKNOWN
+
+        contour_stage = self._contour_stage.run(
+            edges=edges,
+            alpha_mask=alpha_mask,
+            body_region=body_region,
+            calibration=calibration,
+            family=family,
+            image_shape=(img_h, img_w),
+            image=image if debug_images else None,
+            debug_images=debug_images,
+        )
+
+        # Unpack stage result for downstream pipeline
+        feature_contours = contour_stage.feature_contours_post_grid
+        body_fc = contour_stage.body_contour_final
 
         if not feature_contours:
             result.warnings.append("No contours found")
             result.processing_time_ms = (time.time() - start_time) * 1000
             return result
 
-        # Snapshot pre-merge state
-        pre_merge_contours = list(feature_contours)
+        # Propagate merge warnings
+        for w in contour_stage.diagnostics.get("merge_warnings", []):
+            result.warnings.append(w)
 
-        # Score pre-merge candidates
-        family = instrument_family.family if instrument_family else InstrumentFamily.UNKNOWN
-        scores_pre = self.plausibility_scorer.score_all_candidates(
-            pre_merge_contours, body_region, family, mpp, (img_h, img_w))
+        # Propagate grid reclassification count
+        result.grid_reclassified = contour_stage.diagnostics.get(
+            "grid_reclassified", 0)
 
-        # Patch 17 Fix 1: merge fragmented body contours
-        merge_result = self.contour_merger.merge(
-            feature_contours, (img_h, img_w),
-            body_region=body_region, mpp=mpp)
-
-        if merge_result is not None:
-            merged_fc = FeatureContour(
-                points_px=merge_result.merged_contour,
-                feature_type=FeatureType.BODY_OUTLINE,
-                confidence=0.85,
-                area_px=float(cv2.contourArea(merge_result.merged_contour)),
-                bbox_px=merge_result.bbox_px,
-                hash_id=hashlib.md5(
-                    merge_result.merged_contour.tobytes()).hexdigest()[:12],
-            )
-            feature_contours.append(merged_fc)
-            result.warnings.append(
-                f"Body fragmented into {merge_result.n_fragments} parts "
-                f"-- merged with {merge_result.close_kernel_px}x"
-                f"{merge_result.close_kernel_px}px kernel")
-
-        # Snapshot post-merge state
-        post_merge_contours = list(feature_contours)
-
-        # Score post-merge candidates
-        scores_post = self.plausibility_scorer.score_all_candidates(
-            post_merge_contours, body_region, family, mpp, (img_h, img_w))
-
-        # Plausibility scoring (diagnostic -- does NOT override election)
-        best_idx, elected_source, best_score = \
-            self.plausibility_scorer.elect_best(scores_pre, scores_post)
-        logger.info(
-            f"PlausibilityScorer diagnostic: best={elected_source} "
-            f"idx={best_idx} score={best_score:.3f}")
-
-        # Actual body election: Patch 17 Fix 2 X-extent guard (proven pipeline)
-        body_idx = elect_body_contour_v2(
-            feature_contours, body_region,
-            min_overlap=0.50, max_width_factor=1.30)
-        if body_idx >= 0:
-            body_fc = feature_contours[body_idx]
-            if body_fc.feature_type != FeatureType.BODY_OUTLINE:
-                body_fc.feature_type = FeatureType.BODY_OUTLINE
-                body_fc.confidence = 0.7
-        else:
-            body_fc = max(feature_contours, key=lambda c: c.area_px)
-            body_fc.feature_type = FeatureType.BODY_OUTLINE
-            body_fc.confidence = 0.7
-
-        # Build ContourStageResult
-        contour_stage = ContourStageResult(
-            feature_contours_pre_merge=pre_merge_contours,
-            merge_result=merge_result if merge_result is not None else None,
-            feature_contours_post_merge=post_merge_contours,
-            body_contour_pre_grid=body_fc,
-            contour_scores_pre=scores_pre,
-            contour_scores_post=scores_post,
-            elected_source=elected_source,
-            best_score=best_score,
-            diagnostics={
-                "n_pre_merge": len(pre_merge_contours),
-                "n_post_merge": len(post_merge_contours),
-                "n_scored_pre": len(scores_pre),
-                "n_scored_post": len(scores_post),
-                "family": family,
-            },
-        )
-
-        # Check export blocking
-        if best_score < EXPORT_BLOCK_THRESHOLD:
-            contour_stage.export_blocked = True
-            contour_stage.block_reason = (
-                f"Best plausibility score {best_score:.3f} below threshold "
-                f"{EXPORT_BLOCK_THRESHOLD}")
+        # Propagate export blocking
+        if contour_stage.export_blocked:
             result.export_blocked = True
             result.export_block_reason = contour_stage.block_reason
             result.warnings.append(
                 f"EXPORT BLOCKED: {contour_stage.block_reason} -- "
                 f"manual review required")
-            logger.warning(f"Export blocked: {contour_stage.block_reason}")
 
-        # ── Stage 8.5: Grid zone re-classification ───────────────────────
-        body_bbox_px = body_fc.bbox_px if body_fc else None
-        if body_bbox_px:
+        # Write grid overlay debug image if stage produced overlay data
+        if debug_images and body_fc and body_fc.bbox_px:
             grid_clf = PhotoGridClassifier()
-            reclassified = 0
-            for fc in feature_contours:
-                if fc is body_fc:
-                    fc.grid_zone = "BODY_OUTLINE"
-                    fc.grid_confidence = 1.0
-                    continue
-                gc = grid_clf.classify_contour_px(fc.bbox_px, body_bbox_px)
-                fc.grid_zone = gc.primary_category
-                fc.grid_notes = gc.notes
+            contour_bboxes = [
+                fc.bbox_px for fc in feature_contours if fc is not body_fc]
+            classifications = [
+                grid_clf.classify_contour_px(fc.bbox_px, body_fc.bbox_px)
+                for fc in feature_contours if fc is not body_fc]
+            overlay = grid_clf.draw_grid_overlay(
+                image, body_fc.bbox_px, contour_bboxes, classifications)
+            overlay_path = str(out_dir / f"{source.stem}_05_grid_overlay.jpg")
+            cv2.imwrite(overlay_path, overlay)
+            debug_paths["grid_overlay"] = overlay_path
+            result.grid_overlay_path = overlay_path
 
-                # Merge grid + dimension classification
-                final_feat, final_conf, reason = merge_classifications(
-                    fc.feature_type.value, fc.confidence, gc)
-                try:
-                    new_type = FeatureType(final_feat)
-                except ValueError:
-                    new_type = fc.feature_type
-
-                if new_type != fc.feature_type:
-                    logger.info(f"Grid reclassify: {fc.feature_type.value} -> {new_type.value} ({reason})")
-                    fc.feature_type = new_type
-                    reclassified += 1
-                fc.confidence = final_conf
-                fc.grid_confidence = gc.grid_confidence
-
-            result.grid_reclassified = reclassified
-            logger.info(f"Grid re-classification: {reclassified}/{len(feature_contours)} changed")
-
-            if debug_images:
-                contour_bboxes = [fc.bbox_px for fc in feature_contours if fc is not body_fc]
-                classifications = [grid_clf.classify_contour_px(fc.bbox_px, body_bbox_px)
-                                   for fc in feature_contours if fc is not body_fc]
-                overlay = grid_clf.draw_grid_overlay(image, body_bbox_px,
-                                                    contour_bboxes, classifications)
-                overlay_path = str(out_dir / f"{source.stem}_05_grid_overlay.jpg")
-                cv2.imwrite(overlay_path, overlay)
-                debug_paths["grid_overlay"] = overlay_path
-                result.grid_overlay_path = overlay_path
-
-        # Finalize ContourStageResult
-        contour_stage.feature_contours_post_grid = list(feature_contours)
-        contour_stage.body_contour_final = body_fc
         result.contour_stage = contour_stage
 
         result.calibration = calibration
