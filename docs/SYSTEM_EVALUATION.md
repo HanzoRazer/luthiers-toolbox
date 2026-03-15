@@ -256,7 +256,7 @@ Nginx has 60-second proxy timeouts. A complex toolpath operation that takes 90 s
 |---------|----------|--------|
 | **`v-html` XSS via SVG** | 🔴 HIGH | 10+ components render SVG via `v-html` without sanitization. If attacker controls DXF input → SVG generation → `v-html`, they can execute JavaScript in user's browser. |
 | **Dev auth mode** | 🔴 HIGH | Default `AUTH_MODE=header` reads `x-user-role` and `x-user-id` from request headers. Any client can impersonate any role. This is fine for dev but must not be the production default. |
-| **No rate limiting** | 🟠 HIGH | Rate limiting exists only for RMOS delete operations. All upload, CAM processing, and G-code generation endpoints are unprotected. |
+| ~~No rate limiting~~ | ✅ RESOLVED | Rate limiting implemented via slowapi middleware (commit 1ce75797). Tiers: public 30/min, auth 60/min, pro 300/min, AI 10/min, CAM 20/min. |
 | **CORS env var injection** | 🟠 HIGH | `CORS_ORIGINS` env var is parsed and appended to allowed origins without validation. Malformed value could whitelist unintended origins. |
 | **No CSRF tokens** | 🟡 MEDIUM | CORS preflight provides browser-level protection, but explicit CSRF tokens would be safer given `allow_credentials=True`. |
 | **No file upload size limit** | 🟡 MEDIUM | Analyzer upload endpoint accepts arbitrary-sized files. DXF upload guard has limits, but the upload boundary doesn't enforce them before reading the full file into memory. |
