@@ -19,6 +19,13 @@ export { default as KeyboardShortcutsOverlay } from './KeyboardShortcutsOverlay.
 export { default as MeasurementsPanel } from './MeasurementsPanel.vue';
 export { default as MeasureModeIndicator } from './MeasureModeIndicator.vue';
 
+// Phase 4 components
+export { default as PanelContainer } from './PanelContainer.vue';
+
 // Composables
 export { useToolpathPanels } from './useToolpathPanels';
 export type { PanelState } from './useToolpathPanels';
+export { useToolpathAnalysis } from './useToolpathAnalysis';
+export type { ToolpathAnalysisState, AnalysisConfig, ToolpathBounds } from './useToolpathAnalysis';
+export { useToolpathExport } from './useToolpathExport';
+export type { ToolpathExportState } from './useToolpathExport';
