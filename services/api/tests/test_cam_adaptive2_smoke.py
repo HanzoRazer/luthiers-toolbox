@@ -12,9 +12,9 @@ def client():
 
 
 def test_adaptive2_bench_returns_timing_stats(client):
-    """POST /api/cam/adaptive2/bench returns benchmark timing statistics."""
+    """POST /api/cam/bench returns benchmark timing statistics."""
     response = client.post(
-        "/api/cam/adaptive2/bench",
+        "/api/cam/bench",
         json={
             "width": 100.0,
             "height": 60.0,
@@ -32,9 +32,9 @@ def test_adaptive2_bench_returns_timing_stats(client):
 
 
 def test_adaptive2_offset_spiral_returns_svg(client):
-    """POST /api/cam/adaptive2/offset_spiral.svg returns SVG content."""
+    """POST /api/cam/offset_spiral.svg returns SVG content."""
     response = client.post(
-        "/api/cam/adaptive2/offset_spiral.svg",
+        "/api/cam/offset_spiral.svg",
         json={
             "width": 100.0,
             "height": 60.0,
@@ -51,9 +51,9 @@ def test_adaptive2_offset_spiral_returns_svg(client):
 
 
 def test_adaptive2_trochoid_corners_returns_svg(client):
-    """POST /api/cam/adaptive2/trochoid_corners.svg returns SVG content."""
+    """POST /api/cam/trochoid_corners.svg returns SVG content."""
     response = client.post(
-        "/api/cam/adaptive2/trochoid_corners.svg",
+        "/api/cam/trochoid_corners.svg",
         json={
             "width": 100.0,
             "height": 60.0,
@@ -70,9 +70,9 @@ def test_adaptive2_trochoid_corners_returns_svg(client):
 
 
 def test_adaptive2_bench_validation_errors(client):
-    """POST /api/cam/adaptive2/bench returns 422 for invalid params."""
+    """POST /api/cam/bench returns 422 for invalid params."""
     response = client.post(
-        "/api/cam/adaptive2/bench",
+        "/api/cam/bench",
         json={
             "width": 100.0,
             "height": 60.0,
@@ -85,9 +85,9 @@ def test_adaptive2_bench_validation_errors(client):
 
 
 def test_adaptive2_offset_spiral_validation_errors(client):
-    """POST /api/cam/adaptive2/offset_spiral.svg returns 422 for invalid params."""
+    """POST /api/cam/offset_spiral.svg returns 422 for invalid params."""
     response = client.post(
-        "/api/cam/adaptive2/offset_spiral.svg",
+        "/api/cam/offset_spiral.svg",
         json={
             "width": -10.0,  # Invalid: must be positive
             "height": 60.0,

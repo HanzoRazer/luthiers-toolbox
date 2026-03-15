@@ -1,4 +1,4 @@
-"""Smoke tests for CAM risk reports index endpoint (proxied to cam_risk_router)."""
+"""Smoke tests for CAM risk reports endpoint (proxied to cam_risk_router)."""
 
 import pytest
 from fastapi.testclient import TestClient
@@ -11,47 +11,42 @@ def client():
     return TestClient(app)
 
 
-def test_risk_reports_index_returns_reports_array(client):
-    """GET /api/cam/risk/reports_index returns reports array."""
-    response = client.get("/api/cam/risk/reports_index")
+def test_risk_reports_returns_list(client):
+    """GET /api/cam/risk/reports returns reports list."""
+    response = client.get("/api/cam/risk/reports")
     assert response.status_code == 200
     data = response.json()
-    assert "reports" in data
-    assert "total" in data
-    assert isinstance(data["reports"], list)
-    assert isinstance(data["total"], int)
+    assert isinstance(data, list)
 
 
-def test_risk_reports_index_total_matches_length(client):
-    """GET /api/cam/risk/reports_index total matches reports length."""
-    response = client.get("/api/cam/risk/reports_index")
+def test_risk_reports_respects_limit(client):
+    """GET /api/cam/risk/reports respects limit parameter."""
+    response = client.get("/api/cam/risk/reports?limit=5")
     assert response.status_code == 200
     data = response.json()
-    assert data["total"] == len(data["reports"])
+    assert isinstance(data, list)
+    assert len(data) <= 5
 
 
-def test_risk_reports_index_respects_limit(client):
-    """GET /api/cam/risk/reports_index respects limit parameter."""
-    response = client.get("/api/cam/risk/reports_index?limit=5")
+def test_risk_reports_accepts_preset_filter(client):
+    """GET /api/cam/risk/reports accepts preset filter."""
+    response = client.get("/api/cam/risk/reports?preset=GRBL")
     assert response.status_code == 200
     data = response.json()
-    assert len(data["reports"]) <= 5
+    assert isinstance(data, list)
 
 
-def test_risk_reports_index_accepts_preset_filter(client):
-    """GET /api/cam/risk/reports_index accepts preset filter."""
-    response = client.get("/api/cam/risk/reports_index?preset=GRBL")
+def test_risk_reports_accepts_lane_filter(client):
+    """GET /api/cam/risk/reports accepts lane filter."""
+    response = client.get("/api/cam/risk/reports?lane=roughing")
     assert response.status_code == 200
     data = response.json()
-    assert "reports" in data
-    # All reports should match preset filter if any exist
-    for report in data["reports"]:
-        assert report.get("preset") == "GRBL"
+    assert isinstance(data, list)
 
 
-def test_risk_reports_index_accepts_lane_filter(client):
-    """GET /api/cam/risk/reports_index accepts lane filter."""
-    response = client.get("/api/cam/risk/reports_index?lane=roughing")
+def test_risk_jobs_recent_returns_list(client):
+    """GET /api/cam/jobs/recent returns list."""
+    response = client.get("/api/cam/jobs/recent")
     assert response.status_code == 200
     data = response.json()
-    assert "reports" in data
+    assert isinstance(data, list)

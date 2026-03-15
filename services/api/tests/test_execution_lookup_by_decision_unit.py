@@ -10,12 +10,12 @@ def test_get_latest_execution_for_decision_picks_latest(monkeypatch):
     ex_old = {
         "id": "ex_old",
         "kind": "saw_batch_execution",
-        "payload": {"created_utc": "2026-01-01T00:05:00+00:00", "status": "OK", "parent_batch_decision_artifact_id": "dec1"},
+        "payload": {"created_utc": "2026-01-01T00:05:00+00:00", "status": "OK", "parent_decision_id": "dec1"},
     }
     ex_new = {
         "id": "ex_new",
         "kind": "saw_batch_execution",
-        "payload": {"created_utc": "2026-01-01T00:06:00+00:00", "status": "OK", "parent_batch_decision_artifact_id": "dec1", "metrics": {"duration_s": 12}},
+        "payload": {"created_utc": "2026-01-01T00:06:00+00:00", "status": "OK", "parent_decision_id": "dec1", "metrics": {"duration_s": 12}},
     }
 
     def _fake_get_run(aid: str):
