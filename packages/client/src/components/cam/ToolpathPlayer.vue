@@ -28,7 +28,7 @@ import ToolpathComparePanel from "./ToolpathComparePanel.vue";
 import ToolpathAudioPanel from "./ToolpathAudioPanel.vue";
 // Audio engine now managed by useToolpathAudio composable
 import { useToolpathPlayerStore } from "@/stores/useToolpathPlayerStore";
-import { annotationManager, type Annotation } from "@/util/toolpathAnnotations";
+import { annotationManager } from "@/util/toolpathAnnotations";
 import type { MoveSegment as CompareMoveSegment } from "@/util/toolpathComparison";
 import { useTimeEstimates } from "@/composables/useTimeEstimates";
 import { validateGcode, type ValidationResult } from "@/util/gcodeValidator";
@@ -39,20 +39,16 @@ import type { Fixture } from "@/util/collisionDetector";
 import { useToolpathShortcuts } from "@/composables/useToolpathShortcuts";
 // P6 imports: Multi-tool support
 import ToolLegendPanel from "./ToolLegendPanel.vue";
-import { analyzeToolUsage, type ToolChangeMarker } from "@/util/toolpathTools";
+import { analyzeToolUsage } from "@/util/toolpathTools";
 // P6 Step 14: Feed optimization hints
 import FeedAnalysisPanel from "./FeedAnalysisPanel.vue";
-import type { FeedHint } from "@/util/feedOptimizer";
 // P6 Step 15: Stock simulation preview
 import StockSimulationPanel from "./StockSimulationPanel.vue";
 // P6 Step 16: Chip load analysis
 import ChipLoadPanel from "./ChipLoadPanel.vue";
-import type { ChipLoadIssue } from "@/util/chipLoadAnalyzer";
 
 // Extracted subcomponents (Phase 2-7 decomposition)
 import {
-  PlaybackControlsBar,
-  ToolbarButtonGroup,
   PlayerHudBar,
   ExportAnimationPanel,
   CollisionPanel,
@@ -67,12 +63,14 @@ import {
   FloatingPanel,
   EmptyState,
   ResolutionSlider,
+  ControlsBarWrapper,
   useToolpathAnalysis,
   useToolpathExport,
   useToolpathAudio,
   useToolpathNavigation,
   useToolpathPanelState,
   useToolpathViewControls,
+  useToolpathEventHandlers,
 } from "./toolpath-player";
 
 // ---------------------------------------------------------------------------
@@ -229,6 +227,18 @@ const navigation = useToolpathNavigation({
 });
 
 // ---------------------------------------------------------------------------
+// P8: Event handlers (via composable)
+// ---------------------------------------------------------------------------
+const eventHandlers = useToolpathEventHandlers({
+  segments: store.segments,
+  compareSegments,
+  showCompareOverlay,
+  selectedToolFilter,
+  navigation,
+  seek: (p) => store.seek(p),
+});
+
+// ---------------------------------------------------------------------------
 // Computed
 // ---------------------------------------------------------------------------
 const showMemBanner = computed(
@@ -310,57 +320,6 @@ function cancelExport(): void {
 }
 
 // ---------------------------------------------------------------------------
-// P5: Annotations
-// ---------------------------------------------------------------------------
-function handleAnnotationGoto(annotation: Annotation): void {
-  if (annotation.segmentIndex !== null) {
-    // Jump to the segment
-    const progress = annotation.segmentIndex / Math.max(1, store.segments.length - 1);
-    store.seek(Math.min(1, Math.max(0, progress)));
-  }
-}
-
-// ---------------------------------------------------------------------------
-// P5: Compare
-// ---------------------------------------------------------------------------
-function handleCompareSegments(segments: CompareMoveSegment[]): void {
-  compareSegments.value = segments;
-}
-
-function handleCompareOverlayToggle(enabled: boolean): void {
-  showCompareOverlay.value = enabled;
-}
-
-// ---------------------------------------------------------------------------
-// P6: Multi-tool support — now uses navigation composable
-// ---------------------------------------------------------------------------
-function handleToolSelect(toolNumber: number | null): void {
-  selectedToolFilter.value = toolNumber;
-}
-
-function handleToolChangeClick(marker: ToolChangeMarker): void {
-  navigation.jumpToSegment(marker.segmentIndex);
-}
-
-// ---------------------------------------------------------------------------
-// P6 Step 14: Feed Analysis — now uses navigation composable
-// ---------------------------------------------------------------------------
-function handleFeedHintClick(hint: FeedHint): void {
-  navigation.jumpToSegmentRange(hint.segmentRange[0], true);
-}
-
-// ---------------------------------------------------------------------------
-// P6 Step 16: Chip Load Analysis — now uses navigation composable
-// ---------------------------------------------------------------------------
-function handleChipLoadIssueClick(issue: ChipLoadIssue): void {
-  navigation.jumpToSegmentRange(issue.segmentRange[0], true);
-}
-
-// ---------------------------------------------------------------------------
-// P5: Audio — now handled by useToolpathAudio composable
-// ---------------------------------------------------------------------------
-
-// ---------------------------------------------------------------------------
 // Lifecycle
 // ---------------------------------------------------------------------------
 onMounted(async () => {
@@ -427,63 +386,37 @@ onUnmounted(() => {
       :error="store.error"
     />
 
-    <!-- ── Controls bar (using extracted subcomponents) ──────── -->
-    <div
+    <!-- ── Controls bar (using extracted P8 wrapper) ──────────── -->
+    <ControlsBarWrapper
       v-if="props.showControls"
-      class="controls-bar"
-    >
-      <ToolbarButtonGroup
-        :enable3-d="props.enable3D"
-        :view-mode="viewMode"
-        :show-heatmap="panels.heatmap.value"
-        :show-export-panel="showExportPanel"
-        :is-exporting="isExporting"
-        :measure-mode="store.measureMode"
-        :show-help="showHelp"
-        :show-stats-panel="panels.stats.value"
-        :show-filter-panel="panels.filter.value"
-        :has-active-filter="filterPanelRef?.hasActiveFilter ?? false"
-        :show-annotations-panel="panels.annotations.value"
-        :show-compare-panel="panels.compare.value"
-        :show-compare-overlay="showCompareOverlay"
-        :show-audio-panel="panels.audio.value"
-        :has-multiple-tools="hasMultipleTools"
-        :show-tool-legend-panel="panels.toolLegend.value"
-        :show-feed-analysis-panel="panels.feedAnalysis.value"
-        :show-stock-simulation-panel="panels.stockSimulation.value"
-        :has-bounds="!!store.bounds"
-        :show-chip-load-panel="panels.chipLoad.value"
-        :segment-count="store.segments.length"
-        :memory-info="store.memoryInfo"
-        @update:view-mode="viewMode = $event"
-        @update:show-heatmap="panels.heatmap.value = $event"
-        @update:show-export-panel="showExportPanel = $event"
-        @toggle-measure-mode="store.toggleMeasureMode()"
-        @update:show-help="showHelp = $event"
-        @update:show-stats-panel="panels.stats.value = $event"
-        @update:show-filter-panel="panels.filter.value = $event"
-        @update:show-annotations-panel="panels.annotations.value = $event"
-        @update:show-compare-panel="panels.compare.value = $event"
-        @update:show-audio-panel="panels.audio.value = $event"
-        @update:show-tool-legend-panel="panels.toolLegend.value = $event"
-        @update:show-feed-analysis-panel="panels.feedAnalysis.value = $event"
-        @update:show-stock-simulation-panel="panels.stockSimulation.value = $event"
-        @update:show-chip-load-panel="panels.chipLoad.value = $event"
-      />
-      <PlaybackControlsBar
-        :play-state="store.playState"
-        :progress="store.progress"
-        :speed="store.speed"
-        :segment-count="store.segments.length"
-        @play="store.play()"
-        @pause="store.pause()"
-        @stop="store.stop()"
-        @step-forward="store.stepForward()"
-        @step-backward="store.stepBackward()"
-        @seek="store.seek($event)"
-        @set-speed="store.setSpeed($event)"
-      />
-    </div>
+      :enable3-d="props.enable3D"
+      :view-mode="viewMode"
+      :panels="panels"
+      :show-export-panel="showExportPanel"
+      :show-compare-overlay="showCompareOverlay"
+      :is-exporting="isExporting"
+      :measure-mode="store.measureMode"
+      :show-help="showHelp"
+      :has-active-filter="filterPanelRef?.hasActiveFilter ?? false"
+      :has-multiple-tools="hasMultipleTools"
+      :has-bounds="!!store.bounds"
+      :segment-count="store.segments.length"
+      :memory-info="store.memoryInfo"
+      :play-state="store.playState"
+      :progress="store.progress"
+      :speed="store.speed"
+      @update:view-mode="viewMode = $event"
+      @update:show-export-panel="showExportPanel = $event"
+      @update:show-help="showHelp = $event"
+      @toggle-measure-mode="store.toggleMeasureMode()"
+      @play="store.play()"
+      @pause="store.pause()"
+      @stop="store.stop()"
+      @step-forward="store.stepForward()"
+      @step-backward="store.stepBackward()"
+      @seek="store.seek($event)"
+      @set-speed="store.setSpeed($event)"
+    />
 
     <!-- ── Resolution slider (shown when memory warning) - extracted ── -->
     <ResolutionSlider
@@ -610,7 +543,7 @@ onUnmounted(() => {
         :current-position="store.toolPosition as [number, number, number]"
         :current-line-number="store.currentSegment?.line_number ?? null"
         @close="panels.annotations.value = false"
-        @goto="handleAnnotationGoto"
+        @goto="eventHandlers.handleAnnotationGoto"
       />
     </FloatingPanel>
 
@@ -626,8 +559,8 @@ onUnmounted(() => {
         :base-segments="store.segments as CompareMoveSegment[]"
         :base-gcode="store.sourceGcode"
         @close="panels.compare.value = false"
-        @compare-segments="handleCompareSegments"
-        @overlay-toggle="handleCompareOverlayToggle"
+        @compare-segments="eventHandlers.handleCompareSegments"
+        @overlay-toggle="eventHandlers.handleCompareOverlayToggle"
       />
     </FloatingPanel>
 
@@ -654,8 +587,8 @@ onUnmounted(() => {
       <ToolLegendPanel
         :segments="store.segments"
         :current-segment-index="store.currentSegmentIndex"
-        @tool-select="handleToolSelect"
-        @tool-change-click="handleToolChangeClick"
+        @tool-select="eventHandlers.handleToolSelect"
+        @tool-change-click="eventHandlers.handleToolChangeClick"
         @close="panels.toolLegend.value = false"
       />
     </FloatingPanel>
@@ -671,7 +604,7 @@ onUnmounted(() => {
       <FeedAnalysisPanel
         :segments="store.segments"
         :tool-diameter="toolDiameter"
-        @hint-click="handleFeedHintClick"
+        @hint-click="eventHandlers.handleFeedHintClick"
         @close="panels.feedAnalysis.value = false"
       />
     </FloatingPanel>
@@ -705,7 +638,7 @@ onUnmounted(() => {
         :tool-diameter="toolDiameter"
         :flute-count="2"
         :default-rpm="18000"
-        @issue-click="handleChipLoadIssueClick"
+        @issue-click="eventHandlers.handleChipLoadIssueClick"
         @close="panels.chipLoad.value = false"
       />
     </FloatingPanel>
@@ -742,12 +675,5 @@ onUnmounted(() => {
 }
 
 /* ── Overlays moved to ValidationOverlay.vue and EmptyState.vue ───── */
-
-/* ── Controls bar ───────────────────────────────────────────────── */
-.controls-bar {
-  display: flex; align-items: center; gap: 6px; padding: 7px 10px;
-  background: #13131f; border-top: 1px solid #2a2a4a; flex-shrink: 0;
-}
-
-/* ── Subcomponents handle their own styles ── */
+/* ── Controls bar moved to ControlsBarWrapper.vue ── */
 </style>

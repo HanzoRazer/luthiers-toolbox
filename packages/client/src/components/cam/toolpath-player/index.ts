@@ -33,6 +33,9 @@ export { default as EmptyState } from './EmptyState.vue';
 // Phase 7 components
 export { default as ResolutionSlider } from './ResolutionSlider.vue';
 
+// Phase 8 components
+export { default as ControlsBarWrapper } from './ControlsBarWrapper.vue';
+
 // Composables
 export { useToolpathPanels } from './useToolpathPanels';
 export type { PanelState } from './useToolpathPanels';
@@ -50,3 +53,5 @@ export { useToolpathViewControls } from './useToolpathViewControls';
 export type { Canvas3DRef, ViewControlsConfig, ToolpathViewControlsState } from './useToolpathViewControls';
 export { useToolpathLoader } from './useToolpathLoader';
 export type { LoaderConfig, ToolpathLoaderState } from './useToolpathLoader';
+export { useToolpathEventHandlers } from './useToolpathEventHandlers';
+export type { EventHandlersConfig, ToolpathEventHandlersState } from './useToolpathEventHandlers';
