@@ -225,7 +225,21 @@ GET /api/rmos/runs_v2/runs?risk_level=YELLOW&created_after=2025-01-01
 
 ## Rate Limiting
 
-The API does not currently enforce rate limits. For production deployments, consider implementing rate limiting at the infrastructure level.
+The API enforces rate limits using slowapi middleware:
+
+| Tier | Limit | Description |
+|------|-------|-------------|
+| Public | 30/minute | Unauthenticated requests |
+| Authenticated | 60/minute | Free tier users |
+| Pro | 300/minute | Pro subscription users |
+| AI | 10/minute | AI/vision endpoints |
+| CAM | 20/minute | CNC/CAM export endpoints |
+| Upload | 10/minute | File upload endpoints |
+| Health | Unlimited | /health, /docs, /redoc |
+
+Configure via environment:
+- \ to disable
+- \ for distributed limiting
 
 ---
 
