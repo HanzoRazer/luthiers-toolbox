@@ -52,7 +52,9 @@ from photo_vectorizer_v2 import (
     FeatureContour,
     FeatureType,
     InstrumentFamily,
+    INSTRUMENT_SPECS,
     MergeResult,
+    ScaleSource,
     elect_body_contour_v2,
 )
 
@@ -103,6 +105,7 @@ class ContourStage:
         image: Optional[np.ndarray] = None,
         params: Optional[StageParams] = None,
         debug_images: bool = False,
+        spec_name: Optional[str] = None,  # For two-pass calibration
     ) -> ContourStageResult:
         """
         Execute the full contour decision pipeline.
@@ -137,7 +140,8 @@ class ContourStage:
         mpp = calibration.mm_per_px
         img_h, img_w = image_shape
 
-        # ── 8a: Contour assembly ────────────────────────────────────────
+        # ── 8a: Contour assembly (TWO-PASS when scale is uncertain) ─────
+        # Pass 1: Assemble contours with current mm_per_px
         classifier = FeatureClassifier()
         assembler = ContourAssembler(classifier, p.min_contour_area_px)
         feature_contours = assembler.assemble(edges, alpha_mask, mpp)
@@ -147,6 +151,35 @@ class ContourStage:
             return ContourStageResult(
                 diagnostics={"error": "no_contours_found"},
             )
+
+        # ── TWO-PASS CALIBRATION ────────────────────────────────────────
+        # If scale source is unreliable (ASSUMED_DPI, ESTIMATED_RENDER_DPI)
+        # and spec_name is provided, recalibrate using actual body contour height
+        # and re-classify all contours with the corrected mm_per_px.
+        low_confidence_sources = (ScaleSource.ASSUMED_DPI, ScaleSource.ESTIMATED_RENDER_DPI)
+        if (calibration.source in low_confidence_sources
+                and spec_name and spec_name in INSTRUMENT_SPECS):
+            # Find body contour (largest)
+            body_candidate = max(feature_contours, key=lambda c: c.area_px)
+            body_height_px = body_candidate.bbox_px[3]  # h from (x, y, w, h)
+
+            if body_height_px > 0:
+                spec_body_mm = INSTRUMENT_SPECS[spec_name]["body"][0]
+                corrected_mpp = spec_body_mm / body_height_px
+
+                logger.info(
+                    f"Two-pass calibration: {calibration.source.value} -> INSTRUMENT_SPEC "
+                    f"(body {spec_body_mm}mm / {body_height_px}px = {corrected_mpp:.4f} mm/px)")
+
+                # Pass 2: Re-classify all contours with corrected scale
+                mpp = corrected_mpp
+                feature_contours = assembler.assemble(edges, alpha_mask, mpp)
+
+                if not feature_contours:
+                    logger.warning("ContourStage: no contours after recalibration")
+                    return ContourStageResult(
+                        diagnostics={"error": "no_contours_after_recalibration"},
+                    )
 
         # Snapshot pre-merge
         pre_merge_contours = list(feature_contours)
