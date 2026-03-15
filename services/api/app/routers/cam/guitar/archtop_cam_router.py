@@ -183,29 +183,81 @@ def calculate_bridge_fit(req: ArchtopFitRequest) -> Dict[str, Any]:
 
 
 @router.post("/bridge")
-def generate_bridge_dxf(req: ArchtopBridgeRequest) -> Dict[str, Any]:
+def generate_bridge_dxf_endpoint(req: ArchtopBridgeRequest) -> Dict[str, Any]:
     """Generate floating bridge DXF from fit parameters."""
-    script = Path("services/api/app/cam/archtop_bridge_generator.py")
-    if not script.exists():
-        return {
-            "ok": False,
-            "error": "Bridge generator script not implemented",
-            "note": "Manual bridge design required - use fit parameters from /fit endpoint"
-        }
-    return {"ok": False, "error": "Bridge generator not yet implemented", "requested": req.model_dump()}
+    import json
+    from ....cam.archtop_bridge_generator import generate_bridge_dxf
+
+    # Load fit parameters from JSON file
+    fit_path = Path(req.fit_json_path)
+    if not fit_path.exists():
+        raise HTTPException(status_code=404, detail=f"Fit JSON not found: {req.fit_json_path}")
+
+    try:
+        with open(fit_path) as f:
+            fit_data = json.load(f)
+    except json.JSONDecodeError as e:
+        raise HTTPException(status_code=400, detail=f"Invalid JSON: {e}")
+
+    fit_params = fit_data.get("fit_parameters", fit_data)
+
+    # Generate output path
+    ts = time.strftime("%Y%m%d_%H%M%S")
+    out_dir = Path(req.out_dir)
+    out_dir.mkdir(parents=True, exist_ok=True)
+    out_path = out_dir / f"archtop_bridge_{ts}.dxf"
+
+    result = generate_bridge_dxf(
+        fit_params=fit_params,
+        post_spacing_mm=req.post_spacing_mm,
+        bridge_base_length_mm=req.bridge_base_length_mm,
+        bridge_base_width_mm=req.bridge_base_width_mm,
+        string_spacing_mm=req.string_spacing_mm,
+        output_path=str(out_path),
+    )
+
+    if not result.get("ok"):
+        raise HTTPException(status_code=500, detail=result.get("error", "Unknown error"))
+
+    return result
 
 
 @router.post("/saddle")
-def generate_saddle_profile(req: ArchtopSaddleRequest) -> Dict[str, Any]:
+def generate_saddle_profile_endpoint(req: ArchtopSaddleRequest) -> Dict[str, Any]:
     """Generate compensated saddle profile from fit parameters."""
-    script = Path("services/api/app/cam/archtop_saddle_generator.py")
-    if not script.exists():
-        return {
-            "ok": False,
-            "error": "Saddle generator script not implemented",
-            "note": "Manual saddle design required - use compensations from /fit endpoint"
-        }
-    return {"ok": False, "error": "Saddle generator not yet implemented", "requested": req.model_dump()}
+    import json
+    from ....cam.archtop_saddle_generator import generate_saddle_dxf
+
+    # Load fit parameters from JSON file
+    fit_path = Path(req.fit_json_path)
+    if not fit_path.exists():
+        raise HTTPException(status_code=404, detail=f"Fit JSON not found: {req.fit_json_path}")
+
+    try:
+        with open(fit_path) as f:
+            fit_data = json.load(f)
+    except json.JSONDecodeError as e:
+        raise HTTPException(status_code=400, detail=f"Invalid JSON: {e}")
+
+    fit_params = fit_data.get("fit_parameters", fit_data)
+
+    # Generate output path
+    ts = time.strftime("%Y%m%d_%H%M%S")
+    out_dir = Path(req.out_dir)
+    out_dir.mkdir(parents=True, exist_ok=True)
+    out_path = out_dir / f"archtop_saddle_{ts}.dxf"
+
+    result = generate_saddle_dxf(
+        fit_params=fit_params,
+        crown_radius_mm=req.crown_radius_mm,
+        string_spacing_mm=req.string_spacing_mm,
+        output_path=str(out_path),
+    )
+
+    if not result.get("ok"):
+        raise HTTPException(status_code=500, detail=result.get("error", "Unknown error"))
+
+    return result
 
 
 __all__ = [
