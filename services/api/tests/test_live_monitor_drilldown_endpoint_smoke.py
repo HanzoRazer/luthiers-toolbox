@@ -112,7 +112,7 @@ def test_live_monitor_drilldown_with_mock_run(client, monkeypatch):
 
     # Patch the get_run_artifact function
     monkeypatch.setattr(
-        "app.rmos.stub_routes.get_run_artifact",
+        "app.rmos.live_monitor_router.get_run_artifact",
         lambda job_id: mock_run if job_id == "mock-run-123" else None
     )
 
@@ -141,7 +141,7 @@ def test_live_monitor_drilldown_subjob_has_required_fields(client, monkeypatch):
     mock_run.status.value = "OK"
 
     monkeypatch.setattr(
-        "app.rmos.stub_routes.get_run_artifact",
+        "app.rmos.live_monitor_router.get_run_artifact",
         lambda job_id: mock_run if job_id == "test-run" else None
     )
 
@@ -172,7 +172,7 @@ def test_live_monitor_drilldown_cam_events_have_required_fields(client, monkeypa
     mock_run.status.value = "OK"
 
     monkeypatch.setattr(
-        "app.rmos.stub_routes.get_run_artifact",
+        "app.rmos.live_monitor_router.get_run_artifact",
         lambda job_id: mock_run if job_id == "event-test" else None
     )
 
@@ -208,7 +208,7 @@ def test_live_monitor_drilldown_heuristic_reflects_risk_level(client, monkeypatc
     mock_run.status.value = "BLOCKED"
 
     monkeypatch.setattr(
-        "app.rmos.stub_routes.get_run_artifact",
+        "app.rmos.live_monitor_router.get_run_artifact",
         lambda job_id: mock_run if job_id == "red-risk-run" else None
     )
 
