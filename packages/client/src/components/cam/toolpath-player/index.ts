@@ -30,6 +30,9 @@ export { default as ValidationOverlay } from './ValidationOverlay.vue';
 export { default as FloatingPanel } from './FloatingPanel.vue';
 export { default as EmptyState } from './EmptyState.vue';
 
+// Phase 7 components
+export { default as ResolutionSlider } from './ResolutionSlider.vue';
+
 // Composables
 export { useToolpathPanels } from './useToolpathPanels';
 export type { PanelState } from './useToolpathPanels';
@@ -43,3 +46,7 @@ export { useToolpathNavigation } from './useToolpathNavigation';
 export type { ToolpathNavigationState, NavigationConfig } from './useToolpathNavigation';
 export { useToolpathPanelState } from './useToolpathPanelState';
 export type { PanelVisibility, ToolpathPanelState } from './useToolpathPanelState';
+export { useToolpathViewControls } from './useToolpathViewControls';
+export type { Canvas3DRef, ViewControlsConfig, ToolpathViewControlsState } from './useToolpathViewControls';
+export { useToolpathLoader } from './useToolpathLoader';
+export type { LoaderConfig, ToolpathLoaderState } from './useToolpathLoader';

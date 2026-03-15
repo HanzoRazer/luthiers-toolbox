@@ -16,7 +16,7 @@
  * P5: 3D Three.js visualization with orbit controls
  */
 
-import { onMounted, onUnmounted, computed, ref, watch } from "vue";
+import { onMounted, onUnmounted, computed, ref, watch, type Ref } from "vue";
 import ToolpathCanvas from "./ToolpathCanvas.vue";
 import ToolpathCanvas3D from "./ToolpathCanvas3D.vue";
 import GcodeViewer from "./GcodeViewer.vue";
@@ -49,7 +49,7 @@ import StockSimulationPanel from "./StockSimulationPanel.vue";
 import ChipLoadPanel from "./ChipLoadPanel.vue";
 import type { ChipLoadIssue } from "@/util/chipLoadAnalyzer";
 
-// Extracted subcomponents (Phase 2 + Phase 3 + Phase 4 + Phase 5 + Phase 6 decomposition)
+// Extracted subcomponents (Phase 2-7 decomposition)
 import {
   PlaybackControlsBar,
   ToolbarButtonGroup,
@@ -66,11 +66,13 @@ import {
   ValidationOverlay,
   FloatingPanel,
   EmptyState,
+  ResolutionSlider,
   useToolpathAnalysis,
   useToolpathExport,
   useToolpathAudio,
   useToolpathNavigation,
   useToolpathPanelState,
+  useToolpathViewControls,
 } from "./toolpath-player";
 
 // ---------------------------------------------------------------------------
@@ -119,39 +121,26 @@ const { estimates } = useTimeEstimates(computed(() => store.segments));
 // P6: Consolidated panel visibility state (must be before shortcuts)
 const { panels, showCompareOverlay } = useToolpathPanelState();
 
+// P5: 3D view mode (must be before view controls)
+const viewMode = ref<"2d" | "3d">(props.default3D ? "3d" : "2d");
+const canvas3DRef = ref<InstanceType<typeof ToolpathCanvas3D> | null>(null);
+
+// P7: View controls (via composable)
+const viewControls = useToolpathViewControls({
+  viewMode,
+  canvas3DRef: canvas3DRef as Ref<{ resetView?: () => void; setView?: (v: string) => void } | null>,
+  enable3D: props.enable3D,
+});
+
 // P5: Keyboard shortcuts
 const { shortcuts, showHelp, hideHelp } = useToolpathShortcuts({
-  onToggleHeatmap: () => {
-    panels.heatmap.value = !panels.heatmap.value;
-  },
-  onToggleGcode: () => {
-    panels.gcode.value = !panels.gcode.value;
-  },
-  onToggleViewMode: () => {
-    if (props.enable3D) {
-      viewMode.value = viewMode.value === "2d" ? "3d" : "2d";
-    }
-  },
-  onResetView: () => {
-    if (viewMode.value === "3d" && canvas3DRef.value) {
-      (canvas3DRef.value as unknown as { resetView?: () => void }).resetView?.();
-    }
-  },
-  onSetViewTop: () => {
-    if (viewMode.value === "3d" && canvas3DRef.value) {
-      (canvas3DRef.value as unknown as { setView?: (v: string) => void }).setView?.("top");
-    }
-  },
-  onSetViewFront: () => {
-    if (viewMode.value === "3d" && canvas3DRef.value) {
-      (canvas3DRef.value as unknown as { setView?: (v: string) => void }).setView?.("front");
-    }
-  },
-  onSetViewSide: () => {
-    if (viewMode.value === "3d" && canvas3DRef.value) {
-      (canvas3DRef.value as unknown as { setView?: (v: string) => void }).setView?.("side");
-    }
-  },
+  onToggleHeatmap: () => { panels.heatmap.value = !panels.heatmap.value; },
+  onToggleGcode: () => { panels.gcode.value = !panels.gcode.value; },
+  onToggleViewMode: viewControls.toggleViewMode,
+  onResetView: viewControls.resetView,
+  onSetViewTop: viewControls.setViewTop,
+  onSetViewFront: viewControls.setViewFront,
+  onSetViewSide: viewControls.setViewSide,
   enabled: true,
 });
 
@@ -159,12 +148,7 @@ const { shortcuts, showHelp, hideHelp } = useToolpathShortcuts({
 // Local state
 // ---------------------------------------------------------------------------
 const memDismissed = ref(false);
-const resSlider = ref(100);
 const validation = ref<ValidationResult | null>(null);
-
-// P5: 3D view mode
-const viewMode = ref<"2d" | "3d">(props.default3D ? "3d" : "2d");
-const canvas3DRef = ref<InstanceType<typeof ToolpathCanvas3D> | null>(null);
 const canvas2DRef = ref<InstanceType<typeof ToolpathCanvas> | null>(null);
 
 // P5: Filter panel ref (for hasActiveFilter)
@@ -247,14 +231,6 @@ const navigation = useToolpathNavigation({
 // ---------------------------------------------------------------------------
 // Computed
 // ---------------------------------------------------------------------------
-const playIcon = computed(() =>
-  store.playState === "playing" ? "⏸" : "▶",
-);
-const playLabel = computed(() =>
-  store.playState === "playing" ? "Pause" : "Play",
-);
-const speeds = [0.5, 1, 2, 5, 10] as const;
-
 const showMemBanner = computed(
   () =>
     store.memoryInfo.isWarning &&
@@ -271,26 +247,6 @@ const hasErrors = computed(() => validationErrors.value.length > 0);
 // ---------------------------------------------------------------------------
 // Methods
 // ---------------------------------------------------------------------------
-function togglePlay(): void {
-  if (store.playState === "playing") store.pause();
-  else store.play();
-}
-
-function onScrubInput(e: Event): void {
-  store.seek(parseFloat((e.target as HTMLInputElement).value));
-}
-
-function applyResolution(): void {
-  store.setResolution(resSlider.value);
-}
-
-function formatTime(ms: number): string {
-  const totalSecs = ms / 1000;
-  const mins = Math.floor(totalSecs / 60);
-  const secs = (totalSecs % 60).toFixed(1);
-  return `${mins}:${secs.padStart(4, "0")}`;
-}
-
 async function doLoad(): Promise<void> {
   if (!props.gcode) return;
   await store.loadGcode(props.gcode, { arc_resolution_deg: 5 });
@@ -529,29 +485,11 @@ onUnmounted(() => {
       />
     </div>
 
-    <!-- ── Resolution slider (shown when memory warning) ─────── -->
-    <div
-      v-if="store.memoryInfo.isWarning && !store.loading"
-      class="res-bar"
-    >
-      <span class="res-label">
-        Resolution:
-      </span>
-      <input
-        v-model.number="resSlider"
-        type="range"
-        class="res-slider"
-        min="10"
-        max="100"
-      >
-      <span class="res-val">{{ resSlider }}%</span>
-      <button
-        class="res-apply"
-        @click="applyResolution"
-      >
-        Apply
-      </button>
-    </div>
+    <!-- ── Resolution slider (shown when memory warning) - extracted ── -->
+    <ResolutionSlider
+      :visible="store.memoryInfo.isWarning && !store.loading"
+      @apply="store.setResolution($event)"
+    />
 
     <!-- ── HUD bar (using extracted subcomponent) ────────────── -->
     <PlayerHudBar
@@ -811,51 +749,5 @@ onUnmounted(() => {
   background: #13131f; border-top: 1px solid #2a2a4a; flex-shrink: 0;
 }
 
-/* ── View toggle + playback controls moved to ToolbarButtonGroup.vue and PlaybackControlsBar.vue ── */
-
-/* ── Resolution bar ─────────────────────────────────────────────── */
-.res-bar {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 4px 10px;
-  background: #1a1a2e;
-  border-top: 1px solid #2a2a4a;
-  font-size: 11px;
-  color: #aaa;
-}
-.res-label { color: #666; }
-.res-slider { flex: 1; accent-color: #4a90d9; height: 4px; }
-.res-val { min-width: 36px; color: #4a90d9; }
-.res-apply {
-  padding: 2px 8px;
-  background: #252538;
-  border: 1px solid #3a3a5c;
-  color: #ccc;
-  border-radius: 4px;
-  cursor: pointer;
-}
-.res-apply:hover { background: #33334a; color: #fff; }
-
-/* ── HUD bar styles moved to PlayerHudBar.vue ── */
-
-/* ── P4: Panel styles moved to CollisionPanel.vue and OptimizationPanel.vue ── */
-/* ── P5: G-code panel styles moved to GcodeSourcePanel.vue ── */
-/* ── P5: Measure mode/measurements styles moved to MeasureModeIndicator.vue and MeasurementsPanel.vue ── */
-
-/* ── Shared panel header — now handled by PanelContainer ── */
-
-/* ── P5: Help button — moved to ToolbarButtonGroup.vue ────────────── */
-
-/* ── P5: Shortcuts Overlay styles moved to KeyboardShortcutsOverlay.vue ── */
-
-/* ── P5: Stats button — moved to ToolbarButtonGroup.vue ────────────── */
-
-/* ── P5: Stats Panel — now uses PanelContainer ─────────────────────── */
-
-/* ── P5: Filter button — moved to ToolbarButtonGroup.vue ─────────── */
-
-/* ── P5: Filter Panel — now uses PanelContainer ────────────────────── */
-
-/* ── P5/P6: Panel containers now use FloatingPanel component ─────────── */
+/* ── Subcomponents handle their own styles ── */
 </style>
