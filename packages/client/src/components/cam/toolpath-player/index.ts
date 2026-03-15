@@ -25,6 +25,11 @@ export { default as PanelContainer } from './PanelContainer.vue';
 // Phase 5 components
 export { default as LoadingOverlay } from './LoadingOverlay.vue';
 
+// Phase 6 components
+export { default as ValidationOverlay } from './ValidationOverlay.vue';
+export { default as FloatingPanel } from './FloatingPanel.vue';
+export { default as EmptyState } from './EmptyState.vue';
+
 // Composables
 export { useToolpathPanels } from './useToolpathPanels';
 export type { PanelState } from './useToolpathPanels';
@@ -36,3 +41,5 @@ export { useToolpathAudio } from './useToolpathAudio';
 export type { ToolpathAudioState, AudioSyncConfig } from './useToolpathAudio';
 export { useToolpathNavigation } from './useToolpathNavigation';
 export type { ToolpathNavigationState, NavigationConfig } from './useToolpathNavigation';
+export { useToolpathPanelState } from './useToolpathPanelState';
+export type { PanelVisibility, ToolpathPanelState } from './useToolpathPanelState';
