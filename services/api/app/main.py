@@ -244,6 +244,11 @@ if _ANALYTICS_ENABLED:
 from .api_v1 import router as api_v1_router
 app.include_router(api_v1_router)
 
+# WebSocket endpoints - real-time event streaming
+# Access: /ws/monitor, /ws/live, /ws/status
+from .websocket.router import router as websocket_router
+app.include_router(websocket_router, tags=["WebSocket"])
+
 
 # =============================================================================
 # HEALTH ENDPOINTS (fallback for basic CI compatibility)

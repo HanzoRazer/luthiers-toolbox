@@ -240,7 +240,7 @@ The system **cannot scale to multiple instances**. Period.
 
 CAM operations on complex geometry can take significant time. There is no:
 - Background task queue (Celery, ARQ, or similar)
-- WebSocket progress reporting
+- ~~WebSocket progress reporting~~ ✅ RESOLVED - WebSocket router implemented (`/ws/monitor`, `/ws/live`) with event filtering and LiveMonitor integration
 - Cancellation mechanism
 - Timeout enforcement on all geometry endpoints (timeout wrapper exists but is optional)
 
