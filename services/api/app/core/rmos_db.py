@@ -1,318 +1,191 @@
 """
-RMOS SQLite Database Core Infrastructure (N8.6)
+RMOS Database Core Infrastructure (N8.6 + Store Migration)
 
-Provides connection pooling, schema management, and transaction handling
-for the Rosette Manufacturing OS persistence layer.
-
-Features:
-- Connection pooling with context managers
-- Automatic schema initialization
-- Transaction rollback on errors
-- Thread-safe operations
-- Migration support hooks
+Supports both SQLite and PostgreSQL backends via DATABASE_URL.
 """
+from __future__ import annotations
 
+import os
 import sqlite3
 from contextlib import contextmanager
 from pathlib import Path
-from typing import Optional, Generator
+from typing import Optional, Generator, Any
 import logging
 
 logger = logging.getLogger(__name__)
-
-# Default database path
 DEFAULT_DB_PATH = Path(__file__).parent.parent.parent / "data" / "rmos.db"
+SCHEMA_VERSION = 2
 
-# Schema version for migration tracking
-SCHEMA_VERSION = 2  # N11.1: Added pattern_type and rosette_geometry columns
+
+def _is_postgresql_url(url: str) -> bool:
+    return url.startswith("postgresql://") or url.startswith("postgres://")
 
 
 class RMOSDatabase:
-    """
-    SQLite database manager for RMOS persistence.
-    
-    Handles connection pooling, schema initialization, and transaction management.
-    Thread-safe for concurrent access.
-    """
-    
+    """Database manager supporting SQLite and PostgreSQL."""
+
     def __init__(self, db_path: Optional[Path] = None):
-        """
-        Initialize RMOS database connection.
-        
-        Args:
-            db_path: Path to SQLite database file. Creates if doesn't exist.
-        """
-        self.db_path = db_path or DEFAULT_DB_PATH
-        self.db_path.parent.mkdir(parents=True, exist_ok=True)
-        
-        # Initialize schema on first connection
+        db_url = os.environ.get("DATABASE_URL", "")
+        self._is_postgres = _is_postgresql_url(db_url)
+
+        if self._is_postgres:
+            self._pg_url = db_url
+            if self._pg_url.startswith("postgres://"):
+                self._pg_url = "postgresql://" + self._pg_url[11:]
+            self.db_path = None
+            logger.info("RMOS using PostgreSQL backend")
+        else:
+            self.db_path = db_path or DEFAULT_DB_PATH
+            self.db_path.parent.mkdir(parents=True, exist_ok=True)
+            self._pg_url = None
+            logger.info(f"RMOS using SQLite at {self.db_path}")
+
         self._initialize_schema()
-        
-        logger.info(f"RMOS database initialized at {self.db_path}")
-    
+
+    @property
+    def backend_type(self) -> str:
+        return "postgresql" if self._is_postgres else "sqlite"
+
     @contextmanager
-    def get_connection(self, row_factory: bool = True) -> Generator[sqlite3.Connection, None, None]:
-        """
-        Context manager for database connections.
-        
-        Args:
-            row_factory: If True, enable Row factory for dict-like access
-            
-        Yields:
-            SQLite connection with automatic commit/rollback
-            
-        Example:
-            with db.get_connection() as conn:
-                cursor = conn.cursor()
-                cursor.execute("SELECT * FROM patterns")
-                rows = cursor.fetchall()
-        """
+    def get_connection(self, row_factory: bool = True) -> Generator[Any, None, None]:
+        if self._is_postgres:
+            yield from self._get_pg_connection(row_factory)
+        else:
+            yield from self._get_sqlite_connection(row_factory)
+
+    def _get_sqlite_connection(self, row_factory: bool):
         conn = sqlite3.connect(str(self.db_path))
-        
         if row_factory:
             conn.row_factory = sqlite3.Row
-        
         try:
             yield conn
             conn.commit()
-        except sqlite3.Error as e:  # WP-1: narrowed from except Exception
+        except sqlite3.Error as e:
             conn.rollback()
-            logger.error(f"Database error, rolling back: {e}")
+            logger.error(f"SQLite error: {e}")
             raise
         finally:
             conn.close()
-    
-    def _initialize_schema(self):
-        """
-        Create database tables if they don't exist.
-        
-        Schema includes:
-        - patterns: Rosette pattern definitions
-        - strip_families: Material strip configurations
-        - joblogs: Manufacturing run records
-        - schema_version: Migration tracking
-        """
-        with self.get_connection(row_factory=False) as conn:
-            cursor = conn.cursor()
-            
-            # Schema version tracking
-            cursor.execute("""
-                CREATE TABLE IF NOT EXISTS schema_version (
-                    version INTEGER PRIMARY KEY,
-                    applied_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
-                )
-            """)
-            
-            # Patterns table (rosette designs)
-            cursor.execute("""
-                CREATE TABLE IF NOT EXISTS patterns (
-                    id TEXT PRIMARY KEY,
-                    name TEXT NOT NULL,
-                    ring_count INTEGER NOT NULL,
-                    geometry_json TEXT NOT NULL,
-                    strip_family_id TEXT,
-                    created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
-                    updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
-                    metadata_json TEXT,
-                    pattern_type TEXT NOT NULL DEFAULT 'generic',
-                    rosette_geometry TEXT
-                )
-            """)
-            
-            # Strip families table (material configurations)
-            cursor.execute("""
-                CREATE TABLE IF NOT EXISTS strip_families (
-                    id TEXT PRIMARY KEY,
-                    name TEXT NOT NULL,
-                    strip_width_mm REAL NOT NULL,
-                    strip_thickness_mm REAL NOT NULL,
-                    material_type TEXT NOT NULL,
-                    strips_json TEXT NOT NULL,
-                    created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
-                    updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
-                    metadata_json TEXT
-                )
-            """)
-            
-            # JobLogs table (manufacturing runs)
-            cursor.execute("""
-                CREATE TABLE IF NOT EXISTS joblogs (
-                    id TEXT PRIMARY KEY,
-                    job_type TEXT NOT NULL,
-                    pattern_id TEXT,
-                    strip_family_id TEXT,
-                    status TEXT NOT NULL DEFAULT 'pending',
-                    start_time TEXT,
-                    end_time TEXT,
-                    duration_seconds REAL,
-                    parameters_json TEXT NOT NULL,
-                    results_json TEXT,
-                    created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
-                    updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
-                    FOREIGN KEY (pattern_id) REFERENCES patterns(id),
-                    FOREIGN KEY (strip_family_id) REFERENCES strip_families(id)
-                )
-            """)
-            
-            # Indexes for common queries
-            cursor.execute("""
-                CREATE INDEX IF NOT EXISTS idx_patterns_name 
-                ON patterns(name)
-            """)
-            
-            cursor.execute("""
-                CREATE INDEX IF NOT EXISTS idx_patterns_strip_family 
-                ON patterns(strip_family_id)
-            """)
-            
-            # N11.1: Index for pattern_type queries
-            cursor.execute("""
-                CREATE INDEX IF NOT EXISTS idx_patterns_pattern_type 
-                ON patterns(pattern_type)
-            """)
-            
-            # N11.1 Migration: Add columns to existing databases
-            cursor.execute("PRAGMA table_info(patterns)")
-            columns = {row[1] for row in cursor.fetchall()}
-            
-            if 'pattern_type' not in columns:
-                logger.info("Migrating: Adding pattern_type column to patterns table")
-                cursor.execute("""
-                    ALTER TABLE patterns 
-                    ADD COLUMN pattern_type TEXT NOT NULL DEFAULT 'generic'
-                """)
-            
-            if 'rosette_geometry' not in columns:
-                logger.info("Migrating: Adding rosette_geometry column to patterns table")
-                cursor.execute("""
-                    ALTER TABLE patterns 
-                    ADD COLUMN rosette_geometry TEXT
-                """)
-            
-            cursor.execute("""
-                CREATE INDEX IF NOT EXISTS idx_joblogs_pattern 
-                ON joblogs(pattern_id)
-            """)
-            
-            cursor.execute("""
-                CREATE INDEX IF NOT EXISTS idx_joblogs_status 
-                ON joblogs(status)
-            """)
-            
-            cursor.execute("""
-                CREATE INDEX IF NOT EXISTS idx_joblogs_created 
-                ON joblogs(created_at DESC)
-            """)
-            
-            # Record schema version
-            cursor.execute("""
-                INSERT OR IGNORE INTO schema_version (version)
-                VALUES (?)
-            """, (SCHEMA_VERSION,))
-            
+
+    def _get_pg_connection(self, row_factory: bool):
+        try:
+            import psycopg2
+            import psycopg2.extras
+        except ImportError:
+            raise ImportError("psycopg2 required. pip install psycopg2-binary")
+        conn = psycopg2.connect(self._pg_url)
+        try:
+            if row_factory:
+                conn.cursor_factory = psycopg2.extras.RealDictCursor
+            yield conn
             conn.commit()
-            logger.info("RMOS database schema initialized")
-    
-    def get_schema_version(self) -> int:
-        """
-        Get current schema version for migration tracking.
-        
-        Returns:
-            Current schema version number
-        """
-        with self.get_connection() as conn:
-            cursor = conn.cursor()
-            cursor.execute("SELECT MAX(version) FROM schema_version")
-            result = cursor.fetchone()
-            return result[0] if result[0] else 0
-    
-    def execute_query(self, query: str, params: tuple = ()) -> list:
-        """
-        Execute a SELECT query and return all rows.
-        
-        Args:
-            query: SQL SELECT statement
-            params: Query parameters (use ? placeholders)
-            
-        Returns:
-            List of Row objects (dict-like access)
-            
-        Example:
-            rows = db.execute_query(
-                "SELECT * FROM patterns WHERE name LIKE ?",
-                ("%rosette%",)
-            )
-        """
-        with self.get_connection() as conn:
-            cursor = conn.cursor()
-            cursor.execute(query, params)
-            return cursor.fetchall()
-    
-    def execute_update(self, query: str, params: tuple = ()) -> int:
-        """
-        Execute an INSERT/UPDATE/DELETE query.
-        
-        Args:
-            query: SQL modification statement
-            params: Query parameters (use ? placeholders)
-            
-        Returns:
-            Number of affected rows
-            
-        Example:
-            affected = db.execute_update(
-                "UPDATE patterns SET name = ? WHERE id = ?",
-                ("New Name", "pattern-123")
-            )
-        """
-        with self.get_connection() as conn:
-            cursor = conn.cursor()
-            cursor.execute(query, params)
-            return cursor.rowcount
-    
-    def vacuum(self):
-        """
-        Optimize database (reclaim space, rebuild indexes).
-        
-        Should be run periodically or after large deletions.
-        """
+        except psycopg2.Error as e:
+            conn.rollback()
+            logger.error(f"PostgreSQL error: {e}")
+            raise
+        finally:
+            conn.close()
+
+    def _initialize_schema(self):
+        if self._is_postgres:
+            self._init_pg()
+        else:
+            self._init_sqlite()
+
+    def _init_sqlite(self):
         with self.get_connection(row_factory=False) as conn:
-            conn.execute("VACUUM")
-            logger.info("Database vacuumed")
-    
+            c = conn.cursor()
+            c.execute("CREATE TABLE IF NOT EXISTS schema_version (version INTEGER PRIMARY KEY, applied_at TEXT DEFAULT CURRENT_TIMESTAMP)")
+            c.execute("CREATE TABLE IF NOT EXISTS patterns (id TEXT PRIMARY KEY, name TEXT NOT NULL, ring_count INTEGER NOT NULL, geometry_json TEXT NOT NULL, strip_family_id TEXT, created_at TEXT DEFAULT CURRENT_TIMESTAMP, updated_at TEXT DEFAULT CURRENT_TIMESTAMP, metadata_json TEXT, pattern_type TEXT DEFAULT 'generic', rosette_geometry TEXT)")
+            c.execute("CREATE TABLE IF NOT EXISTS strip_families (id TEXT PRIMARY KEY, name TEXT NOT NULL, strip_width_mm REAL NOT NULL, strip_thickness_mm REAL NOT NULL, material_type TEXT NOT NULL, strips_json TEXT NOT NULL, created_at TEXT DEFAULT CURRENT_TIMESTAMP, updated_at TEXT DEFAULT CURRENT_TIMESTAMP, metadata_json TEXT)")
+            c.execute("CREATE TABLE IF NOT EXISTS joblogs (id TEXT PRIMARY KEY, job_type TEXT NOT NULL, pattern_id TEXT, strip_family_id TEXT, status TEXT DEFAULT 'pending', start_time TEXT, end_time TEXT, duration_seconds REAL, parameters_json TEXT NOT NULL, results_json TEXT, created_at TEXT DEFAULT CURRENT_TIMESTAMP, updated_at TEXT DEFAULT CURRENT_TIMESTAMP, FOREIGN KEY (pattern_id) REFERENCES patterns(id), FOREIGN KEY (strip_family_id) REFERENCES strip_families(id))")
+            c.execute("CREATE INDEX IF NOT EXISTS idx_patterns_name ON patterns(name)")
+            c.execute("CREATE INDEX IF NOT EXISTS idx_patterns_strip_family ON patterns(strip_family_id)")
+            c.execute("CREATE INDEX IF NOT EXISTS idx_patterns_pattern_type ON patterns(pattern_type)")
+            c.execute("PRAGMA table_info(patterns)")
+            cols = {r[1] for r in c.fetchall()}
+            if 'pattern_type' not in cols:
+                c.execute("ALTER TABLE patterns ADD COLUMN pattern_type TEXT DEFAULT 'generic'")
+            if 'rosette_geometry' not in cols:
+                c.execute("ALTER TABLE patterns ADD COLUMN rosette_geometry TEXT")
+            c.execute("CREATE INDEX IF NOT EXISTS idx_joblogs_pattern ON joblogs(pattern_id)")
+            c.execute("CREATE INDEX IF NOT EXISTS idx_joblogs_status ON joblogs(status)")
+            c.execute("CREATE INDEX IF NOT EXISTS idx_joblogs_created ON joblogs(created_at DESC)")
+            c.execute("INSERT OR IGNORE INTO schema_version (version) VALUES (?)", (SCHEMA_VERSION,))
+            conn.commit()
+
+    def _init_pg(self):
+        with self.get_connection(row_factory=False) as conn:
+            c = conn.cursor()
+            c.execute("CREATE TABLE IF NOT EXISTS schema_version (version INTEGER PRIMARY KEY, applied_at TIMESTAMPTZ DEFAULT NOW())")
+            c.execute("CREATE TABLE IF NOT EXISTS patterns (id TEXT PRIMARY KEY, name TEXT NOT NULL, ring_count INTEGER NOT NULL, geometry_json TEXT NOT NULL, strip_family_id TEXT, created_at TIMESTAMPTZ DEFAULT NOW(), updated_at TIMESTAMPTZ DEFAULT NOW(), metadata_json TEXT, pattern_type TEXT DEFAULT 'generic', rosette_geometry TEXT)")
+            c.execute("CREATE TABLE IF NOT EXISTS strip_families (id TEXT PRIMARY KEY, name TEXT NOT NULL, strip_width_mm DOUBLE PRECISION NOT NULL, strip_thickness_mm DOUBLE PRECISION NOT NULL, material_type TEXT NOT NULL, strips_json TEXT NOT NULL, created_at TIMESTAMPTZ DEFAULT NOW(), updated_at TIMESTAMPTZ DEFAULT NOW(), metadata_json TEXT)")
+            c.execute("CREATE TABLE IF NOT EXISTS joblogs (id TEXT PRIMARY KEY, job_type TEXT NOT NULL, pattern_id TEXT REFERENCES patterns(id), strip_family_id TEXT REFERENCES strip_families(id), status TEXT DEFAULT 'pending', start_time TIMESTAMPTZ, end_time TIMESTAMPTZ, duration_seconds DOUBLE PRECISION, parameters_json TEXT NOT NULL, results_json TEXT, created_at TIMESTAMPTZ DEFAULT NOW(), updated_at TIMESTAMPTZ DEFAULT NOW())")
+            c.execute("CREATE INDEX IF NOT EXISTS idx_patterns_name ON patterns(name)")
+            c.execute("CREATE INDEX IF NOT EXISTS idx_patterns_strip_family ON patterns(strip_family_id)")
+            c.execute("CREATE INDEX IF NOT EXISTS idx_patterns_pattern_type ON patterns(pattern_type)")
+            c.execute("CREATE INDEX IF NOT EXISTS idx_joblogs_pattern ON joblogs(pattern_id)")
+            c.execute("CREATE INDEX IF NOT EXISTS idx_joblogs_status ON joblogs(status)")
+            c.execute("CREATE INDEX IF NOT EXISTS idx_joblogs_created ON joblogs(created_at DESC)")
+            c.execute("INSERT INTO schema_version (version) VALUES (%s) ON CONFLICT (version) DO NOTHING", (SCHEMA_VERSION,))
+            conn.commit()
+
+    def get_schema_version(self) -> int:
+        with self.get_connection() as conn:
+            c = conn.cursor()
+            c.execute("SELECT MAX(version) FROM schema_version")
+            r = c.fetchone()
+            if r is None:
+                return 0
+            if isinstance(r, dict):
+                return r.get('max', 0) or 0
+            return r[0] if r[0] else 0
+
+    def execute_query(self, query: str, params: tuple = ()) -> list:
+        if self._is_postgres:
+            query = query.replace('?', '%s')
+        with self.get_connection() as conn:
+            c = conn.cursor()
+            c.execute(query, params)
+            return c.fetchall()
+
+    def execute_update(self, query: str, params: tuple = ()) -> int:
+        if self._is_postgres:
+            query = query.replace('?', '%s')
+        with self.get_connection() as conn:
+            c = conn.cursor()
+            c.execute(query, params)
+            return c.rowcount
+
+    def vacuum(self):
+        if self._is_postgres:
+            import psycopg2
+            conn = psycopg2.connect(self._pg_url)
+            conn.autocommit = True
+            conn.cursor().execute("VACUUM ANALYZE")
+            conn.close()
+        else:
+            with self.get_connection(row_factory=False) as conn:
+                conn.execute("VACUUM")
+
     def backup(self, backup_path: Path):
-        """
-        Create a backup copy of the database.
-        
-        Args:
-            backup_path: Destination path for backup file
-        """
+        if self._is_postgres:
+            raise NotImplementedError("Use pg_dump for PostgreSQL")
         import shutil
         backup_path.parent.mkdir(parents=True, exist_ok=True)
         shutil.copy2(self.db_path, backup_path)
-        logger.info(f"Database backed up to {backup_path}")
 
 
-# Singleton instance for application-wide use
 _db_instance: Optional[RMOSDatabase] = None
 
 
 def get_rmos_db(db_path: Optional[Path] = None) -> RMOSDatabase:
-    """
-    Get singleton RMOS database instance.
-    
-    Args:
-        db_path: Optional custom database path (only used on first call)
-        
-    Returns:
-        Shared RMOSDatabase instance
-        
-    Example:
-        db = get_rmos_db()
-        with db.get_connection() as conn:
-            # ... database operations
-    """
     global _db_instance
     if _db_instance is None:
         _db_instance = RMOSDatabase(db_path)
     return _db_instance
+
+
+def reset_rmos_db() -> None:
+    global _db_instance
+    _db_instance = None
