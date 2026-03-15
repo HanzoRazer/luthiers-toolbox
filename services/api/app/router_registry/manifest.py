@@ -21,14 +21,6 @@ ROUTER_MANIFEST: List[RouterSpec] = [
         category="core",
     ),
     RouterSpec(
-        module="app.governance.metrics_router",
-        prefix="",  # /metrics at root
-        tags=["Metrics"],
-        enabled=False,  # TODO: implement metrics router
-        required=False,
-        category="core",
-    ),
-    RouterSpec(
         module="app.governance.governance_consolidated_router",
         prefix="",  # router has /api/_meta prefix
         tags=["Meta", "Governance"],
@@ -376,18 +368,6 @@ ROUTER_MANIFEST: List[RouterSpec] = [
         prefix="/api",
         tags=["Instruments", "Headstock Inlay"],
         category="instruments",
-    ),
-    RouterSpec(
-        module="app.art_studio.relief_router",
-        prefix="/api",
-        tags=["Art Studio", "Relief"],
-        category="art_studio",
-    ),
-    RouterSpec(
-        module="app.art_studio.vcarve_router",
-        prefix="/api",
-        tags=["Art Studio", "V-Carve"],
-        category="art_studio",
     ),
     # -------------------------------------------------------------------------
     # VISION
