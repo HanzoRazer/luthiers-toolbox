@@ -43,6 +43,10 @@ from .governance.governance_consolidated_router import router as governance_rout
 # Route analytics middleware (for router consolidation analysis)
 from .middleware.route_analytics_middleware import RouteAnalyticsMiddleware, analytics_router
 
+# API Rate Limiting
+from .middleware.rate_limit import limiter, rate_limit_exceeded_handler
+from slowapi.errors import RateLimitExceeded
+
 # Centralized router loading (Phase 9)
 from .router_registry import load_all_routers, get_router_health
 
@@ -178,6 +182,12 @@ _ANALYTICS_ENABLED = os.getenv("ENABLE_ROUTE_ANALYTICS", "").lower() in ("1", "t
 if _ANALYTICS_ENABLED:
     app.add_middleware(RouteAnalyticsMiddleware)
     _log.info("Route analytics middleware ENABLED (ENABLE_ROUTE_ANALYTICS=1)")
+
+# API Rate Limiting - protects against abuse and ensures fair usage
+# Disable with RATE_LIMIT_ENABLED=0 in development
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, rate_limit_exceeded_handler)
+_log.info("API rate limiting initialized")
 
 
 # =============================================================================
