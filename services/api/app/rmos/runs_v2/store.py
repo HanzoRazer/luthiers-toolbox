@@ -307,6 +307,7 @@ class RunStoreV2:
         parent_plan_run_id: Optional[str] = None,  # Bundle 10: lineage filtering
         parent_batch_plan_artifact_id: Optional[str] = None,
         parent_batch_spec_artifact_id: Optional[str] = None,
+        parent_artifact_id: Optional[str] = None,  # Generic parent lookup
         date_from: Optional[datetime] = None,
         date_to: Optional[datetime] = None,
     ) -> List[RunArtifact]:
@@ -325,6 +326,7 @@ class RunStoreV2:
             parent_plan_run_id=parent_plan_run_id,
             parent_batch_plan_artifact_id=parent_batch_plan_artifact_id,
             parent_batch_spec_artifact_id=parent_batch_spec_artifact_id,
+            parent_artifact_id=parent_artifact_id,
             date_from=date_from, date_to=date_to,
         )
         matching_metas = [m for m in index.values() if matches_index_meta(m, **fkw)]
@@ -391,6 +393,6 @@ class RunStoreV2:
 # =============================================================================
 # Moved to store_api.py — re-export all public names so existing imports work.
 
-from .store_api import (create_run_id, persist_run, store_artifact, update_run, get_run,  # noqa: E402
+from .store_api import (create_run_id, persist_run, persist_run_artifact, store_artifact, update_run, get_run,  # noqa: E402
     list_runs_filtered, count_runs_filtered, rebuild_index, attach_advisory, delete_run, query_runs,
     query_recent, _get_default_store, _default_store, _norm, _get_nested, _extract_sort_key)

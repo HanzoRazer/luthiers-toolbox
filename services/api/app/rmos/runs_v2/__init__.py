@@ -70,6 +70,7 @@ from .store import (
     # Module-level functions
     create_run_id,
     persist_run,
+    persist_run_artifact,
     get_run,
     list_runs_filtered,
     attach_advisory,
@@ -222,6 +223,7 @@ __all__ = [
     "validate_and_persist",
     "create_run_id",
     "persist_run",
+    "persist_run_artifact",
     "get_run",
     "list_runs_filtered",
     "attach_advisory",

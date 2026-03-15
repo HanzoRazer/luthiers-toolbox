@@ -20,6 +20,7 @@ def matches_index_meta(
     parent_plan_run_id: Optional[str] = None,
     parent_batch_plan_artifact_id: Optional[str] = None,
     parent_batch_spec_artifact_id: Optional[str] = None,
+    parent_artifact_id: Optional[str] = None,  # Generic parent lookup
     date_from: Optional[datetime] = None,
     date_to: Optional[datetime] = None,
 ) -> bool:
@@ -30,7 +31,7 @@ def matches_index_meta(
         return False
     if not _matches_session_labels(m, batch_label, session_id):
         return False
-    if not _matches_lineage(m, parent_plan_run_id, parent_batch_plan_artifact_id, parent_batch_spec_artifact_id):
+    if not _matches_lineage(m, parent_plan_run_id, parent_batch_plan_artifact_id, parent_batch_spec_artifact_id, parent_artifact_id):
         return False
     return True
 
@@ -110,9 +111,10 @@ def _matches_lineage(
     parent_plan_run_id: Optional[str],
     parent_batch_plan_artifact_id: Optional[str],
     parent_batch_spec_artifact_id: Optional[str],
+    parent_artifact_id: Optional[str] = None,
 ) -> bool:
     """Match lineage fields, searching top-level, 'lineage' sub-dict, and 'meta' sub-dict."""
-    if not parent_plan_run_id and not parent_batch_plan_artifact_id and not parent_batch_spec_artifact_id:
+    if not parent_plan_run_id and not parent_batch_plan_artifact_id and not parent_batch_spec_artifact_id and not parent_artifact_id:
         return True
 
     nested_meta = m.get("meta") or {}
@@ -135,6 +137,14 @@ def _matches_lineage(
             m, lineage, nested_meta,
             "parent_batch_spec_artifact_id", parent_batch_spec_artifact_id,
             aliases=("batch_spec_artifact_id",),
+        ):
+            return False
+
+    if parent_artifact_id:
+        if not _any_field_matches(
+            m, lineage, nested_meta,
+            "parent_artifact_id", parent_artifact_id,
+            aliases=("parent_batch_execution_artifact_id",),
         ):
             return False
 
