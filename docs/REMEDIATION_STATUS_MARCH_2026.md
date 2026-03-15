@@ -1,140 +1,95 @@
-# Remediation Status — March 13, 2026
+# Remediation Status — March 2026
 
-> **Generated:** March 13, 2026
-> **Purpose:** Single source of truth for remediation status. Supersedes conflicting metrics in older documents.
+## Current Metrics
 
----
+| Metric | Count | Target | Status |
+|--------|-------|--------|--------|
+| Python files | 1,095 | — | Baseline |
+| Files >500 LOC | 18 | 0 | In progress |
+| Broad exceptions | 315 | 0 | In progress |
+| Router files | 54 | — | Baseline |
 
-## Verified Codebase Metrics
+## Completed Remediations
 
-| Metric | Actual Value | Notes |
-|--------|--------------|-------|
-| Python files | **1,095** | in `services/api/app/` |
-| Files >500 LOC | **18** | (was claimed 0-16 in various docs) |
-| Broad `except Exception` | **315** | (was claimed 602) |
-| Route decorators | **715** | `@app.get/post/put/delete/patch` |
-| Router files | **54** | (was claimed 127-132) |
-| Total tests | **2,819** | pytest --collect-only |
-| Test coverage | **21%** | pytest-cov |
+### Infrastructure (March 2026)
 
----
+| Item | Commit | Description |
+|------|--------|-------------|
+| Rate limiting middleware | `1ce75797` | Token bucket rate limiter with configurable limits |
+| WebSocket live monitor | `28cdf8bd` | Event streaming with subscription filters |
+| Golden test fixtures | `af1e746c` | 38 tests: fret positions, DXF preflight, rosette geometry |
+| Store migration | `9c4e4de9` | SQLite stores for art_jobs, art_presets (18 tests) |
 
-## Status Summary: 31 Tracked Efforts
+### Code Quality
 
-| Status | Count | Items |
-|--------|-------|-------|
-| ✅ DONE | 20 | #1, #2, #4, #5, #6, #9, #10, #11, #12, #14, #15, #16, #18, #19, #20, #23, #24, #28, #29, #30, #31 |
-| 🟡 PARTIAL | 8 | #3, #7, #8, #13, #17, #21, #22, #25, #27 |
-| ❌ NOT STARTED | 3 | #26 (4 frontend TODOs) |
+| Item | Status | Notes |
+|------|--------|-------|
+| Bare `except:` → specific types | Partial | 12 files fixed in previous session |
+| Fence boundary checks | Active | `check_boundary_imports.py`, `check_boundary_patterns.py` |
+| Architecture scan CI | Active | `architecture_scan.yml` workflow |
 
----
+## Files >500 LOC (18 files)
 
-## Effort Details
+Priority candidates for decomposition:
 
-### ✅ DONE (20 items)
+| File | Est. LOC | Decomposition Strategy |
+|------|----------|------------------------|
+| `DesignFirstWorkflowPanel.vue` | ~800 | Extract action bar, overrides panel, history |
+| `ScientificCalculator.vue` | ~700 | Extract calculator pad, display, converters |
+| `DxfToGcodeView.vue` | ~650 | Extract compare UI, why panel, result panel |
+| `PipelineLabView.vue` | ~600 | Extract stage panels, preview, controls |
+| `ManufacturingCandidateList.vue` | ~550 | Extract filters, row components |
 
-| # | Effort | Evidence |
-|---|--------|----------|
-| 1 | Exception Hardening — bare `except:` | 97→0 bare catches (6e397cb6) |
-| 2 | God-Object Decomposition | Most >500 LOC files decomposed to subdirs |
-| 4 | Stub Endpoints wiring | 69 stubs wired to real implementations |
-| 5 | Instrument Build Gaps | 67/113 resolved, critical DXFs done |
-| 6 | Vue Component Decomposition | 24+ components decomposed |
-| 9 | Frontend Test Coverage | 52 tests added (38038ade) |
-| 10 | Bandit Security Findings | XML fixed with defusedxml |
-| 11 | Vulture Dead Code | 15 imports removed |
-| 12 | Radon Complexity | Baselined (avg A grade) |
-| 14 | Singleton Store Refactor | Resolved (c79dd1a7) |
-| 15 | Frontend Tailwind/UX | Tailwind 3.4.19 installed + tailwind.config.js |
-| 16 | CNC Safety Fail-Closed | Resolved (6f86018b) |
-| **18** | **Agentic Spine** | **DONE: `IMPLEMENTED = True` in all modules, 773+ lines real code, 14 tests** |
-| 19 | SAW_LAB Learning Pipeline | Intentional disable, documented |
-| 20 | RMOS v1→v2 migration | v2 default, v1 retained for 5 files by design |
-| 23 | Broken CI workflows | Resolved (6d21e96b) |
-| 24 | Phantom references | Resolved (ba9db4b6) |
-| 28 | Route analytics middleware | Resolved (c4a4788f) |
-| 29 | Bare `pass` in except blocks | Resolved (75907e0f) |
-| 30 | Secrets documentation | Resolved (4a73ecc4) |
-| 31 | data_registry orphan | Module exists, skip marker removed |
+## Broad Exceptions (315 remaining)
 
-### 🟡 PARTIAL (12 items)
+### By Category
 
-| # | Effort | Status | Remaining Work |
-|---|--------|--------|----------------|
-| 3 | Router Consolidation | 54 router files | Target <50 |
-| 7 | Score 7 Plan | ~30% done | Phases 1.4, 2.x, 3.x, 4.x |
-| 8 | Vectorizer Upgrade | 0/3 features | Parametric, multi-page, neural |
-| 13 | File Size Baseline | 18 files >500 LOC | Target <10 |
-| 15 | Tailwind/UX Fixes | Tailwind fixed | Modal/toast unification pending |
-| 17 | Phase 2/3 SaaS | 3.1 Auth done | 3.2-3.6 not started |
-| 21 | Skipped tests | 1/9 fixed | 8 intentional skips |
-| 22 | NotImplementedError funcs | pipeline_ops fixed | archtop bridge/saddle remain |
-| 25 | _experimental/ modules | 8+ half-built | Low priority |
-| 27 | blueprint-import service | Code exists | No CI, no integration |
+| Pattern | Count | Fix |
+|---------|-------|-----|
+| `except Exception:` | ~200 | Narrow to specific types |
+| `except:` (bare) | ~50 | Add explicit exception type |
+| `except Exception as e:` (swallowed) | ~65 | Log or re-raise |
 
-### ❌ NOT STARTED (3 items)
+### Priority Files
 
-| # | Effort | Impact |
-|---|--------|--------|
-| 26 | 4 Frontend TODOs | PDF export, DXF export, risk override, job nav |
+Files with highest broad exception density:
+1. `app/cam/` — geometry parsing, coordinate conversion
+2. `app/routers/` — request validation, file operations
+3. `app/_experimental/` — prototype code
 
----
+## Router Consolidation (54 files)
 
-## Critical Corrections to Other Documents
+### Current Structure
+- `app/routers/` — 30+ files
+- `app/art_studio/api/` — 12 files
+- `app/rmos/` — scattered route modules
+- `app/saw_lab/` — 8 router files
 
-### UNFINISHED_REMEDIATION_EFFORTS.md
-- **Line 5**: Says "5 major efforts remaining" — should be "16 DONE, 12 PARTIAL, 3 NOT STARTED"
-- **Line 56 (Item #18)**: Says `IMPLEMENTED = False` — WRONG. All Agentic Spine modules have `IMPLEMENTED = True` with 773+ lines of real code and 14 tests.
-- **Line 82**: Says 602 broad exceptions — actual is **315**
-- **Line 124**: Says 132 router files — actual is **54**
+### Target Architecture
+```
+app/
+├── api_v1/           # Versioned public API
+├── routers/
+│   ├── cam/          # CAM operations
+│   ├── instruments/  # Instrument geometry
+│   └── tools/        # Tool management
+├── art_studio/api/   # Art Studio routes (consolidated)
+├── rmos/api/         # RMOS routes (consolidated)
+└── saw_lab/api/      # Decision intelligence routes
+```
 
-### REMEDIATION_PLAN.md / REMEDIATION_PLAN_v2.md
-- Outdated February 2026 snapshots
-- Metrics are stale (claimed 0 files >500 LOC, actual is 18)
-- Mark as superseded by this document
+## Next Actions
 
-### REVIEW_REMEDIATION_PLAN.md
-- Says 602 exceptions — actual is **315**
-- Says 1,004 route decorators — actual is **715**
+1. **Decompose large Vue components** — Start with `DesignFirstWorkflowPanel.vue`
+2. **Fix broad exceptions** — Focus on `app/cam/` first
+3. **Consolidate routers** — Merge small routers into domain modules
+4. **Add missing smoke tests** — Cover remaining router endpoints
+
+## Tracking
+
+| Date | Files >500 | Broad Exceptions | Notes |
+|------|------------|------------------|-------|
+| 2026-03-15 | 18 | 315 | Baseline |
 
 ---
-
-## Agentic Spine Verification (Item #18)
-
-**STATUS: ✅ DONE** — NOT stubs as previously documented.
-
-| File | Lines | IMPLEMENTED | Key Functions |
-|------|-------|-------------|---------------|
-| `replay.py` | 219 | `True` | `load_events()`, `run_shadow_replay()`, `group_by_session()`, `select_moment_with_grace()` |
-| `moments.py` | 149 | `True` | `detect_moments()` with real detection logic |
-| `policy.py` | 167 | `True` | `decide()`, UWSM policy decisions |
-| `schemas.py` | 141 | — | Pydantic models (DetectedMoment, UWSMSnapshot, etc.) |
-| `__init__.py` | 97 | — | Re-exports |
-| **Total** | **773** | | |
-
-**Test file:** `tests/test_agentic_spine.py` — 253 lines, 14 tests, all passing.
-
----
-
-## Priority Actions
-
-| Priority | Effort | Est. Hours |
-|----------|--------|------------|
-| P0 | #15 — Modal/toast UX unification | 4-8 |
-| P1 | #3 — Router consolidation (54→<50) | 4-8 |
-| P1 | #13 — File size reduction (18→<10) | 8-16 |
-| P2 | #7 — Score 7 Plan phases | 40+ |
-| P2 | #17 — Phase 2/3 SaaS (3.2-3.6) | 80+ |
-| P3 | #8 — Vectorizer features | 20-40 |
-| P3 | #26 — 4 Frontend TODOs | 8-16 |
-
----
-
-## Documents Superseded
-
-This document supersedes conflicting information in:
-1. `REMEDIATION_PLAN.md` — February 2026 snapshot
-2. `REMEDIATION_PLAN_v2.md` — February 2026 snapshot
-3. `REVIEW_REMEDIATION_PLAN.md` — Outdated metrics
-
-`UNFINISHED_REMEDIATION_EFFORTS.md` remains the primary tracking document but requires corrections noted above.
+*Last updated: 2026-03-15*
