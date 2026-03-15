@@ -1,12 +1,12 @@
 """Analytics Jobs Router - Job success, duration, throughput, and failure metrics.
 
 Provides:
-- GET /jobs/success-trends - Success rate trends over time
-- GET /jobs/duration - Duration analysis by job type
-- GET /jobs/status - Job status distribution
-- GET /jobs/throughput - Throughput metrics (jobs per day/week/month)
-- GET /jobs/failures - Failure analysis
-- GET /jobs/types - Job type distribution
+- GET /analytics/jobs/success-trends - Success rate trends over time
+- GET /analytics/jobs/duration - Duration analysis by job type
+- GET /analytics/jobs/status - Job status distribution
+- GET /analytics/jobs/throughput - Throughput metrics (jobs per day/week/month)
+- GET /analytics/jobs/failures - Failure analysis
+- GET /analytics/jobs/types - Job type distribution
 - GET /analytics/jobs/recent - Recent jobs summary
 
 Total: 7 routes for job analytics.
@@ -25,7 +25,7 @@ logger = logging.getLogger(__name__)
 router = APIRouter(tags=["analytics", "jobs"])
 
 
-@router.get("/jobs/success-trends")
+@router.get("/analytics/jobs/success-trends")
 def get_job_success_trends(days: int = Query(30, ge=1, le=365)):
     """
     Get success rate trends over time.
@@ -46,7 +46,7 @@ def get_job_success_trends(days: int = Query(30, ge=1, le=365)):
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@router.get("/jobs/duration")
+@router.get("/analytics/jobs/duration")
 def get_job_duration_analysis():
     """
     Get duration analysis by job type.
@@ -64,7 +64,7 @@ def get_job_duration_analysis():
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@router.get("/jobs/status")
+@router.get("/analytics/jobs/status")
 def get_job_status_distribution():
     """
     Get distribution of job statuses.
@@ -82,7 +82,7 @@ def get_job_status_distribution():
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@router.get("/jobs/throughput")
+@router.get("/analytics/jobs/throughput")
 def get_job_throughput_metrics():
     """
     Get throughput metrics (jobs per day/week/month).
@@ -100,7 +100,7 @@ def get_job_throughput_metrics():
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@router.get("/jobs/failures")
+@router.get("/analytics/jobs/failures")
 def get_job_failure_analysis():
     """
     Get failure analysis for failed jobs.
@@ -118,7 +118,7 @@ def get_job_failure_analysis():
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@router.get("/jobs/types")
+@router.get("/analytics/jobs/types")
 def get_job_type_distribution():
     """
     Get distribution of job types.
