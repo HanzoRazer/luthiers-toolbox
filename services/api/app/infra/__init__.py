@@ -1,9 +1,8 @@
-"""Infrastructure module - production facade.
+"""Infrastructure module - cross-cutting concerns.
 
-Re-exports from experimental infra for cross-cutting concerns:
-monitoring, logging, and runtime observability.
+Provides monitoring, logging, and runtime observability utilities.
 """
-from app._experimental.infra.live_monitor import publish_event
+from .live_monitor import publish_event
 
 __all__ = [
     "publish_event",
