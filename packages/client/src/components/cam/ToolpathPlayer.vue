@@ -49,7 +49,7 @@ import StockSimulationPanel from "./StockSimulationPanel.vue";
 import ChipLoadPanel from "./ChipLoadPanel.vue";
 import type { ChipLoadIssue } from "@/util/chipLoadAnalyzer";
 
-// Extracted subcomponents (Phase 2 + Phase 3 + Phase 4 + Phase 5 decomposition)
+// Extracted subcomponents (Phase 2 + Phase 3 + Phase 4 + Phase 5 + Phase 6 decomposition)
 import {
   PlaybackControlsBar,
   ToolbarButtonGroup,
@@ -63,10 +63,14 @@ import {
   MeasureModeIndicator,
   PanelContainer,
   LoadingOverlay,
+  ValidationOverlay,
+  FloatingPanel,
+  EmptyState,
   useToolpathAnalysis,
   useToolpathExport,
   useToolpathAudio,
   useToolpathNavigation,
+  useToolpathPanelState,
 } from "./toolpath-player";
 
 // ---------------------------------------------------------------------------
@@ -112,13 +116,16 @@ const props = withDefaults(defineProps<Props>(), {
 const store = useToolpathPlayerStore();
 const { estimates } = useTimeEstimates(computed(() => store.segments));
 
+// P6: Consolidated panel visibility state (must be before shortcuts)
+const { panels, showCompareOverlay } = useToolpathPanelState();
+
 // P5: Keyboard shortcuts
 const { shortcuts, showHelp, hideHelp } = useToolpathShortcuts({
   onToggleHeatmap: () => {
-    showHeatmap.value = !showHeatmap.value;
+    panels.heatmap.value = !panels.heatmap.value;
   },
   onToggleGcode: () => {
-    showGcodePanel.value = !showGcodePanel.value;
+    panels.gcode.value = !panels.gcode.value;
   },
   onToggleViewMode: () => {
     if (props.enable3D) {
@@ -158,59 +165,24 @@ const validation = ref<ValidationResult | null>(null);
 // P5: 3D view mode
 const viewMode = ref<"2d" | "3d">(props.default3D ? "3d" : "2d");
 const canvas3DRef = ref<InstanceType<typeof ToolpathCanvas3D> | null>(null);
-
-// P5: G-code viewer panel
-const showGcodePanel = ref(false);
-
-// P5: Heatmap mode
-const showHeatmap = ref(false);
-
-// P5: Measurements panel
-const showMeasurementsPanel = ref(true);
-
-// P5: Statistics panel
-const showStatsPanel = ref(false);
-
-// P5: Filter panel
-const showFilterPanel = ref(false);
-const filterPanelRef = ref<InstanceType<typeof ToolpathFilter> | null>(null);
-
-// P5: Annotations panel
-const showAnnotationsPanel = ref(false);
-
-// P5: Compare panel
-const showComparePanel = ref(false);
-const compareSegments = ref<CompareMoveSegment[]>([]);
-const showCompareOverlay = ref(false);
-
-// P5: Audio panel
-const showAudioPanel = ref(false);
-// P5: Export animation (via composable)
-const exportState = useToolpathExport();
-const {
-  showExportPanel,
-  isExporting,
-  exportProgress,
-  exportConfig,
-} = exportState;
 const canvas2DRef = ref<InstanceType<typeof ToolpathCanvas> | null>(null);
 
-// P6: Multi-tool legend panel
-const showToolLegendPanel = ref(false);
+// P5: Filter panel ref (for hasActiveFilter)
+const filterPanelRef = ref<InstanceType<typeof ToolpathFilter> | null>(null);
+
+// P5: Compare segments data
+const compareSegments = ref<CompareMoveSegment[]>([]);
+
+// P5: Export animation (via composable)
+const exportState = useToolpathExport();
+const { showExportPanel, isExporting, exportProgress, exportConfig } = exportState;
+
+// P6: Multi-tool filter
 const selectedToolFilter = ref<number | null>(null);
 const hasMultipleTools = computed(() => {
   const tools = analyzeToolUsage(store.segments);
   return tools.length > 1;
 });
-
-// P6 Step 14: Feed analysis panel
-const showFeedAnalysisPanel = ref(false);
-
-// P6 Step 15: Stock simulation panel
-const showStockSimulationPanel = ref(false);
-
-// P6 Step 16: Chip load analysis panel
-const showChipLoadPanel = ref(false);
 
 // ---------------------------------------------------------------------------
 // Machine state array (P3 M-code tracking)
@@ -457,7 +429,7 @@ onUnmounted(() => {
       v-if="viewMode === '2d'"
       ref="canvas2DRef"
       class="canvas-area"
-      :show-heatmap="showHeatmap"
+      :show-heatmap="panels.heatmap.value"
       :tool-diameter="toolDiameter"
       :color-by-tool="hasMultipleTools"
       :tool-filter="selectedToolFilter"
@@ -469,7 +441,7 @@ onUnmounted(() => {
       :tool-diameter="toolDiameter"
       :show-stock="true"
       :show-grid="true"
-      :show-heatmap="showHeatmap"
+      :show-heatmap="panels.heatmap.value"
     />
 
     <!-- ── Loading overlay with progress (P1) - extracted ───── -->
@@ -486,50 +458,18 @@ onUnmounted(() => {
       @optimize="store.setResolution(50)"
     />
 
-    <!-- ── Validation error overlay (P1) ─────────────────────── -->
-    <div
+    <!-- ── Validation error overlay (P1) - extracted ────────── -->
+    <ValidationOverlay
       v-if="hasErrors && !store.loading && store.segments.length === 0"
-      class="error-overlay"
-    >
-      <div class="error-box">
-        <span class="error-icon">
-          ⚠️
-        </span>
-        <div class="error-info">
-          <strong>G-code has errors</strong>
-          <ul class="error-list">
-            <li
-              v-for="iss in validationErrors.slice(0, 3)"
-              :key="iss.code + iss.line"
-            >
-              Line {{ iss.line }}: {{ iss.message }}
-            </li>
-          </ul>
-        </div>
-        <button
-          class="btn-retry"
-          @click="doLoad"
-        >
-          Load anyway
-        </button>
-      </div>
-    </div>
+      :errors="validationErrors"
+      @load-anyway="doLoad"
+    />
 
-    <!-- ── Error state ───────────────────────────────────────── -->
-    <div
-      v-if="store.error && !store.loading"
-      class="error-overlay"
-    >
-      <span>⚠ {{ store.error }}</span>
-    </div>
-
-    <!-- ── Empty / idle prompt ───────────────────────────────── -->
-    <div
-      v-if="!store.loading && !store.error && store.segments.length === 0 && !hasErrors"
-      class="empty-state"
-    >
-      <span>No toolpath loaded</span>
-    </div>
+    <!-- ── Error / Empty state - extracted ───────────────────── -->
+    <EmptyState
+      v-if="!store.loading && !hasErrors && store.segments.length === 0"
+      :error="store.error"
+    />
 
     <!-- ── Controls bar (using extracted subcomponents) ──────── -->
     <div
@@ -539,40 +479,40 @@ onUnmounted(() => {
       <ToolbarButtonGroup
         :enable3-d="props.enable3D"
         :view-mode="viewMode"
-        :show-heatmap="showHeatmap"
+        :show-heatmap="panels.heatmap.value"
         :show-export-panel="showExportPanel"
         :is-exporting="isExporting"
         :measure-mode="store.measureMode"
         :show-help="showHelp"
-        :show-stats-panel="showStatsPanel"
-        :show-filter-panel="showFilterPanel"
+        :show-stats-panel="panels.stats.value"
+        :show-filter-panel="panels.filter.value"
         :has-active-filter="filterPanelRef?.hasActiveFilter ?? false"
-        :show-annotations-panel="showAnnotationsPanel"
-        :show-compare-panel="showComparePanel"
+        :show-annotations-panel="panels.annotations.value"
+        :show-compare-panel="panels.compare.value"
         :show-compare-overlay="showCompareOverlay"
-        :show-audio-panel="showAudioPanel"
+        :show-audio-panel="panels.audio.value"
         :has-multiple-tools="hasMultipleTools"
-        :show-tool-legend-panel="showToolLegendPanel"
-        :show-feed-analysis-panel="showFeedAnalysisPanel"
-        :show-stock-simulation-panel="showStockSimulationPanel"
+        :show-tool-legend-panel="panels.toolLegend.value"
+        :show-feed-analysis-panel="panels.feedAnalysis.value"
+        :show-stock-simulation-panel="panels.stockSimulation.value"
         :has-bounds="!!store.bounds"
-        :show-chip-load-panel="showChipLoadPanel"
+        :show-chip-load-panel="panels.chipLoad.value"
         :segment-count="store.segments.length"
         :memory-info="store.memoryInfo"
         @update:view-mode="viewMode = $event"
-        @update:show-heatmap="showHeatmap = $event"
+        @update:show-heatmap="panels.heatmap.value = $event"
         @update:show-export-panel="showExportPanel = $event"
         @toggle-measure-mode="store.toggleMeasureMode()"
         @update:show-help="showHelp = $event"
-        @update:show-stats-panel="showStatsPanel = $event"
-        @update:show-filter-panel="showFilterPanel = $event"
-        @update:show-annotations-panel="showAnnotationsPanel = $event"
-        @update:show-compare-panel="showComparePanel = $event"
-        @update:show-audio-panel="showAudioPanel = $event"
-        @update:show-tool-legend-panel="showToolLegendPanel = $event"
-        @update:show-feed-analysis-panel="showFeedAnalysisPanel = $event"
-        @update:show-stock-simulation-panel="showStockSimulationPanel = $event"
-        @update:show-chip-load-panel="showChipLoadPanel = $event"
+        @update:show-stats-panel="panels.stats.value = $event"
+        @update:show-filter-panel="panels.filter.value = $event"
+        @update:show-annotations-panel="panels.annotations.value = $event"
+        @update:show-compare-panel="panels.compare.value = $event"
+        @update:show-audio-panel="panels.audio.value = $event"
+        @update:show-tool-legend-panel="panels.toolLegend.value = $event"
+        @update:show-feed-analysis-panel="panels.feedAnalysis.value = $event"
+        @update:show-stock-simulation-panel="panels.stockSimulation.value = $event"
+        @update:show-chip-load-panel="panels.chipLoad.value = $event"
       />
       <PlaybackControlsBar
         :play-state="store.playState"
@@ -627,10 +567,10 @@ onUnmounted(() => {
       :optimization-report="optimizationReport"
       :selected-segment-index="store.selectedSegmentIndex"
       :selected-gcode-line="store.selectedGcodeLine"
-      :show-gcode-panel="showGcodePanel"
+      :show-gcode-panel="panels.gcode.value"
       :show-collision-panel="showCollisionPanel"
       :show-opt-panel="showOptPanel"
-      @update:show-gcode-panel="showGcodePanel = $event"
+      @update:show-gcode-panel="panels.gcode.value = $event"
       @update:show-collision-panel="showCollisionPanel = $event"
       @update:show-opt-panel="showOptPanel = $event"
       @jump-to-selected="store.jumpToSelected()"
@@ -652,9 +592,9 @@ onUnmounted(() => {
 
     <!-- P5: G-code Source Panel (extracted) -->
     <GcodeSourcePanel
-      v-if="showGcodePanel && store.sourceGcode"
+      v-if="panels.gcode.value && store.sourceGcode"
       :has-selection="store.selectedSegmentIndex !== null"
-      @close="showGcodePanel = false"
+      @close="panels.gcode.value = false"
       @clear-selection="store.clearSelection()"
     />
 
@@ -686,24 +626,24 @@ onUnmounted(() => {
 
     <!-- P5: Statistics Panel (using PanelContainer) -->
     <PanelContainer
-      v-if="showStatsPanel && store.segments.length > 0"
+      v-if="panels.stats.value && store.segments.length > 0"
       title="📊 Toolpath Statistics"
       accent="blue"
       position="top-left"
-      @close="showStatsPanel = false"
+      @close="panels.stats.value = false"
     >
       <ToolpathStats :segments="store.segments" />
     </PanelContainer>
 
     <!-- P5: Filter Panel (using PanelContainer) -->
     <PanelContainer
-      v-if="showFilterPanel && store.segments.length > 0"
+      v-if="panels.filter.value && store.segments.length > 0"
       title="🔍 Segment Filter"
       accent="orange"
       position="top-right"
       width="340px"
       :z-index="13"
-      @close="showFilterPanel = false"
+      @close="panels.filter.value = false"
     >
       <template #actions>
         <button
@@ -721,87 +661,106 @@ onUnmounted(() => {
     </PanelContainer>
 
     <!-- P5: Annotations Panel -->
-    <div
-      v-if="showAnnotationsPanel && store.segments.length > 0"
-      class="annotations-panel-container"
+    <FloatingPanel
+      v-if="panels.annotations.value && store.segments.length > 0"
+      position="top-right"
+      :z-index="14"
+      accent="#4a90d9"
     >
       <ToolpathAnnotations
         :current-segment="store.currentSegmentIndex"
         :current-position="store.toolPosition as [number, number, number]"
         :current-line-number="store.currentSegment?.line_number ?? null"
-        @close="showAnnotationsPanel = false"
+        @close="panels.annotations.value = false"
         @goto="handleAnnotationGoto"
       />
-    </div>
+    </FloatingPanel>
 
     <!-- P5: Compare Panel -->
-    <div
-      v-if="showComparePanel && store.segments.length > 0"
-      class="compare-panel-container"
+    <FloatingPanel
+      v-if="panels.compare.value && store.segments.length > 0"
+      position="top-left"
+      width="360px"
+      :z-index="15"
+      accent="#9b59b6"
     >
       <ToolpathComparePanel
         :base-segments="store.segments as CompareMoveSegment[]"
         :base-gcode="store.sourceGcode"
-        @close="showComparePanel = false"
+        @close="panels.compare.value = false"
         @compare-segments="handleCompareSegments"
         @overlay-toggle="handleCompareOverlayToggle"
       />
-    </div>
+    </FloatingPanel>
+
     <!-- P5: Audio Panel -->
-    <div
-      v-if="showAudioPanel && store.segments.length > 0"
-      class="audio-panel-container"
+    <FloatingPanel
+      v-if="panels.audio.value && store.segments.length > 0"
+      position="top-right"
+      :z-index="15"
+      accent="#e9a840"
     >
       <ToolpathAudioPanel
-        @close="showAudioPanel = false"
+        @close="panels.audio.value = false"
       />
-    </div>
+    </FloatingPanel>
 
     <!-- P6: Tool Legend Panel -->
-    <div
-      v-if="showToolLegendPanel && store.segments.length > 0"
-      class="tool-legend-container"
+    <FloatingPanel
+      v-if="panels.toolLegend.value && store.segments.length > 0"
+      position="top-left"
+      width="280px"
+      :z-index="15"
+      accent="#4a90d9"
     >
       <ToolLegendPanel
         :segments="store.segments"
         :current-segment-index="store.currentSegmentIndex"
         @tool-select="handleToolSelect"
         @tool-change-click="handleToolChangeClick"
-        @close="showToolLegendPanel = false"
+        @close="panels.toolLegend.value = false"
       />
-    </div>
+    </FloatingPanel>
 
     <!-- P6 Step 14: Feed Analysis Panel -->
-    <div
-      v-if="showFeedAnalysisPanel && store.segments.length > 0"
-      class="feed-analysis-container"
+    <FloatingPanel
+      v-if="panels.feedAnalysis.value && store.segments.length > 0"
+      position="top-right"
+      width="360px"
+      :z-index="16"
+      accent="#f39c12"
     >
       <FeedAnalysisPanel
         :segments="store.segments"
         :tool-diameter="toolDiameter"
         @hint-click="handleFeedHintClick"
-        @close="showFeedAnalysisPanel = false"
+        @close="panels.feedAnalysis.value = false"
       />
-    </div>
+    </FloatingPanel>
 
     <!-- P6 Step 15: Stock Simulation Panel -->
-    <div
-      v-if="showStockSimulationPanel && store.segments.length > 0 && store.bounds"
-      class="stock-simulation-container"
+    <FloatingPanel
+      v-if="panels.stockSimulation.value && store.segments.length > 0 && store.bounds"
+      position="top-left"
+      :z-index="17"
+      accent="#8B4513"
     >
       <StockSimulationPanel
         :segments="store.segments"
         :current-segment-index="store.currentSegmentIndex"
         :bounds="store.bounds"
         :tool-diameter="toolDiameter"
-        @close="showStockSimulationPanel = false"
+        @close="panels.stockSimulation.value = false"
       />
-    </div>
+    </FloatingPanel>
 
     <!-- P6 Step 16: Chip Load Panel -->
-    <div
-      v-if="showChipLoadPanel && store.segments.length > 0"
-      class="chipload-panel-container"
+    <FloatingPanel
+      v-if="panels.chipLoad.value && store.segments.length > 0"
+      position="top-right"
+      width="340px"
+      :z-index="18"
+      accent="#f39c12"
     >
       <ChipLoadPanel
         :segments="store.segments"
@@ -809,19 +768,19 @@ onUnmounted(() => {
         :flute-count="2"
         :default-rpm="18000"
         @issue-click="handleChipLoadIssueClick"
-        @close="showChipLoadPanel = false"
+        @close="panels.chipLoad.value = false"
       />
-    </div>
+    </FloatingPanel>
 
     <!-- P5: Measurements Panel (extracted) -->
     <MeasurementsPanel
       v-if="store.measurements.length > 0"
       :measurements="store.measurements"
       :measure-tool="store.measureTool"
-      :collapsed="!showMeasurementsPanel"
+      :collapsed="!panels.measurements.value"
       @remove="store.removeMeasurement($event)"
       @clear="store.clearMeasurements()"
-      @update:collapsed="showMeasurementsPanel = !$event"
+      @update:collapsed="panels.measurements.value = !$event"
     />
   </div>
 </template>
@@ -844,33 +803,7 @@ onUnmounted(() => {
   min-height: 0;
 }
 
-/* ── Overlays ───────────────────────────────────────────────────── */
-/* Loading overlay moved to LoadingOverlay.vue */
-.error-overlay, .empty-state {
-  position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
-  gap: 12px; font-size: 13px; color: #888; background: rgba(30, 30, 46, 0.85); pointer-events: none; z-index: 5;
-}
-.error-overlay { color: #e74c3c; pointer-events: auto; }
-
-/* ── Validation error box ───────────────────────────────────── */
-.error-box {
-  display: flex; align-items: flex-start; gap: 16px; padding: 16px 20px;
-  background: #2a1a1a; border: 1px solid #e74c3c; border-radius: 8px; max-width: 460px;
-}
-.error-icon { font-size: 28px; }
-.error-info { flex: 1; }
-.error-list { margin: 6px 0 0; padding-left: 18px; font-size: 11px; color: #e74c3c; }
-.btn-retry {
-  padding: 5px 14px;
-  background: #e74c3c;
-  border: none;
-  border-radius: 4px;
-  color: #fff;
-  cursor: pointer;
-  white-space: nowrap;
-  align-self: center;
-}
-.btn-retry:hover { background: #c0392b; }
+/* ── Overlays moved to ValidationOverlay.vue and EmptyState.vue ───── */
 
 /* ── Controls bar ───────────────────────────────────────────────── */
 .controls-bar {
@@ -924,153 +857,5 @@ onUnmounted(() => {
 
 /* ── P5: Filter Panel — now uses PanelContainer ────────────────────── */
 
-/* ── P5: Annotations button — moved to ToolbarButtonGroup.vue ──────── */
-
-/* ── P5: Annotations Panel ───────────────────────────────────────────── */
-.annotations-panel-container {
-  position: absolute;
-  right: 10px;
-  top: 10px;
-  width: 320px;
-  max-height: calc(100% - 120px);
-  z-index: 14;
-  display: flex;
-  flex-direction: column;
-  box-shadow: 0 4px 20px rgba(74, 144, 217, 0.2);
-}
-
-.annotations-panel-container > :deep(.toolpath-annotations) {
-  flex: 1;
-  overflow: hidden;
-  border: 1px solid #4a90d9;
-}
-
-/* ── P5: Compare button — moved to ToolbarButtonGroup.vue ───────────── */
-
-/* ── P5: Compare Panel ───────────────────────────────────────────────── */
-.compare-panel-container {
-  position: absolute;
-  left: 10px;
-  top: 10px;
-  width: 360px;
-  max-height: calc(100% - 120px);
-  z-index: 15;
-  display: flex;
-  flex-direction: column;
-  box-shadow: 0 4px 20px rgba(155, 89, 182, 0.2);
-}
-
-.compare-panel-container > :deep(.toolpath-compare-panel) {
-  flex: 1;
-  overflow: hidden;
-  border: 1px solid #9b59b6;
-}
-/* ── P5: Audio button — moved to ToolbarButtonGroup.vue ───────────── */
-
-/* ── P5: Audio Panel ────────────────────────────────────────────────── */
-.audio-panel-container {
-  position: absolute;
-  right: 10px;
-  top: 10px;
-  width: 320px;
-  max-height: calc(100% - 120px);
-  z-index: 15;
-  display: flex;
-  flex-direction: column;
-  box-shadow: 0 4px 20px rgba(233, 168, 64, 0.2);
-}
-
-.audio-panel-container > :deep(.audio-panel) {
-  flex: 1;
-  overflow: hidden;
-  border: 1px solid #e9a840;
-  border-radius: 8px;
-}
-
-/* ── P6: Tools button — moved to ToolbarButtonGroup.vue ───────────── */
-
-/* ── P6: Tool Legend Panel ───────────────────────────────────────────── */
-.tool-legend-container {
-  position: absolute;
-  left: 10px;
-  top: 10px;
-  width: 280px;
-  max-height: calc(100% - 120px);
-  z-index: 15;
-  display: flex;
-  flex-direction: column;
-  box-shadow: 0 4px 20px rgba(74, 144, 217, 0.2);
-}
-
-.tool-legend-container > :deep(.tool-legend-panel) {
-  flex: 1;
-  overflow: hidden;
-  border: 1px solid #4a90d9;
-  border-radius: 8px;
-}
-
-/* ── P6 Step 14: Feed button — moved to ToolbarButtonGroup.vue ────── */
-
-/* ── P6 Step 14: Feed Analysis Panel ─────────────────────────────────────── */
-.feed-analysis-container {
-  position: absolute;
-  right: 10px;
-  top: 10px;
-  width: 360px;
-  max-height: calc(100% - 120px);
-  z-index: 16;
-  display: flex;
-  flex-direction: column;
-  box-shadow: 0 4px 20px rgba(243, 156, 18, 0.2);
-}
-
-.feed-analysis-container > :deep(.feed-analysis-panel) {
-  flex: 1;
-  overflow: hidden;
-  border: 1px solid #f39c12;
-  border-radius: 8px;
-}
-
-/* ── P6 Step 15: Stock button — moved to ToolbarButtonGroup.vue ───── */
-
-/* ── P6 Step 15: Stock Simulation Panel ──────────────────────────────────── */
-.stock-simulation-container {
-  position: absolute;
-  left: 10px;
-  top: 10px;
-  width: 320px;
-  max-height: calc(100% - 120px);
-  z-index: 17;
-  display: flex;
-  flex-direction: column;
-  box-shadow: 0 4px 20px rgba(139, 69, 19, 0.2);
-}
-
-.stock-simulation-container > :deep(.stock-simulation-panel) {
-  flex: 1;
-  overflow: hidden;
-  border: 1px solid #8B4513;
-  border-radius: 8px;
-}
-
-/* ── P6 Step 16: Chip Load button — moved to ToolbarButtonGroup.vue ── */
-
-.chipload-panel-container {
-  position: absolute;
-  right: 10px;
-  top: 10px;
-  width: 340px;
-  max-height: calc(100% - 120px);
-  z-index: 18;
-  display: flex;
-  flex-direction: column;
-  box-shadow: 0 4px 20px rgba(243, 156, 18, 0.2);
-}
-
-.chipload-panel-container > :deep(.chip-load-panel) {
-  flex: 1;
-  overflow: hidden;
-  border: 1px solid #f39c12;
-  border-radius: 8px;
-}
+/* ── P5/P6: Panel containers now use FloatingPanel component ─────────── */
 </style>
