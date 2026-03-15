@@ -245,6 +245,13 @@ ROUTER_MANIFEST: List[RouterSpec] = [
         category="config",
     ),
     RouterSpec(
+        module="app.routers.machines_consolidated_router",
+        router_attr="cam_machines_router",
+        prefix="/api",
+        tags=["CAM", "Machines"],
+        category="cam",
+    ),
+    RouterSpec(
         module="app.routers.posts_consolidated_router",
         prefix="/api/posts",
         tags=["Post Processors"],

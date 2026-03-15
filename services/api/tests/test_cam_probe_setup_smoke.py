@@ -12,9 +12,9 @@ def client():
 
 
 def test_probe_setup_sheet_corner_outside_returns_svg(client):
-    """POST /api/cam/probe/svg_setup_sheet returns SVG for corner_outside pattern."""
+    """POST /api/probe/setup_sheet/svg returns SVG for corner_outside pattern."""
     response = client.post(
-        "/api/cam/probe/svg_setup_sheet",
+        "/api/probe/setup_sheet/svg",
         json={
             "pattern": "corner_outside",
             "estimated_diameter": 50.0
@@ -28,9 +28,9 @@ def test_probe_setup_sheet_corner_outside_returns_svg(client):
 
 
 def test_probe_setup_sheet_boss_circular_returns_svg(client):
-    """POST /api/cam/probe/svg_setup_sheet returns SVG for boss_circular pattern."""
+    """POST /api/probe/setup_sheet/svg returns SVG for boss_circular pattern."""
     response = client.post(
-        "/api/cam/probe/svg_setup_sheet",
+        "/api/probe/setup_sheet/svg",
         json={
             "pattern": "boss_circular",
             "estimated_diameter": 75.0
@@ -43,9 +43,9 @@ def test_probe_setup_sheet_boss_circular_returns_svg(client):
 
 
 def test_probe_setup_sheet_surface_z_returns_svg(client):
-    """POST /api/cam/probe/svg_setup_sheet returns SVG for surface_z pattern."""
+    """POST /api/probe/setup_sheet/svg returns SVG for surface_z pattern."""
     response = client.post(
-        "/api/cam/probe/svg_setup_sheet",
+        "/api/probe/setup_sheet/svg",
         json={
             "pattern": "surface_z"
         }
@@ -57,9 +57,9 @@ def test_probe_setup_sheet_surface_z_returns_svg(client):
 
 
 def test_probe_setup_sheet_invalid_pattern_returns_422(client):
-    """POST /api/cam/probe/svg_setup_sheet returns 422 for invalid pattern."""
+    """POST /api/probe/setup_sheet/svg returns 422 for invalid pattern."""
     response = client.post(
-        "/api/cam/probe/svg_setup_sheet",
+        "/api/probe/setup_sheet/svg",
         json={
             "pattern": "nonexistent_pattern",
             "estimated_diameter": 50.0

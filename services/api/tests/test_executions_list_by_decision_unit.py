@@ -8,11 +8,11 @@ def test_list_executions_for_decision_filters_and_paginates(monkeypatch):
 
     # 3 executions, 1 unrelated execution, 1 non-execution
     arts = [
-        {"id": "ex1", "kind": "saw_batch_execution", "payload": {"created_utc": "2026-01-01T00:01:00+00:00", "status": "OK", "parent_batch_decision_artifact_id": "dec1"}},
-        {"id": "ex2", "kind": "saw_batch_execution", "payload": {"created_utc": "2026-01-01T00:02:00+00:00", "status": "OK", "parent_batch_decision_artifact_id": "dec1"}},
-        {"id": "ex3", "kind": "saw_batch_execution", "payload": {"created_utc": "2026-01-01T00:03:00+00:00", "status": "OK", "parent_batch_decision_artifact_id": "dec1"}},
-        {"id": "exX", "kind": "saw_batch_execution", "payload": {"created_utc": "2026-01-01T00:04:00+00:00", "status": "OK", "parent_batch_decision_artifact_id": "other"}},
-        {"id": "tp1", "kind": "saw_batch_toolpaths", "payload": {"created_utc": "2026-01-01T00:05:00+00:00", "status": "OK", "parent_batch_decision_artifact_id": "dec1"}},
+        {"id": "ex1", "kind": "saw_batch_execution", "payload": {"created_utc": "2026-01-01T00:01:00+00:00", "status": "OK", "parent_decision_id": "dec1"}},
+        {"id": "ex2", "kind": "saw_batch_execution", "payload": {"created_utc": "2026-01-01T00:02:00+00:00", "status": "OK", "parent_decision_id": "dec1"}},
+        {"id": "ex3", "kind": "saw_batch_execution", "payload": {"created_utc": "2026-01-01T00:03:00+00:00", "status": "OK", "parent_decision_id": "dec1"}},
+        {"id": "exX", "kind": "saw_batch_execution", "payload": {"created_utc": "2026-01-01T00:04:00+00:00", "status": "OK", "parent_decision_id": "other"}},
+        {"id": "tp1", "kind": "saw_batch_toolpaths", "payload": {"created_utc": "2026-01-01T00:05:00+00:00", "status": "OK", "parent_decision_id": "dec1"}},
     ]
 
     def _fake_get_run(aid: str):

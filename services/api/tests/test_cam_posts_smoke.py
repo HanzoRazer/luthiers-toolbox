@@ -12,8 +12,8 @@ def client():
 
 
 def test_posts_list_returns_posts_array(client):
-    """GET /api/cam/posts returns posts list with builtin posts."""
-    response = client.get("/api/cam/posts")
+    """GET /api/posts returns posts list with builtin posts."""
+    response = client.get("/api/posts")
     assert response.status_code == 200
     data = response.json()
     assert "posts" in data
@@ -27,8 +27,8 @@ def test_posts_list_returns_posts_array(client):
 
 
 def test_posts_get_grbl_returns_config(client):
-    """GET /api/cam/posts/GRBL returns GRBL post config."""
-    response = client.get("/api/cam/posts/GRBL")
+    """GET /api/posts/GRBL returns GRBL post config."""
+    response = client.get("/api/posts/GRBL")
     # May return 404 if GRBL not loaded, but should not error
     if response.status_code == 200:
         data = response.json()
@@ -40,15 +40,15 @@ def test_posts_get_grbl_returns_config(client):
 
 
 def test_posts_get_nonexistent_returns_404(client):
-    """GET /api/cam/posts/{nonexistent} returns 404."""
-    response = client.get("/api/cam/posts/NONEXISTENT_POST_XYZ")
+    """GET /api/posts/{nonexistent} returns 404."""
+    response = client.get("/api/posts/NONEXISTENT_POST_XYZ")
     assert response.status_code == 404
     assert "not found" in response.json()["detail"].lower()
 
 
 def test_posts_list_structure_matches_frontend_expectations(client):
-    """GET /api/cam/posts returns structure expected by frontend."""
-    response = client.get("/api/cam/posts")
+    """GET /api/posts returns structure expected by frontend."""
+    response = client.get("/api/posts")
     assert response.status_code == 200
     data = response.json()
     # Frontend expects { posts: [{ id, name, builtin, description }] }
