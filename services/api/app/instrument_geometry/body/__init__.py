@@ -8,10 +8,11 @@ Modules:
 - fretboard_geometry: Fretboard outline, slot layout, string spacing
 - detailed_outlines: High-resolution point data from DXF extraction
 - j45_bulge: J-45 outline with arc bulge data for CNC toolpaths
+- centerline: Body centerline calculator (PHYS-02)
 
 Assets:
 - dxf/electric/: 7 electric guitar body DXFs
-- dxf/acoustic/: 9 acoustic guitar body DXFs  
+- dxf/acoustic/: 9 acoustic guitar body DXFs
 - dxf/other/: 3 ukulele/mandolin body DXFs
 - catalog.json: Body metadata index
 """
@@ -37,6 +38,12 @@ from .parametric import (
     ellipse_point,
     compute_bounding_box,
 )
+from .centerline import (
+    compute_body_centerline,
+    compute_symmetry_axis,
+    CenterlineResult,
+    BodySymmetry,
+)
 
 __all__ = [
     # fretboard_geometry
@@ -57,4 +64,9 @@ __all__ = [
     "cubic_bezier",
     "ellipse_point",
     "compute_bounding_box",
+    # centerline (PHYS-02)
+    "compute_body_centerline",
+    "compute_symmetry_axis",
+    "CenterlineResult",
+    "BodySymmetry",
 ]

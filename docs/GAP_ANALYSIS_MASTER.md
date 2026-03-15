@@ -407,20 +407,20 @@ Previous updates overstated progress. This section provides the accurate remaini
 
 ---
 
-## Category 13 — Physical Component Geometry ⏸️ TABLED
+## Category 13 — Physical Component Geometry ✅ MOSTLY RESOLVED
 
-**Problem:** Pickup positions, body centerline computation, and cavity-to-coordinate mapping all depend on physical hardware details (pickup dimensions, mounting ring specs, string spacing, bridge saddle geometry) that must be measured or sourced from manufacturer data before the software can be finalized. The math foundations exist (`fret_math.py`, `bridge/placement.py`, `body_outlines.json`) but the calculator that ties them together requires physical-world inputs that aren't settled yet.
+**Problem:** Pickup positions, body centerline computation, and cavity-to-coordinate mapping all depend on physical hardware details (pickup dimensions, mounting ring specs, string spacing, bridge saddle geometry) that must be measured or sourced from manufacturer data before the software can be finalized.
 
-**Status:** ⏸️ **TABLED** — These gaps are real and block production-accurate builds, but require physical measurements and hardware decisions to be worked out first. Will be unblocked once reference pickup dimensions and mounting specs are confirmed.
+**Status:** ✅ **MOSTLY RESOLVED** — Core software modules are complete. PHYS-01 through PHYS-04 resolved with reusable calculators. Only PHYS-05/06 remain, which require manufacturer-specific hardware reference data.
 
-| Gap ID | Scope | Description | Severity | Physical Dependency |
-|--------|-------|-------------|----------|--------------------|
-| PHYS-01 | All electrics | **Pickup position calculator** — No `calculators/pickup_layout.py` exists. Positions are hardcoded per build script. Needs: scale length + fret count + pickup config (SSS/HSS/HH) + clearance rules → cavity center positions (mm from bridge) | CRITICAL | Pickup body dimensions, pole spacing, mounting ring footprint per manufacturer |
-| PHYS-02 | All instruments | **Body centerline calculator** — No function computes the geometric centerline/midline from body outline data. Convention assumes `width/2` but asymmetric bodies (Explorer, Flying V) need true symmetry-axis computation | HIGH | Body outline point data must be verified against physical templates |
-| PHYS-03 | All electrics | **Pickup cavity-to-coordinate mapper** — Build scripts compute `spec_to_gcode()` inline with hardcoded offsets. Need a reusable function: given pickup position (mm from bridge) + body outline + centerline → CNC cavity coordinates | HIGH | Bridge saddle line position varies by hardware (TOM, trem, hardtail) |
-| PHYS-04 | 24-fret instruments | **Neck pickup collision detection** — Fret 24 at 161.73mm from bridge collides with standard neck pickup at ~162mm. The 12mm clearance shift is documented but not codified. Needs fret position data + pickup body width | CRITICAL | Physical pickup cover width per model (single-coil vs humbucker footprint) |
-| PHYS-05 | Les Paul, Explorer, SG | **Humbucker mounting ring geometry** — HH and HSH configs need ring dimensions (flat vs slanted, pickup tilt angle, screw hole spacing) to generate accurate cavity outlines | MEDIUM | Ring dimensions vary by manufacturer (Gibson, Seymour Duncan, DiMarzio, etc.) |
-| PHYS-06 | All electrics | **String spread at pickup position** — Pickup pole pieces must align with strings. String spacing changes along the scale length (wider at bridge, narrower at nut). Need: nut width + bridge spacing + position → string spread at any point | MEDIUM | Nut slot spacing, bridge saddle string spread — hardware-specific |
+| Gap ID | Scope | Description | Severity | Status |
+|--------|-------|-------------|----------|--------|
+| PHYS-01 | All electrics | **Pickup position calculator** — Scale length + fret count + pickup config → cavity positions | CRITICAL | ✅ **Resolved** `calculators/pickup_position_calc.py` |
+| PHYS-02 | All instruments | **Body centerline calculator** — Geometric centerline/midline from body outline, supports symmetric + asymmetric bodies | HIGH | ✅ **Resolved** `instrument_geometry/body/centerline.py` |
+| PHYS-03 | All electrics | **Pickup cavity-to-coordinate mapper** — Pickup positions + body outline + bridge reference → CNC coordinates | HIGH | ✅ **Resolved** `instrument_geometry/pickup/cavity_placement.py` |
+| PHYS-04 | 24-fret instruments | **Neck pickup collision detection** — 12mm clearance shift for fret 24 collision avoidance | CRITICAL | ✅ **Resolved** (built into `pickup_position_calc.py`) |
+| PHYS-05 | Les Paul, Explorer, SG | **Humbucker mounting ring geometry** — Ring dimensions (flat vs slanted, tilt angle, screw spacing) | MEDIUM | ⏸️ Requires manufacturer ring measurements |
+| PHYS-06 | All electrics | **String spread at pickup position** — Pole piece alignment with string spacing at any position | MEDIUM | ⏸️ Requires nut/bridge spacing reference data |
 
 ### What exists today
 
@@ -428,18 +428,22 @@ Previous updates overstated progress. This section provides the accurate remaini
 |---|---|---|
 | Fret position math (equal temperament) | `instrument_geometry/neck/fret_math.py` | ✅ Complete |
 | Bridge placement from scale length | `instrument_geometry/bridge/placement.py` | ✅ Complete |
-| Body outline point data | `instrument_geometry/body/body_outlines.json` | ✅ Data exists (no centerline calc) |
-| Pickup cavity G-code (hardcoded) | `scripts/generate_smart_guitar_full_build.py` | ⚠️ Works but not reusable |
-| Pickup cavity G-code (hardcoded) | `scripts/generate_les_paul_full_build.py` | ⚠️ Works but not reusable |
-| Grid-based centerline (normalized) | `blueprint-import/classifiers/grid_zone/zones.py` | ⚠️ Normalized only, not mm |
+| Body outline point data | `instrument_geometry/body/body_outlines.json` | ✅ Complete |
+| **Body centerline calculator** | `instrument_geometry/body/centerline.py` | ✅ **NEW** — symmetric + asymmetric bodies |
+| **Pickup position calculator** | `calculators/pickup_position_calc.py` | ✅ **NEW** — SSS/HSS/HH configs, 24-fret collision |
+| **Cavity-to-coordinate mapper** | `instrument_geometry/pickup/cavity_placement.py` | ✅ **NEW** — CNC-ready coordinates |
+| Pickup calculator API | `routers/instruments/guitar/pickup_calculator_router.py` | ✅ Complete |
+| Pickup cavity G-code (hardcoded) | `scripts/generate_smart_guitar_full_build.py` | ⚠️ Can now be migrated to calculators |
+| Pickup cavity G-code (hardcoded) | `scripts/generate_les_paul_full_build.py` | ⚠️ Can now be migrated to calculators |
 
-### What needs to happen (when unblocked)
 
-1. **Gather physical reference data** — Pickup body dimensions, mounting ring specs, and bridge saddle positions for target hardware (Gibson, Fender, generic). Store in `data/reference_measurements/pickup_hardware.json`.
-2. **`calculators/pickup_layout.py`** — Pure math module: `compute_pickup_positions(scale_length_mm, fret_count, pickup_config, body_style) → List[PickupPosition]`. Uses `fret_math.py` for collision detection on extended fretboards.
-3. **`instrument_geometry/body/centerline.py`** — `compute_body_centerline(outline_points) → float` for symmetric bodies, `compute_symmetry_axis(outline_points) → (x, angle)` for asymmetric.
-4. **`instrument_geometry/pickup/cavity_placement.py`** — Combines pickup positions + centerline + bridge placement → CNC-ready cavity center coordinates. Replaces inline `spec_to_gcode()` in build scripts.
-5. **Integrate into build scripts** — Replace hardcoded offsets in `generate_smart_guitar_full_build.py` and `generate_les_paul_full_build.py` with calculator calls.
+### Remaining work
+
+1. ~~**`calculators/pickup_layout.py`**~~ → ✅ Done as `pickup_position_calc.py`
+2. ~~**`instrument_geometry/body/centerline.py`**~~ → ✅ Done
+3. ~~**`instrument_geometry/pickup/cavity_placement.py`**~~ → ✅ Done
+4. **Integrate into build scripts** — Replace hardcoded offsets in `generate_smart_guitar_full_build.py` and `generate_les_paul_full_build.py` with calculator calls.
+5. **PHYS-05/06 hardware data** — Gather mounting ring dimensions and string spread reference data from manufacturer specs.
 
 ---
 
