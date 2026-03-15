@@ -8,12 +8,12 @@
 
 Previous updates overstated progress. This section provides the accurate remaining work.
 
-### Actually Unresolved — 46 Items
+### Actually Unresolved — 42 Items
 
 | Severity | Count | Key Items |
 |----------|-------|-----------|
-| **CRITICAL** | 1 | PHYS-01 (Pickup position calculator — tabled, physical deps) |
-| **HIGH** | 13 | BEN-GAP-08, LP-GAP-03, BEN-GAP-04, BEN-GAP-05, VINE-05, INLAY-02, INLAY-06, NECK-05, VINE-08, LP-GAP-02, EX-GAP-04, PHYS-02, PHYS-03 |
+| **CRITICAL** | 0 | ~~PHYS-01~~ Resolved (calculators/pickup_position_calc.py) |
+| **HIGH** | 10 | BEN-GAP-08, LP-GAP-03, BEN-GAP-04, BEN-GAP-05, VINE-05, INLAY-02, INLAY-06, NECK-05, LP-GAP-02, EX-GAP-04 |
 | **MEDIUM** | 19 | BEN-GAP-09, BEN-GAP-07, FV-GAP-05, LP-GAP-04, LP-GAP-05, LP-GAP-06, LP-GAP-08, OM-PURF-03, OM-PURF-05, OM-PURF-08, INLAY-03, INLAY-04, VEC-GAP-06, VEC-GAP-07, FV-GAP-07, FV-GAP-10, EX-GAP-05, EX-GAP-06, EX-GAP-07, EX-GAP-08, EX-GAP-12, SG-GAP-13 |
 | **LOW** | 13 | VINE-12, OM-PURF-06, FV-GAP-09, EX-GAP-09, EX-GAP-10, EX-GAP-11, EX-GAP-13, SG-GAP-09, SG-GAP-14, OM-PURF-07, LP-GAP-10, VEC-GAP-08 |
 
