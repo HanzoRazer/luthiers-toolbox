@@ -51,6 +51,14 @@ import StockSimulationPanel from "./StockSimulationPanel.vue";
 import ChipLoadPanel from "./ChipLoadPanel.vue";
 import type { ChipLoadIssue } from "@/util/chipLoadAnalyzer";
 
+// Extracted subcomponents (Phase 2 decomposition)
+import {
+  PlaybackControlsBar,
+  ToolbarButtonGroup,
+  PlayerHudBar,
+  ExportAnimationPanel,
+} from "./toolpath-player";
+
 // ---------------------------------------------------------------------------
 // Props
 // ---------------------------------------------------------------------------
@@ -690,242 +698,62 @@ onUnmounted(() => {
       <span>No toolpath loaded</span>
     </div>
 
-    <!-- ── Controls bar ──────────────────────────────────────── -->
+    <!-- ── Controls bar (using extracted subcomponents) ──────── -->
     <div
       v-if="props.showControls"
       class="controls-bar"
     >
-      <!-- P5: 2D/3D toggle -->
-      <div
-        v-if="props.enable3D"
-        class="view-toggle"
-      >
-        <button
-          class="view-btn"
-          :class="{ active: viewMode === '2d' }"
-          title="2D View"
-          @click="viewMode = '2d'"
-        >
-          2D
-        </button>
-        <button
-          class="view-btn"
-          :class="{ active: viewMode === '3d' }"
-          title="3D View"
-          @click="viewMode = '3d'"
-        >
-          3D
-        </button>
-      </div>
-
-      <!-- P5: Heatmap toggle -->
-      <button
-        class="heatmap-btn"
-        :class="{ active: showHeatmap }"
-        title="Toggle engagement heatmap"
-        @click="showHeatmap = !showHeatmap"
-      >
-        🔥
-      </button>
-
-      <!-- P5: Export button -->
-      <button
-        class="export-btn"
-        :class="{ active: showExportPanel }"
-        :disabled="store.segments.length === 0 || isExporting"
-        title="Export animation"
-        @click="showExportPanel = !showExportPanel"
-      >
-        📹
-      </button>
-
-      <!-- P5: Measure button -->
-      <button
-        class="measure-btn"
-        :class="{ active: store.measureMode }"
-        :disabled="store.segments.length === 0"
-        title="Measure distance (click two points)"
-        @click="store.toggleMeasureMode()"
-      >
-        📏
-      </button>
-
-      <!-- P5: Keyboard shortcuts help -->
-      <button
-        class="help-btn"
-        :class="{ active: showHelp }"
-        title="Keyboard shortcuts (?)"
-        @click="showHelp = !showHelp"
-      >
-        ⌨️
-      </button>
-
-      <!-- P5: Statistics panel toggle -->
-      <button
-        class="stats-btn"
-        :class="{ active: showStatsPanel }"
-        :disabled="store.segments.length === 0"
-        title="Toolpath statistics"
-        @click="showStatsPanel = !showStatsPanel"
-      >
-        📊
-      </button>
-
-      <!-- P5: Filter panel toggle -->
-      <button
-        class="filter-btn"
-        :class="{ active: showFilterPanel, filtering: filterPanelRef?.hasActiveFilter }"
-        :disabled="store.segments.length === 0"
-        title="Filter segments"
-        @click="showFilterPanel = !showFilterPanel"
-      >
-        🔍
-      </button>
-
-      <!-- P5: Annotations panel toggle -->
-      <button
-        class="annotations-btn"
-        :class="{ active: showAnnotationsPanel }"
-        :disabled="store.segments.length === 0"
-        title="Annotations & bookmarks"
-        @click="showAnnotationsPanel = !showAnnotationsPanel"
-      >
-        📝
-      </button>
-
-      <!-- P5: Compare panel toggle -->
-      <button
-        class="compare-btn"
-        :class="{ active: showComparePanel, comparing: showCompareOverlay }"
-        :disabled="store.segments.length === 0"
-        title="Compare toolpaths"
-        @click="showComparePanel = !showComparePanel"
-      >
-        🔀
-      </button>
-      <!-- P5: Audio panel toggle -->
-      <button
-        class="audio-btn"
-        :class="{ active: showAudioPanel }"
-        :disabled="store.segments.length === 0"
-        title="Machine sounds"
-        @click="showAudioPanel = !showAudioPanel"
-      >
-        🔊
-      </button>
-
-      <!-- P6: Tool legend panel toggle (only show if multiple tools) -->
-      <button
-        v-if="hasMultipleTools"
-        class="tools-btn"
-        :class="{ active: showToolLegendPanel }"
-        :disabled="store.segments.length === 0"
-        title="Tool legend"
-        @click="showToolLegendPanel = !showToolLegendPanel"
-      >
-        🔧
-      </button>
-
-      <!-- P6 Step 14: Feed analysis panel toggle -->
-      <button
-        class="feed-btn"
-        :class="{ active: showFeedAnalysisPanel }"
-        :disabled="store.segments.length === 0"
-        title="Feed rate analysis"
-        @click="showFeedAnalysisPanel = !showFeedAnalysisPanel"
-      >
-        ⚡
-      </button>
-
-      <!-- P6 Step 15: Stock simulation panel toggle -->
-      <button
-        class="stock-btn"
-        :class="{ active: showStockSimulationPanel }"
-        :disabled="store.segments.length === 0 || !store.bounds"
-        title="Stock simulation"
-        @click="showStockSimulationPanel = !showStockSimulationPanel"
-      >
-        🪵
-      </button>
-
-      <!-- P6 Step 16: Chip Load Analysis -->
-      <button
-        class="chipload-btn"
-        :class="{ active: showChipLoadPanel }"
-        :disabled="store.segments.length === 0"
-        title="Chip load analysis"
-        @click="showChipLoadPanel = !showChipLoadPanel"
-      >
-        ⚙️
-      </button>
-
-      <!-- Memory badge -->
-      <div
-        v-if="store.memoryInfo.segmentCount > 0"
-        class="mem-badge"
-        :class="{
-          warning: store.memoryInfo.isWarning,
-          critical: store.memoryInfo.isCritical,
-        }"
-      >
-        {{ store.memoryInfo.segmentCount.toLocaleString() }}
-      </div>
-
-      <button
-        class="ctrl-btn"
-        title="Step back"
-        @click="store.stepBackward()"
-      >
-        ◀◀
-      </button>
-
-      <button
-        class="ctrl-btn play-btn"
-        :title="playLabel"
-        :disabled="store.segments.length === 0"
-        @click="togglePlay()"
-      >
-        {{ playIcon }}
-      </button>
-
-      <button
-        class="ctrl-btn"
-        title="Step forward"
-        @click="store.stepForward()"
-      >
-        ▶▶
-      </button>
-      <button
-        class="ctrl-btn stop-btn"
-        title="Stop"
-        @click="store.stop()"
-      >
-        ■
-      </button>
-
-      <input
-        type="range"
-        class="scrub-bar"
-        min="0"
-        max="1"
-        step="0.0005"
-        :value="store.progress"
-        @input="onScrubInput"
-      >
-
-      <span class="pct">{{ (store.progress * 100).toFixed(0) }}%</span>
-
-      <div class="speed-group">
-        <button
-          v-for="s in speeds"
-          :key="s"
-          class="speed-btn"
-          :class="{ active: store.speed === s }"
-          @click="store.setSpeed(s)"
-        >
-          {{ s }}×
-        </button>
-      </div>
+      <ToolbarButtonGroup
+        :enable3-d="props.enable3D"
+        :view-mode="viewMode"
+        :show-heatmap="showHeatmap"
+        :show-export-panel="showExportPanel"
+        :is-exporting="isExporting"
+        :measure-mode="store.measureMode"
+        :show-help="showHelp"
+        :show-stats-panel="showStatsPanel"
+        :show-filter-panel="showFilterPanel"
+        :has-active-filter="filterPanelRef?.hasActiveFilter ?? false"
+        :show-annotations-panel="showAnnotationsPanel"
+        :show-compare-panel="showComparePanel"
+        :show-compare-overlay="showCompareOverlay"
+        :show-audio-panel="showAudioPanel"
+        :has-multiple-tools="hasMultipleTools"
+        :show-tool-legend-panel="showToolLegendPanel"
+        :show-feed-analysis-panel="showFeedAnalysisPanel"
+        :show-stock-simulation-panel="showStockSimulationPanel"
+        :has-bounds="!!store.bounds"
+        :show-chip-load-panel="showChipLoadPanel"
+        :segment-count="store.segments.length"
+        :memory-info="store.memoryInfo"
+        @update:view-mode="viewMode = $event"
+        @update:show-heatmap="showHeatmap = $event"
+        @update:show-export-panel="showExportPanel = $event"
+        @toggle-measure-mode="store.toggleMeasureMode()"
+        @update:show-help="showHelp = $event"
+        @update:show-stats-panel="showStatsPanel = $event"
+        @update:show-filter-panel="showFilterPanel = $event"
+        @update:show-annotations-panel="showAnnotationsPanel = $event"
+        @update:show-compare-panel="showComparePanel = $event"
+        @update:show-audio-panel="showAudioPanel = $event"
+        @update:show-tool-legend-panel="showToolLegendPanel = $event"
+        @update:show-feed-analysis-panel="showFeedAnalysisPanel = $event"
+        @update:show-stock-simulation-panel="showStockSimulationPanel = $event"
+        @update:show-chip-load-panel="showChipLoadPanel = $event"
+      />
+      <PlaybackControlsBar
+        :play-state="store.playState"
+        :progress="store.progress"
+        :speed="store.speed"
+        :segment-count="store.segments.length"
+        @play="store.play()"
+        @pause="store.pause()"
+        @stop="store.stop()"
+        @step-forward="store.stepForward()"
+        @step-backward="store.stepBackward()"
+        @seek="store.seek($event)"
+        @set-speed="store.setSpeed($event)"
+      />
     </div>
 
     <!-- ── Resolution slider (shown when memory warning) ─────── -->
@@ -952,110 +780,28 @@ onUnmounted(() => {
       </button>
     </div>
 
-    <!-- ── HUD bar (P3: M-code state + time estimate) ────────── -->
-    <div
+    <!-- ── HUD bar (using extracted subcomponent) ────────────── -->
+    <PlayerHudBar
       v-if="props.showHud"
-      class="hud-bar"
-    >
-      <span
-        class="hud-gcode"
-        :title="store.currentSegment?.line_text"
-      >
-        {{ store.currentSegment?.line_text ?? '—' }}
-      </span>
-
-      <!-- M-code state indicators -->
-      <template v-if="currentMachine">
-        <span
-          v-if="currentMachine.spindleOn"
-          class="hud-m"
-          title="Spindle"
-        >
-          ⚡{{ currentMachine.spindleDir.toUpperCase() }} S{{ currentMachine.spindleSpeed }}
-        </span>
-        <span
-          v-if="currentMachine.coolant !== 'off'"
-          class="hud-m"
-          :title="'Coolant: ' + currentMachine.coolant"
-        >
-          {{ currentMachine.coolant === 'flood' ? '💧' : '🌫️' }}
-        </span>
-        <span
-          v-if="currentMachine.currentTool > 0"
-          class="hud-m"
-          title="Tool"
-        >
-          🔧T{{ currentMachine.currentTool }}
-        </span>
-      </template>
-
-      <span class="hud-div">│</span>
-      <span class="hud-z">
-        Z {{ store.toolPosition[2].toFixed(2) }} mm
-      </span>
-      <span class="hud-div">│</span>
-      <span class="hud-feed">
-        F{{ store.currentSegment ? Math.round(store.currentSegment.feed) : 0 }}
-      </span>
-      <span class="hud-div">│</span>
-      <span class="hud-time">
-        {{ formatTime(store.currentTimeMs) }} / {{ formatTime(store.totalDurationMs) }}
-      </span>
-
-      <!-- Time estimate badge -->
-      <span
-        v-if="estimates.realistic.seconds > 0"
-        class="hud-est"
-        :title="'Machine: ' + estimates.machine.formatted + ' | With setup: ' + estimates.withSetup.formatted"
-      >
-        ⏱️ {{ estimates.realistic.formatted }}
-      </span>
-
-      <!-- P4: Collision warning badge -->
-      <button
-        v-if="hasCollisions"
-        class="hud-collision"
-        :class="{ critical: hasCriticalCollisions }"
-        :title="collisionReport?.summary"
-        @click="showCollisionPanel = !showCollisionPanel"
-      >
-        {{ hasCriticalCollisions ? '⛔' : '⚠️' }}
-        {{ collisionReport?.collisions.length }}
-      </button>
-
-      <!-- P4: Optimization badge -->
-      <button
-        v-if="hasOptimizations"
-        class="hud-opt"
-        :title="optimizationReport?.summary"
-        @click="showOptPanel = !showOptPanel"
-      >
-        💡 {{ optimizationReport?.suggestions.length }}
-      </button>
-
-      <!-- P5: Selection info -->
-      <span
-        v-if="store.selectedSegmentIndex !== null"
-        class="hud-selection"
-        :title="'Click to jump to segment ' + store.selectedSegmentIndex"
-        @click="store.jumpToSelected()"
-      >
-        📍 Seg {{ store.selectedSegmentIndex }}
-        <template v-if="store.selectedGcodeLine">
-          (L{{ store.selectedGcodeLine.lineNumber }})
-        </template>
-      </span>
-
-      <!-- P5: G-code panel toggle -->
-      <button
-        class="hud-gcode-toggle"
-        :class="{ active: showGcodePanel }"
-        title="Toggle G-code source panel"
-        @click="showGcodePanel = !showGcodePanel"
-      >
-        { }
-      </button>
-    </div>
+      :current-line-text="store.currentSegment?.line_text ?? null"
+      :current-feed="store.currentSegment?.feed ?? 0"
+      :tool-position="store.toolPosition"
+      :current-time-ms="store.currentTimeMs"
+      :total-duration-ms="store.totalDurationMs"
+      :machine-state="currentMachine"
+      :estimates="estimates"
+      :collision-report="collisionReport"
+      :optimization-report="optimizationReport"
+      :selected-segment-index="store.selectedSegmentIndex"
+      :selected-gcode-line="store.selectedGcodeLine"
+      :show-gcode-panel="showGcodePanel"
+      :show-collision-panel="showCollisionPanel"
+      :show-opt-panel="showOptPanel"
+      @update:show-gcode-panel="showGcodePanel = $event"
+      @update:show-collision-panel="showCollisionPanel = $event"
+      @update:show-opt-panel="showOptPanel = $event"
+      @jump-to-selected="store.jumpToSelected()"
+    />
 
     <!-- P4: Collision Panel -->
     <div
@@ -1143,119 +889,17 @@ onUnmounted(() => {
       />
     </div>
 
-    <!-- P5: Export Panel -->
-    <div
-      v-if="showExportPanel && !isExporting"
-      class="export-panel"
-    >
-      <div class="panel-header">
-        <span>📹 Export Animation</span>
-        <button @click="showExportPanel = false">✕</button>
-      </div>
-      <div class="export-options">
-        <div class="export-row">
-          <label>Format:</label>
-          <select v-model="exportConfig.format" class="export-select">
-            <option value="webm">WebM Video</option>
-            <option value="gif">GIF Animation</option>
-          </select>
-        </div>
-        <div class="export-row">
-          <label>FPS:</label>
-          <select v-model.number="exportConfig.fps" class="export-select">
-            <option :value="15">15 fps</option>
-            <option :value="24">24 fps</option>
-            <option :value="30">30 fps</option>
-            <option :value="60">60 fps</option>
-          </select>
-        </div>
-        <div class="export-row">
-          <label>Quality:</label>
-          <input
-            v-model.number="exportConfig.quality"
-            type="range"
-            min="0.3"
-            max="1"
-            step="0.1"
-            class="export-slider"
-          >
-          <span class="export-val">{{ Math.round((exportConfig.quality ?? 0.8) * 100) }}%</span>
-        </div>
-        <div class="export-row">
-          <label>Duration:</label>
-          <div class="export-duration">
-            <input
-              v-model.number="exportConfig.duration"
-              type="number"
-              min="1"
-              max="300"
-              step="1"
-              placeholder="Full"
-              class="export-input"
-            >
-            <span class="export-hint">sec (blank = full animation)</span>
-          </div>
-        </div>
-        <div class="export-info">
-          <span v-if="exportConfig.format === 'webm'">
-            📼 WebM: High quality, smaller file, plays in browsers
-          </span>
-          <span v-else>
-            🎞️ GIF: Universal support, larger file, limited colors
-          </span>
-        </div>
-        <button
-          class="export-start-btn"
-          @click="startExport"
-        >
-          Start Export
-        </button>
-      </div>
-    </div>
-
-    <!-- P5: Export Progress Overlay -->
-    <div
-      v-if="isExporting && exportProgress"
-      class="export-overlay"
-    >
-      <div class="export-progress-box">
-        <div class="export-progress-header">
-          <span>{{ exportProgress.phase === 'recording' ? '🔴 Recording' : exportProgress.phase === 'encoding' ? '⚙️ Encoding' : '📹 Exporting' }}</span>
-          <button
-            class="export-cancel-btn"
-            @click="cancelExport"
-          >
-            Cancel
-          </button>
-        </div>
-        <div class="export-progress-info">
-          {{ exportProgress.message }}
-        </div>
-        <div class="export-progress-track">
-          <div
-            class="export-progress-fill"
-            :style="{ width: exportProgress.percent + '%' }"
-          />
-        </div>
-        <div class="export-progress-stats">
-          {{ exportProgress.framesCaptured }} / {{ exportProgress.totalFrames }} frames
-        </div>
-      </div>
-    </div>
-
-    <!-- P5: Export Complete Toast -->
-    <div
-      v-if="!isExporting && exportProgress?.phase === 'complete'"
-      class="export-toast success"
-    >
-      ✅ {{ exportProgress.message }}
-    </div>
-    <div
-      v-if="!isExporting && exportProgress?.phase === 'error'"
-      class="export-toast error"
-    >
-      ❌ {{ exportProgress.message }}
-    </div>
+    <!-- P5: Export Panel (using extracted subcomponent) -->
+    <ExportAnimationPanel
+      v-if="showExportPanel"
+      :is-exporting="isExporting"
+      :config="exportConfig"
+      :export-progress="exportProgress"
+      @close="showExportPanel = false"
+      @update:config="Object.assign(exportConfig, $event)"
+      @start-export="startExport"
+      @cancel-export="cancelExport"
+    />
 
     <!-- P5: Measure mode indicator -->
     <div
@@ -1540,89 +1184,7 @@ onUnmounted(() => {
   background: #13131f; border-top: 1px solid #2a2a4a; flex-shrink: 0;
 }
 
-/* ── P5: View mode toggle ──────────────────────────────────────── */
-.view-toggle {
-  display: flex;
-  border: 1px solid #3a3a5c;
-  border-radius: 4px;
-  overflow: hidden;
-  margin-right: 4px;
-}
-
-.view-btn {
-  background: #252538;
-  border: none;
-  color: #888;
-  padding: 3px 8px;
-  font-size: 10px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: background 0.15s, color 0.15s;
-}
-
-.view-btn:first-child {
-  border-right: 1px solid #3a3a5c;
-}
-
-.view-btn:hover {
-  background: #33334a;
-  color: #ccc;
-}
-
-.view-btn.active {
-  background: #1a3a6b;
-  color: #4a90d9;
-}
-
-.mem-badge {
-  padding: 1px 7px;
-  border-radius: 10px;
-  font-size: 10px;
-  background: #1a3a6b;
-  color: #4A90D9;
-  margin-right: 4px;
-}
-.mem-badge.warning { background: #5c4a1a; color: #f39c12; }
-.mem-badge.critical { background: #5c1a1a; color: #e74c3c; }
-
-.ctrl-btn {
-  background: #252538;
-  border: 1px solid #3a3a5c;
-  color: #ccc;
-  border-radius: 4px;
-  width: 30px;
-  height: 28px;
-  font-size: 11px;
-  cursor: pointer;
-  transition: background 0.15s, color 0.15s;
-  flex-shrink: 0;
-}
-.ctrl-btn:hover { background: #33334a; color: #fff; }
-.ctrl-btn:disabled { opacity: 0.35; cursor: default; }
-
-.play-btn { width: 36px; font-size: 14px; color: #4a90d9; border-color: #4a90d9; }
-.play-btn:hover { background: #1a3a6b; color: #fff; }
-
-.stop-btn { color: #e74c3c; border-color: #e74c3c; }
-.stop-btn:hover { background: #5c1a1a; color: #fff; }
-
-.scrub-bar { flex: 1; min-width: 60px; accent-color: #4a90d9; height: 4px; cursor: pointer; }
-
-.pct { font-size: 11px; color: #666; width: 34px; text-align: right; flex-shrink: 0; }
-
-.speed-group { display: flex; gap: 3px; flex-shrink: 0; }
-.speed-btn {
-  background: #252538;
-  border: 1px solid #3a3a5c;
-  color: #888;
-  border-radius: 4px;
-  padding: 2px 6px;
-  font-size: 11px;
-  cursor: pointer;
-  transition: background 0.12s, color 0.12s;
-}
-.speed-btn:hover { background: #33334a; color: #ccc; }
-.speed-btn.active { background: #1a3a6b; border-color: #4a90d9; color: #4a90d9; }
+/* ── View toggle + playback controls moved to ToolbarButtonGroup.vue and PlaybackControlsBar.vue ── */
 
 /* ── Resolution bar ─────────────────────────────────────────────── */
 .res-bar {
@@ -1648,66 +1210,7 @@ onUnmounted(() => {
 }
 .res-apply:hover { background: #33334a; color: #fff; }
 
-/* ── HUD bar ────────────────────────────────────────────────────── */
-.hud-bar {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 5px 10px;
-  background: rgba(0, 0, 0, 0.75);
-  border-top: 1px solid #1a1a2e;
-  font-size: 12px;
-  color: #ddd;
-  flex-shrink: 0;
-  min-height: 26px;
-  white-space: nowrap;
-  overflow: hidden;
-}
-
-.hud-gcode { flex: 1; overflow: hidden; text-overflow: ellipsis; color: #a0c4e8; font-size: 11px; }
-.hud-m { color: #f39c12; font-size: 11px; }
-.hud-div { color: #333; flex-shrink: 0; }
-.hud-z { color: #2ecc71; flex-shrink: 0; }
-.hud-feed { color: #f39c12; flex-shrink: 0; }
-.hud-time { color: #999; flex-shrink: 0; min-width: 100px; text-align: right; }
-
-.hud-est {
-  color: #4a90d9;
-  font-size: 11px;
-  padding: 1px 6px;
-  background: #1a3a6b;
-  border-radius: 4px;
-  cursor: help;
-  flex-shrink: 0;
-}
-
-/* ── P4: Collision & Optimization badges ───────────────────────── */
-.hud-collision, .hud-opt {
-  font-size: 11px;
-  padding: 1px 8px;
-  border-radius: 4px;
-  cursor: pointer;
-  border: none;
-  flex-shrink: 0;
-  transition: background 0.15s;
-}
-
-.hud-collision {
-  background: #5c4a1a;
-  color: #f39c12;
-}
-.hud-collision.critical {
-  background: #5c1a1a;
-  color: #e74c3c;
-}
-.hud-collision:hover { background: #6c5a2a; }
-.hud-collision.critical:hover { background: #7c2a2a; }
-
-.hud-opt {
-  background: #1a4a3a;
-  color: #2ecc71;
-}
-.hud-opt:hover { background: #2a5a4a; }
+/* ── HUD bar styles moved to PlayerHudBar.vue ── */
 
 /* ── P4: Panels ───────────────────────────────────────────────── */
 .p4-panel {
@@ -1808,44 +1311,7 @@ onUnmounted(() => {
   background: #13131f;
 }
 
-/* ── P5: Selection indicator ─────────────────────────────────────── */
-.hud-selection {
-  color: #ffd700;
-  font-size: 11px;
-  padding: 1px 8px;
-  background: rgba(255, 215, 0, 0.15);
-  border: 1px solid rgba(255, 215, 0, 0.3);
-  border-radius: 4px;
-  cursor: pointer;
-  flex-shrink: 0;
-  transition: background 0.15s;
-}
-.hud-selection:hover {
-  background: rgba(255, 215, 0, 0.25);
-}
-
-/* ── P5: G-code toggle button ────────────────────────────────────── */
-.hud-gcode-toggle {
-  font-size: 11px;
-  font-weight: 600;
-  padding: 1px 8px;
-  border-radius: 4px;
-  cursor: pointer;
-  border: 1px solid #3a3a5c;
-  background: #252538;
-  color: #888;
-  flex-shrink: 0;
-  transition: background 0.15s, color 0.15s;
-}
-.hud-gcode-toggle:hover {
-  background: #33334a;
-  color: #ccc;
-}
-.hud-gcode-toggle.active {
-  background: #1a3a6b;
-  border-color: #4a90d9;
-  color: #4a90d9;
-}
+/* ── HUD selection/toggle styles moved to PlayerHudBar.vue ── */
 
 /* ── P5: G-code panel ────────────────────────────────────────────── */
 .gcode-panel {
@@ -1903,318 +1369,8 @@ onUnmounted(() => {
   color: #ffd700 !important;
 }
 
-/* ── P5: Heatmap toggle ──────────────────────────────────────────── */
-.heatmap-btn {
-  background: #252538;
-  border: 1px solid #3a3a5c;
-  color: #666;
-  border-radius: 4px;
-  width: 30px;
-  height: 28px;
-  font-size: 14px;
-  cursor: pointer;
-  transition: background 0.15s, color 0.15s, border-color 0.15s;
-  flex-shrink: 0;
-}
-
-.heatmap-btn:hover {
-  background: #33334a;
-  color: #e67e22;
-}
-
-.heatmap-btn.active {
-  background: linear-gradient(135deg, #5c2a1a 0%, #5c4a1a 50%, #1a4a3a 100%);
-  border-color: #e67e22;
-  color: #fff;
-}
-
-/* ── P5: Export button ───────────────────────────────────────────── */
-.export-btn {
-  background: #252538;
-  border: 1px solid #3a3a5c;
-  color: #666;
-  border-radius: 4px;
-  width: 30px;
-  height: 28px;
-  font-size: 14px;
-  cursor: pointer;
-  transition: background 0.15s, color 0.15s, border-color 0.15s;
-  flex-shrink: 0;
-}
-
-.export-btn:hover {
-  background: #33334a;
-  color: #e74c3c;
-}
-
-.export-btn.active {
-  background: #3a1a1a;
-  border-color: #e74c3c;
-  color: #e74c3c;
-}
-
-.export-btn:disabled {
-  opacity: 0.35;
-  cursor: not-allowed;
-}
-
-/* ── P5: Export Panel ────────────────────────────────────────────── */
-.export-panel {
-  position: absolute;
-  right: 10px;
-  top: 10px;
-  width: 280px;
-  background: #1a1a2e;
-  border: 1px solid #3a3a5c;
-  border-radius: 8px;
-  overflow: hidden;
-  z-index: 15;
-  font-size: 12px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
-}
-
-.export-options {
-  padding: 12px;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-
-.export-row {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-.export-row label {
-  min-width: 60px;
-  color: #888;
-  font-size: 11px;
-}
-
-.export-select {
-  flex: 1;
-  padding: 4px 8px;
-  background: #252538;
-  border: 1px solid #3a3a5c;
-  border-radius: 4px;
-  color: #ccc;
-  font-size: 11px;
-  cursor: pointer;
-}
-
-.export-select:hover {
-  border-color: #4a90d9;
-}
-
-.export-slider {
-  flex: 1;
-  accent-color: #4a90d9;
-  height: 4px;
-}
-
-.export-val {
-  min-width: 35px;
-  text-align: right;
-  color: #4a90d9;
-  font-size: 11px;
-}
-
-.export-duration {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  flex: 1;
-}
-
-.export-input {
-  width: 50px;
-  padding: 4px 6px;
-  background: #252538;
-  border: 1px solid #3a3a5c;
-  border-radius: 4px;
-  color: #ccc;
-  font-size: 11px;
-}
-
-.export-input:focus {
-  outline: none;
-  border-color: #4a90d9;
-}
-
-.export-hint {
-  color: #666;
-  font-size: 10px;
-}
-
-.export-info {
-  padding: 8px;
-  background: #252538;
-  border-radius: 4px;
-  color: #888;
-  font-size: 10px;
-  text-align: center;
-}
-
-.export-start-btn {
-  width: 100%;
-  padding: 8px 16px;
-  background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
-  border: none;
-  border-radius: 4px;
-  color: #fff;
-  font-size: 12px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: transform 0.1s, box-shadow 0.15s;
-}
-
-.export-start-btn:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(231, 76, 60, 0.4);
-}
-
-/* ── P5: Export Progress Overlay ─────────────────────────────────── */
-.export-overlay {
-  position: absolute;
-  inset: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: rgba(0, 0, 0, 0.85);
-  z-index: 20;
-}
-
-.export-progress-box {
-  width: 320px;
-  background: #1a1a2e;
-  border: 1px solid #3a3a5c;
-  border-radius: 8px;
-  padding: 20px;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
-}
-
-.export-progress-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 16px;
-  font-size: 14px;
-  font-weight: 600;
-  color: #e74c3c;
-}
-
-.export-cancel-btn {
-  padding: 4px 12px;
-  background: #252538;
-  border: 1px solid #3a3a5c;
-  border-radius: 4px;
-  color: #888;
-  font-size: 11px;
-  cursor: pointer;
-}
-
-.export-cancel-btn:hover {
-  background: #5c1a1a;
-  border-color: #e74c3c;
-  color: #e74c3c;
-}
-
-.export-progress-info {
-  color: #aaa;
-  font-size: 12px;
-  margin-bottom: 12px;
-  text-align: center;
-}
-
-.export-progress-track {
-  width: 100%;
-  height: 6px;
-  background: #252538;
-  border-radius: 3px;
-  overflow: hidden;
-  margin-bottom: 10px;
-}
-
-.export-progress-fill {
-  height: 100%;
-  background: linear-gradient(90deg, #e74c3c, #f39c12);
-  transition: width 0.2s ease;
-}
-
-.export-progress-stats {
-  color: #666;
-  font-size: 11px;
-  text-align: center;
-}
-
-/* ── P5: Export Toast ────────────────────────────────────────────── */
-.export-toast {
-  position: absolute;
-  bottom: 100px;
-  left: 50%;
-  transform: translateX(-50%);
-  padding: 10px 20px;
-  border-radius: 6px;
-  font-size: 12px;
-  font-weight: 500;
-  z-index: 15;
-  animation: toast-slide-up 0.3s ease;
-}
-
-.export-toast.success {
-  background: #1a4a3a;
-  border: 1px solid #2ecc71;
-  color: #2ecc71;
-}
-
-.export-toast.error {
-  background: #5c1a1a;
-  border: 1px solid #e74c3c;
-  color: #e74c3c;
-}
-
-@keyframes toast-slide-up {
-  from {
-    opacity: 0;
-    transform: translateX(-50%) translateY(10px);
-  }
-  to {
-    opacity: 1;
-    transform: translateX(-50%) translateY(0);
-  }
-}
-
-/* ── P5: Measure button ──────────────────────────────────────────── */
-.measure-btn {
-  background: #252538;
-  border: 1px solid #3a3a5c;
-  color: #666;
-  border-radius: 4px;
-  width: 30px;
-  height: 28px;
-  font-size: 14px;
-  cursor: pointer;
-  transition: background 0.15s, color 0.15s, border-color 0.15s;
-  flex-shrink: 0;
-}
-
-.measure-btn:hover {
-  background: #33334a;
-  color: #00ffff;
-}
-
-.measure-btn.active {
-  background: #1a3a4a;
-  border-color: #00ffff;
-  color: #00ffff;
-  box-shadow: 0 0 8px rgba(0, 255, 255, 0.3);
-}
-
-.measure-btn:disabled {
-  opacity: 0.35;
-  cursor: not-allowed;
-}
+/* ── Toolbar button styles moved to ToolbarButtonGroup.vue ── */
+/* ── Export styles moved to ExportAnimationPanel.vue ── */
 
 /* ── P5: Measure mode indicator ──────────────────────────────────── */
 .measure-indicator {
