@@ -22,6 +22,9 @@ export { default as MeasureModeIndicator } from './MeasureModeIndicator.vue';
 // Phase 4 components
 export { default as PanelContainer } from './PanelContainer.vue';
 
+// Phase 5 components
+export { default as LoadingOverlay } from './LoadingOverlay.vue';
+
 // Composables
 export { useToolpathPanels } from './useToolpathPanels';
 export type { PanelState } from './useToolpathPanels';
@@ -29,3 +32,7 @@ export { useToolpathAnalysis } from './useToolpathAnalysis';
 export type { ToolpathAnalysisState, AnalysisConfig, ToolpathBounds } from './useToolpathAnalysis';
 export { useToolpathExport } from './useToolpathExport';
 export type { ToolpathExportState } from './useToolpathExport';
+export { useToolpathAudio } from './useToolpathAudio';
+export type { ToolpathAudioState, AudioSyncConfig } from './useToolpathAudio';
+export { useToolpathNavigation } from './useToolpathNavigation';
+export type { ToolpathNavigationState, NavigationConfig } from './useToolpathNavigation';

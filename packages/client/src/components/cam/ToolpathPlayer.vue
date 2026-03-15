@@ -26,7 +26,7 @@ import ToolpathFilter from "./ToolpathFilter.vue";
 import ToolpathAnnotations from "./ToolpathAnnotations.vue";
 import ToolpathComparePanel from "./ToolpathComparePanel.vue";
 import ToolpathAudioPanel from "./ToolpathAudioPanel.vue";
-import { getAudioEngine, type MoveSegment as AudioMoveSegment } from "@/util/toolpathAudio";
+// Audio engine now managed by useToolpathAudio composable
 import { useToolpathPlayerStore } from "@/stores/useToolpathPlayerStore";
 import { annotationManager, type Annotation } from "@/util/toolpathAnnotations";
 import type { MoveSegment as CompareMoveSegment } from "@/util/toolpathComparison";
@@ -49,7 +49,7 @@ import StockSimulationPanel from "./StockSimulationPanel.vue";
 import ChipLoadPanel from "./ChipLoadPanel.vue";
 import type { ChipLoadIssue } from "@/util/chipLoadAnalyzer";
 
-// Extracted subcomponents (Phase 2 + Phase 3 + Phase 4 decomposition)
+// Extracted subcomponents (Phase 2 + Phase 3 + Phase 4 + Phase 5 decomposition)
 import {
   PlaybackControlsBar,
   ToolbarButtonGroup,
@@ -62,8 +62,11 @@ import {
   MeasurementsPanel,
   MeasureModeIndicator,
   PanelContainer,
+  LoadingOverlay,
   useToolpathAnalysis,
   useToolpathExport,
+  useToolpathAudio,
+  useToolpathNavigation,
 } from "./toolpath-player";
 
 // ---------------------------------------------------------------------------
@@ -182,7 +185,6 @@ const showCompareOverlay = ref(false);
 
 // P5: Audio panel
 const showAudioPanel = ref(false);
-const audioEngine = getAudioEngine();
 // P5: Export animation (via composable)
 const exportState = useToolpathExport();
 const {
@@ -247,6 +249,28 @@ const {
 const activeCollisions = computed(() =>
   analysis.activeCollisions(store.currentSegmentIndex)
 );
+
+// ---------------------------------------------------------------------------
+// P5: Audio sync (via composable)
+// ---------------------------------------------------------------------------
+useToolpathAudio({
+  segments: computed(() => store.segments),
+  bounds: computed(() => store.bounds),
+  playState: computed(() => store.playState),
+  currentSegmentIndex: computed(() => store.currentSegmentIndex),
+  progress: computed(() => store.progress),
+  totalDurationMs: computed(() => store.totalDurationMs),
+});
+
+// ---------------------------------------------------------------------------
+// P6: Navigation helpers (via composable)
+// ---------------------------------------------------------------------------
+const navigation = useToolpathNavigation({
+  segments: computed(() => store.segments),
+  totalDurationMs: computed(() => store.totalDurationMs),
+  seek: (p) => store.seek(p),
+  pause: () => store.pause(),
+});
 
 // ---------------------------------------------------------------------------
 // Computed
@@ -380,105 +404,33 @@ function handleCompareOverlayToggle(enabled: boolean): void {
 }
 
 // ---------------------------------------------------------------------------
-// P6: Multi-tool support
+// P6: Multi-tool support — now uses navigation composable
 // ---------------------------------------------------------------------------
 function handleToolSelect(toolNumber: number | null): void {
   selectedToolFilter.value = toolNumber;
-  // Could emit to canvas to highlight/filter by tool
 }
 
 function handleToolChangeClick(marker: ToolChangeMarker): void {
-  // Jump to the segment where tool change occurred
-  if (marker.segmentIndex >= 0 && marker.segmentIndex < store.segments.length) {
-    // Calculate cumulative time up to this segment
-    let time = 0;
-    for (let i = 0; i < marker.segmentIndex; i++) {
-      time += store.segments[i].duration_ms;
-    }
-    store.seek(time / store.totalDurationMs);
-  }
+  navigation.jumpToSegment(marker.segmentIndex);
 }
 
 // ---------------------------------------------------------------------------
-// P6 Step 14: Feed Analysis
+// P6 Step 14: Feed Analysis — now uses navigation composable
 // ---------------------------------------------------------------------------
 function handleFeedHintClick(hint: FeedHint): void {
-  // Jump to the first segment in the hint range
-  const [startIdx] = hint.segmentRange;
-  if (startIdx >= 0 && startIdx < store.segments.length) {
-    let time = 0;
-    for (let i = 0; i < startIdx; i++) {
-      time += store.segments[i].duration_ms;
-    }
-    store.seek(time / store.totalDurationMs);
-    // Pause so user can inspect
-    store.pause();
-  }
+  navigation.jumpToSegmentRange(hint.segmentRange[0], true);
 }
 
 // ---------------------------------------------------------------------------
-// P6 Step 16: Chip Load Analysis
+// P6 Step 16: Chip Load Analysis — now uses navigation composable
 // ---------------------------------------------------------------------------
 function handleChipLoadIssueClick(issue: ChipLoadIssue): void {
-  // Jump to the first segment in the issue range
-  const [startIdx] = issue.segmentRange;
-  if (startIdx >= 0 && startIdx < store.segments.length) {
-    let time = 0;
-    for (let i = 0; i < startIdx; i++) {
-      time += store.segments[i].duration_ms;
-    }
-    store.seek(time / store.totalDurationMs);
-    // Pause so user can inspect
-    store.pause();
-  }
+  navigation.jumpToSegmentRange(issue.segmentRange[0], true);
 }
 
 // ---------------------------------------------------------------------------
-// P5: Audio
+// P5: Audio — now handled by useToolpathAudio composable
 // ---------------------------------------------------------------------------
-
-// Initialize audio engine bounds when segments load
-watch(
-  () => store.bounds,
-  (bounds) => {
-    if (bounds) {
-      audioEngine.setBounds(bounds.z_min, bounds.z_max, 100, 3000);
-    }
-  }
-);
-
-// Sync audio with playback state
-watch(
-  () => store.playState,
-  (state) => {
-    if (state === "playing") {
-      audioEngine.start();
-    } else {
-      audioEngine.stop();
-    }
-  }
-);
-
-// Update audio based on current segment
-watch(
-  () => [store.currentSegmentIndex, store.progress] as const,
-  ([segIdx, progress]) => {
-    const seg = store.segments[segIdx];
-    if (seg && store.playState === "playing") {
-      const segProgress = (progress * store.totalDurationMs - getSegmentStartTime(segIdx)) / seg.duration_ms;
-      audioEngine.updateForSegment(seg as AudioMoveSegment, Math.max(0, Math.min(1, segProgress)));
-    }
-  }
-);
-
-// Helper to get segment start time
-function getSegmentStartTime(idx: number): number {
-  let time = 0;
-  for (let i = 0; i < idx; i++) {
-    time += store.segments[i].duration_ms;
-  }
-  return time;
-}
 
 // ---------------------------------------------------------------------------
 // Lifecycle
@@ -520,45 +472,11 @@ onUnmounted(() => {
       :show-heatmap="showHeatmap"
     />
 
-    <!-- ── Loading overlay with progress (P1) ────────────────── -->
-    <div
+    <!-- ── Loading overlay with progress (P1) - extracted ───── -->
+    <LoadingOverlay
       v-if="store.loading"
-      class="loading-overlay"
-    >
-      <div class="loading-inner">
-        <svg
-          class="spinner"
-          viewBox="0 0 24 24"
-          fill="none"
-        >
-          <circle
-            cx="12"
-            cy="12"
-            r="10"
-            stroke="#4A90D9"
-            stroke-width="2"
-            stroke-dasharray="32"
-            stroke-linecap="round"
-          />
-        </svg>
-        <div class="progress-box">
-          <span class="progress-label">
-            {{ store.parseProgress.stage === "uploading"
-              ? "Uploading…"
-              : store.parseProgress.stage === "simulating"
-                ? "Simulating…"
-                : "Loading…" }}
-            {{ store.parseProgress.percent }}%
-          </span>
-          <div class="progress-track">
-            <div
-              class="progress-fill"
-              :style="{ width: store.parseProgress.percent + '%' }"
-            />
-          </div>
-        </div>
-      </div>
-    </div>
+      :progress="store.parseProgress"
+    />
 
     <!-- ── Memory warning banner (P1) ────────────────────────── -->
     <MemoryWarning
@@ -927,20 +845,12 @@ onUnmounted(() => {
 }
 
 /* ── Overlays ───────────────────────────────────────────────────── */
-.loading-overlay, .error-overlay, .empty-state {
+/* Loading overlay moved to LoadingOverlay.vue */
+.error-overlay, .empty-state {
   position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
   gap: 12px; font-size: 13px; color: #888; background: rgba(30, 30, 46, 0.85); pointer-events: none; z-index: 5;
 }
 .error-overlay { color: #e74c3c; pointer-events: auto; }
-.loading-inner { display: flex; flex-direction: column; align-items: center; gap: 16px; min-width: 260px; }
-
-@keyframes spin { to { transform: rotate(360deg); } }
-.spinner { width: 28px; height: 28px; animation: spin 1s linear infinite; }
-
-.progress-box { width: 100%; }
-.progress-label { display: block; text-align: center; color: #4A90D9; font-size: 12px; margin-bottom: 6px; }
-.progress-track { width: 100%; height: 5px; background: #2a2a4a; border-radius: 3px; overflow: hidden; }
-.progress-fill { height: 100%; background: linear-gradient(90deg, #4A90D9, #2ECC71); transition: width 0.2s; }
 
 /* ── Validation error box ───────────────────────────────────── */
 .error-box {
