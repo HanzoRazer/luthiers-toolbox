@@ -134,6 +134,16 @@ class RingSegmentation:
     kerf_mm: float = 0.0
 
     @property
+    def segmentation_id(self) -> str:
+        """Unique identifier for this segmentation."""
+        return f"seg_ring_{self.ring_id}"
+
+    @property
+    def tile_length_mm(self) -> float:
+        """Alias for tile_width_mm (arc length of each tile)."""
+        return self.tile_width_mm
+
+    @property
     def circumference_mm(self) -> float:
         """Average circumference."""
         avg_r = (self.inner_radius_mm + self.outer_radius_mm) / 2
@@ -260,6 +270,7 @@ def compute_ring_segmentation(
     kerf_mm: float = 0.0,
     min_tiles: int = 4,
     force_even: bool = True,
+    tile_count_override: Optional[int] = None,
 ) -> RingSegmentation:
     """
     Compute complete tile segmentation for a ring.
@@ -277,10 +288,13 @@ def compute_ring_segmentation(
     Returns:
         RingSegmentation with all tiles
     """
-    # Calculate tile count
-    tile_count = compute_tile_count(
-        inner_radius_mm, outer_radius_mm, tile_width_mm, min_tiles
-    )
+    # Calculate tile count (use override if provided)
+    if tile_count_override is not None and tile_count_override > 0:
+        tile_count = tile_count_override
+    else:
+        tile_count = compute_tile_count(
+            inner_radius_mm, outer_radius_mm, tile_width_mm, min_tiles
+        )
 
     # Force even for checkerboard/herringbone
     if force_even and pattern in (TilePattern.CHECKERBOARD, TilePattern.HERRINGBONE):
@@ -311,7 +325,7 @@ def compute_ring_segmentation(
     )
 
 
-def compute_tile_segmentation(ring: Dict[str, Any]) -> Dict[str, Any]:
+def compute_tile_segmentation(ring: Dict[str, Any], tile_count_override: Optional[int] = None) -> Dict[str, Any]:
     """
     Main entry point - compute tile segmentation from ring config dict.
 
@@ -329,12 +343,23 @@ def compute_tile_segmentation(ring: Dict[str, Any]) -> Dict[str, Any]:
     Returns:
         Segmentation result dictionary
     """
-    ring_id = ring.get("ring_id", 0)
-    radius_mm = ring.get("radius_mm", 50.0)
-    width_mm = ring.get("width_mm", 5.0)
-    tile_length_mm = ring.get("tile_length_mm", 5.0)
-    pattern_str = ring.get("pattern", "checkerboard")
-    kerf_mm = ring.get("kerf_mm", 0.0)
+    # Handle both dict and dataclass inputs
+    if hasattr(ring, "get"):
+        # Dict input
+        ring_id = ring.get("ring_id", 0)
+        radius_mm = ring.get("radius_mm", 50.0)
+        width_mm = ring.get("width_mm", 5.0)
+        tile_length_mm = ring.get("tile_length_mm", 5.0)
+        pattern_str = ring.get("pattern", "checkerboard")
+        kerf_mm = ring.get("kerf_mm", 0.0)
+    else:
+        # Dataclass input (RosetteRingConfig)
+        ring_id = getattr(ring, "ring_id", 0)
+        radius_mm = getattr(ring, "radius_mm", 50.0)
+        width_mm = getattr(ring, "width_mm", 5.0)
+        tile_length_mm = getattr(ring, "tile_length_mm", 5.0)
+        pattern_str = getattr(ring, "pattern", "checkerboard")
+        kerf_mm = getattr(ring, "kerf_mm", 0.0)
 
     # Convert average radius + width to inner/outer
     inner_radius_mm = radius_mm - width_mm / 2
@@ -354,9 +379,12 @@ def compute_tile_segmentation(ring: Dict[str, Any]) -> Dict[str, Any]:
         tile_width_mm=tile_length_mm,
         pattern=pattern,
         kerf_mm=kerf_mm,
+        tile_count_override=tile_count_override,
     )
 
-    return segmentation.to_dict()
+    # Return the RingSegmentation object (has .segmentation_id, .tile_count, etc.)
+    # Router can use asdict() if it needs a dict
+    return segmentation
 
 
 # Legacy alias for backward compatibility
@@ -372,7 +400,7 @@ from .models import SegmentationResult, Slice, SliceBatch, RosetteRingConfig
 
 def generate_slices_for_ring(
     ring: RosetteRingConfig,
-    segmentation: SegmentationResult,
+    segmentation,  # SegmentationResult or RingSegmentation
 ) -> SliceBatch:
     """
     Generate slice records for each tile in the segmentation.
