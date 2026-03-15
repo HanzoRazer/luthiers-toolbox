@@ -241,6 +241,8 @@ class PhotoExtractionResult:
     debug_images: Dict[str, str] = field(default_factory=dict)
 
     contour_stage: Optional["ContourStageResult"] = None
+    body_isolation: Optional[Any] = None
+    geometry_coach_v2: Optional[Any] = None
     export_blocked: bool = False
     export_block_reason: Optional[str] = None
 
@@ -3111,9 +3113,17 @@ class PhotoVectorizerV2:
         self.contour_merger = ContourMerger()
         self.plausibility_scorer = ContourPlausibilityScorer()
 
-        # Lazy import to avoid circular dependency
+        # Lazy imports to avoid circular dependency
         from contour_stage import ContourStage
-        self._contour_stage = ContourStage()
+        from body_isolation_stage import BodyIsolationStage
+        from geometry_authority import GeometryAuthority
+        from geometry_coach_v2 import GeometryCoachV2
+
+        self.contour_stage = ContourStage()
+        self.geometry_authority = GeometryAuthority()
+        self.body_isolation_stage = BodyIsolationStage(self.body_isolator)
+        self.geometry_coach_v2 = GeometryCoachV2()
+        self.enable_body_isolation_coach = True
 
         logger.info(f"PhotoVectorizerV2 initialized (BG: {bg_method.value})")
 
@@ -3128,6 +3138,7 @@ class PhotoVectorizerV2:
                 export_svg: bool = True,
                 export_json: bool = False,
                 debug_images: bool = False,
+                enable_body_isolation_coach: Optional[bool] = None,
                 ) -> Union[PhotoExtractionResult, List[PhotoExtractionResult]]:
 
         start_time = time.time()
@@ -3235,9 +3246,27 @@ class PhotoVectorizerV2:
             debug_paths["foreground"] = str(out_dir / f"{source.stem}_02_foreground.jpg")
             debug_paths["alpha"] = str(out_dir / f"{source.stem}_03_alpha.png")
 
-        # ── Stage 4.5: Body isolation ───────────────────────────────────────
-        body_region = self.body_isolator.isolate(
-            image, fg_mask=alpha_mask, original_image=original_image)
+        # ── Stage 4.5: Body isolation (typed + coachable) ──────────────────
+        from body_isolation_stage import BodyIsolationParams
+        body_isolation_params = BodyIsolationParams(
+            use_adaptive=self.body_isolator.use_adaptive,
+        )
+        body_isolation_result = self.body_isolation_stage.run(
+            image,
+            fg_mask=alpha_mask,
+            original_image=original_image,
+            instrument_family=None,  # family not known yet at this point
+            geometry_authority=self.geometry_authority,
+            params=body_isolation_params,
+        )
+        body_region = body_isolation_result.body_region
+        result.body_isolation = body_isolation_result
+
+        if body_isolation_result.review_required:
+            result.warnings.append(
+                f"Body isolation flagged for review "
+                f"(score={body_isolation_result.completeness_score:.2f})"
+            )
 
         # ── Stage 4.6: Rough mpp estimate for adaptive kernel sizing ────────
         rough_mpp = compute_rough_mpp(body_region, spec_name)
@@ -3274,10 +3303,12 @@ class PhotoVectorizerV2:
 
         emit_calibration_guidance(calibration, spec_name, body_h_px, result)
 
-        # ── Stage 8: Contour assembly + classification (delegated) ──────────
+        # ── Stage 8: Contour stage (assembly + merge + election + grid) ────
         family = instrument_family.family if instrument_family else InstrumentFamily.UNKNOWN
 
-        contour_stage = self._contour_stage.run(
+        from contour_stage import StageParams
+        stage_params = StageParams()
+        contour_result = self.contour_stage.run(
             edges=edges,
             alpha_mask=alpha_mask,
             body_region=body_region,
@@ -3286,50 +3317,65 @@ class PhotoVectorizerV2:
             image_shape=(img_h, img_w),
             image=image if debug_images else None,
             debug_images=debug_images,
-            spec_name=spec_name,  # For two-pass calibration
+            spec_name=spec_name,
         )
 
-        # Unpack stage result for downstream pipeline
-        feature_contours = contour_stage.feature_contours_post_grid
-        body_fc = contour_stage.body_contour_final
+        # ── Stage 8.5: Optional V2 body-ownership coaching ─────────────────
+        # The coach may rerun body isolation and/or contour stage, but only
+        # within bounded retry rules and monotonic improvement gates.
+        coach_enabled = (
+            self.enable_body_isolation_coach
+            if enable_body_isolation_coach is None
+            else bool(enable_body_isolation_coach)
+        )
 
-        if not feature_contours:
+        if coach_enabled:
+            body_isolation_result, contour_result, coach_decision = (
+                self.geometry_coach_v2.evaluate(
+                    body_stage_runner=self.body_isolation_stage,
+                    contour_stage_runner=self.contour_stage,
+                    image=image,
+                    fg_mask=alpha_mask,
+                    original_image=original_image,
+                    instrument_family=instrument_family,
+                    geometry_authority=self.geometry_authority,
+                    contour_inputs={
+                        "edges": edges,
+                        "alpha_mask": alpha_mask,
+                        "calibration": calibration,
+                        "family": family,
+                        "image_shape": (img_h, img_w),
+                        "params": stage_params,
+                    },
+                    body_result=body_isolation_result,
+                    contour_result=contour_result,
+                )
+            )
+            result.body_isolation = body_isolation_result
+            result.geometry_coach_v2 = coach_decision
+
+            if coach_decision.action == "manual_review_required":
+                result.warnings.append(coach_decision.reason)
+
+        # Surface stage outputs
+        result.contour_stage = contour_result
+        result.export_blocked = bool(getattr(contour_result, "export_blocked", False))
+        result.export_block_reason = getattr(contour_result, "block_reason", None)
+
+        if result.export_blocked:
+            result.warnings.append(
+                f"Export blocked: "
+                f"{result.export_block_reason or 'low contour plausibility'}"
+            )
+
+        # Maintain compatibility with downstream result fields
+        feature_contours = list(getattr(contour_result, "feature_contours_post_grid", []) or [])
+        body_fc = getattr(contour_result, "body_contour_final", None)
+
+        if body_fc is None and not feature_contours:
             result.warnings.append("No contours found")
             result.processing_time_ms = (time.time() - start_time) * 1000
             return result
-
-        # Propagate merge warnings
-        for w in contour_stage.diagnostics.get("merge_warnings", []):
-            result.warnings.append(w)
-
-        # Propagate grid reclassification count
-        result.grid_reclassified = contour_stage.diagnostics.get(
-            "grid_reclassified", 0)
-
-        # Propagate export blocking
-        if contour_stage.export_blocked:
-            result.export_blocked = True
-            result.export_block_reason = contour_stage.block_reason
-            result.warnings.append(
-                f"EXPORT BLOCKED: {contour_stage.block_reason} -- "
-                f"manual review required")
-
-        # Write grid overlay debug image if stage produced overlay data
-        if debug_images and body_fc and body_fc.bbox_px:
-            grid_clf = PhotoGridClassifier()
-            contour_bboxes = [
-                fc.bbox_px for fc in feature_contours if fc is not body_fc]
-            classifications = [
-                grid_clf.classify_contour_px(fc.bbox_px, body_fc.bbox_px)
-                for fc in feature_contours if fc is not body_fc]
-            overlay = grid_clf.draw_grid_overlay(
-                image, body_fc.bbox_px, contour_bboxes, classifications)
-            overlay_path = str(out_dir / f"{source.stem}_05_grid_overlay.jpg")
-            cv2.imwrite(overlay_path, overlay)
-            debug_paths["grid_overlay"] = overlay_path
-            result.grid_overlay_path = overlay_path
-
-        result.contour_stage = contour_stage
 
         result.calibration = calibration
         mpp = calibration.mm_per_px
