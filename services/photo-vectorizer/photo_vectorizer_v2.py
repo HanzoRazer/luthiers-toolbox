@@ -1254,9 +1254,10 @@ class ReferenceObjectDetector:
         gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
 
         # Coin detection via Hough circles (with size sanity filter)
+        # Patch: Tightened param2 30→50, radii 20-200→30-100 to reduce false positives
         raw_circles = cv2.HoughCircles(
             gray, cv2.HOUGH_GRADIENT, dp=1.2, minDist=50,
-            param1=50, param2=30, minRadius=20, maxRadius=200)
+            param1=50, param2=50, minRadius=30, maxRadius=100)
         if raw_circles is not None:
             raw = np.round(raw_circles[0]).astype(int)
             filtered = filter_coin_detections(raw, (h, w), image=image)
@@ -1348,7 +1349,7 @@ class ScaleCalibrator:
                   edge_image: Optional[np.ndarray] = None,
                   ) -> CalibrationResult:
 
-        # Priority 1: User dimension
+        # Priority 1: User dimension (always highest)
         if known_mm and known_px and known_px > 0:
             mm = known_mm
             if unit == Unit.INCH:
@@ -1359,7 +1360,18 @@ class ScaleCalibrator:
                 mm_per_px=mm / known_px, source=ScaleSource.USER_DIMENSION,
                 confidence=1.0, message=f"User: {mm:.1f}mm / {known_px:.1f}px")
 
-        # Priority 2: Reference objects
+        # Priority 2: Instrument spec (WHEN EXPLICITLY PROVIDED - user intent)
+        # Patch: Demote reference_object below spec when user explicitly provides spec_name.
+        # User saying "this is a smart guitar" should outrank speculative circle detection.
+        if spec_name and spec_name in INSTRUMENT_SPECS and body_height_px and body_height_px > 0:
+            body_h_mm = INSTRUMENT_SPECS[spec_name]["body"][0]
+            mpp = body_h_mm / body_height_px
+            return CalibrationResult(
+                mm_per_px=mpp, source=ScaleSource.INSTRUMENT_SPEC,
+                confidence=0.75,  # boosted from 0.6 when user explicitly provided spec
+                message=f"Spec: {spec_name} body {body_h_mm}mm / {body_height_px:.0f}px")
+
+        # Priority 3: Reference objects (only if no explicit spec_name)
         refs = self.ref_detector.detect(image, fg_mask=fg_mask)
         if refs:
             for det in refs:
@@ -1373,20 +1385,15 @@ class ScaleCalibrator:
                             confidence=det["confidence"],
                             message=f"Reference: {name} ({diam_mm}mm)")
 
-        # Priority 3: EXIF DPI (authoritative from scanner/camera)
+        # Priority 4: EXIF DPI (authoritative from scanner/camera)
         if image_dpi and image_dpi > 0:
             return CalibrationResult(
                 mm_per_px=25.4 / image_dpi, source=ScaleSource.EXIF_DPI,
                 confidence=0.85, message=f"EXIF: {image_dpi:.0f} DPI")
 
-        # Priority 4: Instrument spec + body contour height
-        if spec_name and spec_name in INSTRUMENT_SPECS and body_height_px and body_height_px > 0:
-            body_h_mm = INSTRUMENT_SPECS[spec_name]["body"][0]
-            mpp = body_h_mm / body_height_px
-            return CalibrationResult(
-                mm_per_px=mpp, source=ScaleSource.INSTRUMENT_SPEC,
-                confidence=0.6,
-                message=f"Spec: {spec_name} body {body_h_mm}mm / {body_height_px:.0f}px")
+        # Priority 5: Instrument spec fallback (when body_height_px not yet known)
+        # This is for the case where spec is provided but we're in the first pass
+        # before body contour is found. Handled by two-pass calibration.
 
         # Priority 4.5: Feature-based scale (Patch 13B)
         if family_classification and family_classification.family != InstrumentFamily.UNKNOWN:
@@ -2610,7 +2617,67 @@ class ContourAssembler:
                 bbox_px=bbox, hash_id=hash_id))
 
         logger.info(f"Assembled {len(features)} feature contours from {len(contours)} raw")
+
+        # ── Deduplication: Remove concentric duplicates (IoU > 0.85 with body) ──
+        # Body outline often produces both outer and inner edge traces. The inner
+        # trace gets misclassified. Remove contours whose bbox IoU with body > 0.85.
+        features = self._deduplicate_concentric(features)
+
         return features
+
+    def _deduplicate_concentric(self, features: List[FeatureContour],
+                                 iou_threshold: float = 0.85) -> List[FeatureContour]:
+        """Remove contours that are near-duplicates of the body contour."""
+        if len(features) < 2:
+            return features
+
+        # Find body contour (largest BODY_OUTLINE or largest overall)
+        body_idx = -1
+        body_area = 0
+        for i, fc in enumerate(features):
+            if fc.feature_type == FeatureType.BODY_OUTLINE and fc.area_px > body_area:
+                body_idx = i
+                body_area = fc.area_px
+        if body_idx < 0:
+            # No explicit body outline, use largest contour
+            for i, fc in enumerate(features):
+                if fc.area_px > body_area:
+                    body_idx = i
+                    body_area = fc.area_px
+        if body_idx < 0:
+            return features
+
+        body_bbox = features[body_idx].bbox_px
+        bx, by, bw, bh = body_bbox
+
+        keep = []
+        removed = 0
+        for i, fc in enumerate(features):
+            if i == body_idx:
+                keep.append(fc)
+                continue
+            # Calculate IoU of bounding boxes
+            x, y, w, h = fc.bbox_px
+            inter_x1 = max(bx, x)
+            inter_y1 = max(by, y)
+            inter_x2 = min(bx + bw, x + w)
+            inter_y2 = min(by + bh, y + h)
+            inter_w = max(0, inter_x2 - inter_x1)
+            inter_h = max(0, inter_y2 - inter_y1)
+            inter_area = inter_w * inter_h
+            union_area = bw * bh + w * h - inter_area
+            iou = inter_area / union_area if union_area > 0 else 0
+
+            if iou > iou_threshold:
+                # This contour is a near-duplicate of body
+                logger.debug(f"Dedup: removed contour {fc.hash_id} (IoU={iou:.2f} with body)")
+                removed += 1
+            else:
+                keep.append(fc)
+
+        if removed > 0:
+            logger.info(f"Deduplication: removed {removed} concentric duplicates (IoU>{iou_threshold})")
+        return keep
 
 
 # =============================================================================
@@ -3219,6 +3286,7 @@ class PhotoVectorizerV2:
             image_shape=(img_h, img_w),
             image=image if debug_images else None,
             debug_images=debug_images,
+            spec_name=spec_name,  # For two-pass calibration
         )
 
         # Unpack stage result for downstream pipeline
