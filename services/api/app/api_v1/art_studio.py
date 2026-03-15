@@ -4,10 +4,13 @@ Art Studio API v1
 Design and pattern generation for decorative elements:
 
 1. POST /art/rosette/generate - Generate rosette pattern
-2. GET  /art/rosette/presets - List rosette presets
-3. POST /art/inlay/generate - Generate inlay pattern
-4. GET  /art/inlay/presets - List inlay presets
-5. POST /art/preview - Generate SVG preview
+2. POST /art/inlay/generate - Generate inlay pattern
+3. GET  /art/inlay/presets - List inlay presets
+4. POST /art/preview - Generate SVG preview
+
+REMOVED (dead endpoints with no frontend callers):
+- GET /art/rosette/presets - Removed 2026-03-15 (STUB_DEBT_REPORT remediation)
+  Use /api/art/presets (root_art_router.py) for general Art Studio presets
 """
 
 from __future__ import annotations
@@ -99,46 +102,6 @@ def generate_rosette(req: RosetteGenerateRequest) -> V1Response:
             "rings": rings_data,
             "pattern": req.pattern,
             "svg_preview": f"/api/v1/art/preview/rosette_{hash(str(req)) % 100000:05d}.svg",
-        },
-    )
-
-
-@router.get("/rosette/presets")
-def list_rosette_presets() -> V1Response:
-    """
-    List available rosette preset designs.
-
-    Presets are curated designs ready for production.
-    """
-    presets = [
-        {
-            "id": "classic_herringbone",
-            "name": "Classic Herringbone",
-            "description": "Traditional Martin-style herringbone rosette",
-            "rings": 5,
-            "woods": ["maple", "rosewood", "maple", "rosewood", "maple"],
-        },
-        {
-            "id": "abalone_ring",
-            "name": "Abalone Ring",
-            "description": "Single abalone ring with wood borders",
-            "rings": 3,
-            "woods": ["ebony", "abalone", "ebony"],
-        },
-        {
-            "id": "minimalist",
-            "name": "Minimalist",
-            "description": "Simple single-ring design",
-            "rings": 1,
-            "woods": ["maple"],
-        },
-    ]
-
-    return V1Response(
-        ok=True,
-        data={
-            "presets": presets,
-            "total": len(presets),
         },
     )
 
