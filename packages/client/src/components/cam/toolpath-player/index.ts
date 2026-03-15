@@ -5,11 +5,19 @@
  * Use these components to compose the player or import individually.
  */
 
-// Vue components
+// Phase 2 components
 export { default as PlaybackControlsBar } from './PlaybackControlsBar.vue';
 export { default as ToolbarButtonGroup } from './ToolbarButtonGroup.vue';
 export { default as PlayerHudBar } from './PlayerHudBar.vue';
 export { default as ExportAnimationPanel } from './ExportAnimationPanel.vue';
+
+// Phase 3 components
+export { default as CollisionPanel } from './CollisionPanel.vue';
+export { default as OptimizationPanel } from './OptimizationPanel.vue';
+export { default as GcodeSourcePanel } from './GcodeSourcePanel.vue';
+export { default as KeyboardShortcutsOverlay } from './KeyboardShortcutsOverlay.vue';
+export { default as MeasurementsPanel } from './MeasurementsPanel.vue';
+export { default as MeasureModeIndicator } from './MeasureModeIndicator.vue';
 
 // Composables
 export { useToolpathPanels } from './useToolpathPanels';

@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from typing import Any, Dict, List, Optional, Tuple
 
 from body_isolation_result import BodyIsolationResult
@@ -242,6 +242,16 @@ class GeometryCoachV2:
         Expects:
           body_stage_runner.run(...)
           contour_stage_runner.run(...)
+
+        Returns:
+          (
+            current_body_result,
+            current_contour_result,
+            coach_decision
+          )
+
+        The returned body/contour results are the accepted best-known results
+        after any safe retries have been evaluated.
         """
         current_body = body_result
         current_contour = contour_result
@@ -281,13 +291,18 @@ class GeometryCoachV2:
                     candidate_body_result=candidate_body,
                     candidate_contour_result=candidate_contour,
                 ):
-                    decision.candidate_body_score = candidate_body.completeness_score
-                    decision.candidate_contour_score = getattr(candidate_contour, "best_score", None)
+                    decision = replace(
+                        decision,
+                        candidate_body_score=candidate_body.completeness_score,
+                        candidate_contour_score=getattr(candidate_contour, "best_score", None),
+                    )
                     current_body = candidate_body
                     current_contour = candidate_contour
                     continue
 
-                decision.notes.append("Body-isolation retry rejected by monotonic improvement gate.")
+                decision.notes.append(
+                    "Body-isolation retry rejected by monotonic improvement gate."
+                )
                 return current_body, current_contour, decision
 
             if decision.action == "rerun_contour_stage":
@@ -307,12 +322,17 @@ class GeometryCoachV2:
                     candidate_body_result=current_body,
                     candidate_contour_result=candidate_contour,
                 ):
-                    decision.candidate_body_score = current_body.completeness_score
-                    decision.candidate_contour_score = getattr(candidate_contour, "best_score", None)
+                    decision = replace(
+                        decision,
+                        candidate_body_score=current_body.completeness_score,
+                        candidate_contour_score=getattr(candidate_contour, "best_score", None),
+                    )
                     current_contour = candidate_contour
                     continue
 
-                decision.notes.append("Contour-stage retry rejected by monotonic improvement gate.")
+                decision.notes.append(
+                    "Contour-stage retry rejected by monotonic improvement gate."
+                )
                 return current_body, current_contour, decision
 
         fallback = CoachDecisionV2(
