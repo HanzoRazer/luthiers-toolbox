@@ -5,7 +5,9 @@
 | Metric | Count | Target | Status |
 |--------|-------|--------|--------|
 | Python files | 1,095 | — | Baseline |
-| Files >500 LOC | 18 | 0 | In progress |
+| Files >500 LOC | 62 | 0 | In progress |
+| — Python | 25 | 0 | In progress |
+| — Vue | 37 | 0 | In progress |
 | Broad exceptions | 315 | 0 | In progress |
 | Router files | 54 | — | Baseline |
 
@@ -28,17 +30,89 @@
 | Fence boundary checks | Active | `check_boundary_imports.py`, `check_boundary_patterns.py` |
 | Architecture scan CI | Active | `architecture_scan.yml` workflow |
 
-## Files >500 LOC (18 files)
+## Files >500 LOC (62 files)
 
-Priority candidates for decomposition:
+### Python (25 files)
 
-| File | Est. LOC | Decomposition Strategy |
-|------|----------|------------------------|
-| `DesignFirstWorkflowPanel.vue` | ~800 | Extract action bar, overrides panel, history |
-| `ScientificCalculator.vue` | ~700 | Extract calculator pad, display, converters |
-| `DxfToGcodeView.vue` | ~650 | Extract compare UI, why panel, result panel |
-| `PipelineLabView.vue` | ~600 | Extract stage panels, preview, controls |
-| `ManufacturingCandidateList.vue` | ~550 | Extract filters, row components |
+| LOC | File |
+|-----|------|
+| 1241 | `app/cam/rosette/prototypes/herringbone_embedded_quads.py` |
+| 684 | `app/router_registry/manifest.py` |
+| 682 | `app/cam/rosette/modern_pattern_generator.py` |
+| 674 | `app/cam/rosette/prototypes/__archived__/generative_explorer_viewer.py` |
+| 661 | `app/generators/neck_headstock_config.py` |
+| 631 | `app/core/job_queue/queue.py` |
+| 625 | `app/art_studio/services/generators/inlay_patterns.py` |
+| 615 | `app/cam/dxf_advanced_validation.py` |
+| 595 | `app/generators/bezier_body.py` |
+| 587 | `app/cam/rosette/prototypes/shape_library.py` |
+| 578 | `app/cam/rosette/presets.py` |
+| 572 | `app/generators/stratocaster_body_generator.py` |
+| 568 | `app/saw_lab/toolpaths_validate_service.py` |
+| 561 | `app/calculators/unified_canvas.py` |
+| 555 | `app/cam/rosette/prototypes/herringbone_parametric.py` |
+| 553 | `app/cam/rosette/tile_segmentation.py` |
+| 549 | `app/cam/rosette/prototypes/__archived__/diamond_chevron_viewer.py` |
+| 542 | `app/cam/profiling/profile_toolpath.py` |
+| 539 | `app/cam/rosette/traditional_builder.py` |
+| 526 | `app/routers/blueprint_cam/contour_reconstruction.py` |
+| 518 | `app/routers/cam_post_v155_router.py` |
+| 516 | `app/services/rosette_cam_bridge.py` |
+| 512 | `app/cam/rosette/prototypes/__archived__/rosette_studio_viewer.py` |
+| 509 | `app/routers/blueprint_cam/dxf_preprocessor.py` |
+| 504 | `app/tests/test_e2e_workflow_integration.py` |
+
+### Vue (37 files)
+
+| LOC | File |
+|-----|------|
+| 3038 | `components/cam/ToolpathPlayer.vue` |
+| 1240 | `views/art-studio/RosetteWheelView.vue` |
+| 1014 | `views/lab/MachineManagerView.vue` |
+| 997 | `components/cam/ToolpathCanvas3D.vue` |
+| 893 | `components/cam/ToolpathAnnotations.vue` |
+| 878 | `views/art-studio/VCarveView.vue` |
+| 860 | `components/cam/ToolpathStats.vue` |
+| 850 | `components/blueprint/CalibrationPanel.vue` |
+| 804 | `components/cam/ChipLoadPanel.vue` |
+| 798 | `components/cam/ToolpathCanvas.vue` |
+| 797 | `components/cam/ToolpathComparePanel.vue` |
+| 773 | `views/art-studio/InlayDesignerView.vue` |
+| 771 | `views/business/EngineeringEstimatorView.vue` |
+| 744 | `views/art-studio/ReliefCarvingView.vue` |
+| 716 | `views/business/EstimatorAnalyticsDashboard.vue` |
+| 697 | `components/cam/ToolpathFilter.vue` |
+| 671 | `components/cam/FeedAnalysisPanel.vue` |
+| 663 | `views/AppDashboardView.vue` |
+| 658 | `views/business/EstimatorComparePanel.vue` |
+| 656 | `components/wizards/JobCreationWizard.vue` |
+| 651 | `views/dev/NavProto.vue` |
+| 609 | `views/business/EstimatorPresetsPanel.vue` |
+| 591 | `components/wizards/FretboardWizard.vue` |
+| 581 | `components/wizards/DxfToGcodeWizard.vue` |
+| 579 | `components/rmos/ManufacturingCandidateList.vue` |
+| 566 | `components/cam/ToolpathAudioPanel.vue` |
+| 565 | `components/rmos/ManufacturingCandidateListV2.vue` |
+| 563 | `components/rmos/RosettePresetBrowser.vue` |
+| 560 | `views/business/EstimatorHistoryPanel.vue` |
+| 560 | `components/cam/ToolpathCompare.vue` |
+| 548 | `views/art-studio/InlayPatternView.vue` |
+| 531 | `components/cam/StockSimulationPanel.vue` |
+| 520 | `views/InstrumentDesignView.vue` |
+| 514 | `components/saw_lab/SawContourPanel.vue` |
+| 506 | `views/business/EstimatorTemplatesPanel.vue` |
+| 505 | `views/dev/ComponentGallery.vue` |
+| 502 | `components/adaptive/AdaptivePocketLab.vue` |
+
+### Priority Decomposition Targets
+
+| File | LOC | Strategy |
+|------|-----|----------|
+| `ToolpathPlayer.vue` | 3038 | Extract playback controls, timeline, 3D viewer |
+| `herringbone_embedded_quads.py` | 1241 | Split geometry generation from rendering |
+| `RosetteWheelView.vue` | 1240 | Extract wheel canvas, controls, presets panel |
+| `MachineManagerView.vue` | 1014 | Extract machine list, editor, connection panel |
+| `ToolpathCanvas3D.vue` | 997 | Extract camera controls, mesh rendering, overlays |
 
 ## Broad Exceptions (315 remaining)
 
@@ -80,7 +154,7 @@ app/
 
 ## Next Actions
 
-1. **Decompose large Vue components** — Start with `DesignFirstWorkflowPanel.vue`
+1. **Decompose `ToolpathPlayer.vue`** — 3038 LOC, highest priority
 2. **Fix broad exceptions** — Focus on `app/cam/` first
 3. **Consolidate routers** — Merge small routers into domain modules
 4. **Add missing smoke tests** — Cover remaining router endpoints
@@ -89,7 +163,7 @@ app/
 
 | Date | Files >500 | Broad Exceptions | Notes |
 |------|------------|------------------|-------|
-| 2026-03-15 | 18 | 315 | Baseline |
+| 2026-03-15 | 62 | 315 | Corrected baseline (25 Python + 37 Vue) |
 
 ---
 *Last updated: 2026-03-15*
