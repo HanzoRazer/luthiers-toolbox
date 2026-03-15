@@ -240,6 +240,10 @@ class PhotoExtractionResult:
     grid_overlay_path: Optional[str] = None
     debug_images: Dict[str, str] = field(default_factory=dict)
 
+    contour_stage: Optional["ContourStageResult"] = None
+    export_blocked: bool = False
+    export_block_reason: Optional[str] = None
+
     def summary(self) -> Dict[str, Any]:
         feature_counts = {ft.value: len(c) for ft, c in self.features.items()}
         return {
@@ -256,7 +260,40 @@ class PhotoExtractionResult:
             "dark_background_detected": self.dark_background_detected,
             "warnings": self.warnings,
             "processing_time_ms": self.processing_time_ms,
+            "export_blocked": self.export_blocked,
         }
+
+
+@dataclass
+class ContourScore:
+    """Plausibility score for a single contour as body candidate."""
+    contour_index: int
+    score: float  # 0.0-1.0 composite plausibility
+    completeness: float  # solidity (hull coverage)
+    includes_neck: bool
+    border_contact: bool
+    dimension_plausibility: float  # 0.0-1.0 match vs family priors
+    symmetry_score: float  # 0.0-1.0
+    aspect_ratio_ok: bool
+    issues: List[str] = field(default_factory=list)
+
+
+@dataclass
+class ContourStageResult:
+    """Full typed record of Stage 8 contour processing."""
+    feature_contours_pre_merge: List[FeatureContour] = field(default_factory=list)
+    merge_result: Optional[MergeResult] = None
+    feature_contours_post_merge: List[FeatureContour] = field(default_factory=list)
+    body_contour_pre_grid: Optional[FeatureContour] = None
+    feature_contours_post_grid: List[FeatureContour] = field(default_factory=list)
+    body_contour_final: Optional[FeatureContour] = None
+    contour_scores_pre: List[ContourScore] = field(default_factory=list)
+    contour_scores_post: List[ContourScore] = field(default_factory=list)
+    elected_source: str = "post_merge"  # "pre_merge" or "post_merge"
+    best_score: float = 0.0
+    export_blocked: bool = False
+    block_reason: Optional[str] = None
+    diagnostics: Dict[str, Any] = field(default_factory=dict)
 
 
 # Instrument specs for scale calibration and feature classification
@@ -2253,6 +2290,263 @@ def filter_coin_by_position(
 
 
 # =============================================================================
+# Stage 8 — Contour Plausibility Scorer
+# =============================================================================
+
+# Family-aware dimension priors: (min_h_mm, max_h_mm, min_w_mm, max_w_mm)
+_FAMILY_DIMENSION_PRIORS: Dict[str, Tuple[float, float, float, float]] = {
+    InstrumentFamily.SOLID_BODY:  (350.0, 470.0, 280.0, 380.0),
+    InstrumentFamily.ARCHTOP:     (420.0, 560.0, 350.0, 460.0),
+    InstrumentFamily.ACOUSTIC:    (440.0, 560.0, 350.0, 440.0),
+    InstrumentFamily.SEMI_HOLLOW: (400.0, 530.0, 330.0, 440.0),
+    InstrumentFamily.UNKNOWN:     (300.0, 600.0, 250.0, 480.0),
+}
+
+EXPORT_BLOCK_THRESHOLD: float = 0.30
+
+
+class ContourPlausibilityScorer:
+    """
+    Scores contour candidates for plausibility as a guitar body outline.
+
+    V1 signals (no curvature profiling):
+      - Solidity (hull coverage): convex_area / hull_area
+      - Vertical extent: contour height vs body region height
+      - Border contact: contour bbox touching image edges
+      - Aspect ratio sanity vs family priors
+      - Neck inclusion heuristic: contour extends far above body region
+      - Symmetry: left/right area balance
+      - Dimension plausibility vs INSTRUMENT_SPECS family priors
+    """
+
+    def __init__(
+        self,
+        border_margin_px: int = 5,
+        neck_height_factor: float = 1.35,
+        min_solidity: float = 0.55,
+    ):
+        self.border_margin_px = border_margin_px
+        self.neck_height_factor = neck_height_factor
+        self.min_solidity = min_solidity
+
+    def score_candidate(
+        self,
+        fc: FeatureContour,
+        idx: int,
+        body_region: Optional[BodyRegion],
+        family: str,
+        mpp: float,
+        image_shape: Tuple[int, int],
+    ) -> ContourScore:
+        """Score a single contour candidate."""
+        issues: List[str] = []
+        img_h, img_w = image_shape
+
+        # --- Signal 1: Solidity (hull coverage) ---
+        solidity = fc.solidity
+        if solidity < self.min_solidity:
+            issues.append(f"low solidity {solidity:.2f}")
+
+        # --- Signal 2: Border contact ---
+        cx, cy, cw, ch = fc.bbox_px
+        m = self.border_margin_px
+        touches_left = cx <= m
+        touches_top = cy <= m
+        touches_right = (cx + cw) >= (img_w - m)
+        touches_bottom = (cy + ch) >= (img_h - m)
+        border_count = sum([touches_left, touches_top, touches_right, touches_bottom])
+        border_contact = border_count >= 2
+        if border_contact:
+            issues.append(f"border contact on {border_count} edges")
+
+        # --- Signal 3: Neck inclusion ---
+        includes_neck = False
+        if body_region is not None:
+            body_top = body_region.y
+            contour_top = cy
+            # If contour extends significantly above body region top,
+            # it likely includes the neck
+            if contour_top < body_top - body_region.height * 0.15:
+                total_h = ch
+                body_overlap_h = min(cy + ch, body_region.y + body_region.height) - body_region.y
+                if total_h > body_region.height * self.neck_height_factor:
+                    includes_neck = True
+                    issues.append("likely includes neck")
+
+        # --- Signal 4: Aspect ratio sanity ---
+        priors = _FAMILY_DIMENSION_PRIORS.get(
+            family, _FAMILY_DIMENSION_PRIORS[InstrumentFamily.UNKNOWN])
+        expected_aspect_min = priors[0] / priors[3]  # min_h / max_w
+        expected_aspect_max = priors[1] / priors[2]  # max_h / min_w
+        contour_aspect = max(ch, 1) / max(cw, 1)
+        # Allow ±40% tolerance on aspect ratio range
+        aspect_lo = expected_aspect_min * 0.6
+        aspect_hi = expected_aspect_max * 1.4
+        aspect_ratio_ok = aspect_lo <= contour_aspect <= aspect_hi
+        if not aspect_ratio_ok:
+            issues.append(
+                f"aspect ratio {contour_aspect:.2f} outside "
+                f"[{aspect_lo:.2f}, {aspect_hi:.2f}]")
+
+        # --- Signal 5: Dimension plausibility ---
+        dim_plausibility = 1.0
+        if mpp > 0:
+            h_mm = ch * mpp
+            w_mm = cw * mpp
+            min_h, max_h, min_w, max_w = priors
+
+            # Height plausibility
+            if min_h <= h_mm <= max_h:
+                h_plaus = 1.0
+            else:
+                h_dist = min(abs(h_mm - min_h), abs(h_mm - max_h))
+                h_range = max_h - min_h
+                h_plaus = max(0.0, 1.0 - h_dist / h_range)
+
+            # Width plausibility
+            if min_w <= w_mm <= max_w:
+                w_plaus = 1.0
+            else:
+                w_dist = min(abs(w_mm - min_w), abs(w_mm - max_w))
+                w_range = max_w - min_w
+                w_plaus = max(0.0, 1.0 - w_dist / w_range)
+
+            dim_plausibility = (h_plaus + w_plaus) / 2.0
+            if dim_plausibility < 0.4:
+                issues.append(
+                    f"dimensions {h_mm:.0f}x{w_mm:.0f}mm poor match "
+                    f"for {family}")
+
+        # --- Signal 6: Vertical extent vs body region ---
+        completeness = solidity
+        if body_region is not None:
+            height_ratio = ch / max(body_region.height, 1)
+            # Penalize if contour is much smaller than body region
+            if height_ratio < 0.5:
+                completeness *= 0.6
+                issues.append(f"small vs body region ({height_ratio:.0%})")
+
+        # --- Signal 7: Symmetry (left/right area) ---
+        symmetry_score = self._compute_symmetry(fc, image_shape)
+
+        # --- Composite score ---
+        w_solidity = 0.25
+        w_dim = 0.25
+        w_symmetry = 0.15
+        w_aspect = 0.15
+        w_border = 0.10
+        w_neck = 0.10
+
+        score = (
+            w_solidity * min(solidity / 0.85, 1.0) +
+            w_dim * dim_plausibility +
+            w_symmetry * symmetry_score +
+            w_aspect * (1.0 if aspect_ratio_ok else 0.3) +
+            w_border * (0.2 if border_contact else 1.0) +
+            w_neck * (0.3 if includes_neck else 1.0)
+        )
+
+        return ContourScore(
+            contour_index=idx,
+            score=round(score, 4),
+            completeness=round(completeness, 4),
+            includes_neck=includes_neck,
+            border_contact=border_contact,
+            dimension_plausibility=round(dim_plausibility, 4),
+            symmetry_score=round(symmetry_score, 4),
+            aspect_ratio_ok=aspect_ratio_ok,
+            issues=issues,
+        )
+
+    def score_all_candidates(
+        self,
+        contours: List[FeatureContour],
+        body_region: Optional[BodyRegion],
+        family: str,
+        mpp: float,
+        image_shape: Tuple[int, int],
+        min_area_px: float = 5000.0,
+    ) -> List[ContourScore]:
+        """Score all contours above area threshold."""
+        scores: List[ContourScore] = []
+        for i, fc in enumerate(contours):
+            if fc.area_px < min_area_px:
+                continue
+            cs = self.score_candidate(
+                fc, i, body_region, family, mpp, image_shape)
+            scores.append(cs)
+        return scores
+
+    def elect_best(
+        self,
+        pre_merge_scores: List[ContourScore],
+        post_merge_scores: List[ContourScore],
+    ) -> Tuple[int, str, float]:
+        """
+        Compare best pre-merge candidate vs best post-merge candidate.
+
+        Returns (best_contour_index, source, best_score).
+        source is "pre_merge" or "post_merge".
+        """
+        best_pre = max(pre_merge_scores, key=lambda s: s.score) \
+            if pre_merge_scores else None
+        best_post = max(post_merge_scores, key=lambda s: s.score) \
+            if post_merge_scores else None
+
+        if best_pre is None and best_post is None:
+            return -1, "none", 0.0
+
+        if best_pre is None:
+            return best_post.contour_index, "post_merge", best_post.score
+        if best_post is None:
+            return best_pre.contour_index, "pre_merge", best_pre.score
+
+        # Prefer post-merge if scores are close (within 0.05)
+        # since morphological merge is purpose-built for fragmented bodies
+        if best_post.score >= best_pre.score - 0.05:
+            return best_post.contour_index, "post_merge", best_post.score
+        else:
+            logger.info(
+                f"PlausibilityScorer: pre-merge candidate wins "
+                f"(pre={best_pre.score:.3f} vs post={best_post.score:.3f})")
+            return best_pre.contour_index, "pre_merge", best_pre.score
+
+    @staticmethod
+    def _compute_symmetry(
+        fc: FeatureContour,
+        image_shape: Tuple[int, int],
+    ) -> float:
+        """Compute left/right symmetry of a contour about its centroid."""
+        pts = fc.points_px
+        if pts is None or len(pts) < 10:
+            return 0.5
+
+        pts_2d = pts.reshape(-1, 2)
+        cx_centroid = float(pts_2d[:, 0].mean())
+
+        left_pts = pts_2d[pts_2d[:, 0] <= cx_centroid]
+        right_pts = pts_2d[pts_2d[:, 0] > cx_centroid]
+
+        n_left = len(left_pts)
+        n_right = len(right_pts)
+        total = n_left + n_right
+        if total == 0:
+            return 0.5
+
+        balance = min(n_left, n_right) / max(n_left, n_right) \
+            if max(n_left, n_right) > 0 else 0.0
+
+        # Also check vertical spread symmetry
+        if n_left > 2 and n_right > 2:
+            left_span = float(left_pts[:, 1].max() - left_pts[:, 1].min())
+            right_span = float(right_pts[:, 1].max() - right_pts[:, 1].min())
+            span_ratio = min(left_span, right_span) / max(left_span, right_span, 1.0)
+            return (balance + span_ratio) / 2.0
+
+        return balance
+
+
+# =============================================================================
 # Stage 8b — Contour Assembly with Hierarchy
 # =============================================================================
 
@@ -2745,6 +3039,7 @@ class PhotoVectorizerV2:
         self.family_classifier = InstrumentFamilyClassifier()
         self.batch_smoother = BatchCalibrationSmoother()
         self.contour_merger = ContourMerger()
+        self.plausibility_scorer = ContourPlausibilityScorer()
 
         logger.info(f"PhotoVectorizerV2 initialized (BG: {bg_method.value})")
 
@@ -2913,6 +3208,14 @@ class PhotoVectorizerV2:
             result.processing_time_ms = (time.time() - start_time) * 1000
             return result
 
+        # Snapshot pre-merge state
+        pre_merge_contours = list(feature_contours)
+
+        # Score pre-merge candidates
+        family = instrument_family.family if instrument_family else InstrumentFamily.UNKNOWN
+        scores_pre = self.plausibility_scorer.score_all_candidates(
+            pre_merge_contours, body_region, family, mpp, (img_h, img_w))
+
         # Patch 17 Fix 1: merge fragmented body contours
         merge_result = self.contour_merger.merge(
             feature_contours, (img_h, img_w),
@@ -2934,7 +3237,21 @@ class PhotoVectorizerV2:
                 f"-- merged with {merge_result.close_kernel_px}x"
                 f"{merge_result.close_kernel_px}px kernel")
 
-        # Patch 17 Fix 2: elect body contour with X-extent guard
+        # Snapshot post-merge state
+        post_merge_contours = list(feature_contours)
+
+        # Score post-merge candidates
+        scores_post = self.plausibility_scorer.score_all_candidates(
+            post_merge_contours, body_region, family, mpp, (img_h, img_w))
+
+        # Plausibility scoring (diagnostic -- does NOT override election)
+        best_idx, elected_source, best_score = \
+            self.plausibility_scorer.elect_best(scores_pre, scores_post)
+        logger.info(
+            f"PlausibilityScorer diagnostic: best={elected_source} "
+            f"idx={best_idx} score={best_score:.3f}")
+
+        # Actual body election: Patch 17 Fix 2 X-extent guard (proven pipeline)
         body_idx = elect_body_contour_v2(
             feature_contours, body_region,
             min_overlap=0.50, max_width_factor=1.30)
@@ -2947,6 +3264,38 @@ class PhotoVectorizerV2:
             body_fc = max(feature_contours, key=lambda c: c.area_px)
             body_fc.feature_type = FeatureType.BODY_OUTLINE
             body_fc.confidence = 0.7
+
+        # Build ContourStageResult
+        contour_stage = ContourStageResult(
+            feature_contours_pre_merge=pre_merge_contours,
+            merge_result=merge_result if merge_result is not None else None,
+            feature_contours_post_merge=post_merge_contours,
+            body_contour_pre_grid=body_fc,
+            contour_scores_pre=scores_pre,
+            contour_scores_post=scores_post,
+            elected_source=elected_source,
+            best_score=best_score,
+            diagnostics={
+                "n_pre_merge": len(pre_merge_contours),
+                "n_post_merge": len(post_merge_contours),
+                "n_scored_pre": len(scores_pre),
+                "n_scored_post": len(scores_post),
+                "family": family,
+            },
+        )
+
+        # Check export blocking
+        if best_score < EXPORT_BLOCK_THRESHOLD:
+            contour_stage.export_blocked = True
+            contour_stage.block_reason = (
+                f"Best plausibility score {best_score:.3f} below threshold "
+                f"{EXPORT_BLOCK_THRESHOLD}")
+            result.export_blocked = True
+            result.export_block_reason = contour_stage.block_reason
+            result.warnings.append(
+                f"EXPORT BLOCKED: {contour_stage.block_reason} -- "
+                f"manual review required")
+            logger.warning(f"Export blocked: {contour_stage.block_reason}")
 
         # ── Stage 8.5: Grid zone re-classification ───────────────────────
         body_bbox_px = body_fc.bbox_px if body_fc else None
@@ -2990,6 +3339,11 @@ class PhotoVectorizerV2:
                 cv2.imwrite(overlay_path, overlay)
                 debug_paths["grid_overlay"] = overlay_path
                 result.grid_overlay_path = overlay_path
+
+        # Finalize ContourStageResult
+        contour_stage.feature_contours_post_grid = list(feature_contours)
+        contour_stage.body_contour_final = body_fc
+        result.contour_stage = contour_stage
 
         result.calibration = calibration
         mpp = calibration.mm_per_px
@@ -3051,20 +3405,25 @@ class PhotoVectorizerV2:
             svg_w, svg_h = 600, 800
 
         # ── Stage 11: Export ────────────────────────────────────────────────
-        if export_svg:
-            svg_path = str(out_dir / f"{source.stem}_photo_v2.svg")
-            if write_svg(export_contours, svg_path, svg_w, svg_h):
-                result.output_svg = svg_path
+        if result.export_blocked:
+            logger.warning(
+                f"Export skipped: {result.export_block_reason}")
+            result.warnings.append("SVG/DXF/JSON export skipped due to low plausibility")
+        else:
+            if export_svg:
+                svg_path = str(out_dir / f"{source.stem}_photo_v2.svg")
+                if write_svg(export_contours, svg_path, svg_w, svg_h):
+                    result.output_svg = svg_path
 
-        if export_dxf:
-            dxf_path = str(out_dir / f"{source.stem}_photo_v2.dxf")
-            if write_dxf(export_contours, dxf_path, self.dxf_version):
-                result.output_dxf = dxf_path
+            if export_dxf:
+                dxf_path = str(out_dir / f"{source.stem}_photo_v2.dxf")
+                if write_dxf(export_contours, dxf_path, self.dxf_version):
+                    result.output_dxf = dxf_path
 
-        if export_json:
-            json_path = str(out_dir / f"{source.stem}_photo_v2.json")
-            if write_features_json(features_by_type, json_path, calibration):
-                result.output_json = json_path
+            if export_json:
+                json_path = str(out_dir / f"{source.stem}_photo_v2.json")
+                if write_features_json(features_by_type, json_path, calibration):
+                    result.output_json = json_path
 
         result.debug_images = debug_paths
         result.processing_time_ms = (time.time() - start_time) * 1000
