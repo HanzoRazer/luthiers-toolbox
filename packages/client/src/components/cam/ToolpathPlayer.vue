@@ -33,11 +33,9 @@ import type { MoveSegment as CompareMoveSegment } from "@/util/toolpathCompariso
 import { useTimeEstimates } from "@/composables/useTimeEstimates";
 import { validateGcode, type ValidationResult } from "@/util/gcodeValidator";
 import { buildMachineStates, type MachineState } from "@/util/mcodeTracker";
-// P4 imports
-import { CollisionDetector, type CollisionReport, type Fixture } from "@/util/collisionDetector";
-import { GcodeOptimizer, type OptimizationReport } from "@/util/gcodeOptimizer";
-// P5 imports
-import { AnimationExporter, downloadExport, type ExportConfig, type ExportProgress } from "@/util/animationExporter";
+// P4 imports (moved to useToolpathAnalysis composable)
+import type { Fixture } from "@/util/collisionDetector";
+// P5 imports (export logic moved to useToolpathExport composable)
 import { useToolpathShortcuts } from "@/composables/useToolpathShortcuts";
 // P6 imports: Multi-tool support
 import ToolLegendPanel from "./ToolLegendPanel.vue";
@@ -51,7 +49,7 @@ import StockSimulationPanel from "./StockSimulationPanel.vue";
 import ChipLoadPanel from "./ChipLoadPanel.vue";
 import type { ChipLoadIssue } from "@/util/chipLoadAnalyzer";
 
-// Extracted subcomponents (Phase 2 + Phase 3 decomposition)
+// Extracted subcomponents (Phase 2 + Phase 3 + Phase 4 decomposition)
 import {
   PlaybackControlsBar,
   ToolbarButtonGroup,
@@ -63,6 +61,9 @@ import {
   KeyboardShortcutsOverlay,
   MeasurementsPanel,
   MeasureModeIndicator,
+  PanelContainer,
+  useToolpathAnalysis,
+  useToolpathExport,
 } from "./toolpath-player";
 
 // ---------------------------------------------------------------------------
@@ -182,18 +183,15 @@ const showCompareOverlay = ref(false);
 // P5: Audio panel
 const showAudioPanel = ref(false);
 const audioEngine = getAudioEngine();
-// P5: Export animation
-const showExportPanel = ref(false);
-const isExporting = ref(false);
-const exportProgress = ref<ExportProgress | null>(null);
-const exportConfig = ref<Partial<ExportConfig>>({
-  format: "webm",
-  fps: 30,
-  quality: 0.8,
-  duration: null,
-});
+// P5: Export animation (via composable)
+const exportState = useToolpathExport();
+const {
+  showExportPanel,
+  isExporting,
+  exportProgress,
+  exportConfig,
+} = exportState;
 const canvas2DRef = ref<InstanceType<typeof ToolpathCanvas> | null>(null);
-let exporter: AnimationExporter | null = null;
 
 // P6: Multi-tool legend panel
 const showToolLegendPanel = ref(false);
@@ -225,33 +223,29 @@ const currentMachine = computed<MachineState | null>(() => {
 });
 
 // ---------------------------------------------------------------------------
-// P4: Collision Detection
+// P4: Collision Detection & Optimization (via composable)
 // ---------------------------------------------------------------------------
-const collisionReport = ref<CollisionReport | null>(null);
-const showCollisionPanel = ref(false);
-
-const hasCollisions = computed(() =>
-  collisionReport.value && collisionReport.value.collisions.length > 0
-);
-const hasCriticalCollisions = computed(() =>
-  collisionReport.value && collisionReport.value.criticalCount > 0
-);
-
-// Active collisions at current segment
-const activeCollisions = computed(() => {
-  if (!collisionReport.value) return [];
-  const idx = store.currentSegmentIndex;
-  return collisionReport.value.collisions.filter(c => c.segmentIndex <= idx);
+const analysis = useToolpathAnalysis({
+  enableCollisionDetection: props.enableCollisionDetection,
+  enableOptimization: props.enableOptimization,
+  toolDiameter: props.toolDiameter,
+  safeZ: props.safeZ,
+  fixtures: props.fixtures,
 });
 
-// ---------------------------------------------------------------------------
-// P4: Optimization Suggestions
-// ---------------------------------------------------------------------------
-const optimizationReport = ref<OptimizationReport | null>(null);
-const showOptPanel = ref(false);
+const {
+  collisionReport,
+  optimizationReport,
+  showCollisionPanel,
+  showOptPanel,
+  hasCollisions,
+  hasCriticalCollisions,
+  hasOptimizations,
+} = analysis;
 
-const hasOptimizations = computed(() =>
-  optimizationReport.value && optimizationReport.value.suggestions.length > 0
+// Active collisions at current segment
+const activeCollisions = computed(() =>
+  analysis.activeCollisions(store.currentSegmentIndex)
 );
 
 // ---------------------------------------------------------------------------
@@ -323,54 +317,26 @@ async function doLoad(): Promise<void> {
 }
 
 // ---------------------------------------------------------------------------
-// P4: Collision Detection
+// P4: Collision Detection & Optimization - now via composable
 // ---------------------------------------------------------------------------
 function runCollisionDetection(): void {
-  const detector = new CollisionDetector({
-    toolDiameter: props.toolDiameter,
-    safeZ: props.safeZ,
-    fixtures: props.fixtures,
-    stock: store.bounds ? {
-      bounds: store.bounds,
-      resolution: 1,
-      width: 100,
-      height: 100,
-      thickness: Math.abs(store.bounds.z_min) + 5,
-      voxels: new Uint8Array(10000).fill(255),
-      originalVoxels: new Uint8Array(10000).fill(255),
-    } : undefined,
-  });
-
-  collisionReport.value = detector.checkAll(store.segments);
+  analysis.runCollisionDetection(store.segments, store.bounds);
 }
 
-// ---------------------------------------------------------------------------
-// P4: Optimization Analysis
-// ---------------------------------------------------------------------------
 function runOptimizationAnalysis(): void {
-  const optimizer = new GcodeOptimizer({
-    safeZ: props.safeZ,
-    stockTopZ: 0,
-    originalTime: store.totalDurationMs,
-  });
-
-  optimizationReport.value = optimizer.analyze(store.segments);
+  analysis.runOptimizationAnalysis(store.segments, store.totalDurationMs);
 }
 
 // ---------------------------------------------------------------------------
-// P5: Export Animation
+// P5: Export Animation - now via composable
 // ---------------------------------------------------------------------------
 async function startExport(): Promise<void> {
-  if (isExporting.value) return;
-
-  // Get the canvas element - need to access the actual canvas from the component
+  // Get the canvas element from the component
   let canvasEl: HTMLCanvasElement | null = null;
 
   if (viewMode.value === "2d" && canvas2DRef.value) {
-    // Access the canvas element from ToolpathCanvas component
     canvasEl = (canvas2DRef.value as unknown as { $el: HTMLElement }).$el?.querySelector("canvas");
   } else if (viewMode.value === "3d" && canvas3DRef.value) {
-    // Access the canvas element from ToolpathCanvas3D component
     canvasEl = (canvas3DRef.value as unknown as { $el: HTMLElement }).$el?.querySelector("canvas");
   }
 
@@ -379,73 +345,16 @@ async function startExport(): Promise<void> {
     return;
   }
 
-  isExporting.value = true;
-  showExportPanel.value = false;
-
-  exporter = new AnimationExporter(exportConfig.value);
-
-  // Calculate duration - full animation or custom
-  const durationMs = exportConfig.value.duration
-    ? exportConfig.value.duration * 1000
-    : store.totalDurationMs;
-
-  // Reset playback to start
-  store.stop();
-
-  // Wait a frame for reset
-  await new Promise(r => setTimeout(r, 50));
-
-  // Start playback
-  store.play();
-
-  const result = await exporter.exportFromCanvas(
+  await exportState.startExport(
     canvasEl,
-    durationMs,
-    (progress) => {
-      exportProgress.value = progress;
-    },
-    () => {
-      // Frame callback - advance animation
-      // The store's play() handles animation, we just let it run
-    }
+    store.totalDurationMs,
+    () => { store.stop(); store.play(); },
+    () => { store.pause(); }
   );
-
-  isExporting.value = false;
-  store.pause();
-
-  if (result.success) {
-    downloadExport(result);
-    exportProgress.value = {
-      phase: "complete",
-      percent: 100,
-      message: `Exported ${result.filename}`,
-      framesCaptured: exportProgress.value?.totalFrames ?? 0,
-      totalFrames: exportProgress.value?.totalFrames ?? 0,
-    };
-
-    // Clear progress after 3 seconds
-    setTimeout(() => {
-      exportProgress.value = null;
-    }, 3000);
-  } else {
-    exportProgress.value = {
-      phase: "error",
-      percent: 0,
-      message: result.error || "Export failed",
-      framesCaptured: 0,
-      totalFrames: 0,
-    };
-  }
 }
 
 function cancelExport(): void {
-  if (exporter) {
-    exporter.cancel();
-    exporter = null;
-  }
-  isExporting.value = false;
-  exportProgress.value = null;
-  store.pause();
+  exportState.cancelExport(() => { store.pause(); });
 }
 
 // ---------------------------------------------------------------------------
@@ -857,41 +766,41 @@ onUnmounted(() => {
       @close="hideHelp"
     />
 
-    <!-- P5: Statistics Panel -->
-    <div
+    <!-- P5: Statistics Panel (using PanelContainer) -->
+    <PanelContainer
       v-if="showStatsPanel && store.segments.length > 0"
-      class="stats-panel-container"
+      title="📊 Toolpath Statistics"
+      accent="blue"
+      position="top-left"
+      @close="showStatsPanel = false"
     >
-      <div class="panel-header">
-        <span>📊 Toolpath Statistics</span>
-        <button @click="showStatsPanel = false">✕</button>
-      </div>
       <ToolpathStats :segments="store.segments" />
-    </div>
+    </PanelContainer>
 
-    <!-- P5: Filter Panel -->
-    <div
+    <!-- P5: Filter Panel (using PanelContainer) -->
+    <PanelContainer
       v-if="showFilterPanel && store.segments.length > 0"
-      class="filter-panel-container"
+      title="🔍 Segment Filter"
+      accent="orange"
+      position="top-right"
+      width="340px"
+      :z-index="13"
+      @close="showFilterPanel = false"
     >
-      <div class="panel-header">
-        <span>🔍 Segment Filter</span>
-        <div class="panel-header-actions">
-          <button
-            v-if="filterPanelRef?.hasActiveFilter"
-            class="reset-filter-btn"
-            @click="filterPanelRef?.resetFilter()"
-          >
-            Reset
-          </button>
-          <button @click="showFilterPanel = false">✕</button>
-        </div>
-      </div>
+      <template #actions>
+        <button
+          v-if="filterPanelRef?.hasActiveFilter"
+          class="action-btn"
+          @click="filterPanelRef?.resetFilter()"
+        >
+          Reset
+        </button>
+      </template>
       <ToolpathFilter
         ref="filterPanelRef"
         :segments="store.segments"
       />
-    </div>
+    </PanelContainer>
 
     <!-- P5: Annotations Panel -->
     <div
@@ -1091,293 +1000,21 @@ onUnmounted(() => {
 /* ── P5: G-code panel styles moved to GcodeSourcePanel.vue ── */
 /* ── P5: Measure mode/measurements styles moved to MeasureModeIndicator.vue and MeasurementsPanel.vue ── */
 
-/* ── Shared panel header (used by Stats, Filter, Annotations containers) ── */
-.panel-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 8px 12px;
-  background: #252538;
-  border-bottom: 1px solid #3a3a5c;
-  font-weight: 600;
-  color: #ddd;
-}
+/* ── Shared panel header — now handled by PanelContainer ── */
 
-.panel-header button {
-  background: transparent;
-  border: none;
-  color: #666;
-  cursor: pointer;
-  font-size: 14px;
-  padding: 0 4px;
-}
-.panel-header button:hover { color: #e74c3c; }
-
-.panel-header-actions {
-  display: flex;
-  gap: 8px;
-  align-items: center;
-}
-
-.panel-header-actions button {
-  background: transparent;
-  border: none;
-  color: #666;
-  cursor: pointer;
-  font-size: 14px;
-  padding: 0 4px;
-}
-.panel-header-actions button:hover { color: #e74c3c; }
-
-.reset-filter-btn {
-  font-size: 10px !important;
-  padding: 2px 6px !important;
-  background: #252538 !important;
-  border: 1px solid #3a3a5c !important;
-  border-radius: 3px;
-  color: #888 !important;
-}
-.reset-filter-btn:hover {
-  background: #33334a !important;
-  color: #f39c12 !important;
-}
-
-/* ── P5: Help button ─────────────────────────────────────────────── */
-.help-btn {
-  background: #252538;
-  border: 1px solid #3a3a5c;
-  color: #666;
-  border-radius: 4px;
-  width: 30px;
-  height: 28px;
-  font-size: 14px;
-  cursor: pointer;
-  transition: background 0.15s, color 0.15s, border-color 0.15s;
-  flex-shrink: 0;
-}
-
-.help-btn:hover {
-  background: #33334a;
-  color: #9b59b6;
-}
-
-.help-btn.active {
-  background: #2a1a3a;
-  border-color: #9b59b6;
-  color: #9b59b6;
-}
+/* ── P5: Help button — moved to ToolbarButtonGroup.vue ────────────── */
 
 /* ── P5: Shortcuts Overlay styles moved to KeyboardShortcutsOverlay.vue ── */
 
-/* ── P5: Stats button ────────────────────────────────────────────────── */
-.stats-btn {
-  background: #252538;
-  border: 1px solid #3a3a5c;
-  color: #666;
-  border-radius: 4px;
-  width: 30px;
-  height: 28px;
-  font-size: 14px;
-  cursor: pointer;
-  transition: background 0.15s, color 0.15s, border-color 0.15s;
-  flex-shrink: 0;
-}
+/* ── P5: Stats button — moved to ToolbarButtonGroup.vue ────────────── */
 
-.stats-btn:hover {
-  background: #33334a;
-  color: #3498db;
-}
+/* ── P5: Stats Panel — now uses PanelContainer ─────────────────────── */
 
-.stats-btn.active {
-  background: #1a2a4a;
-  border-color: #3498db;
-  color: #3498db;
-}
+/* ── P5: Filter button — moved to ToolbarButtonGroup.vue ─────────── */
 
-.stats-btn:disabled {
-  opacity: 0.35;
-  cursor: not-allowed;
-}
+/* ── P5: Filter Panel — now uses PanelContainer ────────────────────── */
 
-/* ── P5: Stats Panel ─────────────────────────────────────────────────── */
-.stats-panel-container {
-  position: absolute;
-  left: 10px;
-  top: 10px;
-  width: 380px;
-  max-height: calc(100% - 120px);
-  background: #1a1a2e;
-  border: 1px solid #3498db;
-  border-radius: 8px;
-  overflow: hidden;
-  z-index: 12;
-  display: flex;
-  flex-direction: column;
-  box-shadow: 0 4px 20px rgba(52, 152, 219, 0.2);
-}
-
-.stats-panel-container .panel-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 10px 12px;
-  background: linear-gradient(135deg, #1a2a4a 0%, #1a1a2e 100%);
-  border-bottom: 1px solid #3498db;
-  color: #3498db;
-  font-size: 12px;
-  font-weight: 600;
-  flex-shrink: 0;
-}
-
-.stats-panel-container .panel-header button {
-  background: transparent;
-  border: none;
-  color: #666;
-  cursor: pointer;
-  font-size: 14px;
-  padding: 0 4px;
-}
-
-.stats-panel-container .panel-header button:hover {
-  color: #3498db;
-}
-
-/* ── P5: Filter button ───────────────────────────────────────────────── */
-.filter-btn {
-  background: #252538;
-  border: 1px solid #3a3a5c;
-  color: #666;
-  border-radius: 4px;
-  width: 30px;
-  height: 28px;
-  font-size: 14px;
-  cursor: pointer;
-  transition: background 0.15s, color 0.15s, border-color 0.15s;
-  flex-shrink: 0;
-}
-
-.filter-btn:hover {
-  background: #33334a;
-  color: #f39c12;
-}
-
-.filter-btn.active {
-  background: #3a2a1a;
-  border-color: #f39c12;
-  color: #f39c12;
-}
-
-.filter-btn.filtering {
-  animation: filter-pulse 1.5s ease-in-out infinite;
-}
-
-@keyframes filter-pulse {
-  0%, 100% { box-shadow: 0 0 0 0 rgba(243, 156, 18, 0.4); }
-  50% { box-shadow: 0 0 8px 2px rgba(243, 156, 18, 0.6); }
-}
-
-.filter-btn:disabled {
-  opacity: 0.35;
-  cursor: not-allowed;
-  animation: none;
-}
-
-/* ── P5: Filter Panel ────────────────────────────────────────────────── */
-.filter-panel-container {
-  position: absolute;
-  right: 10px;
-  top: 10px;
-  width: 340px;
-  max-height: calc(100% - 120px);
-  background: #1a1a2e;
-  border: 1px solid #f39c12;
-  border-radius: 8px;
-  overflow: hidden;
-  z-index: 13;
-  display: flex;
-  flex-direction: column;
-  box-shadow: 0 4px 20px rgba(243, 156, 18, 0.2);
-}
-
-.filter-panel-container .panel-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 10px 12px;
-  background: linear-gradient(135deg, #3a2a1a 0%, #1a1a2e 100%);
-  border-bottom: 1px solid #f39c12;
-  color: #f39c12;
-  font-size: 12px;
-  font-weight: 600;
-  flex-shrink: 0;
-}
-
-.filter-panel-container .panel-header-actions {
-  display: flex;
-  gap: 8px;
-  align-items: center;
-}
-
-.filter-panel-container .panel-header button {
-  background: transparent;
-  border: none;
-  color: #666;
-  cursor: pointer;
-  font-size: 14px;
-  padding: 0 4px;
-}
-
-.filter-panel-container .panel-header button:hover {
-  color: #f39c12;
-}
-
-.reset-filter-btn {
-  font-size: 10px !important;
-  padding: 2px 8px !important;
-  background: #f39c12 !important;
-  border-radius: 4px;
-  color: #1a1a2e !important;
-  font-weight: 600;
-}
-
-.reset-filter-btn:hover {
-  background: #e67e22 !important;
-}
-
-.filter-panel-container > :deep(.toolpath-filter) {
-  flex: 1;
-  overflow-y: auto;
-}
-
-/* ── P5: Annotations button ──────────────────────────────────────────── */
-.annotations-btn {
-  background: #252538;
-  border: 1px solid #3a3a5c;
-  color: #666;
-  border-radius: 4px;
-  width: 30px;
-  height: 28px;
-  font-size: 14px;
-  cursor: pointer;
-  transition: background 0.15s, color 0.15s, border-color 0.15s;
-  flex-shrink: 0;
-}
-
-.annotations-btn:hover {
-  background: #33334a;
-  color: #4a90d9;
-}
-
-.annotations-btn.active {
-  background: #1a2a4a;
-  border-color: #4a90d9;
-  color: #4a90d9;
-}
-
-.annotations-btn:disabled {
-  opacity: 0.35;
-  cursor: not-allowed;
-}
+/* ── P5: Annotations button — moved to ToolbarButtonGroup.vue ──────── */
 
 /* ── P5: Annotations Panel ───────────────────────────────────────────── */
 .annotations-panel-container {
@@ -1398,45 +1035,7 @@ onUnmounted(() => {
   border: 1px solid #4a90d9;
 }
 
-/* ── P5: Compare button ──────────────────────────────────────────────── */
-.compare-btn {
-  background: #252538;
-  border: 1px solid #3a3a5c;
-  color: #666;
-  border-radius: 4px;
-  width: 30px;
-  height: 28px;
-  font-size: 14px;
-  cursor: pointer;
-  transition: background 0.15s, color 0.15s, border-color 0.15s;
-  flex-shrink: 0;
-}
-
-.compare-btn:hover {
-  background: #33334a;
-  color: #9b59b6;
-}
-
-.compare-btn.active {
-  background: #2a1a3a;
-  border-color: #9b59b6;
-  color: #9b59b6;
-}
-
-.compare-btn.comparing {
-  animation: compare-pulse 1.5s ease-in-out infinite;
-}
-
-@keyframes compare-pulse {
-  0%, 100% { box-shadow: 0 0 0 0 rgba(155, 89, 182, 0.4); }
-  50% { box-shadow: 0 0 8px 2px rgba(155, 89, 182, 0.6); }
-}
-
-.compare-btn:disabled {
-  opacity: 0.35;
-  cursor: not-allowed;
-  animation: none;
-}
+/* ── P5: Compare button — moved to ToolbarButtonGroup.vue ───────────── */
 
 /* ── P5: Compare Panel ───────────────────────────────────────────────── */
 .compare-panel-container {
@@ -1456,39 +1055,7 @@ onUnmounted(() => {
   overflow: hidden;
   border: 1px solid #9b59b6;
 }
-/* ── P5: Audio button ───────────────────────────────────────────────── */
-.audio-btn {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 30px;
-  height: 26px;
-  padding: 0;
-  background: #2a2a3a;
-  border: 1px solid #444;
-  border-radius: 4px;
-  color: #888;
-  font-size: 14px;
-  cursor: pointer;
-  transition: all 0.15s ease;
-}
-
-.audio-btn:hover {
-  background: #3a3a4a;
-  color: #e9a840;
-  border-color: #555;
-}
-
-.audio-btn.active {
-  background: rgba(233, 168, 64, 0.2);
-  border-color: #e9a840;
-  color: #e9a840;
-}
-
-.audio-btn:disabled {
-  opacity: 0.4;
-  cursor: not-allowed;
-}
+/* ── P5: Audio button — moved to ToolbarButtonGroup.vue ───────────── */
 
 /* ── P5: Audio Panel ────────────────────────────────────────────────── */
 .audio-panel-container {
@@ -1510,39 +1077,7 @@ onUnmounted(() => {
   border-radius: 8px;
 }
 
-/* ── P6: Tools button ────────────────────────────────────────────────── */
-.tools-btn {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 30px;
-  height: 26px;
-  padding: 0;
-  background: #2a2a3a;
-  border: 1px solid #444;
-  border-radius: 4px;
-  color: #888;
-  font-size: 14px;
-  cursor: pointer;
-  transition: all 0.15s ease;
-}
-
-.tools-btn:hover {
-  background: #3a3a4a;
-  color: #4a90d9;
-  border-color: #555;
-}
-
-.tools-btn.active {
-  background: rgba(74, 144, 217, 0.2);
-  border-color: #4a90d9;
-  color: #4a90d9;
-}
-
-.tools-btn:disabled {
-  opacity: 0.4;
-  cursor: not-allowed;
-}
+/* ── P6: Tools button — moved to ToolbarButtonGroup.vue ───────────── */
 
 /* ── P6: Tool Legend Panel ───────────────────────────────────────────── */
 .tool-legend-container {
@@ -1564,39 +1099,7 @@ onUnmounted(() => {
   border-radius: 8px;
 }
 
-/* ── P6 Step 14: Feed button ─────────────────────────────────────────────── */
-.feed-btn {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 30px;
-  height: 26px;
-  padding: 0;
-  background: #2a2a3a;
-  border: 1px solid #444;
-  border-radius: 4px;
-  color: #888;
-  font-size: 14px;
-  cursor: pointer;
-  transition: all 0.15s ease;
-}
-
-.feed-btn:hover {
-  background: #3a3a4a;
-  color: #f39c12;
-  border-color: #555;
-}
-
-.feed-btn.active {
-  background: rgba(243, 156, 18, 0.2);
-  border-color: #f39c12;
-  color: #f39c12;
-}
-
-.feed-btn:disabled {
-  opacity: 0.4;
-  cursor: not-allowed;
-}
+/* ── P6 Step 14: Feed button — moved to ToolbarButtonGroup.vue ────── */
 
 /* ── P6 Step 14: Feed Analysis Panel ─────────────────────────────────────── */
 .feed-analysis-container {
@@ -1618,39 +1121,7 @@ onUnmounted(() => {
   border-radius: 8px;
 }
 
-/* ── P6 Step 15: Stock button ────────────────────────────────────────────── */
-.stock-btn {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 30px;
-  height: 26px;
-  padding: 0;
-  background: #2a2a3a;
-  border: 1px solid #444;
-  border-radius: 4px;
-  color: #888;
-  font-size: 14px;
-  cursor: pointer;
-  transition: all 0.15s ease;
-}
-
-.stock-btn:hover {
-  background: #3a3a4a;
-  color: #8B4513;
-  border-color: #555;
-}
-
-.stock-btn.active {
-  background: rgba(139, 69, 19, 0.2);
-  border-color: #8B4513;
-  color: #8B4513;
-}
-
-.stock-btn:disabled {
-  opacity: 0.4;
-  cursor: not-allowed;
-}
+/* ── P6 Step 15: Stock button — moved to ToolbarButtonGroup.vue ───── */
 
 /* ── P6 Step 15: Stock Simulation Panel ──────────────────────────────────── */
 .stock-simulation-container {
@@ -1672,35 +1143,7 @@ onUnmounted(() => {
   border-radius: 8px;
 }
 
-/* ── P6 Step 16: Chip Load Panel ──────────────────────────────────────────── */
-.chipload-btn {
-  background: #252538;
-  border: 1px solid #3a3a5c;
-  border-radius: 4px;
-  color: #888;
-  width: 32px;
-  height: 32px;
-  font-size: 16px;
-  cursor: pointer;
-  transition: all 0.15s ease;
-}
-
-.chipload-btn:hover:not(:disabled) {
-  background: #33334a;
-  border-color: #f39c12;
-  color: #f39c12;
-}
-
-.chipload-btn.active {
-  background: rgba(243, 156, 18, 0.2);
-  border-color: #f39c12;
-  color: #f39c12;
-}
-
-.chipload-btn:disabled {
-  opacity: 0.4;
-  cursor: not-allowed;
-}
+/* ── P6 Step 16: Chip Load button — moved to ToolbarButtonGroup.vue ── */
 
 .chipload-panel-container {
   position: absolute;
