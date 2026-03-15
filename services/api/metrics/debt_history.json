@@ -369,5 +369,20 @@
     "bare_except": 6,
     "large_files": 18,
     "god_objects": 10
+  },
+  {
+    "timestamp": "2026-03-14T10:00:00.000000",
+    "endpoints": 739,
+    "bare_except": 6,
+    "large_files": 20,
+    "god_objects": 13,
+    "note": "RMOS runs_v2 extensions: persist_run_artifact, parent_artifact_id filter, decision intel fixes"
+  },
+  {
+    "timestamp": "2026-03-15T04:12:55.123821",
+    "endpoints": 739,
+    "bare_except": 6,
+    "large_files": 24,
+    "god_objects": 13
   }
 ]

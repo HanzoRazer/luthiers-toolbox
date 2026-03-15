@@ -106,10 +106,19 @@ def matches_parent_decision(art: Dict[str, Any], decision_id: str) -> bool:
         decision_id: Decision ID to match
 
     Returns:
-        True if artifact's parent_decision_id or decision_id matches
+        True if artifact's parent decision field matches (checks multiple field names)
     """
     p = as_dict(art.get("payload") or art.get("data"))
-    return p.get("parent_decision_id") == decision_id or p.get("decision_id") == decision_id
+    # Check multiple field name variations used in SAW Lab artifacts
+    for field in (
+        "parent_decision_id",
+        "decision_id",
+        "parent_batch_decision_artifact_id",
+        "batch_decision_artifact_id",
+    ):
+        if p.get(field) == decision_id:
+            return True
+    return False
 
 
 # Backwards-compatible aliases (will be removed in future version)

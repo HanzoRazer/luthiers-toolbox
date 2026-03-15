@@ -34,6 +34,52 @@ def persist_run(artifact: RunArtifact) -> RunArtifact:
     return artifact
 
 
+def persist_run_artifact(
+    *,
+    kind: str,
+    payload: Dict[str, Any],
+    index_meta: Optional[Dict[str, Any]] = None,
+    parent_artifact_id: Optional[str] = None,
+) -> Dict[str, Any]:
+    """
+    Persist a run artifact with the given kind and payload.
+    
+    This is the interface expected by decision_intelligence_service.
+    Returns a dict with 'id' or 'artifact_id' key.
+    """
+    from .schemas import RunArtifact, RunDecision, Hashes, utc_now
+    from .hashing import sha256_of_obj
+    
+    run_id = create_run_id()
+    meta = dict(index_meta or {})
+    if parent_artifact_id:
+        meta["parent_artifact_id"] = parent_artifact_id
+    
+    # Compute hash for feasibility (required by Hashes)
+    feasibility_data = payload.get("feasibility", {})
+    feasibility_sha = sha256_of_obj(feasibility_data) if feasibility_data else "0" * 64
+    
+    artifact = RunArtifact(
+        run_id=run_id,
+        mode=payload.get("mode") or kind,  # Use kind as fallback
+        tool_id=payload.get("tool_id") or "unknown",
+        event_type=kind,
+        status="OK",
+        created_at_utc=utc_now(),
+        payload=payload,
+        meta=meta,
+        decision=RunDecision(
+            risk_level="GREEN",
+            warnings=[],
+        ),
+        hashes=Hashes(
+            feasibility_sha256=feasibility_sha,
+        ),
+    )
+    persist_run(artifact)
+    return {"id": run_id, "artifact_id": run_id, "run_id": run_id}
+
+
 def store_artifact(
     *,
     kind: str,
@@ -91,6 +137,7 @@ def list_runs_filtered(
     parent_plan_run_id: Optional[str] = None,  # Bundle 10: lineage filtering
     parent_batch_plan_artifact_id: Optional[str] = None,
     parent_batch_spec_artifact_id: Optional[str] = None,
+    parent_artifact_id: Optional[str] = None,  # Generic parent lookup
 ) -> List[RunArtifact]:
     """List runs with optional filtering from the default store."""
     store = _get_default_store()
@@ -108,6 +155,7 @@ def list_runs_filtered(
         parent_plan_run_id=parent_plan_run_id,
         parent_batch_plan_artifact_id=parent_batch_plan_artifact_id,
         parent_batch_spec_artifact_id=parent_batch_spec_artifact_id,
+        parent_artifact_id=parent_artifact_id,
     )
 
 
