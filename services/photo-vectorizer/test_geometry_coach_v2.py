@@ -9,6 +9,7 @@ Verifies:
 """
 
 import pytest
+import types
 from dataclasses import dataclass
 
 from body_isolation_result import (
@@ -224,3 +225,20 @@ def test_healthy_scores_accept(coach):
     )
 
     assert decision.action == "accept"
+
+
+def test_contour_retry_worthwhile_returns_false_when_only_best_score_present():
+    """
+    Regression: older ContourStageResult stubs may only expose best_score
+    and omit contour_scores_pre, contour_scores_post, export_block_issues.
+    _contour_retry_worthwhile() must fail closed and return False.
+    """
+    contour_result = types.SimpleNamespace(
+        best_score=0.62,
+        # intentionally missing:
+        # contour_scores_pre
+        # contour_scores_post
+        # export_block_issues
+    )
+
+    assert GeometryCoachV2._contour_retry_worthwhile(contour_result) is False
