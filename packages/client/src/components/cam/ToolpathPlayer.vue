@@ -16,22 +16,14 @@
  * P5: 3D Three.js visualization with orbit controls
  */
 
-import { onMounted, onUnmounted, computed, ref, type Ref } from "vue";
-import ToolpathCanvas from "./ToolpathCanvas.vue";
-import ToolpathCanvas3D from "./ToolpathCanvas3D.vue";
-// Audio engine now managed by useToolpathAudio composable
+import { computed, ref, type Ref } from "vue";
 import { useToolpathPlayerStore } from "@/stores/useToolpathPlayerStore";
-import { annotationManager } from "@/util/toolpathAnnotations";
 import { useTimeEstimates } from "@/composables/useTimeEstimates";
-import { validateGcode, type ValidationResult } from "@/util/gcodeValidator";
-// P4 imports (moved to useToolpathAnalysis composable)
 import type { Fixture } from "@/util/collisionDetector";
-// P5 imports (export logic moved to useToolpathExport composable)
 import { useToolpathShortcuts } from "@/composables/useToolpathShortcuts";
-// P6 imports: Multi-tool support
 import { analyzeToolUsage } from "@/util/toolpathTools";
 
-// Extracted subcomponents (Phase 2-7 decomposition)
+// Extracted subcomponents (Phase 2-11 decomposition)
 import {
   PlayerHudBar,
   ResolutionSlider,
@@ -39,6 +31,7 @@ import {
   PanelsLayer,
   OverlaysLayer,
   ModalPanelsLayer,
+  CanvasLayer,
   useToolpathAnalysis,
   useToolpathAudio,
   useToolpathNavigation,
@@ -47,7 +40,10 @@ import {
   useToolpathEventHandlers,
   useToolpathMachine,
   useToolpathCanvasExport,
+  useToolpathLifecycle,
 } from "./toolpath-player";
+import ToolpathCanvas from "./ToolpathCanvas.vue";
+import ToolpathCanvas3D from "./ToolpathCanvas3D.vue";
 
 // ---------------------------------------------------------------------------
 // Props
@@ -122,7 +118,6 @@ const { shortcuts, showHelp, hideHelp } = useToolpathShortcuts({
 // Local state
 // ---------------------------------------------------------------------------
 const memDismissed = ref(false);
-const validation = ref<ValidationResult | null>(null);
 const canvas2DRef = ref<InstanceType<typeof ToolpathCanvas> | null>(null);
 
 // P9: Panels layer ref (for accessing filter panel)
@@ -163,6 +158,7 @@ const { currentMachine } = machine;
 // ---------------------------------------------------------------------------
 // P4: Collision Detection & Optimization (via composable)
 // ---------------------------------------------------------------------------
+// NOTE: analysis must be defined before lifecycle (it's passed to lifecycle config)
 const analysis = useToolpathAnalysis({
   enableCollisionDetection: props.enableCollisionDetection,
   enableOptimization: props.enableOptimization,
@@ -176,15 +172,21 @@ const {
   optimizationReport,
   showCollisionPanel,
   showOptPanel,
-  hasCollisions,
-  hasCriticalCollisions,
-  hasOptimizations,
 } = analysis;
 
-// Active collisions at current segment
-const activeCollisions = computed(() =>
-  analysis.activeCollisions(store.currentSegmentIndex)
-);
+// ---------------------------------------------------------------------------
+// P11: Lifecycle management (via composable)
+// ---------------------------------------------------------------------------
+const lifecycle = useToolpathLifecycle({
+  gcode: props.gcode,
+  autoPlay: props.autoPlay,
+  enableCollisionDetection: props.enableCollisionDetection,
+  enableOptimization: props.enableOptimization,
+  store,
+  analysis,
+  machine,
+});
+const { validationErrors, hasErrors, doLoad } = lifecycle;
 
 // ---------------------------------------------------------------------------
 // P5: Audio sync (via composable)
@@ -230,60 +232,6 @@ const showMemBanner = computed(
     store.segments.length > 0 &&
     !memDismissed.value,
 );
-
-const validationErrors = computed(
-  () => validation.value?.issues.filter((i) => i.severity === "error") ?? [],
-);
-const hasErrors = computed(() => validationErrors.value.length > 0);
-
-// ---------------------------------------------------------------------------
-// Methods
-// ---------------------------------------------------------------------------
-async function doLoad(): Promise<void> {
-  if (!props.gcode) return;
-  await store.loadGcode(props.gcode, { arc_resolution_deg: 5 });
-  machine.buildStates(store.segments);
-
-  // P5: Initialize annotations for this G-code
-  annotationManager.init(props.gcode);
-
-  // P4: Run collision detection
-  if (props.enableCollisionDetection && store.segments.length > 0) {
-    runCollisionDetection();
-  }
-
-  // P4: Run optimization analysis
-  if (props.enableOptimization && store.segments.length > 0) {
-    runOptimizationAnalysis();
-  }
-
-  if (props.autoPlay) store.play();
-}
-
-// ---------------------------------------------------------------------------
-// P4: Collision Detection & Optimization - now via composable
-// ---------------------------------------------------------------------------
-function runCollisionDetection(): void {
-  analysis.runCollisionDetection(store.segments, store.bounds);
-}
-
-function runOptimizationAnalysis(): void {
-  analysis.runOptimizationAnalysis(store.segments, store.totalDurationMs);
-}
-
-// ---------------------------------------------------------------------------
-// Lifecycle
-// ---------------------------------------------------------------------------
-onMounted(async () => {
-  if (props.gcode) {
-    validation.value = validateGcode(props.gcode);
-    if (!hasErrors.value) await doLoad();
-  }
-});
-
-onUnmounted(() => {
-  store.dispose();
-});
 </script>
 
 <template>
@@ -291,24 +239,15 @@ onUnmounted(() => {
     class="toolpath-player"
     :style="{ height: props.height }"
   >
-    <!-- ── Canvas (2D or 3D based on viewMode) ─────────────────── -->
-    <ToolpathCanvas
-      v-if="viewMode === '2d'"
-      ref="canvas2DRef"
-      class="canvas-area"
+    <!-- P11: Canvas layer (2D or 3D based on viewMode) -->
+    <CanvasLayer
+      v-model:canvas2-d-ref="canvas2DRef"
+      v-model:canvas3-d-ref="canvas3DRef"
+      :view-mode="viewMode"
       :show-heatmap="panels.heatmap.value"
       :tool-diameter="toolDiameter"
       :color-by-tool="hasMultipleTools"
       :tool-filter="selectedToolFilter"
-    />
-    <ToolpathCanvas3D
-      v-else
-      ref="canvas3DRef"
-      class="canvas-area"
-      :tool-diameter="toolDiameter"
-      :show-stock="true"
-      :show-grid="true"
-      :show-heatmap="panels.heatmap.value"
     />
 
     <!-- P10: Consolidated overlays (loading, memory, validation, empty) -->
@@ -452,11 +391,5 @@ onUnmounted(() => {
   font-family: 'JetBrains Mono', 'Fira Code', 'Cascadia Code', monospace;
 }
 
-.canvas-area {
-  flex: 1;
-  min-height: 0;
-}
-
-/* ── Overlays moved to ValidationOverlay.vue and EmptyState.vue ───── */
-/* ── Controls bar moved to ControlsBarWrapper.vue ── */
+/* P11: canvas-area style moved to CanvasLayer.vue */
 </style>

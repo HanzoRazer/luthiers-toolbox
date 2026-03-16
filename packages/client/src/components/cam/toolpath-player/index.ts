@@ -43,6 +43,9 @@ export { default as PanelsLayer } from './PanelsLayer.vue';
 export { default as OverlaysLayer } from './OverlaysLayer.vue';
 export { default as ModalPanelsLayer } from './ModalPanelsLayer.vue';
 
+// Phase 11 components
+export { default as CanvasLayer } from './CanvasLayer.vue';
+
 // Composables
 export { useToolpathPanels } from './useToolpathPanels';
 export type { PanelState } from './useToolpathPanels';
@@ -66,3 +69,5 @@ export { useToolpathMachine } from './useToolpathMachine';
 export type { MachineConfig, ToolpathMachineState } from './useToolpathMachine';
 export { useToolpathCanvasExport } from './useToolpathCanvasExport';
 export type { CanvasExportConfig, ToolpathCanvasExportState } from './useToolpathCanvasExport';
+export { useToolpathLifecycle } from './useToolpathLifecycle';
+export type { LifecycleConfig, ToolpathLifecycleState } from './useToolpathLifecycle';
