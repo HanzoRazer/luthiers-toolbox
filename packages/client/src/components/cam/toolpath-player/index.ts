@@ -71,3 +71,5 @@ export { useToolpathCanvasExport } from './useToolpathCanvasExport';
 export type { CanvasExportConfig, ToolpathCanvasExportState } from './useToolpathCanvasExport';
 export { useToolpathLifecycle } from './useToolpathLifecycle';
 export type { LifecycleConfig, ToolpathLifecycleState } from './useToolpathLifecycle';
+export { useToolpathMultiTool } from './useToolpathMultiTool';
+export type { MultiToolConfig, ToolpathMultiToolState } from './useToolpathMultiTool';
