@@ -345,18 +345,41 @@ class GeometryCoachV2:
     def _contour_retry_worthwhile(contour_result: Any) -> bool:
         """
         Detect whether Stage 8 disagreement suggests a contour-only retry may help.
+
+        Compatibility: tolerates older ContourStageResult stubs that may lack
+        contour_scores_pre, contour_scores_post, or export_block_issues.
+        Returns False if contour_result is None or best_score is missing.
         """
-        best_score = float(getattr(contour_result, "best_score", 0.0))
-        pre_scores = getattr(contour_result, "contour_scores_pre", []) or []
-        post_scores = getattr(contour_result, "contour_scores_post", []) or []
-        issues = getattr(contour_result, "export_block_issues", []) or []
+        if contour_result is None:
+            return False
+
+        best_score_raw = getattr(contour_result, "best_score", None)
+        if best_score_raw is None:
+            return False
+
+        try:
+            best_score = float(best_score_raw)
+        except (TypeError, ValueError):
+            return False
 
         if best_score >= 0.80:
             return False
 
-        # Compute pre/post best from actual score objects
-        pre_best = max((s.score for s in pre_scores), default=best_score)
-        post_best = max((s.score for s in post_scores), default=best_score)
+        # Fall back gracefully when score lists are missing or malformed
+        pre_scores = getattr(contour_result, "contour_scores_pre", None) or []
+        post_scores = getattr(contour_result, "contour_scores_post", None) or []
+
+        try:
+            pre_best = max((s.score for s in pre_scores), default=best_score)
+        except (TypeError, AttributeError):
+            pre_best = best_score
+
+        try:
+            post_best = max((s.score for s in post_scores), default=best_score)
+        except (TypeError, AttributeError):
+            post_best = best_score
+
+        issues = getattr(contour_result, "export_block_issues", None) or []
 
         disagreement = abs(pre_best - post_best) > 0.08
         merge_tradeoff = any(
