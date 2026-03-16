@@ -92,7 +92,7 @@ class TestContourStageResult:
         assert csr.export_blocked is False
         assert csr.block_reason is None
         assert csr.best_score == 0.0
-        assert csr.diagnostics == {}
+        assert csr.diagnostics == {"retry_attempts": []}
 
     def test_populated(self):
         fc = _make_fc(10, 10, 100, 200)

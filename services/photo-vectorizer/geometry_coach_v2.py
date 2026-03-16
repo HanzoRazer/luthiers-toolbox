@@ -243,6 +243,49 @@ class GeometryCoachV2:
         current_body = body_result
         current_contour = contour_result
 
+        def _ensure_diag(obj: Any) -> Dict[str, Any]:
+            diag = getattr(obj, "diagnostics", None)
+            if diag is None:
+                diag = {}
+                setattr(obj, "diagnostics", diag)
+            return diag
+
+        def _profile_name(profile: Any) -> Optional[str]:
+            if profile is None:
+                return None
+            name = getattr(profile, "profile", None)
+            if name:
+                return str(name)
+            return getattr(profile, "__class__", type(profile)).__name__
+
+        def _annotate_retry_attempt(
+            contour_obj: Any,
+            *,
+            retry_reason: str,
+            retry_profile_used: Optional[str],
+            retry_iteration: int,
+            score_before: Optional[float],
+            score_after: Optional[float],
+        ) -> None:
+            diag = _ensure_diag(contour_obj)
+            attempts = diag.setdefault("retry_attempts", [])
+            delta = None
+            if score_before is not None and score_after is not None:
+                try:
+                    delta = float(score_after) - float(score_before)
+                except (TypeError, ValueError):
+                    delta = None
+            attempts.append(
+                {
+                    "retry_reason": retry_reason,
+                    "retry_profile_used": retry_profile_used,
+                    "retry_iteration": retry_iteration,
+                    "score_before": score_before,
+                    "score_after": score_after,
+                    "score_delta": delta,
+                }
+            )
+
         for retry_count in range(self.config.max_retries + 1):
             decision = self.decide(
                 body_result=current_body,
@@ -278,6 +321,15 @@ class GeometryCoachV2:
                     candidate_body_result=candidate_body,
                     candidate_contour_result=candidate_contour,
                 ):
+                    _annotate_retry_attempt(
+                        candidate_contour,
+                        retry_reason=decision.reason,
+                        retry_profile_used=_profile_name(decision.body_retry_params),
+                        retry_iteration=retry_count + 1,
+                        score_before=getattr(current_contour, "best_score", None),
+                        score_after=getattr(candidate_contour, "best_score", None),
+                    )
+
                     decision = replace(
                         decision,
                         candidate_body_score=candidate_body.completeness_score,
@@ -289,6 +341,14 @@ class GeometryCoachV2:
 
                 decision.notes.append(
                     "Body-isolation retry rejected by monotonic improvement gate."
+                )
+                _annotate_retry_attempt(
+                    current_contour,
+                    retry_reason=decision.reason,
+                    retry_profile_used=_profile_name(decision.body_retry_params),
+                    retry_iteration=retry_count + 1,
+                    score_before=getattr(current_contour, "best_score", None),
+                    score_after=getattr(candidate_contour, "best_score", None),
                 )
                 return current_body, current_contour, decision
 
@@ -309,6 +369,15 @@ class GeometryCoachV2:
                     candidate_body_result=current_body,
                     candidate_contour_result=candidate_contour,
                 ):
+                    _annotate_retry_attempt(
+                        candidate_contour,
+                        retry_reason=decision.reason,
+                        retry_profile_used=_profile_name(decision.contour_retry_params),
+                        retry_iteration=retry_count + 1,
+                        score_before=getattr(current_contour, "best_score", None),
+                        score_after=getattr(candidate_contour, "best_score", None),
+                    )
+
                     decision = replace(
                         decision,
                         candidate_body_score=current_body.completeness_score,
@@ -319,6 +388,14 @@ class GeometryCoachV2:
 
                 decision.notes.append(
                     "Contour-stage retry rejected by monotonic improvement gate."
+                )
+                _annotate_retry_attempt(
+                    current_contour,
+                    retry_reason=decision.reason,
+                    retry_profile_used=_profile_name(decision.contour_retry_params),
+                    retry_iteration=retry_count + 1,
+                    score_before=getattr(current_contour, "best_score", None),
+                    score_after=getattr(candidate_contour, "best_score", None),
                 )
                 return current_body, current_contour, decision
 
@@ -341,16 +418,35 @@ class GeometryCoachV2:
         idx = min(retry_count, len(self.config.contour_retry_profiles) - 1)
         return self.config.contour_retry_profiles[idx]
 
+    # Normal election paths — retries are not worthwhile when the
+    # contour election completed through a stable baseline decision.
+    # Only "pre_merge_guarded" (merge guard override) signals instability
+    # that may benefit from a retry.
+    _STABLE_ELECTION_SOURCES = frozenset({"pre_merge", "post_merge"})
+
     @staticmethod
     def _contour_retry_worthwhile(contour_result: Any) -> bool:
         """
         Detect whether Stage 8 disagreement suggests a contour-only retry may help.
+
+        Additional guard:
+        If the contour stage elected its result through a stable baseline
+        election path (pre_merge or post_merge), retries are not worthwhile.
+        The election logic already evaluated candidate contours and selected
+        the best option.
+
+        Only retry when instability signals exist (merge guard override,
+        dimensional plausibility issues, etc.).
 
         Compatibility: tolerates older ContourStageResult stubs that may lack
         contour_scores_pre, contour_scores_post, or export_block_issues.
         Returns False if contour_result is None or best_score is missing.
         """
         if contour_result is None:
+            return False
+
+        elected_source = getattr(contour_result, "elected_source", None)
+        if elected_source in GeometryCoachV2._STABLE_ELECTION_SOURCES:
             return False
 
         best_score_raw = getattr(contour_result, "best_score", None)
@@ -379,6 +475,7 @@ class GeometryCoachV2:
         except (TypeError, AttributeError):
             post_best = best_score
 
+        # Missing issues field must degrade safely
         issues = getattr(contour_result, "export_block_issues", None) or []
 
         disagreement = abs(pre_best - post_best) > 0.08

@@ -300,7 +300,7 @@ class ContourStageResult:
     export_block_issues: List[str] = field(default_factory=list)
     export_block_score_breakdown: Dict[str, float] = field(default_factory=dict)
     recommended_next_action: Optional[str] = None
-    diagnostics: Dict[str, Any] = field(default_factory=dict)
+    diagnostics: Dict[str, Any] = field(default_factory=lambda: {"retry_attempts": []})
 
 
 # Instrument specs for scale calibration and feature classification
