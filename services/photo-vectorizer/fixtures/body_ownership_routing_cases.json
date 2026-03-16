@@ -1,0 +1,94 @@
+{
+  "cases": [
+    {
+      "id": "smart_guitar_lower_bout_missing",
+      "description": "Body isolation under-captures lower bout; coach should rerun body isolation.",
+      "body_result": {
+        "body_bbox_px": [10, 12, 110, 142],
+        "completeness_score": 0.38,
+        "confidence": 0.72,
+        "review_required": true,
+        "lower_bout_missing_likely": true,
+        "border_contact_likely": false,
+        "score_breakdown": {
+          "hull_coverage": 0.62,
+          "vertical_extent_ratio": 0.41,
+          "width_stability": 0.79,
+          "border_contact_penalty": 0.0,
+          "center_alignment": 0.84,
+          "lower_bout_presence": 0.18
+        },
+        "issues": [
+          {
+            "code": "lower_bout_missing_likely",
+            "message": "Body isolation likely under-captured the lower bout.",
+            "severity": "warning"
+          }
+        ]
+      },
+      "contour_result": {
+        "best_score": 0.56,
+        "export_block_issues": []
+      },
+      "expected_action": "rerun_body_isolation"
+    },
+    {
+      "id": "benedetto_border_contact",
+      "description": "Border/crop contamination likely; coach should rerun body isolation.",
+      "body_result": {
+        "body_bbox_px": [0, 8, 145, 120],
+        "completeness_score": 0.42,
+        "confidence": 0.61,
+        "review_required": true,
+        "lower_bout_missing_likely": false,
+        "border_contact_likely": true,
+        "score_breakdown": {
+          "hull_coverage": 0.59,
+          "vertical_extent_ratio": 0.48,
+          "width_stability": 0.63,
+          "border_contact_penalty": 0.75,
+          "center_alignment": 0.31,
+          "lower_bout_presence": 0.66
+        },
+        "issues": [
+          {
+            "code": "border_contact_likely",
+            "message": "Body isolation touches image border; page edge or crop contamination possible.",
+            "severity": "warning"
+          }
+        ]
+      },
+      "contour_result": {
+        "best_score": 0.60,
+        "export_block_issues": []
+      },
+      "expected_action": "rerun_body_isolation"
+    },
+    {
+      "id": "archtop_merge_disagreement",
+      "description": "Pre/post merge disagreement suggests merge tradeoff; coach should rerun contour stage.",
+      "body_result": {
+        "body_bbox_px": [22, 14, 178, 205],
+        "completeness_score": 0.71,
+        "confidence": 0.76,
+        "review_required": false,
+        "lower_bout_missing_likely": false,
+        "border_contact_likely": false,
+        "score_breakdown": {
+          "hull_coverage": 0.80,
+          "vertical_extent_ratio": 0.73,
+          "width_stability": 0.74,
+          "border_contact_penalty": 0.0,
+          "center_alignment": 0.77,
+          "lower_bout_presence": 0.79
+        },
+        "issues": []
+      },
+      "contour_result": {
+        "best_score": 0.64,
+        "export_block_issues": ["dimension plausibility weak"]
+      },
+      "expected_action": "rerun_contour_stage"
+    }
+  ]
+}

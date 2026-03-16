@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from typing import Any, Dict, Optional, Tuple
 
 import cv2
@@ -18,6 +18,8 @@ class BodyIsolationParams:
     Tunable knobs for body isolation retries.
 
     Start conservative. These can be widened later as coaching learns.
+    Default values reproduce the baseline pipeline behavior.
+    Retry profiles modify these values conservatively.
     """
     body_width_min_pct: float = 0.40
     smooth_window: int = 15
@@ -30,8 +32,55 @@ class BodyIsolationParams:
     dark_threshold: int = 150
     min_fg_coverage_pct: float = 0.05
 
+    # Border trim (used by border_suppression profile)
+    border_trim_px: int = 0
+
     # Export / review hints
     review_threshold: float = 0.45
+
+    # Named retry profile (None = baseline behavior)
+    profile: Optional[str] = None
+
+
+# -------------------------------------------------------------------------
+# Retry profile definitions
+# -------------------------------------------------------------------------
+
+RETRY_PROFILES: Dict[str, Dict[str, Any]] = {
+    "lower_bout_recovery": {
+        "lower_bound_expand_pct": 0.15,
+        "body_width_min_pct": 0.35,
+        "smooth_window": 15,
+        "use_adaptive": True,
+        "border_ignore_px": 6,
+        "border_trim_px": 0,
+    },
+    "border_suppression": {
+        "body_width_min_pct": 0.32,
+        "smooth_window": 21,
+        "use_adaptive": True,
+        "border_ignore_px": 10,
+        "border_trim_px": 8,
+        "upper_bound_expand_pct": 0.02,
+    },
+}
+
+
+def _apply_retry_profile(params: BodyIsolationParams) -> BodyIsolationParams:
+    """
+    Return modified params if a retry profile is requested.
+
+    Baseline behavior remains unchanged when profile is None.
+    """
+    if not params.profile:
+        return params
+
+    profile = RETRY_PROFILES.get(params.profile)
+    if not profile:
+        return params
+
+    overrides = {k: v for k, v in profile.items() if hasattr(params, k)}
+    return replace(params, **overrides)
 
 
 class BodyIsolationStage:
@@ -59,6 +108,9 @@ class BodyIsolationStage:
     ) -> BodyIsolationResult:
         params = params or BodyIsolationParams()
 
+        # Apply retry profile adjustments (no-op for default run)
+        params = _apply_retry_profile(params)
+
         # Configure the existing BodyIsolator instance temporarily
         prev_body_width_min = getattr(self.body_isolator, "body_width_min", None)
         prev_smooth_window = getattr(self.body_isolator, "smooth_window", None)
@@ -69,9 +121,19 @@ class BodyIsolationStage:
             self.body_isolator.smooth_window = params.smooth_window
             self.body_isolator.use_adaptive = params.use_adaptive
 
+            # Apply border trim to fg_mask if profile requests it
+            trimmed_mask = fg_mask
+            if params.border_trim_px > 0 and fg_mask is not None:
+                trimmed_mask = fg_mask.copy()
+                trim = params.border_trim_px
+                trimmed_mask[:trim, :] = 0
+                trimmed_mask[-trim:, :] = 0
+                trimmed_mask[:, :trim] = 0
+                trimmed_mask[:, -trim:] = 0
+
             body_region = self.body_isolator.isolate(
                 image,
-                fg_mask=fg_mask,
+                fg_mask=trimmed_mask,
                 original_image=original_image,
             )
         finally:
