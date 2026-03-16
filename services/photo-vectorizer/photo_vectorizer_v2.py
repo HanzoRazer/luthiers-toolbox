@@ -291,8 +291,10 @@ class ContourStageResult:
     body_contour_final: Optional[FeatureContour] = None
     contour_scores_pre: List[ContourScore] = field(default_factory=list)
     contour_scores_post: List[ContourScore] = field(default_factory=list)
-    elected_source: str = "post_merge"  # "pre_merge" or "post_merge"
+    elected_source: str = "post_merge"  # "pre_merge", "post_merge", or "pre_merge_guarded"
     best_score: float = 0.0
+    pre_merge_best_contour: Optional[FeatureContour] = None
+    post_merge_best_contour: Optional[FeatureContour] = None
     export_blocked: bool = False
     block_reason: Optional[str] = None
     export_block_issues: List[str] = field(default_factory=list)

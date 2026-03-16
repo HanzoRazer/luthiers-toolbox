@@ -71,6 +71,7 @@ class StageParams:
     merge_min_fragment_area: float = 2000.0
     merge_max_fragments: int = 8
     merge_body_overlap_min: float = 0.40
+    merge_guard_epsilon: float = 0.03
     # Body election knobs
     elect_min_overlap: float = 0.50
     elect_max_width_factor: float = 1.30
@@ -192,6 +193,8 @@ class ContourStage:
         )
         scores_pre = scorer.score_all_candidates(
             pre_merge_contours, body_region, family, mpp, image_shape)
+        pre_best = max(scores_pre, key=lambda s: s.score) if scores_pre else None
+        pre_best_fc = pre_merge_contours[pre_best.contour_index] if pre_best is not None else None
 
         # ── 8c: Merge fragmented bodies ─────────────────────────────────
         merger = ContourMerger(
@@ -227,6 +230,8 @@ class ContourStage:
         # ── 8d: Score post-merge candidates ─────────────────────────────
         scores_post = scorer.score_all_candidates(
             post_merge_contours, body_region, family, mpp, image_shape)
+        post_best = max(scores_post, key=lambda s: s.score) if scores_post else None
+        post_best_fc = post_merge_contours[post_best.contour_index] if post_best is not None else None
 
         # ── 8e: Diagnostic plausibility election (logged only) ──────────
         best_idx, elected_source, best_score = \
@@ -251,6 +256,35 @@ class ContourStage:
             body_fc.feature_type = FeatureType.BODY_OUTLINE
             body_fc.confidence = 0.7
 
+        # ── Merge guard ─────────────────────────────────────────────────
+        # If the best pre-merge candidate materially outperforms the best
+        # post-merge candidate, prefer the pre-merge body candidate.
+        pre_best_score = float(pre_best.score) if pre_best is not None else 0.0
+        post_best_score = float(post_best.score) if post_best is not None else 0.0
+
+        merge_guard_diag: Dict[str, Any] = {}
+        if (
+            pre_best is not None
+            and pre_best_fc is not None
+            and pre_best_score > (post_best_score + p.merge_guard_epsilon)
+        ):
+            body_fc = pre_best_fc
+            elected_source = "pre_merge_guarded"
+            best_score = pre_best_score
+            merge_guard_diag["merge_guard_triggered"] = True
+            merge_guard_diag["merge_guard_reason"] = (
+                f"pre-merge best score {pre_best_score:.3f} "
+                f"> post-merge best score {post_best_score:.3f} "
+                f"+ \u03b5 {p.merge_guard_epsilon:.3f}"
+            )
+            logger.info(
+                f"Merge guard triggered: pre-merge {pre_best_score:.3f} "
+                f"> post-merge {post_best_score:.3f} "
+                f"+ \u03b5 {p.merge_guard_epsilon:.3f}")
+        else:
+            merge_guard_diag["merge_guard_triggered"] = False
+            merge_guard_diag["merge_guard_reason"] = None
+
         # ── 8g: Build stage result ──────────────────────────────────────
         contour_stage = ContourStageResult(
             feature_contours_pre_merge=pre_merge_contours,
@@ -261,6 +295,8 @@ class ContourStage:
             contour_scores_post=scores_post,
             elected_source=elected_source,
             best_score=best_score,
+            pre_merge_best_contour=pre_best_fc,
+            post_merge_best_contour=post_best_fc,
             diagnostics={
                 "n_pre_merge": len(pre_merge_contours),
                 "n_post_merge": len(post_merge_contours),
@@ -268,12 +304,13 @@ class ContourStage:
                 "n_scored_post": len(scores_post),
                 "family": family,
                 "merge_warnings": merge_warnings,
+                **merge_guard_diag,
             },
         )
 
         # ── 8h: Enriched export blocking ────────────────────────────────
-        elected_scores = scores_post if elected_source == "post_merge" \
-            else scores_pre
+        elected_scores = scores_pre if elected_source in ("pre_merge", "pre_merge_guarded") \
+            else scores_post
         best_cs = max(elected_scores, key=lambda s: s.score) \
             if elected_scores else None
 
