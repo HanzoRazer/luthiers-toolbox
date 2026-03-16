@@ -25,16 +25,16 @@ Every bundle, gap, and decomposition target has one row. Staging folder path whe
 
 | Item | Status | Owner | Dependency | Staging / path |
 |------|--------|-------|-------------|----------------|
-| B4 Instrument Project Graph (Layer 0) | READY | CC | None | `schemas/instrument_project.py` |
-| B8 Tonewood Materials System (Layer 1) | BLOCKED | CC | B4 | `materials/` domain |
-| B1 String Tension Calculator (Layer 3) | BLOCKED | CU | B4 | `design-utilities/lutherie/string-tension/` |
-| B2 Lutherie Geometry Panel (Layer 3) | BLOCKED | CU | B4 | `design-utilities/lutherie/` |
-| B3 Stiffness Index Panel (Layer 3) | BLOCKED | CU | B8 | `design-utilities/wood-intelligence/stiffness/` |
-| B9 Calculator Panel Revisions (Layer 3) | BLOCKED | CU | B1, B2, B3 | `design-utilities/` |
-| B6 Instrument Hub Shell (Layer 2) | BLOCKED | CC | B4, B8 | `instrument-workspace/hub/` |
-| B7 Bridge Lab Workspace (Layer 2) | BLOCKED | CC | B6 | `instrument-workspace/acoustic/bridge/` |
-| B5 Blueprint Save Feature (Layer 2) | BLOCKED | CC | B4 | `design-intake/blueprint/` |
-| B10 Router Wiring Final | BLOCKED | CC | B4–B9 | `router_registry/manifest.py` |
+| B4 Instrument Project Graph (Layer 0) | DONE | CC | None | `schemas/instrument_project.py` |
+| B8 Tonewood Materials System (Layer 1) | DONE | CC | B4 | `materials/` domain |
+| B1 String Tension Calculator (Layer 3) | DONE | CU | B4 | `design-utilities/lutherie/string-tension/` |
+| B2 Lutherie Geometry Panel (Layer 3) | DONE | CU | B4 | `design-utilities/lutherie/` |
+| B3 Stiffness Index Panel (Layer 3) | DONE | CU | B8 | `design-utilities/wood-intelligence/stiffness/` |
+| B9 Calculator Panel Revisions (Layer 3) | DONE | CU | B1, B2, B3 | `design-utilities/` |
+| B6 Instrument Hub Shell (Layer 2) | DONE | CC | B4, B8 | `instrument-workspace/hub/` |
+| B7 Bridge Lab Workspace (Layer 2) | DONE | CC | B6 | `instrument-workspace/acoustic/bridge/` |
+| B5 Blueprint Save Feature (Layer 2) | DONE | CC | B4 | `design-intake/blueprint/` |
+| B10 Router Wiring Final | DONE | CC | B4–B9 | `router_registry/manifest.py` (94 routers) |
 | B11 Rosette/Inlay Design Tools | DEFERRED | CU | Art Studio consolidation | — |
 
 ---
@@ -78,7 +78,7 @@ Every bundle, gap, and decomposition target has one row. Staging folder path whe
 | Item | Status | Owner | Dependency | Staging / path |
 |------|--------|-------|-------------|----------------|
 | GEN-1 Spec stubs → project creation | READY | CC | None | — |
-| GEN-2 BodyConfig + acoustic_body_style_id | BLOCKED | CC | Decomposition | schema |
+| GEN-2 BodyConfig + acoustic_body_style_id | READY | CC | Decomposition | schema |
 | GEN-3 from_project() factories | BLOCKED | CC | GEN-2 | generators |
 | GEN-4 CAM REST: Strat, LP, Flying V, Neck | BLOCKED | CC | GEN-3 | — |
 | GEN-5 Consolidate description systems | BLOCKED | CC | GEN-4 | — |
@@ -146,7 +146,7 @@ Every bundle, gap, and decomposition target has one row. Staging folder path whe
 
 | Item | Status | Owner | Dependency | Staging / path |
 |------|--------|-------|-------------|----------------|
-| BC-1 Alembic 0002_project_event_log.sql | BLOCKED | CC | B4 | db/migrations |
+| BC-1 Alembic 0002_project_event_log.sql | READY | CC | B4 done | db/migrations |
 | BC-2 project_events/ event log service | BLOCKED | CC | BC-1 | — |
 | BC-3 acoustic_engine/ prediction + dataset | BLOCKED | CC | BC-2 | — |
 | BC-4 BuildChronicleShell.vue | BLOCKED | CU | BC-2 | — |
@@ -177,6 +177,7 @@ Every bundle, gap, and decomposition target has one row. Staging folder path whe
 | 2026-03-16 | CU-A5 + CU-A6 | DEDUPLICATE: deprecated AdaptivePocketLab, ManufacturingCandidateList; useKeyboardShortcuts canonical. PROMOTE: HelicalRampLab → CAM nav, PolygonOffsetLab → Design nav; routes added | — |
 | 2026-03-16 | CU-A1 SoundholeRosetteShell | SoundholeRosetteShell.vue at /art-studio/soundhole-rosette-workspace; 4 tabs (Rosette, Soundhole, Purfling, Binding); nav + deprecation notes; build passed | — |
 | 2026-03-16 | CU-A3 VCarve/Relief → CAM nav | V-Carve and Relief Carving nav moved from Art Studio to CAM Tools; route paths unchanged; comments added | — |
+| 2026-03-16 | Bundle integration 4789a448 | B4-B10 all integrated, 45 files +11689 lines, staging folders deleted, 94 routers registered | GEN-1 ready to start |
 
 ---
 
@@ -185,7 +186,7 @@ Every bundle, gap, and decomposition target has one row. Staging folder path whe
 | Item | Status |
 |------|--------|
 | 0 HIGH gaps remaining | ✅ |
-| B4 Instrument Project Graph integrated | 🟡 Next |
+| B4 Instrument Project Graph integrated | ✅ |
 | GEN-1 connected | 🟡 Next |
 | Phase 3 static file check | 🟡 Next |
 | Safety-path broad exceptions fixed | 🟡 Next |
