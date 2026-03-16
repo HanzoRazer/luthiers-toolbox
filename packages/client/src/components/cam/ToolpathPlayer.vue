@@ -21,31 +21,18 @@ import ToolpathCanvas from "./ToolpathCanvas.vue";
 import ToolpathCanvas3D from "./ToolpathCanvas3D.vue";
 import GcodeViewer from "./GcodeViewer.vue";
 import MemoryWarning from "./MemoryWarning.vue";
-import ToolpathStats from "./ToolpathStats.vue";
 import ToolpathFilter from "./ToolpathFilter.vue";
-import ToolpathAnnotations from "./ToolpathAnnotations.vue";
-import ToolpathComparePanel from "./ToolpathComparePanel.vue";
-import ToolpathAudioPanel from "./ToolpathAudioPanel.vue";
 // Audio engine now managed by useToolpathAudio composable
 import { useToolpathPlayerStore } from "@/stores/useToolpathPlayerStore";
 import { annotationManager } from "@/util/toolpathAnnotations";
-import type { MoveSegment as CompareMoveSegment } from "@/util/toolpathComparison";
 import { useTimeEstimates } from "@/composables/useTimeEstimates";
 import { validateGcode, type ValidationResult } from "@/util/gcodeValidator";
-import { buildMachineStates, type MachineState } from "@/util/mcodeTracker";
 // P4 imports (moved to useToolpathAnalysis composable)
 import type { Fixture } from "@/util/collisionDetector";
 // P5 imports (export logic moved to useToolpathExport composable)
 import { useToolpathShortcuts } from "@/composables/useToolpathShortcuts";
 // P6 imports: Multi-tool support
-import ToolLegendPanel from "./ToolLegendPanel.vue";
 import { analyzeToolUsage } from "@/util/toolpathTools";
-// P6 Step 14: Feed optimization hints
-import FeedAnalysisPanel from "./FeedAnalysisPanel.vue";
-// P6 Step 15: Stock simulation preview
-import StockSimulationPanel from "./StockSimulationPanel.vue";
-// P6 Step 16: Chip load analysis
-import ChipLoadPanel from "./ChipLoadPanel.vue";
 
 // Extracted subcomponents (Phase 2-7 decomposition)
 import {
@@ -57,13 +44,12 @@ import {
   KeyboardShortcutsOverlay,
   MeasurementsPanel,
   MeasureModeIndicator,
-  PanelContainer,
   LoadingOverlay,
   ValidationOverlay,
-  FloatingPanel,
   EmptyState,
   ResolutionSlider,
   ControlsBarWrapper,
+  PanelsLayer,
   useToolpathAnalysis,
   useToolpathExport,
   useToolpathAudio,
@@ -71,6 +57,7 @@ import {
   useToolpathPanelState,
   useToolpathViewControls,
   useToolpathEventHandlers,
+  useToolpathMachine,
 } from "./toolpath-player";
 
 // ---------------------------------------------------------------------------
@@ -149,11 +136,14 @@ const memDismissed = ref(false);
 const validation = ref<ValidationResult | null>(null);
 const canvas2DRef = ref<InstanceType<typeof ToolpathCanvas> | null>(null);
 
-// P5: Filter panel ref (for hasActiveFilter)
-const filterPanelRef = ref<InstanceType<typeof ToolpathFilter> | null>(null);
+// P9: Panels layer ref (for accessing filter panel)
+const panelsLayerRef = ref<InstanceType<typeof PanelsLayer> | null>(null);
+
+// Computed filter panel ref (via PanelsLayer)
+const filterPanelRef = computed(() => panelsLayerRef.value?.filterPanelRef ?? null);
 
 // P5: Compare segments data
-const compareSegments = ref<CompareMoveSegment[]>([]);
+const compareSegments = ref<unknown[]>([]);
 
 // P5: Export animation (via composable)
 const exportState = useToolpathExport();
@@ -167,16 +157,12 @@ const hasMultipleTools = computed(() => {
 });
 
 // ---------------------------------------------------------------------------
-// Machine state array (P3 M-code tracking)
+// P9: Machine state tracking (via composable)
 // ---------------------------------------------------------------------------
-const machineStates = ref<MachineState[]>([]);
-
-// Rebuild machine states when segments change
-const currentMachine = computed<MachineState | null>(() => {
-  const idx = store.currentSegmentIndex;
-  if (idx < 0 || idx >= machineStates.value.length) return null;
-  return machineStates.value[idx];
+const machine = useToolpathMachine({
+  currentSegmentIndex: computed(() => store.currentSegmentIndex),
 });
+const { currentMachine } = machine;
 
 // ---------------------------------------------------------------------------
 // P4: Collision Detection & Optimization (via composable)
@@ -260,7 +246,7 @@ const hasErrors = computed(() => validationErrors.value.length > 0);
 async function doLoad(): Promise<void> {
   if (!props.gcode) return;
   await store.loadGcode(props.gcode, { arc_resolution_deg: 5 });
-  machineStates.value = buildMachineStates(store.segments);
+  machine.buildStates(store.segments);
 
   // P5: Initialize annotations for this G-code
   annotationManager.init(props.gcode);
@@ -495,153 +481,20 @@ onUnmounted(() => {
       @close="hideHelp"
     />
 
-    <!-- P5: Statistics Panel (using PanelContainer) -->
-    <PanelContainer
-      v-if="panels.stats.value && store.segments.length > 0"
-      title="📊 Toolpath Statistics"
-      accent="blue"
-      position="top-left"
-      @close="panels.stats.value = false"
-    >
-      <ToolpathStats :segments="store.segments" />
-    </PanelContainer>
-
-    <!-- P5: Filter Panel (using PanelContainer) -->
-    <PanelContainer
-      v-if="panels.filter.value && store.segments.length > 0"
-      title="🔍 Segment Filter"
-      accent="orange"
-      position="top-right"
-      width="340px"
-      :z-index="13"
-      @close="panels.filter.value = false"
-    >
-      <template #actions>
-        <button
-          v-if="filterPanelRef?.hasActiveFilter"
-          class="action-btn"
-          @click="filterPanelRef?.resetFilter()"
-        >
-          Reset
-        </button>
-      </template>
-      <ToolpathFilter
-        ref="filterPanelRef"
-        :segments="store.segments"
-      />
-    </PanelContainer>
-
-    <!-- P5: Annotations Panel -->
-    <FloatingPanel
-      v-if="panels.annotations.value && store.segments.length > 0"
-      position="top-right"
-      :z-index="14"
-      accent="#4a90d9"
-    >
-      <ToolpathAnnotations
-        :current-segment="store.currentSegmentIndex"
-        :current-position="store.toolPosition as [number, number, number]"
-        :current-line-number="store.currentSegment?.line_number ?? null"
-        @close="panels.annotations.value = false"
-        @goto="eventHandlers.handleAnnotationGoto"
-      />
-    </FloatingPanel>
-
-    <!-- P5: Compare Panel -->
-    <FloatingPanel
-      v-if="panels.compare.value && store.segments.length > 0"
-      position="top-left"
-      width="360px"
-      :z-index="15"
-      accent="#9b59b6"
-    >
-      <ToolpathComparePanel
-        :base-segments="store.segments as CompareMoveSegment[]"
-        :base-gcode="store.sourceGcode"
-        @close="panels.compare.value = false"
-        @compare-segments="eventHandlers.handleCompareSegments"
-        @overlay-toggle="eventHandlers.handleCompareOverlayToggle"
-      />
-    </FloatingPanel>
-
-    <!-- P5: Audio Panel -->
-    <FloatingPanel
-      v-if="panels.audio.value && store.segments.length > 0"
-      position="top-right"
-      :z-index="15"
-      accent="#e9a840"
-    >
-      <ToolpathAudioPanel
-        @close="panels.audio.value = false"
-      />
-    </FloatingPanel>
-
-    <!-- P6: Tool Legend Panel -->
-    <FloatingPanel
-      v-if="panels.toolLegend.value && store.segments.length > 0"
-      position="top-left"
-      width="280px"
-      :z-index="15"
-      accent="#4a90d9"
-    >
-      <ToolLegendPanel
-        :segments="store.segments"
-        :current-segment-index="store.currentSegmentIndex"
-        @tool-select="eventHandlers.handleToolSelect"
-        @tool-change-click="eventHandlers.handleToolChangeClick"
-        @close="panels.toolLegend.value = false"
-      />
-    </FloatingPanel>
-
-    <!-- P6 Step 14: Feed Analysis Panel -->
-    <FloatingPanel
-      v-if="panels.feedAnalysis.value && store.segments.length > 0"
-      position="top-right"
-      width="360px"
-      :z-index="16"
-      accent="#f39c12"
-    >
-      <FeedAnalysisPanel
-        :segments="store.segments"
-        :tool-diameter="toolDiameter"
-        @hint-click="eventHandlers.handleFeedHintClick"
-        @close="panels.feedAnalysis.value = false"
-      />
-    </FloatingPanel>
-
-    <!-- P6 Step 15: Stock Simulation Panel -->
-    <FloatingPanel
-      v-if="panels.stockSimulation.value && store.segments.length > 0 && store.bounds"
-      position="top-left"
-      :z-index="17"
-      accent="#8B4513"
-    >
-      <StockSimulationPanel
-        :segments="store.segments"
-        :current-segment-index="store.currentSegmentIndex"
-        :bounds="store.bounds"
-        :tool-diameter="toolDiameter"
-        @close="panels.stockSimulation.value = false"
-      />
-    </FloatingPanel>
-
-    <!-- P6 Step 16: Chip Load Panel -->
-    <FloatingPanel
-      v-if="panels.chipLoad.value && store.segments.length > 0"
-      position="top-right"
-      width="340px"
-      :z-index="18"
-      accent="#f39c12"
-    >
-      <ChipLoadPanel
-        :segments="store.segments"
-        :tool-diameter="toolDiameter"
-        :flute-count="2"
-        :default-rpm="18000"
-        @issue-click="eventHandlers.handleChipLoadIssueClick"
-        @close="panels.chipLoad.value = false"
-      />
-    </FloatingPanel>
+    <!-- P9: Consolidated floating panels -->
+    <PanelsLayer
+      ref="panelsLayerRef"
+      :panels="panels"
+      :segments="(store.segments as any)"
+      :segment-count="store.segments.length"
+      :source-gcode="store.sourceGcode"
+      :current-segment-index="store.currentSegmentIndex"
+      :tool-position="store.toolPosition as [number, number, number]"
+      :current-line-number="store.currentSegment?.line_number ?? null"
+      :tool-diameter="toolDiameter"
+      :bounds="store.bounds"
+      :event-handlers="eventHandlers"
+    />
 
     <!-- P5: Measurements Panel (extracted) -->
     <MeasurementsPanel
