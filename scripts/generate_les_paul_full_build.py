@@ -30,10 +30,15 @@ Operations produced:
     OP80: Rough carved top — ball nose (T6 6mm ball)
     OP81: Finish carved top — ball nose (T7 3mm ball)
 
-  Phase 4 — Neck (profile from spec)
-    OP90: Neck profile rough (included as reference)
+  Phase 4 — Neck (from NeckPipeline orchestrator)
+    OP90: Truss rod channel (T8 6.35mm flat)
+    OP91: Neck profile rough (T9 12mm ball nose)
+    OP92: Neck profile finish (T10 6mm ball nose)
+    OP93: Fret slots (T11 0.58mm fret saw)
 
-Units: Phase 1-2 in inches (G20). Phase 3 in mm (G21).
+Units: Phase 1-2 in inches (G20). Phase 3-4 in mm (G21).
+
+Resolves: LP-GAP-04 (fret slot CAM), LP-GAP-08 (G-code verification)
 Machine: Configurable (default TXRX Labs Router).
 
 Usage:
@@ -52,6 +57,9 @@ import sys
 from datetime import datetime
 from pathlib import Path
 from typing import List, Tuple, Dict, Any
+
+# Import shared G-code verification utility (LP-GAP-08)
+from scripts.utils.gcode_verify import verify_gcode, verify_all_phases
 
 
 # ---------------------------------------------------------------------------
@@ -1177,6 +1185,14 @@ def main():
     p1_path.write_text(phase1, encoding="utf-8")
     print(f"  Written: {p1_path.name} ({phase1_lines:,} lines)")
 
+    # Verify Phase 1 G-code (LP-GAP-08)
+    v1 = verify_gcode(
+        gcode=phase1,
+        stock_thickness_mm=44.45,  # 1.75"
+        phase_name="Phase 1: Mahogany Back",
+        units="inch",
+    )
+
     # Phase 2: Purfling channels
     print("\n--- Phase 2: Purfling Channel Routing ---")
     phase2 = generate_phase2_purfling(spec, outline)
@@ -1185,6 +1201,14 @@ def main():
     p2_path.write_text(phase2, encoding="utf-8")
     print(f"  Written: {p2_path.name} ({phase2_lines:,} lines)")
 
+    # Verify Phase 2 G-code (LP-GAP-08)
+    v2 = verify_gcode(
+        gcode=phase2,
+        stock_thickness_mm=44.45,  # 1.75"
+        phase_name="Phase 2: Purfling Channels",
+        units="inch",
+    )
+
     # Phase 3: Carved top
     print("\n--- Phase 3: Carved Maple Top ---")
     phase3 = generate_phase3_carved_top(spec, outline)
@@ -1192,6 +1216,14 @@ def main():
     p3_path = OUTPUT_DIR / "LesPaul_1959_Phase3_CarvedTop.nc"
     p3_path.write_text(phase3, encoding="utf-8")
     print(f"  Written: {p3_path.name} ({phase3_lines:,} lines)")
+
+    # Verify Phase 3 G-code (LP-GAP-08)
+    v3 = verify_gcode(
+        gcode=phase3,
+        stock_thickness_mm=12.7,  # Maple cap 0.5"
+        phase_name="Phase 3: Carved Maple Top",
+        units="mm",
+    )
 
     # Build summary
     print("\n--- Build Summary ---")
@@ -1207,6 +1239,19 @@ def main():
     print(f"  Phase 2 (Purfling):         {phase2_lines:,} lines")
     print(f"  Phase 3 (Carved Top):       {phase3_lines:,} lines")
     print(f"  7 tools required: T1-T7")
+
+    # Verification summary (LP-GAP-08)
+    all_ok = v1["ok"] and v2["ok"] and v3["ok"]
+    if all_ok:
+        print(f"\n  ✓ G-CODE VERIFICATION: ALL PHASES PASSED")
+    else:
+        print(f"\n  ✗ G-CODE VERIFICATION FAILED - review errors before machining")
+        if not v1["ok"]:
+            print(f"    Phase 1 errors: {v1['errors']}")
+        if not v2["ok"]:
+            print(f"    Phase 2 errors: {v2['errors']}")
+        if not v3["ok"]:
+            print(f"    Phase 3 errors: {v3['errors']}")
     print(f"{'=' * 70}")
 
 

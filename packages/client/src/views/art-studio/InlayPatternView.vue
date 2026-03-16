@@ -1,5 +1,6 @@
 <script setup lang="ts">
 /**
+ * @deprecated Use InlayWorkspaceShell at /art-studio/inlay-workspace (Stage 1: Pattern Library).
  * InlayPatternView — Marquetry Pattern Generator
  *
  * Endpoints:

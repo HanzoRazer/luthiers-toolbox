@@ -1,6 +1,6 @@
 # Remediation Master List — 2026-03-16
 
-> **Last Updated:** 2026-03-16 | **Baseline Commit:** 6d7bbb5d | **CI Status:** PASSING
+> **Last Updated:** 2026-03-16 (Part 10 added) | **Baseline Commit:** 6d7bbb5d | **CI Status:** PASSING
 
 ---
 
@@ -84,7 +84,7 @@
 
 | # | Item | Current | Target | Status |
 |---|------|---------|--------|--------|
-| 8 | _experimental/ Cleanup | 7 modules | ≤2 | 🟡 PARTIAL |
+| 8 | _experimental/ Cleanup | 7 modules (1 wired to prod) | ≤2 | 🟡 PARTIAL — see Part 10 |
 | 9 | Frontend TODOs | 15 TODOs | 0 | 🔴 NOT STARTED |
 | 10 | Blueprint-import Cleanup | 20 .py files | ≤10 | 🔴 NOT STARTED |
 | 11 | DXF Validation Improvements | Partial | Complete | 🟡 PARTIAL |
@@ -227,6 +227,62 @@ Failures to fix (add as encountered). Resolve then remove from list.
 | Item | Description | ADR / Ref | Status |
 |------|-------------|-----------|--------|
 | **cnc_production promotion** | Promote `_experimental/cnc_production/` to `app/cnc_production/` as first-class production module. Code is wired into production (learned_overrides_router, store_registry, saw_lab learning). Do not delete or refactor until ADR resolved. Execute migration only after GEN-1 through GEN-5 and router consolidation sprint complete. | [ADR-004-cnc-production-experimental-promotion.md](adr/ADR-004-cnc-production-experimental-promotion.md) | Pending |
+
+---
+
+## Part 10: `_experimental/cnc_production/` — Dependency Analysis
+
+> **Assessed:** 2026-03-16 | **Verdict:** NOT DEAD CODE — Still actively wired into production
+
+### Summary
+
+The `_experimental/cnc_production/` module is labeled "experimental" but is **not** half-built prototype code. It is the **SAW Lab learning pipeline** — intentionally quarantined from production until ready to enable. Despite the label, it is actively imported by production routers and stores.
+
+### Active Production Dependencies
+
+| Consumer Module | Imports From `_experimental/cnc_production/` |
+|-----------------|---------------------------------------------|
+| `cam_core/saw_lab/learning.py:19-33` | `learn/live_learn_ingestor.py`, `learn/risk_buckets.py`, `joblog/storage.py` |
+| `routers/learned_overrides_router.py:19-26` | `feeds_speeds/core/learned_overrides.py` (LaneKey, LaneOverrides, ParameterOverride, etc.) |
+| `core/store_registry.py:184` | `feeds_speeds/core/learned_overrides.py` (LearnedOverridesStore factory) |
+
+### Module Contents (What It Actually Is)
+
+| Path | Purpose |
+|------|---------|
+| `feeds_speeds/core/chipload_calc.py` | Real chipload math: `feed / (rpm × flutes)` |
+| `feeds_speeds/core/deflection_model.py` | Tool deflection estimation (stickout/diameter) |
+| `feeds_speeds/core/heat_model.py` | Heat rating from RPM, feed, stepdown |
+| `feeds_speeds/core/feeds_speeds_resolver.py` | RPM/feed guidance for tool+material+machine |
+| `feeds_speeds/core/learned_overrides.py` | 4-tuple lane-based parameter learning system |
+| `joblog/` | Job log storage for completed runs |
+| `learn/risk_buckets.py` | Risk classification for learned data |
+| `learn/live_learn_ingestor.py` | Telemetry ingestion + lane adjustment |
+| `data/cnc_production/learned_overrides.json` | Persisted learning data |
+| `routers.py` | Aggregator mounting feeds_speeds endpoints |
+
+### Deflection Implementations (Three Exist — Not Unified)
+
+| Module | Purpose | LOC | Status |
+|--------|---------|-----|--------|
+| `_experimental/.../deflection_model.py` | Router bits (simple Euler beam) | 14 | Used by `cam_core/feeds_speeds/calculator.py` |
+| `saw_lab/calculators/saw_deflection.py` | Saw blades (full beam theory + scoring) | 176 | Production SAW Lab 2.0 |
+| `calculators/saw/deflection_adapter.py` | Saw blades (simplified, independent) | 139 | Calculator Spine adapters |
+
+**Note:** `calculators/saw/deflection_adapter.py` does **NOT** import from `_experimental`. It has its own independent implementation.
+
+### Migration Prerequisites
+
+Do **NOT** delete `_experimental/cnc_production/` until:
+
+1. ☐ `cam_core/saw_lab/learning.py` refactored to use native `saw_lab/` implementations
+2. ☐ `learned_overrides_router.py` migrated to production-path learned overrides store
+3. ☐ `store_registry.py` factory updated to point to production location
+4. ☐ ADR-004 approved and executed
+
+### Recommendation
+
+Promote to `app/cnc_production/` (drop `_experimental` prefix) after router consolidation sprint. The "experimental" label is misleading — this is a **facade pattern** with production wiring.
 
 ---
 
