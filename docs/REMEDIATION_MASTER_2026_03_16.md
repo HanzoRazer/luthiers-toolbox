@@ -162,7 +162,17 @@ ERROR tests/test_request_id_header_smoke.py
 
 ---
 
-## Part 6: Session Completions (This Session)
+## Part 6: Cleanup List — Test/Build Failures
+
+Failures to fix (add as encountered). Resolve then remove from list.
+
+| # | Test / Item | Error | Notes |
+|---|-------------|--------|-------|
+| 1 | `tests/test_golden_rosette_geometry.py::test_golden_segment_count_for_pattern` | AssertionError: Pattern 'herringbone' segment count (16) should divide 360 evenly | Golden data: `herringbone: 16` but 360 % 16 ≠ 0; fix expected count or assertion |
+
+---
+
+## Part 7: Session Completions (This Session)
 
 | Item | Description | Commit |
 |------|-------------|--------|
@@ -172,7 +182,7 @@ ERROR tests/test_request_id_header_smoke.py
 
 ---
 
-## Part 7: Recommended Next Actions
+## Part 8: Recommended Next Actions
 
 ### Immediate (Today)
 
@@ -209,6 +219,14 @@ ERROR tests/test_request_id_header_smoke.py
    - Wire HeadstockDesignerView
    - Unified inlay canvas
    - Bracing UI integration
+
+---
+
+## Part 9: Pending ADRs / Deferred Remediation
+
+| Item | Description | ADR / Ref | Status |
+|------|-------------|-----------|--------|
+| **cnc_production promotion** | Promote `_experimental/cnc_production/` to `app/cnc_production/` as first-class production module. Code is wired into production (learned_overrides_router, store_registry, saw_lab learning). Do not delete or refactor until ADR resolved. Execute migration only after GEN-1 through GEN-5 and router consolidation sprint complete. | [ADR-004-cnc-production-experimental-promotion.md](adr/ADR-004-cnc-production-experimental-promotion.md) | Pending |
 
 ---
 
