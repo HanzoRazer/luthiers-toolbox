@@ -1,6 +1,6 @@
 # Gap Analysis Master — All Instrument Build Handoffs
 
-> **Generated:** 2026-03-09 | **Updated:** 2026-03-15 | **Sources:** 11 build handoff documents | **Total Gaps:** 113 (75 resolved, 38 remaining)
+> **Generated:** 2026-03-09 | **Updated:** 2026-03-15 | **Sources:** 11 build handoff documents | **Total Gaps:** 113 (76 resolved, 37 remaining)
 
 ---
 
@@ -13,7 +13,7 @@ Previous updates overstated progress. This section provides the accurate remaini
 | Severity | Count | Key Items |
 |----------|-------|-----------|
 | **CRITICAL** | 0 | ~~PHYS-01~~ Resolved (calculators/pickup_position_calc.py) |
-| **HIGH** | 3 | BEN-GAP-08, LP-GAP-03, ~~BEN-GAP-04~~, ~~BEN-GAP-05~~, ~~VINE-05~~, INLAY-02, INLAY-06, ~~NECK-05~~, ~~LP-GAP-02~~, ~~EX-GAP-04~~ |
+| **HIGH** | 2 | BEN-GAP-08, ~~LP-GAP-03~~, ~~BEN-GAP-04~~, ~~BEN-GAP-05~~, ~~VINE-05~~, INLAY-02, INLAY-06, ~~NECK-05~~, ~~LP-GAP-02~~, ~~EX-GAP-04~~ |
 | **MEDIUM** | 17 | BEN-GAP-09, ~~BEN-GAP-07~~, FV-GAP-05, LP-GAP-04, LP-GAP-05, LP-GAP-06, LP-GAP-08, OM-PURF-03, OM-PURF-05, OM-PURF-08, INLAY-03, ~~INLAY-04~~, VEC-GAP-06, VEC-GAP-07, FV-GAP-07, FV-GAP-10, EX-GAP-05, EX-GAP-06, EX-GAP-07, EX-GAP-08, EX-GAP-12, SG-GAP-13 |
 | **LOW** | 13 | VINE-12, OM-PURF-06, FV-GAP-09, EX-GAP-09, EX-GAP-10, EX-GAP-11, EX-GAP-13, SG-GAP-09, SG-GAP-14, OM-PURF-07, LP-GAP-10, VEC-GAP-08 |
 
@@ -21,7 +21,7 @@ Previous updates overstated progress. This section provides the accurate remaini
 
 | Gap | Module Needed | Description |
 |-----|---------------|-------------|
-| LP-GAP-03 | `app/cam/neck/` | Neck CNC pipeline missing |
+| ~~LP-GAP-03~~ | `app/cam/neck/` | ~~Neck CNC pipeline missing~~ **RESOLVED** (modular pipeline with full-scale station awareness) |
 | BEN-GAP-08 | `app/cam/carving/` | 3D surface carving (archtop) |
 | ~~BEN-GAP-04~~ | `calculators/binding_geometry.py` | ~~Neck binding geometry~~ **Resolved** (51eef4f0) |
 | ~~BEN-GAP-05~~ | `calculators/binding_geometry.py` | ~~Headstock binding geometry~~ **Resolved** (51eef4f0) |
@@ -81,6 +81,7 @@ Previous updates overstated progress. This section provides the accurate remaini
 | 2026-03-15 | 51eef4f0 | Add binding geometry calculator (neck/headstock binding, miter joints, bend radius validation) | BEN-GAP-04, BEN-GAP-05, BEN-GAP-07 |
 | 2026-03-15 | — | Add StratocasterNeckGenerator.vue + composables (C/V/modern C profiles, 21/22/24 fret, compound radius) | NECK-05 |
 | 2026-03-15 | — | Add unified coordinate system (`instrument_geometry/coordinate_system.py`) — Y=0 at nut, +Y toward bridge, -Y toward headstock. Enables continuous inlay patterns and unified CAM toolpaths | VINE-05, INLAY-04 |
+| 2026-03-15 | — | Add modular neck CNC pipeline (`app/cam/neck/`) — truss rod channel, profile carving with full-scale station awareness (beyond 12"), fret slots with compound radius support, orchestrator. 38 tests passing | LP-GAP-03 |
 ---
 
 ## Summary by Category
@@ -147,7 +148,7 @@ Previous updates overstated progress. This section provides the accurate remaini
 | FV-GAP-03 | Flying V | `ProfileToolpath` class | **Resolved** (8f74f599) |
 | BEN-GAP-08 | Benedetto | Archtop top/back carving CAM missing — graduation map exists, no toolpath gen | HIGH |
 | BEN-GAP-09 | Benedetto | F-hole routing CAM missing — DXFs exist but no CAM module | MEDIUM |
-| LP-GAP-03 | Les Paul 1959 | No neck CNC pipeline — only 2D geometry exists, no G-code for neck profile/truss rod/fret slots | HIGH |
+| ~~LP-GAP-03~~ | Les Paul 1959 | ~~No neck CNC pipeline — only 2D geometry exists, no G-code for neck profile/truss rod/fret slots~~ **RESOLVED** | ~~HIGH~~ |
 | OM-PURF-01 | OM Purfling | Binding channel CAM module | **Resolved** (e60e2df0) |
 | OM-PURF-02 | OM Purfling | Purfling ledge operation | **Resolved** (e60e2df0) |
 | FV-GAP-05 | Flying V | No pocket toolpath generator that consumes outline data for parametric cavity placement | MEDIUM |
@@ -161,7 +162,7 @@ Previous updates overstated progress. This section provides the accurate remaini
 
 1. **`app/cam/profiling/` module** — Create `ProfileToolpath` class that takes a closed LWPOLYLINE, generates outside-contour toolpath with configurable tab count/size, lead-in arcs, and climb/conventional direction. This single module resolves OM-GAP-02, BEN-GAP-03, VINE-07, FV-GAP-03 (4 instruments blocked).
 2. **`app/cam/binding/` module** — Create binding channel routing: takes body outline + offset distance + channel depth/width, generates parallel offset toolpath. Separate `purfling_ledge()` for second-pass ledge cut. Resolves OM-GAP-03, OM-GAP-04, OM-PURF-01, OM-PURF-02, BEN-GAP-01 (2 instruments blocked).
-3. **`app/cam/neck/` module** — Neck CNC pipeline: truss rod channel, profile carving (with station awareness beyond 12"), fret slot integration, headstock routing. Resolves LP-GAP-03.
+3. **`app/cam/neck/` module** — ✅ **RESOLVED** (2026-03-15) Neck CNC pipeline: truss rod channel, profile carving (with station awareness beyond 12"), fret slot integration. 38 tests. Resolves LP-GAP-03.
 4. **`app/cam/drilling/` module** — Parametric drilling operations: string-through G83 peck, bolt pattern, pilot holes. Resolves FV-GAP-06.
 5. **`app/cam/carving/` module** — 3D surface carving: archtop graduation, Les Paul carved top (with proper asymmetric 1959 profile). Resolves BEN-GAP-08, LP-GAP-05.
 6. **Upgrade `svg_to_naive_gcode()` → production V-carve** — Add cutter compensation, chipload calc, proper stepdown. Resolves VINE-03.
@@ -468,7 +469,7 @@ Previous updates overstated progress. This section provides the accurate remaini
 |-----|----------|--------|
 | ~~Headstock outlines (5 shapes)~~ | ~~NECK-01, GAP-01, OM-GAP-06, BEN-GAP-06, VINE-06~~ | ✅ **Resolved** (5cd6c2ba, 289b4ac4) |
 | ~~Strat body outline generator~~ | ~~GAP-07~~ | ✅ **Resolved** (0642b77c) |
-| Neck CNC pipeline | LP-GAP-03 | Full-instrument builds enabled |
+| ~~Neck CNC pipeline~~ | ~~LP-GAP-03~~ | ✅ **Resolved** (`app/cam/neck/` module with full-scale station awareness) |
 | ~~Mount existing routers~~ | ~~VINE-08, VINE-04, INLAY-01~~ | ✅ **Resolved** (already mounted) |
 | Post-processor G43/G41 | LP-GAP-06, EX-GAP-13, SG-GAP-14, OM-PURF-07, FV-GAP-07 | Safety + automation for all builds |
 
