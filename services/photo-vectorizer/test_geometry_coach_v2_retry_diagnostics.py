@@ -198,3 +198,70 @@ def test_accepted_retry_records_retry_attempt_with_positive_score_delta():
     assert attempt["score_before"] == 0.56
     assert attempt["score_after"] == 0.71
     assert attempt["score_delta"] > 0
+
+
+def test_rejected_retry_records_retry_attempt_with_negative_score_delta_and_preserves_original():
+    """A rejected body-isolation retry records one entry and preserves originals."""
+    coach = GeometryCoachV2(
+        CoachV2Config(
+            max_retries=2,
+            epsilon=0.03,
+            body_isolation_review_threshold=0.45,
+            contour_target_threshold=0.80,
+            body_retry_profiles=[
+                BodyIsolationParams(profile="lower_bout_recovery"),
+            ],
+            contour_retry_profiles=[],
+        )
+    )
+
+    original_body = _make_body_result(completeness=0.40, lower_bout=True)
+    original_contour = _ContourResultStub(best_score=0.56)
+
+    # Retry makes things worse: should be rejected by monotonic improvement gate
+    worse_body = _make_body_result(completeness=0.43, lower_bout=False)
+    worse_contour = _ContourResultStub(best_score=0.50)
+
+    body_stage_runner = types.SimpleNamespace(
+        run=lambda *args, **kwargs: worse_body,
+    )
+    contour_stage_runner = types.SimpleNamespace(
+        run=lambda *args, **kwargs: worse_contour,
+    )
+
+    current_body, current_contour, decision = coach.evaluate(
+        body_stage_runner=body_stage_runner,
+        contour_stage_runner=contour_stage_runner,
+        image=None,
+        fg_mask=None,
+        original_image=None,
+        instrument_family="solid_body",
+        geometry_authority=None,
+        contour_inputs={
+            "edges": None,
+            "alpha_mask": None,
+            "calibration": types.SimpleNamespace(mm_per_pixel=1.0),
+            "family": "solid_body",
+            "image_shape": (300, 200),
+            "params": types.SimpleNamespace(),
+        },
+        body_result=original_body,
+        contour_result=original_contour,
+    )
+
+    # Original results must be preserved
+    assert current_body is original_body
+    assert current_contour is original_contour
+    assert decision.action == "rerun_body_isolation"
+    assert any("rejected by monotonic improvement gate" in note.lower() for note in decision.notes)
+
+    retry_attempts = current_contour.diagnostics.get("retry_attempts", [])
+    assert len(retry_attempts) == 1
+
+    attempt = retry_attempts[0]
+    assert attempt["retry_reason"]
+    assert attempt["retry_profile_used"] == "lower_bout_recovery"
+    assert attempt["retry_iteration"] == 1
+    assert attempt["score_before"] == 0.56
+    assert attempt["score_after"] == 0.50
+    assert attempt["score_delta"] < 0
