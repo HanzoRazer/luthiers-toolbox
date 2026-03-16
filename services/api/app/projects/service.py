@@ -28,6 +28,7 @@ from typing import Any, Dict, Optional
 from pydantic import ValidationError
 
 from ..schemas.instrument_project import (
+    BodyConfig,
     CURRENT_SCHEMA_VERSION,
     DesignStateResponse,
     InstrumentProjectData,
@@ -147,7 +148,7 @@ def create_design_state_from_model_id(model_id: str) -> Optional[InstrumentProje
         >>> state.spec.fret_count
         22
     """
-    from ..schemas.instrument_project import InstrumentCategory, InstrumentSpec
+    from ..schemas.instrument_project import BodyConfig, InstrumentCategory, InstrumentSpec
 
     # Direct mapping of model_id to (get_spec_fn, MODEL_INFO dict)
     # This avoids the circular import issues with InstrumentModelId enum
@@ -212,11 +213,154 @@ def create_design_state_from_model_id(model_id: str) -> Optional[InstrumentProje
         body_join_fret=14,
     )
 
+    # Build BodyConfig from model-specific defaults (GEN-2)
+    body_config = _build_body_config_from_model(model_id, model_info, category_value)
+
     return InstrumentProjectData(
         schema_version=CURRENT_SCHEMA_VERSION,
         instrument_type=category,
         spec=spec,
+        body_config=body_config,
     )
+
+
+def _build_body_config_from_model(
+    model_id: str,
+    model_info: dict,
+    category_value: str,
+) -> "BodyConfig":
+    """
+    Build BodyConfig defaults from model spec (GEN-2).
+
+    Model-specific defaults:
+        - stratocaster: pickup_config="sss", tremolo_style="vintage_6screw"
+        - telecaster: pickup_config="ss", tremolo_style="hardtail"
+        - les_paul: rear_routed=False, pickup_config="hh"
+        - dreadnought: acoustic_body_style_id="dreadnought"
+        - etc.
+    """
+    from ..schemas.instrument_project import BodyConfig
+
+    # Model-specific body config defaults
+    BODY_CONFIG_DEFAULTS = {
+        # Electric guitars
+        "stratocaster": {
+            "pickup_config": "sss",
+            "tremolo_style": "vintage_6screw",
+            "belly_contour": True,
+            "arm_contour": True,
+            "rear_routed": True,
+            "body_style_id": "stratocaster",
+        },
+        "telecaster": {
+            "pickup_config": "ss",
+            "tremolo_style": "hardtail",
+            "belly_contour": False,
+            "arm_contour": False,
+            "rear_routed": True,
+            "body_style_id": "telecaster",
+        },
+        "les_paul": {
+            "pickup_config": "hh",
+            "tremolo_style": "hardtail",
+            "belly_contour": False,
+            "arm_contour": False,
+            "rear_routed": False,  # front-routed
+            "body_style_id": "les_paul",
+        },
+        "sg": {
+            "pickup_config": "hh",
+            "tremolo_style": "hardtail",
+            "rear_routed": False,
+            "body_style_id": "sg",
+        },
+        "prs": {
+            "pickup_config": "hh",
+            "tremolo_style": "2point",
+            "belly_contour": True,
+            "arm_contour": True,
+            "rear_routed": True,
+            "body_style_id": "prs",
+        },
+        "flying_v": {
+            "pickup_config": "hh",
+            "rear_routed": False,
+            "body_style_id": "flying_v",
+        },
+        "explorer": {
+            "pickup_config": "hh",
+            "rear_routed": False,
+            "body_style_id": "explorer",
+        },
+        "firebird": {
+            "pickup_config": "hh",
+            "rear_routed": False,
+            "body_style_id": "firebird",
+        },
+        "moderne": {
+            "pickup_config": "hh",
+            "rear_routed": False,
+            "body_style_id": "moderne",
+        },
+        "es_335": {
+            "pickup_config": "hh",
+            "rear_routed": False,
+            "body_style_id": "es_335",
+        },
+        "jazz_bass": {
+            "pickup_config": "jj",
+            "rear_routed": True,
+            "body_style_id": "jazz_bass",
+        },
+        # Acoustic guitars
+        "dreadnought": {
+            "acoustic_body_style_id": "dreadnought",
+            "belly_contour": False,
+            "arm_contour": False,
+            "rear_routed": False,
+        },
+        "om_000": {
+            "acoustic_body_style_id": "om",
+        },
+        "j_45": {
+            "acoustic_body_style_id": "round_shoulder",
+        },
+        "jumbo_j200": {
+            "acoustic_body_style_id": "jumbo",
+        },
+        "gibson_l_00": {
+            "acoustic_body_style_id": "parlor",
+        },
+        "classical": {
+            "acoustic_body_style_id": "classical",
+        },
+        "archtop": {
+            "acoustic_body_style_id": "archtop",
+        },
+        "ukulele": {
+            "acoustic_body_style_id": "ukulele",
+        },
+    }
+
+    defaults = BODY_CONFIG_DEFAULTS.get(model_id, {})
+
+    # Set category-appropriate defaults
+    is_acoustic = "acoustic" in category_value or model_id in [
+        "dreadnought", "om_000", "j_45", "jumbo_j200", "gibson_l_00",
+        "classical", "archtop", "ukulele"
+    ]
+
+    return BodyConfig(
+        pickup_config=defaults.get("pickup_config"),
+        tremolo_style=defaults.get("tremolo_style"),
+        belly_contour=defaults.get("belly_contour", not is_acoustic),
+        arm_contour=defaults.get("arm_contour", not is_acoustic),
+        rear_routed=defaults.get("rear_routed", not is_acoustic),
+        stock_thickness_mm=model_info.get("body_thickness_mm"),
+        body_style_id=defaults.get("body_style_id"),
+        acoustic_body_style_id=defaults.get("acoustic_body_style_id"),
+    )
+
 
 
 def create_default_design_state(
@@ -228,7 +372,7 @@ def create_default_design_state(
 
     Used when a project is created without an initial design state.
     """
-    from ..schemas.instrument_project import InstrumentCategory, InstrumentSpec
+    from ..schemas.instrument_project import BodyConfig, InstrumentCategory, InstrumentSpec
 
     # Map string to enum safely
     try:
