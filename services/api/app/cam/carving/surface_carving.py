@@ -21,6 +21,7 @@ from .config import (
     FinishingConfig,
 )
 from .graduation_map import GraduationMap
+from ..post_processor import PostProcessor, PostConfig, ToolSpec, ToolChangeMode
 
 
 @dataclass

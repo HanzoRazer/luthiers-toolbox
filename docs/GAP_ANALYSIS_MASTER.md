@@ -1,6 +1,6 @@
 # Gap Analysis Master — All Instrument Build Handoffs
 
-> **Generated:** 2026-03-09 | **Updated:** 2026-03-15 | **Sources:** 11 build handoff documents | **Total Gaps:** 113 (79 resolved, 34 remaining)
+> **Generated:** 2026-03-09 | **Updated:** 2026-03-16 | **Sources:** 11 build handoff documents | **Total Gaps:** 113 (84 resolved, 29 remaining)
 
 ---
 
@@ -14,8 +14,8 @@ Previous updates overstated progress. This section provides the accurate remaini
 |----------|-------|-----------|
 | **CRITICAL** | 0 | ~~PHYS-01~~ Resolved (calculators/pickup_position_calc.py) |
 | **HIGH** | 1 | ~~BEN-GAP-08~~, ~~LP-GAP-03~~, ~~BEN-GAP-04~~, ~~BEN-GAP-05~~, ~~VINE-05~~, INLAY-02, INLAY-06, ~~NECK-05~~, ~~LP-GAP-02~~, ~~EX-GAP-04~~ |
-| **MEDIUM** | 15 | ~~BEN-GAP-09~~, ~~BEN-GAP-07~~, FV-GAP-05, LP-GAP-04, ~~LP-GAP-05~~, LP-GAP-06, LP-GAP-08, OM-PURF-03, OM-PURF-05, OM-PURF-08, INLAY-03, ~~INLAY-04~~, VEC-GAP-06, VEC-GAP-07, FV-GAP-07, FV-GAP-10, EX-GAP-05, EX-GAP-06, EX-GAP-07, EX-GAP-08, EX-GAP-12, SG-GAP-13 |
-| **LOW** | 13 | VINE-12, OM-PURF-06, FV-GAP-09, EX-GAP-09, EX-GAP-10, EX-GAP-11, EX-GAP-13, SG-GAP-09, SG-GAP-14, OM-PURF-07, LP-GAP-10, VEC-GAP-08 |
+| **MEDIUM** | 15 | ~~BEN-GAP-09~~, ~~BEN-GAP-07~~, FV-GAP-05, LP-GAP-04, ~~LP-GAP-05~~, ~~LP-GAP-06~~, LP-GAP-08, OM-PURF-03, OM-PURF-05, OM-PURF-08, INLAY-03, ~~INLAY-04~~, VEC-GAP-06, VEC-GAP-07, ~~FV-GAP-07~~, FV-GAP-10, EX-GAP-05, EX-GAP-06, EX-GAP-07, EX-GAP-08, EX-GAP-12, SG-GAP-13 |
+| **LOW** | 13 | VINE-12, OM-PURF-06, FV-GAP-09, EX-GAP-09, EX-GAP-10, EX-GAP-11, ~~EX-GAP-13~~, SG-GAP-09, ~~SG-GAP-14~~, ~~OM-PURF-07~~, LP-GAP-10, VEC-GAP-08 |
 
 ### HIGH Priority Items (13) — Details
 
@@ -85,6 +85,7 @@ Previous updates overstated progress. This section provides the accurate remaini
 | 2026-03-15 | — | Add 3D surface carving module (`app/cam/carving/`) — parametric ellipsoidal dome with Benedetto recurve, graduation maps with bilinear interpolation, parallel-plane roughing, raster finishing. 33 tests passing | BEN-GAP-08 |
 | 2026-03-15 | — | Add F-hole routing module (`app/cam/fhole/`) — parametric F-hole geometry (traditional, contemporary, Venetian), inside-contour toolpaths with tool compensation, helical plunge entry, multi-pass depth. 30 tests passing | BEN-GAP-09 |
 | 2026-03-15 | — | Add asymmetric carved top support (`app/cam/carving/`) — AsymmetricCarveProfile with authentic 1959 Les Paul specs: peak offset 30mm toward neck, compound radius (508mm × 381mm), variable slopes (1.5° crown to 6° cutaway), binding ledge. New preset `create_les_paul_1959_asymmetric_config()`. 15 tests. | LP-GAP-05 |
+| 2026-03-16 | — | Add centralized post-processor module (`app/cam/post_processor.py`) — G43 tool length compensation after M6, G41/G42 cutter radius compensation, M0/M1 tool change pauses, controller-specific dialects (GRBL, Mach3, Haas, LinuxCNC, Fanuc). 29 tests. | ~~LP-GAP-06~~, ~~EX-GAP-13~~, ~~SG-GAP-14~~, ~~OM-PURF-07~~, ~~FV-GAP-07~~ |
 ---
 
 ## Summary by Category
@@ -307,19 +308,19 @@ Previous updates overstated progress. This section provides the accurate remaini
 
 | Gap ID | Instrument | Description | Severity |
 |--------|-----------|-------------|----------|
-| LP-GAP-06 | Les Paul 1959 | No G43 tool length compensation — all tool changes need manual Z-touch-off | MEDIUM |
-| EX-GAP-13 | Explorer 1958 | No G43 — same issue | LOW |
-| SG-GAP-14 | Smart Guitar | No G43 — same issue | LOW |
-| OM-PURF-07 | OM Purfling | No G41/G42 cutter compensation — pre-calculated offset only | LOW |
-| FV-GAP-07 | Flying V | No tool-change sequencing — multi-tool programs require manual M0 pauses | MEDIUM |
+| ~~LP-GAP-06~~ | Les Paul 1959 | ~~No G43 tool length compensation~~ **RESOLVED** (post_processor.py: G43 Hn after M6) | ~~MEDIUM~~ |
+| ~~EX-GAP-13~~ | Explorer 1958 | ~~No G43~~ **RESOLVED** (post_processor.py) | ~~LOW~~ |
+| ~~SG-GAP-14~~ | Smart Guitar | ~~No G43~~ **RESOLVED** (post_processor.py) | ~~LOW~~ |
+| ~~OM-PURF-07~~ | OM Purfling | ~~No G41/G42 cutter compensation~~ **RESOLVED** (post_processor.py: G41/G42 Dn) | ~~LOW~~ |
+| ~~FV-GAP-07~~ | Flying V | ~~No tool-change sequencing~~ **RESOLVED** (post_processor.py: M0/M1 pause modes) | ~~MEDIUM~~ |
 | LP-GAP-10 | Les Paul 1959 | Mixed G20/G21 across phases — operator risk | LOW |
 | SG-GAP-09 | Smart Guitar | USB-C slot requires 3+1 axis edge routing — 3-axis approximation used | LOW |
 
 ### Fixes
 
-1. **Post-processor upgrade: G43 emission** — Add `emit_tool_length_comp=True` option to all G-code emitters. After each `M6 Tn`, emit `G43 Hn`. Single change resolves LP-GAP-06, EX-GAP-13, SG-GAP-14.
-2. **Post-processor upgrade: G41/G42 support** — Add `use_cutter_comp=True` option. Emit `G41 D{tool}` for climb, `G42 D{tool}` for conventional. Resolves OM-PURF-07.
-3. **Tool-change sequencing** — Add automatic `M6 Tn` + `G43 Hn` + optional `M0` (operator pause) or `M1` (optional stop) between tool sections. Resolves FV-GAP-07.
+1. **Post-processor upgrade: G43 emission** — ✅ **RESOLVED** (post_processor.py). Add `emit_tool_length_comp=True` option to all G-code emitters. After each `M6 Tn`, emit `G43 Hn`. Single change resolves ~~LP-GAP-06~~, ~~EX-GAP-13~~, ~~SG-GAP-14~~.
+2. **Post-processor upgrade: G41/G42 support** — ✅ **RESOLVED** (post_processor.py). Add `use_cutter_comp=True` option. Emit `G41 D{tool}` for climb, `G42 D{tool}` for conventional. Resolves ~~OM-PURF-07~~.
+3. **Tool-change sequencing** — ✅ **RESOLVED** (post_processor.py). Add automatic `M6 Tn` + `G43 Hn` + optional `M0` (operator pause) or `M1` (optional stop) between tool sections. Resolves ~~FV-GAP-07~~.
 4. **Unit enforcement** — All G-code starts with `G21` (mm). No G20 generation. Resolves LP-GAP-10.
 
 ---
@@ -474,7 +475,7 @@ Previous updates overstated progress. This section provides the accurate remaini
 | ~~Strat body outline generator~~ | ~~GAP-07~~ | ✅ **Resolved** (0642b77c) |
 | ~~Neck CNC pipeline~~ | ~~LP-GAP-03~~ | ✅ **Resolved** (`app/cam/neck/` module with full-scale station awareness) |
 | ~~Mount existing routers~~ | ~~VINE-08, VINE-04, INLAY-01~~ | ✅ **Resolved** (already mounted) |
-| Post-processor G43/G41 | LP-GAP-06, EX-GAP-13, SG-GAP-14, OM-PURF-07, FV-GAP-07 | Safety + automation for all builds |
+| Post-processor G43/G41 | ~~LP-GAP-06~~, ~~EX-GAP-13~~, ~~SG-GAP-14~~, ~~OM-PURF-07~~, ~~FV-GAP-07~~ | Safety + automation for all builds |
 
 ### Phase 3 — Polish & Validation
 
