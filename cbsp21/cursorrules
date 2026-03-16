@@ -110,16 +110,9 @@ NOT added ad-hoc in main.py.
 
 ## Stub Routes — Remove, Do Not Extend
 
-These 9 router files are stubs with no real implementation.
-Remove their references from manifest.py, do not add endpoints to them:
-  bridge_export_router.py
-  fret_slots_router.py (unless wiring LP-GAP-04)
-  job_intelligence_router.py
-  live_monitor_router.py
-  mvp_router.py
-  rosette_cam_router.py
-  safety_router.py
-  risk_reports_store.py
+Stub routers previously identified are REAL implementations with frontend
+dependencies. See ROUTER_SAFETY_AUDIT.md. Do not delete without product
+decision and frontend migration.
 
 ## Gap Analysis — Current Priority Order
 
