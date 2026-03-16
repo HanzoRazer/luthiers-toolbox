@@ -25,21 +25,8 @@ class CoachV2Config:
     # Retry profiles for body isolation
     body_retry_profiles: List[BodyIsolationParams] = field(
         default_factory=lambda: [
-            BodyIsolationParams(
-                body_width_min_pct=0.35,
-                smooth_window=15,
-                use_adaptive=True,
-                lower_bound_expand_pct=0.08,
-                border_ignore_px=6,
-            ),
-            BodyIsolationParams(
-                body_width_min_pct=0.32,
-                smooth_window=21,
-                use_adaptive=True,
-                lower_bound_expand_pct=0.15,
-                upper_bound_expand_pct=0.02,
-                border_ignore_px=10,
-            ),
+            BodyIsolationParams(profile="lower_bout_recovery"),
+            BodyIsolationParams(profile="border_suppression"),
         ]
     )
 

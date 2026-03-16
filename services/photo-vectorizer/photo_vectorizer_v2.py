@@ -3146,6 +3146,26 @@ class PhotoVectorizerV2:
         out_dir = Path(output_dir) if output_dir else source.parent
         out_dir.mkdir(parents=True, exist_ok=True)
 
+        # ── Compatibility gate: body-isolation coach can be disabled either
+        #    per-call or globally via environment for tests / production.
+        #
+        # Priority:
+        #   1) explicit function argument
+        #   2) instance default self.enable_body_isolation_coach
+        #   3) env var PHOTO_VECTORIZER_ENABLE_BODY_ISOLATION_COACH
+        #
+        # Accepted falsy env values: 0, false, no, off
+        env_flag_raw = os.getenv(
+            "PHOTO_VECTORIZER_ENABLE_BODY_ISOLATION_COACH",
+            "1" if getattr(self, "enable_body_isolation_coach", True) else "0",
+        )
+        env_flag = str(env_flag_raw).strip().lower() not in {"0", "false", "no", "off"}
+        coach_enabled = (
+            env_flag
+            if enable_body_isolation_coach is None
+            else bool(enable_body_isolation_coach)
+        )
+
         result = PhotoExtractionResult(source_path=str(source))
         debug_paths: Dict[str, str] = {}
 
@@ -3323,12 +3343,6 @@ class PhotoVectorizerV2:
         # ── Stage 8.5: Optional V2 body-ownership coaching ─────────────────
         # The coach may rerun body isolation and/or contour stage, but only
         # within bounded retry rules and monotonic improvement gates.
-        coach_enabled = (
-            self.enable_body_isolation_coach
-            if enable_body_isolation_coach is None
-            else bool(enable_body_isolation_coach)
-        )
-
         if coach_enabled:
             body_isolation_result, contour_result, coach_decision = (
                 self.geometry_coach_v2.evaluate(
@@ -3356,6 +3370,12 @@ class PhotoVectorizerV2:
 
             if coach_decision.action == "manual_review_required":
                 result.warnings.append(coach_decision.reason)
+        else:
+            # Explicitly surface the disabled state for diagnostics/replay clarity.
+            result.geometry_coach_v2 = None
+            result.diagnostics = getattr(result, "diagnostics", {}) or {}
+            result.diagnostics["body_isolation_coach_enabled"] = False
+            result.diagnostics["body_isolation_coach_source"] = "env_or_callsite_disabled"
 
         # Surface stage outputs
         result.contour_stage = contour_result

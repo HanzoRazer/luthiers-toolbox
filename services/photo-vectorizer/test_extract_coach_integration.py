@@ -322,3 +322,46 @@ def test_extract_preserves_original_results_on_manual_review(
         "manual review" in w.lower() or "scores remain too low" in w.lower()
         for w in result.warnings
     )
+
+
+# ── Test 3: coach disabled bypasses evaluate entirely ────────────────────────
+
+
+def test_extract_skips_body_isolation_coach_when_disabled(
+    monkeypatch, vectorizer: PhotoVectorizerV2, tiny_image: Path,
+):
+    """
+    When enable_body_isolation_coach=False, extract() must never call
+    GeometryCoachV2.evaluate() and must leave geometry_coach_v2 as None.
+    """
+    original_body = _make_body_isolation_result(
+        completeness_score=0.52, review_required=False,
+    )
+    original_contour = _ContourStageResultStub(
+        best_score=0.61, export_blocked=False,
+    )
+
+    monkeypatch.setattr(
+        vectorizer, "body_isolation_stage",
+        types.SimpleNamespace(run=lambda *args, **kwargs: original_body),
+        raising=False,
+    )
+    monkeypatch.setattr(
+        vectorizer, "contour_stage",
+        types.SimpleNamespace(run=lambda *args, **kwargs: original_contour),
+        raising=False,
+    )
+
+    def _boom(**kwargs):
+        raise AssertionError("GeometryCoachV2.evaluate() should not be called when disabled")
+
+    monkeypatch.setattr(
+        vectorizer, "geometry_coach_v2",
+        types.SimpleNamespace(evaluate=_boom),
+        raising=False,
+    )
+
+    result = vectorizer.extract(str(tiny_image), enable_body_isolation_coach=False)
+    assert result.body_isolation is original_body
+    assert result.contour_stage is original_contour
+    assert result.geometry_coach_v2 is None
