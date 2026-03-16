@@ -1,3 +1,4 @@
+<!-- @deprecated Use AdaptivePocketLabV2.vue — refactored composable-based version. CU-A5 -->
 <template>
   <div class="p-3 space-y-3 border rounded">
     <h3 class="text-lg font-semibold">

@@ -1,6 +1,8 @@
 <script setup lang="ts">
 /**
  * VCarveView - V-Carve Text and Decorative Lettering
+ * Manufacturing operation — nav moved to CAM Tools section (CU-A3). Route path unchanged.
+ *
  * Connected to API endpoints:
  *   POST /api/art-studio/vcarve/preview
  *   POST /api/cam/toolpath/vcarve/preview_infill

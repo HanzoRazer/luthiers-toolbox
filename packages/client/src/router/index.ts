@@ -107,6 +107,20 @@ const routes: RouteRecordRaw[] = [
     component: () => import("@/views/lab/RiskTimelineLab.vue"),
   },
 
+  // Helical Ramp Lab (CU-A6: promoted to CAM Tools nav)
+  {
+    path: "/lab/helical",
+    name: "LabHelical",
+    component: () => import("@/components/toolbox/HelicalRampLab.vue"),
+  },
+
+  // Polygon Offset Lab (CU-A6: promoted to Design Utilities nav)
+  {
+    path: "/lab/polygon-offset",
+    name: "LabPolygonOffset",
+    component: () => import("@/components/toolbox/PolygonOffsetLab.vue"),
+  },
+
   // Machine Manager
   {
     path: "/lab/machines",
@@ -223,6 +237,11 @@ const routes: RouteRecordRaw[] = [
     path: "/art-studio/inlay-workspace",
     name: "ArtStudioInlayWorkspace",
     component: () => import("@/views/art-studio/InlayWorkspaceShell.vue"),
+  },
+  {
+    path: "/art-studio/soundhole-rosette-workspace",
+    name: "ArtStudioSoundholeRosette",
+    component: () => import("@/views/art-studio/SoundholeRosetteShell.vue"),
   },
   {
     path: "/art-studio/vcarve",
@@ -506,19 +525,7 @@ const routes: RouteRecordRaw[] = [
     component: () => import("@/views/VisionAttachTestView.vue"),
   },
 
-  // Dev: UI Sandbox — design tokens, component gallery, nav/layout prototypes
-  {
-    path: "/dev/sandbox",
-    name: "DevSandbox",
-    component: () => import("@/views/dev/SandboxView.vue"),
-  },
-
-  // Dev: CAD Layout Demo — VCarve/Fusion 360 style component showcase
-  {
-    path: "/dev/cad-layout-demo",
-    name: "DevCadLayoutDemo",
-    component: () => import("@/views/dev/CadLayoutDemo.vue"),
-  },
+  // CU-A4: Dev scratch views removed from routing (SandboxView, CadLayoutDemo, etc.)
 ];
 
 const router = createRouter({
