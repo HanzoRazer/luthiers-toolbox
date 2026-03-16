@@ -328,9 +328,6 @@ class TestPhysicalPlausibility:
     @pytest.mark.parametrize("preset_name", list(BODY_PRESETS.keys()))
     def test_preset_dimensions_reasonable(self, preset_name):
         """All presets should have physically reasonable dimensions."""
-        if preset_name == "om":
-            pytest.skip("om is alias")
-
         params = BODY_PRESETS[preset_name]
 
         # Body length: 17-22 inches for acoustic guitars
@@ -347,9 +344,6 @@ class TestPhysicalPlausibility:
     @pytest.mark.parametrize("preset_name", list(BODY_PRESETS.keys()))
     def test_outline_generates_without_error(self, preset_name):
         """All presets should generate valid outlines."""
-        if preset_name == "om":
-            pytest.skip("om is alias")
-
         params = BODY_PRESETS[preset_name]
         gen = BezierBodyGenerator(params)
         outline = gen.generate_outline(resolution=100)

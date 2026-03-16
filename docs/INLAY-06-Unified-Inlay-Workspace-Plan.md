@@ -1,7 +1,9 @@
 # INLAY-06 — Unified Inlay Workspace Consolidation Plan
 
-**Status:** Plan only (no implementation).  
+**Status:** Implemented (2026-03-16).  
 **Purpose:** Single workspace for pattern library, fretboard placement, headstock placement, and BOM/export.
+
+**Implementation:** `InlayWorkspaceShell.vue` at `/art-studio/inlay-workspace` with 4 tabs: (1) Pattern Library — InlayPatternView; (2) Fretboard — ArtStudioInlay; (3) Headstock — HeadstockDesignerView; (4) BOM & Export — aggregator. Route and Art Studio nav entry added. InlayDesignerView and InlayPatternView deprecated (not deleted). See [SESSION_STATUS.md](SESSION_STATUS.md) Session 7.
 
 ---
 

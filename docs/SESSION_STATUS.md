@@ -1,8 +1,8 @@
-# Session Status — 2026-03-13
+# Session Status — 2026-03-16
 
 **Branch:** main
-**Last Commit:** `108b8cad` feat(inlay): port 3 generators from amsterdam_spiro_engine prototype
-**Pushed:** Yes (origin/main up to date)
+**Last Commit:** *(pending)* — Session 7 changes (VINE-08, INLAY-02, INLAY-06) not yet committed
+**Pushed:** —
 
 ---
 
@@ -180,27 +180,62 @@ Analyzed the 1,525-line `amsterdam_spiro_engine.html` standalone prototype and p
 
 ---
 
+## Session 7 — Frontend Gaps: Bracing Route, Headstock API, Unified Inlay Workspace (2026-03-16)
+
+**Scope:** VINE-08, INLAY-02, INLAY-06 (plan + implementation). No commit hash yet — changes staged/uncommitted.
+
+### VINE-08 — Bracing UI wired to route
+- **Route:** `/art-studio/bracing` → `ArtStudioBracing.vue` (added in `router/index.ts`)
+- **Nav:** Art Studio sidebar — "Bracing" link added in `AppDashboardView.vue`
+- **API:** View already used composables (`previewBracing`, `listBracingPresets`, `batchBracing`, `exportBracingDXF`); no raw fetch
+- **Tests:** 46 bracing tests passing (`test_bracing_endpoint_smoke.py`, `test_bracing_presets_bridge_smoke.py`)
+
+### INLAY-02 — HeadstockDesignerView wired to real API
+- **API client:** `packages/client/src/api/art-studio.ts` — added `listHeadstockTemplates`, `listHeadstockStyles`, `generateHeadstockPrompt` (base `/api/instruments/guitar/headstock-inlay`)
+- **View:** `HeadstockDesignerView.vue` — templates from API on mount; "Generate Preview" → `generateHeadstockPrompt`, prompt shown in preview; "Export DXF" → copies prompt to clipboard (no headstock-only DXF endpoint); removed "This feature is under development" placeholder
+- **Tests:** `test_headstock_inlay_smoke.py` — run with inlay endpoint smoke; 53 passed for inlay + headstock combined
+
+### INLAY-06 — Unified inlay workspace (plan + implementation)
+- **Plan:** `docs/INLAY-06-Unified-Inlay-Workspace-Plan.md` — shared vs stage-specific composables, tabs (no shared canvas), four-stage shell
+- **Shell:** `packages/client/src/views/art-studio/InlayWorkspaceShell.vue`
+  - **Stage 1:** Pattern library — `InlayPatternView.vue` (async)
+  - **Stage 2:** Fretboard — `ArtStudioInlay.vue` (composables), not InlayDesignerView
+  - **Stage 3:** Headstock — `HeadstockDesignerView.vue` (async)
+  - **Stage 4:** BOM & export aggregator — cards with "Open …" to switch tab
+- **Route:** `/art-studio/inlay-workspace` → `InlayWorkspaceShell.vue`; `/art-studio/inlay` kept
+- **Nav:** "Inlay Workspace" added to Art Studio sidebar (above "Inlay Designer")
+- **Deprecation:** `InlayDesignerView.vue` and `InlayPatternView.vue` — `@deprecated` comment added; not deleted; old routes still work
+
+### Test results (Session 7)
+- `tests/test_inlay_endpoint_smoke.py` + `tests/test_headstock_inlay_smoke.py`: **53 passed** (~90s)
+
+---
+
 ## Current State
 
 ### Repos
 | Repo | Branch | Status |
 |------|--------|--------|
-| luthiers-toolbox | main | Clean (amsterdam_spiro_engine.html now tracked) |
+| luthiers-toolbox | main | Session 7 changes uncommitted (bracing route, headstock API, inlay workspace) |
 | code-analysis-tool | main | Separate work in progress |
 | sg-spec | main | Clean |
 
 ### Test Status
 ```
-Inlay tests: 158 passed (0 failed)
+Inlay + headstock smoke: 53 passed (test_inlay_endpoint_smoke + test_headstock_inlay_smoke)
+Bracing smoke: 46 passed
+Inlay engine (generators): 158 passed (unchanged)
 Full suite: not re-run since session 2
 ```
 
-### Inlay Engine Summary
+### Inlay Engine & Frontend Summary
 - **25 generators** across geometric, rope, floral, medallion, and utility categories
 - **14 wood materials** with grain color data
 - **BOM calculator** with area estimation
-- **Full frontend** with undo/redo, measure tool, export
-- **158 tests** covering all generators, geometry math, BOM, spacing utilities
+- **Unified Inlay Workspace** at `/art-studio/inlay-workspace` — 4 tabs: Pattern Library (InlayPatternView), Fretboard (ArtStudioInlay), Headstock (HeadstockDesignerView), BOM & Export
+- **Headstock designer** wired to `/api/instruments/guitar/headstock-inlay` (templates, generate-prompt)
+- **Bracing** reachable at `/art-studio/bracing` with nav entry
+- **Deprecated** (still routed): InlayDesignerView (`/art-studio/inlay`), InlayPatternView (`/art-studio/inlay-patterns`)
 
 ---
 
@@ -217,12 +252,16 @@ Full suite: not re-run since session 2
 - [x] 5 more generators + BOM + blueprint bridge (Session 4)
 - [x] Frontend InlayPatternView with undo/redo + measure tool (Session 5)
 - [x] Amsterdam spiro engine analysis + 3 generator port (Session 6)
+- [x] VINE-08: Bracing UI route + nav (Session 7)
+- [x] INLAY-02: HeadstockDesignerView → real API (templates, generate-prompt) (Session 7)
+- [x] INLAY-06: InlayWorkspaceShell (4 tabs), route, nav, deprecation comments (Session 7)
+- [x] Wire inlay workspace into art-studio sidebar navigation (Session 7)
 
 ### Open
 - [ ] File 8 JSX rosette prototypes into `docs/rosette-prototypes/jsx/` (from Session 1)
 - [ ] Begin consolidation Phase 1 (dead module cleanup)
 - [ ] Re-run full test suite and update pass/fail counts
-- [ ] Wire inlay view into art-studio sidebar navigation
+- [ ] Commit Session 7 changes (VINE-08, INLAY-02, INLAY-06)
 
 ---
 
@@ -234,14 +273,17 @@ Full suite: not re-run since session 2
 | 2 | `6f86018b`…`ba7538fe` | 159 | 24,116 | 2,145 | Remediation sprint + platform hardening |
 | 3 | `e2a1b7f4` | 5 | 1,159 | 13 | Geo band & rope generators |
 | 4–5 | `a7228c89` | 28 | 10,289 | 15 | 5 generators + BOM + frontend view |
-| **Total** | | **225** | **49,323** | **2,173** | |
+| 6 | `108b8cad` | 4 | 2,245 | 2 | Amsterdam spiro engine — 3 generators |
+| 7 | *(pending)* | — | — | — | VINE-08, INLAY-02, INLAY-06 (bracing route, headstock API, inlay workspace) |
+| **Total** | | **229+** | **51,568+** | **2,175+** | *(excl. Session 7)* |
 
 ---
 
 ## Notes
 
 - Rosette system: 2 engines — **Traditional Matrix** (25+ presets) and **Modern Parametric** (7 types)
-- Inlay engine: 22 generators, unified API, CNC-ready (male/pocket offsets, DXF R12 export)
+- Inlay engine: 25 generators, unified API, CNC-ready (male/pocket offsets, DXF R12 export)
+- **Inlay Workspace:** Single entry point at `/art-studio/inlay-workspace` — Pattern Library, Fretboard (ArtStudioInlay), Headstock, BOM & Export; old Inlay Designer and Inlay Patterns routes kept but views marked deprecated
 - CAM pipeline: governed — feasibility gate → toolpath → G-code → run artifact with SHA256 provenance
 - Codebase remediation score improved from 4.7/10 baseline (exact re-score pending)
 - `amsterdam_spiro_engine.html` at repo root is an uncommitted prototype (candidate for `prototypes/` directory)
