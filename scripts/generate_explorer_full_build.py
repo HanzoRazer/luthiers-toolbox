@@ -50,6 +50,9 @@ from datetime import datetime
 from pathlib import Path
 from typing import List, Tuple, Dict, Any
 
+# Import shared G-code verification utility (EX-GAP-12)
+from scripts.utils.gcode_verify import verify_gcode
+
 
 # ---------------------------------------------------------------------------
 # Resolve paths
@@ -976,6 +979,14 @@ def main():
     phase1_path.write_text(phase1_gcode, encoding="utf-8")
     print(f"  Written: {phase1_path.name} ({phase1_lines:,} lines)")
 
+    # Verify Phase 1 G-code (EX-GAP-12)
+    v1 = verify_gcode(
+        gcode=phase1_gcode,
+        stock_thickness_mm=44.45,  # 1.75" Korina
+        phase_name="Phase 1: Rear Face Routing",
+        units="mm",
+    )
+
     # Phase 2: Perimeter Profile
     print("Generating Phase 2: Perimeter Profile...")
     phase2_gcode = generate_phase2_perimeter(spec, outline_mm)
@@ -983,6 +994,14 @@ def main():
     phase2_path = OUTPUT_DIR / "Explorer_1958_Phase2_Perimeter.nc"
     phase2_path.write_text(phase2_gcode, encoding="utf-8")
     print(f"  Written: {phase2_path.name} ({phase2_lines:,} lines)")
+
+    # Verify Phase 2 G-code (EX-GAP-12)
+    v2 = verify_gcode(
+        gcode=phase2_gcode,
+        stock_thickness_mm=44.45,  # 1.75" Korina
+        phase_name="Phase 2: Perimeter Profile",
+        units="mm",
+    )
 
     # Build summary
     print("Generating build summary...")
@@ -1000,6 +1019,17 @@ def main():
     print(f"  Phase 1 (Rear Routing): {phase1_lines:,} lines")
     print(f"  Phase 2 (Perimeter):    {phase2_lines:,} lines")
     print(f"  Output: {OUTPUT_DIR}")
+
+    # Verification summary (EX-GAP-12)
+    all_ok = v1["ok"] and v2["ok"]
+    if all_ok:
+        print(f"\n  ✓ G-CODE VERIFICATION: ALL PHASES PASSED")
+    else:
+        print(f"\n  ✗ G-CODE VERIFICATION FAILED - review errors before machining")
+        if not v1["ok"]:
+            print(f"    Phase 1 errors: {v1['errors']}")
+        if not v2["ok"]:
+            print(f"    Phase 2 errors: {v2['errors']}")
     print("=" * 70)
 
 
