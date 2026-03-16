@@ -141,63 +141,70 @@ async def vectorize_blueprint(
         raise HTTPException(400, "File too large")
     
     start_time = time.time()
-    
-    with tempfile.TemporaryDirectory() as tmpdir:
-        input_path = Path(tmpdir) / f"input{ext}"
-        input_path.write_bytes(content)
-        
-        output_dir = Path(tmpdir) / "output"
-        output_dir.mkdir()
-        
-        try:
-            result = extract_guitar_blueprint(
-                source_path=str(input_path),
-                output_dir=str(output_dir),
-                instrument_type=instrument_type,
-                spec_name=spec_name,
-                dual_pass=dual_pass,
-                use_ml=use_ml,
-                detect_primitives=detect_primitives,
-                validate=validate,
-                dpi=dpi,
+
+    # Use persistent temp directory (like Phase 2) so output files remain accessible
+    # for download after the response is returned. TemporaryDirectory() deletes files
+    # when the context exits, breaking download paths.
+    output_dir = tempfile.mkdtemp(prefix="blueprint_phase3_")
+    input_tmp = None
+
+    try:
+        # Save input file to temp location
+        input_tmp = Path(output_dir) / f"input{ext}"
+        input_tmp.write_bytes(content)
+
+        result = extract_guitar_blueprint(
+            source_path=str(input_tmp),
+            output_dir=output_dir,
+            instrument_type=instrument_type,
+            spec_name=spec_name,
+            dual_pass=dual_pass,
+            use_ml=use_ml,
+            detect_primitives=detect_primitives,
+            validate=validate,
+            dpi=dpi,
+        )
+
+        processing_time = int((time.time() - start_time) * 1000)
+
+        # Clean up input file (keep outputs for download)
+        if input_tmp and input_tmp.exists():
+            input_tmp.unlink()
+
+        dxf_path = result.get("dxf")
+        if dxf_path and Path(dxf_path).exists() and return_dxf:
+            return FileResponse(
+                dxf_path,
+                media_type="application/dxf",
+                filename=f"{Path(file.filename).stem}_phase3.dxf",
             )
-            
-            processing_time = int((time.time() - start_time) * 1000)
-            
-            dxf_path = result.get("dxf")
-            if dxf_path and Path(dxf_path).exists() and return_dxf:
-                return FileResponse(
-                    dxf_path,
-                    media_type="application/dxf",
-                    filename=f"{Path(file.filename).stem}_phase3.dxf",
-                )
-            
-            # Determine scale source
-            scale_source = "phase1_ai" if scale_hint_mm_per_pixel else "dpi"
-            effective_scale = scale_hint_mm_per_pixel or (25.4 / dpi)
-            
-            if scale_hint_mm_per_pixel:
-                logger.info(f"Using Phase 1 scale hint: {scale_hint_mm_per_pixel:.6f} mm/px")
-            
-            return Phase3Response(
-                success=True,
-                dxf_path=result.get("dxf"),
-                svg_path=result.get("svg"),
-                body_size_mm=result.get("body_size_mm"),
-                contours_found=result.get("contours_found", 0),
-                primitives_detected=result.get("primitives_detected", 0),
-                validation_passed=result.get("validation_passed", False),
-                processing_time_ms=processing_time,
-                ml_available=result.get("ml_used", False),
-                ocr_available=result.get("ocr_used", False),
-                scale_hint_mm_per_pixel=effective_scale,
-                scale_source=scale_source,
-                message=result.get("message"),
-            )
-            
-        except Exception as e:  # WP-2: API endpoint catch-all
-            logger.exception("Phase 3 vectorization failed")
-            raise HTTPException(500, f"Vectorization failed: {e}")
+
+        # Determine scale source
+        scale_source = "phase1_ai" if scale_hint_mm_per_pixel else "dpi"
+        effective_scale = scale_hint_mm_per_pixel or (25.4 / dpi)
+
+        if scale_hint_mm_per_pixel:
+            logger.info(f"Using Phase 1 scale hint: {scale_hint_mm_per_pixel:.6f} mm/px")
+
+        return Phase3Response(
+            success=True,
+            dxf_path=result.get("dxf"),
+            svg_path=result.get("svg"),
+            body_size_mm=result.get("body_size_mm"),
+            contours_found=result.get("contours_found", 0),
+            primitives_detected=result.get("primitives_detected", 0),
+            validation_passed=result.get("validation_passed", False),
+            processing_time_ms=processing_time,
+            ml_available=result.get("ml_used", False),
+            ocr_available=result.get("ocr_used", False),
+            scale_hint_mm_per_pixel=effective_scale,
+            scale_source=scale_source,
+            message=result.get("message"),
+        )
+
+    except Exception as e:  # WP-2: API endpoint catch-all
+        logger.exception("Phase 3 vectorization failed")
+        raise HTTPException(500, f"Vectorization failed: {e}")
 
 
 @router.post("/quick")
