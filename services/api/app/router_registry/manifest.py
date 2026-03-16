@@ -229,6 +229,12 @@ ROUTER_MANIFEST: List[RouterSpec] = [
         tags=["DXF", "Exports"],
         category="blueprint",
     ),
+    RouterSpec(
+        module="app.blueprint.save_router",
+        prefix="",  # router has /api/blueprint prefix
+        tags=["Blueprint", "Save"],
+        category="blueprint",
+    ),
     # -------------------------------------------------------------------------
     # MACHINE & POST CONFIGURATION
     # -------------------------------------------------------------------------
@@ -589,6 +595,15 @@ ROUTER_MANIFEST: List[RouterSpec] = [
         category="projects",
     ),
     # -------------------------------------------------------------------------
+    # INSTRUMENT PROJECTS (PROJ-004)
+    # -------------------------------------------------------------------------
+    RouterSpec(
+        module="app.projects.router",
+        prefix="",  # router has /api/projects prefix
+        tags=["Projects", "Instruments"],
+        category="projects",
+    ),
+    # -------------------------------------------------------------------------
     # MISC STUBS (for remaining missing endpoints)
     # -------------------------------------------------------------------------
     RouterSpec(
@@ -671,6 +686,24 @@ ROUTER_MANIFEST: List[RouterSpec] = [
         prefix="/api",
         tags=["Instruments", "Guitar", "Generators"],
         category="instrument_geometry",
+    ),
+
+    # -------------------------------------------------------------------------
+    # MATERIALS REGISTRY (MAT-002/003)
+    # -------------------------------------------------------------------------
+    RouterSpec(
+        module="app.materials.router",
+        router_attr="registry_router",
+        prefix="",  # router has /api/registry prefix
+        tags=["Materials", "Registry"],
+        category="materials",
+    ),
+    RouterSpec(
+        module="app.materials.router",
+        router_attr="system_router",
+        prefix="",  # router has /api/system/materials prefix
+        tags=["Materials", "System"],
+        category="materials",
     ),
 
 ]

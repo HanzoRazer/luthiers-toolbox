@@ -1,6 +1,8 @@
 <script setup lang="ts">
 /**
  * BindingDesignerView - Guitar Body Binding & Purfling Strip Designer
+ * @deprecated Prefer SoundholeRosetteShell at /art-studio/soundhole-rosette-workspace (Stage 4).
+ *
  * Designs binding channel dimensions and strip stacking patterns
  *
  * Planned API endpoints:

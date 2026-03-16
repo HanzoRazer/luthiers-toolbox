@@ -33,3 +33,5 @@ export const DEFAULT_INLAY_SIZE = 6.0
 export const DEFAULT_DOUBLE_SPACING = 8.0
 export const DEFAULT_DXF_VERSION = 'R12'
 export const DEFAULT_LAYER_PREFIX = 'INLAY'
+/** Default pocket depth for inlay DXF/G-code export (mm). INLAY-03 */
+export const DEFAULT_POCKET_DEPTH_MM = 1.5

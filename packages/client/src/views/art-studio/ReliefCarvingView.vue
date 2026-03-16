@@ -1,6 +1,8 @@
 <script setup lang="ts">
 /**
  * ReliefCarvingView - 3D Relief Carving Designer
+ * Manufacturing operation — nav moved to CAM Tools section (CU-A3). Route path unchanged.
+ *
  * Connected to API endpoints:
  *   POST /api/cam/relief/map_from_heightfield
  *   POST /api/cam/relief/roughing

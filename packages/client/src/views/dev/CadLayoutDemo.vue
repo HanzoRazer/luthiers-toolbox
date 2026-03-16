@@ -1,9 +1,9 @@
 <script setup lang="ts">
 /**
  * CadLayoutDemo.vue
+ * @deprecated — dev scratch view, not routed
  *
  * Demonstration of the VCarve/Fusion 360 style layout components.
- * Access at: /dev/cad-layout-demo
  */
 
 import { ref } from "vue";

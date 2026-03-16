@@ -1,10 +1,10 @@
 # Agent Session Bookmark
 
-**Date:** 2026-03-11
-**Session:** GAP_ANALYSIS Remediation Sprint
-**Last Commit:** 06d28e5c feat(geometry): add pickup position calculator (GAP-04)
+**Date:** 2026-03-16
+**Session:** Frontend gaps (VINE-08, INLAY-02, INLAY-06) + GAP_ANALYSIS remediation
+**Last Commit:** *(pending)* — Session 7 changes not yet committed
 **Branch:** main
-**Pushed:** Yes (origin/main up to date)
+**Pushed:** —
 
 ---
 
@@ -41,6 +41,11 @@ Working through infrastructure gaps identified in `docs/GAP_ANALYSIS_MASTER.md`.
 | SG-GAP-08/10, VINE-06 | Screw positions, antenna depth, Gibson headstock | 892ed3dd | Spec completeness fixes |
 | SG-GAP-03/04/05/06/07 | Smart Guitar coordinate system standardization | 6b947186 | All cavities now use y_from_top |
 | LP-GAP-10/NECK-01/GAP-01 | Les Paul unit docs + headstock marks | a8739d63 | Documented G20 inch mode in LP generator |
+| **VINE-08** | Bracing endpoints unreachable from UI | *(pending)* | Route `/art-studio/bracing` + nav; 46 bracing tests passing |
+| **INLAY-02** | HeadstockDesignerView.vue non-functional | *(pending)* | Wired to headstock-inlay API (templates, generate-prompt) |
+| **INLAY-06** | No unified inlay canvas | *(pending)* | InlayWorkspaceShell at `/art-studio/inlay-workspace` (4 tabs) |
+
+**Session 7 (2026-03-16):** See [SESSION_STATUS.md](SESSION_STATUS.md) for full Session 7 log. Remediation docs updated: REMEDIATION_MASTER_2026_03_16.md, GAP_ANALYSIS_MASTER.md, REMEDIATION_PLAN.md, INLAY-06-Unified-Inlay-Workspace-Plan.md.
 
 ---
 

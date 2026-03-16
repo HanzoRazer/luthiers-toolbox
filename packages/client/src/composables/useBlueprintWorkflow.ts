@@ -119,9 +119,11 @@ export function useBlueprintWorkflow(options: BlueprintWorkflowOptions = {}) {
   const calibration = ref<CalibrationResult | null>(null)
   const calibrationAccepted = ref(false)
 
-  // Phase 2: Vectorization
+  // Phase 2 / Phase 3: Vectorization
   const isVectorizing = ref(false)
   const vectorizedGeometry = ref<VectorizedGeometry | null>(null)
+  const usePhase3Vectorization = ref(false)
+  const phase3Available = ref<boolean | null>(null) // null = not yet checked
   const vectorParams = ref<VectorParams>({
     scaleFactor: 1.0,
     instrumentType: 'electric',
@@ -323,43 +325,112 @@ export function useBlueprintWorkflow(options: BlueprintWorkflowOptions = {}) {
     calibrationAccepted.value = false
   }
 
-  // Phase 2: Vectorization
-  const vectorizeGeometry = async (): Promise<boolean> => {
+  // Phase 3: Check availability (GET /api/blueprint/phase3/info)
+  const checkPhase3Availability = async (): Promise<boolean> => {
+    try {
+      const response = await api('/api/blueprint/phase3/info')
+      if (!response.ok) {
+        phase3Available.value = false
+        return false
+      }
+      const data = await response.json()
+      phase3Available.value = data?.available === true
+      return phase3Available.value
+    } catch {
+      phase3Available.value = false
+      return false
+    }
+  }
+
+  // Phase 2: Vectorization (OpenCV)
+  const vectorizeGeometryPhase2 = async (): Promise<boolean> => {
     if (!uploadedFile.value || !analysis.value) return false
 
+    const formData = new FormData()
+    formData.append('file', uploadedFile.value)
+    formData.append('analysis_data', JSON.stringify(analysis.value))
+    formData.append('scale_factor', vectorParams.value.scaleFactor.toString())
+
+    if (calibration.value?.calibration_id) {
+      formData.append('calibration_id', calibration.value.calibration_id)
+    }
+
+    formData.append('instrument_type', vectorParams.value.instrumentType)
+    formData.append('dark_threshold', vectorParams.value.darkThreshold.toString())
+    formData.append('gap_close_size', vectorParams.value.gapCloseSize.toString())
+    formData.append('extraction_mode', vectorParams.value.extractionMode)
+
+    const response = await api('/api/blueprint/vectorize-geometry', {
+      method: 'POST',
+      body: formData,
+    })
+
+    if (!response.ok) {
+      const errorData = await response.json()
+      throw new Error(errorData.detail || 'Vectorization failed')
+    }
+
+    const result = await response.json()
+    vectorizedGeometry.value = result
+    return true
+  }
+
+  // Phase 3: Vectorization (ML pipeline — POST /api/blueprint/phase3/vectorize)
+  const vectorizeGeometryPhase3 = async (): Promise<boolean> => {
+    if (!uploadedFile.value) return false
+
+    const formData = new FormData()
+    formData.append('file', uploadedFile.value)
+    formData.append('instrument_type', vectorParams.value.instrumentType)
+    formData.append('dual_pass', 'true')
+    formData.append('use_ml', 'true')
+    formData.append('detect_primitives', 'true')
+    formData.append('validate', 'true')
+    formData.append('dpi', '400')
+    formData.append('return_dxf', 'false')
+
+    // Phase 1 handoff: scale from AI analysis if available (VEC-GAP-05)
+    const scaleHint = (analysis.value as any)?.scale?.mm_per_pixel ?? (analysis.value as any)?.scale_hint_mm_per_pixel
+    if (typeof scaleHint === 'number' && scaleHint > 0) {
+      formData.append('scale_hint_mm_per_pixel', scaleHint.toString())
+    }
+
+    const response = await api('/api/blueprint/phase3/vectorize', {
+      method: 'POST',
+      body: formData,
+    })
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}))
+      throw new Error(errorData.detail || `Phase 3 vectorization failed: ${response.status}`)
+    }
+
+    const data = await response.json()
+    if (!data?.success) {
+      throw new Error(data?.message || 'Phase 3 vectorization failed')
+    }
+
+    // Map Phase3Response to VectorizedGeometry for existing UI/download flow
+    vectorizedGeometry.value = {
+      contours_detected: data.contours_found ?? 0,
+      lines_detected: data.primitives_detected ?? 0,
+      processing_time_ms: data.processing_time_ms ?? 0,
+      svg_path: data.svg_path ?? '',
+      dxf_path: data.dxf_path ?? '',
+    }
+    return true
+  }
+
+  // Phase 2 or Phase 3: Vectorization (dispatches by usePhase3Vectorization)
+  const vectorizeGeometry = async (): Promise<boolean> => {
     try {
       isVectorizing.value = true
       error.value = null
 
-      const formData = new FormData()
-      formData.append('file', uploadedFile.value)
-      formData.append('analysis_data', JSON.stringify(analysis.value))
-      formData.append('scale_factor', vectorParams.value.scaleFactor.toString())
-
-      // Use calibration if available
-      if (calibration.value?.calibration_id) {
-        formData.append('calibration_id', calibration.value.calibration_id)
+      if (usePhase3Vectorization.value && phase3Available.value) {
+        return await vectorizeGeometryPhase3()
       }
-
-      // Vectorization parameters
-      formData.append('instrument_type', vectorParams.value.instrumentType)
-      formData.append('dark_threshold', vectorParams.value.darkThreshold.toString())
-      formData.append('gap_close_size', vectorParams.value.gapCloseSize.toString())
-      formData.append('extraction_mode', vectorParams.value.extractionMode)
-
-      const response = await api('/api/blueprint/vectorize-geometry', {
-        method: 'POST',
-        body: formData,
-      })
-
-      if (!response.ok) {
-        const errorData = await response.json()
-        throw new Error(errorData.detail || 'Vectorization failed')
-      }
-
-      const result = await response.json()
-      vectorizedGeometry.value = result
-      return true
+      return await vectorizeGeometryPhase2()
     } catch (err: any) {
       console.error('Vectorization error:', err)
       setError(err.message || 'Failed to vectorize geometry')
@@ -531,12 +602,14 @@ export function useBlueprintWorkflow(options: BlueprintWorkflowOptions = {}) {
     calibration,
     calibrationAccepted,
 
-    // Phase 2
+    // Phase 2 / Phase 3 vectorization
     isVectorizing,
     vectorizedGeometry,
     vectorParams,
+    usePhase3Vectorization,
+    phase3Available,
 
-    // Phase 3
+    // Phase 3 CAM
     isSendingToCAM,
     rmosResult,
     camParams,
@@ -556,6 +629,7 @@ export function useBlueprintWorkflow(options: BlueprintWorkflowOptions = {}) {
     acceptCalibration,
     resetCalibration,
     vectorizeGeometry,
+    checkPhase3Availability,
     sendToCAM,
     exportSVGBasic,
     downloadVectorizedSVG,

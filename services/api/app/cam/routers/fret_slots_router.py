@@ -73,7 +73,7 @@ def preview_fret_slots(req: FretSlotsPreviewRequest) -> FretSlotsPreviewResponse
         scale_length_mm = model_spec.scale.scale_length_mm
         nut_width_mm = 42.0
         heel_width_mm = 56.0
-    except Exception:
+    except (FileNotFoundError, KeyError, ValueError, TypeError, AttributeError):
         messages.append(RmosMessageOut(
             code="MODEL_NOT_FOUND",
             severity="warning",
@@ -102,7 +102,7 @@ def preview_fret_slots(req: FretSlotsPreviewRequest) -> FretSlotsPreviewResponse
             slot_width_mm=req.slot_width_mm,
         )
         statistics = compute_cam_statistics(toolpaths)
-    except Exception as e:
+    except (ValueError, TypeError, KeyError, AttributeError, ZeroDivisionError) as e:
         messages.append(RmosMessageOut(
             code="CALCULATION_ERROR",
             severity="error",

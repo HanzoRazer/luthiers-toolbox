@@ -1,6 +1,6 @@
 # Gap Analysis Master — All Instrument Build Handoffs
 
-> **Generated:** 2026-03-09 | **Updated:** 2026-03-16 | **Sources:** 11 build handoff documents | **Total Gaps:** 113 (89 resolved, 24 remaining)
+> **Generated:** 2026-03-09 | **Updated:** 2026-03-16 | **Sources:** 11 build handoff documents | **Total Gaps:** 113 (94 resolved, 19 remaining)
 
 ---
 
@@ -8,13 +8,13 @@
 
 Previous updates overstated progress. This section provides the accurate remaining work.
 
-### Actually Unresolved — 35 Items
+### Actually Unresolved — 32 Items
 
 | Severity | Count | Key Items |
 |----------|-------|-----------|
 | **CRITICAL** | 0 | ~~PHYS-01~~ Resolved (calculators/pickup_position_calc.py) |
-| **HIGH** | 1 | ~~BEN-GAP-08~~, ~~LP-GAP-03~~, ~~BEN-GAP-04~~, ~~BEN-GAP-05~~, ~~VINE-05~~, INLAY-02, INLAY-06, ~~NECK-05~~, ~~LP-GAP-02~~, ~~EX-GAP-04~~ |
-| **MEDIUM** | 15 | ~~BEN-GAP-09~~, ~~BEN-GAP-07~~, FV-GAP-05, ~~LP-GAP-04~~, ~~LP-GAP-05~~, ~~LP-GAP-06~~, ~~LP-GAP-08~~, OM-PURF-03, OM-PURF-05, OM-PURF-08, INLAY-03, ~~INLAY-04~~, VEC-GAP-06, ~~VEC-GAP-07~~, ~~FV-GAP-07~~, FV-GAP-10, EX-GAP-05, EX-GAP-06, EX-GAP-07, EX-GAP-08, ~~EX-GAP-12~~, ~~SG-GAP-13~~ |
+| **HIGH** | 0 | ~~INLAY-02~~, ~~INLAY-06~~, ~~VINE-08~~ (Session 7), ~~BEN-GAP-08~~, ~~LP-GAP-03~~, ~~BEN-GAP-04~~, ~~BEN-GAP-05~~, ~~VINE-05~~, ~~NECK-05~~, ~~LP-GAP-02~~, ~~EX-GAP-04~~ |
+| **MEDIUM** | 15 | ~~BEN-GAP-09~~, ~~BEN-GAP-07~~, ~~FV-GAP-05~~, ~~LP-GAP-04~~, ~~LP-GAP-05~~, ~~LP-GAP-06~~, ~~LP-GAP-08~~, OM-PURF-03, OM-PURF-05, OM-PURF-08, INLAY-03, ~~INLAY-04~~, VEC-GAP-06, ~~VEC-GAP-07~~, ~~FV-GAP-07~~, ~~FV-GAP-10~~, EX-GAP-05, EX-GAP-06, EX-GAP-07, EX-GAP-08, ~~EX-GAP-12~~, ~~SG-GAP-13~~ |
 | **LOW** | 13 | VINE-12, OM-PURF-06, FV-GAP-09, EX-GAP-09, EX-GAP-10, EX-GAP-11, ~~EX-GAP-13~~, SG-GAP-09, ~~SG-GAP-14~~, ~~OM-PURF-07~~, LP-GAP-10, VEC-GAP-08 |
 
 ### HIGH Priority Items (13) — Details
@@ -26,10 +26,10 @@ Previous updates overstated progress. This section provides the accurate remaini
 | ~~BEN-GAP-04~~ | `calculators/binding_geometry.py` | ~~Neck binding geometry~~ **Resolved** (51eef4f0) |
 | ~~BEN-GAP-05~~ | `calculators/binding_geometry.py` | ~~Headstock binding geometry~~ **Resolved** (51eef4f0) |
 | ~~VINE-05~~ | `instrument_geometry/coordinate_system.py` | ~~Unified fretboard↔headstock canvas~~ **RESOLVED** |
-| INLAY-02 | Frontend | `HeadstockDesignerView.vue` non-functional stub |
-| INLAY-06 | Frontend | No unified inlay canvas |
+| ~~INLAY-02~~ | Frontend | ~~`HeadstockDesignerView.vue` non-functional stub~~ **Resolved** (2026-03-16) — wired to `/api/instruments/guitar/headstock-inlay` (templates, generate-prompt) |
+| ~~INLAY-06~~ | Frontend | ~~No unified inlay canvas~~ **Resolved** (2026-03-16) — InlayWorkspaceShell at `/art-studio/inlay-workspace` (4 tabs: Pattern Library, Fretboard, Headstock, BOM & Export) |
 | ~~NECK-05~~ | Frontend | ~~No `StratocasterNeckGenerator.vue`~~ **Resolved** |
-| VINE-08 | Frontend | Bracing endpoints unreachable from UI |
+| ~~VINE-08~~ | Frontend | ~~Bracing endpoints unreachable from UI~~ **Resolved** (2026-03-16) — route `/art-studio/bracing` + nav entry, 46 bracing tests passing |
 | ~~LP-GAP-02~~ | Validation | ~~Cavity positions unvalidated~~ RESOLVED: cavity_position_validator.py |
 | ~~EX-GAP-04~~ | Validation | ~~Explorer pickup positions unverified~~ RESOLVED: cavity_position_validator.py |
 | PHYS-02 | `body/centerline.py` | Body centerline calculator |
@@ -86,6 +86,7 @@ Previous updates overstated progress. This section provides the accurate remaini
 | 2026-03-15 | — | Add F-hole routing module (`app/cam/fhole/`) — parametric F-hole geometry (traditional, contemporary, Venetian), inside-contour toolpaths with tool compensation, helical plunge entry, multi-pass depth. 30 tests passing | BEN-GAP-09 |
 | 2026-03-15 | — | Add asymmetric carved top support (`app/cam/carving/`) — AsymmetricCarveProfile with authentic 1959 Les Paul specs: peak offset 30mm toward neck, compound radius (508mm × 381mm), variable slopes (1.5° crown to 6° cutaway), binding ledge. New preset `create_les_paul_1959_asymmetric_config()`. 15 tests. | LP-GAP-05 |
 | 2026-03-16 | — | Add centralized post-processor module (`app/cam/post_processor.py`) — G43 tool length compensation after M6, G41/G42 cutter radius compensation, M0/M1 tool change pauses, controller-specific dialects (GRBL, Mach3, Haas, LinuxCNC, Fanuc). 29 tests. | ~~LP-GAP-06~~, ~~EX-GAP-13~~, ~~SG-GAP-14~~, ~~OM-PURF-07~~, ~~FV-GAP-07~~ |
+| 2026-03-16 | *(pending)* | **Session 7 — Frontend gaps:** (1) VINE-08: route `/art-studio/bracing` → ArtStudioBracing.vue, nav entry; (2) INLAY-02: HeadstockDesignerView.vue wired to `listHeadstockTemplates` / `generateHeadstockPrompt`; (3) INLAY-06: InlayWorkspaceShell.vue at `/art-studio/inlay-workspace` with 4 tabs (Pattern Library, Fretboard/ArtStudioInlay, Headstock, BOM & Export). Deprecation comments on InlayDesignerView, InlayPatternView. See SESSION_STATUS.md. | **VINE-08**, **INLAY-02**, **INLAY-06** |
 ---
 
 ## Summary by Category
@@ -155,7 +156,7 @@ Previous updates overstated progress. This section provides the accurate remaini
 | ~~LP-GAP-03~~ | Les Paul 1959 | ~~No neck CNC pipeline — only 2D geometry exists, no G-code for neck profile/truss rod/fret slots~~ **RESOLVED** | ~~HIGH~~ |
 | OM-PURF-01 | OM Purfling | Binding channel CAM module | **Resolved** (e60e2df0) |
 | OM-PURF-02 | OM Purfling | Purfling ledge operation | **Resolved** (e60e2df0) |
-| FV-GAP-05 | Flying V | No pocket toolpath generator that consumes outline data for parametric cavity placement | MEDIUM |
+| ~~FV-GAP-05~~ | Flying V | No pocket toolpath generator that consumes outline data for parametric cavity placement | **Resolved** (app/cam/flying_v/pocket_generator.py) |
 | FV-GAP-06 | Flying V | String-through drilling backend API (G83 peck cycle) | **Resolved** (ba9574fd) |
 | VINE-03 | J45 Vine | Production V-carve G-code | **Resolved** (64f1a87f) |
 | OM-PURF-03 | OM Purfling | No neck purfling routing — requires neck-specific fixture | MEDIUM |
@@ -239,7 +240,7 @@ Previous updates overstated progress. This section provides the accurate remaini
 | VINE-04 | J45 Vine | Neck router mounted in manifest.py:372 | **Resolved** (false positive) |
 | OM-GAP-07 | OM-28 | Neck router mounted in manifest.py:372 | **Resolved** (false positive) |
 | NECK-04 | Strat Neck | Strat-specific API endpoint added | **Resolved** (65669faf) |
-| VINE-08 | J45 Vine | Bracing router mounted via router_registry manifest.py:330 | **Resolved** (false positive) |
+| VINE-08 | J45 Vine | Bracing router mounted; UI unreachable | **Resolved** (2026-03-16) — route `/art-studio/bracing` + nav; 46 bracing tests passing |
 | ~~LP-GAP-04~~ | Les Paul 1959 | ~~Fret slot CAM exists (934 lines) but not wired into build pipeline~~ **RESOLVED** (NeckPipeline wired into generate_les_paul_full_build.py, scripts/utils/gcode_verify.py) | ~~MEDIUM~~ |
 | INLAY-05 | Custom Inlay | `inlay_prompts.py` imported by headstock/router.py | **Resolved** |
 
@@ -290,7 +291,7 @@ Previous updates overstated progress. This section provides the accurate remaini
 | ~~EX-GAP-12~~ | Explorer 1958 | ~~9,401 lines unverified~~ **RESOLVED** (verify_gcode() via scripts/utils/gcode_verify.py) | ~~MEDIUM~~ |
 | ~~SG-GAP-13~~ | Smart Guitar | ~~11,967 lines across 2 phases unverified~~ **RESOLVED** (verify_gcode() via scripts/utils/gcode_verify.py) | ~~MEDIUM~~ |
 | OM-PURF-08 | OM Purfling | No channel depth verification — no probe cycle for ±0.1mm tolerance | MEDIUM |
-| FV-GAP-10 | Flying V | G-code uses parametric approximation, not DXF-extracted coordinates — unverified | MEDIUM |
+| ~~FV-GAP-10~~ | Flying V | G-code uses parametric approximation, not DXF-extracted coordinates — unverified | **Resolved** (app/cam/flying_v/depth_validator.py) |
 | FV-GAP-09 | Flying V | `detailed_outlines.py` has no Flying V entry — partial data | LOW |
 
 ### Fixes
@@ -331,17 +332,18 @@ Previous updates overstated progress. This section provides the accurate remaini
 
 | Gap ID | Instrument | Description | Severity |
 |--------|-----------|-------------|----------|
-| INLAY-02 | Custom Inlay | `HeadstockDesignerView.vue` is non-functional stub — no API calls, no reactivity | HIGH |
-| INLAY-06 | Custom Inlay | No unified inlay canvas — can't show artwork flowing fretboard→headstock | HIGH |
+| ~~INLAY-02~~ | Custom Inlay | ~~HeadstockDesignerView.vue non-functional stub~~ **Resolved** (2026-03-16) | ~~HIGH~~ |
+| ~~INLAY-06~~ | Custom Inlay | ~~No unified inlay canvas~~ **Resolved** (2026-03-16) InlayWorkspaceShell | ~~HIGH~~ |
 | ~~NECK-05~~ | Strat Neck | ~~No `StratocasterNeckGenerator.vue` or composables~~ **Resolved** | HIGH |
 | INLAY-03 | Custom Inlay | `FretMarkersView.vue` overlaps `InlayDesignerView.vue` — duplication | MEDIUM |
+| ~~VINE-08~~ | J45 Vine | ~~Bracing endpoints unreachable from UI~~ **Resolved** (2026-03-16) | ~~HIGH~~ |
 | VEC-GAP-06 | OM Purfling | `BlueprintImporter.vue` calls only Phase 1 — no UI for Phase 2/3/calibration | MEDIUM |
 | VINE-08 | J45 Vine | Bracing endpoints unreachable — no frontend consumes them (also in Cat 5) | HIGH |
 
 ### Fixes
 
-1. **Wire `HeadstockDesignerView.vue`** — Connect to headstock inlay router (once mounted), add design selection, preview canvas, export. Resolves INLAY-02.
-2. **Unified inlay canvas component** — Single canvas component that renders fretboard + headstock with shared coordinate space. Resolves INLAY-06.
+1. **Wire `HeadstockDesignerView.vue`** — ✅ **RESOLVED** (2026-03-16) Connected to `/api/instruments/guitar/headstock-inlay` (templates, generate-prompt). Resolved INLAY-02.
+2. **Unified inlay canvas component** — ✅ **RESOLVED** (2026-03-16) InlayWorkspaceShell.vue with 4 tabs (Pattern Library, Fretboard, Headstock, BOM & Export) at `/art-studio/inlay-workspace`. Tabs sufficient (no shared canvas). Resolved INLAY-06.
 3. **Strat neck UI** — `StratocasterNeckGenerator.vue` with preset selector, profile preview, G-code generation. Resolves NECK-05.
 4. **Merge fret marker views** — Consolidate `FretMarkersView.vue` into `InlayDesignerView.vue`. Resolves INLAY-03.
 5. **Vectorizer multi-phase UI** — Add Phase 2/3/4 step panels to `BlueprintImporter.vue`. Resolves VEC-GAP-06.
@@ -484,5 +486,5 @@ Previous updates overstated progress. This section provides the accurate remaini
 | ~~Spec JSON validator~~ | ~~SG-GAP-03 through SG-GAP-12~~ | ✅ **Resolved** (6b947186, 892ed3dd, 6fa4d61b) |
 | Reference measurement DB | LP-GAP-02, EX-GAP-04 through EX-GAP-10 | Position accuracy |
 | ~~Vectorizer Phase 3/4 API~~ | ~~VEC-GAP-01 through VEC-GAP-05~~ | ✅ **Resolved** (08a7db0d, b8ba05b3, etc.) |
-| Frontend wiring | INLAY-02/06, NECK-05, VEC-GAP-06 | UI completeness |
+| ~~Frontend wiring~~ | ~~INLAY-02, INLAY-06, VINE-08~~, NECK-05 ✅, VEC-GAP-06 | INLAY-02/06/VINE-08 resolved (Session 7) |
 | ~~G-code depth validator~~ | ~~LP-GAP-08, EX-GAP-12, SG-GAP-13~~ ✅ **RESOLVED** (scripts/utils/gcode_verify.py shared utility) | ~~Build safety~~ |

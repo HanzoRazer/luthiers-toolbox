@@ -22,6 +22,7 @@ from fastapi import APIRouter
 # Import sub-routers
 from .generation_router import router as generation_router
 from .segmentation_router import router as segmentation_router
+from .analyze_generated_router import router as analyze_generated_router
 
 # Re-export schemas for backward compatibility
 from .schemas import (
@@ -44,6 +45,7 @@ router = APIRouter(prefix="/api/vision", tags=["Vision"])
 # Mount sub-routers (no additional prefix - endpoints already have paths)
 router.include_router(generation_router)
 router.include_router(segmentation_router)
+router.include_router(analyze_generated_router)
 
 
 __all__ = [
@@ -52,6 +54,7 @@ __all__ = [
     # Sub-routers
     "generation_router",
     "segmentation_router",
+    "analyze_generated_router",
     # Schemas
     "VisionAsset",
     "VisionGenerateRequest",
