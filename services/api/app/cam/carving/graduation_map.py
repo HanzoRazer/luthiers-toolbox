@@ -15,7 +15,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import List, Optional, Tuple, Union
 
-from .config import GraduationMapConfig, SurfaceType
+from .config import GraduationMapConfig, SurfaceType, AsymmetricCarveProfile
 
 
 @dataclass
@@ -158,6 +158,10 @@ class GraduationMap:
 
             return max(edge * 0.8, base_thickness)  # Don't go too thin
 
+        elif self.config.surface_type == SurfaceType.ARCHTOP_ASYMMETRIC:
+            # Asymmetric carved top (LP-GAP-05)
+            return self._asymmetric_thickness(x_mm, y_mm)
+
         elif self.config.surface_type == SurfaceType.CONCAVE:
             # Inverted dome (dish shape)
             dome_factor = math.sqrt(1 - r * r)
@@ -166,6 +170,123 @@ class GraduationMap:
         else:
             # Freeform: linear interpolation
             return apex - (apex - edge) * r
+
+    def _asymmetric_thickness(self, x_mm: float, y_mm: float) -> float:
+        """
+        Calculate thickness using asymmetric carved top model (LP-GAP-05).
+
+        Models an ellipsoidal dome with:
+        - Peak offset from center (typically toward neck)
+        - Compound radius (different X and Y radii)
+        - Variable slopes across different zones
+        - Binding ledge at perimeter
+
+        Based on authentic 1959 Les Paul carved top measurements.
+        """
+        profile = self.config.asymmetric_profile
+        if profile is None:
+            # Fall back to symmetric model
+            return self._parametric_thickness_symmetric(x_mm, y_mm)
+
+        x_min, x_max = self.config.bounds_x_mm
+        y_min, y_max = self.config.bounds_y_mm
+        half_width = (x_max - x_min) / 2
+        half_length = (y_max - y_min) / 2
+
+        apex = self.config.apex_thickness_mm
+        edge = self.config.edge_thickness_mm
+
+        # Calculate position relative to offset peak
+        center_x = (x_max + x_min) / 2
+        center_y = (y_max + y_min) / 2
+        peak_x = center_x + profile.peak_offset_x_mm
+        peak_y = center_y + profile.peak_offset_y_mm
+
+        dx = x_mm - peak_x
+        dy = y_mm - peak_y
+
+        # Normalize using compound radius (elliptical dome)
+        # Use major_radius for X (width), minor_radius for Y (length)
+        nx = dx / profile.major_radius_mm if profile.major_radius_mm > 0 else 0
+        ny = dy / profile.minor_radius_mm if profile.minor_radius_mm > 0 else 0
+
+        # Elliptical distance from peak (0 at peak, increases outward)
+        r_ellipse = math.sqrt(nx * nx + ny * ny)
+
+        # Normalized distance for zone calculations (0-1 from center to edge)
+        nx_body = (x_mm - center_x) / half_width
+        ny_body = (y_mm - center_y) / half_length
+        r_body = math.sqrt(nx_body * nx_body + ny_body * ny_body)
+
+        # Check for binding ledge (flat zone at very edge)
+        edge_zone = 1.0 - (profile.binding_ledge_mm / min(half_width, half_length))
+        if r_body > edge_zone:
+            return edge
+
+        # Outside bounds
+        if r_body > 1.0:
+            return edge
+
+        # Determine slope zone and calculate dome factor
+        # Zone 1: Crown (gentle slope near peak)
+        # Zone 2: Cutaway transitions (steep slope)
+        # Zone 3: Lower bout (medium slope)
+        # Zone 4: Average (default slope)
+
+        if r_body < profile.crown_zone_radius:
+            # Crown zone: gentle slope
+            slope_rad = math.radians(profile.slope_crown_deg)
+        elif abs(nx_body) > profile.cutaway_zone_x_min and ny_body < profile.cutaway_zone_y_max:
+            # Cutaway zone: steep slope
+            slope_rad = math.radians(profile.slope_cutaway_deg)
+        elif ny_body > 0.3:  # Lower bout
+            slope_rad = math.radians(profile.slope_lower_bout_deg)
+        else:
+            # Average slope
+            slope_rad = math.radians(profile.slope_average_deg)
+
+        # Calculate height based on elliptical dome with variable slope
+        # Use cosine-based dome profile scaled by total rise
+        if r_ellipse >= 1.0:
+            dome_height = 0.0
+        else:
+            # Smooth cosine dome: height = total_rise * cos(r * pi/2)
+            # Modified to account for variable slope zones
+            dome_height = profile.total_rise_mm * math.cos(r_ellipse * math.pi / 2)
+
+            # Apply slope adjustment in transition zones
+            if r_body > profile.crown_zone_radius:
+                # Blend between crown slope and zone slope
+                zone_factor = (r_body - profile.crown_zone_radius) / (1.0 - profile.crown_zone_radius)
+                # Steeper slope means height drops faster
+                slope_factor = 1.0 + zone_factor * (math.tan(slope_rad) - 0.05)
+                dome_height *= max(0.0, 1.0 - zone_factor * (slope_factor - 1.0) * 0.5)
+
+        # Convert dome height to thickness
+        # thickness = edge + (apex - edge) * (dome_height / total_rise)
+        if profile.total_rise_mm > 0:
+            thickness = edge + (apex - edge) * (dome_height / profile.total_rise_mm)
+        else:
+            thickness = edge
+
+        return max(edge * 0.8, thickness)  # Don't go too thin
+
+    def _parametric_thickness_symmetric(self, x_mm: float, y_mm: float) -> float:
+        """Symmetric fallback for when asymmetric_profile is None."""
+        x_min, x_max = self.config.bounds_x_mm
+        y_min, y_max = self.config.bounds_y_mm
+
+        nx = 2 * (x_mm - x_min) / (x_max - x_min) - 1
+        ny = 2 * (y_mm - y_min) / (y_max - y_min) - 1
+        r = math.sqrt(nx * nx + ny * ny)
+
+        if r > 1.0:
+            return self.config.edge_thickness_mm
+
+        apex = self.config.apex_thickness_mm
+        edge = self.config.edge_thickness_mm
+        dome_factor = math.sqrt(1 - r * r)
+        return edge + (apex - edge) * dome_factor
 
     def get_surface_z_at(
         self,

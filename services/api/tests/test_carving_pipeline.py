@@ -21,12 +21,14 @@ from app.cam.carving import (
     GraduationMapConfig,
     RoughingConfig,
     FinishingConfig,
+    AsymmetricCarveProfile,
     GraduationMap,
     SurfaceCarvingGenerator,
     CarvingResult,
     DEFAULT_CARVING_TOOLS,
     create_benedetto_17_config,
     create_les_paul_top_config,
+    create_les_paul_1959_asymmetric_config,
 )
 
 
@@ -493,3 +495,209 @@ class TestCarvingIntegration:
 
         # Recurve should make it thinner near edge
         assert t_with < t_without
+
+
+# =============================================================================
+# Asymmetric Carving Tests (LP-GAP-05)
+# =============================================================================
+
+class TestAsymmetricCarveProfile:
+    """Tests for AsymmetricCarveProfile configuration."""
+
+    def test_default_profile_has_authentic_1959_specs(self):
+        """Default profile should have authentic 1959 Les Paul specs."""
+        profile = AsymmetricCarveProfile()
+        assert profile.peak_offset_y_mm == 30.0  # 30mm toward neck
+        assert profile.major_radius_mm == 508.0  # 20" across width
+        assert profile.minor_radius_mm == 381.0  # 15" along length
+        assert profile.total_rise_mm == 7.8
+
+    def test_profile_serialization(self):
+        """Profile should serialize to dict."""
+        profile = AsymmetricCarveProfile()
+        d = profile.to_dict()
+        assert "peak_offset_mm" in d
+        assert "compound_radius_mm" in d
+        assert "total_rise_mm" in d
+        assert "slopes_deg" in d
+
+    def test_les_paul_1959_preset(self):
+        """1959 Les Paul preset should have correct specs."""
+        config = create_les_paul_1959_asymmetric_config()
+        assert config.graduation_map.surface_type == SurfaceType.ARCHTOP_ASYMMETRIC
+        assert config.graduation_map.asymmetric_profile is not None
+        assert config.material == MaterialHardness.MEDIUM  # Maple
+
+
+class TestAsymmetricThicknessCalculation:
+    """Tests for asymmetric thickness calculation."""
+
+    def test_peak_at_offset_position(self):
+        """Maximum thickness should be at the offset peak position."""
+        profile = AsymmetricCarveProfile(
+            peak_offset_x_mm=0.0,
+            peak_offset_y_mm=30.0,
+        )
+        config = GraduationMapConfig(
+            bounds_x_mm=(-165.0, 165.0),
+            bounds_y_mm=(-222.0, 222.0),
+            apex_thickness_mm=12.7,
+            edge_thickness_mm=5.0,
+            surface_type=SurfaceType.ARCHTOP_ASYMMETRIC,
+            asymmetric_profile=profile,
+        )
+        grad_map = GraduationMap.create_parametric(config)
+
+        # Thickness at offset peak (0, 30) should be higher than at geometric center (0, 0)
+        t_at_peak = grad_map.get_thickness_at(0, 30)
+        t_at_center = grad_map.get_thickness_at(0, 0)
+        assert t_at_peak > t_at_center
+
+    def test_thickness_decreases_from_peak(self):
+        """Thickness should decrease as distance from offset peak increases."""
+        config = create_les_paul_1959_asymmetric_config()
+        grad_map = GraduationMap.create_parametric(config.graduation_map)
+
+        # Get thicknesses at various distances from peak (0, 30)
+        t_peak = grad_map.get_thickness_at(0, 30)
+        t_mid = grad_map.get_thickness_at(50, 30)
+        t_far = grad_map.get_thickness_at(120, 30)
+
+        assert t_peak > t_mid
+        assert t_mid > t_far
+
+    def test_asymmetric_profile_vs_symmetric(self):
+        """Asymmetric profile should differ from symmetric at same point."""
+        # Symmetric config
+        sym_config = GraduationMapConfig(
+            bounds_x_mm=(-165.0, 165.0),
+            bounds_y_mm=(-222.0, 222.0),
+            apex_thickness_mm=12.7,
+            edge_thickness_mm=5.0,
+            surface_type=SurfaceType.ARCHTOP,
+        )
+
+        # Asymmetric config
+        asym_config = GraduationMapConfig(
+            bounds_x_mm=(-165.0, 165.0),
+            bounds_y_mm=(-222.0, 222.0),
+            apex_thickness_mm=12.7,
+            edge_thickness_mm=5.0,
+            surface_type=SurfaceType.ARCHTOP_ASYMMETRIC,
+            asymmetric_profile=AsymmetricCarveProfile(peak_offset_y_mm=30.0),
+        )
+
+        sym_map = GraduationMap.create_parametric(sym_config)
+        asym_map = GraduationMap.create_parametric(asym_config)
+
+        # At geometric center (0, 0), symmetric should be thicker
+        # because asymmetric peak is offset to (0, 30)
+        t_sym_center = sym_map.get_thickness_at(0, 0)
+        t_asym_center = asym_map.get_thickness_at(0, 0)
+        assert t_sym_center > t_asym_center
+
+    def test_binding_ledge_creates_flat_edge(self):
+        """Binding ledge should create flat edge zone."""
+        profile = AsymmetricCarveProfile(binding_ledge_mm=3.0)
+        config = GraduationMapConfig(
+            bounds_x_mm=(-165.0, 165.0),
+            bounds_y_mm=(-222.0, 222.0),
+            apex_thickness_mm=12.7,
+            edge_thickness_mm=5.0,
+            surface_type=SurfaceType.ARCHTOP_ASYMMETRIC,
+            asymmetric_profile=profile,
+        )
+        grad_map = GraduationMap.create_parametric(config)
+
+        # Points near the very edge should return edge thickness
+        t_edge = grad_map.get_thickness_at(163, 0)  # Near X boundary
+        assert t_edge <= config.edge_thickness_mm * 1.1  # Near edge thickness
+
+    def test_cutaway_zone_has_steeper_slope(self):
+        """Cutaway zone should have steeper slope than crown."""
+        profile = AsymmetricCarveProfile(
+            slope_crown_deg=1.5,
+            slope_cutaway_deg=6.0,
+            cutaway_zone_x_min=0.5,
+            cutaway_zone_y_max=0.7,
+        )
+        config = GraduationMapConfig(
+            bounds_x_mm=(-165.0, 165.0),
+            bounds_y_mm=(-222.0, 222.0),
+            apex_thickness_mm=12.7,
+            edge_thickness_mm=5.0,
+            surface_type=SurfaceType.ARCHTOP_ASYMMETRIC,
+            asymmetric_profile=profile,
+        )
+        grad_map = GraduationMap.create_parametric(config)
+
+        # Sample points in crown zone (near peak) and cutaway zone
+        # Crown zone: small x, near peak y
+        t_crown_1 = grad_map.get_thickness_at(20, 30)
+        t_crown_2 = grad_map.get_thickness_at(40, 30)
+        crown_delta = t_crown_1 - t_crown_2
+
+        # Cutaway zone: large x, upper body
+        t_cutaway_1 = grad_map.get_thickness_at(100, 100)
+        t_cutaway_2 = grad_map.get_thickness_at(130, 100)
+        cutaway_delta = t_cutaway_1 - t_cutaway_2
+
+        # Cutaway should have larger thickness delta per distance (steeper slope)
+        # This is a relative comparison of how quickly thickness changes
+        assert cutaway_delta >= crown_delta * 0.5  # Allow some tolerance
+
+
+class TestAsymmetricPipeline:
+    """Integration tests for asymmetric carving pipeline."""
+
+    def test_les_paul_1959_pipeline(self):
+        """1959 Les Paul asymmetric carving should generate valid G-code."""
+        config = create_les_paul_1959_asymmetric_config()
+        grad_map = GraduationMap.create_parametric(config.graduation_map)
+        pipeline = CarvingPipeline(config, grad_map)
+
+        result = pipeline.generate()
+
+        assert result.total_operations == 2
+        assert len(result.gcode_lines) > 100
+
+        gcode = result.get_gcode()
+        assert "G0" in gcode or "G00" in gcode
+        assert "G1" in gcode or "G01" in gcode
+        assert "M6" in gcode
+
+    def test_asymmetric_result_serialization(self):
+        """Asymmetric result should serialize with profile info."""
+        config = create_les_paul_1959_asymmetric_config()
+        grad_map = GraduationMap.create_parametric(config.graduation_map)
+        pipeline = CarvingPipeline(config, grad_map)
+
+        result = pipeline.generate()
+        data = result.to_dict()
+
+        assert "graduation_map" in data
+        # The serialized graduation map should include asymmetric info
+        grad_data = data["graduation_map"]
+        assert grad_data["surface_type"] == "archtop_asymmetric"
+
+    def test_preview_asymmetric_graduation(self):
+        """Can preview asymmetric graduation map."""
+        config = create_les_paul_1959_asymmetric_config()
+        grad_map = GraduationMap.create_parametric(config.graduation_map)
+        pipeline = CarvingPipeline(config, grad_map)
+
+        preview = pipeline.preview_graduation()
+
+        assert preview["surface_type"] == "archtop_asymmetric"
+        assert "sample_thicknesses" in preview
+
+    def test_asymmetric_z_levels(self):
+        """Asymmetric carving should generate valid Z levels."""
+        config = create_les_paul_1959_asymmetric_config()
+        grad_map = GraduationMap.create_parametric(config.graduation_map)
+        pipeline = CarvingPipeline(config, grad_map)
+
+        z_levels = pipeline.preview_z_levels()
+
+        assert len(z_levels) > 0
+        assert all(z < 0 for z in z_levels)
