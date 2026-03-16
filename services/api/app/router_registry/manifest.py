@@ -646,15 +646,6 @@ ROUTER_MANIFEST: List[RouterSpec] = [
         category="workflow",
     ),
     # -------------------------------------------------------------------------
-    # BUSINESS (Estimator, Goals)
-    # -------------------------------------------------------------------------
-    RouterSpec(
-        module="app.business.estimator_router",
-        prefix="",  # router has /api/business/estimator prefix
-        tags=["Business", "Estimator"],
-        category="business",
-    ),
-    # -------------------------------------------------------------------------
     # HEADSTOCK INLAY (AI prompt generation)
     # -------------------------------------------------------------------------
     RouterSpec(
