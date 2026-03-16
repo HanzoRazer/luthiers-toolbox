@@ -1,6 +1,7 @@
 <script setup lang="ts">
 /**
  * RosetteWheelView — Interactive Rosette Wheel Designer
+ * @deprecated Prefer SoundholeRosetteShell at /art-studio/soundhole-rosette-workspace (Stage 1).
  *
  * Full port of rosette-designer-v5.html: 5-ring wheel, 19 tiles, 4 symmetry
  * modes, drag-drop, 4-tab sidebar (Tiles/Library/BOM/MFG), extension tabs,

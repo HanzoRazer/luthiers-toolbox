@@ -148,6 +148,8 @@ export interface InlayPreviewResponse {
 export interface InlayDXFRequest extends InlayPreviewRequest {
   dxf_version: string;
   layer_prefix: string;
+  /** Pocket depth in mm for G-code/export (0.5–5.0). Default 1.5. */
+  pocket_depth_mm?: number;
 }
 
 export interface InlayPresetInfo {

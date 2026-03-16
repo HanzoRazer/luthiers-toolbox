@@ -42,6 +42,7 @@ const {
   selectedFrets,
   dxfVersion,
   layerPrefix,
+  pocketDepthMm,
   selectedScalePreset
 } = useInlayState()
 
@@ -59,7 +60,8 @@ const { refreshPreview, exportDXF } = useInlayPreview(
   doubleAt12,
   doubleSpacing,
   dxfVersion,
-  layerPrefix
+  layerPrefix,
+  pocketDepthMm
 )
 
 const { loadPresets, applyPreset } = useInlayPresets(
@@ -395,6 +397,23 @@ onMounted(() => {
                 type="text"
                 class="w-full border rounded px-2 py-1 text-sm"
               >
+            </div>
+            <div>
+              <label class="block text-xs text-gray-600 mb-1">Pocket depth (mm)</label>
+              <input
+                v-model.number="pocketDepthMm"
+                type="number"
+                min="0.5"
+                max="5"
+                step="0.1"
+                class="w-full border rounded px-2 py-1 text-sm"
+              >
+              <p
+                v-if="pocketDepthMm > 3"
+                class="mt-1 text-xs text-amber-600"
+              >
+                Depth &gt; 3 mm may increase tearout risk.
+              </p>
             </div>
           </div>
         </div>

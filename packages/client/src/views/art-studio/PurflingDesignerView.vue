@@ -1,6 +1,8 @@
 <script setup lang="ts">
 /**
  * PurflingDesignerView - Decorative Purfling Channel Designer
+ * @deprecated Prefer SoundholeRosetteShell at /art-studio/soundhole-rosette-workspace (Stage 3).
+ *
  * Designs purfling channels around soundholes and body edges
  *
  * Planned API endpoints:

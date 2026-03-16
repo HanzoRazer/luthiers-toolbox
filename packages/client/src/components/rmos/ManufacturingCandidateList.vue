@@ -1,4 +1,7 @@
 <script setup lang="ts">
+/**
+ * @deprecated Use ManufacturingCandidateListV2.vue — decomposed orchestrator with useKeyboardShortcuts. CU-A5
+ */
 import CandidateDecisionHistoryPopover from "@/components/rmos/CandidateDecisionHistoryPopover.vue";
 import CandidateRowItem from "@/components/rmos/CandidateRowItem.vue";
 import CandidateFiltersSection from "@/components/rmos/CandidateFiltersSection.vue";

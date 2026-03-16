@@ -212,6 +212,7 @@ const domains = [
       { icon: '🎨', label: 'Art Studio',       to: '/art-studio' },
       { icon: '📋', label: 'Blueprint Lab',    to: '/blueprint' },
       { icon: '📐', label: 'Instrument Geometry', to: '/instrument-geometry' },
+      { icon: '🔺', label: 'Polygon Offset Lab', to: '/lab/polygon-offset' },
     ],
   },
   {
@@ -227,10 +228,9 @@ const domains = [
       { icon: '〰️', label: 'Purfling',        to: '/art-studio/purfling' },
       { icon: '⭕', label: 'Soundhole',       to: '/art-studio/soundhole' },
       { icon: '💎', label: 'Fret Markers',    to: '/art-studio/fret-markers' },
-      { icon: '🗿', label: 'Relief Carving',  to: '/art-studio/relief' },
       { icon: '💠', label: 'Inlay Workspace', to: '/art-studio/inlay-workspace' },
+      { icon: '🌹', label: 'Soundhole & Rosette', to: '/art-studio/soundhole-rosette-workspace' },
       { icon: '💠', label: 'Inlay Designer',  to: '/art-studio/inlay' },
-      { icon: '✒️', label: 'V-Carve',         to: '/art-studio/vcarve' },
     ],
   },
   {
@@ -249,8 +249,11 @@ const domains = [
       { icon: '🎥', label: 'Simulator',       to: '/cam/simulator' },
       { icon: '↔️', label: 'DXF → G-code',   to: '/cam/dxf-to-gcode' },
       { icon: '🌀', label: 'Adaptive Lab',    to: '/lab/adaptive' },
+      { icon: '🌊', label: 'Helical Ramp Lab', to: '/lab/helical' },
       { icon: '🪚', label: 'Saw Lab',         to: '/lab/saw/slice' },
       { icon: '🌉', label: 'Bridge Lab',      to: '/lab/bridge' },
+      { icon: '🔧', label: 'V-Carve',         to: '/art-studio/vcarve' },
+      { icon: '🗿', label: 'Relief Carving',  to: '/art-studio/relief' },
     ],
   },
   {
@@ -305,15 +308,7 @@ const domains = [
       { icon: '📊', label: 'Estimator',       to: '/business/estimator' },
     ],
   },
-  {
-    id: 'dev',
-    label: 'Dev Tools',
-    icon: '🛠️',
-    description: 'Design sandbox, component gallery, nav prototype',
-    links: [
-      { icon: '🎨', label: 'UI Sandbox',      to: '/dev/sandbox' },
-    ],
-  },
+  // CU-A4: Dev Tools nav removed (SandboxView, CadLayoutDemo, etc. not routed)
 ]
 
 function openMenu(id: string) {
