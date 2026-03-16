@@ -13,6 +13,7 @@ import {
   DEFAULT_DOUBLE_SPACING,
   DEFAULT_DXF_VERSION,
   DEFAULT_LAYER_PREFIX,
+  DEFAULT_POCKET_DEPTH_MM,
   STANDARD_FRETS
 } from './artStudioInlayTypes'
 
@@ -45,6 +46,8 @@ export interface InlayStateReturn {
   // Export options
   dxfVersion: Ref<string>
   layerPrefix: Ref<string>
+  /** Pocket depth (mm) for DXF/G-code export. INLAY-03 */
+  pocketDepthMm: Ref<number>
 
   // Computed
   selectedScalePreset: WritableComputedRef<string | null>
@@ -79,6 +82,7 @@ export function useInlayState(): InlayStateReturn {
   // Export options
   const dxfVersion = ref(DEFAULT_DXF_VERSION)
   const layerPrefix = ref(DEFAULT_LAYER_PREFIX)
+  const pocketDepthMm = ref(DEFAULT_POCKET_DEPTH_MM)
 
   // Computed: scale preset selector
   const selectedScalePreset = computed<string | null>({
@@ -112,6 +116,7 @@ export function useInlayState(): InlayStateReturn {
     selectedFrets,
     dxfVersion,
     layerPrefix,
+    pocketDepthMm,
     selectedScalePreset
   }
 }

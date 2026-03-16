@@ -1,6 +1,7 @@
 /**
  * Composable for keyboard shortcut handling in candidate list.
  * Handles g/y/r (bulk decisions), u (clear), e (export), a/c/i/x (selection), h (history), esc.
+ * Canonical version; useCandidateKeyboard.ts is deprecated (CU-A5).
  */
 import { onMounted, onBeforeUnmount, type Ref } from 'vue'
 import type { RiskLevel } from '@/sdk/rmos/runs'

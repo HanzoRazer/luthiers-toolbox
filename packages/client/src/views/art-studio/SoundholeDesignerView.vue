@@ -1,6 +1,8 @@
 <script setup lang="ts">
 /**
  * SoundholeDesignerView - Acoustic Guitar Soundhole Designer
+ * @deprecated Prefer SoundholeRosetteShell at /art-studio/soundhole-rosette-workspace (Stage 2).
+ *
  * Design soundhole shapes, rosettes, and decorative rings
  *
  * Planned API endpoints:

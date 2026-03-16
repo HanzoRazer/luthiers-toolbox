@@ -12,8 +12,12 @@
       v-if="!vectorizedGeometry"
       :vector-params="vectorParams"
       :is-vectorizing="isVectorizing"
+      :use-phase3="usePhase3"
+      :phase3-available="phase3Available"
       @vectorize="emit('vectorize')"
       @update:vector-params="emit('update:vectorParams', $event)"
+      @update:use-phase3="emit('update:usePhase3', $event)"
+      @check-phase3="emit('checkPhase3')"
     />
 
     <!-- Vectorization Results -->
@@ -35,6 +39,8 @@ defineProps<{
   vectorizedGeometry: VectorizedGeometry | null;
   vectorParams: VectorParams;
   isVectorizing: boolean;
+  usePhase3?: boolean;
+  phase3Available?: boolean | null;
 }>();
 
 const emit = defineEmits<{
@@ -43,6 +49,8 @@ const emit = defineEmits<{
   "download-dxf": [];
   "re-vectorize": [];
   "update:vectorParams": [params: VectorParams];
+  "update:usePhase3": [value: boolean];
+  checkPhase3: [];
 }>();
 </script>
 

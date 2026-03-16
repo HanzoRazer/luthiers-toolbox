@@ -265,6 +265,7 @@ import ezdxf
 from shapely.geometry import Polygon, LineString, Point
 from shapely.validation import explain_validity
 from shapely.ops import unary_union
+from shapely.errors import GEOSException
 import io
 import math
 
@@ -424,7 +425,7 @@ class TopologyValidator:
                         repair_suggestion="Remove entity or increase size"
                     ))
             
-            except Exception as e:
+            except (ValueError, TypeError, AttributeError, GEOSException) as e:
                 self.issues.append(TopologyIssue(
                     severity=Severity.ERROR,
                     message=f"Failed to validate geometry on layer '{entity.dxf.layer}': {str(e)}",
@@ -473,7 +474,7 @@ class TopologyValidator:
                 # buffer(0) didn't fix it
                 return "Complex topology error - manual repair required in CAD software"
         
-        except Exception as e:
+        except (ValueError, TypeError, GEOSException) as e:
             return f"Manual repair required in CAD software ({str(e)})"
     
     def check_line_segments(self) -> List[TopologyIssue]:

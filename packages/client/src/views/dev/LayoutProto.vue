@@ -1,3 +1,4 @@
+<!-- @deprecated — dev scratch view, not routed -->
 <template>
   <div class="layout-proto">
     <div class="proto-intro">

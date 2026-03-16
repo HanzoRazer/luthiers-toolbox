@@ -25,7 +25,8 @@ export function useInlayPreview(
   doubleAt12: Ref<boolean>,
   doubleSpacing: Ref<number>,
   dxfVersion: Ref<string>,
-  layerPrefix: Ref<string>
+  layerPrefix: Ref<string>,
+  pocketDepthMm: Ref<number>
 ): InlayPreviewReturn {
   /**
    * Build the common request payload.
@@ -69,7 +70,8 @@ export function useInlayPreview(
       const blob = await exportInlayDXF({
         ...buildPayload(),
         dxf_version: dxfVersion.value,
-        layer_prefix: layerPrefix.value
+        layer_prefix: layerPrefix.value,
+        pocket_depth_mm: pocketDepthMm.value
       })
       downloadBlob(
         blob,

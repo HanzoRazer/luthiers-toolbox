@@ -670,6 +670,24 @@ Since the system is pre-production with zero external users:
 
 ## Recent Session Log
 
+### 2026-03-16 — Frontend Gaps VINE-08, INLAY-02, INLAY-06
+
+Resolved three frontend gaps (Session 7; see [SESSION_STATUS.md](SESSION_STATUS.md)):
+
+| Gap | Fix | Commit |
+|-----|-----|--------|
+| VINE-08 | Bracing UI wired to route | *(pending)* |
+| INLAY-02 | HeadstockDesignerView → real API | *(pending)* |
+| INLAY-06 | InlayWorkspaceShell (4 tabs) | *(pending)* |
+
+**Deliverables:**
+- Route `/art-studio/bracing` → ArtStudioBracing.vue; nav entry in Art Studio sidebar. 46 bracing tests passing.
+- HeadstockDesignerView.vue: templates from GET `/api/instruments/guitar/headstock-inlay/templates`; Generate Preview / Export → `generateHeadstockPrompt`; placeholder removed.
+- InlayWorkspaceShell.vue at `/art-studio/inlay-workspace`: Stage 1 Pattern Library (InlayPatternView), Stage 2 Fretboard (ArtStudioInlay), Stage 3 Headstock (HeadstockDesignerView), Stage 4 BOM & Export. Deprecation comments on InlayDesignerView, InlayPatternView.
+- [INLAY-06-Unified-Inlay-Workspace-Plan.md](INLAY-06-Unified-Inlay-Workspace-Plan.md) — plan implemented (tabs, no shared canvas).
+
+**Result:** 53 inlay + headstock smoke tests passed; 46 bracing tests passed.
+
 ### 2026-02-09 — Phase 1.3 @safety_critical Decorator
 
 Added fail-closed decorator for safety-critical functions:
