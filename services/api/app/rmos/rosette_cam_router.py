@@ -12,6 +12,7 @@ from datetime import datetime
 
 from fastapi import APIRouter, Query
 from dataclasses import asdict
+from shapely.errors import GEOSException
 
 from ..cam.rosette.models import RosetteRingConfig, SegmentationResult, SliceBatch
 from ..cam.rosette.tile_segmentation import (
@@ -67,7 +68,7 @@ def generate_segment_ring(payload: Dict[str, Any] = None) -> Dict[str, Any]:
             "tile_length_mm": result.tile_length_mm,
             "segments": [asdict(t) for t in result.tiles],
         }
-    except Exception as e:
+    except (ValueError, TypeError, KeyError, AttributeError, ZeroDivisionError, GEOSException) as e:
         return {"ok": False, "error": str(e), "segments": []}
 
 
@@ -210,7 +211,7 @@ def export_rosette_cnc(payload: Dict[str, Any] = None) -> Dict[str, Any]:
             },
             "metadata": export_bundle.metadata,
         }
-    except Exception as e:
+    except (ValueError, TypeError, KeyError, AttributeError, ZeroDivisionError, GEOSException) as e:
         return {
             "ok": False,
             "gcode": None,
