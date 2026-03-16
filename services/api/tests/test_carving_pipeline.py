@@ -678,7 +678,9 @@ class TestAsymmetricPipeline:
         assert "graduation_map" in data
         # The serialized graduation map should include asymmetric info
         grad_data = data["graduation_map"]
-        assert grad_data["surface_type"] == "archtop_asymmetric"
+        assert grad_data["config"]["surface_type"] == "archtop_asymmetric"
+        # Asymmetric profile should be included
+        assert "asymmetric_profile" in grad_data["config"]
 
     def test_preview_asymmetric_graduation(self):
         """Can preview asymmetric graduation map."""
