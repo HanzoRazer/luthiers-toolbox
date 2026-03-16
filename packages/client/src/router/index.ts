@@ -220,9 +220,19 @@ const routes: RouteRecordRaw[] = [
     component: () => import("@/views/art-studio/InlayDesignerView.vue"),
   },
   {
+    path: "/art-studio/inlay-workspace",
+    name: "ArtStudioInlayWorkspace",
+    component: () => import("@/views/art-studio/InlayWorkspaceShell.vue"),
+  },
+  {
     path: "/art-studio/vcarve",
     name: "ArtStudioVCarve",
     component: () => import("@/views/art-studio/VCarveView.vue"),
+  },
+  {
+    path: "/art-studio/bracing",
+    name: "ArtStudioBracing",
+    component: () => import("@/components/art/ArtStudioBracing.vue"),
   },
   {
     path: "/art-studio/binding",
