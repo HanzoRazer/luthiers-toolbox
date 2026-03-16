@@ -1,0 +1,44 @@
+{
+  "schema_version": "1.0",
+  "model_id": "benedetto_17",
+  "surface": "top",
+  "surface_type": "archtop",
+  "description": "Benedetto 17\" archtop top graduation map - parametric ellipsoidal dome with edge recurve",
+
+  "grid_size_x": 32,
+  "grid_size_y": 40,
+
+  "bounds_x_mm": [-215.9, 215.9],
+  "bounds_y_mm": [-254.0, 254.0],
+
+  "apex_thickness_mm": 7.0,
+  "edge_thickness_mm": 3.5,
+  "recurve_depth_mm": 1.5,
+
+  "reference_points": {
+    "apex": {"x_mm": 0, "y_mm": 0, "thickness_mm": 7.0},
+    "upper_bout_edge": {"x_mm": 0, "y_mm": 200, "thickness_mm": 3.5},
+    "lower_bout_edge": {"x_mm": 0, "y_mm": -200, "thickness_mm": 3.5},
+    "waist_left": {"x_mm": -140, "y_mm": 0, "thickness_mm": 4.5},
+    "waist_right": {"x_mm": 140, "y_mm": 0, "thickness_mm": 4.5},
+    "f_hole_left": {"x_mm": -65, "y_mm": -20, "thickness_mm": 6.0},
+    "f_hole_right": {"x_mm": 65, "y_mm": -20, "thickness_mm": 6.0}
+  },
+
+  "notes": {
+    "source": "Based on Benedetto archtop graduation principles",
+    "apex_location": "Center of lower bout, approximately bridge position",
+    "recurve": "1.5mm recurve at perimeter per traditional archtop construction",
+    "f_holes": "Graduation thins slightly approaching f-hole region for tonal flexibility"
+  },
+
+  "outline": [
+    [-180, -254], [-200, -230], [-215, -180], [-215, -100],
+    [-200, -30], [-155, 0], [-200, 30], [-215, 100],
+    [-215, 180], [-200, 230], [-180, 254], [-100, 254],
+    [0, 254], [100, 254], [180, 254], [200, 230],
+    [215, 180], [215, 100], [200, 30], [155, 0],
+    [200, -30], [215, -100], [215, -180], [200, -230],
+    [180, -254], [100, -254], [0, -254], [-100, -254]
+  ]
+}
