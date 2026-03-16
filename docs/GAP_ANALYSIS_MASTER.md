@@ -1,6 +1,6 @@
 # Gap Analysis Master — All Instrument Build Handoffs
 
-> **Generated:** 2026-03-09 | **Updated:** 2026-03-15 | **Sources:** 11 build handoff documents | **Total Gaps:** 113 (73 resolved, 40 remaining)
+> **Generated:** 2026-03-09 | **Updated:** 2026-03-15 | **Sources:** 11 build handoff documents | **Total Gaps:** 113 (75 resolved, 38 remaining)
 
 ---
 
@@ -8,13 +8,13 @@
 
 Previous updates overstated progress. This section provides the accurate remaining work.
 
-### Actually Unresolved — 42 Items
+### Actually Unresolved — 38 Items
 
 | Severity | Count | Key Items |
 |----------|-------|-----------|
 | **CRITICAL** | 0 | ~~PHYS-01~~ Resolved (calculators/pickup_position_calc.py) |
-| **HIGH** | 4 | BEN-GAP-08, LP-GAP-03, ~~BEN-GAP-04~~, ~~BEN-GAP-05~~, VINE-05, INLAY-02, INLAY-06, ~~NECK-05~~, ~~LP-GAP-02~~, ~~EX-GAP-04~~ |
-| **MEDIUM** | 18 | BEN-GAP-09, ~~BEN-GAP-07~~, FV-GAP-05, LP-GAP-04, LP-GAP-05, LP-GAP-06, LP-GAP-08, OM-PURF-03, OM-PURF-05, OM-PURF-08, INLAY-03, INLAY-04, VEC-GAP-06, VEC-GAP-07, FV-GAP-07, FV-GAP-10, EX-GAP-05, EX-GAP-06, EX-GAP-07, EX-GAP-08, EX-GAP-12, SG-GAP-13 |
+| **HIGH** | 3 | BEN-GAP-08, LP-GAP-03, ~~BEN-GAP-04~~, ~~BEN-GAP-05~~, ~~VINE-05~~, INLAY-02, INLAY-06, ~~NECK-05~~, ~~LP-GAP-02~~, ~~EX-GAP-04~~ |
+| **MEDIUM** | 17 | BEN-GAP-09, ~~BEN-GAP-07~~, FV-GAP-05, LP-GAP-04, LP-GAP-05, LP-GAP-06, LP-GAP-08, OM-PURF-03, OM-PURF-05, OM-PURF-08, INLAY-03, ~~INLAY-04~~, VEC-GAP-06, VEC-GAP-07, FV-GAP-07, FV-GAP-10, EX-GAP-05, EX-GAP-06, EX-GAP-07, EX-GAP-08, EX-GAP-12, SG-GAP-13 |
 | **LOW** | 13 | VINE-12, OM-PURF-06, FV-GAP-09, EX-GAP-09, EX-GAP-10, EX-GAP-11, EX-GAP-13, SG-GAP-09, SG-GAP-14, OM-PURF-07, LP-GAP-10, VEC-GAP-08 |
 
 ### HIGH Priority Items (13) — Details
@@ -25,7 +25,7 @@ Previous updates overstated progress. This section provides the accurate remaini
 | BEN-GAP-08 | `app/cam/carving/` | 3D surface carving (archtop) |
 | ~~BEN-GAP-04~~ | `calculators/binding_geometry.py` | ~~Neck binding geometry~~ **Resolved** (51eef4f0) |
 | ~~BEN-GAP-05~~ | `calculators/binding_geometry.py` | ~~Headstock binding geometry~~ **Resolved** (51eef4f0) |
-| VINE-05 | Coordinate system | Unified fretboard↔headstock canvas |
+| ~~VINE-05~~ | `instrument_geometry/coordinate_system.py` | ~~Unified fretboard↔headstock canvas~~ **RESOLVED** |
 | INLAY-02 | Frontend | `HeadstockDesignerView.vue` non-functional stub |
 | INLAY-06 | Frontend | No unified inlay canvas |
 | ~~NECK-05~~ | Frontend | ~~No `StratocasterNeckGenerator.vue`~~ **Resolved** |
@@ -80,6 +80,7 @@ Previous updates overstated progress. This section provides the accurate remaini
 | 2026-03-12 | — | Verified existing Strat presets and spec file | GAP-02, GAP-08, NECK-02, NECK-03 |
 | 2026-03-15 | 51eef4f0 | Add binding geometry calculator (neck/headstock binding, miter joints, bend radius validation) | BEN-GAP-04, BEN-GAP-05, BEN-GAP-07 |
 | 2026-03-15 | — | Add StratocasterNeckGenerator.vue + composables (C/V/modern C profiles, 21/22/24 fret, compound radius) | NECK-05 |
+| 2026-03-15 | — | Add unified coordinate system (`instrument_geometry/coordinate_system.py`) — Y=0 at nut, +Y toward bridge, -Y toward headstock. Enables continuous inlay patterns and unified CAM toolpaths | VINE-05, INLAY-04 |
 ---
 
 ## Summary by Category
