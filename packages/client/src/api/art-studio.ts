@@ -324,6 +324,73 @@ export async function listBracingPresets(): Promise<BracingPresetInfo[]> {
 }
 
 // --------------------------------------------------------------------- //
+// Headstock Inlay (instruments/guitar/headstock-inlay)
+// --------------------------------------------------------------------- //
+
+const headstockInlayBase = `${base}/instruments/guitar/headstock-inlay`;
+
+export interface HeadstockTemplateInfo {
+  id: string;
+  name: string;
+  description: string;
+  headstock_style: string;
+  inlay_design: string;
+  headstock_wood: string;
+  inlay_material: string;
+  tuner_style: string;
+}
+
+export interface HeadstockStyleInfo {
+  id: string;
+  name: string;
+  description: string;
+}
+
+export interface HeadstockPromptRequest {
+  style?: string;
+  headstock_wood?: string;
+  inlay_design?: string;
+  inlay_material?: string;
+  tuner_style?: string;
+  background?: string;
+  include_strings?: boolean;
+  additional_details?: string | null;
+}
+
+export interface HeadstockPromptResponse {
+  prompt: string;
+  style: string;
+  inlay_design: string;
+  headstock_wood: string;
+  inlay_material: string;
+  prompt_length: number;
+}
+
+export async function listHeadstockTemplates(): Promise<HeadstockTemplateInfo[]> {
+  const res = await fetch(`${headstockInlayBase}/templates`);
+  if (!res.ok) throw new Error(await res.text());
+  return res.json();
+}
+
+export async function listHeadstockStyles(): Promise<HeadstockStyleInfo[]> {
+  const res = await fetch(`${headstockInlayBase}/styles`);
+  if (!res.ok) throw new Error(await res.text());
+  return res.json();
+}
+
+export async function generateHeadstockPrompt(
+  req: HeadstockPromptRequest
+): Promise<HeadstockPromptResponse> {
+  const res = await fetch(`${headstockInlayBase}/generate-prompt`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(req),
+  });
+  if (!res.ok) throw new Error(await res.text());
+  return res.json();
+}
+
+// --------------------------------------------------------------------- //
 // Utility Functions
 // --------------------------------------------------------------------- //
 

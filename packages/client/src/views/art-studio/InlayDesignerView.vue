@@ -1,5 +1,6 @@
 <script setup lang="ts">
 /**
+ * @deprecated Use InlayWorkspaceShell at /art-studio/inlay-workspace (Stage 2 uses ArtStudioInlay).
  * InlayDesignerView - Fretboard Inlay Pattern Designer
  * Connected to API endpoints:
  *   GET  /api/art-studio/inlay/presets
