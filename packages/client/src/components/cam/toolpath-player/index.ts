@@ -39,6 +39,10 @@ export { default as ControlsBarWrapper } from './ControlsBarWrapper.vue';
 // Phase 9 components
 export { default as PanelsLayer } from './PanelsLayer.vue';
 
+// Phase 10 components
+export { default as OverlaysLayer } from './OverlaysLayer.vue';
+export { default as ModalPanelsLayer } from './ModalPanelsLayer.vue';
+
 // Composables
 export { useToolpathPanels } from './useToolpathPanels';
 export type { PanelState } from './useToolpathPanels';
@@ -60,3 +64,5 @@ export { useToolpathEventHandlers } from './useToolpathEventHandlers';
 export type { EventHandlersConfig, ToolpathEventHandlersState } from './useToolpathEventHandlers';
 export { useToolpathMachine } from './useToolpathMachine';
 export type { MachineConfig, ToolpathMachineState } from './useToolpathMachine';
+export { useToolpathCanvasExport } from './useToolpathCanvasExport';
+export type { CanvasExportConfig, ToolpathCanvasExportState } from './useToolpathCanvasExport';

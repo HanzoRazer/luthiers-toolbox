@@ -16,12 +16,9 @@
  * P5: 3D Three.js visualization with orbit controls
  */
 
-import { onMounted, onUnmounted, computed, ref, watch, type Ref } from "vue";
+import { onMounted, onUnmounted, computed, ref, type Ref } from "vue";
 import ToolpathCanvas from "./ToolpathCanvas.vue";
 import ToolpathCanvas3D from "./ToolpathCanvas3D.vue";
-import GcodeViewer from "./GcodeViewer.vue";
-import MemoryWarning from "./MemoryWarning.vue";
-import ToolpathFilter from "./ToolpathFilter.vue";
 // Audio engine now managed by useToolpathAudio composable
 import { useToolpathPlayerStore } from "@/stores/useToolpathPlayerStore";
 import { annotationManager } from "@/util/toolpathAnnotations";
@@ -37,27 +34,19 @@ import { analyzeToolUsage } from "@/util/toolpathTools";
 // Extracted subcomponents (Phase 2-7 decomposition)
 import {
   PlayerHudBar,
-  ExportAnimationPanel,
-  CollisionPanel,
-  OptimizationPanel,
-  GcodeSourcePanel,
-  KeyboardShortcutsOverlay,
-  MeasurementsPanel,
-  MeasureModeIndicator,
-  LoadingOverlay,
-  ValidationOverlay,
-  EmptyState,
   ResolutionSlider,
   ControlsBarWrapper,
   PanelsLayer,
+  OverlaysLayer,
+  ModalPanelsLayer,
   useToolpathAnalysis,
-  useToolpathExport,
   useToolpathAudio,
   useToolpathNavigation,
   useToolpathPanelState,
   useToolpathViewControls,
   useToolpathEventHandlers,
   useToolpathMachine,
+  useToolpathCanvasExport,
 } from "./toolpath-player";
 
 // ---------------------------------------------------------------------------
@@ -145,9 +134,16 @@ const filterPanelRef = computed(() => panelsLayerRef.value?.filterPanelRef ?? nu
 // P5: Compare segments data
 const compareSegments = ref<unknown[]>([]);
 
-// P5: Export animation (via composable)
-const exportState = useToolpathExport();
-const { showExportPanel, isExporting, exportProgress, exportConfig } = exportState;
+// P10: Export animation with canvas retrieval (via composable)
+const canvasExport = useToolpathCanvasExport({
+  viewMode,
+  canvas2DRef: canvas2DRef as any,
+  canvas3DRef: canvas3DRef as any,
+  totalDurationMs: computed(() => store.totalDurationMs),
+  onPlayFromStart: () => { store.stop(); store.play(); },
+  onPause: () => store.pause(),
+});
+const { showExportPanel, isExporting, exportProgress, exportConfig } = canvasExport;
 
 // P6: Multi-tool filter
 const selectedToolFilter = ref<number | null>(null);
@@ -276,36 +272,6 @@ function runOptimizationAnalysis(): void {
 }
 
 // ---------------------------------------------------------------------------
-// P5: Export Animation - now via composable
-// ---------------------------------------------------------------------------
-async function startExport(): Promise<void> {
-  // Get the canvas element from the component
-  let canvasEl: HTMLCanvasElement | null = null;
-
-  if (viewMode.value === "2d" && canvas2DRef.value) {
-    canvasEl = (canvas2DRef.value as unknown as { $el: HTMLElement }).$el?.querySelector("canvas");
-  } else if (viewMode.value === "3d" && canvas3DRef.value) {
-    canvasEl = (canvas3DRef.value as unknown as { $el: HTMLElement }).$el?.querySelector("canvas");
-  }
-
-  if (!canvasEl) {
-    console.error("Cannot find canvas element for export");
-    return;
-  }
-
-  await exportState.startExport(
-    canvasEl,
-    store.totalDurationMs,
-    () => { store.stop(); store.play(); },
-    () => { store.pause(); }
-  );
-}
-
-function cancelExport(): void {
-  exportState.cancelExport(() => { store.pause(); });
-}
-
-// ---------------------------------------------------------------------------
 // Lifecycle
 // ---------------------------------------------------------------------------
 onMounted(async () => {
@@ -345,31 +311,19 @@ onUnmounted(() => {
       :show-heatmap="panels.heatmap.value"
     />
 
-    <!-- ── Loading overlay with progress (P1) - extracted ───── -->
-    <LoadingOverlay
-      v-if="store.loading"
-      :progress="store.parseProgress"
-    />
-
-    <!-- ── Memory warning banner (P1) ────────────────────────── -->
-    <MemoryWarning
-      v-if="showMemBanner"
+    <!-- P10: Consolidated overlays (loading, memory, validation, empty) -->
+    <OverlaysLayer
+      :loading="store.loading"
+      :parse-progress="store.parseProgress"
+      :show-mem-banner="showMemBanner"
       :memory-info="store.memoryInfo"
-      @close="memDismissed = true"
-      @optimize="store.setResolution(50)"
-    />
-
-    <!-- ── Validation error overlay (P1) - extracted ────────── -->
-    <ValidationOverlay
-      v-if="hasErrors && !store.loading && store.segments.length === 0"
-      :errors="validationErrors"
-      @load-anyway="doLoad"
-    />
-
-    <!-- ── Error / Empty state - extracted ───────────────────── -->
-    <EmptyState
-      v-if="!store.loading && !hasErrors && store.segments.length === 0"
+      :has-errors="hasErrors"
+      :validation-errors="validationErrors"
+      :segment-count="store.segments.length"
       :error="store.error"
+      @dismiss-memory="memDismissed = true"
+      @optimize-memory="store.setResolution(50)"
+      @load-anyway="doLoad"
     />
 
     <!-- ── Controls bar (using extracted P8 wrapper) ──────────── -->
@@ -433,52 +387,39 @@ onUnmounted(() => {
       @jump-to-selected="store.jumpToSelected()"
     />
 
-    <!-- P4: Collision Panel (extracted) -->
-    <CollisionPanel
-      v-if="showCollisionPanel && collisionReport"
-      :report="collisionReport"
-      @close="showCollisionPanel = false"
-    />
-
-    <!-- P4: Optimization Panel (extracted) -->
-    <OptimizationPanel
-      v-if="showOptPanel && optimizationReport"
-      :report="optimizationReport"
-      @close="showOptPanel = false"
-    />
-
-    <!-- P5: G-code Source Panel (extracted) -->
-    <GcodeSourcePanel
-      v-if="panels.gcode.value && store.sourceGcode"
+    <!-- P10: Consolidated modal panels -->
+    <ModalPanelsLayer
+      :show-collision-panel="showCollisionPanel"
+      :collision-report="collisionReport"
+      :show-opt-panel="showOptPanel"
+      :optimization-report="optimizationReport"
+      :show-gcode-panel="panels.gcode.value"
+      :has-source-gcode="!!store.sourceGcode"
       :has-selection="store.selectedSegmentIndex !== null"
-      @close="panels.gcode.value = false"
-      @clear-selection="store.clearSelection()"
-    />
-
-    <!-- P5: Export Panel (using extracted subcomponent) -->
-    <ExportAnimationPanel
-      v-if="showExportPanel"
+      :show-export-panel="showExportPanel"
       :is-exporting="isExporting"
-      :config="exportConfig"
+      :export-config="exportConfig"
       :export-progress="exportProgress"
-      @close="showExportPanel = false"
-      @update:config="Object.assign(exportConfig, $event)"
-      @start-export="startExport"
-      @cancel-export="cancelExport"
-    />
-
-    <!-- P5: Measure mode indicator (extracted) -->
-    <MeasureModeIndicator
-      v-if="store.measureMode"
-      :pending-start="!!store.pendingMeasureStart"
-      @cancel="store.cancelMeasurement()"
-    />
-
-    <!-- P5: Keyboard Shortcuts Help Overlay (extracted) -->
-    <KeyboardShortcutsOverlay
-      v-if="showHelp"
+      :measure-mode="store.measureMode"
+      :pending-measure-start="!!store.pendingMeasureStart"
+      :show-help="showHelp"
       :shortcuts="shortcuts"
-      @close="hideHelp"
+      :measurements="store.measurements"
+      :measure-tool="store.measureTool"
+      :measurements-collapsed="!panels.measurements.value"
+      @update:show-collision-panel="showCollisionPanel = $event"
+      @update:show-opt-panel="showOptPanel = $event"
+      @update:show-gcode-panel="panels.gcode.value = $event"
+      @clear-selection="store.clearSelection()"
+      @update:show-export-panel="showExportPanel = $event"
+      @update:export-config="Object.assign(exportConfig, $event)"
+      @start-export="canvasExport.startCanvasExport()"
+      @cancel-export="canvasExport.cancelCanvasExport()"
+      @cancel-measurement="store.cancelMeasurement()"
+      @hide-help="hideHelp"
+      @remove-measurement="store.removeMeasurement($event)"
+      @clear-measurements="store.clearMeasurements()"
+      @update:measurements-collapsed="panels.measurements.value = !$event"
     />
 
     <!-- P9: Consolidated floating panels -->
@@ -494,17 +435,6 @@ onUnmounted(() => {
       :tool-diameter="toolDiameter"
       :bounds="store.bounds"
       :event-handlers="eventHandlers"
-    />
-
-    <!-- P5: Measurements Panel (extracted) -->
-    <MeasurementsPanel
-      v-if="store.measurements.length > 0"
-      :measurements="store.measurements"
-      :measure-tool="store.measureTool"
-      :collapsed="!panels.measurements.value"
-      @remove="store.removeMeasurement($event)"
-      @clear="store.clearMeasurements()"
-      @update:collapsed="panels.measurements.value = !$event"
     />
   </div>
 </template>
