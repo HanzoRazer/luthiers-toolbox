@@ -1,6 +1,6 @@
 # Gap Analysis Master — All Instrument Build Handoffs
 
-> **Generated:** 2026-03-09 | **Updated:** 2026-03-15 | **Sources:** 11 build handoff documents | **Total Gaps:** 113 (71 resolved, 42 remaining)
+> **Generated:** 2026-03-09 | **Updated:** 2026-03-15 | **Sources:** 11 build handoff documents | **Total Gaps:** 113 (73 resolved, 40 remaining)
 
 ---
 
@@ -13,7 +13,7 @@ Previous updates overstated progress. This section provides the accurate remaini
 | Severity | Count | Key Items |
 |----------|-------|-----------|
 | **CRITICAL** | 0 | ~~PHYS-01~~ Resolved (calculators/pickup_position_calc.py) |
-| **HIGH** | 6 | BEN-GAP-08, LP-GAP-03, ~~BEN-GAP-04~~, ~~BEN-GAP-05~~, VINE-05, INLAY-02, INLAY-06, ~~NECK-05~~, LP-GAP-02, EX-GAP-04 |
+| **HIGH** | 4 | BEN-GAP-08, LP-GAP-03, ~~BEN-GAP-04~~, ~~BEN-GAP-05~~, VINE-05, INLAY-02, INLAY-06, ~~NECK-05~~, ~~LP-GAP-02~~, ~~EX-GAP-04~~ |
 | **MEDIUM** | 18 | BEN-GAP-09, ~~BEN-GAP-07~~, FV-GAP-05, LP-GAP-04, LP-GAP-05, LP-GAP-06, LP-GAP-08, OM-PURF-03, OM-PURF-05, OM-PURF-08, INLAY-03, INLAY-04, VEC-GAP-06, VEC-GAP-07, FV-GAP-07, FV-GAP-10, EX-GAP-05, EX-GAP-06, EX-GAP-07, EX-GAP-08, EX-GAP-12, SG-GAP-13 |
 | **LOW** | 13 | VINE-12, OM-PURF-06, FV-GAP-09, EX-GAP-09, EX-GAP-10, EX-GAP-11, EX-GAP-13, SG-GAP-09, SG-GAP-14, OM-PURF-07, LP-GAP-10, VEC-GAP-08 |
 
@@ -30,8 +30,8 @@ Previous updates overstated progress. This section provides the accurate remaini
 | INLAY-06 | Frontend | No unified inlay canvas |
 | ~~NECK-05~~ | Frontend | ~~No `StratocasterNeckGenerator.vue`~~ **Resolved** |
 | VINE-08 | Frontend | Bracing endpoints unreachable from UI |
-| LP-GAP-02 | Validation | Cavity positions unvalidated |
-| EX-GAP-04 | Validation | Explorer pickup positions unverified |
+| ~~LP-GAP-02~~ | Validation | ~~Cavity positions unvalidated~~ RESOLVED: cavity_position_validator.py |
+| ~~EX-GAP-04~~ | Validation | ~~Explorer pickup positions unverified~~ RESOLVED: cavity_position_validator.py |
 | PHYS-02 | `body/centerline.py` | Body centerline calculator |
 | PHYS-03 | `pickup/cavity_placement.py` | Pickup cavity-to-coordinate mapper |
 
@@ -392,8 +392,8 @@ Previous updates overstated progress. This section provides the accurate remaini
 
 | Gap ID | Instrument | Description | Severity |
 |--------|-----------|-------------|----------|
-| LP-GAP-02 | Les Paul 1959 | Cavity positions are heuristic center-offset approximations, unvalidated | HIGH |
-| EX-GAP-04 | Explorer 1958 | Pickup positions from general Gibson specs, not verified for Explorer | HIGH |
+| ~~LP-GAP-02~~ | Les Paul 1959 | ~~Cavity positions are heuristic center-offset approximations, unvalidated~~ RESOLVED | ~~HIGH~~ |
+| ~~EX-GAP-04~~ | Explorer 1958 | ~~Pickup positions from general Gibson specs, not verified for Explorer~~ RESOLVED | ~~HIGH~~ |
 | EX-GAP-05 | Explorer 1958 | Control cavity estimated — 1958 vs reissue routing differences | MEDIUM |
 | EX-GAP-06 | Explorer 1958 | Toggle switch position varies by production year — no factory template | MEDIUM |
 | EX-GAP-07 | Explorer 1958 | Bridge/tailpiece stud positions use generic Gibson spacing | MEDIUM |
