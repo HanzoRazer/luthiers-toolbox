@@ -1,6 +1,6 @@
 # Gap Analysis Master — All Instrument Build Handoffs
 
-> **Generated:** 2026-03-09 | **Updated:** 2026-03-13 | **Sources:** 11 build handoff documents | **Total Gaps:** 113 (67 resolved, 46 remaining)
+> **Generated:** 2026-03-09 | **Updated:** 2026-03-15 | **Sources:** 11 build handoff documents | **Total Gaps:** 113 (70 resolved, 43 remaining)
 
 ---
 
@@ -13,8 +13,8 @@ Previous updates overstated progress. This section provides the accurate remaini
 | Severity | Count | Key Items |
 |----------|-------|-----------|
 | **CRITICAL** | 0 | ~~PHYS-01~~ Resolved (calculators/pickup_position_calc.py) |
-| **HIGH** | 10 | BEN-GAP-08, LP-GAP-03, BEN-GAP-04, BEN-GAP-05, VINE-05, INLAY-02, INLAY-06, NECK-05, LP-GAP-02, EX-GAP-04 |
-| **MEDIUM** | 19 | BEN-GAP-09, BEN-GAP-07, FV-GAP-05, LP-GAP-04, LP-GAP-05, LP-GAP-06, LP-GAP-08, OM-PURF-03, OM-PURF-05, OM-PURF-08, INLAY-03, INLAY-04, VEC-GAP-06, VEC-GAP-07, FV-GAP-07, FV-GAP-10, EX-GAP-05, EX-GAP-06, EX-GAP-07, EX-GAP-08, EX-GAP-12, SG-GAP-13 |
+| **HIGH** | 7 | BEN-GAP-08, LP-GAP-03, ~~BEN-GAP-04~~, ~~BEN-GAP-05~~, VINE-05, INLAY-02, INLAY-06, NECK-05, LP-GAP-02, EX-GAP-04 |
+| **MEDIUM** | 18 | BEN-GAP-09, ~~BEN-GAP-07~~, FV-GAP-05, LP-GAP-04, LP-GAP-05, LP-GAP-06, LP-GAP-08, OM-PURF-03, OM-PURF-05, OM-PURF-08, INLAY-03, INLAY-04, VEC-GAP-06, VEC-GAP-07, FV-GAP-07, FV-GAP-10, EX-GAP-05, EX-GAP-06, EX-GAP-07, EX-GAP-08, EX-GAP-12, SG-GAP-13 |
 | **LOW** | 13 | VINE-12, OM-PURF-06, FV-GAP-09, EX-GAP-09, EX-GAP-10, EX-GAP-11, EX-GAP-13, SG-GAP-09, SG-GAP-14, OM-PURF-07, LP-GAP-10, VEC-GAP-08 |
 
 ### HIGH Priority Items (13) — Details
@@ -23,8 +23,8 @@ Previous updates overstated progress. This section provides the accurate remaini
 |-----|---------------|-------------|
 | LP-GAP-03 | `app/cam/neck/` | Neck CNC pipeline missing |
 | BEN-GAP-08 | `app/cam/carving/` | 3D surface carving (archtop) |
-| BEN-GAP-04 | `calculators/binding_geometry.py` | Neck binding geometry |
-| BEN-GAP-05 | `calculators/binding_geometry.py` | Headstock binding geometry |
+| ~~BEN-GAP-04~~ | `calculators/binding_geometry.py` | ~~Neck binding geometry~~ **Resolved** (51eef4f0) |
+| ~~BEN-GAP-05~~ | `calculators/binding_geometry.py` | ~~Headstock binding geometry~~ **Resolved** (51eef4f0) |
 | VINE-05 | Coordinate system | Unified fretboard↔headstock canvas |
 | INLAY-02 | Frontend | `HeadstockDesignerView.vue` non-functional stub |
 | INLAY-06 | Frontend | No unified inlay canvas |
@@ -78,6 +78,7 @@ Previous updates overstated progress. This section provides the accurate remaini
 | 2026-03-12 | 703be846 | Add bracing presets bridge connecting to instrument specs (J-45, Dreadnought, Jumbo) | VINE-11 |
 | 2026-03-12 | 0642b77c | Add Stratocaster body outline generator (SSS/HSS/HSH/HH, 22/24-fret, tremolo styles) | GAP-07 |
 | 2026-03-12 | — | Verified existing Strat presets and spec file | GAP-02, GAP-08, NECK-02, NECK-03 |
+| 2026-03-15 | 51eef4f0 | Add binding geometry calculator (neck/headstock binding, miter joints, bend radius validation) | BEN-GAP-04, BEN-GAP-05, BEN-GAP-07 |
 ---
 
 ## Summary by Category
@@ -201,19 +202,19 @@ Previous updates overstated progress. This section provides the accurate remaini
 | NECK-01 | Strat Neck | Strat headstock outline generator — `FENDER_STRAT` enum falls through to paddle headstock | **Resolved** (289b4ac4) |
 | GAP-01 | 24-Fret Strat | Stratocaster headstock outline is incomplete stub (same as NECK-01) | **Resolved** (289b4ac4) |
 | GAP-05 | 24-Fret Strat | Fretboard overhang channel — no geometry or preset for 24-fret bolt-on | **Resolved** (overhang_channel_calc.py) |
-| BEN-GAP-04 | Benedetto | Neck binding geometry missing — must account for fretboard taper and radius | HIGH |
-| BEN-GAP-05 | Benedetto | Headstock binding geometry missing — tightest bend at ~20mm tip radius | HIGH |
+| BEN-GAP-04 | Benedetto | Neck binding geometry missing — must account for fretboard taper and radius | **Resolved** (binding_geometry.py) |
+| BEN-GAP-05 | Benedetto | Headstock binding geometry missing — tightest bend at ~20mm tip radius | **Resolved** (binding_geometry.py) |
 | OM-GAP-06 | OM-28 | Martin headstock outline missing — neither slotted nor solid | **Resolved** (5cd6c2ba) |
 | BEN-GAP-06 | Benedetto | Archtop/Benedetto headstock outline missing in `neck_headstock_config.py` | **Resolved** (5cd6c2ba) |
 | VINE-06 | J45 Vine | Gibson acoustic solid headstock outline missing — current is electric open-book | **Resolved** (289b4ac4) |
-| BEN-GAP-07 | Benedetto | Miter joint geometry computation missing — no module for angle/cut/joint geometry | MEDIUM |
+| BEN-GAP-07 | Benedetto | Miter joint geometry computation missing — no module for angle/cut/joint geometry | **Resolved** (binding_geometry.py) |
 
 ### Fixes
 
 1. **`neck_headstock_config.py` expansion** — Add headstock outlines: `FENDER_STRAT`, `MARTIN_SLOTTED`, `MARTIN_SOLID`, `BENEDETTO_ARCHTOP`, `GIBSON_ACOUSTIC_SOLID`. 5 additions resolve 5 gaps (NECK-01, GAP-01, OM-GAP-06, BEN-GAP-06, VINE-06).
 2. **`generators/body_outline/stratocaster.py`** — Strat body outline generator with parametric contour cuts, horn geometry, belly cut. Resolves GAP-07.
 3. **`calculators/pickup_position.py`** — Pickup position calculator: takes scale length, pickup count, pickup type → returns XY positions. Resolves GAP-04.
-4. **`calculators/binding_geometry.py`** — Offset curve generation for body/neck/headstock binding paths, with bend-radius constraints and miter joint angle computation. Resolves BEN-GAP-04, BEN-GAP-05, BEN-GAP-07.
+4. **`calculators/binding_geometry.py`** — ✅ **RESOLVED** (2026-03-15) Offset curve generation for body/neck/headstock binding paths, with bend-radius constraints and miter joint angle computation. Resolves BEN-GAP-04, BEN-GAP-05, BEN-GAP-07.
 5. **24-fret extensions** — ~~Fretboard overhang channel geometry preset, neck profile stations extended to 19.14".~~ **RESOLVED** — `calculators/overhang_channel_calc.py` exists with `calculate_24fret_strat_overhang()` + `generate_channel_outline()`.
 
 ---
