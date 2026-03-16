@@ -36,9 +36,11 @@ from .config import (
     GraduationMapConfig,
     RoughingConfig,
     FinishingConfig,
+    AsymmetricCarveProfile,
     DEFAULT_CARVING_TOOLS,
     create_benedetto_17_config,
     create_les_paul_top_config,
+    create_les_paul_1959_asymmetric_config,
 )
 
 from .graduation_map import (
@@ -68,9 +70,11 @@ __all__ = [
     "GraduationMapConfig",
     "RoughingConfig",
     "FinishingConfig",
+    "AsymmetricCarveProfile",
     "DEFAULT_CARVING_TOOLS",
     "create_benedetto_17_config",
     "create_les_paul_top_config",
+    "create_les_paul_1959_asymmetric_config",
     # Graduation Map
     "GraduationMap",
     "GraduationPoint",

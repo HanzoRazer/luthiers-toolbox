@@ -1,6 +1,6 @@
 # Gap Analysis Master — All Instrument Build Handoffs
 
-> **Generated:** 2026-03-09 | **Updated:** 2026-03-15 | **Sources:** 11 build handoff documents | **Total Gaps:** 113 (78 resolved, 35 remaining)
+> **Generated:** 2026-03-09 | **Updated:** 2026-03-15 | **Sources:** 11 build handoff documents | **Total Gaps:** 113 (79 resolved, 34 remaining)
 
 ---
 
@@ -14,7 +14,7 @@ Previous updates overstated progress. This section provides the accurate remaini
 |----------|-------|-----------|
 | **CRITICAL** | 0 | ~~PHYS-01~~ Resolved (calculators/pickup_position_calc.py) |
 | **HIGH** | 1 | ~~BEN-GAP-08~~, ~~LP-GAP-03~~, ~~BEN-GAP-04~~, ~~BEN-GAP-05~~, ~~VINE-05~~, INLAY-02, INLAY-06, ~~NECK-05~~, ~~LP-GAP-02~~, ~~EX-GAP-04~~ |
-| **MEDIUM** | 16 | ~~BEN-GAP-09~~, ~~BEN-GAP-07~~, FV-GAP-05, LP-GAP-04, LP-GAP-05, LP-GAP-06, LP-GAP-08, OM-PURF-03, OM-PURF-05, OM-PURF-08, INLAY-03, ~~INLAY-04~~, VEC-GAP-06, VEC-GAP-07, FV-GAP-07, FV-GAP-10, EX-GAP-05, EX-GAP-06, EX-GAP-07, EX-GAP-08, EX-GAP-12, SG-GAP-13 |
+| **MEDIUM** | 15 | ~~BEN-GAP-09~~, ~~BEN-GAP-07~~, FV-GAP-05, LP-GAP-04, ~~LP-GAP-05~~, LP-GAP-06, LP-GAP-08, OM-PURF-03, OM-PURF-05, OM-PURF-08, INLAY-03, ~~INLAY-04~~, VEC-GAP-06, VEC-GAP-07, FV-GAP-07, FV-GAP-10, EX-GAP-05, EX-GAP-06, EX-GAP-07, EX-GAP-08, EX-GAP-12, SG-GAP-13 |
 | **LOW** | 13 | VINE-12, OM-PURF-06, FV-GAP-09, EX-GAP-09, EX-GAP-10, EX-GAP-11, EX-GAP-13, SG-GAP-09, SG-GAP-14, OM-PURF-07, LP-GAP-10, VEC-GAP-08 |
 
 ### HIGH Priority Items (13) — Details
@@ -84,6 +84,7 @@ Previous updates overstated progress. This section provides the accurate remaini
 | 2026-03-15 | — | Add modular neck CNC pipeline (`app/cam/neck/`) — truss rod channel, profile carving with full-scale station awareness (beyond 12"), fret slots with compound radius support, orchestrator. 38 tests passing | LP-GAP-03 |
 | 2026-03-15 | — | Add 3D surface carving module (`app/cam/carving/`) — parametric ellipsoidal dome with Benedetto recurve, graduation maps with bilinear interpolation, parallel-plane roughing, raster finishing. 33 tests passing | BEN-GAP-08 |
 | 2026-03-15 | — | Add F-hole routing module (`app/cam/fhole/`) — parametric F-hole geometry (traditional, contemporary, Venetian), inside-contour toolpaths with tool compensation, helical plunge entry, multi-pass depth. 30 tests passing | BEN-GAP-09 |
+| 2026-03-15 | — | Add asymmetric carved top support (`app/cam/carving/`) — AsymmetricCarveProfile with authentic 1959 Les Paul specs: peak offset 30mm toward neck, compound radius (508mm × 381mm), variable slopes (1.5° crown to 6° cutaway), binding ledge. New preset `create_les_paul_1959_asymmetric_config()`. 15 tests. | LP-GAP-05 |
 ---
 
 ## Summary by Category
@@ -157,7 +158,7 @@ Previous updates overstated progress. This section provides the accurate remaini
 | FV-GAP-06 | Flying V | String-through drilling backend API (G83 peck cycle) | **Resolved** (ba9574fd) |
 | VINE-03 | J45 Vine | Production V-carve G-code | **Resolved** (64f1a87f) |
 | OM-PURF-03 | OM Purfling | No neck purfling routing — requires neck-specific fixture | MEDIUM |
-| LP-GAP-05 | Les Paul 1959 | Carved top uses elliptical paraboloid approximation vs real asymmetric carve | MEDIUM |
+| ~~LP-GAP-05~~ | Les Paul 1959 | ~~Carved top uses elliptical paraboloid approximation vs real asymmetric carve~~ **RESOLVED** (AsymmetricCarveProfile with compound radius, variable slopes, peak offset) | ~~MEDIUM~~ |
 | OM-PURF-06 | OM Purfling | No material-aware feed rates — generic 600mm/min for all materials | LOW |
 
 ### Fixes

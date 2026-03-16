@@ -26,6 +26,7 @@ class CarvingStrategy(str, Enum):
 class SurfaceType(str, Enum):
     """Type of carved surface."""
     ARCHTOP = "archtop"  # Convex domed surface (guitar top/back)
+    ARCHTOP_ASYMMETRIC = "archtop_asymmetric"  # Asymmetric carved top (LP-GAP-05)
     CONCAVE = "concave"  # Concave dish (e.g., some bracing)
     FREEFORM = "freeform"  # Arbitrary 3D surface
 
@@ -35,6 +36,60 @@ class MaterialHardness(str, Enum):
     SOFT = "soft"  # Spruce, cedar, basswood
     MEDIUM = "medium"  # Maple, mahogany
     HARD = "hard"  # Ebony, rosewood
+
+
+@dataclass
+class AsymmetricCarveProfile:
+    """
+    Asymmetric carved top profile configuration (LP-GAP-05).
+
+    Captures authentic 1959 Les Paul carved top characteristics:
+    - Peak offset from center (typically toward neck)
+    - Compound radius (different X and Y radii)
+    - Variable slopes across different zones
+    - Binding ledge at perimeter
+
+    Based on measurements from Les-Paul-Isolines.pdf and
+    Les-Paul-Front-Front-Side-Profile-Carved-Top.pdf.
+    """
+    # Peak position offset from center (mm)
+    peak_offset_x_mm: float = 0.0  # Offset along width (typically 0)
+    peak_offset_y_mm: float = 30.0  # Offset toward neck (~30mm for 1959 LP)
+
+    # Compound radius (elliptical dome)
+    major_radius_mm: float = 508.0  # 20" across width
+    minor_radius_mm: float = 381.0  # 15" along length
+
+    # Surface heights
+    total_rise_mm: float = 7.8  # Height from binding to peak
+
+    # Variable slope zones (degrees)
+    slope_crown_deg: float = 1.5  # Gentle slope at crown
+    slope_average_deg: float = 3.2  # Average slope
+    slope_cutaway_deg: float = 6.0  # Steeper at cutaway transitions
+    slope_lower_bout_deg: float = 4.5  # Lower bout slope
+
+    # Zone boundaries (normalized 0-1)
+    crown_zone_radius: float = 0.3  # Central crown zone
+    cutaway_zone_x_min: float = 0.5  # X threshold for cutaway zone
+    cutaway_zone_y_max: float = 0.7  # Y threshold for cutaway zone
+
+    # Edge treatment
+    binding_ledge_mm: float = 1.5  # Flat ledge at perimeter for binding
+
+    def to_dict(self) -> dict:
+        return {
+            "peak_offset_mm": (self.peak_offset_x_mm, self.peak_offset_y_mm),
+            "compound_radius_mm": (self.major_radius_mm, self.minor_radius_mm),
+            "total_rise_mm": self.total_rise_mm,
+            "slopes_deg": {
+                "crown": self.slope_crown_deg,
+                "average": self.slope_average_deg,
+                "cutaway": self.slope_cutaway_deg,
+                "lower_bout": self.slope_lower_bout_deg,
+            },
+            "binding_ledge_mm": self.binding_ledge_mm,
+        }
 
 
 @dataclass
@@ -149,8 +204,11 @@ class GraduationMapConfig:
     surface_type: SurfaceType = SurfaceType.ARCHTOP
     reference_plane_z_mm: float = 0.0  # Z of flat reference plane
 
+    # Asymmetric profile (LP-GAP-05)
+    asymmetric_profile: Optional[AsymmetricCarveProfile] = None
+
     def to_dict(self) -> dict:
-        return {
+        result = {
             "grid_size": (self.grid_size_x, self.grid_size_y),
             "bounds_x_mm": self.bounds_x_mm,
             "bounds_y_mm": self.bounds_y_mm,
@@ -159,6 +217,9 @@ class GraduationMapConfig:
             "recurve_depth_mm": self.recurve_depth_mm,
             "surface_type": self.surface_type.value,
         }
+        if self.asymmetric_profile:
+            result["asymmetric_profile"] = self.asymmetric_profile.to_dict()
+        return result
 
 
 @dataclass
@@ -302,5 +363,61 @@ def create_les_paul_top_config() -> CarvingConfig:
             strategy=CarvingStrategy.RASTER_Y,
         ),
         stock_thickness_mm=22.0,  # ~7/8" blank
+        material=MaterialHardness.MEDIUM,  # Maple
+    )
+
+
+def create_les_paul_1959_asymmetric_config() -> CarvingConfig:
+    """
+    Create 1959 Les Paul asymmetric carved maple top configuration (LP-GAP-05).
+
+    This preset captures the authentic 1959 carved top profile:
+    - Peak offset ~30mm toward neck
+    - Compound radius (508mm major / 381mm minor)
+    - Variable slope: 1.5 deg at crown, 6 deg at cutaway transitions
+    - Total rise 7.8mm from binding to peak
+
+    Based on measurements from:
+    - Les-Paul-Isolines.pdf
+    - Les-Paul-Front-Front-Side-Profile-Carved-Top.pdf
+    """
+    return CarvingConfig(
+        graduation_map=GraduationMapConfig(
+            grid_size_x=64,
+            grid_size_y=80,
+            bounds_x_mm=(-165.0, 165.0),  # ~13" width
+            bounds_y_mm=(-222.0, 222.0),  # ~17.5" length
+            apex_thickness_mm=12.7,  # 1/2" at peak
+            edge_thickness_mm=5.0,  # ~3/16" at binding
+            recurve_depth_mm=0.0,  # No recurve on Les Paul
+            surface_type=SurfaceType.ARCHTOP_ASYMMETRIC,
+            asymmetric_profile=AsymmetricCarveProfile(
+                peak_offset_x_mm=0.0,
+                peak_offset_y_mm=30.0,  # Peak 30mm toward neck
+                major_radius_mm=508.0,  # 20" across width
+                minor_radius_mm=381.0,  # 15" along length
+                total_rise_mm=7.8,
+                slope_crown_deg=1.5,
+                slope_average_deg=3.2,
+                slope_cutaway_deg=6.0,
+                slope_lower_bout_deg=4.5,
+                crown_zone_radius=0.3,
+                cutaway_zone_x_min=0.5,
+                cutaway_zone_y_max=0.7,
+                binding_ledge_mm=1.5,
+            ),
+        ),
+        roughing=RoughingConfig(
+            stepdown_mm=2.5,
+            stepover_percent=30.0,
+            finish_allowance_mm=0.75,
+            strategy=CarvingStrategy.PARALLEL_PLANE,
+        ),
+        finishing=FinishingConfig(
+            stepover_percent=8.0,
+            scallop_height_mm=0.05,
+            strategy=CarvingStrategy.RASTER_Y,
+        ),
+        stock_thickness_mm=19.05,  # 3/4" blank
         material=MaterialHardness.MEDIUM,  # Maple
     )
