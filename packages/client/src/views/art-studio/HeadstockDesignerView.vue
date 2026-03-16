@@ -3,13 +3,17 @@
  * HeadstockDesignerView - Guitar Headstock Shape & Overlay Designer
  * Design headstock outlines, tuner holes, and decorative overlays
  *
- * Planned API endpoints:
- *   GET  /api/art-studio/headstock/templates
- *   GET  /api/art-studio/headstock/tuner-layouts
- *   POST /api/art-studio/headstock/preview
- *   POST /api/art-studio/headstock/export-dxf
+ * Wired to:
+ *   GET  /api/instruments/guitar/headstock-inlay/templates
+ *   GET  /api/instruments/guitar/headstock-inlay/styles
+ *   POST /api/instruments/guitar/headstock-inlay/generate-prompt
  */
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
+import {
+  listHeadstockTemplates,
+  generateHeadstockPrompt,
+  type HeadstockTemplateInfo,
+} from '@/api/art-studio'
 
 // Headstock types
 const headstockStyle = ref('3x3')  // 3x3, 6-inline, 4x2
@@ -19,19 +23,16 @@ const tunerHoleDiameter = ref(10)  // mm
 const tunerSpacing = ref(35)  // mm
 const stringSpacing = ref(7.5)  // mm at nut
 
-const templates = ref([
-  { id: 'fender-strat', name: 'Stratocaster Style', style: '6-inline' },
-  { id: 'gibson-les-paul', name: 'Les Paul Style', style: '3x3' },
-  { id: 'prs-style', name: 'PRS Style', style: '3x3' },
-  { id: 'classical', name: 'Classical/Slotted', style: 'slotted' },
-  { id: 'paddle', name: 'Paddle Blank', style: 'blank' },
-])
+// Templates from API (mapped to { id, name, style } for template grid)
+const templates = ref<Array<{ id: string; name: string; style: string }>>([])
+const templatesLoadError = ref<string | null>(null)
 
 const selectedTemplate = ref('')
 const includeOverlay = ref(true)
 const overlayInset = ref(2)  // mm
 const loading = ref(false)
 const previewSvg = ref('')
+const generatedPrompt = ref('')
 
 // Computed
 const tunerLayout = computed(() => {
@@ -40,6 +41,15 @@ const tunerLayout = computed(() => {
   if (headstockStyle.value === '4x2') return { bass: 2, treble: 2 }
   return { bass: 0, treble: 0 }
 })
+
+function mapStyleToTunerLayout(style: string): string {
+  const s = style.toLowerCase()
+  if (s.includes('strat') || s === '6-inline' || s === 'fender') return '6-inline'
+  if (s.includes('3x3') || s.includes('gibson') || s.includes('prs')) return '3x3'
+  if (s.includes('4x2') || s.includes('music man')) return '4x2'
+  if (s.includes('slotted') || s.includes('classical')) return 'slotted'
+  return '3x3'
+}
 
 // Methods
 function selectTemplate(templateId: string) {
@@ -50,15 +60,72 @@ function selectTemplate(templateId: string) {
   }
 }
 
+async function loadTemplates() {
+  templatesLoadError.value = null
+  try {
+    const list = await listHeadstockTemplates()
+    templates.value = list.map((t: HeadstockTemplateInfo) => ({
+      id: t.id,
+      name: t.name,
+      style: mapStyleToTunerLayout(t.headstock_style),
+    }))
+    if (templates.value.length > 0 && !selectedTemplate.value) {
+      selectedTemplate.value = templates.value[0].id
+      headstockStyle.value = templates.value[0].style
+    }
+  } catch (e: any) {
+    templatesLoadError.value = e.message || 'Failed to load templates'
+    templates.value = []
+  }
+}
+
 async function generatePreview() {
   loading.value = true
-  await new Promise(resolve => setTimeout(resolve, 500))
-  loading.value = false
+  generatedPrompt.value = ''
+  try {
+    const template = templates.value.find(t => t.id === selectedTemplate.value)
+    const style = template?.style ?? headstockStyle.value
+    const styleApi = style === '6-inline' ? 'stratocaster' : style === '3x3' ? 'les_paul' : style === '4x2' ? 'prs' : 'les_paul'
+    const res = await generateHeadstockPrompt({
+      style: styleApi,
+      headstock_wood: 'mahogany',
+      inlay_design: 'dove',
+      inlay_material: 'mother_of_pearl',
+    })
+    generatedPrompt.value = res.prompt
+    previewSvg.value = ''
+  } catch (e: any) {
+    generatedPrompt.value = `Error: ${e.message || 'Preview failed'}`
+  } finally {
+    loading.value = false
+  }
 }
 
 async function exportDxf() {
-  alert('Export functionality coming soon')
+  loading.value = true
+  try {
+    const template = templates.value.find(t => t.id === selectedTemplate.value)
+    const style = template?.style ?? headstockStyle.value
+    const styleApi = style === '6-inline' ? 'stratocaster' : style === '3x3' ? 'les_paul' : style === '4x2' ? 'prs' : 'les_paul'
+    const res = await generateHeadstockPrompt({
+      style: styleApi,
+      headstock_wood: 'mahogany',
+      inlay_design: 'dove',
+      inlay_material: 'mother_of_pearl',
+    })
+    await navigator.clipboard.writeText(res.prompt)
+    generatedPrompt.value = res.prompt
+    alert('Prompt copied to clipboard. Use it with an image generator or the Neck Generator for geometry export.')
+  } catch (e: any) {
+    alert(e.message || 'Export failed')
+  } finally {
+    loading.value = false
+  }
 }
+
+onMounted(() => {
+  loadTemplates()
+})
 </script>
 
 <template>
@@ -72,6 +139,7 @@ async function exportDxf() {
       <!-- Templates Panel -->
       <div class="panel templates-panel">
         <h3>Templates</h3>
+        <p v-if="templatesLoadError" class="error-text">{{ templatesLoadError }}</p>
         <div class="template-grid">
           <button
             v-for="template in templates"
@@ -140,6 +208,10 @@ async function exportDxf() {
         <div class="preview-container">
           <div v-if="loading" class="loading">Generating preview...</div>
           <div v-else-if="previewSvg" v-html="previewSvg" class="svg-preview"></div>
+          <div v-else-if="generatedPrompt" class="prompt-preview">
+            <p class="prompt-label">Generated prompt</p>
+            <pre class="prompt-text">{{ generatedPrompt }}</pre>
+          </div>
           <div v-else class="placeholder">
             <span class="icon">🎸</span>
             <p>Select a template or configure dimensions</p>
@@ -159,9 +231,6 @@ async function exportDxf() {
       </div>
     </div>
 
-    <div class="coming-soon-notice">
-      <p>This feature is under development. Full API integration coming soon.</p>
-    </div>
   </div>
 </template>
 
@@ -342,14 +411,33 @@ async function exportDxf() {
   border: 1px solid #333;
 }
 
-.coming-soon-notice {
-  max-width: 1400px;
-  margin: 2rem auto 0;
-  padding: 1rem;
-  background: #1e3a5f;
+.error-text {
+  color: #f87171;
+  font-size: 0.9rem;
+  margin-bottom: 0.5rem;
+}
+
+.prompt-preview {
+  text-align: left;
+  padding: 0.75rem;
+  background: #1e293b;
   border-radius: 0.5rem;
-  text-align: center;
-  color: #60a5fa;
+  max-height: 200px;
+  overflow: auto;
+}
+
+.prompt-preview .prompt-label {
+  font-size: 0.75rem;
+  color: #94a3b8;
+  margin-bottom: 0.25rem;
+}
+
+.prompt-text {
+  font-size: 0.8rem;
+  white-space: pre-wrap;
+  word-break: break-word;
+  margin: 0;
+  color: #e2e8f0;
 }
 
 @media (max-width: 1200px) {

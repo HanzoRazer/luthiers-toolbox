@@ -50,6 +50,9 @@ from datetime import datetime
 from pathlib import Path
 from typing import List, Tuple, Dict, Any
 
+# Import shared G-code verification utility (SG-GAP-13)
+from scripts.utils.gcode_verify import verify_gcode
+
 
 # ---------------------------------------------------------------------------
 # Resolve paths
@@ -1041,6 +1044,14 @@ def main():
     p1_path.write_text(phase1, encoding="utf-8")
     print(f"  Written: {p1_path.name} ({phase1_lines:,} lines)")
 
+    # Verify Phase 1 G-code (SG-GAP-13)
+    v1 = verify_gcode(
+        gcode=phase1,
+        stock_thickness_mm=44.45,  # 1.75" Khaya
+        phase_name="Phase 1: Front Face Routing",
+        units="mm",
+    )
+
     # Phase 2: Rear face
     print("\n--- Phase 2: Rear Face Routing ---")
     phase2 = generate_phase2_rear(spec)
@@ -1048,6 +1059,14 @@ def main():
     p2_path = OUTPUT_DIR / "SmartGuitar_v1_Phase2_RearFace.nc"
     p2_path.write_text(phase2, encoding="utf-8")
     print(f"  Written: {p2_path.name} ({phase2_lines:,} lines)")
+
+    # Verify Phase 2 G-code (SG-GAP-13)
+    v2 = verify_gcode(
+        gcode=phase2,
+        stock_thickness_mm=44.45,  # 1.75" Khaya
+        phase_name="Phase 2: Rear Face Routing",
+        units="mm",
+    )
 
     # Build summary
     print("\n--- Build Summary ---")
@@ -1062,6 +1081,17 @@ def main():
     print(f"  Phase 1 (Front Face):  {phase1_lines:,} lines")
     print(f"  Phase 2 (Rear Face):   {phase2_lines:,} lines")
     print(f"  3 tools required: T1-T3")
+
+    # Verification summary (SG-GAP-13)
+    all_ok = v1["ok"] and v2["ok"]
+    if all_ok:
+        print(f"\n  ✓ G-CODE VERIFICATION: ALL PHASES PASSED")
+    else:
+        print(f"\n  ✗ G-CODE VERIFICATION FAILED - review errors before machining")
+        if not v1["ok"]:
+            print(f"    Phase 1 errors: {v1['errors']}")
+        if not v2["ok"]:
+            print(f"    Phase 2 errors: {v2['errors']}")
     print(f"{'=' * 70}")
 
 

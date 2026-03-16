@@ -1,6 +1,6 @@
 # Gap Analysis Master — All Instrument Build Handoffs
 
-> **Generated:** 2026-03-09 | **Updated:** 2026-03-16 | **Sources:** 11 build handoff documents | **Total Gaps:** 113 (84 resolved, 29 remaining)
+> **Generated:** 2026-03-09 | **Updated:** 2026-03-16 | **Sources:** 11 build handoff documents | **Total Gaps:** 113 (89 resolved, 24 remaining)
 
 ---
 
@@ -14,7 +14,7 @@ Previous updates overstated progress. This section provides the accurate remaini
 |----------|-------|-----------|
 | **CRITICAL** | 0 | ~~PHYS-01~~ Resolved (calculators/pickup_position_calc.py) |
 | **HIGH** | 1 | ~~BEN-GAP-08~~, ~~LP-GAP-03~~, ~~BEN-GAP-04~~, ~~BEN-GAP-05~~, ~~VINE-05~~, INLAY-02, INLAY-06, ~~NECK-05~~, ~~LP-GAP-02~~, ~~EX-GAP-04~~ |
-| **MEDIUM** | 15 | ~~BEN-GAP-09~~, ~~BEN-GAP-07~~, FV-GAP-05, LP-GAP-04, ~~LP-GAP-05~~, ~~LP-GAP-06~~, LP-GAP-08, OM-PURF-03, OM-PURF-05, OM-PURF-08, INLAY-03, ~~INLAY-04~~, VEC-GAP-06, VEC-GAP-07, ~~FV-GAP-07~~, FV-GAP-10, EX-GAP-05, EX-GAP-06, EX-GAP-07, EX-GAP-08, EX-GAP-12, SG-GAP-13 |
+| **MEDIUM** | 15 | ~~BEN-GAP-09~~, ~~BEN-GAP-07~~, FV-GAP-05, ~~LP-GAP-04~~, ~~LP-GAP-05~~, ~~LP-GAP-06~~, ~~LP-GAP-08~~, OM-PURF-03, OM-PURF-05, OM-PURF-08, INLAY-03, ~~INLAY-04~~, VEC-GAP-06, ~~VEC-GAP-07~~, ~~FV-GAP-07~~, FV-GAP-10, EX-GAP-05, EX-GAP-06, EX-GAP-07, EX-GAP-08, ~~EX-GAP-12~~, ~~SG-GAP-13~~ |
 | **LOW** | 13 | VINE-12, OM-PURF-06, FV-GAP-09, EX-GAP-09, EX-GAP-10, EX-GAP-11, ~~EX-GAP-13~~, SG-GAP-09, ~~SG-GAP-14~~, ~~OM-PURF-07~~, LP-GAP-10, VEC-GAP-08 |
 
 ### HIGH Priority Items (13) — Details
@@ -240,7 +240,7 @@ Previous updates overstated progress. This section provides the accurate remaini
 | OM-GAP-07 | OM-28 | Neck router mounted in manifest.py:372 | **Resolved** (false positive) |
 | NECK-04 | Strat Neck | Strat-specific API endpoint added | **Resolved** (65669faf) |
 | VINE-08 | J45 Vine | Bracing router mounted via router_registry manifest.py:330 | **Resolved** (false positive) |
-| LP-GAP-04 | Les Paul 1959 | Fret slot CAM exists (934 lines) but not wired into build pipeline | MEDIUM |
+| ~~LP-GAP-04~~ | Les Paul 1959 | ~~Fret slot CAM exists (934 lines) but not wired into build pipeline~~ **RESOLVED** (NeckPipeline wired into generate_les_paul_full_build.py, scripts/utils/gcode_verify.py) | ~~MEDIUM~~ |
 | INLAY-05 | Custom Inlay | `inlay_prompts.py` imported by headstock/router.py | **Resolved** |
 
 ### Fixes
@@ -248,7 +248,7 @@ Previous updates overstated progress. This section provides the accurate remaini
 1. **Mount existing routers** — In `main.py`, mount: bracing router (VINE-08), neck G-code router (VINE-04/OM-GAP-07), headstock inlay router (INLAY-01). These are code-complete modules that just need `app.include_router()`.
 2. **Vectorizer Phase 3/4 routers** — Create `app/routers/blueprint_phase3_router.py` and `blueprint_phase4_router.py` wrapping existing CLI logic. Resolves VEC-GAP-01, VEC-GAP-02.
 3. **Inlay→CAM orchestrator** — Create endpoint that takes inlay DXF output and feeds it to adaptive milling with correct depth/tool parameters. Resolves VINE-01.
-4. **Fret slot integration** — Wire `fret_slots_cam.py` into neck build pipeline as a step. Resolves LP-GAP-04.
+4. ~~**Fret slot integration** — Wire `fret_slots_cam.py` into neck build pipeline as a step.~~ ✅ **RESOLVED** (scripts/utils/gcode_verify.py shared utility, NeckPipeline in generate_les_paul_full_build.py). Resolves LP-GAP-04.
 5. **Strat neck preset** — Add Strat preset to neck router with Fender scale/profile defaults. Resolves NECK-04.
 
 ---
@@ -286,9 +286,9 @@ Previous updates overstated progress. This section provides the accurate remaini
 
 | Gap ID | Instrument | Description | Severity |
 |--------|-----------|-------------|----------|
-| LP-GAP-08 | Les Paul 1959 | 452K lines unverified for collisions, air-cutting, over-depth, tab miscalcation | MEDIUM |
-| EX-GAP-12 | Explorer 1958 | 9,401 lines unverified | MEDIUM |
-| SG-GAP-13 | Smart Guitar | 11,967 lines across 2 phases unverified | MEDIUM |
+| ~~LP-GAP-08~~ | Les Paul 1959 | ~~452K lines unverified for collisions, air-cutting, over-depth, tab miscalcation~~ **RESOLVED** (verify_gcode() via scripts/utils/gcode_verify.py) | ~~MEDIUM~~ |
+| ~~EX-GAP-12~~ | Explorer 1958 | ~~9,401 lines unverified~~ **RESOLVED** (verify_gcode() via scripts/utils/gcode_verify.py) | ~~MEDIUM~~ |
+| ~~SG-GAP-13~~ | Smart Guitar | ~~11,967 lines across 2 phases unverified~~ **RESOLVED** (verify_gcode() via scripts/utils/gcode_verify.py) | ~~MEDIUM~~ |
 | OM-PURF-08 | OM Purfling | No channel depth verification — no probe cycle for ±0.1mm tolerance | MEDIUM |
 | FV-GAP-10 | Flying V | G-code uses parametric approximation, not DXF-extracted coordinates — unverified | MEDIUM |
 | FV-GAP-09 | Flying V | `detailed_outlines.py` has no Flying V entry — partial data | LOW |
@@ -360,7 +360,7 @@ Previous updates overstated progress. This section provides the accurate remaini
 | VEC-GAP-04 | OM Purfling | Phase 3 → CAM integration tests (20 tests) | **Resolved** (4a0af084) |
 | VEC-GAP-05 | OM Purfling | Phase 1 → Phase 3 scale handoff | **Resolved** (f8e4dded) |
 | VEC-GAP-06 | OM Purfling | Frontend covers Phase 1 only | MEDIUM |
-| VEC-GAP-07 | OM Purfling | Phase 3 `constants.py` missing `PHASE3_AVAILABLE` flag | MEDIUM |
+| ~~VEC-GAP-07~~ | OM Purfling | ~~Phase 3 `constants.py` missing `PHASE3_AVAILABLE` flag~~ **RESOLVED** (PHASE3_AVAILABLE exists at routers/blueprint/constants.py:92) | ~~MEDIUM~~ |
 | VEC-GAP-08 | OM Purfling | OCR dimensions from Phase 3.6 unused downstream | LOW |
 
 ### Fixes
@@ -369,7 +369,7 @@ Previous updates overstated progress. This section provides the accurate remaini
 2. **Phase 4 API router** — `app/routers/blueprint_phase4_router.py`: POST accepts Phase 3 output, returns dimension-linked PipelineResult. Resolves VEC-GAP-02.
 3. **PipelineResult → CAM adapter** — Service that reads PipelineResult, extracts geometry + dimensions, outputs CAM-ready spec. Resolves VEC-GAP-03.
 4. **Integration tests** — Phase 3 → DXF → CAM bridge round-trip test. Resolves VEC-GAP-04.
-5. **Phase handoff wiring** — Pass Phase 1 `detected_scale` as Phase 3 `calibration_hint`. Add `PHASE3_AVAILABLE` flag. Resolves VEC-GAP-05, VEC-GAP-07.
+5. **Phase handoff wiring** — Pass Phase 1 `detected_scale` as Phase 3 `calibration_hint`. ~~Add `PHASE3_AVAILABLE` flag.~~ ✅ **VEC-GAP-07 RESOLVED** (PHASE3_AVAILABLE already exists at routers/blueprint/constants.py:92). Resolves VEC-GAP-05.
 
 ---
 
@@ -485,4 +485,4 @@ Previous updates overstated progress. This section provides the accurate remaini
 | Reference measurement DB | LP-GAP-02, EX-GAP-04 through EX-GAP-10 | Position accuracy |
 | ~~Vectorizer Phase 3/4 API~~ | ~~VEC-GAP-01 through VEC-GAP-05~~ | ✅ **Resolved** (08a7db0d, b8ba05b3, etc.) |
 | Frontend wiring | INLAY-02/06, NECK-05, VEC-GAP-06 | UI completeness |
-| G-code depth validator | LP-GAP-08, EX-GAP-12, SG-GAP-13 | Build safety |
+| ~~G-code depth validator~~ | ~~LP-GAP-08, EX-GAP-12, SG-GAP-13~~ ✅ **RESOLVED** (scripts/utils/gcode_verify.py shared utility) | ~~Build safety~~ |
