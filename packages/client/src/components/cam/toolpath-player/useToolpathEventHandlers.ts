@@ -7,14 +7,13 @@
 
 import { type Ref } from 'vue';
 import type { Annotation } from '@/util/toolpathAnnotations';
-import type { MoveSegment as CompareMoveSegment } from '@/util/toolpathComparison';
 import type { ToolChangeMarker } from '@/util/toolpathTools';
 import type { FeedHint } from '@/util/feedOptimizer';
 import type { ChipLoadIssue } from '@/util/chipLoadAnalyzer';
 
 export interface EventHandlersConfig {
   segments: { length: number };
-  compareSegments: Ref<CompareMoveSegment[]>;
+  compareSegments: Ref<unknown[]>;
   showCompareOverlay: Ref<boolean>;
   selectedToolFilter: Ref<number | null>;
   navigation: {
@@ -26,7 +25,7 @@ export interface EventHandlersConfig {
 
 export interface ToolpathEventHandlersState {
   handleAnnotationGoto: (annotation: Annotation) => void;
-  handleCompareSegments: (segments: CompareMoveSegment[]) => void;
+  handleCompareSegments: (segments: unknown[]) => void;
   handleCompareOverlayToggle: (enabled: boolean) => void;
   handleToolSelect: (toolNumber: number | null) => void;
   handleToolChangeClick: (marker: ToolChangeMarker) => void;
@@ -48,7 +47,7 @@ export function useToolpathEventHandlers(config: EventHandlersConfig): ToolpathE
   /**
    * Update compare segments overlay data
    */
-  function handleCompareSegments(segments: CompareMoveSegment[]): void {
+  function handleCompareSegments(segments: unknown[]): void {
     config.compareSegments.value = segments;
   }
 

@@ -36,6 +36,9 @@ export { default as ResolutionSlider } from './ResolutionSlider.vue';
 // Phase 8 components
 export { default as ControlsBarWrapper } from './ControlsBarWrapper.vue';
 
+// Phase 9 components
+export { default as PanelsLayer } from './PanelsLayer.vue';
+
 // Composables
 export { useToolpathPanels } from './useToolpathPanels';
 export type { PanelState } from './useToolpathPanels';
@@ -55,3 +58,5 @@ export { useToolpathLoader } from './useToolpathLoader';
 export type { LoaderConfig, ToolpathLoaderState } from './useToolpathLoader';
 export { useToolpathEventHandlers } from './useToolpathEventHandlers';
 export type { EventHandlersConfig, ToolpathEventHandlersState } from './useToolpathEventHandlers';
+export { useToolpathMachine } from './useToolpathMachine';
+export type { MachineConfig, ToolpathMachineState } from './useToolpathMachine';
