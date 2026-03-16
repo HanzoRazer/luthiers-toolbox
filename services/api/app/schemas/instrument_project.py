@@ -37,7 +37,7 @@ from pydantic import BaseModel, Field
 # Increment MAJOR on breaking changes (field removal, rename, type change).
 # =============================================================================
 
-CURRENT_SCHEMA_VERSION = "1.0"
+CURRENT_SCHEMA_VERSION = "1.1"
 
 
 # =============================================================================
@@ -449,6 +449,55 @@ class MaterialSelection(BaseModel):
     )
 
 
+
+
+# ---------------------------------------------------------------------------
+# BodyConfig — electric/acoustic body configuration (GEN-2)
+# ---------------------------------------------------------------------------
+
+class BodyConfig(BaseModel):
+    """
+    Body configuration for electric and acoustic instruments.
+
+    Captures build-specific body options that affect CAM operations and
+    construction decisions. Seeds from model specs in GEN-1.
+    """
+    pickup_config: Optional[str] = Field(
+        default=None,
+        description="Pickup configuration (e.g., 'sss', 'hss', 'hh', 'p90_single').",
+    )
+    tremolo_style: Optional[str] = Field(
+        default=None,
+        description="Tremolo type (e.g., 'vintage_6screw', '2point', 'floyd_rose', 'hardtail').",
+    )
+    belly_contour: bool = Field(
+        default=True,
+        description="Whether body has belly contour (comfort carve on back).",
+    )
+    arm_contour: bool = Field(
+        default=True,
+        description="Whether body has forearm contour.",
+    )
+    rear_routed: bool = Field(
+        default=True,
+        description="Whether electronics cavity is rear-routed (vs. front-routed like LP).",
+    )
+    stock_thickness_mm: Optional[float] = Field(
+        default=None,
+        gt=20,
+        lt=100,
+        description="Body blank thickness in mm.",
+    )
+    body_style_id: Optional[str] = Field(
+        default=None,
+        description="Electric body style reference ID (e.g., 'stratocaster', 'les_paul').",
+    )
+    acoustic_body_style_id: Optional[str] = Field(
+        default=None,
+        description="Acoustic body style ID (e.g., 'dreadnought', 'om', 'jumbo').",
+    )
+
+
 # ---------------------------------------------------------------------------
 # AnalyzerObservation — tap-tone measurement result
 # ---------------------------------------------------------------------------
@@ -607,6 +656,12 @@ class InstrumentProjectData(BaseModel):
     material_selection: Optional[MaterialSelection] = Field(
         default=None,
         description="Wood species selection per instrument component role.",
+    )
+
+    # --- Body configuration (GEN-2) ---
+    body_config: Optional[BodyConfig] = Field(
+        default=None,
+        description="Body configuration for electric/acoustic instruments. Seeds from model spec.",
     )
 
     # --- Analyzer observations (advisory enrichment) ---
