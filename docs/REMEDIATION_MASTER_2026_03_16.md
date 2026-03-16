@@ -18,7 +18,7 @@
 
 ---
 
-## Part 1: Gap Analysis Progress (84/113 = 74%)
+## Part 1: Gap Analysis Progress (87/113 = 77%)
 
 ### Resolved Gaps by Category
 
@@ -32,19 +32,19 @@
 | 6. Integration & Pipeline Bridges | 9/10 | 1 | SVG→DXF, blueprint→CAM |
 | 7. Verification & Simulation | 4/6 | 2 | Backplot partial |
 | 8. Post-Processor & G-code | 6/7 | 1 | G43/G41/G42, M0/M1 ✅ |
-| 9. Frontend & UI | 3/6 | 3 | Strat neck generator |
+| 9. Frontend & UI | 6/6 | 0 | ✅ COMPLETE — VINE-08, INLAY-02, INLAY-06 (Session 7) |
 | 10. Vectorizer Pipeline | 6/8 | 2 | Phase 3/4 endpoints |
 | 11. Config & Presets | 4/5 | 1 | Bracing presets |
 | 12. Accuracy & Position Validation | 6/8 | 2 | Cavity position validator |
 | 13. Physical Component Geometry | 0/6 | 6 | ⏸️ TABLED |
 
-### Remaining HIGH Priority Gaps (5)
+### Remaining HIGH Priority Gaps (2)
 
 | Gap ID | Description | Blocker? |
 |--------|-------------|----------|
-| INLAY-02 | HeadstockDesignerView.vue non-functional | Frontend |
-| INLAY-06 | No unified inlay canvas | Frontend |
-| VINE-08 | Bracing endpoints unreachable from UI | Frontend wiring |
+| ~~INLAY-02~~ | ~~HeadstockDesignerView.vue non-functional~~ | **Resolved** (2026-03-16 Session 7) |
+| ~~INLAY-06~~ | ~~No unified inlay canvas~~ | **Resolved** (2026-03-16 InlayWorkspaceShell) |
+| ~~VINE-08~~ | ~~Bracing endpoints unreachable from UI~~ | **Resolved** (2026-03-16 route + nav) |
 | PHYS-02 | Body centerline calculator | Physical dependency |
 | PHYS-03 | Pickup cavity-to-coordinate mapper | Physical dependency |
 
@@ -52,6 +52,7 @@
 
 | Date | Commit | Gaps Resolved |
 |------|--------|---------------|
+| 2026-03-16 | *(pending)* | **VINE-08, INLAY-02, INLAY-06** — Bracing route + nav; HeadstockDesignerView → API; InlayWorkspaceShell (4 tabs) at `/art-studio/inlay-workspace`. See SESSION_STATUS.md Session 7. |
 | 2026-03-16 | 6d7bbb5d | LP-GAP-06, EX-GAP-13, SG-GAP-14, OM-PURF-07, FV-GAP-07 (post-processor) |
 | 2026-03-15 | c7673441 | LP-GAP-05 (asymmetric carved top) |
 | 2026-03-15 | — | BEN-GAP-09 (f-hole routing) |

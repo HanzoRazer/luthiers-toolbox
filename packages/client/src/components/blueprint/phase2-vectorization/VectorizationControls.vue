@@ -3,23 +3,36 @@
  * VectorizationControls.vue - Pre-vectorization controls and action button
  *
  * Controls:
+ * - Pipeline: Phase 2 (OpenCV) or Phase 3 (ML) when available (VEC-GAP-06)
  * - Scale Factor: Manual override if calibration was incorrect
  * - Instrument Type: Electric vs Acoustic (affects contour scoring)
  * - Dark Threshold: Line extraction sensitivity (auto or 0-255)
  * - Gap Close Size: Morphological closing to connect broken lines
  */
-import { computed } from "vue";
+import { computed, onMounted } from "vue";
 import type { VectorParams, ExtractionMode } from "@/composables/useBlueprintWorkflow";
 
-const props = defineProps<{
-  vectorParams: VectorParams;
-  isVectorizing: boolean;
-}>();
+const props = withDefaults(
+  defineProps<{
+    vectorParams: VectorParams;
+    isVectorizing: boolean;
+    usePhase3?: boolean;
+    phase3Available?: boolean | null;
+  }>(),
+  { usePhase3: false, phase3Available: null }
+);
 
 const emit = defineEmits<{
   vectorize: [];
   "update:vectorParams": [params: VectorParams];
+  "update:usePhase3": [value: boolean];
+  checkPhase3: [];
 }>();
+
+// Check Phase 3 availability when controls are shown
+onMounted(() => {
+  emit("checkPhase3");
+});
 
 function updateParam<K extends keyof VectorParams>(key: K, value: VectorParams[K]) {
   emit("update:vectorParams", { ...props.vectorParams, [key]: value });
@@ -48,6 +61,44 @@ function setDarkThresholdValue(value: number) {
     <p class="hint">
       Detect edges, extract contours, and export CAM-ready DXF with closed polylines
     </p>
+
+    <!-- Phase 3 pipeline option (VEC-GAP-06) -->
+    <div
+      v-if="phase3Available !== false"
+      class="control-group pipeline-select"
+    >
+      <label>Vectorization pipeline:</label>
+      <div class="pipeline-options">
+        <label class="radio-label">
+          <input
+            type="radio"
+            name="pipeline"
+            :checked="!usePhase3"
+            @change="emit('update:usePhase3', false)"
+          >
+          Phase 2 (OpenCV)
+        </label>
+        <label
+          v-if="phase3Available === true"
+          class="radio-label"
+        >
+          <input
+            type="radio"
+            name="pipeline"
+            :checked="usePhase3"
+            @change="emit('update:usePhase3', true)"
+          >
+          Phase 3 (ML)
+        </label>
+        <span
+          v-else-if="phase3Available === null"
+          class="control-hint"
+        >
+          Checking Phase 3…
+        </span>
+      </div>
+      <span class="control-hint">Phase 3 uses ML classification and CAM-ready DXF (POST /blueprint/phase3/vectorize)</span>
+    </div>
 
     <!-- Vectorization Controls -->
     <div class="controls-grid">

@@ -8,7 +8,7 @@
  *   Stage 3: Headstock placement (HeadstockDesignerView)
  *   Stage 4: BOM & export aggregator
  */
-import { ref, computed, defineAsyncComponent } from "vue";
+import { ref, defineAsyncComponent } from "vue";
 
 type StageId = "pattern" | "fretboard" | "headstock" | "bom";
 

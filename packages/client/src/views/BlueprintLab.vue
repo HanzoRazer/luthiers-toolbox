@@ -46,17 +46,21 @@
         @recalibrate="resetCalibration"
       />
 
-      <!-- Phase 2: Geometry Vectorization -->
+      <!-- Phase 2 / Phase 3: Geometry Vectorization -->
       <Phase2VectorizationPanel
         v-if="analysis && calibrationAccepted"
         :vectorized-geometry="vectorizedGeometry"
         :vector-params="vectorParams"
         :is-vectorizing="isVectorizing"
+        :use-phase3="usePhase3Vectorization"
+        :phase3-available="phase3Available"
         @vectorize="vectorizeGeometry"
         @download-svg="handleDownloadVectorizedSVG"
         @download-dxf="handleDownloadVectorizedDXF"
         @re-vectorize="resetVectorization"
         @update:vector-params="vectorParams = $event"
+        @update:use-phase3="usePhase3Vectorization = $event"
+        @check-phase3="checkPhase3Availability"
       />
 
       <!-- Phase 3: CAM Integration -->
@@ -128,11 +132,14 @@ const {
   isCalibrating,
   calibration,
   calibrationAccepted,
-  // Phase 2
+  // Phase 2 / Phase 3 vectorization
   isVectorizing,
   vectorizedGeometry,
   vectorParams,
-  // Phase 3
+  usePhase3Vectorization,
+  phase3Available,
+  checkPhase3Availability,
+  // Phase 3 CAM
   isSendingToCAM,
   rmosResult,
   camParams,

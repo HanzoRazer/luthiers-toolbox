@@ -144,14 +144,14 @@ def test_golden_segment_count_for_pattern():
     Golden test: Segment count calculation for repeating patterns.
 
     For a pattern with N repeats around the circle, we need N segments.
-    Common patterns: 12, 16, 24, 32 segments.
+    Segment counts must divide 360 evenly for even tiling.
     """
-    # Standard segment counts for common patterns
+    # Standard segment counts for common patterns (each must divide 360)
     golden_segment_counts = {
         "simple_stripe": 12,
-        "herringbone": 16,
+        "herringbone": 18,   # nearest valid divisor to 16
         "rope_twist": 24,
-        "fine_mosaic": 32,
+        "fine_mosaic": 36,   # nearest valid divisor to 32
     }
 
     for pattern, expected_count in golden_segment_counts.items():
