@@ -127,6 +127,98 @@ def apply_design_state_to_project(
     project.updated_at = datetime.now(timezone.utc)
 
 
+def create_design_state_from_model_id(model_id: str) -> Optional[InstrumentProjectData]:
+    """
+    Create InstrumentProjectData seeded from a guitar model spec (GEN-1).
+
+    When model_id is provided to POST /api/projects, this function looks up
+    the canonical spec for that model and creates accurate defaults.
+
+    Args:
+        model_id: String model identifier (e.g., "stratocaster", "les_paul", "dreadnought")
+
+    Returns:
+        InstrumentProjectData with model-accurate defaults, or None if model not found.
+
+    Example:
+        >>> state = create_design_state_from_model_id("stratocaster")
+        >>> state.spec.scale_length_mm
+        648.0
+        >>> state.spec.fret_count
+        22
+    """
+    from ..schemas.instrument_project import InstrumentCategory, InstrumentSpec
+
+    # Direct mapping of model_id to (get_spec_fn, MODEL_INFO dict)
+    # This avoids the circular import issues with InstrumentModelId enum
+    MODEL_LOADERS = {}
+    
+    try:
+        from ..instrument_geometry.guitars import strat, tele, les_paul, dreadnought
+        from ..instrument_geometry.guitars import om_000, j_45, jazz_bass, classical
+        from ..instrument_geometry.guitars import archtop, prs, sg, jumbo_j200, ukulele
+        from ..instrument_geometry.guitars import gibson_l_00, flying_v, es_335
+        from ..instrument_geometry.guitars import explorer, firebird, moderne
+        
+        MODEL_LOADERS = {
+            "stratocaster": (strat.get_spec, strat.MODEL_INFO),
+            "telecaster": (tele.get_spec, tele.MODEL_INFO),
+            "les_paul": (les_paul.get_spec, les_paul.MODEL_INFO),
+            "dreadnought": (dreadnought.get_spec, dreadnought.MODEL_INFO),
+            "om_000": (om_000.get_spec, om_000.MODEL_INFO),
+            "j_45": (j_45.get_spec, j_45.MODEL_INFO),
+            "jazz_bass": (jazz_bass.get_spec, jazz_bass.MODEL_INFO),
+            "classical": (classical.get_spec, classical.MODEL_INFO),
+            "archtop": (archtop.get_spec, archtop.MODEL_INFO),
+            "prs": (prs.get_spec, prs.MODEL_INFO),
+            "sg": (sg.get_spec, sg.MODEL_INFO),
+            "jumbo_j200": (jumbo_j200.get_spec, jumbo_j200.MODEL_INFO),
+            "ukulele": (ukulele.get_spec, ukulele.MODEL_INFO),
+            "gibson_l_00": (gibson_l_00.get_spec, gibson_l_00.MODEL_INFO),
+            "flying_v": (flying_v.get_spec, flying_v.MODEL_INFO),
+            "es_335": (es_335.get_spec, es_335.MODEL_INFO),
+            "explorer": (explorer.get_spec, explorer.MODEL_INFO),
+            "firebird": (firebird.get_spec, firebird.MODEL_INFO),
+            "moderne": (moderne.get_spec, moderne.MODEL_INFO),
+        }
+    except ImportError:
+        return None
+
+    if model_id not in MODEL_LOADERS:
+        return None
+
+    get_spec_fn, model_info = MODEL_LOADERS[model_id]
+    
+    try:
+        model_spec = get_spec_fn()
+    except Exception:
+        return None
+
+    # Determine category from model info
+    category_value = model_info.get("category", "electric_guitar")
+    try:
+        category = InstrumentCategory(category_value)
+    except ValueError:
+        category = InstrumentCategory.ELECTRIC_GUITAR
+
+    # Build InstrumentSpec (pydantic) from model data
+    spec = InstrumentSpec(
+        scale_length_mm=model_spec.scale_length_mm,
+        fret_count=model_spec.fret_count,
+        string_count=model_spec.string_count,
+        nut_width_mm=model_info.get("nut_width_mm", 43.0),
+        heel_width_mm=56.0,
+        neck_angle_degrees=0.0 if "electric" in category_value else 1.0,
+        body_join_fret=14,
+    )
+
+    return InstrumentProjectData(
+        schema_version=CURRENT_SCHEMA_VERSION,
+        instrument_type=category,
+        spec=spec,
+    )
+
+
 def create_default_design_state(
     instrument_type: str,
     scale_length_mm: Optional[float] = None,
