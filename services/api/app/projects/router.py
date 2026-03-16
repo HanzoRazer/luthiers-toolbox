@@ -33,6 +33,7 @@ from .service import (
     apply_design_state_to_project,
     build_design_state_response,
     create_default_design_state,
+    create_design_state_from_model_id,
     parse_design_state,
     serialize_design_state,
 )
@@ -60,6 +61,7 @@ def _get_project_or_404(project_id: str, principal: Principal, db: Session) -> P
 class CreateProjectRequest(BaseModel):
     name: str
     instrument_type: str = "acoustic_guitar"
+    model_id: Optional[str] = None  # GEN-1: e.g., "stratocaster", "les_paul", "dreadnought"
     scale_length_mm: Optional[float] = None
     description: Optional[str] = None
     initial_state: Optional[InstrumentProjectData] = None
@@ -82,11 +84,22 @@ def create_project(
     principal: Principal = Depends(get_current_principal),
     db: Session = Depends(get_db),
 ) -> ProjectSummaryResponse:
-    """Create project, seed default InstrumentProjectData, persist."""
-    design_state = body.initial_state or create_default_design_state(
-        instrument_type=body.instrument_type,
-        scale_length_mm=body.scale_length_mm,
-    )
+    """Create project, seed default InstrumentProjectData, persist.
+    
+    GEN-1: If model_id is provided (e.g., "stratocaster"), seed from model spec.
+    """
+    design_state = body.initial_state
+    
+    # GEN-1: Try model_id first for model-accurate defaults
+    if design_state is None and body.model_id:
+        design_state = create_design_state_from_model_id(body.model_id)
+    
+    # Fall back to generic defaults
+    if design_state is None:
+        design_state = create_default_design_state(
+            instrument_type=body.instrument_type,
+            scale_length_mm=body.scale_length_mm,
+        )
     project = Project(
         owner_id=uuid.UUID(str(principal.user_id)),
         name=body.name,
