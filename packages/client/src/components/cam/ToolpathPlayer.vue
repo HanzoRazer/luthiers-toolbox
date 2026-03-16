@@ -21,7 +21,6 @@ import { useToolpathPlayerStore } from "@/stores/useToolpathPlayerStore";
 import { useTimeEstimates } from "@/composables/useTimeEstimates";
 import type { Fixture } from "@/util/collisionDetector";
 import { useToolpathShortcuts } from "@/composables/useToolpathShortcuts";
-import { analyzeToolUsage } from "@/util/toolpathTools";
 
 // Extracted subcomponents (Phase 2-11 decomposition)
 import {
@@ -41,6 +40,7 @@ import {
   useToolpathMachine,
   useToolpathCanvasExport,
   useToolpathLifecycle,
+  useToolpathMultiTool,
 } from "./toolpath-player";
 import ToolpathCanvas from "./ToolpathCanvas.vue";
 import ToolpathCanvas3D from "./ToolpathCanvas3D.vue";
@@ -140,11 +140,9 @@ const canvasExport = useToolpathCanvasExport({
 });
 const { showExportPanel, isExporting, exportProgress, exportConfig } = canvasExport;
 
-// P6: Multi-tool filter
-const selectedToolFilter = ref<number | null>(null);
-const hasMultipleTools = computed(() => {
-  const tools = analyzeToolUsage(store.segments);
-  return tools.length > 1;
+// P6: Multi-tool filter (via composable)
+const { selectedToolFilter, hasMultipleTools } = useToolpathMultiTool({
+  segments: computed(() => store.segments),
 });
 
 // ---------------------------------------------------------------------------
