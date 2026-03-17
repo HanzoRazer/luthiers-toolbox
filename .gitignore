@@ -120,6 +120,12 @@ test_program.nc
 test_sample.nc
 
 # ------------------------------------------
+# Premium prototypes & brand assets (DO NOT TRACK)
+# ------------------------------------------
+Rosette Designer/prototypes/premium/
+assets/brand/
+
+# ------------------------------------------
 # Legacy/Archive Directories (DO NOT TRACK)
 # ------------------------------------------
 __ARCHIVE__/
@@ -148,6 +154,7 @@ Feature_N17_Polygon_Offset_Arc*/
 Lutherier Project/
 files/
 "files (*/
+files - 2026-03-14T032048.923/
 phantom_cleanup_patch/
 security_patch_dxf/
 temp_extract_*/

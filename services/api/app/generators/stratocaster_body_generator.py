@@ -21,7 +21,10 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Dict, Any, List, Tuple, Optional
+from typing import Dict, Any, List, Tuple, Optional, TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from ..schemas.instrument_project import InstrumentProjectData
 import math
 
 from .stratocaster_config import (
@@ -40,6 +43,7 @@ from .stratocaster_config import (
 )
 
 from ..instrument_geometry.body.outlines import get_body_outline
+from .cam_utils import _require_cam_ready, _require_spec, _require_body_config
 
 
 @dataclass
@@ -82,6 +86,62 @@ class StratocasterBodyGenerator:
         self._gcode_lines: List[str] = []
         self._stats = StratGCodeStats()
         self._current_tool: Optional[str] = None
+
+
+    @classmethod
+    def from_project(
+        cls,
+        project: "InstrumentProjectData",
+        machine: str = "generic_router",
+    ) -> "StratocasterBodyGenerator":
+        """
+        Create a StratocasterBodyGenerator from InstrumentProjectData (GEN-3).
+
+        Reads spec and body_config from the project to build StratBodySpec.
+        Requires project to be CAM-ready (not DRAFT status).
+
+        Args:
+            project: InstrumentProjectData with spec and body_config
+            machine: Machine profile name
+
+        Returns:
+            Configured StratocasterBodyGenerator instance
+
+        Raises:
+            ValueError: If project is not CAM-ready or missing required data
+
+        Example:
+            >>> gen = StratocasterBodyGenerator.from_project(project)
+            >>> gen.generate("output/strat.nc")
+        """
+        _require_cam_ready(project)
+        _require_spec(project)
+        _require_body_config(project)
+
+        # Map project.body_config.pickup_config string to PickupConfig enum
+        pickup_str = project.body_config.pickup_config or "sss"
+        try:
+            pickup_config = PickupConfig(pickup_str.lower())
+        except ValueError:
+            pickup_config = PickupConfig.SSS
+
+        # Map tremolo_style string
+        tremolo_str = project.body_config.tremolo_style or "vintage_6screw"
+        if tremolo_str not in ("vintage_6screw", "2point", "hardtail"):
+            tremolo_str = "vintage_6screw"
+
+        spec = StratBodySpec(
+            pickup_config=pickup_config,
+            fret_count=project.spec.fret_count,
+            scale_length_mm=project.spec.scale_length_mm,
+            belly_contour=project.body_config.belly_contour,
+            arm_contour=project.body_config.arm_contour,
+            rear_routed=project.body_config.rear_routed,
+            tremolo_style=tremolo_str,
+            stock_thickness_mm=project.body_config.stock_thickness_mm or 44.45,
+        )
+
+        return cls(spec=spec, machine=machine)
 
     def generate(
         self,

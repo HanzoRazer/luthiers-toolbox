@@ -4,8 +4,9 @@ Thin wrapper that re-exports from focused sub-modules:
 - archtop_cam_router.py (5 routes)
 - om_cam_router.py (4 routes)
 - stratocaster_cam_router.py (4 routes)
+- flying_v_cam_router.py (5 routes — FV-GAP-05, FV-GAP-10)
 
-Total: 13 routes under /api/cam/guitar/{model}
+Total: 18 routes under /api/cam/guitar/{model}
 
 LANE: UTILITY (template/asset operations)
 Reference: docs/OPERATION_EXECUTION_GOVERNANCE_v1.md
@@ -30,6 +31,13 @@ Endpoints:
         GET /preview            - SVG preview
         GET /download/{path}    - Download template file
 
+    Flying V (/flying_v):
+        GET /spec               - Spec summary (cavity dimensions)
+        POST /toolpath/control_cavity  - Control cavity pocket G-code
+        POST /toolpath/neck_pocket     - Neck pocket mortise G-code
+        POST /toolpath/pickup          - Pickup cavity G-code
+        POST /validate                 - Depth validation (with preflight)
+
 Wave 15/20: Option C API Restructuring
 """
 from __future__ import annotations
@@ -40,6 +48,7 @@ from fastapi import APIRouter
 from .archtop_cam_router import router as archtop_router
 from .om_cam_router import router as om_router
 from .stratocaster_cam_router import router as stratocaster_router
+from .flying_v_cam_router import router as flying_v_router
 
 # Re-export schemas for backward compatibility
 from .archtop_cam_router import (
@@ -66,6 +75,7 @@ router = APIRouter(tags=["Guitar", "CAM"])
 router.include_router(archtop_router, prefix="/archtop", tags=["Archtop", "CAM"])
 router.include_router(om_router, prefix="/om", tags=["OM", "CAM"])
 router.include_router(stratocaster_router, prefix="/stratocaster", tags=["Stratocaster", "CAM"])
+router.include_router(flying_v_router, prefix="/flying_v", tags=["Flying V", "CAM"])
 
 __all__ = [
     # Routers
@@ -73,6 +83,7 @@ __all__ = [
     "archtop_router",
     "om_router",
     "stratocaster_router",
+    "flying_v_router",
     # Archtop schemas
     "ArchtopContourCSVRequest",
     "ArchtopContourOutlineRequest",

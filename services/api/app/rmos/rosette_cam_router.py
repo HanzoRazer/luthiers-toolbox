@@ -12,7 +12,14 @@ from datetime import datetime
 
 from fastapi import APIRouter, Query
 from dataclasses import asdict
-from shapely.errors import GEOSException
+
+# Geometry-related exceptions (rosette tile/slice logic may use Shapely downstream)
+_ROSETTE_HANDLED = (ValueError, TypeError, KeyError, AttributeError, ZeroDivisionError, IndexError)
+try:
+    from shapely.errors import GEOSException
+    _ROSETTE_HANDLED = (*_ROSETTE_HANDLED, GEOSException)
+except ImportError:
+    pass
 
 from ..cam.rosette.models import RosetteRingConfig, SegmentationResult, SliceBatch
 from ..cam.rosette.tile_segmentation import (
@@ -68,8 +75,162 @@ def generate_segment_ring(payload: Dict[str, Any] = None) -> Dict[str, Any]:
             "tile_length_mm": result.tile_length_mm,
             "segments": [asdict(t) for t in result.tiles],
         }
-    except (ValueError, TypeError, KeyError, AttributeError, ZeroDivisionError, GEOSException) as e:
+    except _ROSETTE_HANDLED as e:
         return {"ok": False, "error": str(e), "segments": []}
+
+
+def _design_rings_from_payload(payload: Dict[str, Any]) -> List[Dict[str, Any]]:
+    """
+    Build per-ring configs from multi-ring design payload.
+
+    Payload: soundhole_diameter_mm, rings: [{role, material?, pattern?, width_mm, radius_mm?}].
+    If radius_mm is set on a ring, use it (center radius); else compute from soundhole + cumulative widths.
+    Returns list of ring dicts with ring_id, radius_mm, width_mm, tile_length_mm, pattern.
+    """
+    soundhole_mm = float(payload.get("soundhole_diameter_mm", 85.0))
+    rings_spec = payload.get("rings", [])
+    if not rings_spec:
+        return []
+
+    inner_edge_mm = soundhole_mm / 2.0
+    ring_dicts: List[Dict[str, Any]] = []
+
+    for i, r in enumerate(rings_spec):
+        width_mm = float(r.get("width_mm", 5.0))
+        if r.get("radius_mm") is not None:
+            radius_mm = float(r["radius_mm"])
+        else:
+            radius_mm = inner_edge_mm + width_mm / 2.0
+        pattern = (r.get("pattern") or "checkerboard").lower()
+        if pattern == "spanish_wave":
+            pattern = "spanish_wave"
+        tile_length_mm = min(6.0, max(3.0, width_mm * 0.8))
+
+        ring_dicts.append({
+            "ring_id": i,
+            "radius_mm": radius_mm,
+            "width_mm": width_mm,
+            "tile_length_mm": tile_length_mm,
+            "pattern": pattern,
+            "kerf_mm": 0.3,
+        })
+        inner_edge_mm += width_mm
+
+    return ring_dicts
+
+
+@router.post("/rosette/design")
+def design_rosette(payload: Dict[str, Any] = None) -> Dict[str, Any]:
+    """
+    Multi-ring rosette design (GAP-NEW-1).
+
+    Accepts soundhole_diameter_mm and rings[]; runs segment-ring + generate-slices
+    + export-cnc for each ring; returns combined segmentation and G-code for all rings.
+    """
+    if payload is None:
+        payload = {}
+
+    try:
+        ring_dicts = _design_rings_from_payload(payload)
+        if not ring_dicts:
+            return {
+                "ok": False,
+                "error": "Missing or empty rings array",
+                "segmentations": [],
+                "gcode_by_ring": [],
+                "combined_gcode": None,
+                "job_ids": [],
+            }
+
+        material_str = (payload.get("material") or "hardwood").lower()
+        material_map = {
+            "hardwood": MaterialType.HARDWOOD,
+            "softwood": MaterialType.SOFTWOOD,
+            "composite": MaterialType.COMPOSITE,
+        }
+        material = material_map.get(material_str, MaterialType.HARDWOOD)
+
+        jig_alignment = JigAlignment(
+            origin_x_mm=float(payload.get("origin_x_mm", 0.0)),
+            origin_y_mm=float(payload.get("origin_y_mm", 0.0)),
+            rotation_deg=float(payload.get("rotation_deg", 0.0)),
+        )
+        envelope = MachineEnvelope(
+            x_min_mm=-200.0, x_max_mm=200.0,
+            y_min_mm=-200.0, y_max_mm=200.0,
+            z_min_mm=-50.0, z_max_mm=50.0,
+        )
+        post_config = GCodePostConfig(
+            profile=MachineProfile.GRBL,
+            safe_z_mm=float(payload.get("safe_z_mm", 5.0)),
+            spindle_rpm=int(payload.get("spindle_rpm", 12000)),
+            tool_id=int(payload.get("tool_id", 1)),
+        )
+
+        import uuid
+        from datetime import datetime
+
+        segmentations_out: List[Dict[str, Any]] = []
+        gcode_by_ring: List[Dict[str, Any]] = []
+        job_ids: List[str] = []
+        combined_lines: List[str] = []
+
+        for ring_dict in ring_dicts:
+            ring_config = _parse_ring_config(ring_dict)
+            segmentation = compute_tile_segmentation(ring_dict)
+            batch = generate_slices_for_ring(ring_config, segmentation)
+
+            segmentations_out.append({
+                "ring_id": ring_config.ring_id,
+                "segmentation_id": getattr(segmentation, "segmentation_id", f"seg_ring_{ring_config.ring_id}"),
+                "tile_count": getattr(segmentation, "tile_count", len(segmentation.tiles)),
+                "tile_length_mm": getattr(segmentation, "tile_length_mm", ring_dict.get("tile_length_mm", 5)),
+                "segments": [asdict(t) for t in segmentation.tiles],
+            })
+
+            export_bundle, simulation = build_ring_cnc_export(
+                ring=ring_config,
+                slice_batch=batch,
+                material=material,
+                jig_alignment=jig_alignment,
+                envelope=envelope,
+            )
+            gcode = generate_gcode_from_toolpaths(export_bundle.toolpaths, post_config)
+            job_id = f"JOB-ROSETTE-{datetime.utcnow().strftime('%Y%m%d-%H%M%S')}-{uuid.uuid4().hex[:8]}"
+
+            job_ids.append(job_id)
+            gcode_by_ring.append({
+                "ring_id": ring_config.ring_id,
+                "job_id": job_id,
+                "gcode": gcode,
+                "line_count": len(gcode.strip().splitlines()),
+                "segment_count": len(export_bundle.toolpaths.segments),
+                "estimated_runtime_sec": simulation.estimated_runtime_sec,
+            })
+            combined_lines.append(f"( Ring {ring_config.ring_id} )")
+            combined_lines.append(gcode.strip())
+            combined_lines.append("")
+
+        combined_gcode = "\n".join(combined_lines).strip() if combined_lines else None
+
+        return {
+            "ok": True,
+            "soundhole_diameter_mm": payload.get("soundhole_diameter_mm"),
+            "ring_count": len(ring_dicts),
+            "segmentations": segmentations_out,
+            "gcode_by_ring": gcode_by_ring,
+            "combined_gcode": combined_gcode,
+            "job_ids": job_ids,
+        }
+    except _ROSETTE_HANDLED as e:
+        return {
+            "ok": False,
+            "error": str(e),
+            "segmentations": [],
+            "gcode_by_ring": [],
+            "combined_gcode": None,
+            "job_ids": [],
+        }
 
 
 @router.post("/rosette/generate-slices")
@@ -91,7 +252,7 @@ def generate_slices(payload: Dict[str, Any] = None) -> Dict[str, Any]:
             "ring_id": batch.ring_id,
             "slices": [asdict(s) for s in batch.slices],
         }
-    except Exception as e:
+    except _ROSETTE_HANDLED as e:
         return {"ok": False, "error": str(e), "slices": []}
 
 
@@ -128,7 +289,7 @@ def preview_rosette(payload: Dict[str, Any] = None) -> Dict[str, Any]:
             "preview": snapshot.payload,
             "rings": [asdict(r) for r in snapshot.rings],
         }
-    except Exception as e:
+    except _ROSETTE_HANDLED as e:
         return {"ok": False, "error": str(e), "preview": None}
 
 
@@ -211,7 +372,7 @@ def export_rosette_cnc(payload: Dict[str, Any] = None) -> Dict[str, Any]:
             },
             "metadata": export_bundle.metadata,
         }
-    except (ValueError, TypeError, KeyError, AttributeError, ZeroDivisionError, GEOSException) as e:
+    except _ROSETTE_HANDLED as e:
         return {
             "ok": False,
             "gcode": None,
