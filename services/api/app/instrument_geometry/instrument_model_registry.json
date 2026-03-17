@@ -1,7 +1,7 @@
 {
-  "version": "1.0.0",
+  "version": "1.1.0",
   "generated": "2025-12-07",
-  "description": "Instrument model registry for The Production Shop Wave 14",
+  "description": "Instrument model registry with cam_capable flags (GEN-5)",
   "models": {
     "stratocaster": {
       "id": "stratocaster",
@@ -31,7 +31,14 @@
           "_exists": true
         }
       ],
-      "spec": "specs/stratocaster.json"
+      "spec": "specs/stratocaster.json",
+      "cam_capable": true,
+      "cam_operations": [
+        "body_perimeter",
+        "neck_pocket",
+        "pickup_routes",
+        "tremolo_cavity"
+      ]
     },
     "telecaster": {
       "id": "telecaster",
@@ -44,7 +51,9 @@
       "description": "Classic Fender single-cutaway electric guitar with 25.5\" scale",
       "manufacturer": "Fender",
       "year_introduced": 1950,
-      "assets": []
+      "assets": [],
+      "cam_capable": false,
+      "cam_operations": []
     },
     "les_paul": {
       "id": "les_paul",
@@ -133,7 +142,15 @@
         }
       ],
       "_phantom_assets": true,
-      "_note": "Some referenced assets do not exist on disk"
+      "_note": "Some referenced assets do not exist on disk",
+      "cam_capable": true,
+      "cam_operations": [
+        "body_perimeter",
+        "neck_pocket",
+        "pickup_routes",
+        "control_cavity",
+        "top_carve"
+      ]
     },
     "sg": {
       "id": "sg",
@@ -146,7 +163,9 @@
       "description": "Gibson double-cutaway solid body electric guitar",
       "manufacturer": "Gibson",
       "year_introduced": 1961,
-      "assets": []
+      "assets": [],
+      "cam_capable": false,
+      "cam_operations": []
     },
     "es_335": {
       "id": "es_335",
@@ -159,7 +178,9 @@
       "description": "Gibson semi-hollow body electric guitar with center block",
       "manufacturer": "Gibson",
       "year_introduced": 1958,
-      "assets": []
+      "assets": [],
+      "cam_capable": false,
+      "cam_operations": []
     },
     "flying_v": {
       "id": "flying_v",
@@ -179,7 +200,13 @@
         "specs/gibson_flying_v_1958.json"
       ],
       "_phantom_assets": true,
-      "_note": "Some referenced assets do not exist on disk"
+      "_note": "Some referenced assets do not exist on disk",
+      "cam_capable": true,
+      "cam_operations": [
+        "body_perimeter",
+        "neck_pocket",
+        "pickup_routes"
+      ]
     },
     "explorer": {
       "id": "explorer",
@@ -201,7 +228,7 @@
         {
           "type": "dxf",
           "path": "body/dxf/electric/gibson_explorer_body.dxf",
-          "note": "24-point coarse polygon, AC1024 \u00e2\u20ac\u201d needs R12 conversion and refinement to 200+ points"
+          "note": "24-point coarse polygon, AC1024 â€” needs R12 conversion and refinement to 200+ points"
         },
         {
           "type": "build_script",
@@ -211,23 +238,30 @@
         {
           "type": "gcode",
           "path": "../../../../exports/explorer_1958/Explorer_1958_Phase1_RearRouting.nc",
-          "note": "Phase 1 rear face routing \u00e2\u20ac\u201d 8,480 lines, 17 operations"
+          "note": "Phase 1 rear face routing â€” 8,480 lines, 17 operations"
         },
         {
           "type": "gcode",
           "path": "../../../../exports/explorer_1958/Explorer_1958_Phase2_Perimeter.nc",
-          "note": "Phase 2 perimeter profile \u00e2\u20ac\u201d 921 lines, 8 tabs"
+          "note": "Phase 2 perimeter profile â€” 921 lines, 8 tabs"
         },
         {
           "type": "build_macro",
           "path": "../../../../exports/explorer_1958/Explorer_1958_BuildMacro.json",
-          "note": "Standalone macro \u00e2\u20ac\u201d 2 phases, 18 ops, 3 tools, 10 gap annotations"
+          "note": "Standalone macro â€” 2 phases, 18 ops, 3 tools, 10 gap annotations"
         },
         {
           "type": "handoff",
           "path": "../../../../docs/handoffs/GIBSON_EXPLORER_1958_CNC_HANDOFF.md",
           "note": "8-part CNC handoff document with gap registry and remediation roadmap"
         }
+      ],
+      "cam_capable": true,
+      "cam_operations": [
+        "body_perimeter",
+        "neck_pocket",
+        "pickup_routes",
+        "control_cavity"
       ]
     },
     "firebird": {
@@ -241,7 +275,9 @@
       "description": "Gibson reverse-body electric guitar with neck-through design",
       "manufacturer": "Gibson",
       "year_introduced": 1963,
-      "assets": []
+      "assets": [],
+      "cam_capable": false,
+      "cam_operations": []
     },
     "moderne": {
       "id": "moderne",
@@ -254,7 +290,9 @@
       "description": "Gibson modernist solid body electric guitar (rare)",
       "manufacturer": "Gibson",
       "year_introduced": 1958,
-      "assets": []
+      "assets": [],
+      "cam_capable": false,
+      "cam_operations": []
     },
     "prs": {
       "id": "prs",
@@ -267,7 +305,9 @@
       "description": "Paul Reed Smith double-cutaway with 25\" scale",
       "manufacturer": "PRS",
       "year_introduced": 1985,
-      "assets": []
+      "assets": [],
+      "cam_capable": false,
+      "cam_operations": []
     },
     "archtop": {
       "id": "archtop",
@@ -298,7 +338,11 @@
             "specs/benedetto_archtop_rope.json"
           ],
           "_phantom_assets": true,
-          "_note": "DXF/JSON assets not yet created. Benedetto blueprints exist in Guitar Plans/Benedetto/ but not extracted."
+          "_note": "DXF/JSON assets not yet created. Benedetto blueprints exist in Guitar Plans/Benedetto/ but not extracted.",
+          "cam_capable": true,
+          "cam_operations": [
+            "body_perimeter"
+          ]
         },
         "l5": {
           "id": "l5",
@@ -308,7 +352,9 @@
           "manufacturer": "Gibson",
           "year_introduced": 1922,
           "body_width_mm": 406.4,
-          "assets": []
+          "assets": [],
+          "cam_capable": false,
+          "cam_operations": []
         },
         "super_400": {
           "id": "super_400",
@@ -318,9 +364,13 @@
           "manufacturer": "Gibson",
           "year_introduced": 1934,
           "body_width_mm": 457.2,
-          "assets": []
+          "assets": [],
+          "cam_capable": false,
+          "cam_operations": []
         }
-      }
+      },
+      "cam_capable": false,
+      "cam_operations": []
     },
     "dreadnought": {
       "id": "dreadnought",
@@ -333,7 +383,9 @@
       "description": "Large-body steel-string acoustic guitar (Martin D-28 style)",
       "manufacturer": "Martin",
       "year_introduced": 1916,
-      "assets": []
+      "assets": [],
+      "cam_capable": false,
+      "cam_operations": []
     },
     "om_000": {
       "id": "om_000",
@@ -348,6 +400,12 @@
       "year_introduced": 1929,
       "assets": [
         "specs/martin_om28.json"
+      ],
+      "cam_capable": true,
+      "cam_operations": [
+        "body_perimeter",
+        "soundhole",
+        "bracing"
       ]
     },
     "j_45": {
@@ -361,7 +419,9 @@
       "description": "Gibson round-shoulder dreadnought acoustic guitar",
       "manufacturer": "Gibson",
       "year_introduced": 1942,
-      "assets": []
+      "assets": [],
+      "cam_capable": false,
+      "cam_operations": []
     },
     "jumbo_j200": {
       "id": "jumbo_j200",
@@ -376,7 +436,9 @@
       "year_introduced": 1937,
       "assets": [
         "Guitar Plans/Jumbo/J-200 Plans.pdf"
-      ]
+      ],
+      "cam_capable": false,
+      "cam_operations": []
     },
     "carlos_jumbo": {
       "id": "carlos_jumbo",
@@ -413,32 +475,32 @@
         {
           "type": "source_pdf",
           "path": "../../../../Guitar Plans/Jumbo Carlos/JUMBO-CARLOS-1-3.pdf",
-          "note": "Plan page 1/3 \u00e2\u20ac\u201d construction details, bracing layout (1.1MB)"
+          "note": "Plan page 1/3 â€” construction details, bracing layout (1.1MB)"
         },
         {
           "type": "source_pdf",
           "path": "../../../../Guitar Plans/Jumbo Carlos/JUMBO-CARLOS-2-3.pdf",
-          "note": "Plan page 2/3 \u00e2\u20ac\u201d section views, neck details (946KB)"
+          "note": "Plan page 2/3 â€” section views, neck details (946KB)"
         },
         {
           "type": "source_pdf",
           "path": "../../../../Guitar Plans/Jumbo Carlos/JUMBO-CARLOS-3-3.pdf",
-          "note": "Plan page 3/3 \u00e2\u20ac\u201d body outline, f-holes (564KB)"
+          "note": "Plan page 3/3 â€” body outline, f-holes (564KB)"
         },
         {
           "type": "dxf",
           "path": "../../../../exports/jumbo_carlos_vectorizer/JUMBO-CARLOS-1-3_phase3.dxf",
-          "note": "Vectorizer page 1 \u00e2\u20ac\u201d 944 primitives, 20 bracing features"
+          "note": "Vectorizer page 1 â€” 944 primitives, 20 bracing features"
         },
         {
           "type": "dxf",
           "path": "../../../../exports/jumbo_carlos_vectorizer/JUMBO-CARLOS-2-3_phase3.dxf",
-          "note": "Vectorizer page 2 \u00e2\u20ac\u201d 741 primitives, section views"
+          "note": "Vectorizer page 2 â€” 741 primitives, section views"
         },
         {
           "type": "dxf",
           "path": "../../../../exports/jumbo_carlos_vectorizer/JUMBO-CARLOS-3-3_phase3.dxf",
-          "note": "Vectorizer page 3 \u00e2\u20ac\u201d 326 primitives, validated body (422x498mm)"
+          "note": "Vectorizer page 3 â€” 326 primitives, validated body (422x498mm)"
         }
       ],
       "vectorizer_analysis": {
@@ -447,8 +509,14 @@
         "total_processing_time_ms": 124367,
         "validated_page": 3,
         "bracing_features_total": 35,
-        "f_hole_detections": "2 (misclassified \u00e2\u20ac\u201d Carlos Jumbo is a flat-top, not an archtop)"
-      }
+        "f_hole_detections": "2 (misclassified â€” Carlos Jumbo is a flat-top, not an archtop)"
+      },
+      "cam_capable": true,
+      "cam_operations": [
+        "body_perimeter",
+        "soundhole",
+        "bracing"
+      ]
     },
     "gibson_l_00": {
       "id": "gibson_l_00",
@@ -465,7 +533,9 @@
         "Guitar Plans/Gibson Plans/L-00/Gibson L-00.pdf"
       ],
       "_phantom_assets": true,
-      "_note": "Some referenced assets do not exist on disk"
+      "_note": "Some referenced assets do not exist on disk",
+      "cam_capable": false,
+      "cam_operations": []
     },
     "classical": {
       "id": "classical",
@@ -478,7 +548,9 @@
       "description": "Nylon-string classical guitar with fan bracing",
       "manufacturer": "Various",
       "year_introduced": 1850,
-      "assets": []
+      "assets": [],
+      "cam_capable": false,
+      "cam_operations": []
     },
     "jazz_bass": {
       "id": "jazz_bass",
@@ -491,7 +563,9 @@
       "description": "Fender offset-waist 4-string electric bass with 34\" scale",
       "manufacturer": "Fender",
       "year_introduced": 1960,
-      "assets": []
+      "assets": [],
+      "cam_capable": false,
+      "cam_operations": []
     },
     "ukulele": {
       "id": "ukulele",
@@ -517,7 +591,12 @@
         }
       ],
       "_note": "Assets exist in blueprint-import output directory (vectorizer extraction)",
-      "_phantom_assets": false
+      "_phantom_assets": false,
+      "cam_capable": true,
+      "cam_operations": [
+        "body_perimeter",
+        "soundhole"
+      ]
     },
     "smart_guitar": {
       "id": "smart_guitar",
@@ -532,9 +611,9 @@
       "year_introduced": 2025,
       "body_style": "explorer_klein_hybrid_angular",
       "iot": {
-        "signal_processor": "Arduino Uno (ATmega328P @ 16MHz) \u00e2\u20ac\u201d near pickups, own 9V battery",
-        "compute": "Raspberry Pi 5 (ARM Cortex-A76 @ 2.4GHz) \u00e2\u20ac\u201d main rear cavity",
-        "signal_chain": "Pickups \u00e2\u2020\u2019 Arduino (44.1kHz ADC, 9V) \u00e2\u2020\u2019 Pi 5 (USB serial, Li-ion)",
+        "signal_processor": "Arduino Uno (ATmega328P @ 16MHz) â€” near pickups, own 9V battery",
+        "compute": "Raspberry Pi 5 (ARM Cortex-A76 @ 2.4GHz) â€” main rear cavity",
+        "signal_chain": "Pickups â†’ Arduino (44.1kHz ADC, 9V) â†’ Pi 5 (USB serial, Li-ion)",
         "memory_gb": 8,
         "storage_gb": 128,
         "storage_type": "NVMe SSD (M.2 2280)",
@@ -619,6 +698,13 @@
         "smart_guitar/electronics_cavity.dxf",
         "smart_guitar/control_panel.dxf",
         "smart_guitar/pcb_mounting.dxf"
+      ],
+      "cam_capable": true,
+      "cam_operations": [
+        "body_perimeter",
+        "electronics_cavity",
+        "arduino_pocket",
+        "antenna_recess"
       ]
     },
     "klein": {
@@ -653,12 +739,12 @@
         {
           "type": "source_pdf",
           "path": "../../../../Guitar Plans/Klein/Klein-Guitar-Template.pdf",
-          "note": "Klein template PDF (375 KB), small-scale reference sheet \u00e2\u20ac\u201d vectorizer validation failed"
+          "note": "Klein template PDF (375 KB), small-scale reference sheet â€” vectorizer validation failed"
         },
         {
           "type": "dxf",
           "path": "../../../../exports/klein_vectorizer/Klein-Guitar-Plan_phase3.dxf",
-          "note": "Phase 3.6 vectorizer output \u00e2\u20ac\u201d body outline with classified features, R12 format"
+          "note": "Phase 3.6 vectorizer output â€” body outline with classified features, R12 format"
         },
         {
           "type": "dxf_primitives",
@@ -681,7 +767,14 @@
           "pickguard": 2,
           "small_feature": 258
         }
-      }
+      },
+      "cam_capable": true,
+      "cam_operations": [
+        "body_perimeter",
+        "neck_pocket",
+        "pickup_routes",
+        "control_cavity"
+      ]
     },
     "melody_maker": {
       "id": "melody_maker",
@@ -703,7 +796,13 @@
         "electric/Gibson-Melody-Maker_phase3_primitives.dxf"
       ],
       "specs_file": "models/gibson_melody_maker.json",
-      "has_detailed_specs": true
+      "has_detailed_specs": true,
+      "cam_capable": true,
+      "cam_operations": [
+        "body_perimeter",
+        "neck_pocket",
+        "pickup_routes"
+      ]
     },
     "cuatro": {
       "id": "cuatro",
@@ -733,11 +832,15 @@
             "folk/Cuatro_Venezolano_body.dxf"
           ],
           "specs_file": "models/cuatro_venezolano.json",
-          "has_detailed_specs": true
+          "has_detailed_specs": true,
+          "cam_capable": true,
+          "cam_operations": [
+            "body_perimeter"
+          ]
         },
         "puertorriqueno": {
           "id": "cuatro_puertorriqueno",
-          "display_name": "Cuatro Puertorrique\u00c3\u00b1o",
+          "display_name": "Cuatro PuertorriqueÃ±o",
           "status": "ASSETS_ONLY",
           "description": "Puerto Rican cuatro - 10 strings in 5 courses, larger body",
           "scale_length_mm": 520.0,
@@ -748,23 +851,30 @@
             "height": 380.0
           },
           "assets": [
-            "Cuatro/cuatro puertorique\u00c3\u00b1o.pdf",
+            "Cuatro/cuatro puertoriqueÃ±o.pdf",
             "Cuatro/El Cuatro 1.pdf",
             "Cuatro/El Cuatro 2.pdf",
             "Cuatro/El Cuatro 3.pdf"
           ],
           "specs_file": "models/cuatro_puertorriqueno.json",
-          "has_detailed_specs": true
+          "has_detailed_specs": true,
+          "cam_capable": false,
+          "cam_operations": []
         }
       },
       "assets": [
         "Cuatro/plano cuatro venezolano.pdf",
-        "Cuatro/cuatro puertorique\u00c3\u00b1o.pdf"
+        "Cuatro/cuatro puertoriqueÃ±o.pdf"
+      ],
+      "cam_capable": true,
+      "cam_operations": [
+        "body_perimeter",
+        "soundhole"
       ]
     },
     "jumbo_archtop": {
       "id": "jumbo_archtop",
-      "display_name": "Jumbo Archtop \u00e2\u20ac\u201d Carlos Body Scale + Benedetto Construction",
+      "display_name": "Jumbo Archtop â€” Carlos Body Scale + Benedetto Construction",
       "status": "PARTIAL",
       "category": "archtop_guitar",
       "scale_length_mm": 648.0,
@@ -798,7 +908,7 @@
         {
           "type": "dxf",
           "path": "body/dxf/acoustic/carlos_jumbo_body.dxf",
-          "note": "Shared body outline from Carlos Jumbo (39-point AI vision extraction) \u00e2\u20ac\u201d reused as archtop plate outline"
+          "note": "Shared body outline from Carlos Jumbo (39-point AI vision extraction) â€” reused as archtop plate outline"
         },
         {
           "type": "knowledge_base",
@@ -807,10 +917,17 @@
         }
       ],
       "pending_assets": [
-        "jumbo_archtop/f_holes.dxf \u00e2\u20ac\u201d f-hole design (traditional archtop 110x28mm)",
-        "jumbo_archtop/top_contours.dxf \u00e2\u20ac\u201d Mottola contour rings for CNC top carving",
-        "jumbo_archtop/back_contours.dxf \u00e2\u20ac\u201d Mottola contour rings for CNC back carving",
-        "jumbo_archtop/graduation_map.json \u00e2\u20ac\u201d target plate thicknesses at measurement stations"
+        "jumbo_archtop/f_holes.dxf â€” f-hole design (traditional archtop 110x28mm)",
+        "jumbo_archtop/top_contours.dxf â€” Mottola contour rings for CNC top carving",
+        "jumbo_archtop/back_contours.dxf â€” Mottola contour rings for CNC back carving",
+        "jumbo_archtop/graduation_map.json â€” target plate thicknesses at measurement stations"
+      ],
+      "cam_capable": true,
+      "cam_operations": [
+        "body_perimeter",
+        "f_holes",
+        "top_carve",
+        "back_carve"
       ]
     }
   }
