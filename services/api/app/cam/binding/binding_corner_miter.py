@@ -20,6 +20,13 @@ import math
 from dataclasses import dataclass, field
 from typing import List, Optional, Tuple, Dict, Any
 
+# OM-PURF-06: Import material-aware feed rates
+from app.calculators.binding_geometry import (
+    BindingMaterial,
+    MaterialFeedSettings,
+    get_material_feed_settings,
+)
+
 Pt = Tuple[float, float]
 
 
@@ -131,9 +138,14 @@ class CornerMiterConfig:
     # Tool parameters
     tool_diameter_mm: float = 1.5  # Small bit for corner cuts
 
-    # Feed rates (mm/min)
+    # OM-PURF-06: Material-aware feed rates
+    # If material is specified, feed rates are auto-calculated
+    material: Optional[BindingMaterial] = None
+    
+    # Feed rates (mm/min) - used when material is None
     feed_rate: float = 300.0   # Slow for precision
     plunge_rate: float = 60.0
+    spindle_rpm: int = 18000
 
     # Safety
     safe_z_mm: float = 5.0
@@ -147,6 +159,22 @@ class CornerMiterConfig:
         if self.miter_depth_mm <= 0:
             # Miter extends 1.5x binding width for clean corner
             self.miter_depth_mm = self.binding_width_mm * 1.5
+    
+    def get_feed_settings(self) -> MaterialFeedSettings:
+        """Get effective feed settings (material-aware or manual)."""
+        if self.material is not None:
+            settings = get_material_feed_settings(self.material)
+            # Corner miters need slower feed than straight cuts (50% of material rate)
+            return MaterialFeedSettings(
+                feed_rate_xy=settings.feed_rate_xy * 0.5,
+                spindle_rpm=settings.spindle_rpm,
+                plunge_rate=settings.plunge_rate * 0.6,
+            )
+        return MaterialFeedSettings(
+            feed_rate_xy=self.feed_rate,
+            spindle_rpm=self.spindle_rpm,
+            plunge_rate=self.plunge_rate,
+        )
 
 
 @dataclass
@@ -299,12 +327,17 @@ def generate_corner_miter_gcode(
     """
     cfg = config
     lines = []
+    
+    # OM-PURF-06: Get material-aware feed settings
+    feed_settings = cfg.get_feed_settings()
 
     # Header
     lines.append("(Binding Corner Miter Cuts - OM-PURF-05)")
     lines.append(f"(Total corners: {len(miters)})")
     lines.append(f"(Tool: {cfg.tool_diameter_mm}mm bit)")
     lines.append(f"(Cut depth: {cfg.cut_depth_mm}mm)")
+    if cfg.material:
+        lines.append(f"(Material: {cfg.material.value})")
     lines.append("")
 
     # Setup
@@ -312,7 +345,7 @@ def generate_corner_miter_gcode(
     lines.append("G90 (Absolute positioning)")
     lines.append("G17 (XY plane)")
     lines.append(f"G0 Z{cfg.safe_z_mm:.3f} (Safe height)")
-    lines.append("M3 S18000 (Spindle on)")
+    lines.append(f"M3 S{feed_settings.spindle_rpm} (Spindle on)")
     lines.append("")
 
     if not miters:
@@ -345,13 +378,13 @@ def generate_corner_miter_gcode(
         lines.append(f"G0 Z{cfg.retract_z_mm:.3f}")
 
         # Plunge
-        lines.append(f"G1 Z{z_depth:.3f} F{cfg.plunge_rate:.0f}")
+        lines.append(f"G1 Z{z_depth:.3f} F{feed_settings.plunge_rate:.0f}")
 
         # Cut to corner vertex
-        lines.append(f"G1 X{cx:.3f} Y{cy:.3f} F{cfg.feed_rate:.0f}")
+        lines.append(f"G1 X{cx:.3f} Y{cy:.3f} F{feed_settings.feed_rate_xy:.0f}")
 
         # Cut to departure point
-        lines.append(f"G1 X{depart_x:.3f} Y{depart_y:.3f} F{cfg.feed_rate:.0f}")
+        lines.append(f"G1 X{depart_x:.3f} Y{depart_y:.3f} F{feed_settings.feed_rate_xy:.0f}")
 
         # Retract
         lines.append(f"G0 Z{cfg.retract_z_mm:.3f}")

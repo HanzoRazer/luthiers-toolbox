@@ -1,6 +1,6 @@
 # Gap Analysis Master — All Instrument Build Handoffs
 
-> **Generated:** 2026-03-09 | **Updated:** 2026-03-17 | **Sources:** 11 build handoff documents | **Total Gaps:** 120 (102 resolved, 18 remaining)
+> **Generated:** 2026-03-09 | **Updated:** 2026-03-17 | **Sources:** 11 build handoff documents | **Total Gaps:** 120 (104 resolved, 16 remaining)
 
 ---
 
@@ -22,7 +22,7 @@ Previous updates overstated progress. This section provides the accurate remaini
 | **CRITICAL** | 0 | ~~PHYS-01~~ Resolved (calculators/pickup_position_calc.py) |
 | **HIGH** | 3 | ~~INLAY-02~~, ~~INLAY-06~~, ~~VINE-08~~ (Session 7), ~~BEN-GAP-08~~, ~~LP-GAP-03~~, ~~BEN-GAP-04~~, ~~BEN-GAP-05~~, ~~VINE-05~~, ~~NECK-05~~, ~~LP-GAP-02~~, ~~EX-GAP-04~~ |
 | **MEDIUM** | 17 | ~~BEN-GAP-09~~, ~~BEN-GAP-07~~, ~~FV-GAP-05~~, ~~LP-GAP-04~~, ~~LP-GAP-05~~, ~~LP-GAP-06~~, ~~LP-GAP-08~~, ~~OM-PURF-03~~, ~~OM-PURF-05~~, ~~OM-PURF-08~~, INLAY-03, ~~INLAY-04~~, VEC-GAP-06, ~~VEC-GAP-07~~, ~~FV-GAP-07~~, ~~FV-GAP-10~~, EX-GAP-05, EX-GAP-06, EX-GAP-07, EX-GAP-08, ~~EX-GAP-12~~, ~~SG-GAP-13~~ |
-| **LOW** | 10 | ~~VINE-12~~, OM-PURF-06, FV-GAP-09, EX-GAP-09, EX-GAP-10, EX-GAP-11, ~~EX-GAP-13~~, ~~SG-GAP-09~~, ~~SG-GAP-14~~, ~~OM-PURF-07~~, LP-GAP-10, VEC-GAP-08 |
+| **LOW** | 8 | ~~VINE-12~~, ~~OM-PURF-06~~, ~~FV-GAP-09~~, EX-GAP-09, EX-GAP-10, EX-GAP-11, ~~EX-GAP-13~~, ~~SG-GAP-09~~, ~~SG-GAP-14~~, ~~OM-PURF-07~~, LP-GAP-10, VEC-GAP-08 |
 
 ### HIGH Priority Items (13) — Details
 
@@ -97,6 +97,7 @@ Previous updates overstated progress. This section provides the accurate remaini
 | 2026-03-17 | — | **GAP-NEW-1:** POST /api/rmos/rosette/design — multi-ring payload (soundhole_diameter_mm, rings[]), combined segmentation + G-code, job_ids. **GAP-NEW-2:** spanish_wave added to TilePattern in tile_segmentation.py. Martin OO 3-ring design run: 3 job_ids, line counts 1114 + 646 + 994, combined 2759. | **GAP-NEW-1**, **GAP-NEW-2** |
 | 2026-03-17 | *(pending)* | **OM-PURF-03:** Second-pass purfling ledge toolpath (`om_purf_03_additions.py`) — shallower step for purfling strip seating, neck-specific purfling path using taper angle. **OM-PURF-05:** Corner miter G-code (`binding_corner_miter.py`) — detect corners, calculate miter angles, generate V-shaped corner cuts, wire into binding design router with `corner_miters` field. **OM-PURF-08:** Channel depth probe cycle (`_om_purf_08_additions.py`) — G38.2 probe routine for binding channel verification with variance report, tolerance checking. | **OM-PURF-03**, **OM-PURF-05**, **OM-PURF-08** |
 | 2026-03-17 | — | **BIND-GAP-04:** BindingChannelSpec in binding_geometry.py (primary 2.375mm, ledge 1.6mm). **SG-GAP-09:** USBCPortSpec in schemas/smart_guitar_cam.py (12mm×6.5mm port, 3+1 axis routing). **VINE-12:** DXF exporter default R12→R2000 (AC1015) for native spline/arc support. | **BIND-GAP-04**, **SG-GAP-09**, **VINE-12** |
+| 2026-03-17 | — | **FV-GAP-09:** 190-point Flying V outline added to body_outlines.json (extracted from flying_v_body_phase3.dxf). **OM-PURF-06:** Material-aware feed rates added to binding_geometry.py (MATERIAL_FEED_RATES dict), wired to purfling_ledge.py and binding_corner_miter.py via get_feed_settings(). | **FV-GAP-09**, **OM-PURF-06** |
 ---
 
 ## Summary by Category
@@ -172,7 +173,7 @@ Previous updates overstated progress. This section provides the accurate remaini
 | VINE-03 | J45 Vine | Production V-carve G-code | **Resolved** (64f1a87f) |
 | OM-PURF-03 | OM Purfling | No neck purfling routing — requires neck-specific fixture | MEDIUM |
 | ~~LP-GAP-05~~ | Les Paul 1959 | ~~Carved top uses elliptical paraboloid approximation vs real asymmetric carve~~ **RESOLVED** (AsymmetricCarveProfile with compound radius, variable slopes, peak offset) | ~~MEDIUM~~ |
-| OM-PURF-06 | OM Purfling | No material-aware feed rates — generic 600mm/min for all materials | LOW |
+| ~~OM-PURF-06~~ | OM Purfling | ~~No material-aware feed rates~~ **RESOLVED** (MATERIAL_FEED_RATES dict in binding_geometry.py, wired to purfling_ledge.py and binding_corner_miter.py) | ~~LOW~~ |
 
 ### Fixes
 
@@ -346,7 +347,8 @@ Previous updates overstated progress. This section provides the accurate remaini
 | ~~INLAY-02~~ | Custom Inlay | ~~HeadstockDesignerView.vue non-functional stub~~ **Resolved** (2026-03-16) | ~~HIGH~~ |
 | ~~INLAY-06~~ | Custom Inlay | ~~No unified inlay canvas~~ **Resolved** (2026-03-16) InlayWorkspaceShell | ~~HIGH~~ |
 | ~~NECK-05~~ | Strat Neck | ~~No `StratocasterNeckGenerator.vue` or composables~~ **Resolved** | HIGH |
-| INLAY-03 | Custom Inlay | `FretMarkersView.vue` overlaps `InlayDesignerView.vue` — duplication | MEDIUM |
+| ~~INLAY-03~~ | Custom Inlay | ~~`FretMarkersView.vue` overlaps `InlayDesignerView.vue` — duplication~~ **Resolved** FretMarkersView superseded by InlayWorkspaceShell Stage 2 (ArtStudioInlay.vue). Route removed; view deprecated. | ~~MEDIUM~~ |
+| ~~INLAY-07~~ | Custom Inlay | ~~Inlay pocket depth control~~ **Resolved** — pocketDepth ref in InlayDesignerView.vue and ArtStudioInlay.vue; pocket_depth_mm wired to export-dxf API. | ~~MEDIUM~~ |
 | ~~VINE-08~~ | J45 Vine | ~~Bracing endpoints unreachable from UI~~ **Resolved** (2026-03-16) | ~~HIGH~~ |
 | VEC-GAP-06 | OM Purfling | `BlueprintImporter.vue` calls only Phase 1 — no UI for Phase 2/3/calibration | MEDIUM |
 | VINE-08 | J45 Vine | Bracing endpoints unreachable — no frontend consumes them (also in Cat 5) | HIGH |
@@ -356,7 +358,7 @@ Previous updates overstated progress. This section provides the accurate remaini
 1. **Wire `HeadstockDesignerView.vue`** — ✅ **RESOLVED** (2026-03-16) Connected to `/api/instruments/guitar/headstock-inlay` (templates, generate-prompt). Resolved INLAY-02.
 2. **Unified inlay canvas component** — ✅ **RESOLVED** (2026-03-16) InlayWorkspaceShell.vue with 4 tabs (Pattern Library, Fretboard, Headstock, BOM & Export) at `/art-studio/inlay-workspace`. Tabs sufficient (no shared canvas). Resolved INLAY-06.
 3. **Strat neck UI** — `StratocasterNeckGenerator.vue` with preset selector, profile preview, G-code generation. Resolves NECK-05.
-4. **Merge fret marker views** — Consolidate `FretMarkersView.vue` into `InlayDesignerView.vue`. Resolves INLAY-03.
+4. **Merge fret marker views** — ✅ **RESOLVED** FretMarkersView.vue superseded by InlayWorkspaceShell Stage 2 (ArtStudioInlay.vue). View deprecated, route removed. Resolved INLAY-03.
 5. **Vectorizer multi-phase UI** — Add Phase 2/3/4 step panels to `BlueprintImporter.vue`. Resolves VEC-GAP-06.
 
 ---
