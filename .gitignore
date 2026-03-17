@@ -120,6 +120,12 @@ test_program.nc
 test_sample.nc
 
 # ------------------------------------------
+# Premium prototypes & brand assets (DO NOT TRACK)
+# ------------------------------------------
+Rosette Designer/prototypes/premium/
+assets/brand/
+
+# ------------------------------------------
 # Legacy/Archive Directories (DO NOT TRACK)
 # ------------------------------------------
 __ARCHIVE__/
