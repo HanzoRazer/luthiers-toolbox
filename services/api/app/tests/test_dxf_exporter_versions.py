@@ -82,6 +82,6 @@ def test_dxf_exporter_default_options():
     export_mlpaths_to_dxf(paths, buf)
     txt = buf.getvalue()
 
-    # Should default to R12
-    assert "AC1009" in txt
+    # VINE-12: Should default to R2000 (AC1015) for native spline/arc support
+    assert "AC1015" in txt
     assert "EOF" in txt

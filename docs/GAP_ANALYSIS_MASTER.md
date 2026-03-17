@@ -1,6 +1,6 @@
 # Gap Analysis Master — All Instrument Build Handoffs
 
-> **Generated:** 2026-03-09 | **Updated:** 2026-03-17 | **Sources:** 11 build handoff documents | **Total Gaps:** 120 (99 resolved, 21 remaining)
+> **Generated:** 2026-03-09 | **Updated:** 2026-03-17 | **Sources:** 11 build handoff documents | **Total Gaps:** 120 (102 resolved, 18 remaining)
 
 ---
 
@@ -22,7 +22,7 @@ Previous updates overstated progress. This section provides the accurate remaini
 | **CRITICAL** | 0 | ~~PHYS-01~~ Resolved (calculators/pickup_position_calc.py) |
 | **HIGH** | 3 | ~~INLAY-02~~, ~~INLAY-06~~, ~~VINE-08~~ (Session 7), ~~BEN-GAP-08~~, ~~LP-GAP-03~~, ~~BEN-GAP-04~~, ~~BEN-GAP-05~~, ~~VINE-05~~, ~~NECK-05~~, ~~LP-GAP-02~~, ~~EX-GAP-04~~ |
 | **MEDIUM** | 17 | ~~BEN-GAP-09~~, ~~BEN-GAP-07~~, ~~FV-GAP-05~~, ~~LP-GAP-04~~, ~~LP-GAP-05~~, ~~LP-GAP-06~~, ~~LP-GAP-08~~, ~~OM-PURF-03~~, ~~OM-PURF-05~~, ~~OM-PURF-08~~, INLAY-03, ~~INLAY-04~~, VEC-GAP-06, ~~VEC-GAP-07~~, ~~FV-GAP-07~~, ~~FV-GAP-10~~, EX-GAP-05, EX-GAP-06, EX-GAP-07, EX-GAP-08, ~~EX-GAP-12~~, ~~SG-GAP-13~~ |
-| **LOW** | 13 | VINE-12, OM-PURF-06, FV-GAP-09, EX-GAP-09, EX-GAP-10, EX-GAP-11, ~~EX-GAP-13~~, SG-GAP-09, ~~SG-GAP-14~~, ~~OM-PURF-07~~, LP-GAP-10, VEC-GAP-08 |
+| **LOW** | 10 | ~~VINE-12~~, OM-PURF-06, FV-GAP-09, EX-GAP-09, EX-GAP-10, EX-GAP-11, ~~EX-GAP-13~~, ~~SG-GAP-09~~, ~~SG-GAP-14~~, ~~OM-PURF-07~~, LP-GAP-10, VEC-GAP-08 |
 
 ### HIGH Priority Items (13) — Details
 
@@ -96,6 +96,7 @@ Previous updates overstated progress. This section provides the accurate remaini
 | 2026-03-16 | *(pending)* | **Session 7 — Frontend gaps:** (1) VINE-08: route `/art-studio/bracing` → ArtStudioBracing.vue, nav entry; (2) INLAY-02: HeadstockDesignerView.vue wired to `listHeadstockTemplates` / `generateHeadstockPrompt`; (3) INLAY-06: InlayWorkspaceShell.vue at `/art-studio/inlay-workspace` with 4 tabs (Pattern Library, Fretboard/ArtStudioInlay, Headstock, BOM & Export). Deprecation comments on InlayDesignerView, InlayPatternView. See SESSION_STATUS.md. | **VINE-08**, **INLAY-02**, **INLAY-06** |
 | 2026-03-17 | — | **GAP-NEW-1:** POST /api/rmos/rosette/design — multi-ring payload (soundhole_diameter_mm, rings[]), combined segmentation + G-code, job_ids. **GAP-NEW-2:** spanish_wave added to TilePattern in tile_segmentation.py. Martin OO 3-ring design run: 3 job_ids, line counts 1114 + 646 + 994, combined 2759. | **GAP-NEW-1**, **GAP-NEW-2** |
 | 2026-03-17 | *(pending)* | **OM-PURF-03:** Second-pass purfling ledge toolpath (`om_purf_03_additions.py`) — shallower step for purfling strip seating, neck-specific purfling path using taper angle. **OM-PURF-05:** Corner miter G-code (`binding_corner_miter.py`) — detect corners, calculate miter angles, generate V-shaped corner cuts, wire into binding design router with `corner_miters` field. **OM-PURF-08:** Channel depth probe cycle (`_om_purf_08_additions.py`) — G38.2 probe routine for binding channel verification with variance report, tolerance checking. | **OM-PURF-03**, **OM-PURF-05**, **OM-PURF-08** |
+| 2026-03-17 | — | **BIND-GAP-04:** BindingChannelSpec in binding_geometry.py (primary 2.375mm, ledge 1.6mm). **SG-GAP-09:** USBCPortSpec in schemas/smart_guitar_cam.py (12mm×6.5mm port, 3+1 axis routing). **VINE-12:** DXF exporter default R12→R2000 (AC1015) for native spline/arc support. | **BIND-GAP-04**, **SG-GAP-09**, **VINE-12** |
 ---
 
 ## Summary by Category
@@ -133,7 +134,7 @@ Previous updates overstated progress. This section provides the accurate remaini
 | EX-GAP-03 | Explorer 1958 | DXF extents don't match spec dimensions (556×434mm vs 475×460mm) | **Resolved** (a7a9ee24) |
 | SG-GAP-02 | Smart Guitar | DXF X-axis asymmetric — centerline 22.2mm off-center, all cavities shifted | **Resolved** (638b7578) |
 | OM-PURF-05 | OM Purfling | Scan data has 5,451 scattered points, not a contour — parametric regen required | MEDIUM |
-| VINE-12 | J45 Vine | Extracted DXFs are R2000 not R12 — LWPolyline necessity but violates convention | LOW |
+| ~~VINE-12~~ | J45 Vine | ~~Extracted DXFs are R2000 not R12~~ **RESOLVED** (dxf_exporter.py default changed from R12 to R2000 for native spline/arc support) | ~~LOW~~ |
 | VINE-09 | J45 Vine | Bracing DXF has raw lines/arcs, not closed contours — 460 entities, 0 closed polylines | **Resolved** (30e50bb3) |
 | SAW-LAB-GAP-01 | Duplicate artifact helpers across 7 files | refactor(saw-lab): SAW-LAB-GAP-01 | 6dd8280a | Centralized 8 helpers into artifact_helpers.py |
 | RMOS-GAP-01 | Duplicate artifact helpers in runs_v2/ (3 files) | refactor(rmos): RMOS-GAP-01 | 528f577d | Moved helpers to rmos/, centralized across saw_lab + runs_v2 |
@@ -325,7 +326,7 @@ Previous updates overstated progress. This section provides the accurate remaini
 | ~~OM-PURF-07~~ | OM Purfling | ~~No G41/G42 cutter compensation~~ **RESOLVED** (post_processor.py: G41/G42 Dn) | ~~LOW~~ |
 | ~~FV-GAP-07~~ | Flying V | ~~No tool-change sequencing~~ **RESOLVED** (post_processor.py: M0/M1 pause modes) | ~~MEDIUM~~ |
 | LP-GAP-10 | Les Paul 1959 | Mixed G20/G21 across phases — operator risk | LOW |
-| SG-GAP-09 | Smart Guitar | USB-C slot requires 3+1 axis edge routing — 3-axis approximation used | LOW |
+| ~~SG-GAP-09~~ | Smart Guitar | ~~USB-C slot requires 3+1 axis edge routing~~ **RESOLVED** (schemas/smart_guitar_cam.py: USBCPortSpec with EdgeRoutingApproach enum, 3+1 flip strategy) | ~~LOW~~ |
 
 ### Fixes
 
@@ -476,7 +477,7 @@ Previous updates overstated progress. This section provides the accurate remaini
 | BIND-GAP-01 | All | `abalone_shell` missing from BindingMaterial enum — fragile material with min_bend_radius=8mm (tighter than wood strips) | **HIGH** |
 | BIND-GAP-02 | Les Paul | `spanish_wave` not in any runtime pattern registry — exists only as reference in gibson_les_paul.json | **HIGH** |
 | BIND-GAP-03 | All | No binding design orchestration endpoint — no POST /api/binding/design accepting body_style + binding_material + purfling_pattern + coverage_flags | **HIGH** |
-| BIND-GAP-04 | Les Paul | No multi-layer channel model — binding_geometry.py models single strip only; Les Paul spec defines primary_channel (2.375mm) + inner_ledge (1.6mm) | MEDIUM |
+| ~~BIND-GAP-04~~ | Les Paul | ~~No multi-layer channel model~~ **RESOLVED** (BindingChannelSpec in binding_geometry.py: primary channel 2.375mm + inner ledge 1.6mm, BINDING_CHANNEL_PRESETS) | ~~MEDIUM~~ |
 | BIND-GAP-05 | OM, All | No body-style-to-outline resolver in binding module — body_style: "om" doesn't map to outline points for binding path computation | MEDIUM |
 
 ### Fixes

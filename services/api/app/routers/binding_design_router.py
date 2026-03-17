@@ -21,8 +21,10 @@ from pydantic import BaseModel, Field
 
 from app.calculators.binding_geometry import (
     BindingMaterial,
+    BindingChannelSpec,
     MINIMUM_BEND_RADII_MM,
     PURFLING_STRIP_PATTERNS,
+    BINDING_CHANNEL_PRESETS,
     PurflingStripSpec,
     calculate_body_binding_path,
     polyline_length,
@@ -180,6 +182,12 @@ class BindingDesignResponse(BaseModel):
         description="List of corner miter positions and angles"
     )
 
+    # BIND-GAP-04: Multi-layer channel spec
+    binding_channel: Optional[Dict[str, Any]] = Field(
+        None,
+        description="Multi-layer binding channel specification (primary + inner ledge)"
+    )
+
     # Validation
     is_manufacturable: bool
     warnings: List[str]
@@ -264,7 +272,25 @@ def design_binding(req: BindingDesignRequest) -> BindingDesignResponse:
     if req.headstock_binding:
         warnings.append("Headstock binding geometry not yet implemented in orchestrator")
 
-    # 7. Calculate corner miters (OM-PURF-05)
+    # 7. Resolve binding channel preset (BIND-GAP-04)
+    binding_channel = None
+    channel_key = canonical_style.lower().replace("-", "_")
+    if channel_key in BINDING_CHANNEL_PRESETS:
+        channel_spec = BINDING_CHANNEL_PRESETS[channel_key]
+        # Override material if user specified different
+        if channel_spec.material != material:
+            from dataclasses import replace
+            channel_spec = BindingChannelSpec(
+                primary_width_mm=channel_spec.primary_width_mm,
+                primary_depth_mm=channel_spec.primary_depth_mm,
+                inner_ledge_width_mm=channel_spec.inner_ledge_width_mm,
+                inner_ledge_depth_mm=channel_spec.inner_ledge_depth_mm,
+                material=material,
+                purfling=channel_spec.purfling,
+            )
+        binding_channel = channel_spec.to_dict()
+
+    # 8. Calculate corner miters (OM-PURF-05)
     corner_miters = calculate_corner_miters(
         path=outline_points,
         binding_width_mm=req.binding_width_mm,
@@ -298,6 +324,7 @@ def design_binding(req: BindingDesignRequest) -> BindingDesignResponse:
         binding_path_analysis=binding_analysis,
         purfling_spec=purfling_spec,
         corner_miters=corner_miters,
+        binding_channel=binding_channel,
         neck_binding_included=req.neck_binding,
         headstock_binding_included=req.headstock_binding,
         is_manufacturable=is_manufacturable,
