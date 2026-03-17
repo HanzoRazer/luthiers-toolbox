@@ -1,6 +1,6 @@
 # Gap Analysis Master — All Instrument Build Handoffs
 
-> **Generated:** 2026-03-09 | **Updated:** 2026-03-17 | **Sources:** 11 build handoff documents | **Total Gaps:** 120 (96 resolved, 24 remaining)
+> **Generated:** 2026-03-09 | **Updated:** 2026-03-17 | **Sources:** 11 build handoff documents | **Total Gaps:** 120 (99 resolved, 21 remaining)
 
 ---
 
@@ -21,7 +21,7 @@ Previous updates overstated progress. This section provides the accurate remaini
 |----------|-------|-----------|
 | **CRITICAL** | 0 | ~~PHYS-01~~ Resolved (calculators/pickup_position_calc.py) |
 | **HIGH** | 3 | ~~INLAY-02~~, ~~INLAY-06~~, ~~VINE-08~~ (Session 7), ~~BEN-GAP-08~~, ~~LP-GAP-03~~, ~~BEN-GAP-04~~, ~~BEN-GAP-05~~, ~~VINE-05~~, ~~NECK-05~~, ~~LP-GAP-02~~, ~~EX-GAP-04~~ |
-| **MEDIUM** | 17 | ~~BEN-GAP-09~~, ~~BEN-GAP-07~~, ~~FV-GAP-05~~, ~~LP-GAP-04~~, ~~LP-GAP-05~~, ~~LP-GAP-06~~, ~~LP-GAP-08~~, OM-PURF-03, OM-PURF-05, OM-PURF-08, INLAY-03, ~~INLAY-04~~, VEC-GAP-06, ~~VEC-GAP-07~~, ~~FV-GAP-07~~, ~~FV-GAP-10~~, EX-GAP-05, EX-GAP-06, EX-GAP-07, EX-GAP-08, ~~EX-GAP-12~~, ~~SG-GAP-13~~ |
+| **MEDIUM** | 17 | ~~BEN-GAP-09~~, ~~BEN-GAP-07~~, ~~FV-GAP-05~~, ~~LP-GAP-04~~, ~~LP-GAP-05~~, ~~LP-GAP-06~~, ~~LP-GAP-08~~, ~~OM-PURF-03~~, ~~OM-PURF-05~~, ~~OM-PURF-08~~, INLAY-03, ~~INLAY-04~~, VEC-GAP-06, ~~VEC-GAP-07~~, ~~FV-GAP-07~~, ~~FV-GAP-10~~, EX-GAP-05, EX-GAP-06, EX-GAP-07, EX-GAP-08, ~~EX-GAP-12~~, ~~SG-GAP-13~~ |
 | **LOW** | 13 | VINE-12, OM-PURF-06, FV-GAP-09, EX-GAP-09, EX-GAP-10, EX-GAP-11, ~~EX-GAP-13~~, SG-GAP-09, ~~SG-GAP-14~~, ~~OM-PURF-07~~, LP-GAP-10, VEC-GAP-08 |
 
 ### HIGH Priority Items (13) — Details
@@ -95,6 +95,7 @@ Previous updates overstated progress. This section provides the accurate remaini
 | 2026-03-16 | — | Add centralized post-processor module (`app/cam/post_processor.py`) — G43 tool length compensation after M6, G41/G42 cutter radius compensation, M0/M1 tool change pauses, controller-specific dialects (GRBL, Mach3, Haas, LinuxCNC, Fanuc). 29 tests. | ~~LP-GAP-06~~, ~~EX-GAP-13~~, ~~SG-GAP-14~~, ~~OM-PURF-07~~, ~~FV-GAP-07~~ |
 | 2026-03-16 | *(pending)* | **Session 7 — Frontend gaps:** (1) VINE-08: route `/art-studio/bracing` → ArtStudioBracing.vue, nav entry; (2) INLAY-02: HeadstockDesignerView.vue wired to `listHeadstockTemplates` / `generateHeadstockPrompt`; (3) INLAY-06: InlayWorkspaceShell.vue at `/art-studio/inlay-workspace` with 4 tabs (Pattern Library, Fretboard/ArtStudioInlay, Headstock, BOM & Export). Deprecation comments on InlayDesignerView, InlayPatternView. See SESSION_STATUS.md. | **VINE-08**, **INLAY-02**, **INLAY-06** |
 | 2026-03-17 | — | **GAP-NEW-1:** POST /api/rmos/rosette/design — multi-ring payload (soundhole_diameter_mm, rings[]), combined segmentation + G-code, job_ids. **GAP-NEW-2:** spanish_wave added to TilePattern in tile_segmentation.py. Martin OO 3-ring design run: 3 job_ids, line counts 1114 + 646 + 994, combined 2759. | **GAP-NEW-1**, **GAP-NEW-2** |
+| 2026-03-17 | *(pending)* | **OM-PURF-03:** Second-pass purfling ledge toolpath (`om_purf_03_additions.py`) — shallower step for purfling strip seating, neck-specific purfling path using taper angle. **OM-PURF-05:** Corner miter G-code (`binding_corner_miter.py`) — detect corners, calculate miter angles, generate V-shaped corner cuts, wire into binding design router with `corner_miters` field. **OM-PURF-08:** Channel depth probe cycle (`_om_purf_08_additions.py`) — G38.2 probe routine for binding channel verification with variance report, tolerance checking. | **OM-PURF-03**, **OM-PURF-05**, **OM-PURF-08** |
 ---
 
 ## Summary by Category

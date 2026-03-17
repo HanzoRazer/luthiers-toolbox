@@ -9,6 +9,10 @@ from typing import Dict, List, Tuple, Optional, Any
 from math import cos, sin, radians
 
 
+# OM-PURF-08: Channel depth probing
+from ._om_purf_08_additions import generate_channel_depth_probe_gcode, generate_channel_probe_points
+
+
 def generate_corner_probe(
     pattern: str = "corner_outside",
     approach_distance: float = 20.0,
@@ -468,7 +472,7 @@ def get_statistics(gcode: str) -> Dict[str, Any]:
     """
     lines = gcode.split('\n')
     
-    probe_count = sum(1 for line in lines if 'G31' in line)
+    probe_count = sum(1 for line in lines if 'G31' in line or 'G38.2' in line)
     variable_count = sum(1 for line in lines if line.strip().startswith('#'))
     has_wcs_set = any('G10 L20' in line for line in lines)
     
