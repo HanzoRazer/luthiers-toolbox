@@ -98,6 +98,7 @@ Previous updates overstated progress. This section provides the accurate remaini
 | 2026-03-17 | *(pending)* | **OM-PURF-03:** Second-pass purfling ledge toolpath (`om_purf_03_additions.py`) — shallower step for purfling strip seating, neck-specific purfling path using taper angle. **OM-PURF-05:** Corner miter G-code (`binding_corner_miter.py`) — detect corners, calculate miter angles, generate V-shaped corner cuts, wire into binding design router with `corner_miters` field. **OM-PURF-08:** Channel depth probe cycle (`_om_purf_08_additions.py`) — G38.2 probe routine for binding channel verification with variance report, tolerance checking. | **OM-PURF-03**, **OM-PURF-05**, **OM-PURF-08** |
 | 2026-03-17 | — | **BIND-GAP-04:** BindingChannelSpec in binding_geometry.py (primary 2.375mm, ledge 1.6mm). **SG-GAP-09:** USBCPortSpec in schemas/smart_guitar_cam.py (12mm×6.5mm port, 3+1 axis routing). **VINE-12:** DXF exporter default R12→R2000 (AC1015) for native spline/arc support. | **BIND-GAP-04**, **SG-GAP-09**, **VINE-12** |
 | 2026-03-17 | — | **FV-GAP-09:** 190-point Flying V outline added to body_outlines.json (extracted from flying_v_body_phase3.dxf). **OM-PURF-06:** Material-aware feed rates added to binding_geometry.py (MATERIAL_FEED_RATES dict), wired to purfling_ledge.py and binding_corner_miter.py via get_feed_settings(). | **FV-GAP-09**, **OM-PURF-06** |
+| 2026-03-17 | — | **BIND-GAP-01:** ABALONE_SHELL added to BindingMaterial (min_bend_radius=8.0mm). **BIND-GAP-02:** SPANISH_WAVE added to TilePattern. **BIND-GAP-03:** POST /api/binding/design endpoint. **BIND-GAP-05:** resolve_body_outline() function. **EX-GAP-11:** 333-point Explorer outline added to body_outlines.json. | **BIND-GAP-01/02/03/05**, **EX-GAP-11** |
 ---
 
 ## Summary by Category
@@ -398,7 +399,7 @@ Previous updates overstated progress. This section provides the accurate remaini
 | GAP-08 | 24-Fret Strat | Strat model hardcodes `fret_count=22` — no parameterization | **Resolved** (StratBodySpec.fret_count parameterized) |
 | NECK-02 | Strat Neck | No canonical `stratocaster.json` spec file | **Resolved** (specs/stratocaster.json exists) |
 | NECK-03 | Strat Neck | Strat registry status is STUB — enum only, no linked spec | **Resolved** (registry status=PARTIAL, spec linked) |
-| EX-GAP-11 | Explorer 1958 | No `body_outlines.json` entry for Explorer | LOW |
+| ~~EX-GAP-11~~ | Explorer 1958 | ~~No `body_outlines.json` Explorer entry~~ **RESOLVED** (333-point outline added) | ~~LOW~~ |
 
 ### Fixes
 
@@ -476,8 +477,8 @@ Previous updates overstated progress. This section provides the accurate remaini
 
 | Gap ID | Instrument | Description | Severity |
 |--------|-----------|-------------|----------|
-| BIND-GAP-01 | All | `abalone_shell` missing from BindingMaterial enum — fragile material with min_bend_radius=8mm (tighter than wood strips) | **HIGH** |
-| BIND-GAP-02 | Les Paul | `spanish_wave` not in any runtime pattern registry — exists only as reference in gibson_les_paul.json | **HIGH** |
+| ~~BIND-GAP-01~~ | All | ~~`abalone_shell` missing from enum~~ **RESOLVED** (ABALONE_SHELL added, min_bend_radius=8.0mm) | ~~HIGH~~ |
+| ~~BIND-GAP-02~~ | Les Paul | ~~`spanish_wave` not in pattern registry~~ **RESOLVED** (SPANISH_WAVE added to TilePattern) | ~~HIGH~~ |
 | ~~BIND-GAP-03~~ | All | ~~No binding design orchestration endpoint~~ **RESOLVED** (POST /api/binding/design in binding_design_router.py) | ~~HIGH~~ |
 | ~~BIND-GAP-04~~ | Les Paul | ~~No multi-layer channel model~~ **RESOLVED** (BindingChannelSpec in binding_geometry.py: primary channel 2.375mm + inner ledge 1.6mm, BINDING_CHANNEL_PRESETS) | ~~MEDIUM~~ |
 | ~~BIND-GAP-05~~ | OM, All | ~~No body-style-to-outline resolver~~ **RESOLVED** (resolve_body_outline() added to binding module) | ~~MEDIUM~~ |
