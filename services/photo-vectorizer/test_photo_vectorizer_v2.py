@@ -29,6 +29,11 @@ from photo_vectorizer_v2 import (
     BodyIsolator,
     BodyRegion,
     CalibrationResult,
+    ContourScore,
+    ContourStageResult,
+    FeatureContour,
+    FeatureType,
+    InstrumentFamily,
     MultiInstrumentSplitter,
     PhotoVectorizerV2,
     ScaleCalibrator,
@@ -37,6 +42,8 @@ from photo_vectorizer_v2 import (
     Unit,
     detect_dark_background,
     estimate_render_dpi,
+    run_contour_stage_v2,
+    vectorize_photo_v2,
     INSTRUMENT_SPECS,
 )
 from grid_classify import PhotoGridClassifier, merge_classifications, GridClassification
@@ -495,7 +502,196 @@ from photo_vectorizer_v2 import BGRemovalMethod
 
 
 # =============================================================================
+# Standalone contour stage helpers
+# =============================================================================
+
+def _make_fc(x, y, w, h, area=None, feature_type=FeatureType.UNKNOWN,
+             confidence=0.8, solidity=0.85):
+    """Create a FeatureContour from a bounding-box spec (rectangle contour)."""
+    pts = np.array([
+        [x, y], [x + w, y], [x + w, y + h], [x, y + h],
+    ], dtype=np.int32).reshape(-1, 1, 2)
+    actual_area = area if area is not None else float(w * h)
+    return FeatureContour(
+        points_px=pts,
+        feature_type=feature_type,
+        confidence=confidence,
+        area_px=actual_area,
+        bbox_px=(x, y, w, h),
+        hash_id="test",
+        solidity=solidity,
+        aspect_ratio=max(w, h) / max(1, min(w, h)),
+    )
+
+
+def _make_body_region(x, y, w, h):
+    return BodyRegion(
+        x=x, y=y, width=w, height=h,
+        confidence=0.9, neck_end_row=y, max_body_width_px=w,
+    )
+
+
+def _make_score(
+    contour_index: int,
+    score: float,
+    *,
+    issues=None,
+    includes_neck=False,
+    border_contact=False,
+    ownership_score=0.85,
+    vertical_coverage=0.92,
+    neck_inclusion_score=0.02,
+):
+    return ContourScore(
+        contour_index=contour_index,
+        score=score,
+        completeness=0.82,
+        includes_neck=includes_neck,
+        border_contact=border_contact,
+        dimension_plausibility=0.80,
+        symmetry_score=0.78,
+        aspect_ratio_ok=True,
+        ownership_score=ownership_score,
+        vertical_coverage=vertical_coverage,
+        neck_inclusion_score=neck_inclusion_score,
+        issues=issues or [],
+    )
+
+
+# =============================================================================
+# run_contour_stage_v2 tests — ownership gate mirroring
+# =============================================================================
+
+
+def test_run_contour_stage_v2_mirrors_ownership_fields(monkeypatch):
+    feature_contours = [
+        _make_fc(10, 20, 120, 220, area=26000),
+        _make_fc(15, 0, 70, 280, area=24000),
+    ]
+
+    monkeypatch.setattr(
+        "photo_vectorizer_v2.extract_feature_contours",
+        lambda *args, **kwargs: feature_contours,
+    )
+    monkeypatch.setattr(
+        "photo_vectorizer_v2.merge_feature_contours",
+        lambda contours, image_shape, body_region, mpp: contours,
+    )
+
+    class _ScorerStub:
+        def score_all_candidates(self, contours, body_region, family, mpp, image_shape):
+            # Both contours below ownership threshold (0.60) so gate rejects all
+            return [
+                _make_score(0, 0.78, ownership_score=0.52, vertical_coverage=0.60),
+                _make_score(
+                    1,
+                    0.83,
+                    ownership_score=0.41,
+                    includes_neck=True,
+                    issues=["body ownership weak (0.41)"],
+                    vertical_coverage=0.48,
+                    neck_inclusion_score=0.72,
+                ),
+            ]
+
+    monkeypatch.setattr("photo_vectorizer_v2.ContourPlausibilityScorer", lambda **kwargs: _ScorerStub())
+
+    result = run_contour_stage_v2(
+        image=np.zeros((400, 300, 3), dtype=np.uint8),
+        merged_mask=np.zeros((400, 300), dtype=np.uint8),
+        body_region=_make_body_region(10, 20, 140, 240),
+        family=InstrumentFamily.ARCHTOP,
+        mpp=0.5,
+    )
+
+    assert result.body_contour_final is not None
+    # best_cs = highest .score among post_merge scores → score[1] with .score=0.83
+    assert result.best_score == 0.83
+    assert result.ownership_score == 0.41
+    assert result.ownership_ok is False
+    assert result.export_blocked is True
+    assert result.recommended_next_action == "rerun_body_isolation"
+    assert "body_ownership_failed" in result.export_block_issues
+    assert result.diagnostics["body_ownership_gate_failed"] is True
+    assert result.export_block_score_breakdown["ownership_score"] == 0.41
+    assert result.export_block_score_breakdown["vertical_coverage"] == 0.48
+
+
+def test_run_contour_stage_v2_keeps_owned_candidate_exportable(monkeypatch):
+    feature_contours = [
+        _make_fc(10, 20, 120, 220, area=26000),
+    ]
+
+    monkeypatch.setattr(
+        "photo_vectorizer_v2.extract_feature_contours",
+        lambda *args, **kwargs: feature_contours,
+    )
+    monkeypatch.setattr(
+        "photo_vectorizer_v2.merge_feature_contours",
+        lambda contours, image_shape, body_region, mpp: feature_contours,
+    )
+
+    class _ScorerStub:
+        def score_all_candidates(self, contours, body_region, family, mpp, image_shape):
+            return [
+                _make_score(0, 0.84, ownership_score=0.88, vertical_coverage=0.95),
+            ]
+
+    monkeypatch.setattr("photo_vectorizer_v2.ContourPlausibilityScorer", lambda **kwargs: _ScorerStub())
+
+    result = run_contour_stage_v2(
+        image=np.zeros((400, 300, 3), dtype=np.uint8),
+        merged_mask=np.zeros((400, 300), dtype=np.uint8),
+        body_region=_make_body_region(10, 20, 140, 240),
+        family=InstrumentFamily.ARCHTOP,
+        mpp=0.5,
+    )
+
+    assert result.export_blocked is False
+    assert result.ownership_score == 0.88
+    assert result.ownership_ok is True
+    assert result.recommended_next_action is None
+
+
+# =============================================================================
+# vectorize_photo_v2 tests — ownership warning surfacing
+# =============================================================================
+
+
+def test_vectorize_photo_v2_surfaces_ownership_failure_warning(monkeypatch):
+    from body_isolation_result import BodyIsolationResult
+
+    body_region = _make_body_region(10, 20, 140, 240)
+    body_result = BodyIsolationResult(
+        body_bbox_px=(10, 20, 140, 240),
+        body_region=body_region,
+        confidence=0.75,
+        completeness_score=0.69,
+    )
+
+    contour_stage = ContourStageResult(
+        best_score=0.58,
+        export_blocked=True,
+        block_reason="No contour passed body ownership threshold 0.60",
+        recommended_next_action="rerun_body_isolation",
+        ownership_score=0.39,
+        ownership_ok=False,
+        export_block_issues=["body_ownership_failed"],
+    )
+
+    monkeypatch.setattr("photo_vectorizer_v2.run_body_isolation_stage", lambda *args, **kwargs: body_result)
+    monkeypatch.setattr("photo_vectorizer_v2.run_contour_stage_v2", lambda *args, **kwargs: contour_stage)
+
+    result = vectorize_photo_v2(
+        image=np.zeros((400, 300, 3), dtype=np.uint8),
+        family_hint=InstrumentFamily.ARCHTOP,
+        mpp=0.5,
+    )
+
+    assert any("ownership failed" in w.lower() for w in result.warnings)
+    assert any("export blocked" in w.lower() for w in result.warnings)
+
+
+# =============================================================================
 # Run with: pytest test_photo_vectorizer_v2.py -v
 # =============================================================================
-if __name__ == "__main__":
-    pytest.main([__file__, "-v", "--tb=short"])

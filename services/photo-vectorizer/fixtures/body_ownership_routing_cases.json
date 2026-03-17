@@ -1,6 +1,33 @@
 {
   "cases": [
     {
+      "id": "smart_guitar_body_ownership_failure",
+      "description": "Contour score improved locally but the elected contour does not own the body; coach should force body isolation retry.",
+      "body_result": {
+        "body_bbox_px": [18, 20, 158, 210],
+        "completeness_score": 0.69,
+        "confidence": 0.77,
+        "review_required": false,
+        "lower_bout_missing_likely": false,
+        "border_contact_likely": false,
+        "score_breakdown": {
+          "hull_coverage": 0.80,
+          "vertical_extent_ratio": 0.72,
+          "width_stability": 0.73,
+          "border_contact_penalty": 0.0,
+          "center_alignment": 0.78,
+          "lower_bout_presence": 0.70
+        },
+        "issues": []
+      },
+      "contour_result": {
+        "best_score": 0.58,
+        "ownership_score": 0.39,
+        "export_block_issues": ["body ownership weak (0.39)"]
+      },
+      "expected_action": "rerun_body_isolation"
+    },
+    {
       "id": "smart_guitar_lower_bout_missing",
       "description": "Body isolation under-captures lower bout; coach should rerun body isolation.",
       "body_result": {
@@ -28,6 +55,7 @@
       },
       "contour_result": {
         "best_score": 0.56,
+        "ownership_score": null,
         "export_block_issues": []
       },
       "expected_action": "rerun_body_isolation"
@@ -60,6 +88,7 @@
       },
       "contour_result": {
         "best_score": 0.60,
+        "ownership_score": null,
         "export_block_issues": []
       },
       "expected_action": "rerun_body_isolation"
@@ -86,6 +115,7 @@
       },
       "contour_result": {
         "best_score": 0.64,
+        "ownership_score": null,
         "export_block_issues": ["dimension plausibility weak"]
       },
       "expected_action": "rerun_contour_stage"

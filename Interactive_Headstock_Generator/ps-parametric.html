@@ -1,0 +1,801 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Production Shop — Parametric Headstock Designer</title>
+<script src="https://unpkg.com/konva@9/konva.min.js"></script>
+<style>
+:root {
+  --w0:#0f0d0a; --w1:#1a1612; --w2:#201d18; --w3:#2a2520; --w4:#353028;
+  --v0:#f0e8d4; --v1:#e8dfc8; --v2:#d8cfb8;
+  --br:#b8962e; --br2:#d4ae48; --br3:#8a6e1a; --br4:#5a4810;
+  --dim:#9a8460; --dim2:#7a6448; --dim3:#5a4830;
+  --red:#9a3828; --red2:#c85040; --green:#3a7a4a; --green2:#5ab86a;
+  --blue:#3a6a8a; --blue2:#5b8fa8; --amber:#b87020;
+  --serif:'Palatino Linotype',Palatino,Georgia,serif;
+  --mono:'Courier New',Courier,monospace;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+html,body{height:100%;background:var(--w0);color:var(--v0);font-family:var(--mono);font-size:11px;overflow:hidden;}
+#app{display:grid;grid-template-columns:240px 1fr 230px;grid-template-rows:40px 1fr 28px;height:100vh;}
+
+/* top bar */
+#topbar{grid-column:1/-1;background:var(--w1);border-bottom:1px solid var(--w3);display:flex;align-items:center;padding:0 14px;gap:8px;}
+.brand{font-family:var(--serif);font-size:14px;font-style:italic;color:var(--v1);white-space:nowrap;margin-right:8px;}
+.brand em{color:var(--br2);font-style:normal;}
+.tsep{width:1px;height:18px;background:var(--w3);}
+.tbtn{background:none;border:1px solid transparent;border-radius:2px;color:var(--dim);font-family:var(--mono);font-size:9px;letter-spacing:.6px;text-transform:uppercase;padding:4px 8px;cursor:pointer;transition:all .12s;white-space:nowrap;}
+.tbtn:hover{border-color:var(--w4);color:var(--v1);}
+.tbtn.go{border-color:var(--br3);color:var(--br2);}
+.tbtn.go:hover{background:var(--br3);color:var(--w0);}
+.tbtn.on{background:var(--w3);border-color:var(--br3);color:var(--br2);}
+.spacer{flex:1;}
+.paid-badge{padding:3px 7px;background:rgba(184,150,46,.1);border:1px solid var(--br3);border-radius:2px;font-size:8px;letter-spacing:.8px;color:var(--br);text-transform:uppercase;}
+
+/* left panel — parameters */
+#params{background:var(--w1);border-right:1px solid var(--w3);overflow-y:auto;display:flex;flex-direction:column;}
+.pcat{padding:10px 12px 8px;border-bottom:1px solid var(--w2);}
+.pcat-lbl{font-size:8px;letter-spacing:1.6px;text-transform:uppercase;color:var(--br3);margin-bottom:8px;}
+.param-row{display:flex;align-items:center;gap:6px;margin-bottom:8px;}
+.param-name{width:72px;font-size:9px;color:var(--dim);flex-shrink:0;line-height:1.3;}
+.param-slider{flex:1;accent-color:var(--br);cursor:pointer;}
+.param-val{width:34px;text-align:right;font-size:10px;color:var(--v1);flex-shrink:0;}
+.param-unit{width:16px;font-size:8px;color:var(--dim2);flex-shrink:0;}
+
+/* tip style selector */
+.tip-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:4px;margin-top:2px;}
+.tip-btn{padding:5px 2px;background:var(--w2);border:1px solid var(--w3);border-radius:3px;font-size:8px;color:var(--dim);text-align:center;cursor:pointer;transition:all .1s;letter-spacing:.2px;}
+.tip-btn:hover{border-color:var(--br3);color:var(--v1);}
+.tip-btn.on{border-color:var(--br);background:rgba(184,150,46,.07);color:var(--br2);}
+
+/* tuner pattern */
+.tpat-row{display:flex;gap:4px;flex-wrap:wrap;margin-top:2px;}
+.tpat-btn{padding:4px 6px;background:var(--w2);border:1px solid var(--w3);border-radius:2px;font-size:8px;color:var(--dim);cursor:pointer;transition:all .1s;letter-spacing:.2px;}
+.tpat-btn:hover{border-color:var(--br3);}
+.tpat-btn.on{border-color:var(--br);color:var(--br2);background:rgba(184,150,46,.07);}
+
+/* canvas */
+#canvas-wrap{position:relative;overflow:hidden;background:var(--w0);}
+
+/* right panel — scoring */
+#scoring{background:var(--w1);border-left:1px solid var(--w3);display:flex;flex-direction:column;overflow-y:auto;}
+.sec{padding:10px 13px 8px;border-bottom:1px solid var(--w2);}
+.sec-ttl{font-family:var(--serif);font-size:11px;font-style:italic;color:var(--br2);margin-bottom:8px;}
+.sec-lbl{font-size:8px;letter-spacing:1.6px;text-transform:uppercase;color:var(--br3);margin-bottom:7px;}
+
+/* novelty meter */
+.novelty-wrap{margin-bottom:8px;}
+.novelty-bar-bg{height:6px;background:var(--w3);border-radius:3px;overflow:hidden;margin:5px 0;}
+.novelty-bar-fg{height:100%;border-radius:3px;transition:width .3s,background .3s;}
+.novelty-val{font-size:18px;font-family:var(--serif);color:var(--v0);line-height:1;}
+.novelty-sub{font-size:9px;color:var(--dim);margin-top:2px;}
+
+/* corpus proximity */
+.corpus-row{display:flex;align-items:center;gap:6px;margin-bottom:5px;}
+.corp-name{width:72px;font-size:9px;color:var(--dim);}
+.corp-bar-bg{flex:1;height:4px;background:var(--w3);border-radius:2px;overflow:hidden;}
+.corp-bar-fg{height:100%;background:var(--dim3);border-radius:2px;transition:width .25s;}
+.corp-val{width:32px;text-align:right;font-size:9px;color:var(--dim2);}
+
+/* gate list */
+.gate-item{display:flex;align-items:flex-start;gap:7px;margin-bottom:6px;padding:5px 7px;border-radius:3px;background:var(--w2);}
+.gate-icon{width:14px;height:14px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:8px;margin-top:1px;}
+.gate-icon.pass{background:var(--green);color:#fff;}
+.gate-icon.fail{background:var(--red);color:#fff;}
+.gate-icon.warn{background:var(--amber);color:#fff;}
+.gate-text{flex:1;}
+.gate-name{font-size:9px;color:var(--v1);margin-bottom:1px;}
+.gate-detail{font-size:8px;color:var(--dim);}
+
+/* presets */
+.preset-grid{display:grid;grid-template-columns:1fr 1fr;gap:4px;}
+.preset-btn{padding:6px 4px;background:var(--w2);border:1px solid var(--w3);border-radius:3px;font-family:var(--serif);font-size:10px;font-style:italic;color:var(--dim);cursor:pointer;transition:all .12s;text-align:center;}
+.preset-btn:hover{border-color:var(--br3);color:var(--v1);}
+
+/* param values export */
+.pv-block{background:var(--w2);border:1px solid var(--w3);border-radius:3px;padding:8px;font-size:9px;color:var(--dim);line-height:1.8;font-family:var(--mono);}
+.pv-block em{color:var(--br2);font-style:normal;}
+
+/* status */
+#statusbar{grid-column:1/-1;background:var(--w1);border-top:1px solid var(--w3);display:flex;align-items:center;padding:0 12px;gap:14px;}
+.st{font-size:9px;color:var(--dim);letter-spacing:.3px;}
+.st em{color:var(--v1);font-style:normal;}
+
+::-webkit-scrollbar{width:4px;}::-webkit-scrollbar-track{background:var(--w1);}::-webkit-scrollbar-thumb{background:var(--w3);border-radius:2px;}
+</style>
+</head>
+<body>
+<div id="app">
+
+<!-- TOP BAR -->
+<div id="topbar">
+  <div class="brand">Production<em>Shop</em> &middot; Parametric Designer</div>
+  <div class="tsep"></div>
+  <span class="paid-badge">Paid tier</span>
+  <div class="tsep"></div>
+  <button class="tbtn on" id="btn-cl">Centerline</button>
+  <button class="tbtn on" id="btn-guides">Guides</button>
+  <button class="tbtn" id="btn-overlay">Corpus overlay</button>
+  <button class="tbtn" id="btn-curv">Curvature</button>
+  <div class="spacer"></div>
+  <button class="tbtn" id="btn-randomize">&#9684; Randomize</button>
+  <div class="tsep"></div>
+  <button class="tbtn go" id="btn-export">&#8595; Export SVG</button>
+  <button class="tbtn go" id="btn-send">Send to workspace &#8594;</button>
+</div>
+
+<!-- LEFT PANEL — PARAMETERS -->
+<div id="params">
+  <div class="pcat">
+    <div class="pcat-lbl">Body geometry</div>
+    <div id="sliders-body"></div>
+  </div>
+  <div class="pcat">
+    <div class="pcat-lbl">Tip style</div>
+    <div class="tip-grid" id="tip-grid"></div>
+  </div>
+  <div class="pcat">
+    <div class="pcat-lbl">Shoulder &amp; waist</div>
+    <div id="sliders-shoulder"></div>
+  </div>
+  <div class="pcat">
+    <div class="pcat-lbl">Tuner pattern</div>
+    <div class="tpat-row" id="tpat-row"></div>
+    <div id="sliders-tuner" style="margin-top:8px"></div>
+  </div>
+  <div class="pcat" style="border-bottom:none">
+    <div class="pcat-lbl">Load preset</div>
+    <div class="preset-grid" id="preset-grid"></div>
+  </div>
+</div>
+
+<!-- CANVAS -->
+<div id="canvas-wrap"><div id="kstage"></div></div>
+
+<!-- RIGHT PANEL — SCORING -->
+<div id="scoring">
+  <div class="sec">
+    <div class="sec-ttl">Design score</div>
+    <div class="novelty-wrap">
+      <div style="display:flex;align-items:baseline;gap:8px">
+        <div class="novelty-val" id="nov-val">—</div>
+        <div style="font-size:9px;color:var(--dim)">novelty</div>
+      </div>
+      <div class="novelty-bar-bg"><div class="novelty-bar-fg" id="nov-bar" style="width:0%"></div></div>
+      <div class="novelty-sub" id="nov-sub">Move sliders to generate a design</div>
+    </div>
+  </div>
+
+  <div class="sec">
+    <div class="sec-lbl">Corpus distance</div>
+    <div id="corpus-bars"></div>
+  </div>
+
+  <div class="sec">
+    <div class="sec-lbl">Manufacture gates</div>
+    <div id="gate-list"></div>
+  </div>
+
+  <div class="sec">
+    <div class="sec-lbl">Parameter vector</div>
+    <div class="pv-block" id="pv-block"></div>
+  </div>
+
+  <div class="sec" style="border-bottom:none;margin-top:auto">
+    <div class="sec-lbl">Tool settings</div>
+    <div class="param-row">
+      <span class="param-name">Bit dia.</span>
+      <input class="param-slider" type="range" min="0.5" max="6" step="0.5" value="2" id="tool-dia">
+      <span class="param-val" id="tool-dia-val">2.0</span>
+      <span class="param-unit">mm</span>
+    </div>
+  </div>
+</div>
+
+<!-- STATUS BAR -->
+<div id="statusbar">
+  <span class="st" id="st-params">params: —</span>
+  <span class="st" id="st-novelty"></span>
+  <span class="st" id="st-gates"></span>
+  <span class="st" style="margin-left:auto" id="st-hint">Drag sliders · Shift+drag = fine adjust</span>
+</div>
+</div>
+
+<script>
+/* ─── Parameter definitions ─────────────────────────────────────────────── */
+const BODY_PARAMS = [
+  { id:'nutWidth',    label:'Nut width',   min:54,  max:80,   step:0.5, def:70,  unit:'u',  mm:true },
+  { id:'length',      label:'Length',      min:200, max:310,  step:1,   def:276, unit:'u',  mm:true },
+  { id:'tipWidth',    label:'Tip width',   min:16,  max:90,   step:0.5, def:58,  unit:'u',  mm:true },
+  { id:'asymmetry',   label:'Asymmetry',   min:-20, max:20,   step:0.5, def:0,   unit:'u' },
+  { id:'taper',       label:'Taper',       min:-20, max:30,   step:0.5, def:0,   unit:'u', tip:'Side angle: neg=narrows, pos=flares' },
+];
+const SHOULDER_PARAMS = [
+  { id:'waistDepth',  label:'Waist depth', min:0,   max:25,   step:0.5, def:2,   unit:'u' },
+  { id:'waistPos',    label:'Waist pos',   min:0.2, max:0.65, step:0.01,def:0.38,unit:'%', pct:true },
+  { id:'bassShoulder',label:'Bass R',      min:8,   max:60,   step:0.5, def:28,  unit:'u' },
+  { id:'trebleShoulder',label:'Treble R',  min:8,   max:60,   step:0.5, def:28,  unit:'u' },
+  { id:'tipRounding', label:'Tip round',   min:0,   max:50,   step:1,   def:18,  unit:'u' },
+];
+const TUNER_PARAMS = [
+  { id:'pegSpacing',  label:'Peg spacing', min:30,  max:55,   step:0.5, def:44,  unit:'u', mm:true },
+  { id:'pegInset',    label:'Peg inset',   min:8,   max:20,   step:0.5, def:12,  unit:'u' },
+];
+const TIP_STYLES = ['Rounded','Squared','Pointed','Scroll'];
+const TUNER_PATS = ['6L','6R','3+3','4+2','3+2+1'];
+
+/* ─── Corpus (approximate parameter vectors, normalized 0..1) ────────────── */
+const CORPUS = {
+  'Les Paul':   { nutWidth:70, length:276, tipWidth:58, asymmetry:0,  taper:0,  waistDepth:2,  waistPos:.38, bassShoulder:28, trebleShoulder:28, tipRounding:18, pegSpacing:44, pegInset:12 },
+  'Strat':      { nutWidth:66, length:278, tipWidth:52, asymmetry:-6, taper:3,  waistDepth:0,  waistPos:.40, bassShoulder:15, trebleShoulder:22, tipRounding:8,  pegSpacing:42, pegInset:12 },
+  'PRS':        { nutWidth:70, length:290, tipWidth:46, asymmetry:0,  taper:-4, waistDepth:4,  waistPos:.42, bassShoulder:22, trebleShoulder:22, tipRounding:30, pegSpacing:46, pegInset:13 },
+  'Telecaster': { nutWidth:66, length:278, tipWidth:66, asymmetry:0,  taper:6,  waistDepth:0,  waistPos:.40, bassShoulder:10, trebleShoulder:10, tipRounding:4,  pegSpacing:42, pegInset:11 },
+  'SG':         { nutWidth:60, length:280, tipWidth:38, asymmetry:0,  taper:-8, waistDepth:6,  waistPos:.44, bassShoulder:18, trebleShoulder:18, tipRounding:22, pegSpacing:40, pegInset:12 },
+};
+
+/* Parameter ranges for normalization */
+const RANGES = {
+  nutWidth:[54,80], length:[200,310], tipWidth:[16,90], asymmetry:[-20,20], taper:[-20,30],
+  waistDepth:[0,25], waistPos:[0.2,0.65], bassShoulder:[8,60], trebleShoulder:[8,60],
+  tipRounding:[0,50], pegSpacing:[30,55], pegInset:[8,20],
+};
+
+function normalize(p) {
+  const v = {};
+  for (const k in RANGES) {
+    const [lo, hi] = RANGES[k];
+    v[k] = (p[k] - lo) / (hi - lo);
+  }
+  return v;
+}
+
+function euclidDist(a, b) {
+  let s = 0;
+  for (const k in RANGES) s += (a[k] - b[k]) ** 2;
+  return Math.sqrt(s / Object.keys(RANGES).length);
+}
+
+/* ─── State ─────────────────────────────────────────────────────────────── */
+let P = {};           // current parameter values
+let tipStyle = 0;     // 0=rounded, 1=squared, 2=pointed, 3=scroll
+let tunerPat = '3+3'; // current tuner pattern
+let showCL = true, showGuides = true, showOverlay = false, showCurv = false;
+let toolDia = 2.0;
+
+/* init defaults */
+[...BODY_PARAMS, ...SHOULDER_PARAMS, ...TUNER_PARAMS].forEach(d => P[d.id] = d.def);
+
+/* ─── Konva setup ────────────────────────────────────────────────────────── */
+const wrap = document.getElementById('canvas-wrap');
+const W = wrap.clientWidth, H = wrap.clientHeight;
+const stage = new Konva.Stage({ container:'kstage', width:W, height:H });
+const bgLayer = new Konva.Layer();
+const hsLayer = new Konva.Layer();
+const ovLayer = new Konva.Layer(); // corpus overlay
+const guLayer = new Konva.Layer(); // guides
+stage.add(bgLayer, ovLayer, hsLayer, guLayer);
+
+const SC = 1.38;
+const OX = (W - 200*SC)/2;
+const OY = (H - 320*SC)/2 + 6;
+const p2cx = p => OX + p*SC;
+const p2cy = p => OY + p*SC;
+const MM = 0.215;
+
+/* ─── Background ─────────────────────────────────────────────────────────── */
+function drawBg() {
+  bgLayer.destroyChildren();
+  bgLayer.add(new Konva.Rect({x:0,y:0,width:W,height:H,fill:'#0f0d0a'}));
+  // Vellum card
+  const pad = 28;
+  bgLayer.add(new Konva.Rect({x:OX-pad+3,y:OY-pad+3,width:200*SC+pad*2,height:320*SC+pad*2,fill:'rgba(0,0,0,.28)',cornerRadius:3}));
+  bgLayer.add(new Konva.Rect({x:OX-pad,y:OY-pad,width:200*SC+pad*2,height:320*SC+pad*2,fill:'#f0e8d4',cornerRadius:3}));
+  bgLayer.add(new Konva.Rect({x:OX-pad,y:OY-pad,width:200*SC+pad*2,height:320*SC+pad*2,fill:'none',stroke:'#d8cfb0',strokeWidth:.8,cornerRadius:3}));
+  // Grid
+  const gs = 10*SC;
+  for(let x=OX;x<=OX+200*SC;x+=gs) bgLayer.add(new Konva.Line({points:[x,OY-pad,x,OY+320*SC+pad],stroke:'#ddd4b4',strokeWidth:.35}));
+  for(let y=OY;y<=OY+320*SC;y+=gs) bgLayer.add(new Konva.Line({points:[OX-pad,y,OX+200*SC+pad,y],stroke:'#ddd4b4',strokeWidth:.35}));
+  const mgs = 50*SC;
+  for(let x=OX;x<=OX+200*SC+1;x+=mgs) bgLayer.add(new Konva.Line({points:[x,OY-pad,x,OY+320*SC+pad],stroke:'#c8bfa0',strokeWidth:.7}));
+  for(let y=OY;y<=OY+320*SC+1;y+=mgs) bgLayer.add(new Konva.Line({points:[OX-pad,y,OX+200*SC+pad,y],stroke:'#c8bfa0',strokeWidth:.7}));
+  bgLayer.draw();
+}
+
+/* ─── Parametric path builder ────────────────────────────────────────────── */
+function buildPath(p, style) {
+  const cx = 100.0, ny = 298.0;
+  const nw2  = p.nutWidth / 2;
+  const L    = p.length;
+  const tw2  = p.tipWidth / 2;
+  const asym = p.asymmetry;
+  const wd   = p.waistDepth;
+  const wp   = p.waistPos;
+  const bsr  = p.bassShoulder;
+  const tsr  = p.trebleShoulder;
+  const tr   = p.tipRounding;
+  const taper = p.taper || 0;
+
+  const waistY    = ny - L * wp;
+  const shoulderY = ny - L * 0.76;
+  const tipY      = ny - L;
+
+  // X coordinates
+  const nutL    = cx - nw2;
+  const nutR    = cx + nw2;
+  const waistL  = cx - nw2 + wd;
+  const waistR  = cx + nw2 - wd;
+  const taper2  = taper / 2;
+  const shouldL = cx - tw2 + asym/2 - 5 - taper2;
+  const shouldR = cx + tw2 + asym/2 + 5 + taper2;
+  const tipL    = cx - tw2 + asym/2;
+  const tipR    = cx + tw2 + asym/2;
+
+  // Bezier handle length helper
+  const h = (y1, y2, f=0.44) => Math.abs(y2-y1)*f;
+
+  // Left side: nut → waist → shoulder → tip
+  const lNutC1y  = ny - h(ny, waistY);
+  const lWstC2y  = waistY + h(waistY, ny, 0.38);
+  const lWstC1y  = waistY - h(waistY, shoulderY, 0.42);
+  const lShdC2y  = shoulderY + bsr * 0.85;
+  const lShdC1y  = shoulderY - bsr * 0.6;
+  const lTipC2y  = tipY + h(tipY, shoulderY, 0.32);
+
+  // Right side mirrors with treble shoulder
+  const rNutC1y  = lNutC1y;
+  const rWstC2y  = lWstC2y;
+  const rWstC1y  = lWstC1y;
+  const rShdC2y  = shoulderY + tsr * 0.85;
+  const rShdC1y  = shoulderY - tsr * 0.6;
+  const rTipC2y  = lTipC2y;
+
+  const f = v => v.toFixed(2);
+
+  // Left path segments (bottom to top, bass side)
+  const leftSide = [
+    `C ${f(nutL)},${f(lNutC1y)} ${f(waistL)},${f(lWstC2y)} ${f(waistL)},${f(waistY)}`,
+    `C ${f(waistL)},${f(lWstC1y)} ${f(shouldL)},${f(lShdC2y)} ${f(shouldL)},${f(shoulderY)}`,
+    `C ${f(shouldL)},${f(lShdC1y)} ${f(tipL)},${f(lTipC2y)} ${f(tipL)},${f(tipY)}`,
+  ].join(' ');
+
+  // Tip closure depends on style
+  let tipCurve;
+  switch(style) {
+    case 0: // Rounded
+      tipCurve = `C ${f(tipL)},${f(tipY-tr)} ${f(tipR)},${f(tipY-tr)} ${f(tipR)},${f(tipY)}`;
+      break;
+    case 1: // Squared
+      tipCurve = `L ${f(tipL)},${f(tipY-2)} L ${f(cx)},${f(tipY-tr*0.3)} L ${f(tipR)},${f(tipY-2)} L ${f(tipR)},${f(tipY)}`;
+      break;
+    case 2: // Pointed
+      tipCurve = `L ${f(cx+asym*0.4)},${f(tipY-tr*1.5)} L ${f(tipR)},${f(tipY)}`;
+      break;
+    case 3: // Scroll
+      { const sx = tipL - tr*0.6, sy = tipY - tr*1.1;
+        const ex = cx + asym*0.3, ey = tipY - tr*0.5;
+        tipCurve = `C ${f(sx)},${f(tipY-tr*0.3)} ${f(sx)},${f(sy)} ${f(cx+asym*0.3)},${f(sy)} `+
+                   `C ${f(tipR+tr*0.3)},${f(sy)} ${f(tipR+tr*0.2)},${f(tipY-tr*0.2)} ${f(tipR)},${f(tipY)}`;
+      }
+      break;
+    default: tipCurve = `C ${f(tipL)},${f(tipY-tr)} ${f(tipR)},${f(tipY-tr)} ${f(tipR)},${f(tipY)}`;
+  }
+
+  // Right side (top to bottom, treble side, reversed)
+  const rightSide = [
+    `C ${f(tipR)},${f(rTipC2y)} ${f(shouldR)},${f(rShdC1y)} ${f(shouldR)},${f(shoulderY)}`,
+    `C ${f(shouldR)},${f(rShdC2y)} ${f(waistR)},${f(rWstC1y)} ${f(waistR)},${f(waistY)}`,
+    `C ${f(waistR)},${f(rWstC2y)} ${f(nutR)},${f(rNutC1y)} ${f(nutR)},${f(ny)}`,
+  ].join(' ');
+
+  return `M ${f(nutL)},${f(ny)} ${leftSide} ${tipCurve} ${rightSide} Z`;
+}
+
+/* ─── Tuner positions ────────────────────────────────────────────────────── */
+function buildTunerPositions(p, pat) {
+  const cx = 100.0, ny = 298.0;
+  const L = p.length;
+  const sp = p.pegSpacing;
+  const inset = p.pegInset;
+  const tipY = ny - L;
+  const asym = p.asymmetry;
+
+  const pos = [];
+  const ranges = {
+    '6L':    [[0,1,2,3,4,5], null],
+    '6R':    [null, [0,1,2,3,4,5]],
+    '3+3':   [[0,1,2], [0,1,2]],
+    '4+2':   [[0,1,2,3], [0,1]],
+    '3+2+1': [[0,1,2], [0,1]],
+  };
+
+  const bassIdxs   = ranges[pat]?.[0];
+  const trebleIdxs = ranges[pat]?.[1];
+
+  if (bassIdxs) {
+    bassIdxs.forEach((i, j) => {
+      const t = (j + 1) / (bassIdxs.length + 1);
+      const y = tipY + (ny - tipY) * t + asym * 0.1;
+      pos.push({ x: cx - p.nutWidth/2 + inset, y, side: 'bass' });
+    });
+  }
+  if (trebleIdxs) {
+    trebleIdxs.forEach((i, j) => {
+      const t = (j + 1) / (trebleIdxs.length + 1);
+      const y = tipY + (ny - tipY) * t - asym * 0.1;
+      pos.push({ x: cx + p.nutWidth/2 - inset + (pat==='6R'?0:0), y, side: 'treble' });
+    });
+  }
+  if (pat === '6L' && bassIdxs) {
+    return bassIdxs.map((i, j) => {
+      const t = (j + 0.5) / bassIdxs.length;
+      return { x: cx - p.nutWidth/2 + inset, y: tipY + (ny - tipY) * t, side: 'bass' };
+    });
+  }
+  if (pat === '6R' && trebleIdxs) {
+    return trebleIdxs.map((i, j) => {
+      const t = (j + 0.5) / trebleIdxs.length;
+      return { x: cx + p.nutWidth/2 - inset, y: tipY + (ny - tipY) * t, side: 'treble' };
+    });
+  }
+  return pos;
+}
+
+/* ─── Render headstock ───────────────────────────────────────────────────── */
+function renderHS() {
+  hsLayer.destroyChildren();
+  guLayer.destroyChildren();
+
+  const d = buildPath(P, tipStyle);
+  const nx = p2cx(100), ny = p2cy(298);
+
+  // Shadow
+  hsLayer.add(new Konva.Path({ data:d, x:OX+3, y:OY+3, scaleX:SC, scaleY:SC, fill:'rgba(0,0,0,.22)', listening:false }));
+  // Fill
+  hsLayer.add(new Konva.Path({ data:d, x:OX, y:OY, scaleX:SC, scaleY:SC, fill:'#7a3d1a', listening:false }));
+  // Grain
+  for(let i=0;i<8;i++){
+    const yo=OY+(30+i*34)*SC;
+    hsLayer.add(new Konva.Line({points:[OX+20*SC,yo,OX+180*SC,yo],stroke:'#fff',strokeWidth:.3,opacity:.05,listening:false}));
+  }
+  // Edge
+  hsLayer.add(new Konva.Path({ data:d, x:OX, y:OY, scaleX:SC, scaleY:SC, fill:'none', stroke:'#4a2010', strokeWidth:2, listening:false }));
+  // Highlight
+  hsLayer.add(new Konva.Path({ data:d, x:OX-1, y:OY-1, scaleX:SC, scaleY:SC, fill:'none', stroke:'rgba(255,255,255,.08)', strokeWidth:.8, listening:false }));
+
+  // Tuner holes
+  const tuners = buildTunerPositions(P, tunerPat);
+  tuners.forEach(t => {
+    const tx = p2cx(t.x), ty = p2cy(t.y);
+    hsLayer.add(new Konva.Circle({x:tx,y:ty,radius:6.5,fill:'#120c06',stroke:'#3a1c08',strokeWidth:.8,listening:false}));
+    hsLayer.add(new Konva.Circle({x:tx,y:ty,radius:3,fill:'#d4b060',listening:false}));
+    hsLayer.add(new Konva.Line({points:[tx-5,ty,tx+5,ty],stroke:'#8a6030',strokeWidth:.4,listening:false}));
+    hsLayer.add(new Konva.Line({points:[tx,ty-5,tx,ty+5],stroke:'#8a6030',strokeWidth:.4,listening:false}));
+  });
+
+  // Curvature overlay
+  if (showCurv) drawCurvature(d);
+
+  // Guides
+  if (showGuides) {
+    const nutY = p2cy(298), nw = P.nutWidth*SC/2, tipY2 = p2cy(298-P.length);
+    const cx2 = p2cx(100+P.asymmetry*0.4);
+    // Nut
+    guLayer.add(new Konva.Line({points:[p2cx(100)-nw,nutY,p2cx(100)+nw,nutY],stroke:'#b8962e',strokeWidth:2,strokeLinecap:'round'}));
+    guLayer.add(new Konva.Line({points:[p2cx(100)-nw,nutY+9,p2cx(100)+nw,nutY+9],stroke:'#b8962e',strokeWidth:.5,opacity:.5}));
+    guLayer.add(new Konva.Line({points:[p2cx(100)-nw,nutY+6,p2cx(100)-nw,nutY+12],stroke:'#b8962e',strokeWidth:.5,opacity:.5}));
+    guLayer.add(new Konva.Line({points:[p2cx(100)+nw,nutY+6,p2cx(100)+nw,nutY+12],stroke:'#b8962e',strokeWidth:.5,opacity:.5}));
+    guLayer.add(new Konva.Text({x:p2cx(100),y:nutY+14,text:`${(P.nutWidth*MM).toFixed(1)} mm`,fill:'#b8962e',fontSize:7.5,fontFamily:'Courier New',align:'center',width:60,offsetX:30,opacity:.8}));
+    // Length arrow
+    guLayer.add(new Konva.Line({points:[OX-22,nutY,OX-22,tipY2],stroke:'#8a7448',strokeWidth:.6,opacity:.5}));
+    guLayer.add(new Konva.Line({points:[OX-26,nutY,OX-18,nutY],stroke:'#8a7448',strokeWidth:.5,opacity:.5}));
+    guLayer.add(new Konva.Line({points:[OX-26,tipY2,OX-18,tipY2],stroke:'#8a7448',strokeWidth:.5,opacity:.5}));
+    guLayer.add(new Konva.Text({x:OX-40,y:(nutY+tipY2)/2-5,text:`${(P.length*MM).toFixed(0)}mm`,fill:'#8a7448',fontSize:7,fontFamily:'Courier New',rotation:-90,opacity:.6}));
+  }
+  if (showCL) {
+    const clx = p2cx(100+P.asymmetry*0.4);
+    const clxNut = p2cx(100);
+    guLayer.add(new Konva.Line({points:[clxNut,OY-20,clxNut,OY+320*SC+12],stroke:'#5b8fa8',strokeWidth:.8,dash:[5,4],opacity:.65}));
+    guLayer.add(new Konva.Text({x:clxNut+3,y:OY-18,text:'CL',fill:'#5b8fa8',fontSize:8,fontFamily:'Courier New',opacity:.7}));
+  }
+
+  hsLayer.draw();
+  guLayer.draw();
+}
+
+/* ─── Corpus overlay ─────────────────────────────────────────────────────── */
+function renderOverlay() {
+  ovLayer.destroyChildren();
+  if (!showOverlay) { ovLayer.draw(); return; }
+  const colors = {'Les Paul':'#e8724a','Strat':'#5baae8','PRS':'#7a5ae8','Telecaster':'#5ec478','SG':'#e8c85a'};
+  Object.entries(CORPUS).forEach(([name, cp]) => {
+    const d = buildPath(cp, 0);
+    ovLayer.add(new Konva.Path({data:d,x:OX,y:OY,scaleX:SC,scaleY:SC,fill:'none',stroke:colors[name],strokeWidth:.8,opacity:.22,dash:[4,3]}));
+  });
+  ovLayer.draw();
+}
+
+/* ─── Curvature comb (simplified) ────────────────────────────────────────── */
+function drawCurvature(pathD) {
+  // Sample path and draw normal spikes proportional to local curvature
+  const svgEl = document.createElementNS('http://www.w3.org/2000/svg','svg');
+  svgEl.setAttribute('viewBox','0 0 200 320');
+  svgEl.style.cssText='position:fixed;top:-9999px;visibility:hidden;width:200px;height:320px';
+  const pe = document.createElementNS('http://www.w3.org/2000/svg','path');
+  pe.setAttribute('d',pathD); svgEl.appendChild(pe); document.body.appendChild(svgEl);
+  try {
+    const len = pe.getTotalLength();
+    const n = 80, dt = 2;
+    for(let i=0;i<n;i++){
+      const t0=i/n*len, t1=Math.min(len,(i+dt)/n*len), tm=Math.max(0,(i-dt)/n*len);
+      const p0=pe.getPointAtLength(t0), p1=pe.getPointAtLength(t1), pm=pe.getPointAtLength(tm);
+      const tx=p1.x-pm.x, ty=p1.y-pm.y;
+      const nx2=-ty, ny2=tx;
+      const nl=Math.sqrt(nx2*nx2+ny2*ny2)||1;
+      const d2x=p1.x-2*p0.x+pm.x, d2y=p1.y-2*p0.y+pm.y;
+      const kappa=Math.sqrt(d2x*d2x+d2y*d2y)/(nl/n*len)*2000;
+      const mag=Math.min(kappa*SC*6, 14);
+      const x0=p2cx(p0.x), y0=p2cy(p0.y);
+      const xn=x0+(nx2/nl)*mag, yn=y0+(ny2/nl)*mag;
+      hsLayer.add(new Konva.Line({points:[x0,y0,xn,yn],stroke:'#3a6a8a',strokeWidth:.5,opacity:.5,listening:false}));
+    }
+  } finally { document.body.removeChild(svgEl); }
+}
+
+/* ─── Novelty & gate scoring ─────────────────────────────────────────────── */
+function score() {
+  const pn = normalize(P);
+  const corpusNorm = Object.fromEntries(Object.entries(CORPUS).map(([k,v])=>[k,normalize(v)]));
+  const dists = Object.fromEntries(Object.entries(corpusNorm).map(([k,v])=>[k,euclidDist(pn,v)]));
+  const minDist = Math.min(...Object.values(dists));
+  const novelty = Math.min(Math.round(minDist * 340), 100);
+
+  // Corpus bars
+  const maxD = Math.max(...Object.values(dists));
+  const cbEl = document.getElementById('corpus-bars');
+  const cbColors = {'Les Paul':'#e8724a','Strat':'#5baae8','PRS':'#7a5ae8','Telecaster':'#5ec478','SG':'#e8c85a'};
+  cbEl.innerHTML = Object.entries(dists).map(([name, d]) => `
+    <div class="corpus-row">
+      <span class="corp-name">${name}</span>
+      <div class="corp-bar-bg"><div class="corp-bar-fg" style="width:${(1-d/maxD)*100}%;background:${cbColors[name]}44"></div></div>
+      <span class="corp-val" style="color:${d<0.25?'var(--red2)':'var(--dim)'}">${d.toFixed(3)}</span>
+    </div>`).join('');
+
+  // Novelty meter
+  const novBar = document.getElementById('nov-bar');
+  const novVal = document.getElementById('nov-val');
+  const novSub = document.getElementById('nov-sub');
+  const col = novelty < 30 ? '#c85040' : novelty < 55 ? '#b87020' : '#5ab86a';
+  novBar.style.width = novelty + '%';
+  novBar.style.background = col;
+  novVal.textContent = novelty;
+  novVal.style.color = col;
+  novSub.textContent = minDist < 0.15 ? `Too close to ${Object.entries(dists).sort((a,b)=>a[1]-b[1])[0][0]} (d=${minDist.toFixed(3)})` :
+                        minDist < 0.3  ? 'Derived — distinguishable but recognisable lineage' :
+                                         'Novel — clear distance from all corpus models';
+
+  // Gates
+  const gates = runGates();
+  renderGates(gates);
+
+  // Status bar
+  document.getElementById('st-novelty').textContent = `novelty: ${novelty}/100`;
+  const nPass = gates.filter(g=>g.pass==='pass').length;
+  document.getElementById('st-gates').textContent = `gates: ${nPass}/${gates.length}`;
+
+  // Param vector
+  const pvEl = document.getElementById('pv-block');
+  const keys = ['nutWidth','length','tipWidth','asymmetry','taper','waistDepth','waistPos','bassShoulder','trebleShoulder','tipRounding'];
+  pvEl.innerHTML = keys.map(k=>`<em>${k.padEnd(18)}</em>${typeof P[k]==='number'&&P[k]<1?P[k].toFixed(2):P[k]}`).join('<br>');
+}
+
+function runGates() {
+  const gates = [];
+  const minWaistWidth = P.nutWidth - P.waistDepth * 2;
+  const minWaistMM = minWaistWidth * MM;
+  gates.push({ name:'Min material at waist', detail:`${minWaistMM.toFixed(1)} mm (min 12 mm)`,
+    pass: minWaistMM >= 12 ? 'pass' : minWaistMM >= 8 ? 'warn' : 'fail' });
+
+  const tipWidthMM = P.tipWidth * MM;
+  gates.push({ name:'Tip width', detail:`${tipWidthMM.toFixed(1)} mm (min 8 mm)`,
+    pass: tipWidthMM >= 8 ? 'pass' : 'fail' });
+
+  const minPegClear = (P.pegSpacing - 13) * MM;
+  gates.push({ name:'Peg clearance', detail:`${minPegClear.toFixed(1)} mm spacing (min 8 mm)`,
+    pass: minPegClear >= 8 ? 'pass' : minPegClear >= 5 ? 'warn' : 'fail' });
+
+  const minR = Math.min(P.bassShoulder, P.trebleShoulder, P.tipRounding) * MM;
+  const minRRequired = toolDia / 2 * 1.1;
+  gates.push({ name:`Min radius ≥ tool radius (${(toolDia/2).toFixed(1)} mm)`, detail:`min curve r = ${minR.toFixed(1)} mm`,
+    pass: minR >= minRRequired ? 'pass' : 'warn' });
+
+  const waistPos = P.waistPos;
+  gates.push({ name:'Waist position', detail:`${(waistPos*100).toFixed(0)}% from nut (valid 20–65%)`,
+    pass: waistPos >= 0.2 && waistPos <= 0.65 ? 'pass' : 'fail' });
+
+  return gates;
+}
+
+function renderGates(gates) {
+  const el = document.getElementById('gate-list');
+  const icons = { pass:'✓', fail:'✗', warn:'!' };
+  el.innerHTML = gates.map(g => `
+    <div class="gate-item">
+      <div class="gate-icon ${g.pass}">${icons[g.pass]}</div>
+      <div class="gate-text">
+        <div class="gate-name">${g.name}</div>
+        <div class="gate-detail">${g.detail}</div>
+      </div>
+    </div>`).join('');
+}
+
+/* ─── Full render ────────────────────────────────────────────────────────── */
+function render() {
+  renderHS();
+  renderOverlay();
+  score();
+  document.getElementById('st-params').textContent =
+    `nut ${(P.nutWidth*MM).toFixed(1)}mm · L ${(P.length*MM).toFixed(0)}mm · tip ${(P.tipWidth*MM).toFixed(1)}mm`;
+}
+
+/* ─── Slider builder ─────────────────────────────────────────────────────── */
+function buildSliders(defs, containerId) {
+  const el = document.getElementById(containerId);
+  defs.forEach(d => {
+    const row = document.createElement('div');
+    row.className = 'param-row';
+    const dispVal = () => d.pct ? `${Math.round(P[d.id]*100)}` : P[d.id];
+    row.innerHTML = `
+      <span class="param-name" title="${d.tip||''}">${d.label}</span>
+      <input class="param-slider" type="range" id="sl-${d.id}"
+        min="${d.min}" max="${d.max}" step="${d.step}" value="${d.def}">
+      <span class="param-val" id="vl-${d.id}">${dispVal()}</span>
+      <span class="param-unit">${d.unit}</span>`;
+    el.appendChild(row);
+    const input = row.querySelector(`#sl-${d.id}`);
+    const valEl = row.querySelector(`#vl-${d.id}`);
+    input.addEventListener('input', () => {
+      P[d.id] = parseFloat(input.value);
+      valEl.textContent = dispVal();
+      render();
+    });
+  });
+}
+
+/* ─── Tip style buttons ──────────────────────────────────────────────────── */
+function buildTipGrid() {
+  const el = document.getElementById('tip-grid');
+  TIP_STYLES.forEach((name, i) => {
+    const btn = document.createElement('div');
+    btn.className = 'tip-btn' + (i===0?' on':'');
+    btn.textContent = name;
+    btn.addEventListener('click', () => {
+      tipStyle = i;
+      el.querySelectorAll('.tip-btn').forEach((b,j)=>b.classList.toggle('on',j===i));
+      render();
+    });
+    el.appendChild(btn);
+  });
+}
+
+/* ─── Tuner pattern buttons ──────────────────────────────────────────────── */
+function buildTunerPat() {
+  const el = document.getElementById('tpat-row');
+  TUNER_PATS.forEach(name => {
+    const btn = document.createElement('div');
+    btn.className = 'tpat-btn' + (name===tunerPat?' on':'');
+    btn.textContent = name;
+    btn.addEventListener('click', () => {
+      tunerPat = name;
+      el.querySelectorAll('.tpat-btn').forEach(b=>b.classList.toggle('on',b.textContent===name));
+      render();
+    });
+    el.appendChild(btn);
+  });
+}
+
+/* ─── Presets ────────────────────────────────────────────────────────────── */
+function buildPresets() {
+  const el = document.getElementById('preset-grid');
+  Object.entries(CORPUS).forEach(([name, cp]) => {
+    const btn = document.createElement('div');
+    btn.className = 'preset-btn';
+    btn.textContent = name;
+    btn.addEventListener('click', () => {
+      Object.assign(P, cp);
+      // Sync all sliders
+      [...BODY_PARAMS, ...SHOULDER_PARAMS, ...TUNER_PARAMS].forEach(d => {
+        const sl = document.getElementById(`sl-${d.id}`);
+        const vl = document.getElementById(`vl-${d.id}`);
+        if (sl) { sl.value = P[d.id]; vl.textContent = d.pct ? Math.round(P[d.id]*100) : P[d.id]; }
+      });
+      render();
+    });
+    el.appendChild(btn);
+  });
+}
+
+/* ─── Randomize ─────────────────────────────────────────────────────────── */
+document.getElementById('btn-randomize').addEventListener('click', () => {
+  const rnd = (lo, hi, step) => {
+    const n = Math.round((lo + Math.random()*(hi-lo))/step)*step;
+    return Math.min(hi, Math.max(lo, n));
+  };
+  [...BODY_PARAMS, ...SHOULDER_PARAMS, ...TUNER_PARAMS].forEach(d => {
+    P[d.id] = rnd(d.min, d.max, d.step);
+    const sl = document.getElementById(`sl-${d.id}`);
+    const vl = document.getElementById(`vl-${d.id}`);
+    if (sl) { sl.value = P[d.id]; vl.textContent = d.pct ? Math.round(P[d.id]*100) : P[d.id]; }
+  });
+  render();
+});
+
+/* ─── Toggle buttons ─────────────────────────────────────────────────────── */
+['cl','guides','overlay','curv'].forEach(key => {
+  const el = document.getElementById(`btn-${key}`);
+  el.addEventListener('click', () => {
+    if(key==='cl') showCL=!showCL;
+    if(key==='guides') showGuides=!showGuides;
+    if(key==='overlay') showOverlay=!showOverlay;
+    if(key==='curv') showCurv=!showCurv;
+    el.classList.toggle('on', key==='cl'?showCL:key==='guides'?showGuides:key==='overlay'?showOverlay:showCurv);
+    render();
+  });
+});
+
+document.getElementById('tool-dia').addEventListener('input', e => {
+  toolDia = parseFloat(e.target.value);
+  document.getElementById('tool-dia-val').textContent = toolDia.toFixed(1);
+  score();
+});
+
+/* ─── Export ─────────────────────────────────────────────────────────────── */
+document.getElementById('btn-export').addEventListener('click', () => {
+  const d = buildPath(P, tipStyle);
+  const tuners = buildTunerPositions(P, tunerPat);
+  const nutY = 298, nw = P.nutWidth/2, cx2 = 100;
+  const tunerSVG = tuners.map((t,i) =>
+    `  <circle cx="${t.x.toFixed(2)}" cy="${t.y.toFixed(2)}" r="5.5" fill="#120c06" stroke="#3a1c08" stroke-width="0.6" id="T${i+1}"/>`
+  ).join('\n');
+  const params = [...BODY_PARAMS,...SHOULDER_PARAMS].map(d=>`     ${d.id}: ${P[d.id]}`).join('\n');
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 320">
+  <!--
+    Production Shop Parametric Headstock
+    ${new Date().toLocaleDateString()}
+    Parameters:
+${params}
+    Tip style: ${TIP_STYLES[tipStyle]}
+    Tuner pattern: ${tunerPat}
+  -->
+  <path d="${d}" fill="#7a3d1a" stroke="#4a2010" stroke-width="1.5"/>
+  <line x1="${(cx2-nw).toFixed(1)}" y1="${nutY}" x2="${(cx2+nw).toFixed(1)}" y2="${nutY}" stroke="#333" stroke-width="1.8" stroke-linecap="round"/>
+${tunerSVG}
+</svg>`;
+  const a = Object.assign(document.createElement('a'), {
+    href: URL.createObjectURL(new Blob([svg],{type:'image/svg+xml'})),
+    download: `ps-parametric.svg`
+  });
+  a.click();
+});
+
+document.getElementById('btn-send').addEventListener('click', () => {
+  const d = buildPath(P, tipStyle);
+  const svgStr = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 320"><path d="${d}"/></svg>`;
+  // Write to sessionStorage for workspace to pick up
+  sessionStorage.setItem('ps_import_path', d);
+  sessionStorage.setItem('ps_import_svg', svgStr);
+  alert('Design saved to session.\nOpen the Headstock workspace and choose "Custom" — it will load this shape.');
+});
+
+/* ─── Init ───────────────────────────────────────────────────────────────── */
+drawBg();
+buildSliders(BODY_PARAMS, 'sliders-body');
+buildSliders(SHOULDER_PARAMS, 'sliders-shoulder');
+buildSliders(TUNER_PARAMS, 'sliders-tuner');
+buildTipGrid();
+buildTunerPat();
+buildPresets();
+render();
+</script>
+</body>
+</html>

@@ -42,17 +42,25 @@
               </div>
             </div>
             <div class="dropdown-links">
-              <RouterLink
-                v-for="link in domain.links"
-                :key="link.to"
-                :to="link.to"
-                class="dropdown-link"
-                @click="closeAllMenus"
+              <template v-if="domain.links.length">
+                <RouterLink
+                  v-for="link in domain.links"
+                  :key="link.to"
+                  :to="link.to"
+                  class="dropdown-link"
+                  @click="closeAllMenus"
+                >
+                  <span class="link-icon">{{ link.icon }}</span>
+                  <span class="link-label">{{ link.label }}</span>
+                  <span class="link-arrow">→</span>
+                </RouterLink>
+              </template>
+              <p
+                v-else
+                class="dropdown-coming-soon"
               >
-                <span class="link-icon">{{ link.icon }}</span>
-                <span class="link-label">{{ link.label }}</span>
-                <span class="link-arrow">→</span>
-              </RouterLink>
+                Coming soon
+              </p>
             </div>
           </div>
         </div>
@@ -85,7 +93,7 @@
               ⚙️
             </div>
             <div class="stat-value">
-              8
+              5
             </div>
             <div class="stat-label">
               Modules
@@ -200,115 +208,70 @@ import { ref } from 'vue'
 
 const activeMenu = ref<string | null>(null)
 
+// Nav reorganized into 5 modules (routes unchanged)
 const domains = [
+  // MODULE 1 — DESIGN
   {
     id: 'design',
     label: 'Design',
     icon: '✏️',
-    description: 'Guitar geometry, rosette, art studio, blueprint import',
+    description: 'New project, instrument hub, blueprint lab',
     links: [
-      { icon: '🎸', label: 'Design Hub',      to: '/design-hub' },
-      { icon: '🌹', label: 'Rosette Pipeline', to: '/rosette' },
-      { icon: '🎨', label: 'Art Studio',       to: '/art-studio' },
+      { icon: '📁', label: 'New Project',     to: '/design-hub' },
+      { icon: '🎸', label: 'Instrument Hub',   to: '/instrument-geometry' },
       { icon: '📋', label: 'Blueprint Lab',    to: '/blueprint' },
-      { icon: '📐', label: 'Instrument Geometry', to: '/instrument-geometry' },
-      { icon: '🔺', label: 'Polygon Offset Lab', to: '/lab/polygon-offset' },
     ],
   },
+  // MODULE 2 — ART STUDIO
   {
     id: 'art-studio',
     label: 'Art Studio',
     icon: '🎨',
-    description: 'Decorative elements: binding, headstock, purfling, rosettes',
+    description: 'Soundhole & rosette, inlay, binding & purfling, headstock',
     links: [
-      { icon: '🎨', label: 'Art Studio Home', to: '/art-studio' },
-      { icon: '📐', label: 'Bracing',        to: '/art-studio/bracing' },
-      { icon: '🔲', label: 'Binding',         to: '/art-studio/binding' },
-      { icon: '🎸', label: 'Headstock',       to: '/art-studio/headstock' },
-      { icon: '〰️', label: 'Purfling',        to: '/art-studio/purfling' },
-      { icon: '⭕', label: 'Soundhole',       to: '/art-studio/soundhole' },
-      { icon: '💎', label: 'Fret Markers',    to: '/art-studio/fret-markers' },
-      { icon: '💠', label: 'Inlay Workspace', to: '/art-studio/inlay-workspace' },
       { icon: '🌹', label: 'Soundhole & Rosette', to: '/art-studio/soundhole-rosette-workspace' },
-      { icon: '💠', label: 'Inlay Designer',  to: '/art-studio/inlay' },
+      { icon: '💠', label: 'Inlay Workspace', to: '/art-studio/inlay-workspace' },
+      { icon: '🔲', label: 'Binding & Purfling', to: '/art-studio/binding' },
+      { icon: '🎸', label: 'Headstock',       to: '/art-studio/headstock' },
     ],
   },
+  // MODULE 3 — CAM
   {
     id: 'cam',
     label: 'CAM',
     icon: '⚙️',
-    description: 'Toolpath generation, G-code, and CNC pipeline',
+    description: 'Adaptive, saw, bridge, helical, V-Carve, relief, polygon offset',
     links: [
-      { icon: '⚡', label: 'Quick Cut',       to: '/quick-cut' },
-      { icon: '🔧', label: 'CAM Pipeline',    to: '/pipeline' },
-      { icon: '🕳️', label: 'Pocket Clearing', to: '/cam/pocket' },
-      { icon: '✂️', label: 'Contour Cutting', to: '/cam/contour' },
-      { icon: '🔳', label: 'Surfacing',       to: '/cam/surfacing' },
-      { icon: '🔩', label: 'Drilling',        to: '/cam/drilling' },
-      { icon: '🎸', label: 'Fret Slotting',   to: '/cam/fret-slots' },
-      { icon: '🎥', label: 'Simulator',       to: '/cam/simulator' },
-      { icon: '↔️', label: 'DXF → G-code',   to: '/cam/dxf-to-gcode' },
       { icon: '🌀', label: 'Adaptive Lab',    to: '/lab/adaptive' },
-      { icon: '🌊', label: 'Helical Ramp Lab', to: '/lab/helical' },
       { icon: '🪚', label: 'Saw Lab',         to: '/lab/saw/slice' },
       { icon: '🌉', label: 'Bridge Lab',      to: '/lab/bridge' },
+      { icon: '🌊', label: 'Helical Ramp Lab', to: '/lab/helical' },
       { icon: '🔧', label: 'V-Carve',         to: '/art-studio/vcarve' },
       { icon: '🗿', label: 'Relief Carving',  to: '/art-studio/relief' },
+      { icon: '🔺', label: 'Polygon Offset Lab', to: '/lab/polygon-offset' },
     ],
   },
+  // MODULE 4 — SHOP FLOOR
   {
-    id: 'production',
-    label: 'Production',
+    id: 'shop-floor',
+    label: 'Shop Floor',
     icon: '🏭',
-    description: 'RMOS manufacturing, inventory, quality, orders',
+    description: 'Manufacturing runs, job queue',
     links: [
-      { icon: '📋', label: 'RMOS Runs',       to: '/rmos/runs' },
-      { icon: '📡', label: 'Live Monitor',    to: '/rmos/live-monitor' },
-      { icon: '📦', label: 'Inventory',       to: '/rmos/inventory' },
-      { icon: '✅', label: 'Quality Control', to: '/rmos/quality' },
-      { icon: '⏱️', label: 'Time Tracking',   to: '/rmos/time' },
-      { icon: '📝', label: 'Orders',          to: '/rmos/orders' },
-      { icon: '🔄', label: 'Compare Runs',    to: '/compare' },
-      { icon: '🏭', label: 'CNC Production',  to: '/cnc' },
+      { icon: '📋', label: 'Manufacturing Runs', to: '/rmos/runs' },
+      { icon: '📬', label: 'Job Queue',       to: '/job-queue' },
     ],
   },
+  // MODULE 5 — SMART GUITAR
   {
-    id: 'ai',
-    label: 'AI Tools',
-    icon: '🤖',
-    description: 'AI-powered analysis, recommendations, and assistance',
+    id: 'smart-guitar',
+    label: 'Smart Guitar',
+    icon: '🎸',
+    description: 'Body design, electronics, RPi5 cavity, WiFi, export & BOM',
     links: [
-      { icon: '🎨', label: 'AI Images',       to: '/ai-images' },
-      { icon: '🪵', label: 'Wood Grading',    to: '/ai/wood-grading' },
-      { icon: '💡', label: 'Recommendations', to: '/ai/recommendations' },
-      { icon: '💬', label: 'Assistant',       to: '/ai/assistant' },
-      { icon: '🔍', label: 'Defect Detection', to: '/ai/defect-detection' },
+      { icon: '🎸', label: 'Smart Guitar', to: '/smart-guitar' },
     ],
   },
-  {
-    id: 'analytics',
-    label: 'Analytics',
-    icon: '📊',
-    description: 'Risk dashboards, acoustics, and monitoring',
-    links: [
-      { icon: '📈', label: 'CAM Dashboard',   to: '/saw' },
-      { icon: '🔬', label: 'Audio Analyzer',  to: '/tools/audio-analyzer' },
-      { icon: '📚', label: 'Acoustics Library', to: '/tools/audio-analyzer/library' },
-      { icon: '🎵', label: 'Acoustics Runs',  to: '/tools/audio-analyzer/runs' },
-      { icon: '⚠️', label: 'Risk Timeline',   to: '/lab/risk-timeline' },
-    ],
-  },
-  {
-    id: 'business',
-    label: 'Business',
-    icon: '💼',
-    description: 'Costing, ROI, cash flow, and engineering estimators',
-    links: [
-      { icon: '💰', label: 'Calculators',     to: '/calculators' },
-      { icon: '📊', label: 'Estimator',       to: '/business/estimator' },
-    ],
-  },
-  // CU-A4: Dev Tools nav removed (SandboxView, CadLayoutDemo, etc. not routed)
 ]
 
 function openMenu(id: string) {
@@ -477,6 +440,14 @@ function closeAllMenus() {
   display: flex;
   flex-direction: column;
   gap: 2px;
+}
+
+.dropdown-coming-soon {
+  padding: var(--space-3, 0.75rem);
+  font-size: var(--font-size-sm, 0.875rem);
+  color: var(--color-text-muted, #64748b);
+  font-style: italic;
+  margin: 0;
 }
 
 .dropdown-link {

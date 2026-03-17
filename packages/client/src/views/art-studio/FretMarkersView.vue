@@ -1,5 +1,9 @@
 <script setup lang="ts">
 /**
+ * @deprecated — superseded by InlayWorkspaceShell Stage 2 (ArtStudioInlay.vue).
+ * FretMarkersView was a stub with no backend.
+ * Resolves INLAY-03.
+ *
  * FretMarkersView - Fretboard Position Marker Designer
  * Design inlay patterns for fret position markers (dots, blocks, custom shapes)
  *

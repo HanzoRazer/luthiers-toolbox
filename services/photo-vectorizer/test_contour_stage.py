@@ -97,6 +97,7 @@ class TestStageParams:
         assert p.merge_max_close_px == 120
         assert p.elect_min_overlap == 0.50
         assert p.export_block_threshold == EXPORT_BLOCK_THRESHOLD
+        assert p.scorer_ownership_threshold == 0.60
 
     def test_custom_params(self):
         p = StageParams(merge_max_close_px=60, elect_max_width_factor=1.50)

@@ -81,6 +81,7 @@ class StageParams:
     scorer_border_margin_px: int = 5
     scorer_neck_height_factor: float = 1.35
     scorer_min_solidity: float = 0.55
+    scorer_ownership_threshold: float = 0.60
     # Export threshold
     export_block_threshold: float = EXPORT_BLOCK_THRESHOLD
 
@@ -190,6 +191,7 @@ class ContourStage:
             border_margin_px=p.scorer_border_margin_px,
             neck_height_factor=p.scorer_neck_height_factor,
             min_solidity=p.scorer_min_solidity,
+            ownership_threshold=p.scorer_ownership_threshold,
         )
         scores_pre = scorer.score_all_candidates(
             pre_merge_contours, body_region, family, mpp, image_shape)
@@ -241,10 +243,18 @@ class ContourStage:
             f"idx={best_idx} score={best_score:.3f}")
 
         # ── 8f: Actual body election (proven X-extent guard) ────────────
+        post_ownership_scores = {
+            cs.contour_index: float(cs.ownership_score)
+            for cs in scores_post
+        }
+
         body_idx = elect_body_contour_v2(
             feature_contours, body_region,
             min_overlap=p.elect_min_overlap,
-            max_width_factor=p.elect_max_width_factor)
+            max_width_factor=p.elect_max_width_factor,
+            ownership_scores=post_ownership_scores,
+            ownership_threshold=p.scorer_ownership_threshold,
+        )
 
         if body_idx >= 0:
             body_fc = feature_contours[body_idx]
@@ -304,6 +314,7 @@ class ContourStage:
                 "n_scored_post": len(scores_post),
                 "family": family,
                 "merge_warnings": merge_warnings,
+                "body_ownership_gate_failed": body_idx < 0,
                 **merge_guard_diag,
             },
         )
@@ -323,8 +334,25 @@ class ContourStage:
                 "aspect_ratio_ok": 1.0 if best_cs.aspect_ratio_ok else 0.0,
                 "border_contact": 0.0 if best_cs.border_contact else 1.0,
                 "includes_neck": 0.0 if best_cs.includes_neck else 1.0,
+                "ownership_score": best_cs.ownership_score,
+                "vertical_coverage": best_cs.vertical_coverage,
+                "neck_inclusion_score": 1.0 - best_cs.neck_inclusion_score,
             }
             contour_stage.export_block_issues = list(best_cs.issues)
+            contour_stage.ownership_score = float(best_cs.ownership_score)
+            contour_stage.ownership_ok = bool(
+                best_cs.ownership_score >= p.scorer_ownership_threshold
+            )
+
+        if body_idx < 0:
+            contour_stage.export_blocked = True
+            contour_stage.block_reason = (
+                f"No contour passed body ownership threshold "
+                f"{p.scorer_ownership_threshold:.2f}"
+            )
+            contour_stage.recommended_next_action = "rerun_body_isolation"
+            if "body_ownership_failed" not in contour_stage.export_block_issues:
+                contour_stage.export_block_issues.append("body_ownership_failed")
 
         if best_score < p.export_block_threshold:
             contour_stage.export_blocked = True

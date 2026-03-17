@@ -1,0 +1,110 @@
+"""Auth, system, and utilities routers."""
+
+from typing import List
+
+from ..models import RouterSpec
+
+SYSTEM_ROUTERS: List[RouterSpec] = [
+    RouterSpec(
+        module="app.routers.health_router",
+        prefix="/api",
+        tags=["Health"],
+        required=True,
+        category="core",
+    ),
+    RouterSpec(
+        module="app.governance.governance_consolidated_router",
+        prefix="",
+        tags=["Meta", "Governance"],
+        required=True,
+        category="core",
+    ),
+    RouterSpec(
+        module="app.routers.auth_router",
+        prefix="",
+        tags=["Auth"],
+        required=True,
+        category="core",
+    ),
+    RouterSpec(
+        module="app.core.job_queue.router",
+        prefix="",
+        tags=["Jobs", "Async"],
+        required=False,
+        category="core",
+    ),
+    RouterSpec(
+        module="app.vision.router",
+        prefix="",
+        tags=["Vision"],
+        category="vision",
+    ),
+    RouterSpec(
+        module="app.advisory.blob_router",
+        prefix="",
+        tags=["Advisory", "Blobs"],
+        category="vision",
+    ),
+    RouterSpec(
+        module="app._experimental.ai_cam_router",
+        prefix="/api",
+        tags=["AI-CAM"],
+        category="experimental",
+    ),
+    RouterSpec(
+        module="app._experimental.joblog_router",
+        prefix="/api",
+        tags=["JobLog", "Telemetry"],
+        category="experimental",
+    ),
+    RouterSpec(
+        module="app.routers.learned_overrides_router",
+        prefix="/api",
+        tags=["Feeds", "Learned"],
+        category="experimental",
+    ),
+    RouterSpec(
+        module="app.routers.analytics_router",
+        prefix="/api",
+        tags=["Analytics"],
+        category="analytics",
+    ),
+    RouterSpec(
+        module="app.ai_context_adapter.routes",
+        prefix="",
+        tags=["AI Context"],
+        category="ai",
+    ),
+    RouterSpec(
+        module="app.routers.misc_stub_routes",
+        prefix="/api",
+        tags=["Stubs"],
+        category="stubs",
+    ),
+    RouterSpec(
+        module="app.analyzer.router",
+        prefix="",
+        tags=["Analyzer"],
+        category="analyzer",
+    ),
+    RouterSpec(
+        module="app.workflow.sessions.routes",
+        prefix="",
+        tags=["Workflow", "Sessions"],
+        category="workflow",
+    ),
+    RouterSpec(
+        module="app.materials.router",
+        router_attr="registry_router",
+        prefix="",
+        tags=["Materials", "Registry"],
+        category="materials",
+    ),
+    RouterSpec(
+        module="app.materials.router",
+        router_attr="system_router",
+        prefix="",
+        tags=["Materials", "System"],
+        category="materials",
+    ),
+]

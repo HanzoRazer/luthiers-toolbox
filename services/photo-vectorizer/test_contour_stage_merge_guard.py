@@ -72,6 +72,9 @@ def _make_score(contour_index, score, issues=None):
         dimension_plausibility=score,
         symmetry_score=0.7,
         aspect_ratio_ok=True,
+        ownership_score=0.85,
+        vertical_coverage=0.92,
+        neck_inclusion_score=0.02,
         issues=issues or [],
     )
 

@@ -44,6 +44,7 @@ class _ContourResultStub:
         post_scores=None,
         issues=None,
         diagnostics=None,
+        ownership_score=None,
     ):
         self.best_score = best_score
         self.elected_source = elected_source
@@ -54,6 +55,7 @@ class _ContourResultStub:
         self.block_reason = None
         self.recommended_next_action = None
         self.diagnostics = diagnostics if diagnostics is not None else {}
+        self.ownership_score = ownership_score
 
 
 # ── Helpers ─────────────────────────────────────────────────────────────────
@@ -265,3 +267,44 @@ def test_rejected_retry_records_retry_attempt_with_negative_score_delta_and_pres
     assert attempt["score_before"] == 0.56
     assert attempt["score_after"] == 0.50
     assert attempt["score_delta"] < 0
+
+
+# ── Ownership failure → body_region_expansion profile ───────────────────────
+
+
+def test_ownership_failure_prefers_body_region_expansion_profile():
+    """
+    When ownership_score < threshold, decide() should select the
+    body_region_expansion profile for the body-isolation retry.
+    """
+    coach = GeometryCoachV2(
+        CoachV2Config(
+            max_retries=2,
+            epsilon=0.03,
+            body_isolation_review_threshold=0.45,
+            contour_target_threshold=0.80,
+            ownership_retry_threshold=0.60,
+            body_retry_profiles=[
+                BodyIsolationParams(profile="lower_bout_recovery"),
+                BodyIsolationParams(profile="body_region_expansion"),
+            ],
+            contour_retry_profiles=[],
+        )
+    )
+
+    body = _make_body_result(completeness=0.70)
+    contour = _ContourResultStub(
+        best_score=0.82,
+        ownership_score=0.40,  # below threshold
+    )
+
+    decision = coach.decide(
+        body_result=body,
+        contour_result=contour,
+        retry_count=0,
+    )
+
+    assert decision.action == "rerun_body_isolation"
+    assert "ownership" in decision.reason.lower()
+    assert decision.body_retry_params is not None
+    assert decision.body_retry_params.profile == "body_region_expansion"

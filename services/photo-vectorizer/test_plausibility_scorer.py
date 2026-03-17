@@ -61,6 +61,8 @@ class TestContourScore:
             includes_neck=False, border_contact=False,
             dimension_plausibility=0.9, symmetry_score=0.7,
             aspect_ratio_ok=True,
+            ownership_score=0.81, vertical_coverage=0.92,
+            neck_inclusion_score=0.03,
         )
         assert cs.score == 0.75
         assert cs.issues == []
@@ -71,6 +73,8 @@ class TestContourScore:
             includes_neck=True, border_contact=True,
             dimension_plausibility=0.2, symmetry_score=0.5,
             aspect_ratio_ok=False,
+            ownership_score=0.22, vertical_coverage=0.38,
+            neck_inclusion_score=0.76,
             issues=["low solidity 0.40", "border contact on 3 edges"],
         )
         assert len(cs.issues) == 2
@@ -93,6 +97,8 @@ class TestContourStageResult:
         assert csr.block_reason is None
         assert csr.best_score == 0.0
         assert csr.diagnostics == {"retry_attempts": []}
+        assert csr.ownership_score is None
+        assert csr.ownership_ok is None
 
     def test_populated(self):
         fc = _make_fc(10, 10, 100, 200)
@@ -129,6 +135,7 @@ class TestScorerScoreCandidate:
         assert cs.border_contact is False
         assert cs.includes_neck is False
         assert cs.aspect_ratio_ok is True
+        assert cs.ownership_score >= 0.60
 
     def test_border_contact_penalized(self):
         """A contour touching 2+ edges should have border_contact=True and lower score."""
@@ -148,6 +155,7 @@ class TestScorerScoreCandidate:
             fc, 0, body, InstrumentFamily.SOLID_BODY,
             mpp=0.5, image_shape=self.image_shape)
         assert cs.includes_neck is True
+        assert cs.ownership_score < 0.60
 
     def test_low_solidity_issues(self):
         """A contour with poor solidity should report issues."""
@@ -208,6 +216,15 @@ class TestScorerScoreCandidate:
             fc, 0, self.body_region, InstrumentFamily.SOLID_BODY,
             mpp=0.0, image_shape=self.image_shape)
         assert cs.dimension_plausibility == 1.0
+
+    def test_partial_body_candidate_gets_low_ownership(self):
+        """A contour covering only a fraction of the body should score low ownership."""
+        body = _make_body_region(100, 100, 600, 900)
+        fc = _make_fc(100, 500, 300, 200, solidity=0.75)   # small slice
+        cs = self.scorer.score_candidate(
+            fc, 0, body, InstrumentFamily.SOLID_BODY,
+            mpp=0.5, image_shape=self.image_shape)
+        assert cs.ownership_score < 0.60
 
 
 class TestScorerScoreAll:

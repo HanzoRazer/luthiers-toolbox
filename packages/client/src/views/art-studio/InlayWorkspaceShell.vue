@@ -2,28 +2,77 @@
 /**
  * InlayWorkspaceShell — Unified inlay workspace (INLAY-06)
  *
- * Four stages:
+ * Five stages:
+ *   Stage 0: Headstock Design (template + wood + import)
  *   Stage 1: Pattern library (InlayPatternView)
  *   Stage 2: Fretboard placement (ArtStudioInlay)
  *   Stage 3: Headstock placement (HeadstockDesignerView)
  *   Stage 4: BOM & export aggregator
  */
-import { ref, defineAsyncComponent } from "vue";
+import { ref, defineAsyncComponent, provide } from "vue";
+import { useWoodGrain, WOOD_SPECIES } from "@/composables/useWoodGrain";
+import { useDxfImport } from "@/composables/useDxfImport";
 
-type StageId = "pattern" | "fretboard" | "headstock" | "bom";
+type StageId = "headstock-design" | "pattern" | "fretboard" | "headstock" | "bom";
 
 const stages: { id: StageId; label: string; icon: string }[] = [
+  { id: "headstock-design", label: "Headstock Design", icon: "🎸" },
   { id: "pattern", label: "Pattern Library", icon: "◇" },
   { id: "fretboard", label: "Fretboard", icon: "▬" },
   { id: "headstock", label: "Headstock", icon: "🎸" },
   { id: "bom", label: "BOM & Export", icon: "📋" },
 ];
 
-const activeStage = ref<StageId>("pattern");
+const activeStage = ref<StageId>("headstock-design");
 
 function setStage(id: StageId) {
   activeStage.value = id;
 }
+
+// Stage 0 state: template + wood species
+const HEADSTOCK_TEMPLATES = ["Les Paul", "Stratocaster", "Telecaster", "Flying V", "Explorer", "Custom"] as const;
+type TemplateName = (typeof HEADSTOCK_TEMPLATES)[number];
+const selectedTemplate = ref<TemplateName | null>(null);
+const selectedSpecies = ref<string>("Mahogany");
+
+const grain = useWoodGrain();
+provide("grain", grain);
+
+const dxfImport = useDxfImport();
+const fileInputRef = ref<HTMLInputElement | null>(null);
+
+function onTemplateSelect(name: TemplateName) {
+  selectedTemplate.value = name;
+}
+
+function onSpeciesSelect(name: string) {
+  if (WOOD_SPECIES[name]) {
+    selectedSpecies.value = name;
+    grain.setSpecies(name);
+  }
+}
+
+function triggerFileInput() {
+  fileInputRef.value?.click();
+}
+
+async function onFileSelected(event: Event) {
+  const input = event.target as HTMLInputElement;
+  const file = input.files?.[0];
+  if (!file) return;
+  try {
+    await dxfImport.loadFile(file);
+    selectedTemplate.value = "Custom";
+  } finally {
+    input.value = "";
+  }
+}
+
+function goToStage1() {
+  setStage("pattern");
+}
+
+const speciesNames = Object.keys(WOOD_SPECIES);
 
 // Lazy-loaded stage content to avoid pulling all views at once
 const PatternStage = defineAsyncComponent(() =>
@@ -42,7 +91,7 @@ const HeadstockStage = defineAsyncComponent(() =>
     <header class="shell-header">
       <h1 class="shell-title">Inlay Workspace</h1>
       <p class="shell-subtitle">
-        Pattern library · Fretboard placement · Headstock · BOM & export
+        Headstock design · Pattern library · Fretboard · Headstock · BOM & export
       </p>
     </header>
 
@@ -64,7 +113,78 @@ const HeadstockStage = defineAsyncComponent(() =>
       </button>
     </nav>
 
+    <input
+      ref="fileInputRef"
+      type="file"
+      accept=".dxf,.svg,application/dxf,image/svg+xml"
+      class="hidden-file-input"
+      aria-hidden="true"
+      @change="onFileSelected"
+    />
+
     <div class="stage-content" role="tabpanel" :id="`stage-${activeStage}`" :aria-labelledby="`tab-${activeStage}`">
+      <!-- Stage 0: Headstock Design -->
+      <div v-show="activeStage === 'headstock-design'" class="stage-panel stage-panel-headstock-design" data-stage="headstock-design">
+        <div class="headstock-design-stage">
+          <section class="hd-section">
+            <h2 class="hd-section-title">1. Headstock template</h2>
+            <div class="template-cards">
+              <button
+                v-for="name in HEADSTOCK_TEMPLATES"
+                :key="name"
+                type="button"
+                class="template-card"
+                :class="{ selected: selectedTemplate === name }"
+                @click="onTemplateSelect(name)"
+              >
+                {{ name }}
+              </button>
+            </div>
+          </section>
+          <section class="hd-section">
+            <h2 class="hd-section-title">2. Wood species</h2>
+            <div class="species-buttons">
+              <button
+                v-for="name in speciesNames"
+                :key="name"
+                type="button"
+                class="species-btn"
+                :class="{ selected: selectedSpecies === name }"
+                @click="onSpeciesSelect(name)"
+              >
+                {{ name }}
+              </button>
+            </div>
+          </section>
+          <section class="hd-section">
+            <h2 class="hd-section-title">3. Import DXF/SVG</h2>
+            <button type="button" class="import-btn" @click="triggerFileInput">
+              Import DXF/SVG
+            </button>
+            <p v-if="dxfImport.importedFile" class="import-filename">{{ dxfImport.importedFile.name }}</p>
+            <p v-if="dxfImport.error" class="import-error">{{ dxfImport.error }}</p>
+          </section>
+          <section class="hd-section">
+            <h2 class="hd-section-title">4. Preview</h2>
+            <div class="canvas-preview">
+              <p v-if="selectedTemplate" class="preview-line">Headstock: <strong>{{ selectedTemplate }}</strong></p>
+              <p class="preview-line">Wood: <strong>{{ selectedSpecies }}</strong></p>
+              <p class="preview-note">Full grain preview coming soon</p>
+            </div>
+          </section>
+          <section class="hd-section hd-actions">
+            <button
+              type="button"
+              class="next-btn"
+              :disabled="!selectedTemplate"
+              @click="goToStage1"
+            >
+              Next →
+            </button>
+          </section>
+        </div>
+      </div>
+
       <!-- Stage 1: Pattern library -->
       <div v-show="activeStage === 'pattern'" class="stage-panel" data-stage="pattern">
         <Suspense>
@@ -282,5 +402,165 @@ const HeadstockStage = defineAsyncComponent(() =>
 
 .bom-link:hover {
   text-decoration: underline;
+}
+
+/* Stage 0: Headstock Design */
+.hidden-file-input {
+  position: absolute;
+  width: 0;
+  height: 0;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.stage-panel-headstock-design {
+  min-height: 400px;
+}
+
+.headstock-design-stage {
+  padding: 1rem;
+  max-width: 720px;
+}
+
+.hd-section {
+  margin-bottom: 1.5rem;
+}
+
+.hd-section-title {
+  font-size: 0.875rem;
+  font-weight: 600;
+  margin: 0 0 0.5rem;
+  color: var(--color-text-primary, #1e293b);
+}
+
+.template-cards {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.5rem;
+}
+
+.template-card {
+  padding: 0.75rem 1rem;
+  border: 1px solid var(--color-border, #e2e8f0);
+  border-radius: 0.5rem;
+  background: var(--color-bg-secondary, #f8fafc);
+  color: var(--color-text-primary, #334155);
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: border-color 0.2s, background 0.2s;
+}
+
+.template-card:hover {
+  border-color: var(--color-accent, #2563eb);
+  background: var(--color-bg-tertiary, #eff6ff);
+}
+
+.template-card.selected {
+  border-color: var(--color-accent, #2563eb);
+  background: var(--color-accent-bg, #2563eb);
+  color: white;
+}
+
+.species-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.species-btn {
+  padding: 0.5rem 0.75rem;
+  border: 1px solid var(--color-border, #e2e8f0);
+  border-radius: 0.375rem;
+  background: var(--color-bg-secondary, #f8fafc);
+  color: var(--color-text-primary, #334155);
+  font-size: 0.8125rem;
+  cursor: pointer;
+  transition: border-color 0.2s, background 0.2s;
+}
+
+.species-btn:hover {
+  border-color: var(--color-accent, #2563eb);
+  background: var(--color-bg-tertiary, #eff6ff);
+}
+
+.species-btn.selected {
+  border-color: var(--color-accent, #2563eb);
+  background: var(--color-accent-bg, #2563eb);
+  color: white;
+}
+
+.import-btn {
+  padding: 0.5rem 1rem;
+  border: 1px solid var(--color-border, #e2e8f0);
+  border-radius: 0.375rem;
+  background: var(--color-bg-secondary, #f8fafc);
+  color: var(--color-text-primary, #334155);
+  font-size: 0.875rem;
+  cursor: pointer;
+}
+
+.import-btn:hover {
+  border-color: var(--color-accent, #2563eb);
+  color: var(--color-accent, #2563eb);
+}
+
+.import-filename {
+  margin: 0.5rem 0 0;
+  font-size: 0.8125rem;
+  color: var(--color-text-secondary, #64748b);
+}
+
+.import-error {
+  margin: 0.5rem 0 0;
+  font-size: 0.8125rem;
+  color: var(--color-error, #dc2626);
+}
+
+.canvas-preview {
+  padding: 1rem;
+  background: var(--color-bg-secondary, #f1f5f9);
+  border: 1px solid var(--color-border, #e2e8f0);
+  border-radius: 0.5rem;
+}
+
+.preview-line {
+  margin: 0 0 0.25rem;
+  font-size: 0.875rem;
+  color: var(--color-text-primary, #334155);
+}
+
+.preview-note {
+  margin: 0.75rem 0 0;
+  font-size: 0.8125rem;
+  color: var(--color-text-secondary, #64748b);
+  font-style: italic;
+}
+
+.hd-actions {
+  margin-top: 1.5rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--color-border, #e2e8f0);
+}
+
+.next-btn {
+  padding: 0.6rem 1.25rem;
+  border: none;
+  border-radius: 0.375rem;
+  background: var(--color-accent, #2563eb);
+  color: white;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: opacity 0.2s;
+}
+
+.next-btn:hover:not(:disabled) {
+  opacity: 0.9;
+}
+
+.next-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 </style>

@@ -53,12 +53,16 @@ class _ContourStageResultStub:
         *,
         best_score: float,
         export_block_issues: list,
+        ownership_score=None,
+        diagnostics=None,
     ):
         self.best_score = best_score
         self.export_block_issues = export_block_issues
         self.export_blocked = False
         self.export_block_reason = None
         self.recommended_next_action = None
+        self.ownership_score = ownership_score
+        self.diagnostics = diagnostics if diagnostics is not None else {}
         # _contour_retry_worthwhile reads these; empty = rely on export_block_issues
         self.contour_scores_pre = []
         self.contour_scores_post = []
@@ -117,6 +121,7 @@ def _make_contour_result(case: dict):
     return _ContourStageResultStub(
         best_score=c["best_score"],
         export_block_issues=c["export_block_issues"],
+        ownership_score=c.get("ownership_score"),
     )
 
 
@@ -133,6 +138,7 @@ def coach() -> GeometryCoachV2:
             contour_target_threshold=0.80,
             body_isolation_review_threshold=0.45,
             severe_border_penalty_threshold=0.5,
+            ownership_retry_threshold=0.60,
         )
     )
 

@@ -1,6 +1,6 @@
 # Gap Analysis Master — All Instrument Build Handoffs
 
-> **Generated:** 2026-03-09 | **Updated:** 2026-03-17 | **Sources:** 11 build handoff documents | **Total Gaps:** 120 (104 resolved, 16 remaining)
+> **Generated:** 2026-03-09 | **Updated:** 2026-03-17 | **Sources:** 11 build handoff documents | **Total Gaps:** 120 (109 resolved, 11 remaining)
 
 ---
 
@@ -478,9 +478,9 @@ Previous updates overstated progress. This section provides the accurate remaini
 |--------|-----------|-------------|----------|
 | BIND-GAP-01 | All | `abalone_shell` missing from BindingMaterial enum — fragile material with min_bend_radius=8mm (tighter than wood strips) | **HIGH** |
 | BIND-GAP-02 | Les Paul | `spanish_wave` not in any runtime pattern registry — exists only as reference in gibson_les_paul.json | **HIGH** |
-| BIND-GAP-03 | All | No binding design orchestration endpoint — no POST /api/binding/design accepting body_style + binding_material + purfling_pattern + coverage_flags | **HIGH** |
+| ~~BIND-GAP-03~~ | All | ~~No binding design orchestration endpoint~~ **RESOLVED** (POST /api/binding/design in binding_design_router.py) | ~~HIGH~~ |
 | ~~BIND-GAP-04~~ | Les Paul | ~~No multi-layer channel model~~ **RESOLVED** (BindingChannelSpec in binding_geometry.py: primary channel 2.375mm + inner ledge 1.6mm, BINDING_CHANNEL_PRESETS) | ~~MEDIUM~~ |
-| BIND-GAP-05 | OM, All | No body-style-to-outline resolver in binding module — body_style: "om" doesn't map to outline points for binding path computation | MEDIUM |
+| ~~BIND-GAP-05~~ | OM, All | ~~No body-style-to-outline resolver~~ **RESOLVED** (resolve_body_outline() added to binding module) | ~~MEDIUM~~ |
 
 ### Fixes
 
