@@ -54,8 +54,8 @@ Every bundle, gap, and decomposition target has one row. Staging folder path whe
 
 | Item | Status | Owner | Dependency | Staging / path |
 |------|--------|-------|-------------|----------------|
-| FV-GAP-05 Flying V pocket toolpath | READY | CC | — | CAM / Flying V |
-| FV-GAP-10 Flying V neck pocket depth | READY | CC | — | Validation |
+| FV-GAP-05 Flying V pocket toolpath | DONE | CU | — | cam/flying_v, routers/cam/guitar/flying_v_cam_router.py |
+| FV-GAP-10 Flying V neck pocket depth | DONE | CU | — | depth_validator + preflight_gate; POST /flying_v/validate |
 | OM-PURF-03 Purfling ledge second-pass | READY | CC | — | CAM purfling |
 | OM-PURF-05 Binding corner miter G-code | READY | CC | — | CAM binding |
 | OM-PURF-08 Binding width validation | READY | CC | — | Validation |
@@ -79,8 +79,8 @@ Every bundle, gap, and decomposition target has one row. Staging folder path whe
 |------|--------|-------|-------------|----------------|
 | GEN-1 Spec stubs → project creation | DONE | CC | None | service.py, router.py |
 | GEN-2 BodyConfig + acoustic_body_style_id | DONE | CC | None | instrument_project.py, service.py |
-| GEN-3 from_project() factories | BLOCKED | CC | GEN-2 | generators |
-| GEN-4 CAM REST: Strat, LP, Flying V, Neck | BLOCKED | CC | GEN-3 | — |
+| GEN-3 from_project() factories | DONE | CC | GEN-2 | generators/cam_utils.py, stratocaster_body_generator.py, neck_headstock_config.py |
+| GEN-4 CAM REST: Strat, LP, Flying V, Neck | READY | CC | GEN-3 | — |
 | GEN-5 Consolidate description systems | BLOCKED | CC | GEN-4 | — |
 | GEN-6 Acoustic body orchestration | BLOCKED | CC | GEN-5 | — |
 
@@ -98,7 +98,7 @@ Every bundle, gap, and decomposition target has one row. Staging folder path whe
 | generative_explorer_viewer.py (674) | READY | CU | None | Archive |
 | router_registry/manifest.py (684) | READY | CC | None | Split by domain |
 | modern_pattern_generator.py (682) | READY | CC | None | Geometry vs rendering |
-| neck_headstock_config.py (661) | BLOCKED | CC | GEN-3 | Extract presets to JSON |
+| neck_headstock_config.py (661) | READY | CC | GEN-3 | Extract presets to JSON |
 | job_queue/queue.py (631) | READY | CC | None | Split queue vs execution |
 | binding_geometry.py (781) | READY | CC | None | Extract helpers |
 | cavity_position_validator.py (705) | READY | CC | None | Split validation |
@@ -159,7 +159,7 @@ Every bundle, gap, and decomposition target has one row. Staging folder path whe
 | Item | Status | Owner | Dependency | Staging / path |
 |------|--------|-------|-------------|----------------|
 | Test collection errors (13 → 0) | IN PROGRESS | — | — | — |
-| Broad exceptions in safety paths (11 files) | READY | CC | None | See REMEDIATION_MASTER |
+| Broad exceptions in safety paths (11 files) | DONE | CU | None | cam/ + rmos/ (dxf_advanced_validation, fret_slots_router, rosette_cam_router, mvp_router, safety_router; store_delete intentional + comment) |
 | Test Collection Errors baseline | READY | — | — | CI |
 
 ---
@@ -182,6 +182,10 @@ Every bundle, gap, and decomposition target has one row. Staging folder path whe
 ---
 | 2026-03-16 | GEN-1 complete | model_id param, 19 guitar specs, dcad0976 | GEN-2 ready |
 | 2026-03-16 | GEN-2 complete | BodyConfig schema, body_config seeding, v1.1, 909ecfed | GEN-3 blocked on GEN-2 |
+| 2026-03-16 | Broad exception cleanup (Files 4–6 + board) | mvp_router, safety_router narrowed; store_delete intentional comment; pytest safety/override/dxf-to-grbl; TRACK 8 + gate updated | — |
+| 2026-03-17 | FV-GAP-05, FV-GAP-10 | Flying V CAM router (spec, control_cavity, neck_pocket, pickup, validate); depth validation + preflight; pytest -k flying 19 passed | — |
+
+| 2026-03-16 | GEN-3 complete | cam_utils.py, from_project() on StratocasterBodyGenerator + NeckDimensions; tests pass | GEN-4 ready |
 
 ## DEPLOYMENT GATE
 
@@ -191,7 +195,7 @@ Every bundle, gap, and decomposition target has one row. Staging folder path whe
 | B4 Instrument Project Graph integrated | ✅ |
 | GEN-1 connected | ✅ |
 | Phase 3 static file check | 🟡 Next |
-| Safety-path broad exceptions fixed | 🟡 Next |
+| Safety-path broad exceptions fixed | ✅ |
 | No test collection errors | 🟡 Verify |
 | MEDIUM gaps ≤5 (excl. deferred) | 🟡 |
 
