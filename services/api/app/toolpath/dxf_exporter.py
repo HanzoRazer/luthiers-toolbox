@@ -3,7 +3,12 @@
 """
 Version-Aware DXF Exporter
 
-Provides DXF export with version control (R12, R14, R18).
+Provides DXF export with version control (R12, R14, R2000, R18).
+
+VINE-12: Default changed from R12 to R2000
+- R2000 (AC1015) supports splines, ellipses, and arcs natively
+- R12 (AC1009) is AutoCAD 1992 — too old for modern CAM
+- R2000 is widely compatible while supporting modern geometry
 
 Features:
 - Minimal DXF header with correct $ACADVER
@@ -27,9 +32,10 @@ from .dxf_io_legacy import write_mlpaths_to_dxf_r12
 class DXFVersion(str, Enum):
     """Supported DXF file versions."""
 
-    R12 = "R12"
-    R14 = "R14"
-    R18 = "R18"
+    R12 = "R12"      # AutoCAD 1992 - legacy compatibility
+    R14 = "R14"      # AutoCAD 14
+    R2000 = "R2000"  # AutoCAD 2000 - splines, ellipses, arcs (VINE-12 default)
+    R18 = "R18"      # AutoCAD 2004
 
 
 class DXFExportOptions:
@@ -37,14 +43,14 @@ class DXFExportOptions:
 
     def __init__(
         self,
-        dxf_version: DXFVersion = DXFVersion.R12,
+        dxf_version: DXFVersion = DXFVersion.R2000,  # VINE-12: R2000 default
         prefer_lwpolyline: bool | None = None,
     ) -> None:
         """
         Initialize export options.
 
         Args:
-            dxf_version: Target DXF version (R12, R14, R18)
+            dxf_version: Target DXF version (R12, R14, R2000, R18). Default: R2000
             prefer_lwpolyline: If True and version >= R14, use LWPOLYLINE
         """
         self.dxf_version = dxf_version
@@ -54,7 +60,7 @@ class DXFExportOptions:
     def use_lwpolyline(self) -> bool:
         """Whether to use LWPOLYLINE (requires R14+ and explicit preference)."""
         return (
-            self.dxf_version in (DXFVersion.R14, DXFVersion.R18)
+            self.dxf_version in (DXFVersion.R14, DXFVersion.R2000, DXFVersion.R18)
             and bool(self.prefer_lwpolyline)
         )
 
@@ -106,9 +112,10 @@ def _write_header(stream: TextIO, options: DXFExportOptions) -> None:
     This is intentionally very small; most consumers don't require more.
     """
     acadver = {
-        DXFVersion.R12: "AC1009",  # R12
-        DXFVersion.R14: "AC1014",  # R14
-        DXFVersion.R18: "AC1018",  # 2004 (roughly R18 family)
+        DXFVersion.R12: "AC1009",   # R12 (AutoCAD 1992)
+        DXFVersion.R14: "AC1014",   # R14 (AutoCAD 14)
+        DXFVersion.R2000: "AC1015", # R2000 (AutoCAD 2000) - VINE-12 default
+        DXFVersion.R18: "AC1018",   # R18 (AutoCAD 2004)
     }[options.dxf_version]
 
     stream.write("0\nSECTION\n2\nHEADER\n")

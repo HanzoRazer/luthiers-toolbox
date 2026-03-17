@@ -148,6 +148,82 @@ PURFLING_STRIP_PATTERNS: Dict[str, PurflingStripSpec] = {
 }
 
 
+
+# =============================================================================
+# BIND-GAP-04: MULTI-LAYER CHANNEL MODEL
+# =============================================================================
+
+@dataclass
+class BindingChannelSpec:
+    """
+    Multi-layer binding channel specification.
+
+    Les Paul spec defines the pattern:
+    - primary_channel: 2.375mm width × 3.0mm depth (outer binding)
+    - inner_ledge: 1.6mm width × 2.0mm depth (purfling inset)
+
+    This supports the common multi-layer binding pattern where:
+    1. Outer binding strip sits in the primary channel
+    2. Purfling strip sits in the shallower inner ledge
+
+    Reference: specs/guitars/gibson_les_paul.json
+    """
+    primary_width_mm: float = 2.375
+    primary_depth_mm: float = 3.0
+    inner_ledge_width_mm: float = 1.6
+    inner_ledge_depth_mm: float = 2.0
+    material: BindingMaterial = BindingMaterial.ABS_PLASTIC
+    purfling: Optional[PurflingStripSpec] = None
+
+    @property
+    def total_width_mm(self) -> float:
+        """Total channel width (primary + inner ledge)."""
+        return self.primary_width_mm + self.inner_ledge_width_mm
+
+    @property
+    def step_depth_mm(self) -> float:
+        """Depth of the step between primary and inner ledge."""
+        return self.primary_depth_mm - self.inner_ledge_depth_mm
+
+    def to_dict(self) -> Dict[str, Any]:
+        return {
+            "primary_width_mm": round(self.primary_width_mm, 3),
+            "primary_depth_mm": round(self.primary_depth_mm, 3),
+            "inner_ledge_width_mm": round(self.inner_ledge_width_mm, 3),
+            "inner_ledge_depth_mm": round(self.inner_ledge_depth_mm, 3),
+            "total_width_mm": round(self.total_width_mm, 3),
+            "step_depth_mm": round(self.step_depth_mm, 3),
+            "material": self.material.value,
+            "purfling": self.purfling.to_dict() if self.purfling else None,
+        }
+
+
+# Preset channel specs for common instruments
+BINDING_CHANNEL_PRESETS: Dict[str, BindingChannelSpec] = {
+    "les_paul": BindingChannelSpec(
+        primary_width_mm=2.375,
+        primary_depth_mm=3.0,
+        inner_ledge_width_mm=1.6,
+        inner_ledge_depth_mm=2.0,
+        material=BindingMaterial.CELLULOID,
+        purfling=PURFLING_STRIP_PATTERNS.get("spanish_wave"),
+    ),
+    "om_acoustic": BindingChannelSpec(
+        primary_width_mm=2.5,
+        primary_depth_mm=2.8,
+        inner_ledge_width_mm=1.5,
+        inner_ledge_depth_mm=1.8,
+        material=BindingMaterial.WOOD_MAPLE,
+    ),
+    "dreadnought": BindingChannelSpec(
+        primary_width_mm=3.0,
+        primary_depth_mm=3.2,
+        inner_ledge_width_mm=1.8,
+        inner_ledge_depth_mm=2.0,
+        material=BindingMaterial.ABS_PLASTIC,
+    ),
+}
+
 # =============================================================================
 # DATA CLASSES
 # =============================================================================
