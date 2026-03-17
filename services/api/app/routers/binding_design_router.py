@@ -28,6 +28,9 @@ from app.calculators.binding_geometry import (
     polyline_length,
 )
 
+# OM-PURF-05: Corner miter analysis
+from app.cam.binding import calculate_corner_miters
+
 router = APIRouter()
 
 Pt2D = Tuple[float, float]
@@ -171,6 +174,12 @@ class BindingDesignResponse(BaseModel):
     neck_binding_included: bool
     headstock_binding_included: bool
 
+    # OM-PURF-05: Corner miters
+    corner_miters: List[Dict[str, Any]] = Field(
+        default_factory=list,
+        description="List of corner miter positions and angles"
+    )
+
     # Validation
     is_manufacturable: bool
     warnings: List[str]
@@ -255,7 +264,14 @@ def design_binding(req: BindingDesignRequest) -> BindingDesignResponse:
     if req.headstock_binding:
         warnings.append("Headstock binding geometry not yet implemented in orchestrator")
 
-    # 7. Build summary
+    # 7. Calculate corner miters (OM-PURF-05)
+    corner_miters = calculate_corner_miters(
+        path=outline_points,
+        binding_width_mm=req.binding_width_mm,
+        corner_threshold_deg=20.0,
+    )
+
+    # 8. Build summary
     is_manufacturable = binding_analysis.get("is_manufacturable", True)
     min_radius = MINIMUM_BEND_RADII_MM.get(material, 10.0)
 
@@ -281,6 +297,7 @@ def design_binding(req: BindingDesignRequest) -> BindingDesignResponse:
         body_perimeter_mm=binding_analysis["total_length_mm"],
         binding_path_analysis=binding_analysis,
         purfling_spec=purfling_spec,
+        corner_miters=corner_miters,
         neck_binding_included=req.neck_binding,
         headstock_binding_included=req.headstock_binding,
         is_manufacturable=is_manufacturable,

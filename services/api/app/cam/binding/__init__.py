@@ -2,7 +2,7 @@
 CAM Binding/Purfling Module
 
 Binding channel and purfling ledge toolpath generation.
-Resolves: OM-GAP-03, OM-GAP-04, OM-PURF-01, OM-PURF-02, BEN-GAP-01
+Resolves: OM-GAP-03, OM-GAP-04, OM-PURF-01, OM-PURF-02, OM-PURF-05, BEN-GAP-01
 
 Binding is the decorative strip around the body edge.
 Purfling is the thin decorative line inset from the binding.
@@ -43,6 +43,28 @@ from .channel_toolpath import BindingChannel, BindingConfig, BindingResult
 from .purfling_ledge import PurflingLedge, PurflingConfig, PurflingResult
 from .offset_geometry import generate_binding_offset, generate_purfling_offset
 
+# OM-PURF-03: Second-pass and neck purfling
+from .om_purf_03_additions import (
+    SecondPassConfig,
+    generate_second_pass_gcode,
+    NeckPurflingConfig,
+    NeckPurflingResult,
+    generate_neck_purfling_path,
+    generate_neck_purfling_gcode,
+)
+
+# OM-PURF-05: Corner miter cuts
+from .binding_corner_miter import (
+    CornerMiter,
+    CornerMiterConfig,
+    CornerMiterResult,
+    detect_corners,
+    analyze_corner_miters,
+    generate_corner_miter_gcode,
+    calculate_corner_miters,
+    generate_binding_corner_gcode,
+)
+
 __all__ = [
     "BindingChannel",
     "BindingConfig",
@@ -52,4 +74,20 @@ __all__ = [
     "PurflingResult",
     "generate_binding_offset",
     "generate_purfling_offset",
+    # OM-PURF-03
+    "SecondPassConfig",
+    "generate_second_pass_gcode",
+    "NeckPurflingConfig",
+    "NeckPurflingResult",
+    "generate_neck_purfling_path",
+    "generate_neck_purfling_gcode",
+    # OM-PURF-05
+    "CornerMiter",
+    "CornerMiterConfig",
+    "CornerMiterResult",
+    "detect_corners",
+    "analyze_corner_miters",
+    "generate_corner_miter_gcode",
+    "calculate_corner_miters",
+    "generate_binding_corner_gcode",
 ]
