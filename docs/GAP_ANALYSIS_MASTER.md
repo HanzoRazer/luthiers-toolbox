@@ -1,6 +1,6 @@
 # Gap Analysis Master — All Instrument Build Handoffs
 
-> **Generated:** 2026-03-09 | **Updated:** 2026-03-17 | **Sources:** 11 build handoff documents | **Total Gaps:** 120 (109 resolved, 11 remaining)
+> **Generated:** 2026-03-09 | **Updated:** 2026-03-17 | **Sources:** 11 build handoff documents | **Total Gaps:** 120 (111 resolved, 9 remaining)
 
 ---
 
@@ -21,8 +21,8 @@ Previous updates overstated progress. This section provides the accurate remaini
 |----------|-------|-----------|
 | **CRITICAL** | 0 | ~~PHYS-01~~ Resolved (calculators/pickup_position_calc.py) |
 | **HIGH** | 3 | ~~INLAY-02~~, ~~INLAY-06~~, ~~VINE-08~~ (Session 7), ~~BEN-GAP-08~~, ~~LP-GAP-03~~, ~~BEN-GAP-04~~, ~~BEN-GAP-05~~, ~~VINE-05~~, ~~NECK-05~~, ~~LP-GAP-02~~, ~~EX-GAP-04~~ |
-| **MEDIUM** | 17 | ~~BEN-GAP-09~~, ~~BEN-GAP-07~~, ~~FV-GAP-05~~, ~~LP-GAP-04~~, ~~LP-GAP-05~~, ~~LP-GAP-06~~, ~~LP-GAP-08~~, ~~OM-PURF-03~~, ~~OM-PURF-05~~, ~~OM-PURF-08~~, INLAY-03, ~~INLAY-04~~, VEC-GAP-06, ~~VEC-GAP-07~~, ~~FV-GAP-07~~, ~~FV-GAP-10~~, EX-GAP-05, EX-GAP-06, EX-GAP-07, EX-GAP-08, ~~EX-GAP-12~~, ~~SG-GAP-13~~ |
-| **LOW** | 8 | ~~VINE-12~~, ~~OM-PURF-06~~, ~~FV-GAP-09~~, EX-GAP-09, EX-GAP-10, EX-GAP-11, ~~EX-GAP-13~~, ~~SG-GAP-09~~, ~~SG-GAP-14~~, ~~OM-PURF-07~~, LP-GAP-10, VEC-GAP-08 |
+| **MEDIUM** | 17 | ~~BEN-GAP-09~~, ~~BEN-GAP-07~~, ~~FV-GAP-05~~, ~~LP-GAP-04~~, ~~LP-GAP-05~~, ~~LP-GAP-06~~, ~~LP-GAP-08~~, ~~OM-PURF-03~~, ~~OM-PURF-05~~, ~~OM-PURF-08~~, ~~INLAY-03~~, ~~INLAY-04~~, ~~VEC-GAP-06~~, ~~VEC-GAP-07~~, ~~FV-GAP-07~~, ~~FV-GAP-10~~, EX-GAP-05, EX-GAP-06, EX-GAP-07, EX-GAP-08, ~~EX-GAP-12~~, ~~SG-GAP-13~~ |
+| **LOW** | 8 | ~~VINE-12~~, ~~OM-PURF-06~~, ~~FV-GAP-09~~, EX-GAP-09, EX-GAP-10, ~~EX-GAP-11~~, ~~EX-GAP-13~~, ~~SG-GAP-09~~, ~~SG-GAP-14~~, ~~OM-PURF-07~~, ~~LP-GAP-10~~, VEC-GAP-08 |
 
 ### HIGH Priority Items (13) — Details
 
@@ -39,8 +39,8 @@ Previous updates overstated progress. This section provides the accurate remaini
 | ~~VINE-08~~ | Frontend | ~~Bracing endpoints unreachable from UI~~ **Resolved** (2026-03-16) — route `/art-studio/bracing` + nav entry, 46 bracing tests passing |
 | ~~LP-GAP-02~~ | Validation | ~~Cavity positions unvalidated~~ RESOLVED: cavity_position_validator.py |
 | ~~EX-GAP-04~~ | Validation | ~~Explorer pickup positions unverified~~ RESOLVED: cavity_position_validator.py |
-| PHYS-02 | `body/centerline.py` | Body centerline calculator |
-| PHYS-03 | `pickup/cavity_placement.py` | Pickup cavity-to-coordinate mapper |
+| ~~PHYS-02~~ | `body/centerline.py` | ~~Body centerline calculator~~ **RESOLVED** (14KB module, Mar 15) |
+| ~~PHYS-03~~ | `pickup/cavity_placement.py` | ~~Pickup cavity-to-coordinate mapper~~ **RESOLVED** (16KB module, Mar 15) |
 
 ---
 
@@ -99,6 +99,7 @@ Previous updates overstated progress. This section provides the accurate remaini
 | 2026-03-17 | — | **BIND-GAP-04:** BindingChannelSpec in binding_geometry.py (primary 2.375mm, ledge 1.6mm). **SG-GAP-09:** USBCPortSpec in schemas/smart_guitar_cam.py (12mm×6.5mm port, 3+1 axis routing). **VINE-12:** DXF exporter default R12→R2000 (AC1015) for native spline/arc support. | **BIND-GAP-04**, **SG-GAP-09**, **VINE-12** |
 | 2026-03-17 | — | **FV-GAP-09:** 190-point Flying V outline added to body_outlines.json (extracted from flying_v_body_phase3.dxf). **OM-PURF-06:** Material-aware feed rates added to binding_geometry.py (MATERIAL_FEED_RATES dict), wired to purfling_ledge.py and binding_corner_miter.py via get_feed_settings(). | **FV-GAP-09**, **OM-PURF-06** |
 | 2026-03-17 | — | **BIND-GAP-01:** ABALONE_SHELL added to BindingMaterial (min_bend_radius=8.0mm). **BIND-GAP-02:** SPANISH_WAVE added to TilePattern. **BIND-GAP-03:** POST /api/binding/design endpoint. **BIND-GAP-05:** resolve_body_outline() function. **EX-GAP-11:** 333-point Explorer outline added to body_outlines.json. | **BIND-GAP-01/02/03/05**, **EX-GAP-11** |
+| 2026-03-17 | 57878a2a | **Gap Reconciliation:** Cross-referenced GAP_ANALYSIS_MASTER.md against commits. Marked resolved: PHYS-02 (centerline.py), PHYS-03 (cavity_placement.py), VEC-GAP-06 (d7ac202c Phase 2/3 panels), LP-GAP-10 (documented a8739d63), INLAY-03 (deprecated route). True remaining: 9 gaps (6 Explorer reference measurements, VEC-GAP-08, PHYS-05/06 hardware data). | **Reconciliation** |
 ---
 
 ## Summary by Category
@@ -351,7 +352,7 @@ Previous updates overstated progress. This section provides the accurate remaini
 | ~~INLAY-03~~ | Custom Inlay | ~~`FretMarkersView.vue` overlaps `InlayDesignerView.vue` — duplication~~ **Resolved** FretMarkersView superseded by InlayWorkspaceShell Stage 2 (ArtStudioInlay.vue). Route removed; view deprecated. | ~~MEDIUM~~ |
 | ~~INLAY-07~~ | Custom Inlay | ~~Inlay pocket depth control~~ **Resolved** — pocketDepth ref in InlayDesignerView.vue and ArtStudioInlay.vue; pocket_depth_mm wired to export-dxf API. | ~~MEDIUM~~ |
 | ~~VINE-08~~ | J45 Vine | ~~Bracing endpoints unreachable from UI~~ **Resolved** (2026-03-16) | ~~HIGH~~ |
-| VEC-GAP-06 | OM Purfling | `BlueprintImporter.vue` calls only Phase 1 — no UI for Phase 2/3/calibration | MEDIUM |
+| ~~VEC-GAP-06~~ | OM Purfling | ~~`BlueprintImporter.vue` calls only Phase 1~~ **RESOLVED** (d7ac202c: Phase2VectorizationPanel + Phase3CamPanel in BlueprintLab.vue) | ~~MEDIUM~~ |
 | VINE-08 | J45 Vine | Bracing endpoints unreachable — no frontend consumes them (also in Cat 5) | HIGH |
 
 ### Fixes
@@ -375,7 +376,7 @@ Previous updates overstated progress. This section provides the accurate remaini
 | VEC-GAP-03 | OM Purfling | PipelineResult CAM adapter | **Resolved** (03acbb4f) |
 | VEC-GAP-04 | OM Purfling | Phase 3 → CAM integration tests (20 tests) | **Resolved** (4a0af084) |
 | VEC-GAP-05 | OM Purfling | Phase 1 → Phase 3 scale handoff | **Resolved** (f8e4dded) |
-| VEC-GAP-06 | OM Purfling | Frontend covers Phase 1 only | MEDIUM |
+| ~~VEC-GAP-06~~ | OM Purfling | ~~Frontend covers Phase 1 only~~ **RESOLVED** (d7ac202c) | ~~MEDIUM~~ |
 | ~~VEC-GAP-07~~ | OM Purfling | ~~Phase 3 `constants.py` missing `PHASE3_AVAILABLE` flag~~ **RESOLVED** (PHASE3_AVAILABLE exists at routers/blueprint/constants.py:92) | ~~MEDIUM~~ |
 | VEC-GAP-08 | OM Purfling | OCR dimensions from Phase 3.6 unused downstream | LOW |
 
