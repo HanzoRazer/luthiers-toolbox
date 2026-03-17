@@ -45,6 +45,7 @@ class BindingMaterial(str, Enum):
     WOOD_ROSEWOOD = "wood_rosewood"  # Very rigid
     FIBER = "fiber"                # Black/white fiber, flexible
     IVOROID = "ivoroid"            # Synthetic ivory, moderate
+    ABALONE_SHELL = "abalone_shell"  # Fragile natural shell, cannot cold-bend tight radius (BIND-GAP-01)
 
 
 # Minimum bend radii by material (mm) - below this risks cracking
@@ -55,6 +56,7 @@ MINIMUM_BEND_RADII_MM: Dict[BindingMaterial, float] = {
     BindingMaterial.WOOD_ROSEWOOD: 20.0,
     BindingMaterial.FIBER: 4.0,
     BindingMaterial.IVOROID: 5.0,
+    BindingMaterial.ABALONE_SHELL: 8.0,  # Fragile shell, requires gentle curves (BIND-GAP-01)
 }
 
 # Standard binding widths (mm)
@@ -65,6 +67,84 @@ BINDING_WIDTHS = {
     "medium": 3.0,
     "bold": 5.0,
     "archtop": 7.0,
+}
+
+
+class PurflingStripProfile(str, Enum):
+    """Purfling strip profile shapes. (BIND-GAP-02)"""
+    SOLID = "solid"              # Flat strip, no pattern
+    HERRINGBONE = "herringbone"  # V-chevron zigzag
+    SINUSOIDAL = "sinusoidal"    # Smooth wave (spanish_wave)
+    ROPE = "rope"                # Traditional twisted rope pattern
+
+
+@dataclass
+class PurflingStripSpec:
+    """
+    Purfling strip specification for bending/installation.
+    
+    Purfling is the thin decorative line inset from binding.
+    Spec includes dimensions and profile for CAM and visual preview.
+    """
+    id: str
+    name: str
+    width_mm: float       # Strip width (perpendicular to body edge)
+    height_mm: float      # Strip height (visible from top)
+    profile: PurflingStripProfile
+    wavelength_mm: Optional[float] = None  # For wave patterns
+    amplitude_mm: Optional[float] = None   # For wave patterns
+    notes: Optional[str] = None
+    
+    def to_dict(self) -> Dict[str, Any]:
+        return {
+            "id": self.id,
+            "name": self.name,
+            "width_mm": self.width_mm,
+            "height_mm": self.height_mm,
+            "profile": self.profile.value,
+            "wavelength_mm": self.wavelength_mm,
+            "amplitude_mm": self.amplitude_mm,
+            "notes": self.notes,
+        }
+
+
+# Purfling strip pattern catalog (BIND-GAP-02)
+PURFLING_STRIP_PATTERNS: Dict[str, PurflingStripSpec] = {
+    "solid_standard": PurflingStripSpec(
+        id="solid_standard",
+        name="Solid Standard",
+        width_mm=1.5,
+        height_mm=0.6,
+        profile=PurflingStripProfile.SOLID,
+        notes="Basic solid purfling strip, no pattern",
+    ),
+    "herringbone_standard": PurflingStripSpec(
+        id="herringbone_standard",
+        name="Herringbone Standard",
+        width_mm=2.0,
+        height_mm=1.0,
+        profile=PurflingStripProfile.HERRINGBONE,
+        notes="Classic V-chevron herringbone purfling",
+    ),
+    "spanish_wave": PurflingStripSpec(
+        id="spanish_wave",
+        name="Spanish Wave",
+        width_mm=2.2,
+        height_mm=6.0,
+        profile=PurflingStripProfile.SINUSOIDAL,
+        wavelength_mm=12.0,    # Sinusoidal period
+        amplitude_mm=0.5,       # Wave amplitude from centerline
+        notes="Traditional Spanish sinusoidal wave purfling. "
+              "2.2mm width × 6.0mm height. Smooth flowing visual effect.",
+    ),
+    "rope_fine": PurflingStripSpec(
+        id="rope_fine",
+        name="Rope Fine",
+        width_mm=1.8,
+        height_mm=0.8,
+        profile=PurflingStripProfile.ROPE,
+        notes="Fine twisted rope pattern purfling",
+    ),
 }
 
 

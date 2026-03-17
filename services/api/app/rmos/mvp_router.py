@@ -197,7 +197,7 @@ async def dxf_to_grbl(
             "stats": plan_result.get("stats", {}),
         }
 
-    except Exception as e:
+    except (ValueError, TypeError, KeyError, AttributeError, OSError, IndexError) as e:
         return {
             "ok": False,
             "run_id": run_id,

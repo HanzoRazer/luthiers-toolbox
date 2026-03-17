@@ -1,6 +1,6 @@
 # Gap Analysis Master — All Instrument Build Handoffs
 
-> **Generated:** 2026-03-09 | **Updated:** 2026-03-16 | **Sources:** 11 build handoff documents | **Total Gaps:** 113 (94 resolved, 19 remaining)
+> **Generated:** 2026-03-09 | **Updated:** 2026-03-17 | **Sources:** 11 build handoff documents | **Total Gaps:** 120 (96 resolved, 24 remaining)
 
 ---
 
@@ -8,13 +8,20 @@
 
 Previous updates overstated progress. This section provides the accurate remaining work.
 
+### New Gaps Identified (2026-03-17) — Resolved
+
+| Gap ID | Description | Resolution |
+|--------|-------------|------------|
+| **GAP-NEW-1** | Multi-ring rosette API: segment-ring ignored rings[] array | **Resolved:** POST /api/rmos/rosette/design in rmos/rosette_cam_router.py — accepts soundhole_diameter_mm + rings[], runs segment/slices/export per ring, returns combined segmentation + G-code and job_ids |
+| **GAP-NEW-2** | Spanish wave pattern missing from tile pattern registry | **Resolved:** Added SPANISH_WAVE to TilePattern in cam/rosette/tile_segmentation.py (even-tile alternating; trapezoidal tiles for now) |
+
 ### Actually Unresolved — 32 Items
 
 | Severity | Count | Key Items |
 |----------|-------|-----------|
 | **CRITICAL** | 0 | ~~PHYS-01~~ Resolved (calculators/pickup_position_calc.py) |
-| **HIGH** | 0 | ~~INLAY-02~~, ~~INLAY-06~~, ~~VINE-08~~ (Session 7), ~~BEN-GAP-08~~, ~~LP-GAP-03~~, ~~BEN-GAP-04~~, ~~BEN-GAP-05~~, ~~VINE-05~~, ~~NECK-05~~, ~~LP-GAP-02~~, ~~EX-GAP-04~~ |
-| **MEDIUM** | 15 | ~~BEN-GAP-09~~, ~~BEN-GAP-07~~, ~~FV-GAP-05~~, ~~LP-GAP-04~~, ~~LP-GAP-05~~, ~~LP-GAP-06~~, ~~LP-GAP-08~~, OM-PURF-03, OM-PURF-05, OM-PURF-08, INLAY-03, ~~INLAY-04~~, VEC-GAP-06, ~~VEC-GAP-07~~, ~~FV-GAP-07~~, ~~FV-GAP-10~~, EX-GAP-05, EX-GAP-06, EX-GAP-07, EX-GAP-08, ~~EX-GAP-12~~, ~~SG-GAP-13~~ |
+| **HIGH** | 3 | ~~INLAY-02~~, ~~INLAY-06~~, ~~VINE-08~~ (Session 7), ~~BEN-GAP-08~~, ~~LP-GAP-03~~, ~~BEN-GAP-04~~, ~~BEN-GAP-05~~, ~~VINE-05~~, ~~NECK-05~~, ~~LP-GAP-02~~, ~~EX-GAP-04~~ |
+| **MEDIUM** | 17 | ~~BEN-GAP-09~~, ~~BEN-GAP-07~~, ~~FV-GAP-05~~, ~~LP-GAP-04~~, ~~LP-GAP-05~~, ~~LP-GAP-06~~, ~~LP-GAP-08~~, OM-PURF-03, OM-PURF-05, OM-PURF-08, INLAY-03, ~~INLAY-04~~, VEC-GAP-06, ~~VEC-GAP-07~~, ~~FV-GAP-07~~, ~~FV-GAP-10~~, EX-GAP-05, EX-GAP-06, EX-GAP-07, EX-GAP-08, ~~EX-GAP-12~~, ~~SG-GAP-13~~ |
 | **LOW** | 13 | VINE-12, OM-PURF-06, FV-GAP-09, EX-GAP-09, EX-GAP-10, EX-GAP-11, ~~EX-GAP-13~~, SG-GAP-09, ~~SG-GAP-14~~, ~~OM-PURF-07~~, LP-GAP-10, VEC-GAP-08 |
 
 ### HIGH Priority Items (13) — Details
@@ -87,6 +94,7 @@ Previous updates overstated progress. This section provides the accurate remaini
 | 2026-03-15 | — | Add asymmetric carved top support (`app/cam/carving/`) — AsymmetricCarveProfile with authentic 1959 Les Paul specs: peak offset 30mm toward neck, compound radius (508mm × 381mm), variable slopes (1.5° crown to 6° cutaway), binding ledge. New preset `create_les_paul_1959_asymmetric_config()`. 15 tests. | LP-GAP-05 |
 | 2026-03-16 | — | Add centralized post-processor module (`app/cam/post_processor.py`) — G43 tool length compensation after M6, G41/G42 cutter radius compensation, M0/M1 tool change pauses, controller-specific dialects (GRBL, Mach3, Haas, LinuxCNC, Fanuc). 29 tests. | ~~LP-GAP-06~~, ~~EX-GAP-13~~, ~~SG-GAP-14~~, ~~OM-PURF-07~~, ~~FV-GAP-07~~ |
 | 2026-03-16 | *(pending)* | **Session 7 — Frontend gaps:** (1) VINE-08: route `/art-studio/bracing` → ArtStudioBracing.vue, nav entry; (2) INLAY-02: HeadstockDesignerView.vue wired to `listHeadstockTemplates` / `generateHeadstockPrompt`; (3) INLAY-06: InlayWorkspaceShell.vue at `/art-studio/inlay-workspace` with 4 tabs (Pattern Library, Fretboard/ArtStudioInlay, Headstock, BOM & Export). Deprecation comments on InlayDesignerView, InlayPatternView. See SESSION_STATUS.md. | **VINE-08**, **INLAY-02**, **INLAY-06** |
+| 2026-03-17 | — | **GAP-NEW-1:** POST /api/rmos/rosette/design — multi-ring payload (soundhole_diameter_mm, rings[]), combined segmentation + G-code, job_ids. **GAP-NEW-2:** spanish_wave added to TilePattern in tile_segmentation.py. Martin OO 3-ring design run: 3 job_ids, line counts 1114 + 646 + 994, combined 2759. | **GAP-NEW-1**, **GAP-NEW-2** |
 ---
 
 ## Summary by Category
@@ -106,7 +114,8 @@ Previous updates overstated progress. This section provides the accurate remaini
 | 11 | Config, Presets & Registry | — | — | 3 | 2 | **5** | Add missing presets and registry entries |
 | 12 | Accuracy & Position Validation | — | 2 | 4 | 2 | **8** | Validate cavity positions against factory references |
 | 13 | Physical Component Geometry ⏸️ | 2 | 2 | 2 | — | **6** | Pickup calculator + body centerline — **TABLED** (physical dependencies) |
-| | **TOTALS** | **19** | **38** | **39** | **17** | **113** | |
+| 14 | Binding & Purfling System | — | 3 | 2 | — | **5** | Binding material enum + pattern registry + design endpoint |
+| | **TOTALS** | **19** | **41** | **41** | **17** | **118** | |
 
 ---
 
@@ -454,6 +463,28 @@ Previous updates overstated progress. This section provides the accurate remaini
 3. ~~**`instrument_geometry/pickup/cavity_placement.py`**~~ → ✅ Done
 4. **Integrate into build scripts** — Replace hardcoded offsets in `generate_smart_guitar_full_build.py` and `generate_les_paul_full_build.py` with calculator calls.
 5. **PHYS-05/06 hardware data** — Gather mounting ring dimensions and string spread reference data from manufacturer specs.
+
+---
+
+## Category 14 — Binding & Purfling System
+
+**Problem:** The binding/purfling system has CAM generation but is missing material definitions, pattern registry entries, and a design orchestration endpoint.
+
+| Gap ID | Instrument | Description | Severity |
+|--------|-----------|-------------|----------|
+| BIND-GAP-01 | All | `abalone_shell` missing from BindingMaterial enum — fragile material with min_bend_radius=8mm (tighter than wood strips) | **HIGH** |
+| BIND-GAP-02 | Les Paul | `spanish_wave` not in any runtime pattern registry — exists only as reference in gibson_les_paul.json | **HIGH** |
+| BIND-GAP-03 | All | No binding design orchestration endpoint — no POST /api/binding/design accepting body_style + binding_material + purfling_pattern + coverage_flags | **HIGH** |
+| BIND-GAP-04 | Les Paul | No multi-layer channel model — binding_geometry.py models single strip only; Les Paul spec defines primary_channel (2.375mm) + inner_ledge (1.6mm) | MEDIUM |
+| BIND-GAP-05 | OM, All | No body-style-to-outline resolver in binding module — body_style: "om" doesn't map to outline points for binding path computation | MEDIUM |
+
+### Fixes
+
+1. **BIND-GAP-01** — Add `ABALONE_SHELL` to BindingMaterial enum in `calculators/binding_geometry.py` with `min_bend_radius=8.0` (mm). Note: abalone is fragile, requires tighter radius than wood strips.
+2. **BIND-GAP-02** — Add `SPANISH_WAVE` to purfling pattern catalog with spec: 2.2mm × 6.0mm strip, sinusoidal wave profile. Reference: `specs/guitars/gibson_les_paul.json`.
+3. **BIND-GAP-03** — Create `POST /api/binding/design` endpoint in `app/routers/binding_router.py`. Accepts: body_style, binding_material, purfling_pattern, coverage_flags (top, back, sides, neck, headstock). Returns: full binding/purfling geometry + bend checks + warnings.
+4. **BIND-GAP-04** — Extend binding_geometry.py with multi-layer channel model: `MultiLayerChannel` class supporting primary channel + inner ledge depths as defined in Gibson specs.
+5. **BIND-GAP-05** — Add `resolve_body_outline(model_id: str) -> List[Point]` function that maps instrument model_id to body outline polyline coordinates for binding path computation.
 
 ---
 
