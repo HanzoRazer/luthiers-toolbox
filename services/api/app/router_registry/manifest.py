@@ -706,4 +706,14 @@ ROUTER_MANIFEST: List[RouterSpec] = [
         category="materials",
     ),
 
+    # -------------------------------------------------------------------------
+    # BINDING DESIGN ORCHESTRATION (BIND-GAP-03)
+    # -------------------------------------------------------------------------
+    RouterSpec(
+        module="app.routers.binding_design_router",
+        prefix="/api/binding",
+        tags=["Binding", "Design", "Orchestration"],
+        category="instrument_geometry",
+    ),
+
 ]

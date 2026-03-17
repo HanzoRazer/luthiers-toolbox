@@ -41,7 +41,7 @@ Every bundle, gap, and decomposition target has one row. Staging folder path whe
 
 ## TRACK 2 — Gaps (GAP_ANALYSIS_MASTER / REMEDIATION_MASTER)
 
-### HIGH (3 remaining — Binding & Purfling System)
+### HIGH (0 remaining — Binding & Purfling System ✅)
 
 | Item | Status | Owner | Dependency | Staging / path |
 |------|--------|-------|-------------|----------------|
@@ -49,9 +49,9 @@ Every bundle, gap, and decomposition target has one row. Staging folder path whe
 | INLAY-02 HeadstockDesignerView → API | DONE | CU | — | `HeadstockDesignerView.vue`, `api/art-studio.ts` |
 | INLAY-06 InlayWorkspaceShell | DONE | CU | — | `InlayWorkspaceShell.vue`, `/art-studio/inlay-workspace` |
 | VEC-GAP-06 Phase 3 vectorizer frontend | DONE | CU | — | `useBlueprintWorkflow.ts`, `VectorizationControls.vue` |
-| BIND-GAP-01 abalone_shell BindingMaterial | READY | CC | — | `calculators/binding_geometry.py` enum + min_bend_radius=8mm |
-| BIND-GAP-02 spanish_wave pattern registry | READY | CC | — | purfling pattern catalog; 2.2mm × 6.0mm sinusoidal |
-| BIND-GAP-03 POST /api/binding/design | READY | CC | — | `routers/binding_router.py` design orchestrator |
+| BIND-GAP-01 abalone_shell BindingMaterial | DONE | CC | — | `calculators/binding_geometry.py` enum + min_bend_radius=8mm |
+| BIND-GAP-02 spanish_wave pattern registry | DONE | CC | — | purfling pattern catalog; 2.2mm × 6.0mm sinusoidal |
+| BIND-GAP-03 POST /api/binding/design | DONE | CC | — | `routers/binding_design_router.py` design orchestrator |
 
 ### MEDIUM (remaining)
 
@@ -66,7 +66,7 @@ Every bundle, gap, and decomposition target has one row. Staging folder path whe
 | OM-PURF-08 Binding width validation | READY | CC | — | Validation |
 | INLAY-03 Inlay pocket depth control | DONE | CU | — | Art Studio inlay |
 | BIND-GAP-04 Multi-layer channel model | READY | CC | — | binding_geometry.py MultiLayerChannel class |
-| BIND-GAP-05 body-style-to-outline resolver | READY | CC | — | resolve_body_outline(model_id) → outline points |
+| BIND-GAP-05 body-style-to-outline resolver | DONE | CC | — | binding_design_router.py resolve_body_outline() |
 | EX-GAP-05..08 Explorer ref data | DEFERRED | — | Reference data | — |
 
 ### PHYS (tabled)
@@ -196,12 +196,14 @@ Every bundle, gap, and decomposition target has one row. Staging folder path whe
 | 2026-03-16 | GEN-3 complete | cam_utils.py, from_project() on StratocasterBodyGenerator + NeckDimensions; tests pass | GEN-4 ready |
 | 2026-03-16 | GEN-4 complete | body_gcode_router.py (4 endpoints); CAM_READY_MODELS; registry updated; Strat+LP+FV+Neck | GEN-5 ready |
 | 2026-03-17 | BIND-GAP-01..05 added | 5 gaps: abalone_shell, spanish_wave, /api/binding/design, multi-layer channel, body-outline resolver | — |
+| 2026-03-17 | BIND-GAP-01, BIND-GAP-02 impl | ABALONE_SHELL enum + 8mm bend radius; PurflingStripPattern enum + spanish_wave (2.2×6.0mm sinusoidal); 6 binding tests pass | GEN-5 needs spec |
+| 2026-03-17 | BIND-GAP-03, BIND-GAP-05 impl | POST /api/binding/design orchestrator + resolve_body_outline(); 95 routers; om_000→1739mm perimeter | — |
 
 ## DEPLOYMENT GATE
 
 | Item | Status |
 |------|--------|
-| 0 HIGH gaps remaining | 🔴 3 BIND-GAP (binding system) |
+| 0 HIGH gaps remaining | ✅ |
 | B4 Instrument Project Graph integrated | ✅ |
 | GEN-1 connected | ✅ |
 | Phase 3 static file check | 🟡 Next |
