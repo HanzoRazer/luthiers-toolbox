@@ -46,6 +46,7 @@ class BindingMaterial(str, Enum):
     FIBER = "fiber"                # Black/white fiber, flexible
     IVOROID = "ivoroid"            # Synthetic ivory, moderate
     ABALONE_SHELL = "abalone_shell"  # Fragile natural shell, cannot cold-bend tight radius (BIND-GAP-01)
+    WOOD_EBONY = "wood_ebony"          # Very hard, slow feed required
 
 
 # Minimum bend radii by material (mm) - below this risks cracking
@@ -57,6 +58,7 @@ MINIMUM_BEND_RADII_MM: Dict[BindingMaterial, float] = {
     BindingMaterial.FIBER: 4.0,
     BindingMaterial.IVOROID: 5.0,
     BindingMaterial.ABALONE_SHELL: 8.0,  # Fragile shell, requires gentle curves (BIND-GAP-01)
+    BindingMaterial.WOOD_EBONY: 25.0,      # Very hard, requires kerfing
 }
 
 # Standard binding widths (mm)
@@ -68,6 +70,48 @@ BINDING_WIDTHS = {
     "bold": 5.0,
     "archtop": 7.0,
 }
+
+
+# OM-PURF-06: Material-aware feed rates (mm/min) and spindle speeds (RPM)
+# Used by purfling_ledge.py and binding_corner_miter.py
+@dataclass
+class MaterialFeedSettings:
+    """Feed rate and spindle settings for a material."""
+    feed_rate_xy: float  # XY feed rate mm/min
+    spindle_rpm: int     # Spindle speed RPM
+    plunge_rate: float = 100.0  # Default plunge rate
+
+
+MATERIAL_FEED_RATES: Dict[BindingMaterial, MaterialFeedSettings] = {
+    BindingMaterial.ABALONE_SHELL: MaterialFeedSettings(feed_rate_xy=800.0, spindle_rpm=18000),
+    BindingMaterial.WOOD_MAPLE: MaterialFeedSettings(feed_rate_xy=1200.0, spindle_rpm=16000),
+    BindingMaterial.WOOD_ROSEWOOD: MaterialFeedSettings(feed_rate_xy=900.0, spindle_rpm=17000),
+    BindingMaterial.WOOD_EBONY: MaterialFeedSettings(feed_rate_xy=700.0, spindle_rpm=18000),
+    BindingMaterial.CELLULOID: MaterialFeedSettings(feed_rate_xy=1500.0, spindle_rpm=14000),
+    BindingMaterial.ABS_PLASTIC: MaterialFeedSettings(feed_rate_xy=1800.0, spindle_rpm=12000),
+    BindingMaterial.FIBER: MaterialFeedSettings(feed_rate_xy=1400.0, spindle_rpm=15000),
+    BindingMaterial.IVOROID: MaterialFeedSettings(feed_rate_xy=1200.0, spindle_rpm=15000),
+}
+
+# Default feed settings when material is unknown
+DEFAULT_FEED_SETTINGS = MaterialFeedSettings(feed_rate_xy=1000.0, spindle_rpm=16000)
+
+
+def get_material_feed_settings(material: Optional[BindingMaterial]) -> MaterialFeedSettings:
+    """
+    Get feed rate and spindle settings for a binding material.
+    
+    OM-PURF-06: Material-aware feed rates for binding/purfling operations.
+    
+    Args:
+        material: BindingMaterial enum value, or None for default
+        
+    Returns:
+        MaterialFeedSettings with feed_rate_xy, spindle_rpm, plunge_rate
+    """
+    if material is None:
+        return DEFAULT_FEED_SETTINGS
+    return MATERIAL_FEED_RATES.get(material, DEFAULT_FEED_SETTINGS)
 
 
 class PurflingStripProfile(str, Enum):

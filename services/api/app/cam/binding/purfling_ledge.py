@@ -8,7 +8,8 @@ The purfling ledge is a shallow channel cut inside the binding area
 to accept the purfling strip.
 
 Resolves:
-- OM-PURF-02: No purfling ledge operation
+- OM-PURF-02: No purfling ledge operation (first pass)
+- OM-PURF-03: Purfling ledge second-pass toolpath (step for purfling strip)
 """
 
 from __future__ import annotations
@@ -19,6 +20,24 @@ from typing import List, Optional, Tuple, Dict, Any
 
 from app.core.safety import safety_critical
 from .offset_geometry import generate_purfling_offset
+
+# OM-PURF-06: Import material-aware feed rates
+from app.calculators.binding_geometry import (
+    BindingMaterial,
+    MaterialFeedSettings,
+    get_material_feed_settings,
+    DEFAULT_FEED_SETTINGS,
+)
+
+# OM-PURF-03: Import second-pass and neck purfling functions
+from .om_purf_03_additions import (
+    SecondPassConfig,
+    generate_second_pass_gcode,
+    NeckPurflingConfig,
+    NeckPurflingResult,
+    generate_neck_purfling_path,
+    generate_neck_purfling_gcode,
+)
 
 Pt = Tuple[float, float]
 
@@ -41,10 +60,16 @@ class PurflingConfig:
     # Cut parameters (single pass typically)
     stepdown_mm: float = 0.8  # Usually single pass
 
-    # Feed rates (mm/min) - slower for small bit
+    # OM-PURF-06: Material-aware feed rates
+    # If material is specified, feed rates are auto-calculated
+    # Otherwise uses manual feed_rate_xy/spindle_rpm values
+    material: Optional[BindingMaterial] = None
+    
+    # Feed rates (mm/min) - used when material is None
     feed_rate_xy: float = 600.0
     feed_rate_z: float = 200.0
     plunge_rate: float = 100.0
+    spindle_rpm: int = 20000
 
     # Safety
     safe_z_mm: float = 5.0
@@ -52,6 +77,16 @@ class PurflingConfig:
 
     # Direction
     climb_milling: bool = True
+    
+    def get_feed_settings(self) -> MaterialFeedSettings:
+        """Get effective feed settings (material-aware or manual)."""
+        if self.material is not None:
+            return get_material_feed_settings(self.material)
+        return MaterialFeedSettings(
+            feed_rate_xy=self.feed_rate_xy,
+            spindle_rpm=self.spindle_rpm,
+            plunge_rate=self.plunge_rate,
+        )
 
 
 @dataclass
@@ -189,12 +224,17 @@ class PurflingLedge:
         lines.append(f"(Depth passes: {len(depth_passes)})")
         lines.append("")
 
+        # OM-PURF-06: Get material-aware feed settings
+        feed_settings = self.config.get_feed_settings()
+        
         # Setup
         lines.append("G21 (Units: mm)")
         lines.append("G90 (Absolute positioning)")
         lines.append("G17 (XY plane)")
         lines.append(f"G0 Z{self.config.safe_z_mm:.3f} (Safe height)")
-        lines.append("M3 S20000 (Spindle on - high RPM for small bit)")
+        if self.config.material:
+            lines.append(f"(Material: {self.config.material.value})")
+        lines.append(f"M3 S{feed_settings.spindle_rpm} (Spindle on)")
         lines.append("")
 
         # Reverse for conventional if not climb
@@ -210,17 +250,17 @@ class PurflingLedge:
             lines.append(f"G0 Z{self.config.retract_z_mm:.3f}")
 
             # Plunge
-            lines.append(f"G1 Z{z_depth:.3f} F{self.config.plunge_rate:.0f}")
+            lines.append(f"G1 Z{z_depth:.3f} F{feed_settings.plunge_rate:.0f}")
 
             # Cut around path
             for pt in path[1:]:
                 lines.append(
-                    f"G1 X{pt[0]:.3f} Y{pt[1]:.3f} F{self.config.feed_rate_xy:.0f}"
+                    f"G1 X{pt[0]:.3f} Y{pt[1]:.3f} F{feed_settings.feed_rate_xy:.0f}"
                 )
 
             # Close path
             lines.append(
-                f"G1 X{start[0]:.3f} Y{start[1]:.3f} F{self.config.feed_rate_xy:.0f}"
+                f"G1 X{start[0]:.3f} Y{start[1]:.3f} F{feed_settings.feed_rate_xy:.0f}"
             )
 
             # Retract
