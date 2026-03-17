@@ -25,10 +25,18 @@ GEN-4 Body G-code (project-driven):
   - /flying_v/body/gcode     - Flying V from project
   - /{model_id}/neck/gcode   - Neck G-code from project
 
+GEN-6 Acoustic CAM (/acoustic/...):
+  - /acoustic/styles                    - List available acoustic styles
+  - /acoustic/preview                   - Preview outline (no G-code)
+  - /acoustic/{style}/body/gcode        - Body perimeter G-code
+  - /acoustic/{style}/soundhole/gcode   - Soundhole routing G-code
+  - /acoustic/{style}/binding/gcode     - Binding channel G-code
+
 Wave 20: Option C API Restructuring - Full Registry Coverage
 Wave 27.2: Restored archtop, om, stratocaster, registry routers.
 Wave 28: Consolidated archtop + om + stratocaster into single router.
 Wave 29: GEN-4 body_gcode_router added.
+Wave 30: GEN-6 acoustic_cam_router added.
 """
 
 from fastapi import APIRouter
@@ -45,6 +53,9 @@ from .guitar_models_consolidated_router import (
 # Body G-code router (GEN-4) - project-driven CAM generation
 from .body_gcode_router import router as body_gcode_router
 
+# Acoustic CAM router (GEN-6) - acoustic body G-code generation
+from .acoustic_cam_router import router as acoustic_cam_router
+
 # Dynamic registry router (all 19 models)
 from .registry_cam_router import router as registry_router
 
@@ -56,8 +67,11 @@ router.include_router(models_router)
 # Mount body G-code router (GEN-4) - before registry to take precedence
 router.include_router(body_gcode_router, tags=["G-code", "GEN-4"])
 
+# Mount acoustic CAM router (GEN-6)
+router.include_router(acoustic_cam_router, prefix="/acoustic", tags=["Acoustic", "CAM", "GEN-6"])
+
 # Mount registry router LAST — catches all other {model_id} patterns.
 # This serves CAM stubs for ANY model in the instrument registry.
 router.include_router(registry_router, tags=["Registry", "CAM"])
 
-__all__ = ["router", "archtop_router", "om_router", "stratocaster_router", "flying_v_router", "body_gcode_router"]
+__all__ = ["router", "archtop_router", "om_router", "stratocaster_router", "flying_v_router", "body_gcode_router", "acoustic_cam_router"]
