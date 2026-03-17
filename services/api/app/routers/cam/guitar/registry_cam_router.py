@@ -48,6 +48,19 @@ def _get_model(model_id: str) -> Optional[Dict[str, Any]]:
 
 
 # =============================================================================
+# GEN-4 CAM-READY MODELS
+# =============================================================================
+
+# Models with from_project() generators (GEN-4)
+# These override status-based cam_ready for explicit CAM generation support
+CAM_READY_MODELS = {
+    "stratocaster",  # StratocasterBodyGenerator.from_project()
+    "les_paul",      # Uses default DXF template
+    "flying_v",      # Uses existing toolpath generators
+}
+
+
+# =============================================================================
 # MODELS
 # =============================================================================
 
@@ -196,9 +209,10 @@ def list_all_cam_models() -> Dict[str, Any]:
         items.append({
             "model_id": model_id,
             "display_name": model.get("display_name", model_id),
-            "cam_ready": caps["has_assets"],
+            "cam_ready": model_id in CAM_READY_MODELS or caps["has_assets"],
             "status": model.get("status", "STUB"),
-            "capability_count": len(caps["capabilities"])
+            "capability_count": len(caps["capabilities"]),
+            "has_generator": model_id in CAM_READY_MODELS,
         })
     
     cam_ready = [i for i in items if i["cam_ready"]]
@@ -226,7 +240,15 @@ def cam_health(model_id: str) -> CamHealth:
     status = model.get("status", "STUB")
     has_assets = len(model.get("assets", [])) > 0 or status == "ASSETS_ONLY"
     
-    if status == "COMPLETE":
+    # GEN-4: Check if model has from_project() generator
+    if model_id in CAM_READY_MODELS:
+        return CamHealth(
+            model_id=model_id,
+            status="active",
+            cam_ready=True,
+            message=f"GEN-4 CAM generation available via POST /{model_id}/body/gcode?project_id={{id}}"
+        )
+    elif status == "COMPLETE":
         return CamHealth(
             model_id=model_id,
             status="active",

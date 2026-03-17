@@ -90,7 +90,7 @@ def evaluate_safety(payload: Dict[str, Any] = None) -> Dict[str, Any]:
             "rules_triggered": result.rules_triggered,
             "engine_version": result.engine_version,
         }
-    except Exception as e:
+    except (ValueError, TypeError, KeyError, AttributeError) as e:
         return {
             "ok": False,
             "decision": "ERROR",

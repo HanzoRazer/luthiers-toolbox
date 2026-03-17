@@ -24,6 +24,7 @@ class TilePattern(str, Enum):
     HERRINGBONE = "herringbone"
     RADIAL = "radial"
     SOLID = "solid"
+    SPANISH_WAVE = "spanish_wave"  # Traditional purfling: sinusoidal wave (alternating curved segments)
 
 
 @dataclass
@@ -296,8 +297,12 @@ def compute_ring_segmentation(
             inner_radius_mm, outer_radius_mm, tile_width_mm, min_tiles
         )
 
-    # Force even for checkerboard/herringbone
-    if force_even and pattern in (TilePattern.CHECKERBOARD, TilePattern.HERRINGBONE):
+    # Force even for checkerboard, herringbone, spanish_wave (alternating segments)
+    if force_even and pattern in (
+        TilePattern.CHECKERBOARD,
+        TilePattern.HERRINGBONE,
+        TilePattern.SPANISH_WAVE,
+    ):
         if tile_count % 2 != 0:
             tile_count += 1
 

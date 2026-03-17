@@ -22,6 +22,7 @@ from .depth_validator import (
     validate_control_cavity_depth,
     validate_all_depths,
     validate_flying_v_gcode_file,
+    validate_flying_v_gcode_with_preflight,
 )
 
 __all__ = [
@@ -37,4 +38,5 @@ __all__ = [
     "validate_control_cavity_depth",
     "validate_all_depths",
     "validate_flying_v_gcode_file",
+    "validate_flying_v_gcode_with_preflight",
 ]
