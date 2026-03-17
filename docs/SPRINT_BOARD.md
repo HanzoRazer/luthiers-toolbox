@@ -78,7 +78,7 @@ Every bundle, gap, and decomposition target has one row. Staging folder path whe
 | Item | Status | Owner | Dependency | Staging / path |
 |------|--------|-------|-------------|----------------|
 | GEN-1 Spec stubs → project creation | DONE | CC | None | service.py, router.py |
-| GEN-2 BodyConfig + acoustic_body_style_id | READY | CC | Decomposition | schema |
+| GEN-2 BodyConfig + acoustic_body_style_id | DONE | CC | None | instrument_project.py, service.py |
 | GEN-3 from_project() factories | BLOCKED | CC | GEN-2 | generators |
 | GEN-4 CAM REST: Strat, LP, Flying V, Neck | BLOCKED | CC | GEN-3 | — |
 | GEN-5 Consolidate description systems | BLOCKED | CC | GEN-4 | — |
@@ -181,6 +181,7 @@ Every bundle, gap, and decomposition target has one row. Staging folder path whe
 
 ---
 | 2026-03-16 | GEN-1 complete | model_id param, 19 guitar specs, dcad0976 | GEN-2 ready |
+| 2026-03-16 | GEN-2 complete | BodyConfig schema, body_config seeding, v1.1, 909ecfed | GEN-3 blocked on GEN-2 |
 
 ## DEPLOYMENT GATE
 
