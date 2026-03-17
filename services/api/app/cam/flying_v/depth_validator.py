@@ -9,7 +9,11 @@ Validates G-code depths against spec JSON before output:
 - Control cavity depth must match control_cavity.depth_mm (35mm)
 - Pickup cavity depths must match pickup route_depth_mm (19mm)
 
-Uses the shared gcode_verify utility from scripts/utils/gcode_verify.py.
+Integrates with the shared gcode_verify stack: scripts/utils/gcode_verify.py
+calls app.cam.preflight_gate.preflight_validate for general G-code sanity
+(units, spindle, feed, depth vs stock). This module adds spec-specific depth
+checks. Call validate_flying_v_gcode_with_preflight() to run both, or run
+verify_gcode() from gcode_verify then validate_*_depth() for two-step validation.
 """
 
 from __future__ import annotations
@@ -388,3 +392,91 @@ def validate_flying_v_gcode_file(
             errors=errors,
             warnings=warnings,
         )
+
+
+def validate_flying_v_gcode_with_preflight(
+    gcode: str,
+    operation: str,
+    spec: Optional[FlyingVSpec] = None,
+    tolerance_mm: float = 0.5,
+) -> Tuple[Any, DepthValidationResult]:
+    """
+    Validate Flying V G-code using shared preflight stack then spec depth check (FV-GAP-10).
+
+    Same preflight_gate used by scripts/utils/gcode_verify.verify_gcode().
+    Returns (preflight_result_dict, depth_validation_result).
+    """
+    if spec is None:
+        spec = load_flying_v_spec()
+
+    preflight_result: Dict[str, Any] = {"ok": True, "errors": [], "warnings": [], "summary": {}}
+    try:
+        from app.cam.preflight_gate import preflight_validate, PreflightConfig
+
+        config = PreflightConfig(
+            stock_thickness_mm=spec.body_thickness_mm,
+            require_units_mm=True,
+            require_absolute=True,
+            require_spindle_on=True,
+            require_feed_on_cut=True,
+        )
+        result = preflight_validate(gcode, config=config)
+        preflight_result = {
+            "ok": result.ok,
+            "errors": list(result.errors),
+            "warnings": list(result.warnings),
+            "summary": result.summary,
+        }
+    except Exception as e:
+        preflight_result = {"ok": False, "errors": [str(e)], "warnings": [], "summary": {}}
+
+    if operation == "neck_pocket":
+        depth_result = validate_neck_pocket_depth(gcode, spec, tolerance_mm)
+    elif operation == "control_cavity":
+        depth_result = validate_control_cavity_depth(gcode, spec, tolerance_mm)
+    elif operation in ("pickup_neck", "pickup_bridge"):
+        expected = spec.neck_pickup.depth_mm if "neck" in operation else spec.bridge_pickup.depth_mm
+        depths = _extract_z_depths(gcode)
+        errors = []
+        warnings = []
+        if not depths:
+            errors.append("No Z depth values found")
+            positive_depths = []
+            max_d, min_d = 0.0, 0.0
+        else:
+            positive_depths = [abs(d) for d in depths]
+            max_d = max(positive_depths)
+            min_d = min(positive_depths)
+            if abs(max_d - expected) > tolerance_mm:
+                errors.append(f"Depth mismatch: expected {expected:.2f}mm, got {max_d:.2f}mm")
+        depth_result = DepthValidationResult(
+            ok=len(errors) == 0,
+            operation=operation,
+            expected_depth_mm=expected,
+            actual_depths=positive_depths if depths else [],
+            min_depth=min_d,
+            max_depth=max_d,
+            tolerance_mm=tolerance_mm,
+            errors=errors,
+            warnings=warnings,
+        )
+    else:
+        depths = _extract_z_depths(gcode)
+        errors = [] if depths else ["No Z depth values found"]
+        warnings = []
+        positive_depths = [abs(d) for d in depths] if depths else []
+        max_d = max(positive_depths) if positive_depths else 0.0
+        min_d = min(positive_depths) if positive_depths else 0.0
+        depth_result = DepthValidationResult(
+            ok=len(errors) == 0,
+            operation=operation,
+            expected_depth_mm=0.0,
+            actual_depths=positive_depths,
+            min_depth=min_d,
+            max_depth=max_d,
+            tolerance_mm=tolerance_mm,
+            errors=errors,
+            warnings=warnings,
+        )
+
+    return preflight_result, depth_result
