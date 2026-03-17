@@ -8,7 +8,12 @@ Extracted from neck_headstock_generator.py during WP-3 decomposition.
 import math
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Dict, List, Optional, Tuple
+from typing import Dict, List, Optional, Tuple, TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from ..schemas.instrument_project import InstrumentProjectData
+
+from .cam_utils import _require_cam_ready, _require_spec
 
 
 # =============================================================================
@@ -97,6 +102,60 @@ class NeckDimensions:
     truss_rod_width_in: float = 0.25
     truss_rod_depth_in: float = 0.375
     truss_rod_length_in: float = 18.0  # From nut
+
+    @classmethod
+    def from_project(
+        cls,
+        project: "InstrumentProjectData",
+    ) -> "NeckDimensions":
+        """
+        Create NeckDimensions from InstrumentProjectData (GEN-3).
+
+        Reads spec and neck_state from the project to build dimensions.
+        Requires project to be CAM-ready (not DRAFT status).
+
+        Args:
+            project: InstrumentProjectData with spec and neck_state
+
+        Returns:
+            Configured NeckDimensions instance
+
+        Raises:
+            ValueError: If project is not CAM-ready or missing required data
+
+        Example:
+            >>> dims = NeckDimensions.from_project(project)
+        """
+        _require_cam_ready(project)
+        _require_spec(project)
+
+        # Convert mm to inches
+        scale_length_in = project.spec.scale_length_mm / 25.4
+        nut_width_in = project.spec.nut_width_mm / 25.4
+        heel_width_in = project.spec.heel_width_mm / 25.4
+
+        # Get headstock angle from neck_state if available
+        headstock_angle = 0.0
+        headstock_type = "flat"
+        depth_at_1st = 0.82
+        depth_at_12th = 0.92
+
+        if project.neck_state:
+            headstock_angle = project.neck_state.headstock_angle_deg
+            headstock_type = project.neck_state.headstock_type
+            if project.neck_state.thickness_at_1st_mm:
+                depth_at_1st = project.neck_state.thickness_at_1st_mm / 25.4
+            if project.neck_state.thickness_at_12th_mm:
+                depth_at_12th = project.neck_state.thickness_at_12th_mm / 25.4
+
+        return cls(
+            scale_length_in=scale_length_in,
+            nut_width_in=nut_width_in,
+            heel_width_in=heel_width_in,
+            depth_at_1st_in=depth_at_1st,
+            depth_at_12th_in=depth_at_12th,
+            headstock_angle_deg=headstock_angle,
+        )
 
 
 # =============================================================================
