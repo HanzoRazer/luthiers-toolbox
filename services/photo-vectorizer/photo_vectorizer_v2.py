@@ -277,6 +277,9 @@ class ContourScore:
     dimension_plausibility: float  # 0.0-1.0 match vs family priors
     symmetry_score: float  # 0.0-1.0
     aspect_ratio_ok: bool
+    ownership_score: float = 0.0
+    vertical_coverage: float = 0.0
+    neck_inclusion_score: float = 0.0
     issues: List[str] = field(default_factory=list)
 
 
@@ -300,6 +303,8 @@ class ContourStageResult:
     export_block_issues: List[str] = field(default_factory=list)
     export_block_score_breakdown: Dict[str, float] = field(default_factory=dict)
     recommended_next_action: Optional[str] = None
+    ownership_score: Optional[float] = None
+    ownership_ok: Optional[bool] = None
     diagnostics: Dict[str, Any] = field(default_factory=lambda: {"retry_attempts": []})
 
 
@@ -2163,6 +2168,8 @@ def elect_body_contour_v2(
     body_region_hint: Optional[BodyRegion] = None,
     min_overlap: float = 0.50,
     max_width_factor: float = 1.30,
+    ownership_scores: Optional[Dict[int, float]] = None,
+    ownership_threshold: float = 0.60,
 ) -> int:
     """
     Elect body contour with vertical overlap AND X-extent guard.
@@ -2179,9 +2186,10 @@ def elect_body_contour_v2(
     body_h = max(body_region_hint.height, 1)
     max_w = body_w * max_width_factor
 
-    scored: List[Tuple[int, float, float, int]] = []
+    scored: List[Tuple[int, float, float, int, float]] = []
     rejected_overlap = 0
     rejected_width = 0
+    rejected_ownership = 0
 
     for i, fc in enumerate(contours):
         cx, cy, cw, ch = fc.bbox_px
@@ -2202,20 +2210,38 @@ def elect_body_contour_v2(
             rejected_width += 1
             continue
 
+        if ownership_scores is not None:
+            ownership = float(ownership_scores.get(i, 0.0))
+            if ownership < ownership_threshold:
+                logger.debug(
+                    f"Ownership gate: contour[{i}] ownership={ownership:.3f} "
+                    f"< threshold={ownership_threshold:.3f} -- rejected")
+                rejected_ownership += 1
+                continue
+        else:
+            ownership = 1.0
+
         score = ov_frac * fc.area_px
-        scored.append((i, score, ov_frac, cw))
+        scored.append((i, score, ov_frac, cw, ownership))
 
     logger.info(
         f"elect_body_contour_v2: {len(scored)} candidates pass "
-        f"(rejected overlap={rejected_overlap}, width={rejected_width})")
+        f"(rejected overlap={rejected_overlap}, width={rejected_width}, "
+        f"ownership={rejected_ownership})")
 
     if scored:
         scored.sort(key=lambda x: x[1], reverse=True)
         best_idx = scored[0][0]
         logger.info(
             f"  Elected idx={best_idx}: overlap={scored[0][2]:.0%}, "
-            f"width={scored[0][3]}px, area={contours[best_idx].area_px:.0f}px2")
+            f"width={scored[0][3]}px, ownership={scored[0][4]:.2f}, "
+            f"area={contours[best_idx].area_px:.0f}px2")
         return best_idx
+
+    if ownership_scores is not None and rejected_ownership > 0:
+        logger.warning(
+            "elect_body_contour_v2: ownership gate rejected all plausible body contours")
+        return -1
 
     # Fallback: no contour passed both filters -- overlap only
     logger.warning(
@@ -2338,10 +2364,12 @@ class ContourPlausibilityScorer:
         border_margin_px: int = 5,
         neck_height_factor: float = 1.35,
         min_solidity: float = 0.55,
+        ownership_threshold: float = 0.60,
     ):
         self.border_margin_px = border_margin_px
         self.neck_height_factor = neck_height_factor
         self.min_solidity = min_solidity
+        self.ownership_threshold = ownership_threshold
 
     def score_candidate(
         self,
@@ -2433,15 +2461,40 @@ class ContourPlausibilityScorer:
 
         # --- Signal 6: Vertical extent vs body region ---
         completeness = solidity
+        vertical_coverage = 1.0
+        neck_inclusion_score = 1.0 if includes_neck else 0.0
         if body_region is not None:
             height_ratio = ch / max(body_region.height, 1)
+            vertical_coverage = max(0.0, min(1.0, height_ratio))
             # Penalize if contour is much smaller than body region
             if height_ratio < 0.5:
                 completeness *= 0.6
                 issues.append(f"small vs body region ({height_ratio:.0%})")
 
+            body_top = body_region.y
+            neck_span = max(0.0, float(body_top - cy))
+            neck_inclusion_score = min(
+                1.0,
+                max(
+                    neck_inclusion_score,
+                    neck_span / max(1.0, body_region.height * 0.25),
+                ),
+            )
+
         # --- Signal 7: Symmetry (left/right area) ---
         symmetry_score = self._compute_symmetry(fc, image_shape)
+
+        # --- Signal 8: Body ownership ---
+        border_contact_score = min(1.0, border_count / 4.0)
+        ownership_score = self._body_ownership_score(
+            completeness=completeness,
+            border_contact=border_contact_score,
+            vertical_coverage=vertical_coverage,
+            neck_inclusion=neck_inclusion_score,
+        )
+        ownership_ok = ownership_score >= self.ownership_threshold
+        if not ownership_ok:
+            issues.append(f"body ownership weak ({ownership_score:.2f})")
 
         # --- Composite score ---
         w_solidity = 0.25
@@ -2460,6 +2513,9 @@ class ContourPlausibilityScorer:
             w_neck * (0.3 if includes_neck else 1.0)
         )
 
+        if not ownership_ok:
+            score = min(score, self.ownership_threshold - 0.01)
+
         return ContourScore(
             contour_index=idx,
             score=round(score, 4),
@@ -2469,6 +2525,9 @@ class ContourPlausibilityScorer:
             dimension_plausibility=round(dim_plausibility, 4),
             symmetry_score=round(symmetry_score, 4),
             aspect_ratio_ok=aspect_ratio_ok,
+            ownership_score=round(ownership_score, 4),
+            vertical_coverage=round(vertical_coverage, 4),
+            neck_inclusion_score=round(neck_inclusion_score, 4),
             issues=issues,
         )
 
@@ -2558,6 +2617,41 @@ class ContourPlausibilityScorer:
             return (balance + span_ratio) / 2.0
 
         return balance
+
+    @staticmethod
+    def _clamp01(value: float) -> float:
+        return max(0.0, min(1.0, float(value)))
+
+    def _body_ownership_score(
+        self,
+        *,
+        completeness: float,
+        border_contact: float,
+        vertical_coverage: float,
+        neck_inclusion: float,
+    ) -> float:
+        completeness = self._clamp01(completeness)
+        border_contact = self._clamp01(border_contact)
+        vertical_coverage = self._clamp01(vertical_coverage)
+        neck_inclusion = self._clamp01(neck_inclusion)
+
+        score = (
+            0.50 * completeness
+            + 0.25 * vertical_coverage
+            + 0.10 * (1.0 - border_contact)
+            + 0.15 * (1.0 - neck_inclusion)
+        )
+
+        if vertical_coverage < 0.45:
+            score -= 0.15
+        if border_contact > 0.30:
+            score -= 0.10
+        if neck_inclusion > 0.25:
+            score -= 0.20
+        if completeness < 0.55:
+            score -= 0.10
+
+        return self._clamp01(score)
 
 
 # =============================================================================
@@ -3559,6 +3653,260 @@ class PhotoVectorizerV2:
             return img
         img = cv2.imread(str(source))
         return img
+
+
+# =============================================================================
+# Standalone pipeline functions (non-class API)
+# =============================================================================
+
+
+def extract_feature_contours(
+    edges: np.ndarray,
+    alpha_mask: np.ndarray,
+    mpp: float,
+    min_contour_area_px: int = 500,
+) -> List[FeatureContour]:
+    """Extract and classify contours from edge + mask images."""
+    classifier = FeatureClassifier()
+    assembler = ContourAssembler(classifier, min_contour_area_px)
+    return assembler.assemble(edges, alpha_mask, mpp)
+
+
+def merge_feature_contours(
+    contours: List[FeatureContour],
+    image_shape: Optional[Tuple[int, int]] = None,
+    body_region: Optional[BodyRegion] = None,
+    mpp: float = 1.0,
+) -> List[FeatureContour]:
+    """Merge fragmented body contours and return updated list."""
+    if not contours or image_shape is None:
+        return list(contours)
+    merger = ContourMerger()
+    merge_result = merger.merge(contours, image_shape, body_region=body_region, mpp=mpp)
+    if merge_result is not None:
+        merged_fc = FeatureContour(
+            points_px=merge_result.merged_contour,
+            feature_type=FeatureType.BODY_OUTLINE,
+            confidence=0.85,
+            area_px=float(cv2.contourArea(merge_result.merged_contour)),
+            bbox_px=merge_result.bbox_px,
+            hash_id=hashlib.md5(merge_result.merged_contour.tobytes()).hexdigest()[:12],
+        )
+        contours = list(contours) + [merged_fc]
+    return contours
+
+
+def run_contour_stage_v2(
+    image: np.ndarray,
+    merged_mask: np.ndarray,
+    body_region: Optional[BodyRegion],
+    family: InstrumentFamily,
+    mpp: float = 1.0,
+    image_shape: Optional[Tuple[int, int]] = None,
+    border_margin_px: int = 5,
+    neck_height_factor: float = 1.35,
+    min_solidity: float = 0.55,
+    export_block_threshold: float = EXPORT_BLOCK_THRESHOLD,
+) -> ContourStageResult:
+    """
+    Standalone contour stage — mirrors ContourStage.run() but as a free function.
+
+    Performs: edge extraction → contour assembly → merge → scoring → election →
+    export blocking with full ownership gate wiring.
+    """
+    if image_shape is None:
+        image_shape = (image.shape[0], image.shape[1])
+
+    # Edge extraction
+    gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY) if len(image.shape) == 3 else image
+    edges = cv2.Canny(gray, 50, 150)
+
+    # Contour assembly
+    feature_contours_raw = extract_feature_contours(edges, merged_mask, mpp)
+    if not feature_contours_raw:
+        return ContourStageResult(diagnostics={"error": "no_contours_found"})
+
+    pre_merge_contours = list(feature_contours_raw)
+
+    # Merge
+    feature_contours_post = merge_feature_contours(
+        feature_contours_raw, image_shape, body_region, mpp,
+    )
+    post_merge_contours = list(feature_contours_post)
+
+    # Score
+    scorer = ContourPlausibilityScorer(
+        border_margin_px=border_margin_px,
+        neck_height_factor=neck_height_factor,
+        min_solidity=min_solidity,
+        ownership_threshold=0.60,
+    )
+    scores_pre = scorer.score_all_candidates(
+        pre_merge_contours, body_region, family, mpp, image_shape
+    )
+    scores_post = scorer.score_all_candidates(
+        post_merge_contours, body_region, family, mpp, image_shape
+    )
+
+    pre_best = max(scores_pre, key=lambda s: s.score) if scores_pre else None
+    post_best = max(scores_post, key=lambda s: s.score) if scores_post else None
+
+    post_ownership_scores = {
+        score.contour_index: float(score.ownership_score)
+        for score in scores_post
+    }
+
+    # Elect body contour with ownership gate
+    elected_idx = elect_body_contour_v2(
+        feature_contours_post,
+        body_region_hint=body_region,
+        min_overlap=0.50,
+        max_width_factor=1.30,
+        ownership_scores=post_ownership_scores,
+        ownership_threshold=0.60,
+    )
+
+    if elected_idx >= 0:
+        body_contour_final = feature_contours_post[elected_idx]
+        elected_source = "post_merge_guarded"
+    else:
+        # Ownership gate failed every plausible candidate.
+        # Preserve a fallback contour for visualization/debugging, but surface
+        # the failure as a hard export block and route the coach back to body isolation.
+        body_contour_final = max(feature_contours_post, key=lambda c: c.area_px) if feature_contours_post else None
+        elected_source = "ownership_gate_failed_fallback"
+
+    best_cs = post_best or pre_best
+    best_score = float(best_cs.score) if best_cs is not None else 0.0
+
+    result = ContourStageResult(
+        feature_contours_pre_merge=pre_merge_contours,
+        feature_contours_post_merge=post_merge_contours,
+        body_contour_final=body_contour_final,
+        elected_source=elected_source,
+        best_score=best_score,
+        diagnostics={
+            "n_pre_merge": len(pre_merge_contours),
+            "n_post_merge": len(post_merge_contours),
+            "n_scored_pre": len(scores_pre),
+            "n_scored_post": len(scores_post),
+            "family": family.value if hasattr(family, "value") else str(family),
+            "body_ownership_gate_failed": elected_idx < 0,
+            "ownership_threshold": 0.60,
+        },
+    )
+
+    if best_cs is not None:
+        result.export_block_score_breakdown = {
+            "composite": float(best_cs.score),
+            "completeness": float(best_cs.completeness),
+            "dimension_plausibility": float(best_cs.dimension_plausibility),
+            "symmetry": float(best_cs.symmetry_score),
+            "aspect_ratio_ok": 1.0 if best_cs.aspect_ratio_ok else 0.0,
+            "border_contact": 0.0 if best_cs.border_contact else 1.0,
+            "includes_neck": 0.0 if best_cs.includes_neck else 1.0,
+            "ownership_score": float(best_cs.ownership_score),
+            "vertical_coverage": float(best_cs.vertical_coverage),
+            "neck_inclusion_score": 1.0 - float(best_cs.neck_inclusion_score),
+        }
+        result.export_block_issues = list(best_cs.issues)
+        result.ownership_score = float(best_cs.ownership_score)
+        result.ownership_ok = bool(best_cs.ownership_score >= 0.60)
+
+    if elected_idx < 0:
+        result.export_blocked = True
+        result.block_reason = "No contour passed body ownership threshold 0.60"
+        result.recommended_next_action = "rerun_body_isolation"
+        if "body_ownership_failed" not in result.export_block_issues:
+            result.export_block_issues.append("body_ownership_failed")
+
+    if best_score < export_block_threshold:
+        result.export_blocked = True
+        result.block_reason = (
+            f"Best plausibility score {best_score:.3f} below threshold "
+            f"{export_block_threshold:.3f}"
+        )
+
+    if result.export_blocked and result.recommended_next_action is None:
+        result.recommended_next_action = "manual_review_required"
+
+    return result
+
+
+def run_body_isolation_stage(
+    image: np.ndarray,
+    fg_mask: Optional[np.ndarray] = None,
+) -> "BodyIsolationResult":
+    """Standalone body isolation — wraps BodyIsolator for non-class callers."""
+    from body_isolation_result import BodyIsolationResult
+    isolator = BodyIsolator()
+    body_region = isolator.isolate(image, fg_mask=fg_mask)
+    return BodyIsolationResult(
+        body_bbox_px=body_region.bbox,
+        body_region=body_region,
+        confidence=body_region.confidence,
+        completeness_score=body_region.confidence,
+    )
+
+
+def vectorize_photo_v2(
+    image: np.ndarray,
+    *,
+    family_hint: Optional[InstrumentFamily] = None,
+    mpp: Optional[float] = None,
+) -> PhotoExtractionResult:
+    """
+    Standalone extraction pipeline — mirrors PhotoVectorizerV2.extract()
+    but as a free function with ownership gate wiring.
+    """
+    warnings: List[str] = []
+    img_h, img_w = image.shape[:2]
+
+    # Foreground mask
+    gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY) if len(image.shape) == 3 else image
+    _, merged_mask = cv2.threshold(gray, 150, 255, cv2.THRESH_BINARY_INV)
+
+    # Body isolation
+    body_result = run_body_isolation_stage(image, fg_mask=merged_mask)
+    body_region = body_result.body_region
+
+    family = family_hint or InstrumentFamily.UNKNOWN
+    effective_mpp = mpp or 1.0
+
+    # Contour stage
+    contour_stage = run_contour_stage_v2(
+        image=image,
+        merged_mask=merged_mask,
+        body_region=body_region,
+        family=family,
+        mpp=effective_mpp,
+        image_shape=(img_h, img_w),
+    )
+
+    # Legacy monolith path must mirror modular contour_stage ownership semantics.
+    if getattr(contour_stage, "ownership_ok", None) is False:
+        warnings.append(
+            f"Contour ownership failed "
+            f"({float(getattr(contour_stage, 'ownership_score', 0.0)):.2f} < 0.60)"
+        )
+        if contour_stage.recommended_next_action is None:
+            contour_stage.recommended_next_action = "rerun_body_isolation"
+
+    export_ok = not contour_stage.export_blocked
+    if contour_stage.export_blocked:
+        warnings.append(
+            f"Export blocked: "
+            f"{contour_stage.block_reason or 'low contour plausibility'}"
+        )
+
+    result = PhotoExtractionResult(
+        source_path="<standalone>",
+        contour_stage=contour_stage,
+        export_blocked=contour_stage.export_blocked,
+        export_block_reason=contour_stage.block_reason,
+    )
+    result.warnings = warnings
+    return result
 
 
 # =============================================================================

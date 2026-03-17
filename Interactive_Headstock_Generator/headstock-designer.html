@@ -1,0 +1,679 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Production Shop — Headstock Designer</title>
+<script src="https://unpkg.com/konva@9/konva.min.js"></script>
+<style>
+:root {
+  --bg: #181614;
+  --surface: #201e1b;
+  --surface2: #272420;
+  --border: #353028;
+  --accent: #c8813a;
+  --accent-dim: #7a4e1c;
+  --text: #ddd8cf;
+  --text-dim: #7a756c;
+  --snap: #4a9eff;
+  --danger: #cc4444;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { height: 100%; background: var(--bg); color: var(--text); font-family: 'Courier New', monospace; font-size: 12px; overflow: hidden; user-select: none; }
+
+#app { display: grid; grid-template-columns: 192px 1fr 188px; grid-template-rows: 38px 1fr 26px; height: 100vh; }
+#topbar { grid-column: 1/-1; background: var(--surface); border-bottom: 1px solid var(--border); display: flex; align-items: center; padding: 0 12px; gap: 12px; }
+#left-panel { background: var(--surface); border-right: 1px solid var(--border); overflow-y: auto; display: flex; flex-direction: column; }
+#stage-wrap { background: var(--bg); overflow: hidden; }
+#right-panel { background: var(--surface); border-left: 1px solid var(--border); overflow-y: auto; display: flex; flex-direction: column; }
+#statusbar { grid-column: 1/-1; background: var(--surface); border-top: 1px solid var(--border); display: flex; align-items: center; padding: 0 12px; gap: 14px; color: var(--text-dim); font-size: 10px; }
+
+.tool-name { font-family: Georgia, serif; font-size: 13px; color: var(--text); letter-spacing: .5px; white-space: nowrap; }
+.tool-name em { color: var(--accent); font-style: normal; }
+.tsep { width: 1px; height: 18px; background: var(--border); flex-shrink: 0; }
+.btn { padding: 4px 9px; background: transparent; border: 1px solid var(--border); border-radius: 3px; color: var(--text-dim); cursor: pointer; font-family: inherit; font-size: 10px; transition: all .12s; white-space: nowrap; }
+.btn:hover { border-color: var(--accent-dim); color: var(--text); }
+.btn.primary { background: var(--accent); border-color: var(--accent); color: #111; font-weight: bold; }
+.btn.primary:hover { background: #d89040; }
+
+.ps { padding: 10px 10px 8px; border-bottom: 1px solid var(--border); }
+.pl { font-size: 9px; letter-spacing: 1.4px; color: var(--text-dim); text-transform: uppercase; margin-bottom: 8px; }
+
+.hs-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 5px; }
+.hs-btn { padding: 7px 4px; background: var(--surface2); border: 1px solid var(--border); border-radius: 3px; color: var(--text-dim); cursor: pointer; font-family: inherit; font-size: 10px; text-align: center; transition: all .12s; }
+.hs-btn:hover { border-color: var(--accent-dim); color: var(--text); }
+.hs-btn.active { border-color: var(--accent); color: var(--accent); background: rgba(200,129,58,.08); }
+
+.inlay-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px; }
+.inlay-item { aspect-ratio: 1; background: var(--surface2); border: 1px solid var(--border); border-radius: 3px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; cursor: pointer; transition: all .12s; font-size: 9px; color: var(--text-dim); }
+.inlay-item:hover { border-color: var(--accent); color: var(--accent); }
+.inlay-item svg { width: 22px; height: 22px; }
+
+.tgl-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px; }
+.tgl-label { font-size: 10px; color: var(--text-dim); }
+.tgl { width: 26px; height: 14px; background: var(--border); border-radius: 7px; position: relative; cursor: pointer; transition: background .2s; flex-shrink: 0; }
+.tgl.on { background: var(--accent); }
+.tgl .knob { position: absolute; top: 2px; left: 2px; width: 10px; height: 10px; border-radius: 50%; background: #fff; transition: left .2s; }
+.tgl.on .knob { left: 14px; }
+
+.prop-row { display: flex; align-items: center; margin-bottom: 5px; gap: 5px; }
+.prop-lbl { width: 46px; color: var(--text-dim); font-size: 10px; flex-shrink: 0; }
+.prop-inp { flex: 1; background: var(--surface2); border: 1px solid var(--border); border-radius: 2px; color: var(--text); font-family: inherit; font-size: 11px; padding: 3px 5px; text-align: right; }
+.prop-inp:focus { outline: none; border-color: var(--accent); }
+
+.layer-item { display: flex; align-items: center; gap: 6px; padding: 5px 6px; border-radius: 3px; cursor: pointer; margin-bottom: 2px; }
+.layer-item:hover { background: var(--surface2); }
+.layer-item.sel { background: rgba(200,129,58,.1); }
+.layer-dot { width: 7px; height: 7px; border-radius: 2px; flex-shrink: 0; }
+.layer-nm { flex: 1; font-size: 10px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+.mfg-badge { font-size: 9px; padding: 3px 6px; border-radius: 2px; margin-top: 8px; }
+.mfg-ok { background: rgba(200,129,58,.1); border: 1px solid var(--accent-dim); color: var(--accent); }
+</style>
+</head>
+<body>
+<div id="app">
+  <div id="topbar">
+    <div class="tool-name">Production<em>Shop</em> &middot; Headstock Designer</div>
+    <div class="tsep"></div>
+    <input type="file" id="dxf-file" accept=".dxf,.svg" style="display:none">
+    <button class="btn" onclick="document.getElementById('dxf-file').click()">&#8593; Import DXF/SVG</button>
+    <button class="btn" id="btn-undo">&#8592; Undo</button>
+    <button class="btn" id="btn-redo">Redo &#8594;</button>
+    <div style="flex:1"></div>
+    <button class="btn" id="btn-clear">Clear</button>
+    <div class="tsep"></div>
+    <button class="btn primary" id="btn-export">&#8595; Export SVG</button>
+  </div>
+
+  <div id="left-panel">
+    <div class="ps">
+      <div class="pl">Headstock model</div>
+      <div class="hs-grid" id="hs-grid"></div>
+    </div>
+
+    <div class="ps">
+      <div class="pl">Inlay shapes</div>
+      <div class="inlay-grid" id="inlay-grid"></div>
+    </div>
+
+    <div class="ps" style="flex:1">
+      <div class="pl">Canvas</div>
+      <div class="tgl-row"><span class="tgl-label">Grid</span><div class="tgl on" id="tgl-grid"><div class="knob"></div></div></div>
+      <div class="tgl-row"><span class="tgl-label">Centerline</span><div class="tgl on" id="tgl-cl"><div class="knob"></div></div></div>
+      <div class="tgl-row"><span class="tgl-label">Nut line</span><div class="tgl on" id="tgl-nut"><div class="knob"></div></div></div>
+      <div class="tgl-row"><span class="tgl-label">Snap to CL</span><div class="tgl on" id="tgl-snap"><div class="knob"></div></div></div>
+      <div class="tgl-row"><span class="tgl-label">Boundary lock</span><div class="tgl on" id="tgl-boundary"><div class="knob"></div></div></div>
+    </div>
+  </div>
+
+  <div id="stage-wrap"></div>
+
+  <div id="right-panel">
+    <div class="ps">
+      <div class="pl">Properties</div>
+      <div id="no-sel" style="color:var(--text-dim);font-size:10px;padding:6px 0">No element selected</div>
+      <div id="sel-props" style="display:none">
+        <div class="prop-row"><span class="prop-lbl">X mm</span><input class="prop-inp" id="prop-x" type="number" step="0.1"></div>
+        <div class="prop-row"><span class="prop-lbl">Y mm</span><input class="prop-inp" id="prop-y" type="number" step="0.1"></div>
+        <div class="prop-row"><span class="prop-lbl">Scale</span><input class="prop-inp" id="prop-s" type="number" step="0.05" min="0.2" max="6"></div>
+        <div class="prop-row"><span class="prop-lbl">Rotate</span><input class="prop-inp" id="prop-r" type="number" step="1"></div>
+        <div class="prop-row"><span class="prop-lbl">Fill</span><input type="color" id="prop-col" style="flex:1;height:22px;background:var(--surface2);border:1px solid var(--border);border-radius:2px;cursor:pointer;padding:1px"></div>
+        <div style="display:flex;gap:5px;margin-top:6px">
+          <button class="btn" style="flex:1;font-size:10px" id="btn-flip">&#8596;</button>
+          <button class="btn" style="flex:1;font-size:10px;color:var(--danger);border-color:var(--danger)" id="btn-del">&#10005; Del</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="ps">
+      <div class="pl">Layers</div>
+      <div id="layer-list"><div style="color:var(--text-dim);font-size:10px;padding:4px 0">No inlays placed</div></div>
+    </div>
+
+    <div class="ps" style="flex:1">
+      <div class="pl">Manufacture info</div>
+      <div style="color:var(--text-dim);font-size:10px;line-height:1.9">
+        <div>Tool dia: <span style="color:var(--text)">2.0 mm</span></div>
+        <div>Scale: <span id="info-scale" style="color:var(--text)">1:1</span></div>
+        <div>Inlays: <span id="info-count" style="color:var(--text)">0</span></div>
+      </div>
+      <div class="mfg-badge mfg-ok" id="mfg-status">Ready to export</div>
+    </div>
+  </div>
+
+  <div id="statusbar">
+    <span id="st-xy">x: — &nbsp; y: —</span>
+    <span>|</span>
+    <span id="st-sel">no selection</span>
+    <span>|</span>
+    <span id="st-count">0 inlays</span>
+    <span style="margin-left:auto;color:var(--snap)" id="st-snap"></span>
+  </div>
+</div>
+
+<script>
+const HEADSTOCKS = {
+  "Les Paul": {
+    col:"#b87040",
+    path:"M65,298 C60,278 52,248 46,216 L42,182 L44,148 L52,114 L66,84 L82,58 L94,38 L100,22 L106,38 L118,58 L134,84 L148,114 L156,148 L158,182 L154,216 C148,248 140,278 135,298 Z",
+    nutY:288, cx:100, nw:70,
+    tuners:[[52,108],[52,158],[52,206],[148,108],[148,158],[148,206]]
+  },
+  "Strat": {
+    col:"#a86830",
+    path:"M65,298 C62,285 58,270 54,250 L50,220 L48,188 L48,154 L50,118 L56,86 L66,60 L80,38 C88,26 96,20 100,20 C104,20 112,26 120,38 L134,60 L140,86 L146,118 L148,154 L148,188 L146,220 L142,250 C138,270 134,285 131,298 Z",
+    nutY:290, cx:100, nw:66,
+    tuners:[[52,92],[52,132],[52,172],[52,212],[52,248],[52,270]]
+  },
+  "PRS": {
+    col:"#b07848",
+    path:"M65,298 C61,276 55,244 50,210 L48,174 L52,136 L64,100 L80,66 L94,38 L100,8 L106,38 L120,66 L136,100 L148,136 L152,174 L150,210 C145,244 139,276 135,298 Z",
+    nutY:292, cx:100, nw:70,
+    tuners:[[55,104],[55,158],[55,206],[145,104],[145,158],[145,206]]
+  },
+  "Telecaster": {
+    col:"#b88050",
+    path:"M65,298 C62,284 58,268 55,248 L52,214 L52,178 L52,142 L52,106 L56,76 L68,52 C78,36 90,28 100,28 C110,28 122,36 132,52 L144,76 L148,106 L148,142 L148,178 L148,214 L145,248 C142,268 138,284 135,298 Z",
+    nutY:290, cx:100, nw:66,
+    tuners:[[54,96],[54,136],[54,176],[54,216],[54,248],[54,270]]
+  },
+  "SG": {
+    col:"#a07040",
+    path:"M58,298 C54,276 50,252 50,228 L52,196 L60,162 L72,130 L86,100 L98,68 L100,18 L102,68 L114,100 L128,130 L140,162 L148,196 L150,228 C150,252 146,276 142,298 Z",
+    nutY:290, cx:100, nw:60,
+    tuners:[[56,108],[56,158],[56,208],[144,108],[144,158],[144,208]]
+  }
+};
+
+const INLAYS = [
+  {id:'dot',    label:'Dot'},
+  {id:'diamond',label:'Diamond'},
+  {id:'block',  label:'Block'},
+  {id:'crown',  label:'Crown'},
+  {id:'oval',   label:'Oval'},
+  {id:'star',   label:'Star'},
+  {id:'hex',    label:'Hex'},
+  {id:'text',   label:'Text'},
+  {id:'import', label:'Import'},
+];
+
+const ICONS = {
+  dot:    `<svg viewBox="-12 -12 24 24"><circle r="7" fill="#c8b090" stroke="#8a6040" stroke-width="1"/></svg>`,
+  diamond:`<svg viewBox="-12 -12 24 24"><polygon points="0,-9 9,0 0,9 -9,0" fill="#c8b090" stroke="#8a6040" stroke-width="1"/></svg>`,
+  block:  `<svg viewBox="-14 -8 28 16"><rect x="-11" y="-5" width="22" height="10" rx="2" fill="#c8b090" stroke="#8a6040" stroke-width="1"/></svg>`,
+  crown:  `<svg viewBox="-14 -12 28 22"><path d="M-12,6 L-12,-2 L-8,4 L0,-8 L8,4 L12,-2 L12,6 Z" fill="#c8b090" stroke="#8a6040" stroke-width="1"/></svg>`,
+  oval:   `<svg viewBox="-12 -8 24 16"><ellipse rx="10" ry="6" fill="#c8b090" stroke="#8a6040" stroke-width="1"/></svg>`,
+  star:   `<svg viewBox="-12 -12 24 24"><polygon points="0,-10 2.9,-4 9.5,-3.1 4.8,1.5 6.1,8.1 0,5 -6.1,8.1 -4.8,1.5 -9.5,-3.1 -2.9,-4" fill="#c8b090" stroke="#8a6040" stroke-width="1"/></svg>`,
+  hex:    `<svg viewBox="-12 -12 24 24"><polygon points="9,0 4.5,7.8 -4.5,7.8 -9,0 -4.5,-7.8 4.5,-7.8" fill="#c8b090" stroke="#8a6040" stroke-width="1"/></svg>`,
+  text:   `<svg viewBox="-14 -10 28 20"><text x="0" y="4" text-anchor="middle" font-size="11" fill="#c8b090" font-family="Georgia">T</text></svg>`,
+  import: `<svg viewBox="-12 -12 24 24"><rect x="-9" y="-9" width="18" height="18" rx="3" fill="none" stroke="#c8b090" stroke-width="1" stroke-dasharray="3,2"/><text x="0" y="4" text-anchor="middle" font-size="10" fill="#c8b090">+</text></svg>`,
+};
+
+// Scale factor: path units to canvas px
+const SCALE = 1.42;
+let currentHS = "Les Paul";
+let selectedNode = null, selIndicator = null;
+let layers = [], inlayN = 0;
+let snapOn = true, boundaryOn = true, showGrid = true, showCL = true, showNut = true;
+let history = [], histIdx = -1;
+let snapLine = null;
+
+// Konva
+const wrap = document.getElementById('stage-wrap');
+const W = wrap.clientWidth || 680, H = wrap.clientHeight || 500;
+const stage = new Konva.Stage({ container: 'stage-wrap', width: W, height: H });
+const gLayer = new Konva.Layer();
+const hsLayer = new Konva.Layer();
+const inLayer = new Konva.Layer();
+const ovLayer = new Konva.Layer();
+const guLayer = new Konva.Layer();
+stage.add(gLayer, hsLayer, inLayer, ovLayer, guLayer);
+
+// Coordinate helpers — headstock path coords 0..200 x 0..320, centered on canvas
+const OX = (W - 200*SCALE)/2, OY = (H - 320*SCALE)/2 + 10;
+const p2cx = p => OX + p*SCALE;
+const p2cy = p => OY + p*SCALE;
+const c2px = c => (c - OX)/SCALE;
+const c2py = c => (c - OY)/SCALE;
+
+// Boundary SVG for isPointInFill
+const bsvg = document.createElementNS('http://www.w3.org/2000/svg','svg');
+bsvg.setAttribute('viewBox','0 0 200 320');
+bsvg.style.cssText='position:absolute;visibility:hidden;pointer-events:none;width:200px;height:320px';
+const bpath = document.createElementNS('http://www.w3.org/2000/svg','path');
+bsvg.appendChild(bpath);
+document.body.appendChild(bsvg);
+
+function setBoundary(d) { bpath.setAttribute('d', d); }
+
+function insideHS(cx, cy) {
+  if (!boundaryOn) return true;
+  try {
+    const pt = bsvg.createSVGPoint();
+    pt.x = c2px(cx); pt.y = c2py(cy);
+    return bpath.isPointInFill(pt);
+  } catch(e) { return true; }
+}
+
+// ─── Grid ────────────────────────────────────────────────────────────────────
+function drawGrid() {
+  gLayer.destroyChildren();
+  if (!showGrid) { gLayer.draw(); return; }
+  const step = 10*SCALE;
+  for (let x = OX%step; x<W; x+=step) gLayer.add(new Konva.Line({points:[x,0,x,H],stroke:'#252220',strokeWidth:.5}));
+  for (let y = OY%step; y<H; y+=step) gLayer.add(new Konva.Line({points:[0,y,W,y],stroke:'#252220',strokeWidth:.5}));
+  const maj = 50*SCALE;
+  for (let x = OX%maj; x<W; x+=maj) gLayer.add(new Konva.Line({points:[x,0,x,H],stroke:'#302c28',strokeWidth:.8}));
+  for (let y = OY%maj; y<H; y+=maj) gLayer.add(new Konva.Line({points:[0,y,W,y],stroke:'#302c28',strokeWidth:.8}));
+  gLayer.draw();
+}
+
+// ─── Headstock ───────────────────────────────────────────────────────────────
+function drawHS(name) {
+  hsLayer.destroyChildren(); ovLayer.destroyChildren();
+  const hs = HEADSTOCKS[name]; if (!hs) return;
+
+  // Main fill
+  hsLayer.add(new Konva.Path({data:hs.path, fill:hs.col, stroke:'#6a3e18', strokeWidth:1.5, x:OX, y:OY, scaleX:SCALE, scaleY:SCALE, listening:false}));
+  // Highlight sheen
+  hsLayer.add(new Konva.Path({data:hs.path, fill:'#ffffff', opacity:.04, x:OX+1, y:OY+1, scaleX:SCALE*.98, scaleY:SCALE*.98, listening:false}));
+
+  // Grain lines (wood effect)
+  for (let i=0; i<6; i++) {
+    const yo = OY + (40 + i*44)*SCALE;
+    hsLayer.add(new Konva.Line({points:[OX+20,yo,OX+180*SCALE-20,yo], stroke:'#ffffff', strokeWidth:.3, opacity:.06, listening:false}));
+  }
+
+  // Tuner holes
+  hs.tuners.forEach(([px,py]) => {
+    hsLayer.add(new Konva.Circle({x:p2cx(px),y:p2cy(py),radius:5,fill:'#1a0e06',stroke:'#5a3010',strokeWidth:.8,listening:false}));
+    hsLayer.add(new Konva.Circle({x:p2cx(px),y:p2cy(py),radius:2.2,fill:'#b09050',listening:false}));
+  });
+  hsLayer.draw();
+
+  // Overlays
+  if (showCL) {
+    const cx = p2cx(hs.cx);
+    ovLayer.add(new Konva.Line({points:[cx,OY-15,cx,OY+320*SCALE+10],stroke:'#4a9eff',strokeWidth:.7,dash:[5,4],opacity:.5,listening:false}));
+    ovLayer.add(new Konva.Text({x:cx+3,y:OY-14,text:'CL',fill:'#4a9eff',fontSize:8,opacity:.6,listening:false}));
+  }
+  if (showNut) {
+    const ny = p2cy(hs.nutY), nx = p2cx(hs.cx), nw = hs.nw*SCALE/2;
+    ovLayer.add(new Konva.Line({points:[nx-nw-6,ny,nx+nw+6,ny],stroke:'#c8813a',strokeWidth:1.3,listening:false}));
+    ovLayer.add(new Konva.Text({x:nx+nw+8,y:ny-5,text:'NUT',fill:'#c8813a',fontSize:8,opacity:.75,listening:false}));
+    const mmW = (hs.nw*0.215).toFixed(1);
+    ovLayer.add(new Konva.Text({x:nx-nw-6,y:ny-14,text:`${mmW}mm`,fill:'#c8813a',fontSize:8,opacity:.5,listening:false}));
+  }
+  ovLayer.draw();
+  setBoundary(hs.path);
+}
+
+// ─── Inlay creation ───────────────────────────────────────────────────────────
+function makeInlay(type, cx, cy) {
+  const hs = HEADSTOCKS[currentHS];
+  const snapX = p2cx(hs.cx);
+  if (snapOn && Math.abs(cx - snapX) < 22) cx = snapX;
+
+  const g = new Konva.Group({x:cx, y:cy, draggable:true, id:`I${++inlayN}`});
+  const fill = '#e2d8b8';
+
+  let shape;
+  switch(type) {
+    case 'dot':     shape = new Konva.Circle({radius:8, fill, stroke:'#907050', strokeWidth:.8}); break;
+    case 'diamond': shape = new Konva.RegularPolygon({sides:4, radius:10, fill, stroke:'#907050', strokeWidth:.8}); break;
+    case 'block':   shape = new Konva.Rect({width:24, height:10, offsetX:12, offsetY:5, fill, stroke:'#907050', strokeWidth:.8, cornerRadius:2}); break;
+    case 'crown':   shape = new Konva.Path({data:'M-12,6 L-12,-2 L-8,4 L0,-8 L8,4 L12,-2 L12,6 Z', fill, stroke:'#907050', strokeWidth:.8}); break;
+    case 'oval':    shape = new Konva.Ellipse({radiusX:11, radiusY:7, fill, stroke:'#907050', strokeWidth:.8}); break;
+    case 'star':    shape = new Konva.Star({numPoints:5, innerRadius:4.5, outerRadius:10, fill, stroke:'#907050', strokeWidth:.8}); break;
+    case 'hex':     shape = new Konva.RegularPolygon({sides:6, radius:10, fill, stroke:'#907050', strokeWidth:.8}); break;
+    case 'text':    shape = new Konva.Text({text:'LOGO', fontSize:12, fill, fontFamily:'Georgia, serif', offsetX:18, offsetY:7, width:36}); break;
+    default:        shape = new Konva.Circle({radius:8, fill, stroke:'#907050', strokeWidth:.8});
+  }
+
+  const sel = new Konva.Rect({x:-18,y:-18,width:36,height:36,stroke:'#4a9eff',strokeWidth:.8,dash:[4,3],visible:false,listening:false});
+  g.add(shape, sel);
+
+  g.on('dragmove', () => {
+    if (snapOn) {
+      const sx = p2cx(HEADSTOCKS[currentHS].cx);
+      if (Math.abs(g.x()-sx)<18) {
+        g.x(sx);
+        if (!snapLine) {
+          snapLine = new Konva.Line({points:[sx,0,sx,H],stroke:'#4a9eff',strokeWidth:.8,dash:[4,4],opacity:.7});
+          guLayer.add(snapLine);
+        }
+        snapLine.points([sx,0,sx,H]); snapLine.visible(true); guLayer.draw();
+        document.getElementById('st-snap').textContent = 'snapped to CL';
+      } else {
+        if (snapLine) { snapLine.visible(false); guLayer.draw(); }
+        document.getElementById('st-snap').textContent = '';
+      }
+    }
+    updateProps(g);
+    updateSt();
+  });
+
+  g.on('dragend', () => {
+    if (snapLine) { snapLine.visible(false); guLayer.draw(); }
+    document.getElementById('st-snap').textContent = '';
+    if (!insideHS(g.x(), g.y())) {
+      // Push to safe center position
+      const hs2 = HEADSTOCKS[currentHS];
+      g.x(p2cx(hs2.cx)); g.y(p2cy(hs2.nutY - 50));
+      inLayer.draw();
+    }
+    updateProps(g);
+    saveHist();
+  });
+
+  g.on('click tap', () => doSelect(g, sel));
+  inLayer.add(g); inLayer.draw();
+
+  const dotCol = ['#c8a870','#d0b080','#b89060','#c4a060','#d8b888'][inlayN%5];
+  layers.push({id:g.id(), name:`${type} ${inlayN}`, node:g, sel, dotCol, type});
+  updateLayerList(); updateSt();
+  saveHist();
+}
+
+// ─── Selection ────────────────────────────────────────────────────────────────
+function doSelect(g, indicator) {
+  if (selIndicator) { selIndicator.visible(false); }
+  selectedNode = g; selIndicator = indicator;
+  indicator.visible(true); inLayer.draw();
+  document.getElementById('no-sel').style.display = 'none';
+  document.getElementById('sel-props').style.display = 'block';
+  updateProps(g);
+  document.getElementById('st-sel').textContent = `sel: ${g.id()}`;
+  updateLayerList();
+}
+
+function deselect() {
+  if (selIndicator) { selIndicator.visible(false); inLayer.draw(); }
+  selectedNode = null; selIndicator = null;
+  document.getElementById('no-sel').style.display = 'block';
+  document.getElementById('sel-props').style.display = 'none';
+  document.getElementById('st-sel').textContent = 'no selection';
+  updateLayerList();
+}
+
+stage.on('click', e => { if (e.target === stage || e.target.getLayer() === gLayer || e.target.getLayer() === hsLayer) deselect(); });
+
+// ─── Properties ───────────────────────────────────────────────────────────────
+const MM = 0.215;
+function updateProps(g) {
+  document.getElementById('prop-x').value = (c2px(g.x())*MM).toFixed(1);
+  document.getElementById('prop-y').value = (c2py(g.y())*MM).toFixed(1);
+  document.getElementById('prop-s').value = g.scaleX().toFixed(2);
+  document.getElementById('prop-r').value = Math.round(g.rotation());
+  const ch = g.children[0];
+  if (ch && ch.fill && ch.fill()) {
+    const hex = ch.fill();
+    if (/^#[0-9a-f]{6}$/i.test(hex)) document.getElementById('prop-col').value = hex;
+  }
+}
+
+document.getElementById('prop-x').addEventListener('change', e => {
+  if (!selectedNode) return;
+  selectedNode.x(p2cx(parseFloat(e.target.value)/MM));
+  inLayer.draw(); saveHist();
+});
+document.getElementById('prop-y').addEventListener('change', e => {
+  if (!selectedNode) return;
+  selectedNode.y(p2cy(parseFloat(e.target.value)/MM));
+  inLayer.draw(); saveHist();
+});
+document.getElementById('prop-s').addEventListener('change', e => {
+  if (!selectedNode) return;
+  const s = parseFloat(e.target.value)||1;
+  selectedNode.scaleX(s); selectedNode.scaleY(s);
+  inLayer.draw(); saveHist();
+});
+document.getElementById('prop-r').addEventListener('change', e => {
+  if (!selectedNode) return;
+  selectedNode.rotation(parseFloat(e.target.value)||0);
+  inLayer.draw(); saveHist();
+});
+document.getElementById('prop-col').addEventListener('input', e => {
+  if (!selectedNode) return;
+  const ch = selectedNode.children[0];
+  if (ch && ch.fill) { ch.fill(e.target.value); inLayer.draw(); }
+});
+document.getElementById('btn-flip').addEventListener('click', () => {
+  if (!selectedNode) return;
+  selectedNode.scaleX(-selectedNode.scaleX()); inLayer.draw(); saveHist();
+});
+document.getElementById('btn-del').addEventListener('click', () => {
+  if (!selectedNode) return;
+  const id = selectedNode.id();
+  selectedNode.destroy(); inLayer.draw();
+  layers = layers.filter(l => l.id !== id);
+  deselect(); updateLayerList(); updateSt(); saveHist();
+});
+
+// ─── Layer list ───────────────────────────────────────────────────────────────
+function updateLayerList() {
+  const el = document.getElementById('layer-list');
+  if (!layers.length) { el.innerHTML = '<div style="color:var(--text-dim);font-size:10px;padding:4px 0">No inlays placed</div>'; return; }
+  el.innerHTML = [...layers].reverse().map(l => `
+    <div class="layer-item ${selectedNode&&selectedNode.id()===l.id?'sel':''}" data-id="${l.id}" style="cursor:pointer">
+      <div class="layer-dot" style="background:${l.dotCol}"></div>
+      <span class="layer-nm">${l.name}</span>
+      <span style="font-size:9px;color:var(--text-dim);cursor:pointer" data-vis="${l.id}">&#128065;</span>
+    </div>
+  `).join('');
+  el.querySelectorAll('[data-id]').forEach(item => {
+    item.addEventListener('click', e => {
+      if (e.target.dataset.vis) return;
+      const l = layers.find(x => x.id===item.dataset.id);
+      if (l) doSelect(l.node, l.sel);
+    });
+  });
+  el.querySelectorAll('[data-vis]').forEach(btn => {
+    btn.addEventListener('click', e => {
+      e.stopPropagation();
+      const l = layers.find(x => x.id===btn.dataset.vis);
+      if (l) { l.node.visible(!l.node.visible()); inLayer.draw(); }
+    });
+  });
+}
+
+// ─── Status ───────────────────────────────────────────────────────────────────
+function updateSt() {
+  const n = layers.length;
+  document.getElementById('st-count').textContent = `${n} inlay${n!==1?'s':''}`;
+  document.getElementById('info-count').textContent = n;
+}
+
+stage.on('mousemove', () => {
+  const pos = stage.getPointerPosition();
+  if (!pos) return;
+  const xmm = (c2px(pos.x)*MM).toFixed(1), ymm = (c2py(pos.y)*MM).toFixed(1);
+  document.getElementById('st-xy').textContent = `x: ${xmm}mm  y: ${ymm}mm`;
+});
+
+// ─── History ─────────────────────────────────────────────────────────────────
+function saveHist() {
+  const snap = layers.map(l=>({id:l.id,x:l.node.x(),y:l.node.y(),s:l.node.scaleX(),r:l.node.rotation(),v:l.node.visible()}));
+  history = history.slice(0, histIdx+1);
+  history.push(snap); if (history.length>60) history.shift();
+  histIdx = history.length-1;
+}
+document.getElementById('btn-undo').addEventListener('click', () => {
+  if (histIdx <= 0) return;
+  histIdx--;
+  history[histIdx].forEach(s => {
+    const l = layers.find(x=>x.id===s.id);
+    if (l) { l.node.x(s.x); l.node.y(s.y); l.node.scaleX(s.s); l.node.scaleY(s.s); l.node.rotation(s.r); l.node.visible(s.v); }
+  });
+  inLayer.draw(); if (selectedNode) updateProps(selectedNode);
+});
+
+// ─── Toggles ─────────────────────────────────────────────────────────────────
+function bindTgl(id, get, set, redraw) {
+  const el = document.getElementById(id);
+  el.addEventListener('click', () => {
+    set(!get()); el.classList.toggle('on', get());
+    el.querySelector('.knob').style.left = get()?'14px':'2px';
+    redraw();
+  });
+}
+bindTgl('tgl-grid', ()=>showGrid, v=>showGrid=v, drawGrid);
+bindTgl('tgl-cl',   ()=>showCL,   v=>showCL=v,   ()=>drawHS(currentHS));
+bindTgl('tgl-nut',  ()=>showNut,  v=>showNut=v,   ()=>drawHS(currentHS));
+bindTgl('tgl-snap', ()=>snapOn,   v=>snapOn=v,    ()=>{});
+bindTgl('tgl-boundary', ()=>boundaryOn, v=>boundaryOn=v, ()=>{});
+
+// ─── Headstock selector ───────────────────────────────────────────────────────
+const hsG = document.getElementById('hs-grid');
+Object.keys(HEADSTOCKS).forEach(name => {
+  const btn = document.createElement('button');
+  btn.className = 'hs-btn' + (name===currentHS?' active':'');
+  btn.textContent = name;
+  btn.addEventListener('click', () => {
+    currentHS = name;
+    hsG.querySelectorAll('.hs-btn').forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active');
+    drawHS(name);
+  });
+  hsG.appendChild(btn);
+});
+
+// ─── Inlay library ────────────────────────────────────────────────────────────
+const inG = document.getElementById('inlay-grid');
+INLAYS.forEach(t => {
+  const el = document.createElement('div');
+  el.className = 'inlay-item';
+  el.innerHTML = `${ICONS[t.id]}<span>${t.label}</span>`;
+  el.title = `Place ${t.label}`;
+  el.addEventListener('click', () => {
+    if (t.id === 'import') {
+      alert('Import: place your SVG file in the DXF/SVG import at the top. The first <path> element becomes a draggable inlay on the canvas.');
+      return;
+    }
+    const hs = HEADSTOCKS[currentHS];
+    let txt;
+    if (t.id === 'text') {
+      txt = prompt('Inlay text:', 'LOGO')||'LOGO';
+    }
+    const cx = p2cx(hs.cx);
+    const cy = p2cy(hs.nutY - 55 - (layers.length%5)*22);
+    const g = makeInlay(t.id==='text'?'text':t.id, cx, cy);
+    if (t.id==='text' && g) {
+      const ch = g.children[0];
+      if (ch && ch.text) { ch.text(txt); inLayer.draw(); }
+    }
+  });
+  inG.appendChild(el);
+});
+
+// ─── Export ───────────────────────────────────────────────────────────────────
+document.getElementById('btn-export').addEventListener('click', () => {
+  const hs = HEADSTOCKS[currentHS];
+  const inlayLines = layers.filter(l=>l.node.visible()).map(l => {
+    const x = c2px(l.node.x()).toFixed(2), y = c2py(l.node.y()).toFixed(2);
+    const s = l.node.scaleX().toFixed(3), r = l.node.rotation().toFixed(1);
+    const ch = l.node.children[0];
+    const col = (ch && ch.fill && ch.fill())||'#e2d8b8';
+    const t = `translate(${x},${y}) rotate(${r}) scale(${s})`;
+    const nm = l.name;
+    if (ch instanceof Konva.Circle)
+      return `  <!-- ${nm} -->\n  <circle transform="${t}" r="${ch.radius()}" fill="${col}" stroke="#907050" stroke-width="0.4"/>`;
+    if (ch instanceof Konva.Ellipse)
+      return `  <!-- ${nm} -->\n  <ellipse transform="${t}" rx="${ch.radiusX()}" ry="${ch.radiusY()}" fill="${col}" stroke="#907050" stroke-width="0.4"/>`;
+    if (ch instanceof Konva.Rect)
+      return `  <!-- ${nm} -->\n  <rect transform="${t}" x="-12" y="-5" width="24" height="10" rx="2" fill="${col}" stroke="#907050" stroke-width="0.4"/>`;
+    if (ch instanceof Konva.Path)
+      return `  <!-- ${nm} -->\n  <path transform="${t}" d="${ch.data()}" fill="${col}" stroke="#907050" stroke-width="0.4"/>`;
+    if (ch instanceof Konva.RegularPolygon || ch instanceof Konva.Star)
+      return `  <!-- ${nm} -->\n  <circle transform="${t}" r="10" fill="${col}" stroke="#907050" stroke-width="0.4"/>`;
+    if (ch instanceof Konva.Text)
+      return `  <!-- ${nm} -->\n  <text transform="${t}" font-size="12" font-family="Georgia, serif" fill="${col}" text-anchor="middle" dominant-baseline="central">${ch.text()}</text>`;
+    return '';
+  }).filter(Boolean).join('\n');
+
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 320">
+  <!-- Production Shop Headstock Designer — ${currentHS} -->
+  <!-- ${new Date().toLocaleDateString()} — ${layers.length} inlay element(s) -->
+  <path d="${hs.path}" fill="${hs.col}" stroke="#6a3e18" stroke-width="1.5"/>
+  <line x1="${hs.cx-hs.nw/2}" y1="${hs.nutY}" x2="${hs.cx+hs.nw/2}" y2="${hs.nutY}" stroke="#333" stroke-width="2" stroke-linecap="round"/>
+${inlayLines}
+</svg>`;
+  const a = Object.assign(document.createElement('a'), {
+    href: URL.createObjectURL(new Blob([svg],{type:'image/svg+xml'})),
+    download: `headstock-${name.toLowerCase().replace(/\s+/g,'-')}.svg`
+  });
+  a.click();
+});
+
+document.getElementById('btn-clear').addEventListener('click', () => {
+  layers.forEach(l=>l.node.destroy()); layers=[];
+  inLayer.draw(); deselect(); updateLayerList(); updateSt(); saveHist();
+});
+
+// SVG file import
+document.getElementById('dxf-file').addEventListener('change', e => {
+  const file = e.target.files[0]; if (!file) return;
+  const ext = file.name.split('.').pop().toLowerCase();
+  if (ext === 'svg') {
+    const r = new FileReader();
+    r.onload = ev => {
+      const doc = new DOMParser().parseFromString(ev.target.result,'image/svg+xml');
+      const paths = doc.querySelectorAll('path');
+      if (!paths.length) { alert('No <path> elements found in SVG'); return; }
+      // Use largest path as headstock template
+      const d = paths[0].getAttribute('d');
+      if (d) {
+        HEADSTOCKS['Custom'] = {col:'#a07040', path:d, nutY:290, cx:100, nw:70, tuners:[]};
+        currentHS='Custom';
+        document.querySelectorAll('.hs-btn').forEach(b=>b.classList.remove('active'));
+        const btn = document.createElement('button');
+        btn.className='hs-btn active'; btn.textContent='Custom';
+        document.getElementById('hs-grid').appendChild(btn);
+        btn.addEventListener('click',()=>{ currentHS='Custom'; document.querySelectorAll('.hs-btn').forEach(b=>b.classList.remove('active')); btn.classList.add('active'); drawHS('Custom'); });
+        drawHS('Custom');
+      }
+      // Additional paths become inlays
+      Array.from(paths).slice(1).forEach(p => {
+        const pd = p.getAttribute('d'); if (!pd) return;
+        const hs2 = HEADSTOCKS[currentHS];
+        const g = new Konva.Group({x:p2cx(hs2.cx), y:p2cy(hs2.nutY-60), draggable:true, id:`I${++inlayN}`});
+        const shape = new Konva.Path({data:pd, fill:'#e2d8b8', stroke:'#907050', strokeWidth:.8});
+        const sel = new Konva.Rect({x:-18,y:-18,width:36,height:36,stroke:'#4a9eff',strokeWidth:.8,dash:[4,3],visible:false,listening:false});
+        g.add(shape,sel);
+        g.on('click tap', ()=>doSelect(g,sel));
+        g.on('dragend', ()=>{ if(!insideHS(g.x(),g.y())){const hs3=HEADSTOCKS[currentHS];g.x(p2cx(hs3.cx));g.y(p2cy(hs3.nutY-50));inLayer.draw();} saveHist(); });
+        inLayer.add(g); inLayer.draw();
+        layers.push({id:g.id(),name:`svg-path ${inlayN}`,node:g,sel,dotCol:'#c0a060',type:'imported'});
+        updateLayerList(); updateSt();
+      });
+    };
+    r.readAsText(file);
+  } else {
+    alert('DXF: in Production Shop, this routes to the ezdxf Python API on your FastAPI backend. For this preview, use SVG files.');
+  }
+  e.target.value='';
+});
+
+// Keyboard shortcuts
+document.addEventListener('keydown', e => {
+  if ((e.key==='Delete'||e.key==='Backspace') && selectedNode && document.activeElement.tagName!=='INPUT')
+    document.getElementById('btn-del').click();
+  if (e.key==='Escape') deselect();
+  if ((e.ctrlKey||e.metaKey)&&e.key==='z') { e.preventDefault(); document.getElementById('btn-undo').click(); }
+  if (selectedNode) {
+    const step = e.shiftKey ? 5 : 1;
+    if (e.key==='ArrowLeft')  { selectedNode.x(selectedNode.x()-step); inLayer.draw(); updateProps(selectedNode); }
+    if (e.key==='ArrowRight') { selectedNode.x(selectedNode.x()+step); inLayer.draw(); updateProps(selectedNode); }
+    if (e.key==='ArrowUp')    { selectedNode.y(selectedNode.y()-step); inLayer.draw(); updateProps(selectedNode); }
+    if (e.key==='ArrowDown')  { selectedNode.y(selectedNode.y()+step); inLayer.draw(); updateProps(selectedNode); }
+  }
+});
+
+// ─── Init ─────────────────────────────────────────────────────────────────────
+drawGrid();
+drawHS(currentHS);
+saveHist();
+</script>
+</body>
+</html>

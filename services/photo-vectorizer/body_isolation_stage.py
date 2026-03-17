@@ -35,6 +35,11 @@ class BodyIsolationParams:
     # Border trim (used by border_suppression profile)
     border_trim_px: int = 0
 
+    # Region expansion / recovery controls (used by body_region_expansion)
+    bbox_expand_ratio: float = 0.0
+    allow_vertical_growth: bool = False
+    allow_lower_bout_growth: bool = False
+
     # Export / review hints
     review_threshold: float = 0.45
 
@@ -62,6 +67,18 @@ RETRY_PROFILES: Dict[str, Dict[str, Any]] = {
         "border_ignore_px": 10,
         "border_trim_px": 8,
         "upper_bound_expand_pct": 0.02,
+    },
+    "body_region_expansion": {
+        "lower_bound_expand_pct": 0.18,
+        "upper_bound_expand_pct": 0.06,
+        "body_width_min_pct": 0.30,
+        "smooth_window": 17,
+        "use_adaptive": True,
+        "border_ignore_px": 6,
+        "border_trim_px": 0,
+        "bbox_expand_ratio": 0.10,
+        "allow_vertical_growth": True,
+        "allow_lower_bout_growth": True,
     },
 }
 
@@ -152,22 +169,44 @@ class BodyIsolationStage:
             int(getattr(body_region, "width", 0)),
             int(getattr(body_region, "height", 0)),
         )
+        raw_body_bbox_px = body_bbox_px
+        expanded_body_bbox_px = self._expand_body_bbox(
+            image_shape=image.shape[:2],
+            bbox=raw_body_bbox_px,
+            params=params,
+        )
 
         result = BodyIsolationResult(
-            body_bbox_px=body_bbox_px,
+            body_bbox_px=expanded_body_bbox_px,
             body_region=body_region,
             confidence=float(getattr(body_region, "confidence", 0.0)),
         )
 
-        # Build optional isolation mask from bbox as a first-pass approximation
-        result.isolation_mask = self._make_bbox_mask(image.shape[:2], body_bbox_px)
+        # Build an ownership-aware isolation mask.
+        # For body_region_expansion retries this must materially differ from the
+        # baseline bbox rectangle or the retry cannot change downstream geometry.
+        result.isolation_mask = self._make_isolation_mask(
+            image_shape=image.shape[:2],
+            bbox=expanded_body_bbox_px,
+            fg_mask=trimmed_mask,
+            params=params,
+        )
 
         # Collect profiles / diagnostics
+        profile_mask = (
+            result.isolation_mask
+            if (
+                params.bbox_expand_ratio > 0.0
+                or params.allow_vertical_growth
+                or params.allow_lower_bout_growth
+            )
+            else trimmed_mask
+        )
         profiles = self._compute_profiles(
             image=image,
-            fg_mask=fg_mask,
+            fg_mask=profile_mask,
             original_image=original_image,
-            body_bbox_px=body_bbox_px,
+            body_bbox_px=expanded_body_bbox_px,
             params=params,
         )
         result.row_width_profile = profiles["row_width_profile"]
@@ -176,6 +215,16 @@ class BodyIsolationStage:
         result.source = profiles["source"]
         result.detected_body_center_px = profiles["detected_body_center_px"]
         result.diagnostics.update(profiles["diagnostics"])
+        result.diagnostics.update(
+            {
+                "retry_profile_used": params.profile,
+                "raw_body_bbox_px": raw_body_bbox_px,
+                "expanded_body_bbox_px": expanded_body_bbox_px,
+                "bbox_expand_ratio": float(params.bbox_expand_ratio),
+                "allow_vertical_growth": bool(params.allow_vertical_growth),
+                "allow_lower_bout_growth": bool(params.allow_lower_bout_growth),
+            }
+        )
 
         # Score body ownership
         self._score_body_isolation(
@@ -396,3 +445,139 @@ class BodyIsolationStage:
         if x1 > x0 and y1 > y0:
             mask[y0:y1, x0:x1] = 255
         return mask
+
+    @staticmethod
+    def _expand_body_bbox(
+        *,
+        image_shape: Tuple[int, int],
+        bbox: Tuple[int, int, int, int],
+        params: BodyIsolationParams,
+    ) -> Tuple[int, int, int, int]:
+        """
+        Expand the isolator bbox so ownership retries can recover missing body.
+
+        Expansion is conservative by default and only becomes active for
+        body_region_expansion or other future retry profiles that set the knobs.
+        """
+        img_h, img_w = image_shape
+        x, y, bw, bh = bbox
+
+        if bw <= 0 or bh <= 0:
+            return bbox
+
+        pad_x = int(round(bw * max(0.0, float(params.bbox_expand_ratio))))
+        pad_y = int(round(bh * max(0.0, float(params.bbox_expand_ratio))))
+
+        top_extra = 0
+        bottom_extra = 0
+
+        if params.allow_vertical_growth:
+            top_extra += int(round(bh * max(0.0, float(params.upper_bound_expand_pct))))
+            bottom_extra += int(round(bh * max(0.0, float(params.lower_bound_expand_pct))))
+
+        if params.allow_lower_bout_growth:
+            bottom_extra += int(round(bh * 0.10))
+
+        x0 = max(0, x - pad_x)
+        y0 = max(0, y - pad_y - top_extra)
+        x1 = min(img_w, x + bw + pad_x)
+        y1 = min(img_h, y + bh + pad_y + bottom_extra)
+
+        return (x0, y0, max(0, x1 - x0), max(0, y1 - y0))
+
+    def _make_isolation_mask(
+        self,
+        image_shape: Tuple[int, int],
+        bbox: Tuple[int, int, int, int],
+        fg_mask: Optional[np.ndarray],
+        params: BodyIsolationParams,
+    ) -> np.ndarray:
+        """
+        Build the effective Stage 4.5 isolation mask.
+
+        Baseline behavior remains bbox-only.
+        body_region_expansion materially changes the mask by:
+          1. using the expanded bbox
+          2. recovering FG pixels inside that ROI
+          3. applying vertical continuity repair
+          4. applying lower-bout recovery in the lower band
+        """
+        mask = self._make_bbox_mask(image_shape, bbox)
+
+        if fg_mask is None:
+            return mask
+
+        if not (
+            params.bbox_expand_ratio > 0.0
+            or params.allow_vertical_growth
+            or params.allow_lower_bout_growth
+        ):
+            return mask
+
+        h, w = image_shape
+        x, y, bw, bh = bbox
+        x0 = max(0, x)
+        y0 = max(0, y)
+        x1 = min(w, x + bw)
+        y1 = min(h, y + bh)
+        if x1 <= x0 or y1 <= y0:
+            return mask
+
+        roi_fg = np.zeros((h, w), dtype=np.uint8)
+        roi_fg[y0:y1, x0:x1] = np.where(fg_mask[y0:y1, x0:x1] > 0, 255, 0).astype(np.uint8)
+
+        if params.allow_vertical_growth:
+            roi_fg = self._recover_vertical_continuity(roi_fg, bbox)
+
+        if params.allow_lower_bout_growth:
+            roi_fg = self._recover_lower_bout(roi_fg, bbox)
+
+        return np.maximum(mask, roi_fg)
+
+    @staticmethod
+    def _recover_vertical_continuity(
+        mask: np.ndarray,
+        bbox: Tuple[int, int, int, int],
+    ) -> np.ndarray:
+        x, y, bw, bh = bbox
+        out = mask.copy()
+        x0 = max(0, x)
+        y0 = max(0, y)
+        x1 = min(mask.shape[1], x + bw)
+        y1 = min(mask.shape[0], y + bh)
+        if x1 <= x0 or y1 <= y0:
+            return out
+
+        roi = out[y0:y1, x0:x1]
+        kernel_h = max(5, ((bh // 12) // 2) * 2 + 1)
+        kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (3, kernel_h))
+        roi = cv2.morphologyEx(roi, cv2.MORPH_CLOSE, kernel)
+        out[y0:y1, x0:x1] = roi
+        return out
+
+    @staticmethod
+    def _recover_lower_bout(
+        mask: np.ndarray,
+        bbox: Tuple[int, int, int, int],
+    ) -> np.ndarray:
+        x, y, bw, bh = bbox
+        out = mask.copy()
+        x0 = max(0, x)
+        y0 = max(0, y)
+        x1 = min(mask.shape[1], x + bw)
+        y1 = min(mask.shape[0], y + bh)
+        if x1 <= x0 or y1 <= y0:
+            return out
+
+        band_start = y0 + int(round(0.55 * max(1, y1 - y0)))
+        lower = out[band_start:y1, x0:x1]
+        if lower.size == 0:
+            return out
+
+        kernel_w = max(5, ((bw // 10) // 2) * 2 + 1)
+        kernel_h = max(5, ((bh // 14) // 2) * 2 + 1)
+        kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (kernel_w, kernel_h))
+        lower = cv2.dilate(lower, kernel, iterations=1)
+        lower = cv2.morphologyEx(lower, cv2.MORPH_CLOSE, kernel)
+        out[band_start:y1, x0:x1] = lower
+        return out

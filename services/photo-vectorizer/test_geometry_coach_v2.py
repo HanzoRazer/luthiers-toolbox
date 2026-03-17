@@ -57,6 +57,7 @@ class _ContourResultStub:
         pre_scores=None,
         post_scores=None,
         issues=None,
+        ownership_score=None,
     ):
         self.best_score = best_score
         self.contour_scores_pre = pre_scores or []
@@ -64,6 +65,8 @@ class _ContourResultStub:
         self.export_block_issues = issues or []
         self.export_blocked = False
         self.block_reason = None
+        self.ownership_score = ownership_score
+        self.diagnostics = {}
 
 
 # ── Helpers ─────────────────────────────────────────────────────────────────
@@ -110,12 +113,14 @@ def make_contour_result(
     pre_best=0.60,
     post_best=0.60,
     issues=None,
+    ownership_score=None,
 ):
     return _ContourResultStub(
         best_score=best_score,
         pre_scores=[_ScoreStub(score=pre_best)],
         post_scores=[_ScoreStub(score=post_best)],
         issues=issues or [],
+        ownership_score=ownership_score,
     )
 
 
@@ -242,3 +247,28 @@ def test_contour_retry_worthwhile_returns_false_when_only_best_score_present():
     )
 
     assert GeometryCoachV2._contour_retry_worthwhile(contour_result) is False
+
+
+# ── Ownership gate → body_region_expansion retry ────────────────────────────
+
+
+def test_low_ownership_forces_body_region_expansion_retry(coach):
+    """Low ownership_score triggers rerun_body_isolation with body_region_expansion profile."""
+    body = make_body_result(completeness=0.72)
+    contour = make_contour_result(
+        best_score=0.80,
+        pre_best=0.80,
+        post_best=0.80,
+        ownership_score=0.45,  # below default threshold of 0.60
+    )
+
+    decision = coach.decide(
+        body_result=body,
+        contour_result=contour,
+        retry_count=0,
+    )
+
+    assert decision.action == "rerun_body_isolation"
+    assert "ownership" in decision.reason.lower()
+    assert decision.body_retry_params is not None
+    assert decision.body_retry_params.profile == "body_region_expansion"

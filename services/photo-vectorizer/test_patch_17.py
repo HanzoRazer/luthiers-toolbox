@@ -189,6 +189,29 @@ class TestElectBodyContourV2:
         idx = elect_body_contour_v2([fc_small, fc_big], body)
         assert idx == 1
 
+    def test_ownership_gate_rejects_high_area_non_owner(self):
+        """Contour with largest area but low ownership should be skipped."""
+        body = _make_body_region(0, 0, 400, 600)
+        fc0 = _make_fc(0, 0, 380, 580, area=220_000)   # big but non-owner
+        fc1 = _make_fc(10, 10, 350, 500, area=175_000)  # smaller but owner
+        idx = elect_body_contour_v2(
+            [fc0, fc1], body,
+            ownership_scores={0: 0.41, 1: 0.78},
+            ownership_threshold=0.60,
+        )
+        assert idx == 1
+
+    def test_ownership_gate_returns_negative_one_when_all_fail(self):
+        """All contours below ownership threshold → return -1."""
+        body = _make_body_region(0, 0, 400, 600)
+        fc0 = _make_fc(0, 0, 380, 580, area=220_000)
+        idx = elect_body_contour_v2(
+            [fc0], body,
+            ownership_scores={0: 0.35},
+            ownership_threshold=0.60,
+        )
+        assert idx == -1
+
 
 # ===========================================================================
 # _body_vertical_overlap

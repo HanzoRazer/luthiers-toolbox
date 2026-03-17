@@ -21,12 +21,14 @@ class CoachV2Config:
     body_isolation_review_threshold: float = 0.45
     contour_target_threshold: float = 0.80
     severe_border_penalty_threshold: float = 0.5
+    ownership_retry_threshold: float = 0.60
 
     # Retry profiles for body isolation
     body_retry_profiles: List[BodyIsolationParams] = field(
         default_factory=lambda: [
             BodyIsolationParams(profile="lower_bout_recovery"),
             BodyIsolationParams(profile="border_suppression"),
+            BodyIsolationParams(profile="body_region_expansion"),
         ]
     )
 
@@ -81,6 +83,11 @@ class GeometryCoachV2:
         body_score = float(getattr(body_result, "completeness_score", 0.0))
         contour_score = float(getattr(contour_result, "best_score", 0.0))
 
+        # Ownership gate — low ownership always warrants a retry attempt
+        ownership_score = self._ownership_score(contour_result)
+        if ownership_score is not None and ownership_score < self.config.ownership_retry_threshold:
+            return True
+
         if contour_score < self.config.contour_target_threshold:
             return True
 
@@ -107,6 +114,43 @@ class GeometryCoachV2:
         """
         body_score = float(getattr(body_result, "completeness_score", 0.0))
         contour_score = float(getattr(contour_result, "best_score", 0.0))
+
+        # Rule 0: body ownership gate — fires before retry budget check so
+        # the first ownership failure always gets a retry attempt.
+        ownership_score = self._ownership_score(contour_result)
+        if ownership_score is not None and ownership_score < self.config.ownership_retry_threshold:
+            if retry_count < self.config.max_retries:
+                params = self._choose_body_retry_profile(
+                    retry_count,
+                    preferred_profile="body_region_expansion",
+                )
+                if params is not None:
+                    return CoachDecisionV2(
+                        action="rerun_body_isolation",
+                        reason=(
+                            f"Contour failed body ownership gate "
+                            f"({ownership_score:.3f} < {self.config.ownership_retry_threshold:.3f})."
+                        ),
+                        retry_count=retry_count,
+                        body_retry_params=params,
+                        original_body_score=body_score,
+                        original_contour_score=contour_score,
+                        notes=[
+                            "Ownership failure suggests body region is incomplete or neck-heavy.",
+                            "Forcing body isolation retry before contour-only retry.",
+                        ],
+                    )
+            return CoachDecisionV2(
+                action="manual_review_required",
+                reason=(
+                    f"Contour failed body ownership gate "
+                    f"({ownership_score:.3f}) and no safe body retry remains."
+                ),
+                retry_count=retry_count,
+                original_body_score=body_score,
+                original_contour_score=contour_score,
+                notes=["manual_review_required due to persistent body ownership failure"],
+            )
 
         if retry_count >= self.config.max_retries:
             return CoachDecisionV2(
@@ -408,7 +452,15 @@ class GeometryCoachV2:
         )
         return current_body, current_contour, fallback
 
-    def _choose_body_retry_profile(self, retry_count: int) -> BodyIsolationParams:
+    def _choose_body_retry_profile(
+        self,
+        retry_count: int,
+        preferred_profile: Optional[str] = None,
+    ) -> Optional[BodyIsolationParams]:
+        if preferred_profile is not None:
+            for profile in self.config.body_retry_profiles:
+                if profile.profile == preferred_profile:
+                    return profile
         idx = min(retry_count, len(self.config.body_retry_profiles) - 1)
         return self.config.body_retry_profiles[idx]
 
@@ -423,6 +475,17 @@ class GeometryCoachV2:
     # Only "pre_merge_guarded" (merge guard override) signals instability
     # that may benefit from a retry.
     _STABLE_ELECTION_SOURCES = frozenset({"pre_merge", "post_merge"})
+
+    @staticmethod
+    def _ownership_score(contour_result: Any) -> Optional[float]:
+        if contour_result is None:
+            return None
+        if hasattr(contour_result, "ownership_score"):
+            value = getattr(contour_result, "ownership_score")
+            return None if value is None else float(value)
+        diagnostics = getattr(contour_result, "diagnostics", {}) or {}
+        value = diagnostics.get("ownership_score")
+        return None if value is None else float(value)
 
     @staticmethod
     def _contour_retry_worthwhile(contour_result: Any) -> bool:

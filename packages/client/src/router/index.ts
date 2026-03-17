@@ -41,6 +41,13 @@ const routes: RouteRecordRaw[] = [
     component: () => import("@/views/AppDashboardView.vue"),
   },
 
+  // Smart Guitar — Module 5 shell (Body Design, Electronics, RPi5 Cavity, WiFi, Export & BOM)
+  {
+    path: "/smart-guitar",
+    name: "SmartGuitar",
+    component: () => import("@/views/smart-guitar/SmartGuitarShell.vue"),
+  },
+
   // Rosette Pipeline - moved from home to /rosette
   {
     path: "/rosette",
@@ -274,11 +281,6 @@ const routes: RouteRecordRaw[] = [
     component: () => import("@/views/art-studio/SoundholeDesignerView.vue"),
   },
   {
-    path: "/art-studio/fret-markers",
-    name: "ArtStudioFretMarkers",
-    component: () => import("@/views/art-studio/FretMarkersView.vue"),
-  },
-  {
     path: "/art-studio/inlay-patterns",
     name: "ArtStudioInlayPatterns",
     component: () => import("@/views/art-studio/InlayPatternView.vue"),
@@ -410,6 +412,7 @@ const routes: RouteRecordRaw[] = [
   // Waves 15-16 — Instrument Geometry Designer (Fretboard CAM)
   {
     path: "/instrument-geometry",
+    alias: "/instrument-hub",
     name: "InstrumentGeometry",
     component: () => import("@/views/InstrumentGeometryView.vue"),
   },

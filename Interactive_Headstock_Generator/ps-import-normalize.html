@@ -1,0 +1,737 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Production Shop — Import & Normalize</title>
+<script src="https://unpkg.com/konva@9/konva.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/dxf-parser@1.1.2/dist/dxf-parser.js"></script>
+<style>
+:root {
+  --w0:#0f0d0a; --w1:#1a1612; --w2:#241f19; --w3:#2e2820; --w4:#3a3028;
+  --v0:#f0e8d4; --v1:#e8dfc8; --v2:#ddd4b8;
+  --br:#b8962e; --br2:#d4ae48; --br3:#7a6018;
+  --dim:#9a8460; --dim2:#7a6448;
+  --ink:#3a2e1c;
+  --blue:#5b8fa8; --blue2:#3a6f8a;
+  --green:#4a8a5a; --green2:#2e6a3a;
+  --red:#8a3a2a; --red2:#6a2010;
+  --serif:'Palatino Linotype',Palatino,Georgia,serif;
+  --mono:'Courier New',Courier,monospace;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+html,body{height:100%;background:var(--w0);color:var(--v0);font-family:var(--mono);font-size:11px;overflow:hidden;}
+
+#app{display:grid;grid-template-columns:1fr 320px;grid-template-rows:40px 1fr 28px;height:100vh;}
+
+/* top bar */
+#topbar{grid-column:1/-1;background:var(--w1);border-bottom:1px solid var(--w3);display:flex;align-items:center;padding:0 16px;gap:10px;}
+.brand{font-family:var(--serif);font-size:14px;font-style:italic;color:var(--v1);white-space:nowrap;}
+.brand em{color:var(--br2);font-style:normal;}
+.tsep{width:1px;height:18px;background:var(--w3);}
+.pill{display:flex;background:var(--w2);border:1px solid var(--w3);border-radius:3px;overflow:hidden;}
+.pill-opt{padding:4px 10px;font-size:9px;letter-spacing:.8px;text-transform:uppercase;color:var(--dim);cursor:pointer;border:none;background:none;font-family:var(--mono);}
+.pill-opt.on{background:var(--br3);color:var(--w0);}
+.spacer{flex:1;}
+.tbtn{background:none;border:1px solid transparent;border-radius:2px;color:var(--dim);font-family:var(--mono);font-size:10px;letter-spacing:.5px;text-transform:uppercase;padding:4px 9px;cursor:pointer;transition:all .12s;white-space:nowrap;}
+.tbtn:hover{border-color:var(--w3);color:var(--v1);}
+.tbtn.go{border-color:var(--br3);color:var(--br2);}
+.tbtn.go:hover{background:var(--br3);color:var(--w0);}
+.tbtn.go:disabled{opacity:.35;cursor:default;background:none;}
+
+/* canvas area */
+#canvas-area{position:relative;overflow:hidden;background:var(--w0);}
+#kstage{position:absolute;top:0;left:0;}
+
+/* drop overlay */
+#drop-overlay{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;pointer-events:none;transition:opacity .2s;}
+#drop-overlay.hidden{opacity:0;}
+.drop-zone{width:320px;height:200px;border:1px dashed var(--w4);border-radius:4px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;pointer-events:all;cursor:pointer;transition:all .15s;background:rgba(15,13,10,.6);}
+.drop-zone:hover,.drop-zone.drag-over{border-color:var(--br);background:rgba(184,150,46,.04);}
+.drop-icon{width:40px;height:40px;opacity:.4;}
+.drop-title{font-family:var(--serif);font-size:13px;font-style:italic;color:var(--v1);}
+.drop-sub{font-size:9px;color:var(--dim);letter-spacing:.5px;}
+.drop-types{display:flex;gap:6px;margin-top:4px;}
+.type-badge{padding:2px 6px;border:1px solid var(--w3);border-radius:2px;font-size:8px;letter-spacing:.6px;color:var(--dim);}
+
+/* right panel */
+#panel{background:var(--w1);border-left:1px solid var(--w3);display:flex;flex-direction:column;overflow:hidden;}
+.sec{padding:12px 14px 10px;border-bottom:1px solid var(--w2);}
+.sec-lbl{font-size:8px;letter-spacing:1.6px;text-transform:uppercase;color:var(--br3);margin-bottom:8px;}
+.sec-title{font-family:var(--serif);font-size:12px;font-style:italic;color:var(--br2);margin-bottom:10px;}
+
+/* file info */
+.info-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:5px;}
+.info-lbl{font-size:9px;color:var(--dim);}
+.info-val{font-size:10px;color:var(--v1);}
+.info-val.ok{color:#6ab87a;}
+.info-val.warn{color:#c8a040;}
+.info-val.err{color:#b06050;}
+
+/* entity table */
+.entity-table{width:100%;border-collapse:collapse;font-size:9px;}
+.entity-table th{text-align:left;color:var(--dim);font-weight:normal;padding:2px 4px;border-bottom:1px solid var(--w3);}
+.entity-table td{padding:3px 4px;color:var(--v1);border-bottom:1px solid var(--w2);}
+.entity-table tr:hover td{background:var(--w2);}
+.ent-check{cursor:pointer;accent-color:var(--br);}
+
+/* normalize controls */
+.ctrl-row{display:flex;align-items:center;gap:8px;margin-bottom:7px;}
+.ctrl-lbl{width:70px;font-size:9px;color:var(--dim);flex-shrink:0;}
+.ctrl-val{flex:1;background:var(--w2);border:1px solid var(--w3);border-radius:2px;color:var(--v1);font-family:var(--mono);font-size:10px;padding:3px 6px;text-align:right;}
+.ctrl-val:focus{outline:none;border-color:var(--br);}
+.ctrl-unit{font-size:8px;color:var(--dim);width:24px;flex-shrink:0;}
+.ctrl-select{flex:1;background:var(--w2);border:1px solid var(--w3);border-radius:2px;color:var(--v1);font-family:var(--mono);font-size:10px;padding:3px 5px;}
+.ctrl-select:focus{outline:none;border-color:var(--br);}
+
+/* mode toggle buttons */
+.use-grid{display:grid;grid-template-columns:1fr 1fr;gap:5px;margin-top:6px;}
+.use-btn{padding:8px 6px;background:var(--w2);border:1px solid var(--w3);border-radius:3px;color:var(--dim);font-family:var(--mono);font-size:9px;letter-spacing:.4px;cursor:pointer;text-align:center;transition:all .12s;}
+.use-btn:hover{border-color:var(--br3);color:var(--v1);}
+.use-btn.on{border-color:var(--br);background:rgba(184,150,46,.07);color:var(--br2);}
+
+/* path list */
+.path-scroll{flex:1;overflow-y:auto;padding:8px 14px;}
+.path-item{display:flex;align-items:center;gap:7px;padding:5px 6px;border-radius:3px;margin-bottom:3px;border:1px solid transparent;cursor:pointer;transition:all .1s;}
+.path-item:hover{background:var(--w2);}
+.path-item.on{border-color:var(--br3);background:rgba(184,150,46,.05);}
+.path-dot{width:8px;height:8px;border-radius:2px;flex-shrink:0;}
+.path-nm{flex:1;font-size:10px;color:var(--dim);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.path-item.on .path-nm{color:var(--v1);}
+.path-pts{font-size:8px;color:var(--dim2);}
+
+/* status bar */
+#statusbar{grid-column:1/-1;background:var(--w1);border-top:1px solid var(--w3);display:flex;align-items:center;padding:0 12px;gap:14px;}
+.st{font-size:9px;color:var(--dim);letter-spacing:.3px;}
+.st.ok{color:var(--green);}
+.st.warn{color:#c8a040;}
+.st em{color:var(--v1);font-style:normal;}
+
+/* pipeline steps */
+.pipeline{display:flex;align-items:center;gap:0;margin:10px 0;}
+.pipe-step{flex:1;text-align:center;font-size:8px;letter-spacing:.5px;padding:5px 2px;border:1px solid var(--w3);color:var(--dim);transition:all .2s;position:relative;}
+.pipe-step:not(:last-child)::after{content:'›';position:absolute;right:-6px;top:50%;transform:translateY(-50%);color:var(--w4);z-index:1;}
+.pipe-step.done{border-color:var(--green2);color:var(--green);background:rgba(74,138,90,.06);}
+.pipe-step.active{border-color:var(--br3);color:var(--br2);background:rgba(184,150,46,.06);}
+
+/* scrollbar */
+::-webkit-scrollbar{width:5px;}::-webkit-scrollbar-track{background:var(--w1);}::-webkit-scrollbar-thumb{background:var(--w3);border-radius:3px;}
+</style>
+</head>
+<body>
+<div id="app">
+
+<!-- TOP BAR -->
+<div id="topbar">
+  <div class="brand">Production<em>Shop</em> &middot; Import &amp; Normalize</div>
+  <div class="tsep"></div>
+  <div class="pill">
+    <button class="pill-opt on" id="view-both">Both</button>
+    <button class="pill-opt" id="view-raw">Raw</button>
+    <button class="pill-opt" id="view-norm">Normalized</button>
+  </div>
+  <div class="tsep"></div>
+  <input type="file" id="file-in" accept=".svg,.dxf" style="display:none">
+  <button class="tbtn" onclick="document.getElementById('file-in').click()">&#8593; Load file</button>
+  <button class="tbtn" id="btn-relabel">Re-parse</button>
+  <div class="spacer"></div>
+  <button class="tbtn go" id="btn-handoff" disabled>Send to workspace &#8594;</button>
+</div>
+
+<!-- CANVAS -->
+<div id="canvas-area">
+  <div id="kstage"></div>
+  <div id="drop-overlay">
+    <div class="drop-zone" id="drop-zone">
+      <svg class="drop-icon" viewBox="0 0 40 40" fill="none">
+        <rect x="4" y="8" width="22" height="28" rx="2" stroke="#9a8460" stroke-width="1"/>
+        <path d="M4 8l6-6h16l6 6" stroke="#9a8460" stroke-width="1" stroke-linejoin="round"/>
+        <path d="M20 18v10M16 24l4 4 4-4" stroke="#b8962e" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/>
+        <rect x="24" y="4" width="12" height="12" rx="2" fill="var(--w0)" stroke="#5b8fa8" stroke-width="1"/>
+        <text x="30" y="13" text-anchor="middle" font-size="7" fill="#5b8fa8">DX</text>
+      </svg>
+      <div class="drop-title">Drop your file here</div>
+      <div class="drop-sub">or click to browse</div>
+      <div class="drop-types">
+        <span class="type-badge">SVG</span>
+        <span class="type-badge">DXF</span>
+        <span class="type-badge">R12 · R14 · 2000+</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- RIGHT PANEL -->
+<div id="panel">
+  <div class="sec">
+    <div class="sec-title">Import pipeline</div>
+    <div class="pipeline">
+      <div class="pipe-step" id="ps-load">Load</div>
+      <div class="pipe-step" id="ps-parse">Parse</div>
+      <div class="pipe-step" id="ps-norm">Normalize</div>
+      <div class="pipe-step" id="ps-out">Output</div>
+    </div>
+  </div>
+
+  <div class="sec" id="file-info-sec" style="display:none">
+    <div class="sec-lbl">File</div>
+    <div class="info-row"><span class="info-lbl">Name</span><span class="info-val" id="fi-name">—</span></div>
+    <div class="info-row"><span class="info-lbl">Type</span><span class="info-val" id="fi-type">—</span></div>
+    <div class="info-row"><span class="info-lbl">Size</span><span class="info-val" id="fi-size">—</span></div>
+    <div class="info-row"><span class="info-lbl">Elements</span><span class="info-val" id="fi-els">—</span></div>
+    <div class="info-row"><span class="info-lbl">Bounding box</span><span class="info-val" id="fi-bb">—</span></div>
+    <div class="info-row"><span class="info-lbl">Units</span><span class="info-val" id="fi-units">—</span></div>
+  </div>
+
+  <div class="sec" id="norm-sec" style="display:none">
+    <div class="sec-lbl">Normalize</div>
+    <div class="ctrl-row">
+      <span class="ctrl-lbl">Fit to</span>
+      <select class="ctrl-select" id="fit-mode">
+        <option value="contain">Contain (letterbox)</option>
+        <option value="width">Match width</option>
+        <option value="height">Match height</option>
+        <option value="stretch">Stretch to fill</option>
+      </select>
+    </div>
+    <div class="ctrl-row">
+      <span class="ctrl-lbl">Align H</span>
+      <select class="ctrl-select" id="align-h">
+        <option value="center">Center</option>
+        <option value="left">Left</option>
+        <option value="right">Right</option>
+      </select>
+    </div>
+    <div class="ctrl-row">
+      <span class="ctrl-lbl">Align V</span>
+      <select class="ctrl-select" id="align-v">
+        <option value="center">Center</option>
+        <option value="top">Top</option>
+        <option value="bottom">Bottom</option>
+      </select>
+    </div>
+    <div class="ctrl-row">
+      <span class="ctrl-lbl">Padding</span>
+      <input class="ctrl-val" type="number" id="norm-pad" value="8" min="0" max="40" step="1">
+      <span class="ctrl-unit">u</span>
+    </div>
+    <div class="ctrl-row">
+      <span class="ctrl-lbl">Flip Y</span>
+      <select class="ctrl-select" id="flip-y">
+        <option value="auto">Auto (DXF=yes, SVG=no)</option>
+        <option value="yes">Always flip</option>
+        <option value="no">Never flip</option>
+      </select>
+    </div>
+    <button class="tbtn go" id="btn-normalize" style="width:100%;margin-top:6px;padding:7px 0">&#8635; Apply normalize</button>
+  </div>
+
+  <div class="sec" id="use-sec" style="display:none">
+    <div class="sec-lbl">Use as</div>
+    <div class="use-grid">
+      <div class="use-btn on" id="use-hs">Headstock template</div>
+      <div class="use-btn" id="use-inlay">Inlay element</div>
+    </div>
+  </div>
+
+  <div class="sec-lbl" style="padding:10px 14px 4px">Extracted paths</div>
+  <div class="path-scroll" id="path-list">
+    <div style="font-size:10px;color:var(--dim);font-style:italic;padding:4px 0">Load a file to see extracted geometry</div>
+  </div>
+</div>
+
+<!-- STATUS BAR -->
+<div id="statusbar">
+  <span class="st" id="st-main">Ready — drop an SVG or DXF file</span>
+  <span class="st" id="st-bb"></span>
+  <span class="st" id="st-scale"></span>
+</div>
+</div>
+
+<script>
+/* ─── Konva ─────────────────────────────────────────────────────────────────── */
+const cArea = document.getElementById('canvas-area');
+const W = cArea.clientWidth, H = cArea.clientHeight;
+const stage = new Konva.Stage({container:'kstage', width:W, height:H});
+const bgL = new Konva.Layer();
+const rawL = new Konva.Layer();
+const normL = new Konva.Layer();
+const guideL = new Konva.Layer();
+stage.add(bgL, rawL, normL, guideL);
+
+/* Canvas split: left = raw, right = normalized */
+const SPLIT = W / 2;
+const PAD = 20; /* inner canvas padding in px */
+
+/* target space: 200 × 320 units */
+const TW = 200, TH = 320;
+
+/* ─── State ──────────────────────────────────────────────────────────────────── */
+let rawPaths = [];      /* [{id, d, color, visible, label}] */
+let normPaths = [];     /* [{id, d, color, visible, label}] */
+let rawBBox = null;     /* {minX,minY,maxX,maxY} */
+let normBBox = null;
+let fileType = null;    /* 'svg' | 'dxf' */
+let useAs = 'hs';       /* 'hs' | 'inlay' */
+
+/* ─── BG ──────────────────────────────────────────────────────────────────── */
+function drawBg() {
+  bgL.destroyChildren();
+  bgL.add(new Konva.Rect({x:0,y:0,width:W,height:H,fill:'#0f0d0a'}));
+
+  /* Left vellum panel */
+  bgL.add(new Konva.Rect({x:PAD,y:PAD,width:SPLIT-PAD*1.5,height:H-PAD*2,fill:'#f0e8d4',cornerRadius:3}));
+  bgL.add(new Konva.Text({x:PAD+8,y:PAD+8,text:'RAW',fill:'#c0b090',fontSize:8,fontFamily:'Courier New',letterSpacing:2,opacity:.7}));
+
+  /* Right vellum panel */
+  bgL.add(new Konva.Rect({x:SPLIT+PAD/2,y:PAD,width:SPLIT-PAD*1.5,height:H-PAD*2,fill:'#f0e8d4',cornerRadius:3}));
+  bgL.add(new Konva.Text({x:SPLIT+PAD/2+8,y:PAD+8,text:'NORMALIZED  200 × 320 u',fill:'#c0b090',fontSize:8,fontFamily:'Courier New',letterSpacing:2,opacity:.7}));
+
+  /* Target frame on right panel */
+  const rOX = SPLIT+PAD/2, rOY = PAD;
+  const rW = SPLIT-PAD*1.5, rH = H-PAD*2;
+  const tSc = Math.min((rW-40)/TW, (rH-40)/TH);
+  const tOX = rOX + (rW - TW*tSc)/2;
+  const tOY = rOY + (rH - TH*tSc)/2;
+  bgL.add(new Konva.Rect({x:tOX,y:tOY,width:TW*tSc,height:TH*tSc,fill:'none',stroke:'#c0b488',strokeWidth:.6,dash:[4,4]}));
+  /* CL */
+  bgL.add(new Konva.Line({points:[tOX+TW*tSc/2,tOY,tOX+TW*tSc/2,tOY+TH*tSc],stroke:'#5b8fa8',strokeWidth:.6,dash:[4,4],opacity:.5}));
+  /* grid on right */
+  const gs = 10*tSc;
+  for(let x=tOX;x<=tOX+TW*tSc;x+=gs) bgL.add(new Konva.Line({points:[x,tOY,x,tOY+TH*tSc],stroke:'#d4c9a8',strokeWidth:.3}));
+  for(let y=tOY;y<=tOY+TH*tSc;y+=gs) bgL.add(new Konva.Line({points:[tOX,y,tOX+TW*tSc,y],stroke:'#d4c9a8',strokeWidth:.3}));
+
+  bgL.draw();
+  return {tSc, tOX, tOY};
+}
+
+const {tSc, tOX, tOY} = drawBg();
+
+/* ─── Pipeline step marker ─────────────────────────────────────────────────── */
+function setStep(n) {
+  ['ps-load','ps-parse','ps-norm','ps-out'].forEach((id,i)=>{
+    const el=document.getElementById(id);
+    el.className='pipe-step'+(i<n?' done':i===n?' active':'');
+  });
+}
+
+/* ─── SVG Parser ─────────────────────────────────────────────────────────────── */
+function svgElToPath(el) {
+  const tag = el.tagName.toLowerCase();
+  switch(tag) {
+    case 'path': return el.getAttribute('d');
+    case 'rect': {
+      const x=+el.getAttribute('x')||0, y=+el.getAttribute('y')||0;
+      const w=+el.getAttribute('width')||0, h=+el.getAttribute('height')||0;
+      const rx=+el.getAttribute('rx')||0;
+      if(!rx) return `M${x},${y}H${x+w}V${y+h}H${x}Z`;
+      return `M${x+rx},${y}H${x+w-rx}A${rx},${rx},0,0,1,${x+w},${y+rx}V${y+h-rx}A${rx},${rx},0,0,1,${x+w-rx},${y+h}H${x+rx}A${rx},${rx},0,0,1,${x},${y+h-rx}V${y+rx}A${rx},${rx},0,0,1,${x+rx},${y}Z`;
+    }
+    case 'circle': {
+      const cx=+el.getAttribute('cx')||0, cy=+el.getAttribute('cy')||0, r=+el.getAttribute('r')||0;
+      return `M${cx-r},${cy}A${r},${r},0,1,0,${cx+r},${cy}A${r},${r},0,1,0,${cx-r},${cy}Z`;
+    }
+    case 'ellipse': {
+      const cx=+el.getAttribute('cx')||0, cy=+el.getAttribute('cy')||0;
+      const rx=+el.getAttribute('rx')||0, ry=+el.getAttribute('ry')||0;
+      return `M${cx-rx},${cy}A${rx},${ry},0,1,0,${cx+rx},${cy}A${rx},${ry},0,1,0,${cx-rx},${cy}Z`;
+    }
+    case 'polyline': case 'polygon': {
+      const pts=(el.getAttribute('points')||'').trim().split(/[\s,]+/);
+      if(pts.length<4) return null;
+      let d=`M${pts[0]},${pts[1]}`;
+      for(let i=2;i<pts.length-1;i+=2) d+=`L${pts[i]},${pts[i+1]}`;
+      if(tag==='polygon') d+='Z';
+      return d;
+    }
+    case 'line': {
+      const x1=+el.getAttribute('x1')||0, y1=+el.getAttribute('y1')||0;
+      const x2=+el.getAttribute('x2')||0, y2=+el.getAttribute('y2')||0;
+      return `M${x1},${y1}L${x2},${y2}`;
+    }
+    default: return null;
+  }
+}
+
+function parseSVG(text) {
+  const doc = new DOMParser().parseFromString(text,'image/svg+xml');
+  const els = doc.querySelectorAll('path,rect,circle,ellipse,polyline,polygon,line');
+  const results = [];
+  const colors = ['#8a4a2a','#3a6a8a','#4a8a5a','#7a5a2a','#5a3a7a','#8a6a2a'];
+  els.forEach((el,i) => {
+    const d = svgElToPath(el);
+    if(!d) return;
+    const fill = el.getAttribute('fill');
+    const stroke = el.getAttribute('stroke');
+    results.push({
+      id:`p${i}`, d, label:`${el.tagName.toLowerCase()} ${i+1}`,
+      color: colors[i%colors.length], visible:true,
+      origFill: fill||null, origStroke: stroke||null
+    });
+  });
+  /* Try to get SVG units */
+  const root = doc.documentElement;
+  const vb = root.getAttribute('viewBox');
+  let units = 'px (SVG)';
+  if(root.getAttribute('width')&&/mm|cm|in/.test(root.getAttribute('width'))) units = root.getAttribute('width').replace(/[\d.]/g,'').trim();
+  return {paths:results, units, viewBox:vb};
+}
+
+/* ─── DXF Entity → SVG Path ─────────────────────────────────────────────────── */
+function arcPath(cx,cy,r,startDeg,endDeg,ccw){
+  const toRad=d=>d*Math.PI/180;
+  let s=startDeg, e=endDeg;
+  if(ccw){ if(e>s) s+=360; } else { if(e<s) e+=360; }
+  const sx=cx+r*Math.cos(toRad(s)), sy=cy+r*Math.sin(toRad(s));
+  const ex=cx+r*Math.cos(toRad(e)), ey=cy+r*Math.sin(toRad(e));
+  const diff=Math.abs(e-s);
+  if(diff>=359.9) return `M${(cx-r).toFixed(3)},${cy.toFixed(3)} A${r.toFixed(3)},${r.toFixed(3)},0,1,0,${(cx+r).toFixed(3)},${cy.toFixed(3)} A${r.toFixed(3)},${r.toFixed(3)},0,1,0,${(cx-r).toFixed(3)},${cy.toFixed(3)} Z`;
+  const large=diff>180?1:0;
+  const sweep=ccw?0:1;
+  return `M${sx.toFixed(3)},${sy.toFixed(3)} A${r.toFixed(3)},${r.toFixed(3)},0,${large},${sweep},${ex.toFixed(3)},${ey.toFixed(3)}`;
+}
+
+function dxfEntityToPath(ent){
+  try{
+    switch(ent.type){
+      case 'LINE':
+        return `M${ent.vertices?ent.vertices[0].x:ent.start.x},${ent.vertices?ent.vertices[0].y:ent.start.y}L${ent.vertices?ent.vertices[1].x:ent.end.x},${ent.vertices?ent.vertices[1].y:ent.end.y}`;
+      case 'LWPOLYLINE': case 'POLYLINE': {
+        if(!ent.vertices||!ent.vertices.length) return null;
+        let d=`M${ent.vertices[0].x.toFixed(3)},${ent.vertices[0].y.toFixed(3)}`;
+        for(let i=1;i<ent.vertices.length;i++){
+          const v=ent.vertices[i];
+          const prev=ent.vertices[i-1];
+          if(prev.bulge&&Math.abs(prev.bulge)>0.0001){
+            /* bulge → arc */
+            const b=prev.bulge;
+            const dx=v.x-prev.x, dy=v.y-prev.y;
+            const dist=Math.sqrt(dx*dx+dy*dy);
+            const r=dist*(1+b*b)/(4*Math.abs(b));
+            const sweep=b<0?1:0;
+            const large=Math.abs(b)>1?1:0;
+            d+=`A${r.toFixed(3)},${r.toFixed(3)},0,${large},${sweep},${v.x.toFixed(3)},${v.y.toFixed(3)}`;
+          } else {
+            d+=`L${v.x.toFixed(3)},${v.y.toFixed(3)}`;
+          }
+        }
+        if(ent.shape) d+='Z';
+        return d;
+      }
+      case 'CIRCLE':
+        return arcPath(ent.center.x,ent.center.y,ent.radius,0,360,false);
+      case 'ARC':
+        return arcPath(ent.center.x,ent.center.y,ent.radius,ent.startAngle,ent.endAngle,false);
+      case 'ELLIPSE':{
+        const a=Math.sqrt(ent.majorAxisEndPoint.x**2+ent.majorAxisEndPoint.y**2);
+        const b=a*ent.axisRatio;
+        const cx=ent.center.x, cy=ent.center.y;
+        return `M${(cx-a).toFixed(3)},${cy.toFixed(3)} A${a.toFixed(3)},${b.toFixed(3)},0,1,0,${(cx+a).toFixed(3)},${cy.toFixed(3)} A${a.toFixed(3)},${b.toFixed(3)},0,1,0,${(cx-a).toFixed(3)},${cy.toFixed(3)} Z`;
+      }
+      case 'SPLINE':{
+        if(!ent.controlPoints||ent.controlPoints.length<2) return null;
+        const pts=ent.controlPoints;
+        let d=`M${pts[0].x.toFixed(3)},${pts[0].y.toFixed(3)}`;
+        for(let i=1;i<pts.length-1;i++){
+          const cp=pts[i], next=pts[i+1]||pts[i];
+          d+=`Q${cp.x.toFixed(3)},${cp.y.toFixed(3)},${((cp.x+next.x)/2).toFixed(3)},${((cp.y+next.y)/2).toFixed(3)}`;
+        }
+        d+=`L${pts[pts.length-1].x.toFixed(3)},${pts[pts.length-1].y.toFixed(3)}`;
+        return d;
+      }
+      default: return null;
+    }
+  }catch(e){return null;}
+}
+
+function parseDXF(text){
+  if(!window.DxfParser) return {paths:[],units:'unknown',error:'DxfParser not loaded'};
+  const parser=new window.DxfParser();
+  let dxf;
+  try{ dxf=parser.parseSync(text); }
+  catch(e){ return {paths:[],units:'unknown',error:e.message}; }
+
+  const entities=(dxf.entities||[]);
+  const colors=['#8a4a2a','#3a6a8a','#4a8a5a','#7a5a2a','#5a3a7a','#8a6a2a','#6a4a8a','#3a8a6a'];
+  const results=[];
+  let idx=0;
+  entities.forEach(ent=>{
+    const d=dxfEntityToPath(ent);
+    if(!d) return;
+    results.push({id:`e${idx}`,d,label:`${ent.type} ${idx+1}`,color:colors[idx%colors.length],visible:true,layer:ent.layer||'0'});
+    idx++;
+  });
+
+  /* DXF units */
+  const uMap={0:'unitless',1:'in',2:'ft',4:'mm',5:'cm',6:'m'};
+  const uCode=dxf.header&&dxf.header.$INSUNITS?dxf.header.$INSUNITS:0;
+  return {paths:results, units:uMap[uCode]||`code ${uCode}`};
+}
+
+/* ─── BBox from paths (via offscreen SVG) ─────────────────────────────────── */
+function computeBBox(paths){
+  const svg=document.createElementNS('http://www.w3.org/2000/svg','svg');
+  svg.setAttribute('viewBox','0 0 100000 100000');
+  svg.style.cssText='position:fixed;top:-9999px;left:-9999px;width:100000px;height:100000px;visibility:hidden';
+  const g=document.createElementNS('http://www.w3.org/2000/svg','g');
+  paths.filter(p=>p.visible).forEach(p=>{
+    const el=document.createElementNS('http://www.w3.org/2000/svg','path');
+    el.setAttribute('d',p.d); g.appendChild(el);
+  });
+  svg.appendChild(g); document.body.appendChild(svg);
+  try{
+    const bb=g.getBBox();
+    document.body.removeChild(svg);
+    if(!bb||bb.width===0&&bb.height===0) return null;
+    return {minX:bb.x,minY:bb.y,maxX:bb.x+bb.width,maxY:bb.y+bb.height,w:bb.width,h:bb.height};
+  }catch(e){document.body.removeChild(svg);return null;}
+}
+
+/* ─── Normalize transform ─────────────────────────────────────────────────── */
+function normalizePaths(paths, bbox, opts){
+  const {fitMode='contain', alignH='center', alignV='center', pad=8, flipY=false} = opts;
+  const tw=TW-pad*2, th=TH-pad*2;
+  let sx,sy;
+  if(fitMode==='contain'){
+    const sc=Math.min(tw/bbox.w, th/bbox.h);
+    sx=sc; sy=sc;
+  } else if(fitMode==='width'){
+    sx=tw/bbox.w; sy=sx;
+  } else if(fitMode==='height'){
+    sy=th/bbox.h; sx=sy;
+  } else { /* stretch */
+    sx=tw/bbox.w; sy=th/bbox.h;
+  }
+
+  const scaledW=bbox.w*sx, scaledH=bbox.h*sy;
+  let offX, offY;
+  if(alignH==='center') offX=pad+(tw-scaledW)/2;
+  else if(alignH==='left') offX=pad;
+  else offX=pad+tw-scaledW;
+  if(alignV==='center') offY=pad+(th-scaledH)/2;
+  else if(alignV==='top') offY=pad;
+  else offY=pad+th-scaledH;
+
+  /* transform: translate(-minX,-minY) scale flip translate(offX,offY) */
+  const flipStr = flipY ? `scale(1,-1) translate(0,${-(bbox.minY*2+bbox.h)})` : '';
+  const transform = `translate(${offX},${offY}) scale(${sx},${sy}) ${flipStr} translate(${-bbox.minX},${-bbox.minY})`;
+
+  /* apply to each path via SVG transform */
+  const svgEl=document.createElementNS('http://www.w3.org/2000/svg','svg');
+  svgEl.setAttribute('viewBox',`0 0 ${TW} ${TH}`);
+  svgEl.style.cssText='position:fixed;top:-9999px;left:-9999px;width:20000px;height:32000px;visibility:hidden';
+  const gEl=document.createElementNS('http://www.w3.org/2000/svg','g');
+  gEl.setAttribute('transform', transform);
+  const pathEls=[];
+  paths.filter(p=>p.visible).forEach((p,i)=>{
+    const el=document.createElementNS('http://www.w3.org/2000/svg','path');
+    el.setAttribute('d',p.d); gEl.appendChild(el); pathEls.push({p,el});
+  });
+  svgEl.appendChild(gEl); document.body.appendChild(svgEl);
+
+  const result=[];
+  pathEls.forEach(({p,el})=>{
+    try{
+      const totalLen=el.getTotalLength();
+      const samples=Math.min(Math.ceil(totalLen/3)+4, 512);
+      let d='';
+      for(let i=0;i<=samples;i++){
+        const pt=el.getPointAtLength(i/samples*totalLen);
+        d+=(i===0?`M`:`L`)+pt.x.toFixed(2)+','+pt.y.toFixed(2);
+      }
+      d+='Z';
+      result.push({...p, id:'n'+p.id, d});
+    }catch(e){
+      result.push({...p, id:'n'+p.id});
+    }
+  });
+  document.body.removeChild(svgEl);
+  return {paths:result, transform, sx, sy, offX, offY};
+}
+
+/* ─── Render paths on Konva ─────────────────────────────────────────────────── */
+function renderRaw(paths, bbox){
+  rawL.destroyChildren();
+  if(!paths.length||!bbox){rawL.draw();return;}
+
+  /* fit raw geometry into left panel */
+  const lW=SPLIT-PAD*1.5, lH=H-PAD*2;
+  const sc=Math.min((lW-40)/bbox.w, (lH-40)/bbox.h);
+  const ox=PAD+(lW-bbox.w*sc)/2 - bbox.minX*sc;
+  const oy=PAD+(lH-bbox.h*sc)/2 - bbox.minY*sc;
+
+  paths.filter(p=>p.visible).forEach(p=>{
+    rawL.add(new Konva.Path({data:p.d,x:ox,y:oy,scaleX:sc,scaleY:sc,fill:'none',stroke:p.color,strokeWidth:1.5/sc}));
+  });
+
+  /* bbox crosshairs */
+  const bx=PAD+(lW-bbox.w*sc)/2, by=PAD+(lH-bbox.h*sc)/2;
+  rawL.add(new Konva.Rect({x:bx,y:by,width:bbox.w*sc,height:bbox.h*sc,fill:'none',stroke:'#b8962e',strokeWidth:.6,dash:[4,4],opacity:.5}));
+  const label=`${bbox.w.toFixed(1)} × ${bbox.h.toFixed(1)}`;
+  rawL.add(new Konva.Text({x:bx+3,y:by+3,text:label,fill:'#b8962e',fontSize:8,fontFamily:'Courier New',opacity:.7}));
+  rawL.draw();
+}
+
+function renderNorm(paths){
+  normL.destroyChildren();
+  if(!paths.length){normL.draw();return;}
+  paths.filter(p=>p.visible).forEach(p=>{
+    normL.add(new Konva.Path({data:p.d,x:tOX,y:tOY,scaleX:tSc,scaleY:tSc,fill:'rgba(122,58,26,.08)',stroke:p.color,strokeWidth:1.5/tSc}));
+  });
+  normL.draw();
+}
+
+/* ─── Path list UI ───────────────────────────────────────────────────────────── */
+function renderPathList(paths, sel){
+  const el=document.getElementById('path-list');
+  if(!paths.length){el.innerHTML='<div style="font-size:10px;color:var(--dim);font-style:italic;padding:4px 0">No paths extracted</div>';return;}
+  el.innerHTML=paths.map(p=>`
+    <div class="path-item${p.visible?' on':''}" data-id="${p.id}">
+      <div class="path-dot" style="background:${p.color}"></div>
+      <span class="path-nm">${p.label}${p.layer?` [${p.layer}]`:''}</span>
+      <span class="path-pts" data-vis="${p.id}">${p.visible?'◉':'○'}</span>
+    </div>`).join('');
+  el.querySelectorAll('[data-vis]').forEach(btn=>{
+    btn.addEventListener('click',e=>{
+      e.stopPropagation();
+      const p=rawPaths.find(x=>x.id===btn.dataset.vis);
+      if(p){ p.visible=!p.visible; renderAll(); renderPathList(rawPaths); }
+    });
+  });
+}
+
+function renderAll(){
+  renderRaw(rawPaths, rawBBox);
+  if(normPaths.length) renderNorm(normPaths);
+}
+
+/* ─── Main load handler ──────────────────────────────────────────────────────── */
+function handleFile(file){
+  fileType = file.name.toLowerCase().endsWith('.dxf') ? 'dxf' : 'svg';
+  setStep(1);
+  document.getElementById('fi-name').textContent = file.name;
+  document.getElementById('fi-type').textContent = fileType.toUpperCase();
+  document.getElementById('fi-size').textContent = (file.size/1024).toFixed(1)+' KB';
+  document.getElementById('file-info-sec').style.display='block';
+  document.getElementById('st-main').textContent = `Parsing ${fileType.toUpperCase()}…`;
+
+  const r=new FileReader();
+  r.onload=ev=>{
+    const text=ev.target.result;
+    setStep(2);
+    const result = fileType==='dxf' ? parseDXF(text) : parseSVG(text);
+
+    if(result.error){
+      document.getElementById('fi-els').textContent=result.error;
+      document.getElementById('fi-els').className='info-val err';
+      document.getElementById('st-main').textContent='Parse error: '+result.error;
+      return;
+    }
+
+    rawPaths=result.paths;
+    document.getElementById('fi-els').textContent=rawPaths.length+' elements';
+    document.getElementById('fi-els').className='info-val ok';
+    document.getElementById('fi-units').textContent=result.units;
+    document.getElementById('drop-overlay').classList.add('hidden');
+
+    rawBBox=computeBBox(rawPaths);
+    if(rawBBox){
+      document.getElementById('fi-bb').textContent=`${rawBBox.w.toFixed(1)} × ${rawBBox.h.toFixed(1)}`;
+      document.getElementById('st-bb').textContent=`bbox ${rawBBox.minX.toFixed(1)},${rawBBox.minY.toFixed(1)} → ${rawBBox.maxX.toFixed(1)},${rawBBox.maxY.toFixed(1)}`;
+    }
+
+    renderRaw(rawPaths, rawBBox);
+    renderPathList(rawPaths);
+    document.getElementById('norm-sec').style.display='block';
+    document.getElementById('use-sec').style.display='block';
+    document.getElementById('st-main').textContent=`Loaded — ${rawPaths.length} paths · ${result.units}`;
+    setStep(2);
+
+    /* auto-normalize */
+    applyNormalize();
+  };
+  r.readAsText(file);
+}
+
+/* ─── Normalize ──────────────────────────────────────────────────────────────── */
+function applyNormalize(){
+  if(!rawBBox) return;
+  setStep(3);
+  const flipYMode=document.getElementById('flip-y').value;
+  const doFlip = flipYMode==='yes' || (flipYMode==='auto'&&fileType==='dxf');
+  const opts={
+    fitMode:document.getElementById('fit-mode').value,
+    alignH:document.getElementById('align-h').value,
+    alignV:document.getElementById('align-v').value,
+    pad:parseInt(document.getElementById('norm-pad').value)||8,
+    flipY:doFlip
+  };
+  const res=normalizePaths(rawPaths, rawBBox, opts);
+  normPaths=res.paths;
+  normBBox=computeBBox(normPaths);
+  renderNorm(normPaths);
+  document.getElementById('st-scale').textContent=`scale ${res.sx.toFixed(3)}×${res.sy.toFixed(3)} | offset ${res.offX.toFixed(1)},${res.offY.toFixed(1)}`;
+  document.getElementById('st-main').textContent=`Normalized — ${normPaths.length} paths → 200×320 space`;
+  document.getElementById('btn-handoff').disabled=false;
+  setStep(4);
+}
+
+document.getElementById('btn-normalize').addEventListener('click',applyNormalize);
+['fit-mode','align-h','align-v','norm-pad','flip-y'].forEach(id=>{
+  document.getElementById(id).addEventListener('change',()=>{ if(rawBBox) applyNormalize(); });
+});
+
+/* ─── Use as toggle ─────────────────────────────────────────────────────────── */
+['hs','inlay'].forEach(mode=>{
+  document.getElementById('use-'+mode).addEventListener('click',()=>{
+    useAs=mode;
+    document.getElementById('use-hs').classList.toggle('on',useAs==='hs');
+    document.getElementById('use-inlay').classList.toggle('on',useAs==='inlay');
+  });
+});
+
+/* ─── Handoff ─────────────────────────────────────────────────────────────────── */
+document.getElementById('btn-handoff').addEventListener('click',()=>{
+  if(!normPaths.length) return;
+  const combined=normPaths.filter(p=>p.visible).map(p=>p.d).join(' ');
+  /* Build export SVG */
+  const svgLines=normPaths.filter(p=>p.visible).map(p=>`  <path d="${p.d}" fill="none" stroke="${p.color}" stroke-width="0.8"/>`).join('\n');
+  const svg=`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 320">\n${svgLines}\n</svg>`;
+  const a=Object.assign(document.createElement('a'),{
+    href:URL.createObjectURL(new Blob([svg],{type:'image/svg+xml'})),
+    download:`ps-normalized.svg`
+  });
+  a.click();
+  document.getElementById('st-main').textContent=`Exported normalized SVG — open in headstock workspace as ${useAs==='hs'?'template':'inlay'}`;
+});
+
+/* ─── File input & drop ──────────────────────────────────────────────────────── */
+document.getElementById('file-in').addEventListener('change',e=>{
+  if(e.target.files[0]) handleFile(e.target.files[0]);
+  e.target.value='';
+});
+
+const dz=document.getElementById('drop-zone');
+dz.addEventListener('click',()=>document.getElementById('file-in').click());
+dz.addEventListener('dragover',e=>{e.preventDefault();dz.classList.add('drag-over');});
+dz.addEventListener('dragleave',()=>dz.classList.remove('drag-over'));
+dz.addEventListener('drop',e=>{e.preventDefault();dz.classList.remove('drag-over');if(e.dataTransfer.files[0])handleFile(e.dataTransfer.files[0]);});
+
+document.getElementById('canvas-area').addEventListener('dragover',e=>e.preventDefault());
+document.getElementById('canvas-area').addEventListener('drop',e=>{e.preventDefault();if(e.dataTransfer.files[0])handleFile(e.dataTransfer.files[0]);});
+
+/* view toggle */
+['both','raw','norm'].forEach(v=>{
+  document.getElementById('view-'+v).addEventListener('click',()=>{
+    document.querySelectorAll('.pill-opt').forEach(b=>b.classList.remove('on'));
+    document.getElementById('view-'+v).classList.add('on');
+    rawL.visible(v!=='norm'); normL.visible(v!=='raw');
+    rawL.draw(); normL.draw();
+  });
+});
+
+document.getElementById('btn-relabel').addEventListener('click',()=>{ if(rawPaths.length)applyNormalize(); });
+setStep(0);
+</script>
+</body>
+</html>

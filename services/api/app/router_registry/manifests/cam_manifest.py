@@ -1,0 +1,223 @@
+"""CAM domain routers (core, subsystem, config, saw lab, consolidated)."""
+
+from typing import List
+
+from ..models import RouterSpec
+
+CAM_ROUTERS: List[RouterSpec] = [
+    RouterSpec(
+        module="app.routers.simulation_consolidated_router",
+        prefix="/api/cam/sim",
+        tags=["CAM Simulation"],
+        category="cam_core",
+    ),
+    RouterSpec(
+        module="app.routers.geometry",
+        prefix="/api/geometry",
+        tags=["Geometry"],
+        category="cam_core",
+    ),
+    RouterSpec(
+        module="app.routers.tooling_router",
+        prefix="/api/tooling",
+        tags=["Tooling"],
+        category="cam_core",
+    ),
+    RouterSpec(
+        module="app.routers.material_router",
+        prefix="/api",
+        tags=["Material", "Energy Model"],
+        category="cam_core",
+    ),
+    RouterSpec(
+        module="app.routers.adaptive",
+        prefix="/api",
+        tags=["Adaptive Pocketing"],
+        category="cam_core",
+    ),
+    RouterSpec(
+        module="app.cam.routers.monitoring",
+        prefix="/api/cam",
+        tags=["CAM Monitoring"],
+        category="cam_core",
+    ),
+    RouterSpec(
+        module="app.cam.routers.utility",
+        prefix="/api/cam",
+        tags=["CAM Utility"],
+        category="cam_core",
+    ),
+    RouterSpec(
+        module="app.routers.cam_learn_router",
+        prefix="/api/cam/learn",
+        tags=["CAM Learning"],
+        category="cam_core",
+    ),
+    RouterSpec(
+        module="app.routers.gcode_consolidated_router",
+        prefix="/api",
+        tags=["G-code", "CAM"],
+        category="cam",
+    ),
+    RouterSpec(
+        module="app.routers.adaptive_preview_router",
+        prefix="/api",
+        tags=["Adaptive", "Preview"],
+        category="cam",
+    ),
+    RouterSpec(
+        module="app.routers.dxf_adaptive_consolidated_router",
+        router_attr="router",
+        prefix="/api",
+        tags=["cam", "dxf", "adaptive"],
+        category="cam",
+    ),
+    RouterSpec(
+        module="app.routers.dxf_preflight_router",
+        prefix="/api",
+        tags=["DXF", "Preflight"],
+        category="cam",
+    ),
+    RouterSpec(
+        module="app.routers.polygon_offset_router",
+        prefix="/api",
+        tags=["Geometry", "Polygon"],
+        category="cam",
+    ),
+    RouterSpec(
+        module="app.routers.bridge_presets_router",
+        prefix="/api",
+        tags=["CAM Bridge"],
+        category="config",
+    ),
+    RouterSpec(
+        module="app.routers.machines_consolidated_router",
+        prefix="/api/machines",
+        tags=["Machines"],
+        category="config",
+    ),
+    RouterSpec(
+        module="app.routers.machines_consolidated_router",
+        router_attr="cam_machines_router",
+        prefix="/api",
+        tags=["CAM", "Machines"],
+        category="cam",
+    ),
+    RouterSpec(
+        module="app.routers.posts_consolidated_router",
+        prefix="/api/posts",
+        tags=["Post Processors"],
+        category="config",
+    ),
+    RouterSpec(
+        module="app.routers.registry_router",
+        prefix="/api/registry",
+        tags=["Data Registry"],
+        category="config",
+    ),
+    RouterSpec(
+        module="app.saw_lab.compare_router",
+        prefix="",
+        tags=["Saw Lab", "Compare"],
+        category="saw_lab",
+    ),
+    RouterSpec(
+        module="app.saw_lab.__init_router__",
+        prefix="",
+        tags=["Saw Lab", "Batch"],
+        required=True,
+        category="saw_lab",
+    ),
+    RouterSpec(
+        module="app.routers.retract_router",
+        prefix="/api/cam/retract",
+        tags=["CAM", "Retract Patterns"],
+        category="misc",
+    ),
+    RouterSpec(
+        module="app.routers.cam_pipeline_preset_run_router",
+        prefix="/api",
+        tags=["CAM", "Pipeline"],
+        category="misc",
+    ),
+    RouterSpec(
+        module="app.routers.cam_risk_router",
+        prefix="/api",
+        tags=["CAM", "Risk"],
+        category="cam",
+    ),
+    RouterSpec(
+        module="app.routers.probe",
+        prefix="/api",
+        tags=["Probe", "CAM"],
+        category="cam",
+    ),
+    RouterSpec(
+        module="app.cam.routers.job_intelligence_router",
+        prefix="/api/cam",
+        tags=["CAM", "Job Intelligence"],
+        category="cam",
+    ),
+    RouterSpec(
+        module="app.cam.routers.bridge_export_router",
+        prefix="/api/cam",
+        tags=["CAM", "Bridge"],
+        category="cam",
+    ),
+    RouterSpec(
+        module="app.cam.routers.fret_slots_router",
+        prefix="/api/cam",
+        tags=["CAM", "Fret Slots"],
+        category="cam",
+    ),
+    RouterSpec(
+        module="app.cam.rosette.photo_batch_router",
+        prefix="",
+        tags=["CAM", "Rosette", "Batch"],
+        category="cam",
+    ),
+    RouterSpec(
+        module="app.routers.cam.guitar",
+        prefix="/api/cam/guitar",
+        tags=["CAM", "Guitar"],
+        category="cam",
+    ),
+    RouterSpec(
+        module="app.routers.cam_post_v155_router",
+        prefix="/api/cam/post",
+        tags=["CAM", "Post", "GCode"],
+        category="cam",
+    ),
+    RouterSpec(
+        module="app.routers.cam_relief_router",
+        prefix="/api",
+        tags=["CAM", "Relief"],
+        category="cam",
+    ),
+    RouterSpec(
+        module="app.routers.cnc_production.presets_router",
+        prefix="/api",
+        tags=["CNC", "Presets"],
+        category="cnc",
+    ),
+    RouterSpec(
+        module="app.cam.routers",
+        router_attr="cam_router",
+        prefix="/api/cam",
+        tags=["CAM Consolidated"],
+        category="consolidated",
+    ),
+    RouterSpec(
+        module="app.compare.routers",
+        router_attr="compare_router",
+        prefix="/api/compare",
+        tags=["Compare Consolidated"],
+        category="consolidated",
+    ),
+    RouterSpec(
+        module="app.cam.headstock.router",
+        prefix="",
+        tags=["CAM", "Headstock", "Inlay"],
+        category="cam",
+    ),
+]

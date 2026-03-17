@@ -1,0 +1,49 @@
+{
+  "source_path": "fixtures/tiny.png",
+  "warnings": [],
+  "export_blocked": false,
+  "export_block_reason": null,
+  "body_isolation": {
+    "body_bbox_px": [10, 10, 100, 200],
+    "confidence": 0.8,
+    "completeness_score": 0.65,
+    "review_required": false
+  },
+  "geometry_coach_v2": {
+    "action": "accept",
+    "reason": "Current body isolation and contour election are acceptable.",
+    "retry_count": 1,
+    "original_body_score": 0.40,
+    "original_contour_score": 0.50,
+    "candidate_body_score": 0.65,
+    "candidate_contour_score": 0.72,
+    "notes": []
+  },
+  "contour_stage": {
+    "best_score": 0.72,
+    "pre_merge_best_score": 0.72,
+    "post_merge_best_score": 0.72,
+    "export_blocked": false,
+    "export_block_reason": null,
+    "diagnostics": {
+      "retry_attempts": [
+        {
+          "retry_reason": "Body isolation likely under-captured lower bout.",
+          "retry_profile_used": "lower_bout_recovery",
+          "retry_iteration": 1,
+          "score_before": 0.50,
+          "score_after": 0.60,
+          "score_delta": 0.10
+        },
+        {
+          "retry_reason": "Body isolation likely under-captured lower bout.",
+          "retry_profile_used": "lower_bout_recovery",
+          "retry_iteration": 2,
+          "score_before": 0.60,
+          "score_after": 0.72,
+          "score_delta": 0.12
+        }
+      ]
+    }
+  }
+}
