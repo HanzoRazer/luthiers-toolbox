@@ -118,6 +118,75 @@ class USBCPortSpec(BaseModel):
         }
 
 
+class SmartGuitarBodyConfig(BaseModel):
+    """
+    Body configuration for Smart Guitar variants (ARCH-004).
+
+    Solid body guitars don't need plate thickness calculation.
+    Semi-hollow and hollow variants use plate_design endpoints.
+    """
+    body_style: Literal["solid", "semi_hollow", "hollow"] = Field(
+        default="solid",
+        description="Body construction style"
+    )
+    top_material: Optional[str] = Field(
+        default=None,
+        description="Top plate material preset (e.g., 'sitka_spruce') for semi_hollow/hollow"
+    )
+    top_target_hz: Optional[float] = Field(
+        default=None,
+        description="Target frequency in Hz for top plate (semi_hollow/hollow)"
+    )
+
+
+def get_plate_spec(config: SmartGuitarBodyConfig) -> Optional[Dict[str, Any]]:
+    """
+    Get plate thickness specification for semi-hollow/hollow variants.
+
+    Args:
+        config: SmartGuitarBodyConfig with body_style and plate params
+
+    Returns:
+        PlateThicknessResult as dict if applicable, None for solid body
+    """
+    if config.body_style == "solid":
+        return None
+
+    # Only compute if we have material and target
+    if config.top_material and config.top_target_hz:
+        try:
+            from app.calculators.plate_design import (
+                analyze_plate,
+                get_material_preset,
+                get_body_calibration,
+                BodyStyle,
+            )
+            from dataclasses import asdict
+
+            mat = get_material_preset(config.top_material)
+            if mat is None:
+                return None
+
+            calibration = get_body_calibration(BodyStyle.ARCHTOP)
+            if calibration is None:
+                return None
+
+            result = analyze_plate(
+                E_L_GPa=mat.E_L_GPa,
+                E_C_GPa=mat.E_C_GPa,
+                density_kg_m3=mat.density_kg_m3,
+                length_mm=calibration.top_a_m * 1000.0,
+                width_mm=calibration.top_b_m * 1000.0,
+                target_f_Hz=config.top_target_hz,
+                material_name=config.top_material,
+            )
+            return asdict(result)
+        except ImportError:
+            return None
+
+    return None
+
+
 class SmartGuitarCAMState(BaseModel):
     """
     Extended state for Smart Guitar CAM operations.
@@ -174,6 +243,8 @@ USBC_PORT_PRESETS: Dict[str, USBCPortSpec] = {
 __all__ = [
     "EdgeRoutingApproach",
     "USBCPortSpec",
+    "SmartGuitarBodyConfig",
+    "get_plate_spec",
     "SmartGuitarCAMState",
     "USBC_PORT_PRESETS",
 ]

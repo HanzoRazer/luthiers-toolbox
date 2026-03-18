@@ -64,6 +64,20 @@ function setTab(id: TabId) {
             Open Instrument Hub →
           </RouterLink>
         </div>
+
+        <!-- ARCH-004: Plate physics info for semi-hollow variant -->
+        <div class="panel-content info-card">
+          <h3 class="panel-heading">Semi-Hollow Variant</h3>
+          <p class="panel-text">
+            Acoustic plate physics available for semi-hollow variant via
+            <code>POST /api/acoustics/plate/analyze</code>
+          </p>
+          <p class="panel-note">
+            Solid body guitars do not require plate thickness calculation.
+            For carved top or semi-hollow variants, the plate design endpoints
+            provide physics-based thickness recommendations.
+          </p>
+        </div>
       </section>
 
       <!-- Tab 2 — Electronics Layout -->
@@ -241,6 +255,22 @@ function setTab(id: TabId) {
 
 .link-card {
   padding: 1rem 0;
+}
+
+.info-card {
+  margin-top: 1.5rem;
+  padding: 1rem;
+  background: var(--color-surface-alt, #f1f5f9);
+  border-radius: var(--radius-md, 0.5rem);
+  border-left: 3px solid var(--color-primary, #2563eb);
+}
+
+.info-card code {
+  background: var(--color-surface, #fff);
+  padding: 0.125rem 0.375rem;
+  border-radius: var(--radius-sm, 0.25rem);
+  font-family: ui-monospace, monospace;
+  font-size: 0.8125rem;
 }
 
 .action-btn {
