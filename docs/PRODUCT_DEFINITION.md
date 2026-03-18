@@ -1,3 +1,6 @@
+> **Official product name:** **The Production Shop**  
+> **Repository:** luthiers-toolbox (legacy name retained for git history continuity)
+
 # Production Shop: Product Definition
 
 *Formerly: Luthiers-ToolBox*

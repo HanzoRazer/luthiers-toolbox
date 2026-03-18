@@ -1,6 +1,6 @@
 # The Production Shop
 
-A CNC guitar lutherie platform with parametric design tools, CAM workflows, and manufacturing safety controls.
+The Production Shop is a CNC guitar lutherie platform with parametric design tools, CAM workflows, and manufacturing safety controls.
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Tests](https://github.com/HanzoRazer/luthiers-toolbox/actions/workflows/api_tests.yml/badge.svg)](https://github.com/HanzoRazer/luthiers-toolbox/actions)
