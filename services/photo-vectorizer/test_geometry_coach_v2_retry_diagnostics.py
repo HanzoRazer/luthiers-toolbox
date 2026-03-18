@@ -45,6 +45,7 @@ class _ContourResultStub:
         issues=None,
         diagnostics=None,
         ownership_score=None,
+        ownership_ok=None,
     ):
         self.best_score = best_score
         self.elected_source = elected_source
@@ -54,8 +55,9 @@ class _ContourResultStub:
         self.export_blocked = False
         self.block_reason = None
         self.recommended_next_action = None
-        self.diagnostics = diagnostics if diagnostics is not None else {}
         self.ownership_score = ownership_score
+        self.ownership_ok = ownership_ok
+        self.diagnostics = diagnostics if diagnostics is not None else {}
 
 
 # ── Helpers ─────────────────────────────────────────────────────────────────
@@ -154,10 +156,18 @@ def test_accepted_retry_records_retry_attempt_with_positive_score_delta():
     )
 
     original_body = _make_body_result(completeness=0.40, lower_bout=True)
-    original_contour = _ContourResultStub(best_score=0.56)
+    original_contour = _ContourResultStub(
+        best_score=0.56,
+        ownership_score=0.39,
+        ownership_ok=False,
+    )
 
     improved_body = _make_body_result(completeness=0.62, lower_bout=False)
-    improved_contour = _ContourResultStub(best_score=0.71)
+    improved_contour = _ContourResultStub(
+        best_score=0.71,
+        ownership_score=0.66,
+        ownership_ok=True,
+    )
 
     body_stage_runner = types.SimpleNamespace(
         run=lambda *args, **kwargs: improved_body,
@@ -200,6 +210,11 @@ def test_accepted_retry_records_retry_attempt_with_positive_score_delta():
     assert attempt["score_before"] == 0.56
     assert attempt["score_after"] == 0.71
     assert attempt["score_delta"] > 0
+    assert attempt["ownership_score_before"] == 0.39
+    assert attempt["ownership_score_after"] == 0.66
+    assert attempt["ownership_score_delta"] > 0
+    assert attempt["ownership_ok_before"] is False
+    assert attempt["ownership_ok_after"] is True
 
 
 def test_rejected_retry_records_retry_attempt_with_negative_score_delta_and_preserves_original():
@@ -218,11 +233,19 @@ def test_rejected_retry_records_retry_attempt_with_negative_score_delta_and_pres
     )
 
     original_body = _make_body_result(completeness=0.40, lower_bout=True)
-    original_contour = _ContourResultStub(best_score=0.56)
+    original_contour = _ContourResultStub(
+        best_score=0.56,
+        ownership_score=0.44,
+        ownership_ok=False,
+    )
 
     # Retry makes things worse: should be rejected by monotonic improvement gate
     worse_body = _make_body_result(completeness=0.43, lower_bout=False)
-    worse_contour = _ContourResultStub(best_score=0.50)
+    worse_contour = _ContourResultStub(
+        best_score=0.50,
+        ownership_score=0.41,
+        ownership_ok=False,
+    )
 
     body_stage_runner = types.SimpleNamespace(
         run=lambda *args, **kwargs: worse_body,
@@ -267,6 +290,11 @@ def test_rejected_retry_records_retry_attempt_with_negative_score_delta_and_pres
     assert attempt["score_before"] == 0.56
     assert attempt["score_after"] == 0.50
     assert attempt["score_delta"] < 0
+    assert attempt["ownership_score_before"] == 0.44
+    assert attempt["ownership_score_after"] == 0.41
+    assert attempt["ownership_score_delta"] < 0
+    assert attempt["ownership_ok_before"] is False
+    assert attempt["ownership_ok_after"] is False
 
 
 # ── Ownership failure → body_region_expansion profile ───────────────────────

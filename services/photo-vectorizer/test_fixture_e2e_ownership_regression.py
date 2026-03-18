@@ -168,7 +168,7 @@ def test_smart_guitar_ownership_triggers_body_retry_with_provenance(coach):
     """
     The Smart Guitar fixture has ownership_score=0.39 (<0.60).
     Evaluate() must route to body retry AND the resulting retry_attempts
-    must carry ownership_before / ownership_after — proving the retry was
+    must carry ownership_score_before / ownership_score_after — proving the retry was
     specifically ownership-triggered, not generic.
     """
     cases = {c["id"]: c for c in _load_cases()}
@@ -212,12 +212,14 @@ def test_smart_guitar_ownership_triggers_body_retry_with_provenance(coach):
     assert len(retry_attempts) >= 1, "Expected at least one retry attempt"
 
     attempt = retry_attempts[0]
-    assert attempt.get("ownership_before") == 0.39, (
-        "Retry must record initial ownership_score as ownership_before"
+    assert attempt.get("ownership_score_before") == 0.39, (
+        "Retry must record initial ownership_score as ownership_score_before"
     )
-    assert attempt.get("ownership_after") == 0.74, (
-        "Retry must record recovered ownership_score as ownership_after"
+    assert attempt.get("ownership_score_after") == 0.74, (
+        "Retry must record recovered ownership_score as ownership_score_after"
     )
+    assert attempt.get("ownership_ok_before") is False
+    assert attempt.get("ownership_ok_after") is True
     assert "ownership" in attempt["retry_reason"].lower(), (
         "Retry reason must mention ownership to distinguish from generic retries"
     )
@@ -230,7 +232,7 @@ def test_smart_guitar_ownership_triggers_body_retry_with_provenance(coach):
 def test_benedetto_border_contact_retry_has_no_ownership_trajectory(coach):
     """
     The Benedetto fixture has border_contact_likely=True but no ownership failure.
-    The retry should NOT carry ownership_before/ownership_after fields,
+    The retry should NOT carry ownership_score_before/ownership_score_after fields,
     proving the system distinguishes ownership retries from border-contact retries.
     """
     cases = {c["id"]: c for c in _load_cases()}
@@ -274,8 +276,10 @@ def test_benedetto_border_contact_retry_has_no_ownership_trajectory(coach):
 
     attempt = retry_attempts[0]
     # Border contact retries should not have ownership data
-    assert "ownership_before" not in attempt or attempt["ownership_before"] is None
-    assert "ownership_after" not in attempt or attempt["ownership_after"] is None
+    assert attempt["ownership_score_before"] is None
+    assert attempt["ownership_score_after"] is None
+    assert attempt["ownership_ok_before"] is None
+    assert attempt["ownership_ok_after"] is None
 
 
 # ---------------------------------------------------------------------------
@@ -325,8 +329,10 @@ def test_archtop_merge_disagreement_retry_is_contour_not_ownership(coach):
 
     attempt = retry_attempts[0]
     # Contour-stage retries for merge disagreement should not have ownership data
-    assert "ownership_before" not in attempt or attempt["ownership_before"] is None
-    assert "ownership_after" not in attempt or attempt["ownership_after"] is None
+    assert attempt["ownership_score_before"] is None
+    assert attempt["ownership_score_after"] is None
+    assert attempt["ownership_ok_before"] is None
+    assert attempt["ownership_ok_after"] is None
     assert "ownership" not in attempt.get("retry_reason", "").lower(), (
         "Merge disagreement retry reason should not mention ownership"
     )

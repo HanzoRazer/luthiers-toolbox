@@ -1,0 +1,35 @@
+{
+  "case_id": "benedetto",
+  "family": "archtop",
+  "manual_review_required": true,
+  "diagnostics": {
+    "retry_attempts": [
+      {
+        "retry_reason": "Contour body ownership is too low (0.28 < 0.60).",
+        "retry_profile_used": "body_region_expansion",
+        "retry_iteration": 1,
+        "score_before": 0.43,
+        "score_after": 0.50,
+        "score_delta": 0.07,
+        "ownership_score_before": 0.28,
+        "ownership_score_after": 0.41,
+        "ownership_score_delta": 0.13,
+        "ownership_ok_before": false,
+        "ownership_ok_after": false
+      },
+      {
+        "retry_reason": "Contour body ownership is too low (0.41 < 0.60).",
+        "retry_profile_used": "lower_bout_recovery",
+        "retry_iteration": 2,
+        "score_before": 0.50,
+        "score_after": 0.54,
+        "score_delta": 0.04,
+        "ownership_score_before": 0.41,
+        "ownership_score_after": 0.47,
+        "ownership_score_delta": 0.06,
+        "ownership_ok_before": false,
+        "ownership_ok_after": false
+      }
+    ]
+  }
+}

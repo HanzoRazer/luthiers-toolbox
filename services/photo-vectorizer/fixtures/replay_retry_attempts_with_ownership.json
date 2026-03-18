@@ -1,0 +1,35 @@
+{
+  "best_score": 0.74,
+  "ownership_score": 0.67,
+  "ownership_ok": true,
+  "diagnostics": {
+    "retry_attempts": [
+      {
+        "retry_reason": "Contour body ownership is too low (0.39 < 0.60).",
+        "retry_profile_used": "body_region_expansion",
+        "retry_iteration": 1,
+        "score_before": 0.58,
+        "score_after": 0.66,
+        "score_delta": 0.08,
+        "ownership_score_before": 0.39,
+        "ownership_score_after": 0.55,
+        "ownership_score_delta": 0.16,
+        "ownership_ok_before": false,
+        "ownership_ok_after": false
+      },
+      {
+        "retry_reason": "Contour body ownership is too low (0.55 < 0.60).",
+        "retry_profile_used": "lower_bout_recovery",
+        "retry_iteration": 2,
+        "score_before": 0.66,
+        "score_after": 0.74,
+        "score_delta": 0.08,
+        "ownership_score_before": 0.55,
+        "ownership_score_after": 0.67,
+        "ownership_score_delta": 0.12,
+        "ownership_ok_before": false,
+        "ownership_ok_after": true
+      }
+    ]
+  }
+}

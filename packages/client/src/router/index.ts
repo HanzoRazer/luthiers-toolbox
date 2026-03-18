@@ -398,6 +398,11 @@ const routes: RouteRecordRaw[] = [
     name: "CamWorkspace",
     component: () => import("@/views/cam/CamWorkspaceView.vue"),
   },
+  {
+    path: "/cam/neck",
+    name: "CamNeck",
+    component: () => import("@/views/cam/NeckView.vue"),
+  },
 
   // Guitar Design Hub - Body Outline Generator, Bracing, Archtop, etc.
   {

@@ -1,0 +1,35 @@
+{
+  "case_id": "smart_guitar",
+  "family": "solid_body",
+  "manual_review_required": false,
+  "diagnostics": {
+    "retry_attempts": [
+      {
+        "retry_reason": "Contour body ownership is too low (0.39 < 0.60).",
+        "retry_profile_used": "body_region_expansion",
+        "retry_iteration": 1,
+        "score_before": 0.58,
+        "score_after": 0.69,
+        "score_delta": 0.11,
+        "ownership_score_before": 0.39,
+        "ownership_score_after": 0.57,
+        "ownership_score_delta": 0.18,
+        "ownership_ok_before": false,
+        "ownership_ok_after": false
+      },
+      {
+        "retry_reason": "Contour body ownership is too low (0.57 < 0.60).",
+        "retry_profile_used": "lower_bout_recovery",
+        "retry_iteration": 2,
+        "score_before": 0.69,
+        "score_after": 0.78,
+        "score_delta": 0.09,
+        "ownership_score_before": 0.57,
+        "ownership_score_after": 0.66,
+        "ownership_score_delta": 0.09,
+        "ownership_ok_before": false,
+        "ownership_ok_after": true
+      }
+    ]
+  }
+}

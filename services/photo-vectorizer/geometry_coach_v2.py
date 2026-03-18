@@ -310,29 +310,40 @@ class GeometryCoachV2:
             retry_iteration: int,
             score_before: Optional[float],
             score_after: Optional[float],
-            ownership_before: Optional[float] = None,
-            ownership_after: Optional[float] = None,
+            ownership_score_before: Optional[float],
+            ownership_score_after: Optional[float],
+            ownership_ok_before: Optional[bool],
+            ownership_ok_after: Optional[bool],
         ) -> None:
             diag = _ensure_diag(contour_obj)
             attempts = diag.setdefault("retry_attempts", [])
             delta = None
+            ownership_delta = None
             if score_before is not None and score_after is not None:
                 try:
                     delta = float(score_after) - float(score_before)
                 except (TypeError, ValueError):
                     delta = None
-            entry: Dict[str, Any] = {
-                "retry_reason": retry_reason,
-                "retry_profile_used": retry_profile_used,
-                "retry_iteration": retry_iteration,
-                "score_before": score_before,
-                "score_after": score_after,
-                "score_delta": delta,
-            }
-            if ownership_before is not None or ownership_after is not None:
-                entry["ownership_before"] = ownership_before
-                entry["ownership_after"] = ownership_after
-            attempts.append(entry)
+            if ownership_score_before is not None and ownership_score_after is not None:
+                try:
+                    ownership_delta = float(ownership_score_after) - float(ownership_score_before)
+                except (TypeError, ValueError):
+                    ownership_delta = None
+            attempts.append(
+                {
+                    "retry_reason": retry_reason,
+                    "retry_profile_used": retry_profile_used,
+                    "retry_iteration": retry_iteration,
+                    "score_before": score_before,
+                    "score_after": score_after,
+                    "score_delta": delta,
+                    "ownership_score_before": ownership_score_before,
+                    "ownership_score_after": ownership_score_after,
+                    "ownership_score_delta": ownership_delta,
+                    "ownership_ok_before": ownership_ok_before,
+                    "ownership_ok_after": ownership_ok_after,
+                }
+            )
 
         for retry_count in range(self.config.max_retries + 1):
             decision = self.decide(
@@ -376,8 +387,10 @@ class GeometryCoachV2:
                         retry_iteration=retry_count + 1,
                         score_before=getattr(current_contour, "best_score", None),
                         score_after=getattr(candidate_contour, "best_score", None),
-                        ownership_before=getattr(current_contour, "ownership_score", None),
-                        ownership_after=getattr(candidate_contour, "ownership_score", None),
+                        ownership_score_before=self._ownership_score(current_contour),
+                        ownership_score_after=self._ownership_score(candidate_contour),
+                        ownership_ok_before=self._ownership_ok(current_contour),
+                        ownership_ok_after=self._ownership_ok(candidate_contour),
                     )
 
                     decision = replace(
@@ -399,8 +412,10 @@ class GeometryCoachV2:
                     retry_iteration=retry_count + 1,
                     score_before=getattr(current_contour, "best_score", None),
                     score_after=getattr(candidate_contour, "best_score", None),
-                    ownership_before=getattr(current_contour, "ownership_score", None),
-                    ownership_after=getattr(candidate_contour, "ownership_score", None),
+                    ownership_score_before=self._ownership_score(current_contour),
+                    ownership_score_after=self._ownership_score(candidate_contour),
+                    ownership_ok_before=self._ownership_ok(current_contour),
+                    ownership_ok_after=self._ownership_ok(candidate_contour),
                 )
                 return current_body, current_contour, decision
 
@@ -428,8 +443,10 @@ class GeometryCoachV2:
                         retry_iteration=retry_count + 1,
                         score_before=getattr(current_contour, "best_score", None),
                         score_after=getattr(candidate_contour, "best_score", None),
-                        ownership_before=getattr(current_contour, "ownership_score", None),
-                        ownership_after=getattr(candidate_contour, "ownership_score", None),
+                        ownership_score_before=self._ownership_score(current_contour),
+                        ownership_score_after=self._ownership_score(candidate_contour),
+                        ownership_ok_before=self._ownership_ok(current_contour),
+                        ownership_ok_after=self._ownership_ok(candidate_contour),
                     )
 
                     decision = replace(
@@ -450,8 +467,10 @@ class GeometryCoachV2:
                     retry_iteration=retry_count + 1,
                     score_before=getattr(current_contour, "best_score", None),
                     score_after=getattr(candidate_contour, "best_score", None),
-                    ownership_before=getattr(current_contour, "ownership_score", None),
-                    ownership_after=getattr(candidate_contour, "ownership_score", None),
+                    ownership_score_before=self._ownership_score(current_contour),
+                    ownership_score_after=self._ownership_score(candidate_contour),
+                    ownership_ok_before=self._ownership_ok(current_contour),
+                    ownership_ok_after=self._ownership_ok(candidate_contour),
                 )
                 return current_body, current_contour, decision
 
@@ -490,14 +509,36 @@ class GeometryCoachV2:
 
     @staticmethod
     def _ownership_score(contour_result: Any) -> Optional[float]:
-        if contour_result is None:
+        raw = getattr(contour_result, "ownership_score", None)
+        if raw is None:
+            diagnostics = getattr(contour_result, "diagnostics", None) or {}
+            raw = diagnostics.get("ownership_score")
+        if raw is None:
             return None
-        if hasattr(contour_result, "ownership_score"):
-            value = getattr(contour_result, "ownership_score")
-            return None if value is None else float(value)
-        diagnostics = getattr(contour_result, "diagnostics", {}) or {}
-        value = diagnostics.get("ownership_score")
-        return None if value is None else float(value)
+        try:
+            return float(raw)
+        except (TypeError, ValueError):
+            return None
+
+    @staticmethod
+    def _ownership_ok(contour_result: Any) -> Optional[bool]:
+        raw = getattr(contour_result, "ownership_ok", None)
+        if raw is None:
+            diagnostics = getattr(contour_result, "diagnostics", None) or {}
+            raw = diagnostics.get("ownership_ok")
+        if raw is None:
+            return None
+        if isinstance(raw, bool):
+            return raw
+        if isinstance(raw, (int, float)):
+            return bool(raw)
+        if isinstance(raw, str):
+            lowered = raw.strip().lower()
+            if lowered in {"true", "1", "yes"}:
+                return True
+            if lowered in {"false", "0", "no"}:
+                return False
+        return None
 
     @staticmethod
     def _contour_retry_worthwhile(contour_result: Any) -> bool:

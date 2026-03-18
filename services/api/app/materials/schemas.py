@@ -96,6 +96,11 @@ class TonewoodEntry(BaseModel):
     modulus_of_elasticity_gpa: Optional[float] = Field(
         default=None, description="MOE (GPa) — Young's modulus. Primary stiffness indicator."
     )
+    E_C_gpa: Optional[float] = Field(
+        default=None,
+        description="Cross-grain modulus GPa. "
+        "Required for plate thickness calculation."
+    )
     modulus_of_rupture_mpa: Optional[float] = Field(
         default=None, description="MOR (MPa) — bending strength."
     )
@@ -187,6 +192,14 @@ class TonewoodEntry(BaseModel):
         c = self.speed_of_sound_computed_m_s
         if c and self.density_kg_m3:
             return round((self.density_kg_m3 * c) * 1e-6, 3)
+        return None
+
+    @computed_field  # type: ignore[misc]
+    @property
+    def R_anis(self) -> Optional[float]:
+        """Orthotropic ratio E_L/E_C. Typically 10-20 for tonewoods."""
+        if self.modulus_of_elasticity_gpa and self.E_C_gpa and self.E_C_gpa > 0:
+            return round(self.modulus_of_elasticity_gpa / self.E_C_gpa, 2)
         return None
 
     @computed_field  # type: ignore[misc]
