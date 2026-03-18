@@ -979,3 +979,314 @@ def validate_binding_material_for_radius(
         "incompatible_materials": incompatible,
         "recommendation": recommendation,
     }
+
+
+# =============================================================================
+# BIND-GAP-04: BINDING STRIP LENGTH CALCULATOR
+# =============================================================================
+
+class InstallationMethod(str, Enum):
+    """Binding installation method affecting strip length calculation."""
+    SINGLE_CONTINUOUS = "single_continuous"  # One piece wraps entire perimeter
+    TOP_AND_BACK = "top_and_back"  # Separate strips for top/back edges
+    SECTIONAL = "sectional"  # Multiple sections with butt joints
+    TRADITIONAL_ACOUSTIC = "traditional_acoustic"  # Top rim, back rim, side strips
+
+
+@dataclass
+class BindingStripEstimate:
+    """
+    Binding strip length estimate for material ordering.
+
+    BIND-GAP-04: Provides accurate strip length calculation including
+    waste allowances for proper material ordering.
+    """
+    # Core measurements
+    perimeter_mm: float
+    installation_method: str
+
+    # Allowances
+    overlap_allowance_mm: float
+    miter_waste_mm: float
+    handling_waste_mm: float
+
+    # Results
+    minimum_length_mm: float  # Absolute minimum (no waste)
+    recommended_length_mm: float  # With standard allowances
+    order_length_mm: float  # Rounded up for ordering
+
+    # Breakdown by section (for multi-piece installations)
+    sections: List[Dict[str, Any]] = field(default_factory=list)
+
+    # Material info
+    material: Optional[str] = None
+    strip_width_mm: Optional[float] = None
+
+    # Notes
+    notes: List[str] = field(default_factory=list)
+
+    def to_dict(self) -> Dict[str, Any]:
+        return {
+            "perimeter_mm": round(self.perimeter_mm, 2),
+            "installation_method": self.installation_method,
+            "overlap_allowance_mm": round(self.overlap_allowance_mm, 2),
+            "miter_waste_mm": round(self.miter_waste_mm, 2),
+            "handling_waste_mm": round(self.handling_waste_mm, 2),
+            "minimum_length_mm": round(self.minimum_length_mm, 2),
+            "recommended_length_mm": round(self.recommended_length_mm, 2),
+            "order_length_mm": round(self.order_length_mm, 2),
+            "sections": self.sections,
+            "material": self.material,
+            "strip_width_mm": self.strip_width_mm,
+            "notes": self.notes,
+        }
+
+
+# Standard allowances (mm)
+DEFAULT_OVERLAP_ALLOWANCE_MM = 10.0  # Overlap at joint
+DEFAULT_MITER_WASTE_PER_CORNER_MM = 3.0  # Waste from miter cuts
+DEFAULT_HANDLING_WASTE_PERCENT = 0.05  # 5% for handling, mistakes
+
+
+def calculate_binding_strip_length(
+    perimeter_mm: float,
+    installation_method: InstallationMethod = InstallationMethod.SINGLE_CONTINUOUS,
+    num_miter_corners: int = 0,
+    num_joints: int = 1,
+    include_top: bool = True,
+    include_back: bool = True,
+    include_sides: bool = False,
+    side_depth_mm: Optional[float] = None,
+    material: Optional[BindingMaterial] = None,
+    strip_width_mm: Optional[float] = None,
+    overlap_allowance_mm: float = DEFAULT_OVERLAP_ALLOWANCE_MM,
+    handling_waste_percent: float = DEFAULT_HANDLING_WASTE_PERCENT,
+) -> BindingStripEstimate:
+    """
+    Calculate binding strip length for material ordering.
+
+    BIND-GAP-04: Binding strip length calculator
+
+    Accounts for:
+    - Perimeter measurement
+    - Installation method (continuous, sections, etc.)
+    - Overlap allowance at joints
+    - Miter waste at corners
+    - Handling waste (5% default)
+    - Top/back/sides as separate components
+
+    Args:
+        perimeter_mm: Body perimeter (from outline measurement)
+        installation_method: How binding will be installed
+        num_miter_corners: Number of corners requiring miter cuts
+        num_joints: Number of butt joints (typically 1 for continuous)
+        include_top: Include top edge binding
+        include_back: Include back edge binding
+        include_sides: Include side strips (acoustic guitars)
+        side_depth_mm: Side depth for side strip calculation
+        material: Binding material (for notes)
+        strip_width_mm: Strip width (for notes)
+        overlap_allowance_mm: Allowance per joint for overlap
+        handling_waste_percent: Percentage for handling/mistakes
+
+    Returns:
+        BindingStripEstimate with lengths and breakdown
+    """
+    notes: List[str] = []
+    sections: List[Dict[str, Any]] = []
+
+    # Base calculations depend on installation method
+    if installation_method == InstallationMethod.SINGLE_CONTINUOUS:
+        # Single strip wraps entire perimeter
+        base_length = perimeter_mm
+        num_joints = 1  # One overlap point
+        notes.append("Single continuous strip wraps entire perimeter")
+        sections.append({
+            "name": "full_perimeter",
+            "length_mm": round(perimeter_mm, 2),
+            "quantity": 1,
+        })
+
+    elif installation_method == InstallationMethod.TOP_AND_BACK:
+        # Top and back are separate (each is half perimeter approximately)
+        half_perimeter = perimeter_mm / 2
+        base_length = 0.0
+
+        if include_top:
+            sections.append({
+                "name": "top_edge",
+                "length_mm": round(half_perimeter, 2),
+                "quantity": 1,
+            })
+            base_length += half_perimeter
+
+        if include_back:
+            sections.append({
+                "name": "back_edge",
+                "length_mm": round(half_perimeter, 2),
+                "quantity": 1,
+            })
+            base_length += half_perimeter
+
+        num_joints = len(sections)  # One joint per section
+        notes.append("Separate strips for top and back edges")
+
+    elif installation_method == InstallationMethod.TRADITIONAL_ACOUSTIC:
+        # Traditional acoustic: top rim, back rim, plus side strips
+        half_perimeter = perimeter_mm / 2
+        base_length = 0.0
+
+        if include_top:
+            sections.append({
+                "name": "top_rim",
+                "length_mm": round(half_perimeter, 2),
+                "quantity": 1,
+            })
+            base_length += half_perimeter
+
+        if include_back:
+            sections.append({
+                "name": "back_rim",
+                "length_mm": round(half_perimeter, 2),
+                "quantity": 1,
+            })
+            base_length += half_perimeter
+
+        if include_sides and side_depth_mm is not None:
+            # Side strips run vertically along body depth
+            # Typically 2 side strips (bass and treble)
+            side_length = side_depth_mm * 2  # Both edges of side
+            sections.append({
+                "name": "side_strips",
+                "length_mm": round(side_length, 2),
+                "quantity": 2,
+                "note": f"Side depth {side_depth_mm}mm × 2 sides",
+            })
+            base_length += side_length * 2  # Two side strips
+
+        num_joints = len(sections)
+        notes.append("Traditional acoustic installation with separate rim and side strips")
+
+    elif installation_method == InstallationMethod.SECTIONAL:
+        # Multiple sections - caller defines num_joints
+        base_length = perimeter_mm
+        section_length = perimeter_mm / max(1, num_joints)
+        for i in range(num_joints):
+            sections.append({
+                "name": f"section_{i + 1}",
+                "length_mm": round(section_length, 2),
+                "quantity": 1,
+            })
+        notes.append(f"Sectional installation with {num_joints} pieces")
+
+    else:
+        # Default to single continuous
+        base_length = perimeter_mm
+        num_joints = 1
+
+    # Calculate allowances
+    miter_waste = num_miter_corners * DEFAULT_MITER_WASTE_PER_CORNER_MM
+    overlap_waste = num_joints * overlap_allowance_mm
+    handling_waste = base_length * handling_waste_percent
+
+    # Total lengths
+    minimum_length = base_length
+    recommended_length = base_length + miter_waste + overlap_waste + handling_waste
+
+    # Round up to nearest 50mm for ordering (practical increment)
+    order_length = math.ceil(recommended_length / 50) * 50
+
+    # Add material-specific notes
+    if material is not None:
+        min_bend = MINIMUM_BEND_RADII_MM.get(material, 10.0)
+        notes.append(f"{material.value}: min bend radius {min_bend}mm")
+
+    if strip_width_mm is not None:
+        notes.append(f"Strip width: {strip_width_mm}mm")
+
+    # Add ordering note
+    notes.append(
+        f"Order length rounded up to {order_length}mm "
+        f"(+{round(order_length - minimum_length, 1)}mm allowance)"
+    )
+
+    return BindingStripEstimate(
+        perimeter_mm=perimeter_mm,
+        installation_method=installation_method.value,
+        overlap_allowance_mm=overlap_waste,
+        miter_waste_mm=miter_waste,
+        handling_waste_mm=handling_waste,
+        minimum_length_mm=minimum_length,
+        recommended_length_mm=recommended_length,
+        order_length_mm=order_length,
+        sections=sections,
+        material=material.value if material else None,
+        strip_width_mm=strip_width_mm,
+        notes=notes,
+    )
+
+
+def calculate_binding_strip_from_outline(
+    outline_points: List[Pt2D],
+    installation_method: InstallationMethod = InstallationMethod.SINGLE_CONTINUOUS,
+    material: Optional[BindingMaterial] = None,
+    strip_width_mm: float = 2.5,
+    include_top: bool = True,
+    include_back: bool = True,
+    side_depth_mm: Optional[float] = None,
+) -> BindingStripEstimate:
+    """
+    Calculate binding strip length from body outline points.
+
+    Convenience wrapper that:
+    1. Computes perimeter from outline
+    2. Detects sharp corners for miter count
+    3. Calls calculate_binding_strip_length()
+
+    Args:
+        outline_points: Body outline as list of (x, y) tuples
+        installation_method: How binding will be installed
+        material: Binding material
+        strip_width_mm: Strip width for reference
+        include_top: Include top edge
+        include_back: Include back edge
+        side_depth_mm: Side depth for acoustic guitars
+
+    Returns:
+        BindingStripEstimate
+    """
+    # Calculate perimeter
+    perimeter = polyline_length(outline_points)
+
+    # Count sharp corners (> 45° turn) that would need miter cuts
+    num_miter_corners = 0
+    if len(outline_points) >= 3:
+        # Ensure closed
+        pts = outline_points
+        if pts[0] != pts[-1]:
+            pts = pts + [pts[0]]
+
+        for i in range(1, len(pts) - 1):
+            p1 = pts[i - 1]
+            p2 = pts[i]
+            p3 = pts[i + 1]
+
+            v1 = normalize_2d((p2[0] - p1[0], p2[1] - p1[1]))
+            v2 = normalize_2d((p3[0] - p2[0], p3[1] - p2[1]))
+
+            if v1 != (0.0, 0.0) and v2 != (0.0, 0.0):
+                turn_angle = angle_between_vectors(v1, v2)
+                if turn_angle > 45:
+                    num_miter_corners += 1
+
+    return calculate_binding_strip_length(
+        perimeter_mm=perimeter,
+        installation_method=installation_method,
+        num_miter_corners=num_miter_corners,
+        include_top=include_top,
+        include_back=include_back,
+        include_sides=side_depth_mm is not None,
+        side_depth_mm=side_depth_mm,
+        material=material,
+        strip_width_mm=strip_width_mm,
+    )
