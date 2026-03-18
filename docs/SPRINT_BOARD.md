@@ -45,7 +45,7 @@
 | PORT-004 | Create POST /api/acoustics/plate/solve endpoint | **DONE** ✓ (via /analyze) | CC |
 | ARCH-001 | D'Aquisto graduation data digitized to JSON | **DONE** ✓ (0d65d043) | CC |
 | ARCH-002 | Normalized archtop graduation template | **DONE** ✓ (0d65d043) | CC |
-| ARCH-003 | archtop_graduation.py connecting graduation profile to plate physics | Ready (PORT-001 done, ARCH-002 done) | CC |
+| ARCH-003 | archtop_graduation.py connecting graduation profile to plate physics | **DONE** ✓ (83d6f68a) | CC |
 | ARCH-004 | Wire plate thickness calculator into Smart Guitar module body design | Ready (PORT-001 done) | CC |
 
 **Key insight (documented):** Archtop graduation proportions are consistent across instruments (D'Aquisto, Benedetto, D'Angelico). Shape = normalized template (edge=0.0 → apex=1.0). Scale = set by plate_design thickness calculator from wood properties and target frequency. `arch_height` is a separate parameter (approx 1:15 to 1:18 body width ratio) — not derived from thickness.
