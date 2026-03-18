@@ -148,6 +148,8 @@ cd packages/client && npm run type-check
 docker compose up --build
 ```
 
+Designed for single-instance, single-shop deployment; see [docs/DEPLOYMENT_VALIDATION.md](docs/DEPLOYMENT_VALIDATION.md) for scale assumptions.
+
 ## Configuration
 
 Environment variables (`.env`):

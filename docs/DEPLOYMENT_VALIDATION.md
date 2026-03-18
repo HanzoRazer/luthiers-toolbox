@@ -14,6 +14,26 @@ The validation harness systematically checks for five categories of deployment i
 | **Cross-origin URLs** | Frontend URL resolution | Relative URL `/api/...` used without `VITE_API_BASE` prefix |
 | **Field mapping** | API response field names | Backend returns `configured`, frontend expects `available` |
 
+## Scale Assumptions
+
+This system is designed for single-instance deployment in a single-shop environment.
+
+**Supported:**
+- 1 FastAPI process, 1 operator, 1 CNC machine
+- Moderate request volume (< 50 req/min typical)
+- SQLite + file storage on local disk
+- Long CAM jobs (toolpath generation) run synchronously — browser waits for response
+
+**Not supported without refactoring:**
+- Horizontal scaling (singleton stores, file-based RMOS runs prevent this)
+- Multi-user concurrent CAM job execution
+- Distributed locking or message queues
+
+**Future path (when needed):**
+- Replace singleton stores with DB-backed state
+- Add FastAPI BackgroundTasks for long CAM jobs
+- Consider read replicas for calculator endpoints
+
 ## Quick Start
 
 ### Shell Script (Fast)
