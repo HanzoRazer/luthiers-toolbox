@@ -23,6 +23,7 @@
       "contour_result": {
         "best_score": 0.58,
         "ownership_score": 0.39,
+        "ownership_ok": false,
         "export_block_issues": ["body ownership weak (0.39)"]
       },
       "expected_action": "rerun_body_isolation"
@@ -56,6 +57,7 @@
       "contour_result": {
         "best_score": 0.56,
         "ownership_score": null,
+        "ownership_ok": null,
         "export_block_issues": []
       },
       "expected_action": "rerun_body_isolation"
@@ -89,6 +91,7 @@
       "contour_result": {
         "best_score": 0.60,
         "ownership_score": null,
+        "ownership_ok": null,
         "export_block_issues": []
       },
       "expected_action": "rerun_body_isolation"
@@ -116,6 +119,7 @@
       "contour_result": {
         "best_score": 0.64,
         "ownership_score": null,
+        "ownership_ok": null,
         "export_block_issues": ["dimension plausibility weak"]
       },
       "expected_action": "rerun_contour_stage"

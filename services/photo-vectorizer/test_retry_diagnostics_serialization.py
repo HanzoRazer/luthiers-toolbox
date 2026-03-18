@@ -59,6 +59,7 @@ class _ContourStageResultStub:
         elected_source: str = "post_merge",
         diagnostics: dict | None = None,
         ownership_score: float | None = None,
+        ownership_ok: bool | None = None,
     ):
         self.best_score = best_score
         self.contour_scores_pre = []
@@ -73,6 +74,7 @@ class _ContourStageResultStub:
         self.elected_source = elected_source
         self.diagnostics = diagnostics if diagnostics is not None else {}
         self.ownership_score = ownership_score
+        self.ownership_ok = ownership_ok
 
 
 def _make_body_isolation_result(
@@ -296,6 +298,7 @@ def test_ownership_failure_cause_survives_json_serialization(
     improved_contour = _ContourStageResultStub(
         best_score=0.66,
         ownership_score=0.72,
+        ownership_ok=True,
         diagnostics={
             "retry_attempts": [
                 {
@@ -355,3 +358,4 @@ def test_ownership_failure_cause_survives_json_serialization(
     # Ownership score itself must appear on the contour_stage
     contour_stage_data = decoded.get("contour_stage", {})
     assert contour_stage_data.get("ownership_score") == 0.72
+    assert contour_stage_data.get("ownership_ok") is True

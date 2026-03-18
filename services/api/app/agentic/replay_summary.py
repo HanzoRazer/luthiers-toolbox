@@ -16,17 +16,26 @@ def summarize_retry_attempts(payload: Dict[str, Any]) -> Dict[str, Any]:
         "final_score_delta": float,
         "last_retry_profile_used": Optional[str],
         "retry_profiles_used": List[Optional[str]],
+        "ownership_score": Optional[float],
+        "ownership_ok": Optional[bool],
+        "ownership_trajectory": List[Dict[str, Optional[float]]],
       }
 
     Behavior:
       - If no retry_attempts exist, returns zero/None defaults
       - If score values are malformed, raises ValueError
+      - ownership_trajectory lists before/after pairs for attempts that
+        include ownership data, preserving why retries were forced
     """
+    contour_stage = payload.get("contour_stage", {})
     retry_attempts = (
-        payload.get("contour_stage", {})
+        contour_stage
         .get("diagnostics", {})
         .get("retry_attempts", [])
     )
+
+    ownership_score = contour_stage.get("ownership_score")
+    ownership_ok = contour_stage.get("ownership_ok")
 
     if not retry_attempts:
         return {
@@ -34,6 +43,9 @@ def summarize_retry_attempts(payload: Dict[str, Any]) -> Dict[str, Any]:
             "final_score_delta": 0.0,
             "last_retry_profile_used": None,
             "retry_profiles_used": [],
+            "ownership_score": ownership_score,
+            "ownership_ok": ownership_ok,
+            "ownership_trajectory": [],
         }
 
     first = retry_attempts[0]
@@ -48,9 +60,22 @@ def summarize_retry_attempts(payload: Dict[str, Any]) -> Dict[str, Any]:
     except (TypeError, ValueError) as e:
         raise ValueError("Retry summary score fields must be numeric") from e
 
+    ownership_trajectory: List[Dict[str, Optional[float]]] = []
+    for attempt in retry_attempts:
+        ob = attempt.get("ownership_before")
+        oa = attempt.get("ownership_after")
+        if ob is not None or oa is not None:
+            ownership_trajectory.append({
+                "ownership_before": ob,
+                "ownership_after": oa,
+            })
+
     return {
         "retry_count": len(retry_attempts),
         "final_score_delta": score_after - score_before,
         "last_retry_profile_used": last.get("retry_profile_used"),
         "retry_profiles_used": retry_profiles_used,
+        "ownership_score": ownership_score,
+        "ownership_ok": ownership_ok,
+        "ownership_trajectory": ownership_trajectory,
     }
