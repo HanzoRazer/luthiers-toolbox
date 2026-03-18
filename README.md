@@ -161,6 +161,7 @@ LOG_LEVEL=INFO
 ## Documentation
 
 Key docs in `docs/`:
+- See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for domain map and stack overview.
 - See [docs/SAFETY.md](docs/SAFETY.md) for operator safety guidelines.
 - `RMOS_FEASIBILITY_RULES_v1.md` - Feasibility rule reference
 - `RMOS_V1_VALIDATION_PROTOCOL.md` - 30-run validation protocol
