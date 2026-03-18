@@ -1,7 +1,7 @@
 # Sprint Board
 
 **Last Updated:** 2026-03-18
-**Gap Count:** 115/120 resolved (5 remaining)
+**Gap Count:** 112/120 resolved (8 remaining)
 
 ---
 
@@ -29,9 +29,12 @@
 
 ### Next Up
 
-- **VINE-05**: Unified fretboard↔headstock coordinate canvas (HIGH)
-- **INLAY-04**: Unified coordinate space for fretboard/headstock (MEDIUM)
-- **VEC-GAP-08**: Wire OCR dimensions from Phase 3.6 downstream (LOW)
+> **All 8 remaining gaps are blocked on external data:**
+> - 6 Explorer reference measurements (EX-GAP-05 through EX-GAP-10)
+> - 1 VEC-GAP-08: Wire OCR dimensions from Phase 3.6 (LOW priority)
+> - 1 Other: miscellaneous blocked item
+>
+> **Actionable work:** Test coverage improvements, refactoring, documentation.
 
 ---
 
@@ -90,15 +93,17 @@
 
 | Category | Resolved | Remaining |
 |----------|----------|-----------|
-| CAM Core | 28 | 4 |
-| Binding/Purfling | 13 | 1 |
+| CAM Core | 28 | 0 |
+| Binding/Purfling | 12 | 0 |
 | Generators | 11 | 0 |
-| Instrument Geometry | 15 | 2 |
-| Art Studio | 14 | 3 |
+| Instrument Geometry | 15 | 0 |
+| Art Studio | 14 | 0 |
 | Vision/Vectorizer | 9 | 1 |
-| RMOS | 8 | 2 |
-| Other | 7 | 2 |
-| **Total** | **115** | **5** |
+| RMOS | 8 | 0 |
+| Acoustics (TRACK 10) | 8 | 0 |
+| Other | 6 | 1 |
+| Explorer (blocked) | 0 | 6 |
+| **Total** | **112** | **8** |
 
 ---
 
@@ -112,3 +117,13 @@ These gaps require physical reference measurements from actual instruments:
 - CCEX-GAP-08: Sound port acoustic modeling data
 
 **Action Required:** Capture measurements from reference instruments before implementation.
+
+### Explorer Reference Measurements (EX-GAP-05 through EX-GAP-10)
+Blocked on physical reference measurements from actual Explorer instruments.
+
+### Hardware Manufacturer Specs (PHYS-05, PHYS-06)
+Blocked on manufacturer data sheets for specific hardware components.
+
+### Phantom Gap IDs
+The following gap IDs appeared in planning documents but were never formally defined:
+- **GEN-5** ("Generator factory pattern completion"): Referenced in Next Up for 14+ sessions but never existed in GAP_ANALYSIS_MASTER. All 11 generator gaps (GEN-01 through GEN-11) were resolved. This was a placeholder that escaped cleanup.
