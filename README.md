@@ -161,6 +161,7 @@ LOG_LEVEL=INFO
 ## Documentation
 
 Key docs in `docs/`:
+- See [docs/SAFETY.md](docs/SAFETY.md) for operator safety guidelines.
 - `RMOS_FEASIBILITY_RULES_v1.md` - Feasibility rule reference
 - `RMOS_V1_VALIDATION_PROTOCOL.md` - 30-run validation protocol
 - `BOUNDARY_RULES.md` - Architectural boundary enforcement
