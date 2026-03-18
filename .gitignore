@@ -455,4 +455,6 @@ Cuatro/Cuatro_DXF_Simple_Package/
 services/api/data/cam_risk_reports.json
 services/api/data/compare/
 services/blueprint-import/output/
-services/photo-vectorizer/grid_classify.py
+
+# Orphaned vectorizer/rosette prototypes (moved from repo root)
+Rosette Designer/prototypes/premium/
