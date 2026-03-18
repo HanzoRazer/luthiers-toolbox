@@ -8,6 +8,7 @@
  * - Query parameter loading from AI extraction
  * - Status messaging
  */
+import { useConfirm } from '@/composables/useConfirm'
 import { ref, computed, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
 
@@ -258,18 +259,18 @@ export function useGuitarDimensions() {
   }
 
   // Clear all dimensions
-  function clearAll() {
-    if (confirm('Clear all dimensions? This cannot be undone.')) {
-      Object.keys(dimensions.value).forEach((key) => {
-        if (key === 'fretCount') {
-          dimensions.value[key as keyof GuitarDimensions] = 22
-        } else {
-          dimensions.value[key as keyof GuitarDimensions] = 0
-        }
-      })
-      status.value = '🗑️ All dimensions cleared'
-      statusType.value = 'info'
-    }
+  const { confirm } = useConfirm()
+  async function clearAll() {
+    if (!(await confirm('Clear all dimensions? This cannot be undone.'))) return
+    Object.keys(dimensions.value).forEach((key) => {
+      if (key === 'fretCount') {
+        dimensions.value[key as keyof GuitarDimensions] = 22
+      } else {
+        dimensions.value[key as keyof GuitarDimensions] = 0
+      }
+    })
+    status.value = '🗑️ All dimensions cleared'
+    statusType.value = 'info'
   }
 
   // Set status message

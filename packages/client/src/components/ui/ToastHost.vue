@@ -1,3 +1,7 @@
+<!--
+  Renders toasts from useUiToastStore.
+  @deprecated Prefer useToastStore + a single toast host; see CRITICAL_SYSTEMS_REVIEW_2026-03-18.md (Usability).
+-->
 <script setup lang="ts">
 import { computed } from "vue";
 import { useUiToastStore } from "@/stores/uiToastStore";

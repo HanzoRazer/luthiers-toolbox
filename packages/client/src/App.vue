@@ -13,7 +13,7 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted, onUnmounted } from 'vue'
+import { onMounted, onUnmounted, onErrorCaptured } from 'vue'
 import { useRouter } from 'vue-router'
 import '@/styles/design-tokens.css'
 // import AppNav from '@/components/AppNav.vue' // Removed - using dashboard navigation
@@ -22,6 +22,13 @@ import IdleDetector from '@/components/agentic/IdleDetector.vue'
 import CommandPalette from '@/components/ui/CommandPalette.vue'
 
 const router = useRouter()
+
+// Global error boundary: log unhandled component errors and prevent propagation
+onErrorCaptured((err) => {
+  console.error('Unhandled component error:', err)
+  // Return false so the error is not propagated (user-facing error state can be shown by child)
+  return false
+})
 
 // Global shortcuts
 function handleGlobalShortcuts(e: KeyboardEvent) {

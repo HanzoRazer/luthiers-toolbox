@@ -1,3 +1,8 @@
+<!--
+  @deprecated Prefer useToastStore from '@/stores/toastStore' for a single app-wide toast system.
+  This ref-based component duplicates toast behavior; will be migrated/removed in a future release.
+  See CRITICAL_SYSTEMS_REVIEW_2026-03-18.md (Usability — single toast system).
+-->
 <script setup lang="ts">
 import { ref, onBeforeUnmount } from 'vue'
 import { DEFAULT_TOAST_MS } from '@/constants/timing'

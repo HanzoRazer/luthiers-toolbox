@@ -6,7 +6,10 @@
  *   GET/PUT/DELETE /api/machines/{mid}/tools
  *   GET /api/posts
  */
+import { useConfirm } from '@/composables/useConfirm'
 import { ref, computed, onMounted, watch } from 'vue'
+
+const { confirm } = useConfirm()
 
 // API bases
 const MACHINES_API = '/api/machines'
@@ -272,7 +275,7 @@ async function createMachine() {
 }
 
 async function deleteMachine(id: string) {
-  if (!confirm(`Delete machine "${id}"? This cannot be undone.`)) return
+  if (!(await confirm(`Delete machine "${id}"? This cannot be undone.`))) return
 
   try {
     const response = await fetch(`${MACHINES_API}/profiles/${id}`, {
@@ -323,7 +326,7 @@ async function addTool() {
 
 async function deleteTool(tnum: number) {
   if (!selectedMachineId.value) return
-  if (!confirm(`Delete tool T${tnum}?`)) return
+  if (!(await confirm(`Delete tool T${tnum}?`))) return
 
   try {
     const response = await fetch(`${MACHINES_API}/${selectedMachineId.value}/tools/${tnum}`, {

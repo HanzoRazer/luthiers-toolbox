@@ -1,6 +1,7 @@
 /**
  * DrillingLab hole management composable.
  */
+import { useConfirm } from '@/composables/useConfirm'
 import type { Ref } from 'vue'
 import type { Hole, LinearPattern, CircularPattern, GridPattern } from './drillingLabTypes'
 
@@ -8,7 +9,7 @@ export interface DrillingHolesReturn {
   selectHole: (index: number) => void
   toggleHole: (index: number, enabled: boolean) => void
   removeHole: (index: number) => void
-  clearAll: () => void
+  clearAll: () => void | Promise<void>
   generateLinearPattern: () => void
   generateCircularPattern: () => void
   generateGridPattern: () => void
@@ -41,12 +42,13 @@ export function useDrillingHoles(
     updatePreview()
   }
 
-  function clearAll(): void {
-    if (holes.value.length === 0 || confirm('Clear all holes?')) {
-      holes.value = []
-      selectedHole.value = null
-      updatePreview()
-    }
+  const { confirm } = useConfirm()
+  async function clearAll(): Promise<void> {
+    const ok = holes.value.length === 0 || (await confirm('Clear all holes?'))
+    if (!ok) return
+    holes.value = []
+    selectedHole.value = null
+    updatePreview()
   }
 
   function generateLinearPattern(): void {

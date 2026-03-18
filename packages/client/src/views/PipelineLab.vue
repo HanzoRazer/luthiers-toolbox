@@ -89,8 +89,11 @@
 </template>
 
 <script setup lang="ts">
+import { useConfirm } from '@/composables/useConfirm'
 import { api } from '@/services/apiBase';
 import { ref, computed } from 'vue'
+
+const { confirm } = useConfirm()
 import { usePipelineLabWorkflow } from '@/composables/usePipelineWorkflow'
 import Stage1UploadPanel from '@/components/pipeline/Stage1UploadPanel.vue'
 import Stage2PreflightPanel from '@/components/pipeline/Stage2PreflightPanel.vue'
@@ -320,8 +323,8 @@ function exportGCode() {
   URL.revokeObjectURL(url)
 }
 
-function resetPipeline() {
-  if (confirm('Reset pipeline? This will clear all progress.')) {
+async function resetPipeline() {
+  if (await confirm('Reset pipeline? This will clear all progress.')) {
     clearFile()
   }
 }

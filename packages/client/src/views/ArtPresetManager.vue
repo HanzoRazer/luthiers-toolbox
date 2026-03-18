@@ -1,6 +1,9 @@
 <script setup lang="ts">
+import { useConfirm } from '@/composables/useConfirm'
 import { computed, onMounted, reactive, ref } from 'vue';
 import axios from 'axios';
+
+const { confirm } = useConfirm()
 
 type ArtPreset = {
   id: string;
@@ -73,7 +76,7 @@ async function createPreset() {
 }
 
 async function deletePreset(preset: ArtPreset) {
-  if (!confirm(`Delete preset "${preset.name}"?`)) return;
+  if (!(await confirm(`Delete preset "${preset.name}"?`))) return;
   try {
     await axios.delete(`/api/art/presets/${preset.id}`);
     await loadPresets();

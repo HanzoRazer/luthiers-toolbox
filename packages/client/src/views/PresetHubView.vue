@@ -155,6 +155,7 @@
 </template>
 
 <script setup lang="ts">
+import { useConfirm } from '@/composables/useConfirm'
 import { api } from '@/services/apiBase'
 import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
@@ -172,6 +173,7 @@ import {
 import { usePresetForm } from './composables/usePresetForm'
 import { useJobTooltip } from './composables/useJobTooltip'
 
+const { confirm } = useConfirm()
 const router = useRouter()
 
 // ==========================================================================
@@ -255,7 +257,7 @@ async function refreshPresets() {
 }
 
 async function deletePreset(preset: Preset) {
-  if (!confirm(`Delete preset "${preset.name}"? This cannot be undone.`)) {
+  if (!(await confirm(`Delete preset "${preset.name}"? This cannot be undone.`))) {
     return
   }
 
