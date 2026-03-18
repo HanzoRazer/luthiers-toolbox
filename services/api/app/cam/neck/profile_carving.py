@@ -31,6 +31,7 @@ from .config import (
     NeckProfileType,
     NeckToolSpec,
 )
+from ..post_processor import PostProcessor, PostConfig, ToolSpec
 
 
 @dataclass
@@ -88,7 +89,7 @@ class ProfileCarvingGenerator:
     - Supports compound profiles that transition shape along length
     """
 
-    def __init__(self, config: NeckPipelineConfig):
+    def __init__(self, config: NeckPipelineConfig, post_processor: Optional[PostProcessor] = None):
         self.config = config
         self.pc_config = config.profile_carving
         self.rough_tool = config.tools.get(1)  # Ball end for roughing
@@ -96,6 +97,12 @@ class ProfileCarvingGenerator:
 
         self.safe_z_mm = 25.0
         self.retract_z_mm = 5.0
+
+        # Use provided post-processor or create default
+        if post_processor is not None:
+            self.post_processor = post_processor
+        else:
+            self.post_processor = PostProcessor(PostConfig(safe_z_mm=self.safe_z_mm))
 
         # Reference positions for interpolation
         self._fret_12_y = self._fret_position(12)
@@ -360,13 +367,11 @@ class ProfileCarvingGenerator:
         return result
 
     def _tool_change(self, tool: NeckToolSpec) -> List[str]:
-        """Generate tool change sequence."""
-        return [
-            "",
-            f"( Tool Change: T{tool.tool_number} - {tool.name} )",
-            "M5",
-            f"T{tool.tool_number} M6",
-            f"S{tool.rpm} M3",
-            "G4 P2",
-            f"G0 Z{self.safe_z_mm:.3f}",
-        ]
+        """Generate tool change sequence via PostProcessor."""
+        tool_spec = ToolSpec(
+            tool_number=tool.tool_number,
+            name=tool.name,
+            rpm=tool.rpm,
+            diameter_mm=tool.diameter_mm,
+        )
+        return self.post_processor.tool_change(tool=tool_spec)
