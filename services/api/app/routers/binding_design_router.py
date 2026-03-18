@@ -28,6 +28,11 @@ from app.calculators.binding_geometry import (
     PurflingStripSpec,
     calculate_body_binding_path,
     polyline_length,
+    # BIND-GAP-04: Strip length calculator
+    InstallationMethod,
+    BindingStripEstimate,
+    calculate_binding_strip_length,
+    calculate_binding_strip_from_outline,
 )
 
 # OM-PURF-05: Corner miter analysis
@@ -381,3 +386,204 @@ def list_purfling_patterns() -> Dict[str, Any]:
         "count": len(patterns),
         "patterns": patterns,
     }
+
+
+# =============================================================================
+# BIND-GAP-04: STRIP LENGTH CALCULATOR ENDPOINT
+# =============================================================================
+
+class StripLengthRequest(BaseModel):
+    """Request for binding strip length estimation."""
+
+    body_style: Optional[str] = Field(
+        None,
+        description="Body style name (e.g., 'om', 'stratocaster'). Mutually exclusive with perimeter_mm."
+    )
+    perimeter_mm: Optional[float] = Field(
+        None,
+        gt=0,
+        description="Manual perimeter input (mm). Mutually exclusive with body_style."
+    )
+    installation_method: str = Field(
+        "single_continuous",
+        description="Installation method: single_continuous, top_and_back, sectional, traditional_acoustic"
+    )
+    num_miter_corners: int = Field(
+        0,
+        ge=0,
+        description="Number of miter corners (adds waste allowance per corner)"
+    )
+    num_joints: int = Field(
+        1,
+        ge=0,
+        description="Number of scarf/butt joints (adds overlap allowance per joint)"
+    )
+    include_top: bool = Field(
+        True,
+        description="Include top binding in estimate"
+    )
+    include_back: bool = Field(
+        True,
+        description="Include back binding in estimate"
+    )
+    include_sides: bool = Field(
+        False,
+        description="Include side binding (rare, for laminated side designs)"
+    )
+    side_depth_mm: Optional[float] = Field(
+        None,
+        gt=0,
+        description="Side depth (mm) when include_sides=True"
+    )
+    binding_material: Optional[str] = Field(
+        None,
+        description="Binding material (for bend radius warnings)"
+    )
+    strip_width_mm: float = Field(
+        2.5,
+        gt=0,
+        le=10.0,
+        description="Binding strip width (mm)"
+    )
+    overlap_allowance_mm: float = Field(
+        10.0,
+        ge=0,
+        description="Overlap allowance per joint (mm)"
+    )
+    handling_waste_percent: float = Field(
+        5.0,
+        ge=0,
+        le=25.0,
+        description="Handling/mistake waste percentage"
+    )
+
+
+class StripLengthResponse(BaseModel):
+    """Response for binding strip length estimation."""
+
+    ok: bool
+    perimeter_mm: float
+    installation_method: str
+    overlap_allowance_mm: float
+    miter_waste_mm: float
+    handling_waste_mm: float
+    minimum_length_mm: float
+    recommended_length_mm: float
+    order_length_mm: float = Field(description="Rounded to practical ordering increment (50mm)")
+    sections: List[Dict[str, Any]] = Field(default_factory=list)
+    material: Optional[str] = None
+    strip_width_mm: Optional[float] = None
+    notes: List[str] = Field(default_factory=list)
+    warnings: List[str] = Field(default_factory=list)
+
+
+@router.post("/strip-length", response_model=StripLengthResponse)
+def estimate_strip_length(req: StripLengthRequest) -> StripLengthResponse:
+    """
+    Estimate binding strip length for material ordering.
+
+    BIND-GAP-04: Provides strip length estimates with:
+    - Installation method-specific calculations
+    - Miter corner waste allowance
+    - Joint overlap allowance
+    - Handling/mistake waste margin
+    - Order length rounded to practical increments
+
+    Supply either body_style OR perimeter_mm (not both).
+    """
+    warnings: List[str] = []
+
+    # Validate input: need either body_style or perimeter_mm
+    if req.body_style and req.perimeter_mm:
+        raise HTTPException(
+            status_code=400,
+            detail="Provide either body_style OR perimeter_mm, not both"
+        )
+    if not req.body_style and not req.perimeter_mm:
+        raise HTTPException(
+            status_code=400,
+            detail="Must provide body_style or perimeter_mm"
+        )
+
+    # Resolve perimeter
+    outline_points: Optional[List[Pt2D]] = None
+    if req.body_style:
+        try:
+            canonical_style, outline_points = resolve_body_outline(req.body_style)
+            perimeter = polyline_length(outline_points)
+        except HTTPException:
+            raise
+        except Exception as e:
+            raise HTTPException(
+                status_code=500,
+                detail=f"Failed to resolve body style: {e}"
+            )
+    else:
+        perimeter = req.perimeter_mm
+
+    # Resolve installation method
+    try:
+        installation = InstallationMethod(req.installation_method.lower())
+    except ValueError:
+        available = [m.value for m in InstallationMethod]
+        raise HTTPException(
+            status_code=400,
+            detail={
+                "error": f"Unknown installation method: {req.installation_method}",
+                "available_methods": available,
+            }
+        )
+
+    # Resolve binding material (optional)
+    material: Optional[BindingMaterial] = None
+    if req.binding_material:
+        try:
+            material = BindingMaterial(req.binding_material.lower())
+        except ValueError:
+            warnings.append(f"Unknown material '{req.binding_material}', ignored for estimate")
+
+    # Calculate strip length
+    if outline_points:
+        # Use outline-based calculator (auto-detects miter corners)
+        estimate = calculate_binding_strip_from_outline(
+            outline_points=outline_points,
+            installation_method=installation,
+            material=material,
+            strip_width_mm=req.strip_width_mm,
+            include_top=req.include_top,
+            include_back=req.include_back,
+            side_depth_mm=req.side_depth_mm if req.include_sides else None,
+        )
+    else:
+        # Use perimeter-based calculator
+        estimate = calculate_binding_strip_length(
+            perimeter_mm=perimeter,
+            installation_method=installation,
+            num_miter_corners=req.num_miter_corners,
+            num_joints=req.num_joints,
+            include_top=req.include_top,
+            include_back=req.include_back,
+            include_sides=req.include_sides,
+            side_depth_mm=req.side_depth_mm,
+            material=material,
+            strip_width_mm=req.strip_width_mm,
+            overlap_allowance_mm=req.overlap_allowance_mm,
+            handling_waste_percent=req.handling_waste_percent,
+        )
+
+    return StripLengthResponse(
+        ok=True,
+        perimeter_mm=estimate.perimeter_mm,
+        installation_method=estimate.installation_method,
+        overlap_allowance_mm=estimate.overlap_allowance_mm,
+        miter_waste_mm=estimate.miter_waste_mm,
+        handling_waste_mm=estimate.handling_waste_mm,
+        minimum_length_mm=estimate.minimum_length_mm,
+        recommended_length_mm=estimate.recommended_length_mm,
+        order_length_mm=estimate.order_length_mm,
+        sections=estimate.sections,
+        material=estimate.material,
+        strip_width_mm=estimate.strip_width_mm,
+        notes=estimate.notes,
+        warnings=warnings,
+    )

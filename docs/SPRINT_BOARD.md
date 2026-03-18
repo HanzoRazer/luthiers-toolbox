@@ -1,7 +1,7 @@
 # Sprint Board
 
 **Last Updated:** 2026-03-18
-**Gap Count:** 111/120 resolved (9 remaining)
+**Gap Count:** 112/120 resolved (8 remaining)
 
 ---
 
@@ -19,7 +19,7 @@
 
 | Gap | Description | Status |
 |-----|-------------|--------|
-| BIND-GAP-04 | Binding strip length calculator | Ready |
+| BIND-GAP-04 | Binding strip length calculator | **DONE** ✓ |
 | CCEX-GAP-05 | Archtop graduation thickness map | Deferred (need reference measurements) |
 | CCEX-GAP-06 | Tap tone frequency targets | Deferred (need reference measurements) |
 | CCEX-GAP-07 | Bracing pattern library | Deferred (need reference measurements) |
@@ -62,6 +62,7 @@
 
 | Date | Gaps Closed | Notes | Next |
 |------|-------------|-------|------|
+| 2026-03-18 | BIND-GAP-04 | **feat(binding): add binding strip length calculator.** calculate_binding_strip_length() in binding_geometry.py: InstallationMethod enum (SINGLE_CONTINUOUS, TOP_AND_BACK, SECTIONAL, TRADITIONAL_ACOUSTIC), BindingStripEstimate dataclass, miter/overlap/handling waste allowances, order length rounding to 50mm. POST /api/binding/strip-length endpoint in binding_design_router.py. 15 tests passing. | doc cleanup |
 | 2026-03-18 | — | **feat(cam-workspace): wire machine selector to live backend.** CamWorkspaceView.vue: add MachineInfo interface, machines ref, fetchMachines() on mount. Dynamic machine dropdown from GET /api/cam-workspace/machines. Machine specs (envelope, z_travel, spindle RPM, dialect) displayed from selectedMachine computed. Pre-selects bcam_2030a. Evaluate/generate/download endpoints already wired. npm run build pass. | GEN-5 next |
 | 2026-03-18 | — | **INLAY-03/INLAY-07 labeling fix:** GAP_ANALYSIS_MASTER: INLAY-07 added to New Gaps Resolved and MEDIUM list (pocket depth control — pocketDepth/pocket_depth_mm wired). INLAY-03 confirmed Resolved (FretMarkersView superseded by InlayWorkspaceShell Stage 2). FretMarkersView.vue deprecation comment updated. No FretMarkers route or nav link present. SPRINT_BOARD: INLAY-07 \| pocket depth \| Done already correct. | GEN-5 next |
 | 2026-03-18 | — | **fix(reliability): consolidate safety_critical, wire router health, add coverage floor** (c0340737). app/core/safety.py: merged signature preservation + _is_safety_critical marker. app/safety/__init__.py: pure re-export (deprecated). health_router.py: GET /health/routers + router_count/errors in /health. pytest.ini: --cov-fail-under=60 for safety paths. Coverage: 57% (cnc_preflight 0%, explain 28%). | GEN-5 next |
@@ -88,14 +89,14 @@
 | Category | Resolved | Remaining |
 |----------|----------|-----------|
 | CAM Core | 28 | 4 |
-| Binding/Purfling | 12 | 2 |
+| Binding/Purfling | 13 | 1 |
 | Generators | 8 | 3 |
 | Instrument Geometry | 15 | 2 |
 | Art Studio | 14 | 3 |
 | Vision/Vectorizer | 9 | 1 |
 | RMOS | 8 | 2 |
 | Other | 7 | 2 |
-| **Total** | **111** | **9** |
+| **Total** | **112** | **8** |
 
 ---
 
