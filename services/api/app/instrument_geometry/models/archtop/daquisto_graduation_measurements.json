@@ -1,0 +1,86 @@
+{
+  "source": "D'Aquisto graduation measurements - hand sketch photograph",
+  "source_image": "DAquisto-Measurements-2.jpg",
+  "instrument": "Jimmy D'Aquisto archtop guitar",
+  "units": "mm for plate thickness, inches for arch height",
+  "notes": "Measurements taken from original hand sketch. Numbers represent plate thickness at each zone.",
+  "citation": "Physical sketch photographed and digitized 2026-03-17; source image DAquisto-Measurements-2.jpg",
+
+  "top_plate": {
+    "zones": {
+      "upper_bout_edge": 3.0,
+      "upper_bout_near_fhole_left": 3.5,
+      "upper_bout_near_fhole_right": 3.0,
+      "waist_left": 3.5,
+      "waist_right": 4.0,
+      "fhole_region_center": 3.5,
+      "fhole_region_left": 4.0,
+      "lower_bout_upper_left": 4.0,
+      "lower_bout_upper_right": 4.0,
+      "lower_bout_center_left": 3.0,
+      "lower_bout_center_right": 4.0,
+      "lower_bout_lower_left": 4.5,
+      "lower_bout_lower_right": 4.5,
+      "lower_bout_bottom_center": 4.0
+    },
+    "arch_height": {
+      "value_inches": 0.625,
+      "value_mm": 15.875,
+      "location": "under bridge",
+      "note": "5/8 inch arch height at bridge position"
+    },
+    "thickness_range_mm": {
+      "min": 3.0,
+      "max": 4.5,
+      "typical_edge": 3.0,
+      "typical_apex_zone": 4.0,
+      "bridge_zone": 4.5
+    }
+  },
+
+  "back_plate": {
+    "zones": {
+      "upper_bout_edge_left": 3.0,
+      "upper_bout_edge_right": 2.0,
+      "upper_bout_near_cutout_left": 2.75,
+      "upper_bout_near_cutout_right": 3.5,
+      "upper_bout_center": 3.0,
+      "upper_mid_left": 3.0,
+      "upper_mid_right": 3.0,
+      "waist_left": 4.0,
+      "waist_right": 4.5,
+      "below_waist_left": 3.0,
+      "below_waist_center": 4.0,
+      "below_waist_right_far": 4.0,
+      "lower_bout_left": 3.0,
+      "lower_bout_center_left": 4.5,
+      "lower_bout_center_right": 4.5,
+      "lower_bout_right": 3.0,
+      "lower_edge_left": 3.0,
+      "lower_edge_right": 2.0
+    },
+    "arch_height": {
+      "value_inches": 0.75,
+      "value_mm": 19.05,
+      "location": "highest point just below waist",
+      "note": "3/4 inch arch height, peak below waist not at center"
+    },
+    "thickness_range_mm": {
+      "min": 2.0,
+      "max": 4.5,
+      "typical_edge": 3.0,
+      "typical_apex_zone": 4.5,
+      "waist_zone": 4.0
+    }
+  },
+
+  "observations": [
+    "Top plate thickest in lower bout / bridge zone (4.5mm) - consistent with supporting bridge load",
+    "Back plate peak thickness at waist zone (4.5mm) not lower bout - different from top",
+    "Both plates thin at edges (3mm typical, 2mm minimum at some points)",
+    "Top arch 5/8 inch = 15.875mm under bridge",
+    "Back arch 3/4 inch = 19.05mm - back arches higher than top",
+    "Proportional consistency expected across D'Aquisto, Benedetto, D'Angelico instruments",
+    "These absolute values set by wood properties - proportions are the universal template"
+  ]
+}

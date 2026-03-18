@@ -130,6 +130,8 @@ assets/brand/
 # ------------------------------------------
 __ARCHIVE__/
 Archtop/
+!services/api/app/instrument_geometry/models/archtop/
+!services/api/app/instrument_geometry/models/archtop/*
 Stratocaster/
 /client/
 /server/
