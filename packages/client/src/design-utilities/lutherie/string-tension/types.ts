@@ -179,10 +179,11 @@ export interface BreakAngleState {
   mode: BreakAngleMode
   /** Manual input field (degrees) */
   manualDeg: number
-  /** Geometry inputs for computed mode */
+  /** Geometry inputs for computed mode (v2 field names) */
   geometry: {
-    pinToSaddleCenterMm: number
-    saddleProtrusionMm: number
+    saddleProjectionMm: number
+    pinToSaddleMm: number
+    slotOffsetMm: number
     saddleSlotDepthMm: number
     saddleBlankHeightMm: number
   }
@@ -194,13 +195,17 @@ export interface BreakAngleState {
   error: string | null
 }
 
-/** Shape of POST /bridge/break-angle response (v1 endpoint — known debt) */
+/** Shape of POST /bridge/break-angle response (v2 corrected) */
 export interface BreakAngleApiResult {
   break_angle_deg: number
-  /** v1 ratings: optimal | acceptable | too_shallow | too_steep */
+  /** v2 gate result: GREEN (>=6°) | YELLOW (4-6°) | RED (<4° or >38°) */
+  gate: 'GREEN' | 'YELLOW' | 'RED'
+  /** v2 ratings: adequate | marginal | too_shallow | too_steep */
   rating: string
-  pin_to_saddle_center_mm: number
-  saddle_protrusion_mm: number
+  effective_distance_mm: number
+  saddle_projection_mm: number
+  /** Minimum projection for 6° angle: h_min = d × tan(6°) */
+  carruth_min_projection_mm: number
   energy_coupling: string
   risk_flags: Array<{
     code: string
@@ -208,6 +213,8 @@ export interface BreakAngleApiResult {
     message: string
   }>
   recommendation: string | null
+  /** Migration note if v1 fields were used */
+  migration_note: string | null
 }
 
 /** Resolved break angle result used downstream */
@@ -217,11 +224,13 @@ export interface ResolvedBreakAngle {
   /** Source of the value */
   mode: BreakAngleMode
   /**
-   * Carruth adequacy — only evaluated when instrumentType.useCarruthThresholds = true.
-   * null when not applicable.
+   * Carruth adequacy — derived from API gate.
+   * true = GREEN, false = RED, null = YELLOW or not computed.
    */
   carruthAdequate: boolean | null
-  /** v1 API rating when mode = 'computed'. null when manual. */
+  /** v2 gate from API when mode = 'computed'. null when manual. */
+  gate: 'GREEN' | 'YELLOW' | 'RED' | null
+  /** v2 API rating when mode = 'computed'. null when manual. */
   apiRating: string | null
   /** Any risk flags from the API */
   riskFlags: BreakAngleApiResult['risk_flags']

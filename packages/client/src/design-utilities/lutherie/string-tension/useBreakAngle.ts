@@ -5,17 +5,10 @@
  *
  * Wraps POST /bridge/break-angle endpoint.
  *
- * ⚠️  KNOWN DEBT — R-7:
- *   The endpoint currently implements v1 geometry (wrong reference surfaces,
- *   AI-fabricated thresholds 18°/23–31°/38°). The corrected v2 spec is
- *   documented in bridge_break_angle_derivation.md and the remediation doc.
- *
- *   This composable:
- *   - Calls the v1 endpoint as-is
- *   - Applies v2 Carruth thresholds CLIENT-SIDE for display (when instrumentType
- *     has useCarruthThresholds = true), ignoring the v1 API rating
- *   - Surfaces the v1 rating separately as apiRating for traceability
- *   - Will be simplified once R-7 corrects the backend
+ * v2 Corrected (R-7 remediation complete):
+ *   - Backend now uses corrected geometry (bridge surface, string exit point)
+ *   - Backend returns gate result (GREEN/YELLOW/RED) based on Carruth 6° minimum
+ *   - Client-side Carruth interpretation removed — use gate from API directly
  *
  * Two modes:
  *   'computed'  — resolves from API using geometry inputs
@@ -29,17 +22,19 @@ import type {
   BreakAngleApiResult,
   ResolvedBreakAngle,
 } from './types'
-import { CARRUTH_MIN_DEG, STEEP_MAX_DEG } from './types'
+import { STEEP_MAX_DEG } from './types'
 
 // ============================================================================
-// GEOMETRY INPUT DEFAULTS
+// GEOMETRY INPUT DEFAULTS (v2 corrected field names)
 // ============================================================================
 
 export interface BreakAngleGeometry {
-  /** Distance from bridge pin center to saddle crown center (mm). Martin ~5.5, Gibson ~6.5 */
-  pinToSaddleCenterMm: number
-  /** Height of saddle crown above bridge top surface (mm). Note: v1 endpoint uses plate surface — see R-7 */
-  saddleProtrusionMm: number
+  /** Height of saddle crown above bridge TOP SURFACE (mm). Typical: 2-4 mm */
+  saddleProjectionMm: number
+  /** Distance from bridge pin center to saddle slot (mm). Martin ~5.5, Gibson ~6.5 */
+  pinToSaddleMm: number
+  /** Offset from pin center to string exit point (mm). Default 1.25 (midpoint 1.0-1.5) */
+  slotOffsetMm: number
   /** Total saddle slot depth (mm) */
   saddleSlotDepthMm: number
   /** Saddle blank total height (mm). Standard bone blank = 12 mm */
@@ -47,8 +42,9 @@ export interface BreakAngleGeometry {
 }
 
 const DEFAULT_GEOMETRY: BreakAngleGeometry = {
-  pinToSaddleCenterMm: 5.5,
-  saddleProtrusionMm: 3.0,
+  saddleProjectionMm: 2.5,
+  pinToSaddleMm: 5.5,
+  slotOffsetMm: 1.25,
   saddleSlotDepthMm: 10.0,
   saddleBlankHeightMm: 12.0,
 }
@@ -57,7 +53,7 @@ const DEFAULT_GEOMETRY: BreakAngleGeometry = {
 // COMPOSABLE
 // ============================================================================
 
-export function useBreakAngle(useCarruthThresholds: { value: boolean }) {
+export function useBreakAngle() {
 
   // --------------------------------------------------------------------------
   // State
@@ -79,28 +75,27 @@ export function useBreakAngle(useCarruthThresholds: { value: boolean }) {
       ? apiResult.value.break_angle_deg
       : manualDeg.value
 
-    // Carruth adequacy — only meaningful for acoustic pin-bridge
-    let carruthAdequate: boolean | null = null
-    if (useCarruthThresholds.value) {
-      carruthAdequate = deg >= CARRUTH_MIN_DEG && deg < STEEP_MAX_DEG
-    }
+    // v2: Use gate from API directly (no client-side Carruth interpretation)
+    const gate = apiResult.value?.gate ?? null
 
-    // Client-side v2 rating (overrides v1 API rating for display when Carruth applies)
+    // carruthAdequate derived from gate (GREEN = adequate)
+    const carruthAdequate = gate === 'GREEN' ? true : gate === 'RED' ? false : null
+
+    // Status label from API gate/rating
     let statusLabel: string
-    if (deg >= STEEP_MAX_DEG) {
+    if (mode.value === 'computed' && apiResult.value) {
+      // Use gate for display
+      if (apiResult.value.gate === 'GREEN') {
+        statusLabel = 'Adequate'
+      } else if (apiResult.value.gate === 'YELLOW') {
+        statusLabel = 'Marginal'
+      } else if (apiResult.value.rating === 'too_steep') {
+        statusLabel = 'Too steep'
+      } else {
+        statusLabel = 'Too shallow'
+      }
+    } else if (deg >= STEEP_MAX_DEG) {
       statusLabel = 'Too steep'
-    } else if (useCarruthThresholds.value && deg < CARRUTH_MIN_DEG) {
-      statusLabel = 'Too shallow (Carruth)'
-    } else if (useCarruthThresholds.value) {
-      statusLabel = 'Adequate'
-    } else if (mode.value === 'computed' && apiResult.value) {
-      // For non-Carruth instruments, surface v1 rating as-is
-      statusLabel = {
-        optimal: 'Optimal',
-        acceptable: 'Acceptable',
-        too_shallow: 'Too shallow',
-        too_steep: 'Too steep',
-      }[apiResult.value.rating] ?? apiResult.value.rating
     } else {
       statusLabel = 'Manual'
     }
@@ -109,6 +104,7 @@ export function useBreakAngle(useCarruthThresholds: { value: boolean }) {
       deg,
       mode: mode.value,
       carruthAdequate,
+      gate,
       apiRating: apiResult.value?.rating ?? null,
       riskFlags: apiResult.value?.risk_flags ?? [],
       statusLabel,
@@ -116,7 +112,7 @@ export function useBreakAngle(useCarruthThresholds: { value: boolean }) {
   })
 
   // --------------------------------------------------------------------------
-  // API call
+  // API call (v2 corrected geometry)
   // --------------------------------------------------------------------------
 
   async function fetchBreakAngle(): Promise<void> {
@@ -124,12 +120,14 @@ export function useBreakAngle(useCarruthThresholds: { value: boolean }) {
     error.value = null
 
     try {
-      // ⚠️ v1 endpoint — uses pin_to_saddle_center_mm (not corrected d_effective)
-      // and measures saddle protrusion above bridge plate (not bridge top surface).
-      // See R-7 for v2 correction plan.
+      // v2: Uses corrected field names and geometry
+      // - saddle_projection_mm: height above bridge TOP SURFACE
+      // - pin_to_saddle_mm: distance from pin center to saddle
+      // - slot_offset_mm: accounts for slotted pin hole
       const result = await api.post<BreakAngleApiResult>('/api/bridge/break-angle', {
-        pin_to_saddle_center_mm: geometry.value.pinToSaddleCenterMm,
-        saddle_protrusion_mm: geometry.value.saddleProtrusionMm,
+        saddle_projection_mm: geometry.value.saddleProjectionMm,
+        pin_to_saddle_mm: geometry.value.pinToSaddleMm,
+        slot_offset_mm: geometry.value.slotOffsetMm,
         saddle_slot_depth_mm: geometry.value.saddleSlotDepthMm,
         saddle_blank_height_mm: geometry.value.saddleBlankHeightMm,
       })
