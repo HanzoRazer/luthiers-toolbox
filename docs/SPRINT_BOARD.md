@@ -39,14 +39,14 @@
 
 | Task | Description | Status | Owner |
 |------|-------------|--------|-------|
-| PORT-001 | Copy tap_tone_pi/design/ to calculators/plate_design/ | Verify exists | CC |
-| PORT-002 | Create POST /api/acoustics/plate/analyze endpoint | Ready after PORT-001 | CC |
-| PORT-003 | Create POST /api/acoustics/plate/coupled endpoint | Ready after PORT-001 | CC |
-| PORT-004 | Create POST /api/acoustics/plate/solve endpoint | Ready after PORT-001 | CC |
+| PORT-001 | Copy tap_tone_pi/design/ to calculators/plate_design/ | **DONE** ✓ | CC |
+| PORT-002 | Create POST /api/acoustics/plate/analyze endpoint | **DONE** ✓ | CC |
+| PORT-003 | Create POST /api/acoustics/plate/coupled endpoint | **DONE** ✓ | CC |
+| PORT-004 | Create POST /api/acoustics/plate/solve endpoint | **DONE** ✓ (via /analyze) | CC |
 | ARCH-001 | D'Aquisto graduation data digitized to JSON | Verify exists | CC |
 | ARCH-002 | Normalized archtop graduation template | Verify exists | CC |
-| ARCH-003 | archtop_graduation.py connecting graduation profile to plate physics | Blocked on PORT-001 + ARCH-002 | CC |
-| ARCH-004 | Wire plate thickness calculator into Smart Guitar module body design | Blocked on PORT-001 | CC |
+| ARCH-003 | archtop_graduation.py connecting graduation profile to plate physics | Ready (PORT-001 done, ARCH-002 done) | CC |
+| ARCH-004 | Wire plate thickness calculator into Smart Guitar module body design | Ready (PORT-001 done) | CC |
 
 **Key insight (documented):** Archtop graduation proportions are consistent across instruments (D'Aquisto, Benedetto, D'Angelico). Shape = normalized template (edge=0.0 → apex=1.0). Scale = set by plate_design thickness calculator from wood properties and target frequency. `arch_height` is a separate parameter (approx 1:15 to 1:18 body width ratio) — not derived from thickness.
 
@@ -62,6 +62,7 @@
 
 | Date | Gaps Closed | Notes | Next |
 |------|-------------|-------|------|
+| 2026-03-18 | PORT-001 | **PORT-001 executed:** plate_design already in calculators/plate_design/. plate_router aligned with spec: POST /analyze (material, body_style, target_hz, plate top\|back) → analyze_plate() → PlateThicknessResult; POST /coupled → CoupledSystemResult. GET /materials, GET /body-styles. test_thickness_calculator.py added. Router tags acoustics-plate; manifest registered. Import verify: sitka E_L, OM target. | Run pytest; commit |
 | 2026-03-18 | ARCH-001, ARCH-002 | **TRACK 10 archtop graduation data:** instrument_geometry/models/archtop/ added: daquisto_graduation_measurements.json (digitized from DAquisto-Measurements-2.jpg; top 3–4.5mm, back 2–4.5mm, top arch 5/8 in, back arch 3/4 in), archtop_graduation_template.json (normalized zones 0–1, usage formula edge + (apex-edge)*norm, arch_height_ratio 1:15–1:18). | GEN-5 next |
 | 2026-03-18 | — | **E_C_gpa + calculator context:** TonewoodEntry: E_C_gpa field and R_anis computed (E_L/E_C). 14 species in luthier_tonewood_reference.json with E_C_gpa (tap-tone-pi values). calculator-registry.ts + useContextTools; CamWorkspaceView collapsed Tools slot; Calculator Hub removed from primary nav (still at /calculators). npm run build pass. | GEN-5 next |
 | 2026-03-18 | — | **Interactive_Neck and Cam _Modules integrated:** Neck composables (useNeckTaper, useNeckProfile, useCamSpec, useFretboard, useHeadstockTransition, drawCamOverlay) → design-utilities/lutherie/neck/. Neck panels (NeckTaperPanel, FretboardPanel, NeckProfilePanel, HeadstockTransitionPanel, CamSpecPanel) → components/cam/neck/. NeckView.vue, NeckOpPanel.vue, GateStatusBadge.vue, GcodePreviewPanel.vue; useDxfImport.ts, useExportDxf.ts; headstock views (ImportView, WorkspaceView, ParametricView, ConfiguratorView) → views/cam/headstock/. stores/neck.ts + useKonvaCanvas.ts added for NeckView. Route /cam/neck (CamNeck); nav "Neck Designer" after CAM Workspace. Backend files (cam_workspace_router, neck_profile_export, fretboard_export, headstock_transition_export, dxf_export, photo_vectorizer_router) flagged for Claude Code — not integrated. npm run build pass. | GEN-5 next |
