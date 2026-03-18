@@ -393,6 +393,11 @@ const routes: RouteRecordRaw[] = [
     name: "CamToolpathSimulator",
     component: () => import("@/views/cam/ToolpathSimulatorView.vue"),
   },
+  {
+    path: "/cam/workspace",
+    name: "CamWorkspace",
+    component: () => import("@/views/cam/CamWorkspaceView.vue"),
+  },
 
   // Guitar Design Hub - Body Outline Generator, Bracing, Archtop, etc.
   {

@@ -25,6 +25,9 @@ def test_replay_summary_helper_computes_retry_metrics_from_serialized_payload():
     assert summary["final_score_delta"] == approx(0.22)
     assert summary["last_retry_profile_used"] == "lower_bout_recovery"
     assert summary["retry_profiles_used"] == ["lower_bout_recovery", "lower_bout_recovery"]
+    assert summary["ownership_score"] is None
+    assert summary["ownership_ok"] is None
+    assert summary["ownership_trajectory"] == []
 
 
 def test_replay_summary_helper_handles_empty_retry_list():
@@ -42,3 +45,6 @@ def test_replay_summary_helper_handles_empty_retry_list():
     assert summary["final_score_delta"] == 0.0
     assert summary["last_retry_profile_used"] is None
     assert summary["retry_profiles_used"] == []
+    assert summary["ownership_score"] is None
+    assert summary["ownership_ok"] is None
+    assert summary["ownership_trajectory"] == []

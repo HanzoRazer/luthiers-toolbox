@@ -242,6 +242,7 @@ const domains = [
     icon: '⚙️',
     description: 'Adaptive, saw, bridge, helical, V-Carve, relief, polygon offset',
     links: [
+      { icon: '📐', label: 'CAM Workspace',   to: '/cam/workspace' },
       { icon: '🌀', label: 'Adaptive Lab',    to: '/lab/adaptive' },
       { icon: '🪚', label: 'Saw Lab',         to: '/lab/saw/slice' },
       { icon: '🌉', label: 'Bridge Lab',      to: '/lab/bridge' },
