@@ -2,7 +2,7 @@
 Tests for app.cam.preflight_gate — safety-critical pre-flight validation.
 
 This module is the last safety gate before G-code reaches the CNC machine.
-Coverage target: >60%
+Coverage target: >60%. Addresses coverage gap from reliability fixes.
 """
 
 import pytest
