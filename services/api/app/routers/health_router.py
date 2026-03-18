@@ -16,27 +16,24 @@ from importlib.metadata import PackageNotFoundError
 from ..core.observability import get_health_summary
 from ..core.features import get_feature_summary, get_feature_catalog
 from ..health.startup import get_startup_summary
+from ..router_registry.health import get_router_health
 
 router = APIRouter(tags=["System"])
 
-# Determine repository root relative to this file
-# In local dev: /repo/services/api/app/routers/health_router.py -> parents[4]
-# In Railway container: /app/app/routers/health_router.py -> different structure
+
 def _find_repo_root() -> Path:
     """Find repo root, handling different deployment environments."""
     current = Path(__file__).resolve()
-    # Try to find repo root by looking for marker files
     for parent in current.parents:
         if (parent / "pyproject.toml").exists() or (parent / ".git").exists():
             return parent
-    # Fallback: in containerized deployment, /app is the working directory
     if Path("/app").exists():
         return Path("/app")
-    # Last resort: go up 4 levels (local dev structure)
     try:
         return current.parents[4]
     except IndexError:
         return current.parent
+
 
 REPO_ROOT = _find_repo_root()
 
@@ -48,20 +45,9 @@ CRITICAL_PATHS = {
     "docs": REPO_ROOT / "docs" if (REPO_ROOT / "docs").exists() else REPO_ROOT,
 }
 
-DIAGNOSTIC_DEPENDENCIES = (
-    "fastapi",
-    "uvicorn",
-    "pydantic",
-    "numpy",
-    "pyclipper",
-)
+DIAGNOSTIC_DEPENDENCIES = ("fastapi", "uvicorn", "pydantic", "numpy", "pyclipper")
 
-SCHEME_DEFAULT_PORT = {
-    "redis": 6379,
-    "rediss": 6380,
-    "amqp": 5672,
-    "amqps": 5671,
-}
+SCHEME_DEFAULT_PORT = {"redis": 6379, "rediss": 6380, "amqp": 5672, "amqps": 5671}
 
 
 def _collect_path_state() -> Dict[str, bool]:
@@ -87,127 +73,89 @@ def _probe_socket(target: str) -> Dict[str, Any]:
     host = parsed.hostname
     port = parsed.port or SCHEME_DEFAULT_PORT.get(parsed.scheme)
     if not host or not port:
-        return {
-            "status": "error",
-            "endpoint": target,
-            "details": "Unable to determine host/port",
-        }
-
+        return {"status": "error", "endpoint": target, "details": "Unable to determine host/port"}
     try:
         with closing(socket.create_connection((host, port), timeout=1.0)):
-            return {
-                "status": "ok",
-                "endpoint": target,
-                "details": "TCP handshake succeeded",
-            }
+            return {"status": "ok", "endpoint": target, "details": "TCP handshake succeeded"}
     except OSError as exc:
-        return {
-            "status": "error",
-            "endpoint": target,
-            "details": str(exc),
-        }
+        return {"status": "error", "endpoint": target, "details": str(exc)}
 
 
 def _queue_status() -> Dict[str, Any]:
     queue_url = os.getenv("QUEUE_URL")
     if not queue_url:
-        return {
-            "status": "not_configured",
-            "endpoint": None,
-            "details": "QUEUE_URL not set",
-        }
+        return {"status": "not_configured", "endpoint": None, "details": "QUEUE_URL not set"}
     return _probe_socket(queue_url)
 
 
 def _cache_status() -> Dict[str, Any]:
     cache_url = os.getenv("CACHE_URL")
     if not cache_url:
-        return {
-            "status": "not_configured",
-            "endpoint": None,
-            "details": "CACHE_URL not set",
-        }
+        return {"status": "not_configured", "endpoint": None, "details": "CACHE_URL not set"}
     return _probe_socket(cache_url)
 
 
 @router.get("/health", summary="System health check")
 def health_check(include_diagnostics: bool = False) -> Dict[str, Any]:
-    """Return repository/instance health metadata."""
+    """Return repository/instance health metadata with router status."""
     path_checks = _collect_path_state()
-    status = _status_from(path_checks)
+    router_health = get_router_health()
+    has_router_errors = len(router_health.get("errors", {})) > 0
+    status = "degraded" if (not all(path_checks.values()) or has_router_errors) else "ok"
     payload: Dict[str, Any] = {
         "status": status,
         "timestamp": datetime.now(timezone.utc).isoformat(),
         "paths": path_checks,
-        "message": "Service ready." if status == "ok" else "One or more critical paths missing.",
+        "router_count": router_health.get("loaded", 0),
+        "router_errors": router_health.get("errors", {}),
+        "message": "Service ready." if status == "ok" else "One or more critical paths missing or routers failed.",
     }
-
     if include_diagnostics:
         payload["diagnostics"] = {
             "dependencies": _dependency_versions(),
             "queue": _queue_status(),
             "cache": _cache_status(),
         }
-
     return payload
 
 
 @router.get("/health/detailed", summary="Detailed system health with feature tracking")
 def detailed_health() -> Dict[str, Any]:
-    """
-    Return comprehensive health summary including:
-    - Application status (ok/degraded)
-    - Uptime in seconds
-    - Version info
-    - Loaded features list
-    - Failed features with error messages
-    """
+    """Return comprehensive health summary."""
     return get_health_summary()
 
 
 @router.get("/features", summary="List loaded API features")
 def list_features() -> Dict[str, Any]:
-    """
-    Return summary of all API features/routers.
-
-    Response includes:
-    - loaded: Features that loaded successfully with route counts
-    - failed: Features that failed to load with error messages
-    - total_routes: Total number of API routes
-    """
+    """Return summary of all API features/routers."""
     return get_feature_summary()
 
 
 @router.get("/features/catalog", summary="Feature catalog with use cases")
 def feature_catalog() -> Dict[str, Any]:
-    """
-    Return user-friendly feature catalog with versions and use cases.
-
-    Response includes:
-    - features: Available features with versions, descriptions, stability
-    - use_cases: Step-by-step guides for common workflows
-    - documentation: Links to API docs
-
-    This is the recommended endpoint for understanding what the API offers.
-    """
+    """Return user-friendly feature catalog with versions and use cases."""
     return get_feature_catalog()
 
 
 @router.get("/health/modules", summary="Safety-critical module status")
 def module_status() -> Dict[str, Any]:
-    """
-    Return status of safety-critical modules validated at startup.
-
-    This endpoint shows which modules were successfully loaded during
-    the startup validation phase. If any required module failed, the
-    server would not have started (unless RMOS_STRICT_STARTUP=0).
-
-    Response includes:
-    - safety_critical: Required modules (server won't start without these)
-    - optional: Non-critical modules (warnings only)
-    - modules: Detailed status of each module
-    """
+    """Return status of safety-critical modules validated at startup."""
     return get_startup_summary()
+
+
+@router.get("/health/routers", summary="Router loading status")
+def router_health_status() -> Dict[str, Any]:
+    """
+    Return status of all routers loaded from the router registry.
+    
+    Response includes:
+    - total: Total number of routers in manifest
+    - loaded: Number of successfully loaded routers
+    - failed: Number of failed routers
+    - by_category: Breakdown by router category
+    - errors: Dict of module -> error message for failures
+    """
+    return get_router_health()
 
 
 # =============================================================================
@@ -217,71 +165,32 @@ def module_status() -> Dict[str, Any]:
 
 @router.get("/health/live", summary="Liveness probe (K8s)")
 def liveness_probe() -> Dict[str, Any]:
-    """
-    Kubernetes liveness probe.
-
-    Returns 200 if the process is running and can handle requests.
-    This should ALWAYS succeed unless the process is deadlocked.
-
-    Use: livenessProbe in K8s deployment
-    """
+    """Kubernetes liveness probe."""
     return {"status": "alive", "timestamp": datetime.now(timezone.utc).isoformat()}
 
 
 @router.get("/health/ready", summary="Readiness probe (K8s)")
 def readiness_probe() -> Dict[str, Any]:
-    """
-    Kubernetes readiness probe.
-
-    Returns 200 if the service is ready to accept traffic.
-    Checks critical dependencies are available.
-
-    Use: readinessProbe in K8s deployment
-    """
-    checks = {
-        "paths": all(_collect_path_state().values()),
-    }
-
-    # Check circuit breakers if any are open
+    """Kubernetes readiness probe."""
+    checks = {"paths": all(_collect_path_state().values())}
     try:
         from ..core.reliability import CircuitBreaker
         breaker_status = CircuitBreaker.all_status()
-        open_circuits = [
-            name for name, status in breaker_status.items()
-            if status.get("state") == "open"
-        ]
+        open_circuits = [name for name, status in breaker_status.items() if status.get("state") == "open"]
         checks["circuits"] = len(open_circuits) == 0
         if open_circuits:
             checks["open_circuits"] = open_circuits
     except ImportError:
         checks["circuits"] = True
-
     ready = all(v for k, v in checks.items() if k != "open_circuits")
-
-    return {
-        "status": "ready" if ready else "not_ready",
-        "timestamp": datetime.now(timezone.utc).isoformat(),
-        "checks": checks,
-    }
+    return {"status": "ready" if ready else "not_ready", "timestamp": datetime.now(timezone.utc).isoformat(), "checks": checks}
 
 
 @router.get("/health/circuits", summary="Circuit breaker status")
 def circuit_status() -> Dict[str, Any]:
-    """
-    Return status of all circuit breakers.
-
-    Circuit breakers protect against cascading failures by failing fast
-    when a dependency is unhealthy.
-    """
+    """Return status of all circuit breakers."""
     try:
         from ..core.reliability import CircuitBreaker
-        return {
-            "circuits": CircuitBreaker.all_status(),
-            "timestamp": datetime.now(timezone.utc).isoformat(),
-        }
+        return {"circuits": CircuitBreaker.all_status(), "timestamp": datetime.now(timezone.utc).isoformat()}
     except ImportError:
-        return {
-            "circuits": {},
-            "message": "Circuit breaker module not loaded",
-            "timestamp": datetime.now(timezone.utc).isoformat(),
-        }
+        return {"circuits": {}, "message": "Circuit breaker module not loaded", "timestamp": datetime.now(timezone.utc).isoformat()}
