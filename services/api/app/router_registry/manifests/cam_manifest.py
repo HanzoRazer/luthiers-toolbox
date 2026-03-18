@@ -220,4 +220,11 @@ CAM_ROUTERS: List[RouterSpec] = [
         tags=["CAM", "Headstock", "Inlay"],
         category="cam",
     ),
+    RouterSpec(
+        module="app.routers.cam.cam_workspace_router",
+        prefix="/api/cam-workspace",
+        router_attr="router",
+        tags=["cam-workspace"],
+        category="cam",
+    ),
 ]
