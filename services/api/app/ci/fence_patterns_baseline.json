@@ -1,11 +1,10 @@
 {
   "patterns": [
-    "frontend_sdk_boundary|packages/client/src/api/rmosRuns.ts|130|fetchRun\\(|Use fetchRunV2() instead of deprecated fetchRun()",
+    "frontend_sdk_boundary|packages/client/src/api/rmosRuns.ts|144|fetchRun\\(|Use fetchRunV2() instead of deprecated fetchRun()",
     "frontend_sdk_boundary|packages/client/src/api/rmosRuns.ts|14|/api/rmos/runs\\b|Frontend must use runs_v2 endpoints, not legacy runs",
-    "frontend_sdk_boundary|packages/client/src/api/rmosRuns.ts|225|fetchRun\\(|Use fetchRunV2() instead of deprecated fetchRun()",
+    "frontend_sdk_boundary|packages/client/src/api/rmosRuns.ts|239|fetchRun\\(|Use fetchRunV2() instead of deprecated fetchRun()",
     "frontend_sdk_boundary|packages/client/src/components/rmos/RunDiffViewer.vue|51|fetchRun\\(|Use fetchRunV2() instead of deprecated fetchRun()",
     "frontend_sdk_boundary|packages/client/src/components/rmos/RunDiffViewer.vue|52|fetchRun\\(|Use fetchRunV2() instead of deprecated fetchRun()",
-    "frontend_sdk_boundary|packages/client/src/components/rmos/VariantReviewPanel.vue|6|/api/rmos/runs\\b|Frontend must use runs_v2 endpoints, not legacy runs",
     "frontend_sdk_boundary|packages/client/src/features/ai_images/AiImageGalleryRmos.vue|7|/api/rmos/runs\\b|Frontend must use runs_v2 endpoints, not legacy runs",
     "frontend_sdk_boundary|packages/client/src/features/ai_images/AiImageGalleryRmos.vue|8|/api/rmos/runs\\b|Frontend must use runs_v2 endpoints, not legacy runs",
     "frontend_sdk_boundary|packages/client/src/features/ai_images/AiImageGalleryRmos.vue|9|/api/rmos/runs\\b|Frontend must use runs_v2 endpoints, not legacy runs",
