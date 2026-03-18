@@ -1,20 +1,12 @@
 <script setup lang="ts">
-/**
- * @deprecated — superseded by InlayWorkspaceShell Stage 2 (ArtStudioInlay.vue).
- * FretMarkersView was a stub with no backend.
- * Resolves INLAY-03.
- *
- * FretMarkersView - Fretboard Position Marker Designer
- * Design inlay patterns for fret position markers (dots, blocks, custom shapes)
- *
- * This is a simplified version focused on markers only.
- * For full inlay design, see InlayDesignerView.
- *
- * Planned API endpoints:
- *   GET  /api/art-studio/fret-markers/patterns
- *   POST /api/art-studio/fret-markers/preview
- *   POST /api/art-studio/fret-markers/export-dxf
- */
+// @deprecated — superseded by InlayWorkspaceShell Stage 2 (ArtStudioInlay.vue).
+// FretMarkersView was a stub with no backend.
+// Resolves INLAY-03.
+//
+// FretMarkersView - Fretboard Position Marker Designer
+// Design inlay patterns for fret position markers (dots, blocks, custom shapes)
+// For full inlay design, see InlayDesignerView / InlayWorkspaceShell.
+// Planned API endpoints (never implemented): GET patterns, POST preview, POST export-dxf.
 import { ref, computed } from 'vue'
 
 // Form state

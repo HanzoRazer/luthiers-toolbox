@@ -14,6 +14,7 @@ Previous updates overstated progress. This section provides the accurate remaini
 |--------|-------------|------------|
 | **GAP-NEW-1** | Multi-ring rosette API: segment-ring ignored rings[] array | **Resolved:** POST /api/rmos/rosette/design in rmos/rosette_cam_router.py — accepts soundhole_diameter_mm + rings[], runs segment/slices/export per ring, returns combined segmentation + G-code and job_ids |
 | **GAP-NEW-2** | Spanish wave pattern missing from tile pattern registry | **Resolved:** Added SPANISH_WAVE to TilePattern in cam/rosette/tile_segmentation.py (even-tile alternating; trapezoidal tiles for now) |
+| **INLAY-07** | Inlay pocket depth control | **Resolved:** pocketDepth ref added to InlayDesignerView.vue and ArtStudioInlay.vue. pocket_depth_mm wired to export-dxf API. |
 
 ### Actually Unresolved — 32 Items
 
@@ -21,7 +22,7 @@ Previous updates overstated progress. This section provides the accurate remaini
 |----------|-------|-----------|
 | **CRITICAL** | 0 | ~~PHYS-01~~ Resolved (calculators/pickup_position_calc.py) |
 | **HIGH** | 3 | ~~INLAY-02~~, ~~INLAY-06~~, ~~VINE-08~~ (Session 7), ~~BEN-GAP-08~~, ~~LP-GAP-03~~, ~~BEN-GAP-04~~, ~~BEN-GAP-05~~, ~~VINE-05~~, ~~NECK-05~~, ~~LP-GAP-02~~, ~~EX-GAP-04~~ |
-| **MEDIUM** | 17 | ~~BEN-GAP-09~~, ~~BEN-GAP-07~~, ~~FV-GAP-05~~, ~~LP-GAP-04~~, ~~LP-GAP-05~~, ~~LP-GAP-06~~, ~~LP-GAP-08~~, ~~OM-PURF-03~~, ~~OM-PURF-05~~, ~~OM-PURF-08~~, ~~INLAY-03~~, ~~INLAY-04~~, ~~VEC-GAP-06~~, ~~VEC-GAP-07~~, ~~FV-GAP-07~~, ~~FV-GAP-10~~, EX-GAP-05, EX-GAP-06, EX-GAP-07, EX-GAP-08, ~~EX-GAP-12~~, ~~SG-GAP-13~~ |
+| **MEDIUM** | 17 | ~~BEN-GAP-09~~, ~~BEN-GAP-07~~, ~~FV-GAP-05~~, ~~LP-GAP-04~~, ~~LP-GAP-05~~, ~~LP-GAP-06~~, ~~LP-GAP-08~~, ~~OM-PURF-03~~, ~~OM-PURF-05~~, ~~OM-PURF-08~~, ~~INLAY-03~~, ~~INLAY-07~~, ~~INLAY-04~~, ~~VEC-GAP-06~~, ~~VEC-GAP-07~~, ~~FV-GAP-07~~, ~~FV-GAP-10~~, EX-GAP-05, EX-GAP-06, EX-GAP-07, EX-GAP-08, ~~EX-GAP-12~~, ~~SG-GAP-13~~ |
 | **LOW** | 8 | ~~VINE-12~~, ~~OM-PURF-06~~, ~~FV-GAP-09~~, EX-GAP-09, EX-GAP-10, ~~EX-GAP-11~~, ~~EX-GAP-13~~, ~~SG-GAP-09~~, ~~SG-GAP-14~~, ~~OM-PURF-07~~, ~~LP-GAP-10~~, VEC-GAP-08 |
 
 ### HIGH Priority Items (13) — Details
@@ -349,7 +350,7 @@ Previous updates overstated progress. This section provides the accurate remaini
 | ~~INLAY-02~~ | Custom Inlay | ~~HeadstockDesignerView.vue non-functional stub~~ **Resolved** (2026-03-16) | ~~HIGH~~ |
 | ~~INLAY-06~~ | Custom Inlay | ~~No unified inlay canvas~~ **Resolved** (2026-03-16) InlayWorkspaceShell | ~~HIGH~~ |
 | ~~NECK-05~~ | Strat Neck | ~~No `StratocasterNeckGenerator.vue` or composables~~ **Resolved** | HIGH |
-| ~~INLAY-03~~ | Custom Inlay | ~~`FretMarkersView.vue` overlaps `InlayDesignerView.vue` — duplication~~ **Resolved** FretMarkersView superseded by InlayWorkspaceShell Stage 2 (ArtStudioInlay.vue). Route removed; view deprecated. | ~~MEDIUM~~ |
+| ~~INLAY-03~~ | Custom Inlay | ~~`FretMarkersView.vue` overlaps `InlayDesignerView.vue` — duplication~~ **Resolved** — superseded by InlayWorkspaceShell Stage 2 (ArtStudioInlay.vue). FretMarkersView.vue deprecated; route/nav removed. | ~~MEDIUM~~ |
 | ~~INLAY-07~~ | Custom Inlay | ~~Inlay pocket depth control~~ **Resolved** — pocketDepth ref in InlayDesignerView.vue and ArtStudioInlay.vue; pocket_depth_mm wired to export-dxf API. | ~~MEDIUM~~ |
 | ~~VINE-08~~ | J45 Vine | ~~Bracing endpoints unreachable from UI~~ **Resolved** (2026-03-16) | ~~HIGH~~ |
 | ~~VEC-GAP-06~~ | OM Purfling | ~~`BlueprintImporter.vue` calls only Phase 1~~ **RESOLVED** (d7ac202c: Phase2VectorizationPanel + Phase3CamPanel in BlueprintLab.vue) | ~~MEDIUM~~ |
