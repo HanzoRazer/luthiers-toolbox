@@ -17,6 +17,10 @@ try:
         PlateThicknessResult,
         CoupledSystemResult,
     )
+    from app.calculators.plate_design.archtop_graduation import (
+        graduation_from_wood_and_target,
+        GraduationResult,
+    )
     PLATE_DESIGN_AVAILABLE = True
 except ImportError as e:
     PLATE_DESIGN_AVAILABLE = False
@@ -166,7 +170,7 @@ def list_body_styles_endpoint() -> List[BodyStyleInfo]:
     """List available body style calibrations."""
     if not PLATE_DESIGN_AVAILABLE:
         raise HTTPException(503, detail="Plate design module not available")
-    
+
     styles = list_body_styles()
     return [
         BodyStyleInfo(
@@ -178,3 +182,38 @@ def list_body_styles_endpoint() -> List[BodyStyleInfo]:
         )
         for s in styles
     ]
+
+
+class ArchtopGraduationRequest(BaseModel):
+    """Request for archtop graduation calculation."""
+    material: str = Field(..., description="Material preset name (e.g., 'maple')")
+    body_style: str = Field(..., description="Body style (e.g., 'archtop')")
+    target_hz: float = Field(..., description="Target frequency in Hz (e.g., 120.0)")
+    lower_bout_width_mm: float = Field(255.0, description="Lower bout width for arch height calc")
+    arch_height_ratio: float = Field(0.062, description="Arch height as ratio of bout width")
+    plate: Literal["top", "back"] = Field("top", description="Plate to analyze")
+
+
+@router.post("/archtop-graduation")
+def archtop_graduation_endpoint(req: ArchtopGraduationRequest) -> Dict[str, Any]:
+    """
+    Compute archtop graduation endpoints from wood properties and target frequency.
+
+    Returns edge_mm, apex_mm, arch_height_mm derived from physics model.
+    The normalized graduation template shape is universal — this provides the scale.
+    """
+    if not PLATE_DESIGN_AVAILABLE:
+        raise HTTPException(503, detail="Plate design module not available")
+
+    try:
+        result = graduation_from_wood_and_target(
+            material=req.material,
+            body_style=req.body_style,
+            target_hz=req.target_hz,
+            lower_bout_width_mm=req.lower_bout_width_mm,
+            arch_height_ratio=req.arch_height_ratio,
+            plate=req.plate,
+        )
+        return result.to_dict()
+    except ValueError as e:
+        raise HTTPException(400, detail=str(e))

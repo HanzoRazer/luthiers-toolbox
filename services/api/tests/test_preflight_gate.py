@@ -460,6 +460,34 @@ class TestValidateToolVsBounds:
         assert len(warnings) == 1
         assert "Y range" in warnings[0]
 
+    def test_x_bounds_none_skips_x_range_check(self):
+        """When min_x or max_x is None, X range check is skipped."""
+        bounds = Bounds(min_x=None, max_x=50, min_y=0, max_y=10)
+        errors, warnings = [], []
+        _validate_tool_vs_bounds(
+            bounds=bounds,
+            tool_diameter_mm=6.0,
+            min_feature_size_mm=None,
+            errors=errors,
+            warnings=warnings,
+        )
+        assert len(errors) == 0
+        assert len(warnings) == 0
+
+    def test_y_bounds_none_skips_y_range_check(self):
+        """When min_y or max_y is None, Y range check is skipped."""
+        bounds = Bounds(min_x=0, max_x=10, min_y=None, max_y=50)
+        errors, warnings = [], []
+        _validate_tool_vs_bounds(
+            bounds=bounds,
+            tool_diameter_mm=6.0,
+            min_feature_size_mm=None,
+            errors=errors,
+            warnings=warnings,
+        )
+        assert len(errors) == 0
+        assert len(warnings) == 0
+
 
 class TestPreflightGate:
     """Tests for preflight_gate blocking function."""
@@ -525,3 +553,26 @@ class TestBaseValidationErrors:
             result = preflight_validate(gcode_text=clean_gcode)
             assert result.ok is False
             assert "Missing feed rate" in result.errors[0]
+
+
+class TestPreflightEmptyBounds:
+    """Tests when base validation returns empty or minimal bounds."""
+
+    def test_empty_bounds_dict_still_runs(self, clean_gcode):
+        """Empty bounds in summary still produce a valid PreflightResult."""
+        mock_result = {
+            "ok": True,
+            "errors": [],
+            "warnings": [],
+            "summary": {"bounds": {}},
+        }
+        with patch(
+            "app.cam.preflight_gate.validate_gcode_static",
+            return_value=mock_result,
+        ):
+            result = preflight_validate(
+                gcode_text=clean_gcode,
+                config=PreflightConfig(stock_thickness_mm=25.0),
+            )
+            assert result.ok is True
+            assert "preflight" in result.summary
