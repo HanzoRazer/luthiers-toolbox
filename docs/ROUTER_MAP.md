@@ -602,7 +602,6 @@ Legacy Routers (Deleted 2026-01-30): 19 routers (~4,000 lines)
 - [services/api/app/main.py](services/api/app/main.py) — Full router registration code with inline comments
 - [services/api/app/governance/](services/api/app/governance/) — Endpoint governance policies
 - [services/api/app/meta/](services/api/app/meta/) — Router truth and self-awareness endpoints
-- [docs/ENDPOINT_TRUTH_MAP.md](docs/ENDPOINT_TRUTH_MAP.md) — Complete API surface documentation
 
 ---
 
