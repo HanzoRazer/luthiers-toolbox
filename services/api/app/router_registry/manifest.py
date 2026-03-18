@@ -8,14 +8,16 @@ from .manifests.cam_manifest import CAM_ROUTERS
 from .manifests.rmos_manifest import RMOS_ROUTERS
 from .manifests.art_studio_manifest import ART_STUDIO_ROUTERS
 from .manifests.business_manifest import BUSINESS_ROUTERS
+from .manifests.acoustics_manifest import ACOUSTICS_ROUTERS
 
-# Assemble in fixed order: system, cam, rmos, art_studio, business
+# Assemble in fixed order: system, cam, rmos, art_studio, business, acoustics
 ROUTER_REGISTRY: List[RouterSpec] = (
     SYSTEM_ROUTERS
     + CAM_ROUTERS
     + RMOS_ROUTERS
     + ART_STUDIO_ROUTERS
     + BUSINESS_ROUTERS
+    + ACOUSTICS_ROUTERS
 )
 
 # Keep existing import name for backward compatibility
