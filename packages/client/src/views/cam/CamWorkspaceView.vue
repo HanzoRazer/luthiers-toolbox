@@ -15,12 +15,25 @@
  * Right:  Shared neck config (scale, frets, material, preset)
  */
 
-import { ref, reactive, computed, watch } from 'vue'
+import { ref, reactive, computed, watch, onMounted } from 'vue'
 import { useContextTools } from '@/composables/useContextTools'
 import NeckOpPanel       from '@/components/cam/NeckOpPanel.vue'
 import GcodePreviewPanel from '@/components/cam/GcodePreviewPanel.vue'
 import GateStatusBadge   from '@/components/cam/GateStatusBadge.vue'
 import type { GateResult } from '@/components/cam/GateStatusBadge.vue'
+
+// ── Machine info type ─────────────────────────────────────────────────────────
+interface MachineInfo {
+  machine_id: string
+  name: string
+  envelope: { x_mm: number; y_mm: number; z_mm: number }
+  z_travel_mm: number
+  safe_z_mm: number
+  spindle_rpm_min: number
+  spindle_rpm_max: number
+  dialect: string
+  tool_change_style: string
+}
 
 const emit = defineEmits<{ toast: [msg: string] }>()
 
@@ -44,6 +57,33 @@ const toolsOpen = ref(false)
 // ── Machine context ───────────────────────────────────────────────────────────
 const machineId  = ref('bcam_2030a')
 const strictMode = ref(false)
+const machines = ref<MachineInfo[]>([])
+const machinesLoading = ref(false)
+
+// Selected machine computed for specs display
+const selectedMachine = computed(() =>
+  machines.value.find(m => m.machine_id === machineId.value) ?? null
+)
+
+// Fetch machines on mount
+async function fetchMachines() {
+  machinesLoading.value = true
+  try {
+    const res = await fetch('/api/cam-workspace/machines')
+    if (!res.ok) return
+    const data = await res.json()
+    if (data.machines) {
+      machines.value = data.machines
+      // Pre-select bcam_2030a if available
+      if (machines.value.some(m => m.machine_id === 'bcam_2030a')) {
+        machineId.value = 'bcam_2030a'
+      } else if (machines.value.length > 0) {
+        machineId.value = machines.value[0].machine_id
+      }
+    }
+  } catch { /* network error */ }
+  finally { machinesLoading.value = false }
+}
 
 // ── Shared neck config ────────────────────────────────────────────────────────
 const neckConfig = reactive<Record<string, any>>({
@@ -129,8 +169,11 @@ async function runEvaluate() {
   finally { gateLoading.value = false }
 }
 
-// Initial evaluate on mount
-evaluateDebounced()
+// On mount: fetch machines then evaluate
+onMounted(async () => {
+  await fetchMachines()
+  evaluateDebounced()
+})
 
 // ── Per-op generated G-code ───────────────────────────────────────────────────
 const opGcodes = reactive<Record<string, string>>({})
@@ -258,16 +301,22 @@ function stepStatus(id: number): 'done' | 'warn' | 'ok' | 'idle' {
             <div class="sec-lbl">Machine</div>
             <div class="field-row">
               <label class="fld-k">Profile</label>
-              <select class="fld-v sel" v-model="machineId" @change="evaluateDebounced()">
-                <option value="bcam_2030a">BCAM 2030A</option>
+              <select class="fld-v sel" v-model="machineId" @change="evaluateDebounced()" :disabled="machinesLoading">
+                <option v-if="machinesLoading" value="">Loading...</option>
+                <option v-for="m in machines" :key="m.machine_id" :value="m.machine_id">
+                  {{ m.name }}
+                </option>
               </select>
             </div>
-            <div class="machine-spec-grid">
-              <div class="ms-row"><span class="ms-k">Envelope</span><span class="ms-v">1219 × 610 × 102 mm</span></div>
-              <div class="ms-row"><span class="ms-k">Z travel</span><span class="ms-v">101.6 mm (4")</span></div>
-              <div class="ms-row"><span class="ms-k">Safe Z</span><span class="ms-v">10 mm</span></div>
-              <div class="ms-row"><span class="ms-k">Spindle</span><span class="ms-v">8,000 – 24,000 RPM</span></div>
-              <div class="ms-row"><span class="ms-k">Post</span><span class="ms-v">GRBL  M1 tool change</span></div>
+            <div class="machine-spec-grid" v-if="selectedMachine">
+              <div class="ms-row"><span class="ms-k">Envelope</span><span class="ms-v">{{ selectedMachine.envelope.x_mm }} × {{ selectedMachine.envelope.y_mm }} × {{ selectedMachine.envelope.z_mm }} mm</span></div>
+              <div class="ms-row"><span class="ms-k">Z travel</span><span class="ms-v">{{ selectedMachine.z_travel_mm }} mm</span></div>
+              <div class="ms-row"><span class="ms-k">Safe Z</span><span class="ms-v">{{ selectedMachine.safe_z_mm }} mm</span></div>
+              <div class="ms-row"><span class="ms-k">Spindle</span><span class="ms-v">{{ selectedMachine.spindle_rpm_min.toLocaleString() }} – {{ selectedMachine.spindle_rpm_max.toLocaleString() }} RPM</span></div>
+              <div class="ms-row"><span class="ms-k">Post</span><span class="ms-v">{{ selectedMachine.dialect.toUpperCase() }}  {{ selectedMachine.tool_change_style }}</span></div>
+            </div>
+            <div class="machine-spec-grid" v-else-if="!machinesLoading">
+              <div class="ms-row"><span class="ms-k">Status</span><span class="ms-v">No machine selected</span></div>
             </div>
           </div>
 
