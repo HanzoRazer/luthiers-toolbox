@@ -1,0 +1,77 @@
+{
+  "description": "Normalized archtop graduation template derived from D'Aquisto measurements",
+  "version": "1.0",
+  "created": "2026-03-17",
+  "source": "D'Aquisto graduation sketch + Benedetto 17 graduation_map.json cross-reference",
+  "principle": "Proportions are consistent across instruments. Shape is universal. Scale is set by wood properties and target frequency.",
+  "usage": "actual_thickness_mm = edge_mm + (apex_mm - edge_mm) * normalized_value",
+  "arch_height_ratio_note": "arch_height to body_lower_bout_width typically 1:15 to 1:18",
+
+  "top_template": {
+    "normalized_zones": {
+      "edge": 0.0,
+      "upper_bout": 0.15,
+      "upper_bout_fhole_zone": 0.25,
+      "waist": 0.30,
+      "fhole_region": 0.35,
+      "lower_bout_upper": 0.60,
+      "lower_bout_center": 0.70,
+      "lower_bout_bridge_zone": 1.0,
+      "lower_bout_bottom": 0.80
+    },
+    "arch_height_ratio": {
+      "description": "arch_height_mm / body_lower_bout_width_mm",
+      "typical_range": [0.056, 0.067],
+      "ratio_range": "1:18 to 1:15",
+      "daquisto_value": 0.062,
+      "note": "5/8 inch on approx 10 inch lower bout width"
+    },
+    "reference_values_mm": {
+      "daquisto_edge": 3.0,
+      "daquisto_apex": 4.5,
+      "benedetto_edge": 3.5,
+      "benedetto_apex": 7.0,
+      "note": "Benedetto apex higher due to carved top design philosophy"
+    }
+  },
+
+  "back_template": {
+    "normalized_zones": {
+      "edge": 0.0,
+      "upper_bout": 0.15,
+      "upper_mid": 0.20,
+      "waist_zone": 1.0,
+      "below_waist": 0.75,
+      "lower_bout": 0.65,
+      "lower_edge": 0.15
+    },
+    "arch_height_ratio": {
+      "description": "arch_height_mm / body_lower_bout_width_mm",
+      "typical_range": [0.067, 0.083],
+      "ratio_range": "1:15 to 1:12",
+      "daquisto_value": 0.075,
+      "note": "3/4 inch, peak below waist - back arches higher than top"
+    },
+    "reference_values_mm": {
+      "daquisto_edge": 3.0,
+      "daquisto_apex": 4.5,
+      "note": "Back apex at waist zone, not lower bout"
+    }
+  },
+
+  "application": {
+    "step_1": "Use plate_design/thickness_calculator.py with wood E_L, E_C, density, plate dimensions, target frequency",
+    "step_2": "thickness_for_target_frequency() returns recommended apex_mm",
+    "step_3": "Set edge_mm = apex_mm * 0.65 (typical ratio) or from stiffness test",
+    "step_4": "Apply normalized_zones template: actual = edge + (apex - edge) * normalized_value",
+    "step_5": "arch_height = lower_bout_width * arch_height_ratio (separate from thickness)",
+    "missing": "archtop_graduation.py - function connecting GraduationMapConfig to plate_design physics"
+  },
+
+  "missing_implementation": {
+    "file": "services/api/app/calculators/plate_design/archtop_graduation.py",
+    "function": "graduation_from_wood_and_target(wood_species, target_frequency_hz, body_style, arch_height_ratio)",
+    "returns": "GraduationMapConfig with apex_mm, edge_mm, arch_height_mm derived from physics not empirical lookup",
+    "blocked_on": "PORT-001 - plate_design package must be ported from tap-tone-pi first"
+  }
+}
