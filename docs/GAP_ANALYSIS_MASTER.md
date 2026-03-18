@@ -1,6 +1,6 @@
 # Gap Analysis Master — All Instrument Build Handoffs
 
-> **Generated:** 2026-03-09 | **Updated:** 2026-03-17 | **Sources:** 11 build handoff documents | **Total Gaps:** 120 (111 resolved, 9 remaining)
+> **Generated:** 2026-03-09 | **Updated:** 2026-03-18 | **Sources:** 11 build handoff documents | **Total Gaps:** 120 (112 resolved, 8 remaining)
 
 ---
 
@@ -277,11 +277,11 @@ Previous updates overstated progress. This section provides the accurate remaini
 |--------|-----------|-------------|----------|
 | VINE-02 | J45 Vine | SVG→DXF `/convert` endpoint in geometry router | **Resolved** (fe2b4e62) |
 | VINE-01 | J45 Vine | Inlay→pocket milling bridge | **Resolved** (6cfe4d12) |
-| VINE-05 | J45 Vine | Unified fretboard↔headstock coordinate canvas missing — separate coord systems | HIGH |
+| ~~VINE-05~~ | J45 Vine | ~~Unified fretboard↔headstock coordinate canvas missing — separate coord systems~~ **RESOLVED** (2026-03-15, coordinate_system.py) | ~~HIGH~~ |
 | VEC-GAP-03 | OM Purfling | PipelineResult CAM adapter `/cam/blueprint/pipeline-adapter/from-pipeline` | **Resolved** (03acbb4f) |
 | VEC-GAP-05 | OM Purfling | Phase 1 → Phase 3 scale handoff `scale_hint_mm_per_pixel` | **Resolved** (f8e4dded) |
 | VEC-GAP-04 | OM Purfling | Blueprint → CAM integration tests (20 tests) | **Resolved** (4a0af084) |
-| INLAY-04 | Custom Inlay | No unified coordinate space — fretboard and headstock use disconnected systems | MEDIUM |
+| ~~INLAY-04~~ | Custom Inlay | ~~No unified coordinate space — fretboard and headstock use disconnected systems~~ **RESOLVED** (2026-03-15, coordinate_system.py) | ~~MEDIUM~~ |
 | VINE-11 | J45 Vine | Bracing presets connected to instrument specs (J-45, Dreadnought, Jumbo) | **Resolved** (703be846) |
 | FV-GAP-04 | Flying V | Flying V CAM-ready DXF with closed LWPOLYLINE | **Resolved** (ec003681) |
 | VEC-GAP-08 | OM Purfling | OCR dimensions from Phase 3.6 unused downstream | LOW |
