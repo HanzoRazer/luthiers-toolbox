@@ -127,6 +127,35 @@ class BCamMachineSpec:
     has_probe: bool = False
     probe_feed_mm_min: float = 100.0
 
+    # Aliases for router compatibility
+    @property
+    def max_x_mm(self) -> float:
+        return self.travel_x_mm
+
+    @property
+    def max_y_mm(self) -> float:
+        return self.travel_y_mm
+
+    @property
+    def max_z_mm(self) -> float:
+        return self.travel_z_mm
+
+    @property
+    def max_rpm(self) -> int:
+        return self.max_spindle_rpm
+
+    @property
+    def max_feed_xy(self) -> float:
+        return self.max_feed_xy_mm_min
+
+    @property
+    def label(self) -> str:
+        return self.name or self.machine_id
+
+    @property
+    def post_dialect(self) -> str:
+        return self.controller.value
+
     def validate_position(self, x: float, y: float, z: float) -> bool:
         """Check if position is within machine travel limits."""
         if x < 0 or x > self.travel_x_mm:
@@ -252,7 +281,31 @@ MACHINE_PRESETS: Dict[str, BCamMachineSpec] = {
         max_tools=20,
         has_probe=True,
     ),
+    "bcam_2030a": BCamMachineSpec(
+        machine_id="bcam_2030a",
+        name="BCAM 2030A Lutherie Router",
+        controller=ControllerType.GRBL,
+        travel_x_mm=600,
+        travel_y_mm=900,
+        travel_z_mm=120,
+        spindle_type=SpindleType.VFD_SPINDLE,
+        min_spindle_rpm=6000,
+        max_spindle_rpm=24000,
+        max_feed_xy_mm_min=8000,
+        max_feed_z_mm_min=3000,
+        safe_z_mm=25.0,
+        has_probe=True,
+        probe_feed_mm_min=100,
+    ),
 }
+
+# Default BCAM machine for lutherie
+BCAM_2030A = MACHINE_PRESETS["bcam_2030a"]
+
+
+def list_machines() -> List[BCamMachineSpec]:
+    """Return all available machine presets."""
+    return list(MACHINE_PRESETS.values())
 
 
 def get_machine(machine_id: str) -> BCamMachineSpec:
@@ -278,5 +331,7 @@ __all__ = [
     "ControllerType",
     "SpindleType",
     "MACHINE_PRESETS",
+    "BCAM_2030A",
     "get_machine",
+    "list_machines",
 ]
