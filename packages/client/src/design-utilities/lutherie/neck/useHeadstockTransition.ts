@@ -37,7 +37,7 @@ import { reactive, computed, readonly } from 'vue'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
-export type VoluteType = 'none' | 'gibson' | 'martin' | 'custom' | 'scallop'
+export type VoluteType = 'none' | 'gibson' | 'custom' | 'scallop'
 
 export interface TransitionSpec {
   // Headstock
@@ -56,11 +56,9 @@ export interface TransitionSpec {
 
   // Volute
   voluteType:       VoluteType
-  voluteHeightMm:   number    // peak height above back surface (mm)
+  voluteHeightMm:   number    // Gaussian peak height (mm above back surface)
   volutePositionMm: number    // Y offset from nut (negative = HS side, ~-12mm)
-  volSigmaMm:       number    // Gaussian σ — controls width for gibson/custom/scallop
-  volHalfWidthMm:   number    // tent half-width for martin (mm each side of peak)
-  volSharpness:     number    // tent face sharpness: 1.0=linear pyramid, <1=flared, >1=steep
+  volSigmaMm:       number    // Gaussian standard deviation (controls width)
 
   // CNC
   ballNoseMm:       number    // finishing ball-nose diameter
@@ -90,38 +88,24 @@ export const TRANSITION_PRESETS: Record<string, Partial<TransitionSpec>> = {
     neckDepthMm: 21.8, nutWidthMm: 43,
     blendLengthMm: 20, blendCentreMm: 4, blendTension: 65,
     voluteType: 'gibson', voluteHeightMm: 5, volutePositionMm: -14, volSigmaMm: 13,
-    volHalfWidthMm: 14, volSharpness: 1.0,
   },
   'PRS Modern': {
     headstockType: 'angled', pitchAngleDeg: 10, hsThicknessMm: 13,
     neckDepthMm: 21, nutWidthMm: 43,
     blendLengthMm: 24, blendCentreMm: 6, blendTension: 55,
     voluteType: 'none', voluteHeightMm: 0, volutePositionMm: -10, volSigmaMm: 10,
-    volHalfWidthMm: 10, volSharpness: 1.0,
   },
   'Fender Strat': {
     headstockType: 'flat', pitchAngleDeg: 0, hsThicknessMm: 14,
     neckDepthMm: 21, nutWidthMm: 42,
     blendLengthMm: 15, blendCentreMm: 3, blendTension: 40,
     voluteType: 'none', voluteHeightMm: 0, volutePositionMm: 0, volSigmaMm: 10,
-    volHalfWidthMm: 10, volSharpness: 1.0,
   },
   'Martin OM': {
-    // Traditional Martin acoustic — uses the faceted diamond/pyramid volute
     headstockType: 'angled', pitchAngleDeg: 15, hsThicknessMm: 14,
     neckDepthMm: 21.5, nutWidthMm: 44.5,
     blendLengthMm: 18, blendCentreMm: 3, blendTension: 60,
-    voluteType: 'martin', voluteHeightMm: 6, volutePositionMm: -15,
-    volSigmaMm: 11, volHalfWidthMm: 14, volSharpness: 0.8,
-  },
-  'Martin Pre-War D-28': {
-    // Pre-war Martin — more pronounced diamond volute, higher pitch angle
-    // h=6mm, half_width=14mm, sharpness=0.8 per classic D-28 measurements
-    headstockType: 'angled', pitchAngleDeg: 15, hsThicknessMm: 14.5,
-    neckDepthMm: 22, nutWidthMm: 44.5,
-    blendLengthMm: 16, blendCentreMm: 2, blendTension: 58,
-    voluteType: 'martin', voluteHeightMm: 6, volutePositionMm: -15,
-    volSigmaMm: 11, volHalfWidthMm: 14, volSharpness: 0.8,
+    voluteType: 'custom', voluteHeightMm: 4, volutePositionMm: -12, volSigmaMm: 11,
   },
 }
 
@@ -140,8 +124,6 @@ const DEFAULT_SPEC: TransitionSpec = {
   voluteHeightMm:   4,
   volutePositionMm: -12,
   volSigmaMm:       12,
-  volHalfWidthMm:   14,
-  volSharpness:     0.8,
   ballNoseMm:       9.525,   // 3/8" — repo T3 finish ball
   stepoverPct:      12,
   feedMmMin:        1200,
@@ -171,39 +153,10 @@ export function blendZ(y: number, spec: TransitionSpec): number {
   return neckBackZ(spec) * (1 - ts) + headstockPlaneZ(y, spec) * ts
 }
 
-/**
- * Volute contribution Z at position Y.
- *
- * Shape functions by type:
- *
- *   gibson / custom  — Gaussian bell curve: smooth swell, typical of Gibson
- *     Z = h × exp(-(y - y_c)² / 2σ²)
- *
- *   martin           — Faceted tent / truncated pyramid: the classic pre-war
- *     Martin diamond volute.  Two straight (or slightly curved) faces meeting
- *     at a ridge.  Shape controlled by half_width and sharpness:
- *       t = max(0, 1 - |y - y_c| / half_width)      ← normalised 0→1
- *       Z = h × t^sharpness
- *     sharpness = 1.0  → true linear pyramid (flat faces)
- *     sharpness < 1.0  → flared base, softer transition at edges (typical 0.7–0.9)
- *     sharpness > 1.0  → steep sides, narrow crown
- *
- *   scallop          — Inverted Gaussian: concave decorative hollow
- *     Z = -h × 0.6 × exp(-(y - y_c)² / 2σ²)
- */
+/** Volute contribution Z at position Y — Gaussian bump (or hollow for scallop) */
 export function voluteZ(y: number, spec: TransitionSpec): number {
   if (spec.voluteType === 'none') return 0
-
-  const dy = y - spec.volutePositionMm
-
-  if (spec.voluteType === 'martin') {
-    // Tent / truncated pyramid — the Martin diamond volute
-    const t = Math.max(0, 1 - Math.abs(dy) / spec.volHalfWidthMm)
-    return spec.voluteHeightMm * Math.pow(t, spec.volSharpness)
-  }
-
-  // Gaussian — gibson, custom, scallop
-  const g = Math.exp(-dy * dy / (2 * spec.volSigmaMm * spec.volSigmaMm))
+  const g = Math.exp(-Math.pow(y - spec.volutePositionMm, 2) / (2 * Math.pow(spec.volSigmaMm, 2)))
   if (spec.voluteType === 'scallop') return -spec.voluteHeightMm * g * 0.6
   return spec.voluteHeightMm * g
 }

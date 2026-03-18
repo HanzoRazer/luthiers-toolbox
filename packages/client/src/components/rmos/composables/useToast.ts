@@ -1,6 +1,10 @@
 /**
  * Composable for simple toast notifications.
  * Auto-dismisses after a configurable timeout.
+ *
+ * @deprecated Prefer useToastStore from '@/stores/toastStore' for a single app-wide toast system.
+ * This composable is local-state only; will be migrated/removed in a future release.
+ * See CRITICAL_SYSTEMS_REVIEW_2026-03-18.md (Usability — single toast system).
  */
 import { ref, onBeforeUnmount, type Ref } from 'vue'
 

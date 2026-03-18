@@ -231,6 +231,7 @@
 </template>
 
 <script setup lang="ts">
+import { useConfirm } from "@/composables/useConfirm";
 import { ref, computed, watch, onMounted, onUnmounted } from "vue";
 import {
   annotationManager,
@@ -239,6 +240,8 @@ import {
   type AnnotationType,
   type AnnotationExport,
 } from "@/util/toolpathAnnotations";
+
+const { confirm } = useConfirm();
 
 // Props
 const props = defineProps<{
@@ -401,11 +404,10 @@ function deleteAnnotation(id: string): void {
 }
 
 // Clear all
-function confirmClearAll(): void {
-  if (confirm("Delete all annotations? This cannot be undone.")) {
-    annotationManager.clearSaved();
-    refreshAnnotations();
-  }
+async function confirmClearAll(): Promise<void> {
+  if (!(await confirm("Delete all annotations? This cannot be undone."))) return;
+  annotationManager.clearSaved();
+  refreshAnnotations();
 }
 
 // Export

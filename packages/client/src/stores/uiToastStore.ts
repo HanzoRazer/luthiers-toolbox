@@ -1,3 +1,8 @@
+/**
+ * @deprecated Prefer useToastStore from '@/stores/toastStore' for a single app-wide toast system.
+ * This store duplicates toast behavior and will be migrated/removed in a future release.
+ * See CRITICAL_SYSTEMS_REVIEW_2026-03-18.md (Usability — single toast system).
+ */
 import { defineStore } from "pinia";
 
 export type ToastLevel = "info" | "success" | "warn" | "error";

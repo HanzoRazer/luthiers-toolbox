@@ -61,10 +61,12 @@
 </template>
 
 <script setup lang="ts">
+import { useConfirm } from '@/composables/useConfirm'
 import { onMounted } from 'vue';
 import { useRosettePatternStore } from '@/stores/useRosettePatternStore';
 import type { RosettePattern } from '@/models/rmos';
 
+const { confirm } = useConfirm()
 const emit = defineEmits<{
   (e: 'pattern-selected', pattern: RosettePattern | null): void;
 }>();
@@ -82,7 +84,7 @@ function selectPattern(id: string) {
 }
 
 async function deletePattern(id: string) {
-  if (!confirm(`Delete pattern ${id}?`)) return;
+  if (!(await confirm(`Delete pattern ${id}?`))) return;
   await store.deletePattern(id);
   emit('pattern-selected', store.selectedPattern);
 }

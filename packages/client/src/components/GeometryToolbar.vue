@@ -124,12 +124,14 @@
  * GeometryToolbar — Floating action panel for Design → CAM workflow.
  * Features: metadata display, clipboard copy, CAM routing, DXF export, clear.
  */
+import { useConfirm } from '@/composables/useConfirm'
 import { api } from '@/services/apiBase'
 import { ref, computed } from 'vue'
 import { useGeometryStore } from '@/stores/geometry'
 import { useRouter } from 'vue-router'
 import type { CAMTarget } from '@/stores/geometry'
 
+const { confirm } = useConfirm()
 type StatusType = 'success' | 'error' | 'info'
 
 const geometryStore = useGeometryStore()
@@ -205,11 +207,10 @@ async function exportDXF(): Promise<void> {
 }
 
 /** Clear geometry with confirmation dialog. */
-function clearGeometry(): void {
-  if (confirm('Clear current geometry? This cannot be undone.')) {
-    geometryStore.clearGeometry()
-    showStatus('Geometry cleared', 'info')
-  }
+async function clearGeometry(): Promise<void> {
+  if (!(await confirm('Clear current geometry? This cannot be undone.'))) return
+  geometryStore.clearGeometry()
+  showStatus('Geometry cleared', 'info')
 }
 
 /** Show status message with 3-second auto-dismiss. */

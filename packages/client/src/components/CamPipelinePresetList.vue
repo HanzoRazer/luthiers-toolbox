@@ -79,8 +79,11 @@ Updated: November 2025
 </template>
 
 <script setup lang="ts">
+import { useConfirm } from '@/composables/useConfirm'
 import { api } from '@/services/apiBase';
 import { computed, onMounted, ref } from 'vue'
+
+const { confirm } = useConfirm()
 
 interface PipelinePreset {
   id: string
@@ -139,7 +142,7 @@ function selectPreset (id: string) {
 }
 
 async function deletePreset (id: string) {
-  if (!window.confirm(`Delete preset ${id}?`)) return
+  if (!(await confirm(`Delete preset ${id}?`))) return
 
   try {
     const resp = await fetch(`/cam/pipeline/presets/${encodeURIComponent(id)}`, {
