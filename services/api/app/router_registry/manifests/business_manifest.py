@@ -95,4 +95,10 @@ BUSINESS_ROUTERS: List[RouterSpec] = [
         tags=["Binding", "Design", "Orchestration"],
         category="instrument_geometry",
     ),
+    RouterSpec(
+        module="app.routers.saddle_compensation_router",
+        prefix="",
+        tags=["Instruments", "Bridge", "Calculators"],
+        category="instrument",
+    ),
 ]
