@@ -19,10 +19,13 @@ from app.calculators.bridge_break_angle import (
     RiskFlag,
     calculate_break_angle,
     calculate_break_angle_v1_compat,
-    MINIMUM_ADEQUATE_DEG,
+    CARRUTH_MIN_DEG,
     TOO_STEEP_DEG,
     MINIMUM_PROJECTION_MM,
 )
+
+# Alias for backward compatibility in tests
+MINIMUM_ADEQUATE_DEG = CARRUTH_MIN_DEG
 
 
 # =============================================================================
