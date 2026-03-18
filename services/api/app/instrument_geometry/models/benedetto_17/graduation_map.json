@@ -15,6 +15,9 @@
   "edge_thickness_mm": 3.5,
   "recurve_depth_mm": 1.5,
 
+  "arch_height_mm": 16.0,
+  "arch_height_note": "Typical Benedetto 17in top arch ~5/8in. Verify against actual instrument.",
+
   "reference_points": {
     "apex": {"x_mm": 0, "y_mm": 0, "thickness_mm": 7.0},
     "upper_bout_edge": {"x_mm": 0, "y_mm": 200, "thickness_mm": 3.5},
