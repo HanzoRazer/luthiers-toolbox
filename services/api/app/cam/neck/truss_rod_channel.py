@@ -19,6 +19,7 @@ from dataclasses import dataclass, field
 from typing import List, Optional
 
 from .config import NeckPipelineConfig, TrussRodConfig, NeckToolSpec
+from ..post_processor import PostProcessor, PostConfig, ToolSpec
 
 
 @dataclass
@@ -55,13 +56,19 @@ class TrussRodChannelGenerator:
     Uses multi-pass depth strategy with configurable stepdown.
     """
 
-    def __init__(self, config: NeckPipelineConfig):
+    def __init__(self, config: NeckPipelineConfig, post_processor: Optional[PostProcessor] = None):
         self.config = config
         self.tr_config = config.truss_rod
         self.tool = config.tools.get(2)  # Default truss rod tool
 
         self.safe_z_mm = 25.0
         self.retract_z_mm = 5.0
+
+        # Use provided post-processor or create default
+        if post_processor is not None:
+            self.post_processor = post_processor
+        else:
+            self.post_processor = PostProcessor(PostConfig(safe_z_mm=self.safe_z_mm))
 
     def generate(self, tool: Optional[NeckToolSpec] = None) -> TrussRodResult:
         """Generate truss rod channel G-code."""
@@ -149,16 +156,15 @@ class TrussRodChannelGenerator:
         return result
 
     def _tool_change(self) -> List[str]:
-        """Generate tool change sequence."""
-        return [
-            "",
-            f"( Tool Change: T{self.tool.tool_number} - {self.tool.name} )",
-            "M5",  # Spindle off
-            f"T{self.tool.tool_number} M6",
-            f"S{self.tool.rpm} M3",
-            "G4 P2",  # Dwell for spindle
-            f"G0 Z{self.safe_z_mm:.3f}",
-        ]
+        """Generate tool change sequence via PostProcessor."""
+        # Convert NeckToolSpec to PostProcessor ToolSpec
+        tool_spec = ToolSpec(
+            tool_number=self.tool.tool_number,
+            name=self.tool.name,
+            rpm=self.tool.rpm,
+            diameter_mm=self.tool.diameter_mm,
+        )
+        return self.post_processor.tool_change(tool=tool_spec)
 
     def generate_access_pocket(self) -> List[str]:
         """

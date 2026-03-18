@@ -43,51 +43,94 @@ class FretSlotCAMOutput:
     statistics: Dict[str, Any]
 
 
+def _sagitta(radius_mm: float, half_width_mm: float) -> float:
+    """
+    Compute sagitta (arc depth) using the geometric formula.
+
+    Sagitta = r - sqrt(r² - x²)
+
+    Where:
+        r = radius of curvature
+        x = half the chord width (distance from center to edge)
+
+    The sagitta represents how deep the curved surface dips below
+    a straight line drawn across the chord.
+    """
+    if radius_mm <= 0 or half_width_mm <= 0:
+        return 0.0
+    # Ensure we don't take sqrt of negative (if half_width > radius)
+    r_squared = radius_mm * radius_mm
+    x_squared = half_width_mm * half_width_mm
+    if x_squared >= r_squared:
+        # Chord wider than circle diameter - shouldn't happen with real fretboards
+        return radius_mm  # Max possible sagitta
+    return radius_mm - sqrt(r_squared - x_squared)
+
+
 def compute_radius_blended_depth(
     base_radius_mm: Optional[float],
     end_radius_mm: Optional[float],
     position_mm: float,
     scale_length_mm: float,
     nominal_depth_mm: float = 3.0,
+    fretboard_width_mm: float = 43.0,  # Typical nut width
 ) -> float:
     """
-    Compute fret slot depth with compound radius blending.
-    
+    Compute fret slot depth with compound radius blending using sagitta formula.
+
     For compound radius fretboards (common taper: 9.5" nut → 12" heel),
     the slot depth varies slightly to maintain consistent fret crown height
     above the curved surface.
-    
+
+    Uses the sagitta formula: depth_correction = r - sqrt(r² - x²)
+
     Args:
         base_radius_mm: Radius at nut (e.g., 241.3mm for 9.5").
         end_radius_mm: Radius at heel (e.g., 304.8mm for 12").
         position_mm: Distance from nut to current fret.
         scale_length_mm: Full scale length.
         nominal_depth_mm: Standard slot depth (typically 2.5-3.5mm).
-    
+        fretboard_width_mm: Width of fretboard at this position.
+
     Returns:
-        Adjusted depth in mm accounting for radius blend.
-    
+        Adjusted depth in mm accounting for radius blend via sagitta.
+
     Notes:
         - If base_radius_mm is None → flat fretboard, return nominal depth.
-        - If end_radius_mm is None → constant radius, return nominal depth.
-        - Blending uses linear interpolation of radius over scale length.
+        - If end_radius_mm is None → constant radius, use base_radius only.
+        - Sagitta difference between nut and current position adjusts depth.
     """
-    if base_radius_mm is None or end_radius_mm is None:
+    # Flat fretboard - no adjustment needed
+    if base_radius_mm is None:
         return nominal_depth_mm
-    
-    # Linear blend ratio
+
+    # Constant radius - no blending needed, but still compute sagitta for accuracy
+    if end_radius_mm is None:
+        end_radius_mm = base_radius_mm
+
+    # Linear blend ratio along scale length
     blend_ratio = min(1.0, max(0.0, position_mm / scale_length_mm))
     current_radius_mm = base_radius_mm + (end_radius_mm - base_radius_mm) * blend_ratio
-    
-    # Radius correction factor (tighter radius → slightly deeper cut)
-    # This is a second-order effect; nominal depth is primary
-    base_factor = 1.0
-    if base_radius_mm > 0:
-        base_factor = current_radius_mm / base_radius_mm
-    
-    # Clamp adjustment to ±10% of nominal
-    adjusted_depth = nominal_depth_mm * base_factor
-    return max(nominal_depth_mm * 0.9, min(nominal_depth_mm * 1.1, adjusted_depth))
+
+    # Half-width for sagitta calculation (center to edge)
+    half_width = fretboard_width_mm / 2.0
+
+    # Compute sagitta at nut (reference) and current position
+    sagitta_at_nut = _sagitta(base_radius_mm, half_width)
+    sagitta_at_position = _sagitta(current_radius_mm, half_width)
+
+    # Depth correction: flatter radius (larger R) = smaller sagitta = shallower cut
+    # Tighter radius (smaller R) = larger sagitta = deeper cut to maintain crown height
+    # The difference in sagitta tells us how much to adjust
+    sagitta_delta = sagitta_at_position - sagitta_at_nut
+
+    # Adjusted depth: nominal + sagitta difference
+    # Positive delta (tighter curve) → deeper cut
+    # Negative delta (flatter curve) → shallower cut
+    adjusted_depth = nominal_depth_mm + sagitta_delta
+
+    # Clamp adjustment to ±15% of nominal for safety
+    return max(nominal_depth_mm * 0.85, min(nominal_depth_mm * 1.15, adjusted_depth))
 
 
 @safety_critical
