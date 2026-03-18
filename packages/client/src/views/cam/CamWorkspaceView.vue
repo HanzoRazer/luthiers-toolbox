@@ -16,6 +16,7 @@
  */
 
 import { ref, reactive, computed, watch } from 'vue'
+import { useContextTools } from '@/composables/useContextTools'
 import NeckOpPanel       from '@/components/cam/NeckOpPanel.vue'
 import GcodePreviewPanel from '@/components/cam/GcodePreviewPanel.vue'
 import GateStatusBadge   from '@/components/cam/GateStatusBadge.vue'
@@ -37,6 +38,8 @@ type StepId = 0 | 1 | 2 | 3 | 4 | 5
 type OpId   = 'truss_rod' | 'profile_rough' | 'profile_finish' | 'fret_slots'
 
 const activeStep = ref<StepId>(0)
+const contextTools = useContextTools('cam')
+const toolsOpen = ref(false)
 
 // ── Machine context ───────────────────────────────────────────────────────────
 const machineId  = ref('bcam_2030a')
@@ -446,6 +449,24 @@ function stepStatus(id: number): 'done' | 'warn' | 'ok' | 'idle' {
       </div>
     </aside>
 
+    <div class="context-tools">
+      <button
+        class="tools-toggle"
+        @click="toolsOpen = !toolsOpen">
+        ⚙ Tools ({{ contextTools.tools.value.length }})
+      </button>
+      <div v-if="toolsOpen" class="tools-panel">
+        <p class="tools-hint">
+          Context-aware calculators will appear here
+          as modules mature.
+        </p>
+        <ul>
+          <li v-for="t in contextTools.tools.value"
+              :key="t">{{ t }}</li>
+        </ul>
+      </div>
+    </div>
+
   </div>
 </template>
 
@@ -627,4 +648,10 @@ function stepStatus(id: number): 'done' | 'warn' | 'ok' | 'idle' {
 .gate-summary { gap: 5px; }
 .gs-row { display: flex; align-items: center; justify-content: space-between; }
 .gs-op  { font-size: 8px; color: var(--dim); text-transform: capitalize; }
+
+.context-tools { padding: 8px 12px; border-top: 1px solid var(--w3); background: var(--w1); }
+.tools-toggle { padding: 4px 8px; font-size: 8px; color: var(--dim); background: none; border: 1px solid var(--w3); border-radius: 3px; cursor: pointer; }
+.tools-panel { margin-top: 6px; padding: 8px; border: 1px solid var(--w3); border-radius: 3px; }
+.tools-hint { font-size: 8px; color: var(--dim3); margin: 0 0 6px 0; }
+.context-tools ul { margin: 0; padding-left: 16px; font-size: 8px; color: var(--dim); }
 </style>

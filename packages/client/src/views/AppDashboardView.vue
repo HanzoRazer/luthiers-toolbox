@@ -177,13 +177,6 @@
               <span class="quick-link-icon">📋</span>
               <span class="quick-link-label">RMOS Runs</span>
             </RouterLink>
-            <RouterLink
-              to="/calculators"
-              class="quick-link-card"
-            >
-              <span class="quick-link-icon">💰</span>
-              <span class="quick-link-label">Calculators</span>
-            </RouterLink>
           </div>
         </div>
       </div>
@@ -243,6 +236,7 @@ const domains = [
     description: 'Adaptive, saw, bridge, helical, V-Carve, relief, polygon offset',
     links: [
       { icon: '📐', label: 'CAM Workspace',   to: '/cam/workspace' },
+      { icon: '🎸', label: 'Neck Designer',  to: '/cam/neck' },
       { icon: '🌀', label: 'Adaptive Lab',    to: '/lab/adaptive' },
       { icon: '🪚', label: 'Saw Lab',         to: '/lab/saw/slice' },
       { icon: '🌉', label: 'Bridge Lab',      to: '/lab/bridge' },

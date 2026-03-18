@@ -310,8 +310,8 @@ def test_ownership_failure_cause_survives_json_serialization(
                     "score_before": 0.58,
                     "score_after": 0.66,
                     "score_delta": 0.08,
-                    "ownership_before": 0.39,
-                    "ownership_after": 0.72,
+                    "ownership_score_before": 0.39,
+                    "ownership_score_after": 0.72,
                 }
             ]
         },
@@ -352,8 +352,8 @@ def test_ownership_failure_cause_survives_json_serialization(
     attempt = retry_attempts[0]
     assert attempt["retry_profile_used"] == "body_region_expansion"
     assert "ownership" in attempt["retry_reason"].lower()
-    assert attempt["ownership_before"] == 0.39
-    assert attempt["ownership_after"] == 0.72
+    assert attempt["ownership_score_before"] == 0.39
+    assert attempt["ownership_score_after"] == 0.72
 
     # Ownership score itself must appear on the contour_stage
     contour_stage_data = decoded.get("contour_stage", {})

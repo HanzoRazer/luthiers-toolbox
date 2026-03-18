@@ -1,0 +1,22 @@
+{
+  "case_id": "archtop",
+  "family": "archtop",
+  "manual_review_required": false,
+  "diagnostics": {
+    "retry_attempts": [
+      {
+        "retry_reason": "Contour body ownership is too low (0.46 < 0.60).",
+        "retry_profile_used": "body_region_expansion",
+        "retry_iteration": 1,
+        "score_before": 0.61,
+        "score_after": 0.70,
+        "score_delta": 0.09,
+        "ownership_score_before": 0.46,
+        "ownership_score_after": 0.63,
+        "ownership_score_delta": 0.17,
+        "ownership_ok_before": false,
+        "ownership_ok_after": true
+      }
+    ]
+  }
+}

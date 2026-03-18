@@ -70,8 +70,8 @@ def test_summarize_retry_attempts_ownership_trajectory():
                         "score_before": 0.58,
                         "score_after": 0.66,
                         "score_delta": 0.08,
-                        "ownership_before": 0.39,
-                        "ownership_after": 0.72,
+                        "ownership_score_before": 0.39,
+                        "ownership_score_after": 0.72,
                     }
                 ]
             },
@@ -84,5 +84,5 @@ def test_summarize_retry_attempts_ownership_trajectory():
     assert result["ownership_score"] == 0.72
     assert result["ownership_ok"] is True
     assert len(result["ownership_trajectory"]) == 1
-    assert result["ownership_trajectory"][0]["ownership_before"] == 0.39
-    assert result["ownership_trajectory"][0]["ownership_after"] == 0.72
+    assert result["ownership_trajectory"][0]["ownership_score_before"] == 0.39
+    assert result["ownership_trajectory"][0]["ownership_score_after"] == 0.72

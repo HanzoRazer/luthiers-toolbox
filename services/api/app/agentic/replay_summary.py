@@ -62,12 +62,12 @@ def summarize_retry_attempts(payload: Dict[str, Any]) -> Dict[str, Any]:
 
     ownership_trajectory: List[Dict[str, Optional[float]]] = []
     for attempt in retry_attempts:
-        ob = attempt.get("ownership_before")
-        oa = attempt.get("ownership_after")
+        ob = attempt.get("ownership_score_before")
+        oa = attempt.get("ownership_score_after")
         if ob is not None or oa is not None:
             ownership_trajectory.append({
-                "ownership_before": ob,
-                "ownership_after": oa,
+                "ownership_score_before": ob,
+                "ownership_score_after": oa,
             })
 
     return {
