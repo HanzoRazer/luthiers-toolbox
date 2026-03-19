@@ -118,9 +118,9 @@ class TestRateLimitIntegration:
         # Default is enabled
         assert RATE_LIMIT_ENABLED is True
 
-    def test_rate_limit_exceeded_handler_response_format(self):
+    @pytest.mark.asyncio
+    async def test_rate_limit_exceeded_handler_response_format(self):
         """Test rate limit exceeded handler returns proper format."""
-        import asyncio
         from app.middleware.rate_limit import rate_limit_exceeded_handler
         from slowapi.errors import RateLimitExceeded
 
@@ -134,12 +134,12 @@ class TestRateLimitIntegration:
         mock_request.client = MagicMock()
         mock_request.client.host = "127.0.0.1"
 
-        exc = RateLimitExceeded(detail="10 per minute")
+        # slowapi RateLimitExceeded(limit) expects a Limit with .error_message
+        mock_limit = MagicMock()
+        mock_limit.error_message = "10 per minute"
+        exc = RateLimitExceeded(mock_limit)
 
-        # Run async handler
-        response = asyncio.get_event_loop().run_until_complete(
-            rate_limit_exceeded_handler(mock_request, exc)
-        )
+        response = await rate_limit_exceeded_handler(mock_request, exc)
 
         assert response.status_code == 429
         assert "Retry-After" in response.headers
