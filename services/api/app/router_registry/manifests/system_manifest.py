@@ -45,18 +45,8 @@ SYSTEM_ROUTERS: List[RouterSpec] = [
         tags=["Advisory", "Blobs"],
         category="vision",
     ),
-    RouterSpec(
-        module="app._experimental.ai_cam_router",
-        prefix="/api",
-        tags=["AI-CAM"],
-        category="experimental",
-    ),
-    RouterSpec(
-        module="app._experimental.joblog_router",
-        prefix="/api",
-        tags=["JobLog", "Telemetry"],
-        category="experimental",
-    ),
+    # REMOVED: app._experimental.ai_cam_router (archived, 0 consumers)
+    # REMOVED: app._experimental.joblog_router (archived, 0 consumers)
     RouterSpec(
         module="app.routers.learned_overrides_router",
         prefix="/api",

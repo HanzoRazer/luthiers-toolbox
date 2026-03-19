@@ -10,25 +10,71 @@ reading actual code.
 
 ## TEST-001 — Fix 33 pre-existing test failures
 
-**Status:** Known, not investigated
+**Status:** ✅ RESOLVED (test_dxf_plan_endpoint_smoke.py: 24/24 passing)
 **Priority:** Medium
-**Effort:** Unknown until investigated
+**Effort:** ~1 hour
 
-33 tests consistently fail in pytest runs.
-They are pre-existing and unrelated to recent work.
+### Root Causes Found and Fixed
 
-**First step:** Run pytest with -v and capture
-the failing test names:
-```bash
-pytest services/api/tests/ -v 2>&1 | grep "FAILED" | head -40
-```
+**1. Logging `filename` key collision** (`app/cam/dxf_validation_gate.py`)
+- Python's LogRecord reserves `filename` attribute
+- Logging `extra={"filename": ...}` caused `KeyError: "Attempt to overwrite 'filename'"`
+- **Fix:** Changed to `"dxf_filename": filename` in logger extra dicts (lines 171, 178, 198, 217)
 
-**Then:** Triage into:
-- Genuinely broken (fix)
-- Skipped intentionally (add skip marker)
-- Environment-dependent (document)
+**2. Wrong method call** (`app/routers/dxf_adaptive_consolidated_router.py`)
+- Called `preflight.validate()` but method is `run_all_checks()`
+- Accessed `report.ok` but attribute is `report.passed`
+- **Fix:** Changed method name and attribute access
 
-Do not fix them now — just document in BACKLOG.
+**3. Unhandled `DXFStructureError`** (`app/routers/dxf_adaptive_consolidated_router.py`)
+- Invalid DXF content (`b"not a dxf file"`) raised unhandled exception
+- **Fix:** Added `from ezdxf.lldxf.const import DXFStructureError` import
+- Wrapped DXF validation in try/except, returns HTTP 422 with clear error
+
+### Files Changed
+- `services/api/app/cam/dxf_validation_gate.py`
+- `services/api/app/routers/dxf_adaptive_consolidated_router.py`
+
+---
+
+## CLEANUP-001 — Graduate _experimental/analytics/
+
+**Status:** Ready to graduate — 4 active consumers
+**Priority:** Medium
+**Effort:** ~2 hours
+
+4 production routers import from `_experimental/analytics/`:
+- `analytics_advanced_router.py`
+- `analytics_jobs_router.py`
+- `analytics_materials_router.py`
+- `analytics_patterns_router.py`
+
+### Steps
+1. Move: `app/_experimental/analytics/` → `app/analytics/`
+2. Update all 4 import paths
+3. Register in a new `analytics_manifest.py`
+4. Run tests after
+
+---
+
+## CLEANUP-002 — Graduate _experimental/cnc_production/
+
+**Status:** Ready to graduate — 6+ active consumers
+**Priority:** Medium
+**Effort:** ~3 hours
+
+6+ production files import from `_experimental/cnc_production/`:
+- `saw_lab/saw_lab_router.py`
+- `rmos/pipeline/feedback/learning.py`
+- `rmos/pipeline/feedback/models.py`
+- `rmos/runs_v2/operations.py`
+- `rmos/runs_v2/store_registry.py`
+- `learned_overrides_router.py`
+
+### Steps
+1. Move: `app/_experimental/cnc_production/` → `app/cam_core/`
+2. Update all import paths
+3. Run tests after
 
 ---
 

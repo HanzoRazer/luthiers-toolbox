@@ -1,6 +1,6 @@
 # _experimental/ Module Status
 
-> Last updated: 2026-03-15
+> Last updated: 2026-03-19
 
 This directory contains modules that are under active development but not yet ready
 for graduation to canonical production paths.
@@ -10,9 +10,9 @@ for graduation to canonical production paths.
 | Module | Status | Used in Production | Graduation Target |
 |--------|--------|-------------------|-------------------|
 | `ai_core/` | **DELETED** | No | Migrated to `app/rmos/ai/` |
-| `ai_cam/` | **ARCHIVED** | No | Was unused - moved to `__ARCHIVED__/` |
-| `ai_cam_router.py` | **ARCHIVED** | No | Was unused - moved to `__ARCHIVED__/` |
-| `joblog_router.py` | **ARCHIVED** | No | Was unused - moved to `__ARCHIVED__/` |
+| `ai_cam/` | **DELETED** | No | Was unused - permanently deleted |
+| `ai_cam_router.py` | **DELETED** | No | Was unused - permanently deleted |
+| `joblog_router.py` | **DELETED** | No | Was unused - permanently deleted |
 | `analytics/` | Stable, Active | Yes | `app/analytics/` |
 | `cnc_production/` | Stable, Active | Yes | `app/cam_core/cnc/` |
 | `infra/` | **GRADUATED** | Yes | Migrated to `app/infra/` |
@@ -32,31 +32,32 @@ Migration completed:
 
 ---
 
-### `ai_cam/` (ARCHIVED - March 2026)
+### `ai_cam/` (DELETED - March 2026)
 
-**Status:** Archived to `__ARCHIVED__/ai_cam/`
+**Status:** Permanently deleted
 
-**Reason:** Audit found zero imports in codebase. The module contained:
+**Reason:** Audit found zero imports in codebase. Was archived on 2026-03-15, then
+permanently deleted on 2026-03-19 after confirming no restoration requests.
+
+The module contained (now gone):
 - `advisor.py` - AI-powered CAM parameter suggestions
 - `explain_gcode.py` - G-code explanation service
 - `models.py` - Pydantic schemas for AI CAM
 - `optimize.py` - Optimization algorithms
 
-**Restoration:** If needed, move back from `__ARCHIVED__/` and register router.
-
 ---
 
-### `ai_cam_router.py` (ARCHIVED - March 2026)
+### `ai_cam_router.py` (DELETED - March 2026)
 
-**Status:** Archived to `__ARCHIVED__/ai_cam_router.py`
+**Status:** Permanently deleted
 
 **Reason:** Not registered in main.py, zero imports found.
 
 ---
 
-### `joblog_router.py` (ARCHIVED - March 2026)
+### `joblog_router.py` (DELETED - March 2026)
 
-**Status:** Archived to `__ARCHIVED__/joblog_router.py`
+**Status:** Permanently deleted
 
 **Reason:** Not registered in main.py, zero imports found.
 
@@ -136,18 +137,6 @@ Migration completed:
 
 ---
 
-## `__ARCHIVED__/` Directory
-
-Contains modules that were audited and found to have no active imports.
-These are preserved for reference but should NOT be imported.
-
-See `__ARCHIVED__/README.md` for details.
-
-**Deletion Policy:** After 2 release cycles with no restoration requests,
-archived modules may be permanently deleted.
-
----
-
 ## Migration Process
 
 When graduating a module:
@@ -174,6 +163,8 @@ from app.analytics import *  # noqa
 
 | Date | Change |
 |------|--------|
+| 2026-03-19 | Permanently deleted `__ARCHIVED__/` directory (ai_cam/, ai_cam_router.py, joblog_router.py) |
+| 2026-03-19 | Removed stale manifest entries from system_manifest.py |
 | 2026-03-15 | Archived `ai_cam/`, `ai_cam_router.py`, `joblog_router.py` (no imports found) |
 | 2026-03-15 | Graduated `infra/` to `app/infra/` |
 | 2026-03-12 | Deleted `ai_core/`, updated ai_search.py imports |
