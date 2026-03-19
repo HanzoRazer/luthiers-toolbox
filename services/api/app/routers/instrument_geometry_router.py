@@ -10,7 +10,7 @@ Endpoints for instrument geometry calculations:
 
 from __future__ import annotations
 
-from typing import List, Any, Dict, Optional
+from typing import Any, Dict, List, Optional
 
 from fastapi import APIRouter
 from pydantic import BaseModel, Field
@@ -30,6 +30,19 @@ from app.calculators.nut_slot_calc import (
     list_string_sets,
     get_string_set,
     STANDARD_STRING_SETS,
+)
+from app.calculators.soundhole_calc import (
+    SoundholeSpec,
+    compute_soundhole_spec,
+    check_soundhole_position,
+    list_body_styles,
+)
+from app.calculators.setup_cascade import (
+    SetupState,
+    SetupCascadeResult,
+    SetupIssue,
+    evaluate_setup,
+    suggest_adjustments,
 )
 
 router = APIRouter(
@@ -83,6 +96,42 @@ class SupportedOptionsResponse(BaseModel):
     """Response with supported species and instrument types."""
     species: List[str]
     instrument_types: List[str]
+
+class SoundholeRequest(BaseModel):
+    """Request for soundhole specification."""
+    body_style: str = Field(..., description="Body style (dreadnought, om_000, parlor, classical, etc.)")
+    body_length_mm: float = Field(..., gt=0, description="Body length from neck block to tail block in mm")
+    custom_diameter_mm: Optional[float] = Field(None, gt=0, description="Custom diameter override in mm")
+
+
+class SoundholeResponse(BaseModel):
+    """Response with soundhole specification."""
+    diameter_mm: float
+    position_from_neck_block_mm: float
+    body_style: str
+    gate: str
+    notes: List[str]
+
+
+class SoundholePositionCheckRequest(BaseModel):
+    """Request to check soundhole position validity."""
+    diameter_mm: float = Field(..., gt=0, description="Soundhole diameter in mm")
+    position_mm: float = Field(..., gt=0, description="Position from neck block in mm")
+    body_length_mm: float = Field(..., gt=0, description="Body length in mm")
+
+
+class SoundholePositionCheckResponse(BaseModel):
+    """Response with position check result."""
+    gate: str
+    diameter_mm: float
+    position_mm: float
+    body_length_mm: float
+
+
+class SoundholeOptionsResponse(BaseModel):
+    """Response with supported body styles."""
+    body_styles: List[str]
+
 
 
 # ─── Nut Slot Models ──────────────────────────────────────────────────────────
@@ -284,3 +333,170 @@ def get_nut_slot_options() -> NutSlotOptionsResponse:
         fret_types=list_fret_types(),
         preset_string_sets=list_string_sets(),
     )
+
+
+# ─── Setup cascade (CONSTRUCTION-002) ────────────────────────────────────────
+
+class SetupStateRequest(BaseModel):
+    """Request body for setup cascade evaluation."""
+    neck_angle_deg: float = Field(default=1.5, description="Neck angle (degrees)")
+    truss_rod_relief_mm: float = Field(default=0.25, description="Relief at 7th fret (mm)")
+    nut_slot_depths_mm: Optional[Dict[str, float]] = Field(default_factory=dict)
+    action_at_nut_mm: float = Field(default=0.5, description="High E at nut (mm)")
+    action_at_12th_treble_mm: float = Field(default=1.9, description="Treble 12th (mm)")
+    action_at_12th_bass_mm: float = Field(default=2.4, description="Bass 12th (mm)")
+    saddle_height_mm: float = Field(default=3.0)
+    saddle_projection_mm: float = Field(default=2.5)
+    scale_length_mm: float = Field(default=628.65)
+    fretboard_height_at_joint_mm: float = Field(default=5.0)
+    neck_joint_fret: int = Field(default=14)
+
+
+class SetupIssueResponse(BaseModel):
+    """Single setup issue for API response."""
+    parameter: str
+    current_value: float
+    recommended_range: List[float]  # [min, max]
+    gate: str
+    fix: str
+
+
+class SetupCascadeResponse(BaseModel):
+    """Response from setup cascade evaluation."""
+    state: Dict[str, Any]  # serialized SetupState fields
+    issues: List[SetupIssueResponse]
+    overall_gate: str
+    summary: str
+    suggestions: List[str] = Field(default_factory=list)
+
+
+@router.post(
+    "/setup/evaluate",
+    response_model=SetupCascadeResponse,
+    summary="Evaluate instrument setup (CONSTRUCTION-002)",
+    description="""
+    Run setup cascade: check neck angle, relief, nut action, 12th fret action,
+    saddle projection. Returns GREEN/YELLOW/RED per parameter and overall,
+    plus plain-language fix suggestions.
+    """,
+)
+def evaluate_instrument_setup(req: SetupStateRequest) -> SetupCascadeResponse:
+    """Evaluate setup state and return cascade result with issues and suggestions."""
+    state = SetupState(
+        neck_angle_deg=req.neck_angle_deg,
+        truss_rod_relief_mm=req.truss_rod_relief_mm,
+        nut_slot_depths_mm=req.nut_slot_depths_mm or {},
+        action_at_nut_mm=req.action_at_nut_mm,
+        action_at_12th_treble_mm=req.action_at_12th_treble_mm,
+        action_at_12th_bass_mm=req.action_at_12th_bass_mm,
+        saddle_height_mm=req.saddle_height_mm,
+        saddle_projection_mm=req.saddle_projection_mm,
+        scale_length_mm=req.scale_length_mm,
+        fretboard_height_at_joint_mm=req.fretboard_height_at_joint_mm,
+        neck_joint_fret=req.neck_joint_fret,
+    )
+    result = evaluate_setup(state)
+    # Serialize state as dict (simple fields only)
+    state_dict = {
+        "neck_angle_deg": state.neck_angle_deg,
+        "truss_rod_relief_mm": state.truss_rod_relief_mm,
+        "action_at_nut_mm": state.action_at_nut_mm,
+        "action_at_12th_treble_mm": state.action_at_12th_treble_mm,
+        "action_at_12th_bass_mm": state.action_at_12th_bass_mm,
+        "saddle_height_mm": state.saddle_height_mm,
+        "saddle_projection_mm": state.saddle_projection_mm,
+        "scale_length_mm": state.scale_length_mm,
+    }
+    issues_resp = [
+        SetupIssueResponse(
+            parameter=i.parameter,
+            current_value=i.current_value,
+            recommended_range=list(i.recommended_range),
+            gate=i.gate,
+            fix=i.fix,
+        )
+        for i in result.issues
+    ]
+    suggestions = suggest_adjustments(result)
+    return SetupCascadeResponse(
+        state=state_dict,
+        issues=issues_resp,
+        overall_gate=result.overall_gate,
+        summary=result.summary,
+        suggestions=suggestions,
+    )
+
+# ─── Soundhole Endpoints ─────────────────────────────────────────────────────
+
+@router.post(
+    "/soundhole",
+    response_model=SoundholeResponse,
+    summary="Calculate soundhole specification",
+    description="""
+    Calculate soundhole diameter and position for a given body style.
+
+    **Input:**
+    - Body style (dreadnought, om_000, parlor, classical, etc.)
+    - Body length (mm)
+    - Optional custom diameter override
+
+    **Output:**
+    - Diameter (mm)
+    - Position from neck block (mm)
+    - Gate status (GREEN/YELLOW/RED)
+    - Notes and warnings
+
+    **Standard diameters:**
+    - Dreadnought: 100mm
+    - OM/000: 98mm
+    - Parlor: 85mm
+    - Classical: 85mm
+    """,
+)
+def calculate_soundhole(req: SoundholeRequest) -> SoundholeResponse:
+    """Calculate soundhole specification for body style."""
+    spec: SoundholeSpec = compute_soundhole_spec(
+        body_style=req.body_style,
+        body_length_mm=req.body_length_mm,
+        custom_diameter_mm=req.custom_diameter_mm,
+    )
+    return SoundholeResponse(**spec.to_dict())
+
+
+@router.post(
+    "/soundhole/check-position",
+    response_model=SoundholePositionCheckResponse,
+    summary="Check soundhole position validity",
+    description="""
+    Validate a soundhole position against body proportions.
+
+    **Position rules:**
+    - Should be 45-55% of body length from neck block
+    - Front edge must clear neck block by at least 20mm
+    - Rear edge must leave room for bracing (40mm from tail)
+    """,
+)
+def check_soundhole_position_endpoint(req: SoundholePositionCheckRequest) -> SoundholePositionCheckResponse:
+    """Check if soundhole position is valid."""
+    gate = check_soundhole_position(
+        diameter_mm=req.diameter_mm,
+        position_mm=req.position_mm,
+        body_length_mm=req.body_length_mm,
+    )
+    return SoundholePositionCheckResponse(
+        gate=gate,
+        diameter_mm=req.diameter_mm,
+        position_mm=req.position_mm,
+        body_length_mm=req.body_length_mm,
+    )
+
+
+@router.get(
+    "/soundhole/options",
+    response_model=SoundholeOptionsResponse,
+    summary="List supported body styles for soundhole calculation",
+)
+def get_soundhole_options() -> SoundholeOptionsResponse:
+    """Return list of supported body styles."""
+    return SoundholeOptionsResponse(body_styles=list_body_styles())
+
