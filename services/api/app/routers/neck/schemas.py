@@ -122,3 +122,27 @@ class NeckGcodeResponse(BaseModel):
     profile: str
     scale_length: float
     nut_width: float
+
+
+# ---------------------------------------------------------------------------
+# Neck angle calculator (GEOMETRY-001)
+# ---------------------------------------------------------------------------
+
+class NeckAngleRequest(BaseModel):
+    """Request body for POST /api/neck/angle."""
+    bridge_height_mm: float = Field(..., description="Top of bridge to soundboard (mm)")
+    saddle_projection_mm: float = Field(..., description="Saddle height above bridge top (mm)")
+    fretboard_height_at_joint_mm: float = Field(
+        ..., description="Fretboard plane at body join (mm)"
+    )
+    nut_to_bridge_mm: float = Field(..., description="Scale length approx (mm)")
+    neck_joint_fret: int = Field(14, description="Fret where neck meets body")
+    action_12th_mm: float = Field(2.0, description="String height at 12th fret (mm)")
+
+
+class NeckAngleResponse(BaseModel):
+    """Response from POST /api/neck/angle."""
+    angle_deg: float
+    gate: str  # GREEN / YELLOW / RED
+    message: str
+    saddle_height_required_mm: float
