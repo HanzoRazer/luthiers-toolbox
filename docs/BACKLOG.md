@@ -8,52 +8,64 @@ reading actual code.
 ---
 
 
-## TEST-001 — Fix 33 pre-existing test failures
+## TEST-001 — Fix pre-existing test failures
 
-**Status:** ✅ RESOLVED (test_dxf_plan_endpoint_smoke.py: 24/24 passing)
+**Status:** ✅ RESOLVED (20→0 failures, 3,887 tests collected)
 **Priority:** Medium
 **Effort:** ~1 hour
 
 ### Root Causes Found and Fixed
 
-**1. Logging `filename` key collision** (`app/cam/dxf_validation_gate.py`)
+**1. Missing `__init__.py`** (`app/dxf/__init__.py`)
+- Module `app.dxf.preflight_service` was not importable
+- 11 tests in `test_golden_dxf_preflight.py` failed with ImportError
+- **Fix:** Created `app/dxf/__init__.py` with exports
+
+**2. Logging `filename` key collision** (`app/cam/dxf_validation_gate.py`)
 - Python's LogRecord reserves `filename` attribute
 - Logging `extra={"filename": ...}` caused `KeyError: "Attempt to overwrite 'filename'"`
 - **Fix:** Changed to `"dxf_filename": filename` in logger extra dicts (lines 171, 178, 198, 217)
 
-**2. Wrong method call** (`app/routers/dxf_adaptive_consolidated_router.py`)
+**3. Wrong method call** (`app/routers/dxf_adaptive_consolidated_router.py`)
 - Called `preflight.validate()` but method is `run_all_checks()`
 - Accessed `report.ok` but attribute is `report.passed`
 - **Fix:** Changed method name and attribute access
 
-**3. Unhandled `DXFStructureError`** (`app/routers/dxf_adaptive_consolidated_router.py`)
+**4. Unhandled `DXFStructureError`** (`app/routers/dxf_adaptive_consolidated_router.py`)
 - Invalid DXF content (`b"not a dxf file"`) raised unhandled exception
 - **Fix:** Added `from ezdxf.lldxf.const import DXFStructureError` import
 - Wrapped DXF validation in try/except, returns HTTP 422 with clear error
 
 ### Files Changed
+- `services/api/app/dxf/__init__.py` (created)
 - `services/api/app/cam/dxf_validation_gate.py`
 - `services/api/app/routers/dxf_adaptive_consolidated_router.py`
 
 ---
 
-## CLEANUP-001 — Graduate _experimental/analytics/
+## STUB-001 — Stub Endpoint Debt Audit
 
-**Status:** Ready to graduate — 4 active consumers
-**Priority:** Medium
-**Effort:** ~2 hours
+**Status:** ✅ RESOLVED (0 endpoint stubs remaining)
+**Priority:** Low
+**Effort:** Audit only
 
-4 production routers import from `_experimental/analytics/`:
-- `analytics_advanced_router.py`
-- `analytics_jobs_router.py`
-- `analytics_materials_router.py`
-- `analytics_patterns_router.py`
+### Findings
 
-### Steps
-1. Move: `app/_experimental/analytics/` → `app/analytics/`
-2. Update all 4 import paths
-3. Register in a new `analytics_manifest.py`
-4. Run tests after
+The `PHASE_2_3_IMPLEMENTATION_PLAN.md` claimed 23 stubs across 3 files, but audit found:
+
+1. **`cam/routers/stub_routes.py`** — FILE DELETED (was 4 stubs)
+2. **`rmos/stub_routes.py`** — FILE DELETED (was 13 stubs)
+3. **`routers/misc_stub_routes.py`** — CLEANED UP (was 6 stubs)
+   - Now contains 1 real proxy endpoint (`/ai/advisories/request` → `rmos.ai_advisory.service`)
+   - All stubs either wired to real implementations or removed
+
+### Intentional Test Utilities (Keep)
+
+- `rmos/engines/feasibility_stub.py` — Test/dev engine for deterministic results
+  - Disabled in production (requires `ALLOW_STUB_ENGINE=true`)
+  - Returns GREEN by default, supports `force_status` for test injection
+
+**No action required** — stub debt is already resolved.
 
 ---
 
