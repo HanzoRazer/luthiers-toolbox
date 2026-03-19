@@ -336,7 +336,7 @@ class TopologyValidator:
             dxf_bytes: Raw DXF file content
             filename: Original filename (for reporting)
         """
-        self.doc = ezdxf.readfile(io.BytesIO(dxf_bytes))
+        self.doc = ezdxf.read(io.BytesIO(dxf_bytes))
         self.filename = filename
         self.msp = self.doc.modelspace()
         self.issues: List[TopologyIssue] = []

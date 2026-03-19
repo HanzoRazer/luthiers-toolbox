@@ -384,5 +384,27 @@
     "bare_except": 6,
     "large_files": 24,
     "god_objects": 13
+  },
+  {
+    "timestamp": "2026-03-19T05:35:33.283796",
+    "endpoints": 847,
+    "bare_except": 0,
+    "large_files": 46,
+    "god_objects": 14,
+    "note": "Calculator bundles: GEOMETRY-005 through CONSTRUCTION-008, electronics layout, voicing, setup cascade"
+  },
+  {
+    "timestamp": "2026-03-19T05:36:12.516734",
+    "endpoints": 847,
+    "bare_except": 6,
+    "large_files": 46,
+    "god_objects": 13
+  },
+  {
+    "timestamp": "2026-03-19T07:09:25.786224",
+    "endpoints": 847,
+    "bare_except": 6,
+    "large_files": 46,
+    "god_objects": 13
   }
 ]

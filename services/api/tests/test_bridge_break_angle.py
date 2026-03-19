@@ -36,14 +36,14 @@ class TestBreakAngleMath:
     """Verify the basic arctan formula produces correct angles."""
 
     def test_default_values(self):
-        """Default: 5.5mm pin distance - 1.2mm slot offset = 4.3mm effective, 2.5mm projection."""
+        """Default: 5.5mm pin distance - 1.25mm slot offset = 4.25mm effective, 2.5mm projection."""
         result = calculate_break_angle(BreakAngleInput())
-        # effective_distance = 5.5 - 1.2 = 4.3 mm
-        expected = math.degrees(math.atan2(2.5, 4.3))
+        # effective_distance = 5.5 - 1.25 = 4.25 mm (DEFAULT_SLOT_OFFSET_MM = 1.25)
+        expected = math.degrees(math.atan2(2.5, 4.25))
         assert result.break_angle_deg == pytest.approx(expected, abs=0.1)
         assert result.rating == "adequate"
         assert result.energy_coupling == "adequate"
-        assert result.effective_distance_mm == pytest.approx(4.3, abs=0.01)
+        assert result.effective_distance_mm == pytest.approx(4.25, abs=0.01)
 
     def test_known_45_degrees(self):
         """Equal effective distance and projection -> 45 deg (too steep)."""
@@ -101,8 +101,8 @@ class TestRatingClassification:
         ))
         assert result.rating == "adequate"
 
-    def test_too_shallow_below_minimum(self):
-        """Angle below MINIMUM_ADEQUATE_DEG should be too_shallow."""
+    def test_marginal_below_minimum(self):
+        """Angle below MINIMUM_ADEQUATE_DEG (6°) but above MARGINAL (4°) should be marginal."""
         d = 10.0
         h = d * math.tan(math.radians(MINIMUM_ADEQUATE_DEG - 1.0))  # 5 deg
         result = calculate_break_angle(BreakAngleInput(
@@ -110,7 +110,21 @@ class TestRatingClassification:
             slot_offset_mm=0.0,
             saddle_projection_mm=h,
         ))
+        # v2: 4-6° is marginal zone (YELLOW gate)
+        assert result.rating == "marginal"
+        assert result.gate == "YELLOW"
+
+    def test_too_shallow_below_marginal(self):
+        """Angle below MARGINAL_MIN_DEG (4°) should be too_shallow."""
+        d = 10.0
+        h = d * math.tan(math.radians(3.0))  # 3 deg - well below marginal
+        result = calculate_break_angle(BreakAngleInput(
+            pin_to_saddle_center_mm=d,
+            slot_offset_mm=0.0,
+            saddle_projection_mm=h,
+        ))
         assert result.rating == "too_shallow"
+        assert result.gate == "RED"
 
     def test_adequate_well_above_minimum(self):
         """Angle well above minimum (e.g. 20 deg) is adequate, not optimal."""
