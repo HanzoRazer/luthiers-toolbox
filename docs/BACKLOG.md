@@ -266,56 +266,6 @@ class BuildSequence:
 
 ---
 
-## GEOMETRY-003 — Kerfing geometry calculator
-
-**Status:** Data exists in specs; no geometry calculator  
-**Priority:** Medium  
-**Effort:** ~2 hours
-
-**What exists:**
-- `instrument_geometry/specs/martin_d28_1937.py`: `SIDE_PROFILE_WITH_KERFING_IN` — kerfing thickness assumed ~0.25" but not parameterized
-- `instrument_geometry/specs/jumbo_archtop.json`: kerfed_lining `{width_mm: 12.0, height_mm: 18.0}` — dimensions stored, no bendability check
-- `instrument_geometry/specs/gibson_j45.json`: `kerf_lining` field exists in j45_bulge.py but data is sparse
-
-**What's missing:** the geometry calculator for the kerfing itself.
-
-**Kerfing geometry formulas:**
-```
-# Kerf slot geometry
-kerf_depth_mm = stock_thickness_mm × 0.70    # 70% depth rule — deeper = more flexible, weaker
-kerf_spacing_mm = typically 3–5mm center-to-center
-
-# Minimum bend radius (from kerf geometry):
-# When bent, the un-kerfed web acts as a hinge
-web_thickness_mm = stock_thickness_mm × 0.30
-min_bend_radius_mm = web_thickness_mm × (kerf_spacing_mm / kerf_depth_mm) × 10
-# Empirical factor — stiffer species need more kerfs per unit length
-
-# Glue surface area (critical for joint strength):
-glue_area_mm2 = (stock_height_mm × body_perimeter_mm) - (kerf_depth_mm × kerf_count)
-```
-
-**Species-specific parameters:**
-- Mahogany: standard 3mm spacing, 70% depth
-- Basswood: 4mm spacing (softer, less kerf needed)
-- Spruce (archtop): 3.5mm, tighter around waist
-
-**Connect to:**
-- `calculators/binding_geometry.py` — `BendRadiusCheck` already exists, kerfing adds to it
-- `instrument_geometry/specs/martin_d28_1937.py` — `SIDE_PROFILE_WITH_KERFING_MM` shows kerfing contributes to side depth
-
-**File to create:** `calculators/kerfing_calc.py`
-```python
-def compute_kerfing_geometry(
-    stock_thickness_mm: float,
-    stock_height_mm: float,
-    species: str,
-    waist_radius_mm: float,
-) -> KerfingSpec   # kerf_depth, kerf_spacing, min_bend_radius, glue_area
-```
-
----
-
 ## GEOMETRY-004 — Bridge design geometry
 
 **Status:** Saddle position and compensation exist; bridge shape absent  
