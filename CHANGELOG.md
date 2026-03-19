@@ -77,6 +77,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - `POST /api/instrument/blocks` — both neck and tail block specs
   - `GET /api/instrument/blocks/options` — supported body styles
 
+- **GEOMETRY-006**: Fret wire selection calculator (`calculators/fret_wire_calc.py`)
+  - 7 fret profiles (vintage_narrow, medium, medium_jumbo, jumbo, extra_jumbo, evo_6105, stainless_6105)
+  - 3 materials (nickel_silver, stainless, evo_gold) with hardness and wear factor
+  - Selection based on playing style (fingerstyle, flatpick, shred, jazz)
+  - Compatibility with fretboard materials and neck profiles
+  - `POST /api/instrument/fret-wire/recommend` — ranked recommendations
+  - `GET /api/instrument/fret-wire/catalog` — full catalog
+  - `GET /api/instrument/fret-wire/options` — available options
+
 ### 🔬 Acoustics / Plate Design
 
 - **PORT-001**: Ported tap-tone-pi plate thickness design module to `calculators/plate_design/`
