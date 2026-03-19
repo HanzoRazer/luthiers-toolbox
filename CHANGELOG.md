@@ -86,6 +86,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - `GET /api/instrument/fret-wire/catalog` — full catalog
   - `GET /api/instrument/fret-wire/options` — available options
 
+- **CONSTRUCTION-008**: Electronics physical layout calculator (`calculators/electronics_layout_calc.py`)
+  - Pickup cavity dimensions: humbucker (50×40×45mm), single_coil (90×15×45mm), p90 (90×50×45mm), mini_humbucker (67×34×40mm)
+  - Control cavity sizing with pot count adjustment (19mm minimum spacing)
+  - Switch cavity specs (3way_toggle, 5way_blade, rotary)
+  - Jack cavity specs (side, top, endpin)
+  - Body style presets (les_paul, stratocaster, telecaster, sg)
+  - Shielding area calculation
+  - GREEN/YELLOW/RED gate for cavity clearance vs body thickness
+  - `POST /api/instrument/electronics-layout` — complete electronics layout
+  - `POST /api/instrument/electronics-layout/pickup-cavity` — single pickup cavity
+  - `POST /api/instrument/electronics-layout/control-layout` — control/switch/jack layout
+  - `GET /api/instrument/electronics-layout/options` — available options
+
 ### 🔬 Acoustics / Plate Design
 
 - **PORT-001**: Ported tap-tone-pi plate thickness design module to `calculators/plate_design/`
