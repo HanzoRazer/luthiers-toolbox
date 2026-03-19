@@ -1,9 +1,10 @@
 # _experimental/ Module Status
 
 > Last updated: 2026-03-19
+> **STATUS: FULLY CLEARED** — All modules graduated or deleted.
 
-This directory contains modules that are under active development but not yet ready
-for graduation to canonical production paths.
+This directory is now empty except for this status file.
+All experimental modules have been graduated to production paths or deleted.
 
 ## Module Status Summary
 
@@ -13,7 +14,7 @@ for graduation to canonical production paths.
 | `ai_cam/` | **DELETED** | No | Was unused - permanently deleted |
 | `ai_cam_router.py` | **DELETED** | No | Was unused - permanently deleted |
 | `joblog_router.py` | **DELETED** | No | Was unused - permanently deleted |
-| `analytics/` | Stable, Active | Yes | `app/analytics/` |
+| `analytics/` | **GRADUATED** | Yes | Graduated to `app/analytics/` |
 | `cnc_production/` | **GRADUATED** | Yes | Graduated to `app/cam_core/` |
 | `infra/` | **GRADUATED** | Yes | Migrated to `app/infra/` |
 
@@ -63,31 +64,23 @@ The module contained (now gone):
 
 ---
 
-### `analytics/` - Advanced Analytics Services
+### `analytics/` (GRADUATED - March 2026)
 
-**Status:** Stable, Production-Used
+**Status:** Graduated to `app/analytics/`
 
-**Files:**
-- `advanced_analytics.py` - Cross-domain aggregate analytics
-- `job_analytics.py` - Job execution statistics
-- `material_analytics.py` - Material usage tracking
-- `pattern_analytics.py` - Pattern frequency analysis
+Migration completed (CLEANUP-001, cf025a1e):
+- `advanced_analytics.py` moved to `app/analytics/advanced_analytics.py`
+- `job_analytics.py` moved to `app/analytics/job_analytics.py`
+- `material_analytics.py` moved to `app/analytics/material_analytics.py`
+- `pattern_analytics.py` moved to `app/analytics/pattern_analytics.py`
 
-**Dependencies:**
-- Used by:
-  - `app/routers/analytics_jobs_router.py`
-  - `app/routers/analytics_advanced_router.py`
-  - `app/routers/analytics_materials_router.py`
-  - `app/routers/analytics_patterns_router.py`
-- Actively serving production endpoints
+4 consumer routers updated:
+- `app/routers/analytics_jobs_router.py`
+- `app/routers/analytics_advanced_router.py`
+- `app/routers/analytics_materials_router.py`
+- `app/routers/analytics_patterns_router.py`
 
-**Graduation Criteria:**
-- [ ] Create `app/analytics/` directory
-- [ ] Move files with updated imports
-- [ ] Update dependent routers
-- [ ] Add deprecation shim for 1 release cycle
-
-**Risk:** Medium - Active production usage requires careful migration
+Experimental `analytics/` directory deleted
 
 ---
 
@@ -151,7 +144,9 @@ from app.analytics import *  # noqa
 
 | Date | Change |
 |------|--------|
-| 2026-03-19 | Graduated `cnc_production/` to `app/cam_core/` (CLEANUP-002) |
+| 2026-03-19 | **FULLY CLEARED** — all modules graduated or deleted |
+| 2026-03-19 | Graduated `analytics/` to `app/analytics/` (CLEANUP-001, cf025a1e) |
+| 2026-03-19 | Graduated `cnc_production/` to `app/cam_core/` (CLEANUP-002, f090ec73) |
 | 2026-03-19 | Permanently deleted `__ARCHIVED__/` directory (ai_cam/, ai_cam_router.py, joblog_router.py) |
 | 2026-03-19 | Removed stale manifest entries from system_manifest.py |
 | 2026-03-15 | Archived `ai_cam/`, `ai_cam_router.py`, `joblog_router.py` (no imports found) |
