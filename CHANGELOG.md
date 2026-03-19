@@ -60,6 +60,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - `POST /api/instrument/side-thickness` — thickness recommendation
   - `GET /api/instrument/side-bending/options` — supported species and instrument types
 
+- **CONSTRUCTION-001**: Nut slot depth schedule calculator (`calculators/nut_slot_calc.py`)
+  - String diameter + fret crown height → slot depth formula
+  - 6 fret types (vintage_narrow, medium, medium_jumbo, jumbo, extra_jumbo, evo_gold)
+  - 4 preset string sets (light electric, regular electric, light acoustic, medium acoustic)
+  - GREEN/YELLOW/RED clearance gate (optimal: 0.3-0.5mm above first fret)
+  - `POST /api/instrument/nut-slots` — complete slot schedule with gate assessment
+  - `GET /api/instrument/nut-slots/options` — supported fret types and string presets
+
 ### 🔬 Acoustics / Plate Design
 
 - **PORT-001**: Ported tap-tone-pi plate thickness design module to `calculators/plate_design/`
