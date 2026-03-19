@@ -35,6 +35,11 @@ from .radius_profiles import (
     inches_to_mm,
     mm_to_inches,
 )
+from .neck_angle import (
+    NeckAngleInput,
+    NeckAngleResult,
+    compute_neck_angle,
+)
 
 __all__ = [
     # fret_math
@@ -60,4 +65,8 @@ __all__ = [
     "generate_compound_radius_profile",
     "inches_to_mm",
     "mm_to_inches",
+    # neck_angle
+    "NeckAngleInput",
+    "NeckAngleResult",
+    "compute_neck_angle",
 ]

@@ -19,6 +19,8 @@ from .neck.schemas import (
     Point2D,
     NeckParameters,
     NeckGeometryOut,
+    NeckAngleRequest,
+    NeckAngleResponse,
 )
 
 # Import geometry functions from decomposed module
@@ -41,6 +43,12 @@ from ..calculators.headstock_break_angle import (
     HeadstockBreakAngleInput,
     HeadstockBreakAngleResult,
     calculate_headstock_break_angle,
+)
+
+# Import neck angle calculator (GEOMETRY-001)
+from ..instrument_geometry.neck.neck_angle import (
+    NeckAngleInput,
+    compute_neck_angle,
 )
 
 # Import sub-routers (guitar_models_router consolidates strat, tele, prs)
@@ -177,6 +185,36 @@ def get_neck_presets():
             }
         ]
     }
+
+
+# ============================================================================
+# NECK ANGLE CALCULATOR (GEOMETRY-001)
+# ============================================================================
+
+@router.post("/angle", response_model=NeckAngleResponse)
+def compute_neck_angle_endpoint(req: NeckAngleRequest) -> NeckAngleResponse:
+    """
+    Compute neck angle from bridge height, fretboard height, and scale length.
+
+    θ = arctan((H_saddle + H_bridge - H_fretboard) / L_body)
+
+    Returns angle in degrees with gate (GREEN/YELLOW/RED) and message.
+    """
+    inp = NeckAngleInput(
+        bridge_height_mm=req.bridge_height_mm,
+        saddle_projection_mm=req.saddle_projection_mm,
+        fretboard_height_at_joint_mm=req.fretboard_height_at_joint_mm,
+        nut_to_bridge_mm=req.nut_to_bridge_mm,
+        neck_joint_fret=req.neck_joint_fret,
+        action_12th_mm=req.action_12th_mm,
+    )
+    result = compute_neck_angle(inp)
+    return NeckAngleResponse(
+        angle_deg=result.angle_deg,
+        gate=result.gate,
+        message=result.message,
+        saddle_height_required_mm=result.saddle_height_required_mm,
+    )
 
 
 # ============================================================================

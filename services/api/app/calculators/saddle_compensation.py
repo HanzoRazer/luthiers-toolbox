@@ -9,9 +9,13 @@ Semi-empirical model based on string gauge, action, scale length, tension, and w
 """
 from __future__ import annotations
 
+import argparse
+import csv
 import math
+import sys
 from dataclasses import dataclass, field
-from typing import List, Literal, Optional
+from pathlib import Path
+from typing import List, Literal, Optional, Union
 
 from pydantic import BaseModel, Field
 
@@ -31,6 +35,18 @@ ACTION_EXPONENT = 1.7
 SCALE_COEFFICIENT = 0.25
 TENSION_COEFFICIENT = 7.5
 WOUND_BONUS_MM = 0.55
+
+# CSV column definitions for bench tool mode
+INPUT_CSV_COLUMNS = [
+    "name", "x_mm", "current_comp_mm",
+    "cents_error", "weight"
+]
+
+OUTPUT_CSV_COLUMNS = [
+    "name", "x_mm", "current_comp_mm",
+    "cents_error", "weight", "delta_mm",
+    "target_comp_mm", "fitted_comp_mm", "residual_mm"
+]
 
 
 # =============================================================================
@@ -449,3 +465,221 @@ def build_setup_result(inp: SetupCalculatorInput) -> SetupCalculatorResult:
         max_adjustment_mm=round(max_adjustment, 3),
         recommendation=rec,
     )
+
+# =============================================================================
+# CSV I/O for Bench Tool Mode
+# =============================================================================
+
+
+def read_string_inputs_from_csv(
+    path: Union[str, Path]
+) -> List[StringMeasurementInput]:
+    """
+    Read string measurement inputs from a CSV file.
+
+    Expected columns: name, x_mm, current_comp_mm, cents_error, weight
+    Weight is optional (defaults to 1.0).
+
+    Args:
+        path: Path to input CSV file
+
+    Returns:
+        List of StringMeasurementInput objects
+    """
+    path = Path(path)
+    strings: List[StringMeasurementInput] = []
+
+    with path.open("r", newline="", encoding="utf-8") as f:
+        reader = csv.DictReader(f)
+        for row in reader:
+            strings.append(
+                StringMeasurementInput(
+                    name=row["name"].strip(),
+                    x_mm=float(row["x_mm"]),
+                    current_comp_mm=float(row["current_comp_mm"]),
+                    cents_error=float(row["cents_error"]),
+                    weight=float(row.get("weight", 1.0) or 1.0),
+                )
+            )
+
+    return strings
+
+
+def write_results_to_csv(
+    result: SetupCalculatorResult,
+    path: Union[str, Path],
+    inputs: Optional[List[StringMeasurementInput]] = None,
+) -> None:
+    """
+    Write setup calculator results to a CSV file.
+
+    Output columns: name, x_mm, current_comp_mm, cents_error, weight,
+                    delta_mm, target_comp_mm, fitted_comp_mm, residual_mm
+
+    Args:
+        result: SetupCalculatorResult from build_setup_result()
+        path: Path to output CSV file
+        inputs: Original inputs (for weight column); if None, weight defaults to 1.0
+    """
+    path = Path(path)
+
+    # Build weight lookup from inputs if provided
+    weight_map = {}
+    if inputs:
+        for inp in inputs:
+            weight_map[inp.name] = inp.weight
+
+    with path.open("w", newline="", encoding="utf-8") as f:
+        writer = csv.writer(f)
+        writer.writerow(OUTPUT_CSV_COLUMNS)
+
+        for sr in result.string_results:
+            weight = weight_map.get(sr.name, 1.0)
+            # target_comp_mm = new_comp_mm (the calculated target)
+            # fitted_comp_mm and residual_mm are N/A for setup mode (use 0)
+            writer.writerow([
+                sr.name,
+                sr.x_mm,
+                sr.current_comp_mm,
+                sr.cents_error,
+                weight,
+                sr.delta_L_mm,
+                sr.new_comp_mm,  # target_comp_mm
+                0.0,  # fitted_comp_mm (N/A for setup mode)
+                0.0,  # residual_mm (N/A for setup mode)
+            ])
+
+
+def write_example_input_csv(path: Union[str, Path]) -> None:
+    """
+    Write an example input CSV template.
+
+    Creates a template with 6 strings (standard guitar) and example values.
+
+    Args:
+        path: Path to output CSV template file
+    """
+    path = Path(path)
+
+    example_strings = [
+        ("E6", 0.0, 2.8, 3.0, 1.0),
+        ("A5", 10.4, 2.5, -2.0, 1.0),
+        ("D4", 20.8, 2.3, 1.5, 1.0),
+        ("G3", 31.2, 2.0, 0.0, 1.0),
+        ("B2", 41.6, 1.8, 2.0, 1.0),
+        ("E1", 52.0, 1.6, -1.0, 1.0),
+    ]
+
+    with path.open("w", newline="", encoding="utf-8") as f:
+        writer = csv.writer(f)
+        writer.writerow(INPUT_CSV_COLUMNS)
+        for row in example_strings:
+            writer.writerow(row)
+
+
+# =============================================================================
+# CLI Entry Point
+# =============================================================================
+
+
+def main() -> int:
+    """
+    CLI entry point for saddle compensation calculator.
+
+    Usage:
+        python -m app.calculators.saddle_compensation \
+            --scale-length-mm 628.65 \
+            --input-csv bench_input.csv \
+            --output-csv bench_output.csv
+
+        python -m app.calculators.saddle_compensation \
+            --write-example-csv template.csv
+    """
+    parser = argparse.ArgumentParser(
+        description="Bridge saddle compensation calculator (bench tool mode)",
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog="""
+Examples:
+  Generate example input template:
+    python -m app.calculators.saddle_compensation --write-example-csv template.csv
+
+  Calculate adjustments from measurements:
+    python -m app.calculators.saddle_compensation --scale-length-mm 628.65 \
+        --input-csv measurements.csv --output-csv results.csv
+""",
+    )
+
+    parser.add_argument(
+        "--scale-length-mm",
+        type=float,
+        help="Scale length in millimeters (e.g., 628.65 for Gibson 24.75\")",
+    )
+    parser.add_argument(
+        "--input-csv",
+        type=str,
+        help="Path to input CSV with string measurements",
+    )
+    parser.add_argument(
+        "--output-csv",
+        type=str,
+        help="Path to output CSV for results",
+    )
+    parser.add_argument(
+        "--write-example-csv",
+        type=str,
+        metavar="PATH",
+        help="Write example input template to PATH and exit",
+    )
+
+    args = parser.parse_args()
+
+    # Handle example template generation
+    if args.write_example_csv:
+        write_example_input_csv(args.write_example_csv)
+        print(f"Example template written to: {args.write_example_csv}")
+        return 0
+
+    # Validate required args for calculation
+    if not args.scale_length_mm:
+        parser.error("--scale-length-mm is required for calculation")
+    if not args.input_csv:
+        parser.error("--input-csv is required for calculation")
+    if not args.output_csv:
+        parser.error("--output-csv is required for calculation")
+
+    # Read inputs
+    try:
+        strings = read_string_inputs_from_csv(args.input_csv)
+    except FileNotFoundError:
+        print(f"Error: Input file not found: {args.input_csv}", file=sys.stderr)
+        return 1
+    except (KeyError, ValueError) as e:
+        print(f"Error: Invalid CSV format: {e}", file=sys.stderr)
+        return 1
+
+    if not strings:
+        print("Error: No strings found in input CSV", file=sys.stderr)
+        return 1
+
+    # Run calculation
+    inp = SetupCalculatorInput(
+        scale_length_mm=args.scale_length_mm,
+        strings=strings,
+    )
+    result = build_setup_result(inp)
+
+    # Write results
+    write_results_to_csv(result, args.output_csv, strings)
+
+    # Print summary
+    print(f"Processed {len(strings)} strings")
+    print(f"Average adjustment: {result.avg_adjustment_mm:.3f} mm")
+    print(f"Maximum adjustment: {result.max_adjustment_mm:.3f} mm")
+    print(f"Recommendation: {result.recommendation}")
+    print(f"Results written to: {args.output_csv}")
+
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())

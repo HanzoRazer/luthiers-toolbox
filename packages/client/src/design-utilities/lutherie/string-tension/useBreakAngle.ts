@@ -10,6 +10,9 @@
  *   - Backend returns gate result (GREEN/YELLOW/RED) based on Carruth 6° minimum
  *   - Client-side Carruth interpretation removed — use gate from API directly
  *
+ * Optional upstream: neck_angle_deg from POST /api/neck/angle (GEOMETRY-001).
+ * If provided, it is noted as the computed neck angle for display/context.
+ *
  * Two modes:
  *   'computed'  — resolves from API using geometry inputs
  *   'manual'    — user enters break angle directly (no API call)
@@ -65,6 +68,9 @@ export function useBreakAngle() {
   const apiResult = ref<BreakAngleApiResult | null>(null)
   const loading = ref(false)
   const error = ref<string | null>(null)
+
+  /** Optional upstream neck angle (from POST /api/neck/angle). When set, note for display/context. */
+  const neckAngleDegUpstream = ref<number | null>(null)
 
   // --------------------------------------------------------------------------
   // Resolved break angle (used downstream by useTension)
@@ -161,6 +167,11 @@ export function useBreakAngle() {
     error.value = null
   }
 
+  /** Set upstream neck angle when available from POST /api/neck/angle (GEOMETRY-001). */
+  function setNeckAngleUpstream(deg: number | null): void {
+    neckAngleDegUpstream.value = deg
+  }
+
   // --------------------------------------------------------------------------
   // Expose
   // --------------------------------------------------------------------------
@@ -173,10 +184,13 @@ export function useBreakAngle() {
     loading: readonly(loading),
     error: readonly(error),
     resolved: readonly(resolved),
+    /** When set, neck angle from POST /api/neck/angle (noted for context). */
+    neckAngleDegUpstream: readonly(neckAngleDegUpstream),
 
     setMode,
     updateGeometry,
     fetchBreakAngle,
     resetToManual,
+    setNeckAngleUpstream,
   }
 }

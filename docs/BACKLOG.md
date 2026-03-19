@@ -443,52 +443,6 @@ class BuildSequence:
 
 ---
 
-## GEOMETRY-001 — Neck angle calculation
-
-**Status:** Field exists in schema, hardcoded in routers — no calculator  
-**Priority:** High — most consequential single geometry decision on a flat-top acoustic  
-**Effort:** ~3 hours
-
-**What exists:**
-- `schemas/instrument_project.py` line 150: `neck_angle_degrees: float` — field only, no derivation
-- `routers/neck_router.py` lines 158/166/174: hardcoded 4.0°, 5.0°, 3.0° per model
-- `routers/cam/guitar/archtop_cam_router.py` line 158: `neck_angle_rad = math.radians(req.neck_angle_deg)` — consumed but never computed
-
-**What's missing:** the formula that derives the correct angle from geometry.
-
-**Formula:**
-```
-neck_angle_deg = arctan(
-    (bridge_height_mm - fretboard_height_at_body_join_mm)
-    / distance_nut_to_bridge_mm
-)
-
-where:
-  bridge_height_mm          = saddle_height_mm + bridge_base_mm + top_thickness_mm
-  fretboard_height_at_body_join_mm = fret_height_at_body_join + fretboard_thickness
-  distance_nut_to_bridge_mm = scale_length_mm + saddle_compensation_avg_mm
-```
-
-**Why it matters:** 0.5° error = ~2mm saddle height error = neck reset required in 5–10 years
-as the top deflects under string tension.
-
-**Connect to:**
-- `instrument_geometry/bridge/geometry.py` — `compute_bridge_location_mm()` gives bridge position
-- `calculators/bridge_break_angle.py` — saddle projection feeds into break angle check
-- `calculators/string_tension.py` (CONSTRUCTION-004) — top deflection under load
-
-**File to create:** `calculators/neck_angle_calc.py`
-```python
-def compute_neck_angle(
-    scale_length_mm: float,
-    bridge_height_mm: float,          # saddle top above body surface
-    fretboard_height_at_join_mm: float,
-    body_join_fret: int,              # 12th fret join vs 14th fret join
-) -> NeckAngleResult
-```
-
----
-
 ## GEOMETRY-002 — Soundhole placement and sizing rules
 
 **Status:** Diameter exists in body volume calc; placement rules absent  

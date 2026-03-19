@@ -58,6 +58,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### 🛠️ Neck Suite
 
+- **GEOMETRY-001**: Neck angle promoted to first-class calculator
+  - `instrument_geometry/neck/neck_angle.py`: `NeckAngleInput`, `NeckAngleResult`, `compute_neck_angle()`
+  - Gates: GREEN 1.0-3.5°, YELLOW 0.5-1.0° / 3.5-5.0°, RED <0.5° or >5.0°
+  - POST `/api/neck/angle` endpoint wired in neck_router.py
+  - Phase 2 of bridge geometry chain: neck_angle → break_angle → compensation → setup
+
 - Added `routers/neck/headstock_transition_export.py` — DXF + G-code for headstock transition zone with volute geometry
 - Added `routers/neck/neck_profile_export.py` — DXF export for neck profile cross-sections
 

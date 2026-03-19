@@ -419,3 +419,154 @@ class TestSaddleCompensationEndpoints:
             }
         )
         assert response.status_code == 422  # Validation error
+
+
+# =============================================================================
+# CSV Round-Trip Tests
+# =============================================================================
+
+
+class TestCsvRoundTrip:
+    """Tests for CSV I/O functions."""
+
+    @pytest.fixture
+    def temp_dir(self, tmp_path):
+        """Create temporary directory for test files."""
+        return tmp_path
+
+    def test_write_example_and_read_back(self, temp_dir):
+        """Example CSV should be valid and readable."""
+        from app.calculators.saddle_compensation import (
+            write_example_input_csv,
+            read_string_inputs_from_csv,
+        )
+
+        example_path = temp_dir / "example.csv"
+        write_example_input_csv(example_path)
+
+        # Should be readable
+        strings = read_string_inputs_from_csv(example_path)
+
+        assert len(strings) == 6
+        assert strings[0].name == "E6"
+        assert strings[5].name == "E1"
+        assert strings[0].cents_error == 3.0
+        assert strings[0].weight == 1.0
+
+    def test_csv_roundtrip_preserves_data(self, temp_dir):
+        """Write results and verify output contains all columns."""
+        from app.calculators.saddle_compensation import (
+            write_example_input_csv,
+            read_string_inputs_from_csv,
+            write_results_to_csv,
+            build_setup_result,
+            SetupCalculatorInput,
+            OUTPUT_CSV_COLUMNS,
+        )
+        import csv
+
+        # Generate example input
+        input_path = temp_dir / "input.csv"
+        write_example_input_csv(input_path)
+        strings = read_string_inputs_from_csv(input_path)
+
+        # Run calculation
+        inp = SetupCalculatorInput(scale_length_mm=GIBSON_SCALE_MM, strings=strings)
+        result = build_setup_result(inp)
+
+        # Write results
+        output_path = temp_dir / "output.csv"
+        write_results_to_csv(result, output_path, strings)
+
+        # Read back and verify
+        with output_path.open("r", encoding="utf-8") as f:
+            reader = csv.DictReader(f)
+            rows = list(reader)
+
+        assert len(rows) == 6
+        # Verify all columns present
+        for col in OUTPUT_CSV_COLUMNS:
+            assert col in rows[0], f"Missing column: {col}"
+
+        # Verify E6 string
+        e6 = next(r for r in rows if r["name"] == "E6")
+        assert float(e6["cents_error"]) == 3.0
+        assert float(e6["delta_mm"]) > 0  # Sharp string needs adjustment
+
+    def test_read_csv_handles_missing_weight(self, temp_dir):
+        """CSV without weight column should default to 1.0."""
+        from app.calculators.saddle_compensation import read_string_inputs_from_csv
+
+        # Write CSV without weight column
+        csv_path = temp_dir / "no_weight.csv"
+        with csv_path.open("w", newline="", encoding="utf-8") as f:
+            f.write("name,x_mm,current_comp_mm,cents_error\n")
+            f.write("E6,0.0,2.5,3.0\n")
+            f.write("E1,52.0,1.8,-2.0\n")
+
+        strings = read_string_inputs_from_csv(csv_path)
+
+        assert len(strings) == 2
+        assert strings[0].weight == 1.0
+        assert strings[1].weight == 1.0
+
+    def test_results_csv_delta_matches_calculation(self, temp_dir):
+        """Output CSV delta_mm should match calculated adjustment."""
+        from app.calculators.saddle_compensation import (
+            read_string_inputs_from_csv,
+            write_results_to_csv,
+            build_setup_result,
+            compute_saddle_adjustment,
+            SetupCalculatorInput,
+            StringMeasurementInput,
+        )
+        import csv
+
+        # Create specific input
+        input_path = temp_dir / "specific.csv"
+        with input_path.open("w", newline="", encoding="utf-8") as f:
+            f.write("name,x_mm,current_comp_mm,cents_error,weight\n")
+            f.write("E1,52.0,2.0,5.0,1.0\n")  # 5 cents sharp
+
+        strings = read_string_inputs_from_csv(input_path)
+        inp = SetupCalculatorInput(scale_length_mm=GIBSON_SCALE_MM, strings=strings)
+        result = build_setup_result(inp)
+
+        output_path = temp_dir / "result.csv"
+        write_results_to_csv(result, output_path, strings)
+
+        with output_path.open("r", encoding="utf-8") as f:
+            reader = csv.DictReader(f)
+            rows = list(reader)
+
+        expected_delta = compute_saddle_adjustment(GIBSON_SCALE_MM, 5.0)
+        actual_delta = float(rows[0]["delta_mm"])
+
+        assert abs(actual_delta - expected_delta) < 0.001
+
+    def test_cli_write_example_csv(self, temp_dir):
+        """CLI --write-example-csv should create valid template."""
+        import subprocess
+        import csv
+
+        template_path = temp_dir / "cli_template.csv"
+
+        result = subprocess.run(
+            [
+                "python", "-m", "app.calculators.saddle_compensation",
+                "--write-example-csv", str(template_path)
+            ],
+            cwd="C:/Users/thepr/Downloads/luthiers-toolbox/services/api",
+            capture_output=True,
+            text=True,
+        )
+
+        assert result.returncode == 0
+        assert template_path.exists()
+
+        with template_path.open("r", encoding="utf-8") as f:
+            reader = csv.DictReader(f)
+            rows = list(reader)
+
+        assert len(rows) == 6
+        assert rows[0]["name"] == "E6"
