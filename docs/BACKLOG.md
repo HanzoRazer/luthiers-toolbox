@@ -32,23 +32,6 @@ Do not fix them now — just document in BACKLOG.
 
 ---
 
-
-## WOOD-001 — Merge material registries
-
-**Status:** Partially closed
-**Priority:** Low
-
-Two separate material tables exist:
-- `materials/registry/tonewoods.py` — machining properties (feeds/speeds context)
-- `calculators/plate_design/calibration.py` (after PORT-001) — acoustic properties
-
-**Progress:** `E_C_gpa` (cross-grain elastic modulus) added to `tonewoods.py` this session, partially closing the gap between machining and acoustic property tables.
-
-Long term they should be one record per species.
-Short term they can coexist — do not block PORT-001 on this.
-
----
-
 ## Notes on how this backlog works
 
 Each item here was identified by reading code, not by speculation.

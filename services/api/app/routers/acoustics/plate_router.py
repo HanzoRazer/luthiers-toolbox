@@ -5,6 +5,9 @@ from typing import Any, Dict, List, Literal, Optional
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel, Field
 
+# Toolbox registry for canonical wood properties
+from app.materials.registry.tonewoods import get_tonewood
+
 try:
     from app.calculators.plate_design import (
         analyze_plate,
@@ -27,6 +30,39 @@ except ImportError as e:
     _import_error = str(e)
 
 router = APIRouter(tags=["acoustics-plate"])
+
+
+# ---------------------------------------------------------------------------
+# Material lookup helper — WOOD-001 registry consolidation
+# ---------------------------------------------------------------------------
+
+def get_material_for_plate(species_id: str) -> Optional[Dict[str, float]]:
+    """
+    Get material properties for plate analysis.
+
+    Tries toolbox registry first (canonical source), falls back to
+    tap-tone-pi presets for materials not yet in the registry.
+
+    Returns dict with E_L_GPa, E_C_GPa, density_kg_m3 or None.
+    """
+    # Try toolbox registry first
+    entry = get_tonewood(species_id)
+    if entry and entry.modulus_of_elasticity_gpa and entry.E_C_gpa:
+        return {
+            "E_L_GPa": entry.modulus_of_elasticity_gpa,
+            "E_C_GPa": entry.E_C_gpa,
+            "density_kg_m3": entry.density_kg_m3,
+        }
+    # Fall back to plate_design presets
+    if PLATE_DESIGN_AVAILABLE:
+        preset = get_material_preset(species_id)
+        if preset:
+            return {
+                "E_L_GPa": preset.E_L_GPa,
+                "E_C_GPa": preset.E_C_GPa,
+                "density_kg_m3": preset.density_kg_m3,
+            }
+    return None
 
 
 # Request/Response Models
@@ -75,7 +111,7 @@ def analyze_plate_endpoint(req: PlateAnalyzeRequest) -> Dict[str, Any]:
     if not PLATE_DESIGN_AVAILABLE:
         raise HTTPException(503, detail="Plate design module not available")
 
-    material = get_material_preset(req.material)
+    material = get_material_for_plate(req.material)
     if material is None:
         raise HTTPException(400, detail=f"Unknown material: {req.material}")
 
@@ -96,9 +132,9 @@ def analyze_plate_endpoint(req: PlateAnalyzeRequest) -> Dict[str, Any]:
         width_mm = calibration.back_b_m * 1000.0
 
     result = analyze_plate(
-        E_L_GPa=material.E_L_GPa,
-        E_C_GPa=material.E_C_GPa,
-        density_kg_m3=material.density_kg_m3,
+        E_L_GPa=material["E_L_GPa"],
+        E_C_GPa=material["E_C_GPa"],
+        density_kg_m3=material["density_kg_m3"],
         length_mm=length_mm,
         width_mm=width_mm,
         target_f_Hz=req.target_hz,
@@ -113,8 +149,8 @@ def analyze_coupled_endpoint(req: CoupledAnalyzeRequest) -> Dict[str, Any]:
     if not PLATE_DESIGN_AVAILABLE:
         raise HTTPException(503, detail="Plate design module not available")
 
-    top_mat = get_material_preset(req.top_material)
-    back_mat = get_material_preset(req.back_material)
+    top_mat = get_material_for_plate(req.top_material)
+    back_mat = get_material_for_plate(req.back_material)
     if top_mat is None:
         raise HTTPException(400, detail=f"Unknown material: {req.top_material}")
     if back_mat is None:
@@ -134,13 +170,13 @@ def analyze_coupled_endpoint(req: CoupledAnalyzeRequest) -> Dict[str, Any]:
 
     result = analyze_coupled_system(
         body=calibration,
-        top_E_L_GPa=top_mat.E_L_GPa,
-        top_E_C_GPa=top_mat.E_C_GPa,
-        top_rho=top_mat.density_kg_m3,
+        top_E_L_GPa=top_mat["E_L_GPa"],
+        top_E_C_GPa=top_mat["E_C_GPa"],
+        top_rho=top_mat["density_kg_m3"],
         top_h_mm=top_h_mm,
-        back_E_L_GPa=back_mat.E_L_GPa,
-        back_E_C_GPa=back_mat.E_C_GPa,
-        back_rho=back_mat.density_kg_m3,
+        back_E_L_GPa=back_mat["E_L_GPa"],
+        back_E_C_GPa=back_mat["E_C_GPa"],
+        back_rho=back_mat["density_kg_m3"],
         back_h_mm=back_h_mm,
     )
     return asdict(result)
