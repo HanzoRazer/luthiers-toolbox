@@ -58,35 +58,6 @@ When a new gap is found during implementation: add it here before closing the se
 Do not let findings live only in conversation history.
 
 ---
-## CONSTRUCTION-002 — Instrument setup cascade calculator
-
-**Status:** Pieces exist separately, not composed  
-**Priority:** Medium  
-**Effort:** ~half day
-
-**What exists (all real function names from codebase):**
-- `instrument_geometry/neck/radius_profiles.py` — `compute_string_height_at_fret()`, `compute_fret_crown_height_mm()`, `compute_radius_drop_mm()`
-- `instrument_geometry/neck/fret_math.py` — fret positions, `compute_compensated_scale_length_mm()`
-- `calculators/bridge_break_angle.py` — saddle projection and break angle with Carruth 6° minimum
-
-**What's missing:** composition into a playable spec.
-
-**The chain:**
-```
-nut action (string height at fret 1)
-  → truss rod relief (neck bow at 7th fret)
-    → fret level check (all frets within tolerance)
-      → saddle height (compensated per string)
-        → string action at 12th fret
-          → recommended adjustments per parameter
-```
-
-**File to create:** `calculators/instrument_setup.py`  
-**Key class:** `SetupSpec` — carries all parameters through the cascade  
-**Key function:** `compute_setup_cascade(spec: SetupSpec) -> SetupResult`
-
----
-
 ## CONSTRUCTION-003 — Fret leveling geometry
 
 **Status:** Not implemented  
@@ -103,34 +74,6 @@ nut action (string height at fret 1)
 
 **Minimum playable fret height:** typically 0.5mm (depends on fret wire spec)  
 **File to create:** `calculators/fret_leveling.py`
-
----
-
-## CONSTRUCTION-004 — String tension calculator
-
-**Status:** Not implemented  
-**Priority:** Medium — needed to drive bracing calc  
-**Effort:** ~2 hours
-
-**What exists:** `calculators/bracing_calc.py` has mass/stiffness but no driving load
-
-**Formula:**
-```
-T = (2 × f × L)² × μ
-where:
-  f = tuned frequency (Hz)
-  L = scale length (m)  
-  μ = linear mass density (kg/m) from string gauge
-```
-
-**String gauge → μ conversion:**
-- Plain steel: μ = (d_mm/1000)² × π/4 × 7800 kg/m³
-- Wound strings: μ from manufacturer data (need lookup table)
-
-**File to create:** `calculators/string_tension.py`  
-**Connect to:** `calculators/bracing_calc.py` — add optional `string_tension_N` input to `calculate_brace_section()`
-
-**Also captures:** total top load (sum of all string tensions × sin(break angle)), useful for bridge plate sizing
 
 ---
 
@@ -323,58 +266,6 @@ class BuildSequence:
 
 ---
 
-## GEOMETRY-002 — Soundhole placement and sizing rules
-
-**Status:** Diameter exists in body volume calc; placement rules absent  
-**Priority:** Medium  
-**Effort:** ~3 hours
-
-**What exists:**
-- `calculators/acoustic_body_volume.py` line 36: `soundhole_diameter_mm = 101.6` (4" default)
-- `calculators/acoustic_body_volume.py` line 215: `A = math.pi * (specs.soundhole_diameter_mm / 2) ** 2`
-- `instrument_geometry/models/cuatro_venezolano.json` line 27: `soundhole_position_from_nut_mm: 280.0` — position stored but never used in any calculation
-- Helmholtz frequency already computed from soundhole area
-
-**What's missing:** the placement rules and the structural implications of sizing.
-
-**Placement rule (traditional round hole):**
-```
-soundhole_center_from_neck_block_mm ≈ body_length_mm × 0.333
-# Traditional: soundhole sits at 1/3 body length from neck block
-# This places it near the antinode of the top's fundamental mode
-```
-
-**Sizing rules:**
-```
-# Helmholtz target (from acoustic_body_volume.py, already computed)
-f_H = (c_air / 2π) × √(A_hole / (V × L_eff))
-
-# Structural minimum ring width around soundhole:
-ring_width_min_mm = soundhole_radius_mm × 0.15   # ~15% of radius
-# Below this, top splits under string tension near soundhole
-
-# Bracing adjustment: larger hole → stiffer X-brace required
-# Brace scallop depth reduces as soundhole diameter increases
-```
-
-**Multiple soundhole variants:**
-- Double-O: two smaller holes, each follows same 1/3 rule, total area ≈ single hole area
-- Oval (Selmer/Maccaferri): area rule same, placement shifts toward center
-- F-holes (archtop): combined area rule, placement flanks bridge zone
-
-**Connect to:**
-- `calculators/acoustic_body_volume.py` — `calculate_helmholtz_frequency()` already exists
-- `instrument_geometry/bracing/x_brace.py` — brace stiffness adjustment based on hole size
-
-**File to create:** `calculators/soundhole_calc.py`
-```python
-def compute_soundhole_placement(body_length_mm, body_style) -> SoundholeSpec
-def compute_soundhole_size_from_helmholtz_target(target_hz, body_volume_m3) -> float
-def check_structural_ring_width(soundhole_diameter_mm, top_thickness_mm) -> RingCheck
-```
-
----
-
 ## GEOMETRY-003 — Kerfing geometry calculator
 
 **Status:** Data exists in specs; no geometry calculator  
@@ -477,7 +368,7 @@ def compute_bridge_pin_positions(
 
 def compute_bridge_plate_dimensions(
     bridge_width_mm: float,
-    string_tension_total_N: float,   # from CONSTRUCTION-004
+    string_tension_total_N: float,   # from calculators/string_tension.py
     top_thickness_mm: float,
 ) -> BridgePlateSpec
 ```
@@ -522,7 +413,7 @@ min_glue_area_mm2 = (total_string_tension_N × safety_factor) / shear_strength_M
 
 **Connect to:**
 - `instrument_geometry/specs/martin_d28_1937.py` — side depth profile
-- `calculators/string_tension.py` (CONSTRUCTION-004) — neck block sizing input
+- `calculators/string_tension.py` — neck block sizing input
 
 **File to create:** `calculators/neck_block_calc.py`
 ```python

@@ -281,3 +281,241 @@ def list_presets():
         "presets": list(GUITAR_PRESETS.keys()),
         "details": GUITAR_PRESETS,
     }
+
+
+# ---------------------------------------------------------------------------
+# String Tension Calculator (CONSTRUCTION-004)
+# ---------------------------------------------------------------------------
+
+from ..calculators.string_tension import (
+    StringSpec as StringSpecCalc,
+    TensionResult,
+    SetTensionResult,
+    compute_string_tension_from_spec,
+    compute_set_tension,
+    get_preset_set,
+    list_preset_sets,
+    STRING_SETS,
+    SCALE_LENGTHS_MM,
+)
+
+
+class StringSpecRequest(BaseModel):
+    """Specification for a single string."""
+    name: str = Field(..., description="String name (e.g., '1' or 'e')")
+    gauge_inch: float = Field(..., gt=0, description="String diameter in inches")
+    is_wound: bool = Field(..., description="True if wound string")
+    note: str = Field(..., description="Note name (e.g., 'E4', 'B3')")
+    frequency_hz: float = Field(..., gt=0, description="Target frequency in Hz")
+
+
+class StringTensionRequest(BaseModel):
+    """Request for string tension calculation."""
+    scale_length_mm: float = Field(..., gt=0, description="Scale length in mm")
+    string_set: Optional[str] = Field(
+        default=None,
+        description="Preset string set name (e.g., 'light_012', 'medium_013')"
+    )
+    custom_strings: Optional[List[StringSpecRequest]] = Field(
+        default=None,
+        description="Custom string specifications (overrides string_set)"
+    )
+
+
+class StringTensionResponse(BaseModel):
+    """Response with tension calculations."""
+    scale_length_mm: float
+    set_name: str
+    strings: List[dict]
+    total_tension_lb: float
+    total_tension_n: float
+
+
+@router.post("/string-tension", response_model=StringTensionResponse)
+def calculate_string_tension(payload: StringTensionRequest) -> StringTensionResponse:
+    """
+    Calculate string tension for a guitar string set.
+
+    Uses the physics formula: T = (2 × f × L)² × μ
+
+    Can use either:
+    - A preset string set (light_012, medium_013, etc.)
+    - Custom string specifications
+
+    Returns tension for each string and total tension.
+    Useful for bracing calculations and bridge plate sizing.
+    """
+    if payload.custom_strings:
+        # Use custom strings
+        strings = [
+            StringSpecCalc(
+                name=s.name,
+                gauge_inch=s.gauge_inch,
+                is_wound=s.is_wound,
+                note=s.note,
+                frequency_hz=s.frequency_hz,
+            )
+            for s in payload.custom_strings
+        ]
+        set_name = "custom"
+    elif payload.string_set:
+        # Use preset
+        try:
+            strings = get_preset_set(payload.string_set)
+            set_name = payload.string_set
+        except ValueError as e:
+            raise HTTPException(status_code=400, detail=str(e))
+    else:
+        # Default to light gauge
+        strings = get_preset_set("light_012")
+        set_name = "light_012"
+
+    result = compute_set_tension(strings, payload.scale_length_mm, set_name=set_name)
+
+    return StringTensionResponse(
+        scale_length_mm=result.scale_length_mm,
+        set_name=result.set_name,
+        strings=[
+            {
+                "name": s.name,
+                "gauge_inch": s.gauge_inch,
+                "gauge_mm": s.gauge_mm,
+                "note": s.note,
+                "is_wound": s.is_wound,
+                "tension_lb": s.tension_lb,
+                "tension_n": s.tension_n,
+            }
+            for s in result.strings
+        ],
+        total_tension_lb=result.total_tension_lb,
+        total_tension_n=result.total_tension_n,
+    )
+
+
+@router.get("/string-tension/presets")
+def list_string_presets():
+    """List available string set presets and scale lengths."""
+    return {
+        "string_sets": list_preset_sets(),
+        "scale_lengths_mm": SCALE_LENGTHS_MM,
+    }
+
+
+# ---------------------------------------------------------------------------
+# Soundhole Calculator (GEOMETRY-002)
+# ---------------------------------------------------------------------------
+
+from ..calculators.soundhole_calc import (
+    SoundholeSpec,
+    compute_soundhole_spec,
+    check_soundhole_position,
+    list_body_styles,
+    get_standard_diameter,
+    STANDARD_DIAMETERS_MM,
+)
+
+
+class SoundholeRequest(BaseModel):
+    """Request for soundhole placement and sizing."""
+    body_style: str = Field(
+        ...,
+        description="Body style: dreadnought, om_000, parlor, classical, jumbo, concert, auditorium"
+    )
+    body_length_mm: float = Field(..., gt=0, description="Body length from neck block to tail block in mm")
+    custom_diameter_mm: Optional[float] = Field(
+        default=None,
+        gt=0,
+        description="Override standard diameter (optional)"
+    )
+
+
+class SoundholeResponse(BaseModel):
+    """Response with soundhole specification."""
+    diameter_mm: float
+    position_from_neck_block_mm: float
+    body_style: str
+    gate: str
+    notes: List[str]
+    standard_diameter_mm: Optional[float] = None
+
+
+class SoundholePositionCheckRequest(BaseModel):
+    """Request for validating a specific soundhole position."""
+    diameter_mm: float = Field(..., gt=0, description="Soundhole diameter in mm")
+    position_mm: float = Field(..., gt=0, description="Center position from neck block in mm")
+    body_length_mm: float = Field(..., gt=0, description="Total body length in mm")
+
+
+class SoundholePositionCheckResponse(BaseModel):
+    """Response with position validation result."""
+    gate: str
+    position_mm: float
+    body_length_mm: float
+    position_ratio: float
+
+
+@router.post("/soundhole", response_model=SoundholeResponse)
+def get_soundhole_spec(payload: SoundholeRequest) -> SoundholeResponse:
+    """
+    Calculate soundhole placement and sizing for a given body style.
+
+    Standard placement: approximately 1/2 body length from neck block.
+    Standard diameters:
+    - Dreadnought: 100mm
+    - OM/000: 98mm
+    - Parlor: 85mm
+    - Classical: 85mm
+    - Jumbo: 102mm
+
+    Returns gate status (GREEN/YELLOW/RED) with notes.
+    """
+    spec = compute_soundhole_spec(
+        body_style=payload.body_style,
+        body_length_mm=payload.body_length_mm,
+        custom_diameter_mm=payload.custom_diameter_mm,
+    )
+
+    return SoundholeResponse(
+        diameter_mm=spec.diameter_mm,
+        position_from_neck_block_mm=spec.position_from_neck_block_mm,
+        body_style=spec.body_style,
+        gate=spec.gate,
+        notes=spec.notes,
+        standard_diameter_mm=get_standard_diameter(payload.body_style),
+    )
+
+
+@router.post("/soundhole/check-position", response_model=SoundholePositionCheckResponse)
+def check_soundhole_position_endpoint(payload: SoundholePositionCheckRequest) -> SoundholePositionCheckResponse:
+    """
+    Validate a specific soundhole position.
+
+    Checks if position is within acceptable range (45-55% of body length)
+    and ensures adequate clearance from neck block and bridge area.
+
+    Returns gate status:
+    - GREEN: Position within standard range
+    - YELLOW: Position acceptable but non-standard
+    - RED: Position problematic (structural concerns)
+    """
+    gate = check_soundhole_position(
+        diameter_mm=payload.diameter_mm,
+        position_mm=payload.position_mm,
+        body_length_mm=payload.body_length_mm,
+    )
+
+    return SoundholePositionCheckResponse(
+        gate=gate,
+        position_mm=payload.position_mm,
+        body_length_mm=payload.body_length_mm,
+        position_ratio=payload.position_mm / payload.body_length_mm,
+    )
+
+
+@router.get("/soundhole/body-styles")
+def list_soundhole_body_styles():
+    """List supported body styles and their standard soundhole diameters."""
+    return {
+        "body_styles": list_body_styles(),
+        "standard_diameters_mm": STANDARD_DIAMETERS_MM,
+    }
