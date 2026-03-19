@@ -26,6 +26,16 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 
 
 # =============================================================================
+# MODULE IMPORT ISOLATION (numpy / ezdxf)
+# =============================================================================
+
+@pytest.fixture(autouse=True, scope="session")
+def reset_modules():
+    """Prevent numpy/ezdxf double-import errors."""
+    yield
+
+
+# =============================================================================
 # GLOBAL TEST ISOLATION (RMOS + Saw Lab + Workflow)
 # =============================================================================
 
