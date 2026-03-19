@@ -86,59 +86,6 @@ Do not let findings live only in conversation history.
 
 ---
 
-## CONSTRUCTION-007 — Finish schedule calculator
-
-**Status:** Not implemented — zero coverage  
-**Priority:** Low  
-**Effort:** ~1 day
-
-No nitro schedule, no poly schedule, no grain fill calculator, no French polish guidance.
-This is the longest phase of many builds and is completely dark in the codebase.
-
-**Minimum viable implementation:**
-
-```python
-class FinishType(Enum):
-    NITROCELLULOSE = "nitro"
-    POLYURETHANE = "poly"
-    OIL = "oil"
-    FRENCH_POLISH = "french_polish"
-
-class FinishSchedule:
-    coats: List[CoatSpec]        # sequence of coat steps
-    total_dry_time_hours: float
-    sanding_schedule: List[SandingStep]
-    grain_fill_coats: int        # from pore size estimate
-```
-
-**Grain fill model:** coats needed ≈ pore_depth_mm / coat_fill_mm_per_layer  
-Pore size by species: rosewood ~0.3mm, mahogany ~0.2mm, maple ~0.05mm (barely needs filling)
-
-**File to create:** `calculators/finish_schedule.py`
-
----
-
-## CONSTRUCTION-008 — Electronics physical layout
-
-**Status:** Not implemented  
-**Priority:** Low  
-**Effort:** ~3 hours
-
-**What exists:**
-- `calculators/wiring/impedance_math.py` — tone rolloff, pickup loading
-- `calculators/wiring/treble_bleed.py`
-- `instrument_geometry/pickup/cavity_placement.py` — pickup cavity routing
-
-**What's missing:** physical layout — how the components are arranged in space:
-- Pot spacing (minimum 19mm center-to-center to clear knobs)
-- Jack placement relative to strap button and output path
-- Control cavity routing paths for wire runs between pickups and controls
-- Shielding area calculation (conductive paint coverage)
-- Switch placement geometry
-
-**File to create:** `calculators/electronics_layout.py`
-
----
 
 ## CONSTRUCTION-009 — Acoustic voicing history / longitudinal brace model
 
