@@ -58,38 +58,6 @@ When a new gap is found during implementation: add it here before closing the se
 Do not let findings live only in conversation history.
 
 ---
-
-
-## CONSTRUCTION-001 — Nut slot depth schedule
-
-**Status:** Not implemented. String spacing exists; slot depth does not.  
-**Priority:** Medium  
-**Effort:** ~2 hours
-
-**What exists:**
-- `instrument_geometry/body/fretboard_geometry.py` — `compute_string_spacing_at_position()`
-- `instrument_geometry/neck/radius_profiles.py` — `compute_fret_crown_height_mm()`
-
-**What's missing:** the depth formula connecting those to a cuttable spec.
-
-**Formula:**
-```
-clearance_above_1st_fret ≈ 1/64" (0.4mm)
-slot_depth = (string_diameter / 2) + clearance_above_1st_fret - fret_crown_height
-```
-Slot must leave string sitting ~0.4mm above first fret crown when fretted at second fret.
-
-**Additional factors:**
-- Nut material: bone slots tighter than TUSQ; self-lubricating materials need less clearance
-- Fretboard radius: slots angle slightly inward on radiused boards
-- String gauge table needed: plain steel vs wound strings have different diameter-per-gauge curves
-
-**File to create:** `calculators/nut_slot_calc.py`  
-**Inputs:** string gauges, fret crown height, fretboard radius, nut material  
-**Output:** slot depth schedule per string, slot angle per string
-
----
-
 ## CONSTRUCTION-002 — Instrument setup cascade calculator
 
 **Status:** Pieces exist separately, not composed  
