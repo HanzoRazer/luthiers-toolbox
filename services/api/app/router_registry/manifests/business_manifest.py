@@ -108,4 +108,11 @@ BUSINESS_ROUTERS: List[RouterSpec] = [
         tags=["Instruments", "Bridge", "Calculators"],
         category="instrument",
     ),
+    # ── GEOMETRY-010: Side bending parameters ──
+    RouterSpec(
+        module="app.routers.instrument_geometry_router",
+        prefix="",
+        tags=["Instruments", "Side Bending", "Calculators"],
+        category="instrument_geometry",
+    ),
 ]

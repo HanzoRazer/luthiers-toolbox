@@ -7,6 +7,31 @@ reading actual code.
 
 ---
 
+
+## TEST-001 — Fix 33 pre-existing test failures
+
+**Status:** Known, not investigated
+**Priority:** Medium
+**Effort:** Unknown until investigated
+
+33 tests consistently fail in pytest runs.
+They are pre-existing and unrelated to recent work.
+
+**First step:** Run pytest with -v and capture
+the failing test names:
+```bash
+pytest services/api/tests/ -v 2>&1 | grep "FAILED" | head -40
+```
+
+**Then:** Triage into:
+- Genuinely broken (fix)
+- Skipped intentionally (add skip marker)
+- Environment-dependent (document)
+
+Do not fix them now — just document in BACKLOG.
+
+---
+
 ## ARCH-001 — Connect plate thickness solver to archtop graduation map
 
 **Status:** Architecture defined, not implemented  
@@ -919,78 +944,3 @@ def compute_back_stiffness_index(
 **Connect to:** `calculators/bracing_calc.py` — `calculate_brace_section()` already handles the cross-section math; back brace calc just needs to set up the inputs from placement rules.
 
 ---
-
-## GEOMETRY-010 — Side thickness and bending parameters
-
-**Status:** Side profile data exists; no bending preparation calculator  
-**Priority:** Medium  
-**Effort:** ~3 hours
-
-**What exists:**
-- `instrument_geometry/specs/martin_d28_1937.py`:
-  `SIDE_PROFILE_RAW_MM` — side depth profile along body length (13 measurement stations)
-  `SIDE_PROFILE_WITH_KERFING_MM` — same with kerfing added (~6.35mm)
-- `calculators/binding_geometry.py` — `BendRadiusCheck` for binding strips
-- `instrument_geometry/guitars/archtop.py` — archtop sides implied but no thickness data
-
-**What's missing:** bending preparation — target thickness, temperature, moisture, bend radius check.
-
-**Side thickness targets by instrument type:**
-```python
-SIDE_THICKNESS_TARGETS_MM = {
-    "steel_string_acoustic": {"min": 2.0, "max": 2.5, "optimal": 2.3},
-    "classical":             {"min": 1.8, "max": 2.2, "optimal": 2.0},
-    "archtop_jazz":          {"min": 2.5, "max": 3.0, "optimal": 2.8},  # stiffer sides for tone
-    "electric_hollow":       {"min": 1.8, "max": 2.3, "optimal": 2.0},
-    "ukulele":               {"min": 1.5, "max": 2.0, "optimal": 1.8},
-}
-```
-
-**Bending parameters by species:**
-```python
-BENDING_PARAMS = {
-    "mahogany":   BendingSpec(temp_c=150, moisture_pct=8,  min_radius_mm=50),
-    "rosewood":   BendingSpec(temp_c=170, moisture_pct=10, min_radius_mm=45),
-    "maple":      BendingSpec(temp_c=160, moisture_pct=9,  min_radius_mm=55),
-    "koa":        BendingSpec(temp_c=155, moisture_pct=8,  min_radius_mm=50),
-    "sapele":     BendingSpec(temp_c=155, moisture_pct=8,  min_radius_mm=48),
-    "walnut":     BendingSpec(temp_c=160, moisture_pct=9,  min_radius_mm=52),
-}
-# Temperature too low: spring-back, won't hold shape
-# Temperature too high: scorching, cell structure damage
-# Moisture too low: cracks during bending
-# Moisture too high: takes too long to dry, distorts
-```
-
-**Waist radius check (tightest bend on the instrument):**
-```
-# The waist is the critical constraint. If the species can't handle the waist radius,
-# the sides must be thinner or the bending parameters adjusted.
-waist_radius_mm ≈ waist_width_mm × 0.15  # empirical — tight waist on OM is ~25mm
-
-if waist_radius_mm < species.min_radius_mm:
-    # Options:
-    # 1. Reduce side thickness by 0.2mm (reduces min bend radius ~15%)
-    # 2. Increase moisture content
-    # 3. Use bending spring (steel backing strip)
-```
-
-**Connect to:**
-- `instrument_geometry/specs/martin_d28_1937.py` — `SIDE_PROFILE_RAW_MM` defines the shape to bend
-- `calculators/kerfing_calc.py` (GEOMETRY-003) — kerfing adds to side depth after bending
-- `calculators/binding_geometry.py` — `BendRadiusCheck` already handles the radius math; side bending extends it
-
-**File to create:** `calculators/side_bending_calc.py`
-```python
-def compute_bending_parameters(
-    species: str,
-    side_thickness_mm: float,
-    waist_radius_mm: float,
-    instrument_type: str,
-) -> BendingPlan   # temp, moisture, risk flags, spring-back estimate
-
-def check_side_thickness(
-    instrument_type: str,
-    species: str,
-) -> SideThicknessSpec   # target, min, max with species-specific note
-```
