@@ -7,43 +7,6 @@ reading actual code.
 
 ---
 
-## PORT-001 — Port tap-tone-pi plate thickness design module
-
-**Status:** Analyzed, not started  
-**Priority:** High — the math exists and is tested; only the wiring is missing  
-**Effort:** ~1 day
-
-**What exists in tap-tone-pi:**
-```
-tap_tone_pi/design/
-  thickness_calculator.py   — plate_modal_frequency(), thickness_for_target_frequency(),
-                               coupled_eigenfrequencies(), analyze_plate(), analyze_coupled_system()
-  calibration.py            — 8 body style calibrations, 14 tonewood material presets
-  inverse_solver.py         — solve_for_thickness(), InverseDesignProblem (multi-mode)
-  rayleigh_ritz.py          — variational solver for accurate mode shapes
-  alpha_beta.py             — physical γ derivation from first principles
-  gamma_calibration.py      — fit γ from measured Chladni/box frequency pairs
-```
-
-**What to do:**
-1. Copy `tap_tone_pi/design/` → `services/api/app/calculators/plate_design/`
-2. Create `services/api/app/routers/plate_design_router.py` with three endpoints:
-   - `POST /api/acoustics/plate/analyze` → `analyze_plate()`
-   - `POST /api/acoustics/plate/coupled` → `analyze_coupled_system()`
-   - `POST /api/acoustics/plate/solve` → `InverseDesignProblem.solve()`
-3. Register router in `main.py`
-4. The design package has zero tap-tone-pi dependencies — only numpy + scipy
-
-**Key test case (from tap-tone-pi tests):**
-```python
-# Mahogany back, D'Aquisto proportions
-analyze_plate(E_L_GPa=10.2, E_C_GPa=0.65, density_kg_m3=540,
-              length_mm=559, width_mm=241, target_f_Hz=86.0)
-# Expected: recommended_h_mm in [2.0, 4.0]
-```
-
----
-
 ## ARCH-001 — Connect plate thickness solver to archtop graduation map
 
 **Status:** Architecture defined, not implemented  
@@ -150,46 +113,7 @@ Also:
 
 ---
 
-## HEADSTOCK-001 — DXF export veneer + binding + material cost (Cursor integration)
-
-**Status:** Built in outputs, not yet in repo  
-**Priority:** Medium  
-**Effort:** 15 min in Cursor — copy file
-
-**File:** `/mnt/user-data/outputs/dxf_export.py`  
-→ Copy to `services/api/app/exports/dxf_export.py` (replacing existing)
-
-**What was added:**
-- `VeneerSpec` model — face veneer as inward-offset layer from headstock outline, `overlap_mm` controls inset (default 0.5mm), separate tool-change layer
-- `BindingSpec` model — binding rabbet with `width_mm`, `depth_mm`, material options with minimum bend radius warnings (from repo's `binding_geometry.py`)
-- Both wired into `ExportRequest` as optional fields — backward compatible
-- Material cost estimate: `/headstock-dxf/preview` endpoint returns `area_mm2`, cost estimate per material, binding length
-- `build_dxf()` now has 7 sections: outline, tuner holes, nut slot, inlay pockets, truss rod, **veneer**, **binding**
-
 ---
-
-## VECTORIZER-001 — Photo-to-DXF vectorizer FastAPI router + Vue integration (Cursor)
-
-**Status:** Built in outputs, not yet in repo  
-**Priority:** Medium — depends on `photo_vectorizer_v2.py` working  
-**Effort:** 30 min in Cursor
-
-**Files:**
-- `/mnt/user-data/outputs/photo_vectorizer_router.py`  
-  → `services/api/app/routers/photo_vectorizer_router.py`
-  → Register in `main.py`: `app.include_router(photo_vectorizer_router, prefix="/api/vectorizer")`
-
-- `/mnt/user-data/outputs/ps-vue/src/composables/useDxfImport.ts`  
-  → Has new `loadFromVectorizerResult()` path alongside existing `loadFile()`
-
-- `/mnt/user-data/outputs/ps-vue/src/views/ImportView.vue`  
-  → 359 lines, File/Photo mode tabs, photo drag-drop zone, vectorizer status check on mount
-
-**Router endpoint:** `POST /api/vectorizer/extract`  
-- Accepts: multipart image upload  
-- Calls: `PhotoVectorizerV2.extract()` from `services/photo-vectorizer/photo_vectorizer_v2.py`  
-- Returns: `{svg_path: str, outline_points: [...], cavities: [...], confidence: float}`  
-- Result feeds into `useDxfImport.loadFromVectorizerResult()` — same path as DXF/SVG file import
 
 ---
 
