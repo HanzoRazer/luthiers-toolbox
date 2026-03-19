@@ -98,6 +98,20 @@ from app.calculators.electronics_layout_calc import (
     compute_shielding_area,
     list_pickup_types,
     list_switch_types,
+)
+from app.calculators.build_sequence import (
+    BuildSpec,
+    BuildResult,
+    BuildSequence,
+    InstrumentType,
+    BodyStyle,
+    NeckJointType,
+    create_dreadnought_spec,
+    create_om_spec,
+    create_classical_spec,
+    run_build_sequence,
+)
+from app.calculators.electronics_layout_calc import (
     list_jack_types,
     list_body_styles as list_electronics_body_styles,
 )
@@ -1534,4 +1548,146 @@ def get_electronics_options() -> ElectronicsOptionsResponse:
         switch_types=list_switch_types(),
         jack_types=list_jack_types(),
         body_styles=list_electronics_body_styles(),
+    )
+
+
+# ─── Build Sequence Models (CONSTRUCTION-010) ──────────────────────────────────
+
+
+class BuildSequenceRequest(BaseModel):
+    """Request for running a complete build sequence."""
+    build_id: Optional[str] = Field(default=None, description="Unique build identifier")
+    preset: str = Field(
+        default="dreadnought",
+        description="Preset type: dreadnought, om, classical"
+    )
+    scale_length_mm: Optional[float] = Field(default=None, gt=0)
+    string_count: Optional[int] = Field(default=None, ge=4, le=12)
+    fret_count: Optional[int] = Field(default=None, ge=12, le=36)
+    top_species: Optional[str] = Field(default=None)
+    back_species: Optional[str] = Field(default=None)
+    finish_type: Optional[str] = Field(default=None)
+    build_rh_pct: Optional[float] = Field(default=None, ge=0, le=100)
+    target_rh_pct: Optional[float] = Field(default=None, ge=0, le=100)
+
+
+class StageResultResponse(BaseModel):
+    """Result of a single build stage."""
+    stage_name: str
+    status: str
+    gate: str
+    warnings: List[str] = []
+    errors: List[str] = []
+    duration_ms: Optional[float] = None
+
+
+class BuildSequenceResponse(BaseModel):
+    """Response from build sequence execution."""
+    build_id: str
+    overall_gate: str
+    stages: Dict[str, StageResultResponse]
+    warnings: List[str]
+    errors: List[str]
+    spec: Dict[str, Any]
+    string_tension: Optional[Dict[str, Any]] = None
+    bridge_geometry: Optional[Dict[str, Any]] = None
+    wood_movement: Optional[Dict[str, Any]] = None
+    finish_schedule: Optional[Dict[str, Any]] = None
+
+
+class BuildSequenceOptionsResponse(BaseModel):
+    """Available options for build sequence configuration."""
+    presets: List[str]
+    instrument_types: List[str]
+    body_styles: List[str]
+    neck_joint_types: List[str]
+
+
+# ─── Build Sequence Endpoints (CONSTRUCTION-010) ───────────────────────────────
+
+
+@router.post(
+    "/build-sequence",
+    response_model=BuildSequenceResponse,
+    summary="Run complete build calculation sequence (CONSTRUCTION-010)",
+)
+def run_build_sequence_endpoint(req: BuildSequenceRequest) -> BuildSequenceResponse:
+    """
+    Execute the complete build calculation sequence.
+
+    Runs all calculation stages in order:
+    - String tension
+    - Bridge geometry
+    - Wood movement
+    - Finish schedule
+
+    Each stage reads from and writes to the shared BuildSpec state.
+    """
+    # Create spec from preset
+    if req.preset.lower() == "om":
+        spec = create_om_spec(req.build_id)
+    elif req.preset.lower() == "classical":
+        spec = create_classical_spec(req.build_id)
+    else:
+        spec = create_dreadnought_spec(req.build_id)
+
+    # Apply overrides from request
+    if req.scale_length_mm is not None:
+        spec.scale_length_mm = req.scale_length_mm
+    if req.string_count is not None:
+        spec.string_count = req.string_count
+    if req.fret_count is not None:
+        spec.fret_count = req.fret_count
+    if req.top_species is not None:
+        spec.top_species = req.top_species
+    if req.back_species is not None:
+        spec.back_species = req.back_species
+    if req.finish_type is not None:
+        spec.finish_type = req.finish_type
+    if req.build_rh_pct is not None:
+        spec.build_rh_pct = req.build_rh_pct
+    if req.target_rh_pct is not None:
+        spec.target_rh_pct = req.target_rh_pct
+
+    # Run the sequence
+    result = run_build_sequence(spec)
+
+    # Build stage responses
+    stage_responses = {}
+    for name, stage_result in result.stages.items():
+        stage_responses[name] = StageResultResponse(
+            stage_name=stage_result.stage_name,
+            status=stage_result.status.value,
+            gate=stage_result.gate,
+            warnings=stage_result.warnings,
+            errors=stage_result.errors,
+            duration_ms=stage_result.duration_ms,
+        )
+
+    return BuildSequenceResponse(
+        build_id=result.spec.build_id,
+        overall_gate=result.overall_gate,
+        stages=stage_responses,
+        warnings=result.warnings,
+        errors=result.errors,
+        spec=result.spec.to_dict(),
+        string_tension=result.string_tension.to_dict() if result.string_tension else None,
+        bridge_geometry=result.bridge_geometry.to_dict() if result.bridge_geometry else None,
+        wood_movement=result.wood_movement.to_dict() if result.wood_movement else None,
+        finish_schedule=result.finish_schedule.to_dict() if result.finish_schedule else None,
+    )
+
+
+@router.get(
+    "/build-sequence/options",
+    response_model=BuildSequenceOptionsResponse,
+    summary="List options for build sequence configuration",
+)
+def get_build_sequence_options() -> BuildSequenceOptionsResponse:
+    """Return available presets and options for build sequence."""
+    return BuildSequenceOptionsResponse(
+        presets=["dreadnought", "om", "classical"],
+        instrument_types=[t.value for t in InstrumentType],
+        body_styles=[s.value for s in BodyStyle],
+        neck_joint_types=[j.value for j in NeckJointType],
     )

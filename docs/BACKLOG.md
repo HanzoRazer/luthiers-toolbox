@@ -126,43 +126,6 @@ def predict_next_tap(
 
 ---
 
-## CONSTRUCTION-010 — Build sequence composition (structural gap)
-
-**Status:** Architecture gap — no individual file to create  
-**Priority:** High — this is what makes all the above useful  
-**Effort:** ~1 week (after individual calculators exist)
-
-**The problem:**  
-Every calculator in this codebase is a standalone tool. A builder doing a complete spec transfers numbers between them by hand:
-- Headstock break angle result → nut slot angle (not connected)
-- Saddle height → neck angle → body depth at neck block → top curvature from X-brace dish (not connected)
-- String tension → brace sizing → plate thickness target (not connected)
-- Tap tone reading → voicing decision → brace thinning → next tap prediction (not connected)
-
-**The CAM workspace is starting to close this on the machining side** — `NeckPipelineConfig` flows through all four operations as shared state. The same pattern needs to exist for acoustic/setup calculations.
-
-**What this looks like:**
-```python
-class BuildSpec:
-    """Shared state that flows through the entire build sequence."""
-    body: BodyCalibration          # from PORT-001 calibration.py
-    top_plate: PlateThicknessResult
-    back_plate: PlateThicknessResult
-    neck: NeckPipelineConfig
-    strings: StringSet
-    setup: SetupSpec
-
-class BuildSequence:
-    """Ordered operations that populate and validate BuildSpec fields."""
-    stages: List[BuildStage]       # each stage reads from + writes to BuildSpec
-    
-    def run_through(self, spec: BuildSpec) -> BuildReport:
-        """Execute all stages, propagating outputs as inputs to the next."""
-```
-
-**Prerequisite:** CONSTRUCTION-001 through 009 don't all need to be done first — but the shared `BuildSpec` state object should be defined early so individual calculators can be connected to it incrementally.
-
----
 
 
 
