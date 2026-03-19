@@ -43,6 +43,11 @@ from app.calculators.fret_leveling_calc import (
     analyze_fret_heights,
     compute_leveling_radius,
 )
+from app.calculators.nut_comp_calc import (
+    NutCompSpec,
+    compute_nut_compensation,
+    compare_nut_types,
+)
 from app.calculators.setup_cascade import (
     SetupState,
     SetupCascadeResult,
@@ -65,6 +70,25 @@ from app.calculators.neck_block_calc import (
     compute_both_blocks,
     list_body_styles as list_block_body_styles,
     get_default_side_depths,
+)
+from app.calculators.fret_wire_calc import (
+    FretWireSpec,
+    recommend_fret_wire,
+    list_fret_wire_catalog,
+    list_fret_wire_names,
+    list_playing_styles,
+    list_fretboard_materials,
+    list_neck_profiles,
+    list_string_gauges,
+    get_fret_wire,
+)
+from app.calculators.wood_movement_calc import (
+    WoodMovementSpec,
+    SafeHumidityRange,
+    compute_wood_movement,
+    safe_humidity_range,
+    list_species as list_wood_species,
+    get_shrinkage_coefficient,
 )
 
 router = APIRouter(
@@ -194,6 +218,38 @@ class LevelingRadiusResponse(BaseModel):
     scale_length_mm: float
     relief_mm: float
     radius_mm: float
+
+class NutCompensationRequest(BaseModel):
+    """Request for nut compensation calculation."""
+    nut_type: str = Field(..., description="'traditional' or 'zero_fret'")
+    nut_width_mm: float = Field(default=3.0, gt=0, description="Nut width in mm")
+    break_angle_deg: float = Field(default=10.0, ge=0, description="Break angle at nut in degrees")
+    scale_length_mm: float = Field(..., gt=0, description="Scale length in mm")
+
+
+class NutCompensationResponse(BaseModel):
+    """Response with nut compensation specification."""
+    nut_type: str
+    compensation_mm: float
+    effective_scale_length_mm: float
+    open_string_pitch_error_cents: float
+    gate: str
+    recommendation: str
+
+
+class NutComparisonRequest(BaseModel):
+    """Request for nut type comparison."""
+    scale_length_mm: float = Field(..., gt=0, description="Scale length in mm")
+    nut_width_mm: float = Field(default=3.0, gt=0, description="Nut width in mm")
+    break_angle_deg: float = Field(default=10.0, ge=0, description="Break angle in degrees")
+
+
+class NutComparisonResponse(BaseModel):
+    """Response comparing traditional vs zero-fret."""
+    traditional: Dict[str, Any]
+    zero_fret: Dict[str, Any]
+    comparison: Dict[str, Any]
+
 
 
 
@@ -862,4 +918,333 @@ def calculate_leveling_radius(req: LevelingRadiusRequest) -> LevelingRadiusRespo
         relief_mm=req.relief_mm,
         radius_mm=radius,
     )
+
+# ─── Fret Wire Models (GEOMETRY-006) ──────────────────────────────────────────
+
+class FretWireRecommendRequest(BaseModel):
+    """Request for fret wire recommendation."""
+    playing_style: str = Field(
+        default="flatpick",
+        description="Playing style (fingerstyle, flatpick, shred, jazz)"
+    )
+    fretboard_material: str = Field(
+        default="rosewood",
+        description="Fretboard material (rosewood, ebony, maple, pau_ferro, richlite)"
+    )
+    neck_profile: str = Field(
+        default="C",
+        description="Neck profile shape (C, D, V, U)"
+    )
+    string_gauge: str = Field(
+        default="medium",
+        description="String gauge category (light, medium, heavy)"
+    )
+
+
+class FretWireResponse(BaseModel):
+    """Response with fret wire specification."""
+    name: str
+    crown_width_mm: float
+    crown_height_mm: float
+    tang_depth_mm: float
+    tang_width_mm: float
+    material: str
+    hardness_hv: int
+    wear_factor: float
+    recommended_for: List[str]
+    gate: str
+    notes: str
+
+
+class FretWireRecommendResponse(BaseModel):
+    """Response with ranked fret wire recommendations."""
+    recommendations: List[FretWireResponse]
+    playing_style: str
+    fretboard_material: str
+    neck_profile: str
+    string_gauge: str
+
+
+class FretWireCatalogResponse(BaseModel):
+    """Response with full fret wire catalog."""
+    catalog: List[FretWireResponse]
+
+
+class FretWireOptionsResponse(BaseModel):
+    """Response with available options for fret wire selection."""
+    playing_styles: List[str]
+    fretboard_materials: List[str]
+    neck_profiles: List[str]
+    string_gauges: List[str]
+    fret_wire_names: List[str]
+
+
+# ─── Fret Wire Endpoints (GEOMETRY-006) ───────────────────────────────────────
+
+@router.post(
+    "/fret-wire/recommend",
+    response_model=FretWireRecommendResponse,
+    summary="Get fret wire recommendations (GEOMETRY-006)",
+    description="""
+    Get ranked fret wire recommendations based on playing style, fretboard,
+    neck profile, and string gauge.
+
+    **Input:**
+    - Playing style (fingerstyle, flatpick, shred, jazz)
+    - Fretboard material (rosewood, ebony, maple, pau_ferro, richlite)
+    - Neck profile (C, D, V, U)
+    - String gauge (light, medium, heavy)
+
+    **Output:**
+    - Ranked list of fret wire recommendations (best first)
+    - Each includes dimensions, material, hardness, gate status, notes
+
+    **Fret wire profiles:**
+    - vintage_narrow: 1.65×0.89mm (classic vintage)
+    - medium: 2.06×1.19mm (versatile)
+    - medium_jumbo: 2.54×1.40mm (modern)
+    - jumbo: 2.79×1.52mm (easy bending)
+    - extra_jumbo: 2.90×1.65mm (shred)
+    - evo_6105: 2.29×1.14mm (gold, hypoallergenic)
+    - stainless_6105: 2.29×1.14mm (hardest, most durable)
+    """,
+)
+def recommend_fret_wire_endpoint(req: FretWireRecommendRequest) -> FretWireRecommendResponse:
+    """Get ranked fret wire recommendations."""
+    recommendations = recommend_fret_wire(
+        playing_style=req.playing_style,
+        fretboard_material=req.fretboard_material,
+        neck_profile=req.neck_profile,
+        string_gauge=req.string_gauge,
+    )
+    return FretWireRecommendResponse(
+        recommendations=[FretWireResponse(**r.to_dict()) for r in recommendations],
+        playing_style=req.playing_style,
+        fretboard_material=req.fretboard_material,
+        neck_profile=req.neck_profile,
+        string_gauge=req.string_gauge,
+    )
+
+
+@router.get(
+    "/fret-wire/catalog",
+    response_model=FretWireCatalogResponse,
+    summary="Get full fret wire catalog",
+)
+def get_fret_wire_catalog() -> FretWireCatalogResponse:
+    """Return complete fret wire catalog."""
+    catalog = list_fret_wire_catalog()
+    return FretWireCatalogResponse(
+        catalog=[FretWireResponse(**fw.to_dict()) for fw in catalog]
+    )
+
+
+@router.get(
+    "/fret-wire/options",
+    response_model=FretWireOptionsResponse,
+    summary="List options for fret wire selection",
+)
+def get_fret_wire_options() -> FretWireOptionsResponse:
+    """Return lists of available options for fret wire selection."""
+    return FretWireOptionsResponse(
+        playing_styles=list_playing_styles(),
+        fretboard_materials=list_fretboard_materials(),
+        neck_profiles=list_neck_profiles(),
+        string_gauges=list_string_gauges(),
+        fret_wire_names=list_fret_wire_names(),
+    )
+
+
+# ─── Wood Movement Models (CONSTRUCTION-006) ─────────────────────────────────
+
+class WoodMovementRequest(BaseModel):
+    """Request for wood movement calculation."""
+    species: str = Field(..., description="Wood species (sitka_spruce, rosewood, mahogany, etc.)")
+    dimension_mm: float = Field(..., gt=0, description="Current dimension in mm (across grain)")
+    rh_from: float = Field(..., ge=0, le=100, description="Starting relative humidity %")
+    rh_to: float = Field(..., ge=0, le=100, description="Ending relative humidity %")
+    grain_direction: str = Field(
+        default="tangential",
+        description="Grain direction: tangential (wider movement) or radial"
+    )
+
+
+class WoodMovementResponse(BaseModel):
+    """Response with wood movement calculation."""
+    species: str
+    dimension_mm: float
+    rh_from: float
+    rh_to: float
+    mc_change_pct: float
+    movement_mm: float
+    direction: str
+    grain_direction: str
+    shrinkage_coefficient: float
+    gate: str
+    risk_note: str
+
+
+class SafeHumidityRequest(BaseModel):
+    """Request for safe humidity range calculation."""
+    species: str = Field(..., description="Wood species")
+    dimension_mm: float = Field(default=400.0, gt=0, description="Dimension to evaluate in mm")
+    max_movement_mm: float = Field(default=1.0, gt=0, description="Maximum acceptable movement in mm")
+    nominal_rh: float = Field(default=45.0, ge=0, le=100, description="Nominal relative humidity %")
+
+
+class SafeHumidityResponse(BaseModel):
+    """Response with safe humidity range."""
+    species: str
+    nominal_rh: float
+    max_movement_mm: float
+    dimension_mm: float
+    min_rh: float
+    max_rh: float
+    notes: List[str]
+
+
+class WoodSpeciesResponse(BaseModel):
+    """Response with supported wood species."""
+    species: List[str]
+
+
+# ─── Wood Movement Endpoints (CONSTRUCTION-006) ──────────────────────────────
+
+@router.post(
+    "/wood-movement",
+    response_model=WoodMovementResponse,
+    summary="Calculate wood movement from humidity change (CONSTRUCTION-006)",
+    description="""
+    Calculate dimensional change from relative humidity variation.
+
+    **Physics:**
+    ΔW = W₀ × ΔMC × S_r
+    where:
+    - ΔW = dimensional change (mm)
+    - W₀ = initial dimension (mm)
+    - ΔMC = moisture content change (%)
+    - S_r = shrinkage coefficient
+
+    **Input:**
+    - Wood species
+    - Dimension (mm, across grain)
+    - Starting RH (%)
+    - Ending RH (%)
+    - Grain direction (tangential or radial)
+
+    **Output:**
+    - Movement (mm)
+    - Direction (expansion/contraction)
+    - Gate status (GREEN/YELLOW/RED)
+    - Risk assessment
+
+    **Houston note:** RH swings 30-90% seasonally. A 400mm spruce top
+    can move 3-6mm — cracking territory for unprotected instruments.
+    """,
+)
+def calculate_wood_movement(req: WoodMovementRequest) -> WoodMovementResponse:
+    """Calculate wood movement from humidity change."""
+    result: WoodMovementSpec = compute_wood_movement(
+        species=req.species,
+        dimension_mm=req.dimension_mm,
+        rh_from=req.rh_from,
+        rh_to=req.rh_to,
+        grain_direction=req.grain_direction,
+    )
+    return WoodMovementResponse(**result.to_dict())
+
+
+@router.post(
+    "/wood-movement/safe-range",
+    response_model=SafeHumidityResponse,
+    summary="Calculate safe humidity range for wood",
+    description="""
+    Calculate the humidity range that keeps wood movement within limits.
+
+    **Input:**
+    - Wood species
+    - Dimension to evaluate (default 400mm for guitar top)
+    - Maximum acceptable movement (default 1.0mm)
+    - Nominal/target humidity (default 45%)
+
+    **Output:**
+    - Min/max safe RH (%)
+    - Notes and warnings
+
+    Use this to determine case humidification requirements.
+    """,
+)
+def calculate_safe_humidity_range(req: SafeHumidityRequest) -> SafeHumidityResponse:
+    """Calculate safe humidity range for wood species."""
+    result: SafeHumidityRange = safe_humidity_range(
+        species=req.species,
+        dimension_mm=req.dimension_mm,
+        max_movement_mm=req.max_movement_mm,
+        nominal_rh=req.nominal_rh,
+    )
+    return SafeHumidityResponse(**result.to_dict())
+
+
+@router.get(
+    "/wood-movement/species",
+    response_model=WoodSpeciesResponse,
+    summary="List supported wood species for movement calculation",
+)
+def get_wood_species() -> WoodSpeciesResponse:
+    """Return list of supported wood species."""
+    return WoodSpeciesResponse(species=list_wood_species())
+
+# ─── Nut Compensation Endpoints ──────────────────────────────────────────────
+
+@router.post(
+    "/nut-compensation",
+    response_model=NutCompensationResponse,
+    summary="Calculate nut compensation",
+    description="""
+    Calculate nut compensation for traditional or zero-fret system.
+
+    **Traditional nut:**
+    - The nut acts as the zero reference point
+    - String contact point offset causes slight sharpness
+    - Compensation moves effective zero toward saddle
+
+    **Zero-fret:**
+    - A fret at position zero sets string height
+    - Nut becomes string guide only
+    - Eliminates nut slot intonation issues
+
+    **Compensation formula (traditional):**
+    comp_mm = (nut_width / 2) × (1 - cos(break_angle)) + stretch_factor
+    """,
+)
+def calculate_nut_compensation(req: NutCompensationRequest) -> NutCompensationResponse:
+    """Calculate nut compensation for given nut type."""
+    spec: NutCompSpec = compute_nut_compensation(
+        nut_type=req.nut_type,
+        nut_width_mm=req.nut_width_mm,
+        break_angle_deg=req.break_angle_deg,
+        scale_length_mm=req.scale_length_mm,
+    )
+    return NutCompensationResponse(**spec.to_dict())
+
+
+@router.post(
+    "/nut-compensation/compare",
+    response_model=NutComparisonResponse,
+    summary="Compare traditional vs zero-fret",
+    description="""
+    Compare traditional nut against zero-fret system for the same parameters.
+
+    Returns specs for both types plus a comparison summary highlighting
+    advantages and pitch error differences.
+    """,
+)
+def compare_nut_compensation(req: NutComparisonRequest) -> NutComparisonResponse:
+    """Compare traditional nut vs zero-fret."""
+    comparison = compare_nut_types(
+        scale_length_mm=req.scale_length_mm,
+        nut_width_mm=req.nut_width_mm,
+        break_angle_deg=req.break_angle_deg,
+    )
+    return NutComparisonResponse(**comparison)
 

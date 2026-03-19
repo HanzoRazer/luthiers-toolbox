@@ -86,37 +86,6 @@ Do not let findings live only in conversation history.
 
 ---
 
-## CONSTRUCTION-006 — Humidity and wood movement
-
-**Status:** Not implemented — zero coverage  
-**Priority:** Low-Medium (Houston has real humidity risk)  
-**Effort:** ~3 hours
-
-**The physics:**
-```
-ΔW = W₀ × (MC₂ - MC₁) × S_r
-where:
-  ΔW = dimensional change (mm)
-  W₀ = initial dimension (mm)
-  MC  = moisture content (%)
-  S_r = shrinkage coefficient (species-dependent, radial vs tangential)
-```
-
-**Equilibrium moisture content from RH:**  
-EMC% ≈ (RH / (100 - RH)) × K (Henderson equation with species factor K)
-
-**What to build:**
-- Wood movement table per species (radial/tangential shrinkage coefficients)
-- EMC calculator from temperature + RH
-- Crack risk assessment: seasonal RH swing → dimensional change → stress vs wood MOR
-
-**Houston-specific note:** RH swings 30–90% seasonally. A 400mm-wide top at 30% RH
-vs 80% RH moves 3-6mm depending on species. That's crack territory for improperly sealed instruments.
-
-**File to create:** `calculators/wood_movement.py`
-
----
-
 ## CONSTRUCTION-007 — Finish schedule calculator
 
 **Status:** Not implemented — zero coverage  
@@ -249,67 +218,6 @@ class BuildSequence:
 ---
 
 
-## GEOMETRY-006 — Fret wire selection
-
-**Status:** Not implemented — no fret wire data or calculator  
-**Priority:** Medium  
-**Effort:** ~2 hours
-
-**What exists:**
-- `instrument_geometry/neck/radius_profiles.py` — `compute_fret_crown_height_mm()` takes `fret_height_mm` as input but has no table of actual fret wire dimensions
-- `calculators/nut_slot_calc.py` (CONSTRUCTION-001) will need fret crown height — depends on this
-
-**What's missing:** a fret wire specification table and selection calculator.
-
-**Standard fret wire profiles (industry data):**
-```python
-FRET_WIRE_PROFILES = {
-    "vintage_narrow":   FretWireSpec(crown_width_mm=2.0,  crown_height_mm=1.0,  tang_width_mm=0.5),
-    "medium":           FretWireSpec(crown_width_mm=2.4,  crown_height_mm=1.2,  tang_width_mm=0.5),
-    "medium_jumbo":     FretWireSpec(crown_width_mm=2.7,  crown_height_mm=1.3,  tang_width_mm=0.6),
-    "jumbo":            FretWireSpec(crown_width_mm=2.9,  crown_height_mm=1.5,  tang_width_mm=0.6),
-    "tall_narrow":      FretWireSpec(crown_width_mm=2.0,  crown_height_mm=1.5,  tang_width_mm=0.5),  # "mandolin style"
-    "stainless_6105":   FretWireSpec(crown_width_mm=2.3,  crown_height_mm=1.4,  tang_width_mm=0.5),  # common SS
-    "gold_evo":         FretWireSpec(crown_width_mm=2.4,  crown_height_mm=1.3,  tang_width_mm=0.5),
-}
-```
-
-**Selection logic:**
-```
-# Playability: wider crown = easier bending, less precise intonation feel
-# Durability: taller crown = more leveling material before replacement
-# Fretboard radius: tighter radius boards suit taller frets (less rocking)
-# Slot width must match tang width ±0.02mm for press fit without splitting
-
-slot_width_tolerance_mm = fret_wire.tang_width_mm + 0.01   # light press fit
-# If slot_width < tang_width - 0.05: tang barbs won't compress → fret pops
-# If slot_width > tang_width + 0.05: fret seats loose, buzzes
-```
-
-**Connect to:**
-- `instrument_geometry/neck/radius_profiles.py` — `compute_fret_crown_height_mm()` should accept a `FretWireSpec` instead of raw `fret_height_mm`
-- `calculators/nut_slot_calc.py` (CONSTRUCTION-001) — slot depth depends on fret crown height
-- `cam/neck/config.py` — `FretSlotConfig.slot_width_mm` should derive from tang width
-
-**File to create:** `calculators/fret_wire_calc.py`
-```python
-@dataclass
-class FretWireSpec:
-    crown_width_mm: float
-    crown_height_mm: float
-    tang_width_mm: float
-    tang_depth_mm: float
-    material: Literal["nickel_silver", "stainless", "gold_evo", "brass"]
-    wear_factor: float    # relative wear rate, nickel_silver = 1.0
-
-def select_fret_wire(
-    fretboard_radius_mm: float,
-    playing_style: Literal["fingerstyle", "flatpicking", "shredding"],
-    preference: Literal["vintage", "modern", "durability"],
-) -> List[FretWireSpec]   # ranked recommendations
-```
-
----
 
 ## GEOMETRY-007 — Nut compensation: zero-fret vs traditional
 
