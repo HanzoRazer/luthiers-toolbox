@@ -1,16 +1,19 @@
 """DXF Preflight validation service - extracted from dxf_preflight_router.py."""
 from pathlib import Path
-from typing import List, Dict, Optional
+from typing import List, Dict, Optional, Any
 import math
 import re
+import tempfile
 
 from fastapi import HTTPException
 
 try:
     import ezdxf
     from ezdxf.document import Drawing
+    from ezdxf import bbox as ezdxf_bbox
     EZDXF_AVAILABLE = True
 except ImportError:
+    ezdxf_bbox = None  # type: ignore[misc, assignment]
     EZDXF_AVAILABLE = False
 
 from ..schemas.dxf_preflight_schemas import (
@@ -63,6 +66,7 @@ def validate_dxf_file(dxf_path: Path) -> ValidationReport:
         dxf_version, units, issues, geometry, errors, warnings, cam_ready,
     )
     
+    bounds = _compute_bounds(doc)
     return ValidationReport(
         filename=filename,
         filesize_bytes=filesize,
@@ -75,8 +79,49 @@ def validate_dxf_file(dxf_path: Path) -> ValidationReport:
         geometry=geometry,
         layers=layers_info,
         cam_ready=cam_ready,
-        recommended_actions=recommendations
+        recommended_actions=recommendations,
+        bounds=bounds,
     )
+
+
+def validate_dxf_bytes(
+    content: bytes,
+    tolerance_mm: Optional[float] = None,
+    check_closure: Optional[bool] = None,
+    **kwargs: Any,
+) -> Dict[str, Any]:
+    """
+    Validate DXF from raw bytes. Returns a dict with layers, entity_count, bounds,
+    and optionally issues/geometry for programmatic use and API responses.
+    """
+    if not EZDXF_AVAILABLE:
+        raise HTTPException(status_code=500, detail="ezdxf library not available")
+    with tempfile.NamedTemporaryFile(suffix=".dxf", delete=False) as f:
+        f.write(content)
+        path = Path(f.name)
+    try:
+        report = validate_dxf_file(path)
+        out: Dict[str, Any] = {
+            "layers": [layer.name for layer in report.layers],
+            "entity_count": report.geometry.total,
+            "bounds": report.bounds,
+        }
+        if getattr(report, "issues", None):
+            out["issues"] = [i.model_dump() if hasattr(i, "model_dump") else i.dict() for i in report.issues]
+        if getattr(report, "geometry", None) and report.geometry:
+            g = report.geometry
+            out["geometry"] = {
+                "lines": g.lines,
+                "arcs": g.arcs,
+                "circles": g.circles,
+                "polylines": g.polylines,
+                "lwpolylines": g.lwpolylines,
+                "splines": g.splines,
+                "total": g.total,
+            }
+        return out
+    finally:
+        path.unlink(missing_ok=True)
 
 
 # ---------------------------------------------------------------------------
@@ -91,6 +136,25 @@ def _read_dxf(dxf_path: Path) -> "Drawing":
         raise
     except (OSError, ValueError) as e:  # WP-1: DXF readfile
         raise HTTPException(status_code=400, detail=f"Failed to read DXF: {str(e)}")
+
+
+def _compute_bounds(doc: "Drawing") -> Optional[Dict[str, float]]:
+    """Compute modelspace bounding box. Returns min_x, max_x, min_y, max_y or None if empty/unsupported."""
+    if not EZDXF_AVAILABLE or not ezdxf_bbox:
+        return None
+    try:
+        msp = doc.modelspace()
+        ext = ezdxf_bbox.extents(msp)
+        if ext.has_data:
+            return {
+                "min_x": ext.extmin.x,
+                "max_x": ext.extmax.x,
+                "min_y": ext.extmin.y,
+                "max_y": ext.extmax.y,
+            }
+    except Exception:
+        pass
+    return None
 
 
 def _check_version_and_units(
