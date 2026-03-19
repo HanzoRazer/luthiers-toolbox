@@ -9,8 +9,8 @@ from dataclasses import dataclass, field
 from datetime import datetime
 from typing import List, Dict, Any, Optional
 
-# Import real models from experimental (now production-ready)
-from app._experimental.cnc_production.joblog.models import (
+# Import real models from cam_core (graduated from experimental)
+from app.cam_core.joblog.models import (
     SawRunMeta,
     SawRunRecord,
     TelemetrySample,
@@ -19,7 +19,7 @@ from app._experimental.cnc_production.joblog.models import (
     RiskGrade,
 )
 
-from app._experimental.cnc_production.learn.models import (
+from app.cam_core.learn.models import (
     TelemetryIngestConfig,
     LaneMetrics,
     LaneAdjustment,

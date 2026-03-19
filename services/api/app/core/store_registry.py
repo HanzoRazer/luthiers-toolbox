@@ -181,7 +181,7 @@ def _register_default_factories_impl(registry: StoreRegistry) -> None:
 
     # Learned overrides
     def _learned_overrides_factory():
-        from app._experimental.cnc_production.feeds_speeds.core.learned_overrides import LearnedOverridesStore
+        from app.cam_core.feeds_speeds.learned_overrides import LearnedOverridesStore
         return LearnedOverridesStore()
 
     # Register all

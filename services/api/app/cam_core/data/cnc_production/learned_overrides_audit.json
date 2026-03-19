@@ -169,8 +169,127 @@
       "new_scale": 0.95,
       "operator": null,
       "reason": null
+    },
+    {
+      "timestamp": "2026-03-18T18:22:14.581880",
+      "lane_key": {
+        "tool_id": "test_tool",
+        "material": "test_mat",
+        "mode": "test_mode",
+        "machine_profile": "test_machine"
+      },
+      "param_name": "lane_scale",
+      "source": "auto_learn",
+      "prev_value": 0.95,
+      "new_value": 0.95,
+      "prev_scale": 0.95,
+      "new_scale": 0.95,
+      "operator": null,
+      "reason": null
+    },
+    {
+      "timestamp": "2026-03-19T03:28:11.191067",
+      "lane_key": {
+        "tool_id": "test_tool",
+        "material": "test_mat",
+        "mode": "test_mode",
+        "machine_profile": "test_machine"
+      },
+      "param_name": "lane_scale",
+      "source": "auto_learn",
+      "prev_value": 0.95,
+      "new_value": 0.95,
+      "prev_scale": 0.95,
+      "new_scale": 0.95,
+      "operator": null,
+      "reason": null
+    },
+    {
+      "timestamp": "2026-03-19T05:05:56.399308",
+      "lane_key": {
+        "tool_id": "test_tool",
+        "material": "test_mat",
+        "mode": "test_mode",
+        "machine_profile": "test_machine"
+      },
+      "param_name": "lane_scale",
+      "source": "auto_learn",
+      "prev_value": 0.95,
+      "new_value": 0.95,
+      "prev_scale": 0.95,
+      "new_scale": 0.95,
+      "operator": null,
+      "reason": null
+    },
+    {
+      "timestamp": "2026-03-19T05:06:02.839904",
+      "lane_key": {
+        "tool_id": "test_tool",
+        "material": "test_mat",
+        "mode": "test_mode",
+        "machine_profile": "test_machine"
+      },
+      "param_name": "lane_scale",
+      "source": "auto_learn",
+      "prev_value": 0.95,
+      "new_value": 0.95,
+      "prev_scale": 0.95,
+      "new_scale": 0.95,
+      "operator": null,
+      "reason": null
+    },
+    {
+      "timestamp": "2026-03-19T05:07:58.992702",
+      "lane_key": {
+        "tool_id": "test_tool",
+        "material": "test_mat",
+        "mode": "test_mode",
+        "machine_profile": "test_machine"
+      },
+      "param_name": "lane_scale",
+      "source": "auto_learn",
+      "prev_value": 0.95,
+      "new_value": 0.95,
+      "prev_scale": 0.95,
+      "new_scale": 0.95,
+      "operator": null,
+      "reason": null
+    },
+    {
+      "timestamp": "2026-03-19T05:14:09.627656",
+      "lane_key": {
+        "tool_id": "test_tool",
+        "material": "test_mat",
+        "mode": "test_mode",
+        "machine_profile": "test_machine"
+      },
+      "param_name": "lane_scale",
+      "source": "auto_learn",
+      "prev_value": 0.95,
+      "new_value": 0.95,
+      "prev_scale": 0.95,
+      "new_scale": 0.95,
+      "operator": null,
+      "reason": null
+    },
+    {
+      "timestamp": "2026-03-19T05:18:40.789025",
+      "lane_key": {
+        "tool_id": "test_tool",
+        "material": "test_mat",
+        "mode": "test_mode",
+        "machine_profile": "test_machine"
+      },
+      "param_name": "lane_scale",
+      "source": "auto_learn",
+      "prev_value": 0.95,
+      "new_value": 0.95,
+      "prev_scale": 0.95,
+      "new_scale": 0.95,
+      "operator": null,
+      "reason": null
     }
   ],
-  "last_updated": "2026-03-13T16:00:28.683625",
-  "entry_count": 10
+  "last_updated": "2026-03-19T05:18:40.791034",
+  "entry_count": 17
 }

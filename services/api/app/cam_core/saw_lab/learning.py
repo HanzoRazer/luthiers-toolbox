@@ -15,8 +15,8 @@ from .models import (
     TelemetryIngestResponse,
 )
 
-# Import learning functions from experimental
-from app._experimental.cnc_production.learn.live_learn_ingestor import (
+# Import learning functions from cam_core
+from app.cam_core.learn.live_learn_ingestor import (
     compute_lane_metrics,
     score_risk,
     decide_scale_delta,
@@ -25,12 +25,12 @@ from app._experimental.cnc_production.learn.live_learn_ingestor import (
     ingest_run_telemetry_by_id,
 )
 
-from app._experimental.cnc_production.learn.risk_buckets import (
+from app.cam_core.learn.risk_buckets import (
     classify_risk,
     RiskBucket,
 )
 
-from app._experimental.cnc_production.joblog.storage import get_telemetry
+from app.cam_core.joblog.storage import get_telemetry
 
 
 def compute_learning_lanes(events: List[Dict[str, Any]]) -> Dict[str, Any]:

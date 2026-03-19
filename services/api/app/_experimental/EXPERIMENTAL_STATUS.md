@@ -14,7 +14,7 @@ for graduation to canonical production paths.
 | `ai_cam_router.py` | **DELETED** | No | Was unused - permanently deleted |
 | `joblog_router.py` | **DELETED** | No | Was unused - permanently deleted |
 | `analytics/` | Stable, Active | Yes | `app/analytics/` |
-| `cnc_production/` | Stable, Active | Yes | `app/cam_core/cnc/` |
+| `cnc_production/` | **GRADUATED** | Yes | Graduated to `app/cam_core/` |
 | `infra/` | **GRADUATED** | Yes | Migrated to `app/infra/` |
 
 ---
@@ -91,38 +91,26 @@ The module contained (now gone):
 
 ---
 
-### `cnc_production/` - CNC Production Learning System
+### `cnc_production/` (GRADUATED - March 2026)
 
-**Status:** Stable, Production-Used
+**Status:** Graduated to `app/cam_core/`
 
-**Structure:**
-```
-cnc_production/
-  data/           - JSON configuration files
-  feeds_speeds/   - Feed/speed calculation and learning
-    core/
-      learned_overrides.py - Operator override learning
-  joblog/         - Job execution logging
-  learn/          - ML-based parameter learning
-  routers.py      - Internal routing
-```
+Migration completed:
+- `joblog/` moved to `app/cam_core/joblog/`
+- `learn/` moved to `app/cam_core/learn/`
+- `data/` moved to `app/cam_core/data/`
+- `feeds_speeds/core/learned_overrides.py` moved to `app/cam_core/feeds_speeds/learned_overrides.py`
+- `feeds_speeds/core/learned_overrides_models.py` moved to `app/cam_core/feeds_speeds/learned_overrides_models.py`
 
-**Dependencies:**
-- Used by:
-  - `app/core/store_registry.py` (LearnedOverridesStore)
-  - `app/routers/learned_overrides_router.py`
-  - `app/cam_core/api/saw_lab_router.py`
-  - `app/cam_core/saw_lab/learning.py`
-  - `app/cam_core/saw_lab/operations.py`
-  - `app/cam_core/saw_lab/models.py`
+6 consumer files updated:
+- `app/core/store_registry.py`
+- `app/routers/learned_overrides_router.py`
+- `app/cam_core/api/saw_lab_router.py`
+- `app/cam_core/saw_lab/learning.py`
+- `app/cam_core/saw_lab/operations.py`
+- `app/cam_core/saw_lab/models.py`
 
-**Graduation Criteria:**
-- [ ] Create `app/cam_core/cnc/` or merge into `app/cam_core/`
-- [ ] Refactor learned_overrides to standalone module
-- [ ] Update 6+ dependent files
-- [ ] Add deprecation shim for 1 release cycle
-
-**Risk:** High - Deep integration with saw_lab and store_registry
+Experimental `cnc_production/` directory deleted
 
 ---
 
@@ -163,6 +151,7 @@ from app.analytics import *  # noqa
 
 | Date | Change |
 |------|--------|
+| 2026-03-19 | Graduated `cnc_production/` to `app/cam_core/` (CLEANUP-002) |
 | 2026-03-19 | Permanently deleted `__ARCHIVED__/` directory (ai_cam/, ai_cam_router.py, joblog_router.py) |
 | 2026-03-19 | Removed stale manifest entries from system_manifest.py |
 | 2026-03-15 | Archived `ai_cam/`, `ai_cam_router.py`, `joblog_router.py` (no imports found) |
