@@ -51,6 +51,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - **ARCH-002**: Added `arch_height_mm: 16.0` and `arch_height_note` to Benedetto 17" graduation map (instrument_geometry/models/benedetto_17/graduation_map.json)
 
+### 🔬 Acoustics / Plate Design
+
+- **PORT-001**: Ported tap-tone-pi plate thickness design module to `calculators/plate_design/`
+  - `thickness_calculator.py`, `calibration.py`, `inverse_solver.py`, `rayleigh_ritz.py`, `alpha_beta.py`, `gamma_calibration.py`, `coupled_2osc.py`, `archtop_graduation.py`
+
+### 🛠️ Neck Suite
+
+- **HEADSTOCK-001**: Added `routers/neck/headstock_transition_export.py` — DXF + G-code export for headstock transition zone with volute geometry
+- **HEADSTOCK-001**: Added `routers/neck/neck_profile_export.py` — DXF export for neck profile cross-sections
+
+### 🖼️ Photo Vectorizer
+
+- **VECTORIZER-001**: Photo vectorizer integrated via blueprint router (`phase1_router.py` → `create_vectorizer()`)
+  - Service: `services/photo-vectorizer/photo_vectorizer_v2.py` (163KB)
+
 ### 📋 Documentation
 
 - Added `docs/BACKLOG.md` — implementation backlog with scoped tasks from code analysis
