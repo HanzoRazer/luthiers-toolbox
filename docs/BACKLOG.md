@@ -266,57 +266,6 @@ class BuildSequence:
 
 ---
 
-## GEOMETRY-005 — Neck block and tail block sizing
-
-**Status:** Not implemented — no standalone calculator  
-**Priority:** Medium  
-**Effort:** ~2 hours
-
-**What exists:**
-- `instrument_geometry/specs/martin_d28_1937.py` — side depth profile includes kerfing offset
-- Neck pocket routing exists in body generators (body-specific CAM, not a calculator)
-
-**What's missing:** structural sizing from first principles.
-
-**Neck block:**
-```
-# Minimum glue surface area for neck joint strength:
-# String tension pulls neck forward with ~45–80 kg total force
-# Wood shear strength (mahogany): ~8 MPa
-# Safety factor 4:
-
-min_glue_area_mm2 = (total_string_tension_N × safety_factor) / shear_strength_MPa
-# Typical: (600N × 4) / 8 = 300 mm²
-# Typical neck block face: 90mm × 60mm = 5400 mm² — well above minimum
-# But dovetail vs bolt-on vs tenon each have different effective shear areas
-
-# Block height = side depth at neck end (from SIDE_PROFILE data)
-# Block width = typically upper bout width × 0.45
-# Block thickness = typically 60–75mm along body centerline
-```
-
-**Tail block:**
-```
-# Tail block is compressive — end pin pulls strap load (strap + guitar weight)
-# Typically 90mm wide × 50mm tall × side_depth deep
-# No structural calculation needed — geometry is by convention
-```
-
-**Connect to:**
-- `instrument_geometry/specs/martin_d28_1937.py` — side depth profile
-- `calculators/string_tension.py` — neck block sizing input
-
-**File to create:** `calculators/neck_block_calc.py`
-```python
-def compute_neck_block_dimensions(
-    upper_bout_width_mm: float,
-    side_depth_at_neck_mm: float,
-    joint_type: Literal["dovetail", "bolt_on", "tenon"],
-    total_string_tension_N: float,
-) -> NeckBlockSpec
-```
-
----
 
 ## GEOMETRY-006 — Fret wire selection
 
