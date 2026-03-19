@@ -87,45 +87,5 @@ Do not let findings live only in conversation history.
 ---
 
 
-## CONSTRUCTION-009 — Acoustic voicing history / longitudinal brace model
-
-**Status:** Not implemented — structural gap between tap-tone-pi and toolbox  
-**Priority:** High (this is the core lutherie intelligence loop)  
-**Effort:** ~1 day design + implementation
-
-**What exists in tap-tone-pi:**
-- `analyzer/analysis/plate_tuning.py` — `TuningPoint` (mass + frequency per measurement)
-  Linear regression on mass vs frequency — outputs objective math only
-- Tap tone measurement acquisition (WAV → FFT → peaks)
-
-**What's missing:** the longitudinal model — tap before/after brace thinning, record the shift, predict what further thinning will do.
-
-**The physics:**  
-For a plate: `f ∝ √(EI/ρ)` where I = bh³/12 (moment of inertia from brace cross-section)  
-Thinning a brace by Δh → ΔI/I = 3Δh/h (cube law) → Δf/f ≈ 1.5 × Δh/h
-
-**What to build:**
-```python
-class VoicingSession:
-    plate: str                         # "top" | "back"
-    measurements: List[TuningPoint]    # each is (mass_g, freq_hz, notes)
-    brace_changes: List[BraceChange]   # what was removed between measurements
-
-def predict_next_tap(
-    session: VoicingSession,
-    proposed_removal_mm3: float        # volume to remove from which brace
-) -> FrequencyPrediction:
-    """Given current regression slope and proposed material removal,
-    predict new fundamental and whether it will cross target."""
-```
-
-**Connect to:** PORT-001 (plate design) — target frequency from `analyze_plate()` drives the voicing goal
-
-**File to create:** `calculators/acoustic_voicing.py`  
-**Also needed:** API endpoint + simple Vue panel showing the regression line with prediction
-
----
-
-
 
 
