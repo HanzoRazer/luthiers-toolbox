@@ -34,7 +34,12 @@
 > - 1 VEC-GAP-08: Wire OCR dimensions from Phase 3.6 (LOW priority)
 > - 1 Other: miscellaneous blocked item
 >
-> **Actionable work:** Test coverage improvements, refactoring, documentation.
+> **All software-closable gaps resolved. Remaining actionable work from BACKLOG.md:**
+> - Bridge saddle migration (6-commit sequence from bridge_break_angle.py)
+> - GEOMETRY-009: Back brace calculator
+> - GEOMETRY-010: Side bending parameters
+> - HEADSTOCK-001: dxf_export.py (needs locating)
+> - VECTORIZER-001: photo_vectorizer_router.py integration
 
 ---
 
@@ -67,6 +72,7 @@
 
 | Date | Gaps Closed | Notes | Next |
 |------|-------------|-------|------|
+| 2026-03-18 | — | **Session summary: Systems review score 6.1→~7.3.** TRACK 10 all 8 tasks complete. Safety coverage 33%→92% (125+ new tests). Bridge break angle v1→v2 corrected. CamWorkspaceView wired to live backend. BIND-GAP-04 binding strip calculator. Saddle compensation calculator ported (Design + Setup modes, 28 tests). Gap count 112/120 (8 remaining, all blocked). GEN-5 phantom removed after 14 sessions. CI green, score 7.0 target achieved. | — |
 | 2026-03-18 | — | **docs(sprint): reconcile gap count + test coverage.** SPRINT_BOARD.md aligned with GAP_ANALYSIS_MASTER: 112/120 (8 remaining). Categories table fixed. GEN-5 phantom documented. Added 53 tests: test_rmos_lineage_service.py (28 tests, lineage.py 0%→100%), test_rmos_store_completeness.py (25 tests, store_completeness.py 23%→85%). Fixed bridge_break_angle.py CARRUTH_MIN_DEG import. | — |
 | 2026-03-18 | — | **test(coverage): RMOS domain test suite expansion.** Added 125 tests across 3 modules: test_saw_cam_guard.py (28 tests, saw_cam_guard.py 0%→100%), test_constraint_search.py (21 tests, constraint_search.py 0%→100%), test_store_filter.py (76 tests, store_filter.py 34%→100%). Tests cover: saw safety guards (rim speed, bite, heat, deflection, kickback), constraint-first rosette search (Mode B), index metadata filtering. | — |
 | 2026-03-18 | BIND-GAP-04 | **feat(binding): add binding strip length calculator.** calculate_binding_strip_length() in binding_geometry.py: InstallationMethod enum (SINGLE_CONTINUOUS, TOP_AND_BACK, SECTIONAL, TRADITIONAL_ACOUSTIC), BindingStripEstimate dataclass, miter/overlap/handling waste allowances, order length rounding to 50mm. POST /api/binding/strip-length endpoint in binding_design_router.py. 15 tests passing. | doc cleanup |
