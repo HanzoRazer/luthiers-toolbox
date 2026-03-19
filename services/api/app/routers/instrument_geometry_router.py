@@ -52,6 +52,14 @@ from app.calculators.bridge_calc import (
     list_body_styles as list_bridge_body_styles,
     get_bridge_defaults,
 )
+from app.calculators.neck_block_calc import (
+    BlockSpec,
+    compute_neck_block,
+    compute_tail_block,
+    compute_both_blocks,
+    list_body_styles as list_block_body_styles,
+    get_default_side_depths,
+)
 
 router = APIRouter(
     prefix="/api/instrument",
@@ -638,3 +646,107 @@ def get_bridge_options() -> BridgeOptionsResponse:
     """Return list of supported body styles."""
     return BridgeOptionsResponse(body_styles=list_bridge_body_styles())
 
+# ─── Neck/Tail Block Models (GEOMETRY-005) ────────────────────────────────────
+
+class BlocksRequest(BaseModel):
+    """Request for neck and tail block calculation."""
+    body_style: str = Field(
+        default="dreadnought",
+        description="Body style (dreadnought, om_000, parlor, classical, archtop, jumbo, concert)"
+    )
+    neck_heel_width_mm: Optional[float] = Field(
+        None, gt=0,
+        description="Neck heel width in mm (uses default for body style if not provided)"
+    )
+    side_depth_at_neck_mm: Optional[float] = Field(
+        None, gt=0,
+        description="Side depth at neck in mm (uses default for body style if not provided)"
+    )
+    side_depth_at_tail_mm: Optional[float] = Field(
+        None, gt=0,
+        description="Side depth at tail in mm (uses default for body style if not provided)"
+    )
+    material: str = Field(default="mahogany", description="Block material")
+
+
+class BlockResponse(BaseModel):
+    """Response with single block specification."""
+    block_type: str
+    height_mm: float
+    width_mm: float
+    depth_mm: float
+    material: str
+    grain_orientation: str
+    gate: str
+    notes: List[str]
+
+
+class BlocksResponse(BaseModel):
+    """Response with both neck and tail block specifications."""
+    neck: BlockResponse
+    tail: BlockResponse
+    body_style: str
+
+
+class BlockOptionsResponse(BaseModel):
+    """Response with supported body styles for block calculation."""
+    body_styles: List[str]
+
+
+# ─── Neck/Tail Block Endpoints (GEOMETRY-005) ─────────────────────────────────
+
+@router.post(
+    "/blocks",
+    response_model=BlocksResponse,
+    summary="Calculate neck and tail block dimensions (GEOMETRY-005)",
+    description="""
+    Calculate neck and tail block dimensions for a given body style.
+
+    **Input:**
+    - Body style (dreadnought, om_000, parlor, classical, archtop, jumbo, concert)
+    - Optional neck heel width override
+    - Optional side depth overrides
+    - Material (mahogany, maple, spanish_cedar)
+
+    **Output for each block:**
+    - Height (= side depth at location)
+    - Width
+    - Depth (front to back)
+    - Grain orientation
+    - Gate status (GREEN/YELLOW/RED)
+    - Notes
+
+    **Standard dimensions:**
+    - Neck block: height=side depth, width=heel+12mm, depth=50-65mm
+    - Tail block: height=side depth, width=65-90mm, depth=30-40mm
+
+    **Gate Logic:**
+    - GREEN: All dimensions within typical ranges
+    - YELLOW: Borderline dimensions
+    - RED: Structural concern (too small)
+    """,
+)
+def calculate_blocks(req: BlocksRequest) -> BlocksResponse:
+    """Calculate neck and tail block dimensions."""
+    blocks = compute_both_blocks(
+        body_style=req.body_style,
+        neck_heel_width_mm=req.neck_heel_width_mm,
+        side_depth_at_neck_mm=req.side_depth_at_neck_mm,
+        side_depth_at_tail_mm=req.side_depth_at_tail_mm,
+        material=req.material,
+    )
+    return BlocksResponse(
+        neck=BlockResponse(**blocks["neck"].to_dict()),
+        tail=BlockResponse(**blocks["tail"].to_dict()),
+        body_style=req.body_style,
+    )
+
+
+@router.get(
+    "/blocks/options",
+    response_model=BlockOptionsResponse,
+    summary="List supported body styles for block calculation",
+)
+def get_block_options() -> BlockOptionsResponse:
+    """Return list of supported body styles."""
+    return BlockOptionsResponse(body_styles=list_block_body_styles())
