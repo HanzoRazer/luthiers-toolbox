@@ -58,24 +58,6 @@ When a new gap is found during implementation: add it here before closing the se
 Do not let findings live only in conversation history.
 
 ---
-## CONSTRUCTION-003 — Fret leveling geometry
-
-**Status:** Not implemented  
-**Priority:** Medium  
-**Effort:** ~3 hours
-
-**What exists:** nothing directly applicable  
-**What it needs:** given a measured fret height map (dict of fret number → height_mm from a straightedge or digital gauge), compute:
-
-1. Best-fit plane through all fret tops (least squares)
-2. Cut depth at each fret = current height − plane height at that position
-3. Flag any fret where cut depth > (current height − minimum playable height)
-4. Output: which frets to level, which to replace, total material removed estimate
-
-**Minimum playable fret height:** typically 0.5mm (depends on fret wire spec)  
-**File to create:** `calculators/fret_leveling.py`
-
----
 
 ## CONSTRUCTION-005 — Glue joint geometry calculator
 

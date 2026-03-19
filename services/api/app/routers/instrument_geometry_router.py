@@ -37,6 +37,12 @@ from app.calculators.soundhole_calc import (
     check_soundhole_position,
     list_body_styles,
 )
+from app.calculators.fret_leveling_calc import (
+    FretProfile,
+    LevelingPlan,
+    analyze_fret_heights,
+    compute_leveling_radius,
+)
 from app.calculators.setup_cascade import (
     SetupState,
     SetupCascadeResult,
@@ -147,6 +153,48 @@ class SoundholePositionCheckResponse(BaseModel):
 class SoundholeOptionsResponse(BaseModel):
     """Response with supported body styles."""
     body_styles: List[str]
+
+class FretLevelingRequest(BaseModel):
+    """Request for fret leveling analysis."""
+    heights_mm: List[float] = Field(..., description="Measured fret heights from fret 1 onwards")
+    scale_length_mm: float = Field(..., gt=0, description="Scale length in mm")
+    relief_mm: float = Field(default=0.2, ge=0, description="Target neck relief in mm")
+    tolerance_mm: float = Field(default=0.03, gt=0, description="High fret detection tolerance")
+
+
+class FretProfileResponse(BaseModel):
+    """Single fret profile in response."""
+    fret_number: int
+    height_mm: float
+    deviation_mm: float
+    status: str
+
+
+class FretLevelingResponse(BaseModel):
+    """Response with fret leveling analysis."""
+    frets: List[FretProfileResponse]
+    high_fret_count: int
+    low_fret_count: int
+    max_deviation_mm: float
+    material_removal_mm: float
+    replacement_needed: List[int]
+    leveling_radius_mm: float
+    gate: str
+    notes: List[str]
+
+
+class LevelingRadiusRequest(BaseModel):
+    """Request for leveling beam radius calculation."""
+    scale_length_mm: float = Field(..., gt=0, description="Scale length in mm")
+    relief_mm: float = Field(..., gt=0, description="Target relief in mm")
+
+
+class LevelingRadiusResponse(BaseModel):
+    """Response with leveling beam radius."""
+    scale_length_mm: float
+    relief_mm: float
+    radius_mm: float
+
 
 
 
@@ -750,3 +798,68 @@ def calculate_blocks(req: BlocksRequest) -> BlocksResponse:
 def get_block_options() -> BlockOptionsResponse:
     """Return list of supported body styles."""
     return BlockOptionsResponse(body_styles=list_block_body_styles())
+
+# ─── Fret Leveling Endpoints ─────────────────────────────────────────────────
+
+@router.post(
+    "/fret-leveling",
+    response_model=FretLevelingResponse,
+    summary="Analyze fret heights for leveling",
+    description="""
+    Analyze measured fret heights to determine leveling requirements.
+
+    **Input:**
+    - List of fret heights (measured from fretboard surface)
+    - Scale length (mm)
+    - Target relief (mm, default 0.2)
+    - Tolerance for high fret detection (mm, default 0.03)
+
+    **Output:**
+    - Per-fret analysis (height, deviation, status)
+    - Count of high/low frets
+    - Maximum deviation and material removal needed
+    - Frets needing replacement (if any)
+    - Leveling beam radius
+    - Gate status (GREEN/YELLOW/RED)
+
+    **Gate Logic:**
+    - GREEN: No issues or minor leveling needed
+    - YELLOW: Significant leveling or many high frets
+    - RED: Frets need replacement (too low after leveling)
+    """,
+)
+def analyze_fret_leveling(req: FretLevelingRequest) -> FretLevelingResponse:
+    """Analyze fret heights and create leveling plan."""
+    plan: LevelingPlan = analyze_fret_heights(
+        heights_mm=req.heights_mm,
+        scale_length_mm=req.scale_length_mm,
+        relief_mm=req.relief_mm,
+        tolerance_mm=req.tolerance_mm,
+    )
+    return FretLevelingResponse(**plan.to_dict())
+
+
+@router.post(
+    "/fret-leveling/radius",
+    response_model=LevelingRadiusResponse,
+    summary="Calculate leveling beam radius",
+    description="""
+    Calculate the radius of the leveling beam arc for a given relief.
+
+    The leveling beam should follow the neck relief curve.
+    For typical relief values (0.1-0.3mm), the radius is very large
+    (essentially flat with slight concavity).
+    """,
+)
+def calculate_leveling_radius(req: LevelingRadiusRequest) -> LevelingRadiusResponse:
+    """Calculate leveling beam radius for target relief."""
+    radius = compute_leveling_radius(
+        scale_length_mm=req.scale_length_mm,
+        relief_mm=req.relief_mm,
+    )
+    return LevelingRadiusResponse(
+        scale_length_mm=req.scale_length_mm,
+        relief_mm=req.relief_mm,
+        radius_mm=radius,
+    )
+
