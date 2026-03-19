@@ -519,3 +519,108 @@ def list_soundhole_body_styles():
         "body_styles": list_body_styles(),
         "standard_diameters_mm": STANDARD_DIAMETERS_MM,
     }
+
+
+# ---------------------------------------------------------------------------
+# Kerfing Calculator (GEOMETRY-003)
+# ---------------------------------------------------------------------------
+
+from ..calculators.kerfing_calc import (
+    KerfingSpec,
+    KerfingDimensions,
+    compute_kerfing_schedule,
+    compute_total_side_depth,
+    list_kerfing_types,
+    get_kerfing_type_info,
+    KERFING_TYPES,
+)
+
+
+class KerfingDimensionsResponse(BaseModel):
+    """Kerfing dimensions for a single strip."""
+    width_mm: float
+    height_mm: float
+    kerf_spacing_mm: float
+    kerf_depth_mm: float
+    material: str
+
+
+class KerfingRequest(BaseModel):
+    """Request for kerfing schedule calculation."""
+    side_depth_mm: float = Field(..., gt=0, description="Side depth from SIDE_PROFILE (without kerfing) in mm")
+    body_style: str = Field(
+        ...,
+        description="Body style: dreadnought, om_000, parlor, classical, jumbo, archtop"
+    )
+    kerfing_type: Optional[str] = Field(
+        default="standard_lining",
+        description="Kerfing type: standard_lining, reverse_kerfing, laminate_lining, carbon_fiber, solid_lining"
+    )
+
+
+class KerfingResponse(BaseModel):
+    """Response with complete kerfing specification."""
+    kerfing_type: str
+    side_depth_mm: float
+    top_kerfing: KerfingDimensionsResponse
+    back_kerfing: KerfingDimensionsResponse
+    total_side_depth_mm: float
+    flexibility_note: str
+
+
+@router.post("/kerfing", response_model=KerfingResponse)
+def get_kerfing_schedule(payload: KerfingRequest) -> KerfingResponse:
+    """
+    Calculate kerfing schedule for a guitar body.
+
+    Kerfing adds depth to the sides at the top and back.
+    It provides the gluing surface for top and back plates.
+
+    Standard kerfing dimensions:
+    - width: 6.35mm (1/4")
+    - height: 7.94mm (5/16") for standard
+    - kerf_spacing: 3.0mm
+    - kerf_depth_ratio: 0.66 (2/3 of height)
+
+    Available kerfing types:
+    - standard_lining: height=7.94mm, flexible
+    - reverse_kerfing: height=9.53mm, stiffer
+    - laminate_lining: height=6.35mm, very flexible
+    - carbon_fiber: height=6.35mm, rigid (no kerfs)
+    - solid_lining: height=9.53mm, rigid (no kerfs)
+    """
+    spec = compute_kerfing_schedule(
+        side_depth_mm=payload.side_depth_mm,
+        body_style=payload.body_style,
+        kerfing_type=payload.kerfing_type or "standard_lining",
+    )
+
+    return KerfingResponse(
+        kerfing_type=spec.kerfing_type,
+        side_depth_mm=spec.side_depth_mm,
+        top_kerfing=KerfingDimensionsResponse(
+            width_mm=spec.top_kerfing.width_mm,
+            height_mm=spec.top_kerfing.height_mm,
+            kerf_spacing_mm=spec.top_kerfing.kerf_spacing_mm,
+            kerf_depth_mm=spec.top_kerfing.kerf_depth_mm,
+            material=spec.top_kerfing.material,
+        ),
+        back_kerfing=KerfingDimensionsResponse(
+            width_mm=spec.back_kerfing.width_mm,
+            height_mm=spec.back_kerfing.height_mm,
+            kerf_spacing_mm=spec.back_kerfing.kerf_spacing_mm,
+            kerf_depth_mm=spec.back_kerfing.kerf_depth_mm,
+            material=spec.back_kerfing.material,
+        ),
+        total_side_depth_mm=spec.total_side_depth_mm,
+        flexibility_note=spec.flexibility_note,
+    )
+
+
+@router.get("/kerfing/types")
+def list_kerfing_types_endpoint():
+    """List available kerfing types and their specifications."""
+    return {
+        "kerfing_types": list_kerfing_types(),
+        "specifications": KERFING_TYPES,
+    }
