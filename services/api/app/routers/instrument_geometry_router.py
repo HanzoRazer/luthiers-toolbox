@@ -44,6 +44,14 @@ from app.calculators.setup_cascade import (
     evaluate_setup,
     suggest_adjustments,
 )
+from app.calculators.bridge_calc import (
+    BridgeSpec,
+    PinPositions,
+    compute_bridge_spec,
+    compute_pin_positions,
+    list_body_styles as list_bridge_body_styles,
+    get_bridge_defaults,
+)
 
 router = APIRouter(
     prefix="/api/instrument",
@@ -499,4 +507,134 @@ def check_soundhole_position_endpoint(req: SoundholePositionCheckRequest) -> Sou
 def get_soundhole_options() -> SoundholeOptionsResponse:
     """Return list of supported body styles."""
     return SoundholeOptionsResponse(body_styles=list_body_styles())
+
+
+# ─── Bridge Geometry Models (GEOMETRY-004) ───────────────────────────────────
+
+class BridgeRequest(BaseModel):
+    """Request for bridge geometry calculation."""
+    body_style: str = Field(..., description="Body style (dreadnought, om_000, parlor, classical, archtop, jumbo)")
+    scale_length_mm: float = Field(..., gt=0, description="Scale length in mm")
+    string_count: int = Field(default=6, ge=1, le=12, description="Number of strings")
+    custom_spacing_mm: Optional[float] = Field(None, gt=0, description="Custom string spacing override in mm")
+
+
+class BridgeResponse(BaseModel):
+    """Response with bridge geometry specification."""
+    body_style: str
+    string_spacing_mm: float
+    bridge_length_mm: float
+    bridge_width_mm: float
+    saddle_slot_width_mm: float
+    saddle_slot_depth_mm: float
+    pin_spacing_mm: float
+    bridge_plate_length_mm: float
+    bridge_plate_width_mm: float
+    material: str
+    gate: str
+    string_count: int
+    notes: List[str]
+
+
+class PinPositionsRequest(BaseModel):
+    """Request for bridge pin positions calculation."""
+    string_spacing_mm: float = Field(..., gt=0, description="E-to-e string spacing in mm")
+    string_count: int = Field(default=6, ge=1, le=12, description="Number of strings")
+    bridge_center_x: float = Field(default=0.0, description="X position of bridge center")
+
+
+class PinPositionsResponse(BaseModel):
+    """Response with bridge pin positions."""
+    positions_mm: List[float]
+    string_spacing_mm: float
+    string_count: int
+    total_span_mm: float
+
+
+class BridgeOptionsResponse(BaseModel):
+    """Response with supported body styles for bridge calculation."""
+    body_styles: List[str]
+
+
+# ─── Bridge Geometry Endpoints (GEOMETRY-004) ────────────────────────────────
+
+@router.post(
+    "/bridge",
+    response_model=BridgeResponse,
+    summary="Calculate bridge geometry (GEOMETRY-004)",
+    description="""
+    Calculate bridge dimensions for a given body style.
+
+    **Input:**
+    - Body style (dreadnought, om_000, parlor, classical, archtop, jumbo)
+    - Scale length (mm)
+    - String count (default 6)
+    - Optional custom string spacing
+
+    **Output:**
+    - String spacing at saddle (E to e)
+    - Bridge dimensions (length × width)
+    - Saddle slot dimensions
+    - Pin spacing
+    - Bridge plate dimensions
+    - Material recommendation
+    - Gate status (GREEN/YELLOW)
+
+    **Standard dimensions:**
+    - Dreadnought: spacing=54mm, length=170mm, width=32mm
+    - OM/000: spacing=52mm, length=165mm, width=30mm
+    - Parlor: spacing=50mm, length=155mm, width=28mm
+    - Classical: spacing=58mm, length=180mm, width=28mm (tie block)
+    - Archtop: spacing=52mm, length=95mm, width=18mm (tune-o-matic)
+    """,
+)
+def calculate_bridge(req: BridgeRequest) -> BridgeResponse:
+    """Calculate bridge geometry for body style."""
+    spec: BridgeSpec = compute_bridge_spec(
+        body_style=req.body_style,
+        scale_length_mm=req.scale_length_mm,
+        string_count=req.string_count,
+        custom_spacing_mm=req.custom_spacing_mm,
+    )
+    return BridgeResponse(**spec.to_dict())
+
+
+@router.post(
+    "/bridge/pin-positions",
+    response_model=PinPositionsResponse,
+    summary="Calculate bridge pin positions",
+    description="""
+    Calculate bridge pin X positions from centerline.
+
+    **Input:**
+    - String spacing (E to e, mm)
+    - String count
+    - Bridge center X position
+
+    **Output:**
+    - List of X positions (bass to treble)
+    - Total span
+
+    Pins are evenly distributed across the string spacing.
+    Position[0] = low E (bass), Position[5] = high e (treble).
+    """,
+)
+def calculate_pin_positions(req: PinPositionsRequest) -> PinPositionsResponse:
+    """Calculate bridge pin positions."""
+    result: PinPositions = compute_pin_positions(
+        string_spacing_mm=req.string_spacing_mm,
+        string_count=req.string_count,
+        bridge_center_x=req.bridge_center_x,
+    )
+    return PinPositionsResponse(**result.to_dict())
+
+
+@router.get(
+    "/bridge/options",
+    response_model=BridgeOptionsResponse,
+    summary="List supported body styles for bridge calculation",
+)
+def get_bridge_options() -> BridgeOptionsResponse:
+    """Return list of supported body styles."""
+    return BridgeOptionsResponse(body_styles=list_bridge_body_styles())
 
