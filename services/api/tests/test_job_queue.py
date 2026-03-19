@@ -397,11 +397,11 @@ class TestJobWorker:
             return {"processed": True}
 
         with patch.dict(
-            "app.core.job_queue.queue._HANDLER_REGISTRY",
+            "app.core.job_queue.queue_execution._HANDLER_REGISTRY",
             {"test_job": "test.handler"},
         ):
             with patch(
-                "app.core.job_queue.queue.get_handler",
+                "app.core.job_queue.queue_execution.get_handler",
                 return_value=test_handler,
             ):
                 # Submit job
@@ -434,11 +434,11 @@ class TestJobWorker:
             raise ValueError("Intentional failure")
 
         with patch.dict(
-            "app.core.job_queue.queue._HANDLER_REGISTRY",
+            "app.core.job_queue.queue_execution._HANDLER_REGISTRY",
             {"fail_job": "test.handler"},
         ):
             with patch(
-                "app.core.job_queue.queue.get_handler",
+                "app.core.job_queue.queue_execution.get_handler",
                 return_value=failing_handler,
             ):
                 job_id = await queue.submit(
@@ -464,11 +464,11 @@ class TestJobWorker:
             return {"order": params["order"]}
 
         with patch.dict(
-            "app.core.job_queue.queue._HANDLER_REGISTRY",
+            "app.core.job_queue.queue_execution._HANDLER_REGISTRY",
             {"priority_test": "test.handler"},
         ):
             with patch(
-                "app.core.job_queue.queue.get_handler",
+                "app.core.job_queue.queue_execution.get_handler",
                 return_value=tracking_handler,
             ):
                 # Submit in reverse priority order
