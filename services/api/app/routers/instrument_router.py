@@ -770,3 +770,188 @@ def list_string_trees():
         "string_tree_types": list(STRING_TREE_SPECS.keys()),
         "specifications": STRING_TREE_SPECS,
     }
+
+
+# ---------------------------------------------------------------------------
+# Nut Compensation Calculator (GEOMETRY-007)
+# ---------------------------------------------------------------------------
+
+from ..calculators.nut_compensation_calc import (
+    NutCompensationSpec,
+    compute_nut_compensation,
+    compare_nut_types,
+    compute_zero_fret_positions,
+    list_nut_types,
+    get_nut_type_info,
+    COMPENSATION_FACTORS,
+)
+
+
+class NutCompensationRequest(BaseModel):
+    """Request for nut compensation calculation."""
+    action_at_nut_mm: float = Field(
+        ...,
+        gt=0,
+        description="String height at nut (bottom of string to fretboard) in mm"
+    )
+    fret_height_mm: float = Field(
+        ...,
+        gt=0,
+        description="Height of frets above fretboard in mm (typically 0.8-1.2mm)"
+    )
+    scale_length_mm: float = Field(
+        ...,
+        gt=0,
+        description="Scale length in mm"
+    )
+    nut_type: Optional[str] = Field(
+        default="traditional",
+        description="Nut type: traditional, zero_fret, or compensated"
+    )
+
+
+class NutCompensationResponse(BaseModel):
+    """Response with nut compensation specification."""
+    nut_type: str
+    setback_mm: float
+    intonation_error_cents: float
+    gate: str
+    recommendation: str
+
+
+class NutCompareResponse(BaseModel):
+    """Response comparing all nut types."""
+    action_at_nut_mm: float
+    fret_height_mm: float
+    scale_length_mm: float
+    comparisons: List[NutCompensationResponse]
+    best_option: str
+
+
+class ZeroFretPositionsRequest(BaseModel):
+    """Request for zero-fret adjusted positions."""
+    scale_length_mm: float = Field(..., gt=0)
+    fret_count: int = Field(..., gt=0, le=36)
+    zero_fret_crown_width_mm: float = Field(default=1.0, gt=0)
+
+
+class ZeroFretPositionsResponse(BaseModel):
+    """Response with zero-fret adjusted positions."""
+    zero_fret_position_mm: float
+    nut_guide_position_mm: float
+    nut_guide_offset_mm: float
+    crown_offset_mm: float
+    fret_positions_mm: List[float]
+    fret_count: int
+    scale_length_mm: float
+    notes: List[str]
+
+
+@router.post("/nut-compensation", response_model=NutCompensationResponse)
+def get_nut_compensation(payload: NutCompensationRequest) -> NutCompensationResponse:
+    """
+    Calculate nut compensation for a given configuration.
+
+    Traditional nut compensation formula:
+      setback_mm = (action_at_nut_mm - fret_height_mm)
+                   × scale_length_mm / 1000
+                   × compensation_factor (0.5-0.8)
+
+    Zero-fret: No compensation needed (open string height = fretted height)
+    Compensated nut: Per-string setback (most accurate)
+
+    Returns setback distance and estimated intonation error in cents.
+    """
+    spec = compute_nut_compensation(
+        action_at_nut_mm=payload.action_at_nut_mm,
+        fret_height_mm=payload.fret_height_mm,
+        scale_length_mm=payload.scale_length_mm,
+        nut_type=payload.nut_type or "traditional",
+    )
+
+    return NutCompensationResponse(
+        nut_type=spec.nut_type,
+        setback_mm=spec.setback_mm,
+        intonation_error_cents=spec.intonation_error_cents,
+        gate=spec.gate,
+        recommendation=spec.recommendation,
+    )
+
+
+@router.post("/nut-compensation/compare", response_model=NutCompareResponse)
+def compare_nut_compensation_types(payload: NutCompensationRequest) -> NutCompareResponse:
+    """
+    Compare all nut types for a given configuration.
+
+    Returns compensation specs for traditional, zero_fret, and compensated nuts,
+    sorted by intonation error (best first).
+
+    Useful for deciding which nut approach to use in a build.
+    """
+    results = compare_nut_types(
+        action_at_nut_mm=payload.action_at_nut_mm,
+        fret_height_mm=payload.fret_height_mm,
+        scale_length_mm=payload.scale_length_mm,
+    )
+
+    comparisons = [
+        NutCompensationResponse(
+            nut_type=r.nut_type,
+            setback_mm=r.setback_mm,
+            intonation_error_cents=r.intonation_error_cents,
+            gate=r.gate,
+            recommendation=r.recommendation,
+        )
+        for r in results
+    ]
+
+    return NutCompareResponse(
+        action_at_nut_mm=payload.action_at_nut_mm,
+        fret_height_mm=payload.fret_height_mm,
+        scale_length_mm=payload.scale_length_mm,
+        comparisons=comparisons,
+        best_option=results[0].nut_type if results else "traditional",
+    )
+
+
+@router.post("/nut-compensation/zero-fret-positions", response_model=ZeroFretPositionsResponse)
+def get_zero_fret_positions(payload: ZeroFretPositionsRequest) -> ZeroFretPositionsResponse:
+    """
+    Calculate fret positions adjusted for zero-fret reference.
+
+    With a zero-fret:
+    - Scale length is measured from zero-fret crown center to saddle
+    - The nut becomes a string guide only (positioned behind zero-fret)
+    - All fret positions are calculated from the zero-fret
+
+    Returns positions and notes about the zero-fret system.
+    """
+    result = compute_zero_fret_positions(
+        scale_length_mm=payload.scale_length_mm,
+        fret_count=payload.fret_count,
+        zero_fret_crown_width_mm=payload.zero_fret_crown_width_mm,
+    )
+
+    return ZeroFretPositionsResponse(
+        zero_fret_position_mm=result["zero_fret_position_mm"],
+        nut_guide_position_mm=result["nut_guide_position_mm"],
+        nut_guide_offset_mm=result["nut_guide_offset_mm"],
+        crown_offset_mm=result["crown_offset_mm"],
+        fret_positions_mm=result["fret_positions_mm"],
+        fret_count=result["fret_count"],
+        scale_length_mm=result["scale_length_mm"],
+        notes=result["notes"],
+    )
+
+
+@router.get("/nut-compensation/types")
+def list_nut_compensation_types():
+    """List available nut types and their specifications."""
+    return {
+        "nut_types": list_nut_types(),
+        "compensation_factors": COMPENSATION_FACTORS,
+        "details": {
+            nut_type: get_nut_type_info(nut_type)
+            for nut_type in list_nut_types()
+        },
+    }
