@@ -48,6 +48,13 @@ BUSINESS_ROUTERS: List[RouterSpec] = [
         category="instrument",
     ),
     RouterSpec(
+        module="app.routers.neck.headstock_transition_export",
+        prefix="/api/headstock/transition",
+        router_attr="router",
+        tags=["headstock-transition"],
+        category="instrument",
+    ),
+    RouterSpec(
         module="app.routers.music",
         prefix="/api/music",
         tags=["Music", "Temperaments"],
