@@ -1,9 +1,34 @@
 # Sprint Board
 
-**Last Updated:** 2026-03-18
+**Last Updated:** 2026-03-19
 **Gap Count:** 112/120 resolved (8 remaining)
 
 ---
+
+## Session: 2026-03-19 — Repo Cleanup Sprint
+
+### Completed
+- TEST-001: 73 test failures resolved (4 commits)
+- WOOD-001: plate_router unified to toolbox registry with calibration.py fallback (35a93194)
+- neck_headstock_config.py decomposed: 721 lines → 33-line shim + 3 focused modules (39d5d40f)
+- _experimental/ archived files deleted: ai_cam/, ai_cam_router.py, joblog_router.py (a0a97317)
+- Stale manifest entries removed (a0a97317)
+- flying_v depth_validator except block narrowed, fail-closed enforced (9c1716ac)
+- neck_profile_export orphan router deleted
+- Router architecture confirmed sound: 90 top-level registered + 74 sub-routers (164 count was never a problem)
+
+### Test Status
+- 3,834 passing
+- 0 failing (was 73 at session start)
+- 96.59% coverage
+- 38 skipped, 16 xfailed
+
+### Remaining Backlog
+- CLEANUP-001: Graduate analytics/ (in progress)
+- CLEANUP-002: Graduate cnc_production/ (in progress)
+
+### Key Finding
+The router consolidation target of <100 files was based on a miscount. Architecture is correct. No router consolidation needed.
 
 ## Current Sprint: Binding & Purfling Completion
 
