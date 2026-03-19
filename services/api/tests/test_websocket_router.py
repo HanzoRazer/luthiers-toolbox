@@ -5,6 +5,7 @@ WebSocket Router Tests
 Tests for WebSocket event streaming endpoints.
 """
 
+import asyncio
 import pytest
 from unittest.mock import MagicMock, patch, AsyncMock
 from fastapi.testclient import TestClient
@@ -38,15 +39,15 @@ class TestWebSocketStatus:
 class TestConnectionManager:
     """Test WebSocket ConnectionManager."""
 
-    def test_connection_manager_connect(self):
+    @pytest.mark.asyncio
+    async def test_connection_manager_connect(self):
         """Test connecting a WebSocket client."""
         from app.websocket.monitor import ConnectionManager
 
         manager = ConnectionManager()
         mock_ws = AsyncMock()
 
-        import asyncio
-        asyncio.get_event_loop().run_until_complete(manager.connect(mock_ws))
+        await manager.connect(mock_ws)
 
         assert mock_ws in manager.active_connections
         mock_ws.accept.assert_called_once()
@@ -115,7 +116,8 @@ class TestConnectionManager:
 class TestBroadcast:
     """Test WebSocket broadcast functionality."""
 
-    def test_broadcast_sends_to_matching_clients(self):
+    @pytest.mark.asyncio
+    async def test_broadcast_sends_to_matching_clients(self):
         """Test broadcast sends to clients with matching filters."""
         from app.websocket.monitor import ConnectionManager
 
@@ -134,10 +136,7 @@ class TestBroadcast:
         manager.set_filters(client_job, ["job"])
         manager.set_filters(client_cam, ["cam"])
 
-        import asyncio
-        asyncio.get_event_loop().run_until_complete(
-            manager.broadcast("job:completed", {"job_id": "123"}, filters=["job", "all"])
-        )
+        await manager.broadcast("job:completed", {"job_id": "123"}, filters=["job", "all"])
 
         # client_all and client_job should receive
         assert client_all.send_json.called
