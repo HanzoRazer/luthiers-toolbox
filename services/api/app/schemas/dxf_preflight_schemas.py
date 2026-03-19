@@ -55,6 +55,7 @@ class ValidationReport(BaseModel):
     layers: List[LayerInfo]
     cam_ready: bool
     recommended_actions: List[str]
+    bounds: Optional[Dict[str, float]] = None  # min_x, max_x, min_y, max_y from modelspace
 
 
 class ValidateBase64Request(BaseModel):
