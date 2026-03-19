@@ -79,6 +79,20 @@ class ConnectionManager:
         """Set event filters for a specific client."""
         self.subscription_filters[websocket] = filters
 
+    def get_filters(self, websocket: WebSocket) -> List[str]:
+        """Get event filters for a specific client."""
+        return self.subscription_filters.get(websocket, [])
+
+    def _should_receive(self, websocket: WebSocket, filters: List[str]) -> bool:
+        """Check if a client should receive an event with given filters."""
+        client_filters = self.get_filters(websocket)
+        # Client with 'all' filter receives everything
+        if 'all' in client_filters:
+            return True
+        # Otherwise check for overlap
+        return any(f in client_filters for f in filters)
+
+
 
 # Global connection manager instance
 manager = ConnectionManager()

@@ -168,14 +168,14 @@ def enforce_dxf_validation(
     if warnings:
         logger.warning(
             f"DXF validation warnings for {filename}: {len(warnings)} warnings",
-            extra={"filename": filename, "warning_count": len(warnings)},
+            extra={"dxf_filename": filename, "warning_count": len(warnings)},
         )
 
     # FAIL-CLOSED: Block on errors
     if errors:
         logger.error(
             f"DXF validation BLOCKED for {filename}: {len(errors)} errors",
-            extra={"filename": filename, "error_count": len(errors)},
+            extra={"dxf_filename": filename, "error_count": len(errors)},
         )
         raise HTTPException(
             status_code=422,
@@ -195,7 +195,7 @@ def enforce_dxf_validation(
     if not allow_warnings and warnings:
         logger.warning(
             f"DXF validation BLOCKED (strict mode) for {filename}: {len(warnings)} warnings",
-            extra={"filename": filename, "warning_count": len(warnings)},
+            extra={"dxf_filename": filename, "warning_count": len(warnings)},
         )
         raise HTTPException(
             status_code=422,
@@ -214,7 +214,7 @@ def enforce_dxf_validation(
     logger.info(
         f"DXF validation PASSED for {filename}",
         extra={
-            "filename": filename,
+            "dxf_filename": filename,
             "entity_count": preflight_report.total_entities,
             "layer_count": len(preflight_report.layers),
         },
