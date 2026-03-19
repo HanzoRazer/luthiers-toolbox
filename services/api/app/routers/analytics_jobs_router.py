@@ -18,7 +18,7 @@ import logging
 
 from fastapi import APIRouter, HTTPException, Query
 
-from .._experimental.analytics.job_analytics import get_job_analytics
+from ..analytics.job_analytics import get_job_analytics
 
 logger = logging.getLogger(__name__)
 

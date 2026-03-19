@@ -17,7 +17,7 @@ import logging
 
 from fastapi import APIRouter, HTTPException, Query
 
-from .._experimental.analytics.pattern_analytics import get_pattern_analytics
+from ..analytics.pattern_analytics import get_pattern_analytics
 
 logger = logging.getLogger(__name__)
 

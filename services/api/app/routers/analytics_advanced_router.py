@@ -24,7 +24,7 @@ router = APIRouter(tags=["analytics", "advanced"])
 @router.get("/advanced/correlation")
 def correlation(x: Optional[str] = None, y: Optional[str] = None):
     """Get Pearson correlation between two metrics."""
-    from .._experimental.analytics.advanced_analytics import get_advanced_analytics
+    from ..analytics.advanced_analytics import get_advanced_analytics
 
     if not x or not y:
         raise HTTPException(
@@ -44,7 +44,7 @@ def correlation(x: Optional[str] = None, y: Optional[str] = None):
 @router.get("/advanced/anomalies/durations")
 def duration_anomalies(z: Optional[float] = 3.0):
     """Detect duration anomalies using z-score threshold."""
-    from .._experimental.analytics.advanced_analytics import get_advanced_analytics
+    from ..analytics.advanced_analytics import get_advanced_analytics
 
     try:
         analytics = get_advanced_analytics()
@@ -59,7 +59,7 @@ def duration_anomalies(z: Optional[float] = 3.0):
 @router.get("/advanced/anomalies/success")
 def success_anomalies(z: Optional[float] = 3.0, window_days: Optional[int] = 30):
     """Detect success rate anomalies."""
-    from .._experimental.analytics.advanced_analytics import get_advanced_analytics
+    from ..analytics.advanced_analytics import get_advanced_analytics
 
     try:
         analytics = get_advanced_analytics()
@@ -76,7 +76,7 @@ def success_anomalies(z: Optional[float] = 3.0, window_days: Optional[int] = 30)
 @router.post("/advanced/predict")
 def predict_failure(body: dict = Body(...)):
     """Predict failure risk based on input parameters."""
-    from .._experimental.analytics.advanced_analytics import get_advanced_analytics
+    from ..analytics.advanced_analytics import get_advanced_analytics
 
     try:
         analytics = get_advanced_analytics()

@@ -17,7 +17,7 @@ import logging
 
 from fastapi import APIRouter, HTTPException
 
-from .._experimental.analytics.material_analytics import get_material_analytics
+from ..analytics.material_analytics import get_material_analytics
 
 logger = logging.getLogger(__name__)
 
