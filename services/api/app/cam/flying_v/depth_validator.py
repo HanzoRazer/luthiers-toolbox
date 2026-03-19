@@ -18,12 +18,16 @@ verify_gcode() from gcode_verify then validate_*_depth() for two-step validation
 
 from __future__ import annotations
 
+import logging
 import re
+import uuid
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
 
 from .pocket_generator import FlyingVSpec, load_flying_v_spec
+
+log = logging.getLogger(__name__)
 
 
 @dataclass
@@ -411,7 +415,11 @@ def validate_flying_v_gcode_with_preflight(
 
     preflight_result: Dict[str, Any] = {"ok": True, "errors": [], "warnings": [], "summary": {}}
     try:
-        from app.cam.preflight_gate import preflight_validate, PreflightConfig
+        from app.cam.preflight_gate import (
+            preflight_validate,
+            PreflightConfig,
+            PreflightBlockedError,
+        )
 
         config = PreflightConfig(
             stock_thickness_mm=spec.body_thickness_mm,
@@ -427,8 +435,32 @@ def validate_flying_v_gcode_with_preflight(
             "warnings": list(result.warnings),
             "summary": result.summary,
         }
-    except Exception as e:
-        preflight_result = {"ok": False, "errors": [str(e)], "warnings": [], "summary": {}}
+    except (ImportError, PreflightBlockedError, ValueError, TypeError, RuntimeError) as e:
+        error_id = str(uuid.uuid4())[:8]
+        log.error(
+            "preflight_setup_failed",
+            extra={"error_id": error_id, "error": str(e)},
+            exc_info=True,
+        )
+        preflight_result = {
+            "ok": False,
+            "errors": [f"[{error_id}] {str(e)}"],
+            "warnings": [],
+            "summary": {},
+        }
+        # Safety-critical fail-closed behavior: do not continue depth checks
+        depth_result = DepthValidationResult(
+            ok=False,
+            operation=operation,
+            expected_depth_mm=0.0,
+            actual_depths=[],
+            min_depth=0.0,
+            max_depth=0.0,
+            tolerance_mm=tolerance_mm,
+            errors=["Preflight failed; depth validation skipped."],
+            warnings=[],
+        )
+        return preflight_result, depth_result
 
     if operation == "neck_pocket":
         depth_result = validate_neck_pocket_depth(gcode, spec, tolerance_mm)
