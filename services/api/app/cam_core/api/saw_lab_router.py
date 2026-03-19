@@ -33,7 +33,7 @@ from ..saw_lab.learning import (
 )
 
 # Import storage directly for simple lookups
-from app._experimental.cnc_production.joblog.storage import get_run, list_runs
+from app.cam_core.joblog.storage import get_run, list_runs
 
 router = APIRouter(prefix="/saw-lab", tags=["cam-core", "saw-lab"])
 

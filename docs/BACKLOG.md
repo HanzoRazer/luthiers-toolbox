@@ -57,27 +57,6 @@ reading actual code.
 
 ---
 
-## CLEANUP-002 — Graduate _experimental/cnc_production/
-
-**Status:** Ready to graduate — 6+ active consumers
-**Priority:** Medium
-**Effort:** ~3 hours
-
-6+ production files import from `_experimental/cnc_production/`:
-- `saw_lab/saw_lab_router.py`
-- `rmos/pipeline/feedback/learning.py`
-- `rmos/pipeline/feedback/models.py`
-- `rmos/runs_v2/operations.py`
-- `rmos/runs_v2/store_registry.py`
-- `learned_overrides_router.py`
-
-### Steps
-1. Move: `app/_experimental/cnc_production/` → `app/cam_core/`
-2. Update all import paths
-3. Run tests after
-
----
-
 ## Notes on how this backlog works
 
 Each item here was identified by reading code, not by speculation.

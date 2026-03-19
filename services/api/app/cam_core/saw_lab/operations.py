@@ -11,8 +11,8 @@ import uuid
 
 from .models import SawRunMeta, SawRunRecord, TelemetrySample
 
-# Import storage functions from experimental
-from app._experimental.cnc_production.joblog.storage import (
+# Import storage functions from cam_core (graduated from experimental)
+from app.cam_core.joblog.storage import (
     save_run,
     get_run,
     list_runs,
