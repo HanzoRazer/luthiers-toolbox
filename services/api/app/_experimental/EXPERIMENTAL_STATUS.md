@@ -68,7 +68,7 @@ The module contained (now gone):
 
 **Status:** Graduated to `app/analytics/`
 
-Migration completed (CLEANUP-001, cf025a1e):
+Migration completed (CLEANUP-001; tracked in `CHANGELOG.md` [Unreleased]):
 - `advanced_analytics.py` moved to `app/analytics/advanced_analytics.py`
 - `job_analytics.py` moved to `app/analytics/job_analytics.py`
 - `material_analytics.py` moved to `app/analytics/material_analytics.py`

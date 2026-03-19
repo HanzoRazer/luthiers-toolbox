@@ -47,6 +47,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Refactor
+
+- **CLEANUP-001**: Graduated `app/_experimental/analytics/` to production `app/analytics/`; analytics sub-routers now import `app.analytics.*` (no experimental path).
+
 ### 🎸 Instrument Geometry
 
 - **ARCH-002**: Added `arch_height_mm: 16.0` and `arch_height_note` to Benedetto 17" graduation map (instrument_geometry/models/benedetto_17/graduation_map.json)

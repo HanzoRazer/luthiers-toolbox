@@ -8,6 +8,7 @@
 ## Session: 2026-03-19 — Repo Cleanup Sprint
 
 ### Completed
+- CLEANUP-001: Analytics graduated to `app/analytics/`; router imports use `app.analytics.*`
 - TEST-001: 73 test failures resolved (4 commits)
 - WOOD-001: plate_router unified to toolbox registry with calibration.py fallback (35a93194)
 - neck_headstock_config.py decomposed: 721 lines → 33-line shim + 3 focused modules (39d5d40f)
@@ -24,7 +25,6 @@
 - 38 skipped, 16 xfailed
 
 ### Remaining Backlog
-- CLEANUP-001: Graduate analytics/ (in progress)
 - CLEANUP-002: Graduate cnc_production/ (in progress)
 
 ### Key Finding
