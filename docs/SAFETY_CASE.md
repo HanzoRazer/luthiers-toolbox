@@ -1,98 +1,106 @@
-# Production Shop — Safety Case
+# Safety case — Production Shop (Luthiers Toolbox)
 
-> **Last Updated:** 2026-03-19
-> **Status:** ACTIVE
-> **Review Cycle:** Quarterly or after safety-critical changes
+**Purpose:** This document states *what* we protect, *how* the system is designed to fail safely, and *what operators and reviewers should verify*. It complements code (`app.core.safety`) and process (tests, preflight, RMOS gates).
 
-## Scope
+**Audience:** Engineers, operators, and auditors reviewing CNC / manufacturing-adjacent features.
 
-This safety case covers software-layer safety controls in the Production Shop platform.
-
-**This is NOT a machine-integrated safety system.**
-
-The platform is operator-assistive, not authoritative. All G-code must be reviewed by a qualified operator before execution.
+**Status:** Living document — update when safety-critical surfaces change.
 
 ---
 
-## Hazard Analysis
+## 1. Scope and assumptions
 
-| Hazard | Likelihood | Severity | Control |
-|--------|-----------|----------|---------|
-| Tool depth exceeds stock | Medium | High | preflight_gate depth check |
-| Feed rate exceeds machine envelope | Medium | High | BCamMachineSpec feed limits |
-| Tool radius violates minimum feature | Low | Medium | feasibility engine constraint |
-| Missing stock dimensions | High | High | preflight blocks on unknown stock |
-| Incorrect scale length in fret calc | Low | High | golden test fixtures |
-| Sagitta formula error in fret slots | Low | High | fixed 2024-03, tested |
-| Break angle below Carruth minimum | Medium | Medium | Carruth gate RED <4° |
-| CAM job without machine profile | Medium | High | preflight requires machine_id |
+| In scope | Out of scope (operator / shop responsibility) |
+|----------|--------------------------------------------------|
+| Server-side feasibility, risk bucketing, and G-code–related computation exposed by the API | Physical machine limits, fixture clamping, spindle/brake interlocks |
+| Software preflight and validation of exported machine instructions | Shop floor procedures, training, PPE |
+| Traceability: logging and explicit failure modes for marked paths | Third-party controller bugs or post-processor edits after export |
+
+**Assumption:** Downstream CAM and machines treat exported data as *advisory* until verified with shop procedures and simulation where applicable.
 
 ---
 
-## Control Mapping
+## 2. Safety goals (informal)
 
-| Control | Implementation | Tests |
-|---------|---------------|-------|
-| Preflight gate | `app/safety/cnc_preflight.py` | 99% coverage |
-| RMOS feasibility | `app/rmos/feasibility/engine.py` | 97% coverage |
-| Saw CAM guard | `app/rmos/saw_cam_guard.py` | 100% coverage |
-| Machine spec validation | `app/cam/machines.py` | `test_machines.py` |
-| Break angle gate | `app/calculators/bridge_break_angle.py` | 15 tests |
-| Constraint search | `app/rmos/services/constraint_search.py` | 100% coverage |
+1. **No silent success on bad physics** — Unexpected errors in feasibility / G-code paths must not be converted into “GREEN” or empty success without an explicit, reviewable decision.
+2. **Fail closed** — Prefer explicit errors, blocked exports, or degraded modes that are visible over ambiguous OK responses.
+3. **Auditability** — Safety-critical entry points are identifiable in code and logs.
 
 ---
 
-## Residual Risk Register
+## 3. Primary mechanisms (implementation)
 
-| Risk | Residual Level | Acceptance Rationale |
-|------|----------------|---------------------|
-| Software-layer only | Medium | Operator review required before execution |
-| Single-instance, no audit log | Low | Single shop context, operator is accountable |
-| Experimental modules near core | Low | `_experimental/` graduated or isolated |
+### 3.1 `@safety_critical` (canonical: `app.core.safety`)
 
----
+Functions that affect **feasibility**, **G-code generation**, **feeds/speeds**, or **risk classification** should be considered for this decorator.
 
-## Validation Evidence
+**Guarantees (by design):**
 
-- **3,834** automated tests passing
-- **96.59%** coverage on safety-critical paths
-- Safety-critical paths: `preflight`, `RMOS`, `saw_cam_guard`
-- Golden test fixtures for G-code output
-- All broad `except` blocks audited (WP-1 complete)
-- `@safety_critical` decorator applied to G-code generation, feasibility scoring
+- Unhandled exceptions are logged at **CRITICAL** with traceback, then **re-raised** (never swallowed).
+- Wrappers expose `_is_safety_critical` for tooling / fence checks.
+- Optional **DEBUG** entry/exit logging when `SAFETY_DEBUG=1`.
 
----
+**Import (preferred):**
 
-## Operator Responsibilities
+```python
+from app.core.safety import safety_critical, is_safety_critical
+```
 
-**The platform does NOT replace operator judgment.**
+Legacy re-export: `app.safety` → same symbols.
 
-Before executing any G-code output:
+### 3.2 RMOS and decision authority
 
-1. Review preflight report
-2. Verify stock dimensions match job
-3. Verify tool selection
-4. Verify machine profile is current
-5. Run dry pass if unfamiliar with operation
+RMOS (run / manufacturing operations safety) is the **decision authority** for operational risk signals. Broad `except Exception` handlers in this area are a known hazard: they can mask faults and skew GREEN/YELLOW/RED outcomes.
 
----
+**Expectation:** Safety-critical functions in the feasibility chain use narrow exception handling and/or `@safety_critical` where appropriate; each broad handler should be justified and reviewed.
 
-## Limitations
+### 3.3 Startup and strict modes
 
-- No real-time machine feedback
-- No spindle/axis encoder integration
-- G-code correctness is software-validated only
-- Material properties are user-supplied
-- Edge cases in novel geometry may not be caught
+- Startup validation should **fail fast** if required safety-related modules cannot load (see `validate_startup()` and related boot checks).
+- **`RMOS_STRICT_STARTUP=1`** (when used) requires safety modules to be present — avoids running in a partially disabled safety configuration without explicit opt-out.
+
+### 3.4 Preflight and export gates
+
+CAM / DXF / toolpath flows should enforce **preflight** and **approval or simulation gates** where the product defines them (e.g. export blocked until validated). These gates are part of the *software* safety case, not a substitute for machine-side interlocks.
 
 ---
 
-## Change Log
+## 4. Verification (what to run / check)
 
-| Date | Change | Author |
-|------|--------|--------|
-| 2026-03-19 | Initial safety case created | Claude Code |
+| Check | Intent |
+|-------|--------|
+| API / contract tests touching RMOS, CAM, preflight | Regression on fail-closed behavior and response shapes |
+| Coverage on safety-tagged modules | Ensures tests exercise decorated paths where metrics are tracked |
+| Manual: attempt export without preflight / with invalid geometry | UI/API should surface explicit errors, not silent files |
+
+*Exact commands depend on repo `Makefile` / CI — align with `make api-verify` or the current GitHub workflow.*
 
 ---
 
-*This document addresses red-team review finding: safety logic exists but needs documented validation evidence and residual risk register.*
+## 5. Known residual risks (honest list)
+
+1. **Incomplete decoration** — Not every function in long call chains may yet be `@safety_critical`; fence checks and reviews should close gaps over time.
+2. **Broad exception handlers** — Any remaining `except Exception` on hot paths needs classification (narrow, re-raise, or document).
+3. **Environment drift** — Missing dependencies or misconfigured strict flags can change behavior at startup; CI should match production expectations.
+4. **Human factors** — Operators can override or bypass UI warnings; training and shop procedure remain essential.
+
+---
+
+## 6. Change control
+
+When adding or changing:
+
+- New G-code or feasibility endpoints,
+- New export formats,
+- Changes to RMOS risk semantics,
+
+…update this document **and** add or extend tests that prove the intended failure mode.
+
+---
+
+## 7. References (in-repo)
+
+- `services/api/app/core/safety.py` — `@safety_critical` implementation
+- `services/api/app/safety/__init__.py` — backward-compatible re-export
+- `docs/PRODUCT_SCOPE.md` — core vs experimental boundaries (if present)
+- `docs/reviews/DESIGN_REVIEW_2026-02-22.md` — historical safety discussion
