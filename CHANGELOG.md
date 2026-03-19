@@ -51,6 +51,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - **ARCH-002**: Added `arch_height_mm: 16.0` and `arch_height_note` to Benedetto 17" graduation map (instrument_geometry/models/benedetto_17/graduation_map.json)
 
+- **GEOMETRY-010**: Side bending parameters calculator (`calculators/side_bending_calc.py`)
+  - Bending temp/moisture by species (mahogany, rosewood, maple, koa, sapele, walnut, cedar, spruce)
+  - Min bend radius safety check with GREEN/YELLOW/RED risk gate
+  - Spring-back estimation (5-8° typical)
+  - Side thickness targets by instrument type (steel string, classical, archtop, hollow-body, ukulele)
+  - `POST /api/instrument/side-bending` — bending plan with risk assessment
+  - `POST /api/instrument/side-thickness` — thickness recommendation
+  - `GET /api/instrument/side-bending/options` — supported species and instrument types
+
 ### 🔬 Acoustics / Plate Design
 
 - **PORT-001**: Ported tap-tone-pi plate thickness design module to `calculators/plate_design/`
