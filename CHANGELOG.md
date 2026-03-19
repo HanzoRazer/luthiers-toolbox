@@ -58,13 +58,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### 🛠️ Neck Suite
 
-- **HEADSTOCK-001**: Added `routers/neck/headstock_transition_export.py` — DXF + G-code export for headstock transition zone with volute geometry
-- **HEADSTOCK-001**: Added `routers/neck/neck_profile_export.py` — DXF export for neck profile cross-sections
+- Added `routers/neck/headstock_transition_export.py` — DXF + G-code for headstock transition zone with volute geometry
+- Added `routers/neck/neck_profile_export.py` — DXF export for neck profile cross-sections
+
+### 🪚 Headstock DXF Export
+
+- **HEADSTOCK-001**: Added `routers/headstock/dxf_export.py` (30KB) — BCAM 2030A DXF export with:
+  - `VeneerSpec` model — face veneer as inward-offset layer
+  - `BindingSpec` model — binding rabbet with material bend radius warnings
+  - 7-section `build_dxf()`: outline, tuners, nut, inlay, truss rod, veneer, binding
+  - Material cost estimate endpoint
 
 ### 🖼️ Photo Vectorizer
 
-- **VECTORIZER-001**: Photo vectorizer integrated via blueprint router (`phase1_router.py` → `create_vectorizer()`)
-  - Service: `services/photo-vectorizer/photo_vectorizer_v2.py` (163KB)
+- **VECTORIZER-001**: Added `routers/photo_vectorizer_router.py` (9KB) — FastAPI router wrapping `PhotoVectorizerV2`
+  - `POST /api/vectorizer/extract` — base64 image → SVG path + bounding box + warnings
+  - Graceful fallback when cv2/rembg/potrace deps unavailable
 
 ### 📋 Documentation
 

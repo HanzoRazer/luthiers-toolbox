@@ -227,4 +227,18 @@ CAM_ROUTERS: List[RouterSpec] = [
         tags=["cam-workspace"],
         category="cam",
     ),
+    # ── HEADSTOCK-001: DXF export with veneer + binding ──
+    RouterSpec(
+        module="app.routers.headstock.dxf_export",
+        prefix="/api/export",
+        tags=["Export", "Headstock", "DXF"],
+        category="cam",
+    ),
+    # ── VECTORIZER-001: Photo vectorizer router ──
+    RouterSpec(
+        module="app.routers.photo_vectorizer_router",
+        prefix="/api/vectorizer",
+        tags=["Vectorizer", "Import", "Photo"],
+        category="cam",
+    ),
 ]
