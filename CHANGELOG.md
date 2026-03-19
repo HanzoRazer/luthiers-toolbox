@@ -68,6 +68,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - `POST /api/instrument/nut-slots` — complete slot schedule with gate assessment
   - `GET /api/instrument/nut-slots/options` — supported fret types and string presets
 
+- **GEOMETRY-005**: Neck block and tail block sizing calculator (`calculators/neck_block_calc.py`)
+  - Block dimensions from side depth and body style
+  - Standard side depths for 7 body styles (dreadnought, om_000, parlor, classical, archtop, jumbo, concert)
+  - Neck block: height=side depth, width=heel+12mm, depth=50-65mm
+  - Tail block: height=side depth, width=65-90mm, depth=30-40mm
+  - GREEN/YELLOW/RED gate for structural adequacy
+  - `POST /api/instrument/blocks` — both neck and tail block specs
+  - `GET /api/instrument/blocks/options` — supported body styles
+
 ### 🔬 Acoustics / Plate Design
 
 - **PORT-001**: Ported tap-tone-pi plate thickness design module to `calculators/plate_design/`
