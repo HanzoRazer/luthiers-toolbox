@@ -108,11 +108,12 @@ BUSINESS_ROUTERS: List[RouterSpec] = [
         tags=["Instruments", "Bridge", "Calculators"],
         category="instrument",
     ),
-    # ── GEOMETRY-010: Side bending parameters ──
+    # ── GEOMETRY-010: Instrument geometry (34 endpoints) ──
+    # Split from monolithic instrument_geometry_router.py (1,868 lines)
     RouterSpec(
-        module="app.routers.instrument_geometry_router",
+        module="app.routers.instrument_geometry",
         prefix="",
-        tags=["Instruments", "Side Bending", "Calculators"],
+        tags=["Instruments", "Geometry", "Calculators"],
         category="instrument_geometry",
     ),
 ]
