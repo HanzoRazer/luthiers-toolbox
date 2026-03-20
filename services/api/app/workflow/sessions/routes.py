@@ -27,7 +27,7 @@ except ImportError:
     list_runs_v2 = None
     count_runs_v2 = None
 
-router = APIRouter(prefix="/api/workflow/sessions", tags=["Workflow Sessions"])
+router = APIRouter(prefix="/api/rmos/workflow/sessions", tags=["Workflow Sessions"])
 
 _store = WorkflowSessionStore()
 
