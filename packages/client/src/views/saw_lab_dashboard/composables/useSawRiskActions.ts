@@ -3,6 +3,7 @@
  */
 import { ref, computed, type Ref, type ComputedRef } from 'vue'
 import type { RunSummaryItem } from '@/api/sawLab'
+import { addOverride } from '@/sdk/rmos/runs'
 
 // ============================================================================
 // Types
@@ -132,15 +133,17 @@ export function useSawRiskActions(
     if (!pendingOverride.value) return
 
     try {
-      // TODO: Call backend API to apply override
-      console.log('Applying override:', {
-        run_id: run.run_id,
-        override: pendingOverride.value.suggested_override,
-        action: pendingOverride.value.title
-      })
+      // Build override reason from action context
+      const reason = `${pendingOverride.value.title}: ${pendingOverride.value.suggested_override}`
 
-      // Show success message (placeholder)
-      alert(`✓ Override applied: ${pendingOverride.value.suggested_override}`)
+      // Call backend API to apply override
+      const result = await addOverride(run.run_id, { reason })
+
+      console.log('Override applied:', {
+        run_id: run.run_id,
+        attachment_id: result.attachment_id,
+        sha256: result.sha256
+      })
 
       // Reload dashboard
       await onSuccess()

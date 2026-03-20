@@ -626,12 +626,14 @@ These phantom references mean contracts, docs, and specs claim features exist th
 
 ### 26. 4 Frontend TODOs Blocking Real Features
 
-| File | TODO | Impact |
+| File | TODO | Status |
 |------|------|--------|
-| `useRosetteDesignerExport.ts` | "Generate PDF with annotations" | Rosette export incomplete |
-| `useCurveHistory.ts` | "Implement DXF export via API" | Curve lab can't export |
-| `useSawRiskActions.ts` | "Call backend API to apply override" | Risk override button does nothing |
-| `useJobIntHistoryActions.ts` | "Open detail modal or navigate to detail view" | Job history click handler empty |
+| `useRosetteDesignerExport.ts` | "Generate PDF with annotations" | ❌ Needs backend PDF service |
+| `useCurveHistory.ts` | "Implement DXF export via API" | ❌ Needs backend curve-to-DXF endpoint |
+| `useSawRiskActions.ts` | "Call backend API to apply override" | ✅ Wired to `addOverride()` SDK |
+| `useJobIntHistoryActions.ts` | "Open detail modal or navigate to detail view" | ✅ Navigates to RmosRunViewer |
+
+**Resolution (partial):** 2 of 4 TODOs completed — wired to existing backends. Remaining 2 require backend work first.
 
 ### 27. Abandoned Service — `blueprint-import/`
 
