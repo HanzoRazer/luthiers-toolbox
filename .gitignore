@@ -460,3 +460,4 @@ services/blueprint-import/output/
 
 # Orphaned vectorizer/rosette prototypes (moved from repo root)
 Rosette Designer/prototypes/premium/
+services/api/data/runs_v2/
