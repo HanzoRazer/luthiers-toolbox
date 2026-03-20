@@ -310,7 +310,6 @@ class TestSegmentationEndpoints:
         response = client.post("/api/vision/segment")
         assert response.status_code == 422
 
-    @pytest.mark.skip(reason="TestClient + UploadFile triggers Pydantic ForwardRef; fix in endpoint schema")
     def test_segment_rejects_invalid_content_type(self, client):
         """Segment should reject non-image files."""
         response = client.post(
