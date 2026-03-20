@@ -69,6 +69,76 @@ The `PHASE_2_3_IMPLEMENTATION_PLAN.md` claimed 23 stubs across 3 files, but audi
 
 ---
 
+## WIRE-001 — Wire choose_batch_plan endpoint
+
+**Status:** ⏳ PENDING
+**Priority:** Medium
+**Effort:** ~2 hours
+**Test:** `tests/test_plan_choose_persists_decision_payload_unit.py`
+
+### What's Missing
+
+The test expects a `choose_batch_plan` function in `app/saw_lab/batch_router.py` that:
+1. Accepts `BatchPlanChooseRequest` with `batch_plan_artifact_id`, `selected_setup_key`, `selected_op_ids`
+2. Creates a `saw_batch_decision` artifact
+3. Optionally applies tuning multipliers when `apply_recommended_patch=True`
+4. Returns `batch_decision_artifact_id` and metadata
+
+### Files to Modify
+
+- `services/api/app/saw_lab/batch_router.py` — add `choose_batch_plan` endpoint
+- `services/api/app/saw_lab/schemas_batch.py` — add `BatchPlanChooseRequest`, `BatchPlanChooseResponse`
+
+---
+
+## WIRE-002 — Wire Relief/VCarve preview router
+
+**Status:** ⏳ PENDING
+**Priority:** Low
+**Effort:** ~1 hour
+**Test:** `tests/test_relief_vcarve_endpoint_smoke.py`
+
+### What's Missing
+
+The test expects `POST /api/preview` endpoint that:
+1. Accepts `{"svg": "<svg>...</svg>", "normalize": bool}`
+2. Parses SVG elements (rect, circle, path, polygon, etc.)
+3. Returns `{"stats": {...}, "normalized": bool}` with polyline count, bbox
+
+### Files to Modify
+
+- `services/api/app/art_studio/relief_router.py` or `vcarve_router.py` — implement preview endpoint
+- Wire router in `app/main.py` or router registry
+
+---
+
+## WIRE-003 — Fix workflow session router path mismatch
+
+**Status:** ⏳ PENDING
+**Priority:** Medium
+**Effort:** ~30 minutes
+**Test:** `tests/test_rmos_workflow_e2e.py`
+
+### What's Wrong
+
+The test expects endpoints at `/api/rmos/workflow/sessions` but the router is mounted at `/api/workflow/sessions`.
+
+**Actual router prefix:** `routes.py:30` → `prefix="/api/workflow/sessions"`
+**Test expects:** `/api/rmos/workflow/sessions`
+
+### Options
+
+1. **Change router prefix** to `/api/rmos/workflow/sessions` (breaking change)
+2. **Change test paths** to `/api/workflow/sessions` (if that's the intended API)
+3. **Add alias route** that forwards to the existing router
+
+### Files to Modify
+
+- `services/api/app/workflow/sessions/routes.py` — change prefix, OR
+- `services/api/tests/test_rmos_workflow_e2e.py` — update test paths
+
+---
+
 ## Notes on how this backlog works
 
 Each item here was identified by reading code, not by speculation.
