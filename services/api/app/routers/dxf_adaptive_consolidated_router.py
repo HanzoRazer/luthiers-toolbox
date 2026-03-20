@@ -19,6 +19,7 @@ import logging
 from typing import Any, Dict, Literal, Optional
 
 import ezdxf
+from ezdxf.lldxf.const import DXFStructureError
 import httpx
 from fastapi import APIRouter, File, Form, HTTPException, Request, UploadFile
 
@@ -58,21 +59,25 @@ async def plan_from_dxf(
     from app.cam.dxf_upload_guard import read_dxf_with_validation
     from app.cam.dxf_validation_gate import enforce_dxf_validation
 
-    dxf_bytes = await read_dxf_with_validation(file)
+    try:
+        dxf_bytes = await read_dxf_with_validation(file)
 
-    # MANDATORY: Validate DXF geometry before G-code export (FAIL-CLOSED)
-    enforce_dxf_validation(dxf_bytes, file.filename or "upload.dxf")
+        # MANDATORY: Validate DXF geometry before G-code export (FAIL-CLOSED)
+        enforce_dxf_validation(dxf_bytes, file.filename or "upload.dxf")
+    except DXFStructureError as exc:
+        raise HTTPException(
+            status_code=422,
+            detail=f"Invalid DXF file structure: {exc}"
+        ) from exc
 
     # Optional preflight for debug info
     preflight_debug: Optional[Dict[str, Any]] = None
     try:
-        preflight = DXFPreflight(dxf_bytes, filename=file.filename)
-        report = preflight.validate()
+        preflight = DXFPreflight(dxf_bytes, filename=file.filename or "upload.dxf")
+        report = preflight.run_all_checks()
         preflight_debug = {
-            "ok": report.ok,
-            "units": report.units,
+            "passed": report.passed,
             "layers": report.layers,
-            "candidate_layers": report.candidate_layers,
             "issue_count": len(report.issues),
         }
     except (ValueError, KeyError, AttributeError, OSError) as e:

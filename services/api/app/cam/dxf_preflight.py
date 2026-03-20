@@ -4,6 +4,7 @@ from typing import List, Dict, Any, Optional, Tuple
 from dataclasses import dataclass, field
 from enum import Enum
 import ezdxf
+from ezdxf.lldxf.const import DXFError
 from pathlib import Path
 import math
 import json
@@ -84,7 +85,7 @@ class DXFPreflight:
                 self.msp = self.doc.modelspace()
             finally:
                 os.unlink(tmp_path)
-        except (IOError, OSError, ValueError) as e:
+        except (IOError, OSError, ValueError, DXFError) as e:
             self.issues.append(Issue(
                 severity=Severity.ERROR,
                 message=f"Failed to read DXF file: {str(e)}",
