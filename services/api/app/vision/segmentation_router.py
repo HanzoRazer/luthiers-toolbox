@@ -6,7 +6,8 @@ Provides:
 
 LANE: PRODUCER (analyzes images via AI, writes to CAS)
 """
-from __future__ import annotations
+# NOTE: Do NOT use "from __future__ import annotations" here - causes Pydantic ForwardRef issues
+from typing import Optional, Dict, Any, List, Union
 
 from fastapi import APIRouter, HTTPException, UploadFile, File, Form, Request
 
