@@ -60,7 +60,6 @@ def sample_spec_artifact():
     }
 
 
-@pytest.mark.skip(reason="choose_batch_plan endpoint not yet implemented - see batch_router.py")
 class TestPlanChooseBasic:
     """Basic plan/choose endpoint tests."""
 
