@@ -5,30 +5,48 @@
 
 ---
 
-## Session: 2026-03-19 — Repo Cleanup Sprint
+## Session: 2026-03-19 — Full Sprint
 
 ### Completed
-- CLEANUP-001: Analytics graduated to `app/analytics/`; router imports use `app.analytics.*`
-- TEST-001: 73 test failures resolved (4 commits)
-- WOOD-001: plate_router unified to toolbox registry with calibration.py fallback (35a93194)
-- neck_headstock_config.py decomposed: 721 lines → 33-line shim + 3 focused modules (39d5d40f)
-- _experimental/ archived files deleted: ai_cam/, ai_cam_router.py, joblog_router.py (a0a97317)
-- Stale manifest entries removed (a0a97317)
-- flying_v depth_validator except block narrowed, fail-closed enforced (9c1716ac)
-- neck_profile_export orphan router deleted
-- Router architecture confirmed sound: 90 top-level registered + 74 sub-routers (164 count was never a problem)
+- **TEST-001:** 73 failures → 0 (multiple commits)
+- **WOOD-001:** plate_router unified to registry
+- **binding_geometry.py:** 1,292 → 828 lines (binding_materials, binding_models, binding_math extracted)
+- **instrument_geometry_router.py:** 1,868 lines → 9 domain routers (e0319ebe)
+- **MachineManagerView.vue:** 895 → 120 lines (3 panel components extracted, 6ce59431)
+- **CLEANUP-001:** analytics graduated (cf025a1e)
+- **CLEANUP-002:** cnc_production graduated (f090ec73)
+- **Exception hardening:** complete (1 justified bare except remains)
+- **_experimental/:** cleared — all modules graduated or archived
+- **NotImplementedError:** all 3 are intentional (protocol stubs)
+- **WIRE-003:** path fix — 3 tests recovered (ff6cc055)
+- **Pydantic ForwardRef fix:** 28 tests recovered (7c78fa03)
+- **Replay tests:** 21 tests recovered (agentic.spine.replay IMPLEMENTED=True)
+- **Docs:** PRODUCT_BOUNDARY, SYSTEM_MAP, PERSONAS, SAFETY_CASE added
+- **Red-team findings:** addressed in documentation
+- **Router architecture:** confirmed sound (90 top-level + 74 sub-routers)
 
 ### Test Status
-- 3,834 passing
-- 0 failing (was 73 at session start)
+- 3,834+ passing
+- 0 failing
 - 96.59% coverage
-- 38 skipped, 16 xfailed
 
-### Remaining Backlog
-- CLEANUP-002: Graduate cnc_production/ (in progress)
+### Key Findings
+- Router consolidation target of <100 files was based on a miscount — architecture is correct
+- _experimental/ fully cleared: analytics + cnc_production graduated, archived stubs deleted
+- All exception hardening complete with fail-closed patterns enforced
 
-### Key Finding
-The router consolidation target of <100 files was based on a miscount. Architecture is correct. No router consolidation needed.
+---
+
+## Session: 2026-03-19 — Repo Cleanup Sprint (Earlier)
+
+### Completed
+- CLEANUP-001: Analytics graduated to `app/analytics/`
+- TEST-001: 73 test failures resolved (4 commits)
+- WOOD-001: plate_router unified to toolbox registry (35a93194)
+- neck_headstock_config.py decomposed: 721 → 33-line shim + 3 modules (39d5d40f)
+- _experimental/ archived files deleted (a0a97317)
+- flying_v depth_validator except block narrowed (9c1716ac)
+- neck_profile_export orphan router deleted
 
 ## Current Sprint: Binding & Purfling Completion
 
@@ -97,6 +115,7 @@ The router consolidation target of <100 files was based on a miscount. Architect
 
 | Date | Gaps Closed | Notes | Next |
 |------|-------------|-------|------|
+| 2026-03-19 | — | **Full Sprint:** TEST-001 73→0 failures. binding_geometry 1,292→828 lines (3 modules extracted). instrument_geometry_router 1,868→9 domain routers. MachineManagerView 895→120 lines. CLEANUP-001/002 graduated. Exception hardening complete. _experimental/ cleared. WIRE-003 path fix (3 tests). Pydantic ForwardRef fix (28 tests). Replay tests (21 tests). Docs: PRODUCT_BOUNDARY, SYSTEM_MAP, PERSONAS, SAFETY_CASE. 3,834+ passing, 96.59% coverage. | WIRE-001 |
 | 2026-03-18 | — | **Session summary: Systems review score 6.1→~7.3.** TRACK 10 all 8 tasks complete. Safety coverage 33%→92% (125+ new tests). Bridge break angle v1→v2 corrected. CamWorkspaceView wired to live backend. BIND-GAP-04 binding strip calculator. Saddle compensation calculator ported (Design + Setup modes, 28 tests). Gap count 112/120 (8 remaining, all blocked). GEN-5 phantom removed after 14 sessions. CI green, score 7.0 target achieved. | — |
 | 2026-03-18 | — | **docs(sprint): reconcile gap count + test coverage.** SPRINT_BOARD.md aligned with GAP_ANALYSIS_MASTER: 112/120 (8 remaining). Categories table fixed. GEN-5 phantom documented. Added 53 tests: test_rmos_lineage_service.py (28 tests, lineage.py 0%→100%), test_rmos_store_completeness.py (25 tests, store_completeness.py 23%→85%). Fixed bridge_break_angle.py CARRUTH_MIN_DEG import. | — |
 | 2026-03-18 | — | **test(coverage): RMOS domain test suite expansion.** Added 125 tests across 3 modules: test_saw_cam_guard.py (28 tests, saw_cam_guard.py 0%→100%), test_constraint_search.py (21 tests, constraint_search.py 0%→100%), test_store_filter.py (76 tests, store_filter.py 34%→100%). Tests cover: saw safety guards (rim speed, bite, heat, deflection, kickback), constraint-first rosette search (Mode B), index metadata filtering. | — |
