@@ -17,6 +17,7 @@ from pathlib import Path
 import numpy as np
 import pytest
 
+from body_isolation_result import BodyRegionProtocol
 from photo_vectorizer_v2 import PhotoVectorizerV2
 from body_isolation_result import (
     BodyIsolationResult,
@@ -54,25 +55,29 @@ class _BodyRegionStub:
     def __init__(
         self,
         *,
-        x_px: int = 10,
-        y_px: int = 10,
-        width_px: int = 100,
-        height_px: int = 200,
+        x: int = 10,
+        y: int = 10,
+        width: int = 100,
+        height: int = 200,
         confidence: float = 0.8,
         height_mm: float | None = None,
         width_mm: float | None = None,
     ):
-        self.x = x_px
-        self.y = y_px
-        self.width = width_px
-        self.height = height_px
-        self.x_px = x_px
-        self.y_px = y_px
-        self.width_px = width_px
-        self.height_px = height_px
+        self.x = x
+        self.y = y
+        self.width = width
+        self.height = height
         self.confidence = confidence
         self.height_mm = height_mm
         self.width_mm = width_mm
+
+    @property
+    def bbox(self) -> tuple[int, int, int, int]:
+        return (self.x, self.y, self.width, self.height)
+
+    @property
+    def height_px(self) -> int:
+        return self.height
 
 
 def _make_body_isolation_result(
@@ -80,9 +85,11 @@ def _make_body_isolation_result(
     completeness_score: float = 0.6,
     review_required: bool = False,
 ) -> BodyIsolationResult:
+    region = _BodyRegionStub()
+    assert isinstance(region, BodyRegionProtocol)
     return BodyIsolationResult(
         body_bbox_px=(10, 10, 100, 200),
-        body_region=_BodyRegionStub(),
+        body_region=region,
         confidence=0.8,
         completeness_score=completeness_score,
         review_required=review_required,

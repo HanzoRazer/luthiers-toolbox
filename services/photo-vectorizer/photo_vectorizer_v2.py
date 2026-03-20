@@ -43,6 +43,7 @@ from xml.etree.ElementTree import Element, SubElement, ElementTree
 import cv2
 import numpy as np
 
+from body_isolation_result import BodyRegionProtocol
 from grid_classify import PhotoGridClassifier, merge_classifications
 
 # ── Optional deps (graceful fallback) ──────────────────────────────────────────
@@ -144,7 +145,7 @@ class CalibrationResult:
 
 
 @dataclass
-class BodyRegion:
+class BodyRegion(BodyRegionProtocol):
     """Bounding box of the isolated instrument body (excludes neck/headstock)."""
     x: int
     y: int
@@ -153,6 +154,8 @@ class BodyRegion:
     confidence: float
     neck_end_row: int
     max_body_width_px: int
+    height_mm: Optional[float] = None
+    width_mm: Optional[float] = None
     notes: List[str] = field(default_factory=list)
 
     @property
@@ -282,6 +285,39 @@ class ContourScore:
     neck_inclusion_score: float = 0.0
     issues: List[str] = field(default_factory=list)
 
+    def to_payload(self) -> Dict[str, Any]:
+        return {
+            "contour_index": int(self.contour_index),
+            "score": float(self.score),
+            "completeness": float(self.completeness),
+            "includes_neck": bool(self.includes_neck),
+            "border_contact": bool(self.border_contact),
+            "dimension_plausibility": float(self.dimension_plausibility),
+            "symmetry_score": float(self.symmetry_score),
+            "aspect_ratio_ok": bool(self.aspect_ratio_ok),
+            "ownership_score": float(self.ownership_score),
+            "vertical_coverage": float(self.vertical_coverage),
+            "neck_inclusion_score": float(self.neck_inclusion_score),
+            "issues": list(self.issues),
+        }
+
+    @classmethod
+    def from_payload(cls, payload: Dict[str, Any]) -> "ContourScore":
+        return cls(
+            contour_index=int(payload.get("contour_index", 0)),
+            score=float(payload.get("score", 0.0)),
+            completeness=float(payload.get("completeness", 0.0)),
+            includes_neck=bool(payload.get("includes_neck", False)),
+            border_contact=bool(payload.get("border_contact", False)),
+            dimension_plausibility=float(payload.get("dimension_plausibility", 0.0)),
+            symmetry_score=float(payload.get("symmetry_score", 0.0)),
+            aspect_ratio_ok=bool(payload.get("aspect_ratio_ok", False)),
+            ownership_score=float(payload.get("ownership_score", 0.0)),
+            vertical_coverage=float(payload.get("vertical_coverage", 0.0)),
+            neck_inclusion_score=float(payload.get("neck_inclusion_score", 0.0)),
+            issues=list(payload.get("issues", []) or []),
+        )
+
 
 @dataclass
 class ContourStageResult:
@@ -306,6 +342,56 @@ class ContourStageResult:
     ownership_score: Optional[float] = None
     ownership_ok: Optional[bool] = None
     diagnostics: Dict[str, Any] = field(default_factory=lambda: {"retry_attempts": []})
+
+    def to_payload(self) -> Dict[str, Any]:
+        return {
+            "best_score": float(self.best_score),
+            "export_blocked": bool(self.export_blocked),
+            "block_reason": self.block_reason,
+            "export_block_issues": list(self.export_block_issues),
+            "export_block_score_breakdown": dict(self.export_block_score_breakdown or {}),
+            "recommended_next_action": self.recommended_next_action,
+            "ownership_score": self.ownership_score,
+            "ownership_ok": self.ownership_ok,
+            "diagnostics": dict(self.diagnostics or {}),
+            "contour_scores_pre": [
+                cs.to_payload() if hasattr(cs, "to_payload") else cs
+                for cs in list(getattr(self, "contour_scores_pre", []) or [])
+            ],
+            "contour_scores_post": [
+                cs.to_payload() if hasattr(cs, "to_payload") else cs
+                for cs in list(getattr(self, "contour_scores_post", []) or [])
+            ],
+            "feature_contours_post_grid": list(getattr(self, "feature_contours_post_grid", []) or []),
+            "body_contour_final": getattr(self, "body_contour_final", None),
+            "elected_source": getattr(self, "elected_source", None),
+        }
+
+    @classmethod
+    def from_payload(cls, payload: Dict[str, Any]) -> "ContourStageResult":
+        result = cls(
+            best_score=float(payload.get("best_score", 0.0)),
+            export_blocked=bool(payload.get("export_blocked", False)),
+            block_reason=payload.get("block_reason"),
+            export_block_issues=list(payload.get("export_block_issues", []) or []),
+            export_block_score_breakdown=dict(payload.get("export_block_score_breakdown", {}) or {}),
+            recommended_next_action=payload.get("recommended_next_action"),
+            ownership_score=payload.get("ownership_score"),
+            ownership_ok=payload.get("ownership_ok"),
+            diagnostics=dict(payload.get("diagnostics", {}) or {"retry_attempts": []}),
+        )
+        result.contour_scores_pre = [
+            ContourScore.from_payload(cs) if isinstance(cs, dict) else cs
+            for cs in list(payload.get("contour_scores_pre", []) or [])
+        ]
+        result.contour_scores_post = [
+            ContourScore.from_payload(cs) if isinstance(cs, dict) else cs
+            for cs in list(payload.get("contour_scores_post", []) or [])
+        ]
+        result.feature_contours_post_grid = list(payload.get("feature_contours_post_grid", []) or [])
+        result.body_contour_final = payload.get("body_contour_final")
+        result.elected_source = payload.get("elected_source", "pre_merge_guarded")
+        return result
 
 
 # Instrument specs for scale calibration and feature classification
@@ -1977,7 +2063,7 @@ _DEFAULT_BODY_HEIGHT_MM = 490.0
 
 
 def compute_rough_mpp(
-    body_region: Optional[BodyRegion],
+    body_region: Optional[BodyRegionProtocol],
     spec_name: Optional[str] = None,
     family_hint: Optional[str] = None,
 ) -> float:
@@ -1985,11 +2071,15 @@ def compute_rough_mpp(
     Compute a rough mm/px estimate for GatedAdaptiveCloser kernel sizing
     BEFORE full calibration runs. Not used as final calibration result.
     """
-    if body_region is None or body_region.height_px <= 0:
+    if body_region is None:
         logger.debug("compute_rough_mpp: no body_region -> using 0.30")
         return 0.30
 
-    body_h_px = float(body_region.height_px)
+    if body_region.height <= 0:
+        logger.debug("compute_rough_mpp: no body_region -> using 0.30")
+        return 0.30
+
+    body_h_px = float(body_region.height)
 
     if spec_name and spec_name.lower() in _ROUGH_SPEC_HEIGHTS:
         h_mm = _ROUGH_SPEC_HEIGHTS[spec_name.lower()]
@@ -3406,7 +3496,7 @@ class PhotoVectorizerV2:
         logger.info(f"Instrument family: {instrument_family.family} (conf={instrument_family.confidence:.2f})")
 
         # ── Stage 7: Calibration (with body isolation + DPI estimation) ───
-        body_h_px = float(body_region.height_px) if body_region.height_px > 0 else None
+        body_h_px = float(body_region.height) if body_region.height > 0 else None
         calibration = self.calibrator.calibrate(
             image, known_mm=known_dimension_mm, known_px=known_dimension_px,
             spec_name=spec_name, image_dpi=exif_dpi,

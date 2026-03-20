@@ -7,6 +7,8 @@ import cv2
 import numpy as np
 
 from body_isolation_result import (
+    BodyRegionLike,
+    BodyRegionProtocol,
     BodyIsolationResult,
     BodyIsolationSignalBreakdown,
 )
@@ -113,6 +115,14 @@ class BodyIsolationStage:
     def __init__(self, body_isolator: Any):
         self.body_isolator = body_isolator
 
+    @staticmethod
+    def _require_body_region(body_region: Any) -> BodyRegionLike:
+        if not isinstance(body_region, BodyRegionProtocol):
+            raise TypeError(
+                "BodyIsolationStage expected body_region with x/y/width/height/confidence contract"
+            )
+        return body_region
+
     def run(
         self,
         image: np.ndarray,
@@ -153,6 +163,7 @@ class BodyIsolationStage:
                 fg_mask=trimmed_mask,
                 original_image=original_image,
             )
+            body_region = self._require_body_region(body_region)
         finally:
             # Restore previous values to avoid global side-effects
             if prev_body_width_min is not None:
@@ -162,12 +173,11 @@ class BodyIsolationStage:
             if prev_use_adaptive is not None:
                 self.body_isolator.use_adaptive = prev_use_adaptive
 
-        # BodyRegion attributes: x, y, width, height (not x_px/y_px/width_px)
         body_bbox_px = (
-            int(getattr(body_region, "x", 0)),
-            int(getattr(body_region, "y", 0)),
-            int(getattr(body_region, "width", 0)),
-            int(getattr(body_region, "height", 0)),
+            int(body_region.x),
+            int(body_region.y),
+            int(body_region.width),
+            int(body_region.height),
         )
         raw_body_bbox_px = body_bbox_px
         expanded_body_bbox_px = self._expand_body_bbox(
@@ -179,7 +189,7 @@ class BodyIsolationStage:
         result = BodyIsolationResult(
             body_bbox_px=expanded_body_bbox_px,
             body_region=body_region,
-            confidence=float(getattr(body_region, "confidence", 0.0)),
+            confidence=float(body_region.confidence),
         )
 
         # Build an ownership-aware isolation mask.
@@ -374,8 +384,8 @@ class BodyIsolationStage:
             profile = geometry_authority.get_expected_body_profile(fam_name)
             if profile:
                 h_min, h_max, w_min, w_max = profile
-                est_h_mm = getattr(result.body_region, "height_mm", None)
-                est_w_mm = getattr(result.body_region, "width_mm", None)
+                est_h_mm = result.body_region.height_mm
+                est_w_mm = result.body_region.width_mm
 
                 if est_h_mm is not None and h_max > h_min:
                     if est_h_mm < h_min:
