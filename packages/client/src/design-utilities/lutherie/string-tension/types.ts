@@ -12,6 +12,8 @@
  *   386.4 = gravitational constant in in/s²
  */
 
+import stringGaugeData from '@/data/string-gauges.json'
+
 // ============================================================================
 // STRING MATERIALS
 // ============================================================================
@@ -31,14 +33,7 @@ export interface MaterialInfo {
   calculated: boolean
 }
 
-export const MATERIALS: MaterialInfo[] = [
-  { id: 'plain_steel',      label: 'Plain steel',      calculated: true },
-  { id: 'nickel_wound',     label: 'Nickel wound',     calculated: true },
-  { id: 'phosphor_bronze',  label: 'Phos. bronze',     calculated: true },
-  { id: '80_20_bronze',     label: '80/20 bronze',     calculated: true },
-  { id: 'nylon_treble',     label: 'Nylon treble',     calculated: true },
-  { id: 'nylon_wound',      label: 'Nylon wound',      calculated: true },
-]
+export const MATERIALS: MaterialInfo[] = stringGaugeData.materials as MaterialInfo[]
 
 // ============================================================================
 // INSTRUMENT TYPES
@@ -64,17 +59,7 @@ export interface InstrumentTypeInfo {
   defaultBreakAngleDeg: number
 }
 
-export const INSTRUMENT_TYPES: InstrumentTypeInfo[] = [
-  { id: 'acoustic_pin',      label: 'Acoustic (pin bridge)',   useCarruthThresholds: true,  defaultBreakAngleDeg: 20 },
-  { id: 'acoustic_classical',label: 'Classical / tied bridge', useCarruthThresholds: false, defaultBreakAngleDeg: 10 },
-  { id: 'electric',          label: 'Electric',                useCarruthThresholds: false, defaultBreakAngleDeg: 10 },
-  { id: 'bass',              label: 'Bass',                    useCarruthThresholds: false, defaultBreakAngleDeg: 8  },
-  { id: 'mandolin',          label: 'Mandolin',                useCarruthThresholds: false, defaultBreakAngleDeg: 12 },
-  { id: 'ukulele',           label: 'Ukulele',                 useCarruthThresholds: false, defaultBreakAngleDeg: 8  },
-  { id: 'banjo',             label: 'Banjo',                   useCarruthThresholds: false, defaultBreakAngleDeg: 6  },
-  { id: 'orchestral',        label: 'Orchestral (bowed)',      useCarruthThresholds: false, defaultBreakAngleDeg: 15 },
-  { id: 'other',             label: 'Other / custom',          useCarruthThresholds: false, defaultBreakAngleDeg: 5  },
-]
+export const INSTRUMENT_TYPES: InstrumentTypeInfo[] = stringGaugeData.instrumentTypes as InstrumentTypeInfo[]
 
 // ============================================================================
 // PER-STRING SPEC
@@ -164,9 +149,9 @@ export interface SetAnalysis {
 // ============================================================================
 
 /** Thresholds for acoustic pin-bridge (Carruth empirical) */
-export const CARRUTH_MIN_DEG = 6.0
-export const PRACTICAL_MIN_PROJECTION_MM = 1.6  // 1/16"
-export const STEEP_MAX_DEG = 38.0
+export const CARRUTH_MIN_DEG = stringGaugeData.constants.carruthMinDeg
+export const PRACTICAL_MIN_PROJECTION_MM = stringGaugeData.constants.practicalMinProjectionMm
+export const STEEP_MAX_DEG = stringGaugeData.constants.steepMaxDeg
 
 /**
  * Break angle state — two modes:
