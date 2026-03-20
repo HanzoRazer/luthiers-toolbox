@@ -125,6 +125,54 @@ Added `POST /api/saw/batch/plan/choose` endpoint to `batch_router.py`:
 
 ---
 
+## BACKEND-001 — Curve-to-DXF endpoint
+
+**Status:** Frontend TODO at `useCurveHistory.ts:46`
+**Priority:** Medium
+**Effort:** ~2 hours
+
+### What's Needed
+
+- Endpoint: `POST /api/export/curve-dxf` or similar
+- Input: curve path data (points, control handles)
+- Output: DXF file download
+
+### Frontend Blocker
+
+`packages/client/src/components/curvelab/composables/useCurveHistory.ts:46` has:
+```typescript
+function exportDXF() {
+  // TODO: Implement DXF export via API
+  alert("DXF export coming soon! Use Export JSON for now.");
+}
+```
+
+---
+
+## BACKEND-002 — Rosette PDF export service
+
+**Status:** Frontend TODO at `useRosetteDesignerExport.ts:101`
+**Priority:** Medium
+**Effort:** ~half day
+
+### What's Needed
+
+- PDF generation service with rosette annotations
+- Input: rosette design state (rings, materials, dimensions)
+- Output: PDF with design rendering + BOM + measurements
+
+### Frontend Blocker
+
+`packages/client/src/components/toolbox/composables/useRosetteDesignerExport.ts:101` has:
+```typescript
+function exportDimensionSheet() {
+  status.value = "📄 Dimension sheet export (coming soon)";
+  // TODO: Generate PDF with annotations
+}
+```
+
+---
+
 ## Notes on how this backlog works
 
 Each item here was identified by reading code, not by speculation.
