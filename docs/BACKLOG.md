@@ -71,23 +71,22 @@ The `PHASE_2_3_IMPLEMENTATION_PLAN.md` claimed 23 stubs across 3 files, but audi
 
 ## WIRE-001 — Wire choose_batch_plan endpoint
 
-**Status:** ⏳ PENDING
+**Status:** ✅ RESOLVED (6 tests pass)
 **Priority:** Medium
-**Effort:** ~2 hours
-**Test:** `tests/test_plan_choose_persists_decision_payload_unit.py`
+**Effort:** ~1 hour
 
-### What's Missing
+### What Was Implemented
 
-The test expects a `choose_batch_plan` function in `app/saw_lab/batch_router.py` that:
+Added `POST /api/saw/batch/plan/choose` endpoint to `batch_router.py`:
 1. Accepts `BatchPlanChooseRequest` with `batch_plan_artifact_id`, `selected_setup_key`, `selected_op_ids`
-2. Creates a `saw_batch_decision` artifact
+2. Creates a `saw_batch_decision` artifact with selected operations
 3. Optionally applies tuning multipliers when `apply_recommended_patch=True`
-4. Returns `batch_decision_artifact_id` and metadata
+4. Returns `BatchPlanChooseResponse` with `batch_decision_artifact_id` and metadata
 
-### Files to Modify
+### Files Changed
 
-- `services/api/app/saw_lab/batch_router.py` — add `choose_batch_plan` endpoint
-- `services/api/app/saw_lab/schemas_batch.py` — add `BatchPlanChooseRequest`, `BatchPlanChooseResponse`
+- `services/api/app/saw_lab/batch_router.py` — added `choose_batch_plan` endpoint (~80 lines)
+- `services/api/tests/test_plan_choose_persists_decision_payload_unit.py` — removed skip decorator
 
 ---
 

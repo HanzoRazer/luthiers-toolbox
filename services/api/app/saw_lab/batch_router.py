@@ -31,6 +31,8 @@ from app.saw_lab.batch_router_schemas import (
     BatchPlanResponse,
     BatchApproveRequest,
     BatchApproveResponse,
+    BatchPlanChooseRequest,
+    BatchPlanChooseResponse,
     BatchToolpathsFromDecisionRequest,
     BatchToolpathsFromDecisionResponse,
 )
@@ -247,10 +249,111 @@ def approve_batch_plan(req: BatchApproveRequest) -> BatchApproveResponse:
 
 
 # ---------------------------------------------------------------------------
-# WP-3: Toolpath generation endpoints - REMOVED (batch_router_toolpaths.py deleted)
+# Plan Choose (operator approval with optional tuning patch)
 # ---------------------------------------------------------------------------
-# Note: batch_router_toolpaths.py was deleted as dormant code.
-# If choose_batch_plan functionality is needed, restore from git history.
+
+
+@router.post("/plan/choose", response_model=BatchPlanChooseResponse)
+def choose_batch_plan(req: BatchPlanChooseRequest) -> BatchPlanChooseResponse:
+    """
+    Operator approval: select ops from a plan, optionally apply recommended patch.
+
+    This creates a saw_batch_decision artifact with the selected operations.
+    If apply_recommended_patch=True, looks up the latest approved tuning decision
+    and applies the multipliers to the decision payload.
+    """
+    # Load the plan artifact
+    plan = get_artifact(req.batch_plan_artifact_id)
+    if not plan:
+        raise HTTPException(status_code=404, detail="Batch plan not found")
+
+    plan_payload = plan.get("payload", {})
+    batch_label = plan_payload.get("batch_label", "")
+    session_id = plan_payload.get("session_id", "")
+    spec_id = plan_payload.get("batch_spec_artifact_id", "")
+
+    # Extract tool_id and material_id for tuning lookup
+    setups = plan_payload.get("setups", [])
+    tool_id: Optional[str] = None
+    material_id: Optional[str] = None
+    if setups and isinstance(setups, list) and len(setups) > 0:
+        first_setup = setups[0] if isinstance(setups[0], dict) else {}
+        tool_id = first_setup.get("tool_id")
+
+    # Try to get material_id from spec
+    if spec_id:
+        spec = get_artifact(spec_id)
+        if spec:
+            spec_payload = spec.get("payload", {})
+            items = spec_payload.get("items", [])
+            if items and isinstance(items, list) and len(items) > 0:
+                first_item = items[0] if isinstance(items[0], dict) else {}
+                material_id = first_item.get("material_id")
+
+    # Build decision payload
+    decision_payload: Dict[str, Any] = {
+        "batch_plan_artifact_id": req.batch_plan_artifact_id,
+        "batch_spec_artifact_id": spec_id,
+        "batch_label": batch_label,
+        "session_id": session_id,
+        "selected_setup_key": req.selected_setup_key,
+        "selected_op_ids": req.selected_op_ids,
+        "operator_note": req.operator_note,
+        "apply_recommended_patch": req.apply_recommended_patch,
+    }
+
+    applied_context_patch: Optional[Dict[str, Any]] = None
+    applied_multipliers: Optional[Dict[str, float]] = None
+    advisory_source_decision_artifact_id: Optional[str] = None
+
+    # Apply tuning patch if requested
+    if req.apply_recommended_patch and tool_id and material_id:
+        try:
+            from .decision_intel_apply_service import (
+                find_latest_approved_tuning_decision,
+                ArtifactStorePorts,
+            )
+            from ..rmos.runs_v2 import store as runs_store
+
+            # Create store ports adapter
+            store_ports = ArtifactStorePorts(
+                list_runs_filtered=runs_store.list_runs_filtered,
+                persist_run_artifact=runs_store.persist_run_artifact,
+            )
+
+            decision_id, tuning_delta = find_latest_approved_tuning_decision(
+                store_ports,
+                tool_id=tool_id,
+                material_id=material_id,
+            )
+
+            if decision_id and tuning_delta:
+                advisory_source_decision_artifact_id = decision_id
+                applied_multipliers = {
+                    "rpm_mul": tuning_delta.rpm_mul,
+                    "feed_mul": tuning_delta.feed_mul,
+                    "doc_mul": tuning_delta.doc_mul,
+                }
+                decision_payload["advisory_source_decision_artifact_id"] = decision_id
+                decision_payload["applied_multipliers"] = applied_multipliers
+        except (ImportError, KeyError, ValueError, TypeError, AttributeError) as e:
+            logger.warning("Tuning decision lookup failed (continuing without patch): %s", e)
+
+    # Store the decision artifact
+    artifact_id = store_artifact(
+        kind="saw_batch_decision",
+        payload=decision_payload,
+        parent_id=req.batch_plan_artifact_id,
+        session_id=session_id,
+    )
+
+    return BatchPlanChooseResponse(
+        batch_decision_artifact_id=artifact_id,
+        selected_setup_key=req.selected_setup_key,
+        applied_context_patch=applied_context_patch,
+        applied_multipliers=applied_multipliers,
+        advisory_source_decision_artifact_id=advisory_source_decision_artifact_id,
+    )
 
 
 # ---------------------------------------------------------------------------
