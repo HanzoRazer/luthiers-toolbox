@@ -1,81 +1,39 @@
 <script setup lang="ts">
 /**
- * ToolpathStats — P5 Statistics & Analytics Panel
- *
- * Displays comprehensive toolpath statistics:
- * - Overview metrics (segments, time, distance)
- * - Distance breakdown (rapid/cut/arc)
- * - Time analysis (with visual bar)
- * - Feed rate histogram
- * - Z depth layers
- * - Move type distribution
- * - Efficiency scores
+ * ToolpathStats — P5 Statistics & Analytics Panel (thin presenter).
+ * Stats computation, formatters, and chart helpers: @/composables/useToolpathStats
  */
 
-import { computed, ref } from "vue";
+import { ref, toRef } from "vue";
+import type { MoveSegment } from "@/util/toolpathAnalytics";
 import {
-  analyzeToolpath,
-  formatDistance,
-  formatFeed,
-  formatPercent,
-  type ToolpathStatistics,
-  type MoveSegment,
-} from "@/util/toolpathAnalytics";
+  useToolpathStats,
+  TOOLPATH_STATS_TAB_IDS,
+  toolpathStatsTabLabel,
+  type ToolpathStatsTabId,
+} from "@/composables/useToolpathStats";
 
-// ---------------------------------------------------------------------------
-// Props
-// ---------------------------------------------------------------------------
 interface Props {
   segments: MoveSegment[];
 }
 
 const props = defineProps<Props>();
 
-// ---------------------------------------------------------------------------
-// State
-// ---------------------------------------------------------------------------
-const activeTab = ref<"overview" | "distance" | "time" | "feed" | "depth" | "efficiency">("overview");
+const activeTab = ref<ToolpathStatsTabId>("overview");
 
-// ---------------------------------------------------------------------------
-// Computed
-// ---------------------------------------------------------------------------
-const stats = computed<ToolpathStatistics | null>(() => {
-  if (!props.segments || props.segments.length === 0) return null;
-  return analyzeToolpath(props.segments);
-});
-
-const moveTypeChartData = computed(() => {
-  if (!stats.value) return [];
-  const { moveTypes } = stats.value;
-  const total = moveTypes.total || 1;
-  return [
-    { label: "Rapid", value: moveTypes.rapid, percent: (moveTypes.rapid / total) * 100, color: "#e74c3c" },
-    { label: "Linear", value: moveTypes.linear, percent: (moveTypes.linear / total) * 100, color: "#2ecc71" },
-    { label: "Arc CW", value: moveTypes.arcCW, percent: (moveTypes.arcCW / total) * 100, color: "#3498db" },
-    { label: "Arc CCW", value: moveTypes.arcCCW, percent: (moveTypes.arcCCW / total) * 100, color: "#9b59b6" },
-  ].filter(d => d.value > 0);
-});
-
-const efficiencyScore = computed(() => {
-  if (!stats.value) return 0;
-  const { efficiency } = stats.value;
-  // Weighted average of efficiency metrics
-  return (
-    efficiency.cuttingEfficiency * 0.4 +
-    efficiency.distanceEfficiency * 0.3 +
-    efficiency.feedUtilization * 0.2 +
-    efficiency.rapidScore * 0.1
-  ) * 100;
-});
-
-const efficiencyGrade = computed(() => {
-  const score = efficiencyScore.value;
-  if (score >= 85) return { grade: "A", color: "#2ecc71", label: "Excellent" };
-  if (score >= 70) return { grade: "B", color: "#27ae60", label: "Good" };
-  if (score >= 55) return { grade: "C", color: "#f39c12", label: "Fair" };
-  if (score >= 40) return { grade: "D", color: "#e67e22", label: "Needs Work" };
-  return { grade: "F", color: "#e74c3c", label: "Poor" };
-});
+const {
+  stats,
+  moveTypeChartData,
+  efficiencyScore,
+  efficiencyGrade,
+  formatDistance,
+  formatFeed,
+  formatPercent,
+  axisBarWidthStyle,
+  rapidTimePercent,
+  histogramBarHeightPercent,
+  layerBarInlineStyle,
+} = useToolpathStats(toRef(props, "segments"));
 </script>
 
 <template>
@@ -83,17 +41,13 @@ const efficiencyGrade = computed(() => {
     <!-- Tab Navigation -->
     <div class="stats-tabs">
       <button
-        v-for="tab in ['overview', 'distance', 'time', 'feed', 'depth', 'efficiency'] as const"
+        v-for="tab in TOOLPATH_STATS_TAB_IDS"
         :key="tab"
         class="stats-tab"
         :class="{ active: activeTab === tab }"
         @click="activeTab = tab"
       >
-        {{ tab === 'overview' ? 'Overview' :
-           tab === 'distance' ? 'Distance' :
-           tab === 'time' ? 'Time' :
-           tab === 'feed' ? 'Feed' :
-           tab === 'depth' ? 'Z Depth' : 'Efficiency' }}
+        {{ toolpathStatsTabLabel(tab) }}
       </button>
     </div>
 
@@ -198,7 +152,7 @@ const efficiencyGrade = computed(() => {
             <div class="axis-bar-track">
               <div
                 class="axis-bar x"
-                :style="{ width: (stats.distance.xTravel / Math.max(stats.distance.xTravel, stats.distance.yTravel, stats.distance.zTravel) * 100) + '%' }"
+                :style="axisBarWidthStyle(stats.distance.xTravel)"
               />
             </div>
             <span class="axis-value">{{ formatDistance(stats.distance.xTravel) }}</span>
@@ -208,7 +162,7 @@ const efficiencyGrade = computed(() => {
             <div class="axis-bar-track">
               <div
                 class="axis-bar y"
-                :style="{ width: (stats.distance.yTravel / Math.max(stats.distance.xTravel, stats.distance.yTravel, stats.distance.zTravel) * 100) + '%' }"
+                :style="axisBarWidthStyle(stats.distance.yTravel)"
               />
             </div>
             <span class="axis-value">{{ formatDistance(stats.distance.yTravel) }}</span>
@@ -218,7 +172,7 @@ const efficiencyGrade = computed(() => {
             <div class="axis-bar-track">
               <div
                 class="axis-bar z"
-                :style="{ width: (stats.distance.zTravel / Math.max(stats.distance.xTravel, stats.distance.yTravel, stats.distance.zTravel) * 100) + '%' }"
+                :style="axisBarWidthStyle(stats.distance.zTravel)"
               />
             </div>
             <span class="axis-value">{{ formatDistance(stats.distance.zTravel) }}</span>
@@ -255,13 +209,13 @@ const efficiencyGrade = computed(() => {
             />
             <div
               class="time-bar rapid"
-              :style="{ width: (100 - stats.time.cutPercent) + '%' }"
+              :style="{ width: rapidTimePercent + '%' }"
               title="Rapid time"
             />
           </div>
           <div class="time-bar-labels">
             <span class="cut-label">Cutting {{ stats.time.cutPercent.toFixed(1) }}%</span>
-            <span class="rapid-label">Rapid {{ (100 - stats.time.cutPercent).toFixed(1) }}%</span>
+            <span class="rapid-label">Rapid {{ rapidTimePercent.toFixed(1) }}%</span>
           </div>
         </div>
       </div>
@@ -298,7 +252,7 @@ const efficiencyGrade = computed(() => {
           >
             <div
               class="histogram-bar"
-              :style="{ height: Math.max(4, bucket.percent) + '%' }"
+              :style="{ height: histogramBarHeightPercent(bucket.percent) + '%' }"
               :title="`${Math.round(bucket.min)}-${Math.round(bucket.max)} mm/min: ${bucket.count} moves`"
             />
             <span class="histogram-label">{{ Math.round(bucket.min) }}</span>
@@ -336,10 +290,7 @@ const efficiencyGrade = computed(() => {
             <div class="layer-bar-track">
               <div
                 class="layer-bar"
-                :style="{
-                  width: ((stats.zDepth.max - z) / stats.zDepth.range * 100) + '%',
-                  background: z < 0 ? '#e74c3c' : '#2ecc71'
-                }"
+                :style="layerBarInlineStyle(z)"
               />
             </div>
             <span class="layer-value">{{ z.toFixed(2) }} mm</span>
