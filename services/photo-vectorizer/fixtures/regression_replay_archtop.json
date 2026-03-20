@@ -1,7 +1,40 @@
 {
   "case_id": "archtop",
   "family": "archtop",
+  "expected_action": "rerun_body_isolation",
+  "expected_final_action": "accept",
+  "expected_retry_count": 1,
+  "expected_last_retry_profile_used": "body_region_expansion",
+  "expected_final_ownership_ok": true,
   "manual_review_required": false,
+  "body_result": {
+    "body_bbox_px": [26, 18, 172, 238],
+    "completeness_score": 0.73,
+    "confidence": 0.81,
+    "review_required": false,
+    "lower_bout_missing_likely": false,
+    "border_contact_likely": false,
+    "neck_inclusion_likely": true,
+    "score_breakdown": {
+      "hull_coverage": 0.77,
+      "vertical_extent_ratio": 0.75,
+      "width_stability": 0.71,
+      "border_contact_penalty": 0.03,
+      "center_alignment": 0.76,
+      "lower_bout_presence": 0.74
+    },
+    "issues": []
+  },
+  "contour_result": {
+    "best_score": 0.61,
+    "ownership_score": 0.46,
+    "ownership_ok": false,
+    "export_block_issues": ["body ownership weak (0.46)"],
+    "diagnostics": {
+      "ownership_score": 0.46,
+      "ownership_ok": false
+    }
+  },
   "diagnostics": {
     "retry_attempts": [
       {
