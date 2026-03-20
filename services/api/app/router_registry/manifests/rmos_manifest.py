@@ -97,4 +97,10 @@ RMOS_ROUTERS: List[RouterSpec] = [
         tags=["RMOS", "Validation"],
         category="rmos",
     ),
+    RouterSpec(
+        module="app.workflow.sessions.routes",
+        prefix="",
+        tags=["RMOS", "Workflow Sessions"],
+        category="rmos",
+    ),
 ]
