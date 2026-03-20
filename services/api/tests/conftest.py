@@ -43,6 +43,63 @@ def _write_text(path: Path, text: str) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(text, encoding="utf-8")
 
+def _run_test_migrations(db_path: Path) -> None:
+    """
+    Run SQLite migrations for test database.
+
+    Creates _migrations table and workflow_sessions table
+    so that workflow session tests don't fail with "table not found".
+    """
+    import sqlite3
+
+    db_path.parent.mkdir(parents=True, exist_ok=True)
+    conn = sqlite3.connect(str(db_path))
+    try:
+        # Create migrations tracking table (0000_init_migrations_table.sql)
+        conn.execute("""
+            CREATE TABLE IF NOT EXISTS _migrations (
+                migration_id TEXT PRIMARY KEY,
+                applied_at TEXT NOT NULL DEFAULT (datetime('now'))
+            )
+        """)
+
+        # Create workflow_sessions table (0001_init_workflow_sessions.sql)
+        conn.execute("""
+            CREATE TABLE IF NOT EXISTS workflow_sessions (
+                session_id TEXT PRIMARY KEY,
+                created_at_utc TEXT NOT NULL DEFAULT (datetime('now')),
+                updated_at_utc TEXT NOT NULL DEFAULT (datetime('now')),
+                workflow_type TEXT NOT NULL,
+                current_step TEXT NOT NULL,
+                status TEXT NOT NULL DEFAULT 'active',
+                context_json TEXT,
+                run_ids_json TEXT,
+                machine_id TEXT,
+                material_id TEXT,
+                tool_id TEXT,
+                user_id TEXT,
+                state_data_json TEXT,
+                error_message TEXT,
+                error_details_json TEXT
+            )
+        """)
+
+        # Record migrations as applied
+        conn.execute("""
+            INSERT OR IGNORE INTO _migrations (migration_id, applied_at)
+            VALUES ('0000_init_migrations_table', datetime('now'))
+        """)
+        conn.execute("""
+            INSERT OR IGNORE INTO _migrations (migration_id, applied_at)
+            VALUES ('0001_init_workflow_sessions', datetime('now'))
+        """)
+
+        conn.commit()
+    finally:
+        conn.close()
+
+
+
 
 @pytest.fixture(autouse=True)
 def rmos_global_test_isolation(tmp_path: Path, monkeypatch: pytest.MonkeyPatch):
@@ -118,6 +175,10 @@ def rmos_global_test_isolation(tmp_path: Path, monkeypatch: pytest.MonkeyPatch):
     if not os.getenv("DATABASE_URL"):
         db_path = tmp_path / "test.sqlite"
         monkeypatch.setenv("DATABASE_URL", f"sqlite:///{db_path}")
+        # Also set RMOS_DB_PATH (higher priority in store resolution)
+        monkeypatch.setenv("RMOS_DB_PATH", str(db_path))
+        # Run migrations to create workflow_sessions table
+        _run_test_migrations(db_path)
 
     yield
 
