@@ -1,0 +1,43 @@
+name: photo-vectorizer typecheck
+
+on:
+  push:
+    paths:
+      - "services/photo-vectorizer/**"
+      - ".github/workflows/photo_vectorizer_typecheck.yml"
+  pull_request:
+    paths:
+      - "services/photo-vectorizer/**"
+      - ".github/workflows/photo_vectorizer_typecheck.yml"
+
+jobs:
+  mypy:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: services/photo-vectorizer
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install typecheck deps
+        run: |
+          python -m pip install --upgrade pip
+          pip install mypy pyright numpy opencv-python-headless pytest
+
+      - name: Run mypy on body-region contract surface
+        run: |
+          python -m mypy \
+            body_isolation_result.py \
+            body_isolation_stage.py \
+            photo_vectorizer_v2.py \
+            test_extract_coach_integration.py \
+            test_geometry_coach_v2_real_routing.py \
+            --config-file mypy.ini
+
+      - name: Run pyright on body-region contract surface
+        run: |
+          python -m pyright --project pyrightconfig.json
