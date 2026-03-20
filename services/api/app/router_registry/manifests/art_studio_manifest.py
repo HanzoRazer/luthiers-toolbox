@@ -89,4 +89,11 @@ ART_STUDIO_ROUTERS: List[RouterSpec] = [
         tags=["Art Studio", "Rosette Designer"],
         category="art_studio",
     ),
+    RouterSpec(
+        module="app.art_studio.preview_consolidated_router",
+        prefix="/api/art-studio",
+        router_attr="router",
+        tags=["art-studio-preview"],
+        category="art_studio",
+    ),
 ]
