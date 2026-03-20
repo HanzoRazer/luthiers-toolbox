@@ -463,6 +463,7 @@ import { useTension } from './useTension'
 import { useBreakAngle } from './useBreakAngle'
 import { INSTRUMENT_TYPES, MATERIALS } from './types'
 import type { TensionUnit, StringMaterial, NoteName } from './types'
+import stringGaugeData from '@/data/string-gauges.json'
 
 // ============================================================================
 // COMPOSABLES
@@ -494,20 +495,12 @@ const {
 const breakAngle = useBreakAngle(useCarruthThresholds)
 
 // ============================================================================
-// PRESET CATEGORIES
+// PRESET CATEGORIES (from JSON)
 // ============================================================================
 
-const PRESET_CATEGORIES = [
-  { id: 'all',       label: 'All' },
-  { id: 'guitar',    label: 'Guitar / Bass' },
-  { id: 'mando',     label: 'Mando / Lute' },
-  { id: 'uke',       label: 'Uke / Banjo' },
-  { id: 'folk',      label: 'Folk' },
-  { id: 'orch',      label: 'Orchestral' },
-  { id: 'validated', label: 'Validated ‡' },
-] as const
+const PRESET_CATEGORIES = stringGaugeData.presetCategories as readonly { id: string; label: string }[]
 
-type PresetCat = typeof PRESET_CATEGORIES[number]['id']
+type PresetCat = string
 const activeCat = ref<PresetCat>('all')
 
 const visiblePresets = computed(() =>
