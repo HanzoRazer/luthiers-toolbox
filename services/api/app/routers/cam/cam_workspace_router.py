@@ -1,23 +1,16 @@
 """
-services/api/app/cam_workspace_router.py
-=========================================
 CAM Workspace API — Phase 1: Neck Pipeline Wizard
 
-Two-endpoint pattern per operation:
-  POST /api/cam-workspace/neck/evaluate
-      Fast. No G-code. Called on every slider change (debounce 300ms in Vue).
-      Runs gate checks against BCamMachineSpec limits + evaluate_cut_operation().
-      Returns gate bundle: overall_risk + per-check details + Z ceiling flag.
+services/api/app/routers/cam/cam_workspace_router.py
+Registered in router_registry with prefix=/api/cam-workspace.
 
-  POST /api/cam-workspace/neck/generate/{op}
-      Slow. Full G-code. Called only on "Generate" button press.
-      Runs NeckPipeline.generate_operation(), preflight_validate(), cycle time.
-      Returns gcode + gate_result + cycle_time_seconds.
-      YELLOW output is enabled (warnings attached). RED blocks output.
-
-Register in main.py:
-  from app.cam_workspace_router import router as cam_ws_router
-  app.include_router(cam_ws_router, prefix="/api/cam-workspace", tags=["cam-workspace"])
+Endpoints:
+  GET  /api/cam-workspace/neck/operations  — list valid neck ops
+  POST /api/cam-workspace/neck/evaluate   — fast gate checks, no G-code (debounced from Vue)
+  POST /api/cam-workspace/neck/generate/{op} — full G-code for one op
+  POST /api/cam-workspace/neck/generate-full — full G-code for all ops
+  GET  /api/cam-workspace/status          — pipeline available + machine
+  GET  /api/cam-workspace/machines         — list machines
 """
 
 from __future__ import annotations
@@ -428,6 +421,15 @@ def _gate_for_saw_op(
 # Routes
 # ─────────────────────────────────────────────────────────────────────────────
 
+NECK_OPERATIONS = ["truss_rod", "profile_rough", "profile_finish", "fret_slots"]
+
+
+@router.get("/neck/operations")
+async def neck_operations():
+    """Return list of valid neck pipeline operation IDs for generate/{op}."""
+    return {"operations": NECK_OPERATIONS}
+
+
 @router.get("/status")
 async def workspace_status():
     return {
@@ -507,16 +509,15 @@ async def generate_neck_op(op: str, req: GenerateRequest):
     YELLOW gate → 200 OK with gcode + warnings.
     GREEN gate → 200 OK, clean.
     """
-    VALID_OPS = {"truss_rod", "profile_rough", "profile_finish", "fret_slots"}
-    if op not in VALID_OPS:
-        raise HTTPException(422, detail=f"Unknown op {op!r}. Valid: {sorted(VALID_OPS)}")
+    if op not in NECK_OPERATIONS:
+        raise HTTPException(422, detail=f"Unknown op {op!r}. Valid: {NECK_OPERATIONS}")
 
     if not PIPELINE_AVAILABLE:
         raise HTTPException(503, detail=f"Pipeline unavailable: {_pipeline_error}")
 
     machine = get_machine(req.machine.machine_id) or BCAM_2030A
     cfg     = _build_pipeline_config(req.neck)
-    pipeline = NeckPipeline(cfg, machine=machine)
+    pipeline = NeckPipeline(cfg)
 
     # Run gate evaluation first
     if op == "truss_rod":
@@ -597,7 +598,7 @@ async def generate_full_neck(req: GenerateRequest):
 
     machine  = get_machine(req.machine.machine_id) or BCAM_2030A
     cfg      = _build_pipeline_config(req.neck)
-    pipeline = NeckPipeline(cfg, machine=machine)
+    pipeline = NeckPipeline(cfg)
 
     result = pipeline.generate(
         include_truss_rod=req.neck.include_truss_rod,
