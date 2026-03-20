@@ -92,22 +92,16 @@ Added `POST /api/saw/batch/plan/choose` endpoint to `batch_router.py`:
 
 ## WIRE-002 — Wire Relief/VCarve preview router
 
-**Status:** ⏳ PENDING
+**Status:** ✅ RESOLVED (commit 4600b02f)
 **Priority:** Low
 **Effort:** ~1 hour
 **Test:** `tests/test_relief_vcarve_endpoint_smoke.py`
 
-### What's Missing
+### What Was Implemented
 
-The test expects `POST /api/preview` endpoint that:
-1. Accepts `{"svg": "<svg>...</svg>", "normalize": bool}`
-2. Parses SVG elements (rect, circle, path, polygon, etc.)
-3. Returns `{"stats": {...}, "normalized": bool}` with polyline count, bbox
-
-### Files to Modify
-
-- `services/api/app/art_studio/relief_router.py` or `vcarve_router.py` — implement preview endpoint
-- Wire router in `app/main.py` or router registry
+- `POST /api/preview` endpoint added to art_studio preview routes
+- Accepts `{"svg": "<svg>...</svg>", "normalize": bool}`
+- Parses SVG elements and returns stats with polyline count, bbox
 
 ---
 
