@@ -1,13 +1,12 @@
 <script setup lang="ts">
 /**
- * RosetteWheelView — Interactive Rosette Wheel Designer
- * @deprecated Prefer SoundholeRosetteShell at /art-studio/soundhole-rosette-workspace (Stage 1).
+ * RosetteWheelView — Active rosette designer
+ * Embedded in SoundholeRosetteShell (Stage 1)
+ * Also directly routed at /art-studio/rosette-designer
  *
- * Full port of rosette-designer-v5.html: 5-ring wheel, 19 tiles, 4 symmetry
- * modes, drag-drop, 4-tab sidebar (Tiles/Library/BOM/MFG), extension tabs,
- * drafting annotations, 8 recipe presets, save/load .rsd, dual SVG export,
- * BOM engine with CSV, 6 manufacturing checks + score + overlay + auto-fix,
- * undo/redo, keyboard shortcuts, rename modal, toast notifications.
+ * Note: Large file (1,241 lines) by design —
+ * wheel canvas, tile library, BOM, and MFG
+ * checks are intentionally unified here.
  */
 import { ref, computed, onMounted, onUnmounted, nextTick, watch } from "vue";
 import { useRosetteWheelStore } from "@/stores/useRosetteWheelStore";
