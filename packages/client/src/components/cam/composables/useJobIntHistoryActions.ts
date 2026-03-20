@@ -2,6 +2,7 @@
  * JobIntHistory entry actions composable.
  */
 import type { Ref } from 'vue'
+import { useRouter } from 'vue-router'
 import { updateJobIntFavorite } from '@/api/job_int'
 import type { JobIntLogEntry } from './jobIntHistoryTypes'
 
@@ -21,9 +22,11 @@ export interface JobIntHistoryActionsReturn {
 export function useJobIntHistoryActions(
   errorMessage: Ref<string | null>
 ): JobIntHistoryActionsReturn {
+  const router = useRouter()
+
   function selectEntry(entry: JobIntLogEntry): void {
-    console.log('Selected job:', entry.run_id)
-    // TODO: Open detail modal or navigate to detail view
+    // Navigate to run detail view
+    router.push({ name: 'RmosRunViewer', params: { id: entry.run_id } })
   }
 
   async function toggleFavorite(entry: JobIntLogEntry): Promise<void> {
