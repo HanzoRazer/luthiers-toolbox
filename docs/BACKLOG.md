@@ -173,6 +173,105 @@ function exportDimensionSheet() {
 
 ---
 
+## ACOUSTIC-001 — Saddle height inverse solver
+
+**Status:** TODO
+**Priority:** High
+**Effort:** ~2 hours
+**File:** `services/api/app/instrument_geometry/neck/neck_angle.py`
+
+### Problem
+
+`saddle_height_required_mm` uses an approximation. The correct formula is:
+```
+H_saddle = L_body × tan(θ_target) + H_fretboard − H_bridge
+```
+where θ_target comes from action at the 12th fret via:
+```
+θ_target = arcsin(action_at_12th / L_nut_to_12th)
+```
+
+### Implementation
+
+1. Fix `saddle_height_required_mm` to use the exact geometry
+2. Add inverse function `solve_for_target_action(target_action_12th_mm, bridge_height_mm, ...)` that returns `{neck_angle_deg, saddle_height_mm, relief_contribution_mm}`
+3. Add 4 unit tests covering edge cases
+
+---
+
+## ACOUSTIC-002 — Saddle force decomposition
+
+**Status:** TODO
+**Priority:** Medium
+**Effort:** ~3 hours
+**File to create:** `services/api/app/calculators/saddle_force_calc.py`
+
+### What's Needed
+
+Calculator that decomposes saddle break angle into:
+- Vertical downbearing force component (bridge plate load)
+- Horizontal torque component (bridge rotation tendency)
+
+Inputs: break_angle_deg, total_string_tension_N, saddle_height_mm, bridge_pin_to_saddle_mm
+Outputs: vertical_force_N, horizontal_force_N, torque_Nm, bridge_plate_stress_estimate_MPa
+
+Formula: `F_vertical = T × sin(θ_break)`, `F_horizontal = T × cos(θ_break)`
+
+---
+
+## ACOUSTIC-003 — Top deflection calculator
+
+**Status:** TODO
+**Priority:** Medium
+**Effort:** ~4 hours
+**File to create:** `services/api/app/calculators/top_deflection_calc.py`
+
+### What's Needed
+
+First-principles top deflection model using:
+- Orthotropic plate theory (different stiffness along/across grain)
+- Load applied at bridge location
+- Boundary conditions from bracing pattern
+
+Inputs: top_thickness_mm, wood_species (for E_L, E_T, G_LT), bracing_pattern, string_load_N
+Outputs: max_deflection_mm, stress_at_soundhole_MPa, factor_of_safety
+
+---
+
+## ACOUSTIC-004 — Inverse brace sizing
+
+**Status:** TODO
+**Priority:** Medium
+**Effort:** ~3 hours
+**File:** `services/api/app/calculators/bracing_calc.py` (extend existing)
+
+### What's Needed
+
+Add inverse function to bracing_calc.py:
+`solve_brace_dimensions(target_stiffness_Nm2, wood_species, max_height_mm) → {width_mm, height_mm, scallop_profile}`
+
+This reverses the current forward calculation (dimensions → stiffness) to solve for required brace dimensions given a target plate stiffness.
+
+---
+
+## ACOUSTIC-005 — Wire acoustic chain into build_sequence
+
+**Status:** TODO (depends on ACOUSTIC-001 through 004)
+**Priority:** Low
+**Effort:** ~2 hours
+**File:** `services/api/app/workflow/build_sequence.py`
+
+### What's Needed
+
+Add acoustic analysis step to the build sequence workflow:
+1. After body dimensions finalized: run top_deflection_calc
+2. After bracing designed: validate combined stiffness
+3. After neck angle set: verify saddle height is manufacturable (> 3mm, < 12mm)
+
+Return warnings if any acoustic constraint is violated.
+
+---
+
 ## Notes on how this backlog works
 
 Each item here was identified by reading code, not by speculation.
