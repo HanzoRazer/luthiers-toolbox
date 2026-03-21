@@ -16,11 +16,16 @@
  */
 
 import { ref, reactive, computed, watch, onMounted } from 'vue'
+import { useAgenticEvents } from '@/composables/useAgenticEvents'
 import { useContextTools } from '@/composables/useContextTools'
 import NeckOpPanel       from '@/components/cam/NeckOpPanel.vue'
+
 import GcodePreviewPanel from '@/components/cam/GcodePreviewPanel.vue'
 import GateStatusBadge   from '@/components/cam/GateStatusBadge.vue'
 import type { GateResult } from '@/components/cam/GateStatusBadge.vue'
+
+// E-1: Agentic Spine event emission
+const { emitViewRendered, emitArtifactCreated, emitParameterChanged } = useAgenticEvents()
 
 // ── Machine info type ─────────────────────────────────────────────────────────
 interface MachineInfo {
@@ -36,6 +41,11 @@ interface MachineInfo {
 }
 
 const emit = defineEmits<{ toast: [msg: string] }>()
+
+// E-1: Emit view_rendered on mount
+onMounted(() => {
+  emitViewRendered('cam_workspace')
+})
 
 // ── Step list ─────────────────────────────────────────────────────────────────
 const STEPS = [
@@ -182,6 +192,8 @@ const opsDone  = computed(() => Object.keys(opGcodes).filter(k => opGcodes[k]))
 
 function onOpGenerated(op: OpId, gcode: string, cycleTime: number) {
   opGcodes[op] = gcode
+  // E-1: Emit artifact created event for G-code generation
+  emitArtifactCreated('cam_gcode', 0.9, { operation: op, cycleTime })
   opTimes[op]  = cycleTime
 }
 
