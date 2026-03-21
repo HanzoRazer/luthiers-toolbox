@@ -199,25 +199,6 @@ where θ_target comes from action at the 12th fret via:
 
 ---
 
-## ACOUSTIC-003 — Top deflection calculator
-
-**Status:** TODO
-**Priority:** Medium
-**Effort:** ~4 hours
-**File to create:** `services/api/app/calculators/top_deflection_calc.py`
-
-### What's Needed
-
-First-principles top deflection model using:
-- Orthotropic plate theory (different stiffness along/across grain)
-- Load applied at bridge location
-- Boundary conditions from bracing pattern
-
-Inputs: top_thickness_mm, wood_species (for E_L, E_T, G_LT), bracing_pattern, string_load_N
-Outputs: max_deflection_mm, stress_at_soundhole_MPa, factor_of_safety
-
----
-
 ## ACOUSTIC-004 — Inverse brace sizing
 
 **Status:** TODO

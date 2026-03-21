@@ -31,6 +31,14 @@ from ..calculators.saddle_force_calc import (
     SaddleForceResult,
     StringForce,
 )
+from ..calculators.top_deflection_calc import (
+    compute_top_deflection,
+    compute_plate_EI,
+    compute_composite_EI,
+    PlateProperties,
+    BraceContribution,
+    DeflectionResult,
+)
 
 router = APIRouter(
     prefix="/api/instrument",
@@ -1058,5 +1066,105 @@ def calculate_saddle_force(payload: SaddleForceRequest) -> SaddleForceResponse:
         total_vertical_force_n=result.total_vertical_force_n,
         total_vertical_force_lbs=result.total_vertical_force_lbs,
         gate=result.gate,
+        notes=result.notes,
+    )
+
+
+# ---------------------------------------------------------------------------
+# ACOUSTIC-003: Top Deflection Calculator
+# ---------------------------------------------------------------------------
+
+
+class PlatePropertiesRequest(BaseModel):
+    """Plate material and geometric properties."""
+    E_L_GPa: float = Field(..., gt=0, description="Longitudinal Young's modulus (GPa)")
+    E_C_GPa: float = Field(default=0.8, gt=0, description="Cross-grain Young's modulus (GPa)")
+    thickness_mm: float = Field(..., gt=0, description="Plate thickness (mm)")
+    length_mm: float = Field(..., gt=0, description="Body length (mm)")
+    width_mm: float = Field(..., gt=0, description="Lower bout width (mm)")
+    density_kg_m3: float = Field(default=400.0, gt=0, description="Wood density (kg/m³)")
+
+
+class BraceContributionRequest(BaseModel):
+    """Brace stiffness contribution."""
+    brace_EI_Nm2: float = Field(..., ge=0, description="Brace EI from bracing_calc.py (N·m²)")
+    brace_count: int = Field(default=1, ge=0, description="Number of braces")
+
+
+class TopDeflectionRequest(BaseModel):
+    """Request for top deflection calculation."""
+    load_n: float = Field(..., gt=0, description="Vertical load at bridge (N)")
+    plate: PlatePropertiesRequest
+    braces: Optional[BraceContributionRequest] = Field(
+        default=None,
+        description="Optional brace stiffness contribution"
+    )
+    bridge_position_fraction: float = Field(
+        default=0.63,
+        ge=0.0,
+        le=1.0,
+        description="Bridge position as fraction of length (0=tail, 1=neck)"
+    )
+
+
+class TopDeflectionResponse(BaseModel):
+    """Response with top deflection analysis."""
+    static_deflection_mm: float
+    creep_projection_mm: float
+    total_projected_mm: float
+    gate: str
+    composite_EI_Nm2: float
+    notes: List[str]
+
+
+@router.post("/top-deflection", response_model=TopDeflectionResponse)
+def calculate_top_deflection(payload: TopDeflectionRequest) -> TopDeflectionResponse:
+    """
+    Calculate top plate deflection under saddle load.
+
+    ACOUSTIC-003: Orthotropic plate deflection using simply-supported
+    beam approximation with creep projection.
+
+    Formula:
+        δ = F × a² × b² / (3 × EI × L)
+        where a, b are distances from bridge to supports
+
+    Creep adds ~35% over instrument lifetime.
+
+    Gate thresholds:
+    - GREEN: total < 1.5 mm (acceptable)
+    - YELLOW: 1.5 <= total < 3.0 mm (monitor)
+    - RED: total >= 3.0 mm (excessive)
+    """
+    # Convert request to dataclasses
+    plate = PlateProperties(
+        E_L_GPa=payload.plate.E_L_GPa,
+        E_C_GPa=payload.plate.E_C_GPa,
+        thickness_mm=payload.plate.thickness_mm,
+        length_mm=payload.plate.length_mm,
+        width_mm=payload.plate.width_mm,
+        density_kg_m3=payload.plate.density_kg_m3,
+    )
+
+    braces = None
+    if payload.braces is not None:
+        braces = BraceContribution(
+            brace_EI_Nm2=payload.braces.brace_EI_Nm2,
+            brace_count=payload.braces.brace_count,
+        )
+
+    result = compute_top_deflection(
+        load_n=payload.load_n,
+        plate=plate,
+        braces=braces,
+        bridge_position_fraction=payload.bridge_position_fraction,
+    )
+
+    return TopDeflectionResponse(
+        static_deflection_mm=result.static_deflection_mm,
+        creep_projection_mm=result.creep_projection_mm,
+        total_projected_mm=result.total_projected_mm,
+        gate=result.gate,
+        composite_EI_Nm2=result.composite_EI_Nm2,
         notes=result.notes,
     )
