@@ -66,6 +66,12 @@ SYSTEM_ROUTERS: List[RouterSpec] = [
         category="ai",
     ),
     RouterSpec(
+        module="app.routers.ai.assistant_router",
+        prefix="",  # Router has /api/ai/assistant prefix
+        tags=["AI Assistant", "Compendium"],
+        category="ai",
+    ),
+    RouterSpec(
         module="app.routers.misc_stub_routes",
         prefix="/api",
         tags=["Stubs"],
