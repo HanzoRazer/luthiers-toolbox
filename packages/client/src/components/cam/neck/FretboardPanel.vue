@@ -90,13 +90,13 @@ const KEY_FRETS = [0, 1, 3, 5, 7, 9, 12, 15, 17, 19, 22]
     <!-- Derived -->
     <div class="sec">
       <div class="sec-lbl">Derived</div>
-      <div class="info-row"><span class="info-k">Crown @ nut</span><span class="info-v">{{ fretboard.derived.value.crownNut }} mm</span></div>
-      <div class="info-row"><span class="info-k">Crown @ 12th</span><span class="info-v">{{ fretboard.derived.value.crown12 }} mm</span></div>
-      <div class="info-row"><span class="info-k">Crown @ last</span><span class="info-v">{{ fretboard.derived.value.crownLast }} mm</span></div>
-      <div class="info-row"><span class="info-k">Passes @ last</span><span class="info-v">{{ fretboard.derived.value.totalPasses }}</span></div>
-      <div class="info-row"><span class="info-k">Step-over</span><span class="info-v">{{ fretboard.derived.value.stepoverMm }} mm</span></div>
-      <div class="info-row"><span class="info-k">Nut slot E1</span><span class="info-v">{{ fretboard.derived.value.nutSlotDepthE1 }} mm</span></div>
-      <div class="info-row"><span class="info-k">Nut slot E6</span><span class="info-v">{{ fretboard.derived.value.nutSlotDepthE6 }} mm</span></div>
+      <div class="info-row"><span class="info-k">Crown @ nut</span><span class="info-v">{{ fretboard.derived.crownNut }} mm</span></div>
+      <div class="info-row"><span class="info-k">Crown @ 12th</span><span class="info-v">{{ fretboard.derived.crown12 }} mm</span></div>
+      <div class="info-row"><span class="info-k">Crown @ last</span><span class="info-v">{{ fretboard.derived.crownLast }} mm</span></div>
+      <div class="info-row"><span class="info-k">Passes @ last</span><span class="info-v">{{ fretboard.derived.totalPasses }}</span></div>
+      <div class="info-row"><span class="info-k">Step-over</span><span class="info-v">{{ fretboard.derived.stepoverMm }} mm</span></div>
+      <div class="info-row"><span class="info-k">Nut slot E1</span><span class="info-v">{{ fretboard.derived.nutSlotDepthE1 }} mm</span></div>
+      <div class="info-row"><span class="info-k">Nut slot E6</span><span class="info-v">{{ fretboard.derived.nutSlotDepthE6 }} mm</span></div>
     </div>
 
     <!-- Fret station table -->
@@ -107,7 +107,7 @@ const KEY_FRETS = [0, 1, 3, 5, 7, 9, 12, 15, 17, 19, 22]
           <tr><th>Fret</th><th>r"</th><th>Crown</th><th>Width</th></tr>
         </thead>
         <tbody>
-          <tr v-for="st in fretboard.fretStations.value.filter(s => KEY_FRETS.includes(s.fret))" :key="st.fret">
+          <tr v-for="st in fretboard.fretStations.filter(s => KEY_FRETS.includes(s.fret))" :key="st.fret">
             <td>{{ st.fret === 0 ? 'Nut' : st.fret }}</td>
             <td>{{ st.radiusInch.toFixed(2) }}"</td>
             <td>{{ st.crownMm.toFixed(3) }}</td>
@@ -120,7 +120,7 @@ const KEY_FRETS = [0, 1, 3, 5, 7, 9, 12, 15, 17, 19, 22]
     <!-- Gates -->
     <div class="sec" style="border-bottom:none">
       <div class="sec-lbl">Gates</div>
-      <div v-for="g in fretboard.gates.value" :key="g.key" class="gate-item" :class="g.status">
+      <div v-for="g in fretboard.gates" :key="g.key" class="gate-item" :class="g.status">
         <span class="gate-dot"></span><span class="gate-txt">{{ g.label }}</span>
       </div>
     </div>

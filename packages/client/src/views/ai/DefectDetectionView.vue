@@ -8,7 +8,16 @@
  *
  * Session E-3: Visual observation endpoint, no grading
  */
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
+import { useAgenticEvents } from '@/composables/useAgenticEvents'
+
+// E-1/E-3: Agentic Spine event emission
+const { emitViewRendered, emitAnalysisCompleted, emitAnalysisFailed } = useAgenticEvents()
+
+// E-1/E-3: Emit view_rendered on mount
+onMounted(() => {
+  emitViewRendered('defect_detection')
+})
 
 const selectedFile = ref<File | null>(null)
 const previewUrl = ref<string>('')
@@ -85,8 +94,13 @@ async function analyzeImage() {
     const data = await res.json()
     analysisResult.value = data
 
+    // E-3: Emit analysis_completed for agentic spine
+    emitAnalysisCompleted(['defect_observation_v1'])
+
   } catch (e: any) {
     errorMessage.value = e.message || 'Analysis failed'
+    // E-3: Emit analysis_failed for agentic spine
+    emitAnalysisFailed(e.message || 'Analysis failed', 'DEFECT_DETECTION_ERROR')
   } finally {
     isAnalyzing.value = false
   }

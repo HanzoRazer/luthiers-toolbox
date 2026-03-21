@@ -12,7 +12,16 @@
  * planned but unbuilt API endpoints. Stage 1 (Rosette Designer) is fully
  * functional. Others render UI only until backend endpoints are implemented.
  */
-import { ref, defineAsyncComponent } from "vue";
+import { ref, defineAsyncComponent, onMounted } from "vue";
+import { useAgenticEvents } from '@/composables/useAgenticEvents'
+
+// E-1: Agentic Spine event emission
+const { emitViewRendered, emitAnalysisCompleted } = useAgenticEvents()
+
+// E-1: Emit view_rendered on mount
+onMounted(() => {
+  emitViewRendered('soundhole_rosette_shell')
+})
 
 type StageId = "rosette" | "soundhole" | "purfling" | "binding";
 

@@ -131,22 +131,25 @@ class TestBuildContextPacket:
             assert result == ""
 
     def test_with_project_id(self):
-        """Test project data loading from database."""
-        import sqlite3
-
-        mock_conn = MagicMock()
-        mock_cursor = MagicMock()
-        mock_conn.cursor.return_value = mock_cursor
-        mock_cursor.fetchone.return_value = {
-            "id": "proj-123",
+        """Project section appears when _get_project_data returns a row."""
+        fake = {
+            "id": "550e8400-e29b-41d4-a716-446655440000",
             "name": "My Guitar Build",
-            "instrument_type": "les_paul",
-            "body_wood": "mahogany",
+            "description": "Test",
+            "instrument_type": "electric_guitar",
+            "spec": {
+                "scale_length_mm": 628.65,
+                "fret_count": 22,
+                "string_count": 6,
+            },
         }
 
-        with patch("app.ai.context_retrieval.RMOS_DB_PATH") as mock_path:
-            mock_path.exists.return_value = False  # Skip DB for this test
-            # Project lookup should gracefully return empty when DB missing
-            result = build_context_packet("what's my project status?", project_id="proj-123")
-            # With no DB, should still work but have no project section
-            assert "Project Data" not in result or result == ""
+        with patch("app.ai.context_retrieval._get_project_data", return_value=fake):
+            result = build_context_packet(
+                "what's my project status?",
+                project_id="550e8400-e29b-41d4-a716-446655440000",
+                owner_user_id="user-1",
+            )
+            assert "Project Data" in result
+            assert "My Guitar Build" in result
+            assert "628.65" in result

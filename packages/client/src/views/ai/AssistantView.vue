@@ -16,6 +16,7 @@
  */
 import { ref, computed, watch, nextTick, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
+import { useAgenticEvents } from '@/composables/useAgenticEvents'
 import { useInstrumentProject } from '@/instrument-workspace/shared-state/useInstrumentProject'
 
 interface Message {
@@ -44,6 +45,9 @@ function greetingForProject(pid: string | null): string {
 
 const route = useRoute()
 const { projectId: hubProjectId } = useInstrumentProject()
+
+// E-1: Agentic Spine event emission
+const { emitViewRendered, emitAnalysisFailed } = useAgenticEvents()
 
 /**
  * D-4 hub project wiring: resolve active project as
@@ -222,6 +226,7 @@ async function clearHistory(): Promise<void> {
 }
 
 onMounted(async () => {
+  emitViewRendered('ai_assistant')
   await checkServiceStatus()
   await loadHistory()
 })
@@ -278,6 +283,9 @@ async function sendMessage() {
     }
     messages.value.push(assistantMessage)
   } catch (e: any) {
+    // E-1: Emit analysis_failed for agentic spine
+    emitAnalysisFailed(e.message || 'Unknown API error', 'ASSISTANT_API_ERROR')
+
     const errorMessage: Message = {
       id: Date.now() + 1,
       role: 'assistant',

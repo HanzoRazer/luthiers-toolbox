@@ -176,18 +176,18 @@ const showGaussianParams = () => ['gibson','custom','scallop'].includes(transiti
     <div class="sec">
       <div class="sec-lbl">Derived</div>
       <div class="info-row"><span class="info-k">Thin point</span>
-        <span class="info-v" :class="{ warn: transition.derived.value.thinPointMm < 12 }">
-          {{ transition.derived.value.thinPointMm }} mm
+        <span class="info-v" :class="{ warn: transition.derived.thinPointMm < 12 }">
+          {{ transition.derived.thinPointMm }} mm
         </span>
       </div>
-      <div class="info-row"><span class="info-k">HS drop @30mm</span><span class="info-v">{{ transition.derived.value.hsDropAt30mm }} mm</span></div>
-      <div class="info-row"><span class="info-k">Blend Δ</span><span class="info-v">{{ transition.derived.value.blendDeltaMm }} mm</span></div>
+      <div class="info-row"><span class="info-k">HS drop @30mm</span><span class="info-v">{{ transition.derived.hsDropAt30mm }} mm</span></div>
+      <div class="info-row"><span class="info-k">Blend Δ</span><span class="info-v">{{ transition.derived.blendDeltaMm }} mm</span></div>
     </div>
 
     <!-- Gates -->
     <div class="sec" style="border-bottom:none">
       <div class="sec-lbl">Gates</div>
-      <div v-for="g in transition.gates.value" :key="g.key" class="gate-item" :class="g.status">
+      <div v-for="g in transition.gates" :key="g.key" class="gate-item" :class="g.status">
         <span class="gate-dot"></span><span class="gate-txt">{{ g.label }}</span>
       </div>
     </div>

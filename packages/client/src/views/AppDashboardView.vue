@@ -150,7 +150,7 @@
               <span class="quick-link-label">Design Hub</span>
             </RouterLink>
             <RouterLink
-              to="/ai/assistant"
+              :to="assistantTo"
               class="quick-link-card"
             >
               <span class="quick-link-icon">🤖</span>
@@ -197,7 +197,30 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
+import { useRoute } from 'vue-router'
+import { useInstrumentProject } from '@/instrument-workspace/shared-state/useInstrumentProject'
+
+const route = useRoute()
+const { projectId: hubProjectId } = useInstrumentProject()
+
+const assistantTo = computed(() => {
+  const q = route.query.project_id
+  const fromRoute =
+    typeof q === 'string' && q
+      ? q
+      : Array.isArray(q) && q[0]
+        ? String(q[0])
+        : ''
+  const pid = fromRoute || hubProjectId.value || ''
+  if (pid) {
+    return {
+      name: 'AiAssistantProject' as const,
+      params: { projectId: pid },
+    }
+  }
+  return { name: 'AiAssistant' as const }
+})
 
 const activeMenu = ref<string | null>(null)
 

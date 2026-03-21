@@ -1,24 +1,35 @@
 """Assistant Router (Session D-1) — Luthier's Book Compendium
 
 Backend for AssistantView.vue with lutherie-grounded system prompt.
+D-2 (build_context_packet) and D-3 (get_lutherie_prompt) are wired on the chat path.
 
 Endpoints:
     POST /api/ai/assistant/chat   — Send message, get AI response
     GET  /api/ai/assistant/history — Retrieve conversation history
 
 Uses in-memory storage (dict keyed by session_id). SQLite persistence TBD.
+
+Session D-1 / D-2 / D-3: Every chat request wires ``build_context_packet`` (D-2) and
+``get_lutherie_prompt`` (D-3) with the assistant route (D-1) so each reply is grounded
+with optional project context and the lutherie system prompt.
 """
+
+# Chat pipeline (high level):
+#   D-3 get_lutherie_prompt — system prompt / compendium grounding
+#   D-2 build_context_packet — optional project + materials context
+#   LLM — request_text with assembled user prompt + system prompt
 
 from __future__ import annotations
 
-import uuid
 import logging
 from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional
 
-from fastapi import APIRouter, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query
 from pydantic import BaseModel, Field
 
+from ...auth.deps import get_optional_principal
+from ...auth.principal import Principal
 from ...ai.transport.llm_client import get_llm_client, LLMClientError
 from ...ai.context_retrieval import build_context_packet
 from ...ai.lutherie_system_prompt import get_lutherie_prompt
@@ -71,13 +82,20 @@ class ChatRequest(BaseModel):
     """Request body for chat endpoint."""
     message: str = Field(..., min_length=1, max_length=10000, description="User message")
     session_id: str = Field(..., description="Session identifier for conversation continuity")
-    project_id: Optional[str] = Field(None, description="Optional project ID for context")
+    project_id: Optional[str] = Field(
+        None,
+        description="When set, project context is assembled via build_context_packet for the chat prompt.",
+    )
 
 
 class ChatResponse(BaseModel):
     """Response from chat endpoint."""
     response: str
     session_id: str
+    project_id: Optional[str] = Field(
+        None,
+        description="Echo of request project_id when provided (debugging).",
+    )
 
 
 class HistoryMessage(BaseModel):
@@ -100,20 +118,36 @@ class HistoryResponse(BaseModel):
 
 
 @router.post("/chat", response_model=ChatResponse)
-async def chat(request: ChatRequest) -> ChatResponse:
+async def chat(
+    request: ChatRequest,
+    principal: Optional[Principal] = Depends(get_optional_principal),
+) -> ChatResponse:
     """
     Send a message to the luthier assistant.
 
-    The assistant uses a lutherie-grounded system prompt and maintains
-    conversation history per session_id.
-
-    If project_id is provided, project context will be injected (future).
+    D-3 lutherie system prompt + D-2 context retrieval on every chat request.
+    Project context is assembled via ``build_context_packet`` when ``project_id`` is set;
+    authentication is required for project-scoped context and project rows are limited to the owner.
     """
     session_id = request.session_id
     user_message = request.message.strip()
 
     if not user_message:
         raise HTTPException(status_code=400, detail="Message cannot be empty")
+
+    if request.project_id:
+        logger.info(
+            "Assistant chat D-4: project_id=%r (build_context_packet + get_lutherie_prompt)",
+            request.project_id,
+        )
+
+    if request.project_id and not principal:
+        raise HTTPException(
+            status_code=401,
+            detail="Authentication required to attach project context (project_id).",
+        )
+
+    owner_user_id: Optional[str] = str(principal.user_id) if principal else None
 
     # Add user message to history
     _add_message(session_id, "user", user_message)
@@ -134,13 +168,23 @@ async def chat(request: ChatRequest) -> ChatResponse:
     else:
         full_prompt = user_message
 
-    # Assemble context packet from project data, wood DB, and instrument specs (D-2)
+    # D-2: context packet (project.data.spec, materials, instrument registry)
     context_packet = build_context_packet(
         message=user_message,
         project_id=request.project_id,
+        owner_user_id=owner_user_id,
     )
     if context_packet:
         full_prompt = f"--- Context ---\n{context_packet}\n--- End Context ---\n\n{full_prompt}"
+
+    # D-3 system prompt + optional project acknowledgement hint
+    system_prompt = get_lutherie_prompt()
+    if context_packet and "## Project Data" in context_packet:
+        system_prompt += (
+            "\n\n## Active project (session)\n"
+            "The user has an active Production Shop project in Context. Open with a brief "
+            "acknowledgement (instrument type, scale, notable woods) when relevant — then answer."
+        )
 
     try:
         # Use Anthropic by default for better reasoning
@@ -158,7 +202,7 @@ async def chat(request: ChatRequest) -> ChatResponse:
 
         response = client.request_text(
             prompt=full_prompt,
-            system_prompt=get_lutherie_prompt(),
+            system_prompt=system_prompt,
             temperature=0.7,
             max_tokens=2048,
         )
@@ -170,12 +214,14 @@ async def chat(request: ChatRequest) -> ChatResponse:
 
         logger.info(
             f"Assistant chat: session={session_id[:8]}..., "
-            f"tokens={response.total_tokens}, model={response.model}"
+            f"tokens={response.total_tokens}, model={response.model}, "
+            f"proj={request.project_id[:8] if request.project_id else 'none'}"
         )
 
         return ChatResponse(
             response=assistant_response,
             session_id=session_id,
+            project_id=request.project_id,
         )
 
     except LLMClientError as e:

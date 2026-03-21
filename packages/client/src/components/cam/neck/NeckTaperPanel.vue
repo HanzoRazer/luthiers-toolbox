@@ -123,17 +123,17 @@ const SPACING_OPTS: { val: SpacingType; label: string; sub: string }[] = [
     <!-- Derived -->
     <div class="sec">
       <div class="sec-lbl">Derived</div>
-      <div class="info-row"><span class="info-k">Taper rate</span><span class="info-v">{{ taper.derived.value.taperRateMmPerM }} mm/m</span></div>
-      <div class="info-row"><span class="info-k">C-C @ nut</span><span class="info-v">{{ taper.derived.value.ccAtNut }} mm</span></div>
-      <div class="info-row"><span class="info-k">C-C @ 12th</span><span class="info-v">{{ taper.derived.value.ccAt12 }} mm</span></div>
-      <div class="info-row"><span class="info-k">Edge margin L</span><span class="info-v">{{ taper.derived.value.nutEdgeLeft }} mm</span></div>
-      <div class="info-row"><span class="info-k">String spread</span><span class="info-v">+{{ taper.derived.value.totalStringSpread }} mm</span></div>
+      <div class="info-row"><span class="info-k">Taper rate</span><span class="info-v">{{ taper.derived.taperRateMmPerM }} mm/m</span></div>
+      <div class="info-row"><span class="info-k">C-C @ nut</span><span class="info-v">{{ taper.derived.ccAtNut }} mm</span></div>
+      <div class="info-row"><span class="info-k">C-C @ 12th</span><span class="info-v">{{ taper.derived.ccAt12 }} mm</span></div>
+      <div class="info-row"><span class="info-k">Edge margin L</span><span class="info-v">{{ taper.derived.nutEdgeLeft }} mm</span></div>
+      <div class="info-row"><span class="info-k">String spread</span><span class="info-v">+{{ taper.derived.totalStringSpread }} mm</span></div>
     </div>
 
     <!-- Gates -->
     <div class="sec" style="border-bottom:none">
       <div class="sec-lbl">Gates</div>
-      <div v-for="g in taper.gates.value" :key="g.key" class="gate-item" :class="g.status">
+      <div v-for="g in taper.gates" :key="g.key" class="gate-item" :class="g.status">
         <span class="gate-dot"></span><span class="gate-txt">{{ g.label }}</span>
       </div>
     </div>

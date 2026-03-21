@@ -169,7 +169,7 @@ const breakdown = () => profile.couplingBreakdown(store.previewFret)
     <!-- Gates -->
     <div class="sec" style="border-bottom:none">
       <div class="sec-lbl">Gates</div>
-      <div v-for="g in profile.gates.value" :key="g.key" class="gate-item" :class="g.status">
+      <div v-for="g in profile.gates" :key="g.key" class="gate-item" :class="g.status">
         <span class="gate-dot"></span><span class="gate-txt">{{ g.label }}</span>
       </div>
     </div>

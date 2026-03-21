@@ -14,6 +14,7 @@
  */
 import { onMounted, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
+import { useAgenticEvents } from '@/composables/useAgenticEvents'
 import RunComparePanel from '@/components/rmos/RunComparePanel.vue'
 import WhyPanel from '@/components/rmos/WhyPanel.vue'
 import AdvisoryExplanationPanel from './rmos_run_viewer/AdvisoryExplanationPanel.vue'
@@ -31,6 +32,9 @@ import {
 
 const route = useRoute()
 const router = useRouter()
+
+// E-1: Agentic Spine event emission
+const { emitViewRendered, emitDecisionRequired } = useAgenticEvents()
 
 // State
 const {
@@ -89,11 +93,19 @@ watch(
     if (!run.value) return
     if (!hasExp) return
     showWhy.value = rl === 'YELLOW' || rl === 'RED'
+
+    // E-1: Emit decision_required for YELLOW/RED risks
+    if (rl === 'YELLOW' || rl === 'RED') {
+      emitDecisionRequired('risk_assessment', ['accept', 'override', 'reject'])
+    }
   },
   { immediate: true }
 )
 
-onMounted(loadRun)
+onMounted(() => {
+  emitViewRendered('rmos_run_viewer')
+  loadRun()
+})
 watch(runId, loadRun)
 </script>
 

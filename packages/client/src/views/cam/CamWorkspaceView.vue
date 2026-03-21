@@ -119,6 +119,8 @@ function applyPatch(patch: Record<string, any>) {
     } else {
       neckConfig[k] = v
     }
+    // E-1: Emit parameter changed event
+    emitParameterChanged(k, v)
   }
   // Trigger re-evaluate
   evaluateDebounced()
