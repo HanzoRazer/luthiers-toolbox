@@ -226,3 +226,19 @@ def get_kerfing_type_info(kerfing_type: str) -> dict:
     if kerfing_type not in KERFING_TYPES:
         return {}
     return KERFING_TYPES[kerfing_type].copy()
+
+
+# --- Session A: full kerf bending geometry (kerfing_geometry_engine.py) ---
+from .kerfing_geometry_engine import (  # noqa: E402
+    BindingKerfResult,
+    KerfingResult,
+    KerfingSpecies,
+    KerfingStripGeometrySpec,
+    KERFING_SPECIES,
+    compute_binding_kerf_cuts,
+    compute_kerfing_geometry,
+    estimate_body_perimeter,
+    kerfing_for_archtop,
+    kerfing_for_flat_top,
+    solve_spacing_for_radius,
+)

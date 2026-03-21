@@ -1,0 +1,116 @@
+{
+  "_comment": "Body landmark reference data for spec-prior contour election (Diff 3).",
+  "_fields": {
+    "body_length_mm": "Total body length heel to tail",
+    "upper_bout_width_mm": "Maximum width in upper third of body",
+    "waist_width_mm": "Minimum width at body waist",
+    "lower_bout_width_mm": "Maximum width in lower half of body",
+    "waist_y_norm": "Waist position as fraction of body length from top (0.0-1.0)",
+    "family": "Instrument family for family-hint matching"
+  },
+
+  "stratocaster": {
+    "body_length_mm": 406,
+    "upper_bout_width_mm": 311,
+    "waist_width_mm": 308,
+    "lower_bout_width_mm": 408,
+    "waist_y_norm": 0.47,
+    "family": "solid_body"
+  },
+  "telecaster": {
+    "body_length_mm": 406,
+    "upper_bout_width_mm": 311,
+    "waist_width_mm": 310,
+    "lower_bout_width_mm": 398,
+    "waist_y_norm": 0.46,
+    "family": "solid_body"
+  },
+  "les_paul": {
+    "body_length_mm": 450,
+    "upper_bout_width_mm": 283,
+    "waist_width_mm": 266,
+    "lower_bout_width_mm": 340,
+    "waist_y_norm": 0.44,
+    "family": "solid_body"
+  },
+  "es335": {
+    "body_length_mm": 500,
+    "upper_bout_width_mm": 375,
+    "waist_width_mm": 295,
+    "lower_bout_width_mm": 420,
+    "waist_y_norm": 0.43,
+    "family": "archtop"
+  },
+  "dreadnought": {
+    "body_length_mm": 520,
+    "upper_bout_width_mm": 292,
+    "waist_width_mm": 241,
+    "lower_bout_width_mm": 381,
+    "waist_y_norm": 0.43,
+    "family": "acoustic"
+  },
+  "om_000": {
+    "body_length_mm": 476,
+    "upper_bout_width_mm": 274,
+    "waist_width_mm": 228,
+    "lower_bout_width_mm": 341,
+    "waist_y_norm": 0.44,
+    "family": "acoustic"
+  },
+  "jumbo": {
+    "body_length_mm": 521,
+    "upper_bout_width_mm": 320,
+    "waist_width_mm": 272,
+    "lower_bout_width_mm": 419,
+    "waist_y_norm": 0.43,
+    "family": "acoustic"
+  },
+  "smart_guitar": {
+    "body_length_mm": 444.5,
+    "upper_bout_width_mm": 310,
+    "waist_width_mm": 307,
+    "lower_bout_width_mm": 368.3,
+    "waist_y_norm": 0.46,
+    "family": "solid_body"
+  },
+  "jumbo_archtop": {
+    "body_length_mm": 520,
+    "upper_bout_width_mm": 340,
+    "waist_width_mm": 248,
+    "lower_bout_width_mm": 432,
+    "waist_y_norm": 0.42,
+    "family": "archtop"
+  },
+  "classical": {
+    "body_length_mm": 481,
+    "upper_bout_width_mm": 280,
+    "waist_width_mm": 225,
+    "lower_bout_width_mm": 365,
+    "waist_y_norm": 0.45,
+    "family": "acoustic"
+  },
+  "j45": {
+    "body_length_mm": 506,
+    "upper_bout_width_mm": 295,
+    "waist_width_mm": 248,
+    "lower_bout_width_mm": 394,
+    "waist_y_norm": 0.44,
+    "family": "acoustic"
+  },
+  "flying_v": {
+    "body_length_mm": 450,
+    "upper_bout_width_mm": 380,
+    "waist_width_mm": 200,
+    "lower_bout_width_mm": 410,
+    "waist_y_norm": 0.52,
+    "family": "solid_body"
+  },
+  "bass_4string": {
+    "body_length_mm": 430,
+    "upper_bout_width_mm": 310,
+    "waist_width_mm": 280,
+    "lower_bout_width_mm": 370,
+    "waist_y_norm": 0.45,
+    "family": "bass"
+  }
+}

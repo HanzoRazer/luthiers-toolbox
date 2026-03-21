@@ -30,6 +30,9 @@ from ..util.dxf_compat import (
     validate_version, DxfVersion, DXF_VERSIONS
 )
 from .bracing_presets_bridge import get_instrument_presets
+from ..instrument_geometry.bracing.back_brace import (
+    generate_back_bracing, list_body_styles, get_profile_label,
+)
 
 router = APIRouter(
     prefix="/art-studio/bracing",
@@ -245,6 +248,77 @@ def get_bracing_presets() -> List[BracingPreset]:
     instrument_presets = get_instrument_presets()
 
     return generic_presets + instrument_presets
+
+
+# --- Back Brace Models & Endpoints ---
+
+class BackBraceRequest(BaseModel):
+    """Request for back brace pattern generation."""
+    body_style: str = Field(default="martin_om")
+    stations_mm: Optional[List[float]] = None
+    width_mm: float = Field(default=6.5)
+    h_center_mm: float = Field(default=10.0)
+    h_end_mm: float = Field(default=3.5)
+    scallop_length_mm: float = Field(default=40.0)
+    back_radius_ft: Optional[float] = Field(default=None)
+    material: str = Field(default="sitka_spruce")
+
+
+@router.post("/back")
+def generate_back_pattern(req: BackBraceRequest):
+    """
+    Generate a ladder-brace back pattern for a given body style.
+
+    Returns per-brace geometry including camber, scallop points for CNC,
+    length (body-width-aware), mass, and center seam protection analysis.
+    """
+    pattern = generate_back_bracing(
+        body_style=req.body_style,
+        stations_mm=req.stations_mm,
+        width_mm=req.width_mm,
+        h_center_mm=req.h_center_mm,
+        h_end_mm=req.h_end_mm,
+        scallop_length_mm=req.scallop_length_mm,
+        back_radius_ft=req.back_radius_ft,
+        material=req.material,
+    )
+
+    return {
+        "body_style":       pattern.body_style,
+        "back_radius_mm":   pattern.back_radius_mm,
+        "back_radius_ft":   round(pattern.back_radius_mm / 304.8, 1),
+        "total_mass_g":     pattern.total_mass_g,
+        "max_seam_span_mm": pattern.max_seam_span_mm,
+        "seam_adequate":    pattern.seam_adequate,
+        "seam_warning":     pattern.seam_warning,
+        "braces": [
+            {
+                "index":              b.index,
+                "station_mm":         b.station_mm,
+                "body_width_mm":      b.body_width_mm,
+                "length_mm":          b.length_mm,
+                "width_mm":           b.width_mm,
+                "h_center_mm":        b.h_center_mm,
+                "h_end_mm":           b.h_end_mm,
+                "scallop_length_mm":  b.scallop_length_mm,
+                "full_height_length_mm": b.full_height_length_mm,
+                "back_radius_mm":     b.back_radius_mm,
+                "camber_mm":          b.camber_mm,
+                "mass_g":             b.mass_g,
+                "span_to_prev_mm":    b.span_to_prev_mm,
+                "span_to_next_mm":    b.span_to_next_mm,
+                "seam_risk":          b.seam_risk,
+                "scallop_points":     b.scallop_points(n=20),
+            }
+            for b in pattern.braces
+        ],
+    }
+
+
+@router.get("/back/body-styles")
+def get_back_body_styles():
+    """Get available body styles for back bracing."""
+    return [{"key": k, "label": get_profile_label(k)} for k in list_body_styles()]
 
 
 # --- DXF Export Models ---
