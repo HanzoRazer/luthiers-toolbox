@@ -38,6 +38,14 @@ import cv2
 import numpy as np
 
 from grid_classify import PhotoGridClassifier, merge_classifications
+from body_model import BodyModel
+
+# Optional: scipy Hausdorff for fast distance computation; pure-numpy fallback
+try:
+    from scipy.spatial.distance import directed_hausdorff as _scipy_directed_hausdorff
+    _SCIPY_HAUSDORFF = True
+except ImportError:
+    _SCIPY_HAUSDORFF = False
 
 from photo_vectorizer_v2 import (
     BodyRegion,
@@ -48,6 +56,8 @@ from photo_vectorizer_v2 import (
     ContourScore,
     ContourStageResult,
     EXPORT_BLOCK_THRESHOLD,
+    elect_body_contour_against_expected_outline,
+    elect_body_contour_v2,
     FeatureClassifier,
     FeatureContour,
     FeatureType,
@@ -55,13 +65,50 @@ from photo_vectorizer_v2 import (
     INSTRUMENT_SPECS,
     MergeResult,
     ScaleSource,
-    elect_body_contour_v2,
 )
 
 logger = logging.getLogger(__name__)
 
 
-# ── Stage parameters (tunable by coach) ────────────────────────────────────
+# ── Hausdorff distance helper (Diff 3) ─────────────────────────────────────
+
+def _hausdorff_distance(pts_a: np.ndarray, pts_b: np.ndarray) -> float:
+    """
+    Compute the symmetric Hausdorff distance between two point sets.
+
+    Uses scipy if available (faster), otherwise falls back to a pure-numpy
+    implementation that sub-samples both arrays to keep runtime bounded.
+
+    Both inputs should be (N, 2) float arrays in pixel space.
+    Returns the maximum directed Hausdorff in pixels.
+    """
+    if pts_a is None or pts_b is None or len(pts_a) < 3 or len(pts_b) < 3:
+        return float("inf")
+
+    a = pts_a.reshape(-1, 2).astype(np.float32)
+    b = pts_b.reshape(-1, 2).astype(np.float32)
+
+    if _SCIPY_HAUSDORFF:
+        d_ab = _scipy_directed_hausdorff(a, b)[0]
+        d_ba = _scipy_directed_hausdorff(b, a)[0]
+        return float(max(d_ab, d_ba))
+
+    # Pure-numpy fallback: sub-sample to ≤200 points each side to cap O(N²)
+    max_pts = 200
+    if len(a) > max_pts:
+        idx = np.round(np.linspace(0, len(a) - 1, max_pts)).astype(int)
+        a = a[idx]
+    if len(b) > max_pts:
+        idx = np.round(np.linspace(0, len(b) - 1, max_pts)).astype(int)
+        b = b[idx]
+
+    # directed: for each point in a, min distance to any point in b
+    def _directed(src: np.ndarray, dst: np.ndarray) -> float:
+        diff = src[:, None, :] - dst[None, :, :]          # (M, N, 2)
+        dist = np.sqrt((diff ** 2).sum(axis=2))            # (M, N)
+        return float(dist.min(axis=1).max())
+
+    return max(_directed(a, b), _directed(b, a))
 
 @dataclass
 class StageParams:
@@ -108,6 +155,7 @@ class ContourStage:
         params: Optional[StageParams] = None,
         debug_images: bool = False,
         spec_name: Optional[str] = None,  # For two-pass calibration
+        body_model: Optional[BodyModel] = None,  # Diff 2: typed geometry handoff
     ) -> ContourStageResult:
         """
         Execute the full contour decision pipeline.
@@ -132,6 +180,11 @@ class ContourStage:
             Tunable parameters. Defaults used if None.
         debug_images : bool
             Whether to generate debug overlay images.
+        body_model : BodyModel or None
+            Typed geometry handoff from Diff 2. When present, its body_region
+            takes precedence over the bare body_region argument. Landmarks and
+            constraints are surfaced in diagnostics. Diff 3 will use
+            body_model.expected_outline_px to rewrite election.
 
         Returns
         -------
@@ -142,11 +195,22 @@ class ContourStage:
         mpp = calibration.mm_per_px
         img_h, img_w = image_shape
 
+        # When a BodyModel is present, prefer its typed body_region over the
+        # bare argument. This is the backward-compatible Diff 2 wire-up.
+        effective_body_region = (
+            body_model.body_region
+            if body_model is not None and body_model.body_region is not None
+            else body_region
+        )
+
         # ── 8a: Contour assembly (TWO-PASS when scale is uncertain) ─────
         # Pass 1: Assemble contours with current mm_per_px
+        # Ownership pre-filter applied when effective_body_region is available.
         classifier = FeatureClassifier()
         assembler = ContourAssembler(classifier, p.min_contour_area_px)
-        feature_contours = assembler.assemble(edges, alpha_mask, mpp)
+        feature_contours = assembler.assemble(
+            edges, alpha_mask, mpp, body_region=effective_body_region
+        )
 
         if not feature_contours:
             logger.warning("ContourStage: no contours found")
@@ -173,9 +237,18 @@ class ContourStage:
                     f"Two-pass calibration: {calibration.source.value} -> INSTRUMENT_SPEC "
                     f"(body {spec_body_mm}mm / {body_height_px}px = {corrected_mpp:.4f} mm/px)")
 
-                # Pass 2: Re-classify all contours with corrected scale
+                # Pass 2: Re-classify all contours with corrected scale.
+                # Update body_model.mm_per_px so spec fitting reflects the
+                # corrected measurement.
                 mpp = corrected_mpp
-                feature_contours = assembler.assemble(edges, alpha_mask, mpp)
+                if body_model is not None:
+                    body_model.mm_per_px = corrected_mpp
+                    logger.info(
+                        "Two-pass: updated body_model.mm_per_px to corrected value"
+                    )
+                feature_contours = assembler.assemble(
+                    edges, alpha_mask, mpp, body_region=effective_body_region
+                )
 
                 if not feature_contours:
                     logger.warning("ContourStage: no contours after recalibration")
@@ -194,7 +267,7 @@ class ContourStage:
             ownership_threshold=p.scorer_ownership_threshold,
         )
         scores_pre = scorer.score_all_candidates(
-            pre_merge_contours, body_region, family, mpp, image_shape)
+            pre_merge_contours, effective_body_region, family, mpp, image_shape)
         pre_best = max(scores_pre, key=lambda s: s.score) if scores_pre else None
         pre_best_fc = pre_merge_contours[pre_best.contour_index] if pre_best is not None else None
 
@@ -207,7 +280,7 @@ class ContourStage:
         )
         merge_result = merger.merge(
             feature_contours, image_shape,
-            body_region=body_region, mpp=mpp)
+            body_region=effective_body_region, mpp=mpp)
 
         merge_warnings: List[str] = []
         if merge_result is not None:
@@ -231,7 +304,7 @@ class ContourStage:
 
         # ── 8d: Score post-merge candidates ─────────────────────────────
         scores_post = scorer.score_all_candidates(
-            post_merge_contours, body_region, family, mpp, image_shape)
+            post_merge_contours, effective_body_region, family, mpp, image_shape)
         post_best = max(scores_post, key=lambda s: s.score) if scores_post else None
         post_best_fc = post_merge_contours[post_best.contour_index] if post_best is not None else None
 
@@ -242,19 +315,65 @@ class ContourStage:
             f"ContourStage diagnostic: best={elected_source} "
             f"idx={best_idx} score={best_score:.3f}")
 
-        # ── 8f: Actual body election (proven X-extent guard) ────────────
+        # ── 8f: Actual body election ─────────────────────────────────────
+        # Diff 3: if a BodyModel with a generated expected outline is
+        # present, rank ownership-passing candidates by Hausdorff distance
+        # to the expected outline ("closest to expected" election).
+        # Fall back to the proven ownership-area election otherwise.
         post_ownership_scores = {
             cs.contour_index: float(cs.ownership_score)
             for cs in scores_post
         }
 
-        body_idx = elect_body_contour_v2(
-            feature_contours, body_region,
-            min_overlap=p.elect_min_overlap,
-            max_width_factor=p.elect_max_width_factor,
-            ownership_scores=post_ownership_scores,
-            ownership_threshold=p.scorer_ownership_threshold,
+        election_method = "ownership_area"  # default
+
+        expected_outline = (
+            body_model.expected_outline_px
+            if body_model is not None
+            else None
         )
+
+        if expected_outline is not None and len(feature_contours) > 0:
+            body_idx = elect_body_contour_against_expected_outline(
+                feature_contours,
+                expected_outline,
+                ownership_scores=post_ownership_scores,
+                ownership_threshold=p.scorer_ownership_threshold,
+            )
+            if body_idx >= 0:
+                election_method = "expected_outline_prior"
+                spec_name = (
+                    body_model.spec_delta.spec_name
+                    if body_model is not None and body_model.spec_delta is not None
+                    else "landmark_only"
+                )
+                logger.info(
+                    f"Expected-outline election: elected idx={body_idx} "
+                    f"(spec={spec_name})"
+                )
+            else:
+                # No ownership-passing candidate — fall back
+                body_idx = elect_body_contour_v2(
+                    feature_contours, effective_body_region,
+                    min_overlap=p.elect_min_overlap,
+                    max_width_factor=p.elect_max_width_factor,
+                    ownership_scores=post_ownership_scores,
+                    ownership_threshold=p.scorer_ownership_threshold,
+                )
+                election_method = "ownership_area_fallback"
+                logger.info(
+                    "Expected-outline election: no ownership-passing candidates — "
+                    "falling back to ownership-area election"
+                )
+        else:
+            # No expected outline available — standard election
+            body_idx = elect_body_contour_v2(
+                feature_contours, effective_body_region,
+                min_overlap=p.elect_min_overlap,
+                max_width_factor=p.elect_max_width_factor,
+                ownership_scores=post_ownership_scores,
+                ownership_threshold=p.scorer_ownership_threshold,
+            )
 
         if body_idx >= 0:
             body_fc = feature_contours[body_idx]
@@ -318,6 +437,43 @@ class ContourStage:
                 **merge_guard_diag,
             },
         )
+
+        # ── Diff 2: surface BodyModel geometry in diagnostics ───────────
+        if body_model is not None:
+            contour_stage.diagnostics["body_model_present"] = True
+            contour_stage.diagnostics["body_model_bbox_px"] = tuple(body_model.body_bbox_px)
+            contour_stage.diagnostics["body_model_constraints_valid"] = (
+                None if body_model.constraints is None
+                else body_model.constraints.all_valid
+            )
+            if body_model.landmarks is not None:
+                contour_stage.diagnostics["body_model_landmarks"] = {
+                    "waist_y_px": body_model.landmarks.waist_y_px,
+                    "waist_width_px": body_model.landmarks.waist_width_px,
+                    "upper_bout_y_px": body_model.landmarks.upper_bout_y_px,
+                    "upper_bout_width_px": body_model.landmarks.upper_bout_width_px,
+                    "lower_bout_y_px": body_model.landmarks.lower_bout_y_px,
+                    "lower_bout_width_px": body_model.landmarks.lower_bout_width_px,
+                }
+            if body_model.constraints is not None:
+                contour_stage.diagnostics["body_model_constraint_violations"] = list(
+                    body_model.constraints.violations
+                )
+            # ── Diff 3: spec-prior election diagnostics ──────────────────
+            contour_stage.diagnostics["election_method"] = election_method
+            contour_stage.diagnostics["used_expected_outline_prior"] = (
+                election_method == "expected_outline_prior"
+            )
+            contour_stage.diagnostics["body_model_expected_outline_ready"] = (
+                body_model.expected_outline_px is not None
+            )
+            if body_model.spec_delta is not None:
+                contour_stage.diagnostics["spec_fit_name"] = body_model.spec_delta.spec_name
+                contour_stage.diagnostics["spec_fit_score"] = body_model.spec_delta.fit_score
+        else:
+            contour_stage.diagnostics["body_model_present"] = False
+            contour_stage.diagnostics["election_method"] = election_method
+            contour_stage.diagnostics["used_expected_outline_prior"] = False
 
         # ── 8h: Enriched export blocking ────────────────────────────────
         elected_scores = scores_pre if elected_source in ("pre_merge", "pre_merge_guarded") \

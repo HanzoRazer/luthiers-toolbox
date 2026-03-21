@@ -13,8 +13,10 @@ Every number here is deliberately conservative:
 
 from __future__ import annotations
 
+import json
+import os
 from dataclasses import dataclass
-from typing import Any, Dict, Optional, Tuple
+from typing import Any, Dict, List, Optional, Tuple
 
 
 # (height_min_mm, height_max_mm, width_min_mm, width_max_mm)
@@ -129,3 +131,78 @@ class GeometryAuthority:
         if inner is not None:
             return getattr(inner, "value", None)
         return None
+
+    # ── Diff 3: spec-prior landmark lookup ────────────────────────────────────
+
+    _DIM_REF_PATH = os.path.join(
+        os.path.dirname(__file__), "body_dimension_reference.json"
+    )
+    _dim_ref_cache: Optional[Dict[str, Any]] = None
+
+    @classmethod
+    def _load_dim_ref(cls) -> Dict[str, Any]:
+        """Load and cache body_dimension_reference.json."""
+        if cls._dim_ref_cache is None:
+            try:
+                with open(cls._DIM_REF_PATH) as fh:
+                    data = json.load(fh)
+                # Strip metadata keys that start with "_"
+                cls._dim_ref_cache = {
+                    k: v for k, v in data.items() if not k.startswith("_")
+                }
+            except (OSError, json.JSONDecodeError):
+                cls._dim_ref_cache = {}
+        return cls._dim_ref_cache
+
+    def find_candidate_specs(
+        self,
+        family_hint: Optional[str] = None,
+        spec_name: Optional[str] = None,
+    ) -> List["BodyDimensionSpec"]:
+        """
+        Return BodyDimensionSpec objects from the reference table.
+
+        If spec_name is provided, return only that entry (exact match).
+        If family_hint is provided, return all specs whose family matches.
+        If neither is provided, return all specs.
+        """
+        ref = self._load_dim_ref()
+        family_norm = self._normalize_family(family_hint)
+
+        results: List[BodyDimensionSpec] = []
+        for name, entry in ref.items():
+            if spec_name is not None and name != spec_name:
+                continue
+            if family_norm is not None:
+                entry_family = entry.get("family", "")
+                if entry_family != family_norm:
+                    continue
+            try:
+                results.append(BodyDimensionSpec(
+                    name=name,
+                    family=entry.get("family", ""),
+                    body_length_mm=float(entry["body_length_mm"]),
+                    upper_bout_width_mm=float(entry["upper_bout_width_mm"]),
+                    waist_width_mm=float(entry["waist_width_mm"]),
+                    lower_bout_width_mm=float(entry["lower_bout_width_mm"]),
+                    waist_y_norm=float(entry["waist_y_norm"]),
+                ))
+            except (KeyError, TypeError, ValueError):
+                continue
+        return results
+
+
+@dataclass(frozen=True)
+class BodyDimensionSpec:
+    """
+    Typed body dimension record from body_dimension_reference.json.
+    Used by landmark_extractor.fit_body_model_to_spec() and
+    generate_expected_outline() for spec-prior contour election.
+    """
+    name: str
+    family: str
+    body_length_mm: float
+    upper_bout_width_mm: float
+    waist_width_mm: float
+    lower_bout_width_mm: float
+    waist_y_norm: float

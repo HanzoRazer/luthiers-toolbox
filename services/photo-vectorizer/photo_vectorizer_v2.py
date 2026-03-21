@@ -37,14 +37,18 @@ from collections import defaultdict
 from dataclasses import dataclass, field
 from enum import Enum
 from pathlib import Path
-from typing import Any, Callable, Dict, List, Optional, Tuple, Union
+from typing import TYPE_CHECKING, Any, Callable, Dict, List, Optional, Tuple, Union
 from xml.etree.ElementTree import Element, SubElement, ElementTree
 
 import cv2
 import numpy as np
 
-from body_isolation_result import BodyRegionProtocol
 from grid_classify import PhotoGridClassifier, merge_classifications
+
+# Diff 2/3: BodyModel is imported at runtime inside methods to avoid circular
+# imports, but declared here for TYPE_CHECKING so type annotations resolve.
+if TYPE_CHECKING:
+    from body_model import BodyModel
 
 # ── Optional deps (graceful fallback) ──────────────────────────────────────────
 try:
@@ -145,7 +149,7 @@ class CalibrationResult:
 
 
 @dataclass
-class BodyRegion(BodyRegionProtocol):
+class BodyRegion:
     """Bounding box of the isolated instrument body (excludes neck/headstock)."""
     x: int
     y: int
@@ -154,9 +158,10 @@ class BodyRegion(BodyRegionProtocol):
     confidence: float
     neck_end_row: int
     max_body_width_px: int
+    notes: List[str] = field(default_factory=list)
+    # Protocol compliance: mm dimensions (populated after scale calibration)
     height_mm: Optional[float] = None
     width_mm: Optional[float] = None
-    notes: List[str] = field(default_factory=list)
 
     @property
     def bbox(self) -> Tuple[int, int, int, int]:
@@ -245,6 +250,7 @@ class PhotoExtractionResult:
 
     contour_stage: Optional["ContourStageResult"] = None
     body_isolation: Optional[Any] = None
+    body_model: Optional[Any] = None  # BodyModel from Diff 2/3 handoff
     geometry_coach_v2: Optional[Any] = None
     export_blocked: bool = False
     export_block_reason: Optional[str] = None
@@ -285,39 +291,6 @@ class ContourScore:
     neck_inclusion_score: float = 0.0
     issues: List[str] = field(default_factory=list)
 
-    def to_payload(self) -> Dict[str, Any]:
-        return {
-            "contour_index": int(self.contour_index),
-            "score": float(self.score),
-            "completeness": float(self.completeness),
-            "includes_neck": bool(self.includes_neck),
-            "border_contact": bool(self.border_contact),
-            "dimension_plausibility": float(self.dimension_plausibility),
-            "symmetry_score": float(self.symmetry_score),
-            "aspect_ratio_ok": bool(self.aspect_ratio_ok),
-            "ownership_score": float(self.ownership_score),
-            "vertical_coverage": float(self.vertical_coverage),
-            "neck_inclusion_score": float(self.neck_inclusion_score),
-            "issues": list(self.issues),
-        }
-
-    @classmethod
-    def from_payload(cls, payload: Dict[str, Any]) -> "ContourScore":
-        return cls(
-            contour_index=int(payload.get("contour_index", 0)),
-            score=float(payload.get("score", 0.0)),
-            completeness=float(payload.get("completeness", 0.0)),
-            includes_neck=bool(payload.get("includes_neck", False)),
-            border_contact=bool(payload.get("border_contact", False)),
-            dimension_plausibility=float(payload.get("dimension_plausibility", 0.0)),
-            symmetry_score=float(payload.get("symmetry_score", 0.0)),
-            aspect_ratio_ok=bool(payload.get("aspect_ratio_ok", False)),
-            ownership_score=float(payload.get("ownership_score", 0.0)),
-            vertical_coverage=float(payload.get("vertical_coverage", 0.0)),
-            neck_inclusion_score=float(payload.get("neck_inclusion_score", 0.0)),
-            issues=list(payload.get("issues", []) or []),
-        )
-
 
 @dataclass
 class ContourStageResult:
@@ -342,56 +315,6 @@ class ContourStageResult:
     ownership_score: Optional[float] = None
     ownership_ok: Optional[bool] = None
     diagnostics: Dict[str, Any] = field(default_factory=lambda: {"retry_attempts": []})
-
-    def to_payload(self) -> Dict[str, Any]:
-        return {
-            "best_score": float(self.best_score),
-            "export_blocked": bool(self.export_blocked),
-            "block_reason": self.block_reason,
-            "export_block_issues": list(self.export_block_issues),
-            "export_block_score_breakdown": dict(self.export_block_score_breakdown or {}),
-            "recommended_next_action": self.recommended_next_action,
-            "ownership_score": self.ownership_score,
-            "ownership_ok": self.ownership_ok,
-            "diagnostics": dict(self.diagnostics or {}),
-            "contour_scores_pre": [
-                cs.to_payload() if hasattr(cs, "to_payload") else cs
-                for cs in list(getattr(self, "contour_scores_pre", []) or [])
-            ],
-            "contour_scores_post": [
-                cs.to_payload() if hasattr(cs, "to_payload") else cs
-                for cs in list(getattr(self, "contour_scores_post", []) or [])
-            ],
-            "feature_contours_post_grid": list(getattr(self, "feature_contours_post_grid", []) or []),
-            "body_contour_final": getattr(self, "body_contour_final", None),
-            "elected_source": getattr(self, "elected_source", None),
-        }
-
-    @classmethod
-    def from_payload(cls, payload: Dict[str, Any]) -> "ContourStageResult":
-        result = cls(
-            best_score=float(payload.get("best_score", 0.0)),
-            export_blocked=bool(payload.get("export_blocked", False)),
-            block_reason=payload.get("block_reason"),
-            export_block_issues=list(payload.get("export_block_issues", []) or []),
-            export_block_score_breakdown=dict(payload.get("export_block_score_breakdown", {}) or {}),
-            recommended_next_action=payload.get("recommended_next_action"),
-            ownership_score=payload.get("ownership_score"),
-            ownership_ok=payload.get("ownership_ok"),
-            diagnostics=dict(payload.get("diagnostics", {}) or {"retry_attempts": []}),
-        )
-        result.contour_scores_pre = [
-            ContourScore.from_payload(cs) if isinstance(cs, dict) else cs
-            for cs in list(payload.get("contour_scores_pre", []) or [])
-        ]
-        result.contour_scores_post = [
-            ContourScore.from_payload(cs) if isinstance(cs, dict) else cs
-            for cs in list(payload.get("contour_scores_post", []) or [])
-        ]
-        result.feature_contours_post_grid = list(payload.get("feature_contours_post_grid", []) or [])
-        result.body_contour_final = payload.get("body_contour_final")
-        result.elected_source = payload.get("elected_source", "pre_merge_guarded")
-        return result
 
 
 # Instrument specs for scale calibration and feature classification
@@ -2063,7 +1986,7 @@ _DEFAULT_BODY_HEIGHT_MM = 490.0
 
 
 def compute_rough_mpp(
-    body_region: Optional[BodyRegionProtocol],
+    body_region: Optional[BodyRegion],
     spec_name: Optional[str] = None,
     family_hint: Optional[str] = None,
 ) -> float:
@@ -2071,15 +1994,11 @@ def compute_rough_mpp(
     Compute a rough mm/px estimate for GatedAdaptiveCloser kernel sizing
     BEFORE full calibration runs. Not used as final calibration result.
     """
-    if body_region is None:
+    if body_region is None or body_region.height_px <= 0:
         logger.debug("compute_rough_mpp: no body_region -> using 0.30")
         return 0.30
 
-    if body_region.height <= 0:
-        logger.debug("compute_rough_mpp: no body_region -> using 0.30")
-        return 0.30
-
-    body_h_px = float(body_region.height)
+    body_h_px = float(body_region.height_px)
 
     if spec_name and spec_name.lower() in _ROUGH_SPEC_HEIGHTS:
         h_mm = _ROUGH_SPEC_HEIGHTS[spec_name.lower()]
@@ -2744,6 +2663,96 @@ class ContourPlausibilityScorer:
         return self._clamp01(score)
 
 
+
+# =============================================================================
+# Stage 8 — Diff 3: Expected-outline election helpers
+# =============================================================================
+
+def _contour_to_points(fc: "FeatureContour") -> np.ndarray:
+    """Extract (N, 2) float32 point array from a FeatureContour."""
+    pts = np.asarray(fc.points_px, dtype=np.float32)
+    if pts.ndim == 3 and pts.shape[1] == 1:
+        pts = pts[:, 0, :]
+    return pts
+
+
+def _resample_closed_curve(points: np.ndarray, n: int = 200) -> np.ndarray:
+    """
+    Resample a closed curve to exactly n evenly-spaced points by arc length.
+    Used to normalise candidate and expected outlines to the same point count
+    before distance comparison.
+    """
+    pts = np.asarray(points, dtype=np.float32)
+    if len(pts) == 0:
+        return np.zeros((0, 2), dtype=np.float32)
+    if not np.allclose(pts[0], pts[-1]):
+        pts = np.vstack([pts, pts[0]])
+    seg = np.sqrt(np.sum(np.diff(pts, axis=0) ** 2, axis=1))
+    cum = np.concatenate([[0.0], np.cumsum(seg)])
+    total = float(cum[-1])
+    if total <= 1e-6:
+        return np.repeat(pts[:1], n, axis=0)
+    targets = np.linspace(0.0, total, n, endpoint=False)
+    out = np.zeros((n, 2), dtype=np.float32)
+    for i, t in enumerate(targets):
+        j = int(np.searchsorted(cum, t, side="right") - 1)
+        j = max(0, min(j, len(seg) - 1))
+        denom = max(seg[j], 1e-6)
+        alpha = (t - cum[j]) / denom
+        out[i] = pts[j] * (1.0 - alpha) + pts[j + 1] * alpha
+    return out
+
+
+def _mean_bidirectional_distance(a: np.ndarray, b: np.ndarray) -> float:
+    """
+    Mean bidirectional nearest-point distance between two point sets.
+
+    Preferred over Hausdorff for election because it is robust to single
+    outlier points that Hausdorff would over-weight.
+    """
+    if len(a) == 0 or len(b) == 0:
+        return float("inf")
+    da = np.sqrt(((a[:, None, :] - b[None, :, :]) ** 2).sum(axis=2)).min(axis=1).mean()
+    db = np.sqrt(((b[:, None, :] - a[None, :, :]) ** 2).sum(axis=2)).min(axis=1).mean()
+    return float((da + db) * 0.5)
+
+
+def elect_body_contour_against_expected_outline(
+    contours: List["FeatureContour"],
+    expected_outline_px: np.ndarray,
+    *,
+    ownership_scores: Optional[Dict[int, float]] = None,
+    ownership_threshold: float = 0.60,
+) -> int:
+    """
+    Diff 3 election: choose the contour with the smallest mean bidirectional
+    distance to the expected outline prior.
+
+    Ownership gate still applies — only candidates that passed the ownership
+    threshold are compared.  Returns -1 if no candidate passes the gate.
+    """
+    expected = _resample_closed_curve(expected_outline_px, n=200)
+    if len(expected) == 0:
+        return -1
+
+    best_idx = -1
+    best_dist = float("inf")
+
+    for i, fc in enumerate(contours):
+        if ownership_scores is not None:
+            if float(ownership_scores.get(i, 0.0)) < ownership_threshold:
+                continue
+        pts = _resample_closed_curve(_contour_to_points(fc), n=200)
+        if len(pts) == 0:
+            continue
+        dist = _mean_bidirectional_distance(pts, expected)
+        if dist < best_dist:
+            best_dist = dist
+            best_idx = i
+
+    return best_idx
+
+
 # =============================================================================
 # Stage 8b — Contour Assembly with Hierarchy
 # =============================================================================
@@ -2755,7 +2764,8 @@ class ContourAssembler:
         self.min_area_px = min_area_px
 
     def assemble(self, edge_image: np.ndarray, alpha_mask: np.ndarray,
-                 mm_per_px: float) -> List[FeatureContour]:
+                 mm_per_px: float,
+                 body_region: Optional[Any] = None) -> List[FeatureContour]:
         contours, hierarchy = cv2.findContours(
             edge_image, cv2.RETR_TREE, cv2.CHAIN_APPROX_NONE)
         if hierarchy is None:
@@ -2779,11 +2789,56 @@ class ContourAssembler:
             if parent >= 0:
                 child_map[parent].append(i)
 
+        # Pre-compute body_region values once for the filter
+        _br_x = _br_y = _br_bw = _br_bh = None
+        if body_region is not None:
+            try:
+                _br_x = int(body_region.x)
+                _br_y = int(body_region.y)
+                _br_bw = int(body_region.width)
+                _br_bh = int(body_region.height)
+            except (AttributeError, TypeError):
+                body_region = None  # treat as absent if malformed
+
         features = []
+        _pre_filter_rejected = 0
         for i, cnt in enumerate(contours):
             area = cv2.contourArea(cnt)
             if area < self.min_area_px:
                 continue
+
+            # ── Ownership pre-filter (Diff: ownership upstream) ─────────────
+            # Reject candidates that cannot possibly score above the ownership
+            # threshold, derived from the three dominant scoring terms:
+            #   1. Bbox must intersect body region
+            #   2. Vertical coverage must be ≥ 30% of body height
+            #   3. Reject neck-only candidates (above midpoint, narrow)
+            # When body_region is None the filter is entirely skipped.
+            if body_region is not None:
+                cx, cy, cw, ch = cv2.boundingRect(cnt)
+
+                # 1. Bounding box must overlap body region
+                no_overlap = (
+                    cx + cw <= _br_x or cx >= _br_x + _br_bw or
+                    cy + ch <= _br_y or cy >= _br_y + _br_bh
+                )
+                if no_overlap:
+                    _pre_filter_rejected += 1
+                    continue
+
+                # 2. Minimum vertical coverage (≥ 30% of body height)
+                if ch / max(_br_bh, 1) < 0.30:
+                    _pre_filter_rejected += 1
+                    continue
+
+                # 3. Neck-heavy rejection: entirely above body midpoint AND narrow
+                body_mid_y = _br_y + _br_bh * 0.50
+                contour_center_y = cy + ch / 2.0
+                if contour_center_y < body_mid_y and cw < _br_bw * 0.40:
+                    _pre_filter_rejected += 1
+                    continue
+            # ─────────────────────────────────────────────────────────────────
+
             peri = cv2.arcLength(cnt, True)
             bbox = cv2.boundingRect(cnt)
             circ = 4 * np.pi * area / (peri ** 2) if peri > 0 else 0
@@ -2804,6 +2859,11 @@ class ContourAssembler:
                 circularity=circ, aspect_ratio=aspect, solidity=solidity,
                 bbox_px=bbox, hash_id=hash_id))
 
+        if _pre_filter_rejected > 0:
+            logger.debug(
+                f"Ownership pre-filter: rejected {_pre_filter_rejected} candidates "
+                f"before classification"
+            )
         logger.info(f"Assembled {len(features)} feature contours from {len(contours)} raw")
 
         # ── Deduplication: Remove concentric duplicates (IoU > 0.85 with body) ──
@@ -3496,7 +3556,7 @@ class PhotoVectorizerV2:
         logger.info(f"Instrument family: {instrument_family.family} (conf={instrument_family.confidence:.2f})")
 
         # ── Stage 7: Calibration (with body isolation + DPI estimation) ───
-        body_h_px = float(body_region.height) if body_region.height > 0 else None
+        body_h_px = float(body_region.height_px) if body_region.height_px > 0 else None
         calibration = self.calibrator.calibrate(
             image, known_mm=known_dimension_mm, known_px=known_dimension_px,
             spec_name=spec_name, image_dpi=exif_dpi,
@@ -3512,12 +3572,22 @@ class PhotoVectorizerV2:
         # ── Stage 8: Contour stage (assembly + merge + election + grid) ────
         family = instrument_family.family if instrument_family else InstrumentFamily.UNKNOWN
 
+        # ── Diff 2/3: Build typed BodyModel from Stage 4.5 evidence ─────────
+        body_model = self._build_body_model(
+            body_result=body_isolation_result,
+            family=family,
+            spec_name=spec_name,
+            calibration=calibration,
+        )
+        result.body_model = body_model
+
         from contour_stage import StageParams
         stage_params = StageParams()
         contour_result = self.contour_stage.run(
             edges=edges,
             alpha_mask=alpha_mask,
             body_region=body_region,
+            body_model=body_model,
             calibration=calibration,
             family=family,
             image_shape=(img_h, img_w),
@@ -3675,6 +3745,152 @@ class PhotoVectorizerV2:
 
         return result
 
+    # ── Diff 2/3/5: BodyModel construction ───────────────────────────────────
+
+    def _build_body_model(
+        self,
+        *,
+        body_result: Any,
+        family: Any,
+        spec_name: Optional[str],
+        calibration: Any,
+    ) -> Optional["BodyModel"]:
+        """
+        Promote Stage 4.5 evidence into a typed BodyModel before contour election.
+
+        Runs the full Diff 2→3 chain:
+          build handoff → extract landmarks → validate constraints →
+          fit to spec → generate expected outline
+
+        Any failure returns None so the pipeline degrades gracefully to the
+        existing ownership-area election.
+        """
+        try:
+            from body_model import BodyModel  # noqa: F401
+            from landmark_extractor import (
+                build_body_model_from_isolation,
+                extract_landmarks_from_profile,
+                fit_body_model_to_spec,
+                generate_expected_outline,
+                validate_body_constraints,
+            )
+
+            body_model = build_body_model_from_isolation(
+                body_result,
+                family_hint=(family.value if hasattr(family, "value") else str(family)),
+                spec_hint=spec_name,
+                mm_per_px=getattr(calibration, "mm_per_px", None),
+            )
+            body_model = extract_landmarks_from_profile(body_model)
+
+            symmetry_score = self._compute_body_symmetry_score(body_result)
+            body_model.diagnostics["body_symmetry_score"] = symmetry_score
+
+            body_model = validate_body_constraints(
+                body_model,
+                symmetry_score=symmetry_score,
+                has_cutaway=False,
+            )
+            body_model = fit_body_model_to_spec(
+                body_model,
+                geometry_authority=self.geometry_authority,
+            )
+            body_model = generate_expected_outline(body_model)
+            return body_model
+        except Exception as exc:
+            logger.warning("BodyModel build failed: %s", exc)
+            return None
+
+    def _compute_body_symmetry_score(self, body_result: Any) -> float:
+        """
+        Measure bilateral body symmetry from Stage 4.5 evidence.
+
+        Primary path: isolation_mask IoU + mass balance inside body bbox.
+        Fallback: column_profile left/right comparison.
+        Returns a score in [0, 1].
+        """
+        bbox = getattr(body_result, "body_bbox_px", None)
+        if bbox is None or not isinstance(bbox, tuple) or len(bbox) != 4:
+            return 0.0
+        x, y, bw, bh = bbox
+        if bw <= 2 or bh <= 2:
+            return 0.0
+
+        mask_score = self._symmetry_from_isolation_mask(body_result)
+        if mask_score is not None:
+            return float(max(0.0, min(1.0, mask_score)))
+
+        profile_score = self._symmetry_from_profiles(body_result)
+        if profile_score is not None:
+            return float(max(0.0, min(1.0, profile_score)))
+
+        return 0.0
+
+    @staticmethod
+    def _symmetry_from_isolation_mask(body_result: Any) -> Optional[float]:
+        """Bilateral symmetry from the isolation mask pixel IoU inside body bbox."""
+        mask = getattr(body_result, "isolation_mask", None)
+        bbox = getattr(body_result, "body_bbox_px", None)
+        if mask is None or bbox is None:
+            return None
+        x, y, bw, bh = bbox
+        if bw <= 2 or bh <= 2:
+            return None
+        h, w = mask.shape[:2]
+        x0, y0 = max(0, int(x)), max(0, int(y))
+        x1, y1 = min(w, int(x + bw)), min(h, int(y + bh))
+        if x1 <= x0 or y1 <= y0:
+            return None
+        roi = (mask[y0:y1, x0:x1] > 0).astype(np.uint8)
+        if roi.size == 0 or np.count_nonzero(roi) == 0:
+            return None
+        mid = roi.shape[1] // 2
+        if mid <= 0:
+            return None
+        left = roi[:, :mid]
+        right = roi[:, roi.shape[1] - mid:]
+        if left.size == 0 or right.size == 0:
+            return None
+        right_flip = np.fliplr(right)
+        overlap = np.logical_and(left > 0, right_flip > 0).sum()
+        union = np.logical_or(left > 0, right_flip > 0).sum()
+        if union <= 0:
+            return None
+        shape_iou = float(overlap) / float(union)
+        left_mass = float(np.count_nonzero(left))
+        right_mass = float(np.count_nonzero(right))
+        mass_balance = 1.0 - abs(left_mass - right_mass) / max(left_mass + right_mass, 1.0)
+        return 0.70 * shape_iou + 0.30 * mass_balance
+
+    @staticmethod
+    def _symmetry_from_profiles(body_result: Any) -> Optional[float]:
+        """Bilateral symmetry from the column width profile inside body bbox."""
+        col = getattr(body_result, "column_profile", None)
+        bbox = getattr(body_result, "body_bbox_px", None)
+        if col is None or bbox is None:
+            return None
+        arr = np.asarray(col, dtype=float)
+        if arr.size == 0:
+            return None
+        x, _, bw, _ = bbox
+        x0, x1 = max(0, int(x)), min(len(arr), int(x + bw))
+        if x1 <= x0:
+            return None
+        band = arr[x0:x1]
+        if band.size < 4 or float(np.sum(band)) <= 0.0:
+            return None
+        mid = len(band) // 2
+        left = band[:mid]
+        right = band[len(band) - mid:]
+        if left.size == 0 or right.size == 0:
+            return None
+        right_flip = right[::-1]
+        num = float(np.sum(np.abs(left - right_flip)))
+        den = float(np.sum(np.abs(left) + np.abs(right_flip)))
+        if den <= 1e-6:
+            return None
+        return 1.0 - (num / den)
+
     def batch_extract(
         self,
         source_paths: List[Union[str, Path]],
@@ -3755,11 +3971,17 @@ def extract_feature_contours(
     alpha_mask: np.ndarray,
     mpp: float,
     min_contour_area_px: int = 500,
+    body_region: Optional[Any] = None,
 ) -> List[FeatureContour]:
-    """Extract and classify contours from edge + mask images."""
+    """Extract and classify contours from edge + mask images.
+
+    When body_region is provided, applies an ownership pre-filter that rejects
+    candidates before classification — stopping bad contours at generation
+    rather than trying to reject them during scoring.
+    """
     classifier = FeatureClassifier()
     assembler = ContourAssembler(classifier, min_contour_area_px)
-    return assembler.assemble(edges, alpha_mask, mpp)
+    return assembler.assemble(edges, alpha_mask, mpp, body_region=body_region)
 
 
 def merge_feature_contours(
@@ -3790,7 +4012,8 @@ def run_contour_stage_v2(
     image: np.ndarray,
     merged_mask: np.ndarray,
     body_region: Optional[BodyRegion],
-    family: InstrumentFamily,
+    body_model: Optional["BodyModel"] = None,
+    family: InstrumentFamily = InstrumentFamily.SOLID_BODY,
     mpp: float = 1.0,
     image_shape: Optional[Tuple[int, int]] = None,
     border_margin_px: int = 5,
@@ -3803,6 +4026,10 @@ def run_contour_stage_v2(
 
     Performs: edge extraction → contour assembly → merge → scoring → election →
     export blocking with full ownership gate wiring.
+
+    Diff 3: when body_model.expected_outline_px is populated, uses
+    elect_body_contour_against_expected_outline (mean bidirectional distance)
+    instead of the ownership-area fallback.
     """
     if image_shape is None:
         image_shape = (image.shape[0], image.shape[1])
@@ -3812,7 +4039,9 @@ def run_contour_stage_v2(
     edges = cv2.Canny(gray, 50, 150)
 
     # Contour assembly
-    feature_contours_raw = extract_feature_contours(edges, merged_mask, mpp)
+    feature_contours_raw = extract_feature_contours(
+        edges, merged_mask, mpp, body_region=body_region
+    )
     if not feature_contours_raw:
         return ContourStageResult(diagnostics={"error": "no_contours_found"})
 
@@ -3846,23 +4075,37 @@ def run_contour_stage_v2(
         for score in scores_post
     }
 
-    # Elect body contour with ownership gate
-    elected_idx = elect_body_contour_v2(
-        feature_contours_post,
-        body_region_hint=body_region,
-        min_overlap=0.50,
-        max_width_factor=1.30,
-        ownership_scores=post_ownership_scores,
-        ownership_threshold=0.60,
+    # Elect body contour — Diff 3: prefer expected-outline prior when available
+    used_expected_outline_prior = False
+    expected_outline = (
+        body_model.expected_outline_px
+        if body_model is not None
+        else None
     )
+
+    if expected_outline is not None:
+        elected_idx = elect_body_contour_against_expected_outline(
+            feature_contours_post,
+            expected_outline,
+            ownership_scores=post_ownership_scores,
+            ownership_threshold=0.60,
+        )
+        used_expected_outline_prior = True
+    else:
+        elected_idx = elect_body_contour_v2(
+            feature_contours_post,
+            body_region_hint=body_region,
+            min_overlap=0.50,
+            max_width_factor=1.30,
+            ownership_scores=post_ownership_scores,
+            ownership_threshold=0.60,
+        )
 
     if elected_idx >= 0:
         body_contour_final = feature_contours_post[elected_idx]
-        elected_source = "post_merge_guarded"
+        elected_source = "post_merge_guarded_prior" if used_expected_outline_prior else "post_merge_guarded"
     else:
         # Ownership gate failed every plausible candidate.
-        # Preserve a fallback contour for visualization/debugging, but surface
-        # the failure as a hard export block and route the coach back to body isolation.
         body_contour_final = max(feature_contours_post, key=lambda c: c.area_px) if feature_contours_post else None
         elected_source = "ownership_gate_failed_fallback"
 
@@ -3883,6 +4126,7 @@ def run_contour_stage_v2(
             "family": family.value if hasattr(family, "value") else str(family),
             "body_ownership_gate_failed": elected_idx < 0,
             "ownership_threshold": 0.60,
+            "used_expected_outline_prior": used_expected_outline_prior,
         },
     )
 
