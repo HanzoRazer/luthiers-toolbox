@@ -9,4 +9,11 @@ ACOUSTICS_ROUTERS = [
         tags=["acoustics-plate"],
         category="acoustics",
     ),
+    RouterSpec(
+        module="app.routers.radius_dish_router",
+        prefix="/api/acoustics",
+        router_attr="router",
+        tags=["Radius Dish"],
+        category="acoustics",
+    ),
 ]
