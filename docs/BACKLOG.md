@@ -199,26 +199,6 @@ where θ_target comes from action at the 12th fret via:
 
 ---
 
-## ACOUSTIC-002 — Saddle force decomposition
-
-**Status:** TODO
-**Priority:** Medium
-**Effort:** ~3 hours
-**File to create:** `services/api/app/calculators/saddle_force_calc.py`
-
-### What's Needed
-
-Calculator that decomposes saddle break angle into:
-- Vertical downbearing force component (bridge plate load)
-- Horizontal torque component (bridge rotation tendency)
-
-Inputs: break_angle_deg, total_string_tension_N, saddle_height_mm, bridge_pin_to_saddle_mm
-Outputs: vertical_force_N, horizontal_force_N, torque_Nm, bridge_plate_stress_estimate_MPa
-
-Formula: `F_vertical = T × sin(θ_break)`, `F_horizontal = T × cos(θ_break)`
-
----
-
 ## ACOUSTIC-003 — Top deflection calculator
 
 **Status:** TODO
