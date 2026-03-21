@@ -392,6 +392,8 @@ rmos_api_contracts_2\ .py
 # Docx Files (Root Level)
 # ------------------------------------------
 *.docx
+# Tracked planning doc (exception to *.docx above)
+!docs/production_shop_overhaul_plan.docx
 
 # ------------------------------------------
 # Patch Files
