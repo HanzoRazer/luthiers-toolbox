@@ -1,41 +1,43 @@
 <script setup lang="ts">
 /**
- * DefectDetectionView - AI-Powered Defect Detection
- * Upload photos to detect cracks, voids, grain issues, and other defects
+ * DefectDetectionView - AI-Powered Defect Detection (E-3)
+ * Upload photos to observe grain, runout, and surface anomalies
  *
  * Connected to API endpoints:
  *   POST /api/ai/defects/analyze
- *   GET  /api/ai/defects/history
+ *
+ * Session E-3: Visual observation endpoint, no grading
  */
 import { ref } from 'vue'
 
 const selectedFile = ref<File | null>(null)
 const previewUrl = ref<string>('')
 const isAnalyzing = ref(false)
+const woodSpecies = ref<string>('')
 
-interface Defect {
-  id: number
-  type: string
-  severity: 'low' | 'medium' | 'high'
-  location: string
-  description: string
+interface AnalysisResult {
+  observations: string
+  grain_spacing_estimate: string
+  runout_visible: boolean
+  anomalies_detected: boolean
+  confidence: string
 }
 
-const detectedDefects = ref<Defect[]>([])
-const overallScore = ref<number | null>(null)
+const analysisResult = ref<AnalysisResult | null>(null)
+const errorMessage = ref<string>('')
 
 const defectTypes = [
-  { name: 'Cracks', description: 'Surface or structural cracks' },
-  { name: 'Voids', description: 'Holes or missing material' },
-  { name: 'Grain Issues', description: 'Runout, knots, irregularities' },
-  { name: 'Finish Defects', description: 'Orange peel, fish-eye, runs' },
-  { name: 'Binding Gaps', description: 'Separation at binding joints' },
+  { name: 'Grain Spacing', description: 'Lines per inch/mm estimation' },
+  { name: 'Runout', description: 'Grain angle deviation' },
+  { name: 'Checking', description: 'Surface cracks or splits' },
+  { name: 'Discoloration', description: 'Staining or mineral streaks' },
+  { name: 'Knots', description: 'Branch inclusion areas' },
 ]
 
 const recentScans = ref([
-  { id: 1, filename: 'top_plate_front.jpg', defects: 0, date: '2026-03-06' },
-  { id: 2, filename: 'binding_corner_01.jpg', defects: 2, date: '2026-03-05' },
-  { id: 3, filename: 'neck_heel_joint.jpg', defects: 1, date: '2026-03-04' },
+  { id: 1, filename: 'top_plate_front.jpg', anomalies: false, date: '2026-03-21' },
+  { id: 2, filename: 'binding_corner_01.jpg', anomalies: true, date: '2026-03-20' },
+  { id: 3, filename: 'neck_heel_joint.jpg', anomalies: false, date: '2026-03-19' },
 ])
 
 function handleFileSelect(event: Event) {
@@ -43,8 +45,8 @@ function handleFileSelect(event: Event) {
   if (input.files?.length) {
     selectedFile.value = input.files[0]
     previewUrl.value = URL.createObjectURL(input.files[0])
-    detectedDefects.value = []
-    overallScore.value = null
+    analysisResult.value = null
+    errorMessage.value = ''
   }
 }
 
@@ -52,22 +54,50 @@ async function analyzeImage() {
   if (!selectedFile.value) return
 
   isAnalyzing.value = true
-  await new Promise(resolve => setTimeout(resolve, 2500))
+  errorMessage.value = ''
+  analysisResult.value = null
 
-  // Simulated results
-  detectedDefects.value = [
-    { id: 1, type: 'Minor Grain Runout', severity: 'low', location: 'Upper bout, left side', description: 'Slight grain deviation, acceptable for structural integrity' },
-  ]
-  overallScore.value = 92
-  isAnalyzing.value = false
+  try {
+    // Convert file to base64
+    const reader = new FileReader()
+    const base64Promise = new Promise<string>((resolve, reject) => {
+      reader.onload = () => resolve(reader.result as string)
+      reader.onerror = reject
+    })
+    reader.readAsDataURL(selectedFile.value)
+    const dataUrl = await base64Promise
+
+    // Call API
+    const res = await fetch('/api/ai/defects/analyze', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        image_base64: dataUrl,
+        wood_species: woodSpecies.value || null,
+      }),
+    })
+
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({ detail: 'Service unavailable' }))
+      throw new Error(err.detail || `HTTP ${res.status}`)
+    }
+
+    const data = await res.json()
+    analysisResult.value = data
+
+  } catch (e: any) {
+    errorMessage.value = e.message || 'Analysis failed'
+  } finally {
+    isAnalyzing.value = false
+  }
 }
 </script>
 
 <template>
   <div class="defect-detection-view">
     <div class="header">
-      <h1>AI Defect Detection</h1>
-      <p class="subtitle">Identify potential issues before they become problems</p>
+      <h1>AI Surface Observer</h1>
+      <p class="subtitle">Visual observations of wood grain and surface characteristics</p>
     </div>
 
     <div class="content">
@@ -87,16 +117,26 @@ async function analyzeImage() {
           </div>
         </div>
 
+        <div class="species-input">
+          <label for="wood-species">Wood Species (optional)</label>
+          <input
+            id="wood-species"
+            type="text"
+            v-model="woodSpecies"
+            placeholder="e.g., sitka spruce, mahogany"
+          />
+        </div>
+
         <button
           class="btn btn-primary btn-large"
           @click="analyzeImage"
           :disabled="!selectedFile || isAnalyzing"
         >
-          {{ isAnalyzing ? 'Analyzing...' : '🔍 Scan for Defects' }}
+          {{ isAnalyzing ? 'Analyzing...' : '🔍 Observe Surface' }}
         </button>
 
         <div class="defect-types">
-          <h4>Detectable Issues</h4>
+          <h4>Observable Characteristics</h4>
           <div class="type-list">
             <div v-for="type in defectTypes" :key="type.name" class="type-item">
               <span class="type-name">{{ type.name }}</span>
@@ -107,42 +147,45 @@ async function analyzeImage() {
       </div>
 
       <div class="panel results-panel">
-        <h3>Analysis Results</h3>
+        <h3>Observations</h3>
 
         <div v-if="isAnalyzing" class="analyzing">
           <div class="spinner"></div>
-          <p>AI is scanning for defects...</p>
+          <p>AI is observing surface characteristics...</p>
           <div class="scan-progress">
             <div class="scan-line"></div>
           </div>
         </div>
 
-        <div v-else-if="overallScore !== null" class="results">
-          <div class="score-display">
-            <div class="score-circle" :class="{ good: overallScore >= 80 }">
-              <span class="score-value">{{ overallScore }}</span>
-              <span class="score-label">Quality Score</span>
+        <div v-else-if="errorMessage" class="error-display">
+          <span class="icon">⚠️</span>
+          <p>{{ errorMessage }}</p>
+          <button class="btn btn-secondary" @click="analyzeImage">Retry</button>
+        </div>
+
+        <div v-else-if="analysisResult" class="results">
+          <div class="observation-summary">
+            <div class="summary-badges">
+              <span class="badge" :class="{ active: analysisResult.runout_visible }">
+                {{ analysisResult.runout_visible ? '⚠️ Runout Visible' : '✓ No Runout' }}
+              </span>
+              <span class="badge" :class="{ active: analysisResult.anomalies_detected }">
+                {{ analysisResult.anomalies_detected ? '⚠️ Anomalies Found' : '✓ Surface Clear' }}
+              </span>
+              <span class="confidence-badge">
+                Confidence: {{ analysisResult.confidence }}
+              </span>
             </div>
           </div>
 
-          <div class="defects-section">
-            <h4>{{ detectedDefects.length }} Issue{{ detectedDefects.length !== 1 ? 's' : '' }} Found</h4>
+          <div class="observation-section">
+            <h4>Grain Spacing</h4>
+            <p class="grain-estimate">{{ analysisResult.grain_spacing_estimate }}</p>
+          </div>
 
-            <div v-if="detectedDefects.length === 0" class="no-defects">
-              <span class="icon">✅</span>
-              <p>No significant defects detected</p>
-            </div>
-
-            <div v-else class="defects-list">
-              <div v-for="defect in detectedDefects" :key="defect.id" class="defect-item">
-                <div class="defect-header">
-                  <span class="defect-type">{{ defect.type }}</span>
-                  <span :class="['severity-badge', defect.severity]">{{ defect.severity }}</span>
-                </div>
-                <p class="defect-location">📍 {{ defect.location }}</p>
-                <p class="defect-description">{{ defect.description }}</p>
-              </div>
-            </div>
+          <div class="observation-section">
+            <h4>Detailed Observations</h4>
+            <p class="observations-text">{{ analysisResult.observations }}</p>
           </div>
 
           <div class="result-actions">
@@ -153,7 +196,7 @@ async function analyzeImage() {
 
         <div v-else class="no-result">
           <span class="icon">📸</span>
-          <p>Upload an image to begin analysis</p>
+          <p>Upload an image to begin observation</p>
         </div>
       </div>
 
@@ -165,16 +208,16 @@ async function analyzeImage() {
               <span class="filename">{{ scan.filename }}</span>
               <span class="date">{{ scan.date }}</span>
             </div>
-            <span :class="['defect-count', { 'has-defects': scan.defects > 0 }]">
-              {{ scan.defects === 0 ? '✓ Clear' : `${scan.defects} issue${scan.defects > 1 ? 's' : ''}` }}
+            <span :class="['status-badge', { 'has-anomalies': scan.anomalies }]">
+              {{ scan.anomalies ? '⚠️ Anomalies' : '✓ Clear' }}
             </span>
           </div>
         </div>
       </div>
     </div>
 
-    <div class="coming-soon-notice">
-      <p>Full defect detection with repair recommendations and severity mapping coming soon.</p>
+    <div class="notice">
+      <p>This tool provides visual observations only — it does not assign quality grades. Use observations to inform your own assessment.</p>
     </div>
   </div>
 </template>
@@ -197,6 +240,10 @@ async function analyzeImage() {
 .upload-placeholder .upload-icon { font-size: 3rem; display: block; margin-bottom: 0.5rem; }
 .upload-placeholder .hint { font-size: 0.75rem; color: #666; }
 
+.species-input { margin-bottom: 1rem; }
+.species-input label { display: block; font-size: 0.75rem; color: #888; margin-bottom: 0.25rem; }
+.species-input input { width: 100%; padding: 0.5rem; background: #262626; border: 1px solid #333; border-radius: 0.375rem; color: #e5e5e5; }
+
 .btn { padding: 0.5rem 1rem; border-radius: 0.375rem; font-weight: 600; cursor: pointer; border: none; }
 .btn-primary { background: #2563eb; color: #fff; }
 .btn-primary:disabled { background: #333; color: #666; }
@@ -216,29 +263,23 @@ async function analyzeImage() {
 .scan-line { width: 30%; height: 100%; background: #2563eb; animation: scan 1.5s ease-in-out infinite; }
 @keyframes scan { 0% { transform: translateX(-100%); } 100% { transform: translateX(400%); } }
 
+.error-display { text-align: center; padding: 2rem; background: #ef444420; border-radius: 0.5rem; }
+.error-display .icon { font-size: 2rem; display: block; margin-bottom: 0.5rem; }
+.error-display p { color: #ef4444; margin: 0 0 1rem; }
+
 .no-result { text-align: center; padding: 3rem; color: #666; }
 .no-result .icon { font-size: 3rem; display: block; margin-bottom: 1rem; }
 
-.score-display { text-align: center; margin-bottom: 2rem; }
-.score-circle { width: 120px; height: 120px; border-radius: 50%; background: #262626; border: 4px solid #333; display: flex; flex-direction: column; align-items: center; justify-content: center; margin: 0 auto; }
-.score-circle.good { border-color: #22c55e; }
-.score-value { font-size: 2.5rem; font-weight: 700; color: #22c55e; }
-.score-label { font-size: 0.625rem; color: #888; text-transform: uppercase; }
+.observation-summary { margin-bottom: 1.5rem; }
+.summary-badges { display: flex; flex-wrap: wrap; gap: 0.5rem; }
+.badge { padding: 0.5rem 0.75rem; background: #22c55e20; color: #22c55e; border-radius: 0.375rem; font-size: 0.875rem; }
+.badge.active { background: #f59e0b20; color: #f59e0b; }
+.confidence-badge { padding: 0.5rem 0.75rem; background: #262626; color: #888; border-radius: 0.375rem; font-size: 0.75rem; text-transform: capitalize; }
 
-.no-defects { text-align: center; padding: 2rem; background: #22c55e10; border-radius: 0.5rem; }
-.no-defects .icon { font-size: 2rem; display: block; margin-bottom: 0.5rem; }
-.no-defects p { color: #22c55e; margin: 0; }
-
-.defects-list { display: flex; flex-direction: column; gap: 0.75rem; }
-.defect-item { padding: 1rem; background: #262626; border-radius: 0.5rem; border-left: 3px solid #f59e0b; }
-.defect-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem; }
-.defect-type { font-weight: 600; }
-.severity-badge { padding: 0.125rem 0.5rem; border-radius: 0.25rem; font-size: 0.625rem; text-transform: uppercase; font-weight: 600; }
-.severity-badge.low { background: #22c55e20; color: #22c55e; }
-.severity-badge.medium { background: #f59e0b20; color: #f59e0b; }
-.severity-badge.high { background: #ef444420; color: #ef4444; }
-.defect-location { font-size: 0.75rem; color: #888; margin: 0.25rem 0; }
-.defect-description { font-size: 0.875rem; margin: 0; }
+.observation-section { margin-bottom: 1.5rem; padding: 1rem; background: #262626; border-radius: 0.5rem; }
+.observation-section h4 { margin: 0 0 0.5rem; color: #60a5fa; }
+.grain-estimate { font-size: 1.25rem; font-weight: 600; margin: 0; color: #e5e5e5; }
+.observations-text { margin: 0; line-height: 1.6; white-space: pre-wrap; }
 
 .result-actions { display: flex; gap: 0.75rem; margin-top: 1.5rem; }
 .result-actions .btn { flex: 1; }
@@ -248,10 +289,10 @@ async function analyzeImage() {
 .scan-info { display: flex; flex-direction: column; }
 .filename { font-size: 0.875rem; font-weight: 500; }
 .date { font-size: 0.75rem; color: #888; }
-.defect-count { font-size: 0.75rem; padding: 0.25rem 0.5rem; background: #22c55e20; color: #22c55e; border-radius: 0.25rem; }
-.defect-count.has-defects { background: #f59e0b20; color: #f59e0b; }
+.status-badge { font-size: 0.75rem; padding: 0.25rem 0.5rem; background: #22c55e20; color: #22c55e; border-radius: 0.25rem; }
+.status-badge.has-anomalies { background: #f59e0b20; color: #f59e0b; }
 
-.coming-soon-notice { max-width: 1400px; margin: 2rem auto 0; padding: 1rem; background: #1e3a5f; border-radius: 0.5rem; text-align: center; color: #60a5fa; }
+.notice { max-width: 1400px; margin: 2rem auto 0; padding: 1rem; background: #262626; border-radius: 0.5rem; text-align: center; color: #888; border-left: 3px solid #60a5fa; }
 
 @media (max-width: 1200px) { .content { grid-template-columns: 1fr; } }
 </style>
