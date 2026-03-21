@@ -1,14 +1,11 @@
 # services/api/app/calculators/bracing_calc.py
 
 """
-Bracing calculator façade for the The Production Shop.
+Bracing calculator for The Production Shop.
 
-This module centralizes access to bracing physics that currently
-lives in `pipelines.bracing.bracing_calc`.
-
-Legacy math is preserved in that module; this layer provides a
-stable, RMOS/Art Studio-friendly interface so we can evolve the
-call signatures over time without losing the underlying formulas.
+Cross-section area, second moment (I), EI stiffness, and camber use
+`._bracing_physics` (Session A — real geometry). Mass estimation uses
+the same volume model as the pipeline CLI.
 """
 
 from __future__ import annotations
@@ -17,14 +14,7 @@ from typing import Any, Dict, Optional
 
 from pydantic import BaseModel, Field
 
-# Import the migrated bracing functions
-try:
-    from ..pipelines.bracing import bracing_calc as legacy
-except ImportError as exc:
-    raise ImportError(
-        "Bracing calculator module `pipelines.bracing.bracing_calc` "
-        "was not found. Ensure the migration placed it correctly."
-    ) from exc
+from . import _bracing_physics as physics
 
 
 class BracingCalcInput(BaseModel):
@@ -101,8 +91,8 @@ def calculate_brace_section(data: BracingCalcInput) -> BraceSectionResult:
         BraceSectionResult with area and profile info
     """
     profile = data.to_profile_dict()
-    area = legacy.brace_section_area_mm2(profile)
-    
+    area = physics.brace_section_area_mm2(profile)
+
     # Generate description
     descriptions = {
         "rectangular": "Full rectangular cross-section",
@@ -135,9 +125,9 @@ def estimate_mass_grams(data: BracingCalcInput) -> float:
         Estimated mass in grams
     """
     profile = data.to_profile_dict()
-    area = legacy.brace_section_area_mm2(profile)
-    
-    mass = legacy.estimate_mass_grams(
+    area = physics.brace_section_area_mm2(profile)
+
+    mass = physics.estimate_mass_grams(
         data.length_mm,
         area,
         data.density_kg_m3

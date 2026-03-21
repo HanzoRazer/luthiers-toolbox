@@ -8,9 +8,6 @@ from fastapi.testclient import TestClient
 from app.calculators.neck_block_calc import (
     compute_neck_block,
     compute_tail_block,
-    compute_both_blocks,
-    list_body_styles,
-    get_default_side_depths,
     BlockSpec,
 )
 from app.main import app
