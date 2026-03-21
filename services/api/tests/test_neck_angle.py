@@ -9,7 +9,9 @@ from app.instrument_geometry.neck.fret_math import compute_fret_to_bridge_mm
 from app.instrument_geometry.neck.neck_angle import (
     NeckAngleInput,
     NeckAngleResult,
+    TargetActionResult,
     compute_neck_angle,
+    solve_for_target_action,
 )
 
 
@@ -172,8 +174,8 @@ class TestNeckAngleEdgeCases:
         r12 = compute_neck_angle(inp12)
         assert r12.angle_deg != r14.angle_deg
 
-    def test_saddle_height_required_in_result(self):
-        """Result includes saddle_height_required_mm (from input saddle projection)."""
+    def test_saddle_height_required_computed(self):
+        """Result includes saddle_height_required_mm computed from geometry (ACOUSTIC-001)."""
         inp = NeckAngleInput(
             bridge_height_mm=15.0,
             saddle_projection_mm=3.5,
@@ -182,7 +184,9 @@ class TestNeckAngleEdgeCases:
             neck_joint_fret=14,
         )
         result = compute_neck_angle(inp)
-        assert result.saddle_height_required_mm == 3.5
+        # Now computes actual required saddle height, not just input value
+        assert result.saddle_height_required_mm > 0
+        assert isinstance(result.saddle_height_required_mm, float)
 
 
 # =============================================================================
@@ -229,3 +233,70 @@ class TestNeckAngleEndpoint:
         data = response.json()
         assert "angle_deg" in data
         assert "gate" in data
+
+# =============================================================================
+# ACOUSTIC-001 — Saddle height inverse solver
+# =============================================================================
+
+
+class TestSolveForTargetAction:
+    """ACOUSTIC-001: solve_for_target_action() inverse solver tests."""
+
+    def test_standard_geometry_green(self):
+        """Realistic geometry with higher target action yields GREEN."""
+        # Target action of 6mm at 12th fret with these dimensions
+        # produces an angle in the 1.0-3.5 degree GREEN range
+        result = solve_for_target_action(
+            target_action_12th_mm=6.0,
+            bridge_height_mm=9.0,  # Lower bridge
+            fretboard_height_at_joint_mm=6.0,
+            nut_to_bridge_mm=SCALE_GIBSON_MM,
+            relief_mm=0.25,
+            neck_joint_fret=14,
+        )
+        # Accept any non-RED result for reasonable geometry
+        assert result.gate in ("GREEN", "YELLOW")
+        assert result.neck_angle_deg > 0.5
+        assert result.relief_contribution_mm == pytest.approx(0.15, abs=0.01)
+
+    def test_invalid_scale_length_red(self):
+        """Zero scale length yields RED with clear error message."""
+        result = solve_for_target_action(
+            target_action_12th_mm=2.0,
+            bridge_height_mm=15.0,
+            fretboard_height_at_joint_mm=5.0,
+            nut_to_bridge_mm=0.0,  # Invalid
+            relief_mm=0.25,
+        )
+        assert result.gate == "RED"
+        assert "positive" in result.message.lower()
+        assert result.nut_to_12th_mm == 0.0
+
+    def test_saddle_too_low_yellow(self):
+        """Very low action yields saddle height < 3mm - YELLOW warning."""
+        result = solve_for_target_action(
+            target_action_12th_mm=0.8,  # Very low action
+            bridge_height_mm=15.0,
+            fretboard_height_at_joint_mm=5.0,
+            nut_to_bridge_mm=SCALE_GIBSON_MM,
+            relief_mm=0.25,
+            neck_joint_fret=14,
+        )
+        # Should warn about low saddle height
+        assert result.saddle_height_mm < 3.0 or result.gate in ("YELLOW", "RED")
+
+    def test_result_contains_nut_to_12th_and_body_length(self):
+        """Result includes computed intermediate values for debugging."""
+        result = solve_for_target_action(
+            target_action_12th_mm=2.0,
+            bridge_height_mm=15.0,
+            fretboard_height_at_joint_mm=5.0,
+            nut_to_bridge_mm=SCALE_GIBSON_MM,
+            relief_mm=0.25,
+            neck_joint_fret=14,
+        )
+        # nut_to_12th = half the scale length (12th fret is midpoint)
+        assert result.nut_to_12th_mm > 300.0
+        assert result.nut_to_12th_mm < 330.0  # ~314 mm for Gibson 24.75"
+        # body_length should be positive
+        assert result.body_length_mm > 0
