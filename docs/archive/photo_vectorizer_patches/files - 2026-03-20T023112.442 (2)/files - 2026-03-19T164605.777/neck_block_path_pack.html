@@ -1,0 +1,700 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Neck &amp; Tail Block Sizing — The Production Shop</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Source+Code+Pro:ital,wght@0,300;0,400;0,600;1,300&family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&display=swap');
+
+  :root {
+    --bg:       #0d0f12;
+    --surf:     #13161b;
+    --surf2:    #1a1e25;
+    --border:   #262c38;
+    --border2:  #1e2330;
+    --copper:   #c8773a;
+    --copper2:  #a05c28;
+    --steel:    #6a9ab8;
+    --green:    #5aaa72;
+    --red:      #b85050;
+    --amber:    #d4a030;
+    --text:     #cdd4e0;
+    --text2:    #8a9aaa;
+    --white:    #eef2f8;
+    --dim:      #5a6478;
+    --dim2:     #3a4050;
+    --mono:     'Source Code Pro', monospace;
+    --serif:    'Libre Baskerville', Georgia, serif;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--serif);
+    font-size: 13px;
+    line-height: 1.75;
+  }
+
+  .shell { display: flex; min-height: 100vh; }
+
+  /* ── Sidebar ── */
+  nav {
+    width: 210px; min-width: 210px;
+    background: var(--surf);
+    border-right: 1px solid var(--border);
+    position: sticky; top: 0; height: 100vh;
+    overflow-y: auto; padding: 22px 0 40px;
+  }
+  .nav-brand {
+    padding: 0 16px 18px;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 14px;
+  }
+  .nav-eyebrow {
+    font-family: var(--mono);
+    font-size: 7px; letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--copper); margin-bottom: 5px;
+  }
+  .nav-title { font-size: 11px; font-weight: 700; color: var(--white); line-height: 1.4; }
+  .nav-grp { padding: 0 16px; margin-bottom: 2px; }
+  .nav-grp-label {
+    font-family: var(--mono); font-size: 7px;
+    letter-spacing: 1.5px; text-transform: uppercase;
+    color: var(--dim2); margin: 10px 0 5px;
+  }
+  nav a {
+    display: block; font-family: var(--mono); font-size: 9px;
+    color: var(--dim); text-decoration: none;
+    padding: 3px 0 3px 8px;
+    border-left: 2px solid transparent;
+    letter-spacing: 0.2px; transition: all .1s;
+  }
+  nav a:hover { color: var(--copper); border-left-color: var(--copper2); }
+  nav a.active { color: var(--copper); border-left-color: var(--copper); }
+
+  /* ── Main ── */
+  main { flex: 1; max-width: 880px; padding: 40px 52px 80px; }
+
+  /* ── Header ── */
+  .doc-header {
+    border-bottom: 2px solid var(--border);
+    padding-bottom: 28px; margin-bottom: 40px;
+  }
+  .doc-eyebrow {
+    font-family: var(--mono); font-size: 8px;
+    letter-spacing: 2px; text-transform: uppercase;
+    color: var(--copper); margin-bottom: 10px;
+  }
+  .doc-title {
+    font-size: 30px; font-weight: 700; color: var(--white);
+    line-height: 1.15; margin-bottom: 12px; letter-spacing: -0.5px;
+  }
+  .doc-subtitle { font-size: 13px; color: var(--text2); font-style: italic; margin-bottom: 14px; }
+  .doc-meta { display: flex; gap: 22px; flex-wrap: wrap; margin-top: 14px; }
+  .doc-meta span { font-family: var(--mono); font-size: 9px; color: var(--dim); }
+  .doc-meta span strong { color: var(--text2); }
+
+  /* ── Section headings ── */
+  h2 {
+    font-size: 18px; font-weight: 700; color: var(--white);
+    margin: 48px 0 14px; padding-bottom: 8px;
+    border-bottom: 1px solid var(--border);
+    letter-spacing: -0.3px; scroll-margin-top: 24px;
+  }
+  h3 {
+    font-family: var(--mono); font-size: 10px; font-weight: 600;
+    color: var(--copper); letter-spacing: 1px;
+    text-transform: uppercase; margin: 26px 0 10px;
+    scroll-margin-top: 24px;
+  }
+  h4 { font-size: 12px; font-weight: 700; color: var(--text2); margin: 16px 0 7px; }
+
+  p { margin-bottom: 11px; color: var(--text); font-size: 13px; }
+  em { font-style: italic; color: var(--text2); }
+  strong { font-weight: 700; color: var(--white); }
+
+  /* ── Formula block ── */
+  .formula {
+    background: var(--surf2);
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--copper);
+    border-radius: 3px;
+    padding: 16px 20px; margin: 14px 0;
+    font-family: var(--mono); font-size: 12px;
+    color: var(--white); line-height: 2.1;
+    white-space: pre-wrap;
+  }
+  .formula .sym  { color: var(--copper); font-weight: 600; }
+  .formula .val  { color: var(--green); }
+  .formula .com  { color: var(--dim); font-style: italic; }
+  .formula .warn { color: var(--amber); }
+  .formula .note {
+    font-size: 10px; color: var(--dim);
+    margin-top: 10px; padding-top: 10px;
+    border-top: 1px solid var(--border2);
+    font-style: italic; line-height: 1.6;
+  }
+
+  /* ── Diagram ── */
+  .diagram {
+    background: var(--surf); border: 1px solid var(--border);
+    border-radius: 3px; padding: 16px 18px; margin: 14px 0;
+    font-family: var(--mono); font-size: 10px; color: var(--text2);
+    line-height: 1.65; white-space: pre; overflow-x: auto;
+  }
+  .diagram .hl  { color: var(--copper); }
+  .diagram .dim { color: var(--dim2); }
+  .diagram .val { color: var(--green); }
+  .diagram .ann { color: var(--steel); }
+
+  /* ── Table ── */
+  table { width: 100%; border-collapse: collapse; margin: 14px 0; font-size: 11px; }
+  th {
+    background: var(--surf2); padding: 7px 12px;
+    text-align: left; font-family: var(--mono);
+    font-size: 8px; font-weight: 600; letter-spacing: 0.9px;
+    text-transform: uppercase; color: var(--dim);
+    border-bottom: 1px solid var(--border);
+  }
+  td {
+    padding: 6px 12px; border-bottom: 1px solid var(--border2);
+    font-family: var(--mono); font-size: 10px; color: var(--text2);
+    vertical-align: top;
+  }
+  td:first-child { color: var(--text); }
+  tr:last-child td { border-bottom: none; }
+  tr:hover td { background: var(--surf2); }
+  .td-good { color: var(--green) !important; }
+  .td-warn { color: var(--amber) !important; }
+
+  /* ── Callouts ── */
+  .callout {
+    border: 1px solid var(--border); border-left: 3px solid var(--green);
+    border-radius: 3px; padding: 12px 16px; margin: 14px 0;
+    font-size: 12px; color: var(--text2);
+  }
+  .callout.warn  { border-left-color: var(--amber); }
+  .callout.steel { border-left-color: var(--steel); }
+  .callout .lbl {
+    font-family: var(--mono); font-size: 8px;
+    letter-spacing: 1.5px; text-transform: uppercase;
+    color: var(--green); margin-bottom: 5px; display: block;
+  }
+  .callout.warn .lbl  { color: var(--amber); }
+  .callout.steel .lbl { color: var(--steel); }
+
+  /* ── Variable list ── */
+  .vars {
+    background: var(--surf2); border: 1px solid var(--border);
+    border-radius: 3px; padding: 14px 18px; margin: 12px 0;
+    font-family: var(--mono); font-size: 10px;
+  }
+  .vrow {
+    display: grid; grid-template-columns: 110px 1fr;
+    gap: 10px; padding: 3px 0;
+    border-bottom: 1px solid var(--border2);
+    align-items: baseline;
+  }
+  .vrow:last-child { border-bottom: none; }
+  .vsym { color: var(--copper); font-weight: 600; }
+  .vdef { color: var(--text2); }
+  .vdef .unit { color: var(--dim); }
+
+  code {
+    font-family: var(--mono); font-size: 10px;
+    background: var(--surf2); border: 1px solid var(--border);
+    padding: 1px 5px; border-radius: 2px; color: var(--green);
+  }
+
+  .ref-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 12px 0; }
+  .ref-card {
+    background: var(--surf2); border: 1px solid var(--border);
+    border-radius: 3px; padding: 12px 14px;
+  }
+  .ref-id {
+    font-family: var(--mono); font-size: 8px;
+    letter-spacing: 1.5px; color: var(--steel);
+    text-transform: uppercase; margin-bottom: 4px;
+  }
+  .ref-title { color: var(--white); font-weight: 700; font-size: 12px; margin-bottom: 3px; }
+  .ref-note  { color: var(--dim); font-size: 10px; font-family: var(--mono); }
+
+  hr.rule { border: none; border-top: 1px solid var(--border); margin: 32px 0; }
+  .sec-n { font-family: var(--mono); font-size: 10px; color: var(--dim2); margin-right: 8px; }
+</style>
+</head>
+<body>
+<div class="shell">
+
+<!-- Sidebar -->
+<nav>
+  <div class="nav-brand">
+    <div class="nav-eyebrow">Production Shop</div>
+    <div class="nav-title">Neck &amp; Tail Block<br>Sizing</div>
+  </div>
+  <div class="nav-grp">
+    <div class="nav-grp-label">Overview</div>
+    <a href="#scope">Scope &amp; Physical Model</a>
+    <a href="#notation">Notation</a>
+    <a href="#fbd">Free Body Diagram</a>
+  </div>
+  <div class="nav-grp">
+    <div class="nav-grp-label">Neck Block</div>
+    <a href="#tension">§1 String Tension</a>
+    <a href="#shear">§2 Shear Force</a>
+    <a href="#moment">§3 Bending Moment</a>
+    <a href="#glue">§4 Glue Area</a>
+    <a href="#joints">§5 Joint Types</a>
+    <a href="#dimensions">§6 Block Dimensions</a>
+  </div>
+  <div class="nav-grp">
+    <div class="nav-grp-label">Tail Block</div>
+    <a href="#tail">§7 Tail Block</a>
+    <a href="#endpin">§8 End Pin</a>
+  </div>
+  <div class="nav-grp">
+    <div class="nav-grp-label">Reference</div>
+    <a href="#presets">Preset Values</a>
+    <a href="#limits">Limits &amp; Checks</a>
+    <a href="#sources">Sources</a>
+  </div>
+</nav>
+
+<!-- Main -->
+<main>
+<div class="doc-header">
+  <div class="doc-eyebrow">Technical Defense — GEOMETRY-005</div>
+  <div class="doc-title">Neck &amp; Tail Block<br>Sizing</div>
+  <div class="doc-subtitle">Structural sizing from string tension through joint load to glue area and block dimensions</div>
+  <div class="doc-meta">
+    <span><strong>Author:</strong> Ross L. Echols, Jr., P.E. #78195</span>
+    <span><strong>Module:</strong> neck_block_calc.py</span>
+    <span><strong>Lines:</strong> 741</span>
+    <span><strong>Status:</strong> Production</span>
+  </div>
+</div>
+
+<!-- SCOPE -->
+<h2 id="scope"><span class="sec-n">00</span>Scope &amp; Physical Model</h2>
+
+<p>The neck block and tail block are the internal structural anchors at the neck and tail ends of the guitar body. Their dimensions determine glue surface area, which determines joint strength under string load. This calculator sizes both blocks from first principles rather than convention alone.</p>
+
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:16px 0;">
+  <div class="callout">
+    <span class="lbl">Neck Block — Structurally Critical</span>
+    Carries the full string tension as shear, plus a bending moment from the string height above the joint. Joint type (dovetail, bolt-on, tenon) determines the <em>effective</em> shear area — which is never the full block face.
+  </div>
+  <div class="callout warn">
+    <span class="lbl">Tail Block — Geometry Driven</span>
+    Carries essentially no string tension. String force is directed toward the nut — the tail block is in the opposite direction. Dimensions are set by body geometry with a minimum depth for the end pin hole.
+  </div>
+</div>
+
+<p>The fundamental result: actual block face areas (5,000–9,000 mm²) are 25–40× the structural minimum. The neck block does <em>not</em> fail by face-shear under any normal string load. What matters is the <strong>joint type</strong>, which reduces the effective shear area by 28–100% depending on geometry.</p>
+
+<hr class="rule">
+
+<!-- NOTATION -->
+<h2 id="notation"><span class="sec-n">01</span>Notation</h2>
+<div class="vars">
+  <div class="vrow"><span class="vsym">T</span><span class="vdef">Total string tension (all strings) <span class="unit">(N)</span></span></div>
+  <div class="vrow"><span class="vsym">V</span><span class="vdef">Shear force at neck joint ≈ T·cos(α) <span class="unit">(N)</span></span></div>
+  <div class="vrow"><span class="vsym">M</span><span class="vdef">Bending moment at neck joint = T·h_neck <span class="unit">(N·mm)</span></span></div>
+  <div class="vrow"><span class="vsym">F_c</span><span class="vdef">Compression/tension couple force = M / d_side <span class="unit">(N)</span></span></div>
+  <div class="vrow"><span class="vsym">h_neck</span><span class="vdef">String height above neck joint pivot ≈ 65 mm <span class="unit">(mm)</span></span></div>
+  <div class="vrow"><span class="vsym">d_side</span><span class="vdef">Side depth at neck end (moment arm for couple) <span class="unit">(mm)</span></span></div>
+  <div class="vrow"><span class="vsym">τ</span><span class="vdef">Wood shear strength parallel to grain <span class="unit">(MPa)</span></span></div>
+  <div class="vrow"><span class="vsym">η</span><span class="vdef">Glue joint efficiency factor = 0.85</span></div>
+  <div class="vrow"><span class="vsym">SF</span><span class="vdef">Safety factor = 4.0 (NDS primary structural joints)</span></div>
+  <div class="vrow"><span class="vsym">A_min</span><span class="vdef">Minimum glue area for shear = V·SF / (τ·η) <span class="unit">(mm²)</span></span></div>
+  <div class="vrow"><span class="vsym">f_jt</span><span class="vdef">Joint effective area fraction (joint-type dependent)</span></div>
+  <div class="vrow"><span class="vsym">α</span><span class="vdef">Neck set angle ≈ 1.5° <span class="unit">(degrees)</span></span></div>
+</div>
+
+<!-- FBD -->
+<h2 id="fbd"><span class="sec-n">02</span>Free Body Diagram</h2>
+<div class="diagram">Neck joint — viewed from treble side (simplified FBD):
+
+   NUT                                          SADDLE
+    │                                               │
+    │←────────────── scale length ─────────────────→│
+    │                                               │
+    ●══════════════════════════════════════════════●  ← string (all 6, resultant)
+                                                   │
+                                           T = <span class="val">419 N</span> (light gauge)
+                                           ↓ (approximately along neck axis)
+
+   Neck joint cross-section:
+
+   ┌──────────────────┐  ← fingerboard / top surface
+   │   NECK BLOCK     │  ← h_neck = <span class="val">65 mm</span> above joint
+   │                  │
+   │  joint face      │  ← V = shear force ≈ <span class="val">419 N</span>
+   └──────────────────┘
+   ↑                  ↑
+   tension             compression
+   (back side)        (fingerboard side)
+
+   F_couple = M / d_side = (419 × 65) / 95 = <span class="val">287 N</span>
+
+   d_side = <span class="ann">side depth at neck end (moment arm)</span>
+   → Deeper sides reduce couple force</div>
+
+<p>The couple force (287 N for Martin OM with light gauge) acts vertically through the block, creating tension at the back glue joint and compression at the top. This is within normal limits for all standard block dimensions and glue types.</p>
+
+<hr class="rule">
+
+<!-- §1 STRING TENSION -->
+<h2 id="tension"><span class="sec-n">§1</span>String Tension</h2>
+
+<p>String tension is the input to all downstream structural calculations. Values are from D'Addario published tension data at concert pitch (A=440 Hz, standard tuning).</p>
+
+<h3>1.1 Per-String and Total Tension</h3>
+
+<div class="formula"><span class="sym">T_total</span> = Σ T_i   <span class="com">// sum over all n strings</span>
+
+Light gauge (.012–.053):
+  T = [<span class="val">71.7, 49.0, 63.1, 72.6, 78.7, 84.4</span>] N  <span class="com">// E1→E6</span>
+  T_total = <span class="val">419.5 N</span> = <span class="val">42.8 kgf</span>
+
+Medium gauge (.013–.056):
+  T_total = <span class="val">468.7 N</span> = <span class="val">47.8 kgf</span>
+
+Nylon (normal tension):
+  T_total = <span class="val">389.0 N</span> = <span class="val">39.7 kgf</span>
+<span class="note">Source: D'Addario String Tension Charts (published per gauge set at standard pitch).
+These are static tensions at rest pitch — dynamic loading during playing
+is higher but brief; static tension governs glue creep and long-term joint integrity.</span></div>
+
+<hr class="rule">
+
+<!-- §2 SHEAR FORCE -->
+<h2 id="shear"><span class="sec-n">§2</span>Shear Force at Neck Joint</h2>
+
+<p>String tension acts approximately along the neck axis. At the neck joint face this becomes a shear force. The neck angle is small enough that cos(α) ≈ 1.</p>
+
+<div class="formula"><span class="sym">V</span> = T_total × cos(α)
+  = <span class="val">419.5</span> × cos(<span class="val">1.5°</span>)
+  = <span class="val">419.4 N</span>   <span class="com">// cos(1.5°) = 0.9997 — neck angle negligible</span>
+<span class="note">The neck angle contributes a small normal force component (T·sin(α) ≈ 11N)
+perpendicular to the joint face. This is a compression load on the joint,
+not a shear, and is always beneficial — it clamps the joint closed.</span></div>
+
+<hr class="rule">
+
+<!-- §3 BENDING MOMENT -->
+<h2 id="moment"><span class="sec-n">§3</span>Bending Moment and Couple Force</h2>
+
+<p>The strings are elevated above the neck joint pivot point by approximately 65 mm (neck heel thickness + fretboard). This eccentricity creates a bending moment that tends to rotate the neck forward. The moment is resisted by a compression/tension couple acting through the neck block.</p>
+
+<h3>3.1 Moment Derivation</h3>
+
+<div class="formula"><span class="sym">M</span> = T_total × h_neck
+  = <span class="val">419.5 N</span> × <span class="val">65 mm</span>
+  = <span class="val">27,268 N·mm</span>  =  <span class="val">27.3 N·m</span>
+
+Couple force (compression at fingerboard, tension at back):
+<span class="sym">F_couple</span> = M / d_side
+
+For Martin OM (d_side = 95mm):
+  F_couple = 27268 / 95 = <span class="val">287 N</span>  =  <span class="val">29 kgf</span>
+<span class="note">This couple force acts as a vertical load on the top plate (compression)
+and back plate (tension) through the block's glue surfaces on each side.
+The glue area on the side surface (height × depth) carries this load.</span></div>
+
+<h3>3.2 Side Depth Effect on Couple Force</h3>
+<table>
+  <tr><th>Side Depth</th><th>Couple Force</th><th>Instrument</th></tr>
+  <tr><td>89 mm</td><td>307 N (31 kgf)</td><td>Martin 000</td></tr>
+  <tr><td>95 mm</td><td>287 N (29 kgf)</td><td>Martin OM</td></tr>
+  <tr><td>102 mm</td><td>267 N (27 kgf)</td><td>Martin D-28</td></tr>
+  <tr><td>120 mm</td><td>227 N (23 kgf)</td><td>Deep-body jumbo</td></tr>
+</table>
+<p>Deeper sides reduce the couple force. This is why deeper-bodied instruments have a structural advantage at the neck joint — the longer moment arm spreads the bending load over a larger Z dimension.</p>
+
+<hr class="rule">
+
+<!-- §4 GLUE AREA -->
+<h2 id="glue"><span class="sec-n">§4</span>Minimum Glue Area from First Principles</h2>
+
+<h3>4.1 Shear Strength of Wood</h3>
+
+<p>The limiting factor is wood shear strength, not glue strength. Both hide glue and Titebond joints exceed wood shear strength when properly prepared — the wood fails first. Values from USDA Wood Handbook Table 4-3 at 12% MC:</p>
+
+<table>
+  <tr><th>Species</th><th>τ (MPa)</th><th>τ·η (MPa)</th><th>Common Use</th></tr>
+  <tr><td>Hard Maple</td><td>10.0</td><td>8.50</td><td>Neck blocks, bindings</td></tr>
+  <tr><td>Mahogany</td><td>9.5</td><td>8.08</td><td>Standard neck block</td></tr>
+  <tr><td>Walnut</td><td>9.5</td><td>8.08</td><td>Neck blocks</td></tr>
+  <tr><td>Cherry</td><td>8.9</td><td>7.57</td><td>Occasional</td></tr>
+  <tr><td>Sitka Spruce</td><td>5.5</td><td>4.68</td><td>Lightweight builds</td></tr>
+  <tr><td>Basswood</td><td>5.5</td><td>4.68</td><td>Production instruments</td></tr>
+</table>
+
+<h3>4.2 Minimum Area Formula</h3>
+
+<div class="formula">Required glue area for shear:
+
+<span class="sym">A_min</span> = V × SF / (τ × η)
+
+For mahogany, light gauge, SF = 4.0:
+<span class="sym">A_min</span> = <span class="val">419.4</span> × <span class="val">4.0</span> / (<span class="val">9.5</span> × <span class="val">0.85</span>)
+      = 1677.6 / 8.075
+      = <span class="val">208 mm²</span>
+
+For basswood (worst case wood, heavy strings, SF=4):
+  A_min = 468.7 × 4.0 / (5.5 × 0.85) = <span class="val">401 mm²</span>
+<span class="note">Safety factor 4.0 from NDS (National Design Specification for Wood Construction).
+Glue efficiency η = 0.85 accounts for stress concentrations at joint edges and
+imperfect wood-to-wood contact in real joints (as opposed to ideal test specimens).
+The actual joint areas (5000–9000 mm²) are 25–40× these minimums.</span></div>
+
+<div class="callout">
+  <span class="lbl">Key Result</span>
+  The structural minimum glue area (208–401 mm²) is vastly exceeded by actual block face areas (5,000–9,000 mm²). Face-shear is <strong>not the limiting failure mode</strong> for any standard block geometry. The critical question is joint type and fitting quality, not block size.
+</div>
+
+<hr class="rule">
+
+<!-- §5 JOINT TYPES -->
+<h2 id="joints"><span class="sec-n">§5</span>Joint Type — Effective Shear Area</h2>
+
+<p>The block face area is <em>not</em> the shear area for most neck joint types. Only the surfaces that are actually in contact and bonded carry shear. The <strong>effective area fraction</strong> converts block face area to the actual shear-carrying area.</p>
+
+<div class="formula"><span class="sym">A_effective</span> = A_face × f_joint
+
+Joint safety multiple:
+<span class="sym">N_joint</span> = A_effective / A_min</div>
+
+<table>
+  <tr><th>Joint Type</th><th>f_joint</th><th>Shear Mechanism</th><th>OM N_joint</th></tr>
+  <tr>
+    <td>Dovetail</td><td>0.28</td>
+    <td>Two angled cheeks: 2×(50×20) = 2,000 mm² on a 7,080 mm² face</td>
+    <td class="td-good">9×</td>
+  </tr>
+  <tr>
+    <td>Bolt-On</td><td>0.35</td>
+    <td>Heel face glue + bolt-preload friction (~150N/bolt)</td>
+    <td class="td-good">11×</td>
+  </tr>
+  <tr>
+    <td>Mortise-Tenon (NT)</td><td>0.65</td>
+    <td>All four tenon faces; largest removable joint shear area</td>
+    <td class="td-good">22×</td>
+  </tr>
+  <tr>
+    <td>Spanish Heel</td><td>1.00</td>
+    <td>Integral — sides slot into block, no discrete shear plane</td>
+    <td class="td-good">26×</td>
+  </tr>
+  <tr>
+    <td>Butt Joint (glued)</td><td>1.00</td>
+    <td>Full face area is the shear plane</td>
+    <td class="td-good">26×</td>
+  </tr>
+</table>
+
+<div class="callout warn">
+  <span class="lbl">Dovetail Note</span>
+  The dovetail f_joint = 0.28 means only 28% of the block face is an active shear surface. Even so, the dovetail joint provides 9× the structural minimum — failure by shear requires neglect or systematic joint misfitting. A poorly fitting dovetail (gap-fit, insufficient glue penetration) can reduce the effective area fraction below 0.10.
+</div>
+
+<hr class="rule">
+
+<!-- §6 BLOCK DIMENSIONS -->
+<h2 id="dimensions"><span class="sec-n">§6</span>Neck Block Dimensions</h2>
+
+<p>Block dimensions are set by geometry (conventional proportions of the body) then verified against structural requirements. The geometry always governs — structural requirements are far below conventional dimensions.</p>
+
+<div class="formula">Block height (Z axis) = side depth at neck end
+<span class="sym">H</span> = d_side   <span class="com">// flush with top and back edges</span>
+
+Block width (Y axis, treble-to-bass):
+<span class="sym">W</span> = upper_bout_width × 0.29
+   = <span class="val">290</span> × 0.29 = <span class="val">84 mm</span>   <span class="com">// Martin OM reference</span>
+
+Block depth (X axis, neck-to-tail):
+<span class="sym">D</span> = max(joint_depth + 5mm margin, 65mm)
+   = max(<span class="val">75</span> + 5, 65) = <span class="val">80 mm</span>   <span class="com">// dovetail joint type</span>
+
+Face area:
+<span class="sym">A_face</span> = W × D = <span class="val">84</span> × <span class="val">80</span> = <span class="val">6,720 mm²</span>
+<span class="note">Width fraction 0.29 derived from measured reference instruments:
+  Martin OM: 84/290 = 0.290
+  Martin D-28: 90/292 = 0.308
+  Martin 000: 80/279 = 0.287
+  Mean = 0.295 → use 0.29</span></div>
+
+<hr class="rule">
+
+<!-- §7 TAIL BLOCK -->
+<h2 id="tail"><span class="sec-n">§7</span>Tail Block — Geometry Driven</h2>
+
+<p>The tail block carries no meaningful string tension. String force is directed toward the nut — the tail is in the opposite direction. The tail block is loaded only by:</p>
+<ul style="list-style:disc;padding-left:24px;margin-bottom:12px;font-size:12px;color:var(--text2);">
+  <li style="margin-bottom:4px;">End pin: strap + guitar weight ≈ 50 N downward</li>
+  <li style="margin-bottom:4px;">Side glue: humidity differential shear (negligible for sizing)</li>
+  <li>Back brace ends: small bending from back plate curvature</li>
+</ul>
+
+<div class="formula">Tail block height = side depth at tail end
+<span class="sym">H</span> = d_tail   <span class="com">// flush with top and back</span>
+
+Tail block width:
+<span class="sym">W</span> = lower_bout_width × 0.16
+   = <span class="val">381</span> × 0.16 = <span class="val">61 mm</span>   <span class="com">// Martin OM reference</span>
+
+Tail block depth (minimum — end pin geometry):
+<span class="sym">D_min</span> = pin_radius + min_wood_around_pin + margin
+       = <span class="val">4.75</span> + <span class="val">8.0</span> + <span class="val">4.0</span> = <span class="val">16.75 mm</span>
+
+<span class="sym">D</span> = max(D_min, <span class="val">22 mm</span>) = <span class="val">22 mm</span>   <span class="com">// conventional minimum</span>
+<span class="note">Width fraction 0.16 from measured instruments:
+  Martin OM: 64/381 = 0.168, D-28: 70/397 = 0.176, 000: 60/368 = 0.163</span></div>
+
+<hr class="rule">
+
+<!-- §8 END PIN -->
+<h2 id="endpin"><span class="sec-n">§8</span>End Pin Bearing Check</h2>
+
+<div class="formula">End pin load: guitar weight + strap tension ≈ <span class="val">50 N</span> (conservative)
+
+Bearing area (half-pin circumference × block depth):
+<span class="sym">A_bearing</span> = π × D_pin / 2 × D_block × 0.5
+           = π × <span class="val">9.5</span> / 2 × <span class="val">22</span> × 0.5
+           = <span class="val">164 mm²</span>
+
+Bearing stress:
+<span class="sym">σ_bearing</span> = F_strap / A_bearing
+           = <span class="val">50</span> / <span class="val">164</span> = <span class="val">0.305 MPa</span>
+
+Allowable bearing (wood across grain): ~<span class="val">3.0 MPa</span>
+
+Safety multiple: 3.0 / 0.305 = <span class="val">9.8×</span>   <span class="val">✓ adequate</span>
+<span class="note">End pin bearing is trivially within limits for any standard wood.
+The 22mm minimum depth is set by drilling and fitting practice,
+not structural limits.</span></div>
+
+<hr class="rule">
+
+<!-- PRESET VALUES -->
+<h2 id="presets"><span class="sec-n">09</span>Preset Reference Values</h2>
+
+<table>
+  <tr><th>Style</th><th>Joint</th><th>Neck Block (W×D×H)</th><th>Joint N</th><th>Tail Block (W×D×H)</th><th>Couple F</th></tr>
+  <tr>
+    <td>Martin OM</td><td>Dovetail</td>
+    <td>84×80×95 mm</td><td class="td-good">9×</td>
+    <td>61×22×120 mm</td><td>287 N</td>
+  </tr>
+  <tr>
+    <td>Martin D-28</td><td>Dovetail</td>
+    <td>85×80×102 mm</td><td class="td-good">8×</td>
+    <td>64×22×126 mm</td><td>267 N</td>
+  </tr>
+  <tr>
+    <td>Martin 000</td><td>Dovetail</td>
+    <td>81×80×89 mm</td><td class="td-good">9×</td>
+    <td>59×22×112 mm</td><td>307 N</td>
+  </tr>
+  <tr>
+    <td>Taylor NT</td><td>Mortise-Tenon</td>
+    <td>84×85×95 mm</td><td class="td-good">22×</td>
+    <td>61×22×120 mm</td><td>287 N</td>
+  </tr>
+  <tr>
+    <td>Classical</td><td>Spanish Heel</td>
+    <td>81×65×92 mm</td><td class="td-good">27×</td>
+    <td>59×22×96 mm</td><td>295 N</td>
+  </tr>
+</table>
+
+<hr class="rule">
+
+<!-- LIMITS -->
+<h2 id="limits"><span class="sec-n">10</span>Limit Checks &amp; Warnings</h2>
+
+<table>
+  <tr><th>Check</th><th>Limit</th><th>Source</th><th>Consequence if Violated</th></tr>
+  <tr><td>Joint safety multiple N_joint</td><td>≥ 4×</td><td>SF=4.0, NDS</td><td>Glue failure under sustained string load or humidity cycle</td></tr>
+  <tr><td>Side depth at neck</td><td>≥ 85 mm recommended</td><td>Moment arm analysis</td><td>Higher couple force; more load on top/back glue at block</td></tr>
+  <tr><td>Neck block width</td><td>≥ 70 mm</td><td>Routing clearance</td><td>Insufficient clearance for neck pocket + kerfing</td></tr>
+  <tr><td>Saddle seat depth</td><td>≥ 3 mm</td><td>Shop standard</td><td>Saddle rocks under tension</td></tr>
+  <tr><td>Tail block depth</td><td>≥ 22 mm</td><td>End pin geometry</td><td>Insufficient wood around pin hole</td></tr>
+  <tr><td>End pin bearing stress</td><td>≤ 3.0 MPa</td><td>Wood cross-grain</td><td>Pin hole elongation, loose pin</td></tr>
+  <tr><td>Dovetail fit quality</td><td>Full contact on cheeks</td><td>Joint physics</td><td>Gap-fit reduces f_joint below 0.10; structural adequacy not guaranteed</td></tr>
+</table>
+
+<hr class="rule">
+
+<!-- SOURCES -->
+<h2 id="sources"><span class="sec-n">11</span>Sources</h2>
+
+<div class="ref-grid">
+  <div class="ref-card">
+    <div class="ref-id">REF-01</div>
+    <div class="ref-title">D'Addario String Tension Charts</div>
+    <div class="ref-note">Published per-string tensions at concert pitch for all gauge sets. Primary input for T_total.</div>
+  </div>
+  <div class="ref-card">
+    <div class="ref-id">REF-02</div>
+    <div class="ref-title">USDA Wood Handbook (2021)</div>
+    <div class="ref-note">Table 4-3: shear strength parallel to grain at 12% MC. Species values for τ.</div>
+  </div>
+  <div class="ref-card">
+    <div class="ref-id">REF-03</div>
+    <div class="ref-title">NDS — National Design Specification</div>
+    <div class="ref-note">Safety factor 4.0 for primary structural wood joints. Glue efficiency η = 0.85.</div>
+  </div>
+  <div class="ref-card">
+    <div class="ref-id">REF-04</div>
+    <div class="ref-title">Gore &amp; Gilet — Contemporary Acoustic Guitar</div>
+    <div class="ref-note">Block proportions, joint type analysis, side depth conventions, safety factor guidance.</div>
+  </div>
+  <div class="ref-card">
+    <div class="ref-id">REF-05</div>
+    <div class="ref-title">martin_d28_1937.py — SIDE_PROFILE data</div>
+    <div class="ref-note">SIDE_PROFILE_WITH_KERFING_MM: measured side depth at neck (101.6 mm) and tail (126.2 mm).</div>
+  </div>
+  <div class="ref-card">
+    <div class="ref-id">REF-06</div>
+    <div class="ref-title">BACKLOG.md GEOMETRY-005</div>
+    <div class="ref-note">Internal spec identifying the gap: routing existed; structural sizing from tension did not.</div>
+  </div>
+</div>
+
+<hr class="rule">
+<div style="text-align:center;padding:16px 0 0;font-family:var(--mono);font-size:8px;color:var(--dim2);letter-spacing:1px;">
+  THE PRODUCTION SHOP — neck_block_calc.py — 741 lines — GEOMETRY-005
+</div>
+</main>
+</div>
+
+<script>
+const sections = document.querySelectorAll('[id]');
+const links = document.querySelectorAll('nav a');
+new IntersectionObserver(entries => {
+  entries.forEach(e => {
+    if (e.isIntersecting) {
+      links.forEach(l => l.classList.remove('active'));
+      const l = document.querySelector(`nav a[href="#${e.target.id}"]`);
+      if (l) l.classList.add('active');
+    }
+  });
+}, { threshold: 0.4 }).observe || sections.forEach(s =>
+  new IntersectionObserver(entries => {
+    if (entries[0].isIntersecting) {
+      links.forEach(l => l.classList.remove('active'));
+      const l = document.querySelector(`nav a[href="#${s.id}"]`);
+      if (l) l.classList.add('active');
+    }
+  }, { threshold: 0.4 }).observe(s)
+);
+</script>
+</body>
+</html>

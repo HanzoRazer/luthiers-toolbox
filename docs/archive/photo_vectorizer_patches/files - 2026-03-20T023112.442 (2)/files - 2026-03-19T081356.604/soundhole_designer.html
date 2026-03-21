@@ -1,0 +1,665 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Soundhole Designer — The Production Shop</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=DM+Mono:ital,wght@0,300;0,400;0,500;1,300&family=Playfair+Display:ital,wght@0,600;1,400&display=swap');
+  *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+  :root{
+    --bg0:#0d0c09;--bg1:#141210;--bg2:#1c1a16;--bg3:#242018;--bg4:#2e291e;
+    --br:#c8962e;--br2:#e0b84a;--br3:#6b4e18;
+    --v1:#e8e0d0;--dim:#9a917e;--dim3:#5a5242;
+    --green:#5ab86a;--amber:#d4a030;--red:#c84848;--blue:#5b8fa8;
+    --mono:'DM Mono',monospace;--serif:'Playfair Display',Georgia,serif;
+    --border:rgba(255,255,255,.06)
+  }
+  body{background:var(--bg0);color:var(--v1);font-family:var(--mono);font-size:12px;line-height:1.5;min-height:100vh;display:flex;flex-direction:column}
+  header{padding:12px 22px 10px;border-bottom:1px solid var(--border);background:var(--bg1);display:flex;align-items:baseline;gap:14px}
+  .htitle{font-family:var(--serif);font-style:italic;font-size:17px;color:var(--br2)}
+  .hsub{font-size:9px;color:var(--dim);letter-spacing:1.3px;text-transform:uppercase}
+  .hbadge{margin-left:auto;font-size:8px;letter-spacing:1px;text-transform:uppercase;padding:3px 8px;border:1px solid var(--br3);color:var(--br);border-radius:2px}
+  .tab-bar{display:flex;background:var(--bg1);border-bottom:1px solid var(--border)}
+  .tab-btn{padding:7px 14px;background:none;border:none;border-bottom:2px solid transparent;color:var(--dim);font-family:var(--mono);font-size:9px;letter-spacing:.7px;text-transform:uppercase;cursor:pointer;transition:all .12s}
+  .tab-btn.active{color:var(--br2);border-bottom-color:var(--br)}
+  .tab-btn:hover{color:var(--v1)}
+  .app-grid{flex:1;display:grid;grid-template-columns:272px 1fr 256px;height:calc(100vh - 86px);overflow:hidden}
+  .ctrl{background:var(--bg1);border-right:1px solid var(--border);overflow-y:auto;display:flex;flex-direction:column}
+  .cav{display:flex;flex-direction:column;align-items:center;justify-content:center;background:var(--bg0);overflow:hidden}
+  .res{background:var(--bg1);border-left:1px solid var(--border);overflow-y:auto;display:flex;flex-direction:column}
+  .sec{padding:9px 13px;border-bottom:1px solid var(--border)}
+  .slbl{font-size:7px;letter-spacing:1.5px;text-transform:uppercase;color:var(--br);margin-bottom:7px}
+  .f{display:flex;align-items:center;gap:7px;margin-bottom:5px}
+  .f:last-child{margin-bottom:0}
+  .fk{font-size:9px;color:var(--dim);flex:1;min-width:64px}
+  .fv{padding:3px 6px;background:var(--bg2);border:1px solid var(--bg4);border-radius:2px;color:var(--v1);font-family:var(--mono);font-size:9px;outline:none;transition:border-color .1s}
+  .fv:focus{border-color:var(--br3)}
+  .fv.n{width:68px}
+  .fu{font-size:8px;color:var(--dim3);width:22px}
+  input[type=range]{-webkit-appearance:none;flex:1;height:3px;background:var(--bg4);border-radius:2px;outline:none}
+  input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:11px;height:11px;border-radius:50%;background:var(--br);cursor:pointer}
+  .sv{font-size:9px;color:var(--br2);width:36px;text-align:right}
+  .pgrid{display:grid;grid-template-columns:1fr 1fr;gap:3px}
+  .pbtn{padding:5px 5px;background:none;border:1px solid var(--border);border-radius:2px;color:var(--dim);font-family:var(--mono);font-size:8px;cursor:pointer;text-align:left;transition:all .12s;line-height:1.4}
+  .pbtn:hover{border-color:var(--bg4);color:var(--v1)}
+  .pbtn.active{border-color:var(--br3);color:var(--br2);background:rgba(200,150,46,.06)}
+  .pnm{display:block;font-size:8px}.phz{display:block;font-size:7px;color:var(--dim3);margin-top:1px}
+  .port-list{display:flex;flex-direction:column;gap:5px}
+  .pi{background:var(--bg2);border:1px solid var(--border);border-radius:3px;padding:7px 9px}
+  .pi.sp{border-color:rgba(91,143,168,.28)}
+  .ph{display:flex;align-items:center;justify-content:space-between;margin-bottom:5px}
+  .pn{font-size:9px;color:var(--br2)}.psp{font-size:7px;color:var(--blue);letter-spacing:.7px;text-transform:uppercase}
+  .prm{background:none;border:none;color:var(--dim3);cursor:pointer;font-size:11px;padding:0 2px;line-height:1}
+  .prm:hover{color:var(--red)}
+  .addbtn{width:100%;padding:5px;background:none;border:1px dashed var(--bg4);border-radius:2px;color:var(--dim3);font-family:var(--mono);font-size:8px;letter-spacing:.7px;text-transform:uppercase;cursor:pointer;transition:all .12s;margin-top:4px}
+  .addbtn:hover{border-color:var(--br3);color:var(--br)}
+  .addsbtn{border-color:rgba(91,143,168,.28);color:var(--blue)}
+  .addsbtn:hover{border-color:var(--blue)}
+  .hzd{padding:16px 14px 12px;border-bottom:1px solid var(--border);text-align:center}
+  .hzv{font-family:var(--serif);font-size:42px;color:var(--br2);line-height:1}
+  .hzu{font-size:13px;color:var(--br);margin-left:2px}
+  .hzn{font-size:10px;color:var(--dim);margin-top:3px}
+  .hzs{font-size:8px;color:var(--dim3);margin-top:4px;letter-spacing:.4px}
+  .sbar{display:flex}
+  .sseg{flex:1;padding:5px 5px;text-align:center;border-right:1px solid var(--border);font-size:7px;letter-spacing:.5px;text-transform:uppercase}
+  .sseg:last-child{border-right:none}
+  .sv2{display:block;font-size:9px;margin-top:1px}
+  .sg{color:var(--green)}.sa{color:var(--amber)}.sr{color:var(--red)}.sd{color:var(--dim)}.sb{color:var(--blue)}
+  .rrow{display:flex;justify-content:space-between;align-items:baseline;padding:4px 13px;border-bottom:1px solid rgba(255,255,255,.02);font-size:9px}
+  .rk{color:var(--dim)}.rv{color:var(--v1)}
+  .rv.good{color:var(--green)}.rv.warn{color:var(--amber)}.rv.bad{color:var(--red)}
+  .cwrap{padding:9px 13px;border-bottom:1px solid var(--border)}
+  .clbl{font-size:7px;letter-spacing:1px;text-transform:uppercase;color:var(--dim3);margin-bottom:5px;display:flex;justify-content:space-between}
+  .radpanel{padding:9px 13px;border-bottom:1px solid var(--border);display:none}
+  .radlbl{font-size:7px;letter-spacing:1px;text-transform:uppercase;color:var(--blue);margin-bottom:5px}
+  .radi{margin-bottom:7px;padding:5px 7px;background:rgba(91,143,168,.06);border-left:2px solid var(--blue);border-radius:0 2px 2px 0}
+  .radn{font-size:8px;color:var(--blue);margin-bottom:2px}
+  .radd{font-size:8px;color:var(--dim);line-height:1.5}
+  .rads{font-size:7px;color:var(--br2);margin-top:2px}
+  .radst{font-size:7px;color:var(--dim3);margin-top:1px}
+  .tbar{padding:8px 13px;border-top:1px solid var(--border);margin-top:auto}
+  .tlbl{font-size:7px;letter-spacing:1px;text-transform:uppercase;color:var(--dim3);margin-bottom:4px}
+  .ttrack{height:5px;background:var(--bg3);border-radius:3px;overflow:hidden}
+  .tfill{height:100%;border-radius:3px;transition:width .3s,background .3s}
+  .tmark{display:flex;justify-content:space-between;font-size:7px;color:var(--dim3);margin-top:2px}
+  .ptbl{width:100%;border-collapse:collapse}
+  .ptbl th{text-align:left;font-size:7px;color:var(--dim3);letter-spacing:.7px;text-transform:uppercase;padding:3px 13px;border-bottom:1px solid var(--border)}
+  .ptbl td{padding:3px 13px;font-size:8px;color:var(--dim);border-bottom:1px solid rgba(255,255,255,.02)}
+  .ptbl td:last-child{text-align:right;color:var(--v1)}
+  .wlist{padding:7px 13px;display:flex;flex-direction:column;gap:3px}
+  .wi{font-size:8px;padding:4px 7px;border-radius:2px;line-height:1.5}
+  .wi.red{background:rgba(200,72,72,.08);color:var(--red);border-left:2px solid var(--red)}
+  .wi.yellow{background:rgba(212,160,48,.08);color:var(--amber);border-left:2px solid var(--amber)}
+  .wi.note{background:rgba(255,255,255,.03);color:var(--dim);border-left:2px solid var(--dim3)}
+  .wi.blue{background:rgba(91,143,168,.08);color:var(--blue);border-left:2px solid var(--blue)}
+  #presetNote{padding:8px 13px;border-top:1px solid var(--border);font-size:8px;color:var(--dim);line-height:1.6;display:none}
+  .pnlbl{font-size:7px;letter-spacing:1px;text-transform:uppercase;color:var(--dim3);margin-bottom:2px}
+  .expbtn{margin:9px 13px;padding:6px;width:calc(100% - 26px);background:none;border:1px solid var(--br3);border-radius:2px;color:var(--br2);font-family:var(--mono);font-size:8px;letter-spacing:.7px;text-transform:uppercase;cursor:pointer;transition:all .12s}
+  .expbtn:hover{background:var(--br);color:#0f0d0a}
+  .applybtn{width:100%;padding:5px;background:none;border:1px solid var(--blue);border-radius:2px;color:var(--blue);font-family:var(--mono);font-size:8px;letter-spacing:.7px;text-transform:uppercase;cursor:pointer;transition:all .12s;margin-top:5px}
+  .applybtn:hover{background:var(--blue);color:var(--bg0)}
+  .applybtn.am{border-color:var(--br3);color:var(--br2)}.applybtn.am:hover{background:var(--br);color:#0f0d0a}
+  .invres{margin-top:7px;padding:7px;background:rgba(90,184,106,.06);border:1px solid rgba(90,184,106,.2);border-radius:3px;font-size:9px;line-height:1.7}
+  .invres b{color:var(--green)}
+  .tcpks{display:flex;gap:7px;margin-bottom:6px}
+  .tcp{flex:1;text-align:center;padding:7px;background:rgba(212,160,48,.06);border:1px solid rgba(212,160,48,.18);border-radius:3px}
+  .tcphz{font-family:var(--serif);font-size:20px;color:var(--amber)}
+  .tcpn{font-size:8px;color:var(--dim)}.tcpl{font-size:7px;color:var(--dim3);letter-spacing:.7px;text-transform:uppercase;margin-bottom:2px}
+  .dgrid{display:grid;grid-template-columns:1fr 1fr;gap:5px}
+  .dpgrid{display:grid;grid-template-columns:1fr 1fr;gap:3px;margin-bottom:7px}
+  .dpbtn{padding:4px 5px;background:none;border:1px solid var(--border);border-radius:2px;font-family:var(--mono);font-size:7px;color:var(--dim);cursor:pointer;transition:all .1s}
+  .dpbtn:hover{border-color:var(--blue);color:var(--blue)}
+  .dres{margin-top:6px;padding:7px;background:rgba(91,143,168,.06);border:1px solid rgba(91,143,168,.18);border-radius:3px;font-size:9px;display:none}
+  .dres b{color:var(--blue)}
+  .tabcont{width:100%;height:100%;padding:22px 28px;overflow-y:auto}
+  .tablbl{font-family:var(--serif);font-style:italic;font-size:15px;color:var(--br2);margin-bottom:16px}
+  .tabsub{font-size:9px;color:var(--dim);margin-bottom:16px;max-width:380px;line-height:1.6}
+  ::-webkit-scrollbar{width:4px}
+  ::-webkit-scrollbar-track{background:var(--bg0)}
+  ::-webkit-scrollbar-thumb{background:var(--bg4);border-radius:2px}
+</style>
+</head>
+<body>
+<header>
+  <span class="htitle">Soundhole Designer</span>
+  <span class="hsub">Helmholtz · Structure · Side Ports · Two-Cavity</span>
+  <span class="hbadge">The Production Shop</span>
+</header>
+<div class="tab-bar">
+  <button class="tab-btn active" data-tab="design">Design</button>
+  <button class="tab-btn" data-tab="inverse">Inverse Solver</button>
+  <button class="tab-btn" data-tab="bodydims">Body Dimensions</button>
+  <button class="tab-btn" data-tab="selmer">Two-Cavity</button>
+</div>
+<div class="app-grid">
+
+<!-- LEFT -->
+<div class="ctrl">
+  <div class="sec">
+    <div class="slbl">Presets</div>
+    <div class="pgrid" id="presetGrid"></div>
+  </div>
+  <div class="sec">
+    <div class="slbl">Body</div>
+    <div class="f"><span class="fk">Volume</span><div style="flex:1;display:flex;align-items:center;gap:5px"><input type="range" id="volume" min="8" max="30" step="0.5" value="17.5"><span class="sv" id="volumeVal">17.5</span></div><span class="fu">L</span></div>
+    <div class="f"><span class="fk">Body length</span><input type="number" class="fv n" id="bodyLength" min="380" max="560" value="495"><span class="fu">mm</span></div>
+    <div class="f"><span class="fk">Top thickness</span><input type="number" class="fv n" id="topThick" min="1.5" max="8" step="0.1" value="2.5"><span class="fu">mm</span></div>
+  </div>
+  <div class="sec">
+    <div class="slbl">Top Ports</div>
+    <div class="port-list" id="topPortList"></div>
+    <button class="addbtn" id="addTopBtn">+ Add top port</button>
+  </div>
+  <div class="sec">
+    <div class="slbl">Side Ports</div>
+    <div class="port-list" id="sidePortList"></div>
+    <button class="addbtn addsbtn" id="addSideBtn">+ Add side port</button>
+  </div>
+  <div class="sec">
+    <div class="slbl">Structural</div>
+    <div class="f"><span class="fk">Ring width</span><input type="number" class="fv n" id="ringWidth" min="1" max="30" step="0.5" value="8"><span class="fu">mm</span></div>
+    <div class="f"><span class="fk">X from neck</span><input type="number" class="fv n" id="xFromNeck" min="50" max="400" value="165"><span class="fu">mm</span></div>
+  </div>
+  <div class="sec">
+    <div class="slbl">Physics</div>
+    <div class="f"><span class="fk">γ (perimeter)</span><input type="number" class="fv n" id="gamma" min="0" max="0.1" step="0.005" value="0.020"></div>
+    <div class="f"><span class="fk">k₀ (end corr.)</span><input type="number" class="fv n" id="k0" min="1.4" max="2.0" step="0.05" value="1.70"></div>
+  </div>
+</div>
+
+<!-- CENTRE -->
+<div class="cav">
+  <div id="tabDesign" style="width:100%;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center">
+    <canvas id="mainCanvas" width="410" height="510"></canvas>
+    <div style="font-size:8px;color:var(--dim3);letter-spacing:.9px;text-transform:uppercase;margin-top:8px">Drag · Scroll to resize</div>
+  </div>
+  <div id="tabInverse" style="display:none;width:100%;height:100%">
+    <div class="tabcont">
+      <div class="tablbl">Inverse Solver</div>
+      <div class="tabsub">Enter a target air resonance frequency. The solver finds the main hole diameter needed, using the current body volume and physics constants.</div>
+      <div class="f"><span class="fk">Target f_H</span><input type="number" class="fv n" id="invTarget" value="108" min="60" max="160"><span class="fu">Hz</span></div>
+      <div class="f"><span class="fk">Side port ∅</span><input type="number" class="fv n" id="invSidePort" value="0" min="0" max="60"><span class="fu">mm</span></div>
+      <button class="applybtn am" id="invSolveBtn" style="margin-top:4px">Solve for diameter</button>
+      <div class="invres" id="invResult" style="display:none"></div>
+      <div style="margin-top:22px">
+        <div style="font-size:7px;letter-spacing:1px;text-transform:uppercase;color:var(--dim3);margin-bottom:7px">Sensitivity curve — f_H vs diameter ±25mm</div>
+        <canvas id="sensitivityCanvas" width="360" height="190" style="background:var(--bg2);border-radius:3px;border:1px solid var(--border)"></canvas>
+        <div style="font-size:8px;color:var(--dim3);margin-top:5px">Steeper slope = more sensitive to sizing. Dot = current design.</div>
+      </div>
+    </div>
+  </div>
+  <div id="tabBodydims" style="display:none;width:100%;height:100%">
+    <div class="tabcont">
+      <div class="tablbl">Body Dimensions → Volume</div>
+      <div class="tabsub">Enter physical body measurements to compute acoustic volume. Calibration factor 1.83× applied (validated against Martin OM, D-28, J-45).</div>
+      <div style="font-size:7px;letter-spacing:1px;text-transform:uppercase;color:var(--dim3);margin-bottom:5px">Quick presets</div>
+      <div class="dpgrid" id="dimPresetGrid"></div>
+      <div class="dgrid">
+        <div>
+          <div class="f"><span class="fk">Lower bout</span><input type="number" class="fv n" id="dLb" value="381" min="280" max="450"><span class="fu">mm</span></div>
+          <div class="f"><span class="fk">Upper bout</span><input type="number" class="fv n" id="dUb" value="299.7" min="220" max="360"><span class="fu">mm</span></div>
+          <div class="f"><span class="fk">Waist</span><input type="number" class="fv n" id="dW" value="241.3" min="180" max="330"><span class="fu">mm</span></div>
+        </div>
+        <div>
+          <div class="f"><span class="fk">Body length</span><input type="number" class="fv n" id="dBl" value="495" min="380" max="560"><span class="fu">mm</span></div>
+          <div class="f"><span class="fk">Depth (end)</span><input type="number" class="fv n" id="dDe" value="108" min="60" max="160"><span class="fu">mm</span></div>
+          <div class="f"><span class="fk">Depth (neck)</span><input type="number" class="fv n" id="dDn" value="102" min="50" max="150"><span class="fu">mm</span></div>
+        </div>
+      </div>
+      <div class="f" style="margin-top:5px"><span class="fk">Shape factor</span><input type="number" class="fv n" id="dSf" value="0.85" min="0.70" max="0.95" step="0.01"><span style="font-size:7px;color:var(--dim3);margin-left:4px">0.75 archtop · 0.85 flat-top</span></div>
+      <div class="dres" id="dimsResult"></div>
+      <button class="applybtn" id="applyDimsBtn">↑ Use this volume in calculator</button>
+    </div>
+  </div>
+  <div id="tabSelmer" style="display:none;width:100%;height:100%">
+    <div class="tabcont">
+      <div class="tablbl">Two-Cavity Model</div>
+      <div class="tabsub" style="padding:7px;background:rgba(212,160,48,.06);border-left:2px solid var(--amber);border-radius:0 2px 2px 0">
+        Selmer/Maccaferri with internal resonator. Two distinct air resonance peaks broaden bass response. f_H2 depends on resonator volume and aperture dimensions.
+      </div>
+      <div style="font-size:7px;letter-spacing:1px;text-transform:uppercase;color:var(--amber);margin:12px 0 7px">Internal Resonator</div>
+      <div class="f"><span class="fk">Volume</span><input type="number" class="fv n" id="selVol" value="0.4" min="0.1" max="2.0" step="0.05"><span class="fu">L</span></div>
+      <div class="f"><span class="fk">Aperture ∅</span><input type="number" class="fv n" id="selAp" value="50" min="10" max="120"><span class="fu">mm</span></div>
+      <div class="f"><span class="fk">Wall thickness</span><input type="number" class="fv n" id="selWall" value="3" min="1" max="15" step="0.5"><span class="fu">mm</span></div>
+      <div style="margin-top:14px">
+        <div style="font-size:7px;letter-spacing:1px;text-transform:uppercase;color:var(--amber);margin-bottom:8px">Two-Cavity Peaks</div>
+        <div class="tcpks">
+          <div class="tcp"><div class="tcpl">Air mode 1</div><div class="tcphz" id="tc1">—</div><div class="tcpn" id="tcn1">—</div></div>
+          <div class="tcp"><div class="tcpl">Air mode 2</div><div class="tcphz" id="tc2">—</div><div class="tcpn" id="tcn2">—</div></div>
+        </div>
+        <div style="font-size:8px;color:var(--dim);line-height:1.6" id="tcNote"></div>
+        <div style="font-size:7px;color:var(--dim3);margin-top:5px">Separation: <span id="tcSep" style="color:var(--amber)">—</span> Hz · Raise aperture area → raise f_H2 · Reduce resonator volume → raise f_H2</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- RIGHT -->
+<div class="res">
+  <div class="hzd">
+    <div><span class="hzv" id="hzValue">—</span><span class="hzu">Hz</span></div>
+    <div class="hzn" id="hzNote">Air resonance (f_H)</div>
+    <div class="hzs">Helmholtz · plate-air coupling factor 0.92</div>
+  </div>
+  <div class="sbar">
+    <div class="sseg"><span class="sd">Ring</span><span class="sv2" id="ringStatus">—</span></div>
+    <div class="sseg"><span class="sd">Place</span><span class="sv2" id="placStatus">—</span></div>
+    <div class="sseg"><span class="sd">Area</span><span class="sv2" id="areaDisp">—</span></div>
+    <div class="sseg"><span class="sd">Ports</span><span class="sv2" id="portCt">—</span></div>
+  </div>
+  <div id="resultRows"></div>
+  <div class="cwrap">
+    <div class="clbl"><span>Sensitivity curve</span><span id="curveCur" style="color:var(--br)"></span></div>
+    <canvas id="inlineCurve" width="230" height="76"></canvas>
+    <div style="display:flex;justify-content:space-between;font-size:7px;color:var(--dim3);margin-top:2px" id="curveMarks"></div>
+  </div>
+  <div class="radpanel" id="radPanel">
+    <div class="radlbl">Side Port Radiation</div>
+    <div id="radItems"></div>
+  </div>
+  <div class="tbar">
+    <div class="tlbl">f_H vs range 80–130 Hz</div>
+    <div class="ttrack"><div class="tfill" id="targetFill"></div></div>
+    <div class="tmark"><span>80</span><span>90</span><span>100</span><span>110</span><span>120</span><span>130</span></div>
+  </div>
+  <table class="ptbl"><thead><tr><th>Port</th><th>Area</th><th>L_eff</th><th>Frac</th></tr></thead><tbody id="portTbl"></tbody></table>
+  <div class="wlist" id="warnList"></div>
+  <div id="presetNote"><div class="pnlbl">Construction note</div><span id="presetNoteText"></span></div>
+  <button class="expbtn" id="exportBtn">↓ Export design JSON</button>
+</div>
+</div>
+
+<script>
+// ── Physics ──────────────────────────────────────────────────────────────────
+const C=343,K0=1.7,G0=0.02,PMF=0.92,RF=0.15,RMIN=6;
+function Leff(a,p,t,k,g){if(a<=0)return t;const r=Math.sqrt(a/Math.PI);return t+k*(1+g*p/Math.sqrt(a))*r}
+function helmholtz(vol,ports,k,g){
+  if(!ports.length||vol<=0)return{f:0,det:[]};
+  const tot=ports.reduce((s,p)=>s+p.a,0);if(!tot)return{f:0,det:[]};
+  let wL=0;
+  const det=ports.map(p=>{const L=Leff(p.a,p.p,p.t,k,g);wL+=p.a*L;return{...p,L,areaCm:(p.a*1e4).toFixed(2),Lmm:(L*1e3).toFixed(1),frac:(p.a/tot).toFixed(3)};});
+  const f=(C/(2*Math.PI))*Math.sqrt(tot/(vol*wL/tot))*PMF;
+  return{f,det};
+}
+function ringChk(r,w){
+  const mn=Math.max(r*RF,RMIN),m=w-mn;
+  if(w>=mn*1.5)return{s:'GREEN',msg:`${w.toFixed(1)}mm — OK (+${m.toFixed(1)}mm)`,note:'No reinforcement needed.',mn:mn.toFixed(1)};
+  if(w>=mn)return{s:'YELLOW',msg:`${w.toFixed(1)}mm — marginal (min ${mn.toFixed(1)}mm)`,note:'Consider thin soundhole patch inside.',mn:mn.toFixed(1)};
+  const df=mn-w;return{s:'RED',msg:`${w.toFixed(1)}mm — below min (need ${mn.toFixed(1)}mm)`,note:`Reduce ∅ by ${(df*2).toFixed(1)}mm or add patch+braces.`,mn:mn.toFixed(1)};
+}
+function placChk(x,bl){
+  const xn=bl*.2,xx=bl*.7,tr=bl*.333,v=x>=xn&&x<=xx;
+  let msg,note;
+  if(v){const d=x-tr;if(Math.abs(d)<10){msg=`${x.toFixed(0)}mm — 1/3 position`;note='Aligns with top fundamental antinode.';}
+    else if(d<0){msg=`${x.toFixed(0)}mm — ${Math.abs(d).toFixed(0)}mm forward`;note='Check brace layout allows this.';}
+    else{msg=`${x.toFixed(0)}mm — ${d.toFixed(0)}mm rearward`;note='Shifted toward lower bout.';}
+  }else if(x<xn){msg=`${x.toFixed(0)}mm — too close to neck block`;note=`Min ${xn.toFixed(0)}mm from neck.`;}
+  else{msg=`${x.toFixed(0)}mm — too close to tail block`;note=`Max ${xx.toFixed(0)}mm from neck.`;}
+  return{v,msg,note};
+}
+function hzNote(hz){if(hz<=0)return'—';const n=['C','C#','D','D#','E','F','F#','G','G#','A','A#','B'];const m=Math.round(12*Math.log2(hz/440)+69);return n[m%12]+(Math.floor(m/12)-1);}
+function curve(vol,d,t,k,g,rng=25,steps=22){
+  const d0=Math.max(40,d-rng),d1=Math.min(150,d+rng);
+  return Array.from({length:steps},(_,i)=>{const di=d0+(d1-d0)*i/(steps-1);const r=(di/2)/1000;return{d:di,f:helmholtz(vol,[{a:Math.PI*r*r,p:2*Math.PI*r,t:t/1000,l:'',loc:'top'}],k,g).f};});
+}
+function bodyVol(lb,ub,w,bl,de,dn,sf=0.85){
+  const ll=bl*.4,wl=bl*.25,ul=bl*.35,ad=(de+dn)/2;
+  const la=Math.PI*(lb/2)*(de/2)*sf,wa=Math.PI*(w/2)*(ad/2)*sf,ua=Math.PI*(ub/2)*(dn/2)*sf;
+  return{L:((la+wa)/2*ll+wa*wl+(wa+ua)/2*ul)/1e6*1.83};
+}
+function invSolve(target,vol,t,k,g,spd=0){
+  let spPort=null;if(spd>0){const r=(spd/2)/1000;spPort={a:Math.PI*r*r,p:2*Math.PI*r,t:0.0023,l:'Side',loc:'side'};}
+  const pred=d=>{const r=(d/2)/1000;const mp={a:Math.PI*r*r,p:2*Math.PI*r,t:t/1000,l:'',loc:'top'};return helmholtz(vol,spPort?[mp,spPort]:[mp],k,g).f;};
+  let lo=40,hi=150;for(let i=0;i<60;i++){const m=(lo+hi)/2;pred(m)<target?lo=m:hi=m;if(hi-lo<.01)break;}
+  const d=(lo+hi)/2;return{d:d.toFixed(1),f:pred(d).toFixed(1),a:(Math.PI*(d/2/10)**2).toFixed(2)};
+}
+function twoCav(volMain,ports,volInt,apD,wallT,k,g){
+  const f1=helmholtz(volMain,ports,k,g).f;
+  const ar=(apD/2)/1000,ap={a:Math.PI*ar*ar,p:2*Math.PI*ar,t:wallT/1000,l:'Ap',loc:'top'};
+  const f2r=(C/(2*Math.PI))*Math.sqrt(ap.a/(volInt/1000*Leff(ap.a,ap.p,ap.t,k,g)));
+  const dt=Math.abs(f1-f2r)*.10;
+  return{f1:(f1<f2r?f1-dt/2:f1+dt/2).toFixed(1),f2:(f1<f2r?f2r+dt/2:f2r-dt/2).toFixed(1),sep:Math.abs((f1<f2r?f2r+dt/2:f2r-dt/2)-(f1<f2r?f1-dt/2:f1+dt/2)).toFixed(1)};
+}
+
+// ── Side port data ───────────────────────────────────────────────────────────
+const SPOS={
+  upper_treble:{lbl:'Upper treble',rad:"Toward player's right ear & upward. Strongest monitor effect — most common for performer comfort.",shift:'+3–6 Hz',struct:'Min 40mm from neck block. Check transverse brace ends.'},
+  upper_bass:{lbl:'Upper bass',rad:"Toward player's left arm and ceiling. Balanced monitoring. Common on OM+port builds.",shift:'+3–6 Hz',struct:'Min 40mm from neck block. May contact upper transverse brace end.'},
+  lower_treble:{lbl:'Lower treble',rad:'Toward floor, treble side. Strong lower-bout coupling → larger f_H shift. Used when f_H tuning is primary goal.',shift:'+8–15 Hz',struct:'Min 40mm from tail block. Clear of lower X-brace leg.'},
+  lower_bass:{lbl:'Lower bass',rad:'Maximum body coupling — largest Helmholtz shift of any side position. Used by Stoll et al. to raise f_H without changing top geometry.',shift:'+8–15 Hz',struct:'Min 40mm from tail block. Clear of lower X-brace (bass side).'},
+  waist:{lbl:'Waist',rad:'Exits at 90° to centerline. Minimal coupling to either bout. Rim depth limits practical port diameter.',shift:'+1–4 Hz',struct:'Waist rim ~70–80mm deep. Keep ≤25mm diameter.'},
+  symmetric:{lbl:'Symmetric pair',rad:'Both upper bouts simultaneously. Stereo-like player monitoring. Double area means larger Helmholtz shift.',shift:'+6–12 Hz',struct:'Each port min 40mm from neck block, 30mm apart.'},
+};
+const PTYP={
+  round:{lbl:'Round',pf:1.0,desc:'Forstner bit or hole saw. Simplest construction.'},
+  oval:{lbl:'Oval',pf:1.15,desc:'Higher P/A → L_eff ~5% longer than round.'},
+  slot:{lbl:'Slot',pf:2.2,desc:'High P/A ratio → much longer L_eff → smaller f_H shift per cm² of area. Common on ukuleles.'},
+  chambered:{lbl:'Chambered',pf:1.0,desc:'Internal channel adds to L_eff — allows deliberate port resonance tuning.'},
+};
+
+// ── State ────────────────────────────────────────────────────────────────────
+let S={vol:17.5,blen:495,topThick:2.5,ring:8,xn:165,gamma:0.02,k0:1.7,
+  top:[{id:1,type:'circle',d:96,w:90,h:120,t:2.5,lbl:'Main soundhole'}],
+  side:[],preset:'martin_om',res:null,tab:'design'};
+let PID=50;
+
+function buildPorts(){
+  const t=S.top.map(p=>{
+    if(p.type==='circle'){const r=(p.d/2)/1000;return{a:Math.PI*r*r,p:2*Math.PI*r,t:p.t/1000,l:p.lbl,loc:'top'};}
+    const a=(p.w/2)/1000,b=(p.h/2)/1000,area=Math.PI*a*b;const hh=((a-b)**2)/((a+b)**2);const perim=Math.PI*(a+b)*(1+3*hh/(10+Math.sqrt(4-3*hh)));return{a:area,p:perim,t:p.t/1000,l:p.lbl,loc:'top'};
+  });
+  const s=S.side.map(p=>{const r=(p.d/2)/1000;const pf=PTYP[p.pt||'round']?.pf||1;const tube=(p.tube||0)/1000;return{a:Math.PI*r*r,p:2*Math.PI*r*pf,t:(p.rt||2.3)/1000+tube,l:p.lbl,loc:'side',_sp:p};});
+  return[...t,...s];
+}
+
+// ── Presets ──────────────────────────────────────────────────────────────────
+const PRESETS=[
+  {id:'martin_om',lbl:'Martin OM',hz:108,vol:17.5,bl:495,xf:.333,ring:8,note:'1/3 body placement. X-brace with soundhole patch.',top:[{id:1,type:'circle',d:96,t:2.5,w:96,h:96,lbl:'Round soundhole'}],side:[]},
+  {id:'martin_d28',lbl:'D-28 Dread.',hz:98,vol:22.0,bl:508,xf:.333,ring:8,note:'Scalloped X-brace. Larger body → lower f_H.',top:[{id:1,type:'circle',d:100,t:2.5,w:100,h:100,lbl:'Round soundhole'}],side:[]},
+  {id:'gibson_j45',lbl:'Gibson J-45',hz:100,vol:21.0,bl:502,xf:.330,ring:8,note:'Slope shoulder. Ladder-braced variant has different f_H.',top:[{id:1,type:'circle',d:98,t:2.5,w:98,h:98,lbl:'Round soundhole'}],side:[]},
+  {id:'classical',lbl:'Classical',hz:96,vol:19.0,bl:480,xf:.340,ring:9,note:'85mm hole, 2mm cedar top. Fan bracing — no patch typically needed.',top:[{id:1,type:'circle',d:85,t:2.0,w:85,h:85,lbl:'Round soundhole'}],side:[]},
+  {id:'selmer',lbl:'Selmer Oval',hz:100,vol:20.0,bl:480,xf:.280,ring:10,note:'80×110mm oval. High P/A ratio → lower resonance per area. Django sound.',top:[{id:1,type:'oval',d:94,w:80,h:110,t:2.5,lbl:'Oval soundhole'}],side:[]},
+  {id:'om_side',lbl:'OM + Side',hz:112,vol:17.5,bl:495,xf:.333,ring:8,note:'Upper bass side port boosts player monitoring. f_H shift +3–6 Hz.',top:[{id:1,type:'circle',d:90,t:2.5,w:90,h:90,lbl:'Main soundhole'}],side:[{id:2,d:30,rt:2.3,pos:'upper_bass',pt:'round',tube:0,lbl:'Side port'}]},
+  {id:'benedetto',lbl:'Benedetto F',hz:90,vol:24.0,bl:520,xf:.500,ring:15,note:'F-holes resonate at ~90 Hz not 120 Hz — elongated shape drives L_eff to 50+mm.',top:[{id:1,type:'fhole',d:50,w:23,h:110,t:5.0,lbl:'F-hole left'},{id:2,type:'fhole',d:50,w:23,h:110,t:5.0,lbl:'F-hole right'}],side:[]},
+];
+const DPRESETS={
+  martin_om:{lbl:'Martin OM',lb:381,ub:299.7,w:241.3,bl:495,de:108,dn:102,sf:0.85},
+  martin_d28:{lbl:'D-28',lb:396.9,ub:292.1,w:273.1,bl:508,de:121.9,dn:107.9,sf:0.85},
+  gibson_j45:{lbl:'J-45',lb:406.4,ub:304.8,w:266.7,bl:502,de:120.7,dn:101.6,sf:0.85},
+  l00:{lbl:'L-00',lb:342.9,ub:276.2,w:228.6,bl:464.8,de:104.8,dn:88.9,sf:0.85},
+  classical:{lbl:'Classical',lb:370,ub:290,w:235,bl:480,de:100,dn:90,sf:0.85},
+  parlor:{lbl:'Parlor',lb:330.2,ub:254,w:215.9,bl:444.5,de:95.3,dn:85,sf:0.85},
+  benedetto:{lbl:'Benedetto 17"',lb:431.8,ub:330.2,w:279.4,bl:520.7,de:88.9,dn:76.2,sf:0.75},
+};
+
+// ── Compute ──────────────────────────────────────────────────────────────────
+function compute(){
+  const ports=buildPorts();
+  const{f,det}=helmholtz(S.vol/1000,ports,S.k0,S.gamma);
+  const mp=ports.filter(p=>p.loc==='top');
+  const mr=mp.length?Math.sqrt(mp[0].a/Math.PI)*1000:45;
+  const ring=ringChk(mr,S.ring);
+  const plac=placChk(S.xn,S.blen);
+  const tot=ports.reduce((s,p)=>s+p.a,0);
+  S.res={f,det,ring,plac,tot};
+  render(S.res);drawCanvas();drawInline();updateTC();
+}
+
+// ── Render results ───────────────────────────────────────────────────────────
+function render(r){
+  const{f,det,ring,plac,tot}=r;
+  document.getElementById('hzValue').textContent=f>0?f.toFixed(1):'—';
+  document.getElementById('hzNote').textContent=f>0?hzNote(f)+' Air resonance':'Air resonance';
+  const rs=document.getElementById('ringStatus');rs.textContent=ring.s;rs.className='sv2 '+(ring.s==='GREEN'?'sg':ring.s==='YELLOW'?'sa':'sr');
+  const ps=document.getElementById('placStatus');ps.textContent=plac.v?'OK':'WARN';ps.className='sv2 '+(plac.v?'sg':'sr');
+  document.getElementById('areaDisp').textContent=(tot*1e4).toFixed(1)+'cm²';
+  document.getElementById('portCt').textContent=`${S.top.length}T/${S.side.length}S`;
+  const pct=f>0?Math.min(100,Math.max(0,(f-80)/50*100)):0;
+  const fill=document.getElementById('targetFill');fill.style.width=pct+'%';fill.style.background=f<88?'#5b8fa8':f>125?'#c84848':'#c8962e';
+  document.getElementById('resultRows').innerHTML=[
+    ['f_H',f>0?f.toFixed(1)+' Hz':'—',''],['Note',f>0?hzNote(f):'—',''],
+    ['Port area',(tot*1e4).toFixed(2)+' cm²',''],
+    ['Ring',ring.s,ring.s==='GREEN'?'good':ring.s==='YELLOW'?'warn':'bad'],
+    ['Placement',plac.v?plac.msg.split('—')[0]:'Out of range',plac.v?'good':'bad'],
+    ['Volume',S.vol+' L',''],['Top thick',S.topThick+' mm',''],
+  ].map(([k,v,c])=>`<div class="rrow"><span class="rk">${k}</span><span class="rv ${c}">${v}</span></div>`).join('');
+
+  // Port table
+  document.getElementById('portTbl').innerHTML=det.map(d=>`<tr><td>${d.l}</td><td>${d.areaCm}cm²</td><td>${d.Lmm}mm</td><td style="color:${d.loc==='side'?'var(--blue)':'var(--dim)'}">${d.frac}</td></tr>`).join('')||'<tr><td colspan="4" style="color:var(--dim3);text-align:center;padding:7px">No ports</td></tr>';
+
+  // Side radiation
+  const rp=document.getElementById('radPanel'),ri=document.getElementById('radItems');
+  if(S.side.length>0){rp.style.display='block';ri.innerHTML=S.side.map(sp=>{const po=SPOS[sp.pos]||SPOS.upper_bass;const pt=PTYP[sp.pt]||PTYP.round;return`<div class="radi"><div class="radn">${sp.lbl} · ${po.lbl} · ${pt.lbl}</div><div class="radd">${po.rad}</div><div class="rads">f_H shift: ${po.shift}</div><div class="radst">⚠ ${po.struct}</div>${sp.tube>0?`<div class="radst" style="color:var(--amber)">Chambered: ${sp.tube}mm tube adds to L_eff</div>`:''}</div>`;}).join('');}
+  else{rp.style.display='none';}
+
+  // Warnings
+  const w=[];
+  if(ring.s==='RED')w.push({c:'red',t:ring.msg+' — '+ring.note});
+  else if(ring.s==='YELLOW')w.push({c:'yellow',t:ring.msg+' — '+ring.note});
+  if(!plac.v)w.push({c:'red',t:plac.msg+' — '+plac.note});
+  S.side.forEach(sp=>{if(sp.pos==='waist'&&sp.d>25)w.push({c:'yellow',t:`Waist port ${sp.d}mm may be too large — rim is narrow here (≤25mm recommended)`});});
+  if(f<70&&f>0)w.push({c:'red',t:'Air resonance very low — check volume and area'});
+  if(f>145)w.push({c:'yellow',t:'Air resonance high — consider larger body or smaller hole'});
+  w.push({c:'note',t:'Accuracy ±10–15 Hz before γ calibration. Calibrate against 3+ measured guitars.'});
+  document.getElementById('warnList').innerHTML=w.map(x=>`<div class="wi ${x.c}">${x.t}</div>`).join('');
+}
+
+// ── Inline curve ─────────────────────────────────────────────────────────────
+function drawInline(){
+  const cv=document.getElementById('inlineCurve');const ctx=cv.getContext('2d');
+  const W=cv.offsetWidth||230,H=cv.offsetHeight||76;cv.width=W;cv.height=H;ctx.clearRect(0,0,W,H);
+  const d0=S.top[0]?.d||90;const pts=curve(S.vol/1000,d0,S.topThick,S.k0,S.gamma);if(pts.length<2)return;
+  const fmn=Math.min(...pts.map(p=>p.f)),fmx=Math.max(...pts.map(p=>p.f));
+  const dmn=pts[0].d,dmx=pts[pts.length-1].d;
+  const fx=d=>(d-dmn)/(dmx-dmn)*(W-16)+8,fy=f=>H-8-(f-fmn)/(fmx-fmn+.1)*(H-16);
+  ctx.strokeStyle='rgba(255,255,255,.04)';ctx.lineWidth=1;
+  for(let fi=Math.ceil(fmn/10)*10;fi<=fmx;fi+=10){ctx.beginPath();ctx.moveTo(8,fy(fi));ctx.lineTo(W-8,fy(fi));ctx.stroke();}
+  ctx.beginPath();ctx.moveTo(fx(pts[0].d),fy(pts[0].f));pts.forEach(p=>ctx.lineTo(fx(p.d),fy(p.f)));ctx.strokeStyle='#c8962e';ctx.lineWidth=1.5;ctx.stroke();
+  const cp=pts.reduce((a,b)=>Math.abs(b.d-d0)<Math.abs(a.d-d0)?b:a,pts[0]);
+  ctx.beginPath();ctx.arc(fx(cp.d),fy(cp.f),3.5,0,Math.PI*2);ctx.fillStyle='#e0b84a';ctx.fill();
+  const cf=S.res?.f||0;document.getElementById('curveCur').textContent=cf>0?`${cf.toFixed(0)} Hz`:'';
+  document.getElementById('curveMarks').innerHTML=`<span>${pts[0].d.toFixed(0)}mm</span><span>${pts[Math.floor(pts.length/2)].d.toFixed(0)}mm</span><span>${pts[pts.length-1].d.toFixed(0)}mm</span>`;
+}
+
+// ── Big sensitivity canvas ────────────────────────────────────────────────────
+function drawSensitivity(){
+  const cv=document.getElementById('sensitivityCanvas');if(!cv)return;
+  const ctx=cv.getContext('2d');const W=360,H=190;cv.width=W;cv.height=H;
+  ctx.fillStyle='#1c1a16';ctx.fillRect(0,0,W,H);
+  const d0=S.top[0]?.d||90;const pts=curve(S.vol/1000,d0,S.topThick,S.k0,S.gamma,30,28);if(pts.length<2)return;
+  const fmn=Math.min(...pts.map(p=>p.f))-1,fmx=Math.max(...pts.map(p=>p.f))+1;
+  const dmn=pts[0].d,dmx=pts[pts.length-1].d;const pd=32;
+  const fx=d=>pd+(d-dmn)/(dmx-dmn)*(W-pd-10),fy=f=>H-pd-(f-fmn)/(fmx-fmn)*(H-pd-10);
+  ctx.strokeStyle='rgba(255,255,255,.05)';ctx.lineWidth=1;
+  for(let fi=Math.ceil(fmn/10)*10;fi<=fmx;fi+=10){ctx.beginPath();ctx.moveTo(pd,fy(fi));ctx.lineTo(W-10,fy(fi));ctx.stroke();ctx.fillStyle='rgba(154,145,126,.5)';ctx.font='9px DM Mono,monospace';ctx.textAlign='right';ctx.fillText(fi,pd-3,fy(fi)+3);}
+  for(let di=Math.ceil(dmn/10)*10;di<=dmx;di+=10){ctx.beginPath();ctx.moveTo(fx(di),10);ctx.lineTo(fx(di),H-pd);ctx.stroke();ctx.fillStyle='rgba(154,145,126,.5)';ctx.font='9px DM Mono,monospace';ctx.textAlign='center';ctx.fillText(di+'mm',fx(di),H-pd+12);}
+  ctx.fillStyle='#9a917e';ctx.font='9px DM Mono,monospace';ctx.textAlign='center';ctx.fillText('Diameter (mm)',W/2,H-3);
+  ctx.save();ctx.translate(9,H/2);ctx.rotate(-Math.PI/2);ctx.fillText('f_H (Hz)',0,0);ctx.restore();
+  const grd=ctx.createLinearGradient(0,fy(fmx),0,fy(fmn));grd.addColorStop(0,'rgba(200,150,46,.18)');grd.addColorStop(1,'rgba(200,150,46,0)');
+  ctx.beginPath();ctx.moveTo(fx(pts[0].d),fy(pts[0].f));pts.forEach(p=>ctx.lineTo(fx(p.d),fy(p.f)));
+  ctx.lineTo(fx(pts[pts.length-1].d),H-pd);ctx.lineTo(fx(pts[0].d),H-pd);ctx.fillStyle=grd;ctx.fill();
+  ctx.beginPath();ctx.moveTo(fx(pts[0].d),fy(pts[0].f));pts.forEach(p=>ctx.lineTo(fx(p.d),fy(p.f)));ctx.strokeStyle='#c8962e';ctx.lineWidth=2;ctx.stroke();
+  const f0=S.res?.f||0;ctx.beginPath();ctx.arc(fx(d0),fy(f0),5,0,Math.PI*2);ctx.fillStyle='#e0b84a';ctx.fill();
+  if(f0>0){ctx.fillStyle='#e0b84a';ctx.font='10px DM Mono,monospace';ctx.textAlign='left';ctx.fillText(`${f0.toFixed(1)} Hz @ ${d0}mm`,fx(d0)+8,fy(f0)-8);}
+}
+
+// ── Canvas body drawing ───────────────────────────────────────────────────────
+function drawCanvas(){
+  const cv=document.getElementById('mainCanvas');if(!cv)return;
+  const ctx=cv.getContext('2d');const CW=410,CH=510;ctx.clearRect(0,0,CW,CH);
+  const cx=CW/2,by=28,bh=CH-56,bw=CW-110;
+  const ub=by+bh*.32,ws=by+bh*.45,lb=by+bh*.72;
+  const ubw=bw*.42,ww=bw*.34,lbw=bw*.50;
+  ctx.beginPath();ctx.moveTo(cx,by);
+  ctx.bezierCurveTo(cx+ubw,by,cx+ubw,ub,cx+ubw*.9,ub);
+  ctx.bezierCurveTo(cx+ww+12,ub+10,cx+ww,ws-10,cx+ww,ws);
+  ctx.bezierCurveTo(cx+ww,ws+10,cx+lbw-12,ws+20,cx+lbw,lb);
+  ctx.bezierCurveTo(cx+lbw,lb+(by+bh-lb)*.6,cx,by+bh,cx,by+bh);
+  ctx.bezierCurveTo(cx-lbw,by+bh,cx-lbw,lb+(by+bh-lb)*.6,cx-lbw,lb);
+  ctx.bezierCurveTo(cx-lbw+12,ws+20,cx-ww,ws+10,cx-ww,ws);
+  ctx.bezierCurveTo(cx-ww,ws-10,cx-ww-12,ub+10,cx-ubw*.9,ub);
+  ctx.bezierCurveTo(cx-ubw,ub,cx-ubw,by,cx,by);
+  ctx.closePath();ctx.fillStyle='#1a1510';ctx.fill();
+  ctx.save();ctx.clip();ctx.strokeStyle='rgba(200,160,80,.03)';ctx.lineWidth=1;
+  for(let xi=55;xi<CW-55;xi+=5){ctx.beginPath();ctx.moveTo(xi,by);ctx.lineTo(xi,by+bh);ctx.stroke();}
+  ctx.restore();ctx.strokeStyle='#3a3020';ctx.lineWidth=1.5;ctx.stroke();
+  ctx.fillStyle='rgba(90,143,168,.07)';ctx.fillRect(55,by,bw,bh*.20);
+  ctx.fillStyle='rgba(90,143,168,.18)';ctx.font='7px DM Mono,monospace';ctx.fillText('NECK BLOCK',61,by+12);
+  ctx.fillStyle='rgba(90,143,168,.07)';ctx.fillRect(55,by+bh*.70,bw,bh*.30);
+  ctx.fillStyle='rgba(90,143,168,.18)';ctx.fillText('TAIL BLOCK',61,by+bh*.70+12);
+  ctx.setLineDash([3,4]);ctx.strokeStyle='rgba(200,150,46,.18)';ctx.lineWidth=1;
+  ctx.beginPath();ctx.moveTo(57,by+bh*.20+bh*.70*.333);ctx.lineTo(CW-57,by+bh*.20+bh*.70*.333);ctx.stroke();
+  ctx.setLineDash([]);ctx.fillStyle='rgba(200,150,46,.32)';ctx.fillText('1/3',40,by+bh*.20+bh*.70*.333+3);
+  ctx.setLineDash([2,3]);ctx.strokeStyle='rgba(200,100,60,.28)';ctx.lineWidth=1;
+  const bry=by+bh*.20+bh*.70*.50;ctx.beginPath();ctx.moveTo(cx-lbw*.7,bry);ctx.lineTo(cx+lbw*.7,bry);ctx.stroke();
+  ctx.setLineDash([]);ctx.fillStyle='rgba(200,100,60,.4)';ctx.fillText('bridge',cx+lbw*.7+4,bry+3);
+  const bt=by+bh*.20,bz=bh*.70;
+  const xf=S.blen>0?S.xn/S.blen:0.333;
+  S.top.forEach(p=>{
+    const pcy=bt+xf*bz;let rx,ry;
+    if(p.type==='circle'){rx=ry=(p.d/2)*(bw/420);}
+    else{rx=(p.w/2)*(bw/420);ry=(p.h/2)*(bw/420);}
+    const grd=ctx.createRadialGradient(cx,pcy,0,cx,pcy,Math.max(rx,ry));grd.addColorStop(0,'rgba(0,0,0,.95)');grd.addColorStop(1,'rgba(0,0,0,.75)');
+    ctx.beginPath();ctx.ellipse(cx,pcy,rx,ry,0,0,Math.PI*2);ctx.fillStyle=grd;ctx.fill();
+    const rc=S.res?.ring?.s==='GREEN'?'#5ab86a':S.res?.ring?.s==='YELLOW'?'#d4a030':'#c84848';
+    ctx.strokeStyle=rc;ctx.lineWidth=1.5;ctx.stroke();
+    const rp=S.ring*(bw/420);ctx.beginPath();ctx.ellipse(cx,pcy,rx+rp,ry+rp,0,0,Math.PI*2);ctx.strokeStyle=rc+'28';ctx.lineWidth=1;ctx.setLineDash([3,3]);ctx.stroke();ctx.setLineDash([]);
+    ctx.fillStyle='rgba(200,150,46,.6)';ctx.font='7px DM Mono,monospace';ctx.textAlign='center';
+    ctx.fillText(p.lbl,cx,pcy-Math.max(rx,ry)-5);
+    ctx.fillText(p.type==='circle'?`∅${p.d}mm`:`${p.w}×${p.h}mm`,cx,pcy+Math.max(rx,ry)+11);ctx.textAlign='left';
+  });
+  const posMap={upper_treble:[cx+ubw*.82,by+bh*.17,8],upper_bass:[cx-ubw*.82,by+bh*.17,-8],lower_treble:[cx+lbw*.88,by+bh*.60,8],lower_bass:[cx-lbw*.88,by+bh*.60,-8],waist:[cx+ww*.98,ws,-8]};
+  S.side.forEach(sp=>{
+    if(sp.pos==='symmetric'){[[cx+ubw*.82,by+bh*.17],[cx-ubw*.82,by+bh*.17]].forEach(([sx,sy])=>{const sr=(sp.d/2)*(bw/420);ctx.beginPath();ctx.arc(sx,sy,sr,0,Math.PI*2);ctx.fillStyle='rgba(91,143,168,.3)';ctx.fill();ctx.strokeStyle='#5b8fa8';ctx.lineWidth=1.5;ctx.stroke();});return;}
+    const pm=posMap[sp.pos]||posMap.upper_bass;const[sx,sy,dx]=pm;const sr=(sp.d/2)*(bw/420);
+    ctx.beginPath();ctx.arc(sx,sy,sr,0,Math.PI*2);ctx.fillStyle='rgba(91,143,168,.35)';ctx.fill();ctx.strokeStyle='#5b8fa8';ctx.lineWidth=1.5;ctx.stroke();
+    ctx.fillStyle='rgba(91,143,168,.75)';ctx.font='7px DM Mono,monospace';ctx.textAlign=dx>0?'left':'right';
+    ctx.fillText(sp.lbl,sx+dx,sy-sr-4);ctx.fillText(`∅${sp.d}mm`,sx+dx,sy+sr+10);ctx.textAlign='left';
+  });
+  if(S.res?.f>0){ctx.fillStyle='rgba(200,150,46,.8)';ctx.font='italic 11px Playfair Display,Georgia,serif';ctx.textAlign='right';ctx.fillText(`f_H = ${S.res.f.toFixed(1)} Hz`,CW-10,CH-10);ctx.textAlign='left';}
+}
+
+// ── Two-cavity update ─────────────────────────────────────────────────────────
+function updateTC(){
+  const mp=buildPorts().filter(p=>p.loc==='top');if(!mp.length)return;
+  const iv=+document.getElementById('selVol').value;
+  const ap=+document.getElementById('selAp').value;
+  const wt=+document.getElementById('selWall').value;
+  const r=twoCav(S.vol/1000,mp,iv,ap,wt,S.k0,S.gamma);
+  const e=(id,v)=>{const el=document.getElementById(id);if(el)el.textContent=v;};
+  e('tc1',r.f1);e('tcn1',hzNote(parseFloat(r.f1)));e('tc2',r.f2);e('tcn2',hzNote(parseFloat(r.f2)));e('tcSep',r.sep);
+  const n=document.getElementById('tcNote');if(n)n.textContent=`Main resonance (hole→outside): ${r.f1} Hz ${hzNote(parseFloat(r.f1))} · Resonator (resonator→body): ${r.f2} Hz ${hzNote(parseFloat(r.f2))}`;
+}
+
+// ── Port list rendering ───────────────────────────────────────────────────────
+function renderTopPorts(){
+  const list=document.getElementById('topPortList');list.innerHTML='';
+  S.top.forEach((p,i)=>{
+    const d=document.createElement('div');d.className='pi';
+    d.innerHTML=`<div class="ph"><span class="pn">${p.lbl}</span><button class="prm" data-i="${i}">×</button></div>
+    <div class="f"><span class="fk">Type</span><select class="fv" style="flex:1" data-i="${i}" data-k="type"><option value="circle" ${p.type==='circle'?'selected':''}>Round</option><option value="oval" ${p.type==='oval'?'selected':''}>Oval</option><option value="fhole" ${p.type==='fhole'?'selected':''}>F-hole</option></select></div>
+    ${p.type==='circle'?`<div class="f"><span class="fk">Diameter</span><input type="number" class="fv n" data-i="${i}" data-k="d" value="${p.d}" min="30" max="150"><span class="fu">mm</span></div>`:
+    `<div class="f"><span class="fk">Width</span><input type="number" class="fv n" data-i="${i}" data-k="w" value="${p.w||90}" min="15" max="150"><span class="fu">mm</span></div>
+     <div class="f"><span class="fk">Height</span><input type="number" class="fv n" data-i="${i}" data-k="h" value="${p.h||110}" min="20" max="200"><span class="fu">mm</span></div>`}
+    <div class="f"><span class="fk">Plate thick.</span><input type="number" class="fv n" data-i="${i}" data-k="t" value="${p.t}" min="1.5" max="8" step="0.1"><span class="fu">mm</span></div>`;
+    d.querySelector('.prm').addEventListener('click',()=>{if(S.top.length>1){S.top.splice(i,1);renderTopPorts();compute();}});
+    d.querySelectorAll('[data-k]').forEach(el=>el.addEventListener('change',()=>{const ii=+el.dataset.i,k=el.dataset.k;S.top[ii][k]=el.tagName==='SELECT'?el.value:+el.value;if(k==='type')renderTopPorts();compute();}));
+    list.appendChild(d);
+  });
+}
+
+function renderSidePorts(){
+  const list=document.getElementById('sidePortList');list.innerHTML='';
+  S.side.forEach((sp,i)=>{
+    const d=document.createElement('div');d.className='pi sp';
+    d.innerHTML=`<div class="ph"><span class="pn">${sp.lbl}</span><span class="psp">Side</span><button class="prm" data-i="${i}">×</button></div>
+    <div class="f"><span class="fk">Position</span><select class="fv" style="flex:1" data-k="pos">${Object.entries(SPOS).map(([k,v])=>`<option value="${k}" ${sp.pos===k?'selected':''}>${v.lbl}</option>`).join('')}</select></div>
+    <div class="f"><span class="fk">Port type</span><select class="fv" style="flex:1" data-k="pt">${Object.entries(PTYP).map(([k,v])=>`<option value="${k}" ${sp.pt===k?'selected':''}>${v.lbl}</option>`).join('')}</select></div>
+    <div class="f"><span class="fk">Diameter</span><input type="number" class="fv n" data-k="d" value="${sp.d}" min="10" max="60"><span class="fu">mm</span></div>
+    <div class="f"><span class="fk">Rim thick.</span><input type="number" class="fv n" data-k="rt" value="${sp.rt||2.3}" min="1.5" max="5" step="0.1"><span class="fu">mm</span></div>
+    <div class="f"><span class="fk">Tube length</span><input type="number" class="fv n" data-k="tube" value="${sp.tube||0}" min="0" max="60"><span class="fu">mm</span></div>
+    <div style="font-size:7px;color:var(--dim3);margin-top:4px;line-height:1.4">${PTYP[sp.pt]?.desc||''}</div>`;
+    d.querySelector('.prm').addEventListener('click',()=>{S.side.splice(i,1);renderSidePorts();compute();});
+    d.querySelectorAll('[data-k]').forEach(el=>el.addEventListener('change',()=>{const k=el.dataset.k;S.side[i][k]=el.tagName==='SELECT'?el.value:+el.value;renderSidePorts();compute();}));
+    list.appendChild(d);
+  });
+}
+
+// ── Presets UI ───────────────────────────────────────────────────────────────
+function renderPresets(){
+  const g=document.getElementById('presetGrid');g.innerHTML='';
+  PRESETS.forEach(pr=>{
+    const b=document.createElement('button');b.className='pbtn'+(S.preset===pr.id?' active':'');
+    b.innerHTML=`<span class="pnm">${pr.lbl}</span><span class="phz">${pr.hz} Hz</span>`;
+    b.addEventListener('click',()=>applyPreset(pr));g.appendChild(b);
+  });
+}
+function applyPreset(pr){
+  S.preset=pr.id;S.vol=pr.vol;S.blen=pr.bl;S.xn=Math.round(pr.xf*pr.bl);S.ring=pr.ring;
+  S.top=pr.top.map(p=>({...p,id:++PID}));S.side=(pr.side||[]).map(p=>({...p,id:++PID}));
+  document.getElementById('volume').value=pr.vol;document.getElementById('volumeVal').textContent=pr.vol;
+  document.getElementById('bodyLength').value=pr.bl;document.getElementById('xFromNeck').value=Math.round(pr.xf*pr.bl);document.getElementById('ringWidth').value=pr.ring;
+  const ne=document.getElementById('presetNote'),nt=document.getElementById('presetNoteText');
+  if(pr.note){nt.textContent=pr.note;ne.style.display='block';}else{ne.style.display='none';}
+  renderPresets();renderTopPorts();renderSidePorts();compute();
+}
+
+// ── Dim presets UI ───────────────────────────────────────────────────────────
+function renderDimPresets(){
+  const g=document.getElementById('dimPresetGrid');g.innerHTML='';
+  Object.entries(DPRESETS).forEach(([k,v])=>{
+    const b=document.createElement('button');b.className='dpbtn';b.textContent=v.lbl;
+    b.addEventListener('click',()=>{
+      document.getElementById('dLb').value=v.lb;document.getElementById('dUb').value=v.ub;
+      document.getElementById('dW').value=v.w;document.getElementById('dBl').value=v.bl;
+      document.getElementById('dDe').value=v.de;document.getElementById('dDn').value=v.dn;
+      document.getElementById('dSf').value=v.sf||0.85;updateDims();
+    });g.appendChild(b);
+  });
+}
+function updateDims(){
+  const v=bodyVol(+document.getElementById('dLb').value,+document.getElementById('dUb').value,+document.getElementById('dW').value,+document.getElementById('dBl').value,+document.getElementById('dDe').value,+document.getElementById('dDn').value,+document.getElementById('dSf').value);
+  const res=document.getElementById('dimsResult');res.style.display='block';
+  res.innerHTML=`Calculated volume: <b>${v.L.toFixed(2)} L</b><br><span style="font-size:7px;color:var(--dim3)">Elliptical model × factor 1.83. Override if measured value available.</span>`;
+  document.getElementById('applyDimsBtn')._v=v.L;
+}
+
+// ── Wire controls ─────────────────────────────────────────────────────────────
+function wire(id,key,parse,cb){const el=document.getElementById(id);if(!el)return;const fn=()=>{S[key]=parse?parse(el.value):el.value;S.preset=null;renderPresets();if(cb)cb();compute();};el.addEventListener('input',fn);el.addEventListener('change',fn);}
+wire('volume','vol',parseFloat,()=>document.getElementById('volumeVal').textContent=document.getElementById('volume').value);
+wire('bodyLength','blen',parseFloat);wire('topThick','topThick',parseFloat);
+wire('ringWidth','ring',parseFloat);wire('xFromNeck','xn',parseFloat);
+wire('gamma','gamma',parseFloat);wire('k0','k0',parseFloat);
+
+document.getElementById('addTopBtn').addEventListener('click',()=>{S.top.push({id:++PID,type:'circle',d:80,w:80,h:80,t:2.5,lbl:`Port ${S.top.length+1}`});renderTopPorts();compute();});
+document.getElementById('addSideBtn').addEventListener('click',()=>{S.side.push({id:++PID,d:30,rt:2.3,pos:'upper_bass',pt:'round',tube:0,lbl:`Side port ${S.side.length+1}`});renderSidePorts();compute();});
+
+['selVol','selAp','selWall'].forEach(id=>{const el=document.getElementById(id);if(el)el.addEventListener('change',()=>{updateTC();});});
+['dLb','dUb','dW','dBl','dDe','dDn','dSf'].forEach(id=>{const el=document.getElementById(id);if(el)el.addEventListener('change',updateDims);});
+
+document.getElementById('applyDimsBtn').addEventListener('click',()=>{const v=document.getElementById('applyDimsBtn')._v;if(v){S.vol=parseFloat(v.toFixed(2));document.getElementById('volume').value=S.vol;document.getElementById('volumeVal').textContent=S.vol;compute();}});
+
+document.getElementById('invSolveBtn').addEventListener('click',()=>{
+  const tgt=+document.getElementById('invTarget').value;const spd=+document.getElementById('invSidePort').value;
+  const r=invSolve(tgt,S.vol/1000,S.topThick,S.k0,S.gamma,spd);
+  const res=document.getElementById('invResult');res.style.display='block';
+  res.innerHTML=`Target: ${tgt} Hz<br>Main hole: <b>${r.d} mm diameter</b><br>Area: <b>${r.a} cm²</b><br>Achieved f_H: <b>${r.f} Hz</b>${spd>0?`<br><span style="font-size:7px;color:var(--dim)">With ${spd}mm side port</span>`:''}
+  <br><button class="applybtn am" style="margin-top:7px" id="invApply">↑ Apply diameter</button>`;
+  document.getElementById('invApply').addEventListener('click',()=>{if(S.top.length>0){S.top[0].d=parseFloat(r.d);S.top[0].type='circle';S.top[0].w=parseFloat(r.d);S.top[0].h=parseFloat(r.d);}renderTopPorts();compute();document.querySelector('[data-tab="design"]').click();});
+  drawSensitivity();
+});
+
+document.querySelectorAll('.tab-btn').forEach(btn=>{
+  btn.addEventListener('click',()=>{
+    document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));btn.classList.add('active');
+    const tab=btn.dataset.tab;S.tab=tab;
+    const map={design:'tabDesign',inverse:'tabInverse',bodydims:'tabBodydims',selmer:'tabSelmer'};
+    Object.values(map).forEach(id=>document.getElementById(id).style.display='none');
+    document.getElementById(map[tab]).style.display='';
+    if(tab==='inverse'){drawSensitivity();}if(tab==='selmer'){updateTC();}
+  });
+});
+
+// Canvas drag/scroll
+const cv=document.getElementById('mainCanvas');let drag=false;
+cv.addEventListener('mousedown',()=>drag=true);cv.addEventListener('mouseup',()=>drag=false);cv.addEventListener('mouseleave',()=>drag=false);
+cv.addEventListener('mousemove',e=>{if(!drag)return;const bh=510-56,bz=bh*.70,bt=28+bh*.20;const f=Math.min(.68,Math.max(.21,(e.offsetY-bt)/bz));S.xn=Math.round(f*S.blen);document.getElementById('xFromNeck').value=S.xn;compute();});
+cv.addEventListener('wheel',e=>{e.preventDefault();if(!S.top.length)return;const p=S.top[0];const d=e.deltaY<0?2:-2;if(p.type==='circle'){p.d=Math.min(140,Math.max(40,p.d+d));p.w=p.d;p.h=p.d;}else{p.w=Math.min(140,Math.max(20,p.w+d));p.h=Math.min(160,Math.max(30,p.h+d));}S.preset=null;renderPresets();renderTopPorts();compute();},{passive:false});
+
+document.getElementById('exportBtn').addEventListener('click',()=>{
+  const data={format:'soundhole_design_v1',timestamp:new Date().toISOString(),preset:S.preset,
+    body:{volume_liters:S.vol,length_mm:S.blen,top_thickness_mm:S.topThick},
+    top_ports:S.top,side_ports:S.side,
+    structural:{ring_width_mm:S.ring,x_from_neck_mm:S.xn},
+    physics:{k0:S.k0,gamma:S.gamma,plate_mass_factor:0.92},
+    result:S.res?{f_helmholtz_hz:S.res.f,ring_status:S.res.ring?.s,placement_valid:S.res.plac?.v,total_area_cm2:(S.res.tot*1e4).toFixed(2)}:null};
+  const url=URL.createObjectURL(new Blob([JSON.stringify(data,null,2)],{type:'application/json'}));
+  const a=document.createElement('a');a.href=url;a.download=`soundhole_${S.preset||'custom'}_${Math.round(S.res?.f||0)}hz.json`;a.click();URL.revokeObjectURL(url);
+});
+
+// Init
+renderPresets();renderTopPorts();renderSidePorts();renderDimPresets();updateDims();applyPreset(PRESETS[0]);
+</script>
+</body>
+</html>

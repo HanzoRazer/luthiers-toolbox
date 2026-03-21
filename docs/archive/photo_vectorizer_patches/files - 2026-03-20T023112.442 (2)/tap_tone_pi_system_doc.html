@@ -1,0 +1,925 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>tap-tone-pi — System Architecture & Measurement Framework</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:ital,wght@0,300;0,400;0,500;0,700;1,300&family=Crimson+Pro:ital,wght@0,300;0,400;0,600;1,300;1,400&display=swap');
+
+  :root {
+    --bg:       #08090b;
+    --surf:     #0f1115;
+    --surf2:    #161a1f;
+    --surf3:    #1c2028;
+    --border:   #252c38;
+    --border2:  #1a2030;
+    --teal:     #3abfb0;
+    --teal2:    #2a9088;
+    --gold:     #c8a050;
+    --gold2:    #a07830;
+    --blue:     #5090d0;
+    --green:    #50b878;
+    --red:      #c06050;
+    --purple:   #9080c8;
+    --text:     #c8d0dc;
+    --text2:    #8090a0;
+    --white:    #e8eef8;
+    --dim:      #506070;
+    --dim2:     #303840;
+    --mono:     'JetBrains Mono', monospace;
+    --serif:    'Crimson Pro', Georgia, serif;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--serif);
+    font-size: 14px;
+    line-height: 1.8;
+  }
+
+  .shell { display: flex; min-height: 100vh; }
+
+  /* ── Sidebar ── */
+  nav {
+    width: 230px; min-width: 230px;
+    background: var(--surf);
+    border-right: 1px solid var(--border);
+    position: sticky; top: 0; height: 100vh;
+    overflow-y: auto; padding: 24px 0 48px;
+  }
+  nav::-webkit-scrollbar { width: 3px; }
+  nav::-webkit-scrollbar-thumb { background: var(--border); }
+  .nav-brand { padding: 0 18px 20px; border-bottom: 1px solid var(--border); margin-bottom: 16px; }
+  .nav-eye {
+    font-family: var(--mono); font-size: 7px; letter-spacing: 2.5px;
+    text-transform: uppercase; color: var(--teal); margin-bottom: 6px;
+  }
+  .nav-title { font-size: 13px; font-weight: 600; color: var(--white); line-height: 1.35; }
+  .nav-sub { font-family: var(--mono); font-size: 9px; color: var(--dim); margin-top: 4px; }
+  .nav-grp { padding: 0 18px; }
+  .nav-grp-lbl {
+    font-family: var(--mono); font-size: 7px; letter-spacing: 1.8px;
+    text-transform: uppercase; color: var(--dim2); margin: 14px 0 6px;
+  }
+  nav a {
+    display: block; font-family: var(--mono); font-size: 9px;
+    color: var(--dim); text-decoration: none;
+    padding: 3px 0 3px 10px;
+    border-left: 2px solid transparent;
+    letter-spacing: 0.2px; transition: all .1s;
+    line-height: 1.6;
+  }
+  nav a:hover { color: var(--teal); border-left-color: var(--teal2); }
+  nav a.active { color: var(--teal); border-left-color: var(--teal); }
+
+  /* ── Main ── */
+  main { flex: 1; max-width: 920px; padding: 44px 56px 100px; }
+
+  /* ── Header ── */
+  .doc-header {
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 32px; margin-bottom: 44px;
+  }
+  .doc-eye {
+    font-family: var(--mono); font-size: 8px; letter-spacing: 2.5px;
+    text-transform: uppercase; color: var(--teal); margin-bottom: 12px;
+  }
+  .doc-title {
+    font-size: 34px; font-weight: 300; color: var(--white);
+    line-height: 1.15; margin-bottom: 12px; letter-spacing: -0.5px;
+    font-style: italic;
+  }
+  .doc-title strong { font-weight: 600; font-style: normal; }
+  .doc-meta { display: flex; gap: 24px; flex-wrap: wrap; margin-top: 16px; }
+  .doc-meta span { font-family: var(--mono); font-size: 9px; color: var(--dim); }
+  .doc-meta span b { color: var(--text2); }
+
+  /* ── Headings ── */
+  h2 {
+    font-size: 22px; font-weight: 300; font-style: italic;
+    color: var(--white); margin: 52px 0 16px;
+    padding-bottom: 10px; border-bottom: 1px solid var(--border);
+    letter-spacing: -0.3px; scroll-margin-top: 24px;
+  }
+  h2 strong { font-weight: 600; font-style: normal; }
+  h3 {
+    font-family: var(--mono); font-size: 10px; font-weight: 500;
+    color: var(--teal); letter-spacing: 1.2px; text-transform: uppercase;
+    margin: 30px 0 12px; scroll-margin-top: 24px;
+  }
+  h4 { font-size: 14px; font-weight: 600; color: var(--text2); margin: 18px 0 8px; }
+
+  p { margin-bottom: 14px; color: var(--text); font-size: 14px; }
+  em { font-style: italic; color: var(--text2); }
+  strong { font-weight: 600; color: var(--white); }
+
+  /* ── Signal chain ── */
+  .signal-chain {
+    display: flex; align-items: center;
+    gap: 0; margin: 24px 0; flex-wrap: wrap;
+  }
+  .sc-node {
+    background: var(--surf2); border: 1px solid var(--border);
+    border-radius: 4px; padding: 14px 18px; min-width: 130px;
+    text-align: center; position: relative;
+  }
+  .sc-node.hl { border-color: var(--teal); background: var(--surf3); }
+  .sc-node.warn { border-color: var(--gold); }
+  .sc-node .label {
+    font-family: var(--mono); font-size: 9px; letter-spacing: 1px;
+    text-transform: uppercase; color: var(--dim); margin-bottom: 5px;
+  }
+  .sc-node .name { font-size: 12px; font-weight: 600; color: var(--white); }
+  .sc-node .sub { font-family: var(--mono); font-size: 9px; color: var(--text2); margin-top: 3px; }
+  .sc-node.hl .label { color: var(--teal); }
+  .sc-node.warn .label { color: var(--gold); }
+  .sc-arrow {
+    font-family: var(--mono); font-size: 18px; color: var(--dim);
+    padding: 0 6px; flex-shrink: 0;
+  }
+
+  /* ── Phase cards ── */
+  .phase-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 14px; margin: 20px 0; }
+  .phase-card {
+    background: var(--surf2); border: 1px solid var(--border);
+    border-radius: 4px; padding: 18px;
+  }
+  .phase-card.p1 { border-top: 3px solid var(--teal); }
+  .phase-card.p2 { border-top: 3px solid var(--blue); }
+  .phase-card.p3 { border-top: 3px solid var(--gold); }
+  .phase-card.loop { border-top: 3px solid var(--green); }
+  .phase-num {
+    font-family: var(--mono); font-size: 8px; letter-spacing: 2px;
+    text-transform: uppercase; margin-bottom: 6px;
+  }
+  .p1 .phase-num { color: var(--teal); }
+  .p2 .phase-num { color: var(--blue); }
+  .p3 .phase-num { color: var(--gold); }
+  .loop .phase-num { color: var(--green); }
+  .phase-card h4 { font-size: 13px; font-weight: 600; color: var(--white); margin: 0 0 8px; }
+  .phase-card p { font-size: 12px; color: var(--text2); margin: 0; line-height: 1.6; }
+
+  /* ── Formula block ── */
+  .formula {
+    background: var(--surf2); border: 1px solid var(--border);
+    border-left: 3px solid var(--teal);
+    border-radius: 3px; padding: 18px 22px; margin: 16px 0;
+    font-family: var(--mono); font-size: 12px;
+    color: var(--white); line-height: 2.1; white-space: pre-wrap;
+  }
+  .formula .sym  { color: var(--teal); font-weight: 500; }
+  .formula .val  { color: var(--green); }
+  .formula .com  { color: var(--dim); font-style: italic; }
+  .formula .warn { color: var(--gold); }
+  .formula .note {
+    font-size: 10px; color: var(--dim); font-style: italic;
+    margin-top: 10px; padding-top: 10px;
+    border-top: 1px solid var(--border2); line-height: 1.6;
+  }
+
+  /* ── Callout ── */
+  .callout {
+    border: 1px solid var(--border); border-left: 3px solid var(--teal);
+    border-radius: 3px; padding: 14px 18px; margin: 16px 0;
+    font-size: 13px; color: var(--text2);
+  }
+  .callout.gold { border-left-color: var(--gold); }
+  .callout.red  { border-left-color: var(--red); }
+  .callout.blue { border-left-color: var(--blue); }
+  .callout .lbl {
+    font-family: var(--mono); font-size: 8px; letter-spacing: 1.5px;
+    text-transform: uppercase; color: var(--teal); margin-bottom: 6px; display: block;
+  }
+  .callout.gold .lbl { color: var(--gold); }
+  .callout.red  .lbl { color: var(--red);  }
+  .callout.blue .lbl { color: var(--blue); }
+
+  /* ── Table ── */
+  table { width: 100%; border-collapse: collapse; margin: 16px 0; font-size: 12px; }
+  th {
+    background: var(--surf2); padding: 8px 14px; text-align: left;
+    font-family: var(--mono); font-size: 8px; font-weight: 500;
+    letter-spacing: 1px; text-transform: uppercase; color: var(--dim);
+    border-bottom: 1px solid var(--border);
+  }
+  td {
+    padding: 7px 14px; border-bottom: 1px solid var(--border2);
+    font-family: var(--mono); font-size: 10px; color: var(--text2);
+    vertical-align: top;
+  }
+  td:first-child { color: var(--text); }
+  tr:last-child td { border-bottom: none; }
+  tr:hover td { background: var(--surf2); }
+  .td-hi { color: var(--teal) !important; font-weight: 500; }
+
+  /* ── Loop diagram ── */
+  .loop-diagram {
+    background: var(--surf2); border: 1px solid var(--border);
+    border-radius: 4px; padding: 24px 28px; margin: 20px 0;
+    font-family: var(--mono); font-size: 10px; color: var(--text2);
+    line-height: 1.9; white-space: pre;
+  }
+  .loop-diagram .hl  { color: var(--teal); }
+  .loop-diagram .p1  { color: var(--teal); }
+  .loop-diagram .p2  { color: var(--blue); }
+  .loop-diagram .p3  { color: var(--gold); }
+  .loop-diagram .lp  { color: var(--green); }
+  .loop-diagram .dim { color: var(--dim2); }
+
+  code {
+    font-family: var(--mono); font-size: 10px;
+    background: var(--surf2); border: 1px solid var(--border);
+    padding: 1px 6px; border-radius: 2px; color: var(--green);
+  }
+
+  hr.rule { border: none; border-top: 1px solid var(--border); margin: 36px 0; }
+  .sec-n { font-family: var(--mono); font-size: 10px; color: var(--dim2); margin-right: 8px; }
+
+  /* ── Hardware spec box ── */
+  .hw-spec {
+    background: var(--surf2); border: 1px solid var(--border);
+    border-radius: 4px; margin: 14px 0; overflow: hidden;
+  }
+  .hw-spec-header {
+    background: var(--surf3); padding: 10px 18px;
+    display: flex; align-items: center; gap: 12px;
+    border-bottom: 1px solid var(--border);
+  }
+  .hw-spec-num {
+    font-family: var(--mono); font-size: 9px; letter-spacing: 1px;
+    color: var(--teal); font-weight: 500;
+    background: var(--bg); padding: 2px 8px; border-radius: 2px;
+    border: 1px solid var(--teal2);
+  }
+  .hw-spec-name { font-size: 13px; font-weight: 600; color: var(--white); }
+  .hw-spec-body { padding: 14px 18px; }
+  .hw-spec-body p { font-size: 12px; margin-bottom: 8px; color: var(--text2); }
+  .hw-spec-body p:last-child { margin-bottom: 0; }
+  .hw-req {
+    display: flex; gap: 8px; margin: 6px 0; align-items: baseline;
+  }
+  .hw-req .req-lbl {
+    font-family: var(--mono); font-size: 9px; color: var(--teal2);
+    min-width: 80px; flex-shrink: 0;
+  }
+  .hw-req .req-val { font-size: 12px; color: var(--text); }
+</style>
+</head>
+<body>
+<div class="shell">
+
+<!-- Sidebar -->
+<nav>
+  <div class="nav-brand">
+    <div class="nav-eye">Production Shop</div>
+    <div class="nav-title">tap-tone-pi</div>
+    <div class="nav-sub">System Architecture</div>
+  </div>
+  <div class="nav-grp">
+    <div class="nav-grp-lbl">Hardware Stack</div>
+    <a href="#stack">Authoritative Stack</a>
+    <a href="#microphones">Microphones</a>
+    <a href="#interface">USB Audio Interface</a>
+    <a href="#pi">Raspberry Pi 5</a>
+    <a href="#contingencies">All Contingencies</a>
+  </div>
+  <div class="nav-grp">
+    <div class="nav-grp-lbl">Measurement Loop</div>
+    <a href="#loop-overview">Loop Overview</a>
+    <a href="#phase1">Phase 1 — Tap Tone</a>
+    <a href="#phase2">Phase 2 — ODS Grid</a>
+    <a href="#phase3">Phase 3 — Closed-Box</a>
+    <a href="#closing">Closing the Loop</a>
+  </div>
+  <div class="nav-grp">
+    <div class="nav-grp-lbl">Theory</div>
+    <a href="#fft">FFT Fundamentals</a>
+    <a href="#transfer">Transfer Functions</a>
+    <a href="#coherence">Coherence</a>
+    <a href="#modes">Plate Modes</a>
+    <a href="#wolf">Wolf Note Physics</a>
+    <a href="#burt-gap">The Burt Gap</a>
+  </div>
+  <div class="nav-grp">
+    <div class="nav-grp-lbl">Reference</div>
+    <a href="#outputs">Output Artifacts</a>
+    <a href="#boundary">Measurement Boundary</a>
+  </div>
+</nav>
+
+<!-- Main -->
+<main>
+<div class="doc-header">
+  <div class="doc-eye">Authoritative System Documentation</div>
+  <div class="doc-title"><strong>tap-tone-pi</strong><br>Hardware Stack · Three-Phase Loop · Theoretical Framework</div>
+  <p style="color:var(--dim);font-size:12px;font-family:var(--mono);margin-top:10px;">
+    This document defines the complete measurement system — what goes in the chain, why it is there,
+    what each phase produces, how the phases connect, and the physics underlying every number.
+  </p>
+  <div class="doc-meta">
+    <span><b>Author:</b> Ross L. Echols Jr., P.E. #78195</span>
+    <span><b>System:</b> tap-tone-pi v2.0</span>
+    <span><b>Platform:</b> Raspberry Pi 5</span>
+    <span><b>Status:</b> Authoritative</span>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════════ -->
+<h2 id="stack"><span class="sec-n">01</span><strong>Authoritative Hardware Stack</strong></h2>
+
+<p>The complete signal chain from acoustic source to digital artifact. Every element is required. The Pi 5 has no usable audio input — phantom power and analog-to-digital conversion must be provided externally by the USB audio interface.</p>
+
+<div class="signal-chain">
+  <div class="sc-node">
+    <div class="label">Source</div>
+    <div class="name">Plate / Instrument</div>
+    <div class="sub">acoustic vibration</div>
+  </div>
+  <div class="sc-arrow">→</div>
+  <div class="sc-node hl">
+    <div class="label">Transducer</div>
+    <div class="name">Microphone</div>
+    <div class="sub">any type (see §02)</div>
+  </div>
+  <div class="sc-arrow">→</div>
+  <div class="sc-node hl warn">
+    <div class="label">Required</div>
+    <div class="name">USB Audio Interface</div>
+    <div class="sub">48V phantom · preamp · ADC</div>
+  </div>
+  <div class="sc-arrow">→</div>
+  <div class="sc-node hl">
+    <div class="label">Compute</div>
+    <div class="name">Raspberry Pi 5</div>
+    <div class="sub">Python · sounddevice · FFT</div>
+  </div>
+  <div class="sc-arrow">→</div>
+  <div class="sc-node">
+    <div class="label">Output</div>
+    <div class="name">Artifacts</div>
+    <div class="sub">WAV · JSON · CSV</div>
+  </div>
+</div>
+
+<div class="callout gold">
+  <span class="lbl">Critical — Pi 5 Has No Usable Audio Input</span>
+  The Raspberry Pi 5 omits the 3.5mm audio jack entirely. The Pi 4 had a combo jack but its ADC is consumer-grade — unsuitable for frequency-response work where you need to resolve modal peaks to within a few Hz. <strong>A USB audio interface providing 48V phantom power is mandatory in all configurations.</strong>
+</div>
+
+<hr class="rule">
+
+<!-- ── Microphones ── -->
+<h2 id="microphones"><span class="sec-n">02</span><strong>Microphones — Any Type</strong></h2>
+
+<p>The system is designed to accept any microphone. The interface provides phantom power universally, so the builder is not locked to a specific capsule type.</p>
+
+<div class="hw-spec">
+  <div class="hw-spec-header">
+    <div class="hw-spec-num">MIC-A</div>
+    <div class="hw-spec-name">USB Measurement Microphone (Self-Contained)</div>
+  </div>
+  <div class="hw-spec-body">
+    <div class="hw-req"><span class="req-lbl">Example</span><span class="req-val">miniDSP UMIK-1 — the reference instrument for this system</span></div>
+    <div class="hw-req"><span class="req-lbl">Signal chain</span><span class="req-val">Capsule → internal preamp → internal ADC → USB → Pi (bypasses the audio interface entirely)</span></div>
+    <div class="hw-req"><span class="req-lbl">Phase use</span><span class="req-val">Phase 1 single-point only. Cannot be used for Phase 2 coherent two-channel capture.</span></div>
+    <div class="hw-req"><span class="req-lbl">Note</span><span class="req-val">Integrates phantom power, preamp, and ADC in the microphone body. Plugs directly to Pi USB — no interface required for Phase 1 only.</span></div>
+  </div>
+</div>
+
+<div class="hw-spec">
+  <div class="hw-spec-header">
+    <div class="hw-spec-num">MIC-B</div>
+    <div class="hw-spec-name">XLR Condenser Microphone</div>
+  </div>
+  <div class="hw-spec-body">
+    <div class="hw-req"><span class="req-lbl">Type</span><span class="req-val">Large or small diaphragm condenser, cardioid or omnidirectional</span></div>
+    <div class="hw-req"><span class="req-lbl">Phantom power</span><span class="req-val">Requires 48V phantom — provided by the USB audio interface</span></div>
+    <div class="hw-req"><span class="req-lbl">Output</span><span class="req-val">Balanced XLR, microphone level (−40 to −60 dBu)</span></div>
+    <div class="hw-req"><span class="req-lbl">Signal chain</span><span class="req-val">Capsule → XLR → USB interface (phantom + preamp + ADC) → USB → Pi</span></div>
+    <div class="hw-req"><span class="req-lbl">Phase use</span><span class="req-val">Phase 1 and Phase 2. For Phase 2, two identical mics into a two-channel interface on a shared clock.</span></div>
+  </div>
+</div>
+
+<div class="hw-spec">
+  <div class="hw-spec-header">
+    <div class="hw-spec-num">MIC-C</div>
+    <div class="hw-spec-name">Contact Microphone / Accelerometer</div>
+  </div>
+  <div class="hw-spec-body">
+    <div class="hw-req"><span class="req-lbl">Type</span><span class="req-val">Piezo contact mic or ICP accelerometer</span></div>
+    <div class="hw-req"><span class="req-lbl">Mounting</span><span class="req-val">Wax or removable adhesive at antinode of target mode — does not add significant mass for Mode 2 work</span></div>
+    <div class="hw-req"><span class="req-lbl">Advantage</span><span class="req-val">Immune to ambient noise; direct structural coupling; needed for Phase 3 closed-box work where soundhole access is limited</span></div>
+    <div class="hw-req"><span class="req-lbl">Phase use</span><span class="req-val">Phase 3 specifically — tapping through the soundhole while a contact mic reads the top directly</span></div>
+  </div>
+</div>
+
+<hr class="rule">
+
+<!-- ── USB Interface ── -->
+<h2 id="interface"><span class="sec-n">03</span><strong>USB Audio Interface — The Mandatory Link</strong></h2>
+
+<p>This is the element absent from existing documentation. It provides three functions the Pi cannot provide itself: phantom power for condenser microphones, clean low-noise preamplification, and a quality analog-to-digital converter.</p>
+
+<table>
+  <tr><th>Requirement</th><th>Minimum</th><th>Why It Matters</th></tr>
+  <tr><td>Phantom power</td><td>48V at XLR inputs</td><td>Required to bias condenser capsule. Without it the mic produces no output.</td></tr>
+  <tr><td>Preamp gain</td><td>40–60 dB clean</td><td>Mic-level signal is −40 to −60 dBu. Must be raised to line level for ADC.</td></tr>
+  <tr><td>ADC resolution</td><td>24-bit minimum</td><td>16-bit (96 dB dynamic range) loses low-level modal peaks in the noise floor. 24-bit gives 144 dB theoretical range.</td></tr>
+  <tr><td>Sample rate</td><td>48 kHz minimum</td><td>Guitar modes of interest are 50–2000 Hz. 48 kHz provides headroom to 24 kHz.</td></tr>
+  <tr><td>Channels for Phase 2</td><td>2 simultaneous, shared clock</td><td>Transfer functions require phase-coherent two-channel capture. Two separate USB devices have independent clocks — phase relationship is meaningless.</td></tr>
+  <tr><td>Driver stability on Pi OS</td><td>USB Audio Class compliant</td><td>Proprietary drivers do not exist for Pi OS. Interface must be class-compliant (plug-and-play).</td></tr>
+</table>
+
+<h3>Recommended interfaces by use case</h3>
+
+<table>
+  <tr><th>Interface</th><th>Channels</th><th>Phase</th><th>Cost</th><th>Notes</th></tr>
+  <tr><td class="td-hi">Focusrite Scarlett Solo</td><td>1 in</td><td>1 only</td><td>~$120</td><td>Best preamp quality for single-mic work. Class-compliant. Reliable on Pi OS.</td></tr>
+  <tr><td class="td-hi">Focusrite Scarlett 2i2</td><td>2 in, shared clock</td><td>1 + 2</td><td>~$160</td><td>The Phase 2 reference choice. Two channels with coherent clocking. Class-compliant.</td></tr>
+  <tr><td>Behringer UMC22</td><td>1 in</td><td>1 only</td><td>~$50</td><td>Budget option for Phase 1 development. Lower preamp quality but functional.</td></tr>
+  <tr><td>Behringer UMC202HD</td><td>2 in, shared clock</td><td>1 + 2</td><td>~$80</td><td>Budget two-channel option. Adequate for Phase 2 coherence measurements.</td></tr>
+  <tr><td>MOTU M2</td><td>2 in, shared clock</td><td>1 + 2</td><td>~$170</td><td>Higher headroom than Scarlett. Good choice for Phase 3 structural measurements.</td></tr>
+</table>
+
+<hr class="rule">
+
+<!-- ── Pi 5 ── -->
+<h2 id="pi"><span class="sec-n">04</span><strong>Raspberry Pi 5 — Compute Node</strong></h2>
+
+<table>
+  <tr><th>Specification</th><th>Value</th><th>Relevance</th></tr>
+  <tr><td>Audio input</td><td class="td-hi">None (Pi 5) / unusable (Pi 4)</td><td>Drives the mandatory interface requirement</td></tr>
+  <tr><td>USB ports</td><td>2× USB 3.0, 2× USB 2.0</td><td>Interface on USB 3.0 for best throughput stability</td></tr>
+  <tr><td>RAM</td><td>4GB or 8GB recommended</td><td>FFT on 48kHz 24-bit 2-channel uses ~10MB/min; 4GB adequate</td></tr>
+  <tr><td>Storage</td><td>32GB+ SD or USB SSD</td><td>Phase 2 sessions: ~8MB/35-point grid. 32GB holds ~4000 sessions.</td></tr>
+  <tr><td>OS</td><td>Raspberry Pi OS (64-bit)</td><td>Required for Python 3.10+; USB audio class-compliance built in</td></tr>
+  <tr><td>Audio driver</td><td>ALSA via sounddevice/PortAudio</td><td>No additional driver installation needed for class-compliant interface</td></tr>
+  <tr><td>Power</td><td>27W USB-C PD</td><td>USB audio interface draws ≤500mA; within Pi 5 USB budget</td></tr>
+</table>
+
+<h3>Software stack</h3>
+
+<div class="formula"><span class="sym">Python 3.10+</span>
+  ├─ sounddevice     <span class="com">// audio capture — wraps PortAudio</span>
+  ├─ numpy / scipy   <span class="com">// FFT, Welch PSD, coherence, signal processing</span>
+  ├─ matplotlib      <span class="com">// spectrum plots, mode shape visualization</span>
+  ├─ pyserial        <span class="com">// load cell + dial indicator (bending rig)</span>
+  └─ jsonschema      <span class="com">// contract validation on all output artifacts</span>
+
+tap_tone_pi package:
+  ├─ modes/tap_tone/         <span class="com">// Phase 1 capture + FFT peak logger</span>
+  ├─ scripts/phase2/         <span class="com">// Phase 2 ODS + coherence + wolf metrics</span>
+  ├─ modes/bending_stiffness/ <span class="com">// MOE from three-point bending (bending rig)</span>
+  ├─ modes/chladni/          <span class="com">// Chladni pattern indexing</span>
+  └─ contracts/              <span class="com">// JSON Schema contracts for all outputs</span></div>
+
+<hr class="rule">
+
+<!-- ── All Contingencies ── -->
+<h2 id="contingencies"><span class="sec-n">05</span><strong>All Contingencies — Stack Configurations</strong></h2>
+
+<table>
+  <tr><th>Scenario</th><th>Mic Type</th><th>Interface</th><th>Channels</th><th>Phases Supported</th></tr>
+  <tr>
+    <td>Minimal Phase 1 only</td>
+    <td>UMIK-1 (USB)</td>
+    <td>None — mic is self-contained</td>
+    <td>1</td>
+    <td class="td-hi">Phase 1</td>
+  </tr>
+  <tr>
+    <td>Standard Phase 1</td>
+    <td>XLR condenser</td>
+    <td>Focusrite Solo or UMC22 (1-ch)</td>
+    <td>1</td>
+    <td class="td-hi">Phase 1</td>
+  </tr>
+  <tr>
+    <td>Full Phase 1 + Phase 2</td>
+    <td>2× XLR condensers</td>
+    <td>Focusrite 2i2 or UMC202HD (2-ch shared clock)</td>
+    <td>2 coherent</td>
+    <td class="td-hi">Phase 1 + Phase 2</td>
+  </tr>
+  <tr>
+    <td>Phase 3 closed-box</td>
+    <td>1× XLR air mic + contact mic</td>
+    <td>2i2 or UMC202HD</td>
+    <td>2 coherent</td>
+    <td class="td-hi">Phase 1 + Phase 2 + Phase 3</td>
+  </tr>
+  <tr>
+    <td>Bending rig (MOE)</td>
+    <td>n/a</td>
+    <td>n/a (serial only)</td>
+    <td>n/a</td>
+    <td class="td-hi">Bending Stiffness Mode</td>
+  </tr>
+</table>
+
+<div class="callout">
+  <span class="lbl">The Complete System</span>
+  Two XLR condensers + a two-channel USB interface + Pi 5 covers every phase simultaneously. The bending rig adds a load cell and dial indicator via serial — independent of the audio chain. Total hardware cost for the full system: $300–400 depending on interface choice.
+</div>
+
+<hr class="rule">
+
+<!-- ══════════════════════════════════════════════════════════════ -->
+<h2 id="loop-overview"><span class="sec-n">06</span><strong>The Three-Phase Measurement Loop</strong></h2>
+
+<p>The central problem in lutherie plate work is that free-plate measurements (taken before assembly) do not predict installed-plate behavior (after the box is closed). The three-phase loop is designed to characterize both states and quantify the gap between them — making wolf notes a pre-assembly calculation rather than a post-assembly crisis.</p>
+
+<div class="loop-diagram"><span class="p1">PHASE 1 ─ Free Plate (before assembly)</span>
+  │
+  │  Plate on foam · suspended at nodal intersection
+  │  Single mic · tap at bridge point · tap at lower bout
+  │  Outputs: Mode 1, Mode 2, Mode 5 frequencies (Hz)
+  │           Bending stiffness EI (from bending rig)
+  │           Species, thickness, density
+  │
+  ▼
+<span class="p2">PHASE 2 ─ Installed Plate, No Strings (box closed, unstrung)</span>
+  │
+  │  Guitar on support · foam isolation · soundhole accessible
+  │  Reference mic fixed · roving mic on 35-point grid
+  │  Speaker-air excitation through soundhole
+  │  Outputs: Transfer function H(f) at each grid point
+  │           Coherence γ²(f) as quality gate
+  │           ODS snapshot (operational deflection shapes)
+  │           WSI curve (wolf suspicion index)
+  │
+  ▼
+<span class="p3">PHASE 3 ─ Installed Plate, Strings at Pitch (fully strung)</span>
+  │
+  │  Same guitar · strings tuned to concert pitch
+  │  Same reference mic · contact mic or air mic through soundhole
+  │  Tap same grid points through soundhole
+  │  Outputs: Mode 2 installed frequency under string prestress
+  │           Wolf note identification (played notes vs body modes)
+  │           Beat frequency measurement if wolf present
+  │
+  ▼
+<span class="lp">THE BURT GAP — Phase 1 vs Phase 3 differential</span>
+  │
+  │  ΔMode2 = Mode2_Phase3 − Mode2_Phase1
+  │  Typically +15 to +45 Hz (assembly + string prestress)
+  │  Varies by body style, brace pattern, string gauge
+  │
+  ▼
+<span class="lp">CORRECTION ALGORITHM (target of the research program)</span>
+  │
+  │  Free-plate target = desired installed frequency − ΔMode2
+  │  Example: target 300 Hz installed → tune free plate to ~265 Hz
+  │
+  ▼
+<span class="dim">Applied to next build → closes the loop</span></div>
+
+<div class="phase-grid">
+  <div class="phase-card p1">
+    <div class="phase-num">Phase 1</div>
+    <h4>Free Plate</h4>
+    <p>Before assembly. Plate suspended in air. Modes measured without boundary constraints or string load. The classic tap-tone measurement.</p>
+  </div>
+  <div class="phase-card p2">
+    <div class="phase-num">Phase 2</div>
+    <h4>Installed · No Strings</h4>
+    <p>Box closed, unstrung. Spatial ODS grid reveals mode shapes under assembly constraints. Quantifies the boundary condition shift from free to installed.</p>
+  </div>
+  <div class="phase-card p3">
+    <div class="phase-num">Phase 3</div>
+    <h4>Installed · Strung</h4>
+    <p>Final state at pitch. String prestress adds membrane stiffening to the top. This is the operating condition that produces wolf notes.</p>
+  </div>
+  <div class="phase-card loop" style="grid-column: span 3;">
+    <div class="phase-num">The Loop</div>
+    <h4>What Closes It</h4>
+    <p>Measuring the same instrument across all three phases on multiple builds establishes ΔMode2 as a predictable function of body style, brace pattern, and string gauge. Once that function is known, free-plate tuning targets can be corrected for the installed state — and wolf notes become a design choice rather than a post-assembly accident.</p>
+  </div>
+</div>
+
+<hr class="rule">
+
+<!-- ── Phase 1 ── -->
+<h2 id="phase1"><span class="sec-n">07</span><strong>Phase 1 — Free Plate Tap Tone</strong></h2>
+
+<h3>Protocol</h3>
+<table>
+  <tr><th>Element</th><th>Specification</th></tr>
+  <tr><td>Specimen state</td><td>Graduated plate, before assembly. Braces glued. F-holes or soundhole cut if applicable.</td></tr>
+  <tr><td>Support</td><td>Foam blocks at nodal intersection of modes 2 and 5. For guitar top: approximately over the bass-side soundhole, offset toward centerline.</td></tr>
+  <tr><td>Excitation</td><td>Sharp tap with hard wooden dowel or pencil. One clean impulse — no double taps. Tap at bridge point (Mode 2 antinode) and at lower bout center.</td></tr>
+  <tr><td>Microphone</td><td>20–30 cm from plate surface. Fixed position — mark it. Do not move between taps.</td></tr>
+  <tr><td>Capture</td><td>2.5 seconds. 48 kHz sample rate. No AGC, no noise suppression, no enhancement.</td></tr>
+  <tr><td>Repeat</td><td>3–5 taps per position. Discard outliers. Report mean and standard deviation.</td></tr>
+</table>
+
+<h3>What is being measured</h3>
+<p>Mode 2 (the cross-dipole, or X-mode in Caldersmith's nomenclature) is the primary measurement. It corresponds to the plate rocking side-to-side, with a nodal line running approximately through the waist. This is the mode most strongly coupled to the string's primary bending vibration and most likely to produce wolf notes when the installed frequency coincides with a commonly played note.</p>
+
+<div class="formula"><span class="sym">frequency</span> ∝ √(<span class="sym">stiffness</span> / <span class="sym">mass</span>)
+
+<span class="com">// Chris Burt (American Lutherie #85, 2006)</span>
+<span class="com">// Removing wood decreases both stiffness and mass, lowering frequency.</span>
+<span class="com">// A note higher than target = plate too stiff = more wood to remove.</span>
+<span class="com">// A note lower than target = graduated too far = irreversible.</span>
+
+Phase 1 targets (free plate, 6-string acoustic, light gauge):
+  <span class="sym">Mode 1</span> (monopole, 0,0):   ~80–120 Hz
+  <span class="sym">Mode 2</span> (cross-dipole, 1,0): ~150–200 Hz   <span class="com">// primary target</span>
+  <span class="sym">Mode 5</span> (ring mode, 0,2):    ~280–350 Hz</div>
+
+<h3>Bending rig — MOE measurement</h3>
+<p>Run alongside Phase 1. Three-point bending on the same plate blank gives Young's modulus E_L (along grain) and E_C (cross grain). These values feed the plate design calculator in the Production Shop and establish the species-specific stiffness properties of that individual piece of wood — not a table average, but this specific plate.</p>
+
+<hr class="rule">
+
+<!-- ── Phase 2 ── -->
+<h2 id="phase2"><span class="sec-n">08</span><strong>Phase 2 — Roving Grid ODS</strong></h2>
+
+<p>Phase 2 maps the spatial behavior of the installed top plate across 35 points on a grid. It requires two simultaneous channels on a single interface with a shared clock. This is the phase that cannot be done with two separate USB microphones.</p>
+
+<h3>The two-channel requirement</h3>
+
+<div class="callout red">
+  <span class="lbl">Non-Negotiable — Shared Clock</span>
+  Transfer functions and coherence calculations require the phase relationship between channels to be meaningful. Two USB audio devices run on independent crystal oscillators that drift relative to each other. Even at a few parts per million of drift, the phase relationship becomes useless within seconds. Both channels must be captured by a single interface with one shared clock.
+</div>
+
+<h3>Measurement topology</h3>
+
+<div class="formula">Reference mic (fixed):  placed near the soundhole, stationary throughout all 35 points
+Roving mic:             moved point-to-point on the 35-point grid
+
+At each point:
+  <span class="sym">X_ref(f)</span>  = FFT of reference channel   <span class="com">// normalization signal</span>
+  <span class="sym">X_rov(f)</span>  = FFT of roving channel    <span class="com">// response at this grid point</span>
+
+Transfer function (H1 estimator):
+  <span class="sym">H(f)</span> = G_xy(f) / G_xx(f)
+  where G_xx = auto-spectrum of reference
+        G_xy = cross-spectrum (roving × reference conjugate)
+
+Coherence (quality gate):
+  <span class="sym">γ²(f)</span> = |G_xy(f)|² / (G_xx(f) × G_yy(f))
+  Range: 0 (no causal relationship) to 1 (perfect linear relationship)
+  Threshold: γ² > 0.8 required to accept measurement at that frequency</div>
+
+<h3>What Phase 2 produces</h3>
+<table>
+  <tr><th>Artifact</th><th>Content</th><th>Use</th></tr>
+  <tr><td>ODS snapshot</td><td>H(f) magnitude and phase at each of 35 grid points, per frequency</td><td>Mode shape visualization — where the plate moves most at any given frequency</td></tr>
+  <tr><td>WSI curve</td><td>Wolf Suspicion Index vs frequency</td><td>Flags frequencies where spatial localization + phase entropy + coherence indicate wolf risk</td></tr>
+  <tr><td>Wolf candidates</td><td>Frequency bins flagged by WSI above threshold</td><td>Identifies which notes to check in Phase 3</td></tr>
+  <tr><td>Coherence grid</td><td>γ²(f) at each point</td><td>Quality gate — low coherence data is marked invalid, not used in ODS</td></tr>
+</table>
+
+<hr class="rule">
+
+<!-- ── Phase 3 ── -->
+<h2 id="phase3"><span class="sec-n">09</span><strong>Phase 3 — Closed-Box Under String Prestress</strong></h2>
+
+<p>Phase 3 is the measurement state that does not exist anywhere in the lutherie literature as a systematic practice. It is the installed plate under the actual operating load — strings at pitch, boundary conditions fully established, the instrument as a musician will play it.</p>
+
+<h3>Why this state is different</h3>
+
+<div class="formula">Free plate (Phase 1):
+  - No boundary constraints (foam support ≈ free-free)
+  - No in-plane compressive load
+  - Modes are pure plate bending modes
+
+Installed, no strings (Phase 2):
+  - Boundary constrained (kerfed lining, glue joint)
+  - Top-to-back couple through sides
+  - Mode frequencies shift UP ~15–30 Hz from Phase 1
+
+Installed, strung (Phase 3):
+  - Above constraints plus:
+  - Bridge torque: ~2500 N·mm trying to rotate bridge forward
+  - Saddle downforce: ~100 N vertical at bridge
+  - In-plane compression forward of bridge (top is prestressed)
+  - Mode frequencies shift UP additional ~5–15 Hz from Phase 2
+
+Total Phase 1 → Phase 3 shift (<span class="sym">Burt Gap</span>):
+  <span class="sym">ΔMode2</span> ≈ 20–45 Hz (typical, varies by body style and string gauge)</div>
+
+<h3>How to measure Phase 3 through a soundhole</h3>
+<p>The challenge is that the soundhole is only 100mm diameter on a typical acoustic guitar, and the strings are in the way. The practical approach is to use a contact microphone mounted to the inside of the top at an antinode of Mode 2 (near the bass-side X-brace intersection), with a long wire exiting through the soundhole. The plate is tapped through the soundhole using a long dowel while the contact mic reads the response. A small USB audio interface accepts the contact mic on one channel and an air microphone on a second channel for coherence checking.</p>
+
+<hr class="rule">
+
+<!-- ── Closing the Loop ── -->
+<h2 id="closing"><span class="sec-n">10</span><strong>Closing the Loop — The Wolf Note Prevention System</strong></h2>
+
+<p>The loop connects the free-plate measurement (when you can still remove wood) to the installed behavior (when it is too late to remove wood without opening the box). Closing it requires empirical data from matched Phase 1 / Phase 3 measurements on the same instrument.</p>
+
+<div class="phase-grid" style="grid-template-columns:1fr 1fr;">
+  <div class="phase-card p1">
+    <div class="phase-num">Current State — Loop Open</div>
+    <h4>Before this research</h4>
+    <p>Builder tunes free plate by ear to a note name. Closes the box. Strings to pitch. Discovers wolf note. Options: scrape through soundhole (imprecise, risky) or open the box (nightmare scenario).</p>
+  </div>
+  <div class="phase-card loop">
+    <div class="phase-num">Target State — Loop Closed</div>
+    <h4>After calibration study</h4>
+    <p>Builder measures free plate with tap-tone-pi. System applies Burt Gap correction for this body style. Builder tunes free plate to corrected target. Closes box. No wolf note.</p>
+  </div>
+</div>
+
+<p>The calibration study — the research program described in the preceding documentation — needs 4–5 matched builds per body style. The Chinese production instruments are the development platform. Their consistent overbuilding means corrections will be large and clearly measurable, making the calibration coefficients easier to establish on early builds.</p>
+
+<hr class="rule">
+
+<!-- ══════════════════════════════════════════════════════════════ -->
+<h2 id="fft"><span class="sec-n">11</span><strong>FFT Fundamentals — Theoretical Framework</strong></h2>
+
+<h3>What the FFT produces</h3>
+
+<div class="formula">Given N samples at sample rate f_s:
+
+<span class="sym">Δf</span> = f_s / N                    <span class="com">// frequency resolution (Hz per bin)</span>
+<span class="sym">f_max</span> = f_s / 2                 <span class="com">// Nyquist limit</span>
+<span class="sym">bins</span> = N/2 + 1                 <span class="com">// number of frequency bins (real signal)</span>
+
+For guitar mode work at 48 kHz, 4096-sample block:
+  Δf = 48000 / 4096 = <span class="val">11.7 Hz</span>   <span class="com">// adequate for broad mode identification</span>
+
+For 5 Hz mode resolution (Burt Gap precision):
+  N ≥ 48000 / 5 = 9600 → use 16384 samples
+  Δf = 48000 / 16384 = <span class="val">2.9 Hz</span>    <span class="com">// adequate for Burt Gap measurement</span></div>
+
+<h3>Windowing — essential for impulse response work</h3>
+
+<p>The FFT assumes the signal is periodic within the analysis window. A tap tone impulse is not — it decays to silence. The Hanning window tapers the signal to zero at both edges, preventing spectral leakage. All tap tone work uses Hanning windowing. The decay portion of the impulse response is where the mode information lives — the window must be long enough to capture the full decay.</p>
+
+<hr class="rule">
+
+<!-- ── Transfer Functions ── -->
+<h2 id="transfer"><span class="sec-n">12</span><strong>Transfer Functions — Phase 2 Core</strong></h2>
+
+<div class="formula"><span class="sym">H(f)</span> = Y(f) / X(f)   <span class="com">// complex ratio: output to input at each frequency</span>
+
+|H(f)| = magnitude (gain) at each frequency
+∠H(f) = phase (delay) at each frequency
+
+Three estimators for different noise conditions:
+
+<span class="sym">H1</span> = G_xy / G_xx    <span class="com">// noise on output — best for speaker-driven excitation</span>
+<span class="sym">H2</span> = G_yy / G_yx    <span class="com">// noise on input — best for impact hammer excitation</span>
+<span class="sym">Hv</span> = √(H1 × H2)    <span class="com">// noise on both channels equally</span>
+
+For Phase 2 (speaker-air excitation, clean reference):
+  Use H1. The excitation is controlled and the reference channel is clean.
+  The roving channel picks up ambient noise → H1 is the correct estimator.</div>
+
+<hr class="rule">
+
+<!-- ── Coherence ── -->
+<h2 id="coherence"><span class="sec-n">13</span><strong>Coherence — The Quality Gate</strong></h2>
+
+<div class="formula"><span class="sym">γ²(f)</span> = |G_xy(f)|² / (G_xx(f) × G_yy(f))
+
+Range: 0 (no linear relationship) → 1 (perfect linear relationship)
+
+Interpretation:
+  γ² > 0.90   Excellent — measurement is trustworthy
+  γ² 0.70–0.90  Good — usable with care
+  γ² 0.50–0.70  Marginal — increase averaging or check setup
+  γ² < 0.50   Poor — result must be discarded
+
+Causes of low coherence:
+  - Ambient noise contaminating the roving channel
+  - Nonlinear response (plate response is linear; strings are not)
+  - Multiple signal paths (room reflections interfering)
+  - Insufficient averaging
+  - Extraneous vibration from HVAC or machinery
+
+Phase 2 quality gate: γ² < 0.80 at a frequency → that frequency bin
+is flagged invalid for that grid point. It is NOT averaged into the ODS.</div>
+
+<hr class="rule">
+
+<!-- ── Plate Modes ── -->
+<h2 id="modes"><span class="sec-n">14</span><strong>Plate Vibration Modes — The Targets</strong></h2>
+
+<p>Guitar top plate modes follow Caldersmith's nomenclature, which Phil Banks also uses in the FEA article (American Lutherie #18, 1989). Mode shapes are labeled (m, n) where m is the number of nodal lines across the grain and n is the number along the grain.</p>
+
+<table>
+  <tr><th>Mode</th><th>Caldersmith Label</th><th>Shape</th><th>Free Plate Target</th><th>Significance</th></tr>
+  <tr><td class="td-hi">Mode 1</td><td>(0,0) monopole</td><td>Whole plate moves in phase — no nodal lines</td><td>80–120 Hz</td><td>Coupled to Helmholtz air resonance; bass response</td></tr>
+  <tr><td class="td-hi">Mode 2</td><td>(1,0) cross dipole</td><td>Plate rocks side-to-side; one nodal line along grain</td><td>150–200 Hz</td><td>Primary graduation target; most wolf-prone mode</td></tr>
+  <tr><td>Mode 5</td><td>(0,2) ring mode</td><td>Four-quadrant pattern; two nodal lines cross</td><td>280–350 Hz</td><td>Cross-grain stiffness indicator; secondary check</td></tr>
+</table>
+
+<p>The nodal intersection of Mode 2 and Mode 5 is the suspension point used in the classical tap-tone technique (Burt's thumb-and-finger method). Suspending at this point damps neither mode, allowing both to be excited with a single tap.</p>
+
+<hr class="rule">
+
+<!-- ── Wolf Note ── -->
+<h2 id="wolf"><span class="sec-n">15</span><strong>Wolf Note Physics — The Coupled Oscillator</strong></h2>
+
+<div class="formula">A wolf note occurs when string frequency ω_s ≈ body mode frequency ω_b.
+
+Coupled oscillator characteristic equation:
+<span class="sym">λ±(ξ)</span> = [1 + ξ² ± √((1 − ξ²)² + 4Ω²ξ²)] / 2
+
+Where:
+  ξ = ω_s / ω_b          <span class="com">// detuning parameter (string/body frequency ratio)</span>
+  Ω² = κ² / (4ω_b²·m_b)  <span class="com">// dimensionless coupling strength</span>
+  λ = ω² / ω_b²           <span class="com">// normalized eigenfrequency squared</span>
+
+At resonance (ξ = 1):
+  Minimum gap: Δλ = 2Ω    <span class="com">// the avoided crossing</span>
+  Beat frequency: f_beat ≈ Ω × f_body
+
+Audible symptoms by beat frequency:
+  1–4 Hz:   growling, pulsating tone (most objectionable)
+  4–10 Hz:  warbling, uneven sustain
+  >10 Hz:   roughness, less distinct beating
+
+Wolf masked (unresolvable) when:
+  f_beat < (γ_lower + γ_upper)   <span class="com">// peaks merge within combined linewidths</span></div>
+
+<hr class="rule">
+
+<!-- ── Burt Gap ── -->
+<h2 id="burt-gap"><span class="sec-n">16</span><strong>The Burt Gap — Why the Loop Exists</strong></h2>
+
+<p>Chris Burt (American Lutherie #85, 2006) explicitly lists what free-plate tap tones do not include: being glued to a rib structure, the compression of strings on the top, and the tension of the back under load. He is aware of the gap but does not model it. Phil Banks' FEA work (American Lutherie #18, 1989) does not include string forces either — he derives purely structural modal properties from the free plate.</p>
+
+<p>The Burt Gap is the systematic offset between free-plate Mode 2 frequency and the same plate's Mode 2 frequency after assembly and stringing. It consists of two components:</p>
+
+<table>
+  <tr><th>Component</th><th>Mechanism</th><th>Typical Magnitude</th></tr>
+  <tr><td class="td-hi">Assembly shift</td><td>Boundary condition change: free edge → constrained by kerfed lining and sides. The constraint stiffens the plate's effective bending resistance.</td><td>+15–30 Hz</td></tr>
+  <tr><td class="td-hi">Prestress shift</td><td>String tension creates in-plane compressive load on the top plate forward of the bridge. This membrane stiffening raises out-of-plane bending modes slightly.</td><td>+5–15 Hz</td></tr>
+  <tr><td>Total Burt Gap</td><td>Phase 1 → Phase 3 difference</td><td>+20–45 Hz typical</td></tr>
+</table>
+
+<div class="callout gold">
+  <span class="lbl">The Research Question</span>
+  How consistent is ΔMode2 across builds of the same body style with the same brace pattern and string gauge? If the standard deviation is small relative to the mean — say, ±5 Hz on a mean shift of 30 Hz — then the correction is reliable enough to use as a design target. The Chinese production instruments are the controlled subjects for establishing this empirically. The tap-tone-pi pipeline is the measurement infrastructure. The study is the missing link.
+</div>
+
+<hr class="rule">
+
+<!-- ── Outputs ── -->
+<h2 id="outputs"><span class="sec-n">17</span><strong>Output Artifacts</strong></h2>
+
+<table>
+  <tr><th>Artifact</th><th>Phase</th><th>Format</th><th>Content</th></tr>
+  <tr><td><code>audio.wav</code></td><td>1, 2, 3</td><td>WAV 48kHz 24-bit</td><td>Raw capture — immutable, never modified</td></tr>
+  <tr><td><code>analysis.json</code></td><td>1</td><td>JSON</td><td>dominant_hz, peaks[], rms, clipped, confidence</td></tr>
+  <tr><td><code>spectrum.csv</code></td><td>1</td><td>CSV</td><td>freq_hz, magnitude — full FFT spectrum</td></tr>
+  <tr><td><code>transfer_function.csv</code></td><td>2</td><td>CSV</td><td>freq_hz, H_mag, H_phase, coherence per point</td></tr>
+  <tr><td><code>ods_snapshot.json</code></td><td>2</td><td>JSON</td><td>ODS at selected frequencies across all 35 grid points</td></tr>
+  <tr><td><code>wsi_curve.csv</code></td><td>2</td><td>CSV</td><td>Wolf Suspicion Index vs frequency</td></tr>
+  <tr><td><code>wolf_candidates.json</code></td><td>2</td><td>JSON</td><td>Flagged frequencies with localization and coherence metrics</td></tr>
+  <tr><td><code>bending_moe.json</code></td><td>Bending rig</td><td>JSON</td><td>E_GPa, method, geometry, fit statistics</td></tr>
+  <tr><td><code>manifest.json</code></td><td>All</td><td>JSON</td><td>SHA-256 hashes of all artifacts, timestamps, operator, rig config</td></tr>
+</table>
+
+<hr class="rule">
+
+<!-- ── Boundary ── -->
+<h2 id="boundary"><span class="sec-n">18</span><strong>Measurement Boundary</strong></h2>
+
+<p>This system measures and records. It does not interpret, score, grade, or advise. This distinction is architectural — it is enforced by CI guards in the codebase that prevent advisory logic from entering the measurement layer. The reasons are practical, not philosophical: measurement and interpretation require different validation standards, different uncertainty budgets, and different update cycles. Keeping them separate means each can be improved independently.</p>
+
+<p>Interpretation of the measurements — what to do about a wolf note candidate, whether a Mode 2 frequency is appropriate for a given instrument design, what brace modification is indicated — is the function of the Production Shop calculators and the builder's judgment. The tap-tone-pi pipeline provides the evidence. The Production Shop provides the analysis framework. The builder closes the loop.</p>
+
+<hr class="rule">
+
+<div style="text-align:center;padding:20px 0 0;font-family:var(--mono);font-size:8px;color:var(--dim2);letter-spacing:1.5px;">
+  THE PRODUCTION SHOP — tap-tone-pi System Architecture — Authoritative Documentation
+</div>
+
+</main>
+</div>
+
+<script>
+const sections = document.querySelectorAll('[id]');
+const links = document.querySelectorAll('nav a');
+new IntersectionObserver(entries => {
+  entries.forEach(e => {
+    if (e.isIntersecting) {
+      links.forEach(l => l.classList.remove('active'));
+      const l = document.querySelector(`nav a[href="#${e.target.id}"]`);
+      if (l) l.classList.add('active');
+    }
+  });
+}, { threshold: 0.35 }).observe || sections.forEach(s =>
+  new IntersectionObserver(([entry]) => {
+    if (entry.isIntersecting) {
+      links.forEach(l => l.classList.remove('active'));
+      const l = document.querySelector(`nav a[href="#${s.id}"]`);
+      if (l) l.classList.add('active');
+    }
+  }, { threshold: 0.35 }).observe(s)
+);
+</script>
+</body>
+</html>

@@ -1,0 +1,721 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Fret Wire Selection — The Production Shop</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Source+Code+Pro:wght@300;400;600&family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&display=swap');
+
+  :root {
+    --bg:     #0b0d10;
+    --surf:   #12151a;
+    --surf2:  #181c23;
+    --surf3:  #1e242d;
+    --border: #252e3a;
+    --bord2:  #1a2030;
+    --amber:  #c8922a;
+    --amb2:   #a07020;
+    --steel:  #6090b8;
+    --green:  #52a870;
+    --red:    #b85050;
+    --purple: #9878c8;
+    --text:   #c8d2de;
+    --text2:  #8898aa;
+    --white:  #e8eef8;
+    --dim:    #4a5868;
+    --dim2:   #2e3848;
+    --mono:   'Source Code Pro', monospace;
+    --serif:  'Libre Baskerville', Georgia, serif;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+  body { background: var(--bg); color: var(--text); font-family: var(--serif); font-size: 13px; line-height: 1.75; }
+
+  .shell { display: flex; min-height: 100vh; }
+
+  nav {
+    width: 215px; min-width: 215px;
+    background: var(--surf); border-right: 1px solid var(--border);
+    position: sticky; top: 0; height: 100vh; overflow-y: auto;
+    padding: 22px 0 48px;
+  }
+  .nav-brand { padding: 0 16px 18px; border-bottom: 1px solid var(--border); margin-bottom: 14px; }
+  .nav-eye { font-family: var(--mono); font-size: 7px; letter-spacing: 2.5px; text-transform: uppercase; color: var(--amber); margin-bottom: 5px; }
+  .nav-title { font-size: 11px; font-weight: 700; color: var(--white); line-height: 1.4; }
+  .nav-grp { padding: 0 16px; }
+  .nav-grp-lbl { font-family: var(--mono); font-size: 7px; letter-spacing: 1.5px; text-transform: uppercase; color: var(--dim2); margin: 12px 0 5px; }
+  nav a { display: block; font-family: var(--mono); font-size: 9px; color: var(--dim); text-decoration: none; padding: 3px 0 3px 8px; border-left: 2px solid transparent; transition: all .1s; }
+  nav a:hover { color: var(--amber); border-left-color: var(--amb2); }
+  nav a.active { color: var(--amber); border-left-color: var(--amber); }
+
+  main { flex: 1; max-width: 900px; padding: 42px 54px 88px; }
+
+  .doc-header { border-bottom: 2px solid var(--border); padding-bottom: 28px; margin-bottom: 42px; }
+  .doc-eye { font-family: var(--mono); font-size: 8px; letter-spacing: 2.5px; text-transform: uppercase; color: var(--amber); margin-bottom: 10px; }
+  .doc-title { font-size: 32px; font-weight: 700; color: var(--white); line-height: 1.15; margin-bottom: 12px; letter-spacing: -0.5px; }
+  .doc-sub { font-size: 13px; color: var(--text2); font-style: italic; margin-bottom: 14px; }
+  .doc-meta { display: flex; gap: 22px; flex-wrap: wrap; margin-top: 14px; }
+  .doc-meta span { font-family: var(--mono); font-size: 9px; color: var(--dim); }
+  .doc-meta span strong { color: var(--text2); }
+
+  h2 { font-size: 19px; font-weight: 700; color: var(--white); margin: 50px 0 14px; padding-bottom: 8px; border-bottom: 1px solid var(--border); letter-spacing: -0.3px; scroll-margin-top: 24px; }
+  h3 { font-family: var(--mono); font-size: 10px; font-weight: 600; color: var(--amber); letter-spacing: 1px; text-transform: uppercase; margin: 28px 0 10px; scroll-margin-top: 24px; }
+  h4 { font-size: 12px; font-weight: 700; color: var(--text2); margin: 16px 0 7px; }
+  p { margin-bottom: 11px; }
+
+  /* ── Profile cards ── */
+  .profile-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin: 16px 0; }
+  .profile-card { background: var(--surf2); border: 1px solid var(--border); border-radius: 3px; overflow: hidden; }
+  .profile-card.vintage { border-top: 3px solid var(--steel); }
+  .profile-card.medium  { border-top: 3px solid var(--green); }
+  .profile-card.tall    { border-top: 3px solid var(--amber); }
+  .profile-card.special { border-top: 3px solid var(--purple); }
+  .pc-head { padding: 12px 16px; border-bottom: 1px solid var(--bord2); }
+  .pc-eyebrow { font-family: var(--mono); font-size: 7px; letter-spacing: 1.5px; text-transform: uppercase; margin-bottom: 3px; }
+  .vintage .pc-eyebrow { color: var(--steel); }
+  .medium  .pc-eyebrow { color: var(--green); }
+  .tall    .pc-eyebrow { color: var(--amber); }
+  .special .pc-eyebrow { color: var(--purple); }
+  .pc-name { font-size: 13px; font-weight: 700; color: var(--white); }
+  .pc-ref  { font-family: var(--mono); font-size: 9px; color: var(--dim); margin-top: 2px; }
+  .pc-dims { padding: 10px 16px; border-bottom: 1px solid var(--bord2); display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 6px; }
+  .dim-cell { text-align: center; }
+  .dim-val { font-family: var(--mono); font-size: 11px; font-weight: 600; color: var(--white); }
+  .dim-lbl { font-family: var(--mono); font-size: 7px; color: var(--dim); letter-spacing: 0.5px; }
+  .pc-body { padding: 10px 16px; font-size: 11px; color: var(--text2); line-height: 1.6; }
+  .pc-row { display: flex; gap: 8px; margin: 4px 0; align-items: baseline; }
+  .pc-lbl { font-family: var(--mono); font-size: 8px; color: var(--dim); min-width: 70px; flex-shrink: 0; text-transform: uppercase; letter-spacing: 0.3px; }
+  .pc-val { font-size: 11px; color: var(--text2); }
+
+  /* ── Fret diagram ── */
+  .fret-diagram { background: var(--surf2); border: 1px solid var(--border); border-radius: 3px; padding: 16px 20px; margin: 16px 0; font-family: var(--mono); font-size: 10px; color: var(--text2); line-height: 1.7; white-space: pre; overflow-x: auto; }
+  .fret-diagram .hl   { color: var(--amber); }
+  .fret-diagram .dim  { color: var(--dim2); }
+  .fret-diagram .val  { color: var(--green); }
+  .fret-diagram .ann  { color: var(--steel); }
+
+  /* ── Formula block ── */
+  .formula { background: var(--surf2); border: 1px solid var(--border); border-left: 3px solid var(--amber); border-radius: 3px; padding: 16px 20px; margin: 14px 0; font-family: var(--mono); font-size: 12px; color: var(--white); line-height: 2.1; white-space: pre-wrap; }
+  .formula .sym  { color: var(--amber); font-weight: 600; }
+  .formula .val  { color: var(--green); }
+  .formula .com  { color: var(--dim); font-style: italic; }
+  .formula .note { font-size: 10px; color: var(--dim); margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--bord2); font-style: italic; line-height: 1.6; }
+
+  /* ── Table ── */
+  table { width: 100%; border-collapse: collapse; margin: 14px 0; font-size: 11px; }
+  th { background: var(--surf2); padding: 7px 12px; text-align: left; font-family: var(--mono); font-size: 8px; font-weight: 600; letter-spacing: 0.9px; text-transform: uppercase; color: var(--dim); border-bottom: 1px solid var(--border); }
+  td { padding: 6px 12px; border-bottom: 1px solid var(--bord2); font-family: var(--mono); font-size: 10px; color: var(--text2); vertical-align: top; }
+  td:first-child { color: var(--text); }
+  tr:last-child td { border-bottom: none; }
+  tr:hover td { background: var(--surf2); }
+  .td-good { color: var(--green) !important; }
+  .td-warn { color: var(--amber) !important; }
+  .td-bad  { color: var(--red)   !important; }
+
+  /* ── Callout ── */
+  .callout { border: 1px solid var(--border); border-left: 3px solid var(--amber); border-radius: 3px; padding: 12px 16px; margin: 14px 0; font-size: 12px; color: var(--text2); }
+  .callout.red   { border-left-color: var(--red); }
+  .callout.steel { border-left-color: var(--steel); }
+  .callout.green { border-left-color: var(--green); }
+  .callout .lbl { font-family: var(--mono); font-size: 8px; letter-spacing: 1.5px; text-transform: uppercase; color: var(--amber); margin-bottom: 5px; display: block; }
+  .callout.red   .lbl { color: var(--red); }
+  .callout.steel .lbl { color: var(--steel); }
+  .callout.green .lbl { color: var(--green); }
+
+  /* ── Leveling bar ── */
+  .level-bar { height: 6px; border-radius: 2px; background: var(--surf3); margin: 3px 0 6px; overflow: hidden; }
+  .level-fill { height: 100%; border-radius: 2px; background: var(--amber); }
+  .level-fill.low    { background: var(--red); }
+  .level-fill.medium { background: var(--amber); }
+  .level-fill.high   { background: var(--green); }
+
+  hr.rule { border: none; border-top: 1px solid var(--border); margin: 34px 0; }
+  .sec-n { font-family: var(--mono); font-size: 10px; color: var(--dim2); margin-right: 8px; }
+  code { font-family: var(--mono); font-size: 10px; background: var(--surf2); border: 1px solid var(--border); padding: 1px 5px; border-radius: 2px; color: var(--green); }
+</style>
+</head>
+<body>
+<div class="shell">
+
+<nav>
+  <div class="nav-brand">
+    <div class="nav-eye">Production Shop</div>
+    <div class="nav-title">Fret Wire<br>Selection</div>
+  </div>
+  <div class="nav-grp">
+    <div class="nav-grp-lbl">Overview</div>
+    <a href="#anatomy">Anatomy</a>
+    <a href="#dimensions">Key Dimensions</a>
+    <a href="#formulas">Core Formulas</a>
+  </div>
+  <div class="nav-grp">
+    <div class="nav-grp-lbl">Profiles</div>
+    <a href="#vintage">Vintage Family</a>
+    <a href="#medium">Medium Family</a>
+    <a href="#tall">Tall-Narrow / Jumbo</a>
+    <a href="#special">EVO &amp; Stainless</a>
+  </div>
+  <div class="nav-grp">
+    <div class="nav-grp-lbl">Analysis</div>
+    <a href="#leveling">Leveling Headroom</a>
+    <a href="#action">Action Interaction</a>
+    <a href="#fretboard">Fretboard Thickness</a>
+    <a href="#materials">Material Hardness</a>
+    <a href="#slots">Slot Requirements</a>
+  </div>
+  <div class="nav-grp">
+    <div class="nav-grp-lbl">Reference</div>
+    <a href="#comparison">Full Comparison</a>
+    <a href="#presets">Presets</a>
+    <a href="#sources">Sources</a>
+  </div>
+</nav>
+
+<main>
+<div class="doc-header">
+  <div class="doc-eye">Technical Reference — GEOMETRY-006</div>
+  <div class="doc-title">Fret Wire Selection</div>
+  <div class="doc-sub">Crown geometry · Leveling headroom · Playability · Wear rates · Fretboard interaction</div>
+  <div class="doc-meta">
+    <span><strong>Author:</strong> Ross L. Echols Jr., P.E. #78195</span>
+    <span><strong>Module:</strong> fret_wire_calc.py</span>
+    <span><strong>Lines:</strong> 695</span>
+    <span><strong>Status:</strong> Production</span>
+  </div>
+</div>
+
+<!-- ANATOMY -->
+<h2 id="anatomy"><span class="sec-n">00</span>Fret Wire Anatomy</h2>
+<p>Every fret wire profile has four dimensions that govern its behavior in use. Width and height define the crown — what the player feels and what wears. Tang depth and width define the portion buried in the fretboard slot.</p>
+
+<div class="fret-diagram">                    <span class="hl">Crown Width (W)</span>
+            ◄──────────────────────►
+
+                 ╭─────────────╮          ← Crown top
+                ╱               ╲
+               ╱                 ╲    ▲
+              ╱                   ╲   │  <span class="hl">Crown Height (H)</span>
+─────────────╱─────────────────────╲──┤──── fretboard surface
+             │                     │  ▼
+             │◄───────────────────►│  ← <span class="ann">W (same as crown)</span>
+             │                     │
+             │  ╔═════════════╗    │
+             │  ║    TANG     ║    │  ▲
+             │  ║             ║    │  │  <span class="hl">Tang Depth (D)</span>
+             │  ║◄─── T ─────►║    │  ▼
+             └──╚═════════════╝────┘
+                                        ← slot bottom
+
+<span class="dim">Crown sits above the fretboard. Tang is buried in the slot.</span>
+<span class="dim">The barbs on the tang sides grip the wood and prevent the fret from lifting.</span></div>
+
+<p>The crown presents a curved surface to the string. That curvature — described by the crown radius — determines how wide the string contact zone is, which directly affects intonation precision and wear rate per unit area.</p>
+
+<hr class="rule">
+
+<!-- DIMENSIONS -->
+<h2 id="dimensions"><span class="sec-n">01</span>Key Dimensions Explained</h2>
+
+<table>
+  <tr><th>Dimension</th><th>What It Controls</th><th>More = ?</th></tr>
+  <tr><td>Crown Width (W)</td><td>String guidance, feel under fingers, intonation contact zone</td><td>Wider contact — more stable but less precise intonation</td></tr>
+  <tr><td>Crown Height (H)</td><td>Leveling headroom, action interaction, bending feel</td><td>Taller crown = more leveling passes, allows lower nut/saddle action</td></tr>
+  <tr><td>Tang Depth (D)</td><td>Retention in fretboard, slot depth requirement</td><td>Deeper = better retention but requires thicker fretboard</td></tr>
+  <tr><td>Tang Width (T)</td><td>Slot width requirement, kerf saw selection</td><td>Wider tang = larger saw required</td></tr>
+</table>
+
+<hr class="rule">
+
+<!-- FORMULAS -->
+<h2 id="formulas"><span class="sec-n">02</span>Core Formulas</h2>
+
+<h3>Crown Radius — intonation contact width</h3>
+<div class="formula"><span class="sym">R_crown</span> = (W/2)² / (2H) + H/2   <span class="com">// chord-sagitta formula</span>
+
+<span class="sym">contact_width</span> = 2 × √(2 × R × d − d²)
+  where d = string contact depth ≈ <span class="val">0.001"</span> (half light-gauge string radius)
+
+Example — Tall-Narrow 6105 (W=0.090", H=0.055"):
+  R_crown = (0.045)² / (0.110) + 0.0275 = <span class="val">0.046"</span>
+  contact_width ≈ <span class="val">19 thou</span>  <span class="com">// 0.019" — narrow, precise</span>
+
+Example — Jumbo (W=0.110", H=0.055"):
+  R_crown = (0.055)² / (0.110) + 0.0275 = <span class="val">0.055"</span>
+  contact_width ≈ <span class="val">21 thou</span>  <span class="com">// wider contact, slightly less precise</span>
+<span class="note">Narrower contact zone means:
+  + More precise intonation at any string position
+  + String notches deeper into crown per stroke (faster groove formation)
+  → Tall-narrow profile trades some longevity for precision</span></div>
+
+<h3>Leveling headroom</h3>
+<div class="formula"><span class="sym">headroom</span> = H - H_min
+  H_min = <span class="val">0.015"</span>  <span class="com">// minimum safe crown height (empirical)</span>
+
+<span class="sym">passes</span> ≈ headroom / 0.006"   <span class="com">// average material per pass</span>
+
+Vintage Narrow (H=0.036"):  headroom = <span class="val">0.021"</span> → ~<span class="val">3 passes</span>
+Tall-Narrow 6105 (H=0.055"): headroom = <span class="val">0.040"</span> → ~<span class="val">6 passes</span>
+<span class="note">The crown HEIGHT — not the width — determines leveling headroom.
+Medium-Jumbo (0.106" wide, 0.036" tall) has the same headroom as Vintage Narrow
+despite being much wider. Width is irrelevant to leveling longevity.</span></div>
+
+<h3>Action interaction</h3>
+<div class="formula">String clearance above crown = action_at_fret - H_crown
+
+A taller crown reduces required nut/saddle action:
+  For same playing clearance of <span class="val">0.015"</span> above the crown:
+
+  Vintage Narrow (H=0.036"):  action needed = 0.036 + 0.015 = <span class="val">0.051"</span>
+  Tall-Narrow (H=0.055"):    action needed = 0.055 + 0.015 = <span class="val">0.070"</span>
+
+→ Tall wire can be set up with lower nut/saddle while maintaining
+  the same clearance above the fret. This is why tall wire "plays lower."
+<span class="note">The saddle and nut set the string height above the fretboard surface.
+The fret crown height adds to the effective playing height.
+Total string height above crown = (saddle/nut setting) - H_crown.</span></div>
+
+<hr class="rule">
+
+<!-- VINTAGE -->
+<h2 id="vintage"><span class="sec-n">03</span>Vintage Family</h2>
+<p>Wide, low profiles descended from mid-century Gibson and Fender specifications. The defining characteristic is a large crown-width-to-height ratio — the string sits in a shallow groove and the player's fingertip contacts the fretboard through the string. This is the "vintage feel" that players describe.</p>
+
+<div class="profile-grid">
+  <div class="profile-card vintage">
+    <div class="pc-head">
+      <div class="pc-eyebrow">Vintage · Narrow</div>
+      <div class="pc-name">6230</div>
+      <div class="pc-ref">Dunlop 6230</div>
+    </div>
+    <div class="pc-dims">
+      <div class="dim-cell"><div class="dim-val">0.082"</div><div class="dim-lbl">Width</div></div>
+      <div class="dim-cell"><div class="dim-val">0.036"</div><div class="dim-lbl">Height</div></div>
+      <div class="dim-cell"><div class="dim-val">0.050"</div><div class="dim-lbl">Tang D</div></div>
+      <div class="dim-cell"><div class="dim-val">~3</div><div class="dim-lbl">Passes</div></div>
+    </div>
+    <div class="pc-body">
+      <div class="pc-row"><span class="pc-lbl">Feel</span><span class="pc-val">Classic vintage. Finger contacts fretboard through string.</span></div>
+      <div class="pc-row"><span class="pc-lbl">Wear</span><span class="pc-val">Lowest headroom — grooves form within 2–3 years heavy play.</span></div>
+      <div class="pc-row"><span class="pc-lbl">Best for</span><span class="pc-val">Authentic vintage recreation. Light-touch players.</span></div>
+      <div class="level-bar"><div class="level-fill low" style="width:30%"></div></div>
+    </div>
+  </div>
+
+  <div class="profile-card vintage">
+    <div class="pc-head">
+      <div class="pc-eyebrow">Vintage · Medium</div>
+      <div class="pc-name">6150</div>
+      <div class="pc-ref">Dunlop 6150 / StewMac 148</div>
+    </div>
+    <div class="pc-dims">
+      <div class="dim-cell"><div class="dim-val">0.102"</div><div class="dim-lbl">Width</div></div>
+      <div class="dim-cell"><div class="dim-val">0.042"</div><div class="dim-lbl">Height</div></div>
+      <div class="dim-cell"><div class="dim-val">0.050"</div><div class="dim-lbl">Tang D</div></div>
+      <div class="dim-cell"><div class="dim-val">~4</div><div class="dim-lbl">Passes</div></div>
+    </div>
+    <div class="pc-body">
+      <div class="pc-row"><span class="pc-lbl">Feel</span><span class="pc-val">Standard Fender American spec for decades.</span></div>
+      <div class="pc-row"><span class="pc-lbl">Wear</span><span class="pc-val">Slightly more headroom than 6230. 2–4 years.</span></div>
+      <div class="pc-row"><span class="pc-lbl">Best for</span><span class="pc-val">Vintage-spec Fender builds. Mixed players.</span></div>
+      <div class="level-bar"><div class="level-fill low" style="width:40%"></div></div>
+    </div>
+  </div>
+</div>
+
+<hr class="rule">
+
+<!-- MEDIUM -->
+<h2 id="medium"><span class="sec-n">04</span>Medium Family</h2>
+<p>The workhorses. Medium profiles balance playability across playing styles and are the most forgiving for builders learning fret work — they dress and crown easily, and the medium height gives adequate leveling headroom without the setup precision tall wire demands.</p>
+
+<div class="profile-grid">
+  <div class="profile-card medium">
+    <div class="pc-head">
+      <div class="pc-eyebrow">Medium</div>
+      <div class="pc-name">6160 / Medium</div>
+      <div class="pc-ref">Dunlop 6160 / StewMac 150</div>
+    </div>
+    <div class="pc-dims">
+      <div class="dim-cell"><div class="dim-val">0.102"</div><div class="dim-lbl">Width</div></div>
+      <div class="dim-cell"><div class="dim-val">0.045"</div><div class="dim-lbl">Height</div></div>
+      <div class="dim-cell"><div class="dim-val">0.050"</div><div class="dim-lbl">Tang D</div></div>
+      <div class="dim-cell"><div class="dim-val">~5</div><div class="dim-lbl">Passes</div></div>
+    </div>
+    <div class="pc-body">
+      <div class="pc-row"><span class="pc-lbl">Feel</span><span class="pc-val">Balanced. Good for acoustic flatpicking and chord work.</span></div>
+      <div class="pc-row"><span class="pc-lbl">Wear</span><span class="pc-val">3–5 years nickel-silver. Best all-round longevity of medium profiles.</span></div>
+      <div class="pc-row"><span class="pc-lbl">Best for</span><span class="pc-val">First fret jobs. Acoustic guitars. All-purpose electrics.</span></div>
+      <div class="level-bar"><div class="level-fill medium" style="width:55%"></div></div>
+    </div>
+  </div>
+
+  <div class="profile-card medium">
+    <div class="pc-head">
+      <div class="pc-eyebrow">Medium-Jumbo</div>
+      <div class="pc-name">6130</div>
+      <div class="pc-ref">Dunlop 6130 / StewMac 155</div>
+    </div>
+    <div class="pc-dims">
+      <div class="dim-cell"><div class="dim-val">0.106"</div><div class="dim-lbl">Width</div></div>
+      <div class="dim-cell"><div class="dim-val">0.036"</div><div class="dim-lbl">Height</div></div>
+      <div class="dim-cell"><div class="dim-val">0.050"</div><div class="dim-lbl">Tang D</div></div>
+      <div class="dim-cell"><div class="dim-val">~3</div><div class="dim-lbl">Passes</div></div>
+    </div>
+    <div class="pc-body">
+      <div class="pc-row"><span class="pc-lbl">Feel</span><span class="pc-val">Wide but low — "modern vintage" compromise. Very common on production guitars.</span></div>
+      <div class="pc-row"><span class="pc-lbl">Wear</span><span class="pc-val">Despite wide crown, low height limits headroom to ~3 passes. Same as 6230.</span></div>
+      <div class="pc-row"><span class="pc-lbl">Best for</span><span class="pc-val">Players transitioning vintage → modern feel.</span></div>
+      <div class="level-bar"><div class="level-fill low" style="width:30%"></div></div>
+    </div>
+  </div>
+</div>
+
+<div class="callout steel">
+  <span class="lbl">Medium-Jumbo Trap</span>
+  The 6130 is the most common production fret but has the same leveling headroom as vintage narrow — only ~3 passes. The wide crown creates the impression of a substantial fret but the height is what matters for service life, and 0.036" is vintage-low. Many builders choose it for feel but should be aware of this constraint.
+</div>
+
+<hr class="rule">
+
+<!-- TALL -->
+<h2 id="tall"><span class="sec-n">05</span>Tall-Narrow and Jumbo</h2>
+<p>Tall profiles give the most material for leveling and allow the lowest action settings. The narrow crown on the 6105 is a different design philosophy from the jumbo — precision over surface area. The jumbo prioritizes maximum material and a broad feel.</p>
+
+<div class="profile-grid">
+  <div class="profile-card tall">
+    <div class="pc-head">
+      <div class="pc-eyebrow">Tall · Narrow — The Player's Fret</div>
+      <div class="pc-name">6105</div>
+      <div class="pc-ref">Dunlop 6105</div>
+    </div>
+    <div class="pc-dims">
+      <div class="dim-cell"><div class="dim-val">0.090"</div><div class="dim-lbl">Width</div></div>
+      <div class="dim-cell"><div class="dim-val">0.055"</div><div class="dim-lbl">Height</div></div>
+      <div class="dim-cell"><div class="dim-val">0.055"</div><div class="dim-lbl">Tang D</div></div>
+      <div class="dim-cell"><div class="dim-val">~6</div><div class="dim-lbl">Passes</div></div>
+    </div>
+    <div class="pc-body">
+      <div class="pc-row"><span class="pc-lbl">Feel</span><span class="pc-val">Precise contact point. Bending effortless. Action can be set lower.</span></div>
+      <div class="pc-row"><span class="pc-lbl">Wear</span><span class="pc-val">6 leveling passes. Best service life of standard nickel-silver profiles.</span></div>
+      <div class="pc-row"><span class="pc-lbl">Caution</span><span class="pc-val">Taller tang needs 0.060" slot depth. Check fretboard thickness.</span></div>
+      <div class="pc-row"><span class="pc-lbl">Best for</span><span class="pc-val">Lead players. Modern electrics. Acoustic flatpickers wanting low action.</span></div>
+      <div class="level-bar"><div class="level-fill high" style="width:80%"></div></div>
+    </div>
+  </div>
+
+  <div class="profile-card tall">
+    <div class="pc-head">
+      <div class="pc-eyebrow">Jumbo — Maximum Material</div>
+      <div class="pc-name">6100</div>
+      <div class="pc-ref">Dunlop 6100</div>
+    </div>
+    <div class="pc-dims">
+      <div class="dim-cell"><div class="dim-val">0.110"</div><div class="dim-lbl">Width</div></div>
+      <div class="dim-cell"><div class="dim-val">0.055"</div><div class="dim-lbl">Height</div></div>
+      <div class="dim-cell"><div class="dim-val">0.055"</div><div class="dim-lbl">Tang D</div></div>
+      <div class="dim-cell"><div class="dim-val">~6</div><div class="dim-lbl">Passes</div></div>
+    </div>
+    <div class="pc-body">
+      <div class="pc-row"><span class="pc-lbl">Feel</span><span class="pc-val">Pronounced under fingers. Bending effortless — light touch critical to avoid fretting sharp.</span></div>
+      <div class="pc-row"><span class="pc-lbl">Wear</span><span class="pc-val">Wide crown distributes wear best. 6 leveling passes in nickel-silver.</span></div>
+      <div class="pc-row"><span class="pc-lbl">Caution</span><span class="pc-val">Wide tang (0.023") needs 0.025" slot saw — not 0.023". Verify before cutting.</span></div>
+      <div class="pc-row"><span class="pc-lbl">Caution</span><span class="pc-val">Wide crown can exceed intonation compensation range on acoustic guitars.</span></div>
+      <div class="pc-row"><span class="pc-lbl">Best for</span><span class="pc-val">Rock/metal electric. Heavy playing. Maximum service interval.</span></div>
+      <div class="level-bar"><div class="level-fill high" style="width:80%"></div></div>
+    </div>
+  </div>
+</div>
+
+<hr class="rule">
+
+<!-- SPECIAL -->
+<h2 id="special"><span class="sec-n">06</span>EVO Gold and Stainless Steel</h2>
+<p>Same geometry as the standard profiles but with different alloys. The material change does not alter playability but radically changes service life, tooling requirements, and installation behavior.</p>
+
+<div class="profile-grid">
+  <div class="profile-card special">
+    <div class="pc-head">
+      <div class="pc-eyebrow">EVO Gold · Jescar — Premium Nickel Replacement</div>
+      <div class="pc-name">Jescar 55090 / EVO Gold</div>
+      <div class="pc-ref">Same geometry as 6105 · HV 350</div>
+    </div>
+    <div class="pc-dims">
+      <div class="dim-cell"><div class="dim-val">0.090"</div><div class="dim-lbl">Width</div></div>
+      <div class="dim-cell"><div class="dim-val">0.055"</div><div class="dim-lbl">Height</div></div>
+      <div class="dim-cell"><div class="dim-val">0.055"</div><div class="dim-lbl">Tang D</div></div>
+      <div class="dim-cell"><div class="dim-val">~6</div><div class="dim-lbl">Passes</div></div>
+    </div>
+    <div class="pc-body">
+      <div class="pc-row"><span class="pc-lbl">Material</span><span class="pc-val">Titanium-enhanced alloy. HV 350 — 2.7× harder than nickel-silver.</span></div>
+      <div class="pc-row"><span class="pc-lbl">Longevity</span><span class="pc-val">~3× longer intervals between leveling vs nickel-silver.</span></div>
+      <div class="pc-row"><span class="pc-lbl">Tooling</span><span class="pc-val">Standard files work but dull faster. Diamond files extend tool life.</span></div>
+      <div class="pc-row"><span class="pc-lbl">Install</span><span class="pc-val">More spring-back during bending — radius must be accurate. Harder to seat.</span></div>
+      <div class="pc-row"><span class="pc-lbl">Best for</span><span class="pc-val">Any instrument where the builder wants 2–3× service life over nickel-silver.</span></div>
+      <div class="level-bar"><div class="level-fill high" style="width:90%"></div></div>
+    </div>
+  </div>
+
+  <div class="profile-card special">
+    <div class="pc-head">
+      <div class="pc-eyebrow">Stainless Steel — Permanent Frets</div>
+      <div class="pc-name">Stainless 6105-geometry</div>
+      <div class="pc-ref">Various sources · HV 500</div>
+    </div>
+    <div class="pc-dims">
+      <div class="dim-cell"><div class="dim-val">0.090"</div><div class="dim-lbl">Width</div></div>
+      <div class="dim-cell"><div class="dim-val">0.055"</div><div class="dim-lbl">Height</div></div>
+      <div class="dim-cell"><div class="dim-val">0.055"</div><div class="dim-lbl">Tang D</div></div>
+      <div class="dim-cell"><div class="dim-val">~6</div><div class="dim-lbl">Passes*</div></div>
+    </div>
+    <div class="pc-body">
+      <div class="pc-row"><span class="pc-lbl">Material</span><span class="pc-val">Austenitic stainless. HV 500 — 3.8× harder than nickel-silver.</span></div>
+      <div class="pc-row"><span class="pc-lbl">Longevity</span><span class="pc-val">Effectively permanent. Strings wear out before frets groove.</span></div>
+      <div class="pc-row"><span class="pc-lbl">Tooling</span><span class="pc-val"><strong>Standard files destroyed on first contact.</strong> Carbide or diamond only.</span></div>
+      <div class="pc-row"><span class="pc-lbl">Install</span><span class="pc-val">Work hardens during hammering. Precision slot prep mandatory. Heat risk on acoustic finishes.</span></div>
+      <div class="pc-row"><span class="pc-lbl">Best for</span><span class="pc-val">Electric instruments with experienced builders and proper tooling. Not recommended for acoustic without stainless experience.</span></div>
+    </div>
+  </div>
+</div>
+
+<div class="callout red">
+  <span class="lbl">Stainless Warning</span>
+  Do not attempt stainless fret installation without carbide or diamond tooling and prior experience. Standard fret files are destroyed on first contact. The work-hardening effect during hammering changes the material properties of already-installed frets — once seated, the fret is harder than it was in the bag. Heat generated during leveling can damage lacquer and nitro finishes. EVO Gold provides 2.7× the wear life of nickel-silver with none of these risks and is the better choice for most builders upgrading from standard wire.
+</div>
+
+<hr class="rule">
+
+<!-- LEVELING -->
+<h2 id="leveling"><span class="sec-n">07</span>Leveling Headroom — The Service Life Analysis</h2>
+
+<p>This is the number that determines how many times the instrument can be refreted without refretting. It is determined entirely by crown height, not crown width.</p>
+
+<table>
+  <tr><th>Profile</th><th>Crown H</th><th>Headroom</th><th>Passes</th><th>Service Life (nickel-silver)</th></tr>
+  <tr>
+    <td>Vintage Narrow 6230</td><td>0.036"</td>
+    <td class="td-bad">0.021"</td><td class="td-bad">~3</td>
+    <td>2–3 years heavy play between levelings</td>
+  </tr>
+  <tr>
+    <td>Medium-Jumbo 6130</td><td>0.036"</td>
+    <td class="td-bad">0.021"</td><td class="td-bad">~3</td>
+    <td>Same as vintage narrow despite wider crown</td>
+  </tr>
+  <tr>
+    <td>Vintage Medium 6150</td><td>0.042"</td>
+    <td class="td-warn">0.027"</td><td class="td-warn">~4</td>
+    <td>Slightly better than 6230</td>
+  </tr>
+  <tr>
+    <td>Medium 6160</td><td>0.045"</td>
+    <td class="td-warn">0.030"</td><td class="td-warn">~5</td>
+    <td>3–5 years. Good all-round balance.</td>
+  </tr>
+  <tr>
+    <td>Tall-Narrow 6105</td><td>0.055"</td>
+    <td class="td-good">0.040"</td><td class="td-good">~6</td>
+    <td>4–6 years. Best service life in standard wire.</td>
+  </tr>
+  <tr>
+    <td>Jumbo 6100</td><td>0.055"</td>
+    <td class="td-good">0.040"</td><td class="td-good">~6</td>
+    <td>4–6 years. Wide crown also distributes wear.</td>
+  </tr>
+  <tr>
+    <td>EVO Gold (6105 geometry)</td><td>0.055"</td>
+    <td class="td-good">0.040"</td><td class="td-good">~6</td>
+    <td>12–18 years. 3× multiplier on nickel-silver baseline.</td>
+  </tr>
+  <tr>
+    <td>Stainless (6105 geometry)</td><td>0.055"</td>
+    <td class="td-good">0.040"</td><td class="td-good">~6*</td>
+    <td>Effectively permanent. String life becomes the limit.</td>
+  </tr>
+</table>
+
+<p><em>*Stainless passes require carbide/diamond tooling. The passes exist but executing them requires proper equipment.</em></p>
+
+<hr class="rule">
+
+<!-- ACTION -->
+<h2 id="action"><span class="sec-n">08</span>Action Interaction</h2>
+
+<p>The fret crown height is additive to string height. When a player "plays to the fret" — just enough pressure to touch the crown — the crown height sets the floor for effective action. Taller wire allows lower nut and saddle settings while maintaining the same playing clearance above the fret.</p>
+
+<table>
+  <tr><th>Profile</th><th>Crown H</th><th>Clearance @ 0.070" action</th><th>Action for 0.015" clearance</th></tr>
+  <tr>
+    <td>Vintage Narrow 6230</td><td>0.036"</td>
+    <td>0.034"</td>
+    <td>0.051"</td>
+  </tr>
+  <tr>
+    <td>Medium 6160</td><td>0.045"</td>
+    <td>0.025"</td>
+    <td>0.060"</td>
+  </tr>
+  <tr>
+    <td>Tall-Narrow 6105</td><td>0.055"</td>
+    <td>0.015"</td>
+    <td>0.070"</td>
+  </tr>
+</table>
+
+<div class="callout green">
+  <span class="lbl">Practical Implication</span>
+  On a guitar set up to 0.070" action at the 12th fret (a common acoustic specification), tall-narrow wire leaves only 0.015" clearance above the fret crown. This is very low — aggressive players may produce fret buzz. But it also means the setup can legitimately lower the saddle to reduce string height because the tall fret is providing height the saddle previously had to supply. This is why identical action measurements feel different across instruments with different fret profiles.
+</div>
+
+<hr class="rule">
+
+<!-- FRETBOARD -->
+<h2 id="fretboard"><span class="sec-n">09</span>Fretboard Thickness Interaction</h2>
+
+<p>The tang must fit within the fretboard with at least 0.040" (1.0mm) of wood below the tang tip. For standard tang depths this is almost never the limiting factor on well-dimensioned fretboards, but it becomes relevant on very thin bound fretboards and thin modern electrics.</p>
+
+<div class="formula"><span class="sym">wood_below_tang</span> = fretboard_thickness - tang_depth
+
+Minimum safe: <span class="val">0.040"</span> (1.0mm)
+
+Standard tang 0.050":
+  Acoustic fretboard 0.240": 0.240 - 0.050 = <span class="val">0.190" remaining</span>  ✓ OK
+  Electric fretboard 0.200": 0.200 - 0.050 = <span class="val">0.150" remaining</span>  ✓ OK
+  Thin electric 0.180":      0.180 - 0.050 = <span class="val">0.130" remaining</span>  ✓ OK
+
+Deep tang 0.055" (6105, Jumbo):
+  Acoustic fretboard 0.240": 0.240 - 0.055 = <span class="val">0.185" remaining</span>  ✓ OK
+  Electric fretboard 0.200": 0.200 - 0.055 = <span class="val">0.145" remaining</span>  ✓ OK
+  Thin electric 0.180":      0.180 - 0.055 = <span class="val">0.125" remaining</span>  ✓ OK
+  Very thin 0.120":          0.120 - 0.055 = <span class="val">0.065" remaining</span>  ⚠ marginal
+<span class="note">Standard instruments are always adequate. The check matters for non-standard builds —
+scalloped fretboards, very thin radiused boards, or boards thinned during refrets.</span></div>
+
+<hr class="rule">
+
+<!-- MATERIALS -->
+<h2 id="materials"><span class="sec-n">10</span>Material Hardness</h2>
+
+<table>
+  <tr><th>Material</th><th>Vickers HV</th><th>vs Nickel-Silver</th><th>Tooling</th><th>Longevity</th></tr>
+  <tr>
+    <td>Nickel-Silver (18%)</td>
+    <td>130</td>
+    <td>1.0× (baseline)</td>
+    <td>Standard fret files. All standard tools.</td>
+    <td>1× baseline</td>
+  </tr>
+  <tr>
+    <td class="td-warn">EVO Gold (Jescar)</td>
+    <td class="td-warn">350</td>
+    <td class="td-warn">2.7×</td>
+    <td>Diamond or carbide recommended. Standard files work but dull faster.</td>
+    <td class="td-good">~3× longer</td>
+  </tr>
+  <tr>
+    <td class="td-bad">Stainless Steel</td>
+    <td class="td-bad">500</td>
+    <td class="td-bad">3.8×</td>
+    <td class="td-bad">Carbide or diamond REQUIRED. Standard files destroyed on contact.</td>
+    <td class="td-good">~10× / permanent</td>
+  </tr>
+</table>
+
+<hr class="rule">
+
+<!-- SLOTS -->
+<h2 id="slots"><span class="sec-n">11</span>Slot Requirements</h2>
+
+<table>
+  <tr><th>Profile</th><th>Tang Width</th><th>Min Slot Width</th><th>Saw</th><th>Slot Depth</th></tr>
+  <tr>
+    <td>Vintage / Medium / 6105</td>
+    <td>0.020–0.021"</td>
+    <td>0.023"</td>
+    <td>0.023" kerf saw</td>
+    <td>0.055"</td>
+  </tr>
+  <tr>
+    <td>Jumbo 6100</td>
+    <td>0.023"</td>
+    <td class="td-warn">0.025"</td>
+    <td class="td-warn">0.025" kerf saw — not 0.023"</td>
+    <td>0.060"</td>
+  </tr>
+</table>
+
+<div class="callout red">
+  <span class="lbl">Jumbo Slot Warning</span>
+  The Jumbo (6100) has a wider tang (0.023") than all other standard profiles (0.020–0.021"). If you cut 0.023" slots with a standard saw and then install Jumbo wire, the tang will not fit. Order the correct 0.025" slotting saw before cutting any slots when using Jumbo wire.
+</div>
+
+<hr class="rule">
+
+<!-- COMPARISON -->
+<h2 id="comparison"><span class="sec-n">12</span>Full Comparison Table</h2>
+
+<table>
+  <tr><th>Profile</th><th>W (in)</th><th>H (in)</th><th>W (mm)</th><th>H (mm)</th><th>Tang D</th><th>Passes</th><th>Family</th></tr>
+  <tr><td>Vintage Narrow 6230</td><td>0.082"</td><td>0.036"</td><td>2.08</td><td>0.91</td><td>0.050"</td><td class="td-bad">~3</td><td>vintage</td></tr>
+  <tr><td>Vintage Medium 6150</td><td>0.102"</td><td>0.042"</td><td>2.59</td><td>1.07</td><td>0.050"</td><td class="td-warn">~4</td><td>vintage</td></tr>
+  <tr><td>Medium 6160</td><td>0.102"</td><td>0.045"</td><td>2.59</td><td>1.14</td><td>0.050"</td><td class="td-warn">~5</td><td>medium</td></tr>
+  <tr><td>Medium-Jumbo 6130</td><td>0.106"</td><td>0.036"</td><td>2.69</td><td>0.91</td><td>0.050"</td><td class="td-bad">~3</td><td>medium</td></tr>
+  <tr><td>Tall-Narrow 6105</td><td>0.090"</td><td>0.055"</td><td>2.29</td><td>1.40</td><td>0.055"</td><td class="td-good">~6</td><td>tall</td></tr>
+  <tr><td>Jumbo 6100</td><td>0.110"</td><td>0.055"</td><td>2.79</td><td>1.40</td><td>0.055"</td><td class="td-good">~6</td><td>tall</td></tr>
+  <tr><td>EVO Gold (6105 geo)</td><td>0.090"</td><td>0.055"</td><td>2.29</td><td>1.40</td><td>0.055"</td><td class="td-good">~6</td><td>special</td></tr>
+  <tr><td>Stainless (6105 geo)</td><td>0.090"</td><td>0.055"</td><td>2.29</td><td>1.40</td><td>0.055"</td><td class="td-good">~6*</td><td>special</td></tr>
+</table>
+
+<hr class="rule">
+
+<!-- PRESETS -->
+<h2 id="presets"><span class="sec-n">13</span>Builder Presets</h2>
+
+<table>
+  <tr><th>Instrument Style</th><th>Profile</th><th>Material</th><th>Passes</th><th>Rationale</th></tr>
+  <tr><td>Acoustic fingerstyle</td><td>Medium 6160</td><td>Nickel-Silver</td><td class="td-warn">5</td><td>Easy to dress; forgiving for first fret jobs; balanced feel</td></tr>
+  <tr><td>Acoustic flatpick</td><td>Tall-Narrow 6105</td><td>Nickel-Silver</td><td class="td-good">6</td><td>Precise intonation; bending under capo; low action possible</td></tr>
+  <tr><td>Electric vintage</td><td>Vintage Medium 6150</td><td>Nickel-Silver</td><td class="td-warn">4</td><td>Authentic Fender specification; period-correct feel</td></tr>
+  <tr><td>Electric modern</td><td>Tall-Narrow 6105</td><td>Nickel-Silver</td><td class="td-good">6</td><td>Player preference standard; low action setup</td></tr>
+  <tr><td>Electric heavy</td><td>Jumbo 6100</td><td>Nickel-Silver</td><td class="td-good">6</td><td>Maximum material; effortless bending</td></tr>
+  <tr><td>Acoustic durable</td><td>Medium 6160</td><td>EVO Gold</td><td class="td-good">6</td><td>Best combination for acoustic builders — easy to work, 3× wear life</td></tr>
+  <tr><td>Electric permanent</td><td>Tall-Narrow 6105</td><td>Stainless</td><td class="td-good">6*</td><td>When tooling is available; effectively permanent installation</td></tr>
+</table>
+
+<hr class="rule">
+
+<!-- SOURCES -->
+<h2 id="sources"><span class="sec-n">14</span>Sources</h2>
+
+<table>
+  <tr><th>Source</th><th>Content Used</th></tr>
+  <tr><td>Dunlop Manufacturing Fret Wire Catalog</td><td>Profile dimensions: 6230, 6150, 6160, 6130, 6105, 6100</td></tr>
+  <tr><td>Jescar Fastener Technologies</td><td>EVO Gold alloy specification; HV 350 hardness; 55090-S profile data</td></tr>
+  <tr><td>StewMac Fret Wire Catalog</td><td>Cross-reference dimensions; installation notes; slot saw specifications</td></tr>
+  <tr><td>Gore &amp; Gilet, Vol. 1</td><td>Fretboard geometry; slot depth specifications; minimum wood below tang</td></tr>
+  <tr><td>Siminoff, "The Luthier's Handbook"</td><td>Installation technique; leveling headroom empirical values; tooling guidance</td></tr>
+</table>
+
+<hr class="rule">
+<div style="text-align:center;padding:16px 0 0;font-family:var(--mono);font-size:8px;color:var(--dim2);letter-spacing:1px;">
+  THE PRODUCTION SHOP — fret_wire_calc.py — 695 lines — GEOMETRY-006
+</div>
+</main>
+</div>
+
+<script>
+const sections = document.querySelectorAll('[id]');
+const links = document.querySelectorAll('nav a');
+sections.forEach(s =>
+  new IntersectionObserver(([e]) => {
+    if (e.isIntersecting) {
+      links.forEach(l => l.classList.remove('active'));
+      const l = document.querySelector(`nav a[href="#${s.id}"]`);
+      if (l) l.classList.add('active');
+    }
+  }, { threshold: 0.4 }).observe(s)
+);
+</script>
+</body>
+</html>
