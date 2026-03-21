@@ -7,7 +7,8 @@
  *   POST /api/ai/assistant/chat
  *   GET  /api/ai/assistant/history
  */
-import { ref, nextTick } from 'vue'
+import { ref, nextTick, onMounted } from 'vue'
+import { useRoute } from 'vue-router'
 
 interface Message {
   id: number
@@ -16,11 +17,17 @@ interface Message {
   timestamp: Date
 }
 
+const route = useRoute()
+const projectId = ref<string | null>((route.query.project_id as string) || null)
+const sessionId = ref<string>(crypto.randomUUID())
+
 const messages = ref<Message[]>([
   {
     id: 1,
     role: 'assistant',
-    content: "Hello! I'm your AI Production Assistant. I can help with questions about guitar building, wood selection, techniques, troubleshooting, and more. What would you like to know?",
+    content: projectId.value
+      ? "Hello! I'm your AI Production Assistant. I can see you have a project loaded — ask me anything about your build, wood selection, or lutherie techniques."
+      : "Hello! I'm your AI Production Assistant. I can help with questions about guitar building, wood selection, techniques, troubleshooting, and more. What would you like to know?",
     timestamp: new Date(),
   },
 ])
@@ -46,6 +53,7 @@ async function sendMessage() {
     timestamp: new Date(),
   }
   messages.value.push(userMessage)
+  const messageText = inputText.value
   inputText.value = ''
 
   await nextTick()
@@ -53,27 +61,44 @@ async function sendMessage() {
 
   isTyping.value = true
 
-  // Simulated AI response
-  await new Promise(resolve => setTimeout(resolve, 1500))
+  try {
+    const res = await fetch('/api/ai/assistant/chat', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        message: messageText,
+        session_id: sessionId.value,
+        project_id: projectId.value,
+      }),
+    })
 
-  const assistantMessage: Message = {
-    id: Date.now() + 1,
-    role: 'assistant',
-    content: getSimulatedResponse(userMessage.content),
-    timestamp: new Date(),
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({ detail: 'Service unavailable' }))
+      throw new Error(err.detail || `HTTP ${res.status}`)
+    }
+
+    const data = await res.json()
+
+    const assistantMessage: Message = {
+      id: Date.now() + 1,
+      role: 'assistant',
+      content: data.response,
+      timestamp: new Date(),
+    }
+    messages.value.push(assistantMessage)
+  } catch (e: any) {
+    const errorMessage: Message = {
+      id: Date.now() + 1,
+      role: 'assistant',
+      content: `I'm having trouble connecting right now. ${e.message || 'Please try again later.'}`,
+      timestamp: new Date(),
+    }
+    messages.value.push(errorMessage)
+  } finally {
+    isTyping.value = false
+    await nextTick()
+    scrollToBottom()
   }
-  messages.value.push(assistantMessage)
-  isTyping.value = false
-
-  await nextTick()
-  scrollToBottom()
-}
-
-function getSimulatedResponse(query: string): string {
-  const responses: Record<string, string> = {
-    default: "That's a great question about lutherie! This AI assistant feature is currently in development. Soon you'll be able to get detailed guidance on all aspects of instrument building, from wood selection to finishing techniques.",
-  }
-  return responses.default
 }
 
 function scrollToBottom() {
@@ -180,10 +205,6 @@ function useQuickPrompt(prompt: string) {
           </div>
         </div>
       </div>
-    </div>
-
-    <div class="coming-soon-notice">
-      <p>Full AI assistant with context-aware responses and build history integration coming soon.</p>
     </div>
   </div>
 </template>
