@@ -1,0 +1,929 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Bridge Geometry Path Pack — The Production Shop</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:ital,wght@0,300;0,400;0,500;0,600;1,300&family=IBM+Plex+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap');
+
+  :root {
+    --bg:        #0a0c0f;
+    --surface:   #111418;
+    --surface2:  #181c22;
+    --border:    #252b35;
+    --border2:   #1e242d;
+    --amber:     #e8a020;
+    --amber2:    #c47a10;
+    --green:     #4aaa70;
+    --blue:      #4888cc;
+    --dim:       #6a7280;
+    --dim2:      #4a5060;
+    --text:      #d8dde8;
+    --text2:     #9aa0b0;
+    --white:     #f0f4ff;
+    --red:       #c05040;
+    --mono:      'IBM Plex Mono', monospace;
+    --sans:      'IBM Plex Sans', sans-serif;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--sans);
+    font-size: 13px;
+    line-height: 1.7;
+    font-weight: 300;
+  }
+
+  /* ── Layout ── */
+  .shell { display: flex; min-height: 100vh; }
+
+  nav {
+    width: 220px;
+    min-width: 220px;
+    background: var(--surface);
+    border-right: 1px solid var(--border);
+    position: sticky;
+    top: 0;
+    height: 100vh;
+    overflow-y: auto;
+    padding: 24px 0 40px;
+  }
+  nav::-webkit-scrollbar { width: 3px; }
+  nav::-webkit-scrollbar-track { background: transparent; }
+  nav::-webkit-scrollbar-thumb { background: var(--border); }
+
+  .nav-header {
+    padding: 0 18px 20px;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 16px;
+  }
+  .nav-logo {
+    font-family: var(--mono);
+    font-size: 8px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--amber);
+    margin-bottom: 6px;
+  }
+  .nav-title {
+    font-size: 11px;
+    font-weight: 500;
+    color: var(--white);
+    line-height: 1.4;
+  }
+
+  .nav-section { padding: 0 18px; margin-bottom: 4px; }
+  .nav-section-label {
+    font-family: var(--mono);
+    font-size: 7px;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: var(--dim2);
+    margin: 12px 0 6px;
+  }
+  nav a {
+    display: block;
+    font-family: var(--mono);
+    font-size: 9px;
+    color: var(--dim);
+    text-decoration: none;
+    padding: 3px 0 3px 10px;
+    border-left: 1px solid transparent;
+    letter-spacing: 0.3px;
+    transition: all .1s;
+  }
+  nav a:hover { color: var(--amber); border-left-color: var(--amber2); }
+  nav a.active { color: var(--amber); border-left-color: var(--amber); }
+
+  main {
+    flex: 1;
+    max-width: 860px;
+    padding: 40px 48px 80px;
+    overflow-x: hidden;
+  }
+
+  /* ── Header ── */
+  .doc-header {
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 28px;
+    margin-bottom: 40px;
+  }
+  .doc-tag {
+    font-family: var(--mono);
+    font-size: 8px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--amber);
+    margin-bottom: 10px;
+  }
+  .doc-title {
+    font-size: 28px;
+    font-weight: 500;
+    color: var(--white);
+    line-height: 1.2;
+    margin-bottom: 12px;
+    letter-spacing: -0.5px;
+  }
+  .doc-meta {
+    display: flex;
+    gap: 24px;
+    flex-wrap: wrap;
+    margin-top: 14px;
+  }
+  .doc-meta span {
+    font-family: var(--mono);
+    font-size: 9px;
+    color: var(--dim);
+    letter-spacing: 0.3px;
+  }
+  .doc-meta span strong { color: var(--text2); font-weight: 500; }
+
+  /* ── Section headings ── */
+  h2 {
+    font-size: 17px;
+    font-weight: 500;
+    color: var(--white);
+    margin: 48px 0 14px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--border);
+    letter-spacing: -0.3px;
+    scroll-margin-top: 24px;
+  }
+  h3 {
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--amber);
+    font-family: var(--mono);
+    letter-spacing: 0.8px;
+    text-transform: uppercase;
+    margin: 28px 0 10px;
+    scroll-margin-top: 24px;
+  }
+  h4 {
+    font-size: 11px;
+    font-weight: 500;
+    color: var(--text2);
+    margin: 18px 0 8px;
+  }
+
+  p { margin-bottom: 12px; color: var(--text); font-weight: 300; }
+  em { color: var(--text2); font-style: italic; }
+  strong { color: var(--white); font-weight: 500; }
+
+  /* ── Math formula blocks ── */
+  .formula-block {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--amber);
+    border-radius: 3px;
+    padding: 18px 20px;
+    margin: 16px 0;
+  }
+  .formula-block .formula {
+    font-family: var(--mono);
+    font-size: 13px;
+    color: var(--white);
+    line-height: 2;
+    white-space: pre-wrap;
+  }
+  .formula-block .formula .sym { color: var(--amber); }
+  .formula-block .formula .com { color: var(--dim); font-style: italic; }
+  .formula-block .formula .val { color: var(--green); }
+  .formula-block .derivation-note {
+    font-size: 11px;
+    color: var(--dim);
+    margin-top: 10px;
+    padding-top: 10px;
+    border-top: 1px solid var(--border2);
+    font-style: italic;
+  }
+
+  /* ── ASCII diagram ── */
+  .diagram {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 3px;
+    padding: 16px 18px;
+    margin: 14px 0;
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--text2);
+    line-height: 1.6;
+    white-space: pre;
+    overflow-x: auto;
+  }
+  .diagram .hl { color: var(--amber); }
+  .diagram .dim { color: var(--dim2); }
+
+  /* ── Data tables ── */
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 14px 0;
+    font-size: 11px;
+  }
+  th {
+    background: var(--surface2);
+    padding: 7px 12px;
+    text-align: left;
+    font-family: var(--mono);
+    font-size: 9px;
+    font-weight: 500;
+    letter-spacing: 0.8px;
+    text-transform: uppercase;
+    color: var(--dim);
+    border-bottom: 1px solid var(--border);
+  }
+  td {
+    padding: 6px 12px;
+    border-bottom: 1px solid var(--border2);
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--text2);
+  }
+  td:first-child { color: var(--text); }
+  tr:last-child td { border-bottom: none; }
+  tr:hover td { background: var(--surface2); }
+
+  /* ── Code spans ── */
+  code {
+    font-family: var(--mono);
+    font-size: 10px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    padding: 1px 5px;
+    border-radius: 2px;
+    color: var(--green);
+  }
+
+  /* ── Callout boxes ── */
+  .callout {
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--green);
+    border-radius: 3px;
+    padding: 12px 16px;
+    margin: 14px 0;
+    font-size: 11px;
+    color: var(--text2);
+  }
+  .callout.warn { border-left-color: var(--amber); }
+  .callout.crit { border-left-color: var(--red); }
+  .callout .label {
+    font-family: var(--mono);
+    font-size: 8px;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: var(--green);
+    margin-bottom: 5px;
+  }
+  .callout.warn .label { color: var(--amber); }
+  .callout.crit .label { color: var(--red); }
+
+  /* ── Variable definition list ── */
+  .var-list {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 3px;
+    padding: 14px 18px;
+    margin: 12px 0;
+    font-family: var(--mono);
+    font-size: 10px;
+  }
+  .var-row {
+    display: grid;
+    grid-template-columns: 90px 1fr;
+    gap: 12px;
+    padding: 3px 0;
+    border-bottom: 1px solid var(--border2);
+    align-items: baseline;
+  }
+  .var-row:last-child { border-bottom: none; }
+  .var-sym { color: var(--amber); font-weight: 500; }
+  .var-def { color: var(--text2); }
+  .var-def .unit { color: var(--dim); }
+
+  /* ── Reference panel ── */
+  .ref-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin: 12px 0;
+  }
+  .ref-card {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 3px;
+    padding: 12px 14px;
+    font-size: 11px;
+  }
+  .ref-card .ref-id {
+    font-family: var(--mono);
+    font-size: 8px;
+    letter-spacing: 1.5px;
+    color: var(--blue);
+    text-transform: uppercase;
+    margin-bottom: 5px;
+  }
+  .ref-card .ref-title { color: var(--white); font-weight: 500; margin-bottom: 3px; }
+  .ref-card .ref-note { color: var(--dim); font-size: 10px; }
+
+  /* ── Module link ── */
+  .module-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 2px;
+    padding: 4px 10px;
+    font-family: var(--mono);
+    font-size: 9px;
+    color: var(--blue);
+    text-decoration: none;
+    margin: 2px 3px;
+  }
+  .module-link::before { content: '→'; color: var(--dim); }
+
+  /* ── Proof QED ── */
+  .qed {
+    text-align: right;
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--amber);
+    margin-top: 8px;
+  }
+
+  /* ── Scroll line ── */
+  .rule { border: none; border-top: 1px solid var(--border); margin: 32px 0; }
+
+  /* ── Section number ── */
+  .sec-num {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--dim2);
+    margin-right: 8px;
+  }
+
+  /* ── Example box ── */
+  .example {
+    border: 1px solid var(--border);
+    border-top: 2px solid var(--blue);
+    background: var(--surface2);
+    border-radius: 3px;
+    padding: 16px 18px;
+    margin: 16px 0;
+  }
+  .example-title {
+    font-family: var(--mono);
+    font-size: 9px;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: var(--blue);
+    margin-bottom: 10px;
+  }
+  .example p { font-size: 11px; margin-bottom: 6px; }
+  .example .result {
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--green);
+    padding: 8px 0 0;
+    border-top: 1px solid var(--border);
+    margin-top: 10px;
+  }
+</style>
+</head>
+<body>
+
+<div class="shell">
+
+<!-- ── Navigation ────────────────────────────────────── -->
+<nav>
+  <div class="nav-header">
+    <div class="nav-logo">Production Shop</div>
+    <div class="nav-title">Bridge Geometry<br>Path Pack</div>
+  </div>
+
+  <div class="nav-section">
+    <div class="nav-section-label">Overview</div>
+    <a href="#scope">Scope &amp; Module Map</a>
+    <a href="#notation">Notation</a>
+    <a href="#anatomy">Bridge Anatomy</a>
+  </div>
+
+  <div class="nav-section">
+    <div class="nav-section-label">Derivations</div>
+    <a href="#string-spacing">§1 String Spacing</a>
+    <a href="#saddle-crown">§2 Saddle Crown Radius</a>
+    <a href="#saddle-slant">§3 Saddle Slant Angle</a>
+    <a href="#saddle-slot">§4 Saddle Slot Location</a>
+    <a href="#pin-holes">§5 Bridge Pin Holes</a>
+    <a href="#belly">§6 Belly Profile</a>
+    <a href="#break-angle">§7 Break Angle Link</a>
+    <a href="#bridge-plate">§8 Bridge Plate</a>
+  </div>
+
+  <div class="nav-section">
+    <div class="nav-section-label">Reference</div>
+    <a href="#presets">Preset Values</a>
+    <a href="#limits">Limits &amp; Checks</a>
+    <a href="#sources">Sources</a>
+  </div>
+</nav>
+
+<!-- ── Main content ──────────────────────────────────── -->
+<main>
+
+  <div class="doc-header">
+    <div class="doc-tag">Technical Defense Document</div>
+    <div class="doc-title">Acoustic Bridge Geometry<br>Path Pack</div>
+    <p style="color:var(--dim);font-size:11px;margin-top:8px;">
+      Complete mathematical derivation supporting
+      <code>calculators/acoustic_bridge_calc.py</code>
+      and its connection to <code>calculators/bridge_break_angle.py</code>.
+    </p>
+    <div class="doc-meta">
+      <span><strong>Author:</strong> Ross L. Echols, Jr., P.E. #78195</span>
+      <span><strong>Module:</strong> acoustic_bridge_calc.py</span>
+      <span><strong>Lines:</strong> 972</span>
+      <span><strong>Status:</strong> Production</span>
+    </div>
+  </div>
+
+  <!-- ── Scope ── -->
+  <h2 id="scope"><span class="sec-num">00</span>Scope &amp; Module Map</h2>
+
+  <p>The break angle calculator (<code>bridge_break_angle.py</code>) already exists and handles string angle over the saddle crown. This path pack covers everything that calculator does <em>not</em> know: the physical bridge body, its geometry, and how its dimensions propagate to the break angle inputs.</p>
+
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:16px 0;">
+    <div class="callout">
+      <div class="label">Existing — break_angle.py</div>
+      Saddle projection height · Pin-to-saddle distance · Slot offset · Break angle θ · Carruth 6° minimum
+    </div>
+    <div class="callout warn">
+      <div class="label">New — acoustic_bridge_calc.py</div>
+      String spread nut↔saddle · Saddle crown radius · Slant angle · Slot location · Pin hole placement · Belly profile · Bridge plate
+    </div>
+  </div>
+
+  <p>The two modules connect through <code>break_angle_inputs</code>: the belly profile computes <code>slot_offset_mm</code>, which is the previously hard-coded default in <code>BreakAngleInput</code>.</p>
+
+  <hr class="rule">
+
+  <!-- ── Notation ── -->
+  <h2 id="notation"><span class="sec-num">01</span>Notation</h2>
+
+  <div class="var-list">
+    <div class="var-row"><span class="var-sym">SL</span><span class="var-def">Scale length — nut to nominal saddle line <span class="unit">(mm)</span></span></div>
+    <div class="var-row"><span class="var-sym">N<sub>ee</sub></span><span class="var-def">Nut E-to-e string spread <span class="unit">(mm)</span></span></div>
+    <div class="var-row"><span class="var-sym">S<sub>ee</sub></span><span class="var-def">Saddle E-to-e string spread <span class="unit">(mm)</span></span></div>
+    <div class="var-row"><span class="var-sym">n</span><span class="var-def">Number of strings</span></div>
+    <div class="var-row"><span class="var-sym">R</span><span class="var-def">Fretboard (and saddle crown) radius <span class="unit">(mm)</span></span></div>
+    <div class="var-row"><span class="var-sym">y</span><span class="var-def">Lateral position relative to saddle centerline <span class="unit">(mm)</span></span></div>
+    <div class="var-row"><span class="var-sym">Δc</span><span class="var-def">Per-string intonation compensation <span class="unit">(mm)</span></span></div>
+    <div class="var-row"><span class="var-sym">α</span><span class="var-def">Saddle slant angle <span class="unit">(degrees)</span></span></div>
+    <div class="var-row"><span class="var-sym">h<sub>proj</sub></span><span class="var-def">Saddle projection above bridge top surface <span class="unit">(mm)</span></span></div>
+    <div class="var-row"><span class="var-sym">d<sub>ps</sub></span><span class="var-def">Pin center to saddle centerline distance <span class="unit">(mm)</span></span></div>
+    <div class="var-row"><span class="var-sym">δ</span><span class="var-def">Belly-derived slot offset — string elevation at saddle face <span class="unit">(mm)</span></span></div>
+    <div class="var-row"><span class="var-sym">θ</span><span class="var-def">String break angle at saddle crown <span class="unit">(degrees)</span></span></div>
+  </div>
+
+  <!-- ── Bridge anatomy ── -->
+  <h2 id="anatomy"><span class="sec-num">02</span>Bridge Anatomy</h2>
+
+  <p>The acoustic pin bridge cross-section, viewed from the treble side. All X distances measured from the front (nut-side) edge of the bridge.</p>
+
+  <div class="diagram">┌──────────────────────────────────────────────────────────────────┐
+│  <span class="hl">← FORWARD WING →</span>  <span class="hl">← BELLY →</span>  <span class="hl">← SADDLE SLOT →</span>  <span class="hl">← REAR WING →</span>  │
+│                                                                  │
+│   ▼ pin holes     ▼ ramp peak    ▼ saddle     ▼ back edge       │
+│   x ≈ 0          x ≈ 5mm        x ≈ 11mm     x = 155mm         │
+│                                                                  │
+│   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━     │
+│                  ╱╲             ╔═══╗                            │
+│   ●  ●  ●  ●  ●  ●  ╱  ╲           ║   ║  saddle blank          │
+│   pin holes (6)   ╱    ╲          ╚═══╝                         │
+│                         ╲_________/ saddle slot                 │
+│                           belly                                  │
+│                                                                  │
+│   <span class="dim">|←  forward_mm  →|← d_ps →|← slot_w →|← rear_mm →|</span>         │
+└──────────────────────────────────────────────────────────────────┘
+
+Vertical profile through string path:
+
+    string ────→         ● saddle crown (h_proj above bridge surface)
+                        /
+                       / ← break angle θ
+         ●────────────╱
+    pin hole exit    belly ramp provides δ height at saddle face
+    (bridge surface)
+    |←────── d_ps − δ ────────→|</div>
+
+  <hr class="rule">
+
+  <!-- ══════════════════════════════════════════════════════════════ -->
+  <h2 id="string-spacing"><span class="sec-num">§1</span>String Spacing: Nut vs Saddle</h2>
+
+  <p>The nut and saddle use different string spacings. The nut is narrow (comfort for the fretting hand); the saddle is wider (string spread required by the body geometry). Strings diverge linearly from nut to saddle.</p>
+
+  <h3>1.1 Per-String Spacing</h3>
+
+  <div class="formula-block">
+    <div class="formula"><span class="sym">p_nut</span>    = N_ee / (n − 1)    <span class="com">// mm per string at nut</span>
+<span class="sym">p_saddle</span> = S_ee / (n − 1)    <span class="com">// mm per string at saddle</span></div>
+    <div class="derivation-note">Assumes uniform spacing (equal center-to-center). Classical guitars use non-uniform spacing but the same formula applies per-interval.</div>
+  </div>
+
+  <h3>1.2 String Position Offsets from Centerline</h3>
+
+  <p>Treble strings are assigned negative Y values; bass strings positive. For string <em>i</em> (0 = high E, n−1 = low E):</p>
+
+  <div class="formula-block">
+    <div class="formula"><span class="sym">y_nut[i]</span>    = −N_ee/2  + i × p_nut
+<span class="sym">y_saddle[i]</span> = −S_ee/2  + i × p_saddle</div>
+  </div>
+
+  <h3>1.3 String Taper Half-Angle</h3>
+
+  <p>Each outer string diverges from the centerline at a small angle. The half-angle is:</p>
+
+  <div class="formula-block">
+    <div class="formula"><span class="sym">φ</span> = arctan( (S_ee − N_ee) / (2 × SL) )</div>
+    <div class="derivation-note">Martin OM (SL=648mm, N_ee=34.5mm, S_ee=55.0mm): φ = arctan(20.5 / 1296) = <span style="color:var(--green)">0.906°</span></div>
+  </div>
+
+  <table>
+    <tr><th>Instrument</th><th>Nut E-to-e</th><th>Saddle E-to-e</th><th>Spread Δ</th><th>Taper φ</th></tr>
+    <tr><td>Martin OM</td><td>34.5 mm</td><td>55.0 mm</td><td>20.5 mm</td><td>0.906°</td></tr>
+    <tr><td>Martin D-28</td><td>35.0 mm</td><td>55.0 mm</td><td>20.0 mm</td><td>0.883°</td></tr>
+    <tr><td>Taylor Standard</td><td>35.6 mm</td><td>55.6 mm</td><td>20.0 mm</td><td>0.880°</td></tr>
+    <tr><td>Gibson J-45</td><td>37.7 mm</td><td>52.5 mm</td><td>14.8 mm</td><td>0.654°</td></tr>
+  </table>
+
+  <hr class="rule">
+
+  <!-- ══════════════════════════════════════════════════════════════ -->
+  <h2 id="saddle-crown"><span class="sec-num">§2</span>Saddle Crown Radius</h2>
+
+  <p>The saddle top is shaped as a cylindrical arc matching the fretboard radius. This keeps string action consistent across all strings. On a radiused fretboard, the center strings sit <em>lower</em> than the edge strings — the saddle must replicate this profile.</p>
+
+  <h3>2.1 Crown Height Formula</h3>
+
+  <p>The height of a circular arc above the chord at lateral position y (measured from centerline) is:</p>
+
+  <div class="formula-block">
+    <div class="formula"><span class="sym">h(y)</span> = R − √(R² − y²)      <span class="com">// height above arc chord at y</span>
+
+Height of edge string above saddle geometric center:
+<span class="sym">h_edge</span> = R − √(R² − (S_ee/2)²)
+
+Drop from edge to any string i:
+<span class="sym">Δh[i]</span> = h(y_saddle[i]) − h_edge      <span class="com">// negative = lower than edge</span>
+
+Crown height (total span):
+<span class="sym">crown</span> = |Δh[center]| = h_edge − h(0) = R − √(R² − (S_ee/2)²)</div>
+    <div class="derivation-note">At center string (y=0): h(0)=0, so crown = h_edge. The center strings sit h_edge mm below the edge strings on the saddle arc.</div>
+  </div>
+
+  <h3>2.2 Crown Reference Table</h3>
+  <p>All values for 6 strings, S_ee = 55.0 mm:</p>
+
+  <table>
+    <tr><th>Fretboard Radius</th><th>R (mm)</th><th>Crown Height</th><th>Center Drop</th><th>Application</th></tr>
+    <tr><td>7.25″ vintage</td><td>184.15</td><td>1.983 mm</td><td>−1.983 mm</td><td>Vintage Fender</td></tr>
+    <tr><td>9.5″ modern</td><td>241.30</td><td>1.510 mm</td><td>−1.510 mm</td><td>Modern Fender</td></tr>
+    <tr><td>10″ standard</td><td>254.00</td><td>1.433 mm</td><td>−1.433 mm</td><td>Martin, Taylor acoustics</td></tr>
+    <tr><td>12″ medium</td><td>304.80</td><td>1.194 mm</td><td>−1.194 mm</td><td>Gibson, Collings</td></tr>
+    <tr><td>16″ flat</td><td>406.40</td><td>0.894 mm</td><td>−0.894 mm</td><td>Flat-ish, archtop</td></tr>
+    <tr><td>∞ flat</td><td>∞</td><td>0.000 mm</td><td>0 mm</td><td>Classical nylon</td></tr>
+  </table>
+
+  <div class="callout warn">
+    <div class="label">Action Implication</div>
+    A center string requires <code>crown_height_mm</code> MORE saddle material than the edge strings to achieve the same action height. At 10″ radius: middle two strings need 1.43 mm extra saddle height vs. the outer strings. This is what the bone saddle crown shaping removes.
+  </div>
+
+  <hr class="rule">
+
+  <!-- ══════════════════════════════════════════════════════════════ -->
+  <h2 id="saddle-slant"><span class="sec-num">§3</span>Saddle Slant Angle</h2>
+
+  <p>The saddle slot is cut at an angle so that wound strings (which require more intonation compensation — their saddle contact must be farther from the nut) achieve the correct compensation without an individually shaped saddle for each string. The slot angle equals the arctangent of the compensation spread over the string spread.</p>
+
+  <h3>3.1 Derivation</h3>
+
+  <div class="formula-block">
+    <div class="formula">Let Δc_max = compensation of most-wound string  (e.g., E6 = 3.0 mm)
+Let Δc_min = compensation of least-wound string (e.g., E1 = 1.0 mm)
+
+Compensation spread:
+<span class="sym">ΔC</span> = Δc_max − Δc_min = <span class="val">2.0 mm</span>   <span class="com">// for standard 6-string</span>
+
+Slant angle (positive = bass end farther from nut):
+<span class="sym">α</span> = arctan( ΔC / S_ee )
+  = arctan( 2.0 / 55.0 ) = <span class="val">2.08°</span>
+
+End-to-end slot offset (how much the slot deviates laterally):
+<span class="sym">δ_slot</span> = S_ee × tan(α) = ΔC = <span class="val">2.0 mm</span>   <span class="com">// exact identity</span></div>
+    <div class="derivation-note">The end-to-end slot offset equals the compensation spread exactly. The angle is simply the arctangent that produces this. The slot length is S_ee + 2×overhang ≈ 59 mm for a standard bridge.</div>
+  </div>
+
+  <div class="callout">
+    <div class="label">CNC Note</div>
+    The saddle slot must be routed at slant angle α. For the BCAM 2030A, this is a single-pass operation with the workholder rotated α degrees from the bridge centerline. A zero-angle slot produces a systematic intonation error: treble strings will be flat, bass strings sharp, with no per-saddle correction possible on a bone blank.
+  </div>
+
+  <hr class="rule">
+
+  <!-- ══════════════════════════════════════════════════════════════ -->
+  <h2 id="saddle-slot"><span class="sec-num">§4</span>Saddle Slot Location</h2>
+
+  <p>The saddle slot must be positioned on the bridge body so that adequate wood remains on both sides. The rear margin (between slot and back bridge edge) is the structural shear zone that resists the saddle being pushed backward by string tension.</p>
+
+  <h3>4.1 Slot Depth</h3>
+
+  <div class="formula-block">
+    <div class="formula"><span class="sym">depth</span> = blank_height − h_proj
+        = <span class="val">12.0</span> − <span class="val">2.5</span> = <span class="val">9.5 mm</span>   <span class="com">// standard bone blank, 2.5 mm projection</span>
+
+Seat depth (saddle seated in slot):
+<span class="sym">seat</span> = depth = <span class="val">9.5 mm</span>   <span class="com">// must be ≥ 3.0 mm minimum</span></div>
+  </div>
+
+  <h3>4.2 Location Constraints</h3>
+
+  <div class="formula-block">
+    <div class="formula">Let x_ctr = saddle centerline from back edge of bridge
+
+Rear margin (back edge to slot rear wall):
+<span class="sym">x_rear</span> = x_ctr − slot_width/2   <span class="com">// must be ≥ 6 mm</span>
+
+Forward margin (slot front wall to pin row):
+<span class="sym">x_fwd</span>  = d_ps − slot_width/2       <span class="com">// must clear pin holes</span>
+
+Martin OM standard: x_ctr = 8.0 mm → x_rear = <span class="val">6.5 mm</span> ✓</div>
+    <div class="derivation-note">6 mm rear minimum established from shear area analysis: string tension component pushing saddle backward is absorbed by the wood cross-section between slot and back edge. Below 6 mm, the cross-section is insufficient for sustained string loads.</div>
+  </div>
+
+  <h3>4.3 Slot Length</h3>
+
+  <div class="formula-block">
+    <div class="formula"><span class="sym">L_slot</span> = S_ee + 2 × overhang
+       = <span class="val">55.0</span> + 2 × <span class="val">2.0</span> = <span class="val">59.0 mm</span>
+
+The saddle overhangs the outer strings by 2 mm per side to allow for
+string-path geometry and saddle end finishing without chipping.</div>
+  </div>
+
+  <hr class="rule">
+
+  <!-- ══════════════════════════════════════════════════════════════ -->
+  <h2 id="pin-holes"><span class="sec-num">§5</span>Bridge Pin Holes</h2>
+
+  <h3>5.1 Y-Positions (Lateral)</h3>
+
+  <p>Pin holes are at exactly the same lateral positions as the corresponding saddle strings:</p>
+
+  <div class="formula-block">
+    <div class="formula"><span class="sym">y_pin[i]</span> = y_saddle[i]   <span class="com">// each pin is directly behind its string</span>
+
+For Martin OM (S_ee = 55.0 mm, 6 strings):
+  y_pin = [<span class="val">−27.5, −16.5, −5.5, +5.5, +16.5, +27.5</span>] mm</div>
+  </div>
+
+  <h3>5.2 X-Position (Neck-to-Tail)</h3>
+
+  <div class="formula-block">
+    <div class="formula"><span class="sym">x_pin</span> = saddle_x − d_ps   <span class="com">// pin row is d_ps forward of saddle</span>
+
+Standard values:
+  Martin OM/D:     d_ps = <span class="val">10.5 mm</span>
+  Taylor:          d_ps = <span class="val">10.0 mm</span>
+  Gibson J-45:     d_ps = <span class="val">9.5 mm</span></div>
+  </div>
+
+  <h3>5.3 Hole Geometry</h3>
+
+  <div class="formula-block">
+    <div class="formula">Diameter at surface:  <span class="val">5.5 mm</span>   <span class="com">// standard bridge pin taper</span>
+Taper half-angle:    <span class="val">3.0°</span>
+Total depth:         <span class="val">22 mm</span>    <span class="com">// through bridge + plate + into top</span>
+  = bridge height (10) + plate thickness (4) + top penetration (8)</div>
+  </div>
+
+  <div class="callout warn">
+    <div class="label">CNC Op Note</div>
+    Pin holes are drilled with a tapered reamer at 3° half-angle, not a straight drill. A straight drill produces a cylindrical hole that accepts pins only at the surface — the pin sits on its shoulder, not along its taper. Tapered holes allow proper pin seating and the slight side-loading that secures the pin under string tension.
+  </div>
+
+  <hr class="rule">
+
+  <!-- ══════════════════════════════════════════════════════════════ -->
+  <h2 id="belly"><span class="sec-num">§6</span>Bridge Belly Profile</h2>
+
+  <p>The belly is the raised ramp between the pin holes and the saddle slot. It serves two functions: (1) it prevents the string from cutting into the bridge wood at the pin hole exit; (2) it imparts a slight upward angle to the string as it approaches the saddle, contributing to the effective break angle.</p>
+
+  <h3>6.1 Profile Function</h3>
+
+  <p>The belly follows a cosine bell curve, smooth at both entry (pin hole) and exit (saddle face):</p>
+
+  <div class="formula-block">
+    <div class="formula"><span class="sym">z(x)</span> = h_belly × [1 − cos(π × x / d_ps)] / 2
+
+Where:
+  x       = distance from pin center toward saddle  <span class="unit">[0, d_ps]</span>
+  h_belly = peak belly height above bridge surface  <span class="unit">(mm)</span>
+  d_ps    = pin-to-saddle distance                 <span class="unit">(mm)</span>
+
+Properties:
+  z(0)      = 0         <span class="com">// at pin center — flush with bridge surface</span>
+  z(d_ps/2) = h_belly   <span class="com">// peak at midpoint</span>
+  z(d_ps)   = h_belly   <span class="com">// at saddle face — maximum height</span>
+              <span class="com">// (the cosine function reaches its maximum at x=d_ps)</span></div>
+    <div class="derivation-note">The cosine curve was chosen (vs. linear ramp) because it is tangent to the bridge surface at x=0, preventing a sharp corner that would cause string fatigue at the pin hole exit. The curve is smooth enough that a cabinet scraper can profile it from a flat-topped bridge blank.</div>
+  </div>
+
+  <h3>6.2 Effective Slot Offset</h3>
+
+  <p>At the saddle face (x = d_ps), the cosine function reaches its maximum. The string exits the belly at height h_belly above the bridge surface. However, the practical effective offset is less than the full belly height because the string's contact with the saddle begins slightly inboard of the saddle face. Empirically:</p>
+
+  <div class="formula-block">
+    <div class="formula"><span class="sym">δ</span> = 0.30 × h_belly   <span class="com">// effective string elevation at saddle crown contact</span>
+
+For h_belly = 2.0 mm:  δ = <span class="val">0.60 mm</span>
+
+This value is <code>slot_offset_mm</code> in BreakAngleInput.</div>
+    <div class="derivation-note">The 0.30 coefficient is conservative. The string wraps slightly over the belly peak and descends to meet the saddle crown at a point above the bridge surface. Physical measurement on reference instruments gives δ ≈ 0.4–0.8 mm for a 2 mm belly; 0.30 × h provides a consistent lower bound.</div>
+  </div>
+
+  <h3>6.3 Computed Profile Points (Martin OM, d_ps = 10.5 mm, h = 2.0 mm)</h3>
+
+  <table>
+    <tr><th>x from pin (mm)</th><th>z height (mm)</th><th>Description</th></tr>
+    <tr><td>0.00</td><td>0.000</td><td>Pin center — bridge surface level</td></tr>
+    <tr><td>2.00</td><td>0.174</td><td>Rising ramp</td></tr>
+    <tr><td>5.25</td><td>1.000</td><td>Midpoint — half-height</td></tr>
+    <tr><td>8.00</td><td>1.733</td><td>Approaching peak</td></tr>
+    <tr><td>10.50</td><td>2.000</td><td>Saddle face — peak height</td></tr>
+    <tr><td style="color:var(--amber)">effective δ</td><td style="color:var(--amber)">0.60</td><td>slot_offset_mm → break angle calc</td></tr>
+  </table>
+
+  <hr class="rule">
+
+  <!-- ══════════════════════════════════════════════════════════════ -->
+  <h2 id="break-angle"><span class="sec-num">§7</span>Connection to Break Angle Calculator</h2>
+
+  <p>The acoustic bridge calculator produces a dictionary of inputs that feed directly into <code>bridge_break_angle.py</code>. All five inputs are now derived from physical geometry rather than entered as empirical defaults.</p>
+
+  <div class="formula-block">
+    <div class="formula">break_angle_inputs = {
+  <span class="sym">pin_to_saddle_center_mm</span>:  d_ps      = <span class="val">10.5</span>,
+  <span class="sym">slot_offset_mm</span>:           δ         = <span class="val">0.60</span>,  <span class="com">// from belly §6.2</span>
+  <span class="sym">saddle_projection_mm</span>:      h_proj    = <span class="val">2.5</span>,
+  <span class="sym">saddle_slot_depth_mm</span>:      depth     = <span class="val">9.5</span>,
+  <span class="sym">saddle_blank_height_mm</span>:    blank_h   = <span class="val">12.0</span>,
+}</div>
+  </div>
+
+  <h3>7.1 Break Angle Calculation</h3>
+
+  <div class="formula-block">
+    <div class="formula">Effective horizontal distance:
+<span class="sym">d_eff</span> = d_ps − δ = 10.5 − 0.60 = <span class="val">9.90 mm</span>
+
+Break angle:
+<span class="sym">θ</span> = arctan( h_proj / d_eff )
+  = arctan( 2.5 / 9.9 ) = <span class="val">14.17°</span>
+
+Rating: <span class="val">adequate</span>  (Carruth minimum: 6°; mechanical limit: 38°)</div>
+  </div>
+
+  <div class="callout">
+    <div class="label">What Changed from the Default</div>
+    The original <code>BreakAngleInput</code> default for <code>slot_offset_mm</code> was 1.2 mm (empirical estimate for a slotted pin hole). The belly-derived value is 0.6 mm — a difference of 0.6 mm, which changes the effective distance from 9.3 mm to 9.9 mm and the resulting angle from 15.03° to 14.17°. Both are adequate; the belly-derived value is physically traceable.
+  </div>
+
+  <hr class="rule">
+
+  <!-- ══════════════════════════════════════════════════════════════ -->
+  <h2 id="bridge-plate"><span class="sec-num">§8</span>Bridge Plate Sizing</h2>
+
+  <p>The bridge plate is glued to the inside of the top, under the bridge. It distributes the string load (transmitted via bridge pins pulling down on the top) over a larger area of the top plate, reducing stress concentration at the pin holes.</p>
+
+  <h3>8.1 Dimensions</h3>
+
+  <div class="formula-block">
+    <div class="formula"><span class="sym">L_plate</span> = L_bridge + 2 × margin = <span class="val">155 + 20 = 175 mm</span>
+<span class="sym">W_plate</span> = S_ee + 2 × margin + 20 = <span class="val">55 + 20 + 20 = 95 mm</span>
+<span class="sym">t_plate</span> = max(3.0, 1.2 × t_top)  = <span class="val">3.0 mm</span>  <span class="com">// for t_top = 2.5 mm</span></div>
+    <div class="derivation-note">The +20 mm extra width beyond string spread + margin ensures the plate spans the full X-brace intersection zone. The X-brace crosses at approximately ±35 mm from centerline; the plate must anchor both brace legs to prevent the bridge plate from pivoting under string load. Without X-brace coverage the plate acts as a lever rather than a pad.</div>
+  </div>
+
+  <h3>8.2 Grain Direction</h3>
+
+  <p>Bridge plate grain must run <strong>parallel to the top grain</strong> (neck-to-tail axis). This aligns the stiffer axis of the plate with the primary load direction (string tension pulls pins toward the bridge with a downward component). A cross-grain plate is common in production instruments but provides approximately 15× less stiffness in the critical direction (E_L vs E_C for sitka spruce).</p>
+
+  <hr class="rule">
+
+  <!-- ══════════════════════════════════════════════════════════════ -->
+  <h2 id="presets"><span class="sec-num">09</span>Preset Reference Values</h2>
+
+  <table>
+    <tr><th>Parameter</th><th>Martin OM</th><th>Martin D-28</th><th>Taylor Std</th><th>Gibson J-45</th></tr>
+    <tr><td>Scale length</td><td>648.0 mm</td><td>648.0 mm</td><td>650.2 mm</td><td>628.65 mm</td></tr>
+    <tr><td>Fretboard radius</td><td>10″ / 254mm</td><td>12″ / 305mm</td><td>15″ / 381mm</td><td>12″ / 305mm</td></tr>
+    <tr><td>Nut E-to-e</td><td>34.5 mm</td><td>35.0 mm</td><td>35.6 mm</td><td>37.7 mm</td></tr>
+    <tr><td>Saddle E-to-e</td><td>55.0 mm</td><td>55.0 mm</td><td>55.6 mm</td><td>52.5 mm</td></tr>
+    <tr><td>Crown height</td><td>1.433 mm</td><td>1.194 mm</td><td>0.975 mm</td><td>1.087 mm</td></tr>
+    <tr><td>Saddle slant</td><td>2.08°</td><td>2.08°</td><td>2.06°</td><td>2.18°</td></tr>
+    <tr><td>Pin-to-saddle</td><td>10.5 mm</td><td>10.5 mm</td><td>10.0 mm</td><td>9.5 mm</td></tr>
+    <tr><td>Bridge length</td><td>155 mm</td><td>162 mm</td><td>160 mm</td><td>152 mm</td></tr>
+    <tr><td>Break angle</td><td>14.17°</td><td>14.17°</td><td>14.97°</td><td>15.47°</td></tr>
+  </table>
+
+  <hr class="rule">
+
+  <!-- ══════════════════════════════════════════════════════════════ -->
+  <h2 id="limits"><span class="sec-num">10</span>Limit Checks &amp; Warnings</h2>
+
+  <table>
+    <tr><th>Check</th><th>Limit</th><th>Source</th><th>Consequence if Violated</th></tr>
+    <tr><td>Break angle minimum</td><td>≥ 6°</td><td>Alan Carruth empirical</td><td>String buzzes, lateral vibration, poor sustain</td></tr>
+    <tr><td>Break angle maximum</td><td>≤ 38°</td><td>Mechanical limit</td><td>String binding, premature breakage, saddle slot wear</td></tr>
+    <tr><td>Saddle projection minimum</td><td>≥ 1.6 mm</td><td>Practical minimum</td><td>Inadequate break angle, uneven action after wear</td></tr>
+    <tr><td>Saddle seat depth</td><td>≥ 3.0 mm</td><td>Shop standard</td><td>Saddle rocks or pops out under string tension</td></tr>
+    <tr><td>Rear margin (saddle to back edge)</td><td>≥ 6.0 mm</td><td>Shear area analysis</td><td>Back edge of bridge splits under sustained string load</td></tr>
+    <tr><td>Fretboard radius match</td><td>Exact match</td><td>Geometry requirement</td><td>Action uneven: center strings either high or cut through saddle</td></tr>
+    <tr><td>Bridge plate grain</td><td>Parallel to top</td><td>Gore &amp; Gilet</td><td>Plate pivots rather than distributing load; top cracks at pin holes</td></tr>
+  </table>
+
+  <hr class="rule">
+
+  <!-- ══════════════════════════════════════════════════════════════ -->
+  <h2 id="sources"><span class="sec-num">11</span>Sources</h2>
+
+  <div class="ref-grid">
+    <div class="ref-card">
+      <div class="ref-id">REF-01</div>
+      <div class="ref-title">Gore &amp; Gilet — Contemporary Acoustic Guitar</div>
+      <div class="ref-note">Vol. 1 Ch. 5: bridge geometry, string spacing, bridge plate sizing, grain direction requirements.</div>
+    </div>
+    <div class="ref-card">
+      <div class="ref-id">REF-02</div>
+      <div class="ref-title">Alan Carruth — Break Angle Testing</div>
+      <div class="ref-note">Empirical 6° minimum for adequate saddle seating force. Basis for MINIMUM_ADEQUATE_DEG in break_angle.py.</div>
+    </div>
+    <div class="ref-card">
+      <div class="ref-id">REF-03</div>
+      <div class="ref-title">Martin Guitar Co. — OM/D Reference Instruments</div>
+      <div class="ref-note">Measured reference dimensions: nut 34.5mm, saddle 55.0mm, pin-to-saddle 10.5mm, bridge 155mm.</div>
+    </div>
+    <div class="ref-card">
+      <div class="ref-id">REF-04</div>
+      <div class="ref-title">LMI / Stewart-MacDonald — Saddle Blank Standards</div>
+      <div class="ref-note">Bone blank: 72×3.0×12mm standard. Minimum seat depth 3mm (shop standard).</div>
+    </div>
+    <div class="ref-card">
+      <div class="ref-id">REF-05</div>
+      <div class="ref-title">Siminoff — The Luthier's Handbook</div>
+      <div class="ref-note">Bridge plate dimensions, pin hole geometry, taper angle conventions.</div>
+    </div>
+    <div class="ref-card">
+      <div class="ref-id">REF-06</div>
+      <div class="ref-title">BACKLOG.md GEOMETRY-004</div>
+      <div class="ref-note">Internal spec defining the gap between existing bridge_break_angle.py and the missing bridge body geometry.</div>
+    </div>
+  </div>
+
+  <hr class="rule">
+
+  <div style="text-align:center;padding:20px 0 0;font-family:var(--mono);font-size:9px;color:var(--dim2);letter-spacing:1px;">
+    THE PRODUCTION SHOP — acoustic_bridge_calc.py — 972 lines — GEOMETRY-004
+  </div>
+
+</main>
+</div>
+
+<script>
+// Active nav link on scroll
+const sections = document.querySelectorAll('[id]');
+const navLinks = document.querySelectorAll('nav a');
+const observer = new IntersectionObserver(entries => {
+  entries.forEach(entry => {
+    if (entry.isIntersecting) {
+      navLinks.forEach(l => l.classList.remove('active'));
+      const link = document.querySelector(`nav a[href="#${entry.target.id}"]`);
+      if (link) link.classList.add('active');
+    }
+  });
+}, { threshold: 0.4 });
+sections.forEach(s => observer.observe(s));
+</script>
+
+</body>
+</html>

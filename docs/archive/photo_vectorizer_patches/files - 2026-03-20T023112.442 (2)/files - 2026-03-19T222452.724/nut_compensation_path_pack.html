@@ -1,0 +1,497 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Nut Compensation — The Production Shop</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Source+Code+Pro:wght@300;400;600&family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&display=swap');
+
+  :root {
+    --bg:     #09090c;
+    --surf:   #111318;
+    --surf2:  #16191f;
+    --surf3:  #1c2028;
+    --border: #22293a;
+    --bord2:  #181e2c;
+    --jade:   #3ab88a;
+    --jade2:  #28876a;
+    --gold:   #c8a030;
+    --blue:   #5090c8;
+    --red:    #b85050;
+    --text:   #c0ccd8;
+    --text2:  #7890a0;
+    --white:  #e4eef8;
+    --dim:    #485868;
+    --dim2:   #282e3e;
+    --mono:   'Source Code Pro', monospace;
+    --serif:  'Libre Baskerville', Georgia, serif;
+  }
+
+  *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+  html{scroll-behavior:smooth}
+  body{background:var(--bg);color:var(--text);font-family:var(--serif);font-size:13px;line-height:1.78}
+
+  .shell{display:flex;min-height:100vh}
+
+  nav{width:215px;min-width:215px;background:var(--surf);border-right:1px solid var(--border);position:sticky;top:0;height:100vh;overflow-y:auto;padding:22px 0 48px}
+  .nav-brand{padding:0 16px 18px;border-bottom:1px solid var(--border);margin-bottom:14px}
+  .nav-eye{font-family:var(--mono);font-size:7px;letter-spacing:2.5px;text-transform:uppercase;color:var(--jade);margin-bottom:5px}
+  .nav-title{font-size:11px;font-weight:700;color:var(--white);line-height:1.4}
+  .nav-grp{padding:0 16px}
+  .nav-grp-lbl{font-family:var(--mono);font-size:7px;letter-spacing:1.5px;text-transform:uppercase;color:var(--dim2);margin:12px 0 5px}
+  nav a{display:block;font-family:var(--mono);font-size:9px;color:var(--dim);text-decoration:none;padding:3px 0 3px 8px;border-left:2px solid transparent;transition:all .1s}
+  nav a:hover{color:var(--jade);border-left-color:var(--jade2)}
+  nav a.active{color:var(--jade);border-left-color:var(--jade)}
+
+  main{flex:1;max-width:900px;padding:42px 54px 88px}
+
+  .doc-header{border-bottom:2px solid var(--border);padding-bottom:28px;margin-bottom:42px}
+  .doc-eye{font-family:var(--mono);font-size:8px;letter-spacing:2.5px;text-transform:uppercase;color:var(--jade);margin-bottom:10px}
+  .doc-title{font-size:32px;font-weight:700;color:var(--white);line-height:1.15;margin-bottom:12px;letter-spacing:-.5px}
+  .doc-sub{font-size:13px;color:var(--text2);font-style:italic;margin-bottom:14px}
+  .doc-meta{display:flex;gap:22px;flex-wrap:wrap;margin-top:14px}
+  .doc-meta span{font-family:var(--mono);font-size:9px;color:var(--dim)}
+  .doc-meta span strong{color:var(--text2)}
+
+  h2{font-size:19px;font-weight:700;color:var(--white);margin:50px 0 14px;padding-bottom:8px;border-bottom:1px solid var(--border);letter-spacing:-.3px;scroll-margin-top:24px}
+  h3{font-family:var(--mono);font-size:10px;font-weight:600;color:var(--jade);letter-spacing:1px;text-transform:uppercase;margin:28px 0 10px;scroll-margin-top:24px}
+  p{margin-bottom:11px}
+
+  .formula{background:var(--surf2);border:1px solid var(--border);border-left:3px solid var(--jade);border-radius:3px;padding:16px 20px;margin:14px 0;font-family:var(--mono);font-size:12px;color:var(--white);line-height:2.1;white-space:pre-wrap}
+  .formula .sym{color:var(--jade);font-weight:600}
+  .formula .val{color:#6ac080}
+  .formula .com{color:var(--dim);font-style:italic}
+  .formula .src{color:var(--gold)}
+  .formula .unc{color:var(--red)}
+  .formula .note{font-size:10px;color:var(--dim);margin-top:10px;padding-top:10px;border-top:1px solid var(--bord2);font-style:italic;line-height:1.6}
+
+  table{width:100%;border-collapse:collapse;margin:14px 0;font-size:11px}
+  th{background:var(--surf2);padding:7px 12px;text-align:left;font-family:var(--mono);font-size:8px;font-weight:600;letter-spacing:.9px;text-transform:uppercase;color:var(--dim);border-bottom:1px solid var(--border)}
+  td{padding:6px 12px;border-bottom:1px solid var(--bord2);font-family:var(--mono);font-size:10px;color:var(--text2);vertical-align:top}
+  td:first-child{color:var(--text)}
+  tr:last-child td{border-bottom:none}
+  tr:hover td{background:var(--surf2)}
+  .td-exact{color:var(--jade) !important;font-weight:600}
+  .td-emp{color:var(--gold) !important}
+  .td-unc{color:var(--red) !important}
+
+  .callout{border:1px solid var(--border);border-left:3px solid var(--jade);border-radius:3px;padding:12px 16px;margin:14px 0;font-size:12px;color:var(--text2)}
+  .callout.gold{border-left-color:var(--gold)}
+  .callout.red{border-left-color:var(--red)}
+  .callout.blue{border-left-color:var(--blue)}
+  .callout .lbl{font-family:var(--mono);font-size:8px;letter-spacing:1.5px;text-transform:uppercase;color:var(--jade);margin-bottom:5px;display:block}
+  .callout.gold .lbl{color:var(--gold)}
+  .callout.red .lbl{color:var(--red)}
+  .callout.blue .lbl{color:var(--blue)}
+
+  .diagram{background:var(--surf2);border:1px solid var(--border);border-radius:3px;padding:16px 20px;margin:14px 0;font-family:var(--mono);font-size:10px;color:var(--text2);line-height:1.7;white-space:pre;overflow-x:auto}
+  .diagram .hl{color:var(--jade)}
+  .diagram .dim{color:var(--dim2)}
+  .diagram .gold{color:var(--gold)}
+  .diagram .val{color:#6ac080}
+  .diagram .red{color:var(--red)}
+
+  hr.rule{border:none;border-top:1px solid var(--border);margin:34px 0}
+  .sec-n{font-family:var(--mono);font-size:10px;color:var(--dim2);margin-right:8px}
+  code{font-family:var(--mono);font-size:10px;background:var(--surf2);border:1px solid var(--border);padding:1px 5px;border-radius:2px;color:#6ac080}
+
+  .src-badge{display:inline-block;font-family:var(--mono);font-size:7px;letter-spacing:1px;text-transform:uppercase;padding:1px 6px;border-radius:2px;vertical-align:middle;margin-left:5px}
+  .src-exact{background:#1a3a28;color:var(--jade);border:1px solid var(--jade2)}
+  .src-emp{background:#3a2e10;color:var(--gold);border:1px solid #8a6010}
+  .src-unc{background:#3a1010;color:var(--red);border:1px solid #8a2020}
+</style>
+</head>
+<body>
+<div class="shell">
+
+<nav>
+  <div class="nav-brand">
+    <div class="nav-eye">Production Shop</div>
+    <div class="nav-title">Nut Compensation</div>
+  </div>
+  <div class="nav-grp">
+    <div class="nav-grp-lbl">Overview</div>
+    <a href="#systems">Nut Systems Compared</a>
+    <a href="#sources">Source Honesty</a>
+  </div>
+  <div class="nav-grp">
+    <div class="nav-grp-lbl">Mathematics</div>
+    <a href="#fret-positions">Fret Positions (12-TET)</a>
+    <a href="#saddle">Saddle Compensation</a>
+    <a href="#nut-trad">Traditional Nut</a>
+    <a href="#zero-fret">Zero Fret</a>
+  </div>
+  <div class="nav-grp">
+    <div class="nav-grp-lbl">Physics</div>
+    <a href="#mechanism">Why Compensation Exists</a>
+    <a href="#bending">Bending Stiffness</a>
+    <a href="#tone">Open String Tone</a>
+  </div>
+  <div class="nav-grp">
+    <div class="nav-grp-lbl">Reference</div>
+    <a href="#slot-depth">Nut Slot Depth</a>
+    <a href="#tables">Compensation Tables</a>
+    <a href="#scales">Scale Lengths</a>
+  </div>
+</nav>
+
+<main>
+<div class="doc-header">
+  <div class="doc-eye">Technical Reference — GEOMETRY-007</div>
+  <div class="doc-title">Nut Compensation</div>
+  <div class="doc-sub">Zero-fret vs traditional · 12-TET fret positions · Compensation physics · Source honesty</div>
+  <div class="doc-meta">
+    <span><strong>Author:</strong> Ross L. Echols Jr., P.E. #78195</span>
+    <span><strong>Module:</strong> nut_compensation_calc.py</span>
+    <span><strong>Lines:</strong> 551</span>
+    <span><strong>Status:</strong> Production</span>
+  </div>
+</div>
+
+<!-- SYSTEMS -->
+<h2 id="systems"><span class="sec-n">00</span>Nut Systems Compared</h2>
+
+<div class="diagram">                   TRADITIONAL NUT                      ZERO FRET
+                   ───────────────                      ──────────────
+
+<span class="hl">Open string</span>:  nut → saddle                    zero-fret → saddle
+
+              ┌────────┐                         ┌──────┬───────────┐
+              │  NUT   │ ← sets height,           │  NUT │  <span class="hl">ZFRET</span>   │
+              │ (bone) │   intonation,            │(guide│(wire     │
+              └────┬───┘   spacing                │ only)│ at pos 0)│
+                   │                              └──────┴─────┬─────┘
+                   │  ← nut-to-fret-1                          │ ← fret height
+     ──────────────┼──────────────────            ─────────────┼─────────────
+         [fret 1]  │                                  [fret 1]  │
+
+<span class="gold">Open string height</span>:  set by nut slot depth      set by zero fret crown height
+<span class="gold">Open string material</span>: bone / TUSQ / etc.         nickel-silver (same as all frets)
+<span class="gold">Nut role</span>:             height + spacing + inton.   spacing only (height non-critical)
+<span class="gold">Slot depth</span>:           critical — sets intonation  non-critical — just a guide slot
+<span class="gold">Wear</span>:                 nut wears, easy to replace   zero fret wears — fret job to fix
+<span class="gold">Compensation</span>:        nut setback 0.005–0.020"     very small (≈0.003–0.007")</div>
+
+<p>The critical practical difference for the builder: on a traditional nut, the nut slot depth controls open string height and directly affects fret 1 intonation. This must be cut precisely. On a zero-fret instrument, the open string height is set by the zero fret crown — same as every other fret — and the nut is cut just deep enough to guide strings without contacting them.</p>
+
+<hr class="rule">
+
+<!-- SOURCE HONESTY -->
+<h2 id="sources"><span class="sec-n">01</span>Source Honesty — Three Categories of Numbers</h2>
+
+<p>This module uses three categories of mathematics with very different epistemic status. They are distinguished here rather than treated as equivalent.</p>
+
+<table>
+  <tr><th>Formula</th><th>Type</th><th>Uncertainty</th><th>Source</th></tr>
+  <tr>
+    <td>12-TET fret positions</td>
+    <td><span class="src-badge src-exact">Exact</span></td>
+    <td class="td-exact">Zero — pure mathematics</td>
+    <td>Euclidean geometry / equal temperament derivation</td>
+  </tr>
+  <tr>
+    <td>Saddle compensation</td>
+    <td><span class="src-badge src-emp">Empirical</span></td>
+    <td class="td-emp">±15%</td>
+    <td>Gore &amp; Gilet Vol. 1 — derived from string mechanics, calibrated against measured instruments</td>
+  </tr>
+  <tr>
+    <td>Nut setback (traditional)</td>
+    <td><span class="src-badge src-emp">Empirical</span></td>
+    <td class="td-unc">±30%</td>
+    <td>Gore &amp; Gilet methodology + luthier practice consensus. Setup-specific.</td>
+  </tr>
+  <tr>
+    <td>Zero fret residual offset</td>
+    <td><span class="src-badge src-unc">Empirical</span></td>
+    <td class="td-unc">±50%</td>
+    <td>Luthier practice. Limited published data. Treat as order-of-magnitude only.</td>
+  </tr>
+</table>
+
+<div class="callout gold">
+  <span class="lbl">Why the Uncertainty Is Large for Nut Compensation</span>
+  The nut compensation depends on action height at the nut, string stiffness, and playing style — all setup-specific variables. A guitar set up for fingerstyle with low action needs less nut compensation than the same guitar set up with high action for slide playing. The values in the tables are typical estimates for standard acoustic setups. The correct approach on precision work is to use these values as starting points and verify by checking fret 1 intonation against the 12th fret harmonic after installation.
+</div>
+
+<hr class="rule">
+
+<!-- FRET POSITIONS -->
+<h2 id="fret-positions"><span class="sec-n">02</span>Fret Positions — 12-TET</h2>
+<p>These are exact. No empirical constants. No uncertainty. Results are deterministic for any scale length input. <span class="src-badge src-exact">Exact Math</span></p>
+
+<div class="formula"><span class="sym">d_from_saddle(n)</span> = L / 2^(n/12)   <span class="com">// distance from saddle to fret n</span>
+<span class="sym">d_from_nut(n)</span>    = L - d_from_saddle(n)
+
+Key identity: fret 12 is exactly half scale length.
+  d_from_saddle(12) = L / 2^(12/12) = L / 2^1 = <span class="val">L / 2</span>   ← exact, always
+
+Example — Martin OM 25.4" scale:
+  Fret 0 (nut):  <span class="val">0.000"</span>   (0.000 mm)
+  Fret 1:        <span class="val">1.4256"</span>  (36.210 mm)
+  Fret 2:        <span class="val">2.7712"</span>  (70.388 mm)
+  Fret 3:        <span class="val">4.0412"</span>  (102.647 mm)
+  Fret 5:        <span class="val">6.3715"</span>  (161.836 mm)
+  Fret 7:        <span class="val">8.4475"</span>  (214.567 mm)
+  Fret 12:       <span class="val">12.7000"</span> (322.580 mm) = exactly half scale
+<span class="note">The formula L/2^(n/12) guarantees that each fret produces exactly one semitone
+above the previous fret in equal temperament. This is a mathematical property,
+not an approximation. The "rule of 18" (dividing remaining length by 17.817)
+is an approximation of this formula — do not use it in CNC work.</span></div>
+
+<hr class="rule">
+
+<!-- SADDLE -->
+<h2 id="saddle"><span class="sec-n">03</span>Saddle Compensation</h2>
+<p><span class="src-badge src-emp">Empirical ±15%</span> — Gore &amp; Gilet Vol. 1 methodology, calibrated against measured instruments.</p>
+
+<div class="formula"><span class="sym">C_saddle</span> ≈ k × gauge_diameter
+
+  k = <span class="val">0.80</span>  for wound strings   <span class="com">// heavier gauge, more stiffness</span>
+  k = <span class="val">0.60</span>  for plain strings
+
+Example — Martin OM 25.4", light gauge .012:
+  Low E  (.053" wound): <span class="val">0.0424"</span> (1.08 mm) saddle setback
+  G      (.024" wound): <span class="val">0.0192"</span> (0.49 mm)
+  High e (.012" plain): <span class="val">0.0072"</span> (0.18 mm)
+<span class="note">Source: Gore &amp; Gilet derive this from string tension + bending stiffness mechanics.
+The k coefficients are fits to measured instruments. Uncertainty ±15% — the correct
+saddle position should be verified by intonation check after installation.</span></div>
+
+<hr class="rule">
+
+<!-- TRADITIONAL NUT -->
+<h2 id="nut-trad"><span class="sec-n">04</span>Traditional Nut Setback</h2>
+<p><span class="src-badge src-emp">Empirical ±30%</span> — Gore &amp; Gilet methodology + luthier practice consensus.</p>
+
+<div class="formula"><span class="sym">C_nut</span> = C_saddle × k_nut
+
+  k_nut = <span class="val">0.22</span>  heavy wound strings (Low E, A)
+  k_nut = <span class="val">0.28</span>  light wound strings (D, G wound)
+  k_nut = <span class="val">0.35</span>  plain strings (B, High e)
+
+Example — Martin OM 25.4", light gauge .012:
+  Low E  (.053"): C_saddle=0.0424" × 0.22 = <span class="val">0.0093"</span> (0.24 mm) setback
+  G      (.024"): C_saddle=0.0192" × 0.28 = <span class="val">0.0054"</span> (0.14 mm) setback
+  High e (.012"): C_saddle=0.0072" × 0.35 = <span class="val">0.0025"</span> (0.06 mm) setback
+<span class="note"><span class="unc">Uncertainty ±30% — this is an estimate, not a precision specification.</span>
+Correct value is setup-specific: action height, string brand, playing style all shift it.
+Use these values as starting points. Verify with electronic tuner: fret 1 should match
+the pitch of the open string + one semitone after nut compensation is set.</span></div>
+
+<div class="callout red">
+  <span class="lbl">Source Transparency</span>
+  The k_nut factors (0.22–0.35) are not published in a single authoritative reference. They are calibrated from the Gore &amp; Gilet methodology and the luthier practice consensus that emerges from sources like Siminoff, StewMac instructional content, and GAL technical discussions. The dominant physical mechanism is bending stiffness at the short open-string segment — not the Pythagorean string-stretch model, which gives values approximately 20× too small. The ±30% uncertainty reflects genuine scatter in the underlying data.
+</div>
+
+<hr class="rule">
+
+<!-- ZERO FRET -->
+<h2 id="zero-fret"><span class="sec-n">05</span>Zero Fret Position and Compensation</h2>
+<p><span class="src-badge src-unc">Empirical ±50%</span> — limited published data. Zero fret residual offset is small enough that most builds place the zero fret at the theoretical position (no offset).</p>
+
+<div class="formula">Zero fret position = theoretical nut position (fret 0, distance L from saddle)
+
+Standard builds:    offset = <span class="val">0.000"</span>  (no compensation)
+Precision builds:   offset ≈ C_nut_traditional × 0.30
+
+Rationale for near-zero offset:
+  Open string height = zero fret crown height ≈ 0.045"  (medium 6160)
+  Fret 1 crown height = same fret wire = 0.045"
+  Depression when fretting at 1 = action above fret 1 only
+  → bending stiffness mismatch is much smaller than traditional nut
+  → residual compensation is small (within tuning tolerance for most builds)
+<span class="note"><span class="unc">Uncertainty ±50% on the 30% residual factor. In practice,
+place the zero fret at the theoretical position and verify intonation.</span>
+
+Nut position behind zero fret:
+  The nut sits approximately <span class="val">3/8" (9.5mm)</span> behind (headstock side of) the zero fret.
+  Nut slot depth: string bottom should sit 0.005–0.010" ABOVE zero fret top.
+  Strings must ride on zero fret — if they contact the nut, the zero fret is bypassed.</span></div>
+
+<hr class="rule">
+
+<!-- MECHANISM -->
+<h2 id="mechanism"><span class="sec-n">06</span>Why Compensation Exists — The Physical Mechanism</h2>
+
+<p>Two distinct physical effects cause fretted notes to sound sharp relative to the theoretically expected pitch. Understanding which effect dominates which part of the scale is key to understanding why nut and saddle compensations differ.</p>
+
+<h3>Effect 1 — string stretching from fretting action</h3>
+<div class="formula">When a string is pressed to a fret, it is deflected from its resting position.
+This deflection stretches the string slightly, increasing tension.
+Increased tension = higher frequency = sharp pitch.
+
+The stretching effect is proportional to:
+  (deflection_height)² / (2 × lever_arm_length)
+
+This effect is LARGEST at the SADDLE end because:
+  - The lever arm (vibrating string length) is longest there
+  - The deflection is proportional to the action height, which is largest near the body
+  
+This is the dominant mechanism for saddle compensation.</div>
+
+<h3>Effect 2 — bending stiffness of the string</h3>
+<div class="formula">A real string has finite stiffness (it resists bending, like a thin rod).
+A stiffer string vibrates at a slightly higher frequency than a pure tensioned string
+of the same length. The effect is larger for shorter vibrating lengths.
+
+The bending stiffness correction scales approximately as:
+  Δf/f ∝ (EI) / (T × L²)
+
+where:
+  EI = bending stiffness (proportional to gauge^4 approximately)
+  T  = string tension
+  L  = vibrating length
+
+For the OPEN string: L = full scale length (smallest correction)
+For FRET 1: L = scale_length / 2^(1/12) ≈ scale_length × 0.9439
+
+The bending stiffness correction for fretted notes is slightly larger
+than for the open string — the string is "stiffer per unit length" when
+the vibrating segment is shorter. This makes the fret 1 note sharp
+relative to the open string.
+
+This is the dominant mechanism for NUT compensation.
+
+KEY RESULT: simple Pythagorean stretching predicts nut compensation of
+~0.001–0.003". Bending stiffness predicts ~0.005–0.015".
+The empirical values seen in practice match bending stiffness, not stretching.</div>
+
+<hr class="rule">
+
+<!-- OPEN STRING TONE -->
+<h2 id="tone"><span class="sec-n">07</span>Open String Tone Character</h2>
+
+<table>
+  <tr><th>Characteristic</th><th>Traditional Nut</th><th>Zero Fret</th></tr>
+  <tr>
+    <td>String contact material</td>
+    <td>Bone, TUSQ, brass, synthetic</td>
+    <td>Nickel-silver fret wire (same as all frets)</td>
+  </tr>
+  <tr>
+    <td>Open vs fretted attack</td>
+    <td>Different — nut material affects attack envelope</td>
+    <td>Identical — same material contact for all notes</td>
+  </tr>
+  <tr>
+    <td>Sustain character</td>
+    <td>Bone: bright, good sustain. TUSQ: consistent. Brass: bell-like.</td>
+    <td>Consistent with fretted notes — no material discontinuity</td>
+  </tr>
+  <tr>
+    <td>Setup criticality</td>
+    <td>Slot depth critical — affects height and intonation simultaneously</td>
+    <td>Slot depth non-critical — strings guided, not constrained</td>
+  </tr>
+  <tr>
+    <td>Maintenance</td>
+    <td>Nut replacement when worn — 30-minute job</td>
+    <td>Zero fret wears — full or partial refret required</td>
+  </tr>
+  <tr>
+    <td>Builder skill required</td>
+    <td>High — nut slot depth is iterative and irreversible</td>
+    <td>Lower — zero fret installation is standard fret work</td>
+  </tr>
+</table>
+
+<div class="callout blue">
+  <span class="lbl">The Open String Argument for Zero Fret</span>
+  The principal reason professional players sometimes prefer zero-fret guitars is consistency: an open G chord has the same attack character as a closed G chord on fret 3. On a traditional nut, the bone or TUSQ contact produces a slightly different initial transient than the fret wire contact of a stopped note. This difference is subtle and debated, but it is real and detectable in close-mic recording. Classical and fingerstyle players tend to notice it more than strummers.
+</div>
+
+<hr class="rule">
+
+<!-- SLOT DEPTH -->
+<h2 id="slot-depth"><span class="sec-n">08</span>Nut Slot Depth — Traditional Nut</h2>
+
+<div class="formula">Slot depth = nut_blank_height - fret_crown_height - target_clearance
+
+Target clearance (string bottom above fret 1 crown):
+  Plain strings:  <span class="val">0.012"</span>  (0.30 mm)
+  Wound strings:  <span class="val">0.017"</span>  (0.43 mm)
+
+Example — 0.200" nut blank, medium fret (crown 0.045"):
+  High e (.012" plain):  0.200 - 0.045 - 0.012 = <span class="val">0.143"</span> depth from top
+  Low E  (.053" wound):  0.200 - 0.045 - 0.017 = <span class="val">0.138"</span> depth from top
+<span class="note">Source: Siminoff; StewMac; shop practice.
+These are minimum slot depths — too shallow = string too high = sharp fret 1.
+Too deep = string buzzes on fret 1 or lower frets.
+Cut incrementally. Verify with electronic tuner. Each pass is irreversible.</span></div>
+
+<div class="callout">
+  <span class="lbl">Zero Fret Nut — Different Requirement</span>
+  On a zero-fret guitar, cut the nut slots so the string bottom sits 0.005–0.010" ABOVE the zero fret crown. The string must contact the zero fret, not the nut. If the nut is cut too deep, strings bypass the zero fret entirely and the instrument becomes a traditional nut guitar with wrong nut position.
+</div>
+
+<hr class="rule">
+
+<!-- TABLES -->
+<h2 id="tables"><span class="sec-n">09</span>Compensation Tables</h2>
+
+<h3>Martin OM — 25.4" scale, light .012 gauge</h3>
+<table>
+  <tr><th>String</th><th>Gauge</th><th>Saddle</th><th>Nut (traditional)</th><th>Zero fret offset</th><th>Slot depth</th></tr>
+  <tr><td>Low E</td><td>.053" wound</td><td>0.0424"</td><td class="td-emp">0.0093" (0.24mm)</td><td class="td-unc">0.0028"</td><td>0.1380"</td></tr>
+  <tr><td>A</td><td>.042" wound</td><td>0.0336"</td><td class="td-emp">0.0074" (0.19mm)</td><td class="td-unc">0.0022"</td><td>0.1380"</td></tr>
+  <tr><td>D</td><td>.032" wound</td><td>0.0256"</td><td class="td-emp">0.0072" (0.18mm)</td><td class="td-unc">0.0022"</td><td>0.1380"</td></tr>
+  <tr><td>G</td><td>.024" wound</td><td>0.0192"</td><td class="td-emp">0.0054" (0.14mm)</td><td class="td-unc">0.0016"</td><td>0.1380"</td></tr>
+  <tr><td>B</td><td>.016" plain</td><td>0.0096"</td><td class="td-emp">0.0034" (0.09mm)</td><td class="td-unc">0.0010"</td><td>0.1430"</td></tr>
+  <tr><td>High e</td><td>.012" plain</td><td>0.0072"</td><td class="td-emp">0.0025" (0.06mm)</td><td class="td-unc">0.0008"</td><td>0.1430"</td></tr>
+</table>
+
+<p><em>Saddle: empirical ±15%. Nut traditional: empirical ±30%. Zero fret offset: empirical ±50%.</em></p>
+
+<h3>Fret positions — 25.4" scale (first 7 frets)</h3>
+<table>
+  <tr><th>Fret</th><th>From nut (mm)</th><th>From nut (in)</th><th>From saddle (in)</th></tr>
+  <tr><td>0 (nut)</td><td class="td-exact">0.000</td><td class="td-exact">0.0000"</td><td>25.4000"</td></tr>
+  <tr><td>1</td><td class="td-exact">36.210</td><td class="td-exact">1.4256"</td><td>23.9744"</td></tr>
+  <tr><td>2</td><td class="td-exact">70.388</td><td class="td-exact">2.7712"</td><td>22.6288"</td></tr>
+  <tr><td>3</td><td class="td-exact">102.647</td><td class="td-exact">4.0412"</td><td>21.3588"</td></tr>
+  <tr><td>4</td><td class="td-exact">133.096</td><td class="td-exact">5.2400"</td><td>20.1600"</td></tr>
+  <tr><td>5</td><td class="td-exact">161.836</td><td class="td-exact">6.3715"</td><td>19.0285"</td></tr>
+  <tr><td>7</td><td class="td-exact">214.567</td><td class="td-exact">8.4475"</td><td>16.9525"</td></tr>
+  <tr><td>12</td><td class="td-exact">322.580</td><td class="td-exact">12.7000"</td><td>12.7000"</td></tr>
+</table>
+
+<p><em>Green = exact mathematics. Zero uncertainty. Do not use "rule of 18" approximation for CNC work.</em></p>
+
+<hr class="rule">
+
+<!-- SCALES -->
+<h2 id="scales"><span class="sec-n">10</span>Standard Scale Lengths</h2>
+
+<table>
+  <tr><th>Name</th><th>Scale (in)</th><th>Scale (mm)</th><th>Fret 1 from nut</th><th>Common instruments</th></tr>
+  <tr><td>Martin long</td><td>25.4"</td><td>645.2</td><td>1.426"</td><td>Martin D, OM, 000 (most)</td></tr>
+  <tr><td>Fender Strat</td><td>25.5"</td><td>647.7</td><td>1.431"</td><td>Fender Stratocaster, Telecaster</td></tr>
+  <tr><td>Classical</td><td>25.6"</td><td>650.2</td><td>1.437"</td><td>Classical, flamenco</td></tr>
+  <tr><td>PRS standard</td><td>25.0"</td><td>635.0</td><td>1.404"</td><td>PRS guitars</td></tr>
+  <tr><td>Martin short</td><td>24.9"</td><td>632.5</td><td>1.398"</td><td>Martin 000 (some)</td></tr>
+  <tr><td>Gibson short</td><td>24.75"</td><td>628.7</td><td>1.390"</td><td>Gibson Les Paul, J-45</td></tr>
+  <tr><td>Baritone</td><td>27.0"</td><td>685.8</td><td>1.516"</td><td>Baritone guitar</td></tr>
+</table>
+
+<hr class="rule">
+<div style="text-align:center;padding:16px 0 0;font-family:var(--mono);font-size:8px;color:var(--dim2);letter-spacing:1px;">
+  THE PRODUCTION SHOP — nut_compensation_calc.py — 551 lines — GEOMETRY-007
+</div>
+</main>
+</div>
+
+<script>
+document.querySelectorAll('[id]').forEach(s =>
+  new IntersectionObserver(([e]) => {
+    if(e.isIntersecting){
+      document.querySelectorAll('nav a').forEach(l=>l.classList.remove('active'));
+      const l=document.querySelector(`nav a[href="#${s.id}"]`);
+      if(l)l.classList.add('active');
+    }
+  },{threshold:0.4}).observe(s)
+);
+</script>
+</body>
+</html>

@@ -1,0 +1,54 @@
+{
+  "schema_version": "1.0",
+  "description": "Normalized archtop graduation template. Shape is universal across makers; absolute values are derived from wood properties via plate_design calculator.",
+  "derivation": "Derived from D'Aquisto measurements (photographed sketch) + Benedetto 17 reference points. Proportions consistent across both instruments confirming universality.",
+  "usage": "Multiply normalized values by (apex_mm - edge_mm) then add edge_mm to get absolute thickness at each zone.",
+
+  "top": {
+    "arch_height_fraction_of_lower_bout_width": 0.062,
+    "arch_height_note": "D'Aquisto: 5/8in (~15.9mm) on ~255mm lower bout = 0.062. Classic range 0.055-0.070.",
+    "apex_location": "lower_bout_under_bridge",
+    "normalized_zones": {
+      "upper_bout_edge":         0.00,
+      "upper_bout_body":         0.17,
+      "fhole_zone":              0.25,
+      "waist":                   0.43,
+      "below_waist":             0.55,
+      "lower_bout_upper":        0.67,
+      "lower_bout_bridge_zone":  1.00,
+      "lower_bout_bottom_edge":  0.67
+    }
+  },
+
+  "back": {
+    "arch_height_fraction_of_lower_bout_width": 0.075,
+    "arch_height_note": "D'Aquisto: 3/4in (~19.1mm) on ~255mm lower bout = 0.075. Back arch typically higher than top.",
+    "apex_location": "just_below_waist",
+    "normalized_zones": {
+      "upper_bout_edge":         0.12,
+      "upper_bout_body":         0.25,
+      "waist_zone":              0.25,
+      "below_waist_apex":        1.00,
+      "lower_bout_upper":        0.75,
+      "lower_bout_center":       0.88,
+      "lower_bout_bottom_edge":  0.12
+    }
+  },
+
+  "sources": [
+    {
+      "instrument": "D'Aquisto archtop",
+      "file": "models/daquisto_excel/graduation_measurements.json",
+      "top_range_mm": [3.0, 4.5],
+      "back_range_mm": [2.5, 4.5]
+    },
+    {
+      "instrument": "Benedetto 17in",
+      "file": "models/benedetto_17/graduation_map.json",
+      "top_range_mm": [3.5, 7.0],
+      "back_range_mm": null
+    }
+  ],
+
+  "implementation_note": "The absolute endpoints (edge_mm, apex_mm) should come from tap_tone_pi.design.analyze_plate() or analyze_coupled_system(). The arch_height should come from arch_height_fraction * actual_lower_bout_width_mm. Neither is currently wired — see BACKLOG.md PORT-001 and ARCH-001."
+}
