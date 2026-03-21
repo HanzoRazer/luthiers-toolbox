@@ -209,17 +209,15 @@ def generate_stratocaster_body_gcode(
 @router.post("/les_paul/body/gcode")
 def generate_les_paul_body_gcode(
     project_id: str = Query(..., description="Project UUID"),
-    machine: str = Query("txrx_router", description="Machine profile"),
+    machine: str = Query("bcam_2030a", description="Machine profile"),
     principal: Principal = Depends(get_current_principal),
     db: Session = Depends(get_db),
 ) -> StreamingResponse:
     """
     Generate Les Paul body G-code from project.
 
-    Uses default Les Paul DXF template with project dimensions.
-
-    NOTE: LesPaulBodyGenerator.from_project() not yet implemented.
-    This endpoint uses the default LP template.
+    Uses LesPaulBodyGenerator.from_project() to create generator from
+    project data. Resolves DXF template from instrument_geometry/body/dxf/electric/.
 
     Returns .nc file as streaming download.
     """
@@ -228,33 +226,18 @@ def generate_les_paul_body_gcode(
 
     try:
         from pathlib import Path
+        import tempfile
         from ....generators.lespaul_body_generator import LesPaulBodyGenerator
 
-        # Find default LP DXF template
-        templates_dir = Path(__file__).parent.parent.parent.parent / "instrument_geometry" / "body" / "dxf" / "electric"
-        lp_dxf = templates_dir / "LesPaul_body.dxf"
-
-        if not lp_dxf.exists():
-            # Try alternate location
-            alt_dxf = Path(__file__).parent.parent.parent.parent / "assets" / "instrument_templates" / "lp" / "lp_body_v1.dxf"
-            if alt_dxf.exists():
-                lp_dxf = alt_dxf
-            else:
-                raise HTTPException(
-                    status_code=500,
-                    detail="Les Paul DXF template not found. LesPaulBodyGenerator.from_project() not yet implemented."
-                )
-
-        # Use existing generator with default DXF
-        gen = LesPaulBodyGenerator(str(lp_dxf), machine=machine)
+        # Use from_project() factory method (GEN-4)
+        gen = LesPaulBodyGenerator.from_project(design_state, machine=machine)
 
         # Get stock thickness from project if available
-        stock_thickness = 1.75  # default
+        stock_thickness = 1.75  # default inches
         if design_state.body_config and design_state.body_config.stock_thickness_mm:
             stock_thickness = design_state.body_config.stock_thickness_mm / 25.4
 
         # Generate to temp path
-        import tempfile
         with tempfile.NamedTemporaryFile(mode='w', suffix='.nc', delete=False) as tmp:
             gen.generate(tmp.name, stock_thickness=stock_thickness)
             tmp_path = tmp.name
@@ -269,6 +252,8 @@ def generate_les_paul_body_gcode(
         filename = f"lespaul_body_{_generate_timestamp()}.nc"
         return _make_nc_response(gcode, filename)
 
+    except FileNotFoundError as e:
+        raise HTTPException(status_code=500, detail=str(e))
     except ValueError as e:
         raise HTTPException(status_code=422, detail=str(e))
     except ImportError as e:
@@ -478,9 +463,8 @@ def body_gcode_status() -> dict:
             },
             "les_paul": {
                 "endpoint": "/les_paul/body/gcode",
-                "from_project": False,  # Uses default DXF template
+                "from_project": True,
                 "cam_ready": True,
-                "note": "Uses default LP DXF template; from_project() not yet implemented"
             },
             "flying_v": {
                 "endpoint": "/flying_v/body/gcode",
