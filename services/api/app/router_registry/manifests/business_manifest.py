@@ -78,6 +78,13 @@ BUSINESS_ROUTERS: List[RouterSpec] = [
         tags=["Business"],
         category="business",
     ),
+    # Session B-2: LTB Calculator Suite
+    RouterSpec(
+        module="app.routers.ltb_calculator_router",
+        prefix="",  # Router has prefix built-in: /api/ltb/calculator
+        tags=["LTB Calculator Suite", "Calculators"],
+        category="calculators",
+    ),
     RouterSpec(
         module="app.instrument_geometry.neck_taper.api_router",
         prefix="",
