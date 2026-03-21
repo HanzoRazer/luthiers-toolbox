@@ -521,7 +521,7 @@ const routes: RouteRecordRaw[] = [
     component: () => import("@/views/ai/RecommendationsView.vue"),
   },
   {
-    path: "/ai/assistant",
+    path: "/ai/assistant/:project_id?",
     name: "AiAssistant",
     component: () => import("@/views/ai/AssistantView.vue"),
   },

@@ -2,28 +2,25 @@
 Context retrieval for LLM assistant queries.
 
 Assembles context packets from:
-1. Project data (rmos.sqlite3 projects table)
-2. Wood species database (material_db.json)
-3. Instrument specifications (instrument_model_registry.json)
+1. Project data — SQLAlchemy ``Project`` row (``data`` JSONB holds InstrumentProjectData, including ``spec``)
+2. Wood species — ``material_db.json`` (CNC reference) and optional ``wood_species.json`` snippets
+3. Instrument specifications — ``instrument_model_registry.json`` (family match from user message)
 
 The context packet is truncated to max_tokens to fit within LLM context windows.
 """
 from __future__ import annotations
 
 import json
-import os
 import re
-import sqlite3
+import uuid
 from pathlib import Path
 from typing import Any, Optional
 
 # Data file paths relative to app directory
 APP_DIR = Path(__file__).resolve().parent.parent
-DATA_DIR = APP_DIR.parent / "data"
 
 MATERIAL_DB_PATH = APP_DIR / "assets" / "material_db.json"
 INSTRUMENT_REGISTRY_PATH = APP_DIR / "instrument_geometry" / "instrument_model_registry.json"
-RMOS_DB_PATH = DATA_DIR / "rmos.sqlite3"
 
 # Instrument family aliases for matching
 INSTRUMENT_ALIASES: dict[str, list[str]] = {
@@ -54,29 +51,87 @@ def _load_json(path: Path) -> Any:
         return {}
 
 
-def _get_project_data(project_id: str) -> dict[str, Any]:
-    """Load project data from rmos.sqlite3 projects table."""
-    if not RMOS_DB_PATH.exists():
+def _get_project_data(project_id: str, owner_user_id: Optional[str] = None) -> dict[str, Any]:
+    """
+    Load project metadata and ``data.spec`` from the app database (Project ORM).
+
+    If ``owner_user_id`` is set, only return a row owned by that user (privacy).
+    """
+    try:
+        pid = uuid.UUID(project_id.strip())
+    except (ValueError, AttributeError):
         return {}
 
     try:
-        conn = sqlite3.connect(str(RMOS_DB_PATH))
-        conn.row_factory = sqlite3.Row
-        cursor = conn.cursor()
+        from app.db.session import db_session
+        from app.db.models.project import Project
+    except ImportError:
+        return {}
 
-        cursor.execute(
-            "SELECT * FROM projects WHERE id = ? OR project_id = ? LIMIT 1",
-            (project_id, project_id),
-        )
-        row = cursor.fetchone()
-        conn.close()
+    try:
+        with db_session() as db:
+            proj = db.get(Project, pid)
+            if proj is None or proj.archived_at is not None:
+                return {}
+            if owner_user_id is not None and str(proj.owner_id) != owner_user_id:
+                return {}
 
-        if row:
-            return dict(row)
-    except sqlite3.Error:
-        pass
+            raw_data = proj.data if isinstance(proj.data, dict) else {}
+            spec = raw_data.get("spec") if isinstance(raw_data, dict) else None
 
-    return {}
+            out: dict[str, Any] = {
+                "id": str(proj.id),
+                "name": proj.name,
+                "description": proj.description,
+                "instrument_type": proj.instrument_type,
+                "spec": spec,
+            }
+            return out
+    except Exception:
+        return {}
+
+
+def _summarize_spec_for_llm(spec: Any) -> list[str]:
+    """Flatten InstrumentProjectData.spec (dict) into prompt lines."""
+    if not spec or not isinstance(spec, dict):
+        return []
+
+    lines: list[str] = []
+    # Common InstrumentSpec fields (see schemas/instrument_project.InstrumentSpec)
+    for key in (
+        "scale_length_mm",
+        "fret_count",
+        "string_count",
+        "nut_width_mm",
+        "heel_width_mm",
+        "neck_angle_degrees",
+        "body_join_fret",
+    ):
+        if key in spec and spec[key] is not None:
+            lines.append(f"- {key}: {spec[key]}")
+
+    nj = spec.get("neck_joint_type")
+    if nj is not None:
+        lines.append(f"- neck_joint_type: {nj!s}")
+
+    trem = spec.get("tremolo_style")
+    if trem is not None:
+        lines.append(f"- tremolo_style: {trem!s}")
+
+    return lines[:24]
+
+
+def _wood_snippets_from_spec(spec: Any) -> list[str]:
+    """Pull wood-like hints from material_selection or spec if present."""
+    if not spec or not isinstance(spec, dict):
+        return []
+    found: list[str] = []
+    ms = spec.get("material_selection")
+    if isinstance(ms, dict):
+        for _k, v in ms.items():
+            if isinstance(v, str) and len(v) > 2:
+                found.append(v.lower())
+    return found[:12]
 
 
 def _search_materials(query: str) -> list[dict[str, Any]]:
@@ -148,34 +203,57 @@ def _truncate_to_tokens(text: str, max_tokens: int) -> str:
 def build_context_packet(
     message: str,
     project_id: Optional[str] = None,
+    owner_user_id: Optional[str] = None,
     max_tokens: int = 2000,
 ) -> str:
     """
     Build context packet for LLM assistant from available data sources.
 
+    When ``project_id`` is set, project metadata and ``data.spec`` are loaded from the
+    app database via ``_get_project_data`` (SQLAlchemy ``Project`` ORM) — not from
+    RMOS SQLite or other offline stores.
+
     Args:
         message: User's query message
-        project_id: Optional project ID to load from rmos.sqlite3
+        project_id: Optional UUID of ``Project`` row (loads ``data.spec``)
+        owner_user_id: If set, project is only loaded when ``owner_id`` matches
         max_tokens: Maximum tokens for context (rough approximation)
 
     Returns:
         Formatted context string for LLM prompt
     """
     sections: list[str] = []
+    project: dict[str, Any] = {}
 
-    # 1. Project data if project_id provided
+    # 1. Project data (Project ORM via _get_project_data)
     if project_id:
-        project = _get_project_data(project_id)
+        project = _get_project_data(project_id, owner_user_id=owner_user_id)
         if project:
             sections.append("## Project Data")
-            # Extract key fields
-            for key in ["name", "description", "instrument_type", "scale_length_mm",
-                        "body_wood", "neck_wood", "fretboard_wood", "status"]:
-                if key in project and project[key]:
-                    sections.append(f"- {key}: {project[key]}")
+            sections.append(f"- id: {project.get('id', '')}")
+            sections.append(f"- name: {project.get('name', '')}")
+            if project.get("description"):
+                desc = str(project["description"])[:500]
+                sections.append(f"- description: {desc}")
+            if project.get("instrument_type"):
+                sections.append(f"- instrument_type: {project['instrument_type']}")
+            spec = project.get("spec")
+            if spec:
+                spec_lines = _summarize_spec_for_llm(spec)
+                if spec_lines:
+                    sections.append("- spec:")
+                    sections.extend(spec_lines)
 
-    # 2. Wood species matches
+    # 2. Wood species matches (message + woods implied by project spec)
     wood_names = _extract_wood_names(message)
+    if project:
+        seen: set[str] = set()
+        ordered: list[str] = []
+        for w in wood_names + _wood_snippets_from_spec(project.get("spec")):
+            if w not in seen:
+                seen.add(w)
+                ordered.append(w)
+        wood_names = ordered
     if wood_names:
         all_matches = []
         for wood_name in wood_names:

@@ -40,10 +40,10 @@ watch(
     () => store.activeTab,
     () => store.previewFret,
     () => store.summary,
-    () => store.fretboard.fretStations.value,
-    () => store.taper.stations.value,
-    () => store.profile.profileStations.value,
-    () => store.transition.derived.value,
+    () => store.fretboard.fretStations,
+    () => store.taper.stations,
+    () => store.profile.profileStations,
+    () => store.transition.derived,
   ],
   redraw,
   { deep: true },
@@ -75,7 +75,7 @@ function drawTaper() {
   const nutX = 80
   const cy2 = CY()
   const spec = store.taper.spec
-  const stations = store.taper.stations.value
+  const stations = store.taper.stations
 
   // Fretboard outline
   const outlineL: number[] = [], outlineR: number[] = []
@@ -128,7 +128,7 @@ function drawTaper() {
 function drawFretboard() {
   const pm = 5.2
   const cx2 = CX(), cy2 = CY()
-  const stations = store.fretboard.fretStations.value
+  const stations = store.fretboard.fretStations
   const st = stations.find(s => s.fret === store.previewFret) ?? stations[0]
   if (!st) return
 
@@ -252,7 +252,7 @@ function drawTransition() {
 
 // ── Export ─────────────────────────────────────────────────────────────────────
 function exportAll() {
-  const payload = JSON.stringify(store.fullExportPayload.value, null, 2)
+  const payload = JSON.stringify(store.fullExportPayload, null, 2)
   const a = Object.assign(document.createElement('a'), {
     href: URL.createObjectURL(new Blob([payload], { type: 'application/json' })),
     download: 'neck-spec.json',

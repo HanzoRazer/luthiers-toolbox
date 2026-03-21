@@ -108,9 +108,10 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted } from 'vue'
+import { onMounted, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { useBlueprintWorkflow } from '@/composables/useBlueprintWorkflow'
+import { useAgenticEvents } from '@/composables/useAgenticEvents'
 import BlueprintUploadZone from '@/components/blueprint/BlueprintUploadZone.vue'
 import Phase1AnalysisPanel from '@/components/blueprint/Phase1AnalysisPanel.vue'
 import CalibrationPanel from '@/components/blueprint/CalibrationPanel.vue'
@@ -118,6 +119,8 @@ import Phase2VectorizationPanel from '@/components/blueprint/Phase2Vectorization
 import Phase3CamPanel from '@/components/blueprint/Phase3CamPanel.vue'
 
 const router = useRouter()
+// E-1: Agentic Spine event emission
+const { emitViewRendered, emitAnalysisCompleted, emitAnalysisFailed } = useAgenticEvents()
 
 // Use composable for workflow state and actions
 const {
@@ -169,6 +172,9 @@ const {
 
 // Check for pending image from AI Images (sessionStorage handoff)
 onMounted(async () => {
+  // E-1: Emit view rendered event for agentic spine
+  emitViewRendered('blueprint-lab')
+
   const pendingImageJson = sessionStorage.getItem('blueprintLab.pendingImage')
   if (!pendingImageJson) return
 
@@ -197,6 +203,24 @@ onMounted(async () => {
   } catch (e) {
     console.error('Failed to load pending image:', e)
     sessionStorage.removeItem('blueprintLab.pendingImage')
+  }
+})
+
+// E-1: Watch for CAM result (Phase 3 completion) to emit analysis_completed
+watch(rmosResult, (newResult) => {
+  if (newResult && newResult.run_id) {
+    emitAnalysisCompleted([
+      'blueprint_vectorized',
+      'cam_toolpaths_generated',
+      newResult.run_id,
+    ])
+  }
+})
+
+// E-1: Watch for analysis errors
+watch(error, (newError) => {
+  if (newError) {
+    emitAnalysisFailed(newError, 'BLUEPRINT_WORKFLOW_ERROR')
   }
 })
 

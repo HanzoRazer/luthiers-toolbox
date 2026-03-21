@@ -8,6 +8,7 @@
 
 import { ref, computed } from "vue";
 import { useRoute, useRouter } from "vue-router";
+import { useInstrumentProject } from "@/instrument-workspace/shared-state/useInstrumentProject";
 
 interface NavItem {
   label: string;
@@ -24,6 +25,13 @@ interface NavDomain {
 
 const route = useRoute();
 const router = useRouter();
+
+const { projectId: loadedProjectId } = useInstrumentProject();
+const ASSISTANT_PATH = "/ai/assistant";
+const assistantNavTarget = computed(() => {
+  const id = loadedProjectId.value;
+  return id ? `/ai/assistant/project/${id}` : "/ai/assistant";
+});
 
 // Track expanded domains
 const expandedDomains = ref<Set<string>>(new Set(["cam"]));
@@ -94,7 +102,7 @@ const domains: NavDomain[] = [
       { label: "AI Images", path: "/ai-images" },
       { label: "Wood Grading", path: "/ai/wood-grading" },
       { label: "Defect Detection", path: "/ai/defect-detection" },
-      { label: "AI Assistant", path: "/ai/assistant" },
+      { label: "AI Assistant", path: ASSISTANT_PATH },
     ],
   },
   {
@@ -179,8 +187,17 @@ if (currentDomain.value) {
             v-for="item in domain.items"
             :key="item.path"
             class="nav-item"
-            :class="{ active: isActive(item.path) }"
-            @click="navigateTo(item.path)"
+            :class="{
+              active:
+                item.path === ASSISTANT_PATH
+                  ? isActive(ASSISTANT_PATH)
+                  : isActive(item.path),
+            }"
+            @click="
+              navigateTo(
+                item.path === ASSISTANT_PATH ? assistantNavTarget : item.path
+              )
+            "
           >
             {{ item.label }}
           </button>
