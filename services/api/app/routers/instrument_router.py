@@ -26,6 +26,11 @@ from ..instrument_geometry.bridge.geometry import (
 from ..instrument_geometry.neck.radius_profiles import (
     compute_compound_radius_at_fret,
 )
+from ..calculators.saddle_force_calc import (
+    compute_saddle_force,
+    SaddleForceResult,
+    StringForce,
+)
 
 router = APIRouter(
     prefix="/api/instrument",
@@ -955,3 +960,103 @@ def list_nut_compensation_types():
             for nut_type in list_nut_types()
         },
     }
+
+
+# ---------------------------------------------------------------------------
+# ACOUSTIC-002: Saddle Force Decomposition
+# ---------------------------------------------------------------------------
+
+
+class SaddleForceRequest(BaseModel):
+    """Request for saddle force calculation."""
+    string_tensions_n: List[float] = Field(
+        ...,
+        description="Tension for each string in Newtons",
+        min_length=1,
+        max_length=12,
+    )
+    break_angles_deg: List[float] = Field(
+        ...,
+        description="Break angle over saddle for each string (degrees)",
+        min_length=1,
+        max_length=12,
+    )
+    body_depth_at_bridge_mm: float = Field(
+        default=100.0,
+        gt=0,
+        description="Depth of body at bridge location (mm)",
+    )
+    pin_to_tailblock_mm: float = Field(
+        default=250.0,
+        gt=0,
+        description="Distance from bridge pins to tailblock (mm)",
+    )
+    string_names: Optional[List[str]] = Field(
+        default=None,
+        description="Optional names for each string (e.g., ['E2', 'A2', ...])",
+    )
+
+
+class StringForceResponse(BaseModel):
+    """Force contribution from a single string."""
+    string_name: str
+    tension_n: float
+    break_angle_deg: float
+    behind_angle_deg: float
+    vertical_force_n: float
+
+
+class SaddleForceResponse(BaseModel):
+    """Response with saddle force decomposition."""
+    string_forces: List[StringForceResponse]
+    total_vertical_force_n: float
+    total_vertical_force_lbs: float
+    gate: str
+    notes: List[str]
+
+
+@router.post("/saddle-force", response_model=SaddleForceResponse)
+def calculate_saddle_force(payload: SaddleForceRequest) -> SaddleForceResponse:
+    """
+    Calculate saddle force from string tensions and break angles.
+
+    ACOUSTIC-002: Decomposes saddle break angle into vertical downbearing
+    force component (bridge plate load).
+
+    Formula: F_saddle_i = T_i × (sin(θ_front_i) + sin(θ_behind_i))
+
+    Gate thresholds:
+    - GREEN: total < 500 N (normal range)
+    - YELLOW: 500 <= total < 700 N (heavy strings, monitor)
+    - RED: total >= 700 N (excessive, risk of failure)
+    """
+    if len(payload.string_tensions_n) != len(payload.break_angles_deg):
+        raise HTTPException(
+            status_code=422,
+            detail=f"Mismatched lengths: {len(payload.string_tensions_n)} tensions vs {len(payload.break_angles_deg)} break angles",
+        )
+
+    result = compute_saddle_force(
+        string_tensions_n=payload.string_tensions_n,
+        break_angles_deg=payload.break_angles_deg,
+        body_depth_at_bridge_mm=payload.body_depth_at_bridge_mm,
+        pin_to_tailblock_mm=payload.pin_to_tailblock_mm,
+        string_names=payload.string_names,
+    )
+
+    return SaddleForceResponse(
+        string_forces=[
+            StringForceResponse(
+                string_name=sf.string_name,
+                tension_n=sf.tension_n,
+                break_angle_deg=sf.break_angle_deg,
+                behind_angle_deg=sf.behind_angle_deg,
+                vertical_force_n=sf.vertical_force_n,
+            )
+            for sf in result.string_forces
+        ],
+        total_vertical_force_n=result.total_vertical_force_n,
+        total_vertical_force_lbs=result.total_vertical_force_lbs,
+        gate=result.gate,
+        notes=result.notes,
+    )
