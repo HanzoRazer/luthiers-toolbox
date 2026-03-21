@@ -16,6 +16,7 @@ import pytest
 import cv2
 
 from contour_stage import ContourStage, StageParams
+from body_model import BodyLandmarks, BodyModel, GeometryConstraints
 from geometry_coach import GeometryCoachV1, CoachConfig, CoachDecision
 from photo_vectorizer_v2 import (
     BodyRegion,
@@ -714,3 +715,175 @@ class TestExtractionEquivalence:
         assert result.body_contour_pre_grid is not None
         assert result.body_contour_final is not None
         assert result.best_score > 0
+
+
+def test_stage_accepts_body_model_and_records_landmark_diagnostics():
+    """ContourStage.run() accepts body_model and surfaces it in diagnostics."""
+    stage = ContourStage()
+    edges, alpha_mask = _make_edges_and_mask()
+    body_region = _make_body_region()
+
+    body_model = BodyModel(
+        source_image_id=None,
+        family_hint="archtop",
+        spec_hint=None,
+        body_bbox_px=(20, 30, 120, 240),
+        body_region=body_region,
+        row_width_profile_px=np.zeros(500, dtype=float),
+        row_width_profile_smoothed_px=np.zeros(500, dtype=float),
+        column_profile_px=np.zeros(300, dtype=float),
+        mm_per_px=0.5,
+        landmarks=BodyLandmarks(
+            centerline_x_px=80.0,
+            body_top_y_px=30,
+            body_bottom_y_px=270,
+            body_length_px=240.0,
+            waist_y_px=140,
+            waist_width_px=80.0,
+            upper_bout_y_px=90,
+            upper_bout_width_px=95.0,
+            lower_bout_y_px=210,
+            lower_bout_width_px=170.0,
+            waist_y_norm=0.46,
+            upper_bout_y_norm=0.25,
+            lower_bout_y_norm=0.75,
+            waist_to_lower_ratio=0.47,
+            upper_to_lower_ratio=0.56,
+            width_to_length_ratio=0.71,
+        ),
+        constraints=GeometryConstraints(
+            lower_gt_waist_gt_upper=True,
+            waist_position_valid=True,
+            aspect_ratio_valid=True,
+            symmetry_valid=True,
+            all_valid=True,
+            violations=[],
+        ),
+    )
+
+    result = stage.run(
+        edges=edges,
+        alpha_mask=alpha_mask,
+        body_region=body_region,
+        body_model=body_model,
+        calibration=_make_calibration(),
+        family=InstrumentFamily.SOLID_BODY,
+        image_shape=edges.shape,
+    )
+
+    assert result.diagnostics["body_model_present"] is True
+    assert result.diagnostics["body_model_bbox_px"] == (20, 30, 120, 240)
+    assert result.diagnostics["body_model_constraints_valid"] is True
+    assert result.diagnostics["body_model_landmarks"]["waist_y_px"] == 140
+
+
+def test_stage_without_body_model_sets_present_false():
+    """body_model_present is False when no BodyModel is passed."""
+    stage = ContourStage()
+    edges, alpha_mask = _make_edges_and_mask()
+
+    result = stage.run(
+        edges=edges,
+        alpha_mask=alpha_mask,
+        body_region=_make_body_region(),
+        calibration=_make_calibration(),
+        family=InstrumentFamily.SOLID_BODY,
+        image_shape=edges.shape,
+    )
+
+    assert result.diagnostics["body_model_present"] is False
+
+
+def test_stage_records_expected_outline_prior_usage():
+    stage = ContourStage()
+    edges, alpha_mask = _make_edges_and_mask()
+    body_region = _make_body_region()
+    calibration = _make_calibration()
+
+    body_model = BodyModel(
+        source_image_id=None,
+        family_hint="archtop",
+        spec_hint=None,
+        body_bbox_px=(20, 30, 120, 240),
+        body_region=body_region,
+        row_width_profile_px=np.zeros(500, dtype=float),
+        row_width_profile_smoothed_px=np.zeros(500, dtype=float),
+        column_profile_px=np.zeros(300, dtype=float),
+        mm_per_px=0.5,
+        expected_outline_px=np.array(
+            [[50.0, 30.0], [20.0, 140.0], [50.0, 270.0],
+             [110.0, 270.0], [140.0, 140.0], [110.0, 30.0]],
+            dtype=np.float32,
+        ),
+    )
+
+    result = stage.run(
+        edges=edges,
+        alpha_mask=alpha_mask,
+        body_region=body_region,
+        body_model=body_model,
+        calibration=calibration,
+        family=InstrumentFamily.SOLID_BODY,
+        image_shape=edges.shape,
+    )
+
+    assert result.diagnostics["used_expected_outline_prior"] is True
+    assert result.diagnostics["body_model_expected_outline_ready"] is True
+
+
+def test_stage_preserves_body_model_constraint_state():
+    stage = ContourStage()
+    edges, alpha_mask = _make_edges_and_mask()
+    body_region = _make_body_region()
+    calibration = _make_calibration()
+
+    body_model = BodyModel(
+        source_image_id=None,
+        family_hint="archtop",
+        spec_hint=None,
+        body_bbox_px=(20, 30, 120, 240),
+        body_region=body_region,
+        row_width_profile_px=np.zeros(500, dtype=float),
+        row_width_profile_smoothed_px=np.zeros(500, dtype=float),
+        column_profile_px=np.zeros(300, dtype=float),
+        mm_per_px=0.5,
+        landmarks=BodyLandmarks(
+            centerline_x_px=80.0,
+            body_top_y_px=30,
+            body_bottom_y_px=270,
+            body_length_px=240.0,
+            waist_y_px=140,
+            waist_width_px=80.0,
+            upper_bout_y_px=90,
+            upper_bout_width_px=95.0,
+            lower_bout_y_px=210,
+            lower_bout_width_px=170.0,
+            waist_y_norm=0.46,
+            upper_bout_y_norm=0.25,
+            lower_bout_y_norm=0.75,
+            waist_to_lower_ratio=0.47,
+            upper_to_lower_ratio=0.56,
+            width_to_length_ratio=0.71,
+        ),
+        constraints=GeometryConstraints(
+            lower_gt_waist_gt_upper=True,
+            waist_position_valid=True,
+            aspect_ratio_valid=True,
+            symmetry_valid=True,
+            all_valid=True,
+            violations=[],
+        ),
+        diagnostics={"body_symmetry_score": 0.91},
+    )
+
+    result = stage.run(
+        edges=edges,
+        alpha_mask=alpha_mask,
+        body_region=body_region,
+        body_model=body_model,
+        calibration=calibration,
+        family=InstrumentFamily.SOLID_BODY,
+        image_shape=edges.shape,
+    )
+
+    assert result.diagnostics["body_model_constraints_valid"] is True
