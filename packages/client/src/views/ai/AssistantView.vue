@@ -1,14 +1,21 @@
 <script setup lang="ts">
 /**
- * AssistantView - AI Production Assistant Chat Interface
+ * AssistantView - AI Production Assistant Chat Interface (D-4)
  * Ask questions about lutherie, get guidance on builds
  *
  * Connected to API endpoints:
  *   POST /api/ai/assistant/chat
  *   GET  /api/ai/assistant/history
+ *   DELETE /api/ai/assistant/history
+ *   GET  /api/ai/assistant/status
+ *
+ * D-4 project context routes:
+ *   ?project_id= (query) and legacy ?projectId=
+ *   /ai/assistant/project/:projectId
  */
-import { ref, nextTick, onMounted } from 'vue'
+import { ref, computed, watch, nextTick, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
+import { useInstrumentProject } from '@/instrument-workspace/shared-state/useInstrumentProject'
 
 interface Message {
   id: number
@@ -17,20 +24,97 @@ interface Message {
   timestamp: Date
 }
 
-const route = useRoute()
-const projectId = ref<string | null>((route.query.project_id as string) || null)
-const sessionId = ref<string>(crypto.randomUUID())
+function firstRouteString(
+  v: string | string[] | undefined | null
+): string | null {
+  if (v == null) return null
+  if (Array.isArray(v)) {
+    const s = v[0]
+    return s != null && String(s) !== '' ? String(s) : null
+  }
+  return String(v) !== '' ? String(v) : null
+}
 
-const messages = ref<Message[]>([
-  {
+function greetingForProject(pid: string | null): string {
+  return pid
+    ? "Hello! I'm your AI Production Assistant. I can see you have a project loaded \u2014 ask me anything about your build, wood selection, or lutherie techniques."
+    : "Hello! I'm your AI Production Assistant. I can help with questions about guitar building, wood selection, techniques, troubleshooting, and more. What would you like to know?"
+}
+
+const route = useRoute()
+const instrumentProject = useInstrumentProject()
+
+/** Session D-4: project_id \u2014 query, route param, or Instrument Hub singleton. */
+const projectId = computed(() => {
+  const fromQuery = firstRouteString(
+    route.query.project_id as string | string[] | undefined
+  )
+  const fromParam = firstRouteString(
+    route.params.projectId as string | string[] | undefined
+  )
+  const fromHub = instrumentProject.projectId.value
+  return fromQuery || fromParam || fromHub || null
+})
+
+/** D-4: Session persistence via sessionStorage (keyed by project) */
+function getSessionKey(): string {
+  return `assistant_session_${projectId.value || 'global'}`
+}
+
+const storedSessionId = sessionStorage.getItem(getSessionKey())
+const sessionId = ref<string>(storedSessionId || crypto.randomUUID())
+if (!storedSessionId) {
+  sessionStorage.setItem(getSessionKey(), sessionId.value)
+}
+
+/** D-4: Service status indicator */
+const serviceAvailable = ref<boolean | null>(null)
+const isLoadingHistory = ref(false)
+
+function makeWelcomeMessage(): Message {
+  return {
     id: 1,
     role: 'assistant',
-    content: projectId.value
-      ? "Hello! I'm your AI Production Assistant. I can see you have a project loaded — ask me anything about your build, wood selection, or lutherie techniques."
-      : "Hello! I'm your AI Production Assistant. I can help with questions about guitar building, wood selection, techniques, troubleshooting, and more. What would you like to know?",
+    content: greetingForProject(projectId.value),
     timestamp: new Date(),
+  }
+}
+
+const messages = ref<Message[]>([makeWelcomeMessage()])
+
+watch(
+  projectId,
+  (next, prev) => {
+    if (next === prev) return
+    // Update session key when project changes
+    const newKey = `assistant_session_${next || 'global'}`
+    const existingSession = sessionStorage.getItem(newKey)
+    if (existingSession) {
+      sessionId.value = existingSession
+    } else {
+      sessionId.value = crypto.randomUUID()
+      sessionStorage.setItem(newKey, sessionId.value)
+    }
+
+    if (messages.value.length === 1 && messages.value[0]?.role === 'assistant') {
+      messages.value[0] = {
+        ...messages.value[0],
+        content: greetingForProject(next),
+        timestamp: new Date(),
+      }
+      return
+    }
+    messages.value.push({
+      id: Date.now(),
+      role: 'assistant',
+      content: next
+        ? "Project context updated \u2014 I can see this build now. Ask me anything about it."
+        : "Project context cleared \u2014 I'm answering in general mode now.",
+      timestamp: new Date(),
+    })
   },
-])
+  { flush: 'post' }
+)
 
 const inputText = ref('')
 const isTyping = ref(false)
@@ -42,6 +126,64 @@ const quickPrompts = [
   'Explain bracing patterns for acoustics',
   'Troubleshooting buzzing frets',
 ]
+
+/** D-4: Check if AI service is available */
+async function checkServiceStatus(): Promise<void> {
+  try {
+    const res = await fetch('/api/ai/assistant/status')
+    if (res.ok) {
+      const data = await res.json()
+      serviceAvailable.value = data.ok === true
+    } else {
+      serviceAvailable.value = false
+    }
+  } catch {
+    serviceAvailable.value = false
+  }
+}
+
+/** D-4: Load conversation history from server */
+async function loadHistory(): Promise<void> {
+  isLoadingHistory.value = true
+  try {
+    const res = await fetch(`/api/ai/assistant/history?session_id=${encodeURIComponent(sessionId.value)}&limit=50`)
+    if (res.ok) {
+      const data = await res.json()
+      if (data.messages && data.messages.length > 0) {
+        messages.value = data.messages.map((msg: any, idx: number) => ({
+          id: idx + 1,
+          role: msg.role as 'user' | 'assistant',
+          content: msg.content,
+          timestamp: new Date(msg.timestamp),
+        }))
+      }
+    }
+  } catch {
+    // Keep welcome message on error
+  } finally {
+    isLoadingHistory.value = false
+  }
+}
+
+/** D-4: Clear conversation history */
+async function clearHistory(): Promise<void> {
+  try {
+    await fetch(`/api/ai/assistant/history?session_id=${encodeURIComponent(sessionId.value)}`, {
+      method: 'DELETE',
+    })
+    // Generate new session
+    sessionId.value = crypto.randomUUID()
+    sessionStorage.setItem(getSessionKey(), sessionId.value)
+    messages.value = [makeWelcomeMessage()]
+  } catch {
+    // Silently fail
+  }
+}
+
+onMounted(async () => {
+  await checkServiceStatus()
+  await loadHistory()
+})
 
 async function sendMessage() {
   if (!inputText.value.trim()) return
@@ -68,7 +210,7 @@ async function sendMessage() {
       body: JSON.stringify({
         message: messageText,
         session_id: sessionId.value,
-        project_id: projectId.value,
+        project_id: projectId.value ?? undefined,
       }),
     })
 
@@ -116,12 +258,33 @@ function useQuickPrompt(prompt: string) {
 <template>
   <div class="assistant-view">
     <div class="header">
-      <h1>AI Assistant</h1>
-      <p class="subtitle">Your personal luthier's knowledge base</p>
+      <div class="header-row">
+        <div class="header-title">
+          <h1>AI Assistant</h1>
+          <p class="subtitle">Your personal luthier's knowledge base</p>
+        </div>
+        <div class="header-actions">
+          <span
+            class="status-dot"
+            :class="{ online: serviceAvailable === true, offline: serviceAvailable === false, pending: serviceAvailable === null }"
+            :title="serviceAvailable === true ? 'Service online' : serviceAvailable === false ? 'Service offline' : 'Checking...'"
+          ></span>
+          <button class="btn btn-sm btn-ghost" @click="clearHistory" title="Clear conversation">
+            Clear
+          </button>
+        </div>
+      </div>
+      <div v-if="projectId" class="project-context">
+        <span class="project-badge">Project context</span>
+        <code class="project-id">{{ projectId }}</code>
+      </div>
     </div>
 
     <div class="content">
       <div class="chat-container">
+        <div v-if="isLoadingHistory" class="loading-history">
+          Loading conversation...
+        </div>
         <div class="messages" ref="messagesContainer">
           <div
             v-for="message in messages"
@@ -129,7 +292,7 @@ function useQuickPrompt(prompt: string) {
             :class="['message', message.role]"
           >
             <div class="message-avatar">
-              {{ message.role === 'assistant' ? '🤖' : '👤' }}
+              {{ message.role === 'assistant' ? '\ud83e\udd16' : '\ud83d\udc64' }}
             </div>
             <div class="message-content">
               <p>{{ message.content }}</p>
@@ -140,7 +303,7 @@ function useQuickPrompt(prompt: string) {
           </div>
 
           <div v-if="isTyping" class="message assistant typing">
-            <div class="message-avatar">🤖</div>
+            <div class="message-avatar">\ud83e\udd16</div>
             <div class="message-content">
               <div class="typing-indicator">
                 <span></span><span></span><span></span>
@@ -175,34 +338,34 @@ function useQuickPrompt(prompt: string) {
       </div>
 
       <div class="sidebar">
+        <div class="panel session-panel">
+          <h3>Session</h3>
+          <div class="session-info">
+            <div class="session-row">
+              <span class="session-label">ID:</span>
+              <code class="session-value">{{ sessionId.slice(0, 8) }}...</code>
+            </div>
+            <div class="session-row">
+              <span class="session-label">Project:</span>
+              <span class="session-value">{{ projectId || 'None' }}</span>
+            </div>
+            <div class="session-row">
+              <span class="session-label">Messages:</span>
+              <span class="session-value">{{ messages.length }}</span>
+            </div>
+          </div>
+        </div>
+
         <div class="panel topics-panel">
           <h3>Popular Topics</h3>
           <ul class="topic-list">
-            <li>🪵 Wood Selection</li>
-            <li>📐 Fret Calculations</li>
-            <li>🎸 Bracing Patterns</li>
-            <li>🔧 Setup & Adjustment</li>
-            <li>✨ Finishing Techniques</li>
-            <li>🔊 Tone Optimization</li>
+            <li>\ud83e\udeb5 Wood Selection</li>
+            <li>\ud83d\udcd0 Fret Calculations</li>
+            <li>\ud83c\udfb8 Bracing Patterns</li>
+            <li>\ud83d\udd27 Setup & Adjustment</li>
+            <li>\u2728 Finishing Techniques</li>
+            <li>\ud83d\udd0a Tone Optimization</li>
           </ul>
-        </div>
-
-        <div class="panel history-panel">
-          <h3>Recent Conversations</h3>
-          <div class="history-list">
-            <div class="history-item">
-              <span class="history-title">Spruce vs Cedar tops</span>
-              <span class="history-date">Today</span>
-            </div>
-            <div class="history-item">
-              <span class="history-title">Fret leveling technique</span>
-              <span class="history-date">Yesterday</span>
-            </div>
-            <div class="history-item">
-              <span class="history-title">Neck relief adjustment</span>
-              <span class="history-date">Mar 4</span>
-            </div>
-          </div>
         </div>
       </div>
     </div>
@@ -212,12 +375,29 @@ function useQuickPrompt(prompt: string) {
 <style scoped>
 .assistant-view { min-height: 100vh; background: #0a0a0a; color: #e5e5e5; padding: 2rem; display: flex; flex-direction: column; }
 .header { max-width: 1400px; margin: 0 auto 2rem; width: 100%; }
-.header h1 { font-size: 2rem; font-weight: 700; margin: 0 0 0.5rem; }
+.header-row { display: flex; justify-content: space-between; align-items: flex-start; }
+.header-title h1 { font-size: 2rem; font-weight: 700; margin: 0 0 0.5rem; }
 .subtitle { color: #888; margin: 0; }
+.header-actions { display: flex; align-items: center; gap: 0.75rem; }
+
+.status-dot { width: 10px; height: 10px; border-radius: 50%; }
+.status-dot.online { background: #22c55e; box-shadow: 0 0 6px #22c55e; }
+.status-dot.offline { background: #ef4444; }
+.status-dot.pending { background: #888; animation: pulse 1.5s infinite; }
+@keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
+
+.btn-sm { padding: 0.375rem 0.75rem; font-size: 0.75rem; }
+.btn-ghost { background: transparent; border: 1px solid #333; color: #888; }
+.btn-ghost:hover { border-color: #60a5fa; color: #60a5fa; }
+
+.project-context { margin-top: 1rem; padding: 0.75rem; background: #1e3a5f; border-radius: 0.5rem; display: flex; align-items: center; gap: 0.75rem; }
+.project-badge { background: #2563eb; color: #fff; padding: 0.25rem 0.5rem; border-radius: 0.25rem; font-size: 0.75rem; font-weight: 600; }
+.project-id { font-size: 0.75rem; color: #60a5fa; }
 
 .content { max-width: 1400px; margin: 0 auto; flex: 1; display: grid; grid-template-columns: 1fr 280px; gap: 1.5rem; width: 100%; }
 
-.chat-container { background: #1a1a1a; border-radius: 0.75rem; display: flex; flex-direction: column; height: 600px; }
+.chat-container { background: #1a1a1a; border-radius: 0.75rem; display: flex; flex-direction: column; height: 600px; position: relative; }
+.loading-history { position: absolute; top: 0; left: 0; right: 0; padding: 0.5rem; background: #262626; text-align: center; font-size: 0.75rem; color: #888; border-radius: 0.75rem 0.75rem 0 0; }
 
 .messages { flex: 1; overflow-y: auto; padding: 1.5rem; display: flex; flex-direction: column; gap: 1rem; }
 .message { display: flex; gap: 0.75rem; }
@@ -250,17 +430,15 @@ function useQuickPrompt(prompt: string) {
 .panel { background: #1a1a1a; border-radius: 0.75rem; padding: 1.5rem; }
 .panel h3 { font-size: 0.875rem; font-weight: 600; color: #888; text-transform: uppercase; margin: 0 0 1rem; }
 
+.session-panel .session-info { display: flex; flex-direction: column; gap: 0.5rem; }
+.session-row { display: flex; justify-content: space-between; font-size: 0.875rem; }
+.session-label { color: #666; }
+.session-value { color: #e5e5e5; }
+.session-value code { font-family: monospace; color: #60a5fa; }
+
 .topic-list { list-style: none; padding: 0; margin: 0; }
 .topic-list li { padding: 0.5rem 0; border-bottom: 1px solid #262626; font-size: 0.875rem; cursor: pointer; }
 .topic-list li:hover { color: #60a5fa; }
-
-.history-list { display: flex; flex-direction: column; gap: 0.5rem; }
-.history-item { padding: 0.5rem; background: #262626; border-radius: 0.375rem; cursor: pointer; }
-.history-item:hover { background: #333; }
-.history-title { display: block; font-size: 0.875rem; font-weight: 500; }
-.history-date { font-size: 0.75rem; color: #888; }
-
-.coming-soon-notice { max-width: 1400px; margin: 2rem auto 0; padding: 1rem; background: #1e3a5f; border-radius: 0.5rem; text-align: center; color: #60a5fa; width: 100%; }
 
 @media (max-width: 1000px) { .content { grid-template-columns: 1fr; } .sidebar { display: none; } }
 </style>
