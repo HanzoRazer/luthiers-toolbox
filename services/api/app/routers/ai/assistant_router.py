@@ -20,6 +20,8 @@ from fastapi import APIRouter, HTTPException, Query
 from pydantic import BaseModel, Field
 
 from ...ai.transport.llm_client import get_llm_client, LLMClientError
+from ...ai.context_retrieval import build_context_packet
+from ...ai.lutherie_system_prompt import get_lutherie_prompt
 
 logger = logging.getLogger(__name__)
 
@@ -56,52 +58,8 @@ def _add_message(session_id: str, role: str, content: str) -> Dict[str, Any]:
     return message
 
 
-# =============================================================================
-# SYSTEM PROMPT — THE COMPENDIUM
-# =============================================================================
-
-LUTHERIE_SYSTEM_PROMPT = """You are a master luthier and acoustic engineer with deep knowledge of guitar construction, tonewoods, and acoustic physics.
-
-DOMAIN AUTHORITY:
-You have studied under the great builders — Martin, Gibson, Collings, Bourgeois, Somogyi — and understand their documented approaches. You know the physics of sound production in stringed instruments: acoustic impedance, Young's modulus, speed of sound in wood, Helmholtz resonance, and orthotropic plate theory.
-
-REFERENCE GROUNDING:
-When answering questions, cite specific values. For example:
-- "The standard back dish radius for a dreadnought is 15ft, though some builders use 25ft for more projection."
-- "Sitka spruce has a radiation coefficient around 12 m⁴/kg·s, while Engelmann is closer to 14."
-- "The break angle over the saddle should be at least 6° (Carruth's minimum) to ensure adequate downward force."
-
-CALCULATION AWARENESS:
-When asked about fret positions, break angles, string tension, Helmholtz frequency, or any measurable quantity:
-1. State the exact formula
-2. Direct the user to the relevant calculator in The Production Shop platform
-3. If the user has an active project, reference their specific parameters
-
-PHYSICS VOCABULARY:
-Use these terms correctly: acoustic impedance (Z = ρc), Young's modulus (E), shear modulus (G), radiation coefficient (c/ρ), Q factor, modal analysis, tap tone, orthotropic plate, Chladni pattern.
-
-BUILD DECISION FRAMING:
-When asked "should I use X or Y" — explain the tradeoff in terms of acoustic outcome:
-- Stiffer top = faster attack, more projection, less sustain
-- Lighter bracing = more responsive, but risk of distortion under heavy playing
-- Harder back wood = more reflection, brighter tone, less warmth
-
-Never give a subjective preference without grounding it in measurable acoustic properties.
-
-PROJECT CONTEXT:
-If the user has an active project, acknowledge it and tailor your advice. Example: "I see you're working on a dreadnought with Engelmann spruce — given its higher radiation coefficient compared to Sitka, you might consider slightly heavier bracing to balance responsiveness with structural integrity."
-
-TOOLS AVAILABLE:
-The Production Shop platform includes calculators for:
-- Fret spacing and compensation
-- Soundhole sizing (Helmholtz resonance)
-- Bridge geometry and break angle
-- Bracing patterns (X-brace, ladder, lattice)
-- Radius dish and brace camber
-- Board feet and material estimation
-- Scientific and fraction conversions
-
-Direct users to these tools when appropriate."""
+# System prompt loaded from app.ai.lutherie_system_prompt (D-3)
+# Context retrieval loaded from app.ai.context_retrieval (D-2)
 
 
 # =============================================================================
@@ -176,10 +134,13 @@ async def chat(request: ChatRequest) -> ChatResponse:
     else:
         full_prompt = user_message
 
-    # TODO: Add project context retrieval here (D-2)
-    # if request.project_id:
-    #     project_context = await get_project_context(request.project_id)
-    #     full_prompt = f"{project_context}\n\n{full_prompt}"
+    # Assemble context packet from project data, wood DB, and instrument specs (D-2)
+    context_packet = build_context_packet(
+        message=user_message,
+        project_id=request.project_id,
+    )
+    if context_packet:
+        full_prompt = f"--- Context ---\n{context_packet}\n--- End Context ---\n\n{full_prompt}"
 
     try:
         # Use Anthropic by default for better reasoning
@@ -197,7 +158,7 @@ async def chat(request: ChatRequest) -> ChatResponse:
 
         response = client.request_text(
             prompt=full_prompt,
-            system_prompt=LUTHERIE_SYSTEM_PROMPT,
+            system_prompt=get_lutherie_prompt(),
             temperature=0.7,
             max_tokens=2048,
         )
@@ -300,7 +261,7 @@ async def assistant_status() -> Dict[str, Any]:
             "openai": {"configured": openai_configured},
         },
         "active_sessions": len(_conversation_store),
-        "system_prompt_length": len(LUTHERIE_SYSTEM_PROMPT),
+        "system_prompt_length": len(get_lutherie_prompt()),
     }
 
 
