@@ -10,8 +10,9 @@
  *   GET  /api/ai/assistant/status
  *
  * D-4 project context routes:
- *   ?project_id= (query) and legacy ?projectId=
- *   /ai/assistant/project/:projectId
+ *   ?project_id= (canonical query); legacy ?projectId= also accepted
+ *   /ai/assistant/:project_id? (optional segment); legacy path param projectId also read if present
+ *   Instrument Hub singleton (useInstrumentProject) when no query/param — D-4 hub fallback
  */
 import { ref, computed, watch, nextTick, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
@@ -42,18 +43,34 @@ function greetingForProject(pid: string | null): string {
 }
 
 const route = useRoute()
-const instrumentProject = useInstrumentProject()
+const { projectId: hubProjectId } = useInstrumentProject()
 
-/** Session D-4: project_id \u2014 query, route param, or Instrument Hub singleton. */
+/**
+ * D-4 hub project wiring: resolve active project as
+ * route query `project_id` / legacy `projectId` → path `project_id` then legacy `projectId` → Instrument Hub.
+ */
 const projectId = computed(() => {
   const fromQuery = firstRouteString(
     route.query.project_id as string | string[] | undefined
   )
-  const fromParam = firstRouteString(
+  const fromLegacyQuery = firstRouteString(
+    route.query.projectId as string | string[] | undefined
+  )
+  const fromPathSnake = firstRouteString(
+    route.params.project_id as string | string[] | undefined
+  )
+  const fromPathLegacy = firstRouteString(
     route.params.projectId as string | string[] | undefined
   )
-  const fromHub = instrumentProject.projectId.value
-  return fromQuery || fromParam || fromHub || null
+  const fromHub = hubProjectId.value
+  return (
+    fromQuery ||
+    fromLegacyQuery ||
+    fromPathSnake ||
+    fromPathLegacy ||
+    fromHub ||
+    null
+  )
 })
 
 /** D-4: Session persistence via sessionStorage (keyed by project) */
@@ -70,6 +87,25 @@ if (!storedSessionId) {
 /** D-4: Service status indicator */
 const serviceAvailable = ref<boolean | null>(null)
 const isLoadingHistory = ref(false)
+
+function formatApiError(err: unknown, fallback: string): string {
+  if (err == null || typeof err !== 'object') return fallback
+  const detail = (err as { detail?: unknown }).detail
+  if (typeof detail === 'string') return detail
+  if (Array.isArray(detail)) {
+    const parts = detail
+      .map((item) => {
+        if (item != null && typeof item === 'object' && 'msg' in item) {
+          const m = (item as { msg?: unknown }).msg
+          return typeof m === 'string' ? m : null
+        }
+        return null
+      })
+      .filter((s): s is string => s != null && s !== '')
+    if (parts.length > 0) return parts.join('; ')
+  }
+  return fallback
+}
 
 function makeWelcomeMessage(): Message {
   return {
@@ -130,7 +166,9 @@ const quickPrompts = [
 /** D-4: Check if AI service is available */
 async function checkServiceStatus(): Promise<void> {
   try {
-    const res = await fetch('/api/ai/assistant/status')
+    const res = await fetch('/api/ai/assistant/status', {
+      credentials: 'include',
+    })
     if (res.ok) {
       const data = await res.json()
       serviceAvailable.value = data.ok === true
@@ -146,7 +184,9 @@ async function checkServiceStatus(): Promise<void> {
 async function loadHistory(): Promise<void> {
   isLoadingHistory.value = true
   try {
-    const res = await fetch(`/api/ai/assistant/history?session_id=${encodeURIComponent(sessionId.value)}&limit=50`)
+    const res = await fetch(`/api/ai/assistant/history?session_id=${encodeURIComponent(sessionId.value)}&limit=50`, {
+      credentials: 'include',
+    })
     if (res.ok) {
       const data = await res.json()
       if (data.messages && data.messages.length > 0) {
@@ -170,6 +210,7 @@ async function clearHistory(): Promise<void> {
   try {
     await fetch(`/api/ai/assistant/history?session_id=${encodeURIComponent(sessionId.value)}`, {
       method: 'DELETE',
+      credentials: 'include',
     })
     // Generate new session
     sessionId.value = crypto.randomUUID()
@@ -204,19 +245,27 @@ async function sendMessage() {
   isTyping.value = true
 
   try {
+    const body: Record<string, string | undefined> = {
+      message: messageText,
+      session_id: sessionId.value,
+    }
+    const pid = projectId.value
+    if (pid) body.project_id = pid
     const res = await fetch('/api/ai/assistant/chat', {
       method: 'POST',
+      credentials: 'include',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        message: messageText,
-        session_id: sessionId.value,
-        project_id: projectId.value ?? undefined,
-      }),
+      body: JSON.stringify(body),
     })
 
     if (!res.ok) {
-      const err = await res.json().catch(() => ({ detail: 'Service unavailable' }))
-      throw new Error(err.detail || `HTTP ${res.status}`)
+      const errPayload = await res.json().catch(() => ({}))
+      if (res.status === 401 && pid) {
+        throw new Error(
+          `${formatApiError(errPayload, 'Authentication required')} Please sign in to use the assistant with project context.`
+        )
+      }
+      throw new Error(formatApiError(errPayload, `HTTP ${res.status}`))
     }
 
     const data = await res.json()
@@ -262,6 +311,9 @@ function useQuickPrompt(prompt: string) {
         <div class="header-title">
           <h1>AI Assistant</h1>
           <p class="subtitle">Your personal luthier's knowledge base</p>
+          <p v-if="projectId" class="project-context-badge">
+            Project context active — <code>{{ projectId }}</code>
+          </p>
         </div>
         <div class="header-actions">
           <span
@@ -273,10 +325,6 @@ function useQuickPrompt(prompt: string) {
             Clear
           </button>
         </div>
-      </div>
-      <div v-if="projectId" class="project-context">
-        <span class="project-badge">Project context</span>
-        <code class="project-id">{{ projectId }}</code>
       </div>
     </div>
 
@@ -378,6 +426,8 @@ function useQuickPrompt(prompt: string) {
 .header-row { display: flex; justify-content: space-between; align-items: flex-start; }
 .header-title h1 { font-size: 2rem; font-weight: 700; margin: 0 0 0.5rem; }
 .subtitle { color: #888; margin: 0; }
+.project-context-badge { margin: 0.75rem 0 0; font-size: 0.8rem; color: #60a5fa; }
+.project-context-badge code { background: #262626; padding: 0.1rem 0.35rem; border-radius: 0.25rem; font-size: 0.75rem; }
 .header-actions { display: flex; align-items: center; gap: 0.75rem; }
 
 .status-dot { width: 10px; height: 10px; border-radius: 50%; }
@@ -389,10 +439,6 @@ function useQuickPrompt(prompt: string) {
 .btn-sm { padding: 0.375rem 0.75rem; font-size: 0.75rem; }
 .btn-ghost { background: transparent; border: 1px solid #333; color: #888; }
 .btn-ghost:hover { border-color: #60a5fa; color: #60a5fa; }
-
-.project-context { margin-top: 1rem; padding: 0.75rem; background: #1e3a5f; border-radius: 0.5rem; display: flex; align-items: center; gap: 0.75rem; }
-.project-badge { background: #2563eb; color: #fff; padding: 0.25rem 0.5rem; border-radius: 0.25rem; font-size: 0.75rem; font-weight: 600; }
-.project-id { font-size: 0.75rem; color: #60a5fa; }
 
 .content { max-width: 1400px; margin: 0 auto; flex: 1; display: grid; grid-template-columns: 1fr 280px; gap: 1.5rem; width: 100%; }
 
