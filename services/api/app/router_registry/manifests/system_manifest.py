@@ -72,6 +72,24 @@ SYSTEM_ROUTERS: List[RouterSpec] = [
         category="ai",
     ),
     RouterSpec(
+        module="app.routers.ai.defect_detection_router",
+        prefix="",  # Router has /api/ai/defects prefix
+        tags=["AI Defects", "Vision", "Wood Analysis"],
+        category="ai",
+    ),
+    RouterSpec(
+        module="app.routers.ai.wood_grading_router",
+        prefix="",  # Router has /api/ai/wood-grading prefix
+        tags=["AI", "Wood Assessment"],
+        category="ai",
+    ),
+    RouterSpec(
+        module="app.agentic.router",
+        prefix="",  # Router has /api/agentic prefix
+        tags=["Agentic", "Spine"],
+        category="ai",
+    ),
+    RouterSpec(
         module="app.routers.misc_stub_routes",
         prefix="/api",
         tags=["Stubs"],
