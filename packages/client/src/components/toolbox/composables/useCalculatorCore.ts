@@ -77,61 +77,36 @@ export function useCalculatorCore(): CalculatorCoreState {
   }
 
   function calculate() {
-    try {
-      let expr = expression.value + (display.value !== '0' ? display.value : '')
+    const expr = expression.value + (display.value !== '0' ? display.value : '')
+    if (!expr.trim()) return
 
-      // Replace visual symbols with math operators
-      expr = expr.replace(/×/g, '*')
-                 .replace(/÷/g, '/')
-                 .replace(/−/g, '-')
-                 .replace(/\^/g, '**')
-                 .replace(/√\(/g, 'Math.sqrt(')
-                 .replace(/π/g, String(Math.PI))
-                 .replace(/e/g, String(Math.E))
-
-      // Handle trig functions (degree/radian conversion)
-      if (angleMode.value === 'deg') {
-        expr = expr.replace(/sin\(/g, 'Math.sin((Math.PI/180)*')
-                   .replace(/cos\(/g, 'Math.cos((Math.PI/180)*')
-                   .replace(/tan\(/g, 'Math.tan((Math.PI/180)*')
-      } else {
-        expr = expr.replace(/sin\(/g, 'Math.sin(')
-                   .replace(/cos\(/g, 'Math.cos(')
-                   .replace(/tan\(/g, 'Math.tan(')
-      }
-
-      // Handle log functions
-      expr = expr.replace(/log\(/g, 'Math.log10(')
-                 .replace(/ln\(/g, 'Math.log(')
-
-      // Handle factorial (simple implementation for small numbers)
-      expr = expr.replace(/(\d+)!/g, (_, n) => {
-        const num = parseInt(n)
-        if (num > 20) return 'Infinity'
-        let result = 1
-        for (let i = 2; i <= num; i++) result *= i
-        return String(result)
+    fetch('/api/ltb/calculator/evaluate', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ expression: expr, angle_mode: angleMode.value })
+    })
+      .then(res => {
+        if (!res.ok) return res.json().then(err => { throw new Error(err.detail || 'Evaluation failed') })
+        return res.json()
       })
+      .then((data: { result: number; expression: string }) => {
+        const result = data.result
+        display.value = Number.isFinite(result)
+          ? (Math.abs(result) < 0.00001 && result !== 0
+              ? result.toExponential(4)
+              : parseFloat(result.toFixed(8)).toString())
+          : 'Error'
 
-      // Evaluate expression (using Function for safer eval)
-      const result = new Function('return ' + expr)()
+        // Add to history
+        history.value.unshift(`${expr} = ${display.value}`)
+        if (history.value.length > 20) history.value.pop()
 
-      // Format result
-      display.value = Number.isFinite(result)
-        ? (Math.abs(result) < 0.00001 && result !== 0
-            ? result.toExponential(4)
-            : result.toFixed(8).replace(/\.?0+$/, ''))
-        : 'Error'
-
-      // Add to history
-      history.value.unshift(`${expression.value}${display.value === '0' ? '' : display.value} = ${display.value}`)
-      if (history.value.length > 20) history.value.pop()
-
-      expression.value = ''
-    } catch {
-      display.value = 'Error'
-      expression.value = ''
-    }
+        expression.value = ''
+      })
+      .catch(() => {
+        display.value = 'Error'
+        expression.value = ''
+      })
   }
 
   function loadHistory(item: string) {
