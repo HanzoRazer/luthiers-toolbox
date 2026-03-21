@@ -180,6 +180,13 @@ def rmos_global_test_isolation(tmp_path: Path, monkeypatch: pytest.MonkeyPatch):
         # Run migrations to create workflow_sessions table
         _run_test_migrations(db_path)
 
+        # Reset workflow sessions store singleton to pick up new path
+        try:
+            from app.workflow.sessions import routes as ws_routes
+            ws_routes._store = ws_routes.WorkflowSessionStore()
+        except ImportError:
+            pass  # Module not available
+
     yield
 
 
