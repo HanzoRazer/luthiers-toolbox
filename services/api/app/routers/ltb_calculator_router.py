@@ -39,6 +39,7 @@ router = APIRouter(
 class ExpressionRequest(BaseModel):
     """Request to evaluate an expression."""
     expression: str = Field(..., description="Mathematical expression to evaluate")
+    angle_mode: str = Field("rad", description="Angle mode: 'deg' or 'rad'")
 
 
 class ExpressionResponse(BaseModel):
@@ -156,7 +157,7 @@ def evaluate_expression(request: ExpressionRequest):
 
     Supports: +, -, *, /, ^, sqrt(), sin(), cos(), tan(), log(), pi, e
     """
-    calc = LTBScientificCalculator()
+    calc = LTBScientificCalculator(angle_mode=request.angle_mode)
     try:
         result = calc.evaluate(request.expression)
         return ExpressionResponse(
