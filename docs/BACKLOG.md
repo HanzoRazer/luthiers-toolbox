@@ -175,7 +175,7 @@ function exportDimensionSheet() {
 
 ## ACOUSTIC-001 — Saddle height inverse solver
 
-**Status:** TODO
+**Status:** ✅ RESOLVED (ACOUSTIC-001–005 chain completed 2026-03-21)
 **Priority:** High
 **Effort:** ~2 hours
 **File:** `services/api/app/instrument_geometry/neck/neck_angle.py`
@@ -197,34 +197,26 @@ where θ_target comes from action at the 12th fret via:
 2. Add inverse function `solve_for_target_action(target_action_12th_mm, bridge_height_mm, ...)` that returns `{neck_angle_deg, saddle_height_mm, relief_contribution_mm}`
 3. Add 4 unit tests covering edge cases
 
+### Resolution
+
+Delivered with ACOUSTIC-002–005 as the acoustic chain (2026-03-21). See sprint board session log.
+
 ---
 
 ## CALC-001 — side_bending_calc physics version migration
 
-**Status:** TODO (requires test updates)
+**Status:** ✅ RESOLVED (physics version merged 2026-03-21; follow-up: coverage on large module)
 **Priority:** Low
 **Effort:** ~2 hours
 **Source:** Uploaded file `files - 2026-03-21T123917.995/side_bending_calc.py`
 
-### Problem
+### Problem (historical)
 
-The physics-based `side_bending_calc.py` (1,039 lines) has breaking changes:
-- Temperature values derived from physics (171°C vs hardcoded 150°C)
-- Species keys are normalized (`mahogany_honduran` vs `mahogany`)
-- Note text uses physics terminology
+The physics-based `side_bending_calc.py` had breaking changes vs legacy (temperatures, species keys, note text). Migration completed in-repo.
 
-### Blocked By
+### Remaining (non-blocking)
 
-6 test failures in `test_side_bending_calc.py`:
-- Temperature assertions need updating
-- Species name assertions need updating
-- Note content assertions need updating
-
-### Migration Path
-
-1. Copy physics version to `side_bending_calc_physics.py`
-2. Update 6 failing tests to match physics output
-3. Swap files once tests pass
+- Add smoke/unit coverage for the upgraded module (still among the largest uncovered files).
 
 ---
 
@@ -270,6 +262,43 @@ need attention:
    - \ (electronics layout)
 
 **Do NOT merge the 1,915-line file directly.** Split first.
+
+---
+
+## DECOMP-002 — Split soundhole_calc.py (2,544 lines)
+
+**Status:** TODO
+**Priority:** Medium
+**Effort:** ~3 hours
+**File:** 
+### Problem
+
+At 2,544 lines with 11 classes and 24 functions, this module handles too many
+concerns: Helmholtz physics, two-cavity resonators, side ports, stiffness,
+climate factors, presets, and spec builders.
+
+### 7 Natural Modules Identified
+
+| Module | ~Lines | Contains |
+|--------|--------|----------|
+| \ | ~600 | Helmholtz math, \, \, constants |
+| \ | ~400 | Coupled resonator: \, \, \ |
+| \ | ~290 | \, \, \, \ |
+| \ | ~200 | \, \, \ |
+| \ | ~200 | Data layer: \, \, \, species data |
+| \ | ~120 | \, \ |
+| \ | ~400 | Facade: \, \, re-exports |
+
+### Split Order
+
+1. \ — Pure math, zero dependencies
+2. \ — Depends on physics
+3. \ — Depends on physics
+4. \ — Depends on physics
+5. \ — Standalone data
+6. \ — Standalone data
+7. \ — Facade with re-exports
+
 
 ---
 
