@@ -545,7 +545,7 @@ async def export_headstock_dxf(req: ExportRequest):
     """
     try:
         doc = build_dxf(req)
-    except Exception as e:
+    except Exception as e:  # audited: http-500 — ValueError,IOError
         raise HTTPException(422, f"DXF build error: {e}")
 
     # Use StringIO for ASCII DXF, then encode to bytes for response

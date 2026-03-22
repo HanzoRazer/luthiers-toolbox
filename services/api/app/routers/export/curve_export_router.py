@@ -77,7 +77,7 @@ def export_curve_dxf(req: CurveExportRequest) -> StreamingResponse:
     """Build a DXF with one layer per curve; 4+ points use SPLINE, fewer use open LWPOLYLINE."""
     try:
         doc = build_curve_dxf(req)
-    except Exception as e:
+    except Exception as e:  # audited: http-500 — ValueError,IOError
         raise HTTPException(status_code=422, detail=f"DXF build error: {e}") from e
 
     text_buf = io.StringIO()

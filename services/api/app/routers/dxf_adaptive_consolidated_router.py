@@ -149,7 +149,7 @@ def _dxf_to_adaptive_request(
         doc = ezdxf.read(data_stream)
     except HTTPException:
         raise
-    except Exception as exc:
+    except (ValueError, IOError, ezdxf.DXFError) as exc:  # audited: DXF-parse
         logger.exception("Failed to parse DXF for adaptive pocket")
         raise HTTPException(status_code=400, detail=f"Failed to parse DXF: {exc}") from exc
 
@@ -208,7 +208,7 @@ async def dxf_adaptive_plan_run(
         dxf_bytes = await file.read()
     except HTTPException:
         raise
-    except Exception as exc:
+    except (IOError, ValueError) as exc:  # audited: file-read
         logger.exception("Failed to read DXF file")
         raise HTTPException(status_code=400, detail=f"Failed to read DXF file: {exc}") from exc
 

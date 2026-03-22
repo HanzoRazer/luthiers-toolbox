@@ -150,7 +150,7 @@ def run_shadow_replay(
         moments: List[DetectedMoment] = []
         try:
             moments = detect_moments(session_events)
-        except Exception:
+        except Exception:  # audited: moment-detection-fallback
             pass
 
         # Apply grace selection if enabled

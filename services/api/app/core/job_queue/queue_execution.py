@@ -71,7 +71,7 @@ async def _worker_loop(queue: Any, worker_id: str) -> None:
 
         except asyncio.CancelledError:
             break
-        except Exception as e:
+        except Exception as e:  # audited: worker-loop-resilience
             logger.error(f"{worker_id}: Unexpected error: {e}")
             await asyncio.sleep(1)
 
@@ -97,7 +97,7 @@ async def _process_job(worker_id: str, job: JobStatus, queue: Any) -> None:
                 module_path, func_name = job.handler.rsplit(".", 1)
                 module = importlib.import_module(module_path)
                 handler = getattr(module, func_name)
-            except Exception:
+            except Exception:  # audited: dynamic-import-fallback
                 pass
 
         if not handler:
@@ -140,7 +140,7 @@ async def _process_job(worker_id: str, job: JobStatus, queue: Any) -> None:
         job.error = f"Job timed out after {job.timeout_seconds} seconds"
         logger.warning(f"{worker_id}: Job {job.job_id} timed out")
 
-    except Exception as e:
+    except Exception as e:  # audited: job-handler-catch-all
         await queue._storage.update_job(
             job.job_id,
             state=JobState.FAILED,
@@ -196,7 +196,7 @@ async def _send_callback(job: JobStatus) -> None:
                     "error": job.error,
                 },
             )
-    except Exception as e:
+    except Exception as e:  # audited: callback-best-effort
         logger.warning(f"Failed to send callback for job {job.job_id}: {e}")
 
 

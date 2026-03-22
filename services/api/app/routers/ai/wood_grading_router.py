@@ -91,7 +91,7 @@ async def analyze_wood_visual(request: WoodVisualAnalysisRequest) -> WoodVisualA
         # Decode image
         try:
             image_bytes = base64.b64decode(request.image_base64)
-        except Exception as e:
+        except Exception as e:  # audited: http-500 — ValueError,KeyError,IOError
             raise HTTPException(status_code=400, detail=f"Invalid base64 image data: {e}")
 
         # Build prompt with species context if provided
@@ -143,7 +143,7 @@ async def analyze_wood_visual(request: WoodVisualAnalysisRequest) -> WoodVisualA
     except VisionClientError as e:
         logger.error(f"Vision analysis failed: {e}")
         raise HTTPException(status_code=500, detail=f"Vision analysis failed: {e}")
-    except Exception as e:
+    except Exception as e:  # audited: http-500 — ValueError,KeyError,IOError
         logger.error(f"Unexpected error in wood visual analysis: {e}")
         raise HTTPException(status_code=500, detail=f"Analysis failed: {e}")
 

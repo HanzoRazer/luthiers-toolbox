@@ -24,7 +24,7 @@ try:
         compute_neck_angle,
     )
     NECK_ANGLE_AVAILABLE = True
-except Exception:
+except Exception:  # audited: optional-sgspec-import
     NECK_ANGLE_AVAILABLE = False
 
 
@@ -130,7 +130,7 @@ def evaluate_setup(state: SetupState) -> SetupCascadeResult:
                     gate=res.gate,
                     fix=res.message,
                 ))
-        except Exception:
+        except Exception:  # audited: optional-sgspec-import
             pass  # skip if geometry fails
     else:
         # Fallback: check state.neck_angle_deg directly

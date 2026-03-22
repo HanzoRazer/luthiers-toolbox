@@ -138,7 +138,7 @@ if RATE_LIMIT_STORAGE.startswith("redis://"):
             enabled=RATE_LIMIT_ENABLED,
         )
         logger.info(f"Rate limiter initialized with Redis storage: {RATE_LIMIT_STORAGE}")
-    except Exception as e:
+    except Exception as e:  # audited: redis-fallback
         logger.warning(f"Failed to connect to Redis, falling back to memory: {e}")
         limiter = Limiter(
             key_func=get_client_key,

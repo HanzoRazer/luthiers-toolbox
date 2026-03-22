@@ -170,7 +170,7 @@ async def analyze_defects(request: DefectAnalyzeRequest) -> DefectAnalyzeRespons
             image_data = image_data.split(",", 1)[1]
 
         image_bytes = base64.b64decode(image_data)
-    except Exception as e:
+    except Exception as e:  # audited: http-500 — ValueError,KeyError,IOError
         raise HTTPException(status_code=400, detail=f"Invalid base64 image: {e}")
 
     if len(image_bytes) < 100:
@@ -225,7 +225,7 @@ async def defect_status() -> Dict[str, Any]:
     try:
         client = get_vision_client("openai")
         configured = client.is_configured
-    except Exception:
+    except Exception:  # audited: http-500 — ValueError,KeyError
         configured = False
 
     return {

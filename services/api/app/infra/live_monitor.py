@@ -85,7 +85,7 @@ async def _broadcast_event(event_type: str, payload: Dict[str, Any]) -> None:
 
     try:
         await manager.broadcast(event_type, payload, filters=filters)
-    except Exception as e:
+    except Exception as e:  # audited: monitor-emit-best-effort
         logger.warning(f"Failed to broadcast event {event_type}: {e}")
 
 

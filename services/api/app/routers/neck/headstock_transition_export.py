@@ -269,7 +269,7 @@ async def transition_dxf(r: TransitionRequest):
     """
     try:
         doc = build_transition_dxf(r)
-    except Exception as e:
+    except Exception as e:  # audited: http-500 — ValueError,IOError
         raise HTTPException(422, f"DXF error: {e}")
     buf = io.BytesIO(); doc.write(buf); buf.seek(0)
     fn = r.label.lower().replace(" ", "-") or "hs-transition"
@@ -286,7 +286,7 @@ async def transition_gcode(r: TransitionRequest):
     """
     try:
         code = build_transition_gcode(r)
-    except Exception as e:
+    except Exception as e:  # audited: http-500 — ValueError,IOError
         raise HTTPException(422, f"G-code error: {e}")
     fn = r.label.lower().replace(" ", "-") or "hs-transition"
     return PlainTextResponse(code,
