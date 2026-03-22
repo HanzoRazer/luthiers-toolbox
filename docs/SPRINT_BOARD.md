@@ -1,7 +1,34 @@
 # Sprint Board
 
-**Last Updated:** 2026-03-19
+**Last Updated:** 2026-03-21
 **Gap Count:** 112/120 resolved (8 remaining)
+
+---
+
+## Session: 2026-03-21 — A–E overhaul, ACOUSTIC chain, coverage recovery
+
+### Done today
+- Sessions A–E overhaul complete
+- ACOUSTIC-001 through ACOUSTIC-005 complete
+- Debt tests fixed: **0 failing** (19b64ab4)
+- `instrument_geometry_router.py` added
+- `side_bending_calc.py` upgraded to physics version
+- `cantilever_armrest_calc.py` added under `calculators/`
+
+### Active
+- **Terminal 1:** Smoke tests for 4 AI routers (assistant, defect_detection, recommendations, wood_grading — ~915 lines, 0% coverage)
+- **Terminal 2:** Coverage for new calculators; tests for `cantilever_armrest_calc.py`
+- **Terminal 3:** DECOMP-002 backlog + coverage report
+
+### Coverage
+- Overall dropped **~96% → ~27%** because new Session A–E code has no tests yet
+- Top uncovered by size: `soundhole_calc.py` (~2,544L), `instrument_geometry_router.py` (~1,915L), `side_bending_calc.py` (~1,057L)
+
+### Next priority
+- Bring coverage back **above the 60% floor** by adding smoke tests to new files: **4 AI routers first**, then large calculators
+
+### Test status (today)
+- 0 failing; coverage % low until smoke tests land on new modules
 
 ---
 
@@ -115,6 +142,7 @@
 
 | Date | Gaps Closed | Notes | Next |
 |------|-------------|-------|------|
+| 2026-03-21 | — | **A–E + ACOUSTIC:** Sessions A–E overhaul; ACOUSTIC-001–005; 0 failing tests (19b64ab4); `instrument_geometry_router.py`; physics `side_bending_calc.py`; `cantilever_armrest_calc.py`. **Coverage:** ~96%→~27% on new untested code. **Active:** smoke tests for 4 AI routers; calculator coverage; DECOMP-002. | Restore coverage >60% (AI routers smoke, then calculators) |
 | 2026-03-19 | — | **Full Sprint:** TEST-001 73→0 failures. binding_geometry 1,292→828 lines (3 modules extracted). instrument_geometry_router 1,868→9 domain routers. MachineManagerView 895→120 lines. CLEANUP-001/002 graduated. Exception hardening complete. _experimental/ cleared. WIRE-003 path fix (3 tests). Pydantic ForwardRef fix (28 tests). Replay tests (21 tests). Docs: PRODUCT_BOUNDARY, SYSTEM_MAP, PERSONAS, SAFETY_CASE. 3,834+ passing, 96.59% coverage. | WIRE-001 |
 | 2026-03-18 | — | **Session summary: Systems review score 6.1→~7.3.** TRACK 10 all 8 tasks complete. Safety coverage 33%→92% (125+ new tests). Bridge break angle v1→v2 corrected. CamWorkspaceView wired to live backend. BIND-GAP-04 binding strip calculator. Saddle compensation calculator ported (Design + Setup modes, 28 tests). Gap count 112/120 (8 remaining, all blocked). GEN-5 phantom removed after 14 sessions. CI green, score 7.0 target achieved. | — |
 | 2026-03-18 | — | **docs(sprint): reconcile gap count + test coverage.** SPRINT_BOARD.md aligned with GAP_ANALYSIS_MASTER: 112/120 (8 remaining). Categories table fixed. GEN-5 phantom documented. Added 53 tests: test_rmos_lineage_service.py (28 tests, lineage.py 0%→100%), test_rmos_store_completeness.py (25 tests, store_completeness.py 23%→85%). Fixed bridge_break_angle.py CARRUTH_MIN_DEG import. | — |
