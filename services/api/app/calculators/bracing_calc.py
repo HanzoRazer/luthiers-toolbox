@@ -10,7 +10,9 @@ the same volume model as the pipeline CLI.
 
 from __future__ import annotations
 
-from typing import Any, Dict, Optional
+import math
+from dataclasses import dataclass, field
+from typing import Any, Dict, List, Literal, Optional
 
 from pydantic import BaseModel, Field
 
@@ -173,3 +175,214 @@ def calculate_brace_set(braces: list[BracingCalcInput]) -> Dict[str, Any]:
             "total_section_area_mm2": total_area,
         }
     }
+
+# =============================================================================
+# ACOUSTIC-004 - Inverse Brace Sizing (from deflection target)
+# =============================================================================
+
+
+@dataclass
+class BraceSizingTarget:
+    """Target deflection parameters for inverse brace sizing."""
+
+    max_deflection_mm: float  # Maximum allowable total deflection (with creep)
+    applied_load_n: float  # String tension load at bridge
+    plate_length_mm: float  # Body length (bridge to tail direction)
+    bridge_position_fraction: float = 0.63  # Bridge position (0=tail, 1=neck)
+    existing_plate_EI_Nm2: float = 0.0  # From compute_plate_EI in top_deflection_calc
+
+
+@dataclass
+class RequiredBraceSpec:
+    """Result of inverse brace sizing calculation."""
+
+    required_EI_Nm2: float  # Total EI needed to meet deflection target
+    required_brace_EI_Nm2: float  # Brace contribution (total - plate)
+    suggested_width_mm: float
+    suggested_height_mm: float
+    wood_species: str
+    profile_type: str
+    gate: Literal["ACHIEVABLE", "MARGINAL", "NOT_ACHIEVABLE"]
+    notes: List[str] = field(default_factory=list)
+
+
+# Creep factor must match top_deflection_calc.py
+_CREEP_FACTOR = 0.35
+
+
+def compute_required_EI(target: BraceSizingTarget) -> float:
+    """
+    Inverse of deflection formula: compute EI needed to limit deflection.
+
+    From simply-supported beam: delta = F * a^2 * b^2 / (3 * EI * L)
+    Solving for EI: EI = F * a^2 * b^2 / (3 * delta_max * L)
+
+    Args:
+        target: Deflection target parameters.
+
+    Returns:
+        Required composite EI in N*m^2.
+    """
+    if target.max_deflection_mm <= 0:
+        raise ValueError("max_deflection_mm must be positive")
+    if target.applied_load_n <= 0:
+        raise ValueError("applied_load_n must be positive")
+
+    # Account for creep in target (delta_static = delta_total / 1.35)
+    static_limit_mm = target.max_deflection_mm / (1.0 + _CREEP_FACTOR)
+    static_limit_m = static_limit_mm / 1000.0
+
+    # Convert length to meters
+    L_m = target.plate_length_mm / 1000.0
+
+    # Bridge position distances
+    a = target.bridge_position_fraction * L_m
+    b = (1.0 - target.bridge_position_fraction) * L_m
+
+    # Inverse formula: EI = F * a^2 * b^2 / (3 * delta * L)
+    required_EI = (target.applied_load_n * (a ** 2) * (b ** 2)) / (3.0 * static_limit_m * L_m)
+
+    return required_EI
+
+
+def compute_brace_dimensions_for_EI(
+    required_brace_EI_Nm2: float,
+    wood_species: str = "sitka_spruce",
+    brace_width_mm: float = 5.5,
+    profile_type: str = "parabolic",
+) -> RequiredBraceSpec:
+    """
+    Compute brace height needed to achieve target EI.
+
+    For rectangular: I = w * h^3 / 12, so h = cbrt(12 * I / w)
+    Since EI = E * I: I = EI / E, then h = cbrt(12 * EI / (E * w))
+
+    For parabolic: effective I is approximately 8/175 of rectangular.
+    So h = cbrt(175 * EI / (8 * E * w))
+
+    Args:
+        required_brace_EI_Nm2: Required brace EI contribution.
+        wood_species: Wood species for E lookup.
+        brace_width_mm: Brace width (default 5.5mm for X-brace).
+        profile_type: Brace profile (rectangular, parabolic, triangular).
+
+    Returns:
+        RequiredBraceSpec with dimensions and gate.
+    """
+    notes: List[str] = []
+
+    # Get MOE for species
+    E_MPa = physics.MATERIAL_MOE_MPA.get(wood_species, physics.DEFAULT_MOE_MPA)
+
+    # Convert EI from N*m^2 to N*mm^2 for mm calculations
+    # 1 N*m^2 = 1e6 N*mm^2
+    required_EI_Nmm2 = required_brace_EI_Nm2 * 1e6
+
+    # E in N/mm^2 (MPa)
+    E_Nmm2 = E_MPa
+
+    # Width in mm
+    w = brace_width_mm
+
+    # Compute I required: I = EI / E
+    I_required_mm4 = required_EI_Nmm2 / E_Nmm2
+
+    # Solve for height based on profile
+    if profile_type == "rectangular":
+        # I = w * h^3 / 12  =>  h = cbrt(12 * I / w)
+        h_cubed = 12.0 * I_required_mm4 / w
+        height_mm = h_cubed ** (1.0 / 3.0) if h_cubed > 0 else 0.0
+    elif profile_type == "parabolic":
+        # Parabolic I is approximately 8/175 of rectangular
+        # For parabolic with peak height h: I_parabolic = (8/175) * w * h^3
+        # So: h^3 = 175 * I / (8 * w)
+        h_cubed = 175.0 * I_required_mm4 / (8.0 * w)
+        height_mm = h_cubed ** (1.0 / 3.0) if h_cubed > 0 else 0.0
+    elif profile_type == "triangular":
+        # I = w * h^3 / 36  =>  h = cbrt(36 * I / w)
+        h_cubed = 36.0 * I_required_mm4 / w
+        height_mm = h_cubed ** (1.0 / 3.0) if h_cubed > 0 else 0.0
+    else:
+        # Default to rectangular
+        h_cubed = 12.0 * I_required_mm4 / w
+        height_mm = h_cubed ** (1.0 / 3.0) if h_cubed > 0 else 0.0
+        notes.append(f"Unknown profile '{profile_type}', used rectangular formula.")
+
+    # Determine gate based on height
+    if height_mm <= 10.0:
+        gate: Literal["ACHIEVABLE", "MARGINAL", "NOT_ACHIEVABLE"] = "ACHIEVABLE"
+        notes.append(f"Height {height_mm:.1f}mm is within typical range (<=10mm).")
+    elif height_mm <= 14.0:
+        gate = "MARGINAL"
+        notes.append(
+            f"Height {height_mm:.1f}mm is tall but achievable (10-14mm). "
+            "Consider wider brace or additional bracing."
+        )
+    else:
+        gate = "NOT_ACHIEVABLE"
+        notes.append(
+            f"Height {height_mm:.1f}mm exceeds practical limits (>14mm). "
+            "Use multiple braces or stiffer wood species."
+        )
+
+    notes.append(f"Wood species: {wood_species} (E={E_MPa:.0f} MPa)")
+    notes.append(f"Profile: {profile_type}")
+
+    return RequiredBraceSpec(
+        required_EI_Nm2=required_brace_EI_Nm2,
+        required_brace_EI_Nm2=required_brace_EI_Nm2,
+        suggested_width_mm=brace_width_mm,
+        suggested_height_mm=round(height_mm, 2),
+        wood_species=wood_species,
+        profile_type=profile_type,
+        gate=gate,
+        notes=notes,
+    )
+
+
+def solve_brace_sizing(
+    target: BraceSizingTarget,
+    wood_species: str = "sitka_spruce",
+    brace_width_mm: float = 5.5,
+    profile_type: str = "parabolic",
+    brace_count: int = 2,
+) -> RequiredBraceSpec:
+    """
+    Full inverse solver: from deflection target to brace dimensions.
+
+    Combines compute_required_EI and compute_brace_dimensions_for_EI.
+
+    Args:
+        target: Deflection target parameters.
+        wood_species: Wood species for braces.
+        brace_width_mm: Individual brace width.
+        profile_type: Brace profile type.
+        brace_count: Number of braces to distribute EI across.
+
+    Returns:
+        RequiredBraceSpec with dimensions for a single brace.
+    """
+    # Compute total required EI
+    total_required_EI = compute_required_EI(target)
+
+    # Subtract existing plate EI to get brace contribution needed
+    required_brace_EI_total = max(0.0, total_required_EI - target.existing_plate_EI_Nm2)
+
+    # Divide by brace count to get per-brace EI
+    per_brace_EI = required_brace_EI_total / brace_count if brace_count > 0 else required_brace_EI_total
+
+    # Compute dimensions for single brace
+    result = compute_brace_dimensions_for_EI(
+        required_brace_EI_Nm2=per_brace_EI,
+        wood_species=wood_species,
+        brace_width_mm=brace_width_mm,
+        profile_type=profile_type,
+    )
+
+    # Update result with total EI info
+    result.required_EI_Nm2 = total_required_EI
+    result.notes.insert(0, f"Total EI required: {total_required_EI:.2f} N*m^2")
+    result.notes.insert(1, f"Plate EI: {target.existing_plate_EI_Nm2:.2f} N*m^2")
+    result.notes.insert(2, f"Brace EI needed: {required_brace_EI_total:.2f} N*m^2 ({brace_count} braces)")
+
+    return result

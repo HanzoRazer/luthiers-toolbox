@@ -39,6 +39,13 @@ from ..calculators.top_deflection_calc import (
     BraceContribution,
     DeflectionResult,
 )
+from ..calculators.bracing_calc import (
+    BraceSizingTarget,
+    RequiredBraceSpec,
+    compute_required_EI,
+    compute_brace_dimensions_for_EI,
+    solve_brace_sizing,
+)
 
 router = APIRouter(
     prefix="/api/instrument",
@@ -1166,5 +1173,119 @@ def calculate_top_deflection(payload: TopDeflectionRequest) -> TopDeflectionResp
         total_projected_mm=result.total_projected_mm,
         gate=result.gate,
         composite_EI_Nm2=result.composite_EI_Nm2,
+        notes=result.notes,
+    )
+
+# ---------------------------------------------------------------------------
+# ACOUSTIC-004: Inverse Brace Sizing
+# ---------------------------------------------------------------------------
+
+
+class BraceSizingTargetRequest(BaseModel):
+    """Target deflection parameters for inverse brace sizing."""
+    max_deflection_mm: float = Field(
+        ...,
+        gt=0,
+        description="Maximum allowable total deflection with creep (mm)"
+    )
+    applied_load_n: float = Field(
+        ...,
+        gt=0,
+        description="String tension load at bridge (N)"
+    )
+    plate_length_mm: float = Field(
+        ...,
+        gt=0,
+        description="Body length - bridge to tail direction (mm)"
+    )
+    bridge_position_fraction: float = Field(
+        default=0.63,
+        ge=0.0,
+        le=1.0,
+        description="Bridge position as fraction of length"
+    )
+    existing_plate_EI_Nm2: float = Field(
+        default=0.0,
+        ge=0,
+        description="Existing plate EI from top_deflection_calc (N*m^2)"
+    )
+    wood_species: str = Field(
+        default="sitka_spruce",
+        description="Wood species: sitka_spruce, engelmann_spruce, red_spruce, mahogany, maple, cedar"
+    )
+    brace_width_mm: float = Field(
+        default=5.5,
+        gt=0,
+        description="Brace width (mm)"
+    )
+    profile_type: str = Field(
+        default="parabolic",
+        description="Brace profile: rectangular, parabolic, triangular"
+    )
+    brace_count: int = Field(
+        default=2,
+        ge=1,
+        description="Number of braces to distribute EI across"
+    )
+
+
+class BraceSizingResponse(BaseModel):
+    """Response with required brace dimensions."""
+    required_EI_Nm2: float
+    required_brace_EI_Nm2: float
+    suggested_width_mm: float
+    suggested_height_mm: float
+    wood_species: str
+    profile_type: str
+    gate: str
+    notes: List[str]
+
+
+@router.post("/brace-sizing", response_model=BraceSizingResponse)
+def calculate_brace_sizing(payload: BraceSizingTargetRequest) -> BraceSizingResponse:
+    """
+    Inverse brace sizing: from deflection target to required brace dimensions.
+
+    ACOUSTIC-004: Given a maximum allowable deflection, compute the brace
+    dimensions (height) needed to achieve that target.
+
+    This is the inverse of top_deflection_calc: instead of computing
+    deflection from brace dimensions, compute brace dimensions from
+    deflection limit.
+
+    Formula (inverse of simply-supported beam):
+        EI = F * a^2 * b^2 / (3 * delta_max * L)
+        height = cbrt(12 * EI / (E * width))  for rectangular
+        height = cbrt(175 * EI / (8 * E * width))  for parabolic
+
+    Gate thresholds (based on achievable brace height):
+    - ACHIEVABLE: height <= 10mm (typical range)
+    - MARGINAL: 10mm < height <= 14mm (tall but achievable)
+    - NOT_ACHIEVABLE: height > 14mm (impractical, need more braces)
+    """
+    target = BraceSizingTarget(
+        max_deflection_mm=payload.max_deflection_mm,
+        applied_load_n=payload.applied_load_n,
+        plate_length_mm=payload.plate_length_mm,
+        bridge_position_fraction=payload.bridge_position_fraction,
+        existing_plate_EI_Nm2=payload.existing_plate_EI_Nm2,
+    )
+
+    result = solve_brace_sizing(
+        target=target,
+        wood_species=payload.wood_species,
+        brace_width_mm=payload.brace_width_mm,
+        profile_type=payload.profile_type,
+        brace_count=payload.brace_count,
+    )
+
+    return BraceSizingResponse(
+        required_EI_Nm2=result.required_EI_Nm2,
+        required_brace_EI_Nm2=result.required_brace_EI_Nm2,
+        suggested_width_mm=result.suggested_width_mm,
+        suggested_height_mm=result.suggested_height_mm,
+        wood_species=result.wood_species,
+        profile_type=result.profile_type,
+        gate=result.gate,
         notes=result.notes,
     )
