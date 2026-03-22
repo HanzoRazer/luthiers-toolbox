@@ -11,7 +11,9 @@ DATE: March 2026
 """
 from __future__ import annotations
 
+import json
 import logging
+import re
 from typing import List, Optional
 
 from fastapi import APIRouter, HTTPException
@@ -138,9 +140,6 @@ async def generate_recommendations(request: RecommendationsRequest) -> Recommend
         )
 
         # Parse JSON response
-        import json
-        import re
-
         content = response.content.strip()
 
         # Extract JSON from response
@@ -164,6 +163,9 @@ async def generate_recommendations(request: RecommendationsRequest) -> Recommend
             reasoning=parsed.get("reasoning", "Recommendations based on provided preferences."),
         )
 
+    except HTTPException:
+        # Re-raise HTTP exceptions (like 503 from unconfigured client)
+        raise
     except LLMClientError as e:
         logger.error(f"LLM client error: {e}")
         raise HTTPException(status_code=502, detail=f"AI service error: {e}")
