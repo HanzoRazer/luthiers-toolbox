@@ -84,6 +84,12 @@ SYSTEM_ROUTERS: List[RouterSpec] = [
         category="ai",
     ),
     RouterSpec(
+        module="app.routers.ai.recommendations_router",
+        prefix="",  # Router has /api/ai/recommendations prefix
+        tags=["AI", "Recommendations"],
+        category="ai",
+    ),
+    RouterSpec(
         module="app.agentic.router",
         prefix="",  # Router has /api/agentic prefix
         tags=["Agentic", "Spine"],
