@@ -10,6 +10,7 @@ Total: 2 endpoints
 
 from __future__ import annotations
 
+from dataclasses import asdict
 from typing import Any, Dict, List, Optional
 
 from fastapi import APIRouter
@@ -139,6 +140,17 @@ def run_build_sequence_endpoint(req: BuildSequenceRequest) -> BuildSequenceRespo
             duration_ms=stage_result.duration_ms,
         )
 
+    def _safe_to_dict(obj: Any) -> Optional[Dict[str, Any]]:
+        """Convert object to dict using to_dict() or asdict() as fallback."""
+        if obj is None:
+            return None
+        if hasattr(obj, "to_dict"):
+            return obj.to_dict()
+        try:
+            return asdict(obj)
+        except (TypeError, ValueError):
+            return None
+
     return BuildSequenceResponse(
         build_id=result.spec.build_id,
         overall_gate=result.overall_gate,
@@ -146,10 +158,10 @@ def run_build_sequence_endpoint(req: BuildSequenceRequest) -> BuildSequenceRespo
         warnings=result.warnings,
         errors=result.errors,
         spec=result.spec.to_dict(),
-        string_tension=result.string_tension.to_dict() if result.string_tension else None,
-        bridge_geometry=result.bridge_geometry.to_dict() if result.bridge_geometry else None,
-        wood_movement=result.wood_movement.to_dict() if result.wood_movement else None,
-        finish_schedule=result.finish_schedule.to_dict() if result.finish_schedule else None,
+        string_tension=_safe_to_dict(result.string_tension),
+        bridge_geometry=_safe_to_dict(result.bridge_geometry),
+        wood_movement=_safe_to_dict(result.wood_movement),
+        finish_schedule=_safe_to_dict(result.finish_schedule),
     )
 
 
