@@ -137,6 +137,9 @@ async def analyze_wood_visual(request: WoodVisualAnalysisRequest) -> WoodVisualA
             confidence=data.get("confidence", "low"),
         )
 
+    except HTTPException:
+        # Re-raise HTTP exceptions (like 400 from invalid base64)
+        raise
     except VisionClientError as e:
         logger.error(f"Vision analysis failed: {e}")
         raise HTTPException(status_code=500, detail=f"Vision analysis failed: {e}")
