@@ -2,11 +2,17 @@
  * useRosetteDesignerExport - Export functions for Rosette Designer
  */
 import type { Ref } from "vue";
-import type { RosetteDimensions } from "./useRosetteDesignerState";
+
+import { api } from "@/services/apiBase";
+
+import type { RosetteDimensions, RosetteSegment } from "./useRosetteDesignerState";
 
 export function useRosetteDesignerExport(
   dimensions: Ref<RosetteDimensions>,
-  status: Ref<string>
+  status: Ref<string>,
+  segments: Ref<RosetteSegment[]>,
+  selectedTemplate: Ref<string | undefined>,
+  selectedMaterial: Ref<string>
 ) {
   /**
    * Export pattern as SVG image
@@ -94,11 +100,49 @@ export function useRosetteDesignerExport(
   }
 
   /**
-   * Export dimension sheet (placeholder)
+   * Export dimension sheet as PDF (BACKEND-002)
    */
-  function exportDimensionSheet() {
-    status.value = "📄 Dimension sheet export (coming soon)";
-    // TODO: Generate PDF with annotations
+  async function exportDimensionSheet() {
+    try {
+      status.value = "📄 Generating PDF…";
+      const res = await api("/api/export/rosette-pdf", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          design: {
+            dimensions: { ...dimensions.value },
+            segments: segments.value,
+            selectedTemplate: selectedTemplate.value,
+            selectedMaterial: selectedMaterial.value,
+          },
+          bom: undefined,
+          title: "Rosette Design",
+          include_bom: true,
+          include_measurements: true,
+        }),
+      });
+      if (!res.ok) {
+        const text = await res.text();
+        throw new Error(text || `PDF export failed (${res.status})`);
+      }
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      const ts = new Date()
+        .toISOString()
+        .replace(/[:.]/g, "-")
+        .slice(0, -5);
+      link.download = `rosette-design-${ts}.pdf`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+      status.value = "✅ Dimension sheet exported (PDF)";
+    } catch (error) {
+      status.value = `❌ PDF export failed: ${error instanceof Error ? error.message : String(error)}`;
+      console.error(error);
+    }
   }
 
   /**

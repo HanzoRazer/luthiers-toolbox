@@ -169,7 +169,13 @@ const {
   exportPatternImage,
   exportDimensionSheet,
   exportChannelPath,
-} = useRosetteDesignerExport(dimensions, status)
+} = useRosetteDesignerExport(
+  dimensions,
+  status,
+  segments,
+  selectedTemplate,
+  selectedMaterial
+)
 
 function handleTemplateApplied(template: AnyTemplate) {
   applyTemplate(template)

@@ -240,6 +240,12 @@ CAM_ROUTERS: List[RouterSpec] = [
         tags=["Export", "Curve", "DXF"],
         category="cam",
     ),
+    RouterSpec(
+        module="app.routers.export.rosette_pdf_router",
+        prefix="/api/export",
+        tags=["Export", "Rosette", "PDF"],
+        category="cam",
+    ),
     # ── VECTORIZER-001: Photo vectorizer router ──
     RouterSpec(
         module="app.routers.photo_vectorizer_router",
