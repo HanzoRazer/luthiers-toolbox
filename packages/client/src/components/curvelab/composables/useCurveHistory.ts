@@ -3,6 +3,8 @@
  */
 import { ref, type Ref } from "vue";
 
+import { exportCurveDxf } from "@/api/curvelab";
+
 export type Point = { x: number; y: number };
 
 export function useCurveHistory() {
@@ -42,9 +44,32 @@ export function useCurveHistory() {
     URL.revokeObjectURL(url);
   }
 
-  function exportDXF() {
-    // TODO: Implement DXF export via API
-    alert("DXF export coming soon! Use Export JSON for now.");
+  async function exportDXF() {
+    if (pts.value.length < 2) {
+      alert("Need at least two points to export a DXF.");
+      return;
+    }
+    try {
+      const blob = await exportCurveDxf({
+        curves: [
+          {
+            points: pts.value.map((p) => ({ x: p.x, y: p.y })),
+            label: "curve",
+          },
+        ],
+        scale_mm_per_unit: 1.0,
+        filename: "curve_export",
+      });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "curve_export.dxf";
+      a.click();
+      URL.revokeObjectURL(url);
+    } catch (e) {
+      console.error(e);
+      alert(e instanceof Error ? e.message : "DXF export failed.");
+    }
   }
 
   return {

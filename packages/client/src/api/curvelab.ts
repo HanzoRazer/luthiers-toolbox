@@ -53,3 +53,21 @@ export async function validateDxf(
   });
   return handleResponse<ValidationReport>(res);
 }
+
+/** BACKEND-001: generic curve polyline/spline → DXF download */
+export async function exportCurveDxf(payload: {
+  curves: { points: { x: number; y: number }[]; label: string }[];
+  scale_mm_per_unit?: number;
+  filename?: string;
+}): Promise<Blob> {
+  const res = await api("/api/export/curve-dxf", {
+    method: "POST",
+    headers: JSON_HEADERS,
+    body: JSON.stringify(payload),
+  });
+  if (!res.ok) {
+    const text = await res.text();
+    throw new Error(text || `Curve DXF export failed (${res.status})`);
+  }
+  return res.blob();
+}
