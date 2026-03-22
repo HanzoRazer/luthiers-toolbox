@@ -124,9 +124,18 @@ from app.calculators.electronics_layout_calc import (
     list_jack_types,
     list_body_styles as list_electronics_body_styles,
 )
+from app.calculators.cantilever_armrest_calc import (
+    ArmRestSpec,
+    ArmRestResult,
+    ArmRestSection,
+    compute_armrest,
+    preset_standard,
+    preset_classical,
+    preset_archtop,
+)
 
 router = APIRouter(
-    prefix="/api/instrument",
+    prefix="",  # Manifest adds /api/instrument prefix
     tags=["instrument-geometry"],
 )
 
@@ -1913,3 +1922,146 @@ def get_voicing_stages() -> BuildStagesResponse:
     """Return list of build stages in order."""
     return BuildStagesResponse(stages=list_build_stages())
 
+
+# ─── Cantilever Armrest ──────────────────────────────────────────────────────
+
+class ArmRestSectionResponse(BaseModel):
+    """A cross-section of the arm rest at a given span position."""
+    t: float = Field(..., description="Normalized span position (0=heel, 1=toe)")
+    h_total_mm: float = Field(..., description="Total height at this section")
+    theta_deg: float = Field(..., description="Face angle in degrees")
+    h_block_mm: float = Field(..., description="Block height (below veneer)")
+    x_overhang_mm: float = Field(..., description="Overhang from side of guitar")
+    w_glue_mm: float = Field(..., description="Glue contact width")
+    face_length_mm: float = Field(..., description="Face panel length")
+    total_width_mm: float = Field(..., description="Total width of arm rest")
+
+
+class CantileverArmrestRequest(BaseModel):
+    """Request for cantilever arm rest geometry calculation."""
+    preset: Optional[str] = Field(
+        None,
+        description="Use preset: 'standard', 'classical', or 'archtop'. Overrides other params if set."
+    )
+    span_mm: float = Field(140.0, gt=0, description="Total span along the bout edge")
+    t_apex: float = Field(0.38, ge=0, le=1, description="Normalized position of apex (0-1)")
+    h_max_mm: float = Field(14.0, gt=0, description="Maximum height at apex")
+    theta_max_deg: float = Field(43.0, ge=0, le=90, description="Maximum face angle in degrees")
+    t_veneer_mm: float = Field(3.0, ge=0, description="Veneer thickness")
+    w_glue_max_mm: float = Field(22.0, gt=0, description="Maximum glue contact width")
+    r_edge_mm: float = Field(10.0, ge=0, description="Edge rounding radius")
+    r_lower_bout_mm: float = Field(200.0, gt=0, description="Lower bout radius for curvature")
+    n_stations: int = Field(11, ge=3, le=51, description="Number of cross-sections to compute")
+
+
+class CantileverArmrestResponse(BaseModel):
+    """Response with complete arm rest geometry and sections."""
+    warnings: List[str]
+    sections: List[ArmRestSectionResponse]
+    apex_section: ArmRestSectionResponse
+    max_overhang_mm: float
+    max_total_width_mm: float
+    face_length_apex_mm: float
+    spec: Dict[str, Any] = Field(..., description="Input spec used for computation")
+
+
+@router.post(
+    "/cantilever-armrest",
+    response_model=CantileverArmrestResponse,
+    summary="Compute cantilever arm rest geometry",
+    description="Calculate ruled surface geometry for a cantilever-style acoustic guitar arm rest. "
+                "Supports presets (standard, classical, archtop) or custom parameters.",
+)
+def compute_cantilever_armrest(req: CantileverArmrestRequest) -> CantileverArmrestResponse:
+    """
+    Compute parametric geometry for a cantilever arm rest.
+    
+    The arm rest is an additive piece that sits on top of the guitar's
+    lower bout corner, providing ergonomic forearm support.
+    """
+    # Use preset if specified
+    if req.preset:
+        preset_map = {
+            "standard": preset_standard,
+            "classical": preset_classical,
+            "archtop": preset_archtop,
+        }
+        preset_fn = preset_map.get(req.preset.lower())
+        if not preset_fn:
+            from fastapi import HTTPException
+            raise HTTPException(
+                status_code=400,
+                detail=f"Unknown preset: {req.preset}. Valid: standard, classical, archtop"
+            )
+        spec = preset_fn()
+    else:
+        spec = ArmRestSpec(
+            span_mm=req.span_mm,
+            t_apex=req.t_apex,
+            h_max_mm=req.h_max_mm,
+            theta_max_deg=req.theta_max_deg,
+            t_veneer_mm=req.t_veneer_mm,
+            w_glue_max_mm=req.w_glue_max_mm,
+            r_edge_mm=req.r_edge_mm,
+            r_lower_bout_mm=req.r_lower_bout_mm,
+        )
+    
+    result = compute_armrest(spec, n_stations=req.n_stations)
+    
+    def section_to_response(s: ArmRestSection) -> ArmRestSectionResponse:
+        return ArmRestSectionResponse(
+            t=s.t,
+            h_total_mm=round(s.h_total_mm, 3),
+            theta_deg=round(s.theta_deg, 2),
+            h_block_mm=round(s.h_block_mm, 3),
+            x_overhang_mm=round(s.x_overhang_mm, 3),
+            w_glue_mm=round(s.w_glue_mm, 3),
+            face_length_mm=round(s.face_length_mm, 3),
+            total_width_mm=round(s.total_width_mm, 3),
+        )
+    
+    return CantileverArmrestResponse(
+        warnings=result.warnings,
+        sections=[section_to_response(s) for s in result.sections],
+        apex_section=section_to_response(result.apex_section),
+        max_overhang_mm=round(result.max_overhang_mm, 3),
+        max_total_width_mm=round(result.max_total_width_mm, 3),
+        face_length_apex_mm=round(result.face_length_apex_mm, 3),
+        spec={
+            "span_mm": spec.span_mm,
+            "t_apex": spec.t_apex,
+            "h_max_mm": spec.h_max_mm,
+            "theta_max_deg": spec.theta_max_deg,
+            "t_veneer_mm": spec.t_veneer_mm,
+            "w_glue_max_mm": spec.w_glue_max_mm,
+            "r_edge_mm": spec.r_edge_mm,
+            "r_lower_bout_mm": spec.r_lower_bout_mm,
+        },
+    )
+
+
+@router.get(
+    "/cantilever-armrest/presets",
+    response_model=Dict[str, Dict[str, Any]],
+    summary="List arm rest presets",
+)
+def list_armrest_presets() -> Dict[str, Dict[str, Any]]:
+    """Return available arm rest presets with their parameters."""
+    presets = {
+        "standard": preset_standard(),
+        "classical": preset_classical(),
+        "archtop": preset_archtop(),
+    }
+    return {
+        name: {
+            "span_mm": p.span_mm,
+            "t_apex": p.t_apex,
+            "h_max_mm": p.h_max_mm,
+            "theta_max_deg": p.theta_max_deg,
+            "t_veneer_mm": p.t_veneer_mm,
+            "w_glue_max_mm": p.w_glue_max_mm,
+            "r_edge_mm": p.r_edge_mm,
+            "r_lower_bout_mm": p.r_lower_bout_mm,
+        }
+        for name, p in presets.items()
+    }
