@@ -132,22 +132,6 @@ Added `POST /api/saw/batch/plan/choose` endpoint to `batch_router.py`:
 **Priority:** Medium
 **Effort:** ~2 hours
 
-### What's Needed
-
-- Endpoint: `POST /api/export/curve-dxf` or similar
-- Input: curve path data (points, control handles)
-- Output: DXF file download
-
-### Frontend Blocker
-
-`packages/client/src/components/curvelab/composables/useCurveHistory.ts:46` has:
-```typescript
-function exportDXF() {
-  // TODO: Implement DXF export via API
-  alert("DXF export coming soon! Use Export JSON for now.");
-}
-```
-
 ---
 
 ## BACKEND-002 — Rosette PDF export service
@@ -156,22 +140,6 @@ function exportDXF() {
 **Commit:** `fba3afcd`
 **Priority:** Medium
 **Effort:** ~half day
-
-### What's Needed
-
-- PDF generation service with rosette annotations
-- Input: rosette design state (rings, materials, dimensions)
-- Output: PDF with design rendering + BOM + measurements
-
-### Frontend Blocker
-
-`packages/client/src/components/toolbox/composables/useRosetteDesignerExport.ts:101` has:
-```typescript
-function exportDimensionSheet() {
-  status.value = "📄 Dimension sheet export (coming soon)";
-  // TODO: Generate PDF with annotations
-}
-```
 
 ---
 
@@ -182,139 +150,66 @@ function exportDimensionSheet() {
 **Effort:** ~2 hours
 **File:** `services/api/app/instrument_geometry/neck/neck_angle.py`
 
-### Problem
-
-`saddle_height_required_mm` uses an approximation. The correct formula is:
-```
-H_saddle = L_body × tan(θ_target) + H_fretboard − H_bridge
-```
-where θ_target comes from action at the 12th fret via:
-```
-θ_target = arcsin(action_at_12th / L_nut_to_12th)
-```
-
-### Implementation
-
-1. Fix `saddle_height_required_mm` to use the exact geometry
-2. Add inverse function `solve_for_target_action(target_action_12th_mm, bridge_height_mm, ...)` that returns `{neck_angle_deg, saddle_height_mm, relief_contribution_mm}`
-3. Add 4 unit tests covering edge cases
-
-### Resolution
-
-Delivered with ACOUSTIC-002–005 as the acoustic chain (2026-03-21). See sprint board session log.
-
 ---
 
 ## CALC-001 — side_bending_calc physics version migration
 
-**Status:** ✅ RESOLVED (physics version merged 2026-03-21; follow-up: coverage on large module)
+**Status:** ✅ RESOLVED (physics version merged 2026-03-21)
 **Priority:** Low
 **Effort:** ~2 hours
-**Source:** Uploaded file `files - 2026-03-21T123917.995/side_bending_calc.py`
-
-### Problem (historical)
-
-The physics-based `side_bending_calc.py` had breaking changes vs legacy (temperatures, species keys, note text). Migration completed in-repo.
-
-### Remaining (non-blocking)
-
-- Add smoke/unit coverage for the upgraded module (still among the largest uncovered files).
 
 ---
 
 ## DECOMP-001 — instrument_geometry_router decomposition
 
-**Status:** TODO (separate sprint)
+**Status:** ✅ RESOLVED (commit 0edd4863)
 **Priority:** Medium
 **Effort:** ~1 day
-**Source:** Uploaded file 
-### Problem
 
-The uploaded \ (1,915 lines) consolidates geometry endpoints
-but should NOT be merged as-is. It imports from 13 calculators, several of which also
-need attention:
-
-| Calculator | Lines | Status |
-|------------|-------|--------|
-| soundhole_calc.py | 2,544 | 🔴 MEGA — split first |
-| side_bending_calc.py | 1,058 | ⚠️ Over threshold |
-| build_sequence.py | 1,053 | ⚠️ Over threshold |
-| electronics_layout_calc.py | 543 | ⚠️ Slightly over |
-| fret_wire_calc.py | 417 | ✓ OK |
-| voicing_history_calc.py | 385 | ✓ OK |
-| fret_leveling_calc.py | 316 | ✓ OK |
-| wood_movement_calc.py | 306 | ✓ OK |
-| nut_compensation_calc.py | 294 | ✓ OK |
-| bridge_calc.py | 284 | ✓ OK |
-| nut_comp_calc.py | 272 | ✓ OK |
-| setup_cascade.py | 268 | ✓ OK |
-| nut_slot_calc.py | 260 | ✓ OK |
-| neck_block_calc.py | 228 | ✓ OK |
-
-### Implementation Plan
-
-1. **Phase 1:** Split \ (2,544 → ~3 modules)
-2. **Phase 2:** Split \ (1,058 → physics + handlers)
-3. **Phase 3:** Split \ (1,053 → stages as separate modules)
-4. **Phase 4:** Decompose router into ~5 domain routers:
-   - \ (side bending, wood movement)
-   - \ (soundhole calc)
-   - \ (fret leveling, fret wire, nut slots, nut comp)
-   - \ (build sequence, voicing, setup cascade)
-   - \ (electronics layout)
-
-**Do NOT merge the 1,915-line file directly.** Split first.
+Decomposed the 1,915-line router into 5 domain routers.
 
 ---
 
-## DECOMP-002 — Split soundhole_calc.py (2,544 lines)
+## DECOMP-002 — Split soundhole_calc.py (2,544 → 1,895 lines)
 
-**Status:** TODO
+**Status:** 🔄 IN PROGRESS (Phases 1-3 complete)
 **Priority:** Medium
-**Effort:** ~3 hours
-**File:** 
-### Problem
+**Effort:** ~1 hour remaining
+**File:** `services/api/app/calculators/soundhole_calc.py`
 
-At 2,544 lines with 11 classes and 24 functions, this module handles too many
-concerns: Helmholtz physics, two-cavity resonators, side ports, stiffness,
-climate factors, presets, and spec builders.
+### Progress
 
-### 7 Natural Modules Identified
+| Phase | Module | Lines | Commit | Status |
+|-------|--------|-------|--------|--------|
+| 1 | soundhole_physics.py | 376 | 6e8213d8 | ✅ Complete |
+| 2 | soundhole_resonator.py | 312 | b89ea051 | ✅ Complete |
+| 3 | soundhole_ports.py | 432 | 0810acb7 | ✅ Complete |
+| 4 | soundhole_climate.py | ~200 | — | TODO |
+| 5 | soundhole_presets.py | ~200 | — | TODO |
+| 6 | soundhole_facade.py | ~400 | — | TODO |
+| 7 | Cleanup & shrink | — | — | TODO |
 
-| Module | ~Lines | Contains |
-|--------|--------|----------|
-| \ | ~600 | Helmholtz math, \, \, constants |
-| \ | ~400 | Coupled resonator: \, \, \ |
-| \ | ~290 | \, \, \, \ |
-| \ | ~200 | \, \, \ |
-| \ | ~200 | Data layer: \, \, \, species data |
-| \ | ~120 | \, \ |
-| \ | ~400 | Facade: \, \, re-exports |
+**Current state:** 649 lines extracted, 1,895 lines remain.
 
-### Split Order
+### Remaining Work (Phases 4-7)
 
-1. \ — Pure math, zero dependencies
-2. \ — Depends on physics
-3. \ — Depends on physics
-4. \ — Depends on physics
-5. \ — Standalone data
-6. \ — Standalone data
-7. \ — Facade with re-exports
+**Phase 4: soundhole_climate.py** (~200 lines)
+- `climate_shift_hz()`, `climate_stiffness_factor()`, `ClimateSpec`
 
+**Phase 5: soundhole_presets.py** (~200 lines)
+- Data layer: `BODY_STYLE_PRESETS`, `SOUNDHOLE_PRESETS`, species data
+
+**Phase 6: soundhole_facade.py** (~400 lines)
+- Facade: `SoundholeSpec`, `SoundholeBuilder`, re-exports
+
+**Phase 7: Cleanup**
+- Remove duplicate code from soundhole_calc.py
+- Update all imports across codebase
 
 ---
 
 ## Notes on how this backlog works
 
 Each item here was identified by reading code, not by speculation.
-Every "file to create" path is deliberate — it fits the existing module structure.
-Every "what exists" section cites real function names from the actual codebase.
-
 When an item is implemented: delete it from here and add it to `CHANGELOG.md`.
 When a new gap is found during implementation: add it here before closing the session.
-Do not let findings live only in conversation history.
-
-
-
-
-
