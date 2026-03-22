@@ -331,12 +331,14 @@ class TopologyValidator:
     def __init__(self, dxf_bytes: bytes, filename: str = "unknown.dxf"):
         """
         Initialize validator with DXF file data.
-        
+
         Args:
             dxf_bytes: Raw DXF file content
             filename: Original filename (for reporting)
         """
-        self.doc = ezdxf.read(io.BytesIO(dxf_bytes))
+        # ezdxf 1.4.3 read() expects a text stream, so decode bytes first
+        text_content = dxf_bytes.decode("cp1252")  # DXF default encoding
+        self.doc = ezdxf.read(io.StringIO(text_content))
         self.filename = filename
         self.msp = self.doc.modelspace()
         self.issues: List[TopologyIssue] = []
@@ -584,10 +586,10 @@ def create_test_figure8_dxf() -> bytes:
     
     msp.add_lwpolyline(points, dxfattribs={'layer': 'GEOMETRY', 'closed': True})
     
-    # Save to bytes
-    output = io.BytesIO()
-    doc.write(output)
-    return output.getvalue()
+    # Save to bytes (ezdxf 1.4.3 writes text, so use StringIO + encode)
+    text_buf = io.StringIO()
+    doc.write(text_buf)
+    return doc.encode(text_buf.getvalue())
 
 
 def create_test_valid_dxf() -> bytes:
@@ -610,7 +612,7 @@ def create_test_valid_dxf() -> bytes:
     
     msp.add_lwpolyline(points, dxfattribs={'layer': 'GEOMETRY', 'closed': True})
     
-    # Save to bytes
-    output = io.BytesIO()
-    doc.write(output)
-    return output.getvalue()
+    # Save to bytes (ezdxf 1.4.3 writes text, so use StringIO + encode)
+    text_buf = io.StringIO()
+    doc.write(text_buf)
+    return doc.encode(text_buf.getvalue())
