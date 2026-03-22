@@ -25,6 +25,18 @@ import math
 from dataclasses import dataclass, field
 from typing import Dict, List, Literal, Optional, Tuple
 
+# ── Pure physics extracted to soundhole_physics.py (DECOMP-002) ───────────────
+# These imports make the physics functions available from either module.
+# Local definitions below are retained for backward compatibility.
+from .soundhole_physics import (
+    PortSpec as PortSpecPhysics,
+    compute_port_neck_length as compute_port_neck_length_physics,
+    compute_helmholtz_multiport as compute_helmholtz_multiport_physics,
+    hz_to_note,
+    compute_two_cavity_helmholtz as compute_two_cavity_helmholtz_physics,
+    exact_coupled_eigenfreq,
+)
+
 # ── Constants ─────────────────────────────────────────────────────────────────
 
 C_AIR: float = 343.0       # Speed of sound in air at 20°C (m/s)
