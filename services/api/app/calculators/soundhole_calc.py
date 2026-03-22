@@ -57,6 +57,36 @@ from .soundhole_stiffness import (
     get_bracing_implication,
 )
 
+# ── Climate and humidity corrections (DECOMP-002 Phase 5) ─────────────────────
+from .soundhole_climate import (
+    CLIMATE_ZONES,
+    get_ring_width_humidity_note,
+    list_climate_zones,
+    get_climate_zone,
+    estimate_seasonal_movement,
+)
+
+# ── Side ports / F-hole (DECOMP-002 Phase 3) ────────────────────────────────────
+from .soundhole_ports import (
+    SIDE_PORT_POSITIONS,
+    SIDE_PORT_TYPES,
+    SidePortResult,
+    SidePortSpec,
+    analyze_side_port,
+    solve_for_diameter_mm,
+    solve_for_diameter_with_side_port_mm,
+)
+
+# ── Climate / humidity corrections extracted to soundhole_climate.py (DECOMP-002 Phase 5)
+from .soundhole_climate import (
+    CLIMATE_ZONES as _CLIMATE_ZONES,
+    RING_WIDTH_HUMIDITY_ADDITION_PER_10PCT_SWING as _RING_WIDTH_HUMIDITY_ADDITION_PER_10PCT_SWING,
+    get_ring_width_humidity_note,
+    list_climate_zones,
+    get_climate_zone,
+    estimate_seasonal_movement,
+)
+
 # ── Constants ─────────────────────────────────────────────────────────────────
 
 C_AIR: float = 343.0       # Speed of sound in air at 20°C (m/s)
@@ -668,19 +698,8 @@ def analyze_preset(preset_name: str) -> Optional[SoundholeResult]:
 
 # ═══════════════════════════════════════════════════════════════════════════════
 # ADDITIONS — Inverse solver, two-cavity model, side port extensions
-# Side port / F-hole calculations: soundhole_ports.py (DECOMP-002 Phase 3)
+# (Side port / F-hole symbols re-exported from soundhole_ports at top of file)
 # ═══════════════════════════════════════════════════════════════════════════════
-
-from .soundhole_ports import (
-    SIDE_PORT_POSITIONS,
-    SIDE_PORT_TYPES,
-    SidePortResult,
-    SidePortSpec,
-    analyze_side_port,
-    solve_for_diameter_mm,
-    solve_for_diameter_with_side_port_mm,
-)
-
 
 # ── Sensitivity curve ─────────────────────────────────────────────────────────
 # compute_sensitivity_curve() moved to soundhole_resonator.py (DECOMP-002 Phase 2)
@@ -1154,118 +1173,6 @@ def estimate_plate_air_coupling(
         design_note=design_note,
     )
 
-
-# ═══════════════════════════════════════════════════════════════════════════════
-# ITEM 9 — HUMIDITY/SEASONAL RING WIDTH NOTE
-# Ring width check already handles structural minimum. This extension adds
-# climate-specific guidance for high-humidity-swing environments.
-# ═══════════════════════════════════════════════════════════════════════════════
-
-# Climate zones by representative annual RH swing (high - low)
-# Used to adjust ring width recommendation
-_CLIMATE_ZONES: Dict[str, Dict] = {
-    "arid":       {"label": "Arid / Desert",           "rh_swing": 25,  "example": "Tucson AZ, Denver CO"},
-    "temperate":  {"label": "Temperate",                "rh_swing": 35,  "example": "Seattle WA, Portland OR"},
-    "continental":{"label": "Continental",              "rh_swing": 45,  "example": "Chicago IL, Minneapolis MN"},
-    "humid":      {"label": "Humid Subtropical",        "rh_swing": 55,  "example": "Houston TX, New Orleans LA"},
-    "tropical":   {"label": "Tropical / Coastal",       "rh_swing": 65,  "example": "Miami FL, Honolulu HI"},
-}
-
-# Ring width addition per 10% RH swing above the 35% base
-# Based on: Δdim = plate_width × MC_change_pct × grain_factor / 100
-# where MC_change_pct ≈ RH_swing × 0.18 (simplified EMC relationship)
-# and grain_factor ≈ 0.003 (radial movement for spruce)
-# For 400mm wide plate: Δ ≈ 400 × (swing × 0.18) × 0.003 = 0.216 × swing mm
-# But we only need the ring to accommodate the edge movement, not full plate:
-# Edge zone ≈ 15mm wide → Δedge ≈ Δ × (15/400) = negligible
-# The real driver is shear stress at the glue line of the ring itself.
-# Empirical recommendation: add 0.5mm to min_ring per 10% RH swing above base 35%
-_RING_WIDTH_HUMIDITY_ADDITION_PER_10PCT_SWING = 0.5  # mm
-
-
-def get_ring_width_humidity_note(
-    soundhole_radius_mm: float,
-    ring_width_mm: float,
-    climate_key: str = "temperate",
-) -> Dict:
-    """
-    Seasonal humidity note for ring width check.
-
-    Extends check_ring_width() with climate-specific guidance.
-    The standard 6mm absolute minimum assumes temperate conditions (~35% RH swing).
-    High-humidity-swing climates (Houston: 50-55% swing) need larger rings.
-
-    Args:
-        soundhole_radius_mm: Soundhole radius (mm)
-        ring_width_mm:       Actual ring width at narrowest point (mm)
-        climate_key:         Key from _CLIMATE_ZONES (default "temperate")
-
-    Returns:
-        Dict with adjusted_min_mm, climate_note, and seasonal_guidance
-    """
-    climate = _CLIMATE_ZONES.get(climate_key, _CLIMATE_ZONES["temperate"])
-    swing = climate["rh_swing"]
-
-    # Base minimum (from check_ring_width)
-    base_min = max(soundhole_radius_mm * RING_WIDTH_RADIUS_FRACTION, RING_WIDTH_ABSOLUTE_MIN_MM)
-
-    # Climate adjustment — addition above base for high-swing environments
-    swing_above_base = max(0, swing - 35)
-    humidity_addition = (swing_above_base / 10.0) * _RING_WIDTH_HUMIDITY_ADDITION_PER_10PCT_SWING
-    adjusted_min = base_min + humidity_addition
-
-    if ring_width_mm >= adjusted_min * 1.3:
-        seasonal_status = "adequate"
-        seasonal_note = (
-            f"Ring width {ring_width_mm:.1f}mm is adequate for {climate['label']} "
-            f"conditions (~{swing}% annual RH swing)."
-        )
-    elif ring_width_mm >= adjusted_min:
-        seasonal_status = "marginal"
-        seasonal_note = (
-            f"Ring width {ring_width_mm:.1f}mm meets adjusted minimum "
-            f"({adjusted_min:.1f}mm) for {climate['label']} conditions "
-            f"(~{swing}% RH swing) but is marginal. Consider 12–15mm if possible."
-        )
-    else:
-        seasonal_status = "insufficient"
-        seasonal_note = (
-            f"Ring width {ring_width_mm:.1f}mm is below the climate-adjusted "
-            f"minimum of {adjusted_min:.1f}mm for {climate['label']} conditions "
-            f"(~{swing}% annual RH swing, e.g. {climate['example']}). "
-            f"Tops in this climate move significantly with seasonal humidity — "
-            f"thin rings at the soundhole edge are the most common crack initiation "
-            f"point. Reduce hole diameter or move hole toward body center."
-        )
-
-    # Full humidity guidance text
-    # MC change ≈ swing × 0.18%; radial movement ≈ 0.2% per 1% MC change
-    plate_width = soundhole_radius_mm * 6  # rough estimate of plate width from hole size
-    estimated_movement_mm = plate_width * (swing * 0.18 * 0.002)
-
-    return {
-        "climate": climate["label"],
-        "rh_swing_pct": swing,
-        "base_min_mm": round(base_min, 1),
-        "humidity_addition_mm": round(humidity_addition, 1),
-        "adjusted_min_mm": round(adjusted_min, 1),
-        "seasonal_status": seasonal_status,
-        "seasonal_note": seasonal_note,
-        "estimated_seasonal_movement_mm": round(estimated_movement_mm, 1),
-        "guidance": (
-            f"Annual humidity swing ~{swing}%. "
-            f"For a top ~{plate_width:.0f}mm wide this creates an estimated "
-            f"seasonal movement of ~{estimated_movement_mm:.1f}mm across the grain. "
-            f"Recommend ring width ≥ {adjusted_min:.0f}mm for this climate zone."
-        ),
-    }
-
-
-def list_climate_zones() -> List[Dict]:
-    """Return list of climate zones for UI dropdown."""
-    return [{"key": k, **v} for k, v in _CLIMATE_ZONES.items()]
-
-# ═══════════════════════════════════════════════════════════════════════════════
 # GEOMETRY-002 — Soundhole placement & sizing (router / tests)
 # Preserved from previous app.calculators.soundhole_calc API.
 # ═══════════════════════════════════════════════════════════════════════════════
