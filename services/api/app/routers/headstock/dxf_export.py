@@ -548,8 +548,11 @@ async def export_headstock_dxf(req: ExportRequest):
     except Exception as e:
         raise HTTPException(422, f"DXF build error: {e}")
 
-    buf = io.BytesIO()
-    doc.write(buf)
+    # Use StringIO for ASCII DXF, then encode to bytes for response
+    text_buf = io.StringIO()
+    doc.write(text_buf)
+    binary_content = doc.encode(text_buf.getvalue())
+    buf = io.BytesIO(binary_content)
     buf.seek(0)
 
     filename = req.label.lower().replace(" ", "-") or "headstock"
