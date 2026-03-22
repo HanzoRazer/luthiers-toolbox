@@ -172,14 +172,20 @@ Decomposed the 1,915-line router into 5 domain routers.
 
 ## DECOMP-002 — Split soundhole_calc.py (2,544 → 1,369 lines)
 
-**Status:** 🔄 IN PROGRESS (Phases 1-5 complete)
-**Priority:** Medium
-**Effort:** ~1 hour remaining
+**Status:** ✅ COMPLETE (6 modules extracted, 139 tests pass)
 **File:** `services/api/app/calculators/soundhole_calc.py`
 
-### Progress
-
 | Phase | Module | Lines | Commit | Status |
+|-------|--------|-------|--------|--------|
+| 1 | soundhole_physics.py | 376 | 6e8213d8 | ✅ |
+| 2 | soundhole_resonator.py | 312 | b89ea051 | ✅ |
+| 3 | soundhole_ports.py | 432 | 0810acb7 | ✅ |
+| 4 | soundhole_stiffness.py | 454 | 669a43b4 | ✅ |
+| 5 | soundhole_climate.py | 258 | b6eb1ea2 | ✅ |
+| 6 | soundhole_presets.py | 367 | 031565f8 | ✅ |
+
+**Final:** 2,199 lines in 6 modules. Backward compat via re-exports.
+
 |-------|--------|-------|--------|--------|
 | 1 | soundhole_physics.py | 376 | 6e8213d8 | ✅ Complete |
 | 2 | soundhole_resonator.py | 312 | b89ea051 | ✅ Complete |
