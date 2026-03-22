@@ -170,9 +170,9 @@ Decomposed the 1,915-line router into 5 domain routers.
 
 ---
 
-## DECOMP-002 — Split soundhole_calc.py (2,544 → 1,895 lines)
+## DECOMP-002 — Split soundhole_calc.py (2,544 → 1,637 lines)
 
-**Status:** 🔄 IN PROGRESS (Phases 1-3 complete)
+**Status:** 🔄 IN PROGRESS (Phases 1-4 complete)
 **Priority:** Medium
 **Effort:** ~1 hour remaining
 **File:** `services/api/app/calculators/soundhole_calc.py`
@@ -184,20 +184,19 @@ Decomposed the 1,915-line router into 5 domain routers.
 | 1 | soundhole_physics.py | 376 | 6e8213d8 | ✅ Complete |
 | 2 | soundhole_resonator.py | 312 | b89ea051 | ✅ Complete |
 | 3 | soundhole_ports.py | 432 | 0810acb7 | ✅ Complete |
-| 4 | soundhole_climate.py | ~200 | — | TODO |
-| 5 | soundhole_presets.py | ~200 | — | TODO |
+| 4 | soundhole_climate.py | 258 | b6eb1ea2 | ✅ Complete |
+| 5 | soundhole_presets.py | 367 | — | 🔄 Created, needs tests |
 | 6 | soundhole_facade.py | ~400 | — | TODO |
 | 7 | Cleanup & shrink | — | — | TODO |
 
-**Current state:** 649 lines extracted, 1,895 lines remain.
+**Current state:** 1,378 lines extracted, 1,637 lines remain.
 
-### Remaining Work (Phases 4-7)
+### Remaining Work (Phases 5-7)
 
-**Phase 4: soundhole_climate.py** (~200 lines)
-- `climate_shift_hz()`, `climate_stiffness_factor()`, `ClimateSpec`
-
-**Phase 5: soundhole_presets.py** (~200 lines)
-- Data layer: `BODY_STYLE_PRESETS`, `SOUNDHOLE_PRESETS`, species data
+**Phase 5: soundhole_presets.py** (367 lines created, needs tests)
+- Data layer: `PRESETS`, `BODY_DIMENSION_PRESETS`, `TOP_SPECIES_THICKNESS`, `STANDARD_DIAMETERS_MM`
+- File exists at `services/api/app/calculators/soundhole_presets.py`
+- Needs: test suite, integration into soundhole_calc.py imports
 
 **Phase 6: soundhole_facade.py** (~400 lines)
 - Facade: `SoundholeSpec`, `SoundholeBuilder`, re-exports
