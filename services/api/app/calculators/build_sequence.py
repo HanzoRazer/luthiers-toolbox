@@ -176,6 +176,7 @@ class StageResult:
     warnings: List[str] = field(default_factory=list)
     errors: List[str] = field(default_factory=list)
     gate: str = "GREEN"  # GREEN, YELLOW, RED
+    duration_ms: Optional[float] = None  # Execution time in milliseconds
 
     def to_dict(self) -> Dict[str, Any]:
         return {
@@ -185,6 +186,7 @@ class StageResult:
             "warnings": self.warnings,
             "errors": self.errors,
             "gate": self.gate,
+            "duration_ms": self.duration_ms,
         }
 
 
