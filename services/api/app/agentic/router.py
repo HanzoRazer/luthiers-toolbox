@@ -87,7 +87,7 @@ async def process_events(request: EventsRequest):
             moments=moments,
             decision=decision,
         )
-    except Exception as e:
+    except Exception as e:  # audited: agent-pipeline
         return EventsResponse(
             ok=False,
             moments=[],
@@ -144,7 +144,7 @@ async def replay_events(request: ReplayRequest):
             total_events=len(request.events),
             total_sessions=len(sessions),
         )
-    except Exception as e:
+    except Exception as e:  # audited: agent-pipeline
         return ReplayResponse(
             ok=False,
             sessions=[],

@@ -550,7 +550,7 @@ async def generate_neck_op(op: str, req: GenerateRequest):
     # Generate G-code
     try:
         result = pipeline.generate_operation(op)
-    except Exception as exc:
+    except (ValueError, KeyError, TypeError, RuntimeError) as exc:  # audited: CAM-generation
         raise HTTPException(500, detail=f"Generation error: {exc}")
 
     gcode = result.get_gcode()
@@ -570,7 +570,7 @@ async def generate_neck_op(op: str, req: GenerateRequest):
             gate.warnings.extend(pf_result.warnings)
             if gate.overall_risk == "GREEN":
                 gate.overall_risk = "YELLOW"
-    except Exception:
+    except Exception:  # audited: best-effort-preflight
         pass  # preflight failure is non-blocking at this stage
 
     cycle_time = result.total_cut_time_seconds

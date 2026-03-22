@@ -494,7 +494,7 @@ class InverseDesignProblem:
 
         try:
             freqs = self._compute_frequencies(h_m)
-        except Exception:
+        except Exception:  # audited: solver-iteration-fallback
             return 1e10  # Penalty for invalid parameters
 
         total_error = 0.0

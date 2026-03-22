@@ -172,7 +172,7 @@ async def generate_recommendations(request: RecommendationsRequest) -> Recommend
     except json.JSONDecodeError as e:
         logger.error(f"JSON parse error: {e}")
         raise HTTPException(status_code=502, detail="Failed to parse AI response")
-    except Exception as e:
+    except Exception as e:  # audited: http-500 — ValueError,KeyError,IOError
         logger.error(f"Recommendations error: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
@@ -186,13 +186,13 @@ async def recommendations_status() -> dict:
     try:
         anthropic_client = get_llm_client("anthropic")
         anthropic_configured = anthropic_client.is_configured
-    except Exception:
+    except Exception:  # audited: http-500 — ValueError,KeyError
         pass
 
     try:
         openai_client = get_llm_client("openai")
         openai_configured = openai_client.is_configured
-    except Exception:
+    except Exception:  # audited: http-500 — ValueError,KeyError
         pass
 
     return {

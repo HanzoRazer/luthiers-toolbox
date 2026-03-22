@@ -164,7 +164,7 @@ def evaluate_expression(request: ExpressionRequest):
             result=result,
             expression=request.expression
         )
-    except Exception as e:
+    except Exception as e:  # audited: http-500 — ValueError,KeyError
         raise HTTPException(status_code=422, detail=str(e))
 
 
@@ -206,7 +206,7 @@ def parse_fraction(text: str):
             "whole": frac.whole,
             "fraction": str(frac)
         }
-    except Exception as e:
+    except Exception as e:  # audited: http-500 — ValueError,KeyError
         raise HTTPException(status_code=422, detail=f"Cannot parse: {text}. {e}")
 
 

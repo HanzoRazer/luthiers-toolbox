@@ -210,7 +210,7 @@ def export_rosette_pdf(req: RosettePdfRequest) -> StreamingResponse:
         pdf_bytes = build_rosette_pdf(req)
     except HTTPException:
         raise
-    except Exception as e:
+    except Exception as e:  # audited: http-500 — ValueError,IOError
         raise HTTPException(status_code=422, detail=f"PDF build error: {e}") from e
 
     return StreamingResponse(

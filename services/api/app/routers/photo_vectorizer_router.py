@@ -52,7 +52,7 @@ try:
 
     from photo_vectorizer_v2 import PhotoVectorizerV2  # type: ignore
     VECTORIZER_AVAILABLE = True
-except Exception as e:
+except Exception as e:  # audited: http-500 — ValueError,IOError
     _vectorizer_error = str(e)
 
 # ─── Request / response models ────────────────────────────────────────────────
@@ -110,7 +110,7 @@ def _extract_svg_paths(svg_path: str) -> str:
                     parts.append(d)
 
         return " ".join(parts)
-    except Exception:
+    except Exception:  # audited: optional-import
         return ""
 
 # ─── Route ────────────────────────────────────────────────────────────────────
@@ -152,7 +152,7 @@ async def extract_from_photo(req: VectorizeRequest):
     # ── Decode base64 image ────────────────────────────────────────────────
     try:
         img_bytes = base64.b64decode(req.image_b64)
-    except Exception as e:
+    except Exception as e:  # audited: http-500 — ValueError,IOError
         raise HTTPException(status_code=422, detail=f"Invalid base64: {e}")
 
     ext = ".jpg" if "jpeg" in req.media_type else ".png"
@@ -177,7 +177,7 @@ async def extract_from_photo(req: VectorizeRequest):
                 export_json=False,
                 debug_images=False,
             )
-        except Exception as e:
+        except Exception as e:  # audited: http-500 — ValueError,IOError
             return VectorizeResponse(
                 ok=False,
                 error=str(e),

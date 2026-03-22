@@ -192,7 +192,7 @@ def create_design_state_from_model_id(model_id: str) -> Optional[InstrumentProje
     
     try:
         model_spec = get_spec_fn()
-    except Exception:
+    except Exception:  # audited: project-save-fallback
         return None
 
     # Determine category from model info

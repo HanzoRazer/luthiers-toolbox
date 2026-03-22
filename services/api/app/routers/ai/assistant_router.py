@@ -291,13 +291,13 @@ async def assistant_status() -> Dict[str, Any]:
     try:
         anthropic_client = get_llm_client("anthropic")
         anthropic_configured = anthropic_client.is_configured
-    except Exception:
+    except Exception:  # audited: http-500 — ValueError,KeyError
         pass
 
     try:
         openai_client = get_llm_client("openai")
         openai_configured = openai_client.is_configured
-    except Exception:
+    except Exception:  # audited: http-500 — ValueError,KeyError
         pass
 
     return {

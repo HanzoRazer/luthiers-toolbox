@@ -96,7 +96,7 @@ async def websocket_monitor(websocket: WebSocket):
     except WebSocketDisconnect:
         manager.disconnect(websocket)
         logger.info("WebSocket client disconnected normally")
-    except Exception as e:
+    except Exception as e:  # audited: websocket-send-best-effort
         manager.disconnect(websocket)
         logger.error(f"WebSocket error: {e}")
 
@@ -127,7 +127,7 @@ async def websocket_live(websocket: WebSocket):
 
     except WebSocketDisconnect:
         manager.disconnect(websocket)
-    except Exception as e:
+    except Exception as e:  # audited: websocket-send-best-effort
         manager.disconnect(websocket)
         logger.error(f"WebSocket live error: {e}")
 

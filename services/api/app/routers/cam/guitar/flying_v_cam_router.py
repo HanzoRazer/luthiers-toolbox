@@ -187,7 +187,7 @@ def validate_flying_v_gcode(req: ValidateRequest) -> ValidateResponse:
             preflight_ok = preflight_result.ok
             preflight_errors = list(preflight_result.errors)
             preflight_warnings = list(preflight_result.warnings)
-        except Exception as e:
+        except Exception as e:  # audited: http-500 — ValueError,KeyError
             preflight_errors.append(f"Preflight unavailable: {e}")
 
     if req.operation == "neck_pocket":

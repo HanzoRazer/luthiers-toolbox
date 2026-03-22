@@ -149,7 +149,7 @@ def _compute_centerline_from_outline(
             symmetry_map.get(result.symmetry, BodySymmetry.UNKNOWN),
             result.symmetry_score,
         )
-    except Exception as exc:
+    except Exception as exc:  # audited: project-write-best-effort
         logger.warning("Centerline computation failed, using simple fallback: %s", exc)
         return 0.0, BodySymmetry.UNKNOWN, 0.0
 

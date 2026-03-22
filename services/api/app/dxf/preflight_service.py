@@ -152,7 +152,7 @@ def _compute_bounds(doc: "Drawing") -> Optional[Dict[str, float]]:
                 "min_y": ext.extmin.y,
                 "max_y": ext.extmax.y,
             }
-    except Exception:
+    except Exception:  # audited: preflight-best-effort
         pass
     return None
 

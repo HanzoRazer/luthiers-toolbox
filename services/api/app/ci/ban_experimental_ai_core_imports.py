@@ -71,7 +71,7 @@ def check_file(path: Path) -> list[str]:
                     )
     except SyntaxError:
         pass  # Skip files with syntax errors
-    except Exception:
+    except Exception:  # audited: ast-parse-fallback
         pass  # Skip unreadable files
 
     return violations

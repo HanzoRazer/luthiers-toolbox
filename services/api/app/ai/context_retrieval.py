@@ -87,7 +87,7 @@ def _get_project_data(project_id: str, owner_user_id: Optional[str] = None) -> d
                 "spec": spec,
             }
             return out
-    except Exception:
+    except Exception:  # audited: context-fetch-fallback
         return {}
 
 

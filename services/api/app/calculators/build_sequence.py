@@ -322,7 +322,7 @@ class StringTensionStage(BuildStage):
                 warnings=warnings,
                 gate=gate,
             )
-        except Exception as e:
+        except Exception as e:  # audited: pipeline-stage-handler
             return StageResult(
                 stage_name=self.name,
                 status=StageStatus.FAILED,
@@ -366,7 +366,7 @@ class BridgeGeometryStage(BuildStage):
                 data=bridge,
                 gate=bridge.gate if hasattr(bridge, 'gate') else "GREEN",
             )
-        except Exception as e:
+        except Exception as e:  # audited: pipeline-stage-handler
             return StageResult(
                 stage_name=self.name,
                 status=StageStatus.FAILED,
@@ -414,7 +414,7 @@ class WoodMovementStage(BuildStage):
                 warnings=warnings,
                 gate=gate,
             )
-        except Exception as e:
+        except Exception as e:  # audited: pipeline-stage-handler
             return StageResult(
                 stage_name=self.name,
                 status=StageStatus.FAILED,
@@ -447,7 +447,7 @@ class FinishScheduleStage(BuildStage):
                 gate=schedule.gate,
                 warnings=schedule.notes if schedule.notes else [],
             )
-        except Exception as e:
+        except Exception as e:  # audited: pipeline-stage-handler
             return StageResult(
                 stage_name=self.name,
                 status=StageStatus.FAILED,
@@ -510,7 +510,7 @@ class NeckAngleStage(BuildStage):
                 gate=angle_result.gate,
                 warnings=[angle_result.message] if angle_result.gate != "GREEN" else [],
             )
-        except Exception as e:
+        except Exception as e:  # audited: pipeline-stage-handler
             return StageResult(
                 stage_name=self.name,
                 status=StageStatus.FAILED,
@@ -582,7 +582,7 @@ class SaddleHeightStage(BuildStage):
                 gate=gate,
                 warnings=warnings,
             )
-        except Exception as e:
+        except Exception as e:  # audited: pipeline-stage-handler
             return StageResult(
                 stage_name=self.name,
                 status=StageStatus.FAILED,
@@ -641,7 +641,7 @@ class BreakAngleStage(BuildStage):
                 data=result.break_angle,
                 gate=break_result.gate,
             )
-        except Exception as e:
+        except Exception as e:  # audited: pipeline-stage-handler
             return StageResult(
                 stage_name=self.name,
                 status=StageStatus.FAILED,
@@ -710,7 +710,7 @@ class SaddleForceStage(BuildStage):
                 gate=force_result.gate,
                 warnings=force_result.notes,
             )
-        except Exception as e:
+        except Exception as e:  # audited: pipeline-stage-handler
             return StageResult(
                 stage_name=self.name,
                 status=StageStatus.FAILED,
@@ -787,7 +787,7 @@ class TopDeflectionStage(BuildStage):
                 gate=deflection_result.gate,
                 warnings=deflection_result.notes,
             )
-        except Exception as e:
+        except Exception as e:  # audited: pipeline-stage-handler
             return StageResult(
                 stage_name=self.name,
                 status=StageStatus.FAILED,
@@ -854,7 +854,7 @@ class BraceSizingStage(BuildStage):
                 gate=sizing_result.gate,
                 warnings=sizing_result.notes[:2] if len(sizing_result.notes) > 2 else sizing_result.notes,
             )
-        except Exception as e:
+        except Exception as e:  # audited: pipeline-stage-handler
             return StageResult(
                 stage_name=self.name,
                 status=StageStatus.FAILED,

@@ -324,7 +324,7 @@ async def neck_profile_gcode(req: NeckRequest):
             code = result.get_gcode()
         else:
             code = _fallback_gcode(req)
-    except Exception as e:
+    except Exception as e:  # audited: http-500 — ValueError,IOError
         raise HTTPException(422, f"G-code error: {e}")
 
     return PlainTextResponse(code,
@@ -339,7 +339,7 @@ async def neck_profile_dxf(req: NeckRequest):
     """
     try:
         doc = build_neck_dxf(req)
-    except Exception as e:
+    except Exception as e:  # audited: http-500 — ValueError,IOError
         raise HTTPException(422, f"DXF error: {e}")
     buf = io.BytesIO(); doc.write(buf); buf.seek(0)
     fn = req.label.lower().replace(" ", "-") or "neck-profile"

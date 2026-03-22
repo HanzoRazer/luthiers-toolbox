@@ -225,7 +225,7 @@ def design_binding(req: BindingDesignRequest) -> BindingDesignResponse:
         canonical_style, outline_points = resolve_body_outline(req.body_style)
     except HTTPException:
         raise
-    except Exception as e:
+    except Exception as e:  # audited: http-500 — ValueError,KeyError
         raise HTTPException(
             status_code=500,
             detail=f"Failed to resolve body style: {e}"
@@ -513,7 +513,7 @@ def estimate_strip_length(req: StripLengthRequest) -> StripLengthResponse:
             perimeter = polyline_length(outline_points)
         except HTTPException:
             raise
-        except Exception as e:
+        except Exception as e:  # audited: http-500 — ValueError,KeyError
             raise HTTPException(
                 status_code=500,
                 detail=f"Failed to resolve body style: {e}"

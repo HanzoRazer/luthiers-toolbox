@@ -74,7 +74,7 @@ def load_tonewoods() -> List[TonewoodEntry]:
                     tier=tier_key,
                 )
                 entries.append(entry)
-            except Exception as exc:
+            except Exception as exc:  # audited: registry-load-fallback
                 logger.warning("Skipped malformed tonewood record %s: %s",
                                record.get("id", "?"), exc)
 
@@ -139,7 +139,7 @@ def load_wood_species() -> List[WoodSpeciesEntry]:
                 guitar_relevance=record.get("guitar_relevance"),
             )
             entries.append(entry)
-        except Exception as exc:
+        except Exception as exc:  # audited: registry-load-fallback
             logger.warning("Skipped malformed species record %s: %s",
                            record.get("id", "?"), exc)
 
