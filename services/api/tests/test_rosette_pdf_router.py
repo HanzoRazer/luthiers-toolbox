@@ -4,6 +4,11 @@ from __future__ import annotations
 
 import io
 
+import pytest
+
+# Skip entire module if reportlab not installed (PDF generation requires it)
+pytest.importorskip("reportlab", reason="reportlab required for PDF export tests")
+
 from fastapi.testclient import TestClient
 
 from app.main import app

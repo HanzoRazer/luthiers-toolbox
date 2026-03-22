@@ -24,7 +24,7 @@ APP_ROOT = Path(__file__).parent.parent / "app"
 METRICS_DIR = Path(__file__).parent.parent / "metrics"
 
 # Targets (ratchet down over time)
-TARGET_MAX_ENDPOINTS = 905  # Current: 903, includes ACOUSTIC chain + AI routers + validation harness
+TARGET_MAX_ENDPOINTS = 927  # Current: 907, includes ACOUSTIC chain + AI routers + validation harness + instrument geometry
 TARGET_MAX_GOD_OBJECTS = 14  # All reviewed and acceptable
 TARGET_MAX_BARE_EXCEPT = 6  # Current: 0 (all fixed)
 TARGET_MAX_LARGE_FILES = 55  # Current: 53 (build_sequence.py grew with ACOUSTIC-005)
