@@ -3686,8 +3686,11 @@ class PhotoVectorizerV2:
             ys = body_fc.points_mm[:, 1]
             w_mm = float(xs.max() - xs.min())
             h_mm = float(ys.max() - ys.min())
-            result.body_dimensions_mm = (w_mm, h_mm)
-            result.body_dimensions_inch = (w_mm / 25.4, h_mm / 25.4)
+            # Normalize: guitar body is taller than wide (height > width)
+            if w_mm > h_mm:
+                h_mm, w_mm = w_mm, h_mm  # swap if landscape orientation
+            result.body_dimensions_mm = (h_mm, w_mm)
+            result.body_dimensions_inch = (h_mm / 25.4, w_mm / 25.4)
 
         # ── Back-project orientation if rotated ───────────────────────────
         if orient.total_rotation != 0:

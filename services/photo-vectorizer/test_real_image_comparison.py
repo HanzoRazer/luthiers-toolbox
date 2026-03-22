@@ -232,10 +232,10 @@ def _print_comparison_report(results: List[ImageTestResult]):
     print("=" * 100)
 
     for tr in results:
-        print(f"\n{'─' * 80}")
+        print(f"\n{'-' * 80}")
         print(f"  {tr.name}")
         print(f"  File: {Path(tr.image_path).name}")
-        print(f"{'─' * 80}")
+        print(f"{'-' * 80}")
 
         if not tr.success:
             print(f"  FAILED: {tr.error}")
