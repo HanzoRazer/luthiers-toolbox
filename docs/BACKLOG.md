@@ -127,7 +127,8 @@ Added `POST /api/saw/batch/plan/choose` endpoint to `batch_router.py`:
 
 ## BACKEND-001 — Curve-to-DXF endpoint
 
-**Status:** Frontend TODO at `useCurveHistory.ts:46`
+**Status:** ✅ RESOLVED
+**Commit:** `cde28da9`
 **Priority:** Medium
 **Effort:** ~2 hours
 
@@ -151,7 +152,8 @@ function exportDXF() {
 
 ## BACKEND-002 — Rosette PDF export service
 
-**Status:** Frontend TODO at `useRosetteDesignerExport.ts:101`
+**Status:** ✅ RESOLVED
+**Commit:** `fba3afcd`
 **Priority:** Medium
 **Effort:** ~half day
 
