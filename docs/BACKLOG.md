@@ -174,22 +174,24 @@ Decomposed the 1,915-line router into 5 domain routers.
 
 ## DECOMP-002 — Split soundhole_calc.py (2,544 → 412 lines)
 
-**Status:** ✅ RESOLVED (commit 8f327140)
+**Status:** ✅ RESOLVED (Phase 6 final)
+**Final commit:** `8f327140`
 **Priority:** Medium
 **Effort:** ~1 day total
 
-Decomposed the 2,544-line calculator into 6 focused modules + 412-line facade.
+Decomposed the monolith into focused modules; **`soundhole_calc.py` is 412 lines** (core + re-exports).
 
-| Phase | Module | Lines | Commit | Status |
-|-------|--------|-------|--------|--------|
-| 1 | soundhole_physics.py | 376 | 6e8213d8 | ✅ |
-| 2 | soundhole_resonator.py | 312 | b89ea051 | ✅ |
-| 3 | soundhole_ports.py | 432 | 0810acb7 | ✅ |
-| 4 | soundhole_stiffness.py | 454 | 669a43b4 | ✅ |
-| 5 | soundhole_climate.py | 258 | b6eb1ea2 | ✅ |
-| 6 | soundhole_presets.py | 367 | 031565f8 | ✅ |
+| Phase | Module | Commit | Status |
+|-------|--------|--------|--------|
+| 1 | soundhole_physics.py | 6e8213d8 | ✅ |
+| 2 | soundhole_resonator.py | b89ea051 | ✅ |
+| 3 | soundhole_ports.py | 0810acb7 | ✅ |
+| 4 | soundhole_stiffness.py | 669a43b4 | ✅ |
+| 5 | soundhole_climate.py | b6eb1ea2 | ✅ |
+| 5b | soundhole_presets.py | 031565f8 | ✅ |
+| 6 | soundhole_facade.py + soundhole_extended.py | 8f327140 | ✅ |
 
-**Final:** 2,199 lines in 6 modules + 412-line facade. 139 tests pass.
+Backward compatibility preserved via re-exports from `soundhole_calc.py`.
 
 
 ---
