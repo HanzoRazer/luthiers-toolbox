@@ -234,6 +234,12 @@ CAM_ROUTERS: List[RouterSpec] = [
         tags=["Export", "Headstock", "DXF"],
         category="cam",
     ),
+    RouterSpec(
+        module="app.routers.export.curve_export_router",
+        prefix="/api/export",
+        tags=["Export", "Curve", "DXF"],
+        category="cam",
+    ),
     # ── VECTORIZER-001: Photo vectorizer router ──
     RouterSpec(
         module="app.routers.photo_vectorizer_router",
