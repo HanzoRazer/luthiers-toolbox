@@ -199,24 +199,6 @@ where θ_target comes from action at the 12th fret via:
 
 ---
 
-## ACOUSTIC-005 — Wire acoustic chain into build_sequence
-
-**Status:** TODO (depends on ACOUSTIC-001 through 004)
-**Priority:** Low
-**Effort:** ~2 hours
-**File:** `services/api/app/workflow/build_sequence.py`
-
-### What's Needed
-
-Add acoustic analysis step to the build sequence workflow:
-1. After body dimensions finalized: run top_deflection_calc
-2. After bracing designed: validate combined stiffness
-3. After neck angle set: verify saddle height is manufacturable (> 3mm, < 12mm)
-
-Return warnings if any acoustic constraint is violated.
-
----
-
 ## Notes on how this backlog works
 
 Each item here was identified by reading code, not by speculation.

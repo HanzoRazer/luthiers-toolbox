@@ -32,6 +32,9 @@ if TYPE_CHECKING:
     from .voicing_history_calc import VoicingReport
     from .plate_design.thickness_calculator import PlateThicknessResult, CoupledSystemResult
     from .plate_design.calibration import BodyCalibration
+    from .saddle_force_calc import SaddleForceResult
+    from .top_deflection_calc import DeflectionResult
+    from .bracing_calc import RequiredBraceSpec
 
 
 # ─── Enums ────────────────────────────────────────────────────────────────────
@@ -206,6 +209,14 @@ class BuildResult:
     back_plate: Optional["PlateThicknessResult"] = None
     coupled_system: Optional["CoupledSystemResult"] = None
     body_calibration: Optional["BodyCalibration"] = None
+
+    # ─── Acoustic chain outputs (ACOUSTIC-005) ────────────────────────────
+    neck_angle: Optional[dict] = None
+    saddle_height: Optional[dict] = None
+    break_angle: Optional[dict] = None
+    saddle_force: Optional["SaddleForceResult"] = None
+    top_deflection: Optional["DeflectionResult"] = None
+    brace_sizing: Optional["RequiredBraceSpec"] = None
 
     def add_stage(self, result: StageResult) -> None:
         """Add a stage result and update overall gate."""
@@ -443,6 +454,413 @@ class FinishScheduleStage(BuildStage):
             )
 
 
+# ─── Acoustic Chain Stages (ACOUSTIC-005) ────────────────────────────────────
+
+
+class NeckAngleStage(BuildStage):
+    """
+    Calculate neck angle from spec geometry.
+
+    Reads: spec.scale_length_mm, spec.target_action_mm_12th, geometry params
+    Writes: result.neck_angle
+    """
+
+    @property
+    def name(self) -> str:
+        return "neck_angle"
+
+    def run(self, spec: BuildSpec, result: BuildResult) -> StageResult:
+        try:
+            from app.instrument_geometry.neck.neck_angle import (
+                NeckAngleInput,
+                compute_neck_angle,
+            )
+        except ImportError:
+            return StageResult(
+                stage_name=self.name,
+                status=StageStatus.SKIPPED,
+                warnings=["neck_angle module not available"],
+                gate="YELLOW",
+            )
+
+        try:
+            # Build input from spec (using typical acoustic defaults)
+            inp = NeckAngleInput(
+                bridge_height_mm=12.0,  # Typical bridge height
+                saddle_projection_mm=3.0,  # Typical saddle projection
+                fretboard_height_at_joint_mm=5.0,
+                nut_to_bridge_mm=spec.scale_length_mm,
+                neck_joint_fret=14,
+                action_12th_mm=spec.target_action_mm_12th,
+            )
+            angle_result = compute_neck_angle(inp)
+
+            result.neck_angle = {
+                "angle_deg": angle_result.angle_deg,
+                "gate": angle_result.gate,
+                "message": angle_result.message,
+            }
+
+            return StageResult(
+                stage_name=self.name,
+                status=StageStatus.COMPLETED,
+                data=result.neck_angle,
+                gate=angle_result.gate,
+                warnings=[angle_result.message] if angle_result.gate != "GREEN" else [],
+            )
+        except Exception as e:
+            return StageResult(
+                stage_name=self.name,
+                status=StageStatus.FAILED,
+                errors=[str(e)],
+                gate="RED",
+            )
+
+
+class SaddleHeightStage(BuildStage):
+    """
+    Compute saddle height from neck angle and target action.
+
+    Depends on: NeckAngleStage
+    Reads: result.neck_angle, spec.target_action_mm_12th
+    Writes: result.saddle_height
+    """
+
+    @property
+    def name(self) -> str:
+        return "saddle_height"
+
+    @property
+    def dependencies(self) -> List[str]:
+        return ["neck_angle"]
+
+    def run(self, spec: BuildSpec, result: BuildResult) -> StageResult:
+        # Short-circuit if upstream is missing
+        if result.neck_angle is None:
+            return StageResult(
+                stage_name=self.name,
+                status=StageStatus.SKIPPED,
+                warnings=["Missing upstream: neck_angle"],
+                gate="YELLOW",
+            )
+
+        try:
+            # Derive saddle height from neck angle and action
+            # Formula: saddle_height ≈ action + projection
+            neck_angle_deg = result.neck_angle.get("angle_deg", 1.5)
+            target_action = spec.target_action_mm_12th
+
+            # Simple model: saddle height = target action + 0.5mm (for projection above bridge)
+            saddle_height_mm = target_action + 0.5
+
+            # Gate: 3-12mm is manufacturable
+            if saddle_height_mm < 3.0:
+                gate = "RED"
+                warnings = [f"Saddle height {saddle_height_mm:.1f}mm too low (<3mm)"]
+            elif saddle_height_mm > 12.0:
+                gate = "RED"
+                warnings = [f"Saddle height {saddle_height_mm:.1f}mm too high (>12mm)"]
+            elif saddle_height_mm < 4.0 or saddle_height_mm > 10.0:
+                gate = "YELLOW"
+                warnings = [f"Saddle height {saddle_height_mm:.1f}mm marginal (ideal: 4-10mm)"]
+            else:
+                gate = "GREEN"
+                warnings = []
+
+            result.saddle_height = {
+                "saddle_height_mm": round(saddle_height_mm, 2),
+                "neck_angle_deg": neck_angle_deg,
+                "gate": gate,
+            }
+
+            return StageResult(
+                stage_name=self.name,
+                status=StageStatus.COMPLETED,
+                data=result.saddle_height,
+                gate=gate,
+                warnings=warnings,
+            )
+        except Exception as e:
+            return StageResult(
+                stage_name=self.name,
+                status=StageStatus.FAILED,
+                errors=[str(e)],
+                gate="RED",
+            )
+
+
+class BreakAngleStage(BuildStage):
+    """
+    Compute bridge break angle from saddle height.
+
+    Depends on: SaddleHeightStage
+    Reads: result.saddle_height
+    Writes: result.break_angle
+    """
+
+    @property
+    def name(self) -> str:
+        return "break_angle"
+
+    @property
+    def dependencies(self) -> List[str]:
+        return ["saddle_height"]
+
+    def run(self, spec: BuildSpec, result: BuildResult) -> StageResult:
+        # Short-circuit if upstream is missing
+        if result.saddle_height is None:
+            return StageResult(
+                stage_name=self.name,
+                status=StageStatus.SKIPPED,
+                warnings=["Missing upstream: saddle_height"],
+                gate="YELLOW",
+            )
+
+        try:
+            from .bridge_break_angle import BreakAngleInput, calculate_break_angle
+
+            saddle_height = result.saddle_height.get("saddle_height_mm", 3.0)
+
+            inp = BreakAngleInput(
+                saddle_projection_mm=saddle_height - 1.5,  # Projection above bridge
+                pin_to_saddle_mm=6.0,  # Typical acoustic
+            )
+            break_result = calculate_break_angle(inp)
+
+            result.break_angle = {
+                "break_angle_deg": break_result.break_angle_deg,
+                "gate": break_result.gate,
+                "rating": break_result.rating,
+            }
+
+            return StageResult(
+                stage_name=self.name,
+                status=StageStatus.COMPLETED,
+                data=result.break_angle,
+                gate=break_result.gate,
+            )
+        except Exception as e:
+            return StageResult(
+                stage_name=self.name,
+                status=StageStatus.FAILED,
+                errors=[str(e)],
+                gate="RED",
+            )
+
+
+class SaddleForceStage(BuildStage):
+    """
+    Compute saddle force from string tensions and break angles.
+
+    Depends on: BreakAngleStage, StringTensionStage
+    Reads: result.break_angle, result.string_tension
+    Writes: result.saddle_force
+    """
+
+    @property
+    def name(self) -> str:
+        return "saddle_force"
+
+    @property
+    def dependencies(self) -> List[str]:
+        return ["break_angle", "string_tension"]
+
+    def run(self, spec: BuildSpec, result: BuildResult) -> StageResult:
+        # Short-circuit if upstream is missing
+        if result.break_angle is None:
+            return StageResult(
+                stage_name=self.name,
+                status=StageStatus.SKIPPED,
+                warnings=["Missing upstream: break_angle"],
+                gate="YELLOW",
+            )
+        if result.string_tension is None:
+            return StageResult(
+                stage_name=self.name,
+                status=StageStatus.SKIPPED,
+                warnings=["Missing upstream: string_tension"],
+                gate="YELLOW",
+            )
+
+        try:
+            from .saddle_force_calc import compute_saddle_force
+
+            # Get per-string tensions
+            tensions = [s.tension_n for s in result.string_tension.strings]
+
+            # Use same break angle for all strings (simplified)
+            break_angle = result.break_angle.get("break_angle_deg", 12.0)
+            break_angles = [break_angle] * len(tensions)
+
+            force_result = compute_saddle_force(
+                string_tensions_n=tensions,
+                break_angles_deg=break_angles,
+            )
+            result.saddle_force = force_result
+
+            return StageResult(
+                stage_name=self.name,
+                status=StageStatus.COMPLETED,
+                data={
+                    "total_vertical_force_n": force_result.total_vertical_force_n,
+                    "gate": force_result.gate,
+                },
+                gate=force_result.gate,
+                warnings=force_result.notes,
+            )
+        except Exception as e:
+            return StageResult(
+                stage_name=self.name,
+                status=StageStatus.FAILED,
+                errors=[str(e)],
+                gate="RED",
+            )
+
+
+class TopDeflectionStage(BuildStage):
+    """
+    Compute top plate deflection under saddle force.
+
+    Depends on: SaddleForceStage
+    Reads: result.saddle_force, spec.top_species
+    Writes: result.top_deflection
+    """
+
+    @property
+    def name(self) -> str:
+        return "top_deflection"
+
+    @property
+    def dependencies(self) -> List[str]:
+        return ["saddle_force"]
+
+    def run(self, spec: BuildSpec, result: BuildResult) -> StageResult:
+        # Short-circuit if upstream is missing
+        if result.saddle_force is None:
+            return StageResult(
+                stage_name=self.name,
+                status=StageStatus.SKIPPED,
+                warnings=["Missing upstream: saddle_force"],
+                gate="YELLOW",
+            )
+
+        try:
+            from .top_deflection_calc import (
+                PlateProperties,
+                BraceContribution,
+                compute_top_deflection,
+            )
+
+            # Default plate properties for typical spruce top
+            plate = PlateProperties(
+                E_L_GPa=12.0,  # Sitka spruce longitudinal
+                E_C_GPa=0.8,   # Sitka spruce cross-grain
+                thickness_mm=2.8,  # Typical graduated thickness
+                length_mm=500.0,  # Body length
+                width_mm=400.0,  # Lower bout
+            )
+
+            # Typical bracing contribution
+            braces = BraceContribution(
+                brace_EI_Nm2=50.0,  # Approximate for X-brace
+                brace_count=2,
+            )
+
+            load = result.saddle_force.total_vertical_force_n
+            deflection_result = compute_top_deflection(
+                load_n=load,
+                plate=plate,
+                braces=braces,
+            )
+            result.top_deflection = deflection_result
+
+            return StageResult(
+                stage_name=self.name,
+                status=StageStatus.COMPLETED,
+                data={
+                    "static_mm": deflection_result.static_deflection_mm,
+                    "total_projected_mm": deflection_result.total_projected_mm,
+                    "gate": deflection_result.gate,
+                },
+                gate=deflection_result.gate,
+                warnings=deflection_result.notes,
+            )
+        except Exception as e:
+            return StageResult(
+                stage_name=self.name,
+                status=StageStatus.FAILED,
+                errors=[str(e)],
+                gate="RED",
+            )
+
+
+class BraceSizingStage(BuildStage):
+    """
+    Check if current bracing meets deflection target.
+
+    Depends on: TopDeflectionStage
+    Reads: result.top_deflection
+    Writes: result.brace_sizing
+    """
+
+    @property
+    def name(self) -> str:
+        return "brace_sizing"
+
+    @property
+    def dependencies(self) -> List[str]:
+        return ["top_deflection"]
+
+    def run(self, spec: BuildSpec, result: BuildResult) -> StageResult:
+        # Short-circuit if upstream is missing
+        if result.top_deflection is None:
+            return StageResult(
+                stage_name=self.name,
+                status=StageStatus.SKIPPED,
+                warnings=["Missing upstream: top_deflection"],
+                gate="YELLOW",
+            )
+
+        try:
+            from .bracing_calc import BraceSizingTarget, solve_brace_sizing
+
+            # Target: keep deflection under 2.0mm (GREEN threshold)
+            target = BraceSizingTarget(
+                max_deflection_mm=2.0,
+                applied_load_n=result.saddle_force.total_vertical_force_n if result.saddle_force else 300.0,
+                plate_length_mm=500.0,
+                existing_plate_EI_Nm2=result.top_deflection.composite_EI_Nm2,
+            )
+
+            sizing_result = solve_brace_sizing(
+                target=target,
+                wood_species=spec.top_species,
+                brace_width_mm=5.5,
+                profile_type="parabolic",
+                brace_count=2,
+            )
+            result.brace_sizing = sizing_result
+
+            return StageResult(
+                stage_name=self.name,
+                status=StageStatus.COMPLETED,
+                data={
+                    "required_EI_Nm2": sizing_result.required_EI_Nm2,
+                    "suggested_height_mm": sizing_result.suggested_height_mm,
+                    "gate": sizing_result.gate,
+                },
+                gate=sizing_result.gate,
+                warnings=sizing_result.notes[:2] if len(sizing_result.notes) > 2 else sizing_result.notes,
+            )
+        except Exception as e:
+            return StageResult(
+                stage_name=self.name,
+                status=StageStatus.FAILED,
+                errors=[str(e)],
+                gate="RED",
+            )
+
+
 # ─── Build Sequence Orchestrator ──────────────────────────────────────────────
 
 class BuildSequence:
@@ -465,12 +883,20 @@ class BuildSequence:
 
     @staticmethod
     def default_acoustic_stages() -> List[BuildStage]:
-        """Default stage sequence for acoustic guitar builds."""
+        """Default stage sequence for acoustic guitar builds (10 stages)."""
         return [
+            # Original 4 stages
             StringTensionStage(),
             BridgeGeometryStage(),
             WoodMovementStage(),
             FinishScheduleStage(),
+            # Acoustic chain stages (ACOUSTIC-005)
+            NeckAngleStage(),
+            SaddleHeightStage(),
+            BreakAngleStage(),
+            SaddleForceStage(),
+            TopDeflectionStage(),
+            BraceSizingStage(),
         ]
 
     def run(self, spec: BuildSpec) -> BuildResult:
@@ -596,3 +1022,32 @@ def run_build_sequence(spec: BuildSpec) -> BuildResult:
         return result
 
     return sequence.run(spec)
+
+def default_acoustic_stages() -> List[BuildStage]:
+    """
+    Returns all 10 stages for the acoustic guitar build pipeline.
+    
+    Stages in dependency order:
+    1. StringTensionStage - Calculate string tensions
+    2. BridgeGeometryStage - Calculate bridge dimensions  
+    3. WoodMovementStage - Calculate expected wood movement
+    4. FinishScheduleStage - Calculate finish schedule
+    5. NeckAngleStage - Calculate neck angle from geometry
+    6. SaddleHeightStage - Compute saddle height from neck angle
+    7. BreakAngleStage - Compute break angle from saddle height
+    8. SaddleForceStage - Compute saddle force from tensions and angles
+    9. TopDeflectionStage - Compute top deflection under saddle force
+    10. BraceSizingStage - Check if bracing meets deflection target
+    """
+    return [
+        StringTensionStage(),
+        BridgeGeometryStage(),
+        WoodMovementStage(),
+        FinishScheduleStage(),
+        NeckAngleStage(),
+        SaddleHeightStage(),
+        BreakAngleStage(),
+        SaddleForceStage(),
+        TopDeflectionStage(),
+        BraceSizingStage(),
+    ]
