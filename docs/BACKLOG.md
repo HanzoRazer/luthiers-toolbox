@@ -1,5 +1,7 @@
 # Production Shop — Implementation Backlog
 
+> **All items below are resolved as of 2026-03-22.** (Final doc pass: DECOMP-002 closed in `8f327140`.)
+
 Items here are fully analyzed and scoped. Each one has a source, a
 specific file path, and enough context to implement without re-researching.
 Nothing here was invented in a planning meeting — every item came from
@@ -170,10 +172,13 @@ Decomposed the 1,915-line router into 5 domain routers.
 
 ---
 
-## DECOMP-002 — Split soundhole_calc.py (2,544 → 1,369 lines)
+## DECOMP-002 — Split soundhole_calc.py (2,544 → 412 lines)
 
-**Status:** ✅ COMPLETE (6 modules extracted, 139 tests pass)
-**File:** `services/api/app/calculators/soundhole_calc.py`
+**Status:** ✅ RESOLVED (commit 8f327140)
+**Priority:** Medium
+**Effort:** ~1 day total
+
+Decomposed the 2,544-line calculator into 6 focused modules + 412-line facade.
 
 | Phase | Module | Lines | Commit | Status |
 |-------|--------|-------|--------|--------|
@@ -184,27 +189,8 @@ Decomposed the 1,915-line router into 5 domain routers.
 | 5 | soundhole_climate.py | 258 | b6eb1ea2 | ✅ |
 | 6 | soundhole_presets.py | 367 | 031565f8 | ✅ |
 
-**Final:** 2,199 lines in 6 modules. Backward compat via re-exports.
+**Final:** 2,199 lines in 6 modules + 412-line facade. 139 tests pass.
 
-|-------|--------|-------|--------|--------|
-| 1 | soundhole_physics.py | 376 | 6e8213d8 | ✅ Complete |
-| 2 | soundhole_resonator.py | 312 | b89ea051 | ✅ Complete |
-| 3 | soundhole_ports.py | 432 | 0810acb7 | ✅ Complete |
-| 4 | soundhole_climate.py | 258 | b6eb1ea2 | ✅ Complete |
-| 5 | soundhole_presets.py | 367 | 031565f8 | ✅ Complete |
-| 6 | soundhole_facade.py | ~400 | — | TODO |
-| 7 | Cleanup & shrink | — | — | TODO |
-
-**Current state:** 1,745 lines extracted into 5 modules, 1,369 lines remain.
-
-### Remaining Work (Phases 6-7)
-
-**Phase 6: soundhole_facade.py** (~400 lines)
-- Facade: `SoundholeSpec`, `SoundholeBuilder`, re-exports
-
-**Phase 7: Cleanup**
-- Remove duplicate code from soundhole_calc.py
-- Update all imports across codebase
 
 ---
 
