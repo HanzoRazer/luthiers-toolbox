@@ -199,22 +199,6 @@ where θ_target comes from action at the 12th fret via:
 
 ---
 
-## ACOUSTIC-004 — Inverse brace sizing
-
-**Status:** TODO
-**Priority:** Medium
-**Effort:** ~3 hours
-**File:** `services/api/app/calculators/bracing_calc.py` (extend existing)
-
-### What's Needed
-
-Add inverse function to bracing_calc.py:
-`solve_brace_dimensions(target_stiffness_Nm2, wood_species, max_height_mm) → {width_mm, height_mm, scallop_profile}`
-
-This reverses the current forward calculation (dimensions → stiffness) to solve for required brace dimensions given a target plate stiffness.
-
----
-
 ## ACOUSTIC-005 — Wire acoustic chain into build_sequence
 
 **Status:** TODO (depends on ACOUSTIC-001 through 004)
