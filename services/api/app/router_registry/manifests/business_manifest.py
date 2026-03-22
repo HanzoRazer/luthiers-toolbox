@@ -123,4 +123,14 @@ BUSINESS_ROUTERS: List[RouterSpec] = [
         tags=["Instruments", "Geometry", "Calculators"],
         category="instrument_geometry",
     ),
+    # ── GEOMETRY-010B: Physics-based instrument geometry (35 endpoints) ──
+    # Full-featured monolithic router with side bending, nut slots, soundhole,
+    # fret leveling, nut compensation, voicing, bridge, blocks, fret wire,
+    # wood movement, electronics layout, build sequence, setup cascade
+    RouterSpec(
+        module="app.routers.instrument_geometry_router",
+        prefix="/api/instrument",
+        tags=["Instruments", "Geometry", "Physics", "Calculators"],
+        category="instrument_geometry_v2",
+    ),
 ]

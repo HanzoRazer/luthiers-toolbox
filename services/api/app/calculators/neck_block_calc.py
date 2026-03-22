@@ -226,3 +226,21 @@ __all__ = [
     "compute_tail_block",
     "list_body_styles",
 ]
+
+
+def get_default_side_depths(body_style: str = "dreadnought") -> Dict[str, float]:
+    """
+    Return default side depths (mm) for common acoustic body styles.
+    Used by instrument_geometry_router for block calculations.
+    """
+    DEFAULTS = {
+        "dreadnought": {"upper_bout": 100.0, "waist": 100.0, "lower_bout": 115.0},
+        "om": {"upper_bout": 90.0, "waist": 85.0, "lower_bout": 100.0},
+        "parlor": {"upper_bout": 85.0, "waist": 80.0, "lower_bout": 95.0},
+        "jumbo": {"upper_bout": 105.0, "waist": 105.0, "lower_bout": 120.0},
+        "classical": {"upper_bout": 95.0, "waist": 90.0, "lower_bout": 100.0},
+        "concert": {"upper_bout": 90.0, "waist": 85.0, "lower_bout": 100.0},
+        "auditorium": {"upper_bout": 95.0, "waist": 92.0, "lower_bout": 105.0},
+    }
+    key = _normalize_body_style(body_style)
+    return DEFAULTS.get(key, DEFAULTS["dreadnought"])
