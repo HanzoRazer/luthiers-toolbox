@@ -158,6 +158,7 @@
 | Date | Gaps Closed | Notes | Next |
 |------|-------------|-------|------|
 | 2026-03-22 | Backlog (docs) | **All `BACKLOG.md` items resolved.** DECOMP-002 final `8f327140` — `soundhole_calc.py` 2,544→412 lines. Refs: DECOMP-001 `0edd4863`, BACKEND-001 `cde28da9`, BACKEND-002 `fba3afcd`, ACOUSTIC-001–005, Sessions A–E complete. | New gaps only via `CHANGELOG.md` / discovery |
+| 2026-03-22 | DECOMP-002 | **ALL BACKLOG RESOLVED:** DECOMP-002 Phase 6 final (8f327140). soundhole_calc.py 2,544→412 lines (6 modules extracted). All backlog items closed: DECOMP-001, DECOMP-002, BACKEND-001/002, ACOUSTIC-001–005, Sessions A–E. Tests: ~4,155 passing, 0 failing. | — |
 | 2026-03-21 | — | **A–E + ACOUSTIC:** Sessions A–E overhaul; ACOUSTIC-001–005; 0 failing tests (19b64ab4); `instrument_geometry_router.py`; physics `side_bending_calc.py`; `cantilever_armrest_calc.py`. **Coverage:** ~96%→~27% on new untested code. **Active:** smoke tests for 4 AI routers; calculator coverage; DECOMP-002. | Restore coverage >60% (AI routers smoke, then calculators) |
 | 2026-03-19 | — | **Full Sprint:** TEST-001 73→0 failures. binding_geometry 1,292→828 lines (3 modules extracted). instrument_geometry_router 1,868→9 domain routers. MachineManagerView 895→120 lines. CLEANUP-001/002 graduated. Exception hardening complete. _experimental/ cleared. WIRE-003 path fix (3 tests). Pydantic ForwardRef fix (28 tests). Replay tests (21 tests). Docs: PRODUCT_BOUNDARY, SYSTEM_MAP, PERSONAS, SAFETY_CASE. 3,834+ passing, 96.59% coverage. | WIRE-001 |
 | 2026-03-18 | — | **Session summary: Systems review score 6.1→~7.3.** TRACK 10 all 8 tasks complete. Safety coverage 33%→92% (125+ new tests). Bridge break angle v1→v2 corrected. CamWorkspaceView wired to live backend. BIND-GAP-04 binding strip calculator. Saddle compensation calculator ported (Design + Setup modes, 28 tests). Gap count 112/120 (8 remaining, all blocked). GEN-5 phantom removed after 14 sessions. CI green, score 7.0 target achieved. | — |
@@ -200,6 +201,8 @@
 | Other | 6 | 1 |
 | Explorer (blocked) | 0 | 6 |
 | **Total** | **112** | **8** |
+
+*As of 2026-03-22, every scoped item in `docs/BACKLOG.md` is resolved. Remaining gap-tracker counts may still include blocked external (e.g. Explorer reference) work.*
 
 ---
 
