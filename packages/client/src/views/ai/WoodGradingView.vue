@@ -9,7 +9,16 @@
  * Connected to API endpoint:
  *   POST /api/ai/wood-grading/analyze
  */
-import { ref } from "vue"
+import { ref, onMounted } from "vue"
+import { useAgenticEvents } from '@/composables/useAgenticEvents'
+
+// E-1/E-4: Agentic Spine event emission
+const { emitViewRendered, emitAnalysisCompleted, emitAnalysisFailed } = useAgenticEvents()
+
+// E-1/E-4: Emit view_rendered on mount
+onMounted(() => {
+  emitViewRendered('wood_grading')
+})
 import { RouterLink } from "vue-router"
 
 const selectedFile = ref<File | null>(null)
@@ -85,9 +94,14 @@ async function analyzeWood() {
       surface_anomalies: data.surface_anomalies || [],
       confidence: data.confidence,
     }
+
+    // E-4: Emit analysis_completed for agentic spine
+    emitAnalysisCompleted(['wood_visual_assessment_v1'])
   } catch (err) {
     errorMessage.value = err instanceof Error ? err.message : "Analysis failed"
     analysisResult.value = null
+    // E-4: Emit analysis_failed for agentic spine
+    emitAnalysisFailed(err instanceof Error ? err.message : "Analysis failed", 'WOOD_GRADING_ERROR')
   } finally {
     isAnalyzing.value = false
   }

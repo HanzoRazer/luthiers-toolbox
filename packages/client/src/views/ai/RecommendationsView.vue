@@ -7,7 +7,16 @@
  *   POST /api/ai/recommendations/generate
  *   GET  /api/ai/recommendations/history
  */
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
+import { useAgenticEvents } from '@/composables/useAgenticEvents'
+
+// E-1/E-5: Agentic Spine event emission
+const { emitViewRendered, emitAnalysisCompleted, emitAnalysisFailed } = useAgenticEvents()
+
+// E-1/E-5: Emit view_rendered on mount
+onMounted(() => {
+  emitViewRendered('recommendations')
+})
 
 const buildType = ref('acoustic')  // acoustic, classical, electric
 const targetTone = ref('warm')  // warm, bright, balanced
@@ -27,30 +36,46 @@ const recentQueries = ref([
   { id: 3, type: 'Acoustic', tone: 'Balanced', date: '2026-03-04' },
 ])
 
+const errorMessage = ref<string | null>(null)
+
 async function generateRecommendations() {
   isGenerating.value = true
-  await new Promise(resolve => setTimeout(resolve, 1500))
+  errorMessage.value = null
 
-  recommendations.value = {
-    tonewoods: [
-      { name: 'Sitka Spruce Top', reason: 'Excellent dynamic range for fingerstyle', score: 95 },
-      { name: 'Indian Rosewood Back/Sides', reason: 'Rich overtones, warm fundamental', score: 92 },
-      { name: 'Mahogany Neck', reason: 'Stable, warm sustain', score: 88 },
-      { name: 'Ebony Fingerboard', reason: 'Articulate attack, durability', score: 90 },
-    ],
-    design: [
-      { feature: 'Body Shape', suggestion: 'OM or 000 for balanced response' },
-      { feature: 'Scale Length', suggestion: '25.4" for warm tone with good tension' },
-      { feature: 'Bracing', suggestion: 'Scalloped X-bracing for responsiveness' },
-      { feature: 'Soundhole', suggestion: 'Standard 4" with decorative rosette' },
-    ],
-    hardware: [
-      { item: 'Tuners', recommendation: 'Gotoh 510 or equivalent' },
-      { item: 'Nut/Saddle', recommendation: 'Bone for clarity and sustain' },
-      { item: 'Bridge Pins', recommendation: 'Ebony to match fingerboard' },
-    ],
+  try {
+    const response = await fetch('/api/ai/recommendations/generate', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        build_type: buildType.value,
+        target_tone: targetTone.value,
+        playing_style: playingStyle.value,
+        budget: budget.value,
+      }),
+    })
+
+    if (!response.ok) {
+      const err = await response.json().catch(() => ({ detail: 'Service unavailable' }))
+      throw new Error(err.detail || `HTTP ${response.status}`)
+    }
+
+    const data = await response.json()
+    recommendations.value = {
+      tonewoods: data.tonewoods,
+      design: data.design,
+      hardware: data.hardware,
+    }
+
+    // E-5: Emit analysis_completed for agentic spine
+    emitAnalysisCompleted(['recommendations_v1'])
+
+  } catch (err) {
+    errorMessage.value = err instanceof Error ? err.message : 'Failed to generate recommendations'
+    // E-5: Emit analysis_failed for agentic spine
+    emitAnalysisFailed(errorMessage.value, 'RECOMMENDATIONS_ERROR')
+  } finally {
+    isGenerating.value = false
   }
-  isGenerating.value = false
 }
 </script>
 

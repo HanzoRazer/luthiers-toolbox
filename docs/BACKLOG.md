@@ -199,6 +199,80 @@ where θ_target comes from action at the 12th fret via:
 
 ---
 
+## CALC-001 — side_bending_calc physics version migration
+
+**Status:** TODO (requires test updates)
+**Priority:** Low
+**Effort:** ~2 hours
+**Source:** Uploaded file `files - 2026-03-21T123917.995/side_bending_calc.py`
+
+### Problem
+
+The physics-based `side_bending_calc.py` (1,039 lines) has breaking changes:
+- Temperature values derived from physics (171°C vs hardcoded 150°C)
+- Species keys are normalized (`mahogany_honduran` vs `mahogany`)
+- Note text uses physics terminology
+
+### Blocked By
+
+6 test failures in `test_side_bending_calc.py`:
+- Temperature assertions need updating
+- Species name assertions need updating
+- Note content assertions need updating
+
+### Migration Path
+
+1. Copy physics version to `side_bending_calc_physics.py`
+2. Update 6 failing tests to match physics output
+3. Swap files once tests pass
+
+---
+
+## DECOMP-001 — instrument_geometry_router decomposition
+
+**Status:** TODO (separate sprint)
+**Priority:** Medium
+**Effort:** ~1 day
+**Source:** Uploaded file 
+### Problem
+
+The uploaded \ (1,915 lines) consolidates geometry endpoints
+but should NOT be merged as-is. It imports from 13 calculators, several of which also
+need attention:
+
+| Calculator | Lines | Status |
+|------------|-------|--------|
+| soundhole_calc.py | 2,544 | 🔴 MEGA — split first |
+| side_bending_calc.py | 1,058 | ⚠️ Over threshold |
+| build_sequence.py | 1,053 | ⚠️ Over threshold |
+| electronics_layout_calc.py | 543 | ⚠️ Slightly over |
+| fret_wire_calc.py | 417 | ✓ OK |
+| voicing_history_calc.py | 385 | ✓ OK |
+| fret_leveling_calc.py | 316 | ✓ OK |
+| wood_movement_calc.py | 306 | ✓ OK |
+| nut_compensation_calc.py | 294 | ✓ OK |
+| bridge_calc.py | 284 | ✓ OK |
+| nut_comp_calc.py | 272 | ✓ OK |
+| setup_cascade.py | 268 | ✓ OK |
+| nut_slot_calc.py | 260 | ✓ OK |
+| neck_block_calc.py | 228 | ✓ OK |
+
+### Implementation Plan
+
+1. **Phase 1:** Split \ (2,544 → ~3 modules)
+2. **Phase 2:** Split \ (1,058 → physics + handlers)
+3. **Phase 3:** Split \ (1,053 → stages as separate modules)
+4. **Phase 4:** Decompose router into ~5 domain routers:
+   - \ (side bending, wood movement)
+   - \ (soundhole calc)
+   - \ (fret leveling, fret wire, nut slots, nut comp)
+   - \ (build sequence, voicing, setup cascade)
+   - \ (electronics layout)
+
+**Do NOT merge the 1,915-line file directly.** Split first.
+
+---
+
 ## Notes on how this backlog works
 
 Each item here was identified by reading code, not by speculation.
