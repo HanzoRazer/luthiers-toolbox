@@ -22,7 +22,7 @@ from typing import Any, Dict, List
 from ezdxf import readfile as dxf_readfile
 from fastapi import APIRouter, File, Form, HTTPException, UploadFile
 
-from ..adaptive_schemas import Loop, PlanIn
+from app.schemas.adaptive_schemas import Loop, PlanIn
 from .plan_router import plan
 
 # Import validation gate for mandatory pre-export validation
