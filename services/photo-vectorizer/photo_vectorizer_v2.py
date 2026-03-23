@@ -361,6 +361,76 @@ INSTRUMENT_SPECS: Dict[str, Dict[str, Any]] = {
 # The image gives us SHAPE. The user gives us SCALE.
 # When they conflict, TRUTH wins.
 
+# ── AI Path Spec Loader ─────────────────────────────────────────────────────
+# Uses body_dimension_reference.json (14 specs) instead of INSTRUMENT_SPECS (7)
+
+_AI_SPEC_CACHE: Optional[Dict[str, Dict[str, Any]]] = None
+
+def _load_ai_specs() -> Dict[str, Dict[str, Any]]:
+    """
+    Load body_dimension_reference.json and convert to AI path format.
+
+    Returns dict mapping spec_name -> {"body": (length_mm, width_mm), ...}
+    Falls back to INSTRUMENT_SPECS if JSON not found.
+    """
+    global _AI_SPEC_CACHE
+    if _AI_SPEC_CACHE is not None:
+        return _AI_SPEC_CACHE
+
+    json_path = Path(__file__).parent / "body_dimension_reference.json"
+    if not json_path.exists():
+        logger.warning(f"body_dimension_reference.json not found, using INSTRUMENT_SPECS")
+        _AI_SPEC_CACHE = INSTRUMENT_SPECS
+        return _AI_SPEC_CACHE
+
+    try:
+        with open(json_path) as f:
+            raw = json.load(f)
+
+        specs: Dict[str, Dict[str, Any]] = {}
+        for name, data in raw.items():
+            if name.startswith("_"):
+                continue  # Skip _comment, _fields
+            if not isinstance(data, dict):
+                continue
+
+            body_length = data.get("body_length_mm", 0)
+            body_width = data.get("lower_bout_width_mm", 0)
+
+            if body_length > 0 and body_width > 0:
+                specs[name] = {
+                    "body": (body_length, body_width),
+                    "family": data.get("family", "unknown"),
+                    "upper_bout_mm": data.get("upper_bout_width_mm"),
+                    "waist_mm": data.get("waist_width_mm"),
+                    "waist_y_norm": data.get("waist_y_norm"),
+                }
+
+        logger.info(f"Loaded {len(specs)} specs from body_dimension_reference.json")
+        _AI_SPEC_CACHE = specs
+        return _AI_SPEC_CACHE
+
+    except Exception as e:
+        logger.warning(f"Failed to load body_dimension_reference.json: {e}")
+        _AI_SPEC_CACHE = INSTRUMENT_SPECS
+        return _AI_SPEC_CACHE
+
+
+def get_ai_spec(spec_name: str) -> Optional[Dict[str, Any]]:
+    """Get spec for AI path, with case-insensitive lookup."""
+    specs = _load_ai_specs()
+
+    # Exact match
+    if spec_name in specs:
+        return specs[spec_name]
+
+    # Case-insensitive match
+    for k, v in specs.items():
+        if k.lower() == spec_name.lower():
+            return v
+
+    return None
+
 @dataclass
 class ExtractedShape:
     """The shape extracted from an AI image (in pixel coordinates)."""
@@ -4416,21 +4486,14 @@ class PhotoVectorizerV2:
         result = PhotoExtractionResult(source_path=str(source))
         result.input_type = InputType.AI_GENERATED  # Mark as AI path
 
-        # Get spec for scaling
-        spec = None
-        if spec_name and spec_name in INSTRUMENT_SPECS:
-            spec = INSTRUMENT_SPECS[spec_name]
-        elif spec_name:
-            # Try case-insensitive match
-            for k, v in INSTRUMENT_SPECS.items():
-                if k.lower() == spec_name.lower():
-                    spec = v
-                    break
+        # Get spec for scaling (uses body_dimension_reference.json with 14 specs)
+        spec = get_ai_spec(spec_name) if spec_name else None
 
         if spec is None:
+            ai_specs = _load_ai_specs()
             result.warnings.append(
                 f"AI path requires spec_name for scaling. "
-                f"Available: {list(INSTRUMENT_SPECS.keys())}"
+                f"Available: {list(ai_specs.keys())}"
             )
             return result
 
