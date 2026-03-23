@@ -4463,7 +4463,7 @@ class PhotoVectorizerV2:
         scale_factor = target_height / shape.height_px
         calibration = CalibrationResult(
             mm_per_px=scale_factor,
-            source=CalibrationSource.SPEC_OVERRIDE,
+            source=ScaleSource.INSTRUMENT_SPEC,
             confidence=validation.overall_confidence,
         )
         result.calibration = calibration
@@ -4472,7 +4472,7 @@ class PhotoVectorizerV2:
         body_contour = FeatureContour(
             points_px=shape.contour,
             points_mm=scaled_contour,
-            feature_type=FeatureType.BODY,
+            feature_type=FeatureType.BODY_OUTLINE,
             confidence=shape.confidence,
             area_px=shape.area_px,
         )
@@ -4486,8 +4486,8 @@ class PhotoVectorizerV2:
 
         if export_dxf:
             dxf_path = str(out_dir / f"{source.stem}_ai_v3.dxf")
-            features = {FeatureType.BODY: [body_contour]}
-            if write_features_dxf(features, dxf_path, calibration, self.dxf_version):
+            contours_by_layer = {"BODY_OUTLINE": [scaled_contour]}
+            if write_dxf(contours_by_layer, dxf_path, self.dxf_version):
                 result.output_dxf = dxf_path
                 logger.info(f"AI DXF written: {dxf_path}")
 

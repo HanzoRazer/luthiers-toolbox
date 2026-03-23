@@ -44,7 +44,7 @@ from typing import Dict, List, Optional
 
 # ── Path setup ─────────────────────────────────────────────────────────────────
 THIS_DIR = Path(__file__).parent
-VECTORIZER_DIR = THIS_DIR  # sandbox lives alongside the pipeline files
+VECTORIZER_DIR = THIS_DIR / "services" / "photo-vectorizer"
 sys.path.insert(0, str(VECTORIZER_DIR))
 
 # ── Check dependencies ─────────────────────────────────────────────────────────
