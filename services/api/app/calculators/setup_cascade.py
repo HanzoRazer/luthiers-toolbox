@@ -14,8 +14,11 @@ Dependency chain:
 
 from __future__ import annotations
 
+import logging
 from dataclasses import dataclass, field
 from typing import Dict, List, Optional, Tuple
+
+logger = logging.getLogger(__name__)
 
 # Optional: use neck_angle for gate check
 try:
@@ -24,7 +27,7 @@ try:
         compute_neck_angle,
     )
     NECK_ANGLE_AVAILABLE = True
-except Exception:  # audited: optional-sgspec-import
+except ImportError:
     NECK_ANGLE_AVAILABLE = False
 
 
@@ -130,8 +133,12 @@ def evaluate_setup(state: SetupState) -> SetupCascadeResult:
                     gate=res.gate,
                     fix=res.message,
                 ))
-        except Exception:  # audited: optional-sgspec-import
-            pass  # skip if geometry fails
+        except (ValueError, TypeError, AttributeError, ZeroDivisionError) as e:
+            logger.warning(
+                "Neck angle geometry computation failed: %s: %s. Falling back to direct check.",
+                type(e).__name__, e
+            )
+            # Fall through to fallback check below
     else:
         # Fallback: check state.neck_angle_deg directly
         if state.neck_angle_deg < 0.5 or state.neck_angle_deg > 5.0:

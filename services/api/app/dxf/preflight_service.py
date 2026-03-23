@@ -1,4 +1,5 @@
 """DXF Preflight validation service - extracted from dxf_preflight_router.py."""
+import logging
 from pathlib import Path
 from typing import List, Dict, Optional, Any
 import math
@@ -6,6 +7,8 @@ import re
 import tempfile
 
 from fastapi import HTTPException
+
+logger = logging.getLogger(__name__)
 
 try:
     import ezdxf
@@ -152,8 +155,11 @@ def _compute_bounds(doc: "Drawing") -> Optional[Dict[str, float]]:
                 "min_y": ext.extmin.y,
                 "max_y": ext.extmax.y,
             }
-    except Exception:  # audited: preflight-best-effort
-        pass
+    except (ValueError, TypeError, AttributeError, RuntimeError) as e:
+        logger.debug(
+            "DXF bounds computation failed: %s: %s",
+            type(e).__name__, e
+        )
     return None
 
 

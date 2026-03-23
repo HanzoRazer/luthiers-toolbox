@@ -10,6 +10,8 @@ This module enables:
 
 from __future__ import annotations
 
+import logging
+
 import json
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -17,6 +19,8 @@ from typing import Any, Dict, Iterator, List, Optional
 
 from .moments import detect_moments
 from .schemas import DetectedMoment, CRITICAL_MOMENTS, AttentionDirective, PolicyDecision, PolicyDiagnostic
+
+logger = logging.getLogger(__name__)
 
 # Module is now implemented
 IMPLEMENTED = True
@@ -150,8 +154,12 @@ def run_shadow_replay(
         moments: List[DetectedMoment] = []
         try:
             moments = detect_moments(session_events)
-        except Exception:  # audited: moment-detection-fallback
-            pass
+        except (ValueError, TypeError, KeyError, AttributeError) as e:
+            logger.warning(
+                "Moment detection failed for session %s: %s: %s",
+                session_id, type(e).__name__, e
+            )
+            # moments stays empty list - fail-safe
 
         # Apply grace selection if enabled
         selected_moment = None

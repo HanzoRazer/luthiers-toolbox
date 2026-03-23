@@ -10,6 +10,8 @@ The context packet is truncated to max_tokens to fit within LLM context windows.
 """
 from __future__ import annotations
 
+import logging
+
 import json
 import re
 import uuid
@@ -17,6 +19,8 @@ from pathlib import Path
 from typing import Any, Optional
 
 # Data file paths relative to app directory
+logger = logging.getLogger(__name__)
+
 APP_DIR = Path(__file__).resolve().parent.parent
 
 MATERIAL_DB_PATH = APP_DIR / "assets" / "material_db.json"
@@ -87,7 +91,11 @@ def _get_project_data(project_id: str, owner_user_id: Optional[str] = None) -> d
                 "spec": spec,
             }
             return out
-    except Exception:  # audited: context-fetch-fallback
+    except (ValueError, TypeError, KeyError, AttributeError, OSError) as e:
+        logger.warning(
+            "Project data fetch failed for project_id=%s: %s: %s",
+            project_id, type(e).__name__, e
+        )
         return {}
 
 
