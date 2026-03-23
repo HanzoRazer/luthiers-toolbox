@@ -133,4 +133,13 @@ BUSINESS_ROUTERS: List[RouterSpec] = [
         tags=["Instruments", "Geometry", "Physics", "Calculators"],
         category="instrument_geometry_v2",
     ),
+    # ── Photo Vectorizer: Photo/AI image to vector outline ──
+    # Standalone capability for importing from photographs or AI-generated images.
+    # Does NOT replace Phase 2/3 blueprint workflow — additive "Photo Import" feature.
+    RouterSpec(
+        module="app.routers.photo_vectorizer_router",
+        prefix="/api/vectorizer",
+        tags=["Vectorizer", "Photo Import"],
+        category="blueprint",
+    ),
 ]
