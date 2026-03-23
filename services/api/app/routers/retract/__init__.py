@@ -11,6 +11,8 @@ Sub-modules:
 
 Total: 8 routes under /api/retract
 """
+from pydantic import BaseModel
+
 from .retract_consolidated_router import (
     router,
     info_router,
@@ -26,6 +28,14 @@ from .retract_consolidated_router import (
     LeadInPatternOut,
 )
 
+
+class Point3DModel(BaseModel):
+    """3D point model."""
+    x: float
+    y: float
+    z: float
+
+
 __all__ = [
     # Main router
     "router",
@@ -34,6 +44,7 @@ __all__ = [
     "apply_router",
     "gcode_router",
     # Models
+    "Point3DModel",
     "StrategyListOut",
     "TimeSavingsIn",
     "TimeSavingsOut",
