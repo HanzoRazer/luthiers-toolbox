@@ -133,10 +133,12 @@ def emit_segment_with_params(segment: dict, params: Dict[str, Any]) -> List[str]
         # Calculate I and J offsets
         i = cx - x1
         j = cy - y1
-        
-        # Determine arc direction (G2 CW or G3 CCW)
-        # For now, use G3 (CCW) as default
-        lines.append(f"G3 X{x2:.4f} Y{y2:.4f} I{i:.4f} J{j:.4f} F{feed_rate}")
+
+        # Determine arc direction using cross-product
+        # cross > 0 means CCW (G3), cross < 0 means CW (G2)
+        cross = (x2 - x1) * (cy - y1) - (y2 - y1) * (cx - x1)
+        arc_cmd = "G2" if cross < 0 else "G3"
+        lines.append(f"{arc_cmd} X{x2:.4f} Y{y2:.4f} I{i:.4f} J{j:.4f} F{feed_rate}")
     
     else:
         lines.append(f"(Unknown segment type: {seg_type})")
