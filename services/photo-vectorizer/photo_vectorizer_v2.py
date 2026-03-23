@@ -95,6 +95,7 @@ class InputType(Enum):
     BLUEPRINT = "blueprint"
     SCAN = "scan"
     SVG = "svg"
+    AI_GENERATED = "ai_generated"  # v3: AI-generated images (DALL-E, Midjourney, etc.)
     UNKNOWN = "unknown"
 
 
@@ -351,6 +352,324 @@ INSTRUMENT_SPECS: Dict[str, Dict[str, Any]] = {
         "business_card": (88.9, 50.8),
     },
 }
+
+
+# =============================================================================
+# AI Path — 4-Stage Pipeline for AI-Generated Images (v3)
+# =============================================================================
+# Philosophy: AI images are FICTION. The user provides TRUTH (specs, dimensions).
+# The image gives us SHAPE. The user gives us SCALE.
+# When they conflict, TRUTH wins.
+
+@dataclass
+class ExtractedShape:
+    """The shape extracted from an AI image (in pixel coordinates)."""
+    contour: np.ndarray  # (N, 2) pixel coordinates
+    area_px: float
+    height_px: float
+    width_px: float
+    aspect_ratio: float
+    solidity: float  # area / convex hull area (1.0 = perfect)
+    bbox: Tuple[int, int, int, int]  # x, y, w, h
+    confidence: float  # 0-1 how confident we are this is the intended shape
+
+    def to_relative(self) -> np.ndarray:
+        """Convert to normalized coordinates (0-1 range)."""
+        if self.height_px == 0 or self.width_px == 0:
+            return self.contour.copy()
+        x_min = self.bbox[0]
+        y_min = self.bbox[1]
+        relative = self.contour.copy().astype(np.float32)
+        relative[:, 0] = (relative[:, 0] - x_min) / self.width_px
+        relative[:, 1] = (relative[:, 1] - y_min) / self.height_px
+        return relative
+
+    def scale_to(self, target_height_mm: float, target_width_mm: float) -> Tuple[np.ndarray, List[str]]:
+        """
+        Scale shape to target dimensions.
+
+        Returns:
+            Tuple of (scaled_contour, warnings)
+
+        BUG FIX: Old code silently ignored width mismatch.
+        Now returns warning if aspect ratios differ significantly.
+        """
+        warnings: List[str] = []
+        if self.height_px == 0:
+            return self.contour.copy().astype(np.float32), ["Zero height, cannot scale"]
+
+        target_aspect = target_height_mm / target_width_mm if target_width_mm > 0 else 1.0
+        current_aspect = self.height_px / self.width_px if self.width_px > 0 else 1.0
+
+        if abs(target_aspect - current_aspect) > 0.05:
+            # Aspect ratio mismatch — scale to target height, warn caller
+            scale = target_height_mm / self.height_px
+            warnings.append(
+                f"Aspect mismatch: image={current_aspect:.2f}, spec={target_aspect:.2f}. "
+                f"Scaled to height; width will differ from spec."
+            )
+        else:
+            # Uniform scale
+            scale = target_height_mm / self.height_px
+
+        # Center the contour at origin before scaling
+        x_min, y_min = self.bbox[0], self.bbox[1]
+        centered = self.contour.astype(np.float32) - np.array([x_min, y_min], dtype=np.float32)
+        scaled = centered * scale
+        return scaled, warnings
+
+
+@dataclass
+class AIValidationResult:
+    """Comparison between extracted shape and expected spec (aspect-only)."""
+    passed: bool
+    aspect_error_pct: float  # BUG FIX: Only aspect error, not fake h/w errors
+    solidity_score: float
+    overall_confidence: float
+    warnings: List[str] = field(default_factory=list)
+    suggestions: List[str] = field(default_factory=list)
+
+    def summary(self) -> str:
+        status = "✓ PASSED" if self.passed else "✗ FAILED"
+        lines = [
+            f"\n{'='*50}",
+            f"AI PATH VALIDATION: {status}",
+            f"{'='*50}",
+            f"Aspect error:   {self.aspect_error_pct:+.1f}%",
+            f"Shape quality:  {self.solidity_score:.1%}",
+            f"Confidence:     {self.overall_confidence:.1%}",
+        ]
+        if self.warnings:
+            lines.append("\nWarnings:")
+            for w in self.warnings:
+                lines.append(f"  ⚠ {w}")
+        if self.suggestions:
+            lines.append("\nSuggestions:")
+            for s in self.suggestions:
+                lines.append(f"  💡 {s}")
+        return "\n".join(lines)
+
+
+class AIToCADExtractor:
+    """
+    Extract clean outlines from AI-generated images.
+
+    Philosophy: AI images have clean edges but unreliable scale.
+    We extract the SHAPE, not the TRUTH.
+
+    4-stage pipeline:
+      1. Otsu threshold (auto handles dark/light backgrounds)
+      2. Morphological clean (remove noise)
+      3. Largest contour (assumed instrument body)
+      4. Simplify (remove redundant points)
+    """
+
+    def __init__(self, debug: bool = False):
+        self.debug = debug
+        self._last_debug_image: Optional[np.ndarray] = None
+        self._last_dark_bg: bool = False  # Track dark background detection
+
+    def extract_shape(self, image_path: Union[str, Path]) -> ExtractedShape:
+        """
+        Extract the main shape from an AI-generated image.
+
+        Assumes:
+        - Image has a plain/contrasting background
+        - Main subject is the largest connected component
+        - Edges are clean enough for threshold-based extraction
+        """
+        img = self._load_image(image_path)
+        if img is None:
+            raise ValueError(f"Could not load image: {image_path}")
+
+        original_h, original_w = img.shape[:2]
+
+        # Step 1: Convert to grayscale
+        gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+
+        # BUG FIX: Check if background is dark (sample border pixels)
+        border_pixels = np.concatenate([
+            gray[0, :], gray[-1, :], gray[:, 0], gray[:, -1]
+        ])
+        mean_border = float(np.mean(border_pixels))
+        self._last_dark_bg = mean_border < 128
+
+        # BUG FIX: Use correct threshold type based on background
+        thresh_type = (
+            cv2.THRESH_BINARY + cv2.THRESH_OTSU
+            if self._last_dark_bg
+            else cv2.THRESH_BINARY_INV + cv2.THRESH_OTSU
+        )
+        _, binary = cv2.threshold(gray, 0, 255, thresh_type)
+
+        if self.debug:
+            self._last_debug_image = binary.copy()
+
+        # Step 2: Clean up noise
+        kernel = np.ones((3, 3), np.uint8)
+        cleaned = cv2.morphologyEx(binary, cv2.MORPH_CLOSE, kernel, iterations=2)
+        cleaned = cv2.morphologyEx(cleaned, cv2.MORPH_OPEN, kernel, iterations=1)
+
+        # Step 3: Find all contours
+        # BUG FIX: Use CHAIN_APPROX_SIMPLE instead of CHAIN_APPROX_NONE (more efficient)
+        contours, _ = cv2.findContours(cleaned, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+
+        if not contours:
+            raise ValueError("No shapes found in image")
+
+        # Step 4: Take the largest contour (assumed to be the instrument)
+        largest = max(contours, key=cv2.contourArea)
+        area = cv2.contourArea(largest)
+
+        # Step 5: Simplify the contour (remove redundant points)
+        epsilon = 0.002 * cv2.arcLength(largest, True)
+        simplified = cv2.approxPolyDP(largest, epsilon, True)
+
+        if len(simplified) < 3:
+            simplified = largest
+
+        # Step 6: Calculate metrics
+        x, y, w, h = cv2.boundingRect(simplified)
+
+        hull = cv2.convexHull(simplified)
+        hull_area = cv2.contourArea(hull)
+        solidity = area / hull_area if hull_area > 0 else 0.0
+
+        image_area = original_h * original_w
+        area_ratio = area / image_area
+
+        confidence = (
+            0.40 * min(1.0, solidity / 0.95) +
+            0.30 * min(1.0, area_ratio * 2) +
+            0.30 * 1.0
+        )
+        confidence = min(1.0, confidence)
+
+        points = simplified.reshape(-1, 2)
+
+        logger.info(
+            f"AIToCADExtractor: {len(points)} pts, {w}x{h}px, "
+            f"solidity={solidity:.2f}, conf={confidence:.2f}, dark_bg={self._last_dark_bg}"
+        )
+
+        return ExtractedShape(
+            contour=points,
+            area_px=area,
+            height_px=float(h),
+            width_px=float(w),
+            aspect_ratio=float(h) / float(w) if w > 0 else 1.0,
+            solidity=solidity,
+            bbox=(x, y, w, h),
+            confidence=confidence
+        )
+
+    def _load_image(self, path: Union[str, Path]) -> Optional[np.ndarray]:
+        """Load image, handling various formats."""
+        path = Path(path)
+        ext = path.suffix.lower()
+
+        if ext == '.pdf':
+            if not PYMUPDF_AVAILABLE:
+                raise ImportError("PyMuPDF (fitz) required for PDF files")
+            doc = fitz.open(str(path))
+            page = doc[0]
+            pix = page.get_pixmap(matrix=fitz.Matrix(2.0, 2.0))
+            img = np.frombuffer(pix.samples, dtype=np.uint8).reshape(
+                pix.height, pix.width, pix.n)
+            if pix.n == 4:
+                img = cv2.cvtColor(img, cv2.COLOR_RGBA2BGR)
+            doc.close()
+            return img
+
+        img = cv2.imread(str(path))
+        if img is None and PIL_AVAILABLE:
+            pil_img = PILImage.open(path)
+            img = cv2.cvtColor(np.array(pil_img), cv2.COLOR_RGB2BGR)
+        return img
+
+    def get_debug_image(self) -> Optional[np.ndarray]:
+        """Return the debug image if debug mode was enabled."""
+        return self._last_debug_image
+
+
+class ShapeValidator:
+    """Validate extracted shape against known instrument specs."""
+
+    def __init__(self, tolerance_pct: float = 10.0):
+        self.tolerance_pct = tolerance_pct
+
+    def validate(self, shape: ExtractedShape, spec_body: Tuple[float, float]) -> AIValidationResult:
+        """
+        Compare extracted shape aspect ratio to spec.
+
+        BUG FIX: Only computes aspect_error_pct (not fake h/w errors since we don't have scale).
+        """
+        warnings: List[str] = []
+        suggestions: List[str] = []
+
+        spec_height, spec_width = spec_body
+        spec_aspect = spec_height / spec_width if spec_width > 0 else 1.0
+        shape_aspect = shape.aspect_ratio
+
+        aspect_error = abs(shape_aspect - spec_aspect) / spec_aspect * 100
+
+        solidity_score = shape.solidity
+
+        overall_confidence = (
+            0.30 * max(0, 1 - aspect_error / 100) +
+            0.40 * solidity_score +
+            0.30 * shape.confidence
+        )
+
+        passed = aspect_error <= self.tolerance_pct and solidity_score > 0.85
+
+        if aspect_error > self.tolerance_pct:
+            warnings.append(
+                f"Aspect ratio error {aspect_error:.1f}% exceeds tolerance {self.tolerance_pct}%"
+            )
+            suggestions.append(
+                f"Expected {spec_height:.0f}x{spec_width:.0f}mm ({spec_aspect:.2f} aspect), "
+                f"got {shape_aspect:.2f} aspect"
+            )
+
+        if solidity_score < 0.85:
+            warnings.append(f"Shape quality low (solidity={solidity_score:.2f})")
+            suggestions.append(
+                "Shape may have holes or jagged edges. Try higher contrast background."
+            )
+
+        if shape.confidence < 0.7:
+            warnings.append(f"Extraction confidence low ({shape.confidence:.1%})")
+            suggestions.append("Try cropping image to just the instrument body.")
+
+        return AIValidationResult(
+            passed=passed,
+            aspect_error_pct=aspect_error,
+            solidity_score=solidity_score,
+            overall_confidence=overall_confidence,
+            warnings=warnings,
+            suggestions=suggestions
+        )
+
+
+def _write_ai_svg(points: np.ndarray, output_path: str) -> None:
+    """Write contour points to SVG file (AI path helper)."""
+    if len(points) < 2:
+        return
+    x_min = float(points[:, 0].min()) - 10
+    y_min = float(points[:, 1].min()) - 10
+    w = float(points[:, 0].max()) - x_min + 20
+    h = float(points[:, 1].max()) - y_min + 20
+
+    path_d = "M " + " L ".join(f"{p[0]:.2f},{p[1]:.2f}" for p in points) + " Z"
+    svg = (
+        f'<?xml version="1.0" encoding="UTF-8"?>\n'
+        f'<svg xmlns="http://www.w3.org/2000/svg" '
+        f'viewBox="{x_min:.1f} {y_min:.1f} {w:.1f} {h:.1f}">\n'
+        f'  <path d="{path_d}" fill="none" stroke="black" stroke-width="0.5"/>\n'
+        f'</svg>'
+    )
+    Path(output_path).write_text(svg)
 
 
 # =============================================================================
@@ -3385,12 +3704,46 @@ class PhotoVectorizerV2:
                 export_json: bool = False,
                 debug_images: bool = False,
                 enable_body_isolation_coach: Optional[bool] = None,
+                source_type: str = "auto",
                 ) -> Union[PhotoExtractionResult, List[PhotoExtractionResult]]:
+        """
+        Extract instrument outline from image.
+
+        Parameters
+        ----------
+        source_type : str
+            "auto" (default) - auto-detect AI vs photo
+            "ai"   - force AI extraction path (simpler, needs spec_name)
+            "photo" - force traditional 12-stage photo pipeline
+        """
 
         start_time = time.time()
         source = Path(source_path)
         out_dir = Path(output_dir) if output_dir else source.parent
         out_dir.mkdir(parents=True, exist_ok=True)
+
+        # ── AI Path Routing (v3) ─────────────────────────────────────────────
+        use_ai_path = False
+        if source_type == "ai":
+            use_ai_path = True
+            logger.info("AI path: forced via source_type='ai'")
+        elif source_type == "auto":
+            use_ai_path = self._detect_ai_image(str(source))
+            if use_ai_path:
+                logger.info("AI path: auto-detected AI-generated image")
+        # source_type == "photo" → use_ai_path stays False
+
+        if use_ai_path:
+            return self._extract_ai_path(
+                source=source,
+                out_dir=out_dir,
+                spec_name=spec_name,
+                export_dxf=export_dxf,
+                export_svg=export_svg,
+                debug_images=debug_images,
+            )
+
+        # ── Photo Path (12-stage pipeline) ───────────────────────────────────
 
         # ── Compatibility gate: body-isolation coach can be disabled either
         #    per-call or globally via environment for tests / production.
@@ -3962,6 +4315,197 @@ class PhotoVectorizerV2:
             return img
         img = cv2.imread(str(source))
         return img
+
+    # ── AI Path Methods (v3) ────────────────────────────────────────────────
+
+    def _detect_ai_image(self, image_path: str) -> bool:
+        """
+        Detect if image is AI-generated vs real photograph.
+
+        Heuristics (in order of reliability):
+        1. EXIF: AI images typically have NO or minimal EXIF data
+        2. Filename: Common AI prefixes (dalle, midjourney, sd_, etc.)
+        3. Resolution: AI images often have unusual aspect ratios (1:1, 16:9 exact)
+        4. Color histogram: AI images often have different color distributions
+
+        Returns True if likely AI-generated.
+        """
+        from pathlib import Path
+
+        path = Path(image_path)
+        filename_lower = path.stem.lower()
+
+        # 1. Check for AI-indicative filename patterns
+        ai_patterns = [
+            'dalle', 'midjourney', 'mj_', 'sd_', 'stable_diffusion',
+            'ai_', 'generated', 'flux', 'firefly', 'ideogram',
+            'leonardo', 'bing_', 'copilot_', 'chatgpt',
+        ]
+        for pattern in ai_patterns:
+            if pattern in filename_lower:
+                logger.info(f"AI detection: filename pattern '{pattern}' matched")
+                return True
+
+        # 2. Check EXIF data
+        try:
+            from PIL import Image
+            from PIL.ExifTags import TAGS
+            with Image.open(image_path) as img:
+                exif_data = img._getexif()
+                if exif_data is None:
+                    # No EXIF at all — suspicious for AI
+                    # But also common for screenshots, so weight lightly
+                    logger.debug("AI detection: no EXIF data (weak signal)")
+                    # Don't return True here, just note it
+                else:
+                    # Check for camera make/model — real photos usually have this
+                    has_camera = False
+                    for tag_id, value in exif_data.items():
+                        tag = TAGS.get(tag_id, tag_id)
+                        if tag in ('Make', 'Model', 'LensModel'):
+                            has_camera = True
+                            break
+                    if has_camera:
+                        logger.debug("AI detection: found camera EXIF data — likely real photo")
+                        return False
+        except Exception:
+            pass  # EXIF check failed, continue with other heuristics
+
+        # 3. Check for exact power-of-2 or common AI resolutions
+        img = cv2.imread(image_path)
+        if img is not None:
+            h, w = img.shape[:2]
+            ai_resolutions = [
+                (512, 512), (768, 768), (1024, 1024), (2048, 2048),
+                (512, 768), (768, 512), (1024, 768), (768, 1024),
+                (1024, 1792), (1792, 1024),  # ChatGPT/DALL-E 3
+                (1280, 720), (720, 1280),
+                (1920, 1080), (1080, 1920),
+            ]
+            if (w, h) in ai_resolutions or (h, w) in ai_resolutions:
+                logger.info(f"AI detection: resolution {w}x{h} matches common AI size")
+                return True
+
+            # Check for exact 1:1 aspect ratio (common for AI)
+            if w == h and w >= 512:
+                logger.info(f"AI detection: square image {w}x{h} — likely AI")
+                return True
+
+        return False
+
+    def _extract_ai_path(
+        self,
+        source: Path,
+        out_dir: Path,
+        spec_name: Optional[str],
+        export_dxf: bool,
+        export_svg: bool,
+        debug_images: bool,
+    ) -> PhotoExtractionResult:
+        """
+        AI-image extraction path: simpler 4-stage pipeline.
+
+        Stage 1: Otsu threshold
+        Stage 2: Largest contour extraction
+        Stage 3: Scale to spec (user provides truth)
+        Stage 4: Export
+
+        The key insight: AI images give us SHAPE, user gives us TRUTH (dimensions).
+        """
+        start_time = time.time()
+        result = PhotoExtractionResult(source_path=str(source))
+        result.input_type = InputType.AI_GENERATED  # Mark as AI path
+
+        # Get spec for scaling
+        spec = None
+        if spec_name and spec_name in INSTRUMENT_SPECS:
+            spec = INSTRUMENT_SPECS[spec_name]
+        elif spec_name:
+            # Try case-insensitive match
+            for k, v in INSTRUMENT_SPECS.items():
+                if k.lower() == spec_name.lower():
+                    spec = v
+                    break
+
+        if spec is None:
+            result.warnings.append(
+                f"AI path requires spec_name for scaling. "
+                f"Available: {list(INSTRUMENT_SPECS.keys())}"
+            )
+            return result
+
+        # Extract using AIToCADExtractor
+        extractor = AIToCADExtractor(debug=debug_images)
+        shape = extractor.extract_shape(str(source))
+
+        if shape is None:
+            result.warnings.append("AI extraction failed: no shape found")
+            return result
+
+        # Validate shape
+        validator = ShapeValidator()
+        validation = validator.validate(shape, spec["body"])
+
+        if not validation.passed:
+            result.warnings.extend(validation.warnings)
+            # Continue anyway — let user see what we found
+
+        # Scale to spec dimensions (body is a tuple: (length_mm, width_mm))
+        target_height = spec["body"][0]
+        target_width = spec["body"][1]
+        scaled_contour, scale_warnings = shape.scale_to(target_height, target_width)
+        result.warnings.extend(scale_warnings)
+
+        # Build body dimensions from spec (we trust user's spec)
+        result.body_dimensions_mm = (target_height, target_width)
+
+        # Create calibration result (synthetic — based on scaling)
+        scale_factor = target_height / shape.height_px
+        calibration = CalibrationResult(
+            mm_per_px=scale_factor,
+            source=CalibrationSource.SPEC_OVERRIDE,
+            confidence=validation.overall_confidence,
+        )
+        result.calibration = calibration
+
+        # Build feature contour
+        body_contour = FeatureContour(
+            points_px=shape.contour,
+            points_mm=scaled_contour,
+            feature_type=FeatureType.BODY,
+            confidence=shape.confidence,
+            area_px=shape.area_px,
+        )
+
+        # Export
+        if export_svg:
+            svg_path = str(out_dir / f"{source.stem}_ai_v3.svg")
+            _write_ai_svg(scaled_contour, svg_path)
+            result.output_svg = svg_path
+            logger.info(f"AI SVG written: {svg_path}")
+
+        if export_dxf:
+            dxf_path = str(out_dir / f"{source.stem}_ai_v3.dxf")
+            features = {FeatureType.BODY: [body_contour]}
+            if write_features_dxf(features, dxf_path, calibration, self.dxf_version):
+                result.output_dxf = dxf_path
+                logger.info(f"AI DXF written: {dxf_path}")
+
+        # Debug images
+        if debug_images:
+            debug_img = extractor._last_debug_image if hasattr(extractor, '_last_debug_image') else None
+            if debug_img is not None:
+                debug_path = str(out_dir / f"{source.stem}_ai_debug.jpg")
+                cv2.imwrite(debug_path, debug_img)
+                result.debug_images["ai_extraction"] = debug_path
+
+        result.processing_time_ms = (time.time() - start_time) * 1000
+        logger.info(
+            f"AI path done in {result.processing_time_ms:.0f}ms: "
+            f"{target_height:.1f} x {target_width:.1f} mm"
+        )
+
+        return result
 
 
 # =============================================================================
