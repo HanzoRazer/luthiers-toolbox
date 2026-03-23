@@ -44,6 +44,16 @@ __all__ = [
     "saddle_string_positions",
     "compatibility_check",
     "thread_compatibility",
+    # floyd rose
+    "FR_ORIGINAL",
+    "FloydRoseOriginalDimensions",
+    "FloydRoseRoutingSpec",
+    "FloydRoseSaddleSpec",
+    "compute_routing_spec",
+    "compute_saddle_positions",
+    "floyd_rose_bridge_preset",
+    "floyd_rose_routing_gcode",
+    "radius_match_note",
 ]
 
 from .electric_bridges import (
@@ -57,4 +67,16 @@ from .electric_bridges import (
     compatibility_check,
     thread_compatibility,
     bridge_summary,
+)
+
+from .floyd_rose_tremolo import (
+    FR_ORIGINAL,
+    FloydRoseOriginalDimensions,
+    FloydRoseRoutingSpec,
+    FloydRoseSaddleSpec,
+    compute_routing_spec,
+    compute_saddle_positions,
+    floyd_rose_bridge_preset,
+    floyd_rose_routing_gcode,
+    radius_match_note,
 )
