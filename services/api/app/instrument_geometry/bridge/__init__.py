@@ -34,4 +34,27 @@ __all__ = [
     "compute_bridge_placement",
     # compensation (Wave 14)
     "compute_compensated_bridge",
+    # electric bridges
+    "ELECTRIC_BRIDGES",
+    "ElectricBridgeSpec",
+    "list_electric_bridges",
+    "get_bridge_spec",
+    "get_bridge_preset_dict",
+    "post_hole_positions",
+    "saddle_string_positions",
+    "compatibility_check",
+    "thread_compatibility",
 ]
+
+from .electric_bridges import (
+    ELECTRIC_BRIDGES,
+    ElectricBridgeSpec,
+    list_electric_bridges,
+    get_bridge_spec,
+    get_bridge_preset_dict,
+    post_hole_positions,
+    saddle_string_positions,
+    compatibility_check,
+    thread_compatibility,
+    bridge_summary,
+)
