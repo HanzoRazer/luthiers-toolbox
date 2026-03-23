@@ -46,7 +46,7 @@ async def dxf_to_grbl(
     """
     import ezdxf
     from ..routers.adaptive.plan_router import plan as compute_plan
-    from ..routers.adaptive_schemas import Loop, PlanIn
+    from app.schemas.adaptive_schemas import Loop, PlanIn
 
     run_id = f"RUN-DXF-{uuid.uuid4().hex[:12].upper()}"
     attachments: List[RunAttachment] = []

@@ -18,7 +18,7 @@ from fastapi.responses import StreamingResponse
 
 from app.middleware.rate_limit import limiter, rate_limit_tier
 
-from ..adaptive_schemas import GcodeIn
+from app.schemas.adaptive_schemas import GcodeIn
 from ..geometry_schemas import GcodeExportIn
 from ..geometry.export_router import export_gcode
 

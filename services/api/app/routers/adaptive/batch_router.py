@@ -21,7 +21,7 @@ from datetime import datetime
 from fastapi import APIRouter, HTTPException
 from fastapi.responses import StreamingResponse
 
-from ..adaptive_schemas import (
+from app.schemas.adaptive_schemas import (
     AdaptiveFeedOverride,
     BatchExportIn,
 )

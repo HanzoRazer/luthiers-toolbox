@@ -21,7 +21,7 @@ from fastapi import APIRouter, HTTPException
 # Import canonical geometry functions - NO inline math in routers (Fortran Rule)
 from ...geometry.arc_utils import tessellate_arc_radians
 
-from ..adaptive_schemas import (
+from app.schemas.adaptive_schemas import (
     Loop,
     PlanIn,
     PlanOut,
