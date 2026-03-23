@@ -18,7 +18,7 @@ CAM_ROUTERS: List[RouterSpec] = [
         category="cam_core",
     ),
     RouterSpec(
-        module="app.routers.tooling_router",
+        module="app.routers.tooling",
         prefix="/api/tooling",
         tags=["Tooling"],
         category="cam_core",
@@ -129,7 +129,7 @@ CAM_ROUTERS: List[RouterSpec] = [
         category="saw_lab",
     ),
     RouterSpec(
-        module="app.routers.retract_router",
+        module="app.routers.retract",
         prefix="/api/cam/retract",
         tags=["CAM", "Retract Patterns"],
         category="misc",
