@@ -155,12 +155,12 @@ def _try_cognitive_extraction(
             return None
 
         engine = CognitiveExtractionEngine(
+            image=img,
             grid_size=16,
             max_iterations=5,
             source_type=source_type,
-            spec_name=spec,
         )
-        result = engine.run(img)
+        result = engine.run()
 
         if result.get('bypassed'):
             print(f"  [cognitive] Bypassed: {result.get('bypassed_reason', 'unknown')}")
@@ -246,8 +246,13 @@ def run_single(
         result.error = str(e)
         extraction = None
 
-    # Try cognitive fallback if enabled and standard pipeline failed
-    if extraction is None and use_cognitive:
+    # Try cognitive fallback if enabled and standard pipeline failed or found no features
+    extraction_failed = (
+        extraction is None or
+        not getattr(extraction, 'features', None) or
+        not any(extraction.features.values())
+    )
+    if extraction_failed and use_cognitive:
         print("  [cognitive] Standard pipeline failed, trying cognitive extraction...")
         cog_result = _try_cognitive_extraction(image_path, spec, source_type, debug)
         if cog_result and cog_result.get('contour') is not None:
