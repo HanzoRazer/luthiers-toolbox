@@ -13,6 +13,7 @@ Examples:
     python pv2_sandbox.py "ChatGPT Image Mar 9.png" --spec stratocaster
     python pv2_sandbox.py "Jumbo Tiger.jpg" --bg-method grabcut --tolerance 20
     python pv2_sandbox.py --batch "Guitar Plans/"
+    python pv2_sandbox.py "problem_image.jpg" --cognitive --spec dreadnought
 
 Options:
     --spec          Instrument spec name (smart_guitar, stratocaster, dreadnought, etc.)
@@ -29,6 +30,7 @@ Options:
     --batch         Run on all images in a directory
     --compare       Compare against baseline results (reads sandbox_baseline.json)
     --save-baseline Save current results as new baseline
+    --cognitive     Enable cognitive extraction engine as fallback
 """
 
 from __future__ import annotations
@@ -113,6 +115,10 @@ class SandboxResult:
     dxf_path: Optional[str]
     svg_path: Optional[str]
 
+    # Cognitive extraction
+    cognitive_used: bool = False
+    cognitive_iterations: int = 0
+
 
 def _pct_error(measured: float, expected: float) -> float:
     if expected <= 0:
@@ -130,6 +136,48 @@ def _bg_method(name: str) -> BGRemovalMethod:
     return mapping.get(name.lower(), BGRemovalMethod.AUTO)
 
 
+def _try_cognitive_extraction(
+    image_path: str,
+    spec: Optional[str],
+    source_type: str,
+    debug: bool,
+) -> Optional[dict]:
+    """
+    Attempt cognitive extraction as fallback.
+    Returns dict with 'contour' and metadata, or None on failure.
+    """
+    try:
+        from cognitive_extraction_engine import CognitiveExtractionEngine
+        import cv2
+
+        img = cv2.imread(image_path)
+        if img is None:
+            return None
+
+        engine = CognitiveExtractionEngine(
+            grid_size=16,
+            max_iterations=5,
+            source_type=source_type,
+            spec_name=spec,
+        )
+        result = engine.run(img)
+
+        if result.get('bypassed'):
+            print(f"  [cognitive] Bypassed: {result.get('bypassed_reason', 'unknown')}")
+            return None
+
+        if result.get('contour') is not None:
+            return result
+
+        return None
+    except ImportError:
+        print("  [cognitive] CognitiveExtractionEngine not available")
+        return None
+    except Exception as e:
+        print(f"  [cognitive] Error: {e}")
+        return None
+
+
 def run_single(
     image_path: str,
     spec: Optional[str] = None,
@@ -140,6 +188,7 @@ def run_single(
     debug: bool = False,
     tolerance_pct: float = 30.0,
     source_type: str = "auto",
+    use_cognitive: bool = False,
 ) -> SandboxResult:
     """Run the full pipeline on one image and return a structured result."""
 
@@ -163,6 +212,7 @@ def run_single(
         processing_time_s=0.0, total_features=0,
         feature_breakdown={}, warnings=[],
         dxf_path=None, svg_path=None,
+        cognitive_used=False, cognitive_iterations=0,
     )
 
     # Pull expected dimensions from INSTRUMENT_SPECS if spec given
@@ -173,6 +223,8 @@ def run_single(
         result.expected_w_mm = body[1]
 
     t0 = time.time()
+    extraction = None
+
     try:
         v = PhotoVectorizerV2(bg_method=_bg_method(bg_method))
         extraction = v.extract(
@@ -190,60 +242,93 @@ def run_single(
         if isinstance(extraction, list):
             extraction = extraction[0] if extraction else None
 
-        if extraction is None:
-            result.error = "Pipeline returned None"
-            return result
-
-        result.success = True
-        result.processing_time_s = time.time() - t0
-
-        h, w = extraction.body_dimensions_mm
-        # Normalize: height > width for guitar bodies
-        if w > h:
-            h, w = w, h
-        result.body_h_mm = h
-        result.body_w_mm = w
-
-        result.input_type = extraction.input_type.value if hasattr(extraction.input_type, 'value') else str(extraction.input_type)
-        result.dark_background = extraction.dark_background_detected
-        result.warnings = list(extraction.warnings or [])
-
-        if extraction.calibration:
-            cal = extraction.calibration
-            result.calibration_source = cal.source.value if hasattr(cal.source, 'value') else str(cal.source)
-            result.calibration_confidence = cal.confidence
-
-        result.feature_breakdown = {
-            ft.value if hasattr(ft, 'value') else str(ft): len(contours)
-            for ft, contours in extraction.features.items()
-            if contours
-        }
-        result.total_features = sum(result.feature_breakdown.values())
-
-        # Accuracy check
-        if result.expected_h_mm and h > 0:
-            result.h_error_pct = _pct_error(h, result.expected_h_mm)
-        if result.expected_w_mm and w > 0:
-            result.w_error_pct = _pct_error(w, result.expected_w_mm)
-
-        if result.h_error_pct is not None and result.w_error_pct is not None:
-            result.passed_tolerance = (
-                result.h_error_pct < tolerance_pct and
-                result.w_error_pct < tolerance_pct
-            )
-
-        # Find output files
-        stem = Path(image_path).stem
-        for f in Path(out_dir).iterdir():
-            if stem in f.name or "photo_v2" in f.name:
-                if f.suffix == ".dxf":
-                    result.dxf_path = str(f)
-                elif f.suffix == ".svg":
-                    result.svg_path = str(f)
-
     except Exception as e:
         result.error = str(e)
+        extraction = None
+
+    # Try cognitive fallback if enabled and standard pipeline failed
+    if extraction is None and use_cognitive:
+        print("  [cognitive] Standard pipeline failed, trying cognitive extraction...")
+        cog_result = _try_cognitive_extraction(image_path, spec, source_type, debug)
+        if cog_result and cog_result.get('contour') is not None:
+            result.cognitive_used = True
+            result.cognitive_iterations = cog_result.get('iterations', 0)
+            result.warnings.append("Extracted via cognitive fallback")
+
+            # Cognitive extraction doesn't produce full PhotoExtractionResult
+            # Just mark as partial success for now
+            result.success = True
+            result.input_type = "cognitive"
+            result.processing_time_s = time.time() - t0
+            result.total_features = 1  # body contour
+            result.feature_breakdown = {"body": 1}
+
+            # Try to get body dimensions from contour
+            contour = cog_result.get('contour')
+            if contour is not None:
+                import cv2
+                x, y, w, h = cv2.boundingRect(contour)
+                # Assume 96 DPI for pixel-to-mm conversion without calibration
+                px_per_mm = 96 / 25.4
+                result.body_h_mm = h / px_per_mm
+                result.body_w_mm = w / px_per_mm
+                if result.body_w_mm > result.body_h_mm:
+                    result.body_h_mm, result.body_w_mm = result.body_w_mm, result.body_h_mm
+
+            return result
+
+    if extraction is None:
+        if result.error is None:
+            result.error = "Pipeline returned None"
         result.processing_time_s = time.time() - t0
+        return result
+
+    result.success = True
+    result.processing_time_s = time.time() - t0
+
+    h, w = extraction.body_dimensions_mm
+    # Normalize: height > width for guitar bodies
+    if w > h:
+        h, w = w, h
+    result.body_h_mm = h
+    result.body_w_mm = w
+
+    result.input_type = extraction.input_type.value if hasattr(extraction.input_type, 'value') else str(extraction.input_type)
+    result.dark_background = extraction.dark_background_detected
+    result.warnings = list(extraction.warnings or [])
+
+    if extraction.calibration:
+        cal = extraction.calibration
+        result.calibration_source = cal.source.value if hasattr(cal.source, 'value') else str(cal.source)
+        result.calibration_confidence = cal.confidence
+
+    result.feature_breakdown = {
+        ft.value if hasattr(ft, 'value') else str(ft): len(contours)
+        for ft, contours in extraction.features.items()
+        if contours
+    }
+    result.total_features = sum(result.feature_breakdown.values())
+
+    # Accuracy check
+    if result.expected_h_mm and h > 0:
+        result.h_error_pct = _pct_error(h, result.expected_h_mm)
+    if result.expected_w_mm and w > 0:
+        result.w_error_pct = _pct_error(w, result.expected_w_mm)
+
+    if result.h_error_pct is not None and result.w_error_pct is not None:
+        result.passed_tolerance = (
+            result.h_error_pct < tolerance_pct and
+            result.w_error_pct < tolerance_pct
+        )
+
+    # Find output files
+    stem = Path(image_path).stem
+    for f in Path(out_dir).iterdir():
+        if stem in f.name or "photo_v2" in f.name:
+            if f.suffix == ".dxf":
+                result.dxf_path = str(f)
+            elif f.suffix == ".svg":
+                result.svg_path = str(f)
 
     return result
 
@@ -271,6 +356,9 @@ def print_result(r: SandboxResult, verbose: bool = True):
     print(f"  Input type:    {r.input_type}")
     print(f"  Calibration:   {r.calibration_source} (confidence={r.calibration_confidence:.2f})")
     print(f"  Body dims:     {r.body_h_mm:.1f} x {r.body_w_mm:.1f} mm  (H x W)")
+
+    if r.cognitive_used:
+        print(f"  Cognitive:     YES ({r.cognitive_iterations} iterations)")
 
     if r.expected_h_mm:
         h_err = f"{r.h_error_pct:.1f}%" if r.h_error_pct is not None else "N/A"
@@ -317,6 +405,8 @@ def print_summary(results: List[SandboxResult], tolerance_pct: float):
             print(f"  {r.image_name[:40]:<40} {'FAILED':<22}")
             continue
         body = f"{r.body_h_mm:.1f}x{r.body_w_mm:.1f}"
+        if r.cognitive_used:
+            body += "*"
         h_err = f"{r.h_error_pct:.1f}%" if r.h_error_pct is not None else "  N/A"
         w_err = f"{r.w_error_pct:.1f}%" if r.w_error_pct is not None else "  N/A"
         gate = "PASS" if r.passed_tolerance else ("FAIL" if r.passed_tolerance is False else "  ---")
@@ -399,6 +489,8 @@ def main():
     parser.add_argument("--source-type", default="auto",
         choices=["auto", "ai", "photo"],
         help="Image source: auto=detect, ai=force AI path, photo=force photo path")
+    parser.add_argument("--cognitive", action="store_true",
+        help="Enable cognitive extraction engine as fallback when standard pipeline fails")
 
     args = parser.parse_args()
 
@@ -442,9 +534,12 @@ def main():
                 debug=args.debug,
                 tolerance_pct=args.tolerance,
                 source_type=args.source_type,
+                use_cognitive=args.cognitive,
             )
             results.append(r)
             status = "OK" if r.success else f"FAIL: {r.error}"
+            if r.cognitive_used:
+                status += " [cognitive]"
             print(f" {status}")
 
         for r in results:
@@ -467,6 +562,7 @@ def main():
             debug=args.debug,
             tolerance_pct=args.tolerance,
             source_type=args.source_type,
+            use_cognitive=args.cognitive,
         )
         results.append(r)
         print_result(r)
