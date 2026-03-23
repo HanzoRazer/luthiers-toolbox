@@ -22,7 +22,7 @@ from typing import Any, Dict, List, Optional
 from fastapi import APIRouter, File, Form, HTTPException, Response, UploadFile
 from pydantic import BaseModel, Field
 
-from .sim_validate import (
+from app.util.sim_validate import (
     DEFAULT_ACCEL,
     DEFAULT_CLEAR_Z,
     DEFAULT_ENVELOPE,
