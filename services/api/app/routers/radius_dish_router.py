@@ -43,6 +43,8 @@ from fastapi import APIRouter
 from fastapi.responses import PlainTextResponse
 from pydantic import BaseModel, Field
 
+from ..core.safety import safety_critical
+
 router = APIRouter(prefix="/radius-dish", tags=["Radius Dish"])
 
 
@@ -107,6 +109,7 @@ def _grbl_footer(safe_z: float) -> List[str]:
     ]
 
 
+@safety_critical
 def generate_radius_dish_gcode(
     radius_mm: float,
     dish_width_mm: float,
