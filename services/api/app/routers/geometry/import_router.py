@@ -356,7 +356,7 @@ def parity(body: ParityRequest) -> Dict[str, Any]:
         - tolerance_mm: Input tolerance threshold
         - pass: bool (True if max_error <= tolerance)
     """
-    from ..sim_validate import simulate
+    from app.util.sim_validate import simulate
 
     # Sample geometry to points - Arc tessellation delegated to geometry/arc_utils.py
     gpts = []
