@@ -1,5 +1,6 @@
 {
   "schema_version": "1.1.0",
+  "setup_spec": "smart_guitar_setup_spec.json",
   "instrument": {
     "name": "Smart Guitar",
     "version": "v1.1",
