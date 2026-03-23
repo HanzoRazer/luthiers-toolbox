@@ -51,6 +51,8 @@ import math
 from dataclasses import dataclass, field, asdict
 from typing import List, Optional, Tuple
 
+from ..core.safety import safety_critical
+
 
 # ---------------------------------------------------------------------------
 # Core taper function
@@ -292,6 +294,7 @@ class GcodeConfig:
     safe_z_mm: float = 10.0
 
 
+@safety_critical
 def generate_gcode(
     spec: ArmRestSpec,
     cfg: GcodeConfig,
