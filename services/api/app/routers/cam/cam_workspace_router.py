@@ -22,6 +22,8 @@ from fastapi import APIRouter, HTTPException
 from fastapi.responses import PlainTextResponse
 from pydantic import BaseModel, Field
 
+from app.core.safety import safety_critical
+
 router = APIRouter(tags=["cam-workspace"])
 
 # ── Import pipeline under a graceful fallback ─────────────────────────────────
@@ -41,7 +43,7 @@ try:
     from app.calculators.cam_cutting_evaluator import evaluate_cut_operation
     from app.cam.preflight_gate import preflight_validate, PreflightConfig
     PIPELINE_AVAILABLE = True
-except Exception as e:
+except ImportError as e:  # WP-1: narrowed from except Exception
     _pipeline_error = str(e)
 
 
@@ -225,6 +227,7 @@ def _build_pipeline_config(neck: NeckConfigIn) -> "NeckPipelineConfig":
     return cfg
 
 
+@safety_critical
 def _z_ceiling_check(depth_mm: float, machine: "BCamMachineSpec") -> tuple[bool, str]:
     """Return (ok, message) for depth vs machine Z travel."""
     # Allow 5mm clearance above stock surface
@@ -237,6 +240,7 @@ def _z_ceiling_check(depth_mm: float, machine: "BCamMachineSpec") -> tuple[bool,
     return True, f"Depth {depth_mm:.1f}mm within Z travel ({machine.max_z_mm:.1f}mm)"
 
 
+@safety_critical
 def _gate_for_router_op(
     tool: "NeckToolSpec",
     depth_mm: float,
@@ -352,6 +356,7 @@ def _gate_for_router_op(
     )
 
 
+@safety_critical
 def _gate_for_saw_op(
     tool: "NeckToolSpec",
     slot_depth_mm: float,
@@ -498,6 +503,7 @@ async def evaluate_neck(req: EvaluateRequest):
 
 
 @router.post("/neck/generate/{op}", response_model=GenerateResponse)
+@safety_critical
 async def generate_neck_op(op: str, req: GenerateRequest):
     """
     Full G-code generation for a single neck operation.
@@ -587,6 +593,7 @@ async def generate_neck_op(op: str, req: GenerateRequest):
 
 
 @router.post("/neck/generate-full")
+@safety_critical
 async def generate_full_neck(req: GenerateRequest):
     """
     Generate complete 4-op neck program for final download.
