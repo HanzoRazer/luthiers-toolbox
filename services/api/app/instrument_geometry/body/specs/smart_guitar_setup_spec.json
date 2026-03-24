@@ -28,21 +28,24 @@
   },
   "smart_guitar_geometry": {
     "scale_mm": 628.65,
-    "scale_source": "Les Paul / Explorer (not Klein \u2014 Klein is 648mm)",
+    "scale_source": "Les Paul / Explorer (not Klein — Klein is 648mm)",
     "fret_count": 24,
     "fret_count_source": "Klein (LP/Explorer are 22)",
     "fretboard_radius_mm": 304.8,
-    "fretboard_radius_source": "Les Paul / Explorer (not Klein \u2014 Klein is 254mm). Open item: confirm before neck build.",
-    "neck_angle_deg": 4.0,
-    "neck_angle_source": "Les Paul (4.0\u00b0). Explorer is 4.5\u00b0 \u2014 slightly steeper. Smart Guitar uses LP angle.",
+    "fretboard_radius_source": "Les Paul / Explorer (not Klein — Klein is 254mm). Open item: confirm before neck build.",
+    "neck_angle_deg": 4.5,
+    "neck_angle_source": "Explorer reference - conservative starting point for bolt-on headless. Adjust with pocket shim after first cut and string-up.",
     "neck_joint": "bolt_on",
     "neck_joint_source": "Klein (LP/Explorer are set-neck)",
     "nut_type": "locking_clamp",
-    "bridge_type": "headless_fixed_fine_tuners"
+    "bridge_type": "headless_fixed_fine_tuners",
+    "neck_angle_note": "Bolt-on joint allows post-cut correction. Cut at 4.5deg, measure action on first article, shim 0.25-0.5deg if needed. Headless saddles provide additional +/-2mm action adjustment range.",
+    "neck_angle_blocker": false,
+    "op20_status": "READY - cut at 4.5deg, verify on first article"
   },
   "neck_relief": {
     "_inherited_from": "gibson_les_paul",
-    "_deviation": "None \u2014 same scale length, same truss rod geometry",
+    "_deviation": "None — same scale length, same truss rod geometry",
     "method": "capo_1st_hold_body_join_check_8th",
     "body_join_fret": 19,
     "check_fret": 8,
@@ -61,11 +64,11 @@
       "remove_relief": "clockwise",
       "increment": "1/8_turn"
     },
-    "note": "Bolt-on join at ~19th fret. Truss rod influence ends at body join. Frets 20-24 are body-side and not truss-rod correctable. Same 628.65mm scale as LP \u2014 relief target identical."
+    "note": "Bolt-on join at ~19th fret. Truss rod influence ends at body join. Frets 20-24 are body-side and not truss-rod correctable. Same 628.65mm scale as LP — relief target identical."
   },
   "action_at_12th_fret": {
     "_inherited_from": "gibson_les_paul",
-    "_deviation": "None at 12th fret. Frets 23-24 have no LP reference \u2014 extrapolate from 22nd.",
+    "_deviation": "None at 12th fret. Frets 23-24 have no LP reference — extrapolate from 22nd.",
     "method": "open_strings_string_bottom_to_fret_top",
     "strings": {
       "low_E": {
@@ -83,11 +86,11 @@
     "frets_23_24_note": "No factory reference for 23rd/24th fret clearance from any parent. Extrapolate: if 22nd fret is clear at LP spec, 23rd and 24th should follow the same string path. Check for choke during bend test."
   },
   "nut_height": {
-    "_inherited_from": "none \u2014 locking nut is a different device",
+    "_inherited_from": "none — locking nut is a different device",
     "type": "locking_clamp",
     "user_adjustable": false,
     "pre_lock_clearance_mm": 0.5,
-    "pre_lock_check": "Before clamping: fret at 3rd, gap at 1st fret barely visible. After clamping: nut slot depth is irrelevant \u2014 strings are clamped above the nut.",
+    "pre_lock_check": "Before clamping: fret at 3rd, gap at 1st fret barely visible. After clamping: nut slot depth is irrelevant — strings are clamped above the nut.",
     "note": "Locking nut height is set by the nut itself. If action in open position feels wrong after clamping, the issue is saddle height, not the nut."
   },
   "pickup_height": {
@@ -113,34 +116,34 @@
     "balance_check": "Match neck and bridge output at unity gain through amp."
   },
   "intonation": {
-    "_inherited_from": "standard electric \u2014 same as LP",
+    "_inherited_from": "standard electric — same as LP",
     "method": "12th_fret_harmonic_vs_fretted_note",
     "bridge": "Headless saddles adjust fore/aft. Same principle as any saddle: sharp at 12th = lengthen string (move saddle back). Flat = shorten (move forward).",
-    "fine_tuner_note": "Fine tuners give \u00b1semitone range. Start fine tuners at mid-travel before setting intonation."
+    "fine_tuner_note": "Fine tuners give ±semitone range. Start fine tuners at mid-travel before setting intonation."
   },
   "string_recommendations": {
     "baseline": "010-046",
     "heavier": "011-049 for drop tunings",
-    "type_required": "ball-end only \u2014 no loop-end",
+    "type_required": "ball-end only — no loop-end",
     "loading_note": "Route through headless bridge first. Lock nut last after stretch and tune cycle."
   },
   "setup_sequence": [
     "1. Install ball-end strings through headless bridge. Do not clamp nut yet.",
     "2. Tune to pitch. Stretch strings thoroughly.",
-    "3. Neck relief: capo 1st, hold 19th, check 8th \u2014 target 0.010\" (0.254mm).",
+    "3. Neck relief: capo 1st, hold 19th, check 8th — target 0.010\" (0.254mm).",
     "4. Tune again after truss rod settle (30 min).",
-    "5. Saddle height per string \u2014 target action at 12th fret (5/64\" low E, 3/64\" high e).",
+    "5. Saddle height per string — target action at 12th fret (5/64\" low E, 3/64\" high e).",
     "6. Clamp locking nut. Retune with fine tuners.",
-    "7. Intonation: fret 12th vs harmonic \u2014 adjust saddle fore/aft.",
+    "7. Intonation: fret 12th vs harmonic — adjust saddle fore/aft.",
     "8. Pickup heights: fret 24th, set neck then bridge.",
     "9. Balance pickup output through amp.",
     "10. Play test: every string every fret. Bend high e 1.5 steps from 6th to 24th."
   ],
   "open_items": {
-    "fretboard_radius": "Must be specified before neck build. Recommend 304.8mm (12\") from LP/Explorer lineage. Klein is 254mm \u2014 compound 254-305mm is an option.",
+    "fretboard_radius": "Must be specified before neck build. Recommend 304.8mm (12\") from LP/Explorer lineage. Klein is 254mm — compound 254-305mm is an option.",
     "pickup_models": "Not yet selected. Heights above are starting points. Each model has its own optimal range.",
     "bridge_model": "Headless bridge model not yet selected. Hipshot, ABM, Steinberger all have different saddle height ranges.",
-    "neck_angle_confirmation": "Neck angle is HIGHER than LP/Explorer reference, not lower. Headless bridge at 10-14mm requires ~4.8-5.4 degrees. Explorer at 8mm TOM needs 4.5deg as calibration baseline. BLOCKER: select bridge model first, measure exact bridge height, then compute final angle before cutting neck pocket.",
+    "neck_angle_confirmation": "RESOLVED - Cut at 4.5deg (Explorer reference). Bolt-on joint + headless saddles allow post-cut adjustment. First article measurement drives any shim decision.",
     "neck_angle_analysis": {
       "date": "2026-03-23",
       "reference_model": "gibson_explorer",
@@ -213,16 +216,18 @@
         "bridge_height_range_mm": "10-14 (model dependent)",
         "solver_angle_range_deg": "1.68-2.77 (solver relative)",
         "real_world_estimate_deg": "4.8-5.9 (applying 3.15 deg offset)",
-        "conclusion": "Neck angle CANNOT be finalized until bridge model is selected. Headless bridges sit higher than TOM \u2014 expect angle STEEPER than Explorer 4.5 deg, not shallower."
+        "conclusion": "Neck angle CANNOT be finalized until bridge model is selected. Headless bridges sit higher than TOM — expect angle STEEPER than Explorer 4.5 deg, not shallower."
       },
       "blocker": "bridge_model_selection",
-      "action_required": "Select headless bridge model (Hipshot/ABM/Steinberger). Measure actual saddle height above body. Re-run solver with correct bridge_height_mm."
+      "action_required": "Select headless bridge model (Hipshot/ABM/Steinberger). Measure actual saddle height above body. Re-run solver with correct bridge_height_mm.",
+      "status": "RESOLVED",
+      "resolution": "Cut at 4.5deg (Explorer reference). Bolt-on allows shimming. First article validates."
     }
   },
   "source_derivation": {
-    "neck_relief": "Gibson Les Paul factory \u2014 David (Memphis final inspector). Same 628.65mm scale.",
+    "neck_relief": "Gibson Les Paul factory — David (Memphis final inspector). Same 628.65mm scale.",
     "action": "Gibson Les Paul factory spec. Same scale, same measurement convention.",
-    "nut_height": "Derived \u2014 locking nut is not user-adjustable for height.",
+    "nut_height": "Derived — locking nut is not user-adjustable for height.",
     "pickup_height": "Gibson current factory (1/16\" bridge, 3/32\" neck) adjusted -0.5mm for direct mount absence of pickup ring.",
     "strings": "Industry standard for 24.75\" scale."
   },
@@ -230,17 +235,17 @@
   "series_note": "This spec covers the Production variant (fixed headless). See tremolo_setup_spec block for Pro series.",
   "tremolo_setup_spec": {
     "_series": "pro",
-    "_applies_to": "Smart Guitar Pro \u2014 headless floating tremolo",
+    "_applies_to": "Smart Guitar Pro — headless floating tremolo",
     "_parent_reference": "No parent instrument has a tremolo. Procedure derived from double-locking floating tremolo first principles and FR Original geometry (floyd_rose_tremolo.py).",
     "bridge_type": "headless_floating_tremolo",
-    "locking_point": "bridge_saddle_blocks as primary lock. FR locking nut can be retrofitted at the nut position using a standard FR nut \u2014 this is a builder workaround, not an official product. No purpose-built headless FR locking nut exists. Alternative: Sophia Tremolo individual string locks (individual set screws, no pair-locking penalty). Strandberg uses yet another mechanism.",
+    "locking_point": "bridge_saddle_blocks as primary lock. FR locking nut can be retrofitted at the nut position using a standard FR nut — this is a builder workaround, not an official product. No purpose-built headless FR locking nut exists. Alternative: Sophia Tremolo individual string locks (individual set screws, no pair-locking penalty). Strandberg uses yet another mechanism.",
     "fundamental_difference_from_fixed": "A floating tremolo is a force-balanced system. String tension and spring tension oppose each other across the pivot. Every adjustment changes the balance: tuning a string changes spring ratio, changing action changes string angle, changing spring count changes everything. Setup is iterative, not linear.",
     "equilibrium_condition": {
-      "physics": "F_strings \u00d7 cos(\u03b1_string) = F_springs \u00d7 cos(\u03b1_spring)",
+      "physics": "F_strings × cos(α_string) = F_springs × cos(α_spring)",
       "plain_english": "String pull forward must equal spring pull rearward for the bridge plate to be parallel to the body.",
-      "target_plate_angle": "parallel to body top \u2014 visually level, not tilted fore or aft",
+      "target_plate_angle": "parallel to body top — visually level, not tilted fore or aft",
       "check_method": "Sight along the body from the tail. Bridge plate should be flush with body surface or tilted not more than 1-2mm at the front edge.",
-      "note": "On a headless tremolo the pivot geometry differs from FR Original \u2014 verify plate angle spec with the specific bridge unit manufacturer."
+      "note": "On a headless tremolo the pivot geometry differs from FR Original — verify plate angle spec with the specific bridge unit manufacturer."
     },
     "setup_sequence": {
       "overview": "Must iterate through steps 3-6 multiple times. Budget 2-3 full passes before the system settles.",
@@ -253,7 +258,7 @@
         {
           "step": 2,
           "name": "Spring pre-balance",
-          "detail": "Adjust spring claw position (or spring count) until bridge plate is approximately parallel to body at pitch. This is a rough balance \u2014 it will shift as strings are locked and stretched."
+          "detail": "Adjust spring claw position (or spring count) until bridge plate is approximately parallel to body at pitch. This is a rough balance — it will shift as strings are locked and stretched."
         },
         {
           "step": 3,
@@ -265,7 +270,7 @@
         {
           "step": 4,
           "name": "String stretch and retune",
-          "detail": "Stretch all strings thoroughly. Retune. Bridge plate will shift \u2014 readjust spring claw if plate has tilted more than 1mm."
+          "detail": "Stretch all strings thoroughly. Retune. Bridge plate will shift — readjust spring claw if plate has tilted more than 1mm."
         },
         {
           "step": 5,
@@ -275,14 +280,14 @@
         {
           "step": 6,
           "name": "Action",
-          "detail": "Set saddle heights. On a floating tremolo, the bridge height (post height or plate tilt) affects action on ALL strings simultaneously \u2014 use this for coarse action. Individual saddle height for per-string fine adjustment.",
+          "detail": "Set saddle heights. On a floating tremolo, the bridge height (post height or plate tilt) affects action on ALL strings simultaneously — use this for coarse action. Individual saddle height for per-string fine adjustment.",
           "targets": {
             "low_E_12th_fret_mm": 1.98,
             "low_E_12th_fret_in": "5/64",
             "high_e_12th_fret_mm": 1.19,
             "high_e_12th_fret_in": "3/64"
           },
-          "note": "Same action targets as Production and Les Paul factory. Changing action may shift bridge angle \u2014 recheck plate level after."
+          "note": "Same action targets as Production and Les Paul factory. Changing action may shift bridge angle — recheck plate level after."
         },
         {
           "step": 7,
@@ -292,12 +297,12 @@
         {
           "step": 8,
           "name": "Intonation",
-          "detail": "12th fret harmonic vs fretted. Adjust saddle fore/aft. Each saddle move changes break angle slightly \u2014 retune and recheck plate level if multiple saddles moved."
+          "detail": "12th fret harmonic vs fretted. Adjust saddle fore/aft. Each saddle move changes break angle slightly — retune and recheck plate level if multiple saddles moved."
         },
         {
           "step": 9,
           "name": "Pickup height",
-          "detail": "Fret 24th. Same targets as Production \u2014 neck pickup low E 3.2mm, high e 2.4mm; bridge pickup low E 2.0mm, high e 1.6mm.",
+          "detail": "Fret 24th. Same targets as Production — neck pickup low E 3.2mm, high e 2.4mm; bridge pickup low E 2.0mm, high e 1.6mm.",
           "neck_pickup_low_E_mm": 3.2,
           "neck_pickup_high_e_mm": 2.4,
           "bridge_pickup_low_E_mm": 2.0,
@@ -306,7 +311,7 @@
         {
           "step": 10,
           "name": "Tremolo range test",
-          "detail": "Depress bar fully \u2014 all strings should return to pitch within 2 cents. Pull up if bridge allows \u2014 same check. If any string goes sharp on down-pull, saddle block may be slipping."
+          "detail": "Depress bar fully — all strings should return to pitch within 2 cents. Pull up if bridge allows — same check. If any string goes sharp on down-pull, saddle block may be slipping."
         },
         {
           "step": 11,
@@ -322,8 +327,8 @@
         "fewer_springs_or_lighter": "Lighter arm feel, more pitch range, more sensitive to string tension changes"
       },
       "claw_position": {
-        "forward_toward_bridge": "Less spring tension \u2014 bridge tilts forward (toward neck)",
-        "rearward_away_from_bridge": "More spring tension \u2014 bridge tilts rearward (toward tail)",
+        "forward_toward_bridge": "Less spring tension — bridge tilts forward (toward neck)",
+        "rearward_away_from_bridge": "More spring tension — bridge tilts rearward (toward tail)",
         "target": "Position where bridge plate is parallel to body at pitch"
       }
     },
@@ -331,29 +336,29 @@
       "string_stretch": "New strings will detune for days. Stretch aggressively before clamping blocks.",
       "saddle_block_grip": "Headless bridge clamps strings at the bridge end. If a string slips in its block, it will go flat after tremolo use. Re-clamp.",
       "pivot_friction": "Knife edges or pivot screws must be smooth. Rough pivot = strings don't return to pitch. Polish or replace.",
-      "nut_note": "No OEM headless locking nut exists. Retrofit options work but have limitations \u2014 shared-block FR nuts require loosening a neighbor string to change one string. Sophia Headpeace avoids this with individual locks. Whichever option: clamp after stretching and achieving pitch stability, then use bridge fine tuners for all subsequent tuning.",
-      "headless_locking_nut": "If FR Original is used on Pro series: headless locking nut clamps strings at nut position. Same clamping function as a standard FR locking nut \u2014 no headstock required behind it. Once clamped, fine tuners at bridge handle pitch adjustment. Setup procedure is identical to a standard FR setup from the nut clamp step onward.",
+      "nut_note": "No OEM headless locking nut exists. Retrofit options work but have limitations — shared-block FR nuts require loosening a neighbor string to change one string. Sophia Headpeace avoids this with individual locks. Whichever option: clamp after stretching and achieving pitch stability, then use bridge fine tuners for all subsequent tuning.",
+      "headless_locking_nut": "If FR Original is used on Pro series: headless locking nut clamps strings at nut position. Same clamping function as a standard FR locking nut — no headstock required behind it. Once clamped, fine tuners at bridge handle pitch adjustment. Setup procedure is identical to a standard FR setup from the nut clamp step onward.",
       "nut_retrofit_note": "If retrofitting a standard FR locking nut for headless use: nut clamps strings in pairs. Breaking one string requires loosening its pair-neighbor to replace it. Confirmed working by builders (community reports 5+ years reliable use). Sophia headpeace individual locks avoid this penalty but are a premium specialty item."
     },
     "blocked_tremolo_option": {
       "description": "Pro series bridge can be blocked (tremolo disabled) for fixed-bridge feel on stage.",
       "method": "Insert a hardwood or aluminum block in the spring cavity between claw and body wall, or use a Tremol-No style device.",
-      "setup_when_blocked": "Follow Production setup sequence \u2014 system behaves as fixed bridge when blocked."
+      "setup_when_blocked": "Follow Production setup sequence — system behaves as fixed bridge when blocked."
     },
     "open_items": {
       "bridge_model": "Not yet selected. Spring type, cavity dimensions, pivot geometry, and saddle height range all depend on specific model.",
       "spring_cavity_geometry": "Cannot be finalized until bridge model is selected. Steinberger S-Trem vs Kahler vs Hipshot Trilogy all have different spring layouts.",
       "floyd_rose_compatibility": "Floyd Rose Original IS compatible with the Pro series. Requires a headless-compatible locking nut (Steinberger or aftermarket) at the nut position. No headstock needed. FR routing specs: floyd_rose_tremolo.py. Stud spacing 74.3mm, M7x0.5 inserts, standard (42mm) or medium (37mm) body routing depth.",
       "headless_locking_nut": "No official OEM headless locking nut. Best current option: Sophia Headpeace (individual per-string, purpose-built). FR retrofit works with limitations. Decision deferred pending bridge model selection.",
-      "floyd_rose_compatibility_note": "Floyd Rose can be fitted to Pro headless variant via standard FR nut retrofit. No official headless FR locking nut product exists \u2014 this is a builder retrofit. Evaluate Sophia Tremolo individual string locks as a cleaner alternative. FR routing specs in floyd_rose_tremolo.py apply regardless of nut solution."
+      "floyd_rose_compatibility_note": "Floyd Rose can be fitted to Pro headless variant via standard FR nut retrofit. No official headless FR locking nut product exists — this is a builder retrofit. Evaluate Sophia Tremolo individual string locks as a cleaner alternative. FR routing specs in floyd_rose_tremolo.py apply regardless of nut solution."
     }
   },
   "signal_chain_canonical": {
     "spec_version": "2.0",
     "date": "2026-03-23",
-    "path_a": "P90 \u2192 buffered splitter \u2192 1/4 dry jack \u2014 0ms, analog bypass",
-    "path_b": "P90 \u2192 buffered splitter \u2192 Hi-Z USB \u2192 Pi 5 \u2192 HiFiBerry \u2192 headphone + WiFi",
-    "wifi": "PipeWire network sink \u2014 Pi 5 built-in WiFi \u2014 no additional hardware",
-    "arduino": "control only \u2014 footswitches, BMS, LEDs, relay bypass"
+    "path_a": "P90 → buffered splitter → 1/4 dry jack — 0ms, analog bypass",
+    "path_b": "P90 → buffered splitter → Hi-Z USB → Pi 5 → HiFiBerry → headphone + WiFi",
+    "wifi": "PipeWire network sink — Pi 5 built-in WiFi — no additional hardware",
+    "arduino": "control only — footswitches, BMS, LEDs, relay bypass"
   }
 }
