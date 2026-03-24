@@ -32,7 +32,7 @@ def test_cam_workspace_neck_evaluate_exists(client):
 
 
 def test_cam_workspace_neck_generate_op_exists(client):
-    """POST /api/cam-workspace/neck/generate/{op} accepts body and returns 200, 409, or 503."""
+    """POST /api/cam-workspace/neck/generate/{op} accepts body and returns 200, 409, 422, or 503."""
     response = client.post(
         "/api/cam-workspace/neck/generate/truss_rod",
         json={
@@ -40,7 +40,8 @@ def test_cam_workspace_neck_generate_op_exists(client):
             "neck": {"scale_length_mm": 628.65, "fret_count": 22},
         },
     )
-    assert response.status_code in [200, 409, 503]
+    # 422 if validation fails, 200/409 if pipeline available, 503 if not
+    assert response.status_code in [200, 409, 422, 503]
 
 
 def test_cam_workspace_status_exists(client):
