@@ -77,7 +77,7 @@
         "ash"
       ],
       "finish": "natural_blonde_amber",
-      "notes": "Prototype body is Khaya (African Mahogany) \u00e2\u20ac\u201d warm tone, stable, easy to machine, ~0.50 g/cm\u00c2\u00b3. Production may use maple or ash depending on tonal goals."
+      "notes": "Prototype body is Khaya (African Mahogany) â€” warm tone, stable, easy to machine, ~0.50 g/cmÂ³. Production may use maple or ash depending on tonal goals."
     },
     "weight_estimate_lbs": 7.5,
     "weight_notes": "Headless saves ~0.4 lb (no headstock/tuners). Klein cutaways remove ~0.6 lb of body wood. Electronics add back ~0.5 lb (Pi 5, Arduino, batteries, SSD, wiring). Net: comparable to a standard solid-body despite embedded computing."
@@ -86,7 +86,7 @@
     "_design_notes": "Hybrid approach: Explorer dual-humbucker front layout with Klein rear-access electronics. All cavity positions mapped to the STEM Guitar 24x32 grid (normalized 0-1 coordinates, origin top-left, Y increases downward).",
     "neck_pocket": {
       "type": "bolt_on",
-      "heritage": "Standard \u00e2\u20ac\u201d both Explorer (set-neck) and Klein (bolt-on) inform this; Smart Guitar uses bolt-on for serviceability",
+      "heritage": "Standard â€” both Explorer (set-neck) and Klein (bolt-on) inform this; Smart Guitar uses bolt-on for serviceability",
       "dimensions_mm": {
         "length": 76.2,
         "width": 55.9,
@@ -139,15 +139,15 @@
         "torque_spec": "3-4 Nm, tighten in cross pattern",
         "notes": "4-bolt pattern for bolt-on neck. 44mm x 56mm spacing. Counterbored for flat-head screws."
       },
-      "_blocker": "BRIDGE_MODEL_REQUIRED \u2014 neck angle cannot be finalized until headless bridge height is known. Explorer reference: 4.5deg at 8mm TOM. Smart Guitar headless estimate: 4.8-5.4deg at 10-14mm. Do NOT cut OP20 until bridge selected.",
-      "neck_angle_deg": "TBD \u2014 pending bridge model",
-      "neck_angle_explorer_ref_deg": 4.5,
-      "neck_angle_estimated_range": "4.8-5.4",
-      "neck_angle_note": "Higher than LP 4.0 and Explorer 4.5 because headless bridge sits higher than TOM"
+      "neck_angle_deg": 4.5,
+      "neck_angle_note": "Bolt-on joint allows post-cut correction. Cut at 4.5deg, measure action on first article, shim 0.25-0.5deg if needed. Headless saddles provide additional +/-2mm action adjustment range.",
+      "neck_angle_source": "Explorer reference - conservative starting point for bolt-on headless. Adjust with pocket shim after first cut and string-up.",
+      "neck_angle_blocker": false,
+      "op20_status": "READY - cut at 4.5deg, verify on first article"
     },
     "neck_pickup_route": {
       "type": "humbucker",
-      "heritage": "Explorer dual-humbucker layout \u00e2\u20ac\u201d neck position",
+      "heritage": "Explorer dual-humbucker layout â€” neck position",
       "dimensions_mm": {
         "length": 92.0,
         "width": 40.0,
@@ -172,7 +172,7 @@
     },
     "bridge_pickup_route": {
       "type": "humbucker",
-      "heritage": "Explorer dual-humbucker layout \u00e2\u20ac\u201d bridge position",
+      "heritage": "Explorer dual-humbucker layout â€” bridge position",
       "dimensions_mm": {
         "length": 92.0,
         "width": 40.0,
@@ -197,7 +197,7 @@
     },
     "bridge_route": {
       "type": "headless_bridge",
-      "heritage": "Headless bridge with integrated fine tuners \u00e2\u20ac\u201d Steinberger / Hipshot / ABM lineage. Replaces traditional TOM + tailpiece and headstock tuners. All tuning happens here.",
+      "heritage": "Headless bridge with integrated fine tuners â€” Steinberger / Hipshot / ABM lineage. Replaces traditional TOM + tailpiece and headstock tuners. All tuning happens here.",
       "dimensions_mm": {
         "bridge_length": 95.0,
         "bridge_width": 42.0,
@@ -207,7 +207,7 @@
         "mounting_hole_diameter": 3.5,
         "mounting_hole_depth": 15.0,
         "string_spacing_mm": 10.5,
-        "notes": "Headless bridge unit: saddles with individual fine tuners for each string. Mounts flat to body surface with 4 screws. No tailpiece needed \u00e2\u20ac\u201d strings anchor and tune at bridge.",
+        "notes": "Headless bridge unit: saddles with individual fine tuners for each string. Mounts flat to body surface with 4 screws. No tailpiece needed â€” strings anchor and tune at bridge.",
         "corner_radius": 3.175
       },
       "grid_position": {
@@ -227,7 +227,7 @@
     },
     "rear_electronics_cavity": {
       "type": "rear_access",
-      "heritage": "Klein rear-access electronics \u00e2\u20ac\u201d no front control cavity. Pi 5 compute module housed in rear-routed chamber with main battery, SSD, and controls. Arduino ADC module separated near pickups (active-preamp style) with its own 9V battery",
+      "heritage": "Klein rear-access electronics â€” no front control cavity. Pi 5 compute module housed in rear-routed chamber with main battery, SSD, and controls. Arduino ADC module separated near pickups (active-preamp style) with its own 9V battery",
       "contains": [
         {
           "component": "Raspberry Pi 5",
@@ -288,7 +288,7 @@
       "body_position_mm": {
         "x_center": 36.8,
         "y_from_top": 275.7,
-        "notes": "Offset right (bass side). Pi 5 only \u00e2\u20ac\u201d 40% less wood removed vs dual-board cavity"
+        "notes": "Offset right (bass side). Pi 5 only â€” 40% less wood removed vs dual-board cavity"
       },
       "cover_plate": {
         "material": "black_abs",
@@ -323,12 +323,12 @@
     },
     "arduino_preamp_pocket": {
       "type": "rear_access",
-      "heritage": "Control coprocessor pocket \u2014 Arduino Uno R4 handles I/O (footswitches, pots, LEDs, BMS telemetry, relay bypass). Audio path handled by Hi-Z USB interface and HiFiBerry HAT.",
+      "heritage": "Control coprocessor pocket — Arduino Uno R4 handles I/O (footswitches, pots, LEDs, BMS telemetry, relay bypass). Audio path handled by Hi-Z USB interface and HiFiBerry HAT.",
       "contains": [
         {
           "component": "Arduino Uno R4",
           "mcu": "Renesas RA4M1 @ 48MHz",
-          "role": "I/O coprocessor \u2014 footswitches, pots, LEDs, BMS telemetry, relay bypass. NO AUDIO.",
+          "role": "I/O coprocessor — footswitches, pots, LEDs, BMS telemetry, relay bypass. NO AUDIO.",
           "board_mm": [
             68.6,
             53.4,
@@ -351,9 +351,9 @@
         "canonical": true,
         "spec_version": "2.0",
         "date": "2026-03-23",
-        "path_a_dry": "P90 \u2192 buffered_splitter \u2192 1/4_TS_dry_jack",
-        "path_b_digital": "P90 \u2192 buffered_splitter \u2192 hi_z_usb_interface \u2192 raspberry_pi_5_usb \u2192 hifiberry_dac_adc_hat_i2s \u2192 headphone_out + wifi_pipewire_sink",
-        "wifi_output": "PipeWire network sink via Pi 5 built-in WiFi \u2014 wireless monitoring to phone/tablet/DAW",
+        "path_a_dry": "P90 → buffered_splitter → 1/4_TS_dry_jack",
+        "path_b_digital": "P90 → buffered_splitter → hi_z_usb_interface → raspberry_pi_5_usb → hifiberry_dac_adc_hat_i2s → headphone_out + wifi_pipewire_sink",
+        "wifi_output": "PipeWire network sink via Pi 5 built-in WiFi — wireless monitoring to phone/tablet/DAW",
         "arduino_role": "control_only",
         "arduino_handles": [
           "footswitches",
@@ -364,7 +364,7 @@
         ],
         "arduino_audio": false,
         "arduino_connection": "USB_serial_to_Pi5_control_messages_only",
-        "deprecated_path": "arduino_adc_direct \u2014 10-bit 44.1kHz inadequate for audio",
+        "deprecated_path": "arduino_adc_direct — 10-bit 44.1kHz inadequate for audio",
         "latency_ms": {
           "path_a": 0,
           "path_b_scarlett_input": 1.0,
@@ -379,13 +379,13 @@
         "components": {
           "splitter": "active buffered Hi-Z 1MOhm input",
           "usb_interface": "Focusrite Scarlett Solo 4th Gen (primary) or IK AXE IO ONE (alt)",
-          "pi": "Raspberry Pi 5 \u2014 JACK + Guitarix/MODEP effects host",
-          "hifiberry": "HiFiBerry DAC+ADC \u2014 I2S GPIO HAT hardware-clocked output",
-          "arduino": "Arduino Uno R4 \u2014 I/O coprocessor only"
+          "pi": "Raspberry Pi 5 — JACK + Guitarix/MODEP effects host",
+          "hifiberry": "HiFiBerry DAC+ADC — I2S GPIO HAT hardware-clocked output",
+          "arduino": "Arduino Uno R4 — I/O coprocessor only"
         }
       },
       "latency_targets_ms": {
-        "_note": "DEPRECATED \u2014 see signal_chain.latency_ms for canonical values",
+        "_note": "DEPRECATED — see signal_chain.latency_ms for canonical values",
         "hard_max": 10,
         "target": 5,
         "ideal": 3.1
@@ -443,11 +443,11 @@
         ],
         "notes": "5mm inset from cavity edge, countersunk flush with cover plate"
       },
-      "function_note": "Houses Arduino Uno R4 \u2014 control path only. Audio handled by Hi-Z USB interface and HiFiBerry HAT."
+      "function_note": "Houses Arduino Uno R4 — control path only. Audio handled by Hi-Z USB interface and HiFiBerry HAT."
     },
     "rear_wiring_channel": {
       "type": "rear_routed_channel",
-      "heritage": "Klein rear-wiring philosophy \u00e2\u20ac\u201d all pickup leads run through rear-routed channels, no front wiring trenches",
+      "heritage": "Klein rear-wiring philosophy â€” all pickup leads run through rear-routed channels, no front wiring trenches",
       "dimensions_mm": {
         "width": 10.0,
         "depth": 15.0,
@@ -538,7 +538,7 @@
     },
     "usb_c_port": {
       "type": "edge_slot",
-      "heritage": "Modern edge-mount port \u00e2\u20ac\u201d Strandberg / Lava ME style side-access charging",
+      "heritage": "Modern edge-mount port â€” Strandberg / Lava ME style side-access charging",
       "dimensions_mm": {
         "slot_width": 12.0,
         "slot_height": 6.5,
@@ -550,12 +550,12 @@
         "zone": "LOWER_BOUT (right edge)",
         "x_center_norm": 0.99,
         "y_center_norm": 0.65,
-        "notes": "Bass-side body edge, same Y-band as rear electronics cavity \u00e2\u20ac\u201d short internal cable to Pi 5 USB-C. Below arm contour, won't interfere with playing."
+        "notes": "Bass-side body edge, same Y-band as rear electronics cavity â€” short internal cable to Pi 5 USB-C. Below arm contour, won't interfere with playing."
       },
       "body_position_mm": {
         "x_center": 216.0,
         "y_from_top": 239.4,
-        "notes": "Edge-routed slot perpendicular to body surface. Body half-width ~219mm at this Y \u00e2\u20ac\u201d slot opens at edge, extends 7mm inward. ~60mm cable to Pi 5."
+        "notes": "Edge-routed slot perpendicular to body surface. Body half-width ~219mm at this Y â€” slot opens at edge, extends 7mm inward. ~60mm cable to Pi 5."
       },
       "function": "USB-C PD 20W charging for Li-ion 18650 + optional USB data connection to Pi 5",
       "internal_cable_mm": 60.0,
@@ -563,7 +563,7 @@
     },
     "antenna_recess": {
       "type": "shallow_pocket",
-      "heritage": "IoT best practice \u00e2\u20ac\u201d PCB antenna under thin wood window, invisible from outside. Used in smart furniture, acoustic wireless systems (e.g., Taylor ES2), and IoT enclosures.",
+      "heritage": "IoT best practice â€” PCB antenna under thin wood window, invisible from outside. Used in smart furniture, acoustic wireless systems (e.g., Taylor ES2), and IoT enclosures.",
       "dimensions_mm": {
         "length": 50.0,
         "width": 30.0,
@@ -583,12 +583,12 @@
         "zone": "BODY_CANVAS (rear face, upper region of electronics cavity)",
         "x_center_norm": 0.55,
         "y_center_norm": 0.55,
-        "notes": "Centered near top of rear cavity area. Maximizes distance from copper shielding paint in pickup routes. Rear face only \u00e2\u20ac\u201d invisible from front."
+        "notes": "Centered near top of rear cavity area. Maximizes distance from copper shielding paint in pickup routes. Rear face only â€” invisible from front."
       },
       "body_position_mm": {
         "x_center": 22.2,
         "y_from_top": 202.6,
-        "notes": "Rear face of body. Milled from inside the rear electronics cavity as a stepped shelf \u00e2\u20ac\u201d no separate external routing needed."
+        "notes": "Rear face of body. Milled from inside the rear electronics cavity as a stepped shelf â€” no separate external routing needed."
       },
       "antenna_type": "dual-band PCB ceramic chip antenna",
       "frequency_bands": [
@@ -608,7 +608,7 @@
     },
     "control_plate_surface": {
       "type": "top_mount_plate",
-      "heritage": "Hybrid \u00e2\u20ac\u201d Explorer top-mount controls simplified with Klein minimalism. 2 knobs + 1 rotary switch mounted on asymmetric plate, no deep front cavity needed",
+      "heritage": "Hybrid â€” Explorer top-mount controls simplified with Klein minimalism. 2 knobs + 1 rotary switch mounted on asymmetric plate, no deep front cavity needed",
       "dimensions_mm": {
         "length": 100.0,
         "width": 50.0,
@@ -658,7 +658,7 @@
     "nut_width_inches": 1.6875,
     "nut_width_mm": 42.86,
     "nut_type": "locking_clamp",
-    "nut_notes": "Headless locking nut \u00e2\u20ac\u201d strings clamped at nut end, tuned at bridge. No headstock, no tuning pegs.",
+    "nut_notes": "Headless locking nut â€” strings clamped at nut end, tuned at bridge. No headstock, no tuning pegs.",
     "fretboard_material": "ebony",
     "inlay_style": "dot",
     "profile": "modern_C",
@@ -685,7 +685,7 @@
       "style": "headless_fixed_with_fine_tuners",
       "cavity_ref": "bridge_route",
       "tuning": "integrated_fine_tuners",
-      "notes": "Headless bridge unit \u00e2\u20ac\u201d all tuning at bridge. Locking nut clamps strings at neck end."
+      "notes": "Headless bridge unit â€” all tuning at bridge. Locking nut clamps strings at neck end."
     },
     "controls": {
       "knobs": 2,
@@ -730,7 +730,7 @@
   "overall": {
     "total_length_inches": 32.0,
     "total_length_mm": 812.8,
-    "notes": "Headless design \u00e2\u20ac\u201d no headstock. Overall length is body (368.3mm) + neck extension to nut (~315mm) + short clamping stub (~30mm). ~180mm shorter than headed equivalent."
+    "notes": "Headless design â€” no headstock. Overall length is body (368.3mm) + neck extension to nut (~315mm) + short clamping stub (~30mm). ~180mm shorter than headed equivalent."
   },
   "source_images": [
     "ChatGPT Image Mar 6, 2026, 01_41_42 AM.png",
