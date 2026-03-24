@@ -16,6 +16,8 @@ from .config import CarvingConfig, CarvingToolSpec
 from .graduation_map import GraduationMap
 from .surface_carving import SurfaceCarvingGenerator, CarvingResult
 
+from app.core.safety import safety_critical
+
 
 @dataclass
 class CarvingPipelineResult:
@@ -84,6 +86,7 @@ class CarvingPipeline:
         self.include_semi_finish = False  # Optional intermediate pass
         self.include_finishing = True
 
+    @safety_critical
     def generate(
         self,
         include_roughing: Optional[bool] = None,
@@ -189,6 +192,7 @@ class CarvingPipeline:
             "%",
         ]
 
+    @safety_critical
     def generate_roughing_only(
         self,
         tool: Optional[CarvingToolSpec] = None,
@@ -212,6 +216,7 @@ class CarvingPipeline:
 
         return result
 
+    @safety_critical
     def generate_finishing_only(
         self,
         tool: Optional[CarvingToolSpec] = None,

@@ -3,6 +3,8 @@ import math
 from typing import List, Tuple, Dict, Any, Optional, Literal
 import pyclipper
 
+from app.core.safety import safety_critical
+
 # =============================================================================
 # VALIDATION CONSTANTS
 # =============================================================================
@@ -122,6 +124,7 @@ def _difference(
 # ROBUST OFFSET STACK GENERATION
 # =============================================================================
 
+@safety_critical
 def build_offset_stacks_robust(
     outer: List[Tuple[float, float]],
     islands: List[List[Tuple[float, float]]],
@@ -242,6 +245,7 @@ def spiralize_linked(rings: List[List[Tuple[float, float]]]) -> List[Tuple[float
 # G-CODE MOVE GENERATION
 # =============================================================================
 
+@safety_critical
 def to_toolpath(
     path_pts: List[Tuple[float, float]],
     feed_xy: float,
@@ -286,6 +290,7 @@ def to_toolpath(
 # MAIN PLANNING FUNCTION (L.1 ENTRY POINT)
 # =============================================================================
 
+@safety_critical
 def plan_adaptive_l1(
     loops: List[List[Tuple[float, float]]],
     tool_d: float,

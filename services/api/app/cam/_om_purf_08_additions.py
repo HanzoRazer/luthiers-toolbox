@@ -6,7 +6,10 @@ G38.2-based probe routine for verifying binding channel depth.
 
 from typing import List, Tuple, Optional
 
+from app.core.safety import safety_critical
 
+
+@safety_critical
 def generate_channel_depth_probe_gcode(
     points: List[Tuple[float, float]],
     expected_depth_mm: float,
@@ -160,6 +163,7 @@ def generate_channel_depth_probe_gcode(
     return "\n".join(lines)
 
 
+@safety_critical
 def generate_channel_probe_points(
     path: List[Tuple[float, float]],
     probe_spacing_mm: float = 50.0,

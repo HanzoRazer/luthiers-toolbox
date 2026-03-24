@@ -38,6 +38,8 @@ from dataclasses import dataclass, field
 from enum import Enum
 from typing import List, Optional, Literal
 
+from app.core.safety import safety_critical
+
 
 class ToolChangeMode(str, Enum):
     """Tool change pause behavior."""
@@ -120,6 +122,7 @@ class PostProcessor:
     # PROGRAM STRUCTURE
     # =========================================================================
 
+    @safety_critical
     def program_header(
         self,
         program_name: str = "CNC Program",
@@ -160,6 +163,7 @@ class PostProcessor:
 
         return lines
 
+    @safety_critical
     def program_footer(self) -> List[str]:
         """
         Generate program footer with safe end sequence.
@@ -185,6 +189,7 @@ class PostProcessor:
     # TOOL CHANGES (G43 TOOL LENGTH COMPENSATION)
     # =========================================================================
 
+    @safety_critical
     def tool_change(
         self,
         tool: Optional[ToolSpec] = None,
@@ -280,6 +285,7 @@ class PostProcessor:
     # CUTTER COMPENSATION (G41/G42)
     # =========================================================================
 
+    @safety_critical
     def cutter_comp_left(
         self,
         tool: Optional[ToolSpec] = None,
@@ -312,6 +318,7 @@ class PostProcessor:
             f"G41 D{tool.d_number}  ( Cutter comp left - climb milling )",
         ]
 
+    @safety_critical
     def cutter_comp_right(
         self,
         tool: Optional[ToolSpec] = None,
@@ -402,6 +409,7 @@ class PostProcessor:
             seconds = milliseconds / 1000.0
             return f"G4 P{seconds:.1f}"
 
+    @safety_critical
     def spindle_on(self, rpm: int, direction: Literal["CW", "CCW"] = "CW") -> List[str]:
         """
         Generate spindle start command.
@@ -458,6 +466,7 @@ class PostProcessor:
 # CONVENIENCE FUNCTIONS
 # =============================================================================
 
+@safety_critical
 def generate_tool_change(
     tool_number: int,
     rpm: int,
@@ -505,6 +514,7 @@ def generate_tool_change(
     )
 
 
+@safety_critical
 def generate_cutter_comp_sequence(
     climb: bool,
     tool_number: int,

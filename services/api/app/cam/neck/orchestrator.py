@@ -23,6 +23,8 @@ from .truss_rod_channel import TrussRodChannelGenerator, TrussRodResult
 from .profile_carving import ProfileCarvingGenerator, ProfileCarvingResult
 from .fret_slots import FretSlotGenerator, FretSlotResult
 
+from app.core.safety import safety_critical
+
 
 @dataclass
 class NeckPipelineResult:
@@ -91,6 +93,7 @@ class NeckPipeline:
         self.include_profile_finish = True
         self.include_fret_slots = config.include_fret_slots
 
+    @safety_critical
     def generate(
         self,
         include_truss_rod: Optional[bool] = None,
@@ -208,6 +211,7 @@ class NeckPipeline:
             "%",
         ]
 
+    @safety_critical
     def generate_operation(
         self,
         operation: str,

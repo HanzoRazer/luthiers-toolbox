@@ -162,6 +162,7 @@ class ArmRestSection:
 # Main geometry computation
 # ---------------------------------------------------------------------------
 
+@safety_critical
 def compute_section(t: float, spec: ArmRestSpec) -> ArmRestSection:
     """
     Compute cross-section geometry at normalized span position t ∈ [0, 1].
@@ -229,6 +230,7 @@ class RuledSurfacePoint:
     z_mm: float     # vertical above guitar top
 
 
+@safety_critical
 def compute_ruled_surface(
     spec: ArmRestSpec,
     n_span: int = 60,
@@ -413,6 +415,7 @@ class ArmRestResult:
         return "\n".join(lines)
 
 
+@safety_critical
 def compute_armrest(
     spec: ArmRestSpec,
     n_stations: int = 11,

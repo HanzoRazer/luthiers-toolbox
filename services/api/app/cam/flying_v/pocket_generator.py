@@ -19,6 +19,8 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
 
+from app.core.safety import safety_critical
+
 # Flying V spec JSON location
 SPEC_PATH = Path(__file__).parent.parent.parent / "instrument_geometry" / "specs" / "gibson_flying_v_1958.json"
 
@@ -159,6 +161,7 @@ def load_flying_v_spec(variant: str = "original_1958") -> FlyingVSpec:
     )
 
 
+@safety_critical
 def _generate_zigzag_pocket(
     width_mm: float,
     length_mm: float,
@@ -227,6 +230,7 @@ def _generate_zigzag_pocket(
     return lines
 
 
+@safety_critical
 def generate_control_cavity_toolpath(
     spec: FlyingVSpec,
     tool: Optional[ToolSpec] = None,
@@ -294,6 +298,7 @@ def generate_control_cavity_toolpath(
     return "\n".join(lines)
 
 
+@safety_critical
 def generate_neck_pocket_toolpath(
     spec: FlyingVSpec,
     roughing_tool: Optional[ToolSpec] = None,
@@ -408,6 +413,7 @@ def generate_neck_pocket_toolpath(
     return "\n".join(lines)
 
 
+@safety_critical
 def generate_pickup_cavity_toolpath(
     spec: FlyingVSpec,
     pickup: str = "both",  # "neck", "bridge", or "both"

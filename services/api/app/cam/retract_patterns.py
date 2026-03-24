@@ -9,6 +9,8 @@ from typing import List, Dict, Any, Tuple, Optional
 from dataclasses import dataclass
 import math
 
+from app.core.safety import safety_critical
+
 
 @dataclass
 class Point3D:
@@ -54,6 +56,7 @@ def distance_3d(p1: Point3D, p2: Point3D) -> float:
     )
 
 
+@safety_critical
 def calculate_retract_height(
     current_pos: Tuple[float, float],
     next_pos: Tuple[float, float],
@@ -87,6 +90,7 @@ def calculate_retract_height(
         return config.safe_z
 
 
+@safety_critical
 def generate_minimal_retract(
     features: List[List[Tuple[float, float, float]]],
     config: RetractConfig,
@@ -153,6 +157,7 @@ def generate_minimal_retract(
     return lines, stats
 
 
+@safety_critical
 def generate_safe_retract(
     features: List[List[Tuple[float, float, float]]],
     config: RetractConfig,
@@ -215,6 +220,7 @@ def generate_safe_retract(
     return lines, stats
 
 
+@safety_critical
 def generate_incremental_retract(
     features: List[List[Tuple[float, float, float]]],
     config: RetractConfig,
@@ -297,6 +303,7 @@ def generate_incremental_retract(
     return lines, stats
 
 
+@safety_critical
 def generate_linear_lead_in(
     start_x: float,
     start_y: float,
@@ -329,6 +336,7 @@ def generate_linear_lead_in(
     return lines
 
 
+@safety_critical
 def generate_arc_lead_in(
     start_x: float,
     start_y: float,

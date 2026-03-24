@@ -16,7 +16,10 @@ import math
 from typing import Dict, Any, List, Tuple, Optional
 from pydantic import BaseModel
 
+from app.core.safety import safety_critical
 
+
+@safety_critical
 def helical_plunge(
     cx: float,
     cy: float,
@@ -196,6 +199,7 @@ def helical_stats(
     return stats
 
 
+@safety_critical
 def helical_validate(
     radius_mm: float,
     pitch_mm_per_rev: float,

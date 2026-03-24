@@ -6,6 +6,8 @@ from pydantic import BaseModel
 
 from .saw_blade_registry import SawBladeSpec, get_registry
 
+from app.core.safety import safety_critical
+
 # --- Validation Result Types ---
 
 class ValidationLevel(str, Enum):
@@ -72,6 +74,7 @@ class SawBladeValidator:
     
     # --- Main Validation Entry Point ---
     
+    @safety_critical
     def validate_operation(
         self,
         blade_id: str,
@@ -138,6 +141,7 @@ class SawBladeValidator:
     
     # --- Individual Validation Checks ---
     
+    @safety_critical
     def _check_contour_radius(
         self,
         blade: SawBladeSpec,
@@ -179,6 +183,7 @@ class SawBladeValidator:
             message=f"Contour radius {radius_mm:.1f}mm is safe for {blade.diameter_mm:.0f}mm blade"
         )
     
+    @safety_critical
     def _check_depth_of_cut(
         self,
         blade: SawBladeSpec,
@@ -234,6 +239,7 @@ class SawBladeValidator:
             message=f"DOC {doc_mm:.1f}mm is within safe range"
         )
     
+    @safety_critical
     def _check_rpm(
         self,
         blade: SawBladeSpec,
@@ -293,6 +299,7 @@ class SawBladeValidator:
             message=f"RPM {rpm:.0f} is within safe range ({rpm_min}-{rpm_max})"
         )
     
+    @safety_critical
     def _check_feed_rate(
         self,
         blade: SawBladeSpec,
@@ -387,6 +394,7 @@ class SawBladeValidator:
             message=f"Feed rate {feed_ipm:.1f} IPM is safe (chipload {chipload:.4f}\")"
         )
     
+    @safety_critical
     def _check_blade_design(
         self,
         blade: SawBladeSpec
@@ -440,6 +448,7 @@ class SawBladeValidator:
             message=f"Blade design is good (kerf/plate ratio {ratio:.2f})"
         )
     
+    @safety_critical
     def _check_material_compatibility(
         self,
         blade: SawBladeSpec,

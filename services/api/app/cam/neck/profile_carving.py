@@ -33,6 +33,8 @@ from .config import (
 )
 from ..post_processor import PostProcessor, PostConfig, ToolSpec
 
+from app.core.safety import safety_critical
+
 
 @dataclass
 class ProfileStation:
@@ -124,6 +126,7 @@ class ProfileCarvingGenerator:
         t = y_mm / self._body_joint_y
         return self.config.nut_width_mm + t * (self.config.heel_width_mm - self.config.nut_width_mm)
 
+    @safety_critical
     def _interpolate_depth(self, y_mm: float) -> float:
         """Interpolate neck depth at Y position."""
         if y_mm <= 0:
@@ -143,6 +146,7 @@ class ProfileCarvingGenerator:
                 self.pc_config.depth_at_heel_mm - self.pc_config.depth_at_12th_mm
             )
 
+    @safety_critical
     def _generate_profile_points(
         self,
         y_mm: float,
@@ -245,6 +249,7 @@ class ProfileCarvingGenerator:
 
         return stations
 
+    @safety_critical
     def generate_roughing(self, tool: Optional[NeckToolSpec] = None) -> ProfileCarvingResult:
         """Generate roughing pass G-code."""
         if tool:
@@ -308,6 +313,7 @@ class ProfileCarvingGenerator:
 
         return result
 
+    @safety_critical
     def generate_finishing(self, tool: Optional[NeckToolSpec] = None) -> ProfileCarvingResult:
         """Generate finishing pass G-code."""
         if tool:
