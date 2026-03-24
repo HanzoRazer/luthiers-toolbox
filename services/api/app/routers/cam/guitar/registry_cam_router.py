@@ -22,6 +22,8 @@ from typing import Any, Dict, List, Optional
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 
+from app.core.safety import safety_critical
+
 router = APIRouter(tags=["CAM", "Registry"])
 
 # Load registry
@@ -32,7 +34,7 @@ def _load_registry() -> Dict[str, Any]:
     """Load instrument model registry."""
     if not REGISTRY_PATH.exists():
         return {"models": {}}
-    with open(REGISTRY_PATH) as f:
+    with open(REGISTRY_PATH, encoding="utf-8") as f:
         return json.load(f)
 
 
@@ -352,6 +354,7 @@ def get_cam_templates(model_id: str) -> Dict[str, Any]:
 
 
 @router.post("/{model_id}/contours/body")
+@safety_critical
 def generate_body_contour(model_id: str, request: ContourRequest) -> ContourResponse:
     """
     Generate body contour (stub for models without assets).
@@ -387,6 +390,7 @@ def generate_body_contour(model_id: str, request: ContourRequest) -> ContourResp
 
 
 @router.post("/{model_id}/toolpaths/pocket")
+@safety_critical
 def generate_pocket_toolpath(model_id: str, request: ToolpathRequest) -> ToolpathResponse:
     """
     Generate pocket toolpath (stub).
