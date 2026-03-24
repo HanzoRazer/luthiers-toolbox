@@ -113,6 +113,14 @@ def create_dxf(spec: dict, output_path: Path):
     msp.add_lwpolyline(body_points, close=True, dxfattribs={"layer": "BODY_OUTLINE"})
 
     # Add routing features from spec cavities
+    # Cavity key names — must match smart_guitar_v1.json exactly
+    # neck_pickup_route (NOT neck_pickup)
+    # bridge_pickup_route (NOT bridge_pickup)
+    # rear_electronics_cavity (NOT pi_cavity)
+    # arduino_preamp_pocket (NOT arduino_pocket)
+    # usb_c_port (NOT usb_port)
+    # antenna_recess (NOT antenna_pocket)
+    # control_plate_surface (NOT control_plate)
     cavities = spec.get("cavities", {})
 
     # Neck pocket
