@@ -140,7 +140,7 @@
     "fretboard_radius": "Must be specified before neck build. Recommend 304.8mm (12\") from LP/Explorer lineage. Klein is 254mm \u2014 compound 254-305mm is an option.",
     "pickup_models": "Not yet selected. Heights above are starting points. Each model has its own optimal range.",
     "bridge_model": "Headless bridge model not yet selected. Hipshot, ABM, Steinberger all have different saddle height ranges.",
-    "neck_angle_confirmation": "4.0\u00b0 assumed (LP). See neck_angle_analysis for solver results.",
+    "neck_angle_confirmation": "Neck angle is HIGHER than LP/Explorer reference, not lower. Headless bridge at 10-14mm requires ~4.8-5.4 degrees. Explorer at 8mm TOM needs 4.5deg as calibration baseline. BLOCKER: select bridge model first, measure exact bridge height, then compute final angle before cutting neck pocket.",
     "neck_angle_analysis": {
       "date": "2026-03-23",
       "reference_model": "gibson_explorer",
