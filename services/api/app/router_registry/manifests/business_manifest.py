@@ -103,6 +103,13 @@ BUSINESS_ROUTERS: List[RouterSpec] = [
         tags=["Instruments", "Guitar", "Generators"],
         category="instrument_geometry",
     ),
+    # Smart Guitar DXF Generator - generates routing DXF from database spec
+    RouterSpec(
+        module="app.routers.instruments.guitar.smart_guitar_dxf_router",
+        prefix="",  # Router has prefix built-in: /api/instruments/smart-guitar
+        tags=["Instruments", "Smart Guitar", "DXF"],
+        category="instrument_geometry",
+    ),
     RouterSpec(
         module="app.routers.binding_design_router",
         prefix="/api/binding",
