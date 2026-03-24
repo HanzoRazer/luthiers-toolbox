@@ -27,6 +27,8 @@ from typing import List, Optional
 from .config import NeckPipelineConfig, FretSlotConfig, NeckToolSpec
 from ..post_processor import PostProcessor, PostConfig, ToolSpec
 
+from app.core.safety import safety_critical
+
 
 @dataclass
 class FretSlotPosition:
@@ -114,6 +116,7 @@ class FretSlotGenerator:
         t = y_mm / body_joint_y
         return self.config.nut_width_mm + t * (self.config.heel_width_mm - self.config.nut_width_mm)
 
+    @safety_critical
     def _slot_depth_at_position(self, fret_number: int, x_mm: float = 0.0) -> float:
         """
         Calculate slot depth at position, accounting for compound radius.
@@ -170,6 +173,7 @@ class FretSlotGenerator:
 
         return slots
 
+    @safety_critical
     def generate(self, tool: Optional[NeckToolSpec] = None) -> FretSlotResult:
         """Generate fret slot cutting G-code."""
         if tool:

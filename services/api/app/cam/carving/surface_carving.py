@@ -23,6 +23,8 @@ from .config import (
 from .graduation_map import GraduationMap
 from ..post_processor import PostProcessor, PostConfig, ToolSpec, ToolChangeMode
 
+from app.core.safety import safety_critical
+
 
 @dataclass
 class CarvingMove:
@@ -98,6 +100,7 @@ class SurfaceCarvingGenerator:
         self.safe_z = config.safe_z_mm
         self.retract_z = config.retract_z_mm
 
+    @safety_critical
     def generate_roughing(
         self,
         tool: Optional[CarvingToolSpec] = None,
@@ -156,6 +159,7 @@ class SurfaceCarvingGenerator:
 
         return result
 
+    @safety_critical
     def generate_finishing(
         self,
         tool: Optional[CarvingToolSpec] = None,
@@ -238,6 +242,7 @@ class SurfaceCarvingGenerator:
 
         return result
 
+    @safety_critical
     def _generate_parallel_plane_pass(
         self,
         z_level: float,
@@ -319,6 +324,7 @@ class SurfaceCarvingGenerator:
 
         return carving_pass
 
+    @safety_critical
     def _generate_raster_passes(
         self,
         tool: CarvingToolSpec,

@@ -26,6 +26,8 @@ from ....generators.acoustic_body_generator import (
     list_acoustic_styles,
 )
 
+from app.core.safety import safety_critical
+
 router = APIRouter(tags=["Acoustic", "CAM", "GEN-6"])
 
 
@@ -188,6 +190,7 @@ def preview_outline(request: OutlinePreviewRequest) -> Dict[str, Any]:
 
 
 @router.post("/{style}/body/gcode")
+@safety_critical
 def generate_body_perimeter(
     style: str,
     request: PerimeterRequest,
@@ -229,6 +232,7 @@ def generate_body_perimeter(
 
 
 @router.post("/{style}/soundhole/gcode")
+@safety_critical
 def generate_soundhole(
     style: str,
     request: SoundholeRequest,
@@ -267,6 +271,7 @@ def generate_soundhole(
 
 
 @router.post("/{style}/binding/gcode")
+@safety_critical
 def generate_binding_channel(
     style: str,
     request: BindingRequest,

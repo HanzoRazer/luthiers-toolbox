@@ -8,11 +8,14 @@ Supports 10+ patterns including corner finding, boss/hole location, and surface 
 from typing import Dict, List, Tuple, Optional, Any
 from math import cos, sin, radians
 
+from app.core.safety import safety_critical
+
 
 # OM-PURF-08: Channel depth probing
 from ._om_purf_08_additions import generate_channel_depth_probe_gcode, generate_channel_probe_points
 
 
+@safety_critical
 def generate_corner_probe(
     pattern: str = "corner_outside",
     approach_distance: float = 20.0,
@@ -88,6 +91,7 @@ def generate_corner_probe(
     return "\n".join(gcode_lines)
 
 
+@safety_critical
 def generate_boss_probe(
     pattern: str = "boss_circular",
     estimated_diameter: float = 50.0,
@@ -196,6 +200,7 @@ def generate_boss_probe(
     return "\n".join(gcode_lines)
 
 
+@safety_critical
 def generate_surface_z_probe(
     approach_z: float = 10.0,
     probe_depth: float = -20.0,
@@ -235,6 +240,7 @@ def generate_surface_z_probe(
     return "\n".join(gcode_lines)
 
 
+@safety_critical
 def generate_pocket_probe(
     pocket_width: float = 100.0,
     pocket_height: float = 60.0,
@@ -337,6 +343,7 @@ def generate_pocket_probe(
     return "\n".join(gcode_lines)
 
 
+@safety_critical
 def generate_vise_square_probe(
     vise_jaw_height: float = 50.0,
     probe_spacing: float = 100.0,

@@ -231,6 +231,8 @@ PATCH HISTORY:
 import math
 from typing import List, Dict, Tuple
 
+from app.core.safety import safety_critical
+
 # Geometry input: list of closed loops (outer first, then inner islands), each loop as [(x,y), ...]
 # Output toolpath: list of moves [{"code":"G1","x":...,"y":...,"f":...}, {"code":"G2","x":...,"y":...,"i":...,"j":...}, ...]
 
@@ -276,6 +278,7 @@ def angle_between(ax,ay,bx,by):
     while d<-math.pi: d += 2*math.pi
     return abs(d)
 
+@safety_critical
 def build_offset_stacks(outer: List[Tuple[float,float]], islands: List[List[Tuple[float,float]]], tool_d: float, stepover: float, margin: float):
     """
     Returns a list of inward offset loops starting from (tool/2 + margin) inside the outer, stopping before collapse or island collision.
@@ -328,6 +331,7 @@ def spiralize(stacks: List[List[Tuple[float,float]]], smoothing: float) -> List[
 # G-CODE GENERATION (LEGACY L.0)
 # =============================================================================
 
+@safety_critical
 def to_toolpath(path_pts: List[Tuple[float,float]], feed_xy: float, z_rough: float, safe_z: float, lead_r: float, climb=True):  # noqa: vulture - lead_r reserved for future
     moves = []
     # lead-in arc
@@ -345,6 +349,7 @@ def to_toolpath(path_pts: List[Tuple[float,float]], feed_xy: float, z_rough: flo
 # MAIN PLANNER (LEGACY L.0)
 # =============================================================================
 
+@safety_critical
 def plan_adaptive(loops: List[List[Tuple[float,float]]], tool_d: float, stepover: float, stepdown: float, margin: float, strategy: str, smoothing: float, climb: bool):
     outer = loops[0]
     islands = loops[1:] if len(loops)>1 else []

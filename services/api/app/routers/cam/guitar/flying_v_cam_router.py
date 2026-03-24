@@ -19,6 +19,8 @@ from typing import Any, Dict, Optional
 from fastapi import APIRouter, Query
 from pydantic import BaseModel, Field
 
+from app.core.safety import safety_critical
+
 router = APIRouter(tags=["Flying V", "CAM"])
 
 
@@ -96,6 +98,7 @@ def get_flying_v_spec(
 
 
 @router.post("/toolpath/control_cavity", response_model=ToolpathResponse)
+@safety_critical
 def generate_control_cavity_toolpath(
     variant: str = Query("original_1958", description="Spec variant"),
 ) -> ToolpathResponse:
@@ -114,6 +117,7 @@ def generate_control_cavity_toolpath(
 
 
 @router.post("/toolpath/neck_pocket", response_model=ToolpathResponse)
+@safety_critical
 def generate_neck_pocket_toolpath(
     variant: str = Query("original_1958", description="Spec variant"),
 ) -> ToolpathResponse:
@@ -132,6 +136,7 @@ def generate_neck_pocket_toolpath(
 
 
 @router.post("/toolpath/pickup", response_model=ToolpathResponse)
+@safety_critical
 def generate_pickup_toolpath(
     pickup: str = Query("both", description="neck | bridge | both"),
     variant: str = Query("original_1958", description="Spec variant"),
@@ -153,6 +158,7 @@ def generate_pickup_toolpath(
 
 
 @router.post("/validate", response_model=ValidateResponse)
+@safety_critical
 def validate_flying_v_gcode(req: ValidateRequest) -> ValidateResponse:
     """
     Validate Flying V G-code depths against spec.

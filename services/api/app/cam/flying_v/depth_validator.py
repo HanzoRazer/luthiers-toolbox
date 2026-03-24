@@ -27,6 +27,8 @@ from typing import Any, Dict, List, Optional, Tuple
 
 from .pocket_generator import FlyingVSpec, load_flying_v_spec
 
+from app.core.safety import safety_critical
+
 log = logging.getLogger(__name__)
 
 
@@ -57,6 +59,7 @@ class DepthValidationResult:
         }
 
 
+@safety_critical
 def _extract_z_depths(gcode: str) -> List[float]:
     """
     Extract all Z depth values from G-code.
@@ -101,6 +104,7 @@ def _extract_z_depths(gcode: str) -> List[float]:
     return depths
 
 
+@safety_critical
 def validate_neck_pocket_depth(
     gcode: str,
     spec: Optional[FlyingVSpec] = None,
@@ -181,6 +185,7 @@ def validate_neck_pocket_depth(
     )
 
 
+@safety_critical
 def validate_control_cavity_depth(
     gcode: str,
     spec: Optional[FlyingVSpec] = None,
@@ -255,6 +260,7 @@ def validate_control_cavity_depth(
     )
 
 
+@safety_critical
 def validate_all_depths(
     gcode_dict: Dict[str, str],
     spec: Optional[FlyingVSpec] = None,
@@ -331,6 +337,7 @@ def validate_all_depths(
     return results
 
 
+@safety_critical
 def validate_flying_v_gcode_file(
     filepath: Path,
     operation: str,
@@ -398,6 +405,7 @@ def validate_flying_v_gcode_file(
         )
 
 
+@safety_critical
 def validate_flying_v_gcode_with_preflight(
     gcode: str,
     operation: str,

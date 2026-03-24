@@ -11,6 +11,8 @@ import uuid
 
 from .models import SawRunMeta, SawRunRecord, TelemetrySample
 
+from app.core.safety import safety_critical
+
 # Import storage functions from cam_core (graduated from experimental)
 from app.cam_core.joblog.storage import (
     save_run,
@@ -29,6 +31,7 @@ def generate_run_id() -> str:
     return f"{timestamp}_{unique}"
 
 
+@safety_critical
 def plan_cut_operation(job: Dict[str, Any]) -> Dict[str, Any]:
     """
     Plan a saw cut operation and create a run record.
@@ -98,6 +101,7 @@ def plan_cut_operation(job: Dict[str, Any]) -> Dict[str, Any]:
     }
 
 
+@safety_critical
 def start_run(run_id: str) -> Dict[str, Any]:
     """
     Mark a run as started.

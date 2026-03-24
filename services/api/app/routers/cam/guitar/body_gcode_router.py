@@ -38,6 +38,8 @@ from ....db.models.project import Project
 from ....projects.service import parse_design_state
 from ....schemas.instrument_project import InstrumentProjectData
 
+from app.core.safety import safety_critical
+
 router = APIRouter(tags=["CAM", "G-code", "GEN-4"])
 
 
@@ -147,6 +149,7 @@ def _generate_timestamp() -> str:
 
 
 @router.post("/stratocaster/body/gcode")
+@safety_critical
 def generate_stratocaster_body_gcode(
     project_id: str = Query(..., description="Project UUID"),
     machine: str = Query("generic_router", description="Machine profile"),
@@ -207,6 +210,7 @@ def generate_stratocaster_body_gcode(
 
 
 @router.post("/les_paul/body/gcode")
+@safety_critical
 def generate_les_paul_body_gcode(
     project_id: str = Query(..., description="Project UUID"),
     machine: str = Query("bcam_2030a", description="Machine profile"),
@@ -269,6 +273,7 @@ def generate_les_paul_body_gcode(
 
 
 @router.post("/flying_v/body/gcode")
+@safety_critical
 def generate_flying_v_body_gcode(
     project_id: str = Query(..., description="Project UUID"),
     operations: str = Query("all", description="Operations: all, control_cavity, neck_pocket, pickup"),
@@ -347,6 +352,7 @@ def generate_flying_v_body_gcode(
 
 
 @router.post("/{model_id}/neck/gcode")
+@safety_critical
 def generate_neck_gcode(
     model_id: str,
     project_id: str = Query(..., description="Project UUID"),

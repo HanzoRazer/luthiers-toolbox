@@ -21,6 +21,8 @@ from typing import List, Optional
 from .config import NeckPipelineConfig, TrussRodConfig, NeckToolSpec
 from ..post_processor import PostProcessor, PostConfig, ToolSpec
 
+from app.core.safety import safety_critical
+
 
 @dataclass
 class TrussRodResult:
@@ -70,6 +72,7 @@ class TrussRodChannelGenerator:
         else:
             self.post_processor = PostProcessor(PostConfig(safe_z_mm=self.safe_z_mm))
 
+    @safety_critical
     def generate(self, tool: Optional[NeckToolSpec] = None) -> TrussRodResult:
         """Generate truss rod channel G-code."""
         if tool:
@@ -166,6 +169,7 @@ class TrussRodChannelGenerator:
         )
         return self.post_processor.tool_change(tool=tool_spec)
 
+    @safety_critical
     def generate_access_pocket(self) -> List[str]:
         """
         Generate optional access pocket at nut end.

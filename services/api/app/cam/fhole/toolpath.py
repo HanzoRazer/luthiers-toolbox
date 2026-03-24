@@ -23,6 +23,8 @@ from typing import List, Tuple, Optional, Dict, Any
 from .config import FHoleRoutingConfig, PlungeStrategy
 from .geometry import FHoleContour, generate_fhole_pair
 
+from app.core.safety import safety_critical
+
 Pt = Tuple[float, float]
 
 
@@ -72,6 +74,7 @@ class FHoleToolpathGenerator:
         self.config = config
         self.tool_radius = config.tool.diameter_mm / 2
 
+    @safety_critical
     def generate(self) -> FHoleToolpathResult:
         """
         Generate complete F-hole routing program.
@@ -120,6 +123,7 @@ class FHoleToolpathGenerator:
 
         return result
 
+    @safety_critical
     def generate_single(
         self,
         contour: FHoleContour,
@@ -193,6 +197,7 @@ class FHoleToolpathGenerator:
             "",
         ]
 
+    @safety_critical
     def _route_fhole(
         self,
         contour: FHoleContour,
@@ -254,6 +259,7 @@ class FHoleToolpathGenerator:
             "time": total_time,
         }
 
+    @safety_critical
     def _offset_contour_inward(self, points: List[Pt]) -> List[Pt]:
         """
         Offset contour inward by tool radius.
@@ -316,6 +322,7 @@ class FHoleToolpathGenerator:
 
         return offset_points
 
+    @safety_critical
     def _calculate_z_levels(self) -> List[float]:
         """Calculate Z levels for depth passes."""
         cfg = self.config
@@ -335,6 +342,7 @@ class FHoleToolpathGenerator:
 
         return levels
 
+    @safety_critical
     def _generate_plunge(
         self,
         x: float,
@@ -395,6 +403,7 @@ class FHoleToolpathGenerator:
 
         return lines, length
 
+    @safety_critical
     def _cut_contour(
         self,
         points: List[Pt],
