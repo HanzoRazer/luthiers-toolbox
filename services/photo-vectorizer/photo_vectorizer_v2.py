@@ -1,27 +1,36 @@
 """
-Photo Vectorizer v2.0 — Standalone Photographic Instrument Outline Extractor
-=============================================================================
+Photo Vectorizer v3.0 — Dual-Path Photographic & AI Instrument Outline Extractor
+=================================================================================
 
-Converts photographs of guitars/instruments into clean SVG and DXF vector outlines.
-Designed for beginners and hobbyists who have a concept photo but not CAD drawings.
+Converts photographs AND AI-generated images of guitars/instruments into clean
+SVG and DXF vector outlines. Designed for beginners and hobbyists who have a
+concept photo or AI render but not CAD drawings.
 
-Pipeline:
-  0. Dark background detection
-  1. EXIF DPI extraction
-  2. Input classification
-  3. Perspective correction
-  4. Background removal (GrabCut / rembg / SAM / threshold)
-  5. Edge detection (Canny + Sobel + Laplacian fusion)
-  6. Reference object detection
-  7. Scale calibration
-  8. Contour assembly with hierarchy + feature classification
-  9. Manual correction hooks
-  10. Confidence heatmap (debug)
-  11. Export (SVG, DXF, JSON)
-  12. Batch processing
+Architecture — two extraction paths selected via `source_type`:
+
+  Photo pipeline (12-stage, original v2 path):
+    0. Dark background detection
+    1. EXIF DPI extraction
+    2. Input classification
+    3. Perspective correction
+    4. Background removal (GrabCut / rembg / SAM / threshold)
+    5. Edge detection (Canny + Sobel + Laplacian fusion)
+    6. Reference object detection
+    7. Scale calibration
+    8. Contour assembly with hierarchy + feature classification
+    9. Manual correction hooks
+    10. Confidence heatmap (debug)
+    11. Export (SVG, DXF, JSON)
+    12. Batch processing
+
+  AI pipeline (4-stage, added in v3):
+    1. AI image detection (_detect_ai_image)
+    2. AI-optimized path extraction (_extract_ai_path)
+    3. Shape classification (ExtractedShape)
+    4. CAD-ready export (AIToCADExtractor)
 
 Author: The Production Shop
-Version: 2.0.0
+Version: 3.0.0
 """
 
 from __future__ import annotations
