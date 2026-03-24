@@ -129,7 +129,7 @@ def create_dxf(spec: dict, output_path: Path):
         ], close=True, dxfattribs={"layer": "NECK_POCKET"})
 
     # Neck pickup (humbucker)
-    pickup_dims = cavities.get("neck_pickup", {}).get("dimensions_mm", {})
+    pickup_dims = cavities.get("neck_pickup_route", {}).get("dimensions_mm", {})
     if pickup_dims:
         pu_l = pickup_dims.get("length", 92)
         pu_w = pickup_dims.get("width", 40)
@@ -142,7 +142,7 @@ def create_dxf(spec: dict, output_path: Path):
         ], close=True, dxfattribs={"layer": "NECK_PICKUP"})
 
     # Bridge pickup (humbucker)
-    bridge_pu = cavities.get("bridge_pickup", {}).get("dimensions_mm", {})
+    bridge_pu = cavities.get("bridge_pickup_route", {}).get("dimensions_mm", {})
     if bridge_pu:
         bp_l = bridge_pu.get("length", 92)
         bp_w = bridge_pu.get("width", 40)
@@ -168,7 +168,7 @@ def create_dxf(spec: dict, output_path: Path):
         ], close=True, dxfattribs={"layer": "BRIDGE_ROUTE"})
 
     # Pi cavity (rear electronics)
-    pi = cavities.get("pi_cavity", {}).get("dimensions_mm", {})
+    pi = cavities.get("rear_electronics_cavity", {}).get("dimensions_mm", {})
     if pi:
         pi_l = pi.get("length", 100)
         pi_w = pi.get("width", 70)
@@ -181,7 +181,7 @@ def create_dxf(spec: dict, output_path: Path):
         ], close=True, dxfattribs={"layer": "PI_CAVITY"})
 
     # Arduino pocket
-    arduino = cavities.get("arduino_pocket", {}).get("dimensions_mm", {})
+    arduino = cavities.get("arduino_preamp_pocket", {}).get("dimensions_mm", {})
     if arduino:
         ar_l = arduino.get("length", 70)
         ar_w = arduino.get("width", 55)
@@ -203,7 +203,7 @@ def create_dxf(spec: dict, output_path: Path):
         msp.add_circle((jack_x, jack_y), jack_d/2, dxfattribs={"layer": "OUTPUT_JACK"})
 
     # USB port
-    usb = cavities.get("usb_port", {}).get("dimensions_mm", {})
+    usb = cavities.get("usb_c_port", {}).get("dimensions_mm", {})
     if usb:
         usb_w = usb.get("width", 15)
         usb_h = usb.get("height", 8)
@@ -217,7 +217,7 @@ def create_dxf(spec: dict, output_path: Path):
         ], close=True, dxfattribs={"layer": "USB_PORT"})
 
     # Antenna pocket
-    antenna = cavities.get("antenna_pocket", {}).get("dimensions_mm", {})
+    antenna = cavities.get("antenna_recess", {}).get("dimensions_mm", {})
     if antenna:
         ant_l = antenna.get("length", 50)
         ant_w = antenna.get("width", 10)
