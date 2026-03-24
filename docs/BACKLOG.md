@@ -206,7 +206,7 @@ When a new gap is found during implementation: add it here before closing the se
 
 ## PHOTO-003 — AI render extractor (ai_render_extractor.py)
 
-**Status:** ✅ RESOLVED (file + tests added)
+**Status:** 🟡 STAGED — file + tests added, integration into photo_vectorizer_v2.py routing pending
 **Priority:** Medium
 **Effort:** ~2 hours
 **File:** `services/photo-vectorizer/ai_render_extractor.py`
@@ -243,3 +243,14 @@ Standalone handler for AI-generated instrument renders (Midjourney, DALL-E, etc.
 - `test_export_dxf_returns_true_and_file_exists` — DXF export works
 - `test_export_empty_result` — Empty result handled gracefully
 - `test_dxf_layers_defined` — DXF_LAYERS constant correct
+
+### Remaining Work
+
+1. **Integration into `photo_vectorizer_v2.py`**
+   - Add routing logic to detect AI-generated renders (dark background, synthetic smoothness)
+   - Call `AIRenderExtractor.extract()` when render type detected
+   - Pass spec name from request params
+
+2. **Smart Guitar spec completion**
+   - Verify `smart_guitar_v1.json` has all cavity positions
+   - Add `CUTAWAY_VOID` polygon coordinates for Klein voids
