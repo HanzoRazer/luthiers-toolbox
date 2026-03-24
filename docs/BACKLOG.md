@@ -201,3 +201,45 @@ Backward compatibility preserved via re-exports from `soundhole_calc.py`.
 Each item here was identified by reading code, not by speculation.
 When an item is implemented: delete it from here and add it to `CHANGELOG.md`.
 When a new gap is found during implementation: add it here before closing the session.
+
+---
+
+## PHOTO-003 — AI render extractor (ai_render_extractor.py)
+
+**Status:** ✅ RESOLVED (file + tests added)
+**Priority:** Medium
+**Effort:** ~2 hours
+**File:** `services/photo-vectorizer/ai_render_extractor.py`
+**Test:** `services/photo-vectorizer/test_ai_render_extractor.py`
+
+### What Was Implemented
+
+Standalone handler for AI-generated instrument renders (Midjourney, DALL-E, etc.):
+
+- `AIRenderExtractor` class with `extract()` and `export_dxf()` methods
+- `CUTAWAY_VOID` layer for Klein ergonomic through-body voids
+- Spec cavity overlay from `instrument_geometry/body/specs/*.json`
+- Dark background auto-detection (AI renders often have dark backgrounds)
+- CLI interface: `python ai_render_extractor.py image.png -s smart_guitar -o output.dxf`
+
+### DXF Layers
+
+| Layer | Color | Purpose |
+|-------|-------|---------|
+| BODY_OUTLINE | White (7) | Main body perimeter |
+| CUTAWAY_VOID | Red (1) | Klein ergonomic voids |
+| NECK_POCKET | Green (3) | From spec JSON |
+| PICKUP_CAVITY | Cyan (4) | From spec JSON |
+| CONTROL_CAVITY | Blue (5) | From spec JSON |
+| BRIDGE_ROUTE | Magenta (6) | From spec JSON |
+
+### Tests
+
+- `test_import_clean` — AIRenderExtractor imports without errors
+- `test_instantiate_default_config` — Default config works
+- `test_instantiate_custom_config` — Custom config accepted
+- `test_load_smart_guitar_spec` — Finds smart_guitar_v1.json
+- `test_load_nonexistent_spec_returns_false` — Graceful failure
+- `test_export_dxf_returns_true_and_file_exists` — DXF export works
+- `test_export_empty_result` — Empty result handled gracefully
+- `test_dxf_layers_defined` — DXF_LAYERS constant correct
