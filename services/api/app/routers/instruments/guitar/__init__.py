@@ -24,6 +24,7 @@ from fastapi import APIRouter
 # Dynamic registry router handles ALL models including archtop, om, stratocaster, smart
 from .registry_router import router as registry_router
 from .assets_router import router as assets_router
+from .smart_guitar_dxf_router import router as smart_guitar_dxf_router
 
 router = APIRouter(tags=["Guitar", "Instruments"])
 
@@ -33,5 +34,8 @@ router.include_router(registry_router, tags=["Registry"])
 
 # Assets router for e2e file serving
 router.include_router(assets_router, tags=["Assets"])
+
+# Smart Guitar DXF generator - separate prefix /api/instruments/smart-guitar
+router.include_router(smart_guitar_dxf_router, tags=["Smart Guitar DXF"])
 
 __all__ = ["router"]
