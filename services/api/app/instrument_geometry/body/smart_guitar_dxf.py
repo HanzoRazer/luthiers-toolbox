@@ -154,7 +154,7 @@ CAVITY_LAYERS: Dict[str, LayerSpec] = {
         color=9,  # Light gray
         depth_mm=0.0,
         description="Body centerline reference",
-        linetype="CENTER",
+        linetype="CONTINUOUS",  # Changed from CENTER - undefined linetypes cause viewer hangs
     ),
     # Void cutaway layers
     "VOID_UPPER_BASS": LayerSpec(
