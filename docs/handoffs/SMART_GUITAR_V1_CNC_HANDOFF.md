@@ -38,7 +38,7 @@ The Smart Guitar is the **first IoT-enabled instrument** in the The Production S
 | Bridge | Headless fixed with fine tuners (95×42mm, 4 mount screws) |
 | Controls | Volume, tone, rotary switch — top-mount plate (100×50mm) |
 | Weight Estimate | 7.5 lbs (3.4 kg) |
-| IoT Platform | Arduino Uno (ADC/MIDI) + Raspberry Pi 5 (compute) — separated |
+| IoT Platform | Raspberry Pi 5 (compute/DSP) + Arduino Uno R4 (I/O coprocessor) — separated |
 | Wireless | WiFi 6 + BLE 5.0 via dual-band PCB antenna under 2mm wood window |
 | Charging | USB-C PD 20W edge-mount slot |
 | Registry Status | `COMPLETE` (was `STUB`) |
@@ -48,10 +48,22 @@ The Smart Guitar is the **first IoT-enabled instrument** in the The Production S
 
 | Board | Location | Power | Function |
 |-------|----------|-------|----------|
-| Arduino Uno (ATmega328P @ 16MHz) | `arduino_preamp_pocket` — near neck pickup, rear access | 9V PP3 battery (independent) | 44.1kHz ADC, pitch detection, MIDI generation |
+| Arduino Uno R4 | `arduino_preamp_pocket` — near neck pickup, rear access | 9V PP3 battery (independent) | I/O coprocessor only — footswitches, pots, LEDs, BMS telemetry, relay bypass. No audio. |
 | Raspberry Pi 5 (4GB) | `rear_electronics_cavity` — lower body, rear access | Li-ion 18650 + USB-C PD 20W | DSP, AI coaching, WiFi/BLE, NVMe SSD storage |
 
-**Signal chain:** Pickups → Arduino (44.1kHz ADC) → Pi 5 (USB serial) → DAW/speaker
+**Signal chain — canonical v2.0 (2026-03-23):**
+
+| Path | Chain | Latency |
+|------|-------|---------|
+| A — Dry analog | P90 pickup → buffered splitter (1MΩ) → 1/4" TS output jack | 0ms |
+| B — Digital processed | P90 pickup → buffered splitter → Hi-Z USB interface (Scarlett Solo) → Pi 5 USB → JACK (64-frame) → HiFiBerry DAC+ADC HAT (I2S GPIO) → headphone out + WiFi (PipeWire network sink) | ~3.1ms |
+| Control | Arduino Uno R4 → USB serial → Pi 5 | n/a |
+
+**WiFi audio:** PipeWire network sink via Pi 5 built-in WiFi — no additional hardware required.
+
+**Deprecated:** Arduino ADC audio path (10-bit, 44.1kHz) — replaced by Hi-Z USB interface. Arduino is I/O coprocessor only.
+
+_Reconciled across luthiers-toolbox and sg-spec repos. Commits: 7364621a (luthiers-toolbox), 898d0dd (sg-spec)._
 
 ---
 
