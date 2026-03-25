@@ -45,6 +45,24 @@ try:
 except ImportError:
     EZDXF_AVAILABLE = False
 
+# Traced outline coordinates (60 body points, 3 voids)
+TRACED_OUTLINE_AVAILABLE = False
+try:
+    from app.instrument_geometry.body.traced_outlines.smart_guitar_traced_outline import (
+        body_pts as TRACED_BODY_PTS,
+        void_upper_bass_pts,
+        void_upper_treble_pts,
+        void_lower_bass_pts,
+        ALL_VOIDS,
+    )
+    TRACED_OUTLINE_AVAILABLE = True
+except ImportError:
+    TRACED_BODY_PTS = None
+    void_upper_bass_pts = []
+    void_upper_treble_pts = []
+    void_lower_bass_pts = []
+    ALL_VOIDS = []
+
 
 # ─── Layer Definitions ───────────────────────────────────────────────────────
 
@@ -138,6 +156,25 @@ CAVITY_LAYERS: Dict[str, LayerSpec] = {
         description="Body centerline reference",
         linetype="CENTER",
     ),
+    # Void cutaway layers
+    "VOID_UPPER_BASS": LayerSpec(
+        name="VOID_UPPER_BASS",
+        color=40,  # Light cyan
+        depth_mm=0.0,
+        description="Upper bass cutaway void (11 points)",
+    ),
+    "VOID_UPPER_TREBLE": LayerSpec(
+        name="VOID_UPPER_TREBLE",
+        color=50,  # Light yellow
+        depth_mm=0.0,
+        description="Upper treble cutaway void (12 points)",
+    ),
+    "VOID_LOWER_BASS": LayerSpec(
+        name="VOID_LOWER_BASS",
+        color=60,  # Light magenta
+        depth_mm=0.0,
+        description="Lower bass cutaway void (21 points)",
+    ),
 }
 
 
@@ -216,6 +253,8 @@ def generate_smart_guitar_dxf(
     include_body_outline: bool = True,
     include_centerline: bool = True,
     include_wiring_channels: bool = True,
+    include_voids: bool = True,
+    use_traced_outline: bool = True,
     body_width_mm: float = 330.0,
     body_height_mm: float = 445.0,
 ) -> Path:
@@ -263,19 +302,53 @@ def generate_smart_guitar_dxf(
 
     # ─── Body Outline ────────────────────────────────────────────────────────
     if include_body_outline:
-        # Simplified LP-style body outline (actual outline would come from DXF)
-        body_points = rounded_rect_points(
-            cx=0, cy=-body_height_mm / 2,
-            length=body_width_mm,
-            width=body_height_mm,
-            corner_radius=50.0,
-            segments_per_corner=16,
-        )
-        msp.add_lwpolyline(
-            body_points,
-            dxfattribs={"layer": "BODY_OUTLINE"},
-            close=True,
-        )
+        if use_traced_outline and TRACED_OUTLINE_AVAILABLE and TRACED_BODY_PTS:
+            # Use 60-point traced outline from smart_guitar_outline_editor_v6
+            msp.add_lwpolyline(
+                TRACED_BODY_PTS,
+                dxfattribs={"layer": "BODY_OUTLINE"},
+                close=True,
+            )
+        else:
+            # Fallback: simplified parametric body outline
+            body_points = rounded_rect_points(
+                cx=0, cy=-body_height_mm / 2,
+                length=body_width_mm,
+                width=body_height_mm,
+                corner_radius=50.0,
+                segments_per_corner=16,
+            )
+            msp.add_lwpolyline(
+                body_points,
+                dxfattribs={"layer": "BODY_OUTLINE"},
+                close=True,
+            )
+
+    # ─── Void Cutaways ───────────────────────────────────────────────────────
+    if include_voids and TRACED_OUTLINE_AVAILABLE:
+        # Upper bass void (11 points)
+        if void_upper_bass_pts:
+            msp.add_lwpolyline(
+                void_upper_bass_pts,
+                dxfattribs={"layer": "VOID_UPPER_BASS"},
+                close=True,
+            )
+
+        # Upper treble void (12 points)
+        if void_upper_treble_pts:
+            msp.add_lwpolyline(
+                void_upper_treble_pts,
+                dxfattribs={"layer": "VOID_UPPER_TREBLE"},
+                close=True,
+            )
+
+        # Lower bass void (21 points)
+        if void_lower_bass_pts:
+            msp.add_lwpolyline(
+                void_lower_bass_pts,
+                dxfattribs={"layer": "VOID_LOWER_BASS"},
+                close=True,
+            )
 
     # ─── Centerline ──────────────────────────────────────────────────────────
     if include_centerline:
