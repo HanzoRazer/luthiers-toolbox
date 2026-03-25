@@ -42,6 +42,7 @@ The Smart Guitar is the **first IoT-enabled instrument** in the The Production S
 | Wireless | WiFi 6 + BLE 5.0 via dual-band PCB antenna under 2mm wood window |
 | Charging | USB-C PD 20W edge-mount slot |
 | Registry Status | `COMPLETE` (was `STUB`) |
+| Neck Blank Length | 444.5mm minimum (368.3mm above body + 76.2mm pocket tenon) |
 | Spec File | `instrument_geometry/body/specs/smart_guitar_v1.json` |
 
 ### IoT Architecture
