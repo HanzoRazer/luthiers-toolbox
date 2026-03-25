@@ -1,0 +1,24 @@
+{
+  "exclude_dirs": ["node_modules", "dist", ".git", "__pycache__", ".venv", "build"],
+  "file_patterns": ["**/*.vue", "**/*.ts", "**/*.tsx", "**/*.js", "**/*.jsx", "**/*.py"],
+  "checks": [],
+  "exclude_checks": [],
+  "severity_filter": ["critical", "warning", "info"],
+  "workers": 4,
+  "rules": {
+    "duplicate_detection": {
+      "enabled": true,
+      "min_lines": 5,
+      "ignore_css": true,
+      "ignore_imports": true
+    },
+    "magic_numbers": {
+      "enabled": true,
+      "allow_css_values": true,
+      "allowlist": [0, 1, 2, -1, 100, 50, 25, 75]
+    },
+    "unused_variables": {
+      "vue_script_setup_aware": true
+    }
+  }
+}
