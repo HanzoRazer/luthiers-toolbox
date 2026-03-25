@@ -27,7 +27,7 @@ The Smart Guitar is the **first IoT-enabled instrument** in the The Production S
 | Scale Length | 628.65mm (24.75" — Gibson standard) |
 | Frets | 24 |
 | Strings | 6 |
-| Body Style | Explorer-Klein hybrid angular |
+| Body Style | Les Paul-Explorer hybrid angular |
 | Body Dimensions | 444.5mm L × 368.3mm W × 44.45mm (1.75") thick |
 | Body Material — Prototype | Khaya (African Mahogany), ~0.50 g/cm³ |
 | Body Material — Production | Khaya, maple, ash |
