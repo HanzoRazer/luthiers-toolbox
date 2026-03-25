@@ -463,3 +463,17 @@ services/blueprint-import/output/
 # Orphaned vectorizer/rosette prototypes (moved from repo root)
 Rosette Designer/prototypes/premium/
 services/api/data/runs_v2/
+
+# ------------------------------------------
+# Sandbox / download artifacts at repo root
+# ------------------------------------------
+files - */
+sandbox_output/
+Test Phots/
+500
+Photo_Vectorizer_Sandbox.md
+Cognitive_Extraction*
+alternative_photo_vect*
+run_preset_tests.bat
+_fix_lineendings.py
+Repository_Critical_Evaluation.md
