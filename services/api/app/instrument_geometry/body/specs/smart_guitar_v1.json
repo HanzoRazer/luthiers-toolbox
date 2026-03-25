@@ -663,7 +663,15 @@
     "inlay_style": "dot",
     "profile": "modern_C",
     "headstock": "none",
-    "headless_notes": "Headless design reduces overall instrument length by ~180mm. Strings pass through locking nut to headless bridge with integrated fine tuners. Shorter neck-behind-nut stub for string clamping."
+    "headless_notes": "Headless design reduces overall instrument length by ~180mm. Strings pass through locking nut to headless bridge with integrated fine tuners. Shorter neck-behind-nut stub for string clamping.",
+    "neck_length": {
+      "protrusion_above_body_mm": 368.3,
+      "pocket_tenon_mm": 76.2,
+      "blank_minimum_mm": 444.5,
+      "note": "protrusion + tenon = blank. Protrusion = overall_length - body_length. Blank minimum equals body length exactly.",
+      "overall_instrument_mm": 812.8,
+      "body_length_mm": 444.5
+    }
   },
   "hardware": {
     "pickups": [
