@@ -35,6 +35,66 @@
     ]
   },
   "body": {
+    "traced_outline": {
+      "version": "v1_back_2026-03-26",
+      "source": "smart_guitar_outline_v4.json \u2014 hand-traced from AI render back view, 2026-03-26",
+      "coordinate_system": "body_center_origin \u2014 X+ treble, Y+ toward neck, units mm",
+      "files": {
+        "json": "traced_outlines/smart_guitar_back_v1.json",
+        "dxf": "dxf/electric/smart_guitar_back_v1.dxf",
+        "metadata": "traced_outlines/smart_guitar_back_v1_metadata.json"
+      },
+      "point_count": 78,
+      "void_count": 7,
+      "void_topology": {
+        "V1": {
+          "pts": 14,
+          "zone": "upper_bass_chamber",
+          "type": "through_body"
+        },
+        "V2": {
+          "pts": 19,
+          "zone": "upper_treble_chamber",
+          "type": "through_body"
+        },
+        "V3": {
+          "pts": 21,
+          "zone": "treble_mid_chamber",
+          "type": "through_body"
+        },
+        "V4": {
+          "pts": 4,
+          "zone": "control_cavity",
+          "type": "rear_routed_rectangle"
+        },
+        "V5": {
+          "pts": 12,
+          "zone": "bass_lower_chamber",
+          "type": "through_body"
+        },
+        "V6": {
+          "pts": 4,
+          "zone": "neck_bolt_plate_area",
+          "type": "hardware_reference"
+        },
+        "V7": {
+          "pts": 4,
+          "zone": "headstock_tuner_area",
+          "type": "hardware_reference_above_body"
+        }
+      },
+      "extent_mm": {
+        "x_min": -128.83,
+        "x_max": 121.21,
+        "y_min": -165.04,
+        "y_max": 125.75,
+        "width": 250.04,
+        "height": 290.79,
+        "bass_overhang_mm": 7.62,
+        "note": "Bass side extends 7.62mm further than treble \u2014 confirmed asymmetric body design"
+      },
+      "scale_note": "Traced at reduced zoom. Shape topology is correct. Scale factor TBD against physical blank."
+    },
     "dimensions": {
       "length_inches": 17.5,
       "length_mm": 444.5,
@@ -77,7 +137,7 @@
         "ash"
       ],
       "finish": "natural_blonde_amber",
-      "notes": "Prototype body is Khaya (African Mahogany) â€” warm tone, stable, easy to machine, ~0.50 g/cmÂ³. Production may use maple or ash depending on tonal goals."
+      "notes": "Prototype body is Khaya (African Mahogany) \u00e2\u20ac\u201d warm tone, stable, easy to machine, ~0.50 g/cm\u00c2\u00b3. Production may use maple or ash depending on tonal goals."
     },
     "weight_estimate_lbs": 7.5,
     "weight_notes": "Headless saves ~0.4 lb (no headstock/tuners). Klein cutaways remove ~0.6 lb of body wood. Electronics add back ~0.5 lb (Pi 5, Arduino, batteries, SSD, wiring). Net: comparable to a standard solid-body despite embedded computing."
@@ -86,7 +146,7 @@
     "_design_notes": "Hybrid approach: Explorer dual-humbucker front layout with Klein rear-access electronics. All cavity positions mapped to the STEM Guitar 24x32 grid (normalized 0-1 coordinates, origin top-left, Y increases downward).",
     "neck_pocket": {
       "type": "bolt_on",
-      "heritage": "Standard â€” both Explorer (set-neck) and Klein (bolt-on) inform this; Smart Guitar uses bolt-on for serviceability",
+      "heritage": "Standard \u00e2\u20ac\u201d both Explorer (set-neck) and Klein (bolt-on) inform this; Smart Guitar uses bolt-on for serviceability",
       "dimensions_mm": {
         "length": 76.2,
         "width": 55.9,
@@ -147,7 +207,7 @@
     },
     "neck_pickup_route": {
       "type": "humbucker",
-      "heritage": "Explorer dual-humbucker layout â€” neck position",
+      "heritage": "Explorer dual-humbucker layout \u00e2\u20ac\u201d neck position",
       "dimensions_mm": {
         "length": 92.0,
         "width": 40.0,
@@ -172,7 +232,7 @@
     },
     "bridge_pickup_route": {
       "type": "humbucker",
-      "heritage": "Explorer dual-humbucker layout â€” bridge position",
+      "heritage": "Explorer dual-humbucker layout \u00e2\u20ac\u201d bridge position",
       "dimensions_mm": {
         "length": 92.0,
         "width": 40.0,
@@ -197,7 +257,7 @@
     },
     "bridge_route": {
       "type": "headless_bridge",
-      "heritage": "Headless bridge with integrated fine tuners â€” Steinberger / Hipshot / ABM lineage. Replaces traditional TOM + tailpiece and headstock tuners. All tuning happens here.",
+      "heritage": "Headless bridge with integrated fine tuners \u00e2\u20ac\u201d Steinberger / Hipshot / ABM lineage. Replaces traditional TOM + tailpiece and headstock tuners. All tuning happens here.",
       "dimensions_mm": {
         "bridge_length": 95.0,
         "bridge_width": 42.0,
@@ -207,7 +267,7 @@
         "mounting_hole_diameter": 3.5,
         "mounting_hole_depth": 15.0,
         "string_spacing_mm": 10.5,
-        "notes": "Headless bridge unit: saddles with individual fine tuners for each string. Mounts flat to body surface with 4 screws. No tailpiece needed â€” strings anchor and tune at bridge.",
+        "notes": "Headless bridge unit: saddles with individual fine tuners for each string. Mounts flat to body surface with 4 screws. No tailpiece needed \u00e2\u20ac\u201d strings anchor and tune at bridge.",
         "corner_radius": 3.175
       },
       "grid_position": {
@@ -227,7 +287,7 @@
     },
     "rear_electronics_cavity": {
       "type": "rear_access",
-      "heritage": "Klein rear-access electronics â€” no front control cavity. Pi 5 compute module housed in rear-routed chamber with main battery, SSD, and controls. Arduino ADC module separated near pickups (active-preamp style) with its own 9V battery",
+      "heritage": "Klein rear-access electronics \u00e2\u20ac\u201d no front control cavity. Pi 5 compute module housed in rear-routed chamber with main battery, SSD, and controls. Arduino ADC module separated near pickups (active-preamp style) with its own 9V battery",
       "contains": [
         {
           "component": "Raspberry Pi 5",
@@ -288,7 +348,7 @@
       "body_position_mm": {
         "x_center": 36.8,
         "y_from_top": 275.7,
-        "notes": "Offset right (bass side). Pi 5 only â€” 40% less wood removed vs dual-board cavity"
+        "notes": "Offset right (bass side). Pi 5 only \u00e2\u20ac\u201d 40% less wood removed vs dual-board cavity"
       },
       "cover_plate": {
         "material": "black_abs",
@@ -323,24 +383,28 @@
     },
     "teensy_io_pocket": {
       "type": "rear_access",
-      "heritage": "I/O coprocessor pocket — Teensy 4.1 handles footswitches, pots, LEDs, BMS telemetry, relay bypass. Audio path handled by Hi-Z USB interface and HiFiBerry HAT. Replaces Arduino Uno R4 (2026-03-25) — pocket 64% smaller, bare board 77% smaller.",
+      "heritage": "I/O coprocessor pocket \u2014 Teensy 4.1 handles footswitches, pots, LEDs, BMS telemetry, relay bypass. Audio path handled by Hi-Z USB interface and HiFiBerry HAT. Replaces Arduino Uno R4 (2026-03-25) \u2014 pocket 64% smaller, bare board 77% smaller.",
       "contains": [
         {
           "component": "Teensy 4.1",
           "mcu": "ARM Cortex-M7 @ 600MHz",
-          "role": "I/O coprocessor — footswitches, pots, LEDs, BMS telemetry, relay bypass. NO AUDIO.",
-          "board_mm": [61.0, 18.0, 3.0],
+          "role": "I/O coprocessor \u2014 footswitches, pots, LEDs, BMS telemetry, relay bypass. NO AUDIO.",
+          "board_mm": [
+            61.0,
+            18.0,
+            3.0
+          ],
           "header_clearance_mm": 4.5,
-          "notes": "Replaces Arduino Uno R4. Pocket area 64% reduction (4800→1750mm²); bare board 77% smaller. Same I/O role, bare-metal determinism."
+          "notes": "Replaces Arduino Uno R4. Pocket area 64% reduction (4800\u21921750mm\u00b2); bare board 77% smaller. Same I/O role, bare-metal determinism."
         }
       ],
       "signal_chain": {
         "canonical": true,
         "spec_version": "2.1",
         "date": "2026-03-25",
-        "path_a_dry": "P90 → buffered_splitter → 1/4_TS_dry_jack",
-        "path_b_digital": "P90 → buffered_splitter → hi_z_usb_interface → raspberry_pi_5_usb → hifiberry_dac_adc_hat_i2s → headphone_out + wifi_pipewire_sink",
-        "wifi_output": "PipeWire network sink via Pi 5 built-in WiFi — wireless monitoring to phone/tablet/DAW",
+        "path_a_dry": "P90 \u2192 buffered_splitter \u2192 1/4_TS_dry_jack",
+        "path_b_digital": "P90 \u2192 buffered_splitter \u2192 hi_z_usb_interface \u2192 raspberry_pi_5_usb \u2192 hifiberry_dac_adc_hat_i2s \u2192 headphone_out + wifi_pipewire_sink",
+        "wifi_output": "PipeWire network sink via Pi 5 built-in WiFi \u2014 wireless monitoring to phone/tablet/DAW",
         "teensy_role": "control_only",
         "teensy_handles": [
           "footswitches",
@@ -351,8 +415,8 @@
         ],
         "teensy_audio": false,
         "teensy_connection": "USB_serial_to_Pi5_control_messages_only",
-        "teensy_power": "3.3V from Pi 5 USB — no independent battery needed",
-        "deprecated_path": "arduino_adc_direct — 10-bit 44.1kHz inadequate for audio (Arduino Uno R4 removed 2026-03-25)",
+        "teensy_power": "3.3V from Pi 5 USB \u2014 no independent battery needed",
+        "deprecated_path": "arduino_adc_direct \u2014 10-bit 44.1kHz inadequate for audio (Arduino Uno R4 removed 2026-03-25)",
         "latency_ms": {
           "path_a": 0,
           "path_b_scarlett_input": 1.0,
@@ -367,13 +431,13 @@
         "components": {
           "splitter": "active buffered Hi-Z 1MOhm input",
           "usb_interface": "Focusrite Scarlett Solo 4th Gen (primary) or IK AXE IO ONE (alt)",
-          "pi": "Raspberry Pi 5 — JACK + Guitarix/MODEP effects host",
-          "hifiberry": "HiFiBerry DAC+ADC — I2S GPIO HAT hardware-clocked output",
-          "teensy": "Teensy 4.1 — I/O coprocessor only (600MHz Cortex-M7)"
+          "pi": "Raspberry Pi 5 \u2014 JACK + Guitarix/MODEP effects host",
+          "hifiberry": "HiFiBerry DAC+ADC \u2014 I2S GPIO HAT hardware-clocked output",
+          "teensy": "Teensy 4.1 \u2014 I/O coprocessor only (600MHz Cortex-M7)"
         }
       },
       "latency_targets_ms": {
-        "_note": "DEPRECATED — see signal_chain.latency_ms for canonical values",
+        "_note": "DEPRECATED \u2014 see signal_chain.latency_ms for canonical values",
         "hard_max": 10,
         "target": 5,
         "ideal": 3.1
@@ -390,7 +454,7 @@
         "floor_remaining_mm": 24.45,
         "floor_verdict": "safe",
         "lateral_wood_recovery_mm": 35.0,
-        "note": "Pocket width reduced 60→25mm. Additional 35mm of lateral wood vs Arduino pocket."
+        "note": "Pocket width reduced 60\u219225mm. Additional 35mm of lateral wood vs Arduino pocket."
       },
       "grid_position": {
         "zone": "BODY_CANVAS (upper, near neck pickup)",
@@ -405,7 +469,10 @@
       },
       "cover_plate": {
         "material": "black_abs",
-        "size_mm": {"length": 80.0, "width": 35.0},
+        "size_mm": {
+          "length": 80.0,
+          "width": 35.0
+        },
         "screw_count": 2,
         "screw_type": "M3_countersunk"
       },
@@ -415,16 +482,22 @@
         "pilot_hole_mm": 2.8,
         "countersink_mm": 5.5,
         "positions_from_center_mm": [
-          {"x": -27.0, "y": 0.0},
-          {"x": 27.0, "y": 0.0}
+          {
+            "x": -27.0,
+            "y": 0.0
+          },
+          {
+            "x": 27.0,
+            "y": 0.0
+          }
         ],
         "notes": "2-screw pattern on long axis. 5mm inset from cover edge."
       },
-      "function_note": "Houses Teensy 4.1 — I/O coprocessor only. Audio handled by Hi-Z USB interface and HiFiBerry HAT."
+      "function_note": "Houses Teensy 4.1 \u2014 I/O coprocessor only. Audio handled by Hi-Z USB interface and HiFiBerry HAT."
     },
     "rear_wiring_channel": {
       "type": "rear_routed_channel",
-      "heritage": "Klein rear-wiring philosophy â€” all pickup leads run through rear-routed channels, no front wiring trenches",
+      "heritage": "Klein rear-wiring philosophy \u00e2\u20ac\u201d all pickup leads run through rear-routed channels, no front wiring trenches",
       "dimensions_mm": {
         "width": 10.0,
         "depth": 15.0,
@@ -515,7 +588,7 @@
     },
     "usb_c_port": {
       "type": "edge_slot",
-      "heritage": "Modern edge-mount port â€” Strandberg / Lava ME style side-access charging",
+      "heritage": "Modern edge-mount port \u00e2\u20ac\u201d Strandberg / Lava ME style side-access charging",
       "dimensions_mm": {
         "slot_width": 12.0,
         "slot_height": 6.5,
@@ -527,12 +600,12 @@
         "zone": "LOWER_BOUT (right edge)",
         "x_center_norm": 0.99,
         "y_center_norm": 0.65,
-        "notes": "Bass-side body edge, same Y-band as rear electronics cavity â€” short internal cable to Pi 5 USB-C. Below arm contour, won't interfere with playing."
+        "notes": "Bass-side body edge, same Y-band as rear electronics cavity \u00e2\u20ac\u201d short internal cable to Pi 5 USB-C. Below arm contour, won't interfere with playing."
       },
       "body_position_mm": {
         "x_center": 216.0,
         "y_from_top": 239.4,
-        "notes": "Edge-routed slot perpendicular to body surface. Body half-width ~219mm at this Y â€” slot opens at edge, extends 7mm inward. ~60mm cable to Pi 5."
+        "notes": "Edge-routed slot perpendicular to body surface. Body half-width ~219mm at this Y \u00e2\u20ac\u201d slot opens at edge, extends 7mm inward. ~60mm cable to Pi 5."
       },
       "function": "USB-C PD 20W charging for Li-ion 18650 + optional USB data connection to Pi 5",
       "internal_cable_mm": 60.0,
@@ -540,7 +613,7 @@
     },
     "antenna_recess": {
       "type": "shallow_pocket",
-      "heritage": "IoT best practice â€” PCB antenna under thin wood window, invisible from outside. Used in smart furniture, acoustic wireless systems (e.g., Taylor ES2), and IoT enclosures.",
+      "heritage": "IoT best practice \u00e2\u20ac\u201d PCB antenna under thin wood window, invisible from outside. Used in smart furniture, acoustic wireless systems (e.g., Taylor ES2), and IoT enclosures.",
       "dimensions_mm": {
         "length": 50.0,
         "width": 30.0,
@@ -560,12 +633,12 @@
         "zone": "BODY_CANVAS (rear face, upper region of electronics cavity)",
         "x_center_norm": 0.55,
         "y_center_norm": 0.55,
-        "notes": "Centered near top of rear cavity area. Maximizes distance from copper shielding paint in pickup routes. Rear face only â€” invisible from front."
+        "notes": "Centered near top of rear cavity area. Maximizes distance from copper shielding paint in pickup routes. Rear face only \u00e2\u20ac\u201d invisible from front."
       },
       "body_position_mm": {
         "x_center": 22.2,
         "y_from_top": 202.6,
-        "notes": "Rear face of body. Milled from inside the rear electronics cavity as a stepped shelf â€” no separate external routing needed."
+        "notes": "Rear face of body. Milled from inside the rear electronics cavity as a stepped shelf \u00e2\u20ac\u201d no separate external routing needed."
       },
       "antenna_type": "dual-band PCB ceramic chip antenna",
       "frequency_bands": [
@@ -585,7 +658,7 @@
     },
     "control_plate_surface": {
       "type": "top_mount_plate",
-      "heritage": "Hybrid â€” Explorer top-mount controls simplified with Klein minimalism. 2 knobs + 1 rotary switch mounted on asymmetric plate, no deep front cavity needed",
+      "heritage": "Hybrid \u00e2\u20ac\u201d Explorer top-mount controls simplified with Klein minimalism. 2 knobs + 1 rotary switch mounted on asymmetric plate, no deep front cavity needed",
       "dimensions_mm": {
         "length": 100.0,
         "width": 50.0,
@@ -630,7 +703,7 @@
     },
     "control_cavity": {
       "type": "rear_routed_electronics_pocket",
-      "heritage": "Les Paul control cavity scaled for 3-knob layout — LP heritage 108×64×31.75mm scaled to 100×60×20mm. Houses pots, switch, wiring harness. Accessed via rear cover plate.",
+      "heritage": "Les Paul control cavity scaled for 3-knob layout \u2014 LP heritage 108\u00d764\u00d731.75mm scaled to 100\u00d760\u00d720mm. Houses pots, switch, wiring harness. Accessed via rear cover plate.",
       "shape": "rounded_rectangle",
       "dimensions_mm": {
         "length": 100.0,
@@ -653,13 +726,13 @@
         "screw_count": 4,
         "screw_pattern": "rectangle",
         "recess_depth_mm": 3.175,
-        "notes": "Flush-mount cover with #4 × 1/2 inch wood screws. 5mm margin around cavity."
+        "notes": "Flush-mount cover with #4 \u00d7 1/2 inch wood screws. 5mm margin around cavity."
       },
       "cnc_operations": {
         "roughing": "OP-CC-50: 6mm flat endmill, adaptive clearing, 3mm stepdown",
         "finishing": "OP-CC-51: 6mm flat endmill, contour pass, 0.5mm stepover",
         "cover_recess": "OP-CC-52: 6mm flat endmill, 3.175mm deep pocket for cover plate",
-        "drilling": "OP-CC-60: 2.5mm drill, 4× screw pilot holes, 10mm deep"
+        "drilling": "OP-CC-60: 2.5mm drill, 4\u00d7 screw pilot holes, 10mm deep"
       },
       "wiring_channels": {
         "to_pickup_cavities": true,
@@ -677,7 +750,7 @@
     "nut_width_inches": 1.6875,
     "nut_width_mm": 42.86,
     "nut_type": "locking_clamp",
-    "nut_notes": "Headless locking nut â€” strings clamped at nut end, tuned at bridge. No headstock, no tuning pegs.",
+    "nut_notes": "Headless locking nut \u00e2\u20ac\u201d strings clamped at nut end, tuned at bridge. No headstock, no tuning pegs.",
     "fretboard_material": "ebony",
     "inlay_style": "dot",
     "profile": "modern_C",
@@ -712,7 +785,7 @@
       "style": "headless_fixed_with_fine_tuners",
       "cavity_ref": "bridge_route",
       "tuning": "integrated_fine_tuners",
-      "notes": "Headless bridge unit â€” all tuning at bridge. Locking nut clamps strings at neck end."
+      "notes": "Headless bridge unit \u00e2\u20ac\u201d all tuning at bridge. Locking nut clamps strings at neck end."
     },
     "controls": {
       "knobs": 2,
@@ -744,31 +817,67 @@
         "entry": "sg_agentd.main:app"
       },
       "endpoints": [
-        {"path": "/generate", "method": "POST", "description": "Generate a new clip bundle from parameters"},
-        {"path": "/regenerate", "method": "POST", "description": "Regenerate a clip with modified parameters"},
-        {"path": "/bundle/{clip_id}", "method": "GET", "description": "Retrieve a clip bundle by ID"},
-        {"path": "/exercises", "method": "GET", "description": "List available exercises from zt_band"},
-        {"path": "/tags", "method": "GET", "description": "List all tags across exercises"}
+        {
+          "path": "/generate",
+          "method": "POST",
+          "description": "Generate a new clip bundle from parameters"
+        },
+        {
+          "path": "/regenerate",
+          "method": "POST",
+          "description": "Regenerate a clip with modified parameters"
+        },
+        {
+          "path": "/bundle/{clip_id}",
+          "method": "GET",
+          "description": "Retrieve a clip bundle by ID"
+        },
+        {
+          "path": "/exercises",
+          "method": "GET",
+          "description": "List available exercises from zt_band"
+        },
+        {
+          "path": "/tags",
+          "method": "GET",
+          "description": "List all tags across exercises"
+        }
       ]
     },
     "zt_band": {
-      "description": "Zone-Tritone Band — jazz practice pattern engine with Markov chains and tritone zone theory",
+      "description": "Zone-Tritone Band \u2014 jazz practice pattern engine with Markov chains and tritone zone theory",
       "repo": "github.com/HanzoRazer/string_master_v.4.0",
       "module": "src/zt_band",
       "version": "0.1.0",
       "components": {
-        "bundle_writer": "src/zt_band/bundle_writer.py — writes clip bundles to disk",
-        "exercises": "src/zt_band/exercises.py — exercise loader from .ztex files",
-        "patterns": "src/zt_band/patterns.py — Markov pattern generation",
-        "zones": "src/shared/zone_tritone/zones.py — tritone zone classification"
+        "bundle_writer": "src/zt_band/bundle_writer.py \u2014 writes clip bundles to disk",
+        "exercises": "src/zt_band/exercises.py \u2014 exercise loader from .ztex files",
+        "patterns": "src/zt_band/patterns.py \u2014 Markov pattern generation",
+        "zones": "src/shared/zone_tritone/zones.py \u2014 tritone zone classification"
       },
       "bundle_format": {
         "description": "Canonical clip bundle structure for practice sessions",
         "files": [
-          {"name": "clip.mid", "type": "MIDI", "description": "Generated MIDI file"},
-          {"name": "clip.tags.json", "type": "JSON", "description": "Clip metadata tags"},
-          {"name": "clip.coach.json", "type": "JSON", "description": "Practice coaching hints"},
-          {"name": "clip.runlog.json", "type": "JSON", "description": "Generation parameters and seed"}
+          {
+            "name": "clip.mid",
+            "type": "MIDI",
+            "description": "Generated MIDI file"
+          },
+          {
+            "name": "clip.tags.json",
+            "type": "JSON",
+            "description": "Clip metadata tags"
+          },
+          {
+            "name": "clip.coach.json",
+            "type": "JSON",
+            "description": "Practice coaching hints"
+          },
+          {
+            "name": "clip.runlog.json",
+            "type": "JSON",
+            "description": "Generation parameters and seed"
+          }
         ]
       }
     },
@@ -820,7 +929,7 @@
   "overall": {
     "total_length_inches": 32.0,
     "total_length_mm": 812.8,
-    "notes": "Headless design â€” no headstock. Overall length is body (368.3mm) + neck extension to nut (~315mm) + short clamping stub (~30mm). ~180mm shorter than headed equivalent."
+    "notes": "Headless design \u00e2\u20ac\u201d no headstock. Overall length is body (368.3mm) + neck extension to nut (~315mm) + short clamping stub (~30mm). ~180mm shorter than headed equivalent."
   },
   "source_images": [
     "ChatGPT Image Mar 6, 2026, 01_41_42 AM.png",
