@@ -902,15 +902,24 @@ def generate_phase2_rear(spec: Dict) -> str:
     ch_depth = wc_dims["depth"]   # 15mm
 
     g.comment(f"Channel: {ch_width}mm wide x {ch_depth}mm deep")
-    g.comment("4 routes connecting pickups, Teensy, Pi 5, and output jack")
+    g.comment("4 routes: pickups to control cavity, control cavity to output jack, Teensy to Pi")
+    g.comment("AUDIO PATH: Pickups -> Control Cavity (pots/selector) -> Output Jack -> Scarlett Solo")
+    g.comment("Pi 5 is NOT in passive audio chain — separate USB audio input from Scarlett")
 
     num_ch_passes = max(1, math.ceil(ch_depth / T3_DOC))
 
-    # Route 1: Pickups to Teensy (short, 20mm)
-    g.comment("Route 1: Pickup area to Teensy pocket (~20mm)")
-    # From neck pickup area to Teensy pocket
+    # Get control cavity position for routing
+    cc = cavs.get("control_cavity")
+    if cc:
+        cc_bp = cc["body_position_mm"]
+        cc_cx, cc_cy = spec_to_gcode(-cc_bp["x_center"], cc_bp["y_from_top"], body_w, body_h)
+    else:
+        # Fallback if control_cavity not defined
+        cc_cx, cc_cy = spec_to_gcode(-25.0, 317.0, body_w, body_h)
+
+    # Route 1: Neck pickup to control cavity
+    g.comment("Route 1: Neck pickup to control cavity (~150mm)")
     r1_start_x, r1_start_y = spec_to_gcode(0.0, 167.6, body_w, body_h)  # neck pickup area
-    r1_end_x, r1_end_y = ard_cx, ard_cy
     for wp in range(num_ch_passes):
         wz = -T3_DOC * (wp + 1)
         if wz < -ch_depth:
@@ -918,11 +927,39 @@ def generate_phase2_rear(spec: Dict) -> str:
         g.rapid(x=r1_start_x, y=r1_start_y)
         g.rapid(z=RETRACT_Z)
         g.linear(z=wz, f=T3_PLUNGE)
-        g.linear(x=r1_end_x, y=r1_end_y, f=T3_FEED)
+        g.linear(x=cc_cx, y=cc_cy, f=T3_FEED)
         g.rapid(z=SAFE_Z)
 
-    # Route 2: Teensy to Pi 5 (USB serial, ~140mm)
-    g.comment("Route 2: Teensy to Pi 5 USB serial (~140mm)")
+    # Route 2: Bridge pickup to control cavity
+    g.comment("Route 2: Bridge pickup to control cavity (~25mm)")
+    r2_start_x, r2_start_y = spec_to_gcode(0.0, 294.6, body_w, body_h)  # bridge pickup area
+    for wp in range(num_ch_passes):
+        wz = -T3_DOC * (wp + 1)
+        if wz < -ch_depth:
+            wz = -ch_depth
+        g.rapid(x=r2_start_x, y=r2_start_y)
+        g.rapid(z=RETRACT_Z)
+        g.linear(z=wz, f=T3_PLUNGE)
+        g.linear(x=cc_cx, y=cc_cy, f=T3_FEED)
+        g.rapid(z=SAFE_Z)
+
+    # Route 3: Control cavity to output jack
+    g.comment("Route 3: Control cavity to output jack (~75mm)")
+    oj = cavs["output_jack"]
+    oj_bp = oj["body_position_mm"]
+    oj_cx, oj_cy = spec_to_gcode(-oj_bp["x_center"], oj_bp["y_from_top"], body_w, body_h)
+    for wp in range(num_ch_passes):
+        wz = -T3_DOC * (wp + 1)
+        if wz < -ch_depth:
+            wz = -ch_depth
+        g.rapid(x=cc_cx, y=cc_cy)
+        g.rapid(z=RETRACT_Z)
+        g.linear(z=wz, f=T3_PLUNGE)
+        g.linear(x=oj_cx, y=oj_cy, f=T3_FEED)
+        g.rapid(z=SAFE_Z)
+
+    # Route 4: Teensy to Pi 5 (USB serial for I/O data — NOT audio)
+    g.comment("Route 4: Teensy to Pi 5 USB serial (~140mm) — I/O data only, no audio")
     for wp in range(num_ch_passes):
         wz = -T3_DOC * (wp + 1)
         if wz < -ch_depth:
@@ -931,35 +968,6 @@ def generate_phase2_rear(spec: Dict) -> str:
         g.rapid(z=RETRACT_Z)
         g.linear(z=wz, f=T3_PLUNGE)
         g.linear(x=rec_cx, y=rec_cy, f=T3_FEED)
-        g.rapid(z=SAFE_Z)
-
-    # Route 3: Bridge pickup to Teensy (~130mm)
-    g.comment("Route 3: Bridge pickup area to Teensy (~130mm)")
-    r3_start_x, r3_start_y = spec_to_gcode(0.0, 294.6, body_w, body_h)  # bridge pickup area
-    for wp in range(num_ch_passes):
-        wz = -T3_DOC * (wp + 1)
-        if wz < -ch_depth:
-            wz = -ch_depth
-        g.rapid(x=r3_start_x, y=r3_start_y)
-        g.rapid(z=RETRACT_Z)
-        g.linear(z=wz, f=T3_PLUNGE)
-        g.linear(x=ard_cx, y=ard_cy, f=T3_FEED)
-        g.rapid(z=SAFE_Z)
-
-    # Route 4: Pi 5 cavity to output jack (~75mm)
-    g.comment("Route 4: Electronics cavity to output jack (~75mm)")
-    oj = cavs["output_jack"]
-    oj_bp = oj["body_position_mm"]
-    # Rear face: mirror X
-    oj_cx, oj_cy = spec_to_gcode(-oj_bp["x_center"], oj_bp["y_from_top"], body_w, body_h)
-    for wp in range(num_ch_passes):
-        wz = -T3_DOC * (wp + 1)
-        if wz < -ch_depth:
-            wz = -ch_depth
-        g.rapid(x=rec_cx, y=rec_cy)
-        g.rapid(z=RETRACT_Z)
-        g.linear(z=wz, f=T3_PLUNGE)
-        g.linear(x=oj_cx, y=oj_cy, f=T3_FEED)
         g.rapid(z=SAFE_Z)
 
     # -----------------------------------------------------------------------
