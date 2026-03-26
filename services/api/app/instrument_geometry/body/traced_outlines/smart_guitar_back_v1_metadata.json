@@ -1,0 +1,76 @@
+{
+  "body": {
+    "traced_outline": {
+      "source": "smart_guitar_outline_v4.json \u2014 hand-traced from AI render back view, 2026-03-26",
+      "coordinate_system": "body_center_origin \u2014 X+ treble, Y+ toward neck, units mm",
+      "scale_note": "Traced at reduced zoom. Shape topology is correct. Scale factor TBD against physical blank.",
+      "point_count": 78,
+      "void_count": 7,
+      "void_point_counts": [
+        14,
+        19,
+        21,
+        4,
+        12,
+        4,
+        4
+      ],
+      "extent_mm": {
+        "x_min": -128.83,
+        "x_max": 121.21,
+        "y_min": -165.04,
+        "y_max": 125.75,
+        "width": 250.04,
+        "height": 290.79,
+        "bass_overhang_mm": 7.62,
+        "note": "Bass side extends 7.62mm further than treble \u2014 confirmed asymmetric body design"
+      },
+      "void_topology": {
+        "V1": {
+          "pts": 14,
+          "zone": "upper_bass_chamber",
+          "type": "through_body"
+        },
+        "V2": {
+          "pts": 19,
+          "zone": "upper_treble_chamber",
+          "type": "through_body"
+        },
+        "V3": {
+          "pts": 21,
+          "zone": "treble_mid_chamber",
+          "type": "through_body"
+        },
+        "V4": {
+          "pts": 4,
+          "zone": "control_cavity",
+          "type": "rear_routed_rectangle"
+        },
+        "V5": {
+          "pts": 12,
+          "zone": "bass_lower_chamber",
+          "type": "through_body"
+        },
+        "V6": {
+          "pts": 4,
+          "zone": "neck_bolt_plate_area",
+          "type": "hardware_reference"
+        },
+        "V7": {
+          "pts": 4,
+          "zone": "headstock_tuner_area",
+          "type": "hardware_reference_above_body"
+        }
+      },
+      "dxf_file": "smart_guitar_back_v1.dxf",
+      "dxf_layers": [
+        "BODY_OUTLINE",
+        "VOID_CHAMBERS",
+        "CONTROL_CAVITY",
+        "HARDWARE_REFS",
+        "CENTERLINE",
+        "ANNOTATIONS"
+      ]
+    }
+  }
+}

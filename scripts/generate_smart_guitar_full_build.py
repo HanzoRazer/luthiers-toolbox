@@ -67,7 +67,7 @@ REPO_ROOT = SCRIPT_DIR.parent
 API_DIR = REPO_ROOT / "services" / "api"
 
 SPEC_PATH = API_DIR / "app" / "instrument_geometry" / "body" / "specs" / "smart_guitar_v1.json"
-DXF_PATH = API_DIR / "app" / "instrument_geometry" / "body" / "dxf" / "electric" / "Smart-Guitar-v1_preliminary.dxf"
+DXF_PATH = API_DIR / "app" / "instrument_geometry" / "body" / "dxf" / "electric" / "smart_guitar_back_v1.dxf"
 OUTPUT_DIR = REPO_ROOT / "exports" / "smart_guitar_v1"
 
 
