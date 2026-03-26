@@ -181,13 +181,13 @@ def generate_dxf(spec_path: Path, output_path: Path):
     add_rounded_rect(msp, 'PI_CAVITY', cx=pi_cx, cy=pi_cy,
         length=pi_d['length'], width=pi_d['width'], r=pi_d.get('corner_radius', 6.0))
 
-    # ARDUINO POCKET
-    ar_d = cavs['arduino_preamp_pocket']['dimensions_mm']
-    ar_p = cavs['arduino_preamp_pocket']['body_position_mm']
+    # TEENSY I/O COPROCESSOR POCKET
+    ar_d = cavs['teensy_io_pocket']['dimensions_mm']
+    ar_p = cavs['teensy_io_pocket']['body_position_mm']
     ar_cx = ar_p.get('x_offset_from_center', 36.8)
     ar_cy = hl - ar_p.get('y_from_top', 133.5)
-    add_rounded_rect(msp, 'ARDUINO_POCKET', cx=ar_cx, cy=ar_cy,
-        length=ar_d['length'], width=ar_d['width'], r=ar_d.get('corner_radius', 4.0))
+    add_rounded_rect(msp, 'TEENSY_IO_POCKET', cx=ar_cx, cy=ar_cy,
+        length=ar_d['length'], width=ar_d['width'], r=ar_d.get('corner_radius', 3.0))
 
     # ANTENNA RECESS
     an_d = cavs['antenna_recess']['dimensions_mm']

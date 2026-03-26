@@ -23,7 +23,7 @@ Operations produced:
 
   Phase 2 — Rear Face (flip body, re-zero Z to rear surface)
     OP60: Rear electronics cavity — Pi 5 (T1 10mm rough, T2 6mm finish)
-    OP61: Arduino preamp pocket (T1 10mm rough, T2 6mm finish)
+    OP61: Teensy I/O coprocessor pocket (T1 10mm rough, T2 6mm finish)
     OP62: Antenna recess — shallow 2mm (T2 6mm)
     OP63: Rear cover plate recess (T2 6mm)
     OP70: Wiring channels — 4 routes (T3 3mm)
@@ -744,24 +744,24 @@ def generate_phase2_rear(spec: Dict) -> str:
     )
 
     # -----------------------------------------------------------------------
-    # OP61: Arduino Preamp Pocket — Rough + Finish
+    # OP61: Teensy I/O Coprocessor Pocket — Rough + Finish
     # -----------------------------------------------------------------------
-    ard = cavs["arduino_preamp_pocket"]
+    ard = cavs["teensy_io_pocket"]
     ard_dims = ard["dimensions_mm"]
     ard_bp = ard["body_position_mm"]
     ard_cx, ard_cy = spec_to_gcode(-ard_bp["x_center"], ard_bp["y_from_top"], body_w, body_h)
 
-    g.tool_change(1, "10mm Flat End Mill", T1_RPM, "OP61: Arduino preamp pocket rough")
+    g.tool_change(1, "10mm Flat End Mill", T1_RPM, "OP61: Teensy I/O coprocessor pocket rough")
     mill_rectangular_pocket(
-        g, "Arduino Preamp Pocket — Rough", ard_cx, ard_cy,
+        g, "Teensy I/O Pocket — Rough", ard_cx, ard_cy,
         ard_dims["length"], ard_dims["width"], ard_dims["depth"],
         T1_DIA, T1_DOC, T1_STEP, T1_FEED, T1_PLUNGE, "OP61",
         corner_r=ard_dims.get("corner_radius", 0)
     )
 
-    g.tool_change(2, "6mm Flat End Mill", T2_RPM, "OP61f: Arduino preamp pocket finish")
+    g.tool_change(2, "6mm Flat End Mill", T2_RPM, "OP61f: Teensy I/O coprocessor pocket finish")
     mill_rectangular_pocket(
-        g, "Arduino Preamp Pocket — Finish", ard_cx, ard_cy,
+        g, "Teensy I/O Pocket — Finish", ard_cx, ard_cy,
         ard_dims["length"], ard_dims["width"], ard_dims["depth"],
         T2_DIA, T2_DOC, T2_STEP, T2_FEED, T2_PLUNGE, "OP61f",
         corner_r=ard_dims.get("corner_radius", 0)
@@ -805,9 +805,9 @@ def generate_phase2_rear(spec: Dict) -> str:
         T2_DIA, T2_DOC, T2_STEP, T2_FEED, T2_PLUNGE, "OP63a"
     )
 
-    # Arduino pocket cover
+    # Teensy pocket cover
     mill_rectangular_pocket(
-        g, "Arduino Pocket Cover Recess", ard_cx, ard_cy,
+        g, "Teensy Pocket Cover Recess", ard_cx, ard_cy,
         ard_dims["length"] + 2 * cover_margin, ard_dims["width"] + 2 * cover_margin,
         cover_lip,
         T2_DIA, T2_DOC, T2_STEP, T2_FEED, T2_PLUNGE, "OP63b"
@@ -825,13 +825,13 @@ def generate_phase2_rear(spec: Dict) -> str:
     ch_depth = wc_dims["depth"]   # 15mm
 
     g.comment(f"Channel: {ch_width}mm wide x {ch_depth}mm deep")
-    g.comment("4 routes connecting pickups, Arduino, Pi 5, and output jack")
+    g.comment("4 routes connecting pickups, Teensy, Pi 5, and output jack")
 
     num_ch_passes = max(1, math.ceil(ch_depth / T3_DOC))
 
-    # Route 1: Pickups to Arduino (short, 20mm)
-    g.comment("Route 1: Pickup area to Arduino pocket (~20mm)")
-    # From neck pickup area to Arduino pocket
+    # Route 1: Pickups to Teensy (short, 20mm)
+    g.comment("Route 1: Pickup area to Teensy pocket (~20mm)")
+    # From neck pickup area to Teensy pocket
     r1_start_x, r1_start_y = spec_to_gcode(0.0, 167.6, body_w, body_h)  # neck pickup area
     r1_end_x, r1_end_y = ard_cx, ard_cy
     for wp in range(num_ch_passes):
@@ -844,8 +844,8 @@ def generate_phase2_rear(spec: Dict) -> str:
         g.linear(x=r1_end_x, y=r1_end_y, f=T3_FEED)
         g.rapid(z=SAFE_Z)
 
-    # Route 2: Arduino to Pi 5 (USB serial, ~140mm)
-    g.comment("Route 2: Arduino to Pi 5 USB serial (~140mm)")
+    # Route 2: Teensy to Pi 5 (USB serial, ~140mm)
+    g.comment("Route 2: Teensy to Pi 5 USB serial (~140mm)")
     for wp in range(num_ch_passes):
         wz = -T3_DOC * (wp + 1)
         if wz < -ch_depth:
@@ -856,8 +856,8 @@ def generate_phase2_rear(spec: Dict) -> str:
         g.linear(x=rec_cx, y=rec_cy, f=T3_FEED)
         g.rapid(z=SAFE_Z)
 
-    # Route 3: Bridge pickup to Arduino (~130mm)
-    g.comment("Route 3: Bridge pickup area to Arduino (~130mm)")
+    # Route 3: Bridge pickup to Teensy (~130mm)
+    g.comment("Route 3: Bridge pickup area to Teensy (~130mm)")
     r3_start_x, r3_start_y = spec_to_gcode(0.0, 294.6, body_w, body_h)  # bridge pickup area
     for wp in range(num_ch_passes):
         wz = -T3_DOC * (wp + 1)
@@ -962,7 +962,7 @@ def generate_build_summary(spec: Dict, phase1_lines: int, phase2_lines: int) -> 
                 "units": "mm (G21)",
                 "operations": [
                     "OP60: Rear electronics cavity rough + finish (T1/T2)",
-                    "OP61: Arduino preamp pocket rough + finish (T1/T2)",
+                    "OP61: Teensy I/O coprocessor pocket rough + finish (T1/T2)",
                     "OP62: Antenna recess 2mm shallow (T2 6mm)",
                     "OP63a/b: Rear cover plate recesses (T2 6mm)",
                     "OP70: Wiring channels 4 routes (T3 3mm)",
@@ -981,7 +981,7 @@ def generate_build_summary(spec: Dict, phase1_lines: int, phase2_lines: int) -> 
         },
         "iot_cavities": {
             "rear_electronics": "95x65x22mm — Pi 5 + Li-ion 18650 + NVMe SSD",
-            "arduino_preamp": "80x60x20mm — Arduino Uno + 9V PP3 battery",
+            "teensy_io": "70x25x20mm — Teensy 4.1 I/O coprocessor",
             "antenna_recess": "50x30x2mm — dual-band PCB antenna under 2mm wood window",
             "usb_c_port": "12x6.5mm edge slot — USB-C PD 20W charging",
             "wiring_channels": "4 routes, 10mm wide x 15mm deep",

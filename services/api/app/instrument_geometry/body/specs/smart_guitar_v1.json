@@ -321,50 +321,38 @@
         "notes": "6mm inset from cavity edge, countersunk flush with cover plate"
       }
     },
-    "arduino_preamp_pocket": {
+    "teensy_io_pocket": {
       "type": "rear_access",
-      "heritage": "Control coprocessor pocket — Arduino Uno R4 handles I/O (footswitches, pots, LEDs, BMS telemetry, relay bypass). Audio path handled by Hi-Z USB interface and HiFiBerry HAT.",
+      "heritage": "I/O coprocessor pocket — Teensy 4.1 handles footswitches, pots, LEDs, BMS telemetry, relay bypass. Audio path handled by Hi-Z USB interface and HiFiBerry HAT. Replaces Arduino Uno R4 (2026-03-25) — pocket 64% smaller, bare board 77% smaller.",
       "contains": [
         {
-          "component": "Arduino Uno R4",
-          "mcu": "Renesas RA4M1 @ 48MHz",
+          "component": "Teensy 4.1",
+          "mcu": "ARM Cortex-M7 @ 600MHz",
           "role": "I/O coprocessor — footswitches, pots, LEDs, BMS telemetry, relay bypass. NO AUDIO.",
-          "board_mm": [
-            68.6,
-            53.4,
-            15.0
-          ]
-        },
-        {
-          "component": "9V battery (PP3)",
-          "type": "alkaline or rechargeable NiMH",
-          "cell_mm": [
-            48.5,
-            26.5,
-            17.5
-          ],
-          "runtime_hours": 40,
-          "position": "beside Arduino board"
+          "board_mm": [61.0, 18.0, 3.0],
+          "header_clearance_mm": 4.5,
+          "notes": "Replaces Arduino Uno R4. Pocket area 64% reduction (4800→1750mm²); bare board 77% smaller. Same I/O role, bare-metal determinism."
         }
       ],
       "signal_chain": {
         "canonical": true,
-        "spec_version": "2.0",
-        "date": "2026-03-23",
+        "spec_version": "2.1",
+        "date": "2026-03-25",
         "path_a_dry": "P90 → buffered_splitter → 1/4_TS_dry_jack",
         "path_b_digital": "P90 → buffered_splitter → hi_z_usb_interface → raspberry_pi_5_usb → hifiberry_dac_adc_hat_i2s → headphone_out + wifi_pipewire_sink",
         "wifi_output": "PipeWire network sink via Pi 5 built-in WiFi — wireless monitoring to phone/tablet/DAW",
-        "arduino_role": "control_only",
-        "arduino_handles": [
+        "teensy_role": "control_only",
+        "teensy_handles": [
           "footswitches",
           "pots",
           "LEDs",
           "BMS_telemetry",
           "relay_bypass"
         ],
-        "arduino_audio": false,
-        "arduino_connection": "USB_serial_to_Pi5_control_messages_only",
-        "deprecated_path": "arduino_adc_direct — 10-bit 44.1kHz inadequate for audio",
+        "teensy_audio": false,
+        "teensy_connection": "USB_serial_to_Pi5_control_messages_only",
+        "teensy_power": "3.3V from Pi 5 USB — no independent battery needed",
+        "deprecated_path": "arduino_adc_direct — 10-bit 44.1kHz inadequate for audio (Arduino Uno R4 removed 2026-03-25)",
         "latency_ms": {
           "path_a": 0,
           "path_b_scarlett_input": 1.0,
@@ -381,7 +369,7 @@
           "usb_interface": "Focusrite Scarlett Solo 4th Gen (primary) or IK AXE IO ONE (alt)",
           "pi": "Raspberry Pi 5 — JACK + Guitarix/MODEP effects host",
           "hifiberry": "HiFiBerry DAC+ADC — I2S GPIO HAT hardware-clocked output",
-          "arduino": "Arduino Uno R4 — I/O coprocessor only"
+          "teensy": "Teensy 4.1 — I/O coprocessor only (600MHz Cortex-M7)"
         }
       },
       "latency_targets_ms": {
@@ -390,17 +378,19 @@
         "target": 5,
         "ideal": 3.1
       },
-      "independent_operation": "Arduino runs standalone on 9V via Vin pin (7-12V input). Controls relay bypass for Path A dry output when Pi 5 is off.",
+      "independent_operation": "Teensy 4.1 powered via USB from Pi 5 (3.3V). When Pi is off, relay bypass defaults to Path A dry output. No independent battery required.",
       "dimensions_mm": {
-        "length": 80.0,
-        "width": 60.0,
+        "length": 70.0,
+        "width": 25.0,
         "depth": 20.0,
-        "corner_radius": 4.0
+        "corner_radius": 3.0
       },
       "structural_analysis": {
         "body_thickness_mm": 44.45,
         "floor_remaining_mm": 24.45,
-        "floor_verdict": "safe"
+        "floor_verdict": "safe",
+        "lateral_wood_recovery_mm": 35.0,
+        "note": "Pocket width reduced 60→25mm. Additional 35mm of lateral wood vs Arduino pocket."
       },
       "grid_position": {
         "zone": "BODY_CANVAS (upper, near neck pickup)",
@@ -411,39 +401,26 @@
       "body_position_mm": {
         "x_center": 36.8,
         "y_from_top": 133.5,
-        "notes": "Near neck pickup (y_from_top ~155mm). Rear access via small 2-screw plate. 9V battery compartment accessible from back"
+        "notes": "Near neck pickup (y_from_top ~155mm). Rear access via small 2-screw plate. Teensy powered via USB from Pi 5."
       },
       "cover_plate": {
         "material": "black_abs",
+        "size_mm": {"length": 80.0, "width": 35.0},
         "screw_count": 2,
         "screw_type": "M3_countersunk"
       },
       "cover_plate_screws": {
-        "count": 4,
+        "count": 2,
         "screw_spec": "#4 x 1/2\" flat head wood screw",
         "pilot_hole_mm": 2.8,
         "countersink_mm": 5.5,
         "positions_from_center_mm": [
-          {
-            "x": -35.0,
-            "y": -25.0
-          },
-          {
-            "x": 35.0,
-            "y": -25.0
-          },
-          {
-            "x": -35.0,
-            "y": 25.0
-          },
-          {
-            "x": 35.0,
-            "y": 25.0
-          }
+          {"x": -27.0, "y": 0.0},
+          {"x": 27.0, "y": 0.0}
         ],
-        "notes": "5mm inset from cavity edge, countersunk flush with cover plate"
+        "notes": "2-screw pattern on long axis. 5mm inset from cover edge."
       },
-      "function_note": "Houses Arduino Uno R4 — control path only. Audio handled by Hi-Z USB interface and HiFiBerry HAT."
+      "function_note": "Houses Teensy 4.1 — I/O coprocessor only. Audio handled by Hi-Z USB interface and HiFiBerry HAT."
     },
     "rear_wiring_channel": {
       "type": "rear_routed_channel",
@@ -455,10 +432,10 @@
       },
       "paths": [
         {
-          "name": "pickups_to_arduino",
+          "name": "pickups_to_teensy",
           "from": "neck_pickup_route",
-          "to": "arduino_preamp_pocket",
-          "route_description": "Short analog lead from pickup cavities to Arduino ADC, ~20mm",
+          "to": "teensy_io_pocket",
+          "route_description": "Short analog lead from pickup cavities to Teensy GPIO, ~20mm",
           "length_mm": 20.0,
           "start_mm": {
             "x": 0.0,
@@ -472,10 +449,10 @@
           }
         },
         {
-          "name": "arduino_to_pi5_usb_serial",
-          "from": "arduino_preamp_pocket",
+          "name": "teensy_to_pi5_usb_serial",
+          "from": "teensy_io_pocket",
           "to": "rear_electronics_cavity",
-          "route_description": "USB serial cable from Arduino to Pi 5 via rear channel, runs alongside pickup wiring, ~140mm",
+          "route_description": "USB serial cable from Teensy to Pi 5 via rear channel, runs alongside pickup wiring, ~140mm",
           "length_mm": 140.0,
           "start_mm": {
             "x": 44.4,
@@ -489,10 +466,10 @@
           }
         },
         {
-          "name": "bridge_pickup_to_arduino",
+          "name": "bridge_pickup_to_teensy",
           "from": "bridge_pickup_route",
-          "to": "arduino_preamp_pocket",
-          "route_description": "Bridge pickup lead routed up to Arduino preamp pocket via rear channel, ~130mm",
+          "to": "teensy_io_pocket",
+          "route_description": "Bridge pickup lead routed up to Teensy I/O pocket via rear channel, ~130mm",
           "length_mm": 130.0,
           "start_mm": {
             "x": 0.0,
@@ -710,7 +687,70 @@
   "smart_features": {
     "control_plate_area_sq_inches": 12.0,
     "expansion_ready": true,
-    "notes": "Separated dual-board architecture: Pi 5 in main rear cavity (95x65x22mm) with Li-ion battery, Arduino near pickups (80x60x20mm) with own 9V battery like an active preamp. If Pi 5 is off, Arduino still passes signal. Rear cavity oversized for future smart modules (Bluetooth, MIDI, preamp)"
+    "notes": "Separated dual-board architecture: Pi 5 in main rear cavity (95x65x22mm) with Li-ion battery, Teensy 4.1 near pickups (70x25x20mm). If Pi 5 is off, Teensy relay bypass defaults to Path A dry output. Rear cavity oversized for future smart modules (Bluetooth, MIDI, preamp)"
+  },
+  "software_stack": {
+    "version": "1.0.0",
+    "updated": "2026-03-25",
+    "description": "Software components that run on the Pi 5 Music Brain for practice coaching, loop generation, and session bundles.",
+    "sg_agentd": {
+      "description": "FastAPI agent daemon wrapping zt_band for HTTP-accessible practice sessions",
+      "repo": "github.com/HanzoRazer/sg-agentd",
+      "runtime": {
+        "host": "127.0.0.1",
+        "port": 8420,
+        "entry": "sg_agentd.main:app"
+      },
+      "endpoints": [
+        {"path": "/generate", "method": "POST", "description": "Generate a new clip bundle from parameters"},
+        {"path": "/regenerate", "method": "POST", "description": "Regenerate a clip with modified parameters"},
+        {"path": "/bundle/{clip_id}", "method": "GET", "description": "Retrieve a clip bundle by ID"},
+        {"path": "/exercises", "method": "GET", "description": "List available exercises from zt_band"},
+        {"path": "/tags", "method": "GET", "description": "List all tags across exercises"}
+      ]
+    },
+    "zt_band": {
+      "description": "Zone-Tritone Band — jazz practice pattern engine with Markov chains and tritone zone theory",
+      "repo": "github.com/HanzoRazer/string_master_v.4.0",
+      "module": "src/zt_band",
+      "version": "0.1.0",
+      "components": {
+        "bundle_writer": "src/zt_band/bundle_writer.py — writes clip bundles to disk",
+        "exercises": "src/zt_band/exercises.py — exercise loader from .ztex files",
+        "patterns": "src/zt_band/patterns.py — Markov pattern generation",
+        "zones": "src/shared/zone_tritone/zones.py — tritone zone classification"
+      },
+      "bundle_format": {
+        "description": "Canonical clip bundle structure for practice sessions",
+        "files": [
+          {"name": "clip.mid", "type": "MIDI", "description": "Generated MIDI file"},
+          {"name": "clip.tags.json", "type": "JSON", "description": "Clip metadata tags"},
+          {"name": "clip.coach.json", "type": "JSON", "description": "Practice coaching hints"},
+          {"name": "clip.runlog.json", "type": "JSON", "description": "Generation parameters and seed"}
+        ]
+      }
+    },
+    "string_master": {
+      "description": "Parent project containing zt_band and shared zone-tritone theory",
+      "repo": "github.com/HanzoRazer/string_master_v.4.0",
+      "path": "C:/Users/thepr/Downloads/string_master_v.4.0",
+      "cli": {
+        "zt-band": "Practice session generator CLI",
+        "zt-gravity": "Gravity voice-leading analyzer"
+      }
+    },
+    "luthiers_toolbox_integration": {
+      "router": "services/api/app/routers/string_master_router.py",
+      "endpoints": [
+        "/api/string-master/exercises",
+        "/api/string-master/generate",
+        "/api/string-master/bundles/{bundle_id}",
+        "/api/string-master/tags",
+        "/api/string-master/zones",
+        "/api/string-master/health"
+      ],
+      "notes": "ToolBox acts as HTTP proxy to sg-agentd running on Pi 5 (or localhost for dev)"
+    }
   },
   "stem_grid_mapping": {
     "_description": "All cavity positions mapped to the STEM Guitar 24x32 grid system. Grid origin is top-left, coordinates normalized 0-1. The grid centerline is at x=0.5. This mapping enables the GridZoneClassifier to validate cavity placement against standard guitar anatomy zones.",
