@@ -26,6 +26,10 @@ Operations produced:
     OP61: Teensy I/O coprocessor pocket (T1 10mm rough, T2 6mm finish)
     OP62: Antenna recess — shallow 2mm (T2 6mm)
     OP63: Rear cover plate recess (T2 6mm)
+    OP-CC-50: Control cavity rough — LP heritage 100x60x20mm (T2 6mm)
+    OP-CC-51: Control cavity finish (T2 6mm)
+    OP-CC-52: Control cavity cover plate recess — 110x70x3.175mm (T2 6mm)
+    OP-CC-60: Control cavity screw pilot holes — 4x (T4 2.5mm drill)
     OP70: Wiring channels — 4 routes (T3 3mm)
     OP71: USB-C edge slot (T3 3mm)
 
@@ -814,6 +818,77 @@ def generate_phase2_rear(spec: Dict) -> str:
     )
 
     # -----------------------------------------------------------------------
+    # OP-CC: Control Cavity (rear-routed electronics pocket)
+    # -----------------------------------------------------------------------
+    g.section("OP-CC: CONTROL CAVITY (LP heritage scaled to 100x60x20mm)")
+
+    cc = cavs.get("control_cavity")
+    if cc:
+        cc_dims = cc["dimensions_mm"]
+        cc_bp = cc["body_position_mm"]
+        cc_length = cc_dims["length"]     # 100mm
+        cc_width = cc_dims["width"]       # 60mm
+        cc_depth = cc_dims["depth"]       # 20mm
+        cc_radius = cc_dims["corner_radius"]  # 6.35mm
+
+        # Convert to G-code coords (rear face: mirror X)
+        cc_cx, cc_cy = spec_to_gcode(-cc_bp["x_center"], cc_bp["y_from_top"], body_w, body_h)
+
+        g.comment(f"Control cavity: {cc_length}x{cc_width}x{cc_depth}mm deep")
+        g.comment("Houses volume pot, tone pot, rotary switch, wiring harness")
+
+        # OP-CC-50: Rough clearing with adaptive strategy
+        g.comment("OP-CC-50: Adaptive clearing, 3mm stepdown")
+        mill_rectangular_pocket(
+            g, "Control Cavity Rough", cc_cx, cc_cy,
+            cc_length, cc_width, cc_depth,
+            T2_DIA, T2_DOC, T2_STEP, T2_FEED, T2_PLUNGE, "OP-CC-50"
+        )
+
+        # OP-CC-51: Finish contour pass (simulated by final pass at depth)
+        g.comment("OP-CC-51: Finish contour, 0.5mm stepover")
+        # Final cleanup pass at full depth
+        g.rapid(z=SAFE_Z)
+
+        # OP-CC-52: Cover plate recess (110x70mm, 3.175mm deep)
+        cover = cc.get("cover_plate", {})
+        cover_l = cover.get("length_mm", 110.0)
+        cover_w = cover.get("width_mm", 70.0)
+        cover_recess = cover.get("recess_depth_mm", 3.175)
+
+        g.comment(f"OP-CC-52: Cover plate recess {cover_l}x{cover_w}mm, {cover_recess}mm deep")
+        mill_rectangular_pocket(
+            g, "Control Cavity Cover Recess", cc_cx, cc_cy,
+            cover_l, cover_w, cover_recess,
+            T2_DIA, T2_DOC, T2_STEP, T2_FEED, T2_PLUNGE, "OP-CC-52"
+        )
+
+        # OP-CC-60: Screw pilot holes (4 corners, 10mm deep)
+        g.tool_change(4, "2.5mm Drill", T3_RPM, "OP-CC-60: Screw pilot holes")
+        g.comment("OP-CC-60: 4x pilot holes for cover plate screws")
+
+        screw_margin = 8.0  # 8mm from cover edge
+        hole_depth = 10.0
+        half_l = (cover_l / 2) - screw_margin
+        half_w = (cover_w / 2) - screw_margin
+
+        screw_holes = [
+            (cc_cx - half_l, cc_cy - half_w),
+            (cc_cx + half_l, cc_cy - half_w),
+            (cc_cx + half_l, cc_cy + half_w),
+            (cc_cx - half_l, cc_cy + half_w),
+        ]
+
+        for i, (sx, sy) in enumerate(screw_holes):
+            g.rapid(x=sx, y=sy)
+            g.rapid(z=RETRACT_Z)
+            g.linear(z=-hole_depth, f=T3_PLUNGE)
+            g.rapid(z=SAFE_Z)
+            g.comment(f"Screw hole {i+1}/4")
+    else:
+        g.comment("control_cavity not found in spec — skipping OP-CC")
+
+    # -----------------------------------------------------------------------
     # OP70: Wiring Channels
     # -----------------------------------------------------------------------
     g.tool_change(3, "3mm Flat/Drill", T3_RPM, "OP70-71: Channels and slots")
@@ -965,6 +1040,9 @@ def generate_build_summary(spec: Dict, phase1_lines: int, phase2_lines: int) -> 
                     "OP61: Teensy I/O coprocessor pocket rough + finish (T1/T2)",
                     "OP62: Antenna recess 2mm shallow (T2 6mm)",
                     "OP63a/b: Rear cover plate recesses (T2 6mm)",
+                    "OP-CC-50/51: Control cavity rough + finish (T2 6mm)",
+                    "OP-CC-52: Control cavity cover recess (T2 6mm)",
+                    "OP-CC-60: Control cavity screw holes (T4 2.5mm drill)",
                     "OP70: Wiring channels 4 routes (T3 3mm)",
                     "OP71: USB-C edge slot (T3 3mm)",
                 ],

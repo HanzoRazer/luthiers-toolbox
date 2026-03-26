@@ -620,10 +620,52 @@
         "count": 3,
         "depth": "through_body_to_rear_cavity"
       },
+      "cavity_ref": "control_cavity",
+      "rear_cavity_note": "Pot shafts extend through body to control_cavity. Wiring harness housed in rear pocket.",
       "body_position_mm": {
         "x_center": 55.2,
         "y_from_top": 346.7,
         "notes": "Derived from grid_position (x=0.65, y=0.78). 55.2mm right of centerline, 346.7mm from top"
+      }
+    },
+    "control_cavity": {
+      "type": "rear_routed_electronics_pocket",
+      "heritage": "Les Paul control cavity scaled for 3-knob layout — LP heritage 108×64×31.75mm scaled to 100×60×20mm. Houses pots, switch, wiring harness. Accessed via rear cover plate.",
+      "shape": "rounded_rectangle",
+      "dimensions_mm": {
+        "length": 100.0,
+        "width": 60.0,
+        "depth": 20.0,
+        "corner_radius": 6.35,
+        "floor_thickness_remaining": 20.45
+      },
+      "body_position_mm": {
+        "x_center": 55.2,
+        "y_from_top": 346.7,
+        "notes": "Aligned with control_plate_surface (x=55.2mm, y=346.7mm). Rear pocket directly behind front-mounted controls."
+      },
+      "cover_plate": {
+        "material": "ABS_black",
+        "thickness_mm": 3.175,
+        "length_mm": 110.0,
+        "width_mm": 70.0,
+        "corner_radius_mm": 6.35,
+        "screw_count": 4,
+        "screw_pattern": "rectangle",
+        "recess_depth_mm": 3.175,
+        "notes": "Flush-mount cover with #4 × 1/2 inch wood screws. 5mm margin around cavity."
+      },
+      "cnc_operations": {
+        "roughing": "OP-CC-50: 6mm flat endmill, adaptive clearing, 3mm stepdown",
+        "finishing": "OP-CC-51: 6mm flat endmill, contour pass, 0.5mm stepover",
+        "cover_recess": "OP-CC-52: 6mm flat endmill, 3.175mm deep pocket for cover plate",
+        "drilling": "OP-CC-60: 2.5mm drill, 4× screw pilot holes, 10mm deep"
+      },
+      "wiring_channels": {
+        "to_pickup_cavities": true,
+        "to_output_jack": true,
+        "channel_diameter_mm": 8.0,
+        "notes": "Channels drilled from control cavity floor to connect pickup routes and jack cavity"
       }
     }
   },
