@@ -780,13 +780,15 @@ def generate_phase2_rear(spec: Dict) -> str:
     ant_cx, ant_cy = spec_to_gcode(-ant_bp["x_center"], ant_bp["y_from_top"], body_w, body_h)
 
     g.section("OP62: ANTENNA RECESS (2mm shallow pocket)")
-    g.comment(f"50x30mm pocket, only 2mm deep — leaves {ant_dims['wood_cover_remaining_mm']}mm wood window for RF transparency")
+    rf_window = ant_dims.get("geometry_clarification", {}).get("rf_window_thickness_mm", 2.0)
+    g.comment(f"50x30mm pocket, only 2mm deep — leaves {rf_window}mm wood window for RF transparency")
     g.comment("Milled as stepped shelf inside the rear electronics cavity")
 
     # This is a shallow pocket milled at the BOTTOM of the electronics cavity
     # Z reference: we're already at the floor of the electronics cavity (22mm deep)
     # The antenna recess goes 2mm deeper from the cavity floor
-    ant_total_depth = rec_dims["depth"] + ant_dims["depth"]
+    ant_shelf_depth = ant_dims.get("shelf_step_depth_mm", ant_dims.get("depth", 2.0))
+    ant_total_depth = rec_dims["depth"] + ant_shelf_depth
     mill_rectangular_pocket(
         g, "Antenna Recess", ant_cx, ant_cy,
         ant_dims["length"], ant_dims["width"], ant_total_depth,
