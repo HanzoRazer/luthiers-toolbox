@@ -15,7 +15,7 @@ Layers:
 - PICKUP_CAVITIES: Neck and bridge humbucker routes (92 x 40 mm)
 - BRIDGE_ROUTE: Headless bridge mounting (95 x 42 mm)
 - ELECTRONICS_CAVITY: Rear Pi 5 cavity (95 x 65 mm) [reference only]
-- ARDUINO_POCKET: Rear Arduino cavity (80 x 60 mm) [reference only]
+- TEENSY_IO_POCKET: Rear Teensy I/O coprocessor cavity (70 x 25 mm) [reference only]
 - CENTERLINE: Vertical centerline for alignment
 
 Origin: Body center (0, 0), Y+ toward neck, Y- toward tail.
@@ -142,13 +142,13 @@ ELECTRONICS_CAVITY = {
     "corner_radius": 6.0,
 }
 
-# Arduino pocket: 80 x 60 mm, y_from_top=133.5, x_center=36.8
-ARDUINO_POCKET = {
+# Teensy I/O pocket: 70 x 25 mm, y_from_top=133.5, x_center=36.8
+TEENSY_IO_POCKET = {
     "x_center": 36.8,
     "y_center": y_from_top_to_body_y(133.5),  # 88.75
-    "length": 80.0,
-    "width": 60.0,
-    "corner_radius": 4.0,
+    "length": 70.0,
+    "width": 25.0,
+    "corner_radius": 3.0,
 }
 
 
@@ -271,8 +271,8 @@ def main():
     # 6. ELECTRONICS_CAVITY - rear Pi 5 cavity (reference)
     add_cavity_polyline(msp, adjust_cavity(ELECTRONICS_CAVITY, x_offset, y_offset), "ELECTRONICS_CAVITY")
 
-    # 7. ARDUINO_POCKET - rear Arduino cavity (reference)
-    add_cavity_polyline(msp, adjust_cavity(ARDUINO_POCKET, x_offset, y_offset), "ARDUINO_POCKET")
+    # 7. TEENSY_IO_POCKET - rear Teensy I/O coprocessor cavity (reference)
+    add_cavity_polyline(msp, adjust_cavity(TEENSY_IO_POCKET, x_offset, y_offset), "TEENSY_IO_POCKET")
 
     # Get actual body bounds after centering
     body_y_max = max(p[1] for p in body_pts_centered)
@@ -315,7 +315,7 @@ def main():
     print(f"  Body points: {len(BODY_PTS)}")
     print(f"  Voids: 3 (upper_bass: {len(VOID_UPPER_BASS)} pts, upper_treble: {len(VOID_UPPER_TREBLE)} pts, lower_bass: {len(VOID_LOWER_BASS)} pts)")
     print(f"  Layers: {len(layers)}")
-    print(f"  Cavities: neck_pocket, neck_pickup, bridge_pickup, bridge_route, electronics (rear), arduino (rear)")
+    print(f"  Cavities: neck_pocket, neck_pickup, bridge_pickup, bridge_route, electronics (rear), teensy_io (rear)")
 
     # Run audit
     auditor = doc.audit()

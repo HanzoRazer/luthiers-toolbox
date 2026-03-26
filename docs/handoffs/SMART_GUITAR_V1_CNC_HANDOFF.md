@@ -6,9 +6,9 @@
 
 ## Executive Summary
 
-The Smart Guitar is the **first IoT-enabled instrument** in the The Production Shop codebase. This session created the authoritative v1.1 spec JSON with all 12 cavity definitions, updated the registry from `STUB` to `COMPLETE`, designed the full dual-board separated electronics architecture (Arduino Uno + Raspberry Pi 5), and generated **11,967 lines of G-code** across two phases covering the entire body build process.
+The Smart Guitar is the **first IoT-enabled instrument** in the The Production Shop codebase. This session created the authoritative v1.1 spec JSON with all 12 cavity definitions, updated the registry from `STUB` to `COMPLETE`, designed the full dual-board separated electronics architecture (Teensy 4.1 + Raspberry Pi 5), and generated **11,967 lines of G-code** across two phases covering the entire body build process.
 
-**What works:** Body outline DXF (21-point R12 polygon), authoritative spec with all 12 cavities mapped to STEM grid 24×32 normalized coordinates, 2-phase G-code generation (front face routing + rear face electronics cavities), 3-tool library, build summary manifest, complete IoT cavity system (Pi 5 cavity, Arduino pocket, antenna recess, USB-C edge slot, 4 wiring channels).
+**What works:** Body outline DXF (21-point R12 polygon), authoritative spec with all 12 cavities mapped to STEM grid 24×32 normalized coordinates, 2-phase G-code generation (front face routing + rear face electronics cavities), 3-tool library, build summary manifest, complete IoT cavity system (Pi 5 cavity, Teensy I/O pocket, antenna recess, USB-C edge slot, 4 wiring channels).
 
 **What breaks:** DXF outline is 44.4mm narrower and 19.1mm shorter than spec dimensions — build script scales to compensate, distorting the shape. Pickle positions use `y_from_bridge` while all other cavities use `y_from_top` — forced derivation at build time. Wiring channels have logical routes but zero coordinate pairs — build script infers endpoints from cavity centers. Output jack bore angle is undefined — G-code drills vertically with operator note.
 
@@ -38,7 +38,7 @@ The Smart Guitar is the **first IoT-enabled instrument** in the The Production S
 | Bridge | Headless fixed with fine tuners (95×42mm, 4 mount screws) |
 | Controls | Volume, tone, rotary switch — top-mount plate (100×50mm) |
 | Weight Estimate | 7.5 lbs (3.4 kg) |
-| IoT Platform | Raspberry Pi 5 (compute/DSP) + Arduino Uno R4 (I/O coprocessor) — separated |
+| IoT Platform | Raspberry Pi 5 (compute/DSP) + Teensy 4.1 (I/O coprocessor) — separated |
 | Wireless | WiFi 6 + BLE 5.0 via dual-band PCB antenna under 2mm wood window |
 | Charging | USB-C PD 20W edge-mount slot |
 | Registry Status | `COMPLETE` (was `STUB`) |
@@ -49,20 +49,20 @@ The Smart Guitar is the **first IoT-enabled instrument** in the The Production S
 
 | Board | Location | Power | Function |
 |-------|----------|-------|----------|
-| Arduino Uno R4 | `arduino_preamp_pocket` — near neck pickup, rear access | 9V PP3 battery (independent) | I/O coprocessor only — footswitches, pots, LEDs, BMS telemetry, relay bypass. No audio. |
+| Teensy 4.1 | `teensy_io_pocket` — near neck pickup, rear access (70×25×20mm) | 3.3V from Pi 5 USB | I/O coprocessor only — footswitches, pots, LEDs, BMS telemetry, relay bypass. No audio. 600MHz Cortex-M7. |
 | Raspberry Pi 5 (4GB) | `rear_electronics_cavity` — lower body, rear access | Li-ion 18650 + USB-C PD 20W | DSP, AI coaching, WiFi/BLE, NVMe SSD storage |
 
-**Signal chain — canonical v2.0 (2026-03-23):**
+**Signal chain — canonical v2.1 (2026-03-25):**
 
 | Path | Chain | Latency |
 |------|-------|---------|
 | A — Dry analog | P90 pickup → buffered splitter (1MΩ) → 1/4" TS output jack | 0ms |
 | B — Digital processed | P90 pickup → buffered splitter → Hi-Z USB interface (Scarlett Solo) → Pi 5 USB → JACK (64-frame) → HiFiBerry DAC+ADC HAT (I2S GPIO) → headphone out + WiFi (PipeWire network sink) | ~3.1ms |
-| Control | Arduino Uno R4 → USB serial → Pi 5 | n/a |
+| Control | Teensy 4.1 → USB serial → Pi 5 | n/a |
 
 **WiFi audio:** PipeWire network sink via Pi 5 built-in WiFi — no additional hardware required.
 
-**Deprecated:** Arduino ADC audio path (10-bit, 44.1kHz) — replaced by Hi-Z USB interface. Arduino is I/O coprocessor only.
+**Teensy 4.1 update (2026-03-25):** Replaced Arduino Uno R4. Pocket area 64% smaller (4800→1750mm²), bare board 77% smaller (4800→1098mm²). Same I/O role, powered via USB from Pi 5 (no independent battery). When Pi is off, relay bypass defaults to Path A dry output.
 
 _Reconciled across luthiers-toolbox and sg-spec repos. Commits: 7364621a (luthiers-toolbox), 898d0dd (sg-spec)._
 
@@ -138,7 +138,7 @@ _Reconciled across luthiers-toolbox and sg-spec repos. Commits: 7364621a (luthie
 | Op | Description | Tool | Depth | Strategy |
 |----|-------------|------|-------|----------|
 | OP60 | Rear electronics cavity (Pi 5) — rough + finish | T1→T2 | 22mm | Helical + spiral, 95×65mm |
-| OP61 | Arduino preamp pocket — rough + finish | T1→T2 | 20mm | Helical + spiral, 80×60mm |
+| OP61 | Teensy I/O coprocessor pocket — rough + finish | T1→T2 | 20mm | Helical + spiral, 70×25mm |
 | OP62 | Antenna recess (2mm shelf) | T2 | 24mm total (22+2) | Extension of electronics floor |
 | OP63a/b | Rear cover plate recesses (2×) | T2 | 2mm | Shallow lip around each cavity |
 | OP70 | Wiring channels (4 routes) | T3 | 15mm | Linear plunge + traverse |
@@ -160,7 +160,7 @@ _Reconciled across luthiers-toolbox and sg-spec repos. Commits: 7364621a (luthie
 | control_plate_surface | BODY_CANVAS | 0.65, 0.78 | x=55.2**, y=346.7** | 100 × 50 | 3 | Front |
 | output_jack | LOWER_BOUT | 0.80, 0.88 | x=110.4, y=391.2 | ⌀12.7 bore | 25 | Front |
 | rear_electronics_cavity | BODY_CANVAS | 0.60, 0.62 | x=36.8, y=275.7 | 95 × 65 | 22 | Rear |
-| arduino_preamp_pocket | NECK_ZONE | 0.60, 0.30 | x=36.8, y=133.5 | 80 × 60 | 20 | Rear |
+| teensy_io_pocket | NECK_ZONE | 0.60, 0.30 | x=36.8, y=133.5 | 70 × 25 | 20 | Rear |
 | antenna_recess | BODY_CANVAS | 0.56, 0.46 | x=22.2, y=202.6 | 50 × 30 | 2 | Rear |
 | rear_wiring_channel | (multi-zone) | — | — | 10 wide | 15 | Rear |
 | usb_c_port | BODY_CANVAS | 0.99, 0.54 | x=216, y=239.4 | 12 × 6.5 slot | 7 | Edge |
@@ -288,11 +288,13 @@ The Smart Guitar is the first instrument to produce **IoT electronics integratio
 
 ### Why Separated Boards?
 
-**Stacked layout (rejected):** Arduino + Pi 5 stacked = 42mm — exceeds the 40mm usable cavity depth (44.45mm stock minus 4mm structural floor). No clearance for cables.
+**Stacked layout (rejected):** Teensy + Pi 5 stacked = still deep for cable clearance. Pi 5 + HiFiBerry HAT stack is 76mm — won't fit in any reasonable pocket.
 
 **Side-by-side layout (rejected):** Both boards in one cavity requires minimum 140×70mm. Largest reasonable cavity in the Explorer-Klein body is 130×75mm — the asymmetric shape constrains available wood.
 
-**Separated layout (accepted):** Arduino near neck pickup (short analog signal path, active preamp style) with independent 9V PP3 battery. Pi 5 in lower body rear cavity with Li-ion 18650 power. Connected by USB serial through wiring channel. Each board has its own cover plate.
+**Separated layout (accepted):** Teensy 4.1 near neck pickup (short analog signal path) powered via USB from Pi 5 (3.3V). Pi 5 in lower body rear cavity with Li-ion 18650 power. Connected by USB serial through wiring channel. Each board has its own cover plate. Teensy pocket is 70×25×20mm — 64% smaller than original Arduino pocket (80×60×20mm).
+
+**Teensy vs Arduino (2026-03-25):** Switched from Arduino Uno R4 to Teensy 4.1 for cavity space recovery. Teensy board is 61×18mm vs 68.6×53.4mm. Pocket area reduced from 4800mm² to 1750mm². Both have same I/O coprocessor role. Teensy runs on 3.3V from Pi 5 USB — no independent battery needed.
 
 ### Why Headless?
 
@@ -307,6 +309,67 @@ The Smart Guitar is the first instrument to produce **IoT electronics integratio
 - Gibson scale + 24 frets places the last fret at the neck-body joint — clean bolt-on geometry
 - Shorter scale = slightly lower string tension = easier bending for the IoT teaching use case
 - 24 frets provide full 2-octave range needed for the AI coaching system
+
+---
+
+## Part 9 · Software Stack (Pi 5 Music Brain)
+
+The Pi 5 runs the "Music Brain" — software for practice coaching, loop generation, and session bundles.
+
+### Components
+
+| Component | Description | Location |
+|-----------|-------------|----------|
+| **sg-agentd** | FastAPI agent daemon wrapping zt_band for HTTP sessions | github.com/HanzoRazer/sg-agentd |
+| **zt_band** | Zone-Tritone Band — jazz practice pattern engine | string_master_v.4.0/src/zt_band |
+| **zone_tritone** | Tritone zone theory library | string_master_v.4.0/src/shared/zone_tritone |
+| **JACK** | Low-latency audio server (64-frame buffer) | Pre-installed |
+| **Guitarix/MODEP** | Effects processing | Pre-installed |
+| **PipeWire** | WiFi audio streaming | Pre-installed |
+
+### sg-agentd Runtime
+
+```
+Host: 127.0.0.1
+Port: 8420
+Entry: sg_agentd.main:app
+```
+
+### Key Endpoints
+
+| Path | Method | Description |
+|------|--------|-------------|
+| `/generate` | POST | Generate a new clip bundle from parameters |
+| `/regenerate` | POST | Regenerate a clip with modified parameters |
+| `/bundle/{clip_id}` | GET | Retrieve a clip bundle by ID |
+| `/exercises` | GET | List available exercises from zt_band |
+| `/tags` | GET | List all tags across exercises |
+
+### Clip Bundle Format
+
+Each generated practice clip produces a 4-file bundle:
+
+| File | Type | Description |
+|------|------|-------------|
+| `clip.mid` | MIDI | Generated MIDI file |
+| `clip.tags.json` | JSON | Clip metadata tags |
+| `clip.coach.json` | JSON | Practice coaching hints |
+| `clip.runlog.json` | JSON | Generation parameters and seed |
+
+### Luthiers ToolBox Integration
+
+ToolBox acts as HTTP proxy to sg-agentd for development and testing:
+
+```
+/api/string-master/exercises    → GET exercises
+/api/string-master/generate     → POST generate clip
+/api/string-master/bundles/{id} → GET bundle
+/api/string-master/tags         → GET tags
+/api/string-master/zones        → GET zone theory data
+/api/string-master/health       → GET health check
+```
+
+Router: `services/api/app/routers/string_master_router.py`
 
 ---
 

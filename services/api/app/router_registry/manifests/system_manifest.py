@@ -127,4 +127,10 @@ SYSTEM_ROUTERS: List[RouterSpec] = [
         tags=["Materials", "System"],
         category="materials",
     ),
+    RouterSpec(
+        module="app.routers.string_master_router",
+        prefix="",  # Router has /api/string-master prefix
+        tags=["String Master", "Practice", "IoT"],
+        category="iot",
+    ),
 ]
