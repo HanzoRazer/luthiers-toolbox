@@ -593,10 +593,10 @@
         "corner_radius": 6.35
       },
       "grid_position": {
-        "zone": "BODY_CANVAS (lower-right)",
-        "x_center_norm": 0.65,
-        "y_center_norm": 0.78,
-        "notes": "Below and right of bridge, accessible control cluster"
+        "zone": "BODY_CANVAS (between bridge pickup and headless bridge)",
+        "x_center_norm": 0.576,
+        "y_center_norm": 0.713,
+        "notes": "Between bridge pickup line and headless bridge line. Single access panel spans pickup route + controls."
       },
       "components": {
         "volume_knob": {
@@ -623,9 +623,9 @@
       "cavity_ref": "control_cavity",
       "rear_cavity_note": "Pot shafts extend through body to control_cavity. Wiring harness housed in rear pocket.",
       "body_position_mm": {
-        "x_center": 55.2,
-        "y_from_top": 346.7,
-        "notes": "Derived from grid_position (x=0.65, y=0.78). 55.2mm right of centerline, 346.7mm from top"
+        "x_center": 25.0,
+        "y_from_top": 317.0,
+        "notes": "Between bridge pickup (y=294.6) and headless bridge (y=343). 25mm right of centerline. 34mm clearance to body edge."
       }
     },
     "control_cavity": {
@@ -640,9 +640,9 @@
         "floor_thickness_remaining": 20.45
       },
       "body_position_mm": {
-        "x_center": 55.2,
-        "y_from_top": 346.7,
-        "notes": "Aligned with control_plate_surface (x=55.2mm, y=346.7mm). Rear pocket directly behind front-mounted controls."
+        "x_center": 25.0,
+        "y_from_top": 317.0,
+        "notes": "Aligned with control_plate_surface. Between bridge pickup and headless bridge. 34mm clearance to body edge (was 9.7mm at old position)."
       },
       "cover_plate": {
         "material": "ABS_black",
