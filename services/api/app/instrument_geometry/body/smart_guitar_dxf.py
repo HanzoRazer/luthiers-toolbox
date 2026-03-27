@@ -63,6 +63,12 @@ except ImportError:
     void_lower_bass_pts = []
     ALL_VOIDS = []
 
+# Body outline origin correction
+# The traced outline has body top at Y=114.87mm (not Y=0).
+# All y_from_top cavity positions must be offset by this value.
+# Derived from: max(body_pts_y) after 1.510312x scale correction.
+BODY_TOP_Y = 114.87  # mm — traced outline body top in world coordinates
+
 
 # ─── Layer Definitions ───────────────────────────────────────────────────────
 
@@ -353,7 +359,7 @@ def generate_smart_guitar_dxf(
     # ─── Centerline ──────────────────────────────────────────────────────────
     if include_centerline:
         msp.add_line(
-            (0, 0), (0, -body_height_mm),
+            (0, BODY_TOP_Y), (0, BODY_TOP_Y - body_height_mm),
             dxfattribs={"layer": "CENTERLINE"},
         )
 
@@ -366,7 +372,7 @@ def generate_smart_guitar_dxf(
         y_from_top = np_pos.get("y_from_top", 53.3)
         points = rounded_rect_points(
             cx=0,
-            cy=-y_from_top - np_dims.get("length", 76.2) / 2,
+            cy=BODY_TOP_Y - y_from_top - np_dims.get("length", 76.2) / 2,
             length=np_dims.get("length", 76.2),
             width=np_dims.get("width", 55.9),
             corner_radius=np_dims.get("corner_radius", 6.35),
@@ -382,7 +388,7 @@ def generate_smart_guitar_dxf(
         y_from_top = nu_pos.get("y_from_top", 167.6)
         points = rounded_rect_points(
             cx=0,
-            cy=-y_from_top,
+            cy=BODY_TOP_Y - y_from_top,
             length=nu_dims.get("length", 92.0),
             width=nu_dims.get("width", 40.0),
             corner_radius=nu_dims.get("corner_radius", 3.175),
@@ -398,7 +404,7 @@ def generate_smart_guitar_dxf(
         y_from_top = bu_pos.get("y_from_top", 294.6)
         points = rounded_rect_points(
             cx=0,
-            cy=-y_from_top,
+            cy=BODY_TOP_Y - y_from_top,
             length=bu_dims.get("length", 92.0),
             width=bu_dims.get("width", 40.0),
             corner_radius=bu_dims.get("corner_radius", 3.175),
@@ -415,7 +421,7 @@ def generate_smart_guitar_dxf(
         y_from_top = re_pos.get("y_from_top", 275.7)
         points = rounded_rect_points(
             cx=x_center,
-            cy=-y_from_top,
+            cy=BODY_TOP_Y - y_from_top,
             length=re_dims.get("length", 95.0),
             width=re_dims.get("width", 65.0),
             corner_radius=re_dims.get("corner_radius", 6.0),
@@ -428,7 +434,7 @@ def generate_smart_guitar_dxf(
         pilot_dia = screws.get("pilot_hole_mm", 2.8)
         for pos in screw_positions:
             screw_x = x_center + pos.get("x", 0)
-            screw_y = -y_from_top + pos.get("y", 0)
+            screw_y = BODY_TOP_Y - y_from_top + pos.get("y", 0)
             msp.add_circle(
                 (screw_x, screw_y),
                 radius=pilot_dia / 2,
@@ -445,7 +451,7 @@ def generate_smart_guitar_dxf(
         y_from_top = ap_pos.get("y_from_top", 133.5)
         points = rounded_rect_points(
             cx=x_center,
-            cy=-y_from_top,
+            cy=BODY_TOP_Y - y_from_top,
             length=ap_dims.get("length", 80.0),
             width=ap_dims.get("width", 60.0),
             corner_radius=ap_dims.get("corner_radius", 4.0),
@@ -462,7 +468,7 @@ def generate_smart_guitar_dxf(
         y_from_top = ar_pos.get("y_from_top", 202.6)
         points = rounded_rect_points(
             cx=x_center,
-            cy=-y_from_top,
+            cy=BODY_TOP_Y - y_from_top,
             length=ar_dims.get("length", 50.0),
             width=ar_dims.get("width", 30.0),
             corner_radius=ar_dims.get("corner_radius", 3.0),
@@ -484,7 +490,7 @@ def generate_smart_guitar_dxf(
         for dx in [-hole_spacing_l/2, hole_spacing_l/2]:
             for dy in [-hole_spacing_w/2, hole_spacing_w/2]:
                 msp.add_circle(
-                    (dx, -y_from_top + dy),
+                    (dx, BODY_TOP_Y - y_from_top + dy),
                     radius=hole_dia / 2,
                     dxfattribs={"layer": "BRIDGE_MOUNTING"},
                 )
@@ -492,7 +498,7 @@ def generate_smart_guitar_dxf(
         # Bridge outline (reference only)
         points = rounded_rect_points(
             cx=0,
-            cy=-y_from_top,
+            cy=BODY_TOP_Y - y_from_top,
             length=br_dims.get("bridge_length", 95.0),
             width=br_dims.get("bridge_width", 42.0),
             corner_radius=br_dims.get("corner_radius", 3.175),
@@ -511,7 +517,7 @@ def generate_smart_guitar_dxf(
         # Plate outline
         points = rounded_rect_points(
             cx=x_center,
-            cy=-y_from_top,
+            cy=BODY_TOP_Y - y_from_top,
             length=cp_dims.get("length", 100.0),
             width=cp_dims.get("width", 50.0),
             corner_radius=cp_dims.get("corner_radius", 6.35),
@@ -524,7 +530,7 @@ def generate_smart_guitar_dxf(
 
         for comp_name, comp in components.items():
             hole_x = x_center + comp.get("x_offset_mm", 0)
-            hole_y = -y_from_top + comp.get("y_offset_mm", 0)
+            hole_y = BODY_TOP_Y - y_from_top + comp.get("y_offset_mm", 0)
             msp.add_circle(
                 (hole_x, hole_y),
                 radius=pot_dia / 2,
@@ -543,7 +549,7 @@ def generate_smart_guitar_dxf(
 
         points = rounded_rect_points(
             cx=x_center,
-            cy=-y_from_top,
+            cy=BODY_TOP_Y - y_from_top,
             length=usb_dims.get("slot_depth", 7.0),  # Into body
             width=usb_dims.get("slot_width", 12.0),
             corner_radius=usb_dims.get("corner_radius", 1.5),
@@ -561,7 +567,7 @@ def generate_smart_guitar_dxf(
         bore_dia = oj_dims.get("bore_diameter", 12.7)
 
         msp.add_circle(
-            (x_center, -y_from_top),
+            (x_center, BODY_TOP_Y - y_from_top),
             radius=bore_dia / 2,
             dxfattribs={"layer": "OUTPUT_JACK"},
         )
@@ -579,8 +585,8 @@ def generate_smart_guitar_dxf(
             if start and end:
                 # Draw channel centerline
                 msp.add_line(
-                    (start.get("x", 0), -start.get("y", 0)),
-                    (end.get("x", 0), -end.get("y", 0)),
+                    (start.get("x", 0), BODY_TOP_Y - start.get("y", 0)),
+                    (end.get("x", 0), BODY_TOP_Y - end.get("y", 0)),
                     dxfattribs={"layer": "WIRING_CHANNEL"},
                 )
 
