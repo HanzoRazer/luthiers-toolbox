@@ -1,6 +1,6 @@
 # Remediation Status — March 2026
 
-> **Last Updated:** 2026-03-19
+> **Last Updated:** 2026-03-28
 
 ## Current Metrics
 
@@ -158,10 +158,11 @@
 
 ## Next Actions
 
-1. **Decompose `ToolpathPlayer.vue`** — 3038 LOC, highest priority
-2. **Fix broad exceptions** — Focus on `app/cam/` first
-3. **Consolidate routers** — Merge small routers into domain modules
-4. **Add missing smoke tests** — Cover remaining router endpoints
+1. Resolve 13 pytest collection errors (Terminal 2)
+2. Merge herringbone decomposition when Cursor completes
+3. Merge MachineManagerView decomposition when Cursor completes
+4. Final test run — confirm 3,834+ passing, 0 collection errors
+5. Tag remediation complete
 
 ## Tracking
 
@@ -170,7 +171,7 @@
 | 2026-03-15 | 62 | 315 | — | Corrected baseline (25 Python + 37 Vue) |
 | 2026-03-19 | ~64 | 1 | 3,834 | Exception hardening complete. _experimental/ cleared. 96.59% coverage. |
 
-## Completed Milestones (2026-03-19)
+## Completed Milestones (2026-03-28)
 
 | Milestone | Status | Notes |
 |-----------|--------|-------|
@@ -180,6 +181,10 @@
 | Test suite health | ✅ Done | 3,834 passing, 0 failing |
 | Gap closure | ✅ Done | 112/120 (93%), 8 blocked on external data |
 | Score 7.0 target | ✅ Done | Achieved ~7.3/10 |
+| ToolpathPlayer.vue decompose | ✅ Done | 3,038 → 394 LOC, 21 components, 11 composables |
+| RosetteWheelView.vue decompose | ✅ Done | 1,240 → 667 LOC, 3 child components extracted |
+| herringbone_embedded_quads.py | In progress — Cursor |
+| MachineManagerView.vue | In progress — Cursor |
 
 ---
-*Last updated: 2026-03-19*
+*Last updated: 2026-03-28*
