@@ -35,10 +35,22 @@ VIEWER_HEADERS = {"x-user-role": "viewer", "x-user-id": "test_viewer"}
 
 @pytest.fixture
 def client():
-    """TestClient using app directly."""
+    """TestClient using app directly.
+
+    NOTE: Clear dependency_overrides to prevent state pollution from
+    other tests (e.g., test_auth_router.py sets overrides for get_current_principal).
+    Without this, header-based auth may fail with 401.
+    """
     from app.main import app
 
-    return TestClient(app)
+    # Clear any stale dependency overrides from previous tests
+    app.dependency_overrides.clear()
+
+    with TestClient(app) as c:
+        yield c
+
+    # Clean up after tests
+    app.dependency_overrides.clear()
 
 
 @pytest.fixture
