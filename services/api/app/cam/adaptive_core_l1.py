@@ -169,6 +169,22 @@ def build_offset_stacks_robust(
         return []
 
     # Subtract islands (expanded outward by tool radius for clearance)
+    # TODO: Island subtraction uses simple expansion which may not handle
+    # complex island geometries correctly. First article verification required.
+    import logging
+    import warnings
+    logger = logging.getLogger(__name__)
+
+    logger.warning(
+        "CAM SAFETY: Island subtraction not implemented. "
+        "Toolpaths may cut through pocket islands. "
+        "Verify manually before cutting. Gap ID: CCEX-GAP-ISLAND-01"
+    )
+    warnings.warn(
+        "Island subtraction not implemented — manual verification required",
+        UserWarning,
+        stacklevel=2,
+    )
     if holes:
         co_hole = pyclipper.PyclipperOffset(miter_limit, arc_tolerance_mm * SCALE)
         co_hole.AddPaths(holes, join_type, end_type)
