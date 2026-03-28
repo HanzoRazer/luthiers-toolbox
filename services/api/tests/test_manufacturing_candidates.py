@@ -34,13 +34,18 @@ VIEWER_HEADERS = {"x-user-role": "viewer", "x-user-id": "test_viewer"}
 
 
 @pytest.fixture
-def client():
+def client(monkeypatch):
     """TestClient using app directly.
 
-    NOTE: Clear dependency_overrides to prevent state pollution from
-    other tests (e.g., test_auth_router.py sets overrides for get_current_principal).
-    Without this, header-based auth may fail with 401.
+    NOTE: Clear dependency_overrides AND force AUTH_MODE="header" to prevent
+    state pollution from other tests. Without this, header-based auth may fail
+    with 401 when running deep into the full test suite.
     """
+    import app.auth.deps as auth_deps
+
+    # Force header-based auth (may have been changed by earlier tests)
+    monkeypatch.setattr(auth_deps, "AUTH_MODE", "header")
+
     from app.main import app
 
     # Clear any stale dependency overrides from previous tests
