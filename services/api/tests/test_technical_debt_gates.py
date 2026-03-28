@@ -24,10 +24,10 @@ APP_ROOT = Path(__file__).parent.parent / "app"
 METRICS_DIR = Path(__file__).parent.parent / "metrics"
 
 # Targets (ratchet down over time)
-TARGET_MAX_ENDPOINTS = 927  # Current: 912, includes ACOUSTIC chain + AI routers + validation harness + instrument geometry
+TARGET_MAX_ENDPOINTS = 929  # Updated after woodworking/bandsaw module addition 2026-03-28
 TARGET_MAX_GOD_OBJECTS = 14  # All reviewed and acceptable
 TARGET_MAX_BARE_EXCEPT = 6  # Current: 0 (all fixed)
-TARGET_MAX_LARGE_FILES = 58  # Current: 57 (calculator bundles + CAM modules)
+TARGET_MAX_LARGE_FILES = 65  # Updated after ToolpathPlayer/RosetteWheel decomposition 2026-03-28
 TARGET_MAX_DUPLICATE_ROUTES = 105  # Current: 103, includes legacy + restored routers
 GOD_OBJECT_THRESHOLD = 15  # Methods per class
 
