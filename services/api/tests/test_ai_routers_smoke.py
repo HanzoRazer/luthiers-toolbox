@@ -20,12 +20,16 @@ from fastapi.testclient import TestClient
 from app.main import app
 
 
-client = TestClient(app)
-
-
 # =============================================================================
 # FIXTURES
 # =============================================================================
+
+
+@pytest.fixture
+def client():
+    """Function-scoped TestClient to prevent shared state pollution."""
+    with TestClient(app) as c:
+        yield c
 
 
 @pytest.fixture
@@ -98,7 +102,7 @@ def sample_image_base64():
 class TestAssistantRouter:
     """Tests for /api/ai/assistant/* endpoints."""
 
-    def test_status_endpoint_exists(self):
+    def test_status_endpoint_exists(self, client):
         """GET /api/ai/assistant/status returns valid response."""
         response = client.get("/api/ai/assistant/status")
         assert response.status_code == 200
@@ -108,7 +112,7 @@ class TestAssistantRouter:
         assert "anthropic" in data["providers"]
         assert "openai" in data["providers"]
 
-    def test_history_endpoint_empty_session(self):
+    def test_history_endpoint_empty_session(self, client):
         """GET /api/ai/assistant/history returns empty for new session."""
         response = client.get(
             "/api/ai/assistant/history",
@@ -120,12 +124,12 @@ class TestAssistantRouter:
         assert data["messages"] == []
         assert data["count"] == 0
 
-    def test_history_requires_session_id(self):
+    def test_history_requires_session_id(self, client):
         """GET /api/ai/assistant/history requires session_id param."""
         response = client.get("/api/ai/assistant/history")
         assert response.status_code == 422  # Validation error
 
-    def test_clear_history_endpoint(self):
+    def test_clear_history_endpoint(self, client):
         """DELETE /api/ai/assistant/history clears session."""
         response = client.delete(
             "/api/ai/assistant/history",
@@ -137,7 +141,7 @@ class TestAssistantRouter:
         assert data["session_id"] == "test-smoke-session-002"
         assert "messages_cleared" in data
 
-    def test_chat_requires_message(self):
+    def test_chat_requires_message(self, client):
         """POST /api/ai/assistant/chat validates empty message."""
         response = client.post(
             "/api/ai/assistant/chat",
@@ -145,7 +149,7 @@ class TestAssistantRouter:
         )
         assert response.status_code == 422  # Validation error (min_length=1)
 
-    def test_chat_requires_session_id(self):
+    def test_chat_requires_session_id(self, client):
         """POST /api/ai/assistant/chat requires session_id."""
         response = client.post(
             "/api/ai/assistant/chat",
@@ -154,7 +158,7 @@ class TestAssistantRouter:
         assert response.status_code == 422  # Missing required field
 
     @patch("app.routers.ai.assistant_router.get_llm_client")
-    def test_chat_success_with_mock(self, mock_get_client, mock_llm_client, mock_llm_response):
+    def test_chat_success_with_mock(self, mock_get_client, mock_llm_client, mock_llm_response, client):
         """POST /api/ai/assistant/chat returns AI response."""
         mock_get_client.return_value = mock_llm_client
 
@@ -171,7 +175,7 @@ class TestAssistantRouter:
         assert data["session_id"] == "test-smoke-session-003"
 
     @patch("app.routers.ai.assistant_router.get_llm_client")
-    def test_chat_no_api_key_returns_503(self, mock_get_client):
+    def test_chat_no_api_key_returns_503(self, mock_get_client, client):
         """POST /api/ai/assistant/chat returns 503 when no API configured."""
         unconfigured_client = MagicMock()
         unconfigured_client.is_configured = False
@@ -196,7 +200,7 @@ class TestAssistantRouter:
 class TestDefectDetectionRouter:
     """Tests for /api/ai/defects/* endpoints."""
 
-    def test_status_endpoint_exists(self):
+    def test_status_endpoint_exists(self, client):
         """GET /api/ai/defects/status returns valid response."""
         response = client.get("/api/ai/defects/status")
         assert response.status_code == 200
@@ -205,7 +209,7 @@ class TestDefectDetectionRouter:
         assert "provider" in data
         assert "configured" in data
 
-    def test_analyze_requires_image(self):
+    def test_analyze_requires_image(self, client):
         """POST /api/ai/defects/analyze requires image_base64."""
         response = client.post(
             "/api/ai/defects/analyze",
@@ -213,7 +217,7 @@ class TestDefectDetectionRouter:
         )
         assert response.status_code == 422  # Validation error
 
-    def test_analyze_rejects_invalid_base64(self):
+    def test_analyze_rejects_invalid_base64(self, client):
         """POST /api/ai/defects/analyze rejects invalid base64."""
         response = client.post(
             "/api/ai/defects/analyze",
@@ -222,7 +226,7 @@ class TestDefectDetectionRouter:
         assert response.status_code == 400
         assert "invalid" in response.json()["detail"].lower()
 
-    def test_analyze_rejects_tiny_image(self):
+    def test_analyze_rejects_tiny_image(self, client):
         """POST /api/ai/defects/analyze rejects images < 100 bytes."""
         tiny_data = base64.b64encode(b"tiny").decode()
         response = client.post(
@@ -234,7 +238,7 @@ class TestDefectDetectionRouter:
 
     @patch("app.routers.ai.defect_detection_router.get_vision_client")
     def test_analyze_success_with_mock(
-        self, mock_get_client, mock_vision_client, sample_image_base64
+        self, mock_get_client, mock_vision_client, sample_image_base64, client
     ):
         """POST /api/ai/defects/analyze returns observations."""
         mock_get_client.return_value = mock_vision_client
@@ -256,7 +260,7 @@ class TestDefectDetectionRouter:
 
     @patch("app.routers.ai.defect_detection_router.get_vision_client")
     def test_analyze_without_species(
-        self, mock_get_client, mock_vision_client, sample_image_base64
+        self, mock_get_client, mock_vision_client, sample_image_base64, client
     ):
         """POST /api/ai/defects/analyze works without wood_species."""
         mock_get_client.return_value = mock_vision_client
@@ -268,7 +272,7 @@ class TestDefectDetectionRouter:
         assert response.status_code == 200
 
     @patch("app.routers.ai.defect_detection_router.get_vision_client")
-    def test_analyze_unconfigured_returns_503(self, mock_get_client, sample_image_base64):
+    def test_analyze_unconfigured_returns_503(self, mock_get_client, sample_image_base64, client):
         """POST /api/ai/defects/analyze returns 503 when vision not configured."""
         unconfigured = MagicMock()
         unconfigured.is_configured = False
@@ -289,7 +293,7 @@ class TestDefectDetectionRouter:
 class TestRecommendationsRouter:
     """Tests for /api/ai/recommendations/* endpoints."""
 
-    def test_status_endpoint_exists(self):
+    def test_status_endpoint_exists(self, client):
         """GET /api/ai/recommendations/status returns valid response."""
         response = client.get("/api/ai/recommendations/status")
         assert response.status_code == 200
@@ -297,7 +301,7 @@ class TestRecommendationsRouter:
         assert "ok" in data
         assert "providers" in data
 
-    def test_generate_requires_all_fields(self):
+    def test_generate_requires_all_fields(self, client):
         """POST /api/ai/recommendations/generate validates required fields."""
         # Missing all fields
         response = client.post("/api/ai/recommendations/generate", json={})
@@ -311,7 +315,7 @@ class TestRecommendationsRouter:
         assert response.status_code == 422
 
     @patch("app.routers.ai.recommendations_router.get_llm_client")
-    def test_generate_success_with_mock(self, mock_get_client, mock_llm_client):
+    def test_generate_success_with_mock(self, mock_get_client, mock_llm_client, client):
         """POST /api/ai/recommendations/generate returns recommendations."""
         # Mock response with valid JSON
         mock_response = MagicMock()
@@ -350,7 +354,7 @@ class TestRecommendationsRouter:
         assert "reasoning" in data
 
     @patch("app.routers.ai.recommendations_router.get_llm_client")
-    def test_generate_unconfigured_returns_503(self, mock_get_client):
+    def test_generate_unconfigured_returns_503(self, mock_get_client, client):
         """POST /api/ai/recommendations/generate returns 503 when not configured."""
         unconfigured = MagicMock()
         unconfigured.is_configured = False
@@ -376,7 +380,7 @@ class TestRecommendationsRouter:
 class TestWoodGradingRouter:
     """Tests for /api/ai/wood-grading/* endpoints."""
 
-    def test_health_endpoint_exists(self):
+    def test_health_endpoint_exists(self, client):
         """GET /api/ai/wood-grading/health returns valid response."""
         response = client.get("/api/ai/wood-grading/health")
         assert response.status_code == 200
@@ -386,7 +390,7 @@ class TestWoodGradingRouter:
         assert "vision_configured" in data
         assert "note" in data  # Reminder about acoustic grading
 
-    def test_analyze_requires_image(self):
+    def test_analyze_requires_image(self, client):
         """POST /api/ai/wood-grading/analyze requires image_base64."""
         response = client.post(
             "/api/ai/wood-grading/analyze",
@@ -394,7 +398,7 @@ class TestWoodGradingRouter:
         )
         assert response.status_code == 422
 
-    def test_analyze_rejects_invalid_base64(self):
+    def test_analyze_rejects_invalid_base64(self, client):
         """POST /api/ai/wood-grading/analyze rejects invalid base64."""
         response = client.post(
             "/api/ai/wood-grading/analyze",
@@ -403,7 +407,7 @@ class TestWoodGradingRouter:
         assert response.status_code == 400
 
     @patch("app.routers.ai.wood_grading_router.get_vision_client")
-    def test_analyze_returns_stub_when_unconfigured(self, mock_get_client, sample_image_base64):
+    def test_analyze_returns_stub_when_unconfigured(self, mock_get_client, sample_image_base64, client):
         """POST /api/ai/wood-grading/analyze returns stub when vision not configured."""
         unconfigured = MagicMock()
         unconfigured.is_configured = False
@@ -421,7 +425,7 @@ class TestWoodGradingRouter:
         assert data["confidence"] == "low"
 
     @patch("app.routers.ai.wood_grading_router.get_vision_client")
-    def test_analyze_success_with_mock(self, mock_get_client, sample_image_base64):
+    def test_analyze_success_with_mock(self, mock_get_client, sample_image_base64, client):
         """POST /api/ai/wood-grading/analyze returns visual observations."""
         mock_client = MagicMock()
         mock_client.is_configured = True
@@ -458,7 +462,7 @@ class TestWoodGradingRouter:
         assert "note" in data  # Tap Tone reminder
 
     @patch("app.routers.ai.wood_grading_router.get_vision_client")
-    def test_analyze_without_species(self, mock_get_client, sample_image_base64):
+    def test_analyze_without_species(self, mock_get_client, sample_image_base64, client):
         """POST /api/ai/wood-grading/analyze works without wood_species."""
         mock_client = MagicMock()
         mock_client.is_configured = True
@@ -490,22 +494,22 @@ class TestWoodGradingRouter:
 class TestAIRouterRegistration:
     """Verify all AI routers are properly mounted."""
 
-    def test_assistant_router_mounted(self):
+    def test_assistant_router_mounted(self, client):
         """Assistant router is mounted at /api/ai/assistant."""
         response = client.get("/api/ai/assistant/status")
         assert response.status_code == 200
 
-    def test_defects_router_mounted(self):
+    def test_defects_router_mounted(self, client):
         """Defect detection router is mounted at /api/ai/defects."""
         response = client.get("/api/ai/defects/status")
         assert response.status_code == 200
 
-    def test_recommendations_router_mounted(self):
+    def test_recommendations_router_mounted(self, client):
         """Recommendations router is mounted at /api/ai/recommendations."""
         response = client.get("/api/ai/recommendations/status")
         assert response.status_code == 200
 
-    def test_wood_grading_router_mounted(self):
+    def test_wood_grading_router_mounted(self, client):
         """Wood grading router is mounted at /api/ai/wood-grading."""
         response = client.get("/api/ai/wood-grading/health")
         assert response.status_code == 200
