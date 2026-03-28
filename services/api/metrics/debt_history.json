@@ -450,5 +450,20 @@
     "bare_except": 6,
     "large_files": 57,
     "god_objects": 12
+  },
+  {
+    "timestamp": "2026-03-28T09:31:34.388619",
+    "endpoints": 919,
+    "bare_except": 0,
+    "large_files": 58,
+    "god_objects": 12,
+    "note": "March 2026: Machine manager panels + rosette wheel + herringbone_quads_data"
+  },
+  {
+    "timestamp": "2026-03-28T09:32:57.130961",
+    "endpoints": 919,
+    "bare_except": 6,
+    "large_files": 57,
+    "god_objects": 12
   }
 ]
