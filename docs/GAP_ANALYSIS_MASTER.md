@@ -24,6 +24,7 @@ Previous updates overstated progress. This section provides the accurate remaini
 | Gap ID | Severity | Description |
 |--------|----------|-------------|
 | CCEX-GAP-ISLAND-01 | CRITICAL | Island subtraction not implemented in adaptive_core_l1.py. CAM engine may cut through pocket islands. Logged with warning. Implementation pending BCAM first article. |
+| CCEX-GAP-ASSETS-01 | MEDIUM | project_assets_router.py returns empty data on all three endpoints (list, manifest, write). No data persists. Logged with warnings. Implementation pending. |
 
 ### Actually Unresolved — 32 Items
 
