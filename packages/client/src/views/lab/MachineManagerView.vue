@@ -1,7 +1,10 @@
 <script setup lang="ts">
 /**
  * MachineManagerView — thin host for machine lab panels.
- * @see machine-manager/MachineProfilePanel.vue — profiles CRUD
+ * @see machine-manager/MachineProfilePanel.vue — orchestrates list + editor + connection
+ * @see machine-manager/MachineListPanel.vue — machine list + add modal
+ * @see machine-manager/MachineProfileEditor.vue — envelope / feeds / spindle
+ * @see machine-manager/MachineConnectionPanel.vue — default post-processor
  * @see machine-manager/MachineToolsPanel.vue — per-machine tools
  * @see machine-manager/MachinePostsPanel.vue — post-processors list
  */

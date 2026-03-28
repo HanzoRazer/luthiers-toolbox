@@ -46,7 +46,7 @@
 
 | LOC | File |
 |-----|------|
-| 1241 | `app/cam/rosette/prototypes/herringbone_embedded_quads.py` |
+| 27 | `app/cam/rosette/prototypes/herringbone_embedded_quads.py` (data: 1223 LOC) |
 | 684 | `app/router_registry/manifest.py` |
 | 682 | `app/cam/rosette/modern_pattern_generator.py` |
 | 674 | `app/cam/rosette/prototypes/__archived__/generative_explorer_viewer.py` |
@@ -119,7 +119,7 @@
 | File | LOC | Strategy |
 |------|-----|----------|
 | `ToolpathPlayer.vue` | 3038 | Extract playback controls, timeline, 3D viewer |
-| `herringbone_embedded_quads.py` | 1241 | Split geometry generation from rendering |
+| `herringbone_embedded_quads.py` | 27 | ✅ Split done: data → herringbone_quads_data.py |
 | `RosetteWheelView.vue` | 1240 | Extract wheel canvas, controls, presets panel |
 | `MachineManagerView.vue` | 1014 | Extract machine list, editor, connection panel |
 | `ToolpathCanvas3D.vue` | 997 | Extract camera controls, mesh rendering, overlays |
@@ -159,7 +159,7 @@
 ## Next Actions
 
 1. Resolve 13 pytest collection errors (Terminal 2)
-2. Merge herringbone decomposition when Cursor completes
+2. ✅ herringbone decomposition complete (1,241 → 27 LOC)
 3. Merge MachineManagerView decomposition when Cursor completes
 4. Final test run — confirm 3,834+ passing, 0 collection errors
 5. Tag remediation complete
@@ -183,7 +183,7 @@
 | Score 7.0 target | ✅ Done | Achieved ~7.3/10 |
 | ToolpathPlayer.vue decompose | ✅ Done | 3,038 → 394 LOC, 21 components, 11 composables |
 | RosetteWheelView.vue decompose | ✅ Done | 1,240 → 667 LOC, 3 child components extracted |
-| herringbone_embedded_quads.py | In progress — Cursor |
+| herringbone_embedded_quads.py | ✅ Done | 1,241 → 27 LOC accessor + 1,223 LOC data file |
 | MachineManagerView.vue | In progress — Cursor |
 
 ---
