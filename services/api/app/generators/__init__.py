@@ -97,7 +97,19 @@ from .stratocaster_config import (
     CONTROL_CAVITY,
 )
 
+
+# Unified body generator dispatcher (GEN-1)
+from .body_generator import (
+    BodyGenerator,
+    ELECTRIC_MODELS,
+    ACOUSTIC_MODELS,
+)
+
 __all__ = [
+    # Unified dispatcher (GEN-1)
+    'BodyGenerator',
+    'ELECTRIC_MODELS',
+    'ACOUSTIC_MODELS',
     # Body (Les Paul / DXF-based)
     'LesPaulBodyGenerator',
     'LesPaulDXFReader',
