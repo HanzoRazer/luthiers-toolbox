@@ -215,6 +215,10 @@ def client():
     """
     TestClient that auto-injects X-Request-Id unless explicitly provided.
 
+    Also clears dependency_overrides to prevent state pollution from
+    other tests (e.g., test_auth_router.py sets overrides for get_current_principal).
+    Without this, header-based auth may fail with 401 in later tests.
+
     Usage:
         def test_something(client):
             r = client.get("/health")
@@ -224,16 +228,23 @@ def client():
         client.get("/api/runs", headers={"x-request-id": "test_fixed"})
     """
     from app.main import app
-    base = TestClient(app)
-    orig_request = base.request
 
-    def request_with_rid(method, url, **kwargs):
-        headers = dict(kwargs.pop("headers", {}) or {})
-        headers.setdefault("x-request-id", f"test_{uuid.uuid4().hex[:12]}")
-        return orig_request(method, url, headers=headers, **kwargs)
+    # Clear stale dependency overrides from previous tests
+    app.dependency_overrides.clear()
 
-    base.request = request_with_rid  # type: ignore[assignment]
-    return base
+    with TestClient(app) as base:
+        orig_request = base.request
+
+        def request_with_rid(method, url, **kwargs):
+            headers = dict(kwargs.pop("headers", {}) or {})
+            headers.setdefault("x-request-id", f"test_{uuid.uuid4().hex[:12]}")
+            return orig_request(method, url, headers=headers, **kwargs)
+
+        base.request = request_with_rid  # type: ignore[assignment]
+        yield base
+
+    # Clean up after tests
+    app.dependency_overrides.clear()
 
 
 @pytest.fixture(autouse=True)
