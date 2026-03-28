@@ -12,7 +12,7 @@ Adapters:
 - kickback_adapter: Kickback risk assessment
 
 Usage:
-    from app.calculators.saw import evaluate_saw_operation
+    from app.calculators.saw_adapters import evaluate_saw_operation
 
     result = evaluate_saw_operation(
         blade_id="SB-24T-10",
