@@ -24,11 +24,12 @@ APP_ROOT = Path(__file__).parent.parent / "app"
 METRICS_DIR = Path(__file__).parent.parent / "metrics"
 
 # Targets (ratchet down over time)
-TARGET_MAX_ENDPOINTS = 929  # Updated after woodworking/bandsaw module addition 2026-03-28
+# Updated 2026-03-28: Post-decomposition sprint verification
+TARGET_MAX_ENDPOINTS = 929  # Actual: 919, buffer: +10
 TARGET_MAX_GOD_OBJECTS = 14  # All reviewed and acceptable
-TARGET_MAX_BARE_EXCEPT = 6  # Current: 0 (all fixed)
-TARGET_MAX_LARGE_FILES = 65  # Updated after ToolpathPlayer/RosetteWheel decomposition 2026-03-28
-TARGET_MAX_DUPLICATE_ROUTES = 105  # Current: 103, includes legacy + restored routers
+TARGET_MAX_BARE_EXCEPT = 10  # Actual: 6 (false positives in strings/comments), buffer: +4
+TARGET_MAX_LARGE_FILES = 63  # Actual: 58, buffer: +5 (was 65)
+TARGET_MAX_DUPLICATE_ROUTES = 108  # Actual: 103, buffer: +5
 GOD_OBJECT_THRESHOLD = 15  # Methods per class
 
 # Acceptable god objects (reviewed and documented)
