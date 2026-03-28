@@ -11,11 +11,13 @@ to function without a full project asset storage implementation.
 
 from __future__ import annotations
 
+import logging
 from typing import Any, Dict, List, Optional
 
 from fastapi import APIRouter, File, Form, UploadFile
 from pydantic import BaseModel
 
+logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/projects", tags=["Projects"])
 
@@ -60,6 +62,10 @@ def list_project_ai_images(project_id: str) -> Dict[str, Any]:
     Stub implementation: Returns empty list.
     Vision-generated images are stored in CAS and attached to RMOS runs.
     """
+    logger.warning(
+        "STUB: project_assets list returns empty. "
+        "Not yet implemented. Gap ID: CCEX-GAP-ASSETS-01"
+    )
     return {"images": [], "project_id": project_id}
 
 
@@ -71,6 +77,10 @@ def get_asset_manifest(project_id: str) -> ImageAssetManifest:
     
     Stub implementation: Returns empty manifest.
     """
+    logger.warning(
+        "STUB: project_assets manifest returns empty. "
+        "Gap ID: CCEX-GAP-ASSETS-01"
+    )
     return ImageAssetManifest(project_id=project_id)
 
 
@@ -88,6 +98,10 @@ async def upload_ai_image_asset(
     Stub implementation: Returns success but doesn't persist.
     Vision-generated images should use /api/vision/generate which stores to CAS.
     """
+    logger.warning(
+        "STUB: project_assets write does not persist. "
+        "Gap ID: CCEX-GAP-ASSETS-01"
+    )
     return {
         "ok": True,
         "message": "Stub endpoint - use /api/vision/generate for actual image storage",
