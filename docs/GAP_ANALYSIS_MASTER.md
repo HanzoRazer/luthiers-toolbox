@@ -19,6 +19,12 @@ Previous updates overstated progress. This section provides the accurate remaini
 | **GAP-NEW-2** | Spanish wave pattern missing from tile pattern registry | **Resolved:** Added SPANISH_WAVE to TilePattern in cam/rosette/tile_segmentation.py (even-tile alternating; trapezoidal tiles for now) |
 | **INLAY-07** | Inlay pocket depth control | **Resolved:** pocketDepth ref added to InlayDesignerView.vue and ArtStudioInlay.vue. pocket_depth_mm wired to export-dxf API. |
 
+### CAM Safety Gaps — Active
+
+| Gap ID | Severity | Description |
+|--------|----------|-------------|
+| CCEX-GAP-ISLAND-01 | CRITICAL | Island subtraction not implemented in adaptive_core_l1.py. CAM engine may cut through pocket islands. Logged with warning. Implementation pending BCAM first article. |
+
 ### Actually Unresolved — 32 Items
 
 | Severity | Count | Key Items |
