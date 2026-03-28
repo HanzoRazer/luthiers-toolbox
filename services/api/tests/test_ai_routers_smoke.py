@@ -17,7 +17,6 @@ from unittest.mock import MagicMock, patch
 import pytest
 from fastapi.testclient import TestClient
 
-from app.main import app
 
 
 # =============================================================================
@@ -28,8 +27,16 @@ from app.main import app
 @pytest.fixture
 def client():
     """Function-scoped TestClient to prevent shared state pollution."""
+    from app.main import app
+    
+    # Clear any stale dependency overrides from previous tests
+    app.dependency_overrides.clear()
+    
     with TestClient(app) as c:
         yield c
+    
+    # Clean up after tests
+    app.dependency_overrides.clear()
 
 
 @pytest.fixture
