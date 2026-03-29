@@ -1,0 +1,64 @@
+{
+  "app\\.data\\rmos.sqlite": {},
+  "app\\data\\art_studio.db": {
+    "rosette_jobs": [
+      "id",
+      "job_id",
+      "name",
+      "preset",
+      "payload_json",
+      "created_at"
+    ],
+    "rosette_presets": [
+      "id",
+      "name",
+      "pattern_type",
+      "segments",
+      "inner_radius",
+      "outer_radius",
+      "metadata_json"
+    ],
+    "rosette_compare_risk": [
+      "id",
+      "job_id_a",
+      "job_id_b",
+      "lane",
+      "risk_score",
+      "diff_json",
+      "note",
+      "created_at"
+    ]
+  },
+  "app\\telemetry\\cam_logs.db": {
+    "runs": [
+      "id",
+      "ts_utc",
+      "job_name",
+      "machine_id",
+      "material_id",
+      "tool_d",
+      "stepover",
+      "stepdown",
+      "post_id",
+      "feed_xy",
+      "rpm",
+      "est_time_s",
+      "act_time_s",
+      "notes"
+    ],
+    "segments": [
+      "id",
+      "run_id",
+      "idx",
+      "code",
+      "x",
+      "y",
+      "len_mm",
+      "limit",
+      "slowdown",
+      "trochoid",
+      "radius_mm",
+      "feed_f"
+    ]
+  }
+}
