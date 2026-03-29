@@ -97,13 +97,6 @@ CAM_ROUTERS: List[RouterSpec] = [
         category="config",
     ),
     RouterSpec(
-        module="app.routers.machines_consolidated_router",
-        router_attr="cam_machines_router",
-        prefix="/api",
-        tags=["CAM", "Machines"],
-        category="cam",
-    ),
-    RouterSpec(
         module="app.routers.posts_consolidated_router",
         prefix="/api/posts",
         tags=["Post Processors"],
@@ -114,12 +107,6 @@ CAM_ROUTERS: List[RouterSpec] = [
         prefix="/api/registry",
         tags=["Data Registry"],
         category="config",
-    ),
-    RouterSpec(
-        module="app.saw_lab.compare_router",
-        prefix="",
-        tags=["Saw Lab", "Compare"],
-        category="saw_lab",
     ),
     RouterSpec(
         module="app.saw_lab.__init_router__",
@@ -246,11 +233,10 @@ CAM_ROUTERS: List[RouterSpec] = [
         tags=["Export", "Rosette", "PDF"],
         category="cam",
     ),
-    # ── VECTORIZER-001: Photo vectorizer router ──
     RouterSpec(
-        module="app.routers.photo_vectorizer_router",
-        prefix="/api/vectorizer",
-        tags=["Vectorizer", "Import", "Photo"],
+        module="app.routers.woodworking_router",
+        prefix="/api/woodworking",
+        tags=["Woodworking"],
         category="cam",
     ),
 ]
