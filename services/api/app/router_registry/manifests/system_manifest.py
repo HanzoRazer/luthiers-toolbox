@@ -108,23 +108,10 @@ SYSTEM_ROUTERS: List[RouterSpec] = [
         category="analyzer",
     ),
     RouterSpec(
-        module="app.workflow.sessions.routes",
-        prefix="",
-        tags=["Workflow", "Sessions"],
-        category="workflow",
-    ),
-    RouterSpec(
         module="app.materials.router",
         router_attr="registry_router",
         prefix="",
         tags=["Materials", "Registry"],
-        category="materials",
-    ),
-    RouterSpec(
-        module="app.materials.router",
-        router_attr="system_router",
-        prefix="",
-        tags=["Materials", "System"],
         category="materials",
     ),
     RouterSpec(
