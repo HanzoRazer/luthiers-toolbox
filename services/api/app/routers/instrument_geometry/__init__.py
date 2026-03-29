@@ -15,11 +15,12 @@ Routers:
 - build_sequence_router: Complete build sequence (2 endpoints)
 - setup_router: Instrument setup evaluation (1 endpoint)
 
-Total: 34 endpoints
+Total: 39 endpoints (includes 5 geometry calculator endpoints)
 """
 
 from fastapi import APIRouter
 
+from .geometry_calculator_router import router as geometry_calculator_router
 from .nut_fret_router import router as nut_fret_router
 from .bridge_router import router as bridge_router
 from .body_construction_router import router as body_construction_router
@@ -37,6 +38,7 @@ router = APIRouter(
 )
 
 # Include all domain routers
+router.include_router(geometry_calculator_router)
 router.include_router(nut_fret_router)
 router.include_router(bridge_router)
 router.include_router(body_construction_router)
@@ -49,6 +51,7 @@ router.include_router(setup_router)
 
 __all__ = [
     "router",
+    "geometry_calculator_router",
     "nut_fret_router",
     "bridge_router",
     "body_construction_router",
