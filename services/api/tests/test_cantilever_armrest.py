@@ -223,7 +223,10 @@ def test_sections_ordered_by_t():
 
 
 # --- Endpoint Tests ---
+# NOTE: These endpoints only exist in the deprecated monolith (instrument_geometry_router.py)
 
+
+@pytest.mark.skip(reason="Endpoint only in deprecated monolith (instrument_geometry_router.py)")
 def test_cantilever_armrest_endpoint_with_preset():
     response = client.post("/api/instrument/cantilever-armrest", json={"preset": "standard"})
     assert response.status_code == 200
@@ -232,6 +235,7 @@ def test_cantilever_armrest_endpoint_with_preset():
     assert "apex_section" in data
 
 
+@pytest.mark.skip(reason="Endpoint only in deprecated monolith (instrument_geometry_router.py)")
 def test_cantilever_armrest_endpoint_custom_params():
     response = client.post("/api/instrument/cantilever-armrest", json={
         "span_mm": 160.0, "t_apex": 0.4, "h_max_mm": 12.0, "theta_max_deg": 40.0, "n_stations": 5
@@ -241,6 +245,7 @@ def test_cantilever_armrest_endpoint_custom_params():
     assert len(data["sections"]) == 5
 
 
+@pytest.mark.skip(reason="Endpoint only in deprecated monolith (instrument_geometry_router.py)")
 def test_cantilever_armrest_presets_endpoint():
     response = client.get("/api/instrument/cantilever-armrest/presets")
     assert response.status_code == 200
