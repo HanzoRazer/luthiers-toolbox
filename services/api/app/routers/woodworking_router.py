@@ -8,10 +8,17 @@ from __future__ import annotations
 
 from typing import Any, Dict
 
-from fastapi import APIRouter
+from fastapi import APIRouter, HTTPException
+from fastapi.responses import Response
 from pydantic import BaseModel, Field
 
 from app.cam_core.saw_lab.bandsaw import Bandsaw
+from app.woodworking.archtop_floating_bridge import (
+    BENEDETTO_17,
+    build_archtop_bridge_report,
+    generate_dxf,
+    resolve_arch_radius_from_sagitta,
+)
 from app.woodworking import (
     board_feet,
     compute_biscuit_layout,
@@ -58,6 +65,74 @@ def post_floating_bridge_action(req: FloatingBridgeActionRequest) -> Dict[str, A
 @router.post("/floating-bridge/break-angle", summary="String break angle behind bridge")
 def post_break_angle(req: BreakAngleRequest) -> Dict[str, float]:
     return {"break_angle_deg": compute_break_angle_deg(req.height_delta_mm, req.horizontal_run_mm)}
+
+
+class ArchtopBridgeGeometryRequest(BaseModel):
+    """Measured top arch: chord span (mm) and sagitta (mm). Prefer over nominal 3048."""
+
+    span_mm: float = Field(..., gt=0, description="Chord span along arch (measured)")
+    sagitta_mm: float = Field(..., gt=0, description="Rise from chord to arc (measured)")
+    base_length_mm: float = Field(default=BENEDETTO_17.base_length_mm)
+    base_width_mm: float = Field(default=BENEDETTO_17.base_width_mm)
+    e_to_e_string_spacing_mm: float = Field(default=BENEDETTO_17.e_to_e_string_spacing_mm)
+    post_spacing_mm: float = Field(default=BENEDETTO_17.post_spacing_mm)
+    saddle_radius_mm: float = Field(default=BENEDETTO_17.saddle_radius_mm)
+
+
+@router.post(
+    "/floating-bridge/archtop/geometry",
+    summary="Benedetto-style archtop floating bridge (sagitta arch, foot, posts, saddle slots)",
+)
+def post_archtop_geometry(req: ArchtopBridgeGeometryRequest) -> Dict[str, Any]:
+    rep = build_archtop_bridge_report(
+        span_mm=req.span_mm,
+        sagitta_mm=req.sagitta_mm,
+        base_length_mm=req.base_length_mm,
+        base_width_mm=req.base_width_mm,
+        e_to_e_string_spacing_mm=req.e_to_e_string_spacing_mm,
+        post_spacing_mm=req.post_spacing_mm,
+        saddle_radius_mm=req.saddle_radius_mm,
+    )
+    return {
+        "arch_radius_mm": rep.arch_radius_mm,
+        "span_mm": rep.span_mm,
+        "sagitta_mm": rep.sagitta_mm,
+        "foot": rep.foot,
+        "posts": rep.posts,
+        "saddle_slots": rep.saddle_slots,
+        "defaults": rep.defaults,
+    }
+
+
+class ArchtopBridgeDxfRequest(ArchtopBridgeGeometryRequest):
+    """Same as geometry; DXF uses resolved arch radius from span + sagitta."""
+
+
+@router.post(
+    "/floating-bridge/archtop/dxf",
+    summary="DXF R2000 (BRIDGE_OUTLINE, FOOT_PROFILE, SADDLE_SLOT, POST_HOLES, CENTERLINE)",
+    response_class=Response,
+)
+def post_archtop_dxf(req: ArchtopBridgeDxfRequest) -> Response:
+    r_arch = resolve_arch_radius_from_sagitta(req.span_mm, req.sagitta_mm)
+    try:
+        raw = generate_dxf(
+            arch_radius_mm=r_arch,
+            base_length_mm=req.base_length_mm,
+            base_width_mm=req.base_width_mm,
+            foot_thickness_mm=BENEDETTO_17.foot_thickness_mm,
+            saddle_radius_mm=req.saddle_radius_mm,
+            post_spacing_mm=req.post_spacing_mm,
+            post_hole_diameter_mm=BENEDETTO_17.post_hole_diameter_mm,
+            e_to_e_string_spacing_mm=req.e_to_e_string_spacing_mm,
+        )
+    except ImportError as e:
+        raise HTTPException(status_code=503, detail=str(e)) from e
+    return Response(
+        content=raw,
+        media_type="application/dxf",
+        headers={"Content-Disposition": 'attachment; filename="archtop_floating_bridge.dxf"'},
+    )
 
 
 # ─── Joinery ─────────────────────────────────────────────────────────────────
