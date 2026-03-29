@@ -5,8 +5,9 @@ Endpoints:
 - POST /soundhole — Calculate soundhole spec
 - POST /soundhole/check-position — Check soundhole position validity
 - GET  /soundhole/options — List body styles
+- GET  /soundhole/body-styles — List body styles with standard diameters
 
-Total: 3 endpoints
+Total: 4 endpoints
 """
 
 from __future__ import annotations
@@ -21,6 +22,7 @@ from app.calculators.soundhole_calc import (
     compute_soundhole_spec,
     check_soundhole_position,
     list_body_styles,
+    STANDARD_DIAMETERS_MM,
 )
 
 router = APIRouter(tags=["instrument-geometry", "soundhole"])
@@ -109,6 +111,23 @@ def check_soundhole_position_endpoint(req: SoundholePositionCheckRequest) -> Sou
 def get_soundhole_options() -> SoundholeOptionsResponse:
     """Return list of supported body styles."""
     return SoundholeOptionsResponse(body_styles=list_body_styles())
+
+
+@router.get(
+    "/soundhole/body-styles",
+    summary="List body styles with standard soundhole diameters",
+)
+def list_soundhole_body_styles():
+    """
+    List supported body styles and their standard soundhole diameters.
+
+    Migrated from instrument_router.py — provides extended response
+    with standard_diameters_mm lookup table.
+    """
+    return {
+        "body_styles": list_body_styles(),
+        "standard_diameters_mm": STANDARD_DIAMETERS_MM,
+    }
 
 
 __all__ = ["router"]

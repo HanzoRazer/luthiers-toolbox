@@ -6,13 +6,15 @@ Endpoints:
 - GET  /nut-slots/options — List fret types and string sets
 - POST /nut-compensation — Calculate nut compensation
 - POST /nut-compensation/compare — Compare traditional vs zero-fret
+- POST /nut-compensation/zero-fret-positions — Calculate zero-fret adjusted positions
+- GET  /nut-compensation/types — List nut types and specifications
 - POST /fret-leveling — Analyze fret heights
 - POST /fret-leveling/radius — Calculate leveling radius
 - POST /fret-wire/recommend — Get fret wire recommendations
 - GET  /fret-wire/catalog — Full fret wire catalog
 - GET  /fret-wire/options — List fret wire options
 
-Total: 9 endpoints
+Total: 11 endpoints
 """
 
 from __future__ import annotations
@@ -33,6 +35,12 @@ from app.calculators.nut_comp_calc import (
     NutCompSpec,
     compute_nut_compensation,
     compare_nut_types,
+)
+from app.calculators.nut_compensation_calc import (
+    compute_zero_fret_positions,
+    list_nut_types,
+    get_nut_type_info,
+    COMPENSATION_FACTORS,
 )
 from app.calculators.fret_leveling_calc import (
     LevelingPlan,
@@ -137,6 +145,25 @@ class NutComparisonResponse(BaseModel):
     traditional: Dict[str, Any]
     zero_fret: Dict[str, Any]
     comparison: Dict[str, Any]
+
+
+class ZeroFretPositionsRequest(BaseModel):
+    """Request for zero-fret adjusted positions."""
+    scale_length_mm: float = Field(..., gt=0, description="Scale length in mm")
+    fret_count: int = Field(..., gt=0, le=36, description="Number of frets")
+    zero_fret_crown_width_mm: float = Field(default=1.0, gt=0, description="Zero fret crown width in mm")
+
+
+class ZeroFretPositionsResponse(BaseModel):
+    """Response with zero-fret adjusted positions."""
+    zero_fret_position_mm: float
+    nut_guide_position_mm: float
+    nut_guide_offset_mm: float
+    crown_offset_mm: float
+    fret_positions_mm: List[float]
+    fret_count: int
+    scale_length_mm: float
+    notes: List[str]
 
 
 # ─── Fret Leveling Models ──────────────────────────────────────────────────────
@@ -306,6 +333,60 @@ def compare_nut_compensation(req: NutComparisonRequest) -> NutComparisonResponse
         break_angle_deg=req.break_angle_deg,
     )
     return NutComparisonResponse(**comparison)
+
+
+@router.post(
+    "/nut-compensation/zero-fret-positions",
+    response_model=ZeroFretPositionsResponse,
+    summary="Calculate zero-fret adjusted positions",
+)
+def get_zero_fret_positions(req: ZeroFretPositionsRequest) -> ZeroFretPositionsResponse:
+    """
+    Calculate fret positions adjusted for zero-fret reference.
+
+    With a zero-fret:
+    - Scale length is measured from zero-fret crown center to saddle
+    - The nut becomes a string guide only (positioned behind zero-fret)
+    - All fret positions are calculated from the zero-fret
+
+    Migrated from instrument_router.py.
+    """
+    result = compute_zero_fret_positions(
+        scale_length_mm=req.scale_length_mm,
+        fret_count=req.fret_count,
+        zero_fret_crown_width_mm=req.zero_fret_crown_width_mm,
+    )
+    return ZeroFretPositionsResponse(
+        zero_fret_position_mm=result["zero_fret_position_mm"],
+        nut_guide_position_mm=result["nut_guide_position_mm"],
+        nut_guide_offset_mm=result["nut_guide_offset_mm"],
+        crown_offset_mm=result["crown_offset_mm"],
+        fret_positions_mm=result["fret_positions_mm"],
+        fret_count=result["fret_count"],
+        scale_length_mm=result["scale_length_mm"],
+        notes=result["notes"],
+    )
+
+
+@router.get(
+    "/nut-compensation/types",
+    summary="List available nut types and specifications",
+)
+def list_nut_compensation_types():
+    """
+    List available nut types and their specifications.
+
+    Returns nut types, compensation factors, and detailed info for each type.
+    Migrated from instrument_router.py.
+    """
+    return {
+        "nut_types": list_nut_types(),
+        "compensation_factors": COMPENSATION_FACTORS,
+        "details": {
+            nut_type: get_nut_type_info(nut_type)
+            for nut_type in list_nut_types()
+        },
+    }
 
 
 # ─── Fret Leveling Endpoints ───────────────────────────────────────────────────
