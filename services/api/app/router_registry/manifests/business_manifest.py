@@ -130,16 +130,15 @@ BUSINESS_ROUTERS: List[RouterSpec] = [
         tags=["Instruments", "Geometry", "Calculators"],
         category="instrument_geometry",
     ),
-    # ── GEOMETRY-010B: Physics-based instrument geometry (35 endpoints) ──
-    # Full-featured monolithic router with side bending, nut slots, soundhole,
-    # fret leveling, nut compensation, voicing, bridge, blocks, fret wire,
-    # wood movement, electronics layout, build sequence, setup cascade
-    RouterSpec(
-        module="app.routers.instrument_geometry_router",
-        prefix="/api/instrument",
-        tags=["Instruments", "Geometry", "Physics", "Calculators"],
-        category="instrument_geometry_v2",
-    ),
+    # ── GEOMETRY-010B: DEPRECATED — monolith unregistered ──
+    # Superseded by split routers in app.routers.instrument_geometry/
+    # File retained at app/routers/instrument_geometry_router.py for reference.
+    # RouterSpec(
+    #     module="app.routers.instrument_geometry_router",
+    #     prefix="/api/instrument",
+    #     tags=["Instruments", "Geometry", "Physics", "Calculators"],
+    #     category="instrument_geometry_v2",
+    # ),
     # ── Photo Vectorizer: Photo/AI image to vector outline ──
     # Standalone capability for importing from photographs or AI-generated images.
     # Does NOT replace Phase 2/3 blueprint workflow — additive "Photo Import" feature.
