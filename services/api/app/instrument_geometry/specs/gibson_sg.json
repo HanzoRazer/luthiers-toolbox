@@ -1,0 +1,101 @@
+{
+  "model_id": "sg",
+  "display_name": "Gibson SG",
+  "source": "Verified specifications from SG Standard with Vintage Pickguard. Neck thickness 20.32mm/22.225mm, joint angle 4 deg, headstock angle 17 deg, body join at 19th fret confirmed from spec sheet 2026-03-29. DXF body outline available: DXF-00-Gibson-SG.dxf.",
+  "units": "mm",
+  "notes": "The SG (Solid Guitar) replaced the Les Paul in 1961 and became Gibson's best-selling electric. Double cutaway allows full access to upper frets - body joins at 19th fret, documented in spec. The SG body is thinner and lighter than the LP.",
+  "variants": {
+    "standard": {
+      "description": "Gibson SG Standard - double cutaway solid mahogany, set neck at 19th fret, dual humbuckers, tune-o-matic bridge. The definitive SG configuration.",
+      "year_range": "1961-present",
+      "scale_length_mm": 628.65,
+      "scale_length_inches": 24.75,
+      "fret_count": 22,
+      "neck": {
+        "nut_width_mm": 43.05,
+        "nut_width_inches": 1.695,
+        "heel_width_mm": 57.4,
+        "heel_width_inches": 2.26,
+        "depth_1st_fret_mm": 20.32,
+        "depth_1st_fret_inches": 0.8,
+        "depth_12th_fret_mm": 22.225,
+        "depth_12th_fret_inches": 0.875,
+        "depth_note": "Neck-only depth (back of neck to underside of fretboard). Add fretboard thickness (~5mm) for total stack.",
+        "total_stack_1st_fret_mm": 25.32,
+        "total_stack_12th_fret_mm": 27.225,
+        "profile_shape": "modern_C",
+        "fretboard_radius_mm": 304.8,
+        "fretboard_radius_inches": 12.0,
+        "compound_radius": false,
+        "fretboard_wood": "rosewood",
+        "neck_wood": "mahogany",
+        "binding": "single_ply_cream",
+        "body_join_fret": 19,
+        "body_join_note": "Documented in spec: set neck joint at 19th fret. Upper fret access is excellent due to double cutaway.",
+        "neck_angle_deg": 4.0,
+        "truss_rod": "single_action_adjustable",
+        "truss_rod_access": "headstock_bell_cover",
+        "inlays": "trapezoids_dots_ovals",
+        "fret_wire": "medium_vintage"
+      },
+      "headstock": {
+        "style": "gibson_open_book",
+        "angle_deg": 17.0,
+        "thickness_mm": 15.08,
+        "thickness_inches": 0.5938,
+        "tuner_layout": "3+3",
+        "tuner_hole_diameter_mm": 10.0,
+        "tuner_hole_spacing_mm": 25.4,
+        "veneer": "holly_or_maple",
+        "note": "Standard Gibson open-book headstock. Slightly thicker than ES-335 (15.08mm vs 14.6mm)."
+      },
+      "body": {
+        "construction": "solid",
+        "style": "double_cutaway",
+        "material": "mahogany",
+        "thickness_mm": 38.1,
+        "thickness_inches": 1.5,
+        "binding": "single_ply_cream",
+        "finish": "nitrocellulose_lacquer",
+        "weight_note": "SG is significantly lighter than LP - thinner body, no maple cap. Typical weight 2.7-3.2 kg.",
+        "dxf_reference": "docs/archive/instrument_references/gibson_sg/DXF-00-Gibson-SG.dxf"
+      },
+      "hardware": {
+        "bridge": "tune_o_matic",
+        "bridge_post_spacing_mm": 73.99,
+        "bridge_post_spacing_inches": 2.913,
+        "tailpiece": "stop_bar",
+        "tailpiece_post_spacing_mm": 82.55,
+        "tailpiece_post_spacing_inches": 3.25,
+        "pickups": "humbucker_x2",
+        "pickup_selector": "3_way_toggle",
+        "controls": "2_volume_2_tone",
+        "tuners": "kluson_style_3+3"
+      }
+    }
+  },
+  "variants_related": {
+    "eds_1275": {
+      "description": "Gibson EDS-1275 Double Neck - SG body extended to accommodate two full necks. Lower: 6-string SG (628.65mm). Upper: 12-string SG (628.65mm). Body join fret and neck specs identical to SG Standard on both necks.",
+      "spec_file": "See docs/archive/instrument_references/gibson_eds_1275/",
+      "status": "reference_only - no separate spec file"
+    },
+    "sg_junior": {
+      "description": "Gibson SG Junior 1963 - single P-90 pickup, wrap-around bridge, dot inlays. Simplified hardware, same body/neck geometry.",
+      "year_range": "1963-1971",
+      "reference": "00-Gibson-1963-SG-JR.pdf"
+    },
+    "sg_custom": {
+      "description": "Gibson SG Custom - multi-ply binding, three pickups, gold hardware, block inlays.",
+      "reference": "Gibson-SG-Custom.pdf"
+    }
+  },
+  "comparison_to_explorer": {
+    "neck_1st_fret": "identical at 20.32mm",
+    "neck_12th_fret_delta_mm": 0.635,
+    "joint_angle_delta_deg": 0.5,
+    "headstock_angle_delta_deg": 3.0,
+    "body_join_fret": "SG joins at documented 19th fret vs Explorer TBD 19-20",
+    "body_construction": "both solid mahogany - SG thinner and lighter"
+  }
+}
