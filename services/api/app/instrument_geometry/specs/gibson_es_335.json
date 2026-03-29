@@ -1,0 +1,85 @@
+{
+  "model_id": "es_335",
+  "display_name": "Gibson ES-335",
+  "source": "Verified specifications from manufacturer data. Neck thickness 21.59mm/24.13mm, joint angle 4 deg, headstock angle 17 deg confirmed from spec sheet 2026-03-29. Semi-hollow body (thinline) with laminated maple top/back/sides and solid maple center block.",
+  "units": "mm",
+  "variants": {
+    "standard": {
+      "description": "Gibson ES-335 — semi-hollow thinline electric. Laminated maple body with solid center block eliminates feedback while retaining acoustic resonance. The defining semi-hollow guitar, introduced 1958.",
+      "year_range": "1958–present",
+      "scale_length_mm": 628.65,
+      "scale_length_inches": 24.75,
+      "fret_count": 22,
+      "neck": {
+        "nut_width_mm": 42.85,
+        "nut_width_inches": 1.687,
+        "heel_width_mm": 56.92,
+        "heel_width_inches": 2.241,
+        "depth_1st_fret_mm": 21.59,
+        "depth_1st_fret_inches": 0.85,
+        "depth_12th_fret_mm": 24.13,
+        "depth_12th_fret_inches": 0.95,
+        "depth_note": "Neck-only depth (back of neck to underside of fretboard). Add fretboard thickness (~5mm) for total stack.",
+        "total_stack_1st_fret_mm": 26.59,
+        "total_stack_12th_fret_mm": 29.13,
+        "profile_shape": "modern_C",
+        "fretboard_radius_mm": 304.8,
+        "fretboard_radius_inches": 12.0,
+        "compound_radius": false,
+        "fretboard_wood": "rosewood",
+        "neck_wood": "mahogany",
+        "binding": "single_ply_cream",
+        "body_join_fret": 19,
+        "neck_angle_deg": 4.0,
+        "truss_rod": "single_action",
+        "truss_rod_access": "headstock_bell_cover",
+        "inlays": "dots",
+        "fret_wire": "medium_vintage",
+        "note": "ES-335 neck is noticeably chunkier than Explorer — 21.59mm at 1st vs Explorer 20.32mm, 24.13mm at 12th vs Explorer 21.59mm. Set neck with long tenon glued into the center block, not the hollow wings."
+      },
+      "headstock": {
+        "style": "gibson_open_book",
+        "angle_deg": 17.0,
+        "thickness_mm": 14.6,
+        "thickness_inches": 0.575,
+        "tuner_layout": "3+3",
+        "tuner_hole_diameter_mm": 10.0,
+        "tuner_hole_spacing_mm": 25.4,
+        "veneer": "holly_or_maple",
+        "note": "Standard Gibson open-book headstock at 17 deg — steeper than Explorer (14 deg)."
+      },
+      "body": {
+        "construction": "semi_hollow_thinline",
+        "style": "double_cutaway",
+        "top_material": "laminated_maple",
+        "back_material": "laminated_maple",
+        "sides_material": "laminated_maple",
+        "center_block": "solid_maple",
+        "center_block_note": "Solid maple center block runs full length of body. Neck tenon glues into the center block.",
+        "binding": "multi_ply_cream",
+        "f_holes": true
+      },
+      "hardware": {
+        "bridge": "tune_o_matic",
+        "bridge_post_spacing_mm": 73.99,
+        "bridge_post_spacing_inches": 2.913,
+        "tailpiece": "stop_bar",
+        "tailpiece_post_spacing_mm": 82.55,
+        "tailpiece_post_spacing_inches": 3.25,
+        "pickups": "humbucker_x2",
+        "pickup_selector": "3_way_toggle",
+        "controls": "2_volume_2_tone",
+        "tuners": "kluson_style_3+3"
+      }
+    }
+  },
+  "comparison_to_explorer": {
+    "note": "Key differences from Gibson Explorer (Smart Guitar primary parent):",
+    "neck_1st_fret_delta_mm": 1.27,
+    "neck_12th_fret_delta_mm": 2.54,
+    "headstock_angle_delta_deg": 3.0,
+    "joint_angle_delta_deg": 0.5,
+    "body_construction": "ES-335 semi-hollow vs Explorer solid body",
+    "scale_length": "identical at 628.65mm"
+  }
+}
