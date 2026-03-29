@@ -28,6 +28,7 @@ from .rim_speed_adapter import compute_saw_rim_speed
 from .heat_adapter import estimate_saw_heat_risk
 from .deflection_adapter import estimate_blade_deflection
 from .kickback_adapter import assess_kickback_risk
+from .machine_class import MachineClass
 
 __all__ = [
     "compute_bite_per_tooth",
@@ -35,4 +36,5 @@ __all__ = [
     "estimate_saw_heat_risk",
     "estimate_blade_deflection",
     "assess_kickback_risk",
+    "MachineClass",
 ]
