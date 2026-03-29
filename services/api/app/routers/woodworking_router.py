@@ -6,13 +6,24 @@ Prefix: /api/woodworking
 
 from __future__ import annotations
 
-from typing import Any, Dict
+from typing import Any, Dict, Optional
 
 from fastapi import APIRouter, HTTPException
 from fastapi.responses import Response
 from pydantic import BaseModel, Field
 
-from app.cam_core.saw_lab.bandsaw import Bandsaw
+from app.cam_core.saw_lab.bandsaw import (
+    Bandsaw,
+    BandsawBladeSpec,
+    compute_blade_tension,
+    compute_drift_angle,
+    compute_feed_rate,
+    get_blade_by_id,
+    load_blade_library,
+    plan_curve_cut,
+    plan_resaw_cut,
+    validate_resaw_setup,
+)
 from app.woodworking.archtop_floating_bridge import (
     BENEDETTO_17,
     build_archtop_bridge_report,
@@ -360,6 +371,174 @@ def post_bandsaw_feed(req: BandsawFeedRequest) -> Dict[str, Any]:
         "resaw_feed_mm_s": feed,
         "stock_thickness_mm": req.stock_thickness_mm,
     }
+
+
+def _resolve_blade(
+    blade_id: Optional[str],
+    width_mm: float,
+    thickness_mm: float,
+    tpi: float,
+    blade_family: str,
+    kerf_mm: float,
+) -> BandsawBladeSpec:
+    if blade_id:
+        b = get_blade_by_id(blade_id.strip())
+        if b is None:
+            raise HTTPException(status_code=404, detail=f"Unknown blade id: {blade_id}")
+        return b
+    return BandsawBladeSpec(
+        id="inline",
+        width_mm=width_mm,
+        thickness_mm=thickness_mm,
+        tpi=tpi,
+        blade_family=blade_family,
+        kerf_mm=kerf_mm,
+    )
+
+
+@router.get("/bandsaw/blades", summary="Bandsaw blade library (JSON)")
+def get_bandsaw_blades() -> Dict[str, Any]:
+    blades = load_blade_library()
+    return {"blades": [b.raw if b.raw else {"id": b.id, "width_mm": b.width_mm} for b in blades]}
+
+
+class BandsawBladeInline(BaseModel):
+    blade_id: Optional[str] = None
+    width_mm: float = Field(default=19.05, gt=0)
+    thickness_mm: float = Field(default=0.9, gt=0)
+    tpi: float = Field(default=14, gt=0)
+    blade_family: str = Field(default="carbon_steel")
+    kerf_mm: float = Field(default=0.65, ge=0)
+
+
+class BandsawTensionRequest(BandsawBladeInline):
+    stress_fraction: float = Field(default=0.5, ge=0, le=1)
+
+
+@router.post("/bandsaw/tension", summary="Blade tension T = σ × A (carbon vs bi-metal σ band)")
+def post_bandsaw_tension(req: BandsawTensionRequest) -> Dict[str, Any]:
+    blade = _resolve_blade(
+        req.blade_id,
+        req.width_mm,
+        req.thickness_mm,
+        req.tpi,
+        req.blade_family,
+        req.kerf_mm,
+    )
+    return compute_blade_tension(blade, stress_fraction=req.stress_fraction)
+
+
+class BandsawDriftRequest(BandsawGeometryRequest, BandsawBladeInline):
+    pass
+
+
+@router.post("/bandsaw/drift", summary="Empirical drift angle (Duginske-style)")
+def post_bandsaw_drift(req: BandsawDriftRequest) -> Dict[str, Any]:
+    blade = _resolve_blade(
+        req.blade_id,
+        req.width_mm,
+        req.thickness_mm,
+        req.tpi,
+        req.blade_family,
+        req.kerf_mm,
+    )
+    return compute_drift_angle(
+        blade.width_mm,
+        req.wheel_diameter_mm,
+        req.rpm,
+        blade.tpi,
+    )
+
+
+class BandsawFeedPhysicsRequest(BandsawGeometryRequest, BandsawBladeInline):
+    stock_thickness_mm: float = Field(..., gt=0)
+    gullet_fill_efficiency: float = Field(default=0.35, gt=0, le=1)
+
+
+@router.post("/bandsaw/feed-rate", summary="Gullet-capacity feed rate (mm/s)")
+def post_bandsaw_feed_physics(req: BandsawFeedPhysicsRequest) -> Dict[str, Any]:
+    blade = _resolve_blade(
+        req.blade_id,
+        req.width_mm,
+        req.thickness_mm,
+        req.tpi,
+        req.blade_family,
+        req.kerf_mm,
+    )
+    bs = Bandsaw(
+        wheel_diameter_mm=req.wheel_diameter_mm,
+        wheel_center_distance_mm=req.wheel_center_distance_mm,
+        kerf_mm=req.kerf_mm,
+    )
+    sfpm = bs.surface_speed_sfpm(req.rpm)
+    out = compute_feed_rate(
+        blade,
+        sfpm,
+        req.stock_thickness_mm,
+        gullet_fill_efficiency=req.gullet_fill_efficiency,
+    )
+    out["rim_speed_sfpm"] = round(sfpm, 2)
+    return out
+
+
+class BandsawValidateResawRequest(BandsawGeometryRequest, BandsawBladeInline):
+    stock_thickness_mm: float = Field(..., gt=0)
+    max_resaw_height_mm: Optional[float] = None
+
+
+@router.post("/bandsaw/validate-resaw", summary="Resaw feasibility and warnings")
+def post_bandsaw_validate_resaw(req: BandsawValidateResawRequest) -> Dict[str, Any]:
+    blade = _resolve_blade(
+        req.blade_id,
+        req.width_mm,
+        req.thickness_mm,
+        req.tpi,
+        req.blade_family,
+        req.kerf_mm,
+    )
+    bs = Bandsaw(
+        wheel_diameter_mm=req.wheel_diameter_mm,
+        wheel_center_distance_mm=req.wheel_center_distance_mm,
+        kerf_mm=req.kerf_mm,
+        max_resaw_height_mm=req.max_resaw_height_mm,
+    )
+    return validate_resaw_setup(bs, blade, req.stock_thickness_mm, req.rpm)
+
+
+class BandsawPlanCurveRequest(BandsawBladeInline):
+    planned_curve_radius_mm: float = Field(..., gt=0)
+
+
+@router.post("/bandsaw/plan-curve", summary="Curve cut vs min radius (blade width)")
+def post_bandsaw_plan_curve(req: BandsawPlanCurveRequest) -> Dict[str, Any]:
+    blade = _resolve_blade(
+        req.blade_id,
+        req.width_mm,
+        req.thickness_mm,
+        req.tpi,
+        req.blade_family,
+        req.kerf_mm,
+    )
+    return plan_curve_cut(blade, req.planned_curve_radius_mm)
+
+
+class BandsawPlanResawRequest(BaseModel):
+    plate_width_mm: float = Field(..., gt=0)
+    plate_thickness_mm: float = Field(..., gt=0)
+    kerf_mm: float = Field(default=0.65, ge=0)
+    target_thickness_mm: float = Field(..., gt=0)
+    bookmatch: bool = True
+
+
+@router.post("/bandsaw/plan-resaw", summary="Bookmatch layout and thinning passes")
+def post_bandsaw_plan_resaw(req: BandsawPlanResawRequest) -> Dict[str, Any]:
+    return plan_resaw_cut(
+        req.plate_width_mm,
+        req.plate_thickness_mm,
+        req.kerf_mm,
+        req.target_thickness_mm,
+        bookmatch=req.bookmatch,
+    )
 
 
 __all__ = ["router"]
