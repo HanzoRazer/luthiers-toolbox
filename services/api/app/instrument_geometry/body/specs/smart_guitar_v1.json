@@ -199,9 +199,9 @@
         "torque_spec": "3-4 Nm, tighten in cross pattern",
         "notes": "4-bolt pattern for bolt-on neck. 44mm x 56mm spacing. Counterbored for flat-head screws."
       },
-      "neck_angle_deg": 4.5,
-      "neck_angle_note": "Bolt-on joint allows post-cut correction. Cut at 4.5deg, measure action on first article, shim 0.25-0.5deg if needed. Headless saddles provide additional +/-2mm action adjustment range.",
-      "neck_angle_source": "Explorer reference - conservative starting point for bolt-on headless. Adjust with pocket shim after first cut and string-up.",
+      "neck_angle_deg": 3.5,
+      "neck_angle_note": "Corrected from 4.5 to 3.5 deg. Source: verified Gibson Explorer spec sheet. Explorer is flat-top, Smart Guitar is flat-top — same geometry applies. Headless bridge saddle height provides additional ±2mm action range. Verify on first article, shim ±0.25 deg if needed.",
+      "neck_angle_source": "Gibson Explorer verified spec — 3.5 deg joint angle confirmed",
       "neck_angle_blocker": false,
       "op20_status": "READY - cut at 4.5deg, verify on first article"
     },
@@ -747,22 +747,61 @@
     "scale_length_inches": 24.75,
     "scale_length_mm": 628.65,
     "fret_count": 24,
-    "nut_width_inches": 1.6875,
-    "nut_width_mm": 42.86,
-    "nut_type": "locking_clamp",
-    "nut_notes": "Headless locking nut \u00e2\u20ac\u201d strings clamped at nut end, tuned at bridge. No headstock, no tuning pegs.",
-    "fretboard_material": "ebony",
-    "inlay_style": "dot",
     "profile": "modern_C",
+    "profile_source": "Gibson Explorer reference — verified spec sheet",
+
+    "nut_width_mm": 42.86,
+    "nut_width_inches": 1.6875,
+    "nut_type": "locking_clamp",
+    "nut_notes": "Headless locking nut \u00e2\u20ac\u201d strings clamped at nut end, tuned at bridge. No headstock.",
+
+    "heel_width_mm": 55.9,
+    "heel_end_fretboard_width_mm": 57.4,
+
+    "fretboard_material": "ebony",
+    "fretboard_thickness_mm": 5.0,
+    "fretboard_radius_mm": 304.8,
+    "fretboard_radius_inches": 12.0,
+    "inlay_style": "dot",
+
+    "neck_thickness": {
+      "note": "Neck-only depth (back of neck to underside of fretboard). Add fretboard_thickness_mm for total stack.",
+      "source": "Gibson Explorer verified spec — Smart Guitar uses Explorer as primary parent",
+      "at_1st_fret_mm": 20.32,
+      "at_1st_fret_inches": 0.800,
+      "at_12th_fret_mm": 21.59,
+      "at_12th_fret_inches": 0.850,
+      "total_stack_1st_fret_mm": 25.32,
+      "total_stack_12th_fret_mm": 26.59,
+      "fusion_360_NeckThickness1st": 25.32,
+      "fusion_360_NeckThickness12th": 26.59
+    },
+
     "headstock": "none",
-    "headless_notes": "Headless design reduces overall instrument length by ~180mm. Strings pass through locking nut to headless bridge with integrated fine tuners. Shorter neck-behind-nut stub for string clamping.",
+    "headpiece_notes": "Headless design. Steinberger-style tuner housing above body. No headstock angle.",
+
     "neck_length": {
-      "protrusion_above_body_mm": 368.3,
-      "pocket_tenon_mm": 76.2,
-      "blank_minimum_mm": 444.5,
-      "note": "protrusion + tenon = blank. Protrusion = overall_length - body_length. Blank minimum equals body length exactly.",
-      "overall_instrument_mm": 812.8,
-      "body_length_mm": 444.5
+      "body_join_fret": "TBD — 19 or 20, pending first-article verification",
+      "tenon_into_body_mm": 76.2,
+      "protrusion_above_body_note": "= fret_pos(join_fret) from nut. Calculated at join fret selection.",
+      "body_length_mm": 438.15,
+      "body_length_note": "Corrected from 444.5mm. Source: Guitar Chalk LP measurement 17.25\" = 438.15mm",
+      "total_instrument_note": "body_length + join_fret_distance + headpiece_stub(~25mm)"
+    },
+
+    "treble_heel_contour": {
+      "note": "Treble-side contoured heel for 24-fret upper access. This is NOT an AANJ design — AANJ applies to symmetric double-cutaway bodies. The Smart Guitar has an asymmetric Explorer/Klein body: the bass horn is solid structural wood running up to the headpiece and requires a full square heel for bolt tension integrity. Only the treble side is relieved, matching the deep treble cutaway geometry.",
+      "design_rationale": "Single-sided relief. Treble face of heel is rounded and body gets matching contour ramp on treble side only. Bass side heel stays full and square — no material removed.",
+      "status": "geometry_pending_first_article",
+      "treble_heel_radius_inner_mm": 25.0,
+      "treble_heel_radius_outer_mm": 35.0,
+      "contour_start_fret": "TBD — likely fret 17 or 18",
+      "pocket_clearance_mm": 0.2,
+      "bass_side": "full_square_heel — structural, no relief",
+      "treble_side": "contoured_relief — rounded heel face + matching body ramp",
+      "reference": "Similar approach to Gibson SG set-neck (asymmetric body, treble-only upper access relief) and Schecter set-neck 24-fret designs",
+      "fusion_360_HeelRadiusInner": 25.0,
+      "fusion_360_HeelRadiusOuter": 35.0
     }
   },
   "hardware": {
