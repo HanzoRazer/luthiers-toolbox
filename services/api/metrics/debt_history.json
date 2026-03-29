@@ -465,5 +465,20 @@
     "bare_except": 6,
     "large_files": 57,
     "god_objects": 12
+  },
+  {
+    "timestamp": "2026-03-29T10:00:00.000000",
+    "endpoints": 941,
+    "bare_except": 6,
+    "large_files": 58,
+    "god_objects": 12,
+    "note": "Woodworking module + bandsaw physics (+30), monolith instrument_geometry_router unregistered (-35)"
+  },
+  {
+    "timestamp": "2026-03-29T13:16:30.552537",
+    "endpoints": 941,
+    "bare_except": 6,
+    "large_files": 59,
+    "god_objects": 12
   }
 ]

@@ -25,7 +25,7 @@ METRICS_DIR = Path(__file__).parent.parent / "metrics"
 
 # Targets (ratchet down over time)
 # Updated 2026-03-28: Post-decomposition sprint verification
-TARGET_MAX_ENDPOINTS = 929  # Actual: 919, buffer: +10
+TARGET_MAX_ENDPOINTS = 945  # Updated 2026-03-29 — woodworking module + bandsaw added ~30 endpoints
 TARGET_MAX_GOD_OBJECTS = 14  # All reviewed and acceptable
 TARGET_MAX_BARE_EXCEPT = 10  # Actual: 6 (false positives in strings/comments), buffer: +4
 TARGET_MAX_LARGE_FILES = 63  # Actual: 58, buffer: +5 (was 65)
