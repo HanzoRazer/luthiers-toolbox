@@ -22,6 +22,7 @@ Total: 42 endpoints (includes 5 geometry calculator endpoints)
 from fastapi import APIRouter
 
 from .geometry_calculator_router import router as geometry_calculator_router
+from .string_tension_router import router as string_tension_router
 from .nut_fret_router import router as nut_fret_router
 from .bridge_router import router as bridge_router
 from .body_construction_router import router as body_construction_router
@@ -41,6 +42,7 @@ router = APIRouter(
 
 # Include all domain routers
 router.include_router(geometry_calculator_router)
+router.include_router(string_tension_router)
 router.include_router(nut_fret_router)
 router.include_router(bridge_router)
 router.include_router(body_construction_router)
@@ -55,6 +57,7 @@ router.include_router(string_tension_router)
 __all__ = [
     "router",
     "geometry_calculator_router",
+    "string_tension_router",
     "nut_fret_router",
     "bridge_router",
     "body_construction_router",
