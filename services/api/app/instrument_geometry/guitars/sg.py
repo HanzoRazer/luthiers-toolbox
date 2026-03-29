@@ -20,12 +20,15 @@ MODEL_INFO = {
     "year_introduced": 1961,
     "scale_length_mm": 628.65,
     "fret_count": 22,
-    "string_count": 6,
-    "nut_width_mm": 43.0,
-    "body_width_mm": 320.0,
-    "body_length_mm": 400.0,
-    "radius_mm": 304.8,
-    "category": "electric_guitar",
+    "neck_profile": "modern_C",
+    "nut_width_mm": 43.05,
+    "neck_depth_1st_mm": 20.32,
+    "neck_depth_12th_mm": 22.225,
+    "neck_angle_deg": 4.0,
+    "headstock_angle_deg": 17.0,
+    "body_join_fret": 19,
+    "body_construction": "solid_double_cutaway",
+    "source": "Verified spec sheet 2026-03-29",
 }
 
 
