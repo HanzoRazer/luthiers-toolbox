@@ -30,7 +30,7 @@ from ...calculators.tuning_machine_calc import (
 )
 
 router = APIRouter(
-    prefix="/api/instrument/tuning-machine",
+    prefix="/tuning-machine",
     tags=["Tuning Machine"],
 )
 
