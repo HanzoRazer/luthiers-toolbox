@@ -14,8 +14,9 @@ Routers:
 - voicing_router: Tap tone analysis and frequency prediction (4 endpoints)
 - build_sequence_router: Complete build sequence (2 endpoints)
 - setup_router: Instrument setup evaluation (1 endpoint)
+- string_tension_router: String tension and saddle force (3 endpoints)
 
-Total: 39 endpoints (includes 5 geometry calculator endpoints)
+Total: 42 endpoints (includes 5 geometry calculator endpoints)
 """
 
 from fastapi import APIRouter
@@ -30,6 +31,7 @@ from .electronics_router import router as electronics_router
 from .voicing_router import router as voicing_router
 from .build_sequence_router import router as build_sequence_router
 from .setup_router import router as setup_router
+from .string_tension_router import router as string_tension_router
 
 # Combined router with /api/instrument prefix
 router = APIRouter(
@@ -48,6 +50,7 @@ router.include_router(electronics_router)
 router.include_router(voicing_router)
 router.include_router(build_sequence_router)
 router.include_router(setup_router)
+router.include_router(string_tension_router)
 
 __all__ = [
     "router",
@@ -61,4 +64,5 @@ __all__ = [
     "voicing_router",
     "build_sequence_router",
     "setup_router",
+    "string_tension_router",
 ]
