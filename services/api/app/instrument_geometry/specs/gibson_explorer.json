@@ -1,7 +1,7 @@
 {
   "model_id": "explorer",
   "display_name": "1958 Gibson Explorer",
-  "source": "Gibson factory drawings and measured specifications. Body outline from DXF (gibson_explorer_body.dxf, 24-point coarse polygon). Model stub from guitars/explorer.py (Wave 14). Hardware and construction references from Gibson '58 Explorer reissue specs and Guitar Plans archive.",
+  "source": "Gibson factory drawings and measured specifications. Primary reference: LonelyStarGuitars.com Explorer blueprint (docs/archive/instrument_references/gibson_explorer/). Body outline from DXF (gibson_explorer_body.dxf). Neck thickness 20.32mm/21.59mm, joint angle 3.5 deg, headstock angle 14 deg verified from blueprint 2026-03-28.",
   "units": "mm",
   "variants": {
     "original_1958": {
@@ -260,29 +260,135 @@
   },
   "cnc_operations": {
     "tool_library": {
-      "T1": {"name": "10mm Flat End Mill", "diameter_mm": 10.0, "rpm": 18000, "use": "Roughing pockets (OP20–OP22)"},
-      "T2": {"name": "6mm Flat End Mill", "diameter_mm": 6.0, "rpm": 18000, "use": "Finishing pockets (OP25–OP31), cover recess (OP35), body perimeter (OP50)"},
-      "T3": {"name": "3mm Flat/Drill", "diameter_mm": 3.0, "rpm": 20000, "use": "Wiring channels (OP40), all drilling (OP60–OP65)"}
+      "T1": {
+        "name": "10mm Flat End Mill",
+        "diameter_mm": 10.0,
+        "rpm": 18000,
+        "use": "Roughing pockets (OP20–OP22)"
+      },
+      "T2": {
+        "name": "6mm Flat End Mill",
+        "diameter_mm": 6.0,
+        "rpm": 18000,
+        "use": "Finishing pockets (OP25–OP31), cover recess (OP35), body perimeter (OP50)"
+      },
+      "T3": {
+        "name": "3mm Flat/Drill",
+        "diameter_mm": 3.0,
+        "rpm": 20000,
+        "use": "Wiring channels (OP40), all drilling (OP60–OP65)"
+      }
     },
     "operations": [
-      {"op": "OP10", "name": "Fixture / Registration Holes", "tool": "T3", "depth_mm": 10.0},
-      {"op": "OP20", "name": "Neck Pocket Rough", "tool": "T1", "depth_mm": 16.0},
-      {"op": "OP21", "name": "Neck Pickup Cavity Rough", "tool": "T1", "depth_mm": 19.05},
-      {"op": "OP22", "name": "Bridge Pickup Cavity Rough", "tool": "T1", "depth_mm": 19.05},
-      {"op": "OP23", "name": "Control Cavity Rough", "tool": "T1", "depth_mm": 31.75},
-      {"op": "OP25", "name": "Neck Pocket Finish", "tool": "T2", "depth_mm": 16.0},
-      {"op": "OP26", "name": "Neck Pickup Cavity Finish", "tool": "T2", "depth_mm": 19.05},
-      {"op": "OP27", "name": "Bridge Pickup Cavity Finish", "tool": "T2", "depth_mm": 19.05},
-      {"op": "OP28", "name": "Control Cavity Finish", "tool": "T2", "depth_mm": 31.75},
-      {"op": "OP35", "name": "Cover Plate Recess", "tool": "T2", "depth_mm": 3.175},
-      {"op": "OP40", "name": "Wiring Channels", "tool": "T3", "depth_mm": 12.7},
-      {"op": "OP50", "name": "Body Perimeter Contour", "tool": "T2", "depth_mm": 44.45, "tabs": 8},
-      {"op": "OP60", "name": "Pot Shaft Holes 3x (3/8 inch through)", "tool": "T3", "depth_mm": 44.45},
-      {"op": "OP61", "name": "Bridge Post Holes 2x (11.1mm)", "tool": "T3", "depth_mm": 19.05},
-      {"op": "OP62", "name": "Tailpiece Stud Holes 2x (7.14mm)", "tool": "T3", "depth_mm": 15.88},
-      {"op": "OP63", "name": "Toggle Switch Hole (12.7mm)", "tool": "T3", "depth_mm": 44.45},
-      {"op": "OP64", "name": "Output Jack Bore (12.7mm)", "tool": "T3", "depth_mm": 25.0},
-      {"op": "OP65", "name": "Cover Screw Pilot Holes 4x", "tool": "T3", "depth_mm": 12.7}
+      {
+        "op": "OP10",
+        "name": "Fixture / Registration Holes",
+        "tool": "T3",
+        "depth_mm": 10.0
+      },
+      {
+        "op": "OP20",
+        "name": "Neck Pocket Rough",
+        "tool": "T1",
+        "depth_mm": 16.0
+      },
+      {
+        "op": "OP21",
+        "name": "Neck Pickup Cavity Rough",
+        "tool": "T1",
+        "depth_mm": 19.05
+      },
+      {
+        "op": "OP22",
+        "name": "Bridge Pickup Cavity Rough",
+        "tool": "T1",
+        "depth_mm": 19.05
+      },
+      {
+        "op": "OP23",
+        "name": "Control Cavity Rough",
+        "tool": "T1",
+        "depth_mm": 31.75
+      },
+      {
+        "op": "OP25",
+        "name": "Neck Pocket Finish",
+        "tool": "T2",
+        "depth_mm": 16.0
+      },
+      {
+        "op": "OP26",
+        "name": "Neck Pickup Cavity Finish",
+        "tool": "T2",
+        "depth_mm": 19.05
+      },
+      {
+        "op": "OP27",
+        "name": "Bridge Pickup Cavity Finish",
+        "tool": "T2",
+        "depth_mm": 19.05
+      },
+      {
+        "op": "OP28",
+        "name": "Control Cavity Finish",
+        "tool": "T2",
+        "depth_mm": 31.75
+      },
+      {
+        "op": "OP35",
+        "name": "Cover Plate Recess",
+        "tool": "T2",
+        "depth_mm": 3.175
+      },
+      {
+        "op": "OP40",
+        "name": "Wiring Channels",
+        "tool": "T3",
+        "depth_mm": 12.7
+      },
+      {
+        "op": "OP50",
+        "name": "Body Perimeter Contour",
+        "tool": "T2",
+        "depth_mm": 44.45,
+        "tabs": 8
+      },
+      {
+        "op": "OP60",
+        "name": "Pot Shaft Holes 3x (3/8 inch through)",
+        "tool": "T3",
+        "depth_mm": 44.45
+      },
+      {
+        "op": "OP61",
+        "name": "Bridge Post Holes 2x (11.1mm)",
+        "tool": "T3",
+        "depth_mm": 19.05
+      },
+      {
+        "op": "OP62",
+        "name": "Tailpiece Stud Holes 2x (7.14mm)",
+        "tool": "T3",
+        "depth_mm": 15.88
+      },
+      {
+        "op": "OP63",
+        "name": "Toggle Switch Hole (12.7mm)",
+        "tool": "T3",
+        "depth_mm": 44.45
+      },
+      {
+        "op": "OP64",
+        "name": "Output Jack Bore (12.7mm)",
+        "tool": "T3",
+        "depth_mm": 25.0
+      },
+      {
+        "op": "OP65",
+        "name": "Cover Screw Pilot Holes 4x",
+        "tool": "T3",
+        "depth_mm": 12.7
+      }
     ]
   },
   "stock": {
@@ -300,9 +406,28 @@
     "scale_length_mm": 628.65,
     "fret_count": 22,
     "positions_from_nut_mm": [
-      35.29, 68.55, 99.91, 129.47, 157.32, 183.56, 208.27, 231.54,
-      253.43, 274.02, 293.36, 311.50, 328.50, 344.39, 359.24, 373.08,
-      385.96, 397.92, 409.02, 419.29, 428.77, 437.50
+      35.29,
+      68.55,
+      99.91,
+      129.47,
+      157.32,
+      183.56,
+      208.27,
+      231.54,
+      253.43,
+      274.02,
+      293.36,
+      311.5,
+      328.5,
+      344.39,
+      359.24,
+      373.08,
+      385.96,
+      397.92,
+      409.02,
+      419.29,
+      428.77,
+      437.5
     ]
   },
   "dxf_assets": {
