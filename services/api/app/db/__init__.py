@@ -1,30 +1,5 @@
-"""
-Database layer for The Production Shop.
+"""Database package — ORM base and migration-oriented models."""
 
-Provides SQLAlchemy ORM infrastructure for workflow sessions
-and related persistence needs.
+from app.db.base import Base
 
-Migrations:
-    cd services/api
-    alembic revision --autogenerate -m "description"
-    alembic upgrade head
-"""
-
-from .base import Base
-from .session import engine, SessionLocal, db_session, get_db, DATABASE_URL
-
-__all__ = [
-    "Base",
-    "engine",
-    "SessionLocal",
-    "db_session",
-    "get_db",
-    "DATABASE_URL",
-    # SQLite migration runner (pure SQLite, uses _migrations table)
-    "apply_migrations_sqlite",
-    "run_migrations_from_env",
-]
-
-# SQLite migration runner exports
-from .migrate_sqlite import apply_migrations as apply_migrations_sqlite
-from .migrate_sqlite import run_migrations_from_env
+__all__ = ["Base"]
