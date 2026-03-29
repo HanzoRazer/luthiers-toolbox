@@ -1,0 +1,26 @@
+{
+  "blades": [
+    {
+      "id": "bs-3-8-14tpi-carbon",
+      "vendor": "generic",
+      "width_mm": 19.05,
+      "thickness_mm": 0.9,
+      "tpi": 14,
+      "blade_family": "carbon_steel",
+      "kerf_mm": 0.65,
+      "min_curve_radius_mm": 127,
+      "notes": "3/4\" resaw blade, 14 TPI"
+    },
+    {
+      "id": "bs-1-2-3tpi-bimetal",
+      "vendor": "generic",
+      "width_mm": 12.7,
+      "thickness_mm": 0.65,
+      "tpi": 3,
+      "blade_family": "bi_metal",
+      "kerf_mm": 0.55,
+      "min_curve_radius_mm": 76,
+      "notes": "1/2\" 3 TPI bi-metal"
+    }
+  ]
+}
