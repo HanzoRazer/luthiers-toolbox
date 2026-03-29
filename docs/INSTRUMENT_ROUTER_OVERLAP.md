@@ -26,3 +26,30 @@ ACTION: These 4 routes are NOT duplicates — they are different
 calculators at the same path. The endpoint ratchet should
 document them as intentional parallel implementations.
 
+
+
+## Polygon Offset Duplicate Analysis
+Date: 2026-03-29
+
+DECISION: Do NOT remove either registration.
+
+cam.routers.utility.polygon_router (/polygon_offset.nc):
+  - Rich CAM parameters: z, safe_z, feed, spindle, post
+  - stepover as absolute mm value
+  - Single endpoint
+
+routers.polygon_offset_router (/cam/polygon_offset.*):
+  - 4 endpoints: .nc, .json, _governed.nc, .preview
+  - RMOS governance integration
+  - stepover as 0-1 fraction
+  - Different request schema
+
+STATUS: Different feature sets. Both should remain.
+These serve different consumers (raw CAM vs governed workflow).
+
+CONSOLIDATED FINDING — All 5 remaining duplicate paths are
+intentional parallel implementations, not accidental duplicates:
+  - nut-compensation: different physics models
+  - soundhole: split router is incomplete
+  - polygon_offset: different feature sets/consumers
+
