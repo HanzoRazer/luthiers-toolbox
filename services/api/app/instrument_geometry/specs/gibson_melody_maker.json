@@ -1,0 +1,135 @@
+{
+  "model_id": "melody_maker",
+  "display_name": "Gibson Melody Maker",
+  "source": "Verified specifications from manufacturer data. Two variants: '59 and '65 D (Tune-O-Matic + Humbuckers). Neck dimensions, joint angles, headstock angles confirmed from spec sheet 2026-03-29.",
+  "units": "mm",
+  "notes": "The Melody Maker was Gibson's entry-level solid body from 1959 onward. Notable for unusually shallow joint angles (1.5 deg on '59, 2.5 deg on '65) compared to other Gibson instruments. Budget line — simplified manufacturing justified the shallow neck pitch.",
+  "variants": {
+    "melody_maker_59": {
+      "description": "Gibson Melody Maker 1959 — single cutaway solid mahogany body, single coil pickup, slab fretboard. Gibson's affordable student guitar. Shallow 1.5 deg neck angle is the shallowest in the Gibson lineup.",
+      "year_range": "1959–1960",
+      "scale_length_mm": 628.65,
+      "scale_length_inches": 24.75,
+      "fret_count": 22,
+      "neck": {
+        "nut_width_mm": 43.27,
+        "nut_width_inches": 1.703,
+        "heel_width_mm": 57.56,
+        "heel_width_inches": 2.266,
+        "depth_1st_fret_mm": 22.86,
+        "depth_1st_fret_inches": 0.9,
+        "depth_12th_fret_mm": 24.638,
+        "depth_12th_fret_inches": 0.97,
+        "depth_note": "Neck-only depth (back of neck to underside of fretboard). Add fretboard thickness (~5mm) for total stack.",
+        "total_stack_1st_fret_mm": 27.86,
+        "total_stack_12th_fret_mm": 29.638,
+        "profile_shape": "modern_C",
+        "fretboard_radius_mm": 304.8,
+        "fretboard_radius_inches": 12.0,
+        "compound_radius": false,
+        "fretboard_wood": "rosewood",
+        "neck_wood": "mahogany",
+        "binding": "none",
+        "body_join_fret": 15,
+        "neck_angle_deg": 1.5,
+        "neck_angle_note": "1.5 deg is the shallowest neck angle in the Gibson spec library. Shallower than LP (4 deg), ES-335 (4 deg), Explorer (3.5 deg). Simplified assembly for student market.",
+        "truss_rod": "single_action",
+        "truss_rod_access": "headstock_bell_cover",
+        "inlays": "dots_trapezoids",
+        "fret_wire": "medium_vintage"
+      },
+      "headstock": {
+        "style": "gibson_open_book",
+        "angle_deg": 17.0,
+        "thickness_mm": 14.29,
+        "thickness_inches": 0.5625,
+        "tuner_layout": "3+3",
+        "tuner_hole_diameter_mm": 10.0,
+        "tuner_hole_spacing_mm": 25.4,
+        "veneer": "holly_or_maple"
+      },
+      "body": {
+        "construction": "solid",
+        "style": "single_cutaway",
+        "material": "mahogany",
+        "binding": "none",
+        "finish": "nitrocellulose_lacquer"
+      },
+      "hardware": {
+        "bridge": "wrap_around_stud",
+        "pickups": "single_coil_x1",
+        "controls": "1_volume_1_tone",
+        "tuners": "kluson_style_3+3"
+      }
+    },
+    "melody_maker_d_65": {
+      "description": "Gibson Melody Maker D 1965 — double cutaway, Tune-O-Matic bridge, humbucker pickups. Mid-60s update with dual cutaway body and upgraded hardware. Unusual neck taper: thin at 1st fret (same as Explorer) but grows to thickest 12th fret in the Gibson library.",
+      "year_range": "1965–1970",
+      "scale_length_mm": 628.65,
+      "scale_length_inches": 24.75,
+      "fret_count": 22,
+      "neck": {
+        "nut_width_mm": 42.85,
+        "nut_width_inches": 1.687,
+        "heel_width_mm": 57.56,
+        "heel_width_inches": 2.266,
+        "depth_1st_fret_mm": 20.32,
+        "depth_1st_fret_inches": 0.8,
+        "depth_12th_fret_mm": 25.4,
+        "depth_12th_fret_inches": 1.0,
+        "depth_note": "Neck-only depth (back of neck to underside of fretboard). Add fretboard thickness (~5mm) for total stack.",
+        "total_stack_1st_fret_mm": 25.32,
+        "total_stack_12th_fret_mm": 30.4,
+        "taper_note": "Unusual taper: 20.32mm at 1st (same as Explorer) growing to 25.4mm at 12th — 5.08mm growth vs Explorer's 1.27mm growth. Produces a distinctive feel that starts slim and becomes very chunky.",
+        "profile_shape": "modern_C",
+        "fretboard_radius_mm": 304.8,
+        "fretboard_radius_inches": 12.0,
+        "compound_radius": false,
+        "fretboard_wood": "rosewood",
+        "neck_wood": "mahogany",
+        "binding": "none",
+        "body_join_fret": 17,
+        "neck_angle_deg": 2.5,
+        "neck_angle_note": "2.5 deg — shallower than LP/ES-335 (4 deg) and Explorer (3.5 deg). Required by Tune-O-Matic bridge height.",
+        "truss_rod": "single_action",
+        "truss_rod_access": "headstock_bell_cover",
+        "inlays": "dots_trapezoids",
+        "fret_wire": "medium_vintage"
+      },
+      "headstock": {
+        "style": "gibson_open_book",
+        "angle_deg": 17.0,
+        "thickness_mm": 14.29,
+        "thickness_inches": 0.5625,
+        "tuner_layout": "3+3",
+        "tuner_hole_diameter_mm": 10.0,
+        "tuner_hole_spacing_mm": 25.4,
+        "veneer": "holly_or_maple"
+      },
+      "body": {
+        "construction": "solid",
+        "style": "double_cutaway",
+        "material": "mahogany",
+        "binding": "none",
+        "finish": "nitrocellulose_lacquer"
+      },
+      "hardware": {
+        "bridge": "tune_o_matic",
+        "bridge_post_spacing_mm": 73.99,
+        "bridge_post_spacing_inches": 2.913,
+        "tailpiece": "stop_bar",
+        "tailpiece_post_spacing_mm": 82.55,
+        "tailpiece_post_spacing_inches": 3.25,
+        "pickups": "humbucker_x2",
+        "pickup_selector": "3_way_toggle",
+        "controls": "2_volume_2_tone",
+        "tuners": "kluson_style_3+3"
+      }
+    }
+  },
+  "comparison_notes": {
+    "joint_angles": "Both variants have shallower joint angles than any other Gibson in the library. '59 at 1.5 deg is the shallowest Gibson angle documented.",
+    "neck_taper_65": "The '65 D has the most extreme neck taper in the library — starts at Explorer-thin (20.32mm) and grows to the thickest 12th fret (25.4mm) of any Gibson spec.",
+    "vs_explorer": "Explorer joint angle 3.5 deg vs Melody Maker '59 at 1.5 deg — 2 deg shallower. Both are Gibson set-neck instruments."
+  }
+}

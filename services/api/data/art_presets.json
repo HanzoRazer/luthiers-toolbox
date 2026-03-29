@@ -1498,5 +1498,45 @@
       "stepdown": 1.0
     },
     "created_at": 1774688432.4492426
+  },
+  {
+    "id": "rosette_preset_1774727829152",
+    "lane": "rosette",
+    "name": "Safe Default",
+    "params": {
+      "feed_xy": 800,
+      "stepdown": 1.0
+    },
+    "created_at": 1774727829.1522284
+  },
+  {
+    "id": "rosette_preset_1774733537079",
+    "lane": "rosette",
+    "name": "Safe Default",
+    "params": {
+      "feed_xy": 800,
+      "stepdown": 1.0
+    },
+    "created_at": 1774733537.0795333
+  },
+  {
+    "id": "rosette_preset_1774734043076",
+    "lane": "rosette",
+    "name": "Safe Default",
+    "params": {
+      "feed_xy": 800,
+      "stepdown": 1.0
+    },
+    "created_at": 1774734043.076541
+  },
+  {
+    "id": "rosette_preset_1774746007758",
+    "lane": "rosette",
+    "name": "Safe Default",
+    "params": {
+      "feed_xy": 800,
+      "stepdown": 1.0
+    },
+    "created_at": 1774746007.7587638
   }
 ]
