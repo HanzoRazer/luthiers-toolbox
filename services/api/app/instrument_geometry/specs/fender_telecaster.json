@@ -1,0 +1,99 @@
+{
+  "model_id": "telecaster",
+  "display_name": "Fender Telecaster",
+  "manufacturer": "Fender",
+  "source": "Verified specifications from Telecaster '72 Custom Deluxe. Scale 647.7mm, radius 241.3mm, neck 20mm/22mm, bolt-on joint confirmed from spec sheet 2026-03-29. First Fender instrument in spec library.",
+  "units": "mm",
+  "notes": "The Telecaster (1950) is the oldest mass-produced solid body electric guitar still in production. Bolt-on maple neck, ash or alder body, single-coil pickups. The longer 647.7mm scale and rounder 241.3mm fretboard radius are defining Fender characteristics distinguishing it from all Gibson instruments in this library.",
+  "variants": {
+    "72_custom_deluxe": {
+      "description": "Fender Telecaster '72 Custom Deluxe — reissue of 1972 variant with wide-range humbuckers. Double-bound body, maple neck. Representative of the modern Telecaster standard dimensions.",
+      "year_range": "1972 / reissue 1995–present",
+      "scale_length_mm": 647.7,
+      "scale_length_inches": 25.5,
+      "fret_count": 21,
+      "neck": {
+        "nut_width_mm": 41.91,
+        "nut_width_inches": 1.65,
+        "heel_width_mm": 56.49,
+        "heel_width_inches": 2.224,
+        "depth_1st_fret_mm": 20.0,
+        "depth_1st_fret_inches": 0.7874,
+        "depth_12th_fret_mm": 22.0,
+        "depth_12th_fret_inches": 0.8661,
+        "depth_note": "Neck-only depth. Add fretboard thickness (~6mm for Fender maple board) for total stack.",
+        "total_stack_1st_fret_mm": 26.0,
+        "total_stack_12th_fret_mm": 28.0,
+        "profile_shape": "modern_C",
+        "fretboard_radius_mm": 241.3,
+        "fretboard_radius_inches": 9.5,
+        "fretboard_radius_note": "9.5 inch radius is rounder (more curved) than Gibson 12 inch. Vintage Fenders used 7.25 inch. Modern players often prefer 9.5-12 inch.",
+        "compound_radius": false,
+        "fretboard_wood": "maple",
+        "neck_wood": "maple",
+        "binding": "none",
+        "body_join_fret": 17,
+        "neck_joint": "bolt_on",
+        "neck_joint_note": "4-bolt neck plate. Bolt-on allows neck removal for adjustment or replacement — key serviceability advantage over set neck.",
+        "neck_angle_deg": 0.0,
+        "neck_angle_note": "Telecaster uses a flat (0 deg) neck angle. String height achieved via bridge saddle adjustment and neck shimming if required.",
+        "truss_rod": "adjustable_3_options",
+        "truss_rod_access": "headstock_spoke_wheel",
+        "inlays": "dots_square_blocks",
+        "peg_hole_diameter_mm": 10.26,
+        "peg_hole_diameter_inches": 0.404,
+        "fret_wire": "medium_narrow"
+      },
+      "headstock": {
+        "style": "fender_tele_6_inline",
+        "angle_deg": 0.0,
+        "angle_note": "Fender headstock is flat (0 deg) — no headstock angle. String trees used on B and high-E strings to create break angle over nut.",
+        "thickness_mm": 13.71,
+        "thickness_inches": 0.54,
+        "tuner_layout": "6_inline",
+        "tuner_hole_diameter_mm": 10.26,
+        "string_trees": true,
+        "string_tree_note": "Required on flat headstocks to maintain break angle on treble strings."
+      },
+      "body": {
+        "construction": "solid",
+        "style": "single_cutaway",
+        "material_options": ["alder", "ash"],
+        "binding": "single_ply_white",
+        "finish": "polyester_or_nitrocellulose",
+        "contour": "none",
+        "typical_weight_kg": 3.4
+      },
+      "hardware": {
+        "bridge": "3_saddle_vintage_or_6_saddle_modern",
+        "bridge_note": "Original Tele uses 3 brass barrel saddles (pairs of strings per saddle). Modern variant uses 6 individual saddles for precise intonation.",
+        "pickups": "wide_range_humbucker_x2",
+        "pickup_note": "72 Deluxe uses Seth Lover wide-range humbuckers — physically sized like single coils but wired as humbuckers.",
+        "pickup_selector": "3_way_toggle",
+        "controls": "1_volume_1_tone",
+        "tuners": "fender_vintage_6_inline"
+      }
+    },
+    "standard": {
+      "description": "Fender Telecaster Standard — classic single-coil configuration. Neck and body dimensions identical to 72 Deluxe. Different pickup and bridge hardware.",
+      "neck_identical_to": "72_custom_deluxe",
+      "pickups": "single_coil_x2",
+      "bridge": "3_saddle_vintage_brass"
+    },
+    "thinline": {
+      "description": "Fender Telecaster Thinline — semi-hollow Telecaster body with f-hole. Same neck as Standard. Lighter weight.",
+      "neck_identical_to": "72_custom_deluxe",
+      "body_construction": "semi_hollow",
+      "f_holes": 1,
+      "reference": "Fender-Telecaster-Thinline-Bodies.pdf"
+    }
+  },
+  "comparison_to_gibson_explorer": {
+    "scale_length_delta_mm": 19.05,
+    "scale_length_note": "Telecaster is 19mm longer scale — noticeable tension difference, brighter tone",
+    "fretboard_radius_comparison": "Tele 241.3mm (9.5in) is more curved than Explorer 304.8mm (12in) — Tele feels rounder under fingers",
+    "neck_joint": "Tele bolt-on vs Explorer set neck — different sustain and serviceability",
+    "headstock_angle": "Tele 0 deg vs Explorer 14 deg — requires string trees on Tele",
+    "fret_count": "Tele 21 vs Explorer 22 — one less fret"
+  }
+}
