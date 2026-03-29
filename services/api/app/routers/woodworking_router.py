@@ -30,6 +30,11 @@ from app.woodworking.archtop_floating_bridge import (
     generate_dxf,
     resolve_arch_radius_from_sagitta,
 )
+from app.woodworking.archtop_bridge import (
+    ArchtopBridgeSpec,
+    compute_foot_arch,
+    compute_post_holes,
+)
 from app.woodworking import (
     board_feet,
     compute_biscuit_layout,
@@ -145,6 +150,53 @@ def post_archtop_dxf(req: ArchtopBridgeDxfRequest) -> Response:
         headers={"Content-Disposition": 'attachment; filename="archtop_floating_bridge.dxf"'},
     )
 
+
+
+
+
+class ArchtopBridgeComputeRequest(BaseModel):
+    """ArchtopBridgeSpec fields for compute endpoint."""
+
+    style: str = Field(default="benedetto")
+    body_arch_radius_mm: Optional[float] = Field(default=3048.0, description="Nominal 120 inch")
+    arch_span_mm: Optional[float] = Field(default=None, description="Measured footprint width")
+    arch_height_mm: Optional[float] = Field(default=None, description="Measured sagitta")
+    base_length_mm: float = Field(default=155.0)
+    foot_width_mm: float = Field(default=4.5)
+    saddle_radius_mm: float = Field(default=381.0)
+    post_spacing_mm: float = Field(default=74.6)
+    post_diameter_mm: float = Field(default=4.0)
+    string_spacing_ee_mm: float = Field(default=52.0)
+    material: str = Field(default="ebony")
+
+
+@router.post(
+    "/archtop-bridge/compute",
+    summary="Archtop bridge foot arch + post holes (measured arch wins over nominal)",
+)
+def post_archtop_bridge_compute(req: ArchtopBridgeComputeRequest) -> Dict[str, Any]:
+    spec = ArchtopBridgeSpec(
+        style=req.style,
+        body_arch_radius_mm=req.body_arch_radius_mm,
+        arch_span_mm=req.arch_span_mm,
+        arch_height_mm=req.arch_height_mm,
+        base_length_mm=req.base_length_mm,
+        foot_width_mm=req.foot_width_mm,
+        saddle_radius_mm=req.saddle_radius_mm,
+        post_spacing_mm=req.post_spacing_mm,
+        post_diameter_mm=req.post_diameter_mm,
+        string_spacing_ee_mm=req.string_spacing_ee_mm,
+        material=req.material,
+    )
+    return {
+        "foot_arch": compute_foot_arch(spec),
+        "post_holes": compute_post_holes(spec),
+        "spec": {
+            "style": spec.style,
+            "material": spec.material,
+            "resolved_arch_radius_mm": spec.resolved_arch_radius(),
+        },
+    }
 
 # ─── Joinery ─────────────────────────────────────────────────────────────────
 
