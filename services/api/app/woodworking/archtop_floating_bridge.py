@@ -1,6 +1,10 @@
 """
 Archtop floating bridge geometry (Benedetto-style).
 
+Canonical implementation for archtop floating bridge in this codebase — use this
+module (and its API routes under ``/floating-bridge/archtop/``) rather than any
+duplicate helpers.
+
 Sagitta-based arch radius, foot profile mating to arched top, post holes,
 saddle slots with plain/wound compensation, and optional DXF (R2000, 5 layers).
 """

@@ -7,12 +7,14 @@ import math
 from app.cam_core.saw_lab.bandsaw import Bandsaw
 from app.woodworking.joinery import compute_box_joint, compute_dovetail_angle_from_slope
 from app.woodworking.floating_bridge import compute_saddle_height_from_twelfth_action
-from app.woodworking.archtop_bridge import (
-    ArchtopBridgeSpec,
-    arch_radius_from_sagitta,
-    compute_foot_arch,
-    compute_post_holes,
+from app.woodworking.archtop_floating_bridge import (
+    BENEDETTO_17,
+    build_archtop_bridge_report,
+    compute_foot_arch_geometry,
+    compute_post_hole_positions,
+    resolve_arch_radius_from_sagitta,
 )
+from app.woodworking.panels import compute_floating_panel_gaps, compute_panel_blank_oversize
 
 
 def test_bandsaw_blade_length_and_sfpm():
@@ -53,34 +55,51 @@ def test_bandsaw_from_inches():
     assert abs(bs.wheel_diameter_mm - 14 * 25.4) < 1e-6
 
 def test_archtop_bridge_nominal():
-    """Uses 3048mm (120 inch) nominal arch radius."""
-    spec = ArchtopBridgeSpec(body_arch_radius_mm=3048.0)
-    foot = compute_foot_arch(spec)
-    posts = compute_post_holes(spec)
+    """Uses 3048 mm nominal top-arch radius; foot chord = Benedetto base length."""
+    r_nom = 3048.0
+    foot = compute_foot_arch_geometry(r_nom, BENEDETTO_17.base_length_mm)
+    posts = compute_post_hole_positions(BENEDETTO_17.post_spacing_mm)
 
-    assert foot["arch_radius_mm"] == 3048.0
-    assert foot["source"] == "nominal"
-    assert foot["foot_contact_arc_mm"] == 155.0  # base_length_mm default
-    # sagitta for R=3048, chord=155: h = R - sqrt(R^2 - (c/2)^2)
-    expected_h = 3048.0 - math.sqrt(3048.0**2 - (155.0 / 2)**2)
-    assert abs(foot["foot_sagitta_mm"] - expected_h) < 0.01
+    assert foot.arch_radius_mm == r_nom
+    assert foot.chord_length_mm == BENEDETTO_17.base_length_mm
+    expected_h = r_nom - math.sqrt(r_nom**2 - (BENEDETTO_17.base_length_mm / 2) ** 2)
+    assert abs(foot.sagitta_mm - expected_h) < 1e-6
 
-    assert len(posts) == 2
-    assert posts[0]["x_mm"] == -37.3  # -post_spacing_mm/2
-    assert posts[1]["x_mm"] == 37.3
+    assert len(posts.positions_mm) == 2
+    half = BENEDETTO_17.post_spacing_mm / 2.0
+    assert posts.positions_mm[0][0] == -half
+    assert posts.positions_mm[1][0] == half
+    assert posts.diameter_mm == BENEDETTO_17.post_hole_diameter_mm
 
 
 def test_archtop_bridge_measured():
-    """Measured span+height wins over nominal body_arch_radius_mm."""
-    # Known: span=300, height=10 => R = (300^2/4 + 10^2) / (2*10) = (22500 + 100) / 20 = 1130
-    spec = ArchtopBridgeSpec(
-        body_arch_radius_mm=3048.0,  # should be ignored
-        arch_span_mm=300.0,
-        arch_height_mm=10.0,
-    )
-    foot = compute_foot_arch(spec)
-
-    expected_r = arch_radius_from_sagitta(300.0, 10.0)
+    """Measured span + sagitta resolve arch radius; report matches."""
+    span_mm = 300.0
+    sagitta_mm = 10.0
+    expected_r = resolve_arch_radius_from_sagitta(span_mm, sagitta_mm)
     assert abs(expected_r - 1130.0) < 0.01
-    assert foot["source"] == "measured"
-    assert abs(foot["arch_radius_mm"] - 1130.0) < 0.01
+
+    rep = build_archtop_bridge_report(span_mm=span_mm, sagitta_mm=sagitta_mm)
+    assert abs(rep.arch_radius_mm - 1130.0) < 0.01
+    assert rep.foot["arch_radius_mm"] == rep.arch_radius_mm
+
+
+def test_floating_panel_gaps():
+    """Wider RH swing ⇒ larger tangential movement and larger gap per edge."""
+    narrow = compute_floating_panel_gaps(
+        400.0, "maple", rh_from=35.0, rh_to=40.0, num_capture_edges=4
+    )
+    wide = compute_floating_panel_gaps(
+        400.0, "maple", rh_from=30.0, rh_to=50.0, num_capture_edges=4
+    )
+    assert wide.gap_per_edge_mm > narrow.gap_per_edge_mm
+    assert wide.total_movement_mm > narrow.total_movement_mm
+
+
+def test_panel_blank_oversize():
+    """Rough blank extends past opening by trim allowance on each side."""
+    r = compute_panel_blank_oversize(200.0, 300.0, oversize_mm_each_side=3.0)
+    assert r.blank_width_mm > r.opening_width_mm
+    assert r.blank_height_mm > r.opening_height_mm
+    assert r.blank_width_mm == r.opening_width_mm + 6.0
+    assert r.blank_height_mm == r.opening_height_mm + 6.0
