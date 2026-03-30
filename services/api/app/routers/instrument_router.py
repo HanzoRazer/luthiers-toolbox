@@ -24,11 +24,15 @@ from ..calculators.soundhole_calc import (
     check_soundhole_position,
     get_standard_diameter,
 )
+from .instrument_geometry.tuning_machine_router import router as tuning_machine_router
 
 router = APIRouter(
     prefix="/api/instrument",
     tags=["instrument_geometry"],
 )
+
+# Include split routers
+router.include_router(tuning_machine_router)
 
 
 # ---------------------------------------------------------------------------
