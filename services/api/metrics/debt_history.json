@@ -493,5 +493,20 @@
     "bare_except": 6,
     "large_files": 58,
     "god_objects": 12
+  },
+  {
+    "timestamp": "2026-03-30T01:06:32.893677",
+    "endpoints": 941,
+    "bare_except": 6,
+    "large_files": 57,
+    "god_objects": 12,
+    "note": "2026-03-29 instrument_router migration: instrument_router.py 1291->212 lines, 19 endpoints -> split routers"
+  },
+  {
+    "timestamp": "2026-03-30T01:08:40.264010",
+    "endpoints": 941,
+    "bare_except": 6,
+    "large_files": 58,
+    "god_objects": 12
   }
 ]
