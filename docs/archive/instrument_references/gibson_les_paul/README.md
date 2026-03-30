@@ -29,14 +29,25 @@ Verified specifications for 1956-59 Gibson Les Paul Standard.
 - Authoritative spec: `services/api/app/instrument_geometry/specs/gibson_les_paul.json`
 - Model code: `services/api/app/instrument_geometry/guitars/les_paul.py`
 
-## Blueprint References
+## Blueprint References (15 files)
 
-PDF blueprints referenced in spec JSON:
-- Gibson-Les-Paul-1950s.pdf
-- Gibson-Les-Paul-59-Complete.pdf
-- Les-Paul-Neck-Angle-Cut-4degrees.pdf
-- Les-Paul-Front-Front-Side-Profile-Carved-Top.pdf
-- (14 PDFs + 2 CAM DXFs total)
+| File | Description |
+|------|-------------|
+| Gibson-Les-Paul-1950s.pdf | 1950s era full blueprint |
+| Gibson-Les-Paul-59-Complete.pdf | Complete 1959 reference |
+| Gibson-Les-Paul-59-Front-Body-Headstock.pdf | 1959 front views |
+| Gibson-Les-Paul-Custom.pdf | Custom model blueprint |
+| Gibson-Les-Paul-Isolines.pdf | Carved top contour lines |
+| Gibson-Les-Paul-Junior-Double-Cut.pdf | Junior DC variant |
+| Gibson-Les-Paul-Junior-Single-Cut.pdf | Junior SC variant |
+| Les-Paul-Body-Neck-Iso.pdf | Body/neck isometric |
+| Les-Paul-Front-Front-Side-Profile-Carved-Top.pdf | Multi-view carved top |
+| Les-Paul-Heel-Profile-Template.pdf | Heel profile template |
+| Les-Paul-Heel-Shape-59.pdf | 1959 heel shape detail |
+| Les-Paul-Neck-Angle-Cut-4degrees.pdf | 4° neck angle cut guide |
+| Les-Paul-Neck-Radius.pdf | Neck radius reference |
+| Les-Paul-Neck-Tenon-Routing-Template.pdf | Tenon routing template |
+| Photoshop-Gibson-Les-Paul-Full.psd | Full layered PSD source |
 
 ## Notes
 
