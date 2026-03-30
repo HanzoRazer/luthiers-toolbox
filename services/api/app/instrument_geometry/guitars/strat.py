@@ -26,7 +26,10 @@ from ..neck.neck_profiles import InstrumentSpec
 StratVariant = Literal["vintage", "modern", "24fret"]
 
 # Load specs from JSON (single source of truth)
-_SPEC_FILE = Path(__file__).parent.parent / "specs" / "stratocaster.json"
+# Prefer fender_stratocaster.json (comprehensive), fallback to stratocaster.json
+_SPEC_FILE_PRIMARY = Path(__file__).parent.parent / "specs" / "fender_stratocaster.json"
+_SPEC_FILE_FALLBACK = Path(__file__).parent.parent / "specs" / "stratocaster.json"
+_SPEC_FILE = _SPEC_FILE_PRIMARY if _SPEC_FILE_PRIMARY.exists() else _SPEC_FILE_FALLBACK
 
 
 def _load_strat_spec() -> dict:
@@ -69,7 +72,25 @@ def get_model_info(variant: StratVariant = "modern") -> dict:
 
 
 # Default MODEL_INFO for backward compatibility
-MODEL_INFO = get_model_info("modern")
+# Verified specs from fender_stratocaster.json (2026-03-29)
+MODEL_INFO = {
+    "id": "stratocaster",
+    "display_name": "Fender Stratocaster",
+    "manufacturer": "Fender",
+    "year_introduced": 1954,
+    "scale_length_mm": 648.0,
+    "fret_count": 22,
+    "neck_profile": "modern_C",
+    "nut_width_mm": 41.91,
+    "neck_depth_1st_mm": 20.0,
+    "neck_depth_12th_mm": 22.2,
+    "neck_angle_deg": 0.0,
+    "headstock_angle_deg": 0.0,
+    "fretboard_radius_mm": 241.3,
+    "neck_joint": "bolt_on",
+    "body_join_fret": 17,
+    "source": "Verified spec sheet 2026-03-29",
+}
 
 
 def get_spec(variant: StratVariant = "modern") -> InstrumentSpec:
