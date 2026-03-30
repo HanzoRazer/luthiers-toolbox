@@ -1,16 +1,26 @@
 # Instrument Router Migration Map
 Generated: 2026-03-29
+**Status: COMPLETE** (2026-03-29)
 
 ## Summary
-- **Total endpoints in instrument_router.py**: 23
-- **Already covered by split routers**: 4 (parallel implementations, NOT replacements)
-- **Needs migration**: 19
+- **Total endpoints migrated**: 19
+- **Parallel implementations retained**: 4 (different schemas)
+- **instrument_router.py**: Trimmed from 1,291 lines → 215 lines
 
-## Endpoint Status
+## Migration Commits
 
-### COVERED (4 endpoints) — Different schemas, both remain
-These exist in both instrument_router and split routers but use DIFFERENT
-request/response schemas. See docs/INSTRUMENT_ROUTER_OVERLAP.md for details.
+| Commit | Endpoints | Router |
+|--------|-----------|--------|
+| `e48db130` | 5 | geometry_calculator_router.py |
+| `ceeb4cc0` | 4 | tuning_machine_router.py |
+| `6f33a931` | 4 | construction_router.py |
+| `70b6c450` | 3 | string_tension_router.py |
+| `4c9e4aa1` | 3 | nut_fret_router.py, soundhole_router.py |
+
+## Parallel Implementations (4 endpoints) — RETAINED
+
+These exist in BOTH instrument_router.py AND split routers with DIFFERENT schemas.
+Retained pending schema reconciliation. See docs/INSTRUMENT_ROUTER_OVERLAP.md.
 
 | Endpoint | instrument_router | split router |
 |----------|-------------------|--------------|
@@ -19,58 +29,49 @@ request/response schemas. See docs/INSTRUMENT_ROUTER_OVERLAP.md for details.
 | POST:/api/instrument/soundhole | has standard_diameter_mm | missing field |
 | POST:/api/instrument/soundhole/check-position | has position_ratio | missing field |
 
-### NOT COVERED (19 endpoints) — Need migration to split routers
+## Migrated Endpoints (19) — COMPLETE
 
-**Geometry (5 endpoints)**
-- GET:/api/instrument/geometry/presets
-- POST:/api/instrument/geometry/bridge
-- POST:/api/instrument/geometry/radius-at-position
-- POST:/api/instrument/geometry/radius-profile
-- POST:/api/instrument/geometry/standard-guitar
+All migrated to split routers in `app/routers/instrument_geometry/`:
 
-**String/Tension (3 endpoints)**
-- GET:/api/instrument/string-tension/presets
-- POST:/api/instrument/string-tension
-- POST:/api/instrument/saddle-force
+**Geometry (5 endpoints)** → geometry_calculator_router.py
+- [x] GET:/api/instrument/geometry/presets
+- [x] POST:/api/instrument/geometry/bridge
+- [x] POST:/api/instrument/geometry/radius-at-position
+- [x] POST:/api/instrument/geometry/radius-profile
+- [x] POST:/api/instrument/geometry/standard-guitar
 
-**Tuning Machine (4 endpoints)**
-- GET:/api/instrument/tuning-machine/post-heights
-- GET:/api/instrument/tuning-machine/string-trees
-- POST:/api/instrument/tuning-machine
-- POST:/api/instrument/tuning-machine/required-height
+**String/Tension (3 endpoints)** → string_tension_router.py
+- [x] GET:/api/instrument/string-tension/presets
+- [x] POST:/api/instrument/string-tension
+- [x] POST:/api/instrument/saddle-force
 
-**Construction (4 endpoints)**
-- GET:/api/instrument/kerfing/types
-- POST:/api/instrument/kerfing
-- POST:/api/instrument/brace-sizing
-- POST:/api/instrument/top-deflection
+**Tuning Machine (4 endpoints)** → tuning_machine_router.py
+- [x] GET:/api/instrument/tuning-machine/post-heights
+- [x] GET:/api/instrument/tuning-machine/string-trees
+- [x] POST:/api/instrument/tuning-machine
+- [x] POST:/api/instrument/tuning-machine/required-height
 
-**Other (3 endpoints)**
-- GET:/api/instrument/nut-compensation/types
-- GET:/api/instrument/soundhole/body-styles
-- POST:/api/instrument/nut-compensation/zero-fret-positions
+**Construction (4 endpoints)** → construction_router.py
+- [x] GET:/api/instrument/kerfing/types
+- [x] POST:/api/instrument/kerfing
+- [x] POST:/api/instrument/brace-sizing
+- [x] POST:/api/instrument/top-deflection
 
-## Large Routers (>500 lines) for Phase B
+**Other (3 endpoints)** → nut_fret_router.py, soundhole_router.py
+- [x] GET:/api/instrument/nut-compensation/types
+- [x] GET:/api/instrument/soundhole/body-styles
+- [x] POST:/api/instrument/nut-compensation/zero-fret-positions
 
-| File | Lines | Status |
-|------|-------|--------|
-| instrument_router.py | 1,291 | **Phase A target** |
-| woodworking_router.py | 596 | New, no split needed |
-| binding_design_router.py | 589 | Review for split |
-| cam_post_v155_router.py | 518 | Review for split |
+## Result
 
-## Migration Strategy
+| Metric | Before | After |
+|--------|--------|-------|
+| instrument_router.py lines | 1,291 | 215 |
+| Endpoint count | 917 | 898 |
+| Split routers | 9 | 13 |
 
-1. Create split routers for uncovered endpoint groups:
-   - `geometry_calculator_router.py` (5 endpoints)
-   - `string_tension_router.py` (3 endpoints)
-   - `tuning_machine_router.py` (4 endpoints)
-   - `construction_calculator_router.py` (4 endpoints)
+## Next Steps
 
-2. Migrate endpoints with IDENTICAL schemas (not the 4 parallel implementations)
-
-3. Update manifest to register new split routers
-
-4. Unregister instrument_router.py when all 19 are migrated
-
-5. Retain instrument_router.py file for reference (parallel implementations)
+1. Schema reconciliation for 4 parallel implementations
+2. After reconciliation, remove parallel endpoints from instrument_router.py
+3. Eventually delete instrument_router.py entirely
