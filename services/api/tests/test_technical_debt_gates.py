@@ -24,10 +24,9 @@ APP_ROOT = Path(__file__).parent.parent / "app"
 METRICS_DIR = Path(__file__).parent.parent / "metrics"
 
 # Targets (ratchet down over time)
-# Updated 2026-03-29 post instrument_router migration sprint
-# instrument_router.py reduced 1291 -> 212 lines
-# 19 endpoints migrated to split routers in instrument_geometry/
-TARGET_MAX_ENDPOINTS = 945  # current 941 + 4 buffer
+# Updated 2026-03-29 — endpoint migration sprint complete
+# 941 actual, 945 = 941 + 4 buffer
+TARGET_MAX_ENDPOINTS = 945
 TARGET_MAX_GOD_OBJECTS = 14  # All reviewed and acceptable
 TARGET_MAX_BARE_EXCEPT = 10  # Actual: 6 (false positives in strings/comments), buffer: +4
 TARGET_MAX_LARGE_FILES = 63  # Actual: 58, buffer: +5 (was 65)
