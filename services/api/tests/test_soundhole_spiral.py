@@ -7,8 +7,8 @@ from pathlib import Path
 
 import pytest
 
-from app.woodworking.soundhole_spiral import (
-    SpiralSoundholeSpec,
+from app.instrument_geometry.soundhole.spiral_geometry import (
+    SpiralSpec as SpiralSoundholeSpec,
     compute_spiral_geometry,
     generate_dxf,
 )
