@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import math
 
-from app.woodworking.archtop_floating_bridge import (
+from app.instrument_geometry.bridge.archtop_floating_bridge import (
     build_archtop_bridge_report,
     compute_foot_arch_geometry,
     generate_dxf,

@@ -18,11 +18,16 @@ from .geometry import (
     STANDARD_6_STRING_COMPENSATION,
     STANDARD_4_STRING_BASS_COMPENSATION,
 )
-from .archtop_bridge_spec import (
-    ArchtopBridgeSpec,
-    arch_radius_from_sagitta,
-    compute_foot_arch,
-    compute_post_holes,
+from .archtop_floating_bridge import (
+    BENEDETTO_17,
+    ArchtopFloatingBridgeReport,
+    Benedetto17Defaults,
+    build_archtop_bridge_report,
+    compute_foot_arch_geometry,
+    compute_post_hole_positions,
+    compute_saddle_slot,
+    generate_dxf as generate_archtop_dxf,
+    resolve_arch_radius_from_sagitta,
 )
 from .placement import compute_bridge_placement
 from .compensation import compute_compensated_bridge
@@ -36,11 +41,16 @@ __all__ = [
     "compute_compensation_estimate",
     "STANDARD_6_STRING_COMPENSATION",
     "STANDARD_4_STRING_BASS_COMPENSATION",
-    # archtop bridge spec (restored)
-    "ArchtopBridgeSpec",
-    "arch_radius_from_sagitta",
-    "compute_foot_arch",
-    "compute_post_holes",
+    # archtop floating bridge
+    "BENEDETTO_17",
+    "ArchtopFloatingBridgeReport",
+    "Benedetto17Defaults",
+    "build_archtop_bridge_report",
+    "compute_foot_arch_geometry",
+    "compute_post_hole_positions",
+    "compute_saddle_slot",
+    "generate_archtop_dxf",
+    "resolve_arch_radius_from_sagitta",
     # placement (Wave 14)
     "compute_bridge_placement",
     # compensation (Wave 14)

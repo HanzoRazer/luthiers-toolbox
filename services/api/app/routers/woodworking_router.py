@@ -24,7 +24,7 @@ from app.cam_core.saw_lab.bandsaw import (
     plan_resaw_cut,
     validate_resaw_setup,
 )
-from app.woodworking.archtop_floating_bridge import (
+from app.instrument_geometry.bridge.archtop_floating_bridge import (
     BENEDETTO_17,
     build_archtop_bridge_report,
     generate_dxf,
