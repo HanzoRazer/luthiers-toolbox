@@ -18,6 +18,12 @@ from .geometry import (
     STANDARD_6_STRING_COMPENSATION,
     STANDARD_4_STRING_BASS_COMPENSATION,
 )
+from .archtop_bridge_spec import (
+    ArchtopBridgeSpec,
+    arch_radius_from_sagitta,
+    compute_foot_arch,
+    compute_post_holes,
+)
 from .placement import compute_bridge_placement
 from .compensation import compute_compensated_bridge
 
@@ -30,6 +36,11 @@ __all__ = [
     "compute_compensation_estimate",
     "STANDARD_6_STRING_COMPENSATION",
     "STANDARD_4_STRING_BASS_COMPENSATION",
+    # archtop bridge spec (restored)
+    "ArchtopBridgeSpec",
+    "arch_radius_from_sagitta",
+    "compute_foot_arch",
+    "compute_post_holes",
     # placement (Wave 14)
     "compute_bridge_placement",
     # compensation (Wave 14)
