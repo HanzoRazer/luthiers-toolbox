@@ -1,6 +1,6 @@
 """Woodworking calculators: floating bridge setup, joinery, frame-and-panel."""
 
-from .floating_bridge import (
+from .wooden_floating_bridge import (
     FloatingBridgeResult,
     compute_break_angle_deg,
     compute_saddle_height_from_twelfth_action,
