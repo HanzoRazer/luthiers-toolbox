@@ -150,6 +150,13 @@ const routes: RouteRecordRaw[] = [
     component: () => import("@/views/CalculatorHubView.vue"),
   },
 
+  // Soundhole Calculator (direct route)
+  {
+    path: "/calculators/acoustics/soundhole",
+    name: "SoundholeCalculator",
+    component: () => import("@/components/toolbox/acoustics/SoundholeCalculator.vue"),
+  },
+
   // ============================================================================
   // LEGACY ROUTES (keep for backwards compatibility)
   // ============================================================================

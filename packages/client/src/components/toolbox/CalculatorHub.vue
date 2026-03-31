@@ -67,6 +67,24 @@
           </div>
         </div>
       </div>
+
+      <!-- Acoustics Calculators -->
+      <div class="calc-category">
+        <h3>🔊 Acoustics</h3>
+        <div class="calc-cards">
+          <div
+            class="calc-card active"
+            @click="selectCalculator('soundhole')"
+          >
+            <div class="calc-icon">
+              🎸
+            </div>
+            <h4>Soundhole Calculator</h4>
+            <p>Helmholtz + P:A ratio with builder calibration log</p>
+            <span class="status-badge ready">✓ Ready</span>
+          </div>
+        </div>
+      </div>
     </div>
 
     <!-- Active Calculator Display -->
@@ -88,6 +106,7 @@
       <ScientificCalculator v-if="activeCalculator === 'scientific'" />
       <CNCROICalculator v-if="activeCalculator === 'cnc-roi'" />
       <BusinessCalculator v-if="activeCalculator === 'business-calc'" />
+      <SoundholeCalculator v-if="activeCalculator === 'soundhole'" />
     </div>
   </div>
 </template>
@@ -98,6 +117,7 @@ import FractionCalculator from './FractionCalculator.vue'
 import ScientificCalculator from './ScientificCalculator.vue'
 import CNCROICalculator from './CNCROICalculator.vue'
 import BusinessCalculator from './BusinessCalculator.vue'
+import SoundholeCalculator from './acoustics/SoundholeCalculator.vue'
 
 const activeCalculator = ref<string | null>(null)
 
@@ -110,7 +130,8 @@ function getCalculatorTitle(calcId: string): string {
     'fractions': '🔢 Fraction Calculator',
     'scientific': '🧮 Scientific Calculator',
     'cnc-roi': '💰 CNC ROI Calculator',
-    'business-calc': '💼 Business Calculator'
+    'business-calc': '💼 Business Calculator',
+    'soundhole': '🎸 Soundhole Calculator'
   }
   return titles[calcId] || calcId
 }
