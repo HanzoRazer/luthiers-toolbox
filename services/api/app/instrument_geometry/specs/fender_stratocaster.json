@@ -6,9 +6,9 @@
   "units": "mm",
   "notes": "The Stratocaster (1954) introduced the contoured body with belly cut and forearm contour, setting it apart from the slab-body Telecaster. Features synchronized tremolo bridge (vibrato). The longer 648mm scale and rounder 241.3mm (9.5\") fretboard radius are defining Fender characteristics. Three single-coil pickups in SSS configuration became the archetypal rock guitar sound.",
   "variants": {
-    "vintage_62": {
-      "description": "Fender Stratocaster '62 Reissue — representative of the pre-CBS golden era (1954-1965). 7.25\" vintage radius fretboard, 21 frets, smaller nut width. The 1962 Strat is considered peak vintage spec.",
-      "year_range": "1962 / reissue 1982–present",
+    "vintage": {
+      "description": "Fender Stratocaster '62 Reissue \u2014 representative of the pre-CBS golden era (1954-1965). 7.25\" vintage radius fretboard, 21 frets, smaller nut width. The 1962 Strat is considered peak vintage spec.",
+      "year_range": "1962 / reissue 1982\u2013present",
       "scale_length_mm": 648.0,
       "scale_length_inches": 25.5,
       "fret_count": 21,
@@ -28,10 +28,13 @@
         "profile_note": "1962 necks transitioned from soft V at nut to C-shape by 12th fret.",
         "fretboard_radius_mm": 184.15,
         "fretboard_radius_inches": 7.25,
-        "fretboard_radius_note": "7.25 inch radius is the vintage Fender standard — rounder than modern 9.5\". Excellent for chord playing but tight for big bends.",
+        "fretboard_radius_note": "7.25 inch radius is the vintage Fender standard \u2014 rounder than modern 9.5\". Excellent for chord playing but tight for big bends.",
         "compound_radius": false,
         "fretboard_wood": "rosewood",
-        "fretboard_wood_options": ["rosewood", "maple"],
+        "fretboard_wood_options": [
+          "rosewood",
+          "maple"
+        ],
         "neck_wood": "maple",
         "binding": "none",
         "body_join_fret": 17,
@@ -59,7 +62,10 @@
       "body": {
         "construction": "solid",
         "style": "double_cutaway",
-        "material_options": ["alder", "ash"],
+        "material_options": [
+          "alder",
+          "ash"
+        ],
         "material_note": "Sunburst finishes typically ash; solid colors typically alder.",
         "binding": "none",
         "finish": "nitrocellulose_lacquer",
@@ -81,9 +87,9 @@
         "tuners": "fender_vintage_6_inline"
       }
     },
-    "modern_standard": {
-      "description": "Fender American Standard / Professional — the modern benchmark Stratocaster. 22 frets, 9.5\" or compound radius fretboard, modern C-profile neck. Represents current production standard.",
-      "year_range": "1987–present (American Standard renamed American Professional 2017)",
+    "modern": {
+      "description": "Fender American Standard / Professional \u2014 the modern benchmark Stratocaster. 22 frets, 9.5\" or compound radius fretboard, modern C-profile neck. Represents current production standard.",
+      "year_range": "1987\u2013present (American Standard renamed American Professional 2017)",
       "scale_length_mm": 648.0,
       "scale_length_inches": 25.5,
       "fret_count": 22,
@@ -102,16 +108,20 @@
         "profile_shape": "modern_C",
         "fretboard_radius_mm": 241.3,
         "fretboard_radius_inches": 9.5,
-        "fretboard_radius_note": "9.5 inch radius is the modern Fender standard — flatter than vintage 7.25\". Better for bending, still comfortable for chords.",
+        "fretboard_radius_note": "9.5 inch radius is the modern Fender standard \u2014 flatter than vintage 7.25\". Better for bending, still comfortable for chords.",
         "fretboard_radius_options": {
           "single_radius_mm": 241.3,
           "compound_radius_start_mm": 241.3,
           "compound_radius_end_mm": 304.8
         },
-        "compound_radius": false,
+        "compound_radius": true,
         "compound_radius_note": "Some American Professional models use compound 9.5\"-14\" radius.",
         "fretboard_wood": "rosewood",
-        "fretboard_wood_options": ["rosewood", "maple", "pau_ferro"],
+        "fretboard_wood_options": [
+          "rosewood",
+          "maple",
+          "pau_ferro"
+        ],
         "neck_wood": "maple",
         "binding": "none",
         "body_join_fret": 17,
@@ -122,7 +132,9 @@
         "truss_rod_access": "headstock_spoke_wheel",
         "inlays": "dots",
         "peg_hole_diameter_mm": 10.26,
-        "fret_wire": "medium_jumbo"
+        "fret_wire": "medium_jumbo",
+        "fretboard_radius_start_mm": 241.3,
+        "fretboard_radius_end_mm": 304.8
       },
       "headstock": {
         "style": "fender_strat_6_inline",
@@ -137,7 +149,10 @@
       "body": {
         "construction": "solid",
         "style": "double_cutaway",
-        "material_options": ["alder", "ash"],
+        "material_options": [
+          "alder",
+          "ash"
+        ],
         "binding": "none",
         "finish": "polyester_or_polyurethane",
         "contour": "belly_cut_and_forearm",
@@ -156,6 +171,35 @@
         "controls": "1_volume_2_tone",
         "tuners": "fender_locking_or_vintage"
       }
+    },
+    "24fret": {
+      "description": "Extended range 24-fret Stratocaster for technical players.",
+      "year_range": "1990s-present",
+      "scale_length_mm": 648.0,
+      "fret_count": 24,
+      "neck": {
+        "nut_width_mm": 42.86,
+        "fretboard_radius_start_mm": 304.8,
+        "fretboard_radius_end_mm": 406.4,
+        "compound_radius": true,
+        "profile_shape": "modern_C",
+        "body_join_fret": 19,
+        "neck_joint": "bolt_on",
+        "neck_angle_deg": 0.0,
+        "fret_wire": "jumbo"
+      },
+      "headstock": {
+        "angle_deg": 0.0,
+        "string_trees": 2
+      },
+      "body": {
+        "construction": "solid",
+        "style": "double_cutaway"
+      },
+      "hardware": {
+        "bridge": "floyd_rose_or_hardtail",
+        "pickup_layout": "HSS"
+      }
     }
   },
   "comparison_to_telecaster": {
@@ -168,11 +212,11 @@
   },
   "comparison_to_gibson_les_paul": {
     "scale_length_delta_mm": 19.35,
-    "scale_length_note": "Strat 648mm vs LP 628.65mm — Strat is brighter, higher tension",
-    "fretboard_radius_comparison": "Strat 241.3mm (9.5\") vs LP 304.8mm (12\") — Strat is rounder",
-    "neck_joint": "Strat bolt-on vs LP set-neck — different sustain and serviceability",
-    "headstock_angle": "Strat 0 deg (flat) vs LP 14-17 deg — Strat requires string trees",
+    "scale_length_note": "Strat 648mm vs LP 628.65mm \u2014 Strat is brighter, higher tension",
+    "fretboard_radius_comparison": "Strat 241.3mm (9.5\") vs LP 304.8mm (12\") \u2014 Strat is rounder",
+    "neck_joint": "Strat bolt-on vs LP set-neck \u2014 different sustain and serviceability",
+    "headstock_angle": "Strat 0 deg (flat) vs LP 14-17 deg \u2014 Strat requires string trees",
     "body_construction": "Strat solid slab vs LP carved maple cap on mahogany",
-    "typical_weight": "Strat ~3.4kg vs LP ~4.0-4.5kg — Strat significantly lighter"
+    "typical_weight": "Strat ~3.4kg vs LP ~4.0-4.5kg \u2014 Strat significantly lighter"
   }
 }
