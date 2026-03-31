@@ -169,6 +169,66 @@ class PortSpec:
             label=label,
         )
 
+    @classmethod
+    def from_spiral_mm(
+        cls,
+        slot_width_mm: float,
+        start_radius_mm: float = 10.0,
+        growth_rate_k: float = 0.18,
+        turns: float = 1.1,
+        location: Literal["top", "side", "back"] = "top",
+        thickness_mm: float = 2.5,
+        label: str = "Spiral soundhole",
+    ) -> "PortSpec":
+        """
+        Convenience constructor for logarithmic spiral soundholes.
+
+        Closed-form geometry for constant-width spiral slot:
+            r(θ) = r0 × e^(k×θ)
+            Arc length: L = (r_end - r0) / sin(atan(1/k))
+            Perimeter: P = 2 × L (two walls)
+            Area: A = slot_width × L
+            P:A ratio: 2/slot_width (independent of k, turns, r0)
+
+        P:A > 0.10 mm⁻¹ required for acoustic efficiency gain over round hole.
+        For 14mm slot: P:A = 0.143 mm⁻¹ — well above threshold.
+
+        Args:
+            slot_width_mm:    Width of the spiral slot (14-20mm optimal)
+            start_radius_mm:  Inner starting radius r0 (typically 8-12mm)
+            growth_rate_k:    Logarithmic growth rate per radian (0.12-0.25)
+            turns:            Number of full turns (0.8-1.5 typical)
+            location:         Where on the body ("top", "side", "back")
+            thickness_mm:     Plate thickness at the opening
+            label:            Human-readable name
+
+        Returns:
+            PortSpec with calculated area and perimeter
+        """
+        if growth_rate_k <= 0:
+            raise ValueError("growth_rate_k must be positive")
+        if slot_width_mm <= 0 or start_radius_mm <= 0 or turns <= 0:
+            raise ValueError("slot_width_mm, start_radius_mm, and turns must be positive")
+
+        # Closed-form calculation
+        theta_end = turns * 2 * math.pi
+        r_end = start_radius_mm * math.exp(growth_rate_k * theta_end)
+        alpha = math.atan(1.0 / growth_rate_k)
+        one_wall_length = (r_end - start_radius_mm) / math.sin(alpha)
+
+        # Perimeter = 2 walls, Area = slot_width × arc_length
+        perim_mm = 2.0 * one_wall_length
+        area_mm2 = slot_width_mm * one_wall_length
+
+        # Convert to m and m²
+        return cls(
+            area_m2=area_mm2 / 1e6,
+            perim_m=perim_mm / 1000.0,
+            location=location,
+            thickness_m=thickness_mm / 1000.0,
+            label=label,
+        )
+
     @property
     def diameter_equiv_mm(self) -> float:
         """Equivalent circular diameter for display purposes."""

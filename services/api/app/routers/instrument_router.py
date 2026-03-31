@@ -10,7 +10,7 @@ reconciliation with the canonical split routes is complete.
 """
 from __future__ import annotations
 
-from typing import List, Optional
+from typing import Dict, List, Optional
 
 from fastapi import APIRouter
 from pydantic import BaseModel, Field
@@ -19,9 +19,15 @@ from ..calculators.nut_compensation_calc import (
     compare_nut_types,
     compute_nut_compensation,
 )
-from ..calculators.soundhole_calc import (
+from ..calculators.soundhole_facade import (
     compute_soundhole_spec,
     check_soundhole_position,
+    SoundholeType,
+    SpiralParams,
+    list_soundhole_types,
+)
+from ..calculators.soundhole_presets import (
+    list_spiral_presets,
     get_standard_diameter,
 )
 from .instrument_geometry.tuning_machine_router import router as tuning_machine_router
@@ -130,15 +136,26 @@ def compare_nut_compensation_types(payload: NutCompensationRequest) -> NutCompar
 
 
 # ---------------------------------------------------------------------------
-# Soundhole (GEOMETRY-002) — parallel
+# Soundhole (GEOMETRY-002) — supports round, oval, spiral, fhole types
 # ---------------------------------------------------------------------------
+
+
+class SpiralParamsRequest(BaseModel):
+    """Parameters for spiral soundhole geometry."""
+    slot_width_mm: float = Field(14.0, ge=8.0, le=30.0, description="Slot width in mm (14-20mm optimal)")
+    start_radius_mm: float = Field(10.0, ge=5.0, le=25.0, description="Starting radius r0 in mm")
+    growth_rate_k: float = Field(0.18, ge=0.05, le=0.40, description="Growth rate k per radian")
+    turns: float = Field(1.1, ge=0.5, le=2.5, description="Number of full turns")
+    rotation_deg: float = Field(0.0, ge=0.0, le=360.0, description="Rotation offset in degrees")
+    center_x_mm: float = Field(0.0, description="Center X position (mm from centerline)")
+    center_y_mm: float = Field(0.0, description="Center Y position (mm from bridge)")
 
 
 class SoundholeRequest(BaseModel):
     """Request for soundhole placement and sizing."""
     body_style: str = Field(
         ...,
-        description="Body style: dreadnought, om_000, parlor, classical, jumbo, concert, auditorium",
+        description="Body style: dreadnought, om_000, parlor, classical, jumbo, concert, auditorium, carlos_jumbo",
     )
     body_length_mm: float = Field(
         ...,
@@ -150,6 +167,14 @@ class SoundholeRequest(BaseModel):
         gt=0,
         description="Override standard diameter (optional)",
     )
+    soundhole_type: str = Field(
+        "round",
+        description="Soundhole type: round, oval, spiral, or fhole",
+    )
+    spiral_params: Optional[SpiralParamsRequest] = Field(
+        None,
+        description="Parameters for spiral soundhole (only used when soundhole_type='spiral')",
+    )
 
 
 class SoundholeResponse(BaseModel):
@@ -159,7 +184,11 @@ class SoundholeResponse(BaseModel):
     body_style: str
     gate: str
     notes: List[str]
-    standard_diameter_mm: Optional[float] = None
+    soundhole_type: str = "round"
+    spiral_params: Optional[Dict] = None
+    area_mm2: Optional[float] = None
+    perimeter_mm: Optional[float] = None
+    pa_ratio_mm_inv: Optional[float] = None
 
 
 class SoundholePositionCheckRequest(BaseModel):
@@ -179,21 +208,43 @@ class SoundholePositionCheckResponse(BaseModel):
 
 @router.post("/soundhole", response_model=SoundholeResponse)
 def get_soundhole_spec(payload: SoundholeRequest) -> SoundholeResponse:
-    """Calculate soundhole placement and sizing for a given body style."""
+    """
+    Calculate soundhole placement and sizing for a given body style.
+
+    Supports multiple soundhole types:
+    - round: Traditional circular soundhole (default)
+    - oval: Oval/elliptical (Selmer/Maccaferri style)
+    - spiral: Logarithmic spiral slot (Williams 2019 acoustic research)
+    - fhole: F-holes (redirects to f-hole calculator)
+    """
+    # Parse soundhole type
+    try:
+        sh_type = SoundholeType(payload.soundhole_type.lower())
+    except ValueError:
+        sh_type = SoundholeType.ROUND
+
+    # Convert spiral params if provided
+    spiral_params = None
+    if payload.spiral_params and sh_type == SoundholeType.SPIRAL:
+        spiral_params = SpiralParams(
+            slot_width_mm=payload.spiral_params.slot_width_mm,
+            start_radius_mm=payload.spiral_params.start_radius_mm,
+            growth_rate_k=payload.spiral_params.growth_rate_k,
+            turns=payload.spiral_params.turns,
+            rotation_deg=payload.spiral_params.rotation_deg,
+            center_x_mm=payload.spiral_params.center_x_mm,
+            center_y_mm=payload.spiral_params.center_y_mm,
+        )
+
     spec = compute_soundhole_spec(
         body_style=payload.body_style,
         body_length_mm=payload.body_length_mm,
         custom_diameter_mm=payload.custom_diameter_mm,
+        soundhole_type=sh_type,
+        spiral_params=spiral_params,
     )
 
-    return SoundholeResponse(
-        diameter_mm=spec.diameter_mm,
-        position_from_neck_block_mm=spec.position_from_neck_block_mm,
-        body_style=spec.body_style,
-        gate=spec.gate,
-        notes=spec.notes,
-        standard_diameter_mm=get_standard_diameter(payload.body_style),
-    )
+    return SoundholeResponse(**spec.to_dict())
 
 
 @router.post("/soundhole/check-position", response_model=SoundholePositionCheckResponse)
@@ -213,3 +264,17 @@ def check_soundhole_position_endpoint(
         body_length_mm=payload.body_length_mm,
         position_ratio=payload.position_mm / payload.body_length_mm,
     )
+
+
+@router.get("/soundhole/types", summary="List supported soundhole types")
+def get_soundhole_types():
+    """
+    List supported soundhole types for the generator dropdown.
+
+    Returns available types: round, oval, spiral, fhole
+    with descriptions and any type-specific notes.
+    """
+    return {
+        "types": list_soundhole_types(),
+        "spiral_presets": list_spiral_presets(),
+    }
