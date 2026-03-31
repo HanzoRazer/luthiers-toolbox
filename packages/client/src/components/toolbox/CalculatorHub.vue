@@ -83,6 +83,17 @@
             <p>Helmholtz + P:A ratio with builder calibration log</p>
             <span class="status-badge ready">✓ Ready</span>
           </div>
+          <div
+            class="calc-card active"
+            @click="navigateTo('/calculators/acoustics/spiral-soundhole')"
+          >
+            <div class="calc-icon">
+              🌀
+            </div>
+            <h4>Spiral Soundhole Designer</h4>
+            <p>Parametric logarithmic spiral soundhole geometry</p>
+            <span class="status-badge ready">✓ Ready</span>
+          </div>
         </div>
       </div>
     </div>
@@ -113,6 +124,7 @@
 
 <script setup lang="ts">
 import { ref } from 'vue'
+import { useRouter } from 'vue-router'
 import FractionCalculator from './FractionCalculator.vue'
 import ScientificCalculator from './ScientificCalculator.vue'
 import CNCROICalculator from './CNCROICalculator.vue'
@@ -120,6 +132,11 @@ import BusinessCalculator from './BusinessCalculator.vue'
 import SoundholeCalculator from '@/views/calculators/acoustics/SoundholeCalculator.vue'
 
 const activeCalculator = ref<string | null>(null)
+const router = useRouter()
+
+function navigateTo(path: string) {
+  router.push(path)
+}
 
 function selectCalculator(calcId: string) {
   activeCalculator.value = calcId
