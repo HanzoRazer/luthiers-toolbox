@@ -195,6 +195,14 @@
             >
               Viewer
             </RouterLink>
+            <div class="border-t my-1"></div>
+            <RouterLink
+              to="/app/calculators/acoustics/soundhole"
+              class="block px-3 py-1.5 hover:bg-gray-100"
+              active-class="bg-blue-50 text-blue-600"
+            >
+              Soundhole Calculator
+            </RouterLink>
           </div>
         </div>
 
@@ -224,6 +232,7 @@ const isSawLabActive = computed(() => {
 
 // Highlight Acoustics button when any acoustics route is active
 const isAcousticsActive = computed(() => {
-  return route.path.startsWith('/tools/audio-analyzer')
+  return route.path.startsWith('/tools/audio-analyzer') ||
+         route.path.startsWith('/app/calculators/acoustics')
 })
 </script>
