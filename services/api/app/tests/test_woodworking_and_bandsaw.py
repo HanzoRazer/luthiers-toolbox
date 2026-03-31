@@ -6,7 +6,7 @@ import math
 
 from app.cam_core.saw_lab.bandsaw import Bandsaw
 from app.woodworking.joinery import compute_box_joint, compute_dovetail_angle_from_slope
-from app.woodworking.floating_bridge import compute_saddle_height_from_twelfth_action
+from app.woodworking.wooden_floating_bridge import compute_saddle_height_from_twelfth_action
 from app.woodworking.archtop_floating_bridge import (
     BENEDETTO_17,
     build_archtop_bridge_report,
