@@ -157,6 +157,13 @@ const routes: RouteRecordRaw[] = [
     component: () => import("@/views/calculators/acoustics/SoundholeCalculator.vue"),
   },
 
+  // Spiral Soundhole Designer (dual-spiral logarithmic geometry)
+  {
+    path: "/calculators/acoustics/spiral-soundhole",
+    name: "spiral-soundhole-designer",
+    component: () => import("@/components/toolbox/acoustics/SpiralSoundholeDesigner.vue"),
+  },
+
   // ============================================================================
   // LEGACY ROUTES (keep for backwards compatibility)
   // ============================================================================
