@@ -117,7 +117,7 @@ import FractionCalculator from './FractionCalculator.vue'
 import ScientificCalculator from './ScientificCalculator.vue'
 import CNCROICalculator from './CNCROICalculator.vue'
 import BusinessCalculator from './BusinessCalculator.vue'
-import SoundholeCalculator from './acoustics/SoundholeCalculator.vue'
+import SoundholeCalculator from '@/views/calculators/acoustics/SoundholeCalculator.vue'
 
 const activeCalculator = ref<string | null>(null)
 
