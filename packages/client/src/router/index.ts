@@ -150,11 +150,11 @@ const routes: RouteRecordRaw[] = [
     component: () => import("@/views/CalculatorHubView.vue"),
   },
 
-  // Soundhole Calculator (direct route)
+  // Soundhole Calculator (Helmholtz + P:A)
   {
-    path: "/calculators/acoustics/soundhole",
-    name: "SoundholeCalculator",
-    component: () => import("@/components/toolbox/acoustics/SoundholeCalculator.vue"),
+    path: "/app/calculators/acoustics/soundhole",
+    name: "soundhole-calculator",
+    component: () => import("@/views/calculators/acoustics/SoundholeCalculator.vue"),
   },
 
   // ============================================================================
