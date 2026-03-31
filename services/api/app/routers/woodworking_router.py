@@ -44,6 +44,13 @@ from app.woodworking import (
     seasonal_movement,
     wood_weight,
 )
+from app.woodworking.soundhole_spiral import (
+    SpiralSoundholeSpec,
+    compute_spiral_geometry,
+    generate_dxf as generate_spiral_dxf,
+    geometry_to_dict,
+    spec_to_dict,
+)
 
 router = APIRouter(tags=["woodworking"])
 
@@ -538,6 +545,129 @@ def post_bandsaw_plan_resaw(req: BandsawPlanResawRequest) -> Dict[str, Any]:
         req.kerf_mm,
         req.target_thickness_mm,
         bookmatch=req.bookmatch,
+    )
+
+
+# ─── Soundhole Spiral ──────────────────────────────────────────────────────────
+
+
+class SpiralSoundholeRequest(BaseModel):
+    """Request for logarithmic concha spiral soundhole geometry."""
+
+    bout_radius_mm: float = Field(
+        ...,
+        gt=0,
+        description="Upper bout radius in mm (e.g., 195 for dreadnought)",
+    )
+    slot_width_mm: float = Field(
+        default=8.0,
+        gt=0,
+        description="Width of the spiral slot in mm",
+    )
+    spiral_start_r_mm: float = Field(
+        default=20.0,
+        gt=0,
+        description="Inner radius at spiral start in mm",
+    )
+    spiral_turns: float = Field(
+        default=0.85,
+        ge=0,
+        le=3.0,
+        description="Number of spiral turns (e.g., 0.85)",
+    )
+    growth_rate: float = Field(
+        default=15.0,
+        gt=0,
+        description="Logarithmic growth rate per turn in mm",
+    )
+    center_x_mm: float = Field(
+        default=0.0,
+        description="Spiral center X offset from top centerline",
+    )
+    center_y_mm: float = Field(
+        default=0.0,
+        description="Spiral center Y offset from top centerline",
+    )
+    num_points: int = Field(
+        default=100,
+        ge=10,
+        le=500,
+        description="Number of sample points along spiral",
+    )
+
+
+@router.post(
+    "/soundhole/spiral/geometry",
+    summary="Logarithmic concha spiral soundhole geometry",
+)
+def post_spiral_soundhole_geometry(req: SpiralSoundholeRequest) -> Dict[str, Any]:
+    """
+    Compute geometry for a nautilus-inspired spiral soundhole.
+
+    Returns centerline, outer/inner wall points, area, perimeter, and P:A ratio.
+    Higher P:A ratio (>0.10) indicates better acoustic coupling.
+    """
+    spec = SpiralSoundholeSpec(
+        bout_radius_mm=req.bout_radius_mm,
+        slot_width_mm=req.slot_width_mm,
+        spiral_start_r_mm=req.spiral_start_r_mm,
+        spiral_turns=req.spiral_turns,
+        growth_rate=req.growth_rate,
+        center_x_mm=req.center_x_mm,
+        center_y_mm=req.center_y_mm,
+    )
+
+    geom = compute_spiral_geometry(spec, num_points=req.num_points)
+
+    return {
+        "spec": spec_to_dict(spec),
+        "geometry": geometry_to_dict(geom),
+        "acoustic_notes": [
+            f"P:A ratio: {geom.pa_ratio_mm_inv:.4f}/mm",
+            "Target P:A > 0.10 for good acoustic coupling" if geom.pa_ratio_mm_inv > 0.10
+            else "P:A ratio below 0.10 - consider narrower slot for better coupling",
+        ],
+    }
+
+
+@router.post(
+    "/soundhole/spiral/dxf",
+    summary="DXF R2000 export of spiral soundhole",
+    response_class=Response,
+)
+def post_spiral_soundhole_dxf(req: SpiralSoundholeRequest) -> Response:
+    """
+    Generate DXF file for spiral soundhole.
+
+    Layers:
+      - SPIRAL_CENTERLINE: Reference (not cut)
+      - SPIRAL_OUTER_WALL: Cut path
+      - SPIRAL_INNER_WALL: Cut path
+      - BOUT_REFERENCE: Upper bout arc reference
+      - DIMENSIONS: Text annotations
+    """
+    import tempfile
+    from pathlib import Path
+
+    spec = SpiralSoundholeSpec(
+        bout_radius_mm=req.bout_radius_mm,
+        slot_width_mm=req.slot_width_mm,
+        spiral_start_r_mm=req.spiral_start_r_mm,
+        spiral_turns=req.spiral_turns,
+        growth_rate=req.growth_rate,
+        center_x_mm=req.center_x_mm,
+        center_y_mm=req.center_y_mm,
+    )
+
+    with tempfile.TemporaryDirectory() as tmpdir:
+        output_path = Path(tmpdir) / "spiral_soundhole.dxf"
+        generate_spiral_dxf(spec, output_path)
+        raw = output_path.read_bytes()
+
+    return Response(
+        content=raw,
+        media_type="application/dxf",
+        headers={"Content-Disposition": 'attachment; filename="spiral_soundhole.dxf"'},
     )
 
 
