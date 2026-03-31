@@ -14,7 +14,11 @@
       "Bash(python:*)",
       "Bash(dir:*)",
       "Bash(ls -la \"C:\\Users\\thepr\\Downloads\\luthiers-toolbox\\docs\\Runs_Advisory_Integration\" 2>&1 || echo \"Directory not found\")",
-      "Bash(wc:*)"
+      "Bash(wc:*)",
+      "Bash(git rm:*)",
+      "Bash(git mv:*)",
+      "Bash(cp \"c:/Users/thepr/Downloads/Smart Guitar _DXFs/smart_guitar_front_v5.dxf\" docs/archive/instrument_references/smart_guitar/)",
+      "Bash(cp \"c:/Users/thepr/Downloads/Smart Guitar _DXFs/smart_guitar_back_v5.dxf\" docs/archive/instrument_references/smart_guitar/)"
     ]
   }
 }
