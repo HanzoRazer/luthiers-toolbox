@@ -44,11 +44,11 @@ from app.woodworking import (
     seasonal_movement,
     wood_weight,
 )
-from app.woodworking.soundhole_spiral import (
-    SpiralSoundholeSpec,
+from app.instrument_geometry.soundhole.spiral_geometry import (
+    SpiralSpec as SpiralSoundholeSpec,
     compute_spiral_geometry,
     generate_dxf as generate_spiral_dxf,
-    geometry_to_dict,
+    geo_to_dict as geometry_to_dict,
     spec_to_dict,
 )
 
