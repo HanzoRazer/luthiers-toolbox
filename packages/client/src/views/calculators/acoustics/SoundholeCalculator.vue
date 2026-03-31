@@ -41,7 +41,7 @@
         />
         <MetricCard
           label="P:A ratio"
-          :value="`${r3(geo.pa)} mm⁻¹`"
+          :value="`${r3(geo.pa)} m⁻¹`"
           :sub="paLabel"
           :accent="geo.pa > PA_THRESHOLD_HI ? '#0F6E56' : geo.pa > PA_THRESHOLD_LO ? '#BA7517' : undefined"
         />
@@ -56,6 +56,34 @@
       <div class="design-grid">
         <!-- Left: Controls -->
         <div class="card controls-card">
+          <!-- Shape selector (always visible) -->
+          <div class="shape-row">
+            <label class="shape-label">Shape</label>
+            <select
+              v-model="shape"
+              class="shape-select"
+            >
+              <option value="round">
+                Round
+              </option>
+              <option value="oval">
+                Oval
+              </option>
+              <option value="slot">
+                Single slot
+              </option>
+              <option value="dslot">
+                Double slot
+              </option>
+              <option value="fhole">
+                F-hole pair
+              </option>
+              <option value="cslot">
+                C-slot
+              </option>
+            </select>
+          </div>
+
           <!-- Tab bar -->
           <div class="tab-bar">
             <button
@@ -208,33 +236,7 @@
             v-if="dTab === 'hole'"
             class="tab-content"
           >
-            <h4>Main soundhole</h4>
-            <div class="field-group">
-              <label class="field-label">Shape</label>
-              <select
-                v-model="shape"
-                class="select-input"
-              >
-                <option value="round">
-                  Round
-                </option>
-                <option value="oval">
-                  Oval
-                </option>
-                <option value="slot">
-                  Single slot
-                </option>
-                <option value="dslot">
-                  Double slot
-                </option>
-                <option value="fhole">
-                  F-hole pair
-                </option>
-                <option value="cslot">
-                  C-slot
-                </option>
-              </select>
-            </div>
+            <h4>Main soundhole dimensions</h4>
             <template v-if="shape === 'round' || shape === 'oval'">
               <SliderRow
                 label="Diameter (in)"
@@ -314,7 +316,7 @@
               />
               <InfoRow
                 label="P:A ratio"
-                :value="`${r3(geo.pa)} mm⁻¹`"
+                :value="`${r3(geo.pa)} m⁻¹`"
                 mono
               />
               <InfoRow
@@ -1003,7 +1005,7 @@ const sideCount = ref(1)
 
 // Design sub-tab
 type DesignTab = 'alpha' | 'body' | 'hole' | 'side' | 'pa'
-const dTab = ref<DesignTab>('alpha')
+const dTab = ref<DesignTab>('hole')
 function setDTab(t: string) {
   dTab.value = t as DesignTab
 }
@@ -1513,6 +1515,35 @@ export default {
 
 .controls-card {
   /* specific styles for left panel */
+}
+
+.shape-row {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.65rem 0.85rem;
+  background: #f0f7ff;
+  border: 1px solid #c5ddf5;
+  border-radius: 8px;
+  margin-bottom: 0.75rem;
+}
+
+.shape-label {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #185FA5;
+  min-width: 3rem;
+}
+
+.shape-select {
+  flex: 1;
+  font-size: 0.9rem;
+  padding: 0.4rem 0.6rem;
+  border: 1px solid #185FA5;
+  border-radius: 6px;
+  background: #fff;
+  color: #111;
+  font-weight: 600;
 }
 
 .tab-bar {
