@@ -1,22 +1,26 @@
 <template>
-  <div class="soundhole-calculator" :style="{ padding: '1rem 0', fontFamily: 'var(--font-sans, system-ui)' }">
+  <div class="soundhole-calculator">
     <!-- Header -->
-    <div :style="{ marginBottom: '13px' }">
-      <div :style="{ fontSize: '15px', fontWeight: 700, marginBottom: '3px' }">
-        Guitar soundhole: Helmholtz + P:A calculator with builder calibration log
-      </div>
-      <div :style="{ fontSize: '12px', color: 'var(--color-text-secondary, #555)' }">
+    <div class="header">
+      <h2>Guitar soundhole: Helmholtz + P:A calculator with builder calibration log</h2>
+      <p class="subtitle">
         Two modes: Design (Gore priors + your data) and Calibration (tap-test a build, fit α, save to log).
         α is a system property — only measurement gives you the right value for your instrument.
-      </div>
+      </p>
     </div>
 
     <!-- Mode switcher -->
-    <div :style="{ display: 'flex', gap: '6px', marginBottom: '14px' }">
-      <button :style="modeBtn(mode === 'design')" @click="mode = 'design'">
+    <div class="mode-switcher">
+      <button
+        :class="['mode-btn', { active: mode === 'design' }]"
+        @click="mode = 'design'"
+      >
         Design mode — explore geometry
       </button>
-      <button :style="modeBtn(mode === 'cal')" @click="mode = 'cal'">
+      <button
+        :class="['mode-btn', { active: mode === 'cal' }]"
+        @click="mode = 'cal'"
+      >
         Calibration mode — record a build
       </button>
     </div>
@@ -24,12 +28,20 @@
     <!-- DESIGN MODE -->
     <template v-if="mode === 'design'">
       <!-- Metric strip -->
-      <div :style="{ display: 'grid', gridTemplateColumns: 'repeat(4,minmax(0,1fr))', gap: '10px', marginBottom: '12px' }">
-        <MetricCard label="Main hole A0" :value="`${r1(mainHz)} Hz`" sub="no side port" />
-        <MetricCard label="Combined A0" :value="`${r1(combHz)} Hz`" sub="with side port" />
+      <div class="metric-strip">
+        <MetricCard
+          label="Main hole A0"
+          :value="`${r1(mainHz)} Hz`"
+          sub="no side port"
+        />
+        <MetricCard
+          label="Combined A0"
+          :value="`${r1(combHz)} Hz`"
+          sub="with side port"
+        />
         <MetricCard
           label="P:A ratio"
-          :value="`${r3(geo.pa)} m⁻¹`"
+          :value="`${r3(geo.pa)} mm⁻¹`"
           :sub="paLabel"
           :accent="geo.pa > PA_THRESHOLD_HI ? '#0F6E56' : geo.pa > PA_THRESHOLD_LO ? '#BA7517' : undefined"
         />
@@ -41,31 +53,38 @@
         />
       </div>
 
-      <div :style="{ display: 'grid', gridTemplateColumns: 'minmax(0,1fr) minmax(0,1fr)', gap: '12px', marginBottom: '12px' }">
-        <!-- Left: controls -->
-        <div :style="cardStyle">
+      <div class="design-grid">
+        <!-- Left: Controls -->
+        <div class="card controls-card">
           <!-- Tab bar -->
-          <div :style="{ display: 'flex', gap: '3px', marginBottom: '11px', borderBottom: '0.5px solid var(--color-border-tertiary, #ddd)', paddingBottom: '2px', flexWrap: 'wrap' }">
+          <div class="tab-bar">
             <button
-              v-for="t in ['alpha','body','hole','side','pa']"
+              v-for="t in ['alpha', 'body', 'hole', 'side', 'pa']"
               :key="t"
-              :style="tabStyle(dTab === t)"
-              @click="dTab = t"
+              :class="['tab-btn', { active: dTab === t }]"
+              @click="setDTab(t)"
             >
               {{ t === 'alpha' ? 'α source' : t === 'pa' ? 'P:A data' : t.charAt(0).toUpperCase() + t.slice(1) }}
             </button>
           </div>
 
-          <!-- α source tab -->
-          <div v-if="dTab === 'alpha'">
-            <div :style="{ fontSize: '13px', fontWeight: 600, marginBottom: '8px' }">Gore end-correction factor α</div>
-            <div :style="priNote">
+          <!-- Alpha Source Tab -->
+          <div
+            v-if="dTab === 'alpha'"
+            class="tab-content"
+          >
+            <h4>Gore end-correction factor α</h4>
+            <div class="info-note">
               α is a system property — body geometry, soundhole position, top compliance, and bracing all affect it simultaneously.
               No material table can give you α. Use Gore priors as starting estimates, then calibrate from measurement.
             </div>
-            <div :style="{ background: 'var(--color-background-secondary, #f5f5f5)', borderRadius: '8px', padding: '10px 12px', marginBottom: '10px' }">
-              <div :style="{ fontSize: '24px', fontWeight: 700, color: '#185FA5' }">{{ alpha.toFixed(2) }}</div>
-              <div :style="{ fontSize: '11px', color: 'var(--color-text-secondary, #555)', marginTop: '2px' }">{{ alphaSource }}</div>
+            <div class="alpha-display">
+              <div class="alpha-value">
+                {{ alpha.toFixed(2) }}
+              </div>
+              <div class="alpha-source">
+                {{ alphaSource }}
+              </div>
             </div>
             <SliderRow
               label="Set α manually"
@@ -74,182 +93,397 @@
               :max="2.20"
               :step="0.01"
               :value="alpha"
+              :display="`${alpha.toFixed(2)}`"
               @update="v => { alpha = v; alphaSource = 'Manual'; }"
-              :display="alpha.toFixed(2)"
             />
 
-            <div :style="{ fontSize: '12px', fontWeight: 600, marginTop: '10px', marginBottom: '6px' }">Gore published priors</div>
-            <div :style="{ display: 'flex', gap: '5px', flexWrap: 'wrap', marginBottom: '10px' }">
+            <h5>Gore published priors</h5>
+            <div class="prior-badges">
               <button
                 v-for="p in GORE_PRIORS"
                 :key="p.label"
+                class="prior-badge gore"
                 @click="applyGore(p)"
-                :style="priorBadge({ background: '#E6F1FB', color: '#0C447C' })"
               >
                 {{ p.label }} {{ p.alpha }}
               </button>
             </div>
 
             <template v-if="userPriors.length > 0">
-              <div :style="{ fontSize: '12px', fontWeight: 600, marginBottom: '6px' }">Your measured priors</div>
-              <div :style="{ display: 'flex', gap: '5px', flexWrap: 'wrap' }">
+              <h5>Your measured priors</h5>
+              <div class="prior-badges">
                 <button
                   v-for="p in userPriors"
                   :key="p.label"
+                  class="prior-badge user"
                   @click="applyUserPrior(p)"
-                  :style="priorBadge({ background: '#E1F5EE', color: '#085041' })"
                 >
                   {{ p.label }} {{ p.alpha }} (n={{ p.n }})
                 </button>
               </div>
             </template>
-            <div v-else :style="{ fontSize: '11px', color: 'var(--color-text-tertiary, #aaa)', marginTop: '6px' }">
+            <div
+              v-else
+              class="no-data"
+            >
               No calibration data yet. Add builds in Calibration mode.
             </div>
 
-            <div :style="{ marginTop: '10px' }">
-              <InfoRow label="Rayleigh rigid baffle (theory)" value="1.70" mono />
-              <InfoRow label="Gore dreadnought (measured)" value="1.63" mono />
-              <InfoRow label="Gore typical range" value="1.60 – 1.80" mono />
-              <InfoRow label="Leff at current α" :value="`${r1(geo.leff * 1000)} mm`" mono />
+            <div class="info-rows">
+              <InfoRow
+                label="Rayleigh rigid baffle (theory)"
+                value="1.70"
+                mono
+              />
+              <InfoRow
+                label="Gore dreadnought (measured)"
+                value="1.63"
+                mono
+              />
+              <InfoRow
+                label="Gore typical range"
+                value="1.60 – 1.80"
+                mono
+              />
+              <InfoRow
+                :label="`Leff at current α`"
+                :value="`${r1(geo.leff * 1000)} mm`"
+                mono
+              />
             </div>
           </div>
 
-          <!-- Body tab -->
-          <div v-if="dTab === 'body'">
-            <div :style="{ fontSize: '13px', fontWeight: 600, marginBottom: '9px' }">Body</div>
-            <div :style="{ marginBottom: '9px' }">
-              <label :style="{ fontSize: '12px', color: 'var(--color-text-secondary, #555)', display: 'block', marginBottom: '3px' }">Guitar type</label>
-              <select :value="volL" @change="handleBodyTypeChange" :style="{ ...textInput, width: '100%' }">
-                <option v-for="p in GORE_PRIORS.filter(p => p.label !== 'Rayleigh')" :key="p.label" :value="p.vol">{{ p.label }}</option>
+          <!-- Body Tab -->
+          <div
+            v-if="dTab === 'body'"
+            class="tab-content"
+          >
+            <h4>Body</h4>
+            <div class="field-group">
+              <label class="field-label">Guitar type</label>
+              <select
+                v-model.number="volL"
+                class="select-input"
+                @change="onGuitarTypeChange"
+              >
+                <option
+                  v-for="p in GORE_PRIORS.filter(g => g.label !== 'Rayleigh')"
+                  :key="p.label"
+                  :value="p.vol"
+                >
+                  {{ p.label }}
+                </option>
               </select>
             </div>
-            <SliderRow label="Body volume (L)" id="vol" :min="8" :max="35" :step="0.5" :value="volL" @update="volL = $event" :display="`${r1(volL)} L`" />
-            <SliderRow label="Target A0 reference (Hz)" id="tgt" :min="70" :max="140" :step="1" :value="targetHz" @update="targetHz = $event" :display="`${ri(targetHz)} Hz`" />
-            <div :style="{ marginTop: '8px' }">
-              <InfoRow label="Volume (m³)" :value="`${(volL * L2M).toFixed(3)} m³`" />
+            <SliderRow
+              label="Body volume (L)"
+              id="vol"
+              :min="8"
+              :max="35"
+              :step="0.5"
+              :value="volL"
+              :display="`${r1(volL)} L`"
+              @update="v => volL = v"
+            />
+            <SliderRow
+              label="Target A0 reference (Hz)"
+              id="tgt"
+              :min="70"
+              :max="140"
+              :step="1"
+              :value="targetHz"
+              :display="`${ri(targetHz)} Hz`"
+              @update="v => targetHz = v"
+            />
+            <div class="info-rows">
+              <InfoRow
+                label="Volume (m³)"
+                :value="`${(volL * L2M).toFixed(3)} m³`"
+              />
             </div>
           </div>
 
-          <!-- Hole tab -->
-          <div v-if="dTab === 'hole'">
-            <div :style="{ fontSize: '13px', fontWeight: 600, marginBottom: '9px' }">Main soundhole</div>
-            <div :style="{ marginBottom: '9px' }">
-              <label :style="fieldLabel">Shape</label>
-              <select v-model="shape" :style="textInput">
-                <option value="round">Round</option>
-                <option value="oval">Oval</option>
-                <option value="slot">Single slot</option>
-                <option value="dslot">Double slot</option>
-                <option value="fhole">F-hole pair</option>
-                <option value="cslot">C-slot</option>
+          <!-- Hole Tab -->
+          <div
+            v-if="dTab === 'hole'"
+            class="tab-content"
+          >
+            <h4>Main soundhole</h4>
+            <div class="field-group">
+              <label class="field-label">Shape</label>
+              <select
+                v-model="shape"
+                class="select-input"
+              >
+                <option value="round">
+                  Round
+                </option>
+                <option value="oval">
+                  Oval
+                </option>
+                <option value="slot">
+                  Single slot
+                </option>
+                <option value="dslot">
+                  Double slot
+                </option>
+                <option value="fhole">
+                  F-hole pair
+                </option>
+                <option value="cslot">
+                  C-slot
+                </option>
               </select>
             </div>
             <template v-if="shape === 'round' || shape === 'oval'">
-              <SliderRow label="Diameter (in)" id="diam" :min="2.5" :max="5.5" :step="0.05" :value="diamIn" @update="diamIn = $event" :display="`${diamIn.toFixed(2)} in`" />
+              <SliderRow
+                label="Diameter (in)"
+                id="diam"
+                :min="2.5"
+                :max="5.5"
+                :step="0.05"
+                :value="diamIn"
+                :display="`${diamIn.toFixed(2)} in`"
+                @update="v => diamIn = v"
+              />
             </template>
-            <template v-if="shape === 'slot' || shape === 'dslot' || shape === 'cslot'">
-              <SliderRow label="Length (mm)" id="slen" :min="40" :max="420" :step="5" :value="slotLenMm" @update="slotLenMm = $event" :display="`${ri(slotLenMm)} mm`" />
-              <SliderRow label="Width (mm)" id="swid" :min="5" :max="50" :step="1" :value="slotWidMm" @update="slotWidMm = $event" :display="`${ri(slotWidMm)} mm`" />
+            <template v-if="['slot', 'dslot', 'cslot'].includes(shape)">
+              <SliderRow
+                label="Length (mm)"
+                id="slen"
+                :min="40"
+                :max="420"
+                :step="5"
+                :value="slotLenMm"
+                :display="`${ri(slotLenMm)} mm`"
+                @update="v => slotLenMm = v"
+              />
+              <SliderRow
+                label="Width (mm)"
+                id="swid"
+                :min="5"
+                :max="50"
+                :step="1"
+                :value="slotWidMm"
+                :display="`${ri(slotWidMm)} mm`"
+                @update="v => slotWidMm = v"
+              />
             </template>
             <template v-if="shape === 'fhole'">
-              <SliderRow label="F-hole length (mm)" id="flen" :min="60" :max="130" :step="2" :value="fholeLenMm" @update="fholeLenMm = $event" :display="`${ri(fholeLenMm)} mm`" />
-              <SliderRow label="Waist width (mm)" id="fwid" :min="3" :max="14" :step="0.5" :value="fholeWidMm" @update="fholeWidMm = $event" :display="`${fholeWidMm.toFixed(1)} mm`" />
+              <SliderRow
+                label="F-hole length (mm)"
+                id="flen"
+                :min="60"
+                :max="130"
+                :step="2"
+                :value="fholeLenMm"
+                :display="`${ri(fholeLenMm)} mm`"
+                @update="v => fholeLenMm = v"
+              />
+              <SliderRow
+                label="Waist width (mm)"
+                id="fwid"
+                :min="3"
+                :max="14"
+                :step="0.5"
+                :value="fholeWidMm"
+                :display="`${fholeWidMm.toFixed(1)} mm`"
+                @update="v => fholeWidMm = v"
+              />
             </template>
-            <SliderRow label="Top thickness (mm)" id="topt" :min="2" :max="5.5" :step="0.1" :value="topThickMm" @update="topThickMm = $event" :display="`${r1(topThickMm)} mm`" />
-            <div :style="{ marginTop: '8px' }">
-              <InfoRow label="Effective area" :value="`${r2(geo.area * 1e4)} cm²`" mono />
-              <InfoRow label="Perimeter" :value="`${r1(geo.perim * 1000)} mm`" mono />
-              <InfoRow label="P:A ratio" :value="`${r3(geo.pa)} m⁻¹`" mono />
-              <InfoRow label="Leff" :value="`${r1(geo.leff * 1000)} mm`" mono />
+            <SliderRow
+              label="Top thickness (mm)"
+              id="topt"
+              :min="2"
+              :max="5.5"
+              :step="0.1"
+              :value="topThickMm"
+              :display="`${r1(topThickMm)} mm`"
+              @update="v => topThickMm = v"
+            />
+            <div class="info-rows">
+              <InfoRow
+                label="Effective area"
+                :value="`${r2(geo.area * 1e4)} cm²`"
+                mono
+              />
+              <InfoRow
+                label="Perimeter"
+                :value="`${r1(geo.perim * 1000)} mm`"
+                mono
+              />
+              <InfoRow
+                label="P:A ratio"
+                :value="`${r3(geo.pa)} mm⁻¹`"
+                mono
+              />
+              <InfoRow
+                label="Leff"
+                :value="`${r1(geo.leff * 1000)} mm`"
+                mono
+              />
             </div>
           </div>
 
-          <!-- Side tab -->
-          <div v-if="dTab === 'side'">
-            <div :style="{ fontSize: '13px', fontWeight: 600, marginBottom: '9px' }">Side soundport</div>
-            <SliderRow label="Port diameter (mm)" id="sided" :min="0" :max="80" :step="1" :value="sideDmm" @update="sideDmm = $event" :display="`${ri(sideDmm)} mm`" />
-            <SliderRow label="Side thickness (mm)" id="sidet" :min="1.5" :max="5" :step="0.1" :value="sideThickMm" @update="sideThickMm = $event" :display="`${r1(sideThickMm)} mm`" />
-            <div :style="{ marginBottom: '8px' }">
-              <label :style="fieldLabel">Count</label>
-              <select v-model.number="sideCount" :style="textInput">
-                <option :value="1">1 port</option>
-                <option :value="2">2 ports</option>
+          <!-- Side Tab -->
+          <div
+            v-if="dTab === 'side'"
+            class="tab-content"
+          >
+            <h4>Side soundport</h4>
+            <SliderRow
+              label="Port diameter (mm)"
+              id="sided"
+              :min="0"
+              :max="80"
+              :step="1"
+              :value="sideDmm"
+              :display="`${ri(sideDmm)} mm`"
+              @update="v => sideDmm = v"
+            />
+            <SliderRow
+              label="Side thickness (mm)"
+              id="sidet"
+              :min="1.5"
+              :max="5"
+              :step="0.1"
+              :value="sideThickMm"
+              :display="`${r1(sideThickMm)} mm`"
+              @update="v => sideThickMm = v"
+            />
+            <div class="field-group">
+              <label class="field-label">Count</label>
+              <select
+                v-model.number="sideCount"
+                class="select-input"
+              >
+                <option :value="1">
+                  1 port
+                </option>
+                <option :value="2">
+                  2 ports
+                </option>
               </select>
             </div>
-            <div :style="{ marginTop: '8px' }">
-              <InfoRow label="Port area" :value="`${r2(sideA * 1e4)} cm²`" mono />
-              <InfoRow label="A0 shift" :value="`${shift >= 0 ? '+' : ''}${r1(shift)} Hz`" mono />
-              <InfoRow label="Port share of total" :value="`${r1(share)}%`" mono />
-              <InfoRow label="φ-based diameter" :value="`${r1((diamIn * 25.4) / 1.618)} mm`" mono />
-              <InfoRow label="Note" value="diameter÷φ ≠ area÷φ (area scales r²)" />
+            <div class="info-rows">
+              <InfoRow
+                label="Port area"
+                :value="`${r2(sideA * 1e4)} cm²`"
+                mono
+              />
+              <InfoRow
+                label="A0 shift"
+                :value="`${shift >= 0 ? '+' : ''}${r1(shift)} Hz`"
+                mono
+              />
+              <InfoRow
+                label="Port share of total"
+                :value="`${r1(share)}%`"
+                mono
+              />
+              <InfoRow
+                label="φ-based diameter"
+                :value="`${r1((diamIn * 25.4) / 1.618)} mm`"
+                mono
+              />
+              <InfoRow
+                label="Note"
+                value="diameter÷φ ≠ area÷φ (area scales r²)"
+              />
             </div>
           </div>
 
-          <!-- P:A data tab -->
-          <div v-if="dTab === 'pa'">
-            <div :style="{ fontSize: '13px', fontWeight: 600, marginBottom: '6px' }">Williams (2019) P:A experimental data</div>
-            <div :style="{ fontSize: '11px', color: 'var(--color-text-secondary, #555)', marginBottom: '8px' }">
+          <!-- P:A Data Tab -->
+          <div
+            v-if="dTab === 'pa'"
+            class="tab-content"
+          >
+            <h4>Williams (2019) P:A experimental data</h4>
+            <p class="pa-note">
               All slots equal-area to R45.4mm round. Rigid parlour cavity. R² = 0.953.
-            </div>
-            <table :style="{ width: '100%', fontSize: '11px', borderCollapse: 'collapse' }">
+            </p>
+            <table class="pa-table">
               <thead>
-                <tr :style="{ color: 'var(--color-text-secondary, #666)', borderBottom: '0.5px solid var(--color-border-tertiary, #ddd)' }">
-                  <td :style="{ padding: '2px 4px' }">Slot</td>
-                  <td>Dims (mm)</td>
-                  <td>P:A</td>
-                  <td>Gain</td>
+                <tr>
+                  <th>Slot</th>
+                  <th>Dims (mm)</th>
+                  <th>P:A</th>
+                  <th>Gain</th>
                 </tr>
               </thead>
               <tbody>
-                <tr v-for="[s, d, pa, g] in paTableData" :key="s" :style="{ borderBottom: '0.5px solid var(--color-border-tertiary, #eee)' }">
-                  <td :style="{ padding: '3px 4px' }">{{ s }}</td>
+                <tr
+                  v-for="[s, d, pa, g] in PA_DATA"
+                  :key="s"
+                >
+                  <td>{{ s }}</td>
                   <td>{{ d }}</td>
-                  <td :style="{ fontFamily: 'monospace' }">{{ pa }}</td>
+                  <td class="mono">
+                    {{ pa }}
+                  </td>
                   <td>
-                    <span :style="{
-                      fontSize: '10px', padding: '1px 5px', borderRadius: '4px', fontWeight: 600,
-                      background: g.includes('+6') || g.includes('+8') ? '#E1F5EE' : g.includes('+3') ? '#FAEEDA' : '#F1EFE8',
-                      color: g.includes('+6') || g.includes('+8') ? '#085041' : g.includes('+3') ? '#633806' : '#444'
-                    }">{{ g }}</span>
+                    <span :class="['gain-badge', gainClass(g)]">{{ g }}</span>
                   </td>
                 </tr>
               </tbody>
             </table>
-            <div :style="{ fontSize: '10px', color: 'var(--color-text-tertiary, #999)', marginTop: '6px', lineHeight: 1.5 }">
+            <p class="pa-footer">
               High P:A shifts tone toward treble. Double slot also frees upper bout as live soundboard area.
               Source: mwguitars.com.au Parts 7–8.
-            </div>
+            </p>
           </div>
         </div>
 
-        <!-- Right: gauge + curve -->
-        <div>
-          <div :style="{ ...cardStyle, marginBottom: '12px' }">
+        <!-- Right: Gauge + Curve -->
+        <div class="right-column">
+          <div class="card">
             <PAGauge :pa="geo.pa" />
           </div>
-          <div :style="{ ...cardStyle, marginBottom: '12px' }">
-            <div :style="{ fontSize: '13px', fontWeight: 600, marginBottom: '6px' }">A0 vs side-port scale</div>
-            <CurveChart :data="curve" :target="targetHz" />
-            <div :style="{ fontSize: '10px', color: 'var(--color-text-tertiary, #aaa)', marginTop: '3px' }">
-              Port scaled 70–130%. Dashed = target A0.
+          <div class="card">
+            <h4>A0 vs side-port scale</h4>
+            <div class="chart-container">
+              <canvas ref="chartCanvas" />
             </div>
+            <p class="chart-note">
+              Port scaled 70–130%. Dashed = target A0.
+            </p>
           </div>
-          <div :style="cardStyle">
-            <div :style="{ fontSize: '13px', fontWeight: 600, marginBottom: '6px' }">Geometry summary</div>
-            <InfoRow label="Main hole A0" :value="`${r1(mainHz)} Hz`" mono />
-            <InfoRow label="Combined A0" :value="`${r1(combHz)} Hz`" mono />
-            <InfoRow label="Shift from port" :value="`${shift >= 0 ? '+' : ''}${r1(shift)} Hz`" mono />
-            <InfoRow label="Efficiency est." :value="`+${ri((geo.eff - 1) * 100)}%`" mono />
-            <InfoRow label="Tone shift" :value="geo.tone" />
+          <div class="card">
+            <h4>Geometry summary</h4>
+            <div class="info-rows">
+              <InfoRow
+                label="Main hole A0"
+                :value="`${r1(mainHz)} Hz`"
+                mono
+              />
+              <InfoRow
+                label="Combined A0"
+                :value="`${r1(combHz)} Hz`"
+                mono
+              />
+              <InfoRow
+                label="Shift from port"
+                :value="`${shift >= 0 ? '+' : ''}${r1(shift)} Hz`"
+                mono
+              />
+              <InfoRow
+                label="Efficiency est."
+                :value="`+${ri((geo.eff - 1) * 100)}%`"
+                mono
+              />
+              <InfoRow
+                label="Tone shift"
+                :value="geo.tone"
+              />
+            </div>
           </div>
         </div>
       </div>
 
       <!-- Verdict -->
-      <div :style="cardStyle">
-        <div :style="{ fontSize: '13px', fontWeight: 600, marginBottom: '6px' }">Design verdict</div>
-        <div :style="{ fontSize: '12px', lineHeight: 1.7, padding: '9px 12px', background: 'var(--color-background-secondary, #f5f5f5)', borderRadius: '8px', color: 'var(--color-text-secondary, #555)' }">
+      <div class="card verdict-card">
+        <h4>Design verdict</h4>
+        <div class="verdict-text">
           {{ verdictText }}
         </div>
       </div>
@@ -257,159 +491,259 @@
 
     <!-- CALIBRATION MODE -->
     <template v-if="mode === 'cal'">
-      <div :style="{ display: 'grid', gridTemplateColumns: 'minmax(0,1fr) minmax(0,1fr)', gap: '12px' }">
+      <div class="cal-grid">
         <!-- Form -->
-        <div :style="cardStyle">
-          <div :style="{ fontSize: '13px', fontWeight: 600, marginBottom: '8px' }">Record a build</div>
-          <div :style="priNote">
+        <div class="card">
+          <h4>Record a build</h4>
+          <div class="info-note">
             Tap your completed instrument. Use Audacity → Analyze → Plot Spectrum to find A0
             (lowest body resonance peak, 80–130 Hz range). Enter all fields below.
             The calculator fits α from your measurement — no assumptions.
           </div>
 
-          <div :style="{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', marginBottom: '8px' }">
-            <div :style="fieldGroup">
-              <label :style="fieldLabel">Build ID / instrument name</label>
-              <input :style="textInput" v-model="cId" placeholder="e.g. OM-007" />
+          <div class="form-row">
+            <div class="field-group">
+              <label class="field-label">Build ID / instrument name</label>
+              <input
+                v-model="cId"
+                type="text"
+                class="text-input"
+                placeholder="e.g. OM-007"
+              >
             </div>
-            <div :style="fieldGroup">
-              <label :style="fieldLabel">Date measured</label>
-              <input :style="textInput" type="text" v-model="cDate" />
+            <div class="field-group">
+              <label class="field-label">Date measured</label>
+              <input
+                v-model="cDate"
+                type="text"
+                class="text-input"
+              >
             </div>
           </div>
 
-          <div :style="{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', marginBottom: '8px' }">
-            <div :style="fieldGroup">
-              <label :style="fieldLabel">Body type</label>
-              <select :style="textInput" v-model="cBtype" @change="handleCalBodyTypeChange">
-                <option v-for="t in ['dread','om','jumbo','parlour','classical','custom']" :key="t" :value="t">{{ t }}</option>
+          <div class="form-row">
+            <div class="field-group">
+              <label class="field-label">Body type</label>
+              <select
+                v-model="cBtype"
+                class="select-input"
+                @change="onCalBodyTypeChange"
+              >
+                <option
+                  v-for="t in ['dread', 'om', 'jumbo', 'parlour', 'classical', 'custom']"
+                  :key="t"
+                  :value="t"
+                >
+                  {{ t }}
+                </option>
               </select>
             </div>
-            <div :style="fieldGroup">
-              <label :style="fieldLabel">Body volume (L)</label>
-              <input :style="textInput" type="number" v-model.number="cVolL" min="8" max="35" step="0.5" />
+            <div class="field-group">
+              <label class="field-label">Body volume (L)</label>
+              <input
+                v-model.number="cVolL"
+                type="number"
+                class="text-input"
+                min="8"
+                max="35"
+                step="0.5"
+              >
             </div>
           </div>
 
-          <div :style="{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', marginBottom: '8px' }">
-            <div :style="fieldGroup">
-              <label :style="fieldLabel">Top wood species</label>
-              <input :style="textInput" v-model="cWood" placeholder="e.g. Engelmann spruce" />
+          <div class="form-row">
+            <div class="field-group">
+              <label class="field-label">Top wood species</label>
+              <input
+                v-model="cWood"
+                type="text"
+                class="text-input"
+                placeholder="e.g. Engelmann spruce"
+              >
             </div>
-            <div :style="fieldGroup">
-              <label :style="fieldLabel">Bracing style</label>
-              <input :style="textInput" v-model="cBrace" placeholder="e.g. Scalloped X" />
+            <div class="field-group">
+              <label class="field-label">Bracing style</label>
+              <input
+                v-model="cBrace"
+                type="text"
+                class="text-input"
+                placeholder="e.g. Scalloped X"
+              >
             </div>
           </div>
 
-          <div :style="{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', marginBottom: '8px' }">
-            <div :style="fieldGroup">
-              <label :style="fieldLabel">Soundhole shape</label>
-              <select :style="textInput" v-model="cShape">
-                <option value="round">Round</option>
-                <option value="slot">Slot</option>
-                <option value="dslot">Double slot</option>
-                <option value="fhole">F-hole pair</option>
+          <div class="form-row">
+            <div class="field-group">
+              <label class="field-label">Soundhole shape</label>
+              <select
+                v-model="cShape"
+                class="select-input"
+              >
+                <option value="round">
+                  Round
+                </option>
+                <option value="slot">
+                  Slot
+                </option>
+                <option value="dslot">
+                  Double slot
+                </option>
+                <option value="fhole">
+                  F-hole pair
+                </option>
               </select>
             </div>
-            <div :style="fieldGroup">
-              <label :style="fieldLabel">Hole diameter or length (mm)</label>
-              <input :style="textInput" type="number" v-model.number="cDimMm" step="0.5" />
+            <div class="field-group">
+              <label class="field-label">Hole diameter or length (mm)</label>
+              <input
+                v-model.number="cDimMm"
+                type="number"
+                class="text-input"
+                step="0.5"
+              >
             </div>
           </div>
 
-          <div :style="{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', marginBottom: '8px' }">
-            <div :style="fieldGroup">
-              <label :style="fieldLabel">Top thickness at hole (mm)</label>
-              <input :style="textInput" type="number" v-model.number="cTopT" step="0.1" />
+          <div class="form-row">
+            <div class="field-group">
+              <label class="field-label">Top thickness at hole (mm)</label>
+              <input
+                v-model.number="cTopT"
+                type="number"
+                class="text-input"
+                step="0.1"
+              >
             </div>
-            <div :style="fieldGroup">
-              <label :style="fieldLabel">Measured A0 (Hz) ← key field</label>
-              <input :style="{ ...textInput, fontWeight: 700, fontSize: '14px' }" type="number" v-model.number="cA0" step="0.5" />
+            <div class="field-group">
+              <label class="field-label key-field">Measured A0 (Hz) ← key field</label>
+              <input
+                v-model.number="cA0"
+                type="number"
+                class="text-input key-input"
+                step="0.5"
+              >
             </div>
           </div>
 
-          <div :style="{ ...fieldGroup, marginBottom: '10px' }">
-            <label :style="fieldLabel">Notes (graduation, nut width, anomalies)</label>
-            <textarea :style="{ ...textInput, resize: 'vertical' }" rows="2" v-model="cNotes"
-              placeholder="e.g. Top 2.7mm edges, 3.1mm center. Light scalloped X." />
+          <div class="field-group full-width">
+            <label class="field-label">Notes (graduation, nut width, anomalies)</label>
+            <textarea
+              v-model="cNotes"
+              class="text-input textarea"
+              rows="2"
+              placeholder="e.g. Top 2.7mm edges, 3.1mm center. Light scalloped X."
+            />
           </div>
 
           <!-- Fitted results -->
-          <div v-if="calFit" :style="{ ...cardStyle, background: 'var(--color-background-secondary, #f5f5f5)', marginBottom: '10px' }">
-            <div :style="{ fontSize: '12px', fontWeight: 600, marginBottom: '8px' }">Fitted values</div>
-            <div :style="{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '8px', marginBottom: '8px' }">
-              <div :style="{ textAlign: 'center', background: 'var(--color-background-primary, #fff)', borderRadius: '6px', padding: '7px 4px' }">
-                <div :style="{ fontSize: '16px', fontWeight: 700 }">{{ cA0.toFixed(1) }}</div>
-                <div :style="{ fontSize: '10px', color: 'var(--color-text-secondary, #666)' }">Hz measured A0</div>
+          <div
+            v-if="calFit"
+            class="fitted-results"
+          >
+            <h5>Fitted values</h5>
+            <div class="fitted-grid">
+              <div class="fitted-item">
+                <div class="fitted-value">
+                  {{ cA0.toFixed(1) }}
+                </div>
+                <div class="fitted-label">
+                  Hz measured A0
+                </div>
               </div>
-              <div :style="{ textAlign: 'center', background: 'var(--color-background-primary, #fff)', borderRadius: '6px', padding: '7px 4px' }">
-                <div :style="{ fontSize: '16px', fontWeight: 700, color: '#0F6E56' }">{{ r2(calFit.alpha) }}</div>
-                <div :style="{ fontSize: '10px', color: 'var(--color-text-secondary, #666)' }">fitted α</div>
+              <div class="fitted-item">
+                <div class="fitted-value alpha">
+                  {{ r2(calFit.alpha) }}
+                </div>
+                <div class="fitted-label">
+                  fitted α
+                </div>
               </div>
-              <div :style="{ textAlign: 'center', background: 'var(--color-background-primary, #fff)', borderRadius: '6px', padding: '7px 4px' }">
-                <div :style="{ fontSize: '16px', fontWeight: 700 }">{{ r1(calFit.leff * 1000) }}</div>
-                <div :style="{ fontSize: '10px', color: 'var(--color-text-secondary, #666)' }">mm Leff</div>
+              <div class="fitted-item">
+                <div class="fitted-value">
+                  {{ r1(calFit.leff * 1000) }}
+                </div>
+                <div class="fitted-label">
+                  mm Leff
+                </div>
               </div>
             </div>
-            <div :style="{ fontSize: '11px', color: 'var(--color-text-secondary, #555)' }">
+            <div class="fitted-interp">
               {{ interpAlpha(calFit.alpha) }}
             </div>
           </div>
 
-          <button @click="saveEntry" :style="{
-            width: '100%', padding: '9px', fontSize: '13px', fontWeight: 600,
-            borderRadius: '8px', border: '0.5px solid var(--color-border-secondary, #ccc)',
-            background: 'var(--color-background-primary, #fff)', cursor: 'pointer'
-          }">
+          <button
+            class="save-btn"
+            @click="saveEntry"
+          >
             Save to calibration log
           </button>
-          <div v-if="saveMsg" :style="{ fontSize: '11px', color: '#0F6E56', marginTop: '5px' }">{{ saveMsg }}</div>
+          <div
+            v-if="saveMsg"
+            class="save-msg"
+          >
+            {{ saveMsg }}
+          </div>
         </div>
 
         <!-- Log -->
-        <div :style="cardStyle">
-          <div :style="{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: '10px' }">
-            <div :style="{ fontSize: '13px', fontWeight: 600 }">Calibration log</div>
-            <span :style="{ fontSize: '11px', color: 'var(--color-text-secondary, #666)' }">
-              {{ log.length }} {{ log.length === 1 ? 'entry' : 'entries' }}
-            </span>
+        <div class="card">
+          <div class="log-header">
+            <h4>Calibration log</h4>
+            <span class="log-count">{{ log.length }} {{ log.length === 1 ? 'entry' : 'entries' }}</span>
           </div>
 
-          <div v-if="logStats" :style="{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '8px', marginBottom: '10px' }">
-            <div :style="{ textAlign: 'center', background: 'var(--color-background-secondary, #f5f5f5)', borderRadius: '6px', padding: '6px 4px' }">
-              <div :style="{ fontSize: '14px', fontWeight: 700 }">{{ logStats.min }}</div>
-              <div :style="{ fontSize: '10px', color: 'var(--color-text-secondary, #666)' }">α min</div>
+          <div
+            v-if="logStats"
+            class="log-stats"
+          >
+            <div class="stat-item">
+              <div class="stat-value">
+                {{ logStats.min }}
+              </div>
+              <div class="stat-label">
+                α min
+              </div>
             </div>
-            <div :style="{ textAlign: 'center', background: 'var(--color-background-secondary, #f5f5f5)', borderRadius: '6px', padding: '6px 4px' }">
-              <div :style="{ fontSize: '14px', fontWeight: 700 }">{{ logStats.mean }}</div>
-              <div :style="{ fontSize: '10px', color: 'var(--color-text-secondary, #666)' }">α mean</div>
+            <div class="stat-item">
+              <div class="stat-value">
+                {{ logStats.mean }}
+              </div>
+              <div class="stat-label">
+                α mean
+              </div>
             </div>
-            <div :style="{ textAlign: 'center', background: 'var(--color-background-secondary, #f5f5f5)', borderRadius: '6px', padding: '6px 4px' }">
-              <div :style="{ fontSize: '14px', fontWeight: 700 }">{{ logStats.max }}</div>
-              <div :style="{ fontSize: '10px', color: 'var(--color-text-secondary, #666)' }">α max</div>
+            <div class="stat-item">
+              <div class="stat-value">
+                {{ logStats.max }}
+              </div>
+              <div class="stat-label">
+                α max
+              </div>
             </div>
           </div>
 
-          <div :style="{ maxHeight: '480px', overflowY: 'auto' }">
-            <div v-if="log.length === 0" :style="{ textAlign: 'center', padding: '32px', color: 'var(--color-text-tertiary, #aaa)', fontSize: '12px' }">
+          <div class="log-entries">
+            <div
+              v-if="log.length === 0"
+              class="no-entries"
+            >
               No entries yet. Record your first build on the left.
             </div>
-            <template v-else>
-              <LogEntry
-                v-for="entry in [...log].reverse()"
-                :key="entry.ts"
-                :entry="entry"
-                @use="useLogEntry"
-                @delete="deleteEntry"
-              />
-            </template>
+            <LogEntry
+              v-for="entry in [...log].reverse()"
+              :key="entry.ts"
+              :entry="entry"
+              @use="useLogEntry"
+              @delete="deleteEntry"
+            />
           </div>
 
-          <button v-if="log.length > 0" @click="clearLog" :style="{
-            marginTop: '10px', fontSize: '11px', color: '#A32D2D',
-            background: 'none', border: 'none', cursor: 'pointer', padding: 0
-          }">
+          <button
+            v-if="log.length > 0"
+            class="clear-btn"
+            @click="clearLog"
+          >
             Clear all entries
           </button>
         </div>
@@ -419,29 +753,30 @@
 </template>
 
 <script setup lang="ts">
-/**
- * SoundholeCalculator.vue
- * Guitar Soundhole Helmholtz + P:A Ratio Calculator with Builder Calibration Log
- *
- * Physics sources:
- *   Gore & Gilet, Contemporary Acoustic Guitar (2011)
- *   Williams, M. (2019), mwguitars.com.au Parts 7-8
- *   Nia et al., Royal Society Proc. A (2015)
- *   Rayleigh, Theory of Sound (1877)
- *   Ingard (1953), JASA 25(6)
- *
- * Two modes:
- *   Design — explore geometry using Gore priors or your own measured priors
- *   Calibration — tap-test a completed instrument, fit α, save to log
- *
- * α (Gore end-correction factor) is a dimensionless system property.
- * It is NOT a material constant. It must be measured per instrument.
- * Leff = top_thickness + α × r_eff
- *
- * Storage: localStorage key "soundhole_cal_log"
- */
+import { ref, computed, watch, onMounted, onUnmounted, nextTick, defineComponent, h } from 'vue'
+import {
+  Chart,
+  LineController,
+  LineElement,
+  PointElement,
+  LinearScale,
+  CategoryScale,
+  Title,
+  Tooltip,
+  Legend
+} from 'chart.js'
 
-import { ref, computed, watch, onMounted } from 'vue'
+// Register Chart.js components
+Chart.register(
+  LineController,
+  LineElement,
+  PointElement,
+  LinearScale,
+  CategoryScale,
+  Title,
+  Tooltip,
+  Legend
+)
 
 // ─── Physics constants ────────────────────────────────────────────────────────
 
@@ -453,24 +788,32 @@ const PA_THRESHOLD_LO = 0.08  // Williams 2019 approaching threshold
 
 // ─── Gore published priors ────────────────────────────────────────────────────
 
-const GORE_PRIORS = [
-  { label: "Dreadnought", alpha: 1.63, vol: 24, diam: 4.00, range: "90–105 Hz", note: "Gore & Gilet measured" },
-  { label: "OM / 000", alpha: 1.70, vol: 17, diam: 3.875, range: "100–115 Hz", note: "Gore & Gilet" },
-  { label: "Jumbo", alpha: 1.65, vol: 28, diam: 4.25, range: "85–100 Hz", note: "Gore & Gilet" },
-  { label: "Parlour", alpha: 1.75, vol: 13, diam: 3.50, range: "110–125 Hz", note: "Gore & Gilet" },
-  { label: "Classical", alpha: 1.78, vol: 15, diam: 3.50, range: "115–130 Hz", note: "Gore & Gilet" },
-  { label: "Rayleigh", alpha: 1.70, vol: 24, diam: 4.00, range: "varies", note: "Rigid baffle theory" },
+interface GorePrior {
+  label: string
+  alpha: number
+  vol: number
+  diam: number
+  range: string
+  note: string
+}
+
+const GORE_PRIORS: GorePrior[] = [
+  { label: 'Dreadnought', alpha: 1.63, vol: 24, diam: 4.00, range: '90–105 Hz', note: 'Gore & Gilet measured' },
+  { label: 'OM / 000', alpha: 1.70, vol: 17, diam: 3.875, range: '100–115 Hz', note: 'Gore & Gilet' },
+  { label: 'Jumbo', alpha: 1.65, vol: 28, diam: 4.25, range: '85–100 Hz', note: 'Gore & Gilet' },
+  { label: 'Parlour', alpha: 1.75, vol: 13, diam: 3.50, range: '110–125 Hz', note: 'Gore & Gilet' },
+  { label: 'Classical', alpha: 1.78, vol: 15, diam: 3.50, range: '115–130 Hz', note: 'Gore & Gilet' },
+  { label: 'Rayleigh', alpha: 1.70, vol: 24, diam: 4.00, range: 'varies', note: 'Rigid baffle theory' }
 ]
 
-// P:A table data
-const paTableData = [
-  ["Round R45", "—", "0.044", "baseline"],
-  ["S3 rect", "150×43", "0.060", "~same"],
-  ["S6 rect", "210×31", "0.074", "slight"],
-  ["S6B C-slot", "300×21.7", "0.096", "~+30%"],
-  ["S7 C-slot", "341×19", "0.112", "+60%"],
-  ["S8 C-slot", "386×17", "0.123", "+60%"],
-  ["DS1 S-slot", "2×380×17", "0.126", "+80%"],
+const PA_DATA: [string, string, string, string][] = [
+  ['Round R45', '—', '0.044', 'baseline'],
+  ['S3 rect', '150×43', '0.060', '~same'],
+  ['S6 rect', '210×31', '0.074', 'slight'],
+  ['S6B C-slot', '300×21.7', '0.096', '~+30%'],
+  ['S7 C-slot', '341×19', '0.112', '+60%'],
+  ['S8 C-slot', '386×17', '0.123', '+60%'],
+  ['DS1 S-slot', '2×380×17', '0.126', '+80%']
 ]
 
 // ─── Utility functions ────────────────────────────────────────────────────────
@@ -480,9 +823,19 @@ const r2 = (n: number) => Math.round(n * 100) / 100
 const r3 = (n: number) => Math.round(n * 1000) / 1000
 const ri = (n: number) => Math.round(n)
 
-function helmholtz(area: number, vol: number, leff: number) {
+function helmholtz(area: number, vol: number, leff: number): number {
   if (area <= 0 || vol <= 0 || leff <= 0) return 0
   return (C / (2 * Math.PI)) * Math.sqrt(area / (vol * leff))
+}
+
+interface GeoResult {
+  area: number
+  perim: number
+  leff: number
+  model: string
+  eff: number
+  tone: string
+  pa: number
 }
 
 interface GeoParams {
@@ -496,67 +849,70 @@ interface GeoParams {
   alpha: number
 }
 
-function getMainGeometry({ shape, diamIn, slotLenMm, slotWidMm, fholeLenMm, fholeWidMm, topThickMm, alpha }: GeoParams) {
+function getMainGeometry(params: GeoParams): GeoResult {
+  const { shape, diamIn, slotLenMm, slotWidMm, fholeLenMm, fholeWidMm, topThickMm, alpha } = params
   const tT = topThickMm / 1000
   const al = alpha
-  let area = 0, perim = 0, leff = 0, model = "", eff = 1.0, tone = ""
+  let area = 0, perim = 0, leff = 0, model = '', eff = 1.0, tone = ''
 
-  if (shape === "round" || shape === "oval") {
+  if (shape === 'round' || shape === 'oval') {
     const r = (diamIn * I2M) / 2
     area = Math.PI * r * r
     perim = 2 * Math.PI * r
     leff = tT + al * r
-    model = "Area model (Helmholtz, round/oval)"
+    model = 'Area model (Helmholtz, round/oval)'
     eff = 1.0
-    tone = "Balanced bass/treble — round baseline"
-  } else if (shape === "slot" || shape === "cslot") {
+    tone = 'Balanced bass/treble — round baseline'
+  } else if (shape === 'slot' || shape === 'cslot') {
     const L = slotLenMm / 1000, W = slotWidMm / 1000
     area = L * W
     perim = 2 * (L + W)
     const rE = Math.sqrt(area / Math.PI)
     leff = tT + al * rE
-    model = "Perimeter model (slot)"
+    model = 'Perimeter model (slot)'
     const pa = area > 0 ? perim / area : 0
     eff = pa > PA_THRESHOLD_HI ? 1.6 : pa > PA_THRESHOLD_LO ? 1.25 : 1.0
     tone = pa > PA_THRESHOLD_HI
-      ? "Treble gain, bass reduction vs round (Williams 2019)"
-      : "Similar to round below P:A threshold"
-  } else if (shape === "dslot") {
+      ? 'Treble gain, bass reduction vs round (Williams 2019)'
+      : 'Similar to round below P:A threshold'
+  } else if (shape === 'dslot') {
     const L = slotLenMm / 1000, W = slotWidMm / 1000
     area = L * W * 2
     perim = 2 * (L + W) * 2
     const rE = Math.sqrt(area / Math.PI)
     leff = tT + al * rE
-    model = "Perimeter model (double slot)"
+    model = 'Perimeter model (double slot)'
     const pa = area > 0 ? perim / area : 0
     eff = pa > PA_THRESHOLD_HI ? 1.8 : pa > PA_THRESHOLD_LO ? 1.3 : 1.0
     tone = pa > PA_THRESHOLD_HI
-      ? "Strong treble gain; upper bout freed as live soundboard area"
-      : "Approaching threshold — lengthen or narrow slot"
-  } else if (shape === "fhole") {
+      ? 'Strong treble gain; upper bout freed as live soundboard area'
+      : 'Approaching threshold — lengthen or narrow slot'
+  } else if (shape === 'fhole') {
     const Lf = fholeLenMm / 1000, Wf = fholeWidMm / 1000
     const pH = 2 * (Lf + Wf) * 0.88
     area = pH * Wf * 0.95 * 2
     perim = pH * 2
     const rE = Math.sqrt(area / Math.PI)
     leff = tT + al * rE * 0.78
-    model = "Nia et al. perimeter model (f-hole pair)"
+    model = 'Nia et al. perimeter model (f-hole pair)'
     eff = 1.35
-    tone = "Higher treble efficiency vs equal-area round (Nia et al. 2015)"
+    tone = 'Higher treble efficiency vs equal-area round (Nia et al. 2015)'
   }
 
-  const pa = area > 0 ? perim / area : 0
+  // P:A in mm⁻¹ (Williams 2019 uses mm⁻¹ for thresholds 0.08-0.10)
+  // area is m², perim is m → pa_mm = perim / (area * 1000)
+  const pa = area > 0 ? perim / (area * 1000) : 0
   return { area, perim, leff, model, eff, tone, pa }
 }
 
-interface FitParams {
-  area: number
-  topThickMm: number
-  measuredA0Hz: number
-  volL: number
+interface FitResult {
+  leff: number
+  alpha: number
+  ext: number
 }
 
-function fitAlpha({ area, topThickMm, measuredA0Hz, volL }: FitParams) {
+function fitAlpha(params: { area: number; topThickMm: number; measuredA0Hz: number; volL: number }): FitResult | null {
+  const { area, topThickMm, measuredA0Hz, volL } = params
   const vol = volL * L2M
   const tT = topThickMm / 1000
   if (area <= 0 || measuredA0Hz <= 0 || vol <= 0) return null
@@ -566,26 +922,22 @@ function fitAlpha({ area, topThickMm, measuredA0Hz, volL }: FitParams) {
   return { leff: fLeff, alpha: fAlpha, ext: fLeff - tT }
 }
 
-function interpAlpha(alpha: number) {
-  if (alpha < 1.40) return "Low — stiffer than typical or check measurement"
-  if (alpha < 1.60) return "Below Gore range — heavy bracing or stiff top"
-  if (alpha <= 1.80) return "Within Gore typical range (1.6–1.8)"
-  if (alpha <= 1.95) return "Above Gore range — compliant top or light bracing"
-  return "Unusually high — verify measurement"
+function interpAlpha(alpha: number): string {
+  if (alpha < 1.40) return 'Low — stiffer than typical or check measurement'
+  if (alpha < 1.60) return 'Below Gore range — heavy bracing or stiff top'
+  if (alpha <= 1.80) return 'Within Gore typical range (1.6–1.8)'
+  if (alpha <= 1.95) return 'Above Gore range — compliant top or light bracing'
+  return 'Unusually high — verify measurement'
 }
 
-interface GeoResult {
-  area: number
-  leff: number
-  pa: number
-  perim: number
-  model: string
-  eff: number
-  tone: string
+interface CurvePoint {
+  scale: number
+  pct: number
+  hz: number
 }
 
-function buildCurve(geo: GeoResult, sideArea: number, sideLeff: number, volM3: number) {
-  const pts = []
+function buildCurve(geo: GeoResult, sideArea: number, sideLeff: number, volM3: number): CurvePoint[] {
+  const pts: CurvePoint[] = []
   for (let m = 0.7; m <= 1.3; m += 0.01) {
     const sa = sideArea * m
     const tot = geo.area + sa
@@ -597,7 +949,7 @@ function buildCurve(geo: GeoResult, sideArea: number, sideLeff: number, volM3: n
 
 // ─── LocalStorage calibration log ────────────────────────────────────────────
 
-const LOG_KEY = "soundhole_cal_log"
+const LOG_KEY = 'soundhole_cal_log'
 
 interface LogEntryData {
   id: string
@@ -617,25 +969,28 @@ interface LogEntryData {
 }
 
 function loadLog(): LogEntryData[] {
-  try { return JSON.parse(localStorage.getItem(LOG_KEY) || "[]") }
-  catch { return [] }
+  try {
+    return JSON.parse(localStorage.getItem(LOG_KEY) || '[]')
+  } catch {
+    return []
+  }
 }
 
-function saveLog(entries: LogEntryData[]) {
+function saveLogToStorage(entries: LogEntryData[]) {
   localStorage.setItem(LOG_KEY, JSON.stringify(entries))
 }
 
-// ─── Reactive state ───────────────────────────────────────────────────────────
+// ─── State ────────────────────────────────────────────────────────────────────
 
 // Mode
 const mode = ref<'design' | 'cal'>('design')
 
 // Design inputs
 const alpha = ref(1.70)
-const alphaSource = ref("Gore — OM / default prior")
+const alphaSource = ref('Gore — OM / default prior')
 const volL = ref(24)
 const targetHz = ref(100)
-const shape = ref("round")
+const shape = ref('round')
 const diamIn = ref(4.0)
 const slotLenMm = ref(150)
 const slotWidMm = ref(43)
@@ -647,34 +1002,34 @@ const sideThickMm = ref(2.3)
 const sideCount = ref(1)
 
 // Design sub-tab
-const dTab = ref('alpha')
+type DesignTab = 'alpha' | 'body' | 'hole' | 'side' | 'pa'
+const dTab = ref<DesignTab>('alpha')
+function setDTab(t: string) {
+  dTab.value = t as DesignTab
+}
 
 // Calibration inputs
-const cId = ref("")
+const cId = ref('')
 const cDate = ref(new Date().toISOString().slice(0, 10))
-const cBtype = ref("dread")
+const cBtype = ref('dread')
 const cVolL = ref(24)
-const cWood = ref("")
-const cBrace = ref("")
-const cShape = ref("round")
+const cWood = ref('')
+const cBrace = ref('')
+const cShape = ref('round')
 const cDimMm = ref(101.6)
 const cTopT = ref(3.0)
 const cA0 = ref(98)
-const cNotes = ref("")
-const saveMsg = ref("")
+const cNotes = ref('')
+const saveMsg = ref('')
 
 // Calibration log
-const log = ref<LogEntryData[]>([])
+const log = ref<LogEntryData[]>(loadLog())
 
-onMounted(() => {
-  log.value = loadLog()
-})
+// Chart
+const chartCanvas = ref<HTMLCanvasElement | null>(null)
+let chartInstance: Chart | null = null
 
-watch(log, (newLog) => {
-  saveLog(newLog)
-}, { deep: true })
-
-// ── Design calculations ─────────────────────────────────────────────────────
+// ─── Computed ─────────────────────────────────────────────────────────────────
 
 const geo = computed(() => getMainGeometry({
   shape: shape.value,
@@ -697,16 +1052,33 @@ const mainHz = computed(() => helmholtz(geo.value.area, volM3.value, geo.value.l
 const combHz = computed(() => helmholtz(totA.value, volM3.value, cLeff.value))
 const shift = computed(() => combHz.value - mainHz.value)
 const share = computed(() => totA.value > 0 ? (sideA.value / totA.value) * 100 : 0)
+
 const curve = computed(() => buildCurve(geo.value, sideA.value, sideLeff.value, volM3.value))
 
-// ── Calibration calculations ────────────────────────────────────────────────
+const paLabel = computed(() => {
+  if (geo.value.pa > PA_THRESHOLD_HI) return 'above threshold'
+  if (geo.value.pa > PA_THRESHOLD_LO) return 'approaching 0.10'
+  return 'below threshold'
+})
 
+const verdictText = computed(() => {
+  let v = combHz.value < 85 ? 'Very low A0 — warm, loose bass.'
+    : combHz.value < 95 ? 'Low A0 — rich bass, large-body character.'
+    : combHz.value <= 110 ? 'Typical dreadnought/OM zone — balanced voicing.'
+    : combHz.value <= 120 ? 'Moderate-high A0 — tighter, quicker response.'
+    : 'High A0 — lean low end, typical parlour or classical.'
+  if (geo.value.pa > PA_THRESHOLD_HI) v += ' High P:A slot: +60–80% radiated power vs round (Williams 2019).'
+  v += ` α = ${alpha.value.toFixed(2)} (${alphaSource.value.slice(0, 40)}).`
+  return v
+})
+
+// Calibration
 const calArea = computed(() => {
   const d = cDimMm.value / 1000
-  if (cShape.value === "round") return Math.PI * (d / 2) * (d / 2)
-  if (cShape.value === "slot") return d * 0.04
-  if (cShape.value === "dslot") return d * 0.035 * 2
-  if (cShape.value === "fhole") return d * 0.006 * 2
+  if (cShape.value === 'round') return Math.PI * (d / 2) * (d / 2)
+  if (cShape.value === 'slot') return d * 0.04
+  if (cShape.value === 'dslot') return d * 0.035 * 2
+  if (cShape.value === 'fhole') return d * 0.006 * 2
   return 0
 })
 
@@ -716,8 +1088,6 @@ const calFit = computed(() => fitAlpha({
   measuredA0Hz: cA0.value,
   volL: cVolL.value
 }))
-
-// ── User priors from log ────────────────────────────────────────────────────
 
 const userPriors = computed(() => {
   const byType: Record<string, number[]> = {}
@@ -742,9 +1112,9 @@ const logStats = computed(() => {
   }
 })
 
-// ── Handlers ────────────────────────────────────────────────────────────────
+// ─── Methods ──────────────────────────────────────────────────────────────────
 
-function applyGore(prior: typeof GORE_PRIORS[0]) {
+function applyGore(prior: GorePrior) {
   alpha.value = prior.alpha
   alphaSource.value = `Gore — ${prior.label} (${prior.note})`
   volL.value = prior.vol
@@ -782,7 +1152,7 @@ function saveEntry() {
   }
   log.value = [...log.value, entry]
   saveMsg.value = `Saved — ${entry.id}`
-  setTimeout(() => { saveMsg.value = "" }, 3000)
+  setTimeout(() => { saveMsg.value = '' }, 3000)
 }
 
 function deleteEntry(ts: number) {
@@ -790,116 +1160,122 @@ function deleteEntry(ts: number) {
 }
 
 function clearLog() {
-  if (window.confirm("Clear all calibration entries?")) {
+  if (window.confirm('Clear all calibration entries?')) {
     log.value = []
   }
 }
 
-function handleBodyTypeChange(e: Event) {
-  const target = e.target as HTMLSelectElement
-  const p = GORE_PRIORS.find(g => g.vol === parseFloat(target.value))
+function onGuitarTypeChange() {
+  const p = GORE_PRIORS.find(g => g.vol === volL.value)
   if (p) {
-    volL.value = p.vol
     diamIn.value = p.diam
-  } else {
-    volL.value = parseFloat(target.value)
   }
 }
 
-function handleCalBodyTypeChange() {
+function onCalBodyTypeChange() {
   const p = GORE_PRIORS.find(g => g.label.toLowerCase().includes(cBtype.value))
-  if (p) cVolL.value = p.vol
+  if (p) {
+    cVolL.value = p.vol
+  }
 }
 
-// ── Derived display strings ─────────────────────────────────────────────────
+function gainClass(g: string): string {
+  if (g.includes('+6') || g.includes('+8')) return 'high'
+  if (g.includes('+3')) return 'medium'
+  return 'low'
+}
 
-const paLabel = computed(() =>
-  geo.value.pa > PA_THRESHOLD_HI ? "above threshold"
-    : geo.value.pa > PA_THRESHOLD_LO ? "approaching 0.10" : "below threshold"
+// ─── Chart ────────────────────────────────────────────────────────────────────
+
+function createChart() {
+  if (!chartCanvas.value) return
+
+  if (chartInstance) {
+    chartInstance.destroy()
+  }
+
+  const ctx = chartCanvas.value.getContext('2d')
+  if (!ctx) return
+
+  chartInstance = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels: curve.value.map(p => `${p.pct}%`),
+      datasets: [{
+        label: 'A0 (Hz)',
+        data: curve.value.map(p => p.hz),
+        borderColor: '#0F6E56',
+        backgroundColor: 'rgba(15, 110, 86, 0.1)',
+        borderWidth: 2,
+        fill: false,
+        tension: 0.3,
+        pointRadius: 0
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          callbacks: {
+            label: (context) => `${context.parsed.y} Hz`
+          }
+        }
+      },
+      scales: {
+        x: {
+          title: { display: true, text: 'Port Scale' },
+          ticks: { font: { size: 10 } }
+        },
+        y: {
+          title: { display: true, text: 'A0 (Hz)' },
+          ticks: { font: { size: 10 } }
+        }
+      }
+    }
+  })
+}
+
+// ─── Watchers ─────────────────────────────────────────────────────────────────
+
+watch(log, (newLog) => {
+  saveLogToStorage(newLog)
+}, { deep: true })
+
+watch(
+  [curve, targetHz, () => mode.value],
+  () => {
+    if (mode.value === 'design') {
+      nextTick(() => createChart())
+    }
+  }
 )
 
-const verdictText = computed(() => {
-  let v = combHz.value < 85 ? "Very low A0 — warm, loose bass."
-    : combHz.value < 95 ? "Low A0 — rich bass, large-body character."
-    : combHz.value <= 110 ? "Typical dreadnought/OM zone — balanced voicing."
-    : combHz.value <= 120 ? "Moderate-high A0 — tighter, quicker response."
-    : "High A0 — lean low end, typical parlour or classical."
-  if (geo.value.pa > PA_THRESHOLD_HI) v += " High P:A slot: +60–80% radiated power vs round (Williams 2019)."
-  v += ` α = ${alpha.value.toFixed(2)} (${alphaSource.value.slice(0, 40)}).`
-  return v
+// ─── Lifecycle ────────────────────────────────────────────────────────────────
+
+onMounted(() => {
+  nextTick(() => {
+    if (mode.value === 'design') {
+      createChart()
+    }
+  })
 })
 
-// ── Shared styles ───────────────────────────────────────────────────────────
-
-const cardStyle = {
-  background: 'var(--color-background-primary, #fff)',
-  border: '0.5px solid var(--color-border-tertiary, #ddd)',
-  borderRadius: '12px',
-  padding: '14px 16px'
-}
-
-const tabStyle = (active: boolean) => ({
-  fontSize: '12px',
-  padding: '4px 10px',
-  border: 'none',
-  cursor: 'pointer',
-  borderRadius: '5px 5px 0 0',
-  background: active ? 'var(--color-background-secondary, #f0f0f0)' : 'none',
-  color: active ? 'var(--color-text-primary, #111)' : 'var(--color-text-secondary, #666)',
-  fontWeight: active ? 600 : 400
+onUnmounted(() => {
+  if (chartInstance) {
+    chartInstance.destroy()
+    chartInstance = null
+  }
 })
-
-const modeBtn = (active: boolean) => ({
-  flex: 1,
-  padding: '9px',
-  border: '0.5px solid var(--color-border-secondary, #ccc)',
-  borderRadius: '8px',
-  fontSize: '13px',
-  fontWeight: 600,
-  cursor: 'pointer',
-  background: active ? 'var(--color-background-primary, #fff)' : 'var(--color-background-secondary, #f5f5f5)',
-  color: active ? 'var(--color-text-primary, #111)' : 'var(--color-text-secondary, #666)'
-})
-
-const priorBadge = (color: { background: string; color: string }) => ({
-  fontSize: '10px',
-  padding: '3px 8px',
-  borderRadius: '5px',
-  fontWeight: 600,
-  cursor: 'pointer',
-  border: 'none',
-  ...color
-})
-
-const priNote = {
-  fontSize: '11px',
-  color: 'var(--color-text-secondary, #555)',
-  background: 'var(--color-background-secondary, #f5f5f5)',
-  padding: '8px 10px',
-  borderRadius: '6px',
-  borderLeft: '3px solid #185FA5',
-  lineHeight: 1.5,
-  marginBottom: '10px'
-}
-
-const fieldGroup = { marginBottom: '9px' }
-const fieldLabel = { display: 'block', fontSize: '11px', color: 'var(--color-text-secondary, #555)', marginBottom: '3px' }
-const textInput = {
-  fontSize: '12px',
-  padding: '5px 8px',
-  border: '0.5px solid var(--color-border-secondary, #ccc)',
-  borderRadius: '6px',
-  width: '100%',
-  background: 'var(--color-background-primary, #fff)',
-  color: 'var(--color-text-primary, #111)'
-}
 </script>
 
+<!-- Sub-components using render functions (no runtime compiler needed) -->
 <script lang="ts">
-// ─── Sub-components (inline) ───────────────────────────────────────────────────
+import { h, defineComponent
+ } from 'vue'
 
-import { defineComponent, h, PropType } from 'vue'
-
+// MetricCard component
 const MetricCard = defineComponent({
   name: 'MetricCard',
   props: {
@@ -908,21 +1284,16 @@ const MetricCard = defineComponent({
     sub: { type: String, default: '' },
     accent: { type: String, default: undefined }
   },
-  setup(props) {
-    return () => h('div', {
-      style: {
-        background: 'var(--color-background-secondary, #f5f5f5)',
-        borderRadius: '8px',
-        padding: '10px 13px'
-      }
-    }, [
-      h('div', { style: { fontSize: '11px', color: 'var(--color-text-secondary, #666)', marginBottom: '3px' } }, props.label),
-      h('div', { style: { fontSize: '20px', fontWeight: 600, color: props.accent || 'inherit' } }, props.value),
-      props.sub && h('div', { style: { fontSize: '10px', color: 'var(--color-text-tertiary, #999)', marginTop: '2px' } }, props.sub)
+  render() {
+    return h('div', { class: 'metric-card' }, [
+      h('div', { class: 'metric-label' }, this.label),
+      h('div', { class: 'metric-value', style: this.accent ? { color: this.accent } : {} }, this.value),
+      this.sub ? h('div', { class: 'metric-sub' }, this.sub) : null
     ])
   }
 })
 
+// SliderRow component
 const SliderRow = defineComponent({
   name: 'SliderRow',
   props: {
@@ -935,31 +1306,25 @@ const SliderRow = defineComponent({
     display: { type: String, required: true }
   },
   emits: ['update'],
-  setup(props, { emit }) {
-    return () => h('div', {
-      style: { display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }
-    }, [
-      h('label', {
-        for: props.id,
-        style: { fontSize: '12px', color: 'var(--color-text-secondary, #555)', minWidth: '148px' }
-      }, props.label),
+  render() {
+    return h('div', { class: 'slider-row' }, [
+      h('label', { for: this.id, class: 'slider-label' }, this.label),
       h('input', {
         type: 'range',
-        id: props.id,
-        min: props.min,
-        max: props.max,
-        step: props.step,
-        value: props.value,
-        onInput: (e: Event) => emit('update', parseFloat((e.target as HTMLInputElement).value)),
-        style: { flex: 1 }
+        id: this.id,
+        min: this.min,
+        max: this.max,
+        step: this.step,
+        value: this.value,
+        class: 'slider-input',
+        onInput: (e: Event) => this.$emit('update', parseFloat((e.target as HTMLInputElement).value))
       }),
-      h('span', {
-        style: { fontSize: '12px', fontWeight: 600, minWidth: '64px', textAlign: 'right' }
-      }, props.display)
+      h('span', { class: 'slider-display' }, this.display)
     ])
   }
 })
 
+// InfoRow component
 const InfoRow = defineComponent({
   name: 'InfoRow',
   props: {
@@ -967,258 +1332,777 @@ const InfoRow = defineComponent({
     value: { type: String, required: true },
     mono: { type: Boolean, default: false }
   },
-  setup(props) {
-    return () => h('div', {
-      style: {
-        display: 'flex',
-        justifyContent: 'space-between',
-        fontSize: '12px',
-        padding: '4px 0',
-        borderBottom: '0.5px solid var(--color-border-tertiary, #e0e0e0)'
-      }
-    }, [
-      h('span', { style: { color: 'var(--color-text-secondary, #555)' } }, props.label),
-      h('span', { style: { fontFamily: props.mono ? 'monospace' : 'inherit', fontWeight: props.mono ? 600 : 400 } }, props.value)
+  render() {
+    return h('div', { class: 'info-row' }, [
+      h('span', { class: 'info-label' }, this.label),
+      h('span', { class: ['info-value', { mono: this.mono }] }, this.value)
     ])
   }
 })
 
+// PAGauge component
 const PAGauge = defineComponent({
   name: 'PAGauge',
   props: {
     pa: { type: Number, required: true }
   },
-  setup(props) {
-    return () => {
-      const PA_THRESHOLD_HI = 0.10
-      const PA_THRESHOLD_LO = 0.08
-      const pct = Math.min(100, props.pa / 0.13 * 100)
-      const color = props.pa > PA_THRESHOLD_HI ? '#0F6E56' : props.pa > PA_THRESHOLD_LO ? '#BA7517' : '#888780'
-      const label = props.pa > PA_THRESHOLD_HI ? 'above threshold' : props.pa > PA_THRESHOLD_LO ? 'approaching 0.10' : 'below threshold'
-
-      return h('div', {}, [
-        h('div', {
-          style: { display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: '4px' }
-        }, [
-          h('span', { style: { fontSize: '13px', fontWeight: 600 } }, 'P:A efficiency'),
-          h('span', {
-            style: {
-              fontSize: '10px',
-              padding: '2px 7px',
-              borderRadius: '5px',
-              fontWeight: 600,
-              background: props.pa > PA_THRESHOLD_HI ? '#E1F5EE' : props.pa > PA_THRESHOLD_LO ? '#FAEEDA' : '#F1EFE8',
-              color
-            }
-          }, label)
-        ]),
-        h('div', {
-          style: { height: '7px', background: 'var(--color-background-secondary, #eee)', borderRadius: '4px', overflow: 'hidden' }
-        }, [
-          h('div', {
-            style: { width: `${pct}%`, height: '100%', background: color, borderRadius: '4px', transition: 'width 0.3s' }
-          })
-        ]),
-        h('div', {
-          style: { display: 'flex', justifyContent: 'space-between', fontSize: '10px', color: '#999', marginTop: '3px' }
-        }, [
-          h('span', {}, '0'),
-          h('span', { style: { color: '#BA7517' } }, '0.08'),
-          h('span', { style: { color: '#0F6E56', fontWeight: 700 } }, '0.10'),
-          h('span', {}, '0.13')
-        ]),
-        h('div', {
-          style: { fontSize: '11px', color: 'var(--color-text-secondary, #555)', marginTop: '6px', lineHeight: 1.5 }
-        }, props.pa > PA_THRESHOLD_HI
-          ? 'Above 0.10: Williams 2019 measured +60% (single slot) to +80% (double slot) vs equal-area round. Gains mainly in 165–330 Hz band.'
-          : props.pa > PA_THRESHOLD_LO
-            ? 'Approaching threshold. Lengthen or narrow the slot to push P:A above 0.10.'
-            : 'Below 0.08: perimeter effect not dominant. Little efficiency advantage over round.')
-      ])
+  computed: {
+    pct(): number { return Math.min(100, (this.pa ?? 0) / 0.13 * 100) },
+    color(): string {
+      const pa = this.pa ?? 0
+      return pa > 0.10 ? '#0F6E56' : pa > 0.08 ? '#BA7517' : '#888780'
+    },
+    labelText(): string {
+      const pa = this.pa ?? 0
+      return pa > 0.10 ? 'above threshold' : pa > 0.08 ? 'approaching 0.10' : 'below threshold'
+    },
+    description(): string {
+      const pa = this.pa ?? 0
+      if (pa > 0.10) return 'Above 0.10: Williams 2019 measured +60% (single slot) to +80% (double slot) vs equal-area round. Gains mainly in 165–330 Hz band.'
+      if (pa > 0.08) return 'Approaching threshold. Lengthen or narrow the slot to push P:A above 0.10.'
+      return 'Below 0.08: perimeter effect not dominant. Little efficiency advantage over round.'
+    },
+    badgeClass(): string {
+      const pa = this.pa ?? 0
+      return pa > 0.10 ? 'high' : pa > 0.08 ? 'med' : 'low'
     }
-  }
-})
-
-const CurveChart = defineComponent({
-  name: 'CurveChart',
-  props: {
-    data: { type: Array as PropType<{ pct: number; hz: number }[]>, required: true },
-    target: { type: Number, required: true }
   },
-  setup(props) {
-    return () => {
-      // Simple SVG chart since recharts is not available in Vue
-      const width = 300
-      const height = 130
-      const padding = { top: 10, right: 10, bottom: 25, left: 40 }
-      const chartW = width - padding.left - padding.right
-      const chartH = height - padding.top - padding.bottom
-
-      const hzValues = props.data.map(d => d.hz)
-      const minHz = Math.min(...hzValues, props.target) - 5
-      const maxHz = Math.max(...hzValues, props.target) + 5
-
-      const xScale = (pct: number) => padding.left + ((pct - 70) / 60) * chartW
-      const yScale = (hz: number) => padding.top + chartH - ((hz - minHz) / (maxHz - minHz)) * chartH
-
-      const pathD = props.data.map((d, i) =>
-        `${i === 0 ? 'M' : 'L'} ${xScale(d.pct)} ${yScale(d.hz)}`
-      ).join(' ')
-
-      return h('svg', {
-        width: '100%',
-        height: height,
-        viewBox: `0 0 ${width} ${height}`,
-        style: { fontFamily: 'system-ui' }
-      }, [
-        // Grid lines
-        ...([70, 85, 100, 115, 130].map(pct =>
-          h('line', {
-            x1: xScale(pct),
-            y1: padding.top,
-            x2: xScale(pct),
-            y2: padding.top + chartH,
-            stroke: '#eee',
-            'stroke-dasharray': '3 3'
-          })
-        )),
-        // Target reference line
-        props.target > 0 && h('line', {
-          x1: padding.left,
-          y1: yScale(props.target),
-          x2: padding.left + chartW,
-          y2: yScale(props.target),
-          stroke: '#BA7517',
-          'stroke-dasharray': '5 4'
-        }),
-        // Data line
-        h('path', {
-          d: pathD,
-          fill: 'none',
-          stroke: '#0F6E56',
-          'stroke-width': 2
-        }),
-        // X axis labels
-        ...([70, 100, 130].map(pct =>
-          h('text', {
-            x: xScale(pct),
-            y: height - 5,
-            'text-anchor': 'middle',
-            'font-size': 10,
-            fill: '#666'
-          }, `${pct}%`)
-        )),
-        // Y axis labels
-        h('text', {
-          x: padding.left - 5,
-          y: yScale(minHz),
-          'text-anchor': 'end',
-          'font-size': 10,
-          fill: '#666'
-        }, Math.round(minHz).toString()),
-        h('text', {
-          x: padding.left - 5,
-          y: yScale(maxHz),
-          'text-anchor': 'end',
-          'font-size': 10,
-          fill: '#666'
-        }, Math.round(maxHz).toString())
-      ])
-    }
+  render() {
+    return h('div', { class: 'pa-gauge' }, [
+      h('div', { class: 'pa-header' }, [
+        h('span', { class: 'pa-title' }, 'P:A efficiency'),
+        h('span', { class: ['pa-badge', this.badgeClass] }, this.labelText)
+      ]),
+      h('div', { class: 'pa-bar-bg' }, [
+        h('div', { class: 'pa-bar', style: { width: this.pct + '%', background: this.color } })
+      ]),
+      h('div', { class: 'pa-scale' }, [
+        h('span', null, '0'),
+        h('span', { class: 'med-marker' }, '0.08'),
+        h('span', { class: 'hi-marker' }, '0.10'),
+        h('span', null, '0.13')
+      ]),
+      h('div', { class: 'pa-desc' }, this.description)
+    ])
   }
 })
 
-interface LogEntryDataLocal {
-  id: string
-  date: string
-  btype: string
-  wood?: string
-  brace?: string
-  a0: number
-  leff: number
-  shape: string
-  alpha: number
-  notes?: string
-  ts: number
-}
-
+// LogEntry component
 const LogEntry = defineComponent({
   name: 'LogEntry',
   props: {
-    entry: { type: Object as PropType<LogEntryDataLocal>, required: true }
+    entry: { type: Object, required: true }
   },
   emits: ['use', 'delete'],
-  setup(props, { emit }) {
-    return () => h('div', {
-      style: {
-        display: 'flex',
-        justifyContent: 'space-between',
-        alignItems: 'flex-start',
-        padding: '8px 10px',
-        borderBottom: '0.5px solid var(--color-border-tertiary, #eee)',
-        fontSize: '12px'
-      }
-    }, [
-      h('div', {}, [
-        h('div', { style: { fontWeight: 600 } }, props.entry.id),
-        h('div', {
-          style: { color: 'var(--color-text-secondary, #666)', fontSize: '11px', marginTop: '1px' }
-        }, `${props.entry.date} · ${props.entry.btype} · ${props.entry.wood || '—'} · ${props.entry.brace || '—'}`),
-        h('div', {
-          style: { color: 'var(--color-text-secondary, #666)', fontSize: '11px' }
-        }, `A0 = ${props.entry.a0} Hz · Leff = ${props.entry.leff} mm · ${props.entry.shape}`),
-        props.entry.notes && h('div', {
-          style: { color: 'var(--color-text-tertiary, #999)', fontSize: '11px', marginTop: '2px' }
-        }, props.entry.notes)
+  render() {
+    const e = this.entry as any
+    return h('div', { class: 'log-entry' }, [
+      h('div', { class: 'entry-info' }, [
+        h('div', { class: 'entry-id' }, e.id),
+        h('div', { class: 'entry-meta' }, `${e.date} · ${e.btype} · ${e.wood || '—'} · ${e.brace || '—'}`),
+        h('div', { class: 'entry-data' }, `A0 = ${e.a0} Hz · Leff = ${e.leff} mm · ${e.shape}`),
+        e.notes ? h('div', { class: 'entry-notes' }, e.notes) : null
       ]),
-      h('div', { style: { textAlign: 'right', flexShrink: 0, marginLeft: '12px' } }, [
-        h('div', { style: { fontSize: '16px', fontWeight: 700, color: '#0F6E56' } }, `α ${props.entry.alpha}`),
-        h('button', {
-          onClick: () => emit('use', props.entry),
-          style: {
-            fontSize: '10px',
-            marginTop: '3px',
-            padding: '2px 7px',
-            border: '0.5px solid var(--color-border-secondary, #ccc)',
-            borderRadius: '4px',
-            background: 'none',
-            cursor: 'pointer',
-            color: '#185FA5',
-            display: 'block'
-          }
-        }, 'use in design'),
-        h('button', {
-          onClick: () => emit('delete', props.entry.ts),
-          style: {
-            fontSize: '10px',
-            marginTop: '2px',
-            border: 'none',
-            background: 'none',
-            cursor: 'pointer',
-            color: 'var(--color-text-tertiary, #aaa)',
-            padding: 0
-          }
-        }, 'delete')
+      h('div', { class: 'entry-actions' }, [
+        h('div', { class: 'entry-alpha' }, `α ${e.alpha}`),
+        h('button', { class: 'use-btn', onClick: () => this.$emit('use', e) }, 'use in design'),
+        h('button', { class: 'delete-btn', onClick: () => this.$emit('delete', e.ts) }, 'delete')
       ])
     ])
   }
 })
 
 export default {
-  components: {
-    MetricCard,
-    SliderRow,
-    InfoRow,
-    PAGauge,
-    CurveChart,
-    LogEntry
-  }
+  components: { MetricCard, SliderRow, InfoRow, PAGauge, LogEntry }
 }
 </script>
 
 <style scoped>
 .soundhole-calculator {
-  max-width: 1200px;
+  padding: 1.5rem;
+  font-family: system-ui, -apple-system, sans-serif;
+  max-width: 1400px;
   margin: 0 auto;
+}
+
+.header {
+  margin-bottom: 1rem;
+}
+
+.header h2 {
+  font-size: 1.1rem;
+  font-weight: 700;
+  margin-bottom: 0.25rem;
+  color: #2c3e50;
+}
+
+.subtitle {
+  font-size: 0.85rem;
+  color: #666;
+  line-height: 1.5;
+}
+
+.mode-switcher {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.mode-btn {
+  flex: 1;
+  padding: 0.65rem;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  background: #f5f5f5;
+  color: #666;
+  transition: all 0.2s;
+}
+
+.mode-btn.active {
+  background: #fff;
+  color: #111;
+  border-color: #3b82f6;
+}
+
+.metric-strip {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+}
+
+.metric-card {
+  background: #f5f5f5;
+  border-radius: 8px;
+  padding: 0.75rem 1rem;
+}
+
+.metric-label {
+  font-size: 0.7rem;
+  color: #666;
+  margin-bottom: 0.2rem;
+}
+
+.metric-value {
+  font-size: 1.25rem;
+  font-weight: 600;
+}
+
+.metric-sub {
+  font-size: 0.65rem;
+  color: #999;
+  margin-top: 0.15rem;
+}
+
+.design-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.card {
+  background: #fff;
+  border: 1px solid #ddd;
+  border-radius: 12px;
+  padding: 1rem 1.25rem;
+}
+
+.controls-card {
+  /* specific styles for left panel */
+}
+
+.tab-bar {
+  display: flex;
+  gap: 0.25rem;
+  margin-bottom: 1rem;
+  border-bottom: 1px solid #ddd;
+  padding-bottom: 0.25rem;
+  flex-wrap: wrap;
+}
+
+.tab-btn {
+  font-size: 0.8rem;
+  padding: 0.3rem 0.7rem;
+  border: none;
+  cursor: pointer;
+  border-radius: 5px 5px 0 0;
+  background: none;
+  color: #666;
+  font-weight: 400;
+}
+
+.tab-btn.active {
+  background: #f0f0f0;
+  color: #111;
+  font-weight: 600;
+}
+
+.tab-content h4 {
+  font-size: 0.95rem;
+  font-weight: 600;
+  margin-bottom: 0.75rem;
+  color: #2c3e50;
+}
+
+.tab-content h5 {
+  font-size: 0.85rem;
+  font-weight: 600;
+  margin: 1rem 0 0.5rem;
+  color: #444;
+}
+
+.info-note {
+  font-size: 0.75rem;
+  color: #555;
+  background: #f5f5f5;
+  padding: 0.6rem 0.8rem;
+  border-radius: 6px;
+  border-left: 3px solid #185FA5;
+  line-height: 1.5;
+  margin-bottom: 0.75rem;
+}
+
+.alpha-display {
+  background: #f5f5f5;
+  border-radius: 8px;
+  padding: 0.75rem 1rem;
+  margin-bottom: 0.75rem;
+}
+
+.alpha-value {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #185FA5;
+}
+
+.alpha-source {
+  font-size: 0.75rem;
+  color: #555;
+  margin-top: 0.15rem;
+}
+
+.slider-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.slider-label {
+  font-size: 0.8rem;
+  color: #555;
+  min-width: 9.5rem;
+}
+
+.slider-input {
+  flex: 1;
+}
+
+.slider-display {
+  font-size: 0.8rem;
+  font-weight: 600;
+  min-width: 4rem;
+  text-align: right;
+}
+
+.prior-badges {
+  display: flex;
+  gap: 0.35rem;
+  flex-wrap: wrap;
+  margin-bottom: 0.75rem;
+}
+
+.prior-badge {
+  font-size: 0.7rem;
+  padding: 0.2rem 0.5rem;
+  border-radius: 5px;
+  font-weight: 600;
+  cursor: pointer;
+  border: none;
+}
+
+.prior-badge.gore {
+  background: #E6F1FB;
+  color: #0C447C;
+}
+
+.prior-badge.user {
+  background: #E1F5EE;
+  color: #085041;
+}
+
+.no-data {
+  font-size: 0.75rem;
+  color: #aaa;
+  margin-top: 0.5rem;
+}
+
+.info-rows {
+  margin-top: 0.75rem;
+}
+
+.info-row {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.8rem;
+  padding: 0.3rem 0;
+  border-bottom: 1px solid #e0e0e0;
+}
+
+.info-label {
+  color: #555;
+}
+
+.info-value {
+  font-weight: 400;
+}
+
+.info-value.mono {
+  font-family: monospace;
+  font-weight: 600;
+}
+
+.field-group {
+  margin-bottom: 0.65rem;
+}
+
+.field-label {
+  display: block;
+  font-size: 0.75rem;
+  color: #555;
+  margin-bottom: 0.2rem;
+}
+
+.select-input,
+.text-input {
+  font-size: 0.85rem;
+  padding: 0.4rem 0.6rem;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  width: 100%;
+  background: #fff;
+  color: #111;
+}
+
+.right-column {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.right-column h4 {
+  font-size: 0.95rem;
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+  color: #2c3e50;
+}
+
+.chart-container {
+  position: relative;
+  height: 130px;
+}
+
+.chart-note {
+  font-size: 0.7rem;
+  color: #aaa;
+  margin-top: 0.25rem;
+}
+
+/* PA Gauge */
+.pa-gauge {
+  /* contained in card */
+}
+
+.pa-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-bottom: 0.35rem;
+}
+
+.pa-title {
+  font-size: 0.95rem;
+  font-weight: 600;
+}
+
+.pa-badge {
+  font-size: 0.65rem;
+  padding: 0.15rem 0.5rem;
+  border-radius: 5px;
+  font-weight: 600;
+}
+
+.pa-badge.high {
+  background: #E1F5EE;
+  color: #0F6E56;
+}
+
+.pa-badge.med {
+  background: #FAEEDA;
+  color: #BA7517;
+}
+
+.pa-badge.low {
+  background: #F1EFE8;
+  color: #888780;
+}
+
+.pa-bar-bg {
+  height: 7px;
+  background: #eee;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.pa-bar {
+  height: 100%;
+  border-radius: 4px;
+  transition: width 0.3s;
+}
+
+.pa-scale {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.65rem;
+  color: #999;
+  margin-top: 0.2rem;
+}
+
+.med-marker {
+  color: #BA7517;
+}
+
+.hi-marker {
+  color: #0F6E56;
+  font-weight: 700;
+}
+
+.pa-desc {
+  font-size: 0.75rem;
+  color: #555;
+  margin-top: 0.5rem;
+  line-height: 1.5;
+}
+
+/* PA Table */
+.pa-note {
+  font-size: 0.75rem;
+  color: #555;
+  margin-bottom: 0.5rem;
+}
+
+.pa-table {
+  width: 100%;
+  font-size: 0.75rem;
+  border-collapse: collapse;
+}
+
+.pa-table th {
+  padding: 0.2rem 0.3rem;
+  color: #666;
+  border-bottom: 1px solid #ddd;
+  text-align: left;
+}
+
+.pa-table td {
+  padding: 0.25rem 0.3rem;
+  border-bottom: 1px solid #eee;
+}
+
+.pa-table .mono {
+  font-family: monospace;
+}
+
+.gain-badge {
+  font-size: 0.65rem;
+  padding: 0.1rem 0.35rem;
+  border-radius: 4px;
+  font-weight: 600;
+}
+
+.gain-badge.high {
+  background: #E1F5EE;
+  color: #085041;
+}
+
+.gain-badge.medium {
+  background: #FAEEDA;
+  color: #633806;
+}
+
+.gain-badge.low {
+  background: #F1EFE8;
+  color: #444;
+}
+
+.pa-footer {
+  font-size: 0.65rem;
+  color: #999;
+  margin-top: 0.5rem;
+  line-height: 1.5;
+}
+
+/* Verdict */
+.verdict-card h4 {
+  font-size: 0.95rem;
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+  color: #2c3e50;
+}
+
+.verdict-text {
+  font-size: 0.85rem;
+  line-height: 1.7;
+  padding: 0.65rem 0.9rem;
+  background: #f5f5f5;
+  border-radius: 8px;
+  color: #555;
+}
+
+/* Calibration Mode */
+.cal-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 1rem;
+}
+
+.form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.full-width {
+  margin-bottom: 0.75rem;
+}
+
+.textarea {
+  resize: vertical;
+}
+
+.key-field {
+  font-weight: 600;
+  color: #185FA5;
+}
+
+.key-input {
+  font-weight: 700;
+  font-size: 1rem;
+}
+
+.fitted-results {
+  background: #f5f5f5;
+  border-radius: 8px;
+  padding: 0.75rem 1rem;
+  margin-bottom: 0.75rem;
+}
+
+.fitted-results h5 {
+  font-size: 0.85rem;
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+}
+
+.fitted-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.fitted-item {
+  text-align: center;
+  background: #fff;
+  border-radius: 6px;
+  padding: 0.5rem 0.3rem;
+}
+
+.fitted-value {
+  font-size: 1.1rem;
+  font-weight: 700;
+}
+
+.fitted-value.alpha {
+  color: #0F6E56;
+}
+
+.fitted-label {
+  font-size: 0.65rem;
+  color: #666;
+}
+
+.fitted-interp {
+  font-size: 0.75rem;
+  color: #555;
+}
+
+.save-btn {
+  width: 100%;
+  padding: 0.65rem;
+  font-size: 0.9rem;
+  font-weight: 600;
+  border-radius: 8px;
+  border: 1px solid #ccc;
+  background: #fff;
+  cursor: pointer;
+}
+
+.save-btn:hover {
+  background: #f5f5f5;
+}
+
+.save-msg {
+  font-size: 0.75rem;
+  color: #0F6E56;
+  margin-top: 0.35rem;
+}
+
+/* Log */
+.log-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-bottom: 0.75rem;
+}
+
+.log-header h4 {
+  font-size: 0.95rem;
+  font-weight: 600;
+  margin: 0;
+}
+
+.log-count {
+  font-size: 0.75rem;
+  color: #666;
+}
+
+.log-stats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.5rem;
+  margin-bottom: 0.75rem;
+}
+
+.stat-item {
+  text-align: center;
+  background: #f5f5f5;
+  border-radius: 6px;
+  padding: 0.4rem 0.3rem;
+}
+
+.stat-value {
+  font-size: 1rem;
+  font-weight: 700;
+}
+
+.stat-label {
+  font-size: 0.65rem;
+  color: #666;
+}
+
+.log-entries {
+  max-height: 30rem;
+  overflow-y: auto;
+}
+
+.no-entries {
+  text-align: center;
+  padding: 2rem;
+  color: #aaa;
+  font-size: 0.85rem;
+}
+
+.log-entry {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  padding: 0.6rem 0.75rem;
+  border-bottom: 1px solid #eee;
+  font-size: 0.8rem;
+}
+
+.entry-info {
+  flex: 1;
+}
+
+.entry-id {
+  font-weight: 600;
+}
+
+.entry-meta,
+.entry-data {
+  color: #666;
+  font-size: 0.75rem;
+  margin-top: 0.15rem;
+}
+
+.entry-notes {
+  color: #999;
+  font-size: 0.75rem;
+  margin-top: 0.15rem;
+}
+
+.entry-actions {
+  text-align: right;
+  flex-shrink: 0;
+  margin-left: 0.75rem;
+}
+
+.entry-alpha {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #0F6E56;
+}
+
+.use-btn {
+  font-size: 0.65rem;
+  margin-top: 0.2rem;
+  padding: 0.15rem 0.5rem;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  background: none;
+  cursor: pointer;
+  color: #185FA5;
+  display: block;
+}
+
+.delete-btn {
+  font-size: 0.65rem;
+  margin-top: 0.15rem;
+  border: none;
+  background: none;
+  cursor: pointer;
+  color: #aaa;
+  padding: 0;
+}
+
+.clear-btn {
+  margin-top: 0.75rem;
+  font-size: 0.75rem;
+  color: #A32D2D;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+}
+
+@media (max-width: 900px) {
+  .metric-strip {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .design-grid,
+  .cal-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .form-row {
+    grid-template-columns: 1fr;
+  }
 }
 </style>
