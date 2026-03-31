@@ -1,5 +1,8 @@
 """
-Endpoint smoke tests for spiral soundhole API.
+Endpoint smoke tests for spiral soundhole as a type option.
+
+Tests the refactored spiral integration into the main soundhole generator.
+Spiral is now one option in the soundhole_type dropdown (round, oval, spiral, fhole).
 """
 
 import pytest
@@ -10,90 +13,180 @@ from app.main import app
 client = TestClient(app)
 
 
-class TestSpiralSoundholeEndpoints:
-    """Smoke tests for /api/woodworking/soundhole/spiral/* endpoints."""
+class TestSoundholeTypeEndpoints:
+    """Smoke tests for soundhole type selection via /api/instrument/soundhole."""
 
-    def test_spiral_geometry_endpoint(self):
-        """POST /api/woodworking/soundhole/spiral/geometry returns geometry."""
-        response = client.post(
-            "/api/woodworking/soundhole/spiral/geometry",
-            json={
-                "bout_radius_mm": 195.0,
-                "slot_width_mm": 8.0,
-                "spiral_start_r_mm": 20.0,
-                "spiral_turns": 0.85,
-                "growth_rate": 15.0,
-            },
-        )
+    def test_soundhole_types_endpoint(self):
+        """GET /api/instrument/soundhole/types returns type list."""
+        response = client.get("/api/instrument/soundhole/types")
 
         assert response.status_code == 200
         data = response.json()
 
         # Verify structure
-        assert "spec" in data
-        assert "geometry" in data
-        assert "acoustic_notes" in data
+        assert "types" in data
+        assert "spiral_presets" in data
 
-        # Verify geometry fields
-        geom = data["geometry"]
-        assert "centerline_points" in geom
-        assert "outer_wall" in geom
-        assert "inner_wall" in geom
-        assert "area_mm2" in geom
-        assert "perimeter_mm" in geom
-        assert "pa_ratio_mm_inv" in geom
+        # Verify types
+        types = data["types"]
+        type_values = [t["type"] for t in types]
+        assert "round" in type_values
+        assert "oval" in type_values
+        assert "spiral" in type_values
+        assert "fhole" in type_values
 
-        # Sanity checks
-        assert geom["area_mm2"] > 0
-        assert geom["pa_ratio_mm_inv"] > 0
+        # Verify spiral presets
+        presets = data["spiral_presets"]
+        assert len(presets) > 0
+        assert any(p["id"] == "standard_14mm" for p in presets)
 
-    def test_spiral_geometry_defaults(self):
-        """POST with minimal params uses defaults."""
+    def test_soundhole_round_type(self):
+        """POST /api/instrument/soundhole with type=round."""
         response = client.post(
-            "/api/woodworking/soundhole/spiral/geometry",
-            json={"bout_radius_mm": 180.0},
+            "/api/instrument/soundhole",
+            json={
+                "body_style": "dreadnought",
+                "body_length_mm": 500.0,
+                "soundhole_type": "round",
+            },
         )
 
         assert response.status_code == 200
         data = response.json()
 
-        # Verify defaults were applied
-        spec = data["spec"]
-        assert spec["slot_width_mm"] == 8.0
-        assert spec["spiral_start_r_mm"] == 20.0
-        assert spec["spiral_turns"] == 0.85
-        assert spec["growth_rate"] == 15.0
+        assert data["soundhole_type"] == "round"
+        assert data["diameter_mm"] == 100.0  # dreadnought standard
+        assert data["gate"] == "GREEN"
+        assert data["area_mm2"] is not None
+        assert data["perimeter_mm"] is not None
 
-    def test_spiral_dxf_endpoint(self):
-        """POST /api/woodworking/soundhole/spiral/dxf returns DXF file."""
+    def test_soundhole_spiral_type(self):
+        """POST /api/instrument/soundhole with type=spiral."""
         response = client.post(
-            "/api/woodworking/soundhole/spiral/dxf",
+            "/api/instrument/soundhole",
             json={
-                "bout_radius_mm": 195.0,
-                "slot_width_mm": 8.0,
-                "spiral_start_r_mm": 20.0,
-                "spiral_turns": 0.85,
-                "growth_rate": 15.0,
+                "body_style": "carlos_jumbo",
+                "body_length_mm": 520.0,
+                "soundhole_type": "spiral",
+                "spiral_params": {
+                    "slot_width_mm": 14.0,
+                    "start_radius_mm": 10.0,
+                    "growth_rate_k": 0.18,
+                    "turns": 1.1,
+                },
             },
         )
 
         assert response.status_code == 200
-        assert response.headers["content-type"] == "application/dxf"
-        assert "spiral_soundhole.dxf" in response.headers["content-disposition"]
+        data = response.json()
 
-        # DXF should have content
-        assert len(response.content) > 100
+        # Verify spiral type
+        assert data["soundhole_type"] == "spiral"
+        assert data["spiral_params"] is not None
 
-        # Should contain DXF markers
-        content = response.content.decode("utf-8", errors="ignore")
-        assert "SECTION" in content
-        assert "ENTITIES" in content
+        # Verify geometry
+        assert data["area_mm2"] is not None
+        assert data["perimeter_mm"] is not None
+        assert data["pa_ratio_mm_inv"] is not None
 
-    def test_spiral_geometry_validation(self):
-        """Invalid params return 422."""
+        # P:A should be approximately 2/slot_width = 2/14 ≈ 0.143
+        assert 0.10 <= data["pa_ratio_mm_inv"] <= 0.20
+
+        # Should be above Williams threshold
+        assert any("above" in note.lower() or "threshold" in note.lower() for note in data["notes"])
+
+    def test_soundhole_spiral_default_params(self):
+        """POST spiral without params uses defaults."""
         response = client.post(
-            "/api/woodworking/soundhole/spiral/geometry",
-            json={"bout_radius_mm": -100},  # Invalid: must be > 0
+            "/api/instrument/soundhole",
+            json={
+                "body_style": "dreadnought",
+                "body_length_mm": 500.0,
+                "soundhole_type": "spiral",
+            },
         )
 
-        assert response.status_code == 422
+        assert response.status_code == 200
+        data = response.json()
+
+        assert data["soundhole_type"] == "spiral"
+        # Should use default params (14mm slot width)
+        assert data["pa_ratio_mm_inv"] is not None
+        assert data["pa_ratio_mm_inv"] > 0.10  # Above Williams threshold
+
+    def test_soundhole_oval_type(self):
+        """POST /api/instrument/soundhole with type=oval."""
+        response = client.post(
+            "/api/instrument/soundhole",
+            json={
+                "body_style": "dreadnought",
+                "body_length_mm": 500.0,
+                "soundhole_type": "oval",
+                "custom_diameter_mm": 80.0,  # Major axis
+            },
+        )
+
+        assert response.status_code == 200
+        data = response.json()
+
+        assert data["soundhole_type"] == "oval"
+        assert "Oval" in data["notes"][0] or "oval" in data["notes"][0].lower()
+
+    def test_soundhole_fhole_type(self):
+        """POST /api/instrument/soundhole with type=fhole."""
+        response = client.post(
+            "/api/instrument/soundhole",
+            json={
+                "body_style": "archtop",
+                "body_length_mm": 520.0,
+                "soundhole_type": "fhole",
+            },
+        )
+
+        assert response.status_code == 200
+        data = response.json()
+
+        assert data["soundhole_type"] == "fhole"
+        assert data["gate"] == "YELLOW"  # F-holes use separate calculator
+
+    def test_soundhole_spiral_pa_validation(self):
+        """Spiral with narrow slot gets P:A warning."""
+        response = client.post(
+            "/api/instrument/soundhole",
+            json={
+                "body_style": "dreadnought",
+                "body_length_mm": 500.0,
+                "soundhole_type": "spiral",
+                "spiral_params": {
+                    "slot_width_mm": 25.0,  # Wide slot = low P:A
+                    "start_radius_mm": 10.0,
+                    "growth_rate_k": 0.18,
+                    "turns": 1.1,
+                },
+            },
+        )
+
+        assert response.status_code == 200
+        data = response.json()
+
+        # P:A = 2/25 = 0.08 — below threshold
+        assert data["pa_ratio_mm_inv"] < 0.10
+        # Should have warning about being below threshold
+        assert any("below" in note.lower() for note in data["notes"])
+
+    def test_soundhole_backward_compatibility(self):
+        """Default request (no type) returns round soundhole."""
+        response = client.post(
+            "/api/instrument/soundhole",
+            json={
+                "body_style": "om_000",
+                "body_length_mm": 495.0,
+            },
+        )
+
+        assert response.status_code == 200
+        data = response.json()
+
+        # Should default to round
+        assert data["soundhole_type"] == "round"
+        assert data["diameter_mm"] == 98.0  # OM standard

@@ -8,7 +8,8 @@ compute_soundhole_spec, check_soundhole_position, list_body_styles, get_standard
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import TYPE_CHECKING, List, Optional
+from enum import Enum
+from typing import TYPE_CHECKING, Dict, List, Literal, Optional
 
 from .soundhole_physics import GAMMA, K0, hz_to_note
 from .soundhole_presets import (
@@ -24,6 +25,46 @@ if TYPE_CHECKING:
     from .soundhole_calc import PortSpec, SoundholeResult
 
 
+class SoundholeType(str, Enum):
+    """Supported soundhole types for the soundhole generator dropdown."""
+    ROUND = "round"
+    OVAL = "oval"
+    SPIRAL = "spiral"
+    FHOLE = "fhole"
+
+
+# Default spiral parameters (from Williams 2019 acoustic research)
+SPIRAL_DEFAULTS: Dict[str, float] = {
+    "slot_width_mm": 14.0,      # P:A = 0.143 — above 0.10 threshold
+    "start_radius_mm": 10.0,
+    "growth_rate_k": 0.18,
+    "turns": 1.1,
+}
+
+
+@dataclass
+class SpiralParams:
+    """Parameters for spiral soundhole geometry."""
+    slot_width_mm: float = 14.0
+    start_radius_mm: float = 10.0
+    growth_rate_k: float = 0.18
+    turns: float = 1.1
+    rotation_deg: float = 0.0
+    center_x_mm: float = 0.0
+    center_y_mm: float = 0.0
+
+    def to_dict(self) -> dict:
+        return {
+            "slot_width_mm": self.slot_width_mm,
+            "start_radius_mm": self.start_radius_mm,
+            "growth_rate_k": self.growth_rate_k,
+            "turns": self.turns,
+            "rotation_deg": self.rotation_deg,
+            "center_x_mm": self.center_x_mm,
+            "center_y_mm": self.center_y_mm,
+        }
+
+
 @dataclass
 class SoundholeSpec:
     """Soundhole specification with placement and sizing."""
@@ -33,50 +74,162 @@ class SoundholeSpec:
     body_style: str
     gate: str  # GREEN, YELLOW, RED
     notes: List[str] = field(default_factory=list)
+    soundhole_type: SoundholeType = SoundholeType.ROUND
+    # Spiral-specific params (only populated for spiral type)
+    spiral_params: Optional[SpiralParams] = None
+    # Computed metrics (populated for all types)
+    area_mm2: Optional[float] = None
+    perimeter_mm: Optional[float] = None
+    pa_ratio_mm_inv: Optional[float] = None
 
     def to_dict(self) -> dict:
         """Convert to dictionary for API response."""
-        return {
+        result = {
             "diameter_mm": self.diameter_mm,
             "position_from_neck_block_mm": self.position_from_neck_block_mm,
             "body_style": self.body_style,
             "gate": self.gate,
             "notes": self.notes,
+            "soundhole_type": self.soundhole_type.value,
         }
+        if self.spiral_params:
+            result["spiral_params"] = self.spiral_params.to_dict()
+        if self.area_mm2 is not None:
+            result["area_mm2"] = round(self.area_mm2, 2)
+        if self.perimeter_mm is not None:
+            result["perimeter_mm"] = round(self.perimeter_mm, 2)
+        if self.pa_ratio_mm_inv is not None:
+            result["pa_ratio_mm_inv"] = round(self.pa_ratio_mm_inv, 4)
+        return result
 
 
 def compute_soundhole_spec(
     body_style: str,
     body_length_mm: float,
     custom_diameter_mm: Optional[float] = None,
+    soundhole_type: SoundholeType = SoundholeType.ROUND,
+    spiral_params: Optional[SpiralParams] = None,
 ) -> SoundholeSpec:
     """
-    Compute soundhole specification for a given body style.
+    Compute soundhole specification for a given body style and type.
 
     Args:
         body_style: Guitar body style (dreadnought, om_000, parlor, etc.)
         body_length_mm: Body length from neck block to tail block
-        custom_diameter_mm: Override standard diameter if provided
+        custom_diameter_mm: Override standard diameter if provided (for round/oval)
+        soundhole_type: Type of soundhole (round, oval, spiral, fhole)
+        spiral_params: Optional parameters for spiral soundholes
 
     Returns:
-        SoundholeSpec with diameter, position, and gate status
+        SoundholeSpec with diameter, position, gate status, and type-specific geometry
     """
+    import math
     notes: List[str] = []
     gate = "GREEN"
 
     # Normalize body style
     style_key = body_style.lower().replace("-", "_").replace(" ", "_")
 
-    # Handle archtop separately
-    if style_key == "archtop":
+    # Handle archtop / f-holes separately
+    if style_key == "archtop" or soundhole_type == SoundholeType.FHOLE:
         return SoundholeSpec(
             diameter_mm=0.0,
             position_from_neck_block_mm=0.0,
             body_style=body_style,
             gate="YELLOW",
-            notes=["Archtop uses f-holes; use f-hole calculator instead"],
+            notes=["F-hole design uses separate f-hole calculator"],
+            soundhole_type=SoundholeType.FHOLE,
         )
 
+    # Handle spiral type
+    if soundhole_type == SoundholeType.SPIRAL:
+        params = spiral_params or SpiralParams()
+
+        # Closed-form spiral geometry
+        theta_end = params.turns * 2 * math.pi
+        r_end = params.start_radius_mm * math.exp(params.growth_rate_k * theta_end)
+        alpha = math.atan(1.0 / params.growth_rate_k)
+        one_wall_length = (r_end - params.start_radius_mm) / math.sin(alpha)
+
+        perim_mm = 2.0 * one_wall_length
+        area_mm2 = params.slot_width_mm * one_wall_length
+        pa_ratio = perim_mm / area_mm2 if area_mm2 > 0 else 0.0
+
+        # Equivalent diameter for position calculations
+        equiv_diameter = 2 * math.sqrt(area_mm2 / math.pi)
+
+        # P:A threshold check (Williams 2019)
+        if pa_ratio >= 0.10:
+            notes.append(f"P:A = {pa_ratio:.3f} mm⁻¹ — above Williams threshold (0.10). Good acoustic efficiency.")
+        else:
+            notes.append(f"P:A = {pa_ratio:.3f} mm⁻¹ — below threshold. Increase slot width for efficiency gain.")
+            gate = "YELLOW"
+
+        # Slot width validation
+        if params.slot_width_mm < 10.0:
+            notes.append(f"Slot width {params.slot_width_mm}mm is narrow (min practical CNC: 8-10mm)")
+            gate = "YELLOW" if gate == "GREEN" else gate
+        elif params.slot_width_mm > 25.0:
+            notes.append(f"Slot width {params.slot_width_mm}mm is very wide; P:A will be low")
+            gate = "YELLOW" if gate == "GREEN" else gate
+
+        # Growth rate validation
+        if params.growth_rate_k > 0.35:
+            notes.append(f"Growth rate k={params.growth_rate_k} is high — spiral expands rapidly")
+            gate = "YELLOW" if gate == "GREEN" else gate
+        elif params.growth_rate_k < 0.08:
+            notes.append(f"Growth rate k={params.growth_rate_k} is low — spiral is nearly circular")
+
+        # Calculate position (spiral typically positioned like traditional soundhole)
+        position_fraction = STANDARD_POSITION_FRACTION.get(style_key, 0.50)
+        position_mm = body_length_mm * position_fraction
+
+        return SoundholeSpec(
+            diameter_mm=round(equiv_diameter, 1),
+            position_from_neck_block_mm=round(position_mm, 1),
+            body_style=body_style,
+            gate=gate,
+            notes=notes,
+            soundhole_type=SoundholeType.SPIRAL,
+            spiral_params=params,
+            area_mm2=area_mm2,
+            perimeter_mm=perim_mm,
+            pa_ratio_mm_inv=pa_ratio,
+        )
+
+    # Handle oval type
+    if soundhole_type == SoundholeType.OVAL:
+        # For oval, custom_diameter_mm represents the major axis
+        width_mm = custom_diameter_mm if custom_diameter_mm else 80.0
+        height_mm = width_mm * 1.375  # 80×110mm Selmer ratio
+
+        a = width_mm / 2
+        b = height_mm / 2
+        area_mm2 = math.pi * a * b
+        # Ramanujan's approximation for ellipse perimeter
+        h = ((a - b) ** 2) / ((a + b) ** 2)
+        perim_mm = math.pi * (a + b) * (1 + 3 * h / (10 + math.sqrt(4 - 3 * h)))
+        pa_ratio = perim_mm / area_mm2 if area_mm2 > 0 else 0.0
+        equiv_diameter = 2 * math.sqrt(area_mm2 / math.pi)
+
+        notes.append(f"Oval soundhole {width_mm:.0f}×{height_mm:.0f}mm (Selmer/Maccaferri style)")
+
+        position_fraction = STANDARD_POSITION_FRACTION.get(style_key, 0.50)
+        position_mm = body_length_mm * position_fraction
+
+        return SoundholeSpec(
+            diameter_mm=round(equiv_diameter, 1),
+            position_from_neck_block_mm=round(position_mm, 1),
+            body_style=body_style,
+            gate=gate,
+            notes=notes,
+            soundhole_type=SoundholeType.OVAL,
+            area_mm2=area_mm2,
+            perimeter_mm=perim_mm,
+            pa_ratio_mm_inv=pa_ratio,
+        )
+
+    # Default: round soundhole
     # Get standard diameter
     if style_key in STANDARD_DIAMETERS_MM:
         standard_diameter = STANDARD_DIAMETERS_MM[style_key]
@@ -120,12 +273,22 @@ def compute_soundhole_spec(
         notes.append("Soundhole edge too close to neck block")
         gate = "RED"
 
+    # Calculate round hole area/perimeter
+    radius_mm = diameter_mm / 2
+    area_mm2 = math.pi * radius_mm ** 2
+    perim_mm = 2 * math.pi * radius_mm
+    pa_ratio = perim_mm / area_mm2 if area_mm2 > 0 else 0.0
+
     return SoundholeSpec(
         diameter_mm=diameter_mm,
         position_from_neck_block_mm=round(position_mm, 1),
         body_style=body_style,
         gate=gate,
         notes=notes,
+        soundhole_type=SoundholeType.ROUND,
+        area_mm2=area_mm2,
+        perimeter_mm=perim_mm,
+        pa_ratio_mm_inv=pa_ratio,
     )
 
 
@@ -271,3 +434,29 @@ def analyze_soundhole(
         warnings=warnings,
         construction_notes=notes,
     )
+
+
+def list_soundhole_types() -> List[Dict]:
+    """Return list of supported soundhole types with descriptions."""
+    return [
+        {
+            "type": SoundholeType.ROUND.value,
+            "label": "Round",
+            "description": "Traditional circular soundhole. Standard for most acoustic guitars.",
+        },
+        {
+            "type": SoundholeType.OVAL.value,
+            "label": "Oval",
+            "description": "Oval/elliptical soundhole. Selmer/Maccaferri gypsy jazz style.",
+        },
+        {
+            "type": SoundholeType.SPIRAL.value,
+            "label": "Spiral",
+            "description": "Logarithmic spiral slot. High P:A ratio for acoustic efficiency (Williams 2019).",
+        },
+        {
+            "type": SoundholeType.FHOLE.value,
+            "label": "F-hole",
+            "description": "Archtop f-holes. Use dedicated f-hole calculator.",
+        },
+    ]
