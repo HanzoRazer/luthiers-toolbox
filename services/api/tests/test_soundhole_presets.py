@@ -154,7 +154,8 @@ class TestStandardBodyStyleData:
         """STANDARD_DIAMETERS_MM should contain expected body styles."""
         expected_keys = {
             "dreadnought", "om_000", "jumbo", "parlor",
-            "classical", "concert", "auditorium", "archtop"
+            "classical", "concert", "auditorium", "archtop",
+            "carlos_jumbo",  # Carlos Jumbo (spiral soundhole option)
         }
         assert set(STANDARD_DIAMETERS_MM.keys()) == expected_keys
 

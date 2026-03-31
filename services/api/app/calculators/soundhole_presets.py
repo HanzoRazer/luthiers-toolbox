@@ -337,7 +337,86 @@ STANDARD_DIAMETERS_MM = {
     "concert": 90.0,
     "auditorium": 95.0,
     "archtop": None,  # Uses f-holes, different calculation
+    "carlos_jumbo": 102.0,  # Carlos Jumbo body (spiral soundhole option)
 }
+
+
+# ── Spiral Soundhole Presets ───────────────────────────────────────────────────
+# Presets for logarithmic spiral soundholes (Williams 2019 acoustic research)
+# P:A = 2/slot_width — must be > 0.10 mm⁻¹ for efficiency gain over round hole
+
+SPIRAL_PRESETS: Dict[str, Dict] = {
+    "standard_14mm": {
+        "label": "Standard 14mm slot",
+        "slot_width_mm": 14.0,
+        "start_radius_mm": 10.0,
+        "growth_rate_k": 0.18,
+        "turns": 1.1,
+        "pa_ratio_mm_inv": 0.143,
+        "note": "P:A = 0.143 mm⁻¹ — well above 0.10 threshold. Good for most acoustic bodies.",
+    },
+    "compact_12mm": {
+        "label": "Compact 12mm slot",
+        "slot_width_mm": 12.0,
+        "start_radius_mm": 8.0,
+        "growth_rate_k": 0.15,
+        "turns": 0.9,
+        "pa_ratio_mm_inv": 0.167,
+        "note": "P:A = 0.167 mm⁻¹ — high efficiency. Smaller footprint for parlor/OM bodies.",
+    },
+    "wide_18mm": {
+        "label": "Wide 18mm slot",
+        "slot_width_mm": 18.0,
+        "start_radius_mm": 12.0,
+        "growth_rate_k": 0.20,
+        "turns": 1.3,
+        "pa_ratio_mm_inv": 0.111,
+        "note": "P:A = 0.111 mm⁻¹ — just above threshold. More area for bass response.",
+    },
+    "carlos_jumbo_upper": {
+        "label": "Carlos Jumbo Upper (bass side)",
+        "slot_width_mm": 14.0,
+        "start_radius_mm": 10.0,
+        "growth_rate_k": 0.18,
+        "turns": 1.1,
+        "center_x_mm": -88.0,
+        "center_y_mm": -62.0,
+        "rotation_deg": 270.0,
+        "pa_ratio_mm_inv": 0.143,
+        "note": "Upper bass-side spiral for Carlos Jumbo dual-spiral design.",
+    },
+    "carlos_jumbo_lower": {
+        "label": "Carlos Jumbo Lower (treble side)",
+        "slot_width_mm": 14.0,
+        "start_radius_mm": 10.0,
+        "growth_rate_k": 0.18,
+        "turns": 1.1,
+        "center_x_mm": 78.0,
+        "center_y_mm": 112.0,
+        "rotation_deg": 90.0,
+        "pa_ratio_mm_inv": 0.143,
+        "note": "Lower treble-side spiral for Carlos Jumbo dual-spiral design.",
+    },
+}
+
+
+def get_spiral_preset(name: str) -> Optional[Dict]:
+    """Return spiral preset config by name, or None if not found."""
+    return SPIRAL_PRESETS.get(name.lower().replace(" ", "_").replace("-", "_"))
+
+
+def list_spiral_presets() -> List[Dict]:
+    """Return summary of all available spiral presets."""
+    return [
+        {
+            "id": k,
+            "label": v["label"],
+            "slot_width_mm": v["slot_width_mm"],
+            "pa_ratio_mm_inv": v["pa_ratio_mm_inv"],
+            "note": v["note"],
+        }
+        for k, v in SPIRAL_PRESETS.items()
+    ]
 
 # Position as fraction of body length from neck block
 STANDARD_POSITION_FRACTION = {
@@ -349,6 +428,7 @@ STANDARD_POSITION_FRACTION = {
     "concert": 0.48,
     "auditorium": 0.49,
     "archtop": None,
+    "carlos_jumbo": 0.52,  # Carlos Jumbo body (similar to jumbo)
 }
 
 # Valid position range (fraction of body length)
