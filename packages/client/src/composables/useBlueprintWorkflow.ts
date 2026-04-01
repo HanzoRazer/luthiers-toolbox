@@ -51,7 +51,7 @@ export interface ManualCalibrationPoints {
   dimensionName: string
 }
 
-export type ExtractionMode = 'smart' | 'simple'
+export type ExtractionMode = 'smart' | 'simple' | 'silhouette'
 
 export interface VectorParams {
   scaleFactor: number
@@ -421,11 +421,61 @@ export function useBlueprintWorkflow(options: BlueprintWorkflowOptions = {}) {
     return true
   }
 
-  // Phase 2 or Phase 3: Vectorization (dispatches by usePhase3Vectorization)
+  // Photo Silhouette: Vectorization via PhotoVectorizerV2 (POST /api/vectorizer/extract)
+  const vectorizeGeometrySilhouette = async (): Promise<boolean> => {
+    if (!uploadedFile.value) return false
+
+    // Convert file to base64
+    const arrayBuffer = await uploadedFile.value.arrayBuffer()
+    const bytes = new Uint8Array(arrayBuffer)
+    let binary = ''
+    for (let i = 0; i < bytes.byteLength; i++) {
+      binary += String.fromCharCode(bytes[i])
+    }
+    const base64Image = btoa(binary)
+
+    const response = await api('/api/vectorizer/extract', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        image_b64: base64Image,
+        source_type: 'silhouette',
+        export_svg: true,
+        export_dxf: true,
+      }),
+    })
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}))
+      throw new Error(errorData.detail || `Silhouette extraction failed: ${response.status}`)
+    }
+
+    const data = await response.json()
+    if (!data?.success) {
+      throw new Error(data?.error || 'Silhouette extraction failed')
+    }
+
+    // Map silhouette response to VectorizedGeometry
+    vectorizedGeometry.value = {
+      contours_detected: data.contour_count ?? 1,
+      lines_detected: data.line_count ?? 0,
+      processing_time_ms: data.processing_ms ?? 0,
+      svg_path: data.svg_path ?? '',
+      dxf_path: data.dxf_path ?? '',
+    }
+    return true
+  }
+
+  // Phase 2 or Phase 3 or Silhouette: Vectorization dispatch
   const vectorizeGeometry = async (): Promise<boolean> => {
     try {
       isVectorizing.value = true
       error.value = null
+
+      // Silhouette mode uses PhotoVectorizerV2
+      if (vectorParams.value.extractionMode === 'silhouette') {
+        return await vectorizeGeometrySilhouette()
+      }
 
       if (usePhase3Vectorization.value && phase3Available.value) {
         return await vectorizeGeometryPhase3()
@@ -450,7 +500,7 @@ export function useBlueprintWorkflow(options: BlueprintWorkflowOptions = {}) {
       rmosResult.value = null
 
       // Fetch the DXF file from server
-      const dxfFilename = vectorizedGeometry.value.dxf_path.split('/').pop()
+      const dxfFilename = getFilename(vectorizedGeometry.value.dxf_path)
       const dxfResponse = await api(`/api/blueprint/static/${dxfFilename}`)
       if (!dxfResponse.ok) throw new Error('Failed to fetch DXF file')
       const dxfBlob = await dxfResponse.blob()
@@ -521,13 +571,19 @@ export function useBlueprintWorkflow(options: BlueprintWorkflowOptions = {}) {
     }
   }
 
+  // Helper to extract filename from path (handles both Windows and Unix)
+  const getFilename = (path: string): string => {
+    // Split by both forward and back slashes, take the last part
+    return path.split(/[/\\]/).pop() || path
+  }
+
   // Export: Vectorized SVG
   const downloadVectorizedSVG = async (): Promise<Blob | null> => {
     if (!vectorizedGeometry.value?.svg_path) return null
 
     try {
       const response = await fetch(
-        `/api/blueprint/static/${vectorizedGeometry.value.svg_path.split('/').pop()}`
+        `/api/blueprint/static/${getFilename(vectorizedGeometry.value.svg_path)}`
       )
       return await response.blob()
     } catch (err: any) {
@@ -542,7 +598,7 @@ export function useBlueprintWorkflow(options: BlueprintWorkflowOptions = {}) {
 
     try {
       const response = await fetch(
-        `/api/blueprint/static/${vectorizedGeometry.value.dxf_path.split('/').pop()}`
+        `/api/blueprint/static/${getFilename(vectorizedGeometry.value.dxf_path)}`
       )
       return await response.blob()
     } catch (err: any) {

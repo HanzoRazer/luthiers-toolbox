@@ -15,6 +15,8 @@ import tempfile
 import time
 from pathlib import Path
 
+from typing import Dict
+
 from fastapi import APIRouter, File, Form, HTTPException, UploadFile
 from fastapi.responses import FileResponse
 
@@ -32,6 +34,10 @@ from .constants import (
 
 logger = logging.getLogger(__name__)
 router = APIRouter(tags=["blueprint"])
+
+# Registry of generated output files: filename -> full_path
+# Enables serving files via /static/{filename} after vectorization
+_output_file_registry: Dict[str, str] = {}
 
 
 @router.post("/to-dxf")
@@ -200,10 +206,18 @@ async def vectorize_geometry(
         if calibration_info:
             message += f" (calibrated at {calibration_info['ppi']:.0f} PPI)"
 
+        # Register output files for serving via /static/{filename}
+        svg_path = result['svg']
+        dxf_path = result['dxf']
+        if svg_path:
+            _output_file_registry[Path(svg_path).name] = svg_path
+        if dxf_path:
+            _output_file_registry[Path(dxf_path).name] = dxf_path
+
         return VectorizeResponse(
             success=True,
-            svg_path=result['svg'],
-            dxf_path=result['dxf'],
+            svg_path=svg_path,
+            dxf_path=dxf_path,
             contours_detected=contours_count,
             lines_detected=lines_count,
             processing_time_ms=processing_time,
@@ -224,3 +238,56 @@ async def vectorize_geometry(
                 Path(tmp_path).unlink(missing_ok=True)
         except OSError as e:
             logger.warning(f"Failed to clean up temp file: {e}")
+
+@router.get("/static/{filename}")
+async def serve_static_file(filename: str) -> FileResponse:
+    """
+    Serve generated DXF/SVG files by filename.
+    
+    Files are registered in _output_file_registry after vectorization.
+    This enables the frontend to download files via /api/blueprint/static/{filename}.
+    
+    Args:
+        filename: The filename (e.g., 'blueprint_vectorized.dxf')
+        
+    Returns:
+        FileResponse with the requested file
+        
+    Raises:
+        HTTPException 404: File not found in registry or on disk
+    """
+    # Check registry first
+    if filename in _output_file_registry:
+        file_path = _output_file_registry[filename]
+        if Path(file_path).exists():
+            media_type = "application/dxf" if filename.endswith(".dxf") else "image/svg+xml"
+            return FileResponse(
+                file_path,
+                media_type=media_type,
+                filename=filename,
+            )
+    
+    # Fallback: search temp directories with blueprint_phase prefix
+    import glob
+    import os
+
+    temp_base = tempfile.gettempdir()
+    # Use os.path.join for cross-platform path construction
+    pattern = os.path.join(temp_base, "blueprint_phase*", filename)
+
+    matches = glob.glob(pattern)
+    if matches:
+        file_path = matches[0]
+        # Register for future lookups
+        _output_file_registry[filename] = file_path
+        media_type = "application/dxf" if filename.endswith(".dxf") else "image/svg+xml"
+        return FileResponse(
+            file_path,
+            media_type=media_type,
+            filename=filename,
+        )
+    
+    raise HTTPException(
+        status_code=404,
+        detail=f"File not found: {filename}. Run vectorization first."
+    )

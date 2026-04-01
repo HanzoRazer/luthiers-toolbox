@@ -34,6 +34,9 @@ from typing import Optional
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 
+# Import phase2 file registry for persisting output files
+from .blueprint.phase2_router import _output_file_registry
+
 router = APIRouter(tags=["vectorizer"])
 
 # ─── Optional import of the vectorizer (graceful fallback) ────────────────────
@@ -44,16 +47,24 @@ router = APIRouter(tags=["vectorizer"])
 
 VECTORIZER_AVAILABLE = False
 _vectorizer_error    = ""
+_debug_pv_path = ""
 
 try:
-    _pv_path = Path(__file__).parents[3] / "services" / "photo-vectorizer"
+    _pv_path = Path(__file__).parents[3] / "photo-vectorizer"
+    _debug_pv_path = str(_pv_path)
+    sys.stderr.write(f"[photo_vectorizer_router] __file__ = {__file__}\n")
+    sys.stderr.write(f"[photo_vectorizer_router] _pv_path = {_pv_path}\n")
+    sys.stderr.write(f"[photo_vectorizer_router] _pv_path.exists() = {_pv_path.exists()}\n")
     if str(_pv_path) not in sys.path:
         sys.path.insert(0, str(_pv_path))
+        sys.stderr.write(f"[photo_vectorizer_router] Added to sys.path\n")
 
     from photo_vectorizer_v2 import PhotoVectorizerV2  # type: ignore
     VECTORIZER_AVAILABLE = True
+    sys.stderr.write(f"[photo_vectorizer_router] SUCCESS - PhotoVectorizerV2 imported\n")
 except Exception as e:  # audited: http-500 — ValueError,IOError
     _vectorizer_error = str(e)
+    sys.stderr.write(f"[photo_vectorizer_router] FAILED - {type(e).__name__}: {e}\n")
 
 # ─── Request / response models ────────────────────────────────────────────────
 
@@ -70,6 +81,10 @@ class VectorizeRequest(BaseModel):
 class VectorizeResponse(BaseModel):
     ok:                 bool
     svg_path_d:         str   = ""      # combined SVG path for ImportView
+    svg_path:           str   = ""      # file path for Blueprint workflow
+    dxf_path:           str   = ""      # file path for Blueprint workflow
+    contour_count:      int   = 0       # for Blueprint workflow compatibility
+    line_count:         int   = 0       # for Blueprint workflow compatibility
     body_width_mm:      float = 0.0
     body_height_mm:     float = 0.0
     body_width_in:      float = 0.0
@@ -119,10 +134,23 @@ def _extract_svg_paths(svg_path: str) -> str:
 @router.get("/status")
 async def vectorizer_status():
     """Health check — confirms whether the vectorizer pipeline is available."""
+    # Debug: try to import right now to check current state
+    import sys
+    try:
+        # Check if module is in sys.modules
+        has_module = "photo_vectorizer_v2" in sys.modules
+        pv_in_path = any("photo-vectorizer" in p for p in sys.path)
+    except Exception:
+        has_module = False
+        pv_in_path = False
+
     return {
         "available": VECTORIZER_AVAILABLE,
         "error":     _vectorizer_error if not VECTORIZER_AVAILABLE else "",
         "note":      "POST /extract with base64 image when available=true",
+        "debug_pv_path": _debug_pv_path,
+        "debug_has_module": has_module,
+        "debug_pv_in_path": pv_in_path,
     }
 
 
@@ -207,9 +235,38 @@ async def extract_from_photo(req: VectorizeRequest):
         w_mm, h_mm = result.body_dimensions_mm
         w_in, h_in = result.body_dimensions_inch
 
+        # ── Persist files for Blueprint workflow ────────────────────────────
+        svg_file_path = ""
+        dxf_file_path = ""
+        contour_count = 1 if svg_path_d else 0
+        
+        # Create persistent output directory (same pattern as phase2)
+        persist_dir = Path(tempfile.gettempdir()) / f"blueprint_phase_silhouette_{int(time.time()*1000)}"
+        persist_dir.mkdir(exist_ok=True)
+        
+        # Copy SVG if exists
+        if result.output_svg and Path(result.output_svg).exists():
+            dest_svg = persist_dir / "silhouette_vectorized.svg"
+            import shutil
+            shutil.copy2(result.output_svg, dest_svg)
+            svg_file_path = str(dest_svg)
+            _output_file_registry[dest_svg.name] = svg_file_path
+        
+        # Copy DXF if exists
+        if result.output_dxf and Path(result.output_dxf).exists():
+            dest_dxf = persist_dir / "silhouette_vectorized.dxf"
+            import shutil
+            shutil.copy2(result.output_dxf, dest_dxf)
+            dxf_file_path = str(dest_dxf)
+            _output_file_registry[dest_dxf.name] = dxf_file_path
+
         return VectorizeResponse(
             ok=bool(svg_path_d and not result.export_blocked),
             svg_path_d=svg_path_d,
+            svg_path=svg_file_path,
+            dxf_path=dxf_file_path,
+            contour_count=contour_count,
+            line_count=0,
             body_width_mm=round(w_mm, 2),
             body_height_mm=round(h_mm, 2),
             body_width_in=round(w_in, 3),
