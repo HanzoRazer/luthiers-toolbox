@@ -3794,6 +3794,8 @@ class PhotoVectorizerV2:
             "auto" (default) - auto-detect AI vs photo
             "ai"   - force AI extraction path (simpler, needs spec_name)
             "photo" - force traditional 12-stage photo pipeline
+            "blueprint" - PDF blueprint with light gray lines (uses light_line_body_extractor)
+            "silhouette" - photo with dark background (uses flood-fill extraction)
         """
 
         start_time = time.time()
@@ -3817,6 +3819,28 @@ class PhotoVectorizerV2:
                 source=source,
                 out_dir=out_dir,
                 spec_name=spec_name,
+                export_dxf=export_dxf,
+                export_svg=export_svg,
+                debug_images=debug_images,
+            )
+
+        # ── Blueprint Path (light line extraction for PDF blueprints) ───────
+        if source_type == "blueprint":
+            return self._extract_blueprint_path(
+                source=source,
+                out_dir=out_dir,
+                known_dimension_mm=known_dimension_mm,
+                export_dxf=export_dxf,
+                export_svg=export_svg,
+                debug_images=debug_images,
+            )
+
+        # ── Silhouette Path (flood-fill for photos with dark backgrounds) ───
+        if source_type == "silhouette":
+            return self._extract_silhouette_path(
+                source=source,
+                out_dir=out_dir,
+                known_dimension_mm=known_dimension_mm,
                 export_dxf=export_dxf,
                 export_svg=export_svg,
                 debug_images=debug_images,
@@ -4574,6 +4598,238 @@ class PhotoVectorizerV2:
         result.processing_time_ms = (time.time() - start_time) * 1000
         logger.info(
             f"AI path done in {result.processing_time_ms:.0f}ms: "
+            f"{target_height:.1f} x {target_width:.1f} mm"
+        )
+
+        return result
+
+    def _extract_blueprint_path(
+        self,
+        source: Path,
+        out_dir: Path,
+        known_dimension_mm: Optional[float],
+        export_dxf: bool,
+        export_svg: bool,
+        debug_images: bool,
+    ) -> PhotoExtractionResult:
+        """
+        Blueprint extraction path: for PDF blueprints with light gray lines.
+
+        Uses light_line_body_extractor which:
+        1. Inverts image (light → dark)
+        2. Enhances contrast 3x
+        3. Uses low Canny thresholds (15, 45)
+        4. Morphological closing to connect broken lines
+        5. Filters for body-sized contours
+        """
+        start_time = time.time()
+        result = PhotoExtractionResult(source_path=str(source))
+        result.input_type = InputType.BLUEPRINT
+
+        try:
+            from light_line_body_extractor import (
+                extract_body_from_pdf,
+                extract_body_from_image,
+                create_acoustic_body_config,
+                save_contour_to_dxf,
+            )
+        except ImportError as e:
+            result.warnings.append(f"Blueprint extractor not available: {e}")
+            return result
+
+        config = create_acoustic_body_config()
+
+        # Handle PDF vs image
+        if source.suffix.lower() == '.pdf':
+            extraction = extract_body_from_pdf(
+                source,
+                page_number=0,
+                page_size_mm=(841.0, 1189.0),  # A0 default
+                config=config,
+                save_debug=debug_images,
+            )
+        else:
+            # Load as image
+            image = cv2.imread(str(source))
+            if image is None:
+                result.warnings.append(f"Failed to load image: {source}")
+                return result
+            h, w = image.shape[:2]
+            # Assume A0 proportion for scale
+            mm_per_px = 1189.0 / h
+            extraction = extract_body_from_image(
+                image, mm_per_px, config=config, save_debug=debug_images
+            )
+
+        if not extraction.success:
+            result.warnings.append(f"Blueprint extraction failed: {extraction.error_message}")
+            return result
+
+        body = extraction.body
+
+        # Scale to known dimension if provided
+        target_width = known_dimension_mm if known_dimension_mm else body.width_mm
+        target_height = body.height_mm * (target_width / body.width_mm)
+
+        # Build calibration result
+        calibration = CalibrationResult(
+            mm_per_px=body.mm_per_px,
+            source=ScaleSource.USER_DIMENSION if known_dimension_mm else ScaleSource.ESTIMATED_RENDER_DPI,
+            confidence=0.85,
+        )
+        result.calibration = calibration
+        result.body_dimensions_mm = (target_height, target_width)
+
+        # Build feature contour
+        contour_mm = body.to_mm_coordinates()
+        if known_dimension_mm:
+            # Rescale to target
+            scale = target_width / body.width_mm
+            cx, cy = contour_mm.mean(axis=0)
+            contour_mm = (contour_mm - [cx, cy]) * scale
+
+        body_contour = FeatureContour(
+            points_px=body.points,
+            points_mm=contour_mm,
+            feature_type=FeatureType.BODY_OUTLINE,
+            confidence=0.85,
+            area_px=body.area_px,
+        )
+        result.feature_contours = [body_contour]
+
+        # Export
+        if export_dxf:
+            dxf_path = out_dir / f"{source.stem}_blueprint.dxf"
+            save_contour_to_dxf(
+                body, dxf_path,
+                scale_to_dimensions=(target_width, target_height) if known_dimension_mm else None,
+            )
+            result.output_dxf = str(dxf_path)
+            logger.info(f"Blueprint DXF written: {dxf_path}")
+
+        if export_svg:
+            svg_path = out_dir / f"{source.stem}_blueprint.svg"
+            _write_ai_svg(contour_mm, str(svg_path))
+            result.output_svg = str(svg_path)
+            logger.info(f"Blueprint SVG written: {svg_path}")
+
+        # Save debug images
+        if debug_images and extraction.debug_images:
+            for name, img in extraction.debug_images.items():
+                debug_path = out_dir / f"{source.stem}_blueprint_{name}.png"
+                cv2.imwrite(str(debug_path), img)
+                result.debug_images[f"blueprint_{name}"] = str(debug_path)
+
+        result.processing_time_ms = (time.time() - start_time) * 1000
+        logger.info(
+            f"Blueprint path done in {result.processing_time_ms:.0f}ms: "
+            f"{target_height:.1f} x {target_width:.1f} mm"
+        )
+
+        return result
+
+    def _extract_silhouette_path(
+        self,
+        source: Path,
+        out_dir: Path,
+        known_dimension_mm: Optional[float],
+        export_dxf: bool,
+        export_svg: bool,
+        debug_images: bool,
+    ) -> PhotoExtractionResult:
+        """
+        Silhouette extraction path: for photos with dark backgrounds.
+
+        Uses photo_silhouette_extractor which:
+        1. Edge detection
+        2. Flood fill from corners (background)
+        3. Invert to get guitar mask
+        4. Extract outer contour
+        5. Filter to body region only
+        """
+        start_time = time.time()
+        result = PhotoExtractionResult(source_path=str(source))
+        result.input_type = InputType.PHOTO
+
+        try:
+            from photo_silhouette_extractor import (
+                extract_body_only,
+                SilhouetteConfig,
+                scale_contour_to_mm,
+                save_to_dxf,
+            )
+        except ImportError as e:
+            result.warnings.append(f"Silhouette extractor not available: {e}")
+            return result
+
+        # Load image
+        image = cv2.imread(str(source))
+        if image is None:
+            result.warnings.append(f"Failed to load image: {source}")
+            return result
+
+        config = SilhouetteConfig()
+        extraction = extract_body_only(image, config, save_debug=debug_images)
+
+        if not extraction.success:
+            result.warnings.append(f"Silhouette extraction failed: {extraction.error_message}")
+            return result
+
+        x, y, cw, ch = extraction.bbox_px
+        contour_px = extraction.contour
+
+        # Scale to known dimension or default jumbo
+        target_width = known_dimension_mm if known_dimension_mm else 477.0
+        target_height = ch * (target_width / cw)
+
+        # Scale contour to mm
+        contour_mm = scale_contour_to_mm(
+            contour_px, cw, ch, target_width, target_height
+        )
+
+        # Build calibration result
+        scale_px_to_mm = target_width / cw
+        calibration = CalibrationResult(
+            mm_per_px=scale_px_to_mm,
+            source=ScaleSource.USER_DIMENSION if known_dimension_mm else ScaleSource.ASSUMED_DPI,
+            confidence=0.75,
+        )
+        result.calibration = calibration
+        result.body_dimensions_mm = (target_height, target_width)
+
+        # Build feature contour
+        body_contour = FeatureContour(
+            points_px=contour_px,
+            points_mm=contour_mm,
+            feature_type=FeatureType.BODY_OUTLINE,
+            confidence=0.75,
+            area_px=cw * ch,  # Approximate
+        )
+        result.feature_contours = [body_contour]
+
+        # Export
+        if export_dxf:
+            dxf_path = out_dir / f"{source.stem}_silhouette.dxf"
+            save_to_dxf(contour_mm, dxf_path)
+            result.output_dxf = str(dxf_path)
+            logger.info(f"Silhouette DXF written: {dxf_path}")
+
+        if export_svg:
+            svg_path = out_dir / f"{source.stem}_silhouette.svg"
+            _write_ai_svg(contour_mm, str(svg_path))
+            result.output_svg = str(svg_path)
+            logger.info(f"Silhouette SVG written: {svg_path}")
+
+        # Save debug images
+        if debug_images and extraction.debug_images:
+            for name, img in extraction.debug_images.items():
+                debug_path = out_dir / f"{source.stem}_silhouette_{name}.png"
+                cv2.imwrite(str(debug_path), img)
+                result.debug_images[f"silhouette_{name}"] = str(debug_path)
+
+        result.processing_time_ms = (time.time() - start_time) * 1000
+        logger.info(
+            f"Silhouette path done in {result.processing_time_ms:.0f}ms: "
             f"{target_height:.1f} x {target_width:.1f} mm"
         )
 
