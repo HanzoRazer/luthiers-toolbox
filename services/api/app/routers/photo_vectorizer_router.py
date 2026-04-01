@@ -65,6 +65,7 @@ class VectorizeRequest(BaseModel):
     export_svg:         bool = True
     export_dxf:         bool = False
     label:              str  = "photo-extract"
+    source_type:        str  = "auto"    # auto, ai, photo, blueprint, silhouette
 
 class VectorizeResponse(BaseModel):
     ok:                 bool
@@ -176,6 +177,7 @@ async def extract_from_photo(req: VectorizeRequest):
                 export_dxf=req.export_dxf,
                 export_json=False,
                 debug_images=False,
+                source_type=req.source_type,
             )
         except Exception as e:  # audited: http-500 — ValueError,IOError
             return VectorizeResponse(
