@@ -371,7 +371,7 @@ def extract_body_from_pdf(
         )
 
 
-def create_acoustic_body_config() -> ExtractionConfig:
+def create_acoustic_body_config(gap_closing_level: str = "normal") -> ExtractionConfig:
     """
     Create optimized config for acoustic guitar body extraction.
 
@@ -379,8 +379,15 @@ def create_acoustic_body_config() -> ExtractionConfig:
     - Body outline is drawn with light gray lines
     - Full front view is on the right side of a multi-view page
     - Expected jumbo body: 420-480mm wide, 510-550mm tall
+
+    Args:
+        gap_closing_level: "normal" (default), "aggressive", or "extreme"
+            - normal: 5x5 kernel, 3 iterations (~2mm gap bridging at 200 DPI)
+            - aggressive: 9x9 kernel, 5 iterations (~6mm gap bridging)
+            - extreme: 15x15 kernel, 7 iterations (~12mm gap bridging)
     """
-    return ExtractionConfig(
+    # Base configuration
+    config = ExtractionConfig(
         dpi=200,
         contrast_multiplier=3.0,
         invert=True,
@@ -402,6 +409,27 @@ def create_acoustic_body_config() -> ExtractionConfig:
         min_area_px=100000.0,
         simplify_epsilon_factor=0.001,
     )
+
+    # Override morphological parameters based on gap closing level
+    if gap_closing_level == "aggressive":
+        # For documents with medium gaps (~3-6mm)
+        config.morph_kernel_size = 9
+        config.morph_iterations = 5
+        config.dilate_iterations = 2
+        config.canny_low = 10  # Lower threshold to catch more edges
+        config.canny_high = 40
+        config.contrast_multiplier = 4.0  # Higher contrast
+    elif gap_closing_level == "extreme":
+        # For heavily fragmented documents (~6-12mm gaps)
+        config.morph_kernel_size = 15
+        config.morph_iterations = 7
+        config.dilate_iterations = 3
+        config.canny_low = 8
+        config.canny_high = 35
+        config.contrast_multiplier = 5.0
+        config.min_area_px = 50000.0  # Lower threshold due to potential fragmentation
+
+    return config
 
 
 def save_contour_to_dxf(

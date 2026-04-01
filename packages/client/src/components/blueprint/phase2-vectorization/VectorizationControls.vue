@@ -10,7 +10,7 @@
  * - Gap Close Size: Morphological closing to connect broken lines
  */
 import { computed, onMounted } from "vue";
-import type { VectorParams, ExtractionMode } from "@/composables/useBlueprintWorkflow";
+import type { VectorParams, ExtractionMode, GapClosingLevel } from "@/composables/useBlueprintWorkflow";
 
 const props = withDefaults(
   defineProps<{
@@ -204,6 +204,25 @@ function setDarkThresholdValue(value: number) {
           <span class="gap-value">{{ vectorParams.gapCloseSize || 'Off' }}</span>
         </div>
         <span class="control-hint">Connect broken lines (5 recommended)</span>
+      </div>
+
+      <!-- Gap Closing Level (Blueprint mode only) -->
+      <div
+        v-if="vectorParams.extractionMode === 'blueprint'"
+        class="control-group"
+      >
+        <label>Gap Bridging Intensity:</label>
+        <select
+          :value="vectorParams.gapClosingLevel"
+          @change="updateParam('gapClosingLevel', ($event.target as HTMLSelectElement).value as GapClosingLevel)"
+        >
+          <option value="normal">Normal (~2mm gaps)</option>
+          <option value="aggressive">Aggressive (~6mm gaps)</option>
+          <option value="extreme">Extreme (~12mm gaps)</option>
+        </select>
+        <span class="control-hint">
+          For low-confidence/fragmented blueprints, try Aggressive or Extreme
+        </span>
       </div>
     </div>
 

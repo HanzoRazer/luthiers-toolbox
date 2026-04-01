@@ -77,6 +77,7 @@ class VectorizeRequest(BaseModel):
     export_dxf:         bool = False
     label:              str  = "photo-extract"
     source_type:        str  = "auto"    # auto, ai, photo, blueprint, silhouette
+    gap_closing_level:  str  = "normal"  # normal, aggressive, extreme (blueprint mode only)
 
 class VectorizeResponse(BaseModel):
     ok:                 bool
@@ -206,6 +207,7 @@ async def extract_from_photo(req: VectorizeRequest):
                 export_json=False,
                 debug_images=False,
                 source_type=req.source_type,
+                gap_closing_level=req.gap_closing_level,
             )
         except Exception as e:  # audited: http-500 — ValueError,IOError
             return VectorizeResponse(

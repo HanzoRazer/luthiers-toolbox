@@ -53,12 +53,15 @@ export interface ManualCalibrationPoints {
 
 export type ExtractionMode = 'smart' | 'simple' | 'silhouette' | 'blueprint'
 
+export type GapClosingLevel = 'normal' | 'aggressive' | 'extreme'
+
 export interface VectorParams {
   scaleFactor: number
   instrumentType: 'electric' | 'acoustic'
   darkThreshold: number | 'auto'
   gapCloseSize: number
   extractionMode: ExtractionMode
+  gapClosingLevel: GapClosingLevel  // For blueprint mode - controls morphological gap bridging
 }
 
 export interface VectorizedGeometry {
@@ -130,6 +133,7 @@ export function useBlueprintWorkflow(options: BlueprintWorkflowOptions = {}) {
     darkThreshold: 'auto',
     gapCloseSize: 0,
     extractionMode: 'smart',
+    gapClosingLevel: 'normal',
   })
 
   // Phase 3: CAM
@@ -487,6 +491,7 @@ export function useBlueprintWorkflow(options: BlueprintWorkflowOptions = {}) {
         source_type: 'blueprint',
         export_svg: true,
         export_dxf: true,
+        gap_closing_level: vectorParams.value.gapClosingLevel,
       }),
     })
 

@@ -3784,6 +3784,7 @@ class PhotoVectorizerV2:
                 debug_images: bool = False,
                 enable_body_isolation_coach: Optional[bool] = None,
                 source_type: str = "auto",
+                gap_closing_level: str = "normal",
                 ) -> Union[PhotoExtractionResult, List[PhotoExtractionResult]]:
         """
         Extract instrument outline from image.
@@ -3833,6 +3834,7 @@ class PhotoVectorizerV2:
                 export_dxf=export_dxf,
                 export_svg=export_svg,
                 debug_images=debug_images,
+                gap_closing_level=gap_closing_level,
             )
 
         # ── Silhouette Path (flood-fill for photos with dark backgrounds) ───
@@ -4611,6 +4613,7 @@ class PhotoVectorizerV2:
         export_dxf: bool,
         export_svg: bool,
         debug_images: bool,
+        gap_closing_level: str = "normal",
     ) -> PhotoExtractionResult:
         """
         Blueprint extraction path: for PDF blueprints with light gray lines.
@@ -4637,7 +4640,7 @@ class PhotoVectorizerV2:
             result.warnings.append(f"Blueprint extractor not available: {e}")
             return result
 
-        config = create_acoustic_body_config()
+        config = create_acoustic_body_config(gap_closing_level=gap_closing_level)
 
         # Handle PDF vs image
         if source.suffix.lower() == '.pdf':
