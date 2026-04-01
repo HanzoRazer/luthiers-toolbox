@@ -4,10 +4,14 @@ Generate DXF files from Carlos Jumbo blueprints - ENHANCED EDGE DETECTION.
 
 Uses multi-scale edge fusion and contrast enhancement to capture
 light gray body outline lines that standard thresholding misses.
+
+Now incorporates instrument spec database (carlos_jumbo.json) for accurate
+scaling based on actual body dimensions (520mm length, 430mm width).
 """
 
 from __future__ import annotations
 
+import json
 import sys
 from pathlib import Path
 
@@ -15,6 +19,23 @@ sys.path.insert(0, str(Path(__file__).parent))
 
 import cv2
 import numpy as np
+
+
+def load_carlos_jumbo_spec(repo_root: Path) -> dict:
+    """Load Carlos Jumbo spec from instrument database."""
+    spec_path = repo_root / "services" / "api" / "app" / "instrument_geometry" / "specs" / "carlos_jumbo.json"
+    if spec_path.exists():
+        with open(spec_path, "r", encoding="utf-8") as f:
+            return json.load(f)
+    return {}
+
+
+# Default dimensions from spec (fallback if spec not found)
+CARLOS_JUMBO_BODY_LENGTH_MM = 520.0
+CARLOS_JUMBO_BODY_WIDTH_MM = 430.0
+CARLOS_JUMBO_LOWER_BOUT_MM = 430.0
+CARLOS_JUMBO_UPPER_BOUT_MM = 310.0
+CARLOS_JUMBO_WAIST_MM = 270.0
 
 try:
     import fitz
@@ -164,10 +185,86 @@ def extract_all_edges_as_lines(image: np.ndarray) -> list:
     return polylines
 
 
+def calibrate_scale_from_soundhole(image: np.ndarray,
+                                   soundhole_mm: float = 102.0) -> float | None:
+    """
+    Detect soundhole circle and calibrate mm/px scale.
+
+    Returns mm_per_px or None if soundhole not detected.
+    """
+    h, w = image.shape[:2]
+    gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+
+    # Estimate expected soundhole radius from body proportions
+    # Body ~520mm length, soundhole ~102mm diameter
+    est_body_h_px = h * 0.65  # body occupies ~65% of height
+    est_mm_per_px = 520.0 / est_body_h_px
+    expected_sh_radius_px = (soundhole_mm / 2) / est_mm_per_px
+
+    # Resize for faster HoughCircles (max 1500px width)
+    scale = min(1.0, 1500 / w)
+    if scale < 1.0:
+        small = cv2.resize(image, (int(w * scale), int(h * scale)))
+        small_gray = cv2.cvtColor(small, cv2.COLOR_BGR2GRAY)
+    else:
+        small_gray = gray
+        scale = 1.0
+
+    blurred = cv2.GaussianBlur(small_gray, (5, 5), 0)
+
+    # Search for soundhole-sized circles
+    min_radius = max(10, int(expected_sh_radius_px * scale * 0.6))
+    max_radius = int(expected_sh_radius_px * scale * 1.5)
+
+    circles = cv2.HoughCircles(
+        blurred,
+        cv2.HOUGH_GRADIENT,
+        dp=1.2,
+        minDist=min_radius * 3,
+        param1=50,
+        param2=30,
+        minRadius=min_radius,
+        maxRadius=max_radius
+    )
+
+    if circles is None:
+        return None
+
+    # Find most centered circle (soundhole is typically centered)
+    best_circle = None
+    best_score = float('inf')
+    center_x = small_gray.shape[1] / 2
+
+    for cx, cy, r in circles[0]:
+        dist_from_center = abs(cx - center_x)
+        if dist_from_center < best_score:
+            best_score = dist_from_center
+            best_circle = (cx, cy, r)
+
+    if best_circle is None:
+        return None
+
+    # Scale radius back to original image size
+    _, _, r_scaled = best_circle
+    r_original = r_scaled / scale
+    diameter_px = r_original * 2
+
+    # Calculate mm/px from soundhole reference
+    mm_per_px = soundhole_mm / diameter_px
+    return mm_per_px
+
+
 def contours_to_mm(contours: list, image_height_px: int,
-                   target_height_mm: float = 500.0) -> list:
-    """Convert pixel coordinates to mm."""
-    mm_per_px = target_height_mm / image_height_px
+                   mm_per_px: float | None = None,
+                   target_height_mm: float = 520.0) -> list:
+    """Convert pixel coordinates to mm.
+
+    Uses mm_per_px if provided (from calibration), otherwise estimates
+    from target_height_mm.
+    """
+    if mm_per_px is None:
+        mm_per_px = target_height_mm / image_height_px
+
     mm_contours = []
     for cnt in contours:
         pts = cnt.reshape(-1, 2).astype(float)
@@ -310,10 +407,19 @@ def generate_enhanced_dxfs():
 
                 safe_label = label.replace(" ", "_").replace("/", "_")
 
+                # Calibrate scale from soundhole detection (102mm reference)
+                mm_per_px = calibrate_scale_from_soundhole(view_image, soundhole_mm=102.0)
+                if mm_per_px:
+                    print(f"    Calibrated: {mm_per_px:.4f} mm/px (soundhole)")
+                else:
+                    # Fallback: estimate from body length (520mm Carlos Jumbo)
+                    mm_per_px = CARLOS_JUMBO_BODY_LENGTH_MM / (view_h * 0.65)
+                    print(f"    Estimated: {mm_per_px:.4f} mm/px (from body length)")
+
                 # Method 1: Enhanced contour extraction
                 contours = extract_contours_enhanced(view_image, min_area_ratio=0.005)
                 if contours:
-                    contours_mm = contours_to_mm(contours, view_h, target_height_mm=500.0)
+                    contours_mm = contours_to_mm(contours, view_h, mm_per_px=mm_per_px)
                     dxf_path = output_dir / f"{pdf_path.stem}_{safe_label}_enhanced.dxf"
                     if write_dxf_enhanced(contours_mm, str(dxf_path)):
                         size_kb = dxf_path.stat().st_size / 1024
@@ -323,7 +429,7 @@ def generate_enhanced_dxfs():
                 # Method 2: All edges as polylines (comprehensive)
                 polylines = extract_all_edges_as_lines(view_image)
                 if polylines:
-                    polylines_mm = contours_to_mm(polylines, view_h, target_height_mm=500.0)
+                    polylines_mm = contours_to_mm(polylines, view_h, mm_per_px=mm_per_px)
                     dxf_path = output_dir / f"{pdf_path.stem}_{safe_label}_alledges.dxf"
                     if write_dxf_all_lines(polylines_mm, str(dxf_path)):
                         size_kb = dxf_path.stat().st_size / 1024
