@@ -1,9 +1,57 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Any, Dict, Optional
+from typing import Any, Dict, List, Optional
 
 import numpy as np
+
+# Import border detection utilities from blueprint view segmenter
+try:
+    from blueprint_view_segmenter import (
+        is_page_border_contour,
+        edge_contact_penalty as compute_edge_contact_penalty,
+        filter_border_contours,
+        reject_oversized_contours,
+    )
+    BORDER_DETECTION_AVAILABLE = True
+except ImportError:
+    BORDER_DETECTION_AVAILABLE = False
+
+
+
+
+def prefilter_border_contours(
+    contours: List[np.ndarray],
+    image_shape: tuple,
+    *,
+    margin: int = 10,
+    max_area_ratio: float = 0.70,
+) -> List[np.ndarray]:
+    """
+    Pre-filter contours to remove page borders and oversized candidates.
+    
+    This should be called BEFORE scoring candidates to avoid wasting
+    computation on obviously invalid contours.
+    
+    Args:
+        contours: List of contour arrays from cv2.findContours
+        image_shape: (height, width) of the source image
+        margin: Pixel margin for border detection
+        max_area_ratio: Maximum allowed area ratio vs image
+        
+    Returns:
+        Filtered list of contours (page borders removed)
+    """
+    if not BORDER_DETECTION_AVAILABLE:
+        return contours
+    
+    # First pass: remove page borders
+    filtered = filter_border_contours(contours, image_shape, margin=margin)
+    
+    # Second pass: remove oversized contours
+    filtered = reject_oversized_contours(filtered, image_shape, max_area_ratio=max_area_ratio)
+    
+    return filtered
 
 
 def _clamp01(value: float) -> float:
