@@ -266,7 +266,15 @@ export function useDxfImport() {
     }
   }
 
-  async function loadFromPhoto(file: File): Promise<void> {
+  /**
+   * Options for photo vectorization
+   */
+  interface PhotoOptions {
+    sourceType?: 'auto' | 'ai' | 'photo' | 'blueprint' | 'silhouette'
+    knownWidthMm?: number
+  }
+
+  async function loadFromPhoto(file: File, options: PhotoOptions = {}): Promise<void> {
     pipeStage.value = 'load'
     rawPaths.value  = []; normPaths.value = []; rawBBox.value = null
     error.value     = ''
@@ -293,6 +301,8 @@ export function useDxfImport() {
           export_svg:          true,
           export_dxf:          false,
           label:               file.name.replace(/\.[^.]+$/, ''),
+          source_type:         options.sourceType ?? 'auto',
+          known_width_mm:      options.knownWidthMm ?? null,
         }),
       })
 

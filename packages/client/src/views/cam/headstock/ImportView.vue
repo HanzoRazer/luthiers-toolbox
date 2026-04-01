@@ -36,13 +36,14 @@ const importMode = ref<'file' | 'photo'>('file')
 // ── Photo-mode state ─────────────────────────────────────────────────────────
 const photoDragOver  = ref(false)
 const photoInputRef  = ref<HTMLInputElement|null>(null)
+const photoSourceType = ref<'auto' | 'silhouette' | 'blueprint' | 'photo' | 'ai'>('auto')
 
 async function onPhotoFile(file: File) {
   if (!file.type.startsWith('image/')) {
     emit('toast', 'Photo import needs a JPEG or PNG image')
     return
   }
-  await loadFromPhoto(file)
+  await loadFromPhoto(file, { sourceType: photoSourceType.value })
   if (error.value) {
     emit('toast', `Vectorizer error: ${error.value}`)
   } else if (pipeStage.value === 'ready') {
@@ -280,6 +281,17 @@ function sendToWorkspace() {
           <span class="badge">Concept render</span>
           <span class="badge">Reference photo</span>
         </div>
+        <!-- Source type selector -->
+        <div class="source-type-row" @click.stop>
+          <label class="st-label">Extraction method:</label>
+          <select class="st-select" v-model="photoSourceType">
+            <option value="auto">Auto-detect</option>
+            <option value="silhouette">Silhouette (dark background)</option>
+            <option value="blueprint">Blueprint (PDF scan)</option>
+            <option value="photo">Photo (natural lighting)</option>
+            <option value="ai">AI-generated render</option>
+          </select>
+        </div>
       </div>
 
       <!-- Processing indicator -->
@@ -460,6 +472,20 @@ function sendToWorkspace() {
 }
 .photo-drop:hover, .photo-drop.drag-over { border-color: var(--br); background: rgba(184,150,46,.04); }
 .photo-drop-icon { font-size: 32px; line-height: 1; }
+
+/* Source type selector */
+.source-type-row {
+  display: flex; align-items: center; gap: 8px;
+  margin-top: 8px; padding-top: 8px;
+  border-top: 1px dashed var(--w3);
+}
+.st-label { font-size: 8px; color: var(--dim); text-transform: uppercase; letter-spacing: .5px; }
+.st-select {
+  background: var(--w1); border: 1px solid var(--w3); border-radius: 3px;
+  padding: 4px 8px; font-size: 9px; color: var(--v1); font-family: var(--mono);
+  cursor: pointer;
+}
+.st-select:focus { outline: none; border-color: var(--br); }
 
 /* Processing spinner */
 .photo-processing {

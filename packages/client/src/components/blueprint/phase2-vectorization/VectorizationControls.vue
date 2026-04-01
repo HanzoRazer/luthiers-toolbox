@@ -138,8 +138,13 @@ function setDarkThresholdValue(value: number) {
         >
           <option value="smart">Smart (ML-filtered)</option>
           <option value="simple">Simple (All contours)</option>
+          <option value="silhouette">Photo Silhouette</option>
         </select>
-        <span class="control-hint">Simple mode works for non-guitar instruments</span>
+        <span class="control-hint">
+          {{ vectorParams.extractionMode === 'silhouette'
+            ? 'Extract body outline from photo (removes background)'
+            : 'Simple mode works for non-guitar instruments' }}
+        </span>
       </div>
 
       <!-- Dark Threshold -->
