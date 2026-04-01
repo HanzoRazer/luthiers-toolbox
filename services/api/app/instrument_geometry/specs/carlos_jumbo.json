@@ -151,7 +151,15 @@
         "helmholtz_hz": 134.8
       },
       "date": "2026-04-01",
-      "note": "Dimensions derived from 1:1 PDF blueprint using soundhole (102mm) as calibration reference. Volume validated against jumbo acoustic range (14-19 liters). Previous dimensions (430/310/270/520) were estimated; these are measured from calibrated blueprint."
+      "note": "Dimensions derived from 1:1 PDF blueprint using soundhole (102mm) as calibration reference. Volume validated against jumbo acoustic range (14-19 liters). Previous dimensions (430/310/270/520) were estimated; these are measured from calibrated blueprint.",
+      "methodology_doc": "services/photo-vectorizer/BLUEPRINT_CALIBRATION_METHODOLOGY.md",
+      "volume_formula": "elliptical_cross_section_integration",
+      "shape_factor": 0.85,
+      "section_proportions": {
+        "lower_section_pct": 0.4,
+        "waist_section_pct": 0.25,
+        "upper_section_pct": 0.35
+      }
     }
   },
   "soundhole": {
