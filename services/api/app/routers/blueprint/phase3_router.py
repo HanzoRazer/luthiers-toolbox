@@ -186,11 +186,20 @@ async def vectorize_blueprint(
         if scale_hint_mm_per_pixel:
             logger.info(f"Using Phase 1 scale hint: {scale_hint_mm_per_pixel:.6f} mm/px")
 
+        # Convert body_size_mm tuple to dict if needed
+        body_size_raw = result.get("body_size_mm")
+        if isinstance(body_size_raw, (tuple, list)) and len(body_size_raw) >= 2:
+            body_size_mm = {"width": float(body_size_raw[0]), "height": float(body_size_raw[1])}
+        elif isinstance(body_size_raw, dict):
+            body_size_mm = body_size_raw
+        else:
+            body_size_mm = None
+
         return Phase3Response(
             success=True,
             dxf_path=result.get("dxf"),
             svg_path=result.get("svg"),
-            body_size_mm=result.get("body_size_mm"),
+            body_size_mm=body_size_mm,
             contours_found=result.get("contours_found", 0),
             primitives_detected=result.get("primitives_detected", 0),
             validation_passed=result.get("validation_passed", False),
