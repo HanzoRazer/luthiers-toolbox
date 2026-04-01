@@ -51,7 +51,7 @@ export interface ManualCalibrationPoints {
   dimensionName: string
 }
 
-export type ExtractionMode = 'smart' | 'simple' | 'silhouette'
+export type ExtractionMode = 'smart' | 'simple' | 'silhouette' | 'blueprint'
 
 export interface VectorParams {
   scaleFactor: number
@@ -466,6 +466,51 @@ export function useBlueprintWorkflow(options: BlueprintWorkflowOptions = {}) {
     return true
   }
 
+  // Blueprint PDF: Vectorization via PhotoVectorizerV2 with gap-closing
+  const vectorizeGeometryBlueprint = async (): Promise<boolean> => {
+    if (!uploadedFile.value) return false
+
+    // Convert file to base64
+    const arrayBuffer = await uploadedFile.value.arrayBuffer()
+    const bytes = new Uint8Array(arrayBuffer)
+    let binary = ''
+    for (let i = 0; i < bytes.byteLength; i++) {
+      binary += String.fromCharCode(bytes[i])
+    }
+    const base64Image = btoa(binary)
+
+    const response = await api('/api/vectorizer/extract', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        image_b64: base64Image,
+        source_type: 'blueprint',
+        export_svg: true,
+        export_dxf: true,
+      }),
+    })
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}))
+      throw new Error(errorData.detail || `Blueprint extraction failed: ${response.status}`)
+    }
+
+    const data = await response.json()
+    if (!data?.ok) {
+      throw new Error(data?.error || 'Blueprint extraction failed')
+    }
+
+    // Map blueprint response to VectorizedGeometry
+    vectorizedGeometry.value = {
+      contours_detected: data.contour_count ?? 1,
+      lines_detected: data.line_count ?? 0,
+      processing_time_ms: data.processing_ms ?? 0,
+      svg_path: data.svg_path ?? '',
+      dxf_path: data.dxf_path ?? '',
+    }
+    return true
+  }
+
   // Phase 2 or Phase 3 or Silhouette: Vectorization dispatch
   const vectorizeGeometry = async (): Promise<boolean> => {
     try {
@@ -475,6 +520,11 @@ export function useBlueprintWorkflow(options: BlueprintWorkflowOptions = {}) {
       // Silhouette mode uses PhotoVectorizerV2
       if (vectorParams.value.extractionMode === 'silhouette') {
         return await vectorizeGeometrySilhouette()
+      }
+
+      // Blueprint mode uses PhotoVectorizerV2 with gap-closing
+      if (vectorParams.value.extractionMode === 'blueprint') {
+        return await vectorizeGeometryBlueprint()
       }
 
       if (usePhase3Vectorization.value && phase3Available.value) {

@@ -139,10 +139,13 @@ function setDarkThresholdValue(value: number) {
           <option value="smart">Smart (ML-filtered)</option>
           <option value="simple">Simple (All contours)</option>
           <option value="silhouette">Photo Silhouette</option>
+          <option value="blueprint">Blueprint PDF (gap closing)</option>
         </select>
         <span class="control-hint">
           {{ vectorParams.extractionMode === 'silhouette'
             ? 'Extract body outline from photo (removes background)'
+            : vectorParams.extractionMode === 'blueprint'
+            ? 'For PDF scans - closes gaps, isolates body only'
             : 'Simple mode works for non-guitar instruments' }}
         </span>
       </div>
