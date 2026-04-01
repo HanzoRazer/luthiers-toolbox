@@ -1,11 +1,11 @@
 {
   "model_id": "carlos_jumbo",
   "display_name": "Carlos Jumbo Acoustic Guitar",
-  "source": "Carlos Jumbo guitar plans archive (3-page set: JUMBO-CARLOS-1-3.pdf, JUMBO-CARLOS-2-3.pdf, JUMBO-CARLOS-3-3.pdf). Vectorizer Phase 3.6 analysis across all 3 pages — page 3 yielded validated body outline (422x498mm, 0.946x scale). Body catalog reference: 400x520mm (39-point DXF, AI vision extraction). Spanish-style jumbo acoustic with wide body for rich bass response.",
+  "source": "Carlos Jumbo guitar plans archive (3-page set: JUMBO-CARLOS-1-3.pdf, JUMBO-CARLOS-2-3.pdf, JUMBO-CARLOS-3-3.pdf). Vectorizer Phase 3.6 analysis across all 3 pages \u00e2\u20ac\u201d page 3 yielded validated body outline (422x498mm, 0.946x scale). Body catalog reference: 400x520mm (39-point DXF, AI vision extraction). Spanish-style jumbo acoustic with wide body for rich bass response.",
   "units": "mm",
   "variants": {
     "standard": {
-      "description": "Carlos Jumbo standard — a Spanish-influenced jumbo-sized acoustic guitar. Wide lower bout and deep body produce a commanding bass-heavy tone with full projection. Traditional fan bracing or X-bracing depending on builder preference.",
+      "description": "Carlos Jumbo standard \u00e2\u20ac\u201d a Spanish-influenced jumbo-sized acoustic guitar. Wide lower bout and deep body produce a commanding bass-heavy tone with full projection. Traditional fan bracing or X-bracing depending on builder preference.",
       "year_range": "traditional_design",
       "scale_length_mm": 650.0,
       "fret_count": 20,
@@ -28,7 +28,7 @@
         "truss_rod_access": "headstock",
         "inlays": "dot_side_only",
         "fret_wire": "medium_vintage",
-        "note": "Wide classical-style nut width (52mm) for fingerstyle playing. Flat fretboard traditional for Spanish instruments. Body join at 12th fret — standard classical/jumbo junction. Cedar neck common for Spanish-influenced designs."
+        "note": "Wide classical-style nut width (52mm) for fingerstyle playing. Flat fretboard traditional for Spanish instruments. Body join at 12th fret \u00e2\u20ac\u201d standard classical/jumbo junction. Cedar neck common for Spanish-influenced designs."
       },
       "headstock": {
         "style": "slotted_classical",
@@ -43,7 +43,7 @@
       }
     },
     "steel_string": {
-      "description": "Carlos Jumbo steel-string variant — adapted for steel strings with reinforced bracing and narrower nut. Pin bridge replaces classical tie bridge.",
+      "description": "Carlos Jumbo steel-string variant \u00e2\u20ac\u201d adapted for steel strings with reinforced bracing and narrower nut. Pin bridge replaces classical tie bridge.",
       "year_range": "traditional_design",
       "scale_length_mm": 650.0,
       "fret_count": 20,
@@ -86,11 +86,11 @@
     "back_sides_wood": "east_indian_rosewood",
     "back_sides_alternative": "indian_laurel",
     "construction": "acoustic_hollow_body",
-    "lower_bout_mm": 430.0,
-    "upper_bout_mm": 310.0,
-    "waist_mm": 270.0,
-    "body_length_mm": 520.0,
-    "body_width_mm": 430.0,
+    "lower_bout_mm": 477.0,
+    "upper_bout_mm": 372.0,
+    "waist_mm": 324.0,
+    "body_length_mm": 522.0,
+    "body_width_mm": 477.0,
     "body_depth_at_tail_mm": 125.0,
     "body_depth_at_neck_mm": 105.0,
     "outline_points": 39,
@@ -108,18 +108,51 @@
       "material": "ivoroid",
       "width_mm": 1.5,
       "purfling": true,
-      "purfling_layers": ["black", "white", "black"],
+      "purfling_layers": [
+        "black",
+        "white",
+        "black"
+      ],
       "purfling_total_width_mm": 3.0
     },
     "binding_back": {
       "material": "ivoroid",
       "width_mm": 1.5,
       "purfling": true,
-      "purfling_layers": ["black", "white", "black"],
+      "purfling_layers": [
+        "black",
+        "white",
+        "black"
+      ],
       "purfling_total_width_mm": 3.0
     },
     "neck_joint_type": "dovetail",
-    "note": "The Carlos Jumbo is a wide-body Spanish-influenced flat-top acoustic guitar (not an archtop). Its lower bout is wider than a standard dreadnought (430mm vs 400mm), producing a louder, bass-forward tone with excellent projection. The rounded jumbo shape with gentle waist curve is characteristic of Spanish-school design. Vectorizer page 3 detected 2 shapes classified as f-holes — these are misclassifications (likely rosette segments or bracing outlines), confirmed by research that the Carlos Jumbo is a round-soundhole flat-top design."
+    "note": "The Carlos Jumbo is a wide-body Spanish-influenced flat-top acoustic guitar (not an archtop). Its lower bout is wider than a standard dreadnought (430mm vs 400mm), producing a louder, bass-forward tone with excellent projection. The rounded jumbo shape with gentle waist curve is characteristic of Spanish-school design. Vectorizer page 3 detected 2 shapes classified as f-holes \u00e2\u20ac\u201d these are misclassifications (likely rosette segments or bracing outlines), confirmed by research that the Carlos Jumbo is a round-soundhole flat-top design.",
+    "calibration": {
+      "method": "soundhole_calibration",
+      "reference": "soundhole_diameter_102mm",
+      "source_pdf": "JUMBO-CARLOS-2-3.pdf",
+      "source_view": "view_7 (front body view)",
+      "mm_per_px": 0.2833,
+      "soundhole_detected_px": 360,
+      "bout_proportions": {
+        "upper_to_lower_ratio": 0.78,
+        "waist_to_lower_ratio": 0.68,
+        "upper_bout_height_pct": 0.3,
+        "lower_bout_height_pct": 0.7
+      },
+      "volume_validation": {
+        "calculated_liters": 14.65,
+        "expected_range_liters": [
+          14.0,
+          19.0
+        ],
+        "validation": "PASSED",
+        "helmholtz_hz": 134.8
+      },
+      "date": "2026-04-01",
+      "note": "Dimensions derived from 1:1 PDF blueprint using soundhole (102mm) as calibration reference. Volume validated against jumbo acoustic range (14-19 liters). Previous dimensions (430/310/270/520) were estimated; these are measured from calibrated blueprint."
+    }
   },
   "soundhole": {
     "diameter_mm": 102.0,
@@ -136,14 +169,20 @@
       "classical_variant": {
         "pattern": "7_fan_brace",
         "material": "sitka_spruce",
-        "brace_cross_section_mm": {"width": 5.0, "height": 14.0},
+        "brace_cross_section_mm": {
+          "width": 5.0,
+          "height": 14.0
+        },
         "scalloped": false,
         "note": "Traditional 7-fan brace pattern for classical/nylon string variant. Fans radiate from below the soundhole toward the lower bout."
       },
       "steel_string_variant": {
         "pattern": "X-brace",
         "material": "sitka_spruce",
-        "brace_cross_section_mm": {"width": 6.35, "height": 12.7},
+        "brace_cross_section_mm": {
+          "width": 6.35,
+          "height": 12.7
+        },
         "scalloped": true,
         "note": "Scalloped X-brace for steel-string variant. Standard acoustic steel-string reinforcement."
       }
@@ -152,7 +191,10 @@
       "count": 4,
       "material": "sitka_spruce",
       "orientation": "lateral",
-      "cross_section_mm": {"width": 6.35, "height": 12.7},
+      "cross_section_mm": {
+        "width": 6.35,
+        "height": 12.7
+      },
       "note": "4 lateral back braces. Standard acoustic construction."
     },
     "vectorizer_bracing_detections": {
@@ -172,7 +214,7 @@
       "height_mm": 10.0,
       "saddle_material": "bone",
       "saddle_compensation": false,
-      "note": "Classical tie bridge for nylon strings. No pin holes — strings are tied through the bridge."
+      "note": "Classical tie bridge for nylon strings. No pin holes \u00e2\u20ac\u201d strings are tied through the bridge."
     },
     "steel_string_variant": {
       "type": "pin_bridge",
@@ -218,39 +260,161 @@
     "finish": "nitrocellulose_lacquer_or_shellac"
   },
   "cnc_operations": {
-    "note": "Acoustic guitar CNC operations differ significantly from solid-body electrics. Operations cover the top plate, back plate, side bending form, and neck — not a single body blank. Listed operations are for a CNC-assisted lutherie workflow.",
+    "note": "Acoustic guitar CNC operations differ significantly from solid-body electrics. Operations cover the top plate, back plate, side bending form, and neck \u00e2\u20ac\u201d not a single body blank. Listed operations are for a CNC-assisted lutherie workflow.",
     "tool_library": {
-      "T1": {"name": "6mm Flat End Mill", "diameter_mm": 6.0, "rpm": 18000, "use": "Soundhole, bridge plate recess, rosette channel, top/back perimeter"},
-      "T2": {"name": "3mm Flat End Mill", "diameter_mm": 3.0, "rpm": 20000, "use": "Binding ledge, bracing slots, detail routing"},
-      "T3": {"name": "6mm Ball Nose", "diameter_mm": 6.0, "rpm": 18000, "use": "Top/back radius dishing, brace scalloping"},
-      "T4": {"name": "1.5mm Drill", "diameter_mm": 1.5, "rpm": 20000, "use": "Bridge pin holes, tuner holes, pilot holes"}
+      "T1": {
+        "name": "6mm Flat End Mill",
+        "diameter_mm": 6.0,
+        "rpm": 18000,
+        "use": "Soundhole, bridge plate recess, rosette channel, top/back perimeter"
+      },
+      "T2": {
+        "name": "3mm Flat End Mill",
+        "diameter_mm": 3.0,
+        "rpm": 20000,
+        "use": "Binding ledge, bracing slots, detail routing"
+      },
+      "T3": {
+        "name": "6mm Ball Nose",
+        "diameter_mm": 6.0,
+        "rpm": 18000,
+        "use": "Top/back radius dishing, brace scalloping"
+      },
+      "T4": {
+        "name": "1.5mm Drill",
+        "diameter_mm": 1.5,
+        "rpm": 20000,
+        "use": "Bridge pin holes, tuner holes, pilot holes"
+      }
     },
     "top_plate_operations": [
-      {"op": "OP10", "name": "Top Plate Perimeter", "tool": "T1", "depth_mm": 3.0, "note": "Cut top plate to body outline shape, slightly oversized for binding ledge"},
-      {"op": "OP11", "name": "Soundhole Cut", "tool": "T1", "depth_mm": 3.0, "note": "102mm diameter soundhole through the top plate"},
-      {"op": "OP12", "name": "Rosette Channel", "tool": "T2", "depth_mm": 1.5, "note": "Concentric channel for mosaic rosette inlay"},
-      {"op": "OP13", "name": "Binding Ledge Top", "tool": "T2", "depth_mm": 1.5, "note": "Stepped ledge around top perimeter for binding"},
-      {"op": "OP14", "name": "Bridge Plate Recess", "tool": "T1", "depth_mm": 1.0, "note": "Shallow recess for bridge plate reinforcement under soundhole"},
-      {"op": "OP15", "name": "Top Radius Dishing", "tool": "T3", "depth_mm": "variable", "note": "Optional: CNC dish for top plate radius (7.6m / 25-foot radius)"}
+      {
+        "op": "OP10",
+        "name": "Top Plate Perimeter",
+        "tool": "T1",
+        "depth_mm": 3.0,
+        "note": "Cut top plate to body outline shape, slightly oversized for binding ledge"
+      },
+      {
+        "op": "OP11",
+        "name": "Soundhole Cut",
+        "tool": "T1",
+        "depth_mm": 3.0,
+        "note": "102mm diameter soundhole through the top plate"
+      },
+      {
+        "op": "OP12",
+        "name": "Rosette Channel",
+        "tool": "T2",
+        "depth_mm": 1.5,
+        "note": "Concentric channel for mosaic rosette inlay"
+      },
+      {
+        "op": "OP13",
+        "name": "Binding Ledge Top",
+        "tool": "T2",
+        "depth_mm": 1.5,
+        "note": "Stepped ledge around top perimeter for binding"
+      },
+      {
+        "op": "OP14",
+        "name": "Bridge Plate Recess",
+        "tool": "T1",
+        "depth_mm": 1.0,
+        "note": "Shallow recess for bridge plate reinforcement under soundhole"
+      },
+      {
+        "op": "OP15",
+        "name": "Top Radius Dishing",
+        "tool": "T3",
+        "depth_mm": "variable",
+        "note": "Optional: CNC dish for top plate radius (7.6m / 25-foot radius)"
+      }
     ],
     "back_plate_operations": [
-      {"op": "OP20", "name": "Back Plate Perimeter", "tool": "T1", "depth_mm": 3.0, "note": "Cut back plate to body outline, slightly oversized"},
-      {"op": "OP21", "name": "Binding Ledge Back", "tool": "T2", "depth_mm": 1.5, "note": "Stepped ledge for back binding"},
-      {"op": "OP22", "name": "Back Radius Dishing", "tool": "T3", "depth_mm": "variable", "note": "Optional: CNC dish for back plate radius (4.6m / 15-foot radius)"}
+      {
+        "op": "OP20",
+        "name": "Back Plate Perimeter",
+        "tool": "T1",
+        "depth_mm": 3.0,
+        "note": "Cut back plate to body outline, slightly oversized"
+      },
+      {
+        "op": "OP21",
+        "name": "Binding Ledge Back",
+        "tool": "T2",
+        "depth_mm": 1.5,
+        "note": "Stepped ledge for back binding"
+      },
+      {
+        "op": "OP22",
+        "name": "Back Radius Dishing",
+        "tool": "T3",
+        "depth_mm": "variable",
+        "note": "Optional: CNC dish for back plate radius (4.6m / 15-foot radius)"
+      }
     ],
     "bending_form_operations": [
-      {"op": "OP30", "name": "Side Bending Form Male", "tool": "T1", "depth_mm": 25.0, "note": "Male mold for side bending — CNC from MDF or plywood"},
-      {"op": "OP31", "name": "Side Bending Form Female", "tool": "T1", "depth_mm": 25.0, "note": "Female mold, offset by side thickness (2mm) from male form"}
+      {
+        "op": "OP30",
+        "name": "Side Bending Form Male",
+        "tool": "T1",
+        "depth_mm": 25.0,
+        "note": "Male mold for side bending \u00e2\u20ac\u201d CNC from MDF or plywood"
+      },
+      {
+        "op": "OP31",
+        "name": "Side Bending Form Female",
+        "tool": "T1",
+        "depth_mm": 25.0,
+        "note": "Female mold, offset by side thickness (2mm) from male form"
+      }
     ],
     "neck_operations": [
-      {"op": "OP40", "name": "Neck Blank Profile", "tool": "T1", "depth_mm": 25.0, "note": "Cut neck blank to heel/shaft profile outline"},
-      {"op": "OP41", "name": "Headstock Angle Cut", "tool": "T1", "depth_mm": "variable", "note": "14-degree headstock scarf joint or carved angle"},
-      {"op": "OP42", "name": "Truss Rod Channel", "tool": "T2", "depth_mm": 10.0, "note": "6mm x 10mm truss rod channel in neck shaft"},
-      {"op": "OP43", "name": "Heel Dovetail Tenon", "tool": "T2", "depth_mm": 16.0, "note": "Precision dovetail tenon on neck heel"},
-      {"op": "OP44", "name": "Fret Slot Cutting", "tool": "T2", "depth_mm": 1.5, "note": "20 precision fret slots — CNC ensures accurate spacing"}
+      {
+        "op": "OP40",
+        "name": "Neck Blank Profile",
+        "tool": "T1",
+        "depth_mm": 25.0,
+        "note": "Cut neck blank to heel/shaft profile outline"
+      },
+      {
+        "op": "OP41",
+        "name": "Headstock Angle Cut",
+        "tool": "T1",
+        "depth_mm": "variable",
+        "note": "14-degree headstock scarf joint or carved angle"
+      },
+      {
+        "op": "OP42",
+        "name": "Truss Rod Channel",
+        "tool": "T2",
+        "depth_mm": 10.0,
+        "note": "6mm x 10mm truss rod channel in neck shaft"
+      },
+      {
+        "op": "OP43",
+        "name": "Heel Dovetail Tenon",
+        "tool": "T2",
+        "depth_mm": 16.0,
+        "note": "Precision dovetail tenon on neck heel"
+      },
+      {
+        "op": "OP44",
+        "name": "Fret Slot Cutting",
+        "tool": "T2",
+        "depth_mm": 1.5,
+        "note": "20 precision fret slots \u00e2\u20ac\u201d CNC ensures accurate spacing"
+      }
     ],
     "bridge_pin_holes": [
-      {"op": "OP50", "name": "Bridge Pin Holes 6x", "tool": "T4", "depth_mm": 12.0, "note": "Steel-string variant only — 6 bridge pin holes through top plate and bridge plate"}
+      {
+        "op": "OP50",
+        "name": "Bridge Pin Holes 6x",
+        "tool": "T4",
+        "depth_mm": 12.0,
+        "note": "Steel-string variant only \u00e2\u20ac\u201d 6 bridge pin holes through top plate and bridge plate"
+      }
     ]
   },
   "stock": {
@@ -293,9 +457,26 @@
     "scale_length_mm": 650.0,
     "fret_count": 20,
     "positions_from_nut_mm": [
-      36.48, 70.92, 103.42, 134.09, 163.05, 190.38, 216.18, 240.53,
-      263.51, 285.20, 305.67, 325.00, 343.24, 360.46, 376.71, 392.05,
-      406.53, 420.19, 433.09, 445.26
+      36.48,
+      70.92,
+      103.42,
+      134.09,
+      163.05,
+      190.38,
+      216.18,
+      240.53,
+      263.51,
+      285.2,
+      305.67,
+      325.0,
+      343.24,
+      360.46,
+      376.71,
+      392.05,
+      406.53,
+      420.19,
+      433.09,
+      445.26
     ]
   },
   "dxf_assets": {
@@ -322,7 +503,7 @@
           "bridge_route": 3,
           "small_feature": 417
         },
-        "note": "Full construction plan page. Oversize detection (821x574mm) — multi-view layout page with neck pocket reference that does not match acoustic body scale. Bracing detail strongest on this page (20 detected)."
+        "note": "Full construction plan page. Oversize detection (821x574mm) \u00e2\u20ac\u201d multi-view layout page with neck pocket reference that does not match acoustic body scale. Bracing detail strongest on this page (20 detected)."
       },
       "page_2": {
         "dxf": "exports/jumbo_carlos_vectorizer/JUMBO-CARLOS-2-3_phase3.dxf",
@@ -365,7 +546,7 @@
           "jack_route": 21,
           "small_feature": 179
         },
-        "note": "Body outline page — only page to pass validation. 422x498mm (close to catalog 400x520mm). 2 f-hole detections are misclassifications — the Carlos Jumbo is a flat-top with a round soundhole, not an archtop. Likely rosette segments or bracing outlines triggered the f-hole classifier. Scale reference from single_coil_route may not be optimal for acoustic plans."
+        "note": "Body outline page \u00e2\u20ac\u201d only page to pass validation. 422x498mm (close to catalog 400x520mm). 2 f-hole detections are misclassifications \u00e2\u20ac\u201d the Carlos Jumbo is a flat-top with a round soundhole, not an archtop. Likely rosette segments or bracing outlines triggered the f-hole classifier. Scale reference from single_coil_route may not be optimal for acoustic plans."
       },
       "total_primitives": 2011,
       "total_processing_time_ms": 124367
@@ -374,7 +555,11 @@
   },
   "design_heritage": {
     "style": "Spanish jumbo acoustic",
-    "influences": ["classical_spanish_school", "gibson_j200_jumbo", "guild_jumbo"],
+    "influences": [
+      "classical_spanish_school",
+      "gibson_j200_jumbo",
+      "guild_jumbo"
+    ],
     "key_features": [
       "wide_lower_bout",
       "deep_body_bass_response",
@@ -382,18 +567,18 @@
       "fan_or_x_bracing",
       "round_soundhole"
     ],
-    "note": "The Carlos Jumbo draws from the Spanish guitar-making tradition with its wide body, deep projection, and classical construction options. The jumbo body size provides exceptional bass response and volume — the largest standard acoustic body shape. This is a flat-top acoustic with a round soundhole (not an archtop). Plans show both classical (nylon) and steel-string construction details."
+    "note": "The Carlos Jumbo draws from the Spanish guitar-making tradition with its wide body, deep projection, and classical construction options. The jumbo body size provides exceptional bass response and volume \u00e2\u20ac\u201d the largest standard acoustic body shape. This is a flat-top acoustic with a round soundhole (not an archtop). Plans show both classical (nylon) and steel-string construction details."
   },
   "notes": [
     "The Carlos Jumbo is a Spanish-influenced jumbo acoustic guitar with a wide body for rich bass and projection.",
     "Three-page plan set: page 1 (construction details, bracing layout), page 2 (section views, neck details), page 3 (body outline).",
-    "Vectorizer processed all 3 pages — 2,011 total primitives across 124 seconds of processing time.",
+    "Vectorizer processed all 3 pages \u00e2\u20ac\u201d 2,011 total primitives across 124 seconds of processing time.",
     "Only page 3 passed body validation (422x498mm). Pages 1-2 contain multi-view layouts that exceed single-body size detection.",
     "Existing body outline in catalog: acoustic/carlos_jumbo_body.dxf (39-point extraction, 400x520mm).",
-    "Vectorizer detected 35 bracing features total across all pages — strong acoustic construction detail in the plans.",
-    "Page 3 detected 2 shapes classified as f-holes — confirmed as vectorizer misclassifications. The Carlos Jumbo is a flat-top acoustic with a round soundhole, not an archtop. Likely rosette segments or bracing outlines triggered the f-hole classifier.",
+    "Vectorizer detected 35 bracing features total across all pages \u00e2\u20ac\u201d strong acoustic construction detail in the plans.",
+    "Page 3 detected 2 shapes classified as f-holes \u00e2\u20ac\u201d confirmed as vectorizer misclassifications. The Carlos Jumbo is a flat-top acoustic with a round soundhole, not an archtop. Likely rosette segments or bracing outlines triggered the f-hole classifier.",
     "CNC operations for acoustic guitars differ fundamentally from solid-body electrics: separate top plate, back plate, side bending forms, and neck operations rather than a single body blank.",
-    "Scale length is 650mm (25.59 inches) — standard for classical and jumbo Spanish-style guitars.",
+    "Scale length is 650mm (25.59 inches) \u00e2\u20ac\u201d standard for classical and jumbo Spanish-style guitars.",
     "Two variants defined: classical (52mm nut, flat fretboard, tie bridge, 12th-fret join) and steel-string (44.5mm nut, radiused fretboard, pin bridge, 14th-fret join)."
   ]
 }
