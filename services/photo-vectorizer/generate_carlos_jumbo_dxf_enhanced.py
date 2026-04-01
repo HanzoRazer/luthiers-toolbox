@@ -30,12 +30,13 @@ def load_carlos_jumbo_spec(repo_root: Path) -> dict:
     return {}
 
 
-# Default dimensions from spec (fallback if spec not found)
-CARLOS_JUMBO_BODY_LENGTH_MM = 520.0
-CARLOS_JUMBO_BODY_WIDTH_MM = 430.0
-CARLOS_JUMBO_LOWER_BOUT_MM = 430.0
-CARLOS_JUMBO_UPPER_BOUT_MM = 310.0
-CARLOS_JUMBO_WAIST_MM = 270.0
+# Default dimensions from 1:1 blueprint calibration (soundhole = 102mm reference)
+# Volume validated: 14.65 liters (within jumbo range 14-19L)
+CARLOS_JUMBO_BODY_LENGTH_MM = 522.0
+CARLOS_JUMBO_BODY_WIDTH_MM = 477.0
+CARLOS_JUMBO_LOWER_BOUT_MM = 477.0
+CARLOS_JUMBO_UPPER_BOUT_MM = 372.0  # ratio 0.78 to lower bout
+CARLOS_JUMBO_WAIST_MM = 324.0       # ratio 0.68 to lower bout
 
 try:
     import fitz

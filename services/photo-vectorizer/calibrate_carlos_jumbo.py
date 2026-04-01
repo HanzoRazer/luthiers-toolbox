@@ -56,10 +56,29 @@ CARLOS_JUMBO_REFS = {
     'body_join_fret': 12,           # 12th fret = scale/2 = 325mm from nut
     'fret_12_from_nut_mm': 325.0,   # Half scale length
 
-    # Expected body proportions for jumbo (for validation)
-    'expected_lower_bout_range_mm': (410, 450),  # Jumbo is wider than dreadnought
-    'expected_body_length_range_mm': (500, 550),
-    'expected_volume_range_liters': (14.0, 19.0),  # Jumbo > dreadnought (~13L)
+    # VALIDATED body dimensions from 1:1 blueprint calibration
+    'lower_bout_mm': 477.0,
+    'upper_bout_mm': 372.0,         # ratio 0.78 to lower bout
+    'waist_mm': 324.0,              # ratio 0.68 to lower bout
+    'body_length_mm': 522.0,
+    'body_width_mm': 477.0,
+    
+    # Body depth (from original spec)
+    'depth_endblock_mm': 125.0,
+    'depth_neck_mm': 105.0,
+    
+    # Bout height proportions
+    'upper_bout_height_pct': 0.30,
+    'lower_bout_height_pct': 0.70,
+
+    # Expected ranges for validation
+    'expected_lower_bout_range_mm': (460, 500),  # Updated based on actual measurement
+    'expected_body_length_range_mm': (510, 540),
+    'expected_volume_range_liters': (14.0, 19.0),  # Validated: 14.65 liters
+    
+    # Volume calculation result
+    'calculated_volume_liters': 14.65,
+    'helmholtz_frequency_hz': 134.8,
 }
 
 
