@@ -266,6 +266,54 @@ Expected Helmholtz frequencies:
 - Calibration script: `services/photo-vectorizer/calibrate_carlos_jumbo.py`
 - DXF generator: `services/photo-vectorizer/generate_carlos_jumbo_dxf_enhanced.py`
 - Volume calculator: `services/api/app/calculators/acoustic_body_volume.py`
+- **Light line extractor**: `services/photo-vectorizer/light_line_body_extractor.py`
+
+## Light Line Extraction
+
+When body outlines are drawn with very light gray lines that standard edge detection misses, use the specialized `light_line_body_extractor.py` module:
+
+```bash
+# CLI usage
+python light_line_body_extractor.py path/to/blueprint.pdf \
+    --page 0 \
+    --page-size A0 \
+    --output body_outline.dxf \
+    --target-width 477 \
+    --target-height 522 \
+    --debug
+```
+
+```python
+# Programmatic usage
+from light_line_body_extractor import (
+    extract_body_from_pdf,
+    create_acoustic_body_config,
+    save_contour_to_dxf,
+)
+
+config = create_acoustic_body_config()
+result = extract_body_from_pdf(
+    pdf_path,
+    page_number=0,
+    page_size_mm=(841.0, 1189.0),  # A0
+    config=config,
+    save_debug=True,
+)
+
+if result.success:
+    save_contour_to_dxf(
+        result.body,
+        output_path,
+        scale_to_dimensions=(477.0, 522.0),  # Target jumbo dimensions
+    )
+```
+
+**Technique**:
+1. Invert image (light → dark)
+2. Enhance contrast by 3x
+3. Low Canny thresholds (15, 45)
+4. Morphological closing (5x5 kernel, 3 iterations)
+5. Filter by expected body dimensions (300-700mm × 350-750mm)
 
 ## Applying to New Blueprints
 
