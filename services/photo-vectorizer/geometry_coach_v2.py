@@ -1,13 +1,32 @@
 from __future__ import annotations
 
+import logging
 from dataclasses import dataclass, field, replace
-from typing import Any, Dict, List, Optional, Tuple
+from pathlib import Path
+from typing import Any, Callable, Dict, List, Optional, Tuple, Union
+
+import numpy as np
 
 from body_isolation_result import BodyIsolationResult
 from body_isolation_stage import BodyIsolationParams
 from contour_stage import StageParams
 from geometry_coach import CoachDecision  # reuse V1 type if needed
 
+# Lazy import to avoid circular dependencies
+try:
+    from blueprint_view_segmenter import (
+        BlueprintViewSegmenter,
+        SegmentationResult,
+        DetectedView,
+    )
+    MULTI_VIEW_AVAILABLE = True
+except ImportError:
+    MULTI_VIEW_AVAILABLE = False
+    BlueprintViewSegmenter = None
+    SegmentationResult = None
+    DetectedView = None
+
+logger = logging.getLogger(__name__)
 
 CRITICAL_EXPORT_THRESHOLD = 0.30
 
@@ -22,6 +41,12 @@ class CoachV2Config:
     contour_target_threshold: float = 0.80
     severe_border_penalty_threshold: float = 0.5
     ownership_retry_threshold: float = 0.60
+
+    # Multi-view blueprint detection settings
+    enable_multi_view_detection: bool = True
+    multi_view_score_threshold: float = 0.50  # min score to consider a view viable
+    multi_view_min_area_ratio: float = 0.05   # min view area as fraction of image
+    multi_view_max_views: int = 6             # max views to process
 
     # Retry profiles for body isolation
     body_retry_profiles: List[BodyIsolationParams] = field(
@@ -38,7 +63,9 @@ class CoachV2Config:
 
 @dataclass
 class CoachDecisionV2:
-    action: str  # accept|rerun_body_isolation|rerun_contour_stage|manual_review_required
+    # Actions: accept | rerun_body_isolation | rerun_contour_stage |
+    #          segment_views | manual_review_required
+    action: str
     reason: str
     notes: List[str] = field(default_factory=list)
     retry_count: int = 0
@@ -50,6 +77,11 @@ class CoachDecisionV2:
     original_contour_score: Optional[float] = None
     candidate_body_score: Optional[float] = None
     candidate_contour_score: Optional[float] = None
+
+    # Multi-view segmentation results
+    views_detected: int = 0
+    selected_view_index: Optional[int] = None
+    view_scores: Optional[List[float]] = None
 
 
 class GeometryCoachV2:
@@ -482,6 +514,249 @@ class GeometryCoachV2:
             original_contour_score=getattr(current_contour, "best_score", None),
         )
         return current_body, current_contour, fallback
+
+    # =========================================================================
+    # Multi-View Blueprint Detection and Handling
+    # =========================================================================
+
+    def is_multi_view_blueprint(
+        self,
+        image: np.ndarray,
+        *,
+        image_path: Optional[Union[str, Path]] = None,
+    ) -> Tuple[bool, Optional["SegmentationResult"]]:
+        """
+        Detect if the input image is a multi-view blueprint.
+
+        Returns:
+            (is_multi_view, segmentation_result)
+            - is_multi_view: True if 2+ distinct views detected
+            - segmentation_result: SegmentationResult if detected, else None
+        """
+        if not MULTI_VIEW_AVAILABLE or not self.config.enable_multi_view_detection:
+            return False, None
+
+        try:
+            segmenter = BlueprintViewSegmenter()
+
+            # Prefer path-based segmentation if available
+            if image_path is not None:
+                result = segmenter.segment(image_path, method="auto")
+            else:
+                # Fallback: segment from numpy array
+                result = segmenter.segment_array(image, method="auto")
+
+            # Multi-view if 2+ views with sufficient area
+            valid_views = [
+                v for v in result.views
+                if (v.area_ratio or 0) >= self.config.multi_view_min_area_ratio
+            ]
+
+            if len(valid_views) >= 2:
+                logger.info(
+                    f"Multi-view blueprint detected: {len(valid_views)} views "
+                    f"(thresholds: area >= {self.config.multi_view_min_area_ratio:.2f})"
+                )
+                return True, result
+
+            return False, None
+
+        except Exception as e:
+            logger.warning(f"Multi-view detection failed: {e}")
+            return False, None
+
+    def extract_per_view(
+        self,
+        image: np.ndarray,
+        segmentation_result: "SegmentationResult",
+        *,
+        extraction_runner: Callable[[np.ndarray], Tuple[Any, Any]],
+    ) -> List[Tuple["DetectedView", Any, Any, float]]:
+        """
+        Run extraction on each detected view and collect results.
+
+        Args:
+            image: Original full image
+            segmentation_result: Result from is_multi_view_blueprint()
+            extraction_runner: Function(view_image) -> (body_result, contour_result)
+
+        Returns:
+            List of (view, body_result, contour_result, score) sorted by score desc
+        """
+        results = []
+        h, w = image.shape[:2]
+
+        for idx, view in enumerate(segmentation_result.views):
+            if idx >= self.config.multi_view_max_views:
+                logger.info(f"Reached max views limit ({self.config.multi_view_max_views})")
+                break
+
+            if (view.area_ratio or 0) < self.config.multi_view_min_area_ratio:
+                logger.debug(f"Skipping view {idx}: area ratio too small")
+                continue
+
+            # Extract view region from image
+            x, y, vw, vh = view.bbox
+            x = max(0, x)
+            y = max(0, y)
+            x2 = min(w, x + vw)
+            y2 = min(h, y + vh)
+
+            view_image = image[y:y2, x:x2].copy()
+
+            try:
+                logger.info(f"Extracting view {idx} ({view.label or 'unlabeled'}): {vw}x{vh} px")
+                body_result, contour_result = extraction_runner(view_image)
+
+                # Score the result
+                contour_score = float(getattr(contour_result, "best_score", 0.0))
+                body_score = float(getattr(body_result, "completeness_score", 0.0))
+
+                # Combined score with contour emphasis
+                combined_score = contour_score * 0.7 + body_score * 0.3
+
+                results.append((view, body_result, contour_result, combined_score))
+                logger.info(
+                    f"View {idx} scores: contour={contour_score:.3f}, "
+                    f"body={body_score:.3f}, combined={combined_score:.3f}"
+                )
+
+            except Exception as e:
+                logger.warning(f"Extraction failed for view {idx}: {e}")
+                continue
+
+        # Sort by score descending
+        results.sort(key=lambda x: x[3], reverse=True)
+        return results
+
+    def select_best_view_result(
+        self,
+        view_results: List[Tuple["DetectedView", Any, Any, float]],
+    ) -> Optional[Tuple["DetectedView", Any, Any, float]]:
+        """
+        Select the best view result that meets quality thresholds.
+
+        Returns:
+            Best (view, body_result, contour_result, score) or None if all fail threshold
+        """
+        if not view_results:
+            return None
+
+        for view, body_result, contour_result, score in view_results:
+            if score >= self.config.multi_view_score_threshold:
+                return view, body_result, contour_result, score
+
+        # No view meets threshold - return best anyway with warning
+        logger.warning(
+            f"No view meets score threshold ({self.config.multi_view_score_threshold}), "
+            f"returning best available (score={view_results[0][3]:.3f})"
+        )
+        return view_results[0]
+
+    def evaluate_with_multi_view(
+        self,
+        *,
+        image: np.ndarray,
+        image_path: Optional[Union[str, Path]] = None,
+        extraction_runner: Callable[[np.ndarray], Tuple[Any, Any]],
+        fallback_body_result: Any,
+        fallback_contour_result: Any,
+    ) -> Tuple[Any, Any, CoachDecisionV2]:
+        """
+        Pre-processing wrapper that handles multi-view blueprints.
+
+        If the image is a multi-view blueprint:
+          1. Segment into views
+          2. Run extraction on each view
+          3. Select best result
+          4. Return with segment_views action
+
+        If not multi-view or detection fails:
+          Return fallback results for standard retry loop.
+
+        Args:
+            image: Input image as numpy array
+            image_path: Optional path for better segmentation
+            extraction_runner: Function(view_image) -> (body_result, contour_result)
+            fallback_body_result: Body result from standard extraction
+            fallback_contour_result: Contour result from standard extraction
+
+        Returns:
+            (body_result, contour_result, decision)
+        """
+        # Check for multi-view
+        is_multi, seg_result = self.is_multi_view_blueprint(image, image_path=image_path)
+
+        if not is_multi or seg_result is None:
+            # Not multi-view - return fallback for standard retry loop
+            return (
+                fallback_body_result,
+                fallback_contour_result,
+                CoachDecisionV2(
+                    action="accept",  # Will be re-evaluated by standard decide()
+                    reason="Single-view image, proceeding with standard extraction.",
+                    views_detected=1,
+                )
+            )
+
+        # Multi-view detected - extract each view
+        view_results = self.extract_per_view(
+            image,
+            seg_result,
+            extraction_runner=extraction_runner,
+        )
+
+        if not view_results:
+            # All view extractions failed
+            return (
+                fallback_body_result,
+                fallback_contour_result,
+                CoachDecisionV2(
+                    action="manual_review_required",
+                    reason="Multi-view blueprint detected but all view extractions failed.",
+                    views_detected=seg_result.view_count,
+                    notes=["Consider manual cropping to individual views."],
+                )
+            )
+
+        # Select best view
+        best = self.select_best_view_result(view_results)
+        if best is None:
+            return (
+                fallback_body_result,
+                fallback_contour_result,
+                CoachDecisionV2(
+                    action="manual_review_required",
+                    reason="Multi-view blueprint detected but no view produced viable result.",
+                    views_detected=seg_result.view_count,
+                )
+            )
+
+        view, body_result, contour_result, score = best
+
+        # Find index of selected view
+        selected_idx = next(
+            (i for i, vr in enumerate(view_results) if vr[0] is view),
+            0
+        )
+
+        return (
+            body_result,
+            contour_result,
+            CoachDecisionV2(
+                action="segment_views",
+                reason=f"Multi-view blueprint: selected view {selected_idx} ({view.label or 'unlabeled'}) with score {score:.3f}",
+                views_detected=seg_result.view_count,
+                selected_view_index=selected_idx,
+                view_scores=[vr[3] for vr in view_results],
+                original_body_score=float(getattr(body_result, "completeness_score", 0.0)),
+                original_contour_score=float(getattr(contour_result, "best_score", 0.0)),
+                notes=[
+                    f"Detected {seg_result.view_count} views in blueprint.",
+                    f"View types: {[v.view_type.value if v.view_type else 'unknown' for v in seg_result.views]}",
+                ],
+            )
+        )
 
     def _choose_body_retry_profile(
         self,
