@@ -388,6 +388,72 @@ class BlueprintViewSegmenter:
 
         return result
 
+    def segment_array(
+        self,
+        image: np.ndarray,
+        method: str = "auto",
+    ) -> SegmentationResult:
+        """
+        Segment blueprint from numpy array into individual views.
+
+        Args:
+            image: BGR image as numpy array
+            method: Detection method ("lines", "whitespace", "contours", "auto")
+
+        Returns:
+            SegmentationResult with detected views
+        """
+        result = SegmentationResult()
+
+        if image is None or image.size == 0:
+            result.warnings.append("Empty or invalid image array")
+            return result
+
+        h, w = image.shape[:2]
+        result.original_size = (w, h)
+
+        # Convert to grayscale
+        if len(image.shape) == 3:
+            gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+        else:
+            gray = image
+
+        # Choose detection method
+        if method == "auto":
+            views = self._auto_detect(image, gray)
+        elif method == "lines":
+            views = self._detect_by_lines(image, gray)
+        elif method == "whitespace":
+            views = self._detect_by_whitespace(image, gray)
+        elif method == "contours":
+            views = self._detect_by_contours(image, gray)
+        else:
+            result.warnings.append(f"Unknown method: {method}")
+            views = []
+
+        # Filter small views
+        min_area = w * h * self.min_view_area_ratio
+        views = [v for v in views if v.width * v.height >= min_area]
+
+        # Limit view count
+        if len(views) > self.max_views:
+            views = sorted(views, key=lambda v: v.width * v.height, reverse=True)
+            views = views[:self.max_views]
+            result.warnings.append(f"Truncated to {self.max_views} largest views")
+
+        # Extract view images
+        for view in views:
+            x, y, vw, vh = view.bbox
+            view.image = image[y:y+vh, x:x+vw].copy()
+            view.area_ratio = (vw * vh) / (w * h)
+
+        result.views = views
+        result.is_multi_view = len(views) > 1
+
+        logger.info(f"Detected {len(views)} views from array (multi-view: {result.is_multi_view})")
+
+        return result
+
     def _auto_detect(
         self,
         image: np.ndarray,
