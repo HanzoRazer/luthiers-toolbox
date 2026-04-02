@@ -1458,13 +1458,32 @@ def main():
 
     # Save outputs
     if result['contour'] is not None:
-        # Save contour as DXF
+        # Save contour as DXF (R2010 format with proper bounds)
         try:
             import ezdxf
-            doc = ezdxf.new("R12")
+            doc = ezdxf.new("R2010")  # AC1024 minimum per CLAUDE.md
+            doc.header['$INSUNITS'] = 4  # mm
+            doc.header['$MEASUREMENT'] = 1  # metric
             msp = doc.modelspace()
+
+            # Create named layer (avoid layer 0 per CLAUDE.md)
+            doc.layers.add("BODY_OUTLINE", color=7)
+
             points = [(float(p[0][0]), float(p[0][1])) for p in result['contour']]
-            msp.add_lwpolyline(points, close=True)
+
+            # Use LINE entities (closed polyline as individual lines per CLAUDE.md)
+            for i in range(len(points)):
+                p1 = points[i]
+                p2 = points[(i + 1) % len(points)]
+                msp.add_line(p1, p2, dxfattribs={"layer": "BODY_OUTLINE"})
+
+            # Calculate and set EXTMIN/EXTMAX bounds
+            if points:
+                xs = [p[0] for p in points]
+                ys = [p[1] for p in points]
+                doc.header['$EXTMIN'] = (min(xs), min(ys), 0)
+                doc.header['$EXTMAX'] = (max(xs), max(ys), 0)
+
             dxf_path = f"{args.output}.dxf"
             doc.saveas(dxf_path)
             print(f"  DXF saved: {dxf_path}")

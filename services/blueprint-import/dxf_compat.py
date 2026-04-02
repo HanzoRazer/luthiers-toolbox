@@ -1,12 +1,19 @@
 """
-DXF Compatibility Layer - R12 through R18 Support
-The genesis of The Production Shop: R12 doesn't support LWPOLYLINE.
+DXF Compatibility Layer - R2010+ Standard (per CLAUDE.md)
+=========================================================
+
+Per CLAUDE.md DXF output standard:
+- Format: AC1024 (R2010) minimum — NEVER R12 or R2000
+- Entities: SPLINE or LINE only — avoid LWPOLYLINE
+- Header: valid EXTMIN/EXTMAX from actual geometry
+- Units: INSUNITS=4 (mm), MEASUREMENT=1 (metric)
+- Layers: named layers only, no geometry on layer 0
+
+R12 was causing Fusion 360 to freeze on smart_guitar_front_v3.dxf.
 
 This module provides version-aware DXF entity creation:
-- R12: Uses LINE segments for polylines (maximum CAM compatibility)
-- R13+: Can use LWPOLYLINE for closed paths
-
-Supported versions: R12, R13, R14, R2000 (R15), R2004 (R16), R2007 (R17), R2010 (R18)
+- R2010+: Default, with proper headers and bounds
+- R12: DEPRECATED - only for reading legacy files
 """
 from typing import List, Tuple, Literal, Optional
 import ezdxf
@@ -65,30 +72,48 @@ def supports_lwpolyline(version: DxfVersion) -> bool:
     return version in LWPOLYLINE_VERSIONS
 
 
-def create_document(version: DxfVersion = 'R12', setup: bool = False) -> Drawing:
+def create_document(version: DxfVersion = 'R2010', setup: bool = True) -> Drawing:
     """
     Create a new DXF document with the specified version.
     
     Args:
-        version: DXF version (R12-R18, default R12 for CAM compatibility)
+        version: DXF version (R12-R18, default R2010 per CLAUDE.md)
         setup: Whether to setup default resources (only for R13+)
     
     Returns:
-        ezdxf Drawing object
+        ezdxf Drawing object with proper headers
+        
+    Note:
+        R2010 is minimum per CLAUDE.md DXF standard. R12 will emit a warning.
     """
     validated = validate_version(version)
-    # R12 doesn't support setup=True
+    
+    # Warn about deprecated R12 usage
     if validated == 'R12':
-        return ezdxf.new(validated)
-    return ezdxf.new(validated, setup=setup)
+        import warnings
+        warnings.warn(
+            "R12 DXF format is deprecated per CLAUDE.md. Use R2010+ to avoid "
+            "CAD software issues (Fusion 360 freeze). Defaulting to R2010.",
+            DeprecationWarning,
+            stacklevel=2
+        )
+        validated = 'R2010'
+    
+    doc = ezdxf.new(validated, setup=setup)
+    
+    # Set units headers per CLAUDE.md standard
+    doc.header["$INSUNITS"] = 4  # mm
+    doc.header["$MEASUREMENT"] = 1  # metric
+    
+    return doc
 
 
 def add_polyline(
     msp: Modelspace,
     points: List[Tuple[float, float]],
-    layer: str = '0',
+    layer: str = 'OUTLINE',
     closed: bool = False,
-    version: DxfVersion = 'R12'
+    version: DxfVersion = 'R2010'
 ) -> None:
     """
     Add a polyline using version-appropriate entity.
@@ -131,8 +156,8 @@ def add_rectangle(
     msp: Modelspace,
     x1: float, y1: float,
     x2: float, y2: float,
-    layer: str = '0',
-    version: DxfVersion = 'R12'
+    layer: str = 'OUTLINE',
+    version: DxfVersion = 'R2010'
 ) -> None:
     """
     Add a rectangle using version-appropriate entity.
@@ -168,3 +193,23 @@ def get_version_info(version: DxfVersion) -> dict:
         'supports_units': validated != 'R12',
         'is_genesis': validated == 'R12',
     }
+
+def set_document_bounds(doc: Drawing, points: List[Tuple[float, float]]) -> None:
+    """
+    Set EXTMIN/EXTMAX bounds from actual geometry points.
+    
+    Per CLAUDE.md: DXF must have valid bounds calculated from geometry.
+    Invalid bounds (1e+20) cause CAD software issues.
+    
+    Args:
+        doc: ezdxf Drawing document
+        points: List of (x, y) coordinate tuples
+    """
+    if not points:
+        return
+    
+    xs = [p[0] for p in points]
+    ys = [p[1] for p in points]
+    
+    doc.header["$EXTMIN"] = (min(xs), min(ys), 0)
+    doc.header["$EXTMAX"] = (max(xs), max(ys), 0)

@@ -52,7 +52,7 @@ try:
 except ImportError:
     SKLEARN_AVAILABLE = False
 
-from dxf_compat import create_document, add_polyline, DxfVersion
+from dxf_compat import create_document, add_polyline, DxfVersion, set_document_bounds
 
 # Phase 3.7 enhancement modules (optional — graceful fallback)
 try:
@@ -2194,7 +2194,7 @@ def export_to_dxf(
     simplify_tolerance: float = 0.2,
     excluded_categories: Optional[List[ContourCategory]] = None,
     max_per_category: Optional[Dict[ContourCategory, int]] = None,
-    dxf_version: DxfVersion = 'R12',
+    dxf_version: DxfVersion = 'R2010',
     scale_factor: float = 1.0
 ) -> Tuple[float, float]:
     """
@@ -2312,6 +2312,17 @@ def export_to_dxf(
             except Exception as e:
                 logger.warning(f"Failed to add contour to {layer_name}: {e}")
 
+    # Set bounds from body outline if available
+    if ContourCategory.BODY_OUTLINE in classified and classified[ContourCategory.BODY_OUTLINE]:
+        body = classified[ContourCategory.BODY_OUTLINE][0]
+        pts = body.contour.reshape(-1, 2)
+        body_pts = []
+        for px, py in pts:
+            x_mm = px * mm_per_px * scale_factor - center_x
+            y_mm = (image_height - py) * mm_per_px * scale_factor - center_y
+            body_pts.append((x_mm, y_mm))
+        set_document_bounds(doc, body_pts)
+
     doc.saveas(output_path)
     logger.info(f"Exported {exported_count} contours to {output_path}")
 
@@ -2322,12 +2333,12 @@ def export_primitives_to_dxf(
     primitives: List[GeometricPrimitive],
     output_path: str,
     center_offset: Tuple[float, float] = (0, 0),
-    dxf_version: DxfVersion = 'R12'
+    dxf_version: DxfVersion = 'R2010'
 ):
     """
     Export geometric primitives to DXF.
 
-    For R12 compatibility, circles and arcs are approximated with polylines.
+    For R2010+ format per CLAUDE.md standard.
 
     Args:
         primitives: List of detected primitives

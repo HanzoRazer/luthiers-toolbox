@@ -186,14 +186,19 @@ async def vectorize_blueprint(
         if scale_hint_mm_per_pixel:
             logger.info(f"Using Phase 1 scale hint: {scale_hint_mm_per_pixel:.6f} mm/px")
 
-        # Convert body_size_mm tuple to dict if needed
+        # Convert body_size_mm tuple/array to dict if needed
         body_size_raw = result.get("body_size_mm")
-        if isinstance(body_size_raw, (tuple, list)) and len(body_size_raw) >= 2:
-            body_size_mm = {"width": float(body_size_raw[0]), "height": float(body_size_raw[1])}
-        elif isinstance(body_size_raw, dict):
+        body_size_mm = None
+        if isinstance(body_size_raw, dict):
             body_size_mm = body_size_raw
-        else:
-            body_size_mm = None
+        elif body_size_raw is not None:
+            # Handle tuple, list, numpy array, or any iterable with 2+ elements
+            try:
+                vals = list(body_size_raw)
+                if len(vals) >= 2:
+                    body_size_mm = {"width": float(vals[0]), "height": float(vals[1])}
+            except (TypeError, ValueError):
+                body_size_mm = None
 
         return Phase3Response(
             success=True,

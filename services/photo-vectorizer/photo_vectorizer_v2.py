@@ -3382,15 +3382,25 @@ def write_svg(contours_by_layer: Dict[str, List[np.ndarray]],
 # =============================================================================
 
 def write_dxf(contours_by_layer: Dict[str, List[np.ndarray]],
-              output_path: str, version: str = "R12") -> bool:
-    """Write contours to DXF with layers."""
+              output_path: str, version: str = "R2010") -> bool:
+    """Write contours to DXF with layers (R2010+ format with proper bounds)."""
     if not EZDXF_AVAILABLE:
         logger.error("ezdxf not installed — pip install ezdxf")
         return False
     try:
-        dxf_ver = {"R12": "R12", "R2000": "R2000", "R2004": "R2004"}.get(version, "R12")
+        # Force minimum R2010 (AC1024) per CLAUDE.md DXF standards
+        dxf_ver = {"R2010": "R2010", "R2013": "R2013", "R2018": "R2018"}.get(version, "R2010")
         doc = ezdxf.new(dxf_ver)
+
+        # Set proper units (mm, metric) per CLAUDE.md
+        doc.header['$INSUNITS'] = 4  # mm
+        doc.header['$MEASUREMENT'] = 1  # metric
+
         msp = doc.modelspace()
+
+        # Track bounds for EXTMIN/EXTMAX
+        all_xs: List[float] = []
+        all_ys: List[float] = []
 
         for layer_name, point_lists in contours_by_layer.items():
             if layer_name not in doc.layers:
@@ -3400,12 +3410,21 @@ def write_dxf(contours_by_layer: Dict[str, List[np.ndarray]],
                     continue
                 pts_2d = pts.reshape(-1, 2)
                 pts_list = [(float(p[0]), float(p[1])) for p in pts_2d]
-                if dxf_ver == "R12":
-                    msp.add_polyline2d(pts_list, dxfattribs={"layer": layer_name},
-                                       close=True)
-                else:
-                    msp.add_lwpolyline(pts_list, dxfattribs={"layer": layer_name},
-                                        close=True)
+
+                # Track bounds
+                all_xs.extend([p[0] for p in pts_list])
+                all_ys.extend([p[1] for p in pts_list])
+
+                # Use LINE entities (closed contour as individual lines per CLAUDE.md)
+                for i in range(len(pts_list)):
+                    p1 = pts_list[i]
+                    p2 = pts_list[(i + 1) % len(pts_list)]
+                    msp.add_line(p1, p2, dxfattribs={"layer": layer_name})
+
+        # Set EXTMIN/EXTMAX bounds from actual geometry
+        if all_xs and all_ys:
+            doc.header['$EXTMIN'] = (min(all_xs), min(all_ys), 0)
+            doc.header['$EXTMAX'] = (max(all_xs), max(all_ys), 0)
 
         doc.saveas(output_path)
         logger.info(f"DXF written: {output_path} ({dxf_ver})")
