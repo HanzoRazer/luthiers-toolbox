@@ -4,6 +4,8 @@ Blueprint Calibration Router
 
 Pixel calibration endpoints for accurate dimension extraction from blueprints.
 
+Supports: PNG, JPEG, and PDF files (PDFs rendered at 300 DPI)
+
 Endpoints:
 - POST /calibrate: Auto-calibrate image, return PPI + confidence
 - POST /calibrate/manual: User provides two points + real measurement
@@ -19,9 +21,17 @@ import logging
 import tempfile
 import uuid
 from pathlib import Path
-from typing import Dict, Optional
+from typing import Dict, Optional, Tuple
 
 import cv2
+
+# PDF rendering support (optional - PyMuPDF)
+PYMUPDF_AVAILABLE = False
+try:
+    import fitz  # PyMuPDF
+    PYMUPDF_AVAILABLE = True
+except ImportError:
+    pass
 import numpy as np
 from fastapi import APIRouter, File, Form, HTTPException, UploadFile
 from pydantic import BaseModel, Field
@@ -106,12 +116,88 @@ class DimensionResponse(BaseModel):
 # HELPER FUNCTIONS
 # =============================================================================
 
-def _decode_image(file_bytes: bytes) -> np.ndarray:
-    """Decode uploaded file to OpenCV image."""
+def _is_pdf(file_bytes: bytes) -> bool:
+    """Check if file bytes are a PDF (magic bytes: %PDF)."""
+    return file_bytes[:4] == b'%PDF'
+
+
+def _render_pdf_to_image(pdf_bytes: bytes, dpi: int = 300) -> np.ndarray:
+    """
+    Render first page of PDF to OpenCV image.
+    
+    Args:
+        pdf_bytes: Raw PDF file bytes
+        dpi: Render resolution (default 300 for good quality)
+        
+    Returns:
+        OpenCV BGR image array
+        
+    Raises:
+        HTTPException: If PyMuPDF not available or rendering fails
+    """
+    if not PYMUPDF_AVAILABLE:
+        raise HTTPException(
+            status_code=501,
+            detail="PDF support requires PyMuPDF. Install with: pip install PyMuPDF"
+        )
+    
+    try:
+        doc = fitz.open(stream=pdf_bytes, filetype="pdf")
+        if len(doc) == 0:
+            raise HTTPException(status_code=400, detail="PDF has no pages")
+        
+        page = doc[0]  # First page
+        
+        # Calculate zoom for target DPI (PDF default is 72 DPI)
+        zoom = dpi / 72.0
+        mat = fitz.Matrix(zoom, zoom)
+        
+        # Render to pixmap
+        pix = page.get_pixmap(matrix=mat, alpha=False)
+        
+        # Convert to numpy array (RGB)
+        img_array = np.frombuffer(pix.samples, dtype=np.uint8).reshape(
+            pix.height, pix.width, 3
+        )
+        
+        # Convert RGB to BGR for OpenCV
+        img_bgr = cv2.cvtColor(img_array, cv2.COLOR_RGB2BGR)
+        
+        doc.close()
+        return img_bgr
+        
+    except fitz.FileDataError as e:
+        raise HTTPException(status_code=400, detail=f"Invalid PDF file: {e}")
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"PDF rendering failed: {e}")
+
+
+def _decode_image(file_bytes: bytes, filename: str = "") -> np.ndarray:
+    """
+    Decode uploaded file to OpenCV image.
+    
+    Supports: PNG, JPEG, and PDF files.
+    PDFs are rendered at 300 DPI for high-quality calibration.
+    
+    Args:
+        file_bytes: Raw file bytes
+        filename: Original filename (used for extension hint)
+        
+    Returns:
+        OpenCV BGR image array
+    """
+    # Check if PDF (by magic bytes or extension)
+    is_pdf = _is_pdf(file_bytes) or filename.lower().endswith('.pdf')
+    
+    if is_pdf:
+        logger.info("Detected PDF file, rendering at 300 DPI")
+        return _render_pdf_to_image(file_bytes, dpi=300)
+    
+    # Standard image decode
     nparr = np.frombuffer(file_bytes, np.uint8)
     img = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
     if img is None:
-        raise HTTPException(status_code=400, detail="Could not decode image")
+        raise HTTPException(status_code=400, detail="Could not decode image. Supported formats: PNG, JPEG, PDF")
     return img
 
 
@@ -141,7 +227,7 @@ async def calibrate_blueprint(
     4. Body heuristic (last resort)
 
     Args:
-        file: Blueprint image (PNG, JPG, JPEG)
+        file: Blueprint image or PDF (PNG, JPG, JPEG, PDF)
         known_scale_length: Known scale length in inches (optional)
         paper_size: Assumed paper size for fallback (letter, a4, tabloid)
         prefer_method: Force specific method (auto, paper, scale, body_heuristic)
@@ -155,9 +241,9 @@ async def calibrate_blueprint(
             detail="Calibration module not available. Check blueprint-import installation."
         )
 
-    # Read and decode image
+    # Read and decode image (supports PDF, PNG, JPEG)
     contents = await file.read()
-    image = _decode_image(contents)
+    image = _decode_image(contents, filename=file.filename or "")
 
     # Create calibration pipeline
     pipeline = create_calibration_pipeline()
@@ -226,9 +312,9 @@ async def manual_calibrate(
             detail="Calibration module not available."
         )
 
-    # Read image for shape info
+    # Read image for shape info (supports PDF, PNG, JPEG)
     contents = await file.read()
-    image = _decode_image(contents)
+    image = _decode_image(contents, filename=file.filename or "")
 
     # Calculate pixel distance
     pixel_distance = _calculate_pixel_distance(point1_x, point1_y, point2_x, point2_y)
@@ -336,9 +422,9 @@ async def extract_dimensions(
     cached = _calibration_cache[calibration_id]
     calibration = cached["calibration"]
 
-    # Read and decode image
+    # Read and decode image (supports PDF, PNG, JPEG)
     contents = await file.read()
-    image = _decode_image(contents)
+    image = _decode_image(contents, filename=file.filename or "")
 
     # Create pipeline and extract dimensions
     pipeline = create_calibration_pipeline()
