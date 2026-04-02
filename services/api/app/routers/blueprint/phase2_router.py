@@ -3,6 +3,7 @@ Blueprint Phase 2 Router - OpenCV Geometry Vectorization
 =========================================================
 
 Computer vision pipeline for blueprint geometry extraction.
+Now supports PDF files (rendered at 300 DPI via PyMuPDF).
 
 Endpoints:
 - POST /to-dxf: DXF export (placeholder, use /vectorize-geometry)
@@ -17,6 +18,8 @@ from pathlib import Path
 
 from typing import Dict
 
+import cv2
+import numpy as np
 from fastapi import APIRouter, File, Form, HTTPException, UploadFile
 from fastapi.responses import FileResponse
 
@@ -39,6 +42,78 @@ router = APIRouter(tags=["blueprint"])
 # Enables serving files via /static/{filename} after vectorization
 _output_file_registry: Dict[str, str] = {}
 
+# =============================================================================
+# PDF RENDERING SUPPORT (PyMuPDF)
+# =============================================================================
+
+PYMUPDF_AVAILABLE = False
+try:
+    import fitz  # PyMuPDF
+    PYMUPDF_AVAILABLE = True
+except ImportError:
+    pass
+
+
+def _is_pdf(file_bytes: bytes) -> bool:
+    """Check if file bytes are a PDF (magic bytes: %PDF)."""
+    return file_bytes[:4] == b'%PDF'
+
+
+def _render_pdf_to_image(pdf_bytes: bytes, dpi: int = 300) -> bytes:
+    """
+    Render first page of PDF to PNG image bytes.
+
+    Args:
+        pdf_bytes: Raw PDF file bytes
+        dpi: Render resolution (default 300 for good quality)
+
+    Returns:
+        PNG image bytes
+
+    Raises:
+        HTTPException: If PyMuPDF not available or rendering fails
+    """
+    if not PYMUPDF_AVAILABLE:
+        raise HTTPException(
+            status_code=501,
+            detail="PDF support requires PyMuPDF. Install with: pip install PyMuPDF"
+        )
+
+    try:
+        doc = fitz.open(stream=pdf_bytes, filetype="pdf")
+        if len(doc) == 0:
+            raise HTTPException(status_code=400, detail="PDF has no pages")
+
+        page = doc[0]  # First page
+
+        # Calculate zoom for target DPI (PDF default is 72 DPI)
+        zoom = dpi / 72.0
+        mat = fitz.Matrix(zoom, zoom)
+
+        # Render to pixmap
+        pix = page.get_pixmap(matrix=mat, alpha=False)
+
+        # Convert to numpy array (RGB)
+        img_array = np.frombuffer(pix.samples, dtype=np.uint8).reshape(
+            pix.height, pix.width, 3
+        )
+
+        # Convert RGB to BGR for OpenCV, then encode as PNG
+        img_bgr = cv2.cvtColor(img_array, cv2.COLOR_RGB2BGR)
+        _, png_bytes = cv2.imencode('.png', img_bgr)
+
+        doc.close()
+        return png_bytes.tobytes()
+
+    except fitz.FileDataError as e:
+        raise HTTPException(status_code=400, detail=f"Invalid PDF file: {e}")
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"PDF rendering failed: {e}")
+
+
+# =============================================================================
+# ENDPOINTS
+# =============================================================================
 
 @router.post("/to-dxf")
 async def export_to_dxf(request: ExportRequest) -> FileResponse:
@@ -83,7 +158,7 @@ async def vectorize_geometry(
     and contour extraction for precise geometry.
 
     Args:
-        file: Blueprint image file (PNG, JPG, JPEG)
+        file: Blueprint file (PNG, JPG, JPEG, or PDF - PDFs rendered at 300 DPI)
         analysis_data: JSON string from /analyze endpoint (optional)
         scale_factor: Scaling multiplier for output coordinates (0.1-10.0)
         calibration_id: UUID from /calibrate endpoint for PPI-aware scaling
@@ -96,8 +171,9 @@ async def vectorize_geometry(
         VectorizeResponse with svg_path, dxf_path, contours_detected, lines_detected
 
     Processing Pipeline:
-        1. Calibration lookup (if calibration_id provided)
-        2. Canny edge detection with adaptive thresholds
+        1. PDF rendering (if PDF file, at 300 DPI)
+        2. Calibration lookup (if calibration_id provided)
+        3. Canny edge detection with adaptive thresholds
         3. Contour extraction with guitar-aware scoring
         4. Feature classification by instrument type
         5. SVG + DXF R12 generation with semantic layers
@@ -105,7 +181,7 @@ async def vectorize_geometry(
     Raises:
         HTTPException 400: Invalid file type, JSON parse error
         HTTPException 500: OpenCV error or vectorization crash
-        HTTPException 501: Phase 2 not available
+        HTTPException 501: Phase 2 not available or PDF support missing
     """
     if not PHASE2_AVAILABLE:
         raise HTTPException(
@@ -126,12 +202,22 @@ async def vectorize_geometry(
                 detail="Invalid analysis_data JSON"
             )
 
-        # Validate file
+        # Read file bytes
+        file_bytes = await file.read()
         file_ext = Path(file.filename).suffix.lower()
-        if file_ext not in PHASE2_EXTENSIONS:
+
+        # Check if PDF (by magic bytes or extension)
+        is_pdf = _is_pdf(file_bytes) or file_ext == '.pdf'
+
+        if is_pdf:
+            # Render PDF to PNG
+            logger.info(f"Rendering PDF at 300 DPI: {file.filename}")
+            file_bytes = _render_pdf_to_image(file_bytes, dpi=300)
+            file_ext = '.png'
+        elif file_ext not in PHASE2_EXTENSIONS:
             raise HTTPException(
                 status_code=400,
-                detail=f"Unsupported file type: {file_ext}. Phase 2 requires PNG/JPG"
+                detail=f"Unsupported file type: {file_ext}. Phase 2 supports PNG, JPG, JPEG, PDF"
             )
 
         # Validate scale factor
@@ -141,9 +227,8 @@ async def vectorize_geometry(
                 detail=f"scale_factor must be between {MIN_SCALE_FACTOR} and {MAX_SCALE_FACTOR}"
             )
 
-        # Save uploaded image to temp file
+        # Save to temp file
         with tempfile.NamedTemporaryFile(delete=False, suffix=file_ext) as tmp:
-            file_bytes = await file.read()
             tmp.write(file_bytes)
             tmp_path = tmp.name
 

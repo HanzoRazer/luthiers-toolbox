@@ -125,7 +125,7 @@ export function useBlueprintWorkflow(options: BlueprintWorkflowOptions = {}) {
   // Phase 2 / Phase 3: Vectorization
   const isVectorizing = ref(false)
   const vectorizedGeometry = ref<VectorizedGeometry | null>(null)
-  const usePhase3Vectorization = ref(false)
+  const usePhase3Vectorization = ref(true) // Phase 3 is now the default (v3.7.0 - PDF, ML, CAM-ready)
   const phase3Available = ref<boolean | null>(null) // null = not yet checked
   const vectorParams = ref<VectorParams>({
     scaleFactor: 1.0,
