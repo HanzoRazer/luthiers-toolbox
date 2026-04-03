@@ -2181,6 +2181,102 @@ def validate_dimensions(
     return passed, warnings
 
 
+def validate_scale_before_export(
+    mm_per_px: float,
+    scale_factor: float,
+    classified: Dict[ContourCategory, List[ContourInfo]],
+    spec_name: Optional[str] = None
+) -> Tuple[float, bool]:
+    """
+    Validate scale produces plausible instrument dimensions before export.
+    If not plausible, attempts correction.
+
+    Called BEFORE export_to_dxf().
+    
+    Args:
+        mm_per_px: Base pixels-to-mm conversion
+        scale_factor: Current scale multiplier
+        contours: List of ContourInfo objects
+        spec_name: Optional instrument spec name for validation
+        
+    Returns:
+        Tuple of (corrected_scale_factor, validation_passed)
+    """
+    effective_mm_per_px = mm_per_px * scale_factor
+
+    # Find body outline from classified dict (authoritative source for export)
+    body_list = classified.get(ContourCategory.BODY_OUTLINE, [])
+    if not body_list:
+        # Fallback to largest contour across all categories
+        all_contours = []
+        for cat_list in classified.values():
+            all_contours.extend(cat_list)
+        if not all_contours:
+            logger.warning("Scale validation: no contours to validate")
+            return scale_factor, False
+        largest = max(all_contours, key=lambda c: c.area_px)
+    else:
+        largest = body_list[0]
+
+    # Use ContourInfo dimensions (already in mm) scaled by scale_factor
+    # This matches what export_to_dxf will produce
+    body_w_mm = largest.width_mm * scale_factor
+    body_h_mm = largest.height_mm * scale_factor
+
+    logger.info(f"Scale validation: body={body_w_mm:.0f}x{body_h_mm:.0f}mm "
+                f"(ContourInfo: {largest.width_mm:.0f}x{largest.height_mm:.0f}mm, scale={scale_factor:.3f})")
+
+    # Check against spec if available
+    if spec_name and spec_name in INSTRUMENT_SPECS:
+        spec = INSTRUMENT_SPECS[spec_name]
+        expected_w = (spec.body_width_range[0] + spec.body_width_range[1]) / 2
+        expected_h = (spec.body_length_range[0] + spec.body_length_range[1]) / 2
+        
+        # Use the larger dimension as length
+        body_length = max(body_w_mm, body_h_mm)
+        body_width = min(body_w_mm, body_h_mm)
+        
+        ratio_len = body_length / expected_h
+        ratio_wid = body_width / expected_w
+
+        if 0.8 < ratio_len < 1.2 and 0.8 < ratio_wid < 1.2:
+            logger.info("Scale validation PASSED (within spec tolerance)")
+            return scale_factor, True
+        else:
+            correction = (expected_h / body_length + expected_w / body_width) / 2
+            logger.warning(f"Scale validation FAILED for {spec_name}. "
+                          f"Expected ~{expected_w:.0f}×{expected_h:.0f}mm, "
+                          f"got {body_width:.0f}×{body_length:.0f}mm. "
+                          f"Correction factor: {correction:.3f}x")
+            return scale_factor * correction, False
+
+    # Generic plausibility check (no spec)
+    max_dim = max(body_w_mm, body_h_mm)
+    min_dim = min(body_w_mm, body_h_mm)
+    
+    if 200 < max_dim < 700 and 150 < min_dim < 550:
+        logger.info("Scale validation PASSED (generic plausibility)")
+        return scale_factor, True
+
+    # Too large — apply correction
+    if max_dim > 700:
+        correction = 500 / max_dim
+        logger.warning(f"Body too large ({max_dim:.0f}mm), "
+                      f"applying {correction:.3f}x correction")
+        return scale_factor * correction, False
+
+    # Too small — apply correction
+    if max_dim < 200:
+        correction = 400 / max_dim
+        logger.warning(f"Body too small ({max_dim:.0f}mm), "
+                      f"applying {correction:.3f}x correction")
+        return scale_factor * correction, False
+
+    logger.info("Scale validation PASSED (within generic bounds)")
+    return scale_factor, True
+
+
+
 # =============================================================================
 # DXF Export
 # =============================================================================
@@ -2255,6 +2351,9 @@ def export_to_dxf(
             center_y = (min(ys) + max(ys)) / 2
             body_width = max(xs) - min(xs)
             body_height = max(ys) - min(ys)
+            logger.info(f"export_to_dxf: body contour has {len(pts)} pts, "
+                       f"ContourInfo dims: {body.width_mm:.0f}x{body.height_mm:.0f}mm, "
+                       f"computed dims: {body_width:.0f}x{body_height:.0f}mm")
 
     # Create DXF document
     doc = create_document(version=dxf_version)
@@ -2296,9 +2395,11 @@ def export_to_dxf(
                 y_mm = (image_height - py) * mm_per_px * scale_factor - center_y
                 mm_pts.append([x_mm, y_mm])
 
-            # Simplify
+            # Simplify with relative epsilon (prevents oversimplification on large contours)
             pts_array = np.array(mm_pts, dtype=np.float32).reshape(-1, 1, 2)
-            simplified = cv2.approxPolyDP(pts_array, simplify_tolerance, closed=True)
+            arc_len = cv2.arcLength(pts_array, True)
+            epsilon = max(simplify_tolerance, arc_len * 0.001)
+            simplified = cv2.approxPolyDP(pts_array, epsilon, closed=True)
             simplified = simplified.reshape(-1, 2)
 
             if len(simplified) < 3:
@@ -2454,7 +2555,8 @@ class Phase3Vectorizer:
         enable_debug: bool = False,
         debug_output_dir: str = "debug_output",
         corrections_file: Optional[str] = None,
-        use_rembg: bool = True
+        use_rembg: bool = True,
+        dxf_version: str = 'R12'
     ):
         """
         Initialize Phase 3.6 Vectorizer.
@@ -2498,6 +2600,7 @@ class Phase3Vectorizer:
         self._ocr_extractor = None  # Lazy load
         self.default_instrument = default_instrument
         self.simplify_tolerance = simplify_tolerance
+        self.dxf_version = dxf_version
 
         # Phase 3.6 components
         self.color_filter = ColorFilter()
@@ -2839,8 +2942,18 @@ class Phase3Vectorizer:
             except Exception as e:
                 logger.warning(f"OCR extraction failed: {e}")
 
+        # Scale validation gate (CLAUDE.md architecture requirement)
+        scale_factor, scale_valid = validate_scale_before_export(
+            self.mm_per_px,
+            scale_factor,
+            classified,
+            spec_name=spec_name
+        )
+        if not scale_valid:
+            logger.info(f"Scale corrected to {scale_factor:.3f}x")
+
         # Export to DXF
-        dxf_version_to_use = 'R2000' if cam_ready else 'R12'
+        dxf_version_to_use = getattr(self, 'dxf_version', 'R12')
         body_w, body_h = export_to_dxf(
             classified,
             output_path,
@@ -3193,7 +3306,8 @@ def extract_guitar_blueprint(
     spec_name: Optional[str] = None,
     use_ml: bool = True,
     detect_primitives: bool = True,
-    ml_model_path: Optional[str] = None
+    ml_model_path: Optional[str] = None,
+    dxf_version: str = 'R12'
 ) -> Dict[str, Any]:
     """
     Convenience function for extracting guitar blueprints.
@@ -3250,7 +3364,8 @@ def extract_guitar_blueprint(
         default_instrument=inst_type,
         simplify_tolerance=simplify_tolerance,
         enable_primitives=detect_primitives,
-        ml_model_path=ml_model_path
+        ml_model_path=ml_model_path,
+        dxf_version=dxf_version
     )
 
     result = vectorizer.extract(
@@ -3356,6 +3471,9 @@ def main():
     parser.add_argument("--no-ml", action="store_true", help="Disable ML classification")
     parser.add_argument("--ml-model", help="Path to trained ML model (.joblib)")
     parser.add_argument("--no-primitives", action="store_true", help="Disable primitive detection")
+    parser.add_argument("--dxf-version", default="R12",
+                        choices=["R12", "R13", "R14", "R2000", "R2004", "R2007", "R2010"],
+                        help="DXF output version (default R12 for CAM compatibility)")
     parser.add_argument("-v", "--verbose", action="store_true", help="Verbose output")
 
     args = parser.parse_args()
@@ -3378,7 +3496,8 @@ def main():
         spec_name=args.spec,
         use_ml=not args.no_ml,
         detect_primitives=not args.no_primitives,
-        ml_model_path=args.ml_model
+        ml_model_path=args.ml_model,
+        dxf_version=args.dxf_version
     )
 
     print("\n" + "=" * 60)
