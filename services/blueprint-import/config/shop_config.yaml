@@ -96,7 +96,7 @@ ocr:
 output:
   # DXF export settings
   dxf:
-    version: R2018  # R12, R2000, R2004, R2007, R2010, R2013, R2018
+    version: R12  # R12 default for maximum CAM compatibility
     units: mm       # mm, inch
     layer_prefix: "BLUEPRINT_"
 
