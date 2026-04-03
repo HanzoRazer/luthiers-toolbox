@@ -89,7 +89,7 @@ def check_dxf_compatibility(annotations: List[Annotation], version: str) -> bool
         logger.warning(
             "DXF R12 selected but annotations present. "
             "Dimensions will be exported as non-associative lines+text. "
-            "Use R2000+ for associative dimensions."
+            "R12 format — associative dimensions not supported, use dimension leader lines instead."
         )
         return False
     return True
@@ -111,7 +111,7 @@ class AnnotationAwareExporter:
             geometry=extraction_result.contours_by_category,
             annotations=annotations,
             output_path='output.dxf',
-            dxf_version='R2000'
+            dxf_version='R12'
         )
     """
 
@@ -242,7 +242,7 @@ class AnnotationAwareExporter:
         geometry: Dict[str, List[Any]],
         annotations: List[Annotation],
         output_path: str,
-        dxf_version: str = 'R2000'
+        dxf_version: str = 'R12'
     ) -> Dict[str, Any]:
         """
         Export geometry and annotations with proper separation.
