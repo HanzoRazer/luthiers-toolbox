@@ -2377,6 +2377,26 @@ def export_to_dxf(
         'SMALL_FEATURE': 7,     # White
     }
 
+    # Per-layer simplification tolerances in mm
+    # Body outline needs fine detail; internal features can be coarser
+    layer_tolerances = {
+        ContourCategory.BODY_OUTLINE: 0.05,   # Ultra-fine for body shape (target: 500+ segments)
+        ContourCategory.NECK_POCKET: 1.0,
+        ContourCategory.PICKUP_ROUTE: 1.0,
+        ContourCategory.CONTROL_CAVITY: 1.5,
+        ContourCategory.SOUNDHOLE: 0.5,
+        ContourCategory.D_HOLE: 0.5,
+        ContourCategory.F_HOLE: 0.5,
+        ContourCategory.ROSETTE: 0.5,
+        ContourCategory.PICKGUARD: 1.0,
+        ContourCategory.BRIDGE_ROUTE: 1.0,
+        ContourCategory.JACK_ROUTE: 1.5,
+        ContourCategory.RHYTHM_CIRCUIT: 1.5,
+        ContourCategory.BRACING: 1.0,
+        ContourCategory.SMALL_FEATURE: 2.0,   # Coarser for small features
+    }
+    default_tolerance = simplify_tolerance  # Fallback for unlisted categories
+
     exported_count = 0
 
     for category, contours in classified.items():
@@ -2395,17 +2415,42 @@ def export_to_dxf(
                 y_mm = (image_height - py) * mm_per_px * scale_factor - center_y
                 mm_pts.append([x_mm, y_mm])
 
-            # Simplify with relative epsilon (prevents oversimplification on large contours)
+            # Simplify with per-layer tolerance (absolute, in mm)
             pts_array = np.array(mm_pts, dtype=np.float32).reshape(-1, 1, 2)
-            arc_len = cv2.arcLength(pts_array, True)
-            epsilon = max(simplify_tolerance, arc_len * 0.001)
-            simplified = cv2.approxPolyDP(pts_array, epsilon, closed=True)
+            tolerance = layer_tolerances.get(category, default_tolerance)
+            simplified = cv2.approxPolyDP(pts_array, tolerance, closed=True)
             simplified = simplified.reshape(-1, 2)
 
             if len(simplified) < 3:
                 continue
 
             point_tuples = [(float(x), float(y)) for x, y in simplified]
+
+            # BODY_OUTLINE: Filter gap-bridging artifacts at LINE level
+            # Write individual LINE entities, skipping any > max_segment_mm
+            if category == ContourCategory.BODY_OUTLINE:
+                max_segment_mm = 10.0  # No body edge should exceed 10mm
+                written_count = 0
+                skipped_count = 0
+
+                for j in range(len(point_tuples)):
+                    p1 = point_tuples[j]
+                    p2 = point_tuples[(j + 1) % len(point_tuples)]  # Wrap for closing
+                    dx = p2[0] - p1[0]
+                    dy = p2[1] - p1[1]
+                    seg_len = math.sqrt(dx*dx + dy*dy)
+
+                    if seg_len <= max_segment_mm:
+                        msp.add_line(p1, p2, dxfattribs={'layer': layer_name})
+                        written_count += 1
+                    else:
+                        skipped_count += 1
+
+                if skipped_count > 0:
+                    logger.info(f"BODY_OUTLINE: skipped {skipped_count} gap-bridging segments > {max_segment_mm}mm, wrote {written_count}")
+
+                exported_count += 1
+                continue  # Skip normal add_polyline call
 
             try:
                 add_polyline(msp, point_tuples, layer=layer_name, closed=True, version=dxf_version)
