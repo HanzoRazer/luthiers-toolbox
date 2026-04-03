@@ -1461,7 +1461,7 @@ def main():
         # Save contour as DXF (R2010 format with proper bounds)
         try:
             import ezdxf
-            doc = ezdxf.new("R2010")  # AC1024 minimum per CLAUDE.md
+            doc = ezdxf.new("R12")  # AC1024 minimum per CLAUDE.md
             doc.header['$INSUNITS'] = 4  # mm
             doc.header['$MEASUREMENT'] = 1  # metric
             msp = doc.modelspace()

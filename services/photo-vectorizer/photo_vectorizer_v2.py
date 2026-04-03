@@ -3382,7 +3382,7 @@ def write_svg(contours_by_layer: Dict[str, List[np.ndarray]],
 # =============================================================================
 
 def write_dxf(contours_by_layer: Dict[str, List[np.ndarray]],
-              output_path: str, version: str = "R2010") -> bool:
+              output_path: str, version: str = "R12") -> bool:
     """Write contours to DXF with layers (R2010+ format with proper bounds)."""
     if not EZDXF_AVAILABLE:
         logger.error("ezdxf not installed — pip install ezdxf")

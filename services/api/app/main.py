@@ -136,6 +136,16 @@ CORS_ORIGINS = [
     "http://localhost:5178",  # Vite fallback
     "http://localhost:5179",  # Vite fallback
     "http://localhost:5180",  # Vite fallback
+    "http://localhost:5181",  # Vite fallback
+    "http://localhost:5182",  # Vite fallback
+    "http://localhost:5183",  # Vite fallback
+    "http://localhost:5184",  # Vite fallback
+    "http://localhost:5185",  # Vite fallback
+    "http://localhost:5186",  # Vite fallback
+    "http://localhost:5187",  # Vite fallback
+    "http://localhost:5188",  # Vite fallback
+    "http://localhost:5189",  # Vite fallback
+    "http://localhost:5190",  # Vite fallback
     "http://localhost:4173",  # Vite preview
     "http://127.0.0.1:5173",
     "http://127.0.0.1:5174",
@@ -145,6 +155,16 @@ CORS_ORIGINS = [
     "http://127.0.0.1:5178",
     "http://127.0.0.1:5179",
     "http://127.0.0.1:5180",
+    "http://127.0.0.1:5181",
+    "http://127.0.0.1:5182",
+    "http://127.0.0.1:5183",
+    "http://127.0.0.1:5184",
+    "http://127.0.0.1:5185",
+    "http://127.0.0.1:5186",
+    "http://127.0.0.1:5187",
+    "http://127.0.0.1:5188",
+    "http://127.0.0.1:5189",
+    "http://127.0.0.1:5190",
     "http://127.0.0.1:4173",
     "https://luthiers-toolboxclient-production-309d.up.railway.app",  # Railway client
 ]

@@ -217,7 +217,7 @@ async def vectorize_geometry(
         elif file_ext not in PHASE2_EXTENSIONS:
             raise HTTPException(
                 status_code=400,
-                detail=f"Unsupported file type: {file_ext}. Phase 2 supports PNG, JPG, JPEG, PDF"
+                detail=f"Unsupported file type: {file_ext}. [MARKER-X1] Phase 2 supports PNG, JPG, JPEG, PDF"
             )
 
         # Validate scale factor
@@ -341,6 +341,13 @@ async def serve_static_file(filename: str) -> FileResponse:
     Raises:
         HTTPException 404: File not found in registry or on disk
     """
+    # Cache headers to prevent browser caching stale files
+    no_cache_headers = {
+        "Cache-Control": "no-cache, no-store, must-revalidate",
+        "Pragma": "no-cache",
+        "Expires": "0"
+    }
+
     # Check registry first
     if filename in _output_file_registry:
         file_path = _output_file_registry[filename]
@@ -350,6 +357,7 @@ async def serve_static_file(filename: str) -> FileResponse:
                 file_path,
                 media_type=media_type,
                 filename=filename,
+                headers=no_cache_headers,
             )
     
     # Fallback: search temp directories with blueprint_phase prefix
@@ -370,6 +378,7 @@ async def serve_static_file(filename: str) -> FileResponse:
             file_path,
             media_type=media_type,
             filename=filename,
+            headers=no_cache_headers,
         )
     
     raise HTTPException(

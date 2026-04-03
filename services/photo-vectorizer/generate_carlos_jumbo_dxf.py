@@ -141,7 +141,7 @@ def write_dxf(contours_mm: list, output_path: str,
 
     try:
         # Use R2010 format for better compatibility
-        doc = ezdxf.new("R2010")
+        doc = ezdxf.new("R12")
         msp = doc.modelspace()
 
         # Set units to mm

@@ -279,7 +279,7 @@ def write_dxf_enhanced(contours_mm: list, output_path: str,
                        layer_name: str = "OUTLINE") -> bool:
     """Write contours to DXF with polylines."""
     try:
-        doc = ezdxf.new("R2010")
+        doc = ezdxf.new("R12")
         msp = doc.modelspace()
         doc.header["$INSUNITS"] = 4
         doc.header["$MEASUREMENT"] = 1
@@ -301,7 +301,7 @@ def write_dxf_enhanced(contours_mm: list, output_path: str,
 def write_dxf_all_lines(polylines_mm: list, output_path: str) -> bool:
     """Write all polylines to DXF (comprehensive output)."""
     try:
-        doc = ezdxf.new("R2010")
+        doc = ezdxf.new("R12")
         msp = doc.modelspace()
         doc.header["$INSUNITS"] = 4
         doc.header["$MEASUREMENT"] = 1

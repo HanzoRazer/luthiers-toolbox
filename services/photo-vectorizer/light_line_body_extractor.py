@@ -471,7 +471,7 @@ def save_contour_to_dxf(
         pts_mm[:, 1] = (pts_mm[:, 1] - cy) * scale_y
 
     # Create DXF
-    doc = ezdxf.new('R2010')
+    doc = ezdxf.new('R12')
     doc.units = ezdxf.units.MM
 
     msp = doc.modelspace()

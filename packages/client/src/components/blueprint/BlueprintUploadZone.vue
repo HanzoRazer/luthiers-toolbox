@@ -62,6 +62,8 @@ function handleFileSelect(event: Event) {
   const target = event.target as HTMLInputElement
   if (target.files && target.files[0]) {
     validateAndEmit(target.files[0])
+    // Reset input to allow re-selecting the same file and prevent caching
+    target.value = ''
   }
 }
 

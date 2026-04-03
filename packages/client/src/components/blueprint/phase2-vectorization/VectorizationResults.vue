@@ -18,7 +18,10 @@ const emit = defineEmits<{
 
 const svgPreviewUrl = computed(() => {
   if (!props.vectorizedGeometry?.svg_path) return "#";
-  return `/api/blueprint/static/${props.vectorizedGeometry.svg_path.split("/").pop()}`;
+  // Cache-bust with processing time to prevent stale image
+  const filename = props.vectorizedGeometry.svg_path.split(/[/\\]/).pop();
+  const ts = props.vectorizedGeometry.processing_time_ms || Date.now();
+  return `/api/blueprint/static/${filename}?t=${ts}`;
 });
 </script>
 
@@ -94,7 +97,7 @@ const svgPreviewUrl = computed(() => {
             d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"
           />
         </svg>
-        Download DXF R2000 (CAM-Ready)
+        Download DXF R12 (CAM-Ready)
       </button>
       <button
         class="btn-secondary"
