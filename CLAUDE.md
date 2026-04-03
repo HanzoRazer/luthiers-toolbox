@@ -353,3 +353,27 @@ Key patterns to copy:
   - Silent fallback when API unavailable
   - Suppression logic (don't repeat guidance already given)
   - on_full_analysis_complete trigger
+
+---
+
+## VECTORIZER SPRINT B — Segmentation-First Extraction
+
+Priority: HIGH — closes the 148 open endpoint problem
+
+Root cause confirmed by gap analysis:
+  - 88 gaps <0.5mm (edge detection noise)
+  - 34 gaps >5mm (maximum 27.25mm) — genuine blueprint
+    discontinuities that edge detection cannot recover
+
+Segmentation approach (Strategy A in Loop 1):
+  1. Add extract_body_by_segmentation() using
+     flood fill from image center point
+  2. Add fg_mask priority path — use foreground
+     mask from background removal when available
+  3. Edge detection becomes fallback only
+
+Expected result: closed contours by construction,
+148 open endpoints → 0 for clean blueprints.
+
+Location: services/blueprint-import/vectorizer_phase3.py
+Test case: cuatro puertoriqueño PDF
