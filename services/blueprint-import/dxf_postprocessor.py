@@ -3,7 +3,7 @@ DXF Post-Processor for CAM-Ready Output
 ========================================
 
 Addresses three commercial viability blockers:
-  1. Version upgrade: R2000 default for native LWPOLYLINE support
+  1. R12 default for maximum CAM compatibility (LINE segments)
   2. Arc fitting: detect circular arcs in polyline sequences
   3. Scale application: multiply all output coordinates by scale_factor
 
@@ -13,7 +13,7 @@ Usage:
 
     # Standalone post-processing of an existing DXF
     from dxf_postprocessor import postprocess_dxf
-    postprocess_dxf("input.dxf", "output.dxf", version='R2000', fit_arcs=True)
+    postprocess_dxf("input.dxf", "output.dxf", version='R12', fit_arcs=True)
 
 Author: The Production Shop
 Version: 1.0.0
@@ -231,7 +231,7 @@ def export_cam_ready_dxf(
     mm_per_px: float,
     scale_factor: float = 1.0,
     simplify_tolerance: float = 0.2,
-    dxf_version: DxfVersion = 'R2000',
+    dxf_version: DxfVersion = 'R12',
     fit_arcs: bool = True,
     arc_tolerance: float = 0.3,
     excluded_categories: Optional[list] = None,
@@ -242,10 +242,10 @@ def export_cam_ready_dxf(
     Export classified contours to a CAM-ready DXF file.
 
     Differences from standard export_to_dxf:
-      - Default version R2000 (LWPOLYLINE, native ARC/CIRCLE)
+      - R12 default for maximum CAM compatibility (LINE segments)
       - Applies scale_factor to all coordinates
       - Optionally fits arcs for smoother toolpaths
-      - Uses native CIRCLE/ARC entities where possible (R13+)
+      - Uses dxf_compat.add_polyline() for version-aware export
 
     Args:
         classified: Dict of category -> contour list
@@ -254,7 +254,7 @@ def export_cam_ready_dxf(
         mm_per_px: Pixels to mm conversion
         scale_factor: Scale multiplier from calibration
         simplify_tolerance: Douglas-Peucker tolerance in mm
-        dxf_version: DXF version (default R2000 for LWPOLYLINE)
+        dxf_version: DXF version (R12 default for max compatibility)
         fit_arcs: Enable arc fitting for smoother output
         arc_tolerance: Arc fit tolerance in mm
         excluded_categories: Categories to skip
@@ -302,7 +302,7 @@ def export_cam_ready_dxf(
         body_width = max(xs) - min(xs)
         body_height = max(ys) - min(ys)
 
-    # Create DXF document (R2000+ by default for LWPOLYLINE)
+    # Create DXF document (R12 default, LINE segments via dxf_compat)
     version = validate_version(dxf_version)
     doc = create_document(version=version, setup=True if version != 'R12' else False)
     msp = doc.modelspace()
@@ -403,7 +403,7 @@ def export_cam_ready_dxf(
 def postprocess_dxf(
     input_path: str,
     output_path: str,
-    version: DxfVersion = 'R2000',
+    version: DxfVersion = 'R12',
     fit_arcs: bool = False,
     arc_tolerance: float = 0.3,
     scale_multiplier: float = 1.0
@@ -417,7 +417,7 @@ def postprocess_dxf(
     Args:
         input_path: Source DXF file
         output_path: Target DXF file
-        version: Target DXF version (default R2000)
+        version: Target DXF version (R12 default for max compatibility)
         fit_arcs: Enable arc detection in polylines
         arc_tolerance: Arc fit tolerance in mm
         scale_multiplier: Scale to apply to all coordinates

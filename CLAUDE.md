@@ -66,12 +66,13 @@ freeze and require a hard reset on smart_guitar_front_v3.dxf.
 Required: services/api/app/cam/dxf_writer.py
   A single central DXF writer that ALL generators call.
 
-Standards to enforce:
-  - Format: AC1024 (R2010) minimum — never R2000
-  - Entities: SPLINE or LINE only — never LWPOLYLINE
-  - Header: valid EXTMIN/EXTMAX from actual geometry
-  - Units: INSUNITS=4 (mm), MEASUREMENT=1 (metric)
-  - Layers: named layers only, no geometry on layer 0
+DXF pipeline standard: R12 (AC1009)
+  - LINE entities only via dxf_compat.add_polyline(version='R12')
+  - No LWPOLYLINE (causes Fusion 360 freeze)
+  - No EXTMIN/EXTMAX population (use sentinel values 1e+20)
+  - Coordinate precision ≤ 3dp
+  - This standard applies to all DXF generators in the repo
+  - dxf_writer.py (Sprint 3) will enforce these standards centrally
 
 Existing generators that must be refactored to use it:
   - app/instrument_geometry/bridge/archtop_floating_bridge.py

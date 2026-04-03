@@ -2686,6 +2686,67 @@ class Phase3Vectorizer:
             self.enhanced_validator = ValidationReport(INSTRUMENT_SPECS)
             logger.info(f"Phase 3.7 enhancements loaded (Photo: {enable_photo_processing}, Debug: {enable_debug})")
 
+    def _raw_extract(
+        self,
+        image: np.ndarray,
+        output_path: str,
+        source_path: str
+    ) -> 'ExtractionResult':
+        """
+        Raw extraction — March 2026 recipe.
+        CHAIN_APPROX_NONE + no classification + R12 LINE entities + CONTOURS layer.
+        Pixel coordinates only — no scale conversion.
+        """
+        import time
+        start_time = time.time()
+
+        # 1. Dark line mask (same as guitar mode)
+        mask = extract_dark_lines(image, threshold=120)
+
+        # 2. ALL contours — every boundary pixel
+        contours, _ = cv2.findContours(
+            mask, cv2.RETR_TREE, cv2.CHAIN_APPROX_NONE
+        )
+
+        logger.info(f"Raw extraction: {len(contours)} contours from mask")
+
+        # 3. No classification. No filtering. No approxPolyDP.
+        # Build LINE entities per contour (R12 format)
+        doc = create_document(version='R12')
+        msp = doc.modelspace()
+
+        total_segments = 0
+        for contour in contours:
+            pts = contour.reshape(-1, 2)
+            if len(pts) < 2:
+                continue
+            # Pixel coordinates — Y inverted for CAD convention
+            points = [(float(p[0]), float(image.shape[0] - p[1])) for p in pts]
+            add_polyline(msp, points, layer='CONTOURS', closed=True, version='R12')
+            total_segments += len(points)
+
+        doc.saveas(output_path)
+
+        elapsed = time.time() - start_time
+        logger.info(f"Raw DXF written: {output_path} ({total_segments} segments, {elapsed:.1f}s)")
+
+        # Return minimal ExtractionResult
+        return ExtractionResult(
+            source_path=source_path,
+            output_dxf=output_path,
+            output_svg=None,
+            instrument_type=InstrumentType.ELECTRIC_GUITAR,  # Default for raw mode
+            contours_by_category={'CONTOURS': []},  # Raw mode has no classification
+            primitives=[],
+            dimensions_mm=(0.0, 0.0),  # Pixel space — not scaled
+            validation_passed=False,
+            scale_factor=1.0,
+            scale_source='raw_mode',
+            warnings=['Raw mode: pixel coordinates, no scale applied'],
+            processing_time_ms=elapsed * 1000
+        )
+
+
     @classmethod
     def from_tier(
         cls,
@@ -2770,7 +2831,9 @@ class Phase3Vectorizer:
         assembly_gap_px: int = 50,
         generate_debug_report: bool = False,
         cam_ready: bool = False,
-        dark_background: Optional[bool] = None
+        dark_background: Optional[bool] = None,
+        # Raw mode (March 2026 restoration)
+        raw_output: bool = False
     ) -> ExtractionResult:
         """
         Extract geometry from a blueprint.
@@ -2796,7 +2859,7 @@ class Phase3Vectorizer:
             correct_perspective: Apply perspective correction (photos)
             assembly_gap_px: Gap tolerance for assembly contour joining
             generate_debug_report: Generate debug visualization report
-            cam_ready: Export CAM-ready DXF (R2000, arcs, LWPOLYLINE)
+            cam_ready: Export CAM-ready DXF (R12, LINE segments via dxf_compat)
             dark_background: Dark background handling (None=auto-detect, True=force invert, False=off)
 
         Returns:
@@ -2822,6 +2885,11 @@ class Phase3Vectorizer:
         height, width = image.shape[:2]
         img_width_mm = width * self.mm_per_px
         img_height_mm = height * self.mm_per_px
+
+        # Raw mode — March 2026 recipe: pixel coords, no classification, R12 LINE entities
+        if raw_output:
+            logger.info("Raw extraction mode enabled")
+            return self._raw_extract(image, output_path, source_path)
 
         # Dark background detection and inversion
         # Auto-detect unless explicitly set by caller
@@ -3352,7 +3420,8 @@ def extract_guitar_blueprint(
     use_ml: bool = True,
     detect_primitives: bool = True,
     ml_model_path: Optional[str] = None,
-    dxf_version: str = 'R12'
+    dxf_version: str = 'R12',
+    raw_output: bool = False
 ) -> Dict[str, Any]:
     """
     Convenience function for extracting guitar blueprints.
@@ -3423,7 +3492,8 @@ def extract_guitar_blueprint(
         body_gap_close=body_gap_close,
         detail_gap_close=detail_gap_close,
         use_ml=use_ml,
-        detect_primitives=detect_primitives
+        detect_primitives=detect_primitives,
+        raw_output=raw_output
     )
 
     return result.summary()
@@ -3519,6 +3589,8 @@ def main():
     parser.add_argument("--dxf-version", default="R12",
                         choices=["R12", "R13", "R14", "R2000", "R2004", "R2007", "R2010"],
                         help="DXF output version (default R12 for CAM compatibility)")
+    parser.add_argument("--raw", action="store_true",
+                        help="Raw extraction: pixel coords, no classification, R12 LINEs, CONTOURS layer")
     parser.add_argument("-v", "--verbose", action="store_true", help="Verbose output")
 
     args = parser.parse_args()
@@ -3542,7 +3614,8 @@ def main():
         use_ml=not args.no_ml,
         detect_primitives=not args.no_primitives,
         ml_model_path=args.ml_model,
-        dxf_version=args.dxf_version
+        dxf_version=args.dxf_version,
+        raw_output=args.raw
     )
 
     print("\n" + "=" * 60)
