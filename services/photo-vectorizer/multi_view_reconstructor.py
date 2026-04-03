@@ -239,7 +239,7 @@ class MultiViewReconstructor:
             from photo_vectorizer_v2 import PhotoVectorizerV2
             self._vectorizer = PhotoVectorizerV2(
                 simplify_tolerance_mm=self.simplify_tolerance_mm,
-                dxf_version="R2010",
+                dxf_version="R12",
             )
         return self._vectorizer
 
@@ -769,7 +769,7 @@ class MultiViewReconstructor:
             output_path = Path(output_path)
 
             # Create DXF document (R2010 format)
-            doc = ezdxf.new("R2010")
+            doc = ezdxf.new("R12")
             msp = doc.modelspace()
 
             # Layer colors (ACI color codes)

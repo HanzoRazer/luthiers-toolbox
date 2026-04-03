@@ -190,6 +190,14 @@ export function useBlueprintWorkflow(options: BlueprintWorkflowOptions = {}) {
       return false
     }
 
+    // Clear previous workflow results when uploading a new file
+    analysis.value = null
+    calibration.value = null
+    calibrationAccepted.value = false
+    vectorizedGeometry.value = null
+    rmosResult.value = null
+    analysisProgress.value = 0
+
     uploadedFile.value = file
     error.value = null
     return true
@@ -556,7 +564,7 @@ export function useBlueprintWorkflow(options: BlueprintWorkflowOptions = {}) {
 
       // Fetch the DXF file from server
       const dxfFilename = getFilename(vectorizedGeometry.value.dxf_path)
-      const dxfResponse = await api(`/api/blueprint/static/${dxfFilename}`)
+      const dxfResponse = await api(`/api/blueprint/static/${dxfFilename}?t=${Date.now()}`)
       if (!dxfResponse.ok) throw new Error('Failed to fetch DXF file')
       const dxfBlob = await dxfResponse.blob()
 
@@ -638,7 +646,7 @@ export function useBlueprintWorkflow(options: BlueprintWorkflowOptions = {}) {
 
     try {
       const response = await fetch(
-        `/api/blueprint/static/${getFilename(vectorizedGeometry.value.svg_path)}`
+        `/api/blueprint/static/${getFilename(vectorizedGeometry.value.svg_path)}?t=${Date.now()}`
       )
       return await response.blob()
     } catch (err: any) {
@@ -653,7 +661,7 @@ export function useBlueprintWorkflow(options: BlueprintWorkflowOptions = {}) {
 
     try {
       const response = await fetch(
-        `/api/blueprint/static/${getFilename(vectorizedGeometry.value.dxf_path)}`
+        `/api/blueprint/static/${getFilename(vectorizedGeometry.value.dxf_path)}?t=${Date.now()}`
       )
       return await response.blob()
     } catch (err: any) {

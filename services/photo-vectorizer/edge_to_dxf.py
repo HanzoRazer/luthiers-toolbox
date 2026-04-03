@@ -12,7 +12,7 @@ Use cases:
 - Creating reference DXFs from photos for manual tracing
 
 Output characteristics:
-- DXF R2010 format (per CLAUDE.md - R12 causes Fusion 360 issues)
+- DXF R12 format for maximum compatibility
 - Individual LINE entities (not LWPOLYLINE)
 - Adjacent edge pixels connected as line segments
 - Configurable scale (default: body height = 500mm)
@@ -98,7 +98,7 @@ class EdgeToDXF:
         canny_low: int = 50,
         canny_high: int = 150,
         adjacency_threshold: float = 3.0,
-        dxf_version: str = "R2010",
+        dxf_version: str = "R12",
         layer_name: str = "EDGES",
     ):
         """
@@ -108,7 +108,7 @@ class EdgeToDXF:
             canny_low: Canny edge detection low threshold
             canny_high: Canny edge detection high threshold
             adjacency_threshold: Max pixel distance to connect as LINE
-            dxf_version: DXF version (R2010 per CLAUDE.md standard)
+            dxf_version: DXF version (R12 for maximum compatibility)
             layer_name: DXF layer name for LINE entities
         """
         if not EZDXF_AVAILABLE:

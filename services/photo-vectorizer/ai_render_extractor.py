@@ -324,7 +324,7 @@ class AIRenderExtractor:
         if not EZDXF_AVAILABLE:
             return False
 
-        doc = ezdxf.new("R2010")
+        doc = ezdxf.new("R12")
         msp = doc.modelspace()
 
         # Create layers

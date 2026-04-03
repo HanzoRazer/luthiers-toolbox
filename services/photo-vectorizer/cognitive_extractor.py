@@ -1447,7 +1447,7 @@ def main():
         # Save contour as DXF
         try:
             import ezdxf
-            doc = ezdxf.new("R2010")
+            doc = ezdxf.new("R12")
             msp = doc.modelspace()
             points = [(float(p[0][0]), float(p[0][1])) for p in result['contour']]
             msp.add_lwpolyline(points, close=True)

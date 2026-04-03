@@ -2194,7 +2194,7 @@ def export_to_dxf(
     simplify_tolerance: float = 0.2,
     excluded_categories: Optional[List[ContourCategory]] = None,
     max_per_category: Optional[Dict[ContourCategory, int]] = None,
-    dxf_version: DxfVersion = 'R2010',
+    dxf_version: DxfVersion = 'R12',
     scale_factor: float = 1.0
 ) -> Tuple[float, float]:
     """
@@ -2333,12 +2333,12 @@ def export_primitives_to_dxf(
     primitives: List[GeometricPrimitive],
     output_path: str,
     center_offset: Tuple[float, float] = (0, 0),
-    dxf_version: DxfVersion = 'R2010'
+    dxf_version: DxfVersion = 'R12'
 ):
     """
     Export geometric primitives to DXF.
 
-    For R2010+ format per CLAUDE.md standard.
+    For R12 format per CLAUDE.md standard (max compatibility).
 
     Args:
         primitives: List of detected primitives

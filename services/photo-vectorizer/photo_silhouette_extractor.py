@@ -354,7 +354,7 @@ def save_to_dxf(
     """Save mm-scaled contour to DXF."""
     import ezdxf
 
-    doc = ezdxf.new('R2010')
+    doc = ezdxf.new('R12')
     doc.units = ezdxf.units.MM
     msp = doc.modelspace()
 

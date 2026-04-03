@@ -10,8 +10,28 @@
       </div>
     </div>
 
-    <!-- Upload Zone -->
-    <BlueprintUploadZone
+    <!-- Tab Bar -->
+    <div class="tab-bar">
+      <button
+        class="tab-btn"
+        :class="{ active: activeTab === 'blueprint' }"
+        @click="activeTab = 'blueprint'"
+      >
+        Blueprint Reader (Legacy)
+      </button>
+      <button
+        class="tab-btn"
+        :class="{ active: activeTab === 'vectorizer' }"
+        @click="activeTab = 'vectorizer'"
+      >
+        Photo Vectorizer V2
+      </button>
+    </div>
+
+    <!-- TAB 1: Blueprint Reader (Legacy) -->
+    <div v-if="activeTab === 'blueprint'">
+      <!-- Upload Zone -->
+      <BlueprintUploadZone
       v-if="!uploadedFile"
       @file-selected="onFileSelected"
       @error="setError"
@@ -75,6 +95,68 @@
         @update:cam-params="camParams = $event"
       />
     </div>
+    </div>
+
+    <!-- TAB 2: Photo Vectorizer V2 -->
+    <div v-if="activeTab === 'vectorizer'" class="v2-panel">
+      <div class="v2-upload-zone"
+        :class="{ dragover: v2DragOver }"
+        @dragover.prevent="v2DragOver = true"
+        @dragleave="v2DragOver = false"
+        @drop.prevent="onV2Drop"
+        @click="v2FileInput?.click()"
+      >
+        <input
+          ref="v2FileInput"
+          type="file"
+          accept="image/*"
+          style="display: none"
+          @change="onV2FileChange"
+        />
+        <div v-if="!v2PreviewUrl" class="v2-placeholder">
+          <p>Drop a guitar photo here or click to browse</p>
+          <p class="hint">PNG, JPG - direct silhouette extraction</p>
+        </div>
+        <img v-else :src="v2PreviewUrl" class="v2-preview" />
+      </div>
+
+      <div class="v2-options">
+        <label>
+          <span>Known Width (mm):</span>
+          <input v-model.number="v2KnownWidth" type="number" placeholder="Optional" />
+        </label>
+        <label class="checkbox-label">
+          <input v-model="v2CorrectPerspective" type="checkbox" />
+          <span>Correct perspective</span>
+        </label>
+        <label class="checkbox-label">
+          <input v-model="v2ExportDxf" type="checkbox" />
+          <span>Export DXF</span>
+        </label>
+      </div>
+
+      <button
+        class="btn-extract"
+        :disabled="!v2File || v2Extracting"
+        @click="extractV2"
+      >
+        {{ v2Extracting ? 'Extracting...' : 'Extract Silhouette' }}
+      </button>
+
+      <div v-if="v2Result" class="v2-result">
+        <h3>Extraction Result</h3>
+        <p v-if="v2Result.body_width_mm">Width: {{ v2Result.body_width_mm.toFixed(1) }} mm</p>
+        <p v-if="v2Result.body_height_mm">Height: {{ v2Result.body_height_mm.toFixed(1) }} mm</p>
+        <p>Processing: {{ v2Result.processing_ms }} ms</p>
+        <div class="v2-downloads">
+          <button v-if="v2Result.svg_path" @click="downloadV2Svg">Download SVG</button>
+          <button v-if="v2Result.dxf_path" @click="downloadV2Dxf">Download DXF</button>
+        </div>
+        <div v-if="v2Result.warnings?.length" class="v2-warnings">
+          <p v-for="w in v2Result.warnings" :key="w">{{ w }}</p>
+        </div>
+      </div>
+    </div>
 
     <!-- Error Display -->
     <div
@@ -108,7 +190,7 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted, watch } from 'vue'
+import { onMounted, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { useBlueprintWorkflow } from '@/composables/useBlueprintWorkflow'
 import { useAgenticEvents } from '@/composables/useAgenticEvents'
@@ -121,6 +203,28 @@ import Phase3CamPanel from '@/components/blueprint/Phase3CamPanel.vue'
 const router = useRouter()
 // E-1: Agentic Spine event emission
 const { emitViewRendered, emitAnalysisCompleted, emitAnalysisFailed } = useAgenticEvents()
+
+// Tab state
+const activeTab = ref<'blueprint' | 'vectorizer'>('blueprint')
+
+// Photo Vectorizer V2 State
+const v2FileInput = ref<HTMLInputElement | null>(null)
+const v2File = ref<File | null>(null)
+const v2PreviewUrl = ref('')
+const v2DragOver = ref(false)
+const v2Extracting = ref(false)
+const v2KnownWidth = ref<number | null>(null)
+const v2CorrectPerspective = ref(false)
+const v2ExportDxf = ref(true)
+const v2Result = ref<{
+  ok: boolean
+  svg_path?: string
+  dxf_path?: string
+  body_width_mm?: number
+  body_height_mm?: number
+  warnings?: string[]
+  processing_ms?: number
+} | null>(null)
 
 // Use composable for workflow state and actions
 const {
@@ -353,6 +457,90 @@ function downloadBlob(blob: Blob, filename: string) {
   document.body.removeChild(a)
   window.URL.revokeObjectURL(url)
 }
+
+// ============================================================================
+// Photo Vectorizer V2 Functions
+// ============================================================================
+
+function onV2FileChange(e: Event) {
+  const input = e.target as HTMLInputElement
+  if (input.files && input.files[0]) {
+    setV2File(input.files[0])
+  }
+}
+
+function onV2Drop(e: DragEvent) {
+  v2DragOver.value = false
+  if (e.dataTransfer?.files && e.dataTransfer.files[0]) {
+    setV2File(e.dataTransfer.files[0])
+  }
+}
+
+function setV2File(file: File) {
+  v2File.value = file
+  v2PreviewUrl.value = URL.createObjectURL(file)
+  v2Result.value = null
+}
+
+async function extractV2() {
+  if (!v2File.value) return
+  
+  v2Extracting.value = true
+  v2Result.value = null
+  
+  try {
+    // Convert file to base64
+    const arrayBuffer = await v2File.value.arrayBuffer()
+    const base64 = btoa(
+      new Uint8Array(arrayBuffer).reduce((data, byte) => data + String.fromCharCode(byte), '')
+    )
+    
+    const payload = {
+      image_b64: base64,
+      media_type: v2File.value.type || 'image/png',
+      known_width_mm: v2KnownWidth.value ?? undefined,
+      correct_perspective: v2CorrectPerspective.value,
+      export_svg: true,
+      export_dxf: v2ExportDxf.value,
+      label: v2File.value.name.replace(/\.[^.]+$/, ''),
+      source_type: 'photo',
+    }
+    
+    const resp = await fetch('/api/vectorizer/extract', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    })
+    
+    if (!resp.ok) {
+      const errText = await resp.text()
+      throw new Error(errText || resp.statusText)
+    }
+    
+    v2Result.value = await resp.json()
+  } catch (e: unknown) {
+    const msg = e instanceof Error ? e.message : String(e)
+    error.value = 'V2 extraction failed: ' + msg
+  } finally {
+    v2Extracting.value = false
+  }
+}
+
+function downloadV2Svg() {
+  if (v2Result.value?.svg_path) {
+    // Extract filename from path (handles both / and \ separators)
+    const filename = v2Result.value.svg_path.split(/[/\\]/).pop()
+    window.open(`/api/blueprint/static/${filename}?t=${Date.now()}`, '_blank')
+  }
+}
+
+function downloadV2Dxf() {
+  if (v2Result.value?.dxf_path) {
+    // Extract filename from path (handles both / and \ separators)
+    const filename = v2Result.value.dxf_path.split(/[/\\]/).pop()
+    window.open(`/api/blueprint/static/${filename}?t=${Date.now()}`, '_blank')
+  }
+}
 </script>
 
 <style scoped>
@@ -437,5 +625,163 @@ function downloadBlob(blob: Blob, filename: string) {
 
 .btn-close:hover {
   opacity: 0.7;
+}
+
+/* Tab Bar */
+.tab-bar {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 1.5rem;
+  border-bottom: 2px solid #e5e7eb;
+  padding-bottom: 0.5rem;
+}
+
+.tab-btn {
+  padding: 0.75rem 1.5rem;
+  border: none;
+  background: transparent;
+  font-size: 1rem;
+  font-weight: 600;
+  color: #6b7280;
+  cursor: pointer;
+  border-radius: 0.5rem 0.5rem 0 0;
+  transition: all 0.2s;
+}
+
+.tab-btn:hover {
+  background: #f3f4f6;
+  color: #374151;
+}
+
+.tab-btn.active {
+  background: #3b82f6;
+  color: white;
+}
+
+/* V2 Panel */
+.v2-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.v2-upload-zone {
+  border: 2px dashed #d1d5db;
+  border-radius: 0.75rem;
+  padding: 2rem;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.2s;
+  min-height: 200px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.v2-upload-zone:hover,
+.v2-upload-zone.dragover {
+  border-color: #3b82f6;
+  background: #eff6ff;
+}
+
+.v2-placeholder {
+  color: #6b7280;
+}
+
+.v2-placeholder .hint {
+  font-size: 0.875rem;
+  margin-top: 0.5rem;
+  color: #9ca3af;
+}
+
+.v2-preview {
+  max-width: 100%;
+  max-height: 300px;
+  object-fit: contain;
+}
+
+.v2-options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1.5rem;
+  align-items: center;
+}
+
+.v2-options label {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.v2-options input[type="number"] {
+  width: 100px;
+  padding: 0.5rem;
+  border: 1px solid #d1d5db;
+  border-radius: 0.375rem;
+}
+
+.checkbox-label {
+  cursor: pointer;
+}
+
+.btn-extract {
+  padding: 0.75rem 1.5rem;
+  background: #10b981;
+  color: white;
+  border: none;
+  border-radius: 0.5rem;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.btn-extract:hover:not(:disabled) {
+  background: #059669;
+}
+
+.btn-extract:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.v2-result {
+  background: #f9fafb;
+  border: 1px solid #e5e7eb;
+  border-radius: 0.5rem;
+  padding: 1.5rem;
+}
+
+.v2-result h3 {
+  margin: 0 0 1rem 0;
+  font-size: 1.125rem;
+}
+
+.v2-downloads {
+  display: flex;
+  gap: 0.75rem;
+  margin-top: 1rem;
+}
+
+.v2-downloads button {
+  padding: 0.5rem 1rem;
+  background: #3b82f6;
+  color: white;
+  border: none;
+  border-radius: 0.375rem;
+  cursor: pointer;
+}
+
+.v2-downloads button:hover {
+  background: #2563eb;
+}
+
+.v2-warnings {
+  margin-top: 1rem;
+  padding: 0.75rem;
+  background: #fef3c7;
+  border-radius: 0.375rem;
+  color: #92400e;
+  font-size: 0.875rem;
 }
 </style>
