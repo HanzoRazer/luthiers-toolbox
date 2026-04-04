@@ -45,9 +45,21 @@ router = APIRouter(prefix="/edge-to-dxf", tags=["Edge-to-DXF"])
 EDGE_TO_DXF_AVAILABLE = False
 _import_error = ""
 
+def _find_photo_vectorizer_path() -> Optional[Path]:
+    """Find photo-vectorizer directory across different Docker layouts."""
+    candidates = [
+        Path(__file__).parents[3] / "photo-vectorizer",
+        Path("/app/services/photo-vectorizer"),
+        Path(__file__).parents[4] / "services" / "photo-vectorizer",
+    ]
+    for p in candidates:
+        if p.exists():
+            return p
+    return None
+
 try:
-    _pv_path = Path(__file__).parents[3] / "photo-vectorizer"
-    if str(_pv_path) not in sys.path:
+    _pv_path = _find_photo_vectorizer_path()
+    if _pv_path and str(_pv_path) not in sys.path:
         sys.path.insert(0, str(_pv_path))
 
     from edge_to_dxf import EdgeToDXF, EdgeToDXFResult
