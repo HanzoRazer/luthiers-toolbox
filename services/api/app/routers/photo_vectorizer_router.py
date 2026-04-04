@@ -49,22 +49,51 @@ VECTORIZER_AVAILABLE = False
 _vectorizer_error    = ""
 _debug_pv_path = ""
 
+def _find_photo_vectorizer_path() -> Optional[Path]:
+    """
+    Find photo-vectorizer directory. Tries multiple locations to handle
+    different Docker build contexts (docker/api/Dockerfile vs services/api/Dockerfile).
+    """
+    candidates = [
+        # docker/api/Dockerfile layout: /app/services/photo-vectorizer
+        Path(__file__).parents[3] / "photo-vectorizer",
+        # Alternative: /app/services/photo-vectorizer (explicit)
+        Path("/app/services/photo-vectorizer"),
+        # Local dev: services/photo-vectorizer relative to repo root
+        Path(__file__).parents[4] / "services" / "photo-vectorizer",
+    ]
+    for p in candidates:
+        if p.exists():
+            return p
+    return None
+
 try:
-    _pv_path = Path(__file__).parents[3] / "photo-vectorizer"
-    _debug_pv_path = str(_pv_path)
-    sys.stderr.write(f"[photo_vectorizer_router] __file__ = {__file__}\n")
-    sys.stderr.write(f"[photo_vectorizer_router] _pv_path = {_pv_path}\n")
-    sys.stderr.write(f"[photo_vectorizer_router] _pv_path.exists() = {_pv_path.exists()}\n")
-    if str(_pv_path) not in sys.path:
-        sys.path.insert(0, str(_pv_path))
-        sys.stderr.write(f"[photo_vectorizer_router] Added to sys.path\n")
+    _pv_path = _find_photo_vectorizer_path()
+    _debug_pv_path = str(_pv_path) if _pv_path else "NOT_FOUND"
+    sys.stderr.write(f"[photo_vectorizer_router] __file__ = {__file__}
+")
+    sys.stderr.write(f"[photo_vectorizer_router] _pv_path = {_pv_path}
+")
+
+    if _pv_path and _pv_path.exists():
+        sys.stderr.write(f"[photo_vectorizer_router] _pv_path.exists() = True
+")
+        if str(_pv_path) not in sys.path:
+            sys.path.insert(0, str(_pv_path))
+            sys.stderr.write(f"[photo_vectorizer_router] Added to sys.path
+")
+    else:
+        sys.stderr.write(f"[photo_vectorizer_router] _pv_path not found, relying on PYTHONPATH
+")
 
     from photo_vectorizer_v2 import PhotoVectorizerV2  # type: ignore
     VECTORIZER_AVAILABLE = True
-    sys.stderr.write(f"[photo_vectorizer_router] SUCCESS - PhotoVectorizerV2 imported\n")
+    sys.stderr.write(f"[photo_vectorizer_router] SUCCESS - PhotoVectorizerV2 imported
+")
 except Exception as e:  # audited: http-500 — ValueError,IOError
     _vectorizer_error = str(e)
-    sys.stderr.write(f"[photo_vectorizer_router] FAILED - {type(e).__name__}: {e}\n")
+    sys.stderr.write(f"[photo_vectorizer_router] FAILED - {type(e).__name__}: {e}
+")
 
 # ─── Request / response models ────────────────────────────────────────────────
 
