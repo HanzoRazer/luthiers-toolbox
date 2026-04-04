@@ -7,7 +7,7 @@ Maintained by: Ross Echols (HanzoRazer)
 ## ACTIVE
 
 ### Sprint 1 — Vectorizer Reconciliation
-**Status:** Phase 4 open
+**Status:** Phase 4 NEXT, Phase 5 queued
 **Branch:** main
 
 | Phase | Description | Commit | Status |
@@ -15,13 +15,34 @@ Maintained by: Ross Echols (HanzoRazer)
 | 1 | Raw mode restoration — `--raw` flag, CHAIN_APPROX_NONE, CONTOURS layer, R12 | 04735bd4 | ✅ Done |
 | 2 | Classification layer fixes — jack route guard, body size ceiling, solidity scoring, instrument detector | 72bfffc9 | ✅ Done |
 | 3 | BlueprintAnalyzer wire-in — scale pre-pass, async wrapper, DPI fallback | 059cf5b0 | ✅ Done |
-| 4 | Production Docker fixes | — | 🔄 Open |
+| 4 | Docker fix — raw mode → production | — | ⏭️ NEXT |
+| 5 | Classified mode root cause fixes | — | 📋 Queued |
 
-**Phase 4 open items:**
+**Phase 4 — Docker fix (NEXT):**
 - `libxcb.so.1` missing in production Docker image (blocks blueprint router)
 - `vectorizer_phase3` not on Python path in API container
 - `photo_vectorizer_router` unavailable in production (same libxcb cause)
 - Fix location: `services/api/Dockerfile` — add libxcb and cv2 dependencies
+
+**Phase 5 — Classified mode root cause fixes (QUEUED):**
+- Root cause 1: Scale detection — BlueprintAnalyzer not firing locally (no ANTHROPIC_API_KEY). Set key and retest.
+- Root cause 2: Feature cross-contamination — CONTROL_CAVITY and RHYTHM_CIRCUIT on acoustics, BRACING on electrics. Les Paul auto-detected as acoustic (aspect ratio bug).
+- Root cause 3: Body contour election unstable — Dreadnought shows 826x552mm in DXF vs 277x377mm reported (3x discrepancy).
+- Root cause 4: Scale correction overcorrecting — Cuatro 0.511x correction produces 500mm vs 430mm target (16% error).
+
+**Quality Test Verdict:**
+```
+RAW MODE:    PASS — production ready. 3/3 files.
+             1.99M segments (Dreadnought), 277K (Les Paul), 1.15M (Cuatro).
+             AC1009, CONTOURS layer, zero open endpoints.
+
+CLASSIFIED:  FAIL — not ready. 0/3 files within ±20% spec.
+             Scale calibration and feature classification unreliable
+             without ANTHROPIC_API_KEY in local environment.
+```
+
+**Strategic decision:** Ship raw mode via Docker fix (Phase 4).
+Classified mode is the premium path — Sprint 1 Phase 5.
 
 **Key decisions recorded:**
 - R12 (AC1009) is project-wide DXF standard — enforced in CLAUDE.md
