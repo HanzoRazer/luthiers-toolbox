@@ -180,5 +180,47 @@ binding channels become distinct CAM-ready layers without manual editing.
 
 ---
 
+### Physical Template Scanner Workflow
+**Status:** Technically complete — documentation and UI surface needed
+**Depends on:** Sprint 4 photo vectorizer production readiness
+
+**The insight:**
+Physical templates are the dominant reference format across all
+hand-craft instrument making traditions — not just violin family.
+This includes guitar, lute, oud, saz, kora, archtop, cello, bass,
+and every non-Western tradition where template-based building
+predates CAD by centuries.
+
+**The product statement:**
+"Upload a photo of your template. Get a CNC-ready DXF."
+
+**Technical status:**
+edge_to_dxf.py already handles this today.
+Flatbed scan at 300 DPI → PNG → edge_to_dxf --raw
+--height [known_height_mm] → R12 DXF at correct physical scale.
+mm_per_px = 25.4/300 = 0.0847 — no BlueprintAnalyzer needed.
+Scale is known from scan resolution.
+
+**What is missing:**
+- One-page workflow guide for non-CAD users
+- UI surface in Blueprint Lab: "Scan a Template" intake path
+- Validation step: compare DXF bounding box against
+  user-entered physical measurements from calipers
+- Documentation in docs/ covering the scanner workflow
+
+**Catalog implications:**
+Enables Tier 3 bowed string entries from physical templates:
+  violin_strad_model, violin_guarneri_del_gesu,
+  violin_montagnana, viola_strad, cello_strad,
+  double_bass_flat_back, double_bass_carved_back
+
+**Strategic value:**
+No other lutherie software tool makes this offer to all
+instrument making traditions simultaneously. The scanner
+workflow is the universal onramp for non-Western and
+traditional instrument makers who have no digital workflow.
+
+---
+
 *This file is updated at the end of every sprint session.*
 *Source of truth for sprint status across all terminals and chat sessions.*
