@@ -7,7 +7,7 @@ Maintained by: Ross Echols (HanzoRazer)
 ## ACTIVE
 
 ### Sprint 1 — Vectorizer Reconciliation
-**Status:** Phase 4 NEXT, Phase 5 queued
+**Status:** Phase 4 DONE, Phase 5 NEXT
 **Branch:** main
 
 | Phase | Description | Commit | Status |
@@ -15,8 +15,8 @@ Maintained by: Ross Echols (HanzoRazer)
 | 1 | Raw mode restoration — `--raw` flag, CHAIN_APPROX_NONE, CONTOURS layer, R12 | 04735bd4 | ✅ Done |
 | 2 | Classification layer fixes — jack route guard, body size ceiling, solidity scoring, instrument detector | 72bfffc9 | ✅ Done |
 | 3 | BlueprintAnalyzer wire-in — scale pre-pass, async wrapper, DPI fallback | 059cf5b0 | ✅ Done |
-| 4 | Docker fix — raw mode → production | — | ⏭️ NEXT |
-| 5 | Classified mode root cause fixes | — | 📋 Queued |
+| 4 | Docker fix — raw mode → production | a76102c2 | ✅ Done |
+| 5 | Classified mode root cause fixes | — | ⏭️ NEXT |
 
 **Phase 4 — Docker fix (NEXT):**
 - `libxcb.so.1` missing in production Docker image (blocks blueprint router)
