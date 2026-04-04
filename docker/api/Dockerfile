@@ -3,8 +3,11 @@ ARG PYTHON_VERSION=3.11
 FROM python:${PYTHON_VERSION}-slim AS base
 
 # system deps (git needed for private repo install)
+# libxcb + libgl1 + libglib required for OpenCV headless operation
 RUN apt-get update && apt-get install -y --no-install-recommends \
-      curl ca-certificates build-essential git && \
+      curl ca-certificates build-essential git \
+      libxcb1 libxcb-render0 libxcb-shape0 libxcb-xfixes0 \
+      libgl1-mesa-glx libglib2.0-0 && \
     rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
@@ -19,6 +22,10 @@ COPY services/api/requirements.txt ./services/api/requirements.txt
 # This ensures uvicorn/fastapi are always available even if sg-spec fails
 RUN grep -v "^sg-spec" services/api/requirements.txt > /tmp/requirements-core.txt && \
     pip install --no-cache-dir -r /tmp/requirements-core.txt
+
+# Install blueprint-import dependencies (opencv-python, pdf2image, ezdxf, etc.)
+COPY services/blueprint-import/requirements.txt ./services/blueprint-import/requirements.txt
+RUN pip install --no-cache-dir -r services/blueprint-import/requirements.txt
 
 # Install sg-spec separately (requires SG_SPEC_TOKEN for private repo)
 # Configure git credential store before pip install
@@ -36,6 +43,10 @@ RUN if [ -n "$SG_SPEC_TOKEN" ]; then \
 # app
 COPY services/api /app/services/api
 
+# blueprint-import and photo-vectorizer for vectorizer_phase3 and photo_vectorizer_router
+COPY services/blueprint-import /app/services/blueprint-import
+COPY services/photo-vectorizer /app/services/photo-vectorizer
+
 # Create non-root user first (needed for chown below)
 RUN useradd -m app
 
@@ -46,7 +57,7 @@ RUN mkdir -p /app/services/api/app/data/runs && chown -R app:app /app/services/a
 USER app
 
 ENV UVICORN_HOST=0.0.0.0 UVICORN_PORT=${SERVER_PORT:-8000}
-ENV PYTHONPATH=/app/services/api
+ENV PYTHONPATH=/app/services/api:/app/services/blueprint-import:/app/services/photo-vectorizer
 EXPOSE 8000
 
 # health endpoint baked in app
