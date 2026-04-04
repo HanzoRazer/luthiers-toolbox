@@ -62,6 +62,12 @@ luthiers-toolbox is the source of truth — standalones are published from it.
 - [ ] Define publish workflow for 8 standalone repos
 - [ ] Populate ltb-acoustic-design-studio from SoundholeCalculator.vue + spiral_geometry.py
 - [ ] Sync blueprint-reader with Sprint 1 Phase 1-3 commits
+- [ ] Wire BlueprintAnalyzer scale pre-pass into photo_vectorizer_v2.py
+      (same pattern as blueprint reader Phase 3 — PNG already in memory)
+- [ ] Build body isolation pre-processor (neck-to-body crop before edge detection)
+- [ ] Wire INSTRUMENT_CATALOG Tier 1 working set into photo_vectorizer_v2.py
+- [ ] Confirm edge_to_dxf.py is available as high-fidelity fallback path
+      for photo inputs where classification fails
 
 ---
 
@@ -80,6 +86,21 @@ luthiers-toolbox is the source of truth — standalones are published from it.
 - [ ] Fix FastAPI regex deprecation warning (pattern= replacement)
 - [ ] Add WeasyPrint dependencies to Docker (PDF export)
 - [ ] libxcb Docker fix (shared with Sprint 1 Phase 4)
+
+---
+
+### Sprint 4 — Photo Vectorizer Production Readiness
+**Status:** Queued — blocked on Sprint 1 Phase 4 Docker fix
+
+**Task list:**
+- [ ] Docker fix brings photo_vectorizer_router online (shared with Sprint 1 Phase 4)
+- [ ] Validate photo vectorizer quality against SG Custom PNG after Docker fix
+- [ ] BlueprintAnalyzer wire-in for photo path scale calibration
+- [ ] Body isolation pre-processor (neck crop)
+- [ ] INSTRUMENT_CATALOG Tier 1 integration
+
+**Note:** edge_to_dxf.py is the proven high-fidelity path for photos.
+photo_vectorizer_v2.py classification path is supplementary.
 
 ---
 
