@@ -34,12 +34,12 @@ from app.woodworking import (
     board_feet,
     compute_biscuit_layout,
     compute_box_joint,
-    compute_break_angle_deg,
+    # compute_break_angle_deg,  # REMOVED: wooden_floating_bridge.py deleted (1b61f219)
     compute_dovetail_angle_from_slope,
     compute_floating_panel_gaps,
     compute_mortise_tenon,
     compute_panel_blank_oversize,
-    compute_saddle_height_from_twelfth_action,
+    # compute_saddle_height_from_twelfth_action,  # REMOVED: wooden_floating_bridge.py deleted
     movement_budget_for_species,
     seasonal_movement,
     wood_weight,
@@ -58,31 +58,32 @@ router = APIRouter(tags=["woodworking"])
 # ─── Floating bridge ──────────────────────────────────────────────────────────
 
 
-class FloatingBridgeActionRequest(BaseModel):
-    scale_length_mm: float = Field(..., gt=0)
-    action_12th_mm: float = Field(..., ge=0)
+# REMOVED: wooden_floating_bridge.py deleted (commit 1b61f219)
+# class FloatingBridgeActionRequest(BaseModel):
+#     scale_length_mm: float = Field(..., gt=0)
+#     action_12th_mm: float = Field(..., ge=0)
 
 
-class BreakAngleRequest(BaseModel):
-    height_delta_mm: float = Field(..., ge=0)
-    horizontal_run_mm: float = Field(..., gt=0)
+# class BreakAngleRequest(BaseModel):
+#     height_delta_mm: float = Field(..., ge=0)
+#     horizontal_run_mm: float = Field(..., gt=0)
 
 
-@router.post("/floating-bridge/from-12th-action", summary="Saddle height from 12th-fret action")
-def post_floating_bridge_action(req: FloatingBridgeActionRequest) -> Dict[str, Any]:
-    r = compute_saddle_height_from_twelfth_action(req.scale_length_mm, req.action_12th_mm)
-    return {
-        "scale_length_mm": r.scale_length_mm,
-        "action_12th_mm": r.action_12th_mm,
-        "saddle_height_above_plane_mm": r.saddle_height_above_plane_mm,
-        "distance_12th_to_bridge_mm": r.distance_12th_to_bridge_mm,
-        "notes": r.notes,
-    }
+# @router.post("/floating-bridge/from-12th-action", summary="Saddle height from 12th-fret action")
+# def post_floating_bridge_action(req: FloatingBridgeActionRequest) -> Dict[str, Any]:
+#     r = compute_saddle_height_from_twelfth_action(req.scale_length_mm, req.action_12th_mm)
+#     return {
+#         "scale_length_mm": r.scale_length_mm,
+#         "action_12th_mm": r.action_12th_mm,
+#         "saddle_height_above_plane_mm": r.saddle_height_above_plane_mm,
+#         "distance_12th_to_bridge_mm": r.distance_12th_to_bridge_mm,
+#         "notes": r.notes,
+#     }
 
 
-@router.post("/floating-bridge/break-angle", summary="String break angle behind bridge")
-def post_break_angle(req: BreakAngleRequest) -> Dict[str, float]:
-    return {"break_angle_deg": compute_break_angle_deg(req.height_delta_mm, req.horizontal_run_mm)}
+# @router.post("/floating-bridge/break-angle", summary="String break angle behind bridge")
+# def post_break_angle(req: BreakAngleRequest) -> Dict[str, float]:
+#     return {"break_angle_deg": compute_break_angle_deg(req.height_delta_mm, req.horizontal_run_mm)}
 
 
 class ArchtopBridgeGeometryRequest(BaseModel):
