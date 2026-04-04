@@ -98,6 +98,8 @@ luthiers-toolbox is the source of truth — standalones are published from it.
 - [ ] BlueprintAnalyzer wire-in for photo path scale calibration
 - [ ] Body isolation pre-processor (neck crop)
 - [ ] INSTRUMENT_CATALOG Tier 1 integration
+- [ ] Extend BlueprintAnalyzer prompt to identify decorative elements
+      (rosettes, inlays, binding patterns) visible in blueprint images
 
 **Note:** edge_to_dxf.py is the proven high-fidelity path for photos.
 photo_vectorizer_v2.py classification path is supplementary.
@@ -148,6 +150,33 @@ latin_american: cuatro puertoriqueño, plano cuatro venezolano, El Cuatro 1-8
 
 97 PDF-only instruments identified as vectorizer candidates.
 Full catalog in: services/api/app/instrument_geometry/models/
+
+---
+
+## POST-DEPLOYMENT RESEARCH
+
+### AI Visual Training — Decorative Element Recognition
+
+**Target recognition categories:**
+- Rosettes (concentric rings, mosaic patterns, spiral slots)
+- Inlays (position markers, headstock logos, vine patterns)
+- Binding patterns (herringbone, checkered, multi-ply)
+- Materials (abalone, mother of pearl, wood species, plastic)
+
+**Training corpus:**
+- Source: 97 PDF-only instruments + Guitar Plans archive
+- Ground truth: Manual annotation by Ross during vectorizer QA
+- Delivery: JSON annotation files alongside source PDFs
+
+**Implementation path:**
+1. BlueprintAnalyzer prompt extension (Sprint 4 task)
+2. Vision API structured output capture
+3. Annotation validation UI (compare AI vs manual)
+4. Fine-tuning data export for future model specialization
+
+**Strategic value:** Decorative element recognition enables automatic
+layer separation in DXF output — rosette geometry, inlay pockets, and
+binding channels become distinct CAM-ready layers without manual editing.
 
 ---
 
