@@ -1,10 +1,9 @@
-"""Woodworking calculators: floating bridge setup, joinery, frame-and-panel."""
+"""Woodworking calculators: joinery, frame-and-panel, board feet."""
 
-from ..instrument_geometry.bridge.wooden_floating_bridge import (
-    FloatingBridgeResult,
-    compute_break_angle_deg,
-    compute_saddle_height_from_twelfth_action,
-)
+# NOTE: FloatingBridgeResult, compute_break_angle_deg, compute_saddle_height_from_twelfth_action
+# were removed — the file wooden_floating_bridge.py was deleted as redundant (commit 1b61f219).
+# Floating bridge geometry is handled by archtop_floating_bridge.py in instrument_geometry/bridge/.
+
 from .joinery import (
     BoxJointResult,
     BiscuitLayoutResult,
@@ -29,9 +28,6 @@ from .board_feet import (
 )
 
 __all__ = [
-    "FloatingBridgeResult",
-    "compute_break_angle_deg",
-    "compute_saddle_height_from_twelfth_action",
     "BoxJointResult",
     "BiscuitLayoutResult",
     "MortiseTenonResult",
