@@ -57,8 +57,8 @@ luthiers-toolbox is the source of truth — standalones are published from it.
 
 **Task list:**
 - [x] Move archtop_floating_bridge.py → app/instrument_geometry/bridge/ *(already in correct location)*
-- [x] Move wooden_floating_bridge.py → app/instrument_geometry/bridge/ *(commit 54c2a6ec)*
-- [ ] Reconcile floating_bridge.py in ltb-woodworking-studio vs main repo
+- [x] ~~Move wooden_floating_bridge.py~~ → Removed as redundant *(commit 1b61f219)*
+- [x] Reconcile floating_bridge.py — resolved by removing redundant file; bridge module complete
 - [ ] Define publish workflow for 8 standalone repos
 - [ ] Populate ltb-acoustic-design-studio from SoundholeCalculator.vue + spiral_geometry.py
 - [ ] Sync blueprint-reader with Sprint 1 Phase 1-3 commits
