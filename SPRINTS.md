@@ -56,8 +56,8 @@ All tools also exist embedded in Pro and Enterprise tiers.
 luthiers-toolbox is the source of truth — standalones are published from it.
 
 **Task list:**
-- [ ] Move archtop_floating_bridge.py → app/instrument_geometry/bridge/
-- [ ] Move wooden_floating_bridge.py → app/instrument_geometry/bridge/
+- [x] Move archtop_floating_bridge.py → app/instrument_geometry/bridge/ *(already in correct location)*
+- [x] Move wooden_floating_bridge.py → app/instrument_geometry/bridge/ *(commit 54c2a6ec)*
 - [ ] Reconcile floating_bridge.py in ltb-woodworking-studio vs main repo
 - [ ] Define publish workflow for 8 standalone repos
 - [ ] Populate ltb-acoustic-design-studio from SoundholeCalculator.vue + spiral_geometry.py
