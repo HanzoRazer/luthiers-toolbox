@@ -1,0 +1,25 @@
+{
+  "id": "flying_v_1958",
+  "tier": 1,
+  "family": "electric_solid",
+  "display_name": "Gibson Flying V (1958)",
+  "body_height_mm": [430, 460, 490],
+  "body_width_mm": [450, 475, 500],
+  "body_thickness_mm": [38, 44, 48],
+  "scale_length_mm": 628.65,
+  "cutaway": null,
+  "cutaway_type": null,
+  "soundhole_type": null,
+  "string_count": 6,
+  "typical_features": ["neck_pocket", "humbucker", "stoptail"],
+  "notes": "Angular V-shaped body, width exceeds height. Asymmetric left/right wings. Korina (African limba) original 1958 production.",
+  "classification_signals": [
+    "v_shape",
+    "width_exceeds_height",
+    "no_cutaway",
+    "angular_body"
+  ],
+  "spec_source": "agentic_supervisor.py INSTRUMENT_SPECS + Gibson58FlyingV.pdf reference",
+  "validated": false,
+  "validation_notes": "Pending DXF verification against PDF source"
+}
