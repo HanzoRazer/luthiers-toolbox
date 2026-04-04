@@ -4,8 +4,11 @@ ARG PYTHON_VERSION=3.11
 FROM python:${PYTHON_VERSION}-slim AS base
 
 # system deps (git needed for private repo install)
+# libxcb + libgl1 + libglib required for OpenCV headless operation
 RUN apt-get update && apt-get install -y --no-install-recommends \
-      curl ca-certificates build-essential git && \
+      curl ca-certificates build-essential git \
+      libxcb1 libxcb-render0 libxcb-shape0 libxcb-xfixes0 \
+      libgl1-mesa-glx libglib2.0-0 && \
     rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
@@ -43,7 +46,7 @@ USER app
 
 # Railway provides $PORT dynamically - default to 8080 for Railway compatibility
 ENV PORT=8080
-ENV PYTHONPATH=/app
+ENV PYTHONPATH=/app:/app/services/blueprint-import:/app/services/photo-vectorizer
 EXPOSE 8080
 
 # health endpoint baked in app
