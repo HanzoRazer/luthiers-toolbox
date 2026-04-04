@@ -70,20 +70,14 @@ def _find_photo_vectorizer_path() -> Optional[Path]:
 try:
     _pv_path = _find_photo_vectorizer_path()
     _debug_pv_path = str(_pv_path) if _pv_path else "NOT_FOUND"
-    sys.stderr.write(f"[photo_vectorizer_router] __file__ = {__file__}\n")
-    sys.stderr.write(f"[photo_vectorizer_router] _pv_path = {_pv_path}\n")
 
     if _pv_path and _pv_path.exists():
-        sys.stderr.write(f"[photo_vectorizer_router] _pv_path.exists() = True\n")
         if str(_pv_path) not in sys.path:
             sys.path.insert(0, str(_pv_path))
-            sys.stderr.write(f"[photo_vectorizer_router] Added to sys.path\n")
-    else:
-        sys.stderr.write(f"[photo_vectorizer_router] _pv_path not found, relying on PYTHONPATH\n")
 
     from photo_vectorizer_v2 import PhotoVectorizerV2  # type: ignore
     VECTORIZER_AVAILABLE = True
-    sys.stderr.write(f"[photo_vectorizer_router] SUCCESS - PhotoVectorizerV2 imported\n")
+    sys.stderr.write(f"[photo_vectorizer_router] loaded\n")
 except Exception as e:  # audited: http-500 — ValueError,IOError
     _vectorizer_error = str(e)
     sys.stderr.write(f"[photo_vectorizer_router] FAILED - {type(e).__name__}: {e}\n")
