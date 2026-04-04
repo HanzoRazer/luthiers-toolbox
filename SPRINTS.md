@@ -94,6 +94,13 @@ luthiers-toolbox is the source of truth — standalones are published from it.
       Batch convert Guitar Plans/ DWG inventory: 59_Flying_V.dwg,
       Flying_V_11.dwg, Classical-02-MM.dwg, DWG-00/01/02/03-Gibson-SG.dwg,
       Acoustic Guitar Neck Profiles DWGs.
+- [ ] Fix flying_v_1958.json schema mismatch with loader.py.
+      load_model_spec("flying_v_1958") crashes on KeyError for "scale" key.
+      Needs scale_length_mm → scale.scale_length_in conversion,
+      body_height_mm array → loader expected format. (Committed 9cdad75b)
+- [ ] Fix instrument_model_registry.json phantom entry: flying_v points to
+      specs/gibson_flying_v_1958.json which does not exist. Align registry
+      path with flying_v_1958.json committed at 9cdad75b.
 
 ---
 
@@ -103,6 +110,10 @@ luthiers-toolbox is the source of truth — standalones are published from it.
 **Status:** Queued — blocked on dxf_writer.py
 
 **Task list:**
+- [ ] Commit dxf_writer.py — currently untracked on disk, zero callers.
+      CLAUDE.md blocking rule not satisfied until committed AND existing
+      generators refactored. Generators still calling ezdxf.new() directly:
+      archtop_floating_bridge.py, spiral_geometry.py, curve_export_router.py.
 - [ ] Build dxf_writer.py — central DXF writer enforcing R12, sentinel EXTMIN/EXTMAX,
       ≤3dp coordinates, no LWPOLYLINE. Blocks all new DXF generators.
 - [ ] Fix 13 pre-existing test failures (10 soundhole spiral Python 3.14/ezdxf,
