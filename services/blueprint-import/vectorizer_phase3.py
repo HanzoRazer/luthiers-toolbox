@@ -124,6 +124,7 @@ class ContourCategory(Enum):
     PAGE_BORDER = "page_border"
     SMALL_FEATURE = "small_feature"
     UNKNOWN = "unknown"
+    BODY_OUTLINE_CANDIDATE = "body_outline_candidate"  # Large contours for re-ranking
     # Grid zone categories (Phase 4.0)
     UPPER_BOUT = "upper_bout"
     LOWER_BOUT = "lower_bout"
@@ -1705,7 +1706,8 @@ def classify_contour(
 
     # BODY OUTLINE FIRST: Check before page border since body may span large portion
     # Body has specific size criteria that distinguish it from page borders
-    if 350 < max_dim < 650 and 280 < min_dim < 450:
+    # Range: soprano ukulele (~200mm) to jumbo acoustic (~560mm), with 20% tolerance
+    if 180 < max_dim < 700 and 140 < min_dim < 550:
         category = ContourCategory.BODY_OUTLINE
 
     # Page border detection (spans nearly full page AND not body-sized)
@@ -1735,14 +1737,16 @@ def classify_contour(
         if 1.0 < aspect_ratio < 1.8:  # Roughly square
             category = ContourCategory.NECK_POCKET
 
-    # Pickup routes
+    # Pickup routes (electric instruments only)
     elif 70 < max_dim < 110 and 30 < min_dim < 65:
-        if 1.3 < aspect_ratio < 3.0:  # Elongated
+        if (1.3 < aspect_ratio < 3.0  # Elongated
+            and instrument_type in (InstrumentType.ELECTRIC_GUITAR, InstrumentType.BASS, InstrumentType.ARCHTOP)):
             category = ContourCategory.PICKUP_ROUTE
 
-    # Bridge route
+    # Bridge route (electric instruments only)
     elif 55 < max_dim < 140 and 30 < min_dim < 80:
-        category = ContourCategory.BRIDGE_ROUTE
+        if instrument_type in (InstrumentType.ELECTRIC_GUITAR, InstrumentType.BASS, InstrumentType.ARCHTOP):
+            category = ContourCategory.BRIDGE_ROUTE
 
     # D-hole (Selmer style)
     elif 150 < max_dim < 250 and 70 < min_dim < 130:
@@ -1764,8 +1768,10 @@ def classify_contour(
         if 0.6 < circularity < 1.0:
             category = ContourCategory.ROSETTE
 
-    # Jack route
-    elif 20 < max_dim < 50 and 15 < min_dim < 45:
+    # Jack route (electric instruments only, non-circular)
+    elif (20 < max_dim < 50 and 15 < min_dim < 45
+          and circularity < 0.7  # jack routes are not circular
+          and instrument_type in (InstrumentType.ELECTRIC_GUITAR, InstrumentType.BASS, InstrumentType.ARCHTOP)):
         category = ContourCategory.JACK_ROUTE
 
     # Small features (screw holes, etc)
@@ -1776,6 +1782,12 @@ def classify_contour(
     elif max_dim > 150 and min_dim < 45:
         if instrument_type == InstrumentType.ACOUSTIC_GUITAR:
             category = ContourCategory.BRACING
+
+    # Large unclassified contours that could be body outlines
+    # Catch-all for contours > 150mm that didn't match specific features
+    # These go to re-ranking for proper body candidate scoring
+    if category == ContourCategory.UNKNOWN and max_dim > 150:
+        category = ContourCategory.BODY_OUTLINE_CANDIDATE
 
     return ContourInfo(
         contour=contour,
@@ -1836,10 +1848,16 @@ def score_body_candidate(
         score += max(0.0, aspect_score)
 
     # Factor 2: Solidity (filled compact shape, not text/wireframe/logo)
-    if info.solidity > 0.7:
-        score += 20.0 * min(info.solidity, 1.0)
-    elif info.solidity > 0.5:
-        score += 10.0
+    # Real body outlines have solidity > 0.85 (solid filled shapes)
+    # Low solidity indicates hollow shapes, logos, or fragments
+    if info.solidity > 0.85:
+        score += 20.0    # Strong positive — likely body outline
+    elif info.solidity > 0.70:
+        score += 10.0    # Acceptable
+    elif info.solidity > 0.50:
+        score += 0.0     # Neutral
+    else:
+        score -= 20.0    # Penalty — hollow shape, not a body
 
     # Factor 3: Size relative to image
     image_area = image_width * image_height
@@ -1909,12 +1927,29 @@ def rerank_body_candidates(
 
     # Existing BODY_OUTLINE contours
     for info in classified.get(ContourCategory.BODY_OUTLINE, []):
+        # Minimum solidity gate — hollow shapes cannot be body outlines
+        if info.solidity < 0.40:
+            continue
         body_score = score_body_candidate(info, image_width, image_height, grid_classifier)
         body_candidates.append((body_score, info, 'existing'))
+
+    # Check BODY_OUTLINE_CANDIDATE contours — large shapes flagged for re-ranking
+    candidates_to_remove = []
+    for info in classified.get(ContourCategory.BODY_OUTLINE_CANDIDATE, []):
+        # Minimum solidity gate — hollow shapes cannot be body outlines
+        if info.solidity < 0.40:
+            continue
+        body_score = score_body_candidate(info, image_width, image_height, grid_classifier)
+        if body_score >= min_body_score:
+            body_candidates.append((body_score, info, 'candidate'))
+            candidates_to_remove.append(info)
 
     # Check UNKNOWN contours — some may be misclassified bodies
     unknowns_to_remove = []
     for info in classified.get(ContourCategory.UNKNOWN, []):
+        # Minimum solidity gate — hollow shapes cannot be body outlines
+        if info.solidity < 0.40:
+            continue
         body_score = score_body_candidate(info, image_width, image_height, grid_classifier)
         if body_score >= min_body_score:
             body_candidates.append((body_score, info, 'promoted'))
@@ -1923,6 +1958,9 @@ def rerank_body_candidates(
     # Also check PICKGUARD — large pickguards sometimes misclassify as the body
     pickguards_to_remove = []
     for info in classified.get(ContourCategory.PICKGUARD, []):
+        # Minimum solidity gate — hollow shapes cannot be body outlines
+        if info.solidity < 0.40:
+            continue
         body_score = score_body_candidate(info, image_width, image_height, grid_classifier)
         if body_score >= 60.0:  # High threshold to steal from pickguard
             body_candidates.append((body_score, info, 'promoted'))
@@ -2000,6 +2038,13 @@ def rerank_body_candidates(
     # Remove promoted contours from their original categories
     unknowns_to_remove_ids = {id(c) for c in unknowns_to_remove}
     pickguards_to_remove_ids = {id(c) for c in pickguards_to_remove}
+
+    # Remove promoted BODY_OUTLINE_CANDIDATE contours
+    candidates_to_remove_ids = {id(c) for c in candidates_to_remove}
+    if candidates_to_remove_ids and ContourCategory.BODY_OUTLINE_CANDIDATE in classified:
+        classified[ContourCategory.BODY_OUTLINE_CANDIDATE] = [
+            c for c in classified[ContourCategory.BODY_OUTLINE_CANDIDATE] if id(c) not in candidates_to_remove_ids
+        ]
 
     if unknowns_to_remove_ids and ContourCategory.UNKNOWN in classified:
         classified[ContourCategory.UNKNOWN] = [
@@ -2746,6 +2791,75 @@ class Phase3Vectorizer:
             processing_time_ms=elapsed * 1000
         )
 
+    def _detect_instrument_type(
+        self,
+        image: np.ndarray,
+        contours: list,
+        user_hint: str = None
+    ) -> InstrumentType:
+        """
+        Detect instrument family from image statistics and contour geometry.
+        Returns: InstrumentType enum value
+        Phase 3 will replace this with BlueprintAnalyzer vision analysis.
+        """
+        if user_hint:
+            hint_lower = user_hint.lower()
+            if hint_lower in ('electric', 'e'):
+                return InstrumentType.ELECTRIC_GUITAR
+            elif hint_lower in ('acoustic', 'a'):
+                return InstrumentType.ACOUSTIC_GUITAR
+            elif hint_lower == 'bass':
+                return InstrumentType.BASS
+            elif hint_lower == 'archtop':
+                return InstrumentType.ARCHTOP
+            elif hint_lower == 'ukulele':
+                return InstrumentType.UKULELE
+            elif hint_lower == 'mandolin':
+                return InstrumentType.MANDOLIN
+
+        if not contours:
+            return InstrumentType.UNKNOWN
+
+        # Use largest contour aspect ratio as primary signal
+        # Acoustic bodies: tall and narrow (aspect ratio > 1.3)
+        # Electric bodies: more square (aspect ratio 0.8-1.3)
+        areas = [cv2.contourArea(c) for c in contours]
+        if not areas:
+            return InstrumentType.UNKNOWN
+        largest_idx = int(np.argmax(areas))
+        largest = contours[largest_idx]
+
+        x, y, w, h = cv2.boundingRect(largest)
+        aspect = max(w, h) / max(1, min(w, h))
+
+        # Soundhole detection: circular contours in upper body region
+        # Presence of circular contour = acoustic signal
+        circular_count = 0
+        for c in contours:
+            area = cv2.contourArea(c)
+            if area < 100:
+                continue
+            perimeter = cv2.arcLength(c, True)
+            if perimeter == 0:
+                continue
+            circularity = 4 * np.pi * area / (perimeter ** 2)
+            if circularity > 0.75:
+                circular_count += 1
+
+        # Decision logic
+        if circular_count >= 2:
+            logger.info(f"Instrument detection: acoustic (circular_count={circular_count})")
+            return InstrumentType.ACOUSTIC_GUITAR   # soundhole + rosette = acoustic
+        if aspect > 1.5:
+            logger.info(f"Instrument detection: acoustic (aspect={aspect:.2f})")
+            return InstrumentType.ACOUSTIC_GUITAR   # tall narrow body
+        if aspect < 1.1:
+            logger.info(f"Instrument detection: electric (aspect={aspect:.2f})")
+            return InstrumentType.ELECTRIC_GUITAR   # square-ish body
+
+        logger.info(f"Instrument detection: unknown (aspect={aspect:.2f}, circular_count={circular_count})")
+        return InstrumentType.UNKNOWN  # ambiguous — conservative
+
 
     @classmethod
     def from_tier(
@@ -2947,6 +3061,30 @@ class Phase3Vectorizer:
                 combined_mask = cv2.bitwise_or(body_mask, detail_mask)
             else:
                 combined_mask = extract_auto(image, gap_close=body_gap_close)
+
+            # Phase 2: Detect instrument type from image geometry
+            # Extract raw contours for type detection (before classification)
+            raw_contours_for_detection, _ = cv2.findContours(
+                combined_mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE
+            )
+            
+            # Detect instrument type if not explicitly provided by user
+            user_hint = spec_name  # User's spec hint (e.g., "dreadnought", "les_paul")
+            if instrument_type is None and spec_name is None:
+                # No user guidance — use automatic detection
+                detected_type = self._detect_instrument_type(
+                    image, raw_contours_for_detection, user_hint=None
+                )
+                instrument = detected_type
+                logger.info(f"  Auto-detected instrument type: {instrument.value}")
+            elif instrument_type is None and spec_name is not None:
+                # User provided spec_name but not instrument_type — use spec as hint
+                detected_type = self._detect_instrument_type(
+                    image, raw_contours_for_detection, user_hint=spec_name
+                )
+                instrument = detected_type
+                logger.info(f"  Instrument type from spec hint: {instrument.value}")
+            # else: user provided explicit instrument_type, use that (already set at line 2989)
 
             # Classify with hierarchy + grid-enhanced body re-ranking
             ml_clf = self.ml_classifier if use_ml else None
