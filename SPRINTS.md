@@ -29,6 +29,7 @@ Maintained by: Ross Echols (HanzoRazer)
 - Root cause 2: Feature cross-contamination — CONTROL_CAVITY and RHYTHM_CIRCUIT on acoustics, BRACING on electrics. Les Paul auto-detected as acoustic (aspect ratio bug).
 - Root cause 3: Body contour election unstable — Dreadnought shows 826x552mm in DXF vs 277x377mm reported (3x discrepancy).
 - Root cause 4: Scale correction overcorrecting — Cuatro 0.511x correction produces 500mm vs 430mm target (16% error).
+- Root cause 5: DXF write truncation on large outputs. Raw mode producing >195K LINE entities truncates ENDSEC/EOF. File required repair. Affects high-density blueprints in production. Investigate flush/buffer behavior in doc.saveas() for large R12 files.
 
 **Quality Test Verdict:**
 ```
@@ -89,6 +90,10 @@ luthiers-toolbox is the source of truth — standalones are published from it.
 - [ ] Wire INSTRUMENT_CATALOG Tier 1 working set into photo_vectorizer_v2.py
 - [ ] Confirm edge_to_dxf.py is available as high-fidelity fallback path
       for photo inputs where classification fails
+- [ ] Install ODA File Converter locally to convert DWG files to DXF.
+      Batch convert Guitar Plans/ DWG inventory: 59_Flying_V.dwg,
+      Flying_V_11.dwg, Classical-02-MM.dwg, DWG-00/01/02/03-Gibson-SG.dwg,
+      Acoustic Guitar Neck Profiles DWGs.
 
 ---
 
