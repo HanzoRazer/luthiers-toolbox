@@ -40,6 +40,13 @@ try:
 except ImportError:
     fitz = None
 
+# Phase 3: BlueprintAnalyzer for vision-based scale detection
+try:
+    from analyzer import BlueprintAnalyzer
+    ANALYZER_AVAILABLE = True
+except ImportError:
+    ANALYZER_AVAILABLE = False
+
 # Optional sklearn for ML classification
 try:
     import warnings
@@ -2791,6 +2798,95 @@ class Phase3Vectorizer:
             processing_time_ms=elapsed * 1000
         )
 
+    def _run_analyzer(
+        self,
+        file_bytes: bytes,
+        filename: str,
+        dpi: int
+    ) -> Optional[float]:
+        """
+        Run BlueprintAnalyzer vision pre-pass on blueprint image.
+        Returns mm_per_px if scale detected, None if not.
+        Falls back gracefully — never raises.
+        """
+        if not ANALYZER_AVAILABLE:
+            logger.debug("BlueprintAnalyzer not available — using DPI fallback")
+            return None
+
+        try:
+            import asyncio
+            analyzer = BlueprintAnalyzer()
+            loop = asyncio.new_event_loop()
+            result = loop.run_until_complete(
+                analyzer.analyze_from_bytes(file_bytes, filename)
+            )
+            loop.close()
+
+            # Extract scale from result
+            scale_str = result.get('scale', '')
+            confidence = result.get('scale_confidence', 'low')
+
+            if confidence == 'low' or not scale_str:
+                logger.info(f"Analyzer: low confidence scale — using DPI fallback")
+                return None
+
+            # Parse scale string to mm_per_px
+            mm_per_px = self._parse_scale_to_mm_per_px(scale_str, dpi)
+
+            if mm_per_px:
+                logger.info(f"Analyzer: scale={scale_str} → {mm_per_px:.4f} mm/px")
+                return mm_per_px
+
+            # Try dimensions directly if scale string unparseable
+            dimensions = result.get('dimensions', [])
+            for dim in dimensions:
+                if dim.get('confidence') in ('high', 'medium'):
+                    logger.info(f"Analyzer: dimension detected: {dim}")
+                    break
+
+            return None
+
+        except Exception as e:
+            logger.warning(f"BlueprintAnalyzer failed: {e} — using DPI fallback")
+            return None
+
+    def _parse_scale_to_mm_per_px(
+        self,
+        scale_str: str,
+        dpi: int
+    ) -> Optional[float]:
+        """
+        Convert scale notation to mm_per_px.
+        Base mm_per_px at given DPI: 25.4 / dpi
+
+        Scale "1:1" → multiply by 1.0
+        Scale "1:2" → multiply by 2.0
+        Scale "1:4" → multiply by 4.0
+        Scale "full size" → multiply by 1.0
+        Scale "half size" → multiply by 2.0
+        """
+        base = 25.4 / dpi
+        s = scale_str.lower().strip()
+
+        if 'full' in s or s in ('1:1', '1/1'):
+            return base * 1.0
+        if 'half' in s or s == '1:2':
+            return base * 2.0
+        if '1:4' in s or 'quarter' in s:
+            return base * 4.0
+        if '1:3' in s:
+            return base * 3.0
+
+        # Try ratio format N:M
+        import re
+        m = re.search(r'(\d+)\s*:\s*(\d+)', s)
+        if m:
+            n, d = int(m.group(1)), int(m.group(2))
+            if n > 0:
+                return base * (d / n)
+
+        return None
+
     def _detect_instrument_type(
         self,
         image: np.ndarray,
@@ -2993,6 +3089,25 @@ class Phase3Vectorizer:
         logger.info(f"  Mode: {mode.value}")
         logger.info(f"  Instrument: {instrument.value}")
         logger.info(f"  Dual-pass: {dual_pass}")
+
+        # Phase 3: BlueprintAnalyzer scale pre-pass (before image load)
+        # Read raw bytes for analyzer
+        scale_source = 'dpi_fallback'
+        try:
+            with open(source_path, 'rb') as f:
+                file_bytes = f.read()
+            analyzer_mm_per_px = self._run_analyzer(
+                file_bytes,
+                Path(source_path).name,
+                self.dpi
+            )
+            if analyzer_mm_per_px is not None:
+                self.mm_per_px = analyzer_mm_per_px
+                scale_source = 'analyzer_vision'
+                logger.info(f"Scale locked by BlueprintAnalyzer: {self.mm_per_px:.4f} mm/px")
+            # else: mm_per_px remains at DPI-based default
+        except Exception as e:
+            logger.warning(f"Analyzer pre-pass failed: {e} — using DPI fallback")
 
         # Load image (with caching)
         image = load_image(source_path, page_num, self.dpi, use_cache=True)
