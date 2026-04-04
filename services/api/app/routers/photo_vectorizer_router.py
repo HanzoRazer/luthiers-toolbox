@@ -77,10 +77,8 @@ try:
 
     from photo_vectorizer_v2 import PhotoVectorizerV2  # type: ignore
     VECTORIZER_AVAILABLE = True
-    sys.stderr.write(f"[photo_vectorizer_router] loaded\n")
 except Exception as e:  # audited: http-500 — ValueError,IOError
     _vectorizer_error = str(e)
-    sys.stderr.write(f"[photo_vectorizer_router] FAILED - {type(e).__name__}: {e}\n")
 
 # ─── Request / response models ────────────────────────────────────────────────
 
