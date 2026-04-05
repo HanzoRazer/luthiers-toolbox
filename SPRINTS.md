@@ -1,5 +1,5 @@
 # The Production Shop — Sprint Registry
-Last updated: 2026-04-04
+Last updated: 2026-04-05
 Maintained by: Ross Echols (HanzoRazer)
 
 ---
@@ -16,13 +16,22 @@ Maintained by: Ross Echols (HanzoRazer)
 | 2 | Classification layer fixes — jack route guard, body size ceiling, solidity scoring, instrument detector | 72bfffc9 | ✅ Done |
 | 3 | BlueprintAnalyzer wire-in — scale pre-pass, async wrapper, DPI fallback | 059cf5b0 | ✅ Done |
 | 4 | Docker fix — raw mode → production | a76102c2 | ✅ Done |
+| 4b | Docker deploy hardening (2026-04-05) | 5a145e90 | ✅ Done |
 | 5 | Classified mode root cause fixes | — | ⏭️ NEXT |
 
-**Phase 4 — Docker fix (NEXT):**
-- `libxcb.so.1` missing in production Docker image (blocks blueprint router)
-- `vectorizer_phase3` not on Python path in API container
-- `photo_vectorizer_router` unavailable in production (same libxcb cause)
-- Fix location: `services/api/Dockerfile` — add libxcb and cv2 dependencies
+**Phase 4b — Docker deploy hardening (2026-04-05):**
+Commit chain fixing Railway deploy blockers:
+- `67c4b68b` fix: libgl1-mesa-glx → libgl1 (Debian Trixie)
+- `78c44886` fix: unterminated f-string in photo_vectorizer_router
+- `cf162d9f` fix: remove broken sys.stderr.write lines
+- `782dea1e` fix: explicit uvicorn+fastapi install before requirements
+- `b6159dca` fix: comment out emergentintegrations (not on PyPI)
+- `4334e378` fix: libgl1 in docker/api/Dockerfile
+- `49ba3547` fix: uvicorn port 8000 → 8080 (Railway)
+- `4674720c` fix: add RMOS_RUNS_DIR env var
+- `5a145e90` fix: correct data paths — app/data not data at root
+
+**graceful-luck service:** CLOSED — deleted from Railway 2026-04-05.
 
 **Phase 5 — Classified mode root cause fixes (QUEUED):**
 - Root cause 1: Scale detection — BlueprintAnalyzer not firing locally (no ANTHROPIC_API_KEY). Set key and retest.
