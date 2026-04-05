@@ -7,7 +7,7 @@ FROM python:${PYTHON_VERSION}-slim AS base
 RUN apt-get update && apt-get install -y --no-install-recommends \
       curl ca-certificates build-essential git \
       libxcb1 libxcb-render0 libxcb-shape0 libxcb-xfixes0 \
-      libgl1-mesa-glx libglib2.0-0 && \
+      libgl1 libglib2.0-0 && \
     rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
