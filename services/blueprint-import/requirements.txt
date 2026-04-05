@@ -1,6 +1,6 @@
 # Blueprint Import Service Dependencies
 # Phase 1: AI Analysis + SVG Export
-emergentintegrations>=0.1.0  # Claude Sonnet 4 integration
+# emergentintegrations>=0.1.0  # Claude Sonnet 4 integration (not on PyPI — needs private source)
 pdf2image>=1.16.0            # PDF to image conversion
 Pillow>=10.0.0               # Image processing
 opencv-python-headless>=4.8.0         # Computer vision (Phase 2)
