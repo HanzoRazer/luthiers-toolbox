@@ -424,7 +424,7 @@ function stepStatus(id: number): 'done' | 'warn' | 'ok' | 'idle' {
             </button>
             <div class="sum-note">
               The full program assembles all enabled ops with M1 tool-change pauses
-              and GRBL header/footer for the BCAM 2030A.
+              and GRBL header/footer for the BCAMCNC 2030A.
             </div>
           </div>
 

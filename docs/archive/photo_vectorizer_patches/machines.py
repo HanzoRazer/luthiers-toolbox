@@ -1,7 +1,7 @@
 """
 services/api/app/cam/machines.py
 =================================
-Canonical BCAM 2030A machine specification.
+Canonical BCAMCNC 2030A machine specification.
 
 Supersedes two scattered definitions that tracked orthogonal concerns
 and used different unit systems:
@@ -32,7 +32,7 @@ class BCamMachineSpec:
     """
 
     machine_id:         str   = "bcam_2030a"
-    label:              str   = "BCAM 2030A"
+    label:              str   = "BCAMCNC 2030A"
 
     # Post-processor dialect
     post_dialect:       str   = "grbl"           # "grbl" | "linuxcnc" | "fanuc"
@@ -65,7 +65,7 @@ class BCamMachineSpec:
 
     # ── Tool change behaviour ─────────────────────────────────────────────────
     # M1 = optional stop — operator changes tool, presses cycle start to resume.
-    # BCAM 2030A has no ATC. M1 is mandatory for multi-tool programs.
+    # BCAMCNC 2030A has no ATC. M1 is mandatory for multi-tool programs.
     # ToolChangeMode.M0 would be a hard block; M1 lets a confident operator skip.
     tool_change_pause:  str   = "M1"             # "M1" | "M0" | "none"
     dwell_after_spindle_ms: int = 2000           # 2s ramp-up before cutting

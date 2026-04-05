@@ -1,4 +1,4 @@
-"""Smoke tests for headstock DXF export endpoints (BCAM 2030A)."""
+"""Smoke tests for headstock DXF export endpoints (BCAMCNC 2030A)."""
 
 import pytest
 from fastapi.testclient import TestClient

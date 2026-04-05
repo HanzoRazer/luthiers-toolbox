@@ -30,7 +30,7 @@ Every feature decision traces back to this mission.
 - Frontend: Vue 3 + TypeScript, Pinia, packages/client/
 - Backend: FastAPI (Python), services/api/
 - Database: SQLite (migrating to PostgreSQL — see DB section)
-- CNC: BCAM 2030A router
+- CNC: BCAMCNC 2030A router
 - Hardware target: Raspberry Pi 5 (tap_tone_pi integration)
 
 ---

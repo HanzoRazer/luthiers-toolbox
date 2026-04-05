@@ -44,5 +44,5 @@ See `packages/client/src/views/`.
 | Backend | FastAPI + Pydantic v2 |
 | Storage | SQLite + file system |
 | CAM math | Python (numpy, scipy) |
-| G-code | GRBL dialect (BCAM 2030A) |
-| CNC | BCAM 2030A — 48"×24"×4" envelope |
+| G-code | GRBL dialect (BCAMCNC 2030A) |
+| CNC | BCAMCNC 2030A — 48"×24"×4" envelope |

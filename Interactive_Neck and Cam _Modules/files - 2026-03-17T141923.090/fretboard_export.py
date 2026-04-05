@@ -8,7 +8,7 @@ FastAPI router that generates:
      - Radius arc annotations at nut, 12th, and last fret
      - Nut slot positions and depths
 
-  2. Ball-nose toolpath G-code for the BCAM 2030A:
+  2. Ball-nose toolpath G-code for the BCAMCNC 2030A:
      - Per-fret-station passes following the radius arc
      - Compound radius support (linearly interpolated)
      - Configurable step-over, feed, depth of cut
@@ -315,7 +315,7 @@ async def fretboard_dxf(req: FretboardRequest):
 
 @router.post("/gcode")
 async def fretboard_gcode(req: FretboardRequest):
-    """Generate ball-nose sweep G-code for BCAM 2030A."""
+    """Generate ball-nose sweep G-code for BCAMCNC 2030A."""
     try:
         gcode = generate_gcode(req)
     except Exception as e:

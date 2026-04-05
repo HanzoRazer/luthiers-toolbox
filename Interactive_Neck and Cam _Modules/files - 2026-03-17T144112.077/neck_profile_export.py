@@ -10,7 +10,7 @@ back_depth(n) = target_depth(n)
 
 Three endpoints:
   POST /api/neck/dxf          — layered DXF with profile cross-sections
-  POST /api/neck/gcode        — back profile sweep G-code for BCAM 2030A
+  POST /api/neck/gcode        — back profile sweep G-code for BCAMCNC 2030A
   POST /api/neck/stations     — JSON station table with coupling breakdown
 
 Add to main.py:
@@ -336,7 +336,7 @@ async def neck_profile_dxf(req: NeckRequest):
 
 @router.post("/gcode")
 async def neck_profile_gcode(req: NeckRequest):
-    """Generate back profile sweep G-code for BCAM 2030A."""
+    """Generate back profile sweep G-code for BCAMCNC 2030A."""
     try:
         code = generate_neck_gcode(req)
     except Exception as e:

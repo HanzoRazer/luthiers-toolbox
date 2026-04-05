@@ -5,7 +5,7 @@ Production Shop — Headstock Transition & Volute Export Service
 Generates:
   1. DXF with transition zone cross-sections at key Y stations
      — Layers: HS_TRANS_NECK, HS_TRANS_BLEND, HS_TRANS_HEAD, HS_VOLUTE, HS_ANNOTATION
-  2. G-code for the BCAM 2030A 3-axis finishing pass across the transition zone
+  2. G-code for the BCAMCNC 2030A 3-axis finishing pass across the transition zone
      — Ball-nose sweep following the blended 3D surface
      — Volute bump or scallop added to Z values per station
 
