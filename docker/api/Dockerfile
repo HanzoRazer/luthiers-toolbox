@@ -51,10 +51,10 @@ COPY services/photo-vectorizer /app/services/photo-vectorizer
 RUN useradd -m app
 
 # Ensure data directories exist and are writable by app user
-RUN mkdir -p /app/services/api/app/data/runs/rmos \
-             /app/services/api/app/data/backups/cam \
-             /app/services/api/app/data/run_attachments && \
-    chown -R app:app /app/services/api/app/data
+RUN mkdir -p /app/services/api/data/runs/rmos \
+             /app/services/api/data/backups/cam \
+             /app/services/api/data/run_attachments && \
+    chown -R app:app /app/services/api/data
 
 # Switch to non-root user
 USER app
