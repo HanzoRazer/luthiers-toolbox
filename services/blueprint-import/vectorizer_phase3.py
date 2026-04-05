@@ -97,6 +97,53 @@ except ImportError:
 logger = logging.getLogger(__name__)
 
 
+def _safe_dxf_save(doc, output_path: str) -> bool:
+    """
+    Save DXF document with explicit flush and verification.
+
+    Phase 5E fix: Large DXF files (>195K LINE entities) can truncate
+    ENDSEC/EOF markers if the OS buffer isn't fully flushed. This helper:
+    1. Calls doc.saveas() to write the file
+    2. Opens the file and forces explicit flush via fsync
+    3. Verifies the file ends with proper termination
+
+    Returns True if save succeeded, False if verification failed.
+    """
+    import os
+
+    # Write the DXF document
+    doc.saveas(output_path)
+
+    # Force OS-level flush for large files
+    try:
+        with open(output_path, 'r+b') as f:
+            f.flush()
+            os.fsync(f.fileno())
+    except (IOError, OSError) as e:
+        logger.warning(f"Could not fsync DXF file: {e}")
+
+    # Verify file ends properly (check last 100 bytes for EOF or ENDSEC)
+    try:
+        with open(output_path, 'rb') as f:
+            f.seek(0, 2)  # End of file
+            size = f.tell()
+            if size > 100:
+                f.seek(-100, 2)
+            else:
+                f.seek(0)
+            tail = f.read().decode('utf-8', errors='ignore')
+
+            # R12 files end with "  0\nEOF\n" or "  0\r\nEOF\r\n"
+            if 'EOF' in tail or 'ENDSEC' in tail:
+                return True
+            else:
+                logger.error(f"DXF verification FAILED: file may be truncated ({output_path})")
+                return False
+    except Exception as e:
+        logger.warning(f"Could not verify DXF termination: {e}")
+        return True  # Assume OK if we can't verify
+
+
 # =============================================================================
 # Data Classes & Enums
 # =============================================================================
@@ -1731,17 +1778,20 @@ def classify_contour(
         if instrument_type in (InstrumentType.ELECTRIC_GUITAR, InstrumentType.ACOUSTIC_GUITAR):
             category = ContourCategory.PICKGUARD
 
-    # Rhythm circuit (Jazzmaster/Jaguar style)
+    # Rhythm circuit (Jazzmaster/Jaguar style, electric only)
     elif 180 < max_dim < 260 and 80 < min_dim < 120:
-        category = ContourCategory.RHYTHM_CIRCUIT
+        if instrument_type in (InstrumentType.ELECTRIC_GUITAR, InstrumentType.BASS, InstrumentType.ARCHTOP):
+            category = ContourCategory.RHYTHM_CIRCUIT
 
-    # Control cavity
+    # Control cavity (electric only)
     elif 80 < max_dim < 180 and 50 < min_dim < 120:
-        category = ContourCategory.CONTROL_CAVITY
+        if instrument_type in (InstrumentType.ELECTRIC_GUITAR, InstrumentType.BASS, InstrumentType.ARCHTOP):
+            category = ContourCategory.CONTROL_CAVITY
 
-    # Neck pocket
+    # Neck pocket (electric only — bolt-on necks)
     elif 60 < max_dim < 120 and 50 < min_dim < 85:
-        if 1.0 < aspect_ratio < 1.8:  # Roughly square
+        if (1.0 < aspect_ratio < 1.8  # Roughly square
+            and instrument_type in (InstrumentType.ELECTRIC_GUITAR, InstrumentType.BASS)):
             category = ContourCategory.NECK_POCKET
 
     # Pickup routes (electric instruments only)
@@ -2521,7 +2571,7 @@ def export_to_dxf(
             body_pts.append((x_mm, y_mm))
         set_document_bounds(doc, body_pts)
 
-    doc.saveas(output_path)
+    _safe_dxf_save(doc, output_path)
     logger.info(f"Exported {exported_count} contours to {output_path}")
 
     return body_width, body_height
@@ -2620,7 +2670,7 @@ def export_primitives_to_dxf(
                 offset_points = [(x - cx_off, y - cy_off) for x, y in prim.points]
                 add_polyline(msp, offset_points, layer=layer, closed=False, version=dxf_version)
 
-    doc.saveas(output_path)
+    _safe_dxf_save(doc, output_path)
     logger.info(f"Exported {len(primitives)} primitives to {output_path}")
 
 
@@ -2777,7 +2827,7 @@ class Phase3Vectorizer:
             add_polyline(msp, points, layer='CONTOURS', closed=True, version='R12')
             total_segments += len(points)
 
-        doc.saveas(output_path)
+        _safe_dxf_save(doc, output_path)
 
         elapsed = time.time() - start_time
         logger.info(f"Raw DXF written: {output_path} ({total_segments} segments, {elapsed:.1f}s)")
@@ -2887,6 +2937,91 @@ class Phase3Vectorizer:
 
         return None
 
+    def _compute_scale_from_spec(
+        self,
+        image: np.ndarray,
+        spec_name: str
+    ) -> Optional[float]:
+        """
+        Compute mm_per_px from known instrument spec dimensions.
+
+        When BlueprintAnalyzer is unavailable (no ANTHROPIC_API_KEY), use
+        the target instrument spec dimensions to calibrate scale by finding
+        the largest contour and assuming it's the body.
+
+        Args:
+            image: Input image (grayscale or BGR)
+            spec_name: Key into INSTRUMENT_SPECS
+
+        Returns:
+            mm_per_px if successful, None if spec not found or no body detected
+        """
+        if spec_name not in INSTRUMENT_SPECS:
+            logger.debug(f"Spec '{spec_name}' not in INSTRUMENT_SPECS — cannot calibrate")
+            return None
+
+        spec = INSTRUMENT_SPECS[spec_name]
+
+        # Expected body dimensions (use midpoint of ranges)
+        expected_length = (spec.body_length_range[0] + spec.body_length_range[1]) / 2
+        expected_width = (spec.body_width_range[0] + spec.body_width_range[1]) / 2
+
+        # Convert to grayscale if needed
+        if len(image.shape) == 3:
+            gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+        else:
+            gray = image
+
+        # Simple threshold to find contours
+        _, thresh = cv2.threshold(gray, 0, 255, cv2.THRESH_BINARY_INV + cv2.THRESH_OTSU)
+        contours, _ = cv2.findContours(thresh, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+
+        if not contours:
+            logger.debug("No contours found — cannot calibrate from spec")
+            return None
+
+        # Find largest contour (likely the body)
+        largest = max(contours, key=cv2.contourArea)
+        x, y, w, h = cv2.boundingRect(largest)
+
+        # Minimum size gate — body should be substantial portion of image
+        img_h, img_w = image.shape[:2]
+        area_ratio = (w * h) / (img_w * img_h)
+        if area_ratio < 0.05:
+            logger.debug(f"Largest contour too small ({area_ratio:.1%} of image) — cannot calibrate")
+            return None
+
+        # Compute mm_per_px using the larger dimension
+        # Body length (height) is typically the larger dimension
+        if h > w:
+            # Vertical orientation — h is body length
+            mm_per_px = expected_length / h
+            computed_width = w * mm_per_px
+        else:
+            # Horizontal orientation — w is body length
+            mm_per_px = expected_length / w
+            computed_width = h * mm_per_px
+
+        # Sanity check — mm_per_px should be reasonable (0.01 to 1.0)
+        if not (0.01 < mm_per_px < 1.0):
+            logger.warning(f"Computed mm_per_px={mm_per_px:.4f} out of range — rejecting")
+            return None
+
+        # Cross-check: computed width should be close to expected width
+        width_error = abs(computed_width - expected_width) / expected_width
+        if width_error > 0.3:  # >30% error suggests wrong contour
+            logger.warning(
+                f"Width cross-check failed: computed {computed_width:.0f}mm vs "
+                f"expected {expected_width:.0f}mm ({width_error:.0%} error)"
+            )
+            # Still return the value but log the warning
+
+        logger.info(
+            f"Scale calibrated from spec '{spec_name}': mm_per_px={mm_per_px:.4f} "
+            f"(bbox={w}x{h}px → {expected_length:.0f}x{computed_width:.0f}mm)"
+        )
+        return mm_per_px
+
     def _detect_instrument_type(
         self,
         image: np.ndarray,
@@ -2896,8 +3031,13 @@ class Phase3Vectorizer:
         """
         Detect instrument family from image statistics and contour geometry.
         Returns: InstrumentType enum value
-        Phase 3 will replace this with BlueprintAnalyzer vision analysis.
+
+        Phase 5C improvements:
+        1. Infer type from spec_name when provided
+        2. Add pickup route detection as electric signal
+        3. Use aspect ratio only as fallback when no other signals present
         """
+        # Check for explicit type hints first
         if user_hint:
             hint_lower = user_hint.lower()
             if hint_lower in ('electric', 'e'):
@@ -2913,12 +3053,33 @@ class Phase3Vectorizer:
             elif hint_lower == 'mandolin':
                 return InstrumentType.MANDOLIN
 
+            # Phase 5C: Infer type from spec_name
+            # Electric specs: stratocaster, telecaster, les_paul, sg, explorer, flying_v, etc.
+            # Acoustic specs: dreadnought, orchestra_model, classical, jumbo, selmer
+            electric_specs = {
+                'stratocaster', 'telecaster', 'jazzmaster', 'jaguar',
+                'les_paul', 'sg', 'es335', 'explorer', 'flying_v',
+                'smart_guitar', 'klein'
+            }
+            acoustic_specs = {
+                'dreadnought', 'orchestra_model', 'classical', 'jumbo', 'selmer'
+            }
+            ukulele_specs = {'ukulele_soprano', 'ukulele_concert', 'ukulele_tenor'}
+
+            if hint_lower in electric_specs:
+                logger.info(f"Instrument type inferred from spec: electric ({hint_lower})")
+                return InstrumentType.ELECTRIC_GUITAR
+            elif hint_lower in acoustic_specs:
+                logger.info(f"Instrument type inferred from spec: acoustic ({hint_lower})")
+                return InstrumentType.ACOUSTIC_GUITAR
+            elif hint_lower in ukulele_specs:
+                logger.info(f"Instrument type inferred from spec: ukulele ({hint_lower})")
+                return InstrumentType.UKULELE
+
         if not contours:
             return InstrumentType.UNKNOWN
 
-        # Use largest contour aspect ratio as primary signal
-        # Acoustic bodies: tall and narrow (aspect ratio > 1.3)
-        # Electric bodies: more square (aspect ratio 0.8-1.3)
+        # Analyze contours for type signals
         areas = [cv2.contourArea(c) for c in contours]
         if not areas:
             return InstrumentType.UNKNOWN
@@ -2928,9 +3089,10 @@ class Phase3Vectorizer:
         x, y, w, h = cv2.boundingRect(largest)
         aspect = max(w, h) / max(1, min(w, h))
 
-        # Soundhole detection: circular contours in upper body region
-        # Presence of circular contour = acoustic signal
-        circular_count = 0
+        # Signal detection
+        circular_count = 0      # Soundhole/rosette signal (acoustic)
+        rectangular_count = 0   # Pickup route signal (electric)
+
         for c in contours:
             area = cv2.contourArea(c)
             if area < 100:
@@ -2938,22 +3100,49 @@ class Phase3Vectorizer:
             perimeter = cv2.arcLength(c, True)
             if perimeter == 0:
                 continue
+
             circularity = 4 * np.pi * area / (perimeter ** 2)
+            cx, cy, cw, ch = cv2.boundingRect(c)
+            c_aspect = max(cw, ch) / max(1, min(cw, ch))
+
+            # Circular contour = soundhole/rosette (acoustic signal)
             if circularity > 0.75:
                 circular_count += 1
 
-        # Decision logic
+            # Elongated rectangular contour = pickup route (electric signal)
+            # Pickup routes: ~70-110mm long, ~30-65mm wide, aspect 1.3-3.0
+            if 1.3 < c_aspect < 3.0 and circularity < 0.6:
+                # Check size relative to body (pickup should be ~10-25% of body width)
+                if 0.05 < (cw * ch) / (w * h) < 0.15:
+                    rectangular_count += 1
+
+        # Decision logic with explicit signals taking priority
+        # Priority 1: Soundhole/rosette detection (strong acoustic signal)
         if circular_count >= 2:
             logger.info(f"Instrument detection: acoustic (circular_count={circular_count})")
-            return InstrumentType.ACOUSTIC_GUITAR   # soundhole + rosette = acoustic
-        if aspect > 1.5:
-            logger.info(f"Instrument detection: acoustic (aspect={aspect:.2f})")
-            return InstrumentType.ACOUSTIC_GUITAR   # tall narrow body
+            return InstrumentType.ACOUSTIC_GUITAR
+
+        # Priority 2: Pickup route detection (strong electric signal)
+        if rectangular_count >= 1:
+            logger.info(f"Instrument detection: electric (rectangular_count={rectangular_count})")
+            return InstrumentType.ELECTRIC_GUITAR
+
+        # Priority 3: Single circular contour with no rectangular = likely acoustic
+        if circular_count == 1 and rectangular_count == 0:
+            logger.info(f"Instrument detection: acoustic (single soundhole, no pickups)")
+            return InstrumentType.ACOUSTIC_GUITAR
+
+        # Priority 4: Aspect ratio fallback (ONLY when no other signals)
+        # Note: This was causing Les Paul misclassification, now it's a low-priority fallback
+        if aspect > 1.8 and circular_count == 0 and rectangular_count == 0:
+            # Very tall body with no features = likely acoustic
+            logger.info(f"Instrument detection: acoustic (aspect={aspect:.2f}, no features detected)")
+            return InstrumentType.ACOUSTIC_GUITAR
         if aspect < 1.1:
             logger.info(f"Instrument detection: electric (aspect={aspect:.2f})")
-            return InstrumentType.ELECTRIC_GUITAR   # square-ish body
+            return InstrumentType.ELECTRIC_GUITAR
 
-        logger.info(f"Instrument detection: unknown (aspect={aspect:.2f}, circular_count={circular_count})")
+        logger.info(f"Instrument detection: unknown (aspect={aspect:.2f}, circular={circular_count}, rectangular={rectangular_count})")
         return InstrumentType.UNKNOWN  # ambiguous — conservative
 
 
@@ -3112,6 +3301,16 @@ class Phase3Vectorizer:
         # Load image (with caching)
         image = load_image(source_path, page_num, self.dpi, use_cache=True)
         height, width = image.shape[:2]
+
+        # Phase 5B: Spec-based scale fallback when analyzer unavailable
+        # If BlueprintAnalyzer failed (no API key) but spec_name is provided,
+        # use known instrument dimensions to calibrate scale from body contour
+        if scale_source == 'dpi_fallback' and spec_name:
+            spec_mm_per_px = self._compute_scale_from_spec(image, spec_name)
+            if spec_mm_per_px is not None:
+                self.mm_per_px = spec_mm_per_px
+                scale_source = 'spec_fallback'
+
         img_width_mm = width * self.mm_per_px
         img_height_mm = height * self.mm_per_px
 
@@ -3739,6 +3938,7 @@ def extract_guitar_blueprint(
         source_path,
         str(output_path),
         page_num=page_num,
+        instrument_type=inst_type,  # Phase 5C: Pass explicit type to prevent auto-detection override
         dual_pass=dual_pass,
         validate=validate,
         spec_name=spec_name,
