@@ -18,7 +18,21 @@ Maintained by: Ross Echols (HanzoRazer)
 | 4 | Docker fix — raw mode → production | a76102c2 | ✅ Done |
 | 4b | Docker deploy hardening (2026-04-05) | 5a145e90 | ✅ Done |
 | 5 | Classified mode root cause fixes (4/5) | 722cc03d | ✅ Done |
-| 5F | Scale correction propagation | — | ⏭️ NEXT |
+| 5F | Scale correction propagation | — | ✅ Done |
+| 5G | Body contour election | — | ⏭️ NEXT |
+
+**Phase 5F — Scale correction propagation (2026-04-05):**
+Confirmed working. Correction factor from `validate_scale_before_export()`
+propagates correctly to `export_to_dxf()`.
+- Dreadnought: 4.4% W, 4.8% L — **PASS** (within ±20%)
+
+**Phase 5G — Body contour election (NEXT):**
+- [ ] Les Paul 59: 17.7% W, 28.6% L — body contour picking up neck
+      extension or multi-view elements
+- [ ] Cuatro: 4.6% W, 33.3% L — same root cause
+- Fix: add height ceiling to body contour election — if elected
+      contour height > 1.5× expected body height, discard and
+      elect next candidate
 
 **Phase 5 — Classified mode root cause fixes (2026-04-05):**
 Commit `722cc03d` addressing 4 of 5 root causes:
