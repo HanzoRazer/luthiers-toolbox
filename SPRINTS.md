@@ -17,7 +17,26 @@ Maintained by: Ross Echols (HanzoRazer)
 | 3 | BlueprintAnalyzer wire-in — scale pre-pass, async wrapper, DPI fallback | 059cf5b0 | ✅ Done |
 | 4 | Docker fix — raw mode → production | a76102c2 | ✅ Done |
 | 4b | Docker deploy hardening (2026-04-05) | 5a145e90 | ✅ Done |
-| 5 | Classified mode root cause fixes | — | ⏭️ NEXT |
+| 5 | Classified mode root cause fixes | 722cc03d | ⚠️ Partial |
+
+**Phase 5 — Classified mode root cause fixes (2026-04-05):**
+Commit `722cc03d` addressing 4 of 5 root causes:
+- Phase 5B: Add `_compute_scale_from_spec()` spec-based scale fallback
+- Phase 5C: Rewrite `_detect_instrument_type()` with spec inference + pickup detection
+- Phase 5D: Add instrument_type guards for RHYTHM_CIRCUIT, CONTROL_CAVITY, NECK_POCKET
+- Phase 5E: Add `_safe_dxf_save()` with explicit fsync + EOF verification
+
+**Quality scorecard (Phase 5):**
+```
+TYPE DETECTION:       3/3 PASS — Dreadnought→acoustic, Les Paul→electric, Cuatro→acoustic
+CROSS-CONTAMINATION:  3/3 PASS — No electric features on acoustics, no BRACING on electrics
+SCALE CALIBRATION:    0/3 PASS — Validation firing but correction not propagating
+                      Width close (4-18% error), height consistently off (24-33%)
+```
+
+**Root cause 5 remaining:** Scale correction values are computed but not applied
+to final dimensions. Requires investigation of the correction propagation path
+from validate_scale_before_export() → export_to_dxf().
 
 **Phase 4b — Docker deploy hardening (2026-04-05):**
 Commit chain fixing Railway deploy blockers:
@@ -33,26 +52,29 @@ Commit chain fixing Railway deploy blockers:
 
 **graceful-luck service:** CLOSED — deleted from Railway 2026-04-05.
 
-**Phase 5 — Classified mode root cause fixes (QUEUED):**
-- Root cause 1: Scale detection — BlueprintAnalyzer not firing locally (no ANTHROPIC_API_KEY). Set key and retest.
-- Root cause 2: Feature cross-contamination — CONTROL_CAVITY and RHYTHM_CIRCUIT on acoustics, BRACING on electrics. Les Paul auto-detected as acoustic (aspect ratio bug).
-- Root cause 3: Body contour election unstable — Dreadnought shows 826x552mm in DXF vs 277x377mm reported (3x discrepancy).
-- Root cause 4: Scale correction overcorrecting — Cuatro 0.511x correction produces 500mm vs 430mm target (16% error).
-- Root cause 5: DXF write truncation on large outputs. Raw mode producing >195K LINE entities truncates ENDSEC/EOF. File required repair. Affects high-density blueprints in production. Investigate flush/buffer behavior in doc.saveas() for large R12 files.
+**Phase 5 root causes — status after 722cc03d:**
+| Root Cause | Description | Status |
+|------------|-------------|--------|
+| RC1 | Scale detection — API key absent | ✅ FIXED: spec fallback added |
+| RC2 | Feature cross-contamination | ✅ FIXED: instrument_type guards |
+| RC3 | Instrument type misdetection | ✅ FIXED: spec inference + pickup detection |
+| RC4 | Scale correction not propagating | ❌ OPEN: validation fires, dimensions unchanged |
+| RC5 | DXF truncation on large files | ✅ FIXED: fsync + EOF verification |
 
-**Quality Test Verdict:**
+**Quality Test Verdict (Phase 5):**
 ```
 RAW MODE:    PASS — production ready. 3/3 files.
              1.99M segments (Dreadnought), 277K (Les Paul), 1.15M (Cuatro).
              AC1009, CONTOURS layer, zero open endpoints.
 
-CLASSIFIED:  FAIL — not ready. 0/3 files within ±20% spec.
-             Scale calibration and feature classification unreliable
-             without ANTHROPIC_API_KEY in local environment.
+CLASSIFIED:  PARTIAL — type + contamination fixed, scale still unreliable.
+             Type detection: 3/3 PASS
+             Cross-contamination: 3/3 PASS
+             Scale: 0/3 PASS (width close, height off)
 ```
 
 **Strategic decision:** Ship raw mode via Docker fix (Phase 4).
-Classified mode is the premium path — Sprint 1 Phase 5.
+Classified mode progressing — Phase 5 delivered 4/5 fixes.
 
 **Key decisions recorded:**
 - R12 (AC1009) is project-wide DXF standard — enforced in CLAUDE.md
