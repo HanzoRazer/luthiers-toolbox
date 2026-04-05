@@ -33,7 +33,7 @@
 The Production Shop is a Vue 3 + TypeScript ERP/CAM platform (`luthiers-toolbox-main`)
 for instrument makers, with a FastAPI backend, ~530 Vue components, and domains
 spanning CAM, RMOS risk management, art studio, saw lab, and toolbox modules.
-Ross owns a BCAM 2030A CNC router.
+Ross owns a BCAMCNC 2030A CNC router.
 
 **CAM Workspace Phase 1 (completed this session):**
 

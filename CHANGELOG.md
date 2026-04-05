@@ -121,7 +121,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### 🪚 Headstock DXF Export
 
-- **HEADSTOCK-001**: Added `routers/headstock/dxf_export.py` (30KB) — BCAM 2030A DXF export with:
+- **HEADSTOCK-001**: Added `routers/headstock/dxf_export.py` (30KB) — BCAMCNC 2030A DXF export with:
   - `VeneerSpec` model — face veneer as inward-offset layer
   - `BindingSpec` model — binding rabbet with material bend radius warnings
   - 7-section `build_dxf()`: outline, tuners, nut, inlay, truss rod, veneer, binding

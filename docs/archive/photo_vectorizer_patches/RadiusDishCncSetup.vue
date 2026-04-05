@@ -62,7 +62,7 @@ function stepoverPct(stepover: number, dia: number) {
         <div class="p-4 border rounded">
           <h4 class="font-medium mb-2">3. G-code notes</h4>
           <ul class="list-disc list-inside text-sm space-y-1 opacity-80">
-            <li>Machine: GRBL-compatible (BCAM 2030A compatible)</li>
+            <li>Machine: GRBL-compatible (BCAMCNC 2030A compatible)</li>
             <li>Units: G21 (mm) — change to G20 in options for inches</li>
             <li>Work coordinate system: G54</li>
             <li>Toolpath: raster X rows, Z follows sphere equation at each point</li>

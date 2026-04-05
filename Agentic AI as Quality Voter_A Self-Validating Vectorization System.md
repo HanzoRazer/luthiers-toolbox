@@ -801,7 +801,7 @@ Manufacturing tolerance: What is the actual acceptable error for production? ±5
 Batch processing reality: The repo shows batch processing imports but not parallel execution. Is batch mode a real user workflow? If so, what's the typical batch size? 5 images? 50 images? This determines whether batch learning (calibration smoothing) is valuable.
 
 On the AI Voter Concept
-CLIP/Stable Diffusion dependencies: These models are large (2-5GB) and require GPU. Is the target deployment environment (BCAM 2030A control PC) capable of running them, or would this require a cloud service?
+CLIP/Stable Diffusion dependencies: These models are large (2-5GB) and require GPU. Is the target deployment environment (BCAMCNC 2030A control PC) capable of running them, or would this require a cloud service?
 
 The "render-back" validation: The voter renders SVG to bitmap and compares to original. How robust is this against style differences? A clean vector render will never look exactly like a photo (no grain, no shading, no reflections). Would the similarity threshold be meaningful?
 

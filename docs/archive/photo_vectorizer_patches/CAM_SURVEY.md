@@ -193,7 +193,7 @@ Operations:
 **`rmos/posts/grbl.py`**, `fanuc.py`, `linuxcnc.py` — Full post implementations
 
 **`cam/rosette/cnc/cnc_machine_profiles.py`** — `MachineConfig`
-- BCAM 2030A: `bcm_2030ca` / `bcamcnc_2030ca` — 48×24×4" work envelope, GRBL-style, 0.6mm/0.2mm tolerances
+- BCAMCNC 2030A: `bcm_2030ca` / `bcamcnc_2030ca` — 48×24×4" work envelope, GRBL-style, 0.6mm/0.2mm tolerances
 - The `lespaul_config.py` also has `bcamcnc_2030ca` → confirms your machine is known to the codebase
 
 ---
@@ -212,7 +212,7 @@ Operations:
 - `CarvingPipeline` (archtop) has no link to the neck pipeline
 - Helical plunge (`helical_core.py`) is a utility called by some engines but not available to others
 - `estimate_time()` exists but nothing in the UI calls it to show cycle time before cutting
-- Post-processor dialect selection is per-engine, not global — you can't say "use BCAM 2030A" once
+- Post-processor dialect selection is per-engine, not global — you can't say "use BCAMCNC 2030A" once
 
 ### Missing (no implementation found)
 - No unified parameter entry point: you can't say "maple, 6mm ball-nose, roughing" and have all engines get those values
@@ -299,7 +299,7 @@ interface CamOperation {
 
 **Phase 1** (next sprint — minimal viable workspace):
 - Neck suite only: wire `NeckPipeline` to a Vue parameter panel + G-code output panel
-- Global machine context selector (BCAM 2030A / GRBL generic)
+- Global machine context selector (BCAMCNC 2030A / GRBL generic)
 - `evaluate_cut_operation()` called on every param change → gate lights
 - `estimate_time()` called on G-code output → cycle time display
 - G-code preview (syntax-highlighted `<pre>`)
@@ -342,7 +342,7 @@ From the repo — these are the defaults the interactive module should pre-popul
 
 ```
 Truss rod:      width=6.35mm  depth=9.525mm  length=406.4mm  T2=3.175mm flat end mill
-BCAM 2030A:     envelope 48"×24"×4" (1219×609×101mm)  GRBL dialect
+BCAMCNC 2030A:     envelope 48"×24"×4" (1219×609×101mm)  GRBL dialect
 Chipload range: 0.05–0.25mm (router bit hardwood)
 Fret slot:      width=0.56mm  depth=0.55mm  T4=thin kerf saw
 Ball-nose step: 15% diameter = 0.9mm for 6mm ball-nose (finishing)

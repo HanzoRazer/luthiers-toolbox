@@ -283,7 +283,7 @@ MACHINE_PRESETS: Dict[str, BCamMachineSpec] = {
     ),
     "bcam_2030a": BCamMachineSpec(
         machine_id="bcam_2030a",
-        name="BCAM 2030A Lutherie Router",
+        name="BCAMCNC 2030A Lutherie Router",
         controller=ControllerType.GRBL,
         travel_x_mm=600,
         travel_y_mm=900,

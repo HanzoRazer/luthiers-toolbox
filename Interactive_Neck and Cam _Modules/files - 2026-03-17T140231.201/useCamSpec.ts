@@ -2,7 +2,7 @@
  * useCamSpec
  *
  * Reactive composable for the three critical CAM parameters that must
- * be resolved before a headstock DXF goes to the BCAM 2030A:
+ * be resolved before a headstock DXF goes to the BCAMCNC 2030A:
  *
  *   1. Headstock pitch angle (and fixture requirements)
  *   2. Truss rod channel geometry

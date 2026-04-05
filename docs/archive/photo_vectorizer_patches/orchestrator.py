@@ -13,7 +13,7 @@ Coordinate convention (VINE-05):
 
 Machine context (BCamMachineSpec) flows through the pipeline:
   - safe_z_mm used in footer and all retract moves
-  - tool_change_pause (M1 on BCAM 2030A) inserted between every operation
+  - tool_change_pause (M1 on BCAMCNC 2030A) inserted between every operation
   - post_dialect controls G-code dialect via PostProcessor
 
 Tool change sequence between operations (NEW — was missing, SAFETY FIX):
@@ -88,7 +88,7 @@ class NeckPipeline:
     4. OP50: Fret slots         (T4 — thin kerf saw)
 
     A PostProcessor tool change block (M5 → M6 → G43 → M3 → M1 pause → dwell)
-    is emitted between every operation.  On the BCAM 2030A the pause mode is
+    is emitted between every operation.  On the BCAMCNC 2030A the pause mode is
     M1 (optional stop) — the operator changes the tool and presses cycle start.
 
     Each operation can be enabled/disabled independently.

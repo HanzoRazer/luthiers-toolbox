@@ -1,11 +1,11 @@
 """
-Production Shop — BCAM 2030A DXF Export Service
+Production Shop — BCAMCNC 2030A DXF Export Service
 FastAPI router that converts normalized headstock SVG paths (200×320 canvas
 units) into a BCAM-ready DXF file with:
 
   - Correct real-world mm scaling
   - Kerf compensation offset (outward for through-cuts)
-  - Layer structure the BCAM 2030A controller expects
+  - Layer structure the BCAMCNC 2030A controller expects
   - Optional dogbone fillets at concave corners
   - Separate layers for: outline, tuner holes, inlay pockets, annotations
 
@@ -38,7 +38,7 @@ router = APIRouter(tags=["export"])
 # Scale factor: real_mm = canvas_unit × MM_PER_UNIT
 MM_PER_UNIT = 0.215   # matches the frontend MM constant
 
-# ─── BCAM 2030A layer naming convention ──────────────────────────────────────
+# ─── BCAMCNC 2030A layer naming convention ──────────────────────────────────────
 LAYER_OUTLINE    = "HS_OUTLINE"       # main headstock perimeter — through cut
 LAYER_TUNERS     = "HS_TUNERS"        # tuner peg holes — drill / pocket
 LAYER_INLAYS     = "HS_INLAYS"        # inlay cavity pockets
@@ -411,7 +411,7 @@ def build_dxf(req: ExportRequest) -> ezdxf.document.Drawing:
 @router.post("/headstock-dxf")
 async def export_headstock_dxf(req: ExportRequest):
     """
-    Convert a normalized headstock outline + features to a BCAM 2030A DXF.
+    Convert a normalized headstock outline + features to a BCAMCNC 2030A DXF.
 
     POST body (JSON):
       outline_path   — SVG path d= string (200×320 canvas units)

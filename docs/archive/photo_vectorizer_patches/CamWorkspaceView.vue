@@ -256,7 +256,7 @@ function stepStatus(id: number): 'done' | 'warn' | 'ok' | 'idle' {
             <div class="field-row">
               <label class="fld-k">Profile</label>
               <select class="fld-v sel" v-model="machineId" @change="evaluateDebounced()">
-                <option value="bcam_2030a">BCAM 2030A</option>
+                <option value="bcam_2030a">BCAMCNC 2030A</option>
               </select>
             </div>
             <div class="machine-spec-grid">
@@ -358,7 +358,7 @@ function stepStatus(id: number): 'done' | 'warn' | 'ok' | 'idle' {
             </button>
             <div class="sum-note">
               The full program assembles all enabled ops with M1 tool-change pauses
-              and GRBL header/footer for the BCAM 2030A.
+              and GRBL header/footer for the BCAMCNC 2030A.
             </div>
           </div>
 

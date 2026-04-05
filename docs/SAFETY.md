@@ -20,7 +20,7 @@ Every G-code-emitting endpoint in this system passes through one of:
 
 The CAM Workspace wizard requires GREEN or acknowledged YELLOW before enabling download.
 
-## BCAM 2030A Specific
+## BCAMCNC 2030A Specific
 
 - **Safe Z:** 10mm (clearance height between moves)
 - **Z travel:** 101.6mm (4 inches) hard ceiling
