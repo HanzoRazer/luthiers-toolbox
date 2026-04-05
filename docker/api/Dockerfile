@@ -51,17 +51,18 @@ COPY services/photo-vectorizer /app/services/photo-vectorizer
 RUN useradd -m app
 
 # Ensure data directories exist and are writable by app user
-RUN mkdir -p /app/services/api/data/runs/rmos \
-             /app/services/api/data/backups/cam \
-             /app/services/api/data/run_attachments && \
-    chown -R app:app /app/services/api/data
+RUN mkdir -p /app/services/api/app/data/runs/rmos \
+             /app/services/api/app/data/backups/cam \
+             /app/services/api/app/data/run_attachments \
+             /app/services/api/app/data && \
+    chown -R app:app /app/services/api/app/data
 
 # Switch to non-root user
 USER app
 
 ENV UVICORN_HOST=0.0.0.0 UVICORN_PORT=${SERVER_PORT:-8000}
 ENV PYTHONPATH=/app/services/api:/app/services/blueprint-import:/app/services/photo-vectorizer
-ENV RMOS_RUNS_DIR=/app/services/api/data/runs/rmos
+ENV RMOS_RUNS_DIR=/app/services/api/app/data/runs/rmos
 EXPOSE 8000
 
 # health endpoint baked in app
