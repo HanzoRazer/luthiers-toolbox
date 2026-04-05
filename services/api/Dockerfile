@@ -18,7 +18,9 @@ ARG SG_SPEC_TOKEN=""
 
 # leverage docker layer caching
 COPY requirements.txt ./
-RUN if [ -n "$SG_SPEC_TOKEN" ]; then \
+ARG CACHEBUST=1
+RUN echo "CACHEBUST=${CACHEBUST}" && \
+    if [ -n "$SG_SPEC_TOKEN" ]; then \
       git config --global url."https://${SG_SPEC_TOKEN}@github.com/".insteadOf "https://github.com/"; \
     fi && \
     pip install --no-cache-dir -r requirements.txt && \
