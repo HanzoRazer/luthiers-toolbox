@@ -61,6 +61,7 @@ USER app
 
 ENV UVICORN_HOST=0.0.0.0 UVICORN_PORT=${SERVER_PORT:-8000}
 ENV PYTHONPATH=/app/services/api:/app/services/blueprint-import:/app/services/photo-vectorizer
+ENV RMOS_RUNS_DIR=/app/services/api/data/runs/rmos
 EXPOSE 8000
 
 # health endpoint baked in app
