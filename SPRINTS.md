@@ -7,7 +7,7 @@ Maintained by: Ross Echols (HanzoRazer)
 ## ACTIVE
 
 ### Sprint 1 — Vectorizer Reconciliation
-**Status:** Phase 4 DONE, Phase 5 NEXT
+**Status:** Phase 5 DONE (4/5), Phase 5F NEXT
 **Branch:** main
 
 | Phase | Description | Commit | Status |
@@ -17,7 +17,8 @@ Maintained by: Ross Echols (HanzoRazer)
 | 3 | BlueprintAnalyzer wire-in — scale pre-pass, async wrapper, DPI fallback | 059cf5b0 | ✅ Done |
 | 4 | Docker fix — raw mode → production | a76102c2 | ✅ Done |
 | 4b | Docker deploy hardening (2026-04-05) | 5a145e90 | ✅ Done |
-| 5 | Classified mode root cause fixes | 722cc03d | ⚠️ Partial |
+| 5 | Classified mode root cause fixes (4/5) | 722cc03d | ✅ Done |
+| 5F | Scale correction propagation | — | ⏭️ NEXT |
 
 **Phase 5 — Classified mode root cause fixes (2026-04-05):**
 Commit `722cc03d` addressing 4 of 5 root causes:
@@ -34,9 +35,11 @@ SCALE CALIBRATION:    0/3 PASS — Validation firing but correction not propagat
                       Width close (4-18% error), height consistently off (24-33%)
 ```
 
-**Root cause 5 remaining:** Scale correction values are computed but not applied
-to final dimensions. Requires investigation of the correction propagation path
-from validate_scale_before_export() → export_to_dxf().
+**Phase 5F — Scale correction propagation (NEXT):**
+- [ ] Scale correction propagation — correction factor computed in
+      `validate_scale_before_export()` but not passed to `export_to_dxf()`.
+      Trace the call path and wire the correction into the export step.
+      Target: Dreadnought within ±20% of 390×505mm spec.
 
 **Phase 4b — Docker deploy hardening (2026-04-05):**
 Commit chain fixing Railway deploy blockers:
