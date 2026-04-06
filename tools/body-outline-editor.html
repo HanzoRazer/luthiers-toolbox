@@ -2248,6 +2248,7 @@ function downloadFile(content, filename, mimeType) {
 // WINDOW RESIZE
 // ============================================================
 window.onresize = function() {
+    if (!view) return;
     view.viewSize = new Size(
         document.getElementById('canvas').offsetWidth,
         document.getElementById('canvas').offsetHeight
