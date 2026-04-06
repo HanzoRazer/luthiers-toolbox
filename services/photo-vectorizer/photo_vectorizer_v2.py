@@ -470,26 +470,34 @@ class ExtractedShape:
         Returns:
             Tuple of (scaled_contour, warnings)
 
-        BUG FIX: Old code silently ignored width mismatch.
-        Now returns warning if aspect ratios differ significantly.
+        FIX: Scale to fit WITHIN both target dimensions (preserves aspect ratio).
+        Uses the smaller scale factor so output fits within target bounds.
         """
         warnings: List[str] = []
-        if self.height_px == 0:
-            return self.contour.copy().astype(np.float32), ["Zero height, cannot scale"]
+        if self.height_px == 0 or self.width_px == 0:
+            return self.contour.copy().astype(np.float32), ["Zero dimension, cannot scale"]
+
+        # Calculate scale factors for both dimensions
+        scale_h = target_height_mm / self.height_px
+        scale_w = target_width_mm / self.width_px
 
         target_aspect = target_height_mm / target_width_mm if target_width_mm > 0 else 1.0
         current_aspect = self.height_px / self.width_px if self.width_px > 0 else 1.0
 
-        if abs(target_aspect - current_aspect) > 0.05:
-            # Aspect ratio mismatch — scale to target height, warn caller
-            scale = target_height_mm / self.height_px
+        # Use the SMALLER scale to fit within bounds (preserves aspect ratio)
+        if abs(scale_h - scale_w) / max(scale_h, scale_w) > 0.05:
+            # Aspect mismatch - fit to width constraint (common case: image wider than spec)
+            scale = min(scale_h, scale_w)
+            constrained_by = "width" if scale_w < scale_h else "height"
+            actual_w = self.width_px * scale
+            actual_h = self.height_px * scale
             warnings.append(
                 f"Aspect mismatch: image={current_aspect:.2f}, spec={target_aspect:.2f}. "
-                f"Scaled to height; width will differ from spec."
+                f"Scaled to fit {constrained_by} constraint: {actual_w:.1f}x{actual_h:.1f}mm"
             )
         else:
-            # Uniform scale
-            scale = target_height_mm / self.height_px
+            # Uniform scale (aspect ratios close enough)
+            scale = scale_h
 
         # Center the contour at origin before scaling
         x_min, y_min = self.bbox[0], self.bbox[1]
@@ -3388,8 +3396,8 @@ def write_dxf(contours_by_layer: Dict[str, List[np.ndarray]],
         logger.error("ezdxf not installed — pip install ezdxf")
         return False
     try:
-        # Force minimum R2010 (AC1024) per CLAUDE.md DXF standards
-        dxf_ver = {"R2010": "R2010", "R2013": "R2013", "R2018": "R2018"}.get(version, "R2010")
+        # Force R12 (AC1009) per CLAUDE.md DXF standards - LINE entities only
+        dxf_ver = {"R12": "R12", "R2010": "R2010", "R2013": "R2013", "R2018": "R2018"}.get(version, "R12")
         doc = ezdxf.new(dxf_ver)
 
         # Set proper units (mm, metric) per CLAUDE.md
