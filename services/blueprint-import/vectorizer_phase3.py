@@ -474,6 +474,15 @@ INSTRUMENT_SPECS = {
         neck_pocket_range=(None, None),
         scale_length=650
     ),
+    "cuatro_puertorriqueno": InstrumentSpec(
+        name="Puerto Rican Cuatro",
+        body_length_range=(420, 500),
+        body_width_range=(240, 290),
+        neck_pocket_range=(None, None),
+        scale_length=585,
+        min_body_dim=200.0,
+        max_body_aspect_ratio=2.0
+    ),
 }
 
 
@@ -1966,6 +1975,7 @@ def rerank_body_candidates(
     min_body_score: float = 30.0,
     min_body_dim: float = 300.0,
     max_body_aspect_ratio: float = 2.0,
+    spec_name: Optional[str] = None,
 ) -> Dict[ContourCategory, List[ContourInfo]]:
     """
     Re-rank body outline candidates using multi-factor scoring.
@@ -2029,37 +2039,65 @@ def rerank_body_candidates(
     # Sort by score descending
     body_candidates.sort(key=lambda x: x[0], reverse=True)
 
-    best_score, best_info, best_source = body_candidates[0]
-    logger.info(
-        f"Body re-ranking: best candidate score={best_score:.1f} "
-        f"({best_source}, {best_info.width_mm:.0f}x{best_info.height_mm:.0f}mm)"
-    )
+    # Get max expected height from spec for height ceiling check
+    max_expected_height = None
+    if spec_name and spec_name in INSTRUMENT_SPECS:
+        spec = INSTRUMENT_SPECS[spec_name]
+        max_expected_height = spec.body_length_range[1] if spec.body_length_range[1] else None
 
-    if best_score < min_body_score:
-        logger.warning(f"Best body candidate scored only {best_score:.1f} — below threshold {min_body_score}")
-        return classified
-
-    # Body geometry sanity check — reject candidates that can't be a real body.
-    # Two checks: (1) minimum dimension, (2) aspect ratio.
-    # Both thresholds are configurable via InstrumentSpec for small instruments.
-    best_max_dim = max(best_info.width_mm, best_info.height_mm)
-    best_min_dim = min(best_info.width_mm, best_info.height_mm)
-    best_aspect = best_max_dim / best_min_dim if best_min_dim > 0 else 999.0
-
-    reject_body = False
-    reject_reason = ""
-    if best_max_dim < min_body_dim:
-        reject_body = True
-        reject_reason = (f"only {best_max_dim:.0f}mm — below {min_body_dim:.0f}mm minimum")
-    elif best_aspect > max_body_aspect_ratio:
-        reject_body = True
-        reject_reason = (
-            f"aspect ratio {best_aspect:.2f} exceeds {max_body_aspect_ratio:.1f} "
-            f"({best_info.width_mm:.0f}x{best_info.height_mm:.0f}mm) — "
-            f"likely a neck, pickguard, or component strip"
+    # Loop through candidates — reject and try next if height ceiling violated
+    elected_candidate = None
+    for candidate_idx, (best_score, best_info, best_source) in enumerate(body_candidates):
+        logger.info(
+            f"Body re-ranking: candidate {candidate_idx} score={best_score:.1f} "
+            f"({best_source}, {best_info.width_mm:.0f}x{best_info.height_mm:.0f}mm)"
         )
 
-    if reject_body:
+        if best_score < min_body_score:
+            logger.warning(f"Candidate {candidate_idx} scored only {best_score:.1f} — below threshold {min_body_score}")
+            continue  # Try next candidate
+
+        # Body geometry sanity check — reject candidates that can't be a real body.
+        # Three checks: (1) minimum dimension, (2) aspect ratio, (3) height ceiling.
+        # All thresholds are configurable via InstrumentSpec for small instruments.
+        best_max_dim = max(best_info.width_mm, best_info.height_mm)
+        best_min_dim = min(best_info.width_mm, best_info.height_mm)
+        best_aspect = best_max_dim / best_min_dim if best_min_dim > 0 else 999.0
+
+        reject_body = False
+        reject_reason = ""
+        if best_max_dim < min_body_dim:
+            reject_body = True
+            reject_reason = (f"only {best_max_dim:.0f}mm — below {min_body_dim:.0f}mm minimum")
+        elif best_aspect > max_body_aspect_ratio:
+            reject_body = True
+            reject_reason = (
+                f"aspect ratio {best_aspect:.2f} exceeds {max_body_aspect_ratio:.1f} "
+                f"({best_info.width_mm:.0f}x{best_info.height_mm:.0f}mm) — "
+                f"likely a neck, pickguard, or component strip"
+            )
+        elif max_expected_height and best_max_dim > 1.5 * max_expected_height:
+            # Phase 5G: Height ceiling check — reject if contour is too tall
+            # (likely picked up neck extension or multi-view elements)
+            reject_body = True
+            reject_reason = (
+                f"height {best_max_dim:.0f}mm exceeds 1.5× expected max {max_expected_height:.0f}mm "
+                f"({best_info.width_mm:.0f}x{best_info.height_mm:.0f}mm) — "
+                f"likely includes neck extension or multi-view elements"
+            )
+
+        if reject_body:
+            logger.info(f"Candidate {candidate_idx} rejected: {reject_reason}. Trying next.")
+            continue  # Try next candidate
+
+        # This candidate passed all checks
+        elected_candidate = (best_score, best_info, best_source)
+        break
+
+    # If no candidate passed, treat as component-only sheet
+    if elected_candidate is None:
+        best_score, best_info, best_source = body_candidates[0]  # Use first for logging
+        reject_reason = "all candidates failed validation"
         logger.info(
             f"Best body candidate rejected: {reject_reason}. "
             f"Treating as component-only sheet."
@@ -2080,7 +2118,8 @@ def rerank_body_candidates(
         classified[ContourCategory.BODY_OUTLINE] = []
         return classified
 
-    # Rebuild BODY_OUTLINE with the best candidate
+    # Rebuild BODY_OUTLINE with the elected candidate
+    best_score, best_info, best_source = elected_candidate
     new_bodies = [best_info]
 
     # Demote other previous body candidates to UNKNOWN
@@ -2136,7 +2175,8 @@ def extract_with_hierarchy(
     ml_classifier: Optional[MLContourClassifier] = None,
     grid_classifier=None,
     min_body_dim: float = 300.0,
-    max_body_aspect_ratio: float = 2.0
+    max_body_aspect_ratio: float = 2.0,
+    spec_name: Optional[str] = None
 ) -> Dict[ContourCategory, List[ContourInfo]]:
     """
     Extract contours with hierarchy information.
@@ -2219,7 +2259,8 @@ def extract_with_hierarchy(
         classified = rerank_body_candidates(
             classified, image_width_px, image_height_px, grid_classifier,
             min_body_dim=min_body_dim,
-            max_body_aspect_ratio=max_body_aspect_ratio
+            max_body_aspect_ratio=max_body_aspect_ratio,
+            spec_name=spec_name
         )
 
     return classified
@@ -2345,11 +2386,17 @@ def validate_scale_before_export(
             logger.info("Scale validation PASSED (within spec tolerance)")
             return scale_factor, True
         else:
-            correction = (expected_h / body_length + expected_w / body_width) / 2
+            # Geometric mean distributes error evenly across both axes
+            # for uniform scaling. Arithmetic mean was overcorrecting width
+            # and undercorrecting height when errors were asymmetric.
+            corr_len = expected_h / body_length
+            corr_wid = expected_w / body_width
+            correction = math.sqrt(corr_len * corr_wid)
             logger.warning(f"Scale validation FAILED for {spec_name}. "
                           f"Expected ~{expected_w:.0f}×{expected_h:.0f}mm, "
                           f"got {body_width:.0f}×{body_length:.0f}mm. "
-                          f"Correction factor: {correction:.3f}x")
+                          f"Correction: {correction:.3f}x "
+                          f"(len={corr_len:.3f}, wid={corr_wid:.3f})")
             return scale_factor * correction, False
 
     # Generic plausibility check (no spec)
@@ -3420,7 +3467,8 @@ class Phase3Vectorizer:
                 ml_classifier=ml_clf,
                 grid_classifier=self.grid_classifier,
                 min_body_dim=_min_body_dim,
-                max_body_aspect_ratio=_max_body_aspect
+                max_body_aspect_ratio=_max_body_aspect,
+                spec_name=spec_name
             )
 
             # Flatten contours for additional processing
