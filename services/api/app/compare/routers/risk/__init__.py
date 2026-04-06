@@ -108,7 +108,7 @@ def get_risk_bucket_detail(
 
 @router.get("/risk_bucket_export")
 def export_risk_bucket(
-    format: str = Query("csv", regex="^(csv|json)$", description="Export format: csv or json"),
+    format: str = Query("csv", pattern="^(csv|json)$", description="Export format: csv or json"),
     lane: Optional[str] = Query(None, description="Filter by lane"),
     preset: Optional[str] = Query(None, description="Filter by preset"),
     since: Optional[str] = Query(None, description="ISO timestamp: only include entries >= this time"),
