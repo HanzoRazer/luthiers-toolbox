@@ -21,12 +21,18 @@ from typing import Any, Dict, List, Tuple
 
 @dataclass(frozen=True)
 class Benedetto17Defaults:
-    """Nominal Benedetto-style floating bridge dimensions (mm)."""
+    """Nominal Benedetto-style floating bridge dimensions (mm).
+
+    Floating bridge Rev 2 (canonical): base length 155, foot 4.5, saddle radius 381,
+    M4 posts, base thickness 10.5, saddle blank 8.
+    """
 
     base_length_mm: float = 155.0
     base_width_mm: float = 30.0
     foot_thickness_mm: float = 4.5
     saddle_radius_mm: float = 381.0
+    base_thickness_mm: float = 10.5
+    saddle_blank_mm: float = 8.0
     post_spacing_mm: float = 74.6
     post_hole_diameter_mm: float = 4.2  # M4 clearance
     e_to_e_string_spacing_mm: float = 52.0
