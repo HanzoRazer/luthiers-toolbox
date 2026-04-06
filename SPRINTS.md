@@ -159,21 +159,19 @@ luthiers-toolbox is the source of truth — standalones are published from it.
 ## QUEUED
 
 ### Sprint 3 — Remediation and Gap Closure
-**Status:** Queued — blocked on dxf_writer.py
+**Status:** In progress
 
 **Task list:**
-- [ ] Commit dxf_writer.py — currently untracked on disk, zero callers.
-      CLAUDE.md blocking rule not satisfied until committed AND existing
-      generators refactored. Generators still calling ezdxf.new() directly:
-      archtop_floating_bridge.py, spiral_geometry.py, curve_export_router.py.
-- [ ] Build dxf_writer.py — central DXF writer enforcing R12, sentinel EXTMIN/EXTMAX,
-      ≤3dp coordinates, no LWPOLYLINE. Blocks all new DXF generators.
+- [x] Build dxf_writer.py — central DXF writer enforcing R12, sentinel EXTMIN/EXTMAX,
+      ≤3dp coordinates, no LWPOLYLINE. Commit 4c4f1a52. Blocks all new DXF generators.
+- [x] Fix PatternRenderer import error in production (commit a7f0f614)
+- [x] Fix FastAPI regex deprecation warning — pattern= replacement (commit 131b1cfd)
+- [x] Add WeasyPrint dependencies to Docker — PDF export (commit ff958c9a)
+- [ ] Migrate Priority 1 generators to dxf_writer.py: archtop_floating_bridge.py,
+      spiral_geometry.py, curve_export_router.py (per REFACTORING POLICY)
 - [ ] Fix 13 pre-existing test failures (10 soundhole spiral Python 3.14/ezdxf,
       2 debt gate ratchet, 1 vision integration)
 - [ ] Resolve 8 gaps awaiting physical measurements
-- [ ] Fix PatternRenderer import error in production
-- [ ] Fix FastAPI regex deprecation warning (pattern= replacement)
-- [ ] Add WeasyPrint dependencies to Docker (PDF export)
 - [ ] libxcb Docker fix (shared with Sprint 1 Phase 4)
 
 ---
@@ -226,6 +224,23 @@ Config corrected: config/shop_config.yaml (version: R2018 → R12)
 | 2026-04-04 | ltb-woodworking-studio is the canonical woodworking module | app/woodworking/ in main repo is a seam — instrument geometry never goes there |
 | 2026-04-04 | Instrument catalog uses tiered schema | Tier 1: validated plans in repo. Tier 2: community submitted. Tier 3: ethno/orchestral |
 | 2026-04-04 | ltb-acoustic-design-studio combines Helmholtz calculator + soundhole designer | Physics-to-geometry pipeline is the product — separating breaks the workflow |
+| 2026-04-05 | Refactor when already in a file, not for refactoring's sake | Bulk refactoring breaks working code — tiered priority keeps risk controlled |
+
+---
+
+## REFACTORING POLICY — STANDING RULE
+
+**Rule:** Refactor a file when you are already in it for another reason.
+Do not refactor for refactoring's sake — that is how working code gets broken.
+
+**Priority tiers:**
+- **Priority 1:** Active development files only (archtop_floating_bridge.py, spiral_geometry.py, curve_export_router.py)
+- **Priority 2:** When touched for other reasons
+- **Priority 3:** Never if stable
+
+**Application:** This policy applies to all refactoring tasks, not just DXF consolidation.
+The dxf_writer.py blocking rule in CLAUDE.md is satisfied by having the central writer
+available — existing generators are migrated opportunistically per this policy.
 
 ---
 
