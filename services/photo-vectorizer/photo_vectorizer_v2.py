@@ -4551,9 +4551,40 @@ class PhotoVectorizerV2:
             )
             return result
 
+        # Auto-rotate if image orientation doesn't match spec orientation
+        # (e.g., landscape image but portrait spec, or vice versa)
+        extract_source = source
+        try:
+            from PIL import Image as PILImage
+            with PILImage.open(source) as img:
+                img_w, img_h = img.size
+                img_aspect = img_w / img_h  # >1 = landscape, <1 = portrait
+                spec_height, spec_width = spec["body"]  # (length_mm, width_mm)
+                spec_aspect = spec_width / spec_height  # >1 = landscape, <1 = portrait
+
+                # If orientations differ (one landscape, one portrait), rotate 90°
+                img_is_landscape = img_aspect > 1.0
+                spec_is_landscape = spec_aspect > 1.0
+
+                if img_is_landscape != spec_is_landscape:
+                    logger.info(f"AI path: auto-rotating image (img_aspect={img_aspect:.2f}, spec_aspect={spec_aspect:.2f})")
+                    rotated = img.rotate(-90, expand=True)
+                    # Save to temp file
+                    import tempfile
+                    fd, temp_path = tempfile.mkstemp(suffix=source.suffix)
+                    os.close(fd)
+                    rotated.save(temp_path)
+                    extract_source = Path(temp_path)
+                    result.warnings.append(
+                        f"Auto-rotated: image was {'landscape' if img_is_landscape else 'portrait'}, "
+                        f"spec expects {'landscape' if spec_is_landscape else 'portrait'}"
+                    )
+        except Exception as e:
+            logger.warning(f"AI path: auto-rotate check failed: {e}")
+
         # Extract using AIToCADExtractor
         extractor = AIToCADExtractor(debug=debug_images)
-        shape = extractor.extract_shape(str(source))
+        shape = extractor.extract_shape(str(extract_source))
 
         if shape is None:
             result.warnings.append("AI extraction failed: no shape found")

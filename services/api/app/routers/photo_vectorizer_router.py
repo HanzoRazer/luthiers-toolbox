@@ -250,8 +250,9 @@ async def extract_from_photo(req: VectorizeRequest):
             if pts and len(pts) >= 3:
                 svg_path_d = "M " + " L ".join(f"{p[0]:.2f},{p[1]:.2f}" for p in pts) + " Z"
 
-        w_mm, h_mm = result.body_dimensions_mm
-        w_in, h_in = result.body_dimensions_inch
+        # body_dimensions_mm is stored as (height, width) — unpack correctly
+        h_mm, w_mm = result.body_dimensions_mm
+        h_in, w_in = result.body_dimensions_inch
 
         # ── Persist files for Blueprint workflow ────────────────────────────
         svg_file_path = ""
