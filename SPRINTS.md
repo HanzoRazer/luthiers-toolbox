@@ -348,6 +348,67 @@ traditional instrument makers who have no digital workflow.
 
 ---
 
+---
+
+### SPRINT: General Soundhole Scanner
+
+**Status:** QUEUED
+**Priority:** Medium
+**Triggered by:** Sunburst archtop f-hole detection failure
+
+**Problem:**
+Current photo vectorizer loses soundhole/f-hole
+contours during edge detection when:
+- Sunburst finish creates false graduation edges
+- F-hole boundaries weaker than graduation ring
+- Pickguard partially covers soundhole boundary
+
+**Scope:**
+Build SoundholeScanner class that works INWARD
+from the detected body outline rather than
+outward from raw edges.
+
+**Target soundhole types:**
+- `round` → acoustic/classical (circle)
+- `oval` → oval soundhole guitars
+- `f_hole` → archtop (elongated S-curve)
+- `f_hole_pair` → symmetric archtop pair
+- `d_hole` → D-shaped soundhole
+- `multi` → harp guitar (multiple openings)
+- `resonator` → resonator cone opening
+
+**Architecture:**
+1. Receive body_outline from existing pipeline
+2. Crop image to body bbox + 10% margin
+3. Apply local adaptive threshold inside crop
+4. findContours on thresholded interior
+5. Filter: must be inside body, not neck pocket
+6. Classify by circularity + aspect ratio
+7. Validate symmetric pairs for f_hole_pair
+8. Return as SOUNDHOLE layer in DXF/SVG output
+
+**Known test cases:**
+- Sunburst archtop (f-holes) → current failure
+- Dreadnought (round soundhole) → should improve
+- Classical (round soundhole) → should improve
+- Oval soundhole guitar → new capability
+
+**Files to create/modify:**
+- NEW: `services/photo-vectorizer/soundhole_scanner.py`
+- MOD: `photo_vectorizer_v2.py` — wire in after body election
+- MOD: `photo_vectorizer_router.py` — expose soundhole results
+
+**Acceptance criteria:**
+- Both f-holes detected on sunburst archtop test image
+- Round soundhole detected on dreadnought scan
+- No false positives on solid body electrics
+- DXF output includes SOUNDHOLE layer with correct geometry
+
+**Known limitation until sprint completes:**
+Sunburst finish guitars → f-holes not detected
+Workaround: `source_type: "ai"` + `spec_name`
+or manual placement in CAM software
+
 ## PRODUCT POSITIONING
 
 ### Blueprint Reader — Founding Story & Landing Page Opening
