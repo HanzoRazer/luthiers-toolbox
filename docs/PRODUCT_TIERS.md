@@ -1,270 +1,247 @@
 # The Production Shop — Product Tiers
 
-**Version:** 1.0-draft  
-**Status:** Living document — expand as products mature  
-**Last updated:** 2026-04-06
+Last updated: 2026-04-06
+Maintained by: Ross Echols (HanzoRazer)
 
 ---
 
-## Strategic Positioning
+## Tier Overview
 
-The Production Shop competes on three axes where existing tools fail:
-
-```
-Luthier Lab     → free, capable, hard to use, Android only
-VCarve          → powerful CAM, not luthiery-specific, expensive
-Fusion 360      → full parametric, steep learning curve, subscription
-Custom scripts  → exist in forums, undocumented, not maintained
-```
-
-The Production Shop wins by being:
-
-```
-Free tier   → accessible to any maker, anywhere, any skill level
-Easy to use → designed around the workflow, not the feature list  
-DXF output  → verified R12 that opens in every CAM tool
-Physics     → acoustic science built in, not bolted on
-Connected   → tools share data, outputs feed inputs
-```
-
----
-
-## Tier Structure
-
-### FREE — Establish Trust
-
-**Who:** Any maker, hobbyist, student, first-time builder  
-**Goal:** Demonstrate capability, build trust, generate word of mouth  
-**Conversion:** Free users become subscribers when they need more
-
-| Tool | Description | Standalone Repo |
-|---|---|---|
-| Blueprint Reader | Upload a photo or scan → get a DXF that opens | ltb-blueprint-reader |
-| Rosette Designer | Design rosette patterns, BOM, DXF export | ltb-rosette-designer |
-| Soundhole Calculator | Helmholtz resonance → recommended soundhole size | ltb-acoustic-design-studio |
-| Body Outline Editor | Trace any instrument outline → DXF export | ltb-body-outline-editor |
-| Fret Calculator | Scale length → fret positions, saddle compensation | ltb-fingerboard-designer |
-| String Tension Calculator | String gauge → tension per string | ltb-express |
-
-**Free tier principles:**
-- No account required for basic use
-- No ads — ever
-- DXF output always R12 verified
-- One instrument at a time
-- No job history or save state between sessions
-
----
-
-### PRO — $X/month (TBD)
-
-**Who:** Serious hobbyist, semi-professional builder, small shop  
-**Goal:** Recurring revenue from active builders  
-**Value:** Tools they use every build, not just occasionally
-
-| Package | Contents | Notes |
-|---|---|---|
-| Art Studio | Rosette Designer (full) + Headstock Inlay + Fretboard Inlay + Binding Designer + Marquetry Engine | All decorative CAM tools |
-| Acoustic Design Studio | Soundhole Calculator + Plate Stiffness + Bracing Calculator + Flexural Rigidity (E×I) + Body Volume Estimator | Physics-first acoustic design |
-| CAM Workstation | Toolpath Visualizer + Adaptive pocketing + G-code post processor + Machine profiles | Full CNC workflow |
-| RMOS | Risk assessment + Safety gates + Audit trail + Run tracking | Safety-critical CAM |
-| Job History | Save sessions, recall previous designs, version history | Persistence across sessions |
-| Parametric Guitar | Define body by parameters → mathematically correct outline | Not tracing — pure parametric |
-
-**Pro tier principles:**
-- Account required
-- Unlimited instruments
-- Save and recall all designs
-- Job history and audit trail
-- Priority email support
-- All free tier tools included
-
----
-
-### ENTERPRISE — Custom Quote
-
-**Who:** Production shop, school, lutherie program, OEM  
-**Goal:** High-value contracts, institutional relationships  
-**Value:** Multi-user, integration, custom specs, SLA
-
-| Feature | Description |
-|---|---|
-| Multi-user | Team accounts, role-based permissions |
-| Custom instrument specs | Add proprietary instrument families to spec_name catalog |
-| API access | Integrate Production Shop tools into existing workflows |
-| Shop OS | Inventory, job scheduling, client management, billing |
-| Priority support | SLA-guaranteed response times |
-| On-premise option | Deploy within shop network (no cloud dependency) |
-| Training | Onboarding for shop staff |
-
----
-
-## Product Packages
-
-### Art Studio
-*All decorative and artistic CAM tools under one roof*
-
-```
-Rosette Designer          ← exists, live (ltb-rosette-designer)
-Headstock Inlay Designer  ← exists in code
-Fretboard Inlay Designer  ← exists in code  
-Binding Designer          ← exists in code
-Marquetry Engine          ← exists in code (5 pattern generators)
-Amsterdam/Spiro Engine    ← exists (rope weave rosettes)
-```
-
-Free preview: Rosette Designer (ltb-rosette-designer)  
-Full package: Pro tier
-
----
-
-### Acoustic Design Studio
-*Physics-first acoustic instrument design*
-
-```
-Soundhole Calculator      ← exists (Helmholtz resonance)
-Plate Stiffness Tools     ← tap_tone_pi bridge (partial)
-Bracing Pattern Calc      ← exists in code
-Flexural Rigidity (E×I)   ← Liutalab-equivalent (planned)
-Body Volume Estimator     ← planned
-```
-
-Free preview: Soundhole Calculator  
-Full package: Pro tier  
-Related: tap_tone_pi (hardware measurement platform)
-
----
-
-### CAM Workstation
-*From DXF to G-code to machine*
-
-```
-Toolpath Visualizer       ← exists in code
-Adaptive pocketing        ← exists in code
-G-code post processor     ← exists (multiple machine profiles)
-RMOS safety system        ← exists (full implementation)
-Machine profiles          ← exists (BCAMCNC 2030A validated)
-```
-
-Full package: Pro tier  
-Note: RMOS is safety-critical infrastructure, not a standalone product
-
----
-
-### Blueprint Reader
-*Analog to digital for any maker*
-
-```
-Photo/scan → DXF pipeline ← exists, production-ready
-AI render path            ← exists (500× faster)
-14 instrument specs       ← exists
-Body outline isolation    ← exists
-```
-
-Free: unlimited  
-Hosted: Hostinger (pending deployment)  
-Note: Free intake funnel → Pro conversion path
+| Tier | Target User | Price | Access Model |
+|------|-------------|-------|--------------|
+| **Free** | Hobbyist, student, evaluator | $0 | Web-based, rate-limited |
+| **Pro** | Professional luthier, small shop | TBD/month | Full access, local install option |
+| **Enterprise** | Production facility, school, OEM | TBD/year | Volume licensing, SLA, custom integration |
 
 ---
 
 ## Competitive Analysis
 
-| Tool | Price | DXF Output | Luthiery-Specific | Physics | Ease of Use |
-|---|---|---|---|---|---|
-| Luthier Lab | Free | No | Yes | No | Hard |
-| VCarve Desktop | $350 one-time | Yes | No | No | Medium |
-| Fusion 360 | $545/year | Yes | No | No | Hard |
-| **Production Shop Free** | **Free** | **Yes (R12)** | **Yes** | **Partial** | **Easy** |
-| **Production Shop Pro** | **TBD** | **Yes (R12)** | **Yes** | **Yes** | **Easy** |
+### Current Market
+
+| Competitor | Price | Strengths | Weaknesses |
+|------------|-------|-----------|------------|
+| LMI Templates | $15-50/plan | Industry standard, physical templates | No digital, no customization |
+| StewMac Plans | $10-30/plan | Trusted brand | Static PDFs, no CAM |
+| FretFind | Free | Scale length calculator | No body geometry, no CAM |
+| Ekfrasis | €200+ | 3D modeling | Complex, not CNC-focused |
+| Generic CAD | $500-2000/yr | Full CAD capability | No lutherie-specific tools |
+
+### Our Position
+
+**Differentiation:** Integrated lutherie-specific CAD/CAM pipeline.
+- Blueprint → DXF → G-code in one workflow
+- Validated instrument geometry (not generic CAD)
+- Physics-based calculators (Helmholtz, P:A ratio, scale length)
+- R12 DXF standard for CAM compatibility
 
 ---
 
-## Pricing Considerations (TBD)
+## Free Tier
 
-Pricing not yet set. Factors to consider:
+### Included Tools
 
-```
-Luthier Lab benchmark    → free (no revenue model)
-VCarve Desktop benchmark → $350 one-time
-Fusion 360 benchmark     → $545/year hobbyist
+**Calculators (unlimited use):**
+- Scale length calculator (standard + multiscale)
+- Fret position calculator
+- String tension calculator
+- Bridge compensation calculator
+- Soundhole P:A ratio calculator
+- Helmholtz resonance estimator
 
-Target customer:
-  Serious hobbyist builds 2-4 instruments/year
-  Small shop builds 10-20 instruments/year
+**Geometry Viewers (read-only):**
+- Body outline viewer
+- Neck profile viewer
+- Headstock template gallery
 
-Price sensitivity:
-  Hobbyist → $10-20/month acceptable
-  Small shop → $50-100/month acceptable
-  Enterprise → custom quote, $500+/month
+**Blueprint Reader (limited):**
+- 3 extractions per month
+- Standard instruments only (Tier 1 catalog)
+- Watermarked DXF output
 
-Revenue model options:
-  A → Monthly subscription (recurring)
-  B → Annual subscription (discounted)
-  C → One-time purchase per tool (no recurring)
-  D → Freemium with usage limits
-  E → Hybrid (free tools + Pro subscription)
+### Rate Limits
 
-Recommendation: Option E
-  Free tools drive discovery and trust
-  Pro subscription captures recurring value
-  Enterprise custom quote for institutional
-```
+| Resource | Free Limit |
+|----------|-----------|
+| Blueprint extractions | 3/month |
+| AI image analysis | 5/month |
+| DXF exports | 10/month |
+| API calls | 100/day |
 
----
+### Purpose
 
-## Free vs Paid Decision Framework
-
-A tool belongs in the **free tier** if:
-
-```
-✓ It solves a single specific problem
-✓ It demonstrates Production Shop quality
-✓ It is a natural funnel to paid tools
-✓ Competitors offer similar tools for free
-✓ Withholding it would push users to competitors
-```
-
-A tool belongs in the **paid tier** if:
-
-```
-✓ It is used repeatedly across many builds
-✓ It requires ongoing maintenance and improvement
-✓ It saves significant time or prevents expensive mistakes
-✓ It integrates with other paid tools
-✓ No free equivalent exists at comparable quality
-```
+- Product discovery and evaluation
+- Education and learning
+- Hobbyist occasional use
+- Funnel to Pro tier
 
 ---
 
-## Roadmap Integration
+## Pro Tier
 
-```
-NOW (live):
-  Blueprint Reader landing page
-  ltb-rosette-designer (live)
-  ltb-woodworking-studio (content committed)
+### Included (everything in Free, plus)
 
-NEXT (Sprint 2):
-  Deploy blueprint-reader to Hostinger
-  Populate ltb-acoustic-design-studio
-  Define Pro tier pricing
+**Blueprint Reader (unlimited):**
+- Unlimited extractions
+- Full instrument catalog (Tier 1 + Tier 2)
+- Clean DXF output (no watermark)
+- SVG + DXF + PDF export
+- Batch processing (up to 10 files)
 
-FUTURE:
-  Art Studio package page
-  Pro tier subscription infrastructure
-  Enterprise inquiry page
-  Learning Vectorizer (Phase 2-4)
-```
+**Design Tools:**
+- Soundhole designer (round, oval, spiral, f-hole)
+- Bridge geometry calculator
+- Neck profile designer
+- Headstock designer
+- Binding/purfling calculator
+
+**CAM Integration:**
+- G-code preview
+- Machine profile library
+- Post-processor selection
+- Toolpath simulation (2D)
+
+**Instrument Catalog Access:**
+- Full Tier 1 validated catalog (27 instruments)
+- Tier 2 community catalog (97+ instruments)
+- Custom instrument spec creation
+
+### Pricing Considerations
+
+**Target:** $TBD/month or $TBD/year
+
+**Comparable pricing:**
+- Fusion 360 Hobbyist: Free (limited)
+- Fusion 360 Commercial: $545/year
+- VCarve Desktop: $349 one-time
+- Aspire: $1995 one-time
+
+**Value proposition:** Specialized lutherie tools that would require
+$500+ in generic CAD software plus manual template purchases.
 
 ---
 
-## Notes
+## Enterprise Tier
 
-- "Free" means genuinely free — no ads, no data harvesting, no dark patterns
-- The Production Shop brand promise: files that actually work
-- Every free tool is a proof of that promise
-- Luthier Lab has proven the market exists — the opportunity is usability
-- The dataset built by testing is a long-term strategic asset
+### Included (everything in Pro, plus)
+
+**Volume Features:**
+- Unlimited team seats
+- Shared instrument library
+- Project management dashboard
+- Production tracking integration
+
+**Integration:**
+- API access (full rate)
+- Webhook notifications
+- Custom post-processor development
+- ERP/MES integration support
+
+**Support:**
+- Dedicated account manager
+- SLA guarantee (TBD uptime %)
+- Priority bug fixes
+- Custom feature development (paid)
+
+### Pricing Considerations
+
+**Target:** $TBD/year minimum contract
+
+**Target customers:**
+- Guitar factories (Eastman, Cordoba, Taylor overseas)
+- Lutherie schools (Roberto-Venn, Chicago School)
+- OEM component suppliers
+- Large restoration shops
 
 ---
 
-*The Production Shop — Design. Build. Track. Deliver.*
+## Free vs Paid Framework
+
+### Principle: Calculators are Free, Workflows are Paid
+
+**Free forever:**
+- Physics calculators (Helmholtz, tension, compensation)
+- Reference data (scale lengths, standard dimensions)
+- Educational content
+- Community catalog viewing
+
+**Paid:**
+- Geometry generation (DXF output)
+- Blueprint extraction (vectorizer)
+- CAM integration (G-code)
+- Batch operations
+- API access beyond limits
+
+### Rationale
+
+Calculators establish authority and trust. They cost nothing to serve
+(client-side computation). They bring traffic and backlinks. They
+convert to paid when users need actual files for CNC.
+
+---
+
+## Standalone Products (Moat Strategy)
+
+Free standalone tools that establish The Production Shop as the
+authoritative source for lutherie calculations:
+
+| Standalone | Description | Status |
+|------------|-------------|--------|
+| ltb-acoustic-design-studio | Helmholtz + soundhole geometry | Planned |
+| ltb-bridge-designer | Bridge geometry + string spacing | Planned |
+| ltb-fingerboard-designer | Scale length, radius, multiscale | Planned |
+| ltb-headstock-designer | Tuner layout, templates | Planned |
+| ltb-neck-designer | Neck profiles, tapers | Planned |
+| ltb-parametric-guitar | Body shape generator | Planned |
+| ltb-woodworking-studio | Joinery, wood movement | In progress |
+| blueprint-reader | PDF → DXF pipeline | Active |
+
+**Strategy:** Free tools with Pro upsell. Each standalone is also
+embedded in the main platform for Pro/Enterprise users.
+
+---
+
+## Subscription Infrastructure
+
+**TBD — Options under consideration:**
+
+| Provider | Pros | Cons |
+|----------|------|------|
+| Stripe | Industry standard, good DX | 2.9% + $0.30 per transaction |
+| Paddle | Handles VAT/tax | Higher fees |
+| LemonSqueezy | Simple, good for SaaS | Newer, less mature |
+| Self-hosted | Full control | Development overhead |
+
+**Decision criteria:**
+- International tax handling (VAT, etc.)
+- Subscription management UX
+- Developer experience
+- Cost at scale
+
+---
+
+## Open Questions
+
+1. **Pro tier price point:** $19/mo? $29/mo? $99/year?
+2. **Annual discount:** 2 months free? 20% off?
+3. **Student/educator discount:** 50% off Pro?
+4. **Lifetime deal:** One-time purchase option?
+5. **Enterprise minimum:** $1000/year? $5000/year?
+6. **Free tier limits:** Too generous? Too restrictive?
+
+---
+
+## Metrics to Track
+
+| Metric | Target |
+|--------|--------|
+| Free → Pro conversion | 5-10% |
+| Pro monthly churn | <5% |
+| Annual vs monthly ratio | 60% annual |
+| Enterprise contract size | $5000+ avg |
+| Time to first paid | <30 days |
+
+---
+
+*This is a living document. Update as pricing experiments complete
+and market feedback arrives.*
