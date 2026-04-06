@@ -1,5 +1,5 @@
 # The Production Shop — Sprint Registry
-Last updated: 2026-04-05
+Last updated: 2026-04-06
 Maintained by: Ross Echols (HanzoRazer)
 
 ---
@@ -17,6 +17,7 @@ Maintained by: Ross Echols (HanzoRazer)
 | 3 | BlueprintAnalyzer wire-in — scale pre-pass, async wrapper, DPI fallback | 059cf5b0 | ✅ Done |
 | 4 | Docker fix — raw mode → production | a76102c2 | ✅ Done |
 | 4b | Docker deploy hardening (2026-04-05) | 5a145e90 | ✅ Done |
+| 4c | Docker Trixie + Railway PORT (2026-04-06) | ebffbd53 | ✅ Done |
 | 5 | Classified mode root cause fixes (4/5) | 722cc03d | ✅ Done |
 | 5F | Scale correction propagation | — | ✅ Done |
 | 5G | Body contour height ceiling | cb0761ed | ✅ Done |
@@ -65,6 +66,16 @@ Commit chain fixing Railway deploy blockers:
 - `49ba3547` fix: uvicorn port 8000 → 8080 (Railway)
 - `4674720c` fix: add RMOS_RUNS_DIR env var
 - `5a145e90` fix: correct data paths — app/data not data at root
+
+**Phase 4c — Docker Debian Trixie + Railway PORT (2026-04-06):**
+Commit chain fixing CI build and Railway deployment:
+- `19a6dd26` fix: libgdk-pixbuf2.0-0 → libgdk-pixbuf-2.0-0 (Debian Trixie package rename)
+- `81cb815b` fix: uvicorn port 8080 → 8000 (match CI healthcheck)
+- `ebffbd53` fix: use $PORT env var for Railway compatibility (shell form CMD)
+
+Production verified:
+- `/health` → `{"status":"ok","version":"2.0.0-clean"}`
+- `/api/vectorizer/status` → `{"available":true}`
 
 **graceful-luck service:** CLOSED — deleted from Railway 2026-04-05.
 
