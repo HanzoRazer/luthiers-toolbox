@@ -3352,9 +3352,11 @@ def write_svg(contours_by_layer: Dict[str, List[np.ndarray]],
             "UNKNOWN": "#999999",
         }
 
+        # Register inkscape namespace for layer grouping
         svg = Element("svg", xmlns="http://www.w3.org/2000/svg",
                        width=f"{width_mm}mm", height=f"{height_mm}mm",
                        viewBox=f"0 0 {width_mm} {height_mm}")
+        svg.set("xmlns:inkscape", "http://www.inkscape.org/namespaces/inkscape")
 
         for layer_name, point_lists in contours_by_layer.items():
             g = SubElement(svg, "g", id=layer_name)
@@ -4152,6 +4154,26 @@ class PhotoVectorizerV2:
 
         features_by_type: Dict[FeatureType, List[FeatureContour]] = defaultdict(list)
         export_contours: Dict[str, List[np.ndarray]] = defaultdict(list)
+
+        # Filter out contours below body bbox (e.g., guitar stand)
+        # Stand appears below body bottom edge in product photos
+        if body_fc:
+            _, body_y, _, body_h = body_fc.bbox_px
+            body_bottom_px = body_y + body_h
+            filtered_contours = []
+            for fc in feature_contours:
+                # Skip body contour from this filter (it defines the bbox)
+                if fc.feature_type.value == "body_outline":
+                    filtered_contours.append(fc)
+                    continue
+                # Get contour centroid Y
+                cnt_y = fc.bbox_px[1] + fc.bbox_px[3] / 2
+                if cnt_y > body_bottom_px + 20:  # 20px tolerance
+                    logger.debug(f"Filtered below-body contour: {fc.feature_type.value} at Y={cnt_y:.0f} (body bottom={body_bottom_px:.0f})")
+                    result.warnings.append(f"Filtered contour below body: {fc.feature_type.value} (likely guitar stand)")
+                else:
+                    filtered_contours.append(fc)
+            feature_contours = filtered_contours
 
         for fc in feature_contours:
             pts_mm = self._to_mm(fc.points_px, mpp, img_h, cx, cy,
