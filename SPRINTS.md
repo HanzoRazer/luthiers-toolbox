@@ -121,6 +121,7 @@ Classified mode progressing — Phase 5 delivered 4/5 fixes.
 
 | Repo | Description | Status |
 |------|-------------|--------|
+| HanzoRazer/ltb-rosette-designer | Rosette Designer — full UI, BOM engine, 8 presets, Manufacturing Intelligence, Amsterdam/Spiro engine | **LIVE** |
 | HanzoRazer/ltb-acoustic-design-studio | Helmholtz + Gore P:A calculator + soundhole geometry designer | Empty — needs content |
 | HanzoRazer/ltb-bridge-designer | Bridge geometry + string spacing | Existing — needs audit |
 | HanzoRazer/ltb-fingerboard-designer | Scale length, radius, multiscale | Existing — needs audit |
@@ -128,12 +129,27 @@ Classified mode progressing — Phase 5 delivered 4/5 fixes.
 | HanzoRazer/ltb-neck-designer | Neck profiles, tapers | Existing — needs audit |
 | HanzoRazer/ltb-parametric-guitar | Body shape generator | Existing — needs audit |
 | HanzoRazer/ltb-woodworking-studio | Joinery, wood movement, bench woodworking | woodworking_v2 committed |
+| HanzoRazer/ltb-express | String tension calculator + quick tools | **CONTAMINATED** — needs cleanup |
 | HanzoRazer/blueprint-reader | PDF → DXF pipeline (vectorizer) | Existing — needs Sprint 1 sync |
 
 **Strategic note:** Standalone repos are a moat — free tools that establish
 The Production Shop as the authoritative lutherie calculator source.
 All tools also exist embedded in Pro and Enterprise tiers.
 luthiers-toolbox is the source of truth — standalones are published from it.
+
+**BLOCKER:** No publish workflow defined (subtree push or CI-based).
+
+**Critical path:**
+```
+Step 1 → Define publish workflow (subtree or CI)
+Step 2 → Clean ltb-express (remove contamination)
+Step 3 → Populate 3 priority repos:
+           ltb-acoustic-design-studio
+           ltb-fingerboard-designer
+           ltb-bridge-designer
+Step 4 → Flip those 3 repos public
+Step 5 → Remaining repos follow same pattern
+```
 
 **Task list:**
 - [x] Move archtop_floating_bridge.py → app/instrument_geometry/bridge/ *(already in correct location)*
