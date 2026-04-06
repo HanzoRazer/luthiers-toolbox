@@ -195,9 +195,14 @@ luthiers-toolbox is the source of truth — standalones are published from it.
       Commit: 5de45310
 - [x] AI pipeline unblocked: source_type="ai" + spec_name works
       Test: Smart Guitar PNG → 1 contour, scale_source=instrument_spec, 286ms
+- [x] Auto-rotate for AI images: landscape image + portrait spec → auto-rotate 90°
+      Commit: d45e213a
+- [x] Dimension swap fix: router was unpacking (height, width) as (width, height)
+      Fix: h_mm, w_mm = result.body_dimensions_mm
+      Commit: d45e213a
+      Test: Smart Guitar now correctly reports 368.3mm × 444.5mm (portrait)
 
 **Remaining:**
-- [ ] Dimension swap fix (auto-rotate when image aspect != spec aspect)
 - [ ] Body isolation pre-processor (neck crop)
 - [ ] INSTRUMENT_CATALOG Tier 1 integration
 - [ ] Extend BlueprintAnalyzer prompt to identify decorative elements
