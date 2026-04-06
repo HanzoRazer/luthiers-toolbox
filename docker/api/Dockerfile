@@ -63,13 +63,15 @@ RUN mkdir -p /app/services/api/app/data/runs/rmos \
 # Switch to non-root user
 USER app
 
-ENV UVICORN_HOST=0.0.0.0 UVICORN_PORT=${SERVER_PORT:-8000}
+ENV UVICORN_HOST=0.0.0.0
 ENV PYTHONPATH=/app/services/api:/app/services/blueprint-import:/app/services/photo-vectorizer
 ENV RMOS_RUNS_DIR=/app/services/api/app/data/runs/rmos
 EXPOSE 8000
 
 # health endpoint baked in app
+# Note: Railway injects PORT env var; CI uses SERVER_PORT=8000
 HEALTHCHECK --interval=10s --timeout=3s --start-period=30s --retries=10 \
-  CMD curl -fsS http://127.0.0.1:${UVICORN_PORT}/health || exit 1
+  CMD curl -fsS http://127.0.0.1:${PORT:-8000}/health || exit 1
 
-CMD ["python","-m","uvicorn","app.main:app","--host","0.0.0.0","--port","8000"]
+# Use shell form to expand $PORT (Railway) or default to 8000 (CI/local)
+CMD python -m uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8000}
