@@ -311,5 +311,58 @@ traditional instrument makers who have no digital workflow.
 
 ---
 
+## PRODUCT POSITIONING
+
+### Blueprint Reader — Founding Story & Landing Page Opening
+
+**Status:** Approved — use as landing page opening paragraph
+
+**Copy:**
+
+I paid $525 for a Les Paul CNC file set that wouldn't open.
+
+The files were all there — body outline, neck pocket, pickup
+routes, cavity depths. But the DXF version was wrong for
+Fusion 360. The layers were a mess. The contours weren't
+closed. AutoCAD choked on the geometry. Five hundred and
+twenty-five dollars for files I couldn't use.
+
+That was the beginning of The Production Shop.
+
+Every decision in this platform traces back to that moment.
+The R12 DXF standard. The validated contour closure. The
+clean layer separation. The accuracy scorecard against known
+instrument dimensions. These are not features — they are the
+specific failures from that $525 file set, solved one by one.
+
+What we deliver:
+
+A DXF file that opens correctly in Fusion 360, VCarve,
+AutoCAD, and FreeCAD. A body outline that closes. Layers
+you can understand. Dimensions you can verify. A file you
+can actually cut.
+
+We validate every output against known instrument
+specifications before it leaves the pipeline. We document
+the accuracy. We tell you exactly what the file contains
+and what it does not.
+
+If the file does not work in your CAM software, that is
+our problem to fix — not yours to work around.
+
+**Use in:**
+- blueprint-reader standalone landing page (opening)
+- README.md founding story section
+- Product marketing materials
+- Any investor or partner introduction
+
+**The one-sentence version:**
+"I paid $525 for a Les Paul CNC file set that looked
+complete but wouldn't open in Fusion 360 or AutoCAD.
+The Production Shop produces clean, verified DXF files
+that actually work."
+
+---
+
 *This file is updated at the end of every sprint session.*
 *Source of truth for sprint status across all terminals and chat sessions.*
