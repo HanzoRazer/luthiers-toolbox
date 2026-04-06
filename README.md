@@ -88,6 +88,26 @@ luthiers-toolbox/
 - Advisory signals and override controls
 - G-code validation and linting
 
+## Blueprint Vectorizer Accuracy
+
+The blueprint vectorizer extracts instrument body outlines
+from scanned PDFs and photographs, producing R12-format DXF
+files ready for CAM software. Validated accuracy against
+three Tier 1 reference instruments ranges from **±2.5% to
+±19.7%** of true body dimensions depending on blueprint
+complexity. Simple symmetric bodies (acoustic guitars,
+cuatros) consistently achieve under 8% error. Complex
+multi-view electric guitar blueprints may reach up to 20%
+error due to layout density and adjacent geometry.
+
+Extracted contours are a **working reference** — verify
+critical dimensions against physical templates before
+committing to CNC toolpaths.
+
+→ See [VECTORIZER_ACCURACY.md](docs/VECTORIZER_ACCURACY.md)
+for full technical details, validation scorecard, and
+accuracy improvement guidance.
+
 ## Quick Start by Use Case
 
 ### DXF → G-code
