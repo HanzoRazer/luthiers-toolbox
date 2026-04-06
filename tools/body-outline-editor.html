@@ -500,6 +500,9 @@
             <button id="btn-smooth-all" title="Smooth all nodes to curves">Smooth All</button>
         </div>
         <div class="toolbar-group">
+            <button id="btn-measure" title="Measure Distance (M)">Measure</button>
+        </div>
+        <div class="toolbar-group">
             <button id="btn-import">Import Image</button>
             <button id="btn-calibrate" title="Calibrate Scale (C)">Calibrate</button>
             <button id="btn-clear-image">Clear Image</button>
@@ -659,6 +662,12 @@ const state = {
     calibrating: false,
     calPoints: [],
     calMarkers: [],
+
+    // Measure mode
+    measuring: false,
+    measurePoints: [],
+    measureMarkers: [],
+    measureFadeTimer: null,
 
     // Undo/Redo
     undoStack: [],
@@ -1155,6 +1164,11 @@ function setupCanvasEvents() {
 
     // Mouse down
     view.onMouseDown = function(event) {
+        if (state.measuring) {
+            handleMeasureClick(event.point);
+            return;
+        }
+
         if (state.calibrating) {
             handleCalibrationClick(event.point);
             return;
@@ -1456,6 +1470,12 @@ function setupKeyboardEvents() {
             return;
         }
 
+        // M - Measure
+        if (e.key.toLowerCase() === 'm' && !e.ctrlKey && !e.metaKey) {
+            startMeasure();
+            return;
+        }
+
         // Delete - Remove node
         if (e.key === 'Delete' && state.selectedSegments.length > 0) {
             deleteSelectedNodes();
@@ -1503,6 +1523,7 @@ function setupToolbarEvents() {
     document.getElementById('btn-smooth-all').addEventListener('click', smoothAllNodes);
 
     document.getElementById('btn-import').addEventListener('click', importImage);
+    document.getElementById('btn-measure').addEventListener('click', startMeasure);
     document.getElementById('btn-calibrate').addEventListener('click', startCalibration);
     document.getElementById('btn-clear-image').addEventListener('click', clearImage);
 
@@ -1989,6 +2010,113 @@ function cancelCalibration() {
     state.calMarkers = [];
     hideCalibrationStatus();
     document.getElementById('modal-calibrate').classList.remove('visible');
+}
+
+// ============================================================
+// MEASURE MODE
+// ============================================================
+function startMeasure() {
+    // Cancel any existing measure
+    cancelMeasure();
+
+    state.measuring = true;
+    state.measurePoints = [];
+    document.getElementById('btn-measure').classList.add('active');
+    showCalibrationStatus('Click first point');
+}
+
+function handleMeasureClick(point) {
+    state.measurePoints.push(point);
+
+    // Draw marker
+    const marker = new Path.Circle({
+        center: point,
+        radius: 6 / state.zoom,
+        fillColor: '#00aaff',
+        strokeColor: '#ffffff',
+        strokeWidth: 2 / state.zoom
+    });
+    state.measureMarkers.push(marker);
+
+    if (state.measurePoints.length === 1) {
+        showCalibrationStatus('Click second point');
+    } else if (state.measurePoints.length === 2) {
+        hideCalibrationStatus();
+
+        // Draw line between points
+        const line = new Path.Line({
+            from: state.measurePoints[0],
+            to: state.measurePoints[1],
+            strokeColor: '#00aaff',
+            strokeWidth: 2 / state.zoom,
+            dashArray: [5 / state.zoom, 5 / state.zoom]
+        });
+        state.measureMarkers.push(line);
+
+        // Calculate and display distance
+        const dist = state.measurePoints[0].getDistance(state.measurePoints[1]);
+        const distanceEl = document.getElementById('distance-display');
+        distanceEl.textContent = 'Measured: ' + dist.toFixed(2) + ' mm';
+        distanceEl.style.display = 'block';
+        distanceEl.style.color = '#00aaff';
+
+        // Draw distance label on canvas
+        const midpoint = state.measurePoints[0].add(state.measurePoints[1]).divide(2);
+        const label = new PointText({
+            point: midpoint.add(new Point(0, -15 / state.zoom)),
+            content: dist.toFixed(2) + ' mm',
+            fillColor: '#00aaff',
+            fontFamily: 'system-ui, sans-serif',
+            fontWeight: 'bold',
+            fontSize: 14 / state.zoom,
+            justification: 'center'
+        });
+        state.measureMarkers.push(label);
+
+        state.measuring = false;
+        document.getElementById('btn-measure').classList.remove('active');
+
+        // Auto-fade after 5 seconds
+        if (state.measureFadeTimer) clearTimeout(state.measureFadeTimer);
+        state.measureFadeTimer = setTimeout(function() {
+            fadeMeasureMarkers();
+        }, 5000);
+    }
+}
+
+function fadeMeasureMarkers() {
+    // Fade out markers
+    state.measureMarkers.forEach(m => {
+        m.tween({ opacity: 0 }, { duration: 500 });
+    });
+
+    // Remove after fade
+    setTimeout(function() {
+        state.measureMarkers.forEach(m => m.remove());
+        state.measureMarkers = [];
+
+        // Hide distance display
+        const distanceEl = document.getElementById('distance-display');
+        distanceEl.style.display = 'none';
+        distanceEl.style.color = '#ffaa00'; // Reset to original color
+    }, 500);
+}
+
+function cancelMeasure() {
+    state.measuring = false;
+    state.measurePoints = [];
+    state.measureMarkers.forEach(m => m.remove());
+    state.measureMarkers = [];
+    if (state.measureFadeTimer) {
+        clearTimeout(state.measureFadeTimer);
+        state.measureFadeTimer = null;
+    }
+    document.getElementById('btn-measure').classList.remove('active');
+    hideCalibrationStatus();
+
+    const distanceEl = document.getElementById('distance-display');
+    distanceEl.style.display = 'none';
+    distanceEl.style.color = '#ffaa00';
 }
 
 function applyCalibration() {
