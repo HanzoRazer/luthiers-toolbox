@@ -421,6 +421,65 @@ python photo_vectorizer_v2.py "guitar.png" \
 
 ---
 
+## Input File Naming Conventions
+
+**Real-world failure mode:** Users have multiple guitar image files in different folders with ambiguous names. This causes extraction from the wrong file, producing unexpected results.
+
+### Recommended Naming
+
+Use descriptive, unambiguous names that identify the instrument and view:
+
+```
+les_paul_reference.png
+smart_guitar_front.png
+dreadnought_top_view.png
+es335_body_photo.jpg
+archtop_jumbo_studio.png
+```
+
+**Pattern:** `{instrument}_{view_or_purpose}.{ext}`
+
+### Not Recommended
+
+Avoid generic or ambiguous names:
+
+```
+guitar.png              <- No instrument identification
+image1.png              <- Completely opaque
+Smart Guitar_1.png      <- Ambiguous version number (is _1 a version? a variant?)
+IMG_20260406.jpg        <- Camera default, no semantic meaning
+photo (2).png           <- OS-generated duplicate suffix
+```
+
+### Version Control
+
+If you must version files, use explicit version prefixes or suffixes:
+
+```
+smart_guitar_v2_front.png       <- Explicit version
+smart_guitar_front_2026-04.png  <- Date-based version
+smart_guitar_front_FINAL.png    <- Status-based (use sparingly)
+```
+
+### Folder Organization
+
+For projects with multiple instruments:
+
+```
+/reference_photos/
+  /smart_guitar/
+    front.png
+    back.png
+    side.png
+  /les_paul/
+    body_reference.png
+    headstock_detail.png
+```
+
+This prevents cross-instrument confusion when extracting.
+
+---
+
 ## Relationship to Upstream
 
 ### Origin: luthiers-toolbox monorepo
