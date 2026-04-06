@@ -4,10 +4,13 @@ FROM python:${PYTHON_VERSION}-slim AS base
 
 # system deps (git needed for private repo install)
 # libxcb + libgl1 + libglib required for OpenCV headless operation
+# libpango + libcairo + libgdk-pixbuf required for WeasyPrint PDF rendering
 RUN apt-get update && apt-get install -y --no-install-recommends \
       curl ca-certificates build-essential git \
       libxcb1 libxcb-render0 libxcb-shape0 libxcb-xfixes0 \
-      libgl1 libglib2.0-0 && \
+      libgl1 libglib2.0-0 \
+      libpango-1.0-0 libpangoft2-1.0-0 libpangocairo-1.0-0 \
+      libgdk-pixbuf2.0-0 libcairo2 libffi-dev shared-mime-info && \
     rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
