@@ -108,6 +108,9 @@ committing to CNC toolpaths.
 for full technical details, validation scorecard, and
 accuracy improvement guidance.
 
+→ See [BLUEPRINT_READER_INPUT_SPEC.md](docs/BLUEPRINT_READER_INPUT_SPEC.md)
+for photography guidelines and input requirements.
+
 ## Quick Start by Use Case
 
 ### DXF → G-code
