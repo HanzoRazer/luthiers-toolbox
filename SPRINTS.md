@@ -137,6 +137,36 @@ The Production Shop as the authoritative lutherie calculator source.
 All tools also exist embedded in Pro and Enterprise tiers.
 luthiers-toolbox is the source of truth — standalones are published from it.
 
+**Repo visibility policy:**
+```
+FREE TIER → PUBLIC repos
+  Open source builds trust, community finds bugs,
+  makers contribute edge cases, SEO discoverability.
+  The code IS the marketing.
+
+PRO/ENTERPRISE → PRIVATE permanently
+  Deployed apps only, source never exposed.
+  Competitive advantage: physics implementations,
+  RMOS architecture, three-feedback-loop system.
+```
+
+**PUBLIC (free tier tools):**
+- ltb-rosette-designer ✅ LIVE
+- ltb-acoustic-design-studio → ready to flip
+- ltb-woodworking-studio → ready to flip
+- blueprint-reader → ready to flip
+- ltb-fingerboard-designer → after population
+- ltb-bridge-designer → after population
+
+**PRIVATE FOREVER:**
+- luthiers-toolbox (monorepo source of truth)
+- RMOS implementation (safety system)
+- photo_vectorizer_v2.py (proprietary pipeline)
+- tap_tone_pi (measurement platform)
+- Learning Vectorizer (future competitive moat)
+- ltb-pro (CAM workstation)
+- ltb-enterprise (shop OS)
+
 **BLOCKER:** No publish workflow defined (subtree push or CI-based).
 
 **Critical path:**
@@ -236,7 +266,8 @@ packages/client/src/components/toolbox/BridgeCalculator.vue
 - [x] ~~Move wooden_floating_bridge.py~~ → Removed as redundant *(commit 1b61f219)*
 - [x] Reconcile floating_bridge.py — resolved by removing redundant file; bridge module complete
 - [ ] Define publish workflow for 8 standalone repos
-- [ ] Populate ltb-acoustic-design-studio from SoundholeCalculator.vue + spiral_geometry.py
+- [x] Populate ltb-acoustic-design-studio (Staged Copy Publish, 2026-04-06) — commit `129c4a6` on HanzoRazer/ltb-acoustic-design-studio
+- [x] Populate ltb-fingerboard-designer (Staged Copy Publish, 2026-04-06) — see HanzoRazer/ltb-fingerboard-designer `main`
 - [ ] Sync blueprint-reader with Sprint 1 Phase 1-3 commits
 - [ ] Wire BlueprintAnalyzer scale pre-pass into photo_vectorizer_v2.py
       (same pattern as blueprint reader Phase 3 — PNG already in memory)
