@@ -409,6 +409,46 @@ Sunburst finish guitars → f-holes not detected
 Workaround: `source_type: "ai"` + `spec_name`
 or manual placement in CAM software
 
+---
+
+## RESEARCH TRACK: Learning Vectorizer
+
+**Strategic insight:** Every extraction builds the training dataset.
+
+The specialized detectors (SoundholeScanner, SunburstGraduationFilter,
+NeckCropPreprocessor) are not dead ends — they are the labeled curriculum
+for the universal model. Each one solves a class of failure modes AND
+generates ground truth for the next phase.
+
+**Phase 1 (current): Specialized detectors**
+- SoundholeScanner — QUEUED (see: POST-DEPLOYMENT RESEARCH > General Soundhole Scanner)
+- SunburstGraduationFilter — future work
+- NeckCropPreprocessor — future work
+
+**Phase 2 (ongoing): Implicit dataset collection**
+Every extraction logged with:
+- source image hash
+- parameters used
+- output contour count
+- dimension accuracy vs spec
+- failure mode if any
+
+Storage format TBD — candidates are SQLite in RMOS or standalone
+extractions.db. Decision when Phase 1 is 80% complete.
+
+**Phase 3 (future): Model training**
+Train on accumulated extractions. Specialized detectors become
+feature extractors. Model learns parameter selection per image type.
+
+**Phase 4 (goal): Universal instrument recognition**
+- Japanese Koto
+- Turkish Ud
+- Persian Tar
+- Indian Sitar
+- Any instrument with strings and a body
+
+---
+
 ## PRODUCT POSITIONING
 
 ### Blueprint Reader — Founding Story & Landing Page Opening
