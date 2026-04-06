@@ -674,10 +674,26 @@ const VOID_COLORS = {
 };
 
 // ============================================================
+// TOP-LEVEL VARIABLES (must be declared before any event handlers)
+// ============================================================
+let isDragging = false;
+let isPanning = false;
+let lastPanPoint = null;
+let dragStartPoint = null;
+let nodeVisuals = null;
+let handleVisuals = null;
+let snapIndicator = null;
+let distanceLine = null;
+
+// ============================================================
 // INITIALIZATION
 // ============================================================
 window.onload = function() {
     paper.setup('canvas');
+
+    // Initialize Paper.js groups (must be after setup)
+    nodeVisuals = new Group();
+    handleVisuals = new Group();
 
     // Set initial view
     view.center = state.viewCenter;
@@ -820,11 +836,6 @@ function setActivePath(type) {
 // ============================================================
 // NODE VISUALS
 // ============================================================
-let nodeVisuals = new Group();
-let handleVisuals = new Group();
-let snapIndicator = null;
-let distanceLine = null;
-
 function redrawHandles() {
     nodeVisuals.removeChildren();
     handleVisuals.removeChildren();
@@ -1117,11 +1128,6 @@ function redo() {
 // ============================================================
 // CANVAS EVENTS
 // ============================================================
-let isPanning = false;
-let lastPanPoint = null;
-let isDragging = false;
-let dragStartPoint = null;
-
 function setupCanvasEvents() {
     const wrapper = document.getElementById('canvas-wrapper');
     const canvas = document.getElementById('canvas');
