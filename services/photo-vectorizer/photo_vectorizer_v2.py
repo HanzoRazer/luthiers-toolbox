@@ -4143,6 +4143,47 @@ class PhotoVectorizerV2:
         result.calibration = calibration
         mpp = calibration.mm_per_px
 
+        # ── Stage 8.5: Body height cap (trim guitar stand merged with body) ──
+        # If body height exceeds spec height × 1.2, trim from bottom
+        if body_fc and spec_name and mpp > 0:
+            spec = get_ai_spec(spec_name)
+            if spec and "body" in spec:
+                expected_h_mm = spec["body"][0]  # body tuple is (length, width)
+                max_h_px = (expected_h_mm * 1.2) / mpp  # 20% tolerance
+                bx, by, bw, bh = body_fc.bbox_px
+                if bh > max_h_px:
+                    # Body too tall — likely includes guitar stand
+                    trim_amount_px = bh - max_h_px
+                    new_bottom_y = by + bh - trim_amount_px
+                    logger.info(f"Body height cap: {bh:.0f}px > {max_h_px:.0f}px max, "
+                                f"trimming {trim_amount_px:.0f}px from bottom")
+                    # Trim points below new_bottom_y
+                    if body_fc.points_px is not None and len(body_fc.points_px) > 0:
+                        # Handle OpenCV contour format (Nx1x2) vs simple (Nx2)
+                        pts = body_fc.points_px
+                        if pts.ndim == 3:
+                            pts = pts.squeeze(axis=1)  # (N,1,2) -> (N,2)
+                        # In image coords, Y increases downward
+                        mask = pts[:, 1] <= new_bottom_y
+                        trimmed_points = pts[mask]
+                        if len(trimmed_points) >= 3:
+                            # Recalculate bbox BEFORE restoring shape (trimmed_points is Nx2 here)
+                            xs = trimmed_points[:, 0]
+                            ys = trimmed_points[:, 1]
+                            body_fc.bbox_px = (
+                                int(xs.min()), int(ys.min()),
+                                int(xs.max() - xs.min()), int(ys.max() - ys.min())
+                            )
+                            # Restore to original shape if needed
+                            if body_fc.points_px.ndim == 3:
+                                trimmed_points = trimmed_points[:, np.newaxis, :]
+                            body_fc.points_px = trimmed_points
+                            result.warnings.append(
+                                f"Body height capped: trimmed {trim_amount_px:.0f}px "
+                                f"(likely guitar stand)")
+                        else:
+                            logger.warning("Height cap would leave <3 points, skipping")
+
         # ── Stage 9: Convert to mm coordinates ──────────────────────────────
         # Center on body
         if body_fc:
