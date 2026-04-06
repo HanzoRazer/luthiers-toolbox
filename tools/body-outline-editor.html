@@ -747,7 +747,7 @@ function createDefaultOutline() {
     });
 
     // Make all nodes smooth
-    state.outerPath.smooth({ type: 'continuous' });
+    state.outerPath.smooth();
 
     state.voids = [];
     state.activePathType = 'outer';
@@ -1197,7 +1197,7 @@ function setupCanvasEvents() {
                     seg.handleOut = new Point(0, 0);
                 } else {
                     // Make smooth
-                    seg.smooth({ type: 'continuous' });
+                    seg.smooth();
                 }
                 redrawHandles();
                 return;
@@ -1242,7 +1242,7 @@ function setupCanvasEvents() {
             const newPoint = location.point;
             path.insert(location.index + 1, new Segment(newPoint));
             const newSeg = path.segments[location.index + 1];
-            newSeg.smooth({ type: 'continuous' });
+            newSeg.smooth();
             state.selectedSegments = [newSeg];
             updateUI();
             redrawHandles();
