@@ -123,7 +123,7 @@ Classified mode progressing — Phase 5 delivered 4/5 fixes.
 |------|-------------|--------|
 | HanzoRazer/ltb-rosette-designer | Rosette Designer — full UI, BOM engine, 8 presets, Manufacturing Intelligence, Amsterdam/Spiro engine | **LIVE** |
 | HanzoRazer/ltb-acoustic-design-studio | Helmholtz + Gore P:A calculator + soundhole geometry designer | Empty — needs content |
-| HanzoRazer/ltb-bridge-designer | Bridge geometry + string spacing | Existing — needs audit |
+| HanzoRazer/ltb-bridge-designer | Bridge geometry + string spacing | POPULATED — commit `55c17a6` |
 | HanzoRazer/ltb-fingerboard-designer | Scale length, radius, multiscale | Existing — needs audit |
 | HanzoRazer/ltb-headstock-designer | Tuner layout, headstock templates | Existing — needs audit |
 | HanzoRazer/ltb-neck-designer | Neck profiles, tapers | Existing — needs audit |
@@ -156,7 +156,7 @@ PRO/ENTERPRISE → PRIVATE permanently
 - ltb-woodworking-studio → ready to flip
 - blueprint-reader → ready to flip
 - ltb-fingerboard-designer → after population
-- ltb-bridge-designer → after population
+- ltb-bridge-designer → POPULATED, ready to flip
 
 **PRIVATE FOREVER:**
 - luthiers-toolbox (monorepo source of truth)
@@ -268,6 +268,7 @@ packages/client/src/components/toolbox/BridgeCalculator.vue
 - [ ] Define publish workflow for 8 standalone repos
 - [x] Populate ltb-acoustic-design-studio (Staged Copy Publish, 2026-04-06) — commit `129c4a6` on HanzoRazer/ltb-acoustic-design-studio
 - [x] Populate ltb-fingerboard-designer (Staged Copy Publish, 2026-04-06) — `5a016a6` (Python) + `577f983` (ScaleLengthDesigner deps) on HanzoRazer/ltb-fingerboard-designer (`master`)
+- [x] Populate ltb-bridge-designer (Staged Copy Publish, 2026-04-06) — commit `55c17a6` on HanzoRazer/ltb-bridge-designer
 - [ ] Sync blueprint-reader with Sprint 1 Phase 1-3 commits
 - [ ] Wire BlueprintAnalyzer scale pre-pass into photo_vectorizer_v2.py
       (same pattern as blueprint reader Phase 3 — PNG already in memory)
