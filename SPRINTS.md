@@ -267,7 +267,7 @@ packages/client/src/components/toolbox/BridgeCalculator.vue
 - [x] Reconcile floating_bridge.py — resolved by removing redundant file; bridge module complete
 - [ ] Define publish workflow for 8 standalone repos
 - [x] Populate ltb-acoustic-design-studio (Staged Copy Publish, 2026-04-06) — commit `129c4a6` on HanzoRazer/ltb-acoustic-design-studio
-- [x] Populate ltb-fingerboard-designer (Staged Copy Publish, 2026-04-06) — see HanzoRazer/ltb-fingerboard-designer `main`
+- [x] Populate ltb-fingerboard-designer (Staged Copy Publish, 2026-04-06) — `5a016a6` (Python) + `577f983` (ScaleLengthDesigner deps) on HanzoRazer/ltb-fingerboard-designer (`master`)
 - [ ] Sync blueprint-reader with Sprint 1 Phase 1-3 commits
 - [ ] Wire BlueprintAnalyzer scale pre-pass into photo_vectorizer_v2.py
       (same pattern as blueprint reader Phase 3 — PNG already in memory)
@@ -391,6 +391,7 @@ Config corrected: config/shop_config.yaml (version: R2018 → R12)
 | 2026-04-04 | Instrument catalog uses tiered schema | Tier 1: validated plans in repo. Tier 2: community submitted. Tier 3: ethno/orchestral |
 | 2026-04-04 | ltb-acoustic-design-studio combines Helmholtz calculator + soundhole designer | Physics-to-geometry pipeline is the product — separating breaks the workflow |
 | 2026-04-05 | Refactor when already in a file, not for refactoring's sake | Bulk refactoring breaks working code — tiered priority keeps risk controlled |
+| 2026-04-06 | Brand manifesto committed as founding document | docs/MANIFESTO.md (049603ac) — homepage, README, pitch deck use |
 
 ---
 
