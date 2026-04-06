@@ -151,6 +151,86 @@ Step 4 → Flip those 3 repos public
 Step 5 → Remaining repos follow same pattern
 ```
 
+**Step 1 COMPLETE — Publish workflow defined (2026-04-06):**
+
+Git subtree not viable — source files scattered across multiple directories.
+Recommended: **Staged Copy Publish** workflow.
+
+```
+For each standalone repo:
+1. Create standalone package structure in target repo
+2. Copy source files (manual or script)
+3. Adapt imports for standalone structure
+4. Add standalone entry point
+5. Commit and push
+```
+
+**Execution plan — ltb-acoustic-design-studio:**
+
+Source paths (luthiers-toolbox):
+```
+services/api/app/calculators/soundhole_calc.py
+services/api/app/calculators/soundhole_physics.py
+services/api/app/calculators/soundhole_resonator.py
+services/api/app/calculators/soundhole_facade.py
+services/api/app/calculators/soundhole_presets.py
+services/api/app/calculators/soundhole_stiffness.py
+services/api/app/calculators/soundhole_climate.py
+services/api/app/calculators/soundhole_extended.py
+services/api/app/calculators/soundhole_ports.py
+services/api/app/calculators/acoustic_body_volume.py
+services/api/app/instrument_geometry/soundhole/spiral_geometry.py
+services/api/app/instrument_geometry/soundhole/__init__.py
+services/api/app/routers/instrument/soundhole_router.py
+packages/client/src/views/calculators/acoustics/SoundholeCalculator.vue
+```
+
+Target structure (ltb-acoustic-design-studio):
+```
+├── src/
+│   ├── calculators/     ← Python modules
+│   └── api/             ← FastAPI router
+├── frontend/            ← Vue component (optional)
+├── requirements.txt
+├── pyproject.toml
+└── README.md
+```
+
+**Execution plan — ltb-fingerboard-designer:**
+
+Source paths:
+```
+services/api/app/calculators/fret_slots_cam.py
+services/api/app/calculators/fret_slots_export.py
+services/api/app/calculators/fret_slots_fan_cam.py
+services/api/app/calculators/fret_leveling_calc.py
+services/api/app/calculators/fret_wire_calc.py
+services/api/app/calculators/fret_wire_physics.py
+services/api/app/instrument_geometry/neck/fret_math.py
+services/api/app/instrument_geometry/neck/radius_profiles.py
+services/api/app/instrument_geometry/body/fretboard_geometry.py
+services/api/app/routers/instrument/fretwork_router.py
+packages/client/src/components/toolbox/ScaleLengthDesigner.vue
+packages/client/src/components/toolbox/FretboardCompoundRadius.vue
+packages/client/src/components/FretboardPreviewSvg.vue
+```
+
+**Execution plan — ltb-bridge-designer:**
+
+Source paths:
+```
+services/api/app/calculators/bridge_calc.py
+services/api/app/calculators/bridge_break_angle.py
+services/api/app/calculators/acoustic_bridge_calc.py
+services/api/app/calculators/string_tension.py
+services/api/app/instrument_geometry/bridge/geometry.py
+services/api/app/instrument_geometry/bridge/placement.py
+services/api/app/instrument_geometry/bridge/compensation.py
+services/api/app/instrument_geometry/bridge/__init__.py
+services/api/app/routers/instrument_geometry/bridge_router.py
+packages/client/src/components/toolbox/BridgeCalculator.vue
+```
+
 **Task list:**
 - [x] Move archtop_floating_bridge.py → app/instrument_geometry/bridge/ *(already in correct location)*
 - [x] ~~Move wooden_floating_bridge.py~~ → Removed as redundant *(commit 1b61f219)*
