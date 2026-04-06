@@ -202,6 +202,23 @@ luthiers-toolbox is the source of truth — standalones are published from it.
       smart_guitar (368×444mm), les_paul (340×450mm),
       dreadnought (381×520mm), stratocaster (408×406mm)
       All returned: ok=True, contour_count=1, scale_source=instrument_spec
+- [x] Unknown instrument test (Gibson EDS-1275):
+      Test case: AI-rendered image of instrument NOT in spec catalog
+
+      | Test | Pipeline | Spec | Result |
+      |------|----------|------|--------|
+      | 1 | AI | None | BLOCKED ✓ — no spec = no calibration |
+      | 2 | AI | gibson_eds_1275 | BLOCKED ✓ — spec not in catalog |
+      | 3 | Photo | Auto | 206×321mm — wrong scale (173s) |
+      | 4 | Blueprint PDF | N/A | 431×388mm ✓ — accurate extraction |
+
+      **Conclusion:** For instruments not in spec catalog, blueprint vectorizer
+      (Phase 3) is the correct path. AI pipeline correctly rejects unknown specs
+      rather than producing garbage dimensions.
+
+      Output files: C:/Users/thepr/Downloads/gibson_eds1275_dxf/
+      - gibson_eds1275_body.dxf (2,331 LINE entities)
+      - gibson_eds1275_primitives.dxf (73,271 LINE entities)
 
 **Remaining:**
 - [ ] Body isolation filter (SVG shows 4 paths, should be 1)
