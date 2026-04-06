@@ -92,6 +92,7 @@ class VectorizeRequest(BaseModel):
     label:              str  = "photo-extract"
     source_type:        str  = "auto"    # auto, ai, photo, blueprint, silhouette
     gap_closing_level:  str  = "normal"  # normal, aggressive, extreme (blueprint mode only)
+    spec_name:          Optional[str] = None  # instrument spec for AI pipeline scaling
 
 class VectorizeResponse(BaseModel):
     ok:                 bool
@@ -214,6 +215,7 @@ async def extract_from_photo(req: VectorizeRequest):
             result = vectorizer.extract(
                 source_path=img_path,
                 output_dir=out_dir,
+                spec_name=req.spec_name,
                 known_dimension_mm=req.known_width_mm,
                 correct_perspective=req.correct_perspective,
                 export_svg=req.export_svg,
