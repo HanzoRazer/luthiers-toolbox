@@ -1,0 +1,448 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Blueprint Reader — Upload a blueprint. Get a DXF that works.</title>
+    <meta name="description" content="Convert guitar blueprints, scans, and photos to clean DXF files that open in Fusion 360, VCarve, AutoCAD, and FreeCAD.">
+    <style>
+        :root {
+            --bg-dark: #1a1a1a;
+            --bg-card: #242424;
+            --bg-accent: #2d2d2d;
+            --text-primary: #f5f5f5;
+            --text-secondary: #a0a0a0;
+            --text-muted: #707070;
+            --accent: #d4a44c;
+            --accent-hover: #e5b85d;
+            --border: #3a3a3a;
+            --success: #4a9f4a;
+            --warning: #c9a227;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            background-color: var(--bg-dark);
+            color: var(--text-primary);
+            line-height: 1.6;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 720px;
+            margin: 0 auto;
+            padding: 0 24px;
+        }
+
+        /* Hero Section */
+        .hero {
+            padding: 80px 0 60px;
+            text-align: center;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .hero h1 {
+            font-size: clamp(1.75rem, 5vw, 2.5rem);
+            font-weight: 700;
+            margin-bottom: 16px;
+            letter-spacing: -0.02em;
+        }
+
+        .hero .subheadline {
+            font-size: 1.1rem;
+            color: var(--text-secondary);
+            margin-bottom: 32px;
+            max-width: 500px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .cta-button {
+            display: inline-block;
+            background: var(--accent);
+            color: var(--bg-dark);
+            font-size: 1rem;
+            font-weight: 600;
+            padding: 14px 32px;
+            border-radius: 6px;
+            text-decoration: none;
+            transition: background 0.2s ease, transform 0.1s ease;
+        }
+
+        .cta-button:hover {
+            background: var(--accent-hover);
+            transform: translateY(-1px);
+        }
+
+        .cta-button:active {
+            transform: translateY(0);
+        }
+
+        /* Section Styling */
+        section {
+            padding: 48px 0;
+            border-bottom: 1px solid var(--border);
+        }
+
+        section:last-of-type {
+            border-bottom: none;
+        }
+
+        h2 {
+            font-size: 1.4rem;
+            font-weight: 600;
+            margin-bottom: 20px;
+            color: var(--text-primary);
+        }
+
+        p {
+            color: var(--text-secondary);
+            margin-bottom: 16px;
+        }
+
+        p:last-child {
+            margin-bottom: 0;
+        }
+
+        /* Founding Story */
+        .founding-story {
+            background: var(--bg-card);
+            padding: 32px;
+            border-radius: 8px;
+            border-left: 4px solid var(--accent);
+        }
+
+        .founding-story .price {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            display: block;
+            margin-bottom: 16px;
+        }
+
+        .founding-story p {
+            font-size: 1rem;
+            line-height: 1.75;
+        }
+
+        /* How It Works */
+        .steps {
+            counter-reset: step;
+        }
+
+        .step {
+            display: flex;
+            gap: 20px;
+            margin-bottom: 24px;
+            align-items: flex-start;
+        }
+
+        .step:last-child {
+            margin-bottom: 0;
+        }
+
+        .step-number {
+            flex-shrink: 0;
+            width: 40px;
+            height: 40px;
+            background: var(--bg-accent);
+            border: 2px solid var(--accent);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            color: var(--accent);
+            font-size: 1.1rem;
+        }
+
+        .step-content h3 {
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin-bottom: 4px;
+            color: var(--text-primary);
+        }
+
+        .step-content p {
+            font-size: 0.95rem;
+            margin-bottom: 0;
+        }
+
+        /* Accuracy Section */
+        .accuracy-box {
+            background: var(--bg-card);
+            padding: 24px;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+        }
+
+        .accuracy-box p {
+            font-size: 1rem;
+        }
+
+        .accuracy-box strong {
+            color: var(--text-primary);
+        }
+
+        .accuracy-box .warning {
+            display: block;
+            margin-top: 16px;
+            padding-top: 16px;
+            border-top: 1px solid var(--border);
+            color: var(--warning);
+            font-weight: 500;
+        }
+
+        /* What Works Best */
+        .best-list {
+            list-style: none;
+        }
+
+        .best-list li {
+            padding: 12px 0;
+            padding-left: 28px;
+            position: relative;
+            color: var(--text-secondary);
+            border-bottom: 1px solid var(--border);
+        }
+
+        .best-list li:last-child {
+            border-bottom: none;
+        }
+
+        .best-list li::before {
+            content: "✓";
+            position: absolute;
+            left: 0;
+            color: var(--success);
+            font-weight: 700;
+        }
+
+        /* Pricing Tiers */
+        .tiers {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .tier {
+            background: var(--bg-card);
+            padding: 24px;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+        }
+
+        .tier.featured {
+            border-color: var(--accent);
+        }
+
+        .tier-name {
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 8px;
+        }
+
+        .tier-name .badge {
+            font-size: 0.75rem;
+            background: var(--accent);
+            color: var(--bg-dark);
+            padding: 2px 8px;
+            border-radius: 4px;
+            margin-left: 8px;
+            vertical-align: middle;
+        }
+
+        .tier-desc {
+            color: var(--text-secondary);
+            font-size: 0.95rem;
+        }
+
+        /* Footer */
+        footer {
+            padding: 48px 0;
+            text-align: center;
+            border-top: 1px solid var(--border);
+        }
+
+        .footer-links {
+            margin-bottom: 24px;
+        }
+
+        .footer-links a {
+            color: var(--accent);
+            text-decoration: none;
+            margin: 0 16px;
+            font-size: 0.95rem;
+        }
+
+        .footer-links a:hover {
+            text-decoration: underline;
+        }
+
+        .footer-company {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        /* Responsive */
+        @media (max-width: 480px) {
+            .hero {
+                padding: 60px 0 48px;
+            }
+
+            section {
+                padding: 36px 0;
+            }
+
+            .founding-story {
+                padding: 24px 20px;
+            }
+
+            .step {
+                gap: 16px;
+            }
+
+            .step-number {
+                width: 36px;
+                height: 36px;
+                font-size: 1rem;
+            }
+
+            .footer-links a {
+                display: block;
+                margin: 12px 0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Hero -->
+    <header class="hero">
+        <div class="container">
+            <h1>Upload a blueprint. Get a DXF that works.</h1>
+            <p class="subheadline">
+                Born from a $525 file set that wouldn't open in Fusion 360.
+            </p>
+            <a href="/blueprint-lab" class="cta-button">Try It Free</a>
+        </div>
+    </header>
+
+    <main>
+        <!-- Founding Story -->
+        <section>
+            <div class="container">
+                <h2>Why This Exists</h2>
+                <div class="founding-story">
+                    <span class="price">I paid $525 for a Les Paul CNC file set that wouldn't open.</span>
+                    <p>
+                        The files were all there — body outline, neck pocket, pickup routes, cavity depths. But the DXF version was wrong for Fusion 360. The layers were a mess. The contours weren't closed. AutoCAD choked on the geometry. Five hundred and twenty-five dollars for files I couldn't use.
+                    </p>
+                    <p>
+                        That was the beginning of The Production Shop.
+                    </p>
+                    <p>
+                        Every decision in this platform traces back to that moment. The R12 DXF standard. The validated contour closure. The clean layer separation. The accuracy scorecard against known instrument dimensions. These are not features — they are the specific failures from that $525 file set, solved one by one.
+                    </p>
+                </div>
+            </div>
+        </section>
+
+        <!-- How It Works -->
+        <section>
+            <div class="container">
+                <h2>How It Works</h2>
+                <div class="steps">
+                    <div class="step">
+                        <div class="step-number">1</div>
+                        <div class="step-content">
+                            <h3>Upload your blueprint, scan, or photo</h3>
+                            <p>PDF blueprints, flatbed scans, or phone photos — we handle all of them.</p>
+                        </div>
+                    </div>
+                    <div class="step">
+                        <div class="step-number">2</div>
+                        <div class="step-content">
+                            <h3>We extract the body outline and clean the geometry</h3>
+                            <p>Automatic contour detection, scale calibration, and layer separation.</p>
+                        </div>
+                    </div>
+                    <div class="step">
+                        <div class="step-number">3</div>
+                        <div class="step-content">
+                            <h3>Download a DXF that opens correctly</h3>
+                            <p>Works in Fusion 360, VCarve, AutoCAD, and FreeCAD. No cleanup required.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Accuracy -->
+        <section>
+            <div class="container">
+                <h2>Accuracy</h2>
+                <div class="accuracy-box">
+                    <p>
+                        For a standard acoustic guitar body scanned at 300 DPI, expect dimensions within <strong>5-10mm</strong> of the original. Complex electric guitar layouts may vary up to <strong>20mm</strong> due to multi-view drawings and adjacent geometry.
+                    </p>
+                    <span class="warning">
+                        Always verify against your physical template before cutting.
+                    </span>
+                </div>
+            </div>
+        </section>
+
+        <!-- What Works Best -->
+        <section>
+            <div class="container">
+                <h2>What Works Best</h2>
+                <ul class="best-list">
+                    <li>Flatbed scans at 300-600 DPI (best results)</li>
+                    <li>Clean PDF blueprints with single body view</li>
+                    <li>Phone photos in good light against plain background</li>
+                    <li>Physical templates laid flat on scanner bed</li>
+                </ul>
+            </div>
+        </section>
+
+        <!-- Pricing Tiers -->
+        <section>
+            <div class="container">
+                <h2>Plans</h2>
+                <div class="tiers">
+                    <div class="tier featured">
+                        <div class="tier-name">Free <span class="badge">No account required</span></div>
+                        <p class="tier-desc">Upload → DXF → download. One file at a time, no login needed.</p>
+                    </div>
+                    <div class="tier">
+                        <div class="tier-name">Pro</div>
+                        <p class="tier-desc">Full CAM workstation, job tracking, RMOS manufacturing controls, and batch processing.</p>
+                    </div>
+                    <div class="tier">
+                        <div class="tier-name">Enterprise</div>
+                        <p class="tier-desc">Multi-user shop OS, business analytics, API access, and dedicated support.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Footer -->
+    <footer>
+        <div class="container">
+            <div class="footer-links">
+                <a href="/docs/VECTORIZER_ACCURACY.md">Full Technical Details</a>
+                <a href="/">The Production Shop</a>
+            </div>
+            <p class="footer-company">Texas Guitar Exchange LLC — Bellaire, TX</p>
+        </div>
+    </footer>
+</body>
+</html>
