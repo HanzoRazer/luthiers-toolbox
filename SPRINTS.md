@@ -356,6 +356,71 @@ packages/client/src/components/toolbox/BridgeCalculator.vue
 **Note:** edge_to_dxf.py is the proven high-fidelity path for photos.
 photo_vectorizer_v2.py classification path is supplementary.
 AI render path (4-stage) is now preferred for AI-generated images.
+---
+
+### SPRINT: LUTHERIE_MATH.md Completion
+
+**Status:** QUEUED
+**Priority:** Medium
+**Triggered by:** Peer review preparation
+**Document:** docs/LUTHERIE_MATH.md (1,160 lines, 25 sections)
+
+**What exists (acoustic physics — complete enough for peer review):**
+1. Fret Position Geometry
+2. Neck Join Position and Bridge Coupling
+3. Saddle Slant Angle
+4. Helmholtz Air Resonance — Single Port
+5. Effective Neck Length and Perimeter Correction
+6. Multi-Port Helmholtz
+7. Plate-Air Coupling Correction
+8. Body Volume from Dimensions
+9. Soundhole Structural Ring Width
+10. Soundhole Placement Validation
+11. Inverse Helmholtz Solver
+12. Orthotropic Plate Modal Frequency
+13. Plate Thickness Inverse Solver
+14. Archtop Arch Geometric Stiffness
+15. Archtop Volume Correction for Arch Height
+16. C-Bout Radius (Sagitta Formula)
+17. Nut Slot Depth
+18. Setup Cascade
+19. String Tension
+20. Acoustic Impedance
+21. Kerfing Geometry
+22. Fretboard Extension Mass Loading
+23. Side Port Perimeter Factor
+24. Two-Cavity Helmholtz
+25. Neck Angle Calculation
+26. Error Log (3 documented corrections)
+
+**What is missing (CAM geometry — next sections to write):**
+27. Break Angle Geometry
+28. Fan Fret Scale Length Interpolation
+29. Compound Radius Mathematics
+30. Binding Channel Geometry
+31. Bridge Saddle Compensation (full derivation)
+32. Brace E×I Flexural Rigidity
+33. Rayleigh-Ritz Variational Solver (full)
+34. Wood Movement / Moisture Coefficient Math
+35. Spiral Soundhole Geometry
+36. Floyd Rose Geometry
+
+**Acceptance criteria:**
+All 10 missing sections written with:
+- Formula with full variable definitions
+- Source citation
+- Conditions under which formula holds
+- Known edge cases and failure modes
+- Implementation reference (which Python file)
+
+Document ready for external peer review
+of both acoustic and CAM geometry sections.
+
+**Peer review targets (when complete):**
+- Option 1: University of New South Wales musical acoustics program
+- Option 2: Trevor Gore / Gore & Gilet forum
+- Option 3: Liutalab development team
+
 
 ---
 
