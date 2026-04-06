@@ -29,8 +29,8 @@
             --void-control: #ffaa00;
             --void-soundhole: #00aaff;
             --void-other: #aa00ff;
-            --grid-minor: #2a2a2a;
-            --grid-major: #333333;
+            --grid-minor: #3a3a3a;
+            --grid-major: #555555;
         }
 
         body {
@@ -684,6 +684,7 @@ let nodeVisuals = null;
 let handleVisuals = null;
 let snapIndicator = null;
 let distanceLine = null;
+let calibrationStatus = null;
 
 // ============================================================
 // INITIALIZATION
@@ -778,7 +779,7 @@ function drawGrid() {
     for (let x = startX; x <= bounds.right; x += minor) {
         const isMajor = Math.abs(x % major) < 0.001;
         const line = new Path.Line(new Point(x, bounds.top), new Point(x, bounds.bottom));
-        line.strokeColor = isMajor ? '#333333' : '#2a2a2a';
+        line.strokeColor = isMajor ? '#555555' : '#3a3a3a';
         line.strokeWidth = isMajor ? 0.8 : 0.5;
         gridLayer.addChild(line);
     }
@@ -786,7 +787,7 @@ function drawGrid() {
     for (let y = startY; y <= bounds.bottom; y += minor) {
         const isMajor = Math.abs(y % major) < 0.001;
         const line = new Path.Line(new Point(bounds.left, y), new Point(bounds.right, y));
-        line.strokeColor = isMajor ? '#333333' : '#2a2a2a';
+        line.strokeColor = isMajor ? '#555555' : '#3a3a3a';
         line.strokeWidth = isMajor ? 0.8 : 0.5;
         gridLayer.addChild(line);
     }
@@ -798,8 +799,8 @@ function drawGrid() {
     gridLayer.addChild(axisX);
 
     const axisY = new Path.Line(new Point(0, bounds.top), new Point(0, bounds.bottom));
-    axisY.strokeColor = '#555555';
-    axisY.strokeWidth = 1;
+    axisY.strokeColor = '#00ff8844';
+    axisY.strokeWidth = 1.5;
     gridLayer.addChild(axisY);
 
     // Mirror centerline indicator (when mirror mode on)
@@ -1879,7 +1880,27 @@ function startCalibration() {
     state.calMarkers.forEach(m => m.remove());
     state.calMarkers = [];
 
-    alert('Click two points on the reference image to calibrate scale.');
+    showCalibrationStatus('Click point A');
+}
+
+function showCalibrationStatus(text) {
+    if (calibrationStatus) calibrationStatus.remove();
+    
+    calibrationStatus = new PointText({
+        point: view.bounds.topLeft.add(new Point(20, 40)),
+        content: text,
+        fillColor: '#ff6600',
+        fontFamily: 'system-ui, sans-serif',
+        fontWeight: 'bold',
+        fontSize: 16
+    });
+}
+
+function hideCalibrationStatus() {
+    if (calibrationStatus) {
+        calibrationStatus.remove();
+        calibrationStatus = null;
+    }
 }
 
 function handleCalibrationClick(point) {
@@ -1895,7 +1916,11 @@ function handleCalibrationClick(point) {
     });
     state.calMarkers.push(marker);
 
-    if (state.calPoints.length === 2) {
+    if (state.calPoints.length === 1) {
+        showCalibrationStatus('Click point B');
+    } else if (state.calPoints.length === 2) {
+        hideCalibrationStatus();
+        
         // Draw line between points
         const line = new Path.Line({
             from: state.calPoints[0],
@@ -1916,6 +1941,7 @@ function cancelCalibration() {
     state.calPoints = [];
     state.calMarkers.forEach(m => m.remove());
     state.calMarkers = [];
+    hideCalibrationStatus();
     document.getElementById('modal-calibrate').classList.remove('visible');
 }
 
