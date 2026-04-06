@@ -7,7 +7,7 @@ Maintained by: Ross Echols (HanzoRazer)
 ## ACTIVE
 
 ### Sprint 1 — Vectorizer Reconciliation
-**Status:** Phase 5 DONE (4/5), Phase 5F NEXT
+**Status:** COMPLETE — all phases done
 **Branch:** main
 
 | Phase | Description | Commit | Status |
@@ -19,20 +19,24 @@ Maintained by: Ross Echols (HanzoRazer)
 | 4b | Docker deploy hardening (2026-04-05) | 5a145e90 | ✅ Done |
 | 5 | Classified mode root cause fixes (4/5) | 722cc03d | ✅ Done |
 | 5F | Scale correction propagation | — | ✅ Done |
-| 5G | Body contour election | — | ⏭️ NEXT |
+| 5G | Body contour height ceiling | cb0761ed | ✅ Done |
 
 **Phase 5F — Scale correction propagation (2026-04-05):**
 Confirmed working. Correction factor from `validate_scale_before_export()`
 propagates correctly to `export_to_dxf()`.
 - Dreadnought: 4.4% W, 4.8% L — **PASS** (within ±20%)
 
-**Phase 5G — Body contour election (NEXT):**
-- [ ] Les Paul 59: 17.7% W, 28.6% L — body contour picking up neck
-      extension or multi-view elements
-- [ ] Cuatro: 4.6% W, 33.3% L — same root cause
-- Fix: add height ceiling to body contour election — if elected
-      contour height > 1.5× expected body height, discard and
-      elect next candidate
+**Phase 5G — Body contour height ceiling (2026-04-05):**
+Commit `cb0761ed` — height ceiling validation in rerank_body_candidates():
+- Add spec_name parameter through call chain
+- Add cuatro_puertorriqueno spec to INSTRUMENT_SPECS
+- Reject candidates where height > 1.5× max_expected_height
+- Loop to next candidate on rejection
+
+Quality scorecard (3/3 PASS):
+- Dreadnought: W=7.1%, H=2.5% ✅
+- Les Paul: W=16.5%, H=19.7% ✅ (was 28.6% H error)
+- Cuatro: W=2.6%, H=2.6% ✅ (was 33.3% H error)
 
 **Phase 5 — Classified mode root cause fixes (2026-04-05):**
 Commit `722cc03d` addressing 4 of 5 root causes:
@@ -49,11 +53,6 @@ SCALE CALIBRATION:    0/3 PASS — Validation firing but correction not propagat
                       Width close (4-18% error), height consistently off (24-33%)
 ```
 
-**Phase 5F — Scale correction propagation (NEXT):**
-- [ ] Scale correction propagation — correction factor computed in
-      `validate_scale_before_export()` but not passed to `export_to_dxf()`.
-      Trace the call path and wire the correction into the export step.
-      Target: Dreadnought within ±20% of 390×505mm spec.
 
 **Phase 4b — Docker deploy hardening (2026-04-05):**
 Commit chain fixing Railway deploy blockers:
@@ -149,6 +148,11 @@ luthiers-toolbox is the source of truth — standalones are published from it.
 - [ ] Fix instrument_model_registry.json phantom entry: flying_v points to
       specs/gibson_flying_v_1958.json which does not exist. Align registry
       path with flying_v_1958.json committed at 9cdad75b.
+- [ ] Create docs/VECTORIZER_ACCURACY.md (technical disclaimer)
+- [ ] Create blueprint-reader plain language accuracy section
+      for landing page
+- [ ] Add one-paragraph accuracy summary to main README.md
+      linking to VECTORIZER_ACCURACY.md
 
 ---
 
