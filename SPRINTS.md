@@ -193,20 +193,21 @@ luthiers-toolbox is the source of truth — standalones are published from it.
 **Completed:**
 - [x] spec_name wire-up: VectorizeRequest → PhotoVectorizerV2.extract()
       Commit: 5de45310
-- [x] AI pipeline unblocked: source_type="ai" + spec_name works
-      Test: Smart Guitar PNG → 1 contour, scale_source=instrument_spec, 286ms
 - [x] Auto-rotate for AI images: landscape image + portrait spec → auto-rotate 90°
       Commit: d45e213a
-- [x] Dimension swap fix: router was unpacking (height, width) as (width, height)
+- [x] Dimension swap fix: router unpacking (height, width) as (width, height)
       Fix: h_mm, w_mm = result.body_dimensions_mm
       Commit: d45e213a
-      Test: Smart Guitar now correctly reports 368.3mm × 444.5mm (portrait)
+- [x] AI pipeline validated across 4 specs:
+      smart_guitar (368×444mm), les_paul (340×450mm),
+      dreadnought (381×520mm), stratocaster (408×406mm)
+      All returned: ok=True, contour_count=1, scale_source=instrument_spec
 
 **Remaining:**
-- [ ] Body isolation pre-processor (neck crop)
+- [ ] Body isolation filter (SVG shows 4 paths, should be 1)
+- [ ] Scale output discrepancy (SVG canvas 1087×949mm vs spec 368×444mm)
+- [ ] Neck crop pre-processor
 - [ ] INSTRUMENT_CATALOG Tier 1 integration
-- [ ] Extend BlueprintAnalyzer prompt to identify decorative elements
-      (rosettes, inlays, binding patterns) visible in blueprint images
 
 **Note:** edge_to_dxf.py is the proven high-fidelity path for photos.
 photo_vectorizer_v2.py classification path is supplementary.
