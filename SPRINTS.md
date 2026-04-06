@@ -177,12 +177,16 @@ luthiers-toolbox is the source of truth — standalones are published from it.
 ---
 
 ### Sprint 4 — Photo Vectorizer Production Readiness
-**Status:** Queued — blocked on Sprint 1 Phase 4 Docker fix
+**Status:** In Progress
 
-**Task list:**
-- [ ] Docker fix brings photo_vectorizer_router online (shared with Sprint 1 Phase 4)
-- [ ] Validate photo vectorizer quality against SG Custom PNG after Docker fix
-- [ ] BlueprintAnalyzer wire-in for photo path scale calibration
+**Completed:**
+- [x] spec_name wire-up: VectorizeRequest → PhotoVectorizerV2.extract()
+      Commit: 5de45310
+- [x] AI pipeline unblocked: source_type="ai" + spec_name works
+      Test: Smart Guitar PNG → 1 contour, scale_source=instrument_spec, 286ms
+
+**Remaining:**
+- [ ] Dimension swap fix (auto-rotate when image aspect != spec aspect)
 - [ ] Body isolation pre-processor (neck crop)
 - [ ] INSTRUMENT_CATALOG Tier 1 integration
 - [ ] Extend BlueprintAnalyzer prompt to identify decorative elements
@@ -190,6 +194,7 @@ luthiers-toolbox is the source of truth — standalones are published from it.
 
 **Note:** edge_to_dxf.py is the proven high-fidelity path for photos.
 photo_vectorizer_v2.py classification path is supplementary.
+AI render path (4-stage) is now preferred for AI-generated images.
 
 ---
 
