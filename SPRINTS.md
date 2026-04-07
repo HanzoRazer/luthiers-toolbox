@@ -732,5 +732,143 @@ Prerequisite: Body outline editor stable.
 
 ---
 
+### RESEARCH TRACK: Chladni Pattern Measurement
+
+**Status:** QUEUED
+**Priority:** High — unlocks mode shape data for radiation efficiency
+**Repository:** tap_tone_pi
+
+**The insight:**
+tap_tone_pi currently measures frequency (eigenvalues) but not mode shape (eigenvectors).
+Mode shape determines radiation efficiency via the modal area coefficient A_n.
+Two guitars with identical tap tone frequencies can sound radically different
+if their mode shapes differ.
+
+**Key physics:**
+- Modal area coefficient: A_n = ∫ φ_n(x,y) dS
+- This is analogous to Sd (speaker diaphragm area) in loudspeaker design
+- Piston-like modes (large A_n) radiate strongly
+- Dipole/checkerboard modes (A_n ≈ 0) cancel and radiate weakly
+
+**Hardware addition:**
+- Exciter driver mounted to plate edge (speaker driver, modal exciter)
+- Sand or salt sprinkled on plate surface
+- Camera captures nodal line pattern at each resonant frequency
+- Image processing extracts mode shape approximation
+
+**Implementation path:**
+1. Add exciter output to existing tap_tone_pi hardware
+2. Sweep frequency while capturing video
+3. Detect resonance peaks from accelerometer + camera
+4. Extract nodal pattern at each peak
+5. Compute A_n approximation from segmented regions
+6. Report (f_n, A_n) pairs instead of just f_n
+
+**Strategic value:**
+This moves tap_tone_pi from "tap tone meter" to "radiation efficiency predictor".
+Builders can optimize for modes that radiate, not just modes that exist.
+
+**Connection to LUTHERIE_MATH.md §39-42:**
+The math for modal area coefficient, brace stiffness field, radiation power,
+and brace pattern optimization is documented in those sections.
+
+---
+
+### LUTHERIE_MATH.md — New Sections §39-42
+
+**Status:** QUEUED
+**Priority:** High — completes the modal radiation theory stack
+**Document:** docs/LUTHERIE_MATH.md
+
+**§39 Modal Area Coefficient A_n**
+
+The modal area coefficient measures how much air a mode pushes:
+
+```
+A_n = ∫∫_S φ_n(x,y) dS
+```
+
+Where φ_n(x,y) is the normalized mode shape (eigenvector) of mode n.
+
+**Classification by A_n:**
+- Piston-like modes: A_n large → strong radiation
+- Dipole modes: A_n ≈ 0 → radiation cancels
+- Distributed modes: A_n moderate → partial radiation
+
+**Critical insight:** Mode shape matters more than frequency.
+Two guitars with identical tap tone frequencies can sound radically
+different if one has piston-like low modes and the other has dipole modes.
+
+**Analogy:** A_n is the soundboard equivalent of Sd (speaker diaphragm area).
+A large speaker cone moves more air. A piston-like mode moves more air.
+
+---
+
+**§40 Brace Pattern as Stiffness Field D(x,y)**
+
+Braces are not discrete elements — they are a spatially varying stiffness field:
+
+```
+D_total(x,y) = D_plate(x,y) + Σ_k D_brace,k(x,y)
+```
+
+Where:
+- D_plate = E×h³/12(1-ν²) for isotropic, or orthotropic tensor for wood
+- D_brace,k = EI_k × δ(x - x_k) along brace k centerline
+
+**Two design dials:**
+1. Thickness → frequency dial (changes f_n)
+2. Bracing → mode shape dial (changes φ_n, thus A_n)
+
+**Design implication:**
+Thickness tuning is frequency-first thinking.
+Brace pattern tuning is radiation-first thinking.
+The latter is more powerful but requires mode shape knowledge.
+
+---
+
+**§41 Radiation Power P_rad**
+
+Total radiated acoustic power from a vibrating plate:
+
+```
+P_rad = ½ρ₀c₀ Σ_n σ_n |v_n|² A_n²
+```
+
+Where:
+- ρ₀c₀ = acoustic impedance of air (~415 Pa·s/m)
+- σ_n = radiation efficiency of mode n (frequency-dependent)
+- v_n = modal velocity amplitude
+- A_n = modal area coefficient
+
+**Key insight:** Power scales with A_n². Doubling modal area quadruples radiation.
+
+---
+
+**§42 Brace Pattern Optimization**
+
+The optimization problem:
+
+```
+maximize: Σ_n w_n × A_n² × σ_n(f_n)
+subject to: f_1 ∈ [f_target - Δ, f_target + Δ]
+           structural constraints (deflection, stress)
+           mass budget
+```
+
+Where w_n are weighting factors by frequency band (bass emphasis, treble emphasis, etc.)
+
+**Practical approach:**
+1. Start with traditional brace pattern
+2. Measure (f_n, A_n) pairs via Chladni method
+3. Identify modes with low A_n that should radiate
+4. Modify brace pattern to convert dipole → piston character
+5. Re-measure and iterate
+
+This is the closed-loop optimization path that connects
+tap_tone_pi measurement to brace design decisions.
+
+---
+
 *This file is updated at the end of every sprint session.*
 *Source of truth for sprint status across all terminals and chat sessions.*
