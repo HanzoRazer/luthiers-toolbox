@@ -167,6 +167,34 @@ This is what the connected platform means.
 
 ---
 
+## For the Engineers
+
+A guitar back is a programmable acoustic radiator.
+The brace pattern is a spatial operator that sculpts
+the eigenfunctions of the plate equation to control
+how energy is transferred from the cavity into
+radiated sound.
+
+The design variable is not brace height.
+It is the stiffness field D(x,y).
+
+The optimization target is not resonance frequency.
+It is the modal area coefficient A_n —
+the integral of the mode shape over the plate surface —
+which determines how much of that mode actually pushes air.
+
+A plate that rings at the right frequency
+but has A_n approaching zero sounds dead.
+A plate with a decent frequency and large A_n
+radiates strongly.
+
+Tap tone gives you frequency.
+Mode shape gives you A_n.
+The Production Shop acoustic stack is building
+the tools to measure both.
+
+---
+
 ## The Promise
 
 Your first guitar will not be your best guitar.
