@@ -1630,6 +1630,157 @@ const summary = buildBackRadiusSummary(410);
 
 ---
 
+## 44. Longitudinal Body Radius Pairs and Wood Quality Mapping
+
+The top and back of a steel-string acoustic guitar are radiused to **different** values, forming a **two-radius system** `(R_top, R_back)`. The ratio and absolute values of this pair are not arbitrary tradition — they are an acoustic decision that maps directly to wood quality, body size, and intended playing context.
+
+§43 supplied the per-plate shell-stiffness correction. §44 applies that correction independently to top and back, and proposes a **design hypothesis** linking the radius pair to acoustic intent.
+
+> **Design hypothesis: Ross Echols (PE #78195),** derived from Hazen-Williams flow optimization in irrigation system design. 32ft radius identified as the hydraulic balance point for energy distribution in spray field systems. Applied to acoustic plate energy distribution as an **untested cross-domain hypothesis**. Validation requires physical measurement (see §44 validation method below).
+
+### The two-radius system
+
+```
+R_top  = top plate longitudinal radius   (typically larger)
+R_back = back plate longitudinal radius  (typically smaller)
+```
+
+The ratio `R_top / R_back` defines the acoustic balance between top stiffness and back stiffness. A larger ratio means a comparatively stiffer back relative to the top — pushing the back toward "rigid reflector" behavior. A smaller ratio means top and back are closer in compliance — allowing the back to participate as a passive radiator.
+
+### Industry reference points
+
+| Builder | R_top (ft) | R_back (ft) | Ratio | Notes |
+|---------|-----------:|------------:|------:|-------|
+| Martin standard | 35 | 15 | 2.33 | Historical default — premium wood era |
+| Martin alternate | 30 | 10 | 3.00 | Tighter top, stiffer back |
+| Taylor (some models) | 40 | 10 | 4.00 | Flat top + stiff back, premium Sitka |
+| Gibson J-45 | 35 | 15 | 2.33 | Same as Martin standard |
+| **Ross experiment A** | **32** | **8** | **4.00** | Laminate / cheap wood target |
+| **Ross experiment B** | **32** | **12** | **2.67** | Mid-grade solid target |
+| **Ross experiment C** | **32** | **16** | **2.00** | Premium solid target |
+
+### Per-plate shell correction (extends §43)
+
+The shell-stiffness correction from §43 applies independently to each plate:
+
+```
+f_top_domed  = f_top_flat  × √(1 + C × (L_top / R_top)²)
+f_back_domed = f_back_flat × √(1 + C × (L_back / R_back)²)
+```
+
+where `L_top` and `L_back` are the effective spans of each plate (often the lower bout width).
+
+> **Calibration constant note:** A single global `C` is used here as in §43. `C_top` and `C_back` may differ due to material differences (spruce top vs hardwood back) and grain orientation (top is end-grain to bout direction; back is typically book-matched flat-grain). **The split is deferred pending physical calibration data.**
+
+### The 32ft hydraulic balance hypothesis
+
+In agricultural irrigation system design, the Hazen-Williams equation governs flow velocity vs. head loss in pipe networks feeding spray circles. Across many installations using ½ HP supply pumps, **a 32ft spray circle radius emerges as the hydraulic balance point** — large enough to avoid valve control problems (which plague <14ft circles) and small enough to avoid drift problems from oversized droplets (>35ft circles).
+
+The cross-domain hypothesis: **the same balance point may apply to acoustic energy distribution across a guitar top plate.** Too flat a top is too compliant — energy disperses without efficient radiation. Too tight a top is too stiff — the plate cannot move as a coherent piston for low-frequency modes. The 32ft top radius is the working hypothesis for the acoustic balance point.
+
+This is an **untested hypothesis**. It is included here as a documented design intent, not as established physics. The validation method below describes how to test it.
+
+### Wood quality to radius pair mapping
+
+| R_top / R_back | Wood tier | Back behavior | Mechanism |
+|----------------|-----------|---------------|-----------|
+| 32ft / 8ft | Laminate / cheaper solid | **Rigid reflector** | Top does all the work; tight back removes wood-quality variance from back contribution. A_n_back ≈ 0 by design. |
+| 32ft / 12ft | Mid-grade solid | **Transition zone** | Back partially active. Good all-around balance for mid-tier hardwoods. |
+| 32ft / 16ft | Premium solid | **Passive radiator** | Back participates as a coupled radiator. Requires premium wood to realize the benefit. |
+| 35ft / 15ft (Martin) | Premium solid | Moderately active | Industry historical default for high-grade Adirondack/Sitka tops. |
+| 40ft / 10ft (Taylor) | Premium solid | Inert reflector | Maximum top compliance + rigid back. Top-dominant projection. |
+
+### Body size to radius pair mapping
+
+The optimal radius pair correlates with body size and neck-joint position:
+
+| Body class | Examples | Suggested R_top / R_back | Rationale |
+|-----------|----------|-------------------------:|-----------|
+| **Large** | Dreadnought, Jumbo | 35–40ft / 12–15ft | Large back area can participate as passive radiator if wood permits |
+| **Mid** | OM, OOO, 000, 14-fret | 32ft / 12ft | Transition zone — back partially active |
+| **Mid (13-fret)** | OOO, 000 with 13-fret | 32ft / 8ft | Bridge sits more centrally → top needs more support, back as reflector |
+| **Small** | Parlor, 0, 00 | 30–32ft / 8ft | Top-dominant by necessity; near-field player listens to top |
+
+### Why 13-fret bodies favor tighter back radius
+
+A 13-fret neck-joint shifts the bridge toward the body center compared to a 14-fret joint of the same scale length. This reduces the available top area **behind** the bridge — the region most responsible for low-frequency top motion. The structural consequence:
+
+- Less top area behind the bridge → top needs more longitudinal support
+- A 32ft top (slightly tighter than Martin's 35ft) provides that support
+- A tight back (8ft) removes the back as a variable, focusing all radiation through the top
+- Player sits in near-field → direct top radiation dominates what they hear; back radiation reflects off the room and contributes less to the player's perception
+
+This is why parlor and OOO 13-fret guitars built with 32ft/8ft are not making a compromise — they are matched to the acoustic situation.
+
+### Validation method (Chladni mode-shape comparison)
+
+The wood-quality and 32ft hypotheses can be tested with a controlled three-body experiment:
+
+1. **Build three identical bodies** — same top wood, same back wood, same bracing pattern, same dimensions, same scale length. **Vary only `R_back`:**
+   - Body A: `R_top = 32ft`, `R_back = 8ft`
+   - Body B: `R_top = 32ft`, `R_back = 12ft`
+   - Body C: `R_top = 32ft`, `R_back = 16ft`
+2. **Tap-test each body** at the bridge and at the back center. Record A0 (Helmholtz), T1 (top main), B1 (back main) frequencies.
+3. **Chladni-pattern each back plate** at the B1 frequency to extract the mode shape `φ_back(x,y)`.
+4. **Calculate `A_n_back`** for each body using the §39 modal area coefficient formula.
+5. **Predict `f_back` for each body** using §43 with the global `C` constant.
+6. **Fit `C`** to minimize prediction error across the three bodies.
+
+Predicted outcomes if the hypothesis holds:
+- `A_n_back(Body A)` ≈ 0 → back is acoustically inert, all radiation from top
+- `A_n_back(Body C)` >> 0 → back is acoustically active
+- `f_back(Body A)` is the highest of the three
+- `C` converges to a value in the range 5–20 (matching §43's first-pass default of 10)
+
+### Speaker analogy
+
+| Speaker concept | Guitar radius pair equivalent |
+|-----------------|------------------------------|
+| Sealed enclosure (rigid back) | Tight back radius (8ft) — back is a rigid wall |
+| Vented / passive radiator enclosure | Loose back radius (15ft+) — back contributes radiation |
+| Cone profile | Top brace pattern + top radius |
+| Surround compliance | Top radius (`R_top`) |
+| Wood quality matching | Driver-to-enclosure matching |
+
+A 32ft/8ft guitar is an acoustic-suspension speaker. A 35ft/15ft Martin is a vented enclosure. Both are correct designs — for different drivers (woods).
+
+### Conditions and limitations
+
+- **Hypothesis status:** The 32ft hydraulic balance point is an **untested** cross-domain inference. No published acoustic measurement currently validates it.
+- **Two-cylinder approximation:** Real radiused tops and backs are sections of cylinders along one axis (longitudinal) and approximately flat along the other (cross-grain). The §43 spherical-shell formula is an approximation when applied to a cylindrical section.
+- **Wood-tier mapping is qualitative:** "Cheap," "mid-grade," and "premium" are not yet quantified. Future work should bind these tiers to measured `E_L`, density, and damping values from `wood_species.json`.
+- **Calibration C is shared between top and back:** Deferred — see calibration constant note above.
+- **Validation requires three identical bodies:** Wood variation between bodies will introduce noise. Use the same flitch for all three tops and the same flitch for all three backs.
+
+### Implementation
+
+```javascript
+// tools/backRadiusCalculator.js — §44 functions
+
+import { radiusPairCalc, INDUSTRY_RADIUS_PAIRS, suggestWoodTier } from './backRadiusCalculator.js';
+
+// Per-plate shell corrections for a radius pair
+const result = radiusPairCalc(32, 8, 410);
+// → { top: {...}, back: {...}, ratio: 4.0, woodTier: 'laminate_or_cheap_solid', backBehavior: 'rigid_reflector', ... }
+
+// Inspect the five industry reference points
+console.log(INDUSTRY_RADIUS_PAIRS);
+
+// Get wood tier suggestion from a custom radius pair
+const tier = suggestWoodTier(32, 12);
+// → 'mid_grade_solid'
+```
+
+### Connection to other sections
+
+- **§39 Modal Area Coefficient `A_n`:** §44 predicts that 32ft/8ft drives `A_n_back → 0`. The validation method measures this directly.
+- **§40 Brace pattern as `D(x,y)`:** Bracing and radius are **independent stiffness dials**. A lightly braced tightly domed back can match a heavily braced flat back (see §43 "Connection to §40").
+- **§42 Brace pattern optimization:** Once `C` is calibrated from §44 validation data, brace optimization can include radius as a free parameter.
+- **§43 Shell stiffness from dome radius:** §44 is the per-plate, paired-radius application of §43.
+- **§14 Archtop arch geometric stiffness:** §43 already supersedes §14 for the back. §44 extends the framework to the top as well, since steel-string tops are also longitudinally radiused (just less aggressively than archtop carved tops).
+
+---
+
 *Document maintained by Ross Echols, PE #78195*
 *For The Production Shop — luthiers-toolbox-main*
 *Last updated: April 2026*
