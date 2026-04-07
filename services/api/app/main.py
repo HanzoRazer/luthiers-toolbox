@@ -125,66 +125,12 @@ def create_app() -> FastAPI:
 app.add_middleware(RequestIdMiddleware)
 
 # CORS configuration
-# NOTE: allow_origins=["*"] with allow_credentials=True is NOT allowed by browsers
-# Must specify explicit origins for cross-origin deployments (Railway, etc.)
-CORS_ORIGINS = [
-    "http://localhost:5173",  # Vite dev server
-    "http://localhost:5174",  # Vite fallback
-    "http://localhost:5175",  # Vite fallback
-    "http://localhost:5176",  # Vite fallback
-    "http://localhost:5177",  # Vite fallback
-    "http://localhost:5178",  # Vite fallback
-    "http://localhost:5179",  # Vite fallback
-    "http://localhost:5180",  # Vite fallback
-    "http://localhost:5181",  # Vite fallback
-    "http://localhost:5182",  # Vite fallback
-    "http://localhost:5183",  # Vite fallback
-    "http://localhost:5184",  # Vite fallback
-    "http://localhost:5185",  # Vite fallback
-    "http://localhost:5186",  # Vite fallback
-    "http://localhost:5187",  # Vite fallback
-    "http://localhost:5188",  # Vite fallback
-    "http://localhost:5189",  # Vite fallback
-    "http://localhost:5190",  # Vite fallback
-    "http://localhost:4173",  # Vite preview
-    "http://127.0.0.1:5173",
-    "http://127.0.0.1:5174",
-    "http://127.0.0.1:5175",
-    "http://127.0.0.1:5176",
-    "http://127.0.0.1:5177",
-    "http://127.0.0.1:5178",
-    "http://127.0.0.1:5179",
-    "http://127.0.0.1:5180",
-    "http://127.0.0.1:5181",
-    "http://127.0.0.1:5182",
-    "http://127.0.0.1:5183",
-    "http://127.0.0.1:5184",
-    "http://127.0.0.1:5185",
-    "http://127.0.0.1:5186",
-    "http://127.0.0.1:5187",
-    "http://127.0.0.1:5188",
-    "http://127.0.0.1:5189",
-    "http://127.0.0.1:5190",
-    "http://127.0.0.1:4173",
-    "https://luthiers-toolboxclient-production-309d.up.railway.app",  # Railway client
-]
-# Also allow from env vars for flexibility:
-# - CORS_ORIGINS: comma-separated list (docker-compose, CI)
-# - CORS_ALLOWED_ORIGIN: single origin (legacy, backward compat)
-if os.getenv("CORS_ORIGINS"):
-    for origin in os.getenv("CORS_ORIGINS", "").split(","):
-        origin = origin.strip()
-        if origin and origin not in CORS_ORIGINS:
-            CORS_ORIGINS.append(origin)
-if os.getenv("CORS_ALLOWED_ORIGIN"):
-    origin = os.getenv("CORS_ALLOWED_ORIGIN", "").strip()
-    if origin and origin not in CORS_ORIGINS:
-        CORS_ORIGINS.append(origin)
-
+# Allow all origins for public API access (claude.ai, external tools, etc.)
+# NOTE: allow_credentials=False is required when using wildcard origins
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=CORS_ORIGINS,
-    allow_credentials=True,
+    allow_origins=["*"],
+    allow_credentials=False,
     allow_methods=["*"],
     allow_headers=["*"],
 )
