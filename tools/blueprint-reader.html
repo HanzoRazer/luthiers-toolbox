@@ -1,0 +1,684 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Blueprint Reader — The Production Shop</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: #0f0f0f;
+      color: #e5e5e5;
+      min-height: 100vh;
+      padding: 2rem;
+    }
+
+    .container {
+      max-width: 1000px;
+      margin: 0 auto;
+    }
+
+    header {
+      text-align: center;
+      margin-bottom: 2rem;
+      padding-bottom: 1.5rem;
+      border-bottom: 1px solid #2a2a2a;
+    }
+
+    h1 {
+      font-size: 1.75rem;
+      font-weight: 600;
+      color: #f59e0b;
+      margin-bottom: 0.5rem;
+    }
+
+    .tagline {
+      color: #888;
+      font-size: 0.9rem;
+    }
+
+    .upload-zone {
+      border: 2px dashed #3a3a3a;
+      border-radius: 12px;
+      padding: 3rem 2rem;
+      text-align: center;
+      margin-bottom: 1.5rem;
+      transition: border-color 0.2s, background 0.2s;
+      cursor: pointer;
+    }
+
+    .upload-zone:hover,
+    .upload-zone.dragover {
+      border-color: #f59e0b;
+      background: rgba(245, 158, 11, 0.05);
+    }
+
+    .upload-zone input {
+      display: none;
+    }
+
+    .upload-icon {
+      font-size: 3rem;
+      margin-bottom: 1rem;
+      color: #555;
+    }
+
+    .upload-text {
+      font-size: 1.1rem;
+      color: #888;
+      margin-bottom: 0.5rem;
+    }
+
+    .upload-hint {
+      font-size: 0.8rem;
+      color: #555;
+    }
+
+    .controls {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .control-group {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+
+    label {
+      font-size: 0.85rem;
+      color: #888;
+      font-weight: 500;
+    }
+
+    select {
+      background: #1a1a1a;
+      border: 1px solid #3a3a3a;
+      border-radius: 8px;
+      padding: 0.75rem 1rem;
+      color: #e5e5e5;
+      font-size: 0.95rem;
+      cursor: pointer;
+      transition: border-color 0.2s;
+    }
+
+    select:hover,
+    select:focus {
+      border-color: #f59e0b;
+      outline: none;
+    }
+
+    .btn {
+      background: #f59e0b;
+      color: #0f0f0f;
+      border: none;
+      border-radius: 8px;
+      padding: 0.875rem 1.5rem;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.2s, transform 0.1s;
+    }
+
+    .btn:hover {
+      background: #d97706;
+    }
+
+    .btn:active {
+      transform: scale(0.98);
+    }
+
+    .btn:disabled {
+      background: #3a3a3a;
+      color: #666;
+      cursor: not-allowed;
+    }
+
+    .btn-secondary {
+      background: #2a2a2a;
+      color: #e5e5e5;
+      border: 1px solid #3a3a3a;
+    }
+
+    .btn-secondary:hover {
+      background: #3a3a3a;
+      border-color: #f59e0b;
+    }
+
+    .extract-btn {
+      width: 100%;
+      margin-bottom: 1.5rem;
+    }
+
+    .status {
+      background: #1a1a1a;
+      border-radius: 8px;
+      padding: 1rem;
+      margin-bottom: 1.5rem;
+      font-family: 'Monaco', 'Menlo', monospace;
+      font-size: 0.85rem;
+      color: #888;
+      min-height: 60px;
+      display: none;
+    }
+
+    .status.visible {
+      display: block;
+    }
+
+    .status.error {
+      color: #ef4444;
+      border: 1px solid #7f1d1d;
+    }
+
+    .status.success {
+      color: #22c55e;
+    }
+
+    .preview-section {
+      display: none;
+      margin-bottom: 1.5rem;
+    }
+
+    .preview-section.visible {
+      display: block;
+    }
+
+    .preview-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1rem;
+    }
+
+    .preview-title {
+      font-size: 1rem;
+      color: #f59e0b;
+    }
+
+    .download-btns {
+      display: flex;
+      gap: 0.75rem;
+    }
+
+    .preview-container {
+      background: #1a1a1a;
+      border: 1px solid #2a2a2a;
+      border-radius: 12px;
+      padding: 1rem;
+      min-height: 400px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: auto;
+    }
+
+    .preview-container svg {
+      max-width: 100%;
+      max-height: 500px;
+    }
+
+    /* Make SVG strokes amber */
+    .preview-container svg path,
+    .preview-container svg line,
+    .preview-container svg polyline,
+    .preview-container svg polygon,
+    .preview-container svg circle,
+    .preview-container svg ellipse,
+    .preview-container svg rect {
+      stroke: #f59e0b !important;
+      fill: none !important;
+    }
+
+    .dimensions {
+      background: #1a1a1a;
+      border-radius: 8px;
+      padding: 1rem;
+      display: none;
+      margin-bottom: 1.5rem;
+    }
+
+    .dimensions.visible {
+      display: block;
+    }
+
+    .dimensions h3 {
+      font-size: 0.9rem;
+      color: #f59e0b;
+      margin-bottom: 0.75rem;
+    }
+
+    .dim-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: 1rem;
+    }
+
+    .dim-item {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .dim-label {
+      font-size: 0.75rem;
+      color: #666;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .dim-value {
+      font-size: 1.1rem;
+      color: #e5e5e5;
+      font-weight: 500;
+    }
+
+    .file-info {
+      display: none;
+      background: #1a1a1a;
+      border-radius: 8px;
+      padding: 0.75rem 1rem;
+      margin-bottom: 1rem;
+      font-size: 0.85rem;
+      color: #888;
+    }
+
+    .file-info.visible {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    .file-icon {
+      color: #f59e0b;
+    }
+
+    .file-name {
+      color: #e5e5e5;
+      flex: 1;
+    }
+
+    .file-size {
+      color: #666;
+    }
+
+    .clear-btn {
+      background: none;
+      border: none;
+      color: #666;
+      cursor: pointer;
+      padding: 0.25rem;
+      font-size: 1.2rem;
+      line-height: 1;
+    }
+
+    .clear-btn:hover {
+      color: #ef4444;
+    }
+
+    footer {
+      text-align: center;
+      padding-top: 2rem;
+      border-top: 1px solid #2a2a2a;
+      margin-top: 2rem;
+    }
+
+    footer a {
+      color: #f59e0b;
+      text-decoration: none;
+    }
+
+    footer a:hover {
+      text-decoration: underline;
+    }
+
+    .footer-text {
+      font-size: 0.8rem;
+      color: #555;
+    }
+
+    @media (max-width: 600px) {
+      .controls {
+        grid-template-columns: 1fr;
+      }
+
+      .download-btns {
+        flex-direction: column;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>Blueprint Reader</h1>
+      <p class="tagline">Upload a plan. Get a verified DXF.</p>
+    </header>
+
+    <div class="upload-zone" id="uploadZone">
+      <input type="file" id="fileInput" accept="image/*,.pdf">
+      <div class="upload-icon">📐</div>
+      <div class="upload-text">Drop image or PDF here, or click to browse</div>
+      <div class="upload-hint">JPG, PNG, PDF — Max 20MB</div>
+    </div>
+
+    <div class="file-info" id="fileInfo">
+      <span class="file-icon">📄</span>
+      <span class="file-name" id="fileName"></span>
+      <span class="file-size" id="fileSize"></span>
+      <button class="clear-btn" id="clearBtn" title="Clear">×</button>
+    </div>
+
+    <div class="controls">
+      <div class="control-group">
+        <label for="sourceType">Source Type</label>
+        <select id="sourceType">
+          <option value="auto">Auto Detect</option>
+          <option value="ai">AI Render</option>
+          <option value="photo">Photo</option>
+          <option value="blueprint">Blueprint</option>
+        </select>
+      </div>
+
+      <div class="control-group">
+        <label for="specName">Instrument Spec (optional)</label>
+        <select id="specName">
+          <option value="">None — Auto Detect</option>
+          <option value="stratocaster">Stratocaster</option>
+          <option value="telecaster">Telecaster</option>
+          <option value="les_paul">Les Paul</option>
+          <option value="gibson_sg">Gibson SG</option>
+          <option value="flying_v">Flying V</option>
+          <option value="es335">ES-335</option>
+          <option value="dreadnought">Dreadnought</option>
+          <option value="om_000">OM / 000</option>
+          <option value="jumbo">Jumbo Acoustic</option>
+          <option value="jumbo_archtop">Jumbo Archtop</option>
+          <option value="classical">Classical</option>
+          <option value="j45">J-45</option>
+          <option value="smart_guitar">Smart Guitar</option>
+          <option value="bass_4string">4-String Bass</option>
+        </select>
+      </div>
+    </div>
+
+    <button class="btn extract-btn" id="extractBtn" disabled>Extract Outline</button>
+
+    <div class="status" id="status"></div>
+
+    <div class="dimensions" id="dimensions">
+      <h3>Extracted Dimensions</h3>
+      <div class="dim-grid">
+        <div class="dim-item">
+          <span class="dim-label">Width</span>
+          <span class="dim-value" id="dimWidth">—</span>
+        </div>
+        <div class="dim-item">
+          <span class="dim-label">Height</span>
+          <span class="dim-value" id="dimHeight">—</span>
+        </div>
+        <div class="dim-item">
+          <span class="dim-label">Contours</span>
+          <span class="dim-value" id="dimContours">—</span>
+        </div>
+        <div class="dim-item">
+          <span class="dim-label">Scale Source</span>
+          <span class="dim-value" id="dimScale">—</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="preview-section" id="previewSection">
+      <div class="preview-header">
+        <span class="preview-title">Preview</span>
+        <div class="download-btns">
+          <button class="btn btn-secondary" id="downloadSvg" disabled>Download SVG</button>
+          <button class="btn" id="downloadDxf" disabled>Download DXF</button>
+        </div>
+      </div>
+      <div class="preview-container" id="previewContainer">
+        <span style="color: #555;">Preview will appear here</span>
+      </div>
+    </div>
+
+    <footer>
+      <p class="footer-text">
+        <a href="https://github.com/HanzoRazer/luthiers-toolbox" target="_blank">The Production Shop</a>
+        — Free. Verified. Yours to keep.
+      </p>
+    </footer>
+  </div>
+
+  <script>
+    const API_BASE = 'https://luthiers-toolbox-production.up.railway.app';
+
+    // Elements
+    const uploadZone = document.getElementById('uploadZone');
+    const fileInput = document.getElementById('fileInput');
+    const fileInfo = document.getElementById('fileInfo');
+    const fileName = document.getElementById('fileName');
+    const fileSize = document.getElementById('fileSize');
+    const clearBtn = document.getElementById('clearBtn');
+    const sourceType = document.getElementById('sourceType');
+    const specName = document.getElementById('specName');
+    const extractBtn = document.getElementById('extractBtn');
+    const status = document.getElementById('status');
+    const dimensions = document.getElementById('dimensions');
+    const previewSection = document.getElementById('previewSection');
+    const previewContainer = document.getElementById('previewContainer');
+    const downloadSvg = document.getElementById('downloadSvg');
+    const downloadDxf = document.getElementById('downloadDxf');
+
+    let selectedFile = null;
+    let extractedData = null;
+
+    // File selection
+    uploadZone.addEventListener('click', () => fileInput.click());
+
+    uploadZone.addEventListener('dragover', (e) => {
+      e.preventDefault();
+      uploadZone.classList.add('dragover');
+    });
+
+    uploadZone.addEventListener('dragleave', () => {
+      uploadZone.classList.remove('dragover');
+    });
+
+    uploadZone.addEventListener('drop', (e) => {
+      e.preventDefault();
+      uploadZone.classList.remove('dragover');
+      if (e.dataTransfer.files.length) {
+        handleFile(e.dataTransfer.files[0]);
+      }
+    });
+
+    fileInput.addEventListener('change', (e) => {
+      if (e.target.files.length) {
+        handleFile(e.target.files[0]);
+      }
+    });
+
+    clearBtn.addEventListener('click', () => {
+      selectedFile = null;
+      extractedData = null;
+      fileInfo.classList.remove('visible');
+      extractBtn.disabled = true;
+      status.classList.remove('visible');
+      dimensions.classList.remove('visible');
+      previewSection.classList.remove('visible');
+      downloadSvg.disabled = true;
+      downloadDxf.disabled = true;
+      fileInput.value = '';
+    });
+
+    function handleFile(file) {
+      if (file.size > 20 * 1024 * 1024) {
+        showStatus('File too large. Maximum size is 20MB.', 'error');
+        return;
+      }
+
+      selectedFile = file;
+      fileName.textContent = file.name;
+      fileSize.textContent = formatFileSize(file.size);
+      fileInfo.classList.add('visible');
+      extractBtn.disabled = false;
+
+      // Reset previous results
+      status.classList.remove('visible');
+      dimensions.classList.remove('visible');
+      previewSection.classList.remove('visible');
+      extractedData = null;
+    }
+
+    function formatFileSize(bytes) {
+      if (bytes < 1024) return bytes + ' B';
+      if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+      return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
+    }
+
+    function showStatus(message, type = '') {
+      status.textContent = message;
+      status.className = 'status visible';
+      if (type) status.classList.add(type);
+    }
+
+    // Extract
+    extractBtn.addEventListener('click', async () => {
+      if (!selectedFile) return;
+
+      extractBtn.disabled = true;
+      showStatus('Reading file...');
+
+      try {
+        // Convert file to base64
+        const base64 = await fileToBase64(selectedFile);
+
+        showStatus('Extracting outline...');
+
+        // Build request
+        const requestBody = {
+          image_base64: base64,
+          source_type: sourceType.value,
+          export_svg: true,
+          export_dxf: true
+        };
+
+        if (specName.value) {
+          requestBody.spec_name = specName.value;
+        }
+
+        // POST to API
+        const response = await fetch(`${API_BASE}/api/vectorizer/extract`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(requestBody)
+        });
+
+        if (!response.ok) {
+          const errorText = await response.text();
+          throw new Error(`API error: ${response.status} — ${errorText}`);
+        }
+
+        const data = await response.json();
+        extractedData = data;
+
+        if (!data.ok) {
+          throw new Error(data.error || 'Extraction failed');
+        }
+
+        // Show success
+        showStatus(`Extraction complete in ${(data.processing_time_s || 0).toFixed(2)}s`, 'success');
+
+        // Show dimensions
+        document.getElementById('dimWidth').textContent =
+          data.body_dimensions_mm ? `${data.body_dimensions_mm[1]?.toFixed(1) || '—'} mm` : '—';
+        document.getElementById('dimHeight').textContent =
+          data.body_dimensions_mm ? `${data.body_dimensions_mm[0]?.toFixed(1) || '—'} mm` : '—';
+        document.getElementById('dimContours').textContent = data.contour_count || '—';
+        document.getElementById('dimScale').textContent = data.scale_source || '—';
+        dimensions.classList.add('visible');
+
+        // Show preview
+        if (data.svg_content) {
+          previewContainer.innerHTML = data.svg_content;
+          previewSection.classList.add('visible');
+          downloadSvg.disabled = false;
+        }
+
+        if (data.dxf_content || data.dxf_base64) {
+          downloadDxf.disabled = false;
+        }
+
+      } catch (err) {
+        showStatus(err.message, 'error');
+        console.error(err);
+      } finally {
+        extractBtn.disabled = false;
+      }
+    });
+
+    function fileToBase64(file) {
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => {
+          // Remove data:xxx;base64, prefix
+          const base64 = reader.result.split(',')[1];
+          resolve(base64);
+        };
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+      });
+    }
+
+    // Downloads
+    downloadSvg.addEventListener('click', () => {
+      if (!extractedData?.svg_content) return;
+
+      const blob = new Blob([extractedData.svg_content], { type: 'image/svg+xml' });
+      downloadBlob(blob, getOutputName('.svg'));
+    });
+
+    downloadDxf.addEventListener('click', () => {
+      if (!extractedData) return;
+
+      let blob;
+      if (extractedData.dxf_base64) {
+        const binary = atob(extractedData.dxf_base64);
+        const bytes = new Uint8Array(binary.length);
+        for (let i = 0; i < binary.length; i++) {
+          bytes[i] = binary.charCodeAt(i);
+        }
+        blob = new Blob([bytes], { type: 'application/dxf' });
+      } else if (extractedData.dxf_content) {
+        blob = new Blob([extractedData.dxf_content], { type: 'application/dxf' });
+      } else {
+        return;
+      }
+
+      downloadBlob(blob, getOutputName('.dxf'));
+    });
+
+    function getOutputName(ext) {
+      if (!selectedFile) return 'output' + ext;
+      const baseName = selectedFile.name.replace(/\.[^.]+$/, '');
+      return baseName + '_extracted' + ext;
+    }
+
+    function downloadBlob(blob, filename) {
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    }
+  </script>
+</body>
+</html>
