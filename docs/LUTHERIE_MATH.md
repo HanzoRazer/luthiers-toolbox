@@ -39,6 +39,13 @@ Challenges and corrections are welcomed — this document is a living record.
 24. [Two-Cavity Helmholtz (Selmer/Maccaferri)](#24-two-cavity-helmholtz)
 25. [Neck Angle Calculation](#25-neck-angle-calculation)
 26. [Error Log](#26-error-log)
+- [Appendix A — Guitar body as speaker enclosure](#appendix-a--guitar-body-as-speaker-enclosure)
+
+**Part II — Design Problems**
+39. [Modal Area Coefficient A_n](#39-modal-area-coefficient-a_n)
+40. [Brace Pattern as Stiffness Field D(x,y)](#40-brace-pattern-as-stiffness-field-dxy)
+41. [Radiation Power P_rad](#41-radiation-power-p_rad)
+42. [Brace Pattern Optimization](#42-brace-pattern-optimization)
 
 ---
 
@@ -1155,6 +1162,370 @@ will produce Helmholtz predictions that are too high by ~35%.
 
 ---
 
+## Appendix A — Guitar body as speaker enclosure
+
+**Priority:** High — stated core product promise: outline editor behaves as a **speaker cabinet designer**, acoustic stack as **port calculator**.
+
+**Prerequisite:** Body outline editor stable and trusted (2D outline in / out).
+
+### Problem
+
+The **body outline editor** and the **acoustic stack** (Helmholtz, soundhole sizing, `soundhole_calc`) are **not coupled** in product UX today. Volume for Helmholtz still flows from **dimensional presets** (§8 / `volume_from_dimensions` / `acoustic_body_volume.py`), not from the **user’s drawn outline**.
+
+### Target coupling layer
+
+1. **Outline → V:** From closed outline (and depth model), compute **enclosed air volume** \(V\) available to the Helmholtz mode (or a defined effective \(V\)).
+2. **V → port:** Fix target air resonance \(f_H\) (or band); run **inverse Helmholtz** (§11, `solve_for_diameter_mm` and variants) to get **soundhole diameter / area** (or multi-port split).
+3. **Canvas:** Draw **suggested soundhole** (and tolerances) on the same canvas as the outline — **cabinet + port** in one view.
+
+### Missing mathematics (planning IDs)
+
+| ID | Topic | Notes |
+|----|--------|--------|
+| **§37** | **Body outline → air volume** | §8 gives volume from **bout/length/depth numbers**, not from a **closed polygon** or Bézier outline. Need: area integral in outline plane × **depth law** (see §38), or calibrated 2.5D surrogate. |
+| **§38** | **Depth profile from body style** | Map **body style** (dreadnought, OM, classical, archtop, …) to a **depth model** \(z(x,y)\) or section stack: endblock/neck depths, taper, arch height — so outline + style → \(V\). |
+
+These are **not** yet full numbered sections in this file; they are **reserved** for the derivations that close the geometry–acoustics loop.
+
+### Relation to existing implementation
+
+- §8, `calculators/acoustic_body_volume.py`, `volume_from_dimensions()` — **proxy** for \(V\) until §37 exists.
+- §11, `solve_for_diameter_mm()` — **inverse port** once \(V\) and \(f_H\) are fixed.
+- `instrument_geometry/body/parametric.py` — outline **generation** from dimensions; inverse direction (outline → metrics) is separate work.
+
+---
+
+# Part II — Design Problems
+
+The preceding sections (§1–§38) treat acoustic and geometric quantities as **forward problems**: given a geometry, predict a frequency or resonance. The plate modal formula says "this thickness produces that frequency." The Helmholtz formula says "this soundhole produces that air resonance."
+
+The following sections treat the same physics as **design problems**: given a target acoustic behavior, find the geometry that produces it. This requires defining what "acoustic behavior" means precisely — not just frequency, but **how much air a vibrating mode actually displaces**. The modal area coefficient A_n is that definition.
+
+This shift — from analysis to synthesis — is where lutherie becomes engineering design rather than measurement and description.
+
+---
+
+## 39. Modal Area Coefficient A_n
+
+**Source:** Plate dynamics and acoustic radiation theory. The modal area coefficient is standard in loudspeaker design (where it appears as Sd, the effective diaphragm area) but rarely formalized in lutherie. Fletcher & Rossing, *Physics of Musical Instruments*, Ch. 3 and 9. Skudrzyk, *Foundations of Acoustics*, Ch. 12.
+
+**Implementation:** Planned for `tap_tone_pi/analysis/modal_area.py` (not yet built). Requires Chladni pattern measurement hardware — see SPRINTS.md Research Track.
+
+### Formula
+
+The modal area coefficient for mode n is the integral of the mode shape over the plate surface:
+
+```
+A_n = ∫∫_S φ_n(x,y) dS
+```
+
+**Variables:**
+
+| Symbol | Meaning | Units |
+|--------|---------|-------|
+| A_n | Modal area coefficient for mode n | m² |
+| φ_n(x,y) | Normalized mode shape (eigenvector) of mode n | dimensionless |
+| S | Plate surface area | m² |
+
+The mode shape φ_n is normalized such that max|φ_n| = 1. The sign of φ_n indicates displacement direction (toward listener = positive, away = negative).
+
+### Physical interpretation
+
+A_n answers the question: **"How much of this mode actually pushes air?"**
+
+Consider three mode shapes on a guitar top:
+
+1. **Piston mode (1,1):** The entire plate moves in phase. φ_n(x,y) > 0 everywhere. The integral A_n is large — nearly equal to the plate area S.
+
+2. **Dipole mode (2,1):** Half the plate moves up while half moves down. The positive and negative regions cancel in the integral. A_n ≈ 0.
+
+3. **Distributed mode (3,2):** Multiple regions move in different phases. Partial cancellation. A_n is moderate.
+
+### Classification by A_n
+
+| Mode character | A_n magnitude | Radiation behavior |
+|---------------|---------------|-------------------|
+| Piston-like | A_n ≈ S | Strong monopole radiation |
+| Dipole | A_n ≈ 0 | Radiation cancels (acoustic short-circuit) |
+| Distributed | 0 < A_n < S | Partial radiation, frequency-dependent |
+
+### Speaker analogy
+
+A_n is the soundboard equivalent of **Sd** (speaker diaphragm effective area).
+
+A 12" woofer moves more air than a 4" midrange driver at the same excursion — not because it moves farther, but because it has larger Sd. Similarly, a piston-like plate mode (large A_n) radiates more strongly than a dipole mode (small A_n) at the same velocity amplitude — the dipole's regions cancel.
+
+**This is why mode shape matters more than frequency.** Two guitars with identical tap tone frequencies can sound radically different if one has piston-like low modes (large A_n, strong bass radiation) and the other has dipole modes at the same frequencies (small A_n, weak bass radiation).
+
+### Measurement method
+
+Direct measurement of φ_n(x,y) requires visualizing the mode shape. The classical method:
+
+1. **Chladni patterns:** Sprinkle sand or salt on the plate, excite at resonant frequency f_n, observe nodal lines where sand accumulates
+2. Nodal lines are where φ_n(x,y) = 0
+3. Regions between nodal lines have opposite phase
+4. Approximate A_n by summing signed region areas
+
+Modern alternatives: laser vibrometry (expensive), holographic interferometry (specialized).
+
+### Conditions and limitations
+
+- **Assumes linear vibration:** A_n is computed from the eigenmode, which assumes small-amplitude linear response. At high excitation levels, mode shapes distort.
+- **Frequency-independent:** A_n characterizes the mode shape geometry, not the radiation efficiency at any particular frequency. The radiation efficiency σ_n (see §41) captures the frequency dependence.
+- **Single mode:** A_n applies to one mode at a time. Real plate motion is a superposition of modes; total radiation requires summing modal contributions (see §41).
+
+### Known edge cases
+
+- **Coupled modes:** When two modes have similar frequencies, they can couple and distort each other's shapes. The individual A_n values become ambiguous near the coupling region.
+- **Nonuniform damping:** High local damping (at a brace joint, for example) can distort mode shapes from their undamped forms.
+
+---
+
+## 40. Brace Pattern as Stiffness Field D(x,y)
+
+**Source:** Plate mechanics. The concept of treating discrete braces as a continuous stiffness field appears in Gore & Gilet, *Contemporary Acoustic Guitar Design*, Vol. 1, Ch. 5–6. Formalization as D(x,y) is standard in composite plate theory (Whitney, *Structural Analysis of Laminated Anisotropic Plates*).
+
+**Implementation:** Planned for `calculators/plate_design/stiffness_field.py` (not yet built).
+
+### Formula
+
+The total flexural rigidity at any point (x,y) on the plate is the sum of plate and brace contributions:
+
+```
+D_total(x,y) = D_plate(x,y) + Σ_k D_brace,k(x,y)
+```
+
+**Variables:**
+
+| Symbol | Meaning | Units |
+|--------|---------|-------|
+| D_total(x,y) | Total flexural rigidity at (x,y) | N·m |
+| D_plate(x,y) | Plate flexural rigidity (may vary with thickness) | N·m |
+| D_brace,k(x,y) | Contribution of brace k to rigidity at (x,y) | N·m |
+
+### Plate flexural rigidity
+
+For an isotropic plate:
+```
+D_plate = E × h³ / (12 × (1 - ν²))
+```
+
+For an orthotropic plate (wood):
+```
+D_L = E_L × h³ / 12      (along grain)
+D_C = E_C × h³ / 12      (across grain)
+```
+
+Where:
+- E, E_L, E_C = Young's modulus (isotropic, longitudinal, cross-grain)
+- h = plate thickness
+- ν = Poisson's ratio
+
+### Brace contribution
+
+Each brace k adds stiffness along its centerline:
+```
+D_brace,k(x,y) = E_brace × I_k × δ_w(x,y; brace_k)
+```
+
+Where:
+- E_brace = Young's modulus of brace material
+- I_k = moment of inertia of brace cross-section = b×h³/12 for rectangular
+- δ_w(x,y; brace_k) = spreading function — 1 along brace centerline, decaying over width w
+
+The spreading function accounts for the fact that a brace stiffens not just the line it occupies but a finite width around it.
+
+### Physical interpretation: Two design dials
+
+**Dial 1: Thickness → Frequency**
+
+Changing plate thickness changes D_plate everywhere uniformly (as h³). This shifts all modal frequencies proportionally (f ∝ √D ∝ h). Thickness is a "frequency dial" — turn it up, all modes go up together.
+
+**Dial 2: Bracing → Mode Shape**
+
+Adding or moving braces changes D(x,y) locally. This changes which mode shapes are preferred. A brace across a potential antinode suppresses that mode relative to others. A brace along a potential nodal line has little effect on that mode.
+
+Bracing is a "mode shape dial" — it doesn't just shift frequencies, it reshapes which modes exist and how they distribute energy.
+
+### Speaker analogy
+
+In loudspeaker design, cone profiles and surrounds serve the same function: controlling mode shape at the expense of frequency. A shallow cone radiates more pistonic motion at the cost of lower efficiency. A steep cone is efficient but breaks up into complex modes earlier.
+
+The guitar maker's bracing pattern is analogous to the loudspeaker designer's cone geometry — both are mode-shape engineering tools, not just frequency tuners.
+
+### Conditions and limitations
+
+- **Quasi-static assumption:** The D(x,y) representation assumes brace attachment is rigid. In reality, glue joints have finite stiffness; very high-frequency modes can "see through" braces.
+- **Neglects mass distribution:** The stiffness field D(x,y) affects frequencies through the eigenvalue equation, but mass distribution also matters. A brace adds both stiffness and mass; the net effect on frequency depends on both.
+- **Continuous approximation:** Treating discrete braces as a continuous field is valid when plate wavelengths are larger than brace spacing. For very high modes, discrete brace positions matter individually.
+
+### Design implication
+
+**Thickness tuning is frequency-first thinking.**
+**Brace pattern tuning is radiation-first thinking.**
+
+The latter is more powerful but requires mode shape knowledge (§39). Without knowing A_n for each mode, brace changes are trial-and-error. With A_n data from Chladni measurements, brace design becomes targeted: suppress dipole modes, enhance piston modes.
+
+---
+
+## 41. Radiation Power P_rad
+
+**Source:** Acoustic radiation from vibrating surfaces. Fletcher & Rossing, *Physics of Musical Instruments*, Ch. 3.5. Standard acoustics result; application to guitar plates is less common outside academic literature.
+
+**Implementation:** Planned for `calculators/plate_design/radiation_power.py` (not yet built).
+
+### Formula
+
+Total acoustic power radiated by a vibrating plate:
+
+```
+P_rad = ½ × ρ₀ × c₀ × Σ_n σ_n × |v_n|² × A_n²
+```
+
+**Variables:**
+
+| Symbol | Meaning | Units | Typical value |
+|--------|---------|-------|---------------|
+| P_rad | Total radiated acoustic power | W | 10⁻⁵ – 10⁻³ |
+| ρ₀ | Air density | kg/m³ | 1.21 |
+| c₀ | Speed of sound in air | m/s | 343 |
+| σ_n | Radiation efficiency of mode n | dimensionless | 0.01 – 1.0 |
+| v_n | Modal velocity amplitude | m/s | 10⁻³ – 10⁻¹ |
+| A_n | Modal area coefficient (§39) | m² | 0 – 0.1 |
+
+ρ₀ × c₀ ≈ 415 Pa·s/m is the characteristic acoustic impedance of air.
+
+### Radiation efficiency σ_n
+
+The radiation efficiency depends on the ratio of acoustic wavelength to plate size:
+
+```
+ka = 2πf × (characteristic_plate_dimension) / c₀
+```
+
+- **ka << 1** (low frequency): σ_n ≈ (ka)⁴ for monopole, (ka)⁶ for dipole — very inefficient
+- **ka ≈ 1** (coincidence): σ_n rises toward 1
+- **ka >> 1** (high frequency): σ_n → 1
+
+For a guitar top (~0.4m characteristic dimension):
+- At 100 Hz: ka ≈ 0.7, σ_n ≈ 0.1–0.3
+- At 500 Hz: ka ≈ 3.7, σ_n ≈ 0.8–1.0
+
+### Physical interpretation
+
+**Power scales with A_n squared.** Doubling the modal area coefficient quadruples the radiated power from that mode.
+
+This is why piston modes (large A_n) dominate low-frequency radiation and dipole modes (A_n ≈ 0) contribute little even if they have large velocity amplitude. The cancellation is quadratic, not linear.
+
+### Speaker analogy
+
+In loudspeaker engineering, the equivalent formula appears as:
+
+```
+P_rad = ½ × ρ₀ × c₀ × σ × |v|² × Sd²
+```
+
+Where Sd is the diaphragm area. The guitar top's multiple modes each act as their own "driver" with effective area A_n. The total sound is the sum of these modal drivers.
+
+### Conditions and limitations
+
+- **Far-field assumption:** The formula gives power radiated to infinity. Near-field (close to the plate) intensity patterns are more complex.
+- **Neglects acoustic coupling:** Modes can couple acoustically through the air cavity. The Helmholtz resonance (§4) is one such coupling — it modifies the effective σ_n near f_H.
+- **Linear superposition:** The sum over modes assumes modes don't interact nonlinearly. Valid for typical playing levels; breaks down at very high excitation.
+- **Neglects back radiation:** Guitar backs also radiate, potentially out of phase with the top. Total guitar radiation requires summing top and back contributions with proper phase.
+
+### Design insight
+
+To maximize bass radiation:
+1. **Maximize A_n for low modes** — design bracing so low modes are piston-like
+2. **Avoid dipole cancellation** — asymmetric bracing can convert symmetric dipole modes to net-radiating asymmetric modes
+3. **Accept frequency-efficiency tradeoff** — σ_n is low at low frequencies regardless of mode shape; thick low-frequency modes are inherently quieter than thin high-frequency modes
+
+---
+
+## 42. Brace Pattern Optimization
+
+**Source:** Structural optimization theory applied to instrument acoustics. Academic treatments: Elejabarrieta et al., "Coupled modes of a guitar as a function of brace shape" (Applied Acoustics, 2000); Torres & Boullosa, "Optimization of a guitar top plate" (JASA, 1996).
+
+**Implementation:** Planned for `calculators/plate_design/brace_optimizer.py` (not yet built). Requires §39–41 infrastructure.
+
+### Optimization problem statement
+
+```
+maximize:   Σ_n w_n × A_n² × σ_n(f_n)
+subject to: f_1 ∈ [f_target - Δ, f_target + Δ]     (fundamental frequency window)
+            max_deflection ≤ d_max                  (structural constraint)
+            max_stress ≤ σ_allow                    (strength constraint)
+            total_mass ≤ m_budget                   (mass budget)
+```
+
+**Variables:**
+
+| Symbol | Meaning | Units |
+|--------|---------|-------|
+| w_n | Weighting factor for mode n | dimensionless |
+| A_n | Modal area coefficient (§39) | m² |
+| σ_n(f_n) | Radiation efficiency at mode n frequency | dimensionless |
+| f_1 | Fundamental plate frequency | Hz |
+| d_max | Maximum allowable static deflection under string load | mm |
+| σ_allow | Allowable stress in wood | MPa |
+| m_budget | Total allowed brace + plate mass | kg |
+
+### Weighting factors w_n
+
+The builder's tonal preference enters through weighting:
+
+| Preference | w_n distribution |
+|------------|-----------------|
+| Bass emphasis | High w_1, w_2; low w_n for n > 3 |
+| Balanced | w_n ∝ 1/n (declining with mode number) |
+| Treble/clarity | Lower w_1, w_2; higher w_n for n = 3–6 |
+
+### Practical optimization approach
+
+Full numerical optimization over brace positions is computationally expensive and requires accurate FEA. The practical closed-loop method:
+
+1. **Start with traditional brace pattern** (X-brace, ladder, fan — per instrument family)
+2. **Measure (f_n, A_n) pairs** using tap tones + Chladni patterns
+3. **Identify problem modes:** modes with low A_n that should radiate, or modes at wrong frequencies
+4. **Modify brace pattern** to address specific problems:
+   - Move brace away from an antinode to increase that mode's A_n
+   - Add brace across antinode to suppress a mode
+   - Scallop brace to reduce local stiffness
+   - Taper brace ends to smooth stiffness transitions
+5. **Re-measure** and iterate
+
+### Speaker analogy
+
+Loudspeaker designers use the same iterative approach:
+1. Start with known cone/surround design
+2. Measure frequency response and breakup modes
+3. Modify cone profile, add damping, adjust surround stiffness
+4. Re-measure
+
+The guitar maker's brace carving is analogous to the loudspeaker designer's cone profiling — both are mode-shape engineering through iterative measurement and modification.
+
+### Conditions and limitations
+
+- **Local optima:** Brace pattern optimization is highly nonlinear. There are many local optima; global optimization is impractical for continuous brace shape variables.
+- **Manufacturing constraints:** Theoretical optima may require brace shapes that are impractical to carve or glue. Real optimization must include manufacturing feasibility.
+- **Uncertainty:** Wood properties vary piece-to-piece. An optimized pattern for one plate may not be optimal for another. Robust optimization (optimizing for average performance across property variation) is more realistic than point optimization.
+- **Coupled objectives:** The structural constraints (deflection, stress) compete with acoustic objectives. A stiffer, heavier bracing pattern is safer but acoustically dead. The art is in the tradeoff.
+
+### Physical interpretation
+
+**This closes the loop from measurement to design.**
+
+Without A_n data, brace changes are guided only by tradition and trial-and-error. With A_n data from Chladni measurements, the luthier knows exactly which modes radiate poorly and can target those modes specifically.
+
+This is the difference between:
+- "I thinned the X-brace and it sounds better" (anecdote)
+- "Mode 2 was dipole-like (A_2 = 0.003 m²); scalloping the X-brace converted it to monopole-like (A_2 = 0.018 m²), increasing its contribution to P_rad by 36×" (engineering)
+
+Both statements may describe the same modification. The second one is reproducible.
+
+---
+
 *Document maintained by Ross Echols, PE #78195*
 *For The Production Shop — luthiers-toolbox-main*
-*Last updated: March 2026*
+*Last updated: April 2026*
