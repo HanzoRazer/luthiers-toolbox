@@ -627,6 +627,128 @@ or manual placement in CAM software
 
 ---
 
+### SPRINT: Archtop Free Tier
+
+**Status:** QUEUED
+**Priority:** Medium
+**Tier:** FREE — public repo (ltb-archtop-designer)
+**Dependency:** none
+
+**Phase 1 — Pipeline (backend foundation)**
+
+Commit 4 scripts to `services/api/app/cam/archtop/`:
+- `archtop_contour_generator.py` — CSV/DXF → contour rings
+- `archtop_stiffness_map.py` — z(x,y) → K_shell stiffness map
+- `archtop_surface_tools.py` — combined contour + stiffness
+- `archtop_modal_analysis.py` — stiffness map → modal frequencies
+
+Wire existing D'Aquisto data:
+- `services/api/app/instrument_geometry/archtop/daquisto_measurements.json` (16 zones)
+- Convert to CSV format pipeline expects: x_mm, y_mm, height_mm
+
+Add API endpoints:
+- `POST /api/archtop/contours` — generate contour rings DXF/SVG
+- `POST /api/archtop/stiffness_map` — generate K_eff heatmap PNG
+- `POST /api/archtop/modal_analysis` — predict mode frequencies
+
+**Phase 2 — Graduation Studio (frontend)**
+
+Standalone HTML: `tools/archtop-graduation-studio.html`
+
+```
+ARCHTOP GRADUATION STUDIO
+
+Step 1 — Enter plate measurements
+  [ Interactive grid overlay on guitar body outline ]
+  Click any point → enter thickness (mm)
+  Or: Upload CSV directly
+  Measurement form printable → PDF download
+
+Step 2 — Choose material properties
+  Wood species dropdown → E, nu, density auto-filled
+  Or manual entry (calibration.py values)
+
+Step 3 — Generate
+  [ Generate Contours ]      → DXF download
+  [ Generate Stiffness Map ] → PNG heatmap
+  [ Predict Modes ]          → frequency table
+
+Step 4 — Results
+  Contour rings preview (SVG inline)
+  Stiffness heatmap (PNG inline)
+  Mode 1, 2, 3 predicted frequencies
+  Compare to D'Aquisto reference overlay
+```
+
+**Phase 3 — Companion form**
+
+`docs/forms/Arched_Plate_Graduation_Form.pdf`
+- Convert existing .txt to printable PDF
+- Matches web grid point layout exactly
+- The measurement form IS the onramp:
+  Print form → measure with calipers → fill in numbers → enter in web grid → generate
+
+**Strategic position:**
+This is the tap_tone_pi bridge for people without hardware.
+tap_tone_pi measures acoustically. Graduation Studio measures mechanically with calipers.
+Both feed the same acoustic model. One requires hardware, one requires only a caliper and 15 minutes.
+
+**Theory connection:**
+- LUTHERIE_MATH.md §40: D(x,y) brace stiffness field
+- LUTHERIE_MATH.md §43: Dome radius shell stiffness
+- LUTHERIE_MATH.md §44: Archtop spatial stiffness field
+- The curved surface IS the bracing — K_shell = α·E·h·k_eff²
+
+**Note:** 4 Python scripts exist in sandbox but NOT committed to repo yet.
+
+---
+
+### SPRINT: Archtop CAM Toolkit
+
+**Status:** QUEUED — blocked on dependencies
+**Priority:** Medium
+**Tier:** PRO — private repo
+**Dependency:** Archtop Free Tier complete, Toolpath Visualizer wired, RMOS operational
+
+**Scope:**
+
+Full CAM pipeline for archtop plate machining:
+
+Roughing strategy:
+- Parallel passes removing bulk material
+- Step-over and depth from arch height
+- Largest ball end mill that fits curvature
+
+Finishing strategy:
+- Radial or parallel finish passes
+- Ball end mill sized to minimum R_eff(x,y)
+- Stiffness map tells WHERE tightest curvature is
+
+Scallop control:
+- Target surface finish in microns
+- Back-calculate step-over from tool radius
+- Output adaptive step-over map
+
+Rest machining:
+- After large roughing tool
+- Identify regions big tool cannot reach
+- Queue smaller tool for those regions
+
+**Integration:**
+- RMOS safety gate before G-code release
+- Toolpath Visualizer preview before cut
+- BCAM 2030A post processor
+- Machine profile validation
+
+**Strategic position:**
+No competitor has this pipeline. VCarve machines archtops but doesn't understand
+acoustic stiffness. Fusion 360 generates toolpaths but knows nothing about lutherie.
+Production Shop is the only platform where:
+  Measure plate → predict acoustics → generate CAM → cut wood
+is one connected workflow.
+
+---
+
 ## RESEARCH TRACK: Learning Vectorizer
 
 **Strategic insight:** Every extraction builds the training dataset.
