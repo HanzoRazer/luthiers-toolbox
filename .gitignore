@@ -129,7 +129,7 @@ assets/brand/
 # Legacy/Archive Directories (DO NOT TRACK)
 # ------------------------------------------
 __ARCHIVE__/
-Archtop/
+Guitar Plans/**/Archtop*/
 !services/api/app/instrument_geometry/models/archtop/
 !services/api/app/instrument_geometry/models/archtop/*
 Stratocaster/

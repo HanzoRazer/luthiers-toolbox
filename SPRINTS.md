@@ -1,6 +1,34 @@
 # The Production Shop — Sprint Registry
-Last updated: 2026-04-06
+Last updated: 2026-04-07
 Maintained by: Ross Echols (HanzoRazer)
+
+---
+
+## NEXT SESSION OPENS WITH (2026-04-07)
+
+1. **Re-upload 3 missing archtop scripts:**
+   - `archtop_stiffness_map.py`
+   - `archtop_surface_tools.py`
+   - `archtop_modal_analysis.py`
+   → commit to `services/api/app/cam/archtop/`
+
+2. **Digitize 12-string dreadnought plans**
+   via `blueprint-reader.html`.
+   Emperor plans in transit — digitize on receipt.
+
+3. **Archtop Free Tier Phase 1**
+   Wire `daquisto_measurements.json` into pipeline.
+   Add API endpoints:
+   - `POST /api/archtop/contours`
+   - `POST /api/archtop/stiffness_map`
+   - `POST /api/archtop/modal_analysis`
+
+**Acquisitions pending:**
+- Benedetto *Making an Archtop Guitar* (book)
+- Epiphone Emperor plans (in mail)
+
+**Physical access pending:**
+- 1941 Gibson L-37 — requires deflection jig build first
 
 ---
 
