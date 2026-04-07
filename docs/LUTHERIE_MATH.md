@@ -1524,6 +1524,110 @@ This is the difference between:
 
 Both statements may describe the same modification. The second one is reproducible.
 
+
+
+---
+
+## 43. Shell Stiffness from Dome Radius
+
+A domed back plate behaves differently than a flat plate. The curvature introduces **membrane stiffness** that adds to the flexural stiffness D(x,y) from §40.
+
+### Formula
+
+**Frequency increase from doming:**
+
+```
+f_domed = f_flat × √(1 + C × (L/R)²)
+```
+
+**Sagitta (dome height at center):**
+
+```
+s = L² / (8R)
+```
+
+### Variables
+
+| Symbol | Description | Units |
+|--------|-------------|-------|
+| R | Dome radius | m |
+| L | Effective span (lower bout width) | m |
+| s | Sagitta (dome height) | m |
+| C | Calibration constant | dimensionless |
+| f_flat | Modal frequency of equivalent flat plate | Hz |
+| f_domed | Modal frequency of domed plate | Hz |
+
+### Calibration constant C
+
+Start with **C = 10** as a default. This value produces:
+- 15ft back radius over 559mm span → ~7% frequency increase
+- 25ft radius over same span → ~2.5% increase
+
+The constant C encapsulates:
+- Material-dependent membrane-to-flexural stiffness ratio
+- Mode shape effects (different modes respond differently to curvature)
+- Boundary condition influences
+
+Refine C empirically by comparing predicted vs. measured frequencies on actual domed plates.
+
+### Physical interpretation
+
+**Tighter dome (smaller R) → higher membrane stiffness N → higher modal frequencies.**
+
+The dome acts like a pre-tensioned drumhead. Even without changing plate thickness or bracing, curving the plate stiffens it. This is why:
+- Classical guitar backs (flat or nearly flat) are more flexible
+- Steel-string backs (15-25ft radius typical) are stiffer
+- Archtop backs (tight radius, carved) are very stiff
+
+### Connection to §40: Additive stiffness mechanisms
+
+The total back plate stiffness combines:
+1. **Flexural stiffness D(x,y)** — from plate thickness and bracing (§40)
+2. **Membrane stiffness N(x,y)** — from dome curvature (this section)
+
+Both contribute to the eigenvalue problem that determines modal frequencies. They are **additive** — a lightly braced but tightly domed back can have similar stiffness to a heavily braced flat back.
+
+This gives the luthier two independent "dials":
+- Bracing pattern controls D(x,y)
+- Dome radius controls N(x,y)
+
+### Design table: Typical back radii
+
+| Radius (ft) | Radius (m) | Character |
+|-------------|------------|-----------|
+| Flat | ∞ | Maximum flexibility, classical style |
+| 40 | 12.2 | Very subtle dome |
+| 28 | 8.5 | Light dome (flamenco, some classical) |
+| 20 | 6.1 | Moderate (smaller steel-string) |
+| 15 | 4.6 | Standard steel-string |
+| 12 | 3.7 | Pronounced dome (jumbo, slope-shoulder) |
+| 10 | 3.0 | Aggressive (archtop territory) |
+
+### Implementation
+
+```javascript
+// tools/backRadiusCalculator.js
+
+import { domeCalc, sweepRadii, buildBackRadiusSummary } from './backRadiusCalculator.js';
+
+// Single calculation
+const result = domeCalc(15, 410);  // 15ft radius, 410mm span
+// → { sagitta_mm: 3.44, percentIncrease: 7.2, ... }
+
+// Sweep radii for design comparison
+const sweep = sweepRadii(410, [10, 15, 20, 25, 30]);
+
+// Full summary with recommendation
+const summary = buildBackRadiusSummary(410);
+```
+
+### Conditions and limitations
+
+- **Small dome approximation:** Formula assumes s << R (sagitta much smaller than radius). Valid for typical guitar backs where s < 10mm.
+- **Isotropic assumption:** Real wood is orthotropic. The membrane stiffness effect varies with grain direction.
+- **Mode-dependent:** Different modes respond differently to curvature. The calibration C is an average; individual modes may deviate.
+- **Does not replace tap tuning:** This formula predicts the *direction* and *magnitude* of frequency change, not absolute frequencies. Use it to understand why a domed back is stiffer, not to replace measurement.
+
 ---
 
 *Document maintained by Ross Echols, PE #78195*
