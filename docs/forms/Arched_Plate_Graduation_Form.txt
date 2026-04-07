@@ -1,0 +1,19 @@
+Arched Plate Graduation Map - Measurement Form
+==============================================
+
+Instrument: ___________________   Plate: Top / Back
+
+Measurement Points
+------------------
+Point | Location | X | Y | Thickness (mm/in) | Notes
+-----------------------------------------------------
+  1   | Upper Bout |   |   |   |   
+  2   | Waist      |   |   |   |   
+  3   | Lower Bout |   |   |   |   
+  4   | Center/Apex|   |   |   |   
+  ...
+
+Notes:
+- Use calipers or dial gauge to record thickness.
+- Enter values consistently in mm or inches.
+- This form can be printed and traced onto the plate outline.
