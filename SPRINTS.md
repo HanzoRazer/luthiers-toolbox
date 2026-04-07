@@ -671,8 +671,11 @@ Commit 4 scripts to `services/api/app/cam/archtop/`:
 - `archtop_modal_analysis.py` — stiffness map → modal frequencies
 
 Wire existing D'Aquisto data:
-- `services/api/app/instrument_geometry/archtop/daquisto_measurements.json` (16 zones)
+- `services/api/app/instrument_geometry/models/archtop/daquisto_graduation_measurements.json` (32 zones: 14 top + 18 back)
 - Convert to CSV format pipeline expects: x_mm, y_mm, height_mm
+- **Conversion gap:** JSON has named zones without x,y coordinates.
+  Requires coordinate mapping file before pipeline can consume
+  D'Aquisto data directly. Interim: synthetic dome from arch_height scalar.
 
 Add API endpoints:
 - `POST /api/archtop/contours` — generate contour rings DXF/SVG
