@@ -130,7 +130,12 @@ Classified mode progressing — Phase 5 delivered 4/5 fixes.
 | HanzoRazer/ltb-parametric-guitar | Body shape generator | Existing — needs audit |
 | HanzoRazer/ltb-woodworking-studio | Joinery, wood movement, bench woodworking | woodworking_v2 committed |
 | HanzoRazer/ltb-express | String tension calculator + quick tools | **CONTAMINATED** — needs cleanup |
-| HanzoRazer/blueprint-reader | PDF → DXF pipeline (vectorizer) | Existing — needs Sprint 1 sync |
+| HanzoRazer/blueprint-reader | PDF → DXF pipeline (vectorizer) | **BLOCKED** — Hostinger billing/coupon issue |
+
+**blueprint-reader Hostinger deploy — BLOCKED:**
+- **Reason:** Hostinger billing/coupon issue
+- **Expected:** Resolved within 24 hours
+- **Next action:** Resume after support response
 
 **Strategic note:** Standalone repos are a moat — free tools that establish
 The Production Shop as the authoritative lutherie calculator source.
