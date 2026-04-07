@@ -1,0 +1,7 @@
+Plate,Label,X,Y,Thickness,Notes
+Top,Upper Bout,0,100,3.5,""
+Top,Waist,0,0,4.0,""
+Top,Lower Bout,0,-100,4.5,""
+Back,Upper Bout,0,100,3.0,""
+Back,Waist,0,0,3.5,""
+Back,Lower Bout,0,-100,4.0,""
