@@ -997,5 +997,42 @@ tap_tone_pi measurement to brace design decisions.
 
 ---
 
+
+---
+
+### RESEARCH TRACK: Physical Instrument Access
+
+**Status:** QUEUED
+**Priority:** High — first published measured C value for vintage archtop
+
+**Instruments available for measurement:**
+
+| Instrument | Status | Target Measurements | Tool Needed |
+|------------|--------|---------------------|-------------|
+| **1941 Gibson L-37 archtop** | Access pending deflection jig build | Arch heights, graduation map, f-hole geometry, body dimensions | Deflection jig (simple frame + dial indicator) |
+
+**Data destination:** `data/archtop_samples/gibson_l37_1941/`
+
+**Plans available for digitization:**
+
+| Plan | Status | Tool | Data Destination |
+|------|--------|------|------------------|
+| **Epiphone Emperor archtop** | Purchased, ready to digitize | blueprint-reader.html | `data/instrument_plans/epiphone_emperor/` |
+| **12-string dreadnought** | Purchased, ready to digitize | blueprint-reader.html | `data/instrument_plans/12string_dreadnought/` |
+
+**New LUTHERIE_MATH.md section required:**
+- §45 12-string loading and top plate stiffness requirements
+
+**Calibration opportunity:**
+L-37 deflection measurements → calibrate C in §43 (arch geometric stiffness).
+First published measured C value for vintage archtop — peer review material.
+
+**Deflection jig spec:**
+- Simple frame with fixed support points
+- Dial indicator at center of lower bout
+- Known weight applied at bridge location
+- Measures static deflection under load
+- Cost: ~$50 in materials
+
 *This file is updated at the end of every sprint session.*
 *Source of truth for sprint status across all terminals and chat sessions.*
