@@ -61,8 +61,8 @@ Because the decisions are informed.
 ## Fifty Guitars Compressed Into Ten
 
 Every master luthier built bad guitars.
-Tops that cracked. Necks that shifted. Instruments that sounded right
-and played wrong, or played right and sounded like furniture.
+Tops that cracked. Necks that shifted. Instruments that looked right
+and played a piece of furniture, or played great and looked like junk.
 
 Each failure taught them something their hands remembered.
 Fifty repetitions of feedback, stored in muscle memory and judgment.
