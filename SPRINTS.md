@@ -713,5 +713,24 @@ that actually work."
 
 ---
 
+## Research Tracks
+
+### RESEARCH TRACK: Guitar Body as Speaker Enclosure
+
+Coupling layer between geometry editor and acoustic stack:
+  1. Body outline area integral → air volume V
+  2. V → Helmholtz inverse solver → soundhole size
+  3. Soundhole suggestion overlaid on canvas
+
+Missing math sections for LUTHERIE_MATH.md:
+  §37 Body outline → air volume
+  §38 Depth profile model by body style
+
+This closes the loop between outline and acoustics.
+Priority: High — core product promise.
+Prerequisite: Body outline editor stable.
+
+---
+
 *This file is updated at the end of every sprint session.*
 *Source of truth for sprint status across all terminals and chat sessions.*

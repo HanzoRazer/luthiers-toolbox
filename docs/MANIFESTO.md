@@ -145,6 +145,28 @@ learned a lesson you do not have to repeat.
 
 ---
 
+## The Body Is the Cabinet
+
+A guitar body is not just a shape.
+It is a speaker enclosure.
+
+Speaker engineers start with a target frequency
+and calculate the box. The port size follows from
+the volume. The geometry serves the acoustics.
+
+Most luthiers work in reverse — copy a proven shape,
+hope the plate voicing compensates, build fifty
+guitars until intuition fills the gaps.
+
+The Production Shop works like the speaker engineer.
+Draw your body outline. The system calculates the
+internal air volume. The inverse solver tells you
+what soundhole size hits your target resonance.
+The geometry serves the acoustics.
+This is what the connected platform means.
+
+---
+
 ## The Promise
 
 Your first guitar will not be your best guitar.
