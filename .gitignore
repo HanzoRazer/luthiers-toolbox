@@ -477,3 +477,6 @@ alternative_photo_vect*
 run_preset_tests.bat
 _fix_lineendings.py
 Repository_Critical_Evaluation.md
+
+# Hostinger deploy target (tracked)
+!hostinger/
