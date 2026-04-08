@@ -401,6 +401,18 @@
       cursor: not-allowed;
     }
 
+    .btn-secondary.success {
+      background: #166534;
+      border-color: #22c55e;
+      color: #bbf7d0;
+    }
+
+    .btn-secondary.error {
+      background: #7f1d1d;
+      border-color: #ef4444;
+      color: #fecaca;
+    }
+
     footer {
       text-align: center;
       padding-top: 2rem;
@@ -664,15 +676,63 @@
         dimensions.after(filterNote);
       }
 
+      const filename = dxfPath.split('/').pop();
+
       filterNote.innerHTML = `
         <p><strong>${lineCount.toLocaleString()} lines</strong> extracted — raw edge data includes all detail.</p>
         <p>Use DXF cleaner to isolate body outline layer.</p>
-        <button class="btn btn-secondary" id="filterBtn" disabled title="Coming soon">
+        <button class="btn btn-secondary" id="filterBtn">
           Filter to Body Outline
         </button>
-        <small>POST /api/blueprint/clean endpoint pending</small>
+        <small>Filters to contours &gt; 50mm</small>
       `;
       filterNote.classList.add('visible');
+
+      // Wire up filter button
+      document.getElementById('filterBtn').addEventListener('click', async () => {
+        const btn = document.getElementById('filterBtn');
+        btn.disabled = true;
+        btn.textContent = 'Filtering...';
+
+        try {
+          const resp = await fetch(`${API_BASE}/api/blueprint/clean`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              dxf_filename: filename,
+              min_contour_length_mm: 50.0
+            })
+          });
+
+          if (!resp.ok) {
+            const err = await resp.text();
+            throw new Error(`Clean failed: ${err}`);
+          }
+
+          const result = await resp.json();
+          if (!result.success) {
+            throw new Error(result.error || 'Clean failed');
+          }
+
+          // Update extractedData with cleaned version
+          extractedData.dxf_path = result.dxf_path;
+          extractedData.dxf_b64_clean = result.dxf_b64;
+
+          // Update UI
+          document.getElementById('dimContours').textContent =
+            `${result.cleaned_entity_count.toLocaleString()} (was ${result.original_entity_count.toLocaleString()})`;
+
+          btn.textContent = `Filtered: ${result.contours_found} contours`;
+          btn.classList.add('success');
+
+          showStatus(`Cleaned: ${result.original_entity_count.toLocaleString()} → ${result.cleaned_entity_count.toLocaleString()} entities`, 'success');
+
+        } catch (err) {
+          btn.textContent = 'Filter Failed';
+          btn.classList.add('error');
+          showStatus(err.message, 'error');
+        }
+      });
     }
 
     // Extract
@@ -886,9 +946,27 @@
       downloadBlob(blob, getOutputName('.svg'));
     });
 
-    downloadDxf.addEventListener('click', () => {
+    downloadDxf.addEventListener('click', async () => {
       if (!extractedData) return;
 
+      // Blueprint mode: download via static endpoint
+      if (extractedData.dxf_path) {
+        const filename = extractedData.dxf_path.split('/').pop();
+        const downloadUrl = `${API_BASE}/api/blueprint/static/${filename}`;
+
+        // Fetch and download
+        try {
+          const resp = await fetch(downloadUrl);
+          if (!resp.ok) throw new Error(`Download failed: ${resp.status}`);
+          const blob = await resp.blob();
+          downloadBlob(blob, getOutputName('.dxf'));
+        } catch (err) {
+          showStatus(`Download error: ${err.message}`, 'error');
+        }
+        return;
+      }
+
+      // Photo mode: use embedded data
       let blob;
       if (extractedData.dxf_base64) {
         const binary = atob(extractedData.dxf_base64);
