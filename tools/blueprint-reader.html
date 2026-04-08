@@ -352,6 +352,55 @@
       opacity: 0.6;
     }
 
+    .filter-note {
+      display: none;
+      background: #1a2a1a;
+      border: 1px solid #2d4a2d;
+      border-radius: 8px;
+      padding: 1rem;
+      margin-top: 1rem;
+      font-size: 0.85rem;
+    }
+
+    .filter-note.visible {
+      display: block;
+    }
+
+    .filter-note p {
+      margin: 0 0 0.5rem 0;
+      color: #9ca3af;
+    }
+
+    .filter-note strong {
+      color: #86efac;
+    }
+
+    .filter-note small {
+      display: block;
+      margin-top: 0.5rem;
+      color: #6b7280;
+      font-style: italic;
+    }
+
+    .btn-secondary {
+      background: #374151;
+      color: #e5e5e5;
+      border: 1px solid #4b5563;
+      padding: 0.5rem 1rem;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 0.85rem;
+    }
+
+    .btn-secondary:hover:not(:disabled) {
+      background: #4b5563;
+    }
+
+    .btn-secondary:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
     footer {
       text-align: center;
       padding-top: 2rem;
@@ -605,6 +654,27 @@
       if (type) status.classList.add(type);
     }
 
+    function showFilterNote(lineCount, dxfPath) {
+      // Create or update filter note element
+      let filterNote = document.getElementById('filterNote');
+      if (!filterNote) {
+        filterNote = document.createElement('div');
+        filterNote.id = 'filterNote';
+        filterNote.className = 'filter-note';
+        dimensions.after(filterNote);
+      }
+
+      filterNote.innerHTML = `
+        <p><strong>${lineCount.toLocaleString()} lines</strong> extracted — raw edge data includes all detail.</p>
+        <p>Use DXF cleaner to isolate body outline layer.</p>
+        <button class="btn btn-secondary" id="filterBtn" disabled title="Coming soon">
+          Filter to Body Outline
+        </button>
+        <small>POST /api/blueprint/clean endpoint pending</small>
+      `;
+      filterNote.classList.add('visible');
+    }
+
     // Extract
     extractBtn.addEventListener('click', async () => {
       if (!selectedFile) return;
@@ -622,7 +692,7 @@
           formData.append('target_height_mm', '500');
           formData.append('return_file', 'false');
 
-          response = await fetch(`${API_BASE}/blueprint/edge-to-dxf/convert`, {
+          response = await fetch(`${API_BASE}/api/blueprint/edge-to-dxf/convert`, {
             method: 'POST',
             body: formData
           });
@@ -641,24 +711,35 @@
 
           // Map edge-to-dxf response to common format
           const timeMs = data.processing_time_ms || 0;
-          showStatus(`Extraction complete in ${(timeMs / 1000).toFixed(2)}s — ${data.line_count?.toLocaleString() || 0} lines`, 'success');
+          const lineCount = data.line_count || 0;
+          showStatus(`Extraction complete in ${(timeMs / 1000).toFixed(2)}s — ${lineCount.toLocaleString()} lines`, 'success');
 
           document.getElementById('dimWidth').textContent =
             data.output_size_mm?.[0] ? `${data.output_size_mm[0].toFixed(1)} mm` : '—';
           document.getElementById('dimHeight').textContent =
             data.output_size_mm?.[1] ? `${data.output_size_mm[1].toFixed(1)} mm` : '—';
-          document.getElementById('dimContours').textContent = data.line_count?.toLocaleString() || '—';
+          document.getElementById('dimContours').textContent = lineCount.toLocaleString();
           document.getElementById('dimScale').textContent = `${data.mm_per_px?.toFixed(4) || '—'} mm/px`;
           dimensions.classList.add('visible');
 
           // DXF available for download (file path returned)
           if (data.dxf_path) {
             downloadDxf.disabled = false;
+            // Show filter note for large extractions
+            if (lineCount > 10000) {
+              showFilterNote(lineCount, data.dxf_path);
+            }
           }
 
         } else {
           // Photo mode: JSON base64 to photo vectorizer
-          const base64 = await fileToBase64(selectedFile);
+          // Resize large images to prevent OOM
+          showStatus('Processing image...');
+          const base64 = await resizeImageIfNeeded(selectedFile);
+
+          if (imageWasResized) {
+            showStatus(`Image resized to max ${MAX_IMAGE_DIM}px for processing...`);
+          }
 
           const requestBody = {
             image_b64: base64,
@@ -685,7 +766,19 @@
           data = await response.json();
           extractedData = data;
 
+          // Detailed logging for diagnosis
+          console.log('=== Photo Vectorizer API Response ===');
+          console.log('Full response:', JSON.stringify(data, null, 2));
+          console.log('ok:', data.ok);
+          console.log('error:', data.error);
+          console.log('warnings:', data.warnings);
+          console.log('contour_count:', data.contour_count);
+          console.log('body_dimensions_mm:', data.body_dimensions_mm);
+          console.log('scale_source:', data.scale_source);
+          console.log('=====================================');
+
           if (!data.ok) {
+            console.log('Extraction failed - throwing error');
             throw new Error(data.error || 'Photo extraction failed');
           }
 
@@ -728,6 +821,60 @@
         };
         reader.onerror = reject;
         reader.readAsDataURL(file);
+      });
+    }
+
+    // Resize image if too large (prevents OOM on server)
+    const MAX_IMAGE_DIM = 3000;
+    let imageWasResized = false;
+
+    function resizeImageIfNeeded(file) {
+      return new Promise((resolve, reject) => {
+        const img = new Image();
+        const url = URL.createObjectURL(file);
+
+        img.onload = () => {
+          URL.revokeObjectURL(url);
+          const { width, height } = img;
+
+          // Check if resize needed
+          if (width <= MAX_IMAGE_DIM && height <= MAX_IMAGE_DIM) {
+            imageWasResized = false;
+            // Return original file as base64
+            fileToBase64(file).then(resolve).catch(reject);
+            return;
+          }
+
+          // Calculate new dimensions
+          imageWasResized = true;
+          let newWidth, newHeight;
+          if (width > height) {
+            newWidth = MAX_IMAGE_DIM;
+            newHeight = Math.round(height * (MAX_IMAGE_DIM / width));
+          } else {
+            newHeight = MAX_IMAGE_DIM;
+            newWidth = Math.round(width * (MAX_IMAGE_DIM / height));
+          }
+
+          // Resize using canvas
+          const canvas = document.createElement('canvas');
+          canvas.width = newWidth;
+          canvas.height = newHeight;
+          const ctx = canvas.getContext('2d');
+          ctx.drawImage(img, 0, 0, newWidth, newHeight);
+
+          // Convert to base64 (JPEG for photos)
+          const dataUrl = canvas.toDataURL('image/jpeg', 0.9);
+          const base64 = dataUrl.split(',')[1];
+          resolve(base64);
+        };
+
+        img.onerror = () => {
+          URL.revokeObjectURL(url);
+          reject(new Error('Failed to load image for resize'));
+        };
+
+        img.src = url;
       });
     }
 
