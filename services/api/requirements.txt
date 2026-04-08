@@ -30,6 +30,7 @@ pytest-mock>=3.11.0
 # anthropic>=0.70.0  # OPTIONAL: Not imported; AI uses raw HTTP via app/ai/transport/
 openai>=1.0.0  # Required for DALL-E image generation
 pdf2image>=1.16.0
+PyMuPDF>=1.24.0  # PDF rendering for edge-to-dxf (provides fitz)
 Pillow>=10.0.0
 opencv-python-headless>=4.8.0
 svgwrite>=1.4.0
