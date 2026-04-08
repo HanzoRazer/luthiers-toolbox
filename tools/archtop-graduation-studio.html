@@ -1,0 +1,1020 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Archtop Graduation Studio - The Production Shop</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: #0f0f0f;
+      color: #e5e5e5;
+      min-height: 100vh;
+      padding: 2rem;
+    }
+
+    .container {
+      max-width: 1100px;
+      margin: 0 auto;
+    }
+
+    header {
+      text-align: center;
+      margin-bottom: 2rem;
+      padding-bottom: 1.5rem;
+      border-bottom: 1px solid #2a2a2a;
+    }
+
+    h1 {
+      font-size: 1.75rem;
+      font-weight: 600;
+      color: #f59e0b;
+      margin-bottom: 0.5rem;
+    }
+
+    .tagline {
+      color: #888;
+      font-size: 0.9rem;
+      line-height: 1.5;
+    }
+
+    h2 {
+      font-size: 1.1rem;
+      font-weight: 600;
+      color: #f59e0b;
+      margin-bottom: 1rem;
+    }
+
+    .section {
+      background: #1a1a1a;
+      border: 1px solid #2a2a2a;
+      border-radius: 12px;
+      padding: 1.5rem;
+      margin-bottom: 1.5rem;
+    }
+
+    /* Plate Toggle */
+    .plate-toggle {
+      display: flex;
+      gap: 0;
+      margin-bottom: 1.5rem;
+      justify-content: center;
+    }
+
+    .toggle-btn {
+      background: #2a2a2a;
+      color: #888;
+      border: 1px solid #3a3a3a;
+      padding: 0.75rem 2rem;
+      font-size: 0.95rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .toggle-btn:first-child {
+      border-radius: 8px 0 0 8px;
+    }
+
+    .toggle-btn:last-child {
+      border-radius: 0 8px 8px 0;
+      border-left: none;
+    }
+
+    .toggle-btn.active {
+      background: #f59e0b;
+      color: #0f0f0f;
+      border-color: #f59e0b;
+    }
+
+    .toggle-btn:hover:not(.active) {
+      background: #3a3a3a;
+      color: #e5e5e5;
+    }
+
+    /* Measurement Grid SVG */
+    .measurement-grid {
+      position: relative;
+      width: 100%;
+      max-width: 500px;
+      margin: 0 auto;
+    }
+
+    .measurement-grid svg {
+      width: 100%;
+      height: auto;
+    }
+
+    .zone-dot {
+      fill: #3a3a3a;
+      stroke: #f59e0b;
+      stroke-width: 2;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .zone-dot:hover {
+      fill: #f59e0b;
+      transform: scale(1.2);
+    }
+
+    .zone-dot.has-value {
+      fill: #f59e0b;
+    }
+
+    .zone-label {
+      font-size: 10px;
+      fill: #e5e5e5;
+      text-anchor: middle;
+      pointer-events: none;
+    }
+
+    .zone-value {
+      font-size: 11px;
+      fill: #f59e0b;
+      font-weight: 600;
+      text-anchor: middle;
+      pointer-events: none;
+    }
+
+    .ref-value {
+      font-size: 9px;
+      fill: #666;
+      text-anchor: middle;
+      pointer-events: none;
+    }
+
+    /* Zone Input Popup */
+    .zone-popup {
+      position: absolute;
+      background: #2a2a2a;
+      border: 1px solid #f59e0b;
+      border-radius: 8px;
+      padding: 0.75rem;
+      display: none;
+      z-index: 100;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+    }
+
+    .zone-popup.active {
+      display: block;
+    }
+
+    .zone-popup input {
+      width: 80px;
+      background: #1a1a1a;
+      border: 1px solid #3a3a3a;
+      border-radius: 4px;
+      padding: 0.5rem;
+      color: #e5e5e5;
+      font-size: 0.9rem;
+      text-align: center;
+    }
+
+    .zone-popup input:focus {
+      outline: none;
+      border-color: #f59e0b;
+    }
+
+    .zone-popup-label {
+      font-size: 0.75rem;
+      color: #888;
+      margin-bottom: 0.5rem;
+      text-align: center;
+    }
+
+    /* Controls Grid */
+    .controls-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 1rem;
+      margin-bottom: 1rem;
+    }
+
+    .control-group {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+
+    label {
+      font-size: 0.85rem;
+      color: #888;
+      font-weight: 500;
+    }
+
+    input[type="number"], select {
+      background: #1a1a1a;
+      border: 1px solid #3a3a3a;
+      border-radius: 8px;
+      padding: 0.75rem 1rem;
+      color: #e5e5e5;
+      font-size: 0.95rem;
+      transition: border-color 0.2s;
+    }
+
+    input[type="number"]:focus, select:focus {
+      border-color: #f59e0b;
+      outline: none;
+    }
+
+    /* Checkbox */
+    .checkbox-group {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      margin-top: 0.5rem;
+    }
+
+    .checkbox-group input[type="checkbox"] {
+      width: 18px;
+      height: 18px;
+      accent-color: #f59e0b;
+      cursor: pointer;
+    }
+
+    .checkbox-group label {
+      cursor: pointer;
+      color: #e5e5e5;
+    }
+
+    /* Buttons */
+    .btn-group {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1rem;
+      margin-top: 1rem;
+    }
+
+    .btn {
+      background: #f59e0b;
+      color: #0f0f0f;
+      border: none;
+      border-radius: 8px;
+      padding: 0.875rem 1.5rem;
+      font-size: 0.95rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.2s, transform 0.1s;
+    }
+
+    .btn:hover {
+      background: #d97706;
+    }
+
+    .btn:active {
+      transform: scale(0.98);
+    }
+
+    .btn:disabled {
+      background: #3a3a3a;
+      color: #666;
+      cursor: not-allowed;
+    }
+
+    .btn-secondary {
+      background: #2a2a2a;
+      color: #e5e5e5;
+      border: 1px solid #3a3a3a;
+    }
+
+    .btn-secondary:hover {
+      background: #3a3a3a;
+      border-color: #f59e0b;
+    }
+
+    /* Results */
+    .results-panel {
+      display: none;
+    }
+
+    .results-panel.active {
+      display: block;
+    }
+
+    .result-item {
+      background: #0f0f0f;
+      border: 1px solid #2a2a2a;
+      border-radius: 8px;
+      padding: 1rem;
+      margin-bottom: 1rem;
+    }
+
+    .result-item h3 {
+      font-size: 0.9rem;
+      color: #f59e0b;
+      margin-bottom: 0.75rem;
+    }
+
+    .result-svg {
+      background: #fff;
+      border-radius: 4px;
+      padding: 1rem;
+      margin-bottom: 0.75rem;
+    }
+
+    .result-svg svg {
+      width: 100%;
+      height: auto;
+      max-height: 300px;
+    }
+
+    .result-img {
+      max-width: 100%;
+      border-radius: 4px;
+    }
+
+    .modes-table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    .modes-table th, .modes-table td {
+      padding: 0.5rem 1rem;
+      text-align: left;
+      border-bottom: 1px solid #2a2a2a;
+    }
+
+    .modes-table th {
+      color: #888;
+      font-weight: 500;
+      font-size: 0.85rem;
+    }
+
+    .modes-table td {
+      font-size: 0.95rem;
+    }
+
+    .download-btn {
+      display: inline-block;
+      margin-top: 0.5rem;
+    }
+
+    /* Status */
+    .status {
+      padding: 0.75rem 1rem;
+      border-radius: 8px;
+      margin-bottom: 1rem;
+      font-size: 0.9rem;
+      display: none;
+    }
+
+    .status.active {
+      display: block;
+    }
+
+    .status.loading {
+      background: rgba(245, 158, 11, 0.1);
+      border: 1px solid #f59e0b;
+      color: #f59e0b;
+    }
+
+    .status.error {
+      background: rgba(239, 68, 68, 0.1);
+      border: 1px solid #ef4444;
+      color: #ef4444;
+    }
+
+    .status.success {
+      background: rgba(34, 197, 94, 0.1);
+      border: 1px solid #22c55e;
+      color: #22c55e;
+    }
+
+    /* Footer */
+    footer {
+      text-align: center;
+      padding-top: 2rem;
+      border-top: 1px solid #2a2a2a;
+      margin-top: 2rem;
+    }
+
+    footer p {
+      color: #666;
+      font-size: 0.85rem;
+      margin-bottom: 0.5rem;
+    }
+
+    footer a {
+      color: #f59e0b;
+      text-decoration: none;
+    }
+
+    footer a:hover {
+      text-decoration: underline;
+    }
+
+    /* Responsive */
+    @media (max-width: 600px) {
+      body { padding: 1rem; }
+      .controls-grid { grid-template-columns: 1fr; }
+      .btn-group { flex-direction: column; }
+      .btn { width: 100%; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>Archtop Graduation Studio</h1>
+      <p class="tagline">Measure your plate. Generate contours. Predict modes.</p>
+    </header>
+
+    <!-- Plate Selector -->
+    <div class="section">
+      <div class="plate-toggle">
+        <button class="toggle-btn active" data-plate="top">Top Plate</button>
+        <button class="toggle-btn" data-plate="back">Back Plate</button>
+      </div>
+
+      <!-- Measurement Grid -->
+      <div class="measurement-grid" id="measurementGrid">
+        <svg id="plateSvg" viewBox="0 0 400 500" xmlns="http://www.w3.org/2000/svg">
+          <!-- Archtop body outline -->
+          <path id="bodyOutline" d="
+            M 200 10
+            C 280 10, 350 60, 360 130
+            C 370 180, 350 200, 340 220
+            C 320 250, 290 260, 280 280
+            C 270 300, 290 340, 320 380
+            C 350 420, 370 450, 360 470
+            C 350 490, 280 495, 200 495
+            C 120 495, 50 490, 40 470
+            C 30 450, 50 420, 80 380
+            C 110 340, 130 300, 120 280
+            C 110 260, 80 250, 60 220
+            C 50 200, 30 180, 40 130
+            C 50 60, 120 10, 200 10
+            Z
+          " fill="none" stroke="#3a3a3a" stroke-width="2"/>
+
+          <!-- F-holes (for visual reference) -->
+          <ellipse cx="140" cy="280" rx="15" ry="45" fill="none" stroke="#2a2a2a" stroke-width="1.5" transform="rotate(-15 140 280)"/>
+          <ellipse cx="260" cy="280" rx="15" ry="45" fill="none" stroke="#2a2a2a" stroke-width="1.5" transform="rotate(15 260 280)"/>
+
+          <!-- Zones will be added dynamically -->
+          <g id="zonesGroup"></g>
+        </svg>
+
+        <!-- Zone input popup -->
+        <div class="zone-popup" id="zonePopup">
+          <div class="zone-popup-label" id="popupLabel">Zone</div>
+          <input type="number" id="zoneInput" step="0.1" min="0" max="10" placeholder="mm">
+        </div>
+      </div>
+    </div>
+
+    <!-- Arch Height -->
+    <div class="section">
+      <h2>Arch Height</h2>
+      <div class="controls-grid">
+        <div class="control-group">
+          <label for="topArchHeight">Top arch height (mm)</label>
+          <input type="number" id="topArchHeight" value="15.875" step="0.001">
+        </div>
+        <div class="control-group">
+          <label for="backArchHeight">Back arch height (mm)</label>
+          <input type="number" id="backArchHeight" value="19.05" step="0.001">
+        </div>
+      </div>
+    </div>
+
+    <!-- Material Properties -->
+    <div class="section">
+      <h2>Material Properties</h2>
+      <div class="controls-grid">
+        <div class="control-group">
+          <label for="woodSpecies">Wood species</label>
+          <select id="woodSpecies">
+            <option value="11.0">Spruce (E=11.0 GPa)</option>
+            <option value="8.5">Cedar (E=8.5 GPa)</option>
+            <option value="9.5">Mahogany (E=9.5 GPa)</option>
+            <option value="12.0">Maple (E=12.0 GPa)</option>
+            <option value="custom">Custom</option>
+          </select>
+        </div>
+        <div class="control-group" id="customEGroup" style="display:none;">
+          <label for="customE">Young's Modulus (GPa)</label>
+          <input type="number" id="customE" value="11.0" step="0.1" min="1" max="30">
+        </div>
+        <div class="control-group">
+          <label for="thickness">Plate thickness (mm)</label>
+          <input type="number" id="thickness" value="4.0" step="0.1" min="1" max="10">
+        </div>
+      </div>
+
+      <div class="checkbox-group">
+        <input type="checkbox" id="showReference">
+        <label for="showReference">Show D'Aquisto reference values</label>
+      </div>
+    </div>
+
+    <!-- Generate Buttons -->
+    <div class="section">
+      <h2>Generate</h2>
+      <div class="btn-group">
+        <button class="btn" id="btnContours">Generate Contours</button>
+        <button class="btn" id="btnStiffness">Generate Stiffness Map</button>
+        <button class="btn" id="btnModes">Predict Modes</button>
+        <button class="btn btn-secondary" id="btnLoadSample">Load Sample Data</button>
+      </div>
+    </div>
+
+    <!-- Status -->
+    <div class="status" id="status"></div>
+
+    <!-- Results Panel -->
+    <div class="section results-panel" id="resultsPanel">
+      <h2>Results</h2>
+
+      <div class="result-item" id="contoursResult" style="display:none;">
+        <h3>Contours</h3>
+        <div class="result-svg" id="contoursSvg"></div>
+        <p id="contoursInfo"></p>
+        <button class="btn btn-secondary download-btn" id="downloadDxf">Download DXF</button>
+      </div>
+
+      <div class="result-item" id="stiffnessResult" style="display:none;">
+        <h3>Stiffness Map</h3>
+        <img class="result-img" id="stiffnessImg" src="" alt="Stiffness heatmap">
+        <p id="stiffnessInfo"></p>
+      </div>
+
+      <div class="result-item" id="modesResult" style="display:none;">
+        <h3>Predicted Modes</h3>
+        <img class="result-img" id="modesImg" src="" alt="Mode shapes">
+        <table class="modes-table" id="modesTable">
+          <thead><tr><th>Mode</th><th>Frequency (Hz)</th></tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </div>
+
+    <footer>
+      <p>Part of <strong><a href="https://easttrinitybaywoodworks.com" target="_blank">East Trinity Bay Woodworks</a></strong></p>
+      <p>The Production Shop — Free. Verified. Yours to keep.</p>
+    </footer>
+  </div>
+
+  <script>
+    const API_BASE = 'https://luthiers-toolbox-production.up.railway.app';
+
+    // D'Aquisto reference data
+    const DAQUISTO_REF = {
+      top: {
+        upper_bout_edge: 3.0,
+        upper_bout_near_fhole_left: 3.5,
+        upper_bout_near_fhole_right: 3.0,
+        waist_left: 3.5,
+        waist_right: 4.0,
+        fhole_region_center: 3.5,
+        fhole_region_left: 4.0,
+        lower_bout_upper_left: 4.0,
+        lower_bout_upper_right: 4.0,
+        lower_bout_center_left: 3.0,
+        lower_bout_center_right: 4.0,
+        lower_bout_lower_left: 4.5,
+        lower_bout_lower_right: 4.5,
+        lower_bout_bottom_center: 4.0
+      },
+      back: {
+        upper_bout_edge_left: 3.0,
+        upper_bout_edge_right: 2.0,
+        upper_bout_near_cutout_left: 2.75,
+        upper_bout_near_cutout_right: 3.5,
+        upper_bout_center: 3.0,
+        upper_mid_left: 3.0,
+        upper_mid_right: 3.0,
+        waist_left: 4.0,
+        waist_right: 4.5,
+        below_waist_left: 3.0,
+        below_waist_center: 4.0,
+        below_waist_right_far: 4.0,
+        lower_bout_left: 3.0,
+        lower_bout_center_left: 4.5,
+        lower_bout_center_right: 4.5,
+        lower_bout_right: 3.0,
+        lower_edge_left: 3.0,
+        lower_edge_right: 2.0
+      }
+    };
+
+    // Zone positions on SVG (x, y on 400x500 viewBox)
+    const ZONE_POSITIONS = {
+      top: {
+        upper_bout_edge: { x: 200, y: 40, label: 'UB Edge' },
+        upper_bout_near_fhole_left: { x: 120, y: 100, label: 'UB L' },
+        upper_bout_near_fhole_right: { x: 280, y: 100, label: 'UB R' },
+        waist_left: { x: 80, y: 220, label: 'Waist L' },
+        waist_right: { x: 320, y: 220, label: 'Waist R' },
+        fhole_region_center: { x: 200, y: 260, label: 'F-hole C' },
+        fhole_region_left: { x: 140, y: 280, label: 'F-hole L' },
+        lower_bout_upper_left: { x: 100, y: 320, label: 'LB Up L' },
+        lower_bout_upper_right: { x: 300, y: 320, label: 'LB Up R' },
+        lower_bout_center_left: { x: 120, y: 380, label: 'LB C L' },
+        lower_bout_center_right: { x: 280, y: 380, label: 'LB C R' },
+        lower_bout_lower_left: { x: 140, y: 430, label: 'LB Lo L' },
+        lower_bout_lower_right: { x: 260, y: 430, label: 'LB Lo R' },
+        lower_bout_bottom_center: { x: 200, y: 470, label: 'LB Bot' }
+      },
+      back: {
+        upper_bout_edge_left: { x: 100, y: 40, label: 'UB Edge L' },
+        upper_bout_edge_right: { x: 300, y: 40, label: 'UB Edge R' },
+        upper_bout_near_cutout_left: { x: 130, y: 80, label: 'UB Cut L' },
+        upper_bout_near_cutout_right: { x: 270, y: 80, label: 'UB Cut R' },
+        upper_bout_center: { x: 200, y: 70, label: 'UB Center' },
+        upper_mid_left: { x: 100, y: 140, label: 'UM L' },
+        upper_mid_right: { x: 300, y: 140, label: 'UM R' },
+        waist_left: { x: 80, y: 220, label: 'Waist L' },
+        waist_right: { x: 320, y: 220, label: 'Waist R' },
+        below_waist_left: { x: 100, y: 280, label: 'BW L' },
+        below_waist_center: { x: 200, y: 280, label: 'BW C' },
+        below_waist_right_far: { x: 300, y: 280, label: 'BW R' },
+        lower_bout_left: { x: 90, y: 360, label: 'LB L' },
+        lower_bout_center_left: { x: 150, y: 400, label: 'LB CL' },
+        lower_bout_center_right: { x: 250, y: 400, label: 'LB CR' },
+        lower_bout_right: { x: 310, y: 360, label: 'LB R' },
+        lower_edge_left: { x: 120, y: 460, label: 'LE L' },
+        lower_edge_right: { x: 280, y: 460, label: 'LE R' }
+      }
+    };
+
+    // State
+    let currentPlate = 'top';
+    let measurements = { top: {}, back: {} };
+    let activeZone = null;
+    let lastStiffnessGrid = null;
+
+    // DOM elements
+    const zonesGroup = document.getElementById('zonesGroup');
+    const zonePopup = document.getElementById('zonePopup');
+    const zoneInput = document.getElementById('zoneInput');
+    const popupLabel = document.getElementById('popupLabel');
+    const status = document.getElementById('status');
+    const resultsPanel = document.getElementById('resultsPanel');
+
+    // Initialize
+    function init() {
+      renderZones();
+      setupEventListeners();
+    }
+
+    function renderZones() {
+      zonesGroup.innerHTML = '';
+      const positions = ZONE_POSITIONS[currentPlate];
+      const refs = DAQUISTO_REF[currentPlate];
+      const showRef = document.getElementById('showReference').checked;
+
+      for (const [zoneId, pos] of Object.entries(positions)) {
+        const value = measurements[currentPlate][zoneId];
+        const refValue = refs[zoneId];
+
+        // Zone dot
+        const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+        circle.setAttribute('cx', pos.x);
+        circle.setAttribute('cy', pos.y);
+        circle.setAttribute('r', 12);
+        circle.setAttribute('class', 'zone-dot' + (value ? ' has-value' : ''));
+        circle.setAttribute('data-zone', zoneId);
+        zonesGroup.appendChild(circle);
+
+        // Value label (if entered)
+        if (value) {
+          const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+          text.setAttribute('x', pos.x);
+          text.setAttribute('y', pos.y - 20);
+          text.setAttribute('class', 'zone-value');
+          text.textContent = value.toFixed(1);
+          zonesGroup.appendChild(text);
+        }
+
+        // Reference value (if enabled)
+        if (showRef && refValue) {
+          const refText = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+          refText.setAttribute('x', pos.x);
+          refText.setAttribute('y', pos.y + (value ? 28 : 25));
+          refText.setAttribute('class', 'ref-value');
+          refText.textContent = `(${refValue})`;
+          zonesGroup.appendChild(refText);
+        }
+
+        // Zone label
+        const label = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+        label.setAttribute('x', pos.x);
+        label.setAttribute('y', pos.y + 4);
+        label.setAttribute('class', 'zone-label');
+        label.textContent = '';
+        zonesGroup.appendChild(label);
+      }
+    }
+
+    function setupEventListeners() {
+      // Plate toggle
+      document.querySelectorAll('.toggle-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          document.querySelectorAll('.toggle-btn').forEach(b => b.classList.remove('active'));
+          btn.classList.add('active');
+          currentPlate = btn.dataset.plate;
+          hidePopup();
+          renderZones();
+        });
+      });
+
+      // Zone clicks
+      document.getElementById('plateSvg').addEventListener('click', (e) => {
+        if (e.target.classList.contains('zone-dot')) {
+          const zoneId = e.target.dataset.zone;
+          showPopup(zoneId, e.target);
+        } else {
+          hidePopup();
+        }
+      });
+
+      // Zone input
+      zoneInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+          saveZoneValue();
+        } else if (e.key === 'Escape') {
+          hidePopup();
+        }
+      });
+
+      zoneInput.addEventListener('blur', () => {
+        setTimeout(hidePopup, 200);
+      });
+
+      // Wood species
+      document.getElementById('woodSpecies').addEventListener('change', (e) => {
+        document.getElementById('customEGroup').style.display =
+          e.target.value === 'custom' ? 'flex' : 'none';
+      });
+
+      // Show reference
+      document.getElementById('showReference').addEventListener('change', renderZones);
+
+      // Generate buttons
+      document.getElementById('btnContours').addEventListener('click', generateContours);
+      document.getElementById('btnStiffness').addEventListener('click', generateStiffness);
+      document.getElementById('btnModes').addEventListener('click', predictModes);
+      document.getElementById('btnLoadSample').addEventListener('click', loadSampleData);
+
+      // Download DXF
+      document.getElementById('downloadDxf').addEventListener('click', downloadDxf);
+    }
+
+    function showPopup(zoneId, element) {
+      activeZone = zoneId;
+      const pos = ZONE_POSITIONS[currentPlate][zoneId];
+      const rect = document.getElementById('measurementGrid').getBoundingClientRect();
+      const svgRect = document.getElementById('plateSvg').getBoundingClientRect();
+
+      const scaleX = svgRect.width / 400;
+      const scaleY = svgRect.height / 500;
+
+      zonePopup.style.left = (pos.x * scaleX - 50) + 'px';
+      zonePopup.style.top = (pos.y * scaleY + 20) + 'px';
+
+      popupLabel.textContent = pos.label;
+      zoneInput.value = measurements[currentPlate][zoneId] || '';
+      zonePopup.classList.add('active');
+      zoneInput.focus();
+    }
+
+    function hidePopup() {
+      zonePopup.classList.remove('active');
+      activeZone = null;
+    }
+
+    function saveZoneValue() {
+      if (activeZone && zoneInput.value) {
+        measurements[currentPlate][activeZone] = parseFloat(zoneInput.value);
+        renderZones();
+      }
+      hidePopup();
+    }
+
+    function getArchHeight() {
+      return currentPlate === 'top'
+        ? parseFloat(document.getElementById('topArchHeight').value)
+        : parseFloat(document.getElementById('backArchHeight').value);
+    }
+
+    function getYoungsModulus() {
+      const select = document.getElementById('woodSpecies');
+      if (select.value === 'custom') {
+        return parseFloat(document.getElementById('customE').value);
+      }
+      return parseFloat(select.value);
+    }
+
+    function buildPoints() {
+      // Convert zone measurements to x,y,height points
+      // Map zone positions to real-world coordinates (approx 400mm x 500mm body)
+      const points = [];
+      const positions = ZONE_POSITIONS[currentPlate];
+      const archHeight = getArchHeight();
+
+      for (const [zoneId, pos] of Object.entries(positions)) {
+        const thickness = measurements[currentPlate][zoneId];
+        if (thickness) {
+          // Convert SVG coords to mm (center at 200,250 -> 0,0)
+          // SVG is 400x500, body is approx 400mm x 500mm
+          const x_mm = pos.x - 200;
+          const y_mm = 250 - pos.y; // flip Y
+
+          // Height is arch height minus depth from surface
+          // Thinner areas are closer to the edge (lower arch)
+          // Simple linear approximation based on position from center
+          const distFromCenter = Math.sqrt(x_mm * x_mm + y_mm * y_mm);
+          const maxDist = 250;
+          const normalizedDist = Math.min(distFromCenter / maxDist, 1);
+          const height_mm = archHeight * (1 - normalizedDist * 0.8);
+
+          points.push({ x_mm, y_mm, height_mm });
+        }
+      }
+      return points;
+    }
+
+    function showStatus(message, type) {
+      status.textContent = message;
+      status.className = 'status active ' + type;
+    }
+
+    function hideStatus() {
+      status.className = 'status';
+    }
+
+    let lastDxfB64 = null;
+
+    async function generateContours() {
+      const points = buildPoints();
+      if (points.length < 4) {
+        showStatus('Enter at least 4 zone measurements', 'error');
+        return;
+      }
+
+      showStatus('Generating contours...', 'loading');
+
+      try {
+        const response = await fetch(`${API_BASE}/api/archtop/contours`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            points,
+            levels_mm: [2, 4, 6, 8, 10, 12, 14],
+            resolution_mm: 2.0,
+            out_format: 'both'
+          })
+        });
+
+        if (!response.ok) {
+          const err = await response.json();
+          throw new Error(err.detail || 'API error');
+        }
+
+        const data = await response.json();
+
+        resultsPanel.classList.add('active');
+        document.getElementById('contoursResult').style.display = 'block';
+        document.getElementById('contoursSvg').innerHTML = data.svg_content || '';
+        document.getElementById('contoursInfo').textContent =
+          `${data.contour_count} contours at levels: ${data.levels_found_mm.join(', ')} mm (${data.processing_ms}ms)`;
+
+        lastDxfB64 = data.dxf_b64;
+
+        showStatus('Contours generated successfully', 'success');
+        setTimeout(hideStatus, 3000);
+
+      } catch (err) {
+        showStatus('Error: ' + err.message, 'error');
+      }
+    }
+
+    async function generateStiffness() {
+      const points = buildPoints();
+      if (points.length < 4) {
+        showStatus('Enter at least 4 zone measurements', 'error');
+        return;
+      }
+
+      showStatus('Computing stiffness map...', 'loading');
+
+      try {
+        const response = await fetch(`${API_BASE}/api/archtop/stiffness_map`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            points,
+            E_gpa: getYoungsModulus(),
+            nu: 0.35,
+            thickness_mm: parseFloat(document.getElementById('thickness').value),
+            alpha: 1.0,
+            Lref_mm: 250.0,
+            resolution_mm: 2.0,
+            heatmap: 'K_eff'
+          })
+        });
+
+        if (!response.ok) {
+          const err = await response.json();
+          throw new Error(err.detail || 'API error');
+        }
+
+        const data = await response.json();
+
+        resultsPanel.classList.add('active');
+        document.getElementById('stiffnessResult').style.display = 'block';
+        document.getElementById('stiffnessImg').src = 'data:image/png;base64,' + data.png_b64;
+        document.getElementById('stiffnessInfo').textContent =
+          `D_b: ${data.D_b_Nm.toFixed(2)} N*m | Max K_shell: ${data.max_K_shell_N_per_m.toFixed(1)} N/m | Grid: ${data.grid_shape[0]}x${data.grid_shape[1]} (${data.processing_ms}ms)`;
+
+        // Store grid for modal analysis
+        lastStiffnessGrid = data.grid;
+
+        showStatus('Stiffness map computed', 'success');
+        setTimeout(hideStatus, 3000);
+
+      } catch (err) {
+        showStatus('Error: ' + err.message, 'error');
+      }
+    }
+
+    async function predictModes() {
+      if (!lastStiffnessGrid) {
+        showStatus('Generate stiffness map first', 'error');
+        return;
+      }
+
+      showStatus('Solving eigenvalue problem...', 'loading');
+
+      try {
+        const response = await fetch(`${API_BASE}/api/archtop/modal_analysis`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            stiffness_map: lastStiffnessGrid,
+            density_kg_m3: 450,
+            thickness_mm: parseFloat(document.getElementById('thickness').value),
+            num_modes: 6
+          })
+        });
+
+        if (!response.ok) {
+          const err = await response.json();
+          throw new Error(err.detail || 'API error');
+        }
+
+        const data = await response.json();
+
+        resultsPanel.classList.add('active');
+        document.getElementById('modesResult').style.display = 'block';
+        document.getElementById('modesImg').src = 'data:image/png;base64,' + data.mode_shapes_png_b64;
+
+        const tbody = document.querySelector('#modesTable tbody');
+        tbody.innerHTML = '';
+        data.modes.forEach(mode => {
+          const tr = document.createElement('tr');
+          tr.innerHTML = `<td>Mode ${mode.mode_number}</td><td>${mode.frequency_hz.toFixed(1)} Hz</td>`;
+          tbody.appendChild(tr);
+        });
+
+        showStatus(`Modes predicted. Lowest: ${data.lowest_mode_hz.toFixed(1)} Hz (${data.processing_ms}ms)`, 'success');
+        setTimeout(hideStatus, 3000);
+
+      } catch (err) {
+        showStatus('Error: ' + err.message, 'error');
+      }
+    }
+
+    function loadSampleData() {
+      // Load D'Aquisto synthetic dome data (simplified - using reference thickness values)
+      const refs = DAQUISTO_REF[currentPlate];
+      measurements[currentPlate] = { ...refs };
+      renderZones();
+      showStatus('Sample data loaded from D\'Aquisto measurements', 'success');
+      setTimeout(hideStatus, 3000);
+    }
+
+    function downloadDxf() {
+      if (!lastDxfB64) {
+        showStatus('Generate contours first', 'error');
+        return;
+      }
+
+      const blob = new Blob([atob(lastDxfB64)], { type: 'application/dxf' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `archtop_${currentPlate}_contours.dxf`;
+      a.click();
+      URL.revokeObjectURL(url);
+    }
+
+    // Initialize on load
+    init();
+  </script>
+</body>
+</html>
