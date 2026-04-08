@@ -273,11 +273,11 @@ def save_modal_data(frequencies_hz, mode_shapes, grid_data, out_prefix):
             'frequency_hz': float(f),
             'angular_frequency_rad_s': float(2 * np.pi * f)
         })
-    
+
     freq_json = f"{out_prefix}_frequencies.json"
     with open(freq_json, 'w') as f:
         json.dump(freq_data, f, indent=2)
-    
+
     # Save mode shapes as CSV
     mode_csv = f"{out_prefix}_mode_shapes.csv"
     with open(mode_csv, 'w', newline='') as f:
@@ -285,7 +285,7 @@ def save_modal_data(frequencies_hz, mode_shapes, grid_data, out_prefix):
         # Header
         header = ['x_mm', 'y_mm'] + [f'mode_{i+1}' for i in range(len(mode_shapes))]
         writer.writerow(header)
-        
+
         # Write data
         ny, nx = grid_data['X_mm'].shape
         for i in range(ny):
@@ -294,9 +294,117 @@ def save_modal_data(frequencies_hz, mode_shapes, grid_data, out_prefix):
                 for mode in mode_shapes:
                     row.append(mode[i, j])
                 writer.writerow(row)
-    
+
     print(f"Saved modal data to {freq_json} and {mode_csv}")
     return freq_data
+
+
+def _plot_modes_to_bytes(grid_data, mode_shapes, frequencies_hz) -> bytes:
+    """Render mode shapes grid to PNG bytes (for API response)."""
+    import io
+
+    num_modes = len(mode_shapes)
+    cols = min(3, num_modes)
+    rows = (num_modes + cols - 1) // cols
+
+    fig, axes = plt.subplots(rows, cols, figsize=(5*cols, 4*rows))
+    if num_modes == 1:
+        axes = [axes]
+    else:
+        axes = axes.flatten()
+
+    for i, (mode, freq) in enumerate(zip(mode_shapes, frequencies_hz)):
+        ax = axes[i]
+        im = ax.contourf(grid_data['X_mm'], grid_data['Y_mm'], mode,
+                         levels=20, cmap='RdBu_r')
+        ax.set_aspect('equal')
+        ax.set_title(f'Mode {i+1}: {freq:.1f} Hz')
+        ax.set_xlabel('x (mm)')
+        ax.set_ylabel('y (mm)')
+        plt.colorbar(im, ax=ax, label='Normalized deflection')
+
+    for i in range(num_modes, len(axes)):
+        axes[i].axis('off')
+
+    plt.tight_layout()
+    buf = io.BytesIO()
+    plt.savefig(buf, format='png', dpi=200, bbox_inches='tight')
+    plt.close()
+    buf.seek(0)
+    return buf.read()
+
+
+# =============================================================================
+# LIBRARY FUNCTION (called by archtop_router.py)
+# =============================================================================
+
+
+def solve_modes_from_grid(
+    X_mm: np.ndarray,
+    Y_mm: np.ndarray,
+    K_eff: np.ndarray,
+    height_mm: np.ndarray,
+    density_kg_m3: float = 450.0,
+    thickness_mm: float = 4.0,
+    num_modes: int = 6,
+    boundary: str = "clamped",
+) -> dict:
+    """Solve for mode shapes and frequencies from a stiffness grid.
+
+    Args:
+        X_mm: X coordinates grid (2D array, shape ny x nx)
+        Y_mm: Y coordinates grid (2D array, shape ny x nx)
+        K_eff: Effective stiffness grid (2D array, shape ny x nx)
+        height_mm: Height values grid (2D array, shape ny x nx)
+        density_kg_m3: Wood density in kg/m^3
+        thickness_mm: Plate thickness in mm
+        num_modes: Number of modes to compute
+        boundary: Boundary condition ("clamped" only for now)
+
+    Returns:
+        dict with frequencies_hz (list), modes_png_b64 (str)
+    """
+    import base64
+
+    if boundary != "clamped":
+        # TODO: Implement simply_supported when solver supports it
+        raise ValueError("Only 'clamped' boundary condition is currently supported")
+
+    ny, nx = X_mm.shape
+    if ny < 3 or nx < 3:
+        raise ValueError(f"Grid too small for modal analysis. Need at least 3x3, got {ny}x{nx}")
+
+    # Build grid_data dict in format expected by solve_modes
+    dx = (X_mm[0, 1] - X_mm[0, 0]) / 1000.0 if nx > 1 else 0.01
+    dy = (Y_mm[1, 0] - Y_mm[0, 0]) / 1000.0 if ny > 1 else 0.01
+
+    grid_data = {
+        'X_m': X_mm / 1000.0,
+        'Y_m': Y_mm / 1000.0,
+        'X_mm': X_mm,
+        'Y_mm': Y_mm,
+        'K_eff': K_eff,
+        'height_mm': height_mm,
+        'nx': nx,
+        'ny': ny,
+        'dx': dx,
+        'dy': dy,
+    }
+
+    h_m = thickness_mm / 1000.0
+
+    frequencies_hz, mode_shapes = solve_modes(
+        grid_data, density_kg_m3, h_m, num_modes, boundary
+    )
+
+    # Render mode shapes to PNG
+    png_bytes = _plot_modes_to_bytes(grid_data, mode_shapes, frequencies_hz)
+    png_b64 = base64.b64encode(png_bytes).decode("ascii")
+
+    return {
+        "frequencies_hz": [float(f) for f in frequencies_hz],
+        "modes_png_b64": png_b64,
+    }
 
 def create_mode_animation(grid_data, mode_shapes, frequencies_hz, out_prefix):
     """Create animated GIF of mode shapes vibrating"""

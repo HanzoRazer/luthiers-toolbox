@@ -239,4 +239,11 @@ CAM_ROUTERS: List[RouterSpec] = [
         tags=["Woodworking"],
         category="cam",
     ),
+    # ── ARCHTOP: Contours, stiffness, modal analysis ──
+    RouterSpec(
+        module="app.routers.archtop_router",
+        prefix="",  # Router has its own /api/archtop prefix
+        tags=["Archtop", "CAM"],
+        category="cam",
+    ),
 ]

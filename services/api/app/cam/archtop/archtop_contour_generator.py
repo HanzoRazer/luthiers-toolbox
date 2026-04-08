@@ -58,6 +58,63 @@ def ensure_closed(arr):
         arr = np.vstack([arr, arr[0]])
     return arr
 
+
+# =============================================================================
+# LIBRARY FUNCTION (called by archtop_router.py)
+# =============================================================================
+
+
+def generate_contours_from_points(
+    xs: np.ndarray,
+    ys: np.ndarray,
+    heights: np.ndarray,
+    levels: list,
+    resolution: float = 2.0,
+) -> dict:
+    """Generate contour rings from measured surface points.
+
+    Args:
+        xs: X coordinates in mm (1D array)
+        ys: Y coordinates in mm (1D array)
+        heights: Height values in mm (1D array)
+        levels: List of contour heights in mm
+        resolution: Grid resolution in mm
+
+    Returns:
+        dict with:
+            paths: List of numpy arrays, each shape (N, 2) representing a closed contour
+            levels_found: List of levels that produced at least one contour
+    """
+    if len(xs) < 4:
+        raise ValueError("At least 4 points required for interpolation")
+
+    XI, YI, ZI = grid_and_interpolate(xs, ys, heights, resolution=resolution)
+
+    cs = plt.contour(XI, YI, ZI, levels=levels)
+    paths = []
+    levels_found = set()
+
+    for level_idx, collection in enumerate(cs.collections):
+        for seg in collection.get_paths():
+            v = seg.vertices
+            if v.shape[0] >= 3:
+                paths.append(ensure_closed(v.copy()))
+                if level_idx < len(levels):
+                    levels_found.add(levels[level_idx])
+
+    plt.close()
+
+    return {
+        "paths": paths,
+        "levels_found": sorted(levels_found),
+    }
+
+
+# =============================================================================
+# CLI FUNCTIONS
+# =============================================================================
+
+
 def mode_csv(args):
     xs, ys, hs = read_csv_points(args.infile)
     XI, YI, ZI = grid_and_interpolate(xs, ys, hs, resolution=args.res)
