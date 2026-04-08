@@ -160,10 +160,11 @@ Classified mode progressing — Phase 5 delivered 4/5 fixes.
 | HanzoRazer/ltb-express | String tension calculator + quick tools | **CONTAMINATED** — needs cleanup |
 | HanzoRazer/blueprint-reader | PDF → DXF pipeline (vectorizer) | **BLOCKED** — Hostinger billing/coupon issue |
 
-**blueprint-reader Hostinger deploy — BLOCKED:**
-- **Reason:** Hostinger billing/coupon issue
-- **Expected:** Resolved within 24 hours
-- **Next action:** Resume after support response
+**Hostinger deploy — IN PROGRESS:**
+- **Domain:** easttrinitybaywoodworks.com
+- **Status:** DNS propagating
+- **Next action:** Upload files to public_html/ when propagated
+- **Files to deploy:** tools/blueprint-reader.html, tools/production-shop-hub.html, tools/archtop-graduation-studio.html
 
 **Strategic note:** Standalone repos are a moat — free tools that establish
 The Production Shop as the authoritative lutherie calculator source.
