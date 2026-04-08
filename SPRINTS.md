@@ -491,6 +491,50 @@ Config corrected: config/shop_config.yaml (version: R2018 → R12)
 | 2026-04-04 | ltb-acoustic-design-studio combines Helmholtz calculator + soundhole designer | Physics-to-geometry pipeline is the product — separating breaks the workflow |
 | 2026-04-05 | Refactor when already in a file, not for refactoring's sake | Bulk refactoring breaks working code — tiered priority keeps risk controlled |
 | 2026-04-06 | Brand manifesto committed as founding document | docs/MANIFESTO.md (049603ac) — homepage, README, pitch deck use |
+| 2026-04-07 | Strict endpoint separation: blueprint vs photo-vectorizer | Never route photos to blueprint endpoint, never route drawings to photo endpoint |
+
+---
+
+## DECISION: Strict Endpoint Separation (2026-04-07)
+
+**Problem:** blueprint-reader.html was calling `/api/vectorizer/extract` which uses
+`photo_vectorizer_v2.py` — a pipeline designed for photographs and AI renders.
+When fed technical drawings (scanned PDFs, vector plans), it fails to find
+body-sized contours because the extraction heuristics assume photographic input.
+
+**Decision:** Two completely separate tools, two completely separate endpoints.
+
+| Tool | Endpoint | Backend | Input Type |
+|------|----------|---------|------------|
+| `blueprint-reader.html` | `POST /api/blueprint/extract` | `edge_to_dxf.py` | Scanned PDFs, vector drawings |
+| `photo-vectorizer.html` | `POST /api/vectorizer/extract` | `photo_vectorizer_v2.py` | Photographs, AI renders |
+
+**Action items:**
+
+1. **Create `POST /api/blueprint/extract`**
+   - Wire to `edge_to_dxf.py` (already has `/blueprint/edge-to-dxf/convert`)
+   - Match request format to current blueprint-reader.html expectations
+   - Return DXF + SVG outputs
+
+2. **Update `blueprint-reader.html`**
+   - Call `/api/blueprint/extract` only
+   - Remove `/api/vectorizer/extract` call entirely
+   - Source type dropdown: remove "Photo" and "AI Render" options
+
+3. **Create separate `photo-vectorizer.html`**
+   - Calls `/api/vectorizer/extract` only
+   - For photographs and AI renders
+   - Different UI optimized for photo input (background removal preview, etc.)
+
+4. **Update `BLUEPRINT_READER_INPUT_SPEC.md`**
+   - Remove all photo/AI render guidance
+   - Blueprint Reader = technical drawings only
+   - Photo guidance belongs in separate photo-vectorizer spec
+
+**Rationale:** Mixing input types in one tool creates confusion and bugs.
+A scanned plan sheet is fundamentally different from a photograph —
+different preprocessing, different edge detection, different scale inference.
+Clean separation prevents "why doesn't my photo work" support tickets.
 
 ---
 
