@@ -1,0 +1,44 @@
+{
+  "instrument": "Acoustic Guitar 12-String Dreadnought",
+  "plan_no": "AGP-03",
+  "designer": "Scott E. Antes",
+  "year_documented": 2004,
+  "source": "Purchased large format print, scanned 300dpi",
+  "body": {
+    "type": "flat-top dreadnought",
+    "soundhole": "round",
+    "bracing": "X-brace with tone bars"
+  },
+  "scale_length_mm": 635.0,
+  "scale_length_in": 25.000,
+  "body_dimensions_mm": {
+    "lower_bout": 397,
+    "waist": 270,
+    "upper_bout": 285
+  },
+  "body_dimensions_in": {
+    "lower_bout": 15.63,
+    "waist": 10.63,
+    "upper_bout": 11.25
+  },
+  "top": {
+    "material": "spruce",
+    "thickness_mm": 3.175,
+    "thickness_in": 0.125,
+    "arching": "none required per plan",
+    "arching_note": "plan explicitly states no arching built into braces"
+  },
+  "back": {
+    "material": "mahogany, hardwood, or maple",
+    "thickness_mm": 3.0,
+    "arch_note": "may be arched 43/32 inch or more"
+  },
+  "strings": 12,
+  "string_tension_note": "extra-light recommended, tension approx 200lb light gauge over 300lb",
+  "side_braces": 10,
+  "sheets": {
+    "sheet1": "Body back and top views, bracing layout, dimensions",
+    "sheet2": "Neck, peghead options, bridge, dovetail joint, fret table"
+  },
+  "notes": "Soundboard will sag under string tension — compensate at neck set and saddle"
+}
