@@ -33,6 +33,7 @@ from .phase3_router import router as phase3_router
 from .phase4_router import router as phase4_router
 from .calibration_router import router as calibration_router
 from .edge_to_dxf_router import router as edge_to_dxf_router
+from .clean_router import router as clean_router
 
 # Aggregate router with common prefix and tags
 router = APIRouter(prefix="/blueprint", tags=["blueprint"])
@@ -44,6 +45,7 @@ router.include_router(phase3_router)
 router.include_router(phase4_router)
 router.include_router(calibration_router)
 router.include_router(edge_to_dxf_router)
+router.include_router(clean_router)
 
 # Re-export feature flags for external use
 from .constants import (
