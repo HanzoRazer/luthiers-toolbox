@@ -243,6 +243,121 @@ def plot_map(X_mm, Y_mm, Z, title, cbar_label, out_path, cmap="viridis"):
     plt.close()
 
 
+def _plot_map_to_bytes(X_mm, Y_mm, Z, title, cbar_label, cmap="viridis") -> bytes:
+    """Render heatmap to PNG bytes (for API response)."""
+    import io
+    plt.figure(figsize=(7, 5.5))
+    im = plt.pcolormesh(X_mm, Y_mm, Z, shading="auto", cmap=cmap)
+    plt.gca().set_aspect("equal", "box")
+    plt.xlabel("x (mm)")
+    plt.ylabel("y (mm)")
+    plt.title(title)
+    cb = plt.colorbar(im)
+    cb.set_label(cbar_label)
+    plt.tight_layout()
+    buf = io.BytesIO()
+    plt.savefig(buf, format="png", dpi=200)
+    plt.close()
+    buf.seek(0)
+    return buf.read()
+
+
+# =============================================================================
+# LIBRARY FUNCTION (called by archtop_router.py)
+# =============================================================================
+
+
+def compute_stiffness_from_points(
+    xs_mm: np.ndarray,
+    ys_mm: np.ndarray,
+    heights_mm: np.ndarray,
+    E_gpa: float = 11.0,
+    nu: float = 0.35,
+    thickness_mm: float = 4.0,
+    alpha: float = 1.0,
+    Lref_mm: float = 250.0,
+    resolution_mm: float = 2.0,
+    heatmap_type: str = "K_eff",
+) -> dict:
+    """Compute curvature-based stiffness proxy from measured surface points.
+
+    Args:
+        xs_mm: X coordinates in mm
+        ys_mm: Y coordinates in mm
+        heights_mm: Height values in mm
+        E_gpa: Young's modulus in GPa
+        nu: Poisson ratio
+        thickness_mm: Plate thickness in mm
+        alpha: Shell stiffness scale factor
+        Lref_mm: Reference span for combined stiffness index
+        resolution_mm: Grid resolution in mm
+        heatmap_type: Which map to render ("K_eff", "K_shell", "R_eff", "height")
+
+    Returns:
+        dict with grid data and summary statistics
+    """
+    import base64
+
+    if len(xs_mm) < 4:
+        raise ValueError("At least 4 points required for interpolation")
+
+    X_mm, Y_mm, Z_mm = idw_grid(xs_mm, ys_mm, heights_mm, resolution_mm=resolution_mm)
+
+    dx_m = resolution_mm / 1000.0
+    dy_m = resolution_mm / 1000.0
+    Z_m = Z_mm / 1000.0
+
+    Zx, Zy, Zxx, Zyy, Zxy = derivatives_from_surface(Z_m, dx_m, dy_m)
+    H, K, k1, k2 = curvature_maps(Zx, Zy, Zxx, Zyy, Zxy)
+
+    E_pa = E_gpa * 1e9
+    h_m = thickness_mm / 1000.0
+    L_ref_m = Lref_mm / 1000.0
+
+    proxy = stiffness_proxy_maps(
+        k1=k1,
+        k2=k2,
+        E_pa=E_pa,
+        nu=nu,
+        h_m=h_m,
+        alpha=alpha,
+        L_ref_m=L_ref_m,
+    )
+
+    # Select heatmap to render
+    heatmap_configs = {
+        "K_eff": (proxy["K_eff"], "Effective Stiffness Index", "K_eff (N*m proxy)", "viridis"),
+        "K_shell": (proxy["K_shell"], "Shell Stiffness Proxy", "K_shell (N/m)", "magma"),
+        "R_eff": (proxy["R_eff_m"] * 1000.0, "Effective Radius Map", "R_eff (mm)", "plasma"),
+        "height": (Z_mm, "Height Map", "height (mm)", "terrain"),
+    }
+
+    if heatmap_type not in heatmap_configs:
+        heatmap_type = "K_eff"
+
+    Z_plot, title, label, cmap = heatmap_configs[heatmap_type]
+    png_bytes = _plot_map_to_bytes(X_mm, Y_mm, Z_plot, title, label, cmap)
+    png_b64 = base64.b64encode(png_bytes).decode("ascii")
+
+    return {
+        "X_mm": X_mm,
+        "Y_mm": Y_mm,
+        "K_eff": proxy["K_eff"],
+        "height_mm": Z_mm,
+        "png_b64": png_b64,
+        "D_b": proxy["D_b"],
+        "max_K_shell": float(np.nanmax(proxy["K_shell"])),
+        "mean_K_shell": float(np.nanmean(proxy["K_shell"])),
+        "max_K_eff": float(np.nanmax(proxy["K_eff"])),
+        "mean_K_eff": float(np.nanmean(proxy["K_eff"])),
+    }
+
+
+# =============================================================================
+# CLI FUNCTION
+# =============================================================================
+
+
 def main():
     ap = argparse.ArgumentParser(description="Compute curvature -> stiffness proxy maps for archtop plates.")
     ap.add_argument("--in", dest="infile", required=True, help="CSV with x,y,height columns in mm")
