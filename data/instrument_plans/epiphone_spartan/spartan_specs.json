@@ -1,0 +1,36 @@
+{
+  "instrument": "Epiphone Spartan",
+  "plan_no": "AGP-11",
+  "designer": "Scott E. Antes",
+  "year_documented": 1983,
+  "year_built": "c.1941",
+  "source": "Purchased large format print, scanned 300dpi",
+  "body": {
+    "type": "archtop",
+    "f_holes": true,
+    "style": "single cutaway"
+  },
+  "scale_length_mm": 647.70,
+  "scale_length_in": 25.500,
+  "top": {
+    "material": "quarter-sawn spruce, book matched",
+    "arch_height_mm": null,
+    "arch_height_note": "see sheet3_arch.jpg — similar to back"
+  },
+  "back": {
+    "material": "maple",
+    "arch_height_mm": null,
+    "arch_height_note": "similar to top per sheet 3"
+  },
+  "finish": "natural blonde",
+  "pickguard": {
+    "material": "plastic dark brown",
+    "thickness_mm": 2.46
+  },
+  "sheets": {
+    "sheet1": "Body outline, f-holes, pickguard, tailpiece",
+    "sheet2": "Neck, fretboard, fret table, bridge",
+    "sheet3": "Arch profile (top and back similar), hardware details"
+  },
+  "notes": "Direct competitor to Gibson L-37 same era (c.1941)"
+}
