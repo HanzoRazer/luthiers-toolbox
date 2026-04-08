@@ -695,11 +695,13 @@
         btn.textContent = 'Filtering...';
 
         try {
+          // Send full dxf_path (not just filename) - works on Railway
+          // where _output_file_registry doesn't persist across workers
           const resp = await fetch(`${API_BASE}/api/blueprint/clean`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
-              dxf_filename: filename,
+              dxf_path: dxfPath,
               min_contour_length_mm: 50.0
             })
           });
