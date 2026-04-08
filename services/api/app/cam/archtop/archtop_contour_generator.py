@@ -94,11 +94,11 @@ def generate_contours_from_points(
     paths = []
     levels_found = set()
 
-    for level_idx, collection in enumerate(cs.collections):
-        for seg in collection.get_paths():
-            v = seg.vertices
-            if v.shape[0] >= 3:
-                paths.append(ensure_closed(v.copy()))
+    # Use allsegs for matplotlib >= 3.8 compatibility (collections deprecated)
+    for level_idx, level_segs in enumerate(cs.allsegs):
+        for seg in level_segs:
+            if len(seg) >= 3:
+                paths.append(ensure_closed(np.array(seg)))
                 if level_idx < len(levels):
                     levels_found.add(levels[level_idx])
 
@@ -121,11 +121,11 @@ def mode_csv(args):
     levels = [float(v) for v in args.levels.split(",")]
     cs = plt.contour(XI, YI, ZI, levels=levels)
     paths = []
-    for c in cs.collections:
-        for seg in c.get_paths():
-            v = seg.vertices
-            if v.shape[0] >= 3:
-                paths.append(ensure_closed(v.copy()))
+    # Use allsegs for matplotlib >= 3.8 compatibility
+    for level_segs in cs.allsegs:
+        for seg in level_segs:
+            if len(seg) >= 3:
+                paths.append(ensure_closed(np.array(seg)))
     plt.close()
     if not paths:
         print("No contour paths found at given levels; try adjusting --levels or --res."); sys.exit(2)
