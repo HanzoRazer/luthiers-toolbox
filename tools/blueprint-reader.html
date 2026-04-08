@@ -319,6 +319,39 @@
       color: #ef4444;
     }
 
+    .mode-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      padding: 0.25rem 0.6rem;
+      border-radius: 4px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      cursor: pointer;
+      transition: opacity 0.2s;
+    }
+
+    .mode-badge:hover {
+      opacity: 0.8;
+    }
+
+    .mode-badge.blueprint {
+      background: #1e3a5f;
+      color: #60a5fa;
+    }
+
+    .mode-badge.photo {
+      background: #3f2d1e;
+      color: #fbbf24;
+    }
+
+    .mode-badge::after {
+      content: '⇄';
+      font-size: 0.65rem;
+      opacity: 0.6;
+    }
+
     footer {
       text-align: center;
       padding-top: 2rem;
@@ -369,6 +402,7 @@
       <span class="file-icon">📄</span>
       <span class="file-name" id="fileName"></span>
       <span class="file-size" id="fileSize"></span>
+      <span class="mode-badge blueprint" id="modeBadge" title="Click to toggle mode">Blueprint</span>
       <button class="clear-btn" id="clearBtn" title="Clear">×</button>
     </div>
 
@@ -471,9 +505,24 @@
     const previewContainer = document.getElementById('previewContainer');
     const downloadSvg = document.getElementById('downloadSvg');
     const downloadDxf = document.getElementById('downloadDxf');
+    const modeBadge = document.getElementById('modeBadge');
 
     let selectedFile = null;
     let extractedData = null;
+    let routeMode = 'blueprint';  // 'blueprint' or 'photo'
+
+    // Toggle mode on badge click
+    modeBadge.addEventListener('click', () => {
+      routeMode = routeMode === 'blueprint' ? 'photo' : 'blueprint';
+      updateModeBadge();
+    });
+
+    function updateModeBadge() {
+      modeBadge.className = 'mode-badge ' + routeMode;
+      modeBadge.textContent = routeMode === 'blueprint' ? 'Blueprint' : 'Photo';
+      // Sync source type dropdown
+      sourceType.value = routeMode === 'blueprint' ? 'blueprint' : 'photo';
+    }
 
     // File selection
     uploadZone.addEventListener('click', () => fileInput.click());
@@ -526,6 +575,17 @@
       fileInfo.classList.add('visible');
       extractBtn.disabled = false;
 
+      // Auto-detect mode based on file extension
+      const ext = file.name.split('.').pop().toLowerCase();
+      if (ext === 'pdf') {
+        routeMode = 'blueprint';
+      } else if (['jpg', 'jpeg', 'png', 'webp'].includes(ext)) {
+        routeMode = 'photo';
+      } else {
+        routeMode = 'blueprint';  // default for unknown types
+      }
+      updateModeBadge();
+
       // Reset previous results
       status.classList.remove('visible');
       dimensions.classList.remove('visible');
@@ -550,68 +610,104 @@
       if (!selectedFile) return;
 
       extractBtn.disabled = true;
-      showStatus('Reading file...');
+      showStatus(`Extracting (${routeMode} mode)...`);
 
       try {
-        // Convert file to base64
-        const base64 = await fileToBase64(selectedFile);
+        let response, data;
 
-        showStatus('Extracting outline...');
+        if (routeMode === 'blueprint') {
+          // Blueprint mode: FormData upload to edge-to-dxf
+          const formData = new FormData();
+          formData.append('file', selectedFile);
+          formData.append('target_height_mm', '500');
+          formData.append('return_file', 'false');
 
-        // Build request
-        const requestBody = {
-          image_b64: base64,
-          source_type: sourceType.value,
-          export_svg: true,
-          export_dxf: true
-        };
+          response = await fetch(`${API_BASE}/blueprint/edge-to-dxf/convert`, {
+            method: 'POST',
+            body: formData
+          });
 
-        if (specName.value) {
-          requestBody.spec_name = specName.value;
-        }
+          if (!response.ok) {
+            const errorText = await response.text();
+            throw new Error(`API error: ${response.status} — ${errorText}`);
+          }
 
-        // POST to API
-        const response = await fetch(`${API_BASE}/api/vectorizer/extract`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify(requestBody)
-        });
+          data = await response.json();
+          extractedData = data;
 
-        if (!response.ok) {
-          const errorText = await response.text();
-          throw new Error(`API error: ${response.status} — ${errorText}`);
-        }
+          if (!data.success) {
+            throw new Error(data.error || 'Blueprint extraction failed');
+          }
 
-        const data = await response.json();
-        extractedData = data;
+          // Map edge-to-dxf response to common format
+          const timeMs = data.processing_time_ms || 0;
+          showStatus(`Extraction complete in ${(timeMs / 1000).toFixed(2)}s — ${data.line_count?.toLocaleString() || 0} lines`, 'success');
 
-        if (!data.ok) {
-          throw new Error(data.error || 'Extraction failed');
-        }
+          document.getElementById('dimWidth').textContent =
+            data.output_size_mm?.[0] ? `${data.output_size_mm[0].toFixed(1)} mm` : '—';
+          document.getElementById('dimHeight').textContent =
+            data.output_size_mm?.[1] ? `${data.output_size_mm[1].toFixed(1)} mm` : '—';
+          document.getElementById('dimContours').textContent = data.line_count?.toLocaleString() || '—';
+          document.getElementById('dimScale').textContent = `${data.mm_per_px?.toFixed(4) || '—'} mm/px`;
+          dimensions.classList.add('visible');
 
-        // Show success
-        showStatus(`Extraction complete in ${(data.processing_time_s || 0).toFixed(2)}s`, 'success');
+          // DXF available for download (file path returned)
+          if (data.dxf_path) {
+            downloadDxf.disabled = false;
+          }
 
-        // Show dimensions
-        document.getElementById('dimWidth').textContent =
-          data.body_dimensions_mm ? `${data.body_dimensions_mm[1]?.toFixed(1) || '—'} mm` : '—';
-        document.getElementById('dimHeight').textContent =
-          data.body_dimensions_mm ? `${data.body_dimensions_mm[0]?.toFixed(1) || '—'} mm` : '—';
-        document.getElementById('dimContours').textContent = data.contour_count || '—';
-        document.getElementById('dimScale').textContent = data.scale_source || '—';
-        dimensions.classList.add('visible');
+        } else {
+          // Photo mode: JSON base64 to photo vectorizer
+          const base64 = await fileToBase64(selectedFile);
 
-        // Show preview
-        if (data.svg_content) {
-          previewContainer.innerHTML = data.svg_content;
-          previewSection.classList.add('visible');
-          downloadSvg.disabled = false;
-        }
+          const requestBody = {
+            image_b64: base64,
+            source_type: sourceType.value,
+            export_svg: true,
+            export_dxf: true
+          };
 
-        if (data.dxf_content || data.dxf_base64) {
-          downloadDxf.disabled = false;
+          if (specName.value) {
+            requestBody.spec_name = specName.value;
+          }
+
+          response = await fetch(`${API_BASE}/api/vectorizer/extract`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(requestBody)
+          });
+
+          if (!response.ok) {
+            const errorText = await response.text();
+            throw new Error(`API error: ${response.status} — ${errorText}`);
+          }
+
+          data = await response.json();
+          extractedData = data;
+
+          if (!data.ok) {
+            throw new Error(data.error || 'Photo extraction failed');
+          }
+
+          showStatus(`Extraction complete in ${(data.processing_time_s || 0).toFixed(2)}s`, 'success');
+
+          document.getElementById('dimWidth').textContent =
+            data.body_dimensions_mm ? `${data.body_dimensions_mm[1]?.toFixed(1) || '—'} mm` : '—';
+          document.getElementById('dimHeight').textContent =
+            data.body_dimensions_mm ? `${data.body_dimensions_mm[0]?.toFixed(1) || '—'} mm` : '—';
+          document.getElementById('dimContours').textContent = data.contour_count || '—';
+          document.getElementById('dimScale').textContent = data.scale_source || '—';
+          dimensions.classList.add('visible');
+
+          if (data.svg_content) {
+            previewContainer.innerHTML = data.svg_content;
+            previewSection.classList.add('visible');
+            downloadSvg.disabled = false;
+          }
+
+          if (data.dxf_content || data.dxf_base64) {
+            downloadDxf.disabled = false;
+          }
         }
 
       } catch (err) {
