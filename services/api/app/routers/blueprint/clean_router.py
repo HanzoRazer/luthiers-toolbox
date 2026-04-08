@@ -35,6 +35,7 @@ class CleanRequest(BaseModel):
     """Request to clean a DXF file."""
     dxf_b64: Optional[str] = None  # Base64 encoded DXF content
     dxf_filename: Optional[str] = None  # Filename from prior extraction (in registry)
+    dxf_path: Optional[str] = None  # Full filesystem path (from edge-to-dxf response)
     min_contour_length_mm: float = 50.0  # Minimum contour length to keep
     close_gaps_mm: float = 1.0  # Maximum gap to close
 
@@ -87,17 +88,25 @@ async def clean_dxf(req: CleanRequest):
     except ImportError:
         raise HTTPException(503, "ezdxf not available")
 
-    # Get input DXF
+    # Get input DXF - priority: dxf_b64 > dxf_path > dxf_filename (registry)
     dxf_bytes = None
     if req.dxf_b64:
         dxf_bytes = base64.b64decode(req.dxf_b64)
+    elif req.dxf_path:
+        # Direct filesystem path (works on Railway where registry doesn't persist)
+        file_path = Path(req.dxf_path)
+        if not file_path.exists():
+            raise HTTPException(404, f"File not found: {req.dxf_path}")
+        dxf_bytes = file_path.read_bytes()
+        logger.info(f"Reading DXF from path: {req.dxf_path} ({len(dxf_bytes)} bytes)")
     elif req.dxf_filename:
+        # Registry lookup (works locally, may fail on Railway multi-worker)
         if req.dxf_filename not in _output_file_registry:
             raise HTTPException(404, f"File not found in registry: {req.dxf_filename}")
         file_path = _output_file_registry[req.dxf_filename]
         dxf_bytes = Path(file_path).read_bytes()
     else:
-        raise HTTPException(400, "Must provide dxf_b64 or dxf_filename")
+        raise HTTPException(400, "Must provide dxf_b64, dxf_path, or dxf_filename")
 
     # Write to temp file for ezdxf
     with tempfile.NamedTemporaryFile(suffix=".dxf", delete=False) as f:
