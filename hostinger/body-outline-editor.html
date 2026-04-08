@@ -1,0 +1,2461 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Body Outline Editor — The Production Shop</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/paper.js/0.12.18/paper-full.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            user-select: none;
+        }
+
+        :root {
+            --bg-dark: #1a1a1a;
+            --bg-toolbar: #111111;
+            --bg-panel: #0e0e0e;
+            --bg-input: #222222;
+            --border: #333333;
+            --text-primary: #e0e0e0;
+            --text-secondary: #888888;
+            --text-muted: #666666;
+            --accent: #00ff88;
+            --accent-dim: #00aa5a;
+            --warning: #ff6600;
+            --void-pickup: #ff6600;
+            --void-control: #ffaa00;
+            --void-soundhole: #00aaff;
+            --void-other: #aa00ff;
+            --grid-minor: #3a3a3a;
+            --grid-major: #555555;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+            background: var(--bg-dark);
+            color: var(--text-primary);
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        /* Toolbar */
+        .toolbar {
+            background: var(--bg-toolbar);
+            border-bottom: 1px solid var(--border);
+            padding: 8px 16px;
+            display: flex;
+            gap: 8px;
+            align-items: center;
+            flex-wrap: wrap;
+            z-index: 100;
+        }
+
+        .toolbar-group {
+            display: flex;
+            gap: 4px;
+            align-items: center;
+            padding: 0 8px;
+            border-right: 1px solid var(--border);
+        }
+
+        .toolbar-group:last-child {
+            border-right: none;
+        }
+
+        .toolbar-group label {
+            font-size: 11px;
+            color: var(--text-muted);
+            margin-right: 4px;
+        }
+
+        button {
+            background: var(--bg-input);
+            border: 1px solid var(--border);
+            color: var(--text-primary);
+            padding: 6px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+            font-family: inherit;
+            transition: all 0.15s;
+        }
+
+        button:hover {
+            background: #2a2a2a;
+            border-color: var(--accent-dim);
+        }
+
+        button:active {
+            background: #1a1a1a;
+        }
+
+        button.active {
+            background: var(--accent-dim);
+            border-color: var(--accent);
+            color: #000;
+        }
+
+        button.mode-btn {
+            min-width: 70px;
+        }
+
+        select {
+            background: var(--bg-input);
+            border: 1px solid var(--border);
+            color: var(--accent);
+            padding: 5px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-family: monospace;
+        }
+
+        /* Main layout */
+        .main-container {
+            display: flex;
+            flex: 1;
+            overflow: hidden;
+        }
+
+        /* Canvas area */
+        .canvas-wrapper {
+            flex: 1;
+            position: relative;
+            background: var(--bg-dark);
+            overflow: hidden;
+        }
+
+        #canvas {
+            display: block;
+            width: 100%;
+            height: 100%;
+            cursor: crosshair;
+        }
+
+        .canvas-wrapper.panning #canvas {
+            cursor: grab;
+        }
+
+        .canvas-wrapper.panning.dragging #canvas {
+            cursor: grabbing;
+        }
+
+        /* Legend overlay */
+        .legend {
+            position: absolute;
+            bottom: 12px;
+            left: 12px;
+            background: rgba(0,0,0,0.8);
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-size: 11px;
+            color: var(--text-secondary);
+            pointer-events: none;
+        }
+
+        .legend kbd {
+            background: #333;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-family: monospace;
+            color: var(--accent);
+        }
+
+        /* Bounding box display */
+        .bbox-display {
+            position: absolute;
+            top: 12px;
+            right: 220px;
+            background: rgba(0,0,0,0.8);
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-size: 12px;
+            font-family: monospace;
+            color: var(--accent);
+        }
+
+        /* Distance display */
+        .distance-display {
+            position: absolute;
+            top: 50px;
+            right: 220px;
+            background: rgba(0,0,0,0.8);
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-size: 12px;
+            font-family: monospace;
+            color: #ffaa00;
+            display: none;
+        }
+
+        /* Right panel */
+        .right-panel {
+            width: 200px;
+            background: var(--bg-panel);
+            border-left: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+            font-size: 12px;
+        }
+
+        .panel-section {
+            border-bottom: 1px solid var(--border);
+        }
+
+        .panel-header {
+            padding: 10px 12px;
+            background: #151515;
+            font-weight: 600;
+            color: var(--accent);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .panel-header .count {
+            font-weight: normal;
+            color: var(--text-muted);
+        }
+
+        .node-list {
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .node-item {
+            display: flex;
+            align-items: center;
+            padding: 6px 12px;
+            border-bottom: 1px solid #1a1a1a;
+            cursor: pointer;
+            transition: background 0.1s;
+        }
+
+        .node-item:hover {
+            background: #1a1a1a;
+        }
+
+        .node-item.selected {
+            background: #1a3a2a;
+            border-left: 2px solid var(--accent);
+        }
+
+        .node-item .index {
+            width: 24px;
+            color: var(--text-muted);
+        }
+
+        .node-item input {
+            width: 60px;
+            background: transparent;
+            border: 1px solid transparent;
+            color: var(--text-primary);
+            padding: 2px 4px;
+            font-family: monospace;
+            font-size: 11px;
+            text-align: right;
+        }
+
+        .node-item input:focus {
+            background: var(--bg-input);
+            border-color: var(--accent);
+            outline: none;
+        }
+
+        /* Void list */
+        .void-list {
+            flex: 1;
+            overflow-y: auto;
+        }
+
+        .void-item {
+            display: flex;
+            align-items: center;
+            padding: 8px 12px;
+            border-bottom: 1px solid #1a1a1a;
+            cursor: pointer;
+            gap: 8px;
+        }
+
+        .void-item:hover {
+            background: #1a1a1a;
+        }
+
+        .void-item.selected {
+            background: #2a1a1a;
+            border-left: 2px solid var(--warning);
+        }
+
+        .void-color {
+            width: 12px;
+            height: 12px;
+            border-radius: 2px;
+        }
+
+        .void-item .role {
+            flex: 1;
+        }
+
+        .void-item .nodes {
+            color: var(--text-muted);
+            font-size: 10px;
+        }
+
+        .void-item .delete-void {
+            opacity: 0;
+            background: transparent;
+            border: none;
+            color: #ff4444;
+            padding: 2px 6px;
+            cursor: pointer;
+        }
+
+        .void-item:hover .delete-void {
+            opacity: 1;
+        }
+
+        .add-void-btn {
+            width: 100%;
+            background: transparent;
+            border: 1px dashed var(--border);
+            color: var(--text-muted);
+            padding: 10px;
+            margin: 8px 0;
+        }
+
+        .add-void-btn:hover {
+            border-color: var(--accent);
+            color: var(--accent);
+        }
+
+        /* Status bar */
+        .status-bar {
+            background: #0a0a0a;
+            border-top: 1px solid var(--border);
+            padding: 6px 16px;
+            display: flex;
+            gap: 24px;
+            font-size: 11px;
+            color: var(--text-muted);
+            font-family: monospace;
+        }
+
+        .status-bar span {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .status-bar .value {
+            color: var(--text-primary);
+        }
+
+        .status-bar .mode {
+            color: var(--accent);
+            font-weight: 600;
+        }
+
+        /* Modal */
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.7);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+
+        .modal-overlay.visible {
+            display: flex;
+        }
+
+        .modal {
+            background: #1e1e1e;
+            border: 1px solid var(--accent);
+            border-radius: 8px;
+            padding: 20px;
+            min-width: 280px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+        }
+
+        .modal h3 {
+            margin-bottom: 16px;
+            color: var(--accent);
+            font-size: 14px;
+        }
+
+        .modal label {
+            display: block;
+            margin-bottom: 6px;
+            color: var(--text-secondary);
+            font-size: 12px;
+        }
+
+        .modal input[type="text"],
+        .modal input[type="number"] {
+            width: 100%;
+            background: var(--bg-input);
+            border: 1px solid var(--border);
+            color: var(--text-primary);
+            padding: 8px 12px;
+            border-radius: 4px;
+            margin-bottom: 12px;
+            font-family: monospace;
+        }
+
+        .modal input:focus {
+            border-color: var(--accent);
+            outline: none;
+        }
+
+        .modal-buttons {
+            display: flex;
+            gap: 8px;
+            justify-content: flex-end;
+            margin-top: 16px;
+        }
+
+        .modal-buttons button {
+            min-width: 80px;
+        }
+
+        .modal-buttons .primary {
+            background: var(--accent-dim);
+            border-color: var(--accent);
+            color: #000;
+        }
+
+        /* Image opacity slider */
+        .opacity-control {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 12px;
+        }
+
+        .opacity-control input[type="range"] {
+            flex: 1;
+            accent-color: var(--accent);
+        }
+
+        .opacity-control .value {
+            font-family: monospace;
+            color: var(--text-muted);
+            width: 36px;
+            text-align: right;
+        }
+
+        /* Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #0a0a0a;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #333;
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #444;
+        }
+    </style>
+</head>
+<body>
+    <!-- Toolbar -->
+    <div class="toolbar">
+        <div class="toolbar-group">
+            <button id="btn-new" title="New (Ctrl+N)">New</button>
+            <button id="btn-undo" title="Undo (Ctrl+Z)">Undo</button>
+            <button id="btn-redo" title="Redo (Ctrl+Y)">Redo</button>
+        </div>
+        <div class="toolbar-group">
+            <button id="btn-grid" class="active" title="Toggle Grid (G)">Grid: ON</button>
+            <label>Snap:</label>
+            <select id="snap-select">
+                <option value="1">1 mm</option>
+                <option value="5" selected>5 mm</option>
+                <option value="10">10 mm</option>
+            </select>
+            <button id="btn-handles" title="Show All Handles">Handles: OFF</button>
+        </div>
+        <div class="toolbar-group">
+            <button id="btn-mirror" title="Mirror Mode">Mirror: OFF</button>
+            <button id="btn-outer" class="mode-btn active">Outer</button>
+            <button id="btn-add-void" class="mode-btn">+ Void</button>
+        </div>
+        <div class="toolbar-group">
+            <button id="btn-simplify" title="Simplify path (reduce nodes)">Simplify</button>
+            <label style="color:var(--text-muted);font-size:11px;margin-left:4px;">tol:</label>
+            <input type="number" id="simplify-tolerance" value="2.5" min="1" max="10" step="0.5" 
+                   style="width:50px;background:var(--bg-input);border:1px solid var(--border);color:var(--text-primary);padding:2px 4px;border-radius:3px;">
+            <button id="btn-smooth-all" title="Smooth all nodes to curves">Smooth All</button>
+        </div>
+        <div class="toolbar-group">
+            <button id="btn-measure" title="Measure Distance (M)">Measure</button>
+        </div>
+        <div class="toolbar-group">
+            <button id="btn-import">Import Image</button>
+            <button id="btn-calibrate" title="Calibrate Scale (C)">Calibrate</button>
+            <button id="btn-clear-image">Clear Image</button>
+        </div>
+        <div class="toolbar-group">
+            <button id="btn-export-dxf">Export DXF</button>
+            <button id="btn-export-json" title="Export JSON (Ctrl+E)">Export JSON</button>
+            <button id="btn-export-svg">Export SVG</button>
+        </div>
+    </div>
+
+    <!-- Main container -->
+    <div class="main-container">
+        <div class="canvas-wrapper" id="canvas-wrapper">
+            <canvas id="canvas" resize></canvas>
+
+            <div class="legend">
+                <kbd>Alt</kbd>+click node = toggle sharp/smooth &nbsp;|&nbsp;
+                <kbd>Alt</kbd>+drag handle = asymmetric &nbsp;|&nbsp;
+                <kbd>Del</kbd> = delete node &nbsp;|&nbsp;
+                <kbd>Space</kbd>+drag = pan
+            </div>
+
+            <div class="bbox-display" id="bbox-display">W: 0.00 mm × H: 0.00 mm</div>
+            <div class="distance-display" id="distance-display">Distance: 0.00 mm</div>
+        </div>
+
+        <!-- Right panel -->
+        <div class="right-panel">
+            <div class="panel-section">
+                <div class="panel-header">
+                    Nodes <span class="count" id="node-count">0</span>
+                </div>
+                <div class="node-list" id="node-list"></div>
+            </div>
+
+            <div class="panel-section" id="image-panel" style="display:none">
+                <div class="panel-header">Reference Image</div>
+                <div class="opacity-control">
+                    <label>Opacity:</label>
+                    <input type="range" id="image-opacity" min="20" max="80" value="50">
+                    <span class="value" id="opacity-value">50%</span>
+                </div>
+            </div>
+
+            <div class="panel-section" style="flex:1">
+                <div class="panel-header">
+                    Voids <span class="count" id="void-count">0</span>
+                </div>
+                <div class="void-list" id="void-list"></div>
+                <button class="add-void-btn" id="btn-add-void-panel">+ Add Void</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Status bar -->
+    <div class="status-bar">
+        <span>Cursor: <span class="value" id="status-cursor">0.00, 0.00</span> mm</span>
+        <span>Selected: <span class="value" id="status-selected">—</span></span>
+        <span>Nodes: <span class="value" id="status-nodes">0</span></span>
+        <span>Zoom: <span class="value" id="status-zoom">100</span>%</span>
+        <span>Grid: <span class="value" id="status-grid">ON</span></span>
+        <span>Mode: <span class="mode" id="status-mode">Outer</span></span>
+    </div>
+
+    <!-- Modals -->
+    <div class="modal-overlay" id="modal-coord">
+        <div class="modal">
+            <h3>Edit Node Coordinates</h3>
+            <label>X (mm):</label>
+            <input type="number" id="coord-x" step="0.01">
+            <label>Y (mm):</label>
+            <input type="number" id="coord-y" step="0.01">
+            <div class="modal-buttons">
+                <button id="coord-cancel">Cancel</button>
+                <button id="coord-ok" class="primary">OK</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="modal-calibrate">
+        <div class="modal">
+            <h3>Scale Calibration</h3>
+            <p style="color:var(--text-secondary);font-size:12px;margin-bottom:12px">
+                Enter the known distance between the two points you clicked.
+            </p>
+            <label>Distance (mm):</label>
+            <input type="number" id="calibrate-distance" step="0.1" value="100">
+            <div class="modal-buttons">
+                <button id="calibrate-cancel">Cancel</button>
+                <button id="calibrate-ok" class="primary">Apply</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="modal-void">
+        <div class="modal">
+            <h3>Add Void</h3>
+            <label>Role:</label>
+            <select id="void-role" style="width:100%;padding:8px;margin-bottom:12px">
+                <option value="pickup">Pickup</option>
+                <option value="control_cavity">Control Cavity</option>
+                <option value="switch">Switch</option>
+                <option value="jack">Jack</option>
+                <option value="soundhole">Soundhole</option>
+                <option value="other">Other</option>
+            </select>
+            <div class="modal-buttons">
+                <button id="void-cancel">Cancel</button>
+                <button id="void-ok" class="primary">Create</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="modal-confirm">
+        <div class="modal">
+            <h3 id="confirm-title">Confirm</h3>
+            <p id="confirm-message" style="color:var(--text-secondary);font-size:12px;margin-bottom:12px"></p>
+            <div class="modal-buttons">
+                <button id="confirm-cancel">Cancel</button>
+                <button id="confirm-ok" class="primary">OK</button>
+            </div>
+        </div>
+    </div>
+
+<script type="text/javascript">
+paper.install(window);
+
+// ============================================================
+// STATE
+// ============================================================
+const state = {
+    // Paths
+    outerPath: null,
+    voids: [], // { id, role, path }
+    activePathType: 'outer', // 'outer' or void id
+
+    // Selection
+    selectedSegments: [], // For multi-select (shift+click)
+    selectedHandle: null, // { segment, type: 'in'|'out' }
+
+    // View
+    zoom: 1.0,
+    viewCenter: new Point(0, 0),
+    gridVisible: true,
+    showAllHandles: false,
+
+    // Tools
+    snapSize: 5,
+    mirrorMode: false,
+
+    // Reference image
+    raster: null,
+    imagePixelsPerMM: null,
+
+    // Calibration
+    calibrating: false,
+    calPoints: [],
+    calMarkers: [],
+
+    // Measure mode
+    measuring: false,
+    measurePoints: [],
+    measureMarkers: [],
+    measureFadeTimer: null,
+
+    // Undo/Redo
+    undoStack: [],
+    redoStack: [],
+    maxHistory: 50,
+    gestureActive: false,
+
+    // Dirty flag
+    dirty: false
+};
+
+// Void colors by role
+const VOID_COLORS = {
+    pickup: '#ff6600',
+    control_cavity: '#ffaa00',
+    switch: '#ffcc00',
+    jack: '#ff8800',
+    soundhole: '#00aaff',
+    other: '#aa00ff'
+};
+
+// ============================================================
+// TOP-LEVEL VARIABLES (must be declared before any event handlers)
+// ============================================================
+let isDragging = false;
+let isPanning = false;
+let lastPanPoint = null;
+let dragStartPoint = null;
+let nodeVisuals = null;
+let handleVisuals = null;
+let snapIndicator = null;
+let distanceLine = null;
+let calibrationStatus = null;
+
+// ============================================================
+// INITIALIZATION
+// ============================================================
+window.onload = function() {
+    paper.setup('canvas');
+
+    // Initialize Paper.js groups (must be after setup)
+    nodeVisuals = new Group();
+    handleVisuals = new Group();
+
+    // Set initial view
+    view.center = state.viewCenter;
+    view.zoom = state.zoom;
+
+    // Create default outline
+    createDefaultOutline();
+
+    // Draw grid
+    drawGrid();
+
+    // Setup event handlers
+    setupCanvasEvents();
+    setupToolbarEvents();
+    setupPanelEvents();
+    setupKeyboardEvents();
+    setupModalEvents();
+
+    // Initial UI update
+    updateUI();
+    pushState();
+};
+
+// ============================================================
+// DEFAULT OUTLINE
+// ============================================================
+function createDefaultOutline() {
+    // 8-node dreadnought-like shape, ~125mm wide × 130mm tall (1:4 scale)
+    // Origin at center, Y+ toward neck
+    const points = [
+        [0, 65],      // Top center (toward neck)
+        [55, 40],     // Upper bout right
+        [45, 0],      // Waist right
+        [65, -50],    // Lower bout right
+        [0, -65],     // Bottom center
+        [-65, -50],   // Lower bout left
+        [-45, 0],     // Waist left
+        [-55, 40]     // Upper bout left
+    ];
+
+    state.outerPath = new Path({
+        closed: true,
+        strokeColor: '#00ff88',
+        strokeWidth: 2,
+        fillColor: null
+    });
+
+    points.forEach(p => {
+        const seg = new Segment(new Point(p[0], p[1]));
+        state.outerPath.add(seg);
+    });
+
+    // Make all nodes smooth
+    state.outerPath.smooth();
+
+    state.voids = [];
+    state.activePathType = 'outer';
+    state.selectedSegments = [];
+    state.dirty = false;
+}
+
+// ============================================================
+// GRID
+// ============================================================
+let gridLayer = null;
+
+function drawGrid() {
+    if (gridLayer) gridLayer.remove();
+    if (!state.gridVisible) return;
+
+    gridLayer = new Layer();
+    gridLayer.sendToBack();
+
+    const bounds = view.bounds.expand(100);
+    const minor = 10;
+    const major = 50;
+
+    // Minor grid lines
+    const startX = Math.floor(bounds.left / minor) * minor;
+    const startY = Math.floor(bounds.top / minor) * minor;
+
+    for (let x = startX; x <= bounds.right; x += minor) {
+        const isMajor = Math.abs(x % major) < 0.001;
+        const line = new Path.Line(new Point(x, bounds.top), new Point(x, bounds.bottom));
+        line.strokeColor = isMajor ? '#555555' : '#3a3a3a';
+        line.strokeWidth = isMajor ? 0.8 : 0.5;
+        gridLayer.addChild(line);
+    }
+
+    for (let y = startY; y <= bounds.bottom; y += minor) {
+        const isMajor = Math.abs(y % major) < 0.001;
+        const line = new Path.Line(new Point(bounds.left, y), new Point(bounds.right, y));
+        line.strokeColor = isMajor ? '#555555' : '#3a3a3a';
+        line.strokeWidth = isMajor ? 0.8 : 0.5;
+        gridLayer.addChild(line);
+    }
+
+    // Axis lines
+    const axisX = new Path.Line(new Point(bounds.left, 0), new Point(bounds.right, 0));
+    axisX.strokeColor = '#555555';
+    axisX.strokeWidth = 1;
+    gridLayer.addChild(axisX);
+
+    const axisY = new Path.Line(new Point(0, bounds.top), new Point(0, bounds.bottom));
+    axisY.strokeColor = '#00ff8844';
+    axisY.strokeWidth = 1.5;
+    gridLayer.addChild(axisY);
+
+    // Mirror centerline indicator (when mirror mode on)
+    if (state.mirrorMode) {
+        const centerLine = new Path.Line(new Point(0, bounds.top), new Point(0, bounds.bottom));
+        centerLine.strokeColor = '#00ff88';
+        centerLine.strokeWidth = 1;
+        centerLine.dashArray = [5, 5];
+        gridLayer.addChild(centerLine);
+    }
+
+    project.activeLayer.activate();
+}
+
+// ============================================================
+// ACTIVE PATH HELPERS
+// ============================================================
+function getActivePath() {
+    if (state.activePathType === 'outer') {
+        return state.outerPath;
+    }
+    const voidObj = state.voids.find(v => v.id === state.activePathType);
+    return voidObj ? voidObj.path : null;
+}
+
+function setActivePath(type) {
+    state.activePathType = type;
+    state.selectedSegments = [];
+    state.selectedHandle = null;
+    updateUI();
+    redrawHandles();
+}
+
+// ============================================================
+// NODE VISUALS
+// ============================================================
+function redrawHandles() {
+    nodeVisuals.removeChildren();
+    handleVisuals.removeChildren();
+
+    const path = getActivePath();
+    if (!path) return;
+
+    const nodeRadius = 7 / state.zoom; // Scale-invariant
+    const handleRadius = 5 / state.zoom;
+
+    path.segments.forEach((seg, idx) => {
+        const isSelected = state.selectedSegments.includes(seg);
+
+        // Node circle
+        const node = new Path.Circle({
+            center: seg.point,
+            radius: nodeRadius,
+            fillColor: isSelected ? '#ff6600' : '#ffffff',
+            strokeColor: isSelected ? '#ff6600' : '#00ff88',
+            strokeWidth: 1.5 / state.zoom
+        });
+        nodeVisuals.addChild(node);
+
+        // Handles (show if selected or showAllHandles)
+        if (isSelected || state.showAllHandles) {
+            // Handle In
+            if (seg.handleIn && seg.handleIn.length > 0) {
+                const handlePos = seg.point.add(seg.handleIn);
+                const line = new Path.Line({
+                    from: seg.point,
+                    to: handlePos,
+                    strokeColor: '#555555',
+                    strokeWidth: 1 / state.zoom,
+                    dashArray: [3 / state.zoom, 2 / state.zoom]
+                });
+                handleVisuals.addChild(line);
+
+                // Diamond shape for handle
+                const diamond = new Path.RegularPolygon({
+                    center: handlePos,
+                    sides: 4,
+                    radius: handleRadius,
+                    fillColor: '#cccccc',
+                    strokeColor: '#00ff88',
+                    strokeWidth: 1 / state.zoom
+                });
+                diamond.rotate(45);
+                handleVisuals.addChild(diamond);
+            }
+
+            // Handle Out
+            if (seg.handleOut && seg.handleOut.length > 0) {
+                const handlePos = seg.point.add(seg.handleOut);
+                const line = new Path.Line({
+                    from: seg.point,
+                    to: handlePos,
+                    strokeColor: '#555555',
+                    strokeWidth: 1 / state.zoom,
+                    dashArray: [3 / state.zoom, 2 / state.zoom]
+                });
+                handleVisuals.addChild(line);
+
+                const diamond = new Path.RegularPolygon({
+                    center: handlePos,
+                    sides: 4,
+                    radius: handleRadius,
+                    fillColor: '#cccccc',
+                    strokeColor: '#00ff88',
+                    strokeWidth: 1 / state.zoom
+                });
+                diamond.rotate(45);
+                handleVisuals.addChild(diamond);
+            }
+        }
+    });
+
+    // Draw void paths
+    state.voids.forEach(v => {
+        v.path.strokeColor = VOID_COLORS[v.role] || '#aa00ff';
+        v.path.strokeWidth = state.activePathType === v.id ? 2.5 : 2;
+    });
+
+    // Highlight active path
+    if (state.outerPath) {
+        state.outerPath.strokeWidth = state.activePathType === 'outer' ? 2.5 : 2;
+    }
+
+    updateDistanceDisplay();
+}
+
+function updateDistanceDisplay() {
+    const distanceEl = document.getElementById('distance-display');
+
+    if (state.selectedSegments.length === 2) {
+        const p1 = state.selectedSegments[0].point;
+        const p2 = state.selectedSegments[1].point;
+        const dist = p1.getDistance(p2);
+        distanceEl.textContent = `Distance: ${dist.toFixed(2)} mm`;
+        distanceEl.style.display = 'block';
+
+        // Draw line between selected points
+        if (distanceLine) distanceLine.remove();
+        distanceLine = new Path.Line({
+            from: p1,
+            to: p2,
+            strokeColor: '#ffaa00',
+            strokeWidth: 1 / state.zoom,
+            dashArray: [4 / state.zoom, 4 / state.zoom]
+        });
+    } else {
+        distanceEl.style.display = 'none';
+        if (distanceLine) {
+            distanceLine.remove();
+            distanceLine = null;
+        }
+    }
+}
+
+// ============================================================
+// SNAP
+// ============================================================
+function snapToGrid(point) {
+    const snap = state.snapSize;
+    return new Point(
+        Math.round(point.x / snap) * snap,
+        Math.round(point.y / snap) * snap
+    );
+}
+
+function showSnapIndicator(point) {
+    if (snapIndicator) snapIndicator.remove();
+    snapIndicator = new Path.Circle({
+        center: point,
+        radius: 10 / state.zoom,
+        strokeColor: '#00ff88',
+        strokeWidth: 2 / state.zoom,
+        fillColor: null
+    });
+}
+
+function hideSnapIndicator() {
+    if (snapIndicator) {
+        snapIndicator.remove();
+        snapIndicator = null;
+    }
+}
+
+// ============================================================
+// MIRROR MODE
+// ============================================================
+function applyMirror(segment, originalX) {
+    if (!state.mirrorMode) return;
+
+    const path = getActivePath();
+    if (!path) return;
+
+    const point = segment.point;
+
+    // If on centerline, constrain to X=0
+    if (Math.abs(originalX) < 0.001 || Math.abs(point.x) < state.snapSize / 2) {
+        segment.point.x = 0;
+        return;
+    }
+
+    // Find mirror segment
+    const mirrorX = -point.x;
+    let mirrorSeg = null;
+    let minDist = Infinity;
+
+    path.segments.forEach(seg => {
+        if (seg === segment) return;
+        const dist = Math.abs(seg.point.x - mirrorX) + Math.abs(seg.point.y - point.y);
+        if (dist < minDist && dist < 20) {
+            minDist = dist;
+            mirrorSeg = seg;
+        }
+    });
+
+    if (mirrorSeg) {
+        mirrorSeg.point.x = -point.x;
+        mirrorSeg.point.y = point.y;
+
+        // Mirror handles
+        if (segment.handleIn) {
+            mirrorSeg.handleIn = new Point(-segment.handleIn.x, segment.handleIn.y);
+        }
+        if (segment.handleOut) {
+            mirrorSeg.handleOut = new Point(-segment.handleOut.x, segment.handleOut.y);
+        }
+    }
+}
+
+// ============================================================
+// UNDO/REDO
+// ============================================================
+function serializeState() {
+    const serializePath = (path) => {
+        if (!path) return null;
+        return path.segments.map(seg => ({
+            point: [seg.point.x, seg.point.y],
+            handleIn: seg.handleIn ? [seg.handleIn.x, seg.handleIn.y] : null,
+            handleOut: seg.handleOut ? [seg.handleOut.x, seg.handleOut.y] : null
+        }));
+    };
+
+    return {
+        outer: serializePath(state.outerPath),
+        voids: state.voids.map(v => ({
+            id: v.id,
+            role: v.role,
+            segments: serializePath(v.path)
+        })),
+        activePathType: state.activePathType
+    };
+}
+
+function deserializeState(data) {
+    const deserializePath = (segments, path) => {
+        path.removeSegments();
+        segments.forEach(s => {
+            const seg = new Segment(new Point(s.point[0], s.point[1]));
+            if (s.handleIn) seg.handleIn = new Point(s.handleIn[0], s.handleIn[1]);
+            if (s.handleOut) seg.handleOut = new Point(s.handleOut[0], s.handleOut[1]);
+            path.add(seg);
+        });
+        path.closed = true;
+    };
+
+    if (data.outer && state.outerPath) {
+        deserializePath(data.outer, state.outerPath);
+    }
+
+    // Remove extra voids
+    while (state.voids.length > data.voids.length) {
+        const v = state.voids.pop();
+        v.path.remove();
+    }
+
+    // Update/add voids
+    data.voids.forEach((vData, i) => {
+        if (i < state.voids.length) {
+            state.voids[i].id = vData.id;
+            state.voids[i].role = vData.role;
+            deserializePath(vData.segments, state.voids[i].path);
+        } else {
+            const path = new Path({
+                closed: true,
+                strokeColor: VOID_COLORS[vData.role] || '#aa00ff',
+                strokeWidth: 2
+            });
+            deserializePath(vData.segments, path);
+            state.voids.push({ id: vData.id, role: vData.role, path });
+        }
+    });
+
+    state.activePathType = data.activePathType;
+    state.selectedSegments = [];
+    state.selectedHandle = null;
+}
+
+function pushState() {
+    const serialized = serializeState();
+    state.undoStack.push(serialized);
+    if (state.undoStack.length > state.maxHistory) {
+        state.undoStack.shift();
+    }
+    state.redoStack = [];
+    state.dirty = true;
+}
+
+function undo() {
+    if (state.undoStack.length <= 1) return;
+    const current = state.undoStack.pop();
+    state.redoStack.push(current);
+    const prev = state.undoStack[state.undoStack.length - 1];
+    deserializeState(prev);
+    updateUI();
+    redrawHandles();
+}
+
+function redo() {
+    if (state.redoStack.length === 0) return;
+    const next = state.redoStack.pop();
+    state.undoStack.push(next);
+    deserializeState(next);
+    updateUI();
+    redrawHandles();
+}
+
+// ============================================================
+// CANVAS EVENTS
+// ============================================================
+function setupCanvasEvents() {
+    const wrapper = document.getElementById('canvas-wrapper');
+    const canvas = document.getElementById('canvas');
+
+    // Mouse move - update cursor position
+    view.onMouseMove = function(event) {
+        const pt = event.point;
+        document.getElementById('status-cursor').textContent =
+            `${pt.x.toFixed(2)}, ${pt.y.toFixed(2)}`;
+
+        // Show snap indicator while dragging
+        if (isDragging && state.selectedSegments.length > 0) {
+            const snapped = snapToGrid(pt);
+            showSnapIndicator(snapped);
+        }
+    };
+
+    // Mouse down
+    view.onMouseDown = function(event) {
+        if (state.measuring) {
+            handleMeasureClick(event.point);
+            return;
+        }
+
+        if (state.calibrating) {
+            handleCalibrationClick(event.point);
+            return;
+        }
+
+        const path = getActivePath();
+        if (!path) return;
+
+        // Check handle hit first
+        if (state.selectedSegments.length === 1) {
+            const seg = state.selectedSegments[0];
+            const hitRadius = 8 / state.zoom;
+
+            if (seg.handleIn && seg.handleIn.length > 0) {
+                const handlePos = seg.point.add(seg.handleIn);
+                if (event.point.getDistance(handlePos) < hitRadius) {
+                    state.selectedHandle = { segment: seg, type: 'in' };
+                    isDragging = true;
+                    state.gestureActive = true;
+                    return;
+                }
+            }
+
+            if (seg.handleOut && seg.handleOut.length > 0) {
+                const handlePos = seg.point.add(seg.handleOut);
+                if (event.point.getDistance(handlePos) < hitRadius) {
+                    state.selectedHandle = { segment: seg, type: 'out' };
+                    isDragging = true;
+                    state.gestureActive = true;
+                    return;
+                }
+            }
+        }
+
+        // Alt+click on node = toggle smooth/cusp
+        if (event.modifiers.alt) {
+            const hitResult = path.hitTest(event.point, {
+                segments: true,
+                tolerance: 12 / state.zoom
+            });
+
+            if (hitResult && hitResult.segment) {
+                pushState();
+                const seg = hitResult.segment;
+                if (seg.handleIn || seg.handleOut) {
+                    // Make cusp (clear handles)
+                    seg.handleIn = new Point(0, 0);
+                    seg.handleOut = new Point(0, 0);
+                } else {
+                    // Make smooth
+                    seg.smooth();
+                }
+                redrawHandles();
+                return;
+            }
+        }
+
+        // Check node hit
+        const hitResult = path.hitTest(event.point, {
+            segments: true,
+            tolerance: 12 / state.zoom
+        });
+
+        if (hitResult && hitResult.segment) {
+            if (event.modifiers.shift) {
+                // Multi-select
+                const idx = state.selectedSegments.indexOf(hitResult.segment);
+                if (idx >= 0) {
+                    state.selectedSegments.splice(idx, 1);
+                } else if (state.selectedSegments.length < 2) {
+                    state.selectedSegments.push(hitResult.segment);
+                }
+            } else {
+                state.selectedSegments = [hitResult.segment];
+            }
+            isDragging = true;
+            dragStartPoint = hitResult.segment.point.clone();
+            state.gestureActive = true;
+            updateUI();
+            redrawHandles();
+            return;
+        }
+
+        // Check curve hit (insert node)
+        const curveHit = path.hitTest(event.point, {
+            curves: true,
+            tolerance: 7 / state.zoom
+        });
+
+        if (curveHit && curveHit.location) {
+            pushState();
+            const location = curveHit.location;
+            const newPoint = location.point;
+            path.insert(location.index + 1, new Segment(newPoint));
+            const newSeg = path.segments[location.index + 1];
+            newSeg.smooth();
+            state.selectedSegments = [newSeg];
+            updateUI();
+            redrawHandles();
+            return;
+        }
+
+        // Deselect
+        state.selectedSegments = [];
+        state.selectedHandle = null;
+        updateUI();
+        redrawHandles();
+    };
+
+    // Mouse drag
+    view.onMouseDrag = function(event) {
+        if (state.calibrating) return;
+
+        // Handle drag
+        if (state.selectedHandle) {
+            const seg = state.selectedHandle.segment;
+            const delta = event.point.subtract(seg.point);
+
+            if (state.selectedHandle.type === 'in') {
+                seg.handleIn = delta;
+                // Mirror unless Alt
+                if (!event.modifiers.alt && seg.handleOut) {
+                    seg.handleOut = delta.multiply(-1);
+                }
+            } else {
+                seg.handleOut = delta;
+                if (!event.modifiers.alt && seg.handleIn) {
+                    seg.handleIn = delta.multiply(-1);
+                }
+            }
+            redrawHandles();
+            return;
+        }
+
+        // Node drag
+        if (isDragging && state.selectedSegments.length > 0) {
+            const seg = state.selectedSegments[0];
+            const originalX = seg.point.x;
+            let newPoint = event.point;
+
+            // Mirror centerline constraint
+            if (state.mirrorMode && Math.abs(dragStartPoint.x) < 0.001) {
+                newPoint = new Point(0, event.point.y);
+            }
+
+            // Snap
+            newPoint = snapToGrid(newPoint);
+            seg.point = newPoint;
+
+            // Apply mirror
+            applyMirror(seg, originalX);
+
+            redrawHandles();
+        }
+    };
+
+    // Mouse up
+    view.onMouseUp = function(event) {
+        hideSnapIndicator();
+
+        if (state.gestureActive) {
+            pushState();
+            state.gestureActive = false;
+        }
+
+        isDragging = false;
+        dragStartPoint = null;
+        state.selectedHandle = null;
+    };
+
+    // Double click - coordinate dialog
+    view.onDoubleClick = function(event) {
+        if (state.selectedSegments.length === 1) {
+            openCoordModal(state.selectedSegments[0]);
+        }
+    };
+
+    // Zoom
+    canvas.addEventListener('wheel', function(e) {
+        e.preventDefault();
+        const delta = e.deltaY > 0 ? 0.9 : 1.1;
+        let newZoom = state.zoom * delta;
+        newZoom = Math.max(0.25, Math.min(4.0, newZoom));
+
+        if (newZoom !== state.zoom) {
+            const mousePoint = view.viewToProject(new Point(e.offsetX, e.offsetY));
+            state.zoom = newZoom;
+            view.zoom = state.zoom;
+
+            // Keep mouse point stable
+            const newMousePoint = view.viewToProject(new Point(e.offsetX, e.offsetY));
+            const shift = mousePoint.subtract(newMousePoint);
+            state.viewCenter = state.viewCenter.add(shift);
+            view.center = state.viewCenter;
+
+            drawGrid();
+            redrawHandles();
+            document.getElementById('status-zoom').textContent = Math.round(state.zoom * 100);
+        }
+    }, { passive: false });
+
+    // Pan with space
+    document.addEventListener('keydown', function(e) {
+        if (e.code === 'Space' && !isPanning) {
+            isPanning = true;
+            wrapper.classList.add('panning');
+            e.preventDefault();
+        }
+    });
+
+    document.addEventListener('keyup', function(e) {
+        if (e.code === 'Space') {
+            isPanning = false;
+            wrapper.classList.remove('panning', 'dragging');
+        }
+    });
+
+    canvas.addEventListener('mousedown', function(e) {
+        if (isPanning) {
+            lastPanPoint = new Point(e.clientX, e.clientY);
+            wrapper.classList.add('dragging');
+            e.preventDefault();
+        }
+    });
+
+    document.addEventListener('mousemove', function(e) {
+        if (isPanning && lastPanPoint) {
+            const dx = e.clientX - lastPanPoint.x;
+            const dy = e.clientY - lastPanPoint.y;
+            const delta = new Point(dx / state.zoom, dy / state.zoom);
+            state.viewCenter = state.viewCenter.subtract(delta);
+            view.center = state.viewCenter;
+            lastPanPoint = new Point(e.clientX, e.clientY);
+            drawGrid();
+        }
+    });
+
+    document.addEventListener('mouseup', function() {
+        lastPanPoint = null;
+        wrapper.classList.remove('dragging');
+    });
+}
+
+// ============================================================
+// KEYBOARD EVENTS
+// ============================================================
+function setupKeyboardEvents() {
+    document.addEventListener('keydown', function(e) {
+        // Prevent browser defaults for our shortcuts
+        if ((e.ctrlKey || e.metaKey) && ['z', 'y', 'n', 's', 'o', 'e'].includes(e.key.toLowerCase())) {
+            e.preventDefault();
+        }
+
+        // Ctrl+Z - Undo
+        if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'z') {
+            undo();
+            return;
+        }
+
+        // Ctrl+Y - Redo
+        if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'y') {
+            redo();
+            return;
+        }
+
+        // Ctrl+N - New
+        if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'n') {
+            confirmNew();
+            return;
+        }
+
+        // Ctrl+S - Save session
+        if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 's') {
+            saveSession();
+            return;
+        }
+
+        // Ctrl+O - Open session
+        if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'o') {
+            openSession();
+            return;
+        }
+
+        // Ctrl+E - Export JSON
+        if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'e') {
+            exportJSON();
+            return;
+        }
+
+        // G - Toggle grid
+        if (e.key.toLowerCase() === 'g' && !e.ctrlKey && !e.metaKey) {
+            toggleGrid();
+            return;
+        }
+
+        // C - Calibrate
+        if (e.key.toLowerCase() === 'c' && !e.ctrlKey && !e.metaKey) {
+            startCalibration();
+            return;
+        }
+
+        // M - Measure
+        if (e.key.toLowerCase() === 'm' && !e.ctrlKey && !e.metaKey) {
+            startMeasure();
+            return;
+        }
+
+        // Delete - Remove node
+        if (e.key === 'Delete' && state.selectedSegments.length > 0) {
+            deleteSelectedNodes();
+            return;
+        }
+    });
+}
+
+function deleteSelectedNodes() {
+    const path = getActivePath();
+    if (!path || path.segments.length <= 3) return;
+
+    pushState();
+    state.selectedSegments.forEach(seg => {
+        const idx = path.segments.indexOf(seg);
+        if (idx >= 0 && path.segments.length > 3) {
+            path.removeSegment(idx);
+        }
+    });
+    state.selectedSegments = [];
+    updateUI();
+    redrawHandles();
+}
+
+// ============================================================
+// TOOLBAR EVENTS
+// ============================================================
+function setupToolbarEvents() {
+    document.getElementById('btn-new').addEventListener('click', confirmNew);
+    document.getElementById('btn-undo').addEventListener('click', undo);
+    document.getElementById('btn-redo').addEventListener('click', redo);
+
+    document.getElementById('btn-grid').addEventListener('click', toggleGrid);
+    document.getElementById('snap-select').addEventListener('change', function() {
+        state.snapSize = parseInt(this.value);
+    });
+    document.getElementById('btn-handles').addEventListener('click', toggleHandles);
+
+    document.getElementById('btn-mirror').addEventListener('click', toggleMirror);
+    document.getElementById('btn-outer').addEventListener('click', () => setActivePath('outer'));
+    document.getElementById('btn-add-void').addEventListener('click', openVoidModal);
+    document.getElementById('btn-add-void-panel').addEventListener('click', openVoidModal);
+
+    document.getElementById('btn-simplify').addEventListener('click', simplifyPath);
+    document.getElementById('btn-smooth-all').addEventListener('click', smoothAllNodes);
+
+    document.getElementById('btn-import').addEventListener('click', importImage);
+    document.getElementById('btn-measure').addEventListener('click', startMeasure);
+    document.getElementById('btn-calibrate').addEventListener('click', startCalibration);
+    document.getElementById('btn-clear-image').addEventListener('click', clearImage);
+
+    document.getElementById('btn-export-dxf').addEventListener('click', exportDXF);
+    document.getElementById('btn-export-json').addEventListener('click', exportJSON);
+    document.getElementById('btn-export-svg').addEventListener('click', exportSVG);
+
+    document.getElementById('image-opacity').addEventListener('input', function() {
+        const val = parseInt(this.value);
+        document.getElementById('opacity-value').textContent = val + '%';
+        if (state.raster) {
+            state.raster.opacity = val / 100;
+        }
+    });
+}
+
+function toggleGrid() {
+    state.gridVisible = !state.gridVisible;
+    document.getElementById('btn-grid').textContent = `Grid: ${state.gridVisible ? 'ON' : 'OFF'}`;
+    document.getElementById('btn-grid').classList.toggle('active', state.gridVisible);
+    document.getElementById('status-grid').textContent = state.gridVisible ? 'ON' : 'OFF';
+    drawGrid();
+}
+
+function toggleHandles() {
+    state.showAllHandles = !state.showAllHandles;
+    document.getElementById('btn-handles').textContent = `Handles: ${state.showAllHandles ? 'ON' : 'OFF'}`;
+    document.getElementById('btn-handles').classList.toggle('active', state.showAllHandles);
+    redrawHandles();
+}
+
+function toggleMirror() {
+    state.mirrorMode = !state.mirrorMode;
+    document.getElementById('btn-mirror').textContent = `Mirror: ${state.mirrorMode ? 'ON' : 'OFF'}`;
+    document.getElementById('btn-mirror').classList.toggle('active', state.mirrorMode);
+    drawGrid();
+}
+
+function simplifyPath() {
+    const path = getActivePath();
+    if (!path) return;
+
+    const tolerance = parseFloat(document.getElementById('simplify-tolerance').value) || 2.5;
+    const beforeCount = path.segments.length;
+
+    path.simplify(tolerance);
+
+    const afterCount = path.segments.length;
+    console.log('Simplified: ' + beforeCount + ' -> ' + afterCount + ' nodes (tolerance: ' + tolerance + ')');
+
+    state.selectedSegments = [];
+    state.selectedHandle = null;
+    state.dirty = true;
+
+    pushState();
+    updateUI();
+    redrawHandles();
+}
+
+function smoothAllNodes() {
+    const path = getActivePath();
+    if (!path) return;
+
+    path.smooth();
+
+    state.selectedSegments = [];
+    state.selectedHandle = null;
+    state.dirty = true;
+
+    pushState();
+    updateUI();
+    redrawHandles();
+}
+
+function confirmNew() {
+    if (state.dirty) {
+        openConfirmModal('Create New Outline?',
+            'You have unsaved changes. Creating a new outline will discard them.',
+            () => {
+                resetEditor();
+            });
+    } else {
+        resetEditor();
+    }
+}
+
+function resetEditor() {
+    if (state.outerPath) state.outerPath.remove();
+    state.voids.forEach(v => v.path.remove());
+    state.voids = [];
+
+    if (state.raster) {
+        state.raster.remove();
+        state.raster = null;
+    }
+    state.imagePixelsPerMM = null;
+    document.getElementById('image-panel').style.display = 'none';
+
+    state.undoStack = [];
+    state.redoStack = [];
+    state.selectedSegments = [];
+    state.selectedHandle = null;
+    state.calibrating = false;
+    state.calPoints = [];
+
+    createDefaultOutline();
+    state.viewCenter = new Point(0, 0);
+    state.zoom = 1.0;
+    view.center = state.viewCenter;
+    view.zoom = state.zoom;
+
+    drawGrid();
+    updateUI();
+    redrawHandles();
+    pushState();
+    state.dirty = false;
+}
+
+// ============================================================
+// PANEL EVENTS
+// ============================================================
+function setupPanelEvents() {
+    // Node list click handling is done in updateNodeList
+}
+
+function updateUI() {
+    updateNodeList();
+    updateVoidList();
+    updateBBoxDisplay();
+
+    // Status bar
+    const path = getActivePath();
+    document.getElementById('status-nodes').textContent = path ? path.segments.length : 0;
+    document.getElementById('node-count').textContent = path ? path.segments.length : 0;
+    document.getElementById('void-count').textContent = state.voids.length;
+
+    // Mode buttons
+    document.getElementById('btn-outer').classList.toggle('active', state.activePathType === 'outer');
+    document.getElementById('status-mode').textContent =
+        state.activePathType === 'outer' ? 'Outer' :
+        state.voids.find(v => v.id === state.activePathType)?.role || 'Void';
+
+    // Selected node info
+    if (state.selectedSegments.length === 1) {
+        const seg = state.selectedSegments[0];
+        const path = getActivePath();
+        const idx = path ? path.segments.indexOf(seg) : -1;
+        document.getElementById('status-selected').textContent =
+            `#${idx} (${seg.point.x.toFixed(2)}, ${seg.point.y.toFixed(2)})`;
+    } else if (state.selectedSegments.length === 2) {
+        document.getElementById('status-selected').textContent = '2 nodes';
+    } else {
+        document.getElementById('status-selected').textContent = '—';
+    }
+}
+
+function updateNodeList() {
+    const container = document.getElementById('node-list');
+    container.innerHTML = '';
+
+    const path = getActivePath();
+    if (!path) return;
+
+    path.segments.forEach((seg, idx) => {
+        const isSelected = state.selectedSegments.includes(seg);
+
+        const div = document.createElement('div');
+        div.className = 'node-item' + (isSelected ? ' selected' : '');
+        div.innerHTML = `
+            <span class="index">${idx}</span>
+            <input type="number" step="0.01" value="${seg.point.x.toFixed(2)}" data-idx="${idx}" data-axis="x">
+            <input type="number" step="0.01" value="${seg.point.y.toFixed(2)}" data-idx="${idx}" data-axis="y">
+        `;
+
+        div.addEventListener('click', function(e) {
+            if (e.target.tagName !== 'INPUT') {
+                if (e.shiftKey && state.selectedSegments.length < 2) {
+                    state.selectedSegments.push(seg);
+                } else {
+                    state.selectedSegments = [seg];
+                }
+                updateUI();
+                redrawHandles();
+            }
+        });
+
+        div.querySelectorAll('input').forEach(input => {
+            input.addEventListener('change', function() {
+                pushState();
+                const newVal = parseFloat(this.value);
+                if (!isNaN(newVal)) {
+                    if (this.dataset.axis === 'x') {
+                        seg.point.x = newVal;
+                    } else {
+                        seg.point.y = newVal;
+                    }
+                    updateUI();
+                    redrawHandles();
+                }
+            });
+
+            input.addEventListener('keydown', function(e) {
+                if (e.key === 'Enter') {
+                    this.blur();
+                }
+            });
+        });
+
+        container.appendChild(div);
+    });
+}
+
+function updateVoidList() {
+    const container = document.getElementById('void-list');
+    container.innerHTML = '';
+
+    state.voids.forEach(v => {
+        const isSelected = state.activePathType === v.id;
+
+        const div = document.createElement('div');
+        div.className = 'void-item' + (isSelected ? ' selected' : '');
+        div.innerHTML = `
+            <span class="void-color" style="background:${VOID_COLORS[v.role] || '#aa00ff'}"></span>
+            <span class="role">${v.role}</span>
+            <span class="nodes">${v.path.segments.length} pts</span>
+            <button class="delete-void" data-id="${v.id}">×</button>
+        `;
+
+        div.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('delete-void')) {
+                setActivePath(v.id);
+            }
+        });
+
+        div.querySelector('.delete-void').addEventListener('click', function(e) {
+            e.stopPropagation();
+            deleteVoid(v.id);
+        });
+
+        container.appendChild(div);
+    });
+}
+
+function updateBBoxDisplay() {
+    const path = state.outerPath;
+    if (!path) return;
+
+    const bounds = path.bounds;
+    document.getElementById('bbox-display').textContent =
+        `W: ${bounds.width.toFixed(2)} mm × H: ${bounds.height.toFixed(2)} mm`;
+}
+
+// ============================================================
+// MODALS
+// ============================================================
+function setupModalEvents() {
+    // Coordinate modal
+    document.getElementById('coord-cancel').addEventListener('click', closeCoordModal);
+    document.getElementById('coord-ok').addEventListener('click', applyCoordModal);
+    document.getElementById('modal-coord').addEventListener('click', function(e) {
+        if (e.target === this) closeCoordModal();
+    });
+
+    // Calibration modal
+    document.getElementById('calibrate-cancel').addEventListener('click', cancelCalibration);
+    document.getElementById('calibrate-ok').addEventListener('click', applyCalibration);
+
+    // Void modal
+    document.getElementById('void-cancel').addEventListener('click', closeVoidModal);
+    document.getElementById('void-ok').addEventListener('click', createVoid);
+
+    // Confirm modal
+    document.getElementById('confirm-cancel').addEventListener('click', closeConfirmModal);
+}
+
+let coordModalSegment = null;
+
+function openCoordModal(segment) {
+    coordModalSegment = segment;
+    document.getElementById('coord-x').value = segment.point.x.toFixed(2);
+    document.getElementById('coord-y').value = segment.point.y.toFixed(2);
+    document.getElementById('modal-coord').classList.add('visible');
+    document.getElementById('coord-x').focus();
+}
+
+function closeCoordModal() {
+    document.getElementById('modal-coord').classList.remove('visible');
+    coordModalSegment = null;
+}
+
+function applyCoordModal() {
+    if (!coordModalSegment) return;
+
+    const x = parseFloat(document.getElementById('coord-x').value);
+    const y = parseFloat(document.getElementById('coord-y').value);
+
+    if (!isNaN(x) && !isNaN(y)) {
+        pushState();
+        coordModalSegment.point = new Point(x, y);
+        updateUI();
+        redrawHandles();
+    }
+    closeCoordModal();
+}
+
+function openVoidModal() {
+    document.getElementById('modal-void').classList.add('visible');
+}
+
+function closeVoidModal() {
+    document.getElementById('modal-void').classList.remove('visible');
+}
+
+function createVoid() {
+    const role = document.getElementById('void-role').value;
+    const id = `${role}_${Date.now()}`;
+
+    // Create default rectangle void at center
+    const path = new Path({
+        closed: true,
+        strokeColor: VOID_COLORS[role] || '#aa00ff',
+        strokeWidth: 2
+    });
+
+    // Default rectangle 30x20mm
+    const pts = [[-15, -10], [15, -10], [15, 10], [-15, 10]];
+    pts.forEach(p => path.add(new Segment(new Point(p[0], p[1]))));
+
+    state.voids.push({ id, role, path });
+    pushState();
+    setActivePath(id);
+    closeVoidModal();
+}
+
+function deleteVoid(id) {
+    const idx = state.voids.findIndex(v => v.id === id);
+    if (idx >= 0) {
+        pushState();
+        state.voids[idx].path.remove();
+        state.voids.splice(idx, 1);
+        if (state.activePathType === id) {
+            setActivePath('outer');
+        }
+        updateUI();
+    }
+}
+
+let confirmCallback = null;
+
+function openConfirmModal(title, message, callback) {
+    document.getElementById('confirm-title').textContent = title;
+    document.getElementById('confirm-message').textContent = message;
+    document.getElementById('modal-confirm').classList.add('visible');
+    confirmCallback = callback;
+
+    document.getElementById('confirm-ok').onclick = function() {
+        closeConfirmModal();
+        if (confirmCallback) confirmCallback();
+    };
+}
+
+function closeConfirmModal() {
+    document.getElementById('modal-confirm').classList.remove('visible');
+    confirmCallback = null;
+}
+
+// ============================================================
+// REFERENCE IMAGE & CALIBRATION
+// ============================================================
+function importImage() {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = 'image/jpeg,image/png';
+
+    input.onchange = function(e) {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        const reader = new FileReader();
+        reader.onload = function(ev) {
+            if (state.raster) state.raster.remove();
+
+            const img = new Image();
+            img.onload = function() {
+                state.raster = new Raster(img);
+                state.raster.position = state.viewCenter;
+                state.raster.opacity = 0.5;
+                state.raster.sendToBack();
+                if (gridLayer) gridLayer.sendToBack();
+
+                document.getElementById('image-panel').style.display = 'block';
+                document.getElementById('image-opacity').value = 50;
+                document.getElementById('opacity-value').textContent = '50%';
+            };
+            img.src = ev.target.result;
+        };
+        reader.readAsDataURL(file);
+    };
+    input.click();
+}
+
+function clearImage() {
+    if (state.raster) {
+        state.raster.remove();
+        state.raster = null;
+    }
+    state.imagePixelsPerMM = null;
+    document.getElementById('image-panel').style.display = 'none';
+    state.calMarkers.forEach(m => m.remove());
+    state.calMarkers = [];
+}
+
+function startCalibration() {
+    if (!state.raster) {
+        alert('Import a reference image first.');
+        return;
+    }
+
+    state.calibrating = true;
+    state.calPoints = [];
+    state.calMarkers.forEach(m => m.remove());
+    state.calMarkers = [];
+
+    showCalibrationStatus('Click point A');
+}
+
+function showCalibrationStatus(text) {
+    if (calibrationStatus) calibrationStatus.remove();
+    
+    calibrationStatus = new PointText({
+        point: view.bounds.topLeft.add(new Point(20, 40)),
+        content: text,
+        fillColor: '#ff6600',
+        fontFamily: 'system-ui, sans-serif',
+        fontWeight: 'bold',
+        fontSize: 16
+    });
+}
+
+function hideCalibrationStatus() {
+    if (calibrationStatus) {
+        calibrationStatus.remove();
+        calibrationStatus = null;
+    }
+}
+
+function handleCalibrationClick(point) {
+    state.calPoints.push(point);
+
+    // Draw marker
+    const marker = new Path.Circle({
+        center: point,
+        radius: 6 / state.zoom,
+        fillColor: '#ff0000',
+        strokeColor: '#ffffff',
+        strokeWidth: 2 / state.zoom
+    });
+    state.calMarkers.push(marker);
+
+    if (state.calPoints.length === 1) {
+        showCalibrationStatus('Click point B');
+    } else if (state.calPoints.length === 2) {
+        hideCalibrationStatus();
+        
+        // Draw line between points
+        const line = new Path.Line({
+            from: state.calPoints[0],
+            to: state.calPoints[1],
+            strokeColor: '#ff0000',
+            strokeWidth: 2 / state.zoom,
+            dashArray: [5 / state.zoom, 5 / state.zoom]
+        });
+        state.calMarkers.push(line);
+
+        document.getElementById('modal-calibrate').classList.add('visible');
+        document.getElementById('calibrate-distance').focus();
+    }
+}
+
+function cancelCalibration() {
+    state.calibrating = false;
+    state.calPoints = [];
+    state.calMarkers.forEach(m => m.remove());
+    state.calMarkers = [];
+    hideCalibrationStatus();
+    document.getElementById('modal-calibrate').classList.remove('visible');
+}
+
+// ============================================================
+// MEASURE MODE
+// ============================================================
+function startMeasure() {
+    // Cancel any existing measure
+    cancelMeasure();
+
+    state.measuring = true;
+    state.measurePoints = [];
+    document.getElementById('btn-measure').classList.add('active');
+    showCalibrationStatus('Click first point');
+}
+
+function handleMeasureClick(point) {
+    state.measurePoints.push(point);
+
+    // Draw marker
+    const marker = new Path.Circle({
+        center: point,
+        radius: 6 / state.zoom,
+        fillColor: '#00aaff',
+        strokeColor: '#ffffff',
+        strokeWidth: 2 / state.zoom
+    });
+    state.measureMarkers.push(marker);
+
+    if (state.measurePoints.length === 1) {
+        showCalibrationStatus('Click second point');
+    } else if (state.measurePoints.length === 2) {
+        hideCalibrationStatus();
+
+        // Draw line between points
+        const line = new Path.Line({
+            from: state.measurePoints[0],
+            to: state.measurePoints[1],
+            strokeColor: '#00aaff',
+            strokeWidth: 2 / state.zoom,
+            dashArray: [5 / state.zoom, 5 / state.zoom]
+        });
+        state.measureMarkers.push(line);
+
+        // Calculate and display distance
+        const dist = state.measurePoints[0].getDistance(state.measurePoints[1]);
+        const distanceEl = document.getElementById('distance-display');
+        distanceEl.textContent = 'Measured: ' + dist.toFixed(2) + ' mm';
+        distanceEl.style.display = 'block';
+        distanceEl.style.color = '#00aaff';
+
+        // Draw distance label on canvas
+        const midpoint = state.measurePoints[0].add(state.measurePoints[1]).divide(2);
+        const label = new PointText({
+            point: midpoint.add(new Point(0, -15 / state.zoom)),
+            content: dist.toFixed(2) + ' mm',
+            fillColor: '#00aaff',
+            fontFamily: 'system-ui, sans-serif',
+            fontWeight: 'bold',
+            fontSize: 14 / state.zoom,
+            justification: 'center'
+        });
+        state.measureMarkers.push(label);
+
+        state.measuring = false;
+        document.getElementById('btn-measure').classList.remove('active');
+
+        // Auto-fade after 5 seconds
+        if (state.measureFadeTimer) clearTimeout(state.measureFadeTimer);
+        state.measureFadeTimer = setTimeout(function() {
+            fadeMeasureMarkers();
+        }, 5000);
+    }
+}
+
+function fadeMeasureMarkers() {
+    // Fade out markers
+    state.measureMarkers.forEach(m => {
+        m.tween({ opacity: 0 }, { duration: 500 });
+    });
+
+    // Remove after fade
+    setTimeout(function() {
+        state.measureMarkers.forEach(m => m.remove());
+        state.measureMarkers = [];
+
+        // Hide distance display
+        const distanceEl = document.getElementById('distance-display');
+        distanceEl.style.display = 'none';
+        distanceEl.style.color = '#ffaa00'; // Reset to original color
+    }, 500);
+}
+
+function cancelMeasure() {
+    state.measuring = false;
+    state.measurePoints = [];
+    state.measureMarkers.forEach(m => m.remove());
+    state.measureMarkers = [];
+    if (state.measureFadeTimer) {
+        clearTimeout(state.measureFadeTimer);
+        state.measureFadeTimer = null;
+    }
+    document.getElementById('btn-measure').classList.remove('active');
+    hideCalibrationStatus();
+
+    const distanceEl = document.getElementById('distance-display');
+    distanceEl.style.display = 'none';
+    distanceEl.style.color = '#ffaa00';
+}
+
+function applyCalibration() {
+    const knownDist = parseFloat(document.getElementById('calibrate-distance').value);
+    if (isNaN(knownDist) || knownDist <= 0) return;
+
+    const pixelDist = state.calPoints[0].getDistance(state.calPoints[1]);
+    const scale = knownDist / pixelDist;
+
+    // Scale the image only
+    if (state.raster) {
+        state.raster.scale(scale);
+        state.imagePixelsPerMM = 1 / scale;
+    }
+
+    cancelCalibration();
+}
+
+// ============================================================
+// EXPORTS
+// ============================================================
+function tessellatePathToPoints(path, stepsPerCurve = 20) {
+    const points = [];
+
+    for (let i = 0; i < path.curves.length; i++) {
+        const curve = path.curves[i];
+        for (let t = 0; t <= stepsPerCurve; t++) {
+            // Skip first point of each curve except the first curve
+            // (to avoid duplicates at joints)
+            if (t === 0 && i > 0) continue;
+
+            const pt = curve.getPointAtTime(t / stepsPerCurve);
+            points.push([
+                parseFloat(pt.x.toFixed(3)),
+                parseFloat(pt.y.toFixed(3))
+            ]);
+        }
+    }
+
+    return points;
+}
+
+function calculateWinding(points) {
+    // Shoelace formula
+    let sum = 0;
+    for (let i = 0; i < points.length; i++) {
+        const j = (i + 1) % points.length;
+        sum += (points[j][0] - points[i][0]) * (points[j][1] + points[i][1]);
+    }
+    return sum > 0 ? 'cw' : 'ccw';
+}
+
+function enforceWinding(points, desiredWinding) {
+    const currentWinding = calculateWinding(points);
+    if (currentWinding !== desiredWinding) {
+        return points.slice().reverse();
+    }
+    return points;
+}
+
+function exportDXF() {
+    let dxf = '';
+
+    // Header
+    dxf += '0\nSECTION\n2\nHEADER\n';
+    dxf += '9\n$EXTMIN\n10\n-1e20\n20\n-1e20\n30\n0\n';
+    dxf += '9\n$EXTMAX\n10\n1e20\n20\n1e20\n30\n0\n';
+    dxf += '0\nENDSEC\n';
+
+    // Entities
+    dxf += '0\nSECTION\n2\nENTITIES\n';
+
+    // Outer body
+    if (state.outerPath) {
+        const points = tessellatePathToPoints(state.outerPath, 20);
+        for (let i = 0; i < points.length; i++) {
+            const j = (i + 1) % points.length;
+            dxf += `0\nLINE\n8\nBODY_OUTLINE\n`;
+            dxf += `10\n${points[i][0].toFixed(3)}\n20\n${points[i][1].toFixed(3)}\n30\n0\n`;
+            dxf += `11\n${points[j][0].toFixed(3)}\n21\n${points[j][1].toFixed(3)}\n31\n0\n`;
+        }
+    }
+
+    // Voids
+    state.voids.forEach(v => {
+        const layerName = `VOID_${v.role.toUpperCase()}`;
+        const points = tessellatePathToPoints(v.path, 20);
+
+        for (let i = 0; i < points.length; i++) {
+            const j = (i + 1) % points.length;
+            dxf += `0\nLINE\n8\n${layerName}\n`;
+            dxf += `10\n${points[i][0].toFixed(3)}\n20\n${points[i][1].toFixed(3)}\n30\n0\n`;
+            dxf += `11\n${points[j][0].toFixed(3)}\n21\n${points[j][1].toFixed(3)}\n31\n0\n`;
+        }
+    });
+
+    dxf += '0\nENDSEC\n0\nEOF\n';
+
+    // Convert to CRLF
+    dxf = dxf.replace(/\n/g, '\r\n');
+
+    downloadFile(dxf, 'body_outline.dxf', 'application/dxf');
+}
+
+function exportJSON() {
+    let outerPoints = [];
+    if (state.outerPath) {
+        outerPoints = tessellatePathToPoints(state.outerPath, 20);
+        outerPoints = enforceWinding(outerPoints, 'ccw');
+    }
+
+    const voids = state.voids.map((v, idx) => {
+        let points = tessellatePathToPoints(v.path, 20);
+        points = enforceWinding(points, 'cw');
+        return {
+            id: `${v.role}_${idx}`,
+            role: v.role,
+            closed: true,
+            winding: 'cw',
+            points: points
+        };
+    });
+
+    const json = {
+        schema_version: 1,
+        units: 'mm',
+        origin: 'body_center_y_positive_toward_neck',
+        metadata: {
+            name: 'untitled',
+            source: 'body_outline_editor_sandbox',
+            created_at: new Date().toISOString()
+        },
+        outer: {
+            id: 'body',
+            role: 'outer',
+            closed: true,
+            winding: 'ccw',
+            points: outerPoints
+        },
+        voids: voids,
+        paths_control: null
+    };
+
+    const str = JSON.stringify(json, null, 2);
+    downloadFile(str, 'body_outline.json', 'application/json');
+}
+
+function exportSVG() {
+    // Create a temporary group with all paths
+    const group = new Group();
+
+    if (state.outerPath) {
+        const clone = state.outerPath.clone();
+        clone.strokeColor = '#00ff88';
+        group.addChild(clone);
+    }
+
+    state.voids.forEach(v => {
+        const clone = v.path.clone();
+        clone.strokeColor = VOID_COLORS[v.role] || '#aa00ff';
+        group.addChild(clone);
+    });
+
+    const svg = group.exportSVG({ asString: true });
+    group.remove();
+
+    downloadFile(svg, 'body_outline.svg', 'image/svg+xml');
+}
+
+function saveSession() {
+    const serializePath = (path) => {
+        if (!path) return null;
+        return path.segments.map(seg => ({
+            point: [seg.point.x, seg.point.y],
+            handleIn: seg.handleIn ? [seg.handleIn.x, seg.handleIn.y] : null,
+            handleOut: seg.handleOut ? [seg.handleOut.x, seg.handleOut.y] : null
+        }));
+    };
+
+    const session = {
+        version: 1,
+        viewport: {
+            zoom: state.zoom,
+            center: [state.viewCenter.x, state.viewCenter.y]
+        },
+        outer: serializePath(state.outerPath),
+        voids: state.voids.map(v => ({
+            id: v.id,
+            role: v.role,
+            segments: serializePath(v.path)
+        })),
+        referenceImage: state.raster ? {
+            data: state.raster.toDataURL(),
+            position: [state.raster.position.x, state.raster.position.y],
+            scale: state.raster.scaling.x,
+            opacity: state.raster.opacity
+        } : null,
+        calibration: state.imagePixelsPerMM
+    };
+
+    const str = JSON.stringify(session);
+    downloadFile(str, 'body_outline.sgession', 'application/json');
+    state.dirty = false;
+}
+
+function openSession() {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = '.sgession';
+
+    input.onchange = function(e) {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        const reader = new FileReader();
+        reader.onload = function(ev) {
+            try {
+                const session = JSON.parse(ev.target.result);
+                loadSession(session);
+            } catch (err) {
+                alert('Failed to load session: ' + err.message);
+            }
+        };
+        reader.readAsText(file);
+    };
+    input.click();
+}
+
+function loadSession(session) {
+    // Clear current state
+    if (state.outerPath) state.outerPath.remove();
+    state.voids.forEach(v => v.path.remove());
+    state.voids = [];
+    if (state.raster) state.raster.remove();
+
+    // Restore viewport
+    if (session.viewport) {
+        state.zoom = session.viewport.zoom || 1;
+        state.viewCenter = new Point(session.viewport.center[0], session.viewport.center[1]);
+        view.zoom = state.zoom;
+        view.center = state.viewCenter;
+    }
+
+    // Restore outer path
+    const deserializeSegments = (segments) => {
+        return segments.map(s => {
+            const seg = new Segment(new Point(s.point[0], s.point[1]));
+            if (s.handleIn) seg.handleIn = new Point(s.handleIn[0], s.handleIn[1]);
+            if (s.handleOut) seg.handleOut = new Point(s.handleOut[0], s.handleOut[1]);
+            return seg;
+        });
+    };
+
+    if (session.outer) {
+        state.outerPath = new Path({
+            segments: deserializeSegments(session.outer),
+            closed: true,
+            strokeColor: '#00ff88',
+            strokeWidth: 2
+        });
+    }
+
+    // Restore voids
+    if (session.voids) {
+        session.voids.forEach(v => {
+            const path = new Path({
+                segments: deserializeSegments(v.segments),
+                closed: true,
+                strokeColor: VOID_COLORS[v.role] || '#aa00ff',
+                strokeWidth: 2
+            });
+            state.voids.push({ id: v.id, role: v.role, path });
+        });
+    }
+
+    // Restore reference image
+    if (session.referenceImage) {
+        const img = new Image();
+        img.onload = function() {
+            state.raster = new Raster(img);
+            state.raster.position = new Point(
+                session.referenceImage.position[0],
+                session.referenceImage.position[1]
+            );
+            state.raster.scaling = new Point(
+                session.referenceImage.scale,
+                session.referenceImage.scale
+            );
+            state.raster.opacity = session.referenceImage.opacity;
+            state.raster.sendToBack();
+            if (gridLayer) gridLayer.sendToBack();
+
+            document.getElementById('image-panel').style.display = 'block';
+            document.getElementById('image-opacity').value =
+                Math.round(session.referenceImage.opacity * 100);
+            document.getElementById('opacity-value').textContent =
+                Math.round(session.referenceImage.opacity * 100) + '%';
+        };
+        img.src = session.referenceImage.data;
+    }
+
+    state.imagePixelsPerMM = session.calibration;
+    state.activePathType = 'outer';
+    state.selectedSegments = [];
+    state.undoStack = [];
+    state.redoStack = [];
+
+    drawGrid();
+    updateUI();
+    redrawHandles();
+    pushState();
+    state.dirty = false;
+
+    document.getElementById('status-zoom').textContent = Math.round(state.zoom * 100);
+}
+
+function downloadFile(content, filename, mimeType) {
+    const blob = new Blob([content], { type: mimeType });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(a.href);
+}
+
+// ============================================================
+// WINDOW RESIZE
+// ============================================================
+window.onresize = function() {
+    if (!view) return;
+    view.viewSize = new Size(
+        document.getElementById('canvas').offsetWidth,
+        document.getElementById('canvas').offsetHeight
+    );
+    drawGrid();
+    redrawHandles();
+};
+</script>
+</body>
+</html>
