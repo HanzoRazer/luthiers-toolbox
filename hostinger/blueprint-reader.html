@@ -434,6 +434,52 @@
       color: #555;
     }
 
+    /* Progress bar */
+    .progress-container {
+      display: none;
+      background: #1a1a1a;
+      border-radius: 8px;
+      padding: 1rem;
+      margin-bottom: 1rem;
+    }
+
+    .progress-container.visible {
+      display: block;
+    }
+
+    .progress-label {
+      font-size: 0.85rem;
+      color: #888;
+      margin-bottom: 0.5rem;
+      display: flex;
+      justify-content: space-between;
+    }
+
+    .progress-bar {
+      height: 8px;
+      background: #2a2a2a;
+      border-radius: 4px;
+      overflow: hidden;
+    }
+
+    .progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #f59e0b, #fbbf24);
+      border-radius: 4px;
+      width: 0%;
+      transition: width 0.3s ease;
+    }
+
+    .progress-fill.indeterminate {
+      width: 30%;
+      animation: indeterminate 1.5s ease-in-out infinite;
+    }
+
+    @keyframes indeterminate {
+      0% { transform: translateX(-100%); }
+      100% { transform: translateX(400%); }
+    }
+
     @media (max-width: 600px) {
       .controls {
         grid-template-columns: 1fr;
@@ -502,7 +548,19 @@
 
     <button class="btn extract-btn" id="extractBtn" disabled>Extract Outline</button>
 
+    <div class="progress-container" id="progressContainer">
+      <div class="progress-label">
+        <span id="progressText">Processing...</span>
+        <span id="progressPercent">0%</span>
+      </div>
+      <div class="progress-bar">
+        <div class="progress-fill" id="progressFill"></div>
+      </div>
+    </div>
+
     <div class="status" id="status"></div>
+
+    <button class="btn btn-secondary" id="retryBtn" style="display:none">↺ Retry</button>
 
     <div class="dimensions" id="dimensions">
       <h3>Extracted Dimensions</h3>
@@ -550,6 +608,14 @@
   <script>
     const API_BASE = 'https://luthiers-toolbox-production.up.railway.app';
 
+    // Timeouts for each operation
+    const TIMEOUTS = {
+      blueprint: 90000,   // 90s for edge-to-dxf
+      photo: 120000,      // 120s for vectorizer
+      clean: 60000,       // 60s for clean
+      download: 30000     // 30s for download
+    };
+
     // Elements
     const uploadZone = document.getElementById('uploadZone');
     const fileInput = document.getElementById('fileInput');
@@ -560,6 +626,7 @@
     const sourceType = document.getElementById('sourceType');
     const specName = document.getElementById('specName');
     const extractBtn = document.getElementById('extractBtn');
+    const retryBtn = document.getElementById('retryBtn');
     const status = document.getElementById('status');
     const dimensions = document.getElementById('dimensions');
     const previewSection = document.getElementById('previewSection');
@@ -567,10 +634,124 @@
     const downloadSvg = document.getElementById('downloadSvg');
     const downloadDxf = document.getElementById('downloadDxf');
     const modeBadge = document.getElementById('modeBadge');
+    const progressContainer = document.getElementById('progressContainer');
+    const progressText = document.getElementById('progressText');
+    const progressPercent = document.getElementById('progressPercent');
+    const progressFill = document.getElementById('progressFill');
 
     let selectedFile = null;
     let extractedData = null;
-    let routeMode = 'blueprint';  // 'blueprint' or 'photo'
+    let routeMode = 'blueprint';
+    let progressInterval = null;
+    let retryAttempt = 0;
+    const MAX_RETRIES = 3;
+
+    // Fetch with timeout and AbortController
+    function fetchWithTimeout(url, options, timeoutMs) {
+      const controller = new AbortController();
+      const id = setTimeout(() => controller.abort(), timeoutMs);
+      return fetch(url, { ...options, signal: controller.signal })
+        .finally(() => clearTimeout(id));
+    }
+
+    // Error handler with AbortError detection
+    function handleError(err) {
+      hideProgress();
+      if (err.name === 'AbortError') {
+        showStatus('Processing timed out. Try a smaller image or simpler view.', 'error');
+      } else {
+        showStatus(err.message, 'error');
+      }
+      retryBtn.style.display = 'inline-block';
+      console.error(err);
+    }
+
+    // Progress bar helpers
+    function showProgress(text) {
+      progressContainer.classList.add('visible');
+      progressText.textContent = text;
+      progressPercent.textContent = '0%';
+      progressFill.style.width = '0%';
+      progressFill.classList.remove('indeterminate');
+    }
+
+    function updateProgress(percent, text = null) {
+      progressFill.style.width = `${Math.min(percent, 100)}%`;
+      progressPercent.textContent = `${Math.round(percent)}%`;
+      if (text) progressText.textContent = text;
+    }
+
+    function hideProgress() {
+      if (progressInterval) {
+        clearInterval(progressInterval);
+        progressInterval = null;
+      }
+      progressContainer.classList.remove('visible');
+    }
+
+    function startProgressSimulation() {
+      let percent = 0;
+      progressInterval = setInterval(() => {
+        percent = Math.min(percent + 5, 90);
+        updateProgress(percent);
+      }, 1000);
+    }
+
+    function completeProgress() {
+      if (progressInterval) clearInterval(progressInterval);
+      updateProgress(100, 'Complete');
+      setTimeout(hideProgress, 1000);
+    }
+
+    // localStorage persistence
+    function loadSettings() {
+      const saved = localStorage.getItem('blueprintReaderSettings');
+      if (saved) {
+        try {
+          const settings = JSON.parse(saved);
+          if (settings.specName) specName.value = settings.specName;
+          if (settings.sourceType) sourceType.value = settings.sourceType;
+          if (settings.routeMode) {
+            routeMode = settings.routeMode;
+            updateModeBadge();
+          }
+        } catch (e) { /* ignore */ }
+      }
+    }
+
+    function saveSettings() {
+      localStorage.setItem('blueprintReaderSettings', JSON.stringify({
+        specName: specName.value,
+        sourceType: sourceType.value,
+        routeMode: routeMode
+      }));
+    }
+
+    // Load settings on startup
+    loadSettings();
+
+    // Save settings on change
+    specName.addEventListener('change', saveSettings);
+    sourceType.addEventListener('change', saveSettings);
+
+    // Retry button handler
+    retryBtn.addEventListener('click', async () => {
+      retryBtn.style.display = 'none';
+      retryAttempt++;
+
+      if (retryAttempt > MAX_RETRIES) {
+        showStatus(`Max retries (${MAX_RETRIES}) reached. Try a different file.`, 'error');
+        retryAttempt = 0;
+        return;
+      }
+
+      // Exponential backoff: 1s, 2s, 4s
+      const delay = Math.pow(2, retryAttempt - 1) * 1000;
+      showStatus(`Retrying (${retryAttempt}/${MAX_RETRIES}) in ${delay/1000}s...`);
+
+      await new Promise(r => setTimeout(r, delay));
+      extractBtn.click();
+    });
 
     // Toggle mode on badge click
     modeBadge.addEventListener('click', () => {
@@ -697,14 +878,22 @@
         try {
           // Send full dxf_path (not just filename) - works on Railway
           // where _output_file_registry doesn't persist across workers
-          const resp = await fetch(`${API_BASE}/api/blueprint/clean`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              dxf_path: dxfPath,
-              min_contour_length_mm: 100.0
-            })
-          });
+          showProgress('Filtering contours...', true);
+
+          const resp = await fetchWithTimeout(
+            `${API_BASE}/api/blueprint/clean`,
+            {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                dxf_path: dxfPath,
+                min_contour_length_mm: 100.0
+              })
+            },
+            TIMEOUTS.clean
+          );
+
+          hideProgress();
 
           if (!resp.ok) {
             const err = await resp.text();
@@ -739,9 +928,14 @@
           showStatus(`Cleaned: ${result.original_entity_count.toLocaleString()} → ${result.contours_found} contours${sizeInfo} — DXF ready`, 'success');
 
         } catch (err) {
+          hideProgress();
           btn.textContent = 'Filter Failed';
           btn.classList.add('error');
-          showStatus(err.message, 'error');
+          if (err.name === 'AbortError') {
+            showStatus('Filtering timed out. Try again.', 'error');
+          } else {
+            showStatus(err.message, 'error');
+          }
         }
       });
     }
@@ -751,7 +945,10 @@
       if (!selectedFile) return;
 
       extractBtn.disabled = true;
+      retryBtn.style.display = 'none';
       showStatus(`Extracting (${routeMode} mode)...`);
+      showProgress('Processing...');
+      startProgressSimulation();
 
       try {
         let response, data;
@@ -763,10 +960,11 @@
           formData.append('target_height_mm', '500');
           formData.append('return_file', 'false');
 
-          response = await fetch(`${API_BASE}/api/blueprint/edge-to-dxf/convert`, {
-            method: 'POST',
-            body: formData
-          });
+          response = await fetchWithTimeout(
+            `${API_BASE}/api/blueprint/edge-to-dxf/convert`,
+            { method: 'POST', body: formData },
+            TIMEOUTS.blueprint
+          );
 
           if (!response.ok) {
             const errorText = await response.text();
@@ -805,11 +1003,10 @@
         } else {
           // Photo mode: JSON base64 to photo vectorizer
           // Resize large images to prevent OOM
-          showStatus('Processing image...');
           const base64 = await resizeImageIfNeeded(selectedFile);
 
           if (imageWasResized) {
-            showStatus(`Image resized to max ${MAX_IMAGE_DIM}px for processing...`);
+            updateProgress(15, `Image resized to max ${MAX_IMAGE_DIM}px`);
           }
 
           const requestBody = {
@@ -823,11 +1020,15 @@
             requestBody.spec_name = specName.value;
           }
 
-          response = await fetch(`${API_BASE}/api/vectorizer/extract`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(requestBody)
-          });
+          response = await fetchWithTimeout(
+            `${API_BASE}/api/vectorizer/extract`,
+            {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify(requestBody)
+            },
+            TIMEOUTS.photo
+          );
 
           if (!response.ok) {
             const errorText = await response.text();
@@ -874,9 +1075,13 @@
           }
         }
 
+        // Success - complete progress and save settings
+        completeProgress();
+        saveSettings();
+        retryAttempt = 0;  // Reset retry counter on success
+
       } catch (err) {
-        showStatus(err.message, 'error');
-        console.error(err);
+        handleError(err);
       } finally {
         extractBtn.disabled = false;
       }
@@ -965,9 +1170,10 @@
       // Priority 1: Streaming download from clean endpoint (blueprint mode)
       if (extractedData.download_filename) {
         try {
-          showStatus('Downloading cleaned DXF...');
+          showProgress('Downloading DXF...');
           const downloadUrl = `${API_BASE}/api/blueprint/clean/download/${extractedData.download_filename}`;
-          const resp = await fetch(downloadUrl);
+          const resp = await fetchWithTimeout(downloadUrl, {}, TIMEOUTS.download);
+          hideProgress();
           if (!resp.ok) {
             throw new Error(`Download failed: ${resp.status}`);
           }
@@ -975,7 +1181,12 @@
           downloadBlob(blob, extractedData.download_filename);
           showStatus('Download complete', 'success');
         } catch (err) {
-          showStatus(`Download error: ${err.message}`, 'error');
+          hideProgress();
+          if (err.name === 'AbortError') {
+            showStatus('Download timed out. Try again.', 'error');
+          } else {
+            showStatus(`Download error: ${err.message}`, 'error');
+          }
         }
         return;
       }
