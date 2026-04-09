@@ -625,7 +625,14 @@
       const controller = new AbortController();
       const id = setTimeout(() => controller.abort(), timeoutMs);
       return fetch(url, { ...options, signal: controller.signal })
-        .finally(() => clearTimeout(id));
+        .then(response => {
+          clearTimeout(id);
+          return response;
+        })
+        .catch(err => {
+          clearTimeout(id);
+          throw err;
+        });
     }
 
     // Error handler with AbortError detection
@@ -914,6 +921,7 @@
     extractBtn.addEventListener('click', async () => {
       if (!selectedFile) return;
 
+      const startTime = Date.now();
       extractBtn.disabled = true;
       retryBtn.style.display = 'none';
       showStatus(`Extracting (${routeMode} mode)...`);
@@ -1015,7 +1023,8 @@
           console.log('error:', data.error);
           console.log('warnings:', data.warnings);
           console.log('contour_count:', data.contour_count);
-          console.log('body_dimensions_mm:', data.body_dimensions_mm);
+          console.log('body_width_mm:', data.body_width_mm);
+          console.log('body_height_mm:', data.body_height_mm);
           console.log('scale_source:', data.scale_source);
           console.log('=====================================');
 
@@ -1024,12 +1033,13 @@
             throw new Error(data.error || 'Photo extraction failed');
           }
 
-          showStatus(`Extraction complete in ${(data.processing_time_s || 0).toFixed(2)}s`, 'success');
+          const elapsedSec = (Date.now() - startTime) / 1000;
+          showStatus(`Extraction complete in ${elapsedSec.toFixed(2)}s`, 'success');
 
           document.getElementById('dimWidth').textContent =
-            data.body_dimensions_mm ? `${data.body_dimensions_mm[1]?.toFixed(1) || '—'} mm` : '—';
+            data.body_width_mm ? `${data.body_width_mm.toFixed(1)} mm` : '—';
           document.getElementById('dimHeight').textContent =
-            data.body_dimensions_mm ? `${data.body_dimensions_mm[0]?.toFixed(1) || '—'} mm` : '—';
+            data.body_height_mm ? `${data.body_height_mm.toFixed(1)} mm` : '—';
           document.getElementById('dimContours').textContent = data.contour_count || '—';
           document.getElementById('dimScale').textContent = data.scale_source || '—';
           dimensions.classList.add('visible');
