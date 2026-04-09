@@ -634,11 +634,30 @@
 
     function getArtifacts(data, mode) {
       if (!data || typeof data !== 'object') {
-        return { hasSvg: false, hasDxf: false, svgContent: null, warnings: [] };
+        return { hasSvg: false, hasDxf: false, svgContent: null, dxfBase64: null, warnings: [], stage: 'unknown' };
       }
 
+      // Check new canonical artifacts schema first (production contract)
+      const artifacts = data.artifacts;
+      if (artifacts && typeof artifacts === 'object') {
+        const svg = artifacts.svg || {};
+        const dxf = artifacts.dxf || {};
+        return {
+          hasSvg: !!svg.present,
+          hasDxf: !!dxf.present,
+          svgContent: svg.content || null,
+          dxfBase64: dxf.base64 || null,
+          warnings: Array.isArray(data.warnings) ? data.warnings : [],
+          stage: data.stage || 'complete',
+          entityCount: dxf.entity_count || 0,
+          closedContours: dxf.closed_contours || 0
+        };
+      }
+
+      // Legacy fallback for backward compatibility
       let svgContent = null;
       let hasDxf = false;
+      let dxfBase64 = null;
 
       if (mode === 'photo') {
         // Use body dimensions for proper scaling
@@ -646,16 +665,20 @@
         const heightMm = data.body_height_mm || 500;
         svgContent = data.svg_content || buildSvgFromPath(data.svg_path_d, widthMm, heightMm);
         hasDxf = !!(data.dxf_base64 || data.dxf_content || data.dxf_path);
+        dxfBase64 = data.dxf_base64 || null;
       } else if (mode === 'blueprint') {
         svgContent = data.svg_preview || null;
-        hasDxf = !!(data.download_filename || data.dxf_path);
+        hasDxf = !!(data.download_filename || data.dxf_b64 || data.dxf_path);
+        dxfBase64 = data.dxf_b64 || null;
       }
 
       return {
         hasSvg: !!svgContent,
         hasDxf,
         svgContent,
-        warnings: Array.isArray(data.warnings) ? data.warnings : []
+        dxfBase64,
+        warnings: Array.isArray(data.warnings) ? data.warnings : [],
+        stage: data.stage || 'complete'
       };
     }
 
@@ -1296,6 +1319,16 @@
     downloadSvg.addEventListener('click', () => {
       if (!extractedData) return;
 
+      // Priority 0: New artifacts schema (production contract)
+      const svgArtifact = extractedData.artifacts?.svg;
+      if (svgArtifact?.present && svgArtifact?.content) {
+        console.log('Using artifacts.svg.content for download');
+        const blob = new Blob([svgArtifact.content], { type: 'image/svg+xml' });
+        downloadBlob(blob, getOutputName('.svg'));
+        return;
+      }
+
+      // Legacy fallback
       let svgContent = extractedData.svg_content || extractedData.svg_preview;
 
       // If svg_path_d exists but not svg_content, build SVG from path
@@ -1316,6 +1349,21 @@
       if (!extractedData) return;
 
       let blob;
+
+      // Priority 0: New artifacts schema (production contract)
+      const dxfArtifact = extractedData.artifacts?.dxf;
+      if (dxfArtifact?.present && dxfArtifact?.base64) {
+        console.log('Using artifacts.dxf.base64 for download');
+        const binary = atob(dxfArtifact.base64);
+        const bytes = new Uint8Array(binary.length);
+        for (let i = 0; i < binary.length; i++) {
+          bytes[i] = binary.charCodeAt(i);
+        }
+        blob = new Blob([bytes], { type: 'application/dxf' });
+        downloadBlob(blob, getOutputName('.dxf'));
+        showStatus('Download complete', 'success');
+        return;
+      }
 
       // Priority 1: Cleaned DXF base64 from filter endpoint (works on Railway)
       if (extractedData.dxf_b64_clean) {
