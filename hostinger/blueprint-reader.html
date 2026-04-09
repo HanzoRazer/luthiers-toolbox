@@ -702,7 +702,7 @@
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
               dxf_path: dxfPath,
-              min_contour_length_mm: 50.0
+              min_contour_length_mm: 100.0
             })
           });
 
@@ -716,21 +716,27 @@
             throw new Error(result.error || 'Clean failed');
           }
 
-          // Update extractedData with cleaned version
-          extractedData.dxf_path = result.dxf_path;
-          extractedData.dxf_b64_clean = result.dxf_b64;
+          // Store download filename for streaming download
+          extractedData.download_filename = result.download_filename;
+
+          // Show SVG preview if available
+          if (result.svg_preview) {
+            previewContainer.innerHTML = result.svg_preview;
+            previewSection.classList.add('visible');
+          }
 
           // Update UI
           document.getElementById('dimContours').textContent =
-            `${result.cleaned_entity_count.toLocaleString()} (was ${result.original_entity_count.toLocaleString()})`;
+            `${result.contours_found} contours (was ${result.original_entity_count.toLocaleString()} lines)`;
 
           btn.textContent = `Filtered: ${result.contours_found} contours`;
           btn.classList.add('success');
 
-          // Enable DXF download now that we have inline base64
+          // Enable DXF download via streaming endpoint
           downloadDxf.disabled = false;
 
-          showStatus(`Cleaned: ${result.original_entity_count.toLocaleString()} → ${result.cleaned_entity_count.toLocaleString()} entities — DXF ready`, 'success');
+          const sizeInfo = result.file_size_kb ? ` (${result.file_size_kb.toFixed(1)} KB)` : '';
+          showStatus(`Cleaned: ${result.original_entity_count.toLocaleString()} → ${result.contours_found} contours${sizeInfo} — DXF ready`, 'success');
 
         } catch (err) {
           btn.textContent = 'Filter Failed';
@@ -956,15 +962,21 @@
 
       let blob;
 
-      // Priority 1: Cleaned base64 from filter endpoint (works on Railway)
-      if (extractedData.dxf_b64_clean) {
-        const binary = atob(extractedData.dxf_b64_clean);
-        const bytes = new Uint8Array(binary.length);
-        for (let i = 0; i < binary.length; i++) {
-          bytes[i] = binary.charCodeAt(i);
+      // Priority 1: Streaming download from clean endpoint (blueprint mode)
+      if (extractedData.download_filename) {
+        try {
+          showStatus('Downloading cleaned DXF...');
+          const downloadUrl = `${API_BASE}/api/blueprint/clean/download/${extractedData.download_filename}`;
+          const resp = await fetch(downloadUrl);
+          if (!resp.ok) {
+            throw new Error(`Download failed: ${resp.status}`);
+          }
+          blob = await resp.blob();
+          downloadBlob(blob, extractedData.download_filename);
+          showStatus('Download complete', 'success');
+        } catch (err) {
+          showStatus(`Download error: ${err.message}`, 'error');
         }
-        blob = new Blob([bytes], { type: 'application/dxf' });
-        downloadBlob(blob, getOutputName('_cleaned.dxf'));
         return;
       }
 
