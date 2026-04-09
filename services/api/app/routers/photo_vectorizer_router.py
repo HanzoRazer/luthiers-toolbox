@@ -122,11 +122,45 @@ class VectorizeRequest(BaseModel):
     gap_closing_level:  str  = "normal"  # normal, aggressive, extreme (blueprint mode only)
     spec_name:          Optional[str] = None  # instrument spec for AI pipeline scaling
 
+
+# ─── Canonical Artifact Schema (Production Contract) ──────────────────────────
+
+class SVGArtifact(BaseModel):
+    present: bool = False
+    content: str = ""          # Full SVG string or path_d for ImportView
+    path_count: int = 0        # Number of paths in SVG
+
+
+class DXFArtifact(BaseModel):
+    present: bool = False
+    base64: str = ""           # Base64-encoded DXF content (no file paths)
+    entity_count: int = 0      # LINE/LWPOLYLINE count
+    closed_contours: int = 0   # Validated closed contours
+
+
+class Artifacts(BaseModel):
+    svg: SVGArtifact = SVGArtifact()
+    dxf: DXFArtifact = DXFArtifact()
+
+
+class Dimensions(BaseModel):
+    width_mm: float = 0.0
+    height_mm: float = 0.0
+    width_in: float = 0.0
+    height_in: float = 0.0
+    spec_match: Optional[str] = None
+    confidence: float = 0.0
+
+
 class VectorizeResponse(BaseModel):
     ok:                 bool
+    stage:              str   = "complete"  # upload, contour_detection, svg_generation, dxf_generation, validation, complete
+    artifacts:          Artifacts = Artifacts()
+    dimensions:         Dimensions = Dimensions()
+    # Legacy fields (deprecated — use artifacts/dimensions instead)
     svg_path_d:         str   = ""      # combined SVG path for ImportView
-    svg_path:           str   = ""      # file path for Blueprint workflow
-    dxf_path:           str   = ""      # file path for Blueprint workflow
+    svg_path:           str   = ""      # DEPRECATED: file path (stateless deploy)
+    dxf_path:           str   = ""      # DEPRECATED: file path (stateless deploy)
     contour_count:      int   = 0       # for Blueprint workflow compatibility
     line_count:         int   = 0       # for Blueprint workflow compatibility
     body_width_mm:      float = 0.0
@@ -141,6 +175,12 @@ class VectorizeResponse(BaseModel):
     export_blocked:     bool  = False
     export_block_reason:str   = ""
     error:              str   = ""
+
+
+# ─── Validation Thresholds ────────────────────────────────────────────────────
+
+SVG_MIN_CHARS = 50       # SVG content must be > 50 chars
+DXF_MIN_BYTES = 800      # DXF must be > 800 bytes (empty DXF is ~700 bytes)
 
 # ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -291,6 +331,9 @@ async def extract_from_photo(req: VectorizeRequest):
             logger.error(f"VECTORIZER_CRASH | mem={mem_at_crash:.0f}MB | error={type(e).__name__}: {e}")
             return VectorizeResponse(
                 ok=False,
+                stage="contour_detection",
+                artifacts=Artifacts(),  # Empty artifacts
+                dimensions=Dimensions(),
                 error=str(e),
                 warnings=[f"Pipeline exception: {type(e).__name__}: {e}"],
                 processing_ms=round((time.time() - t0) * 1000, 1),
@@ -329,47 +372,124 @@ async def extract_from_photo(req: VectorizeRequest):
         h_in, w_in = result.body_dimensions_inch
         logger.info(f"BODY_DIMENSIONS | {w_mm:.1f}mm x {h_mm:.1f}mm")
 
-        # ── Persist files for Blueprint workflow ────────────────────────────
-        svg_file_path = ""
-        dxf_file_path = ""
-        contour_count = 1 if svg_path_d else 0
-        
-        # Create persistent output directory (same pattern as phase2)
-        persist_dir = Path(tempfile.gettempdir()) / f"blueprint_phase_silhouette_{int(time.time()*1000)}"
-        persist_dir.mkdir(exist_ok=True)
-        
-        # Copy SVG if exists
+        # ── Build Artifacts (inline content, no file paths) ────────────────────
+        svg_artifact = SVGArtifact()
+        dxf_artifact = DXFArtifact()
+        contour_count = 0
+        stage = "complete"
+        validation_errors = []
+
+        # Read full SVG content if available
+        svg_content = ""
         if result.output_svg and Path(result.output_svg).exists():
-            dest_svg = persist_dir / "silhouette_vectorized.svg"
-            import shutil
-            shutil.copy2(result.output_svg, dest_svg)
-            svg_file_path = str(dest_svg)
-            _output_file_registry[dest_svg.name] = svg_file_path
-        
-        # Copy DXF if exists
+            try:
+                svg_content = Path(result.output_svg).read_text(encoding='utf-8')
+                path_count = svg_content.count('<path')
+                svg_artifact = SVGArtifact(
+                    present=len(svg_content) > SVG_MIN_CHARS,
+                    content=svg_content,
+                    path_count=path_count
+                )
+                contour_count = path_count if path_count > 0 else 1
+                logger.info(f"SVG_ARTIFACT | present={svg_artifact.present} chars={len(svg_content)} paths={path_count}")
+            except Exception as e:
+                logger.error(f"SVG_READ_ERROR | {e}")
+                validation_errors.append(f"SVG read failed: {e}")
+                stage = "svg_generation"
+        elif svg_path_d:
+            # Fallback: wrap path_d in minimal SVG
+            svg_content = f'<svg xmlns="http://www.w3.org/2000/svg"><path d="{svg_path_d}"/></svg>'
+            svg_artifact = SVGArtifact(
+                present=len(svg_path_d) > SVG_MIN_CHARS,
+                content=svg_content,
+                path_count=1
+            )
+            contour_count = 1
+            logger.info(f"SVG_ARTIFACT | fallback from path_d, len={len(svg_path_d)}")
+
+        # Read and encode DXF content if available
+        dxf_b64 = ""
+        entity_count = 0
         if result.output_dxf and Path(result.output_dxf).exists():
-            dest_dxf = persist_dir / "silhouette_vectorized.dxf"
-            import shutil
-            shutil.copy2(result.output_dxf, dest_dxf)
-            dxf_file_path = str(dest_dxf)
-            _output_file_registry[dest_dxf.name] = dxf_file_path
+            try:
+                dxf_bytes = Path(result.output_dxf).read_bytes()
+                dxf_b64 = base64.b64encode(dxf_bytes).decode('ascii')
+
+                # Count LINE entities in DXF
+                dxf_text = dxf_bytes.decode('utf-8', errors='ignore')
+                entity_count = dxf_text.count('\nLINE\n') + dxf_text.count('\nLWPOLYLINE\n')
+
+                dxf_artifact = DXFArtifact(
+                    present=len(dxf_bytes) > DXF_MIN_BYTES and entity_count > 0,
+                    base64=dxf_b64,
+                    entity_count=entity_count,
+                    closed_contours=contour_count
+                )
+                logger.info(f"DXF_ARTIFACT | present={dxf_artifact.present} bytes={len(dxf_bytes)} entities={entity_count}")
+            except Exception as e:
+                logger.error(f"DXF_READ_ERROR | {e}")
+                validation_errors.append(f"DXF read failed: {e}")
+                stage = "dxf_generation"
+        else:
+            logger.warning(f"DXF_ARTIFACT | no output_dxf or file missing: {result.output_dxf}")
+            if req.export_dxf:
+                validation_errors.append("DXF requested but not generated")
+                stage = "dxf_generation"
+
+        # ── Validation Gate ─────────────────────────────────────────────────
+        # Success requires BOTH artifacts when both are requested
+        is_valid = True
+        if req.export_svg and not svg_artifact.present:
+            is_valid = False
+            validation_errors.append("SVG artifact missing or invalid")
+            if stage == "complete":
+                stage = "validation"
+        if req.export_dxf and not dxf_artifact.present:
+            is_valid = False
+            validation_errors.append("DXF artifact missing or invalid")
+            if stage == "complete":
+                stage = "validation"
+
+        # Block if export was blocked upstream
+        if result.export_blocked:
+            is_valid = False
+            stage = "contour_detection"
+            validation_errors.append(result.export_block_reason or "Export blocked")
+
+        # Build artifacts object
+        artifacts = Artifacts(svg=svg_artifact, dxf=dxf_artifact)
+        dimensions = Dimensions(
+            width_mm=round(w_mm, 2),
+            height_mm=round(h_mm, 2),
+            width_in=round(w_in, 3),
+            height_in=round(h_in, 3),
+            spec_match=req.spec_name,
+            confidence=0.9 if is_valid else 0.0
+        )
 
         # Final diagnostics
         mem_final = log_memory("EXTRACT_COMPLETE")
         total_elapsed = time.time() - t0
         logger.info(
-            f"VECTORIZER_SUCCESS | elapsed={total_elapsed:.1f}s | "
+            f"VECTORIZER_RESULT | ok={is_valid} stage={stage} elapsed={total_elapsed:.1f}s | "
             f"mem_delta={mem_final - mem_start:.0f}MB | "
-            f"body={w_mm:.0f}x{h_mm:.0f}mm | contours={contour_count}"
+            f"body={w_mm:.0f}x{h_mm:.0f}mm | svg={svg_artifact.present} dxf={dxf_artifact.present}"
         )
 
+        # Combine warnings
+        all_warnings = list(result.warnings) + validation_errors
+
         return VectorizeResponse(
-            ok=bool(svg_path_d and not result.export_blocked),
+            ok=is_valid and not result.export_blocked,
+            stage=stage,
+            artifacts=artifacts,
+            dimensions=dimensions,
+            # Legacy fields for backward compatibility
             svg_path_d=svg_path_d,
-            svg_path=svg_file_path,
-            dxf_path=dxf_file_path,
+            svg_path="",  # DEPRECATED: no file paths in stateless deploy
+            dxf_path="",  # DEPRECATED: no file paths in stateless deploy
             contour_count=contour_count,
-            line_count=0,
+            line_count=entity_count,
             body_width_mm=round(w_mm, 2),
             body_height_mm=round(h_mm, 2),
             body_width_in=round(w_in, 3),
@@ -377,8 +497,9 @@ async def extract_from_photo(req: VectorizeRequest):
             scale_source=result.calibration.source.value if result.calibration else "estimated",
             bg_method=result.bg_method_used,
             perspective_corrected=result.perspective_corrected,
-            warnings=result.warnings,
+            warnings=all_warnings,
             processing_ms=processing_ms,
             export_blocked=result.export_blocked,
             export_block_reason=result.export_block_reason or "",
+            error="; ".join(validation_errors) if validation_errors else "",
         )

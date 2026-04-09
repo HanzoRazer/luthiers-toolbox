@@ -154,6 +154,27 @@ async def clean_dxf(req: CleanRequest):
                 processing_time_ms=(time.perf_counter() - start) * 1000
             )
 
+        # VALIDATION GATE: Fail explicitly if no contours survived filtering
+        if result.contours_found == 0:
+            logger.warning(
+                f"CLEAN_VALIDATION_FAIL | chains={result.chains_found} contours=0 "
+                f"discarded_short={result.discarded_short} discarded_open={result.discarded_open}"
+            )
+            return CleanResponse(
+                success=False,
+                error=f"No contours survived filtering. "
+                      f"Found {result.chains_found} chains but 0 closed contours "
+                      f"(discarded: {result.discarded_short} too short, {result.discarded_open} open). "
+                      f"Try reducing min_contour_length_mm or enabling keep_open_chains.",
+                original_entity_count=result.original_entity_count,
+                cleaned_entity_count=0,
+                contours_found=0,
+                chains_found=result.chains_found,
+                discarded_short=result.discarded_short,
+                discarded_open=result.discarded_open,
+                processing_time_ms=(time.perf_counter() - start) * 1000
+            )
+
         # Generate SVG preview
         # Re-read the chains for preview (cleaner doesn't expose them directly)
         # For now, generate a simple stats-based response
