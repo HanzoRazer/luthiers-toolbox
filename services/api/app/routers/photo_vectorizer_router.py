@@ -24,6 +24,8 @@ PYTHONPATH must include:
 from __future__ import annotations
 
 import base64
+import gc
+import logging
 import os
 import sys
 import tempfile
@@ -37,7 +39,33 @@ from pydantic import BaseModel
 # Import phase2 file registry for persisting output files
 from .blueprint.phase2_router import _output_file_registry
 
+logger = logging.getLogger(__name__)
 router = APIRouter(tags=["vectorizer"])
+
+
+# ─── Memory diagnostics (works in Railway/Linux containers) ──────────────────
+
+def get_memory_mb() -> float:
+    """
+    Get current process memory (RSS) in MB.
+    Uses /proc/self/status on Linux (Railway containers).
+    Falls back to -1 if unavailable.
+    """
+    try:
+        with open('/proc/self/status') as f:
+            for line in f:
+                if line.startswith('VmRSS:'):
+                    return int(line.split()[1]) / 1024  # KB to MB
+    except Exception:
+        pass
+    return -1.0
+
+
+def log_memory(stage: str) -> float:
+    """Log memory usage at a given stage, return MB used."""
+    mem_mb = get_memory_mb()
+    logger.info(f"VECTORIZER_MEM | {stage} | {mem_mb:.0f} MB")
+    return mem_mb
 
 # ─── Optional import of the vectorizer (graceful fallback) ────────────────────
 #
@@ -193,6 +221,11 @@ async def extract_from_photo(req: VectorizeRequest):
         )
 
     t0 = time.time()
+    mem_start = log_memory("EXTRACT_START")
+
+    # Log input size for diagnosis
+    input_size_kb = len(req.image_b64) * 3 / 4 / 1024  # Approx decoded size
+    logger.info(f"VECTORIZER_INPUT | size={input_size_kb:.0f}KB | spec={req.spec_name} | source_type={req.source_type}")
 
     # ── Decode base64 image ────────────────────────────────────────────────
     try:
@@ -200,6 +233,7 @@ async def extract_from_photo(req: VectorizeRequest):
     except Exception as e:  # audited: http-500 — ValueError,IOError
         raise HTTPException(status_code=422, detail=f"Invalid base64: {e}")
 
+    log_memory("AFTER_DECODE")
     ext = ".jpg" if "jpeg" in req.media_type else ".png"
 
     with tempfile.TemporaryDirectory() as tmpdir:
@@ -208,10 +242,15 @@ async def extract_from_photo(req: VectorizeRequest):
         out_dir.mkdir()
 
         img_path.write_bytes(img_bytes)
+        log_memory("AFTER_WRITE_TEMP")
 
         # ── Run vectorizer ─────────────────────────────────────────────────
         try:
+            log_memory("BEFORE_VECTORIZER_INIT")
             vectorizer = PhotoVectorizerV2()
+            log_memory("AFTER_VECTORIZER_INIT")
+
+            logger.info("VECTORIZER_STAGE | Starting extract()")
             result = vectorizer.extract(
                 source_path=img_path,
                 output_dir=out_dir,
@@ -225,7 +264,15 @@ async def extract_from_photo(req: VectorizeRequest):
                 source_type=req.source_type,
                 gap_closing_level=req.gap_closing_level,
             )
+            log_memory("AFTER_EXTRACT")
+
+            # Force garbage collection after heavy processing
+            gc.collect()
+            log_memory("AFTER_GC")
+
         except Exception as e:  # audited: http-500 — ValueError,IOError
+            mem_at_crash = log_memory("EXTRACT_CRASHED")
+            logger.error(f"VECTORIZER_CRASH | mem={mem_at_crash:.0f}MB | error={type(e).__name__}: {e}")
             return VectorizeResponse(
                 ok=False,
                 error=str(e),
@@ -278,6 +325,15 @@ async def extract_from_photo(req: VectorizeRequest):
             shutil.copy2(result.output_dxf, dest_dxf)
             dxf_file_path = str(dest_dxf)
             _output_file_registry[dest_dxf.name] = dxf_file_path
+
+        # Final diagnostics
+        mem_final = log_memory("EXTRACT_COMPLETE")
+        total_elapsed = time.time() - t0
+        logger.info(
+            f"VECTORIZER_SUCCESS | elapsed={total_elapsed:.1f}s | "
+            f"mem_delta={mem_final - mem_start:.0f}MB | "
+            f"body={w_mm:.0f}x{h_mm:.0f}mm | contours={contour_count}"
+        )
 
         return VectorizeResponse(
             ok=bool(svg_path_d and not result.export_blocked),
