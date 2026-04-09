@@ -1071,7 +1071,7 @@
     }
 
     // Resize image if too large (prevents OOM on server)
-    const MAX_IMAGE_DIM = 3000;
+    const MAX_IMAGE_DIM = 1600;
     let imageWasResized = false;
 
     function resizeImageIfNeeded(file) {
@@ -1110,7 +1110,7 @@
           ctx.drawImage(img, 0, 0, newWidth, newHeight);
 
           // Convert to base64 (JPEG for photos)
-          const dataUrl = canvas.toDataURL('image/jpeg', 0.9);
+          const dataUrl = canvas.toDataURL('image/jpeg', 0.7);
           const base64 = dataUrl.split(',')[1];
           resolve(base64);
         };
