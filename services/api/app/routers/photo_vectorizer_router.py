@@ -155,22 +155,38 @@ def _extract_svg_paths(svg_path: str) -> str:
         root = tree.getroot()
         ns = {"svg": "http://www.w3.org/2000/svg"}
 
+        # Log SVG structure for diagnosis
+        logger.info(f"SVG_PARSE | file={svg_path}")
+        logger.info(f"SVG_PARSE | root_tag={root.tag}")
+
+        # Get viewBox for dimension info
+        viewbox = root.get("viewBox", "none")
+        width = root.get("width", "none")
+        height = root.get("height", "none")
+        logger.info(f"SVG_PARSE | viewBox={viewbox} width={width} height={height}")
+
         # Collect all path d= attributes, filtering out tiny artifacts
         parts: list[str] = []
         for elem in root.iter("{http://www.w3.org/2000/svg}path"):
             d = elem.get("d", "").strip()
             if d and len(d) > 10:
                 parts.append(d)
+                logger.info(f"SVG_PATH | len={len(d)} preview={d[:100]}...")
 
         # If no namespaced paths, try without namespace
         if not parts:
+            logger.info("SVG_PARSE | No namespaced paths, trying without namespace")
             for elem in root.iter("path"):
                 d = elem.get("d", "").strip()
                 if d and len(d) > 10:
                     parts.append(d)
+                    logger.info(f"SVG_PATH | len={len(d)} preview={d[:100]}...")
 
-        return " ".join(parts)
-    except Exception:  # audited: optional-import
+        combined = " ".join(parts)
+        logger.info(f"SVG_RESULT | paths_found={len(parts)} total_len={len(combined)}")
+        return combined
+    except Exception as e:  # audited: optional-import
+        logger.error(f"SVG_PARSE_ERROR | {e}")
         return ""
 
 # ─── Route ────────────────────────────────────────────────────────────────────
@@ -289,17 +305,29 @@ async def extract_from_photo(req: VectorizeRequest):
         # ── Extract SVG path string ────────────────────────────────────────
         svg_path_d = ""
         if result.output_svg and Path(result.output_svg).exists():
+            logger.info(f"SVG_SOURCE | file={result.output_svg}")
             svg_path_d = _extract_svg_paths(result.output_svg)
+            logger.info(f"SVG_EXTRACTED | len={len(svg_path_d)} chars")
+        else:
+            logger.warning(f"SVG_SOURCE | no output_svg or file missing: {result.output_svg}")
 
         # Fallback: try body_contour points directly if SVG extraction empty
         if not svg_path_d and result.body_contour and hasattr(result.body_contour, "points"):
             pts = result.body_contour.points
             if pts and len(pts) >= 3:
                 svg_path_d = "M " + " L ".join(f"{p[0]:.2f},{p[1]:.2f}" for p in pts) + " Z"
+                logger.info(f"SVG_FALLBACK | built from {len(pts)} contour points, len={len(svg_path_d)}")
+
+        # Log final path preview for diagnosis
+        if svg_path_d:
+            logger.info(f"SVG_CONTENT_PREVIEW | {svg_path_d[:200]}...")
+        else:
+            logger.warning("SVG_CONTENT_PREVIEW | EMPTY - no path data generated")
 
         # body_dimensions_mm is stored as (height, width) — unpack correctly
         h_mm, w_mm = result.body_dimensions_mm
         h_in, w_in = result.body_dimensions_inch
+        logger.info(f"BODY_DIMENSIONS | {w_mm:.1f}mm x {h_mm:.1f}mm")
 
         # ── Persist files for Blueprint workflow ────────────────────────────
         svg_file_path = ""
