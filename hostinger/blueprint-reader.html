@@ -621,9 +621,15 @@
     const MAX_RETRIES = 3;
 
     // Unified artifact helpers
-    function buildSvgFromPath(pathD) {
+    function buildSvgFromPath(pathD, widthMm, heightMm) {
       if (!pathD || typeof pathD !== 'string' || !pathD.trim()) return null;
-      return `<svg viewBox="0 0 500 500" xmlns="http://www.w3.org/2000/svg"><path d="${pathD}" fill="none" stroke="#f59e0b" stroke-width="1"/></svg>`;
+      // Use actual dimensions for proper aspect ratio
+      const w = widthMm || 500;
+      const h = heightMm || 500;
+      return `<svg viewBox="0 0 ${w} ${h}" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg">
+        <rect width="${w}" height="${h}" fill="#1a1a1a"/>
+        <path d="${pathD}" fill="none" stroke="#f59e0b" stroke-width="1.5" vector-effect="non-scaling-stroke"/>
+      </svg>`;
     }
 
     function getArtifacts(data, mode) {
@@ -635,8 +641,11 @@
       let hasDxf = false;
 
       if (mode === 'photo') {
-        svgContent = data.svg_content || buildSvgFromPath(data.svg_path_d);
-        hasDxf = !!(data.dxf_base64 || data.dxf_content);
+        // Use body dimensions for proper scaling
+        const widthMm = data.body_width_mm || 500;
+        const heightMm = data.body_height_mm || 500;
+        svgContent = data.svg_content || buildSvgFromPath(data.svg_path_d, widthMm, heightMm);
+        hasDxf = !!(data.dxf_base64 || data.dxf_content || data.dxf_path);
       } else if (mode === 'blueprint') {
         svgContent = data.svg_preview || null;
         hasDxf = !!(data.download_filename || data.dxf_path);
