@@ -68,6 +68,7 @@ class EdgeToDXFResult:
     mm_per_px: float
     processing_time_ms: float
     file_size_bytes: int
+    contour_count: int = 0  # Number of contours traced
 
     def summary(self) -> str:
         """Human-readable summary."""
@@ -79,6 +80,7 @@ class EdgeToDXFResult:
             f"  Scale: {self.mm_per_px:.4f} mm/px\n"
             f"  Output: {self.output_size_mm[0]:.1f} x {self.output_size_mm[1]:.1f} mm\n"
             f"  Edge pixels: {self.edge_pixel_count:,}\n"
+            f"  Contours: {self.contour_count:,}\n"
             f"  LINE entities: {self.line_count:,}\n"
             f"  File size: {self.file_size_bytes / 1024 / 1024:.2f} MB\n"
             f"  Time: {self.processing_time_ms:.0f} ms"
@@ -200,23 +202,32 @@ class EdgeToDXF:
         if self.layer_name not in doc.layers:
             doc.layers.add(self.layer_name)
 
-        # Convert edge pixels to LINE entities
+        # TOPOLOGY FIX: Use cv2.findContours() for proper contour tracing
+        # instead of row-major pixel sorting which creates disconnected LINE segments
+        logger.info("Tracing contours from edge image...")
+        contours, _ = cv2.findContours(edges, cv2.RETR_LIST, cv2.CHAIN_APPROX_NONE)
+
+        # Filter degenerate contours (< 3 points)
+        valid_contours = [c for c in contours if len(c) >= 3]
+        logger.info(f"Found {len(contours)} contours, {len(valid_contours)} valid (>= 3 points)")
+
+        if not valid_contours:
+            raise ValueError("No valid contours found in edge image")
+
+        # Convert contours to LINE entities (preserving topology)
         line_count = 0
-        threshold_sq = self.adjacency_threshold ** 2
+        contour_count = 0
 
-        # Sort edge points for better connectivity
-        # Using row-major order (y, x) from np.where
-        sorted_indices = np.lexsort((edge_points[:, 1], edge_points[:, 0]))
-        sorted_points = edge_points[sorted_indices]
+        logger.info("Converting contours to LINE entities...")
+        for contour in valid_contours:
+            contour_count += 1
+            points = contour.reshape(-1, 2)  # Shape: (N, 2) with (x, y)
 
-        logger.info("Converting edges to LINE entities...")
-        for i in range(len(sorted_points) - 1):
-            y1, x1 = sorted_points[i]
-            y2, x2 = sorted_points[i + 1]
+            # Create LINE entities along the contour path
+            for i in range(len(points) - 1):
+                x1, y1 = points[i]
+                x2, y2 = points[i + 1]
 
-            # Check if adjacent (within threshold)
-            dist_sq = (x2 - x1) ** 2 + (y2 - y1) ** 2
-            if dist_sq <= threshold_sq:
                 # Convert to mm coordinates (flip Y for CAD convention)
                 mx1 = x1 * mm_per_px
                 my1 = (h - y1) * mm_per_px
@@ -230,7 +241,22 @@ class EdgeToDXF:
                 )
                 line_count += 1
 
-        logger.info(f"Created {line_count:,} LINE entities")
+            # Close the contour (connect last point to first)
+            if len(points) >= 3:
+                x1, y1 = points[-1]
+                x2, y2 = points[0]
+                mx1 = x1 * mm_per_px
+                my1 = (h - y1) * mm_per_px
+                mx2 = x2 * mm_per_px
+                my2 = (h - y2) * mm_per_px
+                msp.add_line(
+                    (mx1, my1),
+                    (mx2, my2),
+                    dxfattribs={'layer': self.layer_name}
+                )
+                line_count += 1
+
+        logger.info(f"Created {line_count:,} LINE entities from {contour_count} contours")
 
         # Save DXF
         logger.info(f"Saving: {output_path}")
@@ -324,27 +350,41 @@ class EdgeToDXF:
         msp = doc.modelspace()
         doc.layers.add(self.layer_name)
 
-        # Convert to LINE entities
+        # TOPOLOGY FIX: Use cv2.findContours() for proper contour tracing
+        logger.info("Tracing contours from combined edge image...")
+        contours, _ = cv2.findContours(combined_edges, cv2.RETR_LIST, cv2.CHAIN_APPROX_NONE)
+
+        valid_contours = [c for c in contours if len(c) >= 3]
+        logger.info(f"Found {len(contours)} contours, {len(valid_contours)} valid")
+
+        if not valid_contours:
+            raise ValueError("No valid contours found")
+
         line_count = 0
-        threshold_sq = self.adjacency_threshold ** 2
-
-        sorted_indices = np.lexsort((edge_points[:, 1], edge_points[:, 0]))
-        sorted_points = edge_points[sorted_indices]
-
-        for i in range(len(sorted_points) - 1):
-            y1, x1 = sorted_points[i]
-            y2, x2 = sorted_points[i + 1]
-
-            dist_sq = (x2 - x1) ** 2 + (y2 - y1) ** 2
-            if dist_sq <= threshold_sq:
+        for contour in valid_contours:
+            points = contour.reshape(-1, 2)
+            for i in range(len(points) - 1):
+                x1, y1 = points[i]
+                x2, y2 = points[i + 1]
                 mx1 = x1 * mm_per_px
                 my1 = (h - y1) * mm_per_px
                 mx2 = x2 * mm_per_px
                 my2 = (h - y2) * mm_per_px
-
                 msp.add_line((mx1, my1), (mx2, my2), dxfattribs={'layer': self.layer_name})
                 line_count += 1
 
+            # Close contour
+            if len(points) >= 3:
+                x1, y1 = points[-1]
+                x2, y2 = points[0]
+                mx1 = x1 * mm_per_px
+                my1 = (h - y1) * mm_per_px
+                mx2 = x2 * mm_per_px
+                my2 = (h - y2) * mm_per_px
+                msp.add_line((mx1, my1), (mx2, my2), dxfattribs={'layer': self.layer_name})
+                line_count += 1
+
+        logger.info(f"Created {line_count:,} LINE entities from {len(valid_contours)} contours")
         doc.saveas(output_path)
         file_size = Path(output_path).stat().st_size
         processing_time = (time.time() - start_time) * 1000
