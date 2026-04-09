@@ -38,6 +38,7 @@ from pydantic import BaseModel
 
 # Import phase2 file registry for persisting output files
 from .blueprint.phase2_router import _output_file_registry
+from ..utils.stage_timer import is_debug_enabled
 
 logger = logging.getLogger(__name__)
 router = APIRouter(tags=["vectorizer"])
@@ -121,6 +122,7 @@ class VectorizeRequest(BaseModel):
     source_type:        str  = "auto"    # auto, ai, photo, blueprint, silhouette
     gap_closing_level:  str  = "normal"  # normal, aggressive, extreme (blueprint mode only)
     spec_name:          Optional[str] = None  # instrument spec for AI pipeline scaling
+    debug:              bool = False     # Include diagnostics (requires VECTORIZER_DEBUG=1)
 
 
 # ─── Canonical Artifact Schema (Production Contract) ──────────────────────────
@@ -175,6 +177,7 @@ class VectorizeResponse(BaseModel):
     export_blocked:     bool  = False
     export_block_reason:str   = ""
     error:              str   = ""
+    debug:              Optional[dict] = None  # Ownership diagnostics (requires VECTORIZER_DEBUG=1)
 
 
 # ─── Validation Thresholds ────────────────────────────────────────────────────
@@ -479,6 +482,24 @@ async def extract_from_photo(req: VectorizeRequest):
         # Combine warnings
         all_warnings = list(result.warnings) + validation_errors
 
+        # Build debug info if requested and allowed
+        debug_dict = None
+        include_debug = req.debug and is_debug_enabled()
+        if include_debug:
+            # Extract ownership diagnostics from result
+            debug_dict = {
+                "ownership_score": getattr(result, "ownership_score", 0.0),
+                "ownership_threshold": 0.60,  # Fixed threshold
+                "ownership_ok": getattr(result, "ownership_ok", False),
+                "candidate_count": getattr(result, "candidate_count", 0),
+                "best_score": getattr(result, "best_plausibility_score", 0.0),
+                "rejection_reasons": getattr(result, "export_block_issues", []),
+                "recommended_next_action": getattr(result, "recommended_next_action", ""),
+                "processing_ms": processing_ms,
+            }
+            # Log debug info for Railway
+            logger.info(f"VECTORIZER_DEBUG | {debug_dict}")
+
         return VectorizeResponse(
             ok=is_valid and not result.export_blocked,
             stage=stage,
@@ -502,4 +523,5 @@ async def extract_from_photo(req: VectorizeRequest):
             export_blocked=result.export_blocked,
             export_block_reason=result.export_block_reason or "",
             error="; ".join(validation_errors) if validation_errors else "",
+            debug=debug_dict,
         )

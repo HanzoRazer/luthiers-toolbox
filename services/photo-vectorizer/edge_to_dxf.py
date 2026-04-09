@@ -40,9 +40,9 @@ from __future__ import annotations
 import argparse
 import logging
 import time
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Optional, Tuple
+from typing import Dict, Optional, Tuple
 
 import cv2
 import numpy as np
@@ -69,6 +69,7 @@ class EdgeToDXFResult:
     processing_time_ms: float
     file_size_bytes: int
     contour_count: int = 0  # Number of contours traced
+    stage_timings: Dict[str, float] = field(default_factory=dict)  # Per-stage timing
 
     def summary(self) -> str:
         """Human-readable summary."""
@@ -144,6 +145,7 @@ class EdgeToDXF:
             EdgeToDXFResult with conversion statistics
         """
         start_time = time.time()
+        stage_timings: Dict[str, float] = {}
 
         # Validate input
         source = Path(source_path)
@@ -154,30 +156,31 @@ class EdgeToDXF:
         if output_path is None:
             output_path = str(source.with_name(f"{source.stem}_edges.dxf"))
 
-        # Load image
+        # Stage: Image load
+        t0 = time.time()
         logger.info(f"Loading: {source_path}")
         img = cv2.imread(str(source_path))
         if img is None:
             raise ValueError(f"Failed to load image: {source_path}")
+        stage_timings["image_load_ms"] = round((time.time() - t0) * 1000, 1)
 
         h, w = img.shape[:2]
         logger.info(f"Image size: {w} x {h} px")
 
-        # Convert to grayscale
+        # Stage: Edge detection (includes grayscale, blur, canny)
+        t0 = time.time()
         gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
 
-        # Optional blur
         if blur_kernel > 0:
             gray = cv2.GaussianBlur(gray, (blur_kernel, blur_kernel), 0)
 
-        # Edge detection
         logger.info(f"Running Canny edge detection (thresholds: {self.canny_low}/{self.canny_high})")
         edges = cv2.Canny(gray, self.canny_low, self.canny_high)
 
-        # Optional morphological close to connect nearby edges
         if morph_close_kernel > 0:
             kernel = np.ones((morph_close_kernel, morph_close_kernel), np.uint8)
             edges = cv2.morphologyEx(edges, cv2.MORPH_CLOSE, kernel)
+        stage_timings["edge_detect_ms"] = round((time.time() - t0) * 1000, 1)
 
         # Get edge pixel coordinates
         edge_points = np.column_stack(np.where(edges > 0))
@@ -193,7 +196,21 @@ class EdgeToDXF:
         output_h = h * mm_per_px
         logger.info(f"Scale: {mm_per_px:.4f} mm/px -> {output_w:.1f} x {output_h:.1f} mm")
 
-        # Create DXF
+        # Stage: Contour tracing
+        t0 = time.time()
+        logger.info("Tracing contours from edge image...")
+        contours, _ = cv2.findContours(edges, cv2.RETR_LIST, cv2.CHAIN_APPROX_NONE)
+
+        # Filter degenerate contours (< 3 points)
+        valid_contours = [c for c in contours if len(c) >= 3]
+        logger.info(f"Found {len(contours)} contours, {len(valid_contours)} valid (>= 3 points)")
+        stage_timings["contour_trace_ms"] = round((time.time() - t0) * 1000, 1)
+
+        if not valid_contours:
+            raise ValueError("No valid contours found in edge image")
+
+        # Stage: DXF generation
+        t0 = time.time()
         logger.info(f"Creating DXF ({self.dxf_version})...")
         doc = ezdxf.new(self.dxf_version)
         msp = doc.modelspace()
@@ -201,18 +218,6 @@ class EdgeToDXF:
         # Add layer
         if self.layer_name not in doc.layers:
             doc.layers.add(self.layer_name)
-
-        # TOPOLOGY FIX: Use cv2.findContours() for proper contour tracing
-        # instead of row-major pixel sorting which creates disconnected LINE segments
-        logger.info("Tracing contours from edge image...")
-        contours, _ = cv2.findContours(edges, cv2.RETR_LIST, cv2.CHAIN_APPROX_NONE)
-
-        # Filter degenerate contours (< 3 points)
-        valid_contours = [c for c in contours if len(c) >= 3]
-        logger.info(f"Found {len(contours)} contours, {len(valid_contours)} valid (>= 3 points)")
-
-        if not valid_contours:
-            raise ValueError("No valid contours found in edge image")
 
         # Convert contours to LINE entities (preserving topology)
         line_count = 0
@@ -257,15 +262,22 @@ class EdgeToDXF:
                 line_count += 1
 
         logger.info(f"Created {line_count:,} LINE entities from {contour_count} contours")
+        stage_timings["dxf_generate_ms"] = round((time.time() - t0) * 1000, 1)
 
-        # Save DXF
+        # Stage: DXF save
+        t0 = time.time()
         logger.info(f"Saving: {output_path}")
         doc.saveas(output_path)
+        stage_timings["dxf_save_ms"] = round((time.time() - t0) * 1000, 1)
 
         # Get file size
         file_size = Path(output_path).stat().st_size
 
         processing_time = (time.time() - start_time) * 1000
+
+        # Log stage timing summary
+        timing_str = " | ".join(f"{k}={v}" for k, v in stage_timings.items())
+        logger.info(f"EDGE_TO_DXF_TIMING | total={processing_time:.0f}ms | {timing_str}")
 
         result = EdgeToDXFResult(
             source_path=str(source_path),
@@ -277,6 +289,8 @@ class EdgeToDXF:
             mm_per_px=mm_per_px,
             processing_time_ms=processing_time,
             file_size_bytes=file_size,
+            contour_count=contour_count,
+            stage_timings=stage_timings,
         )
 
         logger.info(f"Complete in {processing_time:.0f}ms")
