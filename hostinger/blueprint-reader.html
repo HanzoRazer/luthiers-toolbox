@@ -620,6 +620,65 @@
     let retryAttempt = 0;
     const MAX_RETRIES = 3;
 
+    // Unified artifact helpers
+    function buildSvgFromPath(pathD) {
+      if (!pathD || typeof pathD !== 'string' || !pathD.trim()) return null;
+      return `<svg viewBox="0 0 500 500" xmlns="http://www.w3.org/2000/svg"><path d="${pathD}" fill="none" stroke="#f59e0b" stroke-width="1"/></svg>`;
+    }
+
+    function getArtifacts(data, mode) {
+      if (!data || typeof data !== 'object') {
+        return { hasSvg: false, hasDxf: false, svgContent: null, warnings: [] };
+      }
+
+      let svgContent = null;
+      let hasDxf = false;
+
+      if (mode === 'photo') {
+        svgContent = data.svg_content || buildSvgFromPath(data.svg_path_d);
+        hasDxf = !!(data.dxf_base64 || data.dxf_content);
+      } else if (mode === 'blueprint') {
+        svgContent = data.svg_preview || null;
+        hasDxf = !!(data.download_filename || data.dxf_path);
+      }
+
+      return {
+        hasSvg: !!svgContent,
+        hasDxf,
+        svgContent,
+        warnings: Array.isArray(data.warnings) ? data.warnings : []
+      };
+    }
+
+    function renderSvgPreview(svgContent) {
+      if (!svgContent) return false;
+      previewContainer.innerHTML = svgContent;
+      previewSection.classList.add('visible');
+      downloadSvg.disabled = false;
+      return true;
+    }
+
+    function resetPreviewState(message = 'Preview will appear here') {
+      previewContainer.innerHTML = `<span style="color: #555;">${message}</span>`;
+      downloadSvg.disabled = true;
+    }
+
+    function showWarnings(warnings) {
+      if (!warnings || !warnings.length) return;
+      let warningBox = document.getElementById('warningBox');
+      if (!warningBox) {
+        warningBox = document.createElement('div');
+        warningBox.id = 'warningBox';
+        warningBox.className = 'status visible';
+        status.after(warningBox);
+      }
+      warningBox.textContent = `Warnings: ${warnings.join(' | ')}`;
+    }
+
+    function showPartialSuccess(message) {
+      showStatus(message, 'error');
+    }
+
     // Fetch with timeout and AbortController
     // Returns { response, aborted } to detect late aborts
     async function fetchWithTimeout(url, options, timeoutMs) {
@@ -789,6 +848,7 @@
       downloadSvg.disabled = true;
       downloadDxf.disabled = true;
       fileInput.value = '';
+      resetPreviewState();
     });
 
     function handleFile(file) {
@@ -819,6 +879,7 @@
       dimensions.classList.remove('visible');
       previewSection.classList.remove('visible');
       extractedData = null;
+      resetPreviewState();
     }
 
     function formatFileSize(bytes) {
@@ -901,11 +962,14 @@
             console.log('Got dxf_b64 from clean endpoint:', result.dxf_b64.length, 'chars');
           }
           extractedData.download_filename = result.download_filename;
+          extractedData.svg_preview = result.svg_preview || null;
 
           // Show SVG preview if available
-          if (result.svg_preview) {
-            previewContainer.innerHTML = result.svg_preview;
-            previewSection.classList.add('visible');
+          const artifacts = getArtifacts(result, 'blueprint');
+          if (artifacts.hasSvg) {
+            renderSvgPreview(artifacts.svgContent);
+          } else {
+            resetPreviewState('Filtering completed, but no SVG preview was generated.');
           }
 
           // Update UI
@@ -917,9 +981,14 @@
 
           // Enable DXF download
           downloadDxf.disabled = false;
+          downloadSvg.disabled = !artifacts.hasSvg;
 
           const sizeInfo = result.file_size_kb ? ` (${result.file_size_kb.toFixed(1)} KB)` : '';
-          showStatus(`Cleaned: ${result.original_entity_count.toLocaleString()} → ${result.contours_found} contours${sizeInfo} — DXF ready`, 'success');
+          if (artifacts.hasSvg) {
+            showStatus(`Cleaned: ${result.original_entity_count.toLocaleString()} → ${result.contours_found} contours${sizeInfo} — preview and DXF ready`, 'success');
+          } else {
+            showPartialSuccess(`Cleaned: ${result.original_entity_count.toLocaleString()} → ${result.contours_found} contours${sizeInfo}, but no SVG preview was returned. DXF may still be available.`);
+          }
 
         } catch (err) {
           hideProgress();
@@ -944,6 +1013,10 @@
       showStatus(`Extracting (${routeMode} mode)...`);
       showProgress('Processing...');
       startProgressSimulation();
+      resetPreviewState();
+      previewSection.classList.remove('visible');
+      downloadSvg.disabled = true;
+      downloadDxf.disabled = true;
 
       try {
         let response, data;
@@ -982,7 +1055,7 @@
           // Map edge-to-dxf response to common format
           const timeMs = data.processing_time_ms || 0;
           const lineCount = data.line_count || 0;
-          showStatus(`Extraction complete in ${(timeMs / 1000).toFixed(2)}s — ${lineCount.toLocaleString()} lines`, 'success');
+          showStatus(`Raw edge extraction complete in ${(timeMs / 1000).toFixed(2)}s — ${lineCount.toLocaleString()} lines. Filter to isolate the body outline and generate preview.`, 'success');
 
           document.getElementById('dimWidth').textContent =
             data.output_size_mm?.[0] ? `${data.output_size_mm[0].toFixed(1)} mm` : '—';
@@ -991,6 +1064,8 @@
           document.getElementById('dimContours').textContent = lineCount.toLocaleString();
           document.getElementById('dimScale').textContent = `${data.mm_per_px?.toFixed(4) || '—'} mm/px`;
           dimensions.classList.add('visible');
+          previewSection.classList.add('visible');
+          resetPreviewState('Blueprint extraction produced raw edges only. Click "Filter to Body Outline" to generate SVG preview and DXF download.');
 
           // Blueprint mode: DXF requires filtering first (static file serving
           // doesn't work on stateless Railway containers)
@@ -999,6 +1074,8 @@
             extractedData.dxf_path = data.dxf_path;
             // Show filter note — filtering returns inline base64 which works
             showFilterNote(lineCount, data.dxf_path);
+          } else {
+            showPartialSuccess('Blueprint extraction finished, but no DXF path was returned for filtering.');
           }
 
         } else {
@@ -1057,8 +1134,6 @@
           }
 
           const elapsedSec = (Date.now() - startTime) / 1000;
-          showStatus(`Extraction complete in ${elapsedSec.toFixed(2)}s`, 'success');
-
           document.getElementById('dimWidth').textContent =
             data.body_width_mm ? `${data.body_width_mm.toFixed(1)} mm` : '—';
           document.getElementById('dimHeight').textContent =
@@ -1067,24 +1142,29 @@
           document.getElementById('dimScale').textContent = data.scale_source || '—';
           dimensions.classList.add('visible');
 
-          // ISSUE 2 FIX: Build SVG from svg_path_d and store in svg_content
-          if (data.svg_path_d && !data.svg_content) {
-            const w = data.body_width_mm || 500;
-            const h = data.body_height_mm || 500;
-            extractedData.svg_content =
-              '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ' + w + ' ' + h + '">' +
-              '<path d="' + data.svg_path_d + '" fill="none" stroke="#f59e0b" stroke-width="0.5"/></svg>';
+          const artifacts = getArtifacts(data, 'photo');
+          previewSection.classList.add('visible');
+
+          if (artifacts.hasSvg) {
+            renderSvgPreview(artifacts.svgContent);
+          } else {
+            resetPreviewState('No SVG preview was generated from this file.');
           }
 
-          // Display SVG preview
-          if (extractedData.svg_content) {
-            previewContainer.innerHTML = extractedData.svg_content;
-            previewSection.classList.add('visible');
-            downloadSvg.disabled = false;
+          downloadDxf.disabled = !artifacts.hasDxf;
+
+          if (artifacts.warnings.length) {
+            showWarnings(artifacts.warnings);
           }
 
-          if (data.dxf_content || data.dxf_base64) {
-            downloadDxf.disabled = false;
+          if (artifacts.hasSvg && artifacts.hasDxf) {
+            showStatus(`Extraction complete in ${elapsedSec.toFixed(2)}s — SVG preview and DXF available`, 'success');
+          } else if (artifacts.hasSvg && !artifacts.hasDxf) {
+            showPartialSuccess(`Extraction complete in ${elapsedSec.toFixed(2)}s — SVG preview available, but no DXF was returned.`);
+          } else if (!artifacts.hasSvg && artifacts.hasDxf) {
+            showPartialSuccess(`Extraction complete in ${elapsedSec.toFixed(2)}s — DXF available, but no SVG preview was returned.`);
+          } else {
+            throw new Error('Extraction completed, but no SVG or DXF output was returned.');
           }
         }
 
@@ -1171,14 +1251,17 @@
     downloadSvg.addEventListener('click', () => {
       if (!extractedData) return;
 
-      let svgContent = extractedData.svg_content;
+      let svgContent = extractedData.svg_content || extractedData.svg_preview;
 
       // If svg_path_d exists but not svg_content, build SVG from path
       if (!svgContent && extractedData.svg_path_d) {
-        svgContent = `<svg viewBox="0 0 500 500" xmlns="http://www.w3.org/2000/svg"><path d="${extractedData.svg_path_d}" fill="none" stroke="#000" stroke-width="1"/></svg>`;
+        svgContent = buildSvgFromPath(extractedData.svg_path_d);
       }
 
-      if (!svgContent) return;
+      if (!svgContent) {
+        showStatus('SVG not available for this extraction.', 'error');
+        return;
+      }
 
       const blob = new Blob([svgContent], { type: 'image/svg+xml' });
       downloadBlob(blob, getOutputName('.svg'));
