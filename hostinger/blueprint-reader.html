@@ -895,7 +895,11 @@
             throw new Error(result.error || 'Clean failed');
           }
 
-          // Store download filename for streaming download
+          // Store dxf_b64 directly (preferred) or download_filename (fallback)
+          if (result.dxf_b64) {
+            extractedData.dxf_b64_clean = result.dxf_b64;
+            console.log('Got dxf_b64 from clean endpoint:', result.dxf_b64.length, 'chars');
+          }
           extractedData.download_filename = result.download_filename;
 
           // Show SVG preview if available
@@ -911,7 +915,7 @@
           btn.textContent = `Filtered: ${result.contours_found} contours`;
           btn.classList.add('success');
 
-          // Enable DXF download via streaming endpoint
+          // Enable DXF download
           downloadDxf.disabled = false;
 
           const sizeInfo = result.file_size_kb ? ` (${result.file_size_kb.toFixed(1)} KB)` : '';
@@ -1000,6 +1004,7 @@
         } else {
           // Photo mode: JSON base64 to photo vectorizer
           // Resize large images to prevent OOM
+          let requestComplete = false;
           const base64 = await resizeImageIfNeeded(selectedFile);
 
           if (imageWasResized) {
@@ -1027,6 +1032,7 @@
             TIMEOUTS.photo
           );
           response = result.response;
+          requestComplete = true;  // Mark complete before any processing
 
           if (!response.ok) {
             const errorText = await response.text();
@@ -1034,30 +1040,19 @@
           }
 
           data = await response.json();
-
-          // Check if aborted during json parsing
-          if (result.aborted) {
-            throw new Error('Request was cancelled');
-          }
-
           extractedData = data;
 
           // Detailed logging for diagnosis
           console.log('=== Photo Vectorizer API Response ===');
-          console.log('Full response:', JSON.stringify(data, null, 2));
           console.log('ok:', data.ok);
-          console.log('error:', data.error);
-          console.log('warnings:', data.warnings);
           console.log('contour_count:', data.contour_count);
           console.log('body_width_mm:', data.body_width_mm);
           console.log('body_height_mm:', data.body_height_mm);
-          console.log('scale_source:', data.scale_source);
           console.log('svg_content:', data.svg_content ? 'present' : 'missing');
           console.log('svg_path_d:', data.svg_path_d ? 'present' : 'missing');
           console.log('=====================================');
 
           if (!data.ok) {
-            console.log('Extraction failed - throwing error');
             throw new Error(data.error || 'Photo extraction failed');
           }
 
@@ -1072,15 +1067,18 @@
           document.getElementById('dimScale').textContent = data.scale_source || '—';
           dimensions.classList.add('visible');
 
-          // Check for SVG content (may be svg_content or svg_path_d)
-          const svgData = data.svg_content || data.svg_path_d;
-          if (svgData) {
-            // If it's path data, wrap in SVG element
-            if (data.svg_path_d && !data.svg_content) {
-              previewContainer.innerHTML = `<svg viewBox="0 0 500 500" xmlns="http://www.w3.org/2000/svg"><path d="${data.svg_path_d}" fill="none" stroke="#f59e0b" stroke-width="1"/></svg>`;
-            } else {
-              previewContainer.innerHTML = svgData;
-            }
+          // ISSUE 2 FIX: Build SVG from svg_path_d and store in svg_content
+          if (data.svg_path_d && !data.svg_content) {
+            const w = data.body_width_mm || 500;
+            const h = data.body_height_mm || 500;
+            extractedData.svg_content =
+              '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ' + w + ' ' + h + '">' +
+              '<path d="' + data.svg_path_d + '" fill="none" stroke="#f59e0b" stroke-width="0.5"/></svg>';
+          }
+
+          // Display SVG preview
+          if (extractedData.svg_content) {
+            previewContainer.innerHTML = extractedData.svg_content;
             previewSection.classList.add('visible');
             downloadSvg.disabled = false;
           }
@@ -1191,9 +1189,24 @@
 
       let blob;
 
-      // Priority 1: Streaming download from clean endpoint (blueprint mode)
+      // Priority 1: Cleaned DXF base64 from filter endpoint (works on Railway)
+      if (extractedData.dxf_b64_clean) {
+        console.log('Using dxf_b64_clean for download');
+        const binary = atob(extractedData.dxf_b64_clean);
+        const bytes = new Uint8Array(binary.length);
+        for (let i = 0; i < binary.length; i++) {
+          bytes[i] = binary.charCodeAt(i);
+        }
+        blob = new Blob([bytes], { type: 'application/dxf' });
+        downloadBlob(blob, getOutputName('_cleaned.dxf'));
+        showStatus('Download complete', 'success');
+        return;
+      }
+
+      // Priority 2: Streaming download fallback (may fail on Railway)
       if (extractedData.download_filename) {
         try {
+          console.log('Trying streaming download:', extractedData.download_filename);
           showProgress('Downloading DXF...');
           const downloadUrl = `${API_BASE}/api/blueprint/clean/download/${extractedData.download_filename}`;
           const { response: resp } = await fetchWithTimeout(downloadUrl, {}, TIMEOUTS.download);
@@ -1206,6 +1219,7 @@
           showStatus('Download complete', 'success');
         } catch (err) {
           hideProgress();
+          console.error('Streaming download failed:', err);
           if (err.name === 'AbortError') {
             showStatus('Download timed out. Try again.', 'error');
           } else {
@@ -1215,7 +1229,7 @@
         return;
       }
 
-      // Priority 2: Photo mode embedded base64
+      // Priority 3: Photo mode embedded base64
       if (extractedData.dxf_base64) {
         const binary = atob(extractedData.dxf_base64);
         const bytes = new Uint8Array(binary.length);
@@ -1227,7 +1241,7 @@
         return;
       }
 
-      // Priority 3: Photo mode string content
+      // Priority 4: Photo mode string content
       if (extractedData.dxf_content) {
         blob = new Blob([extractedData.dxf_content], { type: 'application/dxf' });
         downloadBlob(blob, getOutputName('.dxf'));

@@ -51,7 +51,8 @@ class CleanResponse(BaseModel):
     """Response from DXF cleaning."""
     success: bool
     svg_preview: Optional[str] = None  # SVG preview of cleaned contours
-    download_filename: Optional[str] = None  # Filename for /clean/download endpoint
+    dxf_b64: Optional[str] = None  # Base64 encoded cleaned DXF (for files < 10MB)
+    download_filename: Optional[str] = None  # Filename for /clean/download endpoint (fallback)
     original_entity_count: int = 0
     cleaned_entity_count: int = 0
     contours_found: int = 0
@@ -179,20 +180,25 @@ async def clean_dxf(req: CleanRequest):
             except Exception as e:
                 logger.warning(f"Failed to generate SVG preview: {e}")
 
-        # Register cleaned file for download
+        # Register cleaned file for download (fallback for large files)
         _clean_file_registry[output_filename] = str(output_path)
-
-        # Also register in main registry for compatibility
         _output_file_registry[output_filename] = str(output_path)
 
-        # Calculate file size
+        # Calculate file size and read as base64 if small enough
         file_size_kb = output_path.stat().st_size / 1024 if output_path.exists() else 0
+        dxf_b64 = None
+
+        # Include base64 for files under 10MB (avoids streaming endpoint issues on Railway)
+        if file_size_kb < 10240:  # 10MB limit
+            dxf_b64 = base64.b64encode(output_path.read_bytes()).decode()
+            logger.info(f"Including dxf_b64 ({file_size_kb:.1f} KB)")
 
         elapsed_ms = (time.perf_counter() - start) * 1000
 
         return CleanResponse(
             success=True,
             svg_preview=svg_preview,
+            dxf_b64=dxf_b64,
             download_filename=output_filename,
             original_entity_count=result.original_entity_count,
             cleaned_entity_count=result.cleaned_entity_count,
