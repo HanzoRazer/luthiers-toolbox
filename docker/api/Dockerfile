@@ -74,4 +74,7 @@ HEALTHCHECK --interval=10s --timeout=3s --start-period=30s --retries=10 \
   CMD curl -fsS http://127.0.0.1:${PORT:-8000}/health || exit 1
 
 # Use shell form to expand $PORT (Railway) or default to 8000 (CI/local)
-CMD python -m uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8000}
+# --timeout-keep-alive: time to keep idle connections open (default 5s, set 120s for slow clients)
+# --timeout-graceful-shutdown: time to wait for in-flight requests to complete (default 0, set 30s)
+# Note: uvicorn has no per-request timeout — Railway gateway timeout (100-300s on Pro) is the limit
+CMD python -m uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8000} --timeout-keep-alive 120 --timeout-graceful-shutdown 30
