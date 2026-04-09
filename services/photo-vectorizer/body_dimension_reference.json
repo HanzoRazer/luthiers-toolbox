@@ -8,7 +8,6 @@
     "waist_y_norm": "Waist position as fraction of body length from top (0.0-1.0)",
     "family": "Instrument family for family-hint matching"
   },
-
   "stratocaster": {
     "body_length_mm": 406,
     "upper_bout_width_mm": 311,
@@ -112,5 +111,22 @@
     "lower_bout_width_mm": 370,
     "waist_y_norm": 0.45,
     "family": "bass"
+  },
+  "gibson_sg": {
+    "body_length_mm": 444,
+    "upper_bout_width_mm": 330,
+    "waist_width_mm": 180,
+    "lower_bout_width_mm": 330,
+    "waist_y_norm": 0.35,
+    "family": "solid_body"
+  },
+  "benedetto_17": {
+    "body_length_mm": 482.6,
+    "upper_bout_width_mm": 279.4,
+    "waist_width_mm": 228.6,
+    "lower_bout_width_mm": 431.8,
+    "waist_y_norm": 0.42,
+    "family": "archtop",
+    "_note": "Benedetto 17-inch archtop jazz guitar from original blueprints"
   }
 }
