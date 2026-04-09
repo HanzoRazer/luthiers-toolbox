@@ -584,8 +584,9 @@
     const API_BASE = 'https://luthiers-toolbox-production.up.railway.app';
 
     // Timeouts for each operation
+    // NOTE: blueprint raised to 180s for diagnosis (was 90s)
     const TIMEOUTS = {
-      blueprint: 90000,   // 90s for edge-to-dxf
+      blueprint: 180000,  // 180s for edge-to-dxf (raised for diagnosis)
       photo: 120000,      // 120s for vectorizer
       clean: 60000,       // 60s for clean
       download: 30000     // 30s for download
