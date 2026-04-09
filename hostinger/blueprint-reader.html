@@ -621,18 +621,27 @@
     const MAX_RETRIES = 3;
 
     // Fetch with timeout and AbortController
-    function fetchWithTimeout(url, options, timeoutMs) {
+    // Returns { response, aborted } to detect late aborts
+    async function fetchWithTimeout(url, options, timeoutMs) {
       const controller = new AbortController();
-      const id = setTimeout(() => controller.abort(), timeoutMs);
-      return fetch(url, { ...options, signal: controller.signal })
-        .then(response => {
-          clearTimeout(id);
-          return response;
-        })
-        .catch(err => {
-          clearTimeout(id);
+      let aborted = false;
+      const id = setTimeout(() => {
+        aborted = true;
+        controller.abort();
+      }, timeoutMs);
+
+      try {
+        const response = await fetch(url, { ...options, signal: controller.signal });
+        clearTimeout(id);
+        return { response, aborted };
+      } catch (err) {
+        clearTimeout(id);
+        // Only treat as abort if we actually aborted
+        if (aborted && err.name === 'AbortError') {
           throw err;
-        });
+        }
+        throw err;
+      }
     }
 
     // Error handler with AbortError detection
@@ -857,7 +866,7 @@
           // where _output_file_registry doesn't persist across workers
           showProgress('Filtering contours...', true);
 
-          const resp = await fetchWithTimeout(
+          const { response: resp, aborted } = await fetchWithTimeout(
             `${API_BASE}/api/blueprint/clean`,
             {
               method: 'POST',
@@ -878,6 +887,10 @@
           }
 
           const result = await resp.json();
+
+          if (aborted) {
+            throw new Error('Request was cancelled');
+          }
           if (!result.success) {
             throw new Error(result.error || 'Clean failed');
           }
@@ -938,11 +951,12 @@
           formData.append('target_height_mm', '500');
           formData.append('return_file', 'false');
 
-          response = await fetchWithTimeout(
+          const result = await fetchWithTimeout(
             `${API_BASE}/api/blueprint/edge-to-dxf/convert`,
             { method: 'POST', body: formData },
             TIMEOUTS.blueprint
           );
+          response = result.response;
 
           if (!response.ok) {
             const errorText = await response.text();
@@ -950,6 +964,11 @@
           }
 
           data = await response.json();
+
+          // Check if aborted during json parsing
+          if (result.aborted) {
+            throw new Error('Request was cancelled');
+          }
           extractedData = data;
 
           if (!data.success) {
@@ -998,7 +1017,7 @@
             requestBody.spec_name = specName.value;
           }
 
-          response = await fetchWithTimeout(
+          const result = await fetchWithTimeout(
             `${API_BASE}/api/vectorizer/extract`,
             {
               method: 'POST',
@@ -1007,6 +1026,7 @@
             },
             TIMEOUTS.photo
           );
+          response = result.response;
 
           if (!response.ok) {
             const errorText = await response.text();
@@ -1014,6 +1034,12 @@
           }
 
           data = await response.json();
+
+          // Check if aborted during json parsing
+          if (result.aborted) {
+            throw new Error('Request was cancelled');
+          }
+
           extractedData = data;
 
           // Detailed logging for diagnosis
@@ -1026,6 +1052,8 @@
           console.log('body_width_mm:', data.body_width_mm);
           console.log('body_height_mm:', data.body_height_mm);
           console.log('scale_source:', data.scale_source);
+          console.log('svg_content:', data.svg_content ? 'present' : 'missing');
+          console.log('svg_path_d:', data.svg_path_d ? 'present' : 'missing');
           console.log('=====================================');
 
           if (!data.ok) {
@@ -1044,8 +1072,15 @@
           document.getElementById('dimScale').textContent = data.scale_source || '—';
           dimensions.classList.add('visible');
 
-          if (data.svg_content) {
-            previewContainer.innerHTML = data.svg_content;
+          // Check for SVG content (may be svg_content or svg_path_d)
+          const svgData = data.svg_content || data.svg_path_d;
+          if (svgData) {
+            // If it's path data, wrap in SVG element
+            if (data.svg_path_d && !data.svg_content) {
+              previewContainer.innerHTML = `<svg viewBox="0 0 500 500" xmlns="http://www.w3.org/2000/svg"><path d="${data.svg_path_d}" fill="none" stroke="#f59e0b" stroke-width="1"/></svg>`;
+            } else {
+              previewContainer.innerHTML = svgData;
+            }
             previewSection.classList.add('visible');
             downloadSvg.disabled = false;
           }
@@ -1136,9 +1171,18 @@
 
     // Downloads
     downloadSvg.addEventListener('click', () => {
-      if (!extractedData?.svg_content) return;
+      if (!extractedData) return;
 
-      const blob = new Blob([extractedData.svg_content], { type: 'image/svg+xml' });
+      let svgContent = extractedData.svg_content;
+
+      // If svg_path_d exists but not svg_content, build SVG from path
+      if (!svgContent && extractedData.svg_path_d) {
+        svgContent = `<svg viewBox="0 0 500 500" xmlns="http://www.w3.org/2000/svg"><path d="${extractedData.svg_path_d}" fill="none" stroke="#000" stroke-width="1"/></svg>`;
+      }
+
+      if (!svgContent) return;
+
+      const blob = new Blob([svgContent], { type: 'image/svg+xml' });
       downloadBlob(blob, getOutputName('.svg'));
     });
 
@@ -1152,7 +1196,7 @@
         try {
           showProgress('Downloading DXF...');
           const downloadUrl = `${API_BASE}/api/blueprint/clean/download/${extractedData.download_filename}`;
-          const resp = await fetchWithTimeout(downloadUrl, {}, TIMEOUTS.download);
+          const { response: resp } = await fetchWithTimeout(downloadUrl, {}, TIMEOUTS.download);
           hideProgress();
           if (!resp.ok) {
             throw new Error(`Download failed: ${resp.status}`);
