@@ -68,10 +68,25 @@ except ImportError:
     PYMUPDF_AVAILABLE = False
 
 try:
-    from rembg import remove as rembg_remove
+    from rembg import remove as rembg_remove, new_session as rembg_new_session
     REMBG_AVAILABLE = True
+    # Cache rembg session at module level to avoid 255MB allocation per request
+    # The session loads the U2Net model once and reuses it across all requests
+    _REMBG_SESSION = None
 except ImportError:
     REMBG_AVAILABLE = False
+    _REMBG_SESSION = None
+
+
+def get_rembg_session():
+    """Get or create cached rembg session. Loads model once, reuses across requests."""
+    global _REMBG_SESSION
+    if _REMBG_SESSION is None and REMBG_AVAILABLE:
+        import logging
+        logging.getLogger(__name__).info("REMBG | Loading U2Net model (one-time, ~255MB)")
+        _REMBG_SESSION = rembg_new_session("u2net")
+        logging.getLogger(__name__).info("REMBG | Model loaded and cached")
+    return _REMBG_SESSION
 
 try:
     from segment_anything import sam_model_registry, SamPredictor
@@ -1102,7 +1117,9 @@ class BackgroundRemover:
         buf = io.BytesIO()
         pil_img.save(buf, format='PNG')
         buf.seek(0)
-        result_bytes = rembg_remove(buf.read())
+        # Use cached session to avoid reloading the 255MB model on each request
+        session = get_rembg_session()
+        result_bytes = rembg_remove(buf.read(), session=session)
         result_pil = _PIL.open(io.BytesIO(result_bytes)).convert('RGBA')
         result_np = np.array(result_pil)
         alpha = result_np[:, :, 3]
