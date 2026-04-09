@@ -1,5 +1,5 @@
 # The Production Shop — Sprint Registry
-Last updated: 2026-04-07
+Last updated: 2026-04-08
 Maintained by: Ross Echols (HanzoRazer)
 
 ---
@@ -390,6 +390,86 @@ packages/client/src/components/toolbox/BridgeCalculator.vue
 **Note:** edge_to_dxf.py is the proven high-fidelity path for photos.
 photo_vectorizer_v2.py classification path is supplementary.
 AI render path (4-stage) is now preferred for AI-generated images.
+
+---
+
+### SPRINT: tap_tone_pi Real-Time Plate Tuning Mode
+
+**Status:** QUEUED
+**Priority:** HIGH
+**Inspired by:** Bryan Galloup Guitar School live Instagram demonstration
+
+**Target workflow:**
+- Speaker excites plate continuously
+- Pi captures two-channel transfer function
+- Real-time FFT displays on screen
+- Luthier removes wood from brace
+- Watches peak shift in real time
+- Before/after overlay shows delta
+- Wolf severity indicator goes green
+
+**Required additions:**
+- Continuous excitation mode (Phase 2 architecture)
+- Real-time H(f) display at 4-10 Hz refresh
+- Peak tracker with musical note labels
+- Before/after freeze overlay (one button)
+- Wolf severity indicator live (WSI module wired)
+
+**Hardware:** No new hardware needed — add small speaker + amp (~$30)
+
+---
+
+### SPRINT: tap_tone_pi Mass-Frequency Tracking
+
+**Status:** QUEUED
+**Priority:** HIGH — original methodology
+**Research basis:** Ross Echols (PE #78195)
+
+System identification via sequential mass removal and frequency measurement.
+"Two points make a line. A line is a function."
+
+**Workflow:**
+- Sequential sessions on same instrument
+- Weight recorded at each session
+- Modal frequencies extracted per session
+
+**Calculations:**
+- dF/dM per mode per brace location
+- Linear predictor: ΔM needed to reach target Hz
+- Polynomial fit at 3+ points for nonlinear range
+
+**Outputs:**
+- Slope chart per mode
+- Target predictor: "Remove Xg to reach YHz"
+- Sensitivity map by brace location
+
+**Long-term:**
+- Calibration database by species + body style
+- Bayesian prior for new builds
+
+**Closes:** Cross-session comparison open item
+**Connects:** archtop_stiffness_map.py validation
+
+---
+
+### SPRINT: tap_tone_pi Reference Overlay
+
+**Status:** QUEUED
+**Priority:** MEDIUM
+
+**Purpose:**
+- Load reference plate from instrument database
+- Overlay reference modal peaks on FFT display
+- Delta display: measured vs reference per mode
+- Feed delta to luthiers-toolbox inverse solver
+
+**Database sources:**
+- D'Aquisto measurements (in repo)
+- Future: L-37 physical measurements
+- Future: Benedetto graduation data
+
+**Closes:** Cross-session comparison open item
+
 ---
 
 ### SPRINT: LUTHERIE_MATH.md Completion
