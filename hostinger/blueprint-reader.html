@@ -436,49 +436,28 @@
     }
 
     /* Progress bar */
-    .progress-container {
-      display: none;
-      background: #1a1a1a;
-      border-radius: 8px;
-      padding: 1rem;
-      margin-bottom: 1rem;
-    }
-
-    .progress-container.visible {
-      display: block;
-    }
-
-    .progress-label {
-      font-size: 0.85rem;
-      color: #888;
-      margin-bottom: 0.5rem;
-      display: flex;
-      justify-content: space-between;
-    }
-
-    .progress-bar {
-      height: 8px;
+    #progressBar {
       background: #2a2a2a;
       border-radius: 4px;
-      overflow: hidden;
+      height: 4px;
+      margin: 0.5rem 0;
+      position: relative;
     }
 
-    .progress-fill {
+    #progressFill {
+      background: #f59e0b;
       height: 100%;
-      background: linear-gradient(90deg, #f59e0b, #fbbf24);
       border-radius: 4px;
       width: 0%;
-      transition: width 0.3s ease;
+      transition: width 0.3s;
     }
 
-    .progress-fill.indeterminate {
-      width: 30%;
-      animation: indeterminate 1.5s ease-in-out infinite;
-    }
-
-    @keyframes indeterminate {
-      0% { transform: translateX(-100%); }
-      100% { transform: translateX(400%); }
+    #progressText {
+      position: absolute;
+      right: 0;
+      top: -20px;
+      font-size: 0.7rem;
+      color: #888;
     }
 
     @media (max-width: 600px) {
@@ -549,19 +528,14 @@
 
     <button class="btn extract-btn" id="extractBtn" disabled>Extract Outline</button>
 
-    <div class="progress-container" id="progressContainer">
-      <div class="progress-label">
-        <span id="progressText">Processing...</span>
-        <span id="progressPercent">0%</span>
-      </div>
-      <div class="progress-bar">
-        <div class="progress-fill" id="progressFill"></div>
-      </div>
-    </div>
-
     <div class="status" id="status"></div>
 
-    <button class="btn btn-secondary" id="retryBtn" style="display:none">↺ Retry</button>
+    <div id="progressBar" style="display:none">
+      <div id="progressFill"></div>
+      <span id="progressText">Processing...</span>
+    </div>
+
+    <button id="retryBtn" class="btn btn-secondary" style="display:none">↺ Retry</button>
 
     <div class="dimensions" id="dimensions">
       <h3>Extracted Dimensions</h3>
@@ -635,10 +609,9 @@
     const downloadSvg = document.getElementById('downloadSvg');
     const downloadDxf = document.getElementById('downloadDxf');
     const modeBadge = document.getElementById('modeBadge');
-    const progressContainer = document.getElementById('progressContainer');
-    const progressText = document.getElementById('progressText');
-    const progressPercent = document.getElementById('progressPercent');
+    const progressBar = document.getElementById('progressBar');
     const progressFill = document.getElementById('progressFill');
+    const progressText = document.getElementById('progressText');
 
     let selectedFile = null;
     let extractedData = null;
@@ -659,7 +632,7 @@
     function handleError(err) {
       hideProgress();
       if (err.name === 'AbortError') {
-        showStatus('Processing timed out. Try a smaller image or simpler view.', 'error');
+        showStatus('Processing timed out. Try a smaller image.', 'error');
       } else {
         showStatus(err.message, 'error');
       }
@@ -669,17 +642,13 @@
 
     // Progress bar helpers
     function showProgress(text) {
-      progressContainer.classList.add('visible');
-      progressText.textContent = text;
-      progressPercent.textContent = '0%';
+      progressBar.style.display = 'block';
       progressFill.style.width = '0%';
-      progressFill.classList.remove('indeterminate');
+      progressText.textContent = text || 'Processing...';
     }
 
-    function updateProgress(percent, text = null) {
+    function updateProgress(percent) {
       progressFill.style.width = `${Math.min(percent, 100)}%`;
-      progressPercent.textContent = `${Math.round(percent)}%`;
-      if (text) progressText.textContent = text;
     }
 
     function hideProgress() {
@@ -687,7 +656,7 @@
         clearInterval(progressInterval);
         progressInterval = null;
       }
-      progressContainer.classList.remove('visible');
+      progressBar.style.display = 'none';
     }
 
     function startProgressSimulation() {
@@ -700,32 +669,32 @@
 
     function completeProgress() {
       if (progressInterval) clearInterval(progressInterval);
-      updateProgress(100, 'Complete');
+      updateProgress(100);
+      progressText.textContent = 'Complete';
       setTimeout(hideProgress, 1000);
     }
 
-    // localStorage persistence
+    // localStorage persistence with try/catch
     function loadSettings() {
-      const saved = localStorage.getItem('blueprintReaderSettings');
-      if (saved) {
-        try {
-          const settings = JSON.parse(saved);
-          if (settings.specName) specName.value = settings.specName;
-          if (settings.sourceType) sourceType.value = settings.sourceType;
-          if (settings.routeMode) {
-            routeMode = settings.routeMode;
-            updateModeBadge();
-          }
-        } catch (e) { /* ignore */ }
-      }
+      try {
+        const savedSpec = localStorage.getItem('blueprint_reader_spec');
+        const savedSource = localStorage.getItem('blueprint_reader_source_type');
+        const savedMode = localStorage.getItem('blueprint_reader_mode');
+        if (savedSpec) specName.value = savedSpec;
+        if (savedSource) sourceType.value = savedSource;
+        if (savedMode) {
+          routeMode = savedMode;
+          updateModeBadge();
+        }
+      } catch (e) { /* localStorage unavailable */ }
     }
 
     function saveSettings() {
-      localStorage.setItem('blueprintReaderSettings', JSON.stringify({
-        specName: specName.value,
-        sourceType: sourceType.value,
-        routeMode: routeMode
-      }));
+      try {
+        localStorage.setItem('blueprint_reader_spec', specName.value);
+        localStorage.setItem('blueprint_reader_source_type', sourceType.value);
+        localStorage.setItem('blueprint_reader_mode', routeMode);
+      } catch (e) { /* localStorage unavailable */ }
     }
 
     // Load settings on startup
