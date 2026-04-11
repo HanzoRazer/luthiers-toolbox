@@ -425,9 +425,214 @@ print(f'Chains: {result.chains_found}, Contours: {result.contours_found}')
 
 ## 11. Definition of Done
 
-- [ ] All 5 test cases pass
-- [ ] `ok: true` only when both SVG and DXF present
-- [ ] Failures include `stage` and `error` fields
-- [ ] No streaming downloads (base64 only)
-- [ ] Railway timeout set to 180s
-- [ ] Frontend shows error when artifacts missing
+- [x] All 5 test cases pass
+- [x] `ok: true` only when both SVG and DXF present
+- [x] Failures include `stage` and `error` fields
+- [x] No streaming downloads (base64 only)
+- [x] Railway timeout set to 180s
+- [x] Frontend shows error when artifacts missing
+
+---
+
+## 12. Blueprint Pipeline Refactor Completion
+
+**Date:** 2025-04-10  
+**Status:** COMPLETE
+
+### Overview
+
+The blueprint processing pipeline (`/api/blueprint/vectorize`) has been fully refactored into a unified, production-ready architecture. This refactor consolidates extraction, cleanup, contour selection, artifact generation, and job orchestration into a single coherent system.
+
+The pipeline now operates as a **deterministic, observable decision system** rather than a threshold-based filter chain.
+
+### Key Architectural Changes
+
+| Component | Change |
+|-----------|--------|
+| `BlueprintOrchestrator` | Single coordination layer for all blueprint processing |
+| `blueprint_extract.py` | Extraction service (image load, edge detection, raw DXF) |
+| `blueprint_clean.py` | Cleanup service (contour scoring, filtering, SVG generation) |
+| `blueprint_orchestrator.py` | Orchestration (composes services, validates artifacts) |
+| `blueprint_limits.py` | Input guardrails (upload size, DPI caps, auto-downscale) |
+| `StageTimer` | Per-stage timing diagnostics |
+| `/api/blueprint/vectorize` | Single-entry endpoint (replaces multi-stage flow) |
+
+### Contour Selection Refactor (Core Change)
+
+Contour selection has been fundamentally redesigned.
+
+#### Before
+
+Binary threshold-based filtering:
+- Length thresholds
+- Closure checks
+- Ownership threshold (0.60 hard gate)
+
+**Failure mode:** No contour passed thresholds → hard fail.
+
+#### After
+
+Unified scoring-based selection:
+
+| Signal | Weight | Description |
+|--------|--------|-------------|
+| Area ratio | 25% | Contour area vs image area |
+| Closure quality | 20% | How well contour closes |
+| Aspect ratio | 15% | Guitar-like proportions |
+| Solidity | 15% | Fill ratio of convex hull |
+| Continuity | 15% | Gap-free perimeter |
+| Ownership | 10% | Foreground pixel coverage |
+
+**Decision model:**
+- All candidates are scored and ranked
+- Best contour is selected deterministically
+- Fallback to best available if all scores are low
+- Confidence score (0.0–1.0) is emitted with result
+
+#### Ownership Handling
+
+| Before | After |
+|--------|-------|
+| Hard gate at 0.60 | Weighted signal (10%) |
+| Binary pass/fail | Contributes to composite score |
+| Standalone rejection | No standalone rejection |
+
+### Decision Model
+
+The pipeline now follows a three-tier outcome model:
+
+| Outcome | Condition | Response |
+|---------|-----------|----------|
+| **Fail** | No usable contour found | `ok: false`, stage indicates where |
+| **Warn** | Usable contour, low confidence | `ok: true`, warnings included |
+| **Pass** | Strong contour | `ok: true`, no warnings |
+
+Artifact validation (SVG/DXF both present and valid) still overrides confidence.
+
+### Observability
+
+Each run now provides:
+
+| Field | Description |
+|-------|-------------|
+| `contour_confidence` | 0.0–1.0 confidence in selected contour |
+| `warnings` | Downscale, DPI cap, low confidence notices |
+| `stage_timings` | Per-stage milliseconds (debug mode) |
+| `debug` | Full diagnostic payload (when enabled) |
+
+### Input Guardrails
+
+| Guardrail | Limit | Behavior |
+|-----------|-------|----------|
+| Upload size | 25 MB | Reject with 413 |
+| Raster dimensions | 8192×8192 px | Auto-downscale with warning |
+| PDF DPI | 300 | Cap and warn |
+
+---
+
+## 13. Scope Boundary: Blueprint vs Photo
+
+> **IMPORTANT:** This refactor applies only to the blueprint pipeline.
+
+### What Changed (Blueprint)
+
+| Item | Status |
+|------|--------|
+| `/api/blueprint/vectorize` | ✅ New unified endpoint |
+| `BlueprintOrchestrator` | ✅ Central coordination |
+| Unified contour scoring | ✅ Scoring-based selection |
+| Ownership as weighted signal | ✅ 10% weight, no hard gate |
+| Low-confidence with warnings | ✅ Returns result + warning |
+| Stage timing diagnostics | ✅ `StageTimer` utility |
+
+### What Did NOT Change (Photo)
+
+| Item | Status |
+|------|--------|
+| `/api/vectorizer/extract` | ❌ Unchanged |
+| `photo_vectorizer_v2.py` | ❌ Unchanged |
+| Ownership threshold (0.60) | ❌ Still hard gate |
+| Hard fail on low ownership | ❌ Still fails |
+| Contour election logic | ❌ Unchanged |
+
+### Behavioral Difference
+
+| Scenario | Blueprint | Photo |
+|----------|-----------|-------|
+| Ownership = 0.55 | Returns with warning | Hard fails |
+| Noisy input | Best-effort + confidence | May reject entirely |
+| AI-generated image | Likely succeeds | May fail ownership gate |
+
+### Implication for Testing
+
+- **Do not** test photo mode against blueprint expectations
+- **Do not** assume photo failures are regressions from this refactor
+- Photo pipeline needs separate follow-up refactor for parity
+
+---
+
+## 14. Current Production Architecture
+
+### Blueprint Pipeline (Refactored)
+
+```
+POST /api/blueprint/vectorize
+    │
+    ├─► BlueprintOrchestrator.process_file()
+    │       │
+    │       ├─► extract_blueprint_to_dxf() ─► raw DXF
+    │       │
+    │       ├─► clean_blueprint_dxf() ─► scored contours
+    │       │       │
+    │       │       └─► UnifiedContourScorer ─► confidence
+    │       │
+    │       ├─► validate_artifacts() ─► SVG + DXF present?
+    │       │
+    │       └─► BlueprintResult ─► canonical response
+    │
+    └─► Response: ok, stage, artifacts, dimensions, warnings
+```
+
+### Photo Pipeline (Unchanged)
+
+```
+POST /api/vectorizer/extract
+    │
+    ├─► PhotoVectorizerV2.extract()
+    │       │
+    │       ├─► body_isolation() ─► foreground mask
+    │       │
+    │       ├─► contour_stage() ─► candidates
+    │       │       │
+    │       │       └─► ownership_threshold = 0.60 ─► HARD GATE
+    │       │
+    │       ├─► export_blocked? ─► fail if ownership < 0.60
+    │       │
+    │       └─► VectorizerResult
+    │
+    └─► Response: ok, artifacts, dimensions, warnings
+```
+
+---
+
+## 15. Open Follow-ups
+
+| Item | Priority | Notes |
+|------|----------|-------|
+| Photo pipeline refactor | HIGH | Bring parity with blueprint scoring model |
+| Frontend confidence display | MEDIUM | Surface `contour_confidence` to users |
+| Scoring weight tuning | LOW | Adjust weights based on production data |
+| Warning UX | MEDIUM | Show downscale/low-confidence warnings clearly |
+
+---
+
+## 16. Summary
+
+The blueprint vectorizer has been transformed from a fragile, threshold-based filter chain into a robust, scoring-based decision system. The key improvements are:
+
+1. **No more silent partial failures** — artifacts are validated before success
+2. **No more binary threshold rejections** — low-confidence results return with warnings
+3. **Observable decision process** — confidence scores and stage timings available
+4. **Unified architecture** — single orchestrator, single endpoint, single contract
+
+The photo pipeline remains unchanged and requires separate follow-up work.
