@@ -148,4 +148,12 @@ BUSINESS_ROUTERS: List[RouterSpec] = [
         tags=["Vectorizer", "Photo Import"],
         category="blueprint",
     ),
+    # ── Blueprint Async: Async job wrapper for blueprint vectorization ──
+    # Avoids HTTP timeouts for large blueprints. Calls BlueprintOrchestrator.
+    RouterSpec(
+        module="app.routers.blueprint_async_router",
+        prefix="/api",
+        tags=["Blueprint", "Async"],
+        category="blueprint",
+    ),
 ]
