@@ -295,11 +295,15 @@ class BlueprintOrchestrator:
                 if cleaned_dxf_path.exists():
                     dxf_bytes = cleaned_dxf_path.read_bytes()
                     dxf_b64 = base64.b64encode(dxf_bytes).decode("ascii")
-                    # Count entities
-                    dxf_text = dxf_bytes.decode("utf-8", errors="ignore")
+                    # Count entities - normalize line endings for reliable counting
+                    # VALIDATION EXPECTATION (Fusion compatibility):
+                    #   - DXF version: R12 (AC1009)
+                    #   - Entity type: LINE only (no LWPOLYLINE)
+                    #   - See CLAUDE.md "Blueprint Export Compatibility"
+                    dxf_text = dxf_bytes.decode("utf-8", errors="ignore").replace("\r\n", "\n")
                     dxf_entity_count = (
                         dxf_text.count("\nLINE\n") +
-                        dxf_text.count("\nLWPOLYLINE\n")
+                        dxf_text.count("\nLWPOLYLINE\n")  # Should be 0 for R12 output
                     )
 
                 # ─── Stage: Validation ────────────────────────────────────
