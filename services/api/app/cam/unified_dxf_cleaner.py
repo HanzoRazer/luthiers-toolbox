@@ -11,7 +11,23 @@ Algorithm for LINE entities:
 1. Build adjacency graph of LINE endpoints (tolerance 0.1mm)
 2. Trace chains by following connections
 3. Keep only closed or near-closed chains above minimum length
-4. Convert to LWPOLYLINE for clean output
+4. Output as LINE entities (R12 compatible)
+
+BLUEPRINT DXF EXPORT RULE (Fusion compatibility)
+------------------------------------------------
+Output format: R12 (AC1009)
+Geometry entities: LINE only
+Avoid: LWPOLYLINE in the Fusion-facing blueprint path
+
+Reason: LWPOLYLINE requires DXF R2000+. Even when the code creates
+an R12 document, attempting to write LWPOLYLINE causes ezdxf errors
+or produces files that Fusion 360 rejects or freezes on. LINE entities
+are universally supported and work reliably with Fusion's DXF import.
+
+This rule applies to:
+- write_selected_chains()
+- clean_file()
+- Any future DXF output in the blueprint pipeline
 
 Author: Production Shop
 """
@@ -24,7 +40,7 @@ import math
 from collections import defaultdict
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Dict, List, Optional, Set, Tuple
+from typing import Callable, Dict, List, Optional, Set, Tuple
 
 import ezdxf
 from ezdxf.entities import LWPolyline
@@ -135,6 +151,116 @@ class DXFCleaner:
         self.closure_tolerance = closure_tolerance
         self.keep_open_chains = keep_open_chains
 
+    def extract_chains(self, input_path: Path) -> Tuple[List[Chain], List[List[Tuple[float, float]]], int]:
+        """
+        Extract chains from DXF without filtering or writing.
+
+        Returns:
+            (chains_from_lines, polyline_points_list, original_entity_count)
+        """
+        doc = ezdxf.readfile(str(input_path))
+        msp = doc.modelspace()
+
+        all_entities = list(msp)
+        original_count = len(all_entities)
+
+        lines: List[LineSegment] = []
+        polylines: List[LWPolyline] = []
+
+        for e in all_entities:
+            if e.dxftype() == "LINE":
+                lines.append(LineSegment(
+                    start=Point(e.dxf.start.x, e.dxf.start.y),
+                    end=Point(e.dxf.end.x, e.dxf.end.y),
+                ))
+            elif e.dxftype() in ("LWPOLYLINE", "POLYLINE"):
+                polylines.append(e)
+
+        # Chain LINE entities
+        chains = self._chain_lines(lines) if lines else []
+
+        # Extract polyline points
+        polyline_pts = []
+        for pl in polylines:
+            points = list(pl.get_points("xy"))
+            if len(points) >= 2:
+                polyline_pts.append(points)
+
+        return chains, polyline_pts, original_count
+
+    def write_selected_chains(
+        self,
+        output_path: Path,
+        chains: List[Chain],
+        polyline_pts: Optional[List[List[Tuple[float, float]]]] = None,
+        preserve_layers: bool = False,
+    ) -> int:
+        """
+        Write pre-selected chains to output DXF.
+
+        Uses LINE entities for R12 compatibility per CLAUDE.md standard.
+
+        Args:
+            output_path: Path for output DXF
+            chains: Selected Chain objects to write
+            polyline_pts: Optional polyline point lists to include
+            preserve_layers: If True, use "body_outline" layer
+
+        Returns:
+            Number of contours written
+        """
+        newdoc = ezdxf.new("R12")
+        newmsp = newdoc.modelspace()
+        contours_written = 0
+
+        for i, chain in enumerate(chains):
+            points = chain.as_polyline_points()
+            layer = f"contour_{i}" if not preserve_layers else "body_outline"
+
+            # Write as LINE entities for R12 compatibility
+            for j in range(len(points) - 1):
+                newmsp.add_line(
+                    points[j],
+                    points[j + 1],
+                    dxfattribs={"layer": layer},
+                )
+
+            # Close the loop if chain is closed
+            if chain.is_closed(self.closure_tolerance) and len(points) > 2:
+                newmsp.add_line(
+                    points[-1],
+                    points[0],
+                    dxfattribs={"layer": layer},
+                )
+
+            contours_written += 1
+
+        if polyline_pts:
+            for i, points in enumerate(polyline_pts):
+                layer = f"polyline_{i}" if not preserve_layers else "body_outline"
+
+                # Write as LINE entities
+                for j in range(len(points) - 1):
+                    newmsp.add_line(
+                        points[j],
+                        points[j + 1],
+                        dxfattribs={"layer": layer},
+                    )
+
+                # Close the loop
+                if len(points) > 2:
+                    newmsp.add_line(
+                        points[-1],
+                        points[0],
+                        dxfattribs={"layer": layer},
+                    )
+
+                contours_written += 1
+
+        output_path.parent.mkdir(parents=True, exist_ok=True)
+        newdoc.saveas(str(output_path))
+        return contours_written
+
     def clean_file(
         self,
         input_path: Path,
@@ -224,36 +350,52 @@ class DXFCleaner:
             logger.info(f"Polylines: {len(polylines)} total, {len(kept_polylines)} kept")
 
             # Create output document - R12 for maximum compatibility
+            # Per CLAUDE.md: LINE entities only, no LWPOLYLINE
             newdoc = ezdxf.new("R12")
             newmsp = newdoc.modelspace()
 
-            # Add chains as LWPOLYLINE
+            # Add chains as LINE entities (R12 compatible)
             for i, chain in enumerate(kept_chains):
                 points = chain.as_polyline_points()
-                # Close the loop if it's a closed chain
-                if chain.is_closed(self.closure_tolerance) and len(points) > 2:
-                    # Don't duplicate the closing point for closed polylines
-                    if points[0] != points[-1]:
-                        points = points  # Keep as-is, set closed flag
+                layer = f"contour_{i}" if not preserve_layers else "body_outline"
 
-                newmsp.add_lwpolyline(
-                    points,
-                    dxfattribs={
-                        "layer": f"contour_{i}" if not preserve_layers else "body_outline",
-                        "closed": chain.is_closed(self.closure_tolerance),
-                    }
-                )
+                # Write consecutive LINE segments
+                for j in range(len(points) - 1):
+                    newmsp.add_line(
+                        points[j],
+                        points[j + 1],
+                        dxfattribs={"layer": layer},
+                    )
+
+                # Close the loop if chain is closed
+                if chain.is_closed(self.closure_tolerance) and len(points) > 2:
+                    newmsp.add_line(
+                        points[-1],
+                        points[0],
+                        dxfattribs={"layer": layer},
+                    )
+
                 result.contours_found += 1
 
-            # Add kept polylines
+            # Add kept polylines as LINE entities
             for i, points in enumerate(kept_polylines):
-                newmsp.add_lwpolyline(
-                    points,
-                    dxfattribs={
-                        "layer": f"polyline_{i}" if not preserve_layers else "body_outline",
-                        "closed": True,
-                    }
-                )
+                layer = f"polyline_{i}" if not preserve_layers else "body_outline"
+
+                for j in range(len(points) - 1):
+                    newmsp.add_line(
+                        points[j],
+                        points[j + 1],
+                        dxfattribs={"layer": layer},
+                    )
+
+                # Close the loop
+                if len(points) > 2:
+                    newmsp.add_line(
+                        points[-1],
+                        points[0],
+                        dxfattribs={"layer": layer},
+                    )
+
                 result.contours_found += 1
 
             result.cleaned_entity_count = result.contours_found
