@@ -109,6 +109,7 @@ class RecommendationInput:
 
     # Hard-fail detection flags
     page_span_detected: bool = False
+    page_border_rejected: bool = False  # True when best candidate was page_border
     extreme_fragmentation: bool = False
     multi_path_ambiguity: bool = False
     spec_forced_rescue: bool = False
@@ -152,6 +153,10 @@ def _detect_hard_fails(inp: RecommendationInput) -> List[str]:
     # Page-span / page-border capture
     if inp.page_span_detected:
         fails.append("Page-span contour detected (likely captured page border)")
+
+    # Page border was the dominant contour (all candidates were filtered)
+    if inp.page_border_rejected:
+        fails.append("Best candidate was page border — body contour not detected")
 
     # Extreme aspect mismatch
     min_aspect, max_aspect = inp.expected_aspect_range
@@ -243,7 +248,14 @@ def recommend_blueprint(inp: RecommendationInput) -> Recommendation:
     ):
         reasons.append("Selection score below accept threshold")
         if sel.winner_margin < BLUEPRINT_ACCEPT_MARGIN:
-            reasons.append(f"Winner margin weak ({sel.winner_margin:.2f} < {BLUEPRINT_ACCEPT_MARGIN})")
+            # More specific reason based on margin value
+            if sel.winner_margin < 0.02 and sel.candidate_count > 1:
+                reasons.append(
+                    f"Multiple competing contours (margin {sel.winner_margin:.2f}) — "
+                    "may need to isolate body outline"
+                )
+            else:
+                reasons.append(f"Winner margin weak ({sel.winner_margin:.2f} < {BLUEPRINT_ACCEPT_MARGIN})")
         if has_severe_warnings:
             reasons.append("Severe warnings present")
 

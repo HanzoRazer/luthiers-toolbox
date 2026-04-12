@@ -55,6 +55,206 @@ except ImportError:
 
 logger = logging.getLogger(__name__)
 
+# Debug overlay (optional, triggered by DEBUG_CONTOURS=1)
+try:
+    from contour_debug_overlay import (
+        is_debug_enabled,
+        ContourDebugNode,
+        DebugContourScore,
+        score_body_candidates_for_debug,
+        to_debug_summary,
+        write_debug_bundle,
+    )
+    DEBUG_OVERLAY_AVAILABLE = True
+except ImportError:
+    DEBUG_OVERLAY_AVAILABLE = False
+
+
+# ─── Hierarchy Isolation Helpers ────────────────────────────────────────────
+
+
+def _touches_border(
+    contour: np.ndarray,
+    image_width: int,
+    image_height: int,
+    margin_px: int = 3,
+) -> Tuple[bool, int]:
+    """Check if contour touches image border. Returns (touches, edge_count 0-4)."""
+    if contour is None or len(contour) < 3:
+        return False, 0
+
+    x, y, w, h = cv2.boundingRect(contour)
+    edges = 0
+    if x <= margin_px:
+        edges += 1
+    if y <= margin_px:
+        edges += 1
+    if x + w >= image_width - margin_px:
+        edges += 1
+    if y + h >= image_height - margin_px:
+        edges += 1
+
+    return edges > 0, edges
+
+
+def _is_page_border(edge_count: int, area_ratio: float) -> bool:
+    """Detect page border: 3+ edges OR (2+ edges AND area > 70%)."""
+    if edge_count >= 3:
+        return True
+    if edge_count >= 2 and area_ratio > 0.70:
+        return True
+    return False
+
+
+def _centrality_score(
+    contour: np.ndarray,
+    image_width: int,
+    image_height: int,
+) -> float:
+    """Score how centered the contour is (0.0 = edge, 1.0 = center)."""
+    if contour is None or len(contour) < 3:
+        return 0.0
+
+    x, y, w, h = cv2.boundingRect(contour)
+    cx, cy = x + w / 2, y + h / 2
+    img_cx, img_cy = image_width / 2, image_height / 2
+
+    dx = abs(cx - img_cx) / (image_width / 2)
+    dy = abs(cy - img_cy) / (image_height / 2)
+    offset = (dx + dy) / 2
+
+    return float(max(0.0, 1.0 - offset))
+
+
+def _build_debug_nodes_from_hierarchy(
+    contours: list,
+    hierarchy: np.ndarray,
+    image_width: int,
+    image_height: int,
+) -> list:
+    """
+    Build ContourDebugNode list from raw OpenCV hierarchy.
+
+    Used for debug visualization only - does not affect production path.
+    """
+    if not DEBUG_OVERLAY_AVAILABLE:
+        return []
+
+    if hierarchy is None or len(contours) == 0:
+        return []
+
+    # Normalize hierarchy shape
+    if len(hierarchy.shape) == 3:
+        hierarchy = hierarchy[0]
+
+    image_area = float(image_width * image_height)
+    nodes = []
+
+    for idx, contour in enumerate(contours):
+        if contour is None or len(contour) < 3:
+            continue
+
+        # Hierarchy: [next, prev, first_child, parent]
+        parent_idx = int(hierarchy[idx][3]) if hierarchy[idx][3] >= 0 else None
+
+        area = float(cv2.contourArea(contour))
+        area_ratio = area / image_area
+        bbox = cv2.boundingRect(contour)
+
+        _, edge_count = _touches_border(contour, image_width, image_height)
+        page_border = _is_page_border(edge_count, area_ratio)
+
+        # Classify
+        is_outer_candidate = False
+        is_child_feature = False
+        reject_reason = ""
+
+        if page_border:
+            reject_reason = "page_border"
+        elif area_ratio < 0.005:
+            reject_reason = "too_small"
+        elif area_ratio > 0.95:
+            reject_reason = "too_large"
+        elif parent_idx is not None:
+            is_child_feature = True
+        else:
+            is_outer_candidate = True
+
+        node = ContourDebugNode(
+            idx=idx,
+            contour=contour,
+            parent_idx=parent_idx,
+            depth=0 if parent_idx is None else 1,
+            area=area,
+            bbox=bbox,
+            touches_border_edges=edge_count,
+            is_page_border=page_border,
+            is_outer_candidate=is_outer_candidate,
+            is_child_feature=is_child_feature,
+            reject_reason=reject_reason,
+        )
+        nodes.append(node)
+
+    return nodes
+
+
+def _isolate_body_contours(
+    contours: list,
+    hierarchy: np.ndarray,
+    image_width: int,
+    image_height: int,
+    min_area_ratio: float = 0.005,
+    max_area_ratio: float = 0.95,
+) -> list:
+    """
+    Filter contours to body candidates using hierarchy.
+
+    Returns only top-level contours that:
+    - Are not page borders
+    - Are not too small or too large
+    - Are not children of other contours
+    """
+    if hierarchy is None or len(contours) == 0:
+        return contours
+
+    # Normalize hierarchy shape
+    if len(hierarchy.shape) == 3:
+        hierarchy = hierarchy[0]
+
+    image_area = float(image_width * image_height)
+    candidates = []
+
+    for idx, contour in enumerate(contours):
+        if contour is None or len(contour) < 3:
+            continue
+
+        # Check parent (hierarchy[idx][3]): -1 means top-level
+        parent_idx = int(hierarchy[idx][3])
+        if parent_idx >= 0:
+            # Has parent = child contour, skip
+            continue
+
+        area = float(cv2.contourArea(contour))
+        area_ratio = area / image_area
+
+        # Size filters
+        if area_ratio < min_area_ratio:
+            continue
+        if area_ratio > max_area_ratio:
+            continue
+
+        # Page border filter
+        _, edge_count = _touches_border(contour, image_width, image_height)
+        if _is_page_border(edge_count, area_ratio):
+            continue
+
+        candidates.append(contour)
+
+    logger.info(
+        f"Hierarchy isolation: {len(contours)} contours -> {len(candidates)} body candidates"
+    )
+    return candidates
+
 
 @dataclass
 class EdgeToDXFResult:
@@ -130,6 +330,7 @@ class EdgeToDXF:
         target_height_mm: float = 500.0,
         blur_kernel: int = 3,
         morph_close_kernel: int = 0,
+        isolate_body: bool = False,
     ) -> EdgeToDXFResult:
         """
         Convert image edges to DXF LINE entities.
@@ -140,6 +341,8 @@ class EdgeToDXF:
             target_height_mm: Target height in mm for scaling
             blur_kernel: Gaussian blur kernel size (0 to disable)
             morph_close_kernel: Morphological close kernel (0 to disable)
+            isolate_body: If True, use hierarchy to filter to body candidates only.
+                Removes page borders, child contours, and noise before DXF creation.
 
         Returns:
             EdgeToDXFResult with conversion statistics
@@ -199,11 +402,73 @@ class EdgeToDXF:
         # Stage: Contour tracing
         t0 = time.time()
         logger.info("Tracing contours from edge image...")
-        contours, _ = cv2.findContours(edges, cv2.RETR_LIST, cv2.CHAIN_APPROX_NONE)
 
-        # Filter degenerate contours (< 3 points)
-        valid_contours = [c for c in contours if len(c) >= 3]
-        logger.info(f"Found {len(contours)} contours, {len(valid_contours)} valid (>= 3 points)")
+        if isolate_body:
+            # Use RETR_TREE to get hierarchy for body isolation
+            logger.info("Using hierarchy-aware isolation mode")
+            contours, hierarchy = cv2.findContours(
+                edges, cv2.RETR_TREE, cv2.CHAIN_APPROX_NONE
+            )
+            # Filter to body candidates using hierarchy
+            valid_contours = _isolate_body_contours(
+                contours, hierarchy, w, h,
+                min_area_ratio=0.005,
+                max_area_ratio=0.95,
+            )
+
+            # Debug overlay (if DEBUG_CONTOURS=1)
+            if DEBUG_OVERLAY_AVAILABLE and is_debug_enabled():
+                try:
+                    logger.info("Generating debug overlay...")
+                    debug_nodes = _build_debug_nodes_from_hierarchy(
+                        contours, hierarchy, w, h
+                    )
+
+                    # Score candidates for debug visualization
+                    candidates = [n for n in debug_nodes if n.is_outer_candidate]
+                    score_map, selected_idx, runner_up, margin = \
+                        score_body_candidates_for_debug(candidates, w, h)
+
+                    # Hydrate scores onto nodes
+                    for node in debug_nodes:
+                        if node.idx in score_map:
+                            node.score = score_map[node.idx].score
+
+                    # Determine recommendation for display
+                    if margin >= 0.12 and score_map.get(selected_idx, DebugContourScore(0, 0)).score >= 0.70:
+                        rec = "accept"
+                    elif score_map.get(selected_idx, DebugContourScore(0, 0)).score >= 0.45:
+                        rec = "review"
+                    else:
+                        rec = "reject"
+
+                    summary = to_debug_summary(
+                        source_name=str(source),
+                        candidate_count=len(candidates),
+                        selected_idx=selected_idx,
+                        selection_score=score_map.get(selected_idx, DebugContourScore(0, 0)).score if selected_idx else 0.0,
+                        runner_up_score=runner_up,
+                        winner_margin=margin,
+                        recommendation=rec,
+                        notes=[f"Total contours: {len(contours)}", f"Body candidates: {len(valid_contours)}"],
+                    )
+
+                    # Write debug bundle
+                    out_dir = Path(output_path).parent if output_path else Path(".")
+                    paths = write_debug_bundle(img, debug_nodes, summary, out_dir)
+                    logger.info(f"Debug overlay written: {paths['overlay']}")
+                    stage_timings["debug_overlay_ms"] = round((time.time() - t0) * 1000, 1)
+
+                except Exception as e:
+                    logger.warning(f"Debug overlay failed (non-fatal): {e}")
+
+        else:
+            # Original behavior: all contours
+            contours, _ = cv2.findContours(edges, cv2.RETR_LIST, cv2.CHAIN_APPROX_NONE)
+            # Filter degenerate contours (< 3 points)
+            valid_contours = [c for c in contours if len(c) >= 3]
+
+        logger.info(f"Found {len(contours)} contours, {len(valid_contours)} valid")
         stage_timings["contour_trace_ms"] = round((time.time() - t0) * 1000, 1)
 
         if not valid_contours:

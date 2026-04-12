@@ -84,12 +84,6 @@ class PhotoResult:
     recommendation: Recommendation = field(default_factory=Recommendation)
     metrics: dict[str, Any] = field(default_factory=dict)
     debug: dict[str, Any] = field(default_factory=dict)
-    # Pass-through fields for router legacy mapping (deprecated)
-    export_blocked: bool = False
-    export_block_reason: str = ""
-    scale_source: str = ""
-    bg_method: str = ""
-    perspective_corrected: bool = False
 
     def to_response_dict(self, include_debug: bool = False) -> dict[str, Any]:
         """Convert to API response dictionary (canonical schema only)."""
@@ -397,6 +391,9 @@ class PhotoOrchestrator:
                     recommendation=rec,
                     metrics={
                         "processing_ms": float(getattr(result, "processing_time_ms", 0.0) or 0.0),
+                        "scale_source": scale_src,
+                        "bg_method": getattr(result, "bg_method_used", "none"),
+                        "perspective_corrected": getattr(result, "perspective_corrected", False),
                     },
                     debug={
                         "ownership_score": ownership_score,
@@ -407,12 +404,6 @@ class PhotoOrchestrator:
                         "recommendation_action": rec.action.value,
                         "recommendation_confidence": rec.confidence,
                     } if debug else {},
-                    # Pass-through for router legacy mapping (deprecated)
-                    export_blocked=export_blocked,
-                    export_block_reason=export_block_reason,
-                    scale_source=scale_src,
-                    bg_method=getattr(result, "bg_method_used", "none"),
-                    perspective_corrected=getattr(result, "perspective_corrected", False),
                 )
 
         except PhotoOrchestratorError as e:

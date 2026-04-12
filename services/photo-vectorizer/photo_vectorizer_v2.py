@@ -4623,6 +4623,9 @@ class PhotoVectorizerV2:
         Stage 4: Export
 
         The key insight: AI images give us SHAPE, user gives us TRUTH (dimensions).
+
+        If no spec_name is provided, extraction proceeds with unscaled pixel
+        coordinates. The recommendation layer handles the uncertainty.
         """
         start_time = time.time()
         result = PhotoExtractionResult(source_path=str(source))
@@ -4630,47 +4633,49 @@ class PhotoVectorizerV2:
 
         # Get spec for scaling (uses body_dimension_reference.json with 14 specs)
         spec = get_ai_spec(spec_name) if spec_name else None
+        is_unscaled = spec is None
 
-        if spec is None:
+        if is_unscaled:
             ai_specs = _load_ai_specs()
             result.warnings.append(
-                f"AI path requires spec_name for scaling. "
-                f"Available: {list(ai_specs.keys())}"
+                f"No spec provided — proceeding with unscaled extraction. "
+                f"Available specs: {list(ai_specs.keys())}"
             )
-            return result
+            logger.info("AI path: no spec_name, proceeding unscaled")
 
         # Auto-rotate if image orientation doesn't match spec orientation
-        # (e.g., landscape image but portrait spec, or vice versa)
+        # (only when spec is available)
         extract_source = source
-        try:
-            from PIL import Image as PILImage
-            with PILImage.open(source) as img:
-                img_w, img_h = img.size
-                img_aspect = img_w / img_h  # >1 = landscape, <1 = portrait
-                spec_height, spec_width = spec["body"]  # (length_mm, width_mm)
-                spec_aspect = spec_width / spec_height  # >1 = landscape, <1 = portrait
+        if spec is not None:
+            try:
+                from PIL import Image as PILImage
+                with PILImage.open(source) as img:
+                    img_w, img_h = img.size
+                    img_aspect = img_w / img_h  # >1 = landscape, <1 = portrait
+                    spec_height, spec_width = spec["body"]  # (length_mm, width_mm)
+                    spec_aspect = spec_width / spec_height  # >1 = landscape, <1 = portrait
 
-                # If orientations differ (one landscape, one portrait), rotate 90°
-                img_is_landscape = img_aspect > 1.0
-                spec_is_landscape = spec_aspect > 1.0
+                    # If orientations differ (one landscape, one portrait), rotate 90°
+                    img_is_landscape = img_aspect > 1.0
+                    spec_is_landscape = spec_aspect > 1.0
 
-                if img_is_landscape != spec_is_landscape:
-                    logger.info(f"AI path: auto-rotating image (img_aspect={img_aspect:.2f}, spec_aspect={spec_aspect:.2f})")
-                    rotated = img.rotate(-90, expand=True)
-                    # Save to temp file
-                    import tempfile
-                    fd, temp_path = tempfile.mkstemp(suffix=source.suffix)
-                    os.close(fd)
-                    rotated.save(temp_path)
-                    extract_source = Path(temp_path)
-                    result.warnings.append(
-                        f"Auto-rotated: image was {'landscape' if img_is_landscape else 'portrait'}, "
-                        f"spec expects {'landscape' if spec_is_landscape else 'portrait'}"
-                    )
-        except Exception as e:
-            logger.warning(f"AI path: auto-rotate check failed: {e}")
+                    if img_is_landscape != spec_is_landscape:
+                        logger.info(f"AI path: auto-rotating image (img_aspect={img_aspect:.2f}, spec_aspect={spec_aspect:.2f})")
+                        rotated = img.rotate(-90, expand=True)
+                        # Save to temp file
+                        import tempfile
+                        fd, temp_path = tempfile.mkstemp(suffix=source.suffix)
+                        os.close(fd)
+                        rotated.save(temp_path)
+                        extract_source = Path(temp_path)
+                        result.warnings.append(
+                            f"Auto-rotated: image was {'landscape' if img_is_landscape else 'portrait'}, "
+                            f"spec expects {'landscape' if spec_is_landscape else 'portrait'}"
+                        )
+            except Exception as e:
+                logger.warning(f"AI path: auto-rotate check failed: {e}")
 
-        # Extract using AIToCADExtractor
+        # Extract using AIToCADExtractor (always runs)
         extractor = AIToCADExtractor(debug=debug_images)
         shape = extractor.extract_shape(str(extract_source))
 
@@ -4678,51 +4683,65 @@ class PhotoVectorizerV2:
             result.warnings.append("AI extraction failed: no shape found")
             return result
 
-        # Validate shape
-        validator = ShapeValidator()
-        validation = validator.validate(shape, spec["body"])
+        # Validate shape (only when spec available)
+        validation = None
+        if spec is not None:
+            validator = ShapeValidator()
+            validation = validator.validate(shape, spec["body"])
+            if not validation.passed:
+                result.warnings.extend(validation.warnings)
+                # Continue anyway — let user see what we found
 
-        if not validation.passed:
-            result.warnings.extend(validation.warnings)
-            # Continue anyway — let user see what we found
+        # Scale to spec dimensions OR use unscaled pixel coordinates
+        if spec is not None:
+            # Scaled path: use spec dimensions
+            target_height = spec["body"][0]
+            target_width = spec["body"][1]
+            export_contour, scale_warnings = shape.scale_to(target_height, target_width)
+            result.warnings.extend(scale_warnings)
+            result.body_dimensions_mm = (target_height, target_width)
 
-        # Scale to spec dimensions (body is a tuple: (length_mm, width_mm))
-        target_height = spec["body"][0]
-        target_width = spec["body"][1]
-        scaled_contour, scale_warnings = shape.scale_to(target_height, target_width)
-        result.warnings.extend(scale_warnings)
-
-        # Build body dimensions from spec (we trust user's spec)
-        result.body_dimensions_mm = (target_height, target_width)
-
-        # Create calibration result (synthetic — based on scaling)
-        scale_factor = target_height / shape.height_px
-        calibration = CalibrationResult(
-            mm_per_px=scale_factor,
-            source=ScaleSource.INSTRUMENT_SPEC,
-            confidence=validation.overall_confidence,
-        )
-        result.calibration = calibration
+            # Create calibration result (synthetic — based on scaling)
+            scale_factor = target_height / shape.height_px
+            result.calibration = CalibrationResult(
+                mm_per_px=scale_factor,
+                source=ScaleSource.INSTRUMENT_SPEC,
+                confidence=validation.overall_confidence if validation else 0.5,
+            )
+            log_dims = f"{target_height:.1f} x {target_width:.1f} mm"
+        else:
+            # Unscaled path: use pixel coordinates as-is
+            export_contour = shape.contour  # Raw pixel contour
+            result.body_dimensions_mm = (0.0, 0.0)  # No dimensions without spec
+            result.calibration = CalibrationResult(
+                mm_per_px=1.0,  # 1:1 pixel
+                source=ScaleSource.NONE,  # No scaling without spec
+                confidence=0.0,
+            )
+            result.warnings.append(
+                "Unscaled AI extraction — dimensions unavailable without spec calibration"
+            )
+            log_dims = f"{shape.height_px} x {shape.width_px} px (unscaled)"
 
         # Build feature contour
         body_contour = FeatureContour(
             points_px=shape.contour,
-            points_mm=scaled_contour,
+            points_mm=export_contour if spec else shape.contour,
             feature_type=FeatureType.BODY_OUTLINE,
             confidence=shape.confidence,
             area_px=shape.area_px,
         )
 
-        # Export
+        # Export (uses export_contour which is scaled or unscaled)
         if export_svg:
             svg_path = str(out_dir / f"{source.stem}_ai_v3.svg")
-            _write_ai_svg(scaled_contour, svg_path)
+            _write_ai_svg(export_contour, svg_path)
             result.output_svg = svg_path
             logger.info(f"AI SVG written: {svg_path}")
 
         if export_dxf:
             dxf_path = str(out_dir / f"{source.stem}_ai_v3.dxf")
-            contours_by_layer = {"BODY_OUTLINE": [scaled_contour]}
+            contours_by_layer = {"BODY_OUTLINE": [export_contour]}
             if write_dxf(contours_by_layer, dxf_path, self.dxf_version):
                 result.output_dxf = dxf_path
                 logger.info(f"AI DXF written: {dxf_path}")
@@ -4736,10 +4755,7 @@ class PhotoVectorizerV2:
                 result.debug_images["ai_extraction"] = debug_path
 
         result.processing_time_ms = (time.time() - start_time) * 1000
-        logger.info(
-            f"AI path done in {result.processing_time_ms:.0f}ms: "
-            f"{target_height:.1f} x {target_width:.1f} mm"
-        )
+        logger.info(f"AI path done in {result.processing_time_ms:.0f}ms: {log_dims}")
 
         return result
 

@@ -200,6 +200,7 @@ def extract_blueprint_to_dxf(
     canny_high: int = 150,
     adjacency: float = 3.0,
     warnings: Optional[list[str]] = None,
+    isolate_body: bool = True,
 ) -> ExtractionResult:
     """
     Run edge-to-DXF conversion on an image file.
@@ -216,6 +217,8 @@ def extract_blueprint_to_dxf(
         canny_high: Canny edge detection high threshold
         adjacency: Max pixel distance to connect edges
         warnings: List to append warning messages to
+        isolate_body: Use hierarchy to filter to body candidates only.
+            Removes page borders, child contours, and noise. Default: True.
 
     Returns:
         ExtractionResult with success status and metrics
@@ -253,6 +256,7 @@ def extract_blueprint_to_dxf(
             source_path,
             output_path=output_path,
             target_height_mm=target_height_mm,
+            isolate_body=isolate_body,
         )
 
         return ExtractionResult(
