@@ -99,27 +99,26 @@ async def _run_blueprint_job(
 
         payload = result.to_response_dict(include_debug=debug)
 
+        # Orchestrator completed successfully (regardless of recommendation)
+        # JobStatus = execution outcome, payload.ok = product outcome
+        job_store.update(
+            job_id,
+            status=JobStatus.COMPLETE,
+            stage=result.stage,
+            progress=100,
+            result=payload,
+            debug=payload.get("debug") or {},
+        )
+
         if result.ok:
-            job_store.update(
-                job_id,
-                status=JobStatus.COMPLETE,
-                stage="complete",
-                progress=100,
-                result=payload,
-                debug=payload.get("debug") or {},
-            )
-            logger.info(f"BLUEPRINT_JOB_COMPLETE | job_id={job_id}")
+            logger.info(f"BLUEPRINT_JOB_COMPLETE_ACCEPT | job_id={job_id}")
         else:
-            job_store.update(
-                job_id,
-                status=JobStatus.FAILED,
-                stage=result.stage,
-                progress=100,
-                error=result.error,
-                result=payload,
-                debug=payload.get("debug") or {},
+            # Non-accept is still a successful job execution
+            rec_action = payload.get("recommendation", {}).get("action", "unknown")
+            logger.info(
+                f"BLUEPRINT_JOB_COMPLETE_NONACCEPT | job_id={job_id} "
+                f"recommendation={rec_action} stage={result.stage}"
             )
-            logger.warning(f"BLUEPRINT_JOB_FAILED | job_id={job_id} error={result.error}")
 
     except Exception as e:
         logger.exception(f"BLUEPRINT_JOB_ERROR | job_id={job_id}")
