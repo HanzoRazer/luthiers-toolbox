@@ -4,6 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Blueprint Reader — The Production Shop</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' fill='%230f0f0f'/><path d='M6 6h20v20H6z' fill='none' stroke='%23f59e0b' stroke-width='2'/><path d='M6 6l20 20M26 6l-20 20' stroke='%23f59e0b' stroke-width='1'/></svg>">
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -434,6 +435,31 @@
       color: #555;
     }
 
+    /* Progress bar */
+    #progressBar {
+      background: #2a2a2a;
+      border-radius: 4px;
+      height: 4px;
+      margin: 0.5rem 0;
+      position: relative;
+    }
+
+    #progressFill {
+      background: #f59e0b;
+      height: 100%;
+      border-radius: 4px;
+      width: 0%;
+      transition: width 0.3s;
+    }
+
+    #progressText {
+      position: absolute;
+      right: 0;
+      top: -20px;
+      font-size: 0.7rem;
+      color: #888;
+    }
+
     @media (max-width: 600px) {
       .controls {
         grid-template-columns: 1fr;
@@ -504,6 +530,13 @@
 
     <div class="status" id="status"></div>
 
+    <div id="progressBar" style="display:none">
+      <div id="progressFill"></div>
+      <span id="progressText">Processing...</span>
+    </div>
+
+    <button id="retryBtn" class="btn btn-secondary" style="display:none">↺ Retry</button>
+
     <div class="dimensions" id="dimensions">
       <h3>Extracted Dimensions</h3>
       <div class="dim-grid">
@@ -550,6 +583,14 @@
   <script>
     const API_BASE = 'https://luthiers-toolbox-production.up.railway.app';
 
+    // Timeouts for each operation
+    const TIMEOUTS = {
+      blueprint: 90000,   // 90s for edge-to-dxf
+      photo: 120000,      // 120s for vectorizer
+      clean: 60000,       // 60s for clean
+      download: 30000     // 30s for download
+    };
+
     // Elements
     const uploadZone = document.getElementById('uploadZone');
     const fileInput = document.getElementById('fileInput');
@@ -560,6 +601,7 @@
     const sourceType = document.getElementById('sourceType');
     const specName = document.getElementById('specName');
     const extractBtn = document.getElementById('extractBtn');
+    const retryBtn = document.getElementById('retryBtn');
     const status = document.getElementById('status');
     const dimensions = document.getElementById('dimensions');
     const previewSection = document.getElementById('previewSection');
@@ -567,10 +609,241 @@
     const downloadSvg = document.getElementById('downloadSvg');
     const downloadDxf = document.getElementById('downloadDxf');
     const modeBadge = document.getElementById('modeBadge');
+    const progressBar = document.getElementById('progressBar');
+    const progressFill = document.getElementById('progressFill');
+    const progressText = document.getElementById('progressText');
 
     let selectedFile = null;
     let extractedData = null;
-    let routeMode = 'blueprint';  // 'blueprint' or 'photo'
+    let routeMode = 'blueprint';
+    let progressInterval = null;
+    let retryAttempt = 0;
+    const MAX_RETRIES = 3;
+
+    // Unified artifact helpers
+    function buildSvgFromPath(pathD, widthMm, heightMm) {
+      if (!pathD || typeof pathD !== 'string' || !pathD.trim()) return null;
+      // Use actual dimensions for proper aspect ratio
+      const w = widthMm || 500;
+      const h = heightMm || 500;
+      return `<svg viewBox="0 0 ${w} ${h}" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg">
+        <rect width="${w}" height="${h}" fill="#1a1a1a"/>
+        <path d="${pathD}" fill="none" stroke="#f59e0b" stroke-width="1.5" vector-effect="non-scaling-stroke"/>
+      </svg>`;
+    }
+
+    function getArtifacts(data, mode) {
+      if (!data || typeof data !== 'object') {
+        return { hasSvg: false, hasDxf: false, svgContent: null, warnings: [] };
+      }
+
+      let svgContent = null;
+      let hasDxf = false;
+
+      if (mode === 'photo') {
+        // Use body dimensions for proper scaling
+        const widthMm = data.body_width_mm || 500;
+        const heightMm = data.body_height_mm || 500;
+        svgContent = data.svg_content || buildSvgFromPath(data.svg_path_d, widthMm, heightMm);
+        hasDxf = !!(data.dxf_base64 || data.dxf_content || data.dxf_path);
+      } else if (mode === 'blueprint') {
+        // New consolidated endpoint returns artifacts.svg.content and artifacts.dxf.base64
+        if (data.artifacts?.svg?.content) {
+          svgContent = data.artifacts.svg.content;
+        } else {
+          // Legacy fallback
+          svgContent = data.svg_preview || null;
+        }
+        hasDxf = !!(data.artifacts?.dxf?.base64 || data.download_filename || data.dxf_path);
+      }
+
+      return {
+        hasSvg: !!svgContent,
+        hasDxf,
+        svgContent,
+        warnings: Array.isArray(data.warnings) ? data.warnings : []
+      };
+    }
+
+    function renderSvgPreview(svgContent) {
+      if (!svgContent) return false;
+      setArtifactProgress('renderSvg', 92);
+      previewContainer.innerHTML = svgContent;
+      previewSection.classList.add('visible');
+      downloadSvg.disabled = false;
+      return true;
+    }
+
+    function resetPreviewState(message = 'Preview will appear here') {
+      previewContainer.innerHTML = `<span style="color: #555;">${message}</span>`;
+      downloadSvg.disabled = true;
+    }
+
+    function showWarnings(warnings) {
+      if (!warnings || !warnings.length) return;
+      let warningBox = document.getElementById('warningBox');
+      if (!warningBox) {
+        warningBox = document.createElement('div');
+        warningBox.id = 'warningBox';
+        warningBox.className = 'status visible';
+        status.after(warningBox);
+      }
+      warningBox.textContent = `Warnings: ${warnings.join(' | ')}`;
+    }
+
+    function showPartialSuccess(message) {
+      showStatus(message, 'error');
+    }
+
+    function requireBothArtifacts(artifacts, dxfAvailable, stage = 'Extraction') {
+      const hasSvg = !!artifacts?.hasSvg;
+      const hasDxf = !!dxfAvailable;
+
+      if (hasSvg && hasDxf) return;
+
+      const missing = [
+        !hasSvg ? 'SVG' : null,
+        !hasDxf ? 'DXF' : null
+      ].filter(Boolean).join(' and ');
+
+      resetPreviewState(`${stage} failed: missing ${missing}.`);
+      previewSection.classList.add('visible');
+      downloadSvg.disabled = true;
+      downloadDxf.disabled = true;
+      throw new Error(`${stage} failed: required output missing (${missing}). Both SVG and DXF must be generated.`);
+    }
+
+    // Fetch with timeout and AbortController
+    // Returns { response, aborted } to detect late aborts
+    async function fetchWithTimeout(url, options, timeoutMs) {
+      const controller = new AbortController();
+      let aborted = false;
+      const id = setTimeout(() => {
+        aborted = true;
+        controller.abort();
+      }, timeoutMs);
+
+      try {
+        const response = await fetch(url, { ...options, signal: controller.signal });
+        clearTimeout(id);
+        return { response, aborted };
+      } catch (err) {
+        clearTimeout(id);
+        // Only treat as abort if we actually aborted
+        if (aborted && err.name === 'AbortError') {
+          throw err;
+        }
+        throw err;
+      }
+    }
+
+    // Error handler with AbortError detection
+    function handleError(err) {
+      hideProgress();
+      if (err.name === 'AbortError') {
+        showStatus('Processing timed out. Try a smaller image.', 'error');
+      } else {
+        showStatus(err.message, 'error');
+      }
+      retryBtn.style.display = 'inline-block';
+      console.error(err);
+    }
+
+    // Progress bar helpers
+    function showProgress(text) {
+      progressBar.style.display = 'block';
+      progressFill.style.width = '0%';
+      progressText.textContent = text || 'Processing...';
+    }
+
+    function updateProgress(percent, text) {
+      progressFill.style.width = `${Math.min(percent, 100)}%`;
+      if (text) progressText.textContent = text;
+    }
+
+    function setArtifactProgress(stage, percent) {
+      const labels = {
+        upload: 'Uploading source...',
+        extract: 'Extracting contours...',
+        filter: 'Filtering body outline...',
+        renderSvg: 'Rendering SVG preview...',
+        renderDxf: 'Preparing DXF export...',
+        validate: 'Validating outputs...'
+      };
+      updateProgress(percent, labels[stage] || 'Processing...');
+    }
+
+    function hideProgress() {
+      if (progressInterval) {
+        clearInterval(progressInterval);
+        progressInterval = null;
+      }
+      progressBar.style.display = 'none';
+    }
+
+    function startProgressSimulation() {
+      let percent = 0;
+      progressInterval = setInterval(() => {
+        percent = Math.min(percent + 5, 90);
+        updateProgress(percent);
+      }, 1000);
+    }
+
+    function completeProgress() {
+      if (progressInterval) clearInterval(progressInterval);
+      updateProgress(100);
+      progressText.textContent = 'Complete';
+      setTimeout(hideProgress, 1000);
+    }
+
+    // localStorage persistence with try/catch
+    function loadSettings() {
+      try {
+        const savedSpec = localStorage.getItem('blueprint_reader_spec');
+        const savedSource = localStorage.getItem('blueprint_reader_source_type');
+        const savedMode = localStorage.getItem('blueprint_reader_mode');
+        if (savedSpec) specName.value = savedSpec;
+        if (savedSource) sourceType.value = savedSource;
+        if (savedMode) {
+          routeMode = savedMode;
+          updateModeBadge();
+        }
+      } catch (e) { /* localStorage unavailable */ }
+    }
+
+    function saveSettings() {
+      try {
+        localStorage.setItem('blueprint_reader_spec', specName.value);
+        localStorage.setItem('blueprint_reader_source_type', sourceType.value);
+        localStorage.setItem('blueprint_reader_mode', routeMode);
+      } catch (e) { /* localStorage unavailable */ }
+    }
+
+    // Load settings on startup
+    loadSettings();
+
+    // Save settings on change
+    specName.addEventListener('change', saveSettings);
+    sourceType.addEventListener('change', saveSettings);
+
+    // Retry button handler
+    retryBtn.addEventListener('click', async () => {
+      retryBtn.style.display = 'none';
+      retryAttempt++;
+
+      if (retryAttempt > MAX_RETRIES) {
+        showStatus(`Max retries (${MAX_RETRIES}) reached. Try a different file.`, 'error');
+        retryAttempt = 0;
+        return;
+      }
+
+      // Exponential backoff: 1s, 2s, 4s
+      const delay = Math.pow(2, retryAttempt - 1) * 1000;
+      showStatus(`Retrying (${retryAttempt}/${MAX_RETRIES}) in ${delay/1000}s...`);
+
+      await new Promise(r => setTimeout(r, delay));
+      extractBtn.click();
+    });
 
     // Toggle mode on badge click
     modeBadge.addEventListener('click', () => {
@@ -622,6 +895,8 @@
       downloadSvg.disabled = true;
       downloadDxf.disabled = true;
       fileInput.value = '';
+      document.getElementById('warningBox')?.remove();
+      resetPreviewState();
     });
 
     function handleFile(file) {
@@ -652,6 +927,8 @@
       dimensions.classList.remove('visible');
       previewSection.classList.remove('visible');
       extractedData = null;
+      document.getElementById('warningBox')?.remove();
+      resetPreviewState();
     }
 
     function formatFileSize(bytes) {
@@ -695,14 +972,25 @@
         btn.textContent = 'Filtering...';
 
         try {
-          const resp = await fetch(`${API_BASE}/api/blueprint/clean`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              dxf_filename: filename,
-              min_contour_length_mm: 50.0
-            })
-          });
+          // Send full dxf_path (not just filename) - works on Railway
+          // where _output_file_registry doesn't persist across workers
+          showProgress('Filtering contours...');
+          setArtifactProgress('filter', 75);
+
+          const { response: resp, aborted } = await fetchWithTimeout(
+            `${API_BASE}/api/blueprint/clean`,
+            {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                dxf_path: dxfPath,
+                min_contour_length_mm: 100.0
+              })
+            },
+            TIMEOUTS.clean
+          );
+
+          hideProgress();
 
           if (!resp.ok) {
             const err = await resp.text();
@@ -710,30 +998,57 @@
           }
 
           const result = await resp.json();
+
+          if (aborted) {
+            throw new Error('Request was cancelled');
+          }
           if (!result.success) {
             throw new Error(result.error || 'Clean failed');
           }
 
-          // Update extractedData with cleaned version
-          extractedData.dxf_path = result.dxf_path;
-          extractedData.dxf_b64_clean = result.dxf_b64;
+          // Store dxf_b64 directly (preferred) or download_filename (fallback)
+          if (result.dxf_b64) {
+            extractedData.dxf_b64_clean = result.dxf_b64;
+            console.log('Got dxf_b64 from clean endpoint:', result.dxf_b64.length, 'chars');
+          }
+          extractedData.download_filename = result.download_filename;
+          extractedData.svg_preview = result.svg_preview || null;
+
+          if (!result.contours_found || result.contours_found <= 0) {
+            resetPreviewState('Filtering removed all contours. No usable outline found.');
+            previewSection.classList.add('visible');
+            throw new Error('Filtering completed, but no contours survived cleanup. Both SVG and DXF are required.');
+          }
+
+          const artifacts = getArtifacts(result, 'blueprint');
+          const dxfAvailable = !!(result.dxf_b64 || result.download_filename);
+          requireBothArtifacts(artifacts, dxfAvailable, 'Filtering');
 
           // Update UI
           document.getElementById('dimContours').textContent =
-            `${result.cleaned_entity_count.toLocaleString()} (was ${result.original_entity_count.toLocaleString()})`;
+            `${result.contours_found} contours (was ${result.original_entity_count.toLocaleString()} lines)`;
+
+          setArtifactProgress('renderSvg', 92);
+          renderSvgPreview(artifacts.svgContent);
+          setArtifactProgress('renderDxf', 96);
+          downloadDxf.disabled = false;
+          downloadSvg.disabled = false;
 
           btn.textContent = `Filtered: ${result.contours_found} contours`;
           btn.classList.add('success');
 
-          // Enable DXF download now that we have inline base64
-          downloadDxf.disabled = false;
-
-          showStatus(`Cleaned: ${result.original_entity_count.toLocaleString()} → ${result.cleaned_entity_count.toLocaleString()} entities — DXF ready`, 'success');
+          const sizeInfo = result.file_size_kb ? ` (${result.file_size_kb.toFixed(1)} KB)` : '';
+          showStatus(`Cleaned: ${result.original_entity_count.toLocaleString()} → ${result.contours_found} contours${sizeInfo} — SVG and DXF ready`, 'success');
 
         } catch (err) {
+          hideProgress();
           btn.textContent = 'Filter Failed';
           btn.classList.add('error');
-          showStatus(err.message, 'error');
+          if (err.name === 'AbortError') {
+            showStatus('Filtering timed out. Try again.', 'error');
+          } else {
+            showStatus(err.message, 'error');
+          }
         }
       });
     }
@@ -742,66 +1057,154 @@
     extractBtn.addEventListener('click', async () => {
       if (!selectedFile) return;
 
+      const startTime = Date.now();
       extractBtn.disabled = true;
+      retryBtn.style.display = 'none';
       showStatus(`Extracting (${routeMode} mode)...`);
+      showProgress('Uploading source...');
+      setArtifactProgress('upload', 5);
+      startProgressSimulation();
+      document.getElementById('warningBox')?.remove();
+      resetPreviewState();
+      previewSection.classList.remove('visible');
+      downloadSvg.disabled = true;
+      downloadDxf.disabled = true;
 
       try {
         let response, data;
 
         if (routeMode === 'blueprint') {
-          // Blueprint mode: FormData upload to edge-to-dxf
+          // Blueprint mode: Async job submission + polling
           const formData = new FormData();
           formData.append('file', selectedFile);
           formData.append('target_height_mm', '500');
-          formData.append('return_file', 'false');
+          formData.append('min_contour_length_mm', '50');
+          formData.append('close_gaps_mm', '1.0');
+          formData.append('debug', 'false');
 
-          response = await fetch(`${API_BASE}/api/blueprint/edge-to-dxf/convert`, {
+          // Step 1: Submit async job
+          setArtifactProgress('extract', 10);
+          showStatus('Submitting blueprint job...', '');
+
+          const submitRes = await fetch(`${API_BASE}/api/blueprint/vectorize/async`, {
             method: 'POST',
-            body: formData
+            body: formData,
           });
 
-          if (!response.ok) {
-            const errorText = await response.text();
-            throw new Error(`API error: ${response.status} — ${errorText}`);
+          if (!submitRes.ok) {
+            const errorText = await submitRes.text();
+            throw new Error(`Submit failed: ${submitRes.status} — ${errorText}`);
           }
 
-          data = await response.json();
+          const submitData = await submitRes.json();
+          const jobId = submitData.job_id;
+
+          if (!jobId) {
+            throw new Error('No job_id returned from server');
+          }
+
+          showStatus(`Blueprint job accepted (${jobId.slice(0, 8)}...). Processing...`, '');
+
+          // Step 2: Poll for completion
+          const maxAttempts = 120; // ~10 minutes at 5s intervals
+          let pollResult = null;
+
+          for (let i = 0; i < maxAttempts; i++) {
+            await new Promise(r => setTimeout(r, 5000)); // 5 second intervals
+
+            const statusRes = await fetch(`${API_BASE}/api/blueprint/vectorize/status/${jobId}`);
+            if (!statusRes.ok) {
+              throw new Error(`Status check failed: ${statusRes.status}`);
+            }
+
+            const status = await statusRes.json();
+
+            // Update progress display
+            const progress = Math.min(10 + (status.progress || 0) * 0.85, 95);
+            setArtifactProgress('extract', progress);
+            showStatus(`Processing: ${status.stage || 'working'}... (${status.progress || 0}%)`, '');
+
+            if (status.status === 'complete') {
+              pollResult = status.result;
+              break;
+            }
+
+            if (status.status === 'failed') {
+              throw new Error(status.error || 'Blueprint job failed');
+            }
+          }
+
+          if (!pollResult) {
+            throw new Error('Blueprint job timed out after 10 minutes');
+          }
+
+          // Step 3: Process result (same as before)
+          data = pollResult;
           extractedData = data;
 
-          if (!data.success) {
-            throw new Error(data.error || 'Blueprint extraction failed');
+          // CRITICAL FIX: Render artifacts even when ok=false
+          // Selection confidence controls recommendation, NOT artifact rendering
+          // Only fail if truly no artifacts exist
+          const hasArtifacts = !!(data.artifacts?.svg?.present || data.artifacts?.dxf?.present);
+          if (!data.ok && !hasArtifacts) {
+            throw new Error(data.error || 'Blueprint extraction failed — no artifacts generated');
           }
 
-          // Map edge-to-dxf response to common format
-          const timeMs = data.processing_time_ms || 0;
-          const lineCount = data.line_count || 0;
-          showStatus(`Extraction complete in ${(timeMs / 1000).toFixed(2)}s — ${lineCount.toLocaleString()} lines`, 'success');
+          setArtifactProgress('extract', 70);
+          const entityCount = data.artifacts?.dxf?.entity_count || 0;
+          const closedContours = data.artifacts?.dxf?.closed_contours || 0;
 
           document.getElementById('dimWidth').textContent =
-            data.output_size_mm?.[0] ? `${data.output_size_mm[0].toFixed(1)} mm` : '—';
+            data.dimensions?.width_mm ? `${data.dimensions.width_mm.toFixed(1)} mm` : '—';
           document.getElementById('dimHeight').textContent =
-            data.output_size_mm?.[1] ? `${data.output_size_mm[1].toFixed(1)} mm` : '—';
-          document.getElementById('dimContours').textContent = lineCount.toLocaleString();
-          document.getElementById('dimScale').textContent = `${data.mm_per_px?.toFixed(4) || '—'} mm/px`;
+            data.dimensions?.height_mm ? `${data.dimensions.height_mm.toFixed(1)} mm` : '—';
+          document.getElementById('dimContours').textContent = closedContours > 0
+            ? `${closedContours} contours (${entityCount} entities)`
+            : entityCount.toLocaleString();
+          document.getElementById('dimScale').textContent = data.stage || 'complete';
           dimensions.classList.add('visible');
 
-          // Blueprint mode: DXF requires filtering first (static file serving
-          // doesn't work on stateless Railway containers)
-          if (data.dxf_path) {
-            // Store for filter endpoint
-            extractedData.dxf_path = data.dxf_path;
-            // Show filter note — filtering returns inline base64 which works
-            showFilterNote(lineCount, data.dxf_path);
+          // SVG and DXF are returned inline
+          const artifacts = getArtifacts(data, 'blueprint');
+          const dxfAvailable = !!(data.artifacts?.dxf?.base64);
+          previewSection.classList.add('visible');
+
+          requireBothArtifacts(artifacts, dxfAvailable, 'Extraction');
+
+          setArtifactProgress('renderSvg', 92);
+          renderSvgPreview(artifacts.svgContent);
+          setArtifactProgress('renderDxf', 96);
+          downloadDxf.disabled = false;
+          downloadSvg.disabled = false;
+
+          // Show warnings and recommendation status
+          if (data.warnings?.length) {
+            showWarnings(data.warnings);
+          }
+
+          const elapsedSec = (Date.now() - startTime) / 1000;
+
+          // Show appropriate status based on recommendation
+          if (!data.ok && hasArtifacts) {
+            // Best-effort output with review recommendation
+            const recAction = data.recommendation?.action || 'review';
+            const recReasons = data.recommendation?.reasons?.join('; ') || data.error || 'Low confidence selection';
+            showStatus(
+              `Best-effort extraction (${recAction}) — ${entityCount} entities. Review before fabrication: ${recReasons}`,
+              'warning'
+            );
+          } else {
+            showStatus(`Extraction complete in ${elapsedSec.toFixed(2)}s — ${entityCount} entities, SVG and DXF generated`, 'success');
           }
 
         } else {
           // Photo mode: JSON base64 to photo vectorizer
           // Resize large images to prevent OOM
-          showStatus('Processing image...');
+          let requestComplete = false;
           const base64 = await resizeImageIfNeeded(selectedFile);
 
           if (imageWasResized) {
-            showStatus(`Image resized to max ${MAX_IMAGE_DIM}px for processing...`);
+            updateProgress(15, `Image resized to max ${MAX_IMAGE_DIM}px`);
           }
 
           const requestBody = {
@@ -815,11 +1218,18 @@
             requestBody.spec_name = specName.value;
           }
 
-          response = await fetch(`${API_BASE}/api/vectorizer/extract`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(requestBody)
-          });
+          setArtifactProgress('extract', 35);
+          const result = await fetchWithTimeout(
+            `${API_BASE}/api/vectorizer/extract`,
+            {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify(requestBody)
+            },
+            TIMEOUTS.photo
+          );
+          response = result.response;
+          requestComplete = true;  // Mark complete before any processing
 
           if (!response.ok) {
             const errorText = await response.text();
@@ -831,44 +1241,76 @@
 
           // Detailed logging for diagnosis
           console.log('=== Photo Vectorizer API Response ===');
-          console.log('Full response:', JSON.stringify(data, null, 2));
           console.log('ok:', data.ok);
-          console.log('error:', data.error);
-          console.log('warnings:', data.warnings);
           console.log('contour_count:', data.contour_count);
-          console.log('body_dimensions_mm:', data.body_dimensions_mm);
-          console.log('scale_source:', data.scale_source);
+          console.log('body_width_mm:', data.body_width_mm);
+          console.log('body_height_mm:', data.body_height_mm);
+          console.log('svg_content:', data.svg_content ? 'present' : 'missing');
+          console.log('svg_path_d:', data.svg_path_d ? 'present' : 'missing');
           console.log('=====================================');
 
-          if (!data.ok) {
-            console.log('Extraction failed - throwing error');
-            throw new Error(data.error || 'Photo extraction failed');
+          // CRITICAL FIX: Render artifacts even when ok=false
+          // Selection confidence controls recommendation, NOT artifact rendering
+          const hasPhotoArtifacts = !!(
+            data.artifacts?.svg?.present ||
+            data.svg_content ||
+            data.svg_path_d
+          );
+          if (!data.ok && !hasPhotoArtifacts) {
+            throw new Error(data.error || 'Photo extraction failed — no artifacts generated');
+          }
+          // Contour count check is informational only when artifacts exist
+          if (Number(data.contour_count || 0) <= 0 && !hasPhotoArtifacts) {
+            throw new Error('No contours detected. Try a clearer image or different mode.');
           }
 
-          showStatus(`Extraction complete in ${(data.processing_time_s || 0).toFixed(2)}s`, 'success');
-
+          setArtifactProgress('validate', 82);
+          const elapsedSec = (Date.now() - startTime) / 1000;
           document.getElementById('dimWidth').textContent =
-            data.body_dimensions_mm ? `${data.body_dimensions_mm[1]?.toFixed(1) || '—'} mm` : '—';
+            data.body_width_mm ? `${data.body_width_mm.toFixed(1)} mm` : '—';
           document.getElementById('dimHeight').textContent =
-            data.body_dimensions_mm ? `${data.body_dimensions_mm[0]?.toFixed(1) || '—'} mm` : '—';
+            data.body_height_mm ? `${data.body_height_mm.toFixed(1)} mm` : '—';
           document.getElementById('dimContours').textContent = data.contour_count || '—';
           document.getElementById('dimScale').textContent = data.scale_source || '—';
           dimensions.classList.add('visible');
 
-          if (data.svg_content) {
-            previewContainer.innerHTML = data.svg_content;
-            previewSection.classList.add('visible');
-            downloadSvg.disabled = false;
+          const artifacts = getArtifacts(data, 'photo');
+          const dxfAvailable = !!(data.dxf_base64 || data.dxf_content || data.dxf_path);
+          previewSection.classList.add('visible');
+
+          requireBothArtifacts(artifacts, dxfAvailable, 'Extraction');
+
+          setArtifactProgress('renderSvg', 92);
+          renderSvgPreview(artifacts.svgContent);
+          setArtifactProgress('renderDxf', 96);
+          downloadDxf.disabled = false;
+          downloadSvg.disabled = false;
+
+          if (artifacts.warnings.length) {
+            showWarnings(artifacts.warnings);
           }
 
-          if (data.dxf_content || data.dxf_base64) {
-            downloadDxf.disabled = false;
+          // Show appropriate status based on recommendation
+          if (!data.ok && hasPhotoArtifacts) {
+            // Best-effort output with review recommendation
+            const recAction = data.recommendation?.action || 'review';
+            const recReasons = data.recommendation?.reasons?.join('; ') || data.error || 'Low confidence selection';
+            showStatus(
+              `Best-effort extraction (${recAction}) — Review before fabrication: ${recReasons}`,
+              'warning'
+            );
+          } else {
+            showStatus(`Extraction complete in ${elapsedSec.toFixed(2)}s — SVG and DXF generated`, 'success');
           }
         }
 
+        // Success - complete progress and save settings
+        completeProgress();
+        saveSettings();
+        retryAttempt = 0;  // Reset retry counter on success
+
       } catch (err) {
-        showStatus(err.message, 'error');
-        console.error(err);
+        handleError(err);
       } finally {
         extractBtn.disabled = false;
       }
@@ -888,7 +1330,7 @@
     }
 
     // Resize image if too large (prevents OOM on server)
-    const MAX_IMAGE_DIM = 3000;
+    const MAX_IMAGE_DIM = 1600;
     let imageWasResized = false;
 
     function resizeImageIfNeeded(file) {
@@ -927,7 +1369,7 @@
           ctx.drawImage(img, 0, 0, newWidth, newHeight);
 
           // Convert to base64 (JPEG for photos)
-          const dataUrl = canvas.toDataURL('image/jpeg', 0.9);
+          const dataUrl = canvas.toDataURL('image/jpeg', 0.7);
           const base64 = dataUrl.split(',')[1];
           resolve(base64);
         };
@@ -943,9 +1385,24 @@
 
     // Downloads
     downloadSvg.addEventListener('click', () => {
-      if (!extractedData?.svg_content) return;
+      if (!extractedData) return;
 
-      const blob = new Blob([extractedData.svg_content], { type: 'image/svg+xml' });
+      // Priority: artifacts.svg.content (new) > svg_content > svg_preview > built from svg_path_d
+      let svgContent = extractedData.artifacts?.svg?.content
+        || extractedData.svg_content
+        || extractedData.svg_preview;
+
+      // If svg_path_d exists but not svg_content, build SVG from path
+      if (!svgContent && extractedData.svg_path_d) {
+        svgContent = buildSvgFromPath(extractedData.svg_path_d);
+      }
+
+      if (!svgContent) {
+        showStatus('SVG not available for this extraction.', 'error');
+        return;
+      }
+
+      const blob = new Blob([svgContent], { type: 'image/svg+xml' });
       downloadBlob(blob, getOutputName('.svg'));
     });
 
@@ -954,8 +1411,23 @@
 
       let blob;
 
-      // Priority 1: Cleaned base64 from filter endpoint (works on Railway)
+      // Priority 0: New consolidated endpoint artifacts.dxf.base64
+      if (extractedData.artifacts?.dxf?.base64) {
+        console.log('Using artifacts.dxf.base64 for download');
+        const binary = atob(extractedData.artifacts.dxf.base64);
+        const bytes = new Uint8Array(binary.length);
+        for (let i = 0; i < binary.length; i++) {
+          bytes[i] = binary.charCodeAt(i);
+        }
+        blob = new Blob([bytes], { type: 'application/dxf' });
+        downloadBlob(blob, getOutputName('.dxf'));
+        showStatus('Download complete', 'success');
+        return;
+      }
+
+      // Priority 1: Cleaned DXF base64 from filter endpoint (legacy)
       if (extractedData.dxf_b64_clean) {
+        console.log('Using dxf_b64_clean for download');
         const binary = atob(extractedData.dxf_b64_clean);
         const bytes = new Uint8Array(binary.length);
         for (let i = 0; i < binary.length; i++) {
@@ -963,10 +1435,38 @@
         }
         blob = new Blob([bytes], { type: 'application/dxf' });
         downloadBlob(blob, getOutputName('_cleaned.dxf'));
+        showStatus('Download complete', 'success');
         return;
       }
 
-      // Priority 2: Photo mode embedded base64
+      // Priority 2: Streaming download fallback (legacy, may fail on Railway)
+      if (extractedData.download_filename) {
+        try {
+          console.log('Trying streaming download:', extractedData.download_filename);
+          showProgress('Downloading DXF...');
+          setArtifactProgress('renderDxf', 40);
+          const downloadUrl = `${API_BASE}/api/blueprint/clean/download/${extractedData.download_filename}`;
+          const { response: resp } = await fetchWithTimeout(downloadUrl, {}, TIMEOUTS.download);
+          hideProgress();
+          if (!resp.ok) {
+            throw new Error(`Download failed: ${resp.status}`);
+          }
+          blob = await resp.blob();
+          downloadBlob(blob, extractedData.download_filename);
+          showStatus('Download complete', 'success');
+        } catch (err) {
+          hideProgress();
+          console.error('Streaming download failed:', err);
+          if (err.name === 'AbortError') {
+            showStatus('Download timed out. Try again.', 'error');
+          } else {
+            showStatus(`Download error: ${err.message}`, 'error');
+          }
+        }
+        return;
+      }
+
+      // Priority 3: Photo mode embedded base64
       if (extractedData.dxf_base64) {
         const binary = atob(extractedData.dxf_base64);
         const bytes = new Uint8Array(binary.length);
@@ -978,7 +1478,7 @@
         return;
       }
 
-      // Priority 3: Photo mode string content
+      // Priority 4: Photo mode string content
       if (extractedData.dxf_content) {
         blob = new Blob([extractedData.dxf_content], { type: 'application/dxf' });
         downloadBlob(blob, getOutputName('.dxf'));
