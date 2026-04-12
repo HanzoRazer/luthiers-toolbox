@@ -636,3 +636,930 @@ The blueprint vectorizer has been transformed from a fragile, threshold-based fi
 4. **Unified architecture** — single orchestrator, single endpoint, single contract
 
 The photo pipeline remains unchanged and requires separate follow-up work.
+
+---
+
+## 17. Photo Pipeline Refactor — COMPLETE
+
+**Date:** 2026-04-11  
+**Status:** COMPLETE (structural refactor)  
+**Next:** Geometry deduplication
+
+### Overview
+
+The photo pipeline (`/api/vectorizer/extract`) has been refactored to match the blueprint architecture pattern. Business logic moved from router to orchestrator. Confidence is now sourced from real scorer output (not fabricated).
+
+### What Changed
+
+| Component | Before | After |
+|-----------|--------|-------|
+| `photo_vectorizer_router.py` | 528 lines, owns business logic | 370 lines, thin HTTP wrapper |
+| `photo_orchestrator.py` | Did not exist | 310 lines, owns orchestration |
+| Confidence value | Fabricated (0.9 or 0.0) | Real scorer: `result.contour_stage.ownership_score` |
+| Artifact encoding | In router | In orchestrator |
+| Validation gates | Scattered | Centralized in orchestrator |
+
+### PhotoOrchestrator Responsibilities
+
+```
+PhotoOrchestrator.process_image()
+    │
+    ├─► Validate input (empty check)
+    │
+    ├─► Import PhotoVectorizerV2 (graceful failure)
+    │
+    ├─► Create temp directory (orchestrator owns)
+    │
+    ├─► Call vectorizer.extract()
+    │
+    ├─► Source confidence from result.contour_stage.ownership_score
+    │
+    ├─► Encode SVG artifact (read file, validate content)
+    │
+    ├─► Encode DXF artifact (read file, base64, count entities)
+    │
+    ├─► Validate artifacts (SVG_MIN_CHARS, DXF_MIN_BYTES)
+    │
+    └─► Return PhotoResult (canonical schema)
+```
+
+### Router Now Thin Wrapper
+
+```python
+# photo_vectorizer_router.py — simplified flow
+result = _orchestrator.process_image(
+    image_bytes=img_bytes,
+    filename=filename,
+    spec_name=req.spec_name,
+    ...
+)
+
+# Map to response with legacy fields
+return VectorizeResponse(
+    ok=result.ok,
+    stage=result.stage,
+    artifacts=artifacts,       # Canonical
+    dimensions=dimensions,     # Canonical
+    svg_path_d=svg_path_d,     # Legacy
+    body_width_mm=...,         # Legacy
+    ...
+)
+```
+
+### Confidence Fix (Critical)
+
+**Before:** Confidence was hardcoded based on export_blocked flag:
+```python
+confidence = 0.0 if export_blocked else 0.9  # FABRICATED
+```
+
+**After:** Confidence sourced from real scorer:
+```python
+confidence = 0.0
+contour_stage = getattr(result, "contour_stage", None)
+if contour_stage is not None:
+    ownership_score = getattr(contour_stage, "ownership_score", None)
+    if ownership_score is not None:
+        confidence = float(ownership_score)
+```
+
+### Test Results
+
+```
+=== RESULT ===
+ok: True
+stage: complete
+dimensions: 222x329mm
+confidence: 0.710  ← Real scorer output (was 0.9 fabricated)
+artifacts.svg.present: True
+```
+
+### Files Modified
+
+| File | Change |
+|------|--------|
+| `app/services/photo_orchestrator.py` | NEW — 310 lines |
+| `app/routers/photo_vectorizer_router.py` | Refactored — 528→370 lines |
+
+### Behavioral Note
+
+The photo pipeline ownership threshold (0.60 hard gate) was NOT changed. This refactor is structural only:
+- Router is now thin
+- Orchestrator owns logic
+- Confidence is real signal
+
+Behavioral changes to threshold/decision model are a separate follow-up.
+
+---
+
+## 18. Frontend Canonical Schema Integration — COMPLETE
+
+**Date:** 2026-04-11  
+**Status:** COMPLETE
+
+### Problem
+
+Frontend photo mode validated against legacy fields:
+```javascript
+const dxfAvailable = !!(data.dxf_base64 || data.dxf_content || data.dxf_path);
+```
+
+But backend now returns canonical schema:
+```json
+{
+  "artifacts": {
+    "dxf": { "present": true, "base64": "..." }
+  }
+}
+```
+
+Result: `requireBothArtifacts()` threw "DXF must be generated" even though DXF was present.
+
+### Solution
+
+Frontend updated to check canonical schema first, with legacy fallback.
+
+### Changes to `tools/blueprint-reader.html`
+
+#### 1. `getArtifacts()` Function (lines 643-653)
+
+```javascript
+if (mode === 'photo') {
+  // Canonical first, then legacy fallback
+  const widthMm = data?.dimensions?.width_mm || data.body_width_mm || 500;
+  const heightMm = data?.dimensions?.height_mm || data.body_height_mm || 500;
+  
+  svgContent = data?.artifacts?.svg?.content || 
+               data.svg_content || 
+               buildSvgFromPath(data.svg_path_d, widthMm, heightMm);
+  
+  hasDxf = !!(
+    (data?.artifacts?.dxf?.present && 
+     (data?.artifacts?.dxf?.base64 || data?.artifacts?.dxf?.entity_count > 0)) ||
+    data.dxf_base64 || data.dxf_content || data.dxf_path
+  );
+}
+```
+
+#### 2. Photo Mode Validation (lines 1186-1213)
+
+```javascript
+// Canonical success check
+const canonicalSuccess = !!(
+  data?.ok === true &&
+  data?.artifacts?.svg?.present &&
+  data?.artifacts?.dxf?.present
+);
+
+// Contour count is informational when canonical artifacts present
+if (Number(contourCount) <= 0 && !canonicalSuccess) {
+  throw new Error('No contours detected...');
+}
+
+// Skip requireBothArtifacts when canonical artifacts present
+if (!canonicalSuccess) {
+  requireBothArtifacts(artifacts, artifacts.hasDxf, 'Extraction');
+}
+```
+
+#### 3. Download Handler (line 1371)
+
+```javascript
+// Canonical first, then legacy
+const dxfBase64 = extractedData?.artifacts?.dxf?.base64 || extractedData.dxf_base64;
+```
+
+### Success Rule
+
+```javascript
+if (data?.ok === true &&
+    data?.artifacts?.svg?.present &&
+    data?.artifacts?.dxf?.present) {
+  // Treat as success — skip legacy validation paths
+}
+```
+
+---
+
+## 19. Remaining Issue: Geometry Duplication
+
+**Date:** 2026-04-11  
+**Status:** OPEN  
+**Priority:** HIGH  
+**Type:** Geometry integrity failure (not runtime failure)
+
+### Problem
+
+DXF output contains duplicate/overlapping paths:
+- Identical contours at same location
+- Overlapping LINE segments
+- Coincident nodes
+
+This causes:
+- CAD software slowdown (processing redundant geometry)
+- Fabrication issues (double-cut, over-etching)
+- Visual artifacts in preview
+
+### Evidence
+
+From retest artifact analysis:
+- Multiple paths overlap at body outline
+- Near-identical contours (tolerance ~0.01-0.05mm)
+- Both construction + final geometry exported
+
+### Required Fix
+
+Add geometry deduplication pass before DXF export:
+
+```python
+def deduplicate_geometry(chains: List[Chain], tolerance_mm: float = 0.05) -> List[Chain]:
+    """
+    Remove duplicate/overlapping paths from chain list.
+    
+    Operations:
+    1. Merge identical contours (within tolerance)
+    2. Remove overlapping LINE segments
+    3. Collapse coincident nodes
+    4. Enforce winding + closed path validation
+    """
+    ...
+```
+
+### Location Options
+
+| Option | File | Pros | Cons |
+|--------|------|------|------|
+| A | `unified_dxf_cleaner.py` | Already has chain logic | Adds complexity to cleaner |
+| B | New `geometry_dedup.py` | Clean separation | New file to maintain |
+| C | `write_selected_chains()` | Single export point | Mixes concerns |
+
+**Recommendation:** Option A — add `deduplicate_chains()` method to `DXFCleaner` class.
+
+### Algorithm Outline
+
+```python
+def deduplicate_chains(self, chains: List[Chain], tolerance: float = 0.05) -> List[Chain]:
+    """
+    1. Build spatial index (KD-tree or grid)
+    2. For each chain:
+       a. Hash by centroid + bounding box
+       b. If hash collision, compare point-by-point within tolerance
+       c. If duplicate, mark for removal
+    3. Segment overlap detection:
+       a. For each LINE segment, check if another segment overlaps
+       b. If overlap > 80%, keep only one
+    4. Node collapse:
+       a. If two nodes within tolerance, merge to single point
+    5. Return deduplicated chains
+    """
+```
+
+### Validation
+
+After deduplication:
+- No two chains should have same centroid within tolerance
+- No LINE segment should overlap another by >80%
+- All exported contours should be closed (start == end within tolerance)
+
+### Test Case
+
+Use existing retest artifact. Before/after should show:
+- Reduced entity count (duplicates removed)
+- Same visual output (no missing geometry)
+- DXF opens without slowdown in Fusion 360
+
+---
+
+## 20. Canonical Response Schema (Production Contract)
+
+### Photo Vectorizer Response
+
+```json
+{
+  "ok": true,
+  "stage": "complete",
+  "artifacts": {
+    "svg": {
+      "present": true,
+      "content": "<svg>...</svg>",
+      "path_count": 3
+    },
+    "dxf": {
+      "present": true,
+      "base64": "...",
+      "entity_count": 1247,
+      "closed_contours": 3
+    }
+  },
+  "dimensions": {
+    "width_mm": 350.5,
+    "height_mm": 482.6,
+    "width_in": 13.8,
+    "height_in": 19.0,
+    "spec_match": "jumbo_archtop",
+    "confidence": 0.715
+  },
+  "svg_path_d": "M...",           // Legacy
+  "body_width_mm": 350.5,         // Legacy
+  "body_height_mm": 482.6,        // Legacy
+  "scale_source": "spec_match",
+  "bg_method": "rembg",
+  "perspective_corrected": false,
+  "warnings": [],
+  "processing_ms": 4523.1,
+  "export_blocked": false,
+  "export_block_reason": "",
+  "error": "",
+  "debug": null
+}
+```
+
+### Blueprint Vectorizer Response
+
+```json
+{
+  "ok": true,
+  "stage": "complete",
+  "artifacts": {
+    "svg": {
+      "present": true,
+      "content": "<svg>...</svg>",
+      "path_count": 6
+    },
+    "dxf": {
+      "present": true,
+      "base64": "...",
+      "entity_count": 847,
+      "closed_contours": 6
+    }
+  },
+  "dimensions": {
+    "width_mm": 289.8,
+    "height_mm": 375.0
+  },
+  "metrics": {
+    "original_entities": 595000,
+    "chains_found": 12847,
+    "contours_found": 6,
+    "best_confidence": 0.535
+  },
+  "warnings": [
+    "PDF render DPI capped from 300 to 150 for web processing.",
+    "Low confidence contour selection (0.54). Review output before fabrication."
+  ],
+  "error": ""
+}
+```
+
+---
+
+## 21. File Reference (Updated)
+
+### Backend — Services/API
+
+| File | Role | Status |
+|------|------|--------|
+| `app/services/photo_orchestrator.py` | Photo orchestration | NEW |
+| `app/services/blueprint_orchestrator.py` | Blueprint orchestration | UPDATED |
+| `app/routers/photo_vectorizer_router.py` | Photo HTTP wrapper | REFACTORED |
+| `app/routers/blueprint/vectorize_router.py` | Blueprint HTTP wrapper | STABLE |
+| `app/services/blueprint_extract.py` | Edge extraction | STABLE |
+| `app/services/blueprint_clean.py` | Contour scoring/cleanup | STABLE |
+| `app/services/contour_scoring.py` | Unified scorer | STABLE |
+| `app/cam/unified_dxf_cleaner.py` | Chain assembly | NEEDS: dedup |
+
+### Photo Vectorizer — Services/photo-vectorizer
+
+| File | Role | Status |
+|------|------|--------|
+| `photo_vectorizer_v2.py` | Main extraction | STABLE |
+| `contour_plausibility.py` | Ownership scoring | STABLE |
+| `edge_to_dxf.py` | Contour→DXF | STABLE |
+
+### Frontend
+
+| File | Role | Status |
+|------|------|--------|
+| `tools/blueprint-reader.html` | Upload/preview UI | UPDATED |
+
+---
+
+## 22. Definition of Done (Updated)
+
+### Completed ✓
+
+- [x] Blueprint orchestrator refactor
+- [x] Photo orchestrator refactor
+- [x] Confidence sourced from real scorer
+- [x] Frontend canonical schema integration
+- [x] Legacy field fallback in frontend
+- [x] `ok: true` only when both artifacts present
+- [x] Canonical success bypasses legacy validation
+
+### Remaining
+
+- [ ] Geometry deduplication (`unified_dxf_cleaner.py`)
+- [ ] Validate no duplicate paths in output
+- [ ] Photo threshold/decision model alignment (optional)
+- [ ] Frontend confidence display (optional)
+
+---
+
+## 23. Next Developer Actions
+
+### Immediate: Geometry Deduplication
+
+1. Add `deduplicate_chains()` to `unified_dxf_cleaner.py`
+2. Call before `write_selected_chains()`
+3. Test with retest artifact — verify reduced entity count
+4. Verify DXF opens cleanly in Fusion 360
+
+### Acceptance Test
+
+```bash
+# Before dedup
+python -c "import ezdxf; doc=ezdxf.readfile('before.dxf'); print(len(list(doc.modelspace())))"
+# Output: 1247
+
+# After dedup  
+python -c "import ezdxf; doc=ezdxf.readfile('after.dxf'); print(len(list(doc.modelspace())))"
+# Output: 623  # ~50% reduction expected
+```
+
+### Visual Validation
+
+- Open DXF in Fusion 360
+- No duplicate outlines visible
+- Single closed contour for body
+- No performance lag on import
+
+---
+
+## 24. Recommendation Layer Architecture — COMPLETE
+
+**Date:** 2026-04-12  
+**Status:** PRODUCTION
+
+### Overview
+
+The vectorizer pipelines now include a unified **recommendation layer** that separates:
+- **Scoring** (which contour is best?) — `contour_scoring.py`
+- **Acceptance** (is it good enough?) — `contour_recommendation.py`
+
+This enables mode-specific thresholds without duplicating scoring logic.
+
+### New File: `contour_recommendation.py`
+
+Location: `services/api/app/services/contour_recommendation.py` (~411 lines)
+
+```python
+class RecommendationAction(Enum):
+    ACCEPT = "accept"   # High confidence, artifacts valid
+    REVIEW = "review"   # Moderate confidence, manual review suggested
+    REJECT = "reject"   # Low confidence or missing artifacts
+
+class ProcessingMode(Enum):
+    BLUEPRINT = "blueprint"  # More permissive (ownership = weighted signal)
+    PHOTO = "photo"          # Stricter (ownership = hard gate)
+
+@dataclass
+class SelectionResult:
+    candidate_count: int
+    selected_index: Optional[int]
+    selection_score: float      # Best candidate score
+    runner_up_score: float      # Second-best score
+    winner_margin: float        # Separation from runner-up
+    reasons: list[str]
+
+@dataclass
+class Recommendation:
+    action: RecommendationAction
+    confidence: float           # 0.0-1.0
+    reasons: list[str]          # Human-readable explanation
+```
+
+### Threshold Configuration
+
+| Mode | Accept Score | Accept Margin | Accept Ownership | Review Score |
+|------|--------------|---------------|------------------|--------------|
+| Blueprint | 0.70 | 0.12 | N/A | 0.45 |
+| Photo | 0.75 | 0.15 | 0.75 | 0.55 |
+
+### Hard-Fail Detection
+
+The recommendation layer detects structural failures that override score:
+
+| Hard-Fail | Description |
+|-----------|-------------|
+| `no_artifacts` | No valid SVG or DXF produced |
+| `page_span` | Contour spans full page (annotation, not body) |
+| `page_border` | Best candidate is the page border |
+| `extreme_aspect` | Aspect ratio wildly wrong for instrument |
+| `extreme_fragmentation` | Too many disconnected pieces |
+| `multi_path_ambiguity` | Multiple peer contours, can't choose |
+| `spec_forced_rescue` | Spec override used with low quality |
+| `mode_mismatch` | AI/photo classifier disagrees with source_type |
+
+### Integration Points
+
+```
+BlueprintOrchestrator
+    └─► clean_blueprint_dxf()
+        └─► score_contours() → SelectionResult
+    └─► recommend() → Recommendation
+    └─► ok = (recommendation.action == ACCEPT)
+
+PhotoOrchestrator
+    └─► PhotoVectorizerV2.extract()
+        └─► contour_stage.ownership_score
+    └─► recommend() → Recommendation
+    └─► ok = (recommendation.action == ACCEPT)
+```
+
+### Data Flow
+
+```
+Contours → score_contours() → SelectionResult
+                                    │
+                                    ▼
+                     ┌──────────────────────────────┐
+                     │   RecommendationInput        │
+                     │   - selection: SelectionResult
+                     │   - mode: BLUEPRINT | PHOTO  
+                     │   - svg_valid: bool          
+                     │   - dxf_valid: bool          
+                     │   - ownership_score: float   
+                     │   - warnings: list[str]      
+                     └──────────────────────────────┘
+                                    │
+                                    ▼
+                            recommend()
+                                    │
+                                    ▼
+                     ┌──────────────────────────────┐
+                     │   Recommendation             │
+                     │   - action: ACCEPT|REVIEW|REJECT
+                     │   - confidence: 0.0-1.0     
+                     │   - reasons: list[str]      
+                     └──────────────────────────────┘
+```
+
+---
+
+## 25. Complete File Reference (2026-04-12)
+
+### API Services Layer (`services/api/app/services/`)
+
+| File | Lines | Role | Dependencies |
+|------|-------|------|--------------|
+| `photo_orchestrator.py` | 413 | Photo pipeline coordination | `photo_vectorizer_v2`, `contour_recommendation` |
+| `blueprint_orchestrator.py` | 413 | Blueprint pipeline coordination | `blueprint_extract`, `blueprint_clean`, `contour_recommendation` |
+| `blueprint_extract.py` | 356 | Edge extraction service | `edge_to_dxf`, `fitz` (PDF) |
+| `blueprint_clean.py` | 418 | Cleanup + contour scoring | `unified_dxf_cleaner`, `contour_scoring` |
+| `blueprint_limits.py` | ~100 | Input guardrails (size, DPI) | — |
+| `contour_scoring.py` | 775 | Multi-signal contour ranking | `numpy`, `cv2` |
+| `contour_recommendation.py` | 411 | Accept/review/reject decisions | `contour_scoring` |
+
+### API Routers (`services/api/app/routers/`)
+
+| File | Lines | Endpoint | Handler |
+|------|-------|----------|---------|
+| `photo_vectorizer_router.py` | 371 | `POST /api/vectorizer/extract` | `PhotoOrchestrator.process_image()` |
+| `blueprint/vectorize_router.py` | 174 | `POST /api/blueprint/vectorize` | `BlueprintOrchestrator.process_file()` |
+| `blueprint_async_router.py` | 237 | `POST /api/blueprint/vectorize/async` | Background job wrapper |
+
+### CAM Utilities (`services/api/app/cam/`)
+
+| File | Lines | Role |
+|------|-------|------|
+| `unified_dxf_cleaner.py` | ~600 | Chain detection, DXF read/write |
+| `dxf_compat.py` | ~200 | DXF version compatibility |
+
+### Photo Vectorizer Core (`services/photo-vectorizer/`)
+
+| File | Lines | Role |
+|------|-------|------|
+| `photo_vectorizer_v2.py` | 5,366 | Main 12-stage pipeline |
+| `contour_stage.py` | 588 | Stage 8 extraction |
+| `body_isolation_stage.py` | 593 | Body region isolation |
+| `geometry_coach_v2.py` | 878 | Agentic retry loop |
+| `geometry_coach.py` | 259 | V1 retry logic |
+| `contour_plausibility.py` | 379 | Ownership scoring |
+| `contour_election.py` | 61 | Body election gate |
+| `cognitive_extraction_engine.py` | 1,503 | Agentic parallel extraction |
+| `cognitive_extractor.py` | 1,470 | Cognitive wrapper |
+| `edge_to_dxf.py` | 733 | High-fidelity DXF export |
+| `blueprint_view_segmenter.py` | 830 | Multi-view detection |
+| `multi_view_reconstructor.py` | 928 | 3D reconstruction |
+| `ai_render_extractor.py` | 462 | AI image features |
+| `light_line_body_extractor.py` | 578 | Light-line extraction |
+| `grid_classify.py` | 420 | Grid zone classification |
+| `body_model.py` | 85 | Instrument body constraints |
+| `landmark_extractor.py` | 340 | Landmark detection |
+| `body_isolation_result.py` | 270 | Typed result dataclass |
+| `geometry_authority.py` | 200 | Family priors, dimension fit |
+| `body_dimension_reference.json` | — | 16 guitar specs |
+
+### Blueprint Import (`services/blueprint-import/`)
+
+| File | Lines | Role |
+|------|-------|------|
+| `vectorizer_phase3.py` | 4,148 | Phase 3.6 blueprint extraction |
+| `dxf_compat.py` | ~200 | DXF version handling |
+
+### Frontend (`hostinger/`, `tools/`)
+
+| File | Role |
+|------|------|
+| `hostinger/blueprint-reader.html` | Production upload UI |
+| `tools/blueprint-reader.html` | Development copy |
+
+### Async Job System (`services/api/app/jobs/`)
+
+| File | Role |
+|------|------|
+| `__init__.py` | Package marker |
+| `models.py` | Job status dataclasses |
+| `store.py` | In-memory + Redis job store |
+
+### Documentation (`docs/`)
+
+| File | Purpose |
+|------|---------|
+| `PHOTO_VECTORIZER_ARCHITECTURE.md` | Executive summary of photo-vectorizer |
+| `BLUEPRINT_VECTORIZER_ARCHITECTURE.md` | Blueprint pipeline architecture |
+| `handoffs/VECTORIZER_PIPELINE_HANDOFF.md` | This file |
+
+---
+
+## 26. Onboarding Guide for New Engineers
+
+### Prerequisites
+
+```bash
+# Python 3.11+
+python --version
+
+# Required packages
+pip install opencv-python-headless numpy ezdxf rembg PyMuPDF
+
+# Optional (for SAM background removal)
+pip install segment-anything torch
+```
+
+### Local Development Setup
+
+```bash
+# Clone repo
+git clone https://github.com/HanzoRazer/luthiers-toolbox.git
+cd luthiers-toolbox
+
+# Set up API
+cd services/api
+pip install -r requirements.txt
+
+# Add photo-vectorizer to path
+export PYTHONPATH="$PWD/../photo-vectorizer:$PYTHONPATH"
+
+# Run API
+uvicorn app.main:app --reload --port 8000
+```
+
+### Key Concepts to Understand
+
+#### 1. Dual Pipeline Architecture
+
+```
+Photo Pipeline (12-stage):
+  - Input: JPEG/PNG photo or AI render
+  - Hard gate: ownership_score >= 0.60
+  - Output: SVG + DXF via PhotoOrchestrator
+
+Blueprint Pipeline (4-stage):
+  - Input: PDF or image of technical drawing
+  - No hard gate: ownership is weighted signal
+  - Output: SVG + DXF via BlueprintOrchestrator
+```
+
+#### 2. Orchestrator Pattern
+
+Both pipelines use orchestrators that:
+- Own temp directory lifecycle
+- Delegate to specialized services
+- Aggregate warnings
+- Source confidence from real scorer
+- Validate artifacts before success
+- Return canonical response schema
+
+#### 3. Recommendation Layer
+
+```python
+# Scoring (deterministic ranking)
+result = score_contours(contours, width, height)
+
+# Acceptance (mode-specific thresholds)
+recommendation = recommend(RecommendationInput(
+    selection=result,
+    mode=ProcessingMode.PHOTO,
+    svg_valid=True,
+    dxf_valid=True,
+))
+
+# ok = True only when action == ACCEPT
+ok = recommendation.action == RecommendationAction.ACCEPT
+```
+
+#### 4. Canonical Response Schema
+
+Both pipelines return the same structure:
+
+```json
+{
+  "ok": true,
+  "stage": "complete",
+  "artifacts": {
+    "svg": { "present": true, "content": "...", "path_count": 3 },
+    "dxf": { "present": true, "base64": "...", "entity_count": 847 }
+  },
+  "dimensions": { "width_mm": 350.5, "height_mm": 482.6 },
+  "selection": { "candidate_count": 12, "selection_score": 0.78 },
+  "recommendation": { "action": "accept", "confidence": 0.82 },
+  "warnings": []
+}
+```
+
+### Common Tasks
+
+#### Add a new instrument spec
+
+Edit `services/photo-vectorizer/body_dimension_reference.json`:
+
+```json
+{
+  "my_new_guitar": {
+    "body_width_mm": 350,
+    "body_height_mm": 450,
+    "lower_bout_mm": 350,
+    "upper_bout_mm": 280,
+    "waist_mm": 230
+  }
+}
+```
+
+#### Adjust contour scoring weights
+
+Edit `services/api/app/services/contour_scoring.py`:
+
+```python
+# Weight configuration (must sum to 1.0)
+WEIGHT_AREA = 0.25
+WEIGHT_CLOSURE = 0.20
+WEIGHT_ASPECT = 0.15
+WEIGHT_SOLIDITY = 0.15
+WEIGHT_CONTINUITY = 0.15
+WEIGHT_OWNERSHIP = 0.10
+```
+
+#### Adjust recommendation thresholds
+
+Edit `services/api/app/services/contour_recommendation.py`:
+
+```python
+# Blueprint mode (more permissive)
+BLUEPRINT_ACCEPT_SCORE = 0.70
+BLUEPRINT_ACCEPT_MARGIN = 0.12
+BLUEPRINT_REVIEW_SCORE = 0.45
+
+# Photo mode (stricter)
+PHOTO_ACCEPT_SCORE = 0.75
+PHOTO_ACCEPT_MARGIN = 0.15
+PHOTO_ACCEPT_OWNERSHIP = 0.75
+```
+
+### Testing
+
+```bash
+# Run all vectorizer tests
+cd services/photo-vectorizer
+pytest test_*.py -v
+
+# Run API tests
+cd services/api
+pytest tests/test_vectorizer*.py -v
+
+# Test specific endpoint
+curl -X POST http://localhost:8000/api/vectorizer/extract \
+  -H "Content-Type: application/json" \
+  -d '{"image_b64": "...", "spec_name": "stratocaster"}'
+```
+
+### Debugging
+
+#### Enable debug mode
+
+```bash
+export VECTORIZER_DEBUG=1
+```
+
+Then add `"debug": true` to request payload.
+
+#### Check Railway logs
+
+```bash
+railway logs --environment production --limit 200 | grep "VECTORIZER\|BLUEPRINT\|PHOTO"
+```
+
+#### Inspect DXF entities
+
+```python
+import ezdxf
+doc = ezdxf.readfile("output.dxf")
+msp = doc.modelspace()
+types = {}
+for e in msp:
+    t = e.dxftype()
+    types[t] = types.get(t, 0) + 1
+print(types)  # Expected: {'LINE': N}
+```
+
+---
+
+## 27. Architecture Decision Records
+
+### ADR-001: Separate Scoring from Acceptance
+
+**Context:** Original pipeline used hard thresholds scattered across code.
+
+**Decision:** Create `contour_scoring.py` for deterministic ranking, `contour_recommendation.py` for mode-specific acceptance.
+
+**Consequences:** 
+- Scoring is testable in isolation
+- Thresholds configurable per mode
+- Clear separation of concerns
+
+### ADR-002: Orchestrator Pattern
+
+**Context:** Business logic was scattered across routers, making testing difficult.
+
+**Decision:** Create `PhotoOrchestrator` and `BlueprintOrchestrator` that own:
+- Temp directory lifecycle
+- Warning aggregation
+- Artifact validation
+- Response construction
+
+**Consequences:**
+- Routers are thin HTTP wrappers
+- Orchestrators are unit-testable
+- Single source of truth per pipeline
+
+### ADR-003: Canonical Response Schema
+
+**Context:** Frontend checked multiple legacy field combinations.
+
+**Decision:** Define canonical `artifacts` and `dimensions` schema. Keep legacy fields for backward compatibility.
+
+**Consequences:**
+- Frontend can migrate incrementally
+- New code uses canonical fields
+- Clear contract documentation
+
+### ADR-004: Blueprint vs Photo Scope Boundary
+
+**Context:** Blueprint refactor risked breaking photo pipeline.
+
+**Decision:** Explicitly scope ownership behavior:
+- Blueprint: ownership is 10% weighted signal
+- Photo: ownership is hard gate at 0.60
+
+**Consequences:**
+- No behavioral changes to photo pipeline
+- Blueprint tolerates low-ownership better
+- Clear documentation prevents confusion
+
+---
+
+## 28. Glossary
+
+| Term | Definition |
+|------|------------|
+| **Ownership score** | Ratio of contour area to foreground mask area (0.0-1.0) |
+| **Selection score** | Composite score from all signals (area, closure, aspect, etc.) |
+| **Winner margin** | Difference between best and second-best candidate scores |
+| **Hard gate** | Binary pass/fail threshold (photo: 0.60 ownership) |
+| **Weighted signal** | Contributes to composite score (blueprint: 10% ownership) |
+| **Orchestrator** | Business logic coordinator that delegates to services |
+| **Recommendation** | Accept/review/reject decision based on mode and signals |
+| **Stage** | Processing phase (upload, edge_extraction, cleanup, validation, complete) |
+| **Canonical schema** | Normalized response structure (`artifacts`, `dimensions`) |
+| **Legacy fields** | Old response fields kept for backward compatibility |
+
+---
+
+## 29. Change Log
+
+| Date | Section | Change |
+|------|---------|--------|
+| 2026-04-09 | 1-11 | Initial handoff document |
+| 2026-04-10 | 12-16 | Blueprint refactor completion |
+| 2026-04-11 | 17-22 | Photo refactor + frontend integration |
+| 2026-04-12 | 24-28 | Recommendation layer + complete file reference + onboarding guide |
