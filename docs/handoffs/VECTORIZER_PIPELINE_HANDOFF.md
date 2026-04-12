@@ -1555,7 +1555,262 @@ print(types)  # Expected: {'LINE': N}
 
 ---
 
-## 29. Change Log
+---
+
+## 30. 🐛 BUG: Blueprint Vectorizer Regression — Weak Selection Produces No Output
+
+**Date:** 2026-04-12  
+**Status:** OPEN  
+**Priority:** 🔥 HIGH — breaks core product behavior  
+**Type:** Product regression
+
+### Summary
+
+Blueprint vectorizer no longer returns best-effort artifacts or visible output for low-confidence selections. Cases that previously produced usable (though imperfect) results now result in blank UI / no usable output, despite the pipeline completing.
+
+### Observed Behavior
+
+**Case 1 (PDF):**
+```
+Selection score below accept threshold
+Winner margin weak (0.00 < 0.12)
+```
+
+**Case 2 (PDF):**
+```
+Selection score below review threshold (0.06 < 0.45)
+```
+
+**Result:**
+- No visible image/preview
+- No usable artifacts exposed
+- Appears as if nothing was produced
+- Product behavior = silent failure
+
+### Expected Behavior
+
+For blueprint mode, low-confidence selection should:
+
+**If candidates exist:**
+- Return:
+  - `recommendation.action = "review"` OR `"reject"` (depending on severity)
+  - Best-effort SVG preview
+  - Best-effort DXF if valid
+  - Full JSON response with selection + recommendation
+
+**Only hard-fail when:**
+- `candidate_count == 0` OR
+- No valid artifacts can be generated
+
+### Regression Definition
+
+| Before | After |
+|--------|-------|
+| Weak selections → best-effort output + warnings | Weak selections → no visible output |
+
+### Suspected Failure Modes
+
+#### 1. Backend Over-Blocking
+
+Artifacts are not generated when:
+- `selection_score < review_threshold`
+- OR candidates are filtered out too early (hierarchy/isolation)
+
+#### 2. Frontend Suppression
+
+Backend returns valid JSON/artifacts, but UI hides output when:
+- `ok == false`
+- OR `recommendation.action != "accept"`
+
+#### 3. Candidate Elimination Regression
+
+New hierarchy isolation removes all viable contours:
+- Result: `candidate_count == 0`
+- → no artifacts generated
+
+### Required Diagnostics
+
+#### Backend Logging
+
+For failing case, log:
+```
+candidate_count
+selection_score
+runner_up_score
+winner_margin
+recommendation.action
+artifacts.svg.present
+artifacts.dxf.present
+```
+
+#### Key Questions
+
+1. Are artifacts generated but not returned?
+2. Is `recommendation.action = "reject"` or `"review"`?
+3. Are candidates eliminated before scoring?
+4. Is DXF generation gated by selection thresholds?
+
+### Acceptance Criteria
+
+#### ✅ Case: Weak but valid contour exists
+
+- `candidate_count > 0`
+- System returns:
+  - `artifacts.svg.present == true`
+  - Preview renders in UI
+  - `recommendation.action = "review"`
+  - Warnings visible
+
+#### ✅ Case: Very weak / ambiguous (margin ~0)
+
+- Still returns:
+  - Best candidate SVG (even if poor)
+  - `recommendation.action = "review"` or `"reject"`
+- UI shows:
+  - Preview
+  - Explanation ("Multiple competing contours")
+
+#### ✅ Case: Truly no contour
+
+- `candidate_count == 0`
+- System returns:
+  - `artifacts.svg.present == false`
+  - `recommendation.action = "reject"`
+- UI shows:
+  - Explicit failure message
+
+### Non-Negotiable Product Rule
+
+> **Blueprint mode must always return best-effort output if any contour exists.**
+> Selection confidence controls recommendation, not artifact existence.
+
+### Likely Fix Areas
+
+| File | Fix |
+|------|-----|
+| `blueprint_clean.py` | Do not block artifact generation on low score |
+| `blueprint_orchestrator.py` | Ensure artifacts pass through regardless of recommendation |
+| `contour_scoring.py` | Ensure best candidate always selected even with low confidence |
+| Frontend (Vue) | Render preview when `processed == true` AND `artifacts.svg.present == true` — do NOT gate on `ok == true` |
+
+### Proposed Backend Fix
+
+#### `blueprint_clean.py` — Remove score-based artifact suppression
+
+```python
+# BEFORE (problematic):
+if candidate.score < MIN_SCORE_TO_KEEP:
+    discarded_low_score += 1
+    continue  # ← This discards potentially valid contours
+
+# AFTER (best-effort):
+# Always keep the best candidate regardless of score
+# Let recommendation layer decide accept/review/reject
+# Artifact generation is independent of confidence
+```
+
+#### `blueprint_orchestrator.py` — Decouple artifacts from recommendation
+
+```python
+# BEFORE (problematic):
+is_ok = rec.action == RecommendationAction.ACCEPT
+if not is_ok:
+    # May be suppressing artifacts here
+
+# AFTER (best-effort):
+# ok controls recommendation, NOT artifact presence
+# Always return artifacts if they exist
+return BlueprintResult(
+    ok=is_ok,  # Controls recommendation only
+    processed=True,
+    svg=SVGArtifact(
+        present=svg_valid,  # Independent of ok
+        content=svg_content,
+    ),
+    dxf=DXFArtifact(
+        present=dxf_valid,  # Independent of ok
+        base64=dxf_b64,
+    ),
+    recommendation=rec,  # Carries the confidence signal
+)
+```
+
+#### Frontend — Render on artifact presence, not ok status
+
+```javascript
+// BEFORE (problematic):
+if (data.ok) {
+    renderPreview(data.artifacts.svg.content);
+}
+
+// AFTER (best-effort):
+if (data.artifacts?.svg?.present) {
+    renderPreview(data.artifacts.svg.content);
+    if (!data.ok) {
+        showWarning(data.recommendation.reasons);
+    }
+}
+```
+
+### Validation Steps
+
+1. **Run benchmark PDFs with DEBUG_CONTOURS=1**
+2. **For each case, verify:**
+
+| Check | Expected |
+|-------|----------|
+| Page border is red and rejected | ✓ |
+| Child contours are orange and not competing | ✓ |
+| Viable top-level candidates are green | ✓ |
+| Selected candidate is blue | ✓ |
+| Preview renders in UI | ✓ |
+| Warnings displayed for low confidence | ✓ |
+
+3. **Record for each file:**
+
+```
+filename:
+selected_contour_correct: yes/no
+candidate_count:
+selection_score:
+winner_margin:
+recommendation:
+page_border_filtered: yes/no
+child_contours_present: yes/no
+artifacts_returned: yes/no
+preview_rendered: yes/no
+notes:
+```
+
+### What Success Looks Like
+
+| Case | Expected Behavior |
+|------|-------------------|
+| Clean single-view PDF | 1–2 green candidates, blue contour is body, margin > 0.12 |
+| Page-border-heavy scan | Border shown red (not selected), body still green, margin improved |
+| Archtop / hole-rich drawing | Outer body blue/green, holes orange (not competing), score stable |
+| Former weak-margin case | Candidate set smaller, margin no longer 0.00 unless truly ambiguous, **preview still renders** |
+
+### Decision Tree After Fix
+
+```
+If overlays show:
+├─ Correct body wins + margin improves
+│   └─ Phases 1–3 validated ✓
+│
+├─ Correct body present but split into multiple green fragments
+│   └─ Phase 4: merged-fragment fallback needed
+│
+├─ Wrong top-level candidates still surviving
+│   └─ Isolation filters need tightening
+│
+└─ Candidate count == 0 (nothing survives)
+    └─ Over-filtering regression — loosen hierarchy isolation
+```
+
+---
+
+## 31. Change Log
 
 | Date | Section | Change |
 |------|---------|--------|
@@ -1563,3 +1818,4 @@ print(types)  # Expected: {'LINE': N}
 | 2026-04-10 | 12-16 | Blueprint refactor completion |
 | 2026-04-11 | 17-22 | Photo refactor + frontend integration |
 | 2026-04-12 | 24-28 | Recommendation layer + complete file reference + onboarding guide |
+| 2026-04-12 | 30 | BUG: Weak selection regression — no output for low-confidence cases |
