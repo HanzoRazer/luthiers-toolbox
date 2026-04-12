@@ -1560,7 +1560,7 @@ print(types)  # Expected: {'LINE': N}
 ## 30. ✅ FIX: Blueprint Vectorizer Regression — Weak Selection Produces No Output
 
 **Date:** 2026-04-12  
-**Status:** FIXED (commit 350af1fd)  
+**Status:** FULLY FIXED (backend: 350af1fd, frontend: ad285944)  
 **Priority:** 🔥 HIGH — was breaking core product behavior  
 **Type:** Product regression (now resolved)
 
@@ -1693,7 +1693,10 @@ artifacts.dxf.present
 | `contour_scoring.py` | Ensure best candidate always selected even with low confidence |
 | Frontend (Vue) | Render preview when `processed == true` AND `artifacts.svg.present == true` — do NOT gate on `ok == true` |
 
-### Applied Fix (commit 350af1fd)
+### Applied Fixes
+
+**Backend (commit 350af1fd):** Two-pass fallback + remove early bail-out  
+**Frontend (commit ad285944):** Render artifacts when ok=false
 
 #### `blueprint_clean.py` — Two-pass fallback ensures artifacts always generated
 
@@ -1741,20 +1744,27 @@ else:
 # Artifacts are now returned even when ok=false
 ```
 
-#### Frontend — Render on artifact presence, not ok status
+#### Frontend — Render on artifact presence, not ok status (commit ad285944)
 
 ```javascript
 // BEFORE (problematic):
-if (data.ok) {
-    renderPreview(data.artifacts.svg.content);
+if (!data.ok) {
+  throw new Error(data.error || 'Blueprint extraction failed');  // ← Stops processing
 }
 
 // AFTER (best-effort):
-if (data.artifacts?.svg?.present) {
-    renderPreview(data.artifacts.svg.content);
-    if (!data.ok) {
-        showWarning(data.recommendation.reasons);
-    }
+const hasArtifacts = !!(data.artifacts?.svg?.present || data.artifacts?.dxf?.present);
+if (!data.ok && !hasArtifacts) {
+  throw new Error(data.error || 'Blueprint extraction failed — no artifacts generated');
+}
+// Continue to render artifacts...
+
+// Show appropriate status based on recommendation
+if (!data.ok && hasArtifacts) {
+  const recAction = data.recommendation?.action || 'review';
+  showStatus(`Best-effort extraction (${recAction}) — Review before fabrication`, 'warning');
+} else {
+  showStatus('Extraction complete', 'success');
 }
 ```
 
@@ -1824,4 +1834,4 @@ If overlays show:
 | 2026-04-10 | 12-16 | Blueprint refactor completion |
 | 2026-04-11 | 17-22 | Photo refactor + frontend integration |
 | 2026-04-12 | 24-28 | Recommendation layer + complete file reference + onboarding guide |
-| 2026-04-12 | 30 | FIX: Weak selection regression — two-pass fallback + remove early bail-out |
+| 2026-04-12 | 30 | FIX: Weak selection regression — backend (two-pass fallback) + frontend (render when ok=false) |
