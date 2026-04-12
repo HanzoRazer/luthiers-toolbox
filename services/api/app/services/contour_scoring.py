@@ -49,6 +49,10 @@ class ContourScore:
     solidity_score: float
     continuity_score: float
     ownership_score: float  # Body ownership score (0.0-1.0), 1.0 if not provided
+    centrality_score: float  # How centered in image (0.0-1.0)
+    touches_border: bool  # Contour touches image edge
+    edge_count: int  # Number of edges touched (0-4)
+    is_page_border: bool  # Detected as page border
     vertex_count: int
     score: float
     rejected: bool = False
@@ -80,6 +84,102 @@ class ContourSelectionResult:
             "candidates": [c.to_dict() for c in self.candidates],
             "warnings": self.warnings,
         }
+
+
+# ─── Page Border Detection ──────────────────────────────────────────────────
+
+def _touches_border(
+    contour: np.ndarray,
+    image_width: int,
+    image_height: int,
+    margin_px: int = 3,
+) -> tuple[bool, int]:
+    """
+    Check if contour touches image border.
+
+    Returns:
+        (touches_any_edge, edge_count) where edge_count is 0-4
+    """
+    if contour is None or len(contour) < 3:
+        return False, 0
+
+    x, y, w, h = cv2.boundingRect(contour)
+
+    edges_touched = 0
+    if x <= margin_px:
+        edges_touched += 1  # left
+    if y <= margin_px:
+        edges_touched += 1  # top
+    if x + w >= image_width - margin_px:
+        edges_touched += 1  # right
+    if y + h >= image_height - margin_px:
+        edges_touched += 1  # bottom
+
+    return edges_touched > 0, edges_touched
+
+
+def _is_page_border(
+    contour: np.ndarray,
+    image_width: int,
+    image_height: int,
+    area_ratio: float,
+) -> bool:
+    """
+    Detect if contour is likely a page border.
+
+    Page borders:
+    - Touch 3+ edges
+    - OR touch 2+ edges AND area > 70% of image
+    """
+    touches, edge_count = _touches_border(contour, image_width, image_height)
+    if not touches:
+        return False
+
+    # Strong signal: touches 3+ edges
+    if edge_count >= 3:
+        return True
+
+    # Moderate signal: touches 2+ edges AND large area
+    if edge_count >= 2 and area_ratio > 0.70:
+        return True
+
+    return False
+
+
+def _centrality_score(
+    contour: np.ndarray,
+    image_width: int,
+    image_height: int,
+) -> float:
+    """
+    Score how centered the contour is in the image.
+
+    Guitar bodies in blueprints are typically centered.
+    Page borders and annotations are often off-center.
+
+    Returns:
+        0.0 (edge-hugging) to 1.0 (perfectly centered)
+    """
+    if contour is None or len(contour) < 3:
+        return 0.0
+
+    x, y, w, h = cv2.boundingRect(contour)
+
+    # Contour center
+    cx = x + w / 2
+    cy = y + h / 2
+
+    # Image center
+    img_cx = image_width / 2
+    img_cy = image_height / 2
+
+    # Distance from center, normalized by image diagonal
+    dx = abs(cx - img_cx) / (image_width / 2)
+    dy = abs(cy - img_cy) / (image_height / 2)
+    offset = (dx + dy) / 2  # 0 = centered, 1 = corner
+
+    # Convert to score (inverted)
+    return float(max(0.0, 1.0 - offset))
 
 
 # ─── Scoring Helpers ─────────────────────────────────────────────────────────
@@ -247,6 +347,10 @@ def score_contours(
                     solidity_score=0.0,
                     continuity_score=0.0,
                     ownership_score=0.0,
+                    centrality_score=0.0,
+                    touches_border=False,
+                    edge_count=0,
+                    is_page_border=False,
                     vertex_count=0,
                     score=0.0,
                     rejected=True,
@@ -266,6 +370,11 @@ def score_contours(
         solid_s = _solidity_score(solid)
         continuity = _continuity_score(len(contour), perimeter)
 
+        # Page border detection (critical for blueprints)
+        touches, edge_count = _touches_border(contour, image_width, image_height)
+        page_border = _is_page_border(contour, image_width, image_height, area_ratio)
+        centrality = _centrality_score(contour, image_width, image_height)
+
         # Compute ownership score if callback provided, else default to 1.0
         ownership = 1.0
         if ownership_fn is not None:
@@ -278,7 +387,11 @@ def score_contours(
         rejected = False
         reject_reason = ""
 
-        if area_ratio < min_area_ratio:
+        # Hard rejection filters (order matters for reject_reason)
+        if page_border:
+            rejected = True
+            reject_reason = "page_border"
+        elif area_ratio < min_area_ratio:
             rejected = True
             reject_reason = "too_small"
         elif area_ratio > max_area_ratio:
@@ -286,26 +399,29 @@ def score_contours(
             reject_reason = "too_large"
 
         # Weighted score calculation
-        # With ownership: geometric signals share 90%, ownership gets 10%
-        # Without ownership (ownership=1.0): full geometric weight
+        # Updated weights: added centrality (5%), reduced area weight
+        # With ownership: geometric signals share 85%, ownership 10%, centrality 5%
+        # Without ownership: geometric + centrality
         if ownership_fn is not None:
             # Weights with ownership signal
             score = (
-                0.35 * min(area_ratio / 0.35, 1.0) +  # body should be ~35% of image
+                0.30 * min(area_ratio / 0.35, 1.0) +  # body should be ~35% of image
                 0.25 * closure +
-                0.10 * aspect_s +      # reduced from 0.15
-                0.15 * solid_s +
-                0.05 * continuity +    # reduced from 0.10
-                0.10 * ownership       # new: ownership signal
+                0.10 * aspect_s +
+                0.10 * solid_s +
+                0.05 * continuity +
+                0.10 * ownership +
+                0.10 * centrality  # new: centered bodies score higher
             )
         else:
-            # Original weights without ownership
+            # Weights without ownership
             score = (
-                0.35 * min(area_ratio / 0.35, 1.0) +
+                0.30 * min(area_ratio / 0.35, 1.0) +
                 0.25 * closure +
-                0.15 * aspect_s +
-                0.15 * solid_s +
-                0.10 * continuity
+                0.10 * aspect_s +
+                0.10 * solid_s +
+                0.10 * continuity +
+                0.15 * centrality  # higher weight when no ownership signal
             )
 
         # Penalize rejected contours heavily but don't zero them
@@ -326,6 +442,10 @@ def score_contours(
                 solidity_score=round(solid_s, 3),
                 continuity_score=round(continuity, 3),
                 ownership_score=round(ownership, 3),
+                centrality_score=round(centrality, 3),
+                touches_border=touches,
+                edge_count=edge_count,
+                is_page_border=page_border,
                 vertex_count=len(contour),
                 score=round(float(score), 3),
                 rejected=rejected,
@@ -421,3 +541,235 @@ def get_contour_confidence(
     """
     result = score_contours(contours, image_width, image_height)
     return result.confidence
+
+
+# ─── Hierarchy-Aware Scoring ────────────────────────────────────────────────
+
+# Import here to avoid circular dependency
+# BodyCandidate is imported at function call time
+
+def score_body_candidates(
+    candidates: List[Any],  # List[BodyCandidate] - avoid circular import
+    image_width: int,
+    image_height: int,
+    *,
+    min_area_ratio: float = 0.01,
+    max_area_ratio: float = 0.95,
+    min_confidence: float = 0.45,
+    ownership_fn: OwnershipFn = None,
+    debug: bool = False,
+) -> ContourSelectionResult:
+    """
+    Score body candidates with hierarchy-aware metrics.
+
+    This is the hierarchy-aware alternative to score_contours().
+    It receives BodyCandidate objects that already have:
+    - Isolated top-level contours only (no children competing)
+    - Child area metrics for adjusted scoring
+
+    Key differences from score_contours():
+    - Uses child-aware fill ratio (outer + children) for solidity
+    - Adds small capped bonus for plausible internal structure
+    - Candidates have already been filtered by hierarchy isolation
+
+    Scoring weights:
+    - 30% area ratio (body should be materially present)
+    - 25% closure score (closed loops preferred)
+    - 10% aspect ratio (reasonable proportions)
+    - 10% solidity (child-aware fill ratio)
+    - 10% continuity (smooth, not jagged)
+    - 10% centrality (centered in image)
+    - 5% child bonus (plausible internal structure)
+
+    Args:
+        candidates: List of BodyCandidate from isolate_body_candidates()
+        image_width: Source image width in pixels
+        image_height: Source image height in pixels
+        min_area_ratio: Minimum contour area / image area
+        max_area_ratio: Maximum contour area / image area
+        min_confidence: Threshold for "low confidence" warning
+        ownership_fn: Optional callback for body ownership score
+        debug: If True, return all candidates; otherwise top 3
+
+    Returns:
+        ContourSelectionResult with selected contour, confidence, and debug info
+    """
+    image_area = float(max(image_width * image_height, 1))
+    warnings: List[str] = []
+    scored: List[ContourScore] = []
+
+    for cand in candidates:
+        contour = cand.contour
+        if contour is None or len(contour) < 3:
+            continue
+
+        area = cand.area
+        area_ratio = area / image_area
+
+        # Basic geometric metrics
+        perimeter = float(cv2.arcLength(contour, closed=False))
+        gap_px = _closure_gap_px(contour)
+        closure = _closure_score(gap_px, perimeter)
+        aspect = _safe_bbox_aspect(contour)
+        aspect_s = _aspect_score(aspect)
+        continuity = _continuity_score(len(contour), perimeter)
+
+        # Child-aware solidity (key fix: don't penalize holes)
+        # Use effective fill = (outer_area + child_area) / hull_area
+        hull = cv2.convexHull(contour)
+        hull_area = cv2.contourArea(hull)
+        if hull_area > 0:
+            effective_fill = min(1.0, (area + cand.child_area_sum) / hull_area)
+        else:
+            effective_fill = 0.0
+        solid_s = _solidity_score(effective_fill)
+
+        # Centrality
+        centrality = _centrality_score(contour, image_width, image_height)
+
+        # Page border detection (should already be filtered, but double-check)
+        touches, edge_count = _touches_border(contour, image_width, image_height)
+        page_border = _is_page_border(contour, image_width, image_height, area_ratio)
+
+        # Ownership score
+        ownership = 1.0
+        if ownership_fn is not None:
+            try:
+                ownership = float(ownership_fn(contour))
+                ownership = max(0.0, min(1.0, ownership))
+            except Exception:
+                ownership = 0.5
+
+        # Child bonus (small, capped)
+        # Only applies if 1-6 children and child_area_ratio in [0.01, 0.25]
+        child_count = len(cand.child_nodes)
+        child_bonus = 0.0
+        if cand.has_internal_structure:
+            # Bonus = child_area_ratio * 0.25, capped at 0.08
+            child_bonus = min(0.08, cand.child_area_ratio * 0.25)
+
+        # Rejection filters
+        rejected = False
+        reject_reason = ""
+
+        if page_border:
+            rejected = True
+            reject_reason = "page_border"
+        elif area_ratio < min_area_ratio:
+            rejected = True
+            reject_reason = "too_small"
+        elif area_ratio > max_area_ratio:
+            rejected = True
+            reject_reason = "too_large"
+
+        # Weighted score calculation (hierarchy-aware)
+        # Note: child_bonus is additive, not weighted
+        score = (
+            0.30 * min(area_ratio / 0.35, 1.0) +  # area
+            0.25 * closure +                       # closure
+            0.10 * aspect_s +                      # aspect
+            0.10 * solid_s +                       # child-aware solidity
+            0.10 * continuity +                    # continuity
+            0.10 * centrality +                    # centrality
+            child_bonus                            # small bonus for internal structure
+        )
+
+        # Add ownership if provided
+        if ownership_fn is not None:
+            # Redistribute: reduce other weights slightly, add ownership
+            score = score * 0.90 + 0.10 * ownership
+
+        # Penalize rejected contours
+        if rejected:
+            score *= 0.1
+
+        scored.append(
+            ContourScore(
+                index=cand.node.idx,
+                area=round(area, 1),
+                area_ratio=round(area_ratio, 4),
+                perimeter=round(perimeter, 1),
+                closure_gap_px=round(gap_px, 2),
+                closure_score=round(closure, 3),
+                aspect_ratio=round(aspect, 2),
+                aspect_score=round(aspect_s, 3),
+                solidity=round(effective_fill, 3),  # Using effective fill
+                solidity_score=round(solid_s, 3),
+                continuity_score=round(continuity, 3),
+                ownership_score=round(ownership, 3),
+                centrality_score=round(centrality, 3),
+                touches_border=touches,
+                edge_count=edge_count,
+                is_page_border=page_border,
+                vertex_count=len(contour),
+                score=round(float(score), 3),
+                rejected=rejected,
+                reject_reason=reject_reason,
+            )
+        )
+
+    if not scored:
+        return ContourSelectionResult(
+            selected_index=None,
+            selected_contour=None,
+            confidence=0.0,
+            candidates=[],
+            warnings=["No body candidates available for scoring."],
+            runner_up_score=0.0,
+            winner_margin=0.0,
+        )
+
+    # Rank by score descending
+    ranked = sorted(scored, key=lambda c: c.score, reverse=True)
+    best = ranked[0]
+
+    # Compute runner-up and margin
+    runner_up_score = ranked[1].score if len(ranked) > 1 else 0.0
+    winner_margin = best.score - runner_up_score
+
+    # Select best non-rejected candidate
+    selected_contour = None
+    selected_index = None
+
+    for cand_score in ranked:
+        if not cand_score.rejected:
+            selected_index = cand_score.index
+            # Find the contour from candidates list
+            for cand in candidates:
+                if cand.node.idx == selected_index:
+                    selected_contour = cand.contour
+                    break
+            break
+
+    confidence = float(best.score)
+
+    # Generate warnings
+    if selected_contour is None:
+        warnings.append("No body candidate passed geometric sanity checks.")
+    elif confidence < min_confidence:
+        warnings.append(
+            f"Low confidence selection ({confidence:.2f}). Review output before fabrication."
+        )
+
+    # Fallback: if all rejected but candidates exist, use best anyway
+    if selected_contour is None and candidates:
+        fallback = ranked[0]
+        selected_index = fallback.index
+        for cand in candidates:
+            if cand.node.idx == selected_index:
+                selected_contour = cand.contour
+                break
+        confidence = float(fallback.score)
+        warnings.append(
+            f"Falling back to best available candidate despite rejection: {fallback.reject_reason}."
+        )
+
+    return ContourSelectionResult(
+        selected_index=selected_index,
+        selected_contour=selected_contour,
+        confidence=confidence,
+        candidates=ranked if debug else ranked[:3],
+        warnings=warnings,
+        runner_up_score=float(runner_up_score),
+        winner_margin=float(winner_margin),
+    )
