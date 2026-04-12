@@ -26,9 +26,7 @@ from __future__ import annotations
 import base64
 import gc
 import logging
-import os
 import sys
-import tempfile
 import time
 from pathlib import Path
 from typing import Optional
@@ -36,9 +34,8 @@ from typing import Optional
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 
-# Import phase2 file registry for persisting output files
-from .blueprint.phase2_router import _output_file_registry
 from ..utils.stage_timer import is_debug_enabled
+from ..services.photo_orchestrator import PhotoOrchestrator
 
 logger = logging.getLogger(__name__)
 router = APIRouter(tags=["vectorizer"])
@@ -108,6 +105,9 @@ try:
     VECTORIZER_AVAILABLE = True
 except Exception as e:  # audited: http-500 — ValueError,IOError
     _vectorizer_error = str(e)
+
+# Singleton orchestrator instance
+_orchestrator = PhotoOrchestrator()
 
 # ─── Request / response models ────────────────────────────────────────────────
 
@@ -180,58 +180,6 @@ class VectorizeResponse(BaseModel):
     debug:              Optional[dict] = None  # Ownership diagnostics (requires VECTORIZER_DEBUG=1)
 
 
-# ─── Validation Thresholds ────────────────────────────────────────────────────
-
-SVG_MIN_CHARS = 50       # SVG content must be > 50 chars
-DXF_MIN_BYTES = 800      # DXF must be > 800 bytes (empty DXF is ~700 bytes)
-
-# ─── Helpers ──────────────────────────────────────────────────────────────────
-
-def _extract_svg_paths(svg_path: str) -> str:
-    """
-    Pull all <path d="..."> elements from the SVG file and join them
-    into a single compound path string suitable for useDxfImport.
-    """
-    import xml.etree.ElementTree as ET
-    try:
-        tree = ET.parse(svg_path)
-        root = tree.getroot()
-        ns = {"svg": "http://www.w3.org/2000/svg"}
-
-        # Log SVG structure for diagnosis
-        logger.info(f"SVG_PARSE | file={svg_path}")
-        logger.info(f"SVG_PARSE | root_tag={root.tag}")
-
-        # Get viewBox for dimension info
-        viewbox = root.get("viewBox", "none")
-        width = root.get("width", "none")
-        height = root.get("height", "none")
-        logger.info(f"SVG_PARSE | viewBox={viewbox} width={width} height={height}")
-
-        # Collect all path d= attributes, filtering out tiny artifacts
-        parts: list[str] = []
-        for elem in root.iter("{http://www.w3.org/2000/svg}path"):
-            d = elem.get("d", "").strip()
-            if d and len(d) > 10:
-                parts.append(d)
-                logger.info(f"SVG_PATH | len={len(d)} preview={d[:100]}...")
-
-        # If no namespaced paths, try without namespace
-        if not parts:
-            logger.info("SVG_PARSE | No namespaced paths, trying without namespace")
-            for elem in root.iter("path"):
-                d = elem.get("d", "").strip()
-                if d and len(d) > 10:
-                    parts.append(d)
-                    logger.info(f"SVG_PATH | len={len(d)} preview={d[:100]}...")
-
-        combined = " ".join(parts)
-        logger.info(f"SVG_RESULT | paths_found={len(parts)} total_len={len(combined)}")
-        return combined
-    except Exception as e:  # audited: optional-import
-        logger.error(f"SVG_PARSE_ERROR | {e}")
-        return ""
-
 # ─── Route ────────────────────────────────────────────────────────────────────
 
 @router.get("/status")
@@ -268,6 +216,12 @@ async def extract_from_photo(req: VectorizeRequest):
     The caller should set known_width_mm if they have a reference
     dimension (e.g. a coin or ruler in the photo, or a known guitar
     body width). Without it, scale_source will be "estimated".
+
+    Architecture note: Business logic has been moved to PhotoOrchestrator.
+    This router is now a thin HTTP wrapper that handles:
+    - Request decoding
+    - Input validation
+    - Legacy field mapping
     """
     if not VECTORIZER_AVAILABLE:
         raise HTTPException(
@@ -293,235 +247,124 @@ async def extract_from_photo(req: VectorizeRequest):
         raise HTTPException(status_code=422, detail=f"Invalid base64: {e}")
 
     log_memory("AFTER_DECODE")
+
+    # ── Determine filename from media type ─────────────────────────────────
     ext = ".jpg" if "jpeg" in req.media_type else ".png"
+    filename = f"upload{ext}"
 
-    with tempfile.TemporaryDirectory() as tmpdir:
-        img_path = Path(tmpdir) / f"upload{ext}"
-        out_dir  = Path(tmpdir) / "out"
-        out_dir.mkdir()
+    # ── Check if debug output is allowed ───────────────────────────────────
+    include_debug = req.debug and is_debug_enabled()
 
-        img_path.write_bytes(img_bytes)
-        log_memory("AFTER_WRITE_TEMP")
+    # ── Delegate to orchestrator ───────────────────────────────────────────
+    result = _orchestrator.process_image(
+        image_bytes=img_bytes,
+        filename=filename,
+        spec_name=req.spec_name,
+        known_dimension_mm=req.known_width_mm,
+        correct_perspective=req.correct_perspective,
+        export_svg=req.export_svg,
+        export_dxf=req.export_dxf,
+        source_type=req.source_type,
+        gap_closing_level=req.gap_closing_level,
+        debug=include_debug,
+    )
 
-        # ── Run vectorizer ─────────────────────────────────────────────────
-        try:
-            log_memory("BEFORE_VECTORIZER_INIT")
-            vectorizer = PhotoVectorizerV2()
-            log_memory("AFTER_VECTORIZER_INIT")
+    # Force garbage collection after heavy processing
+    gc.collect()
+    log_memory("AFTER_ORCHESTRATOR")
 
-            logger.info("VECTORIZER_STAGE | Starting extract()")
-            result = vectorizer.extract(
-                source_path=img_path,
-                output_dir=out_dir,
-                spec_name=req.spec_name,
-                known_dimension_mm=req.known_width_mm,
-                correct_perspective=req.correct_perspective,
-                export_svg=req.export_svg,
-                export_dxf=req.export_dxf,
-                export_json=False,
-                debug_images=False,
-                source_type=req.source_type,
-                gap_closing_level=req.gap_closing_level,
-            )
-            log_memory("AFTER_EXTRACT")
+    processing_ms = round((time.time() - t0) * 1000, 1)
 
-            # Force garbage collection after heavy processing
-            gc.collect()
-            log_memory("AFTER_GC")
+    # ── Extract svg_path_d for legacy compatibility ────────────────────────
+    svg_path_d = ""
+    if result.svg.present and result.svg.content:
+        svg_path_d = _extract_svg_path_d_from_content(result.svg.content)
 
-        except Exception as e:  # audited: http-500 — ValueError,IOError
-            mem_at_crash = log_memory("EXTRACT_CRASHED")
-            logger.error(f"VECTORIZER_CRASH | mem={mem_at_crash:.0f}MB | error={type(e).__name__}: {e}")
-            return VectorizeResponse(
-                ok=False,
-                stage="contour_detection",
-                artifacts=Artifacts(),  # Empty artifacts
-                dimensions=Dimensions(),
-                error=str(e),
-                warnings=[f"Pipeline exception: {type(e).__name__}: {e}"],
-                processing_ms=round((time.time() - t0) * 1000, 1),
-            )
+    # ── Build response with legacy field mapping ───────────────────────────
+    # Canonical fields come from orchestrator result
+    # Legacy fields are mapped for backward compatibility
+    artifacts = Artifacts(
+        svg=SVGArtifact(
+            present=result.svg.present,
+            content=result.svg.content,
+            path_count=result.svg.path_count,
+        ),
+        dxf=DXFArtifact(
+            present=result.dxf.present,
+            base64=result.dxf.base64,
+            entity_count=result.dxf.entity_count,
+            closed_contours=result.dxf.closed_contours,
+        ),
+    )
+    dimensions = Dimensions(
+        width_mm=result.dimensions.width_mm,
+        height_mm=result.dimensions.height_mm,
+        width_in=result.dimensions.width_in,
+        height_in=result.dimensions.height_in,
+        spec_match=result.dimensions.spec_match,
+        confidence=result.dimensions.confidence,  # Now from real scorer
+    )
 
-        # Handle multi-instrument result — take the first (largest) body
-        if isinstance(result, list):
-            result = max(result, key=lambda r: r.body_dimensions_mm[0] * r.body_dimensions_mm[1])
+    # Final diagnostics
+    mem_final = log_memory("EXTRACT_COMPLETE")
+    total_elapsed = time.time() - t0
+    logger.info(
+        f"VECTORIZER_RESULT | ok={result.ok} stage={result.stage} elapsed={total_elapsed:.1f}s | "
+        f"mem_delta={mem_final - mem_start:.0f}MB | "
+        f"body={result.dimensions.width_mm:.0f}x{result.dimensions.height_mm:.0f}mm | "
+        f"confidence={result.dimensions.confidence:.3f}"
+    )
 
-        processing_ms = round((time.time() - t0) * 1000, 1)
+    return VectorizeResponse(
+        ok=result.ok,
+        stage=result.stage,
+        artifacts=artifacts,
+        dimensions=dimensions,
+        # Legacy fields for backward compatibility
+        svg_path_d=svg_path_d,
+        svg_path="",  # DEPRECATED: no file paths in stateless deploy
+        dxf_path="",  # DEPRECATED: no file paths in stateless deploy
+        contour_count=result.svg.path_count,
+        line_count=result.dxf.entity_count,
+        body_width_mm=result.dimensions.width_mm,
+        body_height_mm=result.dimensions.height_mm,
+        body_width_in=result.dimensions.width_in,
+        body_height_in=result.dimensions.height_in,
+        scale_source=result.scale_source,
+        bg_method=result.bg_method,
+        perspective_corrected=result.perspective_corrected,
+        warnings=result.warnings,
+        processing_ms=processing_ms,
+        export_blocked=result.export_blocked,
+        export_block_reason=result.export_block_reason,
+        error=result.error,
+        debug=result.debug if include_debug else None,
+    )
 
-        # ── Extract SVG path string ────────────────────────────────────────
-        svg_path_d = ""
-        if result.output_svg and Path(result.output_svg).exists():
-            logger.info(f"SVG_SOURCE | file={result.output_svg}")
-            svg_path_d = _extract_svg_paths(result.output_svg)
-            logger.info(f"SVG_EXTRACTED | len={len(svg_path_d)} chars")
-        else:
-            logger.warning(f"SVG_SOURCE | no output_svg or file missing: {result.output_svg}")
 
-        # Fallback: try body_contour points directly if SVG extraction empty
-        if not svg_path_d and result.body_contour and hasattr(result.body_contour, "points"):
-            pts = result.body_contour.points
-            if pts and len(pts) >= 3:
-                svg_path_d = "M " + " L ".join(f"{p[0]:.2f},{p[1]:.2f}" for p in pts) + " Z"
-                logger.info(f"SVG_FALLBACK | built from {len(pts)} contour points, len={len(svg_path_d)}")
+def _extract_svg_path_d_from_content(svg_content: str) -> str:
+    """
+    Extract path d= attributes from SVG content string.
+    Used for legacy svg_path_d field.
+    """
+    import xml.etree.ElementTree as ET
+    try:
+        root = ET.fromstring(svg_content)
+        parts: list[str] = []
 
-        # Log final path preview for diagnosis
-        if svg_path_d:
-            logger.info(f"SVG_CONTENT_PREVIEW | {svg_path_d[:200]}...")
-        else:
-            logger.warning("SVG_CONTENT_PREVIEW | EMPTY - no path data generated")
+        # Try with namespace
+        for elem in root.iter("{http://www.w3.org/2000/svg}path"):
+            d = elem.get("d", "").strip()
+            if d and len(d) > 10:
+                parts.append(d)
 
-        # body_dimensions_mm is stored as (height, width) — unpack correctly
-        h_mm, w_mm = result.body_dimensions_mm
-        h_in, w_in = result.body_dimensions_inch
-        logger.info(f"BODY_DIMENSIONS | {w_mm:.1f}mm x {h_mm:.1f}mm")
+        # Try without namespace if none found
+        if not parts:
+            for elem in root.iter("path"):
+                d = elem.get("d", "").strip()
+                if d and len(d) > 10:
+                    parts.append(d)
 
-        # ── Build Artifacts (inline content, no file paths) ────────────────────
-        svg_artifact = SVGArtifact()
-        dxf_artifact = DXFArtifact()
-        contour_count = 0
-        stage = "complete"
-        validation_errors = []
-
-        # Read full SVG content if available
-        svg_content = ""
-        if result.output_svg and Path(result.output_svg).exists():
-            try:
-                svg_content = Path(result.output_svg).read_text(encoding='utf-8')
-                path_count = svg_content.count('<path')
-                svg_artifact = SVGArtifact(
-                    present=len(svg_content) > SVG_MIN_CHARS,
-                    content=svg_content,
-                    path_count=path_count
-                )
-                contour_count = path_count if path_count > 0 else 1
-                logger.info(f"SVG_ARTIFACT | present={svg_artifact.present} chars={len(svg_content)} paths={path_count}")
-            except Exception as e:
-                logger.error(f"SVG_READ_ERROR | {e}")
-                validation_errors.append(f"SVG read failed: {e}")
-                stage = "svg_generation"
-        elif svg_path_d:
-            # Fallback: wrap path_d in minimal SVG
-            svg_content = f'<svg xmlns="http://www.w3.org/2000/svg"><path d="{svg_path_d}"/></svg>'
-            svg_artifact = SVGArtifact(
-                present=len(svg_path_d) > SVG_MIN_CHARS,
-                content=svg_content,
-                path_count=1
-            )
-            contour_count = 1
-            logger.info(f"SVG_ARTIFACT | fallback from path_d, len={len(svg_path_d)}")
-
-        # Read and encode DXF content if available
-        dxf_b64 = ""
-        entity_count = 0
-        if result.output_dxf and Path(result.output_dxf).exists():
-            try:
-                dxf_bytes = Path(result.output_dxf).read_bytes()
-                dxf_b64 = base64.b64encode(dxf_bytes).decode('ascii')
-
-                # Count LINE entities in DXF
-                dxf_text = dxf_bytes.decode('utf-8', errors='ignore')
-                entity_count = dxf_text.count('\nLINE\n') + dxf_text.count('\nLWPOLYLINE\n')
-
-                dxf_artifact = DXFArtifact(
-                    present=len(dxf_bytes) > DXF_MIN_BYTES and entity_count > 0,
-                    base64=dxf_b64,
-                    entity_count=entity_count,
-                    closed_contours=contour_count
-                )
-                logger.info(f"DXF_ARTIFACT | present={dxf_artifact.present} bytes={len(dxf_bytes)} entities={entity_count}")
-            except Exception as e:
-                logger.error(f"DXF_READ_ERROR | {e}")
-                validation_errors.append(f"DXF read failed: {e}")
-                stage = "dxf_generation"
-        else:
-            logger.warning(f"DXF_ARTIFACT | no output_dxf or file missing: {result.output_dxf}")
-            if req.export_dxf:
-                validation_errors.append("DXF requested but not generated")
-                stage = "dxf_generation"
-
-        # ── Validation Gate ─────────────────────────────────────────────────
-        # Success requires BOTH artifacts when both are requested
-        is_valid = True
-        if req.export_svg and not svg_artifact.present:
-            is_valid = False
-            validation_errors.append("SVG artifact missing or invalid")
-            if stage == "complete":
-                stage = "validation"
-        if req.export_dxf and not dxf_artifact.present:
-            is_valid = False
-            validation_errors.append("DXF artifact missing or invalid")
-            if stage == "complete":
-                stage = "validation"
-
-        # Block if export was blocked upstream
-        if result.export_blocked:
-            is_valid = False
-            stage = "contour_detection"
-            validation_errors.append(result.export_block_reason or "Export blocked")
-
-        # Build artifacts object
-        artifacts = Artifacts(svg=svg_artifact, dxf=dxf_artifact)
-        dimensions = Dimensions(
-            width_mm=round(w_mm, 2),
-            height_mm=round(h_mm, 2),
-            width_in=round(w_in, 3),
-            height_in=round(h_in, 3),
-            spec_match=req.spec_name,
-            confidence=0.9 if is_valid else 0.0
-        )
-
-        # Final diagnostics
-        mem_final = log_memory("EXTRACT_COMPLETE")
-        total_elapsed = time.time() - t0
-        logger.info(
-            f"VECTORIZER_RESULT | ok={is_valid} stage={stage} elapsed={total_elapsed:.1f}s | "
-            f"mem_delta={mem_final - mem_start:.0f}MB | "
-            f"body={w_mm:.0f}x{h_mm:.0f}mm | svg={svg_artifact.present} dxf={dxf_artifact.present}"
-        )
-
-        # Combine warnings
-        all_warnings = list(result.warnings) + validation_errors
-
-        # Build debug info if requested and allowed
-        debug_dict = None
-        include_debug = req.debug and is_debug_enabled()
-        if include_debug:
-            # Extract ownership diagnostics from result
-            debug_dict = {
-                "ownership_score": getattr(result, "ownership_score", 0.0),
-                "ownership_threshold": 0.60,  # Fixed threshold
-                "ownership_ok": getattr(result, "ownership_ok", False),
-                "candidate_count": getattr(result, "candidate_count", 0),
-                "best_score": getattr(result, "best_plausibility_score", 0.0),
-                "rejection_reasons": getattr(result, "export_block_issues", []),
-                "recommended_next_action": getattr(result, "recommended_next_action", ""),
-                "processing_ms": processing_ms,
-            }
-            # Log debug info for Railway
-            logger.info(f"VECTORIZER_DEBUG | {debug_dict}")
-
-        return VectorizeResponse(
-            ok=is_valid and not result.export_blocked,
-            stage=stage,
-            artifacts=artifacts,
-            dimensions=dimensions,
-            # Legacy fields for backward compatibility
-            svg_path_d=svg_path_d,
-            svg_path="",  # DEPRECATED: no file paths in stateless deploy
-            dxf_path="",  # DEPRECATED: no file paths in stateless deploy
-            contour_count=contour_count,
-            line_count=entity_count,
-            body_width_mm=round(w_mm, 2),
-            body_height_mm=round(h_mm, 2),
-            body_width_in=round(w_in, 3),
-            body_height_in=round(h_in, 3),
-            scale_source=result.calibration.source.value if result.calibration else "estimated",
-            bg_method=result.bg_method_used,
-            perspective_corrected=result.perspective_corrected,
-            warnings=all_warnings,
-            processing_ms=processing_ms,
-            export_blocked=result.export_blocked,
-            export_block_reason=result.export_block_reason or "",
-            error="; ".join(validation_errors) if validation_errors else "",
-            debug=debug_dict,
-        )
+        return " ".join(parts)
+    except Exception:
+        return ""

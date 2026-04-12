@@ -51,6 +51,14 @@ from .blueprint_clean import (
     clean_blueprint_dxf,
     validate_cleanup_result,
 )
+from .contour_recommendation import (
+    ProcessingMode,
+    Recommendation,
+    RecommendationAction,
+    RecommendationInput,
+    SelectionResult,
+    recommend,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -84,13 +92,16 @@ class Dimensions:
 @dataclass
 class BlueprintResult:
     """Canonical result from blueprint orchestration."""
-    ok: bool
+    ok: bool  # True only when recommendation.action == "accept"
+    processed: bool = True  # Pipeline completed (transport-level)
     stage: str = "complete"
     error: str = ""
     warnings: list[str] = field(default_factory=list)
     dimensions: Dimensions = field(default_factory=Dimensions)
     svg: SVGArtifact = field(default_factory=SVGArtifact)
     dxf: DXFArtifact = field(default_factory=DXFArtifact)
+    selection: SelectionResult = field(default_factory=SelectionResult)
+    recommendation: Recommendation = field(default_factory=Recommendation)
     metrics: dict[str, Any] = field(default_factory=dict)
     debug: dict[str, Any] = field(default_factory=dict)
 
@@ -98,6 +109,7 @@ class BlueprintResult:
         """Convert to API response dictionary."""
         payload = {
             "ok": self.ok,
+            "processed": self.processed,
             "stage": self.stage,
             "error": self.error,
             "warnings": self.warnings,
@@ -118,6 +130,8 @@ class BlueprintResult:
                     "closed_contours": self.dxf.closed_contours,
                 },
             },
+            "selection": self.selection.to_dict(),
+            "recommendation": self.recommendation.to_dict(),
             "metrics": self.metrics,
         }
         if include_debug and self.debug:
@@ -243,8 +257,8 @@ class BlueprintOrchestrator:
                         warnings=warnings,
                     )
 
-                # Merge any additional warnings from extraction
-                warnings.extend(extract_result.warnings)
+                # warnings were already appended in-place by extract_pdf_page()
+                # and extract_blueprint_to_dxf(..., warnings=warnings)
                 stage_timings["extraction_ms"] = extract_result.processing_time_ms
 
                 # ─── Stage: Cleanup/filtering ─────────────────────────────
@@ -319,15 +333,49 @@ class BlueprintOrchestrator:
                 if not dxf_valid:
                     warnings.append("DXF content missing or empty")
 
-                is_ok = svg_valid and dxf_valid
+                # ─── Stage: Recommendation ────────────────────────────────
+                # Build selection result from cleanup output
+                selection = SelectionResult(
+                    candidate_count=clean_result.candidate_count,
+                    selected_index=0 if clean_result.contours_found > 0 else None,
+                    selection_score=clean_result.best_confidence,
+                    runner_up_score=clean_result.runner_up_score,
+                    winner_margin=clean_result.winner_margin,
+                    reasons=[],
+                )
+
+                # Build recommendation input
+                rec_input = RecommendationInput(
+                    selection=selection,
+                    mode=ProcessingMode.BLUEPRINT,
+                    svg_valid=svg_valid,
+                    dxf_valid=dxf_valid,
+                    warnings=warnings,
+                    ownership_score=None,  # Not used for blueprint
+                    scale_source="estimated",  # Blueprint doesn't have calibration
+                )
+
+                # Get recommendation
+                rec = recommend(rec_input)
+
+                # ok = true only when recommendation.action == "accept"
+                is_ok = rec.action == RecommendationAction.ACCEPT
+                stage = "complete" if is_ok else "recommendation"
+
+                # Add recommendation reasons to warnings if not accept
+                if rec.action != RecommendationAction.ACCEPT:
+                    for reason in rec.reasons:
+                        if reason not in warnings:
+                            warnings.append(reason)
 
                 # ─── Build result ─────────────────────────────────────────
                 report("complete", 100)
 
                 return BlueprintResult(
                     ok=is_ok,
-                    stage="complete" if is_ok else "validation",
-                    error="" if is_ok else "; ".join(warnings),
+                    processed=True,
+                    stage=stage,
+                    error="" if is_ok else "; ".join(rec.reasons),
                     warnings=warnings,
                     dimensions=Dimensions(
                         width_mm=extract_result.output_size_mm[0],
@@ -344,6 +392,8 @@ class BlueprintOrchestrator:
                         entity_count=dxf_entity_count,
                         closed_contours=clean_result.contours_found,
                     ),
+                    selection=selection,
+                    recommendation=rec,
                     metrics={
                         "original_entities": extract_result.line_count,
                         "cleaned_entities": clean_result.cleaned_entity_count,

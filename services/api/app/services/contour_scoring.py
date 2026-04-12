@@ -66,11 +66,16 @@ class ContourSelectionResult:
     confidence: float
     candidates: List[ContourScore]
     warnings: List[str]
+    # Selection diagnostics for recommendation layer
+    runner_up_score: float = 0.0
+    winner_margin: float = 0.0
 
     def to_debug_dict(self) -> dict[str, Any]:
         return {
             "selected_index": self.selected_index,
             "confidence": round(self.confidence, 3),
+            "runner_up_score": round(self.runner_up_score, 3),
+            "winner_margin": round(self.winner_margin, 3),
             "candidate_count": len(self.candidates),
             "candidates": [c.to_dict() for c in self.candidates],
             "warnings": self.warnings,
@@ -335,11 +340,17 @@ def score_contours(
             confidence=0.0,
             candidates=[],
             warnings=["No contours available for scoring."],
+            runner_up_score=0.0,
+            winner_margin=0.0,
         )
 
     # Rank by score descending
     ranked = sorted(scored, key=lambda c: c.score, reverse=True)
     best = ranked[0]
+
+    # Compute runner-up and margin for recommendation layer
+    runner_up_score = ranked[1].score if len(ranked) > 1 else 0.0
+    winner_margin = best.score - runner_up_score
 
     # Select contour
     selected_contour = None
@@ -375,6 +386,8 @@ def score_contours(
         confidence=confidence,
         candidates=ranked if debug else ranked[:3],
         warnings=warnings,
+        runner_up_score=float(runner_up_score),
+        winner_margin=float(winner_margin),
     )
 
 

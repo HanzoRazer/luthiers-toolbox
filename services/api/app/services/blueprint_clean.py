@@ -44,6 +44,10 @@ class CleanResult:
     discarded_open: int = 0
     discarded_low_score: int = 0
     best_confidence: float = 0.0
+    # Selection diagnostics for recommendation layer
+    runner_up_score: float = 0.0
+    winner_margin: float = 0.0
+    candidate_count: int = 0
     error: str = ""
     warnings: list[str] = field(default_factory=list)
 
@@ -297,7 +301,8 @@ def clean_blueprint_dxf(
 
         logger.info(
             f"BLUEPRINT_CLEAN | scored {len(scoring_result.candidates)} candidates, "
-            f"selected {len(final_chains)}, confidence={best_confidence:.2f}"
+            f"selected {len(final_chains)}, confidence={best_confidence:.2f}, "
+            f"margin={scoring_result.winner_margin:.2f}"
         )
 
         return CleanResult(
@@ -312,6 +317,9 @@ def clean_blueprint_dxf(
             discarded_open=discarded_open,
             discarded_low_score=discarded_low_score,
             best_confidence=best_confidence,
+            runner_up_score=scoring_result.runner_up_score,
+            winner_margin=scoring_result.winner_margin,
+            candidate_count=len(scoring_result.candidates),
             warnings=warnings,
         )
 
