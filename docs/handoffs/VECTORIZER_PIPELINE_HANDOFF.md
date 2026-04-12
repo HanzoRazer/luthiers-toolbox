@@ -1557,12 +1557,12 @@ print(types)  # Expected: {'LINE': N}
 
 ---
 
-## 30. 🐛 BUG: Blueprint Vectorizer Regression — Weak Selection Produces No Output
+## 30. ✅ FIX: Blueprint Vectorizer Regression — Weak Selection Produces No Output
 
 **Date:** 2026-04-12  
-**Status:** OPEN  
-**Priority:** 🔥 HIGH — breaks core product behavior  
-**Type:** Product regression
+**Status:** FIXED (commit 350af1fd)  
+**Priority:** 🔥 HIGH — was breaking core product behavior  
+**Type:** Product regression (now resolved)
 
 ### Summary
 
@@ -1693,46 +1693,52 @@ artifacts.dxf.present
 | `contour_scoring.py` | Ensure best candidate always selected even with low confidence |
 | Frontend (Vue) | Render preview when `processed == true` AND `artifacts.svg.present == true` — do NOT gate on `ok == true` |
 
-### Proposed Backend Fix
+### Applied Fix (commit 350af1fd)
 
-#### `blueprint_clean.py` — Remove score-based artifact suppression
+#### `blueprint_clean.py` — Two-pass fallback ensures artifacts always generated
 
 ```python
 # BEFORE (problematic):
-if candidate.score < MIN_SCORE_TO_KEEP:
-    discarded_low_score += 1
-    continue  # ← This discards potentially valid contours
+# Single fallback only selected chains passing length/closure filters
+# If all chains failed filters → no selection → no artifacts
 
 # AFTER (best-effort):
-# Always keep the best candidate regardless of score
-# Let recommendation layer decide accept/review/reject
-# Artifact generation is independent of confidence
+# First pass: try chain passing length/closure filters
+fallback_found = False
+for candidate in scoring_result.candidates:
+    if chain_len >= min_contour_length_mm and (is_closed or keep_open_chains):
+        selected_chains.append((chain, candidate.score))
+        fallback_found = True
+        break
+
+# Second pass: if still nothing, use absolute best regardless of filters
+if not fallback_found and scoring_result.candidates:
+    best_candidate = scoring_result.candidates[0]  # Already sorted by score
+    chain = chains[best_candidate.index]
+    selected_chains.append((chain, best_candidate.score))
+    warnings.append("Using best available contour bypassing filters for review.")
 ```
 
-#### `blueprint_orchestrator.py` — Decouple artifacts from recommendation
+#### `blueprint_orchestrator.py` — Removed early bail-out
 
 ```python
 # BEFORE (problematic):
-is_ok = rec.action == RecommendationAction.ACCEPT
-if not is_ok:
-    # May be suppressing artifacts here
+if not cleanup_valid:
+    return BlueprintResult(ok=False, stage="cleanup", ...)  # ← NO ARTIFACTS
 
 # AFTER (best-effort):
-# ok controls recommendation, NOT artifact presence
-# Always return artifacts if they exist
-return BlueprintResult(
-    ok=is_ok,  # Controls recommendation only
-    processed=True,
-    svg=SVGArtifact(
-        present=svg_valid,  # Independent of ok
-        content=svg_content,
-    ),
-    dxf=DXFArtifact(
-        present=dxf_valid,  # Independent of ok
-        base64=dxf_b64,
-    ),
-    recommendation=rec,  # Carries the confidence signal
-)
+# Do NOT bail early on cleanup failure
+# Continue to artifact generation — let recommendation layer decide
+cleanup_valid = True
+if not clean_result.success:
+    cleanup_valid = False
+    warnings.append(clean_result.error or "Cleanup encountered issues")
+else:
+    cleanup_valid, cleanup_warnings = validate_cleanup_result(clean_result)
+    warnings.extend(cleanup_warnings)
+
+# Pipeline continues to artifact encoding regardless of cleanup_valid
+# Artifacts are now returned even when ok=false
 ```
 
 #### Frontend — Render on artifact presence, not ok status
@@ -1818,4 +1824,4 @@ If overlays show:
 | 2026-04-10 | 12-16 | Blueprint refactor completion |
 | 2026-04-11 | 17-22 | Photo refactor + frontend integration |
 | 2026-04-12 | 24-28 | Recommendation layer + complete file reference + onboarding guide |
-| 2026-04-12 | 30 | BUG: Weak selection regression — no output for low-confidence cases |
+| 2026-04-12 | 30 | FIX: Weak selection regression — two-pass fallback + remove early bail-out |
