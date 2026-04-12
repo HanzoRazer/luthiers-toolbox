@@ -254,9 +254,12 @@ def clean_blueprint_dxf(
         selected_chains.sort(key=lambda x: x[1], reverse=True)
 
         # Step 5: Fallback - if nothing selected, use best available
+        # CRITICAL: Always return best-effort output if ANY chain exists
+        # Selection confidence controls recommendation, NOT artifact existence
         best_confidence = scoring_result.confidence
         if not selected_chains and chains:
-            # Find best chain that passes length/closure filters
+            # First pass: try to find chain that passes length/closure filters
+            fallback_found = False
             for candidate in scoring_result.candidates:
                 idx = candidate.index
                 if idx >= len(chains):
@@ -272,7 +275,22 @@ def clean_blueprint_dxf(
                         f"Falling back to best available contour (score={candidate.score:.2f}) "
                         f"despite low confidence."
                     )
+                    fallback_found = True
                     break
+
+            # Second pass: if still nothing, use absolute best regardless of filters
+            # This ensures we ALWAYS produce artifacts for review
+            if not fallback_found and scoring_result.candidates:
+                best_candidate = scoring_result.candidates[0]  # Already sorted by score
+                idx = best_candidate.index
+                if idx < len(chains):
+                    chain = chains[idx]
+                    selected_chains.append((chain, best_candidate.score))
+                    best_confidence = best_candidate.score
+                    warnings.append(
+                        f"Using best available contour (score={best_candidate.score:.2f}) "
+                        f"bypassing length/closure filters for review."
+                    )
 
         # Add scoring warnings
         warnings.extend(scoring_result.warnings)

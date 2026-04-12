@@ -272,33 +272,17 @@ class BlueprintOrchestrator:
                     close_gaps_mm=close_gaps_mm,
                 )
 
+                # CRITICAL FIX: Do NOT bail early on cleanup failure
+                # Continue to artifact generation — let recommendation layer decide
+                # Artifact existence is independent of selection confidence
+                cleanup_valid = True
                 if not clean_result.success:
-                    return BlueprintResult(
-                        ok=False,
-                        stage="cleanup",
-                        error=clean_result.error or "Cleanup failed",
-                        metrics={
-                            "original_entities": extract_result.line_count,
-                            "contours_found": 0,
-                        },
-                    )
-
-                # Validate cleanup result
-                cleanup_valid, cleanup_warnings = validate_cleanup_result(clean_result)
-                warnings.extend(cleanup_warnings)
-
-                if not cleanup_valid:
-                    return BlueprintResult(
-                        ok=False,
-                        stage="cleanup",
-                        error=cleanup_warnings[0] if cleanup_warnings else "Cleanup validation failed",
-                        warnings=warnings,
-                        metrics={
-                            "original_entities": extract_result.line_count,
-                            "chains_found": clean_result.chains_found,
-                            "contours_found": clean_result.contours_found,
-                        },
-                    )
+                    cleanup_valid = False
+                    warnings.append(clean_result.error or "Cleanup encountered issues")
+                else:
+                    # Validate cleanup result (adds warnings, does NOT block)
+                    cleanup_valid, cleanup_warnings = validate_cleanup_result(clean_result)
+                    warnings.extend(cleanup_warnings)
 
                 # ─── Stage: Encode DXF to base64 ──────────────────────────
                 report("encode", 80)
@@ -395,11 +379,12 @@ class BlueprintOrchestrator:
                     selection=selection,
                     recommendation=rec,
                     metrics={
+                        "processing_ms": extract_result.processing_time_ms,  # Canonical name
+                        "extraction_ms": extract_result.processing_time_ms,  # Legacy alias
                         "original_entities": extract_result.line_count,
                         "cleaned_entities": clean_result.cleaned_entity_count,
                         "contours_found": clean_result.contours_found,
                         "chains_found": clean_result.chains_found,
-                        "extraction_ms": extract_result.processing_time_ms,
                         "contour_confidence": round(clean_result.best_confidence, 3),
                     },
                     debug=stage_timings if debug else {},
