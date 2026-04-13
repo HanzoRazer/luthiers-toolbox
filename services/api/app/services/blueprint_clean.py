@@ -23,6 +23,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import List, Optional, Tuple
 
+import cv2
 import numpy as np
 
 from .contour_scoring import score_contours, ContourSelectionResult
@@ -50,6 +51,12 @@ class CleanResult:
     candidate_count: int = 0
     error: str = ""
     warnings: list[str] = field(default_factory=list)
+    # Fallback diagnostics (for debug)
+    fallback_used: bool = False
+    fallback_tier: int = 0  # 1-5, 0 if no fallback
+    fallback_reason: str = ""
+    fallback_reject_reason: str = ""
+    fallback_is_page_border: bool = False
 
 
 # ─── Ownership Adapter ───────────────────────────────────────────────────────
@@ -98,6 +105,124 @@ def _create_ownership_fn(canvas_width: int, canvas_height: int):
         return None
 
 
+# ─── Fallback Priority Ladder ───────────────────────────────────────────────
+
+# Fallback tiers (lower = better):
+# Tier 1: Non-rejected, non-border
+# Tier 2: Rejected-for-score, non-border, structurally plausible
+# Tier 3: Rejected-for-geometry, non-border, not strip-like
+# Tier 4: Rejected non-border, weak structural plausibility
+# Tier 5: Page border (LAST RESORT)
+
+
+def _classify_fallback_tier(candidate) -> int:
+    """
+    Classify a candidate into a fallback tier.
+
+    Returns tier 1-5, where lower is better.
+    """
+    # Tier 1: Not rejected, not page border
+    if not candidate.rejected and not candidate.is_page_border:
+        return 1
+
+    # Page border is always Tier 5
+    if candidate.is_page_border:
+        return 5
+
+    # Non-border rejected candidates: tiers 2-4 based on reject reason
+    reject_reason = candidate.reject_reason
+
+    # Tier 2: Rejected for score/confidence reasons, but structurally valid
+    if reject_reason in ("low_score", "low_confidence", ""):
+        # Check structural plausibility: decent area, not too extreme aspect
+        if candidate.area_ratio >= 0.01 and candidate.aspect_ratio <= 4.0:
+            return 2
+
+    # Tier 3: Rejected for geometric reasons, but not strip-like
+    if reject_reason in ("too_small", "degenerate_contour"):
+        # Still might be a valid body if aspect is reasonable
+        if candidate.aspect_ratio <= 6.0:
+            return 3
+
+    # Tier 4: All other non-border rejected candidates
+    return 4
+
+
+def _is_body_like(candidate, min_contour_length_mm: float, is_closed: bool, keep_open_chains: bool) -> bool:
+    """
+    Check if a candidate is body-like enough for fallback consideration.
+
+    More permissive than primary selection but still filters obvious junk.
+    """
+    # Must pass basic length/closure requirements or be closed
+    if not (is_closed or keep_open_chains):
+        return False
+
+    # Body-like aspect ratio (not a thin strip)
+    if candidate.aspect_ratio > 8.0:
+        return False
+
+    # Not too small (more permissive than primary)
+    if candidate.area_ratio < 0.002:
+        return False
+
+    return True
+
+
+def _select_fallback_candidate(
+    scoring_result,
+    chains: list,
+    min_contour_length_mm: float,
+    close_gaps_mm: float,
+    keep_open_chains: bool,
+) -> tuple:
+    """
+    Select the best fallback candidate using priority ladder.
+
+    Returns:
+        (chain, score, tier, candidate) or (None, 0.0, 0, None) if no fallback
+    """
+    if not scoring_result.candidates or not chains:
+        return None, 0.0, 0, None
+
+    # Build list of (tier, score, idx, candidate, chain) for sorting
+    candidates_with_tiers = []
+
+    for candidate in scoring_result.candidates:
+        idx = candidate.index
+        if idx >= len(chains):
+            continue
+
+        chain = chains[idx]
+        chain_len = chain.length()
+        is_closed = chain.is_closed(close_gaps_mm)
+
+        # Skip if doesn't meet minimum length
+        if chain_len < min_contour_length_mm * 0.5:  # More permissive for fallback
+            continue
+
+        tier = _classify_fallback_tier(candidate)
+
+        # Check body-likeness for tiers 2-4
+        if tier >= 2:
+            if not _is_body_like(candidate, min_contour_length_mm, is_closed, keep_open_chains):
+                # Demote to next tier
+                tier = min(tier + 1, 5)
+
+        candidates_with_tiers.append((tier, -candidate.score, idx, candidate, chain))
+
+    if not candidates_with_tiers:
+        return None, 0.0, 0, None
+
+    # Sort by tier (ascending), then by score (descending via negation)
+    candidates_with_tiers.sort(key=lambda x: (x[0], x[1]))
+
+    best = candidates_with_tiers[0]
+    tier, neg_score, idx, candidate, chain = best
+
+    return chain, candidate.score, tier, candidate
+
+
 # ─── Scoring Integration Helpers ─────────────────────────────────────────────
 
 def _chain_to_contour(chain) -> np.ndarray:
@@ -132,6 +257,124 @@ def _estimate_canvas_size(chains: list, polyline_pts: list) -> Tuple[int, int]:
     width = max(int(max_x - min_x), 100)
     height = max(int(max_y - min_y), 100)
     return width, height
+
+
+# ─── Surgical Border Removal (Cleanup Stage) ────────────────────────────────
+#
+# This mirrors the extraction-stage border removal in edge_to_dxf.py.
+# The cleanup stage can re-detect page borders from chain geometry,
+# so we need to remove them BEFORE scoring to prevent fallback selection.
+#
+# Author: Production Shop
+# Date: 2026-04-13
+
+
+def _is_chain_page_border(
+    chain_contour: np.ndarray,
+    canvas_width: int,
+    canvas_height: int,
+    margin_ratio: float = 0.02,
+    area_threshold: float = 0.70,
+) -> bool:
+    """
+    Detect if a chain contour is likely a page border.
+
+    Uses the same logic as contour_scoring._is_page_border but adapted
+    for DXF chain coordinates (which may be in mm units).
+
+    Args:
+        chain_contour: Numpy array of chain points
+        canvas_width, canvas_height: Estimated canvas size
+        margin_ratio: How close to edge counts as "touching" (default 2%)
+        area_threshold: Area ratio for border detection
+
+    Returns:
+        True if this looks like a page border
+    """
+    if chain_contour is None or len(chain_contour) < 3:
+        return False
+
+    # Flatten if needed
+    points = chain_contour.reshape(-1, 2)
+
+    # Get bounding box
+    x_coords = points[:, 0]
+    y_coords = points[:, 1]
+    min_x, max_x = x_coords.min(), x_coords.max()
+    min_y, max_y = y_coords.min(), y_coords.max()
+
+    # Calculate margins
+    margin_x = canvas_width * margin_ratio
+    margin_y = canvas_height * margin_ratio
+
+    # Check which edges are touched
+    touches_left = min_x <= margin_x
+    touches_right = max_x >= canvas_width - margin_x
+    touches_top = min_y <= margin_y
+    touches_bottom = max_y >= canvas_height - margin_y
+
+    edge_count = sum([touches_left, touches_right, touches_top, touches_bottom])
+
+    # Calculate area ratio
+    area = float(cv2.contourArea(chain_contour.astype(np.float32)))
+    canvas_area = float(canvas_width * canvas_height)
+    area_ratio = area / canvas_area if canvas_area > 0 else 0.0
+
+    # Page border detection (same criteria as contour_scoring)
+    if edge_count >= 3:
+        return True
+    if edge_count >= 2 and area_ratio > area_threshold:
+        return True
+
+    return False
+
+
+def _remove_page_border_chains(
+    chains: list,
+    contours: list,
+    canvas_width: int,
+    canvas_height: int,
+) -> Tuple[list, list, int]:
+    """
+    Remove page border chains BEFORE scoring.
+
+    This is the cleanup-stage equivalent of _remove_page_borders_early()
+    in edge_to_dxf.py. It ensures page borders never enter the scoring
+    contest even if extraction didn't remove them.
+
+    Args:
+        chains: List of Chain objects
+        contours: List of numpy contour arrays (parallel to chains)
+        canvas_width, canvas_height: Estimated canvas size
+
+    Returns:
+        (filtered_chains, filtered_contours, removed_count)
+    """
+    if not chains or not contours:
+        return chains, contours, 0
+
+    filtered_chains = []
+    filtered_contours = []
+    removed_count = 0
+
+    for chain, contour in zip(chains, contours):
+        if _is_chain_page_border(contour, canvas_width, canvas_height):
+            removed_count += 1
+            logger.info(
+                f"BORDER_REMOVAL_CLEAN | Removed chain with {len(contour)} points "
+                f"(detected as page border before scoring)"
+            )
+        else:
+            filtered_chains.append(chain)
+            filtered_contours.append(contour)
+
+    if removed_count > 0:
+        logger.info(
+            f"BORDER_REMOVAL_CLEAN | Removed {removed_count} page border chain(s), "
+            f"{len(filtered_chains)} chains remaining for scoring"
+        )
+
+    return filtered_chains, filtered_contours, removed_count
 
 
 # ─── Main Cleanup Function ───────────────────────────────────────────────────
@@ -203,8 +446,30 @@ def clean_blueprint_dxf(
             dummy_chain = Chain(points=[Point(x, y) for x, y in pts])
             chains.append(dummy_chain)
 
-        # Step 3: Score all contours (with ownership as weighted signal)
+        # Step 2.5: SURGICAL BORDER REMOVAL (Cleanup Stage)
+        # Remove page border chains BEFORE scoring to prevent them from
+        # becoming fallback winners when body contours are fragmented.
+        # This mirrors the extraction-stage fix in edge_to_dxf.py.
         canvas_w, canvas_h = _estimate_canvas_size(chains, [])
+        chains, contours, borders_removed = _remove_page_border_chains(
+            chains, contours, canvas_w, canvas_h
+        )
+
+        if borders_removed > 0:
+            # Re-estimate canvas size without borders
+            canvas_w, canvas_h = _estimate_canvas_size(chains, [])
+            logger.info(f"Canvas re-estimated after border removal: {canvas_w}x{canvas_h}")
+
+        if not chains:
+            return CleanResult(
+                success=False,
+                error="No non-border chains found after filtering",
+                original_entity_count=original_count,
+                chains_found=total_chains,
+                warnings=["All chains were detected as page borders and removed."],
+            )
+
+        # Step 3: Score all contours (with ownership as weighted signal)
         ownership_fn = _create_ownership_fn(canvas_w, canvas_h)
 
         scoring_result = score_contours(
@@ -253,43 +518,67 @@ def clean_blueprint_dxf(
         # Sort by score descending
         selected_chains.sort(key=lambda x: x[1], reverse=True)
 
-        # Step 5: Fallback - if nothing selected, use best available
+        # Step 5: Fallback - if nothing selected, use priority ladder
         # CRITICAL: Always return best-effort output if ANY chain exists
         # Selection confidence controls recommendation, NOT artifact existence
+        # Page border is LAST RESORT - never pick it if any other candidate exists
         best_confidence = scoring_result.confidence
-        if not selected_chains and chains:
-            # First pass: try to find chain that passes length/closure filters
-            fallback_found = False
-            for candidate in scoring_result.candidates:
-                idx = candidate.index
-                if idx >= len(chains):
-                    continue
-                chain = chains[idx]
-                chain_len = chain.length()
-                is_closed = chain.is_closed(close_gaps_mm)
+        fallback_used = False
+        fallback_tier = 0
+        fallback_reason = ""
+        fallback_reject_reason = ""
+        fallback_is_page_border = False
 
-                if chain_len >= min_contour_length_mm and (is_closed or keep_open_chains):
-                    selected_chains.append((chain, candidate.score))
-                    best_confidence = candidate.score
+        if not selected_chains and chains:
+            # Use priority ladder to select fallback
+            fb_chain, fb_score, fb_tier, fb_candidate = _select_fallback_candidate(
+                scoring_result,
+                chains,
+                min_contour_length_mm,
+                close_gaps_mm,
+                keep_open_chains,
+            )
+
+            if fb_chain is not None:
+                selected_chains.append((fb_chain, fb_score))
+                best_confidence = fb_score
+                fallback_used = True
+                fallback_tier = fb_tier
+                fallback_reject_reason = fb_candidate.reject_reason if fb_candidate else ""
+                fallback_is_page_border = fb_candidate.is_page_border if fb_candidate else False
+
+                # Generate appropriate warning based on tier
+                if fb_tier == 1:
+                    fallback_reason = "non-rejected candidate selected via fallback"
                     warnings.append(
-                        f"Falling back to best available contour (score={candidate.score:.2f}) "
+                        f"Falling back to best available contour (score={fb_score:.2f}) "
                         f"despite low confidence."
                     )
-                    fallback_found = True
-                    break
-
-            # Second pass: if still nothing, use absolute best regardless of filters
-            # This ensures we ALWAYS produce artifacts for review
-            if not fallback_found and scoring_result.candidates:
-                best_candidate = scoring_result.candidates[0]  # Already sorted by score
-                idx = best_candidate.index
-                if idx < len(chains):
-                    chain = chains[idx]
-                    selected_chains.append((chain, best_candidate.score))
-                    best_confidence = best_candidate.score
+                elif fb_tier == 2:
+                    fallback_reason = "rejected-for-score but structurally plausible"
                     warnings.append(
-                        f"Using best available contour (score={best_candidate.score:.2f}) "
-                        f"bypassing length/closure filters for review."
+                        f"Falling back to structurally plausible contour (score={fb_score:.2f}, "
+                        f"tier 2) despite rejection."
+                    )
+                elif fb_tier == 3:
+                    fallback_reason = "rejected-for-geometry but not strip-like"
+                    warnings.append(
+                        f"Falling back to non-strip contour (score={fb_score:.2f}, tier 3) "
+                        f"despite geometric rejection: {fallback_reject_reason}."
+                    )
+                elif fb_tier == 4:
+                    fallback_reason = "weak structural plausibility, non-border"
+                    warnings.append(
+                        f"Falling back to weak but non-border contour (score={fb_score:.2f}, tier 4) "
+                        f"despite rejection: {fallback_reject_reason}."
+                    )
+                elif fb_tier == 5:
+                    fallback_reason = "page_border as last resort"
+                    warnings.append(
+                        "No contour passed minimum geometric sanity checks."
+                    )
+                    warnings.append(
+                        f"Falling back to best available contour despite rejection: page_border."
                     )
 
         # Add scoring warnings
@@ -339,6 +628,11 @@ def clean_blueprint_dxf(
             winner_margin=scoring_result.winner_margin,
             candidate_count=len(scoring_result.candidates),
             warnings=warnings,
+            fallback_used=fallback_used,
+            fallback_tier=fallback_tier,
+            fallback_reason=fallback_reason,
+            fallback_reject_reason=fallback_reject_reason,
+            fallback_is_page_border=fallback_is_page_border,
         )
 
     except ImportError as e:
