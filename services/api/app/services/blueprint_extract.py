@@ -414,10 +414,11 @@ def extract_structural_pass(
     warnings: Optional[list[str]] = None,
 ) -> StructuralPassResult:
     """
-    Pass A: Structural geometry extraction.
+    Pass A: Structural geometry extraction using SIMPLE method.
 
-    Uses the recovered baseline behavior (RETR_LIST, no hierarchy filtering).
-    This is the foundation for body geometry capture.
+    Phase 2: Uses adaptive threshold + RETR_LIST + CHAIN_APPROX_SIMPLE + approxPolyDP.
+    This is the March 6, 2026 SIMPLE-style extraction that preserves body geometry
+    better than Canny edge detection for document-style blueprints.
 
     Args:
         source_path: Path to input image
@@ -428,33 +429,84 @@ def extract_structural_pass(
     Returns:
         StructuralPassResult with extraction results
     """
+    import time
+    import cv2
+
     if warnings is None:
         warnings = []
 
-    # Call the recovered baseline path (isolate_body=False)
-    result = extract_blueprint_to_dxf(
-        source_path=source_path,
-        output_path=output_path,
-        target_height_mm=target_height_mm,
-        warnings=warnings,
-        isolate_body=False,  # CRITICAL: recovered baseline behavior
-    )
+    start_time = time.time()
 
-    return StructuralPassResult(
-        success=result.success,
-        dxf_path=result.output_path,
-        entity_count=result.line_count,
-        image_size_px=result.image_size_px,
-        output_size_mm=result.output_size_mm,
-        mm_per_px=result.mm_per_px,
-        processing_time_ms=result.processing_time_ms,
-        error=result.error,
-        warnings=result.warnings,
-        debug={
-            "grouping": result.grouping,
-            "stage_timings": result.stage_timings,
-        },
-    )
+    try:
+        # Import SIMPLE extraction functions
+        from edge_to_dxf import extract_entities_simple, vectorize_entities_to_dxf
+
+        # Load image
+        image = cv2.imread(source_path)
+        if image is None:
+            return StructuralPassResult(
+                success=False,
+                error=f"Failed to load image: {source_path}",
+                warnings=warnings,
+            )
+
+        h, w = image.shape[:2]
+        logger.info(f"Pass A SIMPLE extraction: {source_path} ({w}x{h})")
+
+        # Extract using SIMPLE method (adaptive threshold, RETR_LIST, approxPolyDP)
+        entities = extract_entities_simple(
+            image=image,
+            target_height_mm=target_height_mm,
+            block_size=21,
+            c_constant=10,
+            min_area_px=50,
+            approx_epsilon_factor=0.001,
+        )
+
+        # Write to DXF
+        entity_count, closed_count = vectorize_entities_to_dxf(
+            entities=entities,
+            output_path=output_path,
+            dxf_version="R12",
+            layer_name="BODY",
+        )
+
+        elapsed_ms = (time.time() - start_time) * 1000
+
+        logger.info(f"Pass A complete: {entity_count} entities, {closed_count} closed")
+
+        return StructuralPassResult(
+            success=True,
+            dxf_path=output_path,
+            entity_count=entity_count,
+            image_size_px=(w, h),
+            output_size_mm=(w * entities.mm_per_px, h * entities.mm_per_px),
+            mm_per_px=entities.mm_per_px,
+            processing_time_ms=elapsed_ms,
+            error="",
+            warnings=warnings,
+            debug={
+                "method": "simple",
+                "raw_contours": entities.debug.get("raw_contour_count", 0),
+                "valid_contours": entities.debug.get("valid_contour_count", 0),
+                "closed_contours": closed_count,
+            },
+        )
+
+    except ImportError as e:
+        logger.error(f"SIMPLE extraction not available: {e}")
+        return StructuralPassResult(
+            success=False,
+            error=f"SIMPLE extraction not available: {e}",
+            warnings=warnings,
+        )
+    except Exception as e:
+        logger.exception(f"Pass A extraction failed: {e}")
+        return StructuralPassResult(
+            success=False,
+            error=str(e),
+            warnings=warnings,
+        )
 
 
 def extract_annotation_pass(
