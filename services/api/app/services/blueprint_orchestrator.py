@@ -216,7 +216,7 @@ class BlueprintOrchestrator:
                 )
 
             file_ext = Path(filename).suffix.lower()
-            logger.info(f"BLUEPRINT_ORCHESTRATE | file={filename} size={len(file_bytes)} bytes")
+            logger.info(f"BLUEPRINT_ORCHESTRATE | file={filename} size={len(file_bytes)} bytes mode={mode.value}")
 
             # ─── Create temp directory for processing ─────────────────────
             with tempfile.TemporaryDirectory(prefix="blueprint_orch_") as tmpdir:
@@ -243,6 +243,13 @@ class BlueprintOrchestrator:
                 # ─── Stage: Edge extraction ───────────────────────────────
                 report("edge_extraction", 30)
 
+                # RESTORED_BASELINE: Use RETR_LIST (no hierarchy) like commit 86c49526
+                # All other modes use the default isolate_body=True (RETR_TREE + grouping)
+                #
+                # DO NOT CHANGE THIS LOGIC without reviewing docs/RECOVERY_BASELINE.md
+                # This is the critical fix for the Melody Maker regression.
+                use_isolate_body = mode != CleanupMode.RESTORED_BASELINE
+
                 raw_dxf_path = tmpdir_path / "raw_edges.dxf"
                 extract_result = extract_blueprint_to_dxf(
                     source_path=str(input_path),
@@ -251,6 +258,7 @@ class BlueprintOrchestrator:
                     canny_low=canny_low,
                     canny_high=canny_high,
                     warnings=warnings,  # Pass warnings list for guardrail messages
+                    isolate_body=use_isolate_body,
                 )
 
                 if not extract_result.success:
