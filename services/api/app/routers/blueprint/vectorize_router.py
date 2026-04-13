@@ -138,8 +138,10 @@ async def vectorize_blueprint(
         min_contour_length_mm: Minimum contour length to keep
         close_gaps_mm: Maximum gap to close between endpoints
         debug: Include stage timings in response (requires VECTORIZER_DEBUG=1)
-        mode: Cleanup mode - "baseline" for stable pre-grouping behavior,
-              "refined" for current logic (default)
+        mode: Cleanup mode:
+              - "baseline" for stable pre-grouping behavior
+              - "refined" for current logic (default)
+              - "restored_baseline" for historical 86c49526 behavior (Melody Maker fix)
 
     Returns:
         BlueprintVectorizeResponse with artifacts.svg and artifacts.dxf

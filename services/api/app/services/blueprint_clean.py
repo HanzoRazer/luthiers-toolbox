@@ -61,9 +61,18 @@ class CleanupMode(str, Enum):
               - Surgical border removal before scoring
               - 5-tier fallback priority ladder
               - Body-likeness checks for fallback candidates
+
+    RESTORED_BASELINE: Historical behavior from commit 86c49526 (2026-04-11).
+              - Extraction uses RETR_LIST (all contours, no hierarchy)
+              - NO border removal at any stage
+              - NO grouping or isolation
+              - Simple scoring without penalties
+              - This is the exact behavior that produced working Melody Maker
+                output at 18:51 on 04/11/2026.
     """
     BASELINE = "baseline"
     REFINED = "refined"
+    RESTORED_BASELINE = "restored_baseline"
 
 
 @dataclass
@@ -457,6 +466,11 @@ def clean_blueprint_dxf(
     # Dispatch to appropriate implementation based on mode
     if mode == CleanupMode.BASELINE:
         return _clean_blueprint_baseline(
+            input_path, output_path, min_contour_length_mm,
+            close_gaps_mm, keep_open_chains
+        )
+    if mode == CleanupMode.RESTORED_BASELINE:
+        return _clean_blueprint_restored_baseline(
             input_path, output_path, min_contour_length_mm,
             close_gaps_mm, keep_open_chains
         )
@@ -934,6 +948,201 @@ def _clean_blueprint_baseline(
             fallback_used=fallback_used,
             fallback_tier=0,
             fallback_reason="baseline_simple_fallback" if fallback_used else "",
+            fallback_reject_reason="",
+            fallback_is_page_border=False,
+        )
+
+    except ImportError as e:
+        logger.error(f"DXFCleaner not available: {e}")
+        return CleanResult(success=False, error=f"DXFCleaner not available: {e}", warnings=warnings)
+    except Exception as e:
+        logger.exception(f"DXF cleanup failed: {e}")
+        return CleanResult(success=False, error=str(e), warnings=warnings)
+
+
+# ═══════════════════════════════════════════════════════════════════════════
+# DO NOT MODIFY THIS FUNCTION WITHOUT EXPLICIT APPROVAL
+#
+# This is GROUND TRUTH behavior validated against the Melody Maker benchmark.
+# Any change risks reintroducing the border-fallback regression.
+#
+# See: docs/RECOVERY_BASELINE.md
+# ═══════════════════════════════════════════════════════════════════════════
+
+def _clean_blueprint_restored_baseline(
+    input_path: str,
+    output_path: str,
+    min_contour_length_mm: float,
+    close_gaps_mm: float,
+    keep_open_chains: bool,
+) -> CleanResult:
+    """
+    RESTORED_BASELINE mode: Exact behavior from commit 86c49526 (2026-04-11).
+
+    This replicates the working state that produced the Melody Maker PDF
+    output at 18:51 on 04/11/2026, before the hierarchy-based regression.
+
+    Historical behavior (verified from git diff):
+    - edge_to_dxf used RETR_LIST (all contours, no hierarchy filtering)
+    - NO _remove_page_border_chains() function existed
+    - NO cv2 import in blueprint_clean.py
+    - NO 5-tier fallback ladder
+    - Simple scoring with score_contours()
+    - Single-pass fallback: find first chain that passes length/closure
+
+    This mode exists for:
+    - Historical behavior verification
+    - Melody Maker failure class recovery
+    - Regression comparison against refined mode
+    """
+    warnings: List[str] = []
+    warnings.append("Using RESTORED_BASELINE mode (historical 86c49526 behavior)")
+
+    try:
+        from ..cam.unified_dxf_cleaner import DXFCleaner, Chain, Point
+
+        cleaner = DXFCleaner(
+            min_contour_length_mm=0.0,
+            closure_tolerance=close_gaps_mm,
+            keep_open_chains=True,
+        )
+
+        # Step 1: Extract raw chains without filtering
+        chains, polyline_pts, original_count = cleaner.extract_chains(Path(input_path))
+        total_chains = len(chains)
+
+        logger.info(f"BLUEPRINT_CLEAN_RESTORED | extracted {total_chains} chains, {len(polyline_pts)} polylines")
+
+        if total_chains == 0 and len(polyline_pts) == 0:
+            return CleanResult(
+                success=False,
+                error="No chains or polylines found in DXF",
+                original_entity_count=original_count,
+                chains_found=0,
+                warnings=warnings,
+            )
+
+        # Step 2: Convert chains to contours for scoring
+        contours = [_chain_to_contour(c) for c in chains]
+
+        # Also convert polylines to contours
+        for pts in polyline_pts:
+            arr = np.array(pts, dtype=np.float32).reshape(-1, 1, 2)
+            contours.append(arr)
+            dummy_chain = Chain(points=[Point(x, y) for x, y in pts])
+            chains.append(dummy_chain)
+
+        # Step 3: Score ALL contours - NO BORDER REMOVAL, NO PENALTIES
+        # Historical behavior: simple scoring without hierarchy or border detection
+        canvas_w, canvas_h = _estimate_canvas_size(chains, [])
+
+        # CRITICAL: Historical code did NOT use ownership scoring
+        # Pass ownership_fn=None to disable ownership penalty
+        scoring_result = score_contours(
+            contours,
+            image_width=canvas_w,
+            image_height=canvas_h,
+            min_area_ratio=0.001,  # Historical: very permissive
+            max_area_ratio=0.99,   # Historical: accept almost anything
+            ownership_fn=None,     # Historical: NO ownership scoring
+            debug=True,
+        )
+
+        # Step 4: Select chains using historical simple logic
+        # Historical behavior: filter by length/closure, take best score
+        selected_chains: List = []
+        discarded_short = 0
+        discarded_open = 0
+        discarded_low_score = 0
+
+        for candidate in scoring_result.candidates:
+            idx = candidate.index
+            if idx >= len(chains):
+                continue
+
+            chain = chains[idx]
+            chain_len = chain.length()
+            is_closed = chain.is_closed(close_gaps_mm)
+
+            # Historical: simple length filter
+            if chain_len < min_contour_length_mm:
+                discarded_short += 1
+                continue
+
+            # Historical: simple closure filter
+            if not is_closed and not keep_open_chains:
+                discarded_open += 1
+                continue
+
+            # Historical: NO MIN_SCORE_TO_KEEP threshold
+            # All contours passing geometry filters were kept
+            selected_chains.append((chain, candidate.score))
+
+        selected_chains.sort(key=lambda x: x[1], reverse=True)
+
+        # Step 5: HISTORICAL FALLBACK - single-pass, very simple
+        # If no chains passed, try the absolute best available
+        best_confidence = scoring_result.confidence
+        fallback_used = False
+
+        if not selected_chains and scoring_result.candidates:
+            # Historical: just take the best candidate, no tier system
+            best_candidate = scoring_result.candidates[0]
+            idx = best_candidate.index
+            if idx < len(chains):
+                chain = chains[idx]
+                selected_chains.append((chain, best_candidate.score))
+                best_confidence = best_candidate.score
+                fallback_used = True
+                warnings.append(
+                    f"Historical fallback: using best contour (score={best_candidate.score:.2f})"
+                )
+
+        # Add scoring warnings
+        warnings.extend(scoring_result.warnings)
+
+        # Step 6: Write selected chains to output
+        final_chains = [c for c, _ in selected_chains]
+        contours_written = 0
+
+        if final_chains:
+            contours_written = cleaner.write_selected_chains(
+                Path(output_path),
+                final_chains,
+                polyline_pts=None,
+            )
+
+        # Step 7: Generate SVG preview
+        svg_preview = ""
+        if final_chains:
+            svg_preview = cleaner.generate_svg_preview(final_chains)
+
+        logger.info(
+            f"BLUEPRINT_CLEAN_RESTORED | scored {len(scoring_result.candidates)} candidates, "
+            f"selected {len(final_chains)}, confidence={best_confidence:.2f}, "
+            f"margin={scoring_result.winner_margin:.2f}"
+        )
+
+        return CleanResult(
+            success=True,
+            svg_preview=svg_preview,
+            dxf_path=output_path,
+            original_entity_count=original_count,
+            cleaned_entity_count=contours_written,
+            contours_found=contours_written,
+            chains_found=total_chains,
+            discarded_short=discarded_short,
+            discarded_open=discarded_open,
+            discarded_low_score=discarded_low_score,
+            best_confidence=best_confidence,
+            runner_up_score=scoring_result.runner_up_score,
+            winner_margin=scoring_result.winner_margin,
+            candidate_count=len(scoring_result.candidates),
+            warnings=warnings,
+            # Restored baseline: no tier system
+            fallback_used=fallback_used,
+            fallback_tier=0,
+            fallback_reason="restored_historical_fallback" if fallback_used else "",
             fallback_reject_reason="",
             fallback_is_page_border=False,
         )

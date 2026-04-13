@@ -1,0 +1,61 @@
+{
+  "version": "1.0",
+  "description": "Blueprint vectorizer benchmark manifest for historical baseline recovery",
+  "created": "2026-04-13",
+  "files": [
+    {
+      "path": "Guitar Plans/Gibson-Melody-Maker.pdf",
+      "name": "Gibson Melody Maker",
+      "historical_anchor": true,
+      "expected_grade": "starter",
+      "known_issue_class": "page-border-heavy technical sheet",
+      "historical_notes": "04/11/2026 DXF existed; body starter output, missing neck/side/accessories"
+    },
+    {
+      "path": "Guitar Plans/Classical-Santos-Hernandez-MM.pdf",
+      "name": "Santos Hernandez Classical",
+      "historical_anchor": false,
+      "expected_grade": "starter",
+      "known_issue_class": "detailed annotation overlay",
+      "historical_notes": "Clear body outline with construction annotations"
+    },
+    {
+      "path": "Guitar Plans/A003-Dreadnought-MM.pdf",
+      "name": "Dreadnought Acoustic",
+      "historical_anchor": false,
+      "expected_grade": "starter",
+      "known_issue_class": "standard acoustic body",
+      "historical_notes": "Standard dreadnought body shape"
+    },
+    {
+      "path": "Guitar Plans/Gibson-Explorer-05-Complete-Plans.pdf",
+      "name": "Gibson Explorer",
+      "historical_anchor": false,
+      "expected_grade": "starter",
+      "known_issue_class": "complex multi-view layout",
+      "historical_notes": "Multiple views on single page"
+    }
+  ],
+  "modes": [
+    {
+      "name": "refined",
+      "description": "Current logic with hierarchy-based isolation and scoring refinements"
+    },
+    {
+      "name": "baseline",
+      "description": "Simpler pre-grouping logic without border removal"
+    },
+    {
+      "name": "restored_baseline",
+      "description": "Historical behavior from commit 86c49526 (2026-04-11)"
+    }
+  ],
+  "acceptance_criteria": {
+    "starter": {
+      "min_entity_count": 1000,
+      "min_selection_score": 0.30,
+      "max_page_like": false,
+      "body_like_required": true
+    }
+  }
+}
