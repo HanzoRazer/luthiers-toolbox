@@ -388,11 +388,18 @@ class AnnotationPassResult:
     """Result from Pass B (annotation/document extraction)."""
     success: bool
     entity_count: int = 0
+    bbox_count: int = 0
+    text_like_count: int = 0
     error: str = ""
     warnings: list[str] = field(default_factory=list)
     debug: dict = field(default_factory=dict)
-    # Phase 1: stub fields
-    active: bool = False  # False until Pass B is implemented
+    # Phase 3: active when real extraction is wired
+    active: bool = False
+
+
+def _default_annotation_result() -> AnnotationPassResult:
+    """Factory for default annotation result (not yet run)."""
+    return AnnotationPassResult(success=False, active=False)
 
 
 @dataclass
@@ -400,10 +407,10 @@ class DualPassResult:
     """Combined result from dual-pass extraction."""
     success: bool
     structural: StructuralPassResult = field(default_factory=StructuralPassResult)
-    annotation: AnnotationPassResult = field(default_factory=AnnotationPassResult)
+    annotation: AnnotationPassResult = field(default_factory=_default_annotation_result)
     error: str = ""
     warnings: list[str] = field(default_factory=list)
-    # Phase 1 indicator
+    # Phase 3: indicates Pass B is active
     pass_b_active: bool = False
 
 
@@ -438,6 +445,9 @@ def extract_structural_pass(
     start_time = time.time()
 
     try:
+        # Ensure edge_to_dxf is importable
+        _ensure_edge_to_dxf_importable()
+
         # Import SIMPLE extraction functions
         from edge_to_dxf import extract_entities_simple, vectorize_entities_to_dxf
 
@@ -511,35 +521,97 @@ def extract_structural_pass(
 
 def extract_annotation_pass(
     source_path: str,
+    target_height_mm: float = 500.0,
+    body_bbox: Optional[tuple[int, int, int, int]] = None,
     warnings: Optional[list[str]] = None,
 ) -> AnnotationPassResult:
     """
     Pass B: Annotation/document extraction.
 
-    PHASE 1 STUB: Returns empty result.
-    Phase 2+ will implement actual annotation capture.
+    Phase 3: Real annotation extraction using lighter thresholds
+    to capture titles, dimensions, labels, and text-like strokes.
 
     Args:
         source_path: Path to input image
+        target_height_mm: Target height for scaling
+        body_bbox: Optional body bounding box from Pass A (to filter overlaps)
         warnings: List to append warning messages to
 
     Returns:
-        AnnotationPassResult (empty stub for Phase 1)
+        AnnotationPassResult with annotation entities
     """
+    import cv2
+
     if warnings is None:
         warnings = []
 
-    # Phase 1: Return stub
-    logger.info("Pass B annotation extraction: STUB (not yet implemented)")
+    try:
+        from .annotation_extract import extract_annotations
 
-    return AnnotationPassResult(
-        success=True,
-        entity_count=0,
-        error="",
-        warnings=warnings,
-        debug={"phase": 1, "status": "stub"},
-        active=False,
-    )
+        # Load image
+        image = cv2.imread(source_path)
+        if image is None:
+            return AnnotationPassResult(
+                success=False,
+                error=f"Failed to load image: {source_path}",
+                warnings=warnings,
+                active=False,
+            )
+
+        logger.info(f"Pass B annotation extraction: {source_path}")
+
+        # Extract annotations
+        result = extract_annotations(
+            image=image,
+            target_height_mm=target_height_mm,
+            body_bbox=body_bbox,
+        )
+
+        if not result.success:
+            return AnnotationPassResult(
+                success=False,
+                error=result.error,
+                warnings=result.warnings,
+                active=True,
+            )
+
+        # Count text-like entities
+        text_like_count = result.debug.get("text_like_count", 0)
+
+        return AnnotationPassResult(
+            success=True,
+            entity_count=result.entity_count,
+            bbox_count=result.bbox_count,
+            text_like_count=text_like_count,
+            error="",
+            warnings=result.warnings,
+            debug={
+                "phase": 3,
+                "status": "active",
+                "processing_time_ms": result.processing_time_ms,
+                "raw_contours": result.debug.get("raw_contours", 0),
+                "categories": result.debug.get("categories", {}),
+                "body_bbox_provided": body_bbox is not None,
+            },
+            active=True,
+        )
+
+    except ImportError as e:
+        logger.error(f"Annotation extraction not available: {e}")
+        return AnnotationPassResult(
+            success=False,
+            error=f"Annotation extraction not available: {e}",
+            warnings=warnings,
+            active=False,
+        )
+    except Exception as e:
+        logger.exception(f"Pass B extraction failed: {e}")
+        return AnnotationPassResult(
+            success=False,
+            error=str(e),
+            warnings=warnings,
+            active=False,
+        )
 
 
 def extract_dual_pass(
@@ -553,8 +625,9 @@ def extract_dual_pass(
 
     Runs Pass A (structural) and Pass B (annotation) and combines results.
 
-    PHASE 1: Pass A only. Pass B returns empty stub.
-    Phase 2+: Both passes will be active.
+    Phase 3: Both passes active.
+    - Pass A: SIMPLE extraction for body geometry
+    - Pass B: Lighter thresholds for annotation capture
 
     Args:
         source_path: Path to input image
@@ -569,9 +642,9 @@ def extract_dual_pass(
         warnings = []
 
     logger.info(f"Dual-pass extraction: {source_path}")
-    logger.info("  Phase 1 mode: Pass A active, Pass B stub")
+    logger.info("  Phase 3 mode: Pass A + Pass B active")
 
-    # Pass A: Structural geometry
+    # Pass A: Structural geometry (SIMPLE extraction)
     structural_result = extract_structural_pass(
         source_path=source_path,
         output_path=output_path,
@@ -588,9 +661,13 @@ def extract_dual_pass(
             pass_b_active=False,
         )
 
-    # Pass B: Annotation (stub for Phase 1)
+    # Pass B: Annotation extraction (real implementation)
+    # Note: body_bbox would require reading the DXF or storing contours
+    # For Phase 3, we run without body_bbox filtering
     annotation_result = extract_annotation_pass(
         source_path=source_path,
+        target_height_mm=target_height_mm,
+        body_bbox=None,  # Phase 3: no body filtering yet
         warnings=warnings,
     )
 

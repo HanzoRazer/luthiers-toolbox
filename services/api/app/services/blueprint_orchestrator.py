@@ -248,8 +248,8 @@ class BlueprintOrchestrator:
 
                 raw_dxf_path = tmpdir_path / "raw_edges.dxf"
 
-                # LAYERED_DUAL_PASS: Route to dual-pass extraction (Phase 1 stub)
-                # Pass A is active, Pass B returns empty until Phase 2+
+                # LAYERED_DUAL_PASS: Route to dual-pass extraction
+                # Phase 3: Pass A (structural) + Pass B (annotation) both active
                 if mode == CleanupMode.LAYERED_DUAL_PASS:
                     dual_result = extract_dual_pass(
                         source_path=str(input_path),
@@ -259,6 +259,7 @@ class BlueprintOrchestrator:
                     )
                     # Convert DualPassResult.structural to ExtractionResult for compatibility
                     structural = dual_result.structural
+                    annotation = dual_result.annotation
                     extract_result = ExtractionResult(
                         success=structural.success,
                         output_path=structural.dxf_path,
@@ -273,9 +274,18 @@ class BlueprintOrchestrator:
                         stage_timings=structural.debug.get("stage_timings", {}),
                         grouping=structural.debug.get("grouping"),
                     )
-                    # Add dual-pass metadata to debug
+                    # Add dual-pass metadata to debug (Phase 3 fields)
                     stage_timings["dual_pass_active"] = True
                     stage_timings["pass_b_active"] = dual_result.pass_b_active
+                    stage_timings["pass_a_entity_count"] = structural.entity_count
+                    stage_timings["pass_b_entity_count"] = annotation.entity_count
+                    stage_timings["annotation_present"] = annotation.entity_count > 0
+                    stage_timings["annotation_bbox_count"] = annotation.bbox_count
+                    stage_timings["annotation_text_like_count"] = annotation.text_like_count
+                    stage_timings["behavior_source"] = "dual_pass_phase3"
+                    # Include annotation debug info if available
+                    if annotation.debug:
+                        stage_timings["annotation_categories"] = annotation.debug.get("categories", {})
                 else:
                     # RESTORED_BASELINE: Use RETR_LIST (no hierarchy) like commit 86c49526
                     # All other modes use the default isolate_body=True (RETR_TREE + grouping)
