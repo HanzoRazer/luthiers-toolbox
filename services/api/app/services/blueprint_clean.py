@@ -69,10 +69,17 @@ class CleanupMode(str, Enum):
               - Simple scoring without penalties
               - This is the exact behavior that produced working Melody Maker
                 output at 18:51 on 04/11/2026.
+
+    LAYERED_DUAL_PASS: Dual-pass extraction architecture (Phase 1 stub).
+              - Pass A: Structural geometry extraction (active)
+              - Pass B: Annotation capture (STUB - returns empty)
+              - Routes to extract_dual_pass() in blueprint_extract.py
+              - Behavior is identical to RESTORED_BASELINE until Pass B activates
     """
     BASELINE = "baseline"
     REFINED = "refined"
     RESTORED_BASELINE = "restored_baseline"
+    LAYERED_DUAL_PASS = "layered_dual_pass"
 
 
 @dataclass
@@ -470,6 +477,13 @@ def clean_blueprint_dxf(
             close_gaps_mm, keep_open_chains
         )
     if mode == CleanupMode.RESTORED_BASELINE:
+        return _clean_blueprint_restored_baseline(
+            input_path, output_path, min_contour_length_mm,
+            close_gaps_mm, keep_open_chains
+        )
+    if mode == CleanupMode.LAYERED_DUAL_PASS:
+        # Phase 1: Route to restored_baseline cleanup
+        # Phase 2+ will have dedicated dual-pass cleanup with layer handling
         return _clean_blueprint_restored_baseline(
             input_path, output_path, min_contour_length_mm,
             close_gaps_mm, keep_open_chains
