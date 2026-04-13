@@ -20,6 +20,7 @@ from fastapi import APIRouter, File, Form, HTTPException, UploadFile
 from pydantic import BaseModel
 
 from ...services.blueprint_orchestrator import BlueprintOrchestrator
+from ...services.blueprint_clean import CleanupMode
 from ...services.blueprint_limits import LIMITS
 from ...utils.stage_timer import is_debug_enabled
 
@@ -55,15 +56,54 @@ class Dimensions(BaseModel):
     height_mm: float = 0.0
 
 
+class Selection(BaseModel):
+    """Contour selection diagnostics."""
+    candidate_count: int = 0
+    selected_index: Optional[int] = None
+    selection_score: float = 0.0
+    runner_up_score: float = 0.0
+    winner_margin: float = 0.0
+    reasons: list[str] = []
+
+
+class Recommendation(BaseModel):
+    """Product acceptance recommendation."""
+    action: str = "reject"  # accept | review | reject
+    confidence: float = 0.0
+    reasons: list[str] = []
+
+
+class Deprecation(BaseModel):
+    """Deprecation signal for legacy field migration."""
+    legacy_fields_present: bool = False  # Blueprint has no legacy fields
+    remove_after: str = "n/a"
+    canonical_fields: list[str] = [
+        "artifacts",
+        "selection",
+        "recommendation",
+        "processed",
+    ]
+
+
 class BlueprintVectorizeResponse(BaseModel):
+    """
+    Canonical blueprint vectorizer response.
+
+    ok = true ONLY when recommendation.action == "accept".
+    processed = true when pipeline completed (transport-level).
+    """
     ok: bool
+    processed: bool = True
     stage: str = "complete"
     error: str = ""
     warnings: list[str] = []
     artifacts: Artifacts = Artifacts()
     dimensions: Dimensions = Dimensions()
+    selection: Selection = Selection()
+    recommendation: Recommendation = Recommendation()
     metrics: dict = {}
-    debug: Optional[dict] = None  # Only present when debug=true and VECTORIZER_DEBUG=1
+    debug: Optional[dict] = None
+    deprecation: Optional[Deprecation] = None
 
 
 # ─── Endpoint ─────────────────────────────────────────────────────────────────
@@ -76,6 +116,7 @@ async def vectorize_blueprint(
     min_contour_length_mm: float = Form(100.0),
     close_gaps_mm: float = Form(1.0),
     debug: bool = Form(False),
+    mode: str = Form("refined"),
 ):
     """
     Vectorize a blueprint image or PDF to SVG + DXF.
@@ -97,6 +138,8 @@ async def vectorize_blueprint(
         min_contour_length_mm: Minimum contour length to keep
         close_gaps_mm: Maximum gap to close between endpoints
         debug: Include stage timings in response (requires VECTORIZER_DEBUG=1)
+        mode: Cleanup mode - "baseline" for stable pre-grouping behavior,
+              "refined" for current logic (default)
 
     Returns:
         BlueprintVectorizeResponse with artifacts.svg and artifacts.dxf
@@ -118,6 +161,12 @@ async def vectorize_blueprint(
     # Check if debug output is allowed
     include_debug = debug and is_debug_enabled()
 
+    # Parse cleanup mode (default to refined if invalid)
+    try:
+        cleanup_mode = CleanupMode(mode.lower())
+    except ValueError:
+        cleanup_mode = CleanupMode.REFINED
+
     # Delegate to orchestrator
     result = _orchestrator.process_file(
         file_bytes=file_bytes,
@@ -127,6 +176,7 @@ async def vectorize_blueprint(
         min_contour_length_mm=min_contour_length_mm,
         close_gaps_mm=close_gaps_mm,
         debug=include_debug,
+        mode=cleanup_mode,
     )
 
     # Convert to response dict

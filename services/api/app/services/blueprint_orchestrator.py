@@ -48,6 +48,7 @@ from .blueprint_extract import (
 )
 from .blueprint_clean import (
     CleanResult,
+    CleanupMode,
     clean_blueprint_dxf,
     validate_cleanup_result,
 )
@@ -176,6 +177,7 @@ class BlueprintOrchestrator:
         canny_high: int = 150,
         debug: bool = False,
         progress_callback: ProgressCallback = None,
+        mode: CleanupMode = CleanupMode.REFINED,
     ) -> BlueprintResult:
         """
         Process a blueprint file through extraction and cleanup.
@@ -191,6 +193,8 @@ class BlueprintOrchestrator:
             canny_high: Canny edge detection high threshold
             debug: Include debug info in result
             progress_callback: Optional (stage, percent) callback
+            mode: CleanupMode.BASELINE for stable pre-grouping behavior,
+                  CleanupMode.REFINED for current logic (default)
 
         Returns:
             BlueprintResult with canonical artifacts
@@ -270,6 +274,7 @@ class BlueprintOrchestrator:
                     output_path=str(cleaned_dxf_path),
                     min_contour_length_mm=min_contour_length_mm,
                     close_gaps_mm=close_gaps_mm,
+                    mode=mode,
                 )
 
                 # CRITICAL FIX: Do NOT bail early on cleanup failure
@@ -387,7 +392,9 @@ class BlueprintOrchestrator:
                         "chains_found": clean_result.chains_found,
                         "contour_confidence": round(clean_result.best_confidence, 3),
                     },
-                    debug=stage_timings if debug else {},
+                    debug=self._build_debug_payload(
+                        stage_timings, extract_result, clean_result, debug
+                    ),
                 )
 
         except BlueprintOrchestratorError as e:
@@ -395,3 +402,72 @@ class BlueprintOrchestrator:
         except Exception as e:
             logger.exception("Blueprint orchestration failed")
             return BlueprintResult(ok=False, stage="error", error=str(e))
+
+    def _build_debug_payload(
+        self,
+        stage_timings: dict[str, float],
+        extract_result: ExtractionResult,
+        clean_result: Optional[CleanResult],
+        include_debug: bool,
+    ) -> dict[str, Any]:
+        """
+        Build debug payload including grouping and fallback metadata.
+
+        Grouping metadata is included when:
+        - include_debug=True
+        - extract_result.grouping is not None
+
+        Fallback metadata is included when:
+        - include_debug=True
+        - clean_result is not None
+
+        Fields:
+        - stage_timings: Per-stage timing in ms
+        - group_count: Number of contour groups formed
+        - selected_group_index: Index of winning group
+        - selected_group_bbox: Bounding box of winning group
+        - selected_group_score: Score of winning group
+        - group_winner_margin: Margin between winner and runner-up
+        - grouping_fallback_used: Whether fallback was used
+        - final_candidate_count: Number of candidates after scoring
+        - rejected_candidate_count: Number of rejected candidates
+        - fallback_used: Whether fallback was used in cleanup
+        - fallback_tier: Tier of fallback (1-5)
+        - fallback_reason: Human-readable fallback reason
+        - fallback_reject_reason: Reject reason of fallback candidate
+        - fallback_is_page_border: Whether fallback selected page border
+        - winner_margin: Score margin between winner and runner-up
+        - runner_up_score: Score of runner-up candidate
+        """
+        if not include_debug:
+            return {}
+
+        debug_payload: dict[str, Any] = dict(stage_timings)
+
+        # Add grouping metadata if available
+        grouping = getattr(extract_result, 'grouping', None)
+        if grouping:
+            debug_payload["group_count"] = grouping.get("group_count", 0)
+            debug_payload["selected_group_index"] = grouping.get("selected_group_index", -1)
+            debug_payload["selected_group_bbox"] = grouping.get("selected_group_bbox")
+            debug_payload["selected_group_score"] = grouping.get("selected_group_score", 0.0)
+            debug_payload["group_winner_margin"] = grouping.get("group_winner_margin", 0.0)
+            debug_payload["grouping_fallback_used"] = grouping.get("grouping_fallback_used", False)
+
+        # Add cleanup/fallback metadata if available
+        if clean_result:
+            debug_payload["final_candidate_count"] = clean_result.candidate_count
+            debug_payload["rejected_candidate_count"] = (
+                clean_result.discarded_short +
+                clean_result.discarded_open +
+                clean_result.discarded_low_score
+            )
+            debug_payload["fallback_used"] = clean_result.fallback_used
+            debug_payload["fallback_tier"] = clean_result.fallback_tier
+            debug_payload["fallback_reason"] = clean_result.fallback_reason
+            debug_payload["fallback_reject_reason"] = clean_result.fallback_reject_reason
+            debug_payload["fallback_is_page_border"] = clean_result.fallback_is_page_border
+            debug_payload["winner_margin"] = round(clean_result.winner_margin, 3)
+            debug_payload["runner_up_score"] = round(clean_result.runner_up_score, 3)
+
+        return debug_payload

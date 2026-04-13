@@ -26,6 +26,7 @@ from fastapi.responses import Response
 from ..jobs.models import JobStatus
 from ..jobs.store import job_store
 from ..services.blueprint_orchestrator import BlueprintOrchestrator
+from ..services.blueprint_clean import CleanupMode
 from ..services.blueprint_limits import LIMITS
 
 logger = logging.getLogger(__name__)
@@ -60,6 +61,7 @@ async def _run_blueprint_job(
     min_contour_length_mm: float,
     close_gaps_mm: float,
     debug: bool,
+    mode: CleanupMode = CleanupMode.REFINED,
 ) -> None:
     """
     Background task that runs the blueprint orchestrator.
@@ -95,6 +97,7 @@ async def _run_blueprint_job(
             close_gaps_mm=close_gaps_mm,
             debug=debug,
             progress_callback=progress_callback,
+            mode=mode,
         )
 
         payload = result.to_response_dict(include_debug=debug)
@@ -139,6 +142,7 @@ async def vectorize_blueprint_async(
     min_contour_length_mm: float = Form(50.0),
     close_gaps_mm: float = Form(1.0),
     debug: bool = Form(False),
+    mode: str = Form("refined"),
 ):
     """
     Submit a blueprint for async vectorization.
@@ -147,6 +151,10 @@ async def vectorize_blueprint_async(
     to track progress and retrieve results.
 
     For large blueprints (>5MB or high-res PDFs), this avoids HTTP timeouts.
+
+    Args:
+        mode: Cleanup mode - "baseline" for stable pre-grouping behavior,
+              "refined" for current logic (default)
     """
     file_bytes = await file.read()
     if not file_bytes:
@@ -159,10 +167,16 @@ async def vectorize_blueprint_async(
             detail=f"Blueprint file exceeds {LIMITS.max_upload_mb} MB limit. Please upload a smaller file.",
         )
 
+    # Parse cleanup mode (default to refined if invalid)
+    try:
+        cleanup_mode = CleanupMode(mode.lower())
+    except ValueError:
+        cleanup_mode = CleanupMode.REFINED
+
     filename = file.filename or "upload.bin"
     job = job_store.create(filename=filename)
 
-    logger.info(f"BLUEPRINT_JOB_CREATED | job_id={job.job_id} filename={filename} size={len(file_bytes)}")
+    logger.info(f"BLUEPRINT_JOB_CREATED | job_id={job.job_id} filename={filename} size={len(file_bytes)} mode={cleanup_mode.value}")
 
     # Start background task
     asyncio.create_task(
@@ -175,6 +189,7 @@ async def vectorize_blueprint_async(
             min_contour_length_mm=min_contour_length_mm,
             close_gaps_mm=close_gaps_mm,
             debug=debug,
+            mode=cleanup_mode,
         )
     )
 
