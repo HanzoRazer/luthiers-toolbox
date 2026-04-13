@@ -380,6 +380,254 @@ def _remove_page_borders_early(
 # Date: 2026-04-12
 
 
+# ─── Reusable Extraction Helpers ────────────────────────────────────────────
+#
+# These functions separate extraction from DXF writing for composability.
+# Phase 1: Added for dual-pass extraction support.
+# DO NOT change recovered behavior. These are additive, not replacement.
+# ─────────────────────────────────────────────────────────────────────────────
+
+@dataclass
+class ExtractedEntities:
+    """Container for extracted contour entities."""
+    contours: list  # List of numpy contour arrays
+    edge_count: int  # Total edge pixels detected
+    image_size: Tuple[int, int]  # (width, height)
+    mm_per_px: float  # Scale factor
+    method: str  # "canny" or "simple"
+    debug: Dict[str, Any] = field(default_factory=dict)
+
+
+def extract_entities_canny(
+    image: np.ndarray,
+    target_height_mm: float = 500.0,
+    canny_low: int = 50,
+    canny_high: int = 150,
+    blur_kernel: int = 3,
+    isolate_body: bool = False,
+) -> ExtractedEntities:
+    """
+    Extract contour entities using Canny edge detection.
+
+    This is the extraction portion of EdgeToDXF.convert, separated
+    for composability. Does NOT write DXF.
+
+    Args:
+        image: BGR image (numpy array)
+        target_height_mm: Target height for scaling
+        canny_low: Canny low threshold
+        canny_high: Canny high threshold
+        blur_kernel: Gaussian blur kernel size (0 to disable)
+        isolate_body: Use hierarchy filtering (True) or all contours (False)
+
+    Returns:
+        ExtractedEntities with contours ready for DXF writing
+    """
+    h, w = image.shape[:2]
+    mm_per_px = target_height_mm / h
+
+    # Grayscale + blur
+    gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+    if blur_kernel > 0:
+        gray = cv2.GaussianBlur(gray, (blur_kernel, blur_kernel), 0)
+
+    # Canny edge detection
+    edges = cv2.Canny(gray, canny_low, canny_high)
+
+    # Get edge count
+    edge_points = np.column_stack(np.where(edges > 0))
+    edge_count = len(edge_points)
+
+    # Contour tracing
+    if isolate_body:
+        # Hierarchy-aware path (RETR_TREE)
+        contours, hierarchy = cv2.findContours(
+            edges, cv2.RETR_TREE, cv2.CHAIN_APPROX_NONE
+        )
+        # Apply border removal and grouping
+        contours, _ = _remove_page_borders_early(contours, hierarchy, w, h)
+        valid_contours, _ = _isolate_with_grouping(
+            contours, hierarchy, w, h,
+            min_area_ratio=0.005,
+            max_area_ratio=0.95,
+        )
+    else:
+        # Recovered baseline path (RETR_LIST, all contours)
+        contours, _ = cv2.findContours(edges, cv2.RETR_LIST, cv2.CHAIN_APPROX_NONE)
+        valid_contours = [c for c in contours if len(c) >= 3]
+
+    return ExtractedEntities(
+        contours=valid_contours,
+        edge_count=edge_count,
+        image_size=(w, h),
+        mm_per_px=mm_per_px,
+        method="canny",
+        debug={
+            "canny_low": canny_low,
+            "canny_high": canny_high,
+            "isolate_body": isolate_body,
+            "raw_contour_count": len(contours),
+            "valid_contour_count": len(valid_contours),
+        },
+    )
+
+
+def extract_entities_simple(
+    image: np.ndarray,
+    target_height_mm: float = 500.0,
+    block_size: int = 21,
+    c_constant: int = 10,
+    min_area_px: int = 50,
+    approx_epsilon_factor: float = 0.001,
+) -> ExtractedEntities:
+    """
+    Extract contour entities using adaptive threshold (SIMPLE style).
+
+    Based on March 6, 2026 SIMPLE extraction mode.
+    Uses adaptive threshold instead of Canny for document-style blueprints.
+
+    Args:
+        image: BGR image (numpy array)
+        target_height_mm: Target height for scaling
+        block_size: Adaptive threshold block size
+        c_constant: Adaptive threshold C constant
+        min_area_px: Minimum contour area in pixels
+        approx_epsilon_factor: approxPolyDP epsilon factor
+
+    Returns:
+        ExtractedEntities with contours ready for DXF writing
+    """
+    h, w = image.shape[:2]
+    mm_per_px = target_height_mm / h
+    image_area = h * w
+    max_area_px = image_area * 0.95
+
+    # Grayscale
+    gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+
+    # Handle inverted images
+    if np.mean(gray) < 127:
+        gray = 255 - gray
+
+    # Adaptive threshold (SIMPLE style)
+    binary = cv2.adaptiveThreshold(
+        gray, 255,
+        cv2.ADAPTIVE_THRESH_GAUSSIAN_C,
+        cv2.THRESH_BINARY_INV,
+        block_size, c_constant,
+    )
+
+    # Find contours (RETR_LIST, CHAIN_APPROX_SIMPLE)
+    contours, _ = cv2.findContours(
+        binary, cv2.RETR_LIST, cv2.CHAIN_APPROX_SIMPLE
+    )
+
+    # Filter and simplify
+    valid_contours = []
+    for contour in contours:
+        area = cv2.contourArea(contour)
+        if area < min_area_px or area > max_area_px:
+            continue
+
+        # Simplify with approxPolyDP
+        perimeter = cv2.arcLength(contour, True)
+        epsilon = approx_epsilon_factor * perimeter
+        approx = cv2.approxPolyDP(contour, epsilon, True)
+
+        if len(approx) >= 3:
+            valid_contours.append(approx)
+
+    return ExtractedEntities(
+        contours=valid_contours,
+        edge_count=0,  # Not applicable for threshold method
+        image_size=(w, h),
+        mm_per_px=mm_per_px,
+        method="simple",
+        debug={
+            "block_size": block_size,
+            "c_constant": c_constant,
+            "min_area_px": min_area_px,
+            "approx_epsilon": approx_epsilon_factor,
+            "raw_contour_count": len(contours),
+            "valid_contour_count": len(valid_contours),
+        },
+    )
+
+
+def vectorize_entities_to_dxf(
+    entities: ExtractedEntities,
+    output_path: str,
+    dxf_version: str = "R12",
+    layer_name: str = "EDGES",
+) -> Tuple[int, int]:
+    """
+    Write extracted entities to DXF file.
+
+    This is the DXF writing portion of EdgeToDXF.convert, separated
+    for composability.
+
+    Args:
+        entities: ExtractedEntities from extract_entities_* functions
+        output_path: Path for output DXF file
+        dxf_version: DXF version string
+        layer_name: DXF layer name
+
+    Returns:
+        Tuple of (line_count, file_size_bytes)
+    """
+    if not EZDXF_AVAILABLE:
+        raise ImportError("ezdxf is required: pip install ezdxf")
+
+    w, h = entities.image_size
+    mm_per_px = entities.mm_per_px
+
+    # Create DXF document
+    doc = ezdxf.new(dxf_version)
+    msp = doc.modelspace()
+
+    if layer_name not in doc.layers:
+        doc.layers.add(layer_name)
+
+    # Convert contours to LINE entities
+    line_count = 0
+    for contour in entities.contours:
+        points = contour.reshape(-1, 2)
+
+        # Create LINE entities along contour path
+        for i in range(len(points) - 1):
+            x1, y1 = points[i]
+            x2, y2 = points[i + 1]
+
+            # Convert to mm coordinates (flip Y for CAD)
+            mx1 = x1 * mm_per_px
+            my1 = (h - y1) * mm_per_px
+            mx2 = x2 * mm_per_px
+            my2 = (h - y2) * mm_per_px
+
+            msp.add_line((mx1, my1), (mx2, my2), dxfattribs={'layer': layer_name})
+            line_count += 1
+
+        # Close contour
+        if len(points) >= 3:
+            x1, y1 = points[-1]
+            x2, y2 = points[0]
+            mx1 = x1 * mm_per_px
+            my1 = (h - y1) * mm_per_px
+            mx2 = x2 * mm_per_px
+            my2 = (h - y2) * mm_per_px
+            msp.add_line((mx1, my1), (mx2, my2), dxfattribs={'layer': layer_name})
+            line_count += 1
+
+    # Save
+    doc.saveas(output_path)
+    file_size = Path(output_path).stat().st_size
+
+    return line_count, file_size
+
+
+# ─── Hierarchy Node and Grouping Classes ────────────────────────────────────
+
+
 @dataclass
 class HierarchyNode:
     """
