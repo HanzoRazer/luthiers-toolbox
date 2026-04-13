@@ -1,0 +1,75 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$comment": "Blueprint vectorizer benchmark manifest for regression testing",
+  "version": "1.0.0",
+  "created": "2026-04-13",
+  "purpose": "Permanent regression set for baseline vs refined mode comparison",
+
+  "benchmarks": {
+    "melody_maker": {
+      "path": "docs/archive/instrument_references/gibson_melody_maker/gibson_melody_maker_blueprint.pdf",
+      "description": "Gibson Melody Maker - fragmented body, page border competition",
+      "failure_class": "page_border_wins_when_body_fragmented",
+      "baseline_expectation": "body-like output, may need manual cleanup",
+      "known_issues": ["body contour often fragmented", "border may dominate"]
+    },
+    "santos_hernandez": {
+      "path": "Guitar Plans/Classical-Santos-Hernandez-MM.pdf",
+      "description": "Santos Hernandez Classical - clean single body view",
+      "failure_class": null,
+      "baseline_expectation": "clean body outline, accept recommendation",
+      "known_issues": []
+    },
+    "dreadnought": {
+      "path": "Guitar Plans/A003-Dreadnought-MM.pdf",
+      "description": "Martin Dreadnought - standard acoustic blueprint",
+      "failure_class": null,
+      "baseline_expectation": "clean body outline, accept recommendation",
+      "known_issues": []
+    },
+    "explorer": {
+      "path": "Guitar Plans/Gibson-Explorer-00-1958.pdf",
+      "description": "Gibson Explorer 1958 - angular solid body",
+      "failure_class": null,
+      "baseline_expectation": "angular body outline preserved",
+      "known_issues": ["unusual aspect ratio may trigger warnings"]
+    },
+    "bailey_archtop": {
+      "path": "Guitar Plans/Acoustic-Archtop-Bailey.pdf",
+      "description": "Bailey Archtop - f-hole acoustic with complex curves",
+      "failure_class": null,
+      "baseline_expectation": "body outline with f-hole features",
+      "known_issues": ["f-holes may be selected as body candidates"]
+    }
+  },
+
+  "evaluation_criteria": {
+    "fields": [
+      "svg_present",
+      "dxf_present",
+      "body_like",
+      "border_like",
+      "manual_cleanup",
+      "acceptable"
+    ],
+    "body_like_definition": "Output resembles instrument body shape, not page border or construction lines",
+    "border_like_definition": "Output is rectangular, touches 3+ edges, or covers >70% of canvas",
+    "manual_cleanup_values": ["light", "moderate", "unacceptable"],
+    "acceptable_definition": "Would a human say this is roughly as usable as the older B/B+ output?"
+  },
+
+  "numeric_diagnostics": [
+    "selection_score",
+    "winner_margin",
+    "recommendation.action",
+    "dimensions.width_mm",
+    "dimensions.height_mm",
+    "fallback_used"
+  ],
+
+  "usage": {
+    "baseline_test": "pytest tests/test_vectorizer_benchmark.py --mode=baseline",
+    "refined_test": "pytest tests/test_vectorizer_benchmark.py --mode=refined",
+    "comparison": "pytest tests/test_vectorizer_benchmark.py --compare"
+  }
+}

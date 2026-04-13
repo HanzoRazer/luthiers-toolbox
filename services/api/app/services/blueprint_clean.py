@@ -13,6 +13,20 @@ Integrates contour_scoring for ranked selection instead of binary reject.
 Note: This scoring-based approach applies to blueprint pipeline only.
 Photo vectorizer still uses ownership-threshold hard gate (0.60).
 
+Multi-Mode Architecture (2026-04-13):
+=====================================
+Two cleanup modes are available via the `mode` parameter:
+
+- BASELINE: Last useful end-to-end behavior before grouping/refinement.
+            Bypasses border removal, 5-tier fallback ladder, and newer penalties.
+            Use for stability and regression comparison.
+
+- REFINED:  Current logic with border removal, fallback ladder, and all
+            newer selection intelligence. Default for new processing.
+
+The mode is propagated from API → orchestrator → cleanup.
+Both modes produce the same response shape; only internal behavior differs.
+
 Author: Production Shop
 """
 
@@ -20,6 +34,7 @@ from __future__ import annotations
 
 import logging
 from dataclasses import dataclass, field
+from enum import Enum
 from pathlib import Path
 from typing import List, Optional, Tuple
 
@@ -29,6 +44,26 @@ import numpy as np
 from .contour_scoring import score_contours, ContourSelectionResult
 
 logger = logging.getLogger(__name__)
+
+
+# ─── Cleanup Mode ────────────────────────────────────────────────────────────
+
+class CleanupMode(str, Enum):
+    """
+    Blueprint cleanup behavior mode.
+
+    BASELINE: Simpler pre-grouping logic for stability/regression.
+              - No border removal at cleanup stage
+              - No 5-tier fallback ladder
+              - Simple 2-pass fallback (length/closure, then any)
+
+    REFINED:  Current logic with all improvements.
+              - Surgical border removal before scoring
+              - 5-tier fallback priority ladder
+              - Body-likeness checks for fallback candidates
+    """
+    BASELINE = "baseline"
+    REFINED = "refined"
 
 
 @dataclass
@@ -396,6 +431,7 @@ def clean_blueprint_dxf(
     min_contour_length_mm: float = 50.0,
     close_gaps_mm: float = 1.0,
     keep_open_chains: bool = False,
+    mode: CleanupMode = CleanupMode.REFINED,
 ) -> CleanResult:
     """
     Clean raw edge-to-dxf output to isolate body outline.
@@ -412,9 +448,39 @@ def clean_blueprint_dxf(
         min_contour_length_mm: Minimum contour length to keep
         close_gaps_mm: Maximum gap to close between endpoints
         keep_open_chains: Whether to keep open chains (not just closed loops)
+        mode: CleanupMode.BASELINE for stable pre-grouping behavior,
+              CleanupMode.REFINED for current logic with all improvements
 
     Returns:
         CleanResult with success status, SVG preview, and metrics
+    """
+    # Dispatch to appropriate implementation based on mode
+    if mode == CleanupMode.BASELINE:
+        return _clean_blueprint_baseline(
+            input_path, output_path, min_contour_length_mm,
+            close_gaps_mm, keep_open_chains
+        )
+    # Default: REFINED mode (current behavior)
+    return _clean_blueprint_refined(
+        input_path, output_path, min_contour_length_mm,
+        close_gaps_mm, keep_open_chains
+    )
+
+
+def _clean_blueprint_refined(
+    input_path: str,
+    output_path: str,
+    min_contour_length_mm: float,
+    close_gaps_mm: float,
+    keep_open_chains: bool,
+) -> CleanResult:
+    """
+    REFINED mode: Current cleanup logic with all improvements.
+
+    Features:
+    - Surgical border removal before scoring
+    - 5-tier fallback priority ladder
+    - Body-likeness checks for fallback candidates
     """
     warnings: List[str] = []
 
@@ -668,6 +734,216 @@ def clean_blueprint_dxf(
     except Exception as e:
         logger.exception(f"DXF cleanup failed: {e}")
         return CleanResult(success=False, error=str(e))
+
+
+def _clean_blueprint_baseline(
+    input_path: str,
+    output_path: str,
+    min_contour_length_mm: float,
+    close_gaps_mm: float,
+    keep_open_chains: bool,
+) -> CleanResult:
+    """
+    BASELINE mode: Simpler pre-grouping behavior for stability/regression.
+
+    This is the last useful end-to-end blueprint cleanup before:
+    - Border removal at cleanup stage
+    - 5-tier fallback priority ladder
+    - Body-likeness penalties
+
+    Behavior:
+    - Scores ALL chains (no border removal)
+    - Simple 2-pass fallback:
+      1. Try chains passing length/closure filters
+      2. Fallback to best regardless of filters
+    - Returns same CleanResult shape as refined mode
+
+    This mode exists for:
+    - Regression comparison
+    - Safe fallback when refined mode causes issues
+    - Benchmark validation
+    """
+    warnings: List[str] = []
+    warnings.append("Using BASELINE cleanup mode (pre-grouping behavior)")
+
+    try:
+        from ..cam.unified_dxf_cleaner import DXFCleaner, Chain, Point
+
+        cleaner = DXFCleaner(
+            min_contour_length_mm=0.0,
+            closure_tolerance=close_gaps_mm,
+            keep_open_chains=True,
+        )
+
+        # Step 1: Extract raw chains without filtering
+        chains, polyline_pts, original_count = cleaner.extract_chains(Path(input_path))
+        total_chains = len(chains)
+
+        logger.info(f"BLUEPRINT_CLEAN_BASELINE | extracted {total_chains} chains, {len(polyline_pts)} polylines")
+
+        if total_chains == 0 and len(polyline_pts) == 0:
+            return CleanResult(
+                success=False,
+                error="No chains or polylines found in DXF",
+                original_entity_count=original_count,
+                chains_found=0,
+                warnings=warnings,
+            )
+
+        # Step 2: Convert chains to contours for scoring
+        contours = [_chain_to_contour(c) for c in chains]
+
+        # Also convert polylines to contours
+        for pts in polyline_pts:
+            arr = np.array(pts, dtype=np.float32).reshape(-1, 1, 2)
+            contours.append(arr)
+            dummy_chain = Chain(points=[Point(x, y) for x, y in pts])
+            chains.append(dummy_chain)
+
+        # Step 3: Score ALL contours (NO border removal in baseline)
+        canvas_w, canvas_h = _estimate_canvas_size(chains, [])
+        ownership_fn = _create_ownership_fn(canvas_w, canvas_h)
+
+        scoring_result = score_contours(
+            contours,
+            image_width=canvas_w,
+            image_height=canvas_h,
+            min_area_ratio=0.005,
+            max_area_ratio=0.99,
+            ownership_fn=ownership_fn,
+            debug=True,
+        )
+
+        # Step 4: Select chains based on scores (simple thresholding)
+        selected_chains: List = []
+        discarded_short = 0
+        discarded_open = 0
+        discarded_low_score = 0
+
+        for candidate in scoring_result.candidates:
+            idx = candidate.index
+            if idx >= len(chains):
+                continue
+
+            chain = chains[idx]
+            chain_len = chain.length()
+            is_closed = chain.is_closed(close_gaps_mm)
+
+            if chain_len < min_contour_length_mm:
+                discarded_short += 1
+                continue
+
+            if not is_closed and not keep_open_chains:
+                discarded_open += 1
+                continue
+
+            if candidate.score < MIN_SCORE_TO_KEEP:
+                discarded_low_score += 1
+                continue
+
+            selected_chains.append((chain, candidate.score))
+
+        selected_chains.sort(key=lambda x: x[1], reverse=True)
+
+        # Step 5: BASELINE FALLBACK - simple 2-pass, no tier system
+        best_confidence = scoring_result.confidence
+        fallback_used = False
+
+        if not selected_chains and chains:
+            # Pass 1: Try to find chain that passes length/closure filters
+            for candidate in scoring_result.candidates:
+                idx = candidate.index
+                if idx >= len(chains):
+                    continue
+                chain = chains[idx]
+                chain_len = chain.length()
+                is_closed = chain.is_closed(close_gaps_mm)
+
+                if chain_len >= min_contour_length_mm and (is_closed or keep_open_chains):
+                    selected_chains.append((chain, candidate.score))
+                    best_confidence = candidate.score
+                    fallback_used = True
+                    warnings.append(
+                        f"Falling back to best available contour (score={candidate.score:.2f}) "
+                        f"despite low confidence."
+                    )
+                    break
+
+            # Pass 2: If still nothing, use absolute best regardless of filters
+            if not selected_chains and scoring_result.candidates:
+                best_candidate = scoring_result.candidates[0]
+                idx = best_candidate.index
+                if idx < len(chains):
+                    chain = chains[idx]
+                    selected_chains.append((chain, best_candidate.score))
+                    best_confidence = best_candidate.score
+                    fallback_used = True
+                    warnings.append(
+                        f"Using best available contour (score={best_candidate.score:.2f}) "
+                        f"bypassing length/closure filters for review."
+                    )
+
+        # Add scoring warnings
+        warnings.extend(scoring_result.warnings)
+
+        if best_confidence < MIN_CONFIDENCE_WARNING and selected_chains:
+            warnings.append(
+                f"Low confidence contour selection ({best_confidence:.2f}). "
+                f"Review output before fabrication."
+            )
+
+        # Step 6: Write selected chains to output
+        final_chains = [c for c, _ in selected_chains]
+        contours_written = 0
+
+        if final_chains:
+            contours_written = cleaner.write_selected_chains(
+                Path(output_path),
+                final_chains,
+                polyline_pts=None,
+            )
+
+        # Step 7: Generate SVG preview
+        svg_preview = ""
+        if final_chains:
+            svg_preview = cleaner.generate_svg_preview(final_chains)
+
+        logger.info(
+            f"BLUEPRINT_CLEAN_BASELINE | scored {len(scoring_result.candidates)} candidates, "
+            f"selected {len(final_chains)}, confidence={best_confidence:.2f}, "
+            f"margin={scoring_result.winner_margin:.2f}"
+        )
+
+        return CleanResult(
+            success=True,
+            svg_preview=svg_preview,
+            dxf_path=output_path,
+            original_entity_count=original_count,
+            cleaned_entity_count=contours_written,
+            contours_found=contours_written,
+            chains_found=total_chains,
+            discarded_short=discarded_short,
+            discarded_open=discarded_open,
+            discarded_low_score=discarded_low_score,
+            best_confidence=best_confidence,
+            runner_up_score=scoring_result.runner_up_score,
+            winner_margin=scoring_result.winner_margin,
+            candidate_count=len(scoring_result.candidates),
+            warnings=warnings,
+            # Baseline mode doesn't use the tier system
+            fallback_used=fallback_used,
+            fallback_tier=0,
+            fallback_reason="baseline_simple_fallback" if fallback_used else "",
+            fallback_reject_reason="",
+            fallback_is_page_border=False,
+        )
+
+    except ImportError as e:
+        logger.error(f"DXFCleaner not available: {e}")
+        return CleanResult(success=False, error=f"DXFCleaner not available: {e}", warnings=warnings)
+    except Exception as e:
+        logger.exception(f"DXF cleanup failed: {e}")
+        return CleanResult(success=False, error=str(e), warnings=warnings)
 
 
 def _generate_svg_preview(dxf_path: str, cleaner) -> str:
