@@ -1826,7 +1826,113 @@ If overlays show:
 
 ---
 
-## 31. Change Log
+## 31. Melody Maker Failure Class — Contour Formation Fix
+
+**Date:** 2026-04-13  
+**Status:** Phase 1 DEPLOYED (commit 7a0cefb2)  
+**Priority:** HIGH  
+**Type:** Extraction-level fix (upstream of scoring)
+
+### Problem Statement
+
+The Melody Maker PDF class represents page-border-heavy technical sheets where:
+- The page border is the strongest closed contour
+- The body outline is fragmented, faint, or contaminated by construction lines
+- After downscaling, the body never forms a viable closed candidate
+- Fallback selects `page_border` as the only surviving contour
+
+**Root cause:** Border rejection happened at scoring time, which is too late. When the body doesn't form a closed contour, the border wins by default.
+
+### Diagnostic Signature
+
+```
+Warnings:
+- No contour passed minimum geometric sanity checks.
+- Falling back to best available contour despite rejection: page_border.
+- Selection score below review threshold (0.09 < 0.45)
+
+Dimensions: 646.96 x 500.0 mm (page-like, not body-like)
+SVG: Traces rectangular/linear structure, not guitar body
+```
+
+### Fix Architecture
+
+| Phase | Status | Description |
+|-------|--------|-------------|
+| **Phase 1** | ✅ DEPLOYED | Surgical border removal before grouping |
+| Phase 2 | PENDING | Re-test Melody Maker with fix |
+| Phase 3 | IF NEEDED | Fragment joining / gap closing |
+| Phase 4 | LAST RESORT | Inset crop fallback |
+
+### Phase 1 Implementation (commit 7a0cefb2)
+
+**File:** `services/photo-vectorizer/edge_to_dxf.py`
+
+**New function:** `_remove_page_borders_early()`
+
+```python
+def _remove_page_borders_early(
+    contours: list,
+    hierarchy: np.ndarray,
+    image_width: int,
+    image_height: int,
+) -> Tuple[list, int]:
+    """
+    Remove page border contours from the pool BEFORE grouping.
+    
+    Detection criteria:
+    - Touches 3+ image edges, OR
+    - Touches 2+ edges AND area > 70% of image
+    
+    Implementation:
+    - Nullifies border contours (replaces with empty array)
+    - Preserves hierarchy indices so relationships remain valid
+    - Border never enters the candidate contest
+    """
+```
+
+**Integration point:** Called immediately after `cv2.findContours()`, before `_isolate_with_grouping()`.
+
+```python
+contours, hierarchy = cv2.findContours(edges, cv2.RETR_TREE, ...)
+
+# SURGICAL BORDER REMOVAL (Phase 1)
+contours, borders_removed = _remove_page_borders_early(contours, hierarchy, w, h)
+
+# Now grouping proceeds without borders
+valid_contours, group_result = _isolate_with_grouping(contours, hierarchy, ...)
+```
+
+### Expected Outcome
+
+| Before | After |
+|--------|-------|
+| Border enters candidate pool | Border removed before grouping |
+| Border wins as only closed contour | Body fragments now have a chance |
+| Fallback selects `page_border` | Fallback selects best body-like candidate |
+| Dimensions: page-like | Dimensions: body-like (if body exists) |
+
+### Next Steps (Phase 2 Validation)
+
+1. Re-upload Melody Maker PDF after Railway redeploy
+2. Check logs for `BORDER_REMOVAL | Removed N page border contour(s)`
+3. Verify:
+   - Winner is no longer `page_border`
+   - Body candidate (even if fragmented) is selected
+   - Margin improves from 0.00
+
+### If Phase 2 Still Fails
+
+| Symptom | Next Action |
+|---------|-------------|
+| Body fragments exist but don't form closed contour | Phase 3: Fragment joining |
+| No body-like contours at all | Check edge detection thresholds |
+| Body present but split into multiple green fragments | Phase 4: Merged-fragment fallback |
+| Candidate count == 0 after border removal | May have over-filtered — loosen criteria |
+
+---
+
+## 32. Change Log
 
 | Date | Section | Change |
 |------|---------|--------|
@@ -1835,3 +1941,4 @@ If overlays show:
 | 2026-04-11 | 17-22 | Photo refactor + frontend integration |
 | 2026-04-12 | 24-28 | Recommendation layer + complete file reference + onboarding guide |
 | 2026-04-12 | 30 | FIX: Weak selection regression — backend (two-pass fallback) + frontend (render when ok=false) |
+| 2026-04-13 | 31 | FIX: Melody Maker failure class — surgical border removal before grouping |
