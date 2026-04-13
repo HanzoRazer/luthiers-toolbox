@@ -42,7 +42,7 @@ import logging
 import time
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Dict, Optional, Tuple
+from typing import Any, Dict, Optional, Tuple
 
 import cv2
 import numpy as np
@@ -213,6 +213,9 @@ def _isolate_body_contours(
     - Are not page borders
     - Are not too small or too large
     - Are not children of other contours
+
+    DEPRECATED: Use _isolate_with_grouping() for new code.
+    This function is preserved for fallback compatibility.
     """
     if hierarchy is None or len(contours) == 0:
         return contours
@@ -256,6 +259,604 @@ def _isolate_body_contours(
     return candidates
 
 
+# ─── Surgical Border Removal ────────────────────────────────────────────────
+#
+# This section removes page borders from the contour pool BEFORE hierarchy
+# building and grouping. This prevents borders from dominating the candidate
+# set when the body contour is fragmented or weak.
+#
+# Key insight: Border rejection at scoring time is too late. If the border
+# is the only closed contour, fallback selects it. By removing borders
+# before hierarchy construction, they never enter the contest.
+#
+# Author: Production Shop
+# Date: 2026-04-13
+
+
+def _remove_page_borders_early(
+    contours: list,
+    hierarchy: np.ndarray,
+    image_width: int,
+    image_height: int,
+    area_threshold: float = 0.70,
+    edge_threshold: int = 3,
+) -> Tuple[list, int]:
+    """
+    Remove page border contours from the pool BEFORE grouping.
+
+    This is surgical pre-filtering that prevents page borders from
+    entering the hierarchy/grouping contest. Unlike scoring-time
+    rejection, this ensures borders never become fallback winners.
+
+    Detection criteria (same as _is_page_border):
+    - Touches 3+ image edges, OR
+    - Touches 2+ edges AND area > 70% of image
+
+    Implementation:
+    - Nullifies border contours (replaces with empty array)
+    - Preserves indices so hierarchy relationships remain valid
+    - Degenerate (empty) contours are filtered by downstream logic
+
+    Args:
+        contours: Raw contours from cv2.findContours
+        hierarchy: Hierarchy array (shape: (1, N, 4) or (N, 4))
+        image_width, image_height: Image dimensions
+        area_threshold: Area ratio above which 2-edge contour is border
+        edge_threshold: Number of edges to touch for definite border
+
+    Returns:
+        (modified_contours, removed_count)
+        Contours are modified in-place; border contours become empty arrays.
+    """
+    if hierarchy is None or len(contours) == 0:
+        return contours, 0
+
+    # Normalize hierarchy shape
+    if len(hierarchy.shape) == 3:
+        hierarchy = hierarchy[0]
+
+    image_area = float(image_width * image_height)
+    removed_count = 0
+    border_indices = []
+
+    for idx, contour in enumerate(contours):
+        if contour is None or len(contour) < 3:
+            continue
+
+        # Only check top-level contours (no parent)
+        parent_idx = int(hierarchy[idx][3]) if hierarchy[idx][3] >= 0 else -1
+        if parent_idx >= 0:
+            # Has parent = child contour, not a page border
+            continue
+
+        area = float(cv2.contourArea(contour))
+        area_ratio = area / image_area
+
+        _, edge_count = _touches_border(contour, image_width, image_height)
+
+        # Page border detection (same logic as _is_page_border)
+        is_border = False
+        if edge_count >= edge_threshold:
+            is_border = True
+        elif edge_count >= 2 and area_ratio > area_threshold:
+            is_border = True
+
+        if is_border:
+            border_indices.append(idx)
+            removed_count += 1
+
+    # Nullify border contours (replace with empty array to preserve indices)
+    # This is cleaner than list removal because hierarchy indices stay valid
+    for idx in border_indices:
+        contours[idx] = np.array([], dtype=np.int32).reshape(0, 1, 2)
+
+    if removed_count > 0:
+        logger.info(
+            f"BORDER_REMOVAL | Removed {removed_count} page border contour(s) "
+            f"before grouping (indices: {border_indices[:5]}{'...' if len(border_indices) > 5 else ''})"
+        )
+
+    return contours, removed_count
+
+
+# ─── Primary Object Grouping ────────────────────────────────────────────────
+#
+# This section implements contour grouping to solve the multi-view blueprint
+# problem. Instead of scoring all top-level contours globally (which causes
+# page borders and construction lines to compete with the body), we:
+#
+# 1. Build hierarchy nodes from raw contours
+# 2. Identify eligible root candidates (top-level, non-border, right size)
+# 3. Group each root with its descendants
+# 4. Score groups as units
+# 5. Select the winning group
+# 6. Export only the winning group's contours
+#
+# TODO: Consolidate with services/api/app/services/contour_hierarchy.py
+# These functions duplicate logic that exists in the API service. A future
+# refactor should establish a shared hierarchy module.
+#
+# Author: Production Shop
+# Date: 2026-04-12
+
+
+@dataclass
+class HierarchyNode:
+    """
+    A contour with hierarchy context for production grouping.
+
+    Unlike ContourDebugNode (which requires DEBUG_OVERLAY_AVAILABLE),
+    this is always available for the production grouping path.
+    """
+    idx: int
+    contour: np.ndarray
+    parent_idx: Optional[int]
+    child_indices: list  # Populated in second pass
+    depth: int
+    area: float
+    area_ratio: float
+    bbox: Tuple[int, int, int, int]  # x, y, w, h
+    edge_count: int
+    is_page_border: bool
+    is_eligible_root: bool  # Top-level, non-border, right size
+    reject_reason: str
+
+
+@dataclass
+class ContourGroup:
+    """
+    A group of spatially-related contours (root + descendants).
+
+    In the conservative first pass, each eligible root forms exactly
+    one group with its descendants. No sibling merging yet.
+    """
+    group_id: int
+    root_idx: int
+    root_node: HierarchyNode
+    member_indices: list  # All indices including root and descendants
+    member_contours: list  # Actual contour arrays
+    bbox: Tuple[int, int, int, int]  # Combined bounding box
+    total_area: float
+    center: Tuple[float, float]
+    max_edge_count: int  # Max edge contacts in group
+
+
+@dataclass
+class GroupSelectionResult:
+    """Result of group scoring and selection."""
+    group_count: int
+    selected_group_index: int
+    selected_group_id: int
+    selected_group_bbox: Tuple[int, int, int, int]
+    selected_group_score: float
+    runner_up_score: float
+    winner_margin: float
+    fallback_used: bool
+    fallback_reason: str
+
+
+def _build_hierarchy_nodes(
+    contours: list,
+    hierarchy: np.ndarray,
+    image_width: int,
+    image_height: int,
+    min_area_ratio: float = 0.005,
+    max_area_ratio: float = 0.95,
+) -> list:
+    """
+    Build HierarchyNode list from raw OpenCV findContours output.
+
+    This is the production version that doesn't depend on DEBUG_OVERLAY_AVAILABLE.
+
+    Args:
+        contours: List of contours from cv2.findContours
+        hierarchy: Hierarchy array (shape: (1, N, 4) or (N, 4))
+        image_width, image_height: Image dimensions
+        min_area_ratio, max_area_ratio: Size filters for eligibility
+
+    Returns:
+        List of HierarchyNode with parent/child relationships resolved
+    """
+    if hierarchy is None or len(contours) == 0:
+        return []
+
+    # Normalize hierarchy shape
+    if len(hierarchy.shape) == 3:
+        hierarchy = hierarchy[0]
+
+    image_area = float(image_width * image_height)
+    nodes: list = []
+    idx_to_node: Dict[int, HierarchyNode] = {}
+
+    # First pass: create nodes with basic properties
+    for idx, contour in enumerate(contours):
+        if contour is None or len(contour) < 3:
+            continue
+
+        # Hierarchy: [next, prev, first_child, parent]
+        parent_idx = int(hierarchy[idx][3]) if hierarchy[idx][3] >= 0 else None
+
+        area = float(cv2.contourArea(contour))
+        area_ratio = area / image_area
+        bbox = cv2.boundingRect(contour)
+
+        _, edge_count = _touches_border(contour, image_width, image_height)
+        page_border = _is_page_border(edge_count, area_ratio)
+
+        # Determine eligibility and rejection reason
+        is_eligible = False
+        reject_reason = ""
+
+        if page_border:
+            reject_reason = "page_border"
+        elif area_ratio < min_area_ratio:
+            reject_reason = "too_small"
+        elif area_ratio > max_area_ratio:
+            reject_reason = "too_large"
+        elif parent_idx is not None:
+            reject_reason = "child_contour"
+        else:
+            is_eligible = True
+
+        node = HierarchyNode(
+            idx=idx,
+            contour=contour,
+            parent_idx=parent_idx,
+            child_indices=[],
+            depth=0 if parent_idx is None else 1,
+            area=area,
+            area_ratio=area_ratio,
+            bbox=bbox,
+            edge_count=edge_count,
+            is_page_border=page_border,
+            is_eligible_root=is_eligible,
+            reject_reason=reject_reason,
+        )
+        nodes.append(node)
+        idx_to_node[idx] = node
+
+    # Second pass: populate child_indices
+    for node in nodes:
+        if node.parent_idx is not None and node.parent_idx in idx_to_node:
+            parent = idx_to_node[node.parent_idx]
+            parent.child_indices.append(node.idx)
+            # Update depth based on parent
+            node.depth = parent.depth + 1
+
+    return nodes
+
+
+def _collect_descendants(
+    root_idx: int,
+    idx_to_node: Dict[int, HierarchyNode],
+) -> list:
+    """
+    Recursively collect all descendant indices of a root node.
+
+    Returns list of indices (not including root itself).
+    """
+    descendants = []
+
+    if root_idx not in idx_to_node:
+        return descendants
+
+    root = idx_to_node[root_idx]
+    for child_idx in root.child_indices:
+        descendants.append(child_idx)
+        # Recurse for grandchildren
+        descendants.extend(_collect_descendants(child_idx, idx_to_node))
+
+    return descendants
+
+
+def _group_from_roots(
+    nodes: list,
+    image_width: int,
+    image_height: int,
+) -> list:
+    """
+    Create one ContourGroup per eligible root + its descendants.
+
+    This is the conservative first pass: no sibling merging.
+    Each top-level eligible contour becomes exactly one group.
+
+    Args:
+        nodes: List of HierarchyNode from _build_hierarchy_nodes()
+        image_width, image_height: For computing combined bbox
+
+    Returns:
+        List of ContourGroup
+    """
+    idx_to_node = {n.idx: n for n in nodes}
+    eligible_roots = [n for n in nodes if n.is_eligible_root]
+
+    groups = []
+
+    for group_id, root in enumerate(eligible_roots):
+        # Collect descendants
+        descendant_indices = _collect_descendants(root.idx, idx_to_node)
+        all_indices = [root.idx] + descendant_indices
+
+        # Gather contours
+        member_contours = []
+        for idx in all_indices:
+            if idx in idx_to_node:
+                member_contours.append(idx_to_node[idx].contour)
+
+        if not member_contours:
+            continue
+
+        # Compute combined bounding box
+        all_points = np.vstack([c.reshape(-1, 2) for c in member_contours])
+        x_min, y_min = all_points.min(axis=0)
+        x_max, y_max = all_points.max(axis=0)
+        combined_bbox = (int(x_min), int(y_min), int(x_max - x_min), int(y_max - y_min))
+
+        # Compute total area and center
+        total_area = sum(idx_to_node[idx].area for idx in all_indices if idx in idx_to_node)
+        cx = x_min + (x_max - x_min) / 2
+        cy = y_min + (y_max - y_min) / 2
+
+        # Max edge contacts in group
+        max_edge = max(
+            (idx_to_node[idx].edge_count for idx in all_indices if idx in idx_to_node),
+            default=0
+        )
+
+        group = ContourGroup(
+            group_id=group_id,
+            root_idx=root.idx,
+            root_node=root,
+            member_indices=all_indices,
+            member_contours=member_contours,
+            bbox=combined_bbox,
+            total_area=total_area,
+            center=(cx, cy),
+            max_edge_count=max_edge,
+        )
+        groups.append(group)
+
+    logger.info(f"Created {len(groups)} contour groups from {len(eligible_roots)} eligible roots")
+    return groups
+
+
+def _score_contour_group(
+    group: ContourGroup,
+    image_width: int,
+    image_height: int,
+) -> float:
+    """
+    Score a single contour group.
+
+    Scoring signals:
+    - Area ratio (prefer groups covering meaningful portion of image)
+    - Centrality (prefer centered groups)
+    - Edge contact penalty (avoid border-hugging groups)
+    - Aspect ratio penalty (penalize thin strips like construction lines)
+
+    Returns score in range [0.0, 1.0]
+    """
+    image_area = float(image_width * image_height)
+
+    # Area ratio score (target ~20-50% of image)
+    area_ratio = group.total_area / image_area
+    # Normalize: 0.2 area_ratio = 1.0 score, scales down outside [0.05, 0.60]
+    if area_ratio < 0.05:
+        area_score = area_ratio / 0.05
+    elif area_ratio > 0.60:
+        area_score = max(0.0, 1.0 - (area_ratio - 0.60) / 0.35)
+    else:
+        area_score = 1.0
+
+    # Centrality score
+    cx, cy = group.center
+    img_cx, img_cy = image_width / 2, image_height / 2
+    dx = abs(cx - img_cx) / (image_width / 2)
+    dy = abs(cy - img_cy) / (image_height / 2)
+    centrality = max(0.0, 1.0 - (dx + dy) / 2)
+
+    # Edge contact penalty
+    edge_penalty = min(1.0, group.max_edge_count * 0.25)
+    edge_score = 1.0 - edge_penalty
+
+    # Aspect ratio penalty (penalize thin strips)
+    x, y, w, h = group.bbox
+    if h > 0 and w > 0:
+        aspect = max(w / h, h / w)
+        if aspect > 5.0:
+            # Very elongated = likely construction line or side view edge
+            aspect_score = max(0.0, 1.0 - (aspect - 5.0) / 10.0)
+        else:
+            aspect_score = 1.0
+    else:
+        aspect_score = 0.0
+
+    # Weighted combination
+    score = (
+        0.35 * area_score +
+        0.30 * centrality +
+        0.20 * edge_score +
+        0.15 * aspect_score
+    )
+
+    return float(score)
+
+
+def _select_winning_group(
+    groups: list,
+    image_width: int,
+    image_height: int,
+) -> Tuple[Optional[ContourGroup], GroupSelectionResult]:
+    """
+    Score all groups and select the winner.
+
+    Args:
+        groups: List of ContourGroup from _group_from_roots()
+        image_width, image_height: Image dimensions
+
+    Returns:
+        (winning_group, GroupSelectionResult)
+        winning_group may be None if no groups exist
+    """
+    if not groups:
+        return None, GroupSelectionResult(
+            group_count=0,
+            selected_group_index=-1,
+            selected_group_id=-1,
+            selected_group_bbox=(0, 0, 0, 0),
+            selected_group_score=0.0,
+            runner_up_score=0.0,
+            winner_margin=0.0,
+            fallback_used=True,
+            fallback_reason="no_groups",
+        )
+
+    # Score all groups
+    scored = []
+    for i, group in enumerate(groups):
+        score = _score_contour_group(group, image_width, image_height)
+        scored.append((i, group, score))
+
+    # Sort by score descending
+    scored.sort(key=lambda x: x[2], reverse=True)
+
+    best_idx, best_group, best_score = scored[0]
+
+    # Runner-up and margin
+    if len(scored) > 1:
+        runner_up_score = scored[1][2]
+    else:
+        runner_up_score = 0.0
+
+    winner_margin = best_score - runner_up_score
+
+    logger.info(
+        f"Group selection: {len(groups)} groups, "
+        f"winner=group_{best_group.group_id} score={best_score:.3f} "
+        f"margin={winner_margin:.3f}"
+    )
+
+    return best_group, GroupSelectionResult(
+        group_count=len(groups),
+        selected_group_index=best_idx,
+        selected_group_id=best_group.group_id,
+        selected_group_bbox=best_group.bbox,
+        selected_group_score=best_score,
+        runner_up_score=runner_up_score,
+        winner_margin=winner_margin,
+        fallback_used=False,
+        fallback_reason="",
+    )
+
+
+def _isolate_with_grouping(
+    contours: list,
+    hierarchy: np.ndarray,
+    image_width: int,
+    image_height: int,
+    min_area_ratio: float = 0.005,
+    max_area_ratio: float = 0.95,
+) -> Tuple[list, Optional[GroupSelectionResult]]:
+    """
+    Primary object grouping: isolate contours via hierarchy-aware grouping.
+
+    This is the new production path that:
+    1. Builds hierarchy nodes from raw contours
+    2. Identifies eligible roots (top-level, non-border, right size)
+    3. Groups each root with its descendants
+    4. Scores groups as units
+    5. Returns only the winning group's contours
+
+    Args:
+        contours: Raw contours from cv2.findContours
+        hierarchy: Hierarchy array from cv2.findContours (RETR_TREE)
+        image_width, image_height: Image dimensions
+        min_area_ratio, max_area_ratio: Size eligibility thresholds
+
+    Returns:
+        (selected_contours, group_result)
+        Falls back to legacy behavior if grouping fails.
+    """
+    try:
+        # Step 1: Build hierarchy nodes
+        nodes = _build_hierarchy_nodes(
+            contours, hierarchy, image_width, image_height,
+            min_area_ratio, max_area_ratio
+        )
+
+        if not nodes:
+            logger.warning("No hierarchy nodes built, falling back to legacy isolation")
+            return _isolate_body_contours(
+                contours, hierarchy, image_width, image_height,
+                min_area_ratio, max_area_ratio
+            ), None
+
+        # Step 2: Group from eligible roots
+        groups = _group_from_roots(nodes, image_width, image_height)
+
+        if not groups:
+            logger.warning("No contour groups formed, falling back to legacy isolation")
+            return _isolate_body_contours(
+                contours, hierarchy, image_width, image_height,
+                min_area_ratio, max_area_ratio
+            ), GroupSelectionResult(
+                group_count=0,
+                selected_group_index=-1,
+                selected_group_id=-1,
+                selected_group_bbox=(0, 0, 0, 0),
+                selected_group_score=0.0,
+                runner_up_score=0.0,
+                winner_margin=0.0,
+                fallback_used=True,
+                fallback_reason="no_groups_formed",
+            )
+
+        # Step 3: Score and select winning group
+        winning_group, group_result = _select_winning_group(
+            groups, image_width, image_height
+        )
+
+        if winning_group is None:
+            logger.warning("Group selection failed, falling back to legacy isolation")
+            fallback = _isolate_body_contours(
+                contours, hierarchy, image_width, image_height,
+                min_area_ratio, max_area_ratio
+            )
+            group_result.fallback_used = True
+            group_result.fallback_reason = "selection_failed"
+            return fallback, group_result
+
+        # Step 4: Return winning group's contours
+        # Only include the root contour for body selection, not descendants
+        # (descendants are internal features like soundholes, not body outline)
+        selected_contours = [winning_group.root_node.contour]
+
+        logger.info(
+            f"Grouping complete: selected group_{winning_group.group_id} "
+            f"with {len(winning_group.member_indices)} members, "
+            f"returning root contour for body selection"
+        )
+
+        return selected_contours, group_result
+
+    except Exception as e:
+        logger.exception(f"Grouping failed with error: {e}, falling back to legacy")
+        return _isolate_body_contours(
+            contours, hierarchy, image_width, image_height,
+            min_area_ratio, max_area_ratio
+        ), GroupSelectionResult(
+            group_count=0,
+            selected_group_index=-1,
+            selected_group_id=-1,
+            selected_group_bbox=(0, 0, 0, 0),
+            selected_group_score=0.0,
+            runner_up_score=0.0,
+            winner_margin=0.0,
+            fallback_used=True,
+            fallback_reason=f"exception: {str(e)[:50]}",
+        )
+
+
 @dataclass
 class EdgeToDXFResult:
     """Result of edge-to-DXF conversion."""
@@ -270,6 +871,8 @@ class EdgeToDXFResult:
     file_size_bytes: int
     contour_count: int = 0  # Number of contours traced
     stage_timings: Dict[str, float] = field(default_factory=dict)  # Per-stage timing
+    # Grouping metadata (debug-only, internal)
+    grouping: Optional[Dict[str, Any]] = None
 
     def summary(self) -> str:
         """Human-readable summary."""
@@ -403,18 +1006,52 @@ class EdgeToDXF:
         t0 = time.time()
         logger.info("Tracing contours from edge image...")
 
+        # Track grouping result for debug metadata
+        group_result: Optional[GroupSelectionResult] = None
+
         if isolate_body:
             # Use RETR_TREE to get hierarchy for body isolation
-            logger.info("Using hierarchy-aware isolation mode")
+            logger.info("Using hierarchy-aware isolation mode with PRIMARY OBJECT GROUPING")
             contours, hierarchy = cv2.findContours(
                 edges, cv2.RETR_TREE, cv2.CHAIN_APPROX_NONE
             )
-            # Filter to body candidates using hierarchy
-            valid_contours = _isolate_body_contours(
+
+            # SURGICAL BORDER REMOVAL (Phase 1 of Melody Maker fix):
+            # Remove page borders from the contour pool BEFORE grouping.
+            # This prevents borders from entering the candidate contest
+            # and becoming fallback winners when body is fragmented.
+            contours, borders_removed = _remove_page_borders_early(
+                contours, hierarchy, w, h
+            )
+            if borders_removed > 0:
+                logger.info(f"Proceeding with {len([c for c in contours if len(c) >= 3])} non-border contours")
+
+            # PRIMARY OBJECT GROUPING:
+            # Instead of scoring all contours globally, we:
+            # 1. Build hierarchy nodes (now without page borders)
+            # 2. Group each eligible root + descendants
+            # 3. Score groups as units
+            # 4. Select winning group
+            # 5. Return only winning group's contours
+            valid_contours, group_result = _isolate_with_grouping(
                 contours, hierarchy, w, h,
                 min_area_ratio=0.005,
                 max_area_ratio=0.95,
             )
+
+            # Log grouping outcome
+            if group_result:
+                if group_result.fallback_used:
+                    logger.warning(
+                        f"Grouping fallback used: {group_result.fallback_reason}"
+                    )
+                else:
+                    logger.info(
+                        f"Group selection: {group_result.group_count} groups, "
+                        f"selected group {group_result.selected_group_id}, "
+                        f"score={group_result.selected_group_score:.3f}, "
+                        f"margin={group_result.winner_margin:.3f}"
+                    )
 
             # Debug overlay (if DEBUG_CONTOURS=1)
             if DEBUG_OVERLAY_AVAILABLE and is_debug_enabled():
@@ -442,6 +1079,17 @@ class EdgeToDXF:
                     else:
                         rec = "reject"
 
+                    # Include grouping info in debug notes
+                    debug_notes = [
+                        f"Total contours: {len(contours)}",
+                        f"Body candidates: {len(valid_contours)}",
+                    ]
+                    if group_result and not group_result.fallback_used:
+                        debug_notes.append(
+                            f"Groups: {group_result.group_count}, "
+                            f"selected: {group_result.selected_group_id}"
+                        )
+
                     summary = to_debug_summary(
                         source_name=str(source),
                         candidate_count=len(candidates),
@@ -450,7 +1098,7 @@ class EdgeToDXF:
                         runner_up_score=runner_up,
                         winner_margin=margin,
                         recommendation=rec,
-                        notes=[f"Total contours: {len(contours)}", f"Body candidates: {len(valid_contours)}"],
+                        notes=debug_notes,
                     )
 
                     # Write debug bundle
@@ -544,6 +1192,21 @@ class EdgeToDXF:
         timing_str = " | ".join(f"{k}={v}" for k, v in stage_timings.items())
         logger.info(f"EDGE_TO_DXF_TIMING | total={processing_time:.0f}ms | {timing_str}")
 
+        # Build grouping metadata for debug (internal only)
+        grouping_metadata = None
+        if group_result is not None:
+            grouping_metadata = {
+                "group_count": group_result.group_count,
+                "selected_group_index": group_result.selected_group_index,
+                "selected_group_id": group_result.selected_group_id,
+                "selected_group_bbox": group_result.selected_group_bbox,
+                "selected_group_score": round(group_result.selected_group_score, 3),
+                "runner_up_score": round(group_result.runner_up_score, 3),
+                "group_winner_margin": round(group_result.winner_margin, 3),
+                "grouping_fallback_used": group_result.fallback_used,
+                "fallback_reason": group_result.fallback_reason,
+            }
+
         result = EdgeToDXFResult(
             source_path=str(source_path),
             output_path=output_path,
@@ -556,6 +1219,7 @@ class EdgeToDXF:
             file_size_bytes=file_size,
             contour_count=contour_count,
             stage_timings=stage_timings,
+            grouping=grouping_metadata,
         )
 
         logger.info(f"Complete in {processing_time:.0f}ms")
