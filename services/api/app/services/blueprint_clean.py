@@ -334,13 +334,14 @@ def _remove_page_border_chains(
     contours: list,
     canvas_width: int,
     canvas_height: int,
-) -> Tuple[list, list, int]:
+) -> Tuple[list, list, int, list, list]:
     """
-    Remove page border chains BEFORE scoring.
+    Remove page border chains BEFORE scoring, but KEEP them if they're
+    the only option (for best-effort output).
 
     This is the cleanup-stage equivalent of _remove_page_borders_early()
-    in edge_to_dxf.py. It ensures page borders never enter the scoring
-    contest even if extraction didn't remove them.
+    in edge_to_dxf.py. It ensures page borders don't win when better
+    candidates exist, but still returns SOMETHING if border is all we have.
 
     Args:
         chains: List of Chain objects
@@ -348,21 +349,26 @@ def _remove_page_border_chains(
         canvas_width, canvas_height: Estimated canvas size
 
     Returns:
-        (filtered_chains, filtered_contours, removed_count)
+        (filtered_chains, filtered_contours, removed_count, border_chains, border_contours)
+        If filtered_chains is empty but border_chains exists, caller should
+        fall back to border_chains with appropriate warning.
     """
     if not chains or not contours:
-        return chains, contours, 0
+        return chains, contours, 0, [], []
 
     filtered_chains = []
     filtered_contours = []
+    border_chains = []
+    border_contours = []
     removed_count = 0
 
     for chain, contour in zip(chains, contours):
         if _is_chain_page_border(contour, canvas_width, canvas_height):
             removed_count += 1
+            border_chains.append(chain)
+            border_contours.append(contour)
             logger.info(
-                f"BORDER_REMOVAL_CLEAN | Removed chain with {len(contour)} points "
-                f"(detected as page border before scoring)"
+                f"BORDER_REMOVAL_CLEAN | Identified page border chain with {len(contour)} points"
             )
         else:
             filtered_chains.append(chain)
@@ -370,11 +376,11 @@ def _remove_page_border_chains(
 
     if removed_count > 0:
         logger.info(
-            f"BORDER_REMOVAL_CLEAN | Removed {removed_count} page border chain(s), "
-            f"{len(filtered_chains)} chains remaining for scoring"
+            f"BORDER_REMOVAL_CLEAN | Found {removed_count} page border chain(s), "
+            f"{len(filtered_chains)} non-border chains for scoring"
         )
 
-    return filtered_chains, filtered_contours, removed_count
+    return filtered_chains, filtered_contours, removed_count, border_chains, border_contours
 
 
 # ─── Main Cleanup Function ───────────────────────────────────────────────────
@@ -446,28 +452,49 @@ def clean_blueprint_dxf(
             dummy_chain = Chain(points=[Point(x, y) for x, y in pts])
             chains.append(dummy_chain)
 
-        # Step 2.5: SURGICAL BORDER REMOVAL (Cleanup Stage)
-        # Remove page border chains BEFORE scoring to prevent them from
-        # becoming fallback winners when body contours are fragmented.
-        # This mirrors the extraction-stage fix in edge_to_dxf.py.
+        # Step 2.5: BORDER IDENTIFICATION (not removal)
+        # Identify page borders but DON'T remove them yet.
+        # If they're the ONLY option, we still need to return SOMETHING.
+        # Border removal only happens if better candidates exist.
         canvas_w, canvas_h = _estimate_canvas_size(chains, [])
-        chains, contours, borders_removed = _remove_page_border_chains(
-            chains, contours, canvas_w, canvas_h
-        )
+        non_border_chains, non_border_contours, border_count, border_chains, border_contours = \
+            _remove_page_border_chains(chains, contours, canvas_w, canvas_h)
 
-        if borders_removed > 0:
-            # Re-estimate canvas size without borders
-            canvas_w, canvas_h = _estimate_canvas_size(chains, [])
-            logger.info(f"Canvas re-estimated after border removal: {canvas_w}x{canvas_h}")
-
-        if not chains:
+        # Decision: use non-border chains if available, else fall back to borders
+        use_border_fallback = False
+        if non_border_chains:
+            # Good: we have non-border candidates
+            scoring_chains = non_border_chains
+            scoring_contours = non_border_contours
+            # Re-estimate canvas without borders for better scoring
+            canvas_w, canvas_h = _estimate_canvas_size(scoring_chains, [])
+            logger.info(f"Using {len(scoring_chains)} non-border chains for scoring")
+        elif border_chains:
+            # Fallback: only borders exist, use them but warn
+            scoring_chains = border_chains
+            scoring_contours = border_contours
+            use_border_fallback = True
+            warnings.append(
+                "Only page-border geometry found. Using border as best-effort fallback. "
+                "This is likely not the instrument body."
+            )
+            logger.warning(
+                f"BORDER_FALLBACK | No non-border chains found, using {len(border_chains)} "
+                f"border chain(s) as fallback"
+            )
+        else:
+            # No chains at all
             return CleanResult(
                 success=False,
-                error="No non-border chains found after filtering",
+                error="No chains found in DXF",
                 original_entity_count=original_count,
                 chains_found=total_chains,
-                warnings=["All chains were detected as page borders and removed."],
+                warnings=warnings,
             )
+
+        # Update chains/contours for scoring
+        chains = scoring_chains
+        contours = scoring_contours
 
         # Step 3: Score all contours (with ownership as weighted signal)
         ownership_fn = _create_ownership_fn(canvas_w, canvas_h)
