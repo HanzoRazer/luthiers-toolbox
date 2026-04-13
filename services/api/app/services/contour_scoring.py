@@ -86,6 +86,251 @@ class ContourSelectionResult:
         }
 
 
+# ─── Bounding Box Helpers ───────────────────────────────────────────────────
+
+
+def _bbox_intersection(bbox1: tuple, bbox2: tuple) -> float:
+    """Compute intersection area of two bounding boxes."""
+    x1, y1, w1, h1 = bbox1
+    x2, y2, w2, h2 = bbox2
+
+    # Compute intersection rectangle
+    ix1 = max(x1, x2)
+    iy1 = max(y1, y2)
+    ix2 = min(x1 + w1, x2 + w2)
+    iy2 = min(y1 + h1, y2 + h2)
+
+    if ix2 <= ix1 or iy2 <= iy1:
+        return 0.0
+
+    return float((ix2 - ix1) * (iy2 - iy1))
+
+
+def _bbox_iou(bbox1: tuple, bbox2: tuple) -> float:
+    """Compute Intersection over Union of two bounding boxes."""
+    x1, y1, w1, h1 = bbox1
+    x2, y2, w2, h2 = bbox2
+
+    area1 = w1 * h1
+    area2 = w2 * h2
+
+    if area1 <= 0 or area2 <= 0:
+        return 0.0
+
+    intersection = _bbox_intersection(bbox1, bbox2)
+    union = area1 + area2 - intersection
+
+    if union <= 0:
+        return 0.0
+
+    return float(intersection / union)
+
+
+def _bbox_containment(inner_bbox: tuple, outer_bbox: tuple) -> float:
+    """
+    Compute how much of inner_bbox is contained within outer_bbox.
+
+    Returns intersection / inner_area (0.0 to 1.0).
+    """
+    _, _, w, h = inner_bbox
+    inner_area = w * h
+
+    if inner_area <= 0:
+        return 0.0
+
+    intersection = _bbox_intersection(inner_bbox, outer_bbox)
+    return float(intersection / inner_area)
+
+
+def _bbox_center(bbox: tuple) -> tuple:
+    """Get center point of bounding box."""
+    x, y, w, h = bbox
+    return (x + w / 2, y + h / 2)
+
+
+def _bbox_aspect_ratio(bbox: tuple) -> float:
+    """Get aspect ratio of bounding box (always >= 1.0)."""
+    _, _, w, h = bbox
+    if h <= 0 or w <= 0:
+        return 999.0
+    return float(max(w / h, h / w))
+
+
+# ─── Duplicate Detection ────────────────────────────────────────────────────
+
+
+def _is_nested_duplicate(
+    inner_contour: np.ndarray,
+    outer_contour: np.ndarray,
+    image_width: int,
+    image_height: int,
+) -> bool:
+    """
+    Detect if inner_contour is a nested duplicate of outer_contour.
+
+    A nested duplicate is "same shape, offset inward" - like a binding line
+    inside a body outline.
+
+    Criteria (all must be true):
+    - inner bbox substantially contained in outer bbox (≥90%)
+    - aspect ratios within 15%
+    - area ratio 0.70-0.98 (inner is smaller but similar)
+    """
+    if inner_contour is None or outer_contour is None:
+        return False
+    if len(inner_contour) < 3 or len(outer_contour) < 3:
+        return False
+
+    inner_bbox = cv2.boundingRect(inner_contour)
+    outer_bbox = cv2.boundingRect(outer_contour)
+
+    inner_area = float(cv2.contourArea(inner_contour))
+    outer_area = float(cv2.contourArea(outer_contour))
+
+    if outer_area <= 0 or inner_area <= 0:
+        return False
+
+    # Check containment (inner must be mostly inside outer)
+    containment = _bbox_containment(inner_bbox, outer_bbox)
+    if containment < 0.90:
+        return False
+
+    # Check aspect ratio similarity
+    inner_aspect = _bbox_aspect_ratio(inner_bbox)
+    outer_aspect = _bbox_aspect_ratio(outer_bbox)
+    aspect_diff = abs(inner_aspect - outer_aspect) / max(outer_aspect, 0.01)
+    if aspect_diff > 0.15:
+        return False
+
+    # Check area ratio (inner should be 70-98% of outer)
+    area_ratio = inner_area / outer_area
+    if not (0.70 <= area_ratio <= 0.98):
+        return False
+
+    return True
+
+
+def _is_parallel_duplicate(
+    contour1: np.ndarray,
+    contour2: np.ndarray,
+    image_width: int,
+    image_height: int,
+) -> bool:
+    """
+    Detect if two contours are parallel duplicates (same outline, offset).
+
+    Parallel duplicates are nearly identical outlines offset by a small amount,
+    like doubled construction lines from blueprint printing.
+
+    Criteria:
+    - bbox IoU ≥ 0.80
+    - center distance ≤ 3% of max(image_w, image_h)
+    - aspect ratio difference ≤ 10%
+    - area ratio 0.80-1.20
+    """
+    if contour1 is None or contour2 is None:
+        return False
+    if len(contour1) < 3 or len(contour2) < 3:
+        return False
+
+    bbox1 = cv2.boundingRect(contour1)
+    bbox2 = cv2.boundingRect(contour2)
+
+    area1 = float(cv2.contourArea(contour1))
+    area2 = float(cv2.contourArea(contour2))
+
+    if area1 <= 0 or area2 <= 0:
+        return False
+
+    # Check bbox IoU
+    iou = _bbox_iou(bbox1, bbox2)
+    if iou < 0.80:
+        return False
+
+    # Check center distance
+    c1 = _bbox_center(bbox1)
+    c2 = _bbox_center(bbox2)
+    max_dim = max(image_width, image_height)
+    center_dist = ((c1[0] - c2[0]) ** 2 + (c1[1] - c2[1]) ** 2) ** 0.5
+    normalized_dist = center_dist / max(max_dim, 1)
+    if normalized_dist > 0.03:
+        return False
+
+    # Check aspect ratio similarity
+    aspect1 = _bbox_aspect_ratio(bbox1)
+    aspect2 = _bbox_aspect_ratio(bbox2)
+    aspect_diff = abs(aspect1 - aspect2) / max(aspect1, aspect2, 0.01)
+    if aspect_diff > 0.10:
+        return False
+
+    # Check area ratio
+    area_ratio = min(area1, area2) / max(area1, area2)
+    if area_ratio < 0.80:
+        return False
+
+    return True
+
+
+# ─── Thin Strip Detection ───────────────────────────────────────────────────
+
+
+def _is_thin_strip(
+    contour: np.ndarray,
+    image_width: int,
+    image_height: int,
+) -> tuple:
+    """
+    Detect if contour is a thin strip (dimension line, border fragment).
+
+    A thin strip is:
+    - aspect ratio > 8.0
+    - OR aspect ratio > 6.0 AND touches 2 opposite edges
+    - OR minor axis < 1% of image short side
+
+    Returns:
+        (is_strip: bool, severity: float 0.0-1.0)
+    """
+    if contour is None or len(contour) < 3:
+        return False, 0.0
+
+    bbox = cv2.boundingRect(contour)
+    x, y, w, h = bbox
+
+    aspect = _bbox_aspect_ratio(bbox)
+    minor_axis = min(w, h)
+    image_short_side = min(image_width, image_height)
+
+    # Check minor axis relative to image
+    minor_ratio = minor_axis / max(image_short_side, 1)
+
+    # Strong strip: aspect > 8
+    if aspect > 8.0:
+        severity = min(1.0, (aspect - 8.0) / 4.0 + 0.5)
+        return True, severity
+
+    # Moderate strip: aspect > 6 with edge contact
+    if aspect > 6.0:
+        # Check if touches opposite edges
+        touches_left = x <= 3
+        touches_right = x + w >= image_width - 3
+        touches_top = y <= 3
+        touches_bottom = y + h >= image_height - 3
+
+        touches_horizontal_pair = touches_left and touches_right
+        touches_vertical_pair = touches_top and touches_bottom
+
+        if touches_horizontal_pair or touches_vertical_pair:
+            severity = min(1.0, (aspect - 6.0) / 4.0 + 0.3)
+            return True, severity
+
+    # Very thin: minor axis < 1% of image
+    if minor_ratio < 0.01:
+        severity = min(1.0, (0.01 - minor_ratio) / 0.01 + 0.3)
+        return True, severity
+
+    return False, 0.0
+
+
 # ─── Page Border Detection ──────────────────────────────────────────────────
 
 def _touches_border(
@@ -276,6 +521,164 @@ def _continuity_score(vertex_count: int, perimeter: float) -> float:
     return float(1.0 - ((density - 0.15) / 1.35))
 
 
+# ─── In-Group Refinement ────────────────────────────────────────────────────
+
+
+def _compute_duplicate_penalties(
+    contours: List[np.ndarray],
+    base_scores: List[float],
+    image_width: int,
+    image_height: int,
+) -> List[float]:
+    """
+    Compute duplicate penalties for each contour.
+
+    When contour A is a duplicate (nested or parallel) of higher-scoring contour B,
+    A gets penalized. This prevents near-identical binding lines from competing
+    with the actual body outline.
+
+    Returns:
+        List of penalty multipliers (0.0-1.0), where 1.0 means no penalty
+    """
+    n = len(contours)
+    penalties = [1.0] * n
+
+    # Sort indices by score descending to process higher-scoring first
+    sorted_indices = sorted(range(n), key=lambda i: base_scores[i], reverse=True)
+
+    # Track which contours are "dominant" (not yet penalized as duplicates)
+    dominant = set(sorted_indices)
+
+    for i, idx in enumerate(sorted_indices):
+        contour = contours[idx]
+        if contour is None or len(contour) < 3:
+            continue
+
+        # Compare against all higher-scoring contours
+        for higher_idx in sorted_indices[:i]:
+            if higher_idx not in dominant:
+                continue
+
+            higher_contour = contours[higher_idx]
+            if higher_contour is None or len(higher_contour) < 3:
+                continue
+
+            # Check if current is a nested duplicate of higher
+            if _is_nested_duplicate(contour, higher_contour, image_width, image_height):
+                # Nested duplicate: moderate penalty
+                penalties[idx] *= 0.6
+                dominant.discard(idx)
+                break
+
+            # Check if current is a parallel duplicate of higher
+            if _is_parallel_duplicate(contour, higher_contour, image_width, image_height):
+                # Parallel duplicate: strong penalty (nearly same shape)
+                penalties[idx] *= 0.5
+                dominant.discard(idx)
+                break
+
+    return penalties
+
+
+def _compute_thin_strip_penalties(
+    contours: List[np.ndarray],
+    image_width: int,
+    image_height: int,
+) -> List[float]:
+    """
+    Compute thin strip penalties for each contour.
+
+    Returns:
+        List of penalty multipliers (0.0-1.0), where 1.0 means no penalty
+    """
+    penalties = []
+    for contour in contours:
+        is_strip, severity = _is_thin_strip(contour, image_width, image_height)
+        if is_strip:
+            # Penalty scales with severity: 0.3 severity -> 0.7 multiplier
+            penalty = max(0.3, 1.0 - severity * 0.7)
+            penalties.append(penalty)
+        else:
+            penalties.append(1.0)
+    return penalties
+
+
+def _compute_outer_body_preference(
+    contours: List[np.ndarray],
+    base_scores: List[float],
+    image_width: int,
+    image_height: int,
+    page_border_flags: List[bool],
+) -> List[float]:
+    """
+    Compute outer-body preference bonus for each contour.
+
+    The largest plausible non-border closed contour gets a bonus.
+    This helps the "Body mould" win over smaller template pieces.
+
+    Returns:
+        List of bonus multipliers (1.0-1.15), where 1.0 means no bonus
+    """
+    n = len(contours)
+    bonuses = [1.0] * n
+
+    if n == 0:
+        return bonuses
+
+    image_area = float(image_width * image_height)
+
+    # Find candidates: non-border, reasonable size, decent base score
+    candidates = []
+    for i, contour in enumerate(contours):
+        if contour is None or len(contour) < 3:
+            continue
+        if page_border_flags[i]:
+            continue
+
+        area = float(cv2.contourArea(contour))
+        area_ratio = area / max(image_area, 1)
+
+        # Must be reasonably sized (5-80% of image)
+        if not (0.05 <= area_ratio <= 0.80):
+            continue
+
+        # Must have decent base score (not rejected-level)
+        if base_scores[i] < 0.15:
+            continue
+
+        # Must have body-like aspect ratio (not a strip)
+        bbox = cv2.boundingRect(contour)
+        aspect = _bbox_aspect_ratio(bbox)
+        if aspect > 4.0:  # Too elongated to be a body
+            continue
+
+        candidates.append((i, area, area_ratio))
+
+    if not candidates:
+        return bonuses
+
+    # Sort by area descending
+    candidates.sort(key=lambda x: x[1], reverse=True)
+
+    # Top candidate gets the largest bonus
+    # Second gets smaller bonus, etc.
+    for rank, (idx, area, area_ratio) in enumerate(candidates[:3]):
+        if rank == 0:
+            # Largest: 10-15% bonus based on how dominant it is
+            if len(candidates) > 1:
+                second_area = candidates[1][1]
+                dominance = area / max(second_area, 1)
+                bonus = 1.0 + min(0.15, (dominance - 1.0) * 0.05 + 0.10)
+            else:
+                bonus = 1.15  # Only candidate gets full bonus
+            bonuses[idx] = bonus
+        elif rank == 1:
+            bonuses[idx] = 1.03  # Small bonus for runner-up
+        # Third and beyond get no bonus
+
+    return bonuses
+
+
 # ─── Main Scoring Function ───────────────────────────────────────────────────
 
 def score_contours(
@@ -462,6 +865,55 @@ def score_contours(
             warnings=["No contours available for scoring."],
             runner_up_score=0.0,
             winner_margin=0.0,
+        )
+
+    # ─── In-Group Refinement Pass ───────────────────────────────────────────
+    # Apply duplicate penalties, thin strip penalties, and outer body bonus
+    # to improve winner margin and prevent near-duplicates from competing.
+
+    # Extract data needed for refinement
+    base_scores = [s.score for s in scored]
+    page_border_flags = [s.is_page_border for s in scored]
+
+    # Compute refinement adjustments
+    duplicate_penalties = _compute_duplicate_penalties(
+        contour_list, base_scores, image_width, image_height
+    )
+    strip_penalties = _compute_thin_strip_penalties(
+        contour_list, image_width, image_height
+    )
+    outer_body_bonuses = _compute_outer_body_preference(
+        contour_list, base_scores, image_width, image_height, page_border_flags
+    )
+
+    # Apply adjustments to scores
+    for i, s in enumerate(scored):
+        adjusted_score = s.score
+        adjusted_score *= duplicate_penalties[i]
+        adjusted_score *= strip_penalties[i]
+        adjusted_score *= outer_body_bonuses[i]
+        # Update the score in place (ContourScore is a dataclass)
+        scored[i] = ContourScore(
+            index=s.index,
+            area=s.area,
+            area_ratio=s.area_ratio,
+            perimeter=s.perimeter,
+            closure_gap_px=s.closure_gap_px,
+            closure_score=s.closure_score,
+            aspect_ratio=s.aspect_ratio,
+            aspect_score=s.aspect_score,
+            solidity=s.solidity,
+            solidity_score=s.solidity_score,
+            continuity_score=s.continuity_score,
+            ownership_score=s.ownership_score,
+            centrality_score=s.centrality_score,
+            touches_border=s.touches_border,
+            edge_count=s.edge_count,
+            is_page_border=s.is_page_border,
+            vertex_count=s.vertex_count,
+            score=round(float(adjusted_score), 3),
+            rejected=s.rejected,
+            reject_reason=s.reject_reason,
         )
 
     # Rank by score descending

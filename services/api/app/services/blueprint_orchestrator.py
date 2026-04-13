@@ -45,6 +45,9 @@ from .blueprint_extract import (
     ExtractionResult,
     extract_blueprint_to_dxf,
     extract_pdf_page,
+    # Dual-pass extraction (Phase 1 stub)
+    DualPassResult,
+    extract_dual_pass,
 )
 from .blueprint_clean import (
     CleanResult,
@@ -243,23 +246,53 @@ class BlueprintOrchestrator:
                 # ─── Stage: Edge extraction ───────────────────────────────
                 report("edge_extraction", 30)
 
-                # RESTORED_BASELINE: Use RETR_LIST (no hierarchy) like commit 86c49526
-                # All other modes use the default isolate_body=True (RETR_TREE + grouping)
-                #
-                # DO NOT CHANGE THIS LOGIC without reviewing docs/RECOVERY_BASELINE.md
-                # This is the critical fix for the Melody Maker regression.
-                use_isolate_body = mode != CleanupMode.RESTORED_BASELINE
-
                 raw_dxf_path = tmpdir_path / "raw_edges.dxf"
-                extract_result = extract_blueprint_to_dxf(
-                    source_path=str(input_path),
-                    output_path=str(raw_dxf_path),
-                    target_height_mm=target_height_mm,
-                    canny_low=canny_low,
-                    canny_high=canny_high,
-                    warnings=warnings,  # Pass warnings list for guardrail messages
-                    isolate_body=use_isolate_body,
-                )
+
+                # LAYERED_DUAL_PASS: Route to dual-pass extraction (Phase 1 stub)
+                # Pass A is active, Pass B returns empty until Phase 2+
+                if mode == CleanupMode.LAYERED_DUAL_PASS:
+                    dual_result = extract_dual_pass(
+                        source_path=str(input_path),
+                        output_path=str(raw_dxf_path),
+                        target_height_mm=target_height_mm,
+                        warnings=warnings,
+                    )
+                    # Convert DualPassResult.structural to ExtractionResult for compatibility
+                    structural = dual_result.structural
+                    extract_result = ExtractionResult(
+                        success=structural.success,
+                        output_path=structural.dxf_path,
+                        line_count=structural.entity_count,
+                        edge_pixel_count=0,  # Not tracked in dual-pass
+                        image_size_px=structural.image_size_px,
+                        output_size_mm=structural.output_size_mm,
+                        mm_per_px=structural.mm_per_px,
+                        processing_time_ms=structural.processing_time_ms,
+                        error=structural.error,
+                        warnings=structural.warnings,
+                        stage_timings=structural.debug.get("stage_timings", {}),
+                        grouping=structural.debug.get("grouping"),
+                    )
+                    # Add dual-pass metadata to debug
+                    stage_timings["dual_pass_active"] = True
+                    stage_timings["pass_b_active"] = dual_result.pass_b_active
+                else:
+                    # RESTORED_BASELINE: Use RETR_LIST (no hierarchy) like commit 86c49526
+                    # All other modes use the default isolate_body=True (RETR_TREE + grouping)
+                    #
+                    # DO NOT CHANGE THIS LOGIC without reviewing docs/RECOVERY_BASELINE.md
+                    # This is the critical fix for the Melody Maker regression.
+                    use_isolate_body = mode != CleanupMode.RESTORED_BASELINE
+
+                    extract_result = extract_blueprint_to_dxf(
+                        source_path=str(input_path),
+                        output_path=str(raw_dxf_path),
+                        target_height_mm=target_height_mm,
+                        canny_low=canny_low,
+                        canny_high=canny_high,
+                        warnings=warnings,  # Pass warnings list for guardrail messages
+                        isolate_body=use_isolate_body,
+                    )
 
                 if not extract_result.success:
                     return BlueprintResult(
