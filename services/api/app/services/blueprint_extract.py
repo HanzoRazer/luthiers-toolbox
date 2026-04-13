@@ -46,6 +46,8 @@ class ExtractionResult:
     error: str = ""
     warnings: list[str] = field(default_factory=list)
     stage_timings: dict[str, float] = field(default_factory=dict)
+    # Primary Object Grouping metadata (debug-only, internal)
+    grouping: Optional[dict] = None
 
 
 # ─── Guardrail Helpers ───────────────────────────────────────────────────────
@@ -270,6 +272,7 @@ def extract_blueprint_to_dxf(
             processing_time_ms=result.processing_time_ms,
             stage_timings=getattr(result, 'stage_timings', {}),
             warnings=warnings,
+            grouping=getattr(result, 'grouping', None),
         )
 
     except BlueprintGuardrailError as e:
@@ -354,3 +357,196 @@ def extract_blueprint_enhanced(
     except Exception as e:
         logger.error(f"Edge-to-DXF enhanced failed: {e}")
         return ExtractionResult(success=False, error=str(e), warnings=warnings)
+
+
+# ─── Extraction Pass Boundaries ─────────────────────────────────────────────
+#
+# These are orchestration seams for dual-pass extraction.
+# Phase 1: Pass A only, Pass B is a stub.
+# Phase 2+: Pass A and Pass B will both be active.
+#
+# DO NOT change recovered behavior. These boundaries are for composition only.
+# ─────────────────────────────────────────────────────────────────────────────
+
+@dataclass
+class StructuralPassResult:
+    """Result from Pass A (structural geometry extraction)."""
+    success: bool
+    dxf_path: str = ""
+    entity_count: int = 0
+    image_size_px: tuple[int, int] = (0, 0)
+    output_size_mm: tuple[float, float] = (0.0, 0.0)
+    mm_per_px: float = 0.0
+    processing_time_ms: float = 0.0
+    error: str = ""
+    warnings: list[str] = field(default_factory=list)
+    debug: dict = field(default_factory=dict)
+
+
+@dataclass
+class AnnotationPassResult:
+    """Result from Pass B (annotation/document extraction)."""
+    success: bool
+    entity_count: int = 0
+    error: str = ""
+    warnings: list[str] = field(default_factory=list)
+    debug: dict = field(default_factory=dict)
+    # Phase 1: stub fields
+    active: bool = False  # False until Pass B is implemented
+
+
+@dataclass
+class DualPassResult:
+    """Combined result from dual-pass extraction."""
+    success: bool
+    structural: StructuralPassResult = field(default_factory=StructuralPassResult)
+    annotation: AnnotationPassResult = field(default_factory=AnnotationPassResult)
+    error: str = ""
+    warnings: list[str] = field(default_factory=list)
+    # Phase 1 indicator
+    pass_b_active: bool = False
+
+
+def extract_structural_pass(
+    source_path: str,
+    output_path: str,
+    target_height_mm: float = 500.0,
+    warnings: Optional[list[str]] = None,
+) -> StructuralPassResult:
+    """
+    Pass A: Structural geometry extraction.
+
+    Uses the recovered baseline behavior (RETR_LIST, no hierarchy filtering).
+    This is the foundation for body geometry capture.
+
+    Args:
+        source_path: Path to input image
+        output_path: Path for output DXF file
+        target_height_mm: Target height for scaling
+        warnings: List to append warning messages to
+
+    Returns:
+        StructuralPassResult with extraction results
+    """
+    if warnings is None:
+        warnings = []
+
+    # Call the recovered baseline path (isolate_body=False)
+    result = extract_blueprint_to_dxf(
+        source_path=source_path,
+        output_path=output_path,
+        target_height_mm=target_height_mm,
+        warnings=warnings,
+        isolate_body=False,  # CRITICAL: recovered baseline behavior
+    )
+
+    return StructuralPassResult(
+        success=result.success,
+        dxf_path=result.output_path,
+        entity_count=result.line_count,
+        image_size_px=result.image_size_px,
+        output_size_mm=result.output_size_mm,
+        mm_per_px=result.mm_per_px,
+        processing_time_ms=result.processing_time_ms,
+        error=result.error,
+        warnings=result.warnings,
+        debug={
+            "grouping": result.grouping,
+            "stage_timings": result.stage_timings,
+        },
+    )
+
+
+def extract_annotation_pass(
+    source_path: str,
+    warnings: Optional[list[str]] = None,
+) -> AnnotationPassResult:
+    """
+    Pass B: Annotation/document extraction.
+
+    PHASE 1 STUB: Returns empty result.
+    Phase 2+ will implement actual annotation capture.
+
+    Args:
+        source_path: Path to input image
+        warnings: List to append warning messages to
+
+    Returns:
+        AnnotationPassResult (empty stub for Phase 1)
+    """
+    if warnings is None:
+        warnings = []
+
+    # Phase 1: Return stub
+    logger.info("Pass B annotation extraction: STUB (not yet implemented)")
+
+    return AnnotationPassResult(
+        success=True,
+        entity_count=0,
+        error="",
+        warnings=warnings,
+        debug={"phase": 1, "status": "stub"},
+        active=False,
+    )
+
+
+def extract_dual_pass(
+    source_path: str,
+    output_path: str,
+    target_height_mm: float = 500.0,
+    warnings: Optional[list[str]] = None,
+) -> DualPassResult:
+    """
+    Dual-pass extraction coordinator.
+
+    Runs Pass A (structural) and Pass B (annotation) and combines results.
+
+    PHASE 1: Pass A only. Pass B returns empty stub.
+    Phase 2+: Both passes will be active.
+
+    Args:
+        source_path: Path to input image
+        output_path: Path for output DXF file
+        target_height_mm: Target height for scaling
+        warnings: List to append warning messages to
+
+    Returns:
+        DualPassResult with combined extraction results
+    """
+    if warnings is None:
+        warnings = []
+
+    logger.info(f"Dual-pass extraction: {source_path}")
+    logger.info("  Phase 1 mode: Pass A active, Pass B stub")
+
+    # Pass A: Structural geometry
+    structural_result = extract_structural_pass(
+        source_path=source_path,
+        output_path=output_path,
+        target_height_mm=target_height_mm,
+        warnings=warnings,
+    )
+
+    if not structural_result.success:
+        return DualPassResult(
+            success=False,
+            structural=structural_result,
+            error=structural_result.error,
+            warnings=warnings,
+            pass_b_active=False,
+        )
+
+    # Pass B: Annotation (stub for Phase 1)
+    annotation_result = extract_annotation_pass(
+        source_path=source_path,
+        warnings=warnings,
+    )
+
+    return DualPassResult(
+        success=True,
+        structural=structural_result,
+        annotation=annotation_result,
+        error="",
+        warnings=warnings,
+        pass_b_active=annotation_result.active,
+    )
