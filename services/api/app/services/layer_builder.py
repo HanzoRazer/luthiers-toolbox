@@ -208,6 +208,62 @@ def _is_title_block_region(
     return in_bottom and in_right
 
 
+def _is_body_support(
+    data: Dict[str, Any],
+    body_region: Tuple[int, int, int, int],
+    image_size: Tuple[int, int],
+    min_overlap_ratio: float = 0.5,
+) -> bool:
+    """
+    Check if a contour should be promoted from AUX_VIEWS to BODY.
+
+    BODY_SUPPORT criteria:
+    - Significantly overlaps with or is inside the BODY region
+    - Not a detached secondary view (check position relative to body)
+    - Structurally plausible for same instrument elevation
+
+    Args:
+        data: Contour data dict with bbox, area, center, centrality
+        body_region: Expanded BODY bbox (x, y, w, h)
+        image_size: (width, height) of image
+        min_overlap_ratio: Minimum overlap with body region to qualify
+
+    Returns:
+        True if contour should be promoted to BODY
+    """
+    cx, cy, cw, ch = data["bbox"]
+    bx, by, bw, bh = body_region
+    img_w, img_h = image_size
+
+    # Calculate overlap between contour bbox and body region
+    overlap_x = max(0, min(cx + cw, bx + bw) - max(cx, bx))
+    overlap_y = max(0, min(cy + ch, by + bh) - max(cy, by))
+    overlap_area = overlap_x * overlap_y
+
+    contour_area_bbox = cw * ch
+    if contour_area_bbox <= 0:
+        return False
+
+    overlap_ratio = overlap_area / contour_area_bbox
+
+    # Must have significant overlap with body region
+    if overlap_ratio < min_overlap_ratio:
+        return False
+
+    # Reject if in title block region (bottom-right)
+    center_x, center_y = data["center"]
+    if center_y > (img_h * 0.75) and center_x > (img_w * 0.65):
+        return False
+
+    # Reject very small contours (likely noise or annotation)
+    body_region_area = bw * bh
+    if data["area"] < body_region_area * 0.001:
+        return False
+
+    # Accept: overlaps body region, not in title block, reasonable size
+    return True
+
+
 def _classify_structural_cluster(
     contour: np.ndarray,
     bbox: Tuple[int, int, int, int],
@@ -302,29 +358,48 @@ def build_layers(
                 "contour": contour,
                 "area": area,
                 "bbox": bbox,
+                "center": center,
                 "centrality": centrality,
                 "is_frame": is_frame,
             })
 
-        # Find the largest NON-FRAME contour that's central
-        # This is the body candidate
-        non_frame_data = [d for d in structural_data if not d["is_frame"]]
+        # ─── BODY SYSTEM: Find core + support contours ───────────────────
 
-        body_candidate_area = 0
+        # Step 1: Find BODY_CORE (largest non-frame central contour)
+        non_frame_data = [d for d in structural_data if not d["is_frame"]]
+        body_core = None
+        body_core_bbox = None
+
         if non_frame_data:
-            # Among non-frame contours, find the largest one that's reasonably central
             central_non_frames = [d for d in non_frame_data if d["centrality"] > 0.3]
             if central_non_frames:
-                body_candidate_area = max(d["area"] for d in central_non_frames)
+                body_core = max(central_non_frames, key=lambda d: d["area"])
             else:
-                # Fallback: just use the largest non-frame
-                body_candidate_area = max(d["area"] for d in non_frame_data)
+                body_core = max(non_frame_data, key=lambda d: d["area"])
 
-        # Classify each structural contour
+            if body_core:
+                body_core_bbox = body_core["bbox"]
+
+        # Step 2: Define BODY region with margin for BODY_SUPPORT detection
+        body_region = None
+        if body_core_bbox:
+            bx, by, bw, bh = body_core_bbox
+            margin_x = int(bw * 0.15)
+            margin_y = int(bh * 0.15)
+            body_region = (
+                max(0, bx - margin_x),
+                max(0, by - margin_y),
+                bw + 2 * margin_x,
+                bh + 2 * margin_y,
+            )
+
+        # Step 3: Classify each structural contour
         for data in structural_data:
             if data["is_frame"]:
                 layer = Layer.PAGE_FRAME
-            elif data["area"] == body_candidate_area and data["area"] > 0:
+            elif body_core and data is body_core:
+                layer = Layer.BODY
+            elif body_region and _is_body_support(data, body_region, image_size):
                 layer = Layer.BODY
             else:
                 layer = Layer.AUX_VIEWS
