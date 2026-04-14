@@ -133,6 +133,109 @@ class LayeredEntities:
         }
 
 
+# ─── Acceptance Grading ────────────────────────────────────────────────────
+
+class AcceptanceGrade(str, Enum):
+    """Grade indicating quality level of layered extraction."""
+    STARTER = "starter"              # Minimal usable output
+    USABLE = "usable"                # Good for reference work
+    PRODUCTION_READY = "production_ready"  # Ready for CAM/fabrication
+
+
+@dataclass
+class LayeredAcceptance:
+    """Result of evaluating layered extraction quality."""
+    ok: bool                         # True if extraction is usable
+    grade: AcceptanceGrade           # Quality grade
+    reasons: List[str] = field(default_factory=list)  # Explanation
+    body_count: int = 0
+    body_area_ratio: float = 0.0     # BODY area / total structural area
+    page_frame_dominance: float = 0.0  # PAGE_FRAME area / total area
+
+
+def evaluate_layered_acceptance(
+    entities: LayeredEntities,
+) -> LayeredAcceptance:
+    """
+    Evaluate whether layered extraction produced usable output.
+
+    Criteria:
+    - Usable BODY system present (>= 1 contour with reasonable area)
+    - BODY not trivial compared to useful geometry (BODY + AUX_VIEWS)
+    - Page frames excluded from useful structural calculation (they're borders)
+
+    Grades:
+    - PRODUCTION_READY: BODY >= 10 contours, BODY area > 40% of useful
+    - USABLE: BODY >= 3 contours, BODY area > 20% of useful
+    - STARTER: BODY >= 1 contour with any meaningful area
+
+    Returns:
+        LayeredAcceptance with grade and explanation
+    """
+    counts = entities.counts()
+    reasons = []
+
+    # Calculate areas
+    body_area = sum(e.area for e in entities.body)
+    aux_area = sum(e.area for e in entities.aux_views)
+    frame_area = sum(e.area for e in entities.page_frame)
+
+    # Useful structural area excludes PAGE_FRAME (which are just borders)
+    # PAGE_FRAME contours have large enclosed areas but are not actual geometry
+    useful_area = body_area + aux_area
+    total_structural = useful_area + frame_area
+
+    # Body ratio against useful structural area (not including page frames)
+    body_area_ratio = body_area / useful_area if useful_area > 0 else 0.0
+    # Frame dominance as info metric (not used for rejection)
+    frame_dominance = frame_area / total_structural if total_structural > 0 else 0.0
+
+    # Check for usable BODY system
+    if counts["body"] == 0:
+        reasons.append("No BODY contours found")
+        return LayeredAcceptance(
+            ok=False,
+            grade=AcceptanceGrade.STARTER,
+            reasons=reasons,
+            body_count=0,
+            body_area_ratio=0.0,
+            page_frame_dominance=frame_dominance,
+        )
+
+    # Check if BODY is trivially small compared to useful area
+    if useful_area > 0 and body_area_ratio < 0.05 and counts["body"] < 3:
+        reasons.append(f"BODY system too small: {counts['body']} contours, {body_area_ratio:.0%} of useful area")
+        return LayeredAcceptance(
+            ok=False,
+            grade=AcceptanceGrade.STARTER,
+            reasons=reasons,
+            body_count=counts["body"],
+            body_area_ratio=body_area_ratio,
+            page_frame_dominance=frame_dominance,
+        )
+
+    # Grade based on BODY richness relative to useful structural area
+    if counts["body"] >= 10 and body_area_ratio > 0.40:
+        grade = AcceptanceGrade.PRODUCTION_READY
+        reasons.append(f"BODY system: {counts['body']} contours, {body_area_ratio:.0%} of useful area")
+    elif counts["body"] >= 3 and body_area_ratio > 0.20:
+        grade = AcceptanceGrade.USABLE
+        reasons.append(f"BODY system: {counts['body']} contours, {body_area_ratio:.0%} of useful area")
+    else:
+        grade = AcceptanceGrade.STARTER
+        reasons.append(f"Minimal BODY system: {counts['body']} contours, {body_area_ratio:.0%} of useful area")
+
+    # All grades with adequate BODY are considered ok
+    return LayeredAcceptance(
+        ok=True,
+        grade=grade,
+        reasons=reasons,
+        body_count=counts["body"],
+        body_area_ratio=body_area_ratio,
+        page_frame_dominance=frame_dominance,
+    )
+
+
 # ─── Classification Helpers ─────────────────────────────────────────────────
 
 def _is_page_frame(
@@ -212,6 +315,7 @@ def _is_body_support(
     data: Dict[str, Any],
     body_region: Tuple[int, int, int, int],
     image_size: Tuple[int, int],
+    body_core_area: float,
     min_overlap_ratio: float = 0.5,
 ) -> bool:
     """
@@ -226,6 +330,7 @@ def _is_body_support(
         data: Contour data dict with bbox, area, center, centrality
         body_region: Expanded BODY bbox (x, y, w, h)
         image_size: (width, height) of image
+        body_core_area: Area of the original body core (not expanded region)
         min_overlap_ratio: Minimum overlap with body region to qualify
 
     Returns:
@@ -256,8 +361,8 @@ def _is_body_support(
         return False
 
     # Reject very small contours (likely noise or annotation)
-    body_region_area = bw * bh
-    if data["area"] < body_region_area * 0.001:
+    # Use body_core_area (original, not expanded) for consistent threshold
+    if data["area"] < body_core_area * 0.001:
         return False
 
     # Accept: overlaps body region, not in title block, reasonable size
@@ -381,11 +486,14 @@ def build_layers(
                 body_core_bbox = body_core["bbox"]
 
         # Step 2: Define BODY region with margin for BODY_SUPPORT detection
+        # Using 25% margin to capture same-view structural contours
         body_region = None
+        body_core_area = 0.0
         if body_core_bbox:
             bx, by, bw, bh = body_core_bbox
-            margin_x = int(bw * 0.15)
-            margin_y = int(bh * 0.15)
+            body_core_area = bw * bh  # Original core area for size threshold
+            margin_x = int(bw * 0.25)
+            margin_y = int(bh * 0.25)
             body_region = (
                 max(0, bx - margin_x),
                 max(0, by - margin_y),
@@ -399,7 +507,7 @@ def build_layers(
                 layer = Layer.PAGE_FRAME
             elif body_core and data is body_core:
                 layer = Layer.BODY
-            elif body_region and _is_body_support(data, body_region, image_size):
+            elif body_region and _is_body_support(data, body_region, image_size, body_core_area):
                 layer = Layer.BODY
             else:
                 layer = Layer.AUX_VIEWS
