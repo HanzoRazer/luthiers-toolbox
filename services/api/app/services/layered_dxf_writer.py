@@ -37,12 +37,14 @@ logger = logging.getLogger(__name__)
 # ─── Layer DXF Configuration ────────────────────────────────────────────────
 
 # DXF layer colors (ACI color indices)
+# Using readable colors that work on both light and dark backgrounds
+# 7 = white/black (adapts to background), 8 = gray, 9 = light gray
 LAYER_DXF_COLORS = {
-    Layer.BODY: 3,         # Green
-    Layer.AUX_VIEWS: 5,    # Blue
-    Layer.ANNOTATION: 30,  # Orange
-    Layer.TITLE_BLOCK: 6,  # Magenta
-    Layer.PAGE_FRAME: 1,   # Red
+    Layer.BODY: 7,         # White/black - primary geometry
+    Layer.AUX_VIEWS: 8,    # Gray - secondary geometry
+    Layer.ANNOTATION: 7,   # White/black - readable text
+    Layer.TITLE_BLOCK: 8,  # Gray - title block
+    Layer.PAGE_FRAME: 9,   # Light gray - de-emphasized
 }
 
 
@@ -89,6 +91,10 @@ def write_layered_dxf(
     counts: Dict[str, int] = {layer.value: 0 for layer in Layer}
     total_lines = 0
 
+    # Calculate image height in mm for Y-axis flip
+    img_w, img_h = entities.image_size
+    image_height_mm = img_h * entities.mm_per_px
+
     # Write entities
     for layer in layers_to_export:
         layer_entities = entities.get_layer(layer)
@@ -99,6 +105,7 @@ def write_layered_dxf(
                 contour=entity.contour,
                 layer_name=layer.value,
                 mm_per_px=entities.mm_per_px,
+                image_height_mm=image_height_mm,
             )
             counts[layer.value] += 1
             total_lines += lines_written
@@ -120,9 +127,12 @@ def _write_contour_as_lines(
     contour: np.ndarray,
     layer_name: str,
     mm_per_px: float,
+    image_height_mm: float,
 ) -> int:
     """
     Write a contour as LINE entities to DXF.
+
+    Flips Y axis: image Y (0=top, increases down) → CAD Y (0=bottom, increases up)
 
     Returns number of lines written.
     """
@@ -141,8 +151,9 @@ def _write_contour_as_lines(
         x1, y1 = p1[0] * mm_per_px, p1[1] * mm_per_px
         x2, y2 = p2[0] * mm_per_px, p2[1] * mm_per_px
 
-        # Flip Y axis (image Y is inverted from CAD Y)
-        # Actually, keep as-is for now - let orchestrator handle orientation
+        # Flip Y axis: CAD_Y = image_height - image_Y
+        y1 = image_height_mm - y1
+        y2 = image_height_mm - y2
 
         msp.add_line(
             start=(x1, y1),
