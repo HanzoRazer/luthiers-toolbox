@@ -67,7 +67,10 @@ from .layer_builder import (
     Layer,
     LayeredEntities,
     ExportPreset,
+    AcceptanceGrade,
+    LayeredAcceptance,
     build_layers,
+    evaluate_layered_acceptance,
 )
 from .layered_dxf_writer import (
     write_layered_dxf,
@@ -305,6 +308,14 @@ class BlueprintOrchestrator:
                         mm_per_px=mm_per_px,
                     )
 
+                    # Evaluate layered acceptance (Phase 4 acceptance logic)
+                    layered_acceptance = evaluate_layered_acceptance(layered)
+                    logger.info(
+                        f"Layered acceptance: ok={layered_acceptance.ok}, "
+                        f"grade={layered_acceptance.grade.value}, "
+                        f"body={layered_acceptance.body_count}"
+                    )
+
                     # Get export preset
                     preset = get_preset_from_string(export_preset)
 
@@ -343,6 +354,12 @@ class BlueprintOrchestrator:
                     stage_timings["export_preset"] = preset.value
                     stage_timings["layer_counts"] = counts
                     stage_timings["annotation_categories"] = pass_b_result.debug.get("categories", {})
+                    # Phase 4 acceptance grading
+                    stage_timings["acceptance_ok"] = layered_acceptance.ok
+                    stage_timings["acceptance_grade"] = layered_acceptance.grade.value
+                    stage_timings["acceptance_reasons"] = layered_acceptance.reasons
+                    stage_timings["body_area_ratio"] = round(layered_acceptance.body_area_ratio, 3)
+                    stage_timings["page_frame_dominance"] = round(layered_acceptance.page_frame_dominance, 3)
                 else:
                     # RESTORED_BASELINE: Use RETR_LIST (no hierarchy) like commit 86c49526
                     # All other modes use the default isolate_body=True (RETR_TREE + grouping)
@@ -450,39 +467,70 @@ class BlueprintOrchestrator:
                     warnings.append("DXF content missing or empty")
 
                 # ─── Stage: Recommendation ────────────────────────────────
-                # Build selection result from cleanup output
-                selection = SelectionResult(
-                    candidate_count=clean_result.candidate_count,
-                    selected_index=0 if clean_result.contours_found > 0 else None,
-                    selection_score=clean_result.best_confidence,
-                    runner_up_score=clean_result.runner_up_score,
-                    winner_margin=clean_result.winner_margin,
-                    reasons=[],
-                )
+                # LAYERED_DUAL_PASS uses layered acceptance logic instead of recommend()
+                if mode == CleanupMode.LAYERED_DUAL_PASS:
+                    # Phase 4: Use layered acceptance grading
+                    is_ok = layered_acceptance.ok
+                    stage = "complete" if is_ok else "acceptance"
 
-                # Build recommendation input
-                rec_input = RecommendationInput(
-                    selection=selection,
-                    mode=ProcessingMode.BLUEPRINT,
-                    svg_valid=svg_valid,
-                    dxf_valid=dxf_valid,
-                    warnings=warnings,
-                    ownership_score=None,  # Not used for blueprint
-                    scale_source="estimated",  # Blueprint doesn't have calibration
-                )
+                    # Build minimal selection for compatibility
+                    selection = SelectionResult(
+                        candidate_count=counts.get("total", 0),
+                        selected_index=0 if counts.get("body", 0) > 0 else None,
+                        selection_score=1.0 if layered_acceptance.grade == AcceptanceGrade.PRODUCTION_READY else (
+                            0.8 if layered_acceptance.grade == AcceptanceGrade.USABLE else 0.5
+                        ),
+                        runner_up_score=0.0,
+                        winner_margin=1.0,
+                        reasons=layered_acceptance.reasons,
+                    )
 
-                # Get recommendation
-                rec = recommend(rec_input)
+                    # Create recommendation from acceptance for API compatibility
+                    rec = Recommendation(
+                        action=RecommendationAction.ACCEPT if is_ok else RecommendationAction.REVIEW,
+                        reasons=layered_acceptance.reasons,
+                        confidence=selection.selection_score,
+                    )
 
-                # ok = true only when recommendation.action == "accept"
-                is_ok = rec.action == RecommendationAction.ACCEPT
-                stage = "complete" if is_ok else "recommendation"
+                    # Add acceptance reasons to warnings if not ok
+                    if not is_ok:
+                        for reason in layered_acceptance.reasons:
+                            if reason not in warnings:
+                                warnings.append(reason)
+                else:
+                    # Non-layered modes use traditional recommendation system
+                    selection = SelectionResult(
+                        candidate_count=clean_result.candidate_count,
+                        selected_index=0 if clean_result.contours_found > 0 else None,
+                        selection_score=clean_result.best_confidence,
+                        runner_up_score=clean_result.runner_up_score,
+                        winner_margin=clean_result.winner_margin,
+                        reasons=[],
+                    )
 
-                # Add recommendation reasons to warnings if not accept
-                if rec.action != RecommendationAction.ACCEPT:
-                    for reason in rec.reasons:
-                        if reason not in warnings:
-                            warnings.append(reason)
+                    # Build recommendation input
+                    rec_input = RecommendationInput(
+                        selection=selection,
+                        mode=ProcessingMode.BLUEPRINT,
+                        svg_valid=svg_valid,
+                        dxf_valid=dxf_valid,
+                        warnings=warnings,
+                        ownership_score=None,  # Not used for blueprint
+                        scale_source="estimated",  # Blueprint doesn't have calibration
+                    )
+
+                    # Get recommendation
+                    rec = recommend(rec_input)
+
+                    # ok = true only when recommendation.action == "accept"
+                    is_ok = rec.action == RecommendationAction.ACCEPT
+                    stage = "complete" if is_ok else "recommendation"
+
+                    # Add recommendation reasons to warnings if not accept
+                    if rec.action != RecommendationAction.ACCEPT:
+                        for reason in rec.reasons:
+                            if reason not in warnings:
+                                warnings.append(reason)
 
                 # ─── Build result ─────────────────────────────────────────
                 report("complete", 100)
