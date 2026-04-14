@@ -564,3 +564,337 @@ def build_layers(
     )
 
     return result
+
+
+# ─── BODY Gap Joining ──────────────────────────────────────────────────────
+
+@dataclass
+class GapJoinResult:
+    """Result of BODY gap joining pass."""
+    joins_attempted: int = 0
+    joins_applied: int = 0
+    max_gap_mm: float = 0.0
+    max_angle_deg: float = 0.0
+    joined_segments: List[Tuple[Tuple[float, float], Tuple[float, float]]] = field(
+        default_factory=list
+    )  # For debug overlay: list of (start_pt, end_pt) in pixels
+
+
+def _get_endpoint_tangent(
+    contour: np.ndarray,
+    endpoint_idx: int,
+    num_samples: int = 3,
+) -> np.ndarray:
+    """
+    Get tangent direction at a contour endpoint.
+
+    Args:
+        contour: Contour points array
+        endpoint_idx: 0 for start, -1 for end
+        num_samples: Number of points to use for tangent estimation
+
+    Returns:
+        Normalized tangent vector pointing outward from contour
+    """
+    points = contour.reshape(-1, 2)
+    n = len(points)
+
+    if n < 2:
+        return np.array([1.0, 0.0])
+
+    if endpoint_idx == 0:
+        # Start endpoint - tangent points backward (outward)
+        end_idx = min(num_samples, n)
+        segment = points[:end_idx]
+        if len(segment) >= 2:
+            tangent = segment[0] - segment[-1]
+        else:
+            tangent = np.array([1.0, 0.0])
+    else:
+        # End endpoint - tangent points forward (outward)
+        start_idx = max(0, n - num_samples)
+        segment = points[start_idx:]
+        if len(segment) >= 2:
+            tangent = segment[-1] - segment[0]
+        else:
+            tangent = np.array([1.0, 0.0])
+
+    norm = np.linalg.norm(tangent)
+    if norm > 0:
+        tangent = tangent / norm
+
+    return tangent
+
+
+def _get_local_median_segment_length(
+    contour: np.ndarray,
+    endpoint_idx: int,
+    num_segments: int = 5,
+) -> float:
+    """
+    Get median segment length near a contour endpoint.
+
+    Used to reject joins where gap is disproportionate to local scale.
+    """
+    points = contour.reshape(-1, 2)
+    n = len(points)
+
+    if n < 2:
+        return float('inf')
+
+    if endpoint_idx == 0:
+        # Near start
+        end_idx = min(num_segments + 1, n)
+        segment_points = points[:end_idx]
+    else:
+        # Near end
+        start_idx = max(0, n - num_segments - 1)
+        segment_points = points[start_idx:]
+
+    if len(segment_points) < 2:
+        return float('inf')
+
+    # Calculate segment lengths
+    lengths = []
+    for i in range(len(segment_points) - 1):
+        length = np.linalg.norm(segment_points[i + 1] - segment_points[i])
+        lengths.append(length)
+
+    if not lengths:
+        return float('inf')
+
+    return float(np.median(lengths))
+
+
+def _is_contour_open(contour: np.ndarray, threshold_px: float = 5.0) -> bool:
+    """
+    Check if contour is open (endpoints not connected).
+
+    Args:
+        contour: Contour points array
+        threshold_px: Max distance between endpoints to consider closed
+
+    Returns:
+        True if contour is open
+    """
+    points = contour.reshape(-1, 2)
+    if len(points) < 2:
+        return False
+
+    start = points[0]
+    end = points[-1]
+    dist = np.linalg.norm(end - start)
+
+    return dist > threshold_px
+
+
+def join_body_gaps(
+    entities: LayeredEntities,
+    max_gap_mm: float = 2.0,
+    max_angle_deg: float = 25.0,
+    scale_factor_limit: float = 3.0,
+) -> Tuple[LayeredEntities, GapJoinResult]:
+    """
+    Conservative gap joining for BODY layer only.
+
+    Joins contour endpoints that are:
+    - Close (within max_gap_mm)
+    - Directionally compatible (tangent alignment within max_angle_deg)
+    - Not disproportionate to local geometry (gap < 3x local median segment)
+
+    Args:
+        entities: LayeredEntities from build_layers()
+        max_gap_mm: Maximum gap distance in mm (default 2.0)
+        max_angle_deg: Maximum tangent angle difference in degrees (default 25.0)
+        scale_factor_limit: Reject if gap > this * local median segment (default 3.0)
+
+    Returns:
+        (updated_entities, gap_join_result)
+    """
+    result = GapJoinResult(
+        max_gap_mm=max_gap_mm,
+        max_angle_deg=max_angle_deg,
+    )
+
+    if not entities.body:
+        logger.info("Gap join: No BODY contours to process")
+        return entities, result
+
+    mm_per_px = entities.mm_per_px
+    if mm_per_px <= 0:
+        logger.warning("Gap join: Invalid mm_per_px, skipping")
+        return entities, result
+
+    max_gap_px = max_gap_mm / mm_per_px
+    max_angle_rad = np.deg2rad(max_angle_deg)
+
+    # Extract open contours from BODY layer
+    open_entities = []
+    closed_entities = []
+
+    for entity in entities.body:
+        if _is_contour_open(entity.contour):
+            open_entities.append(entity)
+        else:
+            closed_entities.append(entity)
+
+    logger.info(f"Gap join: {len(open_entities)} open, {len(closed_entities)} closed BODY contours")
+
+    if len(open_entities) < 2:
+        # Nothing to join
+        return entities, result
+
+    # Build endpoint list: (entity_idx, endpoint_idx, point, tangent, median_seg_len)
+    endpoints = []
+    for i, entity in enumerate(open_entities):
+        points = entity.contour.reshape(-1, 2)
+
+        # Start endpoint
+        start_pt = points[0].astype(float)
+        start_tangent = _get_endpoint_tangent(entity.contour, 0)
+        start_median = _get_local_median_segment_length(entity.contour, 0)
+        endpoints.append((i, 0, start_pt, start_tangent, start_median))
+
+        # End endpoint
+        end_pt = points[-1].astype(float)
+        end_tangent = _get_endpoint_tangent(entity.contour, -1)
+        end_median = _get_local_median_segment_length(entity.contour, -1)
+        endpoints.append((i, -1, end_pt, end_tangent, end_median))
+
+    # Track which endpoints have been used
+    used_endpoints = set()  # (entity_idx, endpoint_idx)
+
+    # Track joins to apply: list of (entity_i, endpoint_i, entity_j, endpoint_j)
+    joins_to_apply = []
+
+    # Find valid join candidates
+    for i, (ent_i, ep_i, pt_i, tan_i, med_i) in enumerate(endpoints):
+        if (ent_i, ep_i) in used_endpoints:
+            continue
+
+        best_match = None
+        best_dist = float('inf')
+
+        for j, (ent_j, ep_j, pt_j, tan_j, med_j) in enumerate(endpoints):
+            if i == j:
+                continue
+            if ent_i == ent_j:
+                # Same contour - would close it, not join to another
+                continue
+            if (ent_j, ep_j) in used_endpoints:
+                continue
+
+            # Check distance
+            dist = np.linalg.norm(pt_j - pt_i)
+            if dist > max_gap_px:
+                continue
+
+            result.joins_attempted += 1
+
+            # Check tangent alignment
+            # Tangents should point toward each other (roughly opposite)
+            # So dot product of (tan_i) and (-tan_j) should be positive and close to 1
+            alignment = np.dot(tan_i, -tan_j)
+            angle = np.arccos(np.clip(alignment, -1.0, 1.0))
+
+            if angle > max_angle_rad:
+                continue
+
+            # Check scale factor limit
+            gap_mm = dist * mm_per_px
+            local_median_mm = min(med_i, med_j) * mm_per_px
+            if local_median_mm > 0 and gap_mm > scale_factor_limit * local_median_mm:
+                continue
+
+            # Valid candidate
+            if dist < best_dist:
+                best_dist = dist
+                best_match = (ent_j, ep_j, pt_j)
+
+        if best_match is not None:
+            ent_j, ep_j, pt_j = best_match
+            joins_to_apply.append((ent_i, ep_i, ent_j, ep_j))
+            used_endpoints.add((ent_i, ep_i))
+            used_endpoints.add((ent_j, ep_j))
+
+            # Record for debug overlay
+            result.joined_segments.append((tuple(pt_i), tuple(pt_j)))
+
+    logger.info(f"Gap join: {len(joins_to_apply)} joins to apply")
+
+    if not joins_to_apply:
+        return entities, result
+
+    # Apply joins by merging contours
+    # Build union-find to track merged groups
+    parent = list(range(len(open_entities)))
+
+    def find(x):
+        if parent[x] != x:
+            parent[x] = find(parent[x])
+        return parent[x]
+
+    def union(x, y):
+        px, py = find(x), find(y)
+        if px != py:
+            parent[px] = py
+
+    for ent_i, ep_i, ent_j, ep_j in joins_to_apply:
+        union(ent_i, ent_j)
+        result.joins_applied += 1
+
+    # Group entities by their root
+    groups: Dict[int, List[int]] = {}
+    for i in range(len(open_entities)):
+        root = find(i)
+        if root not in groups:
+            groups[root] = []
+        groups[root].append(i)
+
+    # Build merged contours for each group
+    merged_entities = []
+
+    for root, members in groups.items():
+        if len(members) == 1:
+            # No merge, keep original
+            merged_entities.append(open_entities[members[0]])
+        else:
+            # Merge contours in this group
+            # Simple approach: concatenate points in order of joins
+            # For now, just concatenate all points (can be refined)
+            all_points = []
+            for idx in members:
+                pts = open_entities[idx].contour.reshape(-1, 2)
+                all_points.extend(pts.tolist())
+
+            if all_points:
+                merged_contour = np.array(all_points, dtype=np.int32).reshape(-1, 1, 2)
+                merged_bbox = cv2.boundingRect(merged_contour)
+                merged_area = cv2.contourArea(merged_contour)
+
+                merged_entity = LayeredEntity(
+                    contour=merged_contour,
+                    layer=Layer.BODY,
+                    bbox=merged_bbox,
+                    area=merged_area,
+                    is_closed=not _is_contour_open(merged_contour),
+                )
+                merged_entities.append(merged_entity)
+
+    # Build new entities with merged BODY layer
+    new_entities = LayeredEntities(
+        body=merged_entities + closed_entities,
+        aux_views=entities.aux_views,
+        annotation=entities.annotation,
+        title_block=entities.title_block,
+        page_frame=entities.page_frame,
+        image_size=entities.image_size,
+        mm_per_px=entities.mm_per_px,
+    )
+
+    logger.info(
+        f"Gap join complete: {result.joins_applied} joins applied, "
+        f"BODY contours {len(entities.body)} -> {len(new_entities.body)}"
+    )
+
+    return new_entities, result

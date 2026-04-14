@@ -69,8 +69,10 @@ from .layer_builder import (
     ExportPreset,
     AcceptanceGrade,
     LayeredAcceptance,
+    GapJoinResult,
     build_layers,
     evaluate_layered_acceptance,
+    join_body_gaps,
 )
 from .layered_dxf_writer import (
     write_layered_dxf,
@@ -308,6 +310,17 @@ class BlueprintOrchestrator:
                         mm_per_px=mm_per_px,
                     )
 
+                    # Apply conservative BODY gap joining
+                    layered, gap_join_result = join_body_gaps(
+                        layered,
+                        max_gap_mm=2.0,
+                        max_angle_deg=25.0,
+                    )
+                    logger.info(
+                        f"Gap join: {gap_join_result.joins_applied} applied "
+                        f"({gap_join_result.joins_attempted} attempted)"
+                    )
+
                     # Evaluate layered acceptance (Phase 4 acceptance logic)
                     layered_acceptance = evaluate_layered_acceptance(layered)
                     logger.info(
@@ -360,6 +373,11 @@ class BlueprintOrchestrator:
                     stage_timings["acceptance_reasons"] = layered_acceptance.reasons
                     stage_timings["body_area_ratio"] = round(layered_acceptance.body_area_ratio, 3)
                     stage_timings["page_frame_dominance"] = round(layered_acceptance.page_frame_dominance, 3)
+                    # BODY gap joining debug
+                    stage_timings["body_gap_joins_attempted"] = gap_join_result.joins_attempted
+                    stage_timings["body_gap_joins_applied"] = gap_join_result.joins_applied
+                    stage_timings["body_gap_join_max_mm"] = gap_join_result.max_gap_mm
+                    stage_timings["body_gap_join_max_angle_deg"] = gap_join_result.max_angle_deg
                 else:
                     # RESTORED_BASELINE: Use RETR_LIST (no hierarchy) like commit 86c49526
                     # All other modes use the default isolate_body=True (RETR_TREE + grouping)

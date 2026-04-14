@@ -249,6 +249,7 @@ def create_layered_overlay(
     layered_entities: LayeredEntities,
     alpha: float = 0.7,
     line_thickness: int = 2,
+    joined_segments: Optional[List[Tuple[Tuple[float, float], Tuple[float, float]]]] = None,
 ) -> np.ndarray:
     """
     Create overlay showing all 5 semantic layers.
@@ -259,12 +260,14 @@ def create_layered_overlay(
     - ANNOTATION: Orange
     - TITLE_BLOCK: Purple
     - PAGE_FRAME: Red
+    - Joined segments: Cyan (when provided)
 
     Args:
         image: Original BGR image
         layered_entities: LayeredEntities from build_layers()
         alpha: Blend factor
         line_thickness: Contour line thickness
+        joined_segments: Optional list of (start_pt, end_pt) for gap joins
 
     Returns:
         BGR image with layered overlay
@@ -281,6 +284,15 @@ def create_layered_overlay(
             cv2.drawContours(overlay, contours, -1, color, line_thickness)
             logger.info(f"Overlay: Drew {len(contours)} {layer.value} contours")
 
+    # Draw joined segments in cyan
+    if joined_segments:
+        CYAN = (255, 255, 0)  # BGR
+        for start_pt, end_pt in joined_segments:
+            pt1 = (int(start_pt[0]), int(start_pt[1]))
+            pt2 = (int(end_pt[0]), int(end_pt[1]))
+            cv2.line(overlay, pt1, pt2, CYAN, line_thickness + 1)
+        logger.info(f"Overlay: Drew {len(joined_segments)} joined segments (cyan)")
+
     # Blend with original
     result = cv2.addWeighted(image, 1 - alpha, overlay, alpha, 0)
 
@@ -291,22 +303,25 @@ def generate_layered_overlay(
     source_image_path: str,
     target_height_mm: float = 500.0,
     output_dir: Optional[str] = None,
+    apply_gap_join: bool = True,
 ) -> Tuple[str, Dict]:
     """
     Generate 5-layer overlay for Phase 4 debugging.
 
-    Runs Pass A + Pass B, builds layers, and creates colored overlay.
+    Runs Pass A + Pass B, builds layers, optionally applies gap joining,
+    and creates colored overlay.
 
     Args:
         source_image_path: Path to blueprint image
         target_height_mm: Target height for scaling
         output_dir: Output directory (defaults to source directory)
+        apply_gap_join: Whether to apply BODY gap joining (default True)
 
     Returns:
         (overlay_path, metadata_dict)
     """
     from .annotation_extract import extract_annotations, get_annotation_contours
-    from .layer_builder import build_layers
+    from .layer_builder import build_layers, join_body_gaps
     from .blueprint_extract import _ensure_edge_to_dxf_importable
 
     _ensure_edge_to_dxf_importable()
@@ -342,8 +357,15 @@ def generate_layered_overlay(
         mm_per_px=mm_per_px,
     )
 
+    # Apply gap joining if requested
+    gap_join_result = None
+    joined_segments = None
+    if apply_gap_join:
+        layered, gap_join_result = join_body_gaps(layered)
+        joined_segments = gap_join_result.joined_segments
+
     # Create overlay
-    overlay = create_layered_overlay(image, layered)
+    overlay = create_layered_overlay(image, layered, joined_segments=joined_segments)
 
     # Generate output path
     source_path = Path(source_image_path)
@@ -366,6 +388,13 @@ def generate_layered_overlay(
         "annotation_categories": pass_b_result.debug.get("categories", {}),
     }
 
+    # Add gap join info if available
+    if gap_join_result:
+        metadata["body_gap_joins_attempted"] = gap_join_result.joins_attempted
+        metadata["body_gap_joins_applied"] = gap_join_result.joins_applied
+        metadata["body_gap_join_max_mm"] = gap_join_result.max_gap_mm
+        metadata["body_gap_join_max_angle_deg"] = gap_join_result.max_angle_deg
+
     logger.info(
         f"Generated layered overlay: {output_path}\n"
         f"  BODY: {counts['body']}\n"
@@ -373,6 +402,7 @@ def generate_layered_overlay(
         f"  ANNOTATION: {counts['annotation']}\n"
         f"  TITLE_BLOCK: {counts['title_block']}\n"
         f"  PAGE_FRAME: {counts['page_frame']}"
+        + (f"\n  Gap joins: {gap_join_result.joins_applied} applied" if gap_join_result else "")
     )
 
     return output_path, metadata
