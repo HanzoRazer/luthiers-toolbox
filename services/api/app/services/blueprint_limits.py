@@ -38,7 +38,7 @@ class BlueprintLimits:
     max_upload_mb: int = _get_int("BLUEPRINT_MAX_UPLOAD_MB", 20)
     max_raster_dim_px: int = _get_int("BLUEPRINT_MAX_RASTER_DIM_PX", 4000)
     max_megapixels: int = _get_int("BLUEPRINT_MAX_MEGAPIXELS", 12)
-    max_pdf_dpi: int = _get_int("BLUEPRINT_MAX_PDF_DPI", 150)
+    max_pdf_dpi: int = _get_int("BLUEPRINT_MAX_PDF_DPI", 200)
     min_downscaled_dim_px: int = _get_int("BLUEPRINT_MIN_DOWNSCALED_DIM_PX", 1200)
 
     @property
