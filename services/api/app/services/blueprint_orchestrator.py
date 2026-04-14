@@ -45,7 +45,7 @@ from .blueprint_extract import (
     ExtractionResult,
     extract_blueprint_to_dxf,
     extract_pdf_page,
-    # Dual-pass extraction (Phase 1 stub)
+    # Dual-pass extraction
     DualPassResult,
     extract_dual_pass,
 )
@@ -62,6 +62,16 @@ from .contour_recommendation import (
     RecommendationInput,
     SelectionResult,
     recommend,
+)
+from .layer_builder import (
+    Layer,
+    LayeredEntities,
+    ExportPreset,
+    build_layers,
+)
+from .layered_dxf_writer import (
+    write_layered_dxf,
+    get_preset_from_string,
 )
 
 logger = logging.getLogger(__name__)
@@ -181,6 +191,7 @@ class BlueprintOrchestrator:
         debug: bool = False,
         progress_callback: ProgressCallback = None,
         mode: CleanupMode = CleanupMode.REFINED,
+        export_preset: str = "geometry_only",
     ) -> BlueprintResult:
         """
         Process a blueprint file through extraction and cleanup.
@@ -248,44 +259,90 @@ class BlueprintOrchestrator:
 
                 raw_dxf_path = tmpdir_path / "raw_edges.dxf"
 
-                # LAYERED_DUAL_PASS: Route to dual-pass extraction
-                # Phase 3: Pass A (structural) + Pass B (annotation) both active
+                # LAYERED_DUAL_PASS: Route to dual-pass extraction with layer building
+                # Phase 4: Pass A + Pass B → Layer assignment → Controlled export
                 if mode == CleanupMode.LAYERED_DUAL_PASS:
-                    dual_result = extract_dual_pass(
-                        source_path=str(input_path),
-                        output_path=str(raw_dxf_path),
+                    import cv2
+                    from .annotation_extract import extract_annotations, get_annotation_contours
+
+                    # Ensure edge_to_dxf is importable
+                    from .blueprint_extract import _ensure_edge_to_dxf_importable
+                    _ensure_edge_to_dxf_importable()
+                    from edge_to_dxf import extract_entities_simple
+
+                    # Load image for contour extraction
+                    image = cv2.imread(str(input_path))
+                    if image is None:
+                        return BlueprintResult(
+                            ok=False,
+                            stage="edge_extraction",
+                            error=f"Failed to load image: {input_path}",
+                            warnings=warnings,
+                        )
+
+                    h, w = image.shape[:2]
+                    mm_per_px = target_height_mm / h
+
+                    # Pass A: Structural extraction (SIMPLE method)
+                    pass_a_entities = extract_entities_simple(
+                        image=image,
                         target_height_mm=target_height_mm,
+                    )
+                    pass_a_contours = pass_a_entities.contours
+
+                    # Pass B: Annotation extraction
+                    pass_b_result = extract_annotations(
+                        image=image,
+                        target_height_mm=target_height_mm,
+                    )
+                    pass_b_contours = get_annotation_contours(pass_b_result)
+
+                    # Build layers
+                    layered = build_layers(
+                        structural_contours=pass_a_contours,
+                        annotation_contours=pass_b_contours,
+                        image_size=(w, h),
+                        mm_per_px=mm_per_px,
+                    )
+
+                    # Get export preset
+                    preset = get_preset_from_string(export_preset)
+
+                    # Write layered DXF
+                    layer_counts = write_layered_dxf(
+                        entities=layered,
+                        output_path=str(raw_dxf_path),
+                        preset=preset,
+                    )
+
+                    # Build ExtractionResult for compatibility
+                    total_entities = sum(layer_counts.values())
+                    extract_result = ExtractionResult(
+                        success=True,
+                        output_path=str(raw_dxf_path),
+                        line_count=total_entities,
+                        edge_pixel_count=0,
+                        image_size_px=(w, h),
+                        output_size_mm=(w * mm_per_px, h * mm_per_px),
+                        mm_per_px=mm_per_px,
+                        processing_time_ms=0,  # Not tracked here
+                        error="",
                         warnings=warnings,
                     )
-                    # Convert DualPassResult.structural to ExtractionResult for compatibility
-                    structural = dual_result.structural
-                    annotation = dual_result.annotation
-                    extract_result = ExtractionResult(
-                        success=structural.success,
-                        output_path=structural.dxf_path,
-                        line_count=structural.entity_count,
-                        edge_pixel_count=0,  # Not tracked in dual-pass
-                        image_size_px=structural.image_size_px,
-                        output_size_mm=structural.output_size_mm,
-                        mm_per_px=structural.mm_per_px,
-                        processing_time_ms=structural.processing_time_ms,
-                        error=structural.error,
-                        warnings=structural.warnings,
-                        stage_timings=structural.debug.get("stage_timings", {}),
-                        grouping=structural.debug.get("grouping"),
-                    )
-                    # Add dual-pass metadata to debug (Phase 3 fields)
+
+                    # Add Phase 4 metadata to debug
+                    counts = layered.counts()
                     stage_timings["dual_pass_active"] = True
-                    stage_timings["pass_b_active"] = dual_result.pass_b_active
-                    stage_timings["pass_a_entity_count"] = structural.entity_count
-                    stage_timings["pass_b_entity_count"] = annotation.entity_count
-                    stage_timings["annotation_present"] = annotation.entity_count > 0
-                    stage_timings["annotation_bbox_count"] = annotation.bbox_count
-                    stage_timings["annotation_text_like_count"] = annotation.text_like_count
-                    stage_timings["behavior_source"] = "dual_pass_phase3"
-                    # Include annotation debug info if available
-                    if annotation.debug:
-                        stage_timings["annotation_categories"] = annotation.debug.get("categories", {})
+                    stage_timings["pass_b_active"] = True
+                    stage_timings["pass_a_entity_count"] = len(pass_a_contours)
+                    stage_timings["pass_b_entity_count"] = len(pass_b_contours)
+                    stage_timings["annotation_present"] = pass_b_result.entity_count > 0
+                    stage_timings["annotation_bbox_count"] = pass_b_result.bbox_count
+                    stage_timings["annotation_text_like_count"] = pass_b_result.debug.get("text_like_count", 0)
+                    stage_timings["behavior_source"] = "dual_pass_phase4"
+                    stage_timings["export_preset"] = preset.value
+                    stage_timings["layer_counts"] = counts
+                    stage_timings["annotation_categories"] = pass_b_result.debug.get("categories", {})
                 else:
                     # RESTORED_BASELINE: Use RETR_LIST (no hierarchy) like commit 86c49526
                     # All other modes use the default isolate_body=True (RETR_TREE + grouping)
@@ -320,25 +377,44 @@ class BlueprintOrchestrator:
                 report("cleanup", 60)
 
                 cleaned_dxf_path = tmpdir_path / "cleaned.dxf"
-                clean_result = clean_blueprint_dxf(
-                    input_path=str(raw_dxf_path),
-                    output_path=str(cleaned_dxf_path),
-                    min_contour_length_mm=min_contour_length_mm,
-                    close_gaps_mm=close_gaps_mm,
-                    mode=mode,
-                )
 
-                # CRITICAL FIX: Do NOT bail early on cleanup failure
-                # Continue to artifact generation — let recommendation layer decide
-                # Artifact existence is independent of selection confidence
-                cleanup_valid = True
-                if not clean_result.success:
-                    cleanup_valid = False
-                    warnings.append(clean_result.error or "Cleanup encountered issues")
+                # LAYERED_DUAL_PASS: Skip traditional cleanup - layers handle filtering
+                if mode == CleanupMode.LAYERED_DUAL_PASS:
+                    # Use raw_dxf_path directly (already filtered by layer export preset)
+                    cleaned_dxf_path = raw_dxf_path
+                    # Create minimal CleanResult for compatibility
+                    clean_result = CleanResult(
+                        success=True,
+                        svg_preview="",  # No SVG preview in Phase 4 yet
+                        dxf_path=str(raw_dxf_path),
+                        original_entity_count=extract_result.line_count,
+                        cleaned_entity_count=extract_result.line_count,
+                        contours_found=counts.get("body", 0),
+                        chains_found=0,
+                        best_confidence=0.8,  # High confidence for layered output
+                        candidate_count=counts.get("total", 0),
+                    )
+                    cleanup_valid = True
                 else:
-                    # Validate cleanup result (adds warnings, does NOT block)
-                    cleanup_valid, cleanup_warnings = validate_cleanup_result(clean_result)
-                    warnings.extend(cleanup_warnings)
+                    clean_result = clean_blueprint_dxf(
+                        input_path=str(raw_dxf_path),
+                        output_path=str(cleaned_dxf_path),
+                        min_contour_length_mm=min_contour_length_mm,
+                        close_gaps_mm=close_gaps_mm,
+                        mode=mode,
+                    )
+
+                    # CRITICAL FIX: Do NOT bail early on cleanup failure
+                    # Continue to artifact generation — let recommendation layer decide
+                    # Artifact existence is independent of selection confidence
+                    cleanup_valid = True
+                    if not clean_result.success:
+                        cleanup_valid = False
+                        warnings.append(clean_result.error or "Cleanup encountered issues")
+                    else:
+                        # Validate cleanup result (adds warnings, does NOT block)
+                        cleanup_valid, cleanup_warnings = validate_cleanup_result(clean_result)
+                        warnings.extend(cleanup_warnings)
 
                 # ─── Stage: Encode DXF to base64 ──────────────────────────
                 report("encode", 80)

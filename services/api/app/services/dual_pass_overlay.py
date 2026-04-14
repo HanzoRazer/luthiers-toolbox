@@ -1,14 +1,16 @@
 """
-Dual-Pass Debug Overlay
-=======================
+Dual-Pass Debug Overlay (Phase 4)
+=================================
 
-Visual debugging utility for dual-pass extraction.
-Shows Pass A (structural) and Pass B (annotation) entities
-in different colors for comparison.
+Visual debugging utility for layered dual-pass extraction.
+Shows entities by semantic layer with distinct colors.
 
-Colors:
-- Pass A (structural): Green
-- Pass B (annotation): Orange
+Layer Colors:
+- BODY: Green
+- AUX_VIEWS: Blue
+- ANNOTATION: Orange
+- TITLE_BLOCK: Purple/Magenta
+- PAGE_FRAME: Red
 
 Author: Production Shop
 """
@@ -17,14 +19,16 @@ from __future__ import annotations
 
 import logging
 from pathlib import Path
-from typing import List, Optional, Tuple
+from typing import Dict, List, Optional, Tuple
 
 import cv2
 import numpy as np
 
+from .layer_builder import Layer, LayeredEntities, LAYER_COLORS
+
 logger = logging.getLogger(__name__)
 
-# Color definitions (BGR format for OpenCV)
+# Legacy color definitions for backward compatibility
 PASS_A_COLOR = (0, 255, 0)      # Green
 PASS_B_COLOR = (0, 165, 255)    # Orange
 BACKGROUND_COLOR = (30, 30, 30)  # Dark gray
@@ -233,6 +237,142 @@ def generate_benchmark_overlay(
         f"Generated benchmark overlay: {output_path}\n"
         f"  Pass A: {len(pass_a_contours)} structural\n"
         f"  Pass B: {len(pass_b_contours)} annotation"
+    )
+
+    return output_path, metadata
+
+
+# ─── Phase 4: Layered Overlay ───────────────────────────────────────────────
+
+def create_layered_overlay(
+    image: np.ndarray,
+    layered_entities: LayeredEntities,
+    alpha: float = 0.7,
+    line_thickness: int = 2,
+) -> np.ndarray:
+    """
+    Create overlay showing all 5 semantic layers.
+
+    Colors:
+    - BODY: Green
+    - AUX_VIEWS: Blue
+    - ANNOTATION: Orange
+    - TITLE_BLOCK: Purple
+    - PAGE_FRAME: Red
+
+    Args:
+        image: Original BGR image
+        layered_entities: LayeredEntities from build_layers()
+        alpha: Blend factor
+        line_thickness: Contour line thickness
+
+    Returns:
+        BGR image with layered overlay
+    """
+    h, w = image.shape[:2]
+    overlay = np.full((h, w, 3), BACKGROUND_COLOR, dtype=np.uint8)
+
+    # Draw each layer
+    for layer in Layer:
+        entities = layered_entities.get_layer(layer)
+        if entities:
+            contours = [e.contour for e in entities]
+            color = LAYER_COLORS[layer]
+            cv2.drawContours(overlay, contours, -1, color, line_thickness)
+            logger.info(f"Overlay: Drew {len(contours)} {layer.value} contours")
+
+    # Blend with original
+    result = cv2.addWeighted(image, 1 - alpha, overlay, alpha, 0)
+
+    return result
+
+
+def generate_layered_overlay(
+    source_image_path: str,
+    target_height_mm: float = 500.0,
+    output_dir: Optional[str] = None,
+) -> Tuple[str, Dict]:
+    """
+    Generate 5-layer overlay for Phase 4 debugging.
+
+    Runs Pass A + Pass B, builds layers, and creates colored overlay.
+
+    Args:
+        source_image_path: Path to blueprint image
+        target_height_mm: Target height for scaling
+        output_dir: Output directory (defaults to source directory)
+
+    Returns:
+        (overlay_path, metadata_dict)
+    """
+    from .annotation_extract import extract_annotations, get_annotation_contours
+    from .layer_builder import build_layers
+    from .blueprint_extract import _ensure_edge_to_dxf_importable
+
+    _ensure_edge_to_dxf_importable()
+    from edge_to_dxf import extract_entities_simple
+
+    # Load image
+    image = cv2.imread(source_image_path)
+    if image is None:
+        raise ValueError(f"Failed to load image: {source_image_path}")
+
+    h, w = image.shape[:2]
+    mm_per_px = target_height_mm / h
+
+    # Pass A: Structural
+    pass_a_entities = extract_entities_simple(
+        image=image,
+        target_height_mm=target_height_mm,
+    )
+    pass_a_contours = pass_a_entities.contours
+
+    # Pass B: Annotation
+    pass_b_result = extract_annotations(
+        image=image,
+        target_height_mm=target_height_mm,
+    )
+    pass_b_contours = get_annotation_contours(pass_b_result)
+
+    # Build layers
+    layered = build_layers(
+        structural_contours=pass_a_contours,
+        annotation_contours=pass_b_contours,
+        image_size=(w, h),
+        mm_per_px=mm_per_px,
+    )
+
+    # Create overlay
+    overlay = create_layered_overlay(image, layered)
+
+    # Generate output path
+    source_path = Path(source_image_path)
+    if output_dir:
+        out_dir = Path(output_dir)
+    else:
+        out_dir = source_path.parent
+
+    output_path = str(out_dir / f"{source_path.stem}_layered_overlay.png")
+    cv2.imwrite(output_path, overlay)
+
+    # Build metadata
+    counts = layered.counts()
+    metadata = {
+        "source": source_image_path,
+        "overlay": output_path,
+        "layer_counts": counts,
+        "pass_a_raw": len(pass_a_contours),
+        "pass_b_raw": len(pass_b_contours),
+        "annotation_categories": pass_b_result.debug.get("categories", {}),
+    }
+
+    logger.info(
+        f"Generated layered overlay: {output_path}\n"
+        f"  BODY: {counts['body']}\n"
+        f"  AUX_VIEWS: {counts['aux_views']}\n"
+        f"  ANNOTATION: {counts['annotation']}\n"
+        f"  TITLE_BLOCK: {counts['title_block']}\n"
+        f"  PAGE_FRAME: {counts['page_frame']}"
     )
 
     return output_path, metadata
