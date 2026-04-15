@@ -313,7 +313,7 @@ class BlueprintOrchestrator:
                     # Apply conservative BODY gap joining
                     layered, gap_join_result = join_body_gaps(
                         layered,
-                        max_gap_mm=2.0,
+                        max_gap_mm=4.0,
                         max_angle_deg=25.0,
                     )
                     logger.info(

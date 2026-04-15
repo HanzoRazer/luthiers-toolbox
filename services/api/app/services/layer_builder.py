@@ -690,9 +690,9 @@ def _is_contour_open(contour: np.ndarray, threshold_px: float = 5.0) -> bool:
 
 def join_body_gaps(
     entities: LayeredEntities,
-    max_gap_mm: float = 2.0,
+    max_gap_mm: float = 4.0,
     max_angle_deg: float = 25.0,
-    scale_factor_limit: float = 3.0,
+    scale_factor_limit: float = 4.0,
 ) -> Tuple[LayeredEntities, GapJoinResult]:
     """
     Conservative gap joining for BODY layer only.
@@ -706,7 +706,7 @@ def join_body_gaps(
         entities: LayeredEntities from build_layers()
         max_gap_mm: Maximum gap distance in mm (default 2.0)
         max_angle_deg: Maximum tangent angle difference in degrees (default 25.0)
-        scale_factor_limit: Reject if gap > this * local median segment (default 3.0)
+        scale_factor_limit: Reject if gap > this * local median segment (default 4.0)
 
     Returns:
         (updated_entities, gap_join_result)
