@@ -78,6 +78,10 @@ from .layered_dxf_writer import (
     write_layered_dxf,
     get_preset_from_string,
 )
+from .body_geometry_repair import (
+    repair_body_geometry,
+    is_body_repair_enabled,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -197,6 +201,7 @@ class BlueprintOrchestrator:
         progress_callback: ProgressCallback = None,
         mode: CleanupMode = CleanupMode.REFINED,
         export_preset: str = "geometry_only",
+        spec_name: Optional[str] = None,
     ) -> BlueprintResult:
         """
         Process a blueprint file through extraction and cleanup.
@@ -220,6 +225,50 @@ class BlueprintOrchestrator:
         """
         stage_timings: dict[str, float] = {}
         warnings: list[str] = []
+
+        # ─── Execution Path Reporting (for debug visibility) ──────────────
+        # Records which code path actually runs, preventing dead-code confusion.
+        # See: scripts/trace_live_path.py for the full dispatch table.
+        #
+        # IMPORTANT: Pass B annotation extraction runs in LAYERED_DUAL_PASS,
+        # but annotations only appear in output if export_preset="reference_full".
+        # Default preset "geometry_only" filters annotations out at export time.
+        if mode == CleanupMode.LAYERED_DUAL_PASS:
+            # Determine if annotations will be in output based on preset
+            annotations_in_output = export_preset in ("reference_full",)
+            stage_timings["execution_path"] = {
+                "mode": mode.value,
+                "pipeline": "orchestrator_dual_pass",
+                "writer": "write_layered_dxf",
+                "cleaner": None,
+                "gap_joining": True,
+                "layer_classification": True,
+                "outline_reconstructor": False,
+                # Pass B / Annotation extraction status
+                "pass_b_annotation_extraction": True,  # Pass B always runs
+                "export_preset": export_preset,
+                "annotations_in_output": annotations_in_output,
+            }
+        else:
+            # REFINED, BASELINE, RESTORED_BASELINE all go through clean_blueprint_dxf
+            cleaner_map = {
+                CleanupMode.REFINED: "_clean_blueprint_refined",
+                CleanupMode.BASELINE: "_clean_blueprint_baseline",
+                CleanupMode.RESTORED_BASELINE: "_clean_blueprint_restored_baseline",
+            }
+            stage_timings["execution_path"] = {
+                "mode": mode.value,
+                "pipeline": "extract_blueprint_to_dxf -> clean_blueprint_dxf",
+                "writer": "unified_dxf_cleaner.write_selected_chains",
+                "cleaner": cleaner_map.get(mode, "_clean_blueprint_refined"),
+                "gap_joining": False,
+                "layer_classification": False,
+                "outline_reconstructor": mode == CleanupMode.RESTORED_BASELINE,
+                # Pass B / Annotation extraction status
+                "pass_b_annotation_extraction": False,  # Not wired in non-layered paths
+                "export_preset": None,
+                "annotations_in_output": False,
+            }
 
         def report(stage: str, progress: int) -> None:
             if progress_callback:
@@ -321,6 +370,18 @@ class BlueprintOrchestrator:
                         f"({gap_join_result.joins_attempted} attempted)"
                     )
 
+                    # ─── Phase 6: Post-gap-join geometry reconstruction ───────
+                    # This is NOT extraction. Extraction happened above (Pass A/B).
+                    # Phase 6 improves REPRESENTATION of already-extracted geometry.
+                    # It is BODY-only, confidence-gated, and feature-flagged.
+                    # Disable flags to restore prior behavior (LINE-only output).
+                    body_repair_result = repair_body_geometry(
+                        layered=layered,
+                        spec_name=spec_name,
+                    )
+                    if body_repair_result.applied:
+                        stage_timings["body_repair"] = body_repair_result.to_dict()
+
                     # Evaluate layered acceptance (Phase 4 acceptance logic)
                     layered_acceptance = evaluate_layered_acceptance(layered)
                     logger.info(
@@ -333,10 +394,19 @@ class BlueprintOrchestrator:
                     preset = get_preset_from_string(export_preset)
 
                     # Write layered DXF
+                    # Phase 6B: Pass accepted primitives for POLYLINE substitution.
+                    # When flags OFF: primitives_to_emit is None → all BODY emits LINE.
+                    # When flags ON: qualified BODY runs emit POLYLINE, rest LINE fallback.
+                    primitives_to_emit = (
+                        body_repair_result.accepted_primitives
+                        if body_repair_result.applied and body_repair_result.accepted_primitives
+                        else None
+                    )
                     layer_counts = write_layered_dxf(
                         entities=layered,
                         output_path=str(raw_dxf_path),
                         preset=preset,
+                        primitives=primitives_to_emit,
                     )
 
                     # Build ExtractionResult for compatibility
@@ -437,6 +507,7 @@ class BlueprintOrchestrator:
                         min_contour_length_mm=min_contour_length_mm,
                         close_gaps_mm=close_gaps_mm,
                         mode=mode,
+                        spec_name=spec_name,
                     )
 
                     # CRITICAL FIX: Do NOT bail early on cleanup failure
