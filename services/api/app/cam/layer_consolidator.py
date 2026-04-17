@@ -160,15 +160,16 @@ class LayerConsolidator:
         total_removed = 0
 
         for layer_name, lines in layer_lines.items():
-            # Copy layer properties if possible
-            try:
-                src_layer = doc.layers.get(layer_name)
-                out_doc.layers.add(
-                    layer_name,
-                    dxfattribs={"color": src_layer.color if src_layer else 7}
-                )
-            except Exception:
-                out_doc.layers.add(layer_name)
+            # Copy layer properties if not already present
+            if layer_name not in out_doc.layers:
+                try:
+                    src_layer = doc.layers.get(layer_name)
+                    out_doc.layers.add(
+                        layer_name,
+                        dxfattribs={"color": src_layer.color if src_layer else 7}
+                    )
+                except Exception:
+                    out_doc.layers.add(layer_name)
 
             # Find all connected chains
             chains = self._find_all_chains(lines)
