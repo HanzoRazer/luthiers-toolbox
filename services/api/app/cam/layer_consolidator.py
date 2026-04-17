@@ -127,7 +127,11 @@ class LayerConsolidator:
         body_layer_names: Optional[List[str]] = None,
     ) -> LayerConsolidationResult:
         """
-        Consolidate LINE entities to LWPOLYLINE, preserving layer names.
+        Consolidate LINE entities to LWPOLYLINE, preserving all other entities.
+
+        Works in-place on the original document to preserve MTEXT, DIMENSION,
+        LEADER, ARC, CIRCLE, and all other non-LINE entities including blocks,
+        styles, and resources.
 
         Args:
             input_path: Path to input DXF
@@ -143,36 +147,43 @@ class LayerConsolidator:
         doc = ezdxf.readfile(input_path)
         msp = doc.modelspace()
 
-        # Group lines by layer
-        layer_lines: Dict[str, List] = defaultdict(list)
+        # Extract LINE geometry BEFORE any modifications
+        # Store as (layer, start_point, end_point, handle)
+        line_data: List[Tuple[str, Tuple[float, float], Tuple[float, float], str]] = []
         for e in msp:
             if e.dxftype() == "LINE":
-                layer_lines[e.dxf.layer].append(e)
+                line_data.append((
+                    e.dxf.layer,
+                    (round(e.dxf.start.x, self.precision), round(e.dxf.start.y, self.precision)),
+                    (round(e.dxf.end.x, self.precision), round(e.dxf.end.y, self.precision)),
+                    e.dxf.handle,
+                ))
 
-        input_lines = sum(len(lines) for lines in layer_lines.values())
+        input_lines = len(line_data)
 
-        # Create output document
-        out_doc = ezdxf.new("R2000")
-        out_msp = out_doc.modelspace()
+        # Group by layer
+        layer_segments: Dict[str, List[Tuple[Tuple[float, float], Tuple[float, float]]]] = defaultdict(list)
+        line_handles = []
+        for layer, start, end, handle in line_data:
+            layer_segments[layer].append((start, end))
+            line_handles.append(handle)
 
+        # Delete original LINE entities by handle
+        for handle in line_handles:
+            try:
+                entity = doc.entitydb.get(handle)
+                if entity:
+                    msp.delete_entity(entity)
+            except Exception:
+                pass
+
+        # Build chains and add polylines
         layer_stats = {}
         total_polylines = 0
         total_removed = 0
 
-        for layer_name, lines in layer_lines.items():
-            # Copy layer properties if not already present
-            if layer_name not in out_doc.layers:
-                try:
-                    src_layer = doc.layers.get(layer_name)
-                    out_doc.layers.add(
-                        layer_name,
-                        dxfattribs={"color": src_layer.color if src_layer else 7}
-                    )
-                except Exception:
-                    out_doc.layers.add(layer_name)
-
-            # Find all connected chains
-            chains = self._find_all_chains(lines)
+        for layer_name, segments in layer_segments.items():
+            chains = self._find_chains_from_segments(segments)
 
             # Deduplicate parallel contours on body layers
             removed = 0
@@ -191,42 +202,37 @@ class LayerConsolidator:
                 )**0.5
                 closed = dist < self.close_tolerance
 
-                out_msp.add_lwpolyline(
+                msp.add_lwpolyline(
                     chain,
                     close=closed,
                     dxfattribs={"layer": layer_name}
                 )
                 total_polylines += 1
 
-            layer_stats[layer_name] = (len(lines), len(chains))
+            layer_stats[layer_name] = (len(segments), len(chains))
 
-        out_doc.saveas(output_path)
+        doc.saveas(output_path)
 
         return LayerConsolidationResult(
             input_lines=input_lines,
-            input_layers=len(layer_lines),
+            input_layers=len(layer_segments),
             output_polylines=total_polylines,
             duplicates_removed=total_removed,
             layer_stats=layer_stats,
             output_path=output_path,
         )
 
-    def _find_all_chains(self, lines: List) -> List[List[Tuple[float, float]]]:
-        """Find all connected chains in a set of LINE entities."""
-        if not lines:
+    def _find_chains_from_segments(
+        self,
+        segments: List[Tuple[Tuple[float, float], Tuple[float, float]]]
+    ) -> List[List[Tuple[float, float]]]:
+        """Find all connected chains from line segments (start, end tuples)."""
+        if not segments:
             return []
 
         adj: Dict[Tuple[float, float], List[Tuple[Tuple[float, float], int]]] = defaultdict(list)
 
-        for i, line in enumerate(lines):
-            p1 = (
-                round(line.dxf.start.x, self.precision),
-                round(line.dxf.start.y, self.precision)
-            )
-            p2 = (
-                round(line.dxf.end.x, self.precision),
-                round(line.dxf.end.y, self.precision)
-            )
+        for i, (p1, p2) in enumerate(segments):
             adj[p1].append((p2, i))
             adj[p2].append((p1, i))
 
@@ -261,6 +267,7 @@ class LayerConsolidator:
                 chains.append(chain)
 
         return chains
+
 
 
 def consolidate_preserving_layers(
