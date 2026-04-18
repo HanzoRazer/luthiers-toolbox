@@ -147,6 +147,9 @@ class LayerConsolidator:
         doc = ezdxf.readfile(input_path)
         msp = doc.modelspace()
 
+        # Check if R12 - LWPOLYLINE requires R2000+
+        is_r12 = doc.dxfversion == "AC1009"
+
         # Extract LINE geometry BEFORE any modifications
         # Store as (layer, start_point, end_point, handle)
         line_data: List[Tuple[str, Tuple[float, float], Tuple[float, float], str]] = []
@@ -168,14 +171,22 @@ class LayerConsolidator:
             layer_segments[layer].append((start, end))
             line_handles.append(handle)
 
-        # Delete original LINE entities by handle
-        for handle in line_handles:
-            try:
-                entity = doc.entitydb.get(handle)
-                if entity:
-                    msp.delete_entity(entity)
-            except Exception:
-                pass
+        # For R12, create new R2000 document (LWPOLYLINE not supported in R12)
+        # For R2000+, work in-place to preserve text/dimensions
+        if is_r12:
+            out_doc = ezdxf.new("R2000")
+            out_msp = out_doc.modelspace()
+        else:
+            # Delete original LINE entities by handle
+            for handle in line_handles:
+                try:
+                    entity = doc.entitydb.get(handle)
+                    if entity:
+                        msp.delete_entity(entity)
+                except Exception:
+                    pass
+            out_doc = doc
+            out_msp = msp
 
         # Build chains and add polylines
         layer_stats = {}
@@ -183,6 +194,18 @@ class LayerConsolidator:
         total_removed = 0
 
         for layer_name, segments in layer_segments.items():
+            # For R12 source, create layer in new document
+            if is_r12 and layer_name not in out_doc.layers:
+                try:
+                    src_layer = doc.layers.get(layer_name)
+                    out_doc.layers.add(
+                        layer_name,
+                        dxfattribs={"color": src_layer.color if src_layer else 7}
+                    )
+                except Exception:
+                    if layer_name != "0":  # Layer 0 always exists
+                        out_doc.layers.add(layer_name)
+
             chains = self._find_chains_from_segments(segments)
 
             # Deduplicate parallel contours on body layers
@@ -202,7 +225,7 @@ class LayerConsolidator:
                 )**0.5
                 closed = dist < self.close_tolerance
 
-                msp.add_lwpolyline(
+                out_msp.add_lwpolyline(
                     chain,
                     close=closed,
                     dxfattribs={"layer": layer_name}
@@ -211,7 +234,7 @@ class LayerConsolidator:
 
             layer_stats[layer_name] = (len(segments), len(chains))
 
-        doc.saveas(output_path)
+        out_doc.saveas(output_path)
 
         return LayerConsolidationResult(
             input_lines=input_lines,
