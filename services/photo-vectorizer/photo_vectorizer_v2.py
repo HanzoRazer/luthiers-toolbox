@@ -4788,7 +4788,10 @@ class PhotoVectorizerV2:
                 extract_body_from_pdf,
                 extract_body_from_image,
                 create_acoustic_body_config,
-                save_contour_to_dxf,
+            )
+            from march_pipeline_restore import (
+                classify_and_assign_layers,
+                export_layered_lines_dxf,
             )
         except ImportError as e:
             result.warnings.append(f"Blueprint extractor not available: {e}")
@@ -4797,14 +4800,17 @@ class PhotoVectorizerV2:
         config = create_acoustic_body_config(gap_closing_level=gap_closing_level)
 
         # Handle PDF vs image
+        page_height_mm = 1189.0  # A0 default
         if source.suffix.lower() == '.pdf':
             extraction = extract_body_from_pdf(
                 source,
                 page_number=0,
-                page_size_mm=(841.0, 1189.0),  # A0 default
+                page_size_mm=(841.0, page_height_mm),
                 config=config,
                 save_debug=debug_images,
             )
+            # Compute image_height from mm_per_px after extraction
+            image_height = int(page_height_mm / extraction.body.mm_per_px) if extraction.success else 0
         else:
             # Load as image
             image = cv2.imread(str(source))
@@ -4812,8 +4818,9 @@ class PhotoVectorizerV2:
                 result.warnings.append(f"Failed to load image: {source}")
                 return result
             h, w = image.shape[:2]
+            image_height = h
             # Assume A0 proportion for scale
-            mm_per_px = 1189.0 / h
+            mm_per_px = page_height_mm / h
             extraction = extract_body_from_image(
                 image, mm_per_px, config=config, save_debug=debug_images
             )
@@ -4854,15 +4861,32 @@ class PhotoVectorizerV2:
         )
         result.feature_contours = [body_contour]
 
-        # Export
+        # Export with grid reclassification (Sprint 5)
         if export_dxf:
+            # Convert all_candidates to OpenCV contour format
+            contours = [
+                bc.points.reshape(-1, 1, 2).astype(np.int32)
+                for bc in extraction.all_candidates
+            ]
+
+            # Classify and assign layers
+            layers = classify_and_assign_layers(
+                contours,
+                mm_per_px=body.mm_per_px,
+                min_area_px=2000,
+            )
+
+            # Export R12 LINE DXF (Fusion 360 compatible)
             dxf_path = out_dir / f"{source.stem}_blueprint.dxf"
-            save_contour_to_dxf(
-                body, dxf_path,
-                scale_to_dimensions=(target_width, target_height) if known_dimension_mm else None,
+            line_counts = export_layered_lines_dxf(
+                layers,
+                dxf_path,
+                mm_per_px=body.mm_per_px,
+                image_height=image_height,
             )
             result.output_dxf = str(dxf_path)
-            logger.info(f"Blueprint DXF written: {dxf_path}")
+            layer_summary = ", ".join(f"{k}:{v}" for k, v in line_counts.items())
+            logger.info(f"Blueprint DXF written: {dxf_path} [{layer_summary}]")
 
         if export_svg:
             svg_path = out_dir / f"{source.stem}_blueprint.svg"
