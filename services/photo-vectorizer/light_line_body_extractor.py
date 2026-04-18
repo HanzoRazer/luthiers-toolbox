@@ -51,13 +51,29 @@ class BodyContour:
         return (x_min, y_min, x_max - x_min, y_max - y_min)
 
 
+def detect_image_polarity(gray: np.ndarray) -> str:
+    """
+    Detect if image has dark lines on light background or vice versa.
+
+    Returns:
+        "light_bg" — standard blueprint (dark lines on white/light background)
+        "dark_bg" — inverted/negative (white/light lines on black/dark background)
+    """
+    mean_intensity = gray.mean()
+    # Threshold at midpoint: >127 means mostly light pixels (light background)
+    if mean_intensity > 127:
+        return "light_bg"
+    else:
+        return "dark_bg"
+
+
 @dataclass
 class ExtractionConfig:
     """Configuration for light line extraction."""
     # Image preprocessing
     dpi: int = 200
     contrast_multiplier: float = 3.0
-    invert: bool = True
+    invert: str = "auto"  # "auto", "always", "never"
 
     # Edge detection
     canny_low: int = 15
@@ -129,11 +145,37 @@ def extract_body_from_image(
     else:
         gray = image.copy()
 
+    # Detect polarity BEFORE cropping to determine image type
+    if config.invert == "auto":
+        polarity = detect_image_polarity(gray)
+        should_invert = (polarity == "light_bg")
+        logger.info(f"Polarity detection: {polarity}, invert={should_invert}")
+    elif config.invert == "always":
+        polarity = "light_bg"
+        should_invert = True
+    else:  # "never"
+        polarity = "dark_bg"
+        should_invert = False
+
     # Crop to region of interest
-    x1 = int(w * config.crop_left)
+    # For dark backgrounds (inverted/negative blueprints), skip left crop
+    # since these are typically single-view centered images
+    if polarity == "dark_bg" and config.crop_left > 0:
+        logger.info(f"Dark background detected, skipping crop_left={config.crop_left}")
+        x1 = 0
+    else:
+        x1 = int(w * config.crop_left)
     x2 = int(w * config.crop_right)
     y1 = int(h * config.crop_top)
     y2 = int(h * config.crop_bottom)
+
+    # For dark backgrounds, relax dimension filters
+    # These images often show full instruments (body + neck), not just body
+    if polarity == "dark_bg":
+        config.max_width_mm = max(config.max_width_mm, 900.0)
+        config.max_height_mm = max(config.max_height_mm, 1200.0)
+        config.min_area_px = min(config.min_area_px, 50000.0)
+        logger.info(f"Dark background: relaxed filters to max_w={config.max_width_mm}, max_h={config.max_height_mm}")
 
     cropped = gray[y1:y2, x1:x2]
     crop_h, crop_w = cropped.shape
@@ -142,7 +184,7 @@ def extract_body_from_image(
         debug_images['01_cropped'] = cropped.copy()
 
     # Invert image (light lines become dark)
-    if config.invert:
+    if should_invert:
         inverted = 255 - cropped
     else:
         inverted = cropped
@@ -150,17 +192,26 @@ def extract_body_from_image(
     if save_debug:
         debug_images['02_inverted'] = inverted.copy()
 
-    # Enhance contrast
-    enhanced = np.clip(
-        inverted.astype(float) * config.contrast_multiplier,
-        0, 255
-    ).astype(np.uint8)
+    # For dark backgrounds, use thresholding instead of edge detection
+    # This avoids the double-edge problem from Canny on white lines
+    if polarity == "dark_bg":
+        # Threshold to extract white/bright lines directly
+        _, binary = cv2.threshold(inverted, 100, 255, cv2.THRESH_BINARY)
+        edges = binary
+        logger.info("Dark background: using threshold instead of Canny")
+        if save_debug:
+            debug_images['03_threshold'] = binary.copy()
+    else:
+        # Standard light background: enhance contrast then Canny
+        enhanced = np.clip(
+            inverted.astype(float) * config.contrast_multiplier,
+            0, 255
+        ).astype(np.uint8)
 
-    if save_debug:
-        debug_images['03_enhanced'] = enhanced.copy()
+        if save_debug:
+            debug_images['03_enhanced'] = enhanced.copy()
 
-    # Canny edge detection with low thresholds
-    edges = cv2.Canny(enhanced, config.canny_low, config.canny_high)
+        edges = cv2.Canny(enhanced, config.canny_low, config.canny_high)
 
     if save_debug:
         debug_images['04_edges'] = edges.copy()
@@ -390,7 +441,7 @@ def create_acoustic_body_config(gap_closing_level: str = "normal") -> Extraction
     config = ExtractionConfig(
         dpi=200,
         contrast_multiplier=3.0,
-        invert=True,
+        invert="auto",  # Auto-detect polarity (light bg vs dark bg)
         canny_low=15,
         canny_high=45,
         morph_kernel_size=5,
