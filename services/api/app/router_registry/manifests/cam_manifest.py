@@ -246,4 +246,11 @@ CAM_ROUTERS: List[RouterSpec] = [
         tags=["Archtop", "CAM"],
         category="cam",
     ),
+    # ── BODY SOLVER: BOE ↔ IBG integration ──
+    RouterSpec(
+        module="app.routers.body_solver_router",
+        prefix="",  # Router has its own /api/body prefix
+        tags=["Body Solver", "IBG"],
+        category="cam",
+    ),
 ]
