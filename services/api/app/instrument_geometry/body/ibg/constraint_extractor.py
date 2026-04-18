@@ -222,19 +222,29 @@ class ConstraintExtractor:
 
         # Waist min (only if significantly narrower than lower bout)
         if middle_region:
-            positive_middle = [p for p in middle_region if p[0] > 0]
-            if positive_middle:
-                waist_pt = min(positive_middle, key=lambda p: p[0])
-                # Check if waist is at least 20% narrower than lower bout
-                lower_max_x = max(p[0] for p in lower_region) if lower_region else 200
-                if waist_pt[0] < lower_max_x * 0.80:
-                    landmarks.append(LandmarkPoint(
-                        label='waist_min',
-                        x_mm=waist_pt[0],
-                        y_mm=waist_pt[1],
-                        source='dxf',
-                        confidence=0.85,
-                    ))
+            estimated_lower_bout_half = max(p[0] for p in lower_region) if lower_region else 200
+
+            # Try Option A first — waist must be at least 30% of lower bout width
+            min_waist_x = estimated_lower_bout_half * 0.30
+            waist_candidates = [p for p in middle_region if p[0] > min_waist_x]
+
+            waist_pt = None
+            if waist_candidates:
+                waist_pt = min(waist_candidates, key=lambda p: p[0])
+            else:
+                # Option B fallback — no valid candidates above threshold
+                positive_middle = sorted([p for p in middle_region if p[0] > 5], key=lambda p: p[0])
+                if positive_middle:
+                    waist_pt = positive_middle[max(1, len(positive_middle) // 10)]
+
+            if waist_pt and waist_pt[0] < estimated_lower_bout_half * 0.80:
+                landmarks.append(LandmarkPoint(
+                    label='waist_min',
+                    x_mm=waist_pt[0],
+                    y_mm=waist_pt[1],
+                    source='dxf',
+                    confidence=0.85,
+                ))
 
         # Upper bout max (if region has enough points)
         if upper_region and len(upper_region) > 10:
