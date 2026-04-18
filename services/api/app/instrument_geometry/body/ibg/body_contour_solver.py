@@ -21,7 +21,7 @@ from dataclasses import dataclass, field
 from typing import Dict, List, Optional, Tuple
 
 # Sibling imports
-from .arc_reconstructor import falloff, radius_from_chord_sagitta, fit_circle_3pts
+from .arc_reconstructor import falloff, radius_from_chord_sagitta, fit_circle_3pts, fit_arc_segment
 
 
 # ─── Section A: Data Structures ───────────────────────────────────────────────
@@ -531,47 +531,113 @@ class BodyContourSolver:
 
         return zones
 
+    def _sagitta_from_radius(self, radius: float, chord: float) -> float:
+        """
+        Derive sagitta from fitted circle radius and chord.
+
+        Formula: S = R - sqrt(R² - (C/2)²)
+
+        Args:
+            radius: Circle radius (mm)
+            chord: Chord length (mm)
+
+        Returns:
+            Sagitta (mm), or 0.0 for edge cases
+        """
+        if radius <= 0 or chord <= 0:
+            return 0.0
+
+        half_chord = chord / 2
+
+        if radius < half_chord:
+            return 0.0
+
+        inner = radius**2 - half_chord**2
+        if inner < 0:
+            return 0.0
+
+        return radius - math.sqrt(inner)
+
+    def _heuristic_sagitta(self, chord: float) -> float:
+        """
+        5% fallback when circle fitting fails.
+
+        Args:
+            chord: Chord length (mm)
+
+        Returns:
+            Estimated sagitta (mm) at 5% of chord
+        """
+        if chord <= 0:
+            return 0.0
+        return chord * 0.05
+
+    def _fit_sagitta_from_band(
+        self, outline: List[Tuple[float, float]], y_target: float, chord: float, band_mm: float = 10.0
+    ) -> Optional[float]:
+        """
+        Extract points in ±band_mm Y-band, fit circle via fit_arc_segment, derive sagitta.
+
+        Args:
+            outline: Full body outline points
+            y_target: Y coordinate to center the band on
+            chord: Chord length at this Y (for sagitta calculation)
+            band_mm: Half-width of the Y-band (default ±10mm)
+
+        Returns:
+            Sagitta (mm) from fitted circle, or None if fitting fails
+        """
+        band_points = [
+            (x, y) for x, y in outline
+            if abs(y - y_target) <= band_mm and x >= 0
+        ]
+
+        if len(band_points) < 3:
+            return None
+
+        band_points_sorted = sorted(band_points, key=lambda p: p[1])
+
+        fit_result = fit_arc_segment(band_points_sorted, tolerance_mm=2.0, max_error_mm=5.0)
+        if fit_result is None:
+            return None
+
+        (cx, cy), radius, mean_err, max_err = fit_result
+
+        sagitta = self._sagitta_from_radius(radius, chord)
+        if sagitta <= 0:
+            return None
+
+        return sagitta
+
     def _measure_chord_sagitta(self, outline: List[Tuple[float, float]], y_target: float) -> Tuple[float, float]:
         """
         Measure chord and sagitta at a given Y position.
 
+        Uses circle fitting on points in ±10mm Y-band when possible,
+        falls back to 5% heuristic when fitting fails.
+
         Returns:
             (chord_mm, sagitta_mm) tuple
         """
-        # Find points on the outline nearest to y_target
         right_points = [(x, y) for x, y in outline if x >= 0]
         left_points = [(x, y) for x, y in outline if x <= 0]
 
         if not right_points or not left_points:
             return (0.0, 0.0)
 
-        # Find the point on right side closest to y_target
         right_point = min(right_points, key=lambda p: abs(p[1] - y_target))
-        # Find the point on left side closest to y_target
         left_point = min(left_points, key=lambda p: abs(p[1] - y_target))
 
-        # Chord = distance between left and right points
         chord = abs(right_point[0] - left_point[0])
 
-        # Sagitta = distance from chord midpoint to outline at that Y
-        # For a symmetric body, the widest point at this Y determines sagitta
-        mid_x = (right_point[0] + left_point[0]) / 2  # Should be ~0 for symmetric
-        mid_y = (right_point[1] + left_point[1]) / 2
+        if chord <= 0:
+            return (0.0, 0.0)
 
-        # Find the actual outline point at the midpoint X (should be on centerline)
-        # For guitar bodies, we measure sagitta as the inward curve depth
-        # This is approximated by finding how much the waist indents from the bouts
-
-        # Simple approach: sagitta is half the difference between adjacent zone widths
-        # This is a rough approximation; more accurate would require curve fitting
-        if chord > 0:
-            # Estimate sagitta based on typical guitar body curvature
-            # For lower bout: sagitta ~ chord * 0.04
-            # For waist: sagitta ~ chord * 0.11
-            # For upper bout: sagitta ~ chord * 0.035
-            sagitta = chord * 0.05  # Default estimate
+        fitted_sagitta = self._fit_sagitta_from_band(outline, y_target, chord)
+        if fitted_sagitta is not None and fitted_sagitta > 0:
+            sagitta = fitted_sagitta
         else:
-            sagitta = 0.0
+            sagitta = self._heuristic_sagitta(chord)
 
         return (chord, sagitta)
 
