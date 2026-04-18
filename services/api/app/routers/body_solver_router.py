@@ -7,11 +7,13 @@ Endpoints:
   GET  /api/body/session/{session_id} — Retrieve previously solved session
   PUT  /api/body/session/{session_id}/landmarks — Override landmarks and re-solve (paid tier)
 
-Sprint: Week 1 — API endpoints only, JSON output, no DXF export
+Sprint: Week 2 — run_in_executor for blocking calls, DXF export as base64
 """
 
 from __future__ import annotations
 
+import asyncio
+import base64
 import tempfile
 import os
 import uuid
@@ -75,6 +77,7 @@ class SolveOptions(BaseModel):
     return_json: bool = True
     return_side_heights: bool = True
     return_zone_radii: bool = True
+    return_dxf: bool = False
 
 
 class SolveFromLandmarksRequest(BaseModel):
@@ -127,6 +130,26 @@ def _model_to_dict(model) -> dict:
         "confidence": model.confidence,
         "missing_landmarks": list(model.missing_landmarks),
     }
+
+
+async def _generate_dxf_base64(gen, model) -> str:
+    """Generate DXF from model and return as base64 string."""
+    loop = asyncio.get_event_loop()
+
+    def _generate():
+        with tempfile.NamedTemporaryFile(suffix=".dxf", delete=False) as tmp:
+            dxf_path = tmp.name
+
+        try:
+            gen.save_dxf(model, dxf_path)
+            with open(dxf_path, "rb") as f:
+                dxf_bytes = f.read()
+            return base64.b64encode(dxf_bytes).decode("utf-8")
+        finally:
+            if os.path.exists(dxf_path):
+                os.unlink(dxf_path)
+
+    return await loop.run_in_executor(None, _generate)
 
 
 def _model_to_response(model, gen, options: dict) -> dict:
@@ -204,10 +227,20 @@ async def solve_from_dxf(
 
     try:
         gen = InstrumentBodyGenerator(instrument_spec)
-        model = gen.complete_from_dxf(tmp_path, consolidate=consolidate)
+
+        # Run blocking DXF processing in thread pool to avoid blocking event loop
+        loop = asyncio.get_event_loop()
+        model = await loop.run_in_executor(
+            None, lambda: gen.complete_from_dxf(tmp_path, consolidate=consolidate)
+        )
 
         response = _model_to_response(model, gen, opts)
         response["session_id"] = _create_session(model, gen)
+
+        # Add DXF export if requested
+        if opts.get("return_dxf"):
+            dxf_data = await _generate_dxf_base64(gen, model)
+            response["dxf_data"] = dxf_data
 
         return JSONResponse(response)
 
@@ -248,10 +281,20 @@ async def solve_from_landmarks(request: SolveFromLandmarksRequest):
             for lm in request.landmarks
         ]
 
-        model = gen.complete_from_landmarks(landmarks)
+        # Run blocking solver in thread pool
+        loop = asyncio.get_event_loop()
+        model = await loop.run_in_executor(
+            None, lambda: gen.complete_from_landmarks(landmarks)
+        )
 
-        response = _model_to_response(model, gen, request.options.model_dump())
+        opts = request.options.model_dump()
+        response = _model_to_response(model, gen, opts)
         response["session_id"] = _create_session(model, gen)
+
+        # Add DXF export if requested
+        if opts.get("return_dxf"):
+            dxf_data = await _generate_dxf_base64(gen, model)
+            response["dxf_data"] = dxf_data
 
         return JSONResponse(response)
 
@@ -359,7 +402,11 @@ async def override_landmarks(session_id: str, request: OverrideLandmarksRequest)
                 )
             )
 
-        model = gen.complete_from_landmarks(landmarks)
+        # Run blocking solver in thread pool
+        loop = asyncio.get_event_loop()
+        model = await loop.run_in_executor(
+            None, lambda: gen.complete_from_landmarks(landmarks)
+        )
 
         _sessions[session_id] = {
             "instrument_spec": session["instrument_spec"],
