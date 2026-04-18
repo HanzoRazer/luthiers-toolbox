@@ -183,20 +183,35 @@ class InstrumentBodyGenerator:
         Returns:
             SolvedBodyModel with complete body geometry
         """
-        # Step 0: Consolidate raw LINE entities if needed
-        working_path = dxf_path
-        if consolidate:
-            working_path = self._consolidate_if_needed(dxf_path)
+        # Track temp file for cleanup
+        temp_path = None
 
-        # Step 1: Extract landmarks from DXF
-        landmarks = self.extractor.extract_landmarks_from_dxf(working_path)
+        try:
+            # Step 0: Consolidate raw LINE entities if needed
+            working_path = dxf_path
+            if consolidate:
+                working_path = self._consolidate_if_needed(dxf_path)
+                # Track if a temp file was created (different from input)
+                if working_path != dxf_path:
+                    temp_path = working_path
 
-        # Step 2: Solve complete body
-        solver = BodyContourSolver(self.constraints, family=self.family)
-        for lm in landmarks:
-            solver.add_landmark(lm)
+            # Step 1: Extract landmarks from DXF
+            landmarks = self.extractor.extract_landmarks_from_dxf(working_path)
 
-        return solver.solve()
+            # Step 2: Solve complete body
+            solver = BodyContourSolver(self.constraints, family=self.family)
+            for lm in landmarks:
+                solver.add_landmark(lm)
+
+            return solver.solve()
+
+        finally:
+            # Cleanup temp file to prevent accumulation
+            if temp_path and os.path.exists(temp_path):
+                try:
+                    os.unlink(temp_path)
+                except OSError:
+                    pass  # Best effort cleanup
 
     def _consolidate_if_needed(self, dxf_path: str, threshold: int = 1000) -> str:
         """
