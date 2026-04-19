@@ -41,7 +41,7 @@ from ...util.units import scale_geom_units
 router = APIRouter(tags=["geometry"])
 
 
-@router.post("/export_bundle")
+@router.post("/export_bundle", response_class=Response)
 def export_bundle(body: ExportBundleIn) -> Response:
     """
     Export complete CAM bundle: DXF + SVG + G-code + manifest as ZIP archive.
@@ -115,7 +115,7 @@ def export_bundle(body: ExportBundleIn) -> Response:
     )
 
 
-@router.post("/export_bundle_multi")
+@router.post("/export_bundle_multi", response_class=Response)
 def export_bundle_multi(body: ExportBundleMultiIn) -> Response:
     """
     Export multi-post CAM bundle: DXF + SVG + N x G-code + manifest as ZIP archive.

@@ -162,7 +162,7 @@ def export_geometry(fmt: str = "dxf", body: ExportRequest = Body(...)):
         )
 
 
-@router.post("/export_gcode")
+@router.post("/export_gcode", response_class=Response)
 @safety_critical
 def export_gcode(body: GcodeExportIn) -> Response:
     """
@@ -217,7 +217,7 @@ def export_gcode(body: GcodeExportIn) -> Response:
     return resp
 
 
-@router.post("/export_gcode_governed")
+@router.post("/export_gcode_governed", response_class=Response)
 @safety_critical
 def export_gcode_governed(body: GcodeExportIn) -> Response:
     """

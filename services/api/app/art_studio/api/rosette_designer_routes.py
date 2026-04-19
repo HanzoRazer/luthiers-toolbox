@@ -167,7 +167,7 @@ def render_preview(req: PreviewRequest) -> PreviewResponse:
     return PreviewResponse(svg=svg, filled_count=filled_count, total_cells=total_cells)
 
 
-@router.post("/export/svg")
+@router.post("/export/svg", response_class=Response)
 def export_svg(req: ExportSvgRequest) -> Response:
     """Export design as downloadable SVG file."""
     svg = render_preview_svg(

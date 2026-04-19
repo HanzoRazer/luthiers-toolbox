@@ -193,6 +193,7 @@ async def plan_operation_endpoint(
 
 @router.get(
     "/{run_id}/export.zip",
+    response_class=StreamingResponse,
     summary="Export operation as ZIP",
     description="Download a run artifact and all associated data as an auditable ZIP file.",
     responses={

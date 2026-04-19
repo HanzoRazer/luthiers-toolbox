@@ -30,7 +30,7 @@ def _detect_mime(data: bytes) -> str:
     return "application/octet-stream"
 
 
-@router.get("/{sha256}/download")
+@router.get("/{sha256}/download", response_class=Response)
 def download_blob(
     sha256: str,
     mime: Optional[str] = Query(None, description="Optional MIME type hint"),

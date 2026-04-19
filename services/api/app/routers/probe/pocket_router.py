@@ -46,7 +46,7 @@ async def generate_pocket_probe(body: PocketProbeIn) -> ProbeOut:
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@router.post("/pocket/gcode/download")
+@router.post("/pocket/gcode/download", response_class=Response)
 async def download_pocket_probe(body: PocketProbeIn) -> Response:
     """Download pocket probe G-code as .nc file (DRAFT lane)."""
     try:
@@ -75,7 +75,7 @@ async def download_pocket_probe(body: PocketProbeIn) -> Response:
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@router.post("/pocket/gcode/download_governed")
+@router.post("/pocket/gcode/download_governed", response_class=Response)
 async def download_pocket_probe_governed(body: PocketProbeIn) -> Response:
     """Download pocket probe G-code (GOVERNED lane with RMOS persistence)."""
     try:

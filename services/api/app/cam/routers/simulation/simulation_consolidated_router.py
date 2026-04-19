@@ -47,7 +47,7 @@ class SimInput(BaseModel):
     envelope: Optional[Dict[str, tuple]] = DEFAULT_ENVELOPE
 
 
-@router.post("/simulate_gcode")
+@router.post("/simulate_gcode", response_class=Response)
 def simulate_gcode(body: SimInput) -> Response:
     """Simulate G-code and return moves/issues."""
     sim = simulate(

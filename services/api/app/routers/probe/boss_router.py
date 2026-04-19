@@ -46,7 +46,7 @@ async def generate_boss_probe(body: BossProbeIn) -> ProbeOut:
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@router.post("/boss/gcode/download")
+@router.post("/boss/gcode/download", response_class=Response)
 async def download_boss_probe(body: BossProbeIn) -> Response:
     """Download boss/hole probe G-code as .nc file (DRAFT lane)."""
     try:
@@ -76,7 +76,7 @@ async def download_boss_probe(body: BossProbeIn) -> Response:
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@router.post("/boss/gcode/download_governed")
+@router.post("/boss/gcode/download_governed", response_class=Response)
 async def download_boss_probe_governed(body: BossProbeIn) -> Response:
     """Download boss/hole probe G-code (GOVERNED lane with RMOS persistence)."""
     try:

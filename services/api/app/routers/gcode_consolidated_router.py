@@ -46,7 +46,7 @@ class PlotReq(BaseModel):
 # BACKPLOT ENDPOINTS
 # ===========================================================================
 
-@router.post("/plot.svg")
+@router.post("/plot.svg", response_class=Response)
 def plot(req: PlotReq) -> Response:
     """
     Generate SVG backplot from G-code.

@@ -93,7 +93,7 @@ def generate_simple_retract_gcode(
     return resp
 
 
-@router.post("/gcode/download")
+@router.post("/gcode/download", response_class=Response)
 @safety_critical
 def download_retract_gcode(body: RetractStrategyIn) -> Response:
     """
@@ -218,7 +218,7 @@ def generate_simple_retract_gcode_governed(
     return resp
 
 
-@router.post("/gcode/download_governed")
+@router.post("/gcode/download_governed", response_class=Response)
 @safety_critical
 def download_retract_gcode_governed(body: RetractStrategyIn) -> Response:
     """Generate and download G-code with retract optimization (GOVERNED lane)."""

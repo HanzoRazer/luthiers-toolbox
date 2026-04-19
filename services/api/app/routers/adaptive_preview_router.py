@@ -63,7 +63,7 @@ class TrochoidReq(BaseModel):
     feed_dir: Literal["x", "y"] = "x"  # Primary feed direction
 
 
-@router.post("/spiral.svg")
+@router.post("/spiral.svg", response_class=Response)
 def spiral_svg(req: SpiralReq) -> Response:
     """
     Generate rectangular spiral toolpath preview
@@ -102,7 +102,7 @@ def spiral_svg(req: SpiralReq) -> Response:
     return Response(content=_svg_polyline(pts, stroke="purple"), media_type="image/svg+xml")
 
 
-@router.post("/trochoid.svg")
+@router.post("/trochoid.svg", response_class=Response)
 def trochoid_svg(req: TrochoidReq) -> Response:
     """
     Generate trochoidal toolpath preview

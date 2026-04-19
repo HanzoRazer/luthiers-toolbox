@@ -34,7 +34,7 @@ async def list_backups() -> List[Dict[str, Any]]:
     return items
 
 
-@router.get("/download/{name}")
+@router.get("/download/{name}", response_class=Response)
 async def download_backup(name: str) -> Response:
     """Download a specific backup file."""
     ensure_dir()

@@ -19,7 +19,7 @@ from ...schemas.probe_schemas import SetupSheetIn
 router = APIRouter(tags=["probe", "setup"])
 
 
-@router.post("/setup_sheet/svg")
+@router.post("/setup_sheet/svg", response_class=Response)
 async def generate_setup_sheet(body: SetupSheetIn) -> Response:
     """Generate SVG setup sheet for probing pattern."""
     try:

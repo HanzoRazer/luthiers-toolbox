@@ -115,7 +115,7 @@ async def generate_inlay(req: InlayGenerateRequest) -> InlayGenerateResponse:
 # Export (SVG / DXF / Layered SVG)
 # ---------------------------------------------------------------------------
 
-@router.post("/export")
+@router.post("/export", response_class=Response)
 async def export_inlay(req: InlayExportRequest) -> Response:
     """Export an inlay pattern as SVG (mm dimensions), layered SVG, or DXF R12.
 

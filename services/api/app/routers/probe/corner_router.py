@@ -41,7 +41,7 @@ async def generate_corner_probe(body: CornerProbeIn) -> ProbeOut:
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@router.post("/corner/gcode/download")
+@router.post("/corner/gcode/download", response_class=Response)
 async def download_corner_probe(body: CornerProbeIn) -> Response:
     """Download corner probe G-code as .nc file (DRAFT lane)."""
     try:
@@ -68,7 +68,7 @@ async def download_corner_probe(body: CornerProbeIn) -> Response:
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@router.post("/corner/gcode/download_governed")
+@router.post("/corner/gcode/download_governed", response_class=Response)
 async def download_corner_probe_governed(body: CornerProbeIn) -> Response:
     """Download corner probe G-code (GOVERNED lane with RMOS persistence)."""
     try:

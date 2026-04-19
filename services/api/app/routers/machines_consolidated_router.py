@@ -247,7 +247,7 @@ def delete_tool(mid: str, tnum: int) -> Dict[str, Any]:
     return {"ok": True, "tools": tools}
 
 
-@router.get("/{mid}/tools.csv")
+@router.get("/{mid}/tools.csv", response_class=Response)
 def export_tools_csv(mid: str) -> Response:
     """Export tool table as CSV."""
     data = _load_machines()
