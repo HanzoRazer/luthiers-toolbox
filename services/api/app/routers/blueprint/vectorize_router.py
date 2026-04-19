@@ -140,9 +140,12 @@ async def vectorize_blueprint(
         close_gaps_mm: Maximum gap to close between endpoints
         debug: Include stage timings in response (requires VECTORIZER_DEBUG=1)
         mode: Cleanup mode:
-              - "baseline" for stable pre-grouping behavior
               - "refined" for current logic (default)
-              - "restored_baseline" for historical 86c49526 behavior (Melody Maker fix)
+              - "baseline" for stable pre-grouping behavior
+              - "restored_baseline" for historical 86c49526 behavior
+              - "layered_dual_pass" for classified layers (BODY, BRACING, etc.)
+              - "enhanced" for full edge detail (1M+ entities)
+        spec_name: Instrument spec for scale correction (e.g., "dreadnought", "benedetto_17")
 
     Returns:
         BlueprintVectorizeResponse with artifacts.svg and artifacts.dxf
