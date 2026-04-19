@@ -34,7 +34,7 @@ logger = logging.getLogger(__name__)
 
 class Layer(str, Enum):
     """Semantic layer for blueprint entities."""
-    BODY = "BODY"
+    BODY = "BODY_OUTLINE"
     AUX_VIEWS = "AUX_VIEWS"
     ANNOTATION = "ANNOTATION"
     TITLE_BLOCK = "TITLE_BLOCK"
