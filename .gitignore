@@ -489,7 +489,7 @@ artifacts/
 benchmark_*/
 /benchmark_*
 sandbox/
-production_shop_agent/*.html
+production_shop_agent/**/output/
 
 # Services test outputs
 services/api/*.dxf
