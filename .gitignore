@@ -480,3 +480,29 @@ Repository_Critical_Evaluation.md
 
 # Hostinger deploy target (tracked)
 !hostinger/
+
+# ------------------------------------------
+# Test Outputs & Generated Artifacts (2026-04)
+# ------------------------------------------
+phase4_output/
+artifacts/
+benchmark_*/
+/benchmark_*
+sandbox/
+production_shop_agent/*.html
+
+# Services test outputs
+services/api/*.dxf
+!services/api/fixtures/*.dxf
+services/api/**/results/
+services/blueprint-import/test_output/
+services/photo-vectorizer/live_test_output/
+services/photo-vectorizer/**/test_output*/
+services/photo-vectorizer/test_*/
+services/photo-vectorizer/march_test_*/
+services/photo-vectorizer/march_confirmed/
+services/photo-vectorizer/_experimental/
+services/photo-vectorizer/integration_test/
+
+# Local Claude Code settings
+.claude/
