@@ -73,6 +73,7 @@ from .layer_builder import (
     build_layers,
     evaluate_layered_acceptance,
     join_body_gaps,
+    apply_scale_correction,
 )
 from .layered_dxf_writer import (
     write_layered_dxf,
@@ -197,6 +198,7 @@ class BlueprintOrchestrator:
         progress_callback: ProgressCallback = None,
         mode: CleanupMode = CleanupMode.REFINED,
         export_preset: str = "geometry_only",
+        spec_name: Optional[str] = None,
     ) -> BlueprintResult:
         """
         Process a blueprint file through extraction and cleanup.
@@ -321,6 +323,12 @@ class BlueprintOrchestrator:
                         f"({gap_join_result.joins_attempted} attempted)"
                     )
 
+                    # Apply scale correction if spec_name provided
+                    scale_factor = 1.0
+                    if spec_name:
+                        layered, scale_factor = apply_scale_correction(layered, spec_name)
+                        logger.info(f"Scale correction applied: {scale_factor:.3f}x")
+
                     # Evaluate layered acceptance (Phase 4 acceptance logic)
                     layered_acceptance = evaluate_layered_acceptance(layered)
                     logger.info(
@@ -340,14 +348,32 @@ class BlueprintOrchestrator:
                     )
 
                     # Build ExtractionResult for compatibility
+                    # Compute BODY bounding box dimensions (actual DXF output size)
                     total_entities = sum(layer_counts.values())
+
+                    # Get BODY bounding box for output dimensions
+                    body_width_mm = w * mm_per_px
+                    body_height_mm = h * mm_per_px
+                    if layered.body:
+                        import numpy as np
+                        all_pts = []
+                        for entity in layered.body:
+                            pts = entity.contour.reshape(-1, 2)
+                            all_pts.extend(pts.tolist())
+                        if all_pts:
+                            all_pts = np.array(all_pts)
+                            min_x, max_x = all_pts[:, 0].min(), all_pts[:, 0].max()
+                            min_y, max_y = all_pts[:, 1].min(), all_pts[:, 1].max()
+                            body_width_mm = (max_x - min_x) * mm_per_px
+                            body_height_mm = (max_y - min_y) * mm_per_px
+
                     extract_result = ExtractionResult(
                         success=True,
                         output_path=str(raw_dxf_path),
                         line_count=total_entities,
                         edge_pixel_count=0,
                         image_size_px=(w, h),
-                        output_size_mm=(w * mm_per_px, h * mm_per_px),
+                        output_size_mm=(body_width_mm, body_height_mm),
                         mm_per_px=mm_per_px,
                         processing_time_ms=0,  # Not tracked here
                         error="",
@@ -378,6 +404,9 @@ class BlueprintOrchestrator:
                     stage_timings["body_gap_joins_applied"] = gap_join_result.joins_applied
                     stage_timings["body_gap_join_max_mm"] = gap_join_result.max_gap_mm
                     stage_timings["body_gap_join_max_angle_deg"] = gap_join_result.max_angle_deg
+                    # Scale correction debug
+                    stage_timings["scale_factor"] = round(scale_factor, 3)
+                    stage_timings["spec_name"] = spec_name or ""
                 else:
                     # RESTORED_BASELINE: Use RETR_LIST (no hierarchy) like commit 86c49526
                     # All other modes use the default isolate_body=True (RETR_TREE + grouping)
