@@ -1,0 +1,278 @@
+{
+  "metadata": {
+    "generated": "2026-04-16",
+    "source_documents": [
+      "El_Cuatro_1.pdf - Vista Frontal, Distribucion de Trastes",
+      "El_Cuatro_2.pdf - Vista Acotada, Cuerpo Vista Lateral, Cabeza Vista Lateral",
+      "El_Cuatro_3.pdf - Vista Acotada, Cuerpo Vista Frontal, Cabeza Vista Frontal",
+      "El_Cuatro_4.pdf - Tapa y Golpeador, Vista Acotada",
+      "El_Cuatro_5.pdf - Tapa Vista Interior, Costillas Vistas",
+      "El_Cuatro_6.pdf - El Fondo, Vista Acotada",
+      "El_Cuatro_7.pdf - Los Aros, El Mastil Pieza de Anclaje",
+      "El_Cuatro_8.pdf - El Puente, Vistas Acotadas"
+    ],
+    "drawing_source": "Ideal Music Corp (IMCUA 000)",
+    "drawing_id": "IMCUA 000",
+    "units": "mm",
+    "scale": "1:1 original documents",
+    "extraction_date": "2026-04-16",
+    "extracted_by": "Claude - Ross Echols production session",
+    "notes": "All cm values from source drawings multiplied by 10 to convert to mm. Fret positions in mm converted from cm. Complete 8-sheet extraction."
+  },
+
+  "family_id": "latin_american",
+  "model_id": "cuatro_venezolano",
+  "name": "Cuatro Venezolano",
+  "local_name": "El Cuatro",
+  "regional_tradition": "Venezuela",
+  "description": "The Venezuelan cuatro - four single nylon strings, small guitar-like body, bright percussive tone. National instrument of Venezuela. Central to joropo folk music and used for both rhythmic accompaniment and melodic playing. The Quibor model is named after the town of Quibor in Lara state, a historic center of Venezuelan lutherie.",
+  "status": "COMPLETE_SPEC",
+  "cam_capable": false,
+  "cam_notes": "Pending body generator implementation. Complete spec available for CAM development.",
+
+  "strings": {
+    "count": 4,
+    "courses": 1,
+    "strings_per_course": 1,
+    "material": "nylon",
+    "tuning_standard": "A-D-F#-B",
+    "tuning_notes": "Reentrant tuning - string 1 (A) is higher pitched than string 2 (D). High A, D, F#, B from string 4 to string 1."
+  },
+
+  "scale": {
+    "scale_length_mm": 556.5,
+    "scale_length_cm": 55.65,
+    "scale_length_source": "55.65cm nut to bridge, Sheet 1 IMCUA 000",
+    "half_scale_mm": 278.25,
+    "fret_count": 15,
+    "fret_material": "guitar_frets",
+    "fret_positions_mm": {
+      "nut": 556.548,
+      "1": 525.312,
+      "2": 495.828,
+      "3": 467.999,
+      "4": 441.733,
+      "5": 416.940,
+      "6": 393.539,
+      "7": 371.452,
+      "8": 350.604,
+      "9": 330.926,
+      "10": 312.352,
+      "11": 294.821,
+      "12": 278.274,
+      "13": 262.656,
+      "14": 247.914,
+      "15": 234.000
+    },
+    "fret_positions_source": "Sheet 1, DISTRIBUCION DE TRASTES table, cm values x10"
+  },
+
+  "body": {
+    "total_instrument_length_mm": 815.7,
+    "total_instrument_length_source": "81.57cm, Sheet 3",
+
+    "body_length_mm": 350.0,
+    "body_length_source": "35cm, Sheet 2 and Sheet 3",
+
+    "lower_bout_width_mm": 250.1,
+    "lower_bout_width_source": "25.01cm, Sheet 3 CUERPO VISTA FRONTAL",
+
+    "upper_bout_width_mm": 156.9,
+    "upper_bout_width_source": "15.69cm, Sheet 3",
+
+    "waist_width_mm": 130.0,
+    "waist_width_source": "13cm, Sheet 3 (approximate from drawing proportion)",
+
+    "waist_y_norm": 0.43,
+    "waist_y_source": "Estimated from Sheet 3 proportional measurement - upper bout 8.8cm + 6.27cm = 15.07cm of 35cm body = 0.43",
+
+    "body_depth_mm": 95.0,
+    "body_depth_source": "9.5cm, Sheet 2 VISTA LATERAL",
+
+    "neck_body_junction_from_nut_mm": 322.6,
+    "neck_body_junction_source": "32.26cm, Sheet 3",
+
+    "soundhole": {
+      "type": "round",
+      "diameter_mm": 62.8,
+      "radius_mm": 31.4,
+      "position_from_top_of_body_mm": 88.0,
+      "position_source": "8.8cm from top of body, Sheet 3",
+      "source": "R3.14cm, Sheet 3 CUERPO VISTA FRONTAL"
+    },
+
+    "bridge_position_from_top_mm": 270.5,
+    "bridge_position_note": "8.03cm + 6.27cm + 8.8cm = approx 23.1cm from top, Sheet 3",
+
+    "golpeador": {
+      "description": "Tap plate - scratch plate covering upper body surface. Distinctive feature of Venezuelan cuatro. Single piece of thin wood.",
+      "total_width_mm": 158.7,
+      "height_mm": 119.4,
+      "soundhole_cutout_width_mm": 62.7,
+      "soundhole_cutout_to_right_edge_mm": 47.8,
+      "thickness_mm": 1.5,
+      "material": "single_wood_laminate",
+      "source": "Sheet 4, GOLPEADOR VISTA ACOTADA"
+    },
+
+    "bracing_pattern": "fan",
+    "bracing_description": "Four fan braces (Costillas A, B, C, D) radiating from bridge point P toward lower bout. Horizontal cross brace at upper bout junction. Reinforcement ring around soundhole. Center seam reinforcement strip on top and back.",
+    "bracing_source": "Sheet 5, TAPA VISTA INTERIOR"
+  },
+
+  "top_plate": {
+    "thickness_mm": 1.8,
+    "thickness_max_mm": 2.0,
+    "thickness_source": "E=1.8mm Sheet 5 / E=0.18 a 0.20cm Sheet 4",
+    "construction": "two_piece_bookmatched",
+    "material_recommendation": "spruce or cedar",
+    "center_seam_strip_width_mm": 12.0,
+    "center_seam_strip_thickness_mm": 2.0,
+    "soundhole_reinforcement_ring": true,
+    "soundhole_ring_width_mm": 12.0,
+    "soundhole_ring_thickness_mm": 2.0,
+    "source": "Sheet 4 and Sheet 5"
+  },
+
+  "back_plate": {
+    "thickness_mm": 2.0,
+    "thickness_source": "E=2.00mm, Sheet 6",
+    "construction": "two_piece_bookmatched",
+    "material_recommendation": "mahogany or maple",
+    "center_seam_strip_width_mm": 12.0,
+    "center_seam_strip_thickness_mm": 2.0,
+    "source": "Sheet 6, EL FONDO"
+  },
+
+  "sides": {
+    "thickness_mm": 2.0,
+    "thickness_source": "E=2mm, Sheet 7",
+    "material_recommendation": "mahogany or maple",
+    "depth_upper_bout_mm": 91.0,
+    "depth_lower_bout_mm": 96.0,
+    "source": "Sheet 7, AROS (9.1cm and 9.6cm side heights)"
+  },
+
+  "neck": {
+    "total_neck_length_mm": 322.5,
+    "neck_length_source": "32.25cm, Sheet 2",
+
+    "nut_width_mm": 40.0,
+    "nut_width_source": "4.0cm, Sheet 3",
+
+    "neck_width_at_body_mm": 47.0,
+    "neck_width_at_body_source": "4.7cm, Sheet 3",
+
+    "neck_thickness_at_nut_mm": 21.0,
+    "neck_thickness_source": "2.1cm, Sheet 2 CORTE MASTIL",
+
+    "neck_taper_mm": 5.0,
+    "neck_taper_note": "From 40mm nut to 47mm at body over 322.5mm length",
+
+    "headstock_angle_degrees": 10.0,
+    "headstock_angle_source": "10.00 deg, Sheet 2",
+
+    "headstock_length_mm": 149.3,
+    "headstock_length_source": "14.93cm, Sheet 2",
+
+    "headstock_width_mm": 62.7,
+    "headstock_width_source": "6.27cm, Sheet 3 CABEZA VISTA FRONTAL",
+
+    "headstock_thickness_mm": 14.89,
+    "headstock_thickness_source": "14.89mm shown twice in Sheet 2 (two parallel values)",
+
+    "headstock_style": "four_slot_with_center_cutout",
+    "headstock_notes": "Four tuner slots arranged symmetrically. Center decorative cutout. Traditional Venezuelan cuatro headstock profile.",
+
+    "tuner_slot_width_mm": 15.5,
+    "tuner_slot_height_mm": 6.9,
+    "tuner_slot_spacing_center_to_center_mm": 9.0,
+    "tuner_slot_source": "Sheet 3 CABEZA VISTA FRONTAL",
+
+    "joint_type": "mortise_and_tenon",
+    "joint_angle_degrees": 0.0,
+    "joint_notes": "Flat neck joint at 90 degrees confirmed. No neck angle.",
+    "joint_source": "Sheet 7, ANCLAJE DE MASTIL - 90.00 deg marked explicitly at both corners"
+  },
+
+  "neck_anchor_block": {
+    "anchor_total_width_mm": 91.2,
+    "anchor_depth_into_body_mm": 14.0,
+    "mounting_slot_width_mm": 60.0,
+    "mounting_slot_depth_mm": 20.0,
+    "side_wing_width_mm": 20.0,
+    "bolt_count": 2,
+    "bolt_pattern_spacing_mm": 20.0,
+    "source": "Sheet 7, ANCLAJE DE MASTIL VISTA FRONTAL"
+  },
+
+  "bridge": {
+    "total_length_mm": 130.1,
+    "total_length_source": "13.01cm, Sheet 8",
+
+    "string_spacing_total_mm": 62.8,
+    "string_spacing_source": "6.28cm, Sheet 8",
+
+    "outer_wing_width_mm": 33.6,
+    "outer_wing_source": "3.36cm each side, Sheet 8",
+
+    "saddle_length_mm": 62.8,
+    "saddle_width_mm": 15.0,
+    "saddle_slot_depth_mm": 9.0,
+
+    "bridge_total_height_mm": 23.5,
+    "bridge_height_source": "2.35cm, Sheet 8",
+
+    "bridge_base_height_mm": 11.3,
+    "bridge_base_width_mm": 8.8,
+    "bridge_base_source": "1.13cm + 0.88cm, Sheet 8",
+
+    "saddle_height_above_top_mm": 6.5,
+    "saddle_height_source": "0.65cm, Sheet 8",
+
+    "string_hole_diameter_mm": 2.0,
+    "string_hole_spacing_mm": 15.0,
+    "string_hole_count": 4,
+
+    "tie_block_length_mm": 45.0,
+    "tie_block_width_mm": 37.0,
+
+    "material_recommendation": "hardwood (rosewood or ebony traditional)",
+    "source": "Sheet 8, EL PUENTE all views"
+  },
+
+  "brace_dimensions": {
+    "costilla_a_width_mm": 12.0,
+    "costilla_a_height_mm": 5.0,
+    "costilla_b_width_mm": 12.0,
+    "costilla_b_height_mm": 3.0,
+    "costilla_c_width_mm": 12.0,
+    "costilla_c_height_mm": 5.0,
+    "costilla_d_width_mm": 4.0,
+    "costilla_d_height_mm": 1.0,
+    "brace_thickness_mm": 2.0,
+    "cross_brace_notes": "All braces taper to 0 at ends. Bridge point P is anchor reference for fan braces.",
+    "source": "Sheet 5, COSTILLAS VISTAS A/B/C/D"
+  },
+
+  "variants": [
+    {
+      "id": "cuatro_venezolano_quibor",
+      "name": "Quibor",
+      "drawing_id": "IMCUA 000",
+      "source_company": "Ideal Music Corp",
+      "source_urls": ["www.idealmusicorp.com", "www.idealfengling.com"],
+      "description": "Standard production Quibor model. Named after Quibor, Lara state - traditional Venezuelan lutherie center.",
+      "distinguishing_features": [
+        "Four-slot headstock with center decorative cutout",
+        "Fan bracing with four costillas (A, B, C, D)",
+        "Distinctive golpeador covering upper body",
+        "Mortise and tenon neck joint at 90 degrees - no neck angle",
+        "Reinforcement ring around soundhole",
+        "Reentrant A-D-F#-B tuning"
+      ],
+      "data_completeness": "COMPLETE",
+      "data_notes": "All 8 drawing sheets extracted. Bridge, bracing, sides, neck anchor, fret positions all documented."
+    }
+  ]
+}

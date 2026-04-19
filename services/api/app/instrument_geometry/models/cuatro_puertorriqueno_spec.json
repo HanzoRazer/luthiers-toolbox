@@ -1,0 +1,126 @@
+{
+  "metadata": {
+    "generated": "2026-04-16",
+    "source_documents": [
+      "cuatro_puertorriqueno.pdf - Puerto Rican Cuatro full plan"
+    ],
+    "drawing_source": "Anonymous luthier Mexico collection",
+    "units": "mm (converted from inches where noted)",
+    "scale": "1:1 original document",
+    "extraction_date": "2026-04-16",
+    "extracted_by": "Claude - Ross Echols production session",
+    "notes": "Scale length and fret positions complete. Body dimensions partially extracted - full outline tracing pending in Fusion 360."
+  },
+
+  "family_id": "latin_american",
+  "model_id": "cuatro_puertorriqueno",
+  "name": "Cuatro Puertorriqueno",
+  "local_name": "Cuatro Puertorriqueno",
+  "regional_tradition": "Puerto Rico",
+  "description": "National instrument of Puerto Rico. Evolved over centuries from a 4-string instrument to 10 strings in 5 courses tuned in fourths with octave and unison pairs. Body shape is viola-like with dramatic outward-flaring bouts and decorative horn extensions at lower bout corners. Entirely distinct from Venezuelan cuatro despite the shared name. Declared national instrument of Puerto Rico.",
+  "status": "PARTIAL_SPEC",
+  "cam_capable": false,
+  "cam_notes": "Pending body generator. Unique viola-like body shape with horn extensions requires dedicated outline tracing in Fusion 360.",
+
+  "strings": {
+    "count": 10,
+    "courses": 5,
+    "strings_per_course": 2,
+    "pairing_type": "octave_and_unison",
+    "pairing_notes": "Lower courses paired at octave, upper courses paired at unison",
+    "material": "nylon",
+    "tuning_standard": "B-E-A-D-G",
+    "tuning_notes": "Tuned in fourths from lowest to highest course: B E A D G"
+  },
+
+  "scale": {
+    "scale_length_inches": 22.750,
+    "scale_length_mm": 577.85,
+    "scale_length_source": "22.750 inches, drawing title block",
+    "fret_count": 20,
+    "fret_interval_inches": {
+      "1": 1.2768,
+      "2": 1.2052,
+      "3": 1.1375,
+      "4": 1.0737,
+      "5": 1.0134,
+      "6": 0.9566,
+      "7": 0.9028,
+      "8": 0.8522,
+      "9": 0.8043,
+      "10": 0.7592,
+      "11": 0.7166,
+      "12": 0.6764,
+      "13": 0.6384,
+      "14": 0.6026,
+      "15": 0.5687,
+      "16": 0.5368,
+      "17": 0.5067,
+      "18": 0.4783,
+      "19": 0.4514,
+      "20": 0.4241
+    },
+    "fret_positions_source": "Fret interval table, cuatro_puertorriqueno.pdf",
+    "fret_positions_notes": "Values shown are fret interval widths in inches, not cumulative distances"
+  },
+
+  "body": {
+    "body_shape": "viola_like",
+    "body_shape_description": "Dramatic outward-flaring upper and lower bouts with pronounced waist. Decorative pointed horn extensions project outward from lower bout corners. Tail has decorative heart-shaped ornament. Entirely unlike the guitar-shaped Venezuelan cuatro.",
+
+    "lower_bout_width_inches": 12.0,
+    "lower_bout_width_mm": 304.8,
+    "lower_bout_width_source": "12 inches annotated at bottom of front view",
+
+    "body_depth_inches": 3.0,
+    "body_depth_mm": 76.2,
+    "body_depth_source": "3 inches annotated at left side view",
+
+    "soundhole": {
+      "type": "round",
+      "position": "upper_body",
+      "notes": "Single round soundhole positioned in upper section of body"
+    },
+
+    "distinctive_features": [
+      "Viola-like body outline - not guitar shaped",
+      "Decorative outward horn extensions at lower bout corners",
+      "Heart-shaped decorative tail ornament",
+      "Elaborate floral carved headstock decoration",
+      "Extended decorative tailpiece with leaf motif",
+      "Multiple decorative binding lines",
+      "Upper body has rectangular inlay panel",
+      "Lower bout has rectangular bridge plate"
+    ],
+
+    "construction_layers": ["spruce_top", "poplar", "poplar", "mahogany", "mahogany"],
+    "construction_source": "Material legend at bottom of drawing - spruce top, poplar and mahogany layers"
+  },
+
+  "neck": {
+    "headstock_style": "elaborate_carved_floral",
+    "headstock_notes": "Elaborate carved headstock with floral and leaf decoration. Significantly more ornate than Venezuelan cuatro. Traditional Puerto Rican design.",
+    "joint_type": "standard_acoustic",
+    "joint_notes": "Standard acoustic neck joint visible in side section view"
+  },
+
+  "variants": [
+    {
+      "id": "cuatro_puertorriqueno_traditional",
+      "name": "Traditional",
+      "description": "Traditional 10-string 5-course Puerto Rican cuatro. Elaborate carved headstock and decorative tailpiece.",
+      "source_drawing": "cuatro_puertorriqueno.pdf",
+      "data_completeness": "PARTIAL",
+      "data_notes": "Scale length and fret positions complete. Body dimensions partially extracted - full outline tracing required in Fusion 360 to capture viola-like body shape with horn extensions.",
+      "pending": [
+        "Body outline tracing in Fusion 360",
+        "Upper bout width measurement",
+        "Waist width measurement",
+        "Body length measurement",
+        "Neck width at nut",
+        "Bridge dimensions",
+        "Bracing pattern documentation"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,158 @@
+{
+  "schema_version": "1.1.0",
+  "instrument_id": "gibson_l1_1928",
+  "instrument": {
+    "make": "Gibson",
+    "model": "L-1",
+    "year": 1928,
+    "type": "acoustic_flattop",
+    "family": "parlor",
+    "provenance": "Luthier listing February 23, 2018 — fully set up, all-original except bridge replacement. Dimensions verified by working luthier.",
+    "notes": "Pre-war small-body flattop. Warm, direct tone. Played heavily — intense pickwear. Compound radius fretboard 10-16\". All hairline cracks repaired. Short parlor scale."
+  },
+  "body": {
+    "dimensions": {
+      "length_inches": 18.75,
+      "length_mm": 476.25,
+      "lower_bout_inches": 13.625,
+      "lower_bout_mm": 346.08,
+      "upper_bout_inches": 10.0,
+      "upper_bout_mm": 254.00,
+      "side_depth_endpin_inches": 4.125,
+      "side_depth_endpin_mm": 104.78,
+      "waist_width_mm": null,
+      "waist_width_source": "not documented — estimate from L-1 family: ~215mm"
+    },
+    "construction": {
+      "top": "solid spruce",
+      "back": "solid mahogany",
+      "sides": "solid mahogany",
+      "bracing": "ladder",
+      "binding": "present (visible in photo)"
+    },
+    "ibg_inputs": {
+      "body_length_mm": 476.25,
+      "lower_bout_mm": 346.08,
+      "upper_bout_mm": 254.00,
+      "side_depth_endpin_mm": 104.78,
+      "back_radius_mm": null,
+      "back_radius_source": "not documented — use IBG Tier 2 spherical arch estimate",
+      "waist_y_norm": null,
+      "waist_y_norm_source": "not documented — use IBG family default"
+    },
+    "sevy_side_heights": {
+      "_formula": "Sevy spherical arch model — side height = B - (d²/2R) + correction, where d = distance from high point P",
+      "inputs": {
+        "butt_depth_mm": 104.78,
+        "shoulder_depth_mm": 88.9,
+        "shoulder_depth_source": "estimated — typical parlor is 15-17mm less than butt",
+        "body_length_mm": 476.25
+      },
+      "reference_radius_mm": 1500,
+      "reference_high_point_mm": 189,
+      "reference_high_point_note": "distance from butt to arch peak at R=1500",
+      "positions": {
+        "butt_0pct": {
+          "distance_from_butt_mm": 0,
+          "R1000_mm": 104.8,
+          "R1500_mm": 104.8,
+          "R2000_mm": 104.8,
+          "linear_taper_mm": 104.8
+        },
+        "lower_bout_37pct": {
+          "distance_from_butt_mm": 176,
+          "R1000_mm": 121.9,
+          "R1500_mm": 116.1,
+          "R2000_mm": 112.5,
+          "linear_taper_mm": 98.9
+        },
+        "waist_38pct": {
+          "distance_from_butt_mm": 181,
+          "R1000_mm": 125.9,
+          "R1500_mm": 116.7,
+          "R2000_mm": 112.2,
+          "linear_taper_mm": 100.4
+        },
+        "upper_bout_65pct": {
+          "distance_from_butt_mm": 310,
+          "R1000_mm": 120.8,
+          "R1500_mm": 111.9,
+          "R2000_mm": 107.4,
+          "linear_taper_mm": 93.7
+        },
+        "shoulder_100pct": {
+          "distance_from_butt_mm": 476.25,
+          "R1000_mm": 88.9,
+          "R1500_mm": 88.9,
+          "R2000_mm": 88.9,
+          "linear_taper_mm": 88.9
+        }
+      },
+      "sensitivity": {
+        "waist_delta_R1000_vs_R2000_mm": 13.7,
+        "high_point_delta_R1000_vs_R2000_mm": 34,
+        "note": "13.7mm side height difference at waist between R=1000 and R=2000 — significant for mold fit"
+      }
+    }
+  },
+  "neck": {
+    "scale_length_inches": 24.25,
+    "scale_length_mm": 615.95,
+    "nut_width_inches": 1.75,
+    "nut_width_mm": 44.45,
+    "string_spacing_nut_inches": 1.5,
+    "string_spacing_nut_mm": 38.10,
+    "string_spacing_saddle_inches": 2.25,
+    "string_spacing_saddle_mm": 57.15,
+    "fretboard_radius_compound": true,
+    "fretboard_radius_nut_inches": 10,
+    "fretboard_radius_nut_mm": 254.0,
+    "fretboard_radius_extension_inches": 16,
+    "fretboard_radius_extension_mm": 406.4,
+    "profile": "slim-C",
+    "fretboard_material": "rosewood",
+    "neck_material": "mahogany",
+    "fret_count": null,
+    "action_12th_EA_inches": "3/32",
+    "action_12th_DGBE_inches": "1/16",
+    "truss_rod": true
+  },
+  "hardware": {
+    "bridge_material": "rosewood",
+    "bridge_type": "replacement",
+    "nut_material": "bone",
+    "nut_condition": "original",
+    "saddle_material": "bone",
+    "saddle_condition": "new"
+  },
+  "setup": {
+    "string_gauges": [48, 38, 28, 20, 15, 11],
+    "string_type": "wound bass, plain treble",
+    "string_set_notes": "Custom set calibrated for light build + short scale",
+    "neck_relief": "straight"
+  },
+  "ibg_confidence": {
+    "overall": 0.82,
+    "body_length": 1.0,
+    "lower_bout": 1.0,
+    "upper_bout": 1.0,
+    "side_depth": 1.0,
+    "waist": 0.0,
+    "back_radius": 0.0,
+    "notes": "Four primary dimensions are luthier-verified. Waist and back radius require IBG estimation from family defaults or physical measurement. Confidence will rise to ~0.90 with waist measurement."
+  },
+  "photo_reference": {
+    "available": true,
+    "view": "front",
+    "description": "Sunburst L-1 left, L-0 right, leaning against vintage trunk. Studio lighting.",
+    "lower_bout_px_reference": null,
+    "notes": "Lower bout width (346.08mm) can calibrate photo for pixel-to-mm scale. Full IBG solve possible from this photo + known lower bout."
+  },
+  "source": {
+    "type": "luthier_listing",
+    "date": "2018-02-23",
+    "updated": "2019",
+    "url": null,
+    "verified_by": "working luthier — full setup performed"
+  }
+}

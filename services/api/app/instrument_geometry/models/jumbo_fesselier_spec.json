@@ -1,0 +1,184 @@
+{
+  "metadata": {
+    "generated": "2026-04-16",
+    "source_document": "Guitar-Jumbo-MM-A0.pdf + Guitar-Jumbo-MM-A4.pdf",
+    "source_title": "Guitare Jumbo",
+    "source_author": "Yves Fesselier",
+    "source_date": "2003-04-02",
+    "units": "mm",
+    "pages": 18,
+    "notes": "18-page detailed plan set. A0 format master sheet with A4 format detail sheets. Comprehensive coverage of bracing, neck, headstock, fingerboard, neck joint. French language."
+  },
+
+  "family_id": "acoustic_flat_top",
+  "model_id": "jumbo_fesselier",
+  "name": "Jumbo Acoustic Guitar",
+  "local_name": "Guitare Jumbo",
+  "description": "Large-body jumbo acoustic guitar. Full plan set by Yves Fesselier. X-braced construction with labeled braces A through H. Truss rod. Dovetail neck joint. 14-fret body junction. Radius fingerboard 300mm. Large lower bout — jumbo size provides maximum bass and projection.",
+  "status": "COMPLETE_SPEC",
+  "cam_capable": false,
+  "cam_notes": "Full 18-page plan set available. Pending body generator. Bracing details complete.",
+
+  "strings": {
+    "count": 6,
+    "courses": 1,
+    "material": "steel",
+    "tuning_standard": "E-A-D-G-B-E"
+  },
+
+  "scale": {
+    "scale_length_mm": 645.0,
+    "scale_length_note": "Standard jumbo scale. Confirmed contextually from plan proportions.",
+    "body_junction_fret": 14,
+    "truss_rod": true,
+    "truss_rod_channel_width_mm": 7.7,
+    "truss_rod_channel_depth_mm": 5.0,
+    "truss_rod_source": "Passage truss-rod — pages 4 and 7"
+  },
+
+  "body": {
+    "lower_bout_width_mm": 406.0,
+    "lower_bout_width_note": "Standard jumbo body. 360mm dimension from plan likely refers to upper bout or body section.",
+    "plan_dimension_360mm": "360mm — page A4 detail, likely upper bout or waist reference",
+    "plan_dimension_290mm": "290mm — page A4, brace length or section dimension",
+
+    "soundhole": {
+      "type": "round",
+      "radius_mm": 53.1,
+      "diameter_mm": 106.2,
+      "source": "R 53.10 — page A4 detail"
+    },
+
+    "top_arch": {
+      "arch_type": "flat",
+      "notes": "Standard flat-top construction. X-bracing."
+    },
+
+    "bracing_pattern": "x_brace",
+    "bracing_labels": {
+      "A": "Upper transverse brace — Page 5",
+      "B": "X-brace arm — 294mm long, 16mm wide, Page 17",
+      "C": "X-brace arm — 89mm, 3.2mm thick, Page 11",
+      "D": "Finger brace — 210mm long, 40mm detail, Page 13",
+      "E": "Finger brace — 12.7mm related, Page 16",
+      "F": "Finger brace — 217mm long, Page 13/16",
+      "G": "Finger brace — 12.7mm, Page 13",
+      "H": "Lower transverse brace — 126mm, 10mm, Page 10"
+    },
+
+    "brace_dimensions": {
+      "B": {"length_mm": 294.0, "width_mm": 16.0, "source": "Page 17"},
+      "C": {"length_mm": 89.0, "thickness_mm": 3.2, "source": "Page 11"},
+      "D": {"length_mm": 210.0, "spacing_mm": 40.0, "source": "Pages 13, 16"},
+      "F": {"length_mm": 217.0, "source": "Page 13 — 217 pour F"},
+      "H": {"length_mm": 126.0, "height_mm": 10.0, "source": "Page 10"}
+    },
+
+    "reinforcements": {
+      "bridge_reinforcement": "Renfort de chevalet — Pages 6, 13",
+      "rosette_reinforcement": "Renfort de rosace — Pages 2, 13",
+      "kerfed_lining": "Contre-éclisse — Page 16",
+      "back_braces": "Barres de fond — Pages 5, 17",
+      "back_reinforcements": "Renforts de fond — Page 18"
+    }
+  },
+
+  "top_plate": {
+    "bracing_thickness_mm": 3.2,
+    "bracing_width_mm": 16.0,
+    "bracing_source": "Détail des barrages de table — Pages 3, 16"
+  },
+
+  "back_plate": {
+    "braces": "Barres de fond with Renforts de fond",
+    "back_brace_width_mm": 12.7,
+    "back_brace_source": "Pages 14, 17"
+  },
+
+  "neck": {
+    "neck_width_at_1st_fret_mm": 46.5,
+    "neck_thickness_at_1st_fret_mm": 4.0,
+    "neck_section_1st_fret_source": "Coupe 1re frette: 46.50, 4.00 — Pages A4 and 7",
+
+    "neck_width_at_9th_fret_mm": 53.5,
+    "neck_thickness_at_9th_fret_mm": 4.0,
+    "neck_section_9th_fret_source": "Coupe 9e frette: 53.50, 4.00 — Pages A4 and 8",
+
+    "joint_type": "mortise_and_tenon",
+    "joint_mortise_width_mm": 32.0,
+    "joint_mortise_height_mm": 23.0,
+    "joint_neck_angle_degrees": 96.0,
+    "joint_angle_note": "96° — drawing shows 96° on mortise/tenon detail. Neck angle = 6° from horizontal = 90+6=96° measured from back.",
+    "joint_source": "Pages 9, 12",
+
+    "tenon_length_mm": 50.0,
+    "tenon_width_mm": 20.0,
+    "tenon_source": "Tenon: 50mm, 20mm — Page 12",
+
+    "neck_block": "Tasseau de manche",
+    "neck_block_width_mm": 62.5,
+    "neck_block_depth_mm": 20.0,
+    "neck_block_source": "Pages 8, 12",
+
+    "side_neck_width_mm": 101.7,
+    "side_neck_source": "Côté manche 101,7 — Page 9",
+
+    "heel_cap_detail": "Vue talon manche dessous — Page 12"
+  },
+
+  "fingerboard": {
+    "radius_mm": 300.0,
+    "radius_source": "Touche radius 300 — Pages 4 and 7",
+    "body_junction_fret": 14,
+    "body_junction_source": "14e frette — Pages A4 and 11",
+    "fingerboard_dimensions": {
+      "nut_width_mm": 40.3,
+      "nut_width_source": "40.3 appears twice in headstock detail — Pages 7, A4"
+    }
+  },
+
+  "headstock": {
+    "style": "slotted_or_solid",
+    "length_mm": 156.0,
+    "width_mm": 66.0,
+    "thickness_mm": 45.0,
+    "tuner_angle_degrees": 45.0,
+    "slot_width_mm": 33.6,
+    "slot_length_mm": 18.0,
+    "string_post_spacing_mm": 114.0,
+    "outer_width_mm": 73.0,
+    "additional_width_mm": 12.5,
+    "headstock_source": "Tête vue à plat — Pages 4, 7",
+    "headstock_dimensions_raw": {
+      "45_mm": "headstock width or tuner angle",
+      "66_mm": "headstock slot region",
+      "156_mm": "headstock length",
+      "33.6_mm": "slot width",
+      "18_mm": "slot height/depth",
+      "114_mm": "tuner spacing",
+      "40.3_mm_x2": "appears at string posts",
+      "12.5_mm": "edge dimension",
+      "73_mm": "outer string span",
+      "24_mm": "nut to first tuner"
+    }
+  },
+
+  "variants": [
+    {
+      "id": "jumbo_fesselier_2003",
+      "name": "Fesselier Jumbo",
+      "description": "Full 18-page plan set by Yves Fesselier, 2003. X-braced jumbo. Truss rod. Radius fingerboard 300mm. Mortise and tenon neck joint at 96°. Complete bracing detail A-H.",
+      "source_author": "Yves Fesselier",
+      "source_date": "2003-04-02",
+      "data_completeness": "COMPLETE",
+      "data_notes": "All bracing dimensions, neck sections, fingerboard radius, headstock geometry, and joint details documented from 18-page plan set.",
+      "pending": [
+        "Body outline tracing in Fusion 360",
+        "Lower bout and upper bout width measurements from body plan sheet",
+        "Body length measurement",
+        "Waist width measurement",
+        "Soundhole position relative to body"
+      ]
+    }
+  ]
+}

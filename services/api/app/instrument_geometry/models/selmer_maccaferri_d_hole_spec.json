@@ -1,0 +1,186 @@
+{
+  "metadata": {
+    "generated": "2026-04-16",
+    "source_documents": [
+      "Selmer-Maccaferri-D-hole-MM-01.pdf — Sheet 1/2: Body front view, bracing, bridge detail",
+      "Selmer-Maccaferri-D-hole-MM-02.pdf — Sheet 2/2: Neck plan, fret positions, side view, materials"
+    ],
+    "source_title": "Guitare jazz manouche 'dans le style' Maccaferri type 'D hole'",
+    "source_language": "French/English bilingual",
+    "units": "mm",
+    "scale": "Full size",
+    "notes": "Two-sheet complete plan. 'Dans le style' — in the style of Maccaferri, not exact reproduction. Fret positions extracted from sheet 2/2 fret table. Materials explicitly listed in English on sheet 2/2."
+  },
+
+  "family_id": "gypsy_jazz",
+  "model_id": "selmer_maccaferri_d_hole",
+  "name": "Selmer-Maccaferri D-hole",
+  "local_name": "Guitare jazz manouche type D hole",
+  "description": "Gypsy jazz guitar in the Selmer-Maccaferri tradition with distinctive D-shaped soundhole. The original Selmer-Maccaferri D-hole was produced 1932-1936. Arched soundboard (8mm arch across width at bridge). Floating walnut bridge with detachable middle section. Distinctive construction: ribs use maple with three Dural (aluminum alloy) internal plates perpendicular to sides. Neck is perpendicular to fingerboard — zero neck angle. Associated with Django Reinhardt and the Hot Club de France style.",
+  "status": "COMPLETE_SPEC",
+  "cam_capable": false,
+  "cam_notes": "Unique construction with arched top, floating bridge, and Dural rib plates. Requires specialized CAM approach distinct from flat-top acoustic generator.",
+  "classification_note": "Although sometimes listed with flat-tops, the Selmer-Maccaferri is best classified separately. The soundboard has an 8mm arch across the bridge width. Construction is closer to a domed flat-top than a true carved archtop.",
+
+  "strings": {
+    "count": 6,
+    "courses": 1,
+    "material": "steel",
+    "tuning_standard": "E-A-D-G-B-E",
+    "string_spacing_mm": 39.0,
+    "string_spacing_source": "39mm across strings — Sheet 1/2 bridge section"
+  },
+
+  "scale": {
+    "scale_length_mm": 632.0,
+    "scale_length_note": "Derived from fret position table on Sheet 2/2. Fret 1 = 35.5mm → scale ≈ 632mm. Original Selmer D-hole used 670mm — this plan may be a modified version.",
+    "scale_length_original_selmer_mm": 670.0,
+    "fret_count": 20,
+    "body_junction_fret": 14,
+    "fret_positions_cumulative_mm": {
+      "note": "Cumulative distance from nut to each fret, read from Sheet 2/2 fret plan",
+      "1":   35.5,
+      "2":   69.8,
+      "3":  104.8,
+      "4":  138.0,
+      "5":  165.0,
+      "6":  189.5,
+      "7":  212.9,
+      "8":  236.1,
+      "9":  258.5,
+      "10": 279.1,
+      "11": 300.0,
+      "12": 318.1,
+      "13": 335.9,
+      "14": 349.8,
+      "15": 368.6,
+      "16": 388.6,
+      "17": 400.3,
+      "18": 419.7,
+      "19": 436.3,
+      "20": 450.0
+    }
+  },
+
+  "body": {
+    "soundhole": {
+      "type": "D_hole",
+      "description": "Distinctive D-shaped soundhole — rectangular with one rounded side. Positioned in upper bout. This shape is the defining visual feature of the pre-1936 Selmer guitars.",
+      "width_mm": 107.0,
+      "height_mm": 53.0,
+      "outer_frame_width_mm": 155.0,
+      "inner_slot_width_mm": 75.0,
+      "inner_slot_height_mm": 27.0,
+      "frame_wall_thickness_mm": 10.0,
+      "source": "Sheet 1/2 upper left D-hole detail drawing"
+    },
+
+    "top_arch": {
+      "arch_height_mm": 8.0,
+      "arch_description": "Soundboard arched 8mm across width at bridge",
+      "arch_source": "Sheet 1/2 annotation: Soundboard arched 8mm across width at bridge",
+      "arch_type": "domed_flat_top",
+      "arch_notes": "Not carved like a true archtop. The soundboard halves are bent and then trimmed and joined at center seam."
+    },
+
+    "body_depth_mm": 85.0,
+    "body_depth_source": "85mm — Sheet 2/2 side view",
+
+    "end_block_height_mm": 104.0,
+    "end_block_source": "104mm — Sheet 2/2 side view",
+
+    "tail_block_width_mm": 8.0,
+    "tail_block_source": "8mm — Sheet 2/2 bottom detail",
+
+    "side_sections_mm": [90.0, 90.0, 50.0],
+    "side_sections_source": "90, 90, 50 — Sheet 2/2 side profile width sections",
+
+    "bracing_pattern": "parallel_transverse",
+    "bracing_description": "Transverse ladder-style braces on top. Back braces also transverse. Construction note: soundboard halves are bent at center and then trimmed and joined.",
+    "bracing_construction_note": "Soundboard halves are bent at this point and then trimmed and joined — Sheet 2/2",
+
+    "bridge_position": "floating",
+    "bridge_position_note": "Bridge not glued to top — floating bridge held by string tension only. Standard for arched-top and gypsy jazz guitars."
+  },
+
+  "neck": {
+    "neck_width_at_nut_mm": 47.0,
+    "neck_width_source": "47mm — Sheet 2/2 fret plan width at nut",
+
+    "headstock_angle_degrees": 15.0,
+    "headstock_angle_source": "15° — Sheet 2/2 headstock side view",
+
+    "neck_length_to_body_mm": 175.0,
+    "neck_length_source": "175mm — Sheet 2/2",
+
+    "neck_angle_degrees": 0.0,
+    "neck_angle_note": "Neck perpendicular to fingerboard — zero neck angle. Stated in materials list: NECK: PERPENDICULAR TO FINGERBOARD",
+
+    "heel_width_mm": 42.0,
+    "heel_source": "42mm — Sheet 2/2 heel detail",
+
+    "joint_type": "dovetail",
+    "joint_source": "Dovetail joint visible in Sheet 2/2 neck section view"
+  },
+
+  "bridge": {
+    "type": "floating_adjustable",
+    "material_base": "walnut",
+    "material_top": "ebony",
+    "construction": "hollowed_out_walnut_with_ebony_top",
+    "side_pieces": "glued_to_soundboard",
+    "middle_section": "detachable",
+    "saddle_length_mm": 155.0,
+    "saddle_source": "155mm — Sheet 1/2 bridge top view",
+    "foot_width_mm": 107.0,
+    "source": "BRIDGE: WALNUT WITH EBONY TOP (HOLLOWED OUT), SIDE PIECES GLUED TO SOUNDBOARD, MIDDLE DETACHABLE — Sheet 2/2 materials"
+  },
+
+  "materials": {
+    "soundboard": "spruce",
+    "back": "laminated_rosewood_mahogany",
+    "back_note": "Laminated construction — rosewood outer, mahogany inner",
+    "ribs": "maple_with_three_dural_plates",
+    "ribs_note": "Maple sides with three Dural (aluminum alloy) plates — distinctive Maccaferri construction. The Dural plates are internal stiffeners running perpendicular to the side thickness.",
+    "neck": "perpendicular_to_fingerboard",
+    "neck_note": "Neck set perpendicular to fingerboard — zero neck angle",
+    "fingerboard": "ebony",
+    "bridge_base": "walnut",
+    "bridge_top": "ebony",
+    "source": "MATERIALS box — Sheet 2/2"
+  },
+
+  "distinctive_construction_features": [
+    "D-shaped soundhole — not round, not oval",
+    "Arched soundboard 8mm at bridge — bent not carved",
+    "Floating detachable bridge — middle section removable",
+    "Ribs with three Dural (aluminum alloy) internal plates — unique to Maccaferri tradition",
+    "Zero neck angle — neck perpendicular to fingerboard",
+    "Soundboard construction: halves bent, trimmed, and joined at center seam",
+    "Side pieces of bridge glued to top, middle section detachable for adjustment"
+  ],
+
+  "historical_context": {
+    "original_instrument": "Selmer guitar designed by Mario Maccaferri, produced 1932-1952",
+    "d_hole_period": "1932-1936",
+    "o_hole_period": "1936-1952",
+    "association": "Django Reinhardt and Hot Club de France",
+    "this_plan": "In the style of the original — not an exact reproduction"
+  },
+
+  "variants": [
+    {
+      "id": "selmer_maccaferri_d_hole_style",
+      "name": "D-hole Style",
+      "description": "Full-size plan in the Maccaferri D-hole tradition. Spruce top, laminated rosewood/mahogany back, maple ribs with Dural plates, ebony fingerboard, floating walnut/ebony bridge.",
+      "source_drawing": "Selmer-Maccaferri-D-hole-MM-01.pdf + MM-02.pdf",
+      "data_completeness": "COMPLETE",
+      "pending": [
+        "Body outline tracing in Fusion 360 — body front view on Sheet 1/2",
+        "Lower bout and upper bout width measurements",
+        "Body length measurement",
+        "Waist width measurement"
+      ]
+    }
+  ]
+}

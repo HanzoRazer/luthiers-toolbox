@@ -1,0 +1,99 @@
+{
+  "metadata": {
+    "generated": "2026-04-16",
+    "description": "Instrument family definitions. Models reference these by family_id string.",
+    "notes": "Family metadata is shared across all models in the family. Individual model specs contain the detail."
+  },
+
+  "families": {
+    "latin_american": {
+      "id": "latin_american",
+      "name": "Latin American",
+      "description": "Family of small lute-type chordophones originating from Spanish colonial instruments including the vihuela and cavaquinho. Regional traditions developed distinct body shapes, string configurations, and construction methods across Venezuela, Puerto Rico, Colombia, Cuba, and other Latin American countries. Despite sharing the name cuatro (four), regional variants differ significantly in body shape, string count, scale length, and construction.",
+      "construction_tradition": "classical_acoustic",
+      "string_material": "nylon",
+      "origin_region": "Latin America / Caribbean",
+      "historical_roots": ["vihuela", "cavaquinho", "baroque_guitar"]
+    },
+
+    "acoustic_flat_top": {
+      "id": "acoustic_flat_top",
+      "name": "Acoustic Flat-Top",
+      "description": "Steel-string acoustic guitars with flat (non-carved) tops. Includes dreadnought, OM, 000, 00, parlor, and jumbo body sizes. X-braced or ladder-braced construction. Martin, Gibson, Taylor traditions.",
+      "construction_tradition": "american_acoustic",
+      "string_material": "steel",
+      "origin_region": "United States",
+      "historical_roots": ["classical_guitar", "parlor_guitar"]
+    },
+
+    "archtop": {
+      "id": "archtop",
+      "name": "Archtop",
+      "description": "Carved-top guitars with arched (domed) tops and backs, f-holes, floating bridge and tailpiece. Jazz guitar tradition from Gibson, D'Angelico, D'Aquisto, Benedetto.",
+      "construction_tradition": "violin_derived",
+      "string_material": "steel",
+      "origin_region": "United States",
+      "historical_roots": ["violin", "mandolin", "early_gibson"]
+    },
+
+    "solid_body_electric": {
+      "id": "solid_body_electric",
+      "name": "Solid Body Electric",
+      "description": "Solid wood body electric guitars with magnetic pickups. Fender, Gibson, PRS traditions. No acoustic resonance chamber.",
+      "construction_tradition": "electric",
+      "string_material": "steel",
+      "origin_region": "United States",
+      "historical_roots": ["lap_steel", "spanish_electric"]
+    },
+
+    "semi_hollow": {
+      "id": "semi_hollow",
+      "name": "Semi-Hollow Electric",
+      "description": "Electric guitars with hollow wings and solid center block. ES-335 style. Combines acoustic resonance with feedback resistance.",
+      "construction_tradition": "electric",
+      "string_material": "steel",
+      "origin_region": "United States",
+      "historical_roots": ["archtop", "solid_body_electric"]
+    },
+
+    "classical": {
+      "id": "classical",
+      "name": "Classical / Nylon String",
+      "description": "Nylon-string guitars in the Spanish/Torres tradition. Fan-braced or lattice-braced. Wide flat fingerboard, slotted headstock.",
+      "construction_tradition": "spanish",
+      "string_material": "nylon",
+      "origin_region": "Spain",
+      "historical_roots": ["baroque_guitar", "vihuela"]
+    },
+
+    "ukulele": {
+      "id": "ukulele",
+      "name": "Ukulele",
+      "description": "Small Hawaiian chordophone derived from Portuguese machete. Soprano, concert, tenor, baritone sizes. Reentrant tuning typical.",
+      "construction_tradition": "hawaiian",
+      "string_material": "nylon",
+      "origin_region": "Hawaii",
+      "historical_roots": ["machete", "cavaquinho", "rajao"]
+    },
+
+    "bass": {
+      "id": "bass",
+      "name": "Electric Bass",
+      "description": "Electric bass guitars. 34-inch scale standard (long scale). 4, 5, or 6 strings.",
+      "construction_tradition": "electric",
+      "string_material": "steel",
+      "origin_region": "United States",
+      "historical_roots": ["upright_bass", "solid_body_electric"]
+    },
+
+    "gypsy_jazz": {
+      "id": "gypsy_jazz",
+      "name": "Gypsy Jazz / Manouche",
+      "description": "Steel-string acoustic guitars in the Selmer-Maccaferri tradition. Distinctive D-hole or oval soundhole, arched (bent, not carved) soundboard, floating bridge, and unique internal construction with Dural (aluminum) rib reinforcements. Associated with Django Reinhardt and the Hot Club de France. Longer scale length (typically 670mm) for bright, cutting tone.",
+      "construction_tradition": "french_acoustic",
+      "string_material": "steel",
+      "origin_region": "France",
+      "historical_roots": ["classical_guitar", "banjo_guitar", "maccaferri_design"]
+    }
+  }
+}
