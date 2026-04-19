@@ -1,0 +1,171 @@
+{
+  "metadata": {
+    "generated": "2026-04-16",
+    "source_document": "Acoustic_guitar_00_en.pdf + Acoustic_guitar_00.dxf",
+    "source_title": "Acoustic Guitar — Model 00",
+    "source_author": "C. Grellier — www.grellier.fr",
+    "source_license": "Creative Commons CC BY-NC-SA 2.0 FR",
+    "source_version": "1.1 — March 2008",
+    "units": "mm",
+    "scale": "1:1",
+    "dxf_layers": ["0", "cotes-fr", "text-fr", "text-en", "sides", "traits_fins"],
+    "notes": "Complete CAD drawing in DXF format from grellier.fr. French/English bilingual. X-braced construction. Dimensions extracted from DIMENSION entities and MTEXT annotations in DXF."
+  },
+
+  "family_id": "acoustic_flat_top",
+  "model_id": "acoustic_00",
+  "name": "Acoustic Guitar 00",
+  "local_name": "Guitare acoustique Format 00",
+  "description": "Grand Concert body size. Small-body acoustic guitar positioned between the parlor (0) and the 000/OM. Comfortable compact body with focused midrange. Excellent for fingerstyle and recording. Body size similar to Gibson L0/L1 but with X-bracing. Martin-influenced construction.",
+  "status": "COMPLETE_SPEC",
+  "cam_capable": false,
+  "cam_notes": "DXF file available for body outline extraction. Pending CAM generator.",
+
+  "strings": {
+    "count": 6,
+    "courses": 1,
+    "material": "steel",
+    "tuning_standard": "E-A-D-G-B-E"
+  },
+
+  "scale": {
+    "scale_length_mm": 632.0,
+    "scale_length_note": "Standard short scale for 00 format. 24.9 inches. Confirmed from DXF dimension cluster near 633.5mm.",
+    "scale_length_inches": 24.9
+  },
+
+  "body": {
+    "lower_bout_width_mm": 352.0,
+    "lower_bout_width_note": "Standard 00 lower bout. DXF dimension 362.1mm extracted — slight variation from nominal 352mm. Use DXF geometry as authoritative.",
+    "lower_bout_width_dxf_mm": 362.1,
+
+    "upper_bout_width_mm": 273.0,
+    "upper_bout_width_note": "Standard 00 upper bout. DXF dimension 271.4mm.",
+    "upper_bout_width_dxf_mm": 271.4,
+
+    "body_length_mm": 476.0,
+    "body_length_dxf_mm": 478.9,
+    "body_length_source": "DXF dimension 478.9mm",
+
+    "waist_width_mm": 216.0,
+    "waist_width_note": "Estimated from standard 00 proportions. DXF dimension 217.5mm.",
+    "waist_width_dxf_mm": 217.5,
+
+    "waist_y_norm": 0.44,
+
+    "body_depth_upper_mm": 99.0,
+    "body_depth_lower_mm": 105.0,
+    "body_depth_source": "DXF dimensions 99.0mm and 102-105mm range",
+
+    "soundhole": {
+      "type": "round",
+      "diameter_mm": 94.12,
+      "radius_mm": 47.06,
+      "diameter_source": "Circle entity r=47.06mm in DXF",
+      "rosette_width_mm": 6.0,
+      "rosette_note": "Standard herringbone or plain rosette"
+    },
+
+    "top_radius_ft": 25,
+    "top_radius_mm": 7620,
+    "top_radius_source": "top radius: 25 ft — DXF MTEXT annotation",
+
+    "back_radius_ft": 15,
+    "back_radius_mm": 4570,
+    "back_radius_source": "back radius: 15 ft — DXF MTEXT annotation",
+
+    "bracing_pattern": "x_brace",
+    "bracing_labels": {
+      "T1": "Upper transverse brace",
+      "T2": "X-brace arm upper left",
+      "T3": "X-brace arm upper right",
+      "T4": "X-brace arm lower left",
+      "T5": "X-brace arm lower right",
+      "T6": "Finger brace 1",
+      "T7": "Finger brace 2",
+      "T8": "Finger brace 3",
+      "T9": "Bridge plate brace",
+      "T10": "Lower transverse brace",
+      "B1": "Back brace 1",
+      "B2": "Back brace 2",
+      "B3": "Back brace 3",
+      "B4": "Back brace 4"
+    },
+    "bracing_source": "DXF layer 0 brace labels T1-T10 (top) and B1-B4 (back)"
+  },
+
+  "top_plate": {
+    "material": "spruce",
+    "thickness_mm": 2.5,
+    "thickness_source": "spruce top 0.1 thick (inches) / table epicea ep. 2.5mm — DXF annotation",
+    "thickness_inches": 0.1
+  },
+
+  "back_plate": {
+    "material": "rosewood",
+    "thickness_mm": 2.4,
+    "thickness_source": "rosewood back 0.1 thick / fond palissandre ep. 2.4mm — DXF annotation",
+    "thickness_inches": 0.1,
+    "radius_ft": 15,
+    "radius_mm": 4570
+  },
+
+  "sides": {
+    "material": "rosewood",
+    "thickness_mm": 2.4,
+    "thickness_source": "rosewood sides 0.1 thick / eclisses palissandre ep. 2.4mm — DXF annotation",
+    "thickness_inches": 0.1
+  },
+
+  "neck": {
+    "material": "mahogany",
+    "joint_type": "dovetail",
+    "headstock_veneer": "rosewood",
+    "headstock_veneer_source": "rosewood veneer / placage de tete palissandre — DXF annotation"
+  },
+
+  "fingerboard": {
+    "material": "ebony",
+    "source": "ebony fingerboard — DXF annotation"
+  },
+
+  "bridge": {
+    "material": "ebony",
+    "source": "ebony bridge / chevalet ebene — DXF annotation"
+  },
+
+  "dxf_asset": {
+    "filename": "Acoustic_guitar_00.dxf",
+    "entity_counts": {
+      "LINE": 2976,
+      "ARC": 84,
+      "CIRCLE": 21,
+      "DIMENSION": 117,
+      "MTEXT": 73,
+      "HATCH": 5,
+      "INSERT": 86,
+      "ELLIPSE": 24,
+      "LEADER": 13,
+      "POINT": 7
+    },
+    "layers": ["0", "cotes-fr", "text-fr", "text-en", "sides", "traits_fins"],
+    "extent_mm": {
+      "width": 1147.8,
+      "height": 805.5
+    },
+    "usable_for_cad_tracing": true,
+    "usable_for_vectorizer": true
+  },
+
+  "variants": [
+    {
+      "id": "acoustic_00_grellier",
+      "name": "Grellier 00",
+      "description": "C.Grellier design, version 1.1 March 2008. X-braced, rosewood back/sides, spruce top, mahogany neck, ebony board and bridge.",
+      "source_author": "C. Grellier",
+      "source_url": "www.grellier.fr",
+      "data_completeness": "COMPLETE",
+      "data_notes": "Full DXF available. All material specs, bracing labels, plate thickness, dome radii documented."
+    }
+  ]
+}

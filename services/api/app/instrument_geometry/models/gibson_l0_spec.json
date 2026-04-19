@@ -1,0 +1,203 @@
+{
+  "metadata": {
+    "generated": "2026-04-16",
+    "source_document": "Gibson-L0-IN.pdf",
+    "source_title": "Guitare blues 'dans le style' GIBSON L0",
+    "source_author": "Unknown luthier — French language plan",
+    "units": "mm (converted from inches)",
+    "scale": "FULL SIZE — all measurements in inches per drawing note",
+    "notes": "19-fret ladder-braced small-body blues guitar. Fret interval table from drawing. Body dimensions from drawing annotations. Materials explicitly listed on drawing."
+  },
+
+  "family_id": "acoustic_flat_top",
+  "model_id": "gibson_l0",
+  "name": "Gibson L0",
+  "local_name": "Guitare blues",
+  "description": "Small-body blues guitar in the Gibson L0 style. Ladder-braced mahogany construction with spruce bracing. Classic pre-war small-body acoustic. Famous as Robert Johnson's guitar (L1 variant). The L0 is slightly smaller than the L1 with similar construction. Between Martin 0 and 00 in body size.",
+  "status": "COMPLETE_SPEC",
+  "cam_capable": false,
+  "cam_notes": "Pending body generator. Ladder bracing differs from X-brace acoustic generator.",
+
+  "strings": {
+    "count": 6,
+    "courses": 1,
+    "material": "steel",
+    "tuning_standard": "E-A-D-G-B-E"
+  },
+
+  "scale": {
+    "scale_length_inches": 23.75,
+    "scale_length_mm": 603.25,
+    "scale_length_source": "SCALE LENGTH 23 3/4 — drawing header",
+    "fret_count": 19,
+    "fret_interval_inches": {
+      "1":  1.33300,
+      "2":  1.25818,
+      "3":  1.18756,
+      "4":  1.12091,
+      "5":  1.05800,
+      "6":  0.99862,
+      "7":  0.94257,
+      "8":  0.88967,
+      "9":  0.83973,
+      "10": 0.79260,
+      "11": 0.74812,
+      "12": 0.70613,
+      "13": 0.66649,
+      "14": 0.62909,
+      "15": 0.59378,
+      "16": 0.56045,
+      "17": 0.52892,
+      "18": 0.49931,
+      "19": 0.47128
+    },
+    "fret_interval_mm": {
+      "1":  33.858,
+      "2":  31.958,
+      "3":  30.164,
+      "4":  28.471,
+      "5":  26.873,
+      "6":  25.365,
+      "7":  23.941,
+      "8":  22.598,
+      "9":  21.329,
+      "10": 20.132,
+      "11": 19.002,
+      "12": 17.936,
+      "13": 16.929,
+      "14": 15.979,
+      "15": 15.082,
+      "16": 14.236,
+      "17": 13.438,
+      "18": 12.682,
+      "19": 11.971
+    },
+    "fret_positions_source": "Drawing fret table — values are interval widths, not cumulative"
+  },
+
+  "body": {
+    "lower_bout_width_inches": 13.75,
+    "lower_bout_width_mm": 349.25,
+    "lower_bout_width_source": "Lower bout 13 3/4 — drawing annotation",
+
+    "upper_bout_width_inches": 10.125,
+    "upper_bout_width_mm": 257.175,
+    "upper_bout_width_source": "Upper bout 10 1/8 — drawing annotation",
+
+    "body_family": "small_body",
+    "body_size_comparison": "Between Martin 0 and 00. Smaller than 00 (352mm), smaller than L1.",
+
+    "soundhole": {
+      "type": "round",
+      "inner_ring_diameter_inches": 3.0,
+      "inner_ring_diameter_mm": 76.2,
+      "outer_ring_diameter_inches": 4.0,
+      "outer_ring_diameter_mm": 101.6,
+      "binding": "White/Black/White wood ring",
+      "source": "Drawing annotations '3rd dia' and '4th dia' with White/Black/White wood ring label"
+    },
+
+    "bracing_pattern": "ladder",
+    "bracing_description": "Ladder braced top and back. Pre-war Gibson construction. All braces stop short of linings. Crossing brace below bridge. Center reinforcing strip on back.",
+    "bracing_source": "Drawing interior view annotations",
+
+    "body_section_widths_inches": {
+      "section_1": 2.5,
+      "section_2": 3.375,
+      "section_3": 3.375,
+      "section_4": 4.125,
+      "note": "Width sections shown in bottom cross-section view"
+    }
+  },
+
+  "top_plate": {
+    "material": "mahogany",
+    "bracing_material": "spruce",
+    "source": "MATERIEL listing on drawing"
+  },
+
+  "back_plate": {
+    "material": "mahogany",
+    "bracing_material": "spruce",
+    "source": "MATERIEL listing — Back, sides, top, neck, lining, end/neck, block: Mahogany"
+  },
+
+  "sides": {
+    "material": "mahogany",
+    "lining": "mahogany",
+    "lining_style": "kerfed",
+    "lining_source": "Lining Top & Bottom Mahogany — drawing label"
+  },
+
+  "neck": {
+    "material": "mahogany",
+    "nut_width_inches": 1.8125,
+    "nut_width_mm": 46.0375,
+    "nut_width_source": "Neck width at nut 1 13/16 — drawing annotation",
+
+    "width_at_12th_fret_inches": 2.3125,
+    "width_at_12th_fret_mm": 58.7375,
+    "width_at_12th_source": "At body (12th) 2 5/16 — drawing annotation",
+
+    "truss_rod": false,
+    "truss_rod_notes": "Not trussed or stiffener — drawing annotation. No truss rod. 13/16 at 8th fret.",
+    "joint_type": "dovetail",
+    "joint_notes": "Standard pre-war Gibson dovetail neck joint"
+  },
+
+  "fingerboard": {
+    "material": "ebony",
+    "radius": "flat",
+    "radius_notes": "Fingerboard flat — drawing annotation",
+    "inlay_style": "mother_of_pearl_dots",
+    "inlay_size_inches": 0.25,
+    "inlay_size_mm": 6.35,
+    "inlay_positions_frets": [5, 7, 9],
+    "inlay_source": "1/4 M.O.P. Dots (5,7,9mm dots) — drawing annotation"
+  },
+
+  "headstock": {
+    "veneer_material": "ebony",
+    "source": "Fingerboard, peghead veneer, heelcap: Ebene (Ebony)"
+  },
+
+  "bridge": {
+    "material": "brazilian_rosewood",
+    "material_note": "Bridge 2 pieces: BRZLN, Rossenwood — drawing (Brazilian Rosewood likely)",
+    "bridge_plate_material": "maple",
+    "bridge_plate_source": "Bridge plate: Maple — drawing"
+  },
+
+  "materials_complete": {
+    "body": "mahogany",
+    "sides": "mahogany",
+    "top": "mahogany",
+    "neck": "mahogany",
+    "lining": "mahogany",
+    "end_block": "mahogany",
+    "neck_block": "mahogany",
+    "fingerboard": "ebony",
+    "peghead_veneer": "ebony",
+    "heelcap": "ebony",
+    "top_bracing": "spruce",
+    "back_bracing": "spruce",
+    "bridge_plate": "maple",
+    "bridge": "brazilian_rosewood",
+    "source": "MATERIEL section, drawing"
+  },
+
+  "variants": [
+    {
+      "id": "gibson_l0_style",
+      "name": "Blues Style",
+      "description": "Full-size plan in the Gibson L0 style. Ladder braced, all-mahogany construction except spruce bracing. Pre-war small-body blues guitar.",
+      "source_drawing": "Gibson-L0-IN.pdf",
+      "data_completeness": "COMPLETE",
+      "pending": [
+        "Body outline tracing in Fusion 360 for CAM",
+        "Body depth measurement (not annotated on available sheet)",
+        "Waist width measurement"
+      ]
+    }
+  ]
+}

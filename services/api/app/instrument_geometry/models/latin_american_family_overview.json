@@ -1,0 +1,109 @@
+{
+  "metadata": {
+    "generated": "2026-04-16",
+    "description": "Overview of the Latin American instrument family with pending model tracking.",
+    "notes": "10 Cuatro regional traditions are in the 257-plan corpus from Mexico luthier collection. 2 documented. 8 pending identification and spec extraction."
+  },
+
+  "family_id": "latin_american",
+
+  "documented_models": [
+    {
+      "model_id": "cuatro_venezolano",
+      "spec_file": "cuatro_venezolano_spec.json",
+      "status": "COMPLETE_SPEC",
+      "regional_tradition": "Venezuela"
+    },
+    {
+      "model_id": "cuatro_puertorriqueno",
+      "spec_file": "cuatro_puertorriqueno_spec.json",
+      "status": "PARTIAL_SPEC",
+      "regional_tradition": "Puerto Rico"
+    }
+  ],
+
+  "pending_models": {
+    "count_total": 10,
+    "count_documented": 2,
+    "count_pending": 8,
+    "models": [
+      {
+        "id": "cuatro_colombiano",
+        "regional_tradition": "Colombia",
+        "status": "PENDING",
+        "notes": "Colombian cuatro - distinct from Venezuelan tradition. 4 strings."
+      },
+      {
+        "id": "cuatro_llanero",
+        "regional_tradition": "Venezuela and Colombia border - Llanos plains region",
+        "status": "PENDING",
+        "notes": "Plains variant. May share body geometry with Quibor or be distinct."
+      },
+      {
+        "id": "cuatro_andino",
+        "regional_tradition": "Andean region - Venezuela, Colombia, Ecuador",
+        "status": "PENDING",
+        "notes": "Andean variant. Possible different string count."
+      },
+      {
+        "id": "cuatro_cubano",
+        "regional_tradition": "Cuba",
+        "status": "PENDING",
+        "notes": "Cuban cuatro - similar to Cuban tres. 4 courses of doubled strings."
+      },
+      {
+        "id": "cuatro_dominicano",
+        "regional_tradition": "Dominican Republic",
+        "status": "PENDING"
+      },
+      {
+        "id": "cuatro_ecuatoriano",
+        "regional_tradition": "Ecuador",
+        "status": "PENDING"
+      },
+      {
+        "id": "cuatro_mexico_variant_1",
+        "regional_tradition": "Unknown - Mexico collection plan 7",
+        "status": "PENDING",
+        "notes": "Requires identification from source drawing"
+      },
+      {
+        "id": "cuatro_mexico_variant_2",
+        "regional_tradition": "Unknown - Mexico collection plan 8",
+        "status": "PENDING",
+        "notes": "Requires identification from source drawing"
+      }
+    ]
+  },
+
+  "related_instruments": {
+    "note": "Other Latin American chordophones that may be added to this family",
+    "instruments": [
+      {
+        "id": "tres_cubano",
+        "description": "Cuban tres - 6 strings in 3 courses",
+        "status": "NOT_STARTED"
+      },
+      {
+        "id": "charango",
+        "description": "Andean charango - 10 strings in 5 courses, armadillo shell or wood body",
+        "status": "NOT_STARTED"
+      },
+      {
+        "id": "tiple_colombiano",
+        "description": "Colombian tiple - 12 strings in 4 courses",
+        "status": "NOT_STARTED"
+      },
+      {
+        "id": "cavaquinho",
+        "description": "Portuguese/Brazilian cavaquinho - 4 strings",
+        "status": "NOT_STARTED"
+      },
+      {
+        "id": "requinto",
+        "description": "Small guitar pitched higher than standard - various regional traditions",
+        "status": "NOT_STARTED"
+      }
+    ]
+  }
+}
