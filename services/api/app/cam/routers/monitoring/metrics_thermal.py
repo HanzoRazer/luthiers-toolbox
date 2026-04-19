@@ -189,7 +189,7 @@ def _compute_energy_and_heat(body: ThermalReportIn, mat: Dict, prof: Dict) -> tu
     return energy_data, ts
 
 
-@router.post("/thermal_report_md")
+@router.post("/thermal_report_md", response_class=StreamingResponse)
 def thermal_report_md(body: ThermalReportIn) -> StreamingResponse:
     """Generate comprehensive thermal report as Markdown with:"""
     mat = get_material(body.material_id)
@@ -222,7 +222,7 @@ def thermal_report_md(body: ThermalReportIn) -> StreamingResponse:
     )
 
 
-@router.post("/thermal_report_bundle")
+@router.post("/thermal_report_bundle", response_class=StreamingResponse)
 def thermal_report_bundle(body: ThermalReportIn) -> StreamingResponse:
     """Export thermal report as ZIP bundle containing:"""
     mat = get_material(body.material_id)

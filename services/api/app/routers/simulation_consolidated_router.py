@@ -139,7 +139,7 @@ def _parse_gcode_for_metrics(gcode_text: str) -> List[dict]:
 # Simulation Endpoints
 # ============================================================================
 
-@router.post("/gcode")
+@router.post("/gcode", response_class=Response)
 def simulate_gcode_json(body: SimGcodeInput) -> Response:
     """
     Simulate G-code from JSON body.
@@ -315,7 +315,7 @@ def calculate_metrics(body: SimMetricsIn) -> SimMetricsOut:
 # Legacy Compatibility Endpoints
 # ============================================================================
 
-@router.post("/simulate_gcode")
+@router.post("/simulate_gcode", response_class=Response)
 def simulate_gcode_legacy(body: SimGcodeInput) -> Response:
     """
     Legacy endpoint - redirects to /gcode.

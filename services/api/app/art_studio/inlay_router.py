@@ -178,7 +178,7 @@ def preview_inlay(req: InlayPreviewRequest) -> InlayPreviewResponse:
         raise HTTPException(status_code=400, detail=str(e))
 
 
-@router.post("/export-dxf")
+@router.post("/export-dxf", response_class=Response)
 def export_inlay_dxf(req: InlayDXFRequest) -> Response:
     """
     Export inlay pattern as DXF file.
@@ -382,7 +382,7 @@ def _generate_preview_svg(result: InlayCalcResult, scale_length_mm: float) -> st
 # G-code Export Endpoint (VINE-01)
 # --------------------------------------------------------------------- #
 
-@router.post("/export-gcode")
+@router.post("/export-gcode", response_class=Response)
 @safety_critical
 def export_inlay_gcode(req: InlayGcodeRequest) -> Response:
     """

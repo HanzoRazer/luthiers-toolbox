@@ -41,7 +41,7 @@ async def generate_vise_square_probe(body: ViseSquareProbeIn) -> ProbeOut:
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@router.post("/vise_square/gcode/download")
+@router.post("/vise_square/gcode/download", response_class=Response)
 async def download_vise_square_probe(body: ViseSquareProbeIn) -> Response:
     """Download vise squareness check G-code as .nc file (DRAFT lane)."""
     try:
@@ -67,7 +67,7 @@ async def download_vise_square_probe(body: ViseSquareProbeIn) -> Response:
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@router.post("/vise_square/gcode/download_governed")
+@router.post("/vise_square/gcode/download_governed", response_class=Response)
 async def download_vise_square_probe_governed(body: ViseSquareProbeIn) -> Response:
     """Download vise squareness check G-code (GOVERNED lane with RMOS persistence)."""
     try:

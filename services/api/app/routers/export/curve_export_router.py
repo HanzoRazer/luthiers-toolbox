@@ -72,7 +72,7 @@ def build_curve_dxf(req: CurveExportRequest) -> ezdxf.document.Drawing:
     return doc
 
 
-@router.post("/curve-dxf")
+@router.post("/curve-dxf", response_class=StreamingResponse)
 def export_curve_dxf(req: CurveExportRequest) -> StreamingResponse:
     """Build a DXF with one layer per curve; 4+ points use SPLINE, fewer use open LWPOLYLINE."""
     try:

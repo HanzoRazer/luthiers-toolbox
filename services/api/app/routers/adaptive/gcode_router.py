@@ -43,7 +43,7 @@ from ...rmos.runs_v2 import (
 router = APIRouter(tags=["cam-adaptive"])
 
 
-@router.post("/gcode")
+@router.post("/gcode", response_class=StreamingResponse)
 @limiter.limit(rate_limit_tier("cam"))
 def gcode(request: Request, body: GcodeIn) -> StreamingResponse:
     """

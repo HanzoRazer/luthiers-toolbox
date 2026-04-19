@@ -40,7 +40,7 @@ async def generate_surface_z_probe(body: SurfaceZProbeIn) -> ProbeOut:
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@router.post("/surface_z/gcode/download")
+@router.post("/surface_z/gcode/download", response_class=Response)
 async def download_surface_z_probe(body: SurfaceZProbeIn) -> Response:
     """Download surface Z probe G-code as .nc file (DRAFT lane)."""
     try:
@@ -66,7 +66,7 @@ async def download_surface_z_probe(body: SurfaceZProbeIn) -> Response:
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@router.post("/surface_z/gcode/download_governed")
+@router.post("/surface_z/gcode/download_governed", response_class=Response)
 async def download_surface_z_probe_governed(body: SurfaceZProbeIn) -> Response:
     """Download surface Z probe G-code (GOVERNED lane with RMOS persistence)."""
     try:

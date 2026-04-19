@@ -203,7 +203,7 @@ def build_rosette_pdf(req: RosettePdfRequest) -> bytes:
     return buf.getvalue()
 
 
-@router.post("/rosette-pdf")
+@router.post("/rosette-pdf", response_class=StreamingResponse)
 def export_rosette_pdf(req: RosettePdfRequest) -> StreamingResponse:
     """Generate a printable rosette design sheet (PDF)."""
     try:

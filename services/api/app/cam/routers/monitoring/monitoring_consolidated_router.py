@@ -168,7 +168,7 @@ def energy(body: EnergyIn) -> Dict[str, Any]:
     return out
 
 
-@metrics_router.post("/energy_csv")
+@metrics_router.post("/energy_csv", response_class=StreamingResponse)
 def energy_csv(body: EnergyIn) -> StreamingResponse:
     """Export per-segment energy breakdown as CSV."""
     mat = get_material(body.material_id)
@@ -227,7 +227,7 @@ def heat_ts(body: HeatIn) -> Dict[str, Any]:
     return out
 
 
-@metrics_router.post("/bottleneck_csv")
+@metrics_router.post("/bottleneck_csv", response_class=StreamingResponse)
 def bottleneck_csv_export(body: BottleneckCsvIn) -> StreamingResponse:
     """Export per-segment bottleneck data as CSV."""
     prof = get_profile(body.machine_profile_id)

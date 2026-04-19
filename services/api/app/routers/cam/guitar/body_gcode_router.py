@@ -148,7 +148,7 @@ def _generate_timestamp() -> str:
 # =============================================================================
 
 
-@router.post("/stratocaster/body/gcode")
+@router.post("/stratocaster/body/gcode", response_class=StreamingResponse)
 @safety_critical
 def generate_stratocaster_body_gcode(
     project_id: str = Query(..., description="Project UUID"),
@@ -209,7 +209,7 @@ def generate_stratocaster_body_gcode(
 # =============================================================================
 
 
-@router.post("/les_paul/body/gcode")
+@router.post("/les_paul/body/gcode", response_class=StreamingResponse)
 @safety_critical
 def generate_les_paul_body_gcode(
     project_id: str = Query(..., description="Project UUID"),
@@ -272,7 +272,7 @@ def generate_les_paul_body_gcode(
 # =============================================================================
 
 
-@router.post("/flying_v/body/gcode")
+@router.post("/flying_v/body/gcode", response_class=StreamingResponse)
 @safety_critical
 def generate_flying_v_body_gcode(
     project_id: str = Query(..., description="Project UUID"),
@@ -351,7 +351,7 @@ def generate_flying_v_body_gcode(
 # =============================================================================
 
 
-@router.post("/{model_id}/neck/gcode")
+@router.post("/{model_id}/neck/gcode", response_class=StreamingResponse)
 @safety_critical
 def generate_neck_gcode(
     model_id: str,

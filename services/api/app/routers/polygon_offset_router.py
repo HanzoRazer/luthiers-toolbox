@@ -124,7 +124,7 @@ def generate_polygon_offset_nc_program(req: OffsetReq) -> str:
 # Draft Lane: Fast preview, no RMOS tracking
 # =============================================================================
 
-@router.post("/polygon_offset.nc")
+@router.post("/polygon_offset.nc", response_class=Response)
 def polygon_offset_nc(req: OffsetReq) -> Response:
     """
     Real N.17a polygon-offset engine using pyclipper (DRAFT lane).
@@ -142,7 +142,7 @@ def polygon_offset_nc(req: OffsetReq) -> Response:
 # Governed Lane: Full RMOS artifact persistence and audit trail
 # =============================================================================
 
-@router.post("/polygon_offset_governed.nc")
+@router.post("/polygon_offset_governed.nc", response_class=Response)
 def polygon_offset_nc_governed(req: OffsetReq) -> Response:
     """
     Real N.17a polygon-offset engine using pyclipper (GOVERNED lane).

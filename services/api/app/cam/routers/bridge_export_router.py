@@ -89,7 +89,7 @@ def _build_bridge_dxf(geom: BridgeGeometryIn, meta: str = "") -> str:
     return txt
 
 
-@router.post("/bridge/export_dxf")
+@router.post("/bridge/export_dxf", response_class=Response)
 def export_bridge_dxf(body: BridgeDxfRequest) -> Response:
     """
     Export bridge saddle geometry to DXF R12 format.

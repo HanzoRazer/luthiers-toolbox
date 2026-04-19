@@ -38,7 +38,7 @@ from .plan_router import plan
 router = APIRouter(tags=["cam-adaptive"])
 
 
-@router.post("/batch_export")
+@router.post("/batch_export", response_class=StreamingResponse)
 def batch_export(body: BatchExportIn) -> StreamingResponse:
     """
     Batch export adaptive pocket G-code with multiple feed modes.

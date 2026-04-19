@@ -103,7 +103,7 @@ class ReliefDXFExportRequest(BaseModel):
 # --------------------------------------------------------------------- #
 
 
-@router.post("/export-dxf")
+@router.post("/export-dxf", response_class=Response)
 async def export_relief_dxf(req: ReliefDXFExportRequest) -> Response:
     """
     Export relief geometry to DXF format.
