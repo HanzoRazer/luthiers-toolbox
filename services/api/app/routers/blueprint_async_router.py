@@ -156,8 +156,9 @@ async def vectorize_blueprint_async(
     For large blueprints (>5MB or high-res PDFs), this avoids HTTP timeouts.
 
     Args:
-        mode: Cleanup mode - "baseline" for stable pre-grouping behavior,
-              "refined" for current logic (default)
+        mode: Cleanup mode - "refined" (default), "baseline", "restored_baseline",
+              "layered_dual_pass" (classified layers), "enhanced" (full detail)
+        spec_name: Instrument spec for scale correction (e.g., "dreadnought")
     """
     file_bytes = await file.read()
     if not file_bytes:
