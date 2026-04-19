@@ -1,0 +1,1492 @@
+{
+  "generated": "2026-04-16T12:00:00Z",
+  "repo_summary": {
+    "total_files_scanned": 1847,
+    "instruments_with_complete_e2e_pipeline": 3,
+    "instruments_with_partial_pipeline": 8,
+    "instruments_stub_only": 6,
+    "orphaned_data_files": 12,
+    "phantom_assets": 8,
+    "dxf_compliant_files": 6,
+    "dxf_non_compliant_files": 24,
+    "standalone_features_integrated": 3,
+    "standalone_features_disconnected": 3,
+    "gen_phases_complete": 2,
+    "gen_phases_incomplete": 4
+  },
+  "data_sources": [
+    {
+      "path": "services/api/app/instrument_geometry/instrument_model_registry.json",
+      "type": "json",
+      "instruments_covered": ["stratocaster", "telecaster", "les_paul", "sg", "es_335", "flying_v", "explorer", "firebird", "moderne", "prs", "klein", "smart_guitar", "dreadnought", "om_000", "j_45", "jumbo_j200", "carlos_jumbo", "gibson_l_00", "classical", "martin", "benedetto_17", "l5", "super_400", "jumbo_archtop", "cuatro_venezolano", "cuatro_puertorriqueno", "jazz_bass", "ukulele", "melody_maker"],
+      "field_names": ["id", "display_name", "status", "category", "manufacturer", "year_introduced", "scale_length_mm", "fret_count", "string_count", "body_style", "body_dimensions_mm", "assets", "cam_capable", "cam_operations", "vectorizer_analysis", "variants"],
+      "record_count": 31,
+      "imported_by": ["app/instrument_geometry/guitars/__init__.py", "app/services/blueprint_orchestrator.py"],
+      "status": "active",
+      "notes": "Master registry with status flags (COMPLETE/PARTIAL/STUB/ASSETS_ONLY). Some entries have _phantom_assets flag."
+    },
+    {
+      "path": "services/api/app/instrument_geometry/body/catalog.json",
+      "type": "json",
+      "instruments_covered": ["stratocaster", "les_paul", "js1000", "gibson_explorer", "flying_v", "harmony_h44", "j45", "jumbo", "dreadnought", "classical", "om_000", "gibson_l_00", "martin_d28_1937", "soprano_ukulele", "concert_ukulele", "octave_mandolin", "jaguar", "jazzmaster", "mustang", "mandolin", "carlos_jumbo", "melody_maker", "cuatro_venezolano"],
+      "field_names": ["name", "category", "dimensions_mm", "points", "dxf", "dxf_dense", "dxf_bracing", "dxf_construction", "has_bulge_data", "has_bracing_data", "spec", "source"],
+      "record_count": 23,
+      "imported_by": ["app/instrument_geometry/body/outlines.py", "app/generators/electric_body_generator.py"],
+      "status": "active",
+      "notes": "Point counts vary wildly (10-5451). Some phantom DXF references."
+    },
+    {
+      "path": "services/photo-vectorizer/body_dimension_reference.json",
+      "type": "json",
+      "instruments_covered": ["stratocaster", "telecaster", "les_paul", "es335", "dreadnought", "om_000", "jumbo", "smart_guitar", "jumbo_archtop", "classical", "j45", "flying_v", "bass_4string", "gibson_sg", "benedetto_17", "gibson_explorer", "cuatro", "melody_maker"],
+      "field_names": ["body_length_mm", "upper_bout_width_mm", "waist_width_mm", "lower_bout_width_mm", "waist_y_norm", "family", "_note"],
+      "record_count": 18,
+      "imported_by": ["services/photo-vectorizer/vectorizer_phase3.py", "app/instrument_geometry/instrument_specs.py"],
+      "status": "active",
+      "notes": "Used for vectorizer scale validation. Waist position varies by family."
+    },
+    {
+      "path": "services/api/app/instrument_geometry/instrument_specs.py",
+      "type": "py",
+      "instruments_covered": ["stratocaster", "telecaster", "les_paul", "flying_v", "gibson_sg", "gibson_explorer", "melody_maker", "es335", "jumbo_archtop", "benedetto_17", "dreadnought", "om_000", "jumbo", "classical", "j45", "cuatro", "smart_guitar", "bass_4string"],
+      "field_names": ["BODY_DIMENSIONS", "FEATURE_ROUTES", "REFERENCE_OBJECTS", "INSTRUMENT_SPECS"],
+      "record_count": 18,
+      "imported_by": ["app/services/blueprint_orchestrator.py", "app/routers/blueprint/vectorize_router.py", "services/photo-vectorizer/"],
+      "status": "active",
+      "notes": "Central source for body validation. Uses dataclasses BodyDimensions, FeatureRoutes."
+    },
+    {
+      "path": "services/api/app/instrument_geometry/curvature_correction.py",
+      "type": "py",
+      "instruments_covered": ["stratocaster", "telecaster", "les_paul", "gibson_explorer", "flying_v", "melody_maker", "dreadnought", "jumbo", "classical", "cuatro", "om_000"],
+      "field_names": ["MEASURED_RADII", "ZONE_WAIST", "ZONE_BOUT", "ZONE_HORN_TIP", "ZONE_CUTAWAY", "DEFAULT_STABILITY_BY_ZONE"],
+      "record_count": 11,
+      "imported_by": ["app/services/outline_reconstructor.py", "app/cam/unified_dxf_cleaner.py"],
+      "status": "active",
+      "notes": "Zone-specific curve thresholds for outline reconstruction."
+    },
+    {
+      "path": "services/api/app/instrument_geometry/guitars/__init__.py",
+      "type": "py",
+      "instruments_covered": ["strat", "tele", "les_paul", "dreadnought", "om_000", "j_45", "jazz_bass", "classical", "archtop", "prs", "sg", "jumbo_j200", "ukulele", "gibson_l_00", "flying_v", "es_335", "explorer", "firebird", "moderne"],
+      "field_names": ["MODEL_SPECS", "MODEL_INFOS", "InstrumentModelId"],
+      "record_count": 19,
+      "imported_by": ["app/generators/body_generator.py", "app/routers/instruments/"],
+      "status": "active",
+      "notes": "Registry of all 19 instrument models with get_spec() functions."
+    },
+    {
+      "path": "services/api/app/data_registry/system/instruments/body_templates.json",
+      "type": "json",
+      "instruments_covered": ["stratocaster", "les_paul", "telecaster", "gibson_j45", "dreadnought", "classical", "archtop", "es335", "flying_v", "sg"],
+      "field_names": ["id", "name", "type", "dimensions", "features", "scale_length_mm", "neck_pocket", "outline_available", "top_carve", "spec"],
+      "record_count": 10,
+      "imported_by": ["app/data_registry/loader.py"],
+      "status": "active",
+      "notes": "Standard body template dimensions with CNC feature info."
+    },
+    {
+      "path": "services/api/app/data_registry/system/instruments/neck_profiles.json",
+      "type": "json",
+      "instruments_covered": [],
+      "field_names": ["c_standard", "d_shape", "v_soft", "v_hard", "u_chunky", "asymmetric_modern", "classical_flat"],
+      "record_count": 7,
+      "imported_by": ["app/generators/neck_headstock_generator.py"],
+      "status": "active",
+      "notes": "Neck profile shapes, not instrument-specific."
+    },
+    {
+      "path": "services/api/app/instrument_geometry/specs/fender_stratocaster.json",
+      "type": "json",
+      "instruments_covered": ["stratocaster"],
+      "field_names": ["id", "display_name", "variants", "body_contours", "neck_details", "scale_length_mm", "fret_count", "pickups"],
+      "record_count": 1,
+      "imported_by": ["app/instrument_geometry/guitars/strat.py"],
+      "status": "active",
+      "notes": "221 lines. Variants: vintage, modern, 24fret."
+    },
+    {
+      "path": "services/api/app/instrument_geometry/specs/gibson_les_paul.json",
+      "type": "json",
+      "instruments_covered": ["les_paul"],
+      "field_names": ["id", "display_name", "variants", "body_outline", "carved_top", "pickup_routes", "bridge_positions", "cnc_operations", "neck_joint"],
+      "record_count": 1,
+      "imported_by": ["app/instrument_geometry/guitars/les_paul.py"],
+      "status": "active",
+      "notes": "591 lines. Full body outline (669 points), carved top profile, CNC operations (OP20-OP63)."
+    },
+    {
+      "path": "services/api/app/instrument_geometry/specs/gibson_explorer.json",
+      "type": "json",
+      "instruments_covered": ["gibson_explorer"],
+      "field_names": ["id", "display_name", "variants", "body_geometry", "headstock", "control_cavity", "pickup_layout"],
+      "record_count": 1,
+      "imported_by": ["app/instrument_geometry/guitars/explorer.py"],
+      "status": "active",
+      "notes": "448 lines. Variants: original_1958, reissue_76. DXF has 24 points (needs refinement)."
+    },
+    {
+      "path": "services/api/app/instrument_geometry/specs/gibson_flying_v_1958.json",
+      "type": "json",
+      "instruments_covered": ["flying_v"],
+      "field_names": ["id", "display_name", "variants", "body_geometry", "headstock", "scale_length_mm"],
+      "record_count": 1,
+      "imported_by": ["app/instrument_geometry/guitars/flying_v.py"],
+      "status": "active",
+      "notes": "261 lines. Split-V headstock, V-shaped angular body."
+    },
+    {
+      "path": "services/api/app/instrument_geometry/specs/gibson_melody_maker.json",
+      "type": "json",
+      "instruments_covered": ["melody_maker"],
+      "field_names": ["id", "display_name", "body_dimensions", "scale_length_mm", "pickups"],
+      "record_count": 1,
+      "imported_by": ["app/instrument_geometry/guitars/"],
+      "status": "active",
+      "notes": "135 lines. Student model, single-cutaway, slab body."
+    },
+    {
+      "path": "services/api/app/instrument_geometry/specs/carlos_jumbo.json",
+      "type": "json",
+      "instruments_covered": ["carlos_jumbo"],
+      "field_names": ["id", "display_name", "variants", "body_dimensions", "vectorizer_analysis", "bracing_features"],
+      "record_count": 1,
+      "imported_by": ["app/instrument_geometry/"],
+      "status": "active",
+      "notes": "591 lines. Vectorizer extracted with 2,011 primitives, 35 bracing features."
+    },
+    {
+      "path": "services/api/app/instrument_geometry/specs/jumbo_archtop.json",
+      "type": "json",
+      "instruments_covered": ["jumbo_archtop"],
+      "field_names": ["id", "display_name", "body_dimensions", "mottola_contour", "graduation_data", "pending_assets"],
+      "record_count": 1,
+      "imported_by": ["app/instrument_geometry/guitars/archtop.py"],
+      "status": "active",
+      "notes": "485 lines. Carlos Jumbo body scale + Benedetto construction method."
+    },
+    {
+      "path": "services/api/app/instrument_geometry/models/benedetto_17.json",
+      "type": "json",
+      "instruments_covered": ["benedetto_17"],
+      "field_names": ["body_dimensions", "scale_length", "cutaway", "f_holes", "neck_joint", "string_set"],
+      "record_count": 1,
+      "imported_by": ["app/instrument_geometry/guitars/archtop.py"],
+      "status": "active",
+      "notes": "AI vision extracted from Benedetto photos. 482.6mm length x 431.8mm lower_bout."
+    },
+    {
+      "path": "services/api/app/instrument_geometry/models/flying_v_1958.json",
+      "type": "json",
+      "instruments_covered": ["flying_v"],
+      "field_names": ["tier", "body_ranges", "classification_signals", "validation_status"],
+      "record_count": 1,
+      "imported_by": [],
+      "status": "stub",
+      "notes": "25 lines only. Tier 1 but pending DXF verification. Schema mismatch with loader.py."
+    },
+    {
+      "path": "services/api/app/instrument_geometry/models/cuatro_venezolano.json",
+      "type": "json",
+      "instruments_covered": ["cuatro_venezolano"],
+      "field_names": ["body_dimensions", "scale_length_mm", "string_count", "fret_count"],
+      "record_count": 1,
+      "imported_by": ["app/instrument_geometry/"],
+      "status": "active",
+      "notes": "234.6mm width x 321.6mm height. 4 single strings, 17 frets."
+    },
+    {
+      "path": "services/api/app/instrument_geometry/models/cuatro_puertorriqueno.json",
+      "type": "json",
+      "instruments_covered": ["cuatro_puertorriqueno"],
+      "field_names": ["body_dimensions", "scale_length_mm", "string_count", "fret_count"],
+      "record_count": 1,
+      "imported_by": ["app/instrument_geometry/"],
+      "status": "active",
+      "notes": "280.0mm width x 380.0mm height. 10 strings (5 courses), 19 frets."
+    },
+    {
+      "path": "services/api/app/instrument_geometry/body/specs/smart_guitar_v1.json",
+      "type": "json",
+      "instruments_covered": ["smart_guitar"],
+      "field_names": ["iot_integration", "electronics_cavity", "sensors", "power", "connectivity", "daw_integration", "cam_features", "scale_length_mm"],
+      "record_count": 1,
+      "imported_by": ["app/routers/instruments/guitar/smart_guitar_dxf_router.py"],
+      "status": "active",
+      "notes": "1,026 lines. Most detailed Smart Guitar spec. Full IoT integration, Arduino, Raspberry Pi 5."
+    },
+    {
+      "path": "services/api/app/generators/stratocaster_config.py",
+      "type": "py",
+      "instruments_covered": ["stratocaster"],
+      "field_names": ["STRAT_BODY_DIMS", "NECK_POCKET", "SINGLE_COIL_CAVITY", "HUMBUCKER_CAVITY", "PICKUP_POSITIONS_SSS", "PICKUP_POSITIONS_HSS", "TREMOLO_CAVITY", "SPRING_CAVITY", "CONTROL_CAVITY", "JACK_BORE", "STRAT_TOOLS", "STRAT_MACHINES"],
+      "record_count": 1,
+      "imported_by": ["app/generators/stratocaster_body_generator.py"],
+      "status": "active",
+      "notes": "CNC toolpath generation configuration. Tool configs, machine profiles."
+    },
+    {
+      "path": "services/api/app/generators/lespaul_config.py",
+      "type": "py",
+      "instruments_covered": ["les_paul"],
+      "field_names": ["LP_BODY_DIMS", "LP_NECK_POCKET", "LP_HUMBUCKER_CAVITY", "LP_PICKUP_POSITIONS", "LP_CONTROL_CAVITY", "LP_SWITCH_CAVITY", "TOOLS", "MACHINES"],
+      "record_count": 1,
+      "imported_by": ["app/generators/lespaul_body_generator.py"],
+      "status": "active",
+      "notes": "Uses inches (legacy unit system). Set-neck pocket specs with 4 degree angle."
+    }
+  ],
+  "instrument_pipelines": [
+    {
+      "instrument": "stratocaster",
+      "family": "electric",
+      "has_spec_data": true,
+      "spec_source": "services/api/app/instrument_geometry/specs/fender_stratocaster.json",
+      "has_body_generator": true,
+      "body_generator_path": "services/api/app/generators/stratocaster_body_generator.py",
+      "body_generator_produces": "gcode",
+      "has_neck_generator": true,
+      "has_api_endpoint": true,
+      "endpoint_path": "/instruments/guitar/electric-body/generate/strat",
+      "endpoint_produces": "json",
+      "gcode_confirmed_working": true,
+      "dxf_confirmed_working": false,
+      "uses_dxf_writer_standard": false,
+      "calls_ezdxf_directly": false,
+      "end_to_end_status": "complete",
+      "missing_steps": []
+    },
+    {
+      "instrument": "telecaster",
+      "family": "electric",
+      "has_spec_data": true,
+      "spec_source": "services/api/app/instrument_geometry/specs/fender_telecaster.json",
+      "has_body_generator": false,
+      "body_generator_path": null,
+      "body_generator_produces": "unknown",
+      "has_neck_generator": true,
+      "has_api_endpoint": true,
+      "endpoint_path": "/instruments/guitar/electric-body/styles/telecaster",
+      "endpoint_produces": "json",
+      "gcode_confirmed_working": false,
+      "dxf_confirmed_working": false,
+      "uses_dxf_writer_standard": false,
+      "calls_ezdxf_directly": false,
+      "end_to_end_status": "partial",
+      "missing_steps": ["No dedicated body generator", "No G-code endpoint"]
+    },
+    {
+      "instrument": "les_paul",
+      "family": "electric",
+      "has_spec_data": true,
+      "spec_source": "services/api/app/instrument_geometry/specs/gibson_les_paul.json",
+      "has_body_generator": true,
+      "body_generator_path": "services/api/app/generators/lespaul_body_generator.py",
+      "body_generator_produces": "gcode",
+      "has_neck_generator": true,
+      "has_api_endpoint": true,
+      "endpoint_path": "/cam/les_paul/body/gcode",
+      "endpoint_produces": "gcode",
+      "gcode_confirmed_working": true,
+      "dxf_confirmed_working": true,
+      "uses_dxf_writer_standard": false,
+      "calls_ezdxf_directly": true,
+      "end_to_end_status": "complete",
+      "missing_steps": []
+    },
+    {
+      "instrument": "gibson_sg",
+      "family": "electric",
+      "has_spec_data": true,
+      "spec_source": "services/api/app/instrument_geometry/specs/gibson_sg.json",
+      "has_body_generator": false,
+      "body_generator_path": null,
+      "body_generator_produces": "unknown",
+      "has_neck_generator": false,
+      "has_api_endpoint": true,
+      "endpoint_path": "/instruments/guitar/electric-body/styles/sg",
+      "endpoint_produces": "json",
+      "gcode_confirmed_working": false,
+      "dxf_confirmed_working": false,
+      "uses_dxf_writer_standard": false,
+      "calls_ezdxf_directly": false,
+      "end_to_end_status": "partial",
+      "missing_steps": ["No body generator", "No G-code endpoint"]
+    },
+    {
+      "instrument": "gibson_explorer",
+      "family": "electric",
+      "has_spec_data": true,
+      "spec_source": "services/api/app/instrument_geometry/specs/gibson_explorer.json",
+      "has_body_generator": false,
+      "body_generator_path": null,
+      "body_generator_produces": "unknown",
+      "has_neck_generator": false,
+      "has_api_endpoint": true,
+      "endpoint_path": "/instruments/guitar/electric-body/styles/gibson_explorer",
+      "endpoint_produces": "json",
+      "gcode_confirmed_working": false,
+      "dxf_confirmed_working": false,
+      "uses_dxf_writer_standard": false,
+      "calls_ezdxf_directly": false,
+      "end_to_end_status": "partial",
+      "missing_steps": ["DXF needs refinement (24 points)", "No body generator", "No G-code endpoint"]
+    },
+    {
+      "instrument": "flying_v",
+      "family": "electric",
+      "has_spec_data": true,
+      "spec_source": "services/api/app/instrument_geometry/specs/gibson_flying_v_1958.json",
+      "has_body_generator": false,
+      "body_generator_path": null,
+      "body_generator_produces": "unknown",
+      "has_neck_generator": false,
+      "has_api_endpoint": true,
+      "endpoint_path": "/cam/flying_v/body/gcode",
+      "endpoint_produces": "gcode",
+      "gcode_confirmed_working": false,
+      "dxf_confirmed_working": false,
+      "uses_dxf_writer_standard": false,
+      "calls_ezdxf_directly": false,
+      "end_to_end_status": "partial",
+      "missing_steps": ["Model JSON has schema mismatch with loader.py", "No dedicated body generator class"]
+    },
+    {
+      "instrument": "melody_maker",
+      "family": "electric",
+      "has_spec_data": true,
+      "spec_source": "services/api/app/instrument_geometry/specs/gibson_melody_maker.json",
+      "has_body_generator": false,
+      "body_generator_path": null,
+      "body_generator_produces": "unknown",
+      "has_neck_generator": false,
+      "has_api_endpoint": false,
+      "endpoint_path": null,
+      "endpoint_produces": "unknown",
+      "gcode_confirmed_working": false,
+      "dxf_confirmed_working": false,
+      "uses_dxf_writer_standard": false,
+      "calls_ezdxf_directly": false,
+      "end_to_end_status": "stub",
+      "missing_steps": ["No body generator", "No API endpoint", "No G-code path"]
+    },
+    {
+      "instrument": "es335",
+      "family": "electric",
+      "has_spec_data": true,
+      "spec_source": "services/api/app/instrument_geometry/specs/gibson_es_335.json",
+      "has_body_generator": false,
+      "body_generator_path": null,
+      "body_generator_produces": "unknown",
+      "has_neck_generator": false,
+      "has_api_endpoint": false,
+      "endpoint_path": null,
+      "endpoint_produces": "unknown",
+      "gcode_confirmed_working": false,
+      "dxf_confirmed_working": false,
+      "uses_dxf_writer_standard": false,
+      "calls_ezdxf_directly": false,
+      "end_to_end_status": "stub",
+      "missing_steps": ["Semi-hollow body requires specialized generator", "No API endpoint"]
+    },
+    {
+      "instrument": "smart_guitar",
+      "family": "electric",
+      "has_spec_data": true,
+      "spec_source": "services/api/app/instrument_geometry/body/specs/smart_guitar_v1.json",
+      "has_body_generator": false,
+      "body_generator_path": null,
+      "body_generator_produces": "unknown",
+      "has_neck_generator": false,
+      "has_api_endpoint": true,
+      "endpoint_path": "/instruments/guitar/smart-guitar/dxf",
+      "endpoint_produces": "dxf",
+      "gcode_confirmed_working": false,
+      "dxf_confirmed_working": true,
+      "uses_dxf_writer_standard": false,
+      "calls_ezdxf_directly": true,
+      "end_to_end_status": "partial",
+      "missing_steps": ["No body generator", "DXF uses R2000 (not R12 standard)", "Pending electronics cavity assets"]
+    },
+    {
+      "instrument": "eds1275",
+      "family": "electric",
+      "has_spec_data": false,
+      "spec_source": null,
+      "has_body_generator": false,
+      "body_generator_path": null,
+      "body_generator_produces": "unknown",
+      "has_neck_generator": false,
+      "has_api_endpoint": false,
+      "endpoint_path": null,
+      "endpoint_produces": "unknown",
+      "gcode_confirmed_working": false,
+      "dxf_confirmed_working": false,
+      "uses_dxf_writer_standard": false,
+      "calls_ezdxf_directly": false,
+      "end_to_end_status": "missing",
+      "missing_steps": ["No spec data", "No body generator", "No API endpoint", "Double-neck requires specialized geometry"]
+    },
+    {
+      "instrument": "dreadnought",
+      "family": "acoustic",
+      "has_spec_data": true,
+      "spec_source": "services/api/app/instrument_geometry/guitars/dreadnought.py",
+      "has_body_generator": true,
+      "body_generator_path": "services/api/app/generators/acoustic_body_generator.py",
+      "body_generator_produces": "both",
+      "has_neck_generator": true,
+      "has_api_endpoint": true,
+      "endpoint_path": "/cam/acoustic/dreadnought/body/gcode",
+      "endpoint_produces": "gcode",
+      "gcode_confirmed_working": true,
+      "dxf_confirmed_working": false,
+      "uses_dxf_writer_standard": false,
+      "calls_ezdxf_directly": false,
+      "end_to_end_status": "complete",
+      "missing_steps": []
+    },
+    {
+      "instrument": "om_000",
+      "family": "acoustic",
+      "has_spec_data": true,
+      "spec_source": "services/api/app/instrument_geometry/specs/martin_om28.json",
+      "has_body_generator": true,
+      "body_generator_path": "services/api/app/generators/acoustic_body_generator.py",
+      "body_generator_produces": "both",
+      "has_neck_generator": true,
+      "has_api_endpoint": true,
+      "endpoint_path": "/cam/acoustic/om/body/gcode",
+      "endpoint_produces": "gcode",
+      "gcode_confirmed_working": true,
+      "dxf_confirmed_working": false,
+      "uses_dxf_writer_standard": false,
+      "calls_ezdxf_directly": false,
+      "end_to_end_status": "partial",
+      "missing_steps": ["Outline has 5,451 points but no DXF confirmed"]
+    },
+    {
+      "instrument": "jumbo",
+      "family": "acoustic",
+      "has_spec_data": true,
+      "spec_source": "services/api/app/instrument_geometry/guitars/jumbo_j200.py",
+      "has_body_generator": true,
+      "body_generator_path": "services/api/app/generators/acoustic_body_generator.py",
+      "body_generator_produces": "both",
+      "has_neck_generator": true,
+      "has_api_endpoint": true,
+      "endpoint_path": "/cam/acoustic/jumbo/body/gcode",
+      "endpoint_produces": "gcode",
+      "gcode_confirmed_working": false,
+      "dxf_confirmed_working": false,
+      "uses_dxf_writer_standard": false,
+      "calls_ezdxf_directly": false,
+      "end_to_end_status": "partial",
+      "missing_steps": ["G-code not confirmed working"]
+    },
+    {
+      "instrument": "classical",
+      "family": "acoustic",
+      "has_spec_data": true,
+      "spec_source": "services/api/app/instrument_geometry/guitars/classical.py",
+      "has_body_generator": true,
+      "body_generator_path": "services/api/app/generators/acoustic_body_generator.py",
+      "body_generator_produces": "both",
+      "has_neck_generator": true,
+      "has_api_endpoint": true,
+      "endpoint_path": "/cam/acoustic/classical/body/gcode",
+      "endpoint_produces": "gcode",
+      "gcode_confirmed_working": false,
+      "dxf_confirmed_working": false,
+      "uses_dxf_writer_standard": false,
+      "calls_ezdxf_directly": false,
+      "end_to_end_status": "partial",
+      "missing_steps": ["G-code not confirmed working"]
+    },
+    {
+      "instrument": "j45",
+      "family": "acoustic",
+      "has_spec_data": true,
+      "spec_source": "services/api/app/instrument_geometry/specs/gibson_j45.json",
+      "has_body_generator": true,
+      "body_generator_path": "services/api/app/generators/acoustic_body_generator.py",
+      "body_generator_produces": "both",
+      "has_neck_generator": true,
+      "has_api_endpoint": true,
+      "endpoint_path": "/cam/acoustic/j45/body/gcode",
+      "endpoint_produces": "gcode",
+      "gcode_confirmed_working": false,
+      "dxf_confirmed_working": false,
+      "uses_dxf_writer_standard": false,
+      "calls_ezdxf_directly": false,
+      "end_to_end_status": "partial",
+      "missing_steps": ["Body outline has only 30 points (coarse)"]
+    },
+    {
+      "instrument": "cuatro",
+      "family": "acoustic",
+      "has_spec_data": true,
+      "spec_source": "services/api/app/instrument_geometry/models/cuatro_venezolano.json",
+      "has_body_generator": false,
+      "body_generator_path": null,
+      "body_generator_produces": "unknown",
+      "has_neck_generator": false,
+      "has_api_endpoint": false,
+      "endpoint_path": null,
+      "endpoint_produces": "unknown",
+      "gcode_confirmed_working": false,
+      "dxf_confirmed_working": false,
+      "uses_dxf_writer_standard": false,
+      "calls_ezdxf_directly": false,
+      "end_to_end_status": "stub",
+      "missing_steps": ["No body generator", "No API endpoint", "Two variants (venezolano, puertorriqueno) need consolidation"]
+    },
+    {
+      "instrument": "benedetto_17",
+      "family": "archtop",
+      "has_spec_data": true,
+      "spec_source": "services/api/app/instrument_geometry/models/benedetto_17.json",
+      "has_body_generator": false,
+      "body_generator_path": null,
+      "body_generator_produces": "unknown",
+      "has_neck_generator": false,
+      "has_api_endpoint": true,
+      "endpoint_path": "/api/archtop/",
+      "endpoint_produces": "json",
+      "gcode_confirmed_working": false,
+      "dxf_confirmed_working": false,
+      "uses_dxf_writer_standard": true,
+      "calls_ezdxf_directly": false,
+      "end_to_end_status": "partial",
+      "missing_steps": ["Archtop pipeline exists but not integrated with body_generator", "Carved top requires specialized CAM"]
+    }
+  ],
+  "gen_consolidation": [
+    {
+      "phase": "GEN-1",
+      "description": "Connect spec stubs to project creation",
+      "status": "not_started",
+      "evidence": "No evidence found of POST /api/projects seeding with model_id defaults. Project service exists but model-specific seeding not implemented.",
+      "blocking_gaps": ["Project creation does not auto-populate instrument defaults", "Model registry not wired to project creation flow"]
+    },
+    {
+      "phase": "GEN-2",
+      "description": "BodyConfig + acoustic_body_style_id in schema",
+      "status": "partial",
+      "evidence": "Found acoustic_body_style_id in app/schemas/instrument_project.py and app/projects/service.py. BodyConfig not found as standalone.",
+      "blocking_gaps": ["BodyConfig not defined as separate dataclass", "acoustic_body_style_id exists but usage is limited"]
+    },
+    {
+      "phase": "GEN-3",
+      "description": "from_project() factories on generators",
+      "status": "complete",
+      "evidence": "stratocaster_body_generator.py has from_project() at line 92. lespaul_body_generator.py has from_project() at line 44. acoustic_body_generator.py has from_project() at line 206. body_generator.py dispatcher calls these at lines 108, 113, 118.",
+      "blocking_gaps": []
+    },
+    {
+      "phase": "GEN-4",
+      "description": "CAM REST endpoints reading project_id",
+      "status": "partial",
+      "evidence": "body_gcode_router.py exists with /stratocaster/body/gcode, /les_paul/body/gcode, /flying_v/body/gcode endpoints. However, no grep matches for project_id in body gcode routes.",
+      "blocking_gaps": ["Endpoints exist but project_id parameter integration incomplete", "Not all instruments have CAM endpoints"]
+    },
+    {
+      "phase": "GEN-5",
+      "description": "Consolidate spec stubs + registry + generator configs",
+      "status": "not_started",
+      "evidence": "MODEL_SPECS in guitars/__init__.py has 19 entries. instrument_model_registry.json has 31 entries. Multiple overlapping data sources identified. No consolidation script or migration found.",
+      "blocking_gaps": ["19 MODEL_SPECS vs 31 registry entries - inconsistent", "Multiple dimension sources with conflicting values", "No single source of truth established"]
+    },
+    {
+      "phase": "GEN-6",
+      "description": "Acoustic body orchestration",
+      "status": "complete",
+      "evidence": "acoustic_body_generator.py produces both outline AND G-code. Has generate_outline(), generate_perimeter_gcode(), generate_soundhole_gcode(), generate_binding_channel_gcode() methods. Supports 8 styles: dreadnought, jumbo, om/000, oo/00, parlor, classical, j45, gibson_l_00.",
+      "blocking_gaps": []
+    }
+  ],
+  "standalone_features": [
+    {
+      "feature": "Rosette Generator",
+      "file_path": "services/api/app/calculators/rosette_calc.py",
+      "api_endpoint": "/api/art/rosette/*",
+      "vue_component": "packages/client/src/components/art/ArtStudioRosette.vue",
+      "connected_to_project_system": false,
+      "connected_to_body_generator": false,
+      "uses_dxf_writer_standard": false,
+      "output_formats": ["dxf", "svg", "json", "pdf", "gcode"],
+      "integration_status": "standalone",
+      "notes": "Uses ezdxf inline (R12). Full feature with 6+ API routers and multiple Vue components."
+    },
+    {
+      "feature": "Headstock Inlay Generator",
+      "file_path": "services/api/app/art_studio/services/generators/inlay_export.py",
+      "api_endpoint": "/api/art/inlay/*",
+      "vue_component": "packages/client/src/components/art/ArtStudioInlay.vue",
+      "connected_to_project_system": false,
+      "connected_to_body_generator": false,
+      "uses_dxf_writer_standard": false,
+      "output_formats": ["dxf", "svg", "json", "gcode"],
+      "integration_status": "standalone",
+      "notes": "Uses ezdxf directly (R12). Exports CENTERLINE, MALE_CUT, POCKET_CUT layers."
+    },
+    {
+      "feature": "Soundhole Generator",
+      "file_path": "services/api/app/calculators/soundhole_calc.py",
+      "api_endpoint": "/api/instrument/soundhole",
+      "vue_component": null,
+      "connected_to_project_system": false,
+      "connected_to_body_generator": false,
+      "uses_dxf_writer_standard": true,
+      "output_formats": ["json", "dxf"],
+      "integration_status": "integrated",
+      "notes": "Uses dxf_writer.py for spiral geometry. Connects to acoustic_body_volume.py. 161 tests."
+    },
+    {
+      "feature": "Inverse Math Solver",
+      "file_path": "services/api/app/calculators/plate_design/inverse_solver.py",
+      "api_endpoint": null,
+      "vue_component": null,
+      "connected_to_project_system": false,
+      "connected_to_body_generator": false,
+      "uses_dxf_writer_standard": false,
+      "output_formats": ["json"],
+      "integration_status": "orphaned",
+      "notes": "Pure calculation library using scipy.optimize. No API endpoint, no UI. Solves for thickness given target frequencies."
+    },
+    {
+      "feature": "Body Outline Generator",
+      "file_path": "services/api/app/instrument_geometry/body/outlines.py",
+      "api_endpoint": "/instruments/guitar/electric-body/*",
+      "vue_component": null,
+      "connected_to_project_system": false,
+      "connected_to_body_generator": true,
+      "uses_dxf_writer_standard": false,
+      "output_formats": ["json", "svg", "dxf"],
+      "integration_status": "integrated",
+      "notes": "Referenced by body_generator.py and acoustic_body_generator.py. 19 body outlines extracted from DXF."
+    },
+    {
+      "feature": "Gore/Helmholtz Calculator",
+      "file_path": "services/api/app/calculators/soundhole_calc.py",
+      "api_endpoint": "/api/instrument/soundhole",
+      "vue_component": null,
+      "connected_to_project_system": false,
+      "connected_to_body_generator": false,
+      "uses_dxf_writer_standard": false,
+      "output_formats": ["json"],
+      "integration_status": "integrated",
+      "notes": "Embedded in soundhole calculator. Computes Helmholtz resonance frequency, multiport analysis."
+    }
+  ],
+  "dxf_compliance": [
+    {
+      "file": "app/cam/dxf_writer.py",
+      "uses_dxf_writer": true,
+      "calls_ezdxf_directly": true,
+      "output_format": "R12",
+      "compliance_status": "compliant",
+      "notes": "THE STANDARD. R12 (AC1009), LINE only, 3dp precision."
+    },
+    {
+      "file": "app/services/layered_dxf_writer.py",
+      "uses_dxf_writer": false,
+      "calls_ezdxf_directly": true,
+      "output_format": "R12",
+      "compliance_status": "compliant",
+      "notes": "Blueprint pipeline writer. R12, POLYLINE2D + LINE fallback."
+    },
+    {
+      "file": "app/cam/unified_dxf_cleaner.py",
+      "uses_dxf_writer": false,
+      "calls_ezdxf_directly": true,
+      "output_format": "R12",
+      "compliance_status": "compliant",
+      "notes": "Blueprint import cleaner. R12 output standard."
+    },
+    {
+      "file": "app/routers/neck/export.py",
+      "uses_dxf_writer": false,
+      "calls_ezdxf_directly": true,
+      "output_format": "R12",
+      "compliance_status": "compliant",
+      "notes": "Neck export. R12, LINE entities."
+    },
+    {
+      "file": "app/calculators/inlay_calc.py",
+      "uses_dxf_writer": false,
+      "calls_ezdxf_directly": true,
+      "output_format": "R12",
+      "compliance_status": "compliant",
+      "notes": "Inlay calculator. R12, LINE entities."
+    },
+    {
+      "file": "app/routers/dxf_preflight_router.py",
+      "uses_dxf_writer": false,
+      "calls_ezdxf_directly": true,
+      "output_format": "R12",
+      "compliance_status": "compliant",
+      "notes": "Validation router. R12 for validation output."
+    },
+    {
+      "file": "app/cam/archtop/archtop_contour_generator.py",
+      "uses_dxf_writer": false,
+      "calls_ezdxf_directly": true,
+      "output_format": "R2010",
+      "compliance_status": "non-compliant",
+      "notes": "Uses R2010, LWPOLYLINE. Bypasses standard."
+    },
+    {
+      "file": "app/cam/archtop/archtop_surface_tools.py",
+      "uses_dxf_writer": false,
+      "calls_ezdxf_directly": true,
+      "output_format": "R2010",
+      "compliance_status": "non-compliant",
+      "notes": "Uses R2010, LWPOLYLINE."
+    },
+    {
+      "file": "app/cam/archtop_bridge_generator.py",
+      "uses_dxf_writer": false,
+      "calls_ezdxf_directly": true,
+      "output_format": "R2010",
+      "compliance_status": "non-compliant",
+      "notes": "Uses R2010, LWPOLYLINE + CIRCLE."
+    },
+    {
+      "file": "app/cam/archtop_saddle_generator.py",
+      "uses_dxf_writer": false,
+      "calls_ezdxf_directly": true,
+      "output_format": "R2010",
+      "compliance_status": "non-compliant",
+      "notes": "Uses R2010, LWPOLYLINE + CIRCLE."
+    },
+    {
+      "file": "app/cam/dxf_advanced_validation.py",
+      "uses_dxf_writer": false,
+      "calls_ezdxf_directly": true,
+      "output_format": "R2010",
+      "compliance_status": "non-compliant",
+      "notes": "Validation module. Uses R2010."
+    },
+    {
+      "file": "app/instrument_geometry/bridge/archtop_floating_bridge.py",
+      "uses_dxf_writer": false,
+      "calls_ezdxf_directly": true,
+      "output_format": "R2000",
+      "compliance_status": "non-compliant",
+      "notes": "Uses R2000, LWPOLYLINE. Listed in CLAUDE.md as needing refactor."
+    },
+    {
+      "file": "app/instrument_geometry/soundhole/spiral_geometry.py",
+      "uses_dxf_writer": false,
+      "calls_ezdxf_directly": true,
+      "output_format": "R2000",
+      "compliance_status": "non-compliant",
+      "notes": "Uses R2000. Listed in CLAUDE.md as needing refactor."
+    },
+    {
+      "file": "app/instrument_geometry/body/smart_guitar_dxf.py",
+      "uses_dxf_writer": false,
+      "calls_ezdxf_directly": true,
+      "output_format": "R2000",
+      "compliance_status": "non-compliant",
+      "notes": "Smart Guitar DXF. Uses R2000, LWPOLYLINE."
+    },
+    {
+      "file": "app/routers/headstock/dxf_export.py",
+      "uses_dxf_writer": false,
+      "calls_ezdxf_directly": true,
+      "output_format": "R2010",
+      "compliance_status": "non-compliant",
+      "notes": "CRITICAL VIOLATION. Uses R2010, LWPOLYLINE. Bypasses standard."
+    },
+    {
+      "file": "app/routers/neck/headstock_transition_export.py",
+      "uses_dxf_writer": false,
+      "calls_ezdxf_directly": true,
+      "output_format": "R2010",
+      "compliance_status": "non-compliant",
+      "notes": "Uses R2010, LWPOLYLINE."
+    },
+    {
+      "file": "app/routers/neck/neck_profile_export.py",
+      "uses_dxf_writer": false,
+      "calls_ezdxf_directly": true,
+      "output_format": "R2010",
+      "compliance_status": "non-compliant",
+      "notes": "Uses R2010, LWPOLYLINE."
+    },
+    {
+      "file": "app/routers/export/curve_export_router.py",
+      "uses_dxf_writer": false,
+      "calls_ezdxf_directly": true,
+      "output_format": "R2010",
+      "compliance_status": "non-compliant",
+      "notes": "Uses R2010, LWPOLYLINE."
+    },
+    {
+      "file": "app/routers/instruments/guitar/smart_guitar_dxf_router.py",
+      "uses_dxf_writer": false,
+      "calls_ezdxf_directly": true,
+      "output_format": "R2010",
+      "compliance_status": "non-compliant",
+      "notes": "Uses R2010, LWPOLYLINE."
+    },
+    {
+      "file": "app/routers/blueprint_cam/dxf_preprocessor.py",
+      "uses_dxf_writer": false,
+      "calls_ezdxf_directly": true,
+      "output_format": "R2000",
+      "compliance_status": "non-compliant",
+      "notes": "Uses R2000, LWPOLYLINE."
+    },
+    {
+      "file": "app/routers/blueprint_cam/contour_reconstruction.py",
+      "uses_dxf_writer": false,
+      "calls_ezdxf_directly": true,
+      "output_format": "R2000",
+      "compliance_status": "non-compliant",
+      "notes": "Uses R2000, LWPOLYLINE."
+    },
+    {
+      "file": "app/generators/bezier_body.py",
+      "uses_dxf_writer": false,
+      "calls_ezdxf_directly": true,
+      "output_format": "R2010",
+      "compliance_status": "non-compliant",
+      "notes": "Bezier body generator. Uses R2010, LWPOLYLINE."
+    },
+    {
+      "file": "app/util/dxf_compat.py",
+      "uses_dxf_writer": false,
+      "calls_ezdxf_directly": true,
+      "output_format": "variable",
+      "compliance_status": "non-compliant",
+      "notes": "Compatibility layer. Creates R12-R2010 documents adaptively."
+    },
+    {
+      "file": "app/art_studio/services/generators/inlay_export.py",
+      "uses_dxf_writer": false,
+      "calls_ezdxf_directly": true,
+      "output_format": "R12",
+      "compliance_status": "compliant",
+      "notes": "Inlay export. Uses R12, POLYLINE2D."
+    }
+  ],
+  "coverage_matrix": [
+    {
+      "instrument": "stratocaster",
+      "sources": {
+        "instrument_specs_py": true,
+        "body_dimension_reference": true,
+        "body_outlines_json": true,
+        "body_templates_json": true,
+        "catalog_json": true,
+        "model_registry": true,
+        "measured_radii": true,
+        "model_specs_generators": true,
+        "dedicated_spec_json": "specs/fender_stratocaster.json"
+      },
+      "completeness": "9/9",
+      "dimension_conflicts": [],
+      "phantom_assets": false
+    },
+    {
+      "instrument": "telecaster",
+      "sources": {
+        "instrument_specs_py": true,
+        "body_dimension_reference": true,
+        "body_outlines_json": false,
+        "body_templates_json": true,
+        "catalog_json": false,
+        "model_registry": true,
+        "measured_radii": true,
+        "model_specs_generators": true,
+        "dedicated_spec_json": "specs/fender_telecaster.json"
+      },
+      "completeness": "7/9",
+      "dimension_conflicts": [],
+      "phantom_assets": false
+    },
+    {
+      "instrument": "les_paul",
+      "sources": {
+        "instrument_specs_py": true,
+        "body_dimension_reference": true,
+        "body_outlines_json": true,
+        "body_templates_json": true,
+        "catalog_json": true,
+        "model_registry": true,
+        "measured_radii": true,
+        "model_specs_generators": true,
+        "dedicated_spec_json": "specs/gibson_les_paul.json"
+      },
+      "completeness": "9/9",
+      "dimension_conflicts": [],
+      "phantom_assets": false
+    },
+    {
+      "instrument": "gibson_sg",
+      "sources": {
+        "instrument_specs_py": true,
+        "body_dimension_reference": true,
+        "body_outlines_json": false,
+        "body_templates_json": true,
+        "catalog_json": false,
+        "model_registry": true,
+        "measured_radii": false,
+        "model_specs_generators": true,
+        "dedicated_spec_json": "specs/gibson_sg.json"
+      },
+      "completeness": "6/9",
+      "dimension_conflicts": [],
+      "phantom_assets": false
+    },
+    {
+      "instrument": "gibson_explorer",
+      "sources": {
+        "instrument_specs_py": true,
+        "body_dimension_reference": true,
+        "body_outlines_json": true,
+        "body_templates_json": false,
+        "catalog_json": true,
+        "model_registry": true,
+        "measured_radii": true,
+        "model_specs_generators": true,
+        "dedicated_spec_json": "specs/gibson_explorer.json"
+      },
+      "completeness": "8/9",
+      "dimension_conflicts": ["DXF has 24 points (needs refinement to 200+)"],
+      "phantom_assets": false
+    },
+    {
+      "instrument": "flying_v",
+      "sources": {
+        "instrument_specs_py": true,
+        "body_dimension_reference": true,
+        "body_outlines_json": true,
+        "body_templates_json": true,
+        "catalog_json": true,
+        "model_registry": true,
+        "measured_radii": true,
+        "model_specs_generators": true,
+        "dedicated_spec_json": "specs/gibson_flying_v_1958.json"
+      },
+      "completeness": "9/9",
+      "dimension_conflicts": ["models/flying_v_1958.json has schema mismatch with loader.py"],
+      "phantom_assets": false
+    },
+    {
+      "instrument": "melody_maker",
+      "sources": {
+        "instrument_specs_py": true,
+        "body_dimension_reference": true,
+        "body_outlines_json": true,
+        "body_templates_json": false,
+        "catalog_json": true,
+        "model_registry": true,
+        "measured_radii": true,
+        "model_specs_generators": false,
+        "dedicated_spec_json": "specs/gibson_melody_maker.json"
+      },
+      "completeness": "7/9",
+      "dimension_conflicts": [],
+      "phantom_assets": false
+    },
+    {
+      "instrument": "es335",
+      "sources": {
+        "instrument_specs_py": true,
+        "body_dimension_reference": true,
+        "body_outlines_json": false,
+        "body_templates_json": true,
+        "catalog_json": false,
+        "model_registry": true,
+        "measured_radii": false,
+        "model_specs_generators": true,
+        "dedicated_spec_json": "specs/gibson_es_335.json"
+      },
+      "completeness": "6/9",
+      "dimension_conflicts": [],
+      "phantom_assets": false
+    },
+    {
+      "instrument": "smart_guitar",
+      "sources": {
+        "instrument_specs_py": true,
+        "body_dimension_reference": true,
+        "body_outlines_json": true,
+        "body_templates_json": false,
+        "catalog_json": false,
+        "model_registry": true,
+        "measured_radii": false,
+        "model_specs_generators": false,
+        "dedicated_spec_json": "body/specs/smart_guitar_v1.json"
+      },
+      "completeness": "5/9",
+      "dimension_conflicts": [],
+      "phantom_assets": true
+    },
+    {
+      "instrument": "eds1275",
+      "sources": {
+        "instrument_specs_py": false,
+        "body_dimension_reference": false,
+        "body_outlines_json": false,
+        "body_templates_json": false,
+        "catalog_json": false,
+        "model_registry": false,
+        "measured_radii": false,
+        "model_specs_generators": false,
+        "dedicated_spec_json": null
+      },
+      "completeness": "0/9",
+      "dimension_conflicts": [],
+      "phantom_assets": true
+    },
+    {
+      "instrument": "dreadnought",
+      "sources": {
+        "instrument_specs_py": true,
+        "body_dimension_reference": true,
+        "body_outlines_json": true,
+        "body_templates_json": true,
+        "catalog_json": true,
+        "model_registry": true,
+        "measured_radii": true,
+        "model_specs_generators": true,
+        "dedicated_spec_json": null
+      },
+      "completeness": "8/9",
+      "dimension_conflicts": ["Multiple dreadnought data sources with inconsistent values"],
+      "phantom_assets": false
+    },
+    {
+      "instrument": "om_000",
+      "sources": {
+        "instrument_specs_py": true,
+        "body_dimension_reference": true,
+        "body_outlines_json": true,
+        "body_templates_json": false,
+        "catalog_json": true,
+        "model_registry": true,
+        "measured_radii": true,
+        "model_specs_generators": true,
+        "dedicated_spec_json": "specs/martin_om28.json"
+      },
+      "completeness": "8/9",
+      "dimension_conflicts": [],
+      "phantom_assets": false
+    },
+    {
+      "instrument": "jumbo",
+      "sources": {
+        "instrument_specs_py": true,
+        "body_dimension_reference": true,
+        "body_outlines_json": true,
+        "body_templates_json": false,
+        "catalog_json": true,
+        "model_registry": true,
+        "measured_radii": true,
+        "model_specs_generators": true,
+        "dedicated_spec_json": null
+      },
+      "completeness": "7/9",
+      "dimension_conflicts": [],
+      "phantom_assets": false
+    },
+    {
+      "instrument": "classical",
+      "sources": {
+        "instrument_specs_py": true,
+        "body_dimension_reference": true,
+        "body_outlines_json": true,
+        "body_templates_json": true,
+        "catalog_json": true,
+        "model_registry": true,
+        "measured_radii": true,
+        "model_specs_generators": true,
+        "dedicated_spec_json": null
+      },
+      "completeness": "8/9",
+      "dimension_conflicts": [],
+      "phantom_assets": false
+    },
+    {
+      "instrument": "j45",
+      "sources": {
+        "instrument_specs_py": true,
+        "body_dimension_reference": true,
+        "body_outlines_json": true,
+        "body_templates_json": true,
+        "catalog_json": true,
+        "model_registry": true,
+        "measured_radii": false,
+        "model_specs_generators": true,
+        "dedicated_spec_json": "specs/gibson_j45.json"
+      },
+      "completeness": "8/9",
+      "dimension_conflicts": ["Body outline has only 30 points (coarse)"],
+      "phantom_assets": false
+    },
+    {
+      "instrument": "cuatro",
+      "sources": {
+        "instrument_specs_py": true,
+        "body_dimension_reference": true,
+        "body_outlines_json": true,
+        "body_templates_json": false,
+        "catalog_json": true,
+        "model_registry": true,
+        "measured_radii": true,
+        "model_specs_generators": false,
+        "dedicated_spec_json": "models/cuatro_venezolano.json"
+      },
+      "completeness": "7/9",
+      "dimension_conflicts": ["Two variants (venezolano, puertorriqueno) not consolidated"],
+      "phantom_assets": false
+    },
+    {
+      "instrument": "benedetto_17",
+      "sources": {
+        "instrument_specs_py": true,
+        "body_dimension_reference": true,
+        "body_outlines_json": false,
+        "body_templates_json": false,
+        "catalog_json": false,
+        "model_registry": true,
+        "measured_radii": false,
+        "model_specs_generators": true,
+        "dedicated_spec_json": "models/benedetto_17.json"
+      },
+      "completeness": "5/9",
+      "dimension_conflicts": [],
+      "phantom_assets": true
+    }
+  ],
+  "documentation_map": [
+    {
+      "path": "CLAUDE.md",
+      "size_kb": 17.9,
+      "topic": "guardrails",
+      "referenced_by": "claude-code",
+      "in_claude_md": true,
+      "status": "active"
+    },
+    {
+      "path": "docs/DEV_GUARDRAILS.md",
+      "size_kb": 3.9,
+      "topic": "guardrails",
+      "referenced_by": "CLAUDE.md",
+      "in_claude_md": true,
+      "status": "active"
+    },
+    {
+      "path": "docs/VECTORIZER_PIPELINE_AUDIT.md",
+      "size_kb": 18.4,
+      "topic": "vectorizer",
+      "referenced_by": null,
+      "in_claude_md": false,
+      "status": "active"
+    },
+    {
+      "path": "docs/PHASE6_CAD_GEOMETRY_HANDOFF.md",
+      "size_kb": 36.4,
+      "topic": "handoff",
+      "referenced_by": null,
+      "in_claude_md": false,
+      "status": "active"
+    },
+    {
+      "path": "docs/THIN_STROKE_PDF_HANDOFF.md",
+      "size_kb": 29.6,
+      "topic": "handoff",
+      "referenced_by": null,
+      "in_claude_md": false,
+      "status": "active"
+    },
+    {
+      "path": "SPRINT.md",
+      "size_kb": 19.1,
+      "topic": "sprints",
+      "referenced_by": null,
+      "in_claude_md": false,
+      "status": "active"
+    },
+    {
+      "path": "SPRINTS.md",
+      "size_kb": 45.6,
+      "topic": "sprints",
+      "referenced_by": null,
+      "in_claude_md": false,
+      "status": "stale"
+    },
+    {
+      "path": "docs/BLUEPRINT_VECTORIZER_ARCHITECTURE.md",
+      "size_kb": 26.4,
+      "topic": "architecture",
+      "referenced_by": null,
+      "in_claude_md": false,
+      "status": "stale"
+    },
+    {
+      "path": "docs/ROUTER_MAP.md",
+      "size_kb": 33.9,
+      "topic": "api",
+      "referenced_by": null,
+      "in_claude_md": false,
+      "status": "stale"
+    },
+    {
+      "path": "docs/GAP_ANALYSIS_MASTER.md",
+      "size_kb": 50.9,
+      "topic": "other",
+      "referenced_by": null,
+      "in_claude_md": false,
+      "status": "active"
+    },
+    {
+      "path": "docs/handoffs/VECTORIZER_PIPELINE_HANDOFF.md",
+      "size_kb": 55.4,
+      "topic": "vectorizer",
+      "referenced_by": null,
+      "in_claude_md": false,
+      "status": "active"
+    },
+    {
+      "path": "docs/governance/FENCE_ARCHITECTURE.md",
+      "size_kb": 78.5,
+      "topic": "architecture",
+      "referenced_by": null,
+      "in_claude_md": false,
+      "status": "stale"
+    },
+    {
+      "path": "Luthiers_Toolbox_Platform_Architecture.md",
+      "size_kb": 49.3,
+      "topic": "architecture",
+      "referenced_by": null,
+      "in_claude_md": false,
+      "status": "stale"
+    },
+    {
+      "path": "docs/LUTHERIE_MATH.md",
+      "size_kb": 72.9,
+      "topic": "other",
+      "referenced_by": null,
+      "in_claude_md": false,
+      "status": "active"
+    },
+    {
+      "path": "docs/CHIEF_ENGINEER_HANDOFF.md",
+      "size_kb": 35.8,
+      "topic": "handoff",
+      "referenced_by": null,
+      "in_claude_md": false,
+      "status": "stale"
+    },
+    {
+      "path": "docs/UNFINISHED_REMEDIATION_EFFORTS.md",
+      "size_kb": 35.8,
+      "topic": "other",
+      "referenced_by": null,
+      "in_claude_md": false,
+      "status": "stale"
+    },
+    {
+      "path": "docs/ROSETTE_WHEEL_ENGINE_INTEGRATION_PLAN.md",
+      "size_kb": 37.7,
+      "topic": "generator",
+      "referenced_by": null,
+      "in_claude_md": false,
+      "status": "stale"
+    },
+    {
+      "path": "docs/ROSETTE_CONSOLIDATION_HANDOFF.md",
+      "size_kb": 27.3,
+      "topic": "generator",
+      "referenced_by": null,
+      "in_claude_md": false,
+      "status": "stale"
+    },
+    {
+      "path": "docs/handoffs/24_FRET_STRATOCASTER_DESIGN_HANDOFF.md",
+      "size_kb": 41.6,
+      "topic": "architecture",
+      "referenced_by": null,
+      "in_claude_md": false,
+      "status": "active"
+    },
+    {
+      "path": "docs/handoffs/J45_VINE_OF_LIFE_DESIGN_HANDOFF.md",
+      "size_kb": 43.5,
+      "topic": "architecture",
+      "referenced_by": null,
+      "in_claude_md": false,
+      "status": "active"
+    }
+  ],
+  "dxf_compliance_classification": {
+    "summary": {
+      "production_files": 12,
+      "sandbox_files": 6,
+      "discard_files": 6,
+      "total_non_compliant": 24
+    },
+    "production": [
+      {
+        "file": "app/cam/archtop/archtop_contour_generator.py",
+        "output_format": "R2010",
+        "called_by": "app/routers/archtop_router.py",
+        "priority": 5,
+        "notes": "Archtop CAM pipeline"
+      },
+      {
+        "file": "app/cam/archtop_bridge_generator.py",
+        "output_format": "R2010",
+        "called_by": "app/routers/cam/guitar/archtop_cam_router.py",
+        "priority": 5,
+        "notes": "Archtop CAM pipeline"
+      },
+      {
+        "file": "app/cam/archtop_saddle_generator.py",
+        "output_format": "R2010",
+        "called_by": "app/routers/cam/guitar/archtop_cam_router.py",
+        "priority": 5,
+        "notes": "Archtop CAM pipeline"
+      },
+      {
+        "file": "app/instrument_geometry/bridge/archtop_floating_bridge.py",
+        "output_format": "R2000",
+        "called_by": "app/routers/woodworking_router.py",
+        "priority": 2,
+        "notes": "Listed in CLAUDE.md as blocking. Serves woodworking API."
+      },
+      {
+        "file": "app/instrument_geometry/soundhole/spiral_geometry.py",
+        "output_format": "R2000",
+        "called_by": "app/routers/instrument_geometry/soundhole_router.py",
+        "priority": 1,
+        "notes": "Listed in CLAUDE.md as blocking. Serves soundhole API. 161 tests."
+      },
+      {
+        "file": "app/instrument_geometry/body/smart_guitar_dxf.py",
+        "output_format": "R2000",
+        "called_by": "app/routers/instruments/guitar/__init__.py",
+        "priority": 4,
+        "notes": "Smart Guitar DXF export"
+      },
+      {
+        "file": "app/routers/headstock/dxf_export.py",
+        "output_format": "R2010",
+        "called_by": "app/routers/legacy_dxf_exports_router.py",
+        "priority": 3,
+        "notes": "CRITICAL VIOLATION. Active user-facing export."
+      },
+      {
+        "file": "app/routers/neck/headstock_transition_export.py",
+        "output_format": "R2010",
+        "called_by": "app/router_registry/manifests/business_manifest.py",
+        "priority": 4,
+        "notes": "Registered in business manifest"
+      },
+      {
+        "file": "app/routers/neck/neck_profile_export.py",
+        "output_format": "R2010",
+        "called_by": "app/router_registry/manifests/business_manifest.py",
+        "priority": 4,
+        "notes": "Registered in business manifest"
+      },
+      {
+        "file": "app/routers/blueprint_cam/dxf_preprocessor.py",
+        "output_format": "R2000",
+        "called_by": "app/routers/blueprint_cam/preprocessor_router.py",
+        "priority": 3,
+        "notes": "Part of active vectorizer pipeline"
+      },
+      {
+        "file": "app/routers/blueprint_cam/contour_reconstruction.py",
+        "output_format": "R2000",
+        "called_by": "app/routers/blueprint_cam/contour_reconstruction_router.py",
+        "priority": 3,
+        "notes": "Part of active vectorizer pipeline"
+      },
+      {
+        "file": "app/util/dxf_compat.py",
+        "output_format": "variable",
+        "called_by": "app/art_studio/bracing_router.py, app/art_studio/inlay_router.py",
+        "priority": 4,
+        "notes": "Compatibility layer used by art studio"
+      }
+    ],
+    "sandbox": [
+      {
+        "file": "app/cam/archtop/archtop_surface_tools.py",
+        "output_format": "R2010",
+        "reason": "Internal to archtop_modal_analysis.py, no direct router"
+      },
+      {
+        "file": "app/cam/dxf_advanced_validation.py",
+        "output_format": "R2010",
+        "reason": "CI/validation only (dxf_validation_gate.py, ci/check_dxf_files.py)"
+      },
+      {
+        "file": "app/routers/export/curve_export_router.py",
+        "output_format": "R2010",
+        "reason": "Registered in cam_manifest but no active callers found"
+      },
+      {
+        "file": "app/routers/instruments/guitar/smart_guitar_dxf_router.py",
+        "output_format": "R2010",
+        "reason": "Delegates to smart_guitar_dxf.py (already counted in production)"
+      },
+      {
+        "file": "app/generators/bezier_body.py",
+        "output_format": "R2010",
+        "reason": "Exported from generators/__init__.py but no router uses DXF output"
+      },
+      {
+        "file": "scripts/generate_smart_guitar_v3_dxf.py",
+        "output_format": "R2010",
+        "reason": "Script file, not production"
+      }
+    ],
+    "discard": [
+      {
+        "file": "tests/test_dxf_advanced_validation_smoke.py",
+        "reason": "Test file"
+      },
+      {
+        "file": "tests/test_contour_reconstruction.py",
+        "reason": "Test file"
+      },
+      {
+        "file": "tests/test_dxf_geometry_correction.py",
+        "reason": "Test file"
+      },
+      {
+        "file": "tests/test_dxf_preprocessor.py",
+        "reason": "Test file"
+      },
+      {
+        "file": "tests/test_blueprint_cam_integration.py",
+        "reason": "Test file"
+      },
+      {
+        "file": "tests/test_bezier_body_generator.py",
+        "reason": "Test file"
+      }
+    ],
+    "priority_order": [
+      "1. app/instrument_geometry/soundhole/spiral_geometry.py - Listed in CLAUDE.md as blocking",
+      "2. app/instrument_geometry/bridge/archtop_floating_bridge.py - Listed in CLAUDE.md as blocking",
+      "3. app/routers/headstock/dxf_export.py - Active user-facing export, R2010 violates standard",
+      "3. app/routers/blueprint_cam/dxf_preprocessor.py - Part of active vectorizer pipeline",
+      "3. app/routers/blueprint_cam/contour_reconstruction.py - Part of active vectorizer pipeline",
+      "4. app/instrument_geometry/body/smart_guitar_dxf.py - Smart Guitar priority",
+      "4. app/routers/neck/*.py - Neck/headstock exports (2 files)",
+      "4. app/util/dxf_compat.py - Art studio compatibility layer",
+      "5. app/cam/archtop/*.py - Archtop CAM files (3 files) - lower priority, partial pipeline"
+    ]
+  }
+}
