@@ -76,6 +76,16 @@ curl -X POST /api/blueprint/vectorize \
   -F spec_name=dreadnought
 ```
 
+## Sprint 3: Corpus Consistency Validation
+
+**Corpus directory:** `Guitar Plans/`  
+**Status:** Corpus curation is open — representative PNG variety TBD.
+
+Validation will run `mode=enhanced` across corpus and report:
+- Entity count variance
+- Bounding box match vs spec
+- Closed-contour rate
+
 ## Test Artifacts
 
 Output files from this test run:
