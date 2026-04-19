@@ -44,6 +44,7 @@ from typing import Any, Callable, Optional
 from .blueprint_extract import (
     ExtractionResult,
     extract_blueprint_to_dxf,
+    extract_blueprint_enhanced,
     extract_pdf_page,
     # Dual-pass extraction
     DualPassResult,
@@ -266,9 +267,18 @@ class BlueprintOrchestrator:
 
                 raw_dxf_path = tmpdir_path / "raw_edges.dxf"
 
+                # ENHANCED: Multi-scale edge fusion (highest detail, no simplification)
+                if mode == CleanupMode.ENHANCED:
+                    extract_result = extract_blueprint_enhanced(
+                        source_path=str(input_path),
+                        output_path=str(raw_dxf_path),
+                        target_height_mm=target_height_mm,
+                        warnings=warnings,
+                    )
+
                 # LAYERED_DUAL_PASS: Route to dual-pass extraction with layer building
                 # Phase 4: Pass A + Pass B → Layer assignment → Controlled export
-                if mode == CleanupMode.LAYERED_DUAL_PASS:
+                elif mode == CleanupMode.LAYERED_DUAL_PASS:
                     import cv2
                     from .annotation_extract import extract_annotations, get_annotation_contours
 
@@ -442,8 +452,23 @@ class BlueprintOrchestrator:
 
                 cleaned_dxf_path = tmpdir_path / "cleaned.dxf"
 
-                # LAYERED_DUAL_PASS: Skip traditional cleanup - layers handle filtering
-                if mode == CleanupMode.LAYERED_DUAL_PASS:
+                # ENHANCED and LAYERED_DUAL_PASS: Skip traditional cleanup
+                if mode == CleanupMode.ENHANCED:
+                    # Use raw_dxf_path directly (no filtering for max detail)
+                    cleaned_dxf_path = raw_dxf_path
+                    clean_result = CleanResult(
+                        success=True,
+                        svg_preview="",
+                        dxf_path=str(raw_dxf_path),
+                        original_entity_count=extract_result.line_count,
+                        cleaned_entity_count=extract_result.line_count,
+                        contours_found=0,  # Not tracked in enhanced mode
+                        chains_found=0,
+                        best_confidence=1.0,  # Full confidence for raw output
+                        candidate_count=0,
+                    )
+                    cleanup_valid = True
+                elif mode == CleanupMode.LAYERED_DUAL_PASS:
                     # Use raw_dxf_path directly (already filtered by layer export preset)
                     cleaned_dxf_path = raw_dxf_path
                     # Create minimal CleanResult for compatibility
@@ -514,8 +539,28 @@ class BlueprintOrchestrator:
                     warnings.append("DXF content missing or empty")
 
                 # ─── Stage: Recommendation ────────────────────────────────
+                # ENHANCED: Accept raw output directly (no filtering applied)
+                if mode == CleanupMode.ENHANCED:
+                    is_ok = dxf_valid
+                    stage = "complete" if is_ok else "extraction"
+
+                    selection = SelectionResult(
+                        candidate_count=extract_result.line_count,
+                        selected_index=0,
+                        selection_score=1.0,
+                        runner_up_score=0.0,
+                        winner_margin=1.0,
+                        reasons=["Enhanced multi-scale extraction"],
+                    )
+
+                    rec = Recommendation(
+                        action=RecommendationAction.ACCEPT if is_ok else RecommendationAction.REJECT,
+                        reasons=["Full edge detail preserved"] if is_ok else ["Extraction produced no output"],
+                        confidence=1.0 if is_ok else 0.0,
+                    )
+
                 # LAYERED_DUAL_PASS uses layered acceptance logic instead of recommend()
-                if mode == CleanupMode.LAYERED_DUAL_PASS:
+                elif mode == CleanupMode.LAYERED_DUAL_PASS:
                     # Phase 4: Use layered acceptance grading
                     is_ok = layered_acceptance.ok
                     stage = "complete" if is_ok else "acceptance"
