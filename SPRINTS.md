@@ -497,6 +497,14 @@ Every instrument project starts blank — builder re-enters spec data every sess
 
 ---
 
+## TECH DEBT
+
+| Item | Location | Description | Merge Target |
+|------|----------|-------------|--------------|
+| Bi-arc joining math | `docs/reference/curvature_correction_unmerged.py` | 467 lines of gap-correction math, chord/sagitta utilities, detailed MEASURED_RADII with derivation notes. Not integrated into services/api version. | `services/api/app/instrument_geometry/curvature_correction.py` |
+
+---
+
 ## COMPLETED
 
 ### Sprint 1 Phases 1-3 — Vectorizer Reconciliation
