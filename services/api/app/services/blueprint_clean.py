@@ -75,11 +75,18 @@ class CleanupMode(str, Enum):
               - Pass B: Annotation capture (STUB - returns empty)
               - Routes to extract_dual_pass() in blueprint_extract.py
               - Behavior is identical to RESTORED_BASELINE until Pass B activates
+
+    ENHANCED: Multi-scale edge fusion extraction (highest detail).
+              - Uses three Canny threshold levels (30/100, 50/150, 80/200)
+              - Produces 50,000-300,000+ LINE entities
+              - No contour simplification (preserves all edge detail)
+              - Routes to extract_blueprint_enhanced() in blueprint_extract.py
     """
     BASELINE = "baseline"
     REFINED = "refined"
     RESTORED_BASELINE = "restored_baseline"
     LAYERED_DUAL_PASS = "layered_dual_pass"
+    ENHANCED = "enhanced"
 
 
 @dataclass
