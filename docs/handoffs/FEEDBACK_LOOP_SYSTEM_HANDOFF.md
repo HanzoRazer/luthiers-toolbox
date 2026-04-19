@@ -106,6 +106,273 @@ This is **regression, not absence**. The code exists. The fix is wiring, not wri
 
 ---
 
+## Code at Each Stage
+
+### Stage 1: Loop 3 Implementation (Mar 4, 2026)
+
+**Commit:** `66894d49`  
+**File:** `services/blueprint-import/vectorizer_phase3.py`
+
+```python
+class FeedbackSystem:
+    """
+    Collects and manages user feedback for continuous improvement.
+    """
+
+    def __init__(self, feedback_dir: str = ".feedback"):
+        self.feedback_dir = Path(feedback_dir)
+        self.feedback_dir.mkdir(parents=True, exist_ok=True)
+        self.pending_reviews: List[Dict] = []
+
+    def record_classification(
+        self,
+        contour_hash: str,
+        predicted_category: str,
+        confidence: float,
+        features: np.ndarray,
+        source_file: str
+    ):
+        """Record a classification for potential review."""
+        record = {
+            "contour_hash": contour_hash,
+            "predicted": predicted_category,
+            "confidence": confidence,
+            "features": features.tolist(),
+            "source": source_file,
+            "timestamp": datetime.now().isoformat(),
+            "reviewed": False,
+            "correct_label": None
+        }
+        self.pending_reviews.append(record)
+
+    def submit_correction(self, contour_hash: str, correct_category: str, 
+                          reviewer: str = "user") -> bool:
+        """Submit a correction for a classification."""
+        for record in self.pending_reviews:
+            if record["contour_hash"] == contour_hash:
+                record["correct_label"] = correct_category
+                record["reviewed"] = True
+                self._save_feedback(record)
+                return True
+        return False
+```
+
+**Wiring (disabled by default):**
+```python
+# Line 2741 - default is False
+def __init__(self, ..., enable_feedback: bool = False, ...):
+    self.feedback = FeedbackSystem(feedback_dir) if enable_feedback else None
+```
+
+---
+
+### Stage 2: Loop 1 Full Implementation (Mar 15, 2026)
+
+**Commit:** `190adf66`  
+**File:** `services/photo-vectorizer/geometry_coach_v2.py`
+
+```python
+class GeometryCoachV2:
+    """
+    Coach V2 widens scope from contour-only retries to body-ownership retries.
+
+    Primary responsibilities:
+      1. Inspect BodyIsolationResult
+      2. Inspect ContourStageResult
+      3. Choose the *next safest rerun target*
+      4. Enforce guardrails:
+         - max retries
+         - monotonic improvement
+         - no silent downgrade
+         - terminal manual review state
+    """
+
+    def __init__(self, config: Optional[CoachV2Config] = None):
+        self.config = config or CoachV2Config()
+
+    def should_retry(
+        self,
+        *,
+        body_result: BodyIsolationResult,
+        contour_result: Any,
+        retry_count: int = 0,
+    ) -> bool:
+        if retry_count >= self.config.max_retries:
+            return False
+
+        body_score = float(getattr(body_result, "completeness_score", 0.0))
+        contour_score = float(getattr(contour_result, "best_score", 0.0))
+
+        if contour_score < self.config.contour_target_threshold:
+            return True
+
+        if body_score < self.config.body_isolation_review_threshold:
+            return True
+
+        return False
+
+    def evaluate(self, *, body_stage_runner, contour_stage_runner, 
+                 body_result, contour_result, **kwargs):
+        """Main entry point - returns (body_result, contour_result, decision)"""
+        # ... retry logic with monotonic improvement gates
+```
+
+**Wiring in photo_vectorizer_v2.py (Stage 8.5):**
+```python
+# Line ~4108
+if coach_enabled:
+    body_isolation_result, contour_result, coach_decision = (
+        self.geometry_coach_v2.evaluate(
+            body_stage_runner=self.body_isolation_stage,
+            contour_stage_runner=self.contour_stage,
+            body_result=body_isolation_result,
+            contour_result=contour_result,
+            ...
+        )
+    )
+    
+    if coach_decision.action == "manual_review_required":
+        result.warnings.append(coach_decision.reason)
+```
+
+---
+
+### Stage 3: Loop 1 Partial (Scale Validation) (Apr 3, 2026)
+
+**Commit:** `76b1ff98`  
+**File:** `services/blueprint-import/vectorizer_phase3.py`
+
+```python
+def validate_scale_before_export(
+    mm_per_px: float,
+    scale_factor: float,
+    classified: Dict[ContourCategory, List[ContourInfo]],
+    spec_name: Optional[str] = None
+) -> Tuple[float, bool]:
+    """
+    Validate scale produces plausible instrument dimensions before export.
+    If not plausible, attempts correction.
+
+    Called BEFORE export_to_dxf().
+    
+    Returns:
+        Tuple of (corrected_scale_factor, validation_passed)
+    """
+    effective_mm_per_px = mm_per_px * scale_factor
+
+    # Find body outline from classified dict
+    body_list = classified.get(ContourCategory.BODY_OUTLINE, [])
+    if not body_list:
+        # Fallback to largest contour
+        all_contours = [c for cat_list in classified.values() for c in cat_list]
+        if not all_contours:
+            logger.warning("Scale validation: no contours to validate")
+            return scale_factor, False
+        largest = max(all_contours, key=lambda c: c.area_px)
+    else:
+        largest = body_list[0]
+
+    body_w_mm = largest.width_mm * scale_factor
+    body_h_mm = largest.height_mm * scale_factor
+
+    logger.info(f"Scale validation: body={body_w_mm:.0f}x{body_h_mm:.0f}mm")
+
+    # Check against spec if available
+    if spec_name and spec_name in INSTRUMENT_SPECS:
+        spec = INSTRUMENT_SPECS[spec_name]
+        expected_w = (spec.body_width_range[0] + spec.body_width_range[1]) / 2
+        expected_h = (spec.body_length_range[0] + spec.body_length_range[1]) / 2
+        
+        ratio_w = body_w_mm / expected_w
+        ratio_h = body_h_mm / expected_h
+
+        if 0.8 < ratio_w < 1.2 and 0.8 < ratio_h < 1.2:
+            return scale_factor, True
+        else:
+            correction = (expected_w / body_w_mm + expected_h / body_h_mm) / 2
+            logger.warning(f"Scale validation FAILED. Correction: {correction:.3f}x")
+            return scale_factor * correction, False
+
+    # Generic plausibility (no spec)
+    max_dim = max(body_w_mm, body_h_mm)
+    if max_dim > 700:
+        correction = 500 / max_dim
+        return scale_factor * correction, False
+
+    return scale_factor, True
+```
+
+**Wiring in vectorizer_phase3.py:**
+```python
+# Line 3559
+scale_factor, scale_valid = validate_scale_before_export(
+    mm_per_px, scale_factor, classified, spec_name
+)
+```
+
+---
+
+### Stage 4: Orchestrator Created WITHOUT Validation (Apr 13, 2026)
+
+**Commit:** `e6950d25`  
+**File:** `services/api/app/services/blueprint_orchestrator.py`
+
+```python
+# Imports - NOTE: No validation imports
+from .blueprint_extract import (
+    ExtractionResult,
+    extract_blueprint_to_dxf,
+    extract_pdf_page,
+    DualPassResult,
+    extract_dual_pass,  # <-- New dual-pass, no validation
+)
+from .blueprint_clean import (
+    CleanResult,
+    CleanupMode,
+    ...
+)
+
+# No import of:
+#   - validate_scale_before_export (from vectorizer_phase3)
+#   - GeometryCoachV2 (from photo-vectorizer)
+#   - FeedbackSystem (from vectorizer_phase3)
+
+class BlueprintOrchestrator:
+    def process_file(self, ...):
+        # ... extraction code ...
+        
+        # LAYERED_DUAL_PASS mode - no validation gate
+        if mode == CleanupMode.LAYERED_DUAL_PASS:
+            dual_result = extract_dual_pass(
+                source_path=str(input_path),
+                output_path=str(raw_dxf_path),
+                target_height_mm=target_height_mm,
+                warnings=warnings,
+            )
+            # Proceeds directly to export
+            # NO call to validate_scale_before_export
+            # NO call to GeometryCoachV2.evaluate
+            # NO feedback recording
+```
+
+**What's Missing (the regression):**
+```python
+# THIS CODE SHOULD EXIST BUT DOESN'T:
+
+# Option A: Import scale validation
+from services.blueprint_import.vectorizer_phase3 import validate_scale_before_export
+
+# Option B: Import full coaching
+from services.photo_vectorizer.geometry_coach_v2 import GeometryCoachV2
+
+# Before DXF export:
+scale_factor, valid = validate_scale_before_export(mm_per_px, scale_factor, classified)
+if not valid:
+    result.recommendation = Recommendation(action="review", reasons=["Scale validation failed"])
+```
+
+---
+
 ## File Locations
 
 ### Loop 1 — Intra-Frame Validation
