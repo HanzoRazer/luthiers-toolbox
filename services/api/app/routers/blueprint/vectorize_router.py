@@ -117,6 +117,7 @@ async def vectorize_blueprint(
     close_gaps_mm: float = Form(1.0),
     debug: bool = Form(False),
     mode: str = Form("refined"),
+    spec_name: Optional[str] = Form(None),
 ):
     """
     Vectorize a blueprint image or PDF to SVG + DXF.
@@ -179,6 +180,7 @@ async def vectorize_blueprint(
         close_gaps_mm=close_gaps_mm,
         debug=include_debug,
         mode=cleanup_mode,
+        spec_name=spec_name,
     )
 
     # Convert to response dict

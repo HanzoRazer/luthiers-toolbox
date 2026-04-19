@@ -62,6 +62,7 @@ async def _run_blueprint_job(
     close_gaps_mm: float,
     debug: bool,
     mode: CleanupMode = CleanupMode.REFINED,
+    spec_name: str | None = None,
 ) -> None:
     """
     Background task that runs the blueprint orchestrator.
@@ -98,6 +99,7 @@ async def _run_blueprint_job(
             debug=debug,
             progress_callback=progress_callback,
             mode=mode,
+            spec_name=spec_name,
         )
 
         payload = result.to_response_dict(include_debug=debug)
@@ -143,6 +145,7 @@ async def vectorize_blueprint_async(
     close_gaps_mm: float = Form(1.0),
     debug: bool = Form(False),
     mode: str = Form("refined"),
+    spec_name: str | None = Form(None),
 ):
     """
     Submit a blueprint for async vectorization.
@@ -190,6 +193,7 @@ async def vectorize_blueprint_async(
             close_gaps_mm=close_gaps_mm,
             debug=debug,
             mode=cleanup_mode,
+            spec_name=spec_name,
         )
     )
 
