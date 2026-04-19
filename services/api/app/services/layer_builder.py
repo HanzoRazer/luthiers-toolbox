@@ -898,3 +898,136 @@ def join_body_gaps(
     )
 
     return new_entities, result
+
+
+# ─── Scale Correction ───────────────────────────────────────────────────────
+
+
+def apply_scale_correction(
+    entities: LayeredEntities,
+    spec_name: str,
+) -> Tuple[LayeredEntities, float]:
+    """
+    Apply scale correction to BODY_OUTLINE layer based on instrument spec.
+
+    Computes scale factor from spec height vs extracted body bounding box height,
+    then applies uniformly to BODY_OUTLINE coordinates only.
+
+    Uniform scaling preserves aspect ratio — the shape came from a real instrument,
+    so both dimensions should scale together. If source aspect ratio differs from
+    spec by >10%, a warning is logged (source may be cropped or angled).
+
+    Args:
+        entities: LayeredEntities from build_layers()
+        spec_name: Instrument spec name (e.g., "benedetto_17", "dreadnought")
+
+    Returns:
+        (corrected_entities, scale_factor)
+    """
+    import json
+    from pathlib import Path
+
+    # Load spec from body_dimension_reference.json
+    spec_path = Path(__file__).parent.parent.parent.parent / "photo-vectorizer" / "body_dimension_reference.json"
+    if not spec_path.exists():
+        # Try alternate path
+        spec_path = Path(__file__).parent.parent.parent.parent.parent / "photo-vectorizer" / "body_dimension_reference.json"
+
+    if not spec_path.exists():
+        logger.warning(f"body_dimension_reference.json not found, skipping scale correction")
+        return entities, 1.0
+
+    with open(spec_path) as f:
+        specs = json.load(f)
+
+    if spec_name not in specs:
+        logger.warning(f"Spec '{spec_name}' not found, skipping scale correction")
+        return entities, 1.0
+
+    spec = specs[spec_name]
+    spec_height_mm = spec.get("body_length_mm", 500.0)
+
+    # Get BODY bounding box height
+    if not entities.body:
+        logger.warning("No BODY entities, skipping scale correction")
+        return entities, 1.0
+
+    # Compute combined bounding box of all BODY entities
+    all_points = []
+    for entity in entities.body:
+        pts = entity.contour.reshape(-1, 2)
+        all_points.extend(pts.tolist())
+
+    if not all_points:
+        return entities, 1.0
+
+    all_points = np.array(all_points)
+    min_y, max_y = all_points[:, 1].min(), all_points[:, 1].max()
+    raw_height_px = max_y - min_y
+
+    # Convert to mm using current mm_per_px
+    raw_height_mm = raw_height_px * entities.mm_per_px
+
+    if raw_height_mm < 1.0:
+        logger.warning(f"Raw height too small ({raw_height_mm:.1f}mm), skipping scale correction")
+        return entities, 1.0
+
+    # Compute scale factor from height
+    scale_factor = spec_height_mm / raw_height_mm
+
+    # Width validation: check aspect ratio against spec
+    min_x, max_x = all_points[:, 0].min(), all_points[:, 0].max()
+    raw_width_px = max_x - min_x
+    raw_width_mm = raw_width_px * entities.mm_per_px
+    spec_width_mm = spec.get("lower_bout_width_mm")  # Widest point
+
+    if spec_width_mm:
+        spec_aspect = spec_width_mm / spec_height_mm
+        raw_aspect = raw_width_mm / raw_height_mm
+        aspect_drift = abs(raw_aspect - spec_aspect) / spec_aspect
+
+        if aspect_drift > 0.10:
+            logger.warning(
+                f"Aspect ratio drift {aspect_drift:.1%}: source W/H={raw_aspect:.3f}, "
+                f"spec W/H={spec_aspect:.3f}. Source may be cropped or angled."
+            )
+
+    logger.info(
+        f"Scale correction: spec={spec_name}, spec_height={spec_height_mm:.1f}mm, "
+        f"raw_height={raw_height_mm:.1f}mm, factor={scale_factor:.3f}"
+    )
+
+    # Apply scale to BODY entities only
+    corrected_body = []
+    for entity in entities.body:
+        pts = entity.contour.reshape(-1, 2).astype(float)
+        # Scale coordinates
+        pts *= scale_factor
+        corrected_contour = pts.astype(np.int32).reshape(-1, 1, 2)
+
+        # Recompute bbox
+        x, y, w, h = cv2.boundingRect(corrected_contour)
+
+        corrected_entity = LayeredEntity(
+            contour=corrected_contour,
+            layer=entity.layer,
+            bbox=(x, y, w, h),
+            area=cv2.contourArea(corrected_contour),
+            is_closed=entity.is_closed,
+        )
+        corrected_body.append(corrected_entity)
+
+    # Build corrected entities (only BODY is scaled)
+    # NOTE: mm_per_px is NOT scaled because coordinates are already scaled.
+    # DXF writer does: coord * mm_per_px. If we scaled both, we'd get scale_factor^2.
+    corrected = LayeredEntities(
+        body=corrected_body,
+        aux_views=entities.aux_views,
+        annotation=entities.annotation,
+        title_block=entities.title_block,
+        page_frame=entities.page_frame,
+        image_size=entities.image_size,
+        mm_per_px=entities.mm_per_px,  # Keep original - coords are already scaled
+    )
+
+    return corrected, scale_factor
