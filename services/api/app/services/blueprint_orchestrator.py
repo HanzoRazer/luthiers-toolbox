@@ -200,6 +200,7 @@ class BlueprintOrchestrator:
         mode: CleanupMode = CleanupMode.REFINED,
         export_preset: str = "geometry_only",
         spec_name: Optional[str] = None,
+        gap_close_size: int = 7,
     ) -> BlueprintResult:
         """
         Process a blueprint file through extraction and cleanup.
@@ -273,6 +274,7 @@ class BlueprintOrchestrator:
                         source_path=str(input_path),
                         output_path=str(raw_dxf_path),
                         target_height_mm=target_height_mm,
+                        gap_close_size=gap_close_size,
                         warnings=warnings,
                     )
 

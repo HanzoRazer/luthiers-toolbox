@@ -290,6 +290,7 @@ def extract_blueprint_enhanced(
     source_path: str,
     output_path: str,
     target_height_mm: float = 500.0,
+    gap_close_size: int = 7,
     warnings: Optional[list[str]] = None,
 ) -> ExtractionResult:
     """
@@ -334,6 +335,7 @@ def extract_blueprint_enhanced(
             source_path,
             output_path=output_path,
             target_height_mm=target_height_mm,
+            gap_close_size=gap_close_size,
         )
 
         return ExtractionResult(

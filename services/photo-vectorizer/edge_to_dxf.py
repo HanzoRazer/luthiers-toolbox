@@ -1478,6 +1478,7 @@ class EdgeToDXF:
         source_path: str,
         output_path: Optional[str] = None,
         target_height_mm: float = 500.0,
+        gap_close_size: int = 7,
     ) -> EdgeToDXFResult:
         """
         Enhanced conversion with multi-scale edge fusion.
@@ -1489,6 +1490,7 @@ class EdgeToDXF:
             source_path: Path to source image
             output_path: Output DXF path
             target_height_mm: Target height in mm
+            gap_close_size: Morphological closing kernel size (0=disabled, 7=default)
 
         Returns:
             EdgeToDXFResult with conversion statistics
@@ -1522,6 +1524,12 @@ class EdgeToDXF:
         for low, high in edge_levels:
             edges = cv2.Canny(gray, low, high)
             combined_edges = cv2.bitwise_or(combined_edges, edges)
+
+        # Bridge pixel-level gaps before contour extraction (restored from Phase 2)
+        if gap_close_size > 0:
+            kernel = np.ones((gap_close_size, gap_close_size), np.uint8)
+            combined_edges = cv2.morphologyEx(combined_edges, cv2.MORPH_CLOSE, kernel)
+            logger.info(f"Applied morphological closing with kernel size {gap_close_size}")
 
         # Get edge pixels
         edge_points = np.column_stack(np.where(combined_edges > 0))
