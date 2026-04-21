@@ -1,5 +1,5 @@
 # The Production Shop — Sprint Registry
-Last updated: 2026-04-16
+Last updated: 2026-04-21
 Maintained by: Ross Echols (HanzoRazer)
 
 ---
@@ -42,12 +42,16 @@ Maintained by: Ross Echols (HanzoRazer)
 | 5F | Scale correction propagation | — | ✅ Done |
 | 5G | Body contour height ceiling | cb0761ed | ✅ Done |
 
-**Vectorizer ceiling declared (2026-04-16):**
-Blueprint vectorizer produces 82-88% complete outlines consistently on clean
-engineering drawings. This is the practical ceiling of the current technology.
-Photo vectorizer tested on historical L-1 images and AI-generated renders —
-results were poor. Both vectorizer modes are set aside. The InstrumentBodyGenerator
-is the correct forward path for outline completion.
+**Vectorizer ceiling declared (2026-04-16) — REVERSED (2026-04-20):**
+~~Blueprint vectorizer produces 82-88% complete outlines consistently on clean
+engineering drawings. This is the practical ceiling of the current technology.~~
+**Ceiling reversed:** Commit `3db07c62` restored morphological gap closing capability
+that was missing from enhanced mode. Benchmark output exceeded March 6 baseline.
+The ceiling was an artifact of missing capability, not a fundamental limit.
+Blueprint vectorizer v3.6 is the primary extraction path. InstrumentBodyGenerator
+remains a parallel effort for body completion from partial outlines.
+Photo vectorizer (Sprint 4 items) remains set aside — poor results on L-1 images
+and AI renders.
 
 **Phase 5F — Scale correction propagation (2026-04-05):**
 Confirmed working. Correction factor from `validate_scale_before_export()`
@@ -121,6 +125,18 @@ Quality scorecard (3/3 PASS):
 - [ ] Fix 13 pre-existing test failures (10 soundhole spiral Python 3.14/ezdxf,
       2 debt gate ratchet, 1 vision integration)
 - [ ] Resolve 8 gaps awaiting physical measurements
+- [ ] Text-masking preprocessing pass for blueprint vectorizer (2026-04-20)
+      **Context:** Multi-scale Canny + 7px morphological closing (commit 3db07c62)
+      restores geometry extraction but degrades text quality. A 7×7 kernel applied
+      to text glyphs bridges strokes and fills counters, producing solid blobs
+      that fail size filters or merge with adjacent geometry.
+      **Solution:** Text-detection pass before edge extraction that masks text
+      regions, allowing gap closing to run on geometry only. Text extracted
+      separately with no closing or smaller kernel.
+      **Diagnostic data:** gap_close_size=0 produces 435K entities (text present
+      but fragmented); gap_close_size=7 produces 204K (text merged/missing).
+      **Note:** This does not regress text quality relative to pre-fix enhanced
+      mode — both had poor text output. Geometry restoration was the priority.
 
 **DXF Compliance status (from REPO_DATA_AUDIT.json 2026-04-16):**
 
@@ -266,6 +282,39 @@ System 2 (arc_reconstructor sandbox) → LWPOLYLINE with bulge → "Promote to C
 3. Rosette + soundhole + Gore/Helmholtz → one acoustic design calculator suite
 4. Three neck export files → one module with mode parameter
 5. Nine stale docs → docs/archive/
+
+---
+
+### Sprint 7.5 — Supersession and Orphan Audit
+**Status:** COMPLETE (2026-04-21)
+**Output:** docs/audits/SUPERSESSION_AND_ORPHAN_AUDIT_RESULTS.md
+
+**Summary:**
+| Category | Count |
+|----------|-------|
+| Items classified | 55 |
+| Survivors (Library + Distinct) | 33 |
+| Deletion candidates (Superseded + Orphaned) | 21 |
+| Duplicate groups | 3 |
+
+**Key findings:**
+1. `inverse_solver.py` confirmed **Library** (not orphaned) — imported by brace_prescription.py
+2. Photo vectorizer (18 files) confirmed **Superseded** — Sprint 4 suspension formal
+3. `TrainingDataCollector` confirmed **Orphaned** — defined but never instantiated
+4. `validate_scale_before_export` is **Duplicate** — exists in vectorizer_phase3.py and scale_validation.py
+5. Registry intersection table produced — 10 instruments canonical (in all 3 main registries)
+
+**Deliverables:**
+- `docs/audits/SUPERSESSION_AND_ORPHAN_AUDIT_RESULTS.md` — Full classification matrix
+- `docs/audits/audit_survivors.txt` — 33 files confirmed active
+- `docs/audits/audit_deletion_candidates.txt` — 21 files for review
+- `docs/audits/audit_duplicate_pairs.txt` — 3 consolidation targets
+
+**Unblocks:**
+- GEN-5 Data Consolidation (intersection table ready)
+- Sprint 3 DXF Compliance (confirms 12 production files, 6 sandbox)
+- Repo split work (photo-vectorizer can archive)
+- Library extraction (inverse_solver confirmed foundational)
 
 ---
 
@@ -537,3 +586,4 @@ Commits: 04735bd4, 72bfffc9, 059cf5b0
 | 2026-04-16 | cuatro_venezolano.json scale 420mm is wrong | Correct scale: 556.5mm from IMCUA 000 Quibor engineering drawings |
 | 2026-04-16 | DEV_GUARDRAILS.md mandatory live-path verification | Prevents features landing in non-production code paths |
 | 2026-04-16 | OutlineReconstructor was inserted into dead code path | Lesson: always verify router→orchestrator→mode→cleaner before writing code |
+| 2026-04-20 | Blueprint vectorizer ceiling declaration (2026-04-16) reversed | v3.6 restored morphological gap closing from vectorizer_phase2.py (commit 3db07c62). Benchmark exceeded March 6 baseline (cuatro: 21MB/204K entities vs 16MB/128K). Ceiling was artifact of missing capability, not fundamental limit. Forward path: blueprint vectorizer v3.6 primary; InstrumentBodyGenerator parallel effort for body completion from partial outlines, not exclusive forward path. |
