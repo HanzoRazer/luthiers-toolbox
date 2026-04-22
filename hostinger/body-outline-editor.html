@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Body Outline Editor — The Production Shop</title>
-    <!-- v3.2.0 - Precision Controls + Workflow Improvements -->
+    <!-- v3.3.0 - Image Tools + Templates -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/paper.js/0.12.18/paper-full.min.js"></script>
     <style>
         * {
@@ -468,6 +468,65 @@
         ::-webkit-scrollbar-thumb:hover {
             background: #444;
         }
+
+        /* v3.3.0: Layer panel styling */
+        .layer-list {
+            max-height: 200px;
+            overflow-y: auto;
+        }
+
+        .layer-item {
+            display: flex;
+            align-items: center;
+            padding: 6px 12px;
+            border-bottom: 1px solid #1a1a1a;
+            cursor: pointer;
+            gap: 8px;
+        }
+
+        .layer-item:hover {
+            background: #1a1a1a;
+        }
+
+        .layer-item.active {
+            background: #1a3a2a;
+            border-left: 2px solid #00ff88;
+        }
+
+        .layer-item .layer-visibility {
+            cursor: pointer;
+            width: 24px;
+            text-align: center;
+        }
+
+        .layer-item .layer-name {
+            flex: 1;
+            font-size: 11px;
+        }
+
+        .layer-item .layer-opacity {
+            color: #888;
+            font-size: 10px;
+        }
+
+        .layer-item .layer-delete {
+            opacity: 0;
+            background: transparent;
+            border: none;
+            color: #ff4444;
+            cursor: pointer;
+            padding: 2px 6px;
+        }
+
+        .layer-item:hover .layer-delete {
+            opacity: 1;
+        }
+
+        /* v3.3.0: Rotation slider */
+        .rotation-slider {
+            width: 100px;
+            accent-color: var(--accent);
+        }
     </style>
 </head>
 <body>
@@ -519,6 +578,19 @@
             <button id="btn-calibrate" title="Calibrate Scale (C)">Calibrate</button>
             <button id="btn-clear-image">Clear Image</button>
         </div>
+        <!-- v3.3.0: Image layer controls -->
+        <div class="toolbar-group">
+            <button id="btn-rotate-left" title="Rotate 90° left">↺ 90°</button>
+            <button id="btn-rotate-right" title="Rotate 90° right">↻ 90°</button>
+            <label>Rot:</label>
+            <input type="range" id="rotation-slider" class="rotation-slider" min="0" max="360" value="0" title="Free rotation">
+            <span id="rotation-value" style="font-size:10px;color:#888;width:30px;">0°</span>
+        </div>
+        <div class="toolbar-group">
+            <button id="btn-lock-image" title="Lock/unlock active image">🔓</button>
+            <button id="btn-scale-image" title="Non-uniform scale (drag)">Scale</button>
+            <button id="btn-save-template" title="Save image as template">Save Tpl</button>
+        </div>
         <div class="toolbar-group">
             <button id="btn-export-dxf">Export DXF</button>
             <button id="btn-export-json" title="Export JSON (Ctrl+E)">Export JSON</button>
@@ -559,7 +631,7 @@
     <!-- v3.1.0: MODE DIALOG (shown on page load) -->
     <div id="mode-dialog-overlay" style="position:fixed; inset:0; background:rgba(0,0,0,0.85); display:flex; align-items:center; justify-content:center; z-index:10000;">
         <div style="background:#1e1e1e; border:1px solid #00ff88; border-radius:8px; padding:32px; max-width:500px; text-align:center;">
-            <h2 style="color:#00ff88; margin-bottom:16px;">Body Outline Editor v3.2</h2>
+            <h2 style="color:#00ff88; margin-bottom:16px;">Body Outline Editor v3.3</h2>
             <p style="color:#888; margin-bottom:24px;">Choose how you want to start</p>
 
             <button id="mode-default-btn" style="background:#00aa5a; color:#000; padding:12px 24px; margin:0 8px; border:none; border-radius:4px; cursor:pointer; font-weight:bold;">
@@ -607,6 +679,35 @@
                     <label>Opacity:</label>
                     <input type="range" id="image-opacity" min="20" max="80" value="50">
                     <span class="value" id="opacity-value">50%</span>
+                </div>
+            </div>
+
+            <!-- v3.3.0: Image Layers Panel -->
+            <div class="panel-section" id="layers-panel" style="display:none">
+                <div class="panel-header">
+                    Image Layers <span class="count" id="layer-count">0</span>
+                </div>
+                <div class="layer-list" id="layer-list"></div>
+                <div style="padding:8px;display:flex;gap:4px;">
+                    <button id="btn-add-layer" style="flex:1;font-size:10px;">+ Add</button>
+                    <button id="btn-delete-layer" style="flex:1;font-size:10px;">- Remove</button>
+                </div>
+                <div style="padding:0 8px 8px;display:flex;gap:4px;">
+                    <button id="btn-layer-up" style="flex:1;font-size:10px;">↑ Up</button>
+                    <button id="btn-layer-down" style="flex:1;font-size:10px;">↓ Down</button>
+                </div>
+            </div>
+
+            <!-- v3.3.0: User Templates Panel -->
+            <div class="panel-section" id="templates-panel">
+                <div class="panel-header">
+                    My Templates <span class="count" id="template-count">0</span>
+                </div>
+                <div style="padding:8px;">
+                    <select id="user-template-select" title="User saved templates" style="width:100%;margin-bottom:4px;">
+                        <option value="">-- Select Template --</option>
+                    </select>
+                    <button id="btn-load-user-template" style="width:100%;font-size:10px;">Load Selected</button>
                 </div>
             </div>
 
@@ -1100,7 +1201,18 @@ const state = {
     showDecimalPlaces: 3,         // Coordinate display precision
 
     // v3.2.0: Smooth revert state
-    preSmoothState: null          // Serialized path before smooth
+    preSmoothState: null,         // Serialized path before smooth
+
+    // v3.3.0: Image layer management
+    imageLayers: [],              // [{ id, raster, opacity, locked, visible, name, scaleX, scaleY, rotation }]
+    nextLayerId: 1,
+    activeLayerId: null,
+
+    // v3.3.0: User templates (localStorage)
+    userTemplates: {},
+
+    // v3.3.0: Snap modifier
+    snapModifierPressed: false
 };
 
 // ============================================================
@@ -1254,6 +1366,432 @@ function exitCurrentMode() {
     if (state.editorMode === 'empty') {
         showEmptyModeToast('Ready for dot placement');
     }
+}
+
+// ============================================================
+// v3.3.0: IMAGE LAYER MANAGEMENT
+// ============================================================
+
+const USER_TEMPLATES_KEY = 'body_outline_user_templates';
+
+function addImageLayer(imageDataUrl = null, name = null) {
+    const layerId = state.nextLayerId++;
+
+    const raster = new Raster();
+    raster.position = view.center;
+    raster.opacity = 0.5;
+
+    const layer = {
+        id: layerId,
+        raster: raster,
+        opacity: 0.5,
+        locked: false,
+        visible: true,
+        name: name || `Layer ${layerId}`,
+        scaleX: 1.0,
+        scaleY: 1.0,
+        rotation: 0,
+        originalWidth: 0,
+        originalHeight: 0
+    };
+
+    if (imageDataUrl) {
+        const img = new Image();
+        img.onload = () => {
+            raster.image = img;
+            layer.originalWidth = img.width;
+            layer.originalHeight = img.height;
+            raster.position = view.center;
+            updateImageOrder();
+        };
+        img.src = imageDataUrl;
+    }
+
+    state.imageLayers.push(layer);
+
+    if (!state.activeLayerId) {
+        setActiveLayer(layerId);
+    }
+
+    updateLayerList();
+    updateImageOrder();
+    showLayersPanel();
+
+    logOperation('ADD_LAYER', { layerId, name: layer.name });
+    return layerId;
+}
+
+function setActiveLayer(layerId) {
+    state.activeLayerId = layerId;
+    updateLayerList();
+
+    // Update lock button state
+    const layer = state.imageLayers.find(l => l.id === layerId);
+    if (layer) {
+        document.getElementById('btn-lock-image').textContent = layer.locked ? '🔒' : '🔓';
+        document.getElementById('rotation-slider').value = layer.rotation;
+        document.getElementById('rotation-value').textContent = `${Math.round(layer.rotation)}°`;
+    }
+}
+
+function deleteLayer(layerId) {
+    const index = state.imageLayers.findIndex(l => l.id === layerId);
+    if (index >= 0) {
+        state.imageLayers[index].raster.remove();
+        state.imageLayers.splice(index, 1);
+
+        if (state.activeLayerId === layerId) {
+            state.activeLayerId = state.imageLayers[0]?.id || null;
+        }
+
+        logOperation('DELETE_LAYER', { layerId });
+        updateLayerList();
+        updateImageOrder();
+
+        if (state.imageLayers.length === 0) {
+            hideLayersPanel();
+        }
+    }
+}
+
+function toggleLayerVisibility(layerId) {
+    const layer = state.imageLayers.find(l => l.id === layerId);
+    if (layer) {
+        layer.visible = !layer.visible;
+        layer.raster.visible = layer.visible;
+        updateLayerList();
+    }
+}
+
+function moveLayerUp(layerId) {
+    const index = state.imageLayers.findIndex(l => l.id === layerId);
+    if (index > 0) {
+        const temp = state.imageLayers[index];
+        state.imageLayers[index] = state.imageLayers[index - 1];
+        state.imageLayers[index - 1] = temp;
+        updateLayerList();
+        updateImageOrder();
+    }
+}
+
+function moveLayerDown(layerId) {
+    const index = state.imageLayers.findIndex(l => l.id === layerId);
+    if (index < state.imageLayers.length - 1) {
+        const temp = state.imageLayers[index];
+        state.imageLayers[index] = state.imageLayers[index + 1];
+        state.imageLayers[index + 1] = temp;
+        updateLayerList();
+        updateImageOrder();
+    }
+}
+
+function updateImageOrder() {
+    // Send all rasters to back, in reverse layer order (first layer = top)
+    for (let i = state.imageLayers.length - 1; i >= 0; i--) {
+        state.imageLayers[i].raster.sendToBack();
+    }
+    if (typeof gridLayer !== 'undefined' && gridLayer) {
+        gridLayer.sendToBack();
+    }
+}
+
+function updateLayerList() {
+    const container = document.getElementById('layer-list');
+    if (!container) return;
+
+    container.innerHTML = '';
+
+    state.imageLayers.forEach((layer, idx) => {
+        const div = document.createElement('div');
+        div.className = `layer-item ${layer.id === state.activeLayerId ? 'active' : ''}`;
+        div.innerHTML = `
+            <span class="layer-visibility">${layer.visible ? '👁️' : '🙈'}</span>
+            <span class="layer-name">${layer.name}</span>
+            <span class="layer-opacity">${Math.round(layer.opacity * 100)}%</span>
+            <span class="layer-lock">${layer.locked ? '🔒' : ''}</span>
+            <button class="layer-delete" data-id="${layer.id}">×</button>
+        `;
+
+        div.addEventListener('click', (e) => {
+            if (!e.target.classList.contains('layer-delete') && !e.target.classList.contains('layer-visibility')) {
+                setActiveLayer(layer.id);
+            }
+        });
+
+        div.querySelector('.layer-visibility').addEventListener('click', (e) => {
+            e.stopPropagation();
+            toggleLayerVisibility(layer.id);
+        });
+
+        div.querySelector('.layer-delete').addEventListener('click', (e) => {
+            e.stopPropagation();
+            deleteLayer(layer.id);
+        });
+
+        container.appendChild(div);
+    });
+
+    document.getElementById('layer-count').textContent = state.imageLayers.length;
+}
+
+function showLayersPanel() {
+    document.getElementById('layers-panel').style.display = 'block';
+    document.getElementById('image-panel').style.display = 'block';
+}
+
+function hideLayersPanel() {
+    document.getElementById('layers-panel').style.display = 'none';
+    if (!state.raster) {
+        document.getElementById('image-panel').style.display = 'none';
+    }
+}
+
+// ============================================================
+// v3.3.0: IMAGE ROTATION
+// ============================================================
+
+function rotateActiveLayer(degrees) {
+    const layer = state.imageLayers.find(l => l.id === state.activeLayerId);
+    if (!layer) {
+        // Fallback to legacy single raster
+        if (state.raster) {
+            state.raster.rotate(degrees);
+        }
+        return;
+    }
+    if (layer.locked) {
+        showToast('Layer is locked', '#ff6600');
+        return;
+    }
+
+    layer.rotation = (layer.rotation + degrees) % 360;
+    if (layer.rotation < 0) layer.rotation += 360;
+    applyLayerTransform(layer);
+    logOperation('ROTATE_LAYER', { degrees, layerId: layer.id, newRotation: layer.rotation });
+
+    document.getElementById('rotation-slider').value = layer.rotation;
+    document.getElementById('rotation-value').textContent = `${Math.round(layer.rotation)}°`;
+}
+
+function setLayerRotation(degrees) {
+    const layer = state.imageLayers.find(l => l.id === state.activeLayerId);
+    if (!layer || layer.locked) return;
+
+    layer.rotation = degrees % 360;
+    applyLayerTransform(layer);
+    document.getElementById('rotation-value').textContent = `${Math.round(layer.rotation)}°`;
+}
+
+function applyLayerTransform(layer) {
+    const raster = layer.raster;
+    raster.rotation = layer.rotation;
+    raster.scaling = new Point(layer.scaleX, layer.scaleY);
+}
+
+// ============================================================
+// v3.3.0: NON-UNIFORM SCALING
+// ============================================================
+
+let scalingActive = false;
+
+function startNonUniformScale() {
+    const layer = state.imageLayers.find(l => l.id === state.activeLayerId);
+    if (!layer) {
+        showToast('No active layer to scale', '#ff6600');
+        return;
+    }
+    if (layer.locked) {
+        showToast('Layer is locked', '#ff6600');
+        return;
+    }
+
+    scalingActive = true;
+    const originalScaleX = layer.scaleX;
+    const originalScaleY = layer.scaleY;
+    const startPoint = view.center;
+
+    showToast('Drag: horizontal=X scale, vertical=Y scale. Shift=uniform. Release to finish.', '#00aa5a');
+
+    function onMouseMove(event) {
+        if (!scalingActive) return;
+
+        const delta = event.point.subtract(startPoint);
+
+        if (event.modifiers.shift) {
+            // Uniform scale
+            const scaleFactor = 1 + (delta.x + delta.y) / 500;
+            layer.scaleX = originalScaleX * scaleFactor;
+            layer.scaleY = originalScaleY * scaleFactor;
+        } else {
+            // Non-uniform
+            layer.scaleX = originalScaleX * (1 + delta.x / 300);
+            layer.scaleY = originalScaleY * (1 - delta.y / 300);
+        }
+
+        // Clamp to reasonable values
+        layer.scaleX = Math.max(0.1, Math.min(10, layer.scaleX));
+        layer.scaleY = Math.max(0.1, Math.min(10, layer.scaleY));
+
+        applyLayerTransform(layer);
+    }
+
+    function onMouseUp() {
+        scalingActive = false;
+        view.off('mousemove', onMouseMove);
+        view.off('mouseup', onMouseUp);
+        logOperation('SCALE_LAYER', { scaleX: layer.scaleX, scaleY: layer.scaleY, layerId: layer.id });
+        showToast(`Scale: ${layer.scaleX.toFixed(2)}x × ${layer.scaleY.toFixed(2)}x`, '#00aa5a');
+    }
+
+    view.on('mousemove', onMouseMove);
+    view.on('mouseup', onMouseUp);
+}
+
+// ============================================================
+// v3.3.0: IMAGE LOCKING
+// ============================================================
+
+function toggleImageLock() {
+    const layer = state.imageLayers.find(l => l.id === state.activeLayerId);
+    if (layer) {
+        layer.locked = !layer.locked;
+        document.getElementById('btn-lock-image').textContent = layer.locked ? '🔒' : '🔓';
+        showToast(layer.locked ? 'Layer locked' : 'Layer unlocked', '#00aa5a');
+        updateLayerList();
+    }
+}
+
+// ============================================================
+// v3.3.0: USER TEMPLATES
+// ============================================================
+
+function loadUserTemplates() {
+    try {
+        const saved = localStorage.getItem(USER_TEMPLATES_KEY);
+        if (saved) {
+            state.userTemplates = JSON.parse(saved);
+            updateUserTemplateDropdown();
+        }
+    } catch (e) {
+        console.warn('Failed to load user templates:', e);
+    }
+}
+
+function saveUserTemplate() {
+    const layer = state.imageLayers.find(l => l.id === state.activeLayerId);
+    if (!layer) {
+        showToast('No active image layer to save', '#ff6600');
+        return;
+    }
+
+    const name = prompt('Enter template name:', layer.name || 'Untitled');
+    if (!name) return;
+
+    try {
+        const imageData = layer.raster.toDataURL();
+        const sizeInMB = (imageData.length * 0.75) / (1024 * 1024);
+
+        if (sizeInMB > 4.5) {
+            if (!confirm(`Image is ${sizeInMB.toFixed(1)}MB. localStorage limit is ~5MB. Continue?`)) {
+                return;
+            }
+        }
+
+        state.userTemplates[name] = {
+            name: name,
+            imageData: imageData,
+            scaleX: layer.scaleX,
+            scaleY: layer.scaleY,
+            rotation: layer.rotation,
+            calibration: state.imagePixelsPerMM,
+            savedAt: Date.now()
+        };
+
+        localStorage.setItem(USER_TEMPLATES_KEY, JSON.stringify(state.userTemplates));
+        updateUserTemplateDropdown();
+        showToast(`Template "${name}" saved`, '#00aa5a');
+        logOperation('SAVE_TEMPLATE', { name });
+    } catch (e) {
+        showToast('Failed to save template: ' + e.message, '#ff6600');
+    }
+}
+
+function loadUserTemplate() {
+    const select = document.getElementById('user-template-select');
+    const name = select.value;
+    if (!name || !state.userTemplates[name]) {
+        showToast('Select a template first', '#ff6600');
+        return;
+    }
+
+    const template = state.userTemplates[name];
+
+    const img = new Image();
+    img.onload = () => {
+        const layerId = addImageLayer(null, name);
+        const layer = state.imageLayers.find(l => l.id === layerId);
+        if (layer) {
+            layer.raster.image = img;
+            layer.scaleX = template.scaleX || 1;
+            layer.scaleY = template.scaleY || 1;
+            layer.rotation = template.rotation || 0;
+            applyLayerTransform(layer);
+            if (template.calibration) {
+                state.imagePixelsPerMM = template.calibration;
+            }
+            showToast(`Template "${name}" loaded`, '#00aa5a');
+            logOperation('LOAD_TEMPLATE', { name });
+        }
+    };
+    img.onerror = () => {
+        showToast('Failed to load template image', '#ff6600');
+    };
+    img.src = template.imageData;
+}
+
+function deleteUserTemplate(name) {
+    if (state.userTemplates[name]) {
+        delete state.userTemplates[name];
+        localStorage.setItem(USER_TEMPLATES_KEY, JSON.stringify(state.userTemplates));
+        updateUserTemplateDropdown();
+        showToast(`Template "${name}" deleted`, '#00aa5a');
+    }
+}
+
+function updateUserTemplateDropdown() {
+    const select = document.getElementById('user-template-select');
+    if (!select) return;
+
+    select.innerHTML = '<option value="">-- Select Template --</option>';
+    const count = Object.keys(state.userTemplates).length;
+
+    for (const [name, template] of Object.entries(state.userTemplates)) {
+        const option = document.createElement('option');
+        option.value = name;
+        option.textContent = name;
+        select.appendChild(option);
+    }
+
+    const countEl = document.getElementById('template-count');
+    if (countEl) countEl.textContent = count;
+}
+
+// ============================================================
+// v3.3.0: SNAP MODIFIER (Shift key disables snap)
+// ============================================================
+
+function setupSnapModifier() {
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Shift') {
+            state.snapModifierPressed = true;
+        }
+    });
+
+    document.addEventListener('keyup', (e) => {
+        if (e.key === 'Shift') {
+            state.snapModifierPressed = false;
+        }
+    });
 }
 
 // ============================================================
@@ -1638,6 +2176,10 @@ window.onload = function() {
     setupKeyboardEvents();
     setupModalEvents();
 
+    // v3.3.0: Load user templates and setup snap modifier
+    loadUserTemplates();
+    setupSnapModifier();
+
     // Initial UI update
     updateUI();
     // Note: pushState() is called inside initModeSelection() after mode is chosen
@@ -1884,6 +2426,10 @@ function updateDistanceDisplay() {
 // SNAP
 // ============================================================
 function snapToGrid(point) {
+    // v3.3.0: Shift key disables snap
+    if (state.snapModifierPressed) {
+        return point;
+    }
     const snap = state.snapSize;
     return new Point(
         Math.round(point.x / snap) * snap,
@@ -2875,6 +3421,57 @@ function setupToolbarEvents() {
     document.getElementById('btn-calibrate').addEventListener('click', startCalibration);
     document.getElementById('btn-clear-image').addEventListener('click', clearImage);
 
+    // v3.3.0: Image layer controls
+    document.getElementById('btn-rotate-left').addEventListener('click', () => rotateActiveLayer(-90));
+    document.getElementById('btn-rotate-right').addEventListener('click', () => rotateActiveLayer(90));
+    document.getElementById('btn-lock-image').addEventListener('click', toggleImageLock);
+    document.getElementById('btn-scale-image').addEventListener('click', startNonUniformScale);
+    document.getElementById('btn-save-template').addEventListener('click', saveUserTemplate);
+
+    document.getElementById('rotation-slider').addEventListener('input', function() {
+        setLayerRotation(parseFloat(this.value));
+    });
+
+    // v3.3.0: Layer panel controls
+    document.getElementById('btn-add-layer').addEventListener('click', () => {
+        // Trigger file input for new layer
+        const input = document.createElement('input');
+        input.type = 'file';
+        input.accept = 'image/*';
+        input.onchange = (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = (ev) => {
+                    addImageLayer(ev.target.result, file.name.replace(/\.[^.]+$/, ''));
+                };
+                reader.readAsDataURL(file);
+            }
+        };
+        input.click();
+    });
+
+    document.getElementById('btn-delete-layer').addEventListener('click', () => {
+        if (state.activeLayerId) {
+            deleteLayer(state.activeLayerId);
+        }
+    });
+
+    document.getElementById('btn-layer-up').addEventListener('click', () => {
+        if (state.activeLayerId) {
+            moveLayerUp(state.activeLayerId);
+        }
+    });
+
+    document.getElementById('btn-layer-down').addEventListener('click', () => {
+        if (state.activeLayerId) {
+            moveLayerDown(state.activeLayerId);
+        }
+    });
+
+    // v3.3.0: User templates
+    document.getElementById('btn-load-user-template').addEventListener('click', loadUserTemplate);
+
     document.getElementById('btn-export-dxf').addEventListener('click', exportDXF);
     document.getElementById('btn-export-json').addEventListener('click', exportJSON);
     document.getElementById('btn-export-svg').addEventListener('click', exportSVG);
@@ -3452,6 +4049,11 @@ function importImage() {
 
         const reader = new FileReader();
         reader.onload = function(ev) {
+            // v3.3.0: Also create a layer for multi-layer support
+            const layerName = file.name.replace(/\.[^.]+$/, '');
+            addImageLayer(ev.target.result, layerName);
+
+            // Legacy: keep state.raster for backward compatibility
             if (state.raster) state.raster.remove();
 
             const img = new Image();
