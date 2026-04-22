@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Body Outline Editor — The Production Shop</title>
+    <!-- v3.1.0 - Empty Mode + Precision Improvements -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/paper.js/0.12.18/paper-full.min.js"></script>
     <style>
         * {
@@ -512,12 +513,62 @@
             <button id="btn-export-json" title="Export JSON (Ctrl+E)">Export JSON</button>
             <button id="btn-export-svg">Export SVG</button>
         </div>
+        <div class="toolbar-group">
+            <select id="instrument-select" style="width:140px;">
+                <option value="dreadnought">Dreadnought</option>
+                <option value="cuatro_venezolano">Cuatro Venezolano</option>
+                <option value="stratocaster">Stratocaster</option>
+                <option value="jumbo">Jumbo</option>
+            </select>
+            <button id="btn-solve-from-editor" style="background:#00aa5a;">Solve Outline</button>
+            <span id="confidence-badge" style="background:#333;padding:4px 8px;border-radius:4px;font-size:11px;"></span>
+        </div>
+        <div class="toolbar-group">
+            <label>Template:</label>
+            <select id="template-select" style="width:140px;">
+                <option value="dreadnought">Dreadnought</option>
+                <option value="jumbo">Jumbo</option>
+                <option value="om">OM/000</option>
+                <option value="classical">Classical</option>
+                <option value="parlor">Parlor</option>
+                <option value="stratocaster">Stratocaster</option>
+                <option value="les_paul">Les Paul</option>
+                <option value="telecaster">Telecaster</option>
+            </select>
+            <button id="btn-load-template">Load Template</button>
+        </div>
+        <!-- v3.0.0: Auth / Paid Tier -->
+        <div class="toolbar-group" id="auth-group" style="display:none;">
+            <button id="btn-login" style="background:#00aa5a;">Login</button>
+            <button id="btn-logout" style="display:none;">Logout</button>
+            <span id="user-badge" style="background:#333;padding:4px 8px;border-radius:4px;font-size:11px;"></span>
+        </div>
+    </div>
+
+    <!-- v3.1.0: MODE DIALOG (shown on page load) -->
+    <div id="mode-dialog-overlay" style="position:fixed; inset:0; background:rgba(0,0,0,0.85); display:flex; align-items:center; justify-content:center; z-index:10000;">
+        <div style="background:#1e1e1e; border:1px solid #00ff88; border-radius:8px; padding:32px; max-width:500px; text-align:center;">
+            <h2 style="color:#00ff88; margin-bottom:16px;">Body Outline Editor v3.1</h2>
+            <p style="color:#888; margin-bottom:24px;">Choose how you want to start</p>
+
+            <button id="mode-default-btn" style="background:#00aa5a; color:#000; padding:12px 24px; margin:0 8px; border:none; border-radius:4px; cursor:pointer; font-weight:bold;">
+                Default Mode
+            </button>
+            <button id="mode-empty-btn" style="background:#333; color:#00ff88; padding:12px 24px; margin:0 8px; border:1px solid #00ff88; border-radius:4px; cursor:pointer; font-weight:bold;">
+                Empty Mode (Build from scratch)
+            </button>
+
+            <p style="color:#666; font-size:11px; margin-top:24px;">
+                Default: 8-node dreadnought starter outline<br>
+                Empty: Start with no dots, place each dot manually
+            </p>
+        </div>
     </div>
 
     <!-- Main container -->
     <div class="main-container">
         <div class="canvas-wrapper" id="canvas-wrapper">
-            <canvas id="canvas" resize></canvas>
+            <canvas id="canvas" resize tabindex="0"></canvas>
 
             <div class="legend">
                 <kbd>Alt</kbd>+click node = toggle sharp/smooth &nbsp;|&nbsp;
@@ -632,6 +683,345 @@
 paper.install(window);
 
 // ============================================================
+// SECTION 5: API CLIENT with MOCK - Must Have (v2.0)
+// ============================================================
+
+class InstrumentBodyAPI {
+    constructor(baseUrl = '/api') {
+        this.baseUrl = baseUrl;
+        this.useMock = true;  // v3.0.0: Mock mode for local testing
+        this.currentSession = null;
+        this.authToken = null;
+        this.abortController = null;
+        console.log(this.useMock ? '\u26a0\ufe0f IBG API in MOCK mode' : '\u2705 IBG API connected to /api/body');
+    }
+
+    setAuthToken(token) {
+        this.authToken = token;
+    }
+
+    getAuthHeaders() {
+        const headers = { 'Content-Type': 'application/json' };
+        if (this.authToken) {
+            headers['Authorization'] = `Bearer ${this.authToken}`;
+        }
+        return headers;
+    }
+
+    cancelRequest() {
+        if (this.abortController) {
+            this.abortController.abort();
+            this.abortController = null;
+        }
+    }
+
+    async solveFromLandmarks(instrumentSpec, landmarks, options = {}) {
+        if (this.useMock) {
+            await new Promise(resolve => setTimeout(resolve, 500));
+            return this.generateMockResult(instrumentSpec, landmarks);
+        }
+
+        this.cancelRequest();
+        this.abortController = new AbortController();
+
+        try {
+            const response = await fetch(`${this.baseUrl}/body/solve-from-landmarks`, {
+                method: 'POST',
+                headers: this.getAuthHeaders(),
+                body: JSON.stringify({
+                    instrument_spec: instrumentSpec,
+                    landmarks: landmarks,
+                    options: options
+                }),
+                signal: this.abortController.signal
+            });
+
+            if (!response.ok) {
+                if (response.status === 401) {
+                    throw new Error('AUTH_REQUIRED');
+                }
+                if (response.status === 429) {
+                    throw new Error('RATE_LIMITED');
+                }
+                const error = await response.json().catch(() => ({}));
+                throw new Error(error.detail || `Server error: ${response.status}`);
+            }
+
+            const result = await response.json();
+            if (result.session_id) this.currentSession = result.session_id;
+            return result;
+        } catch (err) {
+            if (err.name === 'AbortError') {
+                console.log('Request cancelled');
+                return null;
+            }
+            throw err;
+        } finally {
+            this.abortController = null;
+        }
+    }
+
+    async getSession(sessionId) {
+        const response = await fetch(`${this.baseUrl}/body/session/${sessionId}`, {
+            method: 'GET',
+            headers: this.getAuthHeaders()
+        });
+        if (!response.ok) throw new Error('Failed to load session');
+        return await response.json();
+    }
+
+    async updateSessionLandmarks(sessionId, landmarks) {
+        const response = await fetch(`${this.baseUrl}/body/session/${sessionId}/landmarks`, {
+            method: 'PUT',
+            headers: this.getAuthHeaders(),
+            body: JSON.stringify({ landmarks: landmarks })
+        });
+        if (!response.ok) throw new Error('Failed to update session');
+        return await response.json();
+    }
+
+    generateMockResult(spec, landmarks) {
+        // Find lower bout from landmarks or use default
+        const lowerBout = landmarks.find(l => l.label === 'lower_bout_max');
+        const lowerBoutWidth = lowerBout ? lowerBout.x_mm * 2 : (spec === 'dreadnought' ? 381 : 250);
+
+        // Generate outline points (simplified ellipse)
+        const outlinePoints = [];
+        const bodyLength = spec === 'dreadnought' ? 520 : 350;
+        const upperBout = lowerBoutWidth * 0.77;
+        const waist = lowerBoutWidth * 0.63;
+        const waistY = bodyLength * 0.44;
+
+        for (let i = 0; i <= 200; i++) {
+            const t = i / 200; // 0 to 1
+            let x, y;
+
+            if (t < 0.44) {
+                // Lower to waist
+                const t2 = t / 0.44;
+                x = (lowerBoutWidth/2) * (1 - t2) + (waist/2) * t2;
+                y = bodyLength * t;
+            } else {
+                // Waist to neck
+                const t2 = (t - 0.44) / 0.56;
+                x = (waist/2) * (1 - t2) + (upperBout/2) * t2;
+                y = bodyLength * t;
+            }
+
+            // Right side
+            outlinePoints.push([x, y]);
+        }
+
+        // Add left side (mirrored, reverse order)
+        const rightSide = [...outlinePoints];
+        const leftSide = rightSide.slice(1, -1).reverse().map(p => [-p[0], p[1]]);
+        const fullOutline = [...rightSide, ...leftSide];
+
+        return {
+            session_id: 'mock_' + Date.now(),
+            status: 'completed',
+            confidence: 0.85,
+            dimensions: {
+                body_length_mm: bodyLength,
+                lower_bout_mm: lowerBoutWidth,
+                upper_bout_mm: upperBout,
+                waist_mm: waist,
+                waist_y_norm: 0.44
+            },
+            outline_points: fullOutline,
+            side_heights: Array(400).fill(0).map((_, i) => {
+                const t = i / 400;
+                return 85 + Math.sin(t * Math.PI) * 15;
+            }),
+            radii_by_zone: {
+                lower_bout: 265,
+                waist: 85,
+                upper_bout: 175
+            }
+        };
+    }
+
+    pathToLandmarks(path, instrumentSpec) {
+        const segments = path.segments;
+        if (segments.length < 8) {
+            console.warn('Path has few segments, landmarks may be inaccurate');
+        }
+
+        const landmarks = [];
+        const yVals = segments.map(s => s.point.y);
+        const minY = Math.min(...yVals);
+        const maxY = Math.max(...yVals);
+        const range = maxY - minY;
+
+        // Lower bout max (right side, lower 35%)
+        const lowerCutoff = minY + range * 0.35;
+        const lowerRight = segments
+            .filter(s => s.point.y < lowerCutoff && s.point.x > 0)
+            .sort((a, b) => b.point.x - a.point.x)[0];
+
+        if (lowerRight) {
+            landmarks.push({
+                label: 'lower_bout_max',
+                x_mm: lowerRight.point.x,
+                y_mm: lowerRight.point.y,
+                source: 'user_input',
+                confidence: 1.0
+            });
+        }
+
+        // Waist min (middle 35-65%)
+        const waistLower = minY + range * 0.35;
+        const waistUpper = minY + range * 0.65;
+        const waistRight = segments
+            .filter(s => s.point.y >= waistLower && s.point.y <= waistUpper && s.point.x > 0)
+            .sort((a, b) => a.point.x - b.point.x)[0];
+
+        if (waistRight) {
+            landmarks.push({
+                label: 'waist_min',
+                x_mm: waistRight.point.x,
+                y_mm: waistRight.point.y,
+                source: 'user_input',
+                confidence: 1.0
+            });
+        }
+
+        // Upper bout max (upper 65-100%)
+        const upperCutoff = minY + range * 0.65;
+        const upperRight = segments
+            .filter(s => s.point.y >= upperCutoff && s.point.x > 0)
+            .sort((a, b) => b.point.x - a.point.x)[0];
+
+        if (upperRight) {
+            landmarks.push({
+                label: 'upper_bout_max',
+                x_mm: upperRight.point.x,
+                y_mm: upperRight.point.y,
+                source: 'user_input',
+                confidence: 1.0
+            });
+        }
+
+        // Endpoints (force centerline X=0)
+        const buttCenter = segments.sort((a, b) => a.point.y - b.point.y)[0];
+        const neckCenter = segments.sort((a, b) => b.point.y - a.point.y)[0];
+
+        landmarks.push({
+            label: 'butt_center',
+            x_mm: 0,
+            y_mm: buttCenter.point.y,
+            source: 'user_input',
+            confidence: 1.0
+        });
+
+        landmarks.push({
+            label: 'neck_center',
+            x_mm: 0,
+            y_mm: neckCenter.point.y,
+            source: 'user_input',
+            confidence: 1.0
+        });
+
+        return landmarks;
+    }
+
+    loadOutlineIntoPaper(outlinePoints) {
+        const path = new Path({
+            segments: outlinePoints.map(p => new Point(p[0], p[1])),
+            closed: true,
+            strokeColor: '#00ff88',
+            strokeWidth: 2,
+            fillColor: null
+        });
+        return path;
+    }
+}
+
+// ============================================================
+// LANDMARK EXTRACTION VALIDATION - Critical (v2.0.2)
+// ============================================================
+
+function validateLandmarks(landmarks, instrumentSpec) {
+    const warnings = [];
+    const errors = [];
+
+    // Check required landmarks exist
+    const required = ['lower_bout_max', 'butt_center', 'neck_center'];
+    const missing = required.filter(r => !landmarks.find(l => l.label === r));
+
+    if (missing.length > 0) {
+        errors.push(`Missing required landmarks: ${missing.join(', ')}`);
+    }
+
+    // Find landmarks for validation
+    const lowerBout = landmarks.find(l => l.label === 'lower_bout_max');
+    const waist = landmarks.find(l => l.label === 'waist_min');
+    const upperBout = landmarks.find(l => l.label === 'upper_bout_max');
+    const butt = landmarks.find(l => l.label === 'butt_center');
+    const neck = landmarks.find(l => l.label === 'neck_center');
+
+    // Validation 1: Body proportions (lower bout should be wider than upper bout)
+    if (lowerBout && upperBout) {
+        if (lowerBout.x_mm <= upperBout.x_mm) {
+            warnings.push(`Lower bout (${lowerBout.x_mm.toFixed(1)}mm) should be wider than upper bout (${upperBout.x_mm.toFixed(1)}mm)`);
+        }
+    }
+
+    // Validation 2: Waist should be narrower than both bouts
+    if (lowerBout && waist && waist.x_mm >= lowerBout.x_mm) {
+        warnings.push(`Waist (${waist.x_mm.toFixed(1)}mm) should be narrower than lower bout (${lowerBout.x_mm.toFixed(1)}mm)`);
+    }
+    if (upperBout && waist && waist.x_mm >= upperBout.x_mm) {
+        warnings.push(`Waist (${waist.x_mm.toFixed(1)}mm) should be narrower than upper bout (${upperBout.x_mm.toFixed(1)}mm)`);
+    }
+
+    // Validation 3: Y-order sanity (butt < waist < neck)
+    if (butt && waist && butt.y_mm >= waist.y_mm) {
+        warnings.push(`Butt Y (${butt.y_mm.toFixed(1)}) should be less than waist Y (${waist.y_mm.toFixed(1)})`);
+    }
+    if (waist && neck && waist.y_mm >= neck.y_mm) {
+        warnings.push(`Waist Y (${waist.y_mm.toFixed(1)}) should be less than neck Y (${neck.y_mm.toFixed(1)})`);
+    }
+
+    // Validation 4: Confidence check
+    const lowConfidence = landmarks.filter(l => l.confidence < 0.7);
+    if (lowConfidence.length > 0) {
+        warnings.push(`${lowConfidence.length} landmark(s) have low confidence`);
+    }
+
+    // Display warnings in UI
+    if (warnings.length > 0 || errors.length > 0) {
+        let warningDiv = document.getElementById('landmark-warning');
+        if (!warningDiv) {
+            warningDiv = document.createElement('div');
+            warningDiv.id = 'landmark-warning';
+            warningDiv.style.position = 'fixed';
+            warningDiv.style.bottom = '120px';
+            warningDiv.style.right = '220px';
+            warningDiv.style.background = '#ff6600';
+            warningDiv.style.color = '#000';
+            warningDiv.style.padding = '8px 12px';
+            warningDiv.style.borderRadius = '4px';
+            warningDiv.style.fontSize = '11px';
+            warningDiv.style.zIndex = '1000';
+            warningDiv.style.maxWidth = '300px';
+            document.body.appendChild(warningDiv);
+        }
+
+        const message = errors.length > 0 ? errors[0] : (warnings[0] + (warnings.length > 1 ? ` (+${warnings.length-1} more)` : ''));
+        warningDiv.textContent = `⚠️ ${message}`;
+        warningDiv.style.display = 'block';
+        setTimeout(() => {
+            if (warningDiv) warningDiv.style.display = 'none';
+        }, 8000);
+
+        console.warn('Landmark validation:', { errors, warnings });
+    }
+
+    return { valid: errors.length === 0, errors, warnings };
+}
+
+// ============================================================
 // STATE
 // ============================================================
 const state = {
@@ -676,8 +1066,347 @@ const state = {
     gestureActive: false,
 
     // Dirty flag
-    dirty: false
+    dirty: false,
+
+    // v2.0: Side heights from API solver
+    sideHeights: null,
+
+    // v3.1.0: Empty mode state
+    editorMode: 'default',        // 'default' or 'empty'
+    emptyModeDots: [],            // { index, point, marker, label, segment, lineToPrev }
+    pendingPlacement: false,
+    pendingAnchorDot: null,
+    nextDotIndex: 0,
+    draggingDot: null             // Currently dragged dot (for drag-to-refine)
 };
+
+// ============================================================
+// v3.1.0: EMPTY MODE FUNCTIONS
+// ============================================================
+
+let emptyModeToast = null;
+
+function showEmptyModeToast(message, isError = false) {
+    if (emptyModeToast) emptyModeToast.remove();
+
+    emptyModeToast = new PointText({
+        point: view.bounds.topLeft.add(new Point(20, 80)),
+        content: message,
+        fillColor: isError ? '#ff6600' : '#00ff88',
+        fontFamily: 'system-ui, sans-serif',
+        fontSize: 12,
+        fontWeight: 'bold'
+    });
+
+    setTimeout(() => {
+        if (emptyModeToast) emptyModeToast.remove();
+        emptyModeToast = null;
+    }, 3000);
+}
+
+function createEmptyModeDot(point, index) {
+    const marker = new Path.Circle({
+        center: point,
+        radius: 6 / state.zoom,
+        fillColor: '#ff6600',
+        strokeColor: '#ffffff',
+        strokeWidth: 2 / state.zoom
+    });
+
+    const label = new PointText({
+        point: point.add(new Point(8 / state.zoom, -8 / state.zoom)),
+        content: `${index + 1}`,
+        fillColor: '#ff6600',
+        fontSize: 10 / state.zoom,
+        fontWeight: 'bold'
+    });
+
+    const segment = new Segment(point);
+
+    return { index, point, marker, label, segment, lineToPrev: null };
+}
+
+function updateEmptyModePath() {
+    if (!state.outerPath) {
+        state.outerPath = new Path({
+            closed: true,
+            strokeColor: '#00ff88',
+            strokeWidth: 2,
+            fillColor: null
+        });
+    }
+
+    state.outerPath.removeSegments();
+
+    for (const dot of state.emptyModeDots) {
+        state.outerPath.add(dot.segment);
+    }
+
+    if (state.emptyModeDots.length >= 3) {
+        state.outerPath.closed = true;
+        state.outerPath.smooth();
+    }
+
+    for (let i = 0; i < state.outerPath.segments.length && i < state.emptyModeDots.length; i++) {
+        state.emptyModeDots[i].segment = state.outerPath.segments[i];
+        state.emptyModeDots[i].point = state.outerPath.segments[i].point;
+        state.emptyModeDots[i].marker.position = state.emptyModeDots[i].point;
+        state.emptyModeDots[i].label.position = state.emptyModeDots[i].point.add(new Point(8 / state.zoom, -8 / state.zoom));
+    }
+
+    for (let i = 0; i < state.emptyModeDots.length; i++) {
+        const dot = state.emptyModeDots[i];
+        if (dot.lineToPrev) dot.lineToPrev.remove();
+
+        if (i < state.emptyModeDots.length - 1) {
+            const nextDot = state.emptyModeDots[i + 1];
+            dot.lineToPrev = new Path.Line({
+                from: dot.point,
+                to: nextDot.point,
+                strokeColor: '#ff6600',
+                strokeWidth: 1.5 / state.zoom,
+                dashArray: [4 / state.zoom, 4 / state.zoom]
+            });
+        }
+    }
+
+    redrawHandles();
+    updateUI();
+}
+
+function highlightDot(dot, color) {
+    if (dot.highlight) dot.highlight.remove();
+    dot.highlight = new Path.Circle({
+        center: dot.point,
+        radius: 10 / state.zoom,
+        strokeColor: color,
+        strokeWidth: 2 / state.zoom,
+        fillColor: null
+    });
+}
+
+function clearDotHighlight(dot) {
+    if (dot.highlight) {
+        dot.highlight.remove();
+        dot.highlight = null;
+    }
+}
+
+function clearAllDotHighlights() {
+    for (const dot of state.emptyModeDots) {
+        clearDotHighlight(dot);
+    }
+}
+
+function findDotAtPoint(point) {
+    for (let i = 0; i < state.emptyModeDots.length; i++) {
+        const dot = state.emptyModeDots[i];
+        const dist = point.getDistance(dot.point);
+        if (dist < 10 / state.zoom) {
+            return { dot, index: i };
+        }
+    }
+    return null;
+}
+
+function findSegmentForInsertion(point) {
+    for (let i = 0; i < state.emptyModeDots.length - 1; i++) {
+        const start = state.emptyModeDots[i].point;
+        const end = state.emptyModeDots[i + 1].point;
+
+        const lineLength = start.getDistance(end);
+        if (lineLength < 0.01) continue;
+
+        const t = ((point.x - start.x) * (end.x - start.x) +
+                   (point.y - start.y) * (end.y - start.y)) / (lineLength * lineLength);
+
+        if (t >= 0 && t <= 1) {
+            const closestX = start.x + t * (end.x - start.x);
+            const closestY = start.y + t * (end.y - start.y);
+            const dist = point.getDistance(new Point(closestX, closestY));
+
+            if (dist < 15 / state.zoom) {
+                return { index: i, position: new Point(closestX, closestY), t };
+            }
+        }
+    }
+    return null;
+}
+
+function clearEmptyMode() {
+    for (const dot of state.emptyModeDots) {
+        if (dot.marker) dot.marker.remove();
+        if (dot.label) dot.label.remove();
+        if (dot.lineToPrev) dot.lineToPrev.remove();
+        if (dot.highlight) dot.highlight.remove();
+    }
+    state.emptyModeDots = [];
+    state.pendingPlacement = false;
+    state.pendingAnchorDot = null;
+    state.nextDotIndex = 0;
+
+    if (state.outerPath) {
+        state.outerPath.removeSegments();
+    }
+
+    redrawHandles();
+    updateUI();
+}
+
+function startEmptyMode() {
+    state.editorMode = 'empty';
+    clearEmptyMode();
+    showEmptyModeToast('Empty Mode: Click to place dots. Click existing dot to select anchor, then click to place next.');
+}
+
+// ============================================================
+// TEMPLATE LIBRARY - 8 Instrument Templates (v2.0.2)
+// ============================================================
+
+const INSTRUMENT_TEMPLATES = {
+    dreadnought: {
+        name: 'Dreadnought',
+        type: 'acoustic',
+        dimensions: { bodyLength: 508, lowerBout: 394, upperBout: 286, waist: 254, waistYNorm: 0.44 }
+    },
+    jumbo: {
+        name: 'Jumbo',
+        type: 'acoustic',
+        dimensions: { bodyLength: 530, lowerBout: 432, upperBout: 304, waist: 280, waistYNorm: 0.45 }
+    },
+    om: {
+        name: 'OM/000',
+        type: 'acoustic',
+        dimensions: { bodyLength: 482, lowerBout: 380, upperBout: 280, waist: 254, waistYNorm: 0.44 }
+    },
+    classical: {
+        name: 'Classical',
+        type: 'acoustic',
+        dimensions: { bodyLength: 482, lowerBout: 362, upperBout: 280, waist: 242, waistYNorm: 0.43 }
+    },
+    parlor: {
+        name: 'Parlor',
+        type: 'acoustic',
+        dimensions: { bodyLength: 400, lowerBout: 304, upperBout: 228, waist: 204, waistYNorm: 0.42 }
+    },
+    stratocaster: {
+        name: 'Stratocaster',
+        type: 'electric',
+        dimensions: { bodyLength: 400, lowerBout: 318, upperBout: 166, waist: 220, waistYNorm: 0.47 }
+    },
+    les_paul: {
+        name: 'Les Paul',
+        type: 'electric',
+        dimensions: { bodyLength: 400, lowerBout: 342, upperBout: 166, waist: 230, waistYNorm: 0.46 }
+    },
+    telecaster: {
+        name: 'Telecaster',
+        type: 'electric',
+        dimensions: { bodyLength: 394, lowerBout: 318, upperBout: 204, waist: 240, waistYNorm: 0.45 }
+    }
+};
+
+function generateTemplateOutline(template) {
+    const d = template.dimensions;
+    const points = [];
+    const steps = 40;
+
+    // Generate right half of body
+    for (let i = 0; i <= steps; i++) {
+        const t = i / steps;  // 0 to 1 along body length
+        let x, y;
+
+        // Waist position
+        const waistY = d.bodyLength * d.waistYNorm;
+
+        if (t < d.waistYNorm) {
+            // Lower bout to waist
+            const t2 = t / d.waistYNorm;
+            const width = d.lowerBout * (1 - t2) + d.waist * t2;
+            x = width / 2;
+            y = d.bodyLength * t;
+        } else {
+            // Waist to upper bout
+            const t2 = (t - d.waistYNorm) / (1 - d.waistYNorm);
+            const width = d.waist * (1 - t2) + d.upperBout * t2;
+            x = width / 2;
+            y = d.bodyLength * t;
+        }
+
+        points.push([x, y]);
+    }
+
+    // Mirror to left side
+    const rightSide = [...points];
+    const leftSide = rightSide.slice(1, -1).reverse().map(p => [-p[0], p[1]]);
+
+    return [...rightSide, ...leftSide];
+}
+
+function loadTemplate(templateId) {
+    const template = INSTRUMENT_TEMPLATES[templateId];
+    if (!template) return false;
+
+    pushState();
+
+    const outlinePoints = generateTemplateOutline(template);
+
+    if (state.outerPath) {
+        state.outerPath.removeSegments();
+        outlinePoints.forEach(p => {
+            state.outerPath.add(new Segment(new Point(p[0], p[1])));
+        });
+        state.outerPath.smooth();
+    }
+
+    // Update view to center on the new outline
+    const bounds = state.outerPath.bounds;
+    state.viewCenter = bounds.center;
+    view.center = state.viewCenter;
+
+    updateUI();
+    redrawHandles();
+    drawGrid();
+
+    console.log(`Loaded template: ${template.name}`);
+    return true;
+}
+
+// v3.1.0: Load template as editable dots in empty mode
+function loadTemplateInEmptyMode(templateId) {
+    const template = INSTRUMENT_TEMPLATES[templateId];
+    if (!template) return false;
+
+    // Clear existing dots
+    clearEmptyMode();
+
+    // Generate outline points
+    const outlinePoints = generateTemplateOutline(template);
+
+    // Create dots from outline points
+    outlinePoints.forEach((p, index) => {
+        const point = new Point(p[0], p[1]);
+        const dot = createEmptyModeDot(point, index);
+        state.emptyModeDots.push(dot);
+    });
+    state.nextDotIndex = state.emptyModeDots.length;
+
+    // Update path
+    updateEmptyModePath();
+
+    // Center view on the outline
+    if (state.outerPath && state.outerPath.bounds) {
+        state.viewCenter = state.outerPath.bounds.center;
+        view.center = state.viewCenter;
+    }
+
+    drawGrid();
+    pushState();
+
+    showEmptyModeToast(`Template "${template.name}" loaded as ${outlinePoints.length} editable dots.`);
+    console.log(`Loaded template in empty mode: ${template.name} (${outlinePoints.length} dots)`);
+    return true;
+}
 
 // Void colors by role
 const VOID_COLORS = {
@@ -696,6 +1425,7 @@ let isDragging = false;
 let isPanning = false;
 let lastPanPoint = null;
 let dragStartPoint = null;
+let dragLabel = null;  // v2.1.0: Dimension label during drag
 let nodeVisuals = null;
 let handleVisuals = null;
 let snapIndicator = null;
@@ -708,6 +1438,9 @@ let calibrationStatus = null;
 window.onload = function() {
     paper.setup('canvas');
 
+    // v3.0.0: Initialize global API client
+    window.bodyAPI = new InstrumentBodyAPI();
+
     // Initialize Paper.js groups (must be after setup)
     nodeVisuals = new Group();
     handleVisuals = new Group();
@@ -716,11 +1449,11 @@ window.onload = function() {
     view.center = state.viewCenter;
     view.zoom = state.zoom;
 
-    // Create default outline
-    createDefaultOutline();
-
-    // Draw grid
+    // Draw grid (before outline so it's behind)
     drawGrid();
+
+    // v3.1.0: Mode selection dialog
+    initModeSelection();
 
     // Setup event handlers
     setupCanvasEvents();
@@ -731,7 +1464,7 @@ window.onload = function() {
 
     // Initial UI update
     updateUI();
-    pushState();
+    // Note: pushState() is called inside initModeSelection() after mode is chosen
 };
 
 // ============================================================
@@ -1001,8 +1734,41 @@ function hideSnapIndicator() {
 }
 
 // ============================================================
-// MIRROR MODE
+// MIRROR MODE - v2.1.0 Weighted Pairing
 // ============================================================
+function findMirrorSegmentWeighted(segment, allSegments) {
+    if (Math.abs(segment.point.x) < 0.1) return null;
+
+    let bestMatch = null;
+    let bestScore = Infinity;
+
+    for (const candidate of allSegments) {
+        if (candidate === segment) continue;
+
+        const yDiff = Math.abs(candidate.point.y - segment.point.y);
+        const xExpected = -segment.point.x;
+        const xDiff = Math.abs(candidate.point.x - xExpected);
+
+        let handleScore = 0;
+        if (segment.handleIn && candidate.handleIn) {
+            const hxDiff = Math.abs(candidate.handleIn.x + segment.handleIn.x);
+            const hyDiff = Math.abs(candidate.handleIn.y - segment.handleIn.y);
+            handleScore = (hxDiff + hyDiff) / 2;
+        } else if (segment.handleIn || candidate.handleIn) {
+            handleScore = 20;
+        }
+
+        const score = (yDiff * 2) + (xDiff * 3) + (handleScore * 1);
+
+        if (score < bestScore && score < 30) {
+            bestScore = score;
+            bestMatch = candidate;
+        }
+    }
+
+    return bestMatch;
+}
+
 function applyMirror(segment, originalX) {
     if (!state.mirrorMode) return;
 
@@ -1011,31 +1777,17 @@ function applyMirror(segment, originalX) {
 
     const point = segment.point;
 
-    // If on centerline, constrain to X=0
     if (Math.abs(originalX) < 0.001 || Math.abs(point.x) < state.snapSize / 2) {
         segment.point.x = 0;
         return;
     }
 
-    // Find mirror segment
-    const mirrorX = -point.x;
-    let mirrorSeg = null;
-    let minDist = Infinity;
-
-    path.segments.forEach(seg => {
-        if (seg === segment) return;
-        const dist = Math.abs(seg.point.x - mirrorX) + Math.abs(seg.point.y - point.y);
-        if (dist < minDist && dist < 20) {
-            minDist = dist;
-            mirrorSeg = seg;
-        }
-    });
+    const mirrorSeg = findMirrorSegmentWeighted(segment, path.segments);
 
     if (mirrorSeg) {
         mirrorSeg.point.x = -point.x;
         mirrorSeg.point.y = point.y;
 
-        // Mirror handles
         if (segment.handleIn) {
             mirrorSeg.handleIn = new Point(-segment.handleIn.x, segment.handleIn.y);
         }
@@ -1043,6 +1795,98 @@ function applyMirror(segment, originalX) {
             mirrorSeg.handleOut = new Point(-segment.handleOut.x, segment.handleOut.y);
         }
     }
+}
+
+// ============================================================
+// SECTION 3: MIRROR VALIDATION - Must Have (v2.0)
+// ============================================================
+
+function validateMirrorSymmetry() {
+    if (!state.mirrorMode) return { valid: true, warnings: [] };
+
+    const path = getActivePath();
+    if (!path || path.segments.length < 4) return { valid: true, warnings: [] };
+
+    const warnings = [];
+    const leftNodes = path.segments.filter(s => s.point.x < -0.1);
+    const rightNodes = path.segments.filter(s => s.point.x > 0.1);
+    const centerNodes = path.segments.filter(s => Math.abs(s.point.x) <= 0.1);
+
+    // Warning 1: Unequal node counts
+    if (Math.abs(leftNodes.length - rightNodes.length) > 1) {
+        warnings.push(`Asymmetric: ${leftNodes.length} left, ${rightNodes.length} right nodes`);
+    }
+
+    // Warning 2: Check Y-axis pairing quality
+    let unpairedCount = 0;
+    const usedRight = new Set();
+
+    for (const left of leftNodes) {
+        let bestMatch = null;
+        let bestDist = Infinity;
+
+        for (let i = 0; i < rightNodes.length; i++) {
+            if (usedRight.has(i)) continue;
+            const right = rightNodes[i];
+            const yDiff = Math.abs(right.point.y - left.point.y);
+            const xExpected = -left.point.x;
+            const xDiff = Math.abs(right.point.x - xExpected);
+
+            if (yDiff < 20 && xDiff < 10) {
+                const totalDiff = yDiff + xDiff;
+                if (totalDiff < bestDist) {
+                    bestDist = totalDiff;
+                    bestMatch = i;
+                }
+            }
+        }
+
+        if (bestMatch !== null) {
+            usedRight.add(bestMatch);
+        } else {
+            unpairedCount++;
+        }
+    }
+
+    if (unpairedCount > 0) {
+        warnings.push(`${unpairedCount} left node${unpairedCount > 1 ? 's have' : ' has'} no matching right node`);
+    }
+
+    // Display warnings
+    if (warnings.length > 0) {
+        console.warn('Mirror mode warnings:', warnings);
+
+        let warningDiv = document.getElementById('mirror-warning');
+        if (!warningDiv) {
+            warningDiv = document.createElement('div');
+            warningDiv.id = 'mirror-warning';
+            warningDiv.style.position = 'fixed';
+            warningDiv.style.bottom = '60px';
+            warningDiv.style.right = '220px';
+            warningDiv.style.background = '#ff6600';
+            warningDiv.style.color = '#000';
+            warningDiv.style.padding = '8px 12px';
+            warningDiv.style.borderRadius = '4px';
+            warningDiv.style.fontSize = '11px';
+            warningDiv.style.zIndex = '1000';
+            document.body.appendChild(warningDiv);
+        }
+
+        warningDiv.textContent = `⚠️ ${warnings[0]}`;
+        warningDiv.style.display = 'block';
+        setTimeout(() => {
+            if (warningDiv) warningDiv.style.display = 'none';
+        }, 5000);
+    }
+
+    return { valid: warnings.length === 0, warnings };
+}
+
+// Call after geometry changes
+function onGeometryChanged() {
+    validateMirrorSymmetry();
+    updateUI();
+    redrawHandles();
 }
 
 // ============================================================
@@ -1058,6 +1902,14 @@ function serializeState() {
         }));
     };
 
+    // v3.1.0: Serialize empty mode dots
+    const serializeEmptyModeDots = () => {
+        return state.emptyModeDots.map(dot => ({
+            index: dot.index,
+            point: [dot.point.x, dot.point.y]
+        }));
+    };
+
     return {
         outer: serializePath(state.outerPath),
         voids: state.voids.map(v => ({
@@ -1065,7 +1917,9 @@ function serializeState() {
             role: v.role,
             segments: serializePath(v.path)
         })),
-        activePathType: state.activePathType
+        activePathType: state.activePathType,
+        editorMode: state.editorMode,
+        emptyModeDots: serializeEmptyModeDots()
     };
 }
 
@@ -1081,7 +1935,35 @@ function deserializeState(data) {
         path.closed = true;
     };
 
-    if (data.outer && state.outerPath) {
+    // v3.1.0: Restore editor mode
+    if (data.editorMode) {
+        state.editorMode = data.editorMode;
+    }
+
+    // v3.1.0: Clear and restore empty mode dots
+    clearEmptyMode();
+    if (data.emptyModeDots && data.emptyModeDots.length > 0) {
+        for (const dotData of data.emptyModeDots) {
+            const point = new Point(dotData.point[0], dotData.point[1]);
+            const dot = createEmptyModeDot(point, dotData.index);
+            state.emptyModeDots.push(dot);
+        }
+        state.nextDotIndex = data.emptyModeDots.length;
+        if (state.emptyModeDots.length > 0) {
+            updateEmptyModePath();
+        }
+    }
+
+    // Restore outer path (create if needed)
+    if (data.outer) {
+        if (!state.outerPath) {
+            state.outerPath = new Path({
+                closed: true,
+                strokeColor: '#00ff88',
+                strokeWidth: 2,
+                fillColor: null
+            });
+        }
         deserializePath(data.outer, state.outerPath);
     }
 
@@ -1121,6 +2003,91 @@ function pushState() {
     }
     state.redoStack = [];
     state.dirty = true;
+    // v2.0: Trigger auto-save on every state change
+    autoSave();
+}
+
+// ============================================================
+// SECTION 1: AUTO-SAVE (localStorage) - Must Have (v2.0)
+// ============================================================
+
+const AUTO_SAVE_KEY = 'body_outline_autosave';
+const AUTO_SAVE_EXPIRY_MS = 24 * 60 * 60 * 1000; // 24 hours
+
+function autoSave() {
+    try {
+        const session = {
+            timestamp: Date.now(),
+            data: serializeState(),
+            viewport: {
+                zoom: state.zoom,
+                center: [state.viewCenter.x, state.viewCenter.y]
+            }
+        };
+        localStorage.setItem(AUTO_SAVE_KEY, JSON.stringify(session));
+
+        // Update status indicator
+        let indicator = document.getElementById('auto-save-indicator');
+        if (!indicator) {
+            indicator = document.createElement('span');
+            indicator.id = 'auto-save-indicator';
+            indicator.style.marginLeft = 'auto';
+            indicator.style.fontSize = '10px';
+            indicator.style.color = '#00aa5a';
+            document.querySelector('.status-bar').appendChild(indicator);
+        }
+        indicator.textContent = '✓ Auto-saved';
+        setTimeout(() => {
+            if (indicator) indicator.textContent = '';
+        }, 2000);
+
+        console.log('Auto-saved at', new Date().toLocaleTimeString());
+    } catch (e) {
+        console.warn('Auto-save failed:', e);
+    }
+}
+
+function restoreAutoSave() {
+    const saved = localStorage.getItem(AUTO_SAVE_KEY);
+    if (!saved) return false;
+
+    try {
+        const session = JSON.parse(saved);
+        const age = Date.now() - session.timestamp;
+
+        if (age > AUTO_SAVE_EXPIRY_MS) {
+            console.log('Auto-save expired, not restoring');
+            localStorage.removeItem(AUTO_SAVE_KEY);
+            return false;
+        }
+
+        const ageMinutes = Math.floor(age / 60000);
+        const ageHours = Math.floor(age / 3600000);
+        const ageText = ageHours > 0 ? `${ageHours} hour${ageHours > 1 ? 's' : ''}` : `${ageMinutes} minutes`;
+
+        if (confirm(`Restore auto-saved work from ${ageText} ago?`)) {
+            deserializeState(session.data);
+
+            if (session.viewport) {
+                state.zoom = session.viewport.zoom;
+                state.viewCenter = new Point(
+                    session.viewport.center[0],
+                    session.viewport.center[1]
+                );
+                view.zoom = state.zoom;
+                view.center = state.viewCenter;
+                drawGrid();
+            }
+
+            updateUI();
+            redrawHandles();
+            console.log('Auto-save restored');
+            return true;
+        }
+    } catch (e) {
+        console.warn('Auto-save restore failed:', e);
+    }
+    return false;
 }
 
 function undo() {
@@ -1171,6 +2138,77 @@ function setupCanvasEvents() {
 
         if (state.calibrating) {
             handleCalibrationClick(event.point);
+            return;
+        }
+
+        // v3.1.0: Empty mode handling
+        if (state.editorMode === 'empty') {
+            const hitDot = findDotAtPoint(event.point);
+
+            if (hitDot) {
+                // Shift+click: anchor selection for insertion
+                if (event.modifiers.shift) {
+                    if (!state.pendingPlacement) {
+                        state.pendingPlacement = true;
+                        state.pendingAnchorDot = hitDot.dot;
+                        clearAllDotHighlights();
+                        highlightDot(state.pendingAnchorDot, '#00ff88');
+                        showEmptyModeToast(`Anchor selected (dot ${hitDot.dot.index + 1}). Click to place next dot.`);
+                    } else {
+                        state.pendingPlacement = false;
+                        clearDotHighlight(state.pendingAnchorDot);
+                        state.pendingAnchorDot = null;
+                        showEmptyModeToast('Placement cancelled');
+                    }
+                    return;
+                }
+                // Regular click: start dragging the dot
+                state.draggingDot = hitDot.dot;
+                state.gestureActive = true;
+                highlightDot(hitDot.dot, '#ffaa00');
+                showEmptyModeToast(`Dragging dot ${hitDot.dot.index + 1}. Release to place.`);
+                return;
+            }
+
+            const insertPoint = findSegmentForInsertion(event.point);
+            if (insertPoint && state.emptyModeDots.length >= 2) {
+                const snappedPoint = snapToGrid(insertPoint.position);
+                const newIndex = insertPoint.index + 1;
+                const dot = createEmptyModeDot(snappedPoint, newIndex);
+                state.emptyModeDots.splice(newIndex, 0, dot);
+                for (let i = newIndex + 1; i < state.emptyModeDots.length; i++) {
+                    state.emptyModeDots[i].index = i;
+                    state.emptyModeDots[i].label.content = `${i + 1}`;
+                }
+                state.nextDotIndex = state.emptyModeDots.length;
+                updateEmptyModePath();
+                showEmptyModeToast(`Dot inserted. Total: ${state.emptyModeDots.length} dots`);
+                return;
+            }
+
+            const snappedPoint = snapToGrid(event.point);
+
+            if (state.pendingPlacement && state.pendingAnchorDot) {
+                const newIndex = state.pendingAnchorDot.index + 1;
+                const dot = createEmptyModeDot(snappedPoint, newIndex);
+                state.emptyModeDots.splice(newIndex, 0, dot);
+                for (let i = newIndex + 1; i < state.emptyModeDots.length; i++) {
+                    state.emptyModeDots[i].index = i;
+                    state.emptyModeDots[i].label.content = `${i + 1}`;
+                }
+                state.nextDotIndex = state.emptyModeDots.length;
+                updateEmptyModePath();
+                showEmptyModeToast(`Dot placed after dot ${state.pendingAnchorDot.index + 1}. Total: ${state.emptyModeDots.length}`);
+                state.pendingPlacement = false;
+                clearDotHighlight(state.pendingAnchorDot);
+                state.pendingAnchorDot = null;
+            } else {
+                const dot = createEmptyModeDot(snappedPoint, state.emptyModeDots.length);
+                state.emptyModeDots.push(dot);
+                state.nextDotIndex = state.emptyModeDots.length;
+                updateEmptyModePath();
+                showEmptyModeToast(`Dot ${state.nextDotIndex} placed.`);
+            }
             return;
         }
 
@@ -1282,6 +2320,19 @@ function setupCanvasEvents() {
     view.onMouseDrag = function(event) {
         if (state.calibrating) return;
 
+        // v3.1.0: Empty mode dot dragging
+        if (state.editorMode === 'empty' && state.draggingDot) {
+            const newPoint = snapToGrid(event.point);
+            state.draggingDot.point = newPoint;
+            state.draggingDot.marker.position = newPoint;
+            state.draggingDot.label.position = newPoint.add(new Point(8 / state.zoom, -8 / state.zoom));
+            if (state.draggingDot.segment) {
+                state.draggingDot.segment.point = newPoint;
+            }
+            updateEmptyModePath();
+            return;
+        }
+
         // Handle drag
         if (state.selectedHandle) {
             const seg = state.selectedHandle.segment;
@@ -1321,6 +2372,20 @@ function setupCanvasEvents() {
             // Apply mirror
             applyMirror(seg, originalX);
 
+            // v2.1.0: Dimension label during single-node drag
+            if (dragStartPoint && state.selectedSegments.length === 1) {
+                const delta = seg.point.subtract(dragStartPoint);
+                if (dragLabel) dragLabel.remove();
+                dragLabel = new PointText({
+                    point: seg.point.add(new Point(15, -15)),
+                    content: `\u0394x: ${delta.x >= 0 ? '+' : ''}${delta.x.toFixed(2)} mm\n\u0394y: ${delta.y >= 0 ? '+' : ''}${delta.y.toFixed(2)} mm`,
+                    fillColor: '#ffaa00',
+                    fontSize: 10,
+                    fontFamily: 'monospace',
+                    fontWeight: 'bold'
+                });
+            }
+
             redrawHandles();
         }
     };
@@ -1328,6 +2393,19 @@ function setupCanvasEvents() {
     // Mouse up
     view.onMouseUp = function(event) {
         hideSnapIndicator();
+
+        // v2.1.0: Clean up dimension label
+        if (dragLabel) {
+            dragLabel.remove();
+            dragLabel = null;
+        }
+
+        // v3.1.0: Finalize empty mode dot drag
+        if (state.draggingDot) {
+            clearDotHighlight(state.draggingDot);
+            state.draggingDot = null;
+            showEmptyModeToast('Dot moved.');
+        }
 
         if (state.gestureActive) {
             pushState();
@@ -1422,6 +2500,44 @@ function setupKeyboardEvents() {
             e.preventDefault();
         }
 
+        // v2.0.2: Arrow key nudge
+        if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.key)) {
+            // Don't nudge if typing in an input field
+            if (document.activeElement && document.activeElement.tagName === 'INPUT') {
+                return;
+            }
+
+            e.preventDefault();
+
+            if (state.selectedSegments.length === 0) return;
+
+            const snap = e.shiftKey ? 0.1 : state.snapSize;
+            let dx = 0, dy = 0;
+
+            switch (e.key) {
+                case 'ArrowLeft': dx = -snap; break;
+                case 'ArrowRight': dx = snap; break;
+                case 'ArrowUp': dy = snap; break;
+                case 'ArrowDown': dy = -snap; break;
+            }
+
+            pushState();
+
+            for (const seg of state.selectedSegments) {
+                const originalX = seg.point.x;
+                seg.point.x += dx;
+                seg.point.y += dy;
+
+                if (state.mirrorMode) {
+                    applyMirror(seg, originalX);
+                }
+            }
+
+            updateUI();
+            redrawHandles();
+            return;
+        }
+
         // Ctrl+Z - Undo
         if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'z') {
             undo();
@@ -1484,20 +2600,53 @@ function setupKeyboardEvents() {
     });
 }
 
+// ============================================================
+// SECTION 4: DELETE CONFIRMATION - Must Have (v2.0)
+// ============================================================
+
 function deleteSelectedNodes() {
     const path = getActivePath();
-    if (!path || path.segments.length <= 3) return;
+    if (!path) return;
+
+    const minSegments = (state.activePathType === 'outer') ? 3 : 3;
+    if (path.segments.length <= minSegments) {
+        alert(`Cannot delete more nodes. ${state.activePathType === 'outer' ? 'Outer' : 'Void'} path requires at least ${minSegments} nodes.`);
+        return;
+    }
+
+    const count = state.selectedSegments.length;
+    if (count === 0) return;
+
+    // Confirm only when deleting 2+ nodes
+    if (count >= 2) {
+        if (!confirm(`Delete ${count} selected node${count > 1 ? 's' : ''}?`)) {
+            return;
+        }
+    }
 
     pushState();
-    state.selectedSegments.forEach(seg => {
+
+    // Delete from end to start to avoid index shifting
+    const sortedSegments = [...state.selectedSegments].sort((a, b) => {
+        const idxA = path.segments.indexOf(a);
+        const idxB = path.segments.indexOf(b);
+        return idxB - idxA;
+    });
+
+    for (const seg of sortedSegments) {
         const idx = path.segments.indexOf(seg);
-        if (idx >= 0 && path.segments.length > 3) {
+        if (idx >= 0 && path.segments.length > minSegments) {
             path.removeSegment(idx);
         }
-    });
+    }
+
     state.selectedSegments = [];
     updateUI();
     redrawHandles();
+
+    if (state.mirrorMode) {
+        validateMirrorSymmetry();
+    }
 }
 
 // ============================================================
@@ -1538,6 +2687,202 @@ function setupToolbarEvents() {
             state.raster.opacity = val / 100;
         }
     });
+
+    // v3.0.0: API Integration - Solve from Editor (real backend)
+    document.getElementById('btn-solve-from-editor').addEventListener('click', async () => {
+        const api = window.bodyAPI || new InstrumentBodyAPI();
+        const spec = document.getElementById('instrument-select').value;
+        const landmarks = api.pathToLandmarks(state.outerPath, spec);
+
+        const validation = validateLandmarks(landmarks, spec);
+        if (!validation.valid) {
+            alert(`Cannot solve: ${validation.errors.join('\n')}`);
+            return;
+        }
+
+        if (landmarks.length < 3) {
+            alert('Need at least 3 landmarks (lower_bout, butt, neck)');
+            return;
+        }
+
+        const btn = document.getElementById('btn-solve-from-editor');
+        const originalText = btn.textContent;
+        btn.textContent = 'Solving...';
+        btn.disabled = true;
+
+        let loadingEl = document.getElementById('solve-loading');
+        if (!loadingEl) {
+            loadingEl = document.createElement('div');
+            loadingEl.id = 'solve-loading';
+            loadingEl.style.cssText = 'position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:rgba(0,0,0,0.9);color:#00ff88;padding:20px 40px;border-radius:8px;font-family:monospace;z-index:2000;';
+            loadingEl.textContent = 'Solving body geometry...';
+            document.body.appendChild(loadingEl);
+        }
+        loadingEl.style.display = 'block';
+
+        try {
+            const result = await api.solveFromLandmarks(spec, landmarks, {
+                return_json: true,
+                return_side_heights: true
+            });
+
+            if (!result) return;
+
+            if (result.outline_points && state.outerPath) {
+                pushState();
+                state.outerPath.removeSegments();
+                result.outline_points.forEach(p => {
+                    state.outerPath.add(new Segment(new Point(p[0], p[1])));
+                });
+                state.outerPath.smooth();
+
+                updateConfidenceBadge(result.confidence);
+
+                if (result.side_heights) {
+                    state.sideHeights = result.side_heights;
+                }
+
+                updateUI();
+                redrawHandles();
+                showSolvedDimensions(result.dimensions);
+
+                if (result.session_id) {
+                    localStorage.setItem('ibg_last_session', result.session_id);
+                }
+            }
+        } catch (err) {
+            console.error('Solve failed:', err);
+            if (err.message === 'AUTH_REQUIRED') {
+                document.getElementById('auth-group').style.display = 'flex';
+                alert('Authentication required. Please login for paid tier access.');
+            } else if (err.message === 'RATE_LIMITED') {
+                alert('Rate limit exceeded. Please wait a moment and try again.');
+            } else {
+                alert('Failed to solve: ' + err.message);
+            }
+        } finally {
+            btn.textContent = originalText;
+            btn.disabled = false;
+            if (loadingEl) loadingEl.style.display = 'none';
+        }
+    });
+
+    // v2.0.2: Template library (v3.1.0: mode-aware)
+    document.getElementById('btn-load-template').addEventListener('click', () => {
+        const templateId = document.getElementById('template-select').value;
+        // v3.1.0: Use mode-appropriate loader
+        const loaded = state.editorMode === 'empty'
+            ? loadTemplateInEmptyMode(templateId)
+            : loadTemplate(templateId);
+        if (loaded) {
+            // Map template to instrument spec where possible
+            const instrumentSelect = document.getElementById('instrument-select');
+            if (instrumentSelect) {
+                const templateToSpec = {
+                    dreadnought: 'dreadnought',
+                    jumbo: 'jumbo',
+                    om: 'dreadnought',
+                    classical: 'cuatro_venezolano',
+                    parlor: 'cuatro_venezolano',
+                    stratocaster: 'stratocaster',
+                    les_paul: 'stratocaster',
+                    telecaster: 'stratocaster'
+                };
+                if (templateToSpec[templateId]) {
+                    instrumentSelect.value = templateToSpec[templateId];
+                }
+            }
+        }
+    });
+
+    // v3.0.0: Auth handlers
+    document.getElementById('btn-login')?.addEventListener('click', () => {
+        const apiKey = prompt('Enter your API key for paid tier features:');
+        if (apiKey) {
+            window.bodyAPI?.setAuthToken(apiKey);
+            localStorage.setItem('ibg_api_key', apiKey);
+            document.getElementById('user-badge').textContent = '\u2713 Paid Tier';
+            document.getElementById('user-badge').style.backgroundColor = '#00aa5a';
+            document.getElementById('btn-login').style.display = 'none';
+            document.getElementById('btn-logout').style.display = 'inline-block';
+        }
+    });
+
+    document.getElementById('btn-logout')?.addEventListener('click', () => {
+        localStorage.removeItem('ibg_api_key');
+        window.bodyAPI?.setAuthToken(null);
+        document.getElementById('user-badge').textContent = '';
+        document.getElementById('btn-login').style.display = 'inline-block';
+        document.getElementById('btn-logout').style.display = 'none';
+    });
+
+    // Check for stored API key on load
+    const storedApiKey = localStorage.getItem('ibg_api_key');
+    if (storedApiKey && window.bodyAPI) {
+        window.bodyAPI.setAuthToken(storedApiKey);
+        document.getElementById('auth-group').style.display = 'flex';
+        document.getElementById('user-badge').textContent = '\u2713 Paid Tier';
+        document.getElementById('user-badge').style.backgroundColor = '#00aa5a';
+        document.getElementById('btn-login').style.display = 'none';
+        document.getElementById('btn-logout').style.display = 'inline-block';
+    }
+}
+
+// ============================================================
+// CONFIDENCE BADGE HELPER - Critical (v2.0.2)
+// ============================================================
+
+function updateConfidenceBadge(confidence) {
+    const badge = document.getElementById('confidence-badge');
+    if (!badge) return;
+
+    const percent = (confidence * 100).toFixed(0);
+    badge.textContent = `Confidence: ${percent}%`;
+
+    if (confidence >= 0.7) {
+        badge.style.backgroundColor = '#00aa5a';
+        badge.style.color = '#fff';
+    } else if (confidence >= 0.4) {
+        badge.style.backgroundColor = '#ffaa00';
+        badge.style.color = '#000';
+    } else {
+        badge.style.backgroundColor = '#ff6600';
+        badge.style.color = '#fff';
+    }
+}
+
+function showSolvedDimensions(dimensions) {
+    if (window.dimensionOverlay) window.dimensionOverlay.remove();
+
+    const overlay = new Group();
+    const dims = [
+        `Body Length: ${dimensions.body_length_mm.toFixed(1)} mm`,
+        `Lower Bout: ${dimensions.lower_bout_mm.toFixed(1)} mm`,
+        `Upper Bout: ${dimensions.upper_bout_mm.toFixed(1)} mm`,
+        `Waist: ${dimensions.waist_mm.toFixed(1)} mm`
+    ];
+
+    let yOffset = -50;
+    dims.forEach(text => {
+        const label = new PointText({
+            point: new Point(20, yOffset),
+            content: text,
+            fillColor: '#00ff88',
+            fontFamily: 'monospace',
+            fontSize: 12,
+            fontWeight: 'bold'
+        });
+        overlay.addChild(label);
+        yOffset += 18;
+    });
+
+    window.dimensionOverlay = overlay;
+    setTimeout(() => {
+        if (window.dimensionOverlay) {
+            window.dimensionOverlay.remove();
+            window.dimensionOverlay = null;
+        }
+    }, 5000);
 }
 
 function toggleGrid() {
@@ -1612,8 +2957,12 @@ function confirmNew() {
 
 function resetEditor() {
     if (state.outerPath) state.outerPath.remove();
+    state.outerPath = null;
     state.voids.forEach(v => v.path.remove());
     state.voids = [];
+
+    // v3.1.0: Clear empty mode dots
+    clearEmptyMode();
 
     if (state.raster) {
         state.raster.remove();
@@ -1629,7 +2978,13 @@ function resetEditor() {
     state.calibrating = false;
     state.calPoints = [];
 
-    createDefaultOutline();
+    // v3.1.0: Mode-aware initialization
+    if (state.editorMode === 'empty') {
+        startEmptyMode();
+    } else {
+        createDefaultOutline();
+    }
+
     state.viewCenter = new Point(0, 0);
     state.zoom = 1.0;
     view.center = state.viewCenter;
@@ -2119,20 +3474,80 @@ function cancelMeasure() {
     distanceEl.style.color = '#ffaa00';
 }
 
+// ============================================================
+// SECTION 2: CALIBRATION VALIDATION - Must Have (v2.0)
+// ============================================================
+
 function applyCalibration() {
     const knownDist = parseFloat(document.getElementById('calibrate-distance').value);
-    if (isNaN(knownDist) || knownDist <= 0) return;
+
+    // Validation 1: Numeric input
+    if (isNaN(knownDist) || knownDist <= 0) {
+        alert('Please enter a valid positive distance (e.g., 100)');
+        return;
+    }
+
+    // Validation 2: Points exist
+    if (!state.calPoints || state.calPoints.length < 2) {
+        alert('Please click two points on the image first');
+        return;
+    }
 
     const pixelDist = state.calPoints[0].getDistance(state.calPoints[1]);
+
+    // Validation 3: Points not too close
+    if (pixelDist < 5) {
+        alert('Calibration points are too close (less than 5 pixels).\nClick two distinct points on a known distance.');
+        return;
+    }
+
     const scale = knownDist / pixelDist;
 
-    // Scale the image only
+    // Validation 4: Sanity check scale
+    if (scale < 0.01 || scale > 100) {
+        const msg = `Scale factor ${scale.toFixed(2)} seems unusual.\n` +
+                   `Pixel distance: ${pixelDist.toFixed(1)}px\n` +
+                   `Known distance: ${knownDist}mm\n\n` +
+                   `Continue anyway?`;
+        if (!confirm(msg)) return;
+    }
+
+    // Validation 5: Warn if scale makes image extreme
+    if (state.raster) {
+        const newWidth = state.raster.width * scale;
+        const newHeight = state.raster.height * scale;
+        if (newWidth < 50 || newHeight < 50) {
+            if (!confirm(`Warning: Image will become very small (${newWidth.toFixed(0)}x${newHeight.toFixed(0)}px). Continue?`)) {
+                return;
+            }
+        }
+        if (newWidth > 5000 || newHeight > 5000) {
+            if (!confirm(`Warning: Image will become very large (${newWidth.toFixed(0)}x${newHeight.toFixed(0)}px). This may slow down the editor. Continue?`)) {
+                return;
+            }
+        }
+    }
+
+    // Apply calibration
     if (state.raster) {
         state.raster.scale(scale);
         state.imagePixelsPerMM = 1 / scale;
+        console.log(`Calibration applied: ${pixelDist.toFixed(1)}px = ${knownDist}mm, scale=${scale.toFixed(4)}`);
     }
 
+    // Clear calibration state and return focus to canvas
     cancelCalibration();
+    document.getElementById('canvas').focus();
+    view.update();
+
+    // Show success message
+    const statusBar = document.querySelector('.status-bar');
+    const calIndicator = document.createElement('span');
+    calIndicator.textContent = ` ✓ Calibrated: ${knownDist}mm = ${pixelDist.toFixed(1)}px`;
+    calIndicator.style.color = '#00aa5a';
+    calIndicator.style.marginLeft = 'auto';
+    statusBar.appendChild(calIndicator);
+    setTimeout(() => calIndicator.remove(), 3000);
 }
 
 // ============================================================
@@ -2159,6 +3574,67 @@ function tessellatePathToPoints(path, stepsPerCurve = 20) {
     return points;
 }
 
+// ============================================================
+// SELF-INTERSECTION DETECTION - Critical (v2.0.2)
+// ============================================================
+
+function segmentsIntersect(p1, p2, p3, p4) {
+    // Check if line segments p1-p2 and p3-p4 intersect
+    function ccw(a, b, c) {
+        return (c.y - a.y) * (b.x - a.x) > (b.y - a.y) * (c.x - a.x);
+    }
+
+    return (ccw(p1, p3, p4) !== ccw(p2, p3, p4)) &&
+           (ccw(p1, p2, p3) !== ccw(p1, p2, p4));
+}
+
+function checkSelfIntersection(path) {
+    if (!path || path.segments.length < 4) return { hasIntersection: false, intersections: [] };
+
+    const points = path.segments.map(s => s.point);
+    const intersections = [];
+
+    for (let i = 0; i < points.length - 1; i++) {
+        for (let j = i + 2; j < points.length - 1; j++) {
+            // Skip adjacent segments
+            if (j === i + 1) continue;
+
+            if (segmentsIntersect(points[i], points[i + 1], points[j], points[j + 1])) {
+                intersections.push({
+                    segment1: { start: i, end: i + 1 },
+                    segment2: { start: j, end: j + 1 }
+                });
+            }
+        }
+    }
+
+    // Check last segment to first segment
+    if (points.length > 3 && segmentsIntersect(points[points.length - 1], points[0], points[1], points[2])) {
+        intersections.push({
+            segment1: { start: points.length - 1, end: 0 },
+            segment2: { start: 1, end: 2 }
+        });
+    }
+
+    return { hasIntersection: intersections.length > 0, intersections };
+}
+
+function validateOutlineBeforeExport() {
+    if (state.activePathType !== 'outer') {
+        // Only validate outer body for self-intersection
+        return { valid: true, message: null };
+    }
+
+    const result = checkSelfIntersection(state.outerPath);
+
+    if (result.hasIntersection) {
+        const msg = `⚠️ Self-intersection detected in outline!\n\nFound ${result.intersections.length} intersecting segment pair(s).\n\nThis may cause CAM toolpath errors.\n\nExport anyway?`;
+        return { valid: confirm(msg), message: 'Self-intersection detected' };
+    }
+
+    return { valid: true, message: null };
+}
+
 function calculateWinding(points) {
     // Shoelace formula
     let sum = 0;
@@ -2178,6 +3654,13 @@ function enforceWinding(points, desiredWinding) {
 }
 
 function exportDXF() {
+    // v2.0.2: Validate before export
+    const validation = validateOutlineBeforeExport();
+    if (!validation.valid) {
+        console.log('Export cancelled:', validation.message);
+        return;
+    }
+
     let dxf = '';
 
     // Header
@@ -2456,6 +3939,309 @@ window.onresize = function() {
     drawGrid();
     redrawHandles();
 };
+
+// ============================================================
+// SECTION 6: TEST FUNCTIONS - Manual Testing (v2.0)
+// ============================================================
+// Call from browser console:
+//   testAPI() - Test API client with mock
+//   testMirror() - Check mirror symmetry
+//   testAutoSave() - Verify auto-save works
+//   testCalibration() - Simulate calibration flow
+
+window.testAPI = async function() {
+    console.log('=== Testing API Client ===');
+    const api = new InstrumentBodyAPI();
+    const landmarks = api.pathToLandmarks(state.outerPath, 'dreadnought');
+    console.log('Landmarks extracted:', landmarks);
+
+    const result = await api.solveFromLandmarks('dreadnought', landmarks);
+    console.log('API result:', result);
+
+    if (result.outline_points) {
+        console.log(`Outline points: ${result.outline_points.length}`);
+        console.log(`Confidence: ${result.confidence}`);
+    }
+    return result;
+};
+
+window.testMirror = function() {
+    console.log('=== Testing Mirror Symmetry ===');
+    const result = validateMirrorSymmetry();
+    console.log('Valid:', result.valid);
+    console.log('Warnings:', result.warnings);
+    return result;
+};
+
+window.testAutoSave = function() {
+    console.log('=== Testing Auto-Save ===');
+    const saved = localStorage.getItem('body_outline_autosave');
+    if (saved) {
+        const session = JSON.parse(saved);
+        console.log('Saved at:', new Date(session.timestamp).toLocaleString());
+        console.log('Age:', Math.floor((Date.now() - session.timestamp) / 60000), 'minutes');
+    } else {
+        console.log('No auto-save found');
+    }
+    return saved;
+};
+
+window.testCalibration = function() {
+    console.log('=== Testing Calibration ===');
+    console.log('Calibration points:', state.calPoints.length);
+    if (state.calPoints.length === 2) {
+        const dist = state.calPoints[0].getDistance(state.calPoints[1]);
+        console.log('Pixel distance:', dist.toFixed(2));
+    }
+    console.log('Raster present:', !!state.raster);
+};
+
+// v2.0.2 Test Functions
+window.testSelfIntersection = function() {
+    console.log('=== Testing Self-Intersection ===');
+    const result = checkSelfIntersection(state.outerPath);
+    console.log('Has intersection:', result.hasIntersection);
+    if (result.hasIntersection) {
+        console.log('Intersections:', result.intersections.length);
+        console.log('Segments:', result.intersections);
+    }
+    return result;
+};
+
+window.testTemplate = function(templateId = 'dreadnought') {
+    console.log('=== Testing Template:', templateId, '===');
+    const result = loadTemplate(templateId);
+    console.log('Template loaded:', result);
+    if (result && INSTRUMENT_TEMPLATES[templateId]) {
+        console.log('Dimensions:', INSTRUMENT_TEMPLATES[templateId].dimensions);
+    }
+    return result;
+};
+
+window.testLandmarks = function() {
+    console.log('=== Testing Landmark Validation ===');
+    const api = new InstrumentBodyAPI();
+    const landmarks = api.pathToLandmarks(state.outerPath, 'dreadnought');
+    console.log('Landmarks extracted:', landmarks.length);
+    landmarks.forEach(l => console.log(`  ${l.label}: (${l.x_mm.toFixed(1)}, ${l.y_mm.toFixed(1)})`));
+    const validation = validateLandmarks(landmarks, 'dreadnought');
+    console.log('Validation:', validation);
+    return { landmarks, validation };
+};
+
+window.testWeightedMirror = function() {
+    console.log('=== Testing Weighted Mirror ===');
+    if (typeof findMirrorSegmentWeighted !== 'function') {
+        console.log('  \u2717 findMirrorSegmentWeighted() missing');
+        return false;
+    }
+    console.log('  \u2713 findMirrorSegmentWeighted() exists');
+    console.log('  Scoring: Y-dist (2x) + X-dist (3x) + handle (1x)');
+    return true;
+};
+
+window.testBackendAPI = async function() {
+    console.log('=== Testing Backend API (v3.0.0) ===');
+    const api = window.bodyAPI || new InstrumentBodyAPI();
+    console.log('  Base URL:', api.baseUrl);
+    console.log('  Mock mode:', api.useMock);
+    console.log('  Auth token:', api.authToken ? 'Present' : 'None');
+    console.log('  Methods:', ['solveFromLandmarks', 'getSession', 'updateSessionLandmarks', 'setAuthToken'].filter(m => typeof api[m] === 'function').join(', '));
+    return api;
+};
+
+// Precision Test — measures click accuracy on canvas (dev diagnostic)
+window.testPrecision = (function() {
+    let precisionTestPoints = [];
+    let precisionTestResults = [];
+    let precisionTestIndex = 0;
+    let originalOnMouseDown = null;
+
+    function showPrecisionToast(msg) {
+        let toast = document.getElementById('precision-toast');
+        if (!toast) {
+            toast = document.createElement('div');
+            toast.id = 'precision-toast';
+            toast.style.cssText = 'position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:#00aa5a;color:#000;padding:8px 16px;border-radius:8px;font-family:monospace;z-index:10000;';
+            document.body.appendChild(toast);
+        }
+        toast.textContent = msg;
+        toast.style.display = 'block';
+        setTimeout(() => { if (toast) toast.style.display = 'none'; }, 3000);
+    }
+
+    function finishPrecisionTest() {
+        view.onMouseDown = originalOnMouseDown;
+
+        const errors = precisionTestResults.map(r => r.error_mm);
+        const avgError = errors.reduce((a, b) => a + b, 0) / errors.length;
+        const maxError = Math.max(...errors);
+        const minError = Math.min(...errors);
+
+        console.log('\n=== PRECISION TEST RESULTS ===');
+        console.log(`Average error: ${avgError.toFixed(2)}mm`);
+        console.log(`Max error: ${maxError.toFixed(2)}mm`);
+        console.log(`Min error: ${minError.toFixed(2)}mm`);
+        console.log(`Snap size: ${state.snapSize}mm`);
+
+        let verdict = '';
+        if (avgError < 0.5) {
+            verdict = 'SUB-MILLIMETER: CNC-ready precision achievable.';
+        } else if (avgError < 1.0) {
+            verdict = 'MODERATE: Good for hand-fitted work.';
+        } else {
+            verdict = 'LIMITED: >1mm error. Precision ceiling reached.';
+        }
+        console.log(`Verdict: ${verdict}`);
+
+        showPrecisionToast(`Test complete. Avg error: ${avgError.toFixed(2)}mm. Check console.`);
+
+        precisionTestPoints.forEach(p => p.markers.forEach(m => m.remove()));
+        precisionTestPoints = [];
+
+        if (confirm('Precision test complete. Restore default outline?')) {
+            createDefaultOutline();
+            updateUI();
+            redrawHandles();
+        }
+    }
+
+    return function startPrecisionTest() {
+        if (state.outerPath) state.outerPath.remove();
+        state.outerPath = null;
+
+        const targets = [
+            { x: 100, y: 100 }, { x: 200, y: 100 }, { x: 300, y: 100 }, { x: 400, y: 100 },
+            { x: 250, y: 200 },
+            { x: 100, y: 300 }, { x: 200, y: 300 }, { x: 300, y: 300 }, { x: 400, y: 300 },
+            { x: 250, y: 400 }
+        ];
+
+        precisionTestPoints = targets.map(t => {
+            const crossH = new Path.Line(new Point(t.x - 10, t.y), new Point(t.x + 10, t.y));
+            const crossV = new Path.Line(new Point(t.x, t.y - 10), new Point(t.x, t.y + 10));
+            crossH.strokeColor = '#ff0000';
+            crossV.strokeColor = '#ff0000';
+            crossH.strokeWidth = 2;
+            crossV.strokeWidth = 2;
+            return { target: new Point(t.x, t.y), markers: [crossH, crossV] };
+        });
+
+        precisionTestResults = [];
+        precisionTestIndex = 0;
+        originalOnMouseDown = view.onMouseDown;
+
+        view.onMouseDown = function(event) {
+            if (precisionTestIndex >= precisionTestPoints.length) {
+                finishPrecisionTest();
+                return;
+            }
+
+            const current = precisionTestPoints[precisionTestIndex];
+            const clickPoint = event.point;
+            const targetPoint = current.target;
+            const error = targetPoint.getDistance(clickPoint);
+
+            precisionTestResults.push({
+                target: targetPoint,
+                clicked: clickPoint,
+                error_mm: error,
+                snap_size: state.snapSize
+            });
+
+            const feedback = new Path.Circle({
+                center: clickPoint,
+                radius: 5,
+                fillColor: error < 0.5 ? '#00ff00' : '#ff6600',
+                opacity: 0.7
+            });
+            setTimeout(() => feedback.remove(), 500);
+
+            console.log(`Target ${precisionTestIndex + 1}: error = ${error.toFixed(2)}mm`);
+            precisionTestIndex++;
+
+            if (precisionTestIndex < precisionTestPoints.length) {
+                showPrecisionToast(`Click target #${precisionTestIndex + 1} (${precisionTestPoints.length - precisionTestIndex} left)`);
+            } else {
+                finishPrecisionTest();
+            }
+        };
+
+        showPrecisionToast('PRECISION TEST: Click on each red cross. 10 targets total.');
+        console.log('Precision test started. Click on each red cross marker.');
+    };
+})();
+
+// v3.1.0: Mode selection initialization
+function initModeSelection() {
+    const dialogOverlay = document.getElementById('mode-dialog-overlay');
+    const defaultBtn = document.getElementById('mode-default-btn');
+    const emptyBtn = document.getElementById('mode-empty-btn');
+
+    // Check for auto-save first - if exists, skip mode dialog
+    const saved = localStorage.getItem(AUTO_SAVE_KEY);
+    if (saved) {
+        try {
+            const session = JSON.parse(saved);
+            const age = Date.now() - session.timestamp;
+            if (age <= AUTO_SAVE_EXPIRY_MS) {
+                // Has valid auto-save - restore it and skip mode dialog
+                if (dialogOverlay) dialogOverlay.remove();
+                restoreAutoSave();
+                return;
+            }
+        } catch (e) {
+            console.warn('Auto-save check failed:', e);
+        }
+    }
+
+    if (!dialogOverlay) {
+        createDefaultOutline();
+        pushState();
+        return;
+    }
+
+    defaultBtn.onclick = () => {
+        state.editorMode = 'default';
+        createDefaultOutline();
+        dialogOverlay.remove();
+        updateUI();
+        redrawHandles();
+        pushState();
+    };
+
+    emptyBtn.onclick = () => {
+        startEmptyMode();
+        dialogOverlay.remove();
+        pushState();
+    };
+}
+
+window.testEmptyMode = function() {
+    console.log('=== Testing Empty Mode ===');
+    const dialog = document.getElementById('mode-dialog-overlay');
+    if (dialog) dialog.remove();
+    startEmptyMode();
+    console.log('Empty mode activated. Click on canvas to place dots.');
+    return true;
+};
+
+window.testAll = async function() {
+    console.log('=== RUNNING ALL TESTS (v3.1.0) ===');
+    await window.testAPI?.();
+    window.testMirror?.();
+    window.testAutoSave?.();
+    window.testSelfIntersection?.();
+    window.testLandmarks?.();
+    window.testWeightedMirror?.();
+    await window.testBackendAPI?.();
+    console.log('=== TESTS COMPLETE ===');
+};
+
+console.log('Body Outline Editor v3.1.0 loaded');
+console.log('Test functions: testAPI(), testMirror(), testAutoSave(), testCalibration()');
+console.log('v2.x tests: testSelfIntersection(), testTemplate(id), testLandmarks(), testWeightedMirror()');
+console.log('v3.1.0 tests: testBackendAPI(), testPrecision(), testEmptyMode(), testAll()');
 </script>
 </body>
 </html>
