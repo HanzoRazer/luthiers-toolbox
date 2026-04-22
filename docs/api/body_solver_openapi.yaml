@@ -1,0 +1,321 @@
+openapi: 3.0.0
+info:
+  title: Body Solver API
+  version: 3.5.0
+  description: |
+    The Body Solver API generates parametric body outlines from landmarks.
+
+    The Instrument Body Generator (IBG) is a separate geometry correction library
+    used internally by the solver — it has no direct API endpoint.
+
+    **Access:** [INTERNAL_ACCESS_NOTE]
+
+servers:
+  - url: https://[DEPLOYMENT_URL]/api
+    description: Production (URL TBD)
+  - url: https://staging.[DEPLOYMENT_URL]/api
+    description: Staging (URL TBD)
+
+paths:
+  /body/solve-from-landmarks:
+    post:
+      summary: Generate body outline from landmarks
+      operationId: solveFromLandmarks
+      tags:
+        - Body Solver
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SolveRequest'
+      responses:
+        '200':
+          description: Successful solve
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SolveResponse'
+        '401':
+          description: Authentication required
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '429':
+          description: Rate limit exceeded
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+      security:
+        - BearerAuth: []
+
+  /body/session/{session_id}:
+    get:
+      summary: Retrieve solved session
+      operationId: getSession
+      tags:
+        - Body Solver
+      parameters:
+        - name: session_id
+          in: path
+          required: true
+          schema:
+            type: string
+            example: "abc123-def456-7890"
+      responses:
+        '200':
+          description: Session data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SolveResponse'
+        '404':
+          description: Session not found
+      security:
+        - BearerAuth: []
+
+  /body/session/{session_id}/landmarks:
+    put:
+      summary: Update session with new landmarks
+      operationId: updateSessionLandmarks
+      tags:
+        - Body Solver
+      parameters:
+        - name: session_id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - landmarks
+              properties:
+                landmarks:
+                  $ref: '#/components/schemas/LandmarksList'
+      responses:
+        '200':
+          description: Re-solved outline
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SolveResponse'
+        '401':
+          description: Authentication required
+        '404':
+          description: Session not found
+      security:
+        - BearerAuth: []
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: |
+        Paid tier: Valid token required. Free tier: No token (rate limited).
+
+  schemas:
+    SolveRequest:
+      type: object
+      required:
+        - instrument_spec
+        - landmarks
+      properties:
+        instrument_spec:
+          type: string
+          enum:
+            - dreadnought
+            - cuatro_venezolano
+            - stratocaster
+            - jumbo
+          example: dreadnought
+          description: Instrument class for geometric relationships
+        landmarks:
+          $ref: '#/components/schemas/LandmarksList'
+        options:
+          type: object
+          properties:
+            return_side_heights:
+              type: boolean
+              default: false
+              description: Include side height array in response
+            return_zone_radii:
+              type: boolean
+              default: false
+              description: Include zone radii in response
+
+    LandmarksList:
+      type: array
+      minItems: 3
+      items:
+        $ref: '#/components/schemas/Landmark'
+
+    Landmark:
+      type: object
+      required:
+        - label
+        - x_mm
+        - y_mm
+      properties:
+        label:
+          type: string
+          enum:
+            - lower_bout_max
+            - waist_min
+            - upper_bout_max
+            - butt_center
+            - neck_center
+          description: |
+            - lower_bout_max: Widest point of lower bout (positive X)
+            - waist_min: Narrowest point at waist (positive X)
+            - upper_bout_max: Widest point of upper bout (positive X)
+            - butt_center: Center of tail (X=0, minimum Y)
+            - neck_center: Center of neck joint (X=0, maximum Y)
+        x_mm:
+          type: number
+          format: float
+          example: 190.5
+          description: X coordinate in millimeters (positive = bass side)
+        y_mm:
+          type: number
+          format: float
+          example: 80.0
+          description: Y coordinate in millimeters (positive = toward neck)
+        source:
+          type: string
+          enum:
+            - user_input
+            - vectorizer_extracted
+            - derived
+            - ratio_estimate
+          default: user_input
+          description: Origin of the landmark
+        confidence:
+          type: number
+          minimum: 0
+          maximum: 1
+          default: 1.0
+          description: Confidence in this landmark (0-1)
+
+    SolveResponse:
+      type: object
+      properties:
+        session_id:
+          type: string
+          example: "abc123-def456-7890"
+          description: Unique session identifier for resuming
+        status:
+          type: string
+          enum: [completed, pending, failed]
+          example: completed
+        confidence:
+          type: number
+          minimum: 0
+          maximum: 1
+          example: 0.87
+          description: Overall confidence in solved outline (green >=0.7, amber 0.4-0.69, orange <0.4)
+        dimensions:
+          type: object
+          properties:
+            body_length_mm:
+              type: number
+              example: 521.3
+            lower_bout_mm:
+              type: number
+              example: 382.1
+            upper_bout_mm:
+              type: number
+              example: 293.5
+            waist_mm:
+              type: number
+              example: 240.8
+            waist_y_norm:
+              type: number
+              example: 0.442
+              description: Waist position as fraction of body length (0-1)
+        outline_points:
+          type: array
+          description: Closed polygon outline (CCW winding, X,Y in mm)
+          items:
+            type: array
+            minItems: 2
+            maxItems: 2
+            items:
+              type: number
+              format: float
+        side_heights:
+          type: array
+          description: Height at each outline point (mm) - only if requested
+          items:
+            type: number
+            format: float
+        radii_by_zone:
+          type: object
+          description: Curvature radii by body zone - only if requested
+          properties:
+            lower_bout:
+              type: number
+            waist:
+              type: number
+            upper_bout:
+              type: number
+        missing_landmarks:
+          type: array
+          description: Required landmarks not provided
+          items:
+            type: string
+
+    ErrorResponse:
+      type: object
+      properties:
+        detail:
+          type: string
+          example: "Authentication required"
+
+  examples:
+    DreadnoughtRequest:
+      summary: Dreadnought with three landmarks
+      value:
+        instrument_spec: dreadnought
+        landmarks:
+          - label: lower_bout_max
+            x_mm: 190.5
+            y_mm: 80.0
+          - label: butt_center
+            x_mm: 0
+            y_mm: 0
+          - label: neck_center
+            x_mm: 0
+            y_mm: 520.0
+
+    FullRequest:
+      summary: Complete landmark set
+      value:
+        instrument_spec: dreadnought
+        landmarks:
+          - label: lower_bout_max
+            x_mm: 190.5
+            y_mm: 80.0
+          - label: waist_min
+            x_mm: 120.5
+            y_mm: 228.0
+          - label: upper_bout_max
+            x_mm: 146.0
+            y_mm: 390.0
+          - label: butt_center
+            x_mm: 0
+            y_mm: 0
+          - label: neck_center
+            x_mm: 0
+            y_mm: 520.0
+        options:
+          return_side_heights: true
+          return_zone_radii: true
