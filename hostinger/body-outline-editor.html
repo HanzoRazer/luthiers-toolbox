@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Body Outline Editor — The Production Shop</title>
-    <!-- v3.4.0 - Measurement & Enhanced Export -->
+    <!-- v3.5.0 - Final Polish (Precision Tier Complete) -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/paper.js/0.12.18/paper-full.min.js"></script>
     <style>
         * {
@@ -626,10 +626,10 @@
         </div>
         <!-- v3.4.0: Measurement tools -->
         <div class="toolbar-group">
-            <button id="btn-measure" title="Distance (M)">📏</button>
-            <button id="btn-measure-angle" title="Angle (3-point)">📐</button>
-            <button id="btn-measure-arc" title="Arc length">〰️</button>
-            <button id="btn-measure-clear" title="Clear all measurements">🗑️</button>
+            <button id="btn-measure" title="Measure distance (click two points)">📏</button>
+            <button id="btn-measure-angle" title="Measure angle (click vertex, then two arms)">📐</button>
+            <button id="btn-measure-arc" title="Measure arc length (click on curve)">〰️</button>
+            <button id="btn-measure-clear" title="Clear all measurements (Ctrl+Shift+M)">🗑️</button>
             <button id="btn-exit-mode" title="Exit current mode (Esc)" style="background:#ff6600;color:#000;display:none;">Exit Mode</button>
         </div>
         <div class="toolbar-group">
@@ -698,7 +698,7 @@
     <!-- v3.1.0: MODE DIALOG (shown on page load) -->
     <div id="mode-dialog-overlay" style="position:fixed; inset:0; background:rgba(0,0,0,0.85); display:flex; align-items:center; justify-content:center; z-index:10000;">
         <div style="background:#1e1e1e; border:1px solid #00ff88; border-radius:8px; padding:32px; max-width:500px; text-align:center;">
-            <h2 style="color:#00ff88; margin-bottom:16px;">Body Outline Editor v3.4</h2>
+            <h2 style="color:#00ff88; margin-bottom:16px;">Body Outline Editor v3.5</h2>
             <p style="color:#888; margin-bottom:24px;">Choose how you want to start</p>
 
             <button id="mode-default-btn" style="background:#00aa5a; color:#000; padding:12px 24px; margin:0 8px; border:none; border-radius:4px; cursor:pointer; font-weight:bold;">
@@ -2312,11 +2312,16 @@ function updateMeasurementList() {
             displayValue = `${formatValue(converted)} ${state.currentUnit}`;
         }
 
+        // v3.5.0: Include annotation if present
+        if (m.annotation) {
+            displayValue += ` (${m.annotation})`;
+        }
+
         const icon = m.type === 'distance' ? '📏' : m.type === 'angle' ? '📐' : '〰️';
 
         div.innerHTML = `
             <span class="measurement-type">${icon}</span>
-            <span class="measurement-value">${displayValue}</span>
+            <span class="measurement-value" title="Double-click to add annotation">${displayValue}</span>
             <button class="measurement-delete" data-id="${m.id}">×</button>
         `;
 
@@ -2327,6 +2332,12 @@ function updateMeasurementList() {
 
         div.addEventListener('click', () => {
             highlightMeasurement(m.id);
+        });
+
+        // v3.5.0: Double-click to edit annotation
+        div.addEventListener('dblclick', (e) => {
+            e.stopPropagation();
+            editMeasurementAnnotation(m.id);
         });
 
         container.appendChild(div);
@@ -2406,6 +2417,62 @@ function highlightMeasurement(id) {
 }
 
 // ============================================================
+// v3.5.0: MEASUREMENT ANNOTATION EDIT
+// ============================================================
+
+function editMeasurementAnnotation(measurementId) {
+    const m = state.measurements.find(m => m.id === measurementId);
+    if (!m) return;
+
+    const newAnnotation = prompt('Enter annotation (e.g., "Bridge to tail"):', m.annotation || '');
+    if (newAnnotation !== null) {
+        m.annotation = newAnnotation;
+
+        // Update label to include annotation
+        if (m.graphics?.label) {
+            let valueStr;
+            if (m.type === 'angle') {
+                valueStr = `${m.value.toFixed(1)}°`;
+            } else {
+                valueStr = `${formatValue(convertUnits(m.value, 'mm', state.currentUnit))} ${state.currentUnit}`;
+            }
+            m.graphics.label.content = m.annotation ?
+                `${valueStr} (${m.annotation})` :
+                valueStr;
+        }
+
+        updateMeasurementList();
+        logOperation('EDIT_ANNOTATION', { id: measurementId, annotation: newAnnotation });
+        showToast(m.annotation ? `Annotation: "${m.annotation}"` : 'Annotation cleared', '#00aa5a');
+    }
+}
+
+// ============================================================
+// v3.5.0: EXPORT SETTINGS PERSISTENCE
+// ============================================================
+
+const EXPORT_SETTINGS_KEY = 'body_outline_export_settings';
+
+function loadExportSettings() {
+    try {
+        const saved = localStorage.getItem(EXPORT_SETTINGS_KEY);
+        if (saved) {
+            state.exportSettings = { ...state.exportSettings, ...JSON.parse(saved) };
+        }
+    } catch (e) {
+        console.warn('Failed to load export settings:', e);
+    }
+}
+
+function saveExportSettings() {
+    try {
+        localStorage.setItem(EXPORT_SETTINGS_KEY, JSON.stringify(state.exportSettings));
+    } catch (e) {
+        console.warn('Failed to save export settings:', e);
+    }
+}
+
+// ============================================================
 // v3.4.0: ENHANCED DXF EXPORT
 // ============================================================
 
@@ -2426,12 +2493,15 @@ function hideExportDialog() {
 }
 
 function exportDXFWithSettings() {
-    // Save settings
+    // Save settings to state
     state.exportSettings.format = document.getElementById('export-format').value;
     state.exportSettings.tessellation = parseInt(document.getElementById('export-tessellation').value);
     state.exportSettings.layerNaming = document.getElementById('export-layer-naming').value;
     state.exportSettings.includeMeasurements = document.getElementById('export-include-measurements').checked;
     state.exportSettings.includeVoids = document.getElementById('export-include-voids').checked;
+
+    // v3.5.0: Persist settings to localStorage
+    saveExportSettings();
 
     hideExportDialog();
 
@@ -2937,6 +3007,9 @@ window.onload = function() {
     // v3.3.0: Load user templates and setup snap modifier
     loadUserTemplates();
     setupSnapModifier();
+
+    // v3.5.0: Load export settings
+    loadExportSettings();
 
     // Initial UI update
     updateUI();
@@ -4081,6 +4154,15 @@ function setupKeyboardEvents() {
         // Ctrl+E - Export JSON
         if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'e') {
             exportJSON();
+            return;
+        }
+
+        // v3.5.0: Ctrl+Shift+M - Clear all measurements
+        if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key.toLowerCase() === 'm') {
+            e.preventDefault();
+            if (state.measurements.length > 0 && confirm('Clear all measurements?')) {
+                clearAllMeasurements();
+            }
             return;
         }
 
@@ -5866,10 +5948,10 @@ window.testAll = async function() {
     console.log('=== TESTS COMPLETE ===');
 };
 
-console.log('Body Outline Editor v3.1.0 loaded');
+console.log('Body Outline Editor v3.5.0 loaded');
 console.log('Test functions: testAPI(), testMirror(), testAutoSave(), testCalibration()');
 console.log('v2.x tests: testSelfIntersection(), testTemplate(id), testLandmarks(), testWeightedMirror()');
-console.log('v3.1.0 tests: testBackendAPI(), testPrecision(), testEmptyMode(), testAll()');
+console.log('v3.x tests: testBackendAPI(), testPrecision(), testEmptyMode(), testAll()');
 </script>
 </body>
 </html>
