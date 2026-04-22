@@ -166,10 +166,30 @@ Quality scorecard (3/3 PASS):
 - [x] AI pipeline validated across 4 specs
 - [x] Unknown instrument test (Gibson EDS-1275)
 
-**Suspended (2026-04-16):**
-Photo vectorizer on L-1 historical images and AI renders produced poor results.
-Photo vectorizer is set aside. InstrumentBodyGenerator is the forward path
-for outline completion from partial vectorizer output.
+**Status Clarification (2026-04-21):**
+
+The file `photo_vectorizer_v2.py` is internally "Photo Vectorizer v3.0" with three extraction paths:
+
+| Path | Entry Point | Status | Input Class |
+|------|-------------|--------|-------------|
+| **Blueprint path** | `source_type="blueprint"` | **LIVE** | Scanned PNG/JPEG of blueprint drawings |
+| **Photo path** | `source_type="photo"` (12-stage) | **Suspended** | L-1 historical images — poor results |
+| **AI path** | `source_type="ai"` (4-stage, v3 feature) | **Suspended** | AI-generated renders — poor results |
+
+**Blueprint path — LIVE.** Uses `light_line_body_extractor.py` for scanned blueprint PNG/JPEG.
+Validated at 85-90% grade DXF/SVG output in last-session testing. This is the path that
+routes to IBG for second-pass correction.
+
+**Photo/AI paths — SUSPENDED.** Remaining Sprint 4 items are specific to these paths:
+- Body isolation filter (SVG shows 4 paths, should be 1) — Photo path
+- Scale output discrepancy (1087×949mm vs spec 368×444mm) — Photo path
+- Neck crop pre-processor — Photo path
+- INSTRUMENT_CATALOG Tier 1 integration — Both paths
+- AI render handling — AI path
+- L-1 historical image handling — Photo path
+
+**Downstream wiring — SCAFFOLDED.** Blueprint path output → IBG for second-pass
+correction is not yet connected. To be implemented in IBG + ML Repo Extraction sprint.
 
 **Remaining (if resumed):**
 - [ ] Body isolation filter (SVG shows 4 paths, should be 1)
@@ -286,35 +306,46 @@ System 2 (arc_reconstructor sandbox) → LWPOLYLINE with bulge → "Promote to C
 ---
 
 ### Sprint 7.5 — Supersession and Orphan Audit
-**Status:** COMPLETE (2026-04-21)
-**Output:** docs/audits/SUPERSESSION_AND_ORPHAN_AUDIT_RESULTS.md
+**Status:** COMPLETE (2026-04-21, revised to v3 methodology)
+**Output:** docs/audits/SUPERSESSION_AND_ORPHAN_AUDIT_RESULTS_v3.md
+
+**v3 Methodology:** Per-file classification (not directory-wide assumptions).
 
 **Summary:**
-| Category | Count |
-|----------|-------|
-| Items classified | 55 |
-| Survivors (Library + Distinct) | 33 |
-| Deletion candidates (Superseded + Orphaned) | 21 |
-| Duplicate groups | 3 |
+| Category | v1 | v3 | v3.1 | Notes |
+|----------|----|----|------|-------|
+| Live (Blueprint path) | — | 42 | 14 | Blueprint extraction + test infra |
+| Suspended (Photo path) | — | — | 15 | 12-stage photo pipeline |
+| Suspended (AI path) | — | 8 | 8 | 4-stage AI pipeline |
+| Scaffolded | — | 5 | 5 | ML training layer |
+| Library/Foundational | 24 | 24 | 24 | Unchanged |
+| Orphaned | 4 | 2 | 2 | TrainingDataCollector → Scaffolded |
+| Duplicate | 3 | 2 | 2 | Archtop CAM confirmed distinct |
 
-**Key findings:**
-1. `inverse_solver.py` confirmed **Library** (not orphaned) — imported by brace_prescription.py
-2. Photo vectorizer (18 files) confirmed **Superseded** — Sprint 4 suspension formal
-3. `TrainingDataCollector` confirmed **Orphaned** — defined but never instantiated
-4. `validate_scale_before_export` is **Duplicate** — exists in vectorizer_phase3.py and scale_validation.py
-5. Registry intersection table produced — 10 instruments canonical (in all 3 main registries)
+**Key findings (v3.1 — path distinction clarified 2026-04-21):**
+1. `inverse_solver.py` confirmed **Library** — imported by brace_prescription.py
+2. `photo_vectorizer_v2.py` has THREE extraction paths with different statuses:
+   - **Blueprint path** (`source_type="blueprint"`) — **LIVE** (85-90% grade)
+   - **Photo path** (`source_type="photo"`, 12-stage) — **Suspended** (L-1 poor)
+   - **AI path** (`source_type="ai"`, 4-stage) — **Suspended** (AI renders poor)
+3. **No code sharing** between photo_vectorizer_v2.py and vectorizer_phase3.py
+4. `TrainingDataCollector` / `GeometryCoachV2` reclassified **Scaffolded** — ML training layer
+5. IBG wiring target: `PhotoVectorizerV2.extract(source_type="blueprint")`
+6. sg.coach deprecated (2026-02-02) — not a destination for any forward-path component
 
 **Deliverables:**
-- `docs/audits/SUPERSESSION_AND_ORPHAN_AUDIT_RESULTS.md` — Full classification matrix
-- `docs/audits/audit_survivors.txt` — 33 files confirmed active
-- `docs/audits/audit_deletion_candidates.txt` — 21 files for review
-- `docs/audits/audit_duplicate_pairs.txt` — 3 consolidation targets
+- `docs/audits/SUPERSESSION_AND_ORPHAN_AUDIT_RESULTS_v3.md` — Full per-file + per-path classification
+- `docs/audits/photo_vectorizer_path_distinction.md` — Photo vectorizer path documentation
+- `docs/audits/audit_survivors_v3.txt` — 52 files confirmed active
+- `docs/audits/audit_deletion_candidates_v3.txt` — 25 files (23 suspended, 1 orphaned, 1 archived)
+- `docs/audits/audit_duplicate_pairs.txt` — 2 consolidation targets
 
 **Unblocks:**
 - GEN-5 Data Consolidation (intersection table ready)
 - Sprint 3 DXF Compliance (confirms 12 production files, 6 sandbox)
-- Repo split work (photo-vectorizer can archive)
-- Library extraction (inverse_solver confirmed foundational)
+- IBG extraction sprint (files classified as Library, new repo planned)
+- Photo vectorizer scanned-blueprint work (NOT blocked)
+- ML training layer planning (Scaffolded files identified)
 
 ---
 
@@ -546,6 +577,60 @@ Every instrument project starts blank — builder re-enters spec data every sess
 
 ---
 
+### Sprint: ML Design Layer Consumer Expansion
+**Status:** QUEUED — deferred pending IBG extraction completion
+**Priority:** Medium — product quality improvement, not blocker
+**Blocked by:** IBG + ML Repo Extraction (must complete first so the pipeline pattern is concrete)
+
+**Premise:**
+
+IBG in `ltb-instrument-modeling-ai` establishes a pattern: ML-powered authenticity correction for instrument geometry that the parametric math produces but doesn't render authentically. The pattern applies to multiple instrument design features beyond body outlines.
+
+Known consumers with the same architectural shape (math correct, output doesn't match authentic traditional examples):
+
+- **Rosettes** — 80+ patterns in `ltb-rosette-designer`. Issue reported October-December 2025. Mathematically correct geometry, visually inauthentic compared to real traditional rosettes.
+- **Headstocks** — potential consumer. Template-based designs that may need style authentication against real instrument references.
+- **Inlays and fret markers** — potential consumer. Pattern authenticity against traditional decorative styles.
+- **Sound hole designs** — potential consumer. Shape authenticity beyond acoustic physics targets.
+- **Marquetry patterns** — potential consumer. Traditional pattern authenticity.
+
+**Scope (decide when work begins, not now):**
+
+For each candidate consumer, evaluate whether it belongs:
+
+- In `ltb-instrument-modeling-ai` (same repo as IBG) — if the ML pattern is clearly identical, same training data structure, same correction interface
+- In a shared ML infrastructure package (new repo, consumed by both IBG and the new consumer) — if the pattern is mostly shared but with domain-specific variations
+- In a parallel dedicated repo — if the variations are significant enough that sharing creates more coupling than benefit
+
+Making this architectural decision requires two concrete use cases (IBG + one other) in front of the decision-maker, not one and speculation.
+
+**Rosette authenticity is the likely first expansion candidate:**
+
+The problem is concrete and long-standing. The pattern matches IBG's structure: collect corpus of authentic traditional rosettes, train recognition layer, use to authenticate or correct mathematically-generated output. 50-100 reference examples needed initially across the 80+ pattern families.
+
+When this sprint activates, rosette authenticity is the natural first use case. Scope it as its own sub-sprint with the architectural placement decision made at that point.
+
+**Success criteria:**
+
+- Pattern from IBG extraction is concrete and stable (meaning IBG has been shipping for enough time to prove the architecture works)
+- At least one consumer beyond IBG has been evaluated and scoped
+- Architectural placement decision for that consumer is informed by two concrete use cases, not speculation
+- If the consumer lands in `ltb-instrument-modeling-ai`, the repo's naming and scope remain coherent; if a separate architectural home is chosen, that home is documented
+
+**Do not start before:**
+
+- IBG + ML Repo Extraction sprint complete
+- IBG is connected to its upstream consumers (BOE, vectorizer v3.6, photo vectorizer scanned-image path) and producing corrected output
+- ML training layer has at least the scaffolded components wired (TrainingDataCollector, GeometryCoachV2, FeedbackSystem operating in their intended roles even if not yet trained on the full 275-plan corpus)
+
+**Related documents:**
+
+- ADR entry 2026-04-20 (ceiling reversal + IBG architecture)
+- IBG + ML Repo Extraction sprint (when written)
+- `ltb-rosette-designer` repo (primary candidate consumer)
+
+---
+
 ## TECH DEBT
 
 | Item | Location | Description | Merge Target |
@@ -586,4 +671,4 @@ Commits: 04735bd4, 72bfffc9, 059cf5b0
 | 2026-04-16 | cuatro_venezolano.json scale 420mm is wrong | Correct scale: 556.5mm from IMCUA 000 Quibor engineering drawings |
 | 2026-04-16 | DEV_GUARDRAILS.md mandatory live-path verification | Prevents features landing in non-production code paths |
 | 2026-04-16 | OutlineReconstructor was inserted into dead code path | Lesson: always verify router→orchestrator→mode→cleaner before writing code |
-| 2026-04-20 | Blueprint vectorizer ceiling declaration (2026-04-16) reversed | v3.6 restored morphological gap closing from vectorizer_phase2.py (commit 3db07c62). Benchmark exceeded March 6 baseline (cuatro: 21MB/204K entities vs 16MB/128K). Ceiling was artifact of missing capability, not fundamental limit. Forward path: blueprint vectorizer v3.6 primary; InstrumentBodyGenerator parallel effort for body completion from partial outlines, not exclusive forward path. |
+| 2026-04-20 | Blueprint vectorizer ceiling declaration (2026-04-16) reversed | v3.6 restored morphological gap closing from vectorizer_phase2.py (commit 3db07c62). Benchmark exceeded March 6 baseline (cuatro: 21.8MB/204K entities vs 16.3MB/128K). The "ceiling" was artifact of missing capability, not fundamental limit. 22 commits of active vectorizer development followed in 04/16-04/21. **Architecture:** Blueprint vectorizer v3.6 is primary production path. Photo vectorizer functional for scanned blueprint PNG/JPEG inputs at 85-90% grade; Sprint 4 suspension applies to specific input classes (AI renders, L-1 historical images), not photo vectorizer files as a whole. IBG is a completion library (no direct API endpoint, connected via imports) — analogous to inverse_solver.py. IBG has learning dependency on ML training layer (TrainingDataCollector, FeedbackSystem, GeometryCoachV2 scaffolded in vectorizer_phase3.py). **Destinations:** IBG → new standalone repo (name TBD, stays in luthiers-toolbox until scaffolded). ML training layer → home TBD. sg.coach deprecated 2026-02-02, superseded by sg-agentd, not a candidate for any role. |
