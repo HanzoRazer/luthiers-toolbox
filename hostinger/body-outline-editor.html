@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Body Outline Editor — The Production Shop</title>
-    <!-- v3.3.0 - Image Tools + Templates -->
+    <!-- v3.4.0 - Measurement & Enhanced Export -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/paper.js/0.12.18/paper-full.min.js"></script>
     <style>
         * {
@@ -527,6 +527,61 @@
             width: 100px;
             accent-color: var(--accent);
         }
+
+        /* v3.4.0: Measurements panel */
+        .measurement-list {
+            max-height: 200px;
+            overflow-y: auto;
+        }
+
+        .measurement-item {
+            display: flex;
+            align-items: center;
+            padding: 6px 12px;
+            border-bottom: 1px solid #1a1a1a;
+            cursor: pointer;
+            gap: 8px;
+        }
+
+        .measurement-item:hover {
+            background: #1a1a1a;
+        }
+
+        .measurement-item.hidden {
+            opacity: 0.5;
+        }
+
+        .measurement-type {
+            width: 24px;
+            text-align: center;
+        }
+
+        .measurement-value {
+            flex: 1;
+            font-family: monospace;
+            color: #00aaff;
+            font-size: 11px;
+        }
+
+        .measurement-delete {
+            opacity: 0;
+            background: transparent;
+            border: none;
+            color: #ff4444;
+            cursor: pointer;
+            padding: 2px 6px;
+        }
+
+        .measurement-item:hover .measurement-delete {
+            opacity: 1;
+        }
+
+        .measurement-empty {
+            padding: 12px;
+            color: #666;
+            text-align: center;
+            font-size: 11px;
+        }
     </style>
 </head>
 <body>
@@ -569,9 +624,21 @@
             <button id="btn-revert-smooth" title="Revert last smooth operation">Revert Smooth</button>
             <button id="btn-reset-handles" title="Remove all bezier handles (straight lines)">Reset Handles</button>
         </div>
+        <!-- v3.4.0: Measurement tools -->
         <div class="toolbar-group">
-            <button id="btn-measure" title="Measure Distance (M)">Measure</button>
+            <button id="btn-measure" title="Distance (M)">📏</button>
+            <button id="btn-measure-angle" title="Angle (3-point)">📐</button>
+            <button id="btn-measure-arc" title="Arc length">〰️</button>
+            <button id="btn-measure-clear" title="Clear all measurements">🗑️</button>
             <button id="btn-exit-mode" title="Exit current mode (Esc)" style="background:#ff6600;color:#000;display:none;">Exit Mode</button>
+        </div>
+        <div class="toolbar-group">
+            <label>Units:</label>
+            <select id="units-select" title="Display units">
+                <option value="mm" selected>mm</option>
+                <option value="in">in</option>
+                <option value="pt">pt</option>
+            </select>
         </div>
         <div class="toolbar-group">
             <button id="btn-import">Import Image</button>
@@ -631,7 +698,7 @@
     <!-- v3.1.0: MODE DIALOG (shown on page load) -->
     <div id="mode-dialog-overlay" style="position:fixed; inset:0; background:rgba(0,0,0,0.85); display:flex; align-items:center; justify-content:center; z-index:10000;">
         <div style="background:#1e1e1e; border:1px solid #00ff88; border-radius:8px; padding:32px; max-width:500px; text-align:center;">
-            <h2 style="color:#00ff88; margin-bottom:16px;">Body Outline Editor v3.3</h2>
+            <h2 style="color:#00ff88; margin-bottom:16px;">Body Outline Editor v3.4</h2>
             <p style="color:#888; margin-bottom:24px;">Choose how you want to start</p>
 
             <button id="mode-default-btn" style="background:#00aa5a; color:#000; padding:12px 24px; margin:0 8px; border:none; border-radius:4px; cursor:pointer; font-weight:bold;">
@@ -708,6 +775,17 @@
                         <option value="">-- Select Template --</option>
                     </select>
                     <button id="btn-load-user-template" style="width:100%;font-size:10px;">Load Selected</button>
+                </div>
+            </div>
+
+            <!-- v3.4.0: Measurements Panel -->
+            <div class="panel-section" id="measurements-panel">
+                <div class="panel-header">
+                    Measurements <span class="count" id="measurement-count">0</span>
+                    <button id="btn-toggle-measurements" title="Toggle visibility" style="background:transparent;border:none;padding:0;cursor:pointer;">👁️</button>
+                </div>
+                <div class="measurement-list" id="measurement-list">
+                    <div class="measurement-empty">No measurements yet.<br>Click 📏, 📐, or 〰️ to add.</div>
                 </div>
             </div>
 
@@ -788,6 +866,43 @@
             <div class="modal-buttons">
                 <button id="confirm-cancel">Cancel</button>
                 <button id="confirm-ok" class="primary">OK</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- v3.4.0: Export Options Modal -->
+    <div class="modal-overlay" id="modal-export">
+        <div class="modal" style="width:400px;">
+            <h3>DXF Export Options</h3>
+
+            <label>Format:</label>
+            <select id="export-format" style="width:100%;padding:8px;margin-bottom:12px;">
+                <option value="R12">R12 (Legacy, most compatible)</option>
+                <option value="R2004">R2004+ (Modern, smaller files)</option>
+            </select>
+
+            <label>Tessellation (points per curve): <span id="tessellation-value">20</span></label>
+            <input type="range" id="export-tessellation" min="10" max="100" step="5" value="20" style="width:100%;margin-bottom:12px;">
+
+            <label>Layer Naming:</label>
+            <select id="export-layer-naming" style="width:100%;padding:8px;margin-bottom:12px;">
+                <option value="standard">Standard (BODY_OUTLINE, VOID_*)</option>
+                <option value="cam">CAM Ready (Layer 1,2,3...)</option>
+            </select>
+
+            <label style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
+                <input type="checkbox" id="export-include-measurements" checked>
+                Include measurements as text entities
+            </label>
+
+            <label style="display:flex;align-items:center;gap:8px;margin-bottom:12px;">
+                <input type="checkbox" id="export-include-voids" checked>
+                Include voids (pickups, cavities)
+            </label>
+
+            <div class="modal-buttons">
+                <button id="export-cancel">Cancel</button>
+                <button id="export-confirm" class="primary">Export DXF</button>
             </div>
         </div>
     </div>
@@ -1212,7 +1327,29 @@ const state = {
     userTemplates: {},
 
     // v3.3.0: Snap modifier
-    snapModifierPressed: false
+    snapModifierPressed: false,
+
+    // v3.4.0: Persistent measurements
+    measurements: [],
+    nextMeasurementId: 1,
+    measurementsVisible: true,
+
+    // v3.4.0: Export settings
+    exportSettings: {
+        format: 'R12',
+        tessellation: 20,
+        layerNaming: 'standard',
+        includeMeasurements: true,
+        includeVoids: true
+    },
+
+    // v3.4.0: Units
+    currentUnit: 'mm',
+    unitConversion: {
+        mm: 1,
+        in: 25.4,
+        pt: 0.352778
+    }
 };
 
 // ============================================================
@@ -1348,18 +1485,40 @@ function resetHandlesToLinear() {
 // ============================================================
 
 function updateActiveModeIndicator() {
+    // v3.4.0: Include new measurement modes
     const modeText = state.calibrating ? 'Calibrate' :
                      state.measuring ? 'Measure' :
+                     distanceMeasureActive ? 'Distance' :
+                     angleMeasureActive ? 'Angle' :
+                     arcMeasureActive ? 'Arc Length' :
                      state.editorMode === 'empty' ? 'Empty' : 'Ready';
     document.getElementById('status-active-mode').textContent = modeText;
 
     const exitBtn = document.getElementById('btn-exit-mode');
-    exitBtn.style.display = (state.calibrating || state.measuring) ? 'inline-block' : 'none';
+    const anyMeasureActive = state.calibrating || state.measuring || distanceMeasureActive || angleMeasureActive || arcMeasureActive;
+    exitBtn.style.display = anyMeasureActive ? 'inline-block' : 'none';
 }
 
 function exitCurrentMode() {
     if (state.calibrating) cancelCalibration();
     if (state.measuring) cancelMeasure();
+
+    // v3.4.0: Cancel new measurement modes
+    if (distanceMeasureActive) {
+        distanceMeasureActive = false;
+        distanceMarkers.forEach(m => m.remove());
+        distanceMarkers = [];
+        distancePoints = [];
+    }
+    if (angleMeasureActive) {
+        angleMeasureActive = false;
+        angleMarkers.forEach(m => m.remove());
+        angleMarkers = [];
+        anglePoints = [];
+    }
+    if (arcMeasureActive) {
+        arcMeasureActive = false;
+    }
 
     updateActiveModeIndicator();
 
@@ -1792,6 +1951,605 @@ function setupSnapModifier() {
             state.snapModifierPressed = false;
         }
     });
+}
+
+// ============================================================
+// v3.4.0: UNITS CONVERSION
+// ============================================================
+
+function convertUnits(value, fromUnit, toUnit) {
+    if (fromUnit === toUnit) return value;
+    const inMM = value * state.unitConversion[fromUnit];
+    return inMM / state.unitConversion[toUnit];
+}
+
+function formatValue(value) {
+    if (value < 0.01) return value.toFixed(4);
+    if (value < 1) return value.toFixed(3);
+    if (value < 10) return value.toFixed(2);
+    return value.toFixed(1);
+}
+
+function setUnits(unit) {
+    state.currentUnit = unit;
+
+    // Update all existing measurement displays
+    for (const m of state.measurements) {
+        const converted = convertUnits(m.value, 'mm', unit);
+        if (m.graphics?.label) {
+            if (m.type === 'angle') {
+                // Angles stay in degrees
+            } else {
+                m.graphics.label.content = `${formatValue(converted)} ${unit}`;
+            }
+        }
+    }
+
+    updateMeasurementList();
+    updateUI();
+    showToast(`Units set to ${unit}`, '#00aa5a');
+}
+
+// ============================================================
+// v3.4.0: PERSISTENT DISTANCE MEASUREMENT
+// ============================================================
+
+let distanceMeasureActive = false;
+let distancePoints = [];
+let distanceMarkers = [];
+
+function startDistanceMeasurement() {
+    exitCurrentMode();
+    distanceMeasureActive = true;
+    distancePoints = [];
+    distanceMarkers = [];
+
+    showToast('Click two points to measure distance', '#00aa5a');
+    updateActiveModeIndicator();
+}
+
+function handleDistanceMeasureClick(point) {
+    if (!distanceMeasureActive) return false;
+
+    distancePoints.push(point);
+
+    const marker = new Path.Circle({
+        center: point,
+        radius: 5 / state.zoom,
+        fillColor: '#00aaff',
+        strokeColor: '#ffffff',
+        strokeWidth: 2 / state.zoom
+    });
+    distanceMarkers.push(marker);
+
+    if (distancePoints.length === 1) {
+        showToast('Click second point', '#00aa5a');
+    } else if (distancePoints.length === 2) {
+        // Calculate distance in mm
+        const distanceMM = distancePoints[0].getDistance(distancePoints[1]);
+        const value = convertUnits(distanceMM, 'mm', state.currentUnit);
+
+        // Draw line
+        const line = new Path.Line({
+            from: distancePoints[0],
+            to: distancePoints[1],
+            strokeColor: '#00aaff',
+            strokeWidth: 2 / state.zoom,
+            dashArray: [5 / state.zoom, 5 / state.zoom]
+        });
+
+        // Draw midpoint label
+        const midpoint = distancePoints[0].add(distancePoints[1]).divide(2);
+        const label = new PointText({
+            point: midpoint.add(new Point(0, -10 / state.zoom)),
+            content: `${formatValue(value)} ${state.currentUnit}`,
+            fillColor: '#00aaff',
+            fontSize: 12 / state.zoom,
+            fontWeight: 'bold',
+            justification: 'center'
+        });
+
+        // Save measurement
+        const measurement = {
+            id: state.nextMeasurementId++,
+            type: 'distance',
+            points: distancePoints.map(p => ({ x: p.x, y: p.y })),
+            value: distanceMM,
+            visible: true,
+            graphics: { line, label, markers: [...distanceMarkers] }
+        };
+        state.measurements.push(measurement);
+
+        updateMeasurementList();
+        logOperation('ADD_MEASUREMENT', { type: 'distance', value: distanceMM });
+
+        // Cleanup
+        distanceMeasureActive = false;
+        distancePoints = [];
+        distanceMarkers = [];
+        updateActiveModeIndicator();
+        showToast(`Distance: ${formatValue(value)} ${state.currentUnit}`, '#00aa5a');
+    }
+
+    return true;
+}
+
+// ============================================================
+// v3.4.0: ANGLE MEASUREMENT (3-POINT)
+// ============================================================
+
+let angleMeasureActive = false;
+let anglePoints = [];
+let angleMarkers = [];
+
+function startAngleMeasurement() {
+    exitCurrentMode();
+    angleMeasureActive = true;
+    anglePoints = [];
+    angleMarkers = [];
+
+    showToast('Click vertex, then two points on arms', '#00aa5a');
+    updateActiveModeIndicator();
+}
+
+function handleAngleMeasureClick(point) {
+    if (!angleMeasureActive) return false;
+
+    anglePoints.push(point);
+
+    const marker = new Path.Circle({
+        center: point,
+        radius: 5 / state.zoom,
+        fillColor: '#ffaa00',
+        strokeColor: '#ffffff',
+        strokeWidth: 2 / state.zoom
+    });
+    angleMarkers.push(marker);
+
+    const prompts = ['Click first arm point', 'Click second arm point'];
+    if (anglePoints.length < 3) {
+        showToast(prompts[anglePoints.length - 1] || 'Click vertex', '#00aa5a');
+    }
+
+    if (anglePoints.length === 3) {
+        // Calculate angle
+        const p1 = anglePoints[0]; // vertex
+        const p2 = anglePoints[1]; // arm 1
+        const p3 = anglePoints[2]; // arm 2
+
+        const v1 = { x: p2.x - p1.x, y: p2.y - p1.y };
+        const v2 = { x: p3.x - p1.x, y: p3.y - p1.y };
+
+        const dot = v1.x * v2.x + v1.y * v2.y;
+        const mag1 = Math.hypot(v1.x, v1.y);
+        const mag2 = Math.hypot(v2.x, v2.y);
+        const angleRad = Math.acos(Math.min(1, Math.max(-1, dot / (mag1 * mag2))));
+        const angleDeg = angleRad * 180 / Math.PI;
+
+        // Draw lines to vertex
+        const line1 = new Path.Line({
+            from: p1,
+            to: p2,
+            strokeColor: '#ffaa00',
+            strokeWidth: 1.5 / state.zoom
+        });
+
+        const line2 = new Path.Line({
+            from: p1,
+            to: p3,
+            strokeColor: '#ffaa00',
+            strokeWidth: 1.5 / state.zoom
+        });
+
+        // Draw arc
+        const radius = 25 / state.zoom;
+        const startAngle = Math.atan2(v1.y, v1.x);
+        const endAngle = Math.atan2(v2.y, v2.x);
+
+        const arcPath = new Path.Arc({
+            from: new Point(p1.x + radius * Math.cos(startAngle), p1.y + radius * Math.sin(startAngle)),
+            through: new Point(p1.x + radius * Math.cos((startAngle + endAngle) / 2), p1.y + radius * Math.sin((startAngle + endAngle) / 2)),
+            to: new Point(p1.x + radius * Math.cos(endAngle), p1.y + radius * Math.sin(endAngle)),
+            strokeColor: '#ffaa00',
+            strokeWidth: 2 / state.zoom
+        });
+
+        // Label
+        const labelAngle = (startAngle + endAngle) / 2;
+        const labelPoint = new Point(p1.x + radius * 1.5 * Math.cos(labelAngle), p1.y + radius * 1.5 * Math.sin(labelAngle));
+        const label = new PointText({
+            point: labelPoint,
+            content: `${angleDeg.toFixed(1)}°`,
+            fillColor: '#ffaa00',
+            fontSize: 12 / state.zoom,
+            fontWeight: 'bold',
+            justification: 'center'
+        });
+
+        // Save measurement
+        const measurement = {
+            id: state.nextMeasurementId++,
+            type: 'angle',
+            points: anglePoints.map(p => ({ x: p.x, y: p.y })),
+            value: angleDeg,
+            visible: true,
+            graphics: { line1, line2, arc: arcPath, label, markers: [...angleMarkers] }
+        };
+        state.measurements.push(measurement);
+
+        updateMeasurementList();
+        logOperation('ADD_MEASUREMENT', { type: 'angle', value: angleDeg });
+
+        // Cleanup
+        angleMeasureActive = false;
+        anglePoints = [];
+        angleMarkers = [];
+        updateActiveModeIndicator();
+        showToast(`Angle: ${angleDeg.toFixed(1)}°`, '#00aa5a');
+    }
+
+    return true;
+}
+
+// ============================================================
+// v3.4.0: ARC LENGTH MEASUREMENT
+// ============================================================
+
+let arcMeasureActive = false;
+
+function startArcMeasurement() {
+    exitCurrentMode();
+    arcMeasureActive = true;
+
+    showToast('Click on a curve segment to measure its length', '#00aa5a');
+    updateActiveModeIndicator();
+}
+
+function handleArcMeasureClick(point) {
+    if (!arcMeasureActive) return false;
+
+    const path = getActivePath();
+    if (!path) {
+        showToast('No outline to measure', '#ff6600');
+        arcMeasureActive = false;
+        updateActiveModeIndicator();
+        return true;
+    }
+
+    // Find closest curve
+    const hit = path.hitTest(point, { curves: true, tolerance: 15 / state.zoom });
+    if (!hit || !hit.location) {
+        showToast('Click closer to a curve', '#ff6600');
+        return true;
+    }
+
+    const curve = hit.location.curve;
+
+    // Numerical integration for arc length
+    const steps = 100;
+    let length = 0;
+    let prevPoint = curve.getPointAtTime(0);
+
+    for (let i = 1; i <= steps; i++) {
+        const t = i / steps;
+        const curvePoint = curve.getPointAtTime(t);
+        length += prevPoint.getDistance(curvePoint);
+        prevPoint = curvePoint;
+    }
+
+    const value = convertUnits(length, 'mm', state.currentUnit);
+
+    // Draw highlight on measured curve
+    const highlight = new Path({
+        segments: [],
+        strokeColor: '#00ff88',
+        strokeWidth: 4 / state.zoom,
+        strokeCap: 'round'
+    });
+
+    for (let i = 0; i <= 50; i++) {
+        highlight.add(curve.getPointAtTime(i / 50));
+    }
+
+    // Label at midpoint
+    const midPoint = curve.getPointAtTime(0.5);
+    const label = new PointText({
+        point: midPoint.add(new Point(0, -12 / state.zoom)),
+        content: `${formatValue(value)} ${state.currentUnit}`,
+        fillColor: '#00ff88',
+        fontSize: 12 / state.zoom,
+        fontWeight: 'bold',
+        justification: 'center'
+    });
+
+    // Save measurement
+    const measurement = {
+        id: state.nextMeasurementId++,
+        type: 'arc',
+        curveIndex: path.curves.indexOf(curve),
+        value: length,
+        visible: true,
+        graphics: { highlight, label }
+    };
+    state.measurements.push(measurement);
+
+    updateMeasurementList();
+    logOperation('ADD_MEASUREMENT', { type: 'arc', value: length });
+
+    // Cleanup
+    arcMeasureActive = false;
+    updateActiveModeIndicator();
+    showToast(`Arc length: ${formatValue(value)} ${state.currentUnit}`, '#00aa5a');
+
+    return true;
+}
+
+// ============================================================
+// v3.4.0: MEASUREMENT MANAGEMENT
+// ============================================================
+
+function updateMeasurementList() {
+    const container = document.getElementById('measurement-list');
+    if (!container) return;
+
+    if (state.measurements.length === 0) {
+        container.innerHTML = '<div class="measurement-empty">No measurements yet.<br>Click 📏, 📐, or 〰️ to add.</div>';
+        document.getElementById('measurement-count').textContent = '0';
+        return;
+    }
+
+    container.innerHTML = '';
+
+    state.measurements.forEach((m) => {
+        const div = document.createElement('div');
+        div.className = `measurement-item ${m.visible ? '' : 'hidden'}`;
+
+        let displayValue;
+        if (m.type === 'angle') {
+            displayValue = `${m.value.toFixed(1)}°`;
+        } else {
+            const converted = convertUnits(m.value, 'mm', state.currentUnit);
+            displayValue = `${formatValue(converted)} ${state.currentUnit}`;
+        }
+
+        const icon = m.type === 'distance' ? '📏' : m.type === 'angle' ? '📐' : '〰️';
+
+        div.innerHTML = `
+            <span class="measurement-type">${icon}</span>
+            <span class="measurement-value">${displayValue}</span>
+            <button class="measurement-delete" data-id="${m.id}">×</button>
+        `;
+
+        div.querySelector('.measurement-delete').addEventListener('click', (e) => {
+            e.stopPropagation();
+            deleteMeasurement(m.id);
+        });
+
+        div.addEventListener('click', () => {
+            highlightMeasurement(m.id);
+        });
+
+        container.appendChild(div);
+    });
+
+    document.getElementById('measurement-count').textContent = state.measurements.length;
+}
+
+function deleteMeasurement(id) {
+    const index = state.measurements.findIndex(m => m.id === id);
+    if (index >= 0) {
+        const m = state.measurements[index];
+        // Remove graphics
+        if (m.graphics) {
+            if (m.graphics.line) m.graphics.line.remove();
+            if (m.graphics.line1) m.graphics.line1.remove();
+            if (m.graphics.line2) m.graphics.line2.remove();
+            if (m.graphics.label) m.graphics.label.remove();
+            if (m.graphics.arc) m.graphics.arc.remove();
+            if (m.graphics.highlight) m.graphics.highlight.remove();
+            if (m.graphics.markers) m.graphics.markers.forEach(marker => marker.remove());
+        }
+        state.measurements.splice(index, 1);
+        updateMeasurementList();
+        logOperation('DELETE_MEASUREMENT', { id });
+    }
+}
+
+function clearAllMeasurements() {
+    for (const m of state.measurements) {
+        if (m.graphics) {
+            if (m.graphics.line) m.graphics.line.remove();
+            if (m.graphics.line1) m.graphics.line1.remove();
+            if (m.graphics.line2) m.graphics.line2.remove();
+            if (m.graphics.label) m.graphics.label.remove();
+            if (m.graphics.arc) m.graphics.arc.remove();
+            if (m.graphics.highlight) m.graphics.highlight.remove();
+            if (m.graphics.markers) m.graphics.markers.forEach(marker => marker.remove());
+        }
+    }
+    state.measurements = [];
+    state.nextMeasurementId = 1;
+    updateMeasurementList();
+    showToast('All measurements cleared', '#00aa5a');
+}
+
+function toggleMeasurementsVisibility() {
+    state.measurementsVisible = !state.measurementsVisible;
+
+    for (const m of state.measurements) {
+        m.visible = state.measurementsVisible;
+        if (m.graphics) {
+            if (m.graphics.line) m.graphics.line.visible = state.measurementsVisible;
+            if (m.graphics.line1) m.graphics.line1.visible = state.measurementsVisible;
+            if (m.graphics.line2) m.graphics.line2.visible = state.measurementsVisible;
+            if (m.graphics.label) m.graphics.label.visible = state.measurementsVisible;
+            if (m.graphics.arc) m.graphics.arc.visible = state.measurementsVisible;
+            if (m.graphics.highlight) m.graphics.highlight.visible = state.measurementsVisible;
+            if (m.graphics.markers) m.graphics.markers.forEach(marker => { marker.visible = state.measurementsVisible; });
+        }
+    }
+
+    document.getElementById('btn-toggle-measurements').textContent = state.measurementsVisible ? '👁️' : '🙈';
+    updateMeasurementList();
+}
+
+function highlightMeasurement(id) {
+    const m = state.measurements.find(m => m.id === id);
+    if (!m || !m.graphics?.label) return;
+
+    // Flash the label
+    const originalColor = m.graphics.label.fillColor;
+    m.graphics.label.fillColor = '#ffffff';
+    setTimeout(() => {
+        if (m.graphics?.label) m.graphics.label.fillColor = originalColor;
+    }, 300);
+}
+
+// ============================================================
+// v3.4.0: ENHANCED DXF EXPORT
+// ============================================================
+
+function showExportDialog() {
+    // Sync UI with current settings
+    document.getElementById('export-format').value = state.exportSettings.format;
+    document.getElementById('export-tessellation').value = state.exportSettings.tessellation;
+    document.getElementById('tessellation-value').textContent = state.exportSettings.tessellation;
+    document.getElementById('export-layer-naming').value = state.exportSettings.layerNaming;
+    document.getElementById('export-include-measurements').checked = state.exportSettings.includeMeasurements;
+    document.getElementById('export-include-voids').checked = state.exportSettings.includeVoids;
+
+    document.getElementById('modal-export').classList.add('visible');
+}
+
+function hideExportDialog() {
+    document.getElementById('modal-export').classList.remove('visible');
+}
+
+function exportDXFWithSettings() {
+    // Save settings
+    state.exportSettings.format = document.getElementById('export-format').value;
+    state.exportSettings.tessellation = parseInt(document.getElementById('export-tessellation').value);
+    state.exportSettings.layerNaming = document.getElementById('export-layer-naming').value;
+    state.exportSettings.includeMeasurements = document.getElementById('export-include-measurements').checked;
+    state.exportSettings.includeVoids = document.getElementById('export-include-voids').checked;
+
+    hideExportDialog();
+
+    let dxf = '';
+
+    // Header based on format
+    if (state.exportSettings.format === 'R12') {
+        dxf += '0\nSECTION\n2\nHEADER\n';
+        dxf += '9\n$ACADVER\n1\nAC1009\n';
+        dxf += '0\nENDSEC\n';
+    } else {
+        dxf += '0\nSECTION\n2\nHEADER\n';
+        dxf += '9\n$ACADVER\n1\nAC1021\n';
+        dxf += '0\nENDSEC\n';
+    }
+
+    dxf += '0\nSECTION\n2\nENTITIES\n';
+
+    // Outer body with tessellation setting
+    if (state.outerPath) {
+        const points = tessellatePathToPoints(state.outerPath, state.exportSettings.tessellation);
+        const layerName = state.exportSettings.layerNaming === 'cam' ? '1' : 'BODY_OUTLINE';
+
+        for (let i = 0; i < points.length; i++) {
+            const j = (i + 1) % points.length;
+            dxf += `0\nLINE\n8\n${layerName}\n`;
+            dxf += `10\n${points[i][0].toFixed(3)}\n20\n${points[i][1].toFixed(3)}\n30\n0\n`;
+            dxf += `11\n${points[j][0].toFixed(3)}\n21\n${points[j][1].toFixed(3)}\n31\n0\n`;
+        }
+    }
+
+    // Voids
+    if (state.exportSettings.includeVoids) {
+        state.voids.forEach((v, idx) => {
+            const layerName = state.exportSettings.layerNaming === 'cam'
+                ? `${2 + idx}`
+                : `VOID_${v.role.toUpperCase()}`;
+            const points = tessellatePathToPoints(v.path, state.exportSettings.tessellation);
+
+            for (let i = 0; i < points.length; i++) {
+                const j = (i + 1) % points.length;
+                dxf += `0\nLINE\n8\n${layerName}\n`;
+                dxf += `10\n${points[i][0].toFixed(3)}\n20\n${points[i][1].toFixed(3)}\n30\n0\n`;
+                dxf += `11\n${points[j][0].toFixed(3)}\n21\n${points[j][1].toFixed(3)}\n31\n0\n`;
+            }
+        });
+    }
+
+    // Measurements as text entities
+    if (state.exportSettings.includeMeasurements) {
+        const measurementLayer = state.exportSettings.layerNaming === 'cam' ? 'DIMENSIONS' : 'MEASUREMENTS';
+
+        for (const m of state.measurements) {
+            if (!m.visible || !m.graphics?.label) continue;
+
+            const text = m.graphics.label.content;
+            const x = m.graphics.label.point.x;
+            const y = m.graphics.label.point.y;
+
+            dxf += `0\nTEXT\n8\n${measurementLayer}\n`;
+            dxf += `10\n${x.toFixed(3)}\n20\n${y.toFixed(3)}\n30\n0\n`;
+            dxf += `40\n2.5\n`;
+            dxf += `1\n${text}\n`;
+        }
+    }
+
+    dxf += '0\nENDSEC\n0\nEOF\n';
+    dxf = dxf.replace(/\n/g, '\r\n');
+
+    downloadFile(dxf, `body_outline_${state.exportSettings.format}.dxf`, 'application/dxf');
+    showToast(`DXF exported (${state.exportSettings.format}, ${state.exportSettings.tessellation} pts/curve)`, '#00aa5a');
+    logOperation('EXPORT_DXF', state.exportSettings);
+}
+
+// ============================================================
+// v3.4.0: ENHANCED SVG EXPORT
+// ============================================================
+
+function exportSVGWithDimensions() {
+    // Use Paper.js export
+    const group = new Group();
+    if (state.outerPath) group.addChild(state.outerPath.clone());
+    if (state.exportSettings.includeVoids) {
+        state.voids.forEach(v => group.addChild(v.path.clone()));
+    }
+
+    let svg = group.exportSVG({ asString: true });
+    group.remove();
+
+    // Inject measurement text elements
+    if (state.exportSettings.includeMeasurements && state.measurements.length > 0) {
+        const parser = new DOMParser();
+        const svgDoc = parser.parseFromString(svg, 'image/svg+xml');
+        const svgEl = svgDoc.documentElement;
+
+        // Add style for measurements
+        const style = svgDoc.createElementNS('http://www.w3.org/2000/svg', 'style');
+        style.textContent = '.measurement { font-family: monospace; font-size: 12px; fill: #00aaff; }';
+        svgEl.insertBefore(style, svgEl.firstChild);
+
+        for (const m of state.measurements) {
+            if (m.visible && m.graphics?.label) {
+                const text = svgDoc.createElementNS('http://www.w3.org/2000/svg', 'text');
+                text.setAttribute('x', m.graphics.label.point.x.toFixed(2));
+                text.setAttribute('y', (-m.graphics.label.point.y).toFixed(2)); // SVG Y is inverted
+                text.setAttribute('class', 'measurement');
+                text.setAttribute('text-anchor', 'middle');
+                text.textContent = m.graphics.label.content;
+                svgEl.appendChild(text);
+            }
+        }
+
+        svg = new XMLSerializer().serializeToString(svgDoc);
+    }
+
+    downloadFile(svg, 'body_outline.svg', 'image/svg+xml');
+    showToast('SVG exported with dimensions', '#00aa5a');
+    logOperation('EXPORT_SVG', { includeMeasurements: state.exportSettings.includeMeasurements });
 }
 
 // ============================================================
@@ -2854,6 +3612,22 @@ function setupCanvasEvents() {
 
     // Mouse down
     view.onMouseDown = function(event) {
+        // v3.4.0: Persistent measurement handlers
+        if (distanceMeasureActive) {
+            handleDistanceMeasureClick(event.point);
+            return;
+        }
+
+        if (angleMeasureActive) {
+            handleAngleMeasureClick(event.point);
+            return;
+        }
+
+        if (arcMeasureActive) {
+            handleArcMeasureClick(event.point);
+            return;
+        }
+
         if (state.measuring) {
             handleMeasureClick(event.point);
             return;
@@ -3410,7 +4184,29 @@ function setupToolbarEvents() {
     document.getElementById('btn-reset-handles').addEventListener('click', resetHandlesToLinear);
 
     document.getElementById('btn-import').addEventListener('click', importImage);
-    document.getElementById('btn-measure').addEventListener('click', startMeasure);
+
+    // v3.4.0: Measurement tools (replaced single startMeasure)
+    document.getElementById('btn-measure').addEventListener('click', startDistanceMeasurement);
+    document.getElementById('btn-measure-angle').addEventListener('click', startAngleMeasurement);
+    document.getElementById('btn-measure-arc').addEventListener('click', startArcMeasurement);
+    document.getElementById('btn-measure-clear').addEventListener('click', () => {
+        if (state.measurements.length === 0) {
+            showToast('No measurements to clear', '#ff6600');
+            return;
+        }
+        if (confirm('Clear all measurements?')) {
+            clearAllMeasurements();
+        }
+    });
+
+    // v3.4.0: Units selector
+    document.getElementById('units-select').addEventListener('change', (e) => {
+        setUnits(e.target.value);
+    });
+
+    // v3.4.0: Measurements panel
+    document.getElementById('btn-toggle-measurements').addEventListener('click', toggleMeasurementsVisibility);
+
     document.getElementById('btn-exit-mode').addEventListener('click', exitCurrentMode);
 
     // v3.2.0: Nudge preference
@@ -3472,9 +4268,17 @@ function setupToolbarEvents() {
     // v3.3.0: User templates
     document.getElementById('btn-load-user-template').addEventListener('click', loadUserTemplate);
 
-    document.getElementById('btn-export-dxf').addEventListener('click', exportDXF);
+    // v3.4.0: Enhanced exports with options
+    document.getElementById('btn-export-dxf').addEventListener('click', showExportDialog);
     document.getElementById('btn-export-json').addEventListener('click', exportJSON);
-    document.getElementById('btn-export-svg').addEventListener('click', exportSVG);
+    document.getElementById('btn-export-svg').addEventListener('click', exportSVGWithDimensions);
+
+    // v3.4.0: Export modal handlers
+    document.getElementById('export-cancel').addEventListener('click', hideExportDialog);
+    document.getElementById('export-confirm').addEventListener('click', exportDXFWithSettings);
+    document.getElementById('export-tessellation').addEventListener('input', (e) => {
+        document.getElementById('tessellation-value').textContent = e.target.value;
+    });
 
     document.getElementById('image-opacity').addEventListener('input', function() {
         const val = parseInt(this.value);
