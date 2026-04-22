@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Body Outline Editor — The Production Shop</title>
-    <!-- v3.1.0 - Empty Mode + Precision Improvements -->
+    <!-- v3.2.0 - Precision Controls + Workflow Improvements -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/paper.js/0.12.18/paper-full.min.js"></script>
     <style>
         * {
@@ -482,9 +482,17 @@
             <button id="btn-grid" class="active" title="Toggle Grid (G)">Grid: ON</button>
             <label>Snap:</label>
             <select id="snap-select">
+                <option value="0.1">0.1 mm</option>
+                <option value="0.5">0.5 mm</option>
                 <option value="1">1 mm</option>
                 <option value="5" selected>5 mm</option>
                 <option value="10">10 mm</option>
+            </select>
+            <label>Nudge:</label>
+            <select id="nudge-select">
+                <option value="0.1" selected>0.1 mm</option>
+                <option value="0.5">0.5 mm</option>
+                <option value="1.0">1.0 mm</option>
             </select>
             <button id="btn-handles" title="Show All Handles">Handles: OFF</button>
         </div>
@@ -498,10 +506,13 @@
             <label style="color:var(--text-muted);font-size:11px;margin-left:4px;">tol:</label>
             <input type="number" id="simplify-tolerance" value="2.5" min="1" max="10" step="0.5" 
                    style="width:50px;background:var(--bg-input);border:1px solid var(--border);color:var(--text-primary);padding:2px 4px;border-radius:3px;">
-            <button id="btn-smooth-all" title="Smooth all nodes to curves">Smooth All</button>
+            <button id="btn-smooth-all" title="Smooth all nodes to curves" style="background:#00aa5a;color:#000;">Smooth</button>
+            <button id="btn-revert-smooth" title="Revert last smooth operation">Revert Smooth</button>
+            <button id="btn-reset-handles" title="Remove all bezier handles (straight lines)">Reset Handles</button>
         </div>
         <div class="toolbar-group">
             <button id="btn-measure" title="Measure Distance (M)">Measure</button>
+            <button id="btn-exit-mode" title="Exit current mode (Esc)" style="background:#ff6600;color:#000;display:none;">Exit Mode</button>
         </div>
         <div class="toolbar-group">
             <button id="btn-import">Import Image</button>
@@ -548,7 +559,7 @@
     <!-- v3.1.0: MODE DIALOG (shown on page load) -->
     <div id="mode-dialog-overlay" style="position:fixed; inset:0; background:rgba(0,0,0,0.85); display:flex; align-items:center; justify-content:center; z-index:10000;">
         <div style="background:#1e1e1e; border:1px solid #00ff88; border-radius:8px; padding:32px; max-width:500px; text-align:center;">
-            <h2 style="color:#00ff88; margin-bottom:16px;">Body Outline Editor v3.1</h2>
+            <h2 style="color:#00ff88; margin-bottom:16px;">Body Outline Editor v3.2</h2>
             <p style="color:#888; margin-bottom:24px;">Choose how you want to start</p>
 
             <button id="mode-default-btn" style="background:#00aa5a; color:#000; padding:12px 24px; margin:0 8px; border:none; border-radius:4px; cursor:pointer; font-weight:bold;">
@@ -611,12 +622,13 @@
 
     <!-- Status bar -->
     <div class="status-bar">
-        <span>Cursor: <span class="value" id="status-cursor">0.00, 0.00</span> mm</span>
+        <span>Cursor: <span class="value" id="status-cursor">0.000, 0.000</span> mm</span>
         <span>Selected: <span class="value" id="status-selected">—</span></span>
         <span>Nodes: <span class="value" id="status-nodes">0</span></span>
         <span>Zoom: <span class="value" id="status-zoom">100</span>%</span>
         <span>Grid: <span class="value" id="status-grid">ON</span></span>
         <span>Mode: <span class="mode" id="status-mode">Outer</span></span>
+        <span>Active: <span class="value" id="status-active-mode" style="color:#00ff88;">Ready</span></span>
     </div>
 
     <!-- Modals -->
@@ -1077,8 +1089,172 @@ const state = {
     pendingPlacement: false,
     pendingAnchorDot: null,
     nextDotIndex: 0,
-    draggingDot: null             // Currently dragged dot (for drag-to-refine)
+    draggingDot: null,            // Currently dragged dot (for drag-to-refine)
+
+    // v3.2.0: Operation logging foundation
+    operationLog: [],             // [{ type, timestamp, params, before, after }]
+    maxLogSize: 1000,             // Prevent memory bloat
+
+    // v3.2.0: Precision controls
+    nudgePreference: 0.1,         // mm per nudge (0.1, 0.5, 1.0)
+    showDecimalPlaces: 3,         // Coordinate display precision
+
+    // v3.2.0: Smooth revert state
+    preSmoothState: null          // Serialized path before smooth
 };
+
+// ============================================================
+// v3.2.0: OPERATION LOGGING FOUNDATION
+// ============================================================
+
+function logOperation(type, params, beforeState, afterState) {
+    if (state.operationLog.length >= state.maxLogSize) {
+        state.operationLog.shift();
+    }
+
+    state.operationLog.push({
+        type: type,
+        timestamp: Date.now(),
+        params: params || {},
+        before: beforeState || null,
+        after: afterState || null
+    });
+
+    console.debug(`[OP] ${type}`, params);
+}
+
+function serializeSegmentSnapshot(segment) {
+    return {
+        point: [segment.point.x, segment.point.y],
+        handleIn: segment.handleIn ? [segment.handleIn.x, segment.handleIn.y] : null,
+        handleOut: segment.handleOut ? [segment.handleOut.x, segment.handleOut.y] : null
+    };
+}
+
+function serializePathSnapshot(path) {
+    if (!path) return null;
+    return path.segments.map(seg => serializeSegmentSnapshot(seg));
+}
+
+// ============================================================
+// v3.2.0: TOAST NOTIFICATIONS
+// ============================================================
+
+let v32Toast = null;
+
+function showToast(message, color = '#00aa5a') {
+    if (v32Toast) v32Toast.remove();
+
+    v32Toast = new PointText({
+        point: view.bounds.topLeft.add(new Point(20, 110)),
+        content: message,
+        fillColor: color,
+        fontFamily: 'system-ui, sans-serif',
+        fontSize: 12,
+        fontWeight: 'bold'
+    });
+
+    setTimeout(() => {
+        if (v32Toast) v32Toast.remove();
+        v32Toast = null;
+    }, 3000);
+}
+
+// ============================================================
+// v3.2.0: SMOOTH TOGGLE / REVERT
+// ============================================================
+
+function smoothWithRevert() {
+    const path = getActivePath();
+    if (!path) return;
+
+    const beforeSnapshot = serializePathSnapshot(path);
+    state.preSmoothState = serializeState();
+
+    path.smooth();
+
+    logOperation('SMOOTH', { segmentCount: path.segments.length }, beforeSnapshot, serializePathSnapshot(path));
+
+    state.selectedSegments = [];
+    state.selectedHandle = null;
+    state.dirty = true;
+
+    pushState();
+    updateUI();
+    redrawHandles();
+
+    showToast('Smooth applied. Click "Revert Smooth" to undo.', '#00aa5a');
+}
+
+function revertSmooth() {
+    if (!state.preSmoothState) {
+        showToast('No smooth to revert. Smooth first.', '#ff6600');
+        return;
+    }
+
+    const path = getActivePath();
+    if (!path) return;
+
+    logOperation('REVERT_SMOOTH', {}, null, null);
+
+    restoreState(state.preSmoothState);
+    state.preSmoothState = null;
+
+    updateUI();
+    redrawHandles();
+
+    showToast('Smooth reverted.', '#00aa5a');
+}
+
+// ============================================================
+// v3.2.0: RESET HANDLES TO LINEAR
+// ============================================================
+
+function resetHandlesToLinear() {
+    const path = getActivePath();
+    if (!path) return;
+
+    const beforeSnapshot = serializePathSnapshot(path);
+
+    pushState();
+
+    for (const seg of path.segments) {
+        seg.handleIn = new Point(0, 0);
+        seg.handleOut = new Point(0, 0);
+    }
+
+    logOperation('RESET_HANDLES', { segmentCount: path.segments.length }, beforeSnapshot, serializePathSnapshot(path));
+
+    updateUI();
+    redrawHandles();
+
+    showToast('All handles reset to linear (straight lines).', '#00aa5a');
+}
+
+// ============================================================
+// v3.2.0: MODE INDICATOR UPDATE
+// ============================================================
+
+function updateActiveModeIndicator() {
+    const modeText = state.calibrating ? 'Calibrate' :
+                     state.measuring ? 'Measure' :
+                     state.editorMode === 'empty' ? 'Empty' : 'Ready';
+    document.getElementById('status-active-mode').textContent = modeText;
+
+    const exitBtn = document.getElementById('btn-exit-mode');
+    exitBtn.style.display = (state.calibrating || state.measuring) ? 'inline-block' : 'none';
+}
+
+function exitCurrentMode() {
+    if (state.calibrating) cancelCalibration();
+    if (state.measuring) cancelMeasure();
+
+    updateActiveModeIndicator();
+
+    if (state.editorMode === 'empty') {
+        showEmptyModeToast('Ready for dot placement');
+    }
+}
 
 // ============================================================
 // v3.1.0: EMPTY MODE FUNCTIONS
@@ -2119,8 +2295,9 @@ function setupCanvasEvents() {
     // Mouse move - update cursor position
     view.onMouseMove = function(event) {
         const pt = event.point;
+        // v3.2.0: 3-decimal precision
         document.getElementById('status-cursor').textContent =
-            `${pt.x.toFixed(2)}, ${pt.y.toFixed(2)}`;
+            `${pt.x.toFixed(state.showDecimalPlaces)}, ${pt.y.toFixed(state.showDecimalPlaces)}`;
 
         // Show snap indicator while dragging
         if (isDragging && state.selectedSegments.length > 0) {
@@ -2500,7 +2677,19 @@ function setupKeyboardEvents() {
             e.preventDefault();
         }
 
-        // v2.0.2: Arrow key nudge
+        // v3.2.0: Escape key - exit any modal mode
+        if (e.key === 'Escape') {
+            if (state.calibrating || state.measuring) {
+                exitCurrentMode();
+                e.preventDefault();
+            } else if (document.getElementById('mode-dialog-overlay')?.style.display !== 'none') {
+                document.getElementById('mode-dialog-overlay')?.remove();
+                e.preventDefault();
+            }
+            return;
+        }
+
+        // v2.0.2: Arrow key nudge (v3.2.0: uses nudgePreference)
         if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.key)) {
             // Don't nudge if typing in an input field
             if (document.activeElement && document.activeElement.tagName === 'INPUT') {
@@ -2511,7 +2700,8 @@ function setupKeyboardEvents() {
 
             if (state.selectedSegments.length === 0) return;
 
-            const snap = e.shiftKey ? 0.1 : state.snapSize;
+            // v3.2.0: Use nudgePreference, shift for fine-tune (0.1mm)
+            const snap = e.shiftKey ? 0.1 : state.nudgePreference;
             let dx = 0, dy = 0;
 
             switch (e.key) {
@@ -2670,9 +2860,18 @@ function setupToolbarEvents() {
 
     document.getElementById('btn-simplify').addEventListener('click', simplifyPath);
     document.getElementById('btn-smooth-all').addEventListener('click', smoothAllNodes);
+    document.getElementById('btn-revert-smooth').addEventListener('click', revertSmooth);
+    document.getElementById('btn-reset-handles').addEventListener('click', resetHandlesToLinear);
 
     document.getElementById('btn-import').addEventListener('click', importImage);
     document.getElementById('btn-measure').addEventListener('click', startMeasure);
+    document.getElementById('btn-exit-mode').addEventListener('click', exitCurrentMode);
+
+    // v3.2.0: Nudge preference
+    document.getElementById('nudge-select').addEventListener('change', function() {
+        state.nudgePreference = parseFloat(this.value);
+        console.log(`Nudge amount set to ${state.nudgePreference}mm`);
+    });
     document.getElementById('btn-calibrate').addEventListener('click', startCalibration);
     document.getElementById('btn-clear-image').addEventListener('click', clearImage);
 
@@ -2929,18 +3128,8 @@ function simplifyPath() {
 }
 
 function smoothAllNodes() {
-    const path = getActivePath();
-    if (!path) return;
-
-    path.smooth();
-
-    state.selectedSegments = [];
-    state.selectedHandle = null;
-    state.dirty = true;
-
-    pushState();
-    updateUI();
-    redrawHandles();
+    // v3.2.0: Delegate to smoothWithRevert for revert capability
+    smoothWithRevert();
 }
 
 function confirmNew() {
@@ -3021,18 +3210,21 @@ function updateUI() {
         state.activePathType === 'outer' ? 'Outer' :
         state.voids.find(v => v.id === state.activePathType)?.role || 'Void';
 
-    // Selected node info
+    // v3.2.0: Selected node info with 3-decimal precision
     if (state.selectedSegments.length === 1) {
         const seg = state.selectedSegments[0];
         const path = getActivePath();
         const idx = path ? path.segments.indexOf(seg) : -1;
         document.getElementById('status-selected').textContent =
-            `#${idx} (${seg.point.x.toFixed(2)}, ${seg.point.y.toFixed(2)})`;
+            `#${idx} (${seg.point.x.toFixed(state.showDecimalPlaces)}, ${seg.point.y.toFixed(state.showDecimalPlaces)})`;
     } else if (state.selectedSegments.length === 2) {
         document.getElementById('status-selected').textContent = '2 nodes';
     } else {
         document.getElementById('status-selected').textContent = '—';
     }
+
+    // v3.2.0: Update active mode indicator
+    updateActiveModeIndicator();
 }
 
 function updateNodeList() {
@@ -3047,10 +3239,11 @@ function updateNodeList() {
 
         const div = document.createElement('div');
         div.className = 'node-item' + (isSelected ? ' selected' : '');
+        // v3.2.0: 3-decimal precision
         div.innerHTML = `
             <span class="index">${idx}</span>
-            <input type="number" step="0.01" value="${seg.point.x.toFixed(2)}" data-idx="${idx}" data-axis="x">
-            <input type="number" step="0.01" value="${seg.point.y.toFixed(2)}" data-idx="${idx}" data-axis="y">
+            <input type="number" step="0.001" value="${seg.point.x.toFixed(state.showDecimalPlaces)}" data-idx="${idx}" data-axis="x">
+            <input type="number" step="0.001" value="${seg.point.y.toFixed(state.showDecimalPlaces)}" data-idx="${idx}" data-axis="y">
         `;
 
         div.addEventListener('click', function(e) {
@@ -3302,6 +3495,9 @@ function startCalibration() {
     state.calMarkers.forEach(m => m.remove());
     state.calMarkers = [];
 
+    // v3.2.0: Update mode indicator
+    updateActiveModeIndicator();
+
     showCalibrationStatus('Click point A');
 }
 
@@ -3365,6 +3561,9 @@ function cancelCalibration() {
     state.calMarkers = [];
     hideCalibrationStatus();
     document.getElementById('modal-calibrate').classList.remove('visible');
+
+    // v3.2.0: Update mode indicator
+    updateActiveModeIndicator();
 }
 
 // ============================================================
@@ -3377,6 +3576,10 @@ function startMeasure() {
     state.measuring = true;
     state.measurePoints = [];
     document.getElementById('btn-measure').classList.add('active');
+
+    // v3.2.0: Update mode indicator
+    updateActiveModeIndicator();
+
     showCalibrationStatus('Click first point');
 }
 
@@ -3454,6 +3657,14 @@ function fadeMeasureMarkers() {
         const distanceEl = document.getElementById('distance-display');
         distanceEl.style.display = 'none';
         distanceEl.style.color = '#ffaa00'; // Reset to original color
+
+        // v3.2.0: Update mode indicator
+        updateActiveModeIndicator();
+
+        // v3.2.0: Auto-reset to empty mode if applicable
+        if (state.editorMode === 'empty') {
+            showEmptyModeToast('Measurement complete. Ready for dot placement.');
+        }
     }, 500);
 }
 
@@ -3472,6 +3683,9 @@ function cancelMeasure() {
     const distanceEl = document.getElementById('distance-display');
     distanceEl.style.display = 'none';
     distanceEl.style.color = '#ffaa00';
+
+    // v3.2.0: Update mode indicator
+    updateActiveModeIndicator();
 }
 
 // ============================================================
@@ -3539,6 +3753,14 @@ function applyCalibration() {
     cancelCalibration();
     document.getElementById('canvas').focus();
     view.update();
+
+    // v3.2.0: Update mode indicator
+    updateActiveModeIndicator();
+
+    // v3.2.0: Auto-reset to empty mode if applicable
+    if (state.editorMode === 'empty') {
+        showEmptyModeToast('Calibration complete. Ready for dot placement.');
+    }
 
     // Show success message
     const statusBar = document.querySelector('.status-bar');
