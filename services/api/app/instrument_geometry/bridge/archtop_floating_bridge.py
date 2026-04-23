@@ -208,27 +208,20 @@ def generate_dxf(
     e_to_e_string_spacing_mm: float = BENEDETTO_17.e_to_e_string_spacing_mm,
 ) -> bytes:
     """
-    Generate DXF R2000 with five layers (bridge plan, top view).
+    Generate DXF R12 with five layers (bridge plan, top view).
 
-    Uses ``ezdxf`` when installed; raises ImportError otherwise.
+    Migrated to dxf_writer.py (Sprint 3) - R12 LINE-only output.
     """
-    try:
-        import ezdxf
-    except ImportError as e:
-        raise ImportError("ezdxf is required for generate_dxf()") from e
+    from ...cam.dxf_writer import DxfWriter, LayerDef
 
-    doc = ezdxf.new("R2000", setup=True)
-    msp = doc.modelspace()
-
-    for name in LAYERS:
-        doc.layers.add(name, color=_LAYER_COLOR[name])
+    layers = [LayerDef(name, color=_LAYER_COLOR[name]) for name in LAYERS]
+    writer = DxfWriter(layers=layers)
 
     hx = base_length_mm / 2.0
     hy = base_width_mm / 2.0
     # BRIDGE_OUTLINE: rectangle centered at origin
     pts = [(-hx, -hy), (hx, -hy), (hx, hy), (-hx, hy)]
-    pl = msp.add_lwpolyline([(p[0], p[1]) for p in pts], dxfattribs={"layer": "BRIDGE_OUTLINE"})
-    pl.close()
+    writer.add_polyline("BRIDGE_OUTLINE", pts, closed=True)
 
     foot = compute_foot_arch_geometry(arch_radius_mm, base_length_mm)
     cx, cy = foot.center_xy
@@ -236,26 +229,24 @@ def generate_dxf(
     # FOOT_PROFILE: chord along X at y=0, arc below (concave foot / top arch)
     a1 = math.degrees(math.atan2(0.0 - cy, -hx - cx))
     a2 = math.degrees(math.atan2(0.0 - cy, hx - cx))
-    msp.add_arc((cx, cy), r, a1, a2, dxfattribs={"layer": "FOOT_PROFILE"})
+    writer.add_arc("FOOT_PROFILE", (cx, cy), r, a1, a2)
 
     # CENTERLINE
-    msp.add_line((-hx - 10, 0), (hx + 10, 0), dxfattribs={"layer": "CENTERLINE"})
+    writer.add_line("CENTERLINE", (-hx - 10, 0), (hx + 10, 0))
 
     # POST_HOLES
     posts = compute_post_hole_positions(post_spacing_mm)
     r_h = post_hole_diameter_mm / 2.0
     for px, py in posts.positions_mm:
-        msp.add_circle((px, py), r_h, dxfattribs={"layer": "POST_HOLES"})
+        writer.add_circle("POST_HOLES", (px, py), r_h)
 
     # SADDLE_SLOT: short line segments at front edge (y = +hy)
     slots = compute_saddle_slot(e_to_e_string_spacing_mm, saddle_radius_mm)
     for s in slots:
         x0 = s.x_mm
-        msp.add_line((x0, hy - 2), (x0, hy + 2), dxfattribs={"layer": "SADDLE_SLOT"})
+        writer.add_line("SADDLE_SLOT", (x0, hy - 2), (x0, hy + 2))
 
-    buf = io.StringIO()
-    doc.write(buf)
-    return buf.getvalue().encode("utf-8")
+    return writer.to_bytes()
 
 
 @dataclass

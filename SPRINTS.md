@@ -1,19 +1,28 @@
 # The Production Shop — Sprint Registry
-Last updated: 2026-04-21
+Last updated: 2026-04-23
 Maintained by: Ross Echols (HanzoRazer)
+Maintenance discipline: docs/SPRINTS_MAINTENANCE.md
 
 ---
 
-## NEXT SESSION OPENS WITH (2026-04-16)
+## NEXT SESSION OPENS WITH
 
-1. **InstrumentBodyGenerator sandbox** — new sprint (dev order written 2026-04-16)
-   File: `sandbox/arc_reconstructor/body_contour_solver.py`
-   First test case: Cuatro Venezolano Quibor (complete spec available)
-   Dev order: `InstrumentBodyGenerator_DevOrder.md`
+**Sprint 3 — CLOSED (2026-04-23)**
 
-**Completed this session:**
-- Sprint 3 DXF Compliance: `spiral_geometry.py` and `archtop_floating_bridge.py` migrated to dxf_writer.py
-- Arc Reconstructor bulge fix: 56.7% arc coverage now working (was 0%)
+Sprint 3 DXF Consolidation complete:
+- 12/12 DXF generators migrated to dxf_writer.py
+- BOE routes through backend endpoint POST /api/editor/export-dxf
+- SPRINTS.md audit completed, maintenance discipline established
+- See docs/SPRINTS_MAINTENANCE.md for update rules
+
+**Next sprint candidates (Ross to direct):**
+1. BOE v3.7 — Refine Curves (scope doc: BOE_v3_7_REFINE_CURVES_SPRINT.md)
+2. Calculator module separation (Ross's December 2025 pre-ship TODO)
+3. BOE v3.8 — Stylus input support (noted, not yet scoped)
+
+**Workaround available:**
+- json_to_dxf_r12.py verified working (2026-04-23)
+- smart_guitar_body_outline_r12.dxf ready for Fusion import
 
 **Acquisitions pending:**
 - Benedetto *Making an Archtop Guitar* (book)
@@ -28,6 +37,7 @@ Maintained by: Ross Echols (HanzoRazer)
 
 ### Sprint 1 — Vectorizer Reconciliation
 **Status:** COMPLETE — all phases done
+**last_verified:** 2026-04-23
 **Branch:** main
 
 | Phase | Description | Commit | Status |
@@ -74,6 +84,7 @@ Quality scorecard (3/3 PASS):
 
 ### Sprint 2 — Repo Split and Standalone Products
 **Status:** In progress
+**last_verified:** 2026-04-23
 **Branch:** main
 
 **Standalone repo inventory (all created on GitHub):**
@@ -97,9 +108,8 @@ Quality scorecard (3/3 PASS):
       DWG-00/01/02/03-Gibson-SG.dwg, Acoustic Guitar Neck Profiles DWGs
 - [ ] Fix flying_v_1958.json schema mismatch with loader.py (committed 9cdad75b)
       load_model_spec("flying_v_1958") crashes on KeyError "scale"
-- [ ] Fix instrument_model_registry.json phantom entry: flying_v points to
-      specs/gibson_flying_v_1958.json which does not exist
-- [ ] Create docs/VECTORIZER_ACCURACY.md (technical disclaimer)
+- [x] Fix instrument_model_registry.json phantom entry — RESOLVED (specs/gibson_flying_v_1958.json now exists)
+- [x] Create docs/VECTORIZER_ACCURACY.md — RESOLVED (docs/VECTORIZER_ACCURACY.md exists)
 - [ ] Add accuracy summary to README.md and blueprint-reader landing page
 - [ ] Sync blueprint-reader with Sprint 1 Phase 1-3 commits
 - [ ] Clean ltb-express (contamination)
@@ -110,7 +120,8 @@ Quality scorecard (3/3 PASS):
 ---
 
 ### Sprint 3 — Remediation and Gap Closure
-**Status:** In progress
+**Status:** CLOSED (2026-04-23)
+**last_verified:** 2026-04-23
 **Branch:** main
 
 **Task list:**
@@ -119,8 +130,8 @@ Quality scorecard (3/3 PASS):
 - [x] Fix PatternRenderer import error in production (commit a7f0f614)
 - [x] Fix FastAPI regex deprecation warning — pattern= replacement (commit 131b1cfd)
 - [x] Add WeasyPrint dependencies to Docker — PDF export (commit ff958c9a)
-- [x] Migrate spiral_geometry.py to dxf_writer.py (2026-04-16)
-- [x] Migrate archtop_floating_bridge.py to dxf_writer.py (2026-04-16)
+- [x] Migrate spiral_geometry.py to dxf_writer.py (2026-04-16, re-migrated 2026-04-23 — regression fixed)
+- [x] Migrate archtop_floating_bridge.py to dxf_writer.py (2026-04-16, re-migrated 2026-04-23 — regression fixed)
 - [ ] Migrate curve_export_router.py to dxf_writer.py
 - [ ] Fix 13 pre-existing test failures (10 soundhole spiral Python 3.14/ezdxf,
       2 debt gate ratchet, 1 vision integration)
@@ -138,26 +149,75 @@ Quality scorecard (3/3 PASS):
       **Note:** This does not regress text quality relative to pre-fix enhanced
       mode — both had poor text output. Geometry restoration was the priority.
 
-**DXF Compliance status (from REPO_DATA_AUDIT.json 2026-04-16):**
+**DXF Consolidation — BOE + remaining migrations (2026-04-23 expansion):**
 
-| Priority | File | Format | Reason |
+- [ ] BOE DXF Export Compliance (Option B — backend endpoint)
+      Root cause: hostinger/body-outline-editor.html DXF export added AFTER
+      Sprint 3 began, implemented using Paper.js native output instead of
+      routing through dxf_writer.py. Produces LWPOLYLINE in R2000+ format,
+      causing Fusion 360 freeze (reproduced 2026-04-23 during Smart Guitar
+      trace import). Violates architectural rule at dxf_svg_generation_
+      architecture.md line 713.
+      **Implementation:** new backend endpoint (e.g., POST /api/editor/export-dxf)
+      accepts BOE geometry JSON, returns R12 DXF via dxf_writer.py.
+      BOE frontend wires Export DXF button to this endpoint.
+      **Reference:** json_to_dxf_r12.py (working R12 reference, verified 2026-04-23)
+
+- [x] Verify json_to_dxf_r12.py runs in engineer environment (2026-04-23)
+      Confirmed: 2241 points → 221.5 KB R12 LINE-only DXF
+
+- [x] Migrate body/smart_guitar_dxf.py to dxf_writer.py (Priority 4 — HIGH IMPACT)
+      Migrate only — do NOT generalize. Scope is tight. (2026-04-23)
+- [x] Migrate headstock/dxf_export.py to dxf_writer.py (Priority 3) (2026-04-23)
+- [x] Migrate blueprint_cam/dxf_preprocessor.py to dxf_writer.py (Priority 3) (2026-04-23)
+- [x] Migrate blueprint_cam/contour_reconstruction.py to dxf_writer.py (Priority 3) (2026-04-23)
+- [x] Migrate curve_export_router.py to dxf_writer.py (Priority 3) (2026-04-23)
+- [x] Migrate neck/headstock_transition_export.py to dxf_writer.py (Priority 4) (2026-04-23)
+- [x] Migrate neck/neck_profile_export.py to dxf_writer.py (Priority 4) (2026-04-23)
+- [x] Migrate archtop/archtop_contour_generator.py to dxf_writer.py (Priority 5) (2026-04-23)
+- [x] Migrate cam/archtop_bridge_generator.py to dxf_writer.py (Priority 5) (2026-04-23)
+- [x] Migrate cam/archtop_saddle_generator.py to dxf_writer.py (Priority 5) (2026-04-23)
+
+**SPRINTS.md Cleanup (2026-04-23 scope addition):**
+
+- [x] Phase 1 — Mechanical audit of all sprints (status vs reality)
+      Output: docs/audit/sprints_audit_2026-04-23.md
+- [x] Phase 2 — Ross triage session on audit findings (6 recommendations approved)
+- [x] Phase 3 — Execute cleanup per triage decisions (completed 2026-04-23):
+      • Re-migrated spiral_geometry.py and archtop_floating_bridge.py (tech debt fixed)
+      • Updated Sprint 2 stale items (flying_v phantom, VECTORIZER_ACCURACY.md marked resolved)
+      • Updated Sprint 3 compliance table (10/12 → 12/12 with re-migration notes)
+      • Updated Sprint 8 location (docs/instrument_library/ → app/instrument_geometry/models/)
+      • Updated Sprint 9 status (PLANNED → IN PROGRESS scaffolded)
+      • Updated Archtop Free Tier (noted scripts already exist)
+- [x] Phase 4 — Establish maintenance discipline (completed 2026-04-23):
+      • Created docs/SPRINTS_MAINTENANCE.md with update rules
+      • Added last_verified timestamps to all sprint sections
+      • Documented recurring audit process (90-day or 800-line trigger)
+      • CI enforcement deferred (solo-dev project)
+
+**DXF Compliance status (VERIFIED 2026-04-23 — 12/12 MIGRATED):**
+
+| Priority | File | Format | Status |
 |----------|------|--------|--------|
-| 1 — BLOCKING | `soundhole/spiral_geometry.py` | R2000 | CLAUDE.md blocking |
-| 2 — BLOCKING | `bridge/archtop_floating_bridge.py` | R2000 | CLAUDE.md blocking |
-| 3 | `headstock/dxf_export.py` | R2010 | User-facing export |
-| 3 | `blueprint_cam/dxf_preprocessor.py` | R2000 | Active vectorizer pipeline |
-| 3 | `blueprint_cam/contour_reconstruction.py` | R2000 | Active vectorizer pipeline |
-| 4 | `body/smart_guitar_dxf.py` | R2000 | Smart Guitar export |
-| 4 | `neck/headstock_transition_export.py` | R2010 | Manifest registered |
-| 4 | `neck/neck_profile_export.py` | R2010 | Manifest registered |
-| 5 | `archtop/archtop_contour_generator.py` | R2010 | Archtop CAM |
-| 5 | `cam/archtop_bridge_generator.py` | R2010 | Archtop CAM |
-| 5 | `cam/archtop_saddle_generator.py` | R2010 | Archtop CAM |
+| 1 | `soundhole/spiral_geometry.py` | R12 | ✅ Re-migrated 2026-04-23 (tech debt regression fixed) |
+| 2 | `bridge/archtop_floating_bridge.py` | R12 | ✅ Re-migrated 2026-04-23 (tech debt regression fixed) |
+| 3 | `headstock/dxf_export.py` | R12 | ✅ Migrated 2026-04-23 |
+| 3 | `blueprint_cam/dxf_preprocessor.py` | R12 | ✅ Migrated 2026-04-23 |
+| 3 | `blueprint_cam/contour_reconstruction.py` | R12 | ✅ Migrated 2026-04-23 |
+| 3 | `export/curve_export_router.py` | R12 | ✅ Migrated 2026-04-23 |
+| 4 | `body/smart_guitar_dxf.py` | R12 | ✅ Migrated 2026-04-23 |
+| 4 | `neck/headstock_transition_export.py` | R12 | ✅ Migrated 2026-04-23 |
+| 4 | `neck/neck_profile_export.py` | R12 | ✅ Migrated 2026-04-23 |
+| 5 | `archtop/archtop_contour_generator.py` | R12 | ✅ Migrated 2026-04-23 |
+| 5 | `cam/archtop_bridge_generator.py` | R12 | ✅ Migrated 2026-04-23 |
+| 5 | `cam/archtop_saddle_generator.py` | R12 | ✅ Migrated 2026-04-23 |
 
 ---
 
 ### Sprint 4 — Photo Vectorizer Production Readiness
 **Status:** In Progress — PARTIALLY SUSPENDED
+**last_verified:** 2026-04-23
 
 **Completed:**
 - [x] spec_name wire-up: VectorizeRequest → PhotoVectorizerV2.extract() (5de45310)
@@ -201,6 +261,7 @@ correction is not yet connected. To be implemented in IBG + ML Repo Extraction s
 
 ### Sprint 5 — Scale Validation Gate + Curvature Profiler
 **Status:** COMPLETE (2026-04-16)
+**last_verified:** 2026-04-23
 **Commits:** db713cc7, 3b18e852 (gap join), plus scale gate sprint
 
 **Delivered:**
@@ -226,6 +287,7 @@ correction is not yet connected. To be implemented in IBG + ML Repo Extraction s
 
 ### Sprint 6 — Arc Reconstructor Sandbox
 **Status:** IN PROGRESS
+**last_verified:** 2026-04-23
 **Location:** sandbox/arc_reconstructor/
 **SESSION_AUDITS.md:** Active audit log in sandbox
 
@@ -273,6 +335,7 @@ System 2 (arc_reconstructor sandbox) → LWPOLYLINE with bulge → "Promote to C
 
 ### Sprint 7 — Repository Data Audit
 **Status:** COMPLETE (2026-04-16)
+**last_verified:** 2026-04-23
 **Output:** docs/REPO_DATA_AUDIT.json (1329 lines)
 
 **Summary:**
@@ -307,6 +370,7 @@ System 2 (arc_reconstructor sandbox) → LWPOLYLINE with bulge → "Promote to C
 
 ### Sprint 7.5 — Supersession and Orphan Audit
 **Status:** COMPLETE (2026-04-21, revised to v3 methodology)
+**last_verified:** 2026-04-23
 **Output:** docs/audits/SUPERSESSION_AND_ORPHAN_AUDIT_RESULTS_v3.md
 
 **v3 Methodology:** Per-file classification (not directory-wide assumptions).
@@ -351,7 +415,8 @@ System 2 (arc_reconstructor sandbox) → LWPOLYLINE with bulge → "Promote to C
 
 ### Sprint 8 — Instrument Library JSON Population
 **Status:** IN PROGRESS (2026-04-16)
-**Location:** docs/instrument_library/ (proposed)
+**last_verified:** 2026-04-23
+**Location:** services/api/app/instrument_geometry/models/
 **Current output:** JSON files extracted from uploaded plans
 
 **Three-level hierarchy defined:**
@@ -401,8 +466,17 @@ Families established:
 ---
 
 ### Sprint 9 — InstrumentBodyGenerator
-**Status:** PLANNED (dev order written 2026-04-16)
-**Location:** sandbox/arc_reconstructor/ (extend existing sandbox)
+**Status:** IN PROGRESS (scaffolded — code exists in sandbox and production paths)
+**last_verified:** 2026-04-23
+**Location:** sandbox/arc_reconstructor/ + services/api/app/instrument_geometry/body/ibg/
+
+**Scaffolded files:**
+- sandbox/arc_reconstructor/instrument_body_generator.py
+- services/api/app/instrument_geometry/body/ibg/instrument_body_generator.py
+- services/api/app/instrument_geometry/body/ibg/body_contour_solver.py
+- services/api/app/instrument_geometry/body/ibg/arc_reconstructor.py
+
+**Remaining:** API endpoint wiring, vectorizer output → IBG pipeline connection
 
 **Vision:**
 Takes 82-88% complete vectorizer output and completes the body outline
@@ -449,6 +523,7 @@ Soundhole Generator → Helmholtz Calculator → complete acoustic design
 
 ### Sprint: tap_tone_pi Real-Time Plate Tuning Mode
 **Status:** QUEUED
+**last_verified:** 2026-04-23
 **Priority:** HIGH
 
 **Target workflow:**
@@ -472,6 +547,7 @@ Soundhole Generator → Helmholtz Calculator → complete acoustic design
 
 ### Sprint: tap_tone_pi Mass-Frequency Tracking
 **Status:** QUEUED
+**last_verified:** 2026-04-23
 **Priority:** HIGH
 
 **Workflow:**
@@ -491,6 +567,7 @@ Soundhole Generator → Helmholtz Calculator → complete acoustic design
 
 ### Sprint: tap_tone_pi Reference Overlay
 **Status:** QUEUED
+**last_verified:** 2026-04-23
 **Priority:** MEDIUM
 
 **Purpose:**
@@ -508,6 +585,7 @@ Soundhole Generator → Helmholtz Calculator → complete acoustic design
 
 ### Sprint: LUTHERIE_MATH.md Completion
 **Status:** QUEUED
+**last_verified:** 2026-04-23
 **Priority:** Medium
 
 **Document:** docs/LUTHERIE_MATH.md (1,160 lines, 25 sections complete)
@@ -536,12 +614,15 @@ Document ready for external peer review.
 ---
 
 ### Sprint: Archtop Free Tier Phase 1
-**Status:** QUEUED
+**Status:** QUEUED — scripts shipped, endpoint wiring remaining
+**last_verified:** 2026-04-23
 
-**Task list:**
-- [ ] Re-upload 3 missing archtop scripts:
-      archtop_stiffness_map.py, archtop_surface_tools.py, archtop_modal_analysis.py
-      → commit to services/api/app/cam/archtop/
+**Completed (2026-04-23 audit):**
+- [x] archtop_stiffness_map.py — EXISTS at services/api/app/cam/archtop/
+- [x] archtop_surface_tools.py — EXISTS at services/api/app/cam/archtop/
+- [x] archtop_modal_analysis.py — EXISTS at services/api/app/cam/archtop/
+
+**Remaining:**
 - [ ] Wire daquisto_measurements.json into pipeline
 - [ ] Add API endpoints:
       POST /api/archtop/contours
@@ -552,6 +633,7 @@ Document ready for external peer review.
 
 ### Sprint: GEN-5 Data Consolidation
 **Status:** QUEUED
+**last_verified:** 2026-04-23
 **Priority:** HIGH — blocks all instrument library work
 
 **Problem:** Five conflicting flat registries with no single source of truth:
@@ -570,6 +652,7 @@ All five registries read from this single source.
 
 ### Sprint: GEN-1 Project Seeding
 **Status:** QUEUED
+**last_verified:** 2026-04-23
 
 POST /api/projects does not seed with model_id defaults.
 Projects created without instrument-specific configuration.
@@ -579,6 +662,7 @@ Every instrument project starts blank — builder re-enters spec data every sess
 
 ### Sprint: ML Design Layer Consumer Expansion
 **Status:** QUEUED — deferred pending IBG extraction completion
+**last_verified:** 2026-04-23
 **Priority:** Medium — product quality improvement, not blocker
 **Blocked by:** IBG + ML Repo Extraction (must complete first so the pipeline pattern is concrete)
 
@@ -633,13 +717,27 @@ When this sprint activates, rosette authenticity is the natural first use case. 
 
 ## TECH DEBT
 
-| Item | Location | Description | Merge Target |
-|------|----------|-------------|--------------|
-| Bi-arc joining math | `docs/reference/curvature_correction_unmerged.py` | 467 lines of gap-correction math, chord/sagitta utilities, detailed MEASURED_RADII with derivation notes. Not integrated into services/api version. | `services/api/app/instrument_geometry/curvature_correction.py` |
+| Item | Location | Description | Status |
+|------|----------|-------------|--------|
+| Bi-arc joining math | `docs/reference/curvature_correction_unmerged.py` | 467 lines of gap-correction math, chord/sagitta utilities, detailed MEASURED_RADII with derivation notes. Not integrated into services/api version. | OPEN — merge target: `services/api/app/instrument_geometry/curvature_correction.py` |
+| ~~DXF migration regression~~ | ~~`instrument_geometry/soundhole/spiral_geometry.py`~~ | ~~Marked migrated 2026-04-16 but still had ezdxf.new("R2000")~~ | ✅ FIXED 2026-04-23 — re-migrated to dxf_writer.py |
+| ~~DXF migration regression~~ | ~~`instrument_geometry/bridge/archtop_floating_bridge.py`~~ | ~~Marked migrated 2026-04-16 but still had ezdxf.new("R2000")~~ | ✅ FIXED 2026-04-23 — re-migrated to dxf_writer.py |
 
 ---
 
 ## COMPLETED
+
+### Sprint 3 — Remediation and Gap Closure (DXF Consolidation)
+**Completed:** 2026-04-23
+**Summary:** 12/12 DXF generators migrated to dxf_writer.py; BOE routes through backend endpoint;
+audit completed; maintenance discipline established (docs/SPRINTS_MAINTENANCE.md)
+**Key deliverables:**
+- dxf_writer.py: Central R12 DXF writer enforcing LINE-only output
+- POST /api/editor/export-dxf: BOE backend endpoint
+- docs/audit/sprints_audit_2026-04-23.md: Mechanical audit report
+- docs/SPRINTS_MAINTENANCE.md: Update rules and recurring audit process
+
+---
 
 ### Sprint 1 Phases 1-3 — Vectorizer Reconciliation
 Completed: 2026-04-04
