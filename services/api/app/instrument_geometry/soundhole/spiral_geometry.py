@@ -249,8 +249,10 @@ def compute_dual_geometry(dual: DualSpiralSpec) -> DualSpiralGeometry:
 
 def generate_dxf(dual_spec: DualSpiralSpec, output_path: str) -> str:
     """
-    Generate a DXF R2000 file from a DualSpiralSpec.
+    Generate a DXF R12 file from a DualSpiralSpec.
     Returns the output path on success.
+
+    Migrated to dxf_writer.py (Sprint 3) - R12 LINE-only output.
 
     Layers:
       SPIRAL_CENTERLINE  — reference, not cut
@@ -259,61 +261,36 @@ def generate_dxf(dual_spec: DualSpiralSpec, output_path: str) -> str:
       BODY_REFERENCE     — body outline, not cut
       BRACE_KEEPOUT      — brace zone reference, not cut
     """
-    try:
-        import ezdxf
-    except ImportError:
-        raise RuntimeError(
-            "ezdxf is required for DXF export. "
-            "Install with: pip install ezdxf --break-system-packages"
-        )
+    from ...cam.dxf_writer import DxfWriter, LayerDef
 
-    doc = ezdxf.new(dxfversion="R2000")
-    msp = doc.modelspace()
-
-    # Define layers
-    layer_defs = [
-        ("SPIRAL_OUTER_WALL", 1, "CONTINUOUS"),
-        ("SPIRAL_INNER_WALL", 2, "CONTINUOUS"),
-        ("SPIRAL_CENTERLINE", 3, "DASHED"),
-        ("BODY_REFERENCE",    5, "DASHED"),
-        ("BRACE_KEEPOUT",     6, "DASHED"),
+    layers = [
+        LayerDef("SPIRAL_OUTER_WALL", color=1),
+        LayerDef("SPIRAL_INNER_WALL", color=2),
+        LayerDef("SPIRAL_CENTERLINE", color=3),
+        LayerDef("BODY_REFERENCE", color=5),
+        LayerDef("BRACE_KEEPOUT", color=6),
     ]
-    for name, color, lt in layer_defs:
-        if name not in doc.layers:
-            doc.layers.new(name=name, dxfattribs={"color": color, "linetype": lt})
-
-    def write_polyline(pts, layer):
-        if len(pts) < 2:
-            return
-        msp.add_lwpolyline(
-            [(p[0], p[1]) for p in pts],
-            dxfattribs={"layer": layer}
-        )
+    writer = DxfWriter(layers=layers)
 
     # Both spirals
     for spec in [dual_spec.upper, dual_spec.lower]:
         geo = compute_spiral_geometry(spec)
-        write_polyline(geo.centerline, "SPIRAL_CENTERLINE")
-        write_polyline(geo.outer_wall, "SPIRAL_OUTER_WALL")
-        write_polyline(geo.inner_wall, "SPIRAL_INNER_WALL")
+        writer.add_polyline("SPIRAL_CENTERLINE", [(p[0], p[1]) for p in geo.centerline], closed=False)
+        writer.add_polyline("SPIRAL_OUTER_WALL", [(p[0], p[1]) for p in geo.outer_wall], closed=False)
+        writer.add_polyline("SPIRAL_INNER_WALL", [(p[0], p[1]) for p in geo.inner_wall], closed=False)
 
     # Carlos Jumbo body reference (simplified outline)
-    _write_body_reference(msp)
+    _write_body_reference(writer)
 
     # Brace keepout zones
-    _write_brace_keepout(msp)
+    _write_brace_keepout(writer)
 
-    doc.saveas(output_path)
+    writer.saveas(output_path)
     return output_path
 
 
-def _write_body_reference(msp):
+def _write_body_reference(writer):
     """Write simplified Carlos Jumbo body outline as DXF reference."""
-    try:
-        import ezdxf
-    except ImportError:
-        return
-
     # Approximate outline using spline control points (mm, origin at bridge)
     body_pts = []
     lower_w, upper_w, waist_w = 194, 147, 107
@@ -359,31 +336,22 @@ def _write_body_reference(msp):
         body_pts.append((x, y))
 
     if body_pts:
-        msp.add_lwpolyline(
-            body_pts,
-            close=True,
-            dxfattribs={"layer": "BODY_REFERENCE"}
-        )
+        writer.add_polyline("BODY_REFERENCE", body_pts, closed=True)
 
 
-def _write_brace_keepout(msp):
+def _write_brace_keepout(writer):
     """Write brace keepout zones as DXF reference circles and lines."""
-    try:
-        import ezdxf
-    except ImportError:
-        return
-
     layer = "BRACE_KEEPOUT"
 
     # Bridge plate zone
-    msp.add_circle((0, 0), radius=32, dxfattribs={"layer": layer})
+    writer.add_circle(layer, (0, 0), 32)
 
     # X-brace diagonals (approximate crossing at origin)
-    msp.add_line((-85, -85), (85, 85), dxfattribs={"layer": layer})
-    msp.add_line((-85, 85), (85, -85), dxfattribs={"layer": layer})
+    writer.add_line(layer, (-85, -85), (85, 85))
+    writer.add_line(layer, (-85, 85), (85, -85))
 
     # Upper transverse brace
-    msp.add_line((-155, -32), (155, -32), dxfattribs={"layer": layer})
+    writer.add_line(layer, (-155, -32), (155, -32))
 
 
 # ── Serialisation helpers ─────────────────────────────────────────────────────
