@@ -68,6 +68,35 @@
         </div>
       </div>
 
+      <!-- Woodworking Calculators -->
+      <div class="calc-category">
+        <h3>🪚 Woodworking</h3>
+        <div class="calc-cards">
+          <div
+            class="calc-card active"
+            @click="selectCalculator('woodworking')"
+          >
+            <div class="calc-icon">
+              📐
+            </div>
+            <h4>Woodworking Calculator</h4>
+            <p>Board feet, volume/weight, miter angles</p>
+            <span class="status-badge ready">✓ Ready</span>
+          </div>
+          <div
+            class="calc-card active"
+            @click="selectCalculator('radius-dish')"
+          >
+            <div class="calc-icon">
+              🥏
+            </div>
+            <h4>Radius Dish Calculator</h4>
+            <p>Dish depth for sanding/carving fixtures</p>
+            <span class="status-badge ready">✓ Ready</span>
+          </div>
+        </div>
+      </div>
+
       <!-- Acoustics Calculators -->
       <div class="calc-category">
         <h3>🔊 Acoustics</h3>
@@ -96,6 +125,46 @@
           </div>
         </div>
       </div>
+
+      <!-- Lutherie Calculators -->
+      <div class="calc-category">
+        <h3>🎸 Lutherie</h3>
+        <div class="calc-cards">
+          <div
+            class="calc-card active"
+            @click="selectCalculator('tension')"
+          >
+            <div class="calc-icon">
+              🎻
+            </div>
+            <h4>String Tension Calculator</h4>
+            <p>Calculate tension for scale lengths and string gauges</p>
+            <span class="status-badge ready">✓ Ready</span>
+          </div>
+          <div
+            class="calc-card active"
+            @click="selectCalculator('archtop')"
+          >
+            <div class="calc-icon">
+              🎷
+            </div>
+            <h4>Archtop Calculator</h4>
+            <p>Bridge height and fit parameters for archtop guitars</p>
+            <span class="status-badge ready">✓ Ready</span>
+          </div>
+          <div
+            class="calc-card active"
+            @click="selectCalculator('bridge')"
+          >
+            <div class="calc-icon">
+              🌉
+            </div>
+            <h4>Bridge Calculator</h4>
+            <p>Saddle geometry, compensation, string spacing</p>
+            <span class="status-badge ready">✓ Ready</span>
+          </div>
+        </div>
+      </div>
     </div>
 
     <!-- Active Calculator Display -->
@@ -118,6 +187,11 @@
       <CNCROICalculator v-if="activeCalculator === 'cnc-roi'" />
       <BusinessCalculator v-if="activeCalculator === 'business-calc'" />
       <SoundholeCalculator v-if="activeCalculator === 'soundhole'" />
+      <TensionCalculator v-if="activeCalculator === 'tension'" />
+      <WoodworkingCalculator v-if="activeCalculator === 'woodworking'" />
+      <RadiusDishCalculator v-if="activeCalculator === 'radius-dish'" />
+      <ArchtopCalculator v-if="activeCalculator === 'archtop'" />
+      <BridgeCalculator v-if="activeCalculator === 'bridge'" />
     </div>
   </div>
 </template>
@@ -130,6 +204,11 @@ import ScientificCalculator from './ScientificCalculator.vue'
 import CNCROICalculator from './CNCROICalculator.vue'
 import BusinessCalculator from './BusinessCalculator.vue'
 import SoundholeCalculator from '@/views/calculators/acoustics/SoundholeCalculator.vue'
+import TensionCalculator from './TensionCalculator.vue'
+import WoodworkingCalculator from './WoodworkingCalculator.vue'
+import ArchtopCalculator from './ArchtopCalculator.vue'
+import BridgeCalculator from './BridgeCalculator.vue'
+import RadiusDishCalculator from './radius-dish/RadiusDishCalculator.vue'
 
 const activeCalculator = ref<string | null>(null)
 const router = useRouter()
@@ -148,7 +227,12 @@ function getCalculatorTitle(calcId: string): string {
     'scientific': '🧮 Scientific Calculator',
     'cnc-roi': '💰 CNC ROI Calculator',
     'business-calc': '💼 Business Calculator',
-    'soundhole': '🎸 Soundhole Calculator'
+    'soundhole': '🎸 Soundhole Calculator',
+    'tension': '🎻 String Tension Calculator',
+    'woodworking': '🪚 Woodworking Calculator',
+    'radius-dish': '🥏 Radius Dish Calculator',
+    'archtop': '🎷 Archtop Calculator',
+    'bridge': '🌉 Bridge Calculator'
   }
   return titles[calcId] || calcId
 }
