@@ -1,34 +1,36 @@
 """
-Saw Lab Calculator Adapters
+Saw Lab Calculator Adapters — Compatibility Shim
 
-This package adapts Saw Lab 2.0 physics calculators into the Calculator Spine's
-common data models and API surface.
+This module re-exports saw calculators from ltb-woodworking-studio when available,
+falling back to local implementations if the package is not installed.
 
-Adapters:
-- bite_per_tooth_adapter: Chip thickness per tooth calculations
-- heat_adapter: Thermal risk from friction
-- deflection_adapter: Blade deflection under load
-- rim_speed_adapter: Surface velocity at blade edge
-- kickback_adapter: Kickback risk assessment
+Migration Status: IN PROGRESS (Phase 3, 2026-04-25)
+Canonical location: ltb-woodworking-studio/woodworking_v2/services/api/app/calculators/saw/
 
-Usage:
-    from app.calculators.saw_adapters import evaluate_saw_operation
-
-    result = evaluate_saw_operation(
-        blade_id="SB-24T-10",
-        material_id="maple",
-        feed_mm_min=3000,
-        rpm=3450,
-        depth_mm=25,
-    )
+Usage (unchanged):
+    from app.calculators.saw_adapters import compute_bite_per_tooth
 """
 
-from .bite_per_tooth_adapter import compute_bite_per_tooth
-from .rim_speed_adapter import compute_saw_rim_speed
-from .heat_adapter import estimate_saw_heat_risk
-from .deflection_adapter import estimate_blade_deflection
-from .kickback_adapter import assess_kickback_risk
-from .machine_class import MachineClass
+try:
+    # Try importing from ltb-woodworking-studio (canonical location)
+    from woodworking_v2.services.api.app.calculators.saw import (
+        compute_bite_per_tooth,
+        compute_saw_rim_speed,
+        estimate_saw_heat_risk,
+        estimate_blade_deflection,
+        assess_kickback_risk,
+        MachineClass,
+    )
+    _USING_WOODWORKING_STUDIO = True
+except ImportError:
+    # Fall back to local implementations
+    from .bite_per_tooth_adapter import compute_bite_per_tooth
+    from .rim_speed_adapter import compute_saw_rim_speed
+    from .heat_adapter import estimate_saw_heat_risk
+    from .deflection_adapter import estimate_blade_deflection
+    from .kickback_adapter import assess_kickback_risk
+    from .machine_class import MachineClass
+    _USING_WOODWORKING_STUDIO = False
 
 __all__ = [
     "compute_bite_per_tooth",
