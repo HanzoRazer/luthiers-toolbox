@@ -291,6 +291,7 @@ def extract_blueprint_enhanced(
     output_path: str,
     target_height_mm: float = 500.0,
     gap_close_size: int = 7,
+    mask_text: bool = True,
     warnings: Optional[list[str]] = None,
 ) -> ExtractionResult:
     """
@@ -299,10 +300,15 @@ def extract_blueprint_enhanced(
     Uses three Canny threshold levels (30/100, 50/150, 80/200) for
     complete edge coverage. Produces 50,000-300,000+ LINE entities.
 
+    Text masking (Sprint 3): When enabled, detects text regions via OCR
+    and removes them from edges before morphological gap closing. This
+    prevents the 7×7 kernel from bridging text glyph strokes.
+
     Args:
         source_path: Path to input image
         output_path: Path for output DXF file
         target_height_mm: Target height for scaling
+        mask_text: If True, detect and mask text regions before gap closing
         warnings: List to append warning messages to
 
     Returns:
@@ -336,6 +342,7 @@ def extract_blueprint_enhanced(
             output_path=output_path,
             target_height_mm=target_height_mm,
             gap_close_size=gap_close_size,
+            mask_text=mask_text,
         )
 
         return ExtractionResult(

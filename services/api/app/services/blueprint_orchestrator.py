@@ -201,6 +201,7 @@ class BlueprintOrchestrator:
         export_preset: str = "geometry_only",
         spec_name: Optional[str] = None,
         gap_close_size: int = 7,
+        mask_text: bool = True,
     ) -> BlueprintResult:
         """
         Process a blueprint file through extraction and cleanup.
@@ -218,6 +219,8 @@ class BlueprintOrchestrator:
             progress_callback: Optional (stage, percent) callback
             mode: CleanupMode.BASELINE for stable pre-grouping behavior,
                   CleanupMode.REFINED for current logic (default)
+            mask_text: If True, detect and mask text regions before gap closing
+                       (Sprint 3 text-masking preprocessing)
 
         Returns:
             BlueprintResult with canonical artifacts
@@ -275,6 +278,7 @@ class BlueprintOrchestrator:
                         output_path=str(raw_dxf_path),
                         target_height_mm=target_height_mm,
                         gap_close_size=gap_close_size,
+                        mask_text=mask_text,
                         warnings=warnings,
                     )
 

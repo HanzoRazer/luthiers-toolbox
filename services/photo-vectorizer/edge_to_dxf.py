@@ -380,6 +380,165 @@ def _remove_page_borders_early(
 # Date: 2026-04-12
 
 
+# ─── Text Region Masking ────────────────────────────────────────────────────
+#
+# Text-masking preprocessing for blueprint vectorization.
+# Problem: Morphological gap closing (7×7 kernel) bridges text glyph strokes,
+# producing solid blobs that pollute geometry contours.
+# Solution: Detect text regions with OCR, mask them before edge detection,
+# then apply gap closing only to geometry.
+#
+# Author: Production Shop
+# Date: 2026-04-26
+# Sprint: Sprint 3 — Text-masking preprocessing pass
+# ─────────────────────────────────────────────────────────────────────────────
+
+# Lazy import for EasyOCR (heavy dependency)
+_EASYOCR_READER = None
+_EASYOCR_AVAILABLE = None
+
+
+def _get_easyocr_reader():
+    """Lazy-load EasyOCR reader (singleton pattern)."""
+    global _EASYOCR_READER, _EASYOCR_AVAILABLE
+
+    if _EASYOCR_AVAILABLE is None:
+        try:
+            import easyocr
+            _EASYOCR_AVAILABLE = True
+            logger.info("EasyOCR available for text masking")
+        except ImportError:
+            _EASYOCR_AVAILABLE = False
+            logger.warning("EasyOCR not available — text masking disabled")
+
+    if not _EASYOCR_AVAILABLE:
+        return None
+
+    if _EASYOCR_READER is None:
+        import easyocr
+        logger.info("Initializing EasyOCR reader (first use)...")
+        _EASYOCR_READER = easyocr.Reader(['en'], gpu=False, verbose=False)
+        logger.info("EasyOCR reader initialized")
+
+    return _EASYOCR_READER
+
+
+def detect_text_regions(
+    image: np.ndarray,
+    min_confidence: float = 0.3,
+    padding_px: int = 5,
+) -> list:
+    """
+    Detect text regions in an image using EasyOCR.
+
+    Args:
+        image: BGR or grayscale image
+        min_confidence: Minimum OCR confidence threshold
+        padding_px: Pixels to expand each bounding box (text has proximity effects)
+
+    Returns:
+        List of (x, y, w, h) bounding boxes for detected text regions.
+        Returns empty list if EasyOCR unavailable or no text found.
+    """
+    reader = _get_easyocr_reader()
+    if reader is None:
+        return []
+
+    try:
+        # EasyOCR expects BGR or grayscale
+        results = reader.readtext(image)
+        logger.info(f"OCR detected {len(results)} text regions")
+
+        regions = []
+        for bbox, text, confidence in results:
+            if confidence < min_confidence:
+                continue
+
+            # Convert polygon bbox to (x, y, w, h)
+            pts = np.array(bbox)
+            x_min, y_min = pts.min(axis=0).astype(int)
+            x_max, y_max = pts.max(axis=0).astype(int)
+
+            # Add padding to account for text proximity effects
+            x_min = max(0, x_min - padding_px)
+            y_min = max(0, y_min - padding_px)
+            x_max = x_max + padding_px
+            y_max = y_max + padding_px
+
+            w = x_max - x_min
+            h = y_max - y_min
+
+            if w > 0 and h > 0:
+                regions.append((x_min, y_min, w, h))
+                logger.debug(f"Text region: '{text[:20]}...' conf={confidence:.2f} bbox=({x_min},{y_min},{w},{h})")
+
+        logger.info(f"Detected {len(regions)} text regions above confidence {min_confidence}")
+        return regions
+
+    except Exception as e:
+        logger.warning(f"Text detection failed: {e}")
+        return []
+
+
+def create_text_mask(
+    image_shape: Tuple[int, int],
+    text_regions: list,
+) -> np.ndarray:
+    """
+    Create a binary mask with text regions filled.
+
+    Args:
+        image_shape: (height, width) of the image
+        text_regions: List of (x, y, w, h) bounding boxes
+
+    Returns:
+        Binary mask where text regions are 255, background is 0.
+        Use bitwise NOT to get geometry-only mask.
+    """
+    h, w = image_shape[:2]
+    mask = np.zeros((h, w), dtype=np.uint8)
+
+    for (x, y, rw, rh) in text_regions:
+        # Clip to image bounds
+        x1 = max(0, x)
+        y1 = max(0, y)
+        x2 = min(w, x + rw)
+        y2 = min(h, y + rh)
+
+        if x2 > x1 and y2 > y1:
+            mask[y1:y2, x1:x2] = 255
+
+    return mask
+
+
+def apply_text_mask_to_edges(
+    edges: np.ndarray,
+    text_mask: np.ndarray,
+) -> Tuple[np.ndarray, int]:
+    """
+    Remove text region edges from edge image.
+
+    Args:
+        edges: Binary edge image from Canny
+        text_mask: Binary mask where text regions are 255
+
+    Returns:
+        (masked_edges, removed_pixel_count)
+    """
+    if text_mask is None or text_mask.size == 0:
+        return edges, 0
+
+    # Count edges that will be removed
+    text_edges = cv2.bitwise_and(edges, text_mask)
+    removed_count = cv2.countNonZero(text_edges)
+
+    # Remove text edges: edges AND (NOT text_mask)
+    geometry_mask = cv2.bitwise_not(text_mask)
+    masked_edges = cv2.bitwise_and(edges, geometry_mask)
+
+    return masked_edges, removed_count
+
+
 # ─── Reusable Extraction Helpers ────────────────────────────────────────────
 #
 # These functions separate extraction from DXF writing for composability.
@@ -1479,6 +1638,7 @@ class EdgeToDXF:
         output_path: Optional[str] = None,
         target_height_mm: float = 500.0,
         gap_close_size: int = 7,
+        mask_text: bool = True,
     ) -> EdgeToDXFResult:
         """
         Enhanced conversion with multi-scale edge fusion.
@@ -1486,11 +1646,16 @@ class EdgeToDXF:
         Combines edges from multiple Canny threshold levels for more
         complete edge coverage. Produces more LINE entities.
 
+        Text masking (Sprint 3): Detects text regions with OCR and removes
+        them from edges before morphological closing. This prevents the 7×7
+        kernel from bridging text glyph strokes into solid blobs.
+
         Args:
             source_path: Path to source image
             output_path: Output DXF path
             target_height_mm: Target height in mm
             gap_close_size: Morphological closing kernel size (0=disabled, 7=default)
+            mask_text: If True, detect and mask text regions before gap closing
 
         Returns:
             EdgeToDXFResult with conversion statistics
@@ -1524,6 +1689,21 @@ class EdgeToDXF:
         for low, high in edge_levels:
             edges = cv2.Canny(gray, low, high)
             combined_edges = cv2.bitwise_or(combined_edges, edges)
+
+        # Text masking: remove text edges BEFORE morphological closing
+        # This prevents the 7×7 kernel from bridging text glyph strokes
+        text_removed_count = 0
+        if mask_text:
+            text_regions = detect_text_regions(img, min_confidence=0.3, padding_px=5)
+            if text_regions:
+                text_mask = create_text_mask((h, w), text_regions)
+                combined_edges, text_removed_count = apply_text_mask_to_edges(
+                    combined_edges, text_mask
+                )
+                logger.info(
+                    f"TEXT_MASK | Removed {text_removed_count:,} edge pixels "
+                    f"from {len(text_regions)} text regions"
+                )
 
         # Bridge pixel-level gaps before contour extraction (restored from Phase 2)
         if gap_close_size > 0:
