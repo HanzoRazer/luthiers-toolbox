@@ -56,16 +56,33 @@ Reference: docs/audit/instrument_model_coverage_2026-04-26.md
     - Status: SCOPABLE (~1 sprint)
     - Audience: Customer-facing
 
-12. Feature Route Coverage Sprint (FOUNDATIONAL — affects 56% of instruments)
-    - Gap: Feature routes (cavity definitions, pickup routes, control cavities, bridge mounting,
-      neck pockets) missing for 10/18 instruments in canonical system
-    - Parametric per instrument — has to be done individually but pattern is reusable
-    - Coordinates with: #6 Constructive Proportional Design System (zone-based primitives may
-      inform feature placement), #7 Body Cutaway Designer (cutaway is itself a feature route)
-    - Status: SCOPABLE per-instrument, batch sprint or cluster sprint TBD
+12. Feature Route Sprint A: EXPLICIT Plan Data Extraction (~40% of plans)
+    - Gap: Many plans have labeled cavity dimensions but no extraction pipeline
+    - Sample analysis: Gibson 335, Carlos Jumbo have explicit pickup/control cavity labels
+    - Work: OCR + template matching to extract labeled dimensions from PDFs
+    - Coordinates with: Blueprint import pipeline, vectorizer feedback loops
+    - Status: SCOPABLE (~1 sprint)
     - Audience: Customer-facing
 
-13. Build Documentation Generation Sprint (NEW CATEGORY — affects all instruments)
+13. Feature Route Sprint B: Cavity Measurement Workflow (~50% of plans)
+    - Gap: Plans show cavities at scale but without labels — requires measurement
+    - Sample analysis: Gibson Flying V, Fender Strat show cavities but no dimensions
+    - Work: Interactive measurement UI or automated contour extraction with scale reference
+    - Architecture decision: measurement UI vs automated extraction vs hybrid
+    - Coordinates with: #12 (can share extraction pipeline), Body Outline Editor measurement tools
+    - Status: NEEDS ARCHITECTURE DECISION before scoping
+    - Audience: Customer-facing
+
+14. Feature Route Sprint C: Standards Library (~10% of plans)
+    - Gap: Some plans omit cavities entirely — need industry standard dimensions
+    - Sample analysis: Cuatro puertoriqueño has no cavity definitions
+    - Work: Curated library of standard pickup/control cavity dimensions by type
+    - Data sources: Manufacturer specs, StewMac/LMII templates, community measurements
+    - Lightweight: data entry sprint, not code-heavy
+    - Status: SCOPABLE (~0.5 sprint)
+    - Audience: Customer-facing
+
+15. Build Documentation Generation Sprint (NEW CATEGORY — affects all instruments)
     - Gap: Zero instruments have assembly instructions or BOMs
     - Different category of work — templating + content layer rather than code pipeline
     - Mechanically simpler than CAM completion but breadth-wide (all instruments need it)
@@ -74,7 +91,7 @@ Reference: docs/audit/instrument_model_coverage_2026-04-26.md
     - Status: SCOPABLE
     - Audience: Customer-facing (build-day reference)
 
-14. Instrument Scope Decision (STRATEGIC — not a sprint)
+16. Instrument Scope Decision (STRATEGIC — not a sprint)
     - Question: Which instruments should the system actually support?
     - 24 instruments identified, several flagged for deferral:
       EDS-1275 (zero implementation), Bass 4-String (different family),
