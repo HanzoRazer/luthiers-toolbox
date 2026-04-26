@@ -1,5 +1,5 @@
 # The Production Shop — Sprint Registry
-Last updated: 2026-04-23
+Last updated: 2026-04-26
 Maintained by: Ross Echols (HanzoRazer)
 Maintenance discipline: docs/SPRINTS_MAINTENANCE.md
 
@@ -7,18 +7,89 @@ Maintenance discipline: docs/SPRINTS_MAINTENANCE.md
 
 ## NEXT SESSION OPENS WITH
 
-**Sprint 3 — CLOSED (2026-04-23)**
+**Sprint 3 — REOPENED (2026-04-26)**
 
-Sprint 3 DXF Consolidation complete:
-- 12/12 DXF generators migrated to dxf_writer.py
-- BOE routes through backend endpoint POST /api/editor/export-dxf
-- SPRINTS.md audit completed, maintenance discipline established
-- See docs/SPRINTS_MAINTENANCE.md for update rules
+Sprint 3 verification audit (docs/audit/sprints_md_verification_2026-04-25.md) found:
+- **2/12 DXF generators actually migrated** — 10 false claims identified
+- **BOE backend endpoint does not exist** — documented but never implemented
+- Sprint 3 "CLOSED" status was based on false completion claims
+
+**Corrections applied:**
+- 10 files marked NOT MIGRATED in DXF Compliance table
+- BOE endpoint marked MISSING — resolution TBD
+- Sprint status changed to REOPENED
+- See docs/audit/sprints_md_verification_2026-04-25.md for full verification
+
+**Remaining Sprint 3 work:**
+- 10 DXF migrations scheduled in Sprint 3B PR 2B
+- BOE endpoint: implement, remove claim, or identify alternate (decision pending)
 
 **Next sprint candidates (Ross to direct):**
 1. BOE v3.7 — Refine Curves (scope doc: BOE_v3_7_REFINE_CURVES_SPRINT.md)
 2. Calculator module separation (Ross's December 2025 pre-ship TODO)
 3. BOE v3.8 — Stylus input support (noted, not yet scoped)
+4. Sprint 3B PR 2B — DXF migration completion (10 files scheduled, see DXF Compliance table below)
+5. BOE STEM Grid Restoration — Restore STEM grid coordinate system for cavity validation
+6. Constructive Proportional Design System — Zone-based geometry primitives for parametric instruments
+7. Body Cutaway Designer — Cutaway shape generation (coordinates with #6 for zone placement)
+8. Bevel Cut Calc Module — Edge bevel calculations for body contouring
+
+**Sprint candidates from Instrument Model Coverage Audit (2026-04-26):**
+Reference: docs/audit/instrument_model_coverage_2026-04-26.md
+
+9. End-to-End Instrument Completion — Stratocaster (CLOSEST TO COMPLETE)
+   - Gap: Contour carving CAM (belly cut, arm contour) missing
+   - Investigation needed: Is contour carving instrument-specific or reusable infrastructure 
+     that would also unlock Telecaster, Les Paul variants, etc.?
+   - Status: SCOPABLE (~2 sprints)
+   - Audience: Customer-facing
+
+10. End-to-End Instrument Completion — Telecaster
+    - Gap: Dedicated router missing (single-coil + bridge plate routing)
+    - May benefit from Stratocaster contour carving work if shared infrastructure
+    - Status: SCOPABLE (~1 sprint)
+    - Audience: Customer-facing
+
+11. End-to-End Instrument Completion — Flying V
+    - Gap: pocket_generator.py exists but not wired to router
+    - Smaller scope than Strat/Tele — wiring rather than building
+    - Status: SCOPABLE (~1 sprint)
+    - Audience: Customer-facing
+
+12. Feature Route Coverage Sprint (FOUNDATIONAL — affects 56% of instruments)
+    - Gap: Feature routes (cavity definitions, pickup routes, control cavities, bridge mounting,
+      neck pockets) missing for 10/18 instruments in canonical system
+    - Parametric per instrument — has to be done individually but pattern is reusable
+    - Coordinates with: #6 Constructive Proportional Design System (zone-based primitives may
+      inform feature placement), #7 Body Cutaway Designer (cutaway is itself a feature route)
+    - Status: SCOPABLE per-instrument, batch sprint or cluster sprint TBD
+    - Audience: Customer-facing
+
+13. Build Documentation Generation Sprint (NEW CATEGORY — affects all instruments)
+    - Gap: Zero instruments have assembly instructions or BOMs
+    - Different category of work — templating + content layer rather than code pipeline
+    - Mechanically simpler than CAM completion but breadth-wide (all instruments need it)
+    - Could leverage existing instrument specs to auto-generate BOM
+    - Assembly instructions may need per-instrument authoring
+    - Status: SCOPABLE
+    - Audience: Customer-facing (build-day reference)
+
+14. Instrument Scope Decision (STRATEGIC — not a sprint)
+    - Question: Which instruments should the system actually support?
+    - 24 instruments identified, several flagged for deferral:
+      EDS-1275 (zero implementation), Bass 4-String (different family),
+      Ukuleles/Mandolins (outside primary scope)
+    - Decision: Complete priority instruments, mark deferred ones explicitly,
+      or remove from claims entirely
+    - Worth holding for explicit consideration later
+
+**Cross-reference note (Sprint 3B vs Instrument Audit):**
+The 10 files in Sprint 3B PR 2B are the authoritative DXF generator migration list.
+The instrument model audit confirmed 4 of these (neck/headstock, smart guitar) and found
+3 additional DXF *readers* (lespaul_dxf_reader, arc_reconstructor, instrument_body_generator)
+that use direct ezdxf for input. The 6 remaining files (blueprint_cam/*, archtop/*, curve_export)
+were not in the audit agents' scope but are correctly scheduled in Sprint 3B.
+Sprint 3B PR 2B execution resolves DXF output compliance; DXF readers are a separate concern.
 
 **Workaround available:**
 - json_to_dxf_r12.py verified working (2026-04-23)
@@ -120,8 +191,8 @@ Quality scorecard (3/3 PASS):
 ---
 
 ### Sprint 3 — Remediation and Gap Closure
-**Status:** CLOSED (2026-04-23)
-**last_verified:** 2026-04-23
+**Status:** REOPENED (2026-04-26) — verification audit found 10/12 false migration claims
+**last_verified:** 2026-04-26
 **Branch:** main
 
 **Task list:**
@@ -196,22 +267,29 @@ Quality scorecard (3/3 PASS):
       • Documented recurring audit process (90-day or 800-line trigger)
       • CI enforcement deferred (solo-dev project)
 
-**DXF Compliance status (VERIFIED 2026-04-23 — 12/12 MIGRATED):**
+**DXF Compliance status (CORRECTED 2026-04-26 — 2/12 MIGRATED, 10 FALSE CLAIMS):**
+
+Verification audit: docs/audit/sprints_md_verification_2026-04-25.md
 
 | Priority | File | Format | Status |
 |----------|------|--------|--------|
-| 1 | `soundhole/spiral_geometry.py` | R12 | ✅ Re-migrated 2026-04-23 (tech debt regression fixed) |
-| 2 | `bridge/archtop_floating_bridge.py` | R12 | ✅ Re-migrated 2026-04-23 (tech debt regression fixed) |
-| 3 | `headstock/dxf_export.py` | R12 | ✅ Migrated 2026-04-23 |
-| 3 | `blueprint_cam/dxf_preprocessor.py` | R12 | ✅ Migrated 2026-04-23 |
-| 3 | `blueprint_cam/contour_reconstruction.py` | R12 | ✅ Migrated 2026-04-23 |
-| 3 | `export/curve_export_router.py` | R12 | ✅ Migrated 2026-04-23 |
-| 4 | `body/smart_guitar_dxf.py` | R12 | ✅ Migrated 2026-04-23 |
-| 4 | `neck/headstock_transition_export.py` | R12 | ✅ Migrated 2026-04-23 |
-| 4 | `neck/neck_profile_export.py` | R12 | ✅ Migrated 2026-04-23 |
-| 5 | `archtop/archtop_contour_generator.py` | R12 | ✅ Migrated 2026-04-23 |
-| 5 | `cam/archtop_bridge_generator.py` | R12 | ✅ Migrated 2026-04-23 |
-| 5 | `cam/archtop_saddle_generator.py` | R12 | ✅ Migrated 2026-04-23 |
+| 1 | `soundhole/spiral_geometry.py` | R12 | ✅ Migrated (verified: imports DxfWriter, 0 ezdxf.new calls) |
+| 2 | `bridge/archtop_floating_bridge.py` | R12 | ✅ Migrated (verified: imports DxfWriter, 0 ezdxf.new calls) |
+| 3 | `headstock/dxf_export.py` | R2010 | ❌ NOT MIGRATED — false claim, scheduled Sprint 3B PR 2B |
+| 3 | `blueprint_cam/dxf_preprocessor.py` | R2000 | ❌ NOT MIGRATED — false claim, scheduled Sprint 3B PR 2B |
+| 3 | `blueprint_cam/contour_reconstruction.py` | R2000 | ❌ NOT MIGRATED — false claim, scheduled Sprint 3B PR 2B |
+| 3 | `export/curve_export_router.py` | R2010 | ❌ NOT MIGRATED — false claim, scheduled Sprint 3B PR 2B |
+| 4 | `body/smart_guitar_dxf.py` | R2000 | ❌ NOT MIGRATED — false claim, scheduled Sprint 3B PR 2B |
+| 4 | `neck/headstock_transition_export.py` | R2010 | ❌ NOT MIGRATED — false claim, scheduled Sprint 3B PR 2B |
+| 4 | `neck/neck_profile_export.py` | R2010 | ❌ NOT MIGRATED — false claim, scheduled Sprint 3B PR 2B |
+| 5 | `archtop/archtop_contour_generator.py` | R2010 | ❌ NOT MIGRATED — false claim, scheduled Sprint 3B PR 2B |
+| 5 | `cam/archtop_bridge_generator.py` | R2010 | ❌ NOT MIGRATED — false claim, scheduled Sprint 3B PR 2B |
+| 5 | `cam/archtop_saddle_generator.py` | R2010 | ❌ NOT MIGRATED — false claim, scheduled Sprint 3B PR 2B |
+
+**BOE Backend Endpoint:**
+- Claim: "POST /api/editor/export-dxf" exists and BOE routes through it
+- Reality: **MISSING** — endpoint does not exist in codebase
+- Resolution: TBD (implement / remove claim / identify alternate)
 
 ---
 
@@ -722,20 +800,48 @@ When this sprint activates, rosette authenticity is the natural first use case. 
 | Bi-arc joining math | `docs/reference/curvature_correction_unmerged.py` | 467 lines of gap-correction math, chord/sagitta utilities, detailed MEASURED_RADII with derivation notes. Not integrated into services/api version. | OPEN — merge target: `services/api/app/instrument_geometry/curvature_correction.py` |
 | ~~DXF migration regression~~ | ~~`instrument_geometry/soundhole/spiral_geometry.py`~~ | ~~Marked migrated 2026-04-16 but still had ezdxf.new("R2000")~~ | ✅ FIXED 2026-04-23 — re-migrated to dxf_writer.py |
 | ~~DXF migration regression~~ | ~~`instrument_geometry/bridge/archtop_floating_bridge.py`~~ | ~~Marked migrated 2026-04-16 but still had ezdxf.new("R2000")~~ | ✅ FIXED 2026-04-23 — re-migrated to dxf_writer.py |
+| DXF reader migration | `lespaul_dxf_reader.py`, `arc_reconstructor.py`, `instrument_body_generator.py` | 3 files use direct ezdxf for DXF parsing/reading (input operations). Not blocking — readers don't have the same R12 enforcement concern as writers. | OPEN — future work if canonical reader pattern emerges |
+
+---
+
+## BACKLOG — CAM Enhancements (2026-04-25 audit)
+
+### CAM Materials Profile Expansion
+**Priority:** LOW — enhancement, not blocker
+**Location:** `cam_core/feeds_speeds/materials.py` (19 lines, placeholder)
+
+`materials.py` has only hardwood/softwood placeholders. Expand with lutherie-specific woods:
+- mahogany, maple, rosewood, ebony, koa, walnut (body/neck)
+- spruce, cedar, redwood (tops)
+- bone, plastic, graphite (nuts/saddles)
+
+**Source data:** `data/cam_core/saw_blades.json` already has better material coverage (hardwood, softwood, veneer with preset modes). May be able to consolidate or extract from there.
+
+**Scope:** Small focused work. Not a full sprint.
+
+### CAM TODO Cleanup
+**Priority:** LOW — backlog items, not blockers
+**Location:** `app/cam/` directory
+
+3 TODO comments identified in CAM audit:
+
+| File | Line | Item |
+|------|------|------|
+| adaptive_core.py | 296 | Island subtraction uses simple expansion |
+| adaptive_core_l1.py | 172 | Island subtraction may not handle complex cases |
+| archtop_modal_analysis.py | 370 | Implement simply_supported when solver supports it |
+
+**Assessment:** Enhancement notes. Current implementations work with simplified approach.
+Track as backlog — address when touching those files for other reasons.
 
 ---
 
 ## COMPLETED
 
-### Sprint 3 — Remediation and Gap Closure (DXF Consolidation)
-**Completed:** 2026-04-23
-**Summary:** 12/12 DXF generators migrated to dxf_writer.py; BOE routes through backend endpoint;
-audit completed; maintenance discipline established (docs/SPRINTS_MAINTENANCE.md)
-**Key deliverables:**
-- dxf_writer.py: Central R12 DXF writer enforcing LINE-only output
-- POST /api/editor/export-dxf: BOE backend endpoint
-- docs/audit/sprints_audit_2026-04-23.md: Mechanical audit report
-- docs/SPRINTS_MAINTENANCE.md: Update rules and recurring audit process
+### ~~Sprint 3 — Remediation and Gap Closure (DXF Consolidation)~~
+**Status:** MOVED BACK TO ACTIVE — see Sprint 3 in ACTIVE section
+**Reason:** Verification audit (2026-04-26) found 10/12 migration claims were false.
+See docs/audit/sprints_md_verification_2026-04-25.md for details.
 
 ---
 
