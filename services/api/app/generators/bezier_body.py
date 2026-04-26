@@ -443,43 +443,33 @@ class BezierBodyGenerator:
         self,
         output_path: str | Path,
         layer_name: str = "BODY_OUTLINE",
-        use_spline: bool = False
     ) -> Path:
         """
         Export outline to DXF file.
 
+        Uses dxf_writer.py for centralized R12 DXF output (Sprint 3B migration).
+        Outputs LINE entities for maximum CAM compatibility.
+
         Args:
             output_path: Output file path
             layer_name: DXF layer name
-            use_spline: If True, export as spline; else as polyline
 
         Returns:
             Path to created file
         """
-        if not HAS_EZDXF:
-            raise ImportError("ezdxf required for DXF export: pip install ezdxf")
+        from ..cam.dxf_writer import DxfWriter, LayerDef
 
         if self._outline is None:
             self.generate_outline()
 
-        doc = ezdxf.new("R2010")
-        msp = doc.modelspace()
+        writer = DxfWriter(layers=[LayerDef(layer_name)])
 
-        # Create layer
-        doc.layers.add(layer_name)
-
-        if use_spline:
-            # Export as B-spline
-            points = [(x, y, 0) for x, y in self._outline]
-            msp.add_spline(points, dxfattribs={"layer": layer_name})
-        else:
-            # Export as polyline
-            points = [(x, y) for x, y in self._outline]
-            msp.add_lwpolyline(points, close=True, dxfattribs={"layer": layer_name})
+        # Export as closed polyline (LINE entities)
+        writer.add_polyline(layer_name, self._outline, closed=True)
 
         output = Path(output_path)
         output.parent.mkdir(parents=True, exist_ok=True)
-        doc.saveas(str(output))
+        writer.saveas(str(output))
 
         return output
 
