@@ -742,6 +742,8 @@ def outline_to_dxf(result: SolvedBodyModel, output_path: str, spec_name: str = "
       - Named layers (no geometry on layer 0)
       - Coordinates rounded to 3dp
 
+    Uses dxf_writer.py for centralized DXF output (Sprint 3B migration).
+
     Args:
         result: SolvedBodyModel from solver.solve()
         output_path: Path for output DXF file
@@ -750,24 +752,23 @@ def outline_to_dxf(result: SolvedBodyModel, output_path: str, spec_name: str = "
     Returns:
         Output file path
     """
-    import ezdxf
-
-    doc = ezdxf.new("R12")
-    msp = doc.modelspace()
+    from ....cam.dxf_writer import DxfWriter, LayerDef
 
     # Define layers
     body_layer = "BODY_SOLVED"
     center_layer = "CENTERLINE"
     landmark_layer = "LANDMARKS"
 
-    doc.layers.add(body_layer, dxfattribs={"color": 1})     # Red
-    doc.layers.add(center_layer, dxfattribs={"color": 5})   # Blue
-    doc.layers.add(landmark_layer, dxfattribs={"color": 3}) # Green
+    writer = DxfWriter(layers=[
+        LayerDef(body_layer, color=1),      # Red
+        LayerDef(center_layer, color=5),    # Blue
+        LayerDef(landmark_layer, color=3),  # Green
+    ])
 
     pts = result.outline_points
 
     if not pts:
-        doc.saveas(output_path)
+        writer.saveas(output_path)
         return output_path
 
     # Check for self-intersections before export (prevents bad geometry reaching CAM)
@@ -779,33 +780,26 @@ def outline_to_dxf(result: SolvedBodyModel, output_path: str, spec_name: str = "
 
     # Add body outline as LINE entities
     for i in range(len(pts) - 1):
-        p1 = (round(pts[i][0], 3), round(pts[i][1], 3))
-        p2 = (round(pts[i + 1][0], 3), round(pts[i + 1][1], 3))
-        msp.add_line(p1, p2, dxfattribs={"layer": body_layer})
+        writer.add_line(body_layer, pts[i], pts[i + 1])
 
     # Close the outline
     if pts[0] != pts[-1]:
-        p1 = (round(pts[-1][0], 3), round(pts[-1][1], 3))
-        p2 = (round(pts[0][0], 3), round(pts[0][1], 3))
-        msp.add_line(p1, p2, dxfattribs={"layer": body_layer})
+        writer.add_line(body_layer, pts[-1], pts[0])
 
     # Centerline
     min_y = min(p[1] for p in pts)
     max_y = max(p[1] for p in pts)
-    msp.add_line((0, round(min_y, 3)), (0, round(max_y, 3)),
-                 dxfattribs={"layer": center_layer})
+    writer.add_line(center_layer, (0, min_y), (0, max_y))
 
     # Landmark points (as small crosses for visibility)
     if result.landmarks:
         cross_size = result.body_length_mm * 0.01 if result.body_length_mm > 0 else 5.0
         for lm in result.landmarks.values():
-            x, y = round(lm.x_mm, 3), round(lm.y_mm, 3)
-            msp.add_line((x - cross_size, y), (x + cross_size, y),
-                         dxfattribs={"layer": landmark_layer})
-            msp.add_line((x, y - cross_size), (x, y + cross_size),
-                         dxfattribs={"layer": landmark_layer})
+            x, y = lm.x_mm, lm.y_mm
+            writer.add_line(landmark_layer, (x - cross_size, y), (x + cross_size, y))
+            writer.add_line(landmark_layer, (x, y - cross_size), (x, y + cross_size))
 
-    doc.saveas(output_path)
+    writer.saveas(output_path)
     print(f"Saved: {output_path} ({len(pts)} outline points)")
     return output_path
 

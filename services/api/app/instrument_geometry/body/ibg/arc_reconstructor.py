@@ -1076,84 +1076,44 @@ def chains_to_dxf(
     """
     Write chains to a DXF file.
 
+    Uses dxf_writer.py for centralized R12 DXF output (Sprint 3B migration).
+    Always outputs LINE entities for maximum CAM compatibility.
+
     Args:
         chains: Chains to write
         output_path: Output DXF path
-        use_polyline: Write as POLYLINE entities (else LINE)
-        use_arc: Write detected arcs as ARC entities (experimental, deprecated)
-        promote_arcs: Fit arcs and write POLYLINE with bulge values
-        arc_tolerance_mm: Mean error threshold for arc fitting
-        arc_max_error_mm: Max single-point error for arc fitting
+        use_polyline: Ignored (kept for API compatibility). Always outputs LINE.
+        use_arc: Ignored (deprecated).
+        promote_arcs: Ignored (deprecated).
+        arc_tolerance_mm: Ignored (deprecated).
+        arc_max_error_mm: Ignored (deprecated).
 
     Returns:
-        Dict with entity counts and arc stats
+        Dict with entity counts
     """
-    import ezdxf
+    from ....cam.dxf_writer import DxfWriter, LayerDef
 
-    # Create R12 document for maximum compatibility
-    doc = ezdxf.new(dxfversion="R12")
-    msp = doc.modelspace()
-
-    # Create layers
+    # Collect unique layers
     layers_seen = set()
     for chain in chains:
-        if chain.layer not in layers_seen:
-            doc.layers.add(chain.layer, dxfattribs={"color": 7})
-            layers_seen.add(chain.layer)
+        layers_seen.add(chain.layer)
 
-    counts = {"polyline": 0, "line": 0, "arc": 0, "arc_segments": 0, "straight_segments": 0}
+    # Create writer with all layers
+    writer = DxfWriter(layers=[LayerDef(name) for name in layers_seen])
+
+    counts = {"line": 0, "straight_segments": 0}
 
     for chain in chains:
         if len(chain.points) < 2:
             continue
 
-        if promote_arcs and len(chain.points) >= 3:
-            # Promote to arc segments with bulge values
-            promoted = promote_chain_to_arcs(
-                chain,
-                tolerance_mm=arc_tolerance_mm,
-                max_error_mm=arc_max_error_mm,
-            )
+        # Write as LINE segments (R12 standard)
+        points = [p.as_tuple() for p in chain.points]
+        writer.add_polyline(chain.layer, points, closed=chain.is_closed)
+        counts["line"] += len(points) - 1 + (1 if chain.is_closed else 0)
+        counts["straight_segments"] += len(points) - 1 + (1 if chain.is_closed else 0)
 
-            # Create POLYLINE and add vertices with bulge
-            polyline = msp.add_polyline2d(
-                [],
-                dxfattribs={"layer": chain.layer},
-                close=chain.is_closed,
-            )
-
-            for (x, y), bulge in promoted:
-                polyline.append_vertices([(x, y)], dxfattribs={"bulge": bulge})
-                if abs(bulge) > 0.001:
-                    counts["arc_segments"] += 1
-                else:
-                    counts["straight_segments"] += 1
-
-            counts["polyline"] += 1
-
-        elif use_polyline and len(chain.points) >= 3:
-            # Write as old-style POLYLINE (R12 compatible), no bulge
-            points = [p.as_tuple() for p in chain.points]
-            msp.add_polyline2d(
-                points,
-                dxfattribs={"layer": chain.layer},
-                close=chain.is_closed,
-            )
-            counts["polyline"] += 1
-            counts["straight_segments"] += len(points) - 1
-        else:
-            # Write as LINE segments
-            points = [p.as_tuple() for p in chain.points]
-            for i in range(len(points) - 1):
-                msp.add_line(
-                    points[i],
-                    points[i + 1],
-                    dxfattribs={"layer": chain.layer},
-                )
-                counts["line"] += 1
-                counts["straight_segments"] += 1
-
-    doc.saveas(output_path)
+    writer.saveas(output_path)
     return counts
 
 
@@ -1243,16 +1203,16 @@ def create_visual_test_dxf(output_path: str) -> str:
     """
     Create a synthetic guitar body outline with deliberate gaps for visual testing.
 
+    Uses dxf_writer.py for centralized R12 DXF output (Sprint 3B migration).
+
     Creates:
     1. A guitar body shape (upper bout, waist, lower bout)
     2. Deliberate gaps at key positions
     3. Returns path to the created DXF
     """
-    import ezdxf
+    from ....cam.dxf_writer import DxfWriter, LayerDef
 
-    doc = ezdxf.new(dxfversion="R12")
-    msp = doc.modelspace()
-    doc.layers.add("BODY", dxfattribs={"color": 7})
+    writer = DxfWriter(layers=[LayerDef("BODY")])
 
     # Guitar body dimensions (simplified dreadnought-like shape)
     body_height = 500.0
@@ -1270,7 +1230,7 @@ def create_visual_test_dxf(output_path: str) -> str:
         points_upper_left.append((x, y))
 
     if len(points_upper_left) >= 2:
-        msp.add_polyline2d(points_upper_left, dxfattribs={"layer": "BODY"})
+        writer.add_polyline("BODY", points_upper_left)
 
     # Upper bout arc (right side) - continues after gap
     points_upper_right = []
@@ -1281,7 +1241,7 @@ def create_visual_test_dxf(output_path: str) -> str:
         points_upper_right.append((x, y))
 
     if len(points_upper_right) >= 2:
-        msp.add_polyline2d(points_upper_right, dxfattribs={"layer": "BODY"})
+        writer.add_polyline("BODY", points_upper_right)
 
     # Waist section (left side) - with gap
     points_waist_left = []
@@ -1292,7 +1252,7 @@ def create_visual_test_dxf(output_path: str) -> str:
         points_waist_left.append((x, y))
 
     if len(points_waist_left) >= 2:
-        msp.add_polyline2d(points_waist_left, dxfattribs={"layer": "BODY"})
+        writer.add_polyline("BODY", points_waist_left)
 
     # Lower bout arc (simplified ellipse, left half) - with gap
     points_lower_left = []
@@ -1303,7 +1263,7 @@ def create_visual_test_dxf(output_path: str) -> str:
         points_lower_left.append((x, y))
 
     if len(points_lower_left) >= 2:
-        msp.add_polyline2d(points_lower_left, dxfattribs={"layer": "BODY"})
+        writer.add_polyline("BODY", points_lower_left)
 
     # Lower bout arc (right half) - after gap
     points_lower_right = []
@@ -1314,21 +1274,21 @@ def create_visual_test_dxf(output_path: str) -> str:
         points_lower_right.append((x, y))
 
     if len(points_lower_right) >= 2:
-        msp.add_polyline2d(points_lower_right, dxfattribs={"layer": "BODY"})
+        writer.add_polyline("BODY", points_lower_right)
 
-    doc.saveas(output_path)
+    writer.saveas(output_path)
     return output_path
 
 
 def create_simple_gap_test_dxf(output_path: str) -> str:
     """
     Create a simple circle with a visible gap for clear visual testing.
-    """
-    import ezdxf
 
-    doc = ezdxf.new(dxfversion="R12")
-    msp = doc.modelspace()
-    doc.layers.add("BODY", dxfattribs={"color": 7})
+    Uses dxf_writer.py for centralized R12 DXF output (Sprint 3B migration).
+    """
+    from ....cam.dxf_writer import DxfWriter, LayerDef
+
+    writer = DxfWriter(layers=[LayerDef("BODY")])
 
     # Circle with 20-degree gap (visible)
     radius = 100.0
@@ -1339,8 +1299,8 @@ def create_simple_gap_test_dxf(output_path: str) -> str:
         y = radius * math.sin(angle)
         points.append((x, y))
 
-    msp.add_polyline2d(points, dxfattribs={"layer": "BODY"})
-    doc.saveas(output_path)
+    writer.add_polyline("BODY", points)
+    writer.saveas(output_path)
     return output_path
 
 

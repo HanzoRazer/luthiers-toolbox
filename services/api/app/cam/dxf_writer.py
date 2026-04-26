@@ -113,6 +113,20 @@ class DxfWriter:
         self._require_layer(layer)
         self._msp.add_point(self._round_pt(location[0], location[1]), dxfattribs={"layer": layer})
 
+    def add_text(self, layer: str, text: str, insert: Tuple[float, float], height: float = 2.5) -> None:
+        """Add a TEXT entity for annotations. R12 supports TEXT."""
+        self._require_layer(layer)
+        pos = self._round_pt(insert[0], insert[1])
+        self._msp.add_text(text, dxfattribs={"layer": layer, "height": round(height, COORDINATE_PRECISION), "insert": pos})
+
+    def add_polyline3d(self, layer: str, points: Sequence[Tuple[float, float, float]], *, closed: bool = False) -> None:
+        """Add a 3D polyline. R12 supports POLYLINE with 3D vertices."""
+        self._require_layer(layer)
+        if len(points) < 2:
+            return
+        rounded = [(round(x, COORDINATE_PRECISION), round(y, COORDINATE_PRECISION), round(z, COORDINATE_PRECISION)) for x, y, z in points]
+        self._msp.add_polyline3d(rounded, close=closed, dxfattribs={"layer": layer})
+
     @property
     def doc(self) -> Drawing:
         return self._doc
