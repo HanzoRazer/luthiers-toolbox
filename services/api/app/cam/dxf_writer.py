@@ -31,7 +31,6 @@ from ezdxf.layouts import Modelspace
 DXF_VERSION = "R12"
 COORDINATE_PRECISION = 3
 DEFAULT_LAYER_COLOR = 7
-SENTINEL_EXTENT = 1e+20
 
 
 @dataclass
@@ -55,11 +54,8 @@ class DxfWriter:
         except (KeyError, ezdxf.DXFValueError):
             pass
 
-        try:
-            self._doc.header["$EXTMIN"] = (SENTINEL_EXTENT, SENTINEL_EXTENT, 0)
-            self._doc.header["$EXTMAX"] = (-SENTINEL_EXTENT, -SENTINEL_EXTENT, 0)
-        except (KeyError, ezdxf.DXFValueError):
-            pass
+        # Note: Do NOT set EXTMIN/EXTMAX — let ezdxf compute from actual geometry.
+        # Previous sentinel values (1e+20/-1e+20) broke CAD viewer zoom-to-fit.
 
         if layers:
             for ldef in layers:
