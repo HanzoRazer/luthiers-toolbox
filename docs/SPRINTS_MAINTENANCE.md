@@ -29,6 +29,39 @@ The `last_verified` field gets bumped when:
 
 A typo fix does not bump `last_verified`. A status audit does.
 
+### Rule 5: Commit hash requirement for completion claims (added 2026-04-26)
+
+**Every completion claim requires three elements:**
+
+1. **Commit hash** that performed the work
+2. **File paths** that were touched
+3. **Verification method** (test passed, endpoint responds, import check, etc.)
+
+Without all three, the status is **aspirational, not reportorial**.
+
+**Example of valid completion entry:**
+```
+| File | Status | Verification |
+|------|--------|--------------|
+| `soundhole/spiral_geometry.py` | ✅ Migrated (9397c055) | imports DxfWriter, 0 ezdxf.new calls |
+```
+
+**Example of INVALID completion entry:**
+```
+| File | Status |
+|------|--------|
+| `soundhole/spiral_geometry.py` | ✅ Migrated 2026-04-23 |
+```
+
+The second form has no commit hash and no verification method. It cannot be trusted.
+
+**Existing entries without commit hashes** should be treated as unverified claims
+and flagged for re-verification before any work depends on them.
+
+**Origin:** This rule was added after the 2026-04-26 verification audit found
+10/12 DXF migration claims in Sprint 3 were false — status was entered without
+work being performed. See docs/audit/sprints_md_verification_2026-04-25.md.
+
 ---
 
 ## Timestamps
@@ -90,6 +123,12 @@ Either approach fits. Decision deferred until team size warrants the overhead.
 3. **Stale open items** — Leaving resolved items unmarked in task lists
 4. **Phantom tech debt** — Marking regressions as fixed without re-verifying
 5. **Five-month drift** — Going multiple months without status audit
+6. **Undocumented completion** — Marking tasks ✅ without commit hash or verification method (added 2026-04-26)
 
-The Sprint 3 audit (2026-04-23) found examples of patterns 1-4. The recurring
-audit process exists to prevent pattern 5.
+The Sprint 3 audit (2026-04-23) found examples of patterns 1-4.
+
+The Sprint 3 verification audit (2026-04-26) found 10 instances of pattern 6:
+completion claims entered without any work being performed. See Rule 5 above
+for the commit hash requirement that prevents this pattern.
+
+The recurring audit process exists to prevent pattern 5.
