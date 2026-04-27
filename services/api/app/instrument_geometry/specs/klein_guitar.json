@@ -73,6 +73,82 @@
         "tuner_hole_spacing_mm": 25.4,
         "note": "Compact headstock design on later Klein models with conventional tuning. Some models retain headless configuration."
       }
+    },
+    "body5_multiscale": {
+      "description": "Klein Body-#5 Multiscale — custom DIY build using Klein ergonomic body shape with fanned frets. Features SSS pickup layout, conventional headstock with rear-mounted tuning mechanism, Schaller roller bridge. Documented build with full BOM.",
+      "year_range": "custom_build",
+      "source": "Klein-Guitar-Plan.pdf BOM and dimensioned drawing",
+      "overall_length_mm": 779.1,
+      "body_length_mm": 390.7,
+      "neck_pocket_width_mm": 75.3,
+      "scale_length_mm": null,
+      "scale_type": "multiscale_fanned",
+      "fret_count": 24,
+      "neck": {
+        "nut_width_mm": 43.0,
+        "heel_width_mm": 56.0,
+        "profile_shape": "modern_C",
+        "fretboard_radius_mm": 254.0,
+        "compound_radius": false,
+        "fretboard_wood": "ebony",
+        "neck_wood": "maple",
+        "neck_source": "LMI Offset Guitar neck - Custom",
+        "fanned_fretboard": true,
+        "binding": "none",
+        "truss_rod": "dual_action",
+        "truss_rod_source": "LMI",
+        "carbon_stiffening_rods": {
+          "count": 2,
+          "dimensions": "0.2in x 0.25in x 18in",
+          "source": "Stewart McDonald"
+        },
+        "inlays": "dot_mother_of_pearl_side",
+        "fret_wire": "nickel_silver"
+      },
+      "headstock": {
+        "style": "klein_compact",
+        "tuner_layout": "rear_mounted_custom",
+        "tuning_mechanism": {
+          "type": "custom_tailstop",
+          "description": "Tuning Tailstop-2 — custom rear-mounted tuning plate with pivoting tuning arms",
+          "material": "brass_plate_aluminum_arms",
+          "arm_material": "Al 6061-T6"
+        }
+      },
+      "pickups": {
+        "layout": "SSS",
+        "type": "Lace Alumitone",
+        "size": "strat_single_coil",
+        "count": 3,
+        "source": "Musician's Friend",
+        "switching": "5-way Megaswitch S-Model"
+      },
+      "bridge": {
+        "type": "Schaller Roller Bridge",
+        "saddles": "Schaller Roller Saddle x6",
+        "studs": "Schaller Stud with STM1250N020018 pan head metric screws"
+      },
+      "body_material": {
+        "wood": "primavera",
+        "source": "LMI",
+        "note": "Primavera (Tabebuia donnell-smithii) — Central American white mahogany, lightweight with good resonance"
+      },
+      "controls": {
+        "potentiometers": 2,
+        "pot_size": "1 inch",
+        "knobs": "Dome Knob Chrome",
+        "output_jack": "1/4in Long Barrel",
+        "jack_plate": "Oval style"
+      },
+      "pickguard": {
+        "material": "laminated_plastic",
+        "type": "custom_klein_shape"
+      },
+      "bom_cost_usd": {
+        "total_materials": 585.97,
+        "reference_real_klein": 3500.00,
+        "note": "Projected cost for DIY build vs factory Klein"
+      }
     }
   },
   "body": {

@@ -1,11 +1,23 @@
 {
+  "model_id": "j_45",
   "model": "Gibson J-45",
+  "display_name": "Gibson J-45",
   "year": "circa 1942-present",
-  "source": "J45 DIMS.dxf (AutoCAD construction drawing)",
-  "source_dxf": "Guitar Plans/J 45 Plans/J45 DIMS.dxf",
+  "manufacturer": "Gibson",
+  "category": "acoustic_guitar",
+  "source": "J45 DIMS.dxf (AutoCAD construction drawing) — ground truth from Guitar Plans/Gibson J 45_ Project/",
+  "source_dxf": "Guitar Plans/Gibson J 45_ Project/J45 DIMS.dxf",
   "extracted_dxf": {
-    "layered": "Guitar Plans/J 45 Plans/J45_DIMS_Layered.dxf",
-    "bracing_only": "Guitar Plans/J 45 Plans/J45_Bracing_Only.dxf"
+    "layered": "Guitar Plans/Gibson J 45_ Project/J45 DIMS_CAM_Closed_Layers.dxf",
+    "cam_closed": "Guitar Plans/Gibson J 45_ Project/J45 DIMS_CAM_Closed.dxf",
+    "cam_split": "Guitar Plans/Gibson J 45_ Project/J45_CAM_Split.dxf"
+  },
+  "additional_assets": {
+    "assembly_pdf": "Guitar Plans/Gibson J 45_ Project/guitar dwgs/Guitar Assembly.pdf",
+    "pieces_pdf": "Guitar Plans/Gibson J 45_ Project/guitar dwgs/GUITAR PIECES.pdf",
+    "detail_dwg": "Guitar Plans/Gibson J 45_ Project/DETAILS & DIMS/B SIZE DWG.dwg",
+    "original_dxf": "Guitar Plans/Gibson J 45_ Project/ag_45_dxf_040409.dxf",
+    "original_dwg": "Guitar Plans/Gibson J 45_ Project/ag_45_dwg_040409.dwg"
   },
   "units_note": "All values in mm. Original drawing in inches, converted x25.4.",
   "dimensions": {
@@ -103,24 +115,40 @@
     "scale_length_inches": 24.75,
     "fret_count": 20,
     "positions_from_nut_mm": [
-      35.28, 68.55, 99.90, 129.41, 157.17,
-      183.26, 207.77, 230.76, 252.33, 272.52,
-      291.41, 309.06, 325.51, 340.83, 355.06,
-      368.26, 380.47, 391.73, 402.10, 411.60
+      35.28, 68.58, 100.03, 129.69, 157.68,
+      184.12, 209.07, 232.61, 254.86, 275.84,
+      295.63, 314.33, 331.98, 348.61, 364.34,
+      379.17, 393.17, 406.40, 418.87, 430.63
     ],
-    "note": "Standard equal-temperament fret spacing, 12th fret at half scale length (314.33 mm)"
+    "positions_from_nut_inches": [
+      1.389, 2.700, 3.938, 5.106, 6.208,
+      7.249, 8.231, 9.158, 10.034, 10.860,
+      11.639, 12.375, 13.070, 13.725, 14.344,
+      14.928, 15.479, 16.000, 16.491, 16.954
+    ],
+    "note": "Fret positions extracted from J45 DIMS.dxf ground truth. 12th fret at half scale length (314.33mm / 12.375in)."
   },
   "dxf_assets": {
-    "body_outline": "acoustic/J45_body_outline.dxf",
-    "body_outline_dense": "acoustic/J45_body_outline_dense.dxf",
-    "construction_layered": "Guitar Plans/J 45 Plans/J45_DIMS_Layered.dxf",
-    "bracing_only": "Guitar Plans/J 45 Plans/J45_Bracing_Only.dxf"
+    "source_construction": "Guitar Plans/Gibson J 45_ Project/J45 DIMS.dxf",
+    "cam_closed": "Guitar Plans/Gibson J 45_ Project/J45 DIMS_CAM_Closed.dxf",
+    "cam_closed_layers": "Guitar Plans/Gibson J 45_ Project/J45 DIMS_CAM_Closed_Layers.dxf",
+    "cam_split": "Guitar Plans/Gibson J 45_ Project/J45_CAM_Split.dxf",
+    "original_archive": "Guitar Plans/Gibson J 45_ Project/ag_45_dxf_040409.dxf"
   },
+  "cam_capable": true,
+  "cam_operations": [
+    "body_perimeter",
+    "soundhole",
+    "bracing_top",
+    "bracing_back"
+  ],
   "notes": [
     "Back braces are lateral (perpendicular to centerline)",
     "Top bracing is scalloped X-brace with 8 braces total",
     "Soundhole R2.000\" = 50.80mm radius = 101.6mm diameter",
     "Body outline available as 30-point CNC-accurate data with arc bulge in j45_bulge.py",
-    "All bracing geometry extracted from J45 DIMS.dxf on 2026-03-07"
+    "All bracing geometry extracted from J45 DIMS.dxf ground truth",
+    "CAM-ready DXF files available: J45 DIMS_CAM_Closed.dxf (closed contours), J45_CAM_Split.dxf (split layers)",
+    "Fret positions verified against DXF dimension labels (2026-04-26)"
   ]
 }
