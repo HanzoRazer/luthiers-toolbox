@@ -6,12 +6,12 @@
     "stratocaster": {
       "id": "stratocaster",
       "display_name": "Fender Stratocaster",
-      "status": "PARTIAL",
+      "status": "COMPLETE",
       "category": "electric_guitar",
       "scale_length_mm": 648.0,
       "fret_count": 22,
       "string_count": 6,
-      "description": "Classic Fender double-cutaway electric guitar with 25.5\" scale",
+      "description": "Classic Fender double-cutaway electric guitar with 25.5\" scale. Complete DXF+STL asset set: body (top/bottom), neck, fretboard, pickguard, tremolo cover. CAM-ready with 3D carving support.",
       "manufacturer": "Fender",
       "year_introduced": 1954,
       "assets": [
@@ -23,21 +23,75 @@
         {
           "type": "neck_preset",
           "path": "app/generators/neck_headstock_config.py",
-          "keys": [
-            "fender_vintage",
-            "fender_modern",
-            "strat_24fret"
-          ],
-          "_exists": true
+          "keys": ["fender_vintage", "fender_modern", "strat_24fret"]
+        },
+        {
+          "type": "body_dxf",
+          "path": "../../../../Guitar Plans/Fender Stratocaster_Project/Body/Stratocaster BODY(Top).dxf",
+          "note": "Body top view DXF"
+        },
+        {
+          "type": "body_dxf",
+          "path": "../../../../Guitar Plans/Fender Stratocaster_Project/Body/Stratocaster BODY(Bottom).dxf",
+          "note": "Body bottom view DXF"
+        },
+        {
+          "type": "body_stl",
+          "path": "../../../../Guitar Plans/Fender Stratocaster_Project/Body/Stratocaster Body 3D.stl",
+          "note": "3D body model for CNC carving (706KB)"
+        },
+        {
+          "type": "neck_dxf",
+          "path": "../../../../Guitar Plans/Fender Stratocaster_Project/Neck/Stratocaster NECK.dxf",
+          "note": "Neck profile DXF"
+        },
+        {
+          "type": "neck_stl",
+          "path": "../../../../Guitar Plans/Fender Stratocaster_Project/Neck/Stratocaster NECK.stl",
+          "note": "3D neck model for CNC carving"
+        },
+        {
+          "type": "fretboard_dxf",
+          "path": "../../../../Guitar Plans/Fender Stratocaster_Project/Fretboard/Stratocaster FRETBOARD.dxf",
+          "note": "Fretboard outline DXF"
+        },
+        {
+          "type": "fretboard_stl",
+          "path": "../../../../Guitar Plans/Fender Stratocaster_Project/Fretboard/Stratocaster FRETBOARD.stl",
+          "note": "3D fretboard model"
+        },
+        {
+          "type": "pickguard_dxf",
+          "path": "../../../../Guitar Plans/Fender Stratocaster_Project/Pickguard/Stratocaster PICKGUARD.dxf",
+          "note": "Pickguard outline DXF"
+        },
+        {
+          "type": "pickguard_stl",
+          "path": "../../../../Guitar Plans/Fender Stratocaster_Project/Pickguard/Stratocaster PICKGUARD.stl",
+          "note": "3D pickguard model"
+        },
+        {
+          "type": "tremolo_cover_dxf",
+          "path": "../../../../Guitar Plans/Fender Stratocaster_Project/Tremolo cover/Stratocaster TREMOLO COVER.dxf",
+          "note": "Tremolo cover plate DXF"
+        },
+        {
+          "type": "tremolo_cover_stl",
+          "path": "../../../../Guitar Plans/Fender Stratocaster_Project/Tremolo cover/Stratocaster TREMOLO COVER.stl",
+          "note": "3D tremolo cover model"
         }
       ],
       "spec": "specs/stratocaster.json",
       "cam_capable": true,
       "cam_operations": [
         "body_perimeter",
+        "body_3d_carving",
         "neck_pocket",
+        "neck_3d_carving",
         "pickup_routes",
-        "tremolo_cavity"
+        "tremolo_cavity",
+        "pickguard",
+        "fretboard"
       ]
     },
     "telecaster": {
@@ -136,13 +190,33 @@
         },
         {
           "type": "cam_dxf",
-          "path": "Les Paul_Project/LesPaul_CAM_Closed.dxf",
-          "_phantom": true
+          "path": "../../../../Guitar Plans/Les Paul_Project/LesPaul_CAM_Closed.dxf",
+          "note": "CAM-ready closed contours (117KB)"
         },
         {
           "type": "cam_dxf_all",
-          "path": "Les Paul_Project/LesPaul_CAM_Closed_ALL.dxf",
-          "_phantom": true
+          "path": "../../../../Guitar Plans/Les Paul_Project/LesPaul_CAM_Closed_ALL.dxf",
+          "note": "All layers combined (232KB)"
+        },
+        {
+          "type": "verification_packet",
+          "path": "../../../../Guitar Plans/Les Paul_Project/LesPaul_DXF_Verification_Packet_with_Diagram_Scale_CAM.pdf",
+          "note": "Verification checklist with diagram and scale"
+        },
+        {
+          "type": "dxf_analysis",
+          "path": "../../../../Guitar Plans/Les Paul_Project/LesPaul_DXF_Analysis.txt",
+          "note": "DXF analysis notes"
+        },
+        {
+          "type": "mach4_kit",
+          "path": "../../../../Guitar Plans/Les Paul_Project/LesPaul_Mach4_CAM_Starter_Kit/",
+          "note": "Mach4 CNC controller starter kit"
+        },
+        {
+          "type": "smart_lp_bundle",
+          "path": "../../../../Guitar Plans/Les Paul_Project/Bundle_Smart_LP_from_ClosedALL/",
+          "note": "Smart Guitar derivative bundle from closed contours"
         },
         {
           "type": "frontend_generator",
@@ -158,8 +232,6 @@
           "key": "les_paul"
         }
       ],
-      "_phantom_assets": true,
-      "_note": "Some referenced assets do not exist on disk",
       "cam_capable": true,
       "cam_operations": [
         "body_perimeter",
@@ -382,6 +454,41 @@
           "year_introduced": 1934,
           "body_width_mm": 457.2,
           "assets": [],
+          "cam_capable": false,
+          "cam_operations": []
+        },
+        "epiphone_spartan": {
+          "id": "epiphone_spartan",
+          "display_name": "Epiphone Spartan",
+          "status": "COMPLETE",
+          "description": "16-inch Epiphone entry-level archtop (1934-1949). Carved spruce top, maple back/sides, trapeze tailpiece. Pre-Gibson NY era. Full 3-sheet AGP-11 plan by Stoll E. Artus (1983).",
+          "manufacturer": "Epiphone",
+          "year_introduced": 1934,
+          "body_width_mm": 406.0,
+          "body_depth_mm": 82.0,
+          "scale_length_mm": 628.65,
+          "assets": [
+            {
+              "type": "spec_json",
+              "path": "specs/epiphone_spartan.json",
+              "note": "Full archtop spec with construction details from AGP-11 plan"
+            },
+            {
+              "type": "plan_image",
+              "path": "../../../../Guitar Plans/Archtop Measurements/Epiphone _Spartan_1.jpg",
+              "note": "Sheet 1: Fret table, neck profile, headstock, cross-section"
+            },
+            {
+              "type": "plan_image",
+              "path": "../../../../Guitar Plans/Archtop Measurements/Epiphone_Spartan_2.jpg",
+              "note": "Sheet 2: Body outline, f-holes, pickguard, label detail"
+            },
+            {
+              "type": "plan_image",
+              "path": "../../../../Guitar Plans/Archtop Measurements/Epiphone_Spartan_3.jpg",
+              "note": "Sheet 3: Arched plate contours, tailpiece, mounting brackets"
+            }
+          ],
           "cam_capable": false,
           "cam_operations": []
         }
@@ -616,21 +723,71 @@
     "gibson_l_00": {
       "id": "gibson_l_00",
       "display_name": "Gibson L-00",
-      "status": "ASSETS_ONLY",
+      "status": "COMPLETE",
       "category": "acoustic_guitar",
       "scale_length_mm": 628.65,
       "fret_count": 19,
       "string_count": 6,
-      "description": "Gibson small-body acoustic guitar (Depression era)",
+      "description": "Gibson small-body acoustic guitar (Depression era). Ladder bracing, mahogany back/sides, Adirondack spruce top. Full construction spec with plate radii (28ft top, 15ft back), bracing layout (T1-T9, B1-B4), mould template.",
       "manufacturer": "Gibson",
       "year_introduced": 1926,
+      "body_dimensions_mm": {
+        "lower_bout": 356.0,
+        "upper_bout": 267.0,
+        "waist": 229.0,
+        "body_length": 470.0,
+        "depth_endblock": 102.0,
+        "soundhole_diameter": 100.0
+      },
+      "construction": {
+        "top_thickness_mm": 2.8,
+        "back_thickness_mm": 2.5,
+        "sides_thickness_mm": 2.0,
+        "top_radius_ft": 28,
+        "back_radius_ft": 15,
+        "bracing_pattern": "ladder",
+        "source": "grellier.fr CC plan (C.Grellier, 2008)"
+      },
       "assets": [
-        "Guitar Plans/Gibson Plans/L-00/Gibson L-00.pdf"
+        {
+          "type": "spec_json",
+          "path": "specs/gibson_l00.json",
+          "note": "Full acoustic spec with construction details, bracing layout"
+        },
+        {
+          "type": "construction_dxf",
+          "path": "../../../../Guitar Plans/Gibson OO_Project/Gibson_L-00 (2).dxf",
+          "note": "Gibson L-00 specific construction drawing"
+        },
+        {
+          "type": "construction_dxf",
+          "path": "../../../../Guitar Plans/Gibson OO_Project/Acoustic_guitar_00 (2).dxf",
+          "note": "Generic 00-size construction drawing"
+        },
+        {
+          "type": "mould_dxf",
+          "path": "../../../../Guitar Plans/Gibson OO_Project/L-OO mould.dxf",
+          "note": "2MB mould template for body form"
+        },
+        {
+          "type": "construction_pdf",
+          "path": "../../../../Guitar Plans/Gibson OO_Project/Gibson_L-00_en (1).pdf",
+          "note": "Full construction plan PDF (English)"
+        },
+        {
+          "type": "vintage_reference",
+          "path": "../../../../Guitar Plans/Gibson OO_Project/1940 Gibson L-00.pdf",
+          "note": "1940 vintage instrument reference"
+        }
       ],
-      "_phantom_assets": true,
-      "_note": "Some referenced assets do not exist on disk",
-      "cam_capable": false,
-      "cam_operations": []
+      "cam_capable": true,
+      "cam_operations": [
+        "body_perimeter",
+        "soundhole",
+        "bracing_top",
+        "bracing_back",
+        "mould"
+      ]
     },
     "classical": {
       "id": "classical",

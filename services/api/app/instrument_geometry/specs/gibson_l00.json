@@ -1,0 +1,146 @@
+{
+  "model_id": "gibson_l_00",
+  "display_name": "Gibson L-00",
+  "manufacturer": "Gibson",
+  "category": "acoustic_guitar",
+  "year_introduced": 1926,
+  "source": "1940 Gibson L-00 construction plan from grellier.fr (C.Grellier, Creative Commons, Feb 2008, version 10). Depression-era small-body acoustic.",
+  "construction_source": {
+    "author": "C.Grellier",
+    "website": "grellier.fr",
+    "year": 2008,
+    "version": 10,
+    "license": "Creative Commons",
+    "reference_year": 1940,
+    "assets_folder": "Guitar Plans/Gibson OO_Project/"
+  },
+  "units": "mm",
+
+  "description": "The Gibson L-00 is a small-body flat-top acoustic guitar introduced during the Depression era. Known for its balanced, focused tone ideal for fingerpicking and blues. The 1940 model features ladder bracing, mahogany back/sides, and Adirondack spruce top. A favorite of blues players including Robert Johnson.",
+
+  "body": {
+    "style": "small_body_flat_top",
+    "lower_bout_mm": 356.0,
+    "upper_bout_mm": 267.0,
+    "waist_mm": 229.0,
+    "body_length_mm": 470.0,
+    "body_width_mm": 356.0,
+    "contour": "round_shoulder",
+    "top_wood": "adirondack_spruce",
+    "top_thickness_mm": 2.8,
+    "back_wood": "mahogany",
+    "back_thickness_mm": 2.5,
+    "sides_wood": "mahogany",
+    "sides_thickness_mm": 2.0,
+    "binding_material": "plastic",
+    "binding_thickness_mm": 1.5,
+    "purfling": "plastic_single_line"
+  },
+
+  "construction": {
+    "source": "grellier.fr Creative Commons plan (2008)",
+    "wood_thicknesses": {
+      "top_mm": 2.8,
+      "top_note": "Adirondack spruce top 28mm (likely typo for 2.8mm)",
+      "back_mm": 2.5,
+      "back_wood": "mahogany",
+      "sides_mm": 2.0,
+      "sides_wood": "mahogany",
+      "binding_mm": 3.0,
+      "binding_note": "Plastic binding 1/16in / 3mm thick"
+    },
+    "plate_radii": {
+      "top_radius_ft": 28,
+      "back_radius_ft": 15,
+      "note": "Top is flatter (28ft), back more curved (15ft)"
+    }
+  },
+
+  "side_profile": {
+    "depth_endblock_mm": 102.0,
+    "depth_neck_mm": 95.0,
+    "note": "Shallow body compared to dreadnought"
+  },
+
+  "soundhole": {
+    "diameter_mm": 100.0,
+    "radius_mm": 50.0,
+    "rosette_style": "simple_rings"
+  },
+
+  "bracing": {
+    "pattern": "ladder",
+    "top_braces": {
+      "count": 9,
+      "labels": ["T1", "T2", "T3", "T4", "T5", "T6", "T7", "T8", "T9"],
+      "note": "Ladder bracing pattern - horizontal braces across top"
+    },
+    "back_braces": {
+      "count": 4,
+      "labels": ["B1", "B2", "B3", "B4"],
+      "pattern": "lateral"
+    },
+    "material": "spruce",
+    "scalloped": false,
+    "note": "Depression-era ladder bracing - simpler than X-brace"
+  },
+
+  "neck": {
+    "scale_length_mm": 628.65,
+    "scale_length_inches": 24.75,
+    "fret_count": 19,
+    "nut_width_mm": 44.5,
+    "neck_wood": "mahogany",
+    "fretboard_wood": "brazilian_rosewood",
+    "fretboard_note": "Brazilian rosewood fingerboard (per plan label)",
+    "profile_shape": "round_C",
+    "body_join_fret": 14,
+    "headstock_style": "gibson_open_book",
+    "headstock_veneer": "none",
+    "truss_rod": "single_action"
+  },
+
+  "bridge": {
+    "type": "pin",
+    "material": "brazilian_rosewood",
+    "bridge_note": "Brazilian rosewood bridge (per plan label)",
+    "string_spacing_mm": 54.0,
+    "saddle_compensation": false,
+    "width_mm": 140.0
+  },
+
+  "hardware": {
+    "tuners": "open_gear_butterbean",
+    "tuner_layout": "3+3",
+    "finish": "nickel"
+  },
+
+  "dxf_assets": {
+    "construction_drawing": "Guitar Plans/Gibson OO_Project/Gibson_L-00 (2).dxf",
+    "generic_00_drawing": "Guitar Plans/Gibson OO_Project/Acoustic_guitar_00 (2).dxf",
+    "mould_template": "Guitar Plans/Gibson OO_Project/L-OO mould.dxf",
+    "construction_pdf_en": "Guitar Plans/Gibson OO_Project/Gibson_L-00_en (1).pdf",
+    "construction_pdf_00": "Guitar Plans/Gibson OO_Project/Acoustic_guitar_00_en (1).pdf",
+    "vintage_reference": "Guitar Plans/Gibson OO_Project/1940 Gibson L-00.pdf"
+  },
+
+  "cam_capable": true,
+  "cam_operations": [
+    "body_perimeter",
+    "soundhole",
+    "bracing_top",
+    "bracing_back",
+    "mould"
+  ],
+
+  "notes": [
+    "Depression-era Gibson small-body acoustic (1926-1946)",
+    "Ladder bracing pattern - simpler construction than X-brace models",
+    "14-fret neck joint (12-fret on earlier models)",
+    "Favorite of blues players including Robert Johnson",
+    "Top radius 28ft (flatter), back radius 15ft",
+    "Construction details from grellier.fr Creative Commons plan (2008)",
+    "Reference instrument: 1940 Gibson L-00",
+    "Mould template available as DXF for body form construction"
+  ]
+}
