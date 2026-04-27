@@ -47,10 +47,12 @@ _import_error = ""
 
 def _find_photo_vectorizer_path() -> Optional[Path]:
     """Find photo-vectorizer directory across different Docker layouts."""
+    # Path from: services/api/app/routers/blueprint/edge_to_dxf_router.py
+    # parents[4] = services/, parents[5] = repo root
     candidates = [
-        Path(__file__).parents[3] / "photo-vectorizer",
-        Path("/app/services/photo-vectorizer"),
-        Path(__file__).parents[4] / "services" / "photo-vectorizer",
+        Path(__file__).parents[4] / "photo-vectorizer",  # services/photo-vectorizer
+        Path("/app/services/photo-vectorizer"),  # Docker layout
+        Path(__file__).parents[5] / "services" / "photo-vectorizer",  # repo/services/photo-vectorizer
     ]
     for p in candidates:
         if p.exists():

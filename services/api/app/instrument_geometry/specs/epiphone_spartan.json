@@ -36,7 +36,8 @@
     "sides_wood": "maple",
     "binding": "single_ply",
     "purfling": "single_line",
-    "note": "Dimensions estimated from AGP-11 full-size plan. 16-inch lower bout class archtop."
+    "extraction_method": "API endpoint POST /api/blueprint/edge-to-dxf/convert (scale 0.0929 mm/px)",
+    "note": "16-inch lower bout class archtop. Body outline extracted from AGP-11 Sheet 2 via in-house vectorization pipeline."
   },
 
   "f_holes": {
@@ -57,8 +58,9 @@
   },
 
   "neck": {
-    "scale_length_mm": 628.65,
-    "scale_length_inches": 24.75,
+    "scale_length_mm": 647.7,
+    "scale_length_inches": 25.5,
+    "scale_length_source": "OCR extraction from AGP-11 Sheet 1: '25.500 INCHES (647.70 mm)'",
     "fret_count": 20,
     "nut_width_mm": 43.0,
     "neck_width_at_body_mm": 52.0,
@@ -149,11 +151,30 @@
     "Produced during Epiphone's New York era (1930s-1950s)",
     "Pre-Gibson acquisition (Gibson bought Epiphone in 1957)",
     "Reference instrument Ser. No. 2431 dates to late 1930s production",
-    "Plan AGP-11 by Stoll E. Artus is a professional lutherie reference"
+    "Plan AGP-11 by Stoll E. Artus is a professional lutherie reference",
+    "Scale length 25.5 inches (647.7mm) confirmed via OCR extraction from plan fret table",
+    "Body outline extracted 2026-04-27 via API endpoint POST /api/blueprint/edge-to-dxf/convert"
   ],
 
-  "cam_capable": false,
-  "cam_notes": "Plan images available but not yet vectorized. Archtop carving requires 3D CAM capability.",
+  "dxf_assets": {
+    "body_outline": "Guitar Plans/Archtop Measurements/epiphone_spartan_body_api.dxf",
+    "extraction_info": {
+      "source_image": "Guitar Plans/Archtop Measurements/Epiphone_Spartan_2.jpg",
+      "extraction_method": "API endpoint POST /api/blueprint/edge-to-dxf/convert",
+      "extraction_date": "2026-04-27",
+      "target_height_mm": 508.0,
+      "output_size_mm": [669.68, 508.0],
+      "scale_mm_per_px": 0.09292116334369856,
+      "edge_pixel_count": 785416,
+      "line_entities": 1342694,
+      "file_size_mb": 195.53,
+      "processing_time_ms": 271224,
+      "format": "R12 (AC1009)"
+    }
+  },
+
+  "cam_capable": true,
+  "cam_notes": "Body outline DXF extracted via edge_to_dxf pipeline. Archtop carving requires 3D CAM capability for top/back arching.",
 
   "related_models": [
     "epiphone_blackstone",
