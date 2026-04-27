@@ -1,7 +1,15 @@
 {
   "model_id": "om_000",
   "display_name": "Martin OM-28",
-  "source": "Martin OM-28 production specs, verified against acoustic_body_volume.py calculator data and om_000.py model stub",
+  "source": "Martin OM-28 production specs, verified against acoustic_body_volume.py calculator data and om_000.py model stub. Construction details from grellier.fr Creative Commons plan (C.Grellier, 2007).",
+  "construction_source": {
+    "author": "C.Grellier",
+    "website": "grellier.fr",
+    "year": 2007,
+    "license": "Creative Commons BY-NC-SA",
+    "assets_folder": "Guitar Plans/Gibson OM _Project/",
+    "note": "Folder misnamed 'Gibson OM' — content is Martin OM-28 style construction plan"
+  },
   "units": "mm",
   "variants": {
     "standard": {
@@ -69,6 +77,26 @@
     "top_wood": "sitka_spruce",
     "back_sides_wood": "east_indian_rosewood"
   },
+  "construction": {
+    "source": "grellier.fr Creative Commons plan",
+    "wood_thicknesses": {
+      "top_mm": 2.8,
+      "top_wood": "spruce",
+      "back_mm": 2.5,
+      "back_wood": "rosewood",
+      "sides_mm": 2.2,
+      "sides_wood": "rosewood",
+      "binding_mm": 3.0,
+      "binding_wood": "maple"
+    },
+    "plate_radii": {
+      "top_radius_ft": 25,
+      "top_radius_m": 7.62,
+      "back_radius_ft": 15,
+      "back_radius_m": 4.57,
+      "note": "Spherical radii for plate arching — top is flatter (25ft), back is more curved (15ft)"
+    }
+  },
   "side_profile": {
     "depth_endblock_mm": 108.0,
     "depth_neck_mm": 102.0,
@@ -83,7 +111,27 @@
     "pattern": "X-brace",
     "scalloped": true,
     "material": "sitka_spruce",
-    "x_brace_intersection": "below_soundhole"
+    "x_brace_intersection": "below_soundhole",
+    "top_braces": {
+      "count": 7,
+      "labels": ["T1", "T2", "T3", "T4", "T5", "T6", "T7"],
+      "T1": {"description": "X-brace main arms (pair)"},
+      "T2": {"description": "Upper transverse brace"},
+      "T3": {"description": "Soundhole reinforcement"},
+      "T4": {"description": "Tone bars (pair)"},
+      "T5": {"description": "Lower face braces"},
+      "T6": {"description": "Bridge plate area"},
+      "T7": {"description": "Lower bout braces"}
+    },
+    "back_braces": {
+      "count": 4,
+      "labels": ["B1", "B2", "B3", "B4"],
+      "pattern": "lateral",
+      "B1": {"description": "Near endpin, lower bout"},
+      "B2": {"description": "Lower bout"},
+      "B3": {"description": "Near waist"},
+      "B4": {"description": "Upper bout, near neck block"}
+    }
   },
   "bridge": {
     "type": "pin",
@@ -122,6 +170,35 @@
     ],
     "total_width_mm": 6.0
   },
+  "graduation_maps": {
+    "source": "grellier.fr SVG graduation maps",
+    "top": {
+      "file": "Guitar Plans/Gibson OM _Project/OM_Graduation_Top_grid.svg",
+      "file_plain": "Guitar Plans/Gibson OM _Project/OM_Graduation_Top_plain.svg",
+      "dimensions_mm": {"width": 385, "height": 490},
+      "grid_spacing_mm": 10
+    },
+    "back": {
+      "file": "Guitar Plans/Gibson OM _Project/OM_Graduation_Back_grid.svg",
+      "file_plain": "Guitar Plans/Gibson OM _Project/OM_Graduation_Back_plain.svg",
+      "dimensions_mm": {"width": 385, "height": 490},
+      "grid_spacing_mm": 10
+    }
+  },
+  "dxf_assets": {
+    "construction_drawing": "Guitar Plans/Gibson OM _Project/OM_acoustic_guitar (2).dxf",
+    "mdf_mould": "Guitar Plans/Gibson OM _Project/OM MDF mod.dxf",
+    "mould_template": "Guitar Plans/Gibson OM _Project/OMmod_mould.dxf",
+    "construction_pdf": "Guitar Plans/Gibson OM _Project/OM_acoustic_guitar_en (1).pdf"
+  },
+  "cam_capable": true,
+  "cam_operations": [
+    "body_perimeter",
+    "soundhole",
+    "bracing_top",
+    "bracing_back",
+    "mould"
+  ],
   "notes": [
     "All dimensions in mm",
     "Scale length: 645.16mm (25.4 inches)",
@@ -131,6 +208,8 @@
     "Shallower body than dreadnought (108mm vs 121mm at endblock)",
     "Herringbone binding is the OM-28 signature — black/white chevron pattern",
     "Standard OM-28 uses slotted or solid headstock depending on era",
-    "Catalog references om_000_body.dxf (5451 points) but DXF file is missing from disk"
+    "Construction details (wood thicknesses, plate radii, bracing layout) from grellier.fr CC plan",
+    "Graduation maps available as SVG with 10mm grid for thickness contouring",
+    "DXF assets include full construction drawing, MDF mould templates"
   ]
 }

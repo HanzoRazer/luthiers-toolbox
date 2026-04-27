@@ -406,39 +406,117 @@
     },
     "om_000": {
       "id": "om_000",
-      "display_name": "OM/000 Acoustic",
-      "status": "PARTIAL",
+      "display_name": "Martin OM-28",
+      "status": "COMPLETE",
       "category": "acoustic_guitar",
       "scale_length_mm": 645.16,
       "fret_count": 20,
       "string_count": 6,
-      "description": "Orchestra Model / 000 body size acoustic guitar",
+      "description": "Orchestra Model acoustic guitar. Full construction spec with wood thicknesses, plate radii (25ft top, 15ft back), X-bracing layout (T1-T7, B1-B4), graduation maps, mould templates. Herringbone binding signature.",
       "manufacturer": "Martin",
       "year_introduced": 1929,
+      "body_dimensions_mm": {
+        "lower_bout": 384.0,
+        "upper_bout": 286.0,
+        "waist": 241.0,
+        "body_length": 495.0,
+        "depth_endblock": 108.0,
+        "depth_neck": 102.0,
+        "soundhole_diameter": 101.6
+      },
+      "construction": {
+        "top_thickness_mm": 2.8,
+        "back_thickness_mm": 2.5,
+        "sides_thickness_mm": 2.2,
+        "top_radius_ft": 25,
+        "back_radius_ft": 15,
+        "source": "grellier.fr CC plan (C.Grellier, 2007)"
+      },
       "assets": [
-        "specs/martin_om28.json"
+        {
+          "type": "spec_json",
+          "path": "specs/martin_om28.json",
+          "note": "Full acoustic spec with construction details, bracing, graduation maps"
+        },
+        {
+          "type": "construction_dxf",
+          "path": "../../../../Guitar Plans/Gibson OM _Project/OM_acoustic_guitar (2).dxf",
+          "note": "Full construction drawing with bracing layout"
+        },
+        {
+          "type": "graduation_svg",
+          "path": "../../../../Guitar Plans/Gibson OM _Project/OM_Graduation_Top_grid.svg",
+          "note": "Top plate graduation map (10mm grid)"
+        },
+        {
+          "type": "graduation_svg",
+          "path": "../../../../Guitar Plans/Gibson OM _Project/OM_Graduation_Back_grid.svg",
+          "note": "Back plate graduation map (10mm grid)"
+        },
+        {
+          "type": "mould_dxf",
+          "path": "../../../../Guitar Plans/Gibson OM _Project/OMmod_mould.dxf",
+          "note": "MDF mould template"
+        }
       ],
       "cam_capable": true,
       "cam_operations": [
         "body_perimeter",
         "soundhole",
-        "bracing"
+        "bracing_top",
+        "bracing_back",
+        "mould"
       ]
     },
     "j_45": {
       "id": "j_45",
       "display_name": "Gibson J-45",
-      "status": "STUB",
+      "status": "COMPLETE",
       "category": "acoustic_guitar",
       "scale_length_mm": 628.65,
       "fret_count": 20,
       "string_count": 6,
-      "description": "Gibson round-shoulder dreadnought acoustic guitar",
+      "description": "Gibson round-shoulder dreadnought acoustic guitar. Full construction spec with X-bracing layout, fret positions from DXF ground truth, CAM-ready contours.",
       "manufacturer": "Gibson",
       "year_introduced": 1942,
-      "assets": [],
-      "cam_capable": false,
-      "cam_operations": []
+      "body_dimensions_mm": {
+        "body_width": 398.5,
+        "body_length": 504.8,
+        "lower_bout": 412.0,
+        "upper_bout": 292.0,
+        "waist": 267.0,
+        "depth_tail": 123.82,
+        "depth_neck": 98.43,
+        "soundhole_diameter": 101.6
+      },
+      "assets": [
+        {
+          "type": "spec_json",
+          "path": "specs/gibson_j45.json",
+          "note": "Full acoustic spec with bracing, fret positions, cross-section details"
+        },
+        {
+          "type": "source_dxf",
+          "path": "../../../../Guitar Plans/Gibson J 45_ Project/J45 DIMS.dxf",
+          "note": "Original AutoCAD construction drawing — ground truth"
+        },
+        {
+          "type": "cam_dxf",
+          "path": "../../../../Guitar Plans/Gibson J 45_ Project/J45 DIMS_CAM_Closed.dxf",
+          "note": "CAM-ready closed contours"
+        },
+        {
+          "type": "assembly_pdf",
+          "path": "../../../../Guitar Plans/Gibson J 45_ Project/guitar dwgs/Guitar Assembly.pdf"
+        }
+      ],
+      "cam_capable": true,
+      "cam_operations": [
+        "body_perimeter",
+        "soundhole",
+        "bracing_top",
+        "bracing_back"
+      ]
     },
     "jumbo_j200": {
       "id": "jumbo_j200",
