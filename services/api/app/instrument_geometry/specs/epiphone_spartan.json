@@ -1,0 +1,164 @@
+{
+  "model_id": "epiphone_spartan",
+  "display_name": "Epiphone Spartan",
+  "manufacturer": "Epiphone",
+  "category": "archtop_guitar",
+  "year_introduced": 1934,
+  "year_discontinued": 1949,
+  "source": "AGP-11 lutherie plan by Stoll E. Artus, 1983. 3-sheet full-size construction drawing. Reference instrument: Epiphone Spartan Ser. No. 2431, Epiphone NY.",
+  "plan_source": {
+    "plan_id": "AGP-11",
+    "author": "Stoll E. Artus",
+    "year": 1983,
+    "scale": "FULL SIZE",
+    "sheets": 3,
+    "assets": [
+      "Guitar Plans/Archtop Measurements/Epiphone _Spartan_1.jpg",
+      "Guitar Plans/Archtop Measurements/Epiphone_Spartan_2.jpg",
+      "Guitar Plans/Archtop Measurements/Epiphone_Spartan_3.jpg"
+    ]
+  },
+  "units": "mm",
+
+  "description": "The Epiphone Spartan was an entry-level archtop guitar produced by Epiphone in New York during the 1930s-40s. Features carved spruce top, maple back and sides, single f-holes, floating pickguard, and trapeze tailpiece. Part of Epiphone's pre-Gibson archtop lineup alongside the Triumph, Broadway, and Emperor models.",
+
+  "body": {
+    "type": "archtop_carved",
+    "lower_bout_mm": 406.0,
+    "upper_bout_mm": 292.0,
+    "waist_mm": 254.0,
+    "body_length_mm": 508.0,
+    "body_depth_mm": 82.0,
+    "top_wood": "spruce",
+    "top_construction": "carved_arched",
+    "back_wood": "maple",
+    "back_construction": "carved_arched",
+    "sides_wood": "maple",
+    "binding": "single_ply",
+    "purfling": "single_line",
+    "note": "Dimensions estimated from AGP-11 full-size plan. 16-inch lower bout class archtop."
+  },
+
+  "f_holes": {
+    "style": "standard_archtop",
+    "count": 2,
+    "position": "symmetric",
+    "length_mm": 152.0,
+    "width_mm": 25.0,
+    "note": "Traditional f-hole shape, positioned in upper bout area"
+  },
+
+  "top_arching": {
+    "description": "Arches shown are similar top & back (per Sheet 3 note)",
+    "peak_height_mm": 18.0,
+    "recurve": true,
+    "contour_source": "Sheet 3 - arched plate cross-sections",
+    "note": "Graduation and arching patterns shown in Sheet 3"
+  },
+
+  "neck": {
+    "scale_length_mm": 628.65,
+    "scale_length_inches": 24.75,
+    "fret_count": 20,
+    "nut_width_mm": 43.0,
+    "neck_width_at_body_mm": 52.0,
+    "neck_wood": "mahogany",
+    "fretboard_wood": "rosewood",
+    "fretboard_binding": true,
+    "profile_shape": "C_shape",
+    "headstock_style": "epiphone_open_book",
+    "headstock_veneer": "rosewood",
+    "truss_rod": "single_action",
+    "truss_rod_adjustment": "headstock",
+    "body_join_fret": 14,
+    "note": "Fret positions table visible in Sheet 1"
+  },
+
+  "headstock": {
+    "style": "epiphone_open_book",
+    "length_mm": 178.0,
+    "width_mm": 95.0,
+    "angle_deg": 17.0,
+    "veneer": "rosewood",
+    "tuner_layout": "3+3",
+    "tuner_type": "open_gear",
+    "note": "Classic Epiphone 'open book' headstock shape shown in Sheet 1"
+  },
+
+  "bridge": {
+    "type": "floating_archtop",
+    "material": "rosewood",
+    "width_mm": 127.0,
+    "height_adjustable": true,
+    "compensation": "straight",
+    "note": "Floating bridge with rosewood base, height-adjustable wheels"
+  },
+
+  "tailpiece": {
+    "type": "trapeze",
+    "material": "nickel_plated",
+    "mounting": "endpin_bracket",
+    "assembly_detail": "Sheet 3 - Tailpiece Assembly (chrome or nickel plated, with rosewood insert block)",
+    "note": "Trapeze tailpiece detailed in Sheet 3"
+  },
+
+  "pickguard": {
+    "type": "elevated_floating",
+    "material": "plastic",
+    "color": "dark_brown_almost_black",
+    "thickness_mm": 2.5,
+    "mounting": "bracket_on_side",
+    "bracket_detail": "Sheet 3 - Pick Guard Mounting Bracket (chrome or nickel plated steel)",
+    "note": "Elevated pickguard with side-mounted bracket, see Sheet 2 and Sheet 3"
+  },
+
+  "hardware": {
+    "finish": "nickel_plated",
+    "tuners": "open_gear_butterbean",
+    "tailpiece": "trapeze",
+    "bridge": "floating_rosewood",
+    "pickguard_bracket": "nickel_plated_steel",
+    "strap_buttons": 2,
+    "end_pin": "standard"
+  },
+
+  "label": {
+    "text": "This Epiphone Instrument is Model 'Spartan' Ser. No. 2431",
+    "location": "interior_back",
+    "manufacturer_address": "Epiphone Inc., New York, N.Y., U.S.A.",
+    "source": "Sheet 2 label detail"
+  },
+
+  "construction_notes": [
+    "See Sheet 3 for details of pickguard mounting brackets",
+    "Arches shown are similar top & back (Sheet 3 header note)",
+    "Tailpiece assembly: chrome or nickel plated with rosewood insert",
+    "Pick guard mounting bracket - on soundboard (Sheet 3)",
+    "Pick guard mounting bracket - on neck (Sheet 3)",
+    "Finish of entire instrument is 'Shaded' Sunburst"
+  ],
+
+  "finish": {
+    "type": "sunburst",
+    "description": "Shaded sunburst - amber center fading to dark brown edges",
+    "source": "Sheet 2 note: 'Finish of entire instrument is Shaded Sunburst'"
+  },
+
+  "historical_notes": [
+    "The Spartan was Epiphone's entry-level archtop, below the Blackstone in the lineup",
+    "Produced during Epiphone's New York era (1930s-1950s)",
+    "Pre-Gibson acquisition (Gibson bought Epiphone in 1957)",
+    "Reference instrument Ser. No. 2431 dates to late 1930s production",
+    "Plan AGP-11 by Stoll E. Artus is a professional lutherie reference"
+  ],
+
+  "cam_capable": false,
+  "cam_notes": "Plan images available but not yet vectorized. Archtop carving requires 3D CAM capability.",
+
+  "related_models": [
+    "epiphone_blackstone",
+    "epiphone_triumph",
+    "epiphone_broadway",
+    "epiphone_emperor"
+  ]
+}
