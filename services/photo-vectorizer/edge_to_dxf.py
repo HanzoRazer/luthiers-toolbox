@@ -41,11 +41,20 @@ import argparse
 import logging
 import time
 from dataclasses import dataclass, field
+from enum import Enum
 from pathlib import Path
-from typing import Any, Dict, Optional, Tuple
+from typing import Any, Dict, List, Optional, Tuple
+import os
 
 import cv2
 import numpy as np
+
+
+class ConversionStatus(Enum):
+    """Status of edge-to-DXF conversion."""
+    SUCCESS = "SUCCESS"
+    CAP_EXCEEDED = "CAP_EXCEEDED"
+    ERROR = "ERROR"
 
 try:
     import ezdxf
@@ -68,6 +77,41 @@ try:
     DEBUG_OVERLAY_AVAILABLE = True
 except ImportError:
     DEBUG_OVERLAY_AVAILABLE = False
+
+
+# ─── Unicode-Safe Image Loading ─────────────────────────────────────────────
+
+
+def _imread_unicode(path: str) -> Optional[np.ndarray]:
+    """
+    Load image with Unicode path support.
+
+    cv2.imread() fails on non-ASCII paths on Windows. This function
+    uses np.fromfile + cv2.imdecode as a fallback when the standard
+    approach fails.
+
+    Args:
+        path: Image file path (may contain Unicode characters)
+
+    Returns:
+        BGR image array or None if loading fails
+    """
+    # Try standard imread first (faster)
+    img = cv2.imread(path)
+    if img is not None:
+        return img
+
+    # Fallback: handle Unicode paths via np.fromfile
+    try:
+        with open(path, 'rb') as f:
+            img_array = np.frombuffer(f.read(), dtype=np.uint8)
+        img = cv2.imdecode(img_array, cv2.IMREAD_COLOR)
+        if img is not None:
+            logger.debug(f"Loaded via Unicode fallback: {path}")
+        return img
+    except Exception as e:
+        logger.warning(f"Failed to load image: {path} - {e}")
+        return None
 
 
 # ─── Hierarchy Isolation Helpers ────────────────────────────────────────────
@@ -1268,7 +1312,7 @@ def _isolate_with_grouping(
 class EdgeToDXFResult:
     """Result of edge-to-DXF conversion."""
     source_path: str
-    output_path: str
+    output_path: Optional[str]
     line_count: int
     edge_pixel_count: int
     image_size_px: Tuple[int, int]  # (width, height)
@@ -1276,26 +1320,128 @@ class EdgeToDXFResult:
     mm_per_px: float
     processing_time_ms: float
     file_size_bytes: int
+    status: ConversionStatus = ConversionStatus.SUCCESS
     contour_count: int = 0  # Number of contours traced
     stage_timings: Dict[str, float] = field(default_factory=dict)  # Per-stage timing
     # Grouping metadata (debug-only, internal)
     grouping: Optional[Dict[str, Any]] = None
+    # Cap failure details (populated when status == CAP_EXCEEDED)
+    cap_value: Optional[int] = None
+    contours_processed: Optional[int] = None
+    entities_at_failure: Optional[int] = None
+    error_message: Optional[str] = None
 
     def summary(self) -> str:
         """Human-readable summary."""
-        return (
-            f"Edge-to-DXF Conversion Complete\n"
-            f"  Source: {self.source_path}\n"
-            f"  Output: {self.output_path}\n"
-            f"  Image: {self.image_size_px[0]} x {self.image_size_px[1]} px\n"
-            f"  Scale: {self.mm_per_px:.4f} mm/px\n"
-            f"  Output: {self.output_size_mm[0]:.1f} x {self.output_size_mm[1]:.1f} mm\n"
-            f"  Edge pixels: {self.edge_pixel_count:,}\n"
-            f"  Contours: {self.contour_count:,}\n"
-            f"  LINE entities: {self.line_count:,}\n"
-            f"  File size: {self.file_size_bytes / 1024 / 1024:.2f} MB\n"
-            f"  Time: {self.processing_time_ms:.0f} ms"
-        )
+        if self.status == ConversionStatus.CAP_EXCEEDED:
+            return (
+                f"Edge-to-DXF Cap Exceeded\n"
+                f"  Source: {self.source_path}\n"
+                f"  Image: {self.image_size_px[0]} x {self.image_size_px[1]} px\n"
+                f"  Edge pixels: {self.edge_pixel_count:,}\n"
+                f"  Contours: {self.contour_count:,}\n"
+                f"  Entities at failure: {self.entities_at_failure:,}\n"
+                f"  Cap: {self.cap_value:,}\n"
+                f"  Time: {self.processing_time_ms:.0f} ms\n\n"
+                f"This image contains too much detail for automatic conversion.\n"
+                f"At current settings, it would generate over {self.cap_value:,} line segments —\n"
+                f"likely capturing texture rather than meaningful outlines.\n\n"
+                f"To proceed, try one of these:\n"
+                f"  - Use higher edge thresholds: --canny-low 80 --canny-high 200\n"
+                f"  - Downsample the image before processing\n"
+                f"  - Crop to the region you need"
+            )
+        elif self.status == ConversionStatus.ERROR:
+            return (
+                f"Edge-to-DXF Error\n"
+                f"  Source: {self.source_path}\n"
+                f"  Error: {self.error_message}\n"
+                f"  Time: {self.processing_time_ms:.0f} ms"
+            )
+        else:
+            return (
+                f"Edge-to-DXF Conversion Complete\n"
+                f"  Source: {self.source_path}\n"
+                f"  Output: {self.output_path}\n"
+                f"  Image: {self.image_size_px[0]} x {self.image_size_px[1]} px\n"
+                f"  Scale: {self.mm_per_px:.4f} mm/px\n"
+                f"  Output: {self.output_size_mm[0]:.1f} x {self.output_size_mm[1]:.1f} mm\n"
+                f"  Edge pixels: {self.edge_pixel_count:,}\n"
+                f"  Contours: {self.contour_count:,}\n"
+                f"  LINE entities: {self.line_count:,}\n"
+                f"  File size: {self.file_size_bytes / 1024 / 1024:.2f} MB\n"
+                f"  Time: {self.processing_time_ms:.0f} ms"
+            )
+
+
+@dataclass
+class BatchEdgeToDXFResult:
+    """Result of batch edge-to-DXF conversion (multiple images → single DXF)."""
+    source_paths: List[str]
+    output_path: Optional[str]
+    total_line_count: int
+    total_edge_pixels: int
+    image_count: int
+    per_image_results: List[Dict[str, Any]]
+    layout: str  # 'vertical' or 'grid'
+    spacing_mm: float
+    processing_time_ms: float
+    file_size_bytes: int
+    status: ConversionStatus = ConversionStatus.SUCCESS
+    # Aggregate cap failure details
+    aggregate_cap_value: Optional[int] = None
+    images_processed: Optional[int] = None
+    images_remaining: Optional[int] = None
+    entities_at_failure: Optional[int] = None
+
+    def summary(self) -> str:
+        """Human-readable summary."""
+        if self.status == ConversionStatus.CAP_EXCEEDED:
+            lines = [
+                f"Batch Edge-to-DXF Aggregate Cap Exceeded",
+                f"  Images processed: {self.images_processed} of {self.image_count}",
+                f"  Images remaining: {self.images_remaining}",
+                f"  Entities at failure: {self.entities_at_failure:,}",
+                f"  Aggregate cap: {self.aggregate_cap_value:,}",
+                f"  Time: {self.processing_time_ms:.0f} ms",
+                f"",
+                f"Combined output exceeds {self.aggregate_cap_value:,} line segments.",
+                f"{self.images_processed} images processed before reaching limit.",
+                f"",
+                f"To proceed:",
+                f"  - Process fewer images per combine operation",
+                f"  - Use higher edge thresholds: --canny-low 80 --canny-high 200",
+                f"  - Process images individually rather than combining",
+                f"",
+                f"Images processed:",
+            ]
+            for i, res in enumerate(self.per_image_results, 1):
+                lines.append(
+                    f"  {i:2d}. {res['name']:30s} | "
+                    f"{res['line_count']:>8,} lines"
+                )
+            return "\n".join(lines)
+        else:
+            lines = [
+                f"Batch Edge-to-DXF Complete",
+                f"  Images: {self.image_count}",
+                f"  Layout: {self.layout} (spacing: {self.spacing_mm:.0f}mm)",
+                f"  Output: {self.output_path}",
+                f"  Total LINE entities: {self.total_line_count:,}",
+                f"  Total edge pixels: {self.total_edge_pixels:,}",
+                f"  File size: {self.file_size_bytes / 1024 / 1024:.2f} MB",
+                f"  Time: {self.processing_time_ms:.0f} ms",
+                f"",
+                f"Per-image breakdown:",
+            ]
+            for i, res in enumerate(self.per_image_results, 1):
+                lines.append(
+                    f"  {i:2d}. {res['name']:30s} | "
+                    f"{res['line_count']:>8,} lines | "
+                    f"{res['size_mm'][0]:.0f}×{res['size_mm'][1]:.0f}mm | "
+                    f"layer: {res['layer']}"
+                )
+            return "\n".join(lines)
 
 
 class EdgeToDXF:
@@ -1341,6 +1487,7 @@ class EdgeToDXF:
         blur_kernel: int = 3,
         morph_close_kernel: int = 0,
         isolate_body: bool = False,
+        max_entities: int = 5_000_000,
     ) -> EdgeToDXFResult:
         """
         Convert image edges to DXF LINE entities.
@@ -1353,9 +1500,11 @@ class EdgeToDXF:
             morph_close_kernel: Morphological close kernel (0 to disable)
             isolate_body: If True, use hierarchy to filter to body candidates only.
                 Removes page borders, child contours, and noise before DXF creation.
+            max_entities: Maximum LINE entities before aborting (default: 5M).
+                Set to 0 for unlimited.
 
         Returns:
-            EdgeToDXFResult with conversion statistics
+            EdgeToDXFResult with conversion statistics (check status field)
         """
         start_time = time.time()
         stage_timings: Dict[str, float] = {}
@@ -1372,7 +1521,7 @@ class EdgeToDXF:
         # Stage: Image load
         t0 = time.time()
         logger.info(f"Loading: {source_path}")
-        img = cv2.imread(str(source_path))
+        img = _imread_unicode(str(source_path))
         if img is None:
             raise ValueError(f"Failed to load image: {source_path}")
         stage_timings["image_load_ms"] = round((time.time() - t0) * 1000, 1)
@@ -1542,6 +1691,7 @@ class EdgeToDXF:
         # Convert contours to LINE entities (preserving topology)
         line_count = 0
         contour_count = 0
+        cap_exceeded = False
 
         logger.info("Converting contours to LINE entities...")
         for contour in valid_contours:
@@ -1566,6 +1716,14 @@ class EdgeToDXF:
                 )
                 line_count += 1
 
+                # Cap enforcement
+                if max_entities > 0 and line_count > max_entities:
+                    cap_exceeded = True
+                    break
+
+            if cap_exceeded:
+                break
+
             # Close the contour (connect last point to first)
             if len(points) >= 3:
                 x1, y1 = points[-1]
@@ -1581,8 +1739,39 @@ class EdgeToDXF:
                 )
                 line_count += 1
 
-        logger.info(f"Created {line_count:,} LINE entities from {contour_count} contours")
+                # Cap enforcement
+                if max_entities > 0 and line_count > max_entities:
+                    cap_exceeded = True
+                    break
+
         stage_timings["dxf_generate_ms"] = round((time.time() - t0) * 1000, 1)
+
+        # Handle cap exceeded
+        if cap_exceeded:
+            processing_time = (time.time() - start_time) * 1000
+            logger.warning(
+                f"CAP_EXCEEDED | entities={line_count:,} | cap={max_entities:,} | "
+                f"contours_processed={contour_count} | edge_pixels={edge_count:,}"
+            )
+            return EdgeToDXFResult(
+                source_path=str(source_path),
+                output_path=None,
+                line_count=0,
+                edge_pixel_count=edge_count,
+                image_size_px=(w, h),
+                output_size_mm=(output_w, output_h),
+                mm_per_px=mm_per_px,
+                processing_time_ms=processing_time,
+                file_size_bytes=0,
+                status=ConversionStatus.CAP_EXCEEDED,
+                contour_count=len(valid_contours),
+                stage_timings=stage_timings,
+                cap_value=max_entities,
+                contours_processed=contour_count,
+                entities_at_failure=line_count,
+            )
+
+        logger.info(f"Created {line_count:,} LINE entities from {contour_count} contours")
 
         # Stage: DXF save
         t0 = time.time()
@@ -1639,6 +1828,7 @@ class EdgeToDXF:
         target_height_mm: float = 500.0,
         gap_close_size: int = 7,
         mask_text: bool = True,
+        max_entities: int = 5_000_000,
     ) -> EdgeToDXFResult:
         """
         Enhanced conversion with multi-scale edge fusion.
@@ -1656,9 +1846,11 @@ class EdgeToDXF:
             target_height_mm: Target height in mm
             gap_close_size: Morphological closing kernel size (0=disabled, 7=default)
             mask_text: If True, detect and mask text regions before gap closing
+            max_entities: Maximum LINE entities before aborting (default: 5M).
+                Set to 0 for unlimited.
 
         Returns:
-            EdgeToDXFResult with conversion statistics
+            EdgeToDXFResult with conversion statistics (check status field)
         """
         start_time = time.time()
 
@@ -1670,7 +1862,7 @@ class EdgeToDXF:
             output_path = str(source.with_name(f"{source.stem}_enhanced.dxf"))
 
         # Load image
-        img = cv2.imread(str(source_path))
+        img = _imread_unicode(str(source_path))
         if img is None:
             raise ValueError(f"Failed to load image: {source_path}")
 
@@ -1740,7 +1932,11 @@ class EdgeToDXF:
             raise ValueError("No valid contours found")
 
         line_count = 0
+        contour_count = 0
+        cap_exceeded = False
+
         for contour in valid_contours:
+            contour_count += 1
             points = contour.reshape(-1, 2)
             for i in range(len(points) - 1):
                 x1, y1 = points[i]
@@ -1752,6 +1948,13 @@ class EdgeToDXF:
                 msp.add_line((mx1, my1), (mx2, my2), dxfattribs={'layer': self.layer_name})
                 line_count += 1
 
+                if max_entities > 0 and line_count > max_entities:
+                    cap_exceeded = True
+                    break
+
+            if cap_exceeded:
+                break
+
             # Close contour
             if len(points) >= 3:
                 x1, y1 = points[-1]
@@ -1762,6 +1965,34 @@ class EdgeToDXF:
                 my2 = (h - y2) * mm_per_px
                 msp.add_line((mx1, my1), (mx2, my2), dxfattribs={'layer': self.layer_name})
                 line_count += 1
+
+                if max_entities > 0 and line_count > max_entities:
+                    cap_exceeded = True
+                    break
+
+        # Handle cap exceeded
+        if cap_exceeded:
+            processing_time = (time.time() - start_time) * 1000
+            logger.warning(
+                f"CAP_EXCEEDED | entities={line_count:,} | cap={max_entities:,} | "
+                f"contours_processed={contour_count} | edge_pixels={edge_count:,}"
+            )
+            return EdgeToDXFResult(
+                source_path=str(source_path),
+                output_path=None,
+                line_count=0,
+                edge_pixel_count=edge_count,
+                image_size_px=(w, h),
+                output_size_mm=(output_w, output_h),
+                mm_per_px=mm_per_px,
+                processing_time_ms=processing_time,
+                file_size_bytes=0,
+                status=ConversionStatus.CAP_EXCEEDED,
+                contour_count=len(valid_contours),
+                cap_value=max_entities,
+                contours_processed=contour_count,
+                entities_at_failure=line_count,
+            )
 
         logger.info(f"Created {line_count:,} LINE entities from {len(valid_contours)} contours")
         doc.saveas(output_path)
@@ -1780,13 +2011,644 @@ class EdgeToDXF:
             file_size_bytes=file_size,
         )
 
+    def convert_batch(
+        self,
+        source_paths: List[str],
+        output_path: str,
+        target_height_mm: float = 500.0,
+        spacing_mm: float = 50.0,
+        layout: str = "vertical",
+        grid_columns: int = 4,
+        max_entities: int = 5_000_000,
+        aggregate_cap: int = 12_000_000,
+    ) -> BatchEdgeToDXFResult:
+        """
+        Convert multiple images to a single combined DXF file.
+
+        Each image is processed separately and placed on its own named layer.
+        Images are arranged vertically or in a grid with configurable spacing.
+
+        Args:
+            source_paths: List of image paths to process
+            output_path: Output DXF path for combined result
+            target_height_mm: Target height in mm for each image
+            spacing_mm: Space between images in mm
+            layout: 'vertical' (stack) or 'grid' arrangement
+            grid_columns: Number of columns for grid layout
+            max_entities: Maximum LINE entities per image (default: 5M).
+                Set to 0 for unlimited per-image.
+            aggregate_cap: Maximum total LINE entities across all images (default: 12M).
+                Set to 0 for unlimited aggregate.
+
+        Returns:
+            BatchEdgeToDXFResult with combined statistics (check status field)
+        """
+        import zipfile
+        import tempfile
+
+        start_time = time.time()
+
+        # Handle zip file input
+        temp_dir = None
+        actual_paths = []
+
+        if len(source_paths) == 1 and source_paths[0].lower().endswith('.zip'):
+            temp_dir = tempfile.mkdtemp(prefix="edge_to_dxf_batch_")
+            with zipfile.ZipFile(source_paths[0], 'r') as zf:
+                zf.extractall(temp_dir)
+            # Find all images in extracted content
+            for root, _, files in os.walk(temp_dir):
+                for f in files:
+                    if f.lower().endswith(('.png', '.jpg', '.jpeg', '.tif', '.tiff', '.bmp')):
+                        actual_paths.append(os.path.join(root, f))
+            actual_paths.sort()
+            logger.info(f"Extracted {len(actual_paths)} images from zip")
+        else:
+            actual_paths = source_paths
+
+        if not actual_paths:
+            raise ValueError("No valid image paths provided")
+
+        logger.info(f"Batch processing {len(actual_paths)} images...")
+
+        # Create combined DXF document
+        doc = ezdxf.new(self.dxf_version)
+        msp = doc.modelspace()
+
+        total_line_count = 0
+        total_edge_pixels = 0
+        per_image_results = []
+        current_y_offset = 0.0
+        current_x_offset = 0.0
+        row_max_height = 0.0
+        col_index = 0
+        aggregate_exceeded = False
+        images_processed_before_cap = 0
+
+        for idx, src_path in enumerate(actual_paths, 1):
+            source = Path(src_path)
+            if not source.exists():
+                logger.warning(f"Skipping missing file: {src_path}")
+                continue
+
+            # Generate layer name from filename
+            layer_name = f"IMAGE_{idx:02d}_{source.stem[:20].upper()}"
+            layer_name = "".join(c if c.isalnum() or c == "_" else "_" for c in layer_name)
+
+            logger.info(f"[{idx}/{len(actual_paths)}] Processing: {source.name} -> layer {layer_name}")
+
+            # Add layer for this image
+            if layer_name not in doc.layers:
+                doc.layers.add(layer_name)
+
+            # Load and process image (Unicode-safe)
+            img = _imread_unicode(str(src_path))
+            if img is None:
+                logger.warning(f"Failed to load: {src_path}")
+                continue
+
+            h, w = img.shape[:2]
+            gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+            edges = cv2.Canny(gray, self.canny_low, self.canny_high)
+
+            edge_points = np.column_stack(np.where(edges > 0))
+            edge_count = len(edge_points)
+
+            if edge_count == 0:
+                logger.warning(f"No edges in: {src_path}")
+                continue
+
+            # Calculate scale
+            mm_per_px = target_height_mm / h
+            output_w = w * mm_per_px
+            output_h = h * mm_per_px
+
+            # Trace contours
+            contours, _ = cv2.findContours(edges, cv2.RETR_LIST, cv2.CHAIN_APPROX_NONE)
+            valid_contours = [c for c in contours if len(c) >= 3]
+
+            if not valid_contours:
+                logger.warning(f"No valid contours in: {src_path}")
+                continue
+
+            # Convert contours to LINE entities with offset
+            image_line_count = 0
+            per_image_cap_exceeded = False
+            contours_processed = 0
+
+            for contour in valid_contours:
+                contours_processed += 1
+                points = contour.reshape(-1, 2)
+                for i in range(len(points) - 1):
+                    x1, y1 = points[i]
+                    x2, y2 = points[i + 1]
+                    mx1 = x1 * mm_per_px + current_x_offset
+                    my1 = (h - y1) * mm_per_px + current_y_offset
+                    mx2 = x2 * mm_per_px + current_x_offset
+                    my2 = (h - y2) * mm_per_px + current_y_offset
+                    msp.add_line((mx1, my1), (mx2, my2), dxfattribs={'layer': layer_name})
+                    image_line_count += 1
+
+                    # Per-image cap check
+                    if max_entities > 0 and image_line_count > max_entities:
+                        per_image_cap_exceeded = True
+                        break
+
+                if per_image_cap_exceeded:
+                    break
+
+                # Close contour
+                if len(points) >= 3:
+                    x1, y1 = points[-1]
+                    x2, y2 = points[0]
+                    mx1 = x1 * mm_per_px + current_x_offset
+                    my1 = (h - y1) * mm_per_px + current_y_offset
+                    mx2 = x2 * mm_per_px + current_x_offset
+                    my2 = (h - y2) * mm_per_px + current_y_offset
+                    msp.add_line((mx1, my1), (mx2, my2), dxfattribs={'layer': layer_name})
+                    image_line_count += 1
+
+                    if max_entities > 0 and image_line_count > max_entities:
+                        per_image_cap_exceeded = True
+                        break
+
+            # Handle per-image cap exceeded (skip this image, continue with others)
+            if per_image_cap_exceeded:
+                logger.warning(
+                    f"Per-image cap exceeded for {source.name}: "
+                    f"{image_line_count:,} entities > {max_entities:,} cap"
+                )
+                per_image_results.append({
+                    'name': source.name,
+                    'path': str(src_path),
+                    'line_count': image_line_count,
+                    'edge_pixels': edge_count,
+                    'size_mm': (output_w, output_h),
+                    'layer': layer_name,
+                    'status': 'CAP_EXCEEDED',
+                    'cap_value': max_entities,
+                })
+                continue
+
+            total_line_count += image_line_count
+            total_edge_pixels += edge_count
+            images_processed_before_cap = len(per_image_results) + 1
+
+            per_image_results.append({
+                'name': source.name,
+                'path': str(src_path),
+                'line_count': image_line_count,
+                'edge_pixels': edge_count,
+                'size_mm': (output_w, output_h),
+                'layer': layer_name,
+                'offset': (current_x_offset, current_y_offset),
+                'status': 'SUCCESS',
+            })
+
+            logger.info(f"  -> {image_line_count:,} lines, {output_w:.0f}×{output_h:.0f}mm (total: {total_line_count:,})")
+
+            # Post-check: aggregate cap
+            if aggregate_cap > 0 and total_line_count > aggregate_cap:
+                aggregate_exceeded = True
+                logger.warning(
+                    f"AGGREGATE_CAP_EXCEEDED | total={total_line_count:,} | cap={aggregate_cap:,} | "
+                    f"images_processed={images_processed_before_cap}"
+                )
+                break
+
+            # Update offset for next image
+            if layout == "grid":
+                col_index += 1
+                row_max_height = max(row_max_height, output_h)
+                if col_index >= grid_columns:
+                    # Move to next row
+                    current_x_offset = 0.0
+                    current_y_offset -= (row_max_height + spacing_mm)
+                    row_max_height = 0.0
+                    col_index = 0
+                else:
+                    current_x_offset += output_w + spacing_mm
+            else:
+                # Vertical stacking (default)
+                current_y_offset -= (output_h + spacing_mm)
+
+        processing_time = (time.time() - start_time) * 1000
+
+        # Cleanup temp dir if we extracted a zip
+        if temp_dir:
+            import shutil
+            shutil.rmtree(temp_dir, ignore_errors=True)
+
+        # Handle aggregate cap exceeded
+        if aggregate_exceeded:
+            return BatchEdgeToDXFResult(
+                source_paths=actual_paths,
+                output_path=None,
+                total_line_count=total_line_count,
+                total_edge_pixels=total_edge_pixels,
+                image_count=len(actual_paths),
+                per_image_results=per_image_results,
+                layout=layout,
+                spacing_mm=spacing_mm,
+                processing_time_ms=processing_time,
+                file_size_bytes=0,
+                status=ConversionStatus.CAP_EXCEEDED,
+                aggregate_cap_value=aggregate_cap,
+                images_processed=images_processed_before_cap,
+                images_remaining=len(actual_paths) - images_processed_before_cap,
+                entities_at_failure=total_line_count,
+            )
+
+        # Save combined DXF
+        logger.info(f"Saving combined DXF: {output_path}")
+        doc.saveas(output_path)
+        file_size = Path(output_path).stat().st_size
+
+        result = BatchEdgeToDXFResult(
+            source_paths=actual_paths,
+            output_path=output_path,
+            total_line_count=total_line_count,
+            total_edge_pixels=total_edge_pixels,
+            image_count=len(per_image_results),
+            per_image_results=per_image_results,
+            layout=layout,
+            spacing_mm=spacing_mm,
+            processing_time_ms=processing_time,
+            file_size_bytes=file_size,
+        )
+
+        logger.info(f"Batch complete: {len(per_image_results)} images, {total_line_count:,} lines, {file_size / 1024 / 1024:.1f} MB")
+        return result
+
+    def convert_separate_batch(
+        self,
+        input_dir: str,
+        output_dir: str,
+        target_height_mm: float = 500.0,
+        max_entities: int = 5_000_000,
+        recursive: bool = False,
+        pattern: Optional[str] = None,
+        skip_existing: bool = False,
+    ) -> Dict[str, Any]:
+        """
+        Convert each image in a directory to its own separate DXF file.
+
+        Produces independent DXF outputs for each input, plus batch_report.json.
+        For PDFs, each page becomes a separate DXF.
+
+        Args:
+            input_dir: Directory containing input images
+            output_dir: Directory for output DXF files
+            target_height_mm: Target height in mm for each image
+            max_entities: Maximum LINE entities per file (default: 5M)
+            recursive: If True, descend into subdirectories
+            pattern: Glob pattern to filter inputs (e.g., "*.png")
+            skip_existing: If True, skip files where output already exists
+
+        Returns:
+            Dict with aggregate stats and per-file results (also saved as batch_report.json)
+        """
+        import json
+        import glob as glob_module
+
+        start_time = time.time()
+        input_path = Path(input_dir)
+        output_path = Path(output_dir)
+
+        if not input_path.exists():
+            raise FileNotFoundError(f"Input directory not found: {input_dir}")
+
+        # Create output directory if needed
+        output_path.mkdir(parents=True, exist_ok=True)
+
+        # Discover input files
+        extensions = ['*.png', '*.jpg', '*.jpeg', '*.tif', '*.tiff', '*.bmp', '*.pdf']
+        if pattern:
+            extensions = [pattern]
+
+        input_files = []
+        for ext in extensions:
+            if recursive:
+                input_files.extend(input_path.rglob(ext))
+            else:
+                input_files.extend(input_path.glob(ext))
+
+        input_files = sorted(set(input_files))
+        logger.info(f"Found {len(input_files)} input files in {input_dir}")
+
+        if not input_files:
+            return {
+                "aggregate": {
+                    "total_files": 0,
+                    "success_count": 0,
+                    "failure_count": 0,
+                    "total_processing_time_seconds": 0,
+                    "total_entities": 0,
+                },
+                "files": [],
+            }
+
+        # Process each file
+        results = []
+        total_entities = 0
+        success_count = 0
+        failure_count = 0
+
+        for idx, src_file in enumerate(input_files, 1):
+            src_path = str(src_file)
+            is_pdf = src_file.suffix.lower() == '.pdf'
+
+            logger.info(f"[{idx}/{len(input_files)}] Processing: {src_file.name}")
+
+            if is_pdf:
+                # Handle PDF: each page becomes separate DXF
+                pdf_results = self._process_pdf_pages(
+                    src_path, output_path, target_height_mm, max_entities, skip_existing
+                )
+                for r in pdf_results:
+                    results.append(r)
+                    if r['status'] == 'SUCCESS':
+                        success_count += 1
+                        total_entities += r['entity_count'] or 0
+                    else:
+                        failure_count += 1
+            else:
+                # Handle regular image
+                output_name = f"{src_file.stem}_edges.dxf"
+                output_file = output_path / output_name
+
+                if skip_existing and output_file.exists():
+                    logger.info(f"  Skipping (output exists): {output_name}")
+                    results.append({
+                        "input_path": src_path,
+                        "output_path": str(output_file),
+                        "status": "SKIPPED",
+                        "entity_count": None,
+                        "processing_time_seconds": 0,
+                        "error_details": None,
+                    })
+                    continue
+
+                file_start = time.time()
+                try:
+                    result = self.convert(
+                        src_path,
+                        output_path=str(output_file),
+                        target_height_mm=target_height_mm,
+                        max_entities=max_entities,
+                    )
+                    file_time = time.time() - file_start
+
+                    if result.status == ConversionStatus.SUCCESS:
+                        success_count += 1
+                        total_entities += result.line_count
+                        results.append({
+                            "input_path": src_path,
+                            "output_path": str(output_file),
+                            "status": "SUCCESS",
+                            "entity_count": result.line_count,
+                            "processing_time_seconds": round(file_time, 1),
+                            "error_details": None,
+                        })
+                        logger.info(f"  -> SUCCESS: {result.line_count:,} entities in {file_time:.1f}s")
+                    else:
+                        failure_count += 1
+                        results.append({
+                            "input_path": src_path,
+                            "output_path": None,
+                            "status": "CAP_EXCEEDED",
+                            "entity_count": None,
+                            "processing_time_seconds": round(file_time, 1),
+                            "error_details": {
+                                "reason": "entity_cap_exceeded",
+                                "cap_value": result.cap_value,
+                                "edge_pixel_count": result.edge_pixel_count,
+                                "contour_count": result.contour_count,
+                            },
+                        })
+                        logger.warning(f"  -> CAP_EXCEEDED: {result.entities_at_failure:,} entities")
+
+                except Exception as e:
+                    file_time = time.time() - file_start
+                    failure_count += 1
+                    results.append({
+                        "input_path": src_path,
+                        "output_path": None,
+                        "status": "ERROR",
+                        "entity_count": None,
+                        "processing_time_seconds": round(file_time, 1),
+                        "error_details": {
+                            "reason": "processing_error",
+                            "message": str(e),
+                        },
+                    })
+                    logger.error(f"  -> ERROR: {e}")
+
+        total_time = time.time() - start_time
+
+        # Build report
+        report = {
+            "aggregate": {
+                "total_files": len(input_files),
+                "success_count": success_count,
+                "failure_count": failure_count,
+                "total_processing_time_seconds": round(total_time, 1),
+                "total_entities": total_entities,
+            },
+            "files": results,
+        }
+
+        # Save batch_report.json
+        report_path = output_path / "batch_report.json"
+        with open(report_path, 'w', encoding='utf-8') as f:
+            json.dump(report, f, indent=2)
+        logger.info(f"Saved batch report: {report_path}")
+
+        logger.info(
+            f"Separate batch complete: {success_count}/{len(input_files)} succeeded, "
+            f"{total_entities:,} total entities, {total_time:.1f}s"
+        )
+        return report
+
+    def _process_pdf_pages(
+        self,
+        pdf_path: str,
+        output_dir: Path,
+        target_height_mm: float,
+        max_entities: int,
+        skip_existing: bool,
+    ) -> List[Dict[str, Any]]:
+        """Process each page of a PDF as a separate DXF."""
+        results = []
+        pdf_name = Path(pdf_path).stem
+
+        try:
+            from pdf2image import convert_from_path
+        except ImportError:
+            logger.warning(f"pdf2image not installed, skipping PDF: {pdf_path}")
+            return [{
+                "input_path": pdf_path,
+                "output_path": None,
+                "status": "ERROR",
+                "entity_count": None,
+                "processing_time_seconds": 0,
+                "error_details": {"reason": "pdf2image_not_installed"},
+            }]
+
+        try:
+            pages = convert_from_path(pdf_path)
+        except Exception as e:
+            logger.error(f"Failed to convert PDF: {e}")
+            return [{
+                "input_path": pdf_path,
+                "output_path": None,
+                "status": "ERROR",
+                "entity_count": None,
+                "processing_time_seconds": 0,
+                "error_details": {"reason": "pdf_conversion_failed", "message": str(e)},
+            }]
+
+        for page_num, page_img in enumerate(pages, 1):
+            output_name = f"{pdf_name}_page{page_num}_edges.dxf"
+            output_file = output_dir / output_name
+            input_ref = f"{pdf_path}#page{page_num}"
+
+            if skip_existing and output_file.exists():
+                logger.info(f"  Skipping page {page_num} (output exists)")
+                results.append({
+                    "input_path": input_ref,
+                    "output_path": str(output_file),
+                    "status": "SKIPPED",
+                    "entity_count": None,
+                    "processing_time_seconds": 0,
+                    "error_details": None,
+                })
+                continue
+
+            # Convert PIL Image to OpenCV format
+            import numpy as np
+            img_array = np.array(page_img)
+            img_bgr = cv2.cvtColor(img_array, cv2.COLOR_RGB2BGR)
+
+            file_start = time.time()
+
+            # Process the page image directly (bypass file loading)
+            h, w = img_bgr.shape[:2]
+            gray = cv2.cvtColor(img_bgr, cv2.COLOR_BGR2GRAY)
+            edges = cv2.Canny(gray, self.canny_low, self.canny_high)
+
+            edge_points = np.column_stack(np.where(edges > 0))
+            edge_count = len(edge_points)
+
+            if edge_count == 0:
+                results.append({
+                    "input_path": input_ref,
+                    "output_path": None,
+                    "status": "ERROR",
+                    "entity_count": None,
+                    "processing_time_seconds": round(time.time() - file_start, 1),
+                    "error_details": {"reason": "no_edges_detected"},
+                })
+                continue
+
+            mm_per_px = target_height_mm / h
+            output_w = w * mm_per_px
+            output_h = h * mm_per_px
+
+            contours, _ = cv2.findContours(edges, cv2.RETR_LIST, cv2.CHAIN_APPROX_NONE)
+            valid_contours = [c for c in contours if len(c) >= 3]
+
+            if not valid_contours:
+                results.append({
+                    "input_path": input_ref,
+                    "output_path": None,
+                    "status": "ERROR",
+                    "entity_count": None,
+                    "processing_time_seconds": round(time.time() - file_start, 1),
+                    "error_details": {"reason": "no_valid_contours"},
+                })
+                continue
+
+            # Create DXF
+            doc = ezdxf.new(self.dxf_version)
+            msp = doc.modelspace()
+            doc.layers.add(self.layer_name)
+
+            line_count = 0
+            cap_exceeded = False
+
+            for contour in valid_contours:
+                points = contour.reshape(-1, 2)
+                for i in range(len(points) - 1):
+                    x1, y1 = points[i]
+                    x2, y2 = points[i + 1]
+                    mx1 = x1 * mm_per_px
+                    my1 = (h - y1) * mm_per_px
+                    mx2 = x2 * mm_per_px
+                    my2 = (h - y2) * mm_per_px
+                    msp.add_line((mx1, my1), (mx2, my2), dxfattribs={'layer': self.layer_name})
+                    line_count += 1
+
+                    if max_entities > 0 and line_count > max_entities:
+                        cap_exceeded = True
+                        break
+
+                if cap_exceeded:
+                    break
+
+                if len(points) >= 3:
+                    x1, y1 = points[-1]
+                    x2, y2 = points[0]
+                    mx1 = x1 * mm_per_px
+                    my1 = (h - y1) * mm_per_px
+                    mx2 = x2 * mm_per_px
+                    my2 = (h - y2) * mm_per_px
+                    msp.add_line((mx1, my1), (mx2, my2), dxfattribs={'layer': self.layer_name})
+                    line_count += 1
+
+                    if max_entities > 0 and line_count > max_entities:
+                        cap_exceeded = True
+                        break
+
+            file_time = time.time() - file_start
+
+            if cap_exceeded:
+                results.append({
+                    "input_path": input_ref,
+                    "output_path": None,
+                    "status": "CAP_EXCEEDED",
+                    "entity_count": None,
+                    "processing_time_seconds": round(file_time, 1),
+                    "error_details": {
+                        "reason": "entity_cap_exceeded",
+                        "cap_value": max_entities,
+                        "edge_pixel_count": edge_count,
+                        "contour_count": len(valid_contours),
+                    },
+                })
+                logger.warning(f"  Page {page_num}: CAP_EXCEEDED")
+            else:
+                doc.saveas(str(output_file))
+                results.append({
+                    "input_path": input_ref,
+                    "output_path": str(output_file),
+                    "status": "SUCCESS",
+                    "entity_count": line_count,
+                    "processing_time_seconds": round(file_time, 1),
+                    "error_details": None,
+                })
+                logger.info(f"  Page {page_num}: {line_count:,} entities")
+
+        return results
+
 
 def main():
     """CLI entry point."""
     parser = argparse.ArgumentParser(
         description="Edge-to-DXF: Convert image edges to high-fidelity LINE DXF"
     )
-    parser.add_argument("source", help="Source image path (JPG, PNG, etc.)")
+    parser.add_argument("source", nargs="+",
+                        help="Source image path(s), directory, or .zip file")
     parser.add_argument("-o", "--output", help="Output DXF path")
     parser.add_argument("--height", type=float, default=500.0,
                         help="Target height in mm (default: 500)")
@@ -1800,7 +2662,41 @@ def main():
                         help="Max pixel distance to connect (default: 3.0)")
     parser.add_argument("-v", "--verbose", action="store_true",
                         help="Verbose logging")
+    # Cap options
+    parser.add_argument("--max-entities", type=int, default=5_000_000,
+                        help="Max LINE entities per image (default: 5000000, 0=unlimited)")
+    parser.add_argument("--aggregate-cap", type=int, default=12_000_000,
+                        help="Max total LINE entities in batch mode (default: 12000000, 0=unlimited)")
+    # Combine mode options (--batch)
+    parser.add_argument("--batch", action="store_true",
+                        help="Combine multiple images into single DXF")
+    parser.add_argument("--spacing", type=float, default=50.0,
+                        help="Space between images in batch mode (mm, default: 50)")
+    parser.add_argument("--layout", choices=["vertical", "grid"], default="vertical",
+                        help="Batch layout: vertical stack or grid (default: vertical)")
+    parser.add_argument("--grid-columns", type=int, default=4,
+                        help="Number of columns for grid layout (default: 4)")
+    # Separate batch mode options (--separate-batch)
+    parser.add_argument("--separate-batch", action="store_true",
+                        help="Process each input to separate DXF (produces batch_report.json)")
+    parser.add_argument("--output-dir",
+                        help="Output directory for separate batch mode")
+    parser.add_argument("--recursive", action="store_true",
+                        help="Descend into subdirectories (separate batch mode)")
+    parser.add_argument("--pattern",
+                        help="Glob pattern to filter inputs (e.g., '*.png')")
+    parser.add_argument("--skip-existing", action="store_true",
+                        help="Skip files where output already exists")
     args = parser.parse_args()
+
+    # Mutual exclusivity check
+    if args.batch and args.separate_batch:
+        parser.error(
+            "--batch and --separate-batch cannot be used together.\n"
+            "--batch combines multiple inputs into a single DXF;\n"
+            "--separate-batch produces independent DXF outputs for each input.\n"
+            "Choose one based on your goal."
+        )
 
     logging.basicConfig(
         level=logging.DEBUG if args.verbose else logging.INFO,
@@ -1813,17 +2709,71 @@ def main():
         adjacency_threshold=args.adjacency,
     )
 
-    if args.enhanced:
+    # Separate batch mode
+    if args.separate_batch:
+        if len(args.source) != 1 or not Path(args.source[0]).is_dir():
+            parser.error("--separate-batch requires a single directory as input")
+        output_dir = args.output_dir or (args.source[0] + "_output")
+        report = converter.convert_separate_batch(
+            input_dir=args.source[0],
+            output_dir=output_dir,
+            target_height_mm=args.height,
+            max_entities=args.max_entities,
+            recursive=args.recursive,
+            pattern=args.pattern,
+            skip_existing=args.skip_existing,
+        )
+        # Print summary
+        agg = report["aggregate"]
+        print(f"\nSeparate Batch Complete")
+        print(f"  Total files: {agg['total_files']}")
+        print(f"  Success: {agg['success_count']}")
+        print(f"  Failures: {agg['failure_count']}")
+        print(f"  Total entities: {agg['total_entities']:,}")
+        print(f"  Time: {agg['total_processing_time_seconds']:.1f}s")
+        print(f"  Report: {output_dir}/batch_report.json")
+        return
+
+    # Determine if combine batch mode
+    is_batch = args.batch or len(args.source) > 1
+
+    # Expand directory to list of images
+    source_paths = []
+    for src in args.source:
+        p = Path(src)
+        if p.is_dir():
+            for ext in ('*.png', '*.jpg', '*.jpeg', '*.tif', '*.tiff', '*.bmp'):
+                source_paths.extend(str(f) for f in p.glob(ext))
+            source_paths.sort()
+        else:
+            source_paths.append(src)
+
+    if is_batch or len(source_paths) > 1:
+        # Batch mode: combine all into single DXF
+        output_path = args.output or "batch_edges.dxf"
+        result = converter.convert_batch(
+            source_paths=source_paths,
+            output_path=output_path,
+            target_height_mm=args.height,
+            spacing_mm=args.spacing,
+            layout=args.layout,
+            grid_columns=args.grid_columns,
+            max_entities=args.max_entities,
+            aggregate_cap=args.aggregate_cap,
+        )
+    elif args.enhanced:
         result = converter.convert_enhanced(
-            args.source,
+            source_paths[0],
             output_path=args.output,
             target_height_mm=args.height,
+            max_entities=args.max_entities,
         )
     else:
         result = converter.convert(
-            args.source,
+            source_paths[0],
             output_path=args.output,
             target_height_mm=args.height,
+            max_entities=args.max_entities,
         )
 
     print(result.summary())
