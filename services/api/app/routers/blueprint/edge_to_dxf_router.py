@@ -64,10 +64,11 @@ try:
     if _pv_path and str(_pv_path) not in sys.path:
         sys.path.insert(0, str(_pv_path))
 
-    from edge_to_dxf import EdgeToDXF, EdgeToDXFResult
+    from edge_to_dxf import EdgeToDXF, EdgeToDXFResult, ConversionStatus
     EDGE_TO_DXF_AVAILABLE = True
 except Exception as e:
     _import_error = str(e)
+    ConversionStatus = None  # Fallback for type hints
 
 
 # PDF rendering support
@@ -82,9 +83,11 @@ except ImportError:
 class EdgeToDXFResponse(BaseModel):
     """Response from edge-to-DXF conversion."""
     success: bool
+    status: str = "SUCCESS"  # SUCCESS, CAP_EXCEEDED, ERROR
     dxf_path: Optional[str] = None
     line_count: int = 0
     edge_pixel_count: int = 0
+    contour_count: int = 0
     image_size_px: list = []  # [width, height]
     output_size_mm: list = []  # [width, height]
     mm_per_px: float = 0.0
@@ -92,6 +95,10 @@ class EdgeToDXFResponse(BaseModel):
     file_size_mb: float = 0.0
     method: str = ""  # "standard" or "enhanced"
     error: Optional[str] = None
+    # Cap exceeded details
+    cap_value: Optional[int] = None
+    entities_at_failure: Optional[int] = None
+    cap_message: Optional[str] = None
 
 
 class EdgeToDXFStatusResponse(BaseModel):
@@ -193,6 +200,28 @@ async def convert_edges(
         # Clean up input
         input_path.unlink(missing_ok=True)
 
+        # Check for cap exceeded
+        if ConversionStatus and result.status == ConversionStatus.CAP_EXCEEDED:
+            logger.warning(f"Cap exceeded: {result.entities_at_failure:,} entities > {result.cap_value:,} cap")
+            return EdgeToDXFResponse(
+                success=False,
+                status="CAP_EXCEEDED",
+                edge_pixel_count=result.edge_pixel_count,
+                contour_count=result.contour_count,
+                image_size_px=list(result.image_size_px),
+                output_size_mm=list(result.output_size_mm),
+                mm_per_px=result.mm_per_px,
+                processing_time_ms=result.processing_time_ms,
+                method="standard",
+                cap_value=result.cap_value,
+                entities_at_failure=result.entities_at_failure,
+                cap_message=(
+                    f"This image contains too much detail for automatic conversion. "
+                    f"At current settings, it would generate over {result.cap_value:,} line segments. "
+                    f"Try higher edge thresholds (canny_low=80, canny_high=200) or downsample the image."
+                ),
+            )
+
         # Register output for download
         _output_file_registry[output_path.name] = str(output_path)
 
@@ -205,9 +234,11 @@ async def convert_edges(
 
         return EdgeToDXFResponse(
             success=True,
+            status="SUCCESS",
             dxf_path=str(output_path),
             line_count=result.line_count,
             edge_pixel_count=result.edge_pixel_count,
+            contour_count=result.contour_count,
             image_size_px=list(result.image_size_px),
             output_size_mm=list(result.output_size_mm),
             mm_per_px=result.mm_per_px,
@@ -220,6 +251,7 @@ async def convert_edges(
         logger.exception("Edge-to-DXF conversion failed")
         return EdgeToDXFResponse(
             success=False,
+            status="ERROR",
             method="standard",
             error=str(e),
         )
@@ -278,6 +310,28 @@ async def convert_edges_enhanced(
         # Clean up input
         input_path.unlink(missing_ok=True)
 
+        # Check for cap exceeded
+        if ConversionStatus and result.status == ConversionStatus.CAP_EXCEEDED:
+            logger.warning(f"Cap exceeded: {result.entities_at_failure:,} entities > {result.cap_value:,} cap")
+            return EdgeToDXFResponse(
+                success=False,
+                status="CAP_EXCEEDED",
+                edge_pixel_count=result.edge_pixel_count,
+                contour_count=result.contour_count,
+                image_size_px=list(result.image_size_px),
+                output_size_mm=list(result.output_size_mm),
+                mm_per_px=result.mm_per_px,
+                processing_time_ms=result.processing_time_ms,
+                method="enhanced",
+                cap_value=result.cap_value,
+                entities_at_failure=result.entities_at_failure,
+                cap_message=(
+                    f"This image contains too much detail for automatic conversion. "
+                    f"At current settings, it would generate over {result.cap_value:,} line segments. "
+                    f"Try higher edge thresholds or downsample the image."
+                ),
+            )
+
         # Register output for download
         _output_file_registry[output_path.name] = str(output_path)
 
@@ -290,9 +344,11 @@ async def convert_edges_enhanced(
 
         return EdgeToDXFResponse(
             success=True,
+            status="SUCCESS",
             dxf_path=str(output_path),
             line_count=result.line_count,
             edge_pixel_count=result.edge_pixel_count,
+            contour_count=result.contour_count,
             image_size_px=list(result.image_size_px),
             output_size_mm=list(result.output_size_mm),
             mm_per_px=result.mm_per_px,
@@ -305,6 +361,7 @@ async def convert_edges_enhanced(
         logger.exception("Edge-to-DXF enhanced conversion failed")
         return EdgeToDXFResponse(
             success=False,
+            status="ERROR",
             method="enhanced",
             error=str(e),
         )
