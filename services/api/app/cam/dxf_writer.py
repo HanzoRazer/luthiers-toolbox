@@ -109,11 +109,24 @@ class DxfWriter:
         self._require_layer(layer)
         self._msp.add_point(self._round_pt(location[0], location[1]), dxfattribs={"layer": layer})
 
-    def add_text(self, layer: str, text: str, insert: Tuple[float, float], height: float = 2.5) -> None:
-        """Add a TEXT entity for annotations. R12 supports TEXT."""
+    def add_text(self, layer: str, text: str, insert: Tuple[float, float], height: float = 2.5, rotation: float = 0.0) -> None:
+        """Add a TEXT entity for annotations. R12 supports TEXT with rotation.
+
+        Args:
+            layer: Target layer name
+            text: Text content
+            insert: (x, y) insertion point in mm
+            height: Text height in mm (default 2.5)
+            rotation: Counter-clockwise rotation in degrees (default 0.0)
+        """
         self._require_layer(layer)
         pos = self._round_pt(insert[0], insert[1])
-        self._msp.add_text(text, dxfattribs={"layer": layer, "height": round(height, COORDINATE_PRECISION), "insert": pos})
+        self._msp.add_text(text, dxfattribs={
+            "layer": layer,
+            "height": round(height, COORDINATE_PRECISION),
+            "insert": pos,
+            "rotation": round(rotation, COORDINATE_PRECISION)
+        })
 
     def add_polyline3d(self, layer: str, points: Sequence[Tuple[float, float, float]], *, closed: bool = False) -> None:
         """Add a 3D polyline. R12 supports POLYLINE with 3D vertices."""
