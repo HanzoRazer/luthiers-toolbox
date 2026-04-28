@@ -118,6 +118,7 @@ async def vectorize_blueprint(
     debug: bool = Form(False),
     mode: str = Form("refined"),
     spec_name: Optional[str] = Form(None),
+    reinsert_text: bool = Form(False),
 ):
     """
     Vectorize a blueprint image or PDF to SVG + DXF.
@@ -146,6 +147,7 @@ async def vectorize_blueprint(
               - "layered_dual_pass" for classified layers (BODY, BRACING, etc.)
               - "enhanced" for full edge detail (1M+ entities)
         spec_name: Instrument spec for scale correction (e.g., "dreadnought", "benedetto_17")
+        reinsert_text: Extract text from image and add as TEXT entities on separate layer
 
     Returns:
         BlueprintVectorizeResponse with artifacts.svg and artifacts.dxf
@@ -184,6 +186,7 @@ async def vectorize_blueprint(
         debug=include_debug,
         mode=cleanup_mode,
         spec_name=spec_name,
+        reinsert_text=reinsert_text,
     )
 
     # Convert to response dict

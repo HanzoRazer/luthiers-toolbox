@@ -202,6 +202,7 @@ class BlueprintOrchestrator:
         spec_name: Optional[str] = None,
         gap_close_size: int = 7,
         mask_text: bool = True,
+        reinsert_text: bool = False,
     ) -> BlueprintResult:
         """
         Process a blueprint file through extraction and cleanup.
@@ -221,6 +222,8 @@ class BlueprintOrchestrator:
                   CleanupMode.REFINED for current logic (default)
             mask_text: If True, detect and mask text regions before gap closing
                        (Sprint 3 text-masking preprocessing)
+            reinsert_text: If True, extract text from image and add as TEXT
+                          entities on a separate layer (Sprint 3 faithful rendering)
 
         Returns:
             BlueprintResult with canonical artifacts
@@ -510,6 +513,36 @@ class BlueprintOrchestrator:
                         # Validate cleanup result (adds warnings, does NOT block)
                         cleanup_valid, cleanup_warnings = validate_cleanup_result(clean_result)
                         warnings.extend(cleanup_warnings)
+
+                # ─── Stage: Text Reinsertion (optional) ───────────────────
+                text_count = 0
+                if reinsert_text and cleaned_dxf_path.exists():
+                    try:
+                        import cv2
+                        from .text_reinsertion import append_text_to_existing_dxf
+
+                        # Load source image for OCR
+                        img = cv2.imread(str(input_path))
+                        if img is not None:
+                            h, w = img.shape[:2]
+                            mm_per_px = target_height_mm / h
+                            text_count = append_text_to_existing_dxf(
+                                dxf_path=str(cleaned_dxf_path),
+                                image=img,
+                                image_height_px=h,
+                                mm_per_px=mm_per_px,
+                                min_confidence=0.3,
+                                layer_name="TEXT",
+                                layer_color=2,
+                            )
+                            if text_count > 0:
+                                stage_timings["text_reinserted"] = text_count
+                                logger.info(f"Text reinsertion: added {text_count} TEXT entities")
+                        else:
+                            warnings.append("Text reinsertion failed: could not load image")
+                    except Exception as e:
+                        warnings.append(f"Text reinsertion failed: {e}")
+                        logger.warning(f"Text reinsertion failed: {e}")
 
                 # ─── Stage: Encode DXF to base64 ──────────────────────────
                 report("encode", 80)
