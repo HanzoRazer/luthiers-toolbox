@@ -16,9 +16,11 @@ from __future__ import annotations
 import logging
 from typing import Optional
 
-from fastapi import APIRouter, File, Form, HTTPException, UploadFile
+from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile
 from pydantic import BaseModel
 
+from ...auth.deps import get_optional_principal
+from ...auth.principal import Principal
 from ...services.blueprint_orchestrator import BlueprintOrchestrator
 from ...services.blueprint_clean import CleanupMode
 from ...services.blueprint_limits import LIMITS
@@ -119,6 +121,7 @@ async def vectorize_blueprint(
     mode: str = Form("refined"),
     spec_name: Optional[str] = Form(None),
     reinsert_text: bool = Form(False),
+    principal: Optional[Principal] = Depends(get_optional_principal),
 ):
     """
     Vectorize a blueprint image or PDF to SVG + DXF.
@@ -146,12 +149,23 @@ async def vectorize_blueprint(
               - "restored_baseline" for historical 86c49526 behavior
               - "layered_dual_pass" for classified layers (BODY, BRACING, etc.)
               - "enhanced" for full edge detail (1M+ entities)
+              - "cam_ready_r2000" for paid-tier CAM output (R2000 LWPOLYLINE, requires auth)
         spec_name: Instrument spec for scale correction (e.g., "dreadnought", "benedetto_17")
         reinsert_text: Extract text from image and add as TEXT entities on separate layer
 
     Returns:
         BlueprintVectorizeResponse with artifacts.svg and artifacts.dxf
     """
+    # Auth check for paid-tier mode
+    if mode.lower() == "cam_ready_r2000" and principal is None:
+        raise HTTPException(
+            status_code=401,
+            detail={
+                "error": "paid_tier_required",
+                "message": "CAM-ready R2000 output requires paid tier authentication",
+            },
+        )
+
     # Read file content
     file_bytes = await file.read()
     filename = file.filename or "upload"

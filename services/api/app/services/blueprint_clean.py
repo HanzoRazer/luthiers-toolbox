@@ -81,12 +81,19 @@ class CleanupMode(str, Enum):
               - Produces 50,000-300,000+ LINE entities
               - No contour simplification (preserves all edge detail)
               - Routes to extract_blueprint_enhanced() in blueprint_extract.py
+
+    CAM_READY_R2000: Paid-tier CAM-ready output (R2000 LWPOLYLINE).
+              - Uses Phase 3 vectorizer with cam_ready=True, dxf_version='R2000'
+              - Produces multi-point closed LWPOLYLINEs suitable for CAM workflows
+              - Requires authentication (returns 401 if unauthenticated)
+              - Verified through GRBL pipeline (2260 G-code lines from BODY_OUTLINE)
     """
     BASELINE = "baseline"
     REFINED = "refined"
     RESTORED_BASELINE = "restored_baseline"
     LAYERED_DUAL_PASS = "layered_dual_pass"
     ENHANCED = "enhanced"
+    CAM_READY_R2000 = "cam_ready_r2000"
 
 
 @dataclass
