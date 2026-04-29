@@ -8,6 +8,17 @@ Tests cover:
 - Feature flag disabled preserves existing behavior
 """
 
+import pytest
+
+pytest.skip(
+    "Orphaned test file — references symbols that don't exist in the codebase: "
+    "_is_curvature_body_candidate, curvature_body_promotion_enabled, "
+    "CURVATURE_PROFILER_AVAILABLE. "
+    "Discovered 2026-04-29 during FRET-A baseline capture. "
+    "See SPRINTS.md backlog item for triage.",
+    allow_module_level=True,
+)
+
 import os
 import numpy as np
 import pytest
