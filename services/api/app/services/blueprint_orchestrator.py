@@ -81,12 +81,11 @@ from .layered_dxf_writer import (
     get_preset_from_string,
 )
 
-# Phase 3 vectorizer for CAM-ready R2000 output
-try:
-    from ..routers.blueprint.constants import PHASE3_AVAILABLE, Phase3Vectorizer
-except ImportError:
-    PHASE3_AVAILABLE = False
-    Phase3Vectorizer = None
+# Phase 3 vectorizer is lazy-loaded to avoid circular import issues.
+# The blueprint/__init__.py imports phase3_router before constants.py
+# finishes setting up sys.path, causing PHASE3_AVAILABLE to be False
+# at module-level import time. Lazy loading defers the import until
+# CAM_READY_R2000 mode is actually invoked.
 
 logger = logging.getLogger(__name__)
 
@@ -190,6 +189,39 @@ class BlueprintOrchestrator:
     Single source of truth for blueprint business logic. Both sync routes
     and future async job runners call this orchestrator.
     """
+
+    # Class-level cache for lazy-loaded Phase3Vectorizer
+    _phase3_vectorizer_class = None
+    _phase3_import_error = None
+
+    @classmethod
+    def _get_phase3_vectorizer(cls):
+        """
+        Lazy-load Phase3Vectorizer to avoid circular import issues.
+
+        The import is deferred until CAM_READY_R2000 mode is actually invoked,
+        by which time blueprint/__init__.py has finished initializing and
+        sys.path includes the blueprint-import service.
+
+        Returns:
+            Phase3Vectorizer class, or None if unavailable
+        """
+        if cls._phase3_vectorizer_class is None and cls._phase3_import_error is None:
+            try:
+                # Add blueprint-import to path if not already present
+                import sys
+                from pathlib import Path
+                bp_path = Path(__file__).parent.parent.parent.parent / "blueprint-import"
+                if str(bp_path) not in sys.path:
+                    sys.path.insert(0, str(bp_path))
+
+                from vectorizer_phase3 import Phase3Vectorizer
+                cls._phase3_vectorizer_class = Phase3Vectorizer
+                logger.info("Phase3Vectorizer lazy-loaded successfully")
+            except ImportError as e:
+                cls._phase3_import_error = str(e)
+                logger.warning(f"Phase3Vectorizer not available: {e}")
+        return cls._phase3_vectorizer_class
 
     def process_file(
         self,
@@ -436,16 +468,19 @@ class BlueprintOrchestrator:
 
                 # CAM_READY_R2000: Paid-tier mode using Phase 3 with R2000 LWPOLYLINE output
                 elif mode == CleanupMode.CAM_READY_R2000:
-                    if not PHASE3_AVAILABLE or Phase3Vectorizer is None:
+                    # Lazy-load Phase3Vectorizer to avoid circular import issues
+                    Phase3VectorizerClass = self._get_phase3_vectorizer()
+                    if Phase3VectorizerClass is None:
+                        error_detail = self._phase3_import_error or "unknown import error"
                         return BlueprintResult(
                             ok=False,
                             stage="edge_extraction",
-                            error="Phase 3 vectorizer not available for CAM-ready R2000 output",
+                            error=f"Phase 3 vectorizer not available for CAM-ready R2000 output: {error_detail}",
                             warnings=warnings,
                         )
 
                     # Create Phase 3 vectorizer with R2000 DXF version
-                    vectorizer = Phase3Vectorizer(
+                    vectorizer = Phase3VectorizerClass(
                         dpi=400,
                         dxf_version='R2000',
                         enable_ocr=False,
@@ -456,7 +491,7 @@ class BlueprintOrchestrator:
                     import time
                     p3_start = time.time()
 
-                    p3_result = vectorizer.extract_to_file(
+                    p3_result = vectorizer.extract(
                         source_path=str(input_path),
                         output_path=str(raw_dxf_path),
                         cam_ready=True,
