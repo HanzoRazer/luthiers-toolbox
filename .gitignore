@@ -506,3 +506,4 @@ services/photo-vectorizer/integration_test/
 
 # Local Claude Code settings
 .claude/
+.baseline/

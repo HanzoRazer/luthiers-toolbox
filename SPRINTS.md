@@ -14,14 +14,18 @@ The test file imports three symbols that don't exist in the codebase:
   - curvature_body_promotion_enabled
   - CURVATURE_PROFILER_AVAILABLE
 
-Git history confirms these symbols existed in commit 944aefc6 and were
-removed in a later refactor. Test file left behind.
+**Origin:** Commit 944aefc6 (2026-04-19 05:17:58) added curvature_profiler.py,
+curvature_correction.py, and this test file together. The test imports symbols
+for layer_builder integration (`_is_curvature_body_candidate`, etc.) that were
+never implemented — the test was written for planned integration that didn't ship.
+
+This is **case B** (speculative test), not case A (removed implementation).
 
 Currently skipped at module level pending triage. Resolution options:
 
-  A. Restore symbols if curvature-based body promotion functionality is needed.
-  B. Delete test file if functionality is intentionally gone.
+  A. Implement the layer_builder integration the test expects.
+  B. Delete test file — the planned integration was abandoned.
 
-Triage with: `git log --all -S "<symbol_name>" -- services/api/app/`
+Recommend option B unless curvature-based body promotion is on the roadmap.
 
 Not blocking FRET-A. Triage in next layer-builder cleanup sprint.
