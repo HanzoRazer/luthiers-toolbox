@@ -57,34 +57,33 @@ class SpiralParams:
 
 ## BLOCKING INFRASTRUCTURE — resolve before new DXF work
 
-### DXF output standard (highest priority after Smart Guitar)
+### DXF output standard: dual-format via dxf_compat
 
-Every DXF generator in the repo calls ezdxf directly
-with inconsistent settings. This caused Fusion 360 to
-freeze and require a hard reset on smart_guitar_front_v3.dxf.
-
-Required: services/api/app/cam/dxf_writer.py
-  A single central DXF writer that ALL generators call.
-
-DXF pipeline standard: R12 (AC1009)
+**Free tier output: R12 (AC1009)**
   - LINE entities only via dxf_compat.add_polyline(version='R12')
-  - No LWPOLYLINE (causes Fusion 360 freeze)
+  - Maximum legacy compatibility for hobbyist users
+
+**Paid tier output: R2000 (AC1015)**
+  - LWPOLYLINE entities via dxf_compat.add_polyline(version='R2000')
+  - Multi-point closed contours, suitable for CAM workflows
+  - Verified safe for DWG TrueView 2026 on 2026-04-28
+    Test file: services/api/test_temp/cuatro_R2000_LWPOLYLINE_test.dxf
+    Operations verified: open, visual inspection, no freeze
+  - Verified through GRBL pipeline 2026-04-29
+    Source: docs/investigations/cam_pipeline_r2000_compat_2026-04-29.md
+    G-code generation: 2260 lines from BODY_OUTLINE layer
+
+**Common requirements (both formats):**
+  - All DXF generators must use dxf_compat — direct ezdxf.new() calls forbidden
   - No EXTMIN/EXTMAX population (use sentinel values 1e+20)
   - Coordinate precision ≤ 3dp
-  - This standard applies to all DXF generators in the repo
-  - dxf_writer.py (Sprint 3) will enforce these standards centrally
+  - Layer naming follows ContourCategory.value.upper() convention
 
-Existing generators that must be refactored to use it:
-  - app/instrument_geometry/bridge/archtop_floating_bridge.py
-  - app/instrument_geometry/soundhole/spiral_geometry.py
-  - Any body outline or CAM generator using ezdxf directly
-
-Rule: No new DXF generator may be built until
-dxf_writer.py exists and existing generators are
-refactored to use it.
-
-Status: NOT STARTED
-Priority: Blocking — ranks equal to Smart Guitar first article
+**History:**
+  - 2026-04-02: R12-only gate established after smart_guitar_front_v3.dxf
+    caused Fusion 360 freeze (specific malformed LWPOLYLINE incident)
+  - 2026-04-28: Gate lifted for R2000 after DWG TrueView verification confirmed
+    properly-formed LWPOLYLINE imports cleanly. R12 retained for free tier.
 ## VECTORIZER ARCHITECTURE DECISION — DO NOT BYPASS
 
 ### Date: 2026-04-02
