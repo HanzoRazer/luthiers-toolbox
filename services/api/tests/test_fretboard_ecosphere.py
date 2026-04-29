@@ -318,3 +318,95 @@ class TestImmutability:
         eco = FretboardEcosphere.compute(params)
         with pytest.raises(ValidationError):
             eco.total_length_mm = 999.0
+
+
+class TestKernelDelegation:
+    """Tests verifying that schema delegates to alternative_temperaments kernel."""
+
+    def test_12tet_schema_matches_kernel_directly(self):
+        """Schema-computed positions must equal kernel-computed positions
+        within 1e-9 mm (i.e., delegation is honest, not just close)."""
+        from app.calculators.alternative_temperaments import (
+            resolve_temperament_ratios,
+            compute_fret_positions_from_ratios_mm,
+            TemperamentSystem,
+        )
+
+        params = FretboardInput(
+            scale_length_mm=647.7,
+            fret_count=22,
+            temperament=TemperamentType.EQUAL_12,
+        )
+        eco = FretboardEcosphere.compute(params)
+
+        # Get positions from schema (fret 1 through 22)
+        schema_positions = [eco.fret_lines[f].center_x_mm for f in range(1, 23)]
+
+        # Get positions from kernel directly
+        ratios = resolve_temperament_ratios(TemperamentSystem.EQUAL_12TET, 22)
+        kernel_positions = compute_fret_positions_from_ratios_mm(647.7, ratios)
+
+        for i, (s, k) in enumerate(zip(schema_positions, kernel_positions)):
+            assert abs(s - k) < 1e-9, f"Fret {i+1} mismatch: schema={s}, kernel={k}"
+
+    def test_19tet_real_math_not_12tet_stub(self):
+        """19-TET output must differ from 12-TET (proves the alt-temperament
+        is actually 19-TET now, not the old 12-TET stub)."""
+        params_12 = FretboardInput(
+            scale_length_mm=647.7,
+            fret_count=12,
+            temperament=TemperamentType.EQUAL_12,
+        )
+        params_19 = FretboardInput(
+            scale_length_mm=647.7,
+            fret_count=12,
+            temperament=TemperamentType.EQUAL_19,
+        )
+        eco_12 = FretboardEcosphere.compute(params_12)
+        eco_19 = FretboardEcosphere.compute(params_19)
+
+        # Position of fret 12: in 12-TET it's the octave; in 19-TET it isn't
+        pos_12 = eco_12.fret_lines[12].center_x_mm
+        pos_19 = eco_19.fret_lines[12].center_x_mm
+
+        # Fret 12 in 12-TET = scale_length / 2 = 323.85 mm
+        assert abs(pos_12 - 323.85) < 0.01
+
+        # Fret 12 in 19-TET ≠ octave — should differ by at least 5mm
+        assert abs(pos_12 - pos_19) > 5.0
+
+    def test_pythagorean_uses_real_ratios(self):
+        """Pythagorean temperament now uses real ratios, not 12-TET fallback."""
+        from app.calculators.alternative_temperaments import (
+            resolve_temperament_ratios,
+            compute_fret_positions_from_ratios_mm,
+            TemperamentSystem,
+        )
+
+        params = FretboardInput(
+            scale_length_mm=647.7,
+            fret_count=12,
+            temperament=TemperamentType.PYTHAGOREAN,
+        )
+        eco = FretboardEcosphere.compute(params)
+
+        # Get positions from kernel
+        ratios = resolve_temperament_ratios(TemperamentSystem.PYTHAGOREAN, 12)
+        kernel_positions = compute_fret_positions_from_ratios_mm(647.7, ratios)
+
+        # Schema should match kernel
+        schema_positions = [eco.fret_lines[f].center_x_mm for f in range(1, 13)]
+        for i, (s, k) in enumerate(zip(schema_positions, kernel_positions)):
+            assert abs(s - k) < 1e-9, f"Fret {i+1} mismatch: schema={s}, kernel={k}"
+
+        # Pythagorean fret 7 (perfect fifth) should differ from 12-TET fret 7
+        params_12 = FretboardInput(
+            scale_length_mm=647.7,
+            fret_count=12,
+            temperament=TemperamentType.EQUAL_12,
+        )
+        eco_12 = FretboardEcosphere.compute(params_12)
+        pos_pyth = eco.fret_lines[7].center_x_mm
+        pos_12 = eco_12.fret_lines[7].center_x_mm
+        # The deviation should be measurable (Pythagorean 5th is ~2 cents sharper)
+        assert abs(pos_pyth - pos_12) > 0.1

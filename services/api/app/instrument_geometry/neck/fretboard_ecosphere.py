@@ -31,6 +31,12 @@ from typing import List, Optional, Dict, Any, Tuple
 
 from pydantic import BaseModel, Field, field_validator, model_validator
 
+from app.calculators.alternative_temperaments import (
+    TemperamentSystem,
+    resolve_temperament_ratios,
+    compute_fret_positions_from_ratios_mm,
+)
+
 
 class ScaleType(str, Enum):
     """Type of scale length configuration."""
@@ -327,35 +333,41 @@ class FretboardEcosphere(BaseModel):
         )
 
     @staticmethod
+    def _temperament_type_to_system(temperament: TemperamentType) -> TemperamentSystem:
+        """Map schema TemperamentType to kernel TemperamentSystem."""
+        mapping = {
+            TemperamentType.EQUAL_12: TemperamentSystem.EQUAL_12TET,
+            TemperamentType.EQUAL_19: TemperamentSystem.EQUAL_19TET,
+            TemperamentType.EQUAL_24: TemperamentSystem.EQUAL_24TET,
+            TemperamentType.EQUAL_31: TemperamentSystem.EQUAL_31TET,
+            TemperamentType.PYTHAGOREAN: TemperamentSystem.PYTHAGOREAN,
+            TemperamentType.JUST_MAJOR: TemperamentSystem.JUST_MAJOR,
+            TemperamentType.MEANTONE_QUARTER: TemperamentSystem.MEANTONE_QUARTER,
+        }
+        return mapping.get(temperament, TemperamentSystem.EQUAL_12TET)
+
+    @classmethod
+    def _compute_fret_positions_for_temperament(
+        cls,
+        scale_length_mm: float,
+        fret_count: int,
+        temperament: TemperamentType,
+    ) -> List[float]:
+        """Compute all fret positions using the kernel (delegated math).
+
+        Returns positions for frets 1 through fret_count (0-indexed list).
+        Fret 0 (nut) is always at position 0.0 and is not included.
+        """
+        system = cls._temperament_type_to_system(temperament)
+        ratios = resolve_temperament_ratios(system, fret_count)
+        return compute_fret_positions_from_ratios_mm(scale_length_mm, ratios)
+
+    @staticmethod
     def _fret_position_12tet(scale_length_mm: float, fret_number: int) -> float:
-        """Calculate fret position for 12-TET."""
+        """Calculate fret position for 12-TET (legacy, kept for reference)."""
         if fret_number == 0:
             return 0.0
         return scale_length_mm * (1.0 - math_pow(2.0, -fret_number / 12.0))
-
-    @staticmethod
-    def _fret_position_temperament(
-        scale_length_mm: float,
-        fret_number: int,
-        temperament: TemperamentType,
-    ) -> float:
-        """Calculate fret position for specified temperament."""
-        if fret_number == 0:
-            return 0.0
-
-        if temperament == TemperamentType.EQUAL_12:
-            divisions = 12
-        elif temperament == TemperamentType.EQUAL_19:
-            divisions = 19
-        elif temperament == TemperamentType.EQUAL_24:
-            divisions = 24
-        elif temperament == TemperamentType.EQUAL_31:
-            divisions = 31
-        else:
-            # Default to 12-TET for non-equal temperaments (placeholder)
-            divisions = 12
-
-        return scale_length_mm * (1.0 - math_pow(2.0, -fret_number / divisions))
 
     @classmethod
     def _compute_standard_frets(
@@ -367,18 +379,27 @@ class FretboardEcosphere(BaseModel):
         heel_width_mm: float,
         temperament: TemperamentType,
     ) -> List[FretLine]:
-        """Compute fret lines for standard (non-multiscale) fretting."""
+        """Compute fret lines for standard (non-multiscale) fretting.
+
+        Delegates to kernel for temperament-aware fret position calculation.
+        """
         fret_lines: List[FretLine] = []
+
+        # Get all fret positions from kernel (frets 1 through fret_count)
+        fret_positions = cls._compute_fret_positions_for_temperament(
+            scale_length_mm, fret_count, temperament
+        )
+        # Prepend fret 0 (nut) at position 0.0
+        all_positions = [0.0] + fret_positions
+        last_fret_x = all_positions[-1] if all_positions else 0.0
 
         # Include fret 0 (nut)
         for fret_num in range(fret_count + 1):
-            x_pos = cls._fret_position_temperament(scale_length_mm, fret_num, temperament)
+            x_pos = all_positions[fret_num]
 
             # Calculate width at this fret position
-            if scale_length_mm > 0:
-                # Use last fret position as reference for taper
-                last_fret_x = cls._fret_position_temperament(scale_length_mm, fret_count, temperament)
-                t = x_pos / last_fret_x if last_fret_x > 0 else 0.0
+            if last_fret_x > 0:
+                t = x_pos / last_fret_x
             else:
                 t = 0.0
 
@@ -421,28 +442,41 @@ class FretboardEcosphere(BaseModel):
         perpendicular_fret: int,
         temperament: TemperamentType,
     ) -> List[FretLine]:
-        """Compute fret lines for multiscale (fanned fret) configuration."""
+        """Compute fret lines for multiscale (fanned fret) configuration.
+
+        Delegates to kernel for temperament-aware fret position calculation.
+        """
         fret_lines: List[FretLine] = []
 
+        # Get all fret positions from kernel for both scales
+        treble_positions = cls._compute_fret_positions_for_temperament(
+            treble_scale_mm, fret_count, temperament
+        )
+        bass_positions = cls._compute_fret_positions_for_temperament(
+            bass_scale_mm, fret_count, temperament
+        )
+        # Prepend fret 0 (nut) at position 0.0
+        treble_all = [0.0] + treble_positions
+        bass_all = [0.0] + bass_positions
+
         # Calculate where perpendicular fret should intersect
-        perp_treble = cls._fret_position_temperament(treble_scale_mm, perpendicular_fret, temperament)
-        perp_bass = cls._fret_position_temperament(bass_scale_mm, perpendicular_fret, temperament)
+        perp_treble = treble_all[perpendicular_fret] if perpendicular_fret <= fret_count else treble_all[-1]
+        perp_bass = bass_all[perpendicular_fret] if perpendicular_fret <= fret_count else bass_all[-1]
         perp_center = (perp_treble + perp_bass) / 2.0
 
         # Offset to make perpendicular fret straight
         treble_offset = perp_center - perp_treble
         bass_offset = perp_center - perp_bass
 
+        # Calculate last fret average for taper reference
+        last_fret_avg = (treble_all[-1] + bass_all[-1]) / 2.0 + (treble_offset + bass_offset) / 2.0
+
         for fret_num in range(fret_count + 1):
-            treble_x = cls._fret_position_temperament(treble_scale_mm, fret_num, temperament) + treble_offset
-            bass_x = cls._fret_position_temperament(bass_scale_mm, fret_num, temperament) + bass_offset
+            treble_x = treble_all[fret_num] + treble_offset
+            bass_x = bass_all[fret_num] + bass_offset
 
             # Average for taper calculation
             avg_x = (treble_x + bass_x) / 2.0
-            last_fret_avg = (
-                cls._fret_position_temperament(treble_scale_mm, fret_count, temperament) +
-                cls._fret_position_temperament(bass_scale_mm, fret_count, temperament)
-            ) / 2.0 + (treble_offset + bass_offset) / 2.0
 
             t = avg_x / last_fret_avg if last_fret_avg > 0 else 0.0
             width_at_fret = nut_width_mm + (heel_width_mm - nut_width_mm) * t
