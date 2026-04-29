@@ -38,6 +38,17 @@ try:
 except ImportError:
     EZDXF_AVAILABLE = False
 
+# Import dxf_compat for centralized DXF creation
+try:
+    import sys
+    from pathlib import Path
+    _bp_import_path = Path(__file__).parent.parent / "blueprint-import"
+    if str(_bp_import_path) not in sys.path:
+        sys.path.insert(0, str(_bp_import_path))
+    from dxf_compat import create_document as dxf_create_document
+except ImportError:
+    dxf_create_document = None
+
 try:
     from shapely.geometry import Polygon
     from shapely.ops import clip_by_rect
@@ -768,8 +779,11 @@ class MultiViewReconstructor:
         try:
             output_path = Path(output_path)
 
-            # Create DXF document (R2010 format)
-            doc = ezdxf.new("R12")
+            # Create DXF document (R12 format for CAM compatibility)
+            if dxf_create_document is not None:
+                doc = dxf_create_document(version='R12')
+            else:
+                doc = ezdxf.new("R12")
             msp = doc.modelspace()
 
             # Layer colors (ACI color codes)

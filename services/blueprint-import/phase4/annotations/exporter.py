@@ -14,9 +14,11 @@ from pathlib import Path
 
 try:
     import ezdxf
+    from dxf_compat import create_document
     EZDXF_AVAILABLE = True
 except ImportError:
     EZDXF_AVAILABLE = False
+    create_document = None
 
 from .base import Annotation
 
@@ -260,7 +262,7 @@ class AnnotationAwareExporter:
         check_dxf_compatibility(annotations, dxf_version)
 
         # Create document
-        doc = ezdxf.new(dxf_version)
+        doc = create_document(version=dxf_version)
         msp = doc.modelspace()
 
         # Setup layers
