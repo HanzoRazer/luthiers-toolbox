@@ -23,6 +23,7 @@ import ezdxf
 from ezdxf.enums import TextEntityAlignment
 import numpy as np
 
+from ..util.dxf_compat import create_document
 from .layer_builder import (
     Layer,
     LayeredEntities,
@@ -77,7 +78,7 @@ def write_layered_dxf(
     logger.info(f"Writing layered DXF: preset={preset.value}, layers={[l.value for l in layers_to_export]}")
 
     # Create DXF document (R12 for compatibility)
-    doc = ezdxf.new(dxfversion="R12")
+    doc = create_document(version='R12')
     msp = doc.modelspace()
 
     # Create layers
