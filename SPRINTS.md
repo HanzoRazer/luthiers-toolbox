@@ -851,6 +851,25 @@ When this sprint activates, rosette authenticity is the natural first use case. 
 **Assessment:** Enhancement notes. Current implementations work with simplified approach.
 Track as backlog — address when touching those files for other reasons.
 
+### GRBL spindle command emission
+
+**Status:** Backlog
+**Priority:** Production-blocking for live cutting (workaround: manual G-code edit)
+**Discovered:** 2026-04-29 during R2000 LWPOLYLINE CAM pipeline test
+**Source:** docs/investigations/cam_pipeline_r2000_compat_2026-04-29.md
+
+The DXF-to-GRBL pipeline emits valid G-code (G21/G90 header, G0/G1 moves,
+M5/M30 termination) but does not emit spindle commands. Operator must manually
+add `S<speed>` and `M3` (spindle on) before first cut, and verify M5 placement.
+
+Files affected:
+  - services/api/app/rmos/mvp_router.py (G-code emit, line TBD)
+
+Required for production cutting on BCAM 2030A. Coolant control (M8/M9) may also
+be needed depending on shop configuration.
+
+No fix in flight. Address when paid-tier CAM pipeline goes live.
+
 ---
 
 ## COMPLETED

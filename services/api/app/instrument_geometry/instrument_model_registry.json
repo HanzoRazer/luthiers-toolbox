@@ -466,12 +466,18 @@
           "year_introduced": 1934,
           "body_width_mm": 406.0,
           "body_depth_mm": 82.0,
-          "scale_length_mm": 628.65,
+          "scale_length_mm": 647.7,
+          "scale_length_note": "OCR extracted from AGP-11 Sheet 1: 25.500 INCHES (647.70 mm)",
           "assets": [
             {
               "type": "spec_json",
               "path": "specs/epiphone_spartan.json",
               "note": "Full archtop spec with construction details from AGP-11 plan"
+            },
+            {
+              "type": "body_dxf",
+              "path": "../../../../Guitar Plans/Archtop Measurements/epiphone_spartan_body_api.dxf",
+              "note": "Body outline DXF via API endpoint /api/blueprint/edge-to-dxf/convert (0.0929 mm/px, 1.34M LINE entities)"
             },
             {
               "type": "plan_image",

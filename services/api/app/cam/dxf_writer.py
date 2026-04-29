@@ -1,20 +1,20 @@
 """Central DXF writer - single point of control for all DXF output.
 
 Every DXF generator in the repo must use this module instead of calling
-ezdxf.new() directly. Standards were validated against Fusion 360 and
-trace back to the 525 dollar Les Paul file set that would not open.
+ezdxf.new() directly. Standards were validated against DWG TrueView 2026
+and trace back to the 525 dollar Les Paul file set that would not open.
 
-Standards enforced (CLAUDE.md):
-  - Format: R12 (AC1009) - maximum CAM compatibility
-  - LINE entities ONLY - no LWPOLYLINE, no POLYLINE2D
-  - Sentinel EXTMIN/EXTMAX (1e+20) - do NOT recompute
+Dual-format support (CLAUDE.md):
+  - Free tier: R12 (AC1009) - LINE entities for maximum CAM compatibility
+  - Paid tier: R2000 (AC1015) - LWPOLYLINE entities for CAM workflows
+
+Common standards (both formats):
   - Coordinates rounded to 3 decimal places
   - Named layers only - no geometry on layer 0
+  - All entity creation routes through dxf_compat for version-aware output
 
-Why R12?
-  - LWPOLYLINE does not exist in R12 -> guarantees LINE-only output
-  - Maximum compatibility: opens in Fusion 360, VCarve, AutoCAD, FreeCAD
-  - The genesis of The Production Shop - R12 is the answer to broken DXF files
+R2000 callers must verify their use case against the dxf_compat output format
+(LWPOLYLINE vs LINE). R2000 was verified safe for DWG TrueView 2026 on 2026-04-28.
 """
 
 from __future__ import annotations
@@ -27,8 +27,10 @@ import ezdxf
 from ezdxf.document import Drawing
 from ezdxf.layouts import Modelspace
 
+from app.util.dxf_compat import create_document, add_polyline as compat_add_polyline
 
-DXF_VERSION = "R12"
+
+DXF_VERSION_DEFAULT = "R12"
 COORDINATE_PRECISION = 3
 DEFAULT_LAYER_COLOR = 7
 
@@ -41,10 +43,11 @@ class LayerDef:
 
 
 class DxfWriter:
-    """Central DXF writer that enforces project-wide R12 output standards."""
+    """Central DXF writer with dual-format support (R12 free tier, R2000 paid tier)."""
 
-    def __init__(self, layers: Sequence[LayerDef] | None = None) -> None:
-        self._doc: Drawing = ezdxf.new(dxfversion=DXF_VERSION)
+    def __init__(self, layers: Sequence[LayerDef] | None = None, version: str = DXF_VERSION_DEFAULT) -> None:
+        self._version = version
+        self._doc: Drawing = create_document(version=version)
         self._msp: Modelspace = self._doc.modelspace()
         self._layers: Dict[str, LayerDef] = {}
 
@@ -77,14 +80,12 @@ class DxfWriter:
             raise ValueError(f"Layer not registered: {layer}")
 
     def add_polyline(self, layer: str, points: Sequence[Tuple[float, float]], *, closed: bool = False) -> None:
-        """Add a polyline as LINE entities (R12 standard)."""
+        """Add a polyline using version-appropriate entity (LINE for R12, LWPOLYLINE for R2000+)."""
         self._require_layer(layer)
         if len(points) < 2:
             return
-        n = len(points)
-        end = n if closed else n - 1
-        for i in range(end):
-            self.add_line(layer, points[i], points[(i + 1) % n])
+        rounded_points = [self._round_pt(p[0], p[1]) for p in points]
+        compat_add_polyline(self._msp, rounded_points, layer=layer, closed=closed, version=self._version)
 
     def add_line(self, layer: str, start: Tuple[float, float], end: Tuple[float, float]) -> None:
         self._require_layer(layer)
@@ -109,11 +110,24 @@ class DxfWriter:
         self._require_layer(layer)
         self._msp.add_point(self._round_pt(location[0], location[1]), dxfattribs={"layer": layer})
 
-    def add_text(self, layer: str, text: str, insert: Tuple[float, float], height: float = 2.5) -> None:
-        """Add a TEXT entity for annotations. R12 supports TEXT."""
+    def add_text(self, layer: str, text: str, insert: Tuple[float, float], height: float = 2.5, rotation: float = 0.0) -> None:
+        """Add a TEXT entity for annotations. R12 supports TEXT with rotation.
+
+        Args:
+            layer: Target layer name
+            text: Text content
+            insert: (x, y) insertion point in mm
+            height: Text height in mm (default 2.5)
+            rotation: Counter-clockwise rotation in degrees (default 0.0)
+        """
         self._require_layer(layer)
         pos = self._round_pt(insert[0], insert[1])
-        self._msp.add_text(text, dxfattribs={"layer": layer, "height": round(height, COORDINATE_PRECISION), "insert": pos})
+        self._msp.add_text(text, dxfattribs={
+            "layer": layer,
+            "height": round(height, COORDINATE_PRECISION),
+            "insert": pos,
+            "rotation": round(rotation, COORDINATE_PRECISION)
+        })
 
     def add_polyline3d(self, layer: str, points: Sequence[Tuple[float, float, float]], *, closed: bool = False) -> None:
         """Add a 3D polyline. R12 supports POLYLINE with 3D vertices."""
@@ -140,6 +154,17 @@ class DxfWriter:
         self._doc.saveas(path)
 
 
-def create_dxf_writer(layer_names: Sequence[str] | None = None, layer_color: int = DEFAULT_LAYER_COLOR) -> DxfWriter:
+def create_dxf_writer(
+    layer_names: Sequence[str] | None = None,
+    layer_color: int = DEFAULT_LAYER_COLOR,
+    version: str = DXF_VERSION_DEFAULT
+) -> DxfWriter:
+    """Create a DxfWriter with optional layers and version.
+
+    Args:
+        layer_names: Optional list of layer names to pre-register
+        layer_color: Default color for layers (default: 7/white)
+        version: DXF version - 'R12' for free tier, 'R2000' for paid tier
+    """
     layers = [LayerDef(name, layer_color) for name in layer_names] if layer_names else None
-    return DxfWriter(layers=layers)
+    return DxfWriter(layers=layers, version=version)

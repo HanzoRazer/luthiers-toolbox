@@ -3584,7 +3584,8 @@ class Phase3Vectorizer:
             export_cam_ready_dxf(
                 classified, cam_dxf_path, height, self.mm_per_px,
                 scale_factor=scale_factor,
-                simplify_tolerance=self.simplify_tolerance
+                simplify_tolerance=self.simplify_tolerance,
+                dxf_version=self.dxf_version
             )
             logger.info(f"CAM-ready DXF exported to {cam_dxf_path}")
 

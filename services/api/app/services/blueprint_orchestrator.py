@@ -81,6 +81,12 @@ from .layered_dxf_writer import (
     get_preset_from_string,
 )
 
+# Phase 3 vectorizer is lazy-loaded to avoid circular import issues.
+# The blueprint/__init__.py imports phase3_router before constants.py
+# finishes setting up sys.path, causing PHASE3_AVAILABLE to be False
+# at module-level import time. Lazy loading defers the import until
+# CAM_READY_R2000 mode is actually invoked.
+
 logger = logging.getLogger(__name__)
 
 # Type alias for progress callbacks
@@ -184,6 +190,39 @@ class BlueprintOrchestrator:
     and future async job runners call this orchestrator.
     """
 
+    # Class-level cache for lazy-loaded Phase3Vectorizer
+    _phase3_vectorizer_class = None
+    _phase3_import_error = None
+
+    @classmethod
+    def _get_phase3_vectorizer(cls):
+        """
+        Lazy-load Phase3Vectorizer to avoid circular import issues.
+
+        The import is deferred until CAM_READY_R2000 mode is actually invoked,
+        by which time blueprint/__init__.py has finished initializing and
+        sys.path includes the blueprint-import service.
+
+        Returns:
+            Phase3Vectorizer class, or None if unavailable
+        """
+        if cls._phase3_vectorizer_class is None and cls._phase3_import_error is None:
+            try:
+                # Add blueprint-import to path if not already present
+                import sys
+                from pathlib import Path
+                bp_path = Path(__file__).parent.parent.parent.parent / "blueprint-import"
+                if str(bp_path) not in sys.path:
+                    sys.path.insert(0, str(bp_path))
+
+                from vectorizer_phase3 import Phase3Vectorizer
+                cls._phase3_vectorizer_class = Phase3Vectorizer
+                logger.info("Phase3Vectorizer lazy-loaded successfully")
+            except ImportError as e:
+                cls._phase3_import_error = str(e)
+                logger.warning(f"Phase3Vectorizer not available: {e}")
+        return cls._phase3_vectorizer_class
+
     def process_file(
         self,
         *,
@@ -202,6 +241,7 @@ class BlueprintOrchestrator:
         spec_name: Optional[str] = None,
         gap_close_size: int = 7,
         mask_text: bool = True,
+        reinsert_text: bool = False,
     ) -> BlueprintResult:
         """
         Process a blueprint file through extraction and cleanup.
@@ -221,6 +261,8 @@ class BlueprintOrchestrator:
                   CleanupMode.REFINED for current logic (default)
             mask_text: If True, detect and mask text regions before gap closing
                        (Sprint 3 text-masking preprocessing)
+            reinsert_text: If True, extract text from image and add as TEXT
+                          entities on a separate layer (Sprint 3 faithful rendering)
 
         Returns:
             BlueprintResult with canonical artifacts
@@ -423,6 +465,61 @@ class BlueprintOrchestrator:
                     # Scale correction debug
                     stage_timings["scale_factor"] = round(scale_factor, 3)
                     stage_timings["spec_name"] = spec_name or ""
+
+                # CAM_READY_R2000: Paid-tier mode using Phase 3 with R2000 LWPOLYLINE output
+                elif mode == CleanupMode.CAM_READY_R2000:
+                    # Lazy-load Phase3Vectorizer to avoid circular import issues
+                    Phase3VectorizerClass = self._get_phase3_vectorizer()
+                    if Phase3VectorizerClass is None:
+                        error_detail = self._phase3_import_error or "unknown import error"
+                        return BlueprintResult(
+                            ok=False,
+                            stage="edge_extraction",
+                            error=f"Phase 3 vectorizer not available for CAM-ready R2000 output: {error_detail}",
+                            warnings=warnings,
+                        )
+
+                    # Create Phase 3 vectorizer with R2000 DXF version
+                    vectorizer = Phase3VectorizerClass(
+                        dpi=400,
+                        dxf_version='R2000',
+                        enable_ocr=False,
+                        enable_primitives=True,
+                    )
+
+                    # Extract with cam_ready=True for LWPOLYLINE output
+                    import time
+                    p3_start = time.time()
+
+                    p3_result = vectorizer.extract(
+                        source_path=str(input_path),
+                        output_path=str(raw_dxf_path),
+                        cam_ready=True,
+                        spec_name=spec_name,
+                    )
+
+                    p3_elapsed_ms = (time.time() - p3_start) * 1000
+
+                    # Convert Phase 3 ExtractionResult to orchestrator's ExtractionResult
+                    extract_result = ExtractionResult(
+                        success=p3_result.validation_passed or p3_result.output_dxf is not None,
+                        output_path=p3_result.output_dxf or str(raw_dxf_path),
+                        line_count=sum(len(v) for v in p3_result.contours_by_category.values()),
+                        edge_pixel_count=0,
+                        image_size_px=(0, 0),  # Not tracked in Phase 3
+                        output_size_mm=p3_result.dimensions_mm,
+                        mm_per_px=vectorizer.mm_per_px,
+                        processing_time_ms=p3_elapsed_ms,
+                        error="" if p3_result.output_dxf else "Phase 3 extraction failed",
+                        warnings=p3_result.warnings,
+                    )
+
+                    # Add CAM R2000 debug info
+                    stage_timings["cam_ready_r2000"] = True
+                    stage_timings["dxf_version"] = "R2000"
+                    stage_timings["phase3_scale_source"] = p3_result.scale_source
+                    stage_timings["phase3_scale_factor"] = round(p3_result.scale_factor, 3)
+
                 else:
                     # RESTORED_BASELINE: Use RETR_LIST (no hierarchy) like commit 86c49526
                     # All other modes use the default isolate_body=True (RETR_TREE + grouping)
@@ -490,6 +587,21 @@ class BlueprintOrchestrator:
                         candidate_count=counts.get("total", 0),
                     )
                     cleanup_valid = True
+                elif mode == CleanupMode.CAM_READY_R2000:
+                    # Use raw_dxf_path directly (Phase 3 already produced CAM-ready output)
+                    cleaned_dxf_path = raw_dxf_path
+                    clean_result = CleanResult(
+                        success=True,
+                        svg_preview="",
+                        dxf_path=str(raw_dxf_path),
+                        original_entity_count=extract_result.line_count,
+                        cleaned_entity_count=extract_result.line_count,
+                        contours_found=extract_result.line_count,
+                        chains_found=0,
+                        best_confidence=0.9,  # High confidence for CAM-ready output
+                        candidate_count=extract_result.line_count,
+                    )
+                    cleanup_valid = True
                 else:
                     clean_result = clean_blueprint_dxf(
                         input_path=str(raw_dxf_path),
@@ -510,6 +622,36 @@ class BlueprintOrchestrator:
                         # Validate cleanup result (adds warnings, does NOT block)
                         cleanup_valid, cleanup_warnings = validate_cleanup_result(clean_result)
                         warnings.extend(cleanup_warnings)
+
+                # ─── Stage: Text Reinsertion (optional) ───────────────────
+                text_count = 0
+                if reinsert_text and cleaned_dxf_path.exists():
+                    try:
+                        import cv2
+                        from .text_reinsertion import append_text_to_existing_dxf
+
+                        # Load source image for OCR
+                        img = cv2.imread(str(input_path))
+                        if img is not None:
+                            h, w = img.shape[:2]
+                            mm_per_px = target_height_mm / h
+                            text_count = append_text_to_existing_dxf(
+                                dxf_path=str(cleaned_dxf_path),
+                                image=img,
+                                image_height_px=h,
+                                mm_per_px=mm_per_px,
+                                min_confidence=0.3,
+                                layer_name="TEXT",
+                                layer_color=2,
+                            )
+                            if text_count > 0:
+                                stage_timings["text_reinserted"] = text_count
+                                logger.info(f"Text reinsertion: added {text_count} TEXT entities")
+                        else:
+                            warnings.append("Text reinsertion failed: could not load image")
+                    except Exception as e:
+                        warnings.append(f"Text reinsertion failed: {e}")
+                        logger.warning(f"Text reinsertion failed: {e}")
 
                 # ─── Stage: Encode DXF to base64 ──────────────────────────
                 report("encode", 80)
@@ -595,6 +737,27 @@ class BlueprintOrchestrator:
                         for reason in layered_acceptance.reasons:
                             if reason not in warnings:
                                 warnings.append(reason)
+
+                # CAM_READY_R2000: Accept CAM-ready output directly
+                elif mode == CleanupMode.CAM_READY_R2000:
+                    is_ok = dxf_valid
+                    stage = "complete" if is_ok else "extraction"
+
+                    selection = SelectionResult(
+                        candidate_count=extract_result.line_count,
+                        selected_index=0,
+                        selection_score=0.9,
+                        runner_up_score=0.0,
+                        winner_margin=0.9,
+                        reasons=["CAM-ready R2000 LWPOLYLINE output"],
+                    )
+
+                    rec = Recommendation(
+                        action=RecommendationAction.ACCEPT if is_ok else RecommendationAction.REJECT,
+                        reasons=["R2000 CAM-ready output for paid tier"] if is_ok else ["Extraction produced no output"],
+                        confidence=0.9 if is_ok else 0.0,
+                    )
+
                 else:
                     # Non-layered modes use traditional recommendation system
                     selection = SelectionResult(
