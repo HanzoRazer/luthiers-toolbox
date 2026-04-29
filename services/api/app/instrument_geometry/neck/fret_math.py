@@ -14,6 +14,38 @@ SEMITONE_RATIO = 2.0 ** (1.0 / 12.0)  # ≈ 1.05946309435929
 PERP_ANGLE_EPS = 1e-4  # ~0.006 degrees
 
 
+def perpendicular_distance_for_fret(fret_number: int, semitones_per_octave: int = 12) -> float:
+    """FretFind PD ratio for a given fret in equal temperament.
+
+    PD (Perpendicular Distance) is the ratio along the string at which a fret
+    should be perpendicular in a multiscale design. PD=0 means nut, PD=0.5 means
+    octave/12th fret, PD=1.0 means bridge.
+
+    Formula: PD = 1 - 2^(-fret_number / semitones_per_octave)
+
+    For 12-TET:
+        Fret 1  → 0.05613
+        Fret 7  → 0.33258
+        Fret 12 → 0.50000  (octave, FretFind default)
+        Fret 24 → 0.75000
+
+    Args:
+        fret_number: Fret number (0 = nut, must be >= 0)
+        semitones_per_octave: Number of divisions per octave (default 12)
+
+    Returns:
+        PD ratio in range [0, 1)
+
+    Raises:
+        ValueError: if fret_number < 0 or semitones_per_octave < 1
+    """
+    if fret_number < 0:
+        raise ValueError(f"fret_number must be >= 0 (got {fret_number})")
+    if semitones_per_octave < 1:
+        raise ValueError(f"semitones_per_octave must be >= 1 (got {semitones_per_octave})")
+    return 1.0 - 2.0 ** (-fret_number / semitones_per_octave)
+
+
 @dataclass
 class FanFretPoint:
     """A single point on a fan-fret (multiscale) fretboard."""
@@ -132,15 +164,85 @@ def compute_multiscale_fret_positions_mm(
     string_count: int,
     perpendicular_fret: int = 0,
     fretboard_width_mm: float = 50.0,
+    perpendicular_distance: Optional[float] = None,
+    scale_lengths_mm: Optional[List[float]] = None,
 ) -> List[List[FanFretPoint]]:
-    """Compute fret positions for a multiscale (fanned fret) instrument."""
+    """Compute fret positions for a multiscale (fanned fret) instrument.
+
+    Resolution order for perpendicular fret:
+        1. If perpendicular_distance is not None and in [0.0, 1.0]:
+           resolve to a perpendicular fret position via the FretFind PD convention.
+           PD is the ratio along the string at which the fret should be
+           perpendicular (PD=0 → nut, PD=0.5 → octave/12th fret, PD=1.0 → bridge).
+        2. Elif perpendicular_fret > 0:
+           use the existing integer-fret behavior.
+        3. Else: no forced perpendicular (frets fan freely).
+
+        If both perpendicular_distance and perpendicular_fret are provided,
+        raise ValueError — caller must pick one.
+
+    Resolution order for scale lengths:
+        1. If scale_lengths_mm is provided AND len(scale_lengths_mm) == string_count:
+           use per-string scale array. bass_scale_mm and treble_scale_mm are
+           ignored (with a logged warning if they conflict with the array endpoints).
+        2. Else: use bass_scale_mm + treble_scale_mm with linear interpolation
+           (existing behavior, byte-identical output).
+    """
+    # Validate perpendicular parameters
+    if perpendicular_distance is not None and perpendicular_fret > 0:
+        raise ValueError(
+            "Cannot specify both perpendicular_distance and perpendicular_fret; pick one"
+        )
+
     if bass_scale_mm <= 0 or treble_scale_mm <= 0:
         raise ValueError("Scale lengths must be > 0")
     if fret_count <= 0 or string_count <= 1:
         raise ValueError("fret_count must be > 0, string_count must be > 1")
 
-    bass_positions = compute_fret_positions_mm(bass_scale_mm, fret_count)
-    treble_positions = compute_fret_positions_mm(treble_scale_mm, fret_count)
+    # Resolve per-string scale lengths
+    if scale_lengths_mm is not None and len(scale_lengths_mm) == string_count:
+        per_string_scales = list(scale_lengths_mm)
+        # Warn if endpoints conflict (>0.01mm tolerance)
+        if abs(per_string_scales[0] - bass_scale_mm) > 0.01 or \
+           abs(per_string_scales[-1] - treble_scale_mm) > 0.01:
+            import warnings
+            warnings.warn(
+                f"scale_lengths_mm endpoints ({per_string_scales[0]:.2f}, "
+                f"{per_string_scales[-1]:.2f}) differ from bass_scale_mm/treble_scale_mm "
+                f"({bass_scale_mm:.2f}, {treble_scale_mm:.2f}); using scale_lengths_mm"
+            )
+    else:
+        # Linear interpolation from bass to treble
+        per_string_scales = [
+            bass_scale_mm + (treble_scale_mm - bass_scale_mm) * (i / (string_count - 1))
+            for i in range(string_count)
+        ]
+
+    # Resolve perpendicular fret from PD if specified
+    effective_perp_fret = perpendicular_fret
+    if perpendicular_distance is not None:
+        if not (0.0 <= perpendicular_distance <= 1.0):
+            raise ValueError(
+                f"perpendicular_distance must be in [0.0, 1.0], got {perpendicular_distance}"
+            )
+        # Find the fret closest to this PD
+        # PD = 1 - 2^(-fret/12) → fret = -12 * log2(1 - PD)
+        if perpendicular_distance >= 1.0:
+            effective_perp_fret = fret_count
+        elif perpendicular_distance <= 0.0:
+            effective_perp_fret = 0
+        else:
+            import math
+            fret_float = -12.0 * math.log2(1.0 - perpendicular_distance)
+            effective_perp_fret = round(fret_float)
+
+    # Compute fret positions for each string
+    per_string_positions = [
+        compute_fret_positions_mm(scale, fret_count) for scale in per_string_scales
+    ]
+
+    bass_positions = per_string_positions[0]
+    treble_positions = per_string_positions[-1]
 
     frets: List[List[FanFretPoint]] = []
     half_width = fretboard_width_mm / 2.0
@@ -149,23 +251,23 @@ def compute_multiscale_fret_positions_mm(
         fret_line: List[FanFretPoint] = []
         bass_pos = bass_positions[fret_idx]
         treble_pos = treble_positions[fret_idx]
-        
+
         # Compute fret angle
         angle_rad, is_perp = _compute_fret_angle(
             bass_pos, treble_pos, fretboard_width_mm
         )
-        
+
         # Override: if this is the designated perpendicular fret, force perpendicular
-        if fret_idx + 1 == perpendicular_fret:
+        if fret_idx + 1 == effective_perp_fret:
             is_perp = True
             angle_rad = 0.0
 
         for string_idx in range(string_count):
-            # Linear interpolation from bass to treble
+            # Use per-string position if available, otherwise interpolate
+            x_pos = per_string_positions[string_idx][fret_idx]
             t = string_idx / (string_count - 1)
-            x_pos = bass_pos + (treble_pos - bass_pos) * t
             y_pos = -half_width + (fretboard_width_mm * t)  # -half to +half
-            
+
             point = FanFretPoint(
                 fret_number=fret_idx + 1,
                 string_index=string_idx,
@@ -173,8 +275,8 @@ def compute_multiscale_fret_positions_mm(
                 y_mm=y_pos,
                 angle_rad=angle_rad,
                 is_perpendicular=is_perp,
-                bass_scale_mm=bass_scale_mm,
-                treble_scale_mm=treble_scale_mm,
+                bass_scale_mm=per_string_scales[0],
+                treble_scale_mm=per_string_scales[-1],
             )
             fret_line.append(point)
 
