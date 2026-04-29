@@ -19,15 +19,20 @@ Repo-wide grep found **35 files** with direct `ezdxf.new()` calls that bypass th
 
 ## Version Distribution
 
-The violations use three different DXF versions, suggesting legitimate version needs per file:
+The violations use three different DXF versions — this is **historical drift, not deliberate design**:
 
-| Version | Use Case | Files |
-|---------|----------|-------|
-| R2010 | CAM surfaces, LWPOLYLINE needed | archtop CAM, headstock, neck profile |
-| R2000 | Middle ground | blueprint_cam, smart_guitar |
-| R12 | Consumer-facing, legacy compat | inlay, cleaner, helpers |
+| Version | Current Use | Files |
+|---------|-------------|-------|
+| R2010 | CAM surfaces, headstock, neck profile | archtop CAM, headstock, neck |
+| R2000 | blueprint_cam, smart_guitar | mixed production code |
+| R12 | inlay, cleaner, helpers | consumer-facing output |
 
-**Implication:** Future cleanup requires version-per-file decision, not uniform refactor.
+**Correction:** The version mixture does not indicate legitimate per-file needs. Future cleanup
+should default to **policy versions** based on generator's intended use:
+- **R12** — free tier, consumer-facing output
+- **R2000** — paid tier, CAM-ready output
+
+Do not preserve current versions as if they were deliberate choices.
 
 ---
 

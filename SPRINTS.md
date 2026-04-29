@@ -46,9 +46,9 @@ Repo-wide grep found **35 files** with direct `ezdxf.new()` calls:
 PR #10 refactored 3 critical bypass files. The remaining 32 are pre-existing
 violations that predate PR #10 — not regressions from R2000 work.
 
-**Version distribution matters:** Files use R12, R2000, and R2010 for different
-reasons (CAM surfaces need LWPOLYLINE → R2010; consumer output → R12). Future
-cleanup requires version-per-file decision, not uniform refactor.
+**Version distribution is historical drift, not deliberate design.** Files use
+R12, R2000, and R2010 inconsistently. Future cleanup should default to policy
+versions: R12 (free tier, consumer-facing) or R2000 (paid tier, CAM-ready).
 
 Resolution options:
 
