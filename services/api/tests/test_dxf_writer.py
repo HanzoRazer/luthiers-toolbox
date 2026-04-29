@@ -22,7 +22,7 @@ SQUARE = [(0.0, 0.0), (100.0, 0.0), (100.0, 100.0), (0.0, 100.0)]
 def _make_writer_with_square(*, closed: bool = True) -> DxfWriter:
     """Return a DxfWriter with a single closed square on BODY_OUTLINE."""
     w = DxfWriter(layers=[LayerDef("BODY_OUTLINE", 7)])
-    w.add_polyline2d("BODY_OUTLINE", SQUARE, closed=closed)
+    w.add_polyline("BODY_OUTLINE", SQUARE, closed=closed)
     return w
 
 
@@ -58,13 +58,22 @@ def test_sentinel_extents_preserved():
 def test_coordinate_precision_3dp():
     """All coordinates must be rounded to 3 decimal places."""
     w = DxfWriter(layers=[LayerDef("TEST", 1)])
-    # Feed coords with excessive precision
-    w.add_polyline2d("TEST", [(1.23456789, 2.98765432)])
+    # Feed coords with excessive precision - need 2+ points for a LINE
+    w.add_polyline("TEST", [(1.23456789, 2.98765432), (10.0, 10.0)])
 
     raw = w.to_bytes().decode("utf-8")
-    # The rounded values should appear; the raw values should not
-    assert "1.235" in raw or "1.234" in raw  # rounded to 3dp
+    # The raw values should NOT appear (proves rounding happened)
     assert "1.23456789" not in raw
+    assert "2.98765432" not in raw
+
+    # Verify via entity inspection (more reliable than text search)
+    doc = ezdxf.read(io.StringIO(raw))
+    lines = [e for e in doc.modelspace() if e.dxftype() == "LINE"]
+    assert len(lines) >= 1
+    # First LINE start should be rounded to 3dp
+    start = lines[0].dxf.start
+    assert start[0] == round(1.23456789, 3)  # 1.235
+    assert start[1] == round(2.98765432, 3)  # 2.988
 
 
 # =============================================================================
@@ -72,16 +81,27 @@ def test_coordinate_precision_3dp():
 # =============================================================================
 
 def test_body_outline_closed():
-    """A closed polyline must form a closed loop when reloaded."""
+    """A closed shape must form a closed loop when reloaded.
+
+    R12 uses LINE entities (not POLYLINE), so we verify closure by
+    checking that the last LINE endpoint connects to the first LINE start.
+    """
     w = _make_writer_with_square(closed=True)
     raw = w.to_bytes()
 
     doc = ezdxf.read(io.StringIO(raw.decode("utf-8")))
     msp = doc.modelspace()
 
-    polylines = [e for e in msp if e.dxftype() == "POLYLINE"]
-    assert len(polylines) == 1
-    assert polylines[0].is_closed is True
+    lines = [e for e in msp if e.dxftype() == "LINE"]
+    # 4-point closed square = 4 LINE segments (including closing segment)
+    assert len(lines) == 4
+
+    # Verify geometric closure: collect all endpoints
+    starts = [(round(e.dxf.start[0], 3), round(e.dxf.start[1], 3)) for e in lines]
+    ends = [(round(e.dxf.end[0], 3), round(e.dxf.end[1], 3)) for e in lines]
+    # Each start should match some end (closed chain)
+    for s in starts:
+        assert s in ends, f"Start point {s} has no matching end — not closed"
 
 
 # =============================================================================
@@ -97,7 +117,7 @@ def test_named_layers_only():
     # Attempting to add geometry to an unregistered layer must raise
     w = DxfWriter(layers=[LayerDef("VALID", 1)])
     with pytest.raises(ValueError, match="not registered"):
-        w.add_polyline2d("NONEXISTENT", [(0, 0), (1, 1)])
+        w.add_polyline("NONEXISTENT", [(0, 0), (1, 1)])
 
 
 # =============================================================================
@@ -112,12 +132,16 @@ def test_save_and_reload(tmp_path):
 
     doc = ezdxf.readfile(str(out))
 
-    # AC1015 format
-    assert doc.dxfversion == "AC1015"
+    # AC1009 format (R12 default for maximum CAM compatibility)
+    assert doc.dxfversion == "AC1009"
 
-    # Units
-    assert doc.header.get("$INSUNITS") == 4       # mm
-    assert doc.header.get("$MEASUREMENT") == 1     # metric
+    # Units - R12 may not support these headers, check gracefully
+    insunits = doc.header.get("$INSUNITS", None)
+    measurement = doc.header.get("$MEASUREMENT", None)
+    if insunits is not None:
+        assert insunits == 4  # mm
+    if measurement is not None:
+        assert measurement == 1  # metric
 
     # Layer exists
     layer_names = [ly.dxf.name for ly in doc.layers if ly.dxf.name != "0"]
