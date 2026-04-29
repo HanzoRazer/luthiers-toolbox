@@ -81,6 +81,13 @@ from .layered_dxf_writer import (
     get_preset_from_string,
 )
 
+# Phase 3 vectorizer for CAM-ready R2000 output
+try:
+    from ..routers.blueprint.constants import PHASE3_AVAILABLE, Phase3Vectorizer
+except ImportError:
+    PHASE3_AVAILABLE = False
+    Phase3Vectorizer = None
+
 logger = logging.getLogger(__name__)
 
 # Type alias for progress callbacks
@@ -426,6 +433,58 @@ class BlueprintOrchestrator:
                     # Scale correction debug
                     stage_timings["scale_factor"] = round(scale_factor, 3)
                     stage_timings["spec_name"] = spec_name or ""
+
+                # CAM_READY_R2000: Paid-tier mode using Phase 3 with R2000 LWPOLYLINE output
+                elif mode == CleanupMode.CAM_READY_R2000:
+                    if not PHASE3_AVAILABLE or Phase3Vectorizer is None:
+                        return BlueprintResult(
+                            ok=False,
+                            stage="edge_extraction",
+                            error="Phase 3 vectorizer not available for CAM-ready R2000 output",
+                            warnings=warnings,
+                        )
+
+                    # Create Phase 3 vectorizer with R2000 DXF version
+                    vectorizer = Phase3Vectorizer(
+                        dpi=400,
+                        dxf_version='R2000',
+                        enable_ocr=False,
+                        enable_primitives=True,
+                    )
+
+                    # Extract with cam_ready=True for LWPOLYLINE output
+                    import time
+                    p3_start = time.time()
+
+                    p3_result = vectorizer.extract_to_file(
+                        source_path=str(input_path),
+                        output_path=str(raw_dxf_path),
+                        cam_ready=True,
+                        spec_name=spec_name,
+                    )
+
+                    p3_elapsed_ms = (time.time() - p3_start) * 1000
+
+                    # Convert Phase 3 ExtractionResult to orchestrator's ExtractionResult
+                    extract_result = ExtractionResult(
+                        success=p3_result.validation_passed or p3_result.output_dxf is not None,
+                        output_path=p3_result.output_dxf or str(raw_dxf_path),
+                        line_count=sum(len(v) for v in p3_result.contours_by_category.values()),
+                        edge_pixel_count=0,
+                        image_size_px=(0, 0),  # Not tracked in Phase 3
+                        output_size_mm=p3_result.dimensions_mm,
+                        mm_per_px=vectorizer.mm_per_px,
+                        processing_time_ms=p3_elapsed_ms,
+                        error="" if p3_result.output_dxf else "Phase 3 extraction failed",
+                        warnings=p3_result.warnings,
+                    )
+
+                    # Add CAM R2000 debug info
+                    stage_timings["cam_ready_r2000"] = True
+                    stage_timings["dxf_version"] = "R2000"
+                    stage_timings["phase3_scale_source"] = p3_result.scale_source
+                    stage_timings["phase3_scale_factor"] = round(p3_result.scale_factor, 3)
+
                 else:
                     # RESTORED_BASELINE: Use RETR_LIST (no hierarchy) like commit 86c49526
                     # All other modes use the default isolate_body=True (RETR_TREE + grouping)
@@ -491,6 +550,21 @@ class BlueprintOrchestrator:
                         chains_found=0,
                         best_confidence=0.8,  # High confidence for layered output
                         candidate_count=counts.get("total", 0),
+                    )
+                    cleanup_valid = True
+                elif mode == CleanupMode.CAM_READY_R2000:
+                    # Use raw_dxf_path directly (Phase 3 already produced CAM-ready output)
+                    cleaned_dxf_path = raw_dxf_path
+                    clean_result = CleanResult(
+                        success=True,
+                        svg_preview="",
+                        dxf_path=str(raw_dxf_path),
+                        original_entity_count=extract_result.line_count,
+                        cleaned_entity_count=extract_result.line_count,
+                        contours_found=extract_result.line_count,
+                        chains_found=0,
+                        best_confidence=0.9,  # High confidence for CAM-ready output
+                        candidate_count=extract_result.line_count,
                     )
                     cleanup_valid = True
                 else:
@@ -628,6 +702,27 @@ class BlueprintOrchestrator:
                         for reason in layered_acceptance.reasons:
                             if reason not in warnings:
                                 warnings.append(reason)
+
+                # CAM_READY_R2000: Accept CAM-ready output directly
+                elif mode == CleanupMode.CAM_READY_R2000:
+                    is_ok = dxf_valid
+                    stage = "complete" if is_ok else "extraction"
+
+                    selection = SelectionResult(
+                        candidate_count=extract_result.line_count,
+                        selected_index=0,
+                        selection_score=0.9,
+                        runner_up_score=0.0,
+                        winner_margin=0.9,
+                        reasons=["CAM-ready R2000 LWPOLYLINE output"],
+                    )
+
+                    rec = Recommendation(
+                        action=RecommendationAction.ACCEPT if is_ok else RecommendationAction.REJECT,
+                        reasons=["R2000 CAM-ready output for paid tier"] if is_ok else ["Extraction produced no output"],
+                        confidence=0.9 if is_ok else 0.0,
+                    )
+
                 else:
                     # Non-layered modes use traditional recommendation system
                     selection = SelectionResult(
