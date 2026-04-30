@@ -28,6 +28,7 @@ from fastapi import APIRouter
 
 from .dxf_workflow import router as dxf_router
 from .fret_math import router as fret_router
+from .fretboard import router as fretboard_router
 from .rmos_safety import router as rmos_router
 from .instrument import router as instrument_router
 from .acoustics import router as acoustics_router
@@ -42,6 +43,7 @@ router = APIRouter(prefix="/api/v1", tags=["API v1"])
 # Mount sub-routers
 router.include_router(dxf_router)
 router.include_router(fret_router)
+router.include_router(fretboard_router)
 router.include_router(rmos_router)
 router.include_router(instrument_router)
 router.include_router(acoustics_router)

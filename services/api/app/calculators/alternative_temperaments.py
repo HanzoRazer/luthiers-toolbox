@@ -23,6 +23,9 @@ from .temperament_ratios import (
 class TemperamentSystem(str, Enum):
     """Available temperament systems."""
     EQUAL_12TET = "12-TET"
+    EQUAL_19TET = "19-TET"
+    EQUAL_24TET = "24-TET"
+    EQUAL_31TET = "31-TET"
     JUST_MAJOR = "just_major"
     JUST_MINOR = "just_minor"
     PYTHAGOREAN = "pythagorean"
@@ -101,6 +104,110 @@ def compute_equal_temperament_position(
     """Compute fret position using standard 12-TET."""
     ratio = 2 ** (fret_number / 12)
     return position_from_ratio(ratio, scale_length_mm)
+
+
+def compute_n_tet_ratios(n: int, fret_count: int) -> List[float]:
+    """Generate frequency ratios for N-tone equal temperament.
+
+    For N-TET, each fret raises pitch by 2^(1/N). Standard guitar uses 12-TET
+    (12 semitones per octave). Microtonal instruments use 19-TET, 24-TET
+    (quarter-tones), 31-TET (close approximation to meantone), etc.
+
+    Args:
+        n: Number of equal divisions per octave (must be >= 2)
+        fret_count: Number of fret positions to generate
+
+    Returns:
+        List of frequency ratios [r_1, r_2, ..., r_fret_count] where
+        r_i is the pitch ratio at fret i relative to the open string (1/1).
+
+    Raises:
+        ValueError: if n < 2 or fret_count < 1
+
+    Example:
+        >>> compute_n_tet_ratios(12, 12)
+        [1.0595..., 1.1225..., ..., 2.0]  # standard guitar octave
+        >>> compute_n_tet_ratios(24, 24)
+        [1.0293..., 1.0595..., ..., 2.0]  # quarter-tone fretting
+    """
+    if n < 2:
+        raise ValueError(f"n must be >= 2 (got {n}); 1-TET has no fret positions")
+    if fret_count < 1:
+        raise ValueError(f"fret_count must be >= 1 (got {fret_count})")
+
+    return [2.0 ** (i / n) for i in range(1, fret_count + 1)]
+
+
+def resolve_temperament_ratios(
+    system: TemperamentSystem,
+    fret_count: int,
+    custom_ratios: Optional[List[float]] = None,
+) -> List[float]:
+    """Resolve a TemperamentSystem to a flat list of fret ratios.
+
+    Returns the ratios that compute_fret_positions_from_ratios_mm consumes.
+    Unifies the per-system functions (just_intonation, pythagorean, meantone)
+    behind a single dispatch.
+
+    For N-TET systems, calls compute_n_tet_ratios.
+    For named systems (just_*, pythagorean, meantone_1/4), uses the ratio tables
+    and extends across octaves.
+    For CUSTOM, returns custom_ratios verbatim.
+
+    Args:
+        system: The temperament system to resolve
+        fret_count: Number of fret positions to generate
+        custom_ratios: Required if system is CUSTOM
+
+    Returns:
+        List of frequency ratios for each fret position
+
+    Raises:
+        ValueError: if system is CUSTOM but custom_ratios not provided,
+                    or if system is unknown
+    """
+    if system == TemperamentSystem.CUSTOM:
+        if not custom_ratios:
+            raise ValueError("CUSTOM temperament requires custom_ratios")
+        return list(custom_ratios)
+
+    # N-TET systems
+    if system == TemperamentSystem.EQUAL_12TET:
+        return compute_n_tet_ratios(12, fret_count)
+    if system == TemperamentSystem.EQUAL_19TET:
+        return compute_n_tet_ratios(19, fret_count)
+    if system == TemperamentSystem.EQUAL_24TET:
+        return compute_n_tet_ratios(24, fret_count)
+    if system == TemperamentSystem.EQUAL_31TET:
+        return compute_n_tet_ratios(31, fret_count)
+
+    # Named non-equal temperaments - use ratio tables extended across octaves
+    if system == TemperamentSystem.JUST_MAJOR:
+        base_ratios = JUST_MAJOR_RATIOS
+    elif system == TemperamentSystem.JUST_MINOR:
+        # Just minor uses same table as major for now (minor mode differences
+        # are in which intervals are emphasized, not the ratios themselves)
+        base_ratios = JUST_MAJOR_RATIOS
+    elif system == TemperamentSystem.PYTHAGOREAN:
+        base_ratios = PYTHAGOREAN_RATIOS
+    elif system == TemperamentSystem.MEANTONE_QUARTER:
+        base_ratios = MEANTONE_RATIOS
+    else:
+        raise ValueError(f"Unknown temperament system: {system}")
+
+    # Generate per-fret ratios by extending across octaves
+    per_fret_ratios: List[float] = []
+    for fret in range(1, fret_count + 1):
+        semitone = fret % 12
+        if semitone == 0:
+            semitone = 12
+        octave = (fret - 1) // 12
+
+        ratio_tuple = base_ratios.get(semitone, (1, 1))
+        ratio_float = ratio_to_float(ratio_tuple) * (2 ** octave)
+        per_fret_ratios.append(ratio_float)
+
+    return per_fret_ratios
 
 
 def compute_deviation_cents(

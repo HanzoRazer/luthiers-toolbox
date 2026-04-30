@@ -157,10 +157,14 @@
             <button @click="downloadCSV" class="btn btn-secondary">
               Download CSV
             </button>
-            <button @click="downloadDXF" class="btn btn-primary">
-              Download DXF Template
+            <button @click="downloadDXF" class="btn btn-primary" :disabled="dxfLoading">
+              {{ dxfLoading ? 'Generating...' : 'Download DXF Template' }}
             </button>
+            <span class="tier-badge" :class="`tier-${currentTier}`">
+              {{ currentTier === 'pro' ? 'Pro' : 'Free' }} ({{ inferredDxfVersion }})
+            </span>
           </div>
+          <p v-if="dxfError" class="error-message">{{ dxfError }}</p>
         </div>
       </div>
     </div>
@@ -187,6 +191,16 @@
 
 <script setup lang="ts">
 import { ref, computed } from 'vue'
+import { useFretboardEcosphere } from '@/design-utilities/lutherie/neck/useFretboardEcosphere'
+import type { TemperamentType } from '@/api/fretboardEcosphere'
+
+const {
+  loading: dxfLoading,
+  error: dxfError,
+  currentTier,
+  inferredDxfVersion,
+  downloadDxf,
+} = useFretboardEcosphere()
 
 const steps = [
   { label: 'Scale Length' },
@@ -225,6 +239,22 @@ const canProceed = computed(() => {
   if (currentStep.value === 2) return params.value.slotWidth > 0
   return true
 })
+
+const temperamentMap: Record<string, TemperamentType> = {
+  equal_12: 'equal_12',
+  pythagorean: 'pythagorean',
+  just_major: 'just_major',
+  meantone: 'meantone_quarter',
+}
+
+const currentRequest = computed(() => ({
+  scaleLengthMm: params.value.scaleLength,
+  fretCount: params.value.fretCount,
+  temperament: temperamentMap[params.value.temperament] ?? 'equal_12',
+  nutWidthMm: params.value.nutWidth,
+  slotWidthMm: params.value.slotWidth,
+  radius: params.value.radius > 0 ? { nutRadiusMm: params.value.radius } : undefined,
+}))
 
 function selectPreset(preset: typeof scalePresets[0]) {
   selectedPreset.value = preset.id
@@ -277,10 +307,12 @@ function downloadCSV() {
   URL.revokeObjectURL(url)
 }
 
-function downloadDXF() {
-  // In a real implementation, this would generate a proper DXF
-  // For now, show a message
-  alert('DXF generation would be implemented via the CAM API')
+async function downloadDXF() {
+  try {
+    await downloadDxf(currentRequest.value)
+  } catch {
+    // Error captured in dxfError ref
+  }
 }
 
 async function nextStep() {
@@ -550,6 +582,30 @@ function prevStep() {
   display: flex;
   gap: 1rem;
   margin-top: 1.5rem;
+  align-items: center;
+}
+
+.tier-badge {
+  display: inline-block;
+  padding: 0.25rem 0.5rem;
+  border-radius: 0.25rem;
+  font-size: 0.75rem;
+}
+
+.tier-free {
+  background: var(--color-bg-tertiary, #e5e7eb);
+  color: var(--color-text-secondary, #666);
+}
+
+.tier-pro {
+  background: var(--color-primary, #3b82f6);
+  color: white;
+}
+
+.error-message {
+  color: var(--color-error, #ef4444);
+  font-size: 0.875rem;
+  margin-top: 0.5rem;
 }
 
 .wizard-footer {

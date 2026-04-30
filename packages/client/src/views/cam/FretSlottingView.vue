@@ -6,9 +6,10 @@
  * Connected to API endpoints:
  *   POST /api/cam/fret-slots/preview
  *   POST /api/cam/fret-slots/generate
- *   GET  /api/calculators/fret-positions
+ *   POST /api/v1/fretboard/dxf (DXF export via ecosphere)
  */
 import { ref, computed } from 'vue'
+import { useFretboardEcosphere } from '@/design-utilities/lutherie/neck/useFretboardEcosphere'
 
 const scaleLength = ref(648)  // mm
 const fretCount = ref(22)
@@ -23,7 +24,23 @@ const spindleSpeed = ref(8000)
 const multiPass = ref(false)
 const passDepth = ref(1.5)
 
+const {
+  loading: dxfLoading,
+  error: dxfError,
+  currentTier,
+  inferredDxfVersion,
+  downloadDxf,
+} = useFretboardEcosphere()
+
 const loading = ref(false)
+
+const currentRequest = computed(() => ({
+  scaleLengthMm: scaleLength.value,
+  fretCount: fretCount.value,
+  slotWidthMm: slotWidth.value,
+  nutWidthMm: fretboardWidth.value,
+  heelWidthMm: fretboardTaper.value,
+}))
 
 // Computed fret positions (simplified calculation)
 const fretPositions = computed(() => {
@@ -41,7 +58,11 @@ async function generateToolpath() {
 }
 
 async function exportDxf() {
-  alert('DXF export coming soon')
+  try {
+    await downloadDxf(currentRequest.value)
+  } catch {
+    // Error captured in dxfError ref
+  }
 }
 </script>
 
@@ -131,8 +152,14 @@ async function exportDxf() {
           <button class="btn btn-primary" @click="generateToolpath" :disabled="loading">
             Generate Toolpath
           </button>
-          <button class="btn btn-secondary" @click="exportDxf">Export DXF</button>
+          <button class="btn btn-secondary" @click="exportDxf" :disabled="dxfLoading">
+            {{ dxfLoading ? 'Generating...' : 'Export DXF' }}
+          </button>
+          <span class="tier-badge" :class="`tier-${currentTier}`">
+            {{ currentTier === 'pro' ? 'Pro' : 'Free' }} ({{ inferredDxfVersion }})
+          </span>
         </div>
+        <p v-if="dxfError" class="error-message">{{ dxfError }}</p>
       </div>
     </div>
 
@@ -170,11 +197,18 @@ async function exportDxf() {
 .placeholder .icon { font-size: 3rem; display: block; margin-bottom: 0.5rem; }
 .detail { font-size: 0.75rem; color: #888; }
 
-.action-buttons { display: flex; gap: 0.75rem; }
+.action-buttons { display: flex; gap: 0.75rem; align-items: center; }
 .btn { flex: 1; padding: 0.75rem; border-radius: 0.5rem; font-weight: 600; cursor: pointer; border: none; }
 .btn-primary { background: #2563eb; color: #fff; }
 .btn-primary:disabled { background: #333; color: #666; }
 .btn-secondary { background: #262626; color: #e5e5e5; border: 1px solid #333; }
+.btn-secondary:disabled { background: #1a1a1a; color: #555; cursor: wait; }
+
+.tier-badge { display: inline-block; padding: 0.25rem 0.5rem; border-radius: 0.25rem; font-size: 0.75rem; flex-shrink: 0; }
+.tier-free { background: #333; color: #888; }
+.tier-pro { background: #2563eb; color: #fff; }
+
+.error-message { color: #ef4444; font-size: 0.875rem; margin-top: 0.5rem; }
 
 .coming-soon-notice { max-width: 1400px; margin: 2rem auto 0; padding: 1rem; background: #1e3a5f; border-radius: 0.5rem; text-align: center; color: #60a5fa; }
 
