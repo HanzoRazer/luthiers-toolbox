@@ -184,6 +184,34 @@ def scala_to_fret_ratios(
     return ratios
 
 
+def scala_scale_from_cents(
+    cents: List[float],
+    description: str = "Generated scale",
+) -> ScalaScale:
+    """Build a ScalaScale from a flat list of cents values.
+
+    Useful for adapting outputs from systems that emit cents directly
+    (like FretboardEcosphere.to_scala_intervals) into the canonical
+    ScalaScale shape that serialize_scala_to_text consumes.
+
+    Each cents value becomes a ScalaPitch with cents preserved as the
+    source form. The frequency_ratio is derived from cents.
+    """
+    pitches: List[ScalaPitch] = []
+    for c in cents:
+        pitches.append(ScalaPitch(
+            source_text=f"{c:.6f}",
+            cents=c,
+            ratio=None,
+            frequency_ratio=2.0 ** (c / 1200.0),
+        ))
+    return ScalaScale(
+        description=description,
+        pitch_count=len(pitches),
+        pitches=pitches,
+    )
+
+
 def serialize_scala_to_text(scale: ScalaScale) -> str:
     """Serialize a ScalaScale back to .scl file format.
 

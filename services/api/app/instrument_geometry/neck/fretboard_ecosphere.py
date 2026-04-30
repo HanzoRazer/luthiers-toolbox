@@ -628,3 +628,18 @@ class FretboardEcosphere(BaseModel):
                 intervals.append(round(cents, 3))
 
         return intervals
+
+
+def build_ecosphere(req: FretboardInput) -> FretboardEcosphere:
+    """Build the canonical fretboard ecosphere from validated input.
+
+    Thin wrapper around FretboardEcosphere.compute() that exists to give
+    consumers (router, CLI, tests, future Fusion add-in) a stable public
+    function to depend on rather than the classmethod's internal name.
+
+    Raises:
+        ValueError: if downstream kernels reject the input (non-monotonic
+            ratios, invalid scale length, etc.). Pydantic validation is
+            already handled at the FretboardInput layer.
+    """
+    return FretboardEcosphere.compute(req)
