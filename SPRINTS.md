@@ -1,5 +1,5 @@
 # The Production Shop — Sprint Registry
-Last updated: 2026-04-26
+Last updated: 2026-04-30
 Maintained by: Ross Echols (HanzoRazer)
 Maintenance discipline: docs/SPRINTS_MAINTENANCE.md
 
@@ -960,19 +960,21 @@ Not blocking FRET-A or any current sprint. Triage when DXF hygiene sprint schedu
 
 ### Sprint FRET-A — Fretboard Ecosphere API
 
-**Status:** COMPLETED (Phase 7)
-**Tag:** v2.5.0-alpha.1-phase7
-**Completed:** 2026-04-29
+**Status:** COMPLETED (Phase 8)
+**Tag:** v2.5.0-alpha.1-phase7 (Phase 7), 95b92f8a (Phase 8)
+**Completed:** 2026-04-30
 **Branch:** sprint/fret-ecosphere-a
 
-Canonical Pydantic-validated fretboard geometry with honest temperament math
-and full nine-layer DXF projection verified through GRBL pipeline.
+Canonical Pydantic-validated fretboard geometry with honest temperament math,
+full nine-layer DXF projection verified through GRBL pipeline, and frontend
+wire-up with tier-aware DXF version selection.
 
 **Phase summary:**
   - Phase 1: Schema (FretboardInput, FretboardEcosphere, FretLine, StringPath)
   - Phase 1.5: Math kernel honesty refactor (real N-TET, Pythagorean, Scala)
   - Phase 2: FastAPI router (/compute, /dxf, /scala, /presets, /schema)
   - Phase 7: Nine-layer DXF projection with R2000 LWPOLYLINE CAM verification
+  - Phase 8: Frontend wire-up — API client, composable, tier badge (R12 free, R2000 pro)
 
 **Phase 7 verification results (R2000):**
 
@@ -991,8 +993,13 @@ and full nine-layer DXF projection verified through GRBL pipeline.
 GRBL pipeline test confirms closed LWPOLYLINE emission avoids the 2-point
 loop-assembly gap identified in cam_pipeline_r2000_compat 2026-04-29.
 
+**Phase 8 deliverables (2026-04-30):**
+  - packages/client/src/api/fretboardEcosphere.ts — typed client, camelCase↔snake_case
+  - packages/client/src/design-utilities/lutherie/neck/useFretboardEcosphere.ts — composable
+  - FretSlottingView.vue, FretboardWizard.vue — alert stubs replaced with real DXF download
+  - Tier badge shows "Free (R12)" or "Pro (R2000)" based on useAuthStore
+
 **Remaining sprints (separate):**
-  - Phase 8 (FRET-B): Frontend wire-up
   - Sprint FRET-D: Harmonics overlay (Zone-Tritone integration)
   - Fusion add-in: Standalone sprint
 
