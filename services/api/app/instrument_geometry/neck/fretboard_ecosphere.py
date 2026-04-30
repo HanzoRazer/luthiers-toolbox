@@ -193,6 +193,15 @@ class FretboardInput(BaseModel):
     # Extension
     extension_mm: float = Field(0.0, ge=0, le=50, description="Length past last fret")
 
+    # Fret slot configuration (for DXF projection)
+    slot_width_mm: float = Field(
+        default=0.58,
+        ge=0.1,
+        le=3.0,
+        description="Fret slot width in mm. Default 0.58mm matches standard "
+                    "Jescar 47104 / Stewart-MacDonald 0148 medium fret wire tang."
+    )
+
     # Intonation
     intonation_offsets_mm: Dict[int, float] = Field(
         default_factory=dict,
@@ -651,10 +660,18 @@ def write_ecosphere_dxf(
 ) -> bytes:
     """Project ecosphere to DXF bytes via central DxfWriter.
 
-    Phase 2 stub: emits FRETS layer with fret line positions.
-    Phase 7 (v2 dev order) populates STRINGS, FRETBOARD_OUTLINE,
-    FRET_SLOTS, NUT, BRIDGE, BRIDGE_COMPENSATED, HARMONICS_OVERLAY,
-    ANNOTATIONS.
+    Sprint FRET-A Phase 7: Full nine-layer DXF projection.
+
+    Layers emitted:
+        STRINGS            - Lines from nut to bridge per string
+        FRETS              - Lines from bass to treble endpoints
+        FRETBOARD_OUTLINE  - 4-point closed contour
+        FRET_SLOTS         - Closed rectangles per slot (for CAM)
+        NUT                - Single line at x=0 + circles at string positions
+        BRIDGE             - Theoretical saddle line at scale_length_mm
+        BRIDGE_COMPENSATED - Per-string points where intonation_offset != 0
+        HARMONICS_OVERLAY  - Empty (future Sprint FRET-D)
+        ANNOTATIONS        - Fret numbers + scale length label
 
     Args:
         eco: The computed FretboardEcosphere document
@@ -665,14 +682,140 @@ def write_ecosphere_dxf(
     """
     from app.cam.dxf_writer import DxfWriter, LayerDef
 
+    # Layer definitions with distinct colors for CAD visibility
+    STRINGS = "STRINGS"
+    FRETS = "FRETS"
+    FRETBOARD_OUTLINE = "FRETBOARD_OUTLINE"
+    FRET_SLOTS = "FRET_SLOTS"
+    NUT = "NUT"
+    BRIDGE = "BRIDGE"
+    BRIDGE_COMPENSATED = "BRIDGE_COMPENSATED"
+    HARMONICS_OVERLAY = "HARMONICS_OVERLAY"
+    ANNOTATIONS = "ANNOTATIONS"
+
     writer = DxfWriter(
-        layers=[LayerDef(name="FRETS", color=7)],
+        layers=[
+            LayerDef(name=STRINGS, color=3),             # Green
+            LayerDef(name=FRETS, color=7),               # White
+            LayerDef(name=FRETBOARD_OUTLINE, color=5),   # Blue
+            LayerDef(name=FRET_SLOTS, color=1),          # Red (CAM critical)
+            LayerDef(name=NUT, color=6),                 # Magenta
+            LayerDef(name=BRIDGE, color=4),              # Cyan
+            LayerDef(name=BRIDGE_COMPENSATED, color=2),  # Yellow
+            LayerDef(name=HARMONICS_OVERLAY, color=8),   # Gray
+            LayerDef(name=ANNOTATIONS, color=7),         # White
+        ],
         version=version,
     )
-    for fl in eco.fret_lines[1:]:
+
+    # Extract slot_width from input params
+    slot_width_mm = getattr(eco.input_params, "slot_width_mm", 0.58)
+
+    # === STRINGS layer: lines from nut to bridge ===
+    for sp in eco.string_paths:
+        nut_pt = sp.nut_position
+        bridge_pt = sp.bridge_position
+        writer.add_line(STRINGS, nut_pt, bridge_pt)
+
+    # === FRETS layer: lines from bass to treble ===
+    for fl in eco.fret_lines[1:]:  # Skip fret 0 (nut)
         if len(fl.points) >= 2:
             bass_pt = (fl.points[0].x_mm, fl.points[0].y_mm)
             treble_pt = (fl.points[-1].x_mm, fl.points[-1].y_mm)
-            writer.add_line("FRETS", bass_pt, treble_pt)
+            writer.add_line(FRETS, bass_pt, treble_pt)
+
+    # === FRETBOARD_OUTLINE layer: closed 4-point contour ===
+    if eco.outline_points and len(eco.outline_points) >= 4:
+        writer.add_polyline(FRETBOARD_OUTLINE, eco.outline_points, closed=True)
+
+    # === FRET_SLOTS layer: closed rectangles for CAM ===
+    # Each slot is a rectangle centered on the fret line with slot_width_mm width
+    for fl in eco.fret_lines[1:]:  # Skip nut
+        if len(fl.points) >= 2:
+            bass_pt = fl.points[0]
+            treble_pt = fl.points[-1]
+
+            # Compute half-width offset perpendicular to fret line
+            half_w = slot_width_mm / 2.0
+
+            # For standard frets (perpendicular), offset is purely in X
+            # For fan frets, we need proper perpendicular offset
+            if fl.is_perpendicular or abs(fl.angle_rad) < 0.001:
+                # Perpendicular fret: slot extends in X direction
+                slot_points = [
+                    (bass_pt.x_mm - half_w, bass_pt.y_mm),
+                    (bass_pt.x_mm + half_w, bass_pt.y_mm),
+                    (treble_pt.x_mm + half_w, treble_pt.y_mm),
+                    (treble_pt.x_mm - half_w, treble_pt.y_mm),
+                ]
+            else:
+                # Fan fret: compute perpendicular offset
+                import math
+                dx = treble_pt.x_mm - bass_pt.x_mm
+                dy = treble_pt.y_mm - bass_pt.y_mm
+                length = math.sqrt(dx * dx + dy * dy)
+                if length > 0:
+                    # Unit perpendicular vector (rotated 90 degrees)
+                    px = -dy / length
+                    py = dx / length
+                    ox, oy = px * half_w, py * half_w
+                    slot_points = [
+                        (bass_pt.x_mm - ox, bass_pt.y_mm - oy),
+                        (bass_pt.x_mm + ox, bass_pt.y_mm + oy),
+                        (treble_pt.x_mm + ox, treble_pt.y_mm + oy),
+                        (treble_pt.x_mm - ox, treble_pt.y_mm - oy),
+                    ]
+                else:
+                    continue  # Degenerate fret line
+
+            writer.add_polyline(FRET_SLOTS, slot_points, closed=True)
+
+    # === NUT layer: single line + string position markers ===
+    if eco.outline_points and len(eco.outline_points) >= 4:
+        # Nut line from outline corners (points 0 and 3 are nut corners)
+        nut_bass = eco.outline_points[0]
+        nut_treble = eco.outline_points[3]
+        writer.add_line(NUT, nut_bass, nut_treble)
+
+    # String slot markers on nut
+    for sp in eco.string_paths:
+        nut_pt = sp.nut_position
+        writer.add_circle(NUT, nut_pt, radius=0.5)
+
+    # === BRIDGE layer: theoretical saddle line ===
+    if eco.string_paths:
+        # Get bass and treble bridge positions (without compensation)
+        bass_bridge = eco.string_paths[0].bridge_position
+        treble_bridge = eco.string_paths[-1].bridge_position
+        writer.add_line(BRIDGE, bass_bridge, treble_bridge)
+
+    # === BRIDGE_COMPENSATED layer: per-string saddle points ===
+    for sp in eco.string_paths:
+        offset = sp.intonation_offset_mm
+        if abs(offset) > 0.001:
+            # Compensated position: bridge_position already includes offset
+            # in the schema (bridge_position = scale + offset)
+            writer.add_circle(BRIDGE_COMPENSATED, sp.bridge_position, radius=0.3)
+
+    # === HARMONICS_OVERLAY layer: empty for Phase 7 ===
+    # Future Sprint FRET-D will populate this with harmonic markers
+
+    # === ANNOTATIONS layer: fret numbers + scale length ===
+    # Fret numbers below bass-side endpoint
+    for fl in eco.fret_lines[1:]:
+        if fl.points:
+            bass_pt = fl.points[0]
+            writer.add_text(
+                ANNOTATIONS,
+                str(fl.fret_number),
+                (bass_pt.x_mm, bass_pt.y_mm - 4.0),
+                height=2.5,
+            )
+
+    # Scale length label
+    scale_mm = eco.input_params.scale_length_mm
+    scale_in = scale_mm / 25.4
+    label = f"Scale: {scale_mm:.1f}mm ({scale_in:.2f}in)"
+    writer.add_text(ANNOTATIONS, label, (0.0, -30.0), height=3.0)
 
     return writer.to_bytes()

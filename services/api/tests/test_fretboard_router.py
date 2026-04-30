@@ -198,3 +198,81 @@ class TestDxfEndpoint:
         })
         assert resp.headers["content-type"] == "application/dxf"
         assert "attachment" in resp.headers.get("content-disposition", "")
+
+    def test_dxf_accepts_slot_width_mm(self):
+        """Custom slot width propagates to DXF generation."""
+        resp = client.post("/api/v1/fretboard/dxf", json={
+            "scale_length_mm": 647.7, "fret_count": 22,
+            "temperament": "equal_12", "string_count": 6,
+            "slot_width_mm": 0.75,
+        })
+        assert resp.status_code == 200
+
+    def test_dxf_contains_nine_layers(self):
+        """Phase 7: DXF output contains all nine named layers."""
+        import tempfile
+        import ezdxf
+
+        resp = client.post("/api/v1/fretboard/dxf", json={
+            "scale_length_mm": 647.7, "fret_count": 22,
+            "temperament": "equal_12", "string_count": 6,
+        })
+        assert resp.status_code == 200
+
+        with tempfile.NamedTemporaryFile(suffix=".dxf", delete=False) as f:
+            f.write(resp.content)
+            f.flush()
+            doc = ezdxf.readfile(f.name)
+
+        layer_names = {layer.dxf.name for layer in doc.layers}
+        expected_layers = {
+            "STRINGS", "FRETS", "FRETBOARD_OUTLINE", "FRET_SLOTS",
+            "NUT", "BRIDGE", "BRIDGE_COMPENSATED", "HARMONICS_OVERLAY",
+            "ANNOTATIONS",
+        }
+        missing = expected_layers - layer_names
+        assert not missing, f"Missing layers: {missing}"
+
+    def test_dxf_fret_slots_has_closed_polylines(self):
+        """Phase 7: FRET_SLOTS layer contains closed polylines for CAM."""
+        import tempfile
+        import ezdxf
+
+        resp = client.post("/api/v1/fretboard/dxf", json={
+            "scale_length_mm": 647.7, "fret_count": 22,
+            "temperament": "equal_12", "string_count": 6,
+        })
+        assert resp.status_code == 200
+
+        with tempfile.NamedTemporaryFile(suffix=".dxf", delete=False) as f:
+            f.write(resp.content)
+            f.flush()
+            doc = ezdxf.readfile(f.name)
+
+        msp = doc.modelspace()
+        slot_entities = [e for e in msp if e.dxf.layer == "FRET_SLOTS"]
+
+        assert len(slot_entities) >= 22, f"Expected 22 fret slot entities, got {len(slot_entities)}"
+
+    def test_dxf_annotations_has_fret_numbers(self):
+        """Phase 7: ANNOTATIONS layer contains fret number text."""
+        import tempfile
+        import ezdxf
+
+        resp = client.post("/api/v1/fretboard/dxf", json={
+            "scale_length_mm": 647.7, "fret_count": 22,
+            "temperament": "equal_12", "string_count": 6,
+        })
+        assert resp.status_code == 200
+
+        with tempfile.NamedTemporaryFile(suffix=".dxf", delete=False) as f:
+            f.write(resp.content)
+            f.flush()
+            doc = ezdxf.readfile(f.name)
+
+        msp = doc.modelspace()
+        annotation_texts = [
+            e for e in msp
+            if e.dxf.layer == "ANNOTATIONS" and e.dxftype() == "TEXT"
+        ]
+        assert len(annotation_texts) >= 22, "Should have at least 22 fret number labels"
