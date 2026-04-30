@@ -4,24 +4,26 @@ Fretboard Ecosphere API v1
 Public API surface for the canonical fretboard ecosphere:
 
     POST /fretboard/compute       Build ecosphere from request (free)
+    POST /fretboard/dxf           Export ecosphere as DXF (R12 free, R2000 pro)
     POST /fretboard/scala         Export ecosphere temperament as Scala (free)
     GET  /fretboard/presets       List preset request shapes (free)
     GET  /fretboard/presets/{name} Get full preset request (free)
     GET  /fretboard/schema        Return JSON schema for FretboardEcosphere (free)
-
-DXF endpoint added in Commit 2.
 """
 from __future__ import annotations
 
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Literal, Optional
 
-from fastapi import APIRouter, HTTPException, Request, Response
+from fastapi import APIRouter, Depends, HTTPException, Request, Response
 from fastapi.responses import JSONResponse
 
+from app.auth.deps import get_optional_principal
+from app.auth.principal import Principal
 from app.instrument_geometry.neck.fretboard_ecosphere import (
     FretboardInput,
     FretboardEcosphere,
     build_ecosphere,
+    write_ecosphere_dxf,
 )
 from app.instrument_geometry.neck.fretboard_presets import (
     FRETBOARD_PRESETS,
@@ -171,3 +173,95 @@ def get_preset_by_name(name: str) -> FretboardInput:
 def get_schema() -> Dict[str, Any]:
     """Return Pydantic-generated JSON schema for client validation."""
     return FretboardEcosphere.model_json_schema()
+
+
+# =============================================================================
+# POST /dxf — tier-aware DXF projection
+# =============================================================================
+
+class DxfRequest(FretboardInput):
+    """Extends FretboardInput with DXF-specific options."""
+    dxf_version: Optional[Literal["R12", "R2000"]] = None
+
+
+@router.post(
+    "/dxf",
+    summary="Export ecosphere as DXF (R12 free, R2000 pro tier)",
+    responses={
+        200: {
+            "description": "DXF bytes",
+            "content": {"application/dxf": {}, "application/octet-stream": {}},
+        },
+        401: {"description": "R2000 requested without authentication"},
+        403: {"description": "R2000 requested without pro tier"},
+    },
+)
+def post_dxf(
+    req: DxfRequest,
+    principal: Optional[Principal] = Depends(get_optional_principal),
+) -> Response:
+    """Project the ecosphere to DXF bytes.
+
+    Version selection:
+      - If req.dxf_version is "R2000", require pro tier (returns 401/403 if not).
+      - If req.dxf_version is "R12", return R12 LINE DXF (free).
+      - If req.dxf_version is None and principal has pro tier: default R2000.
+      - If req.dxf_version is None and no pro tier: default R12.
+
+    Free tier always succeeds with R12. Pro tier can opt down to R12
+    explicitly (legacy CAM tools, etc.).
+    """
+    try:
+        eco = build_ecosphere(req)
+    except ValueError as e:
+        raise HTTPException(status_code=422, detail=str(e))
+
+    version = req.dxf_version
+    if version is None:
+        version = "R2000" if _is_pro(principal) else "R12"
+
+    if version == "R2000" and not _is_pro(principal):
+        if principal is None:
+            raise HTTPException(
+                status_code=401,
+                detail={
+                    "error": "auth_required",
+                    "message": "R2000 LWPOLYLINE output requires authentication",
+                    "free_alternative": "Set dxf_version='R12' for unauthenticated R12 output",
+                },
+            )
+        raise HTTPException(
+            status_code=403,
+            detail={
+                "error": "tier_required",
+                "current_tier": "free",
+                "required_tier": "pro",
+                "free_alternative": "Set dxf_version='R12' for free R12 output",
+            },
+        )
+
+    dxf_bytes = write_ecosphere_dxf(eco, version=version)
+
+    filename = (
+        f"fretboard_{req.temperament.value}_{req.fret_count}fret_{version}.dxf"
+        .replace("/", "_").replace(" ", "_")
+    )
+    return Response(
+        content=dxf_bytes,
+        media_type="application/dxf",
+        headers={
+            "Content-Disposition": f'attachment; filename="{filename}"',
+            "X-DXF-Version": version,
+        },
+    )
+
+
+def _is_pro(principal: Optional[Principal]) -> bool:
+    """Check whether principal has pro tier (sync helper for the route).
+
+    Reads tier from the principal directly to keep the route synchronous.
+    If the principal model does not carry tier, returns False (defaults to R12).
+    """
+    if principal is None:
+        return False
+    return getattr(principal, "tier", "free") == "pro"

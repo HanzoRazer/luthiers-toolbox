@@ -150,3 +150,51 @@ class TestSchemaEndpoint:
         schema = resp.json()
         assert "$defs" in schema or "properties" in schema
         assert "title" in schema
+
+
+# =============================================================================
+# POST /dxf
+# =============================================================================
+
+class TestDxfEndpoint:
+    def test_dxf_default_unauthenticated_returns_r12(self):
+        """No auth, no version -> R12 LINE DXF."""
+        resp = client.post("/api/v1/fretboard/dxf", json={
+            "scale_length_mm": 647.7, "fret_count": 22,
+            "temperament": "equal_12", "string_count": 6,
+        })
+        assert resp.status_code == 200
+        assert resp.headers.get("X-DXF-Version") == "R12"
+        assert b"AC1009" in resp.content[:200]
+
+    def test_dxf_explicit_r12_unauthenticated_succeeds(self):
+        resp = client.post("/api/v1/fretboard/dxf", json={
+            "scale_length_mm": 647.7, "fret_count": 22,
+            "temperament": "equal_12", "string_count": 6,
+            "dxf_version": "R12",
+        })
+        assert resp.status_code == 200
+        assert b"AC1009" in resp.content[:200]
+
+    def test_dxf_r2000_unauthenticated_returns_401(self):
+        resp = client.post("/api/v1/fretboard/dxf", json={
+            "scale_length_mm": 647.7, "fret_count": 22,
+            "temperament": "equal_12", "string_count": 6,
+            "dxf_version": "R2000",
+        })
+        assert resp.status_code == 401
+        body = resp.json()
+        assert "R12" in str(body)
+
+    @pytest.mark.skip(reason="Requires test fixture for pro principal")
+    def test_dxf_r2000_pro_authenticated_returns_r2000(self):
+        """When auth fixture is available, this test verifies R2000 output."""
+        pass
+
+    def test_dxf_returns_dxf_content_type(self):
+        resp = client.post("/api/v1/fretboard/dxf", json={
+            "scale_length_mm": 647.7, "fret_count": 22,
+            "temperament": "equal_12", "string_count": 6,
+        })
+        assert resp.headers["content-type"] == "application/dxf"
+        assert "attachment" in resp.headers.get("content-disposition", "")

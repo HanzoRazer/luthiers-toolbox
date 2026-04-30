@@ -643,3 +643,36 @@ def build_ecosphere(req: FretboardInput) -> FretboardEcosphere:
             already handled at the FretboardInput layer.
     """
     return FretboardEcosphere.compute(req)
+
+
+def write_ecosphere_dxf(
+    eco: "FretboardEcosphere",
+    version: str = "R12",
+) -> bytes:
+    """Project ecosphere to DXF bytes via central DxfWriter.
+
+    Phase 2 stub: emits FRETS layer with fret line positions.
+    Phase 7 (v2 dev order) populates STRINGS, FRETBOARD_OUTLINE,
+    FRET_SLOTS, NUT, BRIDGE, BRIDGE_COMPENSATED, HARMONICS_OVERLAY,
+    ANNOTATIONS.
+
+    Args:
+        eco: The computed FretboardEcosphere document
+        version: DXF version - 'R12' for free tier, 'R2000' for paid tier
+
+    Returns:
+        DXF file content as bytes
+    """
+    from app.cam.dxf_writer import DxfWriter, LayerDef
+
+    writer = DxfWriter(
+        layers=[LayerDef(name="FRETS", color=7)],
+        version=version,
+    )
+    for fl in eco.fret_lines[1:]:
+        if len(fl.points) >= 2:
+            bass_pt = (fl.points[0].x_mm, fl.points[0].y_mm)
+            treble_pt = (fl.points[-1].x_mm, fl.points[-1].y_mm)
+            writer.add_line("FRETS", bass_pt, treble_pt)
+
+    return writer.to_bytes()
