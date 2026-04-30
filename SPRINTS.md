@@ -1,5 +1,47 @@
 # Sprint Backlog
 
+## Completed
+
+### Sprint FRET-A — Fretboard Ecosphere API
+
+**Status:** COMPLETED (Phase 7)
+**Tag:** v2.5.0-alpha.1-phase7
+**Completed:** 2026-04-29
+**Branch:** sprint/fret-ecosphere-a
+
+Canonical Pydantic-validated fretboard geometry with honest temperament math
+and full nine-layer DXF projection verified through GRBL pipeline.
+
+**Phase summary:**
+  - Phase 1: Schema (FretboardInput, FretboardEcosphere, FretLine, StringPath)
+  - Phase 1.5: Math kernel honesty refactor (real N-TET, Pythagorean, Scala)
+  - Phase 2: FastAPI router (/compute, /dxf, /scala, /presets, /schema)
+  - Phase 7: Nine-layer DXF projection with R2000 LWPOLYLINE CAM verification
+
+**Phase 7 verification results (R2000):**
+
+| Layer | Entities | Notes |
+|-------|----------|-------|
+| FRET_SLOTS | 22 LWPOLYLINE | Closed rectangles, CAM-ready |
+| FRETS | 22 LINE | Bass-to-treble per fret |
+| STRINGS | 6 LINE | Nut-to-bridge per string |
+| NUT | 1 LINE + 6 CIRCLE | Nut line + string slot markers |
+| BRIDGE | 1 LINE | Theoretical saddle position |
+| FRETBOARD_OUTLINE | 1 LWPOLYLINE | Closed 4-point contour |
+| ANNOTATIONS | 23 TEXT | 22 fret numbers + scale label |
+| BRIDGE_COMPENSATED | 0 | Empty (no offsets in test) |
+| HARMONICS_OVERLAY | 0 | Empty (future Sprint FRET-D) |
+
+GRBL pipeline test confirms closed LWPOLYLINE emission avoids the 2-point
+loop-assembly gap identified in cam_pipeline_r2000_compat 2026-04-29.
+
+**Remaining sprints (separate):**
+  - Phase 8 (FRET-B): Frontend wire-up
+  - Sprint FRET-D: Harmonics overlay (Zone-Tritone integration)
+  - Fusion add-in: Standalone sprint
+
+---
+
 ## Backlog
 
 ### Orphaned curvature test file
@@ -32,27 +74,24 @@ Not blocking FRET-A. Triage in next layer-builder cleanup sprint.
 
 ### FRET-A schema/kernel math duplication
 
-**Status:** Active (Path 1) or Backlog (Path 2)
+**Status:** RESOLVED (Phase 1.5)
 **Priority:** Technical debt — blocking alt-temperament feature
 **Discovered:** 2026-04-29 during FRET-A Phase 1 retrospective
+**Resolved:** 2026-04-29 in Phase 1.5
 **File:** services/api/app/instrument_geometry/neck/fretboard_ecosphere.py
 
-The FretboardEcosphere schema implements `_fret_position_temperament()`
-internally, duplicating ~30 lines of math from `fret_math.py::
-compute_fret_positions_mm()`. Schema also exposes 19-TET, 24-TET, 31-TET
-as supported temperaments but the underlying math is 12-TET-only
-(all use `divisions` variable but same formula).
+~~The FretboardEcosphere schema implements `_fret_position_temperament()`
+internally, duplicating ~30 lines of math from `fret_math.py`.~~
 
-Resolution path (Path 1):
-  1. Extend fret_math.py with temperament parameter (true N-TET support)
-  2. Create scala_loader.py for .scl parsing
-  3. Refactor schema methods to delegate to the kernels
+**Resolution (Path 1 executed):**
+  1. Extended alternative_temperaments.py with resolve_temperament_ratios()
+  2. Created scala_loader.py for .scl parsing
+  3. Refactored schema methods to delegate to the kernel
 
-Resolution path (Path 2):
-  Document the limitation in API responses; refactor in a later sprint
-  before exposing alt-temperament support publicly.
+All temperaments now produce mathematically correct positions:
+  - Equal temperaments (12/19/24/31-TET): true N-TET math
+  - Non-equal temperaments (Pythagorean, Just, Meantone): real ratio math
+  - Custom Scala: parsed and applied via scala_loader
 
-Current state: 19/24/31-TET enum values exist but produce mathematically
-correct N-TET positions (the formula `1 - 2^(-n/divisions)` is correct
-for any equal temperament). The limitation is that non-equal temperaments
-(Pythagorean, Just, Meantone) fall back to 12-TET silently.
+Round-trip tests confirm compute → scala → parse → compute identity
+within 1e-3 mm tolerance (accounts for Scala format precision).
