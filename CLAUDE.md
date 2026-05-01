@@ -55,6 +55,56 @@ class SpiralParams:
 - 161 soundhole tests in `tests/test_soundhole*.py`
 - Coverage threshold: 20%
 
+## Data Policies
+
+### Wood species data sourcing policy
+
+All species records in `wood_species.json` and consumers (e.g., `wood_movement_calc.py`,
+`side_bending_calc.py`) must source shrinkage and density values from authoritative
+published references. Attribution is per-field, not per-species.
+
+**Source priority (tangential/radial shrinkage):**
+1. **FPL GTR-282 (2021) Table 5-3** — for North American species in this table
+2. **Wood Database (Eric Meier, wood-database.com)** — for tropical species not in FPL,
+   with URL attribution
+3. **unknown_legacy** — values whose origin cannot be traced; flagged for follow-up
+
+**Source priority (density):**
+1. **FPL GTR-282** — for species in FPL tables
+2. **CIRAD wood-density-database (2018)** — for tropical species; density only,
+   NOT tangential/radial shrinkage (CIRAD provides volumetric, not breakdown)
+3. **Wood Database** — fallback when neither FPL nor CIRAD has the species
+
+**Forbidden:**
+- Estimated tangential/radial from volumetric shrinkage without explicit derivation flag
+- Values whose origin cannot be traced to a published reference
+- Single-source FPL claims for species not actually in FPL
+
+**Per-field attribution schema:**
+```json
+{
+  "physical": {
+    "density_kg_m3": 705,
+    "_density_source": "FPL_GTR282_table_5-3",
+    "contraction_tangential_pct": 9.9,
+    "_shrinkage_tangential_source": "FPL_GTR282_table_5-3",
+    "_shrinkage_tangential_table_row": "p.5-7",
+    "contraction_radial_pct": 4.8,
+    "_shrinkage_radial_source": "FPL_GTR282_table_5-3"
+  }
+}
+```
+
+**Valid source values:**
+- `FPL_GTR282_table_5-3` — FPL Wood Handbook 2021, Table 5-3
+- `wood_database_meier` — wood-database.com (include URL in `_source_url` field)
+- `CIRAD_2018` — CIRAD wood density database (density/volumetric only)
+- `unknown_legacy` — unverified value, flagged for follow-up
+
+**Calculator behavior for unknown species:**
+- `wood_movement_calc.py`: raise `ValueError` listing supported species
+- `side_bending_calc.py`: raise `ValueError` — no silent fallback to defaults
+
 ## BLOCKING INFRASTRUCTURE — resolve before new DXF work
 
 ### DXF output standard: dual-format via dxf_compat
