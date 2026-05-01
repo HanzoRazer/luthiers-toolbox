@@ -221,8 +221,15 @@ def compute_finish_schedule(
     props = FINISH_PROPERTIES[finish_key]
     species_key = wood_species.lower().replace("-", "_").replace(" ", "_")
 
-    # Get pore depth for grain fill calculation
-    pore_depth = PORE_DEPTH_MM.get(species_key, 0.10)  # default for unknown
+    # Get pore depth for grain fill calculation — require known species
+    if species_key not in PORE_DEPTH_MM:
+        supported = list(PORE_DEPTH_MM.keys())[:15]
+        raise ValueError(
+            f"Unknown wood species '{wood_species}' for pore depth. "
+            f"Add to PORE_DEPTH_MM with measured pore depth (mm). "
+            f"Supported species include: {supported}..."
+        )
+    pore_depth = PORE_DEPTH_MM[species_key]
 
     notes: List[str] = []
     coats: List[CoatSpec] = []
@@ -358,11 +365,22 @@ def estimate_grain_fill_coats(
     wood_species: str,
     finish_type: str = "nitro",
 ) -> int:
-    """Estimate number of coats needed to fill grain."""
+    """
+    Estimate number of coats needed to fill grain.
+
+    Raises:
+        ValueError: If wood_species or finish_type is unknown
+    """
     species_key = wood_species.lower().replace("-", "_").replace(" ", "_")
     finish_key = finish_type.lower().replace("-", "_").replace(" ", "_")
 
-    pore_depth = PORE_DEPTH_MM.get(species_key, 0.10)
+    if species_key not in PORE_DEPTH_MM:
+        supported = list(PORE_DEPTH_MM.keys())[:15]
+        raise ValueError(
+            f"Unknown wood species '{wood_species}' for pore depth. "
+            f"Supported: {supported}..."
+        )
+    pore_depth = PORE_DEPTH_MM[species_key]
 
     if finish_key not in FINISH_PROPERTIES:
         raise ValueError(f"Unknown finish type: '{finish_type}'")

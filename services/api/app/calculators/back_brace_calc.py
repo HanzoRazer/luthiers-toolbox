@@ -805,8 +805,19 @@ def seam_stress_estimate(
 
     Returns:
         Dict with dimensional change estimates.
+
+    Raises:
+        ValueError: If back_material is not found in SHRINKAGE_TANGENTIAL
     """
-    shrink = SHRINKAGE_TANGENTIAL.get(back_material, 0.0027)
+    material_key = back_material.lower().strip().replace(" ", "_")
+    if material_key not in SHRINKAGE_TANGENTIAL:
+        supported = list(SHRINKAGE_TANGENTIAL.keys())
+        raise ValueError(
+            f"Unknown back material '{back_material}'. "
+            f"Add to SHRINKAGE_TANGENTIAL with verified shrinkage coefficient. "
+            f"Supported: {supported}"
+        )
+    shrink = SHRINKAGE_TANGENTIAL[material_key]
     delta_half = back_half_width_mm * shrink * rh_swing_pct
     delta_total = delta_half * 2
 

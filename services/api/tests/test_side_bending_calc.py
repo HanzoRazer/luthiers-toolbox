@@ -63,15 +63,15 @@ class TestComputeBendingParameters:
         )
         assert any("above" in note.lower() or "exceed" in note.lower() for note in plan.notes)
 
-    def test_unknown_species_uses_default_with_note(self):
-        plan = compute_bending_parameters(
-            species="zebrawood",
-            side_thickness_mm=2.3,
-            waist_radius_mm=90,
-            instrument_type="steel_string_acoustic",
-        )
-        assert any("unknown" in note.lower() for note in plan.notes)
-        assert 140 <= plan.temp_c <= 200
+    def test_unknown_species_raises_valueerror(self):
+        """Unknown species should raise ValueError, not silently fallback."""
+        with pytest.raises(ValueError, match="Unknown species"):
+            compute_bending_parameters(
+                species="unobtanium",
+                side_thickness_mm=2.3,
+                waist_radius_mm=90,
+                instrument_type="steel_string_acoustic",
+            )
 
     def test_spring_back_is_reasonable(self):
         plan = compute_bending_parameters(

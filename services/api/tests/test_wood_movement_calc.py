@@ -104,9 +104,9 @@ class TestComputeWoodMovement:
         )
 
         assert radial.movement_mm < tangential.movement_mm
-        # Radial should be ~55% of tangential
+        # Radial is typically 40-70% of tangential (varies by species)
         ratio = radial.movement_mm / tangential.movement_mm
-        assert abs(ratio - RADIAL_TO_TANGENTIAL_RATIO) < 0.01
+        assert 0.3 < ratio < 0.8
 
     def test_extreme_dryness_red_gate(self):
         """Extreme dryness (<25% RH) should trigger RED gate."""
@@ -122,7 +122,7 @@ class TestComputeWoodMovement:
 
     def test_invalid_species_raises(self):
         """Unknown species should raise ValueError."""
-        with pytest.raises(ValueError, match="Unknown species"):
+        with pytest.raises(ValueError, match="No shrinkage data"):
             compute_wood_movement(
                 species="unobtanium",
                 dimension_mm=400.0,
@@ -223,15 +223,18 @@ class TestHelperFunctions:
         assert coeff == TANGENTIAL_SHRINKAGE["sitka_spruce"]
 
     def test_get_shrinkage_coefficient_radial(self):
-        """Radial coefficient should be scaled down."""
+        """Radial coefficient should be less than tangential."""
         tangential = get_shrinkage_coefficient("maple", "tangential")
         radial = get_shrinkage_coefficient("maple", "radial")
 
-        assert radial == tangential * RADIAL_TO_TANGENTIAL_RATIO
+        # Radial is typically 40-70% of tangential (varies by species)
+        assert radial < tangential
+        ratio = radial / tangential
+        assert 0.3 < ratio < 0.8
 
     def test_get_shrinkage_coefficient_invalid(self):
         """Unknown species should raise ValueError."""
-        with pytest.raises(ValueError, match="Unknown species"):
+        with pytest.raises(ValueError, match="No shrinkage data"):
             get_shrinkage_coefficient("unknown_wood")
 
 
@@ -245,9 +248,10 @@ class TestPhysicsValidation:
 
     def test_shrinkage_coefficients_realistic(self):
         """Shrinkage coefficients should be in realistic range."""
-        # Typical range: 0.001 to 0.003 per % MC
+        # Typical range: 0.001 to 0.004 per % MC
+        # Higher values (0.003+) are valid for high-shrinkage species like maple
         for species, coeff in TANGENTIAL_SHRINKAGE.items():
-            assert 0.001 < coeff < 0.003, f"{species} coefficient {coeff} out of range"
+            assert 0.001 < coeff < 0.004, f"{species} coefficient {coeff} out of range"
 
     def test_houston_scenario(self):
         """

@@ -187,6 +187,30 @@ NUT_FRICTION: Dict[str, float] = {
 }
 
 
+def get_nut_friction(material: str) -> float:
+    """
+    Get friction coefficient for nut/tree material.
+
+    Args:
+        material: Key from NUT_FRICTION dict
+
+    Returns:
+        Friction coefficient (dimensionless)
+
+    Raises:
+        ValueError: If material is not recognized
+    """
+    material_key = material.lower().strip().replace(" ", "_").replace("-", "_")
+    if material_key not in NUT_FRICTION:
+        supported = list(NUT_FRICTION.keys())
+        raise ValueError(
+            f"Unknown nut/tree material '{material}'. "
+            f"Add to NUT_FRICTION with measured friction coefficient. "
+            f"Supported: {supported}"
+        )
+    return NUT_FRICTION[material_key]
+
+
 # ─────────────────────────────────────────────────────────────────────────────
 # Geometry functions
 # ─────────────────────────────────────────────────────────────────────────────
@@ -474,8 +498,8 @@ def analyze_string(
         has_tree = True
 
         # Friction analysis
-        mu_nut  = NUT_FRICTION.get(nut_material, 0.10)
-        mu_tree = NUT_FRICTION.get(tree_material, 0.25)
+        mu_nut  = get_nut_friction(nut_material)
+        mu_tree = get_nut_friction(tree_material)
         lag_nut  = tuning_lag_cents(mu_nut,  theta_nut)
         lag_tree = tuning_lag_cents(mu_tree, abs(theta_tree_contact))
         lag_total = lag_nut + lag_tree
@@ -492,7 +516,7 @@ def analyze_string(
         theta_tree_contact = 0.0
         has_tree = False
 
-        mu_nut = NUT_FRICTION.get(nut_material, 0.10)
+        mu_nut = get_nut_friction(nut_material)
         lag_nut   = tuning_lag_cents(mu_nut, theta_nut)
         lag_tree  = 0.0
         lag_total = lag_nut

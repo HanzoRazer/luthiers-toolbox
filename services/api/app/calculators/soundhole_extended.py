@@ -233,15 +233,17 @@ def estimate_plate_air_coupling(
 
     Returns:
         PlateAirCouplingResult with estimated f_plate and coupling status
+
+    Raises:
+        ValueError: If species_key is not found in TOP_SPECIES_THICKNESS
     """
     species = TOP_SPECIES_THICKNESS.get(species_key)
     if species is None:
-        return PlateAirCouplingResult(
-            species_key=species_key, thickness_mm=thickness_mm,
-            plate_length_mm=plate_length_mm, plate_width_mm=plate_width_mm,
-            f_H_hz=f_H_hz, f_plate_estimated_hz=0.0,
-            separation_hz=999.0, status="clear",
-            warning=None, design_note="Unknown species — plate mode not estimated.",
+        supported = list(TOP_SPECIES_THICKNESS.keys())
+        raise ValueError(
+            f"Unknown species '{species_key}'. "
+            f"Add to TOP_SPECIES_THICKNESS with E_L_GPa, E_C_GPa, rho_kg_m3 values. "
+            f"Supported: {supported}"
         )
 
     h_m = thickness_mm / 1000.0
