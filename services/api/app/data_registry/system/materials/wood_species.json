@@ -1312,6 +1312,10 @@
       "name": "Black Walnut",
       "scientific_name": "Juglans nigra",
       "category": "hardwood",
+      "cites_status": "not_listed",
+      "caveats": {
+        "supply": "Heritage stock (100+ BF) available from domestic sources. Premium figured stock increasingly scarce."
+      },
       "physical": {
         "specific_gravity": 0.56,
         "density_kg_m3": 610,
