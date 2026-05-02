@@ -3423,6 +3423,11 @@
       "name": "Ziricote",
       "scientific_name": "Cordia dodecandra",
       "category": "hardwood",
+      "cites_status": "not_listed",
+      "caveats": {
+        "sustainability": "Slow-growing Central American endemic. Not CITES-listed but supply limited.",
+        "supply": "Premium figured sets increasingly scarce. Verify sustainable sourcing."
+      },
       "physical": {
         "specific_gravity": 0.79,
         "density_kg_m3": 815,
