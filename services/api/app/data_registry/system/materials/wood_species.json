@@ -3,14 +3,14 @@
     "tier": "system",
     "category": "materials",
     "version": "4.0.0",
-    "description": "Canonical wood species reference — physical, thermal, machining, and lutherie properties. Single source of truth. Species are classified by guitar_relevance: primary (traditional tonewoods), established (well-known guitar woods), emerging (gaining popularity), exploratory (valid woods, not yet common in guitars).",
+    "description": "Canonical wood species reference \u00e2\u20ac\u201d physical, thermal, machining, and lutherie properties. Single source of truth. Species are classified by guitar_relevance: primary (traditional tonewoods), established (well-known guitar woods), emerging (gaining popularity), exploratory (valid woods, not yet common in guitars).",
     "sources": {
       "fpl": {
         "title": "USDA FPL Wood Handbook: Wood as an Engineering Material",
         "publication": "General Technical Report FPL-GTR-282, Forest Products Laboratory, USDA Forest Service, Madison, WI",
         "url": "https://www.fpl.fs.usda.gov/documnts/fplgtr/fplgtr282/fplgtr282.pdf",
-        "provides": "thermal_conductivity (Table 3-11, ±20%), SG, Janka, MOR, MOE, shrinkage for ~30 domestic species",
-        "license": "U.S. Government work — public domain"
+        "provides": "thermal_conductivity (Table 3-11, \u00c2\u00b120%), SG, Janka, MOR, MOE, shrinkage for ~30 domestic species",
+        "license": "U.S. Government work \u00e2\u20ac\u201d public domain"
       },
       "wood_database": {
         "title": "The Wood Database",
@@ -29,18 +29,18 @@
       "estimation_methods": "Thermal k, SCE, specific heat, and Janka (bulk species) estimated from SG/density regressions per FPL guidance. Machining params derived from hardness scale. All estimates flagged with _note fields. Full methodology in SOURCES.md."
     },
     "units": {
-      "density_kg_m3": "kg/m³",
+      "density_kg_m3": "kg/m\u00c2\u00b3",
       "janka_hardness_lbf": "lbf (pound-force, side hardness)",
-      "janka_hardness_n": "N (Newtons) — computed as lbf × 4.44822",
-      "thermal_conductivity_w_per_mk": "W/(m·K) at 12% MC across grain",
-      "specific_heat_capacity_j_per_kgk": "J/(kg·K)",
-      "specific_cutting_energy_j_per_mm3": "J/mm³",
+      "janka_hardness_n": "N (Newtons) \u00e2\u20ac\u201d computed as lbf \u00c3\u2014 4.44822",
+      "thermal_conductivity_w_per_mk": "W/(m\u00c2\u00b7K) at 12% MC across grain",
+      "specific_heat_capacity_j_per_kgk": "J/(kg\u00c2\u00b7K)",
+      "specific_cutting_energy_j_per_mm3": "J/mm\u00c2\u00b3",
       "feed/speed values": "mm/min or RPM",
       "moisture_content_pct": "% (default assumption for thermal values)",
       "contraction_radial_pct": "% shrinkage green to oven-dry, radial",
       "contraction_tangential_pct": "% shrinkage green to oven-dry, tangential",
-      "modulus_of_rupture_mpa": "MPa — static bending strength at 12% MC",
-      "modulus_of_elasticity_gpa": "GPa — static bending stiffness at 12% MC"
+      "modulus_of_rupture_mpa": "MPa \u00e2\u20ac\u201d static bending strength at 12% MC",
+      "modulus_of_elasticity_gpa": "GPa \u00e2\u20ac\u201d static bending stiffness at 12% MC"
     }
   },
   "species": {
@@ -197,7 +197,7 @@
           "tool": 0.17,
           "work": 0.1
         },
-        "_source": "FPL Table 3-11: Basswood SG 0.38, 12% MC 0.11 W/m·K"
+        "_source": "FPL Table 3-11: Basswood SG 0.38, 12% MC 0.11 W/m\u00c2\u00b7K"
       },
       "machining": {
         "hardness_scale": 0.15,
@@ -269,7 +269,7 @@
           "tool": 0.15,
           "work": 0.1
         },
-        "_source": "FPL Table 3-11: Western Red Cedar SG 0.33, 12% MC 0.10 W/m·K"
+        "_source": "FPL Table 3-11: Western Red Cedar SG 0.33, 12% MC 0.10 W/m\u00c2\u00b7K"
       },
       "machining": {
         "hardness_scale": 0.1,
@@ -298,7 +298,7 @@
           "burn_risk": "low",
           "tearout_risk": "medium",
           "dust_hazard": "medium",
-          "notes": "Aromatic dust can be irritating. Very soft — light clamping pressure."
+          "notes": "Aromatic dust can be irritating. Very soft \u00e2\u20ac\u201d light clamping pressure."
         }
       },
       "lutherie": {
@@ -324,7 +324,7 @@
         "janka_hardness_lbf": 2960,
         "janka_hardness_n": 13167,
         "grain": "irregular, fine texture, striking figure",
-        "workability": "difficult — very oily, sensitizing dust",
+        "workability": "difficult \u00e2\u20ac\u201d very oily, sensitizing dust",
         "resinous": true,
         "contraction_radial_pct": 2.7,
         "_shrinkage_radial_source": "wood_database_meier",
@@ -342,7 +342,7 @@
           "tool": 0.26,
           "work": 0.16
         },
-        "_note": "Extremely oily — natural oils may interfere with gluing. SG from industry references."
+        "_note": "Extremely oily \u00e2\u20ac\u201d natural oils may interfere with gluing. SG from industry references."
       },
       "machining": {
         "hardness_scale": 0.85,
@@ -381,8 +381,8 @@
           "fretboard",
           "bridge"
         ],
-        "tone_character": "warm, rich, complex — among finest rosewoods",
-        "sustainability": "CITES Appendix II — restricted"
+        "tone_character": "warm, rich, complex \u00e2\u20ac\u201d among finest rosewoods",
+        "sustainability": "CITES Appendix II \u00e2\u20ac\u201d restricted"
       },
       "guitar_relevance": "primary"
     },
@@ -581,7 +581,7 @@
           "burn_risk": "medium",
           "tearout_risk": "medium",
           "dust_hazard": "low",
-          "notes": "Interlocked grain tears on figured areas. Expensive — test on scrap."
+          "notes": "Interlocked grain tears on figured areas. Expensive \u00e2\u20ac\u201d test on scrap."
         }
       },
       "lutherie": {
@@ -776,7 +776,7 @@
           "tool": 0.2,
           "work": 0.1
         },
-        "_source": "FPL Table 3-11: Sugar Maple SG 0.66, 12% MC 0.18 W/m·K"
+        "_source": "FPL Table 3-11: Sugar Maple SG 0.66, 12% MC 0.18 W/m\u00c2\u00b7K"
       },
       "machining": {
         "hardness_scale": 0.7,
@@ -845,7 +845,7 @@
           "tool": 0.2,
           "work": 0.1
         },
-        "_source": "FPL Table 3-11: Red Maple SG 0.56, 12% MC 0.15 W/m·K"
+        "_source": "FPL Table 3-11: Red Maple SG 0.56, 12% MC 0.15 W/m\u00c2\u00b7K"
       },
       "machining": {
         "hardness_scale": 0.5,
@@ -915,7 +915,7 @@
           "tool": 0.24,
           "work": 0.13
         },
-        "_note": "Estimated from SG; CITES I — minimal empirical CNC data available"
+        "_note": "Estimated from SG; CITES I \u00e2\u20ac\u201d minimal empirical CNC data available"
       },
       "machining": {
         "hardness_scale": 0.85,
@@ -1102,8 +1102,8 @@
         "typical_uses": [
           "soundboard"
         ],
-        "tone_character": "powerful, headroom, loud — the pre-war dreadnought tonewood",
-        "sustainability": "limited supply — slow-growing"
+        "tone_character": "powerful, headroom, loud \u00e2\u20ac\u201d the pre-war dreadnought tonewood",
+        "sustainability": "limited supply \u00e2\u20ac\u201d slow-growing"
       },
       "guitar_relevance": "primary",
       "aliases": [
@@ -1139,7 +1139,7 @@
           "tool": 0.16,
           "work": 0.1
         },
-        "_source": "FPL Table 3-11: Engelmann Spruce SG 0.37, 12% MC 0.11 W/m·K"
+        "_source": "FPL Table 3-11: Engelmann Spruce SG 0.37, 12% MC 0.11 W/m\u00c2\u00b7K"
       },
       "machining": {
         "hardness_scale": 0.15,
@@ -1168,7 +1168,7 @@
           "burn_risk": "low",
           "tearout_risk": "high",
           "dust_hazard": "low",
-          "notes": "Softer than Sitka. Preferred for fingerstyle guitars. Very fragile — light cuts only."
+          "notes": "Softer than Sitka. Preferred for fingerstyle guitars. Very fragile \u00e2\u20ac\u201d light cuts only."
         }
       },
       "lutherie": {
@@ -1194,7 +1194,7 @@
         "janka_hardness_lbf": 490,
         "janka_hardness_n": 2180,
         "grain": "straight, very tight, stiff",
-        "workability": "good — soft but stiff",
+        "workability": "good \u00e2\u20ac\u201d soft but stiff",
         "resinous": true,
         "contraction_radial_pct": 2.8,
         "contraction_tangential_pct": 6.8,
@@ -1246,8 +1246,8 @@
         "typical_uses": [
           "soundboard"
         ],
-        "tone_character": "warm, complex, refined — the classical luthier's choice",
-        "sustainability": "sustainable — European plantations"
+        "tone_character": "warm, complex, refined \u00e2\u20ac\u201d the classical luthier's choice",
+        "sustainability": "sustainable \u00e2\u20ac\u201d European plantations"
       },
       "guitar_relevance": "primary"
     },
@@ -1280,7 +1280,7 @@
           "tool": 0.17,
           "work": 0.1
         },
-        "_source": "FPL Table 3-11: Sitka Spruce SG 0.42, 12% MC 0.12 W/m·K"
+        "_source": "FPL Table 3-11: Sitka Spruce SG 0.42, 12% MC 0.12 W/m\u00c2\u00b7K"
       },
       "machining": {
         "hardness_scale": 0.2,
@@ -1355,7 +1355,7 @@
           "tool": 0.2,
           "work": 0.1
         },
-        "_note": "Not in FPL Table 3-11 extract. Estimated from SG 0.56 — comparable to Red Maple."
+        "_note": "Not in FPL Table 3-11 extract. Estimated from SG 0.56 \u00e2\u20ac\u201d comparable to Red Maple."
       },
       "machining": {
         "hardness_scale": 0.5,
@@ -1423,7 +1423,7 @@
           "tool": 0.2,
           "work": 0.1
         },
-        "_source": "FPL Table 3-11: White Ash SG 0.63, 12% MC 0.17 W/m·K"
+        "_source": "FPL Table 3-11: White Ash SG 0.63, 12% MC 0.17 W/m\u00c2\u00b7K"
       },
       "machining": {
         "hardness_scale": 0.6,
@@ -1490,7 +1490,7 @@
           "tool": 0.22,
           "work": 0.1
         },
-        "_source": "FPL Table 3-11: American Beech SG 0.68, 12% MC 0.18 W/m·K"
+        "_source": "FPL Table 3-11: American Beech SG 0.68, 12% MC 0.18 W/m\u00c2\u00b7K"
       },
       "machining": {
         "hardness_scale": 0.62,
@@ -1557,7 +1557,7 @@
           "tool": 0.22,
           "work": 0.1
         },
-        "_source": "FPL Table 3-11: Yellow Birch SG 0.66, 12% MC 0.18 W/m·K"
+        "_source": "FPL Table 3-11: Yellow Birch SG 0.66, 12% MC 0.18 W/m\u00c2\u00b7K"
       },
       "machining": {
         "hardness_scale": 0.62,
@@ -1612,7 +1612,7 @@
         "janka_hardness_lbf": 2200,
         "janka_hardness_n": 9786,
         "grain": "straight to wild, dramatic figure",
-        "workability": "moderate — oily",
+        "workability": "moderate \u00e2\u20ac\u201d oily",
         "resinous": true,
         "modulus_of_rupture_mpa": 114.4,
         "modulus_of_elasticity_gpa": 12.19
@@ -1679,8 +1679,8 @@
         "density_kg_m3": 890,
         "janka_hardness_lbf": 2410,
         "janka_hardness_n": 10720,
-        "grain": "interlocked, often pommelé figure",
-        "workability": "moderate — hard but clean-cutting",
+        "grain": "interlocked, often pommel\u00c3\u00a9 figure",
+        "workability": "moderate \u00e2\u20ac\u201d hard but clean-cutting",
         "resinous": false,
         "contraction_radial_pct": 6.0,
         "_shrinkage_radial_source": "wood_database_meier",
@@ -1729,7 +1729,7 @@
           "burn_risk": "low",
           "tearout_risk": "medium",
           "dust_hazard": "high",
-          "notes": "Hard but machines cleanly. Figured pieces tear — use climb cuts."
+          "notes": "Hard but machines cleanly. Figured pieces tear \u00e2\u20ac\u201d use climb cuts."
         }
       },
       "lutherie": {
@@ -1739,7 +1739,7 @@
           "back_sides",
           "neck_laminate"
         ],
-        "tone_character": "warm, rich bass, articulate mids — prized for bass guitars",
+        "tone_character": "warm, rich bass, articulate mids \u00e2\u20ac\u201d prized for bass guitars",
         "sustainability": "CITES Appendix II since 2017"
       },
       "guitar_relevance": "established"
@@ -1755,7 +1755,7 @@
         "janka_hardness_lbf": 600,
         "janka_hardness_n": 2669,
         "grain": "straight, medium to coarse",
-        "workability": "excellent — very easy to work",
+        "workability": "excellent \u00e2\u20ac\u201d very easy to work",
         "resinous": true,
         "contraction_radial_pct": 4.2,
         "contraction_tangential_pct": 6.3,
@@ -1807,8 +1807,8 @@
         "typical_uses": [
           "neck"
         ],
-        "tone_character": "warm — traditional classical guitar neck wood",
-        "sustainability": "CITES Appendix III — plantation-grown available"
+        "tone_character": "warm \u00e2\u20ac\u201d traditional classical guitar neck wood",
+        "sustainability": "CITES Appendix III \u00e2\u20ac\u201d plantation-grown available"
       },
       "guitar_relevance": "established",
       "aliases": [
@@ -1842,7 +1842,7 @@
           "tool": 0.2,
           "work": 0.1
         },
-        "_source": "FPL Table 3-11: Black Cherry SG 0.53, 12% MC 0.15 W/m·K"
+        "_source": "FPL Table 3-11: Black Cherry SG 0.53, 12% MC 0.15 W/m\u00c2\u00b7K"
       },
       "machining": {
         "hardness_scale": 0.45,
@@ -1950,7 +1950,7 @@
         "typical_uses": [
           "back_sides"
         ],
-        "tone_character": "dry, percussive, bright — quintessential flamenco tonewood",
+        "tone_character": "dry, percussive, bright \u00e2\u20ac\u201d quintessential flamenco tonewood",
         "sustainability": "sustainable"
       },
       "guitar_relevance": "established",
@@ -1962,19 +1962,39 @@
       "id": "douglas_fir",
       "name": "Douglas-Fir",
       "scientific_name": "Pseudotsuga menziesii",
+      "common_names": [
+        "Douglas Fir",
+        "Oregon Pine",
+        "Columbian Pine"
+      ],
       "category": "softwood",
+      "guitar_relevance": "established",
+      "cites_status": "not_listed",
+      "caveats": {
+        "data_confidence": "Values are averages across Coast, Interior West, Interior North, and Interior South regions. Per Wood Database, mechanical properties vary by region. Heritage stock assumed Coast variety (Pseudotsuga menziesii var. menziesii) based on 1904 Pacific Northwest old-growth sourcing.",
+        "supply": "Heritage stock from 1904 Texas farmhouse \u2014 irreplaceable. Each board should be measured and documented before use.",
+        "working_properties": "Resinous \u2014 gums up tooling. Clean cutters frequently. Pronounced growth rings may cause uneven staining."
+      },
       "physical": {
         "specific_gravity": 0.51,
-        "density_kg_m3": 530,
-        "janka_hardness_lbf": 660,
-        "janka_hardness_n": 2936,
+        "_specific_gravity_source": "wood_database_meier",
+        "density_kg_m3": 510,
+        "_density_source": "wood_database_meier",
+        "janka_hardness_lbf": 620,
+        "janka_hardness_n": 2760,
+        "_hardness_source": "wood_database_meier",
         "grain": "straight, pronounced growth rings",
         "workability": "good",
         "resinous": true,
-        "contraction_radial_pct": 4.18,
-        "contraction_tangential_pct": 8.05,
-        "modulus_of_rupture_mpa": 75.3,
-        "modulus_of_elasticity_gpa": 10.0
+        "contraction_radial_pct": 4.5,
+        "contraction_tangential_pct": 7.3,
+        "contraction_volumetric_pct": 11.6,
+        "tr_ratio": 1.6,
+        "_shrinkage_tangential_source": "wood_database_meier",
+        "_shrinkage_radial_source": "wood_database_meier",
+        "modulus_of_rupture_mpa": 86.2,
+        "modulus_of_elasticity_gpa": 12.17,
+        "_mechanical_source": "wood_database_meier"
       },
       "thermal": {
         "thermal_conductivity_w_per_mk": 0.14,
@@ -1985,7 +2005,7 @@
           "tool": 0.18,
           "work": 0.1
         },
-        "_source": "FPL Table 3-11: Douglas-fir Coast SG 0.51, 12% MC 0.14 W/m·K"
+        "_source": "FPL Table 3-11: Douglas-fir Coast SG 0.51, 12% MC 0.14 W/m\u00b7K"
       },
       "machining": {
         "hardness_scale": 0.3,
@@ -2013,8 +2033,7 @@
         "warnings": {
           "burn_risk": "low",
           "tearout_risk": "medium",
-          "dust_hazard": "low",
-          "notes": "Resinous — gums up tooling. Clean cutters frequently."
+          "dust_hazard": "low"
         }
       },
       "lutherie": {
@@ -2022,10 +2041,13 @@
           "soundboard",
           "bracing"
         ],
-        "tone_character": "strong, clear, good for steel-string",
-        "sustainability": "sustainable, abundant"
+        "tone_character": "Strong fundamental with clear projection. Old-growth exhibits tighter grain and higher stiffness-to-weight ratio than plantation stock.",
+        "_tone_confidence": "medium",
+        "_tone_source": "lutherie_literature",
+        "stability_notes": "T/R ratio 1.6 indicates good dimensional stability",
+        "sustainability": "not_restricted"
       },
-      "guitar_relevance": "established"
+      "_source_url": "https://www.wood-database.com/douglas-fir/"
     },
     "granadillo": {
       "id": "granadillo",
@@ -2038,7 +2060,7 @@
         "janka_hardness_lbf": 2790,
         "janka_hardness_n": 12411,
         "grain": "straight, fine",
-        "workability": "moderate — dense but clean-cutting",
+        "workability": "moderate \u00e2\u20ac\u201d dense but clean-cutting",
         "resinous": false
       },
       "thermal": {
@@ -2104,7 +2126,7 @@
         "janka_hardness_lbf": 3510,
         "janka_hardness_n": 15613,
         "grain": "fine, interlocked",
-        "workability": "very difficult — extremely hard, contains lapachol",
+        "workability": "very difficult \u00e2\u20ac\u201d extremely hard, contains lapachol",
         "resinous": true,
         "contraction_radial_pct": 5.61,
         "contraction_tangential_pct": 9.61,
@@ -2149,7 +2171,7 @@
           "burn_risk": "high",
           "tearout_risk": "low",
           "dust_hazard": "high",
-          "notes": "Extreme tool wear — carbide only. Lapachol in dust is irritating. Pre-drill everything."
+          "notes": "Extreme tool wear \u00e2\u20ac\u201d carbide only. Lapachol in dust is irritating. Pre-drill everything."
         }
       },
       "lutherie": {
@@ -2173,7 +2195,7 @@
         "janka_hardness_lbf": 1260,
         "janka_hardness_n": 5605,
         "grain": "interlocked",
-        "workability": "good — some interlocked grain tearout",
+        "workability": "good \u00e2\u20ac\u201d some interlocked grain tearout",
         "resinous": false,
         "modulus_of_rupture_mpa": 97.1,
         "modulus_of_elasticity_gpa": 10.9
@@ -2216,7 +2238,7 @@
           "burn_risk": "medium",
           "tearout_risk": "medium",
           "dust_hazard": "medium",
-          "notes": "Interlocked grain can tear. Contains calcium carbonate deposits — dulls tools."
+          "notes": "Interlocked grain can tear. Contains calcium carbonate deposits \u00e2\u20ac\u201d dulls tools."
         }
       },
       "lutherie": {
@@ -2224,7 +2246,7 @@
           "body"
         ],
         "tone_character": "warm, midrange focus, mahogany-like character",
-        "sustainability": "not threatened — teak substitute"
+        "sustainability": "not threatened \u00e2\u20ac\u201d teak substitute"
       },
       "guitar_relevance": "established"
     },
@@ -2239,7 +2261,7 @@
         "janka_hardness_lbf": 2690,
         "janka_hardness_n": 11966,
         "grain": "interlocked",
-        "workability": "difficult — very hard, dulls tools",
+        "workability": "difficult \u00e2\u20ac\u201d very hard, dulls tools",
         "resinous": false,
         "contraction_radial_pct": 5.01,
         "contraction_tangential_pct": 8.86,
@@ -2284,7 +2306,7 @@
           "burn_risk": "medium",
           "tearout_risk": "medium",
           "dust_hazard": "medium",
-          "notes": "Very hard — carbide tooling essential. Common budget fretboard wood."
+          "notes": "Very hard \u00e2\u20ac\u201d carbide tooling essential. Common budget fretboard wood."
         }
       },
       "lutherie": {
@@ -2292,7 +2314,7 @@
           "fretboard"
         ],
         "tone_character": "bright, percussive, similar to rosewood but less complex",
-        "sustainability": "not threatened — common budget rosewood alternative"
+        "sustainability": "not threatened \u00e2\u20ac\u201d common budget rosewood alternative"
       },
       "guitar_relevance": "established"
     },
@@ -2307,7 +2329,7 @@
         "janka_hardness_lbf": 3650,
         "janka_hardness_n": 16236,
         "grain": "straight, very fine",
-        "workability": "very difficult — extremely hard",
+        "workability": "very difficult \u00e2\u20ac\u201d extremely hard",
         "resinous": false
       },
       "thermal": {
@@ -2356,8 +2378,8 @@
           "fretboard",
           "bridge"
         ],
-        "tone_character": "bright, bell-like — ebony alternative",
-        "sustainability": "not threatened — ebony substitute"
+        "tone_character": "bright, bell-like \u00e2\u20ac\u201d ebony alternative",
+        "sustainability": "not threatened \u00e2\u20ac\u201d ebony substitute"
       },
       "guitar_relevance": "established"
     },
@@ -2372,7 +2394,7 @@
         "janka_hardness_lbf": 2460,
         "janka_hardness_n": 10943,
         "grain": "interlocked, coarse",
-        "workability": "moderate — yellow deposits in pores",
+        "workability": "moderate \u00e2\u20ac\u201d yellow deposits in pores",
         "resinous": false,
         "modulus_of_rupture_mpa": 145.2,
         "modulus_of_elasticity_gpa": 15.93
@@ -2455,7 +2477,7 @@
           "tool": 0.22,
           "work": 0.1
         },
-        "_source": "FPL Table 3-11: Northern Red Oak SG 0.65, 12% MC 0.18 W/m·K"
+        "_source": "FPL Table 3-11: Northern Red Oak SG 0.65, 12% MC 0.18 W/m\u00c2\u00b7K"
       },
       "machining": {
         "hardness_scale": 0.62,
@@ -2526,7 +2548,7 @@
           "tool": 0.22,
           "work": 0.1
         },
-        "_source": "FPL Table 3-11: White Oak SG 0.72, 12% MC 0.19 W/m·K"
+        "_source": "FPL Table 3-11: White Oak SG 0.72, 12% MC 0.19 W/m\u00c2\u00b7K"
       },
       "machining": {
         "hardness_scale": 0.65,
@@ -2581,7 +2603,7 @@
         "janka_hardness_lbf": 1890,
         "janka_hardness_n": 8407,
         "grain": "interlocked, figure common",
-        "workability": "moderate — interlocked grain tearout",
+        "workability": "moderate \u00e2\u20ac\u201d interlocked grain tearout",
         "resinous": false,
         "contraction_radial_pct": 4.3,
         "_shrinkage_radial_source": "wood_database_meier",
@@ -2638,7 +2660,7 @@
           "back_sides",
           "body"
         ],
-        "tone_character": "warm, complex — rosewood family character",
+        "tone_character": "warm, complex \u00e2\u20ac\u201d rosewood family character",
         "sustainability": "not threatened"
       },
       "guitar_relevance": "established"
@@ -2654,7 +2676,7 @@
         "janka_hardness_lbf": 2030,
         "janka_hardness_n": 9030,
         "grain": "straight to irregular, fine texture",
-        "workability": "moderate — oily",
+        "workability": "moderate \u00e2\u20ac\u201d oily",
         "resinous": true,
         "modulus_of_rupture_mpa": 131.0,
         "modulus_of_elasticity_gpa": 14.0
@@ -2706,7 +2728,7 @@
           "back_sides"
         ],
         "tone_character": "bright, rosewood-like, slightly more mid-forward",
-        "sustainability": "not CITES listed — popular rosewood substitute"
+        "sustainability": "not CITES listed \u00e2\u20ac\u201d popular rosewood substitute"
       },
       "guitar_relevance": "established"
     },
@@ -2733,7 +2755,7 @@
           "tool": 0.16,
           "work": 0.1
         },
-        "_source": "FPL Table 3-11: Eastern White Pine SG 0.37, 12% MC 0.11 W/m·K"
+        "_source": "FPL Table 3-11: Eastern White Pine SG 0.37, 12% MC 0.11 W/m\u00c2\u00b7K"
       },
       "machining": {
         "hardness_scale": 0.12,
@@ -2769,7 +2791,7 @@
         "typical_uses": [
           "body"
         ],
-        "tone_character": "warm, resonant when aged — cigar box guitar tradition",
+        "tone_character": "warm, resonant when aged \u00e2\u20ac\u201d cigar box guitar tradition",
         "sustainability": "sustainable, abundant"
       },
       "guitar_relevance": "established"
@@ -2797,7 +2819,7 @@
           "tool": 0.18,
           "work": 0.1
         },
-        "_source": "FPL Table 3-11: Yellow-poplar SG 0.46, 12% MC 0.13 W/m·K"
+        "_source": "FPL Table 3-11: Yellow-poplar SG 0.46, 12% MC 0.13 W/m\u00c2\u00b7K"
       },
       "machining": {
         "hardness_scale": 0.22,
@@ -2852,7 +2874,7 @@
         "janka_hardness_lbf": 2520,
         "janka_hardness_n": 11210,
         "grain": "straight to interlocked",
-        "workability": "moderate — turns purple when cut, gummy when heated",
+        "workability": "moderate \u00e2\u20ac\u201d turns purple when cut, gummy when heated",
         "resinous": false,
         "contraction_radial_pct": 5.61,
         "contraction_tangential_pct": 9.61,
@@ -2897,7 +2919,7 @@
           "burn_risk": "medium",
           "tearout_risk": "low",
           "dust_hazard": "medium",
-          "notes": "Heat turns wood brown — keep feeds up to maintain purple color. Gummy at high temps."
+          "notes": "Heat turns wood brown \u00e2\u20ac\u201d keep feeds up to maintain purple color. Gummy at high temps."
         }
       },
       "lutherie": {
@@ -2942,7 +2964,7 @@
           "tool": 0.17,
           "work": 0.1
         },
-        "_source": "FPL Table 3-11: Redwood Old Growth SG 0.41, 12% MC 0.12 W/m·K"
+        "_source": "FPL Table 3-11: Redwood Old Growth SG 0.41, 12% MC 0.12 W/m\u00c2\u00b7K"
       },
       "machining": {
         "hardness_scale": 0.18,
@@ -2980,7 +3002,7 @@
           "body"
         ],
         "tone_character": "warm, dark, cedar-like response",
-        "sustainability": "old growth restricted — salvage/reclaimed only"
+        "sustainability": "old growth restricted \u00e2\u20ac\u201d salvage/reclaimed only"
       },
       "guitar_relevance": "established"
     },
@@ -2995,7 +3017,7 @@
         "janka_hardness_lbf": 1510,
         "janka_hardness_n": 6715,
         "grain": "interlocked, ribbon figure",
-        "workability": "good — some tearout on interlocked grain",
+        "workability": "good \u00e2\u20ac\u201d some tearout on interlocked grain",
         "resinous": false,
         "contraction_radial_pct": 5.2,
         "_shrinkage_radial_source": "wood_database_meier",
@@ -3054,7 +3076,7 @@
           "back_sides"
         ],
         "tone_character": "like mahogany but brighter, good midrange definition",
-        "sustainability": "sustainable — most common mahogany alternative"
+        "sustainability": "sustainable \u00e2\u20ac\u201d most common mahogany alternative"
       },
       "guitar_relevance": "established"
     },
@@ -3122,7 +3144,7 @@
           "bracing",
           "soundboard"
         ],
-        "tone_character": "bright, even — common bracing wood",
+        "tone_character": "bright, even \u00e2\u20ac\u201d common bracing wood",
         "sustainability": "sustainable, abundant"
       },
       "guitar_relevance": "established",
@@ -3194,7 +3216,7 @@
           "body",
           "back_sides"
         ],
-        "tone_character": "warm, balanced, opens up with age — koa alternative",
+        "tone_character": "warm, balanced, opens up with age \u00e2\u20ac\u201d koa alternative",
         "sustainability": "sustainable, plantation-grown in Tasmania and Australia"
       },
       "guitar_relevance": "established"
@@ -3210,7 +3232,7 @@
         "janka_hardness_lbf": 1155,
         "janka_hardness_n": 5138,
         "grain": "straight, oily",
-        "workability": "good — oily, dulls tools over time",
+        "workability": "good \u00e2\u20ac\u201d oily, dulls tools over time",
         "resinous": true,
         "modulus_of_rupture_mpa": 97.1,
         "modulus_of_elasticity_gpa": 12.28
@@ -3224,7 +3246,7 @@
           "tool": 0.21,
           "work": 0.13
         },
-        "_note": "Oily wood — tectoquinones in dust are irritating"
+        "_note": "Oily wood \u00e2\u20ac\u201d tectoquinones in dust are irritating"
       },
       "machining": {
         "hardness_scale": 0.33,
@@ -3277,7 +3299,7 @@
         "janka_hardness_lbf": 1930,
         "janka_hardness_n": 8587,
         "grain": "straight, very coarse open pore",
-        "workability": "difficult — splintery, dulls tools",
+        "workability": "difficult \u00e2\u20ac\u201d splintery, dulls tools",
         "resinous": false,
         "contraction_radial_pct": 5.23,
         "contraction_tangential_pct": 9.03,
@@ -3322,7 +3344,7 @@
           "burn_risk": "low",
           "tearout_risk": "high",
           "dust_hazard": "high",
-          "notes": "Extremely splintery — large open pores shatter. Dust is sensitizing. Sharp carbide only."
+          "notes": "Extremely splintery \u00e2\u20ac\u201d large open pores shatter. Dust is sensitizing. Sharp carbide only."
         }
       },
       "lutherie": {
@@ -3331,7 +3353,7 @@
           "fretboard"
         ],
         "tone_character": "dark, emphasized bass, warm with controlled highs",
-        "sustainability": "endangered — IUCN listed"
+        "sustainability": "endangered \u00e2\u20ac\u201d IUCN listed"
       },
       "guitar_relevance": "established"
     },
@@ -3346,7 +3368,7 @@
         "janka_hardness_lbf": 1575,
         "janka_hardness_n": 7006,
         "grain": "interlocked, distinctive striped figure",
-        "workability": "moderate — tearout on interlocked grain",
+        "workability": "moderate \u00e2\u20ac\u201d tearout on interlocked grain",
         "resinous": false,
         "contraction_radial_pct": 4.94,
         "contraction_tangential_pct": 8.82,
@@ -3401,7 +3423,7 @@
           "back_sides"
         ],
         "tone_character": "bright, articulate, distinctive appearance",
-        "sustainability": "vulnerable — limited supply"
+        "sustainability": "vulnerable \u00e2\u20ac\u201d limited supply"
       },
       "guitar_relevance": "established"
     },
@@ -3416,7 +3438,7 @@
         "janka_hardness_lbf": 1900,
         "janka_hardness_n": 8452,
         "grain": "irregular, spider-web figure",
-        "workability": "good — machines cleanly despite density",
+        "workability": "good \u00e2\u20ac\u201d machines cleanly despite density",
         "resinous": false,
         "contraction_radial_pct": 3.5,
         "_shrinkage_radial_source": "wood_database_meier",
@@ -3473,7 +3495,7 @@
           "fretboard"
         ],
         "tone_character": "warm, complex, rosewood-like with unique character",
-        "sustainability": "limited supply — slow-growing"
+        "sustainability": "limited supply \u00e2\u20ac\u201d slow-growing"
       },
       "guitar_relevance": "established"
     },
@@ -3545,18 +3567,35 @@
       "id": "african_padauk",
       "name": "African Padauk",
       "scientific_name": "Pterocarpus soyauxii",
+      "common_names": [
+        "African Padauk",
+        "Padouk",
+        "Tacula",
+        "N'gula",
+        "Kisese",
+        "Mbel"
+      ],
+      "naming_caveats": "Common name 'Mukula' may refer to Pterocarpus tinctorius (CITES II). Verify species when sourcing.",
+      "cites_status": "not_listed",
+      "cites_genus_caveat": "Pterocarpus genus contains multiple CITES-listed species (tinctorius, erinaceus, santalinus). Genus-level visual identification is unreliable.",
       "category": "hardwood",
       "guitar_relevance": "emerging",
       "physical": {
         "specific_gravity": 0.74,
+        "_specific_gravity_caveat": "CIRAD reports range 0.38-0.86 across 20 specimens; per-flitch measurement recommended",
         "density_kg_m3": 745,
-        "janka_hardness_lbf": 731,
-        "janka_hardness_n": 3252,
-        "grain": "",
-        "workability": "",
+        "janka_hardness_lbf": 1725,
+        "janka_hardness_n": 7672,
+        "grain": "interlocked",
+        "workability": "good",
         "resinous": false,
         "modulus_of_rupture_mpa": 126.7,
-        "modulus_of_elasticity_gpa": 13.07
+        "modulus_of_elasticity_gpa": 13.07,
+        "contraction_radial_pct": 3.1,
+        "contraction_tangential_pct": 5.0,
+        "contraction_volumetric_pct": 7.9,
+        "tr_ratio": 1.6,
+        "_shrinkage_source": "wood_database_meier"
       },
       "thermal": {
         "thermal_conductivity_w_per_mk": 0.3,
@@ -3599,9 +3638,19 @@
         }
       },
       "lutherie": {
-        "typical_uses": [],
-        "tone_character": "",
-        "sustainability": ""
+        "typical_uses": [
+          "body",
+          "back_sides",
+          "fretboard",
+          "accent"
+        ],
+        "tone_character": "Predicted bright with strong sustain based on density and stiffness; limited production-build documentation in lutherie literature",
+        "_tone_confidence": "low",
+        "_tone_source": "extrapolated_from_physical_properties",
+        "stability_notes": "Exceptional dimensional stability (T/R ratio 1.6, well below typical lutherie wood range of 1.8-2.5)",
+        "color_notes": "Vivid orange-red when fresh; darkens to purplish-brown with UV exposure over months to years",
+        "workability_notes": "Machines well; moderate carbide tooling wear; dust requires extraction (medium respiratory irritation hazard)",
+        "sustainability": "not_restricted"
       },
       "_source_url": "https://www.wood-database.com/african-padauk/"
     },
@@ -5016,7 +5065,7 @@
     "lyptus": {
       "id": "lyptus",
       "name": "Lyptus",
-      "scientific_name": "Eucalyptus grandis × urophylla",
+      "scientific_name": "Eucalyptus grandis \u00c3\u2014 urophylla",
       "category": "hardwood",
       "guitar_relevance": "emerging",
       "physical": {
@@ -16737,7 +16786,7 @@
         "janka_hardness_lbf": 2345,
         "janka_hardness_n": 10431,
         "grain": "interlocked, often wildly figured",
-        "workability": "difficult — very hard, dulls cutters, but finishes beautifully",
+        "workability": "difficult \u00e2\u20ac\u201d very hard, dulls cutters, but finishes beautifully",
         "resinous": false,
         "modulus_of_rupture_mpa": 117.0,
         "modulus_of_elasticity_gpa": 11.58
@@ -16747,17 +16796,17 @@
         "specific_heat_capacity_j_per_kgk": 1450,
         "specific_cutting_energy_j_per_mm3": 0.78,
         "heat_partition": {
-          "chip": 0.60,
+          "chip": 0.6,
           "tool": 0.25,
           "work": 0.15
         },
-        "_note": "All thermal values estimated from density/SG. North American species — no FPL thermal data."
+        "_note": "All thermal values estimated from density/SG. North American species \u00e2\u20ac\u201d no FPL thermal data."
       },
       "machining": {
-        "hardness_scale": 0.70,
+        "hardness_scale": 0.7,
         "burn_tendency": 0.45,
         "tearout_tendency": 0.55,
-        "chipload_multiplier": 0.80,
+        "chipload_multiplier": 0.8,
         "feed_clamp": {
           "roughing_max_mm_min": 2800,
           "finishing_max_mm_min": 1800,
@@ -16770,17 +16819,17 @@
         },
         "doc_limits": {
           "max_doc_mm": 8,
-          "optimal_doc_ratio": 0.40
+          "optimal_doc_ratio": 0.4
         },
         "woc_limits": {
-          "max_woc_ratio": 0.40,
-          "finishing_woc_ratio": 0.10
+          "max_woc_ratio": 0.4,
+          "finishing_woc_ratio": 0.1
         },
         "warnings": {
           "burn_risk": "high",
           "tearout_risk": "high",
           "dust_hazard": "high",
-          "notes": "Extremely hard — dulls HSS quickly, use carbide. Interlocked grain tears easily on figured stock. Dust is irritating. Small blanks common due to tree form."
+          "notes": "Extremely hard \u00e2\u20ac\u201d dulls HSS quickly, use carbide. Interlocked grain tears easily on figured stock. Dust is irritating. Small blanks common due to tree form."
         }
       },
       "lutherie": {
@@ -16791,8 +16840,8 @@
           "bridge",
           "accent"
         ],
-        "tone_character": "bright, dense, crystalline highs with strong sustain — similar to rosewood but more percussive",
-        "sustainability": "abundant in Texas/Southwest US, invasive species — harvest is ecologically beneficial"
+        "tone_character": "bright, dense, crystalline highs with strong sustain \u00e2\u20ac\u201d similar to rosewood but more percussive",
+        "sustainability": "abundant in Texas/Southwest US, invasive species \u00e2\u20ac\u201d harvest is ecologically beneficial"
       },
       "_source_url": "https://www.wood-database.com/honey-mesquite/"
     },
@@ -19231,7 +19280,7 @@
     "london_plane": {
       "id": "london_plane",
       "name": "London Plane",
-      "scientific_name": "Platanus × acerifolia",
+      "scientific_name": "Platanus \u00c3\u2014 acerifolia",
       "category": "hardwood",
       "guitar_relevance": "exploratory",
       "physical": {
