@@ -1239,6 +1239,10 @@
       "name": "Sitka Spruce",
       "scientific_name": "Picea sitchensis",
       "category": "softwood",
+      "cites_status": "not_listed",
+      "caveats": {
+        "data_confidence": "Industry benchmark species. FPL and Wood Database values well-documented."
+      },
       "physical": {
         "specific_gravity": 0.42,
         "density_kg_m3": 425,
