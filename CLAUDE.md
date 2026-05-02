@@ -105,6 +105,13 @@ published references. Attribution is per-field, not per-species.
 - `wood_movement_calc.py`: raise `ValueError` listing supported species
 - `side_bending_calc.py`: raise `ValueError` — no silent fallback to defaults
 
+**Reference data locations:**
+- `docs/reference/cirad/` — CIRAD wood collection index (4,022 samples)
+- `docs/reference/cirad-density/` — CIRAD wood density database (872 species, Vieilledent et al. 2018)
+  - Contains D12 (density at 12% MC), volumetric shrinkage (R), fiber saturation point (S), basic density (Db)
+  - Conversion formula: Db = 0.828 × D12
+- CITES Trade Database (4.3GB) — stored at `~/Downloads/Trade_database_download_v2025.1.zip`, not in repo
+
 ## BLOCKING INFRASTRUCTURE — resolve before new DXF work
 
 ### DXF output standard: dual-format via dxf_compat
