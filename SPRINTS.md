@@ -1,25 +1,26 @@
 # The Production Shop — Sprint Registry
-Last updated: 2026-04-30
+Last updated: 2026-05-02
 Maintained by: Ross Echols (HanzoRazer)
 Maintenance discipline: docs/SPRINTS_MAINTENANCE.md
 
 ---
 
-## NEXT SESSION OPENS WITH (2026-05-01)
+## NEXT SESSION OPENS WITH (2026-05-02)
 
-**SPRINTS.md reconciliation just landed** — DATA INTEGRITY section now reflects M1, M2, NDS Phase 1+1.5, NDS Phase 2 completion plus three new queued items.
+**Sprint FRET-CONSOLIDATION-1 complete** — CAM toolpath generation now consumes FretboardEcosphere as canonical source. No more duplicate fret math.
 
-**Engineer at rest after back-to-back data integrity sprints.** No active work in flight.
+**Engineer at rest after data integrity and consolidation sprints.** No active work in flight.
 
 **Shop setup is the gating critical path** — clearout target 2026-05-15, lab rig fabrication start ~2026-07.
 
 **CAD work on Smart Guitar in parallel** (romantic route chosen; Fusion 360 license renewed).
 
-**Completed 2026-04-30 through 2026-05-01:**
+**Completed 2026-04-30 through 2026-05-02:**
 - Sprint M1 wood shrinkage data integrity remediation (commits 37f29bc6, 477758eb)
 - Sprint M2 silent fallback elimination across 6 files (commit 477758eb)
 - Sprint NDS Phase 1+1.5 foundation (commits 9d37f1ea, d72d9744, e260f365, ac96430f)
 - Sprint NDS Phase 2 router and endpoints (commits 4f8a3209, ab1ed8a2, 6b719fc3) — delivered as FRET-A Phase 2
+- Sprint FRET-CONSOLIDATION-1 CAM-consumes-ecosphere (commits e4220537, fa009184)
 - African Padauk wood_species.json entry update (Janka correction, shrinkage values, CITES warning)
 - Data file sync boundary documented (wood_species.json vs luthier_tonewood_reference.json)
 - Sprint M4 queued: MOE data gaps (spruce_sitka, spruce_engelmann, douglas_fir)
@@ -1088,6 +1089,31 @@ NDS Phase 2 scope was delivered under the FRET-A sprint name. Both names refer t
 - Round-trip integration tests at app/tests/integration/test_fretboard_ecosphere_roundtrip.py
 
 **Minor gap:** signal_logic_version bump to signals_v5 not done (backlog).
+
+---
+
+### Sprint FRET-CONSOLIDATION-1 — CAM Consumes Ecosphere
+
+**Status:** COMPLETE
+**Completed:** 2026-05-02
+**Commits:** e4220537 (Commit 1), fa009184 (Commit 2)
+
+CAM toolpath generation now consumes FretboardEcosphere as canonical source,
+eliminating duplicate fret position math across the system.
+
+**Deliverables:**
+- app/cam/fret_slots_from_ecosphere.py (bridge module)
+- extract_slot_geometry(), ecosphere_to_fretboard_spec(), validate_ecosphere_for_cam()
+- fret_slots_cam.py: generate_fret_slot_toolpaths_from_ecosphere(), generate_fret_slot_cam_from_ecosphere()
+- tests/cam/test_fret_slots_from_ecosphere.py (35 tests, 1e-9 mm tolerance)
+
+**Architecture:**
+```
+FretboardEcosphere (canonical) → extract_slot_geometry() → FretSlotToolpath
+                                  No duplicate fret math
+```
+
+**Tests:** 35 passing (31 extraction + 4 integration)
 
 ---
 
