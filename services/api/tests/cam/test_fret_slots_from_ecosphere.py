@@ -418,6 +418,87 @@ class TestRegressionKnownValues:
 # Edge Cases
 # =============================================================================
 
+# =============================================================================
+# Integration Tests: Ecosphere → CAM Pipeline
+# =============================================================================
+
+@pytest.fixture
+def rmos_context():
+    """Create RmosContext for testing."""
+    from app.rmos.context import RmosContext
+    return RmosContext.from_model_id("strat_25_5")
+
+
+class TestEcosphereToCamPipeline:
+    """Integration tests for full ecosphere → CAM pipeline."""
+
+    def test_generate_toolpaths_from_ecosphere(self, standard_ecosphere, rmos_context):
+        """Full pipeline: ecosphere → toolpaths."""
+        from app.calculators.fret_slots_cam import generate_fret_slot_toolpaths_from_ecosphere
+
+        toolpaths = generate_fret_slot_toolpaths_from_ecosphere(
+            standard_ecosphere, rmos_context, slot_depth_mm=3.0
+        )
+
+        assert len(toolpaths) == standard_ecosphere.input_params.fret_count
+        for tp in toolpaths:
+            assert tp.fret_number > 0
+            assert tp.slot_depth_mm > 0
+            assert tp.feed_rate_mmpm > 0
+
+    def test_generate_cam_output_from_ecosphere(self, standard_ecosphere, rmos_context):
+        """Full pipeline: ecosphere → complete CAM output."""
+        from app.calculators.fret_slots_cam import generate_fret_slot_cam_from_ecosphere
+
+        output = generate_fret_slot_cam_from_ecosphere(
+            standard_ecosphere, rmos_context, slot_depth_mm=3.0
+        )
+
+        assert output.toolpaths is not None
+        assert len(output.toolpaths) == 22
+        assert output.dxf_content is not None
+        assert "FRET_SLOTS" in output.dxf_content
+        assert output.gcode_content is not None
+        assert "G21" in output.gcode_content
+        assert output.statistics["slot_count"] == 22
+
+    def test_fan_fret_cam_from_ecosphere(self, multiscale_ecosphere, rmos_context):
+        """Fan-fret pipeline: ecosphere → CAM with fan mode."""
+        from app.calculators.fret_slots_cam import generate_fret_slot_cam_from_ecosphere
+
+        output = generate_fret_slot_cam_from_ecosphere(
+            multiscale_ecosphere, rmos_context, slot_depth_mm=3.0
+        )
+
+        assert output.statistics.get("mode") == "fan"
+        assert output.statistics["treble_scale_mm"] == 648.0
+        assert output.statistics["bass_scale_mm"] == 686.0
+
+    def test_toolpaths_match_ecosphere_geometry(self, standard_ecosphere, rmos_context):
+        """Toolpath geometry matches source ecosphere exactly."""
+        from app.calculators.fret_slots_cam import generate_fret_slot_toolpaths_from_ecosphere
+
+        toolpaths = generate_fret_slot_toolpaths_from_ecosphere(
+            standard_ecosphere, rmos_context
+        )
+
+        for tp in toolpaths:
+            fl = standard_ecosphere.get_fret_line(tp.fret_number)
+            assert fl is not None
+
+            bass_pt = fl.points[0]
+            treble_pt = fl.points[-1]
+
+            assert abs(tp.bass_point[0] - bass_pt.x_mm) < TOLERANCE_MM
+            assert abs(tp.bass_point[1] - bass_pt.y_mm) < TOLERANCE_MM
+            assert abs(tp.treble_point[0] - treble_pt.x_mm) < TOLERANCE_MM
+            assert abs(tp.treble_point[1] - treble_pt.y_mm) < TOLERANCE_MM
+
+
+# =============================================================================
+# Edge Cases
+# =============================================================================
+
 class TestEdgeCases:
     """Edge case and boundary condition tests."""
 

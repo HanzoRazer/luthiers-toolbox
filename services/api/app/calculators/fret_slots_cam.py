@@ -3,7 +3,10 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import List, Tuple, Dict, Any, Optional, Literal
+from typing import TYPE_CHECKING, List, Tuple, Dict, Any, Optional, Literal
+
+if TYPE_CHECKING:
+    from ..instrument_geometry.neck.fretboard_ecosphere import FretboardEcosphere
 from math import sqrt, pi
 
 from ..core.safety import safety_critical
@@ -536,3 +539,132 @@ def generate_fret_slot_cam(
             gcode_content=gcode_content,
             statistics=statistics,
         )
+
+
+@safety_critical
+def generate_fret_slot_toolpaths_from_ecosphere(
+    ecosphere: "FretboardEcosphere",
+    context: RmosContext,
+    slot_depth_mm: float = 3.0,
+) -> List[FretSlotToolpath]:
+    """
+    Generate CAM toolpaths from FretboardEcosphere (canonical source).
+
+    Sprint FRET-CONSOLIDATION-1: Ecosphere-first CAM generation path.
+    Uses pre-computed geometry from ecosphere, avoiding duplicate fret math.
+
+    Args:
+        ecosphere: Computed FretboardEcosphere document (canonical source).
+        context: RMOS context with material and tooling data.
+        slot_depth_mm: Nominal slot depth (2.5-3.5mm typical).
+
+    Returns:
+        List of FretSlotToolpath objects, one per fret.
+
+    Raises:
+        ValueError: If ecosphere has invalid geometry for CAM.
+
+    Notes:
+        - Slot width comes from ecosphere.input_params.slot_width_mm
+        - Geometry extracted via extract_slot_geometry() (no recomputation)
+        - Feedrates adjusted per context.materials
+    """
+    from ..cam.fret_slots_from_ecosphere import (
+        extract_slot_geometry,
+        ecosphere_to_fretboard_spec,
+        validate_ecosphere_for_cam,
+    )
+
+    validate_ecosphere_for_cam(ecosphere)
+    slots = extract_slot_geometry(ecosphere)
+    spec = ecosphere_to_fretboard_spec(ecosphere)
+
+    toolpaths: List[FretSlotToolpath] = []
+
+    base_feed_mmpm = 1500.0
+    base_plunge_mmpm = 400.0
+
+    if context.materials:
+        density_factor = 1.0
+        if context.materials.density_kg_m3:
+            reference_density = 700.0
+            density_factor = reference_density / context.materials.density_kg_m3
+            density_factor = max(0.5, min(1.5, density_factor))
+        base_feed_mmpm *= density_factor
+        base_plunge_mmpm *= density_factor
+
+    for slot in slots:
+        depth = compute_radius_blended_depth(
+            spec.base_radius_mm,
+            spec.end_radius_mm,
+            slot.center_x_mm,
+            spec.scale_length_mm,
+            slot_depth_mm,
+        )
+
+        toolpath = FretSlotToolpath(
+            fret_number=slot.fret_number,
+            position_mm=slot.center_x_mm,
+            width_mm=slot.slot_length_mm,
+            bass_point=slot.bass_point,
+            treble_point=slot.treble_point,
+            slot_depth_mm=depth,
+            slot_width_mm=slot.slot_width_mm,
+            feed_rate_mmpm=base_feed_mmpm,
+            plunge_rate_mmpm=base_plunge_mmpm,
+            angle_rad=slot.angle_rad,
+            is_perpendicular=slot.is_perpendicular,
+        )
+        toolpaths.append(toolpath)
+
+    return toolpaths
+
+
+@safety_critical
+def generate_fret_slot_cam_from_ecosphere(
+    ecosphere: "FretboardEcosphere",
+    context: RmosContext,
+    slot_depth_mm: float = 3.0,
+    safe_z_mm: float = 5.0,
+    post_id: str = "GRBL",
+) -> FretSlotCAMOutput:
+    """
+    Generate complete CAM output from FretboardEcosphere.
+
+    Sprint FRET-CONSOLIDATION-1: Top-level ecosphere-first entry point.
+    Handles both standard and fan-fret configurations automatically.
+
+    Args:
+        ecosphere: Computed FretboardEcosphere document.
+        context: RMOS context with material/tooling data.
+        slot_depth_mm: Nominal slot depth (2.5-3.5mm typical).
+        safe_z_mm: Safe retract height above workpiece.
+        post_id: Post-processor identifier (GRBL, Mach4, etc.).
+
+    Returns:
+        FretSlotCAMOutput with toolpaths, DXF, G-code, and statistics.
+    """
+    from ..cam.fret_slots_from_ecosphere import is_fan_fret
+
+    toolpaths = generate_fret_slot_toolpaths_from_ecosphere(
+        ecosphere, context, slot_depth_mm
+    )
+
+    mode = "fan" if is_fan_fret(ecosphere) else "standard"
+    dxf_content = export_dxf_r12(toolpaths, mode=mode)
+    gcode_content = generate_gcode(toolpaths, safe_z_mm, post_id, mode=mode)
+    statistics = compute_cam_statistics(toolpaths, safe_z_mm)
+
+    if mode == "fan":
+        statistics["mode"] = "fan"
+        inp = ecosphere.input_params
+        statistics["treble_scale_mm"] = inp.scale_length_mm
+        statistics["bass_scale_mm"] = inp.bass_scale_length_mm
+        statistics["perpendicular_fret"] = inp.perpendicular_fret
+
+    return FretSlotCAMOutput(
+        toolpaths=toolpaths,
+        dxf_content=dxf_content,
+        gcode_content=gcode_content,
+        statistics=statistics,
+    )
