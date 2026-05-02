@@ -672,12 +672,37 @@
       "id": "mahogany_honduran",
       "name": "Honduran Mahogany",
       "scientific_name": "Swietenia macrophylla",
+      "common_names": [
+        "Honduran Mahogany",
+        "Genuine Mahogany",
+        "Big-leaf Mahogany",
+        "Caoba"
+      ],
       "category": "hardwood",
+      "guitar_relevance": "primary",
+      "cites_status": "appendix_II",
+      "cites_details": {
+        "listing_date": "2019-11-26",
+        "annotation": "#6",
+        "annotation_scope": "Logs, sawn wood, veneer sheets and plywood",
+        "genus_listing": false,
+        "scope": "Neotropical populations (Americas)",
+        "source": "CITES_checklist_2026-04-30",
+        "source_url": "https://checklist.cites.org/"
+      },
+      "caveats": {
+        "regulatory": "CITES Appendix II. Annotation #6 covers logs, sawn wood, veneer, and plywood \u2014 finished instruments typically exempt but verify with customs when crossing borders.",
+        "naming": "Trade name 'mahogany' is applied to many unrelated species. True Honduran Mahogany is Swietenia macrophylla only.",
+        "sustainability": "Heavily logged throughout range. FSC-certified sources recommended."
+      },
       "physical": {
         "specific_gravity": 0.52,
+        "_specific_gravity_source": "wood_database_meier",
         "density_kg_m3": 545,
+        "_density_source": "wood_database_meier",
         "janka_hardness_lbf": 800,
         "janka_hardness_n": 3558,
+        "_hardness_source": "wood_database_meier",
         "grain": "interlocked",
         "workability": "excellent",
         "resinous": false,
@@ -687,8 +712,10 @@
         "contraction_tangential_pct": 4.3,
         "_shrinkage_tangential_source": "wood_database_meier",
         "_shrinkage_tangential_url": "https://www.wood-database.com/honduran-mahogany/",
+        "tr_ratio": 1.48,
         "modulus_of_rupture_mpa": 98.4,
-        "modulus_of_elasticity_gpa": 11.97
+        "modulus_of_elasticity_gpa": 11.97,
+        "_mechanical_source": "wood_database_meier"
       },
       "thermal": {
         "thermal_conductivity_w_per_mk": 0.12,
@@ -727,8 +754,7 @@
         "warnings": {
           "burn_risk": "low",
           "tearout_risk": "medium",
-          "dust_hazard": "medium",
-          "notes": "Watch for tearout on interlocked grain areas"
+          "dust_hazard": "medium"
         }
       },
       "lutherie": {
@@ -737,13 +763,13 @@
           "neck",
           "back_sides"
         ],
-        "tone_character": "warm, balanced, good sustain",
-        "sustainability": "CITES Appendix II"
+        "tone_character": "Warm, balanced fundamental with good sustain. Industry benchmark for back/sides tone.",
+        "_tone_confidence": "high",
+        "_tone_source": "production_builds",
+        "stability_notes": "Excellent dimensional stability (T/R ratio 1.48). Low shrinkage values.",
+        "sustainability": "cites_regulated"
       },
-      "guitar_relevance": "primary",
-      "aliases": [
-        "Honduran Mahogany"
-      ]
+      "_source_url": "https://www.wood-database.com/honduran-mahogany/"
     },
     "maple_hard": {
       "id": "maple_hard",
