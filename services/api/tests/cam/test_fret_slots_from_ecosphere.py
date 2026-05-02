@@ -444,4 +444,40 @@ class TestEdgeCases:
             heel_width_mm=70.0,
             string_count=5,
         )
-        eco 
+        eco = FretboardEcosphere.compute(inp)
+        slots = extract_slot_geometry(eco)
+
+        assert len(slots) == 36
+
+    def test_single_string_raises(self):
+        """Single-string ecosphere raises ValueError (degenerate slot)."""
+        # Single string creates fret "lines" with 1 point, not 2
+        # This is a degenerate case that cannot produce valid CAM slots
+        inp = FretboardInput(
+            scale_length_mm=600.0,
+            fret_count=12,
+            string_count=1,
+            nut_width_mm=20.0,
+            heel_width_mm=25.0,
+        )
+        eco = FretboardEcosphere.compute(inp)
+
+        with pytest.raises(ValueError, match="minimum 2 required"):
+            extract_slot_geometry(eco)
+
+    def test_two_strings_minimum(self):
+        """Two-string ecosphere (minimal valid case)."""
+        inp = FretboardInput(
+            scale_length_mm=600.0,
+            fret_count=12,
+            string_count=2,
+            nut_width_mm=20.0,
+            heel_width_mm=25.0,
+        )
+        eco = FretboardEcosphere.compute(inp)
+        slots = extract_slot_geometry(eco)
+
+        assert len(slots) == 12
+        for slot in slots:
+            # Bass and treble Y should differ
+            assert slot.bass_point[1] != slot.treble_point[1]
