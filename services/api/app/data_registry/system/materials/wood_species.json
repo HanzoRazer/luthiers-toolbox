@@ -990,12 +990,38 @@
       "id": "rosewood_east_indian",
       "name": "East Indian Rosewood",
       "scientific_name": "Dalbergia latifolia",
+      "common_names": [
+        "East Indian Rosewood",
+        "Indian Rosewood",
+        "Sonokeling",
+        "Bombay Blackwood",
+        "Shisham"
+      ],
       "category": "hardwood",
+      "guitar_relevance": "primary",
+      "cites_status": "appendix_II",
+      "cites_details": {
+        "listing_date": "2019-11-26",
+        "annotation": "#15",
+        "annotation_scope": "Finished musical instruments, parts, and accessories are EXEMPT. Raw wood, veneer, and unfinished parts require permits.",
+        "genus_listing": true,
+        "scope": "All Dalbergia species",
+        "source": "CITES_checklist_2026-04-30",
+        "source_url": "https://checklist.cites.org/"
+      },
+      "caveats": {
+        "regulatory": "CITES Appendix II with annotation #15. Finished guitars and finished parts are EXEMPT from permit requirements. Raw wood and unfinished blanks require CITES export/re-export permits. Keep purchase documentation for provenance.",
+        "naming": "Multiple Dalbergia species are sold as 'rosewood'. East Indian is specifically D. latifolia.",
+        "working_properties": "Oily \u2014 dulls tools faster than non-oily species. Natural oils can interfere with glue adhesion; wipe joints with solvent before gluing."
+      },
       "physical": {
         "specific_gravity": 0.8,
+        "_specific_gravity_source": "wood_database_meier",
         "density_kg_m3": 830,
+        "_density_source": "wood_database_meier",
         "janka_hardness_lbf": 2440,
         "janka_hardness_n": 10854,
+        "_hardness_source": "wood_database_meier",
         "grain": "interlocked",
         "workability": "moderate - oily, dulls tools",
         "resinous": true,
@@ -1004,7 +1030,11 @@
         "_shrinkage_radial_url": "https://www.wood-database.com/east-indian-rosewood/",
         "contraction_tangential_pct": 5.9,
         "_shrinkage_tangential_source": "wood_database_meier",
-        "_shrinkage_tangential_url": "https://www.wood-database.com/east-indian-rosewood/"
+        "_shrinkage_tangential_url": "https://www.wood-database.com/east-indian-rosewood/",
+        "tr_ratio": 2.27,
+        "modulus_of_rupture_mpa": 119.0,
+        "modulus_of_elasticity_gpa": 11.5,
+        "_mechanical_source": "wood_database_meier"
       },
       "thermal": {
         "thermal_conductivity_w_per_mk": 0.17,
@@ -1015,7 +1045,7 @@
           "tool": 0.22,
           "work": 0.13
         },
-        "_note": "Estimated from SG + oily tropical hardwood profile. Oil in pores increases tool friction."
+        "_note": "Estimated from SG + oily tropical hardwood profile"
       },
       "machining": {
         "hardness_scale": 0.8,
@@ -1034,32 +1064,32 @@
         },
         "doc_limits": {
           "max_doc_mm": 4,
-          "optimal_doc_ratio": 0.25
+          "optimal_doc_ratio": 0.3
         },
         "woc_limits": {
           "max_woc_ratio": 0.3,
-          "finishing_woc_ratio": 0.05
+          "finishing_woc_ratio": 0.08
         },
         "warnings": {
-          "burn_risk": "medium",
-          "tearout_risk": "medium",
-          "dust_hazard": "high",
-          "notes": "Oily wood dulls tools fast. Dust is sensitizing - use extraction."
+          "burn_risk": "low",
+          "tearout_risk": "low",
+          "dust_hazard": "high"
         }
       },
       "lutherie": {
         "typical_uses": [
-          "fretboard",
           "back_sides",
-          "bridge"
+          "fretboard",
+          "bridge",
+          "headstock_overlay"
         ],
-        "tone_character": "warm, complex overtones, sustain",
-        "sustainability": "CITES regulated"
+        "tone_character": "Rich, complex overtones with strong bass response. Industry standard for acoustic back/sides.",
+        "_tone_confidence": "high",
+        "_tone_source": "production_builds",
+        "stability_notes": "Higher T/R ratio (2.27) than mahogany \u2014 more seasonal movement. Needs adequate acclimation.",
+        "sustainability": "cites_regulated"
       },
-      "guitar_relevance": "primary",
-      "aliases": [
-        "East Indian Rosewood"
-      ]
+      "_source_url": "https://www.wood-database.com/east-indian-rosewood/"
     },
     "spruce_adirondack": {
       "id": "spruce_adirondack",
