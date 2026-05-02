@@ -155,7 +155,7 @@ ALIAS_MAP: Dict[str, str] = {
     "mahogany":               "mahogany_honduran",
     "mahogany_honduras":      "mahogany_honduran",
     "mahogany_honduran":      "mahogany_honduran",
-    "mahogany_african":       "mahogany_african",
+    "mahogany_african":       "khaya",
     "rosewood":               "rosewood_east_indian",
     "rosewood_indian":        "rosewood_east_indian",
     "rosewood_east_indian":   "rosewood_east_indian",

@@ -48,7 +48,7 @@ ALIAS_MAP: Dict[str, str] = {
     "indian_rosewood": "rosewood_east_indian",
     "brazilian_rosewood": "rosewood_brazilian",
     "honduran_mahogany": "mahogany_honduran",
-    "african_mahogany": "mahogany_african",
+    "african_mahogany": "khaya",
     # Bare aliases — assumed defaults (legacy compatibility)
     "spruce": "spruce_sitka",               # legacy alias; assumed Sitka
     "cedar": "cedar_western_red",           # legacy alias; assumed Western Red Cedar

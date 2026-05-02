@@ -112,6 +112,31 @@ published references. Attribution is per-field, not per-species.
   - Conversion formula: Db = 0.828 × D12
 - CITES Trade Database (4.3GB) — stored at `~/Downloads/Trade_database_download_v2025.1.zip`, not in repo
 
+### Documentation archive policy
+
+**Archive location**: `docs/archive/`
+**Index**: `docs/archive/INDEX.md`
+
+**60-day rule**: Documents move to archive after 60 days or when superseded by newer versions.
+
+**Archive categories (2026)**:
+- `status/` — point-in-time snapshots, session states
+- `plans/` — superseded implementation plans
+- `remediation/` — completed remediation efforts
+- `evaluations/` — completed assessments and audits
+- `handoffs/` — pre-March 2026 developer handoffs
+- `sprints/` — sprint artifact bundles
+- `session-notes/` — extracted session transcript content
+
+**Code archive**: `archive/code/{year}/` — historical Python files not in production
+
+**Stays active** (never archive):
+- Architecture docs, specs, guides in `docs/`
+- ADRs in `docs/adr/`
+- Current handoffs in `docs/handoffs/` (recent 60 days)
+- Reference material (`docs/reference/`)
+- Tonewood comparison documents
+
 ## BLOCKING INFRASTRUCTURE — resolve before new DXF work
 
 ### DXF output standard: dual-format via dxf_compat

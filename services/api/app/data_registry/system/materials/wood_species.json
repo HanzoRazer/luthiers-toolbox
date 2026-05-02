@@ -595,79 +595,6 @@
       },
       "guitar_relevance": "primary"
     },
-    "mahogany_african": {
-      "id": "mahogany_african",
-      "name": "African Mahogany (Khaya)",
-      "scientific_name": "Khaya spp.",
-      "category": "hardwood",
-      "physical": {
-        "specific_gravity": 0.5,
-        "density_kg_m3": 530,
-        "janka_hardness_lbf": 830,
-        "janka_hardness_n": 3692,
-        "grain": "interlocked",
-        "workability": "good",
-        "resinous": false,
-        "contraction_radial_pct": 3.4,
-        "_shrinkage_radial_source": "wood_database_meier",
-        "_shrinkage_radial_url": "https://www.wood-database.com/african-mahogany/",
-        "contraction_tangential_pct": 5.7,
-        "_shrinkage_tangential_source": "wood_database_meier",
-        "_shrinkage_tangential_url": "https://www.wood-database.com/african-mahogany/"
-      },
-      "thermal": {
-        "thermal_conductivity_w_per_mk": 0.12,
-        "specific_heat_capacity_j_per_kgk": 1600,
-        "specific_cutting_energy_j_per_mm3": 0.45,
-        "heat_partition": {
-          "chip": 0.7,
-          "tool": 0.2,
-          "work": 0.1
-        },
-        "_note": "Estimated from SG; not in FPL Table 3-11"
-      },
-      "machining": {
-        "hardness_scale": 0.42,
-        "burn_tendency": 0.3,
-        "tearout_tendency": 0.5,
-        "chipload_multiplier": 1.0,
-        "feed_clamp": {
-          "roughing_max_mm_min": 4000,
-          "finishing_max_mm_min": 2500,
-          "plunge_max_mm_min": 1000
-        },
-        "speed_clamp": {
-          "min_rpm": 12000,
-          "max_rpm": 24000,
-          "optimal_sfm": 800
-        },
-        "doc_limits": {
-          "max_doc_mm": 12,
-          "optimal_doc_ratio": 0.5
-        },
-        "woc_limits": {
-          "max_woc_ratio": 0.5,
-          "finishing_woc_ratio": 0.1
-        },
-        "warnings": {
-          "burn_risk": "low",
-          "tearout_risk": "medium",
-          "dust_hazard": "medium"
-        }
-      },
-      "lutherie": {
-        "typical_uses": [
-          "body",
-          "neck"
-        ],
-        "tone_character": "similar to honduran, slightly brighter",
-        "sustainability": "sustainable alternative"
-      },
-      "guitar_relevance": "primary",
-      "aliases": [
-        "African Mahogany"
-      ]
-    },
     "mahogany_honduran": {
       "id": "mahogany_honduran",
       "name": "Honduran Mahogany",
@@ -30730,6 +30657,108 @@
         "sustainability": ""
       },
       "_source_url": "https://www.wood-database.com/yellow-silverballi/"
+    },
+    "khaya": {
+      "id": "khaya",
+      "name": "Khaya (African Mahogany)",
+      "scientific_name": "Khaya spp.",
+      "common_names": [
+        "African Mahogany",
+        "Khaya",
+        "Acajou d'Afrique",
+        "Dry Zone Mahogany"
+      ],
+      "category": "hardwood",
+      "guitar_relevance": "emerging",
+      "cites_status": "appendix_II",
+      "cites_details": {
+        "listing_date": "2023-02-23",
+        "annotation": "#17",
+        "annotation_scope": "Logs, sawn wood, veneer sheets, plywood and transformed wood. Finished instruments may be exempt \u2014 verify current annotation interpretation.",
+        "genus_listing": true,
+        "scope": "All Khaya species",
+        "source": "CITES_checklist_2026-04-30",
+        "source_url": "https://checklist.cites.org/"
+      },
+      "naming_caveats": "Trade name 'African Mahogany' is applied to multiple unrelated genera: Khaya (true African Mahogany, CITES II), Entandrophragma (Sapele, Sipo, Utile \u2014 NOT Khaya), and others. Verify genus when sourcing.",
+      "caveats": {
+        "regulatory": "CITES Appendix II as of 2023-02-23. Annotation #17 covers logs, sawn wood, veneer, plywood, and transformed wood. Export permits required for these products. Finished instrument exemption status under #17 is evolving \u2014 verify with customs.",
+        "naming": "Multiple genera sold as 'African Mahogany'. True Khaya species are CITES II. Entandrophragma (Sapele, Utile) are NOT Khaya and have different regulatory status.",
+        "sustainability": "Recent CITES listing reflects conservation concerns. FSC-certified sources recommended."
+      },
+      "physical": {
+        "specific_gravity": 0.5,
+        "_specific_gravity_source": "wood_database_meier",
+        "density_kg_m3": 530,
+        "_density_source": "wood_database_meier",
+        "janka_hardness_lbf": 1070,
+        "janka_hardness_n": 4760,
+        "_hardness_source": "wood_database_meier",
+        "grain": "interlocked",
+        "workability": "good",
+        "resinous": false,
+        "contraction_radial_pct": 3.5,
+        "_shrinkage_radial_source": "wood_database_meier",
+        "contraction_tangential_pct": 5.8,
+        "_shrinkage_tangential_source": "wood_database_meier",
+        "tr_ratio": 1.66,
+        "modulus_of_rupture_mpa": 81.0,
+        "modulus_of_elasticity_gpa": 10.1,
+        "_mechanical_source": "wood_database_meier"
+      },
+      "thermal": {
+        "thermal_conductivity_w_per_mk": 0.12,
+        "specific_heat_capacity_j_per_kgk": 1600,
+        "specific_cutting_energy_j_per_mm3": 0.45,
+        "heat_partition": {
+          "chip": 0.7,
+          "tool": 0.2,
+          "work": 0.1
+        },
+        "_note": "Estimated from SG; not in FPL Table 3-11"
+      },
+      "machining": {
+        "hardness_scale": 0.42,
+        "burn_tendency": 0.3,
+        "tearout_tendency": 0.5,
+        "chipload_multiplier": 1.0,
+        "feed_clamp": {
+          "roughing_max_mm_min": 4000,
+          "finishing_max_mm_min": 2500,
+          "plunge_max_mm_min": 1000
+        },
+        "speed_clamp": {
+          "min_rpm": 12000,
+          "max_rpm": 24000,
+          "optimal_sfm": 800
+        },
+        "doc_limits": {
+          "max_doc_mm": 12,
+          "optimal_doc_ratio": 0.5
+        },
+        "woc_limits": {
+          "max_woc_ratio": 0.5,
+          "finishing_woc_ratio": 0.1
+        },
+        "warnings": {
+          "burn_risk": "low",
+          "tearout_risk": "medium",
+          "dust_hazard": "medium"
+        }
+      },
+      "lutherie": {
+        "typical_uses": [
+          "body",
+          "neck",
+          "back_sides"
+        ],
+        "tone_character": "Similar to Honduran Mahogany \u2014 warm, balanced. Slightly brighter due to lower density. Smart Guitar candidate.",
+        "_tone_confidence": "medium",
+        "_tone_source": "extrapolated_from_physical_properties",
+        "stability_notes": "Good dimensional stability (T/R ratio 1.66). Comparable to Honduran Mahogany.",
+        "sustainability": "cites_regulated"
+      },
+      "_source_url": "https://www.wood-database.com/african-mahogany/"
     }
   }
 }
