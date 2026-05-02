@@ -5,7 +5,31 @@ Maintenance discipline: docs/SPRINTS_MAINTENANCE.md
 
 ---
 
-## NEXT SESSION OPENS WITH
+## NEXT SESSION OPENS WITH (2026-05-01)
+
+**SPRINTS.md reconciliation just landed** — DATA INTEGRITY section now reflects M1, M2, NDS Phase 1+1.5, NDS Phase 2 completion plus three new queued items.
+
+**Engineer at rest after back-to-back data integrity sprints.** No active work in flight.
+
+**Shop setup is the gating critical path** — clearout target 2026-05-15, lab rig fabrication start ~2026-07.
+
+**CAD work on Smart Guitar in parallel** (romantic route chosen; Fusion 360 license renewed).
+
+**Completed 2026-04-30 through 2026-05-01:**
+- Sprint M1 wood shrinkage data integrity remediation (commits 37f29bc6, 477758eb)
+- Sprint M2 silent fallback elimination across 6 files (commit 477758eb)
+- Sprint NDS Phase 1+1.5 foundation (commits 9d37f1ea, d72d9744, e260f365, ac96430f)
+- Sprint NDS Phase 2 router and endpoints (commits 4f8a3209, ab1ed8a2, 6b719fc3) — delivered as FRET-A Phase 2
+- African Padauk wood_species.json entry update (Janka correction, shrinkage values, CITES warning)
+- Data file sync boundary documented (wood_species.json vs luthier_tonewood_reference.json)
+- Sprint M4 queued: MOE data gaps (spruce_sitka, spruce_engelmann, douglas_fir)
+
+**Pending pickup when bandwidth allows:**
+- Sprint M2.5 — Deferred silent fallback cleanup (4 items)
+- Sprint M3a — CITES lookup tool
+- Active Inventory Species Audit (Padauk as template)
+
+---
 
 **Sprint 3 — REOPENED (2026-04-26)**
 
@@ -889,33 +913,15 @@ When this sprint activates, rosette authenticity is the natural first use case. 
 Track as backlog — address when touching those files for other reasons.
 
 
-### Orphaned curvature test file
+### ~~Orphaned curvature test file~~
 
-**Status:** Backlog
-**Priority:** Cleanup — non-blocking
-**Discovered:** 2026-04-29 during FRET-A baseline capture
-**File:** services/api/tests/test_layer_builder_curvature.py
+**Status:** ✅ RESOLVED 2026-05-01
+**Resolution:** Option B — deleted test file (speculative test for unshipped integration)
+**File deleted:** `services/api/tests/test_layer_builder_curvature.py`
 
-The test file imports three symbols that don't exist in the codebase:
-  - _is_curvature_body_candidate
-  - curvature_body_promotion_enabled
-  - CURVATURE_PROFILER_AVAILABLE
-
-**Origin:** Commit 944aefc6 (2026-04-19 05:17:58) added curvature_profiler.py,
-curvature_correction.py, and this test file together. The test imports symbols
-for layer_builder integration (`_is_curvature_body_candidate`, etc.) that were
-never implemented — the test was written for planned integration that didn't ship.
-
-This is **case B** (speculative test), not case A (removed implementation).
-
-Currently skipped at module level pending triage. Resolution options:
-
-  A. Implement the layer_builder integration the test expects.
-  B. Delete test file — the planned integration was abandoned.
-
-Recommend option B unless curvature-based body promotion is on the roadmap.
-
-Not blocking FRET-A. Triage in next layer-builder cleanup sprint.
+The test imported symbols (`_is_curvature_body_candidate`, `curvature_body_promotion_enabled`,
+`CURVATURE_PROFILER_AVAILABLE`) for layer_builder integration that was never implemented.
+Original commit 944aefc6 preserved in git history if needed.
 
 ### FRET-A schema/kernel math duplication
 
@@ -972,6 +978,216 @@ Recommend B + A in batches. Adding a CI check stops the bleed; backfill
 happens when team has bandwidth.
 
 Not blocking FRET-A or any current sprint. Triage when DXF hygiene sprint scheduled.
+
+---
+
+## DATA INTEGRITY
+
+Data sourcing, silent fallback elimination, and verified calculation inputs.
+This section tracks both completed and queued sprints in the data integrity category.
+
+### Sprint M1 — Wood Shrinkage Data Integrity
+
+**Status:** COMPLETE
+**Completed:** 2026-04-30
+**Commits:** 37f29bc6, 477758eb
+
+Replaced unsourced shrinkage coefficients in wood_species.json with verified data.
+
+**Deliverables:**
+- CLAUDE.md sourcing policy
+- wood_species.json: 18 species updated (8 N. American from FPL Table 5-3, 10 tropical from Wood Database Eric Meier)
+- Per-field source attribution in JSON
+- wood_movement_calc.py: migrated to JSON loading with ALIAS_MAP, _load_shrinkage_data(), _resolve_species_id(), get_shrinkage_data(), _LegacyShrinkageDict
+- side_bending_calc.py: raises ValueError on unknown species
+
+**Verification:**
+
+| Species | Old | New | Error |
+|---------|-----|-----|-------|
+| Hard maple | 0.00198 | 0.0033 | -40% |
+| Walnut | 0.00185 | 0.0026 | -29% |
+| Cedar Western Red | 0.00155 | 0.00167 | -7% |
+| Mahogany Honduran | 0.00146 | 0.00143 | +2% |
+
+38 tests pass.
+
+---
+
+### Sprint M2 — Silent Fallback Elimination
+
+**Status:** COMPLETE
+**Completed:** 2026-04-30
+**Commits:** 477758eb
+
+Eliminated silent fallback behavior where calculators returned plausible but wrong results for unknown inputs.
+
+**Fixed (6 files):**
+- soundhole_extended.py: unknown species → ValueError
+- back_brace_calc.py: unknown material → ValueError
+- finish_calc.py (2 places): unknown species → ValueError
+- binding_materials.py: added get_minimum_bend_radius() helper
+- binding_geometry.py: uses validated helper at 4 places
+- headstock_break_angle_calc.py: added get_nut_friction() helper
+
+**Tests:** tests/test_silent_fallback_elimination.py — 12 tests pass
+
+**Deferred to M2.5:**
+- glue_joint_calc.py:80 — MIN_SURFACE_MM2.get(glue_type, 400.0)
+- top_deflection_calc.py:42 — density_kg_m3 = 400.0
+- pickup_position_calc.py:441 — PICKUP_WIDTHS_MM.get(pickup_type, 25.0)
+- Various CAM/service defaults in service.py
+
+---
+
+### Sprint NDS Phase 1+1.5 — Neck Design Studio Foundation
+
+**Status:** COMPLETE
+**Completed:** 2026-04-30
+**Commits:** 9d37f1ea (Phase 1), d72d9744, e260f365, ac96430f (Phase 1.5)
+**Cross-reference:** Sprint FRET-A in COMPLETED section
+
+Foundation work for Neck Design Studio with honest temperament math.
+
+**Phase 1 deliverables:**
+- services/api/app/instrument_geometry/neck/fretboard_ecosphere.py (462 lines)
+- tests/test_fretboard_ecosphere.py (247 lines)
+- 24 tests passing
+
+**Phase 1.5 deliverables (silent fallback to 12-TET eliminated):**
+- alternative_temperaments.py: resolve_temperament_ratios()
+- scala_loader.py: .scl file parser
+- Schema refactored to delegate to kernel
+
+All temperaments now produce mathematically correct positions:
+- Equal temperaments (12/19/24/31-TET): true N-TET math
+- Non-equal temperaments (Pythagorean, Just, Meantone): real ratio math
+- Custom Scala: parsed and applied
+
+Round-trip tests pass within 1e-3 mm tolerance.
+
+---
+
+### Sprint NDS Phase 2 — Router and Endpoints
+
+**Status:** COMPLETE (delivered as FRET-A Phase 2)
+**Completed:** 2026-04-30
+**Commits:** 4f8a3209, ab1ed8a2, 6b719fc3
+**Cross-reference:** Sprint FRET-A in COMPLETED section
+
+NDS Phase 2 scope was delivered under the FRET-A sprint name. Both names refer to the same work.
+
+**Delivered:**
+- Router at app/api_v1/fretboard.py
+- POST /api/v1/fretboard/compute
+- POST /api/v1/fretboard/scala (content-negotiated)
+- POST /api/v1/fretboard/dxf (tier-gated: R12 free, R2000 pro)
+- GET /api/v1/fretboard/presets, /api/v1/fretboard/presets/{name}
+- GET /api/v1/fretboard/schema
+- Presets module at app/instrument_geometry/neck/fretboard_presets.py
+- Round-trip integration tests at app/tests/integration/test_fretboard_ecosphere_roundtrip.py
+
+**Minor gap:** signal_logic_version bump to signals_v5 not done (backlog).
+
+---
+
+### Sprint M2.5 — Deferred Silent Fallback Cleanup
+
+**Status:** QUEUED
+**Priority:** LOW
+
+Items deferred from M2:
+- glue_joint_calc.py:80 — MIN_SURFACE_MM2.get(glue_type, 400.0)
+- top_deflection_calc.py:42 — density_kg_m3 = 400.0 (unused in calculations)
+- pickup_position_calc.py:441 — PICKUP_WIDTHS_MM.get(pickup_type, 25.0)
+- Various CAM/service defaults in service.py
+
+---
+
+### Sprint M3a — CITES Status Field with Lookup Tool
+
+**Status:** QUEUED
+**Priority:** MEDIUM
+
+**Scope:**
+- cites_lookup.py at app/utils/cites_lookup.py — parses CITES checklist JSON
+- cites_status field added to wood_species.json entries
+- Values populated from cites_lookup output
+
+Pattern matches shrinkage_*_source fields from M1.
+
+---
+
+### Sprint: Active Inventory Species Audit
+
+**Status:** QUEUED
+**Priority:** HIGH
+**Template:** Padauk update (2026-05-01)
+
+Apply M1 data integrity pattern to species in active shop inventory:
+- 60 mahogany B&S sets (honduran_mahogany)
+- 25 rosewood (east_indian_rosewood, plus laotian_rosewood entry)
+- 10 walnut/maple (black_walnut, acer_macrophyllum)
+- 3 ziricote
+- 10 tiger flame mahogany (species TBD)
+- 20 spruce tops (sitka_spruce)
+- 24 mahogany necks
+- 20 ebony fretboards (diospyros_crassiflora)
+- 100 BF Padauk (african_padauk — DONE)
+- 100 BF black walnut heritage (juglans_nigra)
+- 100 BF Douglas fir heritage (pseudotsuga_menziesii)
+- 10 assorted body blanks (cherry, walnut, khaya)
+
+Each species gets: Janka correction, shrinkage values with sources, naming caveats, CITES genus warning where applicable.
+
+---
+
+### Data File Sync Boundary Documentation
+
+**Status:** DOCUMENTED
+**Date:** 2026-04-30
+
+Two JSON files serve different purposes — not duplicates, not alternatives:
+
+| File | Species Count | Purpose | Scope |
+|------|---------------|---------|-------|
+| `wood_species.json` | 473 | Full CNC/thermal/shrinkage reference | All wood properties: Janka, density, shrinkage, thermal conductivity, MOE, hardness_category, naming_caveats |
+| `luthier_tonewood_reference.json` | 71 | Curated acoustic subset | Acoustic-specific: stiffness_index, damping_coefficient, tap_tone_character, plus core fields |
+
+**Sync policy:**
+- Core fields (Janka, density, specific_gravity, shrinkage) must match between files when a species appears in both
+- luthier_tonewood_reference.json adds computed acoustic indices not present in wood_species.json
+- wood_species.json is the source of truth for physical/mechanical properties
+- Updates to species in active inventory (Padauk template) touch both files
+
+**Verification:** Padauk entry confirmed in sync 2026-04-30 (Janka 1725, SG 0.74, shrinkage R=3.1% T=5.0%).
+
+---
+
+### Sprint M4 — MOE Data Gap Remediation
+
+**Status:** QUEUED
+**Priority:** MEDIUM
+**Discovered:** 2026-04-30 during Active Inventory audit
+
+Three critical species have missing or incorrect MOE (modulus of elasticity) data:
+
+| Species | Current Value | Issue | Expected |
+|---------|---------------|-------|----------|
+| spruce_sitka | `null` | Missing | ~10.3-11.9 GPa (FPL Table 5-1) |
+| spruce_engelmann | `null` | Missing | ~8.9 GPa (FPL Table 5-1) |
+| douglas_fir | 10.0 GPa | Low | ~13.5 GPa for old-growth (FPL shows 13.4 clear, small) |
+
+**Context:**
+- MOE drives stiffness calculations for tops, braces, and structural analysis
+- Douglas fir discrepancy: 10.0 GPa may represent plantation/second-growth; old-growth heritage stock (100 BF in inventory) closer to ~13.5 GPa
+- Spruce null values cause silent fallback in any calculator that doesn't guard
+
+**Scope:**
+- Verify FPL Table 5-1 values for all three species
+- Add species-specific notes for growth-type variation (plantation vs old-growth)
+- Update wood_species.json entries
+- Cross-check luthier_tonewood_reference.json for acoustic-derived stiffness_index
 
 ---
 
