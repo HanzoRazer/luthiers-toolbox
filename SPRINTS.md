@@ -30,6 +30,8 @@ Maintenance discipline: docs/SPRINTS_MAINTENANCE.md
 - Sprint M3a — CITES lookup tool
 - Active Inventory Species Audit (Padauk as template)
 
+**Strategy update (2026-05-02):** Single-property marketing strategy supersedes standalone-repos-as-moat. All standalone repos except ltb-woodworking-studio collapse back to luthiers-toolbox. Privatization of all standalone repos in flight as separate operational task.
+
 ---
 
 **Sprint 3 — REOPENED (2026-04-26)**
@@ -237,20 +239,12 @@ Quality scorecard (3/3 PASS):
 **last_verified:** 2026-04-23
 **Branch:** main
 
-**Standalone repo inventory (all created on GitHub):**
+**Standalone repo inventory (reduced per 2026-05-02 single-property strategy):**
 
 | Repo | Description | Status |
 |------|-------------|--------|
-| HanzoRazer/ltb-rosette-designer | Rosette Designer — full UI, BOM engine, 8 presets, Manufacturing Intelligence, Amsterdam/Spiro engine | **LIVE** |
-| HanzoRazer/ltb-acoustic-design-studio | Helmholtz + Gore P:A calculator + soundhole geometry designer | Empty — needs content |
-| HanzoRazer/ltb-bridge-designer | Bridge geometry + string spacing | POPULATED — commit `55c17a6` |
-| HanzoRazer/ltb-fingerboard-designer | Scale length, radius, multiscale | Existing — needs audit |
-| HanzoRazer/ltb-headstock-designer | Tuner layout, headstock templates | Existing — needs audit |
-| HanzoRazer/ltb-neck-designer | Neck profiles, tapers | Existing — needs audit |
-| HanzoRazer/ltb-parametric-guitar | Body shape generator | Existing — needs audit |
-| HanzoRazer/ltb-woodworking-studio | Joinery, wood movement, bench woodworking | woodworking_v2 committed |
-| HanzoRazer/ltb-express | String tension calculator + quick tools | **CONTAMINATED** — needs cleanup |
-| HanzoRazer/blueprint-reader | PDF → DXF pipeline (vectorizer) | Deployed to Hostinger |
+| HanzoRazer/ltb-woodworking-studio | Joinery, bending, panel work, bandsaw — separate domain from lutherie | Migration target — push pending verification |
+| HanzoRazer/blueprint-reader | PDF → DXF pipeline (vectorizer) | Deployed to Hostinger — separate due to deployment, not strategic |
 
 **Open items:**
 - [ ] Install ODA File Converter locally — batch convert DWG inventory:
@@ -262,10 +256,13 @@ Quality scorecard (3/3 PASS):
 - [x] Create docs/VECTORIZER_ACCURACY.md — RESOLVED (docs/VECTORIZER_ACCURACY.md exists)
 - [ ] Add accuracy summary to README.md and blueprint-reader landing page
 - [ ] Sync blueprint-reader with Sprint 1 Phase 1-3 commits
-- [ ] Clean ltb-express (contamination)
-- [ ] Define publish workflow for remaining standalone repos
 - [ ] Digitize 12-string dreadnought plans via blueprint-reader.html
 - [ ] Emperor plans — digitize on receipt
+- [ ] ltb-woodworking-studio migration verification and push:
+      - Verify current GitHub state of HanzoRazer/ltb-woodworking-studio
+      - If empty or partial, push local woodworking_v2/ contents to repo
+      - Update luthiers-toolbox imports to reference woodworking as separate dependency
+      - Privatize the repo
 
 ---
 
@@ -1331,3 +1328,4 @@ Commits: 04735bd4, 72bfffc9, 059cf5b0
 | 2026-04-16 | OutlineReconstructor was inserted into dead code path | Lesson: always verify router→orchestrator→mode→cleaner before writing code |
 | 2026-04-20 | Blueprint vectorizer ceiling declaration (2026-04-16) reversed | v3.6 restored morphological gap closing from vectorizer_phase2.py (commit 3db07c62). Benchmark exceeded March 6 baseline (cuatro: 21.8MB/204K entities vs 16.3MB/128K). The "ceiling" was artifact of missing capability, not fundamental limit. 22 commits of active vectorizer development followed in 04/16-04/21. **Architecture:** Blueprint vectorizer v3.6 is primary production path. Photo vectorizer functional for scanned blueprint PNG/JPEG inputs at 85-90% grade; Sprint 4 suspension applies to specific input classes (AI renders, L-1 historical images), not photo vectorizer files as a whole. IBG is a completion library (no direct API endpoint, connected via imports) — analogous to inverse_solver.py. IBG has learning dependency on ML training layer (TrainingDataCollector, FeedbackSystem, GeometryCoachV2 scaffolded in vectorizer_phase3.py). **Destinations:** IBG → new standalone repo (name TBD, stays in luthiers-toolbox until scaffolded). ML training layer → home TBD. sg.coach deprecated 2026-02-02, superseded by sg-agentd, not a candidate for any role. |
 | 2026-04-30 | FRET-CONSOLIDATION: canonical ecosphere is single source of truth | Three parallel fret pipelines (api_v1/fret_math, cam/fret_slots, FRET-A ecosphere) converge to ecosphere. CAM consumes ecosphere geometry; legacy endpoints deprecated after frontend migration. Prevents "which pipeline did this guitar use" debugging at scale. |
+| 2026-05-02 | Standalone repos as moat strategy superseded by single-property marketing | All previously planned standalone repos except ltb-woodworking-studio (different domain) and blueprint-reader (deployment-driven separation) collapse back to luthiers-toolbox. Production Shop website presents tools as named features regardless of repo organization. SEO and brand authority concentrate on single property. ltb-woodworking-studio retains separate status due to conceptual domain boundary (woodworking ≠ lutherie). |
