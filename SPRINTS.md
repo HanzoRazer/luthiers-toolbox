@@ -1,5 +1,5 @@
 # The Production Shop — Sprint Registry
-Last updated: 2026-05-03
+Last updated: 2026-05-04
 Maintained by: Ross Echols (HanzoRazer)
 Maintenance discipline: docs/SPRINTS_MAINTENANCE.md
 
@@ -29,6 +29,7 @@ Maintenance discipline: docs/SPRINTS_MAINTENANCE.md
 - Sprint M2.5 — Deferred silent fallback cleanup (4 items)
 - Sprint M3a — CITES lookup tool
 - Sprint M5 — CIRAD Reference Database API (expose 34K specimens + density data)
+- Sprint M6 — Unfinished Work Audit (BOE, IBG, stale sprints, sandboxed experiments)
 - Active Inventory Species Audit (Padauk as template)
 
 **Strategy update (2026-05-02):** Single-property marketing strategy supersedes standalone-repos-as-moat. All standalone repos except ltb-woodworking-studio collapse back to luthiers-toolbox. Privatization of all standalone repos in flight as separate operational task.
@@ -980,6 +981,334 @@ Not blocking FRET-A or any current sprint. Triage when DXF hygiene sprint schedu
 
 ---
 
+## CLEANUP
+
+### Sprint CL-1 — Security Remediation (COMPLETE 2026-05-03)
+
+**Scope:** Address exposed API credentials surfaced by codebase scan.
+
+**Completed actions:**
+- Repository privatized at HanzoRazer/luthiers-toolbox
+- Anthropic API key rotated (old key revoked, new key issued)
+- OpenAI API key rotated (old key revoked, new key issued)
+- New keys saved to local .env files, verified in VS Code
+
+**Pending follow-through (separate small task):**
+- Add .env entries to .gitignore if not already present
+- Untrack .env and services/api/.env from git history (using `git rm --cached`)
+- Commit and push prevention changes
+
+**Status:** Acute exposure closed. Prevention follow-through scheduled within current week.
+
+---
+
+### Sprint CL-2 — Root Artifact Directory Cleanup
+
+**Priority:** HIGH (low effort, immediate disk reclaim)
+**Effort:** 30 minutes
+**Status:** Queued, ready to execute
+
+**Scope:** Remove timestamped download directories and benchmark output directories at repo root.
+
+**Targets for deletion:**
+- `files - 2026-03-31T002554.594/` (3 files)
+- `files - 2026-04-14T102549.923/` (3 files)
+- `files - 2026-04-16T160551.956/` (3 files)
+- `files - 2026-04-16T161657.416/` (2 files)
+- `files - 2026-04-23T090806.069/` (3 files)
+- `benchmark_dxf_outputs/` (6 files)
+- `benchmark_exports/` (3 files)
+- `benchmark_outputs/` (27 files)
+- `benchmark_results/` (1 file)
+
+**Verification before deletion:** Confirm none of these directories are referenced by current code or active tests. Quick grep for directory names in services/api/ and packages/client/ should suffice.
+
+**Single commit per category** — one for the timestamped download dirs, one for the benchmark dirs.
+
+---
+
+### Sprint CL-3 — Photo Vectorizer Test Output Cleanup
+
+**Priority:** MEDIUM (volume issue, not structural)
+**Effort:** 1-2 hours including curation review
+**Status:** Queued — requires Ross input on artifact preservation
+
+**Scope:** services/photo-vectorizer has 14+ test output directories accumulated during development. Some likely contain meaningful artifacts (calibration runs, validation outputs that informed subsequent decisions). Volume is prohibitive but blanket deletion risks losing useful reference material.
+
+**Approach:**
+1. Engineer surveys the 14+ test output directories
+2. Identifies which contain unique artifacts vs. which are redundant
+3. Produces a brief disposition list: keep (and where to archive), delete (volume artifacts only)
+4. Ross reviews disposition list before any deletion
+5. Engineer executes per Ross's review
+
+**Likely outcome:** Most test outputs delete; a small subset of validated reference outputs (the ones that informed the vectorizer architecture) preserve to docs/archive/2026/photo_vectorizer_validation/.
+
+**Deferred decision:** Whether photo-vectorizer should establish a permanent test-fixture directory pattern going forward (so future test outputs land in a designated location with retention rules) — separate sprint if pursued.
+
+---
+
+### Sprint CL-4 — Photo Vectorizer Version Consolidation
+
+**Priority:** MEDIUM (real architectural decision)
+**Effort:** 4-8 hours
+**Status:** Queued
+
+**Scope:** services/photo-vectorizer has multiple versioned files (extract_body_grid_v2 through v5) suggesting incomplete consolidation. The newest version is presumably canonical but older versions remain.
+
+**Tasks:**
+1. Confirm v5 is canonical (or identify which version is)
+2. Verify no current code imports from older versions
+3. Archive older versions to archive/code/photo_vectorizer/ with brief notes on what changed between versions
+4. Update any documentation that references older versions
+5. Single commit removing legacy versions
+
+---
+
+### Sprint CL-5 — Obvious Orphan Removal
+
+**Priority:** HIGH (low effort, low risk)
+**Effort:** 30 minutes
+**Status:** Queued
+
+**Scope:** Several directories appear to be one-time migration artifacts or accidental commits with no current purpose.
+
+**Targets:**
+- `services/api/app/Users/` — accidental directory (unusual location)
+- `services/api/app/router_rewire_report/` — one-time migration artifact
+- `services/api/app/routers/_archived/` — archived pipeline code (likely safe to remove now that it's been archived for some time; verify nothing references)
+
+**Verification:** grep for each directory name in the codebase before deletion. If references exist, escalate to Ross before removing.
+
+---
+
+### Sprint CL-6 — util/ + utils/ Merge
+
+**Priority:** LOW (minor cleanup)
+**Effort:** 1-2 hours
+**Status:** Queued
+
+**Scope:** services/api/app has both `util/` and `utils/` directories — duplication that should consolidate.
+
+**Tasks:**
+1. Survey contents of both directories
+2. Decide canonical name (utils/ is more conventional)
+3. Move contents from non-canonical to canonical
+4. Update all imports in the codebase
+5. Verify tests still pass
+6. Remove the empty directory
+
+**Risk:** Import updates need to be comprehensive. A single missed import causes runtime failure. Worth running test suite after to verify.
+
+---
+
+### Sprint CL-7 — Landing Page Disposition
+
+**Priority:** MEDIUM
+**Effort:** 30 minutes after Ross identifies which are abandoned
+**Status:** Awaiting Ross confirmation
+
+**Scope:** Resolve abandoned landing pages identified by scan.
+
+**Hostinger HTML pages (4 candidates):**
+- `production-shop-hub.html` — main marketing landing
+- `blueprint-reader.html` — Blueprint Reader tool landing
+- `archtop-graduation-studio.html` — Archtop graduation studio
+- `body-outline-editor.html` — Body outline editor landing
+
+**Unrouted Vue views (12 candidates):**
+- ArtStudioPhase15_5.vue
+- ArtStudioDashboard.vue
+- ArtJobDetail.vue
+- ArtJobTimeline.vue
+- ArtStudioUnified.vue
+- ArtPresetManager.vue
+- MachineListView.vue
+- PostListView.vue
+- CamProductionView.vue
+- MultiRunComparisonView.vue
+- OffsetLabView.vue
+- LabsIndex.vue
+
+**Pattern observation:** The Art Studio variants (6 of the 12 Vue views) suggest a refactoring that consolidated the Art Studio interface but left old views in place. Likely all 6 archive together.
+
+**Ross action:** Open each candidate, confirm abandoned status, mark for archive or removal.
+
+**Engineer execution:** After Ross's disposition decisions, archive abandoned pages to docs/archive/2026/landing_pages/ and remove from active codebase.
+
+---
+
+### Sprint CL-8 — api/ vs api_v1/ Resolution
+
+**Priority:** MEDIUM (architectural decision needed)
+**Effort:** 1 day after decision
+**Status:** Awaiting architectural clarification
+
+**Scope:** services/api/app has both `api/` (3 files, mostly deps) and `api_v1/` (11 files, domain modules). Unclear whether this is intentional API versioning or incomplete migration.
+
+**Resolution paths:**
+- **If intentional versioning:** Document the versioning strategy. Confirm what should live in api/ vs api_v1/. Update CLAUDE.md to make the boundary explicit. Move misplaced files if needed.
+- **If incomplete migration:** Decide forward direction (collapse to api/ or complete migration to api_v1/). Execute the chosen direction. Single sprint of focused work.
+
+**Ross action:** Provide context on original intent. If memory is unclear, engineer can investigate git history of when api_v1/ was created and what was in commit messages.
+
+---
+
+### Sprint CL-9 — Dockerfile Consolidation
+
+**Priority:** MEDIUM
+**Effort:** 1 day
+**Status:** Queued
+
+**Scope:** 7 Dockerfiles exist across the repo with apparent duplication.
+
+**Locations:**
+- `docker/api/Dockerfile`
+- `docker/client/Dockerfile`
+- `docker/client/Dockerfile.railway`
+- `docker/client/Dockerfile.production`
+- `docker/nginx/Dockerfile`
+- `packages/client/Dockerfile` (possible duplicate)
+- `services/api/Dockerfile` (possible duplicate)
+
+**Tasks:**
+1. Identify which Dockerfiles are actively used in deployment
+2. Confirm duplicates by content comparison
+3. Consolidate to one canonical Dockerfile per service (probably 3 total: api, client, nginx)
+4. Update docker-compose files and CI workflows to reference canonical paths
+5. Remove redundant Dockerfiles
+
+**Risk:** Deployment pipelines may break if references aren't updated correctly. Test deploy on staging or local docker-compose before pushing.
+
+---
+
+### Sprint CL-10 — CI Workflow Audit and Consolidation
+
+**Priority:** LOW (works currently, just maintenance burden)
+**Effort:** 2-3 days
+**Status:** Queued — defer until other cleanup completes
+
+**Scope:** 52+ CI workflows is substantial. Some likely have overlapping responsibilities or are no longer relevant.
+
+**Approach:**
+1. Survey all 52+ workflows, categorize by purpose
+2. Identify overlaps (multiple workflows running similar tests)
+3. Identify obsolete workflows (testing systems that no longer exist)
+4. Consolidate where reasonable
+5. Document remaining workflow purposes in .github/README.md or similar
+
+**Realistic outcome:** Probably 20-25 active workflows after consolidation. Reduction in maintenance surface and CI run time.
+
+**Defer rationale:** CI workflows function correctly today. Consolidation is housekeeping that should happen when other higher-priority cleanup is done. Worth scheduling as the final cleanup sprint rather than first.
+
+---
+
+### Sprint CL-11 — Configuration File Consolidation
+
+**Priority:** LOW
+**Effort:** 1-2 days
+**Status:** Queued
+
+**Scope:** 12 .env files exist across the repo. Most are appropriate (templates, examples, tier-specific configs). Worth auditing whether any are redundant or could consolidate.
+
+**Approach:**
+1. Survey all 12 .env files and document each one's purpose
+2. Identify redundancy (multiple files providing same configuration)
+3. Document the canonical configuration pattern
+4. Consolidate where redundancy exists
+5. Update CLAUDE.md with the configuration documentation
+
+**Defer rationale:** Configuration sprawl is annoying but functional. Higher-impact cleanup should happen first.
+
+---
+
+### Sprint CL-12 — Standalone Tools Integration Decision
+
+**Priority:** STRATEGIC (decision, not execution)
+**Effort:** Variable based on decision
+**Status:** Awaiting Ross decision
+
+**Scope:** Several "standalone tool" directories exist at repo root with unclear current status:
+- `Interactive_Headstock_Generator/` (23 files)
+- `Interactive_Neck and Cam _Modules/` (97 files)
+- `Rosette Designer/` (1 file)
+- `Guitar Plans/` (567 files — confirmed reference data, off-limits)
+
+**Decision required:** For each (excluding Guitar Plans), are they:
+- (A) Active code that should integrate into packages/client as features
+- (B) Reference material that should move to docs/reference/
+- (C) Legacy code that should archive
+- (D) Foundation for future products that should preserve as-is
+
+**Ross action:** Apply judgment to each based on current strategy. The single-property marketing strategy and BOE+IBG product concept (per 2026-05-02 decisions) inform some of these decisions but not all.
+
+**Engineer execution:** After Ross's decisions, execute the chosen disposition for each.
+
+---
+
+### Sprint CL-13 — production_shop_agent Placement
+
+**Priority:** LOW (works correctly, just architectural inconsistency)
+**Effort:** 4-8 hours if integration chosen, 0 if status quo accepted
+**Status:** Awaiting decision
+
+**Scope:** production_shop_agent/ exists at repo root as a separate subproject (Claude-powered static website generator). It functions correctly but its placement at root rather than under services/ is architecturally inconsistent.
+
+**Options:**
+- (A) Leave at root as-is — minor inconsistency but no functional issue
+- (B) Move to services/site-generator/ for consistency with other services
+- (C) Integrate functionality into services/api/ as a sub-module
+
+**Ross action:** Decide which option. If (A), close the sprint as "decision made, no action needed."
+
+---
+
+### Sprint CL-14 — Photo Vectorizer Test Fixture Convention
+
+**Priority:** LOW (process improvement)
+**Effort:** 2-4 hours
+**Status:** Optional, deferred
+
+**Scope:** After Sprint CL-3 completes the test output cleanup, establish a standing convention for where photo-vectorizer test outputs live going forward, so future test runs don't recreate the volume problem.
+
+**Tasks:**
+1. Define a tests/fixtures/outputs/ directory pattern (or similar)
+2. Add .gitignore entries that prevent test outputs from accumulating in git
+3. Document the convention in services/photo-vectorizer/README.md
+4. Update test scripts to use the new convention
+
+**Defer rationale:** Process improvement that prevents future occurrence. Worth doing eventually but not urgent.
+
+---
+
+### Cleanup Sprint Sequencing Recommendation
+
+**Immediate (this week):**
+- CL-1 follow-through (.gitignore + untrack)
+- CL-2 (root artifacts) — fast win, immediate disk reclaim
+- CL-5 (obvious orphans) — fast win, low risk
+
+**Near-term (this month):**
+- CL-3 (photo-vectorizer test outputs) — needs Ross input
+- CL-7 (landing page disposition) — needs Ross input
+- CL-12 (standalone tools decision) — needs Ross input
+
+**Medium-term (next 2-3 months):**
+- CL-4 (photo-vectorizer version consolidation)
+- CL-6 (util/ + utils/ merge)
+- CL-8 (api/ vs api_v1/ resolution) — needs architectural input
+
+**Longer-term (deferred):**
+- CL-9 (Dockerfile consolidation)
+- CL-10 (CI workflow audit)
+- CL-11 (configuration consolidation)
+- CL-13 (production_shop_agent placement)
+- CL-14 (test fixture convention)
+
+**Total scope:** 14 cleanup sprints (1 complete, 13 queued). Realistic execution timeline: 2-4 months at sustainable pace, depending on which sprints actually get prioritized vs. which get deferred indefinitely.
+
+---
+
 ## DATA INTEGRITY
 
 Data sourcing, silent fallback elimination, and verified calculation inputs.
@@ -1220,8 +1549,9 @@ Three critical species have missing or incorrect MOE (modulus of elasticity) dat
 **Status:** QUEUED
 **Priority:** MEDIUM
 **Discovered:** 2026-05-03 during wood species audit
+**Scope:** luthiers-toolbox internal only — not designed for cross-repo consumption
 
-Expose CIRAD reference databases to users via read-only API endpoints. Currently these databases exist in `docs/reference/` but are only used internally for data sourcing validation.
+Expose CIRAD reference databases to luthiers-toolbox users via read-only API endpoints. Currently these databases exist in `docs/reference/` but are only used internally for data sourcing validation. Woodworking-studio has its own data; no HTTP dependency on this API (see ADR 2026-05-03).
 
 **Current State:**
 - CIRAD Wood Collection: 34,395 specimens, 9,212 species, 169 countries — no API access
@@ -1304,6 +1634,68 @@ GET /api/reference/cirad/stats
 - Tests: 2h
 
 **Dependencies:** None — standalone feature
+
+---
+
+### Sprint M6 — Unfinished Work Audit
+
+**Status:** QUEUED
+**Priority:** MEDIUM
+**Discovered:** 2026-05-03
+
+Systematic audit to identify code that was developed for purposes that may have been superseded but was never formally paused or archived.
+
+**Known Examples:**
+- Body Outline Editor (BOE) — backend endpoint claim (Sprint 3) marked MISSING
+- InstrumentBodyGenerator (IBG) — scaffolded in sandbox/ and production paths, wiring incomplete
+
+**Scan Categories:**
+
+1. **Scaffolded but incomplete subsystems**
+   - Code structure exists but core functionality not wired
+   - Imports present but never called
+   - Endpoints documented but not implemented
+
+2. **Sandboxed experiments not touched recently**
+   - `sandbox/` directory contents with no recent commits
+   - Prototype code that never graduated to production
+   - Test harnesses for features that didn't ship
+
+3. **Sprint work marked "in flight" that hasn't progressed**
+   - SPRINTS.md entries with IN PROGRESS status but no commits in 30+ days
+   - Task lists with unchecked items and no activity
+   - Branches that diverged and were abandoned
+
+4. **Superseded implementations**
+   - Code paths replaced by newer architecture but not removed
+   - Parallel implementations where one became canonical
+   - Features that shipped via different approach
+
+**Output Per Finding:**
+
+| Field | Description |
+|-------|-------------|
+| Location | File path(s) or directory |
+| Original purpose | What the code was built to do (from comments, commit messages, sprint docs) |
+| Current state | SCAFFOLDED, SUSPENDED, ORPHANED, SUPERSEDED |
+| Last activity | Most recent commit date touching this code |
+| Reconstruction burden | LOW (<4h), MEDIUM (4-16h), HIGH (>16h), UNKNOWN |
+| Dependencies | Other code that imports/calls this, or nothing |
+| Disposition candidates | ARCHIVE, DELETE, COMPLETE, DOCUMENT-AND-DEFER |
+
+**Scope Exclusions:**
+- This sprint surfaces candidates for disposition decisions — it does not fix, complete, or archive anything
+- Code actively worked in past 30 days is not considered stale
+- Suspended work with documented rationale (e.g., Sprint 4 photo/AI paths) is acknowledged, not re-audited
+
+**Deliverable:** `docs/audit/unfinished_work_audit_2026-05.md`
+
+**Estimated Effort:** 4-6 hours
+- Codebase scan: 2h
+- Sprint/commit cross-reference: 1h
+- Documentation: 1-2h
+
+**Dependencies:** None — read-only audit
 
 ---
 
@@ -1422,3 +1814,4 @@ Commits: 04735bd4, 72bfffc9, 059cf5b0
 | 2026-04-20 | Blueprint vectorizer ceiling declaration (2026-04-16) reversed | v3.6 restored morphological gap closing from vectorizer_phase2.py (commit 3db07c62). Benchmark exceeded March 6 baseline (cuatro: 21.8MB/204K entities vs 16.3MB/128K). The "ceiling" was artifact of missing capability, not fundamental limit. 22 commits of active vectorizer development followed in 04/16-04/21. **Architecture:** Blueprint vectorizer v3.6 is primary production path. Photo vectorizer functional for scanned blueprint PNG/JPEG inputs at 85-90% grade; Sprint 4 suspension applies to specific input classes (AI renders, L-1 historical images), not photo vectorizer files as a whole. IBG is a completion library (no direct API endpoint, connected via imports) — analogous to inverse_solver.py. IBG has learning dependency on ML training layer (TrainingDataCollector, FeedbackSystem, GeometryCoachV2 scaffolded in vectorizer_phase3.py). **Destinations:** IBG → new standalone repo (name TBD, stays in luthiers-toolbox until scaffolded). ML training layer → home TBD. sg.coach deprecated 2026-02-02, superseded by sg-agentd, not a candidate for any role. |
 | 2026-04-30 | FRET-CONSOLIDATION: canonical ecosphere is single source of truth | Three parallel fret pipelines (api_v1/fret_math, cam/fret_slots, FRET-A ecosphere) converge to ecosphere. CAM consumes ecosphere geometry; legacy endpoints deprecated after frontend migration. Prevents "which pipeline did this guitar use" debugging at scale. |
 | 2026-05-02 | Standalone repos as moat strategy superseded by single-property marketing | All previously planned standalone repos except ltb-woodworking-studio (different domain) and blueprint-reader (deployment-driven separation) collapse back to luthiers-toolbox. Production Shop website presents tools as named features regardless of repo organization. SEO and brand authority concentrate on single property. ltb-woodworking-studio retains separate status due to conceptual domain boundary (woodworking ≠ lutherie). |
+| 2026-05-03 | Woodworking-studio operates completely independently from luthiers-toolbox | No HTTP cross-repo dependencies at runtime. Each repo has its own wood data (wood_species.json), its own schema (lutherie needs acoustic properties; woodworking needs machining/joinery properties), its own data integrity work. Furniture makers shouldn't need a luthier's platform running to calculate panel movement. Operational independence matches eventual deployment reality — two products, two failure modes. Sprint M5 CIRAD API is luthiers-toolbox internal only; not designed for cross-repo consumption. Initial woodworking-studio data population: 30-40 species with woodworking-specific schema, ~12-20h work. |
