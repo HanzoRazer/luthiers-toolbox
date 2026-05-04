@@ -1,5 +1,5 @@
 # The Production Shop — Sprint Registry
-Last updated: 2026-05-02
+Last updated: 2026-05-03
 Maintained by: Ross Echols (HanzoRazer)
 Maintenance discipline: docs/SPRINTS_MAINTENANCE.md
 
@@ -28,6 +28,7 @@ Maintenance discipline: docs/SPRINTS_MAINTENANCE.md
 **Pending pickup when bandwidth allows:**
 - Sprint M2.5 — Deferred silent fallback cleanup (4 items)
 - Sprint M3a — CITES lookup tool
+- Sprint M5 — CIRAD Reference Database API (expose 34K specimens + density data)
 - Active Inventory Species Audit (Padauk as template)
 
 **Strategy update (2026-05-02):** Single-property marketing strategy supersedes standalone-repos-as-moat. All standalone repos except ltb-woodworking-studio collapse back to luthiers-toolbox. Privatization of all standalone repos in flight as separate operational task.
@@ -1211,6 +1212,98 @@ Three critical species have missing or incorrect MOE (modulus of elasticity) dat
 - Add species-specific notes for growth-type variation (plantation vs old-growth)
 - Update wood_species.json entries
 - Cross-check luthier_tonewood_reference.json for acoustic-derived stiffness_index
+
+---
+
+### Sprint M5 — CIRAD Reference Database API
+
+**Status:** QUEUED
+**Priority:** MEDIUM
+**Discovered:** 2026-05-03 during wood species audit
+
+Expose CIRAD reference databases to users via read-only API endpoints. Currently these databases exist in `docs/reference/` but are only used internally for data sourcing validation.
+
+**Current State:**
+- CIRAD Wood Collection: 34,395 specimens, 9,212 species, 169 countries — no API access
+- CIRAD Wood Density: 4,022 specimens, 872 species with D12/R/S/Db — no API access
+- Users can query wood_species.json (473 species) but cannot access underlying reference data
+
+**Deliverables:**
+
+1. **CIRAD Collection Loader** (`app/materials/registry/cirad.py`)
+   - `load_cirad_collection()` — parses CSV, returns typed records
+   - `search_collection(species=, family=, country=, genus=)` — filtered search
+   - `get_specimen(ctft_id)` — single specimen lookup
+
+2. **CIRAD Density Loader** (`app/materials/registry/cirad_density.py`)
+   - `load_cirad_density()` — parses CSV, returns typed records
+   - `get_density_by_species(species)` — D12, R, S, Db values
+   - `search_density(family=, country=, continent=)` — filtered search
+
+3. **API Router** (`app/materials/cirad_router.py`)
+   ```
+   GET  /api/reference/cirad/collection           — paginated collection (34,395 records)
+   GET  /api/reference/cirad/collection/{ctft_id} — single specimen
+   GET  /api/reference/cirad/collection/search    — filtered search
+   GET  /api/reference/cirad/density              — paginated density data (4,022 records)
+   GET  /api/reference/cirad/density/{code}       — single density record
+   GET  /api/reference/cirad/density/search       — filtered search
+   GET  /api/reference/cirad/stats                — collection statistics
+   ```
+
+4. **Pydantic Schemas** (`app/materials/schemas.py` additions)
+   - `CiradSpecimen` — CTFT id, family, species, SG, country, sub-continent, herbarium, samples
+   - `CiradDensityRecord` — code, taxa, family, country, D12, R, S, Db
+   - `CiradSearchParams` — species, family, country, genus, continent filters
+   - `CiradStatsResponse` — counts by family, country, continent
+
+**Data Fields Exposed:**
+
+| CIRAD Collection | CIRAD Density |
+|------------------|---------------|
+| CTFT id | Code |
+| Family | Taxa |
+| Species | Family |
+| Specific gravity | Country |
+| Country | Continent |
+| Sub-continent | D12 (density at 12% MC) |
+| Herbarium occurrence | R (volumetric shrinkage %) |
+| Number of samples | S (fiber saturation point %) |
+| Collector's name | Db (basic density) |
+| Notes on origin | |
+
+**Query Examples:**
+```
+GET /api/reference/cirad/collection/search?family=LEGUMINOSAE&country=Brazil
+GET /api/reference/cirad/density/search?continent=South-America&min_db=0.7
+GET /api/reference/cirad/stats
+```
+
+**Use Cases:**
+- Cross-validate wood_species.json entries against CIRAD specimens
+- Research species by geographic origin
+- Find alternative species from same region/family
+- Access raw density physics data (D12, R, S, Db) for acoustic modeling
+- Verify specific gravity values against 34,395-specimen reference
+
+**Pagination:**
+- Default page size: 100
+- Max page size: 500
+- Required for collection endpoint (34K records)
+
+**Scope Exclusions:**
+- No write operations (read-only reference data)
+- No CITES integration (separate sprint M3a)
+- No automatic sync to wood_species.json (manual curation process)
+
+**Estimated Effort:** 8-12 hours
+- CSV loaders with caching: 2h
+- Pydantic schemas: 1h
+- Router with pagination: 3h
+- Search/filter logic: 2h
+- Tests: 2h
+
+**Dependencies:** None — standalone feature
 
 ---
 

@@ -106,11 +106,15 @@ published references. Attribution is per-field, not per-species.
 - `side_bending_calc.py`: raise `ValueError` — no silent fallback to defaults
 
 **Reference data locations:**
-- `docs/reference/cirad/` — CIRAD wood collection index (4,022 samples)
-- `docs/reference/cirad-density/` — CIRAD wood density database (872 species, Vieilledent et al. 2018)
+- `docs/reference/cirad/` — CIRAD wood collection index (34,395 specimens, 9,212 species, 169 countries)
+- `docs/reference/cirad-density/` — CIRAD wood density database (4,022 specimens, 872 species, Vieilledent et al. 2018)
   - Contains D12 (density at 12% MC), volumetric shrinkage (R), fiber saturation point (S), basic density (Db)
   - Conversion formula: Db = 0.828 × D12
-- CITES Trade Database (4.3GB) — stored at `~/Downloads/Trade_database_download_v2025.1.zip`, not in repo
+
+**Wood data routing:**
+- **Characterization** (density, SG, shrinkage, origin): CIRAD databases → wood_species.json
+- **Regulatory** (CITES status, trade restrictions): CITES species checklist → wood_species.json cites_status field
+- **Acoustic** (MOE, tone character, typical uses): wood_species.json → luthier_tonewood_reference.json
 
 ### Documentation archive policy
 
