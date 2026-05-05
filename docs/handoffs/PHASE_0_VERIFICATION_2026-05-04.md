@@ -75,7 +75,7 @@ The following require human verification in browser:
 - [ ] Phase 0 panels still render (Setup Evaluation, String Tension, Bridge Preset, Saddle Compensation)
 - [ ] No new console errors caused by Phase 0
 
-**Status:** PENDING — awaiting manual verification
+**Status:** PENDING HUMAN CHECK — requires browser access to complete
 
 ---
 
