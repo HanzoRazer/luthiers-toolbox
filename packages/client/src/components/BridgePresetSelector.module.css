@@ -1,0 +1,103 @@
+/**
+ * BridgePresetSelector CSS Module
+ * Phase 0: Bridge preset selection panel styles
+ */
+
+.panelTitle {
+  margin: 0 0 12px 0;
+  font-size: 15px;
+  font-weight: 600;
+  color: #fff;
+  border-bottom: 1px solid #333;
+  padding-bottom: 8px;
+}
+
+.controls {
+  display: flex;
+  gap: 12px;
+  align-items: flex-end;
+  margin-bottom: 12px;
+}
+
+.controls select {
+  flex: 1;
+  min-width: 140px;
+}
+
+.results {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.specGrid {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.specRow {
+  display: flex;
+  justify-content: space-between;
+  padding: 6px 8px;
+  background: rgba(255, 255, 255, 0.03);
+  border-radius: 3px;
+  font-size: 12px;
+}
+
+.specRow:hover {
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.specLabel {
+  color: #999;
+}
+
+.specValue {
+  color: #fff;
+  font-weight: 500;
+}
+
+.gate {
+  padding: 6px 12px;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 600;
+  text-align: center;
+}
+
+.gateGreen {
+  background: #065f46;
+  color: #6ee7b7;
+}
+
+.gateYellow {
+  background: #78350f;
+  color: #fcd34d;
+}
+
+.gateRed {
+  background: #7f1d1d;
+  color: #fca5a5;
+}
+
+.notes {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.note {
+  font-size: 11px;
+  color: #888;
+  padding: 4px 8px;
+  background: #1a1a1a;
+  border-radius: 3px;
+}
+
+.empty {
+  padding: 16px;
+  text-align: center;
+  color: #666;
+  font-size: 13px;
+}

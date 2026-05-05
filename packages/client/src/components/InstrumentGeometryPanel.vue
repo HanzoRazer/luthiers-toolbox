@@ -206,6 +206,12 @@
             ❌ {{ store.previewError }}
           </div>
         </section>
+
+        <!-- ===== Phase 0: Orphan Endpoint Panels ===== -->
+        <SetupEvaluationPanel />
+        <StringTensionPanel />
+        <BridgePresetSelector />
+        <SaddleCompensationPanel />
       </div>
 
       <!-- ===== RIGHT PANEL: Preview & Results ===== -->
@@ -447,6 +453,10 @@ import {
   INSTRUMENT_MODELS,
 } from "@/stores/instrumentGeometryStore";
 import FretboardPreviewSvg from "@/components/FretboardPreviewSvg.vue";
+import SetupEvaluationPanel from "@/components/SetupEvaluationPanel.vue";
+import StringTensionPanel from "@/components/StringTensionPanel.vue";
+import BridgePresetSelector from "@/components/BridgePresetSelector.vue";
+import SaddleCompensationPanel from "@/components/SaddleCompensationPanel.vue";
 import styles from "./InstrumentGeometryPanel.module.css";
 import shared from "@/styles/dark-theme-shared.module.css";
 

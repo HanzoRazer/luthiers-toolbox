@@ -1,0 +1,111 @@
+/**
+ * StringTensionPanel CSS Module
+ * Phase 0: String tension calculation panel styles
+ */
+
+.panelTitle {
+  margin: 0 0 12px 0;
+  font-size: 15px;
+  font-weight: 600;
+  color: #fff;
+  border-bottom: 1px solid #333;
+  padding-bottom: 8px;
+}
+
+.controls {
+  display: flex;
+  gap: 12px;
+  align-items: flex-end;
+  margin-bottom: 12px;
+}
+
+.controls select {
+  flex: 1;
+  min-width: 140px;
+}
+
+.results {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.totalRow {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  padding: 10px;
+  background: #1a1a1a;
+  border-radius: 4px;
+}
+
+.totalLabel {
+  font-size: 13px;
+  color: #999;
+}
+
+.totalValue {
+  font-size: 20px;
+  font-weight: 600;
+  color: #0ea5e9;
+}
+
+.totalValueSub {
+  font-size: 13px;
+  color: #666;
+}
+
+.stringsGrid {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.stringRow {
+  display: grid;
+  grid-template-columns: 30px 40px 60px 70px;
+  gap: 8px;
+  padding: 6px 8px;
+  background: rgba(255, 255, 255, 0.03);
+  border-radius: 3px;
+  font-size: 12px;
+  align-items: center;
+}
+
+.stringRow:hover {
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.stringName {
+  font-weight: 600;
+  color: #fff;
+}
+
+.stringNote {
+  color: #0ea5e9;
+}
+
+.stringGauge {
+  color: #999;
+  font-family: monospace;
+}
+
+.stringTension {
+  color: #6ee7b7;
+  font-weight: 500;
+  text-align: right;
+}
+
+.meta {
+  font-size: 11px;
+  color: #666;
+  padding-top: 8px;
+  border-top: 1px solid #333;
+}
+
+.empty {
+  padding: 16px;
+  text-align: center;
+  color: #666;
+  font-size: 13px;
+}

@@ -23,6 +23,119 @@ import {
 // Types
 // ============================================================================
 
+// --- Setup Evaluation Types (Phase 0) ---
+export interface SetupIssue {
+  parameter: string;
+  current_value: number;
+  recommended_range: [number, number];
+  gate: "GREEN" | "YELLOW" | "RED";
+  fix: string;
+}
+
+export interface SetupCascadeResponse {
+  state: Record<string, number>;
+  issues: SetupIssue[];
+  overall_gate: "GREEN" | "YELLOW" | "RED";
+  summary: string;
+  suggestions: string[];
+}
+
+export interface SetupStateRequest {
+  neck_angle_deg: number;
+  truss_rod_relief_mm: number;
+  action_at_nut_mm: number;
+  action_at_12th_treble_mm: number;
+  action_at_12th_bass_mm: number;
+  saddle_height_mm: number;
+  saddle_projection_mm: number;
+  scale_length_mm: number;
+  fretboard_height_at_joint_mm: number;
+  neck_joint_fret: number;
+}
+
+// --- String Tension Types (Phase 0) ---
+export interface StringTensionResult {
+  name: string;
+  gauge_inch: number;
+  gauge_mm: number;
+  note: string;
+  is_wound: boolean;
+  tension_lb: number;
+  tension_n: number;
+}
+
+export interface StringTensionResponse {
+  scale_length_mm: number;
+  set_name: string;
+  strings: StringTensionResult[];
+  total_tension_lb: number;
+  total_tension_n: number;
+}
+
+export interface StringPresetsResponse {
+  string_sets: string[];
+  scale_lengths_mm: Record<string, number>;
+}
+
+// --- Bridge Types (Phase 0) ---
+export interface BridgeSpec {
+  body_style: string;
+  string_spacing_mm: number;
+  bridge_length_mm: number;
+  bridge_width_mm: number;
+  saddle_slot_width_mm: number;
+  saddle_slot_depth_mm: number;
+  pin_spacing_mm: number;
+  bridge_plate_length_mm: number;
+  bridge_plate_width_mm: number;
+  material: string;
+  gate: string;
+  string_count: number;
+  notes: string[];
+}
+
+// --- Saddle Compensation Types (Phase 0) ---
+export interface StringCompensationResult {
+  name: string;
+  x_mm: number;
+  compensation_mm: number;
+  fitted_compensation_mm: number;
+  residual_mm: number;
+}
+
+export interface StraightSaddleFit {
+  slope: number;
+  intercept_mm: number;
+  slant_angle_deg: number;
+  r_squared: number;
+}
+
+export interface DesignCompensationResponse {
+  scale_length_mm: number;
+  string_results: StringCompensationResult[];
+  saddle_fit: StraightSaddleFit;
+  max_residual_mm: number;
+  avg_compensation_mm: number;
+  recommendation: string;
+}
+
+export interface StringSetupResult {
+  name: string;
+  x_mm: number;
+  current_comp_mm: number;
+  cents_error: number;
+  delta_L_mm: number;
+  new_comp_mm: number;
+}
+
+export interface SetupCompensationResponse {
+  scale_length_mm: number;
+  string_results: StringSetupResult[];
+  avg_adjustment_mm: number;
+  max_adjustment_mm: number;
+  recommendation: string;
+}
+
 export interface FretboardSpec {
   scale_length_mm: number;
   num_frets: number;
@@ -170,6 +283,44 @@ export const useInstrumentGeometryStore = defineStore(
     const trebleScaleLength = ref(647.7);
     const bassScaleLength = ref(660.4); // +0.5" typical
     const perpendicularFret = ref(7); // Default perpendicular fret
+
+    // ===== Phase 0: Setup Evaluation State =====
+    const setupEvaluation = ref<SetupCascadeResponse | null>(null);
+    const setupLoading = ref(false);
+    const setupError = ref<string | null>(null);
+    const setupRequest = ref<SetupStateRequest>({
+      neck_angle_deg: 1.5,
+      truss_rod_relief_mm: 0.25,
+      action_at_nut_mm: 0.5,
+      action_at_12th_treble_mm: 1.9,
+      action_at_12th_bass_mm: 2.4,
+      saddle_height_mm: 3.0,
+      saddle_projection_mm: 2.5,
+      scale_length_mm: 647.7,
+      fretboard_height_at_joint_mm: 5.0,
+      neck_joint_fret: 14,
+    });
+
+    // ===== Phase 0: String Tension State =====
+    const stringTensionResult = ref<StringTensionResponse | null>(null);
+    const stringTensionLoading = ref(false);
+    const stringTensionError = ref<string | null>(null);
+    const selectedStringSet = ref<string>("light_012");
+    const stringPresets = ref<string[]>([]);
+
+    // ===== Phase 0: Bridge State =====
+    const bridgeOptions = ref<string[]>([]);
+    const selectedBridgeStyle = ref<string>("dreadnought");
+    const bridgeSpec = ref<BridgeSpec | null>(null);
+    const bridgeLoading = ref(false);
+    const bridgeError = ref<string | null>(null);
+
+    // ===== Phase 0: Saddle Compensation State =====
+    const saddleCompensationMode = ref<"design" | "setup">("design");
+    const saddleDesignResult = ref<DesignCompensationResponse | null>(null);
+    const saddleSetupResult = ref<SetupCompensationResponse | null>(null);
+    const saddleLoading = ref(false);
+    const saddleError = ref<string | null>(null)
 
     // ===== Computed =====
 
@@ -393,6 +544,253 @@ export const useInstrumentGeometryStore = defineStore(
       fanFretEnabled.value = false;
     }
 
+    // =========================================================================
+    // Phase 0 Actions: Setup Evaluation
+    // =========================================================================
+
+    /**
+     * Evaluate instrument setup via cascade endpoint
+     */
+    async function evaluateSetup() {
+      setupLoading.value = true;
+      setupError.value = null;
+
+      try {
+        // Sync scale length from current fretboard spec
+        setupRequest.value.scale_length_mm = fretboardSpec.value.scale_length_mm;
+
+        const response = await api("/api/instrument/setup/evaluate", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(setupRequest.value),
+        });
+
+        if (!response.ok) {
+          const errorData = await response.json().catch(() => ({}));
+          throw new Error(errorData.detail || `HTTP ${response.status}`);
+        }
+
+        setupEvaluation.value = await response.json();
+        console.log("✓ Setup evaluated:", setupEvaluation.value?.overall_gate);
+      } catch (err: any) {
+        console.error("Setup evaluation failed:", err);
+        setupError.value = err.message || "Unknown error";
+        setupEvaluation.value = null;
+      } finally {
+        setupLoading.value = false;
+      }
+    }
+
+    // =========================================================================
+    // Phase 0 Actions: String Tension
+    // =========================================================================
+
+    /**
+     * Load string tension presets from backend
+     */
+    async function loadStringPresets() {
+      try {
+        const response = await api("/api/instrument/string-tension/presets");
+        if (response.ok) {
+          const data: StringPresetsResponse = await response.json();
+          stringPresets.value = data.string_sets;
+        }
+      } catch (err) {
+        console.warn("Failed to load string presets:", err);
+      }
+    }
+
+    /**
+     * Calculate string tension for current scale length and string set
+     */
+    async function calculateStringTension() {
+      stringTensionLoading.value = true;
+      stringTensionError.value = null;
+
+      try {
+        const response = await api("/api/instrument/string-tension", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            scale_length_mm: fretboardSpec.value.scale_length_mm,
+            string_set: selectedStringSet.value,
+          }),
+        });
+
+        if (!response.ok) {
+          const errorData = await response.json().catch(() => ({}));
+          throw new Error(errorData.detail || `HTTP ${response.status}`);
+        }
+
+        stringTensionResult.value = await response.json();
+        console.log("✓ String tension calculated:", stringTensionResult.value?.total_tension_lb.toFixed(1), "lb");
+      } catch (err: any) {
+        console.error("String tension calculation failed:", err);
+        stringTensionError.value = err.message || "Unknown error";
+        stringTensionResult.value = null;
+      } finally {
+        stringTensionLoading.value = false;
+      }
+    }
+
+    // =========================================================================
+    // Phase 0 Actions: Bridge
+    // =========================================================================
+
+    /**
+     * Load bridge body style options
+     */
+    async function loadBridgeOptions() {
+      try {
+        const response = await api("/api/instrument/bridge/options");
+        if (response.ok) {
+          const data = await response.json();
+          bridgeOptions.value = data.body_styles;
+        }
+      } catch (err) {
+        console.warn("Failed to load bridge options:", err);
+      }
+    }
+
+    /**
+     * Calculate bridge geometry for selected style
+     */
+    async function calculateBridge() {
+      bridgeLoading.value = true;
+      bridgeError.value = null;
+
+      try {
+        const response = await api("/api/instrument/bridge", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            body_style: selectedBridgeStyle.value,
+            scale_length_mm: fretboardSpec.value.scale_length_mm,
+            string_count: 6,
+          }),
+        });
+
+        if (!response.ok) {
+          const errorData = await response.json().catch(() => ({}));
+          throw new Error(errorData.detail || `HTTP ${response.status}`);
+        }
+
+        bridgeSpec.value = await response.json();
+        console.log("✓ Bridge calculated:", bridgeSpec.value?.body_style);
+      } catch (err: any) {
+        console.error("Bridge calculation failed:", err);
+        bridgeError.value = err.message || "Unknown error";
+        bridgeSpec.value = null;
+      } finally {
+        bridgeLoading.value = false;
+      }
+    }
+
+    // =========================================================================
+    // Phase 0 Actions: Saddle Compensation
+    // =========================================================================
+
+    /**
+     * Calculate saddle compensation (design mode)
+     */
+    async function calculateSaddleCompensationDesign() {
+      saddleLoading.value = true;
+      saddleError.value = null;
+
+      try {
+        // String spacing for x_mm calculation
+        const bridgeWidth = bridgeSpec.value?.string_spacing_mm || 52.0;
+        const stringSpacing = bridgeWidth / 5; // 6 strings, 5 gaps
+
+        // Use string tension data if available, else defaults
+        const stringSpecs = stringTensionResult.value?.strings.map((s, i) => ({
+          name: s.name,
+          gauge_in: s.gauge_inch,
+          tension_lb: s.tension_lb,
+          is_wound: s.is_wound,
+          x_mm: i * stringSpacing,
+        })) || [
+          { name: "E6", gauge_in: 0.046, tension_lb: 17.5, is_wound: true, x_mm: 0 },
+          { name: "A5", gauge_in: 0.036, tension_lb: 19.0, is_wound: true, x_mm: stringSpacing },
+          { name: "D4", gauge_in: 0.026, tension_lb: 17.5, is_wound: true, x_mm: stringSpacing * 2 },
+          { name: "G3", gauge_in: 0.017, tension_lb: 15.0, is_wound: false, x_mm: stringSpacing * 3 },
+          { name: "B2", gauge_in: 0.013, tension_lb: 14.5, is_wound: false, x_mm: stringSpacing * 4 },
+          { name: "E1", gauge_in: 0.010, tension_lb: 14.0, is_wound: false, x_mm: stringSpacing * 5 },
+        ];
+
+        const response = await api("/api/instrument/bridge/compensation", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            scale_length_mm: fretboardSpec.value.scale_length_mm,
+            action_12th_treble_mm: setupRequest.value.action_at_12th_treble_mm,
+            action_12th_bass_mm: setupRequest.value.action_at_12th_bass_mm,
+            strings: stringSpecs,
+          }),
+        });
+
+        if (!response.ok) {
+          const errorData = await response.json().catch(() => ({}));
+          throw new Error(errorData.detail || `HTTP ${response.status}`);
+        }
+
+        saddleDesignResult.value = await response.json();
+        console.log("✓ Saddle compensation (design) calculated");
+      } catch (err: any) {
+        console.error("Saddle compensation failed:", err);
+        saddleError.value = err.message || "Unknown error";
+        saddleDesignResult.value = null;
+      } finally {
+        saddleLoading.value = false;
+      }
+    }
+
+    /**
+     * Calculate saddle adjustments (setup mode) from cents errors
+     */
+    async function calculateSaddleCompensationSetup(measurements: Array<{ current_compensation_mm: number; cents_error: number }>) {
+      saddleLoading.value = true;
+      saddleError.value = null;
+
+      try {
+        // String spacing for x_mm calculation
+        const bridgeWidth = bridgeSpec.value?.string_spacing_mm || 52.0;
+        const stringSpacing = bridgeWidth / 5;
+        const stringNames = ["E6", "A5", "D4", "G3", "B2", "E1"];
+
+        const strings = measurements.map((m, i) => ({
+          name: stringNames[i] || `S${i + 1}`,
+          x_mm: i * stringSpacing,
+          current_comp_mm: m.current_compensation_mm,
+          cents_error: m.cents_error,
+          weight: 1.0,
+        }));
+
+        const response = await api("/api/instrument/bridge/setup", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            scale_length_mm: fretboardSpec.value.scale_length_mm,
+            strings,
+          }),
+        });
+
+        if (!response.ok) {
+          const errorData = await response.json().catch(() => ({}));
+          throw new Error(errorData.detail || `HTTP ${response.status}`);
+        }
+
+        saddleSetupResult.value = await response.json();
+        console.log("✓ Saddle adjustments (setup) calculated");
+      } catch (err: any) {
+        console.error("Saddle setup calculation failed:", err);
+        saddleError.value = err.message || "Unknown error";
+        saddleSetupResult.value = null;
+      } finally {
+        saddleLoading.value = false;
+      }
+    }
+
     /**
      * Load instrument models from API (Wave 20 migration).
      * Falls back to static INSTRUMENT_MODELS on error.
@@ -453,6 +851,33 @@ export const useInstrumentGeometryStore = defineStore(
       modelsLoadError,
       modelsLoadedFromApi,
 
+      // Phase 0: Setup Evaluation State
+      setupEvaluation,
+      setupLoading,
+      setupError,
+      setupRequest,
+
+      // Phase 0: String Tension State
+      stringTensionResult,
+      stringTensionLoading,
+      stringTensionError,
+      selectedStringSet,
+      stringPresets,
+
+      // Phase 0: Bridge State
+      bridgeOptions,
+      selectedBridgeStyle,
+      bridgeSpec,
+      bridgeLoading,
+      bridgeError,
+
+      // Phase 0: Saddle Compensation State
+      saddleCompensationMode,
+      saddleDesignResult,
+      saddleSetupResult,
+      saddleLoading,
+      saddleError,
+
       // Computed
       selectedModel,
       availableModels,
@@ -469,6 +894,15 @@ export const useInstrumentGeometryStore = defineStore(
       downloadGcode,
       reset,
       loadInstrumentModels,
+
+      // Phase 0 Actions
+      evaluateSetup,
+      loadStringPresets,
+      calculateStringTension,
+      loadBridgeOptions,
+      calculateBridge,
+      calculateSaddleCompensationDesign,
+      calculateSaddleCompensationSetup,
     };
   }
 );
