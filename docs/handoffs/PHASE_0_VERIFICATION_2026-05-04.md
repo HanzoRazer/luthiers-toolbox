@@ -52,9 +52,30 @@ Phase 0 wires four orphan backend endpoints to the frontend UI without refactori
 
 ---
 
-## Caveat
+## Fretboard/CAM Regression Check
 
-**Fretboard/CAM regression check:** The existing fretboard preview and CAM generation flow should receive one final manual regression test to confirm no interference from Phase 0 additions. This was not performed during verification.
+**Date:** 2026-05-05
+
+### Automated Checks
+
+| Check | Status | Notes |
+|-------|--------|-------|
+| TypeScript (`npm run type-check`) | PASS (Phase 0 files) | 100+ pre-existing errors in other areas; none in Phase 0 files |
+| Unit Tests (`npm test`) | PASS (Phase 0 scope) | 5 pre-existing failures in VisionAttachFlow, Supabase mocks; none in Phase 0 code |
+
+### Manual UI Checks — PENDING
+
+The following require human verification in browser:
+
+- [ ] Open Instrument Geometry view
+- [ ] Fretboard controls render
+- [ ] Generate fretboard preview
+- [ ] SVG preview renders correctly
+- [ ] CAM preview/export (if accessible from this view)
+- [ ] Phase 0 panels still render (Setup Evaluation, String Tension, Bridge Preset, Saddle Compensation)
+- [ ] No new console errors caused by Phase 0
+
+**Status:** PENDING — awaiting manual verification
 
 ---
 
