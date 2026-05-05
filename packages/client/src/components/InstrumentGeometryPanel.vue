@@ -215,6 +215,9 @@
 
         <!-- ===== NECK-A Phase 3: Relief Workflow ===== -->
         <SetupWorkflowReliefPanel />
+
+        <!-- ===== NECK-A Phase 4: Action Workflow ===== -->
+        <SetupWorkflowActionPanel />
       </div>
 
       <!-- ===== RIGHT PANEL: Preview & Results ===== -->
@@ -461,6 +464,7 @@ import StringTensionPanel from "@/components/StringTensionPanel.vue";
 import BridgePresetSelector from "@/components/BridgePresetSelector.vue";
 import SaddleCompensationPanel from "@/components/SaddleCompensationPanel.vue";
 import SetupWorkflowReliefPanel from "@/components/SetupWorkflowReliefPanel.vue";
+import SetupWorkflowActionPanel from "@/components/SetupWorkflowActionPanel.vue";
 import styles from "./InstrumentGeometryPanel.module.css";
 import shared from "@/styles/dark-theme-shared.module.css";
 

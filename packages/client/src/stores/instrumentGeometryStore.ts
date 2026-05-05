@@ -156,6 +156,22 @@ export interface ReliefWorkflowRequest {
   target_max_mm?: number;
 }
 
+// --- NECK-A Action Workflow Types (Phase 4) ---
+export interface ActionWorkflowResponse {
+  current_step: string;
+  overall_gate: DiagnosticGate;
+  diagnostics: ReliefDiagnosticResult[];
+}
+
+export interface ActionWorkflowRequest {
+  treble_action_mm: number;
+  bass_action_mm: number;
+  treble_target_min_mm?: number;
+  treble_target_max_mm?: number;
+  bass_target_min_mm?: number;
+  bass_target_max_mm?: number;
+}
+
 export interface FretboardSpec {
   scale_length_mm: number;
   num_frets: number;
@@ -348,7 +364,18 @@ export const useInstrumentGeometryStore = defineStore(
     const reliefWorkflowError = ref<string | null>(null);
     const reliefMeasurement = ref<number>(0.20);
     const reliefTargetMin = ref<number>(0.10);
-    const reliefTargetMax = ref<number>(0.30)
+    const reliefTargetMax = ref<number>(0.30);
+
+    // ===== NECK-A Phase 4: Action Workflow State =====
+    const actionWorkflowResult = ref<ActionWorkflowResponse | null>(null);
+    const actionWorkflowLoading = ref(false);
+    const actionWorkflowError = ref<string | null>(null);
+    const trebleActionMeasurement = ref<number>(1.50);
+    const bassActionMeasurement = ref<number>(2.00);
+    const trebleActionTargetMin = ref<number>(1.25);
+    const trebleActionTargetMax = ref<number>(1.75);
+    const bassActionTargetMin = ref<number>(1.75);
+    const bassActionTargetMax = ref<number>(2.25);
 
     // ===== Computed =====
 
@@ -857,6 +884,47 @@ export const useInstrumentGeometryStore = defineStore(
       }
     }
 
+    // =========================================================================
+    // NECK-A Phase 4: Action Workflow Actions
+    // =========================================================================
+
+    /**
+     * Evaluate action height via NECK-A workflow endpoint
+     */
+    async function evaluateActionWorkflow() {
+      actionWorkflowLoading.value = true;
+      actionWorkflowError.value = null;
+
+      try {
+        const response = await api("/api/instrument/setup/workflow/action/evaluate", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            treble_action_mm: trebleActionMeasurement.value,
+            bass_action_mm: bassActionMeasurement.value,
+            treble_target_min_mm: trebleActionTargetMin.value,
+            treble_target_max_mm: trebleActionTargetMax.value,
+            bass_target_min_mm: bassActionTargetMin.value,
+            bass_target_max_mm: bassActionTargetMax.value,
+          }),
+        });
+
+        if (!response.ok) {
+          const errorData = await response.json().catch(() => ({}));
+          throw new Error(errorData.detail || `HTTP ${response.status}`);
+        }
+
+        actionWorkflowResult.value = await response.json();
+        console.log("✓ Action evaluated:", actionWorkflowResult.value?.overall_gate);
+      } catch (err: any) {
+        console.error("Action evaluation failed:", err);
+        actionWorkflowError.value = err.message || "Unknown error";
+        actionWorkflowResult.value = null;
+      } finally {
+        actionWorkflowLoading.value = false;
+      }
+    }
+
     /**
      * Load instrument models from API (Wave 20 migration).
      * Falls back to static INSTRUMENT_MODELS on error.
@@ -952,6 +1020,17 @@ export const useInstrumentGeometryStore = defineStore(
       reliefTargetMin,
       reliefTargetMax,
 
+      // NECK-A Phase 4: Action Workflow State
+      actionWorkflowResult,
+      actionWorkflowLoading,
+      actionWorkflowError,
+      trebleActionMeasurement,
+      bassActionMeasurement,
+      trebleActionTargetMin,
+      trebleActionTargetMax,
+      bassActionTargetMin,
+      bassActionTargetMax,
+
       // Computed
       selectedModel,
       availableModels,
@@ -980,6 +1059,9 @@ export const useInstrumentGeometryStore = defineStore(
 
       // NECK-A Phase 3 Actions
       evaluateRelief,
+
+      // NECK-A Phase 4 Actions
+      evaluateActionWorkflow,
     };
   }
 );

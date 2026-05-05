@@ -4,8 +4,9 @@ Setup Cascade Router — Instrument setup evaluation.
 Endpoints:
 - POST /setup/evaluate — Evaluate instrument setup (Phase 0)
 - POST /setup/workflow/evaluate — Evaluate relief (NECK-A Phase 3)
+- POST /setup/workflow/action/evaluate — Evaluate action (NECK-A Phase 4)
 
-Total: 2 endpoints
+Total: 3 endpoints
 """
 
 from __future__ import annotations
@@ -22,9 +23,15 @@ from app.calculators.setup_cascade import (
 )
 from app.instrument_geometry.neck.setup_workflow import (
     DiagnosticResult,
+    ActionWorkflowResponse,
     evaluate_relief,
+    evaluate_action,
     DEFAULT_RELIEF_TARGET_MIN_MM,
     DEFAULT_RELIEF_TARGET_MAX_MM,
+    DEFAULT_TREBLE_ACTION_TARGET_MIN_MM,
+    DEFAULT_TREBLE_ACTION_TARGET_MAX_MM,
+    DEFAULT_BASS_ACTION_TARGET_MIN_MM,
+    DEFAULT_BASS_ACTION_TARGET_MAX_MM,
 )
 
 router = APIRouter(tags=["instrument-geometry", "setup"])
@@ -75,6 +82,28 @@ class ReliefWorkflowRequest(BaseModel):
     target_max_mm: float = Field(
         default=DEFAULT_RELIEF_TARGET_MAX_MM,
         description="Maximum acceptable relief (default 0.30mm)"
+    )
+
+
+class ActionWorkflowRequest(BaseModel):
+    """Request body for NECK-A action workflow evaluation (Phase 4)."""
+    treble_action_mm: float = Field(description="Measured action at 12th fret, treble side (mm)")
+    bass_action_mm: float = Field(description="Measured action at 12th fret, bass side (mm)")
+    treble_target_min_mm: float = Field(
+        default=DEFAULT_TREBLE_ACTION_TARGET_MIN_MM,
+        description="Minimum acceptable treble action (default 1.25mm)"
+    )
+    treble_target_max_mm: float = Field(
+        default=DEFAULT_TREBLE_ACTION_TARGET_MAX_MM,
+        description="Maximum acceptable treble action (default 1.75mm)"
+    )
+    bass_target_min_mm: float = Field(
+        default=DEFAULT_BASS_ACTION_TARGET_MIN_MM,
+        description="Minimum acceptable bass action (default 1.75mm)"
+    )
+    bass_target_max_mm: float = Field(
+        default=DEFAULT_BASS_ACTION_TARGET_MAX_MM,
+        description="Maximum acceptable bass action (default 2.25mm)"
     )
 
 
@@ -157,6 +186,36 @@ def evaluate_setup_workflow_relief(req: ReliefWorkflowRequest) -> DiagnosticResu
         measured_relief_mm=req.relief_mm,
         target_min_mm=req.target_min_mm,
         target_max_mm=req.target_max_mm,
+    )
+
+
+@router.post(
+    "/setup/workflow/action/evaluate",
+    response_model=ActionWorkflowResponse,
+    summary="Evaluate action height (NECK-A Phase 4)",
+    description="""
+    NECK-A Phase 4: Evaluate action height at 12th fret for treble and bass sides.
+    Returns overall gate (worst-case) and individual diagnostics for each side.
+
+    Gate logic per side:
+    - GREEN: action within target range
+    - YELLOW: within 0.25mm tolerance outside range
+    - RED: beyond 0.25mm tolerance outside range
+
+    Default targets:
+    - Treble: 1.25–1.75mm
+    - Bass: 1.75–2.25mm
+    """,
+)
+def evaluate_setup_workflow_action(req: ActionWorkflowRequest) -> ActionWorkflowResponse:
+    """Evaluate action height and return workflow response with diagnostics."""
+    return evaluate_action(
+        treble_action_mm=req.treble_action_mm,
+        bass_action_mm=req.bass_action_mm,
+        treble_target_min_mm=req.treble_target_min_mm,
+        treble_target_max_mm=req.treble_target_max_mm,
+        bass_target_min_mm=req.bass_target_min_mm,
+        bass_target_max_mm=req.bass_target_max_mm,
     )
 
 
