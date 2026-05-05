@@ -212,6 +212,9 @@
         <StringTensionPanel />
         <BridgePresetSelector />
         <SaddleCompensationPanel />
+
+        <!-- ===== NECK-A Phase 3: Relief Workflow ===== -->
+        <SetupWorkflowReliefPanel />
       </div>
 
       <!-- ===== RIGHT PANEL: Preview & Results ===== -->
@@ -457,6 +460,7 @@ import SetupEvaluationPanel from "@/components/SetupEvaluationPanel.vue";
 import StringTensionPanel from "@/components/StringTensionPanel.vue";
 import BridgePresetSelector from "@/components/BridgePresetSelector.vue";
 import SaddleCompensationPanel from "@/components/SaddleCompensationPanel.vue";
+import SetupWorkflowReliefPanel from "@/components/SetupWorkflowReliefPanel.vue";
 import styles from "./InstrumentGeometryPanel.module.css";
 import shared from "@/styles/dark-theme-shared.module.css";
 

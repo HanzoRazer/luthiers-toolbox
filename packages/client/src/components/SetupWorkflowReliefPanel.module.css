@@ -1,0 +1,140 @@
+/**
+ * SetupWorkflowReliefPanel CSS Module
+ * NECK-A Phase 3: Relief workflow panel styles
+ */
+
+.panelTitle {
+  margin: 0 0 12px 0;
+  font-size: 15px;
+  font-weight: 600;
+  color: #fff;
+  border-bottom: 1px solid #333;
+  padding-bottom: 8px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.badge {
+  font-size: 10px;
+  font-weight: 500;
+  padding: 2px 6px;
+  border-radius: 3px;
+  background: #1e3a5f;
+  color: #60a5fa;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.formGrid {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.helpText {
+  font-size: 11px;
+  color: #888;
+  margin-bottom: 12px;
+  font-style: italic;
+}
+
+.results {
+  margin-top: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.gateHeader {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.gateBadge {
+  padding: 6px 14px;
+  border-radius: 4px;
+  font-weight: 600;
+  font-size: 13px;
+}
+
+.gateGreen {
+  background: #065f46;
+  color: #6ee7b7;
+}
+
+.gateYellow {
+  background: #78350f;
+  color: #fcd34d;
+}
+
+.gateRed {
+  background: #7f1d1d;
+  color: #fca5a5;
+}
+
+.summary {
+  font-size: 13px;
+  color: #ccc;
+}
+
+.measurementDisplay {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  padding: 10px;
+  background: #1a1a1a;
+  border-radius: 4px;
+}
+
+.measurementLabel {
+  font-size: 12px;
+  color: #888;
+}
+
+.measurementValue {
+  font-size: 16px;
+  font-weight: 600;
+  color: #0ea5e9;
+  font-family: monospace;
+}
+
+.measurementRange {
+  font-size: 11px;
+  color: #666;
+}
+
+.causesSection,
+.actionsSection {
+  padding: 10px;
+  background: #1a1a1a;
+  border-radius: 4px;
+  font-size: 12px;
+}
+
+.causesSection {
+  border-left: 3px solid #f59e0b;
+}
+
+.actionsSection {
+  border-left: 3px solid #10b981;
+}
+
+.causesSection strong,
+.actionsSection strong {
+  color: #fff;
+}
+
+.causesSection ul,
+.actionsSection ul {
+  margin: 8px 0 0 0;
+  padding-left: 18px;
+}
+
+.causesSection li,
+.actionsSection li {
+  color: #ccc;
+  margin-bottom: 4px;
+}

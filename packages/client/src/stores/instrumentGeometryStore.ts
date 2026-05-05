@@ -136,6 +136,26 @@ export interface SetupCompensationResponse {
   recommendation: string;
 }
 
+// --- NECK-A Relief Workflow Types (Phase 3) ---
+export type DiagnosticGate = "green" | "yellow" | "red";
+
+export interface ReliefDiagnosticResult {
+  id: string;
+  gate: DiagnosticGate;
+  message: string;
+  measurement: number | null;
+  target_min: number | null;
+  target_max: number | null;
+  probable_causes: string[];
+  recommended_actions: string[];
+}
+
+export interface ReliefWorkflowRequest {
+  relief_mm: number;
+  target_min_mm?: number;
+  target_max_mm?: number;
+}
+
 export interface FretboardSpec {
   scale_length_mm: number;
   num_frets: number;
@@ -320,7 +340,15 @@ export const useInstrumentGeometryStore = defineStore(
     const saddleDesignResult = ref<DesignCompensationResponse | null>(null);
     const saddleSetupResult = ref<SetupCompensationResponse | null>(null);
     const saddleLoading = ref(false);
-    const saddleError = ref<string | null>(null)
+    const saddleError = ref<string | null>(null);
+
+    // ===== NECK-A Phase 3: Relief Workflow State =====
+    const reliefWorkflowResult = ref<ReliefDiagnosticResult | null>(null);
+    const reliefWorkflowLoading = ref(false);
+    const reliefWorkflowError = ref<string | null>(null);
+    const reliefMeasurement = ref<number>(0.20);
+    const reliefTargetMin = ref<number>(0.10);
+    const reliefTargetMax = ref<number>(0.30)
 
     // ===== Computed =====
 
@@ -791,6 +819,44 @@ export const useInstrumentGeometryStore = defineStore(
       }
     }
 
+    // =========================================================================
+    // NECK-A Phase 3: Relief Workflow Actions
+    // =========================================================================
+
+    /**
+     * Evaluate neck relief via NECK-A workflow endpoint
+     */
+    async function evaluateRelief() {
+      reliefWorkflowLoading.value = true;
+      reliefWorkflowError.value = null;
+
+      try {
+        const response = await api("/api/instrument/setup/workflow/evaluate", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            relief_mm: reliefMeasurement.value,
+            target_min_mm: reliefTargetMin.value,
+            target_max_mm: reliefTargetMax.value,
+          }),
+        });
+
+        if (!response.ok) {
+          const errorData = await response.json().catch(() => ({}));
+          throw new Error(errorData.detail || `HTTP ${response.status}`);
+        }
+
+        reliefWorkflowResult.value = await response.json();
+        console.log("✓ Relief evaluated:", reliefWorkflowResult.value?.gate);
+      } catch (err: any) {
+        console.error("Relief evaluation failed:", err);
+        reliefWorkflowError.value = err.message || "Unknown error";
+        reliefWorkflowResult.value = null;
+      } finally {
+        reliefWorkflowLoading.value = false;
+      }
+    }
+
     /**
      * Load instrument models from API (Wave 20 migration).
      * Falls back to static INSTRUMENT_MODELS on error.
@@ -878,6 +944,14 @@ export const useInstrumentGeometryStore = defineStore(
       saddleLoading,
       saddleError,
 
+      // NECK-A Phase 3: Relief Workflow State
+      reliefWorkflowResult,
+      reliefWorkflowLoading,
+      reliefWorkflowError,
+      reliefMeasurement,
+      reliefTargetMin,
+      reliefTargetMax,
+
       // Computed
       selectedModel,
       availableModels,
@@ -903,6 +977,9 @@ export const useInstrumentGeometryStore = defineStore(
       calculateBridge,
       calculateSaddleCompensationDesign,
       calculateSaddleCompensationSetup,
+
+      // NECK-A Phase 3 Actions
+      evaluateRelief,
     };
   }
 );

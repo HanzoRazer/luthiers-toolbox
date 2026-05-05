@@ -2,9 +2,10 @@
 Setup Cascade Router — Instrument setup evaluation.
 
 Endpoints:
-- POST /setup/evaluate — Evaluate instrument setup
+- POST /setup/evaluate — Evaluate instrument setup (Phase 0)
+- POST /setup/workflow/evaluate — Evaluate relief (NECK-A Phase 3)
 
-Total: 1 endpoint
+Total: 2 endpoints
 """
 
 from __future__ import annotations
@@ -18,6 +19,12 @@ from app.calculators.setup_cascade import (
     SetupState,
     evaluate_setup,
     suggest_adjustments,
+)
+from app.instrument_geometry.neck.setup_workflow import (
+    DiagnosticResult,
+    evaluate_relief,
+    DEFAULT_RELIEF_TARGET_MIN_MM,
+    DEFAULT_RELIEF_TARGET_MAX_MM,
 )
 
 router = APIRouter(tags=["instrument-geometry", "setup"])
@@ -56,6 +63,19 @@ class SetupCascadeResponse(BaseModel):
     overall_gate: str
     summary: str
     suggestions: List[str] = Field(default_factory=list)
+
+
+class ReliefWorkflowRequest(BaseModel):
+    """Request body for NECK-A relief workflow evaluation."""
+    relief_mm: float = Field(description="Measured relief at 7th/8th fret (mm)")
+    target_min_mm: float = Field(
+        default=DEFAULT_RELIEF_TARGET_MIN_MM,
+        description="Minimum acceptable relief (default 0.10mm)"
+    )
+    target_max_mm: float = Field(
+        default=DEFAULT_RELIEF_TARGET_MAX_MM,
+        description="Maximum acceptable relief (default 0.30mm)"
+    )
 
 
 # ─── Endpoints ─────────────────────────────────────────────────────────────────
@@ -114,6 +134,29 @@ def evaluate_instrument_setup(req: SetupStateRequest) -> SetupCascadeResponse:
         overall_gate=result.overall_gate,
         summary=result.summary,
         suggestions=suggestions,
+    )
+
+
+@router.post(
+    "/setup/workflow/evaluate",
+    response_model=DiagnosticResult,
+    summary="Evaluate neck relief (NECK-A Phase 3)",
+    description="""
+    NECK-A v1 vertical slice: Evaluate neck relief measurement.
+    Returns GREEN/YELLOW/RED gate with probable causes and recommended actions.
+
+    Gate logic:
+    - GREEN: relief within target range (default 0.10-0.30mm)
+    - YELLOW: within 0.05mm tolerance outside range
+    - RED: beyond 0.05mm tolerance outside range
+    """,
+)
+def evaluate_setup_workflow_relief(req: ReliefWorkflowRequest) -> DiagnosticResult:
+    """Evaluate neck relief and return diagnostic result."""
+    return evaluate_relief(
+        measured_relief_mm=req.relief_mm,
+        target_min_mm=req.target_min_mm,
+        target_max_mm=req.target_max_mm,
     )
 
 
