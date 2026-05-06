@@ -4,6 +4,7 @@ Setup Workflow Models and Evaluators.
 V1 Vertical Slice: Relief measurement workflow.
 V2 Expansion: Action measurement workflow (Phase 4).
 V3 Expansion: Nut slot measurement workflow (Phase 5).
+V4 Expansion: Combined diagnostics (Phase 6).
 Path to expansion: intonation (not yet implemented).
 """
 
@@ -63,6 +64,21 @@ class NutWorkflowResponse(BaseModel):
     current_step: str = Field(default="nut", description="Workflow step identifier")
     overall_gate: DiagnosticGate = Field(description="Worst-case gate across all diagnostics")
     diagnostics: List[DiagnosticResult] = Field(description="Per-string diagnostic results")
+
+
+class CombinedDiagnostic(BaseModel):
+    """Single combined cross-step diagnostic result (Phase 6)."""
+    id: str = Field(description="Rule identifier")
+    gate: DiagnosticGate = Field(description="GREEN/YELLOW/RED")
+    message: str = Field(description="Human-readable insight")
+    contributing_factors: List[str] = Field(default_factory=list, description="Steps contributing to this diagnostic")
+    recommendation: str = Field(default="", description="Actionable recommendation")
+
+
+class CombinedDiagnosticsResponse(BaseModel):
+    """Response from combined setup diagnostics evaluation (Phase 6)."""
+    overall_gate: DiagnosticGate = Field(description="Worst-case gate across all combined diagnostics")
+    diagnostics: List[CombinedDiagnostic] = Field(description="Cross-step diagnostic insights")
 
 
 # ─── V1 Default Thresholds (Relief) ──────────────────────────────────────────
@@ -405,6 +421,152 @@ def evaluate_nut_slots(
     )
 
 
+# ─── Combined Setup Evaluator (Phase 6) ─────────────────────────────────────
+
+def _has_low_diagnostic(diagnostic_ids: List[str]) -> bool:
+    """Check if any diagnostic ID indicates a 'too low' condition."""
+    return any("too_low" in did for did in diagnostic_ids)
+
+
+def _has_high_diagnostic(diagnostic_ids: List[str]) -> bool:
+    """Check if any diagnostic ID indicates a 'too high' condition."""
+    return any("too_high" in did for did in diagnostic_ids)
+
+
+def evaluate_combined_setup(
+    relief_gate: DiagnosticGate,
+    relief_diagnostic_ids: List[str],
+    action_gate: DiagnosticGate,
+    action_diagnostic_ids: List[str],
+    nut_gate: DiagnosticGate,
+    nut_diagnostic_ids: List[str],
+) -> CombinedDiagnosticsResponse:
+    """
+    Evaluate combined setup diagnostics across Relief, Action, and Nut workflows.
+
+    V1: Hardcoded rules only. No JSON config.
+
+    Rules:
+        1. Fret Buzz Likely: relief RED (too low) + action RED/YELLOW (too low)
+        2. High Action Compound: action RED (too high) + nut RED (too high)
+        3. Nut Dominant: nut RED + relief GREEN + action GREEN/YELLOW
+        4. Balanced Setup: all GREEN
+        5. Mixed Moderate: 2+ YELLOW across steps, no RED
+
+    Args:
+        relief_gate: Overall gate from relief workflow
+        relief_diagnostic_ids: List of diagnostic IDs from relief workflow
+        action_gate: Overall gate from action workflow
+        action_diagnostic_ids: List of diagnostic IDs from action workflow
+        nut_gate: Overall gate from nut workflow
+        nut_diagnostic_ids: List of diagnostic IDs from nut workflow
+
+    Returns:
+        CombinedDiagnosticsResponse with overall gate and cross-step diagnostics
+    """
+    diagnostics: List[CombinedDiagnostic] = []
+    gates = [relief_gate, action_gate, nut_gate]
+
+    relief_low = _has_low_diagnostic(relief_diagnostic_ids)
+    action_low = _has_low_diagnostic(action_diagnostic_ids)
+    action_high = _has_high_diagnostic(action_diagnostic_ids)
+    nut_high = _has_high_diagnostic(nut_diagnostic_ids)
+
+    # Rule 1: Fret Buzz Likely
+    # relief = RED (too low) AND action = RED or YELLOW (too low)
+    if (
+        relief_gate == DiagnosticGate.RED
+        and relief_low
+        and action_gate in (DiagnosticGate.RED, DiagnosticGate.YELLOW)
+        and action_low
+    ):
+        diagnostics.append(CombinedDiagnostic(
+            id="combined_fret_buzz_likely",
+            gate=DiagnosticGate.RED,
+            message="Likely fret buzz due to low neck relief combined with low string action.",
+            contributing_factors=["Relief too low", "Action too low"],
+            recommendation="Address relief first by loosening truss rod, then re-evaluate action.",
+        ))
+
+    # Rule 2: High Action Compound Issue
+    # action = RED (too high) AND nut = RED (too high)
+    if (
+        action_gate == DiagnosticGate.RED
+        and action_high
+        and nut_gate == DiagnosticGate.RED
+        and nut_high
+    ):
+        diagnostics.append(CombinedDiagnostic(
+            id="combined_high_action_compound",
+            gate=DiagnosticGate.RED,
+            message="High action is compounded by high nut slots.",
+            contributing_factors=["Action too high", "Nut slots too high"],
+            recommendation="Address nut slots first, then re-evaluate 12th fret action.",
+        ))
+
+    # Rule 3: Nut Dominant Issue
+    # nut = RED AND relief = GREEN AND action = GREEN or YELLOW
+    if (
+        nut_gate == DiagnosticGate.RED
+        and relief_gate == DiagnosticGate.GREEN
+        and action_gate in (DiagnosticGate.GREEN, DiagnosticGate.YELLOW)
+    ):
+        diagnostics.append(CombinedDiagnostic(
+            id="combined_nut_dominant",
+            gate=DiagnosticGate.YELLOW,
+            message="Nut slot height is the primary contributor to playability issues.",
+            contributing_factors=["Nut slots out of range"],
+            recommendation="Focus on adjusting nut slots; neck and saddle setup are acceptable.",
+        ))
+
+    # Rule 4: Balanced Setup
+    # all steps = GREEN
+    if all(g == DiagnosticGate.GREEN for g in gates):
+        diagnostics.append(CombinedDiagnostic(
+            id="combined_balanced",
+            gate=DiagnosticGate.GREEN,
+            message="Setup is well balanced across all parameters.",
+            contributing_factors=[],
+            recommendation="No adjustments needed.",
+        ))
+
+    # Rule 5: Mixed Moderate Issues
+    # 2+ YELLOW across steps AND no RED
+    yellow_count = sum(1 for g in gates if g == DiagnosticGate.YELLOW)
+    has_red = any(g == DiagnosticGate.RED for g in gates)
+    if yellow_count >= 2 and not has_red:
+        contributing = []
+        if relief_gate == DiagnosticGate.YELLOW:
+            contributing.append("Relief slightly off")
+        if action_gate == DiagnosticGate.YELLOW:
+            contributing.append("Action slightly off")
+        if nut_gate == DiagnosticGate.YELLOW:
+            contributing.append("Nut slots slightly off")
+        diagnostics.append(CombinedDiagnostic(
+            id="combined_mixed_moderate",
+            gate=DiagnosticGate.YELLOW,
+            message="Multiple moderate setup deviations detected.",
+            contributing_factors=contributing,
+            recommendation="Consider addressing each parameter incrementally.",
+        ))
+
+    # Sort by severity: RED first, then YELLOW, then GREEN
+    severity_order = {DiagnosticGate.RED: 0, DiagnosticGate.YELLOW: 1, DiagnosticGate.GREEN: 2}
+    diagnostics.sort(key=lambda d: severity_order[d.gate])
+
+    # Overall gate is worst-case across all diagnostics
+    if diagnostics:
+        overall_gate = diagnostics[0].gate
+    else:
+        # No rules matched — derive from individual gates
+        overall_gate = _worst_gate(gates)
+
+    return CombinedDiagnosticsResponse(
+        overall_gate=overall_gate,
+        diagnostics=diagnostics,
+    )
+
+
 __all__ = [
     # Models
     "SetupWorkflowStep",
@@ -413,6 +575,8 @@ __all__ = [
     "SetupWorkflowState",
     "ActionWorkflowResponse",
     "NutWorkflowResponse",
+    "CombinedDiagnostic",
+    "CombinedDiagnosticsResponse",
     # Relief (Phase 3)
     "evaluate_relief",
     "DEFAULT_RELIEF_TARGET_MIN_MM",
@@ -429,4 +593,6 @@ __all__ = [
     "DEFAULT_NUT_TREBLE_TARGET_MAX_MM",
     "DEFAULT_NUT_BASS_TARGET_MIN_MM",
     "DEFAULT_NUT_BASS_TARGET_MAX_MM",
+    # Combined (Phase 6)
+    "evaluate_combined_setup",
 ]

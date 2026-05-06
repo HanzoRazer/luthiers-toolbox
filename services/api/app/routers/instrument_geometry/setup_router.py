@@ -6,8 +6,9 @@ Endpoints:
 - POST /setup/workflow/evaluate — Evaluate relief (NECK-A Phase 3)
 - POST /setup/workflow/action/evaluate — Evaluate action (NECK-A Phase 4)
 - POST /setup/workflow/nut/evaluate — Evaluate nut slots (NECK-A Phase 5)
+- POST /setup/workflow/combined/evaluate — Combined cross-step diagnostics (NECK-A Phase 6)
 
-Total: 4 endpoints
+Total: 5 endpoints
 """
 
 from __future__ import annotations
@@ -23,12 +24,15 @@ from app.calculators.setup_cascade import (
     suggest_adjustments,
 )
 from app.instrument_geometry.neck.setup_workflow import (
+    DiagnosticGate,
     DiagnosticResult,
     ActionWorkflowResponse,
     NutWorkflowResponse,
+    CombinedDiagnosticsResponse,
     evaluate_relief,
     evaluate_action,
     evaluate_nut_slots,
+    evaluate_combined_setup,
     DEFAULT_RELIEF_TARGET_MIN_MM,
     DEFAULT_RELIEF_TARGET_MAX_MM,
     DEFAULT_TREBLE_ACTION_TARGET_MIN_MM,
@@ -145,6 +149,25 @@ class NutWorkflowRequest(BaseModel):
             if c < 0:
                 raise ValueError(f"Clearance for string {i + 1} must be >= 0, got {c}")
         return v
+
+
+class CombinedWorkflowRequest(BaseModel):
+    """Request body for NECK-A combined cross-step diagnostics (Phase 6)."""
+    relief_gate: DiagnosticGate = Field(description="Overall gate from relief workflow")
+    relief_diagnostic_ids: List[str] = Field(
+        default_factory=list,
+        description="Diagnostic IDs from relief workflow (e.g., relief_too_low)"
+    )
+    action_gate: DiagnosticGate = Field(description="Overall gate from action workflow")
+    action_diagnostic_ids: List[str] = Field(
+        default_factory=list,
+        description="Diagnostic IDs from action workflow"
+    )
+    nut_gate: DiagnosticGate = Field(description="Overall gate from nut workflow")
+    nut_diagnostic_ids: List[str] = Field(
+        default_factory=list,
+        description="Diagnostic IDs from nut workflow"
+    )
 
 
 # ─── Endpoints ─────────────────────────────────────────────────────────────────
@@ -287,6 +310,37 @@ def evaluate_setup_workflow_nut(req: NutWorkflowRequest) -> NutWorkflowResponse:
         treble_target_max_mm=req.treble_target_max_mm,
         bass_target_min_mm=req.bass_target_min_mm,
         bass_target_max_mm=req.bass_target_max_mm,
+    )
+
+
+@router.post(
+    "/setup/workflow/combined/evaluate",
+    response_model=CombinedDiagnosticsResponse,
+    summary="Evaluate combined setup diagnostics (NECK-A Phase 6)",
+    description="""
+    NECK-A Phase 6: Cross-step diagnostic evaluation.
+    Interprets interactions between Relief, Action, and Nut workflows.
+
+    Input: Gate and diagnostic IDs from each workflow step.
+    Output: Combined insights with contributing factors and recommendations.
+
+    V1 Rules:
+    - Fret buzz likely (relief RED low + action RED/YELLOW low)
+    - High action compound (action RED high + nut RED high)
+    - Nut dominant issue (nut RED + relief GREEN + action GREEN/YELLOW)
+    - Balanced setup (all GREEN)
+    - Mixed moderate (2+ YELLOW, no RED)
+    """,
+)
+def evaluate_setup_workflow_combined(req: CombinedWorkflowRequest) -> CombinedDiagnosticsResponse:
+    """Evaluate combined setup diagnostics and return cross-step insights."""
+    return evaluate_combined_setup(
+        relief_gate=req.relief_gate,
+        relief_diagnostic_ids=req.relief_diagnostic_ids,
+        action_gate=req.action_gate,
+        action_diagnostic_ids=req.action_diagnostic_ids,
+        nut_gate=req.nut_gate,
+        nut_diagnostic_ids=req.nut_diagnostic_ids,
     )
 
 

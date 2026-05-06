@@ -1,0 +1,211 @@
+/**
+ * SetupWorkflowCombinedPanel CSS Module
+ * NECK-A Phase 6: Combined cross-step diagnostics panel styles
+ */
+
+.panelTitle {
+  margin: 0 0 12px 0;
+  font-size: 15px;
+  font-weight: 600;
+  color: #fff;
+  border-bottom: 1px solid #333;
+  padding-bottom: 8px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.badge {
+  font-size: 10px;
+  font-weight: 500;
+  padding: 2px 6px;
+  border-radius: 3px;
+  background: #1e3a5f;
+  color: #60a5fa;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.badgeExpert {
+  background: #3f1e5f;
+  color: #c084fc;
+}
+
+.prerequisiteNotice {
+  padding: 12px;
+  background: #1a1a1a;
+  border-radius: 4px;
+  border-left: 3px solid #666;
+  margin-bottom: 12px;
+}
+
+.prerequisiteText {
+  font-size: 12px;
+  color: #888;
+  margin: 0;
+}
+
+.prerequisiteList {
+  margin: 8px 0 0 0;
+  padding-left: 20px;
+  font-size: 11px;
+}
+
+.prerequisiteList li {
+  color: #666;
+  margin-bottom: 2px;
+}
+
+.prerequisiteList li.completed {
+  color: #10b981;
+}
+
+.prerequisiteList li.pending {
+  color: #f59e0b;
+}
+
+.results {
+  margin-top: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.gateHeader {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.gateBadge {
+  padding: 6px 14px;
+  border-radius: 4px;
+  font-weight: 600;
+  font-size: 13px;
+}
+
+.gateGreen {
+  background: #065f46;
+  color: #6ee7b7;
+}
+
+.gateYellow {
+  background: #78350f;
+  color: #fcd34d;
+}
+
+.gateRed {
+  background: #7f1d1d;
+  color: #fca5a5;
+}
+
+.summary {
+  font-size: 13px;
+  color: #ccc;
+}
+
+.diagnosticsList {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.diagnosticCard {
+  padding: 14px;
+  background: #1a1a1a;
+  border-radius: 4px;
+  border-left: 4px solid #333;
+}
+
+.diagnosticCard.gateGreen {
+  border-left-color: #10b981;
+}
+
+.diagnosticCard.gateYellow {
+  border-left-color: #f59e0b;
+}
+
+.diagnosticCard.gateRed {
+  border-left-color: #ef4444;
+}
+
+.diagHeader {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.diagBadge {
+  padding: 3px 10px;
+  border-radius: 3px;
+  font-weight: 600;
+  font-size: 11px;
+}
+
+.diagId {
+  font-size: 11px;
+  color: #666;
+  font-family: monospace;
+}
+
+.diagMessage {
+  font-size: 13px;
+  color: #fff;
+  margin-bottom: 10px;
+  line-height: 1.4;
+}
+
+.factorsSection {
+  margin-bottom: 10px;
+}
+
+.factorsLabel {
+  font-size: 10px;
+  font-weight: 500;
+  color: #888;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 4px;
+}
+
+.factorsList {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.factorTag {
+  font-size: 11px;
+  padding: 2px 8px;
+  background: #2a2a2a;
+  border-radius: 3px;
+  color: #aaa;
+}
+
+.recommendationSection {
+  padding-top: 10px;
+  border-top: 1px dashed #333;
+}
+
+.recommendationLabel {
+  font-size: 10px;
+  font-weight: 500;
+  color: #888;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 4px;
+}
+
+.recommendationText {
+  font-size: 12px;
+  color: #0ea5e9;
+  line-height: 1.4;
+}
+
+.emptyState {
+  padding: 20px;
+  text-align: center;
+  color: #666;
+  font-size: 12px;
+}

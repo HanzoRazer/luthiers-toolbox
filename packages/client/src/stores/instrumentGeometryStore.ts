@@ -187,6 +187,20 @@ export interface NutWorkflowRequest {
   bass_target_max_mm?: number;
 }
 
+// --- NECK-A Combined Diagnostics Types (Phase 6) ---
+export interface CombinedDiagnostic {
+  id: string;
+  gate: DiagnosticGate;
+  message: string;
+  contributing_factors: string[];
+  recommendation: string;
+}
+
+export interface CombinedDiagnosticsResponse {
+  overall_gate: DiagnosticGate;
+  diagnostics: CombinedDiagnostic[];
+}
+
 export interface FretboardSpec {
   scale_length_mm: number;
   num_frets: number;
@@ -402,6 +416,11 @@ export const useInstrumentGeometryStore = defineStore(
     const nutTrebleTargetMax = ref<number>(0.30);
     const nutBassTargetMin = ref<number>(0.25);
     const nutBassTargetMax = ref<number>(0.40);
+
+    // NECK-A Phase 6: Combined Diagnostics State
+    const combinedDiagnosticsResult = ref<CombinedDiagnosticsResponse | null>(null);
+    const combinedDiagnosticsLoading = ref(false);
+    const combinedDiagnosticsError = ref<string | null>(null);
 
     // ===== Computed =====
 
@@ -991,6 +1010,73 @@ export const useInstrumentGeometryStore = defineStore(
       }
     }
 
+    // =========================================================================
+    // NECK-A Phase 6: Combined Diagnostics Actions
+    // =========================================================================
+
+    /**
+     * Check if all three workflow results exist for combined evaluation
+     */
+    function canEvaluateCombined(): boolean {
+      return (
+        reliefWorkflowResult.value !== null &&
+        actionWorkflowResult.value !== null &&
+        nutWorkflowResult.value !== null
+      );
+    }
+
+    /**
+     * Evaluate combined setup diagnostics via NECK-A workflow endpoint
+     */
+    async function evaluateCombinedSetup() {
+      if (!canEvaluateCombined()) {
+        combinedDiagnosticsError.value = "Evaluate Relief, Action, and Nut first.";
+        return;
+      }
+
+      combinedDiagnosticsLoading.value = true;
+      combinedDiagnosticsError.value = null;
+
+      try {
+        // Extract gates and diagnostic IDs from existing results
+        const reliefGate = reliefWorkflowResult.value!.gate;
+        const reliefDiagnosticIds = [reliefWorkflowResult.value!.id];
+
+        const actionGate = actionWorkflowResult.value!.overall_gate;
+        const actionDiagnosticIds = actionWorkflowResult.value!.diagnostics.map((d) => d.id);
+
+        const nutGate = nutWorkflowResult.value!.overall_gate;
+        const nutDiagnosticIds = nutWorkflowResult.value!.diagnostics.map((d) => d.id);
+
+        const response = await api("/api/instrument/setup/workflow/combined/evaluate", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            relief_gate: reliefGate,
+            relief_diagnostic_ids: reliefDiagnosticIds,
+            action_gate: actionGate,
+            action_diagnostic_ids: actionDiagnosticIds,
+            nut_gate: nutGate,
+            nut_diagnostic_ids: nutDiagnosticIds,
+          }),
+        });
+
+        if (!response.ok) {
+          const errorData = await response.json().catch(() => ({}));
+          throw new Error(errorData.detail || `HTTP ${response.status}`);
+        }
+
+        combinedDiagnosticsResult.value = await response.json();
+        console.log("✓ Combined setup evaluated:", combinedDiagnosticsResult.value?.overall_gate);
+      } catch (err: any) {
+        console.error("Combined evaluation failed:", err);
+        combinedDiagnosticsError.value = err.message || "Unknown error";
+        combinedDiagnosticsResult.value = null;
+      } finally {
+        combinedDiagnosticsLoading.value = false;
+      }
+    }
+
     /**
      * Load instrument models from API (Wave 20 migration).
      * Falls back to static INSTRUMENT_MODELS on error.
@@ -1107,6 +1193,12 @@ export const useInstrumentGeometryStore = defineStore(
       nutBassTargetMin,
       nutBassTargetMax,
 
+      // NECK-A Phase 6: Combined Diagnostics State
+      combinedDiagnosticsResult,
+      combinedDiagnosticsLoading,
+      combinedDiagnosticsError,
+      canEvaluateCombined,
+
       // Computed
       selectedModel,
       availableModels,
@@ -1141,6 +1233,9 @@ export const useInstrumentGeometryStore = defineStore(
 
       // NECK-A Phase 5 Actions
       evaluateNutWorkflow,
+
+      // NECK-A Phase 6 Actions
+      evaluateCombinedSetup,
     };
   }
 );

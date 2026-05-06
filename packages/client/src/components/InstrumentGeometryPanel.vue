@@ -221,6 +221,9 @@
 
         <!-- ===== NECK-A Phase 5: Nut Slot Workflow ===== -->
         <SetupWorkflowNutPanel />
+
+        <!-- ===== NECK-A Phase 6: Combined Diagnostics ===== -->
+        <SetupWorkflowCombinedPanel />
       </div>
 
       <!-- ===== RIGHT PANEL: Preview & Results ===== -->
@@ -469,6 +472,7 @@ import SaddleCompensationPanel from "@/components/SaddleCompensationPanel.vue";
 import SetupWorkflowReliefPanel from "@/components/SetupWorkflowReliefPanel.vue";
 import SetupWorkflowActionPanel from "@/components/SetupWorkflowActionPanel.vue";
 import SetupWorkflowNutPanel from "@/components/SetupWorkflowNutPanel.vue";
+import SetupWorkflowCombinedPanel from "@/components/SetupWorkflowCombinedPanel.vue";
 import styles from "./InstrumentGeometryPanel.module.css";
 import shared from "@/styles/dark-theme-shared.module.css";
 
