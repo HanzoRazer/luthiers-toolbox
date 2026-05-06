@@ -5,16 +5,17 @@ Endpoints:
 - POST /setup/evaluate — Evaluate instrument setup (Phase 0)
 - POST /setup/workflow/evaluate — Evaluate relief (NECK-A Phase 3)
 - POST /setup/workflow/action/evaluate — Evaluate action (NECK-A Phase 4)
+- POST /setup/workflow/nut/evaluate — Evaluate nut slots (NECK-A Phase 5)
 
-Total: 3 endpoints
+Total: 4 endpoints
 """
 
 from __future__ import annotations
 
 from typing import Any, Dict, List, Optional
 
-from fastapi import APIRouter
-from pydantic import BaseModel, Field
+from fastapi import APIRouter, HTTPException
+from pydantic import BaseModel, Field, field_validator
 
 from app.calculators.setup_cascade import (
     SetupState,
@@ -24,14 +25,20 @@ from app.calculators.setup_cascade import (
 from app.instrument_geometry.neck.setup_workflow import (
     DiagnosticResult,
     ActionWorkflowResponse,
+    NutWorkflowResponse,
     evaluate_relief,
     evaluate_action,
+    evaluate_nut_slots,
     DEFAULT_RELIEF_TARGET_MIN_MM,
     DEFAULT_RELIEF_TARGET_MAX_MM,
     DEFAULT_TREBLE_ACTION_TARGET_MIN_MM,
     DEFAULT_TREBLE_ACTION_TARGET_MAX_MM,
     DEFAULT_BASS_ACTION_TARGET_MIN_MM,
     DEFAULT_BASS_ACTION_TARGET_MAX_MM,
+    DEFAULT_NUT_TREBLE_TARGET_MIN_MM,
+    DEFAULT_NUT_TREBLE_TARGET_MAX_MM,
+    DEFAULT_NUT_BASS_TARGET_MIN_MM,
+    DEFAULT_NUT_BASS_TARGET_MAX_MM,
 )
 
 router = APIRouter(tags=["instrument-geometry", "setup"])
@@ -105,6 +112,39 @@ class ActionWorkflowRequest(BaseModel):
         default=DEFAULT_BASS_ACTION_TARGET_MAX_MM,
         description="Maximum acceptable bass action (default 2.25mm)"
     )
+
+
+class NutWorkflowRequest(BaseModel):
+    """Request body for NECK-A nut slot workflow evaluation (Phase 5)."""
+    clearances_mm: List[float] = Field(
+        description="First-fret clearance per string, 6 values [high E, B, G, D, A, low E]",
+        min_length=6,
+        max_length=6,
+    )
+    treble_target_min_mm: float = Field(
+        default=DEFAULT_NUT_TREBLE_TARGET_MIN_MM,
+        description="Minimum acceptable treble clearance (default 0.20mm)"
+    )
+    treble_target_max_mm: float = Field(
+        default=DEFAULT_NUT_TREBLE_TARGET_MAX_MM,
+        description="Maximum acceptable treble clearance (default 0.30mm)"
+    )
+    bass_target_min_mm: float = Field(
+        default=DEFAULT_NUT_BASS_TARGET_MIN_MM,
+        description="Minimum acceptable bass clearance (default 0.25mm)"
+    )
+    bass_target_max_mm: float = Field(
+        default=DEFAULT_NUT_BASS_TARGET_MAX_MM,
+        description="Maximum acceptable bass clearance (default 0.40mm)"
+    )
+
+    @field_validator("clearances_mm")
+    @classmethod
+    def validate_clearances_non_negative(cls, v: List[float]) -> List[float]:
+        for i, c in enumerate(v):
+            if c < 0:
+                raise ValueError(f"Clearance for string {i + 1} must be >= 0, got {c}")
+        return v
 
 
 # ─── Endpoints ─────────────────────────────────────────────────────────────────
@@ -212,6 +252,37 @@ def evaluate_setup_workflow_action(req: ActionWorkflowRequest) -> ActionWorkflow
     return evaluate_action(
         treble_action_mm=req.treble_action_mm,
         bass_action_mm=req.bass_action_mm,
+        treble_target_min_mm=req.treble_target_min_mm,
+        treble_target_max_mm=req.treble_target_max_mm,
+        bass_target_min_mm=req.bass_target_min_mm,
+        bass_target_max_mm=req.bass_target_max_mm,
+    )
+
+
+@router.post(
+    "/setup/workflow/nut/evaluate",
+    response_model=NutWorkflowResponse,
+    summary="Evaluate nut slot clearance (NECK-A Phase 5)",
+    description="""
+    NECK-A Phase 5: Evaluate nut slot clearance (first-fret height) per string.
+    Returns overall gate (worst-case) and individual diagnostics for each string.
+
+    V1: Fixed 6-string support. Strings 1-3 use treble targets, strings 4-6 use bass targets.
+
+    Gate logic per string:
+    - GREEN: clearance within target range
+    - YELLOW: within 0.05mm tolerance outside range
+    - RED: beyond 0.05mm tolerance outside range
+
+    Default targets:
+    - Treble (strings 1-3): 0.20–0.30mm
+    - Bass (strings 4-6): 0.25–0.40mm
+    """,
+)
+def evaluate_setup_workflow_nut(req: NutWorkflowRequest) -> NutWorkflowResponse:
+    """Evaluate nut slot clearance and return workflow response with per-string diagnostics."""
+    return evaluate_nut_slots(
+        clearances_mm=req.clearances_mm,
         treble_target_min_mm=req.treble_target_min_mm,
         treble_target_max_mm=req.treble_target_max_mm,
         bass_target_min_mm=req.bass_target_min_mm,

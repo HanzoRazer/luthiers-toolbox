@@ -1,0 +1,265 @@
+/**
+ * SetupWorkflowNutPanel CSS Module
+ * NECK-A Phase 5: Nut slot workflow panel styles
+ */
+
+.panelTitle {
+  margin: 0 0 12px 0;
+  font-size: 15px;
+  font-weight: 600;
+  color: #fff;
+  border-bottom: 1px solid #333;
+  padding-bottom: 8px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.badge {
+  font-size: 10px;
+  font-weight: 500;
+  padding: 2px 6px;
+  border-radius: 3px;
+  background: #1e3a5f;
+  color: #60a5fa;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.formGrid {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  margin-bottom: 12px;
+}
+
+.stringGrid {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 8px;
+}
+
+.stringInput {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+.stringLabel {
+  font-size: 10px;
+  font-weight: 500;
+  color: #888;
+  text-transform: uppercase;
+}
+
+.clearanceInput {
+  width: 50px;
+  padding: 6px 4px;
+  background: #1a1a1a;
+  border: 1px solid #333;
+  border-radius: 3px;
+  color: #fff;
+  font-size: 12px;
+  text-align: center;
+}
+
+.clearanceInput:focus {
+  border-color: #60a5fa;
+  outline: none;
+}
+
+.targetSection {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.sectionLabel {
+  margin: 0;
+  font-size: 12px;
+  font-weight: 500;
+  color: #888;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.targetRow {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12px;
+}
+
+.targetRow label {
+  min-width: 90px;
+  color: #888;
+}
+
+.targetInput {
+  width: 60px;
+  padding: 4px 6px;
+  background: #1a1a1a;
+  border: 1px solid #333;
+  border-radius: 3px;
+  color: #ccc;
+  font-size: 12px;
+  text-align: center;
+}
+
+.targetSeparator {
+  color: #666;
+}
+
+.helpText {
+  font-size: 11px;
+  color: #888;
+  margin-bottom: 12px;
+  font-style: italic;
+}
+
+.results {
+  margin-top: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.gateHeader {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.gateBadge {
+  padding: 6px 14px;
+  border-radius: 4px;
+  font-weight: 600;
+  font-size: 13px;
+}
+
+.gateGreen {
+  background: #065f46;
+  color: #6ee7b7;
+}
+
+.gateYellow {
+  background: #78350f;
+  color: #fcd34d;
+}
+
+.gateRed {
+  background: #7f1d1d;
+  color: #fca5a5;
+}
+
+.summary {
+  font-size: 13px;
+  color: #ccc;
+}
+
+.diagnosticsList {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+}
+
+.diagnosticCard {
+  padding: 10px;
+  background: #1a1a1a;
+  border-radius: 4px;
+  border-left: 3px solid #333;
+}
+
+.diagnosticCard.gateGreen {
+  border-left-color: #10b981;
+}
+
+.diagnosticCard.gateYellow {
+  border-left-color: #f59e0b;
+}
+
+.diagnosticCard.gateRed {
+  border-left-color: #ef4444;
+}
+
+.diagHeader {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 6px;
+}
+
+.diagBadge {
+  padding: 2px 6px;
+  border-radius: 3px;
+  font-weight: 600;
+  font-size: 9px;
+}
+
+.diagPosition {
+  font-size: 12px;
+  font-weight: 500;
+  color: #fff;
+}
+
+.diagMessage {
+  font-size: 11px;
+  color: #ccc;
+  margin-bottom: 6px;
+}
+
+.diagMeasurement {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin-bottom: 6px;
+}
+
+.measurementValue {
+  font-size: 13px;
+  font-weight: 600;
+  color: #0ea5e9;
+  font-family: monospace;
+}
+
+.measurementRange {
+  font-size: 10px;
+  color: #666;
+}
+
+.causesSection,
+.actionsSection {
+  margin-top: 6px;
+  font-size: 10px;
+}
+
+.causesSection {
+  border-top: 1px dashed #333;
+  padding-top: 6px;
+}
+
+.actionsSection {
+  border-top: 1px dashed #333;
+  padding-top: 6px;
+}
+
+.causesSection strong,
+.actionsSection strong {
+  color: #999;
+  font-size: 9px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.causesSection ul,
+.actionsSection ul {
+  margin: 2px 0 0 0;
+  padding-left: 14px;
+}
+
+.causesSection li,
+.actionsSection li {
+  color: #aaa;
+  margin-bottom: 1px;
+}

@@ -218,6 +218,9 @@
 
         <!-- ===== NECK-A Phase 4: Action Workflow ===== -->
         <SetupWorkflowActionPanel />
+
+        <!-- ===== NECK-A Phase 5: Nut Slot Workflow ===== -->
+        <SetupWorkflowNutPanel />
       </div>
 
       <!-- ===== RIGHT PANEL: Preview & Results ===== -->
@@ -465,6 +468,7 @@ import BridgePresetSelector from "@/components/BridgePresetSelector.vue";
 import SaddleCompensationPanel from "@/components/SaddleCompensationPanel.vue";
 import SetupWorkflowReliefPanel from "@/components/SetupWorkflowReliefPanel.vue";
 import SetupWorkflowActionPanel from "@/components/SetupWorkflowActionPanel.vue";
+import SetupWorkflowNutPanel from "@/components/SetupWorkflowNutPanel.vue";
 import styles from "./InstrumentGeometryPanel.module.css";
 import shared from "@/styles/dark-theme-shared.module.css";
 

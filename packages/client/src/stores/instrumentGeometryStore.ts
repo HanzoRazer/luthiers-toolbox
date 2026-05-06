@@ -172,6 +172,21 @@ export interface ActionWorkflowRequest {
   bass_target_max_mm?: number;
 }
 
+// --- NECK-A Nut Slot Workflow Types (Phase 5) ---
+export interface NutWorkflowResponse {
+  current_step: string;
+  overall_gate: DiagnosticGate;
+  diagnostics: ReliefDiagnosticResult[];
+}
+
+export interface NutWorkflowRequest {
+  clearances_mm: number[];
+  treble_target_min_mm?: number;
+  treble_target_max_mm?: number;
+  bass_target_min_mm?: number;
+  bass_target_max_mm?: number;
+}
+
 export interface FretboardSpec {
   scale_length_mm: number;
   num_frets: number;
@@ -376,6 +391,17 @@ export const useInstrumentGeometryStore = defineStore(
     const trebleActionTargetMax = ref<number>(1.75);
     const bassActionTargetMin = ref<number>(1.75);
     const bassActionTargetMax = ref<number>(2.25);
+
+    // ===== NECK-A Phase 5: Nut Slot Workflow State =====
+    const nutWorkflowResult = ref<NutWorkflowResponse | null>(null);
+    const nutWorkflowLoading = ref(false);
+    const nutWorkflowError = ref<string | null>(null);
+    // Default clearances: [high E, B, G, D, A, low E]
+    const nutClearancesMm = ref<number[]>([0.25, 0.25, 0.25, 0.30, 0.30, 0.30]);
+    const nutTrebleTargetMin = ref<number>(0.20);
+    const nutTrebleTargetMax = ref<number>(0.30);
+    const nutBassTargetMin = ref<number>(0.25);
+    const nutBassTargetMax = ref<number>(0.40);
 
     // ===== Computed =====
 
@@ -925,6 +951,46 @@ export const useInstrumentGeometryStore = defineStore(
       }
     }
 
+    // =========================================================================
+    // NECK-A Phase 5: Nut Slot Workflow Actions
+    // =========================================================================
+
+    /**
+     * Evaluate nut slot clearance via NECK-A workflow endpoint
+     */
+    async function evaluateNutWorkflow() {
+      nutWorkflowLoading.value = true;
+      nutWorkflowError.value = null;
+
+      try {
+        const response = await api("/api/instrument/setup/workflow/nut/evaluate", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            clearances_mm: nutClearancesMm.value,
+            treble_target_min_mm: nutTrebleTargetMin.value,
+            treble_target_max_mm: nutTrebleTargetMax.value,
+            bass_target_min_mm: nutBassTargetMin.value,
+            bass_target_max_mm: nutBassTargetMax.value,
+          }),
+        });
+
+        if (!response.ok) {
+          const errorData = await response.json().catch(() => ({}));
+          throw new Error(errorData.detail || `HTTP ${response.status}`);
+        }
+
+        nutWorkflowResult.value = await response.json();
+        console.log("✓ Nut slots evaluated:", nutWorkflowResult.value?.overall_gate);
+      } catch (err: any) {
+        console.error("Nut slot evaluation failed:", err);
+        nutWorkflowError.value = err.message || "Unknown error";
+        nutWorkflowResult.value = null;
+      } finally {
+        nutWorkflowLoading.value = false;
+      }
+    }
+
     /**
      * Load instrument models from API (Wave 20 migration).
      * Falls back to static INSTRUMENT_MODELS on error.
@@ -1031,6 +1097,16 @@ export const useInstrumentGeometryStore = defineStore(
       bassActionTargetMin,
       bassActionTargetMax,
 
+      // NECK-A Phase 5: Nut Slot Workflow State
+      nutWorkflowResult,
+      nutWorkflowLoading,
+      nutWorkflowError,
+      nutClearancesMm,
+      nutTrebleTargetMin,
+      nutTrebleTargetMax,
+      nutBassTargetMin,
+      nutBassTargetMax,
+
       // Computed
       selectedModel,
       availableModels,
@@ -1062,6 +1138,9 @@ export const useInstrumentGeometryStore = defineStore(
 
       // NECK-A Phase 4 Actions
       evaluateActionWorkflow,
+
+      // NECK-A Phase 5 Actions
+      evaluateNutWorkflow,
     };
   }
 );
