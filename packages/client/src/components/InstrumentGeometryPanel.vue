@@ -224,6 +224,9 @@
 
         <!-- ===== NECK-A Phase 6: Combined Diagnostics ===== -->
         <SetupWorkflowCombinedPanel />
+
+        <!-- ===== NECK-A Phase 7: Expert Diagnostics ===== -->
+        <SetupWorkflowExpertPanel />
       </div>
 
       <!-- ===== RIGHT PANEL: Preview & Results ===== -->
@@ -473,6 +476,7 @@ import SetupWorkflowReliefPanel from "@/components/SetupWorkflowReliefPanel.vue"
 import SetupWorkflowActionPanel from "@/components/SetupWorkflowActionPanel.vue";
 import SetupWorkflowNutPanel from "@/components/SetupWorkflowNutPanel.vue";
 import SetupWorkflowCombinedPanel from "@/components/SetupWorkflowCombinedPanel.vue";
+import SetupWorkflowExpertPanel from "@/components/SetupWorkflowExpertPanel.vue";
 import styles from "./InstrumentGeometryPanel.module.css";
 import shared from "@/styles/dark-theme-shared.module.css";
 

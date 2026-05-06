@@ -201,6 +201,34 @@ export interface CombinedDiagnosticsResponse {
   diagnostics: CombinedDiagnostic[];
 }
 
+// --- NECK-A Expert Diagnostics Types (Phase 7) ---
+export type PlayerSymptom =
+  | "buzz_open_strings"
+  | "buzz_low_frets"
+  | "buzz_middle_frets"
+  | "buzz_upper_frets"
+  | "fretted_notes_buzz"
+  | "first_position_hard"
+  | "feels_stiff"
+  | "feels_slinky"
+  | "first_position_sharp";
+
+export interface ExpertDiagnostic {
+  id: string;
+  gate: DiagnosticGate;
+  symptom: PlayerSymptom;
+  message: string;
+  probable_causes: string[];
+  recommended_checks: string[];
+  recommended_actions: string[];
+  confidence: number;
+}
+
+export interface ExpertDiagnosticsResponse {
+  overall_gate: DiagnosticGate;
+  diagnostics: ExpertDiagnostic[];
+}
+
 export interface FretboardSpec {
   scale_length_mm: number;
   num_frets: number;
@@ -421,6 +449,12 @@ export const useInstrumentGeometryStore = defineStore(
     const combinedDiagnosticsResult = ref<CombinedDiagnosticsResponse | null>(null);
     const combinedDiagnosticsLoading = ref(false);
     const combinedDiagnosticsError = ref<string | null>(null);
+
+    // NECK-A Phase 7: Expert Diagnostics State
+    const expertSymptoms = ref<PlayerSymptom[]>([]);
+    const expertDiagnosticsResult = ref<ExpertDiagnosticsResponse | null>(null);
+    const expertDiagnosticsLoading = ref(false);
+    const expertDiagnosticsError = ref<string | null>(null);
 
     // ===== Computed =====
 
@@ -1077,6 +1111,80 @@ export const useInstrumentGeometryStore = defineStore(
       }
     }
 
+    // =========================================================================
+    // NECK-A Phase 7: Expert Diagnostics Actions
+    // =========================================================================
+
+    /**
+     * Toggle a symptom in the expert symptoms list
+     */
+    function toggleExpertSymptom(symptom: PlayerSymptom) {
+      const idx = expertSymptoms.value.indexOf(symptom);
+      if (idx >= 0) {
+        expertSymptoms.value.splice(idx, 1);
+      } else {
+        expertSymptoms.value.push(symptom);
+      }
+    }
+
+    /**
+     * Evaluate expert diagnostics based on symptoms and workflow results
+     */
+    async function evaluateExpertDiagnostics() {
+      if (!canEvaluateCombined()) {
+        expertDiagnosticsError.value = "Evaluate Relief, Action, and Nut first.";
+        return;
+      }
+
+      if (expertSymptoms.value.length === 0) {
+        expertDiagnosticsError.value = "Select at least one symptom.";
+        return;
+      }
+
+      expertDiagnosticsLoading.value = true;
+      expertDiagnosticsError.value = null;
+
+      try {
+        // Extract gates and diagnostic IDs from existing results
+        const reliefGate = reliefWorkflowResult.value!.gate;
+        const reliefDiagnosticIds = [reliefWorkflowResult.value!.id];
+
+        const actionGate = actionWorkflowResult.value!.overall_gate;
+        const actionDiagnosticIds = actionWorkflowResult.value!.diagnostics.map((d) => d.id);
+
+        const nutGate = nutWorkflowResult.value!.overall_gate;
+        const nutDiagnosticIds = nutWorkflowResult.value!.diagnostics.map((d) => d.id);
+
+        const response = await api("/api/instrument/setup/workflow/expert/evaluate", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            symptoms: expertSymptoms.value,
+            relief_gate: reliefGate,
+            relief_diagnostic_ids: reliefDiagnosticIds,
+            action_gate: actionGate,
+            action_diagnostic_ids: actionDiagnosticIds,
+            nut_gate: nutGate,
+            nut_diagnostic_ids: nutDiagnosticIds,
+          }),
+        });
+
+        if (!response.ok) {
+          const errorData = await response.json().catch(() => ({}));
+          throw new Error(errorData.detail || `HTTP ${response.status}`);
+        }
+
+        expertDiagnosticsResult.value = await response.json();
+        console.log("✓ Expert diagnostics evaluated:", expertDiagnosticsResult.value?.overall_gate);
+      } catch (err: any) {
+        console.error("Expert evaluation failed:", err);
+        expertDiagnosticsError.value = err.message || "Unknown error";
+        expertDiagnosticsResult.value = null;
+      } finally {
+        expertDiagnosticsLoading.value = false;
+      }
+    }
+
     /**
      * Load instrument models from API (Wave 20 migration).
      * Falls back to static INSTRUMENT_MODELS on error.
@@ -1199,6 +1307,12 @@ export const useInstrumentGeometryStore = defineStore(
       combinedDiagnosticsError,
       canEvaluateCombined,
 
+      // NECK-A Phase 7: Expert Diagnostics State
+      expertSymptoms,
+      expertDiagnosticsResult,
+      expertDiagnosticsLoading,
+      expertDiagnosticsError,
+
       // Computed
       selectedModel,
       availableModels,
@@ -1236,6 +1350,10 @@ export const useInstrumentGeometryStore = defineStore(
 
       // NECK-A Phase 6 Actions
       evaluateCombinedSetup,
+
+      // NECK-A Phase 7 Actions
+      toggleExpertSymptom,
+      evaluateExpertDiagnostics,
     };
   }
 );

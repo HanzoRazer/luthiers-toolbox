@@ -7,8 +7,9 @@ Endpoints:
 - POST /setup/workflow/action/evaluate — Evaluate action (NECK-A Phase 4)
 - POST /setup/workflow/nut/evaluate — Evaluate nut slots (NECK-A Phase 5)
 - POST /setup/workflow/combined/evaluate — Combined cross-step diagnostics (NECK-A Phase 6)
+- POST /setup/workflow/expert/evaluate — Expert symptom-based diagnostics (NECK-A Phase 7)
 
-Total: 5 endpoints
+Total: 6 endpoints
 """
 
 from __future__ import annotations
@@ -29,10 +30,13 @@ from app.instrument_geometry.neck.setup_workflow import (
     ActionWorkflowResponse,
     NutWorkflowResponse,
     CombinedDiagnosticsResponse,
+    PlayerSymptom,
+    ExpertDiagnosticsResponse,
     evaluate_relief,
     evaluate_action,
     evaluate_nut_slots,
     evaluate_combined_setup,
+    evaluate_expert_symptoms,
     DEFAULT_RELIEF_TARGET_MIN_MM,
     DEFAULT_RELIEF_TARGET_MAX_MM,
     DEFAULT_TREBLE_ACTION_TARGET_MIN_MM,
@@ -157,6 +161,29 @@ class CombinedWorkflowRequest(BaseModel):
     relief_diagnostic_ids: List[str] = Field(
         default_factory=list,
         description="Diagnostic IDs from relief workflow (e.g., relief_too_low)"
+    )
+    action_gate: DiagnosticGate = Field(description="Overall gate from action workflow")
+    action_diagnostic_ids: List[str] = Field(
+        default_factory=list,
+        description="Diagnostic IDs from action workflow"
+    )
+    nut_gate: DiagnosticGate = Field(description="Overall gate from nut workflow")
+    nut_diagnostic_ids: List[str] = Field(
+        default_factory=list,
+        description="Diagnostic IDs from nut workflow"
+    )
+
+
+class ExpertWorkflowRequest(BaseModel):
+    """Request body for NECK-A expert symptom-based diagnostics (Phase 7)."""
+    symptoms: List[PlayerSymptom] = Field(
+        description="Player-reported symptoms",
+        min_length=1,
+    )
+    relief_gate: DiagnosticGate = Field(description="Overall gate from relief workflow")
+    relief_diagnostic_ids: List[str] = Field(
+        default_factory=list,
+        description="Diagnostic IDs from relief workflow"
     )
     action_gate: DiagnosticGate = Field(description="Overall gate from action workflow")
     action_diagnostic_ids: List[str] = Field(
@@ -335,6 +362,42 @@ def evaluate_setup_workflow_nut(req: NutWorkflowRequest) -> NutWorkflowResponse:
 def evaluate_setup_workflow_combined(req: CombinedWorkflowRequest) -> CombinedDiagnosticsResponse:
     """Evaluate combined setup diagnostics and return cross-step insights."""
     return evaluate_combined_setup(
+        relief_gate=req.relief_gate,
+        relief_diagnostic_ids=req.relief_diagnostic_ids,
+        action_gate=req.action_gate,
+        action_diagnostic_ids=req.action_diagnostic_ids,
+        nut_gate=req.nut_gate,
+        nut_diagnostic_ids=req.nut_diagnostic_ids,
+    )
+
+
+@router.post(
+    "/setup/workflow/expert/evaluate",
+    response_model=ExpertDiagnosticsResponse,
+    summary="Evaluate expert symptom-based diagnostics (NECK-A Phase 7)",
+    description="""
+    NECK-A Phase 7: Expert symptom-based diagnostic evaluation.
+    Combines player-reported symptoms with setup measurements to identify probable causes.
+
+    Input: List of symptoms + gate and diagnostic IDs from each workflow step.
+    Output: Per-symptom diagnostics with probable causes, recommended checks, actions, and confidence.
+
+    V1 Rules:
+    - Open string buzz + nut too low → nut slot issue
+    - Low fret buzz + relief too low → insufficient relief
+    - Middle fret buzz + relief/action low → interaction issue
+    - Upper fret buzz + action too low → saddle/fret issue
+    - First position hard + nut too high → high nut slots
+    - First position sharp + nut too high → string stretch from high nut
+    - Feels stiff + action/nut high → excessive action/nut height
+    - Feels slinky + action low → low action
+    - Fallback for unmatched symptoms
+    """,
+)
+def evaluate_setup_workflow_expert(req: ExpertWorkflowRequest) -> ExpertDiagnosticsResponse:
+    """Evaluate expert diagnostics based on symptoms and return probable causes."""
+    return evaluate_expert_symptoms(
+        symptoms=req.symptoms,
         relief_gate=req.relief_gate,
         relief_diagnostic_ids=req.relief_diagnostic_ids,
         action_gate=req.action_gate,

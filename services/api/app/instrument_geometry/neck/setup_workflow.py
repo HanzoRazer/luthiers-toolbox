@@ -5,6 +5,7 @@ V1 Vertical Slice: Relief measurement workflow.
 V2 Expansion: Action measurement workflow (Phase 4).
 V3 Expansion: Nut slot measurement workflow (Phase 5).
 V4 Expansion: Combined diagnostics (Phase 6).
+V5 Expansion: Expert symptom-based diagnostics (Phase 7).
 Path to expansion: intonation (not yet implemented).
 """
 
@@ -79,6 +80,37 @@ class CombinedDiagnosticsResponse(BaseModel):
     """Response from combined setup diagnostics evaluation (Phase 6)."""
     overall_gate: DiagnosticGate = Field(description="Worst-case gate across all combined diagnostics")
     diagnostics: List[CombinedDiagnostic] = Field(description="Cross-step diagnostic insights")
+
+
+class PlayerSymptom(str, Enum):
+    """Player-reported symptoms for expert diagnosis (Phase 7)."""
+    BUZZ_OPEN_STRINGS = "buzz_open_strings"
+    BUZZ_LOW_FRETS = "buzz_low_frets"
+    BUZZ_MIDDLE_FRETS = "buzz_middle_frets"
+    BUZZ_UPPER_FRETS = "buzz_upper_frets"
+    FRETTED_NOTES_BUZZ = "fretted_notes_buzz"
+    FIRST_POSITION_HARD = "first_position_hard"
+    FEELS_STIFF = "feels_stiff"
+    FEELS_SLINKY = "feels_slinky"
+    FIRST_POSITION_SHARP = "first_position_sharp"
+
+
+class ExpertDiagnostic(BaseModel):
+    """Single expert diagnostic result based on symptoms (Phase 7)."""
+    id: str = Field(description="Rule identifier")
+    gate: DiagnosticGate = Field(description="Inherited from triggering measurement")
+    symptom: PlayerSymptom = Field(description="Player-reported symptom this addresses")
+    message: str = Field(description="Human-readable diagnosis")
+    probable_causes: List[str] = Field(default_factory=list)
+    recommended_checks: List[str] = Field(default_factory=list)
+    recommended_actions: List[str] = Field(default_factory=list)
+    confidence: float = Field(ge=0.0, le=1.0, description="Confidence in diagnosis (0-1)")
+
+
+class ExpertDiagnosticsResponse(BaseModel):
+    """Response from expert symptom-based diagnostics evaluation (Phase 7)."""
+    overall_gate: DiagnosticGate = Field(description="Worst-case gate across all expert diagnostics")
+    diagnostics: List[ExpertDiagnostic] = Field(description="Symptom-based diagnostic insights")
 
 
 # ─── V1 Default Thresholds (Relief) ──────────────────────────────────────────
@@ -567,6 +599,226 @@ def evaluate_combined_setup(
     )
 
 
+# ─── Expert Symptom-Based Evaluator (Phase 7) ───────────────────────────────
+
+def evaluate_expert_symptoms(
+    symptoms: List[PlayerSymptom],
+    relief_gate: DiagnosticGate,
+    relief_diagnostic_ids: List[str],
+    action_gate: DiagnosticGate,
+    action_diagnostic_ids: List[str],
+    nut_gate: DiagnosticGate,
+    nut_diagnostic_ids: List[str],
+) -> ExpertDiagnosticsResponse:
+    """
+    Evaluate expert diagnostics based on player-reported symptoms and setup measurements.
+
+    V1: One diagnostic per symptom. No symptom-combining.
+
+    Rules:
+        1. Open String Buzz: buzz_open_strings + nut too_low → RED
+        2. Low Fret Buzz: buzz_low_frets + relief too_low → RED
+        3. Middle Fret Buzz: buzz_middle_frets + (relief too_low OR action too_low) → YELLOW/RED
+        4. Upper Fret Buzz: buzz_upper_frets + action too_low → YELLOW/RED
+        5. First Position Hard: first_position_hard + nut too_high → RED
+        6. First Position Sharp: first_position_sharp + nut too_high → YELLOW/RED
+        7. Feels Stiff: feels_stiff + (action high OR nut high) → YELLOW
+        8. Feels Slinky: feels_slinky + action low → YELLOW
+        Fallback: symptom with no strong match → YELLOW, confidence 0.4
+
+    Args:
+        symptoms: List of player-reported symptoms
+        relief_gate: Overall gate from relief workflow
+        relief_diagnostic_ids: Diagnostic IDs from relief workflow
+        action_gate: Overall gate from action workflow
+        action_diagnostic_ids: Diagnostic IDs from action workflow
+        nut_gate: Overall gate from nut workflow
+        nut_diagnostic_ids: Diagnostic IDs from nut workflow
+
+    Returns:
+        ExpertDiagnosticsResponse with overall gate and per-symptom diagnostics
+    """
+    diagnostics: List[ExpertDiagnostic] = []
+
+    # Pre-compute directional flags
+    relief_low = _has_low_diagnostic(relief_diagnostic_ids)
+    relief_high = _has_high_diagnostic(relief_diagnostic_ids)
+    action_low = _has_low_diagnostic(action_diagnostic_ids)
+    action_high = _has_high_diagnostic(action_diagnostic_ids)
+    nut_low = _has_low_diagnostic(nut_diagnostic_ids)
+    nut_high = _has_high_diagnostic(nut_diagnostic_ids)
+
+    for symptom in symptoms:
+        matched = False
+
+        # Rule 1: Open String Buzz
+        if symptom == PlayerSymptom.BUZZ_OPEN_STRINGS and nut_low:
+            diagnostics.append(ExpertDiagnostic(
+                id="expert_open_string_buzz_nut",
+                gate=nut_gate,
+                symptom=symptom,
+                message="Open string buzz is likely caused by nut slots cut too deep.",
+                probable_causes=["Nut slot too deep", "Nut wear", "String not seated properly"],
+                recommended_checks=["Inspect nut slot depth for each string", "Check for nut cracks or wear"],
+                recommended_actions=["Fill and re-cut nut slots or replace nut"],
+                confidence=0.9,
+            ))
+            matched = True
+
+        # Rule 2: Low Fret Buzz
+        if symptom == PlayerSymptom.BUZZ_LOW_FRETS and relief_low:
+            diagnostics.append(ExpertDiagnostic(
+                id="expert_low_fret_buzz_relief",
+                gate=relief_gate,
+                symptom=symptom,
+                message="Low-fret buzz is likely caused by insufficient neck relief.",
+                probable_causes=["Neck too straight or back-bowed", "Truss rod too tight"],
+                recommended_checks=["Re-check relief at 7th-9th fret with capo at 1st"],
+                recommended_actions=["Loosen truss rod 1/4 turn and re-measure after 24 hours"],
+                confidence=0.85,
+            ))
+            matched = True
+
+        # Rule 3: Middle Fret Buzz
+        if symptom == PlayerSymptom.BUZZ_MIDDLE_FRETS and (relief_low or action_low):
+            # Inherit gate from the worse of relief/action
+            gate = relief_gate if relief_low else action_gate
+            if relief_low and action_low:
+                gate = _worst_gate([relief_gate, action_gate])
+            diagnostics.append(ExpertDiagnostic(
+                id="expert_middle_fret_buzz_interaction",
+                gate=gate,
+                symptom=symptom,
+                message="Middle-fret buzz is likely caused by relief/action interaction.",
+                probable_causes=["Insufficient relief", "Low action", "Uneven frets in middle region"],
+                recommended_checks=["Check relief", "Check action at 12th fret", "Sight neck for twists"],
+                recommended_actions=["Address relief first, then action if buzz persists"],
+                confidence=0.75,
+            ))
+            matched = True
+
+        # Rule 4: Upper Fret Buzz
+        if symptom == PlayerSymptom.BUZZ_UPPER_FRETS and action_low:
+            diagnostics.append(ExpertDiagnostic(
+                id="expert_upper_fret_buzz_action",
+                gate=action_gate,
+                symptom=symptom,
+                message="Upper-fret buzz is likely caused by low bridge/saddle action.",
+                probable_causes=["Saddle too low", "Upper frets may need leveling"],
+                recommended_checks=["Check action at 12th and 17th frets", "Check for high frets near body joint"],
+                recommended_actions=["Raise saddle or shim bridge; level frets if necessary"],
+                confidence=0.75,
+            ))
+            matched = True
+
+        # Rule 5: First Position Hard
+        if symptom == PlayerSymptom.FIRST_POSITION_HARD and nut_high:
+            diagnostics.append(ExpertDiagnostic(
+                id="expert_first_position_hard_nut",
+                gate=nut_gate,
+                symptom=symptom,
+                message="First position feels hard to play due to high nut slots.",
+                probable_causes=["Nut slots not cut deep enough", "New nut not fully shaped"],
+                recommended_checks=["Measure clearance at 1st fret with capo at 3rd"],
+                recommended_actions=["Carefully file nut slots to proper depth"],
+                confidence=0.9,
+            ))
+            matched = True
+
+        # Rule 6: First Position Sharp
+        if symptom == PlayerSymptom.FIRST_POSITION_SHARP and nut_high:
+            diagnostics.append(ExpertDiagnostic(
+                id="expert_first_position_sharp_nut",
+                gate=nut_gate if nut_gate == DiagnosticGate.RED else DiagnosticGate.YELLOW,
+                symptom=symptom,
+                message="First position plays sharp due to excessive string stretch from high nut.",
+                probable_causes=["Nut slots too high cause extra string stretch when fretting"],
+                recommended_checks=["Check intonation at 1st and 12th frets", "Compare open vs fretted pitch"],
+                recommended_actions=["Lower nut slots to reduce string stretch"],
+                confidence=0.85,
+            ))
+            matched = True
+
+        # Rule 7: Feels Stiff
+        if symptom == PlayerSymptom.FEELS_STIFF and (action_high or nut_high):
+            gate = DiagnosticGate.YELLOW
+            causes = []
+            if action_high:
+                causes.append("High action increases finger pressure needed")
+            if nut_high:
+                causes.append("High nut slots increase first-position effort")
+            diagnostics.append(ExpertDiagnostic(
+                id="expert_feels_stiff_action_nut",
+                gate=gate,
+                symptom=symptom,
+                message="Guitar feels stiff to play due to high action or nut slots.",
+                probable_causes=causes,
+                recommended_checks=["Measure action at 12th fret", "Measure nut slot clearance"],
+                recommended_actions=["Lower saddle and/or nut slots as needed"],
+                confidence=0.7,
+            ))
+            matched = True
+
+        # Rule 8: Feels Slinky
+        if symptom == PlayerSymptom.FEELS_SLINKY and action_low:
+            diagnostics.append(ExpertDiagnostic(
+                id="expert_feels_slinky_action",
+                gate=DiagnosticGate.YELLOW,
+                symptom=symptom,
+                message="Guitar feels slinky/loose due to low action.",
+                probable_causes=["Low action reduces string resistance", "May also indicate light gauge strings"],
+                recommended_checks=["Verify action measurements", "Check string gauge"],
+                recommended_actions=["Raise saddle slightly if buzz-free playability is desired"],
+                confidence=0.6,
+            ))
+            matched = True
+
+        # Rule: Fretted Notes Buzz (general)
+        if symptom == PlayerSymptom.FRETTED_NOTES_BUZZ:
+            # This is a general symptom - check multiple causes
+            if relief_low or action_low:
+                gate = _worst_gate([g for g, low in [(relief_gate, relief_low), (action_gate, action_low)] if low])
+                diagnostics.append(ExpertDiagnostic(
+                    id="expert_fretted_buzz_general",
+                    gate=gate,
+                    symptom=symptom,
+                    message="Fretted notes buzz, likely due to low relief or action.",
+                    probable_causes=["Insufficient relief", "Low action", "Possible fret irregularities"],
+                    recommended_checks=["Check relief", "Check action", "Look for worn or lifted frets"],
+                    recommended_actions=["Adjust relief first, then action"],
+                    confidence=0.7,
+                ))
+                matched = True
+
+        # Fallback: symptom reported but no strong measurement match
+        if not matched:
+            diagnostics.append(ExpertDiagnostic(
+                id=f"expert_fallback_{symptom.value}",
+                gate=DiagnosticGate.YELLOW,
+                symptom=symptom,
+                message=f"Symptom reported ({symptom.value.replace('_', ' ')}), but measurements do not strongly indicate a cause.",
+                probable_causes=["Cause may not be captured by current measurements"],
+                recommended_checks=["Verify all measurements are accurate", "Check for fret wear or uneven frets"],
+                recommended_actions=["Consider professional fret level/dress if issue persists"],
+                confidence=0.4,
+            ))
+
+    # Sort by severity (RED > YELLOW > GREEN), then by confidence (descending)
+    severity_order = {DiagnosticGate.RED: 0, DiagnosticGate.YELLOW: 1, DiagnosticGate.GREEN: 2}
+    diagnostics.sort(key=lambda d: (severity_order[d.gate], -d.confidence))
+
+    # Overall gate is worst-case across all diagnostics
+    if diagnostics:
+        overall_gate = diagnostics[0].gate
+    else:
+        overall_gate = DiagnosticGate.GREEN
+
+    return ExpertDiagnosticsResponse(
+        overall_gate=overall_gate,
+        diagnostics=diagnostics,
+    )
+
+
 __all__ = [
     # Models
     "SetupWorkflowStep",
@@ -577,6 +829,9 @@ __all__ = [
     "NutWorkflowResponse",
     "CombinedDiagnostic",
     "CombinedDiagnosticsResponse",
+    "PlayerSymptom",
+    "ExpertDiagnostic",
+    "ExpertDiagnosticsResponse",
     # Relief (Phase 3)
     "evaluate_relief",
     "DEFAULT_RELIEF_TARGET_MIN_MM",
@@ -595,4 +850,6 @@ __all__ = [
     "DEFAULT_NUT_BASS_TARGET_MAX_MM",
     # Combined (Phase 6)
     "evaluate_combined_setup",
+    # Expert (Phase 7)
+    "evaluate_expert_symptoms",
 ]
