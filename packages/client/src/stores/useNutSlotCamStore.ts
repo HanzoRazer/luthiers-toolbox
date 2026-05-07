@@ -12,6 +12,7 @@ import {
   type NutSlotPreviewRequest,
   type NutSlotPreviewResponse,
   type CamGate,
+  type CamIssue,
 } from "@/sdk/endpoints/cam";
 
 // ---------------------------------------------------------------------------
@@ -64,6 +65,16 @@ export const useNutSlotCamStore = defineStore("nutSlotCam", () => {
   const warnings = computed(() => previewResult.value?.warnings ?? []);
 
   const errors = computed(() => previewResult.value?.errors ?? []);
+
+  const issues = computed(() => previewResult.value?.issues ?? []);
+
+  const redIssues = computed(() =>
+    issues.value.filter((i: CamIssue) => i.severity === "red")
+  );
+
+  const yellowIssues = computed(() =>
+    issues.value.filter((i: CamIssue) => i.severity === "yellow")
+  );
 
   const statistics = computed(() => previewResult.value?.statistics ?? null);
 
@@ -180,6 +191,9 @@ export const useNutSlotCamStore = defineStore("nutSlotCam", () => {
     toolpaths,
     warnings,
     errors,
+    issues,
+    redIssues,
+    yellowIssues,
     statistics,
     gateColor,
     gateBgColor,

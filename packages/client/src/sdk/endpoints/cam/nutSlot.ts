@@ -68,7 +68,19 @@ export interface ToolMetadata {
 export interface PreviewStatistics {
   total_slots: number;
   max_depth_mm: number;
+  min_adjacent_spacing_mm: number | null;
+  max_adjacent_spacing_mm: number | null;
+  cutting_move_count: number;
+  rapid_move_count: number;
   estimated_time_s: number | null;
+}
+
+/** Structured CAM issue (Dev Order 2B) */
+export interface CamIssue {
+  code: string;
+  severity: "yellow" | "red";
+  message: string;
+  field?: string | null;
 }
 
 export interface NutSlotPreviewResponse {
@@ -82,6 +94,7 @@ export interface NutSlotPreviewResponse {
   toolpaths: SlotToolpath[];
   warnings: string[];
   errors: string[];
+  issues: CamIssue[];
   statistics: PreviewStatistics;
 }
 

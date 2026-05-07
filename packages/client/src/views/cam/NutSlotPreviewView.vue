@@ -283,29 +283,51 @@
           </div>
         </div>
 
-        <!-- Warnings -->
+        <!-- RED Issues (Errors) -->
         <div
-          v-if="store.warnings.length > 0"
+          v-if="store.redIssues.length > 0"
           :class="styles.messageSection"
         >
           <h4 :class="styles.messageSectionTitle">
-            <span :class="styles.warningIcon">&#9888;</span>
-            Warnings ({{ store.warnings.length }})
+            <span :class="styles.errorIcon">&#10006;</span>
+            Errors ({{ store.redIssues.length }})
           </h4>
           <ul :class="styles.messageList">
             <li
-              v-for="(warning, idx) in store.warnings"
-              :key="idx"
-              :class="styles.warningItem"
+              v-for="issue in store.redIssues"
+              :key="issue.code"
+              :class="styles.errorItem"
             >
-              {{ warning }}
+              <code :class="styles.issueCode">{{ issue.code }}</code>
+              {{ issue.message }}
             </li>
           </ul>
         </div>
 
-        <!-- Errors -->
+        <!-- YELLOW Issues (Warnings) -->
         <div
-          v-if="store.errors.length > 0"
+          v-if="store.yellowIssues.length > 0"
+          :class="styles.messageSection"
+        >
+          <h4 :class="styles.messageSectionTitle">
+            <span :class="styles.warningIcon">&#9888;</span>
+            Warnings ({{ store.yellowIssues.length }})
+          </h4>
+          <ul :class="styles.messageList">
+            <li
+              v-for="issue in store.yellowIssues"
+              :key="issue.code"
+              :class="styles.warningItem"
+            >
+              <code :class="styles.issueCode">{{ issue.code }}</code>
+              {{ issue.message }}
+            </li>
+          </ul>
+        </div>
+
+        <!-- Legacy string errors (fallback) -->
+        <div
+          v-if="store.errors.length > 0 && store.redIssues.length === 0"
           :class="styles.messageSection"
         >
           <h4 :class="styles.messageSectionTitle">

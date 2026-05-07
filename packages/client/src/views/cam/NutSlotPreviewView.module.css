@@ -204,6 +204,17 @@
   color: #fca5a5;
 }
 
+.issueCode {
+  display: inline-block;
+  padding: 1px 6px;
+  margin-right: 6px;
+  font-size: 10px;
+  font-weight: 600;
+  background: rgba(0, 0, 0, 0.3);
+  border-radius: 3px;
+  vertical-align: middle;
+}
+
 .emptyState {
   display: flex;
   flex-direction: column;

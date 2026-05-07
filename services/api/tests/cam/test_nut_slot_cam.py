@@ -2,10 +2,13 @@
 Nut Slot CAM Preview Tests
 
 CAM Dev Order 1: Tests for POST /api/cam/nut-slot/preview
+CAM Dev Order 2B: Safety hardening tests
 
 Test coverage:
   - Unit tests for gate evaluation (RED/YELLOW/GREEN)
   - Unit tests for position generation
+  - Structured issue tests (Dev Order 2B)
+  - Preview integrity tests (Dev Order 2B)
   - Endpoint tests for request/response validation
 """
 
@@ -14,6 +17,7 @@ from fastapi.testclient import TestClient
 
 from app.cam.nut_slot_cam import (
     CamGate,
+    CamIssue,
     NutSlotPreviewRequest,
     generate_nut_slot_preview,
     generate_string_positions,
@@ -262,6 +266,165 @@ class TestNegativeDimensions:
 
 
 # =============================================================================
+# Dev Order 2B: Structured Issue Tests
+# =============================================================================
+
+class TestStructuredIssues:
+    """Tests for structured issue codes (Dev Order 2B)."""
+
+    def test_tool_too_large_structured_issue(self, valid_6_string_request):
+        """Structured issue returned for tool > slot width."""
+        valid_6_string_request.tool_diameter_mm = 0.7
+        result = generate_nut_slot_preview(valid_6_string_request)
+        assert result.gate == CamGate.RED
+        assert any(i.code == "TOOL_DIAMETER_EXCEEDS_SLOT_WIDTH" for i in result.issues)
+        issue = next(i for i in result.issues if i.code == "TOOL_DIAMETER_EXCEEDS_SLOT_WIDTH")
+        assert issue.severity == "red"
+        assert issue.field == "tool_diameter_mm"
+
+    def test_depth_exceeds_safe_ratio_structured_issue(self, valid_6_string_request):
+        """Structured issue returned for depth > 80% stock."""
+        valid_6_string_request.slot_depth_mm = 5.0  # 83% of 6.0
+        result = generate_nut_slot_preview(valid_6_string_request)
+        assert result.gate == CamGate.RED
+        assert any(i.code == "SLOT_DEPTH_EXCEEDS_SAFE_RATIO" for i in result.issues)
+
+    def test_depth_high_warning_structured_issue(self, valid_6_string_request):
+        """Structured warning for depth 60-80%."""
+        valid_6_string_request.slot_depth_mm = 4.0  # 67% of 6.0
+        result = generate_nut_slot_preview(valid_6_string_request)
+        assert result.gate == CamGate.YELLOW
+        assert any(i.code == "SLOT_DEPTH_HIGH" for i in result.issues)
+        issue = next(i for i in result.issues if i.code == "SLOT_DEPTH_HIGH")
+        assert issue.severity == "yellow"
+
+    def test_adjacent_spacing_critical_red(self, valid_6_string_request):
+        """RED for adjacent spacing < 3mm."""
+        valid_6_string_request.string_positions_x_mm = [3.5, 5.0, 17.9, 25.1, 32.3, 39.5]  # 1.5mm gap
+        result = generate_nut_slot_preview(valid_6_string_request)
+        assert result.gate == CamGate.RED
+        assert any(i.code == "ADJACENT_STRING_SPACING_CRITICAL" for i in result.issues)
+
+    def test_adjacent_spacing_tight_yellow(self, valid_6_string_request):
+        """YELLOW for adjacent spacing 3-5mm."""
+        valid_6_string_request.string_positions_x_mm = [3.5, 7.0, 17.9, 25.1, 32.3, 39.5]  # 3.5mm gap
+        result = generate_nut_slot_preview(valid_6_string_request)
+        assert result.gate == CamGate.YELLOW
+        assert any(i.code == "ADJACENT_STRING_SPACING_TIGHT" for i in result.issues)
+
+    def test_position_count_mismatch_red(self, valid_6_string_request):
+        """RED for explicit position count != num_strings."""
+        valid_6_string_request.string_positions_x_mm = [3.5, 10.0, 20.0, 30.0]  # 4 positions, 6 strings
+        result = generate_nut_slot_preview(valid_6_string_request)
+        assert result.gate == CamGate.RED
+        assert any(i.code == "POSITION_COUNT_MISMATCH" for i in result.issues)
+
+    def test_edge_offsets_consume_nut_red(self, valid_6_string_request):
+        """RED for edge offsets >= nut width."""
+        valid_6_string_request.edge_offset_bass_mm = 25.0
+        valid_6_string_request.edge_offset_treble_mm = 25.0  # total 50mm > 43mm
+        result = generate_nut_slot_preview(valid_6_string_request)
+        assert result.gate == CamGate.RED
+        assert any(i.code == "EDGE_OFFSETS_CONSUME_NUT_WIDTH" for i in result.issues)
+
+    def test_safe_z_low_warning(self, valid_6_string_request):
+        """YELLOW for safe_z < 2mm."""
+        valid_6_string_request.safe_z_mm = 1.5
+        result = generate_nut_slot_preview(valid_6_string_request)
+        assert result.gate == CamGate.YELLOW
+        assert any(i.code == "SAFE_Z_LOW" for i in result.issues)
+
+    def test_valid_request_no_issues(self, valid_6_string_request):
+        """Valid request has no issues."""
+        result = generate_nut_slot_preview(valid_6_string_request)
+        assert result.gate == CamGate.GREEN
+        assert len(result.issues) == 0
+
+
+# =============================================================================
+# Dev Order 2B: Statistics Tests
+# =============================================================================
+
+class TestStatistics:
+    """Tests for enhanced statistics (Dev Order 2B)."""
+
+    def test_statistics_include_spacing(self, valid_6_string_request):
+        """Statistics include min/max adjacent spacing."""
+        result = generate_nut_slot_preview(valid_6_string_request)
+        assert result.statistics.min_adjacent_spacing_mm is not None
+        assert result.statistics.max_adjacent_spacing_mm is not None
+        # With equal spacing, min should equal max
+        assert result.statistics.min_adjacent_spacing_mm == result.statistics.max_adjacent_spacing_mm
+
+    def test_statistics_include_move_counts(self, valid_6_string_request):
+        """Statistics include cutting/rapid move counts."""
+        result = generate_nut_slot_preview(valid_6_string_request)
+        # 6 slots × 2 cutting moves (plunge, linear) = 12
+        assert result.statistics.cutting_move_count == 12
+        # 6 slots × 2 rapid moves (rapid, retract) = 12
+        assert result.statistics.rapid_move_count == 12
+
+    def test_statistics_single_string_no_spacing(self):
+        """Single string has no spacing values."""
+        request = NutSlotPreviewRequest(
+            nut_width_mm=43.0,
+            num_strings=1,
+            edge_offset_bass_mm=3.5,
+            edge_offset_treble_mm=3.5,
+            slot_length_mm=4.0,
+            slot_depth_mm=1.5,
+            slot_width_mm=0.56,
+            stock_thickness_mm=6.0,
+            tool_diameter_mm=0.5,
+        )
+        result = generate_nut_slot_preview(request)
+        assert result.statistics.min_adjacent_spacing_mm is None
+        assert result.statistics.max_adjacent_spacing_mm is None
+
+
+# =============================================================================
+# Dev Order 2B: Integrity Validation Tests
+# =============================================================================
+
+class TestIntegrityValidation:
+    """Tests for preview integrity validation (Dev Order 2B)."""
+
+    def test_valid_toolpaths_pass_integrity(self, valid_6_string_request):
+        """Valid toolpaths pass integrity checks."""
+        result = generate_nut_slot_preview(valid_6_string_request)
+        # No integrity errors should be present
+        integrity_errors = [i for i in result.issues if i.code.startswith("INTEGRITY_")]
+        assert len(integrity_errors) == 0
+
+    def test_toolpath_slot_count_matches(self, valid_6_string_request):
+        """Toolpath count matches num_strings."""
+        result = generate_nut_slot_preview(valid_6_string_request)
+        assert len(result.toolpaths) == valid_6_string_request.num_strings
+
+    def test_toolpath_indices_sequential(self, valid_6_string_request):
+        """Toolpath indices are 0-based and sequential."""
+        result = generate_nut_slot_preview(valid_6_string_request)
+        for i, tp in enumerate(result.toolpaths):
+            assert tp.slot_index == i
+
+    def test_toolpath_string_numbers_sequential(self, valid_6_string_request):
+        """String numbers are 1-based and sequential."""
+        result = generate_nut_slot_preview(valid_6_string_request)
+        for i, tp in enumerate(result.toolpaths):
+            assert tp.string_number == i + 1
+
+    def test_move_sequence_valid(self, valid_6_string_request):
+        """Move sequence is rapid→plunge→linear→retract."""
+        result = generate_nut_slot_preview(valid_6_string_request)
+        for tp in result.toolpaths:
+            assert len(tp.moves) == 4
+            assert tp.moves[0].type == "rapid"
+            assert tp.moves[1].type == "plunge"
+            assert tp.moves[2].type == "linear"
+            assert tp.moves[3].type == "retract"
+
+
+# =============================================================================
 # Unit Tests: Position Generation
 # =============================================================================
 
@@ -417,6 +580,7 @@ class TestEndpoint:
         assert "toolpaths" in data
         assert "warnings" in data
         assert "errors" in data
+        assert "issues" in data  # Dev Order 2B
         assert "statistics" in data
 
         # Check coordinate system
@@ -433,6 +597,42 @@ class TestEndpoint:
         assert "x_mm" in tp
         assert "moves" in tp
         assert len(tp["moves"]) == 4  # rapid, plunge, linear, retract
+
+        # Check statistics structure (Dev Order 2B)
+        stats = data["statistics"]
+        assert "total_slots" in stats
+        assert "max_depth_mm" in stats
+        assert "min_adjacent_spacing_mm" in stats
+        assert "max_adjacent_spacing_mm" in stats
+        assert "cutting_move_count" in stats
+        assert "rapid_move_count" in stats
+
+    def test_endpoint_returns_structured_issues(self):
+        """Endpoint returns structured issues for unsafe inputs."""
+        response = client.post(
+            "/api/cam/nut-slot/preview",
+            json={
+                "nut_width_mm": 43.0,
+                "num_strings": 6,
+                "edge_offset_bass_mm": 3.5,
+                "edge_offset_treble_mm": 3.5,
+                "slot_length_mm": 4.0,
+                "slot_depth_mm": 1.5,
+                "slot_width_mm": 0.56,
+                "stock_thickness_mm": 6.0,
+                "tool_diameter_mm": 0.7,  # Too large
+            },
+        )
+        assert response.status_code == 200
+        data = response.json()
+        assert data["gate"] == "red"
+        assert len(data["issues"]) > 0
+        issue = data["issues"][0]
+        assert "code" in issue
+        assert "severity" in issue
+        assert "message" in issue
+        assert issue["code"] == "TOOL_DIAMETER_EXCEEDS_SLOT_WIDTH"
+        assert issue["severity"] == "red"
 
     def test_toolpath_move_sequence(self):
         """Toolpath moves follow correct sequence."""
