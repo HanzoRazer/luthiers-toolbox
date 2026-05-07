@@ -1,13 +1,23 @@
 """
-soundhole_spiral.py
+spiral_geometry.py
 Logarithmic spiral soundhole geometry engine for the Production Shop.
 
 Physics:
   Centerline: r(θ) = r0 * exp(k * θ)
   Wall offsets: ±(slot_width/2) perpendicular to tangent
-  Perimeter (closed form): P = 2 * (r_end - r0) / sin(atan(1/k))
-  Area (closed form):      A = slot_width * (r_end - r0) / sin(atan(1/k))
-  P:A ratio:               P/A = 2 / slot_width  (independent of k, turns, size)
+
+  Arc length (closed form):
+    L = sqrt(1 + k²) / k × (r_end - r0)
+
+    Derivation: For r(θ) = r0 * e^(kθ), dr/dθ = k*r, so the arc element is
+    ds = sqrt(r² + (dr/dθ)²) dθ = r * sqrt(1 + k²) dθ
+    Integrating: L = sqrt(1 + k²) * ∫r dθ = sqrt(1 + k²) * (r_end - r0) / k
+
+    For k → 0 (near-circular): L ≈ r0 * θ_end (circular arc fallback)
+
+  Perimeter (two walls): P = 2 * L
+  Area:                  A = slot_width * L
+  P:A ratio:             P/A = 2 / slot_width  (independent of k, turns, size)
 
 Coordinate system: origin at bridge centerline.
   x positive = treble side
@@ -176,19 +186,32 @@ def _spiral_walls(
     return outer, inner
 
 
+def _spiral_arc_length(r0: float, r_end: float, k: float, theta_end: float) -> float:
+    """
+    Compute arc length of logarithmic spiral r(θ) = r0 * e^(kθ).
+
+    Correct formula: L = sqrt(1 + k²) / k × (r_end - r0)
+
+    For k → 0 (near-circular spiral), falls back to circular arc: L = r0 × θ
+    """
+    if abs(k) < 1e-6:
+        # Near-circular: use circular arc length
+        return r0 * theta_end
+    return math.sqrt(1.0 + k * k) / k * (r_end - r0)
+
+
 def _closed_form_stats(r0: float, k: float, turns: float, slot_w: float) -> dict:
     """
     Closed-form P, A, P:A for a logarithmic spiral slot.
 
-    Arc length of one wall: L = (r_end - r0) / sin(atan(1/k))
-    Perimeter (two walls):  P = 2 * L
-    Area:                   A = slot_w * L
-    P:A:                    2 / slot_w  (independent of k, turns, r0)
+    Arc length (one wall): L = sqrt(1 + k²) / k × (r_end - r0)
+    Perimeter (two walls): P = 2 × L
+    Area:                  A = slot_w × L
+    P:A:                   2 / slot_w  (independent of k, turns, r0)
     """
     theta_end = turns * 2 * math.pi
     r_end = r0 * math.exp(k * theta_end)
-    alpha = math.atan(1.0 / k)
-    one_wall = (r_end - r0) / math.sin(alpha)
+    one_wall = _spiral_arc_length(r0, r_end, k, theta_end)
     perim = 2.0 * one_wall
     area = slot_w * one_wall
     pa = perim / area if area > 0 else 0.0

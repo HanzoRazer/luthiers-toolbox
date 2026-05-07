@@ -210,11 +210,19 @@ class PortSpec:
         if slot_width_mm <= 0 or start_radius_mm <= 0 or turns <= 0:
             raise ValueError("slot_width_mm, start_radius_mm, and turns must be positive")
 
-        # Closed-form calculation
+        # Closed-form calculation using correct logarithmic spiral arc length
+        # L = sqrt(1 + k²) / k × (r_end - r0)
         theta_end = turns * 2 * math.pi
         r_end = start_radius_mm * math.exp(growth_rate_k * theta_end)
-        alpha = math.atan(1.0 / growth_rate_k)
-        one_wall_length = (r_end - start_radius_mm) / math.sin(alpha)
+
+        if abs(growth_rate_k) < 1e-6:
+            # Near-circular fallback: L = r0 × θ
+            one_wall_length = start_radius_mm * theta_end
+        else:
+            one_wall_length = (
+                math.sqrt(1.0 + growth_rate_k * growth_rate_k) / growth_rate_k
+                * (r_end - start_radius_mm)
+            )
 
         # Perimeter = 2 walls, Area = slot_width × arc_length
         perim_mm = 2.0 * one_wall_length

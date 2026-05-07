@@ -51,6 +51,10 @@ from app.instrument_geometry.soundhole.spiral_geometry import (
     dual_geo_to_dict,
     spec_to_dict,
 )
+from app.instrument_geometry.soundhole.aperture_geometry import (
+    aperture_from_spiral_geometry,
+    aperture_geometry_to_dict,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -356,6 +360,14 @@ def compute_spiral_geometry_endpoint(req: DualSpiralRequest):
         dual_spec = _request_to_dual(req)
         dual_geo = compute_dual_geometry(dual_spec)
         result = dual_geo_to_dict(dual_geo)
+
+        # Augment with normalized aperture geometry
+        result["upper"]["aperture_geometry"] = aperture_geometry_to_dict(
+            aperture_from_spiral_geometry(dual_geo.upper)
+        )
+        result["lower"]["aperture_geometry"] = aperture_geometry_to_dict(
+            aperture_from_spiral_geometry(dual_geo.lower)
+        )
 
         u_pa = dual_geo.upper.pa_ratio_mm_inv
         l_pa = dual_geo.lower.pa_ratio_mm_inv

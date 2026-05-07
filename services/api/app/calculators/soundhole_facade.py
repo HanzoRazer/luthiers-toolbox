@@ -145,11 +145,19 @@ def compute_soundhole_spec(
     if soundhole_type == SoundholeType.SPIRAL:
         params = spiral_params or SpiralParams()
 
-        # Closed-form spiral geometry
+        # Closed-form spiral geometry using correct logarithmic spiral arc length
+        # L = sqrt(1 + k²) / k × (r_end - r0)
         theta_end = params.turns * 2 * math.pi
         r_end = params.start_radius_mm * math.exp(params.growth_rate_k * theta_end)
-        alpha = math.atan(1.0 / params.growth_rate_k)
-        one_wall_length = (r_end - params.start_radius_mm) / math.sin(alpha)
+
+        k = params.growth_rate_k
+        if abs(k) < 1e-6:
+            # Near-circular fallback: L = r0 × θ
+            one_wall_length = params.start_radius_mm * theta_end
+        else:
+            one_wall_length = (
+                math.sqrt(1.0 + k * k) / k * (r_end - params.start_radius_mm)
+            )
 
         perim_mm = 2.0 * one_wall_length
         area_mm2 = params.slot_width_mm * one_wall_length

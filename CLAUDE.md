@@ -463,3 +463,29 @@ Expected result: closed contours by construction,
 
 Location: services/blueprint-import/vectorizer_phase3.py
 Test case: cuatro puertoriqueño PDF
+
+## Feature Parity Migration Policy
+
+See: `FEATURE_PARITY_MIGRATION_POLICY.md`
+
+**Core rule**: No existing canonical implementation may be removed or superseded until parity is verified.
+
+**Migration states** (must be declared explicitly):
+1. **Canonical** — the trusted production implementation
+2. **Mounted Legacy Component** — legacy embedded in new workspace, owns its own logic
+3. **Beta Consolidation Shell** — workspace exists but parity incomplete
+4. **Parity Verified** — replacement may proceed
+
+**Approved migration order**: mount → verify → audit → extract → normalize → replace
+
+**Anti-patterns** (prohibited):
+- Shell-first replacement
+- Implicit deprecation (hiding routes before parity)
+- Archive without audit
+- "Newer means better" assumptions
+
+**Current status**:
+- `SpiralSoundholeDesigner.vue` = canonical implementation
+- `ApertureWorkspace.vue` = beta consolidation shell (State 3)
+
+The workspace shell may mount the legacy component. It may NOT replace or remove the legacy implementation until parity is verified.
