@@ -1,0 +1,166 @@
+/**
+ * Shared workflow CSS module.
+ * Canonical color palette from NECK-A Phase 7.
+ */
+
+:root {
+  /* Gate badge backgrounds */
+  --workflow-green-bg: #065f46;
+  --workflow-yellow-bg: #78350f;
+  --workflow-red-bg: #7f1d1d;
+
+  /* Gate badge text */
+  --workflow-green-text: #6ee7b7;
+  --workflow-yellow-text: #fcd34d;
+  --workflow-red-text: #fca5a5;
+
+  /* Diagnostic card borders */
+  --workflow-green-border: #10b981;
+  --workflow-yellow-border: #f59e0b;
+  --workflow-red-border: #ef4444;
+
+  /* List category colors */
+  --workflow-causes-color: #fbbf24;
+  --workflow-checks-color: #60a5fa;
+  --workflow-actions-color: #34d399;
+
+  /* Base colors */
+  --workflow-card-bg: #1f2937;
+  --workflow-card-border: #374151;
+  --workflow-text-primary: #f9fafb;
+  --workflow-text-secondary: #9ca3af;
+  --workflow-notice-bg: #374151;
+}
+
+/* Gate badge base */
+.gateBadge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.25rem 0.75rem;
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.gateBadge.green {
+  background: var(--workflow-green-bg);
+  color: var(--workflow-green-text);
+}
+
+.gateBadge.yellow {
+  background: var(--workflow-yellow-bg);
+  color: var(--workflow-yellow-text);
+}
+
+.gateBadge.red {
+  background: var(--workflow-red-bg);
+  color: var(--workflow-red-text);
+}
+
+/* Diagnostic card */
+.diagnosticCard {
+  background: var(--workflow-card-bg);
+  border: 1px solid var(--workflow-card-border);
+  border-left-width: 4px;
+  border-radius: 0.5rem;
+  padding: 1rem;
+  margin-bottom: 0.75rem;
+}
+
+.diagnosticCard.green {
+  border-left-color: var(--workflow-green-border);
+}
+
+.diagnosticCard.yellow {
+  border-left-color: var(--workflow-yellow-border);
+}
+
+.diagnosticCard.red {
+  border-left-color: var(--workflow-red-border);
+}
+
+.diagnosticCardHeader {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 0.5rem;
+}
+
+.diagnosticCardMessage {
+  color: var(--workflow-text-primary);
+  font-size: 0.875rem;
+  line-height: 1.5;
+}
+
+.diagnosticCardConfidence {
+  color: var(--workflow-text-secondary);
+  font-size: 0.75rem;
+  margin-left: auto;
+}
+
+/* Section lists */
+.sectionLabel {
+  font-size: 0.625rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--workflow-text-secondary);
+  margin-top: 0.75rem;
+  margin-bottom: 0.25rem;
+}
+
+.causesList,
+.checksList,
+.actionsList {
+  margin: 0;
+  padding-left: 1.25rem;
+  font-size: 0.8125rem;
+}
+
+.causesList li {
+  color: var(--workflow-causes-color);
+}
+
+.checksList li {
+  color: var(--workflow-checks-color);
+}
+
+.actionsList li {
+  color: var(--workflow-actions-color);
+}
+
+/* Prerequisite notice */
+.prerequisiteNotice {
+  background: var(--workflow-notice-bg);
+  border-radius: 0.5rem;
+  padding: 1rem;
+  color: var(--workflow-text-secondary);
+  font-size: 0.875rem;
+  text-align: center;
+}
+
+.prerequisiteNotice ul {
+  list-style: none;
+  padding: 0;
+  margin: 0.5rem 0 0 0;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.5rem 1rem;
+}
+
+.prerequisiteNotice li {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.prerequisiteNotice li.satisfied {
+  color: var(--workflow-green-text);
+}
+
+.prerequisiteNotice li.unsatisfied {
+  color: var(--workflow-red-text);
+}

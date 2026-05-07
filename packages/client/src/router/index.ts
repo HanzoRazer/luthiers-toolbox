@@ -305,6 +305,11 @@ const routes: RouteRecordRaw[] = [
     component: () =>
       import("@/views/art-studio/RosetteWheelView.vue"),
   },
+  {
+    path: "/art-studio/aperture",
+    name: "ArtStudioAperture",
+    component: () => import("@/views/art-studio/ApertureWorkspace.vue"),
+  },
 
   // Preset Hub
   {
