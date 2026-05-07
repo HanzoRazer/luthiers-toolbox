@@ -1281,70 +1281,6 @@ Not blocking FRET-A or any current sprint. Triage when DXF hygiene sprint schedu
 
 ---
 
-### Sprint CL-15 — CAM Simulation Production Remediation
-
-**Priority:** MEDIUM (feature completeness)
-**Effort:** 1-2 days
-**Status:** Queued
-**Reference:** CAM_SIMULATION_AUDIT_2026-05-06.md
-
-**Scope:** The CAM animated simulation system (ToolpathPlayer + G-code simulator) has working core infrastructure but known unfixed bugs and dead code that prevent it from being production-ready. The audit document (CAM_SIMULATION_AUDIT_2026-05-06.md) surfaced these issues; this sprint remediates them.
-
-**Known issues to resolve:**
-
-1. **Metrics endpoint production bug (CRITICAL)**
-   - `/api/cam/sim/metrics` has router/schema mismatch
-   - 8 tests in `test_simulation_endpoint_smoke.py` marked xfail with reason "Production bug: router/schema mismatch in metrics endpoint"
-   - Lines 65, 294, 301, 308, 316, 327, 335, 345 apply `metrics_production_bug` decorator
-   - Either fix the endpoint or remove it from the API surface
-
-2. **Dead duplicate router (HIGH)**
-   - LIVE: `services/api/app/routers/simulation_consolidated_router.py` (273 LOC)
-   - DEAD: `services/api/app/cam/routers/simulation/simulation_consolidated_router.py` (115 LOC)
-   - The dead router is not wired (aggregator import commented out)
-   - Delete the dead version with a commit explaining the consolidation
-
-3. **False documentation claims (MEDIUM)**
-   - Build status doc claims 4 views use ToolpathPlayer: ToolpathSimulatorView, CamWorkspaceView, DxfToGcodeWizard, BridgeLabView
-   - Reality: Only `DxfToGcodeView.vue` and `ToolpathCompare.vue` actually import/use the player
-   - Either wire the claimed views to ToolpathPlayer OR correct the documentation
-   - If views are scaffolding with no immediate use, delete them and update docs
-
-4. **xfail markers removal (after fix)**
-   - Once metrics endpoint is fixed, remove `metrics_production_bug` decorator
-   - Verify all 8 tests pass without xfail
-   - If any tests fail for legitimate reasons, fix or document properly (no silent xfail)
-
-5. **Minor documentation corrections**
-   - Update LOC counts (ToolpathCanvas.vue: 798, not ~400; ToolpathCanvas3D.vue: 997, not ~350)
-   - Update subcomponent count (35 files, not 12)
-   - Align phase numbering (source says P1-P5, doc says P1-P6)
-
-**Acceptance criteria:**
-- `/api/cam/sim/gcode` and `/api/cam/sim/upload` pass all tests (already working)
-- `/api/cam/sim/metrics` either passes all tests OR is removed from API surface
-- No xfail markers remain in `test_simulation_endpoint_smoke.py`
-- Only one simulation router file exists (dead duplicate deleted)
-- Documentation accurately reflects which views use ToolpathPlayer
-- Test suite can be run and produces verifiable pass count
-
-**Files affected:**
-- `services/api/app/routers/simulation_consolidated_router.py` — metrics fix
-- `services/api/app/models/sim_metrics.py` — schema alignment (if exists)
-- `services/api/app/cam/routers/simulation/` — DELETE entire directory
-- `services/api/tests/test_simulation_endpoint_smoke.py` — remove xfail markers
-- `docs/handoffs/CAM_ANIMATED_SIMULATION_STATUS_2026-05-06.md` — correct claims
-
-**Decision point before execution:**
-The feature is currently not active. Options:
-- (A) Fix metrics endpoint to make system production-ready for future activation
-- (B) Remove metrics endpoint entirely (simpler if energy/time metrics are not needed)
-- (C) Delete entire simulation system if feature is deprecated (extreme option)
-
-Ross to decide which path. Default assumption: (A) or (B), not (C).
-
----
-
 ### Cleanup Sprint Sequencing Recommendation
 
 **Immediate (this week):**
@@ -1356,7 +1292,6 @@ Ross to decide which path. Default assumption: (A) or (B), not (C).
 - CL-3 (photo-vectorizer test outputs) — needs Ross input
 - CL-7 (landing page disposition) — needs Ross input
 - CL-12 (standalone tools decision) — needs Ross input
-- CL-15 (CAM simulation remediation) — needs Ross decision on metrics endpoint fate
 
 **Medium-term (next 2-3 months):**
 - CL-4 (photo-vectorizer version consolidation)
@@ -1370,7 +1305,7 @@ Ross to decide which path. Default assumption: (A) or (B), not (C).
 - CL-13 (production_shop_agent placement)
 - CL-14 (test fixture convention)
 
-**Total scope:** 15 cleanup sprints (1 complete, 14 queued). Realistic execution timeline: 2-4 months at sustainable pace, depending on which sprints actually get prioritized vs. which get deferred indefinitely.
+**Total scope:** 14 cleanup sprints (1 complete, 13 queued). Realistic execution timeline: 2-4 months at sustainable pace, depending on which sprints actually get prioritized vs. which get deferred indefinitely.
 
 ---
 
