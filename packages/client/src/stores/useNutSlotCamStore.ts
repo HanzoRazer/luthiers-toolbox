@@ -14,6 +14,10 @@ import {
   type CamGate,
   type CamIssue,
 } from "@/sdk/endpoints/cam";
+import {
+  buildNutCamPrefillFromNeckA,
+  type NeckANutState,
+} from "@/utils/cam/neckAToNutCam";
 
 // ---------------------------------------------------------------------------
 // Default Values (6-string guitar)
@@ -54,6 +58,9 @@ export const useNutSlotCamStore = defineStore("nutSlotCam", () => {
   const previewResult = ref<NutSlotPreviewResponse | null>(null);
   const previewLoading = ref(false);
   const previewError = ref<string | null>(null);
+
+  // ── Prefill Source (Dev Order 3B) ────────────────────────────────────────
+  const prefillSource = ref<"defaults" | "neck_a" | null>(null);
 
   // ── Computed ─────────────────────────────────────────────────────────────
   const gate = computed<CamGate | null>(() => previewResult.value?.gate ?? null);
@@ -134,6 +141,7 @@ export const useNutSlotCamStore = defineStore("nutSlotCam", () => {
     stockThicknessMm.value = DEFAULT_6_STRING.stock_thickness_mm;
     toolDiameterMm.value = DEFAULT_6_STRING.tool_diameter_mm;
     safeZMm.value = DEFAULT_6_STRING.safe_z_mm ?? 5.0;
+    prefillSource.value = "defaults";
     previewResult.value = null;
     previewError.value = null;
   }
@@ -209,6 +217,32 @@ export const useNutSlotCamStore = defineStore("nutSlotCam", () => {
     downloadJson(filename, previewResult.value);
   }
 
+  /**
+   * Load CAM form values from NECK-A setup workflow state.
+   *
+   * Dev Order 3B: One-way handoff, advisory only.
+   * Does NOT auto-preview or auto-export.
+   * CAM validation still required after prefill.
+   */
+  function loadFromNeckA(neckAState: NeckANutState): void {
+    const prefill = buildNutCamPrefillFromNeckA(neckAState);
+
+    if (prefill.nut_width_mm !== undefined) nutWidthMm.value = prefill.nut_width_mm;
+    if (prefill.num_strings !== undefined) numStrings.value = prefill.num_strings;
+    if (prefill.edge_offset_bass_mm !== undefined) edgeOffsetBassMm.value = prefill.edge_offset_bass_mm;
+    if (prefill.edge_offset_treble_mm !== undefined) edgeOffsetTrebleMm.value = prefill.edge_offset_treble_mm;
+    if (prefill.slot_length_mm !== undefined) slotLengthMm.value = prefill.slot_length_mm;
+    if (prefill.slot_depth_mm !== undefined) slotDepthMm.value = prefill.slot_depth_mm;
+    if (prefill.slot_width_mm !== undefined) slotWidthMm.value = prefill.slot_width_mm;
+    if (prefill.stock_thickness_mm !== undefined) stockThicknessMm.value = prefill.stock_thickness_mm;
+    if (prefill.tool_diameter_mm !== undefined) toolDiameterMm.value = prefill.tool_diameter_mm;
+    if (prefill.safe_z_mm !== undefined) safeZMm.value = prefill.safe_z_mm;
+
+    prefillSource.value = "neck_a";
+    previewResult.value = null;
+    previewError.value = null;
+  }
+
   return {
     // Input state
     nutWidthMm,
@@ -226,6 +260,7 @@ export const useNutSlotCamStore = defineStore("nutSlotCam", () => {
     previewResult,
     previewLoading,
     previewError,
+    prefillSource,
 
     // Computed
     gate,
@@ -247,5 +282,6 @@ export const useNutSlotCamStore = defineStore("nutSlotCam", () => {
     generatePreview,
     clearPreview,
     downloadPreviewJson,
+    loadFromNeckA,
   };
 });

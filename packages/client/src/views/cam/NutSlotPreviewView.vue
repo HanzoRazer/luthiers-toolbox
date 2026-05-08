@@ -13,12 +13,30 @@
         <section :class="shared.controlSection">
           <div :class="styles.sectionHeader">
             <h3>Parameters</h3>
-            <button
-              :class="styles.defaultsBtn"
-              @click="store.loadDefaults"
-            >
-              Load Defaults
-            </button>
+            <div :class="styles.headerButtons">
+              <button
+                :class="styles.defaultsBtn"
+                @click="store.loadDefaults"
+              >
+                Load Defaults
+              </button>
+              <button
+                :class="[styles.defaultsBtn, !canLoadFromNeckA && styles.defaultsBtnDisabled]"
+                :disabled="!canLoadFromNeckA"
+                :title="canLoadFromNeckA ? 'Prefill from NECK-A. CAM validation still required.' : 'Complete Nut Workflow First'"
+                @click="handleLoadFromNeckA"
+              >
+                Load From NECK-A
+              </button>
+            </div>
+          </div>
+
+          <!-- Provenance Notice -->
+          <div
+            v-if="store.prefillSource === 'neck_a'"
+            :class="styles.provenanceNotice"
+          >
+            Prefilled from NECK-A setup workflow. Review values before generating CAM preview.
           </div>
 
           <!-- Nut Dimensions -->
@@ -396,10 +414,24 @@
 <script setup lang="ts">
 import { computed } from "vue";
 import { useNutSlotCamStore } from "@/stores/useNutSlotCamStore";
+import { useInstrumentGeometryStore } from "@/stores/instrumentGeometryStore";
 import shared from "@/styles/dark-theme-shared.module.css";
 import styles from "./NutSlotPreviewView.module.css";
 
 const store = useNutSlotCamStore();
+const geometryStore = useInstrumentGeometryStore();
+
+const canLoadFromNeckA = computed(() => {
+  return geometryStore.nutWorkflowResult !== null;
+});
+
+function handleLoadFromNeckA() {
+  if (!canLoadFromNeckA.value) return;
+  store.loadFromNeckA({
+    nutClearancesMm: geometryStore.nutClearancesMm,
+    nutWidthMm: geometryStore.fretboardSpec.nut_width_mm,
+  });
+}
 
 const svgViewBox = computed(() => {
   const padding = 2;
