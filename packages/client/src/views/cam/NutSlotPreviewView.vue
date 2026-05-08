@@ -283,6 +283,31 @@
           </div>
         </div>
 
+        <!-- Export Section -->
+        <div
+          v-if="store.hasPreview"
+          :class="styles.exportSection"
+        >
+          <button
+            :class="[
+              styles.exportButton,
+              !store.canDownloadPreviewJson && styles.exportButtonDisabled
+            ]"
+            :disabled="!store.canDownloadPreviewJson || store.previewLoading"
+            @click="store.downloadPreviewJson"
+          >
+            <span v-if="!store.hasPreview">No Preview Generated</span>
+            <span v-else-if="store.gate === 'red'">Download Disabled — RED Gate</span>
+            <span v-else>Download Preview JSON</span>
+          </button>
+          <p
+            v-if="store.gate === 'yellow'"
+            :class="styles.exportWarningText"
+          >
+            Warnings present. JSON is for review only.
+          </p>
+        </div>
+
         <!-- RED Issues (Errors) -->
         <div
           v-if="store.redIssues.length > 0"

@@ -117,6 +117,10 @@ export const useNutSlotCamStore = defineStore("nutSlotCam", () => {
     }
   });
 
+  const canDownloadPreviewJson = computed(() => {
+    return !!previewResult.value && previewResult.value.gate !== "red";
+  });
+
   // ── Actions ──────────────────────────────────────────────────────────────
 
   function loadDefaults(): void {
@@ -167,6 +171,44 @@ export const useNutSlotCamStore = defineStore("nutSlotCam", () => {
     previewError.value = null;
   }
 
+  function makeNutSlotPreviewFilename(): string {
+    const now = new Date();
+    const pad = (n: number) => String(n).padStart(2, "0");
+    const stamp =
+      `${now.getFullYear()}${pad(now.getMonth() + 1)}${pad(now.getDate())}-` +
+      `${pad(now.getHours())}${pad(now.getMinutes())}${pad(now.getSeconds())}`;
+    return `nut-slot-preview-${stamp}.toolpath.json`;
+  }
+
+  function downloadJson(filename: string, data: unknown): void {
+    const blob = new Blob([JSON.stringify(data, null, 2)], {
+      type: "application/json",
+    });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = filename;
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    URL.revokeObjectURL(url);
+  }
+
+  function downloadPreviewJson(): void {
+    if (!previewResult.value) return;
+    if (previewResult.value.gate === "red") return;
+
+    if (previewResult.value.gate === "yellow") {
+      const confirmed = window.confirm(
+        "This CAM preview has warnings. Download JSON for review only?"
+      );
+      if (!confirmed) return;
+    }
+
+    const filename = makeNutSlotPreviewFilename();
+    downloadJson(filename, previewResult.value);
+  }
+
   return {
     // Input state
     nutWidthMm,
@@ -198,10 +240,12 @@ export const useNutSlotCamStore = defineStore("nutSlotCam", () => {
     gateColor,
     gateBgColor,
     gateTextColor,
+    canDownloadPreviewJson,
 
     // Actions
     loadDefaults,
     generatePreview,
     clearPreview,
+    downloadPreviewJson,
   };
 });
