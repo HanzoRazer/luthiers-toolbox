@@ -1,0 +1,183 @@
+[
+  {
+    "module": "profiling",
+    "path": "app/cam/profiling/",
+    "primary_generator": "ProfileToolpathGenerator",
+    "status": "candidate",
+    "category": "export_generator",
+    "readiness_score": 67,
+    "promotion_target": "governed_preview",
+    "blocking_issues": [
+      "Coordinate system origin not explicitly documented",
+      "Z-zero semantics not documented",
+      "No dedicated test file"
+    ],
+    "strengths": [
+      "Well-structured ProfileConfig dataclass",
+      "Holding tabs, lead-in/out, climb milling implemented",
+      "Safe-Z and retract-Z properly handled"
+    ],
+    "last_evaluated": "2026-05-09"
+  },
+  {
+    "module": "drilling",
+    "path": "app/cam/drilling/",
+    "primary_generator": "DrillingPeckCycleGenerator",
+    "status": "candidate",
+    "category": "export_generator",
+    "readiness_score": 72,
+    "promotion_target": "governed_preview",
+    "blocking_issues": [
+      "Preview endpoint missing",
+      "Coordinate origin not explicitly documented"
+    ],
+    "strengths": [
+      "Clear G83 peck drilling documentation",
+      "Configurable peck depth, dwell, canned cycle option",
+      "Estimated time calculation included"
+    ],
+    "last_evaluated": "2026-05-09"
+  },
+  {
+    "module": "binding",
+    "path": "app/cam/binding/",
+    "primary_generator": "BindingChannel",
+    "status": "candidate",
+    "category": "export_generator",
+    "readiness_score": 62,
+    "promotion_target": "governed_preview",
+    "blocking_issues": [
+      "Coordinate origin not documented",
+      "Export separation needs improvement",
+      "Tests could be more comprehensive"
+    ],
+    "strengths": [
+      "Multi-pass auto-detection for wide channels",
+      "Climb milling option for clean edge",
+      "Resolves multiple GAPs"
+    ],
+    "last_evaluated": "2026-05-09"
+  },
+  {
+    "module": "rosette",
+    "path": "app/cam/rosette/",
+    "primary_generator": "generate_gcode_from_toolpaths",
+    "status": "candidate",
+    "category": "export_generator",
+    "readiness_score": 70,
+    "promotion_target": "governed_preview",
+    "blocking_issues": [
+      "Coordinate origin not explicitly documented",
+      "Postprocessor integration partial",
+      "Preview consolidation needed"
+    ],
+    "strengths": [
+      "MachineProfile enum for GRBL vs FANUC",
+      "cnc_safety_validator.py for validation",
+      "Large, feature-rich module"
+    ],
+    "last_evaluated": "2026-05-09"
+  },
+  {
+    "module": "vcarve",
+    "path": "app/cam/vcarve/",
+    "primary_generator": "VCarveToolpathGenerator",
+    "status": "candidate",
+    "category": "export_generator",
+    "readiness_score": 68,
+    "promotion_target": "governed_preview",
+    "blocking_issues": [
+      "Coordinate origin not documented",
+      "Dedicated test file needed"
+    ],
+    "strengths": [
+      "Chipload-based feed rate calculation",
+      "Corner slowdown for quality",
+      "Multi-pass stepdown for deep cuts"
+    ],
+    "last_evaluated": "2026-05-09"
+  },
+  {
+    "module": "fret_slots_cam",
+    "path": "app/calculators/fret_slots_cam.py",
+    "primary_generator": "compute_fret_slot_toolpath",
+    "status": "candidate",
+    "category": "export_generator",
+    "readiness_score": 75,
+    "promotion_target": "governed_export",
+    "blocking_issues": [
+      "G-code generation not via postprocessor",
+      "RMOS integration incomplete",
+      "Coordinate docs could be more explicit"
+    ],
+    "strengths": [
+      "Integrated with FretboardEcosphere",
+      "Radius-blended depth calculation",
+      "DXF + G-code output bundle",
+      "Good test coverage"
+    ],
+    "last_evaluated": "2026-05-09"
+  },
+  {
+    "module": "fret_slots_fan_cam",
+    "path": "app/calculators/fret_slots_fan_cam.py",
+    "primary_generator": "generate_fan_fret_cam",
+    "status": "candidate",
+    "category": "export_generator",
+    "readiness_score": 70,
+    "promotion_target": "governed_preview",
+    "blocking_issues": [
+      "Dependent on fret_slots_cam promotion",
+      "Coordinate docs inherited, not explicit"
+    ],
+    "strengths": [
+      "Fan-fret geometry validation",
+      "Perpendicular fret support",
+      "Delegates to fret_slots_cam infrastructure"
+    ],
+    "dependencies": ["fret_slots_cam"],
+    "last_evaluated": "2026-05-09"
+  },
+  {
+    "module": "saw_lab",
+    "path": "app/saw_lab/",
+    "primary_generator": "SawToolpathBuilder",
+    "status": "quarantined",
+    "category": "export_generator",
+    "readiness_score": null,
+    "promotion_target": "split_then_candidate",
+    "blocking_issues": [
+      "batch_gcode_router.py produces machine output without RMOS governance",
+      "G-code download available without audit trail",
+      "No run_id pattern for provenance"
+    ],
+    "candidate_subsystems": [
+      {
+        "name": "risk_evaluator",
+        "path": "app/saw_lab/risk_evaluator.py",
+        "risk": "LOW",
+        "potential_promotion": "governed_preview"
+      },
+      {
+        "name": "path_planner",
+        "path": "app/saw_lab/path_planner.py",
+        "risk": "LOW",
+        "potential_promotion": "governed_preview"
+      },
+      {
+        "name": "calculators",
+        "path": "app/saw_lab/calculators/",
+        "risk": "LOW",
+        "potential_promotion": "library"
+      }
+    ],
+    "quarantine_release_requirements": [
+      "Split machine-output endpoints from preview/analysis services",
+      "Wire G-code endpoints to RMOS with run_id pattern",
+      "Add input/output hashing for provenance",
+      "Add user confirmation before G-code download",
+      "Document coordinate system for all operations"
+    ],
+    "last_evaluated": "2026-05-09"
+  }
+]

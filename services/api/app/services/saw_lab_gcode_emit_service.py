@@ -1,3 +1,12 @@
+"""
+Saw Lab G-code Emit Service
+
+Service layer for converting saw toolpath moves to G-code strings.
+
+QUARANTINE STATUS: This module emits machine-ready G-code without RMOS run
+tracking. The @safety_critical decorator marks it for review but does not
+provide audit trail. See CAM_MACHINE_OUTPUT_QUARANTINE_POLICY.md.
+"""
 from __future__ import annotations
 
 from typing import Any, Callable, Dict, List, Optional

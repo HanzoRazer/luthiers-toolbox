@@ -1,0 +1,172 @@
+[
+  {
+    "module": "nut_slot_cam",
+    "path": "app/cam/nut_slot_cam.py",
+    "preview_route": "/api/cam/nut-slot/preview",
+    "gate_support": true,
+    "coordinate_system_support": true,
+    "metadata_support": true,
+    "statistics_support": true,
+    "structured_issues_support": true,
+    "normalized": true,
+    "compliance_pct": 100,
+    "status": "canonical_reference",
+    "required_work": [],
+    "last_evaluated": "2026-05-09"
+  },
+  {
+    "module": "fret_slots_cam",
+    "path": "app/calculators/fret_slots_cam.py",
+    "preview_route": "/api/cam/fret_slots/preview",
+    "gate_support": false,
+    "coordinate_system_support": false,
+    "metadata_support": false,
+    "statistics_support": true,
+    "structured_issues_support": true,
+    "normalized": false,
+    "compliance_pct": 45,
+    "status": "candidate",
+    "required_work": [
+      "Add gate field with evaluation logic",
+      "Add coordinate_system object",
+      "Add operation/status/units fields",
+      "Rename route to /fret-slot/preview",
+      "Map messages to issues schema"
+    ],
+    "estimated_effort": "medium",
+    "priority": 1,
+    "last_evaluated": "2026-05-09"
+  },
+  {
+    "module": "drilling",
+    "path": "app/cam/drilling/peck_cycle.py",
+    "preview_route": null,
+    "gate_support": false,
+    "coordinate_system_support": false,
+    "metadata_support": false,
+    "statistics_support": true,
+    "structured_issues_support": false,
+    "normalized": false,
+    "compliance_pct": 35,
+    "status": "candidate",
+    "required_work": [
+      "Create /api/cam/drilling/preview endpoint",
+      "Add gate evaluation logic",
+      "Add coordinate_system object",
+      "Add standard statistics mapping",
+      "Keep existing G-code route for export path"
+    ],
+    "estimated_effort": "medium",
+    "priority": 3,
+    "last_evaluated": "2026-05-09"
+  },
+  {
+    "module": "fret_slots_fan_cam",
+    "path": "app/calculators/fret_slots_fan_cam.py",
+    "preview_route": "/api/cam/fret_slots/preview",
+    "gate_support": false,
+    "coordinate_system_support": false,
+    "metadata_support": false,
+    "statistics_support": true,
+    "structured_issues_support": true,
+    "normalized": false,
+    "compliance_pct": 40,
+    "status": "candidate",
+    "required_work": [
+      "Inherits fret_slots_cam normalization",
+      "Add fan-fret specific metadata"
+    ],
+    "estimated_effort": "low",
+    "priority": 2,
+    "dependencies": ["fret_slots_cam"],
+    "last_evaluated": "2026-05-09"
+  },
+  {
+    "module": "rosette",
+    "path": "app/cam/rosette/cnc/cnc_gcode_exporter.py",
+    "preview_route": null,
+    "gate_support": true,
+    "coordinate_system_support": true,
+    "metadata_support": false,
+    "statistics_support": false,
+    "structured_issues_support": false,
+    "normalized": false,
+    "compliance_pct": 50,
+    "status": "candidate",
+    "required_work": [
+      "Consolidate to /api/cam/rosette/preview",
+      "Create JSON preview response schema",
+      "Integrate cnc_safety_validator into response",
+      "Add coordinate_system object",
+      "Add standard statistics"
+    ],
+    "notes": "Multiple preview routes exist in art_studio and rmos",
+    "estimated_effort": "high",
+    "priority": 4,
+    "last_evaluated": "2026-05-09"
+  },
+  {
+    "module": "profiling",
+    "path": "app/cam/profiling/profile_toolpath.py",
+    "preview_route": "/api/cam/profiling/preview",
+    "gate_support": false,
+    "coordinate_system_support": false,
+    "metadata_support": false,
+    "statistics_support": true,
+    "structured_issues_support": false,
+    "normalized": false,
+    "compliance_pct": 40,
+    "status": "candidate",
+    "required_work": [
+      "Add gate evaluation",
+      "Add coordinate_system object",
+      "Add standard response wrapper"
+    ],
+    "estimated_effort": "medium",
+    "priority": 5,
+    "last_evaluated": "2026-05-09"
+  },
+  {
+    "module": "binding",
+    "path": "app/cam/binding/channel_toolpath.py",
+    "preview_route": "/api/cam/binding/preview",
+    "gate_support": false,
+    "coordinate_system_support": false,
+    "metadata_support": false,
+    "statistics_support": true,
+    "structured_issues_support": false,
+    "normalized": false,
+    "compliance_pct": 40,
+    "status": "candidate",
+    "required_work": [
+      "Add gate evaluation",
+      "Add coordinate_system object",
+      "Add standard response wrapper"
+    ],
+    "estimated_effort": "medium",
+    "priority": 6,
+    "last_evaluated": "2026-05-09"
+  },
+  {
+    "module": "vcarve",
+    "path": "app/cam/vcarve/toolpath.py",
+    "preview_route": "/api/cam/vcarve/production/preview",
+    "gate_support": false,
+    "coordinate_system_support": false,
+    "metadata_support": false,
+    "statistics_support": true,
+    "structured_issues_support": false,
+    "normalized": false,
+    "compliance_pct": 40,
+    "status": "candidate",
+    "required_work": [
+      "Add gate evaluation",
+      "Add coordinate_system object",
+      "Simplify route to /api/cam/vcarve/preview"
+    ],
+    "notes": "Route has extra /production/ segment",
+    "estimated_effort": "medium",
+    "priority": 7,
+    "last_evaluated": "2026-05-09"
+  }
+]
