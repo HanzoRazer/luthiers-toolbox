@@ -3,11 +3,20 @@ Fret Slots Router
 
 Fret slot preview endpoint for guitar neck CAM operations.
 Extracted from stub_routes.py during decomposition.
+
+GOVERNED PREVIEW STATUS: CANDIDATE (normalizing to standard)
+Gate Semantics: Derived from messages (error→RED, warning→YELLOW, else→GREEN)
+Coordinate System: Nut-origin, X=scale length, Y=bass-to-treble, Z=depth
+
+Normalization: Dev Order 5C (2026-05-09)
+Reference: nut_slot_cam.py is canonical pattern
 """
 
 from __future__ import annotations
 
-from typing import Any, Dict, List, Optional
+from datetime import datetime, timezone
+from enum import Enum
+from typing import Any, Dict, List, Literal, Optional
 
 from fastapi import APIRouter
 from pydantic import BaseModel, Field
@@ -19,6 +28,58 @@ from app.rmos.context import RmosContext
 
 
 router = APIRouter(tags=["cam", "fret-slots"])
+
+
+# --- Governed Preview Standard Types (5C Normalization) ---
+
+class CamGate(str, Enum):
+    """CAM safety gate classification."""
+    GREEN = "green"
+    YELLOW = "yellow"
+    RED = "red"
+
+
+class CamIssue(BaseModel):
+    """Structured issue for governed preview."""
+    code: str
+    severity: Literal["green", "yellow", "red"]
+    message: str
+    field: Optional[str] = None
+
+
+class CoordinateSystem(BaseModel):
+    """Coordinate system metadata for governed preview."""
+    units: str = "mm"
+    origin: str
+    x_axis: str
+    y_axis: str
+    z_axis: str
+    z_zero: str
+    handedness: str = "right_handed"
+    frame: str = "local_part"
+
+
+class PreviewMetadata(BaseModel):
+    """Generator metadata for governed preview."""
+    generator_id: str
+    generator_version: Optional[str] = None
+    preview_only: bool = True
+    machine_ready: bool = False
+    risk_class: str = "A"
+    generated_at: str
+
+
+# Fret Slot coordinate system constant (documented from fret_slots_cam.py behavior)
+FRET_SLOT_COORDINATE_SYSTEM = CoordinateSystem(
+    units="mm",
+    origin="nut_edge",
+    x_axis="scale_length_direction",
+    y_axis="bass_to_treble",
+    z_axis="depth_into_fretboard",
+    z_zero="top_of_fretboard",
+    handedness="right_handed",
+    frame="local_part",
+)
 
 
 class FretSlotsPreviewRequest(BaseModel):
@@ -55,7 +116,32 @@ class RmosMessageOut(BaseModel):
 
 
 class FretSlotsPreviewResponse(BaseModel):
-    """Response for fret slot preview."""
+    """
+    Response for fret slot preview.
+
+    GOVERNED PREVIEW fields (5C normalization):
+    - operation, status, gate, units: standard envelope
+    - coordinate_system: spatial reference metadata
+    - canonical_toolpath: wrapper for slots data
+    - warnings, errors, issues: structured validation output
+    - metadata: generator provenance
+
+    LEGACY fields (preserved for frontend compatibility):
+    - model_id, fret_count, slots, messages, statistics
+    """
+    # --- Governed Preview Standard Fields ---
+    operation: str = "fret_slot_preview"
+    status: str = "preview"
+    gate: CamGate = CamGate.GREEN
+    units: str = "mm"
+    coordinate_system: CoordinateSystem = Field(default_factory=lambda: FRET_SLOT_COORDINATE_SYSTEM)
+    canonical_toolpath: Optional[Dict[str, Any]] = None
+    warnings: List[str] = Field(default_factory=list)
+    errors: List[str] = Field(default_factory=list)
+    issues: List[CamIssue] = Field(default_factory=list)
+    metadata: Optional[PreviewMetadata] = None
+
+    # --- Legacy Fields (preserved) ---
     model_id: str
     fret_count: int
     slots: List[FretSlotOut]
@@ -63,9 +149,76 @@ class FretSlotsPreviewResponse(BaseModel):
     statistics: Optional[Dict[str, Any]] = None
 
 
+def _derive_gate_from_messages(messages: List[RmosMessageOut]) -> CamGate:
+    """
+    Derive gate status from RMOS messages.
+
+    Gate escalation (never de-escalates):
+    - error severity → RED
+    - warning severity → YELLOW (if not already RED)
+    - info/other → GREEN (default)
+    """
+    gate = CamGate.GREEN
+    for msg in messages:
+        if msg.severity == "error":
+            return CamGate.RED  # RED is terminal
+        if msg.severity == "warning" and gate != CamGate.RED:
+            gate = CamGate.YELLOW
+    return gate
+
+
+def _messages_to_issues(messages: List[RmosMessageOut]) -> List[CamIssue]:
+    """Convert RMOS messages to structured CamIssue format."""
+    severity_map = {
+        "error": "red",
+        "warning": "yellow",
+        "info": "green",
+    }
+    return [
+        CamIssue(
+            code=msg.code,
+            severity=severity_map.get(msg.severity, "green"),
+            message=msg.message,
+            field=None,
+        )
+        for msg in messages
+    ]
+
+
+def _normalize_statistics(
+    raw_stats: Optional[Dict[str, Any]],
+    slot_count: int,
+) -> Dict[str, Any]:
+    """
+    Normalize statistics to governed preview standard.
+
+    Adds required core statistics alongside existing fields.
+    """
+    if raw_stats is None:
+        return {
+            "operation_count": slot_count,
+            "move_count": slot_count * 4,  # rapid + plunge + cut + retract per slot
+            "warning_count": 0,
+            "error_count": 0,
+        }
+
+    # Add required core statistics if missing
+    normalized = dict(raw_stats)
+    normalized.setdefault("operation_count", normalized.get("slot_count", slot_count))
+    normalized.setdefault("move_count", slot_count * 4)
+    normalized.setdefault("warning_count", 0)
+    normalized.setdefault("error_count", 0)
+    return normalized
+
+
 @router.post("/fret_slots/preview")
 def preview_fret_slots(req: FretSlotsPreviewRequest) -> FretSlotsPreviewResponse:
-    """Preview fret slot positions using real calculator."""
+    """
+    Preview fret slot positions using real calculator.
+
+    GOVERNED PREVIEW endpoint (5C normalization).
+    Returns standard preview envelope with legacy fields preserved.
+    """
     messages: List[RmosMessageOut] = []
 
     try:
@@ -141,10 +294,47 @@ def preview_fret_slots(req: FretSlotsPreviewRequest) -> FretSlotsPreviewResponse
             context={"slot_depth_mm": req.slot_depth_mm},
         ))
 
+    # --- Governed Preview Normalization (5C) ---
+    gate = _derive_gate_from_messages(messages)
+    issues = _messages_to_issues(messages)
+    warnings_list = [m.message for m in messages if m.severity == "warning"]
+    errors_list = [m.message for m in messages if m.severity == "error"]
+
+    normalized_stats = _normalize_statistics(statistics, req.fret_count)
+    normalized_stats["warning_count"] = len(warnings_list)
+    normalized_stats["error_count"] = len(errors_list)
+
+    metadata = PreviewMetadata(
+        generator_id="fret_slots_cam",
+        generator_version="1.0.0",
+        preview_only=True,
+        machine_ready=False,
+        risk_class="A",
+        generated_at=datetime.now(timezone.utc).isoformat(),
+    )
+
+    canonical_toolpath = {
+        "slots": [slot.model_dump() for slot in slots],
+        "slot_count": len(slots),
+        "mode": req.mode or "standard",
+    }
+
     return FretSlotsPreviewResponse(
+        # Governed preview fields
+        operation="fret_slot_preview",
+        status="preview",
+        gate=gate,
+        units="mm",
+        coordinate_system=FRET_SLOT_COORDINATE_SYSTEM,
+        canonical_toolpath=canonical_toolpath,
+        warnings=warnings_list,
+        errors=errors_list,
+        issues=issues,
+        metadata=metadata,
+        # Legacy fields (preserved)
         model_id=req.model_id,
         fret_count=req.fret_count,
         slots=slots,
         messages=messages,
-        statistics=statistics,
+        statistics=normalized_stats,
     )
