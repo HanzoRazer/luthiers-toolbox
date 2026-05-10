@@ -474,8 +474,38 @@ All changes require parity verification first.
 
 ---
 
+## Phase-2 Status Update
+
+**Date:** 2026-05-07  
+**Dev Order:** 14
+
+Phase-2 Aperture Workspace development validated the containment audit findings:
+
+**Resolved issues:**
+- Endpoint mismatch resolved in Dev Order 8 (`/api/woodworking/` → `/api/instrument/`)
+- Canonical provenance clarified in Dev Order 9
+- Workspace mount validated (Spiral tab)
+
+**Current status:**
+- Shared comparison infrastructure operational
+- Canonical spiral implementation remains intact
+- Component still owns rendering, state, export behavior
+- Workspace consumes spiral geometry outputs only
+
+**Validation:**
+- DXF export verified functional
+- Validation endpoint verified functional
+- Combined dual-spiral comparison operational
+- No regression in canonical tool behavior
+
+**Governance:**
+`FEATURE_PARITY_MIGRATION_POLICY.md` successfully prevented regression during Phase-2.
+
+---
+
 ## Revision History
 
 | Date | Change |
 |------|--------|
+| 2026-05-07 | Phase-2 status update (Dev Order 14) |
 | 2026-05-07 | Initial containment audit (Dev Order 7) |

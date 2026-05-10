@@ -27,6 +27,18 @@ const SpiralSoundholeDesigner = defineAsyncComponent(
   () => import('@/components/toolbox/acoustics/SpiralSoundholeDesigner.vue')
 )
 
+const StandardAperturePanel = defineAsyncComponent(
+  () => import('./panels/StandardAperturePanel.vue')
+)
+
+const ApertureComparisonPanel = defineAsyncComponent(
+  () => import('@/components/toolbox/acoustics/ApertureComparisonPanel.vue')
+)
+
+const TargetMatchingPanel = defineAsyncComponent(
+  () => import('@/components/toolbox/acoustics/TargetMatchingPanel.vue')
+)
+
 type TabId = 'spiral' | 'standard' | 'comparison' | 'inverse' | 'calibration'
 
 interface Tab {
@@ -57,9 +69,9 @@ const tabs: Tab[] = [
   },
   {
     id: 'inverse',
-    label: 'Inverse Solver',
-    icon: '🔄',
-    description: 'Calculate parameters from target area or P:A ratio',
+    label: 'Target Matching',
+    icon: '🎯',
+    description: 'Solve for required aperture parameters from acoustic targets',
   },
   {
     id: 'calibration',
@@ -138,60 +150,38 @@ const workspaceGate: WorkflowGateLevel = 'green'
 
         <!-- Standard Types Tab -->
         <div v-else-if="activeTab === 'standard'" :class="$style.tabContent">
-          <div :class="$style.placeholderCard">
-            <SectionLabel text="Aperture Type Selection" />
-            <div :class="$style.typePlaceholder">
-              <div :class="$style.typeOption">
-                <GateBadge gate="green" label="Round" />
-                <span>Traditional circular soundhole</span>
-              </div>
-              <div :class="$style.typeOption">
-                <GateBadge gate="green" label="Oval" />
-                <span>Selmer/Maccaferri elliptical</span>
-              </div>
-              <div :class="$style.typeOption">
-                <GateBadge gate="green" label="F-hole" />
-                <span>Archtop f-holes</span>
-              </div>
-            </div>
-          </div>
-
-          <div :class="$style.placeholderCard">
-            <SectionLabel text="Sizing" />
-            <PrerequisiteNotice message="Select an aperture type above to configure sizing parameters." />
-          </div>
+          <Suspense>
+            <template #default>
+              <StandardAperturePanel />
+            </template>
+            <template #fallback>
+              <div :class="$style.loadingPlaceholder">Loading Standard Aperture Panel...</div>
+            </template>
+          </Suspense>
         </div>
 
         <!-- Comparison Tab -->
         <div v-else-if="activeTab === 'comparison'" :class="$style.tabContent">
-          <div :class="$style.placeholderCard">
-            <SectionLabel text="Cross-Type Comparison" />
-            <div :class="$style.comparisonPlaceholder">
-              <p>Compare area, equivalent diameter, and P:A ratio across aperture types.</p>
-              <p>Enables direct comparison: "How does my spiral compare to a 4-inch round?"</p>
-            </div>
-          </div>
-
-          <PrerequisiteNotice
-            message="Configure at least one aperture in Spiral or Standard tabs before comparing."
-          />
+          <Suspense>
+            <template #default>
+              <ApertureComparisonPanel />
+            </template>
+            <template #fallback>
+              <div :class="$style.loadingPlaceholder">Loading Comparison Panel...</div>
+            </template>
+          </Suspense>
         </div>
 
-        <!-- Inverse Solver Tab -->
+        <!-- Target Matching Tab -->
         <div v-else-if="activeTab === 'inverse'" :class="$style.tabContent">
-          <div :class="$style.placeholderCard">
-            <SectionLabel text="Inverse Solver" />
-            <div :class="$style.inversePlaceholder">
-              <p>Specify target area or P:A ratio, and the solver will calculate required parameters.</p>
-              <p>Example: "I need 2000 mm² with P:A > 0.12 — what slot width and turns?"</p>
-            </div>
-          </div>
-
-          <div :class="$style.placeholderCard">
-            <SectionLabel text="Constraints" />
-            <GateBadge gate="yellow" label="Not Implemented" />
-            <p :class="$style.deferredNote">Inverse solver UI deferred to later dev order.</p>
-          </div>
+          <Suspense>
+            <template #default>
+              <TargetMatchingPanel />
+            </template>
+            <template #fallback>
+              <div :class="$style.loadingPlaceholder">Loading Target Matching Panel...</div>
+            </template>
+          </Suspense>
         </div>
 
         <!-- Calibration Tab -->
@@ -448,4 +438,6 @@ const workspaceGate: WorkflowGateLevel = 'green'
   color: #6b7280;
   font-size: 0.875rem;
 }
+
+/* Dev Order 17: Solver card CSS moved to TargetMatchingPanel.vue */
 </style>

@@ -1,9 +1,9 @@
 # African Hardwoods: Angolan & East African Species Reference
 
-**Version:** 1.1.0  
-**Species count:** 15  
-**Generated:** 2026-05-07  
-**Source data:** CIRAD Wood Density Database, Wood Database, PROTA
+**Version:** 1.3.0  
+**Species count:** 17  
+**Last updated:** 2026-05-07  
+**Source data:** CIRAD Wood Density Database, Wood Database, PROTA, FPL GTR-282
 
 ---
 
@@ -30,7 +30,7 @@
 | 4 | **Chanfuta** | *Afzelia quanzensis* | 0.83 | 830 | 2210 | 2.6 | 4.1 | — |
 | 5 | **Doussie** | *Afzelia bipindensis* | 0.83 | 830 | 2430 | 3.0 | 4.4 | — |
 | 6 | **Banga Wanga** | *Amblygonocarpus andongensis* | 0.77 | 770 | ~1800 | 3.5 † | 5.5 † | — |
-| 7 | **Mugavu** | *Albizia coriaria* | 0.61 | 610 | ~1220 | 3.8 † | 6.2 † | — |
+| 7 | **Mugavu** | *Albizia coriaria* | 0.76 | 764 | ~1800 | 3.8 † | 6.2 † | — |
 | 8 | **Sapele / Undianuno** | *Entandrophragma cylindricum* | 0.64 | 640 | 1410 | 4.6 | 7.4 | App II |
 | 9 | **Kibaba / Tiama** | *Entandrophragma angolense* | 0.58 | 580 | 940 | 5.2 | 7.6 | Prop II |
 | 10 | **Sipo / Utile** | *Entandrophragma utile* | 0.59 | 590 | 1130 | 4.8 | 6.4 | Prop II |
@@ -39,6 +39,8 @@
 | 13 | **Longhi (red)** | *Gambeya lacourtiana* | 0.59 | 590 | ~1400 | 4.5 † | 7.3 † | — |
 | 14 | **Mukulungu** | *Autranella congolensis* | 0.87 | 870 | 2500 | 5.0 † | 8.2 † | — |
 | 15 | **Mvule / Iroko** | *Milicia excelsa* | 0.64 | 660 | 1260 | 3.2 | 4.6 | — |
+| 16 | **Ovangkol / Shedua** | *Guibourtia ehie* | 0.82 | 825 | 1360 | 4.3 | 8.3 | — |
+| 17 | **Wenge** | *Millettia laurentii* | 0.87 | 870 | 1930 | 4.8 | 8.1 | — |
 
 > † Estimated from SG correlation  
 > Prop II = Proposed CITES Appendix II at CoP20 (November 2025)  
@@ -207,9 +209,9 @@
 
 | Property | Value |
 |----------|-------|
-| Specific Gravity | 0.61 |
-| Density | 610 kg/m³ |
-| Janka Hardness | ~1220 lbf / ~5430 N † |
+| Specific Gravity | 0.76 |
+| Density | 764 kg/m³ |
+| Janka Hardness | ~1800 lbf / ~8000 N † |
 | Shrinkage (radial) | 3.8% † |
 | Shrinkage (tangential) | 6.2% † |
 | T/R Ratio | 1.6 † |
@@ -218,10 +220,10 @@
 | Resinous | No |
 | CNC Risks | Burn: low, Tearout: medium, Dust: medium |
 | Guitar Uses | body, back/sides |
-| Tone Character | *(needs acoustic testing — positioned as mahogany alternative)* |
+| Tone Character | *(needs acoustic testing — positioned between Sapele and Bubinga)* |
 | Sustainability | Abundant — not CITES listed, East African supply growing |
 
-**Notes:** Strategic emerging tonewood. At 610 kg/m³, sits in ideal mahogany-weight territory. East African luthiers already use Mugavu as a mahogany replacement — this is established regional practice, not speculation. European furniture export channels exist and could pivot to tonewood grading. The highest-priority data gap is acoustic characterization (speed of sound, impedance).
+**Notes:** Strategic emerging tonewood. At 764 kg/m³, sits between Sapele (640) and Bubinga (890) — denser than mahogany alternatives, lighter than rosewoods. East African luthiers already use Mugavu as a mahogany replacement — this is established regional practice, not speculation. European furniture export channels exist and could pivot to tonewood grading. The highest-priority data gap is acoustic characterization (speed of sound, impedance).
 
 > † Estimated from SG correlation
 
@@ -433,13 +435,67 @@
 
 ---
 
+<a id="guibourtia_ehie"></a>
+### Ovangkol / Shedua
+
+**ID:** `ovangkol` · **Category:** hardwood · **Scientific name:** *Guibourtia ehie* (A.Chev.) J.Léonard · **Also known as:** Shedua, Amazique, Amazoué, Ehie, Hyedua
+
+| Property | Value |
+|----------|-------|
+| Specific Gravity | 0.82 |
+| Density | 825 kg/m³ |
+| Janka Hardness | 1360 lbf / 6050 N |
+| Modulus of Elasticity | 18.6 GPa |
+| Modulus of Rupture | 140.3 MPa |
+| Shrinkage (radial) | 4.3% |
+| Shrinkage (tangential) | 8.3% |
+| T/R Ratio | 1.9 |
+| Grain | interlocked, often figured |
+| Workability | moderate — interlocked grain prone to tearout |
+| Resinous | No |
+| CNC Risks | Burn: low, Tearout: medium, Dust: medium |
+| Guitar Uses | back/sides, body, fretboard |
+| Tone Character | warm, complex — rosewood family character with fuller midrange |
+| Sustainability | Not CITES listed — not threatened |
+
+**Notes:** West African *Guibourtia*, closely related to Bubinga (*G. demeusei*). The go-to rosewood alternative for back/sides — similar warmth and complexity but without CITES burden. Taylor, Martin, and other major manufacturers use Ovangkol extensively. High T/R ratio (1.9) means more movement than some alternatives — proper acclimatization critical. The interlocked grain can tear; climb cuts recommended.
+
+---
+
+<a id="millettia_laurentii"></a>
+### Wenge
+
+**ID:** `wenge` · **Category:** hardwood · **Scientific name:** *Millettia laurentii* De Wild. · **Also known as:** Dikela, Palissandre du Congo, Awong
+
+| Property | Value |
+|----------|-------|
+| Specific Gravity | 0.87 |
+| Density | 870 kg/m³ |
+| Janka Hardness | 1930 lbf / 8590 N |
+| Shrinkage (radial) | 4.8% |
+| Shrinkage (tangential) | 8.1% |
+| T/R Ratio | 1.7 |
+| Grain | straight |
+| Workability | difficult — very hard, splinters easily, dulls tools rapidly |
+| Resinous | No |
+| CNC Risks | Burn: medium, Tearout: high, Dust: high (sensitizing, splinters) |
+| Guitar Uses | fretboard, neck, body, accent |
+| Tone Character | bright, percussive, excellent sustain — stiff and articulate |
+| Sustainability | **IUCN Endangered** — not CITES listed but declining |
+
+**Notes:** The benchmark African fretboard/neck wood. Extremely stiff (high MOE), which translates to exceptional sustain and articulate attack. Warwick, Ibanez, and others use Wenge necks extensively. Straight grain is visually striking — dark brown/black with lighter streaks. **Caution:** coarse texture splinters easily, dust is highly sensitizing. Glue adhesion can be poor — surface prep critical. IUCN Endangered due to habitat loss — consider Panga Panga as alternative (same genus, similar properties, not endangered).
+
+---
+
 ## CITES Status Summary
 
 | Status | Species | Action Required |
 |--------|---------|-----------------|
-| **Appendix II (current)** | African Blackwood, Sapele | Export permits required |
+| **Appendix II (current)** | African Blackwood, Sapele, Khaya (African Mahogany) | Export permits required |
 | **Proposed Appendix II (CoP20)** | Kibaba, Sipo, all *Entandrophragma* | Acquire stock before November 2025 |
-| **Not listed** | All others | No trade restrictions |
+| **Not listed** | All others in this comparison | No trade restrictions |
+
+> **Note:** Khaya spp. (African Mahogany) added to Appendix II on 2023-02-23 with annotation #17. Not covered in this comparison but relevant for sourcing decisions.
 
 ---
 
@@ -447,10 +503,11 @@
 
 | Application | Recommended Species | Density Range |
 |-------------|-------------------|---------------|
-| **Acoustic back/sides** | African Walnut, Kibaba, Sipo, Kiaat | 530–620 kg/m³ |
+| **Acoustic back/sides** | African Walnut, Kibaba, Sipo, Kiaat, Ovangkol | 530–825 kg/m³ |
 | **Acoustic neck** | Sapele, Sipo, Kiaat, Mvule | 590–660 kg/m³ |
-| **Electric body** | Chanfuta, Doussie, Panga Panga, Sapele, Mvule | 640–880 kg/m³ |
-| **Fretboard** | African Blackwood, Panga Panga, Mukulungu | 870–1270 kg/m³ |
+| **Electric neck** | Wenge, Ovangkol, Panga Panga | 825–880 kg/m³ |
+| **Electric body** | Chanfuta, Doussie, Panga Panga, Sapele, Mvule, Ovangkol, Wenge | 640–880 kg/m³ |
+| **Fretboard** | African Blackwood, Panga Panga, Wenge, Mukulungu | 870–1270 kg/m³ |
 | **Bridge** | African Blackwood, Mukulungu, Doussie | 830–1270 kg/m³ |
 
 ---
@@ -473,6 +530,8 @@
 | **Longhi (both)** | ALL acoustic properties, Janka (measured) |
 | **Mukulungu** | MOE, MOR, acoustic properties |
 | **Mvule / Iroko** | MOE, MOR, speed of sound, acoustic impedance |
+| **Ovangkol** | speed of sound, acoustic impedance |
+| **Wenge** | MOE, MOR, speed of sound, acoustic impedance |
 
 **Priority:** Acoustic characterization (speed of sound, impedance) is missing for all species. Without measured values, tonal positioning relies on density-based estimates.
 
@@ -485,7 +544,9 @@
 | CIRAD Wood Density Database (2018) | D12, Db, volumetric shrinkage |
 | CIRAD Wood Collection Index | SG cross-validation (34,395 specimens) |
 | Wood Database | Janka, shrinkage, workability |
+| FPL GTR-282 (2021) | North American species physical properties |
 | PROTA/PlantUse | Vernacular names, distribution |
 | ITTO Tropical Timber | Trade names, applications |
-| CITES Appendices (2024-05-25) | Current listings |
+| CITES Checklist (2026-04-30) | Current listings |
 | CITES CoP20 Proposals | Proposed listings |
+| East African Forestry Data | Mugavu SG/density verification |

@@ -9,3 +9,4 @@ export * from "./roughing";
 export * from "./pipeline";
 export * from "./simulate";
 export * from "./types";
+export * from "./nutSlot";

@@ -69,7 +69,7 @@ export const toolRegistry: ToolEntry[] = [
     metadata: {
       canonical: false,
       migrationState: 'beta-consolidation-shell',
-      mounts: ['SpiralSoundholeDesigner.vue'],
+      mounts: ['SpiralSoundholeDesigner.vue', 'StandardAperturePanel.vue', 'ApertureComparisonPanel.vue'],
     },
   },
 ]
