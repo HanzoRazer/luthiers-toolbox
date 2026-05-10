@@ -63,10 +63,9 @@ def generate_fan_fret_cam(
         treble_scale_mm=treble_scale_mm,
         bass_scale_mm=bass_scale_mm,
         fret_count=spec.fret_count,
-        perpendicular_fret=perpendicular_fret,
         nut_width_mm=spec.nut_width_mm,
         heel_width_mm=spec.heel_width_mm,
-        scale_length_reference_mm=treble_scale_mm,
+        perpendicular_fret=perpendicular_fret,
     )
 
     # Generate toolpaths from fan-fret points

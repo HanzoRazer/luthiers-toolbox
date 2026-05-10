@@ -24,6 +24,7 @@ from pydantic import BaseModel, Field
 from app.instrument_geometry import load_model_spec
 from app.instrument_geometry.neck.neck_profiles import FretboardSpec
 from app.calculators.fret_slots_cam import generate_fret_slot_toolpaths, compute_cam_statistics
+from app.calculators.fret_slots_fan_cam import generate_fan_fret_cam
 from app.rmos.context import RmosContext
 
 
@@ -57,6 +58,8 @@ class CoordinateSystem(BaseModel):
     z_zero: str
     handedness: str = "right_handed"
     frame: str = "local_part"
+    notes: Optional[str] = None
+    coordinate_confidence: Optional[str] = None
 
 
 class PreviewMetadata(BaseModel):
@@ -67,6 +70,7 @@ class PreviewMetadata(BaseModel):
     machine_ready: bool = False
     risk_class: str = "A"
     generated_at: str
+    mode: Optional[str] = None
 
 
 # Fret Slot coordinate system constant (documented from fret_slots_cam.py behavior)
@@ -79,6 +83,22 @@ FRET_SLOT_COORDINATE_SYSTEM = CoordinateSystem(
     z_zero="top_of_fretboard",
     handedness="right_handed",
     frame="local_part",
+    coordinate_confidence="documented_from_current_code",
+)
+
+# Fan Fret coordinate system (extends standard with angled slot notes)
+FAN_FRET_COORDINATE_SYSTEM = CoordinateSystem(
+    units="mm",
+    origin="nut_edge",
+    x_axis="scale_length_direction",
+    y_axis="bass_to_treble",
+    z_axis="depth_into_fretboard",
+    z_zero="top_of_fretboard",
+    handedness="right_handed",
+    frame="local_part",
+    notes="Fan fret slots are angled; each slot has separate bass and treble X positions. "
+          "Perpendicular fret is marked with is_perpendicular=true.",
+    coordinate_confidence="documented_from_current_code",
 )
 
 
@@ -216,10 +236,16 @@ def preview_fret_slots(req: FretSlotsPreviewRequest) -> FretSlotsPreviewResponse
     """
     Preview fret slot positions using real calculator.
 
-    GOVERNED PREVIEW endpoint (5C normalization).
+    GOVERNED PREVIEW endpoint (5C/5D normalization).
     Returns standard preview envelope with legacy fields preserved.
+
+    Modes:
+    - standard: Perpendicular fret slots (5C)
+    - fan_fret: Angled multi-scale fret slots (5D)
     """
     messages: List[RmosMessageOut] = []
+    mode = req.mode or "standard"
+    is_fan_fret = mode == "fan_fret"
 
     try:
         model_spec = load_model_spec(req.model_id)
@@ -246,21 +272,50 @@ def preview_fret_slots(req: FretSlotsPreviewRequest) -> FretSlotsPreviewResponse
     )
 
     context = RmosContext(model_id=req.model_id, model_spec={})
+    toolpaths = []
+    statistics = None
 
     try:
-        toolpaths = generate_fret_slot_toolpaths(
-            spec=spec,
-            context=context,
-            slot_depth_mm=req.slot_depth_mm,
-            slot_width_mm=req.slot_width_mm,
-        )
-        statistics = compute_cam_statistics(toolpaths)
+        if is_fan_fret:
+            # Fan fret mode: use dedicated fan fret generator (5D wiring)
+            if req.bass_scale_mm is None or req.treble_scale_mm is None:
+                messages.append(RmosMessageOut(
+                    code="FAN_FRET_PARAMS_MISSING",
+                    severity="error",
+                    message="Fan fret mode requires bass_scale_mm and treble_scale_mm",
+                    context={"mode": mode},
+                    hint="Provide both scale lengths for multi-scale fretting",
+                ))
+            else:
+                perpendicular = req.perpendicular_fret or 7
+                cam_output = generate_fan_fret_cam(
+                    spec=spec,
+                    context=context,
+                    treble_scale_mm=req.treble_scale_mm,
+                    bass_scale_mm=req.bass_scale_mm,
+                    perpendicular_fret=perpendicular,
+                    slot_depth_mm=req.slot_depth_mm,
+                    slot_width_mm=req.slot_width_mm,
+                    safe_z_mm=5.0,
+                    post_id="GRBL",
+                )
+                toolpaths = cam_output.toolpaths
+                statistics = cam_output.statistics
+        else:
+            # Standard mode: perpendicular fret slots
+            toolpaths = generate_fret_slot_toolpaths(
+                spec=spec,
+                context=context,
+                slot_depth_mm=req.slot_depth_mm,
+                slot_width_mm=req.slot_width_mm,
+            )
+            statistics = compute_cam_statistics(toolpaths)
     except (ValueError, TypeError, KeyError, AttributeError, ZeroDivisionError) as e:
         messages.append(RmosMessageOut(
             code="CALCULATION_ERROR",
             severity="error",
             message=f"Fret slot calculation failed: {str(e)}",
-            context={},
+            context={"mode": mode},
         ))
         toolpaths = []
         statistics = None
@@ -294,7 +349,7 @@ def preview_fret_slots(req: FretSlotsPreviewRequest) -> FretSlotsPreviewResponse
             context={"slot_depth_mm": req.slot_depth_mm},
         ))
 
-    # --- Governed Preview Normalization (5C) ---
+    # --- Governed Preview Normalization (5C/5D) ---
     gate = _derive_gate_from_messages(messages)
     issues = _messages_to_issues(messages)
     warnings_list = [m.message for m in messages if m.severity == "warning"]
@@ -304,28 +359,40 @@ def preview_fret_slots(req: FretSlotsPreviewRequest) -> FretSlotsPreviewResponse
     normalized_stats["warning_count"] = len(warnings_list)
     normalized_stats["error_count"] = len(errors_list)
 
+    # Mode-aware operation and coordinate system (5D)
+    operation = "fan_fret_preview" if is_fan_fret else "fret_slot_preview"
+    coordinate_system = FAN_FRET_COORDINATE_SYSTEM if is_fan_fret else FRET_SLOT_COORDINATE_SYSTEM
+    generator_id = "fret_slots_fan_cam" if is_fan_fret else "fret_slots_cam"
+
     metadata = PreviewMetadata(
-        generator_id="fret_slots_cam",
+        generator_id=generator_id,
         generator_version="1.0.0",
         preview_only=True,
         machine_ready=False,
         risk_class="A",
         generated_at=datetime.now(timezone.utc).isoformat(),
+        mode=mode,
     )
 
     canonical_toolpath = {
         "slots": [slot.model_dump() for slot in slots],
         "slot_count": len(slots),
-        "mode": req.mode or "standard",
+        "mode": mode,
     }
+
+    # Add fan-fret specific fields to canonical_toolpath
+    if is_fan_fret and req.bass_scale_mm and req.treble_scale_mm:
+        canonical_toolpath["bass_scale_mm"] = req.bass_scale_mm
+        canonical_toolpath["treble_scale_mm"] = req.treble_scale_mm
+        canonical_toolpath["perpendicular_fret"] = req.perpendicular_fret or 7
 
     return FretSlotsPreviewResponse(
         # Governed preview fields
-        operation="fret_slot_preview",
+        operation=operation,
         status="preview",
         gate=gate,
         units="mm",
-        coordinate_system=FRET_SLOT_COORDINATE_SYSTEM,
+        coordinate_system=coordinate_system,
         canonical_toolpath=canonical_toolpath,
         warnings=warnings_list,
         errors=errors_list,
