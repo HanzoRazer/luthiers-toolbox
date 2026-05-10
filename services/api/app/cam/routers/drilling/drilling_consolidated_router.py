@@ -23,6 +23,7 @@ from fastapi import APIRouter
 # Import sub-routers
 from .drill_modal_router import router as drill_router
 from .drill_pattern_router import router as pattern_router
+from .drilling_preview_router import router as preview_router
 
 # Re-export models for backward compatibility
 from .drill_modal_router import Hole, DrillReq
@@ -40,6 +41,7 @@ router = APIRouter(tags=["CAM", "Drilling"])
 # Mount sub-routers (no additional prefix - endpoints already have paths)
 router.include_router(drill_router)
 router.include_router(pattern_router)
+router.include_router(preview_router)
 
 
 __all__ = [
@@ -48,6 +50,7 @@ __all__ = [
     # Sub-routers
     "drill_router",
     "pattern_router",
+    "preview_router",
     # Models (backward compat)
     "Hole",
     "DrillReq",
