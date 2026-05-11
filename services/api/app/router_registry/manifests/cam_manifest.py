@@ -170,6 +170,12 @@ CAM_ROUTERS: List[RouterSpec] = [
         category="cam",
     ),
     RouterSpec(
+        module="app.routers.cam.dxf_translator_router",
+        prefix="/api/cam",
+        tags=["CAM", "DXF", "Translator"],
+        category="cam",
+    ),
+    RouterSpec(
         module="app.cam.rosette.photo_batch_router",
         prefix="",
         tags=["CAM", "Rosette", "Batch"],

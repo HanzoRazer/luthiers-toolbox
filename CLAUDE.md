@@ -489,3 +489,22 @@ See: `FEATURE_PARITY_MIGRATION_POLICY.md`
 - `ApertureWorkspace.vue` = beta consolidation shell (State 3)
 
 The workspace shell may mount the legacy component. It may NOT replace or remove the legacy implementation until parity is verified.
+
+## Governance Framework
+
+See: `docs/governance/`
+
+**Core documents:**
+- `MORPHOLOGY_RECONSTRUCTION_PLATFORM.md` — MRP governance framework
+- `BLUEPRINT_READER_PROTECTION_RULES.md` — frozen MVP protection
+- `IBG_ROLE_DEFINITION.md` — IBG role boundaries
+- `THREE_LOOP_ARCHITECTURE_REFRAMED.md` — loop architecture within MRP
+- `MORPHOLOGY_CORPUS_STANDARD.md` — corpus data standards
+- `SPRINT_NAMESPACE_STANDARD.md` — sprint naming conventions
+
+**Protection levels:**
+- LOCKED — no changes without explicit approval
+- STABILIZED — changes require regression verification
+- EVOLUTIONARY — changes permitted behind feature flags
+
+**Sprint namespaces:** VECTOR, IBG, BOE, DXF, CAM, RMOS, SPIRAL, MRP
