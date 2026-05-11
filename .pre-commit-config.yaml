@@ -29,6 +29,14 @@ repos:
         pass_filenames: false
         always_run: true
 
+      - id: dxf-compat-check
+        name: Enforce dxf_compat usage
+        description: Ensure all DXF creation uses dxf_compat.create_document()
+        entry: python scripts/check_dxf_compat.py
+        language: system
+        pass_filenames: false
+        always_run: true
+
   # Optional: Standard Python checks
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v4.5.0

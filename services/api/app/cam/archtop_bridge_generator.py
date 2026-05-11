@@ -21,6 +21,7 @@ from typing import Any, Dict, List, Tuple
 
 try:
     import ezdxf
+    from app.util.dxf_compat import create_document
     EZDXF_AVAILABLE = True
 except ImportError:
     EZDXF_AVAILABLE = False
@@ -51,7 +52,7 @@ def generate_bridge_dxf(
     if not EZDXF_AVAILABLE:
         return {"ok": False, "error": "ezdxf not installed"}
 
-    doc = ezdxf.new("R2010")
+    doc = create_document(version="R2010")
     msp = doc.modelspace()
 
     # Create layers

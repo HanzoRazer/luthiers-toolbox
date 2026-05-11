@@ -16,6 +16,8 @@ from typing import List
 import ezdxf
 from ezdxf.document import Drawing
 
+from app.util.dxf_compat import create_document
+
 from .inlay_geometry import (
     GeometryCollection,
     GeometryElement,
@@ -76,7 +78,7 @@ def geometry_to_dxf(
     Returns the Drawing object (call ``.saveas(path)`` or stream with
     ``doc.write()``).
     """
-    doc = ezdxf.new("R12")
+    doc = create_document(version="R12")
     msp = doc.modelspace()
 
     # Create layers

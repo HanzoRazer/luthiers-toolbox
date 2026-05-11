@@ -31,6 +31,8 @@ from typing import Dict, List, Optional, Set, Tuple
 import ezdxf
 from ezdxf.math import Vec2
 
+from app.util.dxf_compat import create_document
+
 
 @dataclass
 class EntityEndpoints:
@@ -369,7 +371,7 @@ def reconstruct_contours(
         )
 
     # Create output DXF with LWPOLYLINE contours
-    out_doc = ezdxf.new("R2000")  # R2000 for LWPOLYLINE support
+    out_doc = create_document(version="R2000")  # R2000 for LWPOLYLINE support
     out_msp = out_doc.modelspace()
 
     # Add layer
@@ -448,7 +450,7 @@ def reconstruct_bracing_dxf(
         return result
 
     # Create output DXF
-    out_doc = ezdxf.new("R2000")
+    out_doc = create_document(version="R2000")
     out_msp = out_doc.modelspace()
 
     total_contours = 0

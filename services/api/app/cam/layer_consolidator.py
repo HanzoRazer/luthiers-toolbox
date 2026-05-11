@@ -21,6 +21,8 @@ from typing import Dict, List, Optional, Tuple
 
 import ezdxf
 
+from app.util.dxf_compat import create_document
+
 
 @dataclass
 class LayerConsolidationResult:
@@ -174,7 +176,7 @@ class LayerConsolidator:
         # For R12, create new R2000 document (LWPOLYLINE not supported in R12)
         # For R2000+, work in-place to preserve text/dimensions
         if is_r12:
-            out_doc = ezdxf.new("R2000")
+            out_doc = create_document(version="R2000")
             out_msp = out_doc.modelspace()
         else:
             # Delete original LINE entities by handle

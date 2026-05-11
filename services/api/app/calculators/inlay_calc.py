@@ -384,10 +384,10 @@ def generate_inlay_dxf_string(
     return stream.getvalue()
 
 def _generate_basic_r12_dxf(result: InlayCalcResult) -> str:
-    """Fallback basic R12 DXF generation without dxf_compat."""
-    import ezdxf
-    
-    doc = ezdxf.new("R12")
+    """Fallback basic R12 DXF generation using dxf_compat."""
+    from app.util.dxf_compat import create_document
+
+    doc = create_document(version="R12")
     msp = doc.modelspace()
     
     doc.layers.add("INLAY_OUTLINE", color=5)

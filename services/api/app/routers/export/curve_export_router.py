@@ -13,6 +13,8 @@ from typing import List
 import ezdxf
 from ezdxf import units
 from fastapi import APIRouter, HTTPException
+
+from app.util.dxf_compat import create_document
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel, Field
 
@@ -51,7 +53,7 @@ def _safe_filename(name: str) -> str:
 
 
 def build_curve_dxf(req: CurveExportRequest) -> ezdxf.document.Drawing:
-    doc = ezdxf.new(dxfversion="R2010")
+    doc = create_document(version="R2010")
     doc.units = units.MM
     msp = doc.modelspace()
     scale = req.scale_mm_per_unit

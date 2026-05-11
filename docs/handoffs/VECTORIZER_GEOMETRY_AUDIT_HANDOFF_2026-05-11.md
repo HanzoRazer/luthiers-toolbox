@@ -246,10 +246,13 @@ doc = create_document(version='R2010')
 ## 5. Remediation Checklist
 
 ```
-DXF Compliance
-[ ] Refactor 21 violating files to use dxf_compat
-[ ] Add pre-commit hook to prevent future violations
-[ ] Update smart_guitar_dxf.py to use dxf_compat.create_document()
+DXF Compliance (COMPLETED 2026-05-11)
+[x] Refactor 19 violating files to use dxf_compat
+[x] Add pre-commit hook to prevent future violations
+[x] Add enforcement script (scripts/check_dxf_compat.py)
+[x] Document exemptions (docs/architecture/DXF_COMPAT_EXEMPTIONS.md)
+[-] Smart Guitar excluded (EXCLUDED_EXTERNAL_ECOSYSTEM)
+[-] Photo Vectorizer excluded (EXCLUDED_R_AND_D_SANDBOX)
 
 Loop 1: Intra-Frame Validation
 [ ] Add extract_with_self_check() with 5-check voting

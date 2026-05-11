@@ -9,6 +9,8 @@ import argparse, os, sys, math
 import numpy as np
 import ezdxf
 from shapely.geometry import Polygon, LineString, LinearRing
+
+from app.util.dxf_compat import create_document
 import matplotlib.pyplot as plt
 
 def read_csv_points(csv_path):
@@ -130,7 +132,7 @@ def mode_csv(args):
     if not paths:
         print("No contour paths found at given levels; try adjusting --levels or --res."); sys.exit(2)
     dxf_path = f"{args.out_prefix}_Contours.dxf"
-    doc = ezdxf.new("R2010"); msp = doc.modelspace()
+    doc = create_document(version="R2010"); msp = doc.modelspace()
     for p in paths:
         msp.add_lwpolyline([(float(x), float(y)) for x, y in p[:-1]], format="xy",
                            dxfattribs={"closed": True, "layer": "Contours"})
@@ -166,7 +168,7 @@ def mode_outline(args):
         ring = outline0.copy(); ring[:,0] *= s; ring[:,1] *= s; ring[:,0] += ox; ring[:,1] += oy
         scaled.append(ensure_closed(ring))
     dxf_path = f"{args.out_prefix}_ScaledRings.dxf"
-    doc = ezdxf.new("R2010"); msp = doc.modelspace()
+    doc = create_document(version="R2010"); msp = doc.modelspace()
     for i, p in enumerate(scaled, start=1):
         msp.add_lwpolyline([(float(x), float(y)) for x,y in p[:-1]], format="xy",
                            dxfattribs={"closed": True, "layer": f"Contour_{i:02d}"})

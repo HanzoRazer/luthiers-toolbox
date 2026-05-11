@@ -13,6 +13,8 @@ engineering maps.
 Requires:
     pip install numpy matplotlib ezdxf
 
+Note: Uses dxf_compat.create_document() per governance.
+
 Usage:
     python archtop_surface_tools.py csv \
       --in sample_top_points.csv \
@@ -46,6 +48,8 @@ from pathlib import Path
 import numpy as np
 import matplotlib.pyplot as plt
 import ezdxf
+
+from app.util.dxf_compat import create_document
 
 
 # ---------------------------
@@ -140,7 +144,7 @@ def export_contours(X_mm, Y_mm, Z_mm, levels, out_prefix):
         raise RuntimeError("No contour paths found; adjust --levels or --res.")
 
     dxf_path = f"{out_prefix}_Contours.dxf"
-    doc = ezdxf.new("R2010")
+    doc = create_document(version="R2010")
     msp = doc.modelspace()
     for p in paths:
         msp.add_lwpolyline(

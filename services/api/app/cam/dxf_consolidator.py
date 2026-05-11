@@ -29,6 +29,8 @@ from typing import Dict, List, Optional, Tuple
 import ezdxf
 from ezdxf.entities import Line
 
+from app.util.dxf_compat import create_document
+
 
 @dataclass
 class ContourInfo:
@@ -238,7 +240,7 @@ class DxfConsolidator:
     ) -> None:
         """Write consolidated DXF with semantic layers."""
         # Use R2000 for LWPOLYLINE support (R12 only has LINE)
-        doc = ezdxf.new("R2000")
+        doc = create_document(version="R2000")
         msp = doc.modelspace()
 
         # Add layers
