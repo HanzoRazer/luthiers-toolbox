@@ -246,11 +246,13 @@ doc = create_document(version='R2010')
 ## 5. Remediation Checklist
 
 ```
-DXF Compliance (COMPLETED 2026-05-11)
+DXF Compliance (REMEDIATED via VECTOR-1A — see VECTOR_1A_DXF_COMPLIANCE_CLOSEOUT.md)
 [x] Refactor 19 violating files to use dxf_compat
 [x] Add pre-commit hook to prevent future violations
 [x] Add enforcement script (scripts/check_dxf_compat.py)
 [x] Document exemptions (docs/architecture/DXF_COMPAT_EXEMPTIONS.md)
+[x] Add R12 compliance tests (test_dxf_compat_r12_compliance.py)
+[x] Add semantic determinism tests
 [-] Smart Guitar excluded (EXCLUDED_EXTERNAL_ECOSYSTEM)
 [-] Photo Vectorizer excluded (EXCLUDED_R_AND_D_SANDBOX)
 
