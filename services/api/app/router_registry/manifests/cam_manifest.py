@@ -182,6 +182,12 @@ CAM_ROUTERS: List[RouterSpec] = [
         category="cam",
     ),
     RouterSpec(
+        module="app.routers.cam.lifecycle_capability_router",
+        prefix="/api/cam",
+        tags=["CAM", "Lifecycle", "Capabilities"],
+        category="cam",
+    ),
+    RouterSpec(
         module="app.cam.rosette.photo_batch_router",
         prefix="",
         tags=["CAM", "Rosette", "Batch"],

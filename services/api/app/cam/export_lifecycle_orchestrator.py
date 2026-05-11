@@ -1,7 +1,7 @@
 """
 Governed Export Lifecycle Orchestrator
 
-CAM Dev Order 6E/6F/6G: End-to-end lifecycle validation with optional RMOS persistence.
+CAM Dev Order 6E/6F/6G/6H: End-to-end lifecycle validation with optional RMOS persistence.
 
 This module orchestrates the complete governed export lifecycle:
   Preview → Export Object → Postprocessor Compatibility → Translator Compatibility
@@ -24,9 +24,10 @@ Core rule:
   - Drilling operation support
   - Multi-operation dispatcher pattern
 
-Supported operations:
-  - nut_slot
-  - drilling
+6H additions:
+  - Registry-driven operation support
+  - Supported operations derived from CAM_OPERATION_REGISTRY
+  - Single source of truth for lifecycle capabilities
 
 Safety assertions:
   - machine_output_generated: always false
@@ -59,13 +60,10 @@ from app.cam.export_rmos_artifacts import (
     persist_export_lifecycle_artifacts,
     create_empty_persistence_result,
 )
-
-
-# -----------------------------------------------------------------------------
-# Supported Operations
-# -----------------------------------------------------------------------------
-
-SUPPORTED_OPERATIONS = ["nut_slot", "drilling"]
+from app.cam.cam_operation_registry import (
+    get_operation_capability,
+    list_lifecycle_supported_operations,
+)
 
 
 # -----------------------------------------------------------------------------
@@ -203,9 +201,13 @@ def dispatch_preview(
     """
     Dispatch preview request to appropriate generator.
 
+    Uses CAM_OPERATION_REGISTRY as single source of truth for supported operations.
+
     Returns (preview_response, gate, errors, warnings).
     """
-    if operation not in SUPPORTED_OPERATIONS:
+    # Check registry for lifecycle support (6H)
+    capability = get_operation_capability(operation)
+    if capability is None or not capability.lifecycle_supported:
         return None, "red", [f"Unsupported lifecycle operation: {operation}"], []
 
     if operation == "nut_slot":
