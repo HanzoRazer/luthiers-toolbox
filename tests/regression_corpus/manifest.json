@@ -1,0 +1,61 @@
+{
+  "manifest_version": "1.0.0",
+  "status": "DECLARED",
+  "effective_date": "2026-05-11",
+  "governance_doc": "docs/governance/MORPHOLOGY_CORPUS_STANDARD.md",
+  "notes": "Regression artifacts declared but not yet populated. Artifacts will be added as regression testing matures.",
+  "artifacts": [
+    {
+      "id": "MELODY_MAKER_PDF",
+      "purpose": "Blueprint Reader regression indicator",
+      "status": "REQUIRED_FUTURE",
+      "system": "BLUEPRINT_READER_MVP",
+      "notes": "Primary regression indicator referenced in Blueprint Reader protection rules. Used to detect filtering regressions."
+    },
+    {
+      "id": "DREADNOUGHT_REFERENCE",
+      "purpose": "Acoustic body extraction baseline",
+      "status": "REQUIRED_FUTURE",
+      "system": "BLUEPRINT_READER_MVP",
+      "expected_accuracy": {
+        "width_error_pct": 7.1,
+        "height_error_pct": 2.5
+      },
+      "notes": "Tier 1 reference instrument. Expected accuracy from Blueprint Reader MVP baseline."
+    },
+    {
+      "id": "CUATRO_REFERENCE",
+      "purpose": "Small-body extraction baseline",
+      "status": "REQUIRED_FUTURE",
+      "system": "BLUEPRINT_READER_MVP",
+      "expected_accuracy": {
+        "width_error_pct": 2.6,
+        "height_error_pct": 2.6
+      },
+      "notes": "Tier 1 reference instrument. Cuatro Puertorriqueño PDF."
+    },
+    {
+      "id": "LES_PAUL_REFERENCE",
+      "purpose": "Electric guitar complex-layout baseline",
+      "status": "REQUIRED_FUTURE",
+      "system": "BLUEPRINT_READER_MVP",
+      "expected_accuracy": {
+        "width_error_pct": 16.5,
+        "height_error_pct": 19.7
+      },
+      "notes": "Tier 1 reference instrument. Higher error acceptable due to layout complexity."
+    },
+    {
+      "id": "DREADNOUGHT_IBG_VALIDATION",
+      "purpose": "IBG body completion baseline",
+      "status": "REQUIRED_FUTURE",
+      "system": "IBG_CORE",
+      "expected_dimensions": {
+        "body_length_mm": 520,
+        "lower_bout_mm": 381,
+        "waist_mm": 241
+      },
+      "notes": "Validates generate_from_defaults() produces correct dimensions."
+    }
+  ]
+}

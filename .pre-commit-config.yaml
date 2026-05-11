@@ -37,6 +37,23 @@ repos:
         pass_filenames: false
         always_run: true
 
+      - id: governance-protected-paths
+        name: Governance protected paths
+        description: Detect changes to protected paths without approval
+        entry: python scripts/check_protected_paths.py
+        language: system
+        pass_filenames: false
+        always_run: true
+
+      - id: sprint-namespace-check
+        name: Sprint namespace check
+        description: Warn on unnamespaced dev order references
+        entry: python scripts/check_sprint_namespace.py
+        language: system
+        pass_filenames: false
+        always_run: true
+        verbose: true
+
   # Optional: Standard Python checks
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v4.5.0

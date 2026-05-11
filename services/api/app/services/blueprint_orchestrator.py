@@ -1,3 +1,9 @@
+# GOVERNANCE:
+# SYSTEM: BLUEPRINT_READER_MVP
+# STATUS: PROTECTED_PRODUCTION_BASELINE
+# DOC: docs/governance/BLUEPRINT_READER_PROTECTION_RULES.md
+# RULE: Do not alter production behavior without GOVERNANCE_APPROVED_CHANGE.
+
 """
 Blueprint Orchestrator
 ======================

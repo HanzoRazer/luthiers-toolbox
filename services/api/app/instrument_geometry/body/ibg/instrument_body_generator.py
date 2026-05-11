@@ -1,4 +1,10 @@
 #!/usr/bin/env python3
+# GOVERNANCE:
+# SYSTEM: IBG_CORE
+# STATUS: PROTECTED_PRODUCTION_BASELINE
+# DOC: docs/governance/IBG_ROLE_DEFINITION.md
+# RULE: Do not alter production behavior without GOVERNANCE_APPROVED_CHANGE.
+
 """
 Instrument Body Generator — Complete Body from Partial Vectorizer Output
 =========================================================================

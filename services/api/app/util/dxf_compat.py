@@ -1,3 +1,9 @@
+# GOVERNANCE:
+# SYSTEM: DXF_COMPAT_LAYER
+# STATUS: PROTECTED_PRODUCTION_BASELINE
+# DOC: docs/governance/MORPHOLOGY_RECONSTRUCTION_PLATFORM.md
+# RULE: Do not alter production behavior without GOVERNANCE_APPROVED_CHANGE.
+
 """
 DXF Compatibility Layer - R12 through R18 Support
 The genesis of The Production Shop: R12 doesn't support LWPOLYLINE.
