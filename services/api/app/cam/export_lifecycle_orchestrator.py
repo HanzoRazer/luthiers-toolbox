@@ -1,7 +1,7 @@
 """
 Governed Export Lifecycle Orchestrator
 
-CAM Dev Order 6E: End-to-end lifecycle validation without output generation.
+CAM Dev Order 6E/6F: End-to-end lifecycle validation with optional RMOS persistence.
 
 This module orchestrates the complete governed export lifecycle:
   Preview → Export Object → Postprocessor Compatibility → Translator Compatibility
@@ -14,7 +14,11 @@ Core rule:
   - No DXF generation
   - No G-code generation
   - No machine output
-  - No RMOS persistence
+
+6F additions:
+  - Optional RMOS artifact persistence (persist_to_rmos flag)
+  - Lightweight export provenance ID (RUN-EXPORT-{uuid})
+  - No RunStoreV2 lifecycle coupling
 
 Safety assertions:
   - machine_output_generated: always false
@@ -36,6 +40,11 @@ from app.cam.nut_slot_export import create_nut_slot_export_object
 from app.cam.postprocessor_boundary import (
     MachineProfileValidationOnly,
     evaluate_postprocessor_compatibility,
+)
+from app.cam.export_rmos_artifacts import (
+    RMOSPersistenceResult,
+    persist_export_lifecycle_artifacts,
+    create_empty_persistence_result,
 )
 
 
@@ -61,6 +70,10 @@ class GovernedExportLifecycleRequest(BaseModel):
     preview_request: PreviewRequestWrapper = Field(..., description="Preview request with operation type")
     machine_profile: MachineProfileValidationOnly = Field(..., description="Machine profile for compatibility")
     translator_profile: DXFTranslatorProfile = Field(..., description="Translator profile for compatibility")
+    persist_to_rmos: bool = Field(
+        default=False,
+        description="If true, persist export object and lifecycle report to RMOS"
+    )
 
 
 class ExportObjectSummary(BaseModel):
@@ -140,6 +153,12 @@ class GovernedExportLifecycleReport(BaseModel):
     metadata: LifecycleMetadata = Field(
         default_factory=LifecycleMetadata,
         description="Validation metadata"
+    )
+
+    # RMOS persistence (6F)
+    rmos: Optional[RMOSPersistenceResult] = Field(
+        None,
+        description="RMOS artifact persistence result (if persist_to_rmos was true)"
     )
 
 
@@ -235,8 +254,9 @@ def run_governed_export_lifecycle(
       5. Run translator compatibility validation
       6. Aggregate lifecycle report
       7. Propagate lifecycle gate
+      8. Persist to RMOS (if persist_to_rmos is true)
 
-    No serialization. No persistence. No output generation.
+    No DXF generation. No G-code generation. No machine output.
     """
     blocking_issues = []
     warnings = []
@@ -326,10 +346,51 @@ def run_governed_export_lifecycle(
     )
     translator_ready = translator_compatible is True
 
+    # --- Step 8: RMOS persistence (6F) ---
+    rmos_result: Optional[RMOSPersistenceResult] = None
+
+    if request.persist_to_rmos:
+        # Serialize export object if created
+        export_object_dict = None
+        if export_object is not None:
+            export_object_dict = export_object.model_dump(mode="json")
+
+        # Build lifecycle report dict for persistence
+        # (we build it manually to avoid circular reference)
+        lifecycle_report_dict = {
+            "lifecycle_gate": lifecycle_gate,
+            "export_ready": export_ready,
+            "machine_ready": False,
+            "translator_ready": translator_ready,
+            "machine_output_generated": False,
+            "translator_output_generated": False,
+            "preview_gate": preview_gate,
+            "preview_operation": operation,
+            "export_object_summary": export_summary.model_dump() if export_summary else None,
+            "machine_validation_gate": machine_gate,
+            "machine_validation_compatible": machine_compatible,
+            "translator_validation_gate": translator_gate,
+            "translator_validation_compatible": translator_compatible,
+            "blocking_issues": blocking_issues,
+            "warnings": warnings,
+            "metadata": {
+                "validation_only": True,
+                "risk_class": "B",
+                "governed_export_pipeline": True,
+            },
+        }
+
+        rmos_result = persist_export_lifecycle_artifacts(
+            export_object=export_object_dict,
+            lifecycle_report=lifecycle_report_dict,
+        )
+    else:
+        rmos_result = create_empty_persistence_result()
+
     return GovernedExportLifecycleReport(
         lifecycle_gate=lifecycle_gate,
         export_ready=export_ready,
-        machine_ready=False,  # Always false in 6E
+        machine_ready=False,  # Always false
         translator_ready=translator_ready,
         machine_output_generated=False,  # Always false
         translator_output_generated=False,  # Always false
@@ -347,4 +408,5 @@ def run_governed_export_lifecycle(
             risk_class="B",
             governed_export_pipeline=True,
         ),
+        rmos=rmos_result,
     )
