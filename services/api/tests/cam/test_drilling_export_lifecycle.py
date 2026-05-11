@@ -18,8 +18,8 @@ from app.cam.export_lifecycle_orchestrator import (
     GovernedExportLifecycleRequest,
     PreviewRequestWrapper,
     run_governed_export_lifecycle,
-    SUPPORTED_OPERATIONS,
 )
+from app.cam.cam_operation_registry import list_lifecycle_supported_operations
 from app.cam.postprocessor_boundary import MachineProfileValidationOnly
 from app.cam.routers.drilling.drilling_preview_router import (
     DrillingPreviewRequest,
@@ -100,12 +100,14 @@ class TestDrillingInSupportedOperations:
     """Tests verifying drilling is in supported operations."""
 
     def test_drilling_in_supported_operations(self):
-        """Drilling is listed in SUPPORTED_OPERATIONS."""
-        assert "drilling" in SUPPORTED_OPERATIONS
+        """Drilling is listed in lifecycle-supported operations."""
+        supported = list_lifecycle_supported_operations()
+        assert "drilling" in supported
 
     def test_nut_slot_still_supported(self):
         """Nut slot remains supported (no regression)."""
-        assert "nut_slot" in SUPPORTED_OPERATIONS
+        supported = list_lifecycle_supported_operations()
+        assert "nut_slot" in supported
 
     def test_unsupported_operation_returns_red(self):
         """Unsupported operation still returns RED."""
