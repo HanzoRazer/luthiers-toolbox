@@ -1,9 +1,20 @@
 {
-  "manifest_version": "1.0.0",
-  "status": "DECLARED",
+  "manifest_version": "1.1.0",
+  "status": "INFRASTRUCTURE_READY",
   "effective_date": "2026-05-11",
   "governance_doc": "docs/governance/MORPHOLOGY_CORPUS_STANDARD.md",
-  "notes": "Regression artifacts declared but not yet populated. Artifacts will be added as regression testing matures.",
+  "notes": "MRP-1B: Observability infrastructure ready. Artifacts declared but not yet populated.",
+  "infrastructure": {
+    "signature_schema": "services/api/app/regression/signature_schema.py",
+    "blueprint_signature": "services/api/app/regression/blueprint_signature.py",
+    "dxf_comparator": "services/api/app/regression/dxf_comparator.py",
+    "invariants": "services/api/app/regression/invariants.py",
+    "comparison_harness": "services/api/app/regression/comparison_harness.py",
+    "baselines_dir": "tests/regression_corpus/baselines/"
+  },
+  "invariant_definitions": {
+    "BLUEPRINT_READER_MVP": 9
+  },
   "artifacts": [
     {
       "id": "MELODY_MAKER_PDF",
