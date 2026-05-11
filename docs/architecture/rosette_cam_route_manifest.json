@@ -1,0 +1,349 @@
+{
+  "manifest_version": "1.0",
+  "category": "rosette",
+  "audit_date": "2026-05-10",
+  "auditor": "CAM Dev Order 5F",
+  "routes": [
+    {
+      "route": "/rosette/designer/catalog",
+      "method": "GET",
+      "file": "rosette_designer_routes.py",
+      "generator": "rosette_engine",
+      "status": "active",
+      "governance_state": "untracked",
+      "consumers": ["RosetteWheelView"]
+    },
+    {
+      "route": "/rosette/designer/place-tile",
+      "method": "POST",
+      "file": "rosette_designer_routes.py",
+      "generator": "rosette_engine",
+      "status": "active",
+      "governance_state": "untracked",
+      "consumers": ["RosetteWheelView"]
+    },
+    {
+      "route": "/rosette/designer/preview",
+      "method": "POST",
+      "file": "rosette_designer_routes.py",
+      "generator": "rosette_engine.render_preview_svg",
+      "status": "active",
+      "governance_state": "candidate_preview",
+      "consumers": ["RosetteWheelView"]
+    },
+    {
+      "route": "/rosette/designer/bom",
+      "method": "POST",
+      "file": "rosette_designer_routes.py",
+      "generator": "rosette_engine.compute_bom",
+      "status": "active",
+      "governance_state": "untracked",
+      "consumers": ["RosetteWheelView"]
+    },
+    {
+      "route": "/rosette/designer/mfg-check",
+      "method": "POST",
+      "file": "rosette_designer_routes.py",
+      "generator": "rosette_engine.run_mfg_checks",
+      "status": "active",
+      "governance_state": "untracked",
+      "consumers": ["RosetteWheelView"]
+    },
+    {
+      "route": "/rosette/designer/recipes",
+      "method": "GET",
+      "file": "rosette_designer_routes.py",
+      "generator": "rosette_engine.RECIPES",
+      "status": "active",
+      "governance_state": "untracked",
+      "consumers": ["RosetteWheelView"]
+    },
+    {
+      "route": "/rosette/designer/export/svg",
+      "method": "POST",
+      "file": "rosette_designer_routes.py",
+      "generator": "rosette_engine.render_preview_svg",
+      "status": "active",
+      "governance_state": "export_untracked",
+      "consumers": ["RosetteWheelView"]
+    },
+    {
+      "route": "/api/art/rosette/preview",
+      "method": "POST",
+      "file": "rosette_jobs_routes.py",
+      "generator": "inline_arc_utils",
+      "status": "active",
+      "governance_state": "candidate_preview",
+      "consumers": ["RosettePipelineView"]
+    },
+    {
+      "route": "/api/art/rosette/save",
+      "method": "POST",
+      "file": "rosette_jobs_routes.py",
+      "generator": "art_studio_rosette_store",
+      "status": "active",
+      "governance_state": "untracked",
+      "consumers": ["RosettePipelineView"]
+    },
+    {
+      "route": "/api/art/rosette/jobs",
+      "method": "GET",
+      "file": "rosette_jobs_routes.py",
+      "generator": "art_studio_rosette_store",
+      "status": "active",
+      "governance_state": "untracked",
+      "consumers": ["RosettePipelineView"]
+    },
+    {
+      "route": "/api/art/rosette/presets",
+      "method": "GET",
+      "file": "rosette_jobs_routes.py",
+      "generator": "art_studio_rosette_store",
+      "status": "active",
+      "governance_state": "untracked",
+      "consumers": ["RosettePipelineView"]
+    },
+    {
+      "route": "/api/art/rosette/compare",
+      "method": "POST",
+      "file": "rosette_compare_routes.py",
+      "generator": "comparison_logic",
+      "status": "active",
+      "governance_state": "untracked",
+      "consumers": ["ArtStudioRosetteCompare"]
+    },
+    {
+      "route": "/api/art/rosette/compare/snapshot",
+      "method": "POST",
+      "file": "rosette_compare_routes.py",
+      "generator": "art_studio_rosette_store",
+      "status": "active",
+      "governance_state": "untracked",
+      "consumers": ["ArtStudioRosetteCompare"]
+    },
+    {
+      "route": "/rosette/snapshots/export",
+      "method": "POST",
+      "file": "rosette_snapshot_routes.py",
+      "generator": "rosette_snapshot_store",
+      "status": "active",
+      "governance_state": "rmos_integrated",
+      "consumers": ["unknown"]
+    },
+    {
+      "route": "/rosette/snapshots/import",
+      "method": "POST",
+      "file": "rosette_snapshot_routes.py",
+      "generator": "rosette_snapshot_store",
+      "status": "active",
+      "governance_state": "rmos_integrated",
+      "consumers": ["unknown"]
+    },
+    {
+      "route": "/api/art/rosette/pattern/status",
+      "method": "GET",
+      "file": "rosette_pattern_routes.py",
+      "generator": "pattern_generator",
+      "status": "active",
+      "governance_state": "untracked",
+      "consumers": ["unknown"]
+    },
+    {
+      "route": "/api/art/rosette/pattern/patterns",
+      "method": "GET",
+      "file": "rosette_pattern_routes.py",
+      "generator": "pattern_generator",
+      "status": "active",
+      "governance_state": "untracked",
+      "consumers": ["unknown"]
+    },
+    {
+      "route": "/api/art/rosette/pattern/generate_traditional",
+      "method": "POST",
+      "file": "rosette_pattern_routes.py",
+      "generator": "pattern_generator.generate_traditional",
+      "status": "active",
+      "governance_state": "untracked",
+      "consumers": ["unknown"]
+    },
+    {
+      "route": "/api/art/rosette/pattern/generate_modern",
+      "method": "POST",
+      "file": "rosette_pattern_routes.py",
+      "generator": "pattern_generator.generate_modern",
+      "status": "active",
+      "governance_state": "untracked",
+      "consumers": ["unknown"]
+    },
+    {
+      "route": "/api/art/rosette/pattern/simulate-build",
+      "method": "POST",
+      "file": "rosette_pattern_routes.py",
+      "generator": "herringbone_parametric.simulate_build_and_cnc",
+      "status": "active",
+      "governance_state": "experimental",
+      "consumers": ["unknown"]
+    },
+    {
+      "route": "/api/art/rosette/manufacturing-plan",
+      "method": "POST",
+      "file": "rosette_manufacturing_routes.py",
+      "generator": "rosette_planner",
+      "status": "active",
+      "governance_state": "untracked",
+      "consumers": ["unknown"]
+    },
+    {
+      "route": "/api/art/rosette/traditional/project",
+      "method": "POST",
+      "file": "rosette_manufacturing_routes.py",
+      "generator": "traditional_builder",
+      "status": "active",
+      "governance_state": "untracked",
+      "consumers": ["unknown"]
+    },
+    {
+      "route": "/api/art/rosette/project",
+      "method": "POST",
+      "file": "rosette_manufacturing_routes.py",
+      "generator": "rosette_cam_bridge.plan_per_ring_toolpath",
+      "status": "active",
+      "governance_state": "candidate_preview",
+      "consumers": ["unknown"]
+    },
+    {
+      "route": "/rosette/plan-toolpath",
+      "method": "POST",
+      "file": "rosette_toolpath_router.py",
+      "generator": "rosette_cam_bridge.plan_rosette_toolpath",
+      "status": "active",
+      "governance_state": "rmos_integrated",
+      "consumers": ["unknown"]
+    },
+    {
+      "route": "/rosette/post-gcode",
+      "method": "POST",
+      "file": "rosette_toolpath_router.py",
+      "generator": "rosette_cam_bridge.postprocess_toolpath_grbl",
+      "status": "active",
+      "governance_state": "rmos_integrated",
+      "consumers": ["unknown"]
+    },
+    {
+      "route": "/rmos/rosette/segment-ring",
+      "method": "POST",
+      "file": "rosette_cam_router.py",
+      "generator": "tile_segmentation.compute_tile_segmentation",
+      "status": "active",
+      "governance_state": "untracked",
+      "consumers": ["unknown"]
+    },
+    {
+      "route": "/rmos/rosette/design",
+      "method": "POST",
+      "file": "rosette_cam_router.py",
+      "generator": "rosette_cnc_wiring",
+      "status": "active",
+      "governance_state": "untracked",
+      "consumers": ["unknown"]
+    },
+    {
+      "route": "/rmos/rosette/preview",
+      "method": "POST",
+      "file": "rosette_cam_router.py",
+      "generator": "tile_segmentation.build_preview_snapshot",
+      "status": "active",
+      "governance_state": "candidate_preview",
+      "consumers": ["unknown"]
+    },
+    {
+      "route": "/rmos/rosette/export-cnc",
+      "method": "POST",
+      "file": "rosette_cam_router.py",
+      "generator": "cnc_gcode_exporter.generate_gcode_from_toolpaths",
+      "status": "active",
+      "governance_state": "quarantine_candidate",
+      "notes": "G-code export without RMOS governance"
+    }
+  ],
+  "generators": [
+    {
+      "id": "rosette_engine",
+      "file": "art_studio/services/rosette_engine.py",
+      "functions": ["render_preview_svg", "compute_bom", "run_mfg_checks", "estimate_rosette_feasibility"],
+      "status": "active"
+    },
+    {
+      "id": "rosette_cam_bridge",
+      "file": "services/rosette_cam_bridge.py",
+      "functions": ["plan_rosette_toolpath", "plan_per_ring_toolpath", "postprocess_toolpath_grbl"],
+      "status": "active"
+    },
+    {
+      "id": "pattern_generator",
+      "file": "cam/rosette/pattern_generator.py",
+      "functions": ["generate_traditional", "generate_modern", "list_preset_matrices"],
+      "status": "active"
+    },
+    {
+      "id": "tile_segmentation",
+      "file": "cam/rosette/tile_segmentation.py",
+      "functions": ["compute_tile_segmentation", "generate_slices_for_ring", "build_preview_snapshot"],
+      "status": "active"
+    },
+    {
+      "id": "cnc_gcode_exporter",
+      "file": "cam/rosette/cnc/cnc_gcode_exporter.py",
+      "functions": ["generate_gcode_from_toolpaths"],
+      "status": "active"
+    },
+    {
+      "id": "traditional_builder",
+      "file": "cam/rosette/traditional_builder.py",
+      "functions": ["list_master_patterns", "get_pattern_info", "create_project"],
+      "status": "active"
+    },
+    {
+      "id": "rosette_planner",
+      "file": "core/rosette_planner.py",
+      "functions": ["generate_manufacturing_plan"],
+      "status": "active"
+    }
+  ],
+  "frontend_consumers": [
+    {
+      "id": "RosettePipelineView",
+      "file": "views/RosettePipelineView.vue",
+      "routes_consumed": ["/api/art/rosette/preview", "/api/art/rosette/save", "/api/art/rosette/jobs"]
+    },
+    {
+      "id": "RosetteDesignerView",
+      "file": "views/RosetteDesignerView.vue",
+      "routes_consumed": ["unknown"]
+    },
+    {
+      "id": "RosetteWheelView",
+      "file": "views/art-studio/RosetteWheelView.vue",
+      "routes_consumed": ["/rosette/designer/*"]
+    },
+    {
+      "id": "SoundholeRosetteShell",
+      "file": "views/art-studio/SoundholeRosetteShell.vue",
+      "routes_consumed": ["unknown"]
+    },
+    {
+      "id": "ArtStudioRosetteCompare",
+      "file": "views/ArtStudioRosetteCompare.vue",
+      "routes_consumed": ["/api/art/rosette/compare"]
+    }
+  ],
+  "fragmentation_summary": {
+    "route_count": 29,
+    "generator_count": 7,
+    "preview_routes": 3,
+    "gcode_routes": 2,
+    "rmos_integrated": 4,
+    "governance_gaps": ["rosette_cam_router.export-cnc", "rosette_designer.export/svg"],
+    "candidate_previews": 4
+  }
+}
