@@ -373,17 +373,20 @@ def _compute_statistics(holes: List[DrillHoleInput]) -> Dict[str, Any]:
     }
 
 
-# --- Endpoint ---
+# --- Core Preview Function ---
 
-@router.post("/preview")
-def preview_drilling(req: DrillingPreviewRequest) -> DrillingPreviewResponse:
+def generate_drilling_preview(req: DrillingPreviewRequest) -> DrillingPreviewResponse:
     """
-    Preview drilling operation geometry and validate parameters.
+    Generate governed drilling preview from request.
 
-    GOVERNED PREVIEW endpoint (5E).
-    Returns governed preview response with gate evaluation.
-
+    Pure function that can be called by lifecycle orchestrator or route.
     No G-code generation. No RMOS persistence.
+
+    Args:
+        req: Drilling preview request
+
+    Returns:
+        DrillingPreviewResponse with gate evaluation
     """
     # Evaluate gate conditions
     gate_eval = _evaluate_drilling_gate(
@@ -464,3 +467,18 @@ def preview_drilling(req: DrillingPreviewRequest) -> DrillingPreviewResponse:
         statistics=statistics,
         metadata=metadata,
     )
+
+
+# --- Endpoint ---
+
+@router.post("/preview")
+def preview_drilling(req: DrillingPreviewRequest) -> DrillingPreviewResponse:
+    """
+    Preview drilling operation geometry and validate parameters.
+
+    GOVERNED PREVIEW endpoint (5E).
+    Returns governed preview response with gate evaluation.
+
+    No G-code generation. No RMOS persistence.
+    """
+    return generate_drilling_preview(req)

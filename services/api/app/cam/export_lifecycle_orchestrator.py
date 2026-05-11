@@ -1,7 +1,7 @@
 """
 Governed Export Lifecycle Orchestrator
 
-CAM Dev Order 6E/6F: End-to-end lifecycle validation with optional RMOS persistence.
+CAM Dev Order 6E/6F/6G: End-to-end lifecycle validation with optional RMOS persistence.
 
 This module orchestrates the complete governed export lifecycle:
   Preview → Export Object → Postprocessor Compatibility → Translator Compatibility
@@ -20,6 +20,14 @@ Core rule:
   - Lightweight export provenance ID (RUN-EXPORT-{uuid})
   - No RunStoreV2 lifecycle coupling
 
+6G additions:
+  - Drilling operation support
+  - Multi-operation dispatcher pattern
+
+Supported operations:
+  - nut_slot
+  - drilling
+
 Safety assertions:
   - machine_output_generated: always false
   - translator_output_generated: always false
@@ -37,6 +45,11 @@ from app.cam.export_object import ExportObject
 from app.cam.export_object_to_dxf_adapter import evaluate_dxf_translator_compatibility
 from app.cam.nut_slot_cam import NutSlotPreviewRequest, generate_nut_slot_preview
 from app.cam.nut_slot_export import create_nut_slot_export_object
+from app.cam.routers.drilling.drilling_preview_router import (
+    DrillingPreviewRequest,
+    generate_drilling_preview,
+)
+from app.cam.drilling_export import create_drilling_export_object
 from app.cam.postprocessor_boundary import (
     MachineProfileValidationOnly,
     evaluate_postprocessor_compatibility,
@@ -52,7 +65,7 @@ from app.cam.export_rmos_artifacts import (
 # Supported Operations
 # -----------------------------------------------------------------------------
 
-SUPPORTED_OPERATIONS = ["nut_slot"]
+SUPPORTED_OPERATIONS = ["nut_slot", "drilling"]
 
 
 # -----------------------------------------------------------------------------
@@ -208,6 +221,19 @@ def dispatch_preview(
         except Exception as e:
             return None, "red", [f"Preview generation failed: {str(e)}"], []
 
+    if operation == "drilling":
+        try:
+            request = DrillingPreviewRequest(**payload)
+            preview = generate_drilling_preview(request)
+            return (
+                preview,
+                preview.gate.value,
+                list(preview.errors),
+                list(preview.warnings),
+            )
+        except Exception as e:
+            return None, "red", [f"Preview generation failed: {str(e)}"], []
+
     return None, "red", [f"Operation '{operation}' not implemented"], []
 
 
@@ -229,6 +255,14 @@ def dispatch_export_object(
         try:
             request = NutSlotPreviewRequest(**payload)
             export_obj = create_nut_slot_export_object(preview, request)
+            return export_obj, []
+        except Exception as e:
+            return None, [f"Export object creation failed: {str(e)}"]
+
+    if operation == "drilling":
+        try:
+            request = DrillingPreviewRequest(**payload)
+            export_obj = create_drilling_export_object(preview, request)
             return export_obj, []
         except Exception as e:
             return None, [f"Export object creation failed: {str(e)}"]
