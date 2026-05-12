@@ -72,6 +72,38 @@ If production breaks:
 
 ---
 
+## Protected Experimental Recovery Modes
+
+**Status:** EXPERIMENTAL — Not default, requires explicit `?mode=` invocation
+
+These modes bypass the LOCKED production pipeline to recover March 2026 extraction fidelity. They are NOT integrated into the default flow and exist only for archaeology and validation purposes.
+
+| Mode | Source | Use Case | Notes |
+|------|--------|----------|-------|
+| `V2_RAW` | `vectorizer_phase3.py:_raw_extract()` | PDF blueprints | March 2026 recipe: CHAIN_APPROX_NONE, no classification, R12 LINE, CONTOURS layer |
+| `PHOTO_V2` | `edge_to_dxf.py:convert_enhanced()` | Photographic images | Multi-scale Canny edge fusion, works for photos not blueprints |
+
+### Protection Rules for Recovery Modes
+
+1. **DO NOT modify** the underlying extraction functions (`_raw_extract`, `convert_enhanced`)
+2. **DO NOT make these default** — they bypass production validation
+3. **DO NOT tune parameters** — they recover specific March 2026 behavior
+4. **DO NOT merge** V2_RAW and PHOTO_V2 paths — they serve different input types
+5. **Use for archaeology only** until semantic validation confirms parity
+
+### API Access
+
+```
+POST /api/blueprint/vectorize?mode=v2_raw     # PDF blueprints
+POST /api/blueprint/vectorize?mode=photo_v2   # Photographic images
+```
+
+### Reference
+
+See: `docs/handoffs/MRP_1C_VECTORIZER_V2_ARCHAEOLOGY_HANDOFF.md`
+
+---
+
 ## Accuracy Baseline
 
 | Instrument | Width Error | Height Error |

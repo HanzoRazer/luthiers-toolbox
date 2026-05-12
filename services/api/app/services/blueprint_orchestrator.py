@@ -526,6 +526,111 @@ class BlueprintOrchestrator:
                     stage_timings["phase3_scale_source"] = p3_result.scale_source
                     stage_timings["phase3_scale_factor"] = round(p3_result.scale_factor, 3)
 
+                # V2_RAW: PROTECTED_EXPERIMENTAL_RECOVERY_MODE
+                # Routes to vectorizer_phase3.py:_raw_extract() for PDF blueprints
+                # March 2026 recipe: CHAIN_APPROX_NONE + no classification + R12 LINE + CONTOURS layer
+                # DO NOT MODIFY without reviewing docs/handoffs/MRP_1C_VECTORIZER_V2_ARCHAEOLOGY_HANDOFF.md
+                elif mode == CleanupMode.V2_RAW:
+                    Phase3VectorizerClass = self._get_phase3_vectorizer()
+                    if Phase3VectorizerClass is None:
+                        error_detail = self._phase3_import_error or "unknown import error"
+                        return BlueprintResult(
+                            ok=False,
+                            stage="edge_extraction",
+                            error=f"Phase 3 vectorizer not available for V2_RAW mode: {error_detail}",
+                            warnings=warnings,
+                        )
+
+                    # Create Phase 3 vectorizer with R12 DXF version (March 2026 recipe)
+                    vectorizer = Phase3VectorizerClass(
+                        dpi=300,
+                        dxf_version='R12',
+                        enable_ocr=False,
+                        enable_primitives=False,
+                    )
+
+                    import time
+                    p3_start = time.time()
+
+                    # raw_output=True triggers _raw_extract() path
+                    p3_result = vectorizer.extract(
+                        source_path=str(input_path),
+                        output_path=str(raw_dxf_path),
+                        raw_output=True,
+                        spec_name=spec_name,
+                    )
+
+                    p3_elapsed_ms = (time.time() - p3_start) * 1000
+
+                    extract_result = ExtractionResult(
+                        success=p3_result.validation_passed or p3_result.output_dxf is not None,
+                        output_path=p3_result.output_dxf or str(raw_dxf_path),
+                        line_count=sum(len(v) for v in p3_result.contours_by_category.values()),
+                        edge_pixel_count=0,
+                        image_size_px=(0, 0),
+                        output_size_mm=p3_result.dimensions_mm,
+                        mm_per_px=vectorizer.mm_per_px,
+                        processing_time_ms=p3_elapsed_ms,
+                        error="" if p3_result.output_dxf else "V2_RAW extraction failed",
+                        warnings=p3_result.warnings,
+                    )
+
+                    stage_timings["v2_raw_mode"] = True
+                    stage_timings["dxf_version"] = "R12"
+                    stage_timings["phase3_scale_source"] = p3_result.scale_source
+                    stage_timings["phase3_scale_factor"] = round(p3_result.scale_factor, 3)
+
+                # PHOTO_V2: PROTECTED_EXPERIMENTAL_RECOVERY_MODE
+                # Routes to edge_to_dxf.py:EdgeToDXF.convert_enhanced() for photographic images
+                # Pixel edge extraction via multi-scale Canny - works for photos, not blueprints
+                # DO NOT MODIFY without reviewing docs/handoffs/MRP_1C_VECTORIZER_V2_ARCHAEOLOGY_HANDOFF.md
+                elif mode == CleanupMode.PHOTO_V2:
+                    from .blueprint_extract import _ensure_edge_to_dxf_importable
+                    _ensure_edge_to_dxf_importable()
+
+                    try:
+                        from edge_to_dxf import EdgeToDXF, ConversionStatus
+                    except ImportError as e:
+                        return BlueprintResult(
+                            ok=False,
+                            stage="edge_extraction",
+                            error=f"EdgeToDXF not available for PHOTO_V2 mode: {e}",
+                            warnings=warnings,
+                        )
+
+                    import time
+                    photo_start = time.time()
+
+                    # EdgeToDXF with CONTOURS layer (March 2026 recipe)
+                    # Use convert_enhanced for multi-scale Canny edge fusion
+                    converter = EdgeToDXF(layer_name='CONTOURS')
+                    photo_result = converter.convert_enhanced(
+                        source_path=str(input_path),
+                        output_path=str(raw_dxf_path),
+                        target_height_mm=target_height_mm,
+                        mask_text=False,  # Preserve text in photos
+                    )
+
+                    photo_elapsed_ms = (time.time() - photo_start) * 1000
+
+                    # EdgeToDXFResult is a dataclass, access attributes directly
+                    extract_result = ExtractionResult(
+                        success=photo_result.status == ConversionStatus.SUCCESS,
+                        output_path=photo_result.output_path or str(raw_dxf_path),
+                        line_count=photo_result.line_count,
+                        edge_pixel_count=photo_result.edge_pixel_count,
+                        image_size_px=photo_result.image_size_px,
+                        output_size_mm=photo_result.output_size_mm,
+                        mm_per_px=photo_result.mm_per_px,
+                        processing_time_ms=photo_elapsed_ms,
+                        error=photo_result.error_message or "",
+                        warnings=[],
+                    )
+
+                    stage_timings["photo_v2_mode"] = True
+                    stage_timings["dxf_version"] = "R12"
+                    stage_timings["photo_contour_count"] = photo_result.contour_count
+
                 else:
                     # RESTORED_BASELINE: Use RETR_LIST (no hierarchy) like commit 86c49526
                     # All other modes use the default isolate_body=True (RETR_TREE + grouping)
@@ -605,6 +710,36 @@ class BlueprintOrchestrator:
                         contours_found=extract_result.line_count,
                         chains_found=0,
                         best_confidence=0.9,  # High confidence for CAM-ready output
+                        candidate_count=extract_result.line_count,
+                    )
+                    cleanup_valid = True
+                elif mode == CleanupMode.V2_RAW:
+                    # V2_RAW: Skip cleanup - raw extraction preserves March 2026 fidelity
+                    cleaned_dxf_path = raw_dxf_path
+                    clean_result = CleanResult(
+                        success=True,
+                        svg_preview="",
+                        dxf_path=str(raw_dxf_path),
+                        original_entity_count=extract_result.line_count,
+                        cleaned_entity_count=extract_result.line_count,
+                        contours_found=extract_result.line_count,
+                        chains_found=0,
+                        best_confidence=0.95,  # High confidence for V2 raw output
+                        candidate_count=extract_result.line_count,
+                    )
+                    cleanup_valid = True
+                elif mode == CleanupMode.PHOTO_V2:
+                    # PHOTO_V2: Skip cleanup - edge_to_dxf output is already clean
+                    cleaned_dxf_path = raw_dxf_path
+                    clean_result = CleanResult(
+                        success=True,
+                        svg_preview="",
+                        dxf_path=str(raw_dxf_path),
+                        original_entity_count=extract_result.line_count,
+                        cleaned_entity_count=extract_result.line_count,
+                        contours_found=extract_result.line_count,
+                        chains_found=0,
+                        best_confidence=0.9,  # High confidence for photo extraction
                         candidate_count=extract_result.line_count,
                     )
                     cleanup_valid = True

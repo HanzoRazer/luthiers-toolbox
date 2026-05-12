@@ -156,6 +156,8 @@ async def vectorize_blueprint(
               - "layered_dual_pass" for classified layers (BODY, BRACING, etc.)
               - "enhanced" for full edge detail (1M+ entities)
               - "cam_ready_r2000" for paid-tier CAM output (R2000 LWPOLYLINE, requires auth)
+              - "v2_raw" for March 2026 fidelity on PDF blueprints (experimental recovery)
+              - "photo_v2" for photographic image extraction (experimental recovery)
         spec_name: Instrument spec for scale correction (e.g., "dreadnought", "benedetto_17")
         reinsert_text: Extract text from image and add as TEXT entities on separate layer
 

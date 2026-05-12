@@ -87,6 +87,19 @@ class CleanupMode(str, Enum):
               - Produces multi-point closed LWPOLYLINEs suitable for CAM workflows
               - Requires authentication (returns 401 if unauthenticated)
               - Verified through GRBL pipeline (2260 G-code lines from BODY_OUTLINE)
+
+    V2_RAW: Protected recovered production extraction path (MRP-1C).
+              - Routes to vectorizer_phase3.py:_raw_extract()
+              - CHAIN_APPROX_NONE + no classification + R12 LINE entities + CONTOURS layer
+              - Preserves vector text from PDF blueprints
+              - Recovered March 2026 fidelity behavior
+              - PROTECTED_EXPERIMENTAL_RECOVERY_MODE: callable, testable, observable, not silently mutable
+
+    PHOTO_V2: Controlled photographic blueprint conversion bridge (MRP-1C).
+              - Routes to edge_to_dxf.py:EdgeToDXF.convert()
+              - Pixel edge extraction for photographic images (PNG/JPG)
+              - NOT for rendered/vectorized PDFs (use V2_RAW for those)
+              - PROTECTED_EXPERIMENTAL_RECOVERY_MODE: callable, testable, observable, not silently mutable
     """
     BASELINE = "baseline"
     REFINED = "refined"
@@ -94,6 +107,8 @@ class CleanupMode(str, Enum):
     LAYERED_DUAL_PASS = "layered_dual_pass"
     ENHANCED = "enhanced"
     CAM_READY_R2000 = "cam_ready_r2000"
+    V2_RAW = "v2_raw"
+    PHOTO_V2 = "photo_v2"
 
 
 @dataclass
