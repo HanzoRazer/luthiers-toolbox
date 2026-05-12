@@ -178,7 +178,7 @@ class TestLifecycleOrchestration:
 
         assert report.lifecycle_gate == "red"
         assert report.export_ready is False
-        assert any("Unsupported lifecycle operation" in issue for issue in report.blocking_issues)
+        assert any("not found" in issue for issue in report.blocking_issues)
 
     def test_incompatible_machine_propagates_red(self):
         """Incompatible machine profile propagates to RED."""

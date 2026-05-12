@@ -117,7 +117,7 @@ class TestDrillingInSupportedOperations:
         report = run_governed_export_lifecycle(request)
 
         assert report.lifecycle_gate == "red"
-        assert any("Unsupported lifecycle operation" in issue for issue in report.blocking_issues)
+        assert any("not found" in issue for issue in report.blocking_issues)
 
 
 # -----------------------------------------------------------------------------

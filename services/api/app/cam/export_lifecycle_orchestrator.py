@@ -1,14 +1,15 @@
 """
 Governed Export Lifecycle Orchestrator
 
-CAM Dev Order 6E/6F/6G/6H: End-to-end lifecycle validation with optional RMOS persistence.
+CAM Dev Order 6E/6F/6G/6H/6I: End-to-end lifecycle validation with policy enforcement.
 
 This module orchestrates the complete governed export lifecycle:
-  Preview → Export Object → Postprocessor Compatibility → Translator Compatibility
+  Policy → Preview → Export Object → Postprocessor Compatibility → Translator Compatibility
 
 It is ORCHESTRATION, not EXECUTION. No output is generated.
 
 Core rule:
+  - Policy engine controls lifecycle stages BEFORE they run
   - Coordinates validation across all layers
   - Propagates gates (RED > YELLOW > GREEN)
   - No DXF generation
@@ -28,6 +29,13 @@ Core rule:
   - Registry-driven operation support
   - Supported operations derived from CAM_OPERATION_REGISTRY
   - Single source of truth for lifecycle capabilities
+
+6I additions:
+  - Policy engine integration
+  - Stage-level permission enforcement
+  - Exportability class enforcement
+  - Maturity enforcement
+  - RMOS eligibility enforcement
 
 Safety assertions:
   - machine_output_generated: always false
@@ -63,6 +71,10 @@ from app.cam.export_rmos_artifacts import (
 from app.cam.cam_operation_registry import (
     get_operation_capability,
     list_lifecycle_supported_operations,
+)
+from app.cam.cam_lifecycle_policy_engine import (
+    LifecyclePolicyEvaluation,
+    evaluate_lifecycle_policy,
 )
 
 
@@ -170,6 +182,12 @@ class GovernedExportLifecycleReport(BaseModel):
     rmos: Optional[RMOSPersistenceResult] = Field(
         None,
         description="RMOS artifact persistence result (if persist_to_rmos was true)"
+    )
+
+    # Policy evaluation (6I)
+    policy_evaluation: Optional[LifecyclePolicyEvaluation] = Field(
+        None,
+        description="Policy engine evaluation result"
     )
 
 
@@ -282,39 +300,80 @@ def run_governed_export_lifecycle(
     """
     Run the complete governed export lifecycle validation.
 
-    Flow:
-      1. Generate governed preview
-      2. Validate preview gate
-      3. Build export object (if preview not RED)
-      4. Run postprocessor compatibility validation
-      5. Run translator compatibility validation
+    Flow (6I policy-governed):
+      0. Evaluate lifecycle policy (6I)
+      1. If policy RED: return early with lifecycle-shaped report
+      2. Generate governed preview (if preview_allowed)
+      3. Build export object (if export_object_allowed and preview GREEN)
+      4. Run machine compatibility validation (if machine_validation_allowed)
+      5. Run translator compatibility validation (if translator_validation_allowed)
       6. Aggregate lifecycle report
       7. Propagate lifecycle gate
-      8. Persist to RMOS (if persist_to_rmos is true)
+      8. Persist to RMOS (if rmos_persistence_allowed and persist_to_rmos)
 
     No DXF generation. No G-code generation. No machine output.
     """
-    blocking_issues = []
-    warnings = []
-    gates = []
-
     operation = request.preview_request.operation
     payload = request.preview_request.payload
 
-    # --- Step 1: Generate governed preview ---
-    preview, preview_gate, preview_errors, preview_warnings = dispatch_preview(
-        operation, payload
+    # --- Step 0: Evaluate lifecycle policy (6I) ---
+    policy = evaluate_lifecycle_policy(
+        operation=operation,
+        persist_to_rmos=request.persist_to_rmos,
     )
-    gates.append(preview_gate)
-    blocking_issues.extend(preview_errors)
-    warnings.extend(preview_warnings)
 
-    # --- Step 2: Check preview gate ---
+    # --- Step 1: If policy RED, return early ---
+    if not policy.allowed:
+        return GovernedExportLifecycleReport(
+            lifecycle_gate="red",
+            export_ready=False,
+            machine_ready=False,
+            translator_ready=False,
+            machine_output_generated=False,
+            translator_output_generated=False,
+            preview_gate="red",
+            preview_operation=operation,
+            export_object_summary=None,
+            machine_validation_gate=None,
+            machine_validation_compatible=None,
+            translator_validation_gate=None,
+            translator_validation_compatible=None,
+            blocking_issues=list(policy.blocking_issues),
+            warnings=list(policy.warnings),
+            metadata=LifecycleMetadata(
+                validation_only=True,
+                risk_class="B",
+                governed_export_pipeline=True,
+            ),
+            rmos=create_empty_persistence_result(),
+            policy_evaluation=policy,
+        )
+
+    blocking_issues = list(policy.blocking_issues)
+    warnings = list(policy.warnings)
+    gates = [policy.lifecycle_gate]
+
+    # --- Step 2: Generate governed preview (if allowed) ---
+    preview = None
+    preview_gate = "red"
+
+    if policy.preview_allowed:
+        preview, preview_gate, preview_errors, preview_warnings = dispatch_preview(
+            operation, payload
+        )
+        gates.append(preview_gate)
+        blocking_issues.extend(preview_errors)
+        warnings.extend(preview_warnings)
+
+    # --- Step 3: Build export object (if allowed and preview GREEN) ---
     export_object = None
     export_summary = None
 
-    if preview_gate != "red" and preview is not None:
-        # --- Step 3: Build export object ---
+    if (
+        policy.export_object_allowed
+        and preview_gate != "red"
+        and preview is not None
+    ):
         export_object, export_errors = dispatch_export_object(
             operation, preview, payload
         )
@@ -330,11 +389,11 @@ def run_governed_export_lifecycle(
                 units=export_object.geometry.coordinate_system.units,
             )
 
-    # --- Step 4: Machine compatibility validation ---
+    # --- Step 4: Machine compatibility validation (if allowed) ---
     machine_gate = None
     machine_compatible = None
 
-    if export_object is not None:
+    if policy.machine_validation_allowed and export_object is not None:
         machine_report = evaluate_postprocessor_compatibility(
             export_object, request.machine_profile
         )
@@ -351,11 +410,11 @@ def run_governed_export_lifecycle(
                 [f"[Machine] {warning}" for warning in machine_report.warnings]
             )
 
-    # --- Step 5: Translator compatibility validation ---
+    # --- Step 5: Translator compatibility validation (if allowed) ---
     translator_gate = None
     translator_compatible = None
 
-    if export_object is not None:
+    if policy.translator_validation_allowed and export_object is not None:
         translator_report = evaluate_dxf_translator_compatibility(
             export_object, request.translator_profile
         )
@@ -382,10 +441,10 @@ def run_governed_export_lifecycle(
     )
     translator_ready = translator_compatible is True
 
-    # --- Step 8: RMOS persistence (6F) ---
+    # --- Step 8: RMOS persistence (if allowed and requested) ---
     rmos_result: Optional[RMOSPersistenceResult] = None
 
-    if request.persist_to_rmos:
+    if request.persist_to_rmos and policy.rmos_persistence_allowed:
         # Serialize export object if created
         export_object_dict = None
         if export_object is not None:
@@ -414,6 +473,7 @@ def run_governed_export_lifecycle(
                 "risk_class": "B",
                 "governed_export_pipeline": True,
             },
+            "policy_evaluation": policy.model_dump(),
         }
 
         rmos_result = persist_export_lifecycle_artifacts(
@@ -445,4 +505,5 @@ def run_governed_export_lifecycle(
             governed_export_pipeline=True,
         ),
         rmos=rmos_result,
+        policy_evaluation=policy,
     )

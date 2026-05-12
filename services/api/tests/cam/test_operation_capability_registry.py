@@ -308,7 +308,7 @@ class TestLifecycleDispatcherIntegration:
         request = self._create_lifecycle_request("unregistered_op")
         report = run_governed_export_lifecycle(request)
         assert report.lifecycle_gate == "red"
-        assert any("Unsupported lifecycle operation" in issue for issue in report.blocking_issues)
+        assert any("not found" in issue for issue in report.blocking_issues)
 
     def test_dispatcher_checks_registry(self):
         """Dispatcher validates against registry, not hardcoded list."""
