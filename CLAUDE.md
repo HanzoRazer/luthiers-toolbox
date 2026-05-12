@@ -141,6 +141,39 @@ published references. Attribution is per-field, not per-species.
 - Reference material (`docs/reference/`)
 - Tonewood comparison documents
 
+## Governance Authority
+
+The repository uses a 3-tier governance hierarchy. When governance systems conflict,
+higher tiers take precedence.
+
+**Tier 1 — Structural Invariants (repository-wide):**
+- `docs/governance/ARCHITECTURE_INVARIANTS.md` — code placement rules
+- `FEATURE_PARITY_MIGRATION_POLICY.md` — migration discipline
+
+**Tier 2 — Domain Governance (domain-specific):**
+- MRP: `docs/governance/MORPHOLOGY_RECONSTRUCTION_PLATFORM.md`
+- CAM: `docs/architecture/CAM_GOVERNED_EXPORT_ARCHITECTURE.md`
+- RMOS: `docs/canonical/governance/RMOS_2.0_Specification.md`
+
+**Tier 3 — Operational Policies (runtime behavior):**
+- `docs/governance/SPRINT_NAMESPACE_STANDARD.md`
+- CAM capability registry and policy engine
+
+**Key documents:**
+- Authority hierarchy: `docs/governance/GOVERNANCE_AUTHORITY_HIERARCHY.md`
+- Topology map: `docs/governance/GOVERNANCE_TOPOLOGY_MAP.md`
+- Manifest index: `docs/governance/MANIFEST_INDEX.md`
+- Implementation guide: `docs/handoffs/GOVERNANCE_REMEDIATION_IMPLEMENTATION_GUIDE.md`
+
+**Governance commands:**
+```bash
+python scripts/governance/check_all.py          # Run all governance checks
+python scripts/check_protected_paths.py         # Check protected system modifications
+python scripts/check_capability_registry.py     # Validate CAM registry
+python scripts/governance/check_manifest_index.py  # Validate manifest index
+pytest tests/test_governance_compliance.py -v   # Run governance tests
+```
+
 ## BLOCKING INFRASTRUCTURE — resolve before new DXF work
 
 ### DXF output standard: dual-format via dxf_compat
