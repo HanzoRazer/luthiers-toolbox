@@ -15,6 +15,7 @@ Exit codes:
 Exemptions are documented in docs/architecture/DXF_COMPAT_EXEMPTIONS.md
 """
 
+import os
 import re
 import sys
 from pathlib import Path
@@ -50,6 +51,9 @@ EXCLUDED_DIRS = [
     '__pycache__/',
 ]
 
+# Directory names to prune during os.walk (prevents descent)
+PRUNE_DIRS = {'.venv', 'venv', 'node_modules', '__pycache__', '.git'}
+
 # Test files (allowed for now, documented for Phase 2 migration)
 TEST_FILE_PATTERNS = [
     'tests/',
@@ -80,6 +84,24 @@ def is_rnd_sandbox(path: str) -> bool:
         if sandbox in path_lower:
             return True
     return False
+
+
+def iter_python_files(root: Path) -> List[Path]:
+    """
+    Iterate Python files, pruning excluded directories during traversal.
+
+    Uses os.walk with in-place directory pruning to avoid descending into
+    .venv, node_modules, etc. This is significantly faster than rglob()
+    followed by filtering, especially on Windows with large venv directories.
+    """
+    py_files = []
+    for dirpath, dirnames, filenames in os.walk(root):
+        # Prune excluded directories in-place (prevents descent)
+        dirnames[:] = [d for d in dirnames if d not in PRUNE_DIRS]
+        for f in filenames:
+            if f.endswith('.py'):
+                py_files.append(Path(dirpath) / f)
+    return py_files
 
 
 def normalize_path(path: Path, base: Path) -> str:
@@ -125,11 +147,11 @@ def main(search_path: str = None) -> int:
     # Combine all file-level exemptions
     all_exemptions = CANONICAL_WRAPPERS | EXCLUDED_EXTERNAL_ECOSYSTEM
 
-    # Find all Python files
+    # Find all Python files (with directory pruning for performance)
     if search_root.is_file():
         py_files = [search_root]
     else:
-        py_files = list(search_root.rglob('*.py'))
+        py_files = iter_python_files(search_root)
 
     for py_file in py_files:
         rel_path = normalize_path(py_file, base_path)
