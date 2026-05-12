@@ -167,12 +167,24 @@ higher tiers take precedence.
 
 **Governance commands:**
 ```bash
-python scripts/governance/check_all.py          # Run all governance checks
-python scripts/check_protected_paths.py         # Check protected system modifications
-python scripts/check_capability_registry.py     # Validate CAM registry
-python scripts/governance/check_manifest_index.py  # Validate manifest index
-pytest tests/test_governance_compliance.py -v   # Run governance tests
+# Tier-based execution (default: ci)
+python scripts/governance/check_all.py --tier precommit  # Fast checks (~2s)
+python scripts/governance/check_all.py --tier ci         # CI checks (~4s)
+python scripts/governance/check_all.py --tier nightly    # Full suite (~130s)
+python scripts/governance/check_all.py --list            # Show all checks by tier
+
+# Individual checks
+python scripts/check_protected_paths.py         # Protected system modifications
+python scripts/check_capability_registry.py     # CAM registry validation
+python scripts/governance/check_manifest_index.py  # Manifest index validation
+pytest tests/test_governance_compliance.py -v   # Governance test suite
 ```
+
+**Enforcement tiers:**
+- `precommit` — fast checks for pre-commit hooks (<2s each)
+- `ci` — moderate checks for CI builds (<30s each, default)
+- `nightly` — heavy checks requiring full app init (scheduled builds)
+- `manual` — explicit invocation only
 
 ## BLOCKING INFRASTRUCTURE — resolve before new DXF work
 
