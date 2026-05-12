@@ -425,4 +425,111 @@ tests/regression_corpus/pending/
 
 ---
 
-*MRP-1C Vectorizer V2 Archaeology — ENDPOINT VALIDATION COMPLETE — 2026-05-12*
+## Addendum: Extended Validation Session — 2026-05-12
+
+### Test Input Files
+
+**PDF Blueprints (V2_RAW mode):**
+
+| File | Location |
+|------|----------|
+| Cuatro Puertorriqueño | `Guitar Plans/El Cuatro/cuatro puertoriqueño.pdf` |
+| Gibson Double-Neck | `Guitar Plans/Gibson-Double-Neck-esd1275.pdf` |
+| Gibson Melody Maker | `docs/archive/instrument_references/gibson_melody_maker/gibson_melody_maker_blueprint.pdf` |
+
+**Image Files (PHOTO_V2 mode):**
+
+| File | Location |
+|------|----------|
+| Cuatro Puertorriqueño PNG | `Guitar Plans/cuatro puertoriqueño.png` |
+| Gibson Melody Maker PNG | `Guitar Plans/Gibson-Melody-Maker.png` |
+| Acoustic Orchestra Model | `Guitar Plans/Acoustic-Orchestra-Model-MM.png` |
+| Gibson SG Custom | `Guitar Plans/Gibson-SG-Custom.png` |
+| D'Aquisto Measurements | `Guitar Plans/Archtop Measurements/DAquisto-Measurements-2.jpg` |
+
+### Generated DXF Artifacts
+
+**V2_RAW Mode Output (PDF → vectorizer_phase3._raw_extract):**
+
+| Artifact | Entities | Size | Location |
+|----------|----------|------|----------|
+| cuatro_puertorriqueno_v2_raw_test.dxf | 477,429 | 52.2 MB | `tests/regression_corpus/pending/` |
+| gibson_double_neck_v2_raw_test.dxf | 1,166,415 | 127.9 MB | `tests/regression_corpus/pending/` |
+| melody_maker_pdf_v2_raw/output.dxf | — | — | `tests/regression_corpus/pending/` |
+| cuatro_pdf_v2_raw/output.dxf | — | — | `tests/regression_corpus/pending/` |
+
+**PHOTO_V2 Mode Output (Image → edge_to_dxf.convert_enhanced):**
+
+| Artifact | Contours | Entities | Size | Location |
+|----------|----------|----------|------|----------|
+| cuatro_puertorriqueno_photo_v2.dxf | 2,118 | 364,252 | 56.6 MB | `tests/regression_corpus/pending/` |
+| gibson_melody_maker_photo_v2.dxf | 3,222 | 709,578 | 108.3 MB | `tests/regression_corpus/pending/` |
+| acoustic_orchestra_model_photo_v2.dxf | 2,147 | 1,035,522 | 160.8 MB | `tests/regression_corpus/pending/` |
+| gibson_sg_custom_photo_v2.dxf | 2,507 | 662,529 | 95.3 MB | `tests/regression_corpus/pending/` |
+| daquisto_measurements_photo_v2.dxf | 104 | 22,612 | 3.5 MB | `tests/regression_corpus/pending/` |
+
+### Production Mechanism
+
+**V2_RAW Mode:**
+```
+POST /api/blueprint/vectorize
+Content-Type: multipart/form-data
+
+file: <PDF file>
+mode: v2_raw
+```
+
+Routing path:
+1. `vectorize_router.py` receives request with `mode=v2_raw`
+2. `blueprint_orchestrator.py` routes to `CleanupMode.V2_RAW` branch
+3. `Phase3Vectorizer.extract(raw_output=True)` invokes `_raw_extract()`
+4. Output: R12 DXF with LINE entities on single CONTOURS layer
+
+**PHOTO_V2 Mode:**
+```
+POST /api/blueprint/vectorize
+Content-Type: multipart/form-data
+
+file: <PNG/JPG file>
+mode: photo_v2
+```
+
+Routing path:
+1. `vectorize_router.py` receives request with `mode=photo_v2`
+2. `blueprint_orchestrator.py` routes to `CleanupMode.PHOTO_V2` branch
+3. `EdgeToDXF(layer_name='CONTOURS').convert_enhanced()` performs multi-scale Canny
+4. Output: R12 DXF with LINE entities on single CONTOURS layer
+
+### Test Automation
+
+Test file: `tests/test_v2_recovery_modes.py`
+
+```python
+# Run all V2 recovery mode tests
+pytest tests/test_v2_recovery_modes.py -v
+
+# Test classes:
+# - TestV2RawMode: PDF blueprint tests
+# - TestPhotoV2Mode: Image extraction tests
+# - TestRegressionSafety: Existing mode verification
+```
+
+### Key Technical Details
+
+1. **Mode parameter**: Must be passed as form data (`data={"mode": "v2_raw"}`), not query string
+2. **DXF format**: R12 (AC1009) for maximum compatibility
+3. **Layer naming**: Single `CONTOURS` layer (matches March 2026 anchor artifact)
+4. **Entity type**: LINE only (no LWPOLYLINE)
+5. **Cleanup bypass**: Both modes skip the cleanup stage entirely
+
+### Visual Verification Status
+
+| Artifact | Verified | Notes |
+|----------|----------|-------|
+| cuatro_puertorriqueno_v2_raw_test.dxf | YES | Excellent rendering confirmed by user |
+| gibson_double_neck_v2_raw_test.dxf | YES | Excellent rendering confirmed by user |
+| PHOTO_V2 artifacts | PENDING | Generated, awaiting visual inspection |
+
+---
+
+*MRP-1C Vectorizer V2 Archaeology — ADDENDUM COMPLETE — 2026-05-12*
