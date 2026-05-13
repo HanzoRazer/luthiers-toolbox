@@ -915,13 +915,35 @@ paper.install(window);
 // ============================================================
 
 class InstrumentBodyAPI {
-    constructor(baseUrl = '/api') {
-        this.baseUrl = baseUrl;
-        this.useMock = true;  // v3.0.0: Mock mode for local testing
+    constructor(baseUrl = null, useMock = null) {
+        // IBG-2B: Configuration from URL params, window config, or defaults
+        // Priority: constructor args > URL params > window.IBG_CONFIG > defaults
+        const urlParams = new URLSearchParams(window.location.search);
+        const config = window.IBG_CONFIG || {};
+
+        // Base URL: constructor > URL param > config > default
+        this.baseUrl = baseUrl
+            || urlParams.get('ibg_api_url')
+            || config.apiUrl
+            || '/api';
+
+        // Mock mode: constructor > URL param > config > default (true for safety)
+        if (useMock !== null) {
+            this.useMock = useMock;
+        } else if (urlParams.has('ibg_mock')) {
+            this.useMock = urlParams.get('ibg_mock') !== 'false';
+        } else if (config.useMock !== undefined) {
+            this.useMock = config.useMock;
+        } else {
+            this.useMock = true;  // Default to mock for safety
+        }
+
         this.currentSession = null;
         this.authToken = null;
         this.abortController = null;
-        console.log(this.useMock ? '\u26a0\ufe0f IBG API in MOCK mode' : '\u2705 IBG API connected to /api/body');
+        console.log(this.useMock
+            ? '\u26a0\ufe0f IBG API in MOCK mode (set IBG_CONFIG.useMock=false or ?ibg_mock=false for production)'
+            : `\u2705 IBG API connected to ${this.baseUrl}/body`);
     }
 
     setAuthToken(token) {

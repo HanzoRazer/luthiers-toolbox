@@ -125,12 +125,23 @@ def create_app() -> FastAPI:
 app.add_middleware(RequestIdMiddleware)
 
 # CORS configuration
-# Allow all origins for public API access (claude.ai, external tools, etc.)
+# Production: configure via CORS_ORIGINS env var (comma-separated)
+# Development: defaults to wildcard for local testing
 # NOTE: allow_credentials=False is required when using wildcard origins
+_cors_origins_env = os.getenv("CORS_ORIGINS", "").strip()
+if _cors_origins_env:
+    _cors_origins = [origin.strip() for origin in _cors_origins_env.split(",") if origin.strip()]
+    _cors_credentials = True  # Can enable credentials with explicit origins
+    _log.info(f"CORS configured with explicit origins: {_cors_origins}")
+else:
+    _cors_origins = ["*"]
+    _cors_credentials = False
+    _log.info("CORS configured with wildcard (development mode)")
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=False,
+    allow_origins=_cors_origins,
+    allow_credentials=_cors_credentials,
     allow_methods=["*"],
     allow_headers=["*"],
 )

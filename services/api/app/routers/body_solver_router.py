@@ -7,57 +7,38 @@ Endpoints:
   GET  /api/body/session/{session_id} — Retrieve previously solved session
   PUT  /api/body/session/{session_id}/landmarks — Override landmarks and re-solve (paid tier)
 
-Sprint: Week 2 — run_in_executor for blocking calls, DXF export as base64
+Sprint: IBG-2B — Production infrastructure (Redis sessions, auth, rate limiting)
 """
 
 from __future__ import annotations
 
 import asyncio
 import base64
+import json
 import tempfile
 import os
-import uuid
-from functools import wraps
-from typing import Dict, List, Optional
+from typing import List, Optional
 
-from fastapi import APIRouter, File, Form, HTTPException, UploadFile
+from fastapi import APIRouter, Depends, File, Form, HTTPException, Request, UploadFile
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field
 
+from app.auth.deps import get_current_principal, get_optional_principal
+from app.auth.principal import Principal
 from app.instrument_geometry.body.ibg import InstrumentBodyGenerator
 from app.instrument_geometry.body.ibg.body_contour_solver import LandmarkPoint
+from app.instrument_geometry.body.ibg.session_store import get_session_store
+from app.middleware.rate_limit import limiter, rate_limit_tier
 
 
 router = APIRouter(prefix="/api/body", tags=["Body Solver"])
 
 
-# ─── Auth Stub ────────────────────────────────────────────────────────────────
+# ─── Rate Limit Configuration ────────────────────────────────────────────────
 
 
-def requires_paid_tier(func):
-    """
-    Decorator stub for paid tier authentication.
-
-    TODO: Implement real auth check against user subscription status.
-    For now, allows all requests through for development/testing.
-    In production, this should check request.user.is_paid or similar.
-    """
-    @wraps(func)
-    async def wrapper(*args, **kwargs):
-        # TODO: Implement real auth check
-        # if not request.user.is_paid:
-        #     raise HTTPException(status_code=403, detail="Paid tier required")
-        return await func(*args, **kwargs)
-    return wrapper
-
-
-# ─── Session Storage ──────────────────────────────────────────────────────────
-
-
-# TODO: Migrate to Redis before multi-worker deployment.
-# This in-memory dict dies on restart and breaks with multiple workers.
-# Docker Compose includes Redis but this code doesn't use it yet.
-_sessions: Dict[str, Dict] = {}
+IBG_RATE_LIMIT_FREE = os.getenv("IBG_RATE_LIMIT_FREE", "10/hour")
+IBG_RATE_LIMIT_PAID = os.getenv("IBG_RATE_LIMIT_PAID", "100/hour")
 
 
 # ─── Pydantic Models ──────────────────────────────────────────────────────────
@@ -98,8 +79,8 @@ class OverrideLandmarksRequest(BaseModel):
 
 def _create_session(model, gen) -> str:
     """Create a new session and store the model."""
-    session_id = f"sess_{uuid.uuid4().hex[:8]}"
-    _sessions[session_id] = {
+    store = get_session_store()
+    session_data = {
         "instrument_spec": gen.spec_name,
         "landmarks": [
             {
@@ -113,7 +94,23 @@ def _create_session(model, gen) -> str:
         ],
         "model": _model_to_dict(model),
     }
-    return session_id
+    return store.create(session_data)
+
+
+def _get_session(session_id: str) -> dict:
+    """Get session or raise 404."""
+    store = get_session_store()
+    session = store.get(session_id)
+    if session is None:
+        raise HTTPException(status_code=404, detail="Session not found")
+    return session
+
+
+def _update_session(session_id: str, data: dict) -> None:
+    """Update session or raise 404."""
+    store = get_session_store()
+    if not store.update(session_id, data):
+        raise HTTPException(status_code=404, detail="Session not found")
 
 
 def _model_to_dict(model) -> dict:
@@ -193,16 +190,20 @@ def _model_to_response(model, gen, options: dict) -> dict:
 
 
 @router.post("/solve-from-dxf")
+@limiter.limit(IBG_RATE_LIMIT_FREE)
 async def solve_from_dxf(
+    request: Request,
     dxf_file: UploadFile = File(...),
     instrument_spec: str = Form(...),
     consolidate: bool = Form(True),
     options: str = Form("{}"),
+    principal: Optional[Principal] = Depends(get_optional_principal),
 ):
     """
     Upload partial DXF, receive solved body model.
 
-    Free tier endpoint — no auth required.
+    Free tier endpoint — authentication optional.
+    Rate limited to 10 requests/hour for unauthenticated users.
 
     Args:
         dxf_file: Partial vectorizer output DXF
@@ -213,8 +214,6 @@ async def solve_from_dxf(
     Returns:
         Solved body model with dimensions, outline points, side heights, etc.
     """
-    import json
-
     try:
         opts = json.loads(options)
     except json.JSONDecodeError:
@@ -228,7 +227,6 @@ async def solve_from_dxf(
     try:
         gen = InstrumentBodyGenerator(instrument_spec)
 
-        # Run blocking DXF processing in thread pool to avoid blocking event loop
         loop = asyncio.get_event_loop()
         model = await loop.run_in_executor(
             None, lambda: gen.complete_from_dxf(tmp_path, consolidate=consolidate)
@@ -237,7 +235,6 @@ async def solve_from_dxf(
         response = _model_to_response(model, gen, opts)
         response["session_id"] = _create_session(model, gen)
 
-        # Add DXF export if requested
         if opts.get("return_dxf"):
             dxf_data = await _generate_dxf_base64(gen, model)
             response["dxf_data"] = dxf_data
@@ -254,21 +251,26 @@ async def solve_from_dxf(
 
 
 @router.post("/solve-from-landmarks")
-@requires_paid_tier
-async def solve_from_landmarks(request: SolveFromLandmarksRequest):
+@limiter.limit(IBG_RATE_LIMIT_PAID)
+async def solve_from_landmarks(
+    request: Request,
+    body: SolveFromLandmarksRequest,
+    principal: Principal = Depends(get_current_principal),
+):
     """
     Solve body from user-provided landmarks.
 
-    Paid tier endpoint — requires authentication.
+    Paid tier endpoint — authentication required.
+    Rate limited to 100 requests/hour.
 
     Args:
-        request: Instrument spec + landmarks list
+        body: Instrument spec + landmarks list
 
     Returns:
         Solved body model with dimensions, outline points, side heights, etc.
     """
     try:
-        gen = InstrumentBodyGenerator(request.instrument_spec)
+        gen = InstrumentBodyGenerator(body.instrument_spec)
 
         landmarks = [
             LandmarkPoint(
@@ -278,20 +280,18 @@ async def solve_from_landmarks(request: SolveFromLandmarksRequest):
                 source=lm.source,
                 confidence=lm.confidence,
             )
-            for lm in request.landmarks
+            for lm in body.landmarks
         ]
 
-        # Run blocking solver in thread pool
         loop = asyncio.get_event_loop()
         model = await loop.run_in_executor(
             None, lambda: gen.complete_from_landmarks(landmarks)
         )
 
-        opts = request.options.model_dump()
+        opts = body.options.model_dump()
         response = _model_to_response(model, gen, opts)
         response["session_id"] = _create_session(model, gen)
 
-        # Add DXF export if requested
         if opts.get("return_dxf"):
             dxf_data = await _generate_dxf_base64(gen, model)
             response["dxf_data"] = dxf_data
@@ -305,9 +305,16 @@ async def solve_from_landmarks(request: SolveFromLandmarksRequest):
 
 
 @router.get("/session/{session_id}")
-async def get_session(session_id: str):
+@limiter.limit(IBG_RATE_LIMIT_FREE)
+async def get_session(
+    request: Request,
+    session_id: str,
+    principal: Optional[Principal] = Depends(get_optional_principal),
+):
     """
     Retrieve previously solved session.
+
+    Free tier endpoint — authentication optional.
 
     Args:
         session_id: Session ID from a previous solve call
@@ -315,10 +322,7 @@ async def get_session(session_id: str):
     Returns:
         Stored session data including model and landmarks
     """
-    if session_id not in _sessions:
-        raise HTTPException(status_code=404, detail="Session not found")
-
-    session = _sessions[session_id]
+    session = _get_session(session_id)
     model_data = session["model"]
 
     return JSONResponse({
@@ -346,24 +350,27 @@ async def get_session(session_id: str):
 
 
 @router.put("/session/{session_id}/landmarks")
-@requires_paid_tier
-async def override_landmarks(session_id: str, request: OverrideLandmarksRequest):
+@limiter.limit(IBG_RATE_LIMIT_PAID)
+async def override_landmarks(
+    request: Request,
+    session_id: str,
+    body: OverrideLandmarksRequest,
+    principal: Principal = Depends(get_current_principal),
+):
     """
     Override landmarks and re-solve.
 
-    Paid tier endpoint — requires authentication.
+    Paid tier endpoint — authentication required.
+    Rate limited to 100 requests/hour.
 
     Args:
         session_id: Existing session ID
-        request: Landmarks to override or add
+        body: Landmarks to override or add
 
     Returns:
         Re-solved body model with updated landmarks
     """
-    if session_id not in _sessions:
-        raise HTTPException(status_code=404, detail="Session not found")
-
-    session = _sessions[session_id]
+    session = _get_session(session_id)
 
     try:
         gen = InstrumentBodyGenerator(session["instrument_spec"])
@@ -379,7 +386,7 @@ async def override_landmarks(session_id: str, request: OverrideLandmarksRequest)
             for lm in session.get("landmarks", [])
         ]
 
-        for override in request.override_landmarks:
+        for override in body.override_landmarks:
             for i, lm in enumerate(landmarks):
                 if lm.label == override.label:
                     landmarks[i] = LandmarkPoint(
@@ -391,7 +398,7 @@ async def override_landmarks(session_id: str, request: OverrideLandmarksRequest)
                     )
                     break
 
-        for new_lm in request.add_landmarks:
+        for new_lm in body.add_landmarks:
             landmarks.append(
                 LandmarkPoint(
                     label=new_lm.label,
@@ -402,13 +409,12 @@ async def override_landmarks(session_id: str, request: OverrideLandmarksRequest)
                 )
             )
 
-        # Run blocking solver in thread pool
         loop = asyncio.get_event_loop()
         model = await loop.run_in_executor(
             None, lambda: gen.complete_from_landmarks(landmarks)
         )
 
-        _sessions[session_id] = {
+        updated_session = {
             "instrument_spec": session["instrument_spec"],
             "landmarks": [
                 {
@@ -422,6 +428,7 @@ async def override_landmarks(session_id: str, request: OverrideLandmarksRequest)
             ],
             "model": _model_to_dict(model),
         }
+        _update_session(session_id, updated_session)
 
         response = _model_to_response(model, gen, {"return_json": True})
         response["session_id"] = session_id
