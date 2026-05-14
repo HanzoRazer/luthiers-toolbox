@@ -72,8 +72,9 @@ def create_compatible_machine_profile() -> MachineProfileValidationOnly:
 
 def create_compatible_translator_profile() -> DXFTranslatorProfile:
     """Create a translator profile compatible with drilling geometry."""
+    # 7C: Use registered translator ID from TRANSLATOR_CAPABILITY_REGISTRY
     return DXFTranslatorProfile(
-        translator_id="generic_dxf_r14_validation_only",
+        translator_id="dxf_r12",
         supported_geometry_types=["line", "polyline", "arc", "circle"],
         supports_layers=True,
         supports_blocks=False,
@@ -328,7 +329,7 @@ class TestDrillingRMOSPersistence:
 
         assert report.rmos.persisted is True
         assert report.rmos.run_id is not None
-        assert len(report.rmos.artifacts) == 2  # export object + lifecycle report
+        assert len(report.rmos.artifacts) == 3  # export object + lifecycle report + audit ledger (6K)
 
     def test_drilling_no_persist_by_default(self):
         """Drilling does not persist by default."""

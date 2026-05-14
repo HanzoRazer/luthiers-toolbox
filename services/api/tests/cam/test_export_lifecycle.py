@@ -62,8 +62,9 @@ def create_compatible_machine_profile() -> MachineProfileValidationOnly:
 
 def create_compatible_translator_profile() -> DXFTranslatorProfile:
     """Create a translator profile compatible with nut slot geometry."""
+    # 7C: Use registered translator ID from TRANSLATOR_CAPABILITY_REGISTRY
     return DXFTranslatorProfile(
-        translator_id="generic_dxf_r14_validation_only",
+        translator_id="dxf_r12",
         supported_geometry_types=["line", "polyline", "arc", "circle"],
         supports_layers=True,
         supports_blocks=False,

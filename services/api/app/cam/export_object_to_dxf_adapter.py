@@ -1,7 +1,7 @@
 """
 Export Object to DXF Translator Adapter
 
-CAM Dev Order 6D: Semantic mapping for translator boundary validation.
+CAM Dev Order 6D/7C: Semantic mapping for translator boundary validation.
 
 This module maps Export Object geometry/toolpath semantics into
 translator-neutral classification. It does NOT generate DXF.
@@ -10,6 +10,7 @@ Purpose:
   - Detect geometry types from Export Object
   - Classify translator requirements
   - Validate translator compatibility
+  - Registry-gated validation (7C)
 
 NOT:
   - DXF generation
@@ -20,11 +21,17 @@ Core principle:
   Translation is separate from representation.
   Export Object owns manufacturing intent.
   This adapter prepares for translation without executing it.
+
+7C additions:
+  - Registry lookup before compatibility checks
+  - Category validation (translator vs postprocessor)
+  - Output class validation (must be dxf)
+  - Execution state validation
 """
 
 from __future__ import annotations
 
-from typing import List, Set, Tuple
+from typing import List, Optional, Set, Tuple
 
 from app.cam.dxf_translator_boundary import (
     DXFTranslatorCompatibilityReport,
@@ -32,6 +39,10 @@ from app.cam.dxf_translator_boundary import (
     DXFTranslatorProfile,
 )
 from app.cam.export_object import ExportObject
+from app.cam.translator_capability_registry import (
+    TranslatorCapability,
+    get_translator_capability,
+)
 
 
 # -----------------------------------------------------------------------------
@@ -121,6 +132,58 @@ def detect_required_features(
         features.add("multi_entity_support")
 
     return sorted(features)
+
+
+# -----------------------------------------------------------------------------
+# Registry-Gated Validation (7C)
+# -----------------------------------------------------------------------------
+
+def validate_translator_registry(
+    translator_id: str,
+) -> Tuple[Optional[TranslatorCapability], List[str]]:
+    """
+    Validate translator against capability registry (7C).
+
+    Checks:
+      1. Translator exists in registry
+      2. Translator category is 'translator' (not 'postprocessor')
+      3. Output class is 'dxf'
+      4. Execution state is compatible with validation
+
+    Returns (capability, blocking_issues).
+    If blocking_issues is non-empty, validation should fail RED.
+    """
+    blocking_issues = []
+
+    # 1. Check translator exists
+    capability = get_translator_capability(translator_id)
+    if capability is None:
+        blocking_issues.append(
+            f"Unknown translator: '{translator_id}' not found in capability registry"
+        )
+        return None, blocking_issues
+
+    # 2. Check translator category (translator vs postprocessor)
+    if capability.translator_category != "translator":
+        blocking_issues.append(
+            f"Translator '{translator_id}' is a {capability.translator_category}, "
+            f"not a DXF translator"
+        )
+
+    # 3. Check output class
+    if capability.output_class != "dxf":
+        blocking_issues.append(
+            f"Translator '{translator_id}' output class '{capability.output_class}' "
+            f"is incompatible with DXF validation"
+        )
+
+    # 4. Check execution state (execution_disabled means not usable)
+    if capability.execution_state == "execution_disabled":
+        blocking_issues.append(
+            f"Translator '{translator_id}' is disabled and cannot be used for validation"
+        )
+
+    return capability, blocking_issues
 
 
 # -----------------------------------------------------------------------------
@@ -234,6 +297,8 @@ def evaluate_dxf_translator_compatibility(
     Returns a compatibility REPORT, not DXF output.
     No serialization occurs. No DXF is generated.
 
+    7C: Registry-gated validation runs FIRST (fail fast).
+
     Gate logic:
       - GREEN: All checks pass, ready for translation
       - YELLOW: Checks pass with warnings
@@ -241,6 +306,35 @@ def evaluate_dxf_translator_compatibility(
     """
     blocking_issues = []
     warnings = []
+    unsupported: List[str] = []
+
+    # --- 7C: Registry validation FIRST (fail fast) ---
+    registry_capability, registry_issues = validate_translator_registry(
+        translator_profile.translator_id
+    )
+
+    if registry_issues:
+        # Registry validation failed - return RED immediately
+        return DXFTranslatorCompatibilityReport(
+            compatible=False,
+            gate="red",
+            translator_output_generated=False,
+            dxf_generated=False,
+            translation_ready=False,
+            geometry_types_detected=[],
+            unsupported_geometry=[],
+            warnings=[],
+            blocking_issues=registry_issues,
+            required_translator_features=[],
+            metadata=DXFTranslatorMetadata(
+                validation_only=True,
+                risk_class="B",
+                translator_class="DXF",
+                machine_ready=False,
+            ),
+        )
+
+    # --- Registry validated, proceed with compatibility checks ---
 
     # Detect geometry types
     geometry_types = detect_geometry_types(export_object)
@@ -286,8 +380,8 @@ def evaluate_dxf_translator_compatibility(
     return DXFTranslatorCompatibilityReport(
         compatible=compatible,
         gate=gate,
-        translator_output_generated=False,  # Always false in 6D
-        dxf_generated=False,  # Always false in 6D
+        translator_output_generated=False,  # Always false
+        dxf_generated=False,  # Always false
         translation_ready=translation_ready,
         geometry_types_detected=geometry_types,
         unsupported_geometry=list(unsupported) if not geom_passed else [],

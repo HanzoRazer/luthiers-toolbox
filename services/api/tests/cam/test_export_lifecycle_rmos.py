@@ -72,7 +72,7 @@ def create_compatible_machine_profile() -> MachineProfileValidationOnly:
 def create_compatible_translator_profile() -> DXFTranslatorProfile:
     """Create a compatible translator profile."""
     return DXFTranslatorProfile(
-        translator_id="generic_dxf_r14_validation_only",
+        translator_id="dxf_r12",  # 7C: Use registered translator ID
         supported_geometry_types=["line", "polyline", "arc", "circle"],
         supports_layers=True,
         supports_blocks=False,
@@ -289,9 +289,11 @@ class TestRedLifecyclePersistence:
 
         report = run_governed_export_lifecycle(request)
 
-        # Only one artifact (lifecycle report)
-        assert len(report.rmos.artifacts) == 1
-        assert report.rmos.artifacts[0].kind == LIFECYCLE_REPORT_KIND
+        # Two artifacts: lifecycle report + audit ledger (6K), but no export object
+        assert len(report.rmos.artifacts) == 2
+        artifact_kinds = [a.kind for a in report.rmos.artifacts]
+        assert LIFECYCLE_REPORT_KIND in artifact_kinds
+        assert EXPORT_OBJECT_KIND not in artifact_kinds
 
 
 # -----------------------------------------------------------------------------

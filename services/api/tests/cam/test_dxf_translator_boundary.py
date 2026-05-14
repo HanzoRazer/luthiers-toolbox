@@ -52,8 +52,9 @@ def create_valid_export_object():
 
 def create_generic_translator_profile() -> DXFTranslatorProfile:
     """Create a generic DXF translator profile."""
+    # 7C: Use registered translator ID from TRANSLATOR_CAPABILITY_REGISTRY
     return DXFTranslatorProfile(
-        translator_id="generic_dxf_r14_validation_only",
+        translator_id="dxf_r12",
         supported_geometry_types=["line", "polyline", "arc", "circle"],
         supports_layers=True,
         supports_blocks=False,
@@ -63,9 +64,13 @@ def create_generic_translator_profile() -> DXFTranslatorProfile:
 
 
 def create_limited_translator_profile() -> DXFTranslatorProfile:
-    """Create a limited translator profile (no polyline support)."""
+    """Create a limited translator profile (no polyline support).
+
+    7C: Uses registered translator ID but with limited capabilities
+    for testing compatibility failures.
+    """
     return DXFTranslatorProfile(
-        translator_id="limited_dxf_validation_only",
+        translator_id="dxf_r12",  # Registered ID with limited capabilities for testing
         supported_geometry_types=["line"],  # Only lines
         supports_layers=False,
         supports_blocks=False,
@@ -181,7 +186,7 @@ class TestEvaluateCompatibility:
         """Missing polyline support when required returns RED."""
         export_obj = create_valid_export_object()
         translator = DXFTranslatorProfile(
-            translator_id="no_polyline",
+            translator_id="dxf_r12",  # 7C: registered ID, limited capabilities for testing
             supported_geometry_types=["line", "arc"],  # No polyline
             supports_layers=True,
             units="mm",
@@ -196,7 +201,7 @@ class TestEvaluateCompatibility:
         """Missing optional layer support returns YELLOW."""
         export_obj = create_valid_export_object()
         translator = DXFTranslatorProfile(
-            translator_id="no_layers",
+            translator_id="dxf_r12",  # 7C: registered ID, no layer support test
             supported_geometry_types=["line", "polyline", "arc"],
             supports_layers=False,  # No layer support
             units="mm",
@@ -379,7 +384,7 @@ class TestEdgeCases:
         """Empty supported_geometry_types list returns RED."""
         export_obj = create_valid_export_object()
         translator = DXFTranslatorProfile(
-            translator_id="empty",
+            translator_id="dxf_r12",  # 7C: registered ID, empty capabilities test
             supported_geometry_types=[],
             units="mm",
         )
@@ -411,7 +416,7 @@ class TestEdgeCases:
         """Multiple issues are all reported."""
         export_obj = create_valid_export_object()
         translator = DXFTranslatorProfile(
-            translator_id="problematic",
+            translator_id="dxf_r12",  # 7C: registered ID, problematic capabilities test
             supported_geometry_types=["circle"],  # Wrong types
             supports_layers=False,
             units="inch",  # Wrong units
