@@ -188,6 +188,18 @@ CAM_ROUTERS: List[RouterSpec] = [
         category="cam",
     ),
     RouterSpec(
+        module="app.routers.cam.translator_capability_router",
+        prefix="/api/cam",
+        tags=["CAM", "Translator", "Capabilities"],
+        category="cam",
+    ),
+    RouterSpec(
+        module="app.routers.cam.lifecycle_promotion_router",
+        prefix="",
+        tags=["CAM", "Lifecycle", "Promotion"],
+        category="cam",
+    ),
+    RouterSpec(
         module="app.cam.rosette.photo_batch_router",
         prefix="",
         tags=["CAM", "Rosette", "Batch"],
@@ -281,6 +293,13 @@ CAM_ROUTERS: List[RouterSpec] = [
         module="app.routers.body_solver_router",
         prefix="",  # Router has its own /api/body prefix
         tags=["Body Solver", "IBG"],
+        category="cam",
+    ),
+    # ── MRP-2B: Body Export Bridge (BOE → Export Object) ──
+    RouterSpec(
+        module="app.routers.export.body_export_router",
+        prefix="/api/export",
+        tags=["Export", "Body", "MRP"],
         category="cam",
     ),
 ]
