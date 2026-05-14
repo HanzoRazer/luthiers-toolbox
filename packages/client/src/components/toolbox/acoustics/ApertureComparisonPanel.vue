@@ -12,10 +12,42 @@
 import { ref, reactive, computed, watch, onMounted } from 'vue'
 import { GateBadge, SectionLabel, PrerequisiteNotice } from '@/components/shared/workflow'
 import { ApertureResultCard, type ApertureGeometry } from '@/components/shared/aperture'
-import { AcousticStateCard, MeasuredResponseCard } from '@/components/shared/acoustics'
-import { createGeometryAcousticState, createEmptyMeasuredResponse } from '@/utils/acoustics'
+import {
+  AcousticStateCard,
+  MeasuredResponseCard,
+  MeasuredResponseDeltaCard,
+  CalibrationReadinessCard,
+  CalibrationResidualCard,
+  MeasurementPairingStatusCard,
+  HelmholtzEstimateCard,
+  EstimateAssumptionSummaryCard,
+  ResidualInterpretationCard,
+  ResidualTrendCard,
+  ResidualStabilityCard,
+  ResidualCoherenceCard,
+  DiagnosticNarrativeCard,
+  SnapshotExchangeSection,
+} from '@/components/shared/acoustics'
+import {
+  createGeometryAcousticState,
+  createEmptyMeasuredResponse,
+  evaluateCalibrationReadiness,
+  createCalibrationResidualPreview,
+  updateGeometryPreservingEstimates,
+  evaluateMeasurementPairing,
+  createEstimateAssumptionSummary,
+  interpretResidualPreview,
+  summarizeResidualTrend,
+  classifyResidualStability,
+  summarizeResidualCoherence,
+  generateDiagnosticNarrative,
+  createDiagnosticSnapshot,
+  normalizeDiagnosticSnapshotForExport,
+  createDiagnosticSnapshotExportMetadata,
+} from '@/utils/acoustics'
 import type { AcousticState } from '@/types/acoustics'
 import type { MeasuredResponse } from '@/types/measurements'
+import type { HelmholtzEstimateResult } from '@/types/helmholtz'
 
 // Types
 type ReferenceType = 'round' | 'oval'
@@ -280,24 +312,65 @@ const deltaTable = computed<DeltaRow[]>(() => {
 })
 
 // Acoustic state computations (Dev Order 15)
-const referenceAcousticState = computed<AcousticState | null>(() =>
-  referenceGeometry.value
-    ? createGeometryAcousticState({
-        id: 'reference',
-        label: 'Reference Aperture',
-        apertureGeometry: referenceGeometry.value,
-      })
-    : null
+// Acoustic state (Dev Order 15, editable Dev Order 24)
+const referenceAcousticState = ref<AcousticState | null>(null)
+const candidateAcousticState = ref<AcousticState | null>(null)
+
+function updateReferenceAcousticState(updated: AcousticState) {
+  referenceAcousticState.value = updated
+}
+
+function updateCandidateAcousticState(updated: AcousticState) {
+  candidateAcousticState.value = updated
+}
+
+// Watch geometry changes and update acoustic state (preserving manual estimates)
+watch(
+  referenceGeometry,
+  (newGeo) => {
+    if (!newGeo) {
+      referenceAcousticState.value = null
+      return
+    }
+    const newGeoState = createGeometryAcousticState({
+      id: 'reference',
+      label: 'Reference Aperture',
+      apertureGeometry: newGeo,
+    })
+    if (referenceAcousticState.value) {
+      referenceAcousticState.value = updateGeometryPreservingEstimates(
+        referenceAcousticState.value,
+        newGeoState
+      )
+    } else {
+      referenceAcousticState.value = newGeoState
+    }
+  },
+  { immediate: true }
 )
 
-const candidateAcousticState = computed<AcousticState | null>(() =>
-  candidateGeometry.value
-    ? createGeometryAcousticState({
-        id: 'candidate',
-        label: 'Candidate Aperture',
-        apertureGeometry: candidateGeometry.value,
-      })
-    : null
+watch(
+  candidateGeometry,
+  (newGeo) => {
+    if (!newGeo) {
+      candidateAcousticState.value = null
+      return
+    }
+    const newGeoState = createGeometryAcousticState({
+      id: 'candidate',
+      label: 'Candidate Aperture',
+      apertureGeometry: newGeo,
+    })
+    if (candidateAcousticState.value) {
+      candidateAcousticState.value = updateGeometryPreservingEstimates(
+        candidateAcousticState.value,
+        newGeoState
+      )
+    } else {
+      candidateAcousticState.value = newGeoState
+    }
+  },
+  { immediate: true }
 )
 
 // Measured response state (Dev Order 19, editable Dev Order 20)
@@ -324,6 +397,250 @@ function updateReferenceMeasurement(updated: MeasuredResponse) {
 function updateCandidateMeasurement(updated: MeasuredResponse) {
   candidateMeasuredResponse.value = updated
 }
+
+// Helmholtz estimate handlers (Dev Order 27)
+function attachReferenceHelmholtzEstimate(
+  result: HelmholtzEstimateResult,
+  volumeLiters: number,
+  effectiveLengthMm: number
+) {
+  if (!referenceAcousticState.value) return
+  referenceAcousticState.value = {
+    ...referenceAcousticState.value,
+    estimatedHelmholtzHz: result.estimatedHelmholtzHz,
+    bodyVolumeLiters: volumeLiters,
+    estimatedEffectiveLengthMm: effectiveLengthMm,
+    speedOfSoundMps: result.inputUsed.speedOfSoundMps,
+    estimateMethod: result.method,
+    source: 'geometry_estimate',
+    confidence: 'low',
+    assumptions: [
+      ...referenceAcousticState.value.assumptions.filter(
+        (a) => !a.startsWith('First-order Helmholtz')
+      ),
+      'First-order Helmholtz estimate attached from geometry assumptions',
+      ...result.assumptions,
+    ],
+    warnings: [
+      ...(referenceAcousticState.value.warnings ?? []).filter(
+        (w) => !w.includes('calibration')
+      ),
+      ...result.warnings,
+    ],
+  }
+}
+
+function attachCandidateHelmholtzEstimate(
+  result: HelmholtzEstimateResult,
+  volumeLiters: number,
+  effectiveLengthMm: number
+) {
+  if (!candidateAcousticState.value) return
+  candidateAcousticState.value = {
+    ...candidateAcousticState.value,
+    estimatedHelmholtzHz: result.estimatedHelmholtzHz,
+    bodyVolumeLiters: volumeLiters,
+    estimatedEffectiveLengthMm: effectiveLengthMm,
+    speedOfSoundMps: result.inputUsed.speedOfSoundMps,
+    estimateMethod: result.method,
+    source: 'geometry_estimate',
+    confidence: 'low',
+    assumptions: [
+      ...candidateAcousticState.value.assumptions.filter(
+        (a) => !a.startsWith('First-order Helmholtz')
+      ),
+      'First-order Helmholtz estimate attached from geometry assumptions',
+      ...result.assumptions,
+    ],
+    warnings: [
+      ...(candidateAcousticState.value.warnings ?? []).filter(
+        (w) => !w.includes('calibration')
+      ),
+      ...result.warnings,
+    ],
+  }
+}
+
+// Calibration readiness (Dev Order 22)
+const calibrationReadiness = computed(() =>
+  evaluateCalibrationReadiness({
+    referenceGeometry: referenceGeometry.value,
+    candidateGeometry: candidateGeometry.value,
+    referenceMeasured: referenceMeasuredResponse.value,
+    candidateMeasured: candidateMeasuredResponse.value,
+  })
+)
+
+// Measurement pairing status (Dev Order 25)
+const referencePairingStatus = computed(() =>
+  evaluateMeasurementPairing({
+    id: 'reference-pairing',
+    label: 'Reference Pairing Status',
+    acousticState: referenceAcousticState.value,
+    measuredResponse: referenceMeasuredResponse.value,
+  })
+)
+
+const candidatePairingStatus = computed(() =>
+  evaluateMeasurementPairing({
+    id: 'candidate-pairing',
+    label: 'Candidate Pairing Status',
+    acousticState: candidateAcousticState.value,
+    measuredResponse: candidateMeasuredResponse.value,
+  })
+)
+
+// Calibration residual preview (Dev Order 23)
+const referenceResidualPreview = computed(() =>
+  createCalibrationResidualPreview({
+    id: 'reference-residuals',
+    label: 'Reference Residual Preview',
+    acousticState: referenceAcousticState.value,
+    measuredResponse: referenceMeasuredResponse.value,
+  })
+)
+
+const candidateResidualPreview = computed(() =>
+  createCalibrationResidualPreview({
+    id: 'candidate-residuals',
+    label: 'Candidate Residual Preview',
+    acousticState: candidateAcousticState.value,
+    measuredResponse: candidateMeasuredResponse.value,
+  })
+)
+
+// Estimate assumption summaries (Dev Order 28)
+const referenceEstimateSummary = computed(() =>
+  createEstimateAssumptionSummary({
+    id: 'reference-estimate-summary',
+    label: 'Reference Estimate Assumptions',
+    acousticState: referenceAcousticState.value,
+  })
+)
+
+const candidateEstimateSummary = computed(() =>
+  createEstimateAssumptionSummary({
+    id: 'candidate-estimate-summary',
+    label: 'Candidate Estimate Assumptions',
+    acousticState: candidateAcousticState.value,
+  })
+)
+
+// Residual interpretation (Dev Order 30)
+const referenceResidualInterpretation = computed(() =>
+  interpretResidualPreview({
+    id: 'reference-residual-interpretation',
+    label: 'Reference Residual Interpretation',
+    preview: referenceResidualPreview.value,
+  })
+)
+
+const candidateResidualInterpretation = computed(() =>
+  interpretResidualPreview({
+    id: 'candidate-residual-interpretation',
+    label: 'Candidate Residual Interpretation',
+    preview: candidateResidualPreview.value,
+  })
+)
+
+// Residual trend (Dev Order 31)
+const referenceResidualTrend = computed(() =>
+  summarizeResidualTrend({
+    id: 'reference-residual-trend',
+    label: 'Reference Residual Trend',
+    preview: referenceResidualPreview.value,
+  })
+)
+
+const candidateResidualTrend = computed(() =>
+  summarizeResidualTrend({
+    id: 'candidate-residual-trend',
+    label: 'Candidate Residual Trend',
+    preview: candidateResidualPreview.value,
+  })
+)
+
+// Residual stability (Dev Order 32)
+const referenceResidualStability = computed(() =>
+  classifyResidualStability({
+    id: 'reference-residual-stability',
+    label: 'Reference Residual Stability',
+    interpretation: referenceResidualInterpretation.value,
+    trend: referenceResidualTrend.value,
+  })
+)
+
+const candidateResidualStability = computed(() =>
+  classifyResidualStability({
+    id: 'candidate-residual-stability',
+    label: 'Candidate Residual Stability',
+    interpretation: candidateResidualInterpretation.value,
+    trend: candidateResidualTrend.value,
+  })
+)
+
+// Residual coherence summary (Dev Order 33)
+const referenceResidualCoherence = computed(() =>
+  summarizeResidualCoherence({
+    id: 'reference-residual-coherence',
+    label: 'Reference Residual Coherence',
+    interpretation: referenceResidualInterpretation.value,
+    trend: referenceResidualTrend.value,
+    stability: referenceResidualStability.value,
+  })
+)
+
+const candidateResidualCoherence = computed(() =>
+  summarizeResidualCoherence({
+    id: 'candidate-residual-coherence',
+    label: 'Candidate Residual Coherence',
+    interpretation: candidateResidualInterpretation.value,
+    trend: candidateResidualTrend.value,
+    stability: candidateResidualStability.value,
+  })
+)
+
+// Diagnostic narrative summary (Dev Order 34)
+const referenceDiagnosticNarrative = computed(() =>
+  generateDiagnosticNarrative({
+    id: 'reference-diagnostic-narrative',
+    label: 'Reference Diagnostic Narrative',
+    interpretation: referenceResidualInterpretation.value,
+    trend: referenceResidualTrend.value,
+    stability: referenceResidualStability.value,
+    coherence: referenceResidualCoherence.value,
+  })
+)
+
+const candidateDiagnosticNarrative = computed(() =>
+  generateDiagnosticNarrative({
+    id: 'candidate-diagnostic-narrative',
+    label: 'Candidate Diagnostic Narrative',
+    interpretation: candidateResidualInterpretation.value,
+    trend: candidateResidualTrend.value,
+    stability: candidateResidualStability.value,
+    coherence: candidateResidualCoherence.value,
+  })
+)
+
+// Diagnostic session snapshot (Dev Order 36, normalized Dev Order 37)
+const diagnosticSnapshot = computed(() =>
+  normalizeDiagnosticSnapshotForExport(
+    createDiagnosticSnapshot({
+      id: 'current-diagnostic-session',
+      referenceNarrative: referenceDiagnosticNarrative.value,
+      candidateNarrative: candidateDiagnosticNarrative.value,
+      calibrationReadiness: calibrationReadiness.value,
+      referenceCoherence: referenceResidualCoherence.value,
+      candidateCoherence: candidateResidualCoherence.value,
+    })
+  )
+)
+
+// Export metadata (Dev Order 41)
+const diagnosticSnapshotExportMetadata = computed(() =>
+  createDiagnosticSnapshotExportMetadata()
+)
 
 // Watch for reference parameter changes
 watch(
@@ -489,12 +806,50 @@ onMounted(() => {
       </table>
     </section>
 
-    <!-- Acoustic State Display (Dev Order 15, extracted Dev Order 16) -->
+    <!-- Acoustic State Display (Dev Order 15, extracted Dev Order 16, editable Dev Order 24) -->
     <section :class="$style.acousticStateSection">
       <SectionLabel text="Acoustic State" />
       <div :class="$style.acousticStateGrid">
-        <AcousticStateCard v-if="referenceAcousticState" :state="referenceAcousticState" />
-        <AcousticStateCard v-if="candidateAcousticState" :state="candidateAcousticState" />
+        <AcousticStateCard
+          v-if="referenceAcousticState"
+          :state="referenceAcousticState"
+          editable
+          @update:state="updateReferenceAcousticState"
+        />
+        <AcousticStateCard
+          v-if="candidateAcousticState"
+          :state="candidateAcousticState"
+          editable
+          @update:state="updateCandidateAcousticState"
+        />
+      </div>
+    </section>
+
+    <!-- First-Order Helmholtz Estimate (Dev Order 27) -->
+    <section :class="$style.helmholtzEstimateSection">
+      <SectionLabel text="First-Order Helmholtz Estimate" />
+      <div :class="$style.helmholtzEstimateGrid">
+        <HelmholtzEstimateCard
+          label="Reference Helmholtz Estimate"
+          :aperture-geometry="referenceGeometry"
+          :acoustic-state="referenceAcousticState"
+          @attach-estimate="attachReferenceHelmholtzEstimate"
+        />
+        <HelmholtzEstimateCard
+          label="Candidate Helmholtz Estimate"
+          :aperture-geometry="candidateGeometry"
+          :acoustic-state="candidateAcousticState"
+          @attach-estimate="attachCandidateHelmholtzEstimate"
+        />
+      </div>
+    </section>
+
+    <!-- Estimate Assumption Summary (Dev Order 28) -->
+    <section :class="$style.estimateSummarySection">
+      <SectionLabel text="Estimate Assumption Summary" />
+      <div :class="$style.estimateSummaryGrid">
+        <EstimateAssumptionSummaryCard :summary="referenceEstimateSummary" />
+        <EstimateAssumptionSummaryCard :summary="candidateEstimateSummary" />
       </div>
     </section>
 
@@ -513,13 +868,70 @@ onMounted(() => {
       </div>
     </section>
 
+    <!-- Measured Response Delta (Dev Order 21) -->
+    <MeasuredResponseDeltaCard
+      :reference="referenceMeasuredResponse"
+      :candidate="candidateMeasuredResponse"
+    />
+
+    <!-- Measurement Pairing Status (Dev Order 25) -->
+    <div :class="$style.pairingGrid">
+      <MeasurementPairingStatusCard :status="referencePairingStatus" />
+      <MeasurementPairingStatusCard :status="candidatePairingStatus" />
+    </div>
+
+    <!-- Calibration Readiness (Dev Order 22) -->
+    <CalibrationReadinessCard :readiness="calibrationReadiness" />
+
+    <!-- Calibration Residual Preview (Dev Order 23) -->
+    <div :class="$style.residualGrid">
+      <CalibrationResidualCard :preview="referenceResidualPreview" />
+      <CalibrationResidualCard :preview="candidateResidualPreview" />
+    </div>
+
+    <!-- Residual Interpretation (Dev Order 30) -->
+    <div :class="$style.interpretationGrid">
+      <ResidualInterpretationCard :summary="referenceResidualInterpretation" />
+      <ResidualInterpretationCard :summary="candidateResidualInterpretation" />
+    </div>
+
+    <!-- Residual Trend (Dev Order 31) -->
+    <div :class="$style.trendGrid">
+      <ResidualTrendCard :summary="referenceResidualTrend" />
+      <ResidualTrendCard :summary="candidateResidualTrend" />
+    </div>
+
+    <!-- Residual Stability (Dev Order 32) -->
+    <div :class="$style.stabilityGrid">
+      <ResidualStabilityCard :summary="referenceResidualStability" />
+      <ResidualStabilityCard :summary="candidateResidualStability" />
+    </div>
+
+    <!-- Residual Coherence (Dev Order 33) -->
+    <div :class="$style.coherenceGrid">
+      <ResidualCoherenceCard :summary="referenceResidualCoherence" />
+      <ResidualCoherenceCard :summary="candidateResidualCoherence" />
+    </div>
+
+    <!-- Diagnostic Narrative (Dev Order 34) -->
+    <div :class="$style.narrativeGrid">
+      <DiagnosticNarrativeCard :summary="referenceDiagnosticNarrative" />
+      <DiagnosticNarrativeCard :summary="candidateDiagnosticNarrative" />
+    </div>
+
+    <!-- Snapshot Exchange Section (Dev Order 42) -->
+    <SnapshotExchangeSection
+      :snapshot="diagnosticSnapshot"
+      :export-metadata="diagnosticSnapshotExportMetadata"
+    />
+
     <!-- Future Acoustic Intelligence -->
     <section :class="$style.futurePlaceholder">
       <SectionLabel text="Future Acoustic Intelligence" />
       <div :class="$style.futureContent">
         <GateBadge gate="yellow" label="Planned" />
         <ul>
-          <li>Helmholtz frequency estimates</li>
+          <li :class="$style.implemented">Helmholtz frequency estimates (Dev Order 27)</li>
           <li>Effective neck length comparison</li>
           <li>Q / sustain estimates</li>
           <li>Two-cavity coupling analysis</li>
@@ -741,5 +1153,89 @@ onMounted(() => {
   grid-template-columns: 1fr 1fr;
   gap: 1rem;
   margin-top: 0.75rem;
+}
+
+/* Measurement Pairing Status (Dev Order 25) */
+.pairingGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+
+/* Calibration Residual Preview (Dev Order 23) */
+.residualGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+
+/* First-Order Helmholtz Estimate (Dev Order 27) */
+.helmholtzEstimateSection {
+  background: #1f2937;
+  border: 1px solid #374151;
+  border-radius: 0.5rem;
+  padding: 1rem;
+}
+
+.helmholtzEstimateGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+  margin-top: 0.75rem;
+}
+
+.implemented {
+  color: #10b981;
+  text-decoration: line-through;
+}
+
+/* Estimate Assumption Summary (Dev Order 28) */
+.estimateSummarySection {
+  background: #1f2937;
+  border: 1px solid #374151;
+  border-radius: 0.5rem;
+  padding: 1rem;
+}
+
+.estimateSummaryGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+  margin-top: 0.75rem;
+}
+
+/* Residual Interpretation (Dev Order 30) */
+.interpretationGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+
+/* Residual Trend (Dev Order 31) */
+.trendGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+
+/* Residual Stability (Dev Order 32) */
+.stabilityGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+
+/* Residual Coherence (Dev Order 33) */
+.coherenceGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+
+/* Diagnostic Narrative (Dev Order 34) */
+.narrativeGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
 }
 </style>

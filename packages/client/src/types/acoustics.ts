@@ -3,6 +3,7 @@
  *
  * Dev Order 15: Normalized acoustic state model for bridging geometry
  * comparison and future target-matching / inverse-solver work.
+ * Dev Order 28: Added provenance fields (speedOfSoundMps, estimateMethod).
  *
  * This is a descriptive model, not a solver. It represents known or
  * estimated acoustic values without claiming prediction accuracy.
@@ -77,6 +78,12 @@ export interface AcousticState {
 
   /** Estimated effective acoustic neck length in mm */
   estimatedEffectiveLengthMm?: number
+
+  /** Speed of sound used for estimate (m/s) */
+  speedOfSoundMps?: number
+
+  /** Method used to generate the estimate */
+  estimateMethod?: 'first_order_helmholtz' | string
 
   /** Estimated Q factor */
   qEstimate?: number

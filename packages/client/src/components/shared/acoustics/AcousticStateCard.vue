@@ -1,21 +1,33 @@
 <script setup lang="ts">
 /**
- * AcousticStateCard — Reusable display for AcousticState
+ * AcousticStateCard — Reusable display and edit for AcousticState
  *
  * Dev Order 16: Extracted from ApertureComparisonPanel inline display.
+ * Dev Order 24: Added manual estimate attachment controls.
  * Displays acoustic state metadata without prediction logic.
  */
-import { computed } from 'vue'
+import { computed, ref } from 'vue'
 import { GateBadge } from '@/components/shared/workflow'
 import type { AcousticState, AcousticConfidence } from '@/types/acoustics'
 import {
   hasEstimatedAcoustics,
   getConfidenceLabel,
   getSourceLabel,
+  mergeManualEstimates,
 } from '@/utils/acoustics'
 
-const props = defineProps<{
-  state: AcousticState
+const props = withDefaults(
+  defineProps<{
+    state: AcousticState
+    editable?: boolean
+  }>(),
+  {
+    editable: false,
+  }
+)
+
+const emit = defineEmits<{
+  (e: 'update:state', value: AcousticState): void
 }>()
 
 /**
@@ -29,6 +41,52 @@ function confidenceToGate(confidence: AcousticConfidence): 'green' | 'yellow' {
 
 const hasEstimates = computed(() => hasEstimatedAcoustics(props.state))
 const gateColor = computed(() => confidenceToGate(props.state.confidence))
+const isManualSource = computed(() => props.state.source === 'manual')
+
+// Edit mode state
+const isEditing = ref(false)
+const localHelmholtz = ref<number | null>(null)
+const localEffectiveLength = ref<number | null>(null)
+const localQ = ref<number | null>(null)
+const localLoss = ref<number | null>(null)
+
+function startEditing() {
+  localHelmholtz.value = props.state.estimatedHelmholtzHz ?? null
+  localEffectiveLength.value = props.state.estimatedEffectiveLengthMm ?? null
+  localQ.value = props.state.qEstimate ?? null
+  localLoss.value = props.state.lossEstimate ?? null
+  isEditing.value = true
+}
+
+function cancelEditing() {
+  isEditing.value = false
+}
+
+function saveEstimates() {
+  const estimates: {
+    estimatedHelmholtzHz?: number
+    estimatedEffectiveLengthMm?: number
+    qEstimate?: number
+    lossEstimate?: number
+  } = {}
+
+  if (localHelmholtz.value !== null && localHelmholtz.value > 0) {
+    estimates.estimatedHelmholtzHz = localHelmholtz.value
+  }
+  if (localEffectiveLength.value !== null && localEffectiveLength.value > 0) {
+    estimates.estimatedEffectiveLengthMm = localEffectiveLength.value
+  }
+  if (localQ.value !== null && localQ.value > 0) {
+    estimates.qEstimate = localQ.value
+  }
+  if (localLoss.value !== null && localLoss.value >= 0) {
+    estimates.lossEstimate = localLoss.value
+  }
+
+  const updated = mergeManualEstimates(props.state, estimates)
+  emit('update:state', updated)
+  isEditing.value = false
+}
 </script>
 
 <template>
@@ -55,29 +113,94 @@ const gateColor = computed(() => confidenceToGate(props.state.confidence))
       </div>
     </div>
 
-    <!-- Estimated Values -->
-    <div v-if="hasEstimates" :class="$style.estimates">
-      <div v-if="state.estimatedHelmholtzHz !== undefined" :class="$style.row">
-        <span :class="$style.key">Helmholtz:</span>
-        <span :class="$style.value">{{ state.estimatedHelmholtzHz.toFixed(1) }} Hz</span>
+    <!-- Editing Form -->
+    <div v-if="isEditing" :class="$style.editForm">
+      <div :class="$style.field">
+        <label :class="$style.fieldLabel">Estimated Helmholtz (Hz)</label>
+        <input
+          v-model.number="localHelmholtz"
+          type="number"
+          :class="$style.input"
+          min="0"
+          step="0.1"
+          placeholder="e.g., 98.5"
+        />
       </div>
-      <div v-if="state.estimatedEffectiveLengthMm !== undefined" :class="$style.row">
-        <span :class="$style.key">Effective length:</span>
-        <span :class="$style.value">{{ state.estimatedEffectiveLengthMm.toFixed(1) }} mm</span>
+      <div :class="$style.field">
+        <label :class="$style.fieldLabel">Estimated Effective Length (mm)</label>
+        <input
+          v-model.number="localEffectiveLength"
+          type="number"
+          :class="$style.input"
+          min="0"
+          step="0.1"
+          placeholder="e.g., 12.4"
+        />
       </div>
-      <div v-if="state.qEstimate !== undefined" :class="$style.row">
-        <span :class="$style.key">Q estimate:</span>
-        <span :class="$style.value">{{ state.qEstimate.toFixed(1) }}</span>
+      <div :class="$style.field">
+        <label :class="$style.fieldLabel">Q Estimate</label>
+        <input
+          v-model.number="localQ"
+          type="number"
+          :class="$style.input"
+          min="0"
+          step="0.1"
+          placeholder="e.g., 7.2"
+        />
       </div>
-      <div v-if="state.lossEstimate !== undefined" :class="$style.row">
-        <span :class="$style.key">Loss estimate:</span>
-        <span :class="$style.value">{{ state.lossEstimate.toFixed(2) }}</span>
+      <div :class="$style.field">
+        <label :class="$style.fieldLabel">Loss Estimate</label>
+        <input
+          v-model.number="localLoss"
+          type="number"
+          :class="$style.input"
+          min="0"
+          step="0.01"
+          placeholder="e.g., 0.18"
+        />
+      </div>
+      <div :class="$style.editActions">
+        <button :class="$style.btnCancel" @click="cancelEditing">Cancel</button>
+        <button :class="$style.btnSave" @click="saveEstimates">Save</button>
       </div>
     </div>
 
-    <!-- No Estimates Message -->
-    <div v-else :class="$style.noEstimates">
-      No calibrated acoustic estimates attached.
+    <!-- Display mode -->
+    <template v-else>
+      <!-- Estimated Values -->
+      <div v-if="hasEstimates" :class="$style.estimates">
+        <div v-if="state.estimatedHelmholtzHz !== undefined" :class="$style.row">
+          <span :class="$style.key">Helmholtz:</span>
+          <span :class="$style.value">{{ state.estimatedHelmholtzHz.toFixed(1) }} Hz</span>
+        </div>
+        <div v-if="state.estimatedEffectiveLengthMm !== undefined" :class="$style.row">
+          <span :class="$style.key">Effective length:</span>
+          <span :class="$style.value">{{ state.estimatedEffectiveLengthMm.toFixed(1) }} mm</span>
+        </div>
+        <div v-if="state.qEstimate !== undefined" :class="$style.row">
+          <span :class="$style.key">Q estimate:</span>
+          <span :class="$style.value">{{ state.qEstimate.toFixed(1) }}</span>
+        </div>
+        <div v-if="state.lossEstimate !== undefined" :class="$style.row">
+          <span :class="$style.key">Loss estimate:</span>
+          <span :class="$style.value">{{ state.lossEstimate.toFixed(2) }}</span>
+        </div>
+      </div>
+
+      <!-- No Estimates Message -->
+      <div v-else :class="$style.noEstimates">
+        No calibrated acoustic estimates attached.
+      </div>
+
+      <!-- Edit Button -->
+      <button v-if="editable" :class="$style.editBtn" @click="startEditing">
+        Attach Estimate
+      </button>
+    </template>
+
+    <!-- Manual estimate notice -->
+    <div v-if="isManualSource && hasEstimates" :class="$style.manualNotice">
+      Manual estimates are placeholders and are not calibrated predictions.
     </div>
 
     <!-- Warnings -->
@@ -167,6 +290,109 @@ const gateColor = computed(() => confidenceToGate(props.state.confidence))
   font-style: italic;
   padding: 0.5rem;
   background: rgba(107, 114, 128, 0.1);
+  border-radius: 0.25rem;
+  margin-bottom: 0.5rem;
+}
+
+.editBtn {
+  width: 100%;
+  padding: 0.5rem;
+  margin-bottom: 0.5rem;
+  background: rgba(99, 102, 241, 0.2);
+  border: 1px dashed #6366f1;
+  border-radius: 0.25rem;
+  color: #a5b4fc;
+  font-size: 0.75rem;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.editBtn:hover {
+  background: rgba(99, 102, 241, 0.3);
+}
+
+.editForm {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding: 0.5rem;
+  background: rgba(99, 102, 241, 0.1);
+  border-radius: 0.25rem;
+  margin-bottom: 0.5rem;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.fieldLabel {
+  font-size: 0.6875rem;
+  font-weight: 500;
+  color: #9ca3af;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.input {
+  padding: 0.375rem 0.5rem;
+  background: #1f2937;
+  border: 1px solid #374151;
+  border-radius: 0.25rem;
+  color: #f9fafb;
+  font-size: 0.8125rem;
+  font-family: var(--font-mono, ui-monospace, monospace);
+}
+
+.input:focus {
+  outline: none;
+  border-color: #6366f1;
+}
+
+.editActions {
+  display: flex;
+  gap: 0.5rem;
+  justify-content: flex-end;
+  margin-top: 0.25rem;
+}
+
+.btnCancel,
+.btnSave {
+  padding: 0.375rem 0.75rem;
+  border-radius: 0.25rem;
+  font-size: 0.75rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.btnCancel {
+  background: transparent;
+  border: 1px solid #4b5563;
+  color: #9ca3af;
+}
+
+.btnCancel:hover {
+  background: rgba(75, 85, 99, 0.3);
+}
+
+.btnSave {
+  background: #6366f1;
+  border: 1px solid #6366f1;
+  color: #fff;
+}
+
+.btnSave:hover {
+  background: #4f46e5;
+}
+
+.manualNotice {
+  font-size: 0.6875rem;
+  color: #fbbf24;
+  font-style: italic;
+  padding: 0.375rem 0.5rem;
+  background: rgba(251, 191, 36, 0.1);
   border-radius: 0.25rem;
   margin-bottom: 0.5rem;
 }
