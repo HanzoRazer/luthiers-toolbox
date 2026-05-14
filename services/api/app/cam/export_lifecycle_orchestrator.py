@@ -67,6 +67,8 @@ from app.cam.export_rmos_artifacts import (
     RMOSPersistenceResult,
     persist_export_lifecycle_artifacts,
     create_empty_persistence_result,
+    persist_audit_ledger_artifact,
+    register_audit_in_index,
 )
 from app.cam.cam_operation_registry import (
     get_operation_capability,
@@ -75,6 +77,15 @@ from app.cam.cam_operation_registry import (
 from app.cam.cam_lifecycle_policy_engine import (
     LifecyclePolicyEvaluation,
     evaluate_lifecycle_policy,
+)
+from app.cam.cam_lifecycle_audit_ledger import (
+    AuditLedgerSummary,
+    generate_lifecycle_audit_snapshot,
+    create_audit_summary,
+)
+from app.cam.translation_artifact import (
+    TranslationArtifactSummary,
+    build_artifact_summary_from_translator,
 )
 
 
@@ -188,6 +199,18 @@ class GovernedExportLifecycleReport(BaseModel):
     policy_evaluation: Optional[LifecyclePolicyEvaluation] = Field(
         None,
         description="Policy engine evaluation result"
+    )
+
+    # Audit ledger (6K)
+    audit_ledger: Optional[AuditLedgerSummary] = Field(
+        None,
+        description="Lifecycle audit ledger summary (6K)"
+    )
+
+    # Translation artifact (7D)
+    translation_artifact_summary: Optional[TranslationArtifactSummary] = Field(
+        None,
+        description="Translation artifact summary — validation metadata only (7D)"
     )
 
 
@@ -324,7 +347,33 @@ def run_governed_export_lifecycle(
 
     # --- Step 1: If policy RED, return early ---
     if not policy.allowed:
-        return GovernedExportLifecycleReport(
+        # RMOS persistence for early return (if requested)
+        early_rmos: Optional[RMOSPersistenceResult] = None
+        if request.persist_to_rmos:
+            # Build lifecycle report dict for persistence
+            lifecycle_report_dict = {
+                "lifecycle_gate": "red",
+                "export_ready": False,
+                "machine_ready": False,
+                "translator_ready": False,
+                "machine_output_generated": False,
+                "translator_output_generated": False,
+                "preview_gate": "red",
+                "preview_operation": operation,
+                "export_object_summary": None,
+                "blocking_issues": list(policy.blocking_issues),
+                "warnings": list(policy.warnings),
+                "policy_evaluation": policy.model_dump(),
+            }
+            early_rmos = persist_export_lifecycle_artifacts(
+                export_object=None,  # No export object for RED policy
+                lifecycle_report=lifecycle_report_dict,
+            )
+        else:
+            early_rmos = create_empty_persistence_result()
+
+        # Build early report for audit generation
+        early_report = GovernedExportLifecycleReport(
             lifecycle_gate="red",
             export_ready=False,
             machine_ready=False,
@@ -345,9 +394,38 @@ def run_governed_export_lifecycle(
                 risk_class="B",
                 governed_export_pipeline=True,
             ),
-            rmos=create_empty_persistence_result(),
+            rmos=early_rmos,
             policy_evaluation=policy,
+            audit_ledger=None,
+            translation_artifact_summary=None,
         )
+
+        # Generate audit even for early return (6K)
+        capability = get_operation_capability(operation)
+        audit_snapshot = generate_lifecycle_audit_snapshot(
+            lifecycle_report=early_report,
+            policy_evaluation=policy,
+            operation_capability=capability,
+        )
+
+        # Persist audit if RMOS was persisted
+        if early_rmos and early_rmos.persisted:
+            audit_ref = persist_audit_ledger_artifact(
+                audit_ledger=audit_snapshot.model_dump(mode="json"),
+                run_id=early_rmos.run_id,
+            )
+            early_rmos.artifacts.append(audit_ref)
+
+        # Register audit in index
+        register_audit_in_index(
+            operation=operation,
+            audit_id=audit_snapshot.audit_id,
+            deterministic_hash=audit_snapshot.deterministic_hash,
+            run_id=early_rmos.run_id if early_rmos and early_rmos.persisted else None,
+        )
+
+        early_report.audit_ledger = create_audit_summary(audit_snapshot)
+        return early_report
 
     blocking_issues = list(policy.blocking_issues)
     warnings = list(policy.warnings)
@@ -431,6 +509,14 @@ def run_governed_export_lifecycle(
                 [f"[Translator] {warning}" for warning in translator_report.warnings]
             )
 
+    # --- Step 5.5: Generate translation artifact summary (7D) ---
+    translation_artifact = None
+    if export_object is not None and translator_compatible:
+        translation_artifact = build_artifact_summary_from_translator(
+            export_object=export_object,
+            translator_id=request.translator_profile.translator_id,
+        )
+
     # --- Step 6: Aggregate lifecycle gate ---
     lifecycle_gate = propagate_gate(*gates)
 
@@ -483,7 +569,8 @@ def run_governed_export_lifecycle(
     else:
         rmos_result = create_empty_persistence_result()
 
-    return GovernedExportLifecycleReport(
+    # --- Step 9: Build report (before audit generation) ---
+    report = GovernedExportLifecycleReport(
         lifecycle_gate=lifecycle_gate,
         export_ready=export_ready,
         machine_ready=False,  # Always false
@@ -506,4 +593,43 @@ def run_governed_export_lifecycle(
         ),
         rmos=rmos_result,
         policy_evaluation=policy,
+        audit_ledger=None,  # Set below
+        translation_artifact_summary=translation_artifact,
     )
+
+    # --- Step 10: Generate audit ledger (6K) ---
+    capability = get_operation_capability(operation)
+    audit_snapshot = generate_lifecycle_audit_snapshot(
+        lifecycle_report=report,
+        policy_evaluation=policy,
+        operation_capability=capability,
+    )
+
+    # Update RMOS summary in audit if we persisted
+    if rmos_result and rmos_result.persisted:
+        audit_snapshot.rmos_summary = {
+            "persisted": True,
+            "run_id": rmos_result.run_id,
+            "artifact_count": len(rmos_result.artifacts),
+            "artifact_kinds": [a.kind for a in rmos_result.artifacts],
+        }
+
+        # Persist audit ledger to RMOS
+        audit_ref = persist_audit_ledger_artifact(
+            audit_ledger=audit_snapshot.model_dump(mode="json"),
+            run_id=rmos_result.run_id,
+        )
+        rmos_result.artifacts.append(audit_ref)
+
+    # Register audit in index (for 6L promotion queries)
+    register_audit_in_index(
+        operation=operation,
+        audit_id=audit_snapshot.audit_id,
+        deterministic_hash=audit_snapshot.deterministic_hash,
+        run_id=rmos_result.run_id if rmos_result and rmos_result.persisted else None,
+    )
+
+    # Attach audit summary to report
+    report.audit_ledger = create_audit_summary(audit_snapshot)
+
+    return report

@@ -194,6 +194,12 @@ CAM_ROUTERS: List[RouterSpec] = [
         category="cam",
     ),
     RouterSpec(
+        module="app.routers.cam.translation_artifact_router",
+        prefix="",
+        tags=["CAM", "Translation", "Artifacts"],
+        category="cam",
+    ),
+    RouterSpec(
         module="app.routers.cam.lifecycle_promotion_router",
         prefix="",
         tags=["CAM", "Lifecycle", "Promotion"],
