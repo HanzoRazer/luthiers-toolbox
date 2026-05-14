@@ -24,10 +24,13 @@ from __future__ import annotations
 import hashlib
 import json
 from datetime import datetime, timezone
-from typing import Any, Dict, List, Literal, Optional
+from typing import TYPE_CHECKING, Any, Dict, List, Literal, Optional
 from uuid import uuid4
 
 from pydantic import BaseModel, Field, model_validator
+
+if TYPE_CHECKING:
+    from app.cam.translation_artifact_provenance import TranslationArtifactProvenanceSummary
 
 from app.cam.export_object import ExportObject
 from app.cam.translator_capability_registry import (
@@ -98,6 +101,12 @@ class TranslationArtifactSummary(BaseModel):
     deterministic_hash: Optional[str] = Field(
         default=None,
         description="Deterministic hash of artifact governance state"
+    )
+
+    # Provenance (7F)
+    provenance_summary: Optional[Any] = Field(
+        default=None,
+        description="Provenance lineage summary (7F) — TranslationArtifactProvenanceSummary"
     )
 
 
