@@ -22,9 +22,12 @@ Key distinction:
 from __future__ import annotations
 
 from datetime import datetime, timezone
-from typing import Any, Dict, List, Literal, Optional
+from typing import TYPE_CHECKING, Any, Dict, List, Literal, Optional
 
 from pydantic import BaseModel, Field, model_validator
+
+if TYPE_CHECKING:
+    from app.cam.translator_execution_quarantine import ExecutionQuarantineSummary
 
 from app.cam.translator_capability_registry import (
     TranslatorCapability,
@@ -236,6 +239,12 @@ class TranslatorReadinessEvaluation(BaseModel):
     provenance_count: int = Field(
         default=0,
         description="Number of provenance records"
+    )
+
+    # --- Quarantine Integration (7H) ---
+    execution_quarantine_summary: Optional[Any] = Field(
+        default=None,
+        description="Execution quarantine summary from 7H (if evaluated)"
     )
 
     # --- 7G Invariants ---

@@ -218,6 +218,12 @@ CAM_ROUTERS: List[RouterSpec] = [
         category="cam",
     ),
     RouterSpec(
+        module="app.routers.cam.translator_execution_quarantine_router",
+        prefix="/api/cam",
+        tags=["CAM", "Translator", "Quarantine"],
+        category="cam",
+    ),
+    RouterSpec(
         module="app.routers.cam.lifecycle_promotion_router",
         prefix="",
         tags=["CAM", "Lifecycle", "Promotion"],
