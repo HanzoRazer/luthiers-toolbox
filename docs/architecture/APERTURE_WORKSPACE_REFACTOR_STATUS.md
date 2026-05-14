@@ -2632,6 +2632,141 @@ This order verifies roundtrip compatibility only. It does NOT:
 
 ---
 
+## Dev Order 47 — Snapshot Exchange Interaction State Polish
+
+**Status:** Complete  
+**Date:** 2026-05-14
+
+Refines hover, focus, validation, and interaction states inside Snapshot Exchange while preserving all existing snapshot/export/import behavior.
+
+### Modified Files
+
+| File | Change |
+|------|--------|
+| `packages/client/src/components/shared/acoustics/DiagnosticSnapshotCard.vue` | Added focus-visible ring, muted notice backgrounds |
+| `packages/client/src/components/shared/acoustics/DiagnosticSnapshotExportMetadataCard.vue` | Muted warning/notice backgrounds |
+| `packages/client/src/components/shared/acoustics/DiagnosticSnapshotImportCard.vue` | Focus rings for file input and clear button, muted validation backgrounds |
+
+### Interaction Refinements
+
+| Element | Change |
+|---------|--------|
+| Export button | Added `focus-visible` box-shadow ring |
+| File input | Added `focus-visible` styling |
+| Clear button | Added `focus-visible` box-shadow ring, transition |
+| Validation states | Reduced background opacity (0.1 → 0.08) |
+| Notices | Reduced background opacity for diagnostic feel |
+
+### Focus Ring Style
+
+```css
+box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.5);
+```
+
+Applied to: export button, file input, clear button
+
+### Design Decisions
+
+| Decision | Rationale |
+|----------|-----------|
+| Box-shadow focus ring | Respects border-radius, consistent with card styling |
+| Reduced validation opacity | More diagnostic/informational, less alarm-like |
+| Transitions on buttons | Smooth interaction without jitter |
+
+### Important
+
+This order changes interaction presentation only. No snapshot semantics, export logic, import validation behavior, restore logic, or persistence behavior changed.
+
+### Build Status
+
+| Check | Result |
+|-------|--------|
+| `npm run build` | ✅ PASS (1m 47s) |
+| Component bundle | `ApertureComparisonPanel-DEVX2Wqs.js 98.69 kB` |
+
+### Browser Verification
+
+| Step | Expected | Result |
+|------|----------|--------|
+| Navigate to `/art-studio/aperture` | Route loads | ✅ PASS |
+| Export button focus visible (Tab) | Box-shadow ring | ✅ PASS |
+| File input focus visible | Box-shadow ring | ✅ PASS |
+| Clear button focus visible | Box-shadow ring | ✅ PASS |
+| Validation backgrounds muted | Diagnostic feel | ✅ PASS |
+| Warnings readable but not alarming | Informational | ✅ PASS |
+| JSON export still works | Behavior preserved | ✅ PASS |
+| Import validation still works | Behavior preserved | ✅ PASS |
+| No console errors | Clean console | ✅ PASS |
+
+---
+
+## Dev Order 46 — Snapshot Exchange Typography & Spacing Harmonization
+
+**Status:** Complete  
+**Date:** 2026-05-14
+
+Refines typography hierarchy and spacing consistency across Snapshot Exchange while preserving all existing snapshot/export/import behavior.
+
+### Modified Files
+
+| File | Change |
+|------|--------|
+| `packages/client/src/components/shared/acoustics/SnapshotExchangeSection.vue` | Section heading to 1.0625rem, padding to 1rem, card gap to 0.75rem |
+| `packages/client/src/components/shared/acoustics/DiagnosticSnapshotCard.vue` | Card padding to 1rem, header margin to 0.75rem, sections margin to 0.75rem |
+| `packages/client/src/components/shared/acoustics/DiagnosticSnapshotExportMetadataCard.vue` | Card padding to 0.75rem, header margin to 0.5rem |
+| `packages/client/src/components/shared/acoustics/DiagnosticSnapshotImportCard.vue` | Card padding to 0.75rem, header margin to 0.5rem, guidance padding to 0.5rem |
+
+### Typography Hierarchy
+
+| Element | Size | Role |
+|---------|------|------|
+| Section title | 1.0625rem (17px) | Strongest — section anchor |
+| Primary card title | 0.9375rem (15px) | Primary — main workflow |
+| Secondary/utility titles | 0.8125rem (13px) | Supporting — informational |
+
+### Spacing Scale
+
+Consolidated to canonical rhythm:
+- `0.375rem` — tight internal spacing
+- `0.5rem` — standard gap
+- `0.75rem` — section separation
+- `1rem` — container padding
+
+### Design Decisions
+
+| Decision | Rationale |
+|----------|-----------|
+| Increased section heading | Clear hierarchy above primary card |
+| Canonical spacing scale | Cleaner visual rhythm, easier maintenance |
+| Consistent card padding | Primary gets 1rem, secondary/utility get 0.75rem |
+
+### Important
+
+This order changes presentation only. No snapshot semantics, export logic, import validation behavior, restore logic, or persistence behavior changed.
+
+### Build Status
+
+| Check | Result |
+|-------|--------|
+| `npm run build` | ✅ PASS (37.47s) |
+| Component bundle | `ApertureComparisonPanel-CCVxzhjs.js 98.69 kB` |
+
+### Browser Verification
+
+| Step | Expected | Result |
+|------|----------|--------|
+| Navigate to `/art-studio/aperture` | Route loads | ✅ PASS |
+| Section heading visually largest | Clear hierarchy | ✅ PASS |
+| Snapshot card heading below section | Primary emphasis | ✅ PASS |
+| Metadata/Import headings smaller | Secondary/utility | ✅ PASS |
+| Spacing rhythm consistent | 0.375/0.5/0.75/1rem | ✅ PASS |
+| Card padding consistent within tiers | Primary vs secondary | ✅ PASS |
+| JSON export still works | Behavior preserved | ✅ PASS |
+| Import validation still works | Behavior preserved | ✅ PASS |
+| No console errors | Clean console | ✅ PASS |
+
+---
+
 ## Dev Order 45 — Snapshot Exchange Visual State Hierarchy
 
 **Status:** Complete  
@@ -3063,6 +3198,8 @@ Import validation is structural validation only. It does NOT restore, apply, cal
 
 | Date | Change |
 |------|--------|
+| 2026-05-14 | **Dev Order 47 Snapshot Exchange Interaction State Polish complete** |
+| 2026-05-14 | **Dev Order 46 Snapshot Exchange Typography & Spacing Harmonization complete** |
 | 2026-05-14 | **Dev Order 45 Snapshot Exchange Visual State Hierarchy complete** |
 | 2026-05-14 | **Dev Order 44 Snapshot Exchange Empty-State Refinement complete** |
 | 2026-05-13 | **Dev Order 43 Snapshot Exchange Warning Display Cleanup complete** |

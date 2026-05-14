@@ -82,14 +82,14 @@ function formatExportStatus(status: string): string {
   background: #111827;
   border: 1px solid #30363d;
   border-radius: 0.375rem;
-  padding: 0.625rem;
+  padding: 0.75rem;
 }
 
 .header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 0.375rem;
+  margin-bottom: 0.5rem;
   padding-bottom: 0.375rem;
   border-bottom: 1px solid #30363d;
 }
@@ -104,7 +104,7 @@ function formatExportStatus(status: string): string {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
   gap: 0.375rem;
-  margin-bottom: 0.375rem;
+  margin-bottom: 0.5rem;
   padding: 0.375rem;
   background: rgba(55, 65, 81, 0.4);
   border-radius: 0.25rem;
@@ -133,14 +133,14 @@ function formatExportStatus(status: string): string {
 .warnings {
   margin-bottom: 0.5rem;
   padding: 0.375rem 0.5rem;
-  background: rgba(251, 191, 36, 0.1);
+  background: rgba(251, 191, 36, 0.08);
   border-radius: 0.25rem;
 }
 
 .warningsLabel {
   display: block;
   font-size: 0.5625rem;
-  color: #fbbf24;
+  color: #d97706;
   text-transform: uppercase;
   letter-spacing: 0.05em;
   margin-bottom: 0.25rem;
@@ -158,7 +158,7 @@ function formatExportStatus(status: string): string {
 
 .notice {
   padding: 0.375rem 0.5rem;
-  background: rgba(107, 114, 128, 0.1);
+  background: rgba(107, 114, 128, 0.08);
   border-radius: 0.25rem;
   font-size: 0.6875rem;
   color: #9ca3af;

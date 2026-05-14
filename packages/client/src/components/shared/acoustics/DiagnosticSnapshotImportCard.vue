@@ -177,14 +177,14 @@ function formatTimestamp(iso: string): string {
   background: #111827;
   border: 1px solid #30363d;
   border-radius: 0.375rem;
-  padding: 0.625rem;
+  padding: 0.75rem;
 }
 
 .header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 0.375rem;
+  margin-bottom: 0.5rem;
   padding-bottom: 0.375rem;
   border-bottom: 1px solid #30363d;
 }
@@ -196,8 +196,8 @@ function formatTimestamp(iso: string): string {
 }
 
 .guidance {
-  margin: 0 0 0.375rem 0;
-  padding: 0.375rem 0.5rem;
+  margin: 0 0 0.5rem 0;
+  padding: 0.5rem;
   background: rgba(99, 102, 241, 0.08);
   border-radius: 0.25rem;
   font-size: 0.6875rem;
@@ -219,6 +219,12 @@ function formatTimestamp(iso: string): string {
   color: #d1d5db;
 }
 
+.fileInput:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.5);
+  border-radius: 0.25rem;
+}
+
 .fileInput::file-selector-button {
   padding: 0.25rem 0.5rem;
   background: #374151;
@@ -228,6 +234,7 @@ function formatTimestamp(iso: string): string {
   font-size: 0.6875rem;
   cursor: pointer;
   margin-right: 0.5rem;
+  transition: background-color 0.15s ease;
 }
 
 .fileInput::file-selector-button:hover {
@@ -287,12 +294,12 @@ function formatTimestamp(iso: string): string {
 }
 
 .statusValid {
-  background: rgba(16, 185, 129, 0.1);
+  background: rgba(16, 185, 129, 0.08);
   color: #10b981;
 }
 
 .statusInvalid {
-  background: rgba(239, 68, 68, 0.1);
+  background: rgba(239, 68, 68, 0.08);
   color: #ef4444;
 }
 
@@ -361,15 +368,21 @@ function formatTimestamp(iso: string): string {
   font-size: 0.6875rem;
   cursor: pointer;
   margin-bottom: 0.5rem;
+  transition: background-color 0.15s ease, box-shadow 0.15s ease;
 }
 
 .clearButton:hover {
   background: #4b5563;
 }
 
+.clearButton:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.5);
+}
+
 .notice {
   padding: 0.375rem 0.5rem;
-  background: rgba(251, 191, 36, 0.1);
+  background: rgba(251, 191, 36, 0.08);
   border-radius: 0.25rem;
   font-size: 0.6875rem;
   color: #fbbf24;

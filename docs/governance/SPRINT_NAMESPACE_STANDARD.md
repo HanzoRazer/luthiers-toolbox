@@ -42,6 +42,32 @@ Standardize sprint ticket and audit naming to prevent namespace collisions and e
 | `IBG-1` | IBG functional assessment |
 | `DXF-1` | dxf_compat enforcement |
 | `CAM-1` | Nut slot preview |
+| `CAM-6A` | Governed export architecture |
+
+---
+
+## Registered Sprint Chains
+
+Sprint chains are multi-phase efforts with sequential deliverables.
+
+| Chain | Prefix | Range | Description |
+|-------|--------|-------|-------------|
+| CAM Governed Export | `CAM-6` | 6A-6J | Governed export pipeline, lifecycle orchestration |
+
+### CAM-6 Chain (2026-05)
+
+| Sprint | Deliverable |
+|--------|-------------|
+| `CAM-6A` | Governed Export Architecture |
+| `CAM-6B` | Export Object Prototype |
+| `CAM-6C` | Postprocessor Boundary |
+| `CAM-6D` | DXF Translator Alignment |
+| `CAM-6E` | Export Lifecycle Orchestrator |
+| `CAM-6F` | RMOS Export Object Integration |
+| `CAM-6G` | Drilling Lifecycle Integration |
+| `CAM-6H` | Capability Registry |
+| `CAM-6I` | Policy Engine |
+| `CAM-6J` | Governance Reconciliation |
 
 ---
 

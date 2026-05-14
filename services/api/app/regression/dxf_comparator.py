@@ -161,12 +161,44 @@ def extract_dxf_summary(
 
         # Update bounds from entity
         try:
-            bbox = entity.bbox()
-            if bbox is not None:
-                min_x = min(min_x, bbox.extmin.x)
-                min_y = min(min_y, bbox.extmin.y)
-                max_x = max(max_x, bbox.extmax.x)
-                max_y = max(max_y, bbox.extmax.y)
+            if etype == "LINE":
+                # LINE entities: extract start/end points directly
+                start = entity.dxf.start
+                end = entity.dxf.end
+                min_x = min(min_x, start.x, end.x)
+                min_y = min(min_y, start.y, end.y)
+                max_x = max(max_x, start.x, end.x)
+                max_y = max(max_y, start.y, end.y)
+            elif etype == "LWPOLYLINE":
+                # LWPOLYLINE: iterate vertices
+                for x, y, *_ in entity.get_points():
+                    min_x = min(min_x, x)
+                    min_y = min(min_y, y)
+                    max_x = max(max_x, x)
+                    max_y = max(max_y, y)
+            elif etype == "CIRCLE":
+                cx, cy = entity.dxf.center.x, entity.dxf.center.y
+                r = entity.dxf.radius
+                min_x = min(min_x, cx - r)
+                min_y = min(min_y, cy - r)
+                max_x = max(max_x, cx + r)
+                max_y = max(max_y, cy + r)
+            elif etype == "ARC":
+                # ARC: use center +/- radius as conservative bound
+                cx, cy = entity.dxf.center.x, entity.dxf.center.y
+                r = entity.dxf.radius
+                min_x = min(min_x, cx - r)
+                min_y = min(min_y, cy - r)
+                max_x = max(max_x, cx + r)
+                max_y = max(max_y, cy + r)
+            else:
+                # Fallback: try bbox() method
+                bbox = entity.bbox()
+                if bbox is not None:
+                    min_x = min(min_x, bbox.extmin.x)
+                    min_y = min(min_y, bbox.extmin.y)
+                    max_x = max(max_x, bbox.extmax.x)
+                    max_y = max(max_y, bbox.extmax.y)
         except Exception:
             pass
 

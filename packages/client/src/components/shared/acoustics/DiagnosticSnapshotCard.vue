@@ -158,15 +158,15 @@ function handleDownload() {
   border: 1px solid #374151;
   border-left: 3px solid #6366f1;
   border-radius: 0.375rem;
-  padding: 0.875rem;
+  padding: 1rem;
 }
 
 .header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 0.625rem;
-  padding-bottom: 0.625rem;
+  margin-bottom: 0.75rem;
+  padding-bottom: 0.5rem;
   border-bottom: 1px solid #374151;
 }
 
@@ -280,7 +280,7 @@ function handleDownload() {
   font-size: 0.75rem;
   font-weight: 500;
   color: #a5b4fc;
-  margin-bottom: 0.25rem;
+  margin-bottom: 0.375rem;
 }
 
 .sparseHint {
@@ -293,7 +293,7 @@ function handleDownload() {
   display: flex;
   flex-direction: column;
   gap: 0.375rem;
-  margin-bottom: 0.5rem;
+  margin-bottom: 0.75rem;
 }
 
 .section {
@@ -345,8 +345,8 @@ function handleDownload() {
 }
 
 .provenance {
-  margin-bottom: 0.5rem;
-  padding: 0.375rem 0.5rem;
+  margin-bottom: 0.75rem;
+  padding: 0.5rem;
   background: rgba(99, 102, 241, 0.1);
   border-radius: 0.25rem;
   font-size: 0.6875rem;
@@ -358,7 +358,7 @@ function handleDownload() {
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  margin-bottom: 0.5rem;
+  margin-bottom: 0.75rem;
   padding: 0.5rem;
   background: #1f2937;
   border-radius: 0.25rem;
@@ -373,11 +373,16 @@ function handleDownload() {
   font-size: 0.75rem;
   font-weight: 500;
   cursor: pointer;
-  transition: background-color 0.15s ease;
+  transition: background-color 0.15s ease, box-shadow 0.15s ease;
 }
 
 .exportButton:hover:not(:disabled) {
   background: #4338ca;
+}
+
+.exportButton:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.5);
 }
 
 .exportButtonDisabled {
@@ -395,7 +400,7 @@ function handleDownload() {
 .exportNotice {
   margin-bottom: 0.5rem;
   padding: 0.375rem 0.5rem;
-  background: rgba(16, 185, 129, 0.1);
+  background: rgba(16, 185, 129, 0.08);
   border-radius: 0.25rem;
   font-size: 0.6875rem;
   color: #10b981;
@@ -403,7 +408,7 @@ function handleDownload() {
 
 .notice {
   padding: 0.375rem 0.5rem;
-  background: rgba(251, 191, 36, 0.1);
+  background: rgba(251, 191, 36, 0.08);
   border-radius: 0.25rem;
   font-size: 0.6875rem;
   color: #fbbf24;

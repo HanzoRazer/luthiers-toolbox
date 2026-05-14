@@ -215,7 +215,7 @@ def _initialize_default_translators(registry: TranslatorRegistry) -> None:
         dxf_serialization_capabilities("body_outline_dxf_r2000", "R2000"),
     )
 
-    # SVG translator (will be created in this sprint)
+    # SVG translator
     try:
         from app.cam.translators.svg import BodyOutlineSvgTranslator
 
@@ -223,6 +223,22 @@ def _initialize_default_translators(registry: TranslatorRegistry) -> None:
             "body_outline_svg",
             lambda: BodyOutlineSvgTranslator(),
             svg_visualization_capabilities("body_outline_svg"),
+        )
+    except ImportError:
+        pass
+
+    # STEP AP203 translator (MRP-5C: experimental, flat-body only)
+    try:
+        from app.cam.translators.step import (
+            BodyOutlineStepTranslator,
+            STEP_AP203_TRANSLATOR_ID,
+            STEP_AP203_CAPABILITIES,
+        )
+
+        registry.register(
+            STEP_AP203_TRANSLATOR_ID,
+            lambda: BodyOutlineStepTranslator(),
+            STEP_AP203_CAPABILITIES,
         )
     except ImportError:
         pass

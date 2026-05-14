@@ -344,6 +344,21 @@ This provides the foundation for all future:
 
 ---
 
+## Capability → Layer Mapping
+
+The CAM Capability Registry (6H) defines operation exportability classes. This table maps each class to the layer architecture:
+
+| Exportability Class | Applicable Layers | Description |
+|---------------------|-------------------|-------------|
+| `preview_only` | Layers 1-3 only | Preview generation only; no export object |
+| `governed_export` | Layers 1-5 | Full export pipeline through RMOS persistence |
+| `translator_ready` | Layers 1-6 (validation only) | Export + translator validation (no execution) |
+| `machine_candidate` | Layers 1-7 (future) | Full pipeline including machine output (not yet implemented) |
+
+**Cross-Reference:** `services/api/app/cam/cam_operation_registry.py`
+
+---
+
 ## Cross-Reference
 
 | Document | Purpose |
