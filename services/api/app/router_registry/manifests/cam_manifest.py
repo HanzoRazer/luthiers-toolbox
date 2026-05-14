@@ -302,4 +302,19 @@ CAM_ROUTERS: List[RouterSpec] = [
         tags=["Export", "Body", "MRP"],
         category="cam",
     ),
+    # ── MRP-3B: DXF Translator Endpoint (Export Object → DXF) ──
+    # DEPRECATED: Use /api/translate/{target} instead (MRP-4A)
+    RouterSpec(
+        module="app.routers.export.dxf_translate_router",
+        prefix="/api/export/translate",
+        tags=["Export", "Translate", "DXF", "MRP"],
+        category="cam",
+    ),
+    # ── MRP-4A: Multi-Target Translator Endpoint ──
+    RouterSpec(
+        module="app.routers.export.translate_router",
+        prefix="/api/translate",
+        tags=["Export", "Translate", "MRP"],
+        category="cam",
+    ),
 ]
