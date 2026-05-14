@@ -659,6 +659,7 @@
             <button id="btn-save-template" title="Save image as template">Save Tpl</button>
         </div>
         <div class="toolbar-group">
+            <button id="btn-import-json" title="Import BOE JSON">Import JSON</button>
             <button id="btn-export-dxf">Export DXF</button>
             <button id="btn-export-json" title="Export JSON (Ctrl+E)">Export JSON</button>
             <button id="btn-export-svg">Export SVG</button>
@@ -1320,6 +1321,9 @@ const state = {
 
     // v2.0: Side heights from API solver
     sideHeights: null,
+
+    // MRP-2C: IBG context preservation
+    ibgContext: null,  // { session_id, confidence, dimensions, instrument_spec, side_heights_mm, radii_by_zone, missing_landmarks, recovery_mode }
 
     // v3.1.0: Empty mode state
     editorMode: 'default',        // 'default' or 'empty'
@@ -4372,6 +4376,9 @@ function setupToolbarEvents() {
     // v3.3.0: User templates
     document.getElementById('btn-load-user-template').addEventListener('click', loadUserTemplate);
 
+    // MRP-2C: Import JSON button
+    document.getElementById('btn-import-json').addEventListener('click', importJSON);
+
     // v3.4.0: Enhanced exports with options
     document.getElementById('btn-export-dxf').addEventListener('click', showExportDialog);
     document.getElementById('btn-export-json').addEventListener('click', exportJSON);
@@ -4445,6 +4452,19 @@ function setupToolbarEvents() {
                 if (result.side_heights) {
                     state.sideHeights = result.side_heights;
                 }
+
+                // MRP-2C: Capture full IBG context for export preservation
+                const instrumentSpec = document.getElementById('instrument-select')?.value || 'unknown';
+                state.ibgContext = {
+                    session_id: result.session_id || null,
+                    confidence: result.confidence || 0,
+                    dimensions: result.dimensions || {},
+                    instrument_spec: instrumentSpec,
+                    side_heights_mm: result.side_heights || null,
+                    radii_by_zone: result.radii_by_zone || null,
+                    missing_landmarks: result.missing_landmarks || null,
+                    recovery_mode: result.recovery_mode || null
+                };
 
                 updateUI();
                 redrawHandles();
@@ -5436,7 +5456,7 @@ function exportDXF() {
     downloadFile(dxf, 'body_outline.dxf', 'application/dxf');
 }
 
-function exportJSON() {
+async function exportJSON() {
     let outerPoints = [];
     if (state.outerPath) {
         outerPoints = tessellatePathToPoints(state.outerPath, 20);
@@ -5455,13 +5475,14 @@ function exportJSON() {
         };
     });
 
-    const json = {
+    // MRP-2C: Build geometry payload with IBG context
+    const geometry = {
         schema_version: 1,
         units: 'mm',
         origin: 'body_center_y_positive_toward_neck',
         metadata: {
             name: 'untitled',
-            source: 'body_outline_editor_sandbox',
+            source: 'body_outline_editor',
             created_at: new Date().toISOString()
         },
         outer: {
@@ -5471,12 +5492,152 @@ function exportJSON() {
             winding: 'ccw',
             points: outerPoints
         },
-        voids: voids,
-        paths_control: null
+        voids: voids
     };
 
-    const str = JSON.stringify(json, null, 2);
+    // MRP-2C: Build request with optional ibg_context
+    const requestBody = { geometry };
+    if (state.ibgContext) {
+        requestBody.ibg_context = state.ibgContext;
+    }
+
+    // MRP-2C: Call export bridge API for full Export Object
+    const apiBase = window.bodyAPI?.baseUrl || window.IBG_CONFIG?.apiUrl || '';
+    if (apiBase) {
+        try {
+            const response = await fetch(`${apiBase}/export/body-outline`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    ...(localStorage.getItem('ibg_api_key') ? { 'Authorization': `Bearer ${localStorage.getItem('ibg_api_key')}` } : {})
+                },
+                body: JSON.stringify(requestBody)
+            });
+
+            if (response.ok) {
+                const result = await response.json();
+                if (result.export_object) {
+                    const str = JSON.stringify(result.export_object, null, 2);
+                    downloadFile(str, 'body_export_object.json', 'application/json');
+                    console.log('MRP-2C: Export Object generated', result.gate_status);
+                    return;
+                }
+            } else {
+                console.warn('MRP-2C: Export API returned', response.status, '- falling back to local JSON');
+            }
+        } catch (err) {
+            console.warn('MRP-2C: Export API unavailable, falling back to local JSON:', err.message);
+        }
+    }
+
+    // Fallback: Export local JSON with ibg_context embedded
+    if (state.ibgContext) {
+        geometry.ibg_context = state.ibgContext;
+    }
+    const str = JSON.stringify(geometry, null, 2);
     downloadFile(str, 'body_outline.json', 'application/json');
+}
+
+// MRP-2C: Import BOE JSON (with optional ibg_context)
+function importJSON() {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = '.json';
+
+    input.onchange = function(e) {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        const reader = new FileReader();
+        reader.onload = function(ev) {
+            try {
+                const data = JSON.parse(ev.target.result);
+                loadBOEJson(data);
+            } catch (err) {
+                alert('Failed to load JSON: ' + err.message);
+            }
+        };
+        reader.readAsText(file);
+    };
+    input.click();
+}
+
+// MRP-2C: Load BOE JSON structure into editor
+function loadBOEJson(data) {
+    // Clear current state
+    if (state.outerPath) state.outerPath.remove();
+    state.voids.forEach(v => v.path.remove());
+    state.voids = [];
+
+    // Handle Export Object format (unwrap geometry)
+    let geometry = data;
+    if (data.export_type === 'geometry' && data.geometry) {
+        geometry = {
+            outer: data.geometry.entities?.find(e => e.role === 'outer'),
+            voids: data.geometry.entities?.filter(e => e.role !== 'outer') || []
+        };
+        // Extract ibg_context from extensions
+        if (data.extensions?.ibg_morphology) {
+            state.ibgContext = data.extensions.ibg_morphology;
+        }
+    } else if (data.ibg_context) {
+        // Direct BOE JSON format with ibg_context
+        state.ibgContext = data.ibg_context;
+    } else {
+        state.ibgContext = null;
+    }
+
+    // Load outer path
+    if (geometry.outer && geometry.outer.points?.length > 0) {
+        state.outerPath = new Path({
+            strokeColor: '#00ff88',
+            strokeWidth: 2,
+            closed: true
+        });
+        geometry.outer.points.forEach(p => {
+            state.outerPath.add(new Segment(new Point(p[0], p[1])));
+        });
+    }
+
+    // Load voids
+    const voidData = geometry.voids || [];
+    voidData.forEach((v, idx) => {
+        if (v.points?.length > 0) {
+            const path = new Path({
+                strokeColor: VOID_COLORS[v.role] || '#aa00ff',
+                strokeWidth: 2,
+                closed: true
+            });
+            v.points.forEach(p => {
+                path.add(new Segment(new Point(p[0], p[1])));
+            });
+            state.voids.push({
+                id: v.id || `${v.role}_${idx}`,
+                role: v.role || 'other',
+                path
+            });
+        }
+    });
+
+    // Update UI with restored IBG context
+    if (state.ibgContext?.confidence) {
+        updateConfidenceBadge(state.ibgContext.confidence);
+    }
+    if (state.ibgContext?.dimensions) {
+        showSolvedDimensions(state.ibgContext.dimensions);
+    }
+
+    state.activePathType = 'outer';
+    state.selectedSegments = [];
+    state.undoStack = [];
+    state.redoStack = [];
+    state.dirty = false;
+
+    updateUI();
+    redrawHandles();
+    pushState();
+
+    console.log('MRP-2C: Loaded BOE JSON', state.ibgContext ? 'with IBG context' : 'without IBG context');
 }
 
 function exportSVG() {
@@ -5512,7 +5673,7 @@ function saveSession() {
     };
 
     const session = {
-        version: 1,
+        version: 2,  // MRP-2C: bumped for ibgContext
         viewport: {
             zoom: state.zoom,
             center: [state.viewCenter.x, state.viewCenter.y]
@@ -5529,7 +5690,9 @@ function saveSession() {
             scale: state.raster.scaling.x,
             opacity: state.raster.opacity
         } : null,
-        calibration: state.imagePixelsPerMM
+        calibration: state.imagePixelsPerMM,
+        // MRP-2C: Preserve IBG context through session save/load
+        ibgContext: state.ibgContext
     };
 
     const str = JSON.stringify(session);
@@ -5634,6 +5797,13 @@ function loadSession(session) {
     }
 
     state.imagePixelsPerMM = session.calibration;
+
+    // MRP-2C: Restore IBG context (version 2+ sessions)
+    state.ibgContext = session.ibgContext || null;
+    if (state.ibgContext && state.ibgContext.confidence) {
+        updateConfidenceBadge(state.ibgContext.confidence);
+    }
+
     state.activePathType = 'outer';
     state.selectedSegments = [];
     state.undoStack = [];
