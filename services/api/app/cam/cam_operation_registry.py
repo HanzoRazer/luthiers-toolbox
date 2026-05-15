@@ -116,6 +116,20 @@ class CAMOperationCapability(BaseModel):
         description="Always false in 6H — no machine output generation"
     )
 
+    # --- Promotion Evidence (6L) ---
+    test_coverage_score: int = Field(
+        default=0,
+        description="Test coverage confidence (0-20). Explicit declaration, not runtime discovery.",
+        ge=0,
+        le=20,
+    )
+    lifecycle_stability_score: int = Field(
+        default=0,
+        description="Lifecycle stability evidence (0-25). Based on audit history.",
+        ge=0,
+        le=25,
+    )
+
     # --- Documentation ---
     notes: Optional[str] = Field(
         None, description="Additional notes about this operation"
@@ -153,6 +167,8 @@ CAM_OPERATION_REGISTRY: Dict[str, CAMOperationCapability] = {
         ],
         machine_ready=False,
         machine_output_supported=False,
+        test_coverage_score=18,  # 6L: 27 tests in test_nut_slot_cam.py
+        lifecycle_stability_score=20,  # 6L: canonical since 6H
         notes="Nut slot cutting for string instruments. Governed preview since 5C.",
     ),
     "drilling": CAMOperationCapability(
@@ -180,6 +196,8 @@ CAM_OPERATION_REGISTRY: Dict[str, CAMOperationCapability] = {
         ],
         machine_ready=False,
         machine_output_supported=False,
+        test_coverage_score=16,  # 6L: tests in test_drilling_preview_normalization.py, test_drilling_export_lifecycle.py
+        lifecycle_stability_score=18,  # 6L: canonical since 6G
         notes="Drilling operations. Governed preview since 5E, lifecycle since 6G.",
     ),
 }

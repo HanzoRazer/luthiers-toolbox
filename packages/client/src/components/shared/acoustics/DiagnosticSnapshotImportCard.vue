@@ -115,23 +115,26 @@ function formatTimestamp(iso: string): string {
 
     <!-- Validation Result -->
     <template v-if="validation">
-      <!-- Metadata -->
-      <div :class="$style.metadata">
-        <div :class="$style.metaItem">
-          <span :class="$style.metaLabel">Schema</span>
-          <span :class="$style.metaValue">{{ validation.schemaVersion ?? 'Unknown' }}</span>
-        </div>
-        <div :class="$style.metaItem">
-          <span :class="$style.metaLabel">Kind</span>
-          <span :class="$style.metaValue">{{ validation.kind ?? 'Unknown' }}</span>
-        </div>
-        <div :class="$style.metaItem">
-          <span :class="$style.metaLabel">Sections</span>
-          <span :class="$style.metaValue">{{ validation.sectionCount ?? 0 }}</span>
-        </div>
-        <div v-if="validation.createdAtIso" :class="$style.metaItem">
-          <span :class="$style.metaLabel">Created</span>
-          <span :class="$style.metaValue">{{ formatTimestamp(validation.createdAtIso) }}</span>
+      <!-- Schema Info -->
+      <div :class="$style.metaGroup">
+        <span :class="$style.groupLabel">Schema</span>
+        <div :class="$style.metadata">
+          <div :class="$style.metaItem">
+            <span :class="$style.metaLabel">Version</span>
+            <span :class="$style.metaValue">{{ validation.schemaVersion ?? 'Unknown' }}</span>
+          </div>
+          <div :class="$style.metaItem">
+            <span :class="$style.metaLabel">Kind</span>
+            <span :class="$style.metaValue">{{ validation.kind ?? 'Unknown' }}</span>
+          </div>
+          <div :class="$style.metaItem">
+            <span :class="$style.metaLabel">Sections</span>
+            <span :class="$style.metaValue">{{ validation.sectionCount ?? 0 }}</span>
+          </div>
+          <div v-if="validation.createdAtIso" :class="$style.metaItem">
+            <span :class="$style.metaLabel">Created</span>
+            <span :class="$style.metaValue">{{ formatTimestamp(validation.createdAtIso) }}</span>
+          </div>
         </div>
       </div>
 
@@ -177,14 +180,14 @@ function formatTimestamp(iso: string): string {
   background: #111827;
   border: 1px solid #30363d;
   border-radius: 0.375rem;
-  padding: 0.625rem;
+  padding: 0.75rem;
 }
 
 .header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 0.375rem;
+  margin-bottom: 0.5rem;
   padding-bottom: 0.375rem;
   border-bottom: 1px solid #30363d;
 }
@@ -196,7 +199,7 @@ function formatTimestamp(iso: string): string {
 }
 
 .guidance {
-  margin: 0 0 0.375rem 0;
+  margin: 0 0 0.5rem 0;
   padding: 0.375rem 0.5rem;
   background: rgba(99, 102, 241, 0.08);
   border-radius: 0.25rem;
@@ -219,6 +222,12 @@ function formatTimestamp(iso: string): string {
   color: #d1d5db;
 }
 
+.fileInput:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.5);
+  border-radius: 0.25rem;
+}
+
 .fileInput::file-selector-button {
   padding: 0.25rem 0.5rem;
   background: #374151;
@@ -228,6 +237,7 @@ function formatTimestamp(iso: string): string {
   font-size: 0.6875rem;
   cursor: pointer;
   margin-right: 0.5rem;
+  transition: background-color 0.15s ease, box-shadow 0.15s ease;
 }
 
 .fileInput::file-selector-button:hover {
@@ -243,18 +253,30 @@ function formatTimestamp(iso: string): string {
 .error {
   margin-bottom: 0.5rem;
   padding: 0.375rem 0.5rem;
-  background: rgba(239, 68, 68, 0.1);
+  background: rgba(239, 68, 68, 0.08);
   border-radius: 0.25rem;
   font-size: 0.6875rem;
   color: #ef4444;
 }
 
+.metaGroup {
+  margin-bottom: 0.5rem;
+}
+
+.groupLabel {
+  display: block;
+  font-size: 0.5rem;
+  color: #6b7280;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 0.25rem;
+}
+
 .metadata {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
-  gap: 0.5rem;
-  margin-bottom: 0.5rem;
-  padding: 0.5rem;
+  gap: 0.375rem;
+  padding: 0.375rem 0.5rem;
   background: rgba(55, 65, 81, 0.5);
   border-radius: 0.25rem;
 }
@@ -287,19 +309,19 @@ function formatTimestamp(iso: string): string {
 }
 
 .statusValid {
-  background: rgba(16, 185, 129, 0.1);
+  background: rgba(16, 185, 129, 0.08);
   color: #10b981;
 }
 
 .statusInvalid {
-  background: rgba(239, 68, 68, 0.1);
+  background: rgba(239, 68, 68, 0.08);
   color: #ef4444;
 }
 
 .diagnostics {
   margin-bottom: 0.5rem;
   padding: 0.375rem 0.5rem;
-  background: rgba(107, 114, 128, 0.1);
+  background: rgba(107, 114, 128, 0.08);
   border-radius: 0.25rem;
 }
 
@@ -314,7 +336,7 @@ function formatTimestamp(iso: string): string {
 
 .diagnostic {
   padding: 0.25rem 0.375rem;
-  margin-bottom: 0.25rem;
+  margin-bottom: 0.125rem;
   border-radius: 0.125rem;
   border-left: 2px solid;
 }
@@ -360,16 +382,24 @@ function formatTimestamp(iso: string): string {
   border-radius: 0.25rem;
   font-size: 0.6875rem;
   cursor: pointer;
+  margin-top: 0.375rem;
   margin-bottom: 0.5rem;
+  transition: background-color 0.15s ease, box-shadow 0.15s ease;
 }
 
 .clearButton:hover {
   background: #4b5563;
 }
 
+.clearButton:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.5);
+}
+
 .notice {
+  margin-top: 0.25rem;
   padding: 0.375rem 0.5rem;
-  background: rgba(251, 191, 36, 0.1);
+  background: rgba(251, 191, 36, 0.08);
   border-radius: 0.25rem;
   font-size: 0.6875rem;
   color: #fbbf24;

@@ -5,15 +5,19 @@ Transforms BOE-approved body geometry into a DXF-agnostic Export Object
 candidate suitable for downstream translators.
 
 Sprint: MRP-2B
+Updated: MRP-5C (added cad_semantics extension)
 """
 
 from __future__ import annotations
 
 import hashlib
 from datetime import datetime, timezone
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, TYPE_CHECKING
 
 from pydantic import BaseModel, Field
+
+if TYPE_CHECKING:
+    from .cad_semantics import CadSemantics
 
 
 # ─── Input Schemas (BOE Output) ──────────────────────────────────────────────
@@ -171,6 +175,7 @@ class IBGMorphologyExtension(BaseModel):
 class ExportExtensions(BaseModel):
     """Export Object extensions block."""
     ibg_morphology: Optional[IBGMorphologyExtension] = None
+    cad_semantics: Optional["CadSemantics"] = None  # MRP-5C: CAD semantic extension
 
 
 class BodyExportObject(BaseModel):
@@ -435,3 +440,15 @@ def create_body_export_object(
 def is_export_ready(validation: ExportValidation) -> bool:
     """Check if geometry is approved for export (green or yellow gate)."""
     return validation.gate_status in ("green", "yellow")
+
+
+# MRP-5C: Resolve forward reference to CadSemantics
+# This must be done after the module is loaded to resolve the TYPE_CHECKING import
+def _rebuild_models():
+    """Rebuild Pydantic models to resolve forward references."""
+    from .cad_semantics import CadSemantics  # noqa: F401
+    ExportExtensions.model_rebuild()
+    BodyExportObject.model_rebuild()
+
+
+_rebuild_models()

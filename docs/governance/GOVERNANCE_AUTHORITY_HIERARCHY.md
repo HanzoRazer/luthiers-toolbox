@@ -1,8 +1,10 @@
 # Governance Authority Hierarchy
 
-**Date:** 2026-05-07  
-**Status:** AUDIT DELIVERABLE  
+**Date:** 2026-05-12 (updated from 2026-05-07)  
+**Status:** RECONCILED (CAM-6J)  
 **Purpose:** Establish clear authority boundaries between governance systems
+
+**Note:** This document serves as the authority matrix for governance systems. CAM-6J verified boundaries and documented resolved overlaps in `GOVERNANCE_RECONCILIATION_PLAN.md`.
 
 ---
 

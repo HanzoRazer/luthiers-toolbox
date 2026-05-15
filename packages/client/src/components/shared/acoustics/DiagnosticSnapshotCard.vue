@@ -59,32 +59,38 @@ function handleDownload() {
     </div>
 
     <!-- Schema Metadata -->
-    <div :class="$style.schemaInfo">
-      <div :class="$style.schemaItem">
-        <span :class="$style.schemaLabel">Schema</span>
-        <span :class="$style.schemaValue">{{ snapshot.schemaVersion }}</span>
-      </div>
-      <div :class="$style.schemaItem">
-        <span :class="$style.schemaLabel">Kind</span>
-        <span :class="$style.schemaValue">{{ snapshot.kind }}</span>
-      </div>
-      <div :class="$style.schemaItem">
-        <span :class="$style.schemaLabel">Export Ready</span>
-        <span :class="[$style.schemaValue, snapshot.exportReady ? $style.exportReady : $style.exportNotReady]">
-          {{ snapshot.exportReady ? 'Yes' : 'No' }}
-        </span>
+    <div :class="$style.metaGroup">
+      <span :class="$style.groupLabel">Schema</span>
+      <div :class="$style.schemaInfo">
+        <div :class="$style.schemaItem">
+          <span :class="$style.schemaLabel">Version</span>
+          <span :class="$style.schemaValue">{{ snapshot.schemaVersion }}</span>
+        </div>
+        <div :class="$style.schemaItem">
+          <span :class="$style.schemaLabel">Kind</span>
+          <span :class="$style.schemaValue">{{ snapshot.kind }}</span>
+        </div>
       </div>
     </div>
 
-    <!-- Metadata -->
-    <div :class="$style.metadata">
-      <div :class="$style.metaItem">
-        <span :class="$style.metaLabel">Timestamp</span>
-        <span :class="$style.metaValue">{{ formattedTimestamp }}</span>
-      </div>
-      <div :class="$style.metaItem">
-        <span :class="$style.metaLabel">Sections</span>
-        <span :class="$style.metaValue">{{ availableCount }} / {{ totalCount }} available</span>
+    <!-- Export State -->
+    <div :class="$style.metaGroup">
+      <span :class="$style.groupLabel">Export State</span>
+      <div :class="$style.metadata">
+        <div :class="$style.metaItem">
+          <span :class="$style.metaLabel">Ready</span>
+          <span :class="[$style.metaValue, snapshot.exportReady ? $style.exportReady : $style.exportNotReady]">
+            {{ snapshot.exportReady ? 'Yes' : 'No' }}
+          </span>
+        </div>
+        <div :class="$style.metaItem">
+          <span :class="$style.metaLabel">Timestamp</span>
+          <span :class="$style.metaValue">{{ formattedTimestamp }}</span>
+        </div>
+        <div :class="$style.metaItem">
+          <span :class="$style.metaLabel">Sections</span>
+          <span :class="$style.metaValue">{{ availableCount }} / {{ totalCount }} available</span>
+        </div>
       </div>
     </div>
 
@@ -158,15 +164,15 @@ function handleDownload() {
   border: 1px solid #374151;
   border-left: 3px solid #6366f1;
   border-radius: 0.375rem;
-  padding: 0.875rem;
+  padding: 1rem;
 }
 
 .header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 0.625rem;
-  padding-bottom: 0.625rem;
+  margin-bottom: 0.75rem;
+  padding-bottom: 0.5rem;
   border-bottom: 1px solid #374151;
 }
 
@@ -176,11 +182,23 @@ function handleDownload() {
   color: #f9fafb;
 }
 
+.metaGroup {
+  margin-bottom: 0.5rem;
+}
+
+.groupLabel {
+  display: block;
+  font-size: 0.5rem;
+  color: #6b7280;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 0.25rem;
+}
+
 .schemaInfo {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 0.5rem;
-  margin-bottom: 0.5rem;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 0.375rem;
   padding: 0.375rem 0.5rem;
   background: rgba(55, 65, 81, 0.5);
   border-radius: 0.25rem;
@@ -217,10 +235,9 @@ function handleDownload() {
 
 .metadata {
   display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 0.5rem;
-  margin-bottom: 0.5rem;
-  padding: 0.5rem;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.375rem;
+  padding: 0.375rem 0.5rem;
   background: #1f2937;
   border-radius: 0.25rem;
 }
@@ -280,7 +297,7 @@ function handleDownload() {
   font-size: 0.75rem;
   font-weight: 500;
   color: #a5b4fc;
-  margin-bottom: 0.25rem;
+  margin-bottom: 0.375rem;
 }
 
 .sparseHint {
@@ -292,14 +309,25 @@ function handleDownload() {
 .sections {
   display: flex;
   flex-direction: column;
-  gap: 0.375rem;
-  margin-bottom: 0.5rem;
+  gap: 0;
+  margin-bottom: 0.75rem;
 }
 
 .section {
   padding: 0.375rem 0.5rem;
   background: rgba(107, 114, 128, 0.1);
-  border-radius: 0.25rem;
+  border-bottom: 1px solid rgba(107, 114, 128, 0.15);
+}
+
+.section:first-child {
+  border-top-left-radius: 0.25rem;
+  border-top-right-radius: 0.25rem;
+}
+
+.section:last-child {
+  border-bottom: none;
+  border-bottom-left-radius: 0.25rem;
+  border-bottom-right-radius: 0.25rem;
 }
 
 .sectionUnavailable {
@@ -310,7 +338,7 @@ function handleDownload() {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 0.25rem;
+  margin-bottom: 0.375rem;
 }
 
 .sectionLabel {
@@ -345,8 +373,8 @@ function handleDownload() {
 }
 
 .provenance {
-  margin-bottom: 0.5rem;
-  padding: 0.375rem 0.5rem;
+  margin-bottom: 0.75rem;
+  padding: 0.5rem;
   background: rgba(99, 102, 241, 0.1);
   border-radius: 0.25rem;
   font-size: 0.6875rem;
@@ -358,7 +386,7 @@ function handleDownload() {
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  margin-bottom: 0.5rem;
+  margin-bottom: 0.75rem;
   padding: 0.5rem;
   background: #1f2937;
   border-radius: 0.25rem;
@@ -373,11 +401,16 @@ function handleDownload() {
   font-size: 0.75rem;
   font-weight: 500;
   cursor: pointer;
-  transition: background-color 0.15s ease;
+  transition: background-color 0.15s ease, box-shadow 0.15s ease;
 }
 
 .exportButton:hover:not(:disabled) {
   background: #4338ca;
+}
+
+.exportButton:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.5);
 }
 
 .exportButtonDisabled {
@@ -393,17 +426,19 @@ function handleDownload() {
 }
 
 .exportNotice {
-  margin-bottom: 0.5rem;
+  margin-top: 0.5rem;
+  margin-bottom: 0.375rem;
   padding: 0.375rem 0.5rem;
-  background: rgba(16, 185, 129, 0.1);
+  background: rgba(16, 185, 129, 0.08);
   border-radius: 0.25rem;
   font-size: 0.6875rem;
   color: #10b981;
 }
 
 .notice {
+  margin-top: 0.25rem;
   padding: 0.375rem 0.5rem;
-  background: rgba(251, 191, 36, 0.1);
+  background: rgba(251, 191, 36, 0.08);
   border-radius: 0.25rem;
   font-size: 0.6875rem;
   color: #fbbf24;

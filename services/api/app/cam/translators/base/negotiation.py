@@ -56,6 +56,10 @@ TARGET_TRANSLATOR_MAP = {
         "1.1": "body_outline_svg",
         "default": "body_outline_svg",
     },
+    "step": {
+        "ap203_minimal": "body_outline_step_ap203",
+        "default": "body_outline_step_ap203",
+    },
 }
 
 

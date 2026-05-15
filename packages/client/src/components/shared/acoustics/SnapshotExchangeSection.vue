@@ -50,7 +50,7 @@ defineProps<{
   background: #0d1117;
   border: 1px solid #30363d;
   border-radius: 0.5rem;
-  padding: 0.75rem;
+  padding: 1rem;
 }
 
 .header {
@@ -61,13 +61,13 @@ defineProps<{
 
 .heading {
   margin: 0;
-  font-size: 0.9375rem;
+  font-size: 1.0625rem;
   font-weight: 600;
   color: #f0f6fc;
 }
 
 .description {
-  margin: 0 0 0.5rem 0;
+  margin: 0 0 0.375rem 0;
   font-size: 0.75rem;
   color: #8b949e;
   line-height: 1.5;
@@ -83,6 +83,6 @@ defineProps<{
 .cards {
   display: flex;
   flex-direction: column;
-  gap: 0.625rem;
+  gap: 0.75rem;
 }
 </style>

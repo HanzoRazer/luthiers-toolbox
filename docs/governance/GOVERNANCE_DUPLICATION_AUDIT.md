@@ -1,7 +1,7 @@
 # Governance Duplication Audit
 
-**Date:** 2026-05-07  
-**Status:** AUDIT DELIVERABLE  
+**Date:** 2026-05-12 (updated from 2026-05-07)  
+**Status:** AUDIT DELIVERABLE — RECONCILED (6J)  
 **Purpose:** Identify duplicate, overlapping, and conflicting governance definitions
 
 ---
@@ -294,22 +294,22 @@ These are consistent, but the namespace standard doesn't explicitly register "6A
 
 ### Immediate (documentation only):
 
-1. Add authority hierarchy reference to CLAUDE.md governance section
-2. Add RMOS scope clarification to RMOS_2.0_Specification.md
-3. Add Capability→Layer mapping to CAM_GOVERNED_EXPORT_ARCHITECTURE.md
-4. Create MANIFEST_INDEX.md listing all manifests
+1. ✓ Add authority hierarchy reference to CLAUDE.md governance section — **DONE** (2026-05-11)
+2. ✓ Add RMOS scope clarification to RMOS_2.0_Specification.md — **DONE** (2026-05-12, Section 0.1)
+3. ✓ Add Capability→Layer mapping to CAM_GOVERNED_EXPORT_ARCHITECTURE.md — **DONE** (6J)
+4. ✓ Create MANIFEST_INDEX.md listing all manifests — **DONE** (2026-05-12)
 
 ### Near-term (low code risk):
 
-1. Add `_maturity_system` field to distinguish CAM vs migration "canonical"
-2. Add cross-references between related governance docs
-3. Register 6A-6I in SPRINT_NAMESPACE_STANDARD.md
+1. ◐ Add `_maturity_system` field to distinguish CAM vs migration "canonical" — **DEFERRED** (documented in reconciliation plan; low priority given clear context in each doc)
+2. ✓ Add cross-references between related governance docs — **DONE** (RMOS Spec, Authority Hierarchy, Topology Map all cross-reference)
+3. ✓ Register 6A-6I in SPRINT_NAMESPACE_STANDARD.md — **DONE** (6J)
 
 ### Future (design required):
 
-1. Unified governance manifest schema
-2. Unified lifecycle state machine
-3. Single pre-commit enforcement aggregating all governance
+1. ◐ Unified governance manifest schema — **NOT PLANNED** (current separate manifests serve distinct domains; unification would reduce clarity)
+2. ◐ Unified lifecycle state machine — **NOT PLANNED** (CAM Capability Registry + Policy Engine address this within CAM domain)
+3. ✓ Single pre-commit enforcement aggregating all governance — **PARTIAL** (check_all.py tiered system created)
 
 ---
 
