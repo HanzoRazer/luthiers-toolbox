@@ -39,10 +39,13 @@ from __future__ import annotations
 import hashlib
 import json
 from datetime import datetime, timezone
-from typing import Any, Dict, List, Literal, Optional
+from typing import TYPE_CHECKING, Any, Dict, List, Literal, Optional
 from uuid import uuid4
 
 from pydantic import BaseModel, Field, model_validator
+
+if TYPE_CHECKING:
+    from app.cam.translator_governance_dossier import GovernanceDossierSummary
 
 
 # -----------------------------------------------------------------------------
@@ -309,6 +312,12 @@ class TranslatorExecutionQuarantine(BaseModel):
     source_provenance_id: str = Field(
         default="",
         description="ID of source provenance"
+    )
+
+    # --- Governance Dossier Integration (7I) ---
+    governance_dossier_summary: Optional[Any] = Field(
+        default=None,
+        description="Governance dossier summary from 7I (if built)"
     )
 
     # --- Timestamps ---
