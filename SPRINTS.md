@@ -100,6 +100,43 @@ Reference: docs/audit/instrument_model_coverage_2026-04-26.md
       or remove from claims entirely
     - Worth holding for explicit consideration later
 
+17. Sprint FRET-CONSOLIDATION — Unify Fret Pipelines
+    **Decided:** 2026-04-30
+    **Estimated effort:** 25-35 hours total across 4 sub-sprints
+    
+    Strategic decision: eliminate parallel fret pipelines so the canonical
+    ecosphere is the single source of truth for fret geometry across all
+    consumers (FRET-A export, CAM toolpath, frontend preview).
+    
+    Six months from now, instrument production must not depend on three
+    parallel implementations of fret math. The consolidation pays its cost
+    now to avoid debugging "which pipeline did this guitar use" later.
+    
+    Sub-sprints in execution order:
+    
+    17a. FRET-CONSOLIDATION-1 — CAM consumes ecosphere (6-10h)
+         Refactor CAM toolpath generation to source fret geometry from
+         FretboardEcosphere instead of recomputing via fret_slots_cam.py.
+         Affected: fret_slots_cam.py, fret_slots_fan_cam.py, fret_slots_router.py
+         Open question: ecosphere carries CAM concerns or CAM adds params separately?
+    
+    17b. FRET-CONSOLIDATION-2 — FretboardWizard migration (3-4h)
+         Update FretboardWizard.vue to call /fretboard/compute instead of /frets/positions.
+         After: deprecate /frets/positions, remove api_v1/fret_math.py router.
+    
+    17c. FRET-CONSOLIDATION-3 — FretSlottingView refactor (6-8h)
+         Refactor FretSlottingView.vue and fretSlotsCamStore.ts to consume ecosphere.
+         Eliminates /api/cam/fret_slots/preview endpoint.
+         After: remove cam/routers/fret_slots_router.py.
+    
+    17d. FRET-CONSOLIDATION-4 — Interactive widget (8-12h)
+         Live-update fretboard playground with sliders, reactive SVG, tier-aware DXF.
+         Target: /design/fretboard/playground or embedded section.
+    
+    Quick wins (independent, <1h each):
+    - Remove FanFretPointLegacy class (only test_wave_e1.py uses it)
+    - Remove compute_fan_fret_positions (already marked DEPRECATED)
+
 **Cross-reference note (Sprint 3B vs Instrument Audit):**
 The 10 files in Sprint 3B PR 2B are the authoritative DXF generator migration list.
 The instrument model audit confirmed 4 of these (neck/headstock, smart guitar) and found
@@ -851,24 +888,6 @@ When this sprint activates, rosette authenticity is the natural first use case. 
 **Assessment:** Enhancement notes. Current implementations work with simplified approach.
 Track as backlog — address when touching those files for other reasons.
 
-### GRBL spindle command emission
-
-**Status:** Backlog
-**Priority:** Production-blocking for live cutting (workaround: manual G-code edit)
-**Discovered:** 2026-04-29 during R2000 LWPOLYLINE CAM pipeline test
-**Source:** docs/investigations/cam_pipeline_r2000_compat_2026-04-29.md
-
-The DXF-to-GRBL pipeline emits valid G-code (G21/G90 header, G0/G1 moves,
-M5/M30 termination) but does not emit spindle commands. Operator must manually
-add `S<speed>` and `M3` (spindle on) before first cut, and verify M5 placement.
-
-Files affected:
-  - services/api/app/rmos/mvp_router.py (G-code emit, line TBD)
-
-Required for production cutting on BCAM 2030A. Coolant control (M8/M9) may also
-be needed depending on shop configuration.
-
-No fix in flight. Address when paid-tier CAM pipeline goes live.
 
 ### Orphaned curvature test file
 
@@ -958,6 +977,32 @@ Not blocking FRET-A or any current sprint. Triage when DXF hygiene sprint schedu
 
 ## COMPLETED
 
+### Sprint A — GRBL Spindle Command Emission
+
+**Status:** COMPLETED
+**Completed:** 2026-04-30
+**Branch:** feat/grbl-spindle-emission-sprint-a
+**Commit:** ba17ba68
+
+DXF-to-GRBL pipeline now emits spindle commands for live cutting on BCAM 2030A.
+
+**Changes:**
+  - `POST /api/rmos/wrap/mvp/dxf-to-grbl` gains `spindle_rpm` (default 18000) and
+    `spindle_dwell_ms` (default 2000) parameters
+  - G-code emits `M3 S{rpm}` after safe-Z, `G4 P{sec}` dwell, `M5` before program end
+  - `spindle_rpm=0` omits all spindle commands (backward-compatible dry-run mode)
+
+**Verification:**
+  - 6 spindle-specific tests added to test_dxf_to_grbl_endpoint_smoke.py
+  - All 23 endpoint tests pass; coverage 23.04%
+  - Sample output verified: `M3 S18000`, `G4 P2.0`, `M5` in correct positions
+
+**Remaining (separate sprints):**
+  - Coolant control (M8/M9) — file as new backlog entry when needed
+  - Tool change commands (Tn M6) — single-tool assumption holds for now
+
+---
+
 ### Sprint FRET-A — Fretboard Ecosphere API
 
 **Status:** COMPLETED (Phase 8)
@@ -1043,3 +1088,4 @@ Commits: 04735bd4, 72bfffc9, 059cf5b0
 | 2026-04-16 | DEV_GUARDRAILS.md mandatory live-path verification | Prevents features landing in non-production code paths |
 | 2026-04-16 | OutlineReconstructor was inserted into dead code path | Lesson: always verify router→orchestrator→mode→cleaner before writing code |
 | 2026-04-20 | Blueprint vectorizer ceiling declaration (2026-04-16) reversed | v3.6 restored morphological gap closing from vectorizer_phase2.py (commit 3db07c62). Benchmark exceeded March 6 baseline (cuatro: 21.8MB/204K entities vs 16.3MB/128K). The "ceiling" was artifact of missing capability, not fundamental limit. 22 commits of active vectorizer development followed in 04/16-04/21. **Architecture:** Blueprint vectorizer v3.6 is primary production path. Photo vectorizer functional for scanned blueprint PNG/JPEG inputs at 85-90% grade; Sprint 4 suspension applies to specific input classes (AI renders, L-1 historical images), not photo vectorizer files as a whole. IBG is a completion library (no direct API endpoint, connected via imports) — analogous to inverse_solver.py. IBG has learning dependency on ML training layer (TrainingDataCollector, FeedbackSystem, GeometryCoachV2 scaffolded in vectorizer_phase3.py). **Destinations:** IBG → new standalone repo (name TBD, stays in luthiers-toolbox until scaffolded). ML training layer → home TBD. sg.coach deprecated 2026-02-02, superseded by sg-agentd, not a candidate for any role. |
+| 2026-04-30 | FRET-CONSOLIDATION: canonical ecosphere is single source of truth | Three parallel fret pipelines (api_v1/fret_math, cam/fret_slots, FRET-A ecosphere) converge to ecosphere. CAM consumes ecosphere geometry; legacy endpoints deprecated after frontend migration. Prevents "which pipeline did this guitar use" debugging at scale. |

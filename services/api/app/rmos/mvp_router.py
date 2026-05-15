@@ -12,7 +12,7 @@ import uuid
 from datetime import datetime, timezone
 from typing import Any, Dict, List
 
-from fastapi import APIRouter, File, Form, UploadFile
+from fastapi import APIRouter, File, Form, Query, UploadFile
 
 from .runs_v2.attachments import put_bytes_attachment, put_json_attachment
 from .runs_v2.schemas import RunAttachment
@@ -37,12 +37,20 @@ async def dxf_to_grbl(
     climb: bool = Form(True),
     smoothing: bool = Form(False),
     margin: float = Form(0.0),
+    spindle_rpm: int = Form(18000, ge=0, le=30000),
+    spindle_dwell_ms: int = Form(2000, ge=0, le=10000),
 ) -> Dict[str, Any]:
     """
     Convert DXF to GRBL G-code (MVP workflow).
 
     Wired to real DXF parsing + adaptive toolpath + G-code generation.
     Creates RMOS run artifact with full attachment persistence.
+
+    Spindle control:
+        spindle_rpm: Spindle speed in RPM (default 18000 for wood routing).
+                     Set to 0 to omit spindle commands entirely (dry run mode).
+        spindle_dwell_ms: Post-spindle dwell in milliseconds (default 2000).
+                          Allows spindle to reach target RPM before cutting.
     """
     import ezdxf
     from ..routers.adaptive.plan_router import plan as compute_plan
@@ -137,6 +145,12 @@ async def dxf_to_grbl(
             f"G0 Z{safe_z}",
         ]
 
+        if spindle_rpm > 0:
+            gcode_lines.append(f"M3 S{spindle_rpm} ; spindle on CW")
+            if spindle_dwell_ms > 0:
+                dwell_sec = spindle_dwell_ms / 1000.0
+                gcode_lines.append(f"G4 P{dwell_sec:.1f} ; dwell for spindle ramp-up")
+
         for move in moves:
             cmd = move.get("cmd", "G1")
             x = move.get("x")
@@ -155,9 +169,10 @@ async def dxf_to_grbl(
                 parts.append(f"F{f:.0f}")
             gcode_lines.append(" ".join(parts))
 
+        gcode_lines.append(f"G0 Z{safe_z}")
+        if spindle_rpm > 0:
+            gcode_lines.append("M5 ; spindle off")
         gcode_lines.extend([
-            f"G0 Z{safe_z}",
-            "M5 ; spindle off",
             "G0 X0 Y0",
             "M30 ; end",
         ])
