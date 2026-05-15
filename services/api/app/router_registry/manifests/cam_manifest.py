@@ -236,6 +236,12 @@ CAM_ROUTERS: List[RouterSpec] = [
         category="cam",
     ),
     RouterSpec(
+        module="app.routers.cam.translator_governance_review_ledger_router",
+        prefix="/api/cam",
+        tags=["CAM", "Translator", "Governance", "Ledger"],
+        category="cam",
+    ),
+    RouterSpec(
         module="app.routers.cam.lifecycle_promotion_router",
         prefix="",
         tags=["CAM", "Lifecycle", "Promotion"],
