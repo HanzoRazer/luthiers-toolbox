@@ -336,6 +336,48 @@ class InstrumentBodyGenerator:
         print(f"Saved: {output_path}")
         return output_path
 
+    def get_morphology_descriptor(
+        self,
+        landmarks: List[LandmarkPoint],
+        outline_points: Optional[List[tuple]] = None
+    ):
+        """
+        Generate advisory MorphologyDescriptor from landmarks.
+
+        This is a NON-MUTATING operation that produces semantic morphology
+        information as advisory evidence. It does NOT affect solver behavior
+        or modify any geometry.
+
+        The descriptor can be used for:
+        - Human review overlays
+        - Variant classification display
+        - Asymmetry reporting
+        - Future advisory integration
+
+        Args:
+            landmarks: List of LandmarkPoint from extraction
+            outline_points: Optional raw outline points (x_mm, y_mm)
+
+        Returns:
+            MorphologyDescriptor or None if body_grid unavailable
+
+        Note:
+            This method is intentionally isolated from the solver path.
+            No solver geometry is mutated by calling this method.
+        """
+        try:
+            from .body_grid.morphology_descriptor import analyze_from_dxf_landmarks
+        except ImportError:
+            return None
+
+        # Convert landmarks to tuple format
+        landmark_tuples = [
+            (lm.label, lm.x_mm, lm.y_mm)
+            for lm in landmarks
+        ]
+
+        return analyze_from_dxf_landmarks(landmark_tuples, outline_points)
+
     def validate_against_expected(self, model: SolvedBodyModel) -> Dict[str, float]:
         """
         Compare solved dimensions against expected spec dimensions.
