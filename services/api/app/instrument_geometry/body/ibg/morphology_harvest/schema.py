@@ -15,6 +15,22 @@ Terminology Normalization:
     confidence: Confidence in the normalization
     requires_review: Whether human review is needed
 
+STORAGE AUTHORITY WARNING:
+    HarvestRecord is a preservation/coordination artifact.
+    The `morphology_harvest/outputs/` directory is NOT canonical storage.
+    It is a temporary staging area for generated outputs only.
+
+    Canonical promotion target must be resolved before harvested
+    records are used as shared instrument-building data.
+
+    Potential promotion targets:
+    - data_registry/system/instruments/body_templates.json
+    - instrument_specs.py BODY_DIMENSIONS dict
+    - A new governed morphology corpus location
+
+    Do not treat HarvestRecord as authoritative instrument data
+    until governance assigns canonical storage authority.
+
 Author: Production Shop
 Date: 2026-05-16
 Sprint: IBG Semantic Morphology Harvest Pass 1A

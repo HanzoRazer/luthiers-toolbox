@@ -211,6 +211,51 @@ Generated outputs are gitignored. Only schemas, sample fixtures, and documentati
 
 ---
 
+## Storage Authority Warning
+
+**IMPORTANT:** `morphology_harvest/outputs/` is **NOT canonical storage**.
+
+It is a **temporary/generated staging area** for 1A harvest outputs only.
+
+Harvested records represent reusable instrument-building knowledge that may support:
+
+- IBG reconstruction
+- Body Grid morphology
+- Neck/fretboard/headstock systems
+- Cavity and hardware layout
+- CAD generation
+- Validation pipelines
+- Future adaptive sandboxes
+- Downstream instrument-building workflows
+
+### Canonical Storage Candidates
+
+The repository has existing data authorities that may be the correct promotion target:
+
+| Authority | Path | Purpose |
+|-----------|------|---------|
+| data_registry | `app/data_registry/` | Three-tier hybrid registry (system/curated/user) |
+| body_templates | `data_registry/system/instruments/body_templates.json` | Standard body templates |
+| instrument_specs | `app/instrument_geometry/instrument_specs.py` | Canonical body dimensions |
+
+### Promotion Rules
+
+```
+HarvestRecord is a preservation/coordination artifact.
+Canonical promotion target must be resolved before harvested
+records are used as shared instrument-building data.
+```
+
+Until governance explicitly assigns canonical storage authority:
+
+1. `morphology_harvest/outputs/` remains **non-canonical staging**
+2. Harvested records should **not** be treated as authoritative instrument data
+3. Promotion to `data_registry` or `instrument_specs` requires governance approval
+
+See: `docs/governance/MORPHOLOGY_HARVEST_STORAGE_AUTHORITY.md` (pending)
+
+---
+
 ## Integration Path
 
 ### BodyEvidence Conversion
