@@ -552,6 +552,96 @@ INITIAL_CANONICAL_VOCABULARY: List[Dict[str, Any]] = [
         "lifecycle_semantics": ["absent", "governed", "authorized"],
         "aliases": ["execution_authority", "runtime_governance_authority"],
     },
+    # DEV ORDER 1D: Constitutional Runtime Foundation
+    {
+        "term": "authority_state",
+        "canonical_definition": (
+            "Trust level of a semantic object in the IBG intake pipeline, "
+            "tracking transformation from canonical source through advisory "
+            "candidate to approved generation."
+        ),
+        "owning_domain": "IBG Governance",
+        "owning_governance_tier": 1,
+        "canonical_contracts": ["AuthorityStateContract", "IBGIntakeContract"],
+        "prohibited_reinterpretations": [
+            "confidence_level",
+            "quality_score",
+            "automatic_promotion",
+        ],
+        "lifecycle_semantics": [
+            "canonical_geometry",
+            "derived_topology",
+            "semantic_interpretation",
+            "advisory_candidate",
+            "human_reviewed",
+            "approved_for_generation",
+            "sandbox_experimental",
+            "rejected",
+        ],
+        "aliases": ["semantic_authority", "ibg_authority_state"],
+    },
+    {
+        "term": "semantic_provenance",
+        "canonical_definition": (
+            "Complete lineage record tracking source artifact, derivation chain, "
+            "transformation history, and topology integrity for semantic objects."
+        ),
+        "owning_domain": "IBG Governance",
+        "owning_governance_tier": 1,
+        "canonical_contracts": ["ProvenanceLineageContract", "IBGIntakeContract"],
+        "prohibited_reinterpretations": [
+            "execution_log",
+            "cache_metadata",
+            "runtime_trace",
+        ],
+        "lifecycle_semantics": None,
+        "aliases": ["ibg_provenance", "semantic_lineage"],
+    },
+    {
+        "term": "confidence_declaration",
+        "canonical_definition": (
+            "Typed confidence measurement with explicit semantics, separating "
+            "signal quality from authority legitimacy. Confidence NEVER implies "
+            "correctness, canonicity, or review bypass."
+        ),
+        "owning_domain": "IBG Governance",
+        "owning_governance_tier": 1,
+        "canonical_contracts": ["ConfidenceContract", "IBGIntakeContract"],
+        "prohibited_reinterpretations": [
+            "truth_score",
+            "approval_likelihood",
+            "automatic_canonization_threshold",
+        ],
+        "lifecycle_semantics": [
+            "epistemic",
+            "statistical",
+            "heuristic",
+            "human_assessed",
+        ],
+        "aliases": ["semantic_confidence", "typed_confidence"],
+    },
+    {
+        "term": "review_enforcement",
+        "canonical_definition": (
+            "Protected review state that machine code cannot bypass. Once "
+            "review_required is set, only explicit human review can clear it."
+        ),
+        "owning_domain": "IBG Governance",
+        "owning_governance_tier": 1,
+        "canonical_contracts": ["ReviewEnforcementContract", "IBGIntakeContract"],
+        "prohibited_reinterpretations": [
+            "optional_review",
+            "machine_clearable_review",
+            "automatic_approval",
+        ],
+        "lifecycle_semantics": [
+            "pending",
+            "approve",
+            "reject",
+            "defer",
+        ],
+        "aliases": ["human_review_enforcement", "ibg_review_gate"],
+    },
 ]
 
 
