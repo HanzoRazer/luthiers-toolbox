@@ -96,9 +96,16 @@ class CleanupMode(str, Enum):
               - PROTECTED_EXPERIMENTAL_RECOVERY_MODE: callable, testable, observable, not silently mutable
 
     PHOTO_V2: Controlled photographic blueprint conversion bridge (MRP-1C).
-              - Routes to edge_to_dxf.py:EdgeToDXF.convert()
-              - Pixel edge extraction for photographic images (PNG/JPG)
-              - NOT for rendered/vectorized PDFs (use V2_RAW for those)
+              - Routes to edge_to_dxf.py:EdgeToDXF.convert_enhanced()
+              - Multi-scale Canny + text masking + morphological closing
+              - Best for AI-generated images where text removal is acceptable
+              - PROTECTED_EXPERIMENTAL_RECOVERY_MODE: callable, testable, observable, not silently mutable
+
+    PHOTO_REFINED: Text-preserving photo extraction (MRP-1C resurrected April 2026).
+              - Routes to edge_to_dxf.py:EdgeToDXF.convert() with morph_close_kernel=0
+              - Single-scale Canny (50/150), NO morphological closing
+              - Preserves text strokes from photos of blueprints
+              - Higher entity count than PHOTO_V2 but text remains legible
               - PROTECTED_EXPERIMENTAL_RECOVERY_MODE: callable, testable, observable, not silently mutable
     """
     BASELINE = "baseline"
@@ -109,6 +116,7 @@ class CleanupMode(str, Enum):
     CAM_READY_R2000 = "cam_ready_r2000"
     V2_RAW = "v2_raw"
     PHOTO_V2 = "photo_v2"
+    PHOTO_REFINED = "photo_refined"
 
 
 @dataclass

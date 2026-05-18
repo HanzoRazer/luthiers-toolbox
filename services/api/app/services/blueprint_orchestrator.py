@@ -631,6 +631,58 @@ class BlueprintOrchestrator:
                     stage_timings["dxf_version"] = "R12"
                     stage_timings["photo_contour_count"] = photo_result.contour_count
 
+                # PHOTO_REFINED: PROTECTED_EXPERIMENTAL_RECOVERY_MODE
+                # Routes to edge_to_dxf.py:EdgeToDXF.convert() with morph_close_kernel=0
+                # Text-preserving extraction for photos of blueprints (resurrected April 2026 sandbox)
+                # DO NOT MODIFY without reviewing docs/handoffs/MRP_1C_VECTORIZER_V2_ARCHAEOLOGY_HANDOFF.md
+                elif mode == CleanupMode.PHOTO_REFINED:
+                    from .blueprint_extract import _ensure_edge_to_dxf_importable
+                    _ensure_edge_to_dxf_importable()
+
+                    try:
+                        from edge_to_dxf import EdgeToDXF, ConversionStatus
+                    except ImportError as e:
+                        return BlueprintResult(
+                            ok=False,
+                            stage="edge_extraction",
+                            error=f"EdgeToDXF not available for PHOTO_REFINED mode: {e}",
+                            warnings=warnings,
+                        )
+
+                    import time
+                    photo_start = time.time()
+
+                    # PHOTO_REFINED: Single-scale Canny, NO morphological closing
+                    # morph_close_kernel=0 preserves text strokes
+                    # This is the April 2026 sandbox recipe that produced text-legible output
+                    converter = EdgeToDXF(layer_name='CONTOURS')
+                    photo_result = converter.convert(
+                        source_path=str(input_path),
+                        output_path=str(raw_dxf_path),
+                        target_height_mm=target_height_mm,
+                        morph_close_kernel=0,  # CRITICAL: preserves text
+                        max_entities=0,  # No cap - let user control via UI if needed
+                    )
+
+                    photo_elapsed_ms = (time.time() - photo_start) * 1000
+
+                    extract_result = ExtractionResult(
+                        success=photo_result.status == ConversionStatus.SUCCESS,
+                        output_path=photo_result.output_path or str(raw_dxf_path),
+                        line_count=photo_result.line_count,
+                        edge_pixel_count=photo_result.edge_pixel_count,
+                        image_size_px=photo_result.image_size_px,
+                        output_size_mm=photo_result.output_size_mm,
+                        mm_per_px=photo_result.mm_per_px,
+                        processing_time_ms=photo_elapsed_ms,
+                        error=photo_result.error_message or "",
+                        warnings=[],
+                    )
+
+                    stage_timings["photo_refined_mode"] = True
+                    stage_timings["dxf_version"] = "R12"
+                    stage_timings["photo_contour_count"] = photo_result.contour_count
+
                 else:
                     # RESTORED_BASELINE: Use RETR_LIST (no hierarchy) like commit 86c49526
                     # All other modes use the default isolate_body=True (RETR_TREE + grouping)
@@ -740,6 +792,21 @@ class BlueprintOrchestrator:
                         contours_found=extract_result.line_count,
                         chains_found=0,
                         best_confidence=0.9,  # High confidence for photo extraction
+                        candidate_count=extract_result.line_count,
+                    )
+                    cleanup_valid = True
+                elif mode == CleanupMode.PHOTO_REFINED:
+                    # PHOTO_REFINED: Skip cleanup - text-preserving extraction already clean
+                    cleaned_dxf_path = raw_dxf_path
+                    clean_result = CleanResult(
+                        success=True,
+                        svg_preview="",
+                        dxf_path=str(raw_dxf_path),
+                        original_entity_count=extract_result.line_count,
+                        cleaned_entity_count=extract_result.line_count,
+                        contours_found=extract_result.line_count,
+                        chains_found=0,
+                        best_confidence=0.9,  # High confidence for refined photo extraction
                         candidate_count=extract_result.line_count,
                     )
                     cleanup_valid = True
