@@ -343,6 +343,41 @@ pytest services/api/tests/test_ibg_intake_gate.py -v
 
 ---
 
+## Gate Integration Points
+
+The IBG Intake Gate MUST be called before any of the following operations:
+
+| Operation | Required Check | Enforcement Location |
+|-----------|----------------|---------------------|
+| IBG memory population | `gate.validate_or_raise(candidate)` | Before any write to IBG corpus |
+| Morphology corpus write | `candidate.require_approval("corpus write")` | `morphology_harvest/` consumers |
+| Canonical template registration | `gate.validate(candidate).is_valid` | `body_templates.json` updates |
+| CAD generation from body evidence | `can_populate_ibg_memory(candidate.authority_state)` | CAM export pipeline |
+
+### Current Bypass Audit Status (1D-HARDEN)
+
+| System | Status | Notes |
+|--------|--------|-------|
+| `artifact_body_evidence_adapter.py` | SAFE | Creates BodyEvidence, not BodyEvidenceCandidate |
+| `morphology_harvest/schema.py` | SAFE | Has explicit STORAGE AUTHORITY WARNING |
+| `body_grid/` | SAFE | Analysis only, no persistence |
+| IBG memory (future) | GATED | Gate must be wired at integration |
+
+### Integration Pattern
+
+```python
+from app.instrument_geometry.body.ibg.ibg_intake_gate import create_default_intake_gate
+
+# Before any IBG memory operation:
+gate = create_default_intake_gate()
+result = gate.validate_or_raise(candidate)  # Raises if invalid
+
+# Now safe to proceed
+populate_ibg_memory(candidate.evidence)
+```
+
+---
+
 ## Acceptance Criteria
 
 | Criterion | Status |
