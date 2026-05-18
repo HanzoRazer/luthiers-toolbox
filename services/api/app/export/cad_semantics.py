@@ -48,10 +48,31 @@ class SideProfileType(str, Enum):
 
 
 class ContinuityTarget(str, Enum):
-    """Target geometric continuity at junctions."""
+    """
+    Target geometric continuity at junctions.
 
-    G0 = "G0"  # Positional continuity
-    G1 = "G1"  # Tangent continuity
+    ADVISORY ONLY — C2-C Constitutional Classification (2026-05-18)
+
+    ContinuityTarget expresses semantic preference and interoperability guidance.
+
+    It does NOT:
+    - define geometry authority (see BOE)
+    - require manufacturability guarantees (see TopologyTier)
+    - imply topology canonization (see ContinuityLevel in topology_builder)
+    - feed into validate_continuity() enforcement
+
+    For enforcement-level continuity, see:
+        topology_builder.contracts.ContinuityLevel (G0/G1/G2)
+
+    G2 (curvature continuity) is intentionally omitted here because
+    acoustic body junctions rarely require G2-level smoothness.
+
+    Consumption path: Currently advisory for CAD translators.
+    No direct connection to topology_builder validation.
+    """
+
+    G0 = "G0"  # Positional continuity (advisory)
+    G1 = "G1"  # Tangent continuity (advisory)
 
 
 class ClosureType(str, Enum):
@@ -168,11 +189,14 @@ class RimSemantics(BaseModel):
 
     Describes expected continuity at plate-rim junctions.
     These are semantic targets, not runtime guarantees.
+
+    C2-C Advisory Classification: semantic_continuity layer.
+    No enforcement path to topology_builder validation.
     """
 
     continuity_target: ContinuityTarget = Field(
         default=ContinuityTarget.G1,
-        description="Target continuity at plate-rim junctions",
+        description="Advisory target continuity at plate-rim junctions (not enforced)",
     )
     closure_type: ClosureType = Field(
         default=ClosureType.CLOSED_RIM,
