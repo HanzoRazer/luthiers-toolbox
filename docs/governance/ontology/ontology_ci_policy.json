@@ -1,0 +1,104 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Ontology CI Policy",
+  "version": "1.0.0",
+  "date": "2026-05-16",
+  "description": "Machine-readable ontology governance enforcement policy",
+  "enforcement_phase": 2,
+  "enforcement_phase_description": "Phase 1-2: Advisory and warnings active, blocking for authority violations only",
+  "checks": {
+    "audit_authority_chains": {
+      "script": "scripts/governance/audit_authority_chains.py",
+      "description": "Verify authority chain integrity and ownership",
+      "severity": "blocking",
+      "tier": "ci",
+      "exit_codes": {
+        "pass": 0,
+        "authority_violation": 1
+      },
+      "active": true
+    },
+    "validate_lifecycle_terms": {
+      "script": "scripts/governance/validate_lifecycle_terms.py",
+      "description": "Validate lifecycle terms against canonical registry",
+      "severity": "warning",
+      "tier": "ci",
+      "exit_codes": {
+        "pass": 0,
+        "violations_found": 0
+      },
+      "active": true
+    },
+    "detect_semantic_drift": {
+      "script": "scripts/governance/detect_semantic_drift.py",
+      "description": "Detect semantic drift and vocabulary conflicts",
+      "severity": "advisory",
+      "tier": "nightly",
+      "exit_codes": {
+        "pass": 0,
+        "drift_found": 0
+      },
+      "active": true
+    },
+    "list_semantic_owners": {
+      "script": "scripts/governance/list_semantic_owners.py",
+      "description": "List semantic term ownership",
+      "severity": "informational",
+      "tier": "manual",
+      "exit_codes": {
+        "pass": 0
+      },
+      "active": false
+    }
+  },
+  "severity_definitions": {
+    "informational": {
+      "exit_code": 0,
+      "ci_behavior": "no_action",
+      "description": "Reporting only"
+    },
+    "advisory": {
+      "exit_code": 0,
+      "ci_behavior": "log_finding",
+      "description": "Visible governance concern"
+    },
+    "warning": {
+      "exit_code": 0,
+      "ci_behavior": "log_prominently",
+      "description": "Likely future violation"
+    },
+    "blocking": {
+      "exit_code": 1,
+      "ci_behavior": "fail_ci",
+      "description": "Ontology integrity failure"
+    },
+    "quarantine": {
+      "exit_code": 2,
+      "ci_behavior": "reserved",
+      "description": "Forbidden semantic state (not activated)"
+    }
+  },
+  "escalation_rules": {
+    "advisory_to_warning": [
+      "Term appears in new code (not legacy)",
+      "Term appears in multiple locations",
+      "Term used across domains"
+    ],
+    "warning_to_blocking": [
+      "Authority inversion detected",
+      "Semantic corruption detected",
+      "Ownership conflict detected",
+      "Canonical mutation attempted"
+    ],
+    "blocking_to_quarantine": [
+      "Requires immediate isolation",
+      "Requires cross-team review",
+      "Requires governance committee decision"
+    ]
+  },
+  "baseline_file": "ontology_drift_baseline_2026_05.json",
+  "baseline_behavior": {
+    "violations_in_baseline": "advisory",
+    "new_violations": "escalate_per_severity"
+  }
+}

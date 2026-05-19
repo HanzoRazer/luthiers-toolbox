@@ -1,10 +1,27 @@
 # Governance Authority Hierarchy
 
-**Date:** 2026-05-12 (updated from 2026-05-07)  
+**Date:** 2026-05-15 (updated from 2026-05-12)  
 **Status:** RECONCILED (CAM-6J)  
 **Purpose:** Establish clear authority boundaries between governance systems
 
 **Note:** This document serves as the authority matrix for governance systems. CAM-6J verified boundaries and documented resolved overlaps in `GOVERNANCE_RECONCILIATION_PLAN.md`.
+
+---
+
+## Foundational Methodology
+
+This governance hierarchy is built on principles documented in:
+
+- `docs/governance/REPOSITORY_REMEDIATION_GOVERNANCE_METHODOLOGY.md`
+
+That document defines:
+- The Architectural Thesis (what the repository represents)
+- The Reconstruction Methodology (how fragmented repos evolve safely)
+- Canonical Ontology Authority (single semantic truth)
+- The remediation playbook phases
+- Reusable governance principles
+
+The hierarchy below operationalizes those principles for this repository.
 
 ---
 
@@ -72,6 +89,7 @@ Each claims authority over overlapping concerns. Without hierarchy, enforcement 
 **Documents:**
 - `docs/governance/ARCHITECTURE_INVARIANTS.md`
 - `FEATURE_PARITY_MIGRATION_POLICY.md`
+- `docs/governance/REPOSITORY_EXPANSION_GUIDANCE_DIRECTIVE.md`
 
 **Authority Scope:**
 - Code placement (6-layer model)

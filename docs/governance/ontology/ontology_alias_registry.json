@@ -1,0 +1,130 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Ontology Alias Registry",
+  "version": "1.0.0",
+  "date": "2026-05-16",
+  "description": "Maps aliases and transitional names to canonical terms",
+  "aliases": {
+    "SUPPORTED_PROTOTYPE": {
+      "canonical_term": "supported_prototype",
+      "domain": "topology_builder",
+      "status": "active",
+      "notes": "Enum value in TopologyRuntimeSupport"
+    },
+    "PARTIAL_PROTOTYPE": {
+      "canonical_term": "partial_prototype",
+      "domain": "topology_builder",
+      "status": "active",
+      "notes": "Enum value in TopologyRuntimeSupport"
+    },
+    "UNSUPPORTED_RUNTIME": {
+      "canonical_term": "unsupported_runtime",
+      "domain": "topology_builder",
+      "status": "active",
+      "notes": "Enum value in TopologyRuntimeSupport"
+    },
+    "UNSUPPORTED_TOPOLOGY_RUNTIME": {
+      "canonical_term": "unsupported_runtime",
+      "domain": "translator_rejection",
+      "status": "active",
+      "notes": "Used in translator error classification"
+    },
+    "RESEARCH_REQUIRED": {
+      "canonical_term": "research_required",
+      "domain": "topology_builder",
+      "status": "active",
+      "notes": "Enum value in TopologyRuntimeSupport"
+    },
+    "RESEARCH_ONLY": {
+      "canonical_term": "research_required",
+      "domain": "documentation",
+      "status": "transitional",
+      "notes": "Older documentation term, prefer research_required"
+    },
+    "SUPPORTED": {
+      "canonical_term": "supported",
+      "domain": "cad_semantics",
+      "status": "active",
+      "notes": "Enum value in RuntimeSupport"
+    },
+    "SEMANTIC_ONLY": {
+      "canonical_term": "semantic_only",
+      "domain": "cad_semantics",
+      "status": "active",
+      "notes": "Enum value in RuntimeSupport"
+    },
+    "UNSUPPORTED": {
+      "canonical_term": "unsupported",
+      "domain": "cad_semantics",
+      "status": "active",
+      "notes": "Enum value in RuntimeSupport"
+    },
+    "BLOCKING": {
+      "canonical_term": "blocking",
+      "domain": "topology_failure",
+      "status": "active",
+      "notes": "Failure severity classification"
+    },
+    "MAJOR": {
+      "canonical_term": "major",
+      "domain": "topology_failure",
+      "status": "active",
+      "notes": "Failure severity classification"
+    },
+    "WARNING": {
+      "canonical_term": "warning",
+      "domain": "topology_failure",
+      "status": "active",
+      "notes": "Failure severity classification"
+    },
+    "ACCEPTABLE": {
+      "canonical_term": "acceptable",
+      "domain": "topology_failure",
+      "status": "active",
+      "notes": "Failure severity classification - not a failure"
+    },
+    "governed_execution": {
+      "canonical_term": "governed",
+      "domain": "export_lifecycle",
+      "status": "transitional",
+      "notes": "Older term, prefer governed"
+    },
+    "PROTOTYPE": {
+      "canonical_term": "prototype",
+      "domain": "topology_builder",
+      "status": "active",
+      "notes": "TopologyTier enum value"
+    },
+    "PRODUCTION": {
+      "canonical_term": "production",
+      "domain": "topology_builder",
+      "status": "active",
+      "notes": "TopologyTier enum value"
+    }
+  },
+  "deprecated_terms": {
+    "uncontrolled": {
+      "replacement": "experimental",
+      "deprecation_date": "2026-05-16",
+      "reason": "Ambiguous term, experimental is more precise"
+    }
+  },
+  "domain_vocabularies": {
+    "topology_builder": {
+      "terms": ["supported_prototype", "partial_prototype", "unsupported_runtime", "research_required", "prototype", "production"],
+      "source_file": "app/cam/topology_builder/runtime_support.py"
+    },
+    "cad_semantics": {
+      "terms": ["supported", "semantic_only", "unsupported"],
+      "source_file": "app/export/cad_semantics.py"
+    },
+    "topology_failure": {
+      "terms": ["blocking", "major", "warning", "acceptable"],
+      "source_file": "docs/governance/TOPOLOGY_FAILURE_CLASSIFICATION.md"
+    },
+    "governance_tier": {
+      "terms": ["tier_1", "tier_2", "tier_3"],
+      "source_file": "docs/governance/GOVERNANCE_AUTHORITY_HIERARCHY.md"
+    }
+  }
+}

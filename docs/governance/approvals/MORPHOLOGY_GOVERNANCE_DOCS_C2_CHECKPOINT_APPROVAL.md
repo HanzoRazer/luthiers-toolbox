@@ -44,11 +44,21 @@ This approval covers the following governance documentation changes:
 
 - `C2_CONTINUITY_ARBITRATION_FRAMEWORK.md`
 - `C2_CONTINUITY_PROVENANCE_REVIEW.md`
+- `packets/C2_CONTINUITY_ARBITRATION_PACKET_003.md`
+- `packets/C2_CONTINUITY_ARBITRATION_PACKET_004.md`
+
+### C2-DX: Export/Serialization Continuity Reviews (Terminal 5)
+
+*Retroactive coverage for commit b90a957e*
+
 - `C2_CONTINUITY_EXPORT_PROPAGATION_REVIEW.md`
 - `C2_CONTINUITY_SERIALIZATION_BOUNDARIES.md`
 - `C2_CONTINUITY_TRANSLATOR_DISCIPLINE.md`
-- `packets/C2_CONTINUITY_ARBITRATION_PACKET_003.md`
-- `packets/C2_CONTINUITY_ARBITRATION_PACKET_004.md`
+- `C2_CONTINUITY_SEMANTIC_DECOMPOSITION.md`
+- `C2_CONTINUITY_NAMESPACE_COLLISIONS.md`
+- `C2_CONTINUITY_PROPAGATION_ANALYSIS.md`
+- `C2_CONTINUITY_LAYER_CANDIDATES.md`
+- `C2_CONTINUITY_RUNTIME_REVIEW.md`
 
 ### C2-E: Derived Semantic Systems
 
@@ -109,7 +119,17 @@ All C2 arbitration documents are:
 
 ---
 
-## 4. Approval Constraints
+## 4. Conditions
+
+This approval is granted under the following conditions:
+
+- No semantic convergence authorized outside ratified packets
+- No sandbox federation authorized
+- No ontology registration implied unless explicitly ratified
+- Advisory semantics remain non-authoritative
+- Governance checks must pass without `--no-verify`
+
+## 5. Approval Constraints
 
 This approval does NOT permit:
 
@@ -119,7 +139,17 @@ This approval does NOT permit:
 
 ---
 
-## 5. Approval Record
+## 6. Ratification Caveat
+
+```
+Ratification preserves decomposition boundaries.
+Ratification does not authorize semantic convergence
+outside explicitly arbitrated federation phases.
+```
+
+---
+
+## 7. Approval Record
 
 ```
 APPROVED BY: Terminal 1 (Governance Integration Lead)

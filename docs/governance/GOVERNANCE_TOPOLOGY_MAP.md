@@ -1,6 +1,6 @@
 # Governance Topology Map
 
-**Date:** 2026-05-12 (updated from 2026-05-07)  
+**Date:** 2026-05-15 (updated from 2026-05-12)  
 **Status:** RECONCILED (CAM-6J)  
 **Purpose:** Inventory and map all governance systems in luthiers-toolbox
 
@@ -10,7 +10,7 @@
 
 ## Governance System Inventory
 
-The repository contains **6 distinct governance systems** operating across different domains.
+The repository contains **7 distinct governance systems** operating across different domains.
 
 ---
 
@@ -148,7 +148,41 @@ The repository contains **6 distinct governance systems** operating across diffe
 
 ---
 
-## 5. Architecture Invariants (6-Layer Placement)
+## 5. Foundational Governance Methodology
+
+**Primary Documents:**
+- `docs/governance/REPOSITORY_REMEDIATION_GOVERNANCE_METHODOLOGY.md`
+- `docs/governance/REPOSITORY_EXPANSION_GUIDANCE_DIRECTIVE.md`
+
+**Scope:** Canonical ontology authority, remediation methodology, expansion direction
+
+**Key Concepts:**
+| Concept | Definition |
+|---------|------------|
+| Architectural Thesis | What the repository fundamentally represents |
+| Reconstruction Methodology | How fragmented repos evolve safely |
+| Canonical Ontology Authority | Single semantic truth requirement |
+| Parallel Ontology Drift | Late-stage failure pattern to prevent |
+
+**Core Principles:**
+1. One subsystem owns one kind of truth
+2. Contracts are ontology (domain vocabulary)
+3. Intent is separate from execution
+4. Runtime cannot redefine ontology
+5. Experimental systems must remain contained
+
+**Remediation Phases:**
+1. Archaeology — Reveal actual behavior
+2. Instrumentation — Force assumptions observable
+3. Boundary Formalization — Separate authority domains
+4. Governance Layering — Prevent future collapse
+5. Controlled Extension — Extend without destabilization
+
+**Authority Claim:** "Formalized lutherie knowledge expressed as executable systems"
+
+---
+
+## 6. Architecture Invariants (6-Layer Placement)
 
 **Primary Document:**
 - `docs/governance/ARCHITECTURE_INVARIANTS.md`
@@ -179,7 +213,7 @@ The repository contains **6 distinct governance systems** operating across diffe
 
 ---
 
-## 6. Feature Parity Migration Policy
+## 7. Feature Parity Migration Policy
 
 **Primary Document:**
 - `FEATURE_PARITY_MIGRATION_POLICY.md`
@@ -213,6 +247,11 @@ The repository contains **6 distinct governance systems** operating across diffe
 
 | Document | Domain |
 |----------|--------|
+| `REPOSITORY_REMEDIATION_GOVERNANCE_METHODOLOGY.md` | Foundational methodology |
+| `REPOSITORY_EXPANSION_GUIDANCE_DIRECTIVE.md` | Expansion direction |
+| `INSTRUMENT_DATA_STORAGE_AUDIT.md` | Instrument data topology audit |
+| `ontology/INSTRUMENT_DIMENSION_ONTOLOGY_V1.md` | Dimensional semantics (DRAFT) |
+| `ontology/PROMOTION_REVIEW_MANIFEST_V1.md` | Tier 3→2 review contract (DRAFT) |
 | `SPRINT_NAMESPACE_STANDARD.md` | Sprint naming conventions |
 | `SEMANTIC_GEOMETRY_CONTINUITY.md` | Geometry semantics |
 | `THREE_LOOP_ARCHITECTURE_REFRAMED.md` | Vectorizer feedback loops |

@@ -1,0 +1,118 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Ontology Drift Baseline",
+  "version": "1.0.0",
+  "date": "2026-05-16",
+  "sprint": "MRP-5K",
+  "description": "Machine-readable baseline of accepted ontology drift",
+  "summary": {
+    "duplicate_enum_values": 151,
+    "cross_domain_terms": 7,
+    "missing_registrations": 1,
+    "authority_naming_inconsistencies": 2,
+    "valid_lifecycle_usages": 50,
+    "alias_usages": 4,
+    "potential_lifecycle_issues": 26
+  },
+  "accepted_duplicates": {
+    "description": "Enum values appearing in multiple files - accepted as domain-specific usage",
+    "count": 151,
+    "categories": {
+      "instrument_types": ["CLASSICAL", "DREADNOUGHT", "PARLOR", "JUMBO", "ACOUSTIC_DREADNOUGHT", "ACOUSTIC_OM", "ACOUSTIC_PARLOR", "ELECTRIC_SOLID", "ELECTRIC_HOLLOW", "UKULELE", "MANDOLIN", "ARCHTOP"],
+      "body_styles": ["STRATOCASTER", "TELECASTER", "LES_PAUL", "SG", "FLYING_V", "EXPLORER"],
+      "workflow_states": ["PENDING", "APPROVED", "REJECTED", "DRAFT", "COMPLETED", "CANCELLED", "ARCHIVED", "BLOCKED"],
+      "severities": ["CRITICAL", "WARNING", "INFO", "SUGGESTION", "ANALYSIS"],
+      "material_types": ["SOFT", "MEDIUM", "HARD", "COMPOSITE"],
+      "pattern_types": ["SOLID", "HERRINGBONE", "ROPE", "CELTIC_KNOT", "CHECKERBOARD"],
+      "ai_providers": ["OPENAI", "ANTHROPIC", "LOCAL"],
+      "other": ["CUSTOM", "OTHER", "UNKNOWN", "DOTS", "MIXED"]
+    }
+  },
+  "accepted_cross_domain_terms": {
+    "description": "Lifecycle terms used across 3+ domains - accepted with domain-qualified disambiguation",
+    "terms": [
+      {
+        "term": "blocking",
+        "domains": ["cad", "acoustic", "topology", "export"],
+        "canonical_domain": "topology_failure"
+      },
+      {
+        "term": "warning",
+        "domains": ["cad", "acoustic", "topology", "export"],
+        "canonical_domain": "topology_failure"
+      },
+      {
+        "term": "major",
+        "domains": ["cad", "acoustic", "export", "topology"],
+        "canonical_domain": "topology_failure"
+      },
+      {
+        "term": "canonical",
+        "domains": ["cad", "topology", "export", "cam"],
+        "canonical_domain": "governance"
+      },
+      {
+        "term": "governed",
+        "domains": ["cad", "topology", "export"],
+        "canonical_domain": "export_lifecycle"
+      },
+      {
+        "term": "prototype",
+        "domains": ["cad", "acoustic", "topology"],
+        "canonical_domain": "topology_builder"
+      },
+      {
+        "term": "research_required",
+        "domains": ["cad", "acoustic", "topology"],
+        "canonical_domain": "topology_builder"
+      }
+    ]
+  },
+  "missing_registrations": {
+    "description": "Terms used but not in lifecycle_registry.json",
+    "terms": [
+      {
+        "term": "unsupported",
+        "used_in": "cad_semantics",
+        "action": "add_to_registry"
+      }
+    ]
+  },
+  "authority_naming_inconsistencies": {
+    "description": "Naming differences between registries - not actual ownership conflicts",
+    "inconsistencies": [
+      {
+        "term": "morphology",
+        "semantic_registry_owner": "Geometry Layer / MRP",
+        "authority_registry_owner": "Geometry Layer"
+      },
+      {
+        "term": "feasibility",
+        "semantic_registry_owner": "RMOS / Feasibility Layer",
+        "authority_registry_owner": "Feasibility Layer"
+      }
+    ]
+  },
+  "potential_lifecycle_issues": {
+    "description": "Strings resembling lifecycle terms - mostly false positives",
+    "count": 26,
+    "categories": {
+      "error_class_names": 8,
+      "feature_flags": 4,
+      "method_names": 6,
+      "execution_states": 4,
+      "other": 4
+    },
+    "false_positive_patterns": [
+      "*Error",
+      "*_features",
+      "get_*",
+      "classify_*"
+    ]
+  },
+  "baseline_rules": {
+    "violations_in_baseline": "advisory",
+    "new_violations": "escalate_per_severity",
+    "update_frequency": "quarterly_or_after_major_cleanup"
+  }
+}

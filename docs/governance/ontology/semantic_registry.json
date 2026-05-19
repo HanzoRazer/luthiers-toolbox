@@ -1,0 +1,99 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Canonical Semantic Registry",
+  "version": "1.0.0",
+  "date": "2026-05-16",
+  "description": "Machine-readable registry of canonical semantic terms",
+  "terms": {
+    "intent": {
+      "canonical_definition": "A declared purpose or goal that guides downstream execution without prescribing implementation",
+      "owner_domain": "Governance Layer",
+      "authority_tier": 1,
+      "source_documents": ["CAM_INTENT_SCHEMA_V1.md"],
+      "allowed_usage": ["declaring goals", "specifying desired outcomes", "guiding execution decisions"],
+      "prohibited_meanings": ["execution state", "runtime behavior"],
+      "lifecycle_status": "canonical"
+    },
+    "runtime": {
+      "canonical_definition": "The execution environment and behavior of systems during active operation",
+      "owner_domain": "Runtime Layer",
+      "authority_tier": 3,
+      "source_documents": ["GOVERNANCE_AUTHORITY_HIERARCHY.md"],
+      "allowed_usage": ["describing execution behavior", "process management", "operational state"],
+      "prohibited_meanings": ["semantic authority", "vocabulary definition", "ontology governance"],
+      "lifecycle_status": "canonical"
+    },
+    "translator": {
+      "canonical_definition": "A component that transforms data between representations while preserving semantic meaning",
+      "owner_domain": "CAM Export / Serialization Layer",
+      "authority_tier": 2,
+      "source_documents": ["TRANSLATOR_LAYER_RULES.md", "MULTI_TARGET_TRANSLATOR_POLICY.md", "CAD_TRANSLATOR_GOVERNANCE_RULES.md"],
+      "allowed_usage": ["format conversion", "representation transformation", "protocol bridging"],
+      "prohibited_meanings": ["geometry generator", "runtime planner", "semantic mutator"],
+      "lifecycle_status": "canonical"
+    },
+    "validation": {
+      "canonical_definition": "The process of verifying that data or state conforms to declared constraints without modifying the validated subject",
+      "owner_domain": "Validation Layer",
+      "authority_tier": 2,
+      "source_documents": ["ACOUSTIC_SEMANTIC_VALIDATION_RULES.md"],
+      "allowed_usage": ["conformance checking", "constraint verification", "schema validation"],
+      "prohibited_meanings": ["data mutation", "semantic authority over validated data"],
+      "lifecycle_status": "canonical"
+    },
+    "provenance": {
+      "canonical_definition": "The documented origin, history, and lineage of data or artifacts",
+      "owner_domain": "Governance Layer",
+      "authority_tier": 1,
+      "source_documents": ["GOVERNANCE_AUTHORITY_HIERARCHY.md"],
+      "allowed_usage": ["origin tracking", "lineage documentation", "audit trails"],
+      "prohibited_meanings": ["fabricated history", "inferred origin without declaration"],
+      "lifecycle_status": "canonical"
+    },
+    "artifact": {
+      "canonical_definition": "A discrete, identifiable output produced by a process with defined boundaries, provenance, and lifecycle state",
+      "owner_domain": "Governance Layer",
+      "authority_tier": 1,
+      "source_documents": ["RUN_ARTIFACT_PERSISTENCE_CONTRACT_v1.md"],
+      "allowed_usage": ["naming outputs", "tracking deliverables", "documenting production"],
+      "prohibited_meanings": ["implicit creation", "undeclared outputs"],
+      "lifecycle_status": "canonical"
+    },
+    "topology": {
+      "canonical_definition": "The spatial relationships and connectivity structure of geometric elements",
+      "owner_domain": "CAD Topology Governance",
+      "authority_tier": 2,
+      "source_documents": ["TOPOLOGY_AUTHORITY_CHAIN.md", "ACOUSTIC_TOPOLOGY_RUNTIME_RULES.md"],
+      "allowed_usage": ["shell construction", "surface connectivity", "geometric relationships"],
+      "prohibited_meanings": ["geometry data", "coordinate values"],
+      "lifecycle_status": "canonical"
+    },
+    "morphology": {
+      "canonical_definition": "The structural form and shape characteristics of instrument bodies",
+      "owner_domain": "Geometry Layer / MRP",
+      "authority_tier": 2,
+      "source_documents": ["MORPHOLOGY_RECONSTRUCTION_PLATFORM.md", "MORPHOLOGY_CORPUS_STANDARD.md"],
+      "allowed_usage": ["body classification", "shape description", "form vocabulary"],
+      "prohibited_meanings": ["runtime execution", "CAM operations"],
+      "lifecycle_status": "canonical"
+    },
+    "feasibility": {
+      "canonical_definition": "The determination of whether an operation can be safely and correctly executed",
+      "owner_domain": "RMOS / Feasibility Layer",
+      "authority_tier": 2,
+      "source_documents": ["GOVERNANCE_AUTHORITY_HIERARCHY.md"],
+      "allowed_usage": ["manufacturing assessment", "risk evaluation", "capability checking"],
+      "prohibited_meanings": ["visualization authority", "geometry definition"],
+      "lifecycle_status": "canonical"
+    },
+    "governance": {
+      "canonical_definition": "The system of rules, constraints, and authority relationships that control repository evolution",
+      "owner_domain": "Governance Layer",
+      "authority_tier": 1,
+      "source_documents": ["GOVERNANCE_AUTHORITY_HIERARCHY.md", "REPOSITORY_REMEDIATION_GOVERNANCE_METHODOLOGY.md"],
+      "allowed_usage": ["rule definition", "constraint specification", "authority assignment"],
+      "prohibited_meanings": ["runtime execution", "implementation details"],
+      "lifecycle_status": "canonical"
+    }
+  }
+}
