@@ -11,6 +11,86 @@
 
 The constitutional runtime foundation is implemented. The DXF artifact path now produces `BodyEvidenceCandidate` with full provenance, authority state, confidence declaration, and review enforcement. The IBG Intake Gate blocks all candidates until human approval.
 
+**Key outcome:**
+
+```
+DXF → artifact_body_evidence_adapter → BodyEvidence
+→ BodyEvidenceCandidate → IBGIntakeGate
+→ BLOCKED until human approval
+```
+
+**Deferred:**
+
+```
+Photo/vectorizer ingestion remains deferred future work.
+```
+
+**Architectural distinction:**
+
+```
+The governance layer was implemented as shared infrastructure,
+not IBG-owned infrastructure.
+```
+
+This preserves:
+
+```
+governance authority ≠ sandbox ownership
+```
+
+---
+
+## Planned vs Actual Implementation
+
+| Planned Assumption | Actual Implementation |
+|--------------------|----------------------|
+| IBG-specific governance modules | Shared governance modules under `services/api/app/governance/` |
+| Patch `BodyIsolationResult` directly | Wrapper pattern using `BodyEvidenceCandidate` |
+| Generic sandbox intake | DXF-first intake path implemented |
+| Conceptual authority states | 9-state operational enum implemented |
+| Future provenance concept | Concrete `ProvenanceRecord` implemented |
+| Placeholder confidence | Structured `ConfidenceDeclaration` implemented |
+| Planned intake validation | Operational `IBGIntakeGate` with 8 rejection reasons |
+| Conceptual transition rules | `FORBIDDEN_TRANSITIONS` enforced in state machine |
+
+---
+
+## Architectural Corrections From Initial Proposal
+
+### Why Wrapper Pattern Replaced Direct Patching
+
+The initial proposal suggested adding `provenance`, `confidence_declaration`, and `authority_state` fields directly to `BodyIsolationResult`. This was rejected because:
+
+1. **Cross-service coupling** — `BodyIsolationResult` lives in `services/photo-vectorizer/`, while governance belongs in `services/api/`. Direct patching would create import cycles.
+
+2. **Breaking change risk** — Existing callers of `BodyIsolationResult` (replay system, coach, tests) would need updates. The wrapper pattern is additive.
+
+3. **Separation of concerns** — Data extraction (`BodyIsolationResult`, `BodyEvidence`) should remain pure. Constitutional metadata is a governance concern, not an extraction concern.
+
+4. **Reusability** — `BodyEvidenceCandidate` can wrap any `BodyEvidence`, regardless of origin. A `BodyIsolationCandidate` would only work for the photo path.
+
+### Why Shared Governance Modules
+
+The initial proposal placed governance modules under `ibg/governance/`. This was rejected because:
+
+1. **Authority should not be owned by sandbox** — IBG is a sandbox system. Governance modules (`AuthorityState`, `ProvenanceRecord`) should not be owned by the thing they govern.
+
+2. **Reuse across domains** — `AuthorityState` and `ProvenanceRecord` are useful beyond IBG (CAM governance, vectorizer artifacts, acoustic snapshots).
+
+3. **Import hierarchy** — `app/governance/` can be imported by any `app/` module. `app/.../ibg/governance/` would create awkward import paths.
+
+### Why DXF-First Sequencing
+
+The initial proposal assumed a generic "body isolation" path. The implementation chose DXF-first because:
+
+1. **Canonical artifacts** — DXF files from the vectorizer are canonical source artifacts. Photo-derived `BodyIsolationResult` is pixel-space interpretation.
+
+2. **Simpler provenance** — DXF path has clear lineage: `PDF → vectorizer → DXF → adapter`. Photo path has complex intermediate states (fg_mask, body_bbox_px, retry profiles).
+
+3. **Constitutional risk** — Starting with the simpler path allows validation of governance machinery before tackling the coach/retry complexity.
+
+4. **E2E spine alignment** — The morphology harvest system already uses the DXF path (`artifact_body_evidence_adapter`). Gating this path first closes the most immediate IBG intake vulnerability.
+
 ---
 
 ## Implementation Status
@@ -247,21 +327,77 @@ class ConstitutionalAdapterResult:
 
 ---
 
-## Original Audit (Historical Reference)
+## Superseded Planning Context
+
+The original planning document (DEV ORDER 1B) made assumptions that were corrected during implementation. This section preserves that context.
+
+### Original Proposed File Structure (Superseded)
+
+```
+services/api/app/instrument_geometry/body/ibg/governance/
+├── provenance_record.py      ← SUPERSEDED: now in app/governance/
+├── authority_state.py        ← SUPERSEDED: now in app/governance/
+├── confidence_declaration.py ← SUPERSEDED: now in app/governance/
+├── authority_state_machine.py ← SUPERSEDED: merged into authority_state.py
+├── ibg_intake_gate.py        ← KEPT: lives in ibg/, not governance/
+└── __init__.py
+```
+
+### Original Proposed Patch (Superseded)
+
+The proposal suggested patching `BodyIsolationResult` directly:
+
+```python
+# SUPERSEDED APPROACH — NOT IMPLEMENTED
+@dataclass
+class BodyIsolationResult:
+    # ... existing fields ...
+    provenance: ProvenanceRecord | None = None
+    confidence_declaration: ConfidenceDeclaration | None = None
+    authority_state: AuthorityState = AuthorityState.ADVISORY_CANDIDATE
+```
+
+This was replaced with the wrapper pattern:
+
+```python
+# ACTUAL IMPLEMENTATION
+@dataclass
+class BodyEvidenceCandidate:
+    evidence: BodyEvidence
+    authority: AuthorityStateContainer
+    provenance: ProvenanceRecord
+    confidence: ConfidenceDeclaration
+    review: ReviewEnforcement
+```
+
+### Original Gap Analysis (Still Valid for Photo Path)
 
 The original audit identified these gaps in `BodyIsolationResult`:
 
-| Gap | Resolution |
-|-----|------------|
-| No authority state | Addressed via `BodyEvidenceCandidate` wrapper (DXF path) |
-| No provenance lineage | `ProvenanceRecord` attached to candidate |
-| Bare confidence float | `ConfidenceDeclaration` with typed semantics |
-| Review bypass possible | `ReviewEnforcement` with protected flag |
-| No intake gate | `IBGIntakeGate` with 8 rejection reasons |
+| Gap | DXF Path Resolution | Photo Path Status |
+|-----|---------------------|-------------------|
+| No authority state | `BodyEvidenceCandidate.authority` | NOT ADDRESSED |
+| No provenance lineage | `ProvenanceRecord` attached | NOT ADDRESSED |
+| Bare confidence float | `ConfidenceDeclaration` | NOT ADDRESSED |
+| Review bypass possible | `ReviewEnforcement` | NOT ADDRESSED |
+| No intake gate | `IBGIntakeGate` | NOT ADDRESSED |
 
 The photo-vectorizer `BodyIsolationResult` still has these gaps. Future work will either:
 - Add provenance fields directly to `BodyIsolationResult`
 - Convert `BodyIsolationResult` → `BodyEvidence` → `BodyEvidenceCandidate`
+
+### Original Implementation Sequence (Superseded)
+
+The proposal outlined a 4-phase sequence:
+
+```
+Phase 1 — Provenance Foundation ← COMPLETED (1D)
+Phase 2 — Result Integration    ← PARTIALLY COMPLETED (2A, DXF only)
+Phase 3 — Gate Enforcement      ← COMPLETED (1D)
+Phase 4 — Coach Integration     ← NOT STARTED
+```
+
+The actual implementation reordered and combined these phases.
 
 ---
 
