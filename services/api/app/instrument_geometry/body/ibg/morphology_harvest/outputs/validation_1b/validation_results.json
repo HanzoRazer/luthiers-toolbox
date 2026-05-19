@@ -1,8 +1,8 @@
 {
-  "timestamp": "2026-05-16T23:25:21.690811",
+  "timestamp": "2026-05-17T00:46:57.058722",
   "corpus_root": "C:\\Users\\thepr\\Downloads\\luthiers-toolbox\\Guitar Plans",
   "total_instruments": 10,
-  "successful_harvests": 0,
+  "successful_harvests": 8,
   "classification_matches": 0,
   "results": [
     {
@@ -11,28 +11,54 @@
       "category": "single_cut",
       "expected_class": "ROUNDED_SINGLE_CUT",
       "pdf_readable": true,
-      "harvest_success": false,
-      "body_evidence_created": false,
-      "body_grid_success": false,
-      "overlay_generated": false,
-      "actual_class": null,
+      "harvest_success": true,
+      "body_evidence_created": true,
+      "body_grid_success": true,
+      "overlay_generated": true,
+      "actual_class": "ROUNDED_ACOUSTIC",
       "classification_confidence": 0.0,
-      "centerline_confidence": 0.0,
+      "centerline_confidence": 0.6,
       "asymmetry_score": 0.0,
-      "zone_coverage": {},
+      "zone_coverage": {
+        "centerline": 0.0,
+        "upper_bout": 0.0,
+        "waist": 0.0,
+        "lower_bout": 0.0,
+        "horn_left": 0.0,
+        "horn_right": 0.0,
+        "cutaway_left": 0.0,
+        "cutaway_right": 0.0,
+        "neck_pocket": 0.0,
+        "bridge_region": 0.0,
+        "left_flank": 0.0,
+        "right_flank": 0.0,
+        "outer_boundary": 0.0,
+        "butt_end": 0.0,
+        "shoulder": 0.0
+      },
       "primitives_detected": 0,
-      "missing_regions": [],
-      "classification_match": false,
-      "errors": [
-        "Harvest failed: no data extracted"
+      "missing_regions": [
+        "lower_bout",
+        "waist",
+        "upper_bout",
+        "butt_end"
       ],
-      "warnings": [],
-      "ambiguities": [],
+      "classification_match": false,
+      "errors": [],
+      "warnings": [
+        "Low classification confidence: 0.00",
+        "Missing regions: lower_bout, waist, upper_bout, butt_end"
+      ],
+      "ambiguities": [
+        "Classification mismatch: expected ROUNDED_SINGLE_CUT, got ROUNDED_ACOUSTIC (conf: 0.00)"
+      ],
       "attention_points": [
         "carved top detection",
         "asymmetry handling"
       ],
-      "review_notes": []
+      "review_notes": [
+        "Created 1 landmarks"
+      ]
     },
     {
       "instrument_id": "sg_complete",
@@ -69,7 +95,7 @@
       "category": "slab_body",
       "expected_class": "SLAB_BODY",
       "pdf_readable": true,
-      "harvest_success": false,
+      "harvest_success": true,
       "body_evidence_created": false,
       "body_grid_success": false,
       "overlay_generated": false,
@@ -82,7 +108,7 @@
       "missing_regions": [],
       "classification_match": false,
       "errors": [
-        "Harvest failed: no data extracted"
+        "Harvest exception: Object of type ContourCategory is not JSON serializable"
       ],
       "warnings": [],
       "ambiguities": [],
@@ -128,7 +154,7 @@
       "category": "angular",
       "expected_class": "ANGULAR_WEDGE",
       "pdf_readable": true,
-      "harvest_success": false,
+      "harvest_success": true,
       "body_evidence_created": false,
       "body_grid_success": false,
       "overlay_generated": false,
@@ -141,7 +167,7 @@
       "missing_regions": [],
       "classification_match": false,
       "errors": [
-        "Harvest failed: no data extracted"
+        "Harvest exception: Object of type ContourCategory is not JSON serializable"
       ],
       "warnings": [],
       "ambiguities": [],
@@ -158,7 +184,7 @@
       "category": "acoustic_dread",
       "expected_class": "ROUNDED_ACOUSTIC",
       "pdf_readable": true,
-      "harvest_success": false,
+      "harvest_success": true,
       "body_evidence_created": false,
       "body_grid_success": false,
       "overlay_generated": false,
@@ -171,7 +197,7 @@
       "missing_regions": [],
       "classification_match": false,
       "errors": [
-        "Harvest failed: no data extracted"
+        "Harvest exception: Object of type ContourCategory is not JSON serializable"
       ],
       "warnings": [],
       "ambiguities": [],
@@ -188,7 +214,7 @@
       "category": "classical",
       "expected_class": "CLASSICAL_FIGURE_8",
       "pdf_readable": true,
-      "harvest_success": false,
+      "harvest_success": true,
       "body_evidence_created": false,
       "body_grid_success": false,
       "overlay_generated": false,
@@ -201,7 +227,7 @@
       "missing_regions": [],
       "classification_match": false,
       "errors": [
-        "Harvest failed: no data extracted"
+        "Harvest exception: Object of type ContourCategory is not JSON serializable"
       ],
       "warnings": [],
       "ambiguities": [],
@@ -218,7 +244,7 @@
       "category": "semi_hollow",
       "expected_class": "ROUNDED_DOUBLE_CUT",
       "pdf_readable": true,
-      "harvest_success": false,
+      "harvest_success": true,
       "body_evidence_created": false,
       "body_grid_success": false,
       "overlay_generated": false,
@@ -231,7 +257,7 @@
       "missing_regions": [],
       "classification_match": false,
       "errors": [
-        "Harvest failed: no data extracted"
+        "Harvest exception: Object of type ContourCategory is not JSON serializable"
       ],
       "warnings": [],
       "ambiguities": [],
@@ -248,7 +274,7 @@
       "category": "ergonomic",
       "expected_class": "HYBRID_FORM",
       "pdf_readable": true,
-      "harvest_success": false,
+      "harvest_success": true,
       "body_evidence_created": false,
       "body_grid_success": false,
       "overlay_generated": false,
@@ -261,7 +287,7 @@
       "missing_regions": [],
       "classification_match": false,
       "errors": [
-        "Harvest failed: no data extracted"
+        "Harvest exception: Object of type ContourCategory is not JSON serializable"
       ],
       "warnings": [],
       "ambiguities": [],
@@ -278,7 +304,7 @@
       "category": "latin_folk",
       "expected_class": "ROUNDED_ACOUSTIC",
       "pdf_readable": true,
-      "harvest_success": false,
+      "harvest_success": true,
       "body_evidence_created": false,
       "body_grid_success": false,
       "overlay_generated": false,
@@ -291,7 +317,7 @@
       "missing_regions": [],
       "classification_match": false,
       "errors": [
-        "Harvest failed: no data extracted"
+        "Harvest exception: Object of type ContourCategory is not JSON serializable"
       ],
       "warnings": [],
       "ambiguities": [],

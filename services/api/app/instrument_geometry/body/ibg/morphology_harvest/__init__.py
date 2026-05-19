@@ -14,8 +14,8 @@ This module:
 - Generates human-reviewable morphology records
 
 This module does NOT:
-- Extract dimensions (delegates to Phase 4)
-- Detect scale (delegates to calibration)
+- Extract dimensions (delegates to canonical blueprint_reader.html pipeline)
+- Detect scale (embedded in vectorizer response)
 - Classify morphology (delegates to body_grid)
 - Own ontology authority
 - Implement adaptive/LLM behavior
@@ -80,10 +80,13 @@ from .pdf_inventory import (
 
 from .adapters import (
     AdapterResult,
-    Phase4DimensionAssociationAdapter,
+    BlueprintVectorizerAdapter,
+    PhotoVectorizerAdapter,
     CalibrationMetadataAdapter,
     BodyGridAdapter,
-    get_phase4_adapter,
+    get_blueprint_adapter,
+    get_photo_adapter,
+    get_phase4_adapter,  # Deprecated alias
     get_calibration_adapter,
     get_body_grid_adapter,
     check_all_adapters,
@@ -131,10 +134,13 @@ __all__ = [
     "scan_corpus",
     # Adapters
     "AdapterResult",
-    "Phase4DimensionAssociationAdapter",
+    "BlueprintVectorizerAdapter",
+    "PhotoVectorizerAdapter",
     "CalibrationMetadataAdapter",
     "BodyGridAdapter",
-    "get_phase4_adapter",
+    "get_blueprint_adapter",
+    "get_photo_adapter",
+    "get_phase4_adapter",  # Deprecated alias
     "get_calibration_adapter",
     "get_body_grid_adapter",
     "check_all_adapters",

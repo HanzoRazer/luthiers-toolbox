@@ -2702,7 +2702,7 @@ This order changes interaction presentation only. No snapshot semantics, export 
 
 ## Dev Order 49 — Snapshot Exchange State Density Refinement
 
-**Status:** In Progress  
+**Status:** Complete  
 **Date:** 2026-05-14
 
 Refines readability and spacing density for Snapshot Exchange when many warnings, diagnostics, and snapshot sections are simultaneously visible.
@@ -2740,14 +2740,14 @@ This order changes presentation only. No snapshot semantics, export behavior, im
 
 | Step | Expected | Result |
 |------|----------|--------|
-| Navigate to `/art-studio/aperture` | Route loads | ⏳ PENDING |
-| Multiple warnings readable | Bulleted, scannable | ⏳ PENDING |
-| Multiple sections readable | Separated, not merged | ⏳ PENDING |
-| Metadata density improved | Tighter grid gaps | ⏳ PENDING |
-| Sparse state balanced | Layout not cramped | ⏳ PENDING |
-| JSON export still works | Behavior preserved | ⏳ PENDING |
-| Import validation still works | Behavior preserved | ⏳ PENDING |
-| No console errors | Clean console | ⏳ PENDING |
+| Navigate to `/art-studio/aperture` | Route loads | ✅ PASS |
+| Multiple warnings readable | Bulleted, scannable | ✅ PASS |
+| Multiple sections readable | Separated, not merged | ✅ PASS |
+| Metadata density improved | Tighter grid gaps | ✅ PASS |
+| Sparse state balanced | Layout not cramped | ✅ PASS |
+| JSON export still works | Behavior preserved | ✅ PASS |
+| Import validation still works | Behavior preserved | ✅ PASS |
+| No console errors | Clean console | ✅ PASS |
 
 ---
 
@@ -2797,6 +2797,272 @@ Verifies Snapshot Exchange readability and behavior after Dev Orders 44–50 ref
 ### Important
 
 This order is verification only. No code changes unless a defect is found.
+
+---
+
+## Dev Order 53 — Architectural Boundary Freeze & Sprint Refocus
+
+**Status:** Complete  
+**Date:** 2026-05-14
+
+Formally ends the Snapshot Exchange polish spiral and redirects the sprint back to repo architecture goals.
+
+### Deliverables
+
+| Document | Purpose |
+|----------|---------|
+| `ARCHITECTURAL_BOUNDARIES.md` | Formal layer boundary declaration |
+| `SPRINTS.md` update | Deferred UX optimization section |
+| Phase-3B closure | Below |
+| Sprint refocus | Below |
+
+### Reference
+
+**Architectural boundaries:** [ARCHITECTURAL_BOUNDARIES.md](./ARCHITECTURAL_BOUNDARIES.md)
+
+---
+
+## Dev Order 54 — Measurement Archive Infrastructure Foundation
+
+**Status:** Complete  
+**Date:** 2026-05-15
+
+Establishes foundational types, utilities, and architecture documentation for measurement archives. Archives preserve observational measurements and their provenance — they do NOT store calibration outputs, predictions, or recommendations.
+
+### Deliverables
+
+| File | Purpose |
+|------|---------|
+| `packages/client/src/types/acoustics/measurementArchive.ts` | Archive types and interfaces |
+| `packages/client/src/utils/acoustics/measurementArchive.ts` | Archive utility helpers |
+| `packages/client/src/components/shared/acoustics/MeasurementArchivePreviewCard.vue` | Read-only archive preview card |
+| `docs/architecture/MEASUREMENT_ARCHIVE_ARCHITECTURE.md` | Archive architecture reference |
+
+### Archive Schema
+
+Schema version: `measurement-archive.v1`
+
+Core types:
+- `MeasurementArchiveRecord` — complete archive structure
+- `MeasurementArchiveMetadata` — schema version, kind, timestamps
+- `MeasurementArchiveMeasurement` — individual measurement entries
+- `MeasurementArchiveContext` — session context and geometry summaries
+- `MeasurementArchiveValidationResult` — schema validation output
+
+### Constraints Preserved
+
+- Observational-only flag always true
+- No calibration storage
+- No prediction persistence
+- No backend upload
+- Client-side file operations only
+
+### Reference
+
+**Archive architecture:** [MEASUREMENT_ARCHIVE_ARCHITECTURE.md](./MEASUREMENT_ARCHIVE_ARCHITECTURE.md)
+
+---
+
+## Dev Order 56 — Canonical Reconciliation Layer Foundation
+
+**Status:** Complete  
+**Date:** 2026-05-16
+
+Establishes foundational ontology reconciliation infrastructure for canonical vocabulary, authority mapping, semantic ratification, and ontology drift classification.
+
+### Deliverables
+
+| File | Purpose |
+|------|---------|
+| `docs/governance/CANONICAL_ONTOLOGY_VOCABULARY.md` | Vocabulary definitions (22 canonical terms) |
+| `docs/governance/CANONICAL_AUTHORITY_MAP.md` | Semantic ownership declarations |
+| `docs/governance/ONTOLOGY_RECONCILIATION_WORKFLOW.md` | Ratification process with roles |
+| `docs/governance/ONTOLOGY_DRIFT_CLASSIFICATIONS.md` | Drift detection patterns |
+
+### Architecture Updates
+
+| File | Change |
+|------|--------|
+| `docs/architecture/ARCHITECTURAL_BOUNDARIES.md` | Added Canonical Reconciliation Layer section |
+| `SPRINTS.md` | Added Canonical Reconciliation Phase section |
+
+### Core Invariants Established
+
+1. Execution consumes intent; execution does not redefine intent
+2. Runtime systems consume ontology; runtime systems do not define ontology
+3. AI assistance is advisory only; human authority ratifies canonical ontology
+4. No subsystem may independently redefine canonical meaning
+5. No sandbox may independently freeze ontology
+
+### Authority Structure
+
+Hybrid approach: abstract authority layer (Canonical Owner) + named subsystems (Operational Owner).
+
+### Governance Roles
+
+| Role | Responsibility |
+|------|---------------|
+| Domain Owner | Owns semantic authority for a domain |
+| Governance Reviewer | Evaluates cross-domain consistency |
+| Implementer | Applies reconciled changes |
+| Human Arbiter | Resolves unresolved conflicts |
+
+### Important
+
+This order introduces governance infrastructure only. No runtime orchestration, ontology automation, AI semantic authority, or execution behavior was introduced.
+
+---
+
+## Dev Order 57 — Runtime Dispatcher Skeleton
+
+**Status:** Complete  
+**Date:** 2026-05-16
+
+Creates the first governed CAM runtime dispatcher skeleton after Canonical Reconciliation Layer establishment.
+
+### Deliverables
+
+| File | Purpose |
+|------|---------|
+| `services/api/app/cam/runtime/__init__.py` | Package exports |
+| `services/api/app/cam/runtime/dispatcher.py` | RuntimeDispatcher class |
+| `services/api/app/cam/runtime/operation_runtime.py` | CamOperationRuntime protocol |
+| `services/api/app/cam/runtime/operation_manifest.py` | OperationManifestV1 schema |
+| `services/api/app/cam/runtime/plugin_registry.py` | RuntimePluginRegistry |
+| `services/api/tests/test_cam_runtime_dispatcher.py` | Test suite (10 test cases) |
+| `docs/architecture/CAM_RUNTIME_DISPATCHER_ARCHITECTURE.md` | Architecture reference |
+
+### Manifest Invariants
+
+| Field | Value | Enforcement |
+|-------|-------|-------------|
+| `execution_ready` | Always `False` | Pydantic validator |
+| `machine_operation_authorized` | Always `False` | Pydantic validator |
+
+### Governance Updates
+
+| File | Change |
+|------|--------|
+| `docs/governance/CANONICAL_AUTHORITY_MAP.md` | Added CAM runtime dispatch row |
+
+### Important
+
+The dispatcher consumes intent and routes to runtime plugins. It does NOT:
+- Generate machine output
+- Authorize execution
+- Mutate geometry
+- Persist RMOS runs
+
+No real CAM plugin migration was introduced.
+
+---
+
+## Dev Order 58 — Runtime Result Contract Normalization
+
+**Status:** Complete  
+**Date:** 2026-05-16
+
+Normalizes runtime result contracts so all plugins share deterministic, inspectable, governed, provenance-aware result semantics.
+
+### Deliverables
+
+| File | Purpose |
+|------|---------|
+| `services/api/app/cam/runtime/runtime_results.py` | Normalized result contracts |
+| `services/api/tests/test_cam_runtime_results.py` | Result contract tests (30 tests) |
+
+### Modified Files
+
+| File | Change |
+|------|--------|
+| `services/api/app/cam/runtime/operation_runtime.py` | Import from runtime_results.py |
+| `services/api/app/cam/runtime/dispatcher.py` | Full stage chain, result ID tracking |
+| `services/api/app/cam/runtime/operation_manifest.py` | Result ID reference fields |
+| `services/api/app/cam/runtime/__init__.py` | Export new result types |
+| `services/api/tests/test_cam_runtime_dispatcher.py` | Updated for normalized results |
+
+### Result Contract Invariants
+
+| Result Type | Hard Invariant |
+|-------------|----------------|
+| All results | `observational_only = True` |
+| Validation | `execution_ready = False`, `machine_operation_authorized = False` |
+| Export | `machine_output_generated = False` |
+
+### Stage Chain
+
+Full dispatch now executes: validate → resolve_geometry → plan → preview → export
+
+### Vocabulary Updates
+
+Added 6 new terms to `CANONICAL_ONTOLOGY_VOCABULARY.md`:
+- runtime-result
+- validation-result
+- geometry-resolution-result
+- plan-result
+- preview-result
+- export-result
+
+### Important
+
+Runtime results remain observational and non-authoritative. No machine execution, machine output generation, or adaptive machining behavior was introduced.
+
+---
+
+## Phase-3B Closure
+
+Phase-3B established the observational acoustic diagnostic substrate.
+
+### Completed
+
+- Measured response attachment
+- Estimate attachment
+- Residual analysis
+- Interpretation layers
+- Trend/stability/coherence analysis
+- Diagnostic narratives
+- Snapshot exchange
+- Provenance-aware diagnostics
+
+### Intentionally Deferred
+
+- Calibration
+- Prediction
+- Persistence
+- Restore
+- Report generation
+- Recommendation systems
+
+### Important
+
+No calibrated acoustic prediction capability currently exists. Observational diagnostics remain explicitly non-predictive.
+
+---
+
+## Sprint Refocus
+
+The original sprint objective was repository architectural stabilization and governed experimental evolution.
+
+### Future Work Priorities
+
+| Priority | Area |
+|----------|------|
+| 1 | Governed subsystem evolution |
+| 2 | Shared contract discipline |
+| 3 | Research infrastructure |
+| 4 | Measurement archives |
+| 5 | Calibration governance |
+| 6 | Experimental containment |
+
+### Explicitly Deprioritized
+
+- Continued local UX optimization
+- Spacing refinement
+- Typography tuning
+- Micro-interaction polish
+- Visual density optimization
+
+**Reason:** Further refinement provides diminishing architectural value and risks local optimization churn.
 
 ---
 
@@ -3496,6 +3762,11 @@ Import validation is structural validation only. It does NOT restore, apply, cal
 
 | Date | Change |
 |------|--------|
+| 2026-05-16 | **Dev Order 58 Runtime Result Contract Normalization complete** |
+| 2026-05-16 | **Dev Order 57 Runtime Dispatcher Skeleton complete** |
+| 2026-05-16 | **Dev Order 56 Canonical Reconciliation Layer Foundation complete** |
+| 2026-05-15 | **Dev Order 54 Measurement Archive Infrastructure Foundation complete** |
+| 2026-05-14 | **Dev Order 53 Architectural Boundary Freeze & Sprint Refocus complete** |
 | 2026-05-14 | **Dev Order 52 Snapshot Exchange Documentation & Architecture Consolidation complete** |
 | 2026-05-14 | **Dev Order 51 Snapshot Exchange Final UX Checkpoint complete** |
 | 2026-05-14 | **Dev Order 50 Snapshot Exchange Information Chunking Refinement complete** |

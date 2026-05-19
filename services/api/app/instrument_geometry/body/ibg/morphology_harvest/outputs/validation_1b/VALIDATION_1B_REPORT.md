@@ -1,9 +1,7 @@
 # IBG Morphology Validation 1B Report
 
-**Date:** 2026-05-16
-**Sprint:** IBG Corpus Ingestion & Morphology Validation 1B
+**Date:** 2026-05-17
 **Corpus:** C:\Users\thepr\Downloads\luthiers-toolbox\Guitar Plans
-**Governance:** MORPHOLOGY_FAILURE_TAXONOMY.md
 
 ---
 
@@ -12,31 +10,9 @@
 | Metric | Value |
 |--------|-------|
 | Total instruments | 10 |
-| Successful harvests | 0 (0%) |
+| Successful harvests | 8 (80%) |
 | Classification matches | 0 (0%) |
-| Failures recorded | 10 |
-
-### Root Cause
-
-All 10 instruments blocked by **Phase 4 not wired in 1A**.
-
-The morphology harvest coordinator is a thin coordination layer that correctly delegates dimension extraction to Phase 4. Since Phase 4 is stubbed in 1A, no dimensions are extracted, which blocks Body Grid classification.
-
-**This is expected 1A behavior, not a bug.**
-
-### System Status
-
-```
-phase4: not_wired_in_1A
-calibration: not_wired_in_1A
-body_grid: available (but blocked by missing dimensions)
-```
-
-### Phase 1B Requirement
-
-Wire the following adapters:
-1. `services/blueprint-import/phase4/` → `morphology_harvest/adapters.py`
-2. `services/blueprint-import/calibration/` → `morphology_harvest/adapters.py`
+| Failures recorded | 11 |
 
 ---
 
@@ -45,10 +21,23 @@ Wire the following adapters:
 ### les_paul_59 (single_cut)
 
 **File:** `Gibson-Les-Paul-59-Complete.pdf`
-**Status:** FAIL
+**Status:** PARTIAL
 
-**Errors:**
-- Harvest failed: no data extracted
+| Metric | Value |
+|--------|-------|
+| Expected class | ROUNDED_SINGLE_CUT |
+| Actual class | ROUNDED_ACOUSTIC |
+| Classification confidence | 0.00 |
+| Centerline confidence | 0.60 |
+| Asymmetry score | 0.00 |
+| Primitives detected | 0 |
+
+**Warnings:**
+- Low classification confidence: 0.00
+- Missing regions: lower_bout, waist, upper_bout, butt_end
+
+**Ambiguities:**
+- Classification mismatch: expected ROUNDED_SINGLE_CUT, got ROUNDED_ACOUSTIC (conf: 0.00)
 
 **Attention points:**
 - carved top detection
@@ -73,10 +62,19 @@ Wire the following adapters:
 ### stratocaster_62 (slab_body)
 
 **File:** `Fender-Stratocaster-62.pdf`
-**Status:** FAIL
+**Status:** PARTIAL
+
+| Metric | Value |
+|--------|-------|
+| Expected class | SLAB_BODY |
+| Actual class | N/A |
+| Classification confidence | 0.00 |
+| Centerline confidence | 0.00 |
+| Asymmetry score | 0.00 |
+| Primitives detected | 0 |
 
 **Errors:**
-- Harvest failed: no data extracted
+- Harvest exception: Object of type ContourCategory is not JSON serializable
 
 **Attention points:**
 - contour detection
@@ -102,10 +100,19 @@ Wire the following adapters:
 ### explorer_complete (angular)
 
 **File:** `Gibson-Explorer-05-Complete-Plans.pdf`
-**Status:** FAIL
+**Status:** PARTIAL
+
+| Metric | Value |
+|--------|-------|
+| Expected class | ANGULAR_WEDGE |
+| Actual class | N/A |
+| Classification confidence | 0.00 |
+| Centerline confidence | 0.00 |
+| Asymmetry score | 0.00 |
+| Primitives detected | 0 |
 
 **Errors:**
-- Harvest failed: no data extracted
+- Harvest exception: Object of type ContourCategory is not JSON serializable
 
 **Attention points:**
 - angular primitive detection
@@ -117,10 +124,19 @@ Wire the following adapters:
 ### dreadnought (acoustic_dread)
 
 **File:** `A003-Dreadnought-MM.pdf`
-**Status:** FAIL
+**Status:** PARTIAL
+
+| Metric | Value |
+|--------|-------|
+| Expected class | ROUNDED_ACOUSTIC |
+| Actual class | N/A |
+| Classification confidence | 0.00 |
+| Centerline confidence | 0.00 |
+| Asymmetry score | 0.00 |
+| Primitives detected | 0 |
 
 **Errors:**
-- Harvest failed: no data extracted
+- Harvest exception: Object of type ContourCategory is not JSON serializable
 
 **Attention points:**
 - bout ratios
@@ -132,10 +148,19 @@ Wire the following adapters:
 ### classical_santos (classical)
 
 **File:** `Classical-Santos-Hernandez-MM.pdf`
-**Status:** FAIL
+**Status:** PARTIAL
+
+| Metric | Value |
+|--------|-------|
+| Expected class | CLASSICAL_FIGURE_8 |
+| Actual class | N/A |
+| Classification confidence | 0.00 |
+| Centerline confidence | 0.00 |
+| Asymmetry score | 0.00 |
+| Primitives detected | 0 |
 
 **Errors:**
-- Harvest failed: no data extracted
+- Harvest exception: Object of type ContourCategory is not JSON serializable
 
 **Attention points:**
 - bout proportions
@@ -147,10 +172,19 @@ Wire the following adapters:
 ### es335_complete (semi_hollow)
 
 **File:** `Gibson-335/Gibson-335-Dot-Complete.pdf`
-**Status:** FAIL
+**Status:** PARTIAL
+
+| Metric | Value |
+|--------|-------|
+| Expected class | ROUNDED_DOUBLE_CUT |
+| Actual class | N/A |
+| Classification confidence | 0.00 |
+| Centerline confidence | 0.00 |
+| Asymmetry score | 0.00 |
+| Primitives detected | 0 |
 
 **Errors:**
-- Harvest failed: no data extracted
+- Harvest exception: Object of type ContourCategory is not JSON serializable
 
 **Attention points:**
 - f-hole detection
@@ -162,10 +196,19 @@ Wire the following adapters:
 ### klein_ergonomic (ergonomic)
 
 **File:** `Klein-Guitar-Plan.pdf`
-**Status:** FAIL
+**Status:** PARTIAL
+
+| Metric | Value |
+|--------|-------|
+| Expected class | HYBRID_FORM |
+| Actual class | N/A |
+| Classification confidence | 0.00 |
+| Centerline confidence | 0.00 |
+| Asymmetry score | 0.00 |
+| Primitives detected | 0 |
 
 **Errors:**
-- Harvest failed: no data extracted
+- Harvest exception: Object of type ContourCategory is not JSON serializable
 
 **Attention points:**
 - non-canonical morphology
@@ -176,11 +219,20 @@ Wire the following adapters:
 
 ### cuatro_pr (latin_folk)
 
-**File:** `El Cuatro/cuatro puertorique�o.pdf`
-**Status:** FAIL
+**File:** `El Cuatro/cuatro puertorique�o.pdf`
+**Status:** PARTIAL
+
+| Metric | Value |
+|--------|-------|
+| Expected class | ROUNDED_ACOUSTIC |
+| Actual class | N/A |
+| Classification confidence | 0.00 |
+| Centerline confidence | 0.00 |
+| Asymmetry score | 0.00 |
+| Primitives detected | 0 |
 
 **Errors:**
-- Harvest failed: no data extracted
+- Harvest exception: Object of type ContourCategory is not JSON serializable
 
 **Attention points:**
 - scale assumptions
@@ -195,8 +247,19 @@ Wire the following adapters:
 
 No instruments correctly classified.
 
+### Classification Mismatches
+
+- **les_paul_59**: Expected ROUNDED_SINGLE_CUT, got ROUNDED_ACOUSTIC
+- **stratocaster_62**: Expected SLAB_BODY, got None
+- **explorer_complete**: Expected ANGULAR_WEDGE, got None
+- **dreadnought**: Expected ROUNDED_ACOUSTIC, got None
+- **classical_santos**: Expected CLASSICAL_FIGURE_8, got None
+- **es335_complete**: Expected ROUNDED_DOUBLE_CUT, got None
+- **klein_ergonomic**: Expected HYBRID_FORM, got None
+- **cuatro_pr**: Expected ROUNDED_ACOUSTIC, got None
+
 ### Failure Summary
 
-Total failures recorded: 10
+Total failures recorded: 11
 
 See `docs/governance/MORPHOLOGY_FAILURE_TAXONOMY.md` for details.

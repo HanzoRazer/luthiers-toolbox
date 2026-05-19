@@ -14,7 +14,7 @@ from __future__ import annotations
 
 import math
 from dataclasses import dataclass
-from typing import List, Tuple
+from typing import List, Optional, Tuple
 
 Pt = Tuple[float, float]
 
@@ -62,7 +62,7 @@ class TabGenerator:
     where they would be weak.
     """
 
-    def __init__(self, config: TabConfig = None):
+    def __init__(self, config: Optional[TabConfig] = None):
         self.config = config or TabConfig()
 
     def generate_tabs(

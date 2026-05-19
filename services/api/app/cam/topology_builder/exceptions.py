@@ -50,7 +50,7 @@ class GeometryMutationError(TopologyBuildError):
         output_point: Optional[List[float]] = None,
         drift_mm: Optional[float] = None,
     ):
-        context = {}
+        context: Dict[str, Any] = {}
         if original_point:
             context["original_point"] = original_point
         if output_point:
@@ -82,7 +82,7 @@ class UnsupportedTopologyError(TopologyBuildError):
         body_category: Optional[str] = None,
         unsupported_features: Optional[List[str]] = None,
     ):
-        context = {}
+        context: Dict[str, Any] = {}
         if body_category:
             context["body_category"] = body_category
         if unsupported_features:
@@ -149,7 +149,7 @@ class ShellClosureError(TopologyBuildError):
         open_edge_count: Optional[int] = None,
         gap_mm: Optional[float] = None,
     ):
-        context = {}
+        context: Dict[str, Any] = {}
         if open_edge_count is not None:
             context["open_edge_count"] = open_edge_count
         if gap_mm is not None:

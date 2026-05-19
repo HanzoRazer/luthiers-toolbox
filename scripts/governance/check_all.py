@@ -72,6 +72,14 @@ GOVERNANCE_CHECKS = [
 
     # === NIGHTLY TIER — heavy checks requiring full app initialization ===
     ("scripts/governance/check_routing_truth.py", "Routing truth validation", False, EnforcementTier.NIGHTLY),
+
+    # === MRP-5K: Ontology Governance Checks ===
+    # CI tier - authority chain audit (blocking for authority violations)
+    ("scripts/governance/audit_authority_chains.py", "Authority chain audit", True, EnforcementTier.CI),
+    # CI tier - lifecycle vocabulary (warning only)
+    ("scripts/governance/validate_lifecycle_terms.py", "Lifecycle vocabulary validation", False, EnforcementTier.CI),
+    # Nightly tier - semantic drift detection (advisory only)
+    ("scripts/governance/detect_semantic_drift.py", "Semantic drift detection", False, EnforcementTier.NIGHTLY),
 ]
 
 

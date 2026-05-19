@@ -19,6 +19,7 @@
  * Dev Order 39: Added DiagnosticSnapshotImportCard for import validation.
  * Dev Order 41: Added DiagnosticSnapshotExportMetadataCard for export metadata display.
  * Dev Order 42: Added SnapshotExchangeSection for consolidated snapshot workflow.
+ * Dev Order 54: Added MeasurementArchivePreviewCard for archive preview.
  */
 
 export { default as AcousticStateCard } from './AcousticStateCard.vue'
@@ -39,3 +40,4 @@ export { default as DiagnosticSnapshotCard } from './DiagnosticSnapshotCard.vue'
 export { default as DiagnosticSnapshotImportCard } from './DiagnosticSnapshotImportCard.vue'
 export { default as DiagnosticSnapshotExportMetadataCard } from './DiagnosticSnapshotExportMetadataCard.vue'
 export { default as SnapshotExchangeSection } from './SnapshotExchangeSection.vue'
+export { default as MeasurementArchivePreviewCard } from './MeasurementArchivePreviewCard.vue'

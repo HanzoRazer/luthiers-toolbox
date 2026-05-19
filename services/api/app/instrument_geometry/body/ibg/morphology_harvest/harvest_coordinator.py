@@ -6,14 +6,16 @@ Coordinates morphology evidence extraction from multiple systems.
 This is a COORDINATION layer, not an extraction engine.
 
 All extraction is delegated to:
-- Phase 4 for dimension-to-geometry association
-- Calibration for scale detection
+- Blueprint Vectorizer for PDF → DXF (canonical pipeline)
+- Calibration (embedded in vectorizer response)
 - Body Grid for morphology analysis
 
 Author: Production Shop
 Date: 2026-05-16
 Sprint: IBG Semantic Morphology Harvest Pass 1A
 Governance: MORPHOLOGY_HARVEST_GOVERNANCE_AUDIT.md
+
+1B-FIX-v2: Uses canonical blueprint_reader.html pipeline, NOT Phase 4.
 """
 
 from __future__ import annotations
@@ -27,7 +29,7 @@ from uuid import uuid4
 from .schema import HarvestRecord, HarvestSource, ReviewStatus
 from .evidence_categories import BodyData, ConstructionNotes
 from .adapters import (
-    get_phase4_adapter,
+    get_blueprint_adapter,
     get_calibration_adapter,
     get_body_grid_adapter,
     check_all_adapters,
@@ -84,7 +86,7 @@ class HarvestCoordinator:
     """
 
     def __init__(self):
-        self._phase4 = get_phase4_adapter()
+        self._blueprint = get_blueprint_adapter()
         self._calibration = get_calibration_adapter()
         self._body_grid = get_body_grid_adapter()
 
@@ -159,26 +161,54 @@ class HarvestCoordinator:
                     source_authority="inventory",
                 )
 
-        # Step 1: Try Phase 4 for dimension extraction
-        phase4_result = self._phase4.check_availability()
-        adapter_status["phase4"] = phase4_result.available
+        # Step 1: Try Blueprint Vectorizer for dimension extraction (canonical pipeline)
+        blueprint_result = self._blueprint.check_availability()
+        adapter_status["blueprint_vectorizer"] = blueprint_result.available
 
-        if phase4_result.available:
+        if blueprint_result.available:
             try:
-                dimensions = self._phase4.extract_dimension_values(pdf_path, page)
-                if dimensions:
-                    self._apply_dimensions(record, dimensions)
-                    record.phase4_result_id = f"phase4_{harvest_id}"
-                    record.upstream_sources["phase4"] = {
-                        "available": True,
-                        "dimensions_extracted": len(dimensions),
-                    }
+                extraction = self._blueprint.extract_dimension_values(pdf_path, page)
+
+                # Handle return format: {"dimensions": {...}, "raw_extraction": {...}, "confidence": ...}
+                if extraction and isinstance(extraction, dict):
+                    if "error" in extraction:
+                        errors.append(f"Blueprint extraction error: {extraction['error']}")
+                    else:
+                        dimensions = extraction.get("dimensions", {})
+                        if dimensions:
+                            self._apply_dimensions(record, dimensions)
+
+                            # Update confidence from extraction result
+                            confidence = extraction.get("confidence", 0.7)
+                            if record.body_data.observed:
+                                record.body_data.confidence = confidence
+
+                            record.vectorizer_result_id = f"blueprint_{harvest_id}"
+                            record.upstream_sources["blueprint_vectorizer"] = {
+                                "available": True,
+                                "dimensions_extracted": len(dimensions),
+                                "confidence": confidence,
+                                "svg_present": extraction.get("svg_content") is not None,
+                                "dxf_present": extraction.get("dxf_base64") is not None,
+                            }
+
+                            # Store artifacts for downstream use
+                            if extraction.get("svg_content"):
+                                record.svg_content = extraction["svg_content"]
+                            if extraction.get("dxf_base64"):
+                                record.dxf_base64 = extraction["dxf_base64"]
+                        else:
+                            record.upstream_sources["blueprint_vectorizer"] = {
+                                "available": True,
+                                "dimensions_extracted": 0,
+                                "note": "No dimensions mapped from extraction",
+                            }
             except Exception as e:
-                errors.append(f"Phase 4 error: {e}")
+                errors.append(f"Blueprint extraction error: {e}")
         else:
-            record.upstream_sources["phase4"] = {
+            record.upstream_sources["blueprint_vectorizer"] = {
                 "available": False,
-                "reason": phase4_result.reason,
+                "reason": blueprint_result.reason,
             }
 
         # Step 2: Try calibration for scale

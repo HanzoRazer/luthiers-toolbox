@@ -130,13 +130,14 @@ PATCH HISTORY:
 """
 import re
 from pathlib import Path
+from typing import Optional
 
 
 # =============================================================================
 # FILENAME SANITIZATION
 # =============================================================================
 
-def safe_stem(filename: str, prefix: str = None) -> str:
+def safe_stem(filename: str, prefix: Optional[str] = None) -> str:
     """
     Extract a safe stem (filename without extension) from a path or filename
 

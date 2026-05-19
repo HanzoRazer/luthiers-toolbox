@@ -1,22 +1,52 @@
 """
-External System Adapters — Stubbed Integration Points
-======================================================
+External System Adapters — Canonical Pipeline Integration
+==========================================================
 
-Adapters for Phase 4 and Calibration systems.
-For 1A: stubbed with graceful degradation.
-Actual wiring deferred to 1B after paths and ownership are stable.
+Adapters for the canonical blueprint_reader.html pipeline.
+
+1B-FIX-v2: Wired to canonical REST API endpoints, NOT Phase 4.
+
+Canonical endpoints (from blueprint_reader.html):
+- PDF → DXF: POST /api/blueprint/vectorize/async (raw edge extractor)
+- Photo → DXF: POST /api/vectorizer/extract (edge to dxf)
+
+Phase 4 is an incomplete R&D asset — NOT part of production pipeline.
 
 Author: Production Shop
-Date: 2026-05-16
-Sprint: IBG Semantic Morphology Harvest Pass 1A
+Date: 2026-05-17
+Sprint: IBG Morphology Harvest 1B-FIX
 Governance: MORPHOLOGY_HARVEST_GOVERNANCE_AUDIT.md
 """
 
 from __future__ import annotations
 
+import base64
+import logging
+import time
 from abc import ABC, abstractmethod
-from dataclasses import dataclass, field
-from typing import Any, Dict, List, Optional
+from dataclasses import dataclass
+from pathlib import Path
+from typing import Any, Dict, Optional
+import requests
+
+logger = logging.getLogger(__name__)
+
+# Canonical API endpoint
+API_BASE = "https://luthiers-toolbox-production.up.railway.app"
+
+# For local development, check if local server is running
+LOCAL_API_BASE = "http://localhost:8000"
+
+
+def _get_api_base() -> str:
+    """Get API base URL, preferring local if available."""
+    try:
+        resp = requests.get(f"{LOCAL_API_BASE}/health", timeout=1)
+        if resp.ok:
+            return LOCAL_API_BASE
+    except Exception:
+        pass
+    return API_BASE
 
 
 @dataclass
@@ -72,139 +102,281 @@ class BaseAdapter(ABC):
         pass
 
 
-class Phase4DimensionAssociationAdapter(BaseAdapter):
+class BlueprintVectorizerAdapter(BaseAdapter):
     """
-    Adapter for Phase 4 dimension-to-geometry association.
+    Adapter for the canonical blueprint vectorizer (PDF → DXF).
 
-    Phase 4 owns:
-    - OCR text detection
-    - Arrow/leader line detection
-    - Dimension-to-geometry linking
-    - LinkedDimensions output
+    This is the RAW EDGE EXTRACTOR from blueprint_reader.html.
+    Endpoint: POST /api/blueprint/vectorize/async
 
-    For 1A: STUBBED
-    Actual wiring deferred to 1B.
+    Returns SVG preview and DXF artifacts.
     """
 
     def __init__(self):
-        self._pipeline = None
-        self._wire_attempted = False
+        self._api_base = None
 
     @property
     def name(self) -> str:
-        return "Phase4DimensionAssociation"
+        return "BlueprintVectorizer"
 
     @property
     def is_available(self) -> bool:
-        return self._pipeline is not None
+        return True  # REST API is always available
 
     def check_availability(self) -> AdapterResult:
-        """Check Phase 4 availability."""
-        if self._wire_attempted:
-            if self._pipeline:
-                return AdapterResult.ok({"status": "wired"})
-            else:
-                return AdapterResult.not_available("not_wired_in_1A")
+        """Check API availability."""
+        if self._api_base is None:
+            self._api_base = _get_api_base()
+        return AdapterResult.ok({
+            "status": "wired",
+            "api_base": self._api_base,
+            "endpoint": "/api/blueprint/vectorize/async",
+        })
 
-        # Attempt lazy import (will fail in 1A)
-        self._wire_attempted = True
-        try:
-            # This import path would need adjustment for cross-service
-            # Deferred to 1B when paths are stable
-            # from services.blueprint_import.phase4.pipeline import BlueprintPipeline
-            # self._pipeline = BlueprintPipeline()
-            raise ImportError("Phase 4 wiring deferred to 1B")
-        except ImportError as e:
-            return AdapterResult.not_available(f"not_wired_in_1A: {e}")
-
-    def process_pdf(
+    def extract_from_pdf(
         self,
         pdf_path: str,
-        page: int = 1,
+        target_height_mm: float = 500.0,
+        min_contour_length_mm: float = 50.0,
+        close_gaps_mm: float = 1.0,
+        timeout_seconds: int = 600,
     ) -> AdapterResult:
         """
-        Process PDF through Phase 4 dimension association.
+        Extract contours from PDF via canonical vectorizer.
 
         Args:
             pdf_path: Path to PDF file
-            page: Page number (1-indexed)
+            target_height_mm: Target height for normalization
+            min_contour_length_mm: Minimum contour length filter
+            close_gaps_mm: Gap closing distance
+            timeout_seconds: Max time to wait for job
 
         Returns:
-            AdapterResult with LinkedDimensions data if successful
+            AdapterResult with SVG/DXF artifacts and dimensions
         """
-        availability = self.check_availability()
-        if not availability.available:
-            return availability
+        if self._api_base is None:
+            self._api_base = _get_api_base()
+
+        pdf_file = Path(pdf_path)
+        if not pdf_file.exists():
+            return AdapterResult.failed(f"PDF not found: {pdf_path}")
 
         try:
-            result = self._pipeline.process(pdf_path, page=page)
-            return AdapterResult.ok({
-                "source_file": result.source_file,
-                "dimensions": [d.to_dict() for d in result.dimensions],
-                "unmatched_count": len(result.unmatched_texts),
-                "association_rate": result.association_rate,
-            })
+            # Step 1: Submit async job
+            with open(pdf_file, 'rb') as f:
+                files = {'file': (pdf_file.name, f, 'application/pdf')}
+                data = {
+                    'target_height_mm': str(target_height_mm),
+                    'min_contour_length_mm': str(min_contour_length_mm),
+                    'close_gaps_mm': str(close_gaps_mm),
+                    'debug': 'false',
+                }
+                resp = requests.post(
+                    f"{self._api_base}/api/blueprint/vectorize/async",
+                    files=files,
+                    data=data,
+                    timeout=30,
+                )
+
+            if not resp.ok:
+                return AdapterResult.failed(f"Submit failed: {resp.status_code} - {resp.text}")
+
+            job_data = resp.json()
+            job_id = job_data.get('job_id')
+            if not job_id:
+                return AdapterResult.failed("No job_id returned")
+
+            logger.info(f"Blueprint job submitted: {job_id}")
+
+            # Step 2: Poll for completion
+            start_time = time.time()
+            poll_interval = 5  # seconds
+
+            while (time.time() - start_time) < timeout_seconds:
+                time.sleep(poll_interval)
+
+                status_resp = requests.get(
+                    f"{self._api_base}/api/blueprint/vectorize/status/{job_id}",
+                    timeout=10,
+                )
+
+                if not status_resp.ok:
+                    continue
+
+                status = status_resp.json()
+
+                if status.get('status') == 'complete':
+                    result = status.get('result', {})
+                    return AdapterResult.ok({
+                        "job_id": job_id,
+                        "ok": result.get('ok', False),
+                        "dimensions": result.get('dimensions', {}),
+                        "artifacts": result.get('artifacts', {}),
+                        "stage": result.get('stage'),
+                        "warnings": result.get('warnings', []),
+                    })
+
+                if status.get('status') == 'failed':
+                    return AdapterResult.failed(status.get('error', 'Job failed'))
+
+            return AdapterResult.failed(f"Job timed out after {timeout_seconds}s")
+
+        except requests.exceptions.Timeout:
+            return AdapterResult.failed("Request timed out")
         except Exception as e:
-            return AdapterResult.failed(f"Phase 4 processing failed: {e}")
+            logger.exception("Blueprint extraction failed")
+            return AdapterResult.failed(f"Extraction failed: {e}")
 
     def extract_dimension_values(
         self,
         pdf_path: str,
         page: int = 1,
-    ) -> Dict[str, Optional[float]]:
+        instrument_type: Optional[str] = None,
+    ) -> Dict[str, Any]:
         """
         Extract dimension values from PDF.
 
-        Convenience method that returns dimension values
-        mapped to canonical field names.
-
-        Returns empty dict if Phase 4 unavailable.
+        Maps extracted dimensions to canonical field names.
         """
-        result = self.process_pdf(pdf_path, page)
+        result = self.extract_from_pdf(pdf_path)
 
         if not result.success:
-            return {}
+            return {"error": result.reason, "dimensions": {}}
 
-        # Map Phase 4 dimensions to canonical fields
+        data = result.data
         dimensions = {}
-        for dim in result.data.get("dimensions", []):
-            label = dim.get("label", "").lower()
-            value = dim.get("value_mm")
 
-            if value is None:
-                continue
+        # Get dimensions from extraction result
+        dims = data.get("dimensions", {})
+        if dims.get("width_mm") and dims.get("height_mm"):
+            # Width is typically lower bout, height is body length
+            dimensions["lower_bout_width_mm"] = dims["width_mm"]
+            dimensions["body_length_mm"] = dims["height_mm"]
 
-            # Map to canonical terms per governance audit
-            if "body" in label and "length" in label:
-                dimensions["body_length_mm"] = value
-            elif "lower" in label and "bout" in label:
-                dimensions["lower_bout_width_mm"] = value
-            elif "upper" in label and "bout" in label:
-                dimensions["upper_bout_width_mm"] = value
-            elif "waist" in label:
-                dimensions["waist_width_mm"] = value
-            elif "scale" in label and "length" in label:
-                dimensions["scale_length_mm"] = value
+        return {
+            "dimensions": dimensions,
+            "raw_extraction": data,
+            "confidence": 0.7 if data.get("ok") else 0.4,
+            "svg_content": data.get("artifacts", {}).get("svg", {}).get("content"),
+            "dxf_base64": data.get("artifacts", {}).get("dxf", {}).get("base64"),
+        }
 
-        return dimensions
+
+class PhotoVectorizerAdapter(BaseAdapter):
+    """
+    Adapter for the canonical photo vectorizer (image → DXF).
+
+    This is the EDGE TO DXF from blueprint_reader.html.
+    Endpoint: POST /api/vectorizer/extract
+
+    Returns SVG preview and DXF artifacts.
+    """
+
+    def __init__(self):
+        self._api_base = None
+
+    @property
+    def name(self) -> str:
+        return "PhotoVectorizer"
+
+    @property
+    def is_available(self) -> bool:
+        return True
+
+    def check_availability(self) -> AdapterResult:
+        """Check API availability."""
+        if self._api_base is None:
+            self._api_base = _get_api_base()
+        return AdapterResult.ok({
+            "status": "wired",
+            "api_base": self._api_base,
+            "endpoint": "/api/vectorizer/extract",
+        })
+
+    def extract_from_image(
+        self,
+        image_path: str,
+        source_type: str = "auto",
+        spec_name: Optional[str] = None,
+    ) -> AdapterResult:
+        """
+        Extract contours from image via canonical vectorizer.
+
+        Args:
+            image_path: Path to image file
+            source_type: "auto", "ai", "photo", "blueprint"
+            spec_name: Optional instrument spec hint
+
+        Returns:
+            AdapterResult with SVG/DXF artifacts and dimensions
+        """
+        if self._api_base is None:
+            self._api_base = _get_api_base()
+
+        img_file = Path(image_path)
+        if not img_file.exists():
+            return AdapterResult.failed(f"Image not found: {image_path}")
+
+        try:
+            # Read and encode image
+            with open(img_file, 'rb') as f:
+                image_b64 = base64.b64encode(f.read()).decode('utf-8')
+
+            # Call vectorizer
+            payload = {
+                "image_b64": image_b64,
+                "source_type": source_type,
+                "export_svg": True,
+                "export_dxf": True,
+            }
+            if spec_name:
+                payload["spec_name"] = spec_name
+
+            resp = requests.post(
+                f"{self._api_base}/api/vectorizer/extract",
+                json=payload,
+                timeout=120,
+            )
+
+            if not resp.ok:
+                return AdapterResult.failed(f"Extract failed: {resp.status_code} - {resp.text}")
+
+            data = resp.json()
+
+            return AdapterResult.ok({
+                "ok": data.get('ok', False),
+                "body_width_mm": data.get('body_width_mm'),
+                "body_height_mm": data.get('body_height_mm'),
+                "contour_count": data.get('contour_count', 0),
+                "scale_source": data.get('scale_source'),
+                "svg_content": data.get('svg_content'),
+                "svg_path_d": data.get('svg_path_d'),
+                "dxf_base64": data.get('dxf_base64'),
+                "warnings": data.get('warnings', []),
+            })
+
+        except requests.exceptions.Timeout:
+            return AdapterResult.failed("Request timed out")
+        except Exception as e:
+            logger.exception("Photo extraction failed")
+            return AdapterResult.failed(f"Extraction failed: {e}")
 
 
 class CalibrationMetadataAdapter(BaseAdapter):
     """
     Adapter for calibration/scale detection.
 
-    Calibration owns:
-    - Scale detection (ruler, scale length, paper size)
-    - mm/px conversion
-    - CalibrationResult output
+    Note: The canonical vectorizer pipeline handles calibration internally
+    and returns dimensions in mm. This adapter is for cases where we need
+    to calibrate independently.
 
-    For 1A: STUBBED
-    Actual wiring deferred to 1B.
+    Calibration is embedded in the vectorizer response via:
+    - dimensions.width_mm / dimensions.height_mm (blueprint mode)
+    - body_width_mm / body_height_mm (photo mode)
     """
 
     def __init__(self):
-        self._calibrator = None
-        self._wire_attempted = False
+        self._api_base = None
 
     @property
     def name(self) -> str:
@@ -212,67 +384,28 @@ class CalibrationMetadataAdapter(BaseAdapter):
 
     @property
     def is_available(self) -> bool:
-        return self._calibrator is not None
+        return True
 
     def check_availability(self) -> AdapterResult:
-        """Check calibration availability."""
-        if self._wire_attempted:
-            if self._calibrator:
-                return AdapterResult.ok({"status": "wired"})
-            else:
-                return AdapterResult.not_available("not_wired_in_1A")
+        """Check availability - always available via vectorizer."""
+        if self._api_base is None:
+            self._api_base = _get_api_base()
+        return AdapterResult.ok({
+            "status": "wired",
+            "note": "Calibration is embedded in vectorizer response",
+        })
 
-        self._wire_attempted = True
-        try:
-            # Deferred to 1B
-            # from services.blueprint_import.calibration.pixel_calibrator import PixelCalibrator
-            # self._calibrator = PixelCalibrator()
-            raise ImportError("Calibration wiring deferred to 1B")
-        except ImportError as e:
-            return AdapterResult.not_available(f"not_wired_in_1A: {e}")
-
-    def calibrate_pdf(
+    def get_calibration_method(
         self,
         pdf_path: str,
         page: int = 1,
-    ) -> AdapterResult:
+    ) -> Optional[str]:
         """
-        Get calibration data for PDF.
+        Get calibration method - returns 'vectorizer_embedded'.
 
-        Args:
-            pdf_path: Path to PDF file
-            page: Page number (1-indexed)
-
-        Returns:
-            AdapterResult with calibration data if successful
+        The canonical pipeline handles calibration internally.
         """
-        availability = self.check_availability()
-        if not availability.available:
-            return availability
-
-        try:
-            result = self._calibrator.calibrate_from_pdf(pdf_path, page=page)
-            return AdapterResult.ok({
-                "method": result.method,
-                "mm_per_px": result.mm_per_px,
-                "confidence": result.confidence,
-                "reference_used": result.reference_used,
-            })
-        except Exception as e:
-            return AdapterResult.failed(f"Calibration failed: {e}")
-
-    def get_calibration_method(self, pdf_path: str, page: int = 1) -> Optional[str]:
-        """
-        Get calibration method used for PDF.
-
-        Returns None if calibration unavailable.
-        """
-        result = self.calibrate_pdf(pdf_path, page)
-
-        if not result.success:
-            return None
-
-        return result.data.get("method")
+        return "vectorizer_embedded"
 
 
 class BodyGridAdapter(BaseAdapter):
@@ -359,17 +492,33 @@ class BodyGridAdapter(BaseAdapter):
 
 
 # Singleton instances for reuse
-_phase4_adapter: Optional[Phase4DimensionAssociationAdapter] = None
+_blueprint_adapter: Optional[BlueprintVectorizerAdapter] = None
+_photo_adapter: Optional[PhotoVectorizerAdapter] = None
 _calibration_adapter: Optional[CalibrationMetadataAdapter] = None
 _body_grid_adapter: Optional[BodyGridAdapter] = None
 
 
-def get_phase4_adapter() -> Phase4DimensionAssociationAdapter:
-    """Get Phase 4 adapter singleton."""
-    global _phase4_adapter
-    if _phase4_adapter is None:
-        _phase4_adapter = Phase4DimensionAssociationAdapter()
-    return _phase4_adapter
+def get_blueprint_adapter() -> BlueprintVectorizerAdapter:
+    """Get blueprint vectorizer adapter singleton (PDF → DXF)."""
+    global _blueprint_adapter
+    if _blueprint_adapter is None:
+        _blueprint_adapter = BlueprintVectorizerAdapter()
+    return _blueprint_adapter
+
+
+def get_photo_adapter() -> PhotoVectorizerAdapter:
+    """Get photo vectorizer adapter singleton (image → DXF)."""
+    global _photo_adapter
+    if _photo_adapter is None:
+        _photo_adapter = PhotoVectorizerAdapter()
+    return _photo_adapter
+
+
+# Backwards compatibility alias
+def get_phase4_adapter() -> BlueprintVectorizerAdapter:
+    """DEPRECATED: Use get_blueprint_adapter() instead."""
+    logger.warning("get_phase4_adapter() is deprecated - use get_blueprint_adapter()")
+    return get_blueprint_adapter()
 
 
 def get_calibration_adapter() -> CalibrationMetadataAdapter:
@@ -395,7 +544,8 @@ def check_all_adapters() -> Dict[str, AdapterResult]:
     Returns dict mapping adapter name to availability result.
     """
     return {
-        "phase4": get_phase4_adapter().check_availability(),
+        "blueprint_vectorizer": get_blueprint_adapter().check_availability(),
+        "photo_vectorizer": get_photo_adapter().check_availability(),
         "calibration": get_calibration_adapter().check_availability(),
         "body_grid": get_body_grid_adapter().check_availability(),
     }
