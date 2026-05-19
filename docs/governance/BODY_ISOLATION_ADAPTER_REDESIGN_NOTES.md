@@ -1,316 +1,290 @@
 # Body Isolation Adapter Redesign Notes
 
 **Date:** 2026-05-18  
-**Status:** EXPERIMENTAL_CANDIDATE — Not approved for production  
-**Sprint:** DEV ORDER 1B — Adapter Constitutional Audit  
-**Depends On:** SEMANTIC_PROVENANCE_MODEL.md (Tier 1 pending ratification)
+**Status:** PHASE 1-2A COMPLETE — DXF path constitutionally gated  
+**Sprints:** DEV ORDER 1D, 1D-HARDEN, 2A  
+**Commits:** `4f3039f3`, `a0135f93`, `7a8f918b`
 
 ---
 
-## Purpose
+## Summary
 
-This document audits the existing body isolation implementation against the Semantic Provenance Model and identifies gaps that must be closed before any adapter can populate IBG memory or become a production authority layer.
+The constitutional runtime foundation is implemented. The DXF artifact path now produces `BodyEvidenceCandidate` with full provenance, authority state, confidence declaration, and review enforcement. The IBG Intake Gate blocks all candidates until human approval.
 
 ---
 
-## Current Implementation Inventory
+## Implementation Status
 
-### Existing Components (photo-vectorizer ecosystem)
+### Completed (Phase 1 + 2A)
 
-| File | Purpose | Authority State |
-|------|---------|-----------------|
-| `body_isolation_result.py` | Result dataclass with diagnostics | `advisory_candidate` |
-| `body_isolation_stage.py` | Stage 4.5 wrapper with retry profiles | `advisory_candidate` |
-| `geometry_coach_v2.py` | Coach with ownership-aware retry logic | `advisory_candidate` |
-| `geometry_authority.py` | Expected body profile lookup | `derived_topology` reference |
+| Component | Location | Status |
+|-----------|----------|--------|
+| `AuthorityState` enum | `app/governance/authority_state.py` | ✓ COMPLETE |
+| `AuthorityStateContainer` | `app/governance/authority_state.py` | ✓ COMPLETE |
+| `ProvenanceRecord` | `app/governance/provenance_record.py` | ✓ COMPLETE |
+| `ConfidenceDeclaration` | `app/governance/confidence_declaration.py` | ✓ COMPLETE |
+| `ReviewEnforcement` | `app/governance/review_enforcement.py` | ✓ COMPLETE |
+| `BodyEvidenceCandidate` | `app/instrument_geometry/body/ibg/body_evidence_candidate.py` | ✓ COMPLETE |
+| `IBGIntakeGate` | `app/instrument_geometry/body/ibg/ibg_intake_gate.py` | ✓ COMPLETE |
+| `artifact_body_evidence_adapter.py` | `app/.../morphology_harvest/artifact_body_evidence_adapter.py` | ✓ COMPLETE |
 
-### Current Data Flow
+### Remaining (Future Work)
+
+| Component | Location | Status |
+|-----------|----------|--------|
+| `BodyIsolationResult` provenance | `services/photo-vectorizer/body_isolation_result.py` | NOT STARTED |
+| `GeometryCoachV2` integration | `services/photo-vectorizer/geometry_coach_v2.py` | NOT STARTED |
+| Human review UI | `blueprint_reader.html` or new | NOT STARTED |
+| IBG memory population | — | BLOCKED (by design) |
+
+---
+
+## Architecture Decision
+
+**Chosen: Option B — Wrapper Class**
+
+Instead of patching `BodyIsolationResult` directly, the implementation created:
 
 ```
-[Photo/PDF Input]
-    │ authority: canonical_source
+BodyEvidence (plain data container)
+    ↓ wrapped by
+BodyEvidenceCandidate (constitutional wrapper)
+    ↓ validated by
+IBGIntakeGate (entry gate)
+```
+
+**Rationale:**
+- Separation of concerns (data vs. governance)
+- No breaking changes to existing callers
+- Clear constitutional boundary
+- Reusable pattern for other semantic objects
+
+---
+
+## Data Flow (DXF Path — Implemented)
+
+```
+[DXF Artifact from Vectorizer]
+    │
     ▼
-[Background Removal / FG Mask]
-    │ authority: derived_topology
+[artifact_body_evidence_adapter.from_vectorizer_response_constitutional()]
+    │ creates: BodyEvidence
+    │ wraps in: BodyEvidenceCandidate
+    │ attaches: ProvenanceRecord, AuthorityState, ConfidenceDeclaration
+    │ sets: review_required = True, authority = advisory_candidate
+    ▼
+[IBGIntakeGate.validate()]
+    │ checks: authority, provenance, review, confidence, topology
+    │ result: BLOCKED (no human approval yet)
+    ▼
+[Human Review via API]
+    │ candidate.record_review("human:reviewer", APPROVE, notes)
+    │ authority transitions: advisory_candidate → human_reviewed
+    ▼
+[IBGIntakeGate.validate()]
+    │ result: PASSED
+    │ candidate.approved_for_ibg_memory = True
+    ▼
+[IBG Memory Population]
+    │ (NOT YET IMPLEMENTED — gate exists, path blocked)
+```
+
+---
+
+## Data Flow (Photo Path — Not Yet Implemented)
+
+```
+[Photo Input]
+    │
     ▼
 [BodyIsolationStage.run()]
-    │ authority: semantic_interpretation
-    │ produces: BodyIsolationResult
+    │ produces: BodyIsolationResult (pixel space)
+    │ NO PROVENANCE YET
     ▼
 [GeometryCoachV2.decide()]
-    │ authority: advisory_candidate
-    │ decides: accept | retry | manual_review
+    │ NO CONSTITUTIONAL WRAPPER YET
     ▼
-[ContourStage] ← BODY REGION USED HERE
-    │ authority: advisory_candidate
-    │ uses body_bbox_px as ownership filter
-    ▼
-[Export]
+[Future: Convert to BodyEvidence → BodyEvidenceCandidate]
+    │ attach provenance
+    │ pass through IBGIntakeGate
 ```
 
 ---
 
-## Audit Against Semantic Provenance Model
+## Governance Modules
 
-### 1. Authority State Compliance
+Located in `services/api/app/governance/`:
 
-| Requirement | Current Status | Gap |
-|-------------|----------------|-----|
-| Objects must declare authority state | **MISSING** | No `authority_state` field in BodyIsolationResult |
-| State transitions must be logged | **MISSING** | No `authority_state_history` |
-| Forbidden transitions must fail | **MISSING** | No enforcement mechanism |
+| Module | Purpose |
+|--------|---------|
+| `authority_state.py` | 9-state enum, FORBIDDEN_TRANSITIONS, AuthorityStateContainer |
+| `provenance_record.py` | ProvenanceRecord, TransformationStage, derivation chains |
+| `confidence_declaration.py` | Typed confidence that never implies correctness/canonicity |
+| `review_enforcement.py` | Protected review_required, bypass attempt tracking |
+| `__init__.py` | Public exports |
 
-### 2. Provenance Chain Compliance
+### AuthorityState Values
 
-| Requirement | Current Status | Gap |
-|-------------|----------------|-----|
-| `source_artifact` tracked | **MISSING** | No lineage to original DXF/image |
-| `derivation_chain` preserved | **MISSING** | No chain of transformations |
-| `transformation_method` documented | **PARTIAL** | `source` field captures mask origin only |
+```python
+SANDBOX_EXPERIMENTAL      # Untrusted experimental
+ADVISORY_CANDIDATE        # Ranked suggestion, not ratified
+HUMAN_REVIEWED           # Examined by human
+APPROVED_FOR_GENERATION  # Cleared for CAD output
+CANONICAL_GEOMETRY       # Original source artifact
+DERIVED_TOPOLOGY         # Reconstructed from source
+SEMANTIC_INTERPRETATION  # Meaning inferred
+REJECTED                 # Explicitly rejected
+ARCHIVED_SUPERSEDED      # No longer authoritative
+```
 
-### 3. Confidence Semantics Compliance
+### Forbidden Transitions
 
-| Requirement | Current Status | Gap |
-|-------------|----------------|-----|
-| `confidence_type` declared | **MISSING** | `confidence` is a bare float |
-| `confidence_origin` tracked | **MISSING** | Unclear what produced the score |
-| `does_not_imply` explicit | **MISSING** | No safeguard against misinterpretation |
-
-### 4. Human Review Compliance
-
-| Requirement | Current Status | Gap |
-|-------------|----------------|-----|
-| `human_review_required` flag | **PRESENT** | `review_required` field exists |
-| `human_review_completed` flag | **MISSING** | No tracking of review state |
-| `human_review_decision` recorded | **MISSING** | No decision field |
-| Review bypass prevention | **MISSING** | Nothing prevents machine from setting `review_required = False` |
-
-### 5. IBG Intake Gate Compliance
-
-| Requirement | Current Status | Gap |
-|-------------|----------------|-----|
-| Input authority >= `human_reviewed` | **NOT ENFORCED** | No gate |
-| Provenance chain intact | **NOT CHECKED** | No validation |
-| Human review decision = `approve` | **NOT CHECKED** | No gate |
+```python
+FORBIDDEN_TRANSITIONS = {
+    (ADVISORY_CANDIDATE, CANONICAL_GEOMETRY),
+    (ADVISORY_CANDIDATE, APPROVED_FOR_GENERATION),
+    (SANDBOX_EXPERIMENTAL, APPROVED_FOR_GENERATION),
+    (SANDBOX_EXPERIMENTAL, CANONICAL_GEOMETRY),
+    (DERIVED_TOPOLOGY, CANONICAL_GEOMETRY),
+    (SEMANTIC_INTERPRETATION, CANONICAL_GEOMETRY),
+    (REJECTED, APPROVED_FOR_GENERATION),
+    (REJECTED, CANONICAL_GEOMETRY),
+}
+```
 
 ---
 
-## Critical Gaps Summary
+## IBG Intake Gate
 
-### BLOCKING — Must fix before any IBG integration
+Located in `app/instrument_geometry/body/ibg/ibg_intake_gate.py`
 
-1. **No provenance lineage** — BodyIsolationResult has no link to source DXF/image
-2. **No authority state machine** — Objects can be used at any trust level
-3. **No confidence semantics** — `confidence: 0.87` is ambiguous (heuristic? statistical? human?)
-4. **No review bypass prevention** — Machine can set `review_required = False`
+### Rejection Reasons
 
-### SERIOUS — Should fix before production use
+| Reason | Description |
+|--------|-------------|
+| `AUTHORITY_INSUFFICIENT` | Authority < human_reviewed |
+| `PROVENANCE_MISSING` | No provenance record |
+| `PROVENANCE_INCOMPLETE` | Incomplete lineage |
+| `REVIEW_REQUIRED` | Review not completed |
+| `REVIEW_NOT_APPROVED` | Completed but not approved |
+| `CONFIDENCE_UNDECLARED` | Unknown confidence type |
+| `REVIEW_BYPASS_DETECTED` | Bypass attempts > threshold |
+| `TOPOLOGY_INTEGRITY_DEGRADED` | Integrity below minimum |
+| `CANDIDATE_REJECTED` | In REJECTED state |
 
-5. **No transformation stage identity** — Which pipeline stage produced this?
-6. **No topology integrity score** — How much geometry was lost/degraded?
-7. **No forbidden transition enforcement** — Advisory can become canonical silently
+### Gate Configurations
 
-### MODERATE — Can be addressed incrementally
-
-8. **Sparse diagnostics** — `diagnostics` dict is unstructured
-9. **No decay tracking** — Cached results don't track staleness
-10. **No supersession chain** — When results are replaced, old isn't archived
+```python
+create_default_intake_gate()    # Standard: 0.5 topology, 0 bypass tolerance
+create_strict_intake_gate()     # Production: 0.7 topology, stricter authority
+create_permissive_intake_gate() # Dev only: 0.3 topology, 2 bypass tolerance
+```
 
 ---
 
-## Redesign Requirements
+## Constitutional Adapter Output
 
-### R1. Add ProvenanceRecord to BodyIsolationResult
+`artifact_body_evidence_adapter.from_vectorizer_response_constitutional()` returns:
 
 ```python
 @dataclass
-class BodyIsolationResult:
-    # ... existing fields ...
-    
-    # NEW: Provenance metadata
-    provenance: Optional[ProvenanceRecord] = None
+class ConstitutionalAdapterResult:
+    success: bool
+    candidate: Optional[BodyEvidenceCandidate]
+    gate_result: Optional[IntakeValidationResult]
+    topology_integrity: float
+    metadata: Optional[ArtifactMetadata]
+    errors: Optional[List[str]]
+
+    def to_review_json(self) -> Dict[str, Any]:
+        """Review-ready JSON for API-only workflow."""
 ```
 
-The adapter MUST NOT populate this result into downstream systems if `provenance is None`.
+### Review JSON Structure
 
-### R2. Add Confidence Declaration
-
-```python
-@dataclass
-class BodyIsolationResult:
-    # ... existing fields ...
-    
-    # REPLACE bare confidence float with typed declaration
-    confidence_declaration: Optional[ConfidenceDeclaration] = None
-```
-
-Current `confidence: float` becomes `confidence_declaration.value`.
-
-### R3. Add Authority State Machine
-
-Create `authority_state.py`:
-
-```python
-class AuthorityStateMachine:
-    """Enforces valid state transitions."""
-    
-    VALID_TRANSITIONS = {
-        AuthorityState.CANONICAL_SOURCE: {AuthorityState.DERIVED_TOPOLOGY},
-        AuthorityState.DERIVED_TOPOLOGY: {AuthorityState.SEMANTIC_INTERPRETATION},
-        AuthorityState.SEMANTIC_INTERPRETATION: {AuthorityState.ADVISORY_CANDIDATE},
-        AuthorityState.ADVISORY_CANDIDATE: {AuthorityState.HUMAN_REVIEWED},
-        AuthorityState.HUMAN_REVIEWED: {AuthorityState.APPROVED_FOR_GENERATION},
-        # ANY → sandbox/archived allowed
-    }
-    
-    FORBIDDEN_TRANSITIONS = {
-        (AuthorityState.ADVISORY_CANDIDATE, AuthorityState.CANONICAL_SOURCE),
-        (AuthorityState.DERIVED_TOPOLOGY, AuthorityState.CANONICAL_SOURCE),
-        (AuthorityState.SANDBOX_EXPERIMENTAL, AuthorityState.APPROVED_FOR_GENERATION),
-    }
-    
-    def transition(self, obj, to_state, reason, actor):
-        if (obj.authority_state, to_state) in self.FORBIDDEN_TRANSITIONS:
-            raise ForbiddenTransitionError(...)
-        # ... record transition in history ...
-```
-
-### R4. Add IBG Intake Gate
-
-```python
-def validate_for_ibg_intake(result: BodyIsolationResult) -> None:
-    """Gate that MUST pass before IBG memory population."""
-    
-    if result.provenance is None:
-        raise ProvenanceMissingError("Cannot populate IBG without provenance")
-    
-    if result.provenance.authority_state < AuthorityState.HUMAN_REVIEWED:
-        raise AuthorityInsufficientError(
-            f"IBG intake requires human_reviewed, got {result.provenance.authority_state}"
-        )
-    
-    if not result.provenance.human_review_completed:
-        raise ReviewIncompleteError("IBG intake requires completed human review")
-    
-    if result.provenance.human_review_decision != "approve":
-        raise ReviewRejectedError(
-            f"IBG intake requires approval, got {result.provenance.human_review_decision}"
-        )
-```
-
-### R5. Immutable Review Flag
-
-The `review_required` field must be immutable once set to `True` by machine:
-
-```python
-@dataclass
-class BodyIsolationResult:
-    _review_required: bool = field(default=False, repr=False)
-    _review_required_locked: bool = field(default=False, repr=False)
-    
-    @property
-    def review_required(self) -> bool:
-        return self._review_required
-    
-    def set_review_required(self, value: bool, actor: str) -> None:
-        if self._review_required and not value:
-            if not actor.startswith("human:"):
-                raise ReviewBypassAttemptError(
-                    "Machine cannot clear review_required flag"
-                )
-        self._review_required = value
-        if value:
-            self._review_required_locked = True
+```json
+{
+  "candidate_id": "bec_abc123def456",
+  "source_dxf": "/blueprints/guitar.dxf",
+  "provenance": { "source_artifact": "...", "transformation_history": [...] },
+  "authority_state": "advisory_candidate",
+  "confidence_declaration": { "value": 0.75, "confidence_type": "heuristic", ... },
+  "topology_integrity": 0.85,
+  "gate_decision": { "is_valid": false, "rejections": ["authority_insufficient", "review_required"] },
+  "review_required": true,
+  "review_notes_placeholder": "",
+  "metadata": { "source_file": "...", "entity_count": 42, "closed_contours": 3 }
+}
 ```
 
 ---
 
-## Decision Matrix
+## Tests
 
-| Option | Description | Recommendation |
-|--------|-------------|----------------|
-| **A. Refactor** | Add provenance to existing BodyIsolationResult | RECOMMENDED for short-term |
-| **B. Replace** | New BodyIsolationCandidate class with provenance built-in | Consider for v2 |
-| **C. Archive** | Freeze current, build parallel system | NOT RECOMMENDED (duplication) |
-
-**Recommended path:**
-
-1. Add `ProvenanceRecord` as optional field (backwards compatible)
-2. Add `ConfidenceDeclaration` alongside existing `confidence` (deprecate bare float)
-3. Create `AuthorityStateMachine` as external validator
-4. Create `IBGIntakeGate` as external validator
-5. Wire gates into any path that touches IBG memory
+| Test File | Coverage |
+|-----------|----------|
+| `test_governance_constitutional_runtime.py` | Authority, provenance, confidence, review |
+| `test_ibg_intake_gate.py` | Gate rejection/acceptance |
+| `test_ibg_constitutional_integration.py` | Full flow smoke tests, failure modes |
+| `test_artifact_constitutional_adapter.py` | Constitutional adapter output |
 
 ---
 
-## Implementation Sequence
+## Acceptance Criteria (Phase 1 + 2A)
 
-```
-Phase 1 — Provenance Foundation (current sprint)
-├── A. Define ProvenanceRecord dataclass (in governance/)
-├── B. Define AuthorityState enum
-├── C. Define ConfidenceDeclaration dataclass
-└── D. Define AuthorityStateMachine
-
-Phase 2 — Result Integration (next sprint)
-├── E. Add provenance field to BodyIsolationResult
-├── F. Add confidence_declaration field
-├── G. Deprecate bare confidence float
-└── H. Add serialization support (to_payload/from_payload)
-
-Phase 3 — Gate Enforcement (following sprint)
-├── I. Implement IBGIntakeGate
-├── J. Wire gate to IBG population path
-├── K. Add governance check to CI
-└── L. Add runtime assertions
-
-Phase 4 — Coach Integration (final sprint)
-├── M. Update GeometryCoachV2 to emit provenance
-├── N. Update BodyIsolationStage to attach source lineage
-├── O. Add human review workflow hooks
-└── P. End-to-end test with real DXF
-```
+| Criterion | Status |
+|-----------|--------|
+| ProvenanceRecord exists and propagates | ✓ |
+| AuthorityState exists and is enforced | ✓ |
+| ConfidenceDeclaration separates confidence from legitimacy | ✓ |
+| BodyEvidenceCandidate carries constitutional metadata | ✓ |
+| IBGIntakeGate blocks unauthorized intake | ✓ |
+| Review bypass vulnerability is closed | ✓ |
+| DXF adapter produces BodyEvidenceCandidate | ✓ |
+| Gate blocks by default | ✓ |
+| Review-ready JSON exists | ✓ |
+| Tests prove weak provenance cannot enter IBG | ✓ |
 
 ---
 
-## Open Questions
+## Original Audit (Historical Reference)
 
-1. **Where does human review happen?** — CLI? Web UI? Both?
-2. **Who reviews?** — Any user? Only project owner?
-3. **What is reviewed?** — Just body bbox? Full contour set? DXF overlay?
-4. **How is review persisted?** — Database? Sidecar JSON? Git commit?
+The original audit identified these gaps in `BodyIsolationResult`:
 
-These must be answered before Phase 3 can complete.
+| Gap | Resolution |
+|-----|------------|
+| No authority state | Addressed via `BodyEvidenceCandidate` wrapper (DXF path) |
+| No provenance lineage | `ProvenanceRecord` attached to candidate |
+| Bare confidence float | `ConfidenceDeclaration` with typed semantics |
+| Review bypass possible | `ReviewEnforcement` with protected flag |
+| No intake gate | `IBGIntakeGate` with 8 rejection reasons |
+
+The photo-vectorizer `BodyIsolationResult` still has these gaps. Future work will either:
+- Add provenance fields directly to `BodyIsolationResult`
+- Convert `BodyIsolationResult` → `BodyEvidence` → `BodyEvidenceCandidate`
 
 ---
 
-## Classification
+## Open Questions (Resolved)
 
-This document and all referenced adapter code is classified as:
-
-```
-authority_state: sandbox_experimental
-human_review_required: true
-approved_for_generation: false
-approved_for_ibg_memory: false
-```
-
-No code in this ecosystem may populate IBG memory until:
-1. SEMANTIC_PROVENANCE_MODEL.md is ratified (Tier 1)
-2. Phases 1-3 above are complete
-3. Chief Engineer approves production deployment
+| Question | Resolution |
+|----------|------------|
+| Where does human review happen? | API-only for now (future: UI) |
+| Governance module location? | Shared `app/governance/`, not IBG-specific |
+| Patch or wrap? | Wrap (`BodyEvidenceCandidate`) |
+| Which path first? | DXF path (simpler, canonical artifacts) |
 
 ---
 
 ## Related Documents
 
-| Document | Relationship |
-|----------|--------------|
-| `SEMANTIC_PROVENANCE_MODEL.md` | Constitutional foundation (depends on) |
-| `AUTHORITY_STATE_ARCHITECTURE.md` | State machine details (to be written) |
-| `IBG_ROLE_DEFINITION.md` | IBG governance context |
-| `THREE_LOOP_ARCHITECTURE_REFRAMED.md` | Coach integration context |
+| Document | Purpose |
+|----------|---------|
+| `IBG_CONSTITUTIONAL_RUNTIME_FOUNDATION.md` | Full foundation specification |
+| `IBG_CONSTITUTIONAL_RUNTIME_1A_COVERAGE_NOTE.md` | 1A/1D relationship |
+| `SEMANTIC_PROVENANCE_MODEL.md` | Constitutional foundation theory |
+| `IBG_ROLE_DEFINITION.md` | IBG governance boundaries |
 
 ---
 
-*BODY_ISOLATION_ADAPTER_REDESIGN_NOTES.md — DEV ORDER 1B — 2026-05-18*
+*BODY_ISOLATION_ADAPTER_REDESIGN_NOTES.md — Updated 2026-05-18 after DEV ORDER 2A*
