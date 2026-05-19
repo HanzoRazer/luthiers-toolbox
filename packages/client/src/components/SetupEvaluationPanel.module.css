@@ -1,0 +1,131 @@
+/**
+ * SetupEvaluationPanel CSS Module
+ * Phase 0: Setup cascade evaluation panel styles
+ */
+
+.panelTitle {
+  margin: 0 0 12px 0;
+  font-size: 15px;
+  font-weight: 600;
+  color: #fff;
+  border-bottom: 1px solid #333;
+  padding-bottom: 8px;
+}
+
+.formGrid {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.results {
+  margin-top: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.gateHeader {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.gateBadge {
+  padding: 6px 14px;
+  border-radius: 4px;
+  font-weight: 600;
+  font-size: 13px;
+}
+
+.gateGreen {
+  background: #065f46;
+  color: #6ee7b7;
+}
+
+.gateYellow {
+  background: #78350f;
+  color: #fcd34d;
+}
+
+.gateRed {
+  background: #7f1d1d;
+  color: #fca5a5;
+}
+
+.summary {
+  font-size: 13px;
+  color: #ccc;
+}
+
+.issuesList {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.issueRow {
+  display: grid;
+  grid-template-columns: 120px 60px 100px 1fr;
+  gap: 8px;
+  padding: 8px;
+  border-radius: 4px;
+  font-size: 12px;
+  align-items: center;
+}
+
+.issueGreen {
+  background: rgba(16, 185, 129, 0.1);
+  border-left: 3px solid #10b981;
+}
+
+.issueYellow {
+  background: rgba(251, 188, 5, 0.1);
+  border-left: 3px solid #f59e0b;
+}
+
+.issueRed {
+  background: rgba(239, 68, 68, 0.1);
+  border-left: 3px solid #ef4444;
+}
+
+.issueParam {
+  font-weight: 500;
+  color: #fff;
+}
+
+.issueValue {
+  color: #0ea5e9;
+  font-family: monospace;
+}
+
+.issueRange {
+  color: #999;
+  font-size: 11px;
+}
+
+.issueFix {
+  color: #ccc;
+}
+
+.suggestions {
+  padding: 10px;
+  background: #1a1a1a;
+  border-radius: 4px;
+  font-size: 12px;
+}
+
+.suggestions strong {
+  color: #fff;
+}
+
+.suggestions ul {
+  margin: 8px 0 0 0;
+  padding-left: 18px;
+}
+
+.suggestions li {
+  color: #ccc;
+  margin-bottom: 4px;
+}

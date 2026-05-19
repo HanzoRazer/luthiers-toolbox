@@ -305,6 +305,11 @@ const routes: RouteRecordRaw[] = [
     component: () =>
       import("@/views/art-studio/RosetteWheelView.vue"),
   },
+  {
+    path: "/art-studio/aperture",
+    name: "ArtStudioAperture",
+    component: () => import("@/views/art-studio/ApertureWorkspace.vue"),
+  },
 
   // Preset Hub
   {
@@ -416,6 +421,11 @@ const routes: RouteRecordRaw[] = [
     path: "/cam/neck",
     name: "CamNeck",
     component: () => import("@/views/cam/NeckView.vue"),
+  },
+  {
+    path: "/cam/nut-slot-preview",
+    name: "CamNutSlotPreview",
+    component: () => import("@/views/cam/NutSlotPreviewView.vue"),
   },
 
   // Guitar Design Hub - Body Outline Generator, Bracing, Archtop, etc.

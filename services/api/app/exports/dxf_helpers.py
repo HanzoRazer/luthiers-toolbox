@@ -138,11 +138,12 @@ def try_build_with_ezdxf(entities: List[Tuple[str, dict]]) -> Optional[bytes]:
     try:
         import ezdxf
         from io import BytesIO
+        from app.util.dxf_compat import create_document
     except ImportError:
         return None
 
     try:
-        doc = ezdxf.new("R12")
+        doc = create_document(version="R12")
         msp = doc.modelspace()
 
         comment = None

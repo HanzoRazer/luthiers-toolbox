@@ -8,6 +8,10 @@ G-code export and execution retry endpoints extracted from batch_router.py:
   - Job logs CSV export
 
 Mounted at: /api/saw/batch
+
+QUARANTINE STATUS: This module produces machine-ready G-code output without
+RMOS run tracking. See CAM_MACHINE_OUTPUT_QUARANTINE_POLICY.md for governance
+requirements before promoting to governed status.
 """
 
 from __future__ import annotations

@@ -39,6 +39,8 @@ import ezdxf
 from ezdxf import units
 from ezdxf.enums import TextEntityAlignment
 from fastapi import APIRouter, HTTPException
+
+from app.util.dxf_compat import create_document
 from fastapi.responses import StreamingResponse, PlainTextResponse, JSONResponse
 from pydantic import BaseModel, Field
 
@@ -142,7 +144,7 @@ def _shape_z(x_norm: float, back_depth: float, shape: str = "C") -> float:
 # ─── DXF builder ─────────────────────────────────────────────────────────────
 
 def build_transition_dxf(r: TransitionRequest) -> ezdxf.document.Drawing:
-    doc = ezdxf.new(dxfversion="R2010")
+    doc = create_document(version="R2010")
     doc.units = units.MM
     msp = doc.modelspace()
 

@@ -11,6 +11,7 @@ from .schemas import NeckParameters, NeckGeometryOut
 
 try:
     import ezdxf
+    from app.util.dxf_compat import create_document
     EZDXF_AVAILABLE = True
 except ImportError:
     EZDXF_AVAILABLE = False
@@ -32,7 +33,7 @@ def export_neck_dxf(params: NeckParameters, geometry: NeckGeometryOut) -> bytes:
         raise HTTPException(500, detail="ezdxf library not installed")
 
     # Create DXF document (R12 format for maximum compatibility)
-    doc = ezdxf.new('R12', setup=True)
+    doc = create_document(version='R12')
     msp = doc.modelspace()
 
     # Layer definitions with colors

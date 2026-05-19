@@ -11,6 +11,7 @@ import re
 try:
     import ezdxf
     from ezdxf.document import Drawing
+    from app.util.dxf_compat import create_document
     EZDXF_AVAILABLE = True
 except ImportError:
     EZDXF_AVAILABLE = False
@@ -280,7 +281,7 @@ async def auto_fix_dxf(request: AutoFixRequest):
         
         if "convert_to_r12" in request.fixes:
             # Create a new R12 document and copy entities
-            r12_doc = ezdxf.new('R12')
+            r12_doc = create_document(version='R12')
             r12_msp = r12_doc.modelspace()
             
             # Copy entities from original doc

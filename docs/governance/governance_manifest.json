@@ -1,0 +1,142 @@
+{
+  "manifest_version": "1.0.0",
+  "effective_date": "2026-05-11",
+  "governance_framework": "docs/governance/MORPHOLOGY_RECONSTRUCTION_PLATFORM.md",
+  "protected_systems": [
+    {
+      "id": "BLUEPRINT_READER_MVP",
+      "protection_level": "LOCKED",
+      "paths": [
+        "services/api/app/routers/blueprint/",
+        "services/api/app/services/blueprint_orchestrator.py",
+        "services/api/app/services/blueprint_extract.py",
+        "services/api/app/services/blueprint_clean.py",
+        "services/api/app/services/blueprint_limits.py",
+        "services/api/app/services/contour_recommendation.py",
+        "services/api/app/services/layer_builder.py"
+      ],
+      "governance_doc": "docs/governance/BLUEPRINT_READER_PROTECTION_RULES.md",
+      "requires_explicit_approval": true,
+      "forbidden_actions": [
+        "rewrite_extraction_semantics",
+        "remove_restored_baseline",
+        "change_default_mode",
+        "bypass_validation_gates",
+        "alter_scale_validation_thresholds",
+        "add_new_modes_without_reactivation"
+      ],
+      "allowed_actions": [
+        "read",
+        "audit",
+        "document",
+        "add_non_behavioral_comments"
+      ],
+      "regression_required": true
+    },
+    {
+      "id": "RESTORED_BASELINE_MODE",
+      "protection_level": "LOCKED",
+      "paths": [
+        "services/api/app/services/blueprint_orchestrator.py",
+        "services/api/app/services/blueprint_extract.py"
+      ],
+      "governance_doc": "docs/governance/BLUEPRINT_READER_PROTECTION_RULES.md",
+      "requires_explicit_approval": true,
+      "forbidden_actions": [
+        "remove_restored_baseline_mode",
+        "rename_restored_baseline",
+        "change_restored_baseline_behavior",
+        "make_restored_baseline_non_default_recovery"
+      ],
+      "allowed_actions": [
+        "read",
+        "audit",
+        "document"
+      ],
+      "regression_required": true,
+      "notes": "restored_baseline is the recovery mode for production regressions"
+    },
+    {
+      "id": "DXF_COMPAT_LAYER",
+      "protection_level": "LOCKED",
+      "paths": [
+        "services/api/app/util/dxf_compat.py",
+        "services/blueprint-import/dxf_compat.py",
+        "services/api/app/cam/dxf_writer.py"
+      ],
+      "governance_doc": "docs/governance/MORPHOLOGY_RECONSTRUCTION_PLATFORM.md",
+      "requires_explicit_approval": true,
+      "forbidden_actions": [
+        "bypass_dxf_compat_for_new_generators",
+        "change_r12_line_only_behavior",
+        "change_r2000_lwpolyline_behavior",
+        "remove_version_parameter"
+      ],
+      "allowed_actions": [
+        "read",
+        "audit",
+        "document",
+        "add_new_version_support"
+      ],
+      "regression_required": true
+    },
+    {
+      "id": "IBG_CORE",
+      "protection_level": "LOCKED",
+      "paths": [
+        "services/api/app/instrument_geometry/body/ibg/instrument_body_generator.py",
+        "services/api/app/instrument_geometry/body/ibg/body_contour_solver.py",
+        "services/api/app/instrument_geometry/body/ibg/constraint_extractor.py",
+        "services/api/app/instrument_geometry/body/ibg/arc_reconstructor.py"
+      ],
+      "governance_doc": "docs/governance/IBG_ROLE_DEFINITION.md",
+      "requires_explicit_approval": true,
+      "forbidden_actions": [
+        "alter_sevy_mottola_math",
+        "add_image_processing",
+        "add_learning_systems",
+        "change_solved_body_model_schema",
+        "bypass_landmark_extraction"
+      ],
+      "allowed_actions": [
+        "read",
+        "audit",
+        "document",
+        "add_instrument_specs"
+      ],
+      "regression_required": true,
+      "notes": "IBG math verified against published lutherie sources"
+    },
+    {
+      "id": "MORPHOLOGY_GOVERNANCE_DOCS",
+      "protection_level": "STABILIZED",
+      "paths": [
+        "docs/governance/"
+      ],
+      "governance_doc": "docs/governance/MORPHOLOGY_RECONSTRUCTION_PLATFORM.md",
+      "requires_explicit_approval": true,
+      "forbidden_actions": [
+        "delete_governance_documents",
+        "weaken_protection_levels",
+        "remove_protected_systems",
+        "bypass_approval_requirements"
+      ],
+      "allowed_actions": [
+        "read",
+        "add_new_governance_docs",
+        "strengthen_protections",
+        "add_protected_systems"
+      ],
+      "regression_required": false
+    }
+  ],
+  "approval_mechanism": {
+    "environment_variable": "GOVERNANCE_APPROVED_CHANGE",
+    "required_value": "1",
+    "notes": "Set GOVERNANCE_APPROVED_CHANGE=1 to approve changes to protected paths"
+  },
+  "enforcement_scripts": {
+    "protected_paths": "scripts/check_protected_paths.py",
+    "sprint_namespace": "scripts/check_sprint_namespace.py"
+  }
+}

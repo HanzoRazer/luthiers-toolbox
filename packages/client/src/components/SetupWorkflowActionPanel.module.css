@@ -1,0 +1,229 @@
+/**
+ * SetupWorkflowActionPanel CSS Module
+ * NECK-A Phase 4: Action workflow panel styles
+ */
+
+.panelTitle {
+  margin: 0 0 12px 0;
+  font-size: 15px;
+  font-weight: 600;
+  color: #fff;
+  border-bottom: 1px solid #333;
+  padding-bottom: 8px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.badge {
+  font-size: 10px;
+  font-weight: 500;
+  padding: 2px 6px;
+  border-radius: 3px;
+  background: #1e3a5f;
+  color: #60a5fa;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.formGrid {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  margin-bottom: 12px;
+}
+
+.formRow {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.sectionLabel {
+  margin: 0;
+  font-size: 12px;
+  font-weight: 500;
+  color: #888;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.targetRow {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12px;
+}
+
+.targetRow label {
+  min-width: 60px;
+  color: #888;
+}
+
+.targetInput {
+  width: 60px;
+  padding: 4px 6px;
+  background: #1a1a1a;
+  border: 1px solid #333;
+  border-radius: 3px;
+  color: #ccc;
+  font-size: 12px;
+  text-align: center;
+}
+
+.targetSeparator {
+  color: #666;
+}
+
+.helpText {
+  font-size: 11px;
+  color: #888;
+  margin-bottom: 12px;
+  font-style: italic;
+}
+
+.results {
+  margin-top: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.gateHeader {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.gateBadge {
+  padding: 6px 14px;
+  border-radius: 4px;
+  font-weight: 600;
+  font-size: 13px;
+}
+
+.gateGreen {
+  background: #065f46;
+  color: #6ee7b7;
+}
+
+.gateYellow {
+  background: #78350f;
+  color: #fcd34d;
+}
+
+.gateRed {
+  background: #7f1d1d;
+  color: #fca5a5;
+}
+
+.summary {
+  font-size: 13px;
+  color: #ccc;
+}
+
+.diagnosticsList {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.diagnosticCard {
+  padding: 12px;
+  background: #1a1a1a;
+  border-radius: 4px;
+  border-left: 3px solid #333;
+}
+
+.diagnosticCard.gateGreen {
+  border-left-color: #10b981;
+}
+
+.diagnosticCard.gateYellow {
+  border-left-color: #f59e0b;
+}
+
+.diagnosticCard.gateRed {
+  border-left-color: #ef4444;
+}
+
+.diagHeader {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.diagBadge {
+  padding: 2px 8px;
+  border-radius: 3px;
+  font-weight: 600;
+  font-size: 10px;
+}
+
+.diagPosition {
+  font-size: 13px;
+  font-weight: 500;
+  color: #fff;
+}
+
+.diagMessage {
+  font-size: 12px;
+  color: #ccc;
+  margin-bottom: 8px;
+}
+
+.diagMeasurement {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.measurementValue {
+  font-size: 14px;
+  font-weight: 600;
+  color: #0ea5e9;
+  font-family: monospace;
+}
+
+.measurementRange {
+  font-size: 11px;
+  color: #666;
+}
+
+.causesSection,
+.actionsSection {
+  margin-top: 8px;
+  font-size: 11px;
+}
+
+.causesSection {
+  border-top: 1px dashed #333;
+  padding-top: 8px;
+}
+
+.actionsSection {
+  border-top: 1px dashed #333;
+  padding-top: 8px;
+}
+
+.causesSection strong,
+.actionsSection strong {
+  color: #999;
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.causesSection ul,
+.actionsSection ul {
+  margin: 4px 0 0 0;
+  padding-left: 16px;
+}
+
+.causesSection li,
+.actionsSection li {
+  color: #aaa;
+  margin-bottom: 2px;
+}

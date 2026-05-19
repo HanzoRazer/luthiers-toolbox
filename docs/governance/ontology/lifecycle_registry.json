@@ -1,0 +1,166 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Lifecycle Vocabulary Registry",
+  "version": "1.0.0",
+  "date": "2026-05-16",
+  "description": "Normalized lifecycle state vocabulary across all domains",
+  "classifications": {
+    "canonical": {
+      "canonical_definition": "The authoritative, ratified form of a term, schema, or implementation",
+      "owner_domain": "Governance Layer",
+      "classification": "CANONICAL",
+      "allowed_contexts": ["vocabulary registry", "schema definitions", "authority declarations"],
+      "runtime_meaning": "Stable, production-ready, governance-ratified",
+      "conflicts_with": []
+    },
+    "supported": {
+      "canonical_definition": "Full runtime generation capability exists and is production-ready",
+      "owner_domain": "Runtime Classification",
+      "classification": "CANONICAL",
+      "allowed_contexts": ["translator capability", "export operations", "runtime dispatch"],
+      "runtime_meaning": "Can execute without limitation",
+      "aliases": ["SUPPORTED_PROTOTYPE"],
+      "conflicts_with": []
+    },
+    "semantic_only": {
+      "canonical_definition": "Schema is valid but no runtime topology or execution capability exists",
+      "owner_domain": "CAD Translation Governance",
+      "classification": "CANONICAL",
+      "allowed_contexts": ["cad_semantics classification", "translator rejection"],
+      "runtime_meaning": "Schema validation passes; no output generated",
+      "conflicts_with": ["unsupported_runtime"],
+      "reconciliation_note": "semantic_only implies valid schema; unsupported_runtime implies rejection"
+    },
+    "prototype": {
+      "canonical_definition": "Experimental implementation with relaxed validation, not production-ready",
+      "owner_domain": "Topology Builder Governance",
+      "classification": "CANONICAL",
+      "allowed_contexts": ["topology tier", "validation mode", "development phase"],
+      "runtime_meaning": "G0 acceptable, warnings allowed, clear prototype marking",
+      "aliases": ["PROTOTYPE", "TopologyTier.PROTOTYPE"],
+      "conflicts_with": []
+    },
+    "partial_prototype": {
+      "canonical_definition": "Some features supported with warnings, others skipped",
+      "owner_domain": "Topology Builder Governance",
+      "classification": "CANONICAL",
+      "allowed_contexts": ["topology runtime support", "feature classification"],
+      "runtime_meaning": "Partial output with explicit warnings",
+      "aliases": ["PARTIAL_PROTOTYPE"],
+      "conflicts_with": []
+    },
+    "unsupported_runtime": {
+      "canonical_definition": "Cannot generate output, clean rejection required",
+      "owner_domain": "Topology Builder Governance",
+      "classification": "CANONICAL",
+      "allowed_contexts": ["topology classification", "translator rejection"],
+      "runtime_meaning": "Explicit failure with classification",
+      "aliases": ["UNSUPPORTED_RUNTIME", "UNSUPPORTED_TOPOLOGY_RUNTIME"],
+      "conflicts_with": []
+    },
+    "research_required": {
+      "canonical_definition": "Future capability needed, implementation not yet available",
+      "owner_domain": "Topology Builder Governance",
+      "classification": "CANONICAL",
+      "allowed_contexts": ["feature classification", "roadmap items"],
+      "runtime_meaning": "Blocked pending implementation",
+      "aliases": ["RESEARCH_REQUIRED", "RESEARCH_ONLY"],
+      "conflicts_with": []
+    },
+    "governed": {
+      "canonical_definition": "Subject to governance constraints and lifecycle rules",
+      "owner_domain": "Governance Layer",
+      "classification": "CANONICAL",
+      "allowed_contexts": ["export lifecycle", "artifact classification"],
+      "runtime_meaning": "Governance rules apply",
+      "conflicts_with": []
+    },
+    "governed_experimental": {
+      "canonical_definition": "Subject to governance but explicitly experimental, may change without notice",
+      "owner_domain": "Governance Layer",
+      "classification": "CANONICAL",
+      "allowed_contexts": ["feature flags", "experimental APIs"],
+      "runtime_meaning": "Governance applies but stability not guaranteed",
+      "conflicts_with": []
+    },
+    "experimental": {
+      "canonical_definition": "Not yet governed, subject to change or removal",
+      "owner_domain": "Governance Layer",
+      "classification": "CANONICAL",
+      "allowed_contexts": ["development branches", "prototype features"],
+      "runtime_meaning": "No stability guarantees",
+      "conflicts_with": []
+    },
+    "quarantine": {
+      "canonical_definition": "Isolated from production paths pending review or remediation",
+      "owner_domain": "Governance Layer",
+      "classification": "CANONICAL",
+      "allowed_contexts": ["unsafe code", "pending review", "isolation boundaries"],
+      "runtime_meaning": "Must not reach production without explicit release",
+      "conflicts_with": []
+    },
+    "validation_only": {
+      "canonical_definition": "Performs validation without producing output or modifying state",
+      "owner_domain": "Validation Layer",
+      "classification": "CANONICAL",
+      "allowed_contexts": ["dry-run modes", "validation passes"],
+      "runtime_meaning": "No side effects, report only",
+      "conflicts_with": []
+    },
+    "preview_only": {
+      "canonical_definition": "Visualization output only, not machine-ready",
+      "owner_domain": "CAM Export Governance",
+      "classification": "CANONICAL",
+      "allowed_contexts": ["preview generation", "visualization"],
+      "runtime_meaning": "Not suitable for manufacturing",
+      "conflicts_with": []
+    },
+    "machine_candidate": {
+      "canonical_definition": "Potentially machine-ready, pending final authorization",
+      "owner_domain": "CAM Export Governance",
+      "classification": "CANONICAL",
+      "allowed_contexts": ["CAM pipeline", "machine output"],
+      "runtime_meaning": "Requires authorization gate before execution",
+      "conflicts_with": []
+    },
+    "blocking": {
+      "canonical_definition": "Failure severity that prevents operation from proceeding",
+      "owner_domain": "Topology Failure Classification",
+      "classification": "CANONICAL",
+      "allowed_contexts": ["error classification", "validation failures"],
+      "runtime_meaning": "Immediate rejection, no output",
+      "aliases": ["BLOCKING"],
+      "conflicts_with": []
+    },
+    "major": {
+      "canonical_definition": "Failure severity requiring investigation, tier-dependent handling",
+      "owner_domain": "Topology Failure Classification",
+      "classification": "CANONICAL",
+      "allowed_contexts": ["error classification", "validation warnings"],
+      "runtime_meaning": "PROTOTYPE: warning; PRODUCTION: blocking",
+      "aliases": ["MAJOR"],
+      "conflicts_with": []
+    },
+    "warning": {
+      "canonical_definition": "Minor issue, output usable but not ideal",
+      "owner_domain": "Topology Failure Classification",
+      "classification": "CANONICAL",
+      "allowed_contexts": ["error classification", "quality flags"],
+      "runtime_meaning": "Logged, output produced",
+      "aliases": ["WARNING"],
+      "conflicts_with": []
+    }
+  },
+  "known_conflicts": [
+    {
+      "terms": ["semantic_only", "unsupported"],
+      "nature": "semantic_only implies valid schema; unsupported may imply invalid schema",
+      "resolution": "Use semantic_only when schema validates; use unsupported when schema itself is invalid"
+    },
+    {
+      "terms": ["supported", "supported_prototype"],
+      "nature": "Different domains use different terminology for similar concepts",
+      "resolution": "supported is cad_semantics vocabulary; supported_prototype is topology_builder vocabulary"
+    }
+  ]
+}

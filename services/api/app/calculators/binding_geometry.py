@@ -38,6 +38,7 @@ from .binding_materials import (
     MATERIAL_FEED_RATES,
     DEFAULT_FEED_SETTINGS,
     get_material_feed_settings,
+    get_minimum_bend_radius,
     PurflingStripProfile,
     PurflingStripSpec,
     PURFLING_STRIP_PATTERNS,
@@ -160,7 +161,7 @@ def calculate_neck_binding_geometry(
 
     # Check bend radii along the path
     bend_checks = []
-    min_material_radius = MINIMUM_BEND_RADII_MM.get(material, 10.0)
+    min_material_radius = get_minimum_bend_radius(material)
 
     # For neck binding, curvature comes from the taper, not sharp corners
     # The taper is gradual, so bend radius is essentially infinite (straight line in XY)
@@ -237,7 +238,7 @@ def calculate_headstock_binding_geometry(
     bend_checks = []
     miter_joints = []
 
-    min_material_radius = MINIMUM_BEND_RADII_MM.get(material, 10.0)
+    min_material_radius = get_minimum_bend_radius(material)
     is_manufacturable = True
 
     # Analyze curvature at each point
@@ -445,7 +446,7 @@ def calculate_body_binding_path(
     if body_outline[0] != body_outline[-1]:
         body_outline = body_outline + [body_outline[0]]
 
-    min_material_radius = MINIMUM_BEND_RADII_MM.get(material, 10.0)
+    min_material_radius = get_minimum_bend_radius(material)
     total_length = polyline_length(body_outline)
 
     # Find tightest curves
@@ -734,7 +735,7 @@ def calculate_binding_strip_length(
 
     # Add material-specific notes
     if material is not None:
-        min_bend = MINIMUM_BEND_RADII_MM.get(material, 10.0)
+        min_bend = get_minimum_bend_radius(material)
         notes.append(f"{material.value}: min bend radius {min_bend}mm")
 
     if strip_width_mm is not None:

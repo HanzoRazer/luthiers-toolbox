@@ -21,6 +21,7 @@ from typing import Any, Dict, List, Tuple
 
 try:
     import ezdxf
+    from app.util.dxf_compat import create_document
     EZDXF_AVAILABLE = True
 except ImportError:
     EZDXF_AVAILABLE = False
@@ -57,7 +58,7 @@ def generate_saddle_dxf(
     compensations = fit_params.get("string_compensations_mm", [3.0, 2.5, 2.2, 2.0, 1.8, 1.5])
     num_strings = len(compensations)
 
-    doc = ezdxf.new("R2010")
+    doc = create_document(version="R2010")
     msp = doc.modelspace()
 
     # Create layers

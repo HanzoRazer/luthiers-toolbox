@@ -158,6 +158,108 @@ CAM_ROUTERS: List[RouterSpec] = [
         category="cam",
     ),
     RouterSpec(
+        module="app.routers.cam.nut_slot_router",
+        prefix="/api/cam",
+        tags=["CAM", "Nut Slot"],
+        category="cam",
+    ),
+    RouterSpec(
+        module="app.routers.cam.postprocessor_boundary_router",
+        prefix="/api/cam",
+        tags=["CAM", "Postprocessor", "Compatibility"],
+        category="cam",
+    ),
+    RouterSpec(
+        module="app.routers.cam.dxf_translator_router",
+        prefix="/api/cam",
+        tags=["CAM", "DXF", "Translator"],
+        category="cam",
+    ),
+    RouterSpec(
+        module="app.routers.cam.export_lifecycle_router",
+        prefix="/api/cam",
+        tags=["CAM", "Export", "Lifecycle"],
+        category="cam",
+    ),
+    RouterSpec(
+        module="app.routers.cam.lifecycle_capability_router",
+        prefix="/api/cam",
+        tags=["CAM", "Lifecycle", "Capabilities"],
+        category="cam",
+    ),
+    RouterSpec(
+        module="app.routers.cam.translator_capability_router",
+        prefix="/api/cam",
+        tags=["CAM", "Translator", "Capabilities"],
+        category="cam",
+    ),
+    RouterSpec(
+        module="app.routers.cam.translation_artifact_router",
+        prefix="",
+        tags=["CAM", "Translation", "Artifacts"],
+        category="cam",
+    ),
+    RouterSpec(
+        module="app.routers.cam.translation_artifact_authorization_router",
+        prefix="",
+        tags=["CAM", "Translation", "Authorization"],
+        category="cam",
+    ),
+    RouterSpec(
+        module="app.routers.cam.translation_provenance_router",
+        prefix="",
+        tags=["CAM", "Translation", "Provenance"],
+        category="cam",
+    ),
+    RouterSpec(
+        module="app.routers.cam.translator_readiness_router",
+        prefix="/api/cam",
+        tags=["CAM", "Translator", "Readiness"],
+        category="cam",
+    ),
+    RouterSpec(
+        module="app.routers.cam.translator_execution_quarantine_router",
+        prefix="/api/cam",
+        tags=["CAM", "Translator", "Quarantine"],
+        category="cam",
+    ),
+    RouterSpec(
+        module="app.routers.cam.translator_governance_dossier_router",
+        prefix="/api/cam",
+        tags=["CAM", "Translator", "Governance", "Dossier"],
+        category="cam",
+    ),
+    RouterSpec(
+        module="app.routers.cam.translator_governance_review_router",
+        prefix="/api/cam",
+        tags=["CAM", "Translator", "Governance", "Review"],
+        category="cam",
+    ),
+    RouterSpec(
+        module="app.routers.cam.translator_governance_review_ledger_router",
+        prefix="/api/cam",
+        tags=["CAM", "Translator", "Governance", "Ledger"],
+        category="cam",
+    ),
+    RouterSpec(
+        module="app.routers.cam.translator_governance_continuity_router",
+        prefix="",
+        tags=["CAM", "Translator", "Governance", "Continuity"],
+        category="cam",
+    ),
+    RouterSpec(
+        module="app.routers.cam.ontology_reconciliation_router",
+        prefix="",
+        tags=["CAM", "Ontology", "Governance", "Reconciliation"],
+        category="cam",
+    ),
+    RouterSpec(
+        module="app.routers.cam.lifecycle_promotion_router",
+        prefix="",
+        tags=["CAM", "Lifecycle", "Promotion"],
+        category="cam",
+    ),
+    RouterSpec(
         module="app.cam.rosette.photo_batch_router",
         prefix="",
         tags=["CAM", "Rosette", "Batch"],
@@ -251,6 +353,28 @@ CAM_ROUTERS: List[RouterSpec] = [
         module="app.routers.body_solver_router",
         prefix="",  # Router has its own /api/body prefix
         tags=["Body Solver", "IBG"],
+        category="cam",
+    ),
+    # ── MRP-2B: Body Export Bridge (BOE → Export Object) ──
+    RouterSpec(
+        module="app.routers.export.body_export_router",
+        prefix="/api/export",
+        tags=["Export", "Body", "MRP"],
+        category="cam",
+    ),
+    # ── MRP-3B: DXF Translator Endpoint (Export Object → DXF) ──
+    # DEPRECATED: Use /api/translate/{target} instead (MRP-4A)
+    RouterSpec(
+        module="app.routers.export.dxf_translate_router",
+        prefix="/api/export/translate",
+        tags=["Export", "Translate", "DXF", "MRP"],
+        category="cam",
+    ),
+    # ── MRP-4A: Multi-Target Translator Endpoint ──
+    RouterSpec(
+        module="app.routers.export.translate_router",
+        prefix="/api/translate",
+        tags=["Export", "Translate", "MRP"],
         category="cam",
     ),
 ]

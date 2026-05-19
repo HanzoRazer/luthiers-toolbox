@@ -1,0 +1,214 @@
+{
+  "manifest_version": "2.0",
+  "dev_order": "5G",
+  "audit_date": "2026-05-10",
+  "category": "rosette",
+  "routes": [
+    {
+      "path": "/api/rmos/rosette/segment-ring",
+      "method": "POST",
+      "router_file": "rmos/rosette_cam_router.py",
+      "frontend_callers": ["useRosetteDesignerStore.ts", "rmosRosetteCam.ts"],
+      "output_type": "geometry",
+      "classification": "CANDIDATE_PREVIEW",
+      "machine_output": false,
+      "safety_gate": "not_required",
+      "coordinate_system": "unknown",
+      "notes": "Ring segmentation geometry"
+    },
+    {
+      "path": "/api/rmos/rosette/design",
+      "method": "POST",
+      "router_file": "rmos/rosette_cam_router.py",
+      "frontend_callers": [],
+      "output_type": "geometry",
+      "classification": "CANDIDATE_PREVIEW",
+      "machine_output": false,
+      "safety_gate": "not_required",
+      "coordinate_system": "unknown",
+      "notes": "Multi-ring design"
+    },
+    {
+      "path": "/api/rmos/rosette/generate-slices",
+      "method": "POST",
+      "router_file": "rmos/rosette_cam_router.py",
+      "frontend_callers": ["useRosetteDesignerStore.ts", "rmosRosetteCam.ts"],
+      "output_type": "geometry",
+      "classification": "CANDIDATE_PREVIEW",
+      "machine_output": false,
+      "safety_gate": "not_required",
+      "coordinate_system": "unknown",
+      "notes": "Slice generation"
+    },
+    {
+      "path": "/api/rmos/rosette/preview",
+      "method": "POST",
+      "router_file": "rmos/rosette_cam_router.py",
+      "frontend_callers": ["useRosetteDesignerStore.ts", "rmosRosetteCam.ts"],
+      "output_type": "preview",
+      "classification": "CANDIDATE_PREVIEW",
+      "machine_output": false,
+      "safety_gate": "not_required",
+      "coordinate_system": "unknown",
+      "notes": "CNC-aware preview, candidate for canonical CAM preview"
+    },
+    {
+      "path": "/api/rmos/rosette/export-cnc",
+      "method": "POST",
+      "router_file": "rmos/rosette_cam_router.py",
+      "frontend_callers": ["useRosetteDesignerStore.ts"],
+      "output_type": "gcode",
+      "classification": "QUARANTINED_EXPORT",
+      "machine_output": true,
+      "safety_gate": "missing",
+      "coordinate_system": "missing",
+      "rmos_artifact": false,
+      "input_hash": false,
+      "output_hash": false,
+      "required_governance": [
+        "RMOS run artifact creation",
+        "Input/output hash persistence",
+        "Safety gate enforcement",
+        "Coordinate system declaration",
+        "Tool validation"
+      ],
+      "notes": "CRITICAL: G-code export without RMOS governance. Quarantined pending governance implementation."
+    },
+    {
+      "path": "/api/rmos/rosette/cnc-history",
+      "method": "GET",
+      "router_file": "rmos/rosette_cam_router.py",
+      "frontend_callers": ["RMOSCncHistoryView.vue"],
+      "output_type": "list",
+      "classification": "LEGACY",
+      "machine_output": false,
+      "safety_gate": "not_required",
+      "notes": "Job history listing"
+    },
+    {
+      "path": "/api/rmos/rosette/cnc-job/{job_id}",
+      "method": "GET",
+      "router_file": "rmos/rosette_cam_router.py",
+      "frontend_callers": ["RMOSCncJobDetailView.vue"],
+      "output_type": "artifact",
+      "classification": "LEGACY",
+      "machine_output": false,
+      "safety_gate": "not_required",
+      "notes": "Job detail retrieval"
+    },
+    {
+      "path": "/api/art/rosette/preview/svg",
+      "method": "POST",
+      "router_file": "art_studio/api/preview_routes.py",
+      "frontend_callers": ["artPreviewClient.ts"],
+      "output_type": "svg",
+      "classification": "CANDIDATE_PREVIEW",
+      "machine_output": false,
+      "safety_gate": "not_required",
+      "coordinate_system": "unknown",
+      "notes": "SVG preview, candidate for canonical design preview"
+    },
+    {
+      "path": "/api/art/rosette/preview",
+      "method": "POST",
+      "router_file": "art_studio/api/rosette_jobs_routes.py",
+      "frontend_callers": ["RosettePipelineView"],
+      "output_type": "paths",
+      "classification": "LEGACY",
+      "machine_output": false,
+      "safety_gate": "not_required",
+      "notes": "Inline generator, not suitable for canonical"
+    },
+    {
+      "path": "/api/art/rosette/jobs",
+      "method": "GET",
+      "router_file": "art_studio/api/rosette_jobs_routes.py",
+      "frontend_callers": ["useRosetteCompareActions.ts"],
+      "output_type": "list",
+      "classification": "LEGACY",
+      "machine_output": false,
+      "safety_gate": "not_required",
+      "notes": "Job listing"
+    },
+    {
+      "path": "/api/art/rosette/presets",
+      "method": "GET",
+      "router_file": "art_studio/api/rosette_jobs_routes.py",
+      "frontend_callers": [],
+      "output_type": "list",
+      "classification": "LEGACY",
+      "machine_output": false,
+      "safety_gate": "not_required",
+      "notes": "Preset listing"
+    },
+    {
+      "path": "/api/art/rosette/compare",
+      "method": "POST",
+      "router_file": "art_studio/api/rosette_compare_routes.py",
+      "frontend_callers": ["useRosetteCompareActions.ts"],
+      "output_type": "diff",
+      "classification": "LEGACY",
+      "machine_output": false,
+      "safety_gate": "not_required",
+      "notes": "Comparison feature"
+    },
+    {
+      "path": "/api/cam/rosette/post-gcode",
+      "method": "POST",
+      "router_file": "cam/routers/rosette/rosette_toolpath_router.py",
+      "frontend_callers": [],
+      "output_type": "gcode",
+      "classification": "GOVERNED_EXPORT",
+      "machine_output": true,
+      "safety_gate": "verified",
+      "rmos_artifact": true,
+      "coordinate_system": "partial",
+      "notes": "RMOS-integrated G-code export. Recommended canonical export path."
+    },
+    {
+      "path": "/api/cam/rosette/plan-toolpath",
+      "method": "POST",
+      "router_file": "cam/routers/rosette/rosette_toolpath_router.py",
+      "frontend_callers": [],
+      "output_type": "toolpath",
+      "classification": "RMOS_INTEGRATED",
+      "machine_output": false,
+      "safety_gate": "verified",
+      "notes": "Toolpath planning, RMOS integrated"
+    },
+    {
+      "path": "/rosette/snapshots/export",
+      "method": "POST",
+      "router_file": "art_studio/api/rosette_snapshot_routes.py",
+      "frontend_callers": ["sdk/art/snapshots.ts"],
+      "output_type": "snapshot",
+      "classification": "RMOS_INTEGRATED",
+      "machine_output": false,
+      "safety_gate": "not_required",
+      "notes": "Snapshot export"
+    }
+  ],
+  "summary": {
+    "total_routes": 15,
+    "candidate_preview": 5,
+    "governed_export": 1,
+    "quarantined_export": 1,
+    "legacy": 6,
+    "rmos_integrated": 2,
+    "frontend_drift": 6,
+    "critical_governance_gaps": [
+      "/api/rmos/rosette/export-cnc"
+    ]
+  },
+  "canonical_recommendations": {
+    "design_preview": "/api/art/rosette/preview/svg",
+    "cam_preview": "/api/rmos/rosette/preview",
+    "governed_export": "/api/cam/rosette/post-gcode"
+  },
+  "future_sequence": [
+    "5H — Canonical preview selection",
+    "5I — Governed preview implementation",
+    "5J — Export boundary normalization",
+    "5K — Governed export promotion"
+  ]
+}

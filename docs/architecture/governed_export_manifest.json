@@ -1,0 +1,263 @@
+{
+  "manifest_version": "1.0.0",
+  "created_at": "2026-05-10",
+  "dev_order": "6A",
+  "status": "ARCHITECTURAL DEFINITION",
+
+  "architecture": {
+    "umbrella_document": "CAM_GOVERNED_EXPORT_ARCHITECTURE.md",
+    "description": "Canonical export model connecting preview, export, and machine output",
+    "layers": [
+      {
+        "layer": 1,
+        "name": "Geometry",
+        "classification": "NEUTRAL",
+        "status": "COMPLETE",
+        "description": "Pure dimensional data without machining semantics"
+      },
+      {
+        "layer": 2,
+        "name": "Toolpath",
+        "classification": "NEUTRAL",
+        "status": "COMPLETE",
+        "description": "Machine-agnostic toolpath generation"
+      },
+      {
+        "layer": 3,
+        "name": "Governed Preview",
+        "classification": "PREVIEW",
+        "status": "COMPLETE",
+        "description": "Human-inspection representation with gate evaluation",
+        "dev_order": "5C-5E"
+      },
+      {
+        "layer": 4,
+        "name": "Export Object",
+        "classification": "EXPORT",
+        "status": "ARCHITECTURE DEFINED",
+        "description": "Portable manufacturing representation",
+        "dev_order": "6A"
+      },
+      {
+        "layer": 5,
+        "name": "RMOS Persistence",
+        "classification": "GOVERNANCE",
+        "status": "PARTIAL",
+        "description": "Artifact storage, lineage, provenance"
+      },
+      {
+        "layer": 6,
+        "name": "Postprocessor",
+        "classification": "MACHINE OUTPUT",
+        "status": "INTERFACE DEFINED",
+        "description": "Machine/controller-specific translation",
+        "dev_order": "6A"
+      },
+      {
+        "layer": 7,
+        "name": "Machine Output",
+        "classification": "MACHINE OUTPUT",
+        "status": "NOT IMPLEMENTED",
+        "description": "Executable delivery"
+      }
+    ]
+  },
+
+  "classifications": [
+    {
+      "name": "NEUTRAL",
+      "description": "No governance requirements",
+      "layers": [1, 2]
+    },
+    {
+      "name": "PREVIEW",
+      "description": "Human-inspection oriented, gate-evaluated",
+      "layers": [3],
+      "governance": "Governed Preview Standard"
+    },
+    {
+      "name": "EXPORT",
+      "description": "Portable manufacturing representation",
+      "layers": [4],
+      "governance": "Export Object Model"
+    },
+    {
+      "name": "GOVERNANCE",
+      "description": "System artifacts and tracking",
+      "layers": [5],
+      "governance": "RMOS"
+    },
+    {
+      "name": "MACHINE OUTPUT",
+      "description": "Machine-executable representation",
+      "layers": [6, 7],
+      "governance": "Machine Output Quarantine Policy + Export Governance Policy"
+    }
+  ],
+
+  "boundaries": [
+    {
+      "name": "Preview → Export",
+      "from_layer": 3,
+      "to_layer": 4,
+      "crossing_requirements": [
+        "Preview gate status GREEN or YELLOW",
+        "User confirmation for YELLOW gates",
+        "Complete validation record attached",
+        "Source preview hash preserved"
+      ]
+    },
+    {
+      "name": "Export → Postprocessor",
+      "from_layer": 5,
+      "to_layer": 6,
+      "crossing_requirements": [
+        "Valid Export Object",
+        "Selected Machine Profile",
+        "Tool validation against machine",
+        "Envelope validation against machine",
+        "RMOS run tracking active"
+      ]
+    }
+  ],
+
+  "documents": [
+    {
+      "id": "CAM_GOVERNED_EXPORT_ARCHITECTURE",
+      "file": "CAM_GOVERNED_EXPORT_ARCHITECTURE.md",
+      "type": "umbrella",
+      "description": "Main architectural definition connecting all components"
+    },
+    {
+      "id": "CAM_EXPORT_OBJECT_MODEL",
+      "file": "CAM_EXPORT_OBJECT_MODEL.md",
+      "type": "schema",
+      "description": "Export object schema with all blocks"
+    },
+    {
+      "id": "CAM_POSTPROCESSOR_INTERFACE_STANDARD",
+      "file": "CAM_POSTPROCESSOR_INTERFACE_STANDARD.md",
+      "type": "interface",
+      "description": "Postprocessor contract definition"
+    },
+    {
+      "id": "CAM_MACHINE_PROFILE_STANDARD",
+      "file": "CAM_MACHINE_PROFILE_STANDARD.md",
+      "type": "schema",
+      "description": "Machine abstraction model"
+    },
+    {
+      "id": "CAM_TOOL_LIBRARY_STANDARD",
+      "file": "CAM_TOOL_LIBRARY_STANDARD.md",
+      "type": "schema",
+      "description": "Tooling abstraction"
+    },
+    {
+      "id": "CAM_EXPORT_LIFECYCLE",
+      "file": "CAM_EXPORT_LIFECYCLE.md",
+      "type": "flow",
+      "description": "Preview → Export → Machine lifecycle"
+    }
+  ],
+
+  "related_policies": [
+    {
+      "document": "CAM_EXPORT_GOVERNANCE_POLICY.md",
+      "role": "Defines gates for Export → Machine Output"
+    },
+    {
+      "document": "CAM_POSTPROCESSOR_BOUNDARY.md",
+      "role": "Defines postprocessor interface requirements"
+    },
+    {
+      "document": "CAM_MACHINE_OUTPUT_QUARANTINE_POLICY.md",
+      "role": "Classifies endpoints by governance status"
+    },
+    {
+      "document": "CAM_PREVIEW_CONTRACT_STANDARD.md",
+      "role": "Defines governed preview response shape"
+    }
+  ],
+
+  "governed_preview_operations": [
+    {
+      "operation": "nut_slot_preview",
+      "status": "COMPLETE",
+      "dev_order": "5C",
+      "endpoint": "/api/cam/nut-slot/preview"
+    },
+    {
+      "operation": "fret_slot_preview",
+      "status": "COMPLETE",
+      "dev_order": "5D",
+      "endpoint": "/api/cam/fret-slots/preview"
+    },
+    {
+      "operation": "drilling_preview",
+      "status": "COMPLETE",
+      "dev_order": "5E",
+      "endpoint": "/api/cam/drilling/preview"
+    }
+  ],
+
+  "candidate_operations": [
+    {
+      "operation": "rosette_preview",
+      "status": "FRAGMENTED",
+      "blocker": "Route ambiguity - multiple preview implementations",
+      "audit": "rosette_cam_route_manifest.json"
+    }
+  ],
+
+  "export_types": [
+    {
+      "type": "toolpath",
+      "description": "Full export with toolpaths ready for postprocessing"
+    },
+    {
+      "type": "geometry",
+      "description": "Geometry only (DXF equivalent)"
+    },
+    {
+      "type": "bundle",
+      "description": "Combined geometry + toolpaths + artifacts"
+    }
+  ],
+
+  "controller_types": [
+    {
+      "type": "grbl",
+      "dialects": ["grbl_1.1", "grbl_0.9"],
+      "postprocessor_status": "INTERFACE DEFINED"
+    },
+    {
+      "type": "linuxcnc",
+      "dialects": ["linuxcnc"],
+      "postprocessor_status": "INTERFACE DEFINED"
+    },
+    {
+      "type": "fanuc",
+      "dialects": ["fanuc"],
+      "postprocessor_status": "INTERFACE DEFINED"
+    }
+  ],
+
+  "strategic_outcome": {
+    "after_6A": [
+      "Clear classification for all output types",
+      "Defined boundaries with explicit crossing requirements",
+      "Export Object model for portable manufacturing representation",
+      "Postprocessor interface standard",
+      "Machine profile model for machine abstraction",
+      "Tool library model for tooling abstraction",
+      "Governance integration connecting existing policies"
+    ],
+    "enables": [
+      "DXF export normalization",
+      "G-code promotion from quarantine",
+      "Postprocessor implementation",
+      "Machine profile creation",
+      "Tool library integration"
+    ]
+  }
+}

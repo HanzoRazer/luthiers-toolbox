@@ -29,6 +29,8 @@ This rule applies to:
 - clean_file()
 - Any future DXF output in the blueprint pipeline
 
+All DXF document creation uses dxf_compat.create_document() per governance.
+
 Author: Production Shop
 """
 
@@ -44,6 +46,8 @@ from typing import Callable, Dict, List, Optional, Set, Tuple
 
 import ezdxf
 from ezdxf.entities import LWPolyline
+
+from app.util.dxf_compat import create_document
 
 logger = logging.getLogger(__name__)
 
@@ -209,7 +213,7 @@ class DXFCleaner:
         Returns:
             Number of contours written
         """
-        newdoc = ezdxf.new("R12")
+        newdoc = create_document(version="R12")
         newmsp = newdoc.modelspace()
         contours_written = 0
 
@@ -351,7 +355,7 @@ class DXFCleaner:
 
             # Create output document - R12 for maximum compatibility
             # Per CLAUDE.md: LINE entities only, no LWPOLYLINE
-            newdoc = ezdxf.new("R12")
+            newdoc = create_document(version="R12")
             newmsp = newdoc.modelspace()
 
             # Add chains as LINE entities (R12 compatible)

@@ -34,6 +34,13 @@ from .constraint_extractor import (
     ConstraintExtractor,
     ExtractionResult,
 )
+from .session_store import (
+    IBGSessionStore,
+    InMemoryIBGSessionStore,
+    RedisIBGSessionStore,
+    get_session_store,
+    reset_session_store,
+)
 
 __all__ = [
     # Main API
@@ -51,4 +58,10 @@ __all__ = [
     # Extractor
     "ConstraintExtractor",
     "ExtractionResult",
+    # Session Store (IBG-2B)
+    "IBGSessionStore",
+    "InMemoryIBGSessionStore",
+    "RedisIBGSessionStore",
+    "get_session_store",
+    "reset_session_store",
 ]

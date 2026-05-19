@@ -27,6 +27,8 @@ from ezdxf.enums import TextEntityAlignment
 from ezdxf.math import Vec2
 
 from fastapi import APIRouter, HTTPException
+
+from app.util.dxf_compat import create_document
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel, Field
 
@@ -269,7 +271,7 @@ def build_dxf(req: ExportRequest) -> ezdxf.document.Drawing:
     scale = req.scale_override if req.scale_override else MM_PER_UNIT
     kerf_offset = req.kerf_mm / 2   # outward offset = half kerf
 
-    doc = ezdxf.new(dxfversion="R2010")
+    doc = create_document(version="R2010")
     doc.units = units.MM
     msp = doc.modelspace()
 

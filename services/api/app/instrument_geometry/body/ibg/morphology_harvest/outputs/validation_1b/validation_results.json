@@ -1,0 +1,306 @@
+{
+  "timestamp": "2026-05-16T23:25:21.690811",
+  "corpus_root": "C:\\Users\\thepr\\Downloads\\luthiers-toolbox\\Guitar Plans",
+  "total_instruments": 10,
+  "successful_harvests": 0,
+  "classification_matches": 0,
+  "results": [
+    {
+      "instrument_id": "les_paul_59",
+      "file_path": "Gibson-Les-Paul-59-Complete.pdf",
+      "category": "single_cut",
+      "expected_class": "ROUNDED_SINGLE_CUT",
+      "pdf_readable": true,
+      "harvest_success": false,
+      "body_evidence_created": false,
+      "body_grid_success": false,
+      "overlay_generated": false,
+      "actual_class": null,
+      "classification_confidence": 0.0,
+      "centerline_confidence": 0.0,
+      "asymmetry_score": 0.0,
+      "zone_coverage": {},
+      "primitives_detected": 0,
+      "missing_regions": [],
+      "classification_match": false,
+      "errors": [
+        "Harvest failed: no data extracted"
+      ],
+      "warnings": [],
+      "ambiguities": [],
+      "attention_points": [
+        "carved top detection",
+        "asymmetry handling"
+      ],
+      "review_notes": []
+    },
+    {
+      "instrument_id": "sg_complete",
+      "file_path": "01-Gibson-SG-Complete-Template.pdf",
+      "category": "double_cut",
+      "expected_class": "ROUNDED_DOUBLE_CUT",
+      "pdf_readable": true,
+      "harvest_success": false,
+      "body_evidence_created": false,
+      "body_grid_success": false,
+      "overlay_generated": false,
+      "actual_class": null,
+      "classification_confidence": 0.0,
+      "centerline_confidence": 0.0,
+      "asymmetry_score": 0.0,
+      "zone_coverage": {},
+      "primitives_detected": 0,
+      "missing_regions": [],
+      "classification_match": false,
+      "errors": [
+        "Harvest failed: no data extracted"
+      ],
+      "warnings": [],
+      "ambiguities": [],
+      "attention_points": [
+        "horn detection",
+        "cutaway symmetry"
+      ],
+      "review_notes": []
+    },
+    {
+      "instrument_id": "stratocaster_62",
+      "file_path": "Fender-Stratocaster-62.pdf",
+      "category": "slab_body",
+      "expected_class": "SLAB_BODY",
+      "pdf_readable": true,
+      "harvest_success": false,
+      "body_evidence_created": false,
+      "body_grid_success": false,
+      "overlay_generated": false,
+      "actual_class": null,
+      "classification_confidence": 0.0,
+      "centerline_confidence": 0.0,
+      "asymmetry_score": 0.0,
+      "zone_coverage": {},
+      "primitives_detected": 0,
+      "missing_regions": [],
+      "classification_match": false,
+      "errors": [
+        "Harvest failed: no data extracted"
+      ],
+      "warnings": [],
+      "ambiguities": [],
+      "attention_points": [
+        "contour detection",
+        "waist offset"
+      ],
+      "review_notes": []
+    },
+    {
+      "instrument_id": "jazzmaster_62",
+      "file_path": "Fender-Jazzmaster-62-Body.pdf",
+      "category": "offset",
+      "expected_class": "OFFSET_DOUBLE_CUT",
+      "pdf_readable": true,
+      "harvest_success": false,
+      "body_evidence_created": false,
+      "body_grid_success": false,
+      "overlay_generated": false,
+      "actual_class": null,
+      "classification_confidence": 0.0,
+      "centerline_confidence": 0.0,
+      "asymmetry_score": 0.0,
+      "zone_coverage": {},
+      "primitives_detected": 0,
+      "missing_regions": [],
+      "classification_match": false,
+      "errors": [
+        "Harvest failed: no data extracted"
+      ],
+      "warnings": [],
+      "ambiguities": [],
+      "attention_points": [
+        "asymmetry handling",
+        "offset detection",
+        "waist behavior"
+      ],
+      "review_notes": []
+    },
+    {
+      "instrument_id": "explorer_complete",
+      "file_path": "Gibson-Explorer-05-Complete-Plans.pdf",
+      "category": "angular",
+      "expected_class": "ANGULAR_WEDGE",
+      "pdf_readable": true,
+      "harvest_success": false,
+      "body_evidence_created": false,
+      "body_grid_success": false,
+      "overlay_generated": false,
+      "actual_class": null,
+      "classification_confidence": 0.0,
+      "centerline_confidence": 0.0,
+      "asymmetry_score": 0.0,
+      "zone_coverage": {},
+      "primitives_detected": 0,
+      "missing_regions": [],
+      "classification_match": false,
+      "errors": [
+        "Harvest failed: no data extracted"
+      ],
+      "warnings": [],
+      "ambiguities": [],
+      "attention_points": [
+        "angular primitive detection",
+        "suppressed waist",
+        "non-traditional zones"
+      ],
+      "review_notes": []
+    },
+    {
+      "instrument_id": "dreadnought",
+      "file_path": "A003-Dreadnought-MM.pdf",
+      "category": "acoustic_dread",
+      "expected_class": "ROUNDED_ACOUSTIC",
+      "pdf_readable": true,
+      "harvest_success": false,
+      "body_evidence_created": false,
+      "body_grid_success": false,
+      "overlay_generated": false,
+      "actual_class": null,
+      "classification_confidence": 0.0,
+      "centerline_confidence": 0.0,
+      "asymmetry_score": 0.0,
+      "zone_coverage": {},
+      "primitives_detected": 0,
+      "missing_regions": [],
+      "classification_match": false,
+      "errors": [
+        "Harvest failed: no data extracted"
+      ],
+      "warnings": [],
+      "ambiguities": [],
+      "attention_points": [
+        "bout ratios",
+        "waist detection",
+        "symmetry"
+      ],
+      "review_notes": []
+    },
+    {
+      "instrument_id": "classical_santos",
+      "file_path": "Classical-Santos-Hernandez-MM.pdf",
+      "category": "classical",
+      "expected_class": "CLASSICAL_FIGURE_8",
+      "pdf_readable": true,
+      "harvest_success": false,
+      "body_evidence_created": false,
+      "body_grid_success": false,
+      "overlay_generated": false,
+      "actual_class": null,
+      "classification_confidence": 0.0,
+      "centerline_confidence": 0.0,
+      "asymmetry_score": 0.0,
+      "zone_coverage": {},
+      "primitives_detected": 0,
+      "missing_regions": [],
+      "classification_match": false,
+      "errors": [
+        "Harvest failed: no data extracted"
+      ],
+      "warnings": [],
+      "ambiguities": [],
+      "attention_points": [
+        "bout proportions",
+        "waist position",
+        "classical vs acoustic"
+      ],
+      "review_notes": []
+    },
+    {
+      "instrument_id": "es335_complete",
+      "file_path": "Gibson-335/Gibson-335-Dot-Complete.pdf",
+      "category": "semi_hollow",
+      "expected_class": "ROUNDED_DOUBLE_CUT",
+      "pdf_readable": true,
+      "harvest_success": false,
+      "body_evidence_created": false,
+      "body_grid_success": false,
+      "overlay_generated": false,
+      "actual_class": null,
+      "classification_confidence": 0.0,
+      "centerline_confidence": 0.0,
+      "asymmetry_score": 0.0,
+      "zone_coverage": {},
+      "primitives_detected": 0,
+      "missing_regions": [],
+      "classification_match": false,
+      "errors": [
+        "Harvest failed: no data extracted"
+      ],
+      "warnings": [],
+      "ambiguities": [],
+      "attention_points": [
+        "f-hole detection",
+        "hollow body handling",
+        "cutaway behavior"
+      ],
+      "review_notes": []
+    },
+    {
+      "instrument_id": "klein_ergonomic",
+      "file_path": "Klein-Guitar-Plan.pdf",
+      "category": "ergonomic",
+      "expected_class": "HYBRID_FORM",
+      "pdf_readable": true,
+      "harvest_success": false,
+      "body_evidence_created": false,
+      "body_grid_success": false,
+      "overlay_generated": false,
+      "actual_class": null,
+      "classification_confidence": 0.0,
+      "centerline_confidence": 0.0,
+      "asymmetry_score": 0.0,
+      "zone_coverage": {},
+      "primitives_detected": 0,
+      "missing_regions": [],
+      "classification_match": false,
+      "errors": [
+        "Harvest failed: no data extracted"
+      ],
+      "warnings": [],
+      "ambiguities": [],
+      "attention_points": [
+        "non-canonical morphology",
+        "zone mapping failure",
+        "hybrid detection"
+      ],
+      "review_notes": []
+    },
+    {
+      "instrument_id": "cuatro_pr",
+      "file_path": "El Cuatro/cuatro puertorique\u00f1o.pdf",
+      "category": "latin_folk",
+      "expected_class": "ROUNDED_ACOUSTIC",
+      "pdf_readable": true,
+      "harvest_success": false,
+      "body_evidence_created": false,
+      "body_grid_success": false,
+      "overlay_generated": false,
+      "actual_class": null,
+      "classification_confidence": 0.0,
+      "centerline_confidence": 0.0,
+      "asymmetry_score": 0.0,
+      "zone_coverage": {},
+      "primitives_detected": 0,
+      "missing_regions": [],
+      "classification_match": false,
+      "errors": [
+        "Harvest failed: no data extracted"
+      ],
+      "warnings": [],
+      "ambiguities": [],
+      "attention_points": [
+        "scale assumptions",
+        "non-guitar morphology",
+        "size handling"
+      ],
+      "review_notes": []
+    }
+  ]
+}

@@ -1,3 +1,9 @@
+# GOVERNANCE:
+# SYSTEM: IBG_CORE
+# STATUS: PROTECTED_PRODUCTION_BASELINE
+# DOC: docs/governance/IBG_ROLE_DEFINITION.md
+# RULE: Do not alter production behavior without GOVERNANCE_APPROVED_CHANGE.
+
 """
 Body Contour Solver — Parametric Guitar Body Outline Generator
 ===============================================================

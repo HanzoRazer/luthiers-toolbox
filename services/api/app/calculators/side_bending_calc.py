@@ -155,7 +155,7 @@ ALIAS_MAP: Dict[str, str] = {
     "mahogany":               "mahogany_honduran",
     "mahogany_honduras":      "mahogany_honduran",
     "mahogany_honduran":      "mahogany_honduran",
-    "mahogany_african":       "mahogany_african",
+    "mahogany_african":       "khaya",
     "rosewood":               "rosewood_east_indian",
     "rosewood_indian":        "rosewood_east_indian",
     "rosewood_east_indian":   "rosewood_east_indian",
@@ -786,6 +786,9 @@ def compute_bending_parameters(
 
     Returns:
         BendingPlan with complete preparation and risk assessment.
+
+    Raises:
+        ValueError: If species is not found in SPECIES_DATA or wood_species.json
     """
     key    = species.lower().strip().replace(" ", "_")
     db_id  = _resolve_db_id(key)
@@ -793,6 +796,14 @@ def compute_bending_parameters(
     overlay = SPECIES_DATA.get(db_id) or SPECIES_DATA.get(key) or DEFAULT_SPEC
     is_known = (db_id in SPECIES_DATA or key in SPECIES_DATA or
                 (db_id is not None and db_id in _WOOD_DB))
+
+    if not is_known:
+        supported = list(SPECIES_DATA.keys())[:10]
+        raise ValueError(
+            f"Unknown species '{species}'. "
+            f"Add to SPECIES_DATA or wood_species.json with verified source. "
+            f"Supported species include: {supported}..."
+        )
 
     # Physical properties: DB first, overlay fallback
     E_GPa, MOR_MPa, density = _get_physical_props(db_id, overlay)
@@ -810,12 +821,6 @@ def compute_bending_parameters(
     sb = spring_back_for_thickness(overlay.spring_back_deg, side_thickness_mm)
 
     notes: List[str] = []
-
-    if not is_known:
-        notes.append(
-            f"Unknown species '{species}' — using conservative defaults. "
-            "Test a scrap piece before bending."
-        )
 
     # Thickness check
     instr_key = instrument_type.lower().strip().replace(" ", "_")
@@ -902,6 +907,9 @@ def check_side_thickness(
     recommended toward the lower end of the range for the instrument type,
     as thinner sides reduce bending stress. Soft, pliable species may
     use the upper end for better durability.
+
+    Raises:
+        ValueError: If species is not found in SPECIES_DATA or wood_species.json
     """
     instr_key = instrument_type.lower().strip().replace(" ", "_")
     sp_key    = species.lower().strip().replace(" ", "_")
@@ -916,30 +924,37 @@ def check_side_thickness(
     # Resolve through DB and overlay
     db_id   = _resolve_db_id(sp_key)
     overlay = SPECIES_DATA.get(db_id) or SPECIES_DATA.get(sp_key)
+    is_known = db_id or overlay or (db_id is not None and db_id in _WOOD_DB)
+
+    if not is_known:
+        supported = list(SPECIES_DATA.keys())[:10]
+        raise ValueError(
+            f"Unknown species '{species}'. "
+            f"Add to SPECIES_DATA or wood_species.json with verified source. "
+            f"Supported species include: {supported}..."
+        )
+
     _, _, density = _get_physical_props(db_id, overlay or DEFAULT_SPEC)
 
     # Species-specific thickness adjustment within the instrument range
     optimal = tt.optimal_mm
     note_parts = [instr_note] if instr_note else []
 
-    if db_id or overlay:
-        if density > 650:
-            optimal = tt.min_mm + (tt.optimal_mm - tt.min_mm) * 0.3
-            note_parts.append(
-                f"Dense species ({density} kg/m³) — recommend toward minimum "
-                f"({tt.min_mm}mm) to reduce bending stress. "
-                f"Minimum bend radius scales with thickness."
-            )
-        elif density < 500:
-            optimal = tt.optimal_mm + (tt.max_mm - tt.optimal_mm) * 0.5
-            note_parts.append(
-                f"Light species ({density} kg/m³) — use upper end of range "
-                f"({tt.max_mm}mm) for structural durability."
-            )
-        if overlay and overlay.notes:
-            note_parts.append(overlay.notes)
-    else:
-        note_parts.append(f"Unknown species '{species}' — using standard target.")
+    if density > 650:
+        optimal = tt.min_mm + (tt.optimal_mm - tt.min_mm) * 0.3
+        note_parts.append(
+            f"Dense species ({density} kg/m³) — recommend toward minimum "
+            f"({tt.min_mm}mm) to reduce bending stress. "
+            f"Minimum bend radius scales with thickness."
+        )
+    elif density < 500:
+        optimal = tt.optimal_mm + (tt.max_mm - tt.optimal_mm) * 0.5
+        note_parts.append(
+            f"Light species ({density} kg/m³) — use upper end of range "
+            f"({tt.max_mm}mm) for structural durability."
+        )
+    if overlay and overlay.notes:
+        note_parts.append(overlay.notes)
 
     note_parts.append(tt.rationale)
 

@@ -1,0 +1,135 @@
+[
+  {
+    "path": "app/saw_lab/batch_gcode_router.py",
+    "status": "quarantined",
+    "risk_class": "C",
+    "reason": "Returns downloadable G-code without RMOS audit trail",
+    "notes": "Endpoints: GET /api/saw/batch/op-toolpaths/{id}/gcode, GET /api/saw/batch/executions/{id}/gcode"
+  },
+  {
+    "path": "app/services/saw_lab_gcode_emit_service.py",
+    "status": "quarantined",
+    "risk_class": "C",
+    "reason": "Emits G-code without RMOS run tracking",
+    "notes": "Service layer for saw lab G-code. Has @safety_critical but no run_id pattern."
+  },
+  {
+    "path": "app/rmos/mvp_router.py",
+    "status": "governed",
+    "risk_class": "C",
+    "reason": "Full RMOS tracking, SHA hashing, attachment persistence",
+    "notes": "CANONICAL pattern. Endpoint: POST /wrap/mvp/dxf-to-grbl"
+  },
+  {
+    "path": "app/cam/profiling/profile_toolpath.py",
+    "status": "candidate",
+    "risk_class": "C",
+    "reason": "Generator class with generate_gcode() method",
+    "notes": "Not directly exposed. Needs governance review if wired to route."
+  },
+  {
+    "path": "app/cam/drilling/peck_cycle.py",
+    "status": "candidate",
+    "risk_class": "C",
+    "reason": "Generator class with generate_gcode() method",
+    "notes": "Not directly exposed. Needs governance review if wired to route."
+  },
+  {
+    "path": "app/cam/vcarve/toolpath.py",
+    "status": "candidate",
+    "risk_class": "C",
+    "reason": "Generator class with generate_gcode() method",
+    "notes": "Not directly exposed. Needs governance review if wired to route."
+  },
+  {
+    "path": "app/cam/binding/channel_toolpath.py",
+    "status": "candidate",
+    "risk_class": "C",
+    "reason": "Generator class with generate_gcode() method",
+    "notes": "Not directly exposed. Needs governance review if wired to route."
+  },
+  {
+    "path": "app/cam/carving/surface_carving.py",
+    "status": "candidate",
+    "risk_class": "C",
+    "reason": "Generator class with to_gcode() method",
+    "notes": "Not directly exposed. Needs governance review if wired to route."
+  },
+  {
+    "path": "app/cam/neck/fret_slots.py",
+    "status": "candidate",
+    "risk_class": "C",
+    "reason": "Generator class with generate() method",
+    "notes": "Not directly exposed. Needs governance review if wired to route."
+  },
+  {
+    "path": "app/generators/lespaul_gcode/generator.py",
+    "status": "candidate",
+    "risk_class": "C",
+    "reason": "Full instrument G-code generator",
+    "notes": "Les Paul body generator. Not directly exposed."
+  },
+  {
+    "path": "app/generators/acoustic_body_generator.py",
+    "status": "candidate",
+    "risk_class": "C",
+    "reason": "Full instrument G-code generator",
+    "notes": "Acoustic body generator. Not directly exposed."
+  },
+  {
+    "path": "app/calculators/fret_slots_cam.py",
+    "status": "candidate",
+    "risk_class": "C",
+    "reason": "Has generate_gcode() function",
+    "notes": "Calculator with G-code output capability."
+  },
+  {
+    "path": "app/calculators/fret_slots_export.py",
+    "status": "candidate",
+    "risk_class": "C",
+    "reason": "Has generate_gcode() function",
+    "notes": "Export function for fret slots."
+  },
+  {
+    "path": "app/util/gcode/simulator.py",
+    "status": "library",
+    "risk_class": "A",
+    "reason": "G-code parsing and simulation only",
+    "notes": "Does not generate machine output."
+  },
+  {
+    "path": "app/util/gcode/lexer.py",
+    "status": "library",
+    "risk_class": "A",
+    "reason": "G-code parsing only",
+    "notes": "Does not generate machine output."
+  },
+  {
+    "path": "app/util/gcode/types.py",
+    "status": "library",
+    "risk_class": "A",
+    "reason": "Type definitions only",
+    "notes": "Does not generate machine output."
+  },
+  {
+    "path": "app/util/gcode/geometry.py",
+    "status": "library",
+    "risk_class": "A",
+    "reason": "Geometry calculations only",
+    "notes": "Does not generate machine output."
+  },
+  {
+    "path": "app/rmos/posts/base.py",
+    "status": "library",
+    "risk_class": "B",
+    "reason": "Post-processor protocol and utilities",
+    "notes": "Infrastructure for governed output. Not directly machine-adjacent."
+  },
+  {
+    "path": "app/rmos/posts/grbl.py",
+    "status": "library",
+    "risk_class": "B",
+    "reason": "GRBL dialect post-processor",
+    "notes": "Used by governed endpoints."
+  }
+]

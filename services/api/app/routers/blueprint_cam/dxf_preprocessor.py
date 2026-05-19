@@ -19,6 +19,8 @@ from typing import List, Tuple, Optional, Dict, Any
 import ezdxf
 from ezdxf.math import Vec2
 
+from app.util.dxf_compat import create_document
+
 
 # =============================================================================
 # CONFIGURATION
@@ -128,7 +130,7 @@ def normalize_dxf_format(dxf_bytes: bytes) -> Tuple[bytes, str, str, List[str]]:
             warnings.append(f"Downgrading from {original_version} to R2000 for CAM compatibility")
 
         # Create new R2000 document
-        new_doc = ezdxf.new('R2000')
+        new_doc = create_document(version='R2000')
         new_msp = new_doc.modelspace()
 
         # Copy all layers

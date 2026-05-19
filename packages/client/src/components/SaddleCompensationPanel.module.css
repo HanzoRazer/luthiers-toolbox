@@ -1,0 +1,172 @@
+/**
+ * SaddleCompensationPanel CSS Module
+ * Phase 0: Saddle compensation panel styles
+ */
+
+.panelTitle {
+  margin: 0 0 12px 0;
+  font-size: 15px;
+  font-weight: 600;
+  color: #fff;
+  border-bottom: 1px solid #333;
+  padding-bottom: 8px;
+}
+
+.modeSelector {
+  display: flex;
+  gap: 4px;
+  margin-bottom: 12px;
+}
+
+.modeBtn {
+  flex: 1;
+  padding: 8px 12px;
+  border: 1px solid #444;
+  background: #1a1a1a;
+  color: #999;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.modeBtn:first-child {
+  border-radius: 4px 0 0 4px;
+}
+
+.modeBtn:last-child {
+  border-radius: 0 4px 4px 0;
+}
+
+.modeBtnActive {
+  background: #0ea5e9;
+  border-color: #0ea5e9;
+  color: #fff;
+}
+
+.modeContent {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.modeDesc {
+  font-size: 12px;
+  color: #888;
+  margin: 0;
+}
+
+.results {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 8px;
+}
+
+.compensationGrid {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.compRow {
+  display: grid;
+  grid-template-columns: 70px 80px 1fr;
+  gap: 8px;
+  padding: 6px 8px;
+  background: rgba(255, 255, 255, 0.03);
+  border-radius: 3px;
+  font-size: 12px;
+  align-items: center;
+}
+
+.compRow:hover {
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.compString {
+  color: #999;
+}
+
+.compValue {
+  color: #6ee7b7;
+  font-weight: 500;
+  font-family: monospace;
+}
+
+.compAdjust {
+  font-weight: 500;
+  font-family: monospace;
+}
+
+.adjustBack {
+  color: #f59e0b;
+}
+
+.adjustForward {
+  color: #0ea5e9;
+}
+
+.compNew {
+  color: #6ee7b7;
+  font-family: monospace;
+}
+
+.fitInfo {
+  display: flex;
+  gap: 16px;
+  font-size: 11px;
+  color: #666;
+}
+
+.adjustStats {
+  display: flex;
+  gap: 16px;
+  font-size: 11px;
+  color: #666;
+}
+
+.recommendation {
+  padding: 8px;
+  background: #1a1a1a;
+  border-radius: 4px;
+  font-size: 12px;
+  color: #ccc;
+}
+
+.measurementForm {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.measurementRow {
+  display: grid;
+  grid-template-columns: 60px 1fr 1fr;
+  gap: 8px;
+  align-items: center;
+}
+
+.measurementLabel {
+  font-size: 12px;
+  color: #999;
+}
+
+.measurementInput {
+  padding: 6px 8px;
+  background: #0a0a0a;
+  border: 1px solid #444;
+  border-radius: 4px;
+  color: #e5e5e5;
+  font-size: 12px;
+  width: 100%;
+}
+
+.measurementInput:focus {
+  outline: none;
+  border-color: #0ea5e9;
+}
+
+.measurementInput::placeholder {
+  color: #666;
+}

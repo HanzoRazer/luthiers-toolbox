@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Body Outline Editor — The Production Shop</title>
-    <!-- v3.1.0 - Empty Mode + Precision Improvements -->
+    <!-- v3.5.0 - Final Polish (Precision Tier Complete) -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/paper.js/0.12.18/paper-full.min.js"></script>
     <style>
         * {
@@ -468,6 +468,120 @@
         ::-webkit-scrollbar-thumb:hover {
             background: #444;
         }
+
+        /* v3.3.0: Layer panel styling */
+        .layer-list {
+            max-height: 200px;
+            overflow-y: auto;
+        }
+
+        .layer-item {
+            display: flex;
+            align-items: center;
+            padding: 6px 12px;
+            border-bottom: 1px solid #1a1a1a;
+            cursor: pointer;
+            gap: 8px;
+        }
+
+        .layer-item:hover {
+            background: #1a1a1a;
+        }
+
+        .layer-item.active {
+            background: #1a3a2a;
+            border-left: 2px solid #00ff88;
+        }
+
+        .layer-item .layer-visibility {
+            cursor: pointer;
+            width: 24px;
+            text-align: center;
+        }
+
+        .layer-item .layer-name {
+            flex: 1;
+            font-size: 11px;
+        }
+
+        .layer-item .layer-opacity {
+            color: #888;
+            font-size: 10px;
+        }
+
+        .layer-item .layer-delete {
+            opacity: 0;
+            background: transparent;
+            border: none;
+            color: #ff4444;
+            cursor: pointer;
+            padding: 2px 6px;
+        }
+
+        .layer-item:hover .layer-delete {
+            opacity: 1;
+        }
+
+        /* v3.3.0: Rotation slider */
+        .rotation-slider {
+            width: 100px;
+            accent-color: var(--accent);
+        }
+
+        /* v3.4.0: Measurements panel */
+        .measurement-list {
+            max-height: 200px;
+            overflow-y: auto;
+        }
+
+        .measurement-item {
+            display: flex;
+            align-items: center;
+            padding: 6px 12px;
+            border-bottom: 1px solid #1a1a1a;
+            cursor: pointer;
+            gap: 8px;
+        }
+
+        .measurement-item:hover {
+            background: #1a1a1a;
+        }
+
+        .measurement-item.hidden {
+            opacity: 0.5;
+        }
+
+        .measurement-type {
+            width: 24px;
+            text-align: center;
+        }
+
+        .measurement-value {
+            flex: 1;
+            font-family: monospace;
+            color: #00aaff;
+            font-size: 11px;
+        }
+
+        .measurement-delete {
+            opacity: 0;
+            background: transparent;
+            border: none;
+            color: #ff4444;
+            cursor: pointer;
+            padding: 2px 6px;
+        }
+
+        .measurement-item:hover .measurement-delete {
+            opacity: 1;
+        }
+
+        .measurement-empty {
+            padding: 12px;
+            color: #666;
+            text-align: center;
+            font-size: 11px;
+        }
     </style>
 </head>
 <body>
@@ -482,9 +596,17 @@
             <button id="btn-grid" class="active" title="Toggle Grid (G)">Grid: ON</button>
             <label>Snap:</label>
             <select id="snap-select">
+                <option value="0.1">0.1 mm</option>
+                <option value="0.5">0.5 mm</option>
                 <option value="1">1 mm</option>
                 <option value="5" selected>5 mm</option>
                 <option value="10">10 mm</option>
+            </select>
+            <label>Nudge:</label>
+            <select id="nudge-select">
+                <option value="0.1" selected>0.1 mm</option>
+                <option value="0.5">0.5 mm</option>
+                <option value="1.0">1.0 mm</option>
             </select>
             <button id="btn-handles" title="Show All Handles">Handles: OFF</button>
         </div>
@@ -498,15 +620,43 @@
             <label style="color:var(--text-muted);font-size:11px;margin-left:4px;">tol:</label>
             <input type="number" id="simplify-tolerance" value="2.5" min="1" max="10" step="0.5" 
                    style="width:50px;background:var(--bg-input);border:1px solid var(--border);color:var(--text-primary);padding:2px 4px;border-radius:3px;">
-            <button id="btn-smooth-all" title="Smooth all nodes to curves">Smooth All</button>
+            <button id="btn-smooth-all" title="Smooth all nodes to curves" style="background:#00aa5a;color:#000;">Smooth</button>
+            <button id="btn-revert-smooth" title="Revert last smooth operation">Revert Smooth</button>
+            <button id="btn-reset-handles" title="Remove all bezier handles (straight lines)">Reset Handles</button>
+        </div>
+        <!-- v3.4.0: Measurement tools -->
+        <div class="toolbar-group">
+            <button id="btn-measure" title="Measure distance (click two points)">📏</button>
+            <button id="btn-measure-angle" title="Measure angle (click vertex, then two arms)">📐</button>
+            <button id="btn-measure-arc" title="Measure arc length (click on curve)">〰️</button>
+            <button id="btn-measure-clear" title="Clear all measurements (Ctrl+Shift+M)">🗑️</button>
+            <button id="btn-exit-mode" title="Exit current mode (Esc)" style="background:#ff6600;color:#000;display:none;">Exit Mode</button>
         </div>
         <div class="toolbar-group">
-            <button id="btn-measure" title="Measure Distance (M)">Measure</button>
+            <label>Units:</label>
+            <select id="units-select" title="Display units">
+                <option value="mm" selected>mm</option>
+                <option value="in">in</option>
+                <option value="pt">pt</option>
+            </select>
         </div>
         <div class="toolbar-group">
             <button id="btn-import">Import Image</button>
             <button id="btn-calibrate" title="Calibrate Scale (C)">Calibrate</button>
             <button id="btn-clear-image">Clear Image</button>
+        </div>
+        <!-- v3.3.0: Image layer controls -->
+        <div class="toolbar-group">
+            <button id="btn-rotate-left" title="Rotate 90° left">↺ 90°</button>
+            <button id="btn-rotate-right" title="Rotate 90° right">↻ 90°</button>
+            <label>Rot:</label>
+            <input type="range" id="rotation-slider" class="rotation-slider" min="0" max="360" value="0" title="Free rotation">
+            <span id="rotation-value" style="font-size:10px;color:#888;width:30px;">0°</span>
+        </div>
+        <div class="toolbar-group">
+            <button id="btn-lock-image" title="Lock/unlock active image">🔓</button>
+            <button id="btn-scale-image" title="Non-uniform scale (drag)">Scale</button>
+            <button id="btn-save-template" title="Save image as template">Save Tpl</button>
         </div>
         <div class="toolbar-group">
             <button id="btn-export-dxf">Export DXF</button>
@@ -548,7 +698,7 @@
     <!-- v3.1.0: MODE DIALOG (shown on page load) -->
     <div id="mode-dialog-overlay" style="position:fixed; inset:0; background:rgba(0,0,0,0.85); display:flex; align-items:center; justify-content:center; z-index:10000;">
         <div style="background:#1e1e1e; border:1px solid #00ff88; border-radius:8px; padding:32px; max-width:500px; text-align:center;">
-            <h2 style="color:#00ff88; margin-bottom:16px;">Body Outline Editor v3.1</h2>
+            <h2 style="color:#00ff88; margin-bottom:16px;">Body Outline Editor v3.5</h2>
             <p style="color:#888; margin-bottom:24px;">Choose how you want to start</p>
 
             <button id="mode-default-btn" style="background:#00aa5a; color:#000; padding:12px 24px; margin:0 8px; border:none; border-radius:4px; cursor:pointer; font-weight:bold;">
@@ -599,6 +749,46 @@
                 </div>
             </div>
 
+            <!-- v3.3.0: Image Layers Panel -->
+            <div class="panel-section" id="layers-panel" style="display:none">
+                <div class="panel-header">
+                    Image Layers <span class="count" id="layer-count">0</span>
+                </div>
+                <div class="layer-list" id="layer-list"></div>
+                <div style="padding:8px;display:flex;gap:4px;">
+                    <button id="btn-add-layer" style="flex:1;font-size:10px;">+ Add</button>
+                    <button id="btn-delete-layer" style="flex:1;font-size:10px;">- Remove</button>
+                </div>
+                <div style="padding:0 8px 8px;display:flex;gap:4px;">
+                    <button id="btn-layer-up" style="flex:1;font-size:10px;">↑ Up</button>
+                    <button id="btn-layer-down" style="flex:1;font-size:10px;">↓ Down</button>
+                </div>
+            </div>
+
+            <!-- v3.3.0: User Templates Panel -->
+            <div class="panel-section" id="templates-panel">
+                <div class="panel-header">
+                    My Templates <span class="count" id="template-count">0</span>
+                </div>
+                <div style="padding:8px;">
+                    <select id="user-template-select" title="User saved templates" style="width:100%;margin-bottom:4px;">
+                        <option value="">-- Select Template --</option>
+                    </select>
+                    <button id="btn-load-user-template" style="width:100%;font-size:10px;">Load Selected</button>
+                </div>
+            </div>
+
+            <!-- v3.4.0: Measurements Panel -->
+            <div class="panel-section" id="measurements-panel">
+                <div class="panel-header">
+                    Measurements <span class="count" id="measurement-count">0</span>
+                    <button id="btn-toggle-measurements" title="Toggle visibility" style="background:transparent;border:none;padding:0;cursor:pointer;">👁️</button>
+                </div>
+                <div class="measurement-list" id="measurement-list">
+                    <div class="measurement-empty">No measurements yet.<br>Click 📏, 📐, or 〰️ to add.</div>
+                </div>
+            </div>
+
             <div class="panel-section" style="flex:1">
                 <div class="panel-header">
                     Voids <span class="count" id="void-count">0</span>
@@ -611,12 +801,13 @@
 
     <!-- Status bar -->
     <div class="status-bar">
-        <span>Cursor: <span class="value" id="status-cursor">0.00, 0.00</span> mm</span>
+        <span>Cursor: <span class="value" id="status-cursor">0.000, 0.000</span> mm</span>
         <span>Selected: <span class="value" id="status-selected">—</span></span>
         <span>Nodes: <span class="value" id="status-nodes">0</span></span>
         <span>Zoom: <span class="value" id="status-zoom">100</span>%</span>
         <span>Grid: <span class="value" id="status-grid">ON</span></span>
         <span>Mode: <span class="mode" id="status-mode">Outer</span></span>
+        <span>Active: <span class="value" id="status-active-mode" style="color:#00ff88;">Ready</span></span>
     </div>
 
     <!-- Modals -->
@@ -679,6 +870,43 @@
         </div>
     </div>
 
+    <!-- v3.4.0: Export Options Modal -->
+    <div class="modal-overlay" id="modal-export">
+        <div class="modal" style="width:400px;">
+            <h3>DXF Export Options</h3>
+
+            <label>Format:</label>
+            <select id="export-format" style="width:100%;padding:8px;margin-bottom:12px;">
+                <option value="R12">R12 (Legacy, most compatible)</option>
+                <option value="R2004">R2004+ (Modern, smaller files)</option>
+            </select>
+
+            <label>Tessellation (points per curve): <span id="tessellation-value">20</span></label>
+            <input type="range" id="export-tessellation" min="10" max="100" step="5" value="20" style="width:100%;margin-bottom:12px;">
+
+            <label>Layer Naming:</label>
+            <select id="export-layer-naming" style="width:100%;padding:8px;margin-bottom:12px;">
+                <option value="standard">Standard (BODY_OUTLINE, VOID_*)</option>
+                <option value="cam">CAM Ready (Layer 1,2,3...)</option>
+            </select>
+
+            <label style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
+                <input type="checkbox" id="export-include-measurements" checked>
+                Include measurements as text entities
+            </label>
+
+            <label style="display:flex;align-items:center;gap:8px;margin-bottom:12px;">
+                <input type="checkbox" id="export-include-voids" checked>
+                Include voids (pickups, cavities)
+            </label>
+
+            <div class="modal-buttons">
+                <button id="export-cancel">Cancel</button>
+                <button id="export-confirm" class="primary">Export DXF</button>
+            </div>
+        </div>
+    </div>
+
 <script type="text/javascript">
 paper.install(window);
 
@@ -687,13 +915,35 @@ paper.install(window);
 // ============================================================
 
 class InstrumentBodyAPI {
-    constructor(baseUrl = '/api') {
-        this.baseUrl = baseUrl;
-        this.useMock = true;  // v3.0.0: Mock mode for local testing
+    constructor(baseUrl = null, useMock = null) {
+        // IBG-2B: Configuration from URL params, window config, or defaults
+        // Priority: constructor args > URL params > window.IBG_CONFIG > defaults
+        const urlParams = new URLSearchParams(window.location.search);
+        const config = window.IBG_CONFIG || {};
+
+        // Base URL: constructor > URL param > config > default
+        this.baseUrl = baseUrl
+            || urlParams.get('ibg_api_url')
+            || config.apiUrl
+            || '/api';
+
+        // Mock mode: constructor > URL param > config > default (true for safety)
+        if (useMock !== null) {
+            this.useMock = useMock;
+        } else if (urlParams.has('ibg_mock')) {
+            this.useMock = urlParams.get('ibg_mock') !== 'false';
+        } else if (config.useMock !== undefined) {
+            this.useMock = config.useMock;
+        } else {
+            this.useMock = true;  // Default to mock for safety
+        }
+
         this.currentSession = null;
         this.authToken = null;
         this.abortController = null;
-        console.log(this.useMock ? '\u26a0\ufe0f IBG API in MOCK mode' : '\u2705 IBG API connected to /api/body');
+        console.log(this.useMock
+            ? '\u26a0\ufe0f IBG API in MOCK mode (set IBG_CONFIG.useMock=false or ?ibg_mock=false for production)'
+            : `\u2705 IBG API connected to ${this.baseUrl}/body`);
     }
 
     setAuthToken(token) {
@@ -1077,8 +1327,1322 @@ const state = {
     pendingPlacement: false,
     pendingAnchorDot: null,
     nextDotIndex: 0,
-    draggingDot: null             // Currently dragged dot (for drag-to-refine)
+    draggingDot: null,            // Currently dragged dot (for drag-to-refine)
+
+    // v3.2.0: Operation logging foundation
+    operationLog: [],             // [{ type, timestamp, params, before, after }]
+    maxLogSize: 1000,             // Prevent memory bloat
+
+    // v3.2.0: Precision controls
+    nudgePreference: 0.1,         // mm per nudge (0.1, 0.5, 1.0)
+    showDecimalPlaces: 3,         // Coordinate display precision
+
+    // v3.2.0: Smooth revert state
+    preSmoothState: null,         // Serialized path before smooth
+
+    // v3.3.0: Image layer management
+    imageLayers: [],              // [{ id, raster, opacity, locked, visible, name, scaleX, scaleY, rotation }]
+    nextLayerId: 1,
+    activeLayerId: null,
+
+    // v3.3.0: User templates (localStorage)
+    userTemplates: {},
+
+    // v3.3.0: Snap modifier
+    snapModifierPressed: false,
+
+    // v3.4.0: Persistent measurements
+    measurements: [],
+    nextMeasurementId: 1,
+    measurementsVisible: true,
+
+    // v3.4.0: Export settings
+    exportSettings: {
+        format: 'R12',
+        tessellation: 20,
+        layerNaming: 'standard',
+        includeMeasurements: true,
+        includeVoids: true
+    },
+
+    // v3.4.0: Units
+    currentUnit: 'mm',
+    unitConversion: {
+        mm: 1,
+        in: 25.4,
+        pt: 0.352778
+    }
 };
+
+// ============================================================
+// v3.2.0: OPERATION LOGGING FOUNDATION
+// ============================================================
+
+function logOperation(type, params, beforeState, afterState) {
+    if (state.operationLog.length >= state.maxLogSize) {
+        state.operationLog.shift();
+    }
+
+    state.operationLog.push({
+        type: type,
+        timestamp: Date.now(),
+        params: params || {},
+        before: beforeState || null,
+        after: afterState || null
+    });
+
+    console.debug(`[OP] ${type}`, params);
+}
+
+function serializeSegmentSnapshot(segment) {
+    return {
+        point: [segment.point.x, segment.point.y],
+        handleIn: segment.handleIn ? [segment.handleIn.x, segment.handleIn.y] : null,
+        handleOut: segment.handleOut ? [segment.handleOut.x, segment.handleOut.y] : null
+    };
+}
+
+function serializePathSnapshot(path) {
+    if (!path) return null;
+    return path.segments.map(seg => serializeSegmentSnapshot(seg));
+}
+
+// ============================================================
+// v3.2.0: TOAST NOTIFICATIONS
+// ============================================================
+
+let v32Toast = null;
+
+function showToast(message, color = '#00aa5a') {
+    if (v32Toast) v32Toast.remove();
+
+    v32Toast = new PointText({
+        point: view.bounds.topLeft.add(new Point(20, 110)),
+        content: message,
+        fillColor: color,
+        fontFamily: 'system-ui, sans-serif',
+        fontSize: 12,
+        fontWeight: 'bold'
+    });
+
+    setTimeout(() => {
+        if (v32Toast) v32Toast.remove();
+        v32Toast = null;
+    }, 3000);
+}
+
+// ============================================================
+// v3.2.0: SMOOTH TOGGLE / REVERT
+// ============================================================
+
+function smoothWithRevert() {
+    const path = getActivePath();
+    if (!path) return;
+
+    const beforeSnapshot = serializePathSnapshot(path);
+    state.preSmoothState = serializeState();
+
+    path.smooth();
+
+    logOperation('SMOOTH', { segmentCount: path.segments.length }, beforeSnapshot, serializePathSnapshot(path));
+
+    state.selectedSegments = [];
+    state.selectedHandle = null;
+    state.dirty = true;
+
+    pushState();
+    updateUI();
+    redrawHandles();
+
+    showToast('Smooth applied. Click "Revert Smooth" to undo.', '#00aa5a');
+}
+
+function revertSmooth() {
+    if (!state.preSmoothState) {
+        showToast('No smooth to revert. Smooth first.', '#ff6600');
+        return;
+    }
+
+    const path = getActivePath();
+    if (!path) return;
+
+    logOperation('REVERT_SMOOTH', {}, null, null);
+
+    restoreState(state.preSmoothState);
+    state.preSmoothState = null;
+
+    updateUI();
+    redrawHandles();
+
+    showToast('Smooth reverted.', '#00aa5a');
+}
+
+// ============================================================
+// v3.2.0: RESET HANDLES TO LINEAR
+// ============================================================
+
+function resetHandlesToLinear() {
+    const path = getActivePath();
+    if (!path) return;
+
+    const beforeSnapshot = serializePathSnapshot(path);
+
+    pushState();
+
+    for (const seg of path.segments) {
+        seg.handleIn = new Point(0, 0);
+        seg.handleOut = new Point(0, 0);
+    }
+
+    logOperation('RESET_HANDLES', { segmentCount: path.segments.length }, beforeSnapshot, serializePathSnapshot(path));
+
+    updateUI();
+    redrawHandles();
+
+    showToast('All handles reset to linear (straight lines).', '#00aa5a');
+}
+
+// ============================================================
+// v3.2.0: MODE INDICATOR UPDATE
+// ============================================================
+
+function updateActiveModeIndicator() {
+    // v3.4.0: Include new measurement modes
+    const modeText = state.calibrating ? 'Calibrate' :
+                     state.measuring ? 'Measure' :
+                     distanceMeasureActive ? 'Distance' :
+                     angleMeasureActive ? 'Angle' :
+                     arcMeasureActive ? 'Arc Length' :
+                     state.editorMode === 'empty' ? 'Empty' : 'Ready';
+    document.getElementById('status-active-mode').textContent = modeText;
+
+    const exitBtn = document.getElementById('btn-exit-mode');
+    const anyMeasureActive = state.calibrating || state.measuring || distanceMeasureActive || angleMeasureActive || arcMeasureActive;
+    exitBtn.style.display = anyMeasureActive ? 'inline-block' : 'none';
+}
+
+function exitCurrentMode() {
+    if (state.calibrating) cancelCalibration();
+    if (state.measuring) cancelMeasure();
+
+    // v3.4.0: Cancel new measurement modes
+    if (distanceMeasureActive) {
+        distanceMeasureActive = false;
+        distanceMarkers.forEach(m => m.remove());
+        distanceMarkers = [];
+        distancePoints = [];
+    }
+    if (angleMeasureActive) {
+        angleMeasureActive = false;
+        angleMarkers.forEach(m => m.remove());
+        angleMarkers = [];
+        anglePoints = [];
+    }
+    if (arcMeasureActive) {
+        arcMeasureActive = false;
+    }
+
+    updateActiveModeIndicator();
+
+    if (state.editorMode === 'empty') {
+        showEmptyModeToast('Ready for dot placement');
+    }
+}
+
+// ============================================================
+// v3.3.0: IMAGE LAYER MANAGEMENT
+// ============================================================
+
+const USER_TEMPLATES_KEY = 'body_outline_user_templates';
+
+function addImageLayer(imageDataUrl = null, name = null) {
+    const layerId = state.nextLayerId++;
+
+    const raster = new Raster();
+    raster.position = view.center;
+    raster.opacity = 0.5;
+
+    const layer = {
+        id: layerId,
+        raster: raster,
+        opacity: 0.5,
+        locked: false,
+        visible: true,
+        name: name || `Layer ${layerId}`,
+        scaleX: 1.0,
+        scaleY: 1.0,
+        rotation: 0,
+        originalWidth: 0,
+        originalHeight: 0
+    };
+
+    if (imageDataUrl) {
+        const img = new Image();
+        img.onload = () => {
+            raster.image = img;
+            layer.originalWidth = img.width;
+            layer.originalHeight = img.height;
+            raster.position = view.center;
+            updateImageOrder();
+        };
+        img.src = imageDataUrl;
+    }
+
+    state.imageLayers.push(layer);
+
+    if (!state.activeLayerId) {
+        setActiveLayer(layerId);
+    }
+
+    updateLayerList();
+    updateImageOrder();
+    showLayersPanel();
+
+    logOperation('ADD_LAYER', { layerId, name: layer.name });
+    return layerId;
+}
+
+function setActiveLayer(layerId) {
+    state.activeLayerId = layerId;
+    updateLayerList();
+
+    // Update lock button state
+    const layer = state.imageLayers.find(l => l.id === layerId);
+    if (layer) {
+        document.getElementById('btn-lock-image').textContent = layer.locked ? '🔒' : '🔓';
+        document.getElementById('rotation-slider').value = layer.rotation;
+        document.getElementById('rotation-value').textContent = `${Math.round(layer.rotation)}°`;
+    }
+}
+
+function deleteLayer(layerId) {
+    const index = state.imageLayers.findIndex(l => l.id === layerId);
+    if (index >= 0) {
+        state.imageLayers[index].raster.remove();
+        state.imageLayers.splice(index, 1);
+
+        if (state.activeLayerId === layerId) {
+            state.activeLayerId = state.imageLayers[0]?.id || null;
+        }
+
+        logOperation('DELETE_LAYER', { layerId });
+        updateLayerList();
+        updateImageOrder();
+
+        if (state.imageLayers.length === 0) {
+            hideLayersPanel();
+        }
+    }
+}
+
+function toggleLayerVisibility(layerId) {
+    const layer = state.imageLayers.find(l => l.id === layerId);
+    if (layer) {
+        layer.visible = !layer.visible;
+        layer.raster.visible = layer.visible;
+        updateLayerList();
+    }
+}
+
+function moveLayerUp(layerId) {
+    const index = state.imageLayers.findIndex(l => l.id === layerId);
+    if (index > 0) {
+        const temp = state.imageLayers[index];
+        state.imageLayers[index] = state.imageLayers[index - 1];
+        state.imageLayers[index - 1] = temp;
+        updateLayerList();
+        updateImageOrder();
+    }
+}
+
+function moveLayerDown(layerId) {
+    const index = state.imageLayers.findIndex(l => l.id === layerId);
+    if (index < state.imageLayers.length - 1) {
+        const temp = state.imageLayers[index];
+        state.imageLayers[index] = state.imageLayers[index + 1];
+        state.imageLayers[index + 1] = temp;
+        updateLayerList();
+        updateImageOrder();
+    }
+}
+
+function updateImageOrder() {
+    // Send all rasters to back, in reverse layer order (first layer = top)
+    for (let i = state.imageLayers.length - 1; i >= 0; i--) {
+        state.imageLayers[i].raster.sendToBack();
+    }
+    if (typeof gridLayer !== 'undefined' && gridLayer) {
+        gridLayer.sendToBack();
+    }
+}
+
+function updateLayerList() {
+    const container = document.getElementById('layer-list');
+    if (!container) return;
+
+    container.innerHTML = '';
+
+    state.imageLayers.forEach((layer, idx) => {
+        const div = document.createElement('div');
+        div.className = `layer-item ${layer.id === state.activeLayerId ? 'active' : ''}`;
+        div.innerHTML = `
+            <span class="layer-visibility">${layer.visible ? '👁️' : '🙈'}</span>
+            <span class="layer-name">${layer.name}</span>
+            <span class="layer-opacity">${Math.round(layer.opacity * 100)}%</span>
+            <span class="layer-lock">${layer.locked ? '🔒' : ''}</span>
+            <button class="layer-delete" data-id="${layer.id}">×</button>
+        `;
+
+        div.addEventListener('click', (e) => {
+            if (!e.target.classList.contains('layer-delete') && !e.target.classList.contains('layer-visibility')) {
+                setActiveLayer(layer.id);
+            }
+        });
+
+        div.querySelector('.layer-visibility').addEventListener('click', (e) => {
+            e.stopPropagation();
+            toggleLayerVisibility(layer.id);
+        });
+
+        div.querySelector('.layer-delete').addEventListener('click', (e) => {
+            e.stopPropagation();
+            deleteLayer(layer.id);
+        });
+
+        container.appendChild(div);
+    });
+
+    document.getElementById('layer-count').textContent = state.imageLayers.length;
+}
+
+function showLayersPanel() {
+    document.getElementById('layers-panel').style.display = 'block';
+    document.getElementById('image-panel').style.display = 'block';
+}
+
+function hideLayersPanel() {
+    document.getElementById('layers-panel').style.display = 'none';
+    if (!state.raster) {
+        document.getElementById('image-panel').style.display = 'none';
+    }
+}
+
+// ============================================================
+// v3.3.0: IMAGE ROTATION
+// ============================================================
+
+function rotateActiveLayer(degrees) {
+    const layer = state.imageLayers.find(l => l.id === state.activeLayerId);
+    if (!layer) {
+        // Fallback to legacy single raster
+        if (state.raster) {
+            state.raster.rotate(degrees);
+        }
+        return;
+    }
+    if (layer.locked) {
+        showToast('Layer is locked', '#ff6600');
+        return;
+    }
+
+    layer.rotation = (layer.rotation + degrees) % 360;
+    if (layer.rotation < 0) layer.rotation += 360;
+    applyLayerTransform(layer);
+    logOperation('ROTATE_LAYER', { degrees, layerId: layer.id, newRotation: layer.rotation });
+
+    document.getElementById('rotation-slider').value = layer.rotation;
+    document.getElementById('rotation-value').textContent = `${Math.round(layer.rotation)}°`;
+}
+
+function setLayerRotation(degrees) {
+    const layer = state.imageLayers.find(l => l.id === state.activeLayerId);
+    if (!layer || layer.locked) return;
+
+    layer.rotation = degrees % 360;
+    applyLayerTransform(layer);
+    document.getElementById('rotation-value').textContent = `${Math.round(layer.rotation)}°`;
+}
+
+function applyLayerTransform(layer) {
+    const raster = layer.raster;
+    raster.rotation = layer.rotation;
+    raster.scaling = new Point(layer.scaleX, layer.scaleY);
+}
+
+// ============================================================
+// v3.3.0: NON-UNIFORM SCALING
+// ============================================================
+
+let scalingActive = false;
+
+function startNonUniformScale() {
+    const layer = state.imageLayers.find(l => l.id === state.activeLayerId);
+    if (!layer) {
+        showToast('No active layer to scale', '#ff6600');
+        return;
+    }
+    if (layer.locked) {
+        showToast('Layer is locked', '#ff6600');
+        return;
+    }
+
+    scalingActive = true;
+    const originalScaleX = layer.scaleX;
+    const originalScaleY = layer.scaleY;
+    const startPoint = view.center;
+
+    showToast('Drag: horizontal=X scale, vertical=Y scale. Shift=uniform. Release to finish.', '#00aa5a');
+
+    function onMouseMove(event) {
+        if (!scalingActive) return;
+
+        const delta = event.point.subtract(startPoint);
+
+        if (event.modifiers.shift) {
+            // Uniform scale
+            const scaleFactor = 1 + (delta.x + delta.y) / 500;
+            layer.scaleX = originalScaleX * scaleFactor;
+            layer.scaleY = originalScaleY * scaleFactor;
+        } else {
+            // Non-uniform
+            layer.scaleX = originalScaleX * (1 + delta.x / 300);
+            layer.scaleY = originalScaleY * (1 - delta.y / 300);
+        }
+
+        // Clamp to reasonable values
+        layer.scaleX = Math.max(0.1, Math.min(10, layer.scaleX));
+        layer.scaleY = Math.max(0.1, Math.min(10, layer.scaleY));
+
+        applyLayerTransform(layer);
+    }
+
+    function onMouseUp() {
+        scalingActive = false;
+        view.off('mousemove', onMouseMove);
+        view.off('mouseup', onMouseUp);
+        logOperation('SCALE_LAYER', { scaleX: layer.scaleX, scaleY: layer.scaleY, layerId: layer.id });
+        showToast(`Scale: ${layer.scaleX.toFixed(2)}x × ${layer.scaleY.toFixed(2)}x`, '#00aa5a');
+    }
+
+    view.on('mousemove', onMouseMove);
+    view.on('mouseup', onMouseUp);
+}
+
+// ============================================================
+// v3.3.0: IMAGE LOCKING
+// ============================================================
+
+function toggleImageLock() {
+    const layer = state.imageLayers.find(l => l.id === state.activeLayerId);
+    if (layer) {
+        layer.locked = !layer.locked;
+        document.getElementById('btn-lock-image').textContent = layer.locked ? '🔒' : '🔓';
+        showToast(layer.locked ? 'Layer locked' : 'Layer unlocked', '#00aa5a');
+        updateLayerList();
+    }
+}
+
+// ============================================================
+// v3.3.0: USER TEMPLATES
+// ============================================================
+
+function loadUserTemplates() {
+    try {
+        const saved = localStorage.getItem(USER_TEMPLATES_KEY);
+        if (saved) {
+            state.userTemplates = JSON.parse(saved);
+            updateUserTemplateDropdown();
+        }
+    } catch (e) {
+        console.warn('Failed to load user templates:', e);
+    }
+}
+
+function saveUserTemplate() {
+    const layer = state.imageLayers.find(l => l.id === state.activeLayerId);
+    if (!layer) {
+        showToast('No active image layer to save', '#ff6600');
+        return;
+    }
+
+    const name = prompt('Enter template name:', layer.name || 'Untitled');
+    if (!name) return;
+
+    try {
+        const imageData = layer.raster.toDataURL();
+        const sizeInMB = (imageData.length * 0.75) / (1024 * 1024);
+
+        if (sizeInMB > 4.5) {
+            if (!confirm(`Image is ${sizeInMB.toFixed(1)}MB. localStorage limit is ~5MB. Continue?`)) {
+                return;
+            }
+        }
+
+        state.userTemplates[name] = {
+            name: name,
+            imageData: imageData,
+            scaleX: layer.scaleX,
+            scaleY: layer.scaleY,
+            rotation: layer.rotation,
+            calibration: state.imagePixelsPerMM,
+            savedAt: Date.now()
+        };
+
+        localStorage.setItem(USER_TEMPLATES_KEY, JSON.stringify(state.userTemplates));
+        updateUserTemplateDropdown();
+        showToast(`Template "${name}" saved`, '#00aa5a');
+        logOperation('SAVE_TEMPLATE', { name });
+    } catch (e) {
+        showToast('Failed to save template: ' + e.message, '#ff6600');
+    }
+}
+
+function loadUserTemplate() {
+    const select = document.getElementById('user-template-select');
+    const name = select.value;
+    if (!name || !state.userTemplates[name]) {
+        showToast('Select a template first', '#ff6600');
+        return;
+    }
+
+    const template = state.userTemplates[name];
+
+    const img = new Image();
+    img.onload = () => {
+        const layerId = addImageLayer(null, name);
+        const layer = state.imageLayers.find(l => l.id === layerId);
+        if (layer) {
+            layer.raster.image = img;
+            layer.scaleX = template.scaleX || 1;
+            layer.scaleY = template.scaleY || 1;
+            layer.rotation = template.rotation || 0;
+            applyLayerTransform(layer);
+            if (template.calibration) {
+                state.imagePixelsPerMM = template.calibration;
+            }
+            showToast(`Template "${name}" loaded`, '#00aa5a');
+            logOperation('LOAD_TEMPLATE', { name });
+        }
+    };
+    img.onerror = () => {
+        showToast('Failed to load template image', '#ff6600');
+    };
+    img.src = template.imageData;
+}
+
+function deleteUserTemplate(name) {
+    if (state.userTemplates[name]) {
+        delete state.userTemplates[name];
+        localStorage.setItem(USER_TEMPLATES_KEY, JSON.stringify(state.userTemplates));
+        updateUserTemplateDropdown();
+        showToast(`Template "${name}" deleted`, '#00aa5a');
+    }
+}
+
+function updateUserTemplateDropdown() {
+    const select = document.getElementById('user-template-select');
+    if (!select) return;
+
+    select.innerHTML = '<option value="">-- Select Template --</option>';
+    const count = Object.keys(state.userTemplates).length;
+
+    for (const [name, template] of Object.entries(state.userTemplates)) {
+        const option = document.createElement('option');
+        option.value = name;
+        option.textContent = name;
+        select.appendChild(option);
+    }
+
+    const countEl = document.getElementById('template-count');
+    if (countEl) countEl.textContent = count;
+}
+
+// ============================================================
+// v3.3.0: SNAP MODIFIER (Shift key disables snap)
+// ============================================================
+
+function setupSnapModifier() {
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Shift') {
+            state.snapModifierPressed = true;
+        }
+    });
+
+    document.addEventListener('keyup', (e) => {
+        if (e.key === 'Shift') {
+            state.snapModifierPressed = false;
+        }
+    });
+}
+
+// ============================================================
+// v3.4.0: UNITS CONVERSION
+// ============================================================
+
+function convertUnits(value, fromUnit, toUnit) {
+    if (fromUnit === toUnit) return value;
+    const inMM = value * state.unitConversion[fromUnit];
+    return inMM / state.unitConversion[toUnit];
+}
+
+function formatValue(value) {
+    if (value < 0.01) return value.toFixed(4);
+    if (value < 1) return value.toFixed(3);
+    if (value < 10) return value.toFixed(2);
+    return value.toFixed(1);
+}
+
+function setUnits(unit) {
+    state.currentUnit = unit;
+
+    // Update all existing measurement displays
+    for (const m of state.measurements) {
+        const converted = convertUnits(m.value, 'mm', unit);
+        if (m.graphics?.label) {
+            if (m.type === 'angle') {
+                // Angles stay in degrees
+            } else {
+                m.graphics.label.content = `${formatValue(converted)} ${unit}`;
+            }
+        }
+    }
+
+    updateMeasurementList();
+    updateUI();
+    showToast(`Units set to ${unit}`, '#00aa5a');
+}
+
+// ============================================================
+// v3.4.0: PERSISTENT DISTANCE MEASUREMENT
+// ============================================================
+
+let distanceMeasureActive = false;
+let distancePoints = [];
+let distanceMarkers = [];
+
+function startDistanceMeasurement() {
+    exitCurrentMode();
+    distanceMeasureActive = true;
+    distancePoints = [];
+    distanceMarkers = [];
+
+    showToast('Click two points to measure distance', '#00aa5a');
+    updateActiveModeIndicator();
+}
+
+function handleDistanceMeasureClick(point) {
+    if (!distanceMeasureActive) return false;
+
+    distancePoints.push(point);
+
+    const marker = new Path.Circle({
+        center: point,
+        radius: 5 / state.zoom,
+        fillColor: '#00aaff',
+        strokeColor: '#ffffff',
+        strokeWidth: 2 / state.zoom
+    });
+    distanceMarkers.push(marker);
+
+    if (distancePoints.length === 1) {
+        showToast('Click second point', '#00aa5a');
+    } else if (distancePoints.length === 2) {
+        // Calculate distance in mm
+        const distanceMM = distancePoints[0].getDistance(distancePoints[1]);
+        const value = convertUnits(distanceMM, 'mm', state.currentUnit);
+
+        // Draw line
+        const line = new Path.Line({
+            from: distancePoints[0],
+            to: distancePoints[1],
+            strokeColor: '#00aaff',
+            strokeWidth: 2 / state.zoom,
+            dashArray: [5 / state.zoom, 5 / state.zoom]
+        });
+
+        // Draw midpoint label
+        const midpoint = distancePoints[0].add(distancePoints[1]).divide(2);
+        const label = new PointText({
+            point: midpoint.add(new Point(0, -10 / state.zoom)),
+            content: `${formatValue(value)} ${state.currentUnit}`,
+            fillColor: '#00aaff',
+            fontSize: 12 / state.zoom,
+            fontWeight: 'bold',
+            justification: 'center'
+        });
+
+        // Save measurement
+        const measurement = {
+            id: state.nextMeasurementId++,
+            type: 'distance',
+            points: distancePoints.map(p => ({ x: p.x, y: p.y })),
+            value: distanceMM,
+            visible: true,
+            graphics: { line, label, markers: [...distanceMarkers] }
+        };
+        state.measurements.push(measurement);
+
+        updateMeasurementList();
+        logOperation('ADD_MEASUREMENT', { type: 'distance', value: distanceMM });
+
+        // Cleanup
+        distanceMeasureActive = false;
+        distancePoints = [];
+        distanceMarkers = [];
+        updateActiveModeIndicator();
+        showToast(`Distance: ${formatValue(value)} ${state.currentUnit}`, '#00aa5a');
+    }
+
+    return true;
+}
+
+// ============================================================
+// v3.4.0: ANGLE MEASUREMENT (3-POINT)
+// ============================================================
+
+let angleMeasureActive = false;
+let anglePoints = [];
+let angleMarkers = [];
+
+function startAngleMeasurement() {
+    exitCurrentMode();
+    angleMeasureActive = true;
+    anglePoints = [];
+    angleMarkers = [];
+
+    showToast('Click vertex, then two points on arms', '#00aa5a');
+    updateActiveModeIndicator();
+}
+
+function handleAngleMeasureClick(point) {
+    if (!angleMeasureActive) return false;
+
+    anglePoints.push(point);
+
+    const marker = new Path.Circle({
+        center: point,
+        radius: 5 / state.zoom,
+        fillColor: '#ffaa00',
+        strokeColor: '#ffffff',
+        strokeWidth: 2 / state.zoom
+    });
+    angleMarkers.push(marker);
+
+    const prompts = ['Click first arm point', 'Click second arm point'];
+    if (anglePoints.length < 3) {
+        showToast(prompts[anglePoints.length - 1] || 'Click vertex', '#00aa5a');
+    }
+
+    if (anglePoints.length === 3) {
+        // Calculate angle
+        const p1 = anglePoints[0]; // vertex
+        const p2 = anglePoints[1]; // arm 1
+        const p3 = anglePoints[2]; // arm 2
+
+        const v1 = { x: p2.x - p1.x, y: p2.y - p1.y };
+        const v2 = { x: p3.x - p1.x, y: p3.y - p1.y };
+
+        const dot = v1.x * v2.x + v1.y * v2.y;
+        const mag1 = Math.hypot(v1.x, v1.y);
+        const mag2 = Math.hypot(v2.x, v2.y);
+        const angleRad = Math.acos(Math.min(1, Math.max(-1, dot / (mag1 * mag2))));
+        const angleDeg = angleRad * 180 / Math.PI;
+
+        // Draw lines to vertex
+        const line1 = new Path.Line({
+            from: p1,
+            to: p2,
+            strokeColor: '#ffaa00',
+            strokeWidth: 1.5 / state.zoom
+        });
+
+        const line2 = new Path.Line({
+            from: p1,
+            to: p3,
+            strokeColor: '#ffaa00',
+            strokeWidth: 1.5 / state.zoom
+        });
+
+        // Draw arc
+        const radius = 25 / state.zoom;
+        const startAngle = Math.atan2(v1.y, v1.x);
+        const endAngle = Math.atan2(v2.y, v2.x);
+
+        const arcPath = new Path.Arc({
+            from: new Point(p1.x + radius * Math.cos(startAngle), p1.y + radius * Math.sin(startAngle)),
+            through: new Point(p1.x + radius * Math.cos((startAngle + endAngle) / 2), p1.y + radius * Math.sin((startAngle + endAngle) / 2)),
+            to: new Point(p1.x + radius * Math.cos(endAngle), p1.y + radius * Math.sin(endAngle)),
+            strokeColor: '#ffaa00',
+            strokeWidth: 2 / state.zoom
+        });
+
+        // Label
+        const labelAngle = (startAngle + endAngle) / 2;
+        const labelPoint = new Point(p1.x + radius * 1.5 * Math.cos(labelAngle), p1.y + radius * 1.5 * Math.sin(labelAngle));
+        const label = new PointText({
+            point: labelPoint,
+            content: `${angleDeg.toFixed(1)}°`,
+            fillColor: '#ffaa00',
+            fontSize: 12 / state.zoom,
+            fontWeight: 'bold',
+            justification: 'center'
+        });
+
+        // Save measurement
+        const measurement = {
+            id: state.nextMeasurementId++,
+            type: 'angle',
+            points: anglePoints.map(p => ({ x: p.x, y: p.y })),
+            value: angleDeg,
+            visible: true,
+            graphics: { line1, line2, arc: arcPath, label, markers: [...angleMarkers] }
+        };
+        state.measurements.push(measurement);
+
+        updateMeasurementList();
+        logOperation('ADD_MEASUREMENT', { type: 'angle', value: angleDeg });
+
+        // Cleanup
+        angleMeasureActive = false;
+        anglePoints = [];
+        angleMarkers = [];
+        updateActiveModeIndicator();
+        showToast(`Angle: ${angleDeg.toFixed(1)}°`, '#00aa5a');
+    }
+
+    return true;
+}
+
+// ============================================================
+// v3.4.0: ARC LENGTH MEASUREMENT
+// ============================================================
+
+let arcMeasureActive = false;
+
+function startArcMeasurement() {
+    exitCurrentMode();
+    arcMeasureActive = true;
+
+    showToast('Click on a curve segment to measure its length', '#00aa5a');
+    updateActiveModeIndicator();
+}
+
+function handleArcMeasureClick(point) {
+    if (!arcMeasureActive) return false;
+
+    const path = getActivePath();
+    if (!path) {
+        showToast('No outline to measure', '#ff6600');
+        arcMeasureActive = false;
+        updateActiveModeIndicator();
+        return true;
+    }
+
+    // Find closest curve
+    const hit = path.hitTest(point, { curves: true, tolerance: 15 / state.zoom });
+    if (!hit || !hit.location) {
+        showToast('Click closer to a curve', '#ff6600');
+        return true;
+    }
+
+    const curve = hit.location.curve;
+
+    // Numerical integration for arc length
+    const steps = 100;
+    let length = 0;
+    let prevPoint = curve.getPointAtTime(0);
+
+    for (let i = 1; i <= steps; i++) {
+        const t = i / steps;
+        const curvePoint = curve.getPointAtTime(t);
+        length += prevPoint.getDistance(curvePoint);
+        prevPoint = curvePoint;
+    }
+
+    const value = convertUnits(length, 'mm', state.currentUnit);
+
+    // Draw highlight on measured curve
+    const highlight = new Path({
+        segments: [],
+        strokeColor: '#00ff88',
+        strokeWidth: 4 / state.zoom,
+        strokeCap: 'round'
+    });
+
+    for (let i = 0; i <= 50; i++) {
+        highlight.add(curve.getPointAtTime(i / 50));
+    }
+
+    // Label at midpoint
+    const midPoint = curve.getPointAtTime(0.5);
+    const label = new PointText({
+        point: midPoint.add(new Point(0, -12 / state.zoom)),
+        content: `${formatValue(value)} ${state.currentUnit}`,
+        fillColor: '#00ff88',
+        fontSize: 12 / state.zoom,
+        fontWeight: 'bold',
+        justification: 'center'
+    });
+
+    // Save measurement
+    const measurement = {
+        id: state.nextMeasurementId++,
+        type: 'arc',
+        curveIndex: path.curves.indexOf(curve),
+        value: length,
+        visible: true,
+        graphics: { highlight, label }
+    };
+    state.measurements.push(measurement);
+
+    updateMeasurementList();
+    logOperation('ADD_MEASUREMENT', { type: 'arc', value: length });
+
+    // Cleanup
+    arcMeasureActive = false;
+    updateActiveModeIndicator();
+    showToast(`Arc length: ${formatValue(value)} ${state.currentUnit}`, '#00aa5a');
+
+    return true;
+}
+
+// ============================================================
+// v3.4.0: MEASUREMENT MANAGEMENT
+// ============================================================
+
+function updateMeasurementList() {
+    const container = document.getElementById('measurement-list');
+    if (!container) return;
+
+    if (state.measurements.length === 0) {
+        container.innerHTML = '<div class="measurement-empty">No measurements yet.<br>Click 📏, 📐, or 〰️ to add.</div>';
+        document.getElementById('measurement-count').textContent = '0';
+        return;
+    }
+
+    container.innerHTML = '';
+
+    state.measurements.forEach((m) => {
+        const div = document.createElement('div');
+        div.className = `measurement-item ${m.visible ? '' : 'hidden'}`;
+
+        let displayValue;
+        if (m.type === 'angle') {
+            displayValue = `${m.value.toFixed(1)}°`;
+        } else {
+            const converted = convertUnits(m.value, 'mm', state.currentUnit);
+            displayValue = `${formatValue(converted)} ${state.currentUnit}`;
+        }
+
+        // v3.5.0: Include annotation if present
+        if (m.annotation) {
+            displayValue += ` (${m.annotation})`;
+        }
+
+        const icon = m.type === 'distance' ? '📏' : m.type === 'angle' ? '📐' : '〰️';
+
+        div.innerHTML = `
+            <span class="measurement-type">${icon}</span>
+            <span class="measurement-value" title="Double-click to add annotation">${displayValue}</span>
+            <button class="measurement-delete" data-id="${m.id}">×</button>
+        `;
+
+        div.querySelector('.measurement-delete').addEventListener('click', (e) => {
+            e.stopPropagation();
+            deleteMeasurement(m.id);
+        });
+
+        div.addEventListener('click', () => {
+            highlightMeasurement(m.id);
+        });
+
+        // v3.5.0: Double-click to edit annotation
+        div.addEventListener('dblclick', (e) => {
+            e.stopPropagation();
+            editMeasurementAnnotation(m.id);
+        });
+
+        container.appendChild(div);
+    });
+
+    document.getElementById('measurement-count').textContent = state.measurements.length;
+}
+
+function deleteMeasurement(id) {
+    const index = state.measurements.findIndex(m => m.id === id);
+    if (index >= 0) {
+        const m = state.measurements[index];
+        // Remove graphics
+        if (m.graphics) {
+            if (m.graphics.line) m.graphics.line.remove();
+            if (m.graphics.line1) m.graphics.line1.remove();
+            if (m.graphics.line2) m.graphics.line2.remove();
+            if (m.graphics.label) m.graphics.label.remove();
+            if (m.graphics.arc) m.graphics.arc.remove();
+            if (m.graphics.highlight) m.graphics.highlight.remove();
+            if (m.graphics.markers) m.graphics.markers.forEach(marker => marker.remove());
+        }
+        state.measurements.splice(index, 1);
+        updateMeasurementList();
+        logOperation('DELETE_MEASUREMENT', { id });
+    }
+}
+
+function clearAllMeasurements() {
+    for (const m of state.measurements) {
+        if (m.graphics) {
+            if (m.graphics.line) m.graphics.line.remove();
+            if (m.graphics.line1) m.graphics.line1.remove();
+            if (m.graphics.line2) m.graphics.line2.remove();
+            if (m.graphics.label) m.graphics.label.remove();
+            if (m.graphics.arc) m.graphics.arc.remove();
+            if (m.graphics.highlight) m.graphics.highlight.remove();
+            if (m.graphics.markers) m.graphics.markers.forEach(marker => marker.remove());
+        }
+    }
+    state.measurements = [];
+    state.nextMeasurementId = 1;
+    updateMeasurementList();
+    showToast('All measurements cleared', '#00aa5a');
+}
+
+function toggleMeasurementsVisibility() {
+    state.measurementsVisible = !state.measurementsVisible;
+
+    for (const m of state.measurements) {
+        m.visible = state.measurementsVisible;
+        if (m.graphics) {
+            if (m.graphics.line) m.graphics.line.visible = state.measurementsVisible;
+            if (m.graphics.line1) m.graphics.line1.visible = state.measurementsVisible;
+            if (m.graphics.line2) m.graphics.line2.visible = state.measurementsVisible;
+            if (m.graphics.label) m.graphics.label.visible = state.measurementsVisible;
+            if (m.graphics.arc) m.graphics.arc.visible = state.measurementsVisible;
+            if (m.graphics.highlight) m.graphics.highlight.visible = state.measurementsVisible;
+            if (m.graphics.markers) m.graphics.markers.forEach(marker => { marker.visible = state.measurementsVisible; });
+        }
+    }
+
+    document.getElementById('btn-toggle-measurements').textContent = state.measurementsVisible ? '👁️' : '🙈';
+    updateMeasurementList();
+}
+
+function highlightMeasurement(id) {
+    const m = state.measurements.find(m => m.id === id);
+    if (!m || !m.graphics?.label) return;
+
+    // Flash the label
+    const originalColor = m.graphics.label.fillColor;
+    m.graphics.label.fillColor = '#ffffff';
+    setTimeout(() => {
+        if (m.graphics?.label) m.graphics.label.fillColor = originalColor;
+    }, 300);
+}
+
+// ============================================================
+// v3.5.0: MEASUREMENT ANNOTATION EDIT
+// ============================================================
+
+function editMeasurementAnnotation(measurementId) {
+    const m = state.measurements.find(m => m.id === measurementId);
+    if (!m) return;
+
+    const newAnnotation = prompt('Enter annotation (e.g., "Bridge to tail"):', m.annotation || '');
+    if (newAnnotation !== null) {
+        m.annotation = newAnnotation;
+
+        // Update label to include annotation
+        if (m.graphics?.label) {
+            let valueStr;
+            if (m.type === 'angle') {
+                valueStr = `${m.value.toFixed(1)}°`;
+            } else {
+                valueStr = `${formatValue(convertUnits(m.value, 'mm', state.currentUnit))} ${state.currentUnit}`;
+            }
+            m.graphics.label.content = m.annotation ?
+                `${valueStr} (${m.annotation})` :
+                valueStr;
+        }
+
+        updateMeasurementList();
+        logOperation('EDIT_ANNOTATION', { id: measurementId, annotation: newAnnotation });
+        showToast(m.annotation ? `Annotation: "${m.annotation}"` : 'Annotation cleared', '#00aa5a');
+    }
+}
+
+// ============================================================
+// v3.5.0: EXPORT SETTINGS PERSISTENCE
+// ============================================================
+
+const EXPORT_SETTINGS_KEY = 'body_outline_export_settings';
+
+function loadExportSettings() {
+    try {
+        const saved = localStorage.getItem(EXPORT_SETTINGS_KEY);
+        if (saved) {
+            state.exportSettings = { ...state.exportSettings, ...JSON.parse(saved) };
+        }
+    } catch (e) {
+        console.warn('Failed to load export settings:', e);
+    }
+}
+
+function saveExportSettings() {
+    try {
+        localStorage.setItem(EXPORT_SETTINGS_KEY, JSON.stringify(state.exportSettings));
+    } catch (e) {
+        console.warn('Failed to save export settings:', e);
+    }
+}
+
+// ============================================================
+// v3.4.0: ENHANCED DXF EXPORT
+// ============================================================
+
+function showExportDialog() {
+    // Sync UI with current settings
+    document.getElementById('export-format').value = state.exportSettings.format;
+    document.getElementById('export-tessellation').value = state.exportSettings.tessellation;
+    document.getElementById('tessellation-value').textContent = state.exportSettings.tessellation;
+    document.getElementById('export-layer-naming').value = state.exportSettings.layerNaming;
+    document.getElementById('export-include-measurements').checked = state.exportSettings.includeMeasurements;
+    document.getElementById('export-include-voids').checked = state.exportSettings.includeVoids;
+
+    document.getElementById('modal-export').classList.add('visible');
+}
+
+function hideExportDialog() {
+    document.getElementById('modal-export').classList.remove('visible');
+}
+
+function exportDXFWithSettings() {
+    // Save settings to state
+    state.exportSettings.format = document.getElementById('export-format').value;
+    state.exportSettings.tessellation = parseInt(document.getElementById('export-tessellation').value);
+    state.exportSettings.layerNaming = document.getElementById('export-layer-naming').value;
+    state.exportSettings.includeMeasurements = document.getElementById('export-include-measurements').checked;
+    state.exportSettings.includeVoids = document.getElementById('export-include-voids').checked;
+
+    // v3.5.0: Persist settings to localStorage
+    saveExportSettings();
+
+    hideExportDialog();
+
+    let dxf = '';
+
+    // Header based on format
+    if (state.exportSettings.format === 'R12') {
+        dxf += '0\nSECTION\n2\nHEADER\n';
+        dxf += '9\n$ACADVER\n1\nAC1009\n';
+        dxf += '0\nENDSEC\n';
+    } else {
+        dxf += '0\nSECTION\n2\nHEADER\n';
+        dxf += '9\n$ACADVER\n1\nAC1021\n';
+        dxf += '0\nENDSEC\n';
+    }
+
+    dxf += '0\nSECTION\n2\nENTITIES\n';
+
+    // Outer body with tessellation setting
+    if (state.outerPath) {
+        const points = tessellatePathToPoints(state.outerPath, state.exportSettings.tessellation);
+        const layerName = state.exportSettings.layerNaming === 'cam' ? '1' : 'BODY_OUTLINE';
+
+        for (let i = 0; i < points.length; i++) {
+            const j = (i + 1) % points.length;
+            dxf += `0\nLINE\n8\n${layerName}\n`;
+            dxf += `10\n${points[i][0].toFixed(3)}\n20\n${points[i][1].toFixed(3)}\n30\n0\n`;
+            dxf += `11\n${points[j][0].toFixed(3)}\n21\n${points[j][1].toFixed(3)}\n31\n0\n`;
+        }
+    }
+
+    // Voids
+    if (state.exportSettings.includeVoids) {
+        state.voids.forEach((v, idx) => {
+            const layerName = state.exportSettings.layerNaming === 'cam'
+                ? `${2 + idx}`
+                : `VOID_${v.role.toUpperCase()}`;
+            const points = tessellatePathToPoints(v.path, state.exportSettings.tessellation);
+
+            for (let i = 0; i < points.length; i++) {
+                const j = (i + 1) % points.length;
+                dxf += `0\nLINE\n8\n${layerName}\n`;
+                dxf += `10\n${points[i][0].toFixed(3)}\n20\n${points[i][1].toFixed(3)}\n30\n0\n`;
+                dxf += `11\n${points[j][0].toFixed(3)}\n21\n${points[j][1].toFixed(3)}\n31\n0\n`;
+            }
+        });
+    }
+
+    // Measurements as text entities
+    if (state.exportSettings.includeMeasurements) {
+        const measurementLayer = state.exportSettings.layerNaming === 'cam' ? 'DIMENSIONS' : 'MEASUREMENTS';
+
+        for (const m of state.measurements) {
+            if (!m.visible || !m.graphics?.label) continue;
+
+            const text = m.graphics.label.content;
+            const x = m.graphics.label.point.x;
+            const y = m.graphics.label.point.y;
+
+            dxf += `0\nTEXT\n8\n${measurementLayer}\n`;
+            dxf += `10\n${x.toFixed(3)}\n20\n${y.toFixed(3)}\n30\n0\n`;
+            dxf += `40\n2.5\n`;
+            dxf += `1\n${text}\n`;
+        }
+    }
+
+    dxf += '0\nENDSEC\n0\nEOF\n';
+    dxf = dxf.replace(/\n/g, '\r\n');
+
+    downloadFile(dxf, `body_outline_${state.exportSettings.format}.dxf`, 'application/dxf');
+    showToast(`DXF exported (${state.exportSettings.format}, ${state.exportSettings.tessellation} pts/curve)`, '#00aa5a');
+    logOperation('EXPORT_DXF', state.exportSettings);
+}
+
+// ============================================================
+// v3.4.0: ENHANCED SVG EXPORT
+// ============================================================
+
+function exportSVGWithDimensions() {
+    // Use Paper.js export
+    const group = new Group();
+    if (state.outerPath) group.addChild(state.outerPath.clone());
+    if (state.exportSettings.includeVoids) {
+        state.voids.forEach(v => group.addChild(v.path.clone()));
+    }
+
+    let svg = group.exportSVG({ asString: true });
+    group.remove();
+
+    // Inject measurement text elements
+    if (state.exportSettings.includeMeasurements && state.measurements.length > 0) {
+        const parser = new DOMParser();
+        const svgDoc = parser.parseFromString(svg, 'image/svg+xml');
+        const svgEl = svgDoc.documentElement;
+
+        // Add style for measurements
+        const style = svgDoc.createElementNS('http://www.w3.org/2000/svg', 'style');
+        style.textContent = '.measurement { font-family: monospace; font-size: 12px; fill: #00aaff; }';
+        svgEl.insertBefore(style, svgEl.firstChild);
+
+        for (const m of state.measurements) {
+            if (m.visible && m.graphics?.label) {
+                const text = svgDoc.createElementNS('http://www.w3.org/2000/svg', 'text');
+                text.setAttribute('x', m.graphics.label.point.x.toFixed(2));
+                text.setAttribute('y', (-m.graphics.label.point.y).toFixed(2)); // SVG Y is inverted
+                text.setAttribute('class', 'measurement');
+                text.setAttribute('text-anchor', 'middle');
+                text.textContent = m.graphics.label.content;
+                svgEl.appendChild(text);
+            }
+        }
+
+        svg = new XMLSerializer().serializeToString(svgDoc);
+    }
+
+    downloadFile(svg, 'body_outline.svg', 'image/svg+xml');
+    showToast('SVG exported with dimensions', '#00aa5a');
+    logOperation('EXPORT_SVG', { includeMeasurements: state.exportSettings.includeMeasurements });
+}
 
 // ============================================================
 // v3.1.0: EMPTY MODE FUNCTIONS
@@ -1462,6 +3026,13 @@ window.onload = function() {
     setupKeyboardEvents();
     setupModalEvents();
 
+    // v3.3.0: Load user templates and setup snap modifier
+    loadUserTemplates();
+    setupSnapModifier();
+
+    // v3.5.0: Load export settings
+    loadExportSettings();
+
     // Initial UI update
     updateUI();
     // Note: pushState() is called inside initModeSelection() after mode is chosen
@@ -1708,6 +3279,10 @@ function updateDistanceDisplay() {
 // SNAP
 // ============================================================
 function snapToGrid(point) {
+    // v3.3.0: Shift key disables snap
+    if (state.snapModifierPressed) {
+        return point;
+    }
     const snap = state.snapSize;
     return new Point(
         Math.round(point.x / snap) * snap,
@@ -2119,8 +3694,9 @@ function setupCanvasEvents() {
     // Mouse move - update cursor position
     view.onMouseMove = function(event) {
         const pt = event.point;
+        // v3.2.0: 3-decimal precision
         document.getElementById('status-cursor').textContent =
-            `${pt.x.toFixed(2)}, ${pt.y.toFixed(2)}`;
+            `${pt.x.toFixed(state.showDecimalPlaces)}, ${pt.y.toFixed(state.showDecimalPlaces)}`;
 
         // Show snap indicator while dragging
         if (isDragging && state.selectedSegments.length > 0) {
@@ -2131,6 +3707,22 @@ function setupCanvasEvents() {
 
     // Mouse down
     view.onMouseDown = function(event) {
+        // v3.4.0: Persistent measurement handlers
+        if (distanceMeasureActive) {
+            handleDistanceMeasureClick(event.point);
+            return;
+        }
+
+        if (angleMeasureActive) {
+            handleAngleMeasureClick(event.point);
+            return;
+        }
+
+        if (arcMeasureActive) {
+            handleArcMeasureClick(event.point);
+            return;
+        }
+
         if (state.measuring) {
             handleMeasureClick(event.point);
             return;
@@ -2500,7 +4092,19 @@ function setupKeyboardEvents() {
             e.preventDefault();
         }
 
-        // v2.0.2: Arrow key nudge
+        // v3.2.0: Escape key - exit any modal mode
+        if (e.key === 'Escape') {
+            if (state.calibrating || state.measuring) {
+                exitCurrentMode();
+                e.preventDefault();
+            } else if (document.getElementById('mode-dialog-overlay')?.style.display !== 'none') {
+                document.getElementById('mode-dialog-overlay')?.remove();
+                e.preventDefault();
+            }
+            return;
+        }
+
+        // v2.0.2: Arrow key nudge (v3.2.0: uses nudgePreference)
         if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.key)) {
             // Don't nudge if typing in an input field
             if (document.activeElement && document.activeElement.tagName === 'INPUT') {
@@ -2511,7 +4115,8 @@ function setupKeyboardEvents() {
 
             if (state.selectedSegments.length === 0) return;
 
-            const snap = e.shiftKey ? 0.1 : state.snapSize;
+            // v3.2.0: Use nudgePreference, shift for fine-tune (0.1mm)
+            const snap = e.shiftKey ? 0.1 : state.nudgePreference;
             let dx = 0, dy = 0;
 
             switch (e.key) {
@@ -2571,6 +4176,15 @@ function setupKeyboardEvents() {
         // Ctrl+E - Export JSON
         if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'e') {
             exportJSON();
+            return;
+        }
+
+        // v3.5.0: Ctrl+Shift+M - Clear all measurements
+        if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key.toLowerCase() === 'm') {
+            e.preventDefault();
+            if (state.measurements.length > 0 && confirm('Clear all measurements?')) {
+                clearAllMeasurements();
+            }
             return;
         }
 
@@ -2670,15 +4284,105 @@ function setupToolbarEvents() {
 
     document.getElementById('btn-simplify').addEventListener('click', simplifyPath);
     document.getElementById('btn-smooth-all').addEventListener('click', smoothAllNodes);
+    document.getElementById('btn-revert-smooth').addEventListener('click', revertSmooth);
+    document.getElementById('btn-reset-handles').addEventListener('click', resetHandlesToLinear);
 
     document.getElementById('btn-import').addEventListener('click', importImage);
-    document.getElementById('btn-measure').addEventListener('click', startMeasure);
+
+    // v3.4.0: Measurement tools (replaced single startMeasure)
+    document.getElementById('btn-measure').addEventListener('click', startDistanceMeasurement);
+    document.getElementById('btn-measure-angle').addEventListener('click', startAngleMeasurement);
+    document.getElementById('btn-measure-arc').addEventListener('click', startArcMeasurement);
+    document.getElementById('btn-measure-clear').addEventListener('click', () => {
+        if (state.measurements.length === 0) {
+            showToast('No measurements to clear', '#ff6600');
+            return;
+        }
+        if (confirm('Clear all measurements?')) {
+            clearAllMeasurements();
+        }
+    });
+
+    // v3.4.0: Units selector
+    document.getElementById('units-select').addEventListener('change', (e) => {
+        setUnits(e.target.value);
+    });
+
+    // v3.4.0: Measurements panel
+    document.getElementById('btn-toggle-measurements').addEventListener('click', toggleMeasurementsVisibility);
+
+    document.getElementById('btn-exit-mode').addEventListener('click', exitCurrentMode);
+
+    // v3.2.0: Nudge preference
+    document.getElementById('nudge-select').addEventListener('change', function() {
+        state.nudgePreference = parseFloat(this.value);
+        console.log(`Nudge amount set to ${state.nudgePreference}mm`);
+    });
     document.getElementById('btn-calibrate').addEventListener('click', startCalibration);
     document.getElementById('btn-clear-image').addEventListener('click', clearImage);
 
-    document.getElementById('btn-export-dxf').addEventListener('click', exportDXF);
+    // v3.3.0: Image layer controls
+    document.getElementById('btn-rotate-left').addEventListener('click', () => rotateActiveLayer(-90));
+    document.getElementById('btn-rotate-right').addEventListener('click', () => rotateActiveLayer(90));
+    document.getElementById('btn-lock-image').addEventListener('click', toggleImageLock);
+    document.getElementById('btn-scale-image').addEventListener('click', startNonUniformScale);
+    document.getElementById('btn-save-template').addEventListener('click', saveUserTemplate);
+
+    document.getElementById('rotation-slider').addEventListener('input', function() {
+        setLayerRotation(parseFloat(this.value));
+    });
+
+    // v3.3.0: Layer panel controls
+    document.getElementById('btn-add-layer').addEventListener('click', () => {
+        // Trigger file input for new layer
+        const input = document.createElement('input');
+        input.type = 'file';
+        input.accept = 'image/*';
+        input.onchange = (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = (ev) => {
+                    addImageLayer(ev.target.result, file.name.replace(/\.[^.]+$/, ''));
+                };
+                reader.readAsDataURL(file);
+            }
+        };
+        input.click();
+    });
+
+    document.getElementById('btn-delete-layer').addEventListener('click', () => {
+        if (state.activeLayerId) {
+            deleteLayer(state.activeLayerId);
+        }
+    });
+
+    document.getElementById('btn-layer-up').addEventListener('click', () => {
+        if (state.activeLayerId) {
+            moveLayerUp(state.activeLayerId);
+        }
+    });
+
+    document.getElementById('btn-layer-down').addEventListener('click', () => {
+        if (state.activeLayerId) {
+            moveLayerDown(state.activeLayerId);
+        }
+    });
+
+    // v3.3.0: User templates
+    document.getElementById('btn-load-user-template').addEventListener('click', loadUserTemplate);
+
+    // v3.4.0: Enhanced exports with options
+    document.getElementById('btn-export-dxf').addEventListener('click', showExportDialog);
     document.getElementById('btn-export-json').addEventListener('click', exportJSON);
-    document.getElementById('btn-export-svg').addEventListener('click', exportSVG);
+    document.getElementById('btn-export-svg').addEventListener('click', exportSVGWithDimensions);
+
+    // v3.4.0: Export modal handlers
+    document.getElementById('export-cancel').addEventListener('click', hideExportDialog);
+    document.getElementById('export-confirm').addEventListener('click', exportDXFWithSettings);
+    document.getElementById('export-tessellation').addEventListener('input', (e) => {
+        document.getElementById('tessellation-value').textContent = e.target.value;
+    });
 
     document.getElementById('image-opacity').addEventListener('input', function() {
         const val = parseInt(this.value);
@@ -2929,18 +4633,8 @@ function simplifyPath() {
 }
 
 function smoothAllNodes() {
-    const path = getActivePath();
-    if (!path) return;
-
-    path.smooth();
-
-    state.selectedSegments = [];
-    state.selectedHandle = null;
-    state.dirty = true;
-
-    pushState();
-    updateUI();
-    redrawHandles();
+    // v3.2.0: Delegate to smoothWithRevert for revert capability
+    smoothWithRevert();
 }
 
 function confirmNew() {
@@ -3021,18 +4715,21 @@ function updateUI() {
         state.activePathType === 'outer' ? 'Outer' :
         state.voids.find(v => v.id === state.activePathType)?.role || 'Void';
 
-    // Selected node info
+    // v3.2.0: Selected node info with 3-decimal precision
     if (state.selectedSegments.length === 1) {
         const seg = state.selectedSegments[0];
         const path = getActivePath();
         const idx = path ? path.segments.indexOf(seg) : -1;
         document.getElementById('status-selected').textContent =
-            `#${idx} (${seg.point.x.toFixed(2)}, ${seg.point.y.toFixed(2)})`;
+            `#${idx} (${seg.point.x.toFixed(state.showDecimalPlaces)}, ${seg.point.y.toFixed(state.showDecimalPlaces)})`;
     } else if (state.selectedSegments.length === 2) {
         document.getElementById('status-selected').textContent = '2 nodes';
     } else {
         document.getElementById('status-selected').textContent = '—';
     }
+
+    // v3.2.0: Update active mode indicator
+    updateActiveModeIndicator();
 }
 
 function updateNodeList() {
@@ -3047,10 +4744,11 @@ function updateNodeList() {
 
         const div = document.createElement('div');
         div.className = 'node-item' + (isSelected ? ' selected' : '');
+        // v3.2.0: 3-decimal precision
         div.innerHTML = `
             <span class="index">${idx}</span>
-            <input type="number" step="0.01" value="${seg.point.x.toFixed(2)}" data-idx="${idx}" data-axis="x">
-            <input type="number" step="0.01" value="${seg.point.y.toFixed(2)}" data-idx="${idx}" data-axis="y">
+            <input type="number" step="0.001" value="${seg.point.x.toFixed(state.showDecimalPlaces)}" data-idx="${idx}" data-axis="x">
+            <input type="number" step="0.001" value="${seg.point.y.toFixed(state.showDecimalPlaces)}" data-idx="${idx}" data-axis="y">
         `;
 
         div.addEventListener('click', function(e) {
@@ -3259,6 +4957,11 @@ function importImage() {
 
         const reader = new FileReader();
         reader.onload = function(ev) {
+            // v3.3.0: Also create a layer for multi-layer support
+            const layerName = file.name.replace(/\.[^.]+$/, '');
+            addImageLayer(ev.target.result, layerName);
+
+            // Legacy: keep state.raster for backward compatibility
             if (state.raster) state.raster.remove();
 
             const img = new Image();
@@ -3301,6 +5004,9 @@ function startCalibration() {
     state.calPoints = [];
     state.calMarkers.forEach(m => m.remove());
     state.calMarkers = [];
+
+    // v3.2.0: Update mode indicator
+    updateActiveModeIndicator();
 
     showCalibrationStatus('Click point A');
 }
@@ -3365,6 +5071,9 @@ function cancelCalibration() {
     state.calMarkers = [];
     hideCalibrationStatus();
     document.getElementById('modal-calibrate').classList.remove('visible');
+
+    // v3.2.0: Update mode indicator
+    updateActiveModeIndicator();
 }
 
 // ============================================================
@@ -3377,6 +5086,10 @@ function startMeasure() {
     state.measuring = true;
     state.measurePoints = [];
     document.getElementById('btn-measure').classList.add('active');
+
+    // v3.2.0: Update mode indicator
+    updateActiveModeIndicator();
+
     showCalibrationStatus('Click first point');
 }
 
@@ -3454,6 +5167,14 @@ function fadeMeasureMarkers() {
         const distanceEl = document.getElementById('distance-display');
         distanceEl.style.display = 'none';
         distanceEl.style.color = '#ffaa00'; // Reset to original color
+
+        // v3.2.0: Update mode indicator
+        updateActiveModeIndicator();
+
+        // v3.2.0: Auto-reset to empty mode if applicable
+        if (state.editorMode === 'empty') {
+            showEmptyModeToast('Measurement complete. Ready for dot placement.');
+        }
     }, 500);
 }
 
@@ -3472,6 +5193,9 @@ function cancelMeasure() {
     const distanceEl = document.getElementById('distance-display');
     distanceEl.style.display = 'none';
     distanceEl.style.color = '#ffaa00';
+
+    // v3.2.0: Update mode indicator
+    updateActiveModeIndicator();
 }
 
 // ============================================================
@@ -3539,6 +5263,14 @@ function applyCalibration() {
     cancelCalibration();
     document.getElementById('canvas').focus();
     view.update();
+
+    // v3.2.0: Update mode indicator
+    updateActiveModeIndicator();
+
+    // v3.2.0: Auto-reset to empty mode if applicable
+    if (state.editorMode === 'empty') {
+        showEmptyModeToast('Calibration complete. Ready for dot placement.');
+    }
 
     // Show success message
     const statusBar = document.querySelector('.status-bar');
@@ -4238,10 +5970,10 @@ window.testAll = async function() {
     console.log('=== TESTS COMPLETE ===');
 };
 
-console.log('Body Outline Editor v3.1.0 loaded');
+console.log('Body Outline Editor v3.5.0 loaded');
 console.log('Test functions: testAPI(), testMirror(), testAutoSave(), testCalibration()');
 console.log('v2.x tests: testSelfIntersection(), testTemplate(id), testLandmarks(), testWeightedMirror()');
-console.log('v3.1.0 tests: testBackendAPI(), testPrecision(), testEmptyMode(), testAll()');
+console.log('v3.x tests: testBackendAPI(), testPrecision(), testEmptyMode(), testAll()');
 </script>
 </body>
 </html>

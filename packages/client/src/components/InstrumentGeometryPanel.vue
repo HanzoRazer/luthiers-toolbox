@@ -206,6 +206,27 @@
             ❌ {{ store.previewError }}
           </div>
         </section>
+
+        <!-- ===== Phase 0: Orphan Endpoint Panels ===== -->
+        <SetupEvaluationPanel />
+        <StringTensionPanel />
+        <BridgePresetSelector />
+        <SaddleCompensationPanel />
+
+        <!-- ===== NECK-A Phase 3: Relief Workflow ===== -->
+        <SetupWorkflowReliefPanel />
+
+        <!-- ===== NECK-A Phase 4: Action Workflow ===== -->
+        <SetupWorkflowActionPanel />
+
+        <!-- ===== NECK-A Phase 5: Nut Slot Workflow ===== -->
+        <SetupWorkflowNutPanel />
+
+        <!-- ===== NECK-A Phase 6: Combined Diagnostics ===== -->
+        <SetupWorkflowCombinedPanel />
+
+        <!-- ===== NECK-A Phase 7: Expert Diagnostics ===== -->
+        <SetupWorkflowExpertPanel />
       </div>
 
       <!-- ===== RIGHT PANEL: Preview & Results ===== -->
@@ -447,6 +468,15 @@ import {
   INSTRUMENT_MODELS,
 } from "@/stores/instrumentGeometryStore";
 import FretboardPreviewSvg from "@/components/FretboardPreviewSvg.vue";
+import SetupEvaluationPanel from "@/components/SetupEvaluationPanel.vue";
+import StringTensionPanel from "@/components/StringTensionPanel.vue";
+import BridgePresetSelector from "@/components/BridgePresetSelector.vue";
+import SaddleCompensationPanel from "@/components/SaddleCompensationPanel.vue";
+import SetupWorkflowReliefPanel from "@/components/SetupWorkflowReliefPanel.vue";
+import SetupWorkflowActionPanel from "@/components/SetupWorkflowActionPanel.vue";
+import SetupWorkflowNutPanel from "@/components/SetupWorkflowNutPanel.vue";
+import SetupWorkflowCombinedPanel from "@/components/SetupWorkflowCombinedPanel.vue";
+import SetupWorkflowExpertPanel from "@/components/SetupWorkflowExpertPanel.vue";
 import styles from "./InstrumentGeometryPanel.module.css";
 import shared from "@/styles/dark-theme-shared.module.css";
 

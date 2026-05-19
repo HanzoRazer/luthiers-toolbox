@@ -1,0 +1,11 @@
+# Morphology Harvest Outputs
+# Generated files are gitignored — only schemas, fixtures, and docs are committed
+
+# Manifest and records
+manifest.json
+records/
+overlays/
+reports/
+
+# Keep the directory structure
+!.gitignore

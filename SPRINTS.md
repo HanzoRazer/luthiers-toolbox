@@ -1,11 +1,40 @@
 # The Production Shop — Sprint Registry
-Last updated: 2026-04-30
+Last updated: 2026-05-06
 Maintained by: Ross Echols (HanzoRazer)
 Maintenance discipline: docs/SPRINTS_MAINTENANCE.md
 
 ---
 
-## NEXT SESSION OPENS WITH
+## NEXT SESSION OPENS WITH (2026-05-02)
+
+**Sprint FRET-CONSOLIDATION-1 complete** — CAM toolpath generation now consumes FretboardEcosphere as canonical source. No more duplicate fret math.
+
+**Engineer at rest after data integrity and consolidation sprints.** No active work in flight.
+
+**Shop setup is the gating critical path** — clearout target 2026-05-15, lab rig fabrication start ~2026-07.
+
+**CAD work on Smart Guitar in parallel** (romantic route chosen; Fusion 360 license renewed).
+
+**Completed 2026-04-30 through 2026-05-02:**
+- Sprint M1 wood shrinkage data integrity remediation (commits 37f29bc6, 477758eb)
+- Sprint M2 silent fallback elimination across 6 files (commit 477758eb)
+- Sprint NDS Phase 1+1.5 foundation (commits 9d37f1ea, d72d9744, e260f365, ac96430f)
+- Sprint NDS Phase 2 router and endpoints (commits 4f8a3209, ab1ed8a2, 6b719fc3) — delivered as FRET-A Phase 2
+- Sprint FRET-CONSOLIDATION-1 CAM-consumes-ecosphere (commits e4220537, fa009184)
+- African Padauk wood_species.json entry update (Janka correction, shrinkage values, CITES warning)
+- Data file sync boundary documented (wood_species.json vs luthier_tonewood_reference.json)
+- Sprint M4 queued: MOE data gaps (spruce_sitka, spruce_engelmann, douglas_fir)
+
+**Pending pickup when bandwidth allows:**
+- Sprint M2.5 — Deferred silent fallback cleanup (4 items)
+- Sprint M3a — CITES lookup tool
+- Sprint M5 — CIRAD Reference Database API (expose 34K specimens + density data)
+- Sprint M6 — Unfinished Work Audit (BOE, IBG, stale sprints, sandboxed experiments)
+- Active Inventory Species Audit (Padauk as template)
+
+**Strategy update (2026-05-02):** Single-property marketing strategy supersedes standalone-repos-as-moat. All standalone repos except ltb-woodworking-studio collapse back to luthiers-toolbox. Privatization of all standalone repos in flight as separate operational task.
+
+---
 
 **Sprint 3 — REOPENED (2026-04-26)**
 
@@ -212,20 +241,12 @@ Quality scorecard (3/3 PASS):
 **last_verified:** 2026-04-23
 **Branch:** main
 
-**Standalone repo inventory (all created on GitHub):**
+**Standalone repo inventory (reduced per 2026-05-02 single-property strategy):**
 
 | Repo | Description | Status |
 |------|-------------|--------|
-| HanzoRazer/ltb-rosette-designer | Rosette Designer — full UI, BOM engine, 8 presets, Manufacturing Intelligence, Amsterdam/Spiro engine | **LIVE** |
-| HanzoRazer/ltb-acoustic-design-studio | Helmholtz + Gore P:A calculator + soundhole geometry designer | Empty — needs content |
-| HanzoRazer/ltb-bridge-designer | Bridge geometry + string spacing | POPULATED — commit `55c17a6` |
-| HanzoRazer/ltb-fingerboard-designer | Scale length, radius, multiscale | Existing — needs audit |
-| HanzoRazer/ltb-headstock-designer | Tuner layout, headstock templates | Existing — needs audit |
-| HanzoRazer/ltb-neck-designer | Neck profiles, tapers | Existing — needs audit |
-| HanzoRazer/ltb-parametric-guitar | Body shape generator | Existing — needs audit |
-| HanzoRazer/ltb-woodworking-studio | Joinery, wood movement, bench woodworking | woodworking_v2 committed |
-| HanzoRazer/ltb-express | String tension calculator + quick tools | **CONTAMINATED** — needs cleanup |
-| HanzoRazer/blueprint-reader | PDF → DXF pipeline (vectorizer) | Deployed to Hostinger |
+| HanzoRazer/ltb-woodworking-studio | Joinery, bending, panel work, bandsaw — separate domain from lutherie | Migration target — push pending verification |
+| HanzoRazer/blueprint-reader | PDF → DXF pipeline (vectorizer) | Deployed to Hostinger — separate due to deployment, not strategic |
 
 **Open items:**
 - [ ] Install ODA File Converter locally — batch convert DWG inventory:
@@ -237,10 +258,13 @@ Quality scorecard (3/3 PASS):
 - [x] Create docs/VECTORIZER_ACCURACY.md — RESOLVED (docs/VECTORIZER_ACCURACY.md exists)
 - [ ] Add accuracy summary to README.md and blueprint-reader landing page
 - [ ] Sync blueprint-reader with Sprint 1 Phase 1-3 commits
-- [ ] Clean ltb-express (contamination)
-- [ ] Define publish workflow for remaining standalone repos
 - [ ] Digitize 12-string dreadnought plans via blueprint-reader.html
 - [ ] Emperor plans — digitize on receipt
+- [ ] ltb-woodworking-studio migration verification and push:
+      - Verify current GitHub state of HanzoRazer/ltb-woodworking-studio
+      - If empty or partial, push local woodworking_v2/ contents to repo
+      - Update luthiers-toolbox imports to reference woodworking as separate dependency
+      - Privatize the repo
 
 ---
 
@@ -889,33 +913,15 @@ When this sprint activates, rosette authenticity is the natural first use case. 
 Track as backlog — address when touching those files for other reasons.
 
 
-### Orphaned curvature test file
+### ~~Orphaned curvature test file~~
 
-**Status:** Backlog
-**Priority:** Cleanup — non-blocking
-**Discovered:** 2026-04-29 during FRET-A baseline capture
-**File:** services/api/tests/test_layer_builder_curvature.py
+**Status:** ✅ RESOLVED 2026-05-01
+**Resolution:** Option B — deleted test file (speculative test for unshipped integration)
+**File deleted:** `services/api/tests/test_layer_builder_curvature.py`
 
-The test file imports three symbols that don't exist in the codebase:
-  - _is_curvature_body_candidate
-  - curvature_body_promotion_enabled
-  - CURVATURE_PROFILER_AVAILABLE
-
-**Origin:** Commit 944aefc6 (2026-04-19 05:17:58) added curvature_profiler.py,
-curvature_correction.py, and this test file together. The test imports symbols
-for layer_builder integration (`_is_curvature_body_candidate`, etc.) that were
-never implemented — the test was written for planned integration that didn't ship.
-
-This is **case B** (speculative test), not case A (removed implementation).
-
-Currently skipped at module level pending triage. Resolution options:
-
-  A. Implement the layer_builder integration the test expects.
-  B. Delete test file — the planned integration was abandoned.
-
-Recommend option B unless curvature-based body promotion is on the roadmap.
-
-Not blocking FRET-A. Triage in next layer-builder cleanup sprint.
+The test imported symbols (`_is_curvature_body_candidate`, `curvature_body_promotion_enabled`,
+`CURVATURE_PROFILER_AVAILABLE`) for layer_builder integration that was never implemented.
+Original commit 944aefc6 preserved in git history if needed.
 
 ### FRET-A schema/kernel math duplication
 
@@ -972,6 +978,724 @@ Recommend B + A in batches. Adding a CI check stops the bleed; backfill
 happens when team has bandwidth.
 
 Not blocking FRET-A or any current sprint. Triage when DXF hygiene sprint scheduled.
+
+---
+
+## CLEANUP
+
+### Sprint CL-1 — Security Remediation (COMPLETE 2026-05-03)
+
+**Scope:** Address exposed API credentials surfaced by codebase scan.
+
+**Completed actions:**
+- Repository privatized at HanzoRazer/luthiers-toolbox
+- Anthropic API key rotated (old key revoked, new key issued)
+- OpenAI API key rotated (old key revoked, new key issued)
+- New keys saved to local .env files, verified in VS Code
+
+**Pending follow-through (separate small task):**
+- Add .env entries to .gitignore if not already present
+- Untrack .env and services/api/.env from git history (using `git rm --cached`)
+- Commit and push prevention changes
+
+**Status:** Acute exposure closed. Prevention follow-through scheduled within current week.
+
+---
+
+### Sprint CL-2 — Root Artifact Directory Cleanup
+
+**Priority:** HIGH (low effort, immediate disk reclaim)
+**Effort:** 30 minutes
+**Status:** Queued, ready to execute
+
+**Scope:** Remove timestamped download directories and benchmark output directories at repo root.
+
+**Targets for deletion:**
+- `files - 2026-03-31T002554.594/` (3 files)
+- `files - 2026-04-14T102549.923/` (3 files)
+- `files - 2026-04-16T160551.956/` (3 files)
+- `files - 2026-04-16T161657.416/` (2 files)
+- `files - 2026-04-23T090806.069/` (3 files)
+- `benchmark_dxf_outputs/` (6 files)
+- `benchmark_exports/` (3 files)
+- `benchmark_outputs/` (27 files)
+- `benchmark_results/` (1 file)
+
+**Verification before deletion:** Confirm none of these directories are referenced by current code or active tests. Quick grep for directory names in services/api/ and packages/client/ should suffice.
+
+**Single commit per category** — one for the timestamped download dirs, one for the benchmark dirs.
+
+---
+
+### Sprint CL-3 — Photo Vectorizer Test Output Cleanup
+
+**Priority:** MEDIUM (volume issue, not structural)
+**Effort:** 1-2 hours including curation review
+**Status:** Queued — requires Ross input on artifact preservation
+
+**Scope:** services/photo-vectorizer has 14+ test output directories accumulated during development. Some likely contain meaningful artifacts (calibration runs, validation outputs that informed subsequent decisions). Volume is prohibitive but blanket deletion risks losing useful reference material.
+
+**Approach:**
+1. Engineer surveys the 14+ test output directories
+2. Identifies which contain unique artifacts vs. which are redundant
+3. Produces a brief disposition list: keep (and where to archive), delete (volume artifacts only)
+4. Ross reviews disposition list before any deletion
+5. Engineer executes per Ross's review
+
+**Likely outcome:** Most test outputs delete; a small subset of validated reference outputs (the ones that informed the vectorizer architecture) preserve to docs/archive/2026/photo_vectorizer_validation/.
+
+**Deferred decision:** Whether photo-vectorizer should establish a permanent test-fixture directory pattern going forward (so future test outputs land in a designated location with retention rules) — separate sprint if pursued.
+
+---
+
+### Sprint CL-4 — Photo Vectorizer Version Consolidation
+
+**Priority:** MEDIUM (real architectural decision)
+**Effort:** 4-8 hours
+**Status:** Queued
+
+**Scope:** services/photo-vectorizer has multiple versioned files (extract_body_grid_v2 through v5) suggesting incomplete consolidation. The newest version is presumably canonical but older versions remain.
+
+**Tasks:**
+1. Confirm v5 is canonical (or identify which version is)
+2. Verify no current code imports from older versions
+3. Archive older versions to archive/code/photo_vectorizer/ with brief notes on what changed between versions
+4. Update any documentation that references older versions
+5. Single commit removing legacy versions
+
+---
+
+### Sprint CL-5 — Obvious Orphan Removal
+
+**Priority:** HIGH (low effort, low risk)
+**Effort:** 30 minutes
+**Status:** Queued
+
+**Scope:** Several directories appear to be one-time migration artifacts or accidental commits with no current purpose.
+
+**Targets:**
+- `services/api/app/Users/` — accidental directory (unusual location)
+- `services/api/app/router_rewire_report/` — one-time migration artifact
+- `services/api/app/routers/_archived/` — archived pipeline code (likely safe to remove now that it's been archived for some time; verify nothing references)
+
+**Verification:** grep for each directory name in the codebase before deletion. If references exist, escalate to Ross before removing.
+
+---
+
+### Sprint CL-6 — util/ + utils/ Merge
+
+**Priority:** LOW (minor cleanup)
+**Effort:** 1-2 hours
+**Status:** Queued
+
+**Scope:** services/api/app has both `util/` and `utils/` directories — duplication that should consolidate.
+
+**Tasks:**
+1. Survey contents of both directories
+2. Decide canonical name (utils/ is more conventional)
+3. Move contents from non-canonical to canonical
+4. Update all imports in the codebase
+5. Verify tests still pass
+6. Remove the empty directory
+
+**Risk:** Import updates need to be comprehensive. A single missed import causes runtime failure. Worth running test suite after to verify.
+
+---
+
+### Sprint CL-7 — Landing Page Disposition
+
+**Priority:** MEDIUM
+**Effort:** 30 minutes after Ross identifies which are abandoned
+**Status:** Awaiting Ross confirmation
+
+**Scope:** Resolve abandoned landing pages identified by scan.
+
+**Hostinger HTML pages (4 candidates):**
+- `production-shop-hub.html` — main marketing landing
+- `blueprint-reader.html` — Blueprint Reader tool landing
+- `archtop-graduation-studio.html` — Archtop graduation studio
+- `body-outline-editor.html` — Body outline editor landing
+
+**Unrouted Vue views (12 candidates):**
+- ArtStudioPhase15_5.vue
+- ArtStudioDashboard.vue
+- ArtJobDetail.vue
+- ArtJobTimeline.vue
+- ArtStudioUnified.vue
+- ArtPresetManager.vue
+- MachineListView.vue
+- PostListView.vue
+- CamProductionView.vue
+- MultiRunComparisonView.vue
+- OffsetLabView.vue
+- LabsIndex.vue
+
+**Pattern observation:** The Art Studio variants (6 of the 12 Vue views) suggest a refactoring that consolidated the Art Studio interface but left old views in place. Likely all 6 archive together.
+
+**Ross action:** Open each candidate, confirm abandoned status, mark for archive or removal.
+
+**Engineer execution:** After Ross's disposition decisions, archive abandoned pages to docs/archive/2026/landing_pages/ and remove from active codebase.
+
+---
+
+### Sprint CL-8 — api/ vs api_v1/ Resolution
+
+**Priority:** MEDIUM (architectural decision needed)
+**Effort:** 1 day after decision
+**Status:** Awaiting architectural clarification
+
+**Scope:** services/api/app has both `api/` (3 files, mostly deps) and `api_v1/` (11 files, domain modules). Unclear whether this is intentional API versioning or incomplete migration.
+
+**Resolution paths:**
+- **If intentional versioning:** Document the versioning strategy. Confirm what should live in api/ vs api_v1/. Update CLAUDE.md to make the boundary explicit. Move misplaced files if needed.
+- **If incomplete migration:** Decide forward direction (collapse to api/ or complete migration to api_v1/). Execute the chosen direction. Single sprint of focused work.
+
+**Ross action:** Provide context on original intent. If memory is unclear, engineer can investigate git history of when api_v1/ was created and what was in commit messages.
+
+---
+
+### Sprint CL-9 — Dockerfile Consolidation
+
+**Priority:** MEDIUM
+**Effort:** 1 day
+**Status:** Queued
+
+**Scope:** 7 Dockerfiles exist across the repo with apparent duplication.
+
+**Locations:**
+- `docker/api/Dockerfile`
+- `docker/client/Dockerfile`
+- `docker/client/Dockerfile.railway`
+- `docker/client/Dockerfile.production`
+- `docker/nginx/Dockerfile`
+- `packages/client/Dockerfile` (possible duplicate)
+- `services/api/Dockerfile` (possible duplicate)
+
+**Tasks:**
+1. Identify which Dockerfiles are actively used in deployment
+2. Confirm duplicates by content comparison
+3. Consolidate to one canonical Dockerfile per service (probably 3 total: api, client, nginx)
+4. Update docker-compose files and CI workflows to reference canonical paths
+5. Remove redundant Dockerfiles
+
+**Risk:** Deployment pipelines may break if references aren't updated correctly. Test deploy on staging or local docker-compose before pushing.
+
+---
+
+### Sprint CL-10 — CI Workflow Audit and Consolidation
+
+**Priority:** LOW (works currently, just maintenance burden)
+**Effort:** 2-3 days
+**Status:** Queued — defer until other cleanup completes
+
+**Scope:** 52+ CI workflows is substantial. Some likely have overlapping responsibilities or are no longer relevant.
+
+**Approach:**
+1. Survey all 52+ workflows, categorize by purpose
+2. Identify overlaps (multiple workflows running similar tests)
+3. Identify obsolete workflows (testing systems that no longer exist)
+4. Consolidate where reasonable
+5. Document remaining workflow purposes in .github/README.md or similar
+
+**Realistic outcome:** Probably 20-25 active workflows after consolidation. Reduction in maintenance surface and CI run time.
+
+**Defer rationale:** CI workflows function correctly today. Consolidation is housekeeping that should happen when other higher-priority cleanup is done. Worth scheduling as the final cleanup sprint rather than first.
+
+---
+
+### Sprint CL-11 — Configuration File Consolidation
+
+**Priority:** LOW
+**Effort:** 1-2 days
+**Status:** Queued
+
+**Scope:** 12 .env files exist across the repo. Most are appropriate (templates, examples, tier-specific configs). Worth auditing whether any are redundant or could consolidate.
+
+**Approach:**
+1. Survey all 12 .env files and document each one's purpose
+2. Identify redundancy (multiple files providing same configuration)
+3. Document the canonical configuration pattern
+4. Consolidate where redundancy exists
+5. Update CLAUDE.md with the configuration documentation
+
+**Defer rationale:** Configuration sprawl is annoying but functional. Higher-impact cleanup should happen first.
+
+---
+
+### Sprint CL-12 — Standalone Tools Integration Decision
+
+**Priority:** STRATEGIC (decision, not execution)
+**Effort:** Variable based on decision
+**Status:** Awaiting Ross decision
+
+**Scope:** Several "standalone tool" directories exist at repo root with unclear current status:
+- `Interactive_Headstock_Generator/` (23 files)
+- `Interactive_Neck and Cam _Modules/` (97 files)
+- `Rosette Designer/` (1 file)
+- `Guitar Plans/` (567 files — confirmed reference data, off-limits)
+
+**Decision required:** For each (excluding Guitar Plans), are they:
+- (A) Active code that should integrate into packages/client as features
+- (B) Reference material that should move to docs/reference/
+- (C) Legacy code that should archive
+- (D) Foundation for future products that should preserve as-is
+
+**Ross action:** Apply judgment to each based on current strategy. The single-property marketing strategy and BOE+IBG product concept (per 2026-05-02 decisions) inform some of these decisions but not all.
+
+**Engineer execution:** After Ross's decisions, execute the chosen disposition for each.
+
+---
+
+### Sprint CL-13 — production_shop_agent Placement
+
+**Priority:** LOW (works correctly, just architectural inconsistency)
+**Effort:** 4-8 hours if integration chosen, 0 if status quo accepted
+**Status:** Awaiting decision
+
+**Scope:** production_shop_agent/ exists at repo root as a separate subproject (Claude-powered static website generator). It functions correctly but its placement at root rather than under services/ is architecturally inconsistent.
+
+**Options:**
+- (A) Leave at root as-is — minor inconsistency but no functional issue
+- (B) Move to services/site-generator/ for consistency with other services
+- (C) Integrate functionality into services/api/ as a sub-module
+
+**Ross action:** Decide which option. If (A), close the sprint as "decision made, no action needed."
+
+---
+
+### Sprint CL-14 — Photo Vectorizer Test Fixture Convention
+
+**Priority:** LOW (process improvement)
+**Effort:** 2-4 hours
+**Status:** Optional, deferred
+
+**Scope:** After Sprint CL-3 completes the test output cleanup, establish a standing convention for where photo-vectorizer test outputs live going forward, so future test runs don't recreate the volume problem.
+
+**Tasks:**
+1. Define a tests/fixtures/outputs/ directory pattern (or similar)
+2. Add .gitignore entries that prevent test outputs from accumulating in git
+3. Document the convention in services/photo-vectorizer/README.md
+4. Update test scripts to use the new convention
+
+**Defer rationale:** Process improvement that prevents future occurrence. Worth doing eventually but not urgent.
+
+---
+
+### Cleanup Sprint Sequencing Recommendation
+
+**Immediate (this week):**
+- CL-1 follow-through (.gitignore + untrack)
+- CL-2 (root artifacts) — fast win, immediate disk reclaim
+- CL-5 (obvious orphans) — fast win, low risk
+
+**Near-term (this month):**
+- CL-3 (photo-vectorizer test outputs) — needs Ross input
+- CL-7 (landing page disposition) — needs Ross input
+- CL-12 (standalone tools decision) — needs Ross input
+
+**Medium-term (next 2-3 months):**
+- CL-4 (photo-vectorizer version consolidation)
+- CL-6 (util/ + utils/ merge)
+- CL-8 (api/ vs api_v1/ resolution) — needs architectural input
+
+**Longer-term (deferred):**
+- CL-9 (Dockerfile consolidation)
+- CL-10 (CI workflow audit)
+- CL-11 (configuration consolidation)
+- CL-13 (production_shop_agent placement)
+- CL-14 (test fixture convention)
+
+**Total scope:** 14 cleanup sprints (1 complete, 13 queued). Realistic execution timeline: 2-4 months at sustainable pace, depending on which sprints actually get prioritized vs. which get deferred indefinitely.
+
+---
+
+## DATA INTEGRITY
+
+Data sourcing, silent fallback elimination, and verified calculation inputs.
+This section tracks both completed and queued sprints in the data integrity category.
+
+### Sprint M1 — Wood Shrinkage Data Integrity
+
+**Status:** COMPLETE
+**Completed:** 2026-04-30
+**Commits:** 37f29bc6, 477758eb
+
+Replaced unsourced shrinkage coefficients in wood_species.json with verified data.
+
+**Deliverables:**
+- CLAUDE.md sourcing policy
+- wood_species.json: 18 species updated (8 N. American from FPL Table 5-3, 10 tropical from Wood Database Eric Meier)
+- Per-field source attribution in JSON
+- wood_movement_calc.py: migrated to JSON loading with ALIAS_MAP, _load_shrinkage_data(), _resolve_species_id(), get_shrinkage_data(), _LegacyShrinkageDict
+- side_bending_calc.py: raises ValueError on unknown species
+
+**Verification:**
+
+| Species | Old | New | Error |
+|---------|-----|-----|-------|
+| Hard maple | 0.00198 | 0.0033 | -40% |
+| Walnut | 0.00185 | 0.0026 | -29% |
+| Cedar Western Red | 0.00155 | 0.00167 | -7% |
+| Mahogany Honduran | 0.00146 | 0.00143 | +2% |
+
+38 tests pass.
+
+---
+
+### Sprint M2 — Silent Fallback Elimination
+
+**Status:** COMPLETE
+**Completed:** 2026-04-30
+**Commits:** 477758eb
+
+Eliminated silent fallback behavior where calculators returned plausible but wrong results for unknown inputs.
+
+**Fixed (6 files):**
+- soundhole_extended.py: unknown species → ValueError
+- back_brace_calc.py: unknown material → ValueError
+- finish_calc.py (2 places): unknown species → ValueError
+- binding_materials.py: added get_minimum_bend_radius() helper
+- binding_geometry.py: uses validated helper at 4 places
+- headstock_break_angle_calc.py: added get_nut_friction() helper
+
+**Tests:** tests/test_silent_fallback_elimination.py — 12 tests pass
+
+**Deferred to M2.5:**
+- glue_joint_calc.py:80 — MIN_SURFACE_MM2.get(glue_type, 400.0)
+- top_deflection_calc.py:42 — density_kg_m3 = 400.0
+- pickup_position_calc.py:441 — PICKUP_WIDTHS_MM.get(pickup_type, 25.0)
+- Various CAM/service defaults in service.py
+
+---
+
+### Sprint NDS Phase 1+1.5 — Neck Design Studio Foundation
+
+**Status:** COMPLETE
+**Completed:** 2026-04-30
+**Commits:** 9d37f1ea (Phase 1), d72d9744, e260f365, ac96430f (Phase 1.5)
+**Cross-reference:** Sprint FRET-A in COMPLETED section
+
+Foundation work for Neck Design Studio with honest temperament math.
+
+**Phase 1 deliverables:**
+- services/api/app/instrument_geometry/neck/fretboard_ecosphere.py (462 lines)
+- tests/test_fretboard_ecosphere.py (247 lines)
+- 24 tests passing
+
+**Phase 1.5 deliverables (silent fallback to 12-TET eliminated):**
+- alternative_temperaments.py: resolve_temperament_ratios()
+- scala_loader.py: .scl file parser
+- Schema refactored to delegate to kernel
+
+All temperaments now produce mathematically correct positions:
+- Equal temperaments (12/19/24/31-TET): true N-TET math
+- Non-equal temperaments (Pythagorean, Just, Meantone): real ratio math
+- Custom Scala: parsed and applied
+
+Round-trip tests pass within 1e-3 mm tolerance.
+
+---
+
+### Sprint NDS Phase 2 — Router and Endpoints
+
+**Status:** COMPLETE (delivered as FRET-A Phase 2)
+**Completed:** 2026-04-30
+**Commits:** 4f8a3209, ab1ed8a2, 6b719fc3
+**Cross-reference:** Sprint FRET-A in COMPLETED section
+
+NDS Phase 2 scope was delivered under the FRET-A sprint name. Both names refer to the same work.
+
+**Delivered:**
+- Router at app/api_v1/fretboard.py
+- POST /api/v1/fretboard/compute
+- POST /api/v1/fretboard/scala (content-negotiated)
+- POST /api/v1/fretboard/dxf (tier-gated: R12 free, R2000 pro)
+- GET /api/v1/fretboard/presets, /api/v1/fretboard/presets/{name}
+- GET /api/v1/fretboard/schema
+- Presets module at app/instrument_geometry/neck/fretboard_presets.py
+- Round-trip integration tests at app/tests/integration/test_fretboard_ecosphere_roundtrip.py
+
+**Minor gap:** signal_logic_version bump to signals_v5 not done (backlog).
+
+---
+
+### Sprint FRET-CONSOLIDATION-1 — CAM Consumes Ecosphere
+
+**Status:** COMPLETE
+**Completed:** 2026-05-02
+**Commits:** e4220537 (Commit 1), fa009184 (Commit 2)
+
+CAM toolpath generation now consumes FretboardEcosphere as canonical source,
+eliminating duplicate fret position math across the system.
+
+**Deliverables:**
+- app/cam/fret_slots_from_ecosphere.py (bridge module)
+- extract_slot_geometry(), ecosphere_to_fretboard_spec(), validate_ecosphere_for_cam()
+- fret_slots_cam.py: generate_fret_slot_toolpaths_from_ecosphere(), generate_fret_slot_cam_from_ecosphere()
+- tests/cam/test_fret_slots_from_ecosphere.py (35 tests, 1e-9 mm tolerance)
+
+**Architecture:**
+```
+FretboardEcosphere (canonical) → extract_slot_geometry() → FretSlotToolpath
+                                  No duplicate fret math
+```
+
+**Tests:** 35 passing (31 extraction + 4 integration)
+
+---
+
+### Sprint M2.5 — Deferred Silent Fallback Cleanup
+
+**Status:** QUEUED
+**Priority:** LOW
+
+Items deferred from M2:
+- glue_joint_calc.py:80 — MIN_SURFACE_MM2.get(glue_type, 400.0)
+- top_deflection_calc.py:42 — density_kg_m3 = 400.0 (unused in calculations)
+- pickup_position_calc.py:441 — PICKUP_WIDTHS_MM.get(pickup_type, 25.0)
+- Various CAM/service defaults in service.py
+
+---
+
+### Sprint M3a — CITES Status Field with Lookup Tool
+
+**Status:** QUEUED
+**Priority:** MEDIUM
+
+**Scope:**
+- cites_lookup.py at app/utils/cites_lookup.py — parses CITES checklist JSON
+- cites_status field added to wood_species.json entries
+- Values populated from cites_lookup output
+
+Pattern matches shrinkage_*_source fields from M1.
+
+---
+
+### Sprint: Active Inventory Species Audit
+
+**Status:** QUEUED
+**Priority:** HIGH
+**Template:** Padauk update (2026-05-01)
+
+Apply M1 data integrity pattern to species in active shop inventory:
+- 60 mahogany B&S sets (honduran_mahogany)
+- 25 rosewood (east_indian_rosewood, plus laotian_rosewood entry)
+- 10 walnut/maple (black_walnut, acer_macrophyllum)
+- 3 ziricote
+- 10 tiger flame mahogany (species TBD)
+- 20 spruce tops (sitka_spruce)
+- 24 mahogany necks
+- 20 ebony fretboards (diospyros_crassiflora)
+- 100 BF Padauk (african_padauk — DONE)
+- 100 BF black walnut heritage (juglans_nigra)
+- 100 BF Douglas fir heritage (pseudotsuga_menziesii)
+- 10 assorted body blanks (cherry, walnut, khaya)
+
+Each species gets: Janka correction, shrinkage values with sources, naming caveats, CITES genus warning where applicable.
+
+---
+
+### Data File Sync Boundary Documentation
+
+**Status:** DOCUMENTED
+**Date:** 2026-04-30
+
+Two JSON files serve different purposes — not duplicates, not alternatives:
+
+| File | Species Count | Purpose | Scope |
+|------|---------------|---------|-------|
+| `wood_species.json` | 473 | Full CNC/thermal/shrinkage reference | All wood properties: Janka, density, shrinkage, thermal conductivity, MOE, hardness_category, naming_caveats |
+| `luthier_tonewood_reference.json` | 71 | Curated acoustic subset | Acoustic-specific: stiffness_index, damping_coefficient, tap_tone_character, plus core fields |
+
+**Sync policy:**
+- Core fields (Janka, density, specific_gravity, shrinkage) must match between files when a species appears in both
+- luthier_tonewood_reference.json adds computed acoustic indices not present in wood_species.json
+- wood_species.json is the source of truth for physical/mechanical properties
+- Updates to species in active inventory (Padauk template) touch both files
+
+**Verification:** Padauk entry confirmed in sync 2026-04-30 (Janka 1725, SG 0.74, shrinkage R=3.1% T=5.0%).
+
+---
+
+### Sprint M4 — MOE Data Gap Remediation
+
+**Status:** QUEUED
+**Priority:** MEDIUM
+**Discovered:** 2026-04-30 during Active Inventory audit
+
+Three critical species have missing or incorrect MOE (modulus of elasticity) data:
+
+| Species | Current Value | Issue | Expected |
+|---------|---------------|-------|----------|
+| spruce_sitka | `null` | Missing | ~10.3-11.9 GPa (FPL Table 5-1) |
+| spruce_engelmann | `null` | Missing | ~8.9 GPa (FPL Table 5-1) |
+| douglas_fir | 10.0 GPa | Low | ~13.5 GPa for old-growth (FPL shows 13.4 clear, small) |
+
+**Context:**
+- MOE drives stiffness calculations for tops, braces, and structural analysis
+- Douglas fir discrepancy: 10.0 GPa may represent plantation/second-growth; old-growth heritage stock (100 BF in inventory) closer to ~13.5 GPa
+- Spruce null values cause silent fallback in any calculator that doesn't guard
+
+**Scope:**
+- Verify FPL Table 5-1 values for all three species
+- Add species-specific notes for growth-type variation (plantation vs old-growth)
+- Update wood_species.json entries
+- Cross-check luthier_tonewood_reference.json for acoustic-derived stiffness_index
+
+---
+
+### Sprint M5 — CIRAD Reference Database API
+
+**Status:** QUEUED
+**Priority:** MEDIUM
+**Discovered:** 2026-05-03 during wood species audit
+**Scope:** luthiers-toolbox internal only — not designed for cross-repo consumption
+
+Expose CIRAD reference databases to luthiers-toolbox users via read-only API endpoints. Currently these databases exist in `docs/reference/` but are only used internally for data sourcing validation. Woodworking-studio has its own data; no HTTP dependency on this API (see ADR 2026-05-03).
+
+**Current State:**
+- CIRAD Wood Collection: 34,395 specimens, 9,212 species, 169 countries — no API access
+- CIRAD Wood Density: 4,022 specimens, 872 species with D12/R/S/Db — no API access
+- Users can query wood_species.json (473 species) but cannot access underlying reference data
+
+**Deliverables:**
+
+1. **CIRAD Collection Loader** (`app/materials/registry/cirad.py`)
+   - `load_cirad_collection()` — parses CSV, returns typed records
+   - `search_collection(species=, family=, country=, genus=)` — filtered search
+   - `get_specimen(ctft_id)` — single specimen lookup
+
+2. **CIRAD Density Loader** (`app/materials/registry/cirad_density.py`)
+   - `load_cirad_density()` — parses CSV, returns typed records
+   - `get_density_by_species(species)` — D12, R, S, Db values
+   - `search_density(family=, country=, continent=)` — filtered search
+
+3. **API Router** (`app/materials/cirad_router.py`)
+   ```
+   GET  /api/reference/cirad/collection           — paginated collection (34,395 records)
+   GET  /api/reference/cirad/collection/{ctft_id} — single specimen
+   GET  /api/reference/cirad/collection/search    — filtered search
+   GET  /api/reference/cirad/density              — paginated density data (4,022 records)
+   GET  /api/reference/cirad/density/{code}       — single density record
+   GET  /api/reference/cirad/density/search       — filtered search
+   GET  /api/reference/cirad/stats                — collection statistics
+   ```
+
+4. **Pydantic Schemas** (`app/materials/schemas.py` additions)
+   - `CiradSpecimen` — CTFT id, family, species, SG, country, sub-continent, herbarium, samples
+   - `CiradDensityRecord` — code, taxa, family, country, D12, R, S, Db
+   - `CiradSearchParams` — species, family, country, genus, continent filters
+   - `CiradStatsResponse` — counts by family, country, continent
+
+**Data Fields Exposed:**
+
+| CIRAD Collection | CIRAD Density |
+|------------------|---------------|
+| CTFT id | Code |
+| Family | Taxa |
+| Species | Family |
+| Specific gravity | Country |
+| Country | Continent |
+| Sub-continent | D12 (density at 12% MC) |
+| Herbarium occurrence | R (volumetric shrinkage %) |
+| Number of samples | S (fiber saturation point %) |
+| Collector's name | Db (basic density) |
+| Notes on origin | |
+
+**Query Examples:**
+```
+GET /api/reference/cirad/collection/search?family=LEGUMINOSAE&country=Brazil
+GET /api/reference/cirad/density/search?continent=South-America&min_db=0.7
+GET /api/reference/cirad/stats
+```
+
+**Use Cases:**
+- Cross-validate wood_species.json entries against CIRAD specimens
+- Research species by geographic origin
+- Find alternative species from same region/family
+- Access raw density physics data (D12, R, S, Db) for acoustic modeling
+- Verify specific gravity values against 34,395-specimen reference
+
+**Pagination:**
+- Default page size: 100
+- Max page size: 500
+- Required for collection endpoint (34K records)
+
+**Scope Exclusions:**
+- No write operations (read-only reference data)
+- No CITES integration (separate sprint M3a)
+- No automatic sync to wood_species.json (manual curation process)
+
+**Estimated Effort:** 8-12 hours
+- CSV loaders with caching: 2h
+- Pydantic schemas: 1h
+- Router with pagination: 3h
+- Search/filter logic: 2h
+- Tests: 2h
+
+**Dependencies:** None — standalone feature
+
+---
+
+### Sprint M6 — Unfinished Work Audit
+
+**Status:** QUEUED
+**Priority:** MEDIUM
+**Discovered:** 2026-05-03
+
+Systematic audit to identify code that was developed for purposes that may have been superseded but was never formally paused or archived.
+
+**Known Examples:**
+- Body Outline Editor (BOE) — backend endpoint claim (Sprint 3) marked MISSING
+- InstrumentBodyGenerator (IBG) — scaffolded in sandbox/ and production paths, wiring incomplete
+
+**Scan Categories:**
+
+1. **Scaffolded but incomplete subsystems**
+   - Code structure exists but core functionality not wired
+   - Imports present but never called
+   - Endpoints documented but not implemented
+
+2. **Sandboxed experiments not touched recently**
+   - `sandbox/` directory contents with no recent commits
+   - Prototype code that never graduated to production
+   - Test harnesses for features that didn't ship
+
+3. **Sprint work marked "in flight" that hasn't progressed**
+   - SPRINTS.md entries with IN PROGRESS status but no commits in 30+ days
+   - Task lists with unchecked items and no activity
+   - Branches that diverged and were abandoned
+
+4. **Superseded implementations**
+   - Code paths replaced by newer architecture but not removed
+   - Parallel implementations where one became canonical
+   - Features that shipped via different approach
+
+**Output Per Finding:**
+
+| Field | Description |
+|-------|-------------|
+| Location | File path(s) or directory |
+| Original purpose | What the code was built to do (from comments, commit messages, sprint docs) |
+| Current state | SCAFFOLDED, SUSPENDED, ORPHANED, SUPERSEDED |
+| Last activity | Most recent commit date touching this code |
+| Reconstruction burden | LOW (<4h), MEDIUM (4-16h), HIGH (>16h), UNKNOWN |
+| Dependencies | Other code that imports/calls this, or nothing |
+| Disposition candidates | ARCHIVE, DELETE, COMPLETE, DOCUMENT-AND-DEFER |
+
+**Scope Exclusions:**
+- This sprint surfaces candidates for disposition decisions — it does not fix, complete, or archive anything
+- Code actively worked in past 30 days is not considered stale
+- Suspended work with documented rationale (e.g., Sprint 4 photo/AI paths) is acknowledged, not re-audited
+
+**Deliverable:** `docs/audit/unfinished_work_audit_2026-05.md`
+
+**Estimated Effort:** 4-6 hours
+- Codebase scan: 2h
+- Sprint/commit cross-reference: 1h
+- Documentation: 1-2h
+
+**Dependencies:** None — read-only audit
 
 ---
 
@@ -1089,3 +1813,5 @@ Commits: 04735bd4, 72bfffc9, 059cf5b0
 | 2026-04-16 | OutlineReconstructor was inserted into dead code path | Lesson: always verify router→orchestrator→mode→cleaner before writing code |
 | 2026-04-20 | Blueprint vectorizer ceiling declaration (2026-04-16) reversed | v3.6 restored morphological gap closing from vectorizer_phase2.py (commit 3db07c62). Benchmark exceeded March 6 baseline (cuatro: 21.8MB/204K entities vs 16.3MB/128K). The "ceiling" was artifact of missing capability, not fundamental limit. 22 commits of active vectorizer development followed in 04/16-04/21. **Architecture:** Blueprint vectorizer v3.6 is primary production path. Photo vectorizer functional for scanned blueprint PNG/JPEG inputs at 85-90% grade; Sprint 4 suspension applies to specific input classes (AI renders, L-1 historical images), not photo vectorizer files as a whole. IBG is a completion library (no direct API endpoint, connected via imports) — analogous to inverse_solver.py. IBG has learning dependency on ML training layer (TrainingDataCollector, FeedbackSystem, GeometryCoachV2 scaffolded in vectorizer_phase3.py). **Destinations:** IBG → new standalone repo (name TBD, stays in luthiers-toolbox until scaffolded). ML training layer → home TBD. sg.coach deprecated 2026-02-02, superseded by sg-agentd, not a candidate for any role. |
 | 2026-04-30 | FRET-CONSOLIDATION: canonical ecosphere is single source of truth | Three parallel fret pipelines (api_v1/fret_math, cam/fret_slots, FRET-A ecosphere) converge to ecosphere. CAM consumes ecosphere geometry; legacy endpoints deprecated after frontend migration. Prevents "which pipeline did this guitar use" debugging at scale. |
+| 2026-05-02 | Standalone repos as moat strategy superseded by single-property marketing | All previously planned standalone repos except ltb-woodworking-studio (different domain) and blueprint-reader (deployment-driven separation) collapse back to luthiers-toolbox. Production Shop website presents tools as named features regardless of repo organization. SEO and brand authority concentrate on single property. ltb-woodworking-studio retains separate status due to conceptual domain boundary (woodworking ≠ lutherie). |
+| 2026-05-03 | Woodworking-studio operates completely independently from luthiers-toolbox | No HTTP cross-repo dependencies at runtime. Each repo has its own wood data (wood_species.json), its own schema (lutherie needs acoustic properties; woodworking needs machining/joinery properties), its own data integrity work. Furniture makers shouldn't need a luthier's platform running to calculate panel movement. Operational independence matches eventual deployment reality — two products, two failure modes. Sprint M5 CIRAD API is luthiers-toolbox internal only; not designed for cross-repo consumption. Initial woodworking-studio data population: 30-40 species with woodworking-specific schema, ~12-20h work. |

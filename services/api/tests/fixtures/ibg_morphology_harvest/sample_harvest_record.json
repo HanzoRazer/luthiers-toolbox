@@ -1,0 +1,174 @@
+{
+  "harvest_id": "harvest_sample01",
+  "source_pdf": "Guitar Plans/Dreadnought/martin_d28_plans.pdf",
+  "page_number": 1,
+  "harvest_timestamp": "2026-05-16T12:00:00",
+  "harvest_source": "vector_text",
+  "evidence_categories": {
+    "body_data": {
+      "observed": true,
+      "confidence": 0.85,
+      "source_type": "pdf_text",
+      "source_authority": "inventory",
+      "requires_review": false,
+      "notes": ["Extracted from vector text in PDF"],
+      "body_length_mm": 520.0,
+      "lower_bout_width_mm": 381.0,
+      "upper_bout_width_mm": 292.0,
+      "waist_width_mm": 241.0,
+      "waist_y_norm": 0.43,
+      "body_depth_mm": 121.0,
+      "morphology_class": "rounded_acoustic",
+      "instrument_family_normalized": "dreadnought",
+      "source_terms": {
+        "lower_bout_mm": "lower_bout_width_mm"
+      }
+    },
+    "neck_pocket_data": {
+      "observed": false,
+      "confidence": 0.0,
+      "source_type": null,
+      "source_authority": null,
+      "requires_review": true,
+      "notes": [],
+      "neck_pocket_length_mm": null,
+      "neck_pocket_width_mm": null,
+      "neck_pocket_depth_mm": null,
+      "neck_angle_deg": null,
+      "pocket_type": null
+    },
+    "neck_system_data": {
+      "observed": true,
+      "confidence": 0.9,
+      "source_type": "pdf_text",
+      "source_authority": "inventory",
+      "requires_review": false,
+      "notes": [],
+      "scale_length_mm": 645.0,
+      "nut_width_mm": 44.5,
+      "neck_width_at_12th_mm": null,
+      "neck_profile": null,
+      "truss_rod_type": null
+    },
+    "fretboard_data": {
+      "observed": false,
+      "confidence": 0.0,
+      "source_type": null,
+      "source_authority": null,
+      "requires_review": true,
+      "notes": [],
+      "fretboard_radius_mm": null,
+      "fretboard_radius_inches": null,
+      "fret_count": null,
+      "fretboard_material": null,
+      "inlay_pattern": null,
+      "fret_width_mm": null
+    },
+    "headstock_data": {
+      "observed": false,
+      "confidence": 0.0,
+      "source_type": null,
+      "source_authority": null,
+      "requires_review": true,
+      "notes": [],
+      "headstock_style": null,
+      "headstock_angle_deg": null,
+      "headstock_length_mm": null,
+      "headstock_width_mm": null,
+      "tuner_layout": null
+    },
+    "hardware_cavity_data": {
+      "observed": false,
+      "confidence": 0.0,
+      "source_type": null,
+      "source_authority": null,
+      "requires_review": true,
+      "notes": [],
+      "pickup_routes": [],
+      "control_cavity_present": false,
+      "tremolo_route_present": false,
+      "battery_cavity_present": false,
+      "bridge_type": null,
+      "cavity_dimensions": {}
+    },
+    "alignment_data": {
+      "observed": false,
+      "confidence": 0.0,
+      "source_type": null,
+      "source_authority": null,
+      "requires_review": true,
+      "notes": [],
+      "centerline_confidence": 0.0,
+      "centerline_source": null,
+      "symmetry_score": null,
+      "bridge_to_nut_alignment": null,
+      "neck_to_body_alignment": null
+    },
+    "construction_notes": {
+      "observed": true,
+      "confidence": 0.6,
+      "source_type": "pdf_text",
+      "source_authority": "inventory",
+      "requires_review": true,
+      "notes": [],
+      "detected_text_blocks": [
+        "Martin D-28 Full Size Plans",
+        "Scale: 1:1"
+      ],
+      "material_mentions": ["spruce", "rosewood"],
+      "dimension_strings": [
+        "520mm",
+        "381mm",
+        "292mm",
+        "241mm",
+        "645mm scale"
+      ],
+      "construction_method_hints": [],
+      "has_bracing_info": false,
+      "has_binding_info": false,
+      "has_finish_info": false
+    }
+  },
+  "term_normalizations": [
+    {
+      "source_term": "lower_bout_mm",
+      "normalized_term": "lower_bout_width_mm",
+      "owning_system": "harvest",
+      "confidence": 1.0,
+      "requires_review": false
+    }
+  ],
+  "provenance": {
+    "upstream_sources": {
+      "phase4": {
+        "available": false,
+        "reason": "not_wired_in_1A"
+      },
+      "calibration": {
+        "available": false,
+        "reason": "not_wired_in_1A"
+      },
+      "body_grid": {
+        "available": true,
+        "morphology_class": "rounded_acoustic"
+      }
+    },
+    "calibration_method": null,
+    "phase4_result_id": null
+  },
+  "review": {
+    "status": "pending_review",
+    "notes": [],
+    "requires_review": true
+  },
+  "confidence": {
+    "overall": 0.77
+  },
+  "extensions": {
+    "adaptive_context": {
+      "available": false,
+      "sandbox_required": true,
+      "notes": "Harvest semantics may be consumed by future adaptive systems, but no adaptive behavior executes here."
+    }
+  }
+}

@@ -55,6 +55,137 @@ class SpiralParams:
 - 161 soundhole tests in `tests/test_soundhole*.py`
 - Coverage threshold: 20%
 
+## Data Policies
+
+### Wood species data sourcing policy
+
+All species records in `wood_species.json` and consumers (e.g., `wood_movement_calc.py`,
+`side_bending_calc.py`) must source shrinkage and density values from authoritative
+published references. Attribution is per-field, not per-species.
+
+**Source priority (tangential/radial shrinkage):**
+1. **FPL GTR-282 (2021) Table 5-3** — for North American species in this table
+2. **Wood Database (Eric Meier, wood-database.com)** — for tropical species not in FPL,
+   with URL attribution
+3. **unknown_legacy** — values whose origin cannot be traced; flagged for follow-up
+
+**Source priority (density):**
+1. **FPL GTR-282** — for species in FPL tables
+2. **CIRAD wood-density-database (2018)** — for tropical species; density only,
+   NOT tangential/radial shrinkage (CIRAD provides volumetric, not breakdown)
+3. **Wood Database** — fallback when neither FPL nor CIRAD has the species
+
+**Forbidden:**
+- Estimated tangential/radial from volumetric shrinkage without explicit derivation flag
+- Values whose origin cannot be traced to a published reference
+- Single-source FPL claims for species not actually in FPL
+
+**Per-field attribution schema:**
+```json
+{
+  "physical": {
+    "density_kg_m3": 705,
+    "_density_source": "FPL_GTR282_table_5-3",
+    "contraction_tangential_pct": 9.9,
+    "_shrinkage_tangential_source": "FPL_GTR282_table_5-3",
+    "_shrinkage_tangential_table_row": "p.5-7",
+    "contraction_radial_pct": 4.8,
+    "_shrinkage_radial_source": "FPL_GTR282_table_5-3"
+  }
+}
+```
+
+**Valid source values:**
+- `FPL_GTR282_table_5-3` — FPL Wood Handbook 2021, Table 5-3
+- `wood_database_meier` — wood-database.com (include URL in `_source_url` field)
+- `CIRAD_2018` — CIRAD wood density database (density/volumetric only)
+- `unknown_legacy` — unverified value, flagged for follow-up
+
+**Calculator behavior for unknown species:**
+- `wood_movement_calc.py`: raise `ValueError` listing supported species
+- `side_bending_calc.py`: raise `ValueError` — no silent fallback to defaults
+
+**Reference data locations:**
+- `docs/reference/cirad/` — CIRAD wood collection index (34,395 specimens, 9,212 species, 169 countries)
+- `docs/reference/cirad-density/` — CIRAD wood density database (4,022 specimens, 872 species, Vieilledent et al. 2018)
+  - Contains D12 (density at 12% MC), volumetric shrinkage (R), fiber saturation point (S), basic density (Db)
+  - Conversion formula: Db = 0.828 × D12
+
+**Wood data routing:**
+- **Characterization** (density, SG, shrinkage, origin): CIRAD databases → wood_species.json
+- **Regulatory** (CITES status, trade restrictions): CITES species checklist → wood_species.json cites_status field
+- **Acoustic** (MOE, tone character, typical uses): wood_species.json → luthier_tonewood_reference.json
+
+### Documentation archive policy
+
+**Archive location**: `docs/archive/`
+**Index**: `docs/archive/INDEX.md`
+
+**60-day rule**: Documents move to archive after 60 days or when superseded by newer versions.
+
+**Archive categories (2026)**:
+- `status/` — point-in-time snapshots, session states
+- `plans/` — superseded implementation plans
+- `remediation/` — completed remediation efforts
+- `evaluations/` — completed assessments and audits
+- `handoffs/` — pre-March 2026 developer handoffs
+- `sprints/` — sprint artifact bundles
+- `session-notes/` — extracted session transcript content
+
+**Code archive**: `archive/code/{year}/` — historical Python files not in production
+
+**Stays active** (never archive):
+- Architecture docs, specs, guides in `docs/`
+- ADRs in `docs/adr/`
+- Current handoffs in `docs/handoffs/` (recent 60 days)
+- Reference material (`docs/reference/`)
+- Tonewood comparison documents
+
+## Governance Authority
+
+The repository uses a 3-tier governance hierarchy. When governance systems conflict,
+higher tiers take precedence.
+
+**Tier 1 — Structural Invariants (repository-wide):**
+- `docs/governance/ARCHITECTURE_INVARIANTS.md` — code placement rules
+- `FEATURE_PARITY_MIGRATION_POLICY.md` — migration discipline
+
+**Tier 2 — Domain Governance (domain-specific):**
+- MRP: `docs/governance/MORPHOLOGY_RECONSTRUCTION_PLATFORM.md`
+- CAM: `docs/architecture/CAM_GOVERNED_EXPORT_ARCHITECTURE.md`
+- RMOS: `docs/canonical/governance/RMOS_2.0_Specification.md`
+
+**Tier 3 — Operational Policies (runtime behavior):**
+- `docs/governance/SPRINT_NAMESPACE_STANDARD.md`
+- CAM capability registry and policy engine
+
+**Key documents:**
+- Authority hierarchy: `docs/governance/GOVERNANCE_AUTHORITY_HIERARCHY.md`
+- Topology map: `docs/governance/GOVERNANCE_TOPOLOGY_MAP.md`
+- Manifest index: `docs/governance/MANIFEST_INDEX.md`
+- Implementation guide: `docs/handoffs/GOVERNANCE_REMEDIATION_IMPLEMENTATION_GUIDE.md`
+
+**Governance commands:**
+```bash
+# Tier-based execution (default: ci)
+python scripts/governance/check_all.py --tier precommit  # Fast checks (~2s)
+python scripts/governance/check_all.py --tier ci         # CI checks (~4s)
+python scripts/governance/check_all.py --tier nightly    # Full suite (~130s)
+python scripts/governance/check_all.py --list            # Show all checks by tier
+
+# Individual checks
+python scripts/check_protected_paths.py         # Protected system modifications
+python scripts/check_capability_registry.py     # CAM registry validation
+python scripts/governance/check_manifest_index.py  # Manifest index validation
+pytest tests/test_governance_compliance.py -v   # Governance test suite
+```
+
+**Enforcement tiers:**
+- `precommit` — fast checks for pre-commit hooks (<2s each)
+- `ci` — moderate checks for CI builds (<30s each, default)
+- `nightly` — heavy checks requiring full app init (scheduled builds)
+- `manual` — explicit invocation only
+
 ## BLOCKING INFRASTRUCTURE — resolve before new DXF work
 
 ### DXF output standard: dual-format via dxf_compat
@@ -377,3 +508,48 @@ Expected result: closed contours by construction,
 
 Location: services/blueprint-import/vectorizer_phase3.py
 Test case: cuatro puertoriqueño PDF
+
+## Feature Parity Migration Policy
+
+See: `FEATURE_PARITY_MIGRATION_POLICY.md`
+
+**Core rule**: No existing canonical implementation may be removed or superseded until parity is verified.
+
+**Migration states** (must be declared explicitly):
+1. **Canonical** — the trusted production implementation
+2. **Mounted Legacy Component** — legacy embedded in new workspace, owns its own logic
+3. **Beta Consolidation Shell** — workspace exists but parity incomplete
+4. **Parity Verified** — replacement may proceed
+
+**Approved migration order**: mount → verify → audit → extract → normalize → replace
+
+**Anti-patterns** (prohibited):
+- Shell-first replacement
+- Implicit deprecation (hiding routes before parity)
+- Archive without audit
+- "Newer means better" assumptions
+
+**Current status**:
+- `SpiralSoundholeDesigner.vue` = canonical implementation
+- `ApertureWorkspace.vue` = beta consolidation shell (State 3)
+
+The workspace shell may mount the legacy component. It may NOT replace or remove the legacy implementation until parity is verified.
+
+## Governance Framework
+
+See: `docs/governance/`
+
+**Core documents:**
+- `MORPHOLOGY_RECONSTRUCTION_PLATFORM.md` — MRP governance framework
+- `BLUEPRINT_READER_PROTECTION_RULES.md` — frozen MVP protection
+- `IBG_ROLE_DEFINITION.md` — IBG role boundaries
+- `THREE_LOOP_ARCHITECTURE_REFRAMED.md` — loop architecture within MRP
+- `MORPHOLOGY_CORPUS_STANDARD.md` — corpus data standards
+- `SPRINT_NAMESPACE_STANDARD.md` — sprint naming conventions
+
+**Protection levels:**
+- LOCKED — no changes without explicit approval
+- STABILIZED — changes require regression verification
+- EVOLUTIONARY — changes permitted behind feature flags
+
+**Sprint namespaces:** VECTOR, IBG, BOE, DXF, CAM, RMOS, SPIRAL, MRP

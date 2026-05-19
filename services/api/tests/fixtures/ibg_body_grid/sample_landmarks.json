@@ -1,0 +1,65 @@
+{
+  "description": "Sample landmark data for Body Grid tests",
+  "dreadnought": {
+    "landmarks": [
+      {"label": "butt_center", "x_mm": 0.0, "y_mm": 0.0},
+      {"label": "lower_bout_max", "x_mm": 190.5, "y_mm": 130.0},
+      {"label": "waist_min", "x_mm": 120.5, "y_mm": 230.0},
+      {"label": "upper_bout_max", "x_mm": 146.0, "y_mm": 340.0},
+      {"label": "neck_center", "x_mm": 0.0, "y_mm": 450.0}
+    ],
+    "expected_class": "ROUNDED_ACOUSTIC",
+    "expected_symmetry": 0.9
+  },
+  "stratocaster": {
+    "landmarks": [
+      {"label": "butt_center", "x_mm": 0.0, "y_mm": 0.0},
+      {"label": "lower_bout_max", "x_mm": 166.0, "y_mm": 102.0},
+      {"label": "waist_min", "x_mm": 125.0, "y_mm": 190.0},
+      {"label": "upper_bout_max", "x_mm": 155.5, "y_mm": 270.0},
+      {"label": "horn_right", "x_mm": 130.0, "y_mm": 330.0},
+      {"label": "horn_left", "x_mm": -80.0, "y_mm": 340.0},
+      {"label": "neck_center", "x_mm": 0.0, "y_mm": 406.0}
+    ],
+    "expected_class": "DOUBLE_CUT",
+    "expected_symmetry": 0.6
+  },
+  "les_paul": {
+    "landmarks": [
+      {"label": "butt_center", "x_mm": 0.0, "y_mm": 0.0},
+      {"label": "lower_bout_max", "x_mm": 171.5, "y_mm": 95.0},
+      {"label": "waist_min", "x_mm": 140.0, "y_mm": 175.0},
+      {"label": "upper_bout_max", "x_mm": 145.0, "y_mm": 260.0},
+      {"label": "cutaway_right", "x_mm": 90.0, "y_mm": 290.0},
+      {"label": "neck_center", "x_mm": 0.0, "y_mm": 355.0}
+    ],
+    "expected_class": "ROUNDED_SINGLE_CUT",
+    "expected_symmetry": 0.4
+  },
+  "explorer": {
+    "landmarks": [
+      {"label": "butt_center", "x_mm": 0.0, "y_mm": 0.0},
+      {"label": "lower_bout_max", "x_mm": 210.0, "y_mm": 100.0},
+      {"label": "upper_bout_max", "x_mm": 180.0, "y_mm": 280.0},
+      {"label": "neck_center", "x_mm": 0.0, "y_mm": 380.0}
+    ],
+    "expected_class": "ANGULAR_WEDGE",
+    "expected_symmetry": 0.7,
+    "notes": "No waist landmark - waist is suppressed"
+  },
+  "jazzmaster": {
+    "landmarks": [
+      {"label": "butt_center", "x_mm": 0.0, "y_mm": 0.0},
+      {"label": "lower_bout_max_left", "x_mm": -175.0, "y_mm": 95.0},
+      {"label": "lower_bout_max_right", "x_mm": 165.0, "y_mm": 105.0},
+      {"label": "waist_min", "x_mm": 130.0, "y_mm": 200.0},
+      {"label": "upper_bout_max", "x_mm": 150.0, "y_mm": 300.0},
+      {"label": "horn_right", "x_mm": 120.0, "y_mm": 360.0},
+      {"label": "horn_left", "x_mm": -100.0, "y_mm": 350.0},
+      {"label": "neck_center", "x_mm": 0.0, "y_mm": 420.0}
+    ],
+    "expected_class": "OFFSET_WAIST",
+    "expected_symmetry": 0.3,
+    "notes": "Asymmetric lower bout and offset waist"
+  }
+}

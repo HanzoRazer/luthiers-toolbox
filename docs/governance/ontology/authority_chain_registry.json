@@ -1,0 +1,162 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Authority Chain Registry",
+  "version": "1.0.0",
+  "date": "2026-05-16",
+  "description": "Machine-readable authority chain definitions",
+  "chains": {
+    "geometry_authority_chain": {
+      "description": "Authority flow for instrument body geometry",
+      "sequence": [
+        "Blueprint",
+        "IBG",
+        "BOE",
+        "CadSemantics",
+        "TopologyBuilder",
+        "ShellValidation",
+        "Translator"
+      ],
+      "invariants": [
+        "Downstream cannot redefine upstream geometry",
+        "BOE geometry is immutable after approval",
+        "Translators serialize but do not generate geometry"
+      ],
+      "source_document": "TOPOLOGY_AUTHORITY_CHAIN.md"
+    },
+    "governance_tier_chain": {
+      "description": "Governance tier authority hierarchy",
+      "sequence": [
+        "Tier 1: Structural Invariants",
+        "Tier 2: Domain Governance",
+        "Tier 3: Operational Policies"
+      ],
+      "invariants": [
+        "Lower tiers cannot violate higher tier constraints",
+        "Cross-domain conflicts escalate to Tier 1",
+        "Tier 3 defers to owning Tier 2 domain"
+      ],
+      "source_document": "GOVERNANCE_AUTHORITY_HIERARCHY.md"
+    },
+    "semantic_authority_chain": {
+      "description": "Authority flow for semantic definitions",
+      "sequence": [
+        "Vocabulary Registry",
+        "Domain Owner",
+        "Operational Implementation",
+        "Runtime Consumer"
+      ],
+      "invariants": [
+        "Runtime systems consume ontology but do not define it",
+        "Domain owners may propose vocabulary changes",
+        "Vocabulary registry is canonical authority"
+      ],
+      "source_document": "CANONICAL_AUTHORITY_MAP.md"
+    },
+    "export_lifecycle_chain": {
+      "description": "Authority flow for export artifacts",
+      "sequence": [
+        "Export Request",
+        "Feasibility Check",
+        "Validation",
+        "Translation",
+        "Authorization Gate",
+        "Machine Output"
+      ],
+      "invariants": [
+        "No stage may bypass feasibility check",
+        "Authorization gate required before machine output",
+        "Translation preserves semantic meaning"
+      ],
+      "source_document": "CAM_GOVERNED_EXPORT_ARCHITECTURE.md"
+    },
+    "topology_construction_chain": {
+      "description": "Authority flow for topology construction",
+      "sequence": [
+        "cad_semantics",
+        "TopologyBuilder",
+        "TopologyValidation",
+        "Translator"
+      ],
+      "invariants": [
+        "TopologyBuilder constructs topology",
+        "Translator serializes topology",
+        "Validation does not repair topology"
+      ],
+      "source_document": "ACOUSTIC_TOPOLOGY_BUILDER_MODEL.md"
+    },
+    "adaptive_intelligence_chain": {
+      "description": "Authority constraints for adaptive/AI systems",
+      "sequence": [
+        "Deterministic Spine",
+        "AI Advisory (sandboxed)",
+        "Human Ratification",
+        "Canonical Implementation"
+      ],
+      "invariants": [
+        "AI assistance is advisory only",
+        "Human authority ratifies canonical ontology",
+        "Adaptive systems may recommend but not ratify",
+        "Deterministic spine remains authoritative"
+      ],
+      "source_document": "ADAPTIVE_TOPOLOGY_BOUNDARY_RULES.md"
+    }
+  },
+  "domain_ownership": {
+    "geometry": {
+      "canonical_owner": "Geometry Layer",
+      "operational_owners": ["IBG", "Body Grid", "BOE"],
+      "authority_tier": 2,
+      "consumers": ["CAM", "Export", "Visualization"],
+      "forbidden_ownership": "Runtime systems may not redefine geometry semantics"
+    },
+    "morphology": {
+      "canonical_owner": "Geometry Layer",
+      "operational_owners": ["MRP", "Morphology Corpus"],
+      "authority_tier": 2,
+      "consumers": ["Analysis", "Classification"],
+      "forbidden_ownership": "Runtime systems may not redefine morphology vocabulary"
+    },
+    "feasibility": {
+      "canonical_owner": "Feasibility Layer",
+      "operational_owners": ["RMOS"],
+      "authority_tier": 2,
+      "consumers": ["CAM", "Export", "Toolpath"],
+      "forbidden_ownership": "Visualization systems may not claim feasibility authority"
+    },
+    "export_lifecycle": {
+      "canonical_owner": "Export Governance Layer",
+      "operational_owners": ["CAM Export", "DXF Writer", "Translators"],
+      "authority_tier": 2,
+      "consumers": ["Downstream consumers"],
+      "forbidden_ownership": "Runtime dispatchers may not bypass export governance"
+    },
+    "serialization": {
+      "canonical_owner": "Serialization Layer",
+      "operational_owners": ["Translators", "Schema Validators"],
+      "authority_tier": 2,
+      "consumers": ["All persistence consumers"],
+      "forbidden_ownership": "Execution systems may not define serialization semantics"
+    },
+    "validation": {
+      "canonical_owner": "Validation Layer",
+      "operational_owners": ["Schema Validators", "Constraint Systems"],
+      "authority_tier": 2,
+      "consumers": ["All validated data producers"],
+      "forbidden_ownership": "Validated systems may not override validation rules"
+    },
+    "vocabulary": {
+      "canonical_owner": "Governance Layer",
+      "operational_owners": ["Vocabulary Registry"],
+      "authority_tier": 1,
+      "consumers": ["All systems"],
+      "forbidden_ownership": "No subsystem may independently create canonical vocabulary"
+    },
+    "topology": {
+      "canonical_owner": "CAD Topology Governance",
+      "operational_owners": ["TopologyBuilder", "ShellValidation"],
+      "authority_tier": 2,
+      "consumers": ["Translators"],
+      "forbidden_ownership": "Translators may not generate topology"
+    }
+  }
+}

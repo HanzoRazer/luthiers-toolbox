@@ -161,6 +161,7 @@
 
 <script setup lang="ts">
 import { ref, reactive, computed, watch, onMounted, nextTick } from 'vue'
+import SliderRow from './SliderRow.vue'
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -183,7 +184,7 @@ interface SpiralStats {
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 
-const API_BASE = '/api/woodworking/soundhole/spiral'
+const API_BASE = '/api/instrument/soundhole/spiral'
 const ROUND_REF_AREA = Math.PI * (50.8 / 2) ** 2  // 4" round hole mm²
 
 const CONTROL_DEFS = [
@@ -230,10 +231,18 @@ const validationResult = ref<any>(null)
 // ── Computed stats (client-side closed form) ──────────────────────────────────
 
 function spiralStats(p: SpiralParams): SpiralStats {
+  // Correct logarithmic spiral arc length: L = sqrt(1 + k²) / k × (r_end - r0)
   const thetaEnd = p.turns * 2 * Math.PI
   const rEnd = p.r0 * Math.exp(p.k * thetaEnd)
-  const alpha = Math.atan(1.0 / p.k)
-  const oneWall = (rEnd - p.r0) / Math.sin(alpha)
+
+  let oneWall: number
+  if (Math.abs(p.k) < 1e-6) {
+    // Near-circular fallback: L = r0 × θ
+    oneWall = p.r0 * thetaEnd
+  } else {
+    oneWall = Math.sqrt(1.0 + p.k * p.k) / p.k * (rEnd - p.r0)
+  }
+
   const perim = 2 * oneWall
   const area = p.slotW * oneWall
   const pa = area > 0 ? perim / area : 0

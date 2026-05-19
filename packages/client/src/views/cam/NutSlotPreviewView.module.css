@@ -1,0 +1,331 @@
+/**
+ * NutSlotPreviewView CSS Module
+ * CAM Dev Order 2A: Nut slot toolpath preview styling
+ */
+
+.header {
+  padding: 24px 32px 16px;
+  border-bottom: 1px solid #333;
+}
+
+.header h1 {
+  margin: 0 0 4px 0;
+  font-size: 24px;
+  font-weight: 600;
+  color: #fff;
+}
+
+.subtitle {
+  margin: 0;
+  font-size: 14px;
+  color: #888;
+}
+
+.layout {
+  display: grid;
+  grid-template-columns: 320px 1fr;
+  gap: 24px;
+  padding: 24px 32px;
+  min-height: calc(100vh - 120px);
+}
+
+.inputPanel {
+  background: #1a1a1a;
+  border-radius: 8px;
+  padding: 16px;
+  height: fit-content;
+}
+
+.sectionHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.sectionHeader h3 {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+  color: #fff;
+}
+
+.defaultsBtn {
+  padding: 4px 10px;
+  font-size: 11px;
+  font-weight: 500;
+  color: #60a5fa;
+  background: transparent;
+  border: 1px solid #60a5fa;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.defaultsBtn:hover:not(:disabled) {
+  background: rgba(96, 165, 250, 0.1);
+}
+
+.defaultsBtnDisabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.headerButtons {
+  display: flex;
+  gap: 8px;
+}
+
+.provenanceNotice {
+  padding: 8px 12px;
+  margin-bottom: 12px;
+  font-size: 12px;
+  color: #60a5fa;
+  background: rgba(96, 165, 250, 0.1);
+  border-left: 3px solid #60a5fa;
+  border-radius: 4px;
+}
+
+.subheader {
+  margin: 20px 0 12px 0;
+  font-size: 12px;
+  font-weight: 500;
+  color: #888;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  border-top: 1px solid #333;
+  padding-top: 16px;
+}
+
+.previewPanel {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.gateBanner {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  border-radius: 6px;
+  border-left: 4px solid;
+}
+
+.gateBadge {
+  padding: 4px 12px;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+}
+
+.gateLabel {
+  font-size: 13px;
+  color: #ccc;
+}
+
+.svgContainer {
+  background: #0d0d1a;
+  border-radius: 8px;
+  border: 2px solid;
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.svg {
+  width: 100%;
+  max-width: 600px;
+  height: auto;
+  min-height: 120px;
+}
+
+.slotLabel {
+  font-family: monospace;
+}
+
+.axisLabels {
+  display: flex;
+  gap: 24px;
+  margin-top: 12px;
+  font-size: 11px;
+  color: #666;
+}
+
+.statsGrid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+}
+
+.statCard {
+  background: #1a1a1a;
+  border-radius: 6px;
+  padding: 12px;
+  text-align: center;
+}
+
+.statLabel {
+  font-size: 11px;
+  color: #888;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 4px;
+}
+
+.statValue {
+  font-size: 18px;
+  font-weight: 600;
+  color: #fff;
+}
+
+.messageSection {
+  background: #1a1a1a;
+  border-radius: 6px;
+  padding: 14px;
+}
+
+.messageSectionTitle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 0 10px 0;
+  font-size: 13px;
+  font-weight: 600;
+  color: #fff;
+}
+
+.warningIcon {
+  color: #fbbf24;
+}
+
+.errorIcon {
+  color: #ef4444;
+}
+
+.messageList {
+  margin: 0;
+  padding-left: 20px;
+}
+
+.messageList li {
+  font-size: 12px;
+  line-height: 1.5;
+  margin-bottom: 4px;
+}
+
+.warningItem {
+  color: #fbbf24;
+}
+
+.errorItem {
+  color: #fca5a5;
+}
+
+.issueCode {
+  display: inline-block;
+  padding: 1px 6px;
+  margin-right: 6px;
+  font-size: 10px;
+  font-weight: 600;
+  background: rgba(0, 0, 0, 0.3);
+  border-radius: 3px;
+  vertical-align: middle;
+}
+
+.exportSection {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 16px;
+  background: #1a1a1a;
+  border-radius: 6px;
+}
+
+.exportButton {
+  padding: 10px 20px;
+  font-size: 14px;
+  font-weight: 600;
+  color: #fff;
+  background: #10b981;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background 0.15s, opacity 0.15s;
+}
+
+.exportButton:hover:not(:disabled) {
+  background: #059669;
+}
+
+.exportButtonDisabled {
+  background: #4b5563;
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.exportWarningText {
+  margin: 0;
+  font-size: 12px;
+  color: #fbbf24;
+  text-align: center;
+}
+
+.emptyState {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 24px;
+  background: #1a1a1a;
+  border-radius: 8px;
+  text-align: center;
+}
+
+.emptyIcon {
+  font-size: 48px;
+  margin-bottom: 16px;
+  opacity: 0.5;
+}
+
+.emptyState h3 {
+  margin: 0 0 8px 0;
+  font-size: 18px;
+  font-weight: 600;
+  color: #fff;
+}
+
+.emptyState p {
+  margin: 0;
+  font-size: 14px;
+  color: #888;
+}
+
+.loadingState {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 24px;
+  background: #1a1a1a;
+  border-radius: 8px;
+}
+
+.loadingState p {
+  margin: 16px 0 0 0;
+  font-size: 14px;
+  color: #888;
+}
+
+@media (max-width: 900px) {
+  .layout {
+    grid-template-columns: 1fr;
+  }
+
+  .statsGrid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}

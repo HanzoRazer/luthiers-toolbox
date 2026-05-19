@@ -22,6 +22,44 @@ The new ToolBox architectural layers—AI, Feasibility, Calculators, Geometry En
 RMOS 2.0 preserves the name and identity, but restructures RMOS into a modular manufacturing framework that orchestrates, validates, and prepares designs for real CNC machining.
 RMOS 2.0 = the Manufacturing Brain of the ToolBox.
 ________________________________________
+0.1 RMOS Scope Clarification (2026-05-12)
+
+**Decision:** RMOS owns all manufacturing persistence and artifact governance.
+
+**Historical Context:**
+RMOS originated from rosette manufacturing workflows (RMOS 1.0). The name
+"Rosette Manufacturing Operating System" reflects this origin. Over time,
+RMOS capabilities expanded to serve general manufacturing governance needs.
+
+**Current Scope:**
+RMOS 2.0 governs ALL manufacturing workflows in the repository, including:
+- Rosette operations (original scope)
+- CAM export artifact persistence (CAM Layer 5)
+- Run artifacts for all CAM operations
+- Feasibility evaluation for all manufacturing
+- Audit trails and provenance for all exports
+
+**CAM Integration:**
+The CAM Governed Export Architecture defines a 7-layer export pipeline.
+Layer 5 ("RMOS Persistence") is explicitly RMOS-owned:
+
+```
+CAM Layer 5: RMOS Persistence
+├── Owned by: RMOS
+├── Function: Artifact storage, lineage, provenance
+├── Applies to: ALL CAM operations, not just rosettes
+└── Contract: CAM references RMOS; CAM does not redefine RMOS
+```
+
+**Cross-Reference:**
+- CAM Governed Export Architecture: `docs/architecture/CAM_GOVERNED_EXPORT_ARCHITECTURE.md`
+- Governance Authority Hierarchy: `docs/governance/GOVERNANCE_AUTHORITY_HIERARCHY.md`
+- Run Artifact Contracts: `docs/governance/RUN_ARTIFACT_PERSISTENCE_CONTRACT_v1.md`
+
+**Key Rule:**
+CAM systems MUST use RMOS for persistence. CAM systems MUST NOT
+create parallel artifact storage that duplicates RMOS functionality.
+________________________________________
 1. RMOS 2.0 Philosophy
 1.	Manufacturability first.
 Every design must pass through physics-based constraints before entering CAM.

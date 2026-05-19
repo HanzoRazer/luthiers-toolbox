@@ -2,22 +2,51 @@
 Setup Cascade Router — Instrument setup evaluation.
 
 Endpoints:
-- POST /setup/evaluate — Evaluate instrument setup
+- POST /setup/evaluate — Evaluate instrument setup (Phase 0)
+- POST /setup/workflow/evaluate — Evaluate relief (NECK-A Phase 3)
+- POST /setup/workflow/action/evaluate — Evaluate action (NECK-A Phase 4)
+- POST /setup/workflow/nut/evaluate — Evaluate nut slots (NECK-A Phase 5)
+- POST /setup/workflow/combined/evaluate — Combined cross-step diagnostics (NECK-A Phase 6)
+- POST /setup/workflow/expert/evaluate — Expert symptom-based diagnostics (NECK-A Phase 7)
 
-Total: 1 endpoint
+Total: 6 endpoints
 """
 
 from __future__ import annotations
 
 from typing import Any, Dict, List, Optional
 
-from fastapi import APIRouter
-from pydantic import BaseModel, Field
+from fastapi import APIRouter, HTTPException
+from pydantic import BaseModel, Field, field_validator
 
 from app.calculators.setup_cascade import (
     SetupState,
     evaluate_setup,
     suggest_adjustments,
+)
+from app.instrument_geometry.neck.setup_workflow import (
+    DiagnosticGate,
+    DiagnosticResult,
+    ActionWorkflowResponse,
+    NutWorkflowResponse,
+    CombinedDiagnosticsResponse,
+    PlayerSymptom,
+    ExpertDiagnosticsResponse,
+    evaluate_relief,
+    evaluate_action,
+    evaluate_nut_slots,
+    evaluate_combined_setup,
+    evaluate_expert_symptoms,
+    DEFAULT_RELIEF_TARGET_MIN_MM,
+    DEFAULT_RELIEF_TARGET_MAX_MM,
+    DEFAULT_TREBLE_ACTION_TARGET_MIN_MM,
+    DEFAULT_TREBLE_ACTION_TARGET_MAX_MM,
+    DEFAULT_BASS_ACTION_TARGET_MIN_MM,
+    DEFAULT_BASS_ACTION_TARGET_MAX_MM,
+    DEFAULT_NUT_TREBLE_TARGET_MIN_MM,
+    DEFAULT_NUT_TREBLE_TARGET_MAX_MM,
+    DEFAULT_NUT_BASS_TARGET_MIN_MM,
+    DEFAULT_NUT_BASS_TARGET_MAX_MM,
 )
 
 router = APIRouter(tags=["instrument-geometry", "setup"])
@@ -56,6 +85,116 @@ class SetupCascadeResponse(BaseModel):
     overall_gate: str
     summary: str
     suggestions: List[str] = Field(default_factory=list)
+
+
+class ReliefWorkflowRequest(BaseModel):
+    """Request body for NECK-A relief workflow evaluation."""
+    relief_mm: float = Field(description="Measured relief at 7th/8th fret (mm)")
+    target_min_mm: float = Field(
+        default=DEFAULT_RELIEF_TARGET_MIN_MM,
+        description="Minimum acceptable relief (default 0.10mm)"
+    )
+    target_max_mm: float = Field(
+        default=DEFAULT_RELIEF_TARGET_MAX_MM,
+        description="Maximum acceptable relief (default 0.30mm)"
+    )
+
+
+class ActionWorkflowRequest(BaseModel):
+    """Request body for NECK-A action workflow evaluation (Phase 4)."""
+    treble_action_mm: float = Field(description="Measured action at 12th fret, treble side (mm)")
+    bass_action_mm: float = Field(description="Measured action at 12th fret, bass side (mm)")
+    treble_target_min_mm: float = Field(
+        default=DEFAULT_TREBLE_ACTION_TARGET_MIN_MM,
+        description="Minimum acceptable treble action (default 1.25mm)"
+    )
+    treble_target_max_mm: float = Field(
+        default=DEFAULT_TREBLE_ACTION_TARGET_MAX_MM,
+        description="Maximum acceptable treble action (default 1.75mm)"
+    )
+    bass_target_min_mm: float = Field(
+        default=DEFAULT_BASS_ACTION_TARGET_MIN_MM,
+        description="Minimum acceptable bass action (default 1.75mm)"
+    )
+    bass_target_max_mm: float = Field(
+        default=DEFAULT_BASS_ACTION_TARGET_MAX_MM,
+        description="Maximum acceptable bass action (default 2.25mm)"
+    )
+
+
+class NutWorkflowRequest(BaseModel):
+    """Request body for NECK-A nut slot workflow evaluation (Phase 5)."""
+    clearances_mm: List[float] = Field(
+        description="First-fret clearance per string, 6 values [high E, B, G, D, A, low E]",
+        min_length=6,
+        max_length=6,
+    )
+    treble_target_min_mm: float = Field(
+        default=DEFAULT_NUT_TREBLE_TARGET_MIN_MM,
+        description="Minimum acceptable treble clearance (default 0.20mm)"
+    )
+    treble_target_max_mm: float = Field(
+        default=DEFAULT_NUT_TREBLE_TARGET_MAX_MM,
+        description="Maximum acceptable treble clearance (default 0.30mm)"
+    )
+    bass_target_min_mm: float = Field(
+        default=DEFAULT_NUT_BASS_TARGET_MIN_MM,
+        description="Minimum acceptable bass clearance (default 0.25mm)"
+    )
+    bass_target_max_mm: float = Field(
+        default=DEFAULT_NUT_BASS_TARGET_MAX_MM,
+        description="Maximum acceptable bass clearance (default 0.40mm)"
+    )
+
+    @field_validator("clearances_mm")
+    @classmethod
+    def validate_clearances_non_negative(cls, v: List[float]) -> List[float]:
+        for i, c in enumerate(v):
+            if c < 0:
+                raise ValueError(f"Clearance for string {i + 1} must be >= 0, got {c}")
+        return v
+
+
+class CombinedWorkflowRequest(BaseModel):
+    """Request body for NECK-A combined cross-step diagnostics (Phase 6)."""
+    relief_gate: DiagnosticGate = Field(description="Overall gate from relief workflow")
+    relief_diagnostic_ids: List[str] = Field(
+        default_factory=list,
+        description="Diagnostic IDs from relief workflow (e.g., relief_too_low)"
+    )
+    action_gate: DiagnosticGate = Field(description="Overall gate from action workflow")
+    action_diagnostic_ids: List[str] = Field(
+        default_factory=list,
+        description="Diagnostic IDs from action workflow"
+    )
+    nut_gate: DiagnosticGate = Field(description="Overall gate from nut workflow")
+    nut_diagnostic_ids: List[str] = Field(
+        default_factory=list,
+        description="Diagnostic IDs from nut workflow"
+    )
+
+
+class ExpertWorkflowRequest(BaseModel):
+    """Request body for NECK-A expert symptom-based diagnostics (Phase 7)."""
+    symptoms: List[PlayerSymptom] = Field(
+        description="Player-reported symptoms",
+        min_length=1,
+    )
+    relief_gate: DiagnosticGate = Field(description="Overall gate from relief workflow")
+    relief_diagnostic_ids: List[str] = Field(
+        default_factory=list,
+        description="Diagnostic IDs from relief workflow"
+    )
+    action_gate: DiagnosticGate = Field(description="Overall gate from action workflow")
+    action_diagnostic_ids: List[str] = Field(
+        default_factory=list,
+        description="Diagnostic IDs from action workflow"
+    )
+    nut_gate: DiagnosticGate = Field(description="Overall gate from nut workflow")
+    nut_diagnostic_ids: List[str] = Field(
+        default_factory=list,
+        description="Diagnostic IDs from nut workflow"
+    )
 
 
 # ─── Endpoints ─────────────────────────────────────────────────────────────────
@@ -114,6 +253,157 @@ def evaluate_instrument_setup(req: SetupStateRequest) -> SetupCascadeResponse:
         overall_gate=result.overall_gate,
         summary=result.summary,
         suggestions=suggestions,
+    )
+
+
+@router.post(
+    "/setup/workflow/evaluate",
+    response_model=DiagnosticResult,
+    summary="Evaluate neck relief (NECK-A Phase 3)",
+    description="""
+    NECK-A v1 vertical slice: Evaluate neck relief measurement.
+    Returns GREEN/YELLOW/RED gate with probable causes and recommended actions.
+
+    Gate logic:
+    - GREEN: relief within target range (default 0.10-0.30mm)
+    - YELLOW: within 0.05mm tolerance outside range
+    - RED: beyond 0.05mm tolerance outside range
+    """,
+)
+def evaluate_setup_workflow_relief(req: ReliefWorkflowRequest) -> DiagnosticResult:
+    """Evaluate neck relief and return diagnostic result."""
+    return evaluate_relief(
+        measured_relief_mm=req.relief_mm,
+        target_min_mm=req.target_min_mm,
+        target_max_mm=req.target_max_mm,
+    )
+
+
+@router.post(
+    "/setup/workflow/action/evaluate",
+    response_model=ActionWorkflowResponse,
+    summary="Evaluate action height (NECK-A Phase 4)",
+    description="""
+    NECK-A Phase 4: Evaluate action height at 12th fret for treble and bass sides.
+    Returns overall gate (worst-case) and individual diagnostics for each side.
+
+    Gate logic per side:
+    - GREEN: action within target range
+    - YELLOW: within 0.25mm tolerance outside range
+    - RED: beyond 0.25mm tolerance outside range
+
+    Default targets:
+    - Treble: 1.25–1.75mm
+    - Bass: 1.75–2.25mm
+    """,
+)
+def evaluate_setup_workflow_action(req: ActionWorkflowRequest) -> ActionWorkflowResponse:
+    """Evaluate action height and return workflow response with diagnostics."""
+    return evaluate_action(
+        treble_action_mm=req.treble_action_mm,
+        bass_action_mm=req.bass_action_mm,
+        treble_target_min_mm=req.treble_target_min_mm,
+        treble_target_max_mm=req.treble_target_max_mm,
+        bass_target_min_mm=req.bass_target_min_mm,
+        bass_target_max_mm=req.bass_target_max_mm,
+    )
+
+
+@router.post(
+    "/setup/workflow/nut/evaluate",
+    response_model=NutWorkflowResponse,
+    summary="Evaluate nut slot clearance (NECK-A Phase 5)",
+    description="""
+    NECK-A Phase 5: Evaluate nut slot clearance (first-fret height) per string.
+    Returns overall gate (worst-case) and individual diagnostics for each string.
+
+    V1: Fixed 6-string support. Strings 1-3 use treble targets, strings 4-6 use bass targets.
+
+    Gate logic per string:
+    - GREEN: clearance within target range
+    - YELLOW: within 0.05mm tolerance outside range
+    - RED: beyond 0.05mm tolerance outside range
+
+    Default targets:
+    - Treble (strings 1-3): 0.20–0.30mm
+    - Bass (strings 4-6): 0.25–0.40mm
+    """,
+)
+def evaluate_setup_workflow_nut(req: NutWorkflowRequest) -> NutWorkflowResponse:
+    """Evaluate nut slot clearance and return workflow response with per-string diagnostics."""
+    return evaluate_nut_slots(
+        clearances_mm=req.clearances_mm,
+        treble_target_min_mm=req.treble_target_min_mm,
+        treble_target_max_mm=req.treble_target_max_mm,
+        bass_target_min_mm=req.bass_target_min_mm,
+        bass_target_max_mm=req.bass_target_max_mm,
+    )
+
+
+@router.post(
+    "/setup/workflow/combined/evaluate",
+    response_model=CombinedDiagnosticsResponse,
+    summary="Evaluate combined setup diagnostics (NECK-A Phase 6)",
+    description="""
+    NECK-A Phase 6: Cross-step diagnostic evaluation.
+    Interprets interactions between Relief, Action, and Nut workflows.
+
+    Input: Gate and diagnostic IDs from each workflow step.
+    Output: Combined insights with contributing factors and recommendations.
+
+    V1 Rules:
+    - Fret buzz likely (relief RED low + action RED/YELLOW low)
+    - High action compound (action RED high + nut RED high)
+    - Nut dominant issue (nut RED + relief GREEN + action GREEN/YELLOW)
+    - Balanced setup (all GREEN)
+    - Mixed moderate (2+ YELLOW, no RED)
+    """,
+)
+def evaluate_setup_workflow_combined(req: CombinedWorkflowRequest) -> CombinedDiagnosticsResponse:
+    """Evaluate combined setup diagnostics and return cross-step insights."""
+    return evaluate_combined_setup(
+        relief_gate=req.relief_gate,
+        relief_diagnostic_ids=req.relief_diagnostic_ids,
+        action_gate=req.action_gate,
+        action_diagnostic_ids=req.action_diagnostic_ids,
+        nut_gate=req.nut_gate,
+        nut_diagnostic_ids=req.nut_diagnostic_ids,
+    )
+
+
+@router.post(
+    "/setup/workflow/expert/evaluate",
+    response_model=ExpertDiagnosticsResponse,
+    summary="Evaluate expert symptom-based diagnostics (NECK-A Phase 7)",
+    description="""
+    NECK-A Phase 7: Expert symptom-based diagnostic evaluation.
+    Combines player-reported symptoms with setup measurements to identify probable causes.
+
+    Input: List of symptoms + gate and diagnostic IDs from each workflow step.
+    Output: Per-symptom diagnostics with probable causes, recommended checks, actions, and confidence.
+
+    V1 Rules:
+    - Open string buzz + nut too low → nut slot issue
+    - Low fret buzz + relief too low → insufficient relief
+    - Middle fret buzz + relief/action low → interaction issue
+    - Upper fret buzz + action too low → saddle/fret issue
+    - First position hard + nut too high → high nut slots
+    - First position sharp + nut too high → string stretch from high nut
+    - Feels stiff + action/nut high → excessive action/nut height
+    - Feels slinky + action low → low action
+    - Fallback for unmatched symptoms
+    """,
+)
+def evaluate_setup_workflow_expert(req: ExpertWorkflowRequest) -> ExpertDiagnosticsResponse:
+    """Evaluate expert diagnostics based on symptoms and return probable causes."""
+    return evaluate_expert_symptoms(
+        symptoms=req.symptoms,
+        relief_gate=req.relief_gate,
+        relief_diagnostic_ids=req.relief_diagnostic_ids,
+        action_gate=req.action_gate,
+        action_diagnostic_ids=req.action_diagnostic_ids,
+        nut_gate=req.nut_gate,
+        nut_diagnostic_ids=req.nut_diagnostic_ids,
     )
 
 

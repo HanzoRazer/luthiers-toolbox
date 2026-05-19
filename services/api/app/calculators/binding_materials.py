@@ -47,6 +47,44 @@ MINIMUM_BEND_RADII_MM: Dict[BindingMaterial, float] = {
     BindingMaterial.WOOD_EBONY: 25.0,      # Very hard, requires kerfing
 }
 
+
+def get_minimum_bend_radius(material: Any) -> float:
+    """
+    Get minimum bend radius for a binding material.
+
+    Args:
+        material: BindingMaterial enum, enum value string, or raw string
+
+    Returns:
+        Minimum bend radius in mm
+
+    Raises:
+        ValueError: If material is not recognized
+    """
+    # Handle BindingMaterial enum directly
+    if isinstance(material, BindingMaterial):
+        return MINIMUM_BEND_RADII_MM[material]
+
+    # Handle string input — try to resolve to enum
+    if isinstance(material, str):
+        material_key = material.lower().strip().replace(" ", "_").replace("-", "_")
+        # Try direct enum value match
+        for mat in BindingMaterial:
+            if mat.value == material_key:
+                return MINIMUM_BEND_RADII_MM[mat]
+        # Try enum name match (e.g., "CELLULOID" or "celluloid")
+        for mat in BindingMaterial:
+            if mat.name.lower() == material_key:
+                return MINIMUM_BEND_RADII_MM[mat]
+
+    # Unknown material
+    supported = [m.value for m in BindingMaterial]
+    raise ValueError(
+        f"Unknown binding material '{material}'. "
+        f"Add to BindingMaterial enum and MINIMUM_BEND_RADII_MM. "
+        f"Supported: {supported}"
+    )
+
 # Standard binding widths (mm)
 BINDING_WIDTHS = {
     "delicate": 1.5,

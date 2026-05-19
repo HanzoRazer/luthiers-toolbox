@@ -87,6 +87,26 @@ class CleanupMode(str, Enum):
               - Produces multi-point closed LWPOLYLINEs suitable for CAM workflows
               - Requires authentication (returns 401 if unauthenticated)
               - Verified through GRBL pipeline (2260 G-code lines from BODY_OUTLINE)
+
+    V2_RAW: Protected recovered production extraction path (MRP-1C).
+              - Routes to vectorizer_phase3.py:_raw_extract()
+              - CHAIN_APPROX_NONE + no classification + R12 LINE entities + CONTOURS layer
+              - Preserves vector text from PDF blueprints
+              - Recovered March 2026 fidelity behavior
+              - PROTECTED_EXPERIMENTAL_RECOVERY_MODE: callable, testable, observable, not silently mutable
+
+    PHOTO_V2: Controlled photographic blueprint conversion bridge (MRP-1C).
+              - Routes to edge_to_dxf.py:EdgeToDXF.convert_enhanced()
+              - Multi-scale Canny + text masking + morphological closing
+              - Best for AI-generated images where text removal is acceptable
+              - PROTECTED_EXPERIMENTAL_RECOVERY_MODE: callable, testable, observable, not silently mutable
+
+    PHOTO_REFINED: Text-preserving photo extraction (MRP-1C resurrected April 2026).
+              - Routes to edge_to_dxf.py:EdgeToDXF.convert() with morph_close_kernel=0
+              - Single-scale Canny (50/150), NO morphological closing
+              - Preserves text strokes from photos of blueprints
+              - Higher entity count than PHOTO_V2 but text remains legible
+              - PROTECTED_EXPERIMENTAL_RECOVERY_MODE: callable, testable, observable, not silently mutable
     """
     BASELINE = "baseline"
     REFINED = "refined"
@@ -94,6 +114,9 @@ class CleanupMode(str, Enum):
     LAYERED_DUAL_PASS = "layered_dual_pass"
     ENHANCED = "enhanced"
     CAM_READY_R2000 = "cam_ready_r2000"
+    V2_RAW = "v2_raw"
+    PHOTO_V2 = "photo_v2"
+    PHOTO_REFINED = "photo_refined"
 
 
 @dataclass
