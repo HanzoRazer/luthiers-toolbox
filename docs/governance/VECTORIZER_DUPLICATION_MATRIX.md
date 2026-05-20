@@ -99,7 +99,7 @@ This document maps duplicate or parallel implementations across the vectorizer e
 | `scale_detector.py` | blueprint-import/calibration/ | Feature detection |
 | `BlueprintAnalyzer` | blueprint-import/analyzer.py | Claude vision |
 
-**Assessment:** Multiple scale detection methods. `calibration_integration.py` was supposed to unify but is orphaned.
+**Assessment:** Multiple scale detection methods. `calibration_integration.py` is **PARTIAL** (calibration API routes only; not on main `BlueprintOrchestrator` vectorize). See `VECTORIZER_COMPONENT_LIFECYCLE.md`.
 
 ### DXF Output
 

@@ -19,6 +19,10 @@
  * Dev Order 39: Added DiagnosticSnapshotImportCard for import validation.
  * Dev Order 41: Added DiagnosticSnapshotExportMetadataCard for export metadata display.
  * Dev Order 42: Added SnapshotExchangeSection for consolidated snapshot workflow.
+ * Dev Order 60: Added MeasurementArchive* components for archive workflow.
+ * Dev Order 62: Added MeasurementArchiveEvidenceIndex for experimental history.
+ * Dev Order 63: Added MeasurementResidualComparisonPanel for pairwise archive comparison.
+ * Dev Order 66: Added TopologyVariant* components for experimental topology variants.
  */
 
 export { default as AcousticStateCard } from './AcousticStateCard.vue'
@@ -39,3 +43,15 @@ export { default as DiagnosticSnapshotCard } from './DiagnosticSnapshotCard.vue'
 export { default as DiagnosticSnapshotImportCard } from './DiagnosticSnapshotImportCard.vue'
 export { default as DiagnosticSnapshotExportMetadataCard } from './DiagnosticSnapshotExportMetadataCard.vue'
 export { default as SnapshotExchangeSection } from './SnapshotExchangeSection.vue'
+
+// Measurement Archive components (Dev Order 60, 62, 63)
+export { default as MeasurementArchiveExportCard } from './MeasurementArchiveExportCard.vue'
+export { default as MeasurementArchiveImportCard } from './MeasurementArchiveImportCard.vue'
+export { default as MeasurementArchivePreviewCard } from './MeasurementArchivePreviewCard.vue'
+export { default as MeasurementArchiveExchangeSection } from './MeasurementArchiveExchangeSection.vue'
+export { default as MeasurementArchiveEvidenceIndex } from './MeasurementArchiveEvidenceIndex.vue'
+export { default as MeasurementResidualComparisonPanel } from './MeasurementResidualComparisonPanel.vue'
+
+// Topology Variant components (Dev Order 66)
+export { default as TopologyVariantCard } from './TopologyVariantCard.vue'
+export { default as TopologyVariantBuilder } from './TopologyVariantBuilder.vue'

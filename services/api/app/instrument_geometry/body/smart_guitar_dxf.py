@@ -41,6 +41,7 @@ try:
     import ezdxf
     from ezdxf import units
     from ezdxf.math import Vec2
+    from app.util.dxf_compat import create_document
     EZDXF_AVAILABLE = True
 except ImportError:
     EZDXF_AVAILABLE = False
@@ -293,8 +294,8 @@ def generate_smart_guitar_dxf(
 
     cavities = spec.get("cavities", {})
 
-    # Create DXF document
-    doc = ezdxf.new("R2000")
+    # Create DXF document via governed dxf_compat layer
+    doc = create_document("R2000")
     doc.units = units.MM
     msp = doc.modelspace()
 
