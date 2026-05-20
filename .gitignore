@@ -339,6 +339,7 @@ Altitude vs Modal frequencies_.html
 !services/api/requirements.txt
 !.github/workflows/.legacy_paths_ignore.txt
 !.github/workflows/.api_base_ignore.txt
+!requirements-governance.txt
 
 # ------------------------------------------
 # JSON Data Files (Root Level)

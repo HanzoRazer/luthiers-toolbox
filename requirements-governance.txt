@@ -1,0 +1,5 @@
+# Dependencies for governance checks
+# Used by .github/workflows/governance_unified.yml
+
+# Required for check_capability_registry.py to import CAM registry
+pydantic>=2.0
