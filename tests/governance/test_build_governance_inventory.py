@@ -55,9 +55,9 @@ class TestJsonStructure:
         with open(DEFAULT_JSON, "r", encoding="utf-8") as f:
             return json.load(f)
 
-    def test_has_generated_at(self, inventory_data):
-        """JSON should have generated_at timestamp."""
-        assert "generated_at" in inventory_data
+    def test_no_timestamp_by_default(self, inventory_data):
+        """JSON should NOT have generated_at timestamp by default (determinism)."""
+        assert "generated_at" not in inventory_data
 
     def test_has_summary(self, inventory_data):
         """JSON should have summary section."""
@@ -123,3 +123,59 @@ class TestClassification:
         """Should have at least some consumed docs."""
         summary = inventory_data["summary"]
         assert summary["consumed"] > 0, "Expected at least one consumed doc"
+
+
+class TestDeterminism:
+    """Test output determinism."""
+
+    def test_json_output_is_deterministic(self, tmp_path):
+        """Running scanner twice should produce identical JSON output."""
+        json_out_1 = tmp_path / "run1.json"
+        json_out_2 = tmp_path / "run2.json"
+        md_out = tmp_path / "out.md"
+
+        result1 = subprocess.run(
+            [sys.executable, str(SCRIPT_PATH),
+             "--json-output", str(json_out_1),
+             "--md-output", str(md_out),
+             "--quiet"],
+            capture_output=True,
+            text=True,
+            cwd=str(REPO_ROOT)
+        )
+        assert result1.returncode == 0, f"First run failed: {result1.stderr}"
+
+        result2 = subprocess.run(
+            [sys.executable, str(SCRIPT_PATH),
+             "--json-output", str(json_out_2),
+             "--md-output", str(md_out),
+             "--quiet"],
+            capture_output=True,
+            text=True,
+            cwd=str(REPO_ROOT)
+        )
+        assert result2.returncode == 0, f"Second run failed: {result2.stderr}"
+
+        content1 = json_out_1.read_text(encoding="utf-8")
+        content2 = json_out_2.read_text(encoding="utf-8")
+        assert content1 == content2, "JSON output differs between runs"
+
+    def test_timestamp_with_flag(self, tmp_path):
+        """--include-timestamp should add timestamp to output."""
+        json_out = tmp_path / "with_ts.json"
+        md_out = tmp_path / "with_ts.md"
+
+        result = subprocess.run(
+            [sys.executable, str(SCRIPT_PATH),
+             "--json-output", str(json_out),
+             "--md-output", str(md_out),
+             "--include-timestamp",
+             "--quiet"],
+            capture_output=True,
+            text=True,
+            cwd=str(REPO_ROOT)
+        )
+        assert result.returncode == 0, f"Run failed: {result.stderr}"
+
+        data = json.loads(json_out.read_text(encoding="utf-8"))
+        assert "generated_at" in data, "Timestamp should be present with --include-timestamp"
