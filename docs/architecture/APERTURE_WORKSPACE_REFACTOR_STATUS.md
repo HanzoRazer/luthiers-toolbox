@@ -3492,10 +3492,128 @@ Import validation is structural validation only. It does NOT restore, apply, cal
 
 ---
 
+## Dev Order 60 — Measurement Archive Integration
+
+**Status:** Complete  
+**Date:** 2026-05-19
+
+Restored measurement archive infrastructure from Dev Order 54 that existed as unreachable "dead code". Integrated archive creation, export, and import validation into the Aperture Workspace.
+
+### New Files
+
+| File | Purpose |
+|------|---------|
+| `packages/client/src/components/shared/acoustics/MeasurementArchiveImportCard.vue` | Validates imported JSON archives (structural validation only) |
+| `packages/client/src/components/shared/acoustics/MeasurementArchiveExportCard.vue` | Displays archive metadata and exports JSON |
+| `packages/client/src/components/shared/acoustics/MeasurementArchiveExchangeSection.vue` | Bundles export, import, and preview cards |
+
+### Design Decisions
+
+| Decision | Rationale |
+|----------|-----------|
+| MeasurementArchiveExchangeSection pattern | Mirrors SnapshotExchangeSection for consistency |
+| archiveReferences field | Bidirectional provenance between snapshots and archives |
+| Observational only | All archive operations remain local, no persistence backend |
+
+---
+
+## Dev Order 61 — Measurement Archive Hardening
+
+**Status:** Complete  
+**Date:** 2026-05-20
+
+Added type guards, helper utilities, and comprehensive tests for measurement archive infrastructure.
+
+### Utilities Added
+
+| Function | Purpose |
+|----------|---------|
+| `isMeasurementArchiveRecord(value)` | Runtime type guard for archive validation |
+| `buildMeasurementArchiveFilename(record)` | Generates `measurement-archive-v1-{YYYYMMDD-HHmmss}.json` |
+| `parseMeasurementArchiveJson(text)` | Parses JSON with validation result |
+| `summarizeMeasurementArchive(record)` | Summary for display |
+| `tryCreateArchiveFromDiagnosticContext(context)` | Creates archive from diagnostic context with error handling |
+
+### Verification
+
+| Check | Result |
+|-------|--------|
+| Test suite | 29/29 PASS |
+
+---
+
+## Dev Order 62 — Measurement Lab Evidence Index
+
+**Status:** Complete  
+**Date:** 2026-05-20
+
+Added evidence index inside the Measurement Lab for organizing created and imported measurement archives as coherent experimental history.
+
+### New Files
+
+| File | Purpose |
+|------|---------|
+| `packages/client/src/components/shared/acoustics/MeasurementArchiveEvidenceIndex.vue` | Evidence organization component with chronological, method-based, and experiment-tag views |
+
+### New Utilities
+
+| Function | Purpose |
+|----------|---------|
+| `sortMeasurementArchivesByTimestamp(records, order)` | Stable timestamp sorting |
+| `groupMeasurementArchivesByMethod(records)` | Group by measurement method |
+| `groupMeasurementArchivesByExperimentTag(records)` | Group by experiment tags |
+| `filterMeasurementArchivesBySnapshotReference(records, snapshotId)` | Filter by linked snapshot |
+| `createEvidenceSummary(record)` | Extended summary with sparse detection |
+
+### Type Additions
+
+| Type | Purpose |
+|------|---------|
+| `MeasurementArchiveMetadata.experimentTags` | Optional experiment tags for grouping/filtering |
+| `MeasurementArchiveEvidenceSummary` | Extended summary with methods, tags, sparse warnings |
+| `ArchiveMethodGroup` | Grouping structure for method-based view |
+| `ArchiveExperimentTagGroup` | Grouping structure for experiment-tag view |
+
+### Evidence Index Features
+
+- Chronological view with newest/oldest sorting
+- Method-based grouped view
+- Experiment-tag grouped view
+- Sparse archive detection with warnings
+- Provenance visibility (linked snapshot indicator)
+- Selectable entries for preview
+
+### Design Decisions
+
+| Decision | Rationale |
+|----------|-----------|
+| Three view modes | Supports different experimental workflows |
+| Sparse detection | Warns about incomplete data without blocking |
+| experimentTags in metadata | Separate from general tags, for experiment continuity |
+| Lab notebook feel | Not a scoring dashboard |
+
+### Verification
+
+| Check | Result |
+|-------|--------|
+| Test suite | 44/44 PASS |
+| Build | PASS |
+
+### Architectural Intent
+
+This order restores **experimental evidence continuity** which is necessary before residual comparison systems, topology studies, or calibration-body refinement can become scientifically useful.
+
+The repo is now transitioning from **isolated measurement artifacts** toward **coherent experimental acoustic history**.
+
+---
+
 ## Revision History
 
 | Date | Change |
 |------|--------|
+| 2026-05-20 | **Dev Order 62 Measurement Lab Evidence Index complete** |
+| 2026-05-20 | **Dev Order 61 Measurement Archive Hardening complete** |
+| 2026-05-19 | **Dev Order 60 Measurement Archive Integration complete** |
 | 2026-05-14 | **Dev Order 52 Snapshot Exchange Documentation & Architecture Consolidation complete** |
 | 2026-05-14 | **Dev Order 51 Snapshot Exchange Final UX Checkpoint complete** |
 | 2026-05-14 | **Dev Order 50 Snapshot Exchange Information Chunking Refinement complete** |

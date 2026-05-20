@@ -305,10 +305,14 @@ def build_summary(results: List[DocClassification]) -> Dict:
     }
 
 
-def generate_json_report(results: List[DocClassification]) -> Dict:
-    """Generate JSON report."""
-    return {
-        "generated_at": datetime.now().isoformat(),
+def generate_json_report(results: List[DocClassification], include_timestamp: bool = False) -> Dict:
+    """Generate JSON report.
+
+    Args:
+        results: Classification results
+        include_timestamp: If True, include generated_at timestamp. Default False for determinism.
+    """
+    report = {
         "scan_scope": "docs/governance/",
         "summary": build_summary(results),
         "documents": [
@@ -323,16 +327,27 @@ def generate_json_report(results: List[DocClassification]) -> Dict:
             for r in sorted(results, key=lambda x: (x.category, x.path))
         ]
     }
+    if include_timestamp:
+        report["generated_at"] = datetime.now().isoformat()
+    return report
 
 
-def generate_markdown_report(results: List[DocClassification]) -> str:
-    """Generate markdown report."""
+def generate_markdown_report(results: List[DocClassification], include_timestamp: bool = False) -> str:
+    """Generate markdown report.
+
+    Args:
+        results: Classification results
+        include_timestamp: If True, include generated timestamp. Default False for determinism.
+    """
     summary = build_summary(results)
 
     lines = [
         "# Governance Document Inventory",
         "",
-        f"Generated: {datetime.now().strftime('%Y-%m-%d %H:%M')}",
+    ]
+    if include_timestamp:
+        lines.append(f"Generated: {datetime.now().strftime('%Y-%m-%d %H:%M')}")
+    lines.extend([
         f"Scope: `docs/governance/`",
         "",
         "## Summary",
@@ -405,6 +420,11 @@ def main():
         action="store_true",
         help="Suppress human-readable output"
     )
+    parser.add_argument(
+        "--include-timestamp",
+        action="store_true",
+        help="Include generated_at timestamp in output (default: omit for determinism)"
+    )
     args = parser.parse_args()
 
     if not args.quiet:
@@ -417,13 +437,13 @@ def main():
     json_path = REPO_ROOT / args.json_output
     json_path.parent.mkdir(parents=True, exist_ok=True)
     with open(json_path, "w", encoding="utf-8") as f:
-        json.dump(generate_json_report(results), f, indent=2)
+        json.dump(generate_json_report(results, include_timestamp=args.include_timestamp), f, indent=2)
 
     # Write Markdown
     md_path = REPO_ROOT / args.md_output
     md_path.parent.mkdir(parents=True, exist_ok=True)
     with open(md_path, "w", encoding="utf-8") as f:
-        f.write(generate_markdown_report(results))
+        f.write(generate_markdown_report(results, include_timestamp=args.include_timestamp))
 
     if not args.quiet:
         print()

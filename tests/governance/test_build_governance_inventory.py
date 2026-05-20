@@ -123,3 +123,82 @@ class TestClassification:
         """Should have at least some consumed docs."""
         summary = inventory_data["summary"]
         assert summary["consumed"] > 0, "Expected at least one consumed doc"
+
+
+class TestDeterminism:
+    """Test output determinism."""
+
+    def test_json_output_is_deterministic(self, tmp_path):
+        """Running scanner twice should produce identical JSON output."""
+        output1 = tmp_path / "inventory1.json"
+        output2 = tmp_path / "inventory2.json"
+
+        # Run scanner twice (default mode, no timestamp)
+        result1 = subprocess.run(
+            [sys.executable, str(SCRIPT_PATH),
+             "--json-output", str(output1),
+             "--md-output", str(tmp_path / "md1.md"),
+             "--quiet"],
+            capture_output=True,
+            text=True,
+            cwd=str(REPO_ROOT),
+            timeout=120
+        )
+        assert result1.returncode == 0, f"First run failed: {result1.stderr}"
+
+        result2 = subprocess.run(
+            [sys.executable, str(SCRIPT_PATH),
+             "--json-output", str(output2),
+             "--md-output", str(tmp_path / "md2.md"),
+             "--quiet"],
+            capture_output=True,
+            text=True,
+            cwd=str(REPO_ROOT),
+            timeout=120
+        )
+        assert result2.returncode == 0, f"Second run failed: {result2.stderr}"
+
+        # Compare outputs
+        data1 = json.loads(output1.read_text())
+        data2 = json.loads(output2.read_text())
+
+        assert data1 == data2, "JSON outputs differ between runs"
+
+    def test_no_timestamp_by_default(self, tmp_path):
+        """Default mode should not include timestamp."""
+        output = tmp_path / "inventory.json"
+
+        result = subprocess.run(
+            [sys.executable, str(SCRIPT_PATH),
+             "--json-output", str(output),
+             "--md-output", str(tmp_path / "md.md"),
+             "--quiet"],
+            capture_output=True,
+            text=True,
+            cwd=str(REPO_ROOT),
+            timeout=120
+        )
+        assert result.returncode == 0
+
+        data = json.loads(output.read_text())
+        assert "generated_at" not in data, "Timestamp present in default mode"
+
+    def test_timestamp_with_flag(self, tmp_path):
+        """--include-timestamp should add timestamp."""
+        output = tmp_path / "inventory.json"
+
+        result = subprocess.run(
+            [sys.executable, str(SCRIPT_PATH),
+             "--json-output", str(output),
+             "--md-output", str(tmp_path / "md.md"),
+             "--include-timestamp",
+             "--quiet"],
+            capture_output=True,
+            text=True,
+            cwd=str(REPO_ROOT),
+            timeout=120
+        )
+        assert result.returncode == 0
+
+        data = json.loads(output.read_text())
+        assert "generated_at" in data, "Timestamp missing with --include-timestamp"

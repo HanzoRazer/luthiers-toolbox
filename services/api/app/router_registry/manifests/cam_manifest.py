@@ -377,4 +377,11 @@ CAM_ROUTERS: List[RouterSpec] = [
         tags=["Export", "Translate", "MRP"],
         category="cam",
     ),
+    # ── CAM Dev Order 7S: Governed Manufacturing Cognition ──
+    RouterSpec(
+        module="app.routers.cam.cam_assist_router",
+        prefix="",
+        tags=["CAM", "Assist", "Cognition"],
+        category="cam",
+    ),
 ]
