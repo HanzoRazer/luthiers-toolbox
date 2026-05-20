@@ -40,9 +40,12 @@ Structured inventory of technical debt in the vectorizer ecosystem, classified b
 | Debt Item | Location | Domain | Issue | Recommendation |
 |-----------|----------|--------|-------|----------------|
 | `_simple_extraction()` exports empty DXF | vectorizer_phase3.py:3766 | **topology** | UNKNOWN category excluded by export | Fix export to include UNKNOWN or add category |
-| `calibration_integration.py` orphaned | blueprint-import/ | **semantic** | "NEVER CALLED" per CLAUDE.md — scale detection incomplete | Wire to pipeline or archive |
-| `FeedbackSystem` never triggered | vectorizer_phase3.py:1181 | **authority_risk** | User corrections cannot improve system | Wire to API or remove |
-| `TrainingDataCollector` never triggered | vectorizer_phase3.py:1273 | **authority_risk** | ML model cannot learn | Wire to API or remove |
+| `submit_correction()` never called | vectorizer_phase3.py | **authority_risk** | User feedback intake path dead | Wire to API or remove |
+| `TrainingDataCollector` never instantiated | vectorizer_phase3.py:1273 | **authority_risk** | ML model cannot learn from corrections | Wire to API or remove |
+
+**Corrected (2026-05-20 verification):**
+- `calibration_integration.py` — Downgraded to MEDIUM. Wired to calibration API routes (`calibration_router`, `phase2_router`), not main vectorize orchestrator.
+- `FeedbackSystem.record_classification()` — Partially wired in SMART mode with `enable_feedback=True`. Only `submit_correction()` is dead.
 
 ---
 
@@ -63,6 +66,7 @@ Structured inventory of technical debt in the vectorizer ecosystem, classified b
 
 | Debt Item | Location | Domain | Issue | Recommendation |
 |-----------|----------|--------|-------|----------------|
+| `calibration_integration.py` partial wiring | blueprint-import/ | **semantic** | Wired to calibration routes only, not main vectorize orchestrator | Wire to main pipeline or document scope |
 | Contour plausibility import fallback | contour_plausibility.py:10 | **semantic** | Border detection disabled silently | Add warning log |
 | CleanupMode invalid input default | vectorize_router.py:195 | **maintainability** | Silent default to REFINED | Log warning |
 | `geometry_coach.py` v1 not deprecated | photo-vectorizer/ | **maintainability** | v2 is canonical but v1 still exists | Deprecate v1 |

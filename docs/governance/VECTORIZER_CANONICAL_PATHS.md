@@ -93,7 +93,7 @@ POST /api/vectorizer/extract
 | `vectorizer_enhancements.py` | Optional import by phase3 | ACTIVE | Phase 3.7 features |
 | `dxf_compat.py` | All DXF creation | **CANONICAL** | R12/R2000 abstraction |
 | `phase4/` | Dimension linking | STANDALONE | Not integrated |
-| `calibration_integration.py` | `EnhancedCalibrationPipeline` | **ORPHAN** | Documented "NEVER CALLED" |
+| `calibration_integration.py` | `EnhancedCalibrationPipeline` | PARTIAL | Wired to calibration routes, not main vectorize |
 
 ### services/photo-vectorizer/
 
@@ -148,9 +148,10 @@ Response: { artifacts: { svg: {...}, dxf: {...} } }
 
 | System | Location | Reason |
 |--------|----------|--------|
-| `calibration_integration.py` | blueprint-import | NEVER CALLED per CLAUDE.md |
-| `FeedbackSystem` | vectorizer_phase3.py:1181 | Instantiated but no API trigger |
-| `TrainingDataCollector` | vectorizer_phase3.py:1273 | Instantiated but no API trigger |
+| `calibration_integration.py` | blueprint-import | Wired to calibration routes only (not main vectorize) |
+| `FeedbackSystem.record_classification` | vectorizer_phase3.py:1181 | Called in SMART mode with enable_feedback=True |
+| `FeedbackSystem.submit_correction` | vectorizer_phase3.py | **NEVER CALLED** — user feedback intake dead |
+| `TrainingDataCollector` | vectorizer_phase3.py:1273 | Never instantiated |
 | `phase4/` directory | blueprint-import | Complete but standalone |
 | `cognitive_extractor.py` | photo-vectorizer | Never imported |
 | `cognitive_extraction_engine.py` | photo-vectorizer | Never imported |

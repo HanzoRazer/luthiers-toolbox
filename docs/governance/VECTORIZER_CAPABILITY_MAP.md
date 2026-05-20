@@ -75,7 +75,7 @@
 |--------|----------|-----------|--------|--------|------|
 | `pixel_calibrator.py` | blueprint-import/calibration/ | Yes | Yes | Yes | Low |
 | `scale_detector.py` | blueprint-import/calibration/ | Yes | Yes | No | Medium |
-| `calibration_integration.py` | blueprint-import | **ORPHAN** | No | No | **High** |
+| `calibration_integration.py` | blueprint-import | Partial | Yes (calibration routes) | No | Medium |
 | `ScaleCalibrator` | vectorizer_enhancements.py | Optional | Yes | No | Medium |
 
 ### Coaching / Retry Systems
@@ -98,8 +98,9 @@
 | PHOTO_V2 mode | **Yes** | Image input | Yes | Yes | Yes |
 | SIMPLE extraction | **No** | — | Partial | No | No |
 | Phase 4 dimension linking | Unknown | Standalone | No | Yes | No |
-| Feedback retraining | **No** | Never called | No | No | No |
-| Calibration integration | **No** | Never called | No | No | No |
+| Feedback recording | **Partial** | SMART mode + enable_feedback | Yes | No | Partial |
+| Feedback submission | **No** | submit_correction never called | No | No | No |
+| Calibration integration | **Partial** | Calibration routes only | Yes (partial) | No | Partial |
 | Body isolation | **Yes** | Photo pipeline | Yes | Yes | Yes |
 | Arc reconstruction | **Yes** | Gap bridging | Yes | Yes | Yes |
 | IBG intake gate | **Yes** | Constitutional | Yes | Yes | Yes |
@@ -119,8 +120,8 @@
 
 | Gap | Impact | Priority |
 |-----|--------|----------|
-| `calibration_integration.py` not wired | Scale accuracy limited | Medium |
-| `FeedbackSystem` not triggered | No learning from corrections | Low |
+| `calibration_integration.py` not on main vectorize | Scale accuracy limited on main endpoint | Medium |
+| `submit_correction()` not wired | User feedback cannot reach learning system | Medium |
 | `_simple_extraction()` broken | Non-guitar instruments fail | High |
 | Phase 4 not integrated | Manual dimension annotation | Low |
 | `cognitive_*` orphaned | Dead code risk | Medium |
