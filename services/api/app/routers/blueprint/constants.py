@@ -72,17 +72,21 @@ except ImportError:
     pass
 
 # =============================================================================
-# PHASE 2 VECTORIZER (OPENCV-POWERED)
+# PHASE 2 VECTORIZER (RELOCATED — not loaded in runtime spine)
 # =============================================================================
+# vectorizer_phase2.py moved to vectorizer-sandbox (Tier A archaeology).
+# Canonical production: POST /api/blueprint/vectorize/async + CleanupMode.REFINED.
+# See services/photo-vectorizer/ARCHAEOLOGY_RELOCATION.md
 
 PHASE2_AVAILABLE = False
 create_phase2_vectorizer = None  # type: ignore
-
-try:
-    from vectorizer_phase2 import create_phase2_vectorizer
-    PHASE2_AVAILABLE = True
-except ImportError:
-    pass
+PHASE2_UNAVAILABLE_DETAIL = (
+    "Phase 2 vectorizer relocated to semantic cognition repo "
+    "(https://github.com/HanzoRazer/vectorizer-sandbox). "
+    "Production blueprint path: POST /api/blueprint/vectorize/async "
+    "(CleanupMode.REFINED). "
+    "See services/photo-vectorizer/ARCHAEOLOGY_RELOCATION.md."
+)
 
 
 # =============================================================================

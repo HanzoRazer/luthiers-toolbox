@@ -29,6 +29,7 @@ from .constants import (
     MIN_SCALE_FACTOR,
     MAX_SCALE_FACTOR,
     PHASE2_AVAILABLE,
+    PHASE2_UNAVAILABLE_DETAIL,
     PHASE2_EXTENSIONS,
     CALIBRATION_AVAILABLE,
     create_phase2_vectorizer,
@@ -128,10 +129,7 @@ async def export_to_dxf(request: ExportRequest) -> FileResponse:
         HTTPException 501: Not implemented
     """
     if not PHASE2_AVAILABLE:
-        raise HTTPException(
-            status_code=501,
-            detail="Phase 2 vectorizer not available. Install opencv-python and ezdxf."
-        )
+        raise HTTPException(status_code=501, detail=PHASE2_UNAVAILABLE_DETAIL)
 
     raise HTTPException(
         status_code=501,
@@ -184,10 +182,7 @@ async def vectorize_geometry(
         HTTPException 501: Phase 2 not available or PDF support missing
     """
     if not PHASE2_AVAILABLE:
-        raise HTTPException(
-            status_code=501,
-            detail="Phase 2 not available. Install: pip install opencv-python scikit-image"
-        )
+        raise HTTPException(status_code=501, detail=PHASE2_UNAVAILABLE_DETAIL)
 
     start_time = time.time()
     tmp_path = None

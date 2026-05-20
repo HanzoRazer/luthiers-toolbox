@@ -25,24 +25,16 @@ Write-Host "=== Vectorizer audit verification ===" -ForegroundColor Cyan
 Write-Host "Repo: $RepoRoot"
 Write-Host ""
 
-# --- 1. Cognitive extractor LOC ---
-Write-Host "--- 1. Cognitive extractor line counts ---" -ForegroundColor Yellow
+# --- 1. Tier A relocated (not in runtime spine) ---
+Write-Host "--- 1. Tier A relocated to vectorizer-sandbox ---" -ForegroundColor Yellow
+$reloc = Join-Path $RepoRoot "services\photo-vectorizer\ARCHAEOLOGY_RELOCATION.md"
 $cog1 = Join-Path $RepoRoot "services\photo-vectorizer\cognitive_extractor.py"
-$cog2 = Join-Path $RepoRoot "services\photo-vectorizer\cognitive_extraction_engine.py"
-foreach ($f in @($cog1, $cog2)) {
-    if (Test-Path $f) {
-        $n = (Get-Content $f).Count
-        Write-Host "  $(Split-Path $f -Leaf): $n lines"
-    } else {
-        Write-Check "LOC" "FAIL" "Missing $f"
-    }
-}
-$lines1 = if (Test-Path $cog1) { (Get-Content $cog1).Count } else { 0 }
-$lines2 = if (Test-Path $cog2) { (Get-Content $cog2).Count } else { 0 }
-if ($lines1 -ge 1400 -and $lines2 -ge 1400) {
-    Write-Check "1-LOC" "PASS" "Both cognitive files >= 1400 LOC ($lines1, $lines2)"
+if (-not (Test-Path $cog1) -and (Test-Path $reloc)) {
+    Write-Check "1-RELOCATED" "PASS" "Tier A absent from main; ARCHAEOLOGY_RELOCATION.md present"
+} elseif (Test-Path $cog1) {
+    Write-Check "1-RELOCATED" "WARN" "cognitive_extractor.py still on disk (Tier A not removed?)"
 } else {
-    Write-Check "1-LOC" "WARN" "LOC differs from audit (~1455/1492): $lines1, $lines2"
+    Write-Check "1-RELOCATED" "WARN" "Tier A gone but ARCHAEOLOGY_RELOCATION.md missing"
 }
 
 # --- 2. Semantic sandbox import gate (cognitive + grid) ---
@@ -173,10 +165,10 @@ if ($recCall -ge 1 -and $submitCount -eq 0) {
     Write-Check "7-FEEDBACK" "WARN" "record_classification refs: $recordCount; submit_correction call sites: $submitCount"
 }
 
-# --- 8. Dead code file existence ---
+# --- 8. Tier A removed from runtime spine ---
 Write-Host ""
-Write-Host "--- 8. Dead / abandoned files present ---" -ForegroundColor Yellow
-$deadFiles = @(
+Write-Host "--- 8. Tier A files removed (relocated) ---" -ForegroundColor Yellow
+$relocFiles = @(
     "services\photo-vectorizer\cognitive_extractor.py",
     "services\photo-vectorizer\cognitive_extraction_engine.py",
     "services\photo-vectorizer\extract_body_grid.py",
@@ -186,12 +178,17 @@ $deadFiles = @(
     "services\photo-vectorizer\extract_body_grid_v5.py",
     "services\blueprint-import\vectorizer_phase2.py"
 )
-$found = 0
-foreach ($df in $deadFiles) {
+$stillPresent = @()
+foreach ($df in $relocFiles) {
     $p = Join-Path $RepoRoot $df
-    if (Test-Path $p) { $found++; $loc = (Get-Content $p).Count; Write-Host "  exists: $df ($loc lines)" }
+    if (Test-Path $p) { $stillPresent += $df }
 }
-Write-Check "8-DEAD" "PASS" "$found / $($deadFiles.Count) flagged files exist on disk"
+if ($stillPresent.Count -eq 0) {
+    Write-Check "8-RELOC" "PASS" "All $($relocFiles.Count) Tier A paths absent from main repo"
+} else {
+    Write-Check "8-RELOC" "FAIL" "$($stillPresent.Count) Tier A file(s) still on disk"
+    $stillPresent | ForEach-Object { Write-Host "    $_" }
+}
 
 # --- 9. Direct ezdxf bypass (boundary inventory) ---
 Write-Host ""
