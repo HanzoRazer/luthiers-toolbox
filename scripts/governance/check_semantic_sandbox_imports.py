@@ -31,16 +31,8 @@ FORBIDDEN_MODULE_PREFIXES: Tuple[str, ...] = (
     "extract_body_grid",
 )
 
-# Files that may reference themselves / siblings without counting as production coupling.
-ALLOWLIST_RELATIVE: Tuple[str, ...] = (
-    "services/photo-vectorizer/cognitive_extractor.py",
-    "services/photo-vectorizer/cognitive_extraction_engine.py",
-    "services/photo-vectorizer/extract_body_grid.py",
-    "services/photo-vectorizer/extract_body_grid_v2.py",
-    "services/photo-vectorizer/extract_body_grid_v3.py",
-    "services/photo-vectorizer/extract_body_grid_v4.py",
-    "services/photo-vectorizer/extract_body_grid_v5.py",
-)
+# Tier A modules removed from runtime spine (2026-05-20). Any import is a violation.
+ALLOWLIST_RELATIVE: Tuple[str, ...] = ()
 
 IMPORT_LINE = re.compile(r"^\s*(?:from|import)\s+")
 
