@@ -15,6 +15,7 @@ from ...time_estimator_v2 import estimate_cycle_time_v2
 from ...whatif_opt import optimize_feed_stepover
 from ....routers.machines_consolidated_router import get_profile
 from ....cam_core.feeds_speeds import calculate_feed_plan
+from ....core.safety import safety_critical
 
 router = APIRouter(prefix="/opt")
 
@@ -85,6 +86,7 @@ class FeedsSpeedsResponse(BaseModel):
 
 
 @router.post("/feeds-speeds", response_model=FeedsSpeedsResponse)
+@safety_critical
 def calculate_feeds_speeds(body: FeedsSpeedsRequest) -> FeedsSpeedsResponse:
     """Calculate optimal feeds and speeds for tool/material/strategy."""
     tool: Dict[str, Any] = {"id": body.tool_id}

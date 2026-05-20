@@ -28,6 +28,8 @@ from typing import List, Literal, Optional
 
 from pydantic import BaseModel, Field
 
+from app.core.safety import safety_critical
+
 
 # -----------------------------------------------------------------------------
 # Gate Enum
@@ -467,6 +469,7 @@ def generate_slot_toolpath(
 # Preview Integrity Checker (Dev Order 2B)
 # -----------------------------------------------------------------------------
 
+@safety_critical
 def validate_toolpath_integrity(
     toolpaths: List[SlotToolpath],
     request: NutSlotPreviewRequest,

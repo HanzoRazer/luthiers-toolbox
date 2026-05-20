@@ -238,6 +238,7 @@ class BraceCamberRequest(BaseModel):
 # ── Endpoints ─────────────────────────────────────────────────────────────────
 
 @router.post("/generate-gcode")
+@safety_critical
 def generate_gcode(req: RadiusDishRequest) -> PlainTextResponse:
     """
     Generate GRBL G-code for a spherical radius dish.

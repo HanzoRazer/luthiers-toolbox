@@ -220,10 +220,12 @@ class VCarveToolpath:
             warnings=self._warnings,
         )
 
+    @safety_critical
     def generate_gcode(self) -> str:
         """Generate G-code string (convenience method)."""
         return self.generate().gcode
 
+    @safety_critical
     def _generate_gcode(
         self,
         paths: List[MLPath],

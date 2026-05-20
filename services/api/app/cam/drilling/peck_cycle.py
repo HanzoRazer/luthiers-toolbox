@@ -144,6 +144,7 @@ class PeckDrill:
             warnings=self._warnings,
         )
 
+    @safety_critical
     def generate_gcode(self) -> str:
         """Generate G-code string (convenience method)."""
         return self.generate().gcode
