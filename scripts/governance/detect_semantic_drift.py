@@ -20,6 +20,7 @@ import argparse
 import json
 import re
 import sys
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Dict, List, Optional, Set, Tuple
 
@@ -198,9 +199,14 @@ def main():
     parser.add_argument("--json", action="store_true", help="Output in JSON format to stdout")
     parser.add_argument("--json-output", type=str, metavar="PATH", help="Write JSON report to file")
     parser.add_argument("--quiet", action="store_true", help="Suppress human-readable output")
+    parser.add_argument("--include-timestamp", action="store_true", help="Include generated_at timestamp")
     args = parser.parse_args()
 
     results = {
+        "script": "scripts/governance/detect_semantic_drift.py",
+        "passed": True,
+        "severity": "advisory",
+        "generated_at": datetime.now(timezone.utc).isoformat() if args.include_timestamp else None,
         "duplicate_definitions": [],
         "conflicting_meanings": [],
         "missing_registrations": [],

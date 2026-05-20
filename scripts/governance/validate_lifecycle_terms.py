@@ -13,6 +13,7 @@ import argparse
 import json
 import re
 import sys
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Dict, List, Optional, Set
 
@@ -174,6 +175,7 @@ def main():
     parser.add_argument("--json-output", type=str, metavar="PATH", help="Write JSON report to file")
     parser.add_argument("--strict", action="store_true", help="Exit non-zero on any issues")
     parser.add_argument("--quiet", action="store_true", help="Suppress human-readable output")
+    parser.add_argument("--include-timestamp", action="store_true", help="Include generated_at timestamp")
     args = parser.parse_args()
 
     # Load registries
@@ -188,11 +190,16 @@ def main():
     valid_aliases = get_valid_aliases(alias_registry)
 
     results = {
+        "script": "scripts/governance/validate_lifecycle_terms.py",
+        "passed": True,
+        "severity": "warning",
+        "generated_at": datetime.now(timezone.utc).isoformat() if args.include_timestamp else None,
         "canonical_terms_count": len(canonical_terms),
         "valid_aliases_count": len(valid_aliases),
         "python_scan": {},
         "manifest_scan": {},
-        "summary": {}
+        "summary": {},
+        "findings": [],
     }
 
     # Scan Python files (sample key directories)
@@ -217,6 +224,12 @@ def main():
     results["manifest_scan"] = validate_findings(
         manifest_findings, canonical_terms, valid_aliases
     )
+
+    # Build unified findings list
+    for issue in results["python_scan"].get("potential_issues", []):
+        results["findings"].append({"category": "python", "severity": "warning", **issue})
+    for issue in results["manifest_scan"].get("potential_issues", []):
+        results["findings"].append({"category": "manifest", "severity": "warning", **issue})
 
     # Summary
     results["summary"] = {
