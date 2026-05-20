@@ -333,18 +333,18 @@ class HarvestRecord:
             "harvest_timestamp": self.harvest_timestamp,
             "harvest_source": self.harvest_source.value,
             "evidence_categories": {
-                "body_data": asdict(self.body_data),
-                "neck_pocket_data": asdict(self.neck_pocket_data),
-                "neck_system_data": asdict(self.neck_system_data),
-                "fretboard_data": asdict(self.fretboard_data),
-                "headstock_data": asdict(self.headstock_data),
-                "hardware_cavity_data": asdict(self.hardware_cavity_data),
-                "alignment_data": asdict(self.alignment_data),
-                "construction_notes": asdict(self.construction_notes),
+                "body_data": _sanitize_for_json(asdict(self.body_data)),
+                "neck_pocket_data": _sanitize_for_json(asdict(self.neck_pocket_data)),
+                "neck_system_data": _sanitize_for_json(asdict(self.neck_system_data)),
+                "fretboard_data": _sanitize_for_json(asdict(self.fretboard_data)),
+                "headstock_data": _sanitize_for_json(asdict(self.headstock_data)),
+                "hardware_cavity_data": _sanitize_for_json(asdict(self.hardware_cavity_data)),
+                "alignment_data": _sanitize_for_json(asdict(self.alignment_data)),
+                "construction_notes": _sanitize_for_json(asdict(self.construction_notes)),
             },
             "term_normalizations": [t.to_dict() for t in self.term_normalizations],
             "provenance": {
-                "upstream_sources": self.upstream_sources,
+                "upstream_sources": _sanitize_for_json(self.upstream_sources),
                 "calibration_method": self.calibration_method,
                 "phase4_result_id": self.phase4_result_id,
             },
@@ -356,13 +356,13 @@ class HarvestRecord:
             "confidence": {
                 "overall": self.overall_confidence(),
             },
-            "extensions": self.extensions,
+            "extensions": _sanitize_for_json(self.extensions),
         }
 
     def save(self, path: str) -> None:
         """Save record to JSON file."""
         with open(path, 'w') as f:
-            json.dump(self.to_dict(), f, indent=2)
+            json.dump(self.to_dict(), f, indent=2, cls=_EnumSafeEncoder)
 
     @classmethod
     def load(cls, path: str) -> "HarvestRecord":
@@ -393,3 +393,35 @@ class HarvestRecord:
         record.reviewer_notes = review.get("notes", [])
 
         return record
+
+
+def _sanitize_for_json(obj: Any) -> Any:
+    """
+    Recursively convert enum values to strings for JSON serialization.
+
+    Handles ContourCategory and other enum types that may leak through
+    from vectorizer responses when running against local server.
+    """
+    if isinstance(obj, Enum):
+        return obj.value
+    elif isinstance(obj, dict):
+        return {k: _sanitize_for_json(v) for k, v in obj.items()}
+    elif isinstance(obj, (list, tuple)):
+        return [_sanitize_for_json(item) for item in obj]
+    return obj
+
+
+class _EnumSafeEncoder(json.JSONEncoder):
+    """
+    JSON encoder that converts enum values to strings.
+
+    Handles ContourCategory and other enum types that may leak through
+    from vectorizer responses when running against local server.
+
+    Minimal fix for 1B validation serialization failures.
+    """
+
+    def default(self, obj):
+        if isinstance(obj, Enum):
+            return obj.value
+        return super().default(obj)

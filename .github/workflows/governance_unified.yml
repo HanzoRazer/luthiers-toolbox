@@ -1,0 +1,92 @@
+# Unified Governance Gate
+#
+# Runs governance checks via check_all.py with policy support.
+# Part of Governance Execution Alignment Sprint.
+#
+# Current state: WARN MODE (observational)
+# To promote to blocking: change --mode warn to --mode block
+
+name: Unified Governance
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    paths:
+      - "services/api/**"
+      - "scripts/**"
+      - "docs/governance/**"
+      - ".github/workflows/governance_unified.yml"
+  workflow_dispatch:
+
+env:
+  PYTHONUNBUFFERED: "1"
+
+jobs:
+  governance-unified:
+    name: Unified Governance Gate
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Configure git for private repos
+        run: |
+          git config --global url."https://${{ secrets.SG_SPEC_TOKEN }}@github.com/".insteadOf "https://github.com/"
+
+      - name: Install minimal dependencies
+        run: |
+          python -m pip install --upgrade pip
+          # Only install if governance scripts have external deps
+          # Currently check_all.py is stdlib-only
+          if [ -f requirements-governance.txt ]; then
+            pip install -r requirements-governance.txt
+          fi
+
+      - name: Create reports directory
+        run: mkdir -p reports/governance
+
+      - name: Run unified governance checks
+        run: |
+          python scripts/governance/check_all.py \
+            --tier ci \
+            --mode warn \
+            --policy docs/governance/ontology/ontology_ci_policy.json \
+            --strict-policy \
+            --fail-on-missing-active-script \
+            --json-output reports/governance/check_all_ci.json \
+            --verbose
+
+      - name: Upload governance report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: governance-check-all-ci
+          path: reports/governance/check_all_ci.json
+          retention-days: 30
+
+      - name: Summary
+        if: always()
+        run: |
+          if [ -f reports/governance/check_all_ci.json ]; then
+            echo "## Governance Check Results" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            python - <<'PY'
+          import json
+          with open("reports/governance/check_all_ci.json") as f:
+              report = json.load(f)
+          print(f"| Metric | Value |")
+          print(f"|--------|-------|")
+          print(f"| Passed | {report['passed']} |")
+          print(f"| Blocking Failures | {report['failed_blocking']} |")
+          print(f"| Warnings | {report['failed_warning']} |")
+          print(f"| Duration | {report['duration_ms']}ms |")
+          print(f"| Exit Code | {report['exit_code']} |")
+          PY
+            echo "" >> $GITHUB_STEP_SUMMARY
+          fi

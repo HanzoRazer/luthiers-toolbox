@@ -1,0 +1,8 @@
+# Governance CI reports (generated per-run, not committed)
+check_all_*.json
+governance_report_*.json
+*_ci.json
+
+# Keep the directory
+!.gitkeep
+!.gitignore
