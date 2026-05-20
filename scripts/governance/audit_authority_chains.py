@@ -18,6 +18,7 @@ Usage:
 import argparse
 import json
 import sys
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Dict, List, Optional, Set
 
@@ -273,6 +274,7 @@ def main():
     parser.add_argument("--json-output", type=str, metavar="PATH", help="Write JSON report to file")
     parser.add_argument("--strict", action="store_true", help="Exit non-zero on blocking issues")
     parser.add_argument("--quiet", action="store_true", help="Suppress human-readable output")
+    parser.add_argument("--include-timestamp", action="store_true", help="Include generated_at timestamp")
     args = parser.parse_args()
 
     # Load registries
@@ -285,13 +287,18 @@ def main():
     semantic_registry = load_semantic_registry()
 
     results = {
+        "script": "scripts/governance/audit_authority_chains.py",
+        "passed": True,
+        "severity": "blocking",
+        "generated_at": datetime.now(timezone.utc).isoformat() if args.include_timestamp else None,
         "chains_audited": len(authority_registry.get("chains", {})),
         "domains_audited": len(authority_registry.get("domain_ownership", {})),
         "completeness_issues": [],
         "ordering_violations": [],
         "authority_inversion_violations": [],
         "redefinition_violations": [],
-        "summary": {}
+        "summary": {},
+        "findings": [],
     }
 
     # Check completeness
@@ -310,6 +317,16 @@ def main():
     results["redefinition_violations"] = check_downstream_redefinitions(
         authority_registry, term_ownership
     )
+
+    # Build unified findings list
+    for issue in results["completeness_issues"]:
+        results["findings"].append({"category": "completeness", "message": issue, "severity": "error"})
+    for v in results["ordering_violations"]:
+        results["findings"].append({"category": "ordering", **v})
+    for v in results["authority_inversion_violations"]:
+        results["findings"].append({"category": "authority_inversion", **v})
+    for v in results["redefinition_violations"]:
+        results["findings"].append({"category": "redefinition", **v})
 
     # Summary
     results["summary"] = {
