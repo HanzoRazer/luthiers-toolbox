@@ -1,5 +1,5 @@
 {
-  "schema_version": "cbsp21_patch_input_v1",
+  "schema": "cbsp21_patch_input_v1",
   "patch_id": "BUNDLE_32.4.18",
   "title": "Bundle 32.4.18 — Reset Tips Button (localStorage cleanup)",
   "intent": "Add a 'Reset tips' button in the toolbar that clears the localStorage cooldown key, allowing operators to manually re-enable onboarding hints. Provides explicit user control over tip visibility.",

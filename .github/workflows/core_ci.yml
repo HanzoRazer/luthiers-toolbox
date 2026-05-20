@@ -20,6 +20,7 @@ jobs:
         with:
           python-version: "3.11"
       - name: Configure git for private repos
+        if: ${{ secrets.SG_SPEC_TOKEN != '' }}
         run: |
           git config --global url."https://${{ secrets.SG_SPEC_TOKEN }}@github.com/".insteadOf "https://github.com/"
       - name: Install API dependencies
@@ -64,6 +65,7 @@ jobs:
         with:
           python-version: "3.11"
       - name: Configure git for private repos
+        if: ${{ secrets.SG_SPEC_TOKEN != '' }}
         run: |
           git config --global url."https://${{ secrets.SG_SPEC_TOKEN }}@github.com/".insteadOf "https://github.com/"
       - name: Install API dependencies
