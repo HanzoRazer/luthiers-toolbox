@@ -1,9 +1,9 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "title": "Ontology CI Policy",
-  "version": "1.0.0",
-  "date": "2026-05-16",
-  "description": "Machine-readable ontology governance enforcement policy",
+  "version": "1.1.0",
+  "date": "2026-05-19",
+  "description": "Machine-readable ontology governance enforcement policy. Consumed by scripts/governance/check_all.py.",
   "enforcement_phase": 2,
   "enforcement_phase_description": "Phase 1-2: Advisory and warnings active, blocking for authority violations only",
   "checks": {
@@ -12,43 +12,52 @@
       "description": "Verify authority chain integrity and ownership",
       "severity": "blocking",
       "tier": "ci",
+      "active": true,
+      "missing_script_behavior": "fail",
+      "owner": "ontology",
       "exit_codes": {
         "pass": 0,
         "authority_violation": 1
-      },
-      "active": true
+      }
     },
     "validate_lifecycle_terms": {
       "script": "scripts/governance/validate_lifecycle_terms.py",
       "description": "Validate lifecycle terms against canonical registry",
       "severity": "warning",
       "tier": "ci",
+      "active": true,
+      "missing_script_behavior": "fail",
+      "owner": "ontology",
       "exit_codes": {
         "pass": 0,
         "violations_found": 0
-      },
-      "active": true
+      }
     },
     "detect_semantic_drift": {
       "script": "scripts/governance/detect_semantic_drift.py",
       "description": "Detect semantic drift and vocabulary conflicts",
       "severity": "advisory",
       "tier": "nightly",
+      "active": true,
+      "missing_script_behavior": "fail",
+      "owner": "ontology",
       "exit_codes": {
         "pass": 0,
         "drift_found": 0
-      },
-      "active": true
+      }
     },
     "list_semantic_owners": {
       "script": "scripts/governance/list_semantic_owners.py",
-      "description": "List semantic term ownership",
+      "description": "List semantic term ownership (manual reporting utility)",
       "severity": "informational",
       "tier": "manual",
+      "active": false,
+      "missing_script_behavior": "ignore",
+      "owner": "ontology",
+      "status_note": "Manual utility, not run in CI",
       "exit_codes": {
         "pass": 0
-      },
-      "active": false
+      }
     }
   },
   "severity_definitions": {
