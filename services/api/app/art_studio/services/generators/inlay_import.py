@@ -30,11 +30,9 @@ from .inlay_geometry import (
 # DXF parser — ported from V2, handles 4 entity types
 # ---------------------------------------------------------------------------
 
-def parse_dxf(text: str) -> GeometryCollection:
-    """Parse a DXF R12 string into a GeometryCollection of polylines/circles.
 
-    Handles LWPOLYLINE, POLYLINE+VERTEX, CIRCLE, ARC.
-    """
+def _tokenize_dxf_pairs(text: str) -> List[Tuple[int, str]]:
+    """Parse DXF text into (code, value) pairs."""
     lines = text.replace("\r", "").split("\n")
     pairs: List[Tuple[int, str]] = []
     i = 0
@@ -47,8 +45,11 @@ def parse_dxf(text: str) -> GeometryCollection:
         val = lines[i + 1].strip()
         pairs.append((code, val))
         i += 2
+    return pairs
 
-    # Extract entities
+
+def _extract_entities_from_pairs(pairs: List[Tuple[int, str]]) -> List[Dict[str, Any]]:
+    """Extract raw entity dictionaries from DXF code/value pairs."""
     raw_entities: List[Dict[str, Any]] = []
     in_entities = False
     cur: Optional[Dict[str, Any]] = None
@@ -85,9 +86,14 @@ def parse_dxf(text: str) -> GeometryCollection:
             elif code == 70:
                 cur["flags"] = int(val)
 
-    # Merge VERTEX entities into preceding POLYLINE
+    return raw_entities
+
+
+def _merge_polyline_vertices(raw_entities: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+    """Merge VERTEX entities into their preceding POLYLINE."""
     merged: List[Dict[str, Any]] = []
     poly: Optional[Dict[str, Any]] = None
+
     for ent in raw_entities:
         if ent["type"] == "POLYLINE":
             poly = {"type": "POLYLINE", "pts": [], "flags": ent.get("flags", 0)}
@@ -103,9 +109,18 @@ def parse_dxf(text: str) -> GeometryCollection:
                 poly = None
             merged.append(ent)
 
-    # Compute bounds
+    return merged
+
+
+def _compute_entity_bounds(
+    entities: List[Dict[str, Any]]
+) -> Tuple[float, float, float, float, float, float]:
+    """Compute bounding box and dimensions from entities.
+
+    Returns (min_x, min_y, max_x, max_y, width, height).
+    """
     all_pts: List[Pt] = []
-    for ent in merged:
+    for ent in entities:
         all_pts.extend(ent.get("pts", []))
         if ent["type"] == "CIRCLE" and ent.get("pts"):
             cx, cy = ent["pts"][0]
@@ -113,64 +128,106 @@ def parse_dxf(text: str) -> GeometryCollection:
             all_pts.extend([(cx - r, cy - r), (cx + r, cy + r)])
 
     if not all_pts:
-        return GeometryCollection()
+        return (0.0, 0.0, 100.0, 100.0, 100.0, 100.0)
 
     min_x = min(p[0] for p in all_pts)
     min_y = min(p[1] for p in all_pts)
     max_x = max(p[0] for p in all_pts)
     max_y = max(p[1] for p in all_pts)
-    W = max_x - min_x or 100.0
-    H = max_y - min_y or 100.0
+    width = max_x - min_x or 100.0
+    height = max_y - min_y or 100.0
 
-    # Convert to GeometryElements (translate to origin, flip Y for SVG)
+    return (min_x, min_y, max_x, max_y, width, height)
+
+
+def _arc_to_polyline_points(
+    cx: float, cy: float, r: float, start_angle: float, end_angle: float,
+    min_x: float, max_y: float, min_y: float
+) -> List[Pt]:
+    """Convert arc entity to polyline points with coordinate transform."""
+    sa = math.radians(start_angle)
+    ea = math.radians(end_angle)
+    if ea <= sa:
+        ea += 2 * math.pi
+    steps = max(8, int((ea - sa) / (math.pi / 18)))
+    pts: List[Pt] = []
+    for s in range(steps + 1):
+        t = sa + (ea - sa) * s / steps
+        pts.append((
+            cx + r * math.cos(t) - min_x,
+            (max_y - (cy + r * math.sin(t))) + min_y,
+        ))
+    return pts
+
+
+def _entity_to_element(
+    ent: Dict[str, Any], min_x: float, min_y: float, max_y: float
+) -> Optional[GeometryElement]:
+    """Convert a single DXF entity to a GeometryElement."""
+    etype = ent["type"]
+
+    if etype in ("LWPOLYLINE", "POLYLINE"):
+        pts = [(x - min_x, (max_y - y) + min_y) for x, y in ent.get("pts", [])]
+        if len(pts) < 2:
+            return None
+        closed = ent.get("flags", 0) & 1 == 1
+        return GeometryElement(
+            kind="polygon" if closed else "polyline",
+            points=pts,
+            stroke_width=0.25,
+        )
+
+    if etype == "CIRCLE" and ent.get("pts"):
+        cx, cy = ent["pts"][0]
+        return GeometryElement(
+            kind="circle",
+            points=[(cx - min_x, (max_y - cy) + min_y)],
+            radius=ent.get("radius", 0),
+            stroke_width=0.25,
+        )
+
+    if etype == "ARC" and ent.get("pts"):
+        cx, cy = ent["pts"][0]
+        pts = _arc_to_polyline_points(
+            cx, cy,
+            ent.get("radius", 0),
+            ent.get("start_angle", 0),
+            ent.get("end_angle", 360),
+            min_x, max_y, min_y
+        )
+        return GeometryElement(
+            kind="polyline",
+            points=pts,
+            stroke_width=0.25,
+        )
+
+    return None
+
+
+def parse_dxf(text: str) -> GeometryCollection:
+    """Parse a DXF R12 string into a GeometryCollection of polylines/circles.
+
+    Handles LWPOLYLINE, POLYLINE+VERTEX, CIRCLE, ARC.
+    """
+    pairs = _tokenize_dxf_pairs(text)
+    raw_entities = _extract_entities_from_pairs(pairs)
+    merged = _merge_polyline_vertices(raw_entities)
+
+    if not merged:
+        return GeometryCollection()
+
+    min_x, min_y, max_x, max_y, width, height = _compute_entity_bounds(merged)
+
     elements: List[GeometryElement] = []
     for ent in merged:
-        etype = ent["type"]
-        if etype in ("LWPOLYLINE", "POLYLINE"):
-            pts = [
-                (x - min_x, (max_y - y) + min_y) for x, y in ent.get("pts", [])
-            ]
-            if len(pts) < 2:
-                continue
-            closed = ent.get("flags", 0) & 1 == 1
-            elements.append(GeometryElement(
-                kind="polygon" if closed else "polyline",
-                points=pts,
-                stroke_width=0.25,
-            ))
-        elif etype == "CIRCLE" and ent.get("pts"):
-            cx, cy = ent["pts"][0]
-            elements.append(GeometryElement(
-                kind="circle",
-                points=[(cx - min_x, (max_y - cy) + min_y)],
-                radius=ent.get("radius", 0),
-                stroke_width=0.25,
-            ))
-        elif etype == "ARC" and ent.get("pts"):
-            cx, cy = ent["pts"][0]
-            r = ent.get("radius", 0)
-            sa = math.radians(ent.get("start_angle", 0))
-            ea = math.radians(ent.get("end_angle", 360))
-            if ea <= sa:
-                ea += 2 * math.pi
-            steps = max(8, int((ea - sa) / (math.pi / 18)))
-            pts: List[Pt] = []
-            for s in range(steps + 1):
-                t = sa + (ea - sa) * s / steps
-                pts.append((
-                    cx + r * math.cos(t) - min_x,
-                    (max_y - (cy + r * math.sin(t))) + min_y,
-                ))
-            elements.append(GeometryElement(
-                kind="polyline",
-                points=pts,
-                stroke_width=0.25,
-            ))
+        elem = _entity_to_element(ent, min_x, min_y, max_y)
+        if elem is not None:
+            elements.append(elem)
 
     return GeometryCollection(
         elements=elements,
-        width_mm=W,
-        height_mm=H,
+        width_mm=width,
+        height_mm=height,
     )
 
 

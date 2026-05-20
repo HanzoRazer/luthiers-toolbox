@@ -177,21 +177,15 @@ def bom_to_csv(req: BomRequest, design_name: str = "Untitled Design") -> str:
 
 
 # ─────────────────────────────────────────────────────────────────────────────
-# Manufacturing Checks
+# Manufacturing Checks - Individual check functions
 # ─────────────────────────────────────────────────────────────────────────────
 
-def run_manufacturing_checks(req: MfgCheckRequest) -> MfgCheckResponse:
-    """Run all 6 manufacturing intelligence checks."""
-    num_segs = req.num_segs
-    sym_mode = req.sym_mode
-    grid = req.grid
-    ring_active = req.ring_active
-    show_tabs = req.show_tabs
+
+def _check_arc_length(
+    num_segs: int, grid: Dict[str, str], ring_active: List[bool]
+) -> List[MfgFlag]:
+    """Check 1: Arc length too short (fragile inlay)."""
     seg_ang = 360.0 / num_segs
-
-    flags: List[MfgFlag] = []
-
-    # Check 1: Arc length too short (fragile inlay)
     short_arc_cells: List[MfgFlagCellRef] = []
     narrow_arc_cells: List[MfgFlagCellRef] = []
 
@@ -215,6 +209,7 @@ def run_manufacturing_checks(req: MfgCheckRequest) -> MfgCheckResponse:
                     ri=ri, si=si, key=key, label=rd.label, val=min_arc
                 ))
 
+    flags: List[MfgFlag] = []
     if short_arc_cells:
         flags.append(MfgFlag(
             id="short-arc", sev=MfgSeverity.ERROR,
@@ -234,8 +229,11 @@ def run_manufacturing_checks(req: MfgCheckRequest) -> MfgCheckResponse:
             cells=narrow_arc_cells,
             fix="Consider reducing segment count for these rings.",
         ))
+    return flags
 
-    # Check 2: Ring depth too shallow
+
+def _check_ring_depth(grid: Dict[str, str], ring_active: List[bool]) -> List[MfgFlag]:
+    """Check 2: Ring depth too shallow."""
     shallow_errors: List[Dict] = []
     shallow_warns: List[Dict] = []
 
@@ -251,6 +249,7 @@ def run_manufacturing_checks(req: MfgCheckRequest) -> MfgCheckResponse:
         elif depth < MFG_THRESHOLDS["NARROW_DEPTH"]:
             shallow_warns.append({"ri": ri, "label": rd.label, "depth": depth})
 
+    flags: List[MfgFlag] = []
     if shallow_errors:
         labels = ", ".join(f'{s["label"]} ({s["depth"]:.3f}")' for s in shallow_errors)
         flags.append(MfgFlag(
@@ -268,38 +267,59 @@ def run_manufacturing_checks(req: MfgCheckRequest) -> MfgCheckResponse:
             desc=(f'{labels} — depth between {MFG_THRESHOLDS["FRAGILE_DEPTH"]}" and '
                   f'{MFG_THRESHOLDS["NARROW_DEPTH"]}".'),
         ))
+    return flags
 
-    # Check 3: Extension tab arc width
-    if show_tabs:
-        for ri, rd in enumerate(RING_DEFS):
-            if not rd.has_tabs or not ring_active[ri]:
-                continue
-            mid_r = (rd.r1 + rd.r2) / 2
-            tab_arc = _arc_inches(mid_r, rd.tab_ang_width)
-            if tab_arc < MFG_THRESHOLDS["THIN_TAB_ARC"]:
-                flags.append(MfgFlag(
-                    id=f"thin-tab-{ri}", sev=MfgSeverity.WARNING,
-                    title="Extension tabs may be too narrow",
-                    desc=(f'Main Channel tabs span {tab_arc:.3f}" arc. '
-                          f"Consider disabling tabs or reducing segment count."),
-                    fix="Disable extension tabs or reduce segment count.",
-                ))
 
-    # Check 4: Mismatched purfling
+def _check_tab_width(
+    num_segs: int, show_tabs: bool, ring_active: List[bool]
+) -> List[MfgFlag]:
+    """Check 3: Extension tab arc width."""
+    if not show_tabs:
+        return []
+
+    seg_ang = 360.0 / num_segs
+    flags: List[MfgFlag] = []
+
+    for ri, rd in enumerate(RING_DEFS):
+        if not rd.has_tabs or not ring_active[ri]:
+            continue
+        mid_r = (rd.r1 + rd.r2) / 2
+        tab_arc = _arc_inches(mid_r, rd.tab_ang_width)
+        if tab_arc < MFG_THRESHOLDS["THIN_TAB_ARC"]:
+            flags.append(MfgFlag(
+                id=f"thin-tab-{ri}", sev=MfgSeverity.WARNING,
+                title="Extension tabs may be too narrow",
+                desc=(f'Main Channel tabs span {tab_arc:.3f}" arc. '
+                      f"Consider disabling tabs or reducing segment count."),
+                fix="Disable extension tabs or reduce segment count.",
+            ))
+    return flags
+
+
+def _check_purfling_mismatch(grid: Dict[str, str], ring_active: List[bool]) -> List[MfgFlag]:
+    """Check 4: Mismatched purfling (main channel filled but purfling empty)."""
     main_filled = any(k.startswith("2-") and grid.get(k) for k in grid)
-    if main_filled:
-        for ri in (1, 3):
-            if not ring_active[ri]:
-                continue
-            has_fill = any(k.startswith(f"{ri}-") and grid.get(k) for k in grid)
-            if not has_fill:
-                flags.append(MfgFlag(
-                    id=f"empty-purfling-{ri}", sev=MfgSeverity.INFO,
-                    title=f"{RING_DEFS[ri].label} is empty",
-                    desc=(f"Main Channel is filled but {RING_DEFS[ri].label} has no material."),
-                ))
+    if not main_filled:
+        return []
 
-    # Check 5: Segment count / symmetry mismatch
+    flags: List[MfgFlag] = []
+    for ri in (1, 3):
+        if not ring_active[ri]:
+            continue
+        has_fill = any(k.startswith(f"{ri}-") and grid.get(k) for k in grid)
+        if not has_fill:
+            flags.append(MfgFlag(
+                id=f"empty-purfling-{ri}", sev=MfgSeverity.INFO,
+                title=f"{RING_DEFS[ri].label} is empty",
+                desc=(f"Main Channel is filled but {RING_DEFS[ri].label} has no material."),
+            ))
+    return flags
+
+
+def _check_symmetry_mismatch(num_segs: int, sym_mode: SymmetryMode) -> List[MfgFlag]:
+    """Check 5: Segment count / symmetry mismatch."""
+    flags: List[MfgFlag] = []
+
     if sym_mode == SymmetryMode.QUADRANT and num_segs % 4 != 0:
         flags.append(MfgFlag(
             id="sym-mismatch", sev=MfgSeverity.WARNING,
@@ -312,23 +332,35 @@ def run_manufacturing_checks(req: MfgCheckRequest) -> MfgCheckResponse:
             title="Odd segment count with bilateral symmetry",
             desc=f"Bilateral symmetry on {num_segs} segments leaves one center segment unmirrored.",
         ))
+    return flags
 
-    # Check 6: High segment count outer ring density
-    if num_segs > MFG_THRESHOLDS["MAX_SEGS_OUTER"]:
-        outer_arc = _arc_inches(320, seg_ang)
-        if outer_arc < MFG_THRESHOLDS["NARROW_ARC"]:
-            flags.append(MfgFlag(
-                id="dense-outer", sev=MfgSeverity.WARNING,
-                title="Outer ring pieces very dense",
-                desc=(f"At {num_segs} segments, outer ring pieces are only {outer_arc:.3f}\" wide."),
-            ))
 
-    # Score computation
+def _check_outer_density(num_segs: int) -> List[MfgFlag]:
+    """Check 6: High segment count outer ring density."""
+    if num_segs <= MFG_THRESHOLDS["MAX_SEGS_OUTER"]:
+        return []
+
+    seg_ang = 360.0 / num_segs
+    outer_arc = _arc_inches(320, seg_ang)
+    if outer_arc >= MFG_THRESHOLDS["NARROW_ARC"]:
+        return []
+
+    return [MfgFlag(
+        id="dense-outer", sev=MfgSeverity.WARNING,
+        title="Outer ring pieces very dense",
+        desc=(f"At {num_segs} segments, outer ring pieces are only {outer_arc:.3f}\" wide."),
+    )]
+
+
+def _compute_mfg_score(flags: List[MfgFlag], filled_cells: int) -> tuple:
+    """Compute manufacturing score from flags.
+
+    Returns (score, score_class, error_count, warning_count, info_count, passing_count).
+    """
     errors = [f for f in flags if f.sev == MfgSeverity.ERROR]
     warnings = [f for f in flags if f.sev == MfgSeverity.WARNING]
     infos = [f for f in flags if f.sev == MfgSeverity.INFO]
 
-    filled_cells = sum(1 for k in grid if grid.get(k))
     score = 100
     score -= len(errors) * 20
     score -= len(warnings) * 8
@@ -347,13 +379,37 @@ def run_manufacturing_checks(req: MfgCheckRequest) -> MfgCheckResponse:
     total_checks = 6
     passing = total_checks - len(errors) - len(warnings) - len(infos)
 
+    return (score, score_class, len(errors), len(warnings), len(infos), max(0, passing))
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Manufacturing Checks - Main orchestrator
+# ─────────────────────────────────────────────────────────────────────────────
+
+
+def run_manufacturing_checks(req: MfgCheckRequest) -> MfgCheckResponse:
+    """Run all 6 manufacturing intelligence checks."""
+    flags: List[MfgFlag] = []
+
+    # Run each check
+    flags.extend(_check_arc_length(req.num_segs, req.grid, req.ring_active))
+    flags.extend(_check_ring_depth(req.grid, req.ring_active))
+    flags.extend(_check_tab_width(req.num_segs, req.show_tabs, req.ring_active))
+    flags.extend(_check_purfling_mismatch(req.grid, req.ring_active))
+    flags.extend(_check_symmetry_mismatch(req.num_segs, req.sym_mode))
+    flags.extend(_check_outer_density(req.num_segs))
+
+    # Compute score
+    filled_cells = sum(1 for k in req.grid if req.grid.get(k))
+    score, score_class, errors, warnings, infos, passing = _compute_mfg_score(flags, filled_cells)
+
     return MfgCheckResponse(
         score=score,
         score_class=score_class,
-        error_count=len(errors),
-        warning_count=len(warnings),
-        info_count=len(infos),
-        passing_count=max(0, passing),
+        error_count=errors,
+        warning_count=warnings,
+        info_count=infos,
+        passing_count=passing,
         flags=flags,
     )
 
