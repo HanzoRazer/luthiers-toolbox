@@ -1787,6 +1787,85 @@ Commits: 04735bd4, 72bfffc9, 059cf5b0
 
 ---
 
+## Deferred UX Optimization / Local Polish
+
+**Date:** 2026-05-14  
+**Context:** Dev Orders 44–52 (Snapshot Exchange)
+
+The Snapshot Exchange subsystem reached functional and architectural sufficiency during Dev Orders 44–52.
+
+Further work involving:
+- spacing refinement
+- typography tuning
+- micro-interaction polish
+- visual density optimization
+- hierarchy fine-tuning
+- local UI consistency adjustments
+
+is intentionally deferred.
+
+**Reason:**
+Further refinement currently provides diminishing architectural value and risks local optimization churn.
+
+**Future UX refinement should occur only:**
+- after new architectural capabilities exist, or
+- during a dedicated design-system consolidation phase.
+
+**Reference:** [ARCHITECTURAL_BOUNDARIES.md](docs/architecture/ARCHITECTURAL_BOUNDARIES.md)
+
+---
+
+## Canonical Reconciliation Phase
+
+**Date:** 2026-05-16  
+**Context:** Dev Order 56 (Canonical Reconciliation Layer Foundation)
+
+The repository is transitioning from remediation/stabilization into canonical ontology reconciliation.
+
+### Phase Purpose
+
+The repository has reached the stage where:
+- architecture exists
+- governance exists
+- runtime systems exist
+- experimental systems exist
+
+but semantic convergence is not yet operationalized.
+
+The primary architectural risk is now **parallel ontology drift**.
+
+### Future Implementation Priorities
+
+| Priority | Area |
+|----------|------|
+| 1 | Vocabulary normalization |
+| 2 | Authority mapping |
+| 3 | Runtime cohesion |
+| 4 | Provenance standardization |
+| 5 | Semantic drift detection |
+| 6 | Shared lifecycle discipline |
+
+### Core Constraints
+
+1. AI assistance is advisory only
+2. Human authority ratifies canonical ontology
+3. No subsystem may independently redefine canonical meaning
+4. Execution consumes intent; execution does not redefine intent
+5. Runtime systems consume ontology; runtime systems do not define ontology
+
+### Reconciliation Infrastructure
+
+- [CANONICAL_ONTOLOGY_VOCABULARY.md](docs/governance/CANONICAL_ONTOLOGY_VOCABULARY.md) — vocabulary definitions
+- [CANONICAL_AUTHORITY_MAP.md](docs/governance/CANONICAL_AUTHORITY_MAP.md) — ownership declarations
+- [ONTOLOGY_RECONCILIATION_WORKFLOW.md](docs/governance/ONTOLOGY_RECONCILIATION_WORKFLOW.md) — ratification process
+- [ONTOLOGY_DRIFT_CLASSIFICATIONS.md](docs/governance/ONTOLOGY_DRIFT_CLASSIFICATIONS.md) — drift detection
+
+### Strategic Guidance
+
+The repository should prioritize **semantic coherence over rapid feature proliferation**.
+
+---
+
 ## ARCHITECTURAL DECISIONS LOG
 
 | Date | Decision | Rationale |

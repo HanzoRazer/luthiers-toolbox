@@ -1,55 +1,57 @@
 """
 Mock CAD Kernel Adapter.
 
-Sprint: MRP-5H
+Sprint: MRP-5H, MRP-5K
 Status: PROTOTYPE
 
 Provides a mock kernel adapter for testing topology construction
 without requiring a real CAD kernel. Records operations for
 verification in tests.
+
+MRP-5K: Now implements KernelAdapterInterface formally.
 """
 
 from dataclasses import dataclass, field
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional
 
-from ..contracts import Point3D
-
-
-@dataclass
-class MockShellHandle:
-    """Mock handle representing a kernel shell object."""
-
-    handle_id: str
-    shell_type: str
-    points: List[Point3D] = field(default_factory=list)
-    is_closed: bool = True
-    is_manifold: bool = True
-    bounding_box: Optional[Tuple[Point3D, Point3D]] = None
+from .interface import (
+    AdapterBoundingBox,
+    AdapterErrorCode,
+    AdapterExportResult,
+    AdapterGeometryHandle,
+    AdapterOperationType,
+    AdapterPoint3D,
+    AdapterResult,
+    AdapterValidationResult,
+    BaseKernelAdapter,
+)
 
 
 @dataclass
 class OperationRecord:
     """Record of a kernel operation for test verification."""
 
-    operation: str
+    operation: AdapterOperationType
     args: Dict[str, Any] = field(default_factory=dict)
     result: Any = None
 
 
-class MockKernelAdapter:
+class MockKernelAdapter(BaseKernelAdapter):
     """
     Mock CAD kernel adapter for testing.
 
-    Records all operations and returns configurable results.
-    Can be configured to fail specific operations for error path testing.
+    Implements KernelAdapterInterface with configurable behavior.
+    Records all operations for test verification.
     """
 
     def __init__(
         self,
         should_fail_create: bool = False,
         should_fail_extrude: bool = False,
+        should_fail_loft: bool = False,
         should_fail_closure: bool = False,
         should_fail_manifold: bool = False,
+        should_fail_export: bool = False,
     ):
         """
         Initialize the mock adapter.
@@ -57,39 +59,52 @@ class MockKernelAdapter:
         Args:
             should_fail_create: If True, create_face_from_points fails
             should_fail_extrude: If True, extrude_face fails
+            should_fail_loft: If True, loft_profiles fails
             should_fail_closure: If True, validate_closed returns False
             should_fail_manifold: If True, validate_manifold returns False
+            should_fail_export: If True, export_step fails
         """
+        super().__init__(adapter_id="mock", kernel_name="mock")
+
         self._should_fail_create = should_fail_create
         self._should_fail_extrude = should_fail_extrude
+        self._should_fail_loft = should_fail_loft
         self._should_fail_closure = should_fail_closure
         self._should_fail_manifold = should_fail_manifold
+        self._should_fail_export = should_fail_export
 
         self._operations: List[OperationRecord] = []
-        self._handle_counter = 0
+        self._geometry_store: Dict[str, Dict[str, Any]] = {}
+
+    @property
+    def is_available(self) -> bool:
+        """Mock kernel is always available."""
+        return True
 
     def create_face_from_points(
-        self, points: List[Point3D]
-    ) -> MockShellHandle:
-        """
-        Create a mock face from points.
-
-        Records the operation and returns a mock handle.
-        """
-        self._handle_counter += 1
-        handle_id = f"face_{self._handle_counter}"
+        self,
+        points: List[AdapterPoint3D],
+    ) -> AdapterResult:
+        """Create a mock face from points."""
+        handle_id = self._next_handle_id("face")
 
         record = OperationRecord(
-            operation="create_face_from_points",
+            operation=AdapterOperationType.CREATE_FACE,
             args={"point_count": len(points)},
         )
 
         if self._should_fail_create:
-            record.result = None
+            record.result = "FAILED"
             self._operations.append(record)
-            raise RuntimeError("Mock: create_face_from_points failed")
+            return AdapterResult(
+                success=False,
+                operation=AdapterOperationType.CREATE_FACE,
+                error_code=AdapterErrorCode.OPERATION_FAILED,
+                error_message="Mock: create_face_from_points configured to fail",
+            )
 
         # Calculate bounding box
+        bbox = None
         if points:
             min_x = min(p.x for p in points)
             max_x = max(p.x for p in points)
@@ -98,169 +113,268 @@ class MockKernelAdapter:
             min_z = min(p.z for p in points)
             max_z = max(p.z for p in points)
 
-            bbox = (
-                Point3D(min_x, min_y, min_z),
-                Point3D(max_x, max_y, max_z),
+            bbox = AdapterBoundingBox(
+                min_point=AdapterPoint3D(min_x, min_y, min_z),
+                max_point=AdapterPoint3D(max_x, max_y, max_z),
             )
-        else:
-            bbox = None
 
-        handle = MockShellHandle(
+        handle = AdapterGeometryHandle(
             handle_id=handle_id,
-            shell_type="face",
-            points=points.copy(),
-            bounding_box=bbox,
+            geometry_type="face",
         )
 
-        record.result = handle
+        # Store geometry data internally
+        self._geometry_store[handle_id] = {
+            "points": [p.to_tuple() for p in points],
+            "bbox": bbox,
+            "is_closed": not self._should_fail_closure,
+            "is_manifold": not self._should_fail_manifold,
+        }
+
+        record.result = handle_id
         self._operations.append(record)
 
-        return handle
+        return AdapterResult(
+            success=True,
+            operation=AdapterOperationType.CREATE_FACE,
+            handle=handle,
+        )
 
     def extrude_face(
         self,
-        face_handle: MockShellHandle,
-        direction: Point3D,
+        face_handle: AdapterGeometryHandle,
+        direction: AdapterPoint3D,
         distance: float,
-    ) -> MockShellHandle:
-        """
-        Extrude a mock face to create a solid.
-
-        Records the operation and returns a mock solid handle.
-        """
-        self._handle_counter += 1
-        handle_id = f"solid_{self._handle_counter}"
+    ) -> AdapterResult:
+        """Extrude a mock face to create a solid."""
+        handle_id = self._next_handle_id("solid")
 
         record = OperationRecord(
-            operation="extrude_face",
+            operation=AdapterOperationType.EXTRUDE,
             args={
                 "face_handle_id": face_handle.handle_id,
-                "direction": (direction.x, direction.y, direction.z),
+                "direction": direction.to_tuple(),
                 "distance": distance,
             },
         )
 
         if self._should_fail_extrude:
-            record.result = None
+            record.result = "FAILED"
             self._operations.append(record)
-            raise RuntimeError("Mock: extrude_face failed")
+            return AdapterResult(
+                success=False,
+                operation=AdapterOperationType.EXTRUDE,
+                error_code=AdapterErrorCode.OPERATION_FAILED,
+                error_message="Mock: extrude_face configured to fail",
+            )
+
+        # Get source face data
+        face_data = self._geometry_store.get(face_handle.handle_id, {})
+        source_bbox = face_data.get("bbox")
 
         # Update bounding box for extrusion
         bbox = None
-        if face_handle.bounding_box:
-            min_pt, max_pt = face_handle.bounding_box
+        if source_bbox:
+            min_pt = source_bbox.min_point
+            max_pt = source_bbox.max_point
 
-            # Extend bounding box in extrusion direction
-            new_min = Point3D(
+            new_min = AdapterPoint3D(
                 min_pt.x + min(0, direction.x * distance),
                 min_pt.y + min(0, direction.y * distance),
                 min_pt.z + min(0, direction.z * distance),
             )
-            new_max = Point3D(
+            new_max = AdapterPoint3D(
                 max_pt.x + max(0, direction.x * distance),
                 max_pt.y + max(0, direction.y * distance),
                 max_pt.z + max(0, direction.z * distance),
             )
-            bbox = (new_min, new_max)
+            bbox = AdapterBoundingBox(min_point=new_min, max_point=new_max)
 
-        handle = MockShellHandle(
+        handle = AdapterGeometryHandle(
             handle_id=handle_id,
-            shell_type="solid",
-            points=face_handle.points.copy(),
-            is_closed=not self._should_fail_closure,
-            is_manifold=not self._should_fail_manifold,
-            bounding_box=bbox,
+            geometry_type="solid",
         )
 
-        record.result = handle
+        self._geometry_store[handle_id] = {
+            "source": face_handle.handle_id,
+            "bbox": bbox,
+            "is_closed": not self._should_fail_closure,
+            "is_manifold": not self._should_fail_manifold,
+        }
+
+        record.result = handle_id
         self._operations.append(record)
 
-        return handle
+        return AdapterResult(
+            success=True,
+            operation=AdapterOperationType.EXTRUDE,
+            handle=handle,
+        )
 
-    def validate_closed(self, shell_handle: MockShellHandle) -> bool:
-        """Check if shell is closed (mock always returns configured value)."""
+    def loft_profiles(
+        self,
+        profile_handles: List[AdapterGeometryHandle],
+    ) -> AdapterResult:
+        """Loft between multiple profile faces."""
+        handle_id = self._next_handle_id("loft")
+
         record = OperationRecord(
-            operation="validate_closed",
-            args={"handle_id": shell_handle.handle_id},
-            result=shell_handle.is_closed,
+            operation=AdapterOperationType.LOFT,
+            args={"profile_count": len(profile_handles)},
         )
+
+        if self._should_fail_loft:
+            record.result = "FAILED"
+            self._operations.append(record)
+            return AdapterResult(
+                success=False,
+                operation=AdapterOperationType.LOFT,
+                error_code=AdapterErrorCode.OPERATION_FAILED,
+                error_message="Mock: loft_profiles configured to fail",
+            )
+
+        if len(profile_handles) < 2:
+            record.result = "FAILED"
+            self._operations.append(record)
+            return AdapterResult(
+                success=False,
+                operation=AdapterOperationType.LOFT,
+                error_code=AdapterErrorCode.INVALID_INPUT,
+                error_message="Loft requires at least 2 profiles",
+            )
+
+        handle = AdapterGeometryHandle(
+            handle_id=handle_id,
+            geometry_type="solid",
+        )
+
+        self._geometry_store[handle_id] = {
+            "profiles": [h.handle_id for h in profile_handles],
+            "is_closed": not self._should_fail_closure,
+            "is_manifold": not self._should_fail_manifold,
+        }
+
+        record.result = handle_id
         self._operations.append(record)
 
-        return shell_handle.is_closed
+        return AdapterResult(
+            success=True,
+            operation=AdapterOperationType.LOFT,
+            handle=handle,
+        )
 
-    def validate_manifold(self, shell_handle: MockShellHandle) -> bool:
-        """Check if shell is manifold (mock always returns configured value)."""
+    def validate_closed(
+        self,
+        geometry_handle: AdapterGeometryHandle,
+    ) -> AdapterValidationResult:
+        """Check if geometry is closed."""
+        geom_data = self._geometry_store.get(geometry_handle.handle_id, {})
+        is_closed = geom_data.get("is_closed", True)
+
         record = OperationRecord(
-            operation="validate_manifold",
-            args={"handle_id": shell_handle.handle_id},
-            result=shell_handle.is_manifold,
+            operation=AdapterOperationType.VALIDATE_CLOSED,
+            args={"handle_id": geometry_handle.handle_id},
+            result=is_closed,
         )
         self._operations.append(record)
 
-        return shell_handle.is_manifold
+        return AdapterValidationResult(
+            passed=is_closed,
+            operation=AdapterOperationType.VALIDATE_CLOSED,
+            details={"geometry_type": geometry_handle.geometry_type},
+        )
+
+    def validate_manifold(
+        self,
+        geometry_handle: AdapterGeometryHandle,
+    ) -> AdapterValidationResult:
+        """Check if geometry is manifold."""
+        geom_data = self._geometry_store.get(geometry_handle.handle_id, {})
+        is_manifold = geom_data.get("is_manifold", True)
+
+        record = OperationRecord(
+            operation=AdapterOperationType.VALIDATE_MANIFOLD,
+            args={"handle_id": geometry_handle.handle_id},
+            result=is_manifold,
+        )
+        self._operations.append(record)
+
+        return AdapterValidationResult(
+            passed=is_manifold,
+            operation=AdapterOperationType.VALIDATE_MANIFOLD,
+            details={"geometry_type": geometry_handle.geometry_type},
+        )
 
     def get_bounding_box(
-        self, shell_handle: MockShellHandle
-    ) -> Tuple[Point3D, Point3D]:
-        """Get bounding box of a shell."""
+        self,
+        geometry_handle: AdapterGeometryHandle,
+    ) -> Optional[AdapterBoundingBox]:
+        """Get bounding box of geometry."""
+        geom_data = self._geometry_store.get(geometry_handle.handle_id, {})
+
         record = OperationRecord(
-            operation="get_bounding_box",
-            args={"handle_id": shell_handle.handle_id},
+            operation=AdapterOperationType.GET_BOUNDS,
+            args={"handle_id": geometry_handle.handle_id},
         )
 
-        if shell_handle.bounding_box:
-            record.result = shell_handle.bounding_box
-            self._operations.append(record)
-            return shell_handle.bounding_box
+        bbox = geom_data.get("bbox")
+        if bbox:
+            record.result = "found"
+        else:
+            record.result = "not_found"
 
-        # Default bounding box if not set
-        default_bbox = (
-            Point3D(0, 0, 0),
-            Point3D(100, 100, 10),
-        )
-        record.result = default_bbox
         self._operations.append(record)
-        return default_bbox
+        return bbox
 
     def export_step(
         self,
-        shell_handle: MockShellHandle,
-        header: Optional[Dict[str, str]] = None,
-    ) -> bytes:
-        """
-        Export to STEP format (mock returns placeholder).
-
-        In a real kernel, this would generate valid STEP.
-        """
+        geometry_handle: AdapterGeometryHandle,
+        header_metadata: Optional[Dict[str, str]] = None,
+    ) -> AdapterExportResult:
+        """Export to STEP format."""
         record = OperationRecord(
-            operation="export_step",
+            operation=AdapterOperationType.EXPORT_STEP,
             args={
-                "handle_id": shell_handle.handle_id,
-                "header": header,
+                "handle_id": geometry_handle.handle_id,
+                "has_header": header_metadata is not None,
             },
         )
 
-        # Return mock STEP content
+        if self._should_fail_export:
+            record.result = "FAILED"
+            self._operations.append(record)
+            return AdapterExportResult(
+                success=False,
+                error_code=AdapterErrorCode.EXPORT_FAILED,
+                error_message="Mock: export_step configured to fail",
+            )
+
+        geom_data = self._geometry_store.get(geometry_handle.handle_id, {})
+
         step_content = f"""\
 ISO-10303-21;
 HEADER;
 FILE_DESCRIPTION(('Mock STEP export'),'2;1');
-FILE_NAME('{shell_handle.handle_id}.stp','2026-05-14T00:00:00',('MockKernel'),('Luthiers Toolbox'),'MRP-5H Prototype','MockKernelAdapter','');
+FILE_NAME('{geometry_handle.handle_id}.stp','2026-05-19T00:00:00',('MockKernel'),('MRP-5K'),'MockKernelAdapter','mock','');
 FILE_SCHEMA(('AUTOMOTIVE_DESIGN'));
 ENDSEC;
 DATA;
-/* Mock topology data - {shell_handle.shell_type} with {len(shell_handle.points)} base points */
+/* Mock geometry: {geometry_handle.geometry_type} */
 #1=PRODUCT('Mock','Mock Product',$,(#2));
 #2=PRODUCT_CONTEXT('',#3,'mechanical');
 #3=APPLICATION_CONTEXT('mock topology');
 ENDSEC;
 END-ISO-10303-21;
 """
-        result = step_content.encode("utf-8")
-        record.result = f"<{len(result)} bytes>"
+        content = step_content.encode("utf-8")
+        record.result = f"<{len(content)} bytes>"
         self._operations.append(record)
 
-        return result
+        return AdapterExportResult(
+            success=True,
+            content=content,
+            format_version="STEP_PART21_MOCK",
+        )
 
     # Test helper methods
 
@@ -272,15 +386,18 @@ END-ISO-10303-21;
         """Get total number of operations performed."""
         return len(self._operations)
 
-    def get_operations_by_type(self, operation_type: str) -> List[OperationRecord]:
+    def get_operations_by_type(
+        self, operation_type: AdapterOperationType
+    ) -> List[OperationRecord]:
         """Get operations of a specific type."""
         return [op for op in self._operations if op.operation == operation_type]
 
     def reset(self) -> None:
-        """Reset operation history."""
+        """Reset operation history and geometry store."""
         self._operations.clear()
+        self._geometry_store.clear()
         self._handle_counter = 0
 
-    def was_operation_called(self, operation_type: str) -> bool:
+    def was_operation_called(self, operation_type: AdapterOperationType) -> bool:
         """Check if a specific operation was called."""
         return any(op.operation == operation_type for op in self._operations)

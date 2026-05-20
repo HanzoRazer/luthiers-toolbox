@@ -3,6 +3,7 @@
  * ApertureComparisonPanel — Compare aperture geometries side-by-side
  *
  * Dev Order 12: Comparison panel for normalized aperture geometry comparison.
+ * Dev Order 60: Added measurement archive integration for experimental workflow.
  *
  * Reference: round or oval (standard aperture API)
  * Candidate: dual_spiral (combined Carlos Jumbo defaults)
@@ -27,6 +28,7 @@ import {
   ResidualCoherenceCard,
   DiagnosticNarrativeCard,
   SnapshotExchangeSection,
+  MeasurementArchiveExchangeSection,
 } from '@/components/shared/acoustics'
 import {
   createGeometryAcousticState,
@@ -44,7 +46,10 @@ import {
   createDiagnosticSnapshot,
   normalizeDiagnosticSnapshotForExport,
   createDiagnosticSnapshotExportMetadata,
+  tryCreateArchiveFromDiagnosticContext,
+  createGeometrySummary,
 } from '@/utils/acoustics'
+import type { MeasurementArchiveRecord } from '@/types/acoustics/measurementArchive'
 import type { AcousticState } from '@/types/acoustics'
 import type { MeasuredResponse } from '@/types/measurements'
 import type { HelmholtzEstimateResult } from '@/types/helmholtz'
@@ -642,6 +647,71 @@ const diagnosticSnapshotExportMetadata = computed(() =>
   createDiagnosticSnapshotExportMetadata()
 )
 
+// Measurement archive state (Dev Order 60, hardened Dev Order 61)
+const currentMeasurementArchive = ref<MeasurementArchiveRecord | null>(null)
+const archiveError = ref<string | null>(null)
+
+const canArchiveMeasurement = computed(() => {
+  const refHasData =
+    referenceMeasuredResponse.value.measuredHelmholtzHz !== undefined ||
+    referenceMeasuredResponse.value.measuredQ !== undefined ||
+    referenceMeasuredResponse.value.dominantPeakHz !== undefined
+
+  const candHasData =
+    candidateMeasuredResponse.value.measuredHelmholtzHz !== undefined ||
+    candidateMeasuredResponse.value.measuredQ !== undefined ||
+    candidateMeasuredResponse.value.dominantPeakHz !== undefined
+
+  return refHasData || candHasData
+})
+
+function archiveCurrentMeasurement() {
+  archiveError.value = null
+
+  const refGeoSummary = referenceGeometry.value
+    ? createGeometrySummary(
+        referenceGeometry.value.aperture_type,
+        referenceGeometry.value.area_mm2,
+        referenceGeometry.value.equivalent_diameter_mm ?? undefined,
+        referenceGeometry.value.pa_ratio_mm_inv ?? undefined
+      )
+    : undefined
+
+  const candGeoSummary = candidateGeometry.value
+    ? createGeometrySummary(
+        candidateGeometry.value.aperture_type,
+        candidateGeometry.value.area_mm2,
+        candidateGeometry.value.equivalent_diameter_mm ?? undefined,
+        candidateGeometry.value.pa_ratio_mm_inv ?? undefined
+      )
+    : undefined
+
+  const result = tryCreateArchiveFromDiagnosticContext({
+    referenceLabel: 'Reference Aperture',
+    candidateLabel: 'Candidate Aperture',
+    referenceMeasured: referenceMeasuredResponse.value,
+    candidateMeasured: candidateMeasuredResponse.value,
+    referenceGeometry: refGeoSummary,
+    candidateGeometry: candGeoSummary,
+    referenceCoherence: referenceResidualCoherence.value,
+    candidateCoherence: candidateResidualCoherence.value,
+    referenceNarrative: referenceDiagnosticNarrative.value,
+    candidateNarrative: candidateDiagnosticNarrative.value,
+    linkedSnapshot: diagnosticSnapshot.value,
+    tags: ['aperture-comparison', referenceType.value, 'dual_spiral'],
+  })
+
+  if (result.success && result.archive) {
+    currentMeasurementArchive.value = result.archive
+  } else {
+    archiveError.value = result.error ?? 'Failed to create archive'
+  }
+}
+
+function handleArchiveExported(archive: MeasurementArchiveRecord) {
+  console.log('Archive exported:', archive.archiveId)
+}
+
 // Watch for reference parameter changes
 watch(
   [referenceType, bodyStyle, bodyLengthMm, customDiameterMm, useCustomDiameter, ovalWidthMm, ovalHeightMm],
@@ -855,7 +925,20 @@ onMounted(() => {
 
     <!-- Measured Response Display (Dev Order 19, editable Dev Order 20) -->
     <section :class="$style.measuredResponseSection">
-      <SectionLabel text="Measured Response" />
+      <div :class="$style.measuredResponseHeader">
+        <SectionLabel text="Measured Response" />
+        <div :class="$style.archiveControls">
+          <button
+            :class="[$style.archiveButton, !canArchiveMeasurement && $style.archiveButtonDisabled]"
+            :disabled="!canArchiveMeasurement"
+            :title="canArchiveMeasurement ? 'Archive current measurements' : 'Enter measurement data to enable archiving'"
+            @click="archiveCurrentMeasurement"
+          >
+            Archive Measurement
+          </button>
+          <span v-if="archiveError" :class="$style.archiveError">{{ archiveError }}</span>
+        </div>
+      </div>
       <div :class="$style.measuredResponseGrid">
         <MeasuredResponseCard
           :response="referenceMeasuredResponse"
@@ -923,6 +1006,13 @@ onMounted(() => {
     <SnapshotExchangeSection
       :snapshot="diagnosticSnapshot"
       :export-metadata="diagnosticSnapshotExportMetadata"
+    />
+
+    <!-- Measurement Archive Exchange Section (Dev Order 60) -->
+    <MeasurementArchiveExchangeSection
+      :archive="currentMeasurementArchive"
+      :linked-snapshot-id="diagnosticSnapshot.id"
+      @exported="handleArchiveExported"
     />
 
     <!-- Future Acoustic Intelligence -->
@@ -1148,11 +1238,58 @@ onMounted(() => {
   padding: 1rem;
 }
 
+.measuredResponseHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.5rem;
+}
+
+.archiveButton {
+  padding: 0.375rem 0.75rem;
+  background: #374151;
+  color: #f9fafb;
+  border: 1px solid #4b5563;
+  border-radius: 0.375rem;
+  font-size: 0.75rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.archiveButton:hover {
+  background: #4b5563;
+}
+
+.archiveButton:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.5);
+}
+
+.archiveButtonDisabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.archiveButtonDisabled:hover {
+  background: #374151;
+}
+
+.archiveControls {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.archiveError {
+  font-size: 0.6875rem;
+  color: #ef4444;
+}
+
 .measuredResponseGrid {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 1rem;
-  margin-top: 0.75rem;
 }
 
 /* Measurement Pairing Status (Dev Order 25) */

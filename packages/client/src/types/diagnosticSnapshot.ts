@@ -4,6 +4,8 @@
  * Dev Order 36: Diagnostic session snapshot scaffold.
  * Dev Order 37: Export preparation — schema versioning, normalization, export readiness.
  * Dev Order 38: JSON export — client-side snapshot download.
+ * Dev Order 60: Added archiveReferences for bidirectional provenance with measurement archives.
+ *
  * Captures observational diagnostic state for future export workflows.
  * Does NOT persist, calibrate, or predict.
  */
@@ -37,6 +39,9 @@ export interface DiagnosticSnapshot {
 
   exportReady: boolean
   exportWarnings: string[]
+
+  /** Observational references to measurement archive IDs for provenance continuity */
+  archiveReferences?: string[]
 }
 
 export type DiagnosticSnapshotExportStatus =

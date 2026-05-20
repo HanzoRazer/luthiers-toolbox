@@ -3567,6 +3567,9 @@ class Phase3Vectorizer:
 
         # Export to DXF
         dxf_version_to_use = getattr(self, 'dxf_version', 'R12')
+        # SIMPLE mode: export all contours (don't exclude UNKNOWN, no max limit)
+        simple_excluded = [] if mode == ExtractionMode.SIMPLE else None
+        simple_max = {ContourCategory.UNKNOWN: 10000} if mode == ExtractionMode.SIMPLE else None
         body_w, body_h = export_to_dxf(
             classified,
             output_path,
@@ -3574,7 +3577,9 @@ class Phase3Vectorizer:
             self.mm_per_px,
             simplify_tolerance=self.simplify_tolerance,
             dxf_version=dxf_version_to_use,
-            scale_factor=scale_factor
+            scale_factor=scale_factor,
+            excluded_categories=simple_excluded,
+            max_per_category=simple_max
         )
 
         # Phase 3.7: CAM-ready DXF export (arc fitting, LWPOLYLINE)
@@ -3922,7 +3927,8 @@ def extract_guitar_blueprint(
     detect_primitives: bool = True,
     ml_model_path: Optional[str] = None,
     dxf_version: str = 'R12',
-    raw_output: bool = False
+    raw_output: bool = False,
+    simple_mode: bool = False
 ) -> Dict[str, Any]:
     """
     Convenience function for extracting guitar blueprints.
@@ -3973,6 +3979,9 @@ def extract_guitar_blueprint(
     output_path = Path(output_dir) / f"{source.stem}_phase3.dxf"
     Path(output_dir).mkdir(parents=True, exist_ok=True)
 
+    # Determine extraction mode
+    extraction_mode = ExtractionMode.SIMPLE if simple_mode else ExtractionMode.SMART
+
     # Create vectorizer and extract
     vectorizer = Phase3Vectorizer(
         dpi=dpi,
@@ -3980,7 +3989,8 @@ def extract_guitar_blueprint(
         simplify_tolerance=simplify_tolerance,
         enable_primitives=detect_primitives,
         ml_model_path=ml_model_path,
-        dxf_version=dxf_version
+        dxf_version=dxf_version,
+        extraction_mode=extraction_mode
     )
 
     result = vectorizer.extract(
@@ -3995,7 +4005,8 @@ def extract_guitar_blueprint(
         detail_gap_close=detail_gap_close,
         use_ml=use_ml,
         detect_primitives=detect_primitives,
-        raw_output=raw_output
+        raw_output=raw_output,
+        extraction_mode=extraction_mode
     )
 
     return result.summary()
@@ -4093,6 +4104,8 @@ def main():
                         help="DXF output version (default R12 for CAM compatibility)")
     parser.add_argument("--raw", action="store_true",
                         help="Raw extraction: pixel coords, no classification, R12 LINEs, CONTOURS layer")
+    parser.add_argument("--simple", action="store_true",
+                        help="SIMPLE mode: all contours via adaptive threshold, no ML filtering (works for cuatros, mandolins, etc.)")
     parser.add_argument("-v", "--verbose", action="store_true", help="Verbose output")
 
     args = parser.parse_args()
@@ -4117,7 +4130,8 @@ def main():
         detect_primitives=not args.no_primitives,
         ml_model_path=args.ml_model,
         dxf_version=args.dxf_version,
-        raw_output=args.raw
+        raw_output=args.raw,
+        simple_mode=args.simple
     )
 
     print("\n" + "=" * 60)

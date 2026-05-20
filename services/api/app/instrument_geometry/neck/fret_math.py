@@ -421,7 +421,7 @@ def compute_fan_fret_positions(
     nut_width_mm: float,
     heel_width_mm: float,
     perpendicular_fret: int = 7,
-    _scale_length_reference_mm: float = None,
+    _scale_length_reference_mm: Optional[float] = None,
 ) -> List[FanFretPointLegacy]:
     """DEPRECATED: Backward compatibility implementation for old compute_fan_fret_positions API."""
     fret_points: List[FanFretPointLegacy] = []

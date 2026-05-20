@@ -114,6 +114,11 @@ risk_bucket_test.csv
 services/api/tests/test_log.txt
 
 # ------------------------------------------
+# IBG E-2-E Spine Staging Outputs
+# ------------------------------------------
+services/api/app/instrument_geometry/body/ibg/morphology_harvest/outputs/
+
+# ------------------------------------------
 # Export Artifacts
 # ------------------------------------------
 test_program.nc

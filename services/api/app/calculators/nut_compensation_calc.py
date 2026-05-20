@@ -21,7 +21,7 @@ from __future__ import annotations
 
 import math
 from dataclasses import dataclass
-from typing import List, Literal
+from typing import Dict, List, Literal
 
 Gate = Literal["GREEN", "YELLOW", "RED"]
 NutType = Literal["traditional", "zero_fret", "compensated"]

@@ -1,9 +1,7 @@
 # IBG Morphology Validation 1B Report
 
-**Date:** 2026-05-16
-**Sprint:** IBG Corpus Ingestion & Morphology Validation 1B
+**Date:** 2026-05-19
 **Corpus:** C:\Users\thepr\Downloads\luthiers-toolbox\Guitar Plans
-**Governance:** MORPHOLOGY_FAILURE_TAXONOMY.md
 
 ---
 
@@ -16,28 +14,6 @@
 | Classification matches | 0 (0%) |
 | Failures recorded | 10 |
 
-### Root Cause
-
-All 10 instruments blocked by **Phase 4 not wired in 1A**.
-
-The morphology harvest coordinator is a thin coordination layer that correctly delegates dimension extraction to Phase 4. Since Phase 4 is stubbed in 1A, no dimensions are extracted, which blocks Body Grid classification.
-
-**This is expected 1A behavior, not a bug.**
-
-### System Status
-
-```
-phase4: not_wired_in_1A
-calibration: not_wired_in_1A
-body_grid: available (but blocked by missing dimensions)
-```
-
-### Phase 1B Requirement
-
-Wire the following adapters:
-1. `services/blueprint-import/phase4/` → `morphology_harvest/adapters.py`
-2. `services/blueprint-import/calibration/` → `morphology_harvest/adapters.py`
-
 ---
 
 ## Per-Instrument Results
@@ -49,6 +25,7 @@ Wire the following adapters:
 
 **Errors:**
 - Harvest failed: no data extracted
+- Harvest error: Blueprint extraction error: Submit failed: 404 - {"status":"error","code":404,"message":"Application not found","request_id":"DXaA8-01S9mdokBso3UVLg"}
 
 **Attention points:**
 - carved top detection
@@ -63,6 +40,7 @@ Wire the following adapters:
 
 **Errors:**
 - Harvest failed: no data extracted
+- Harvest error: Blueprint extraction error: Submit failed: 404 - {"status":"error","code":404,"message":"Application not found","request_id":"B2ju1a-nRKaMBCEUH4GxDA"}
 
 **Attention points:**
 - horn detection
@@ -77,6 +55,7 @@ Wire the following adapters:
 
 **Errors:**
 - Harvest failed: no data extracted
+- Harvest error: Blueprint extraction error: Submit failed: 404 - {"status":"error","code":404,"message":"Application not found","request_id":"8ffwiJJVS6anc7H_c9o55Q"}
 
 **Attention points:**
 - contour detection
@@ -91,6 +70,7 @@ Wire the following adapters:
 
 **Errors:**
 - Harvest failed: no data extracted
+- Harvest error: Blueprint extraction error: Submit failed: 404 - {"status":"error","code":404,"message":"Application not found","request_id":"KMJRnZdrTX2E910eFFmdQQ"}
 
 **Attention points:**
 - asymmetry handling
@@ -106,6 +86,7 @@ Wire the following adapters:
 
 **Errors:**
 - Harvest failed: no data extracted
+- Harvest error: Blueprint extraction error: Submit failed: 404 - {"status":"error","code":404,"message":"Application not found","request_id":"HmsJ7OBZTNO84nkHAax-fw"}
 
 **Attention points:**
 - angular primitive detection
@@ -121,6 +102,7 @@ Wire the following adapters:
 
 **Errors:**
 - Harvest failed: no data extracted
+- Harvest error: Blueprint extraction error: Submit failed: 404 - {"status":"error","code":404,"message":"Application not found","request_id":"mkZNNbH2SpmBwP_VyCLmYg"}
 
 **Attention points:**
 - bout ratios
@@ -136,6 +118,7 @@ Wire the following adapters:
 
 **Errors:**
 - Harvest failed: no data extracted
+- Harvest error: Blueprint extraction error: Submit failed: 404 - {"status":"error","code":404,"message":"Application not found","request_id":"bmArS1_KRri5B3-_woOzXw"}
 
 **Attention points:**
 - bout proportions
@@ -151,6 +134,7 @@ Wire the following adapters:
 
 **Errors:**
 - Harvest failed: no data extracted
+- Harvest error: Blueprint extraction error: Submit failed: 404 - {"status":"error","code":404,"message":"Application not found","request_id":"6WWpxqQ2Rg2keUkjyCLmYg"}
 
 **Attention points:**
 - f-hole detection
@@ -166,6 +150,7 @@ Wire the following adapters:
 
 **Errors:**
 - Harvest failed: no data extracted
+- Harvest error: Blueprint extraction error: Submit failed: 404 - {"status":"error","code":404,"message":"Application not found","request_id":"TmcFTewlRYef-GX0ozsQ6Q"}
 
 **Attention points:**
 - non-canonical morphology
@@ -176,11 +161,12 @@ Wire the following adapters:
 
 ### cuatro_pr (latin_folk)
 
-**File:** `El Cuatro/cuatro puertorique�o.pdf`
+**File:** `El Cuatro/cuatro puertorique�o.pdf`
 **Status:** FAIL
 
 **Errors:**
 - Harvest failed: no data extracted
+- Harvest error: Blueprint extraction error: Submit failed: 404 - {"status":"error","code":404,"message":"Application not found","request_id":"MOGnenkgQYa1pGRSc9o55Q"}
 
 **Attention points:**
 - scale assumptions

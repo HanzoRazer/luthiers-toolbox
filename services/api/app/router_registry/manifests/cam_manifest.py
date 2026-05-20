@@ -254,6 +254,24 @@ CAM_ROUTERS: List[RouterSpec] = [
         category="cam",
     ),
     RouterSpec(
+        module="app.routers.cam.runtime_semantic_consumption_router",
+        prefix="",
+        tags=["CAM", "Runtime", "Consumption", "Governance"],
+        category="cam",
+    ),
+    RouterSpec(
+        module="app.routers.cam.runtime_semantic_ledger_router",
+        prefix="",
+        tags=["CAM", "Ledger", "Escalation", "Governance"],
+        category="cam",
+    ),
+    RouterSpec(
+        module="app.routers.cam.runtime_governance_enforcement_router",
+        prefix="",
+        tags=["CAM", "Runtime", "Enforcement", "Governance"],
+        category="cam",
+    ),
+    RouterSpec(
         module="app.routers.cam.lifecycle_promotion_router",
         prefix="",
         tags=["CAM", "Lifecycle", "Promotion"],

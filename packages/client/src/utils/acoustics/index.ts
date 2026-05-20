@@ -16,6 +16,7 @@
  * Dev Order 36: Added diagnostic session snapshot.
  * Dev Order 38: Added diagnostic snapshot JSON export.
  * Dev Order 39: Added diagnostic snapshot import validation.
+ * Dev Order 60: Added measurement archive utilities with diagnostic context capture.
  */
 
 export * from './acousticState'
@@ -33,3 +34,4 @@ export * from './diagnosticNarrative'
 export * from './diagnosticSnapshot'
 export * from './diagnosticSnapshotExport'
 export * from './diagnosticSnapshotImport'
+export * from './measurementArchive'

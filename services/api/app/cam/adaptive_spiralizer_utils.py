@@ -3,7 +3,7 @@ Adaptive Spiralizer L.2 - Enhanced Utilities
 Curvature-based adaptive respacing and resampling tools
 """
 import math
-from typing import List, Tuple
+from typing import List, Optional, Tuple
 
 
 def polyline_length(pts: List[Tuple[float, float]]) -> float:
@@ -119,7 +119,7 @@ def adaptive_respace(
 def compute_slowdown_factors(
     pts: List[Tuple[float, float]],
     tool_d: float,
-    k_threshold: float = None,
+    k_threshold: Optional[float] = None,
     slowdown_range: Tuple[float, float] = (0.4, 1.0)
 ) -> List[float]:
     """

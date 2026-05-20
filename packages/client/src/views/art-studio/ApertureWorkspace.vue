@@ -7,13 +7,14 @@
  * Dev Order 5: Shell only, no logic migration yet.
  * Dev Order 6: Mount SpiralSoundholeDesigner in Spiral tab.
  * Dev Order 9: Clarify canonical/beta provenance.
+ * Dev Order 60: Renamed Calibration tab to Measurement Lab, added experimental workspace.
  *
  * Tabs:
  *   - Spiral: logarithmic spiral soundhole design (mounted production tool)
  *   - Round/Oval/F-hole: standard aperture types
  *   - Comparison: cross-type area/acoustic comparison
  *   - Inverse Solver: target area → parameter calculation
- *   - Calibration: measurement import and validation
+ *   - Measurement Lab: observational measurement archive workspace
  *
  * The Spiral tab mounts SpiralSoundholeDesigner.vue, the canonical production
  * implementation. The standalone route /calculators/acoustics/spiral-soundhole
@@ -21,7 +22,9 @@
  */
 import { ref, computed, defineAsyncComponent } from 'vue'
 import { GateBadge, SectionLabel, PrerequisiteNotice } from '@/components/shared/workflow'
+import { MeasurementArchiveExchangeSection } from '@/components/shared/acoustics'
 import type { WorkflowGateLevel } from '@/types/workflow'
+import type { MeasurementArchiveRecord, MeasurementArchiveValidationResult } from '@/types/acoustics/measurementArchive'
 
 const SpiralSoundholeDesigner = defineAsyncComponent(
   () => import('@/components/toolbox/acoustics/SpiralSoundholeDesigner.vue')
@@ -39,7 +42,7 @@ const TargetMatchingPanel = defineAsyncComponent(
   () => import('@/components/toolbox/acoustics/TargetMatchingPanel.vue')
 )
 
-type TabId = 'spiral' | 'standard' | 'comparison' | 'inverse' | 'calibration'
+type TabId = 'spiral' | 'standard' | 'comparison' | 'inverse' | 'measurement-lab'
 
 interface Tab {
   id: TabId
@@ -74,10 +77,10 @@ const tabs: Tab[] = [
     description: 'Solve for required aperture parameters from acoustic targets',
   },
   {
-    id: 'calibration',
-    label: 'Calibration',
-    icon: '📐',
-    description: 'Import measurements and validate against specs',
+    id: 'measurement-lab',
+    label: 'Measurement Lab',
+    icon: '🔬',
+    description: 'Observational measurement archive and experimental workflow',
   },
 ]
 
@@ -90,6 +93,23 @@ function setTab(id: TabId) {
 const activeTabData = computed(() => tabs.find((t) => t.id === activeTab.value))
 
 const workspaceGate: WorkflowGateLevel = 'green'
+
+// Measurement Lab state (Dev Order 60)
+const labArchive = ref<MeasurementArchiveRecord | null>(null)
+const importedArchives = ref<MeasurementArchiveRecord[]>([])
+
+function handleLabArchiveExported(archive: MeasurementArchiveRecord) {
+  console.log('Lab archive exported:', archive.archiveId)
+}
+
+function handleLabArchiveImported(
+  result: MeasurementArchiveValidationResult,
+  archive: MeasurementArchiveRecord | null
+) {
+  if (result.valid && archive) {
+    importedArchives.value = [...importedArchives.value, archive]
+  }
+}
 </script>
 
 <template>
@@ -184,17 +204,47 @@ const workspaceGate: WorkflowGateLevel = 'green'
           </Suspense>
         </div>
 
-        <!-- Calibration Tab -->
-        <div v-else-if="activeTab === 'calibration'" :class="$style.tabContent">
-          <div :class="$style.placeholderCard">
-            <SectionLabel text="Measurement Import" />
-            <div :class="$style.calibrationPlaceholder">
-              <p>Import measured aperture dimensions from physical instruments.</p>
-              <p>Validate against design specs and track deviations.</p>
+        <!-- Measurement Lab Tab (Dev Order 60) -->
+        <div v-else-if="activeTab === 'measurement-lab'" :class="$style.tabContent">
+          <!-- Intro Section -->
+          <div :class="$style.labIntro">
+            <SectionLabel text="Experimental Measurement Workspace" />
+            <p :class="$style.labDescription">
+              Archive and review observational measurements from acoustic experiments.
+              This workspace supports local-only measurement archival for experimental continuity.
+            </p>
+            <div :class="$style.labBoundary">
+              No calibration, prediction, or authoritative interpretation is performed here.
+              All measurements remain observational.
             </div>
           </div>
 
-          <PrerequisiteNotice message="Calibration framework deferred. Measurement import will integrate with NECK-A workflow patterns." />
+          <!-- Archive Exchange Section -->
+          <MeasurementArchiveExchangeSection
+            :archive="labArchive"
+            @exported="handleLabArchiveExported"
+            @imported="handleLabArchiveImported"
+          />
+
+          <!-- Imported Archives List -->
+          <div v-if="importedArchives.length > 0" :class="$style.importedSection">
+            <SectionLabel text="Imported Archives" />
+            <div :class="$style.importedList">
+              <div
+                v-for="archive in importedArchives"
+                :key="archive.archiveId"
+                :class="$style.importedItem"
+              >
+                <span :class="$style.importedId">{{ archive.archiveId }}</span>
+                <span :class="$style.importedCount">{{ archive.measurements.length }} measurements</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Workflow Notice -->
+          <PrerequisiteNotice
+            message="Measurement archives capture observational state only. For comparison and diagnostic analysis, use the Comparison tab which provides full diagnostic workflow integration."
+          />
         </div>
       </div>
 
@@ -440,4 +490,65 @@ const workspaceGate: WorkflowGateLevel = 'green'
 }
 
 /* Dev Order 17: Solver card CSS moved to TargetMatchingPanel.vue */
+
+/* Dev Order 60: Measurement Lab styles */
+.labIntro {
+  background: #1f2937;
+  border: 1px solid #374151;
+  border-radius: 0.5rem;
+  padding: 1rem;
+  margin-bottom: 1rem;
+}
+
+.labDescription {
+  margin: 0.5rem 0;
+  font-size: 0.875rem;
+  color: #9ca3af;
+  line-height: 1.5;
+}
+
+.labBoundary {
+  margin-top: 0.75rem;
+  padding: 0.5rem 0.75rem;
+  background: rgba(251, 191, 36, 0.08);
+  border-radius: 0.25rem;
+  font-size: 0.75rem;
+  color: #fbbf24;
+  font-style: italic;
+}
+
+.importedSection {
+  background: #1f2937;
+  border: 1px solid #374151;
+  border-radius: 0.5rem;
+  padding: 1rem;
+  margin-top: 1rem;
+}
+
+.importedList {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-top: 0.75rem;
+}
+
+.importedItem {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.5rem 0.75rem;
+  background: #111827;
+  border-radius: 0.375rem;
+}
+
+.importedId {
+  font-size: 0.75rem;
+  font-family: var(--font-mono, ui-monospace, monospace);
+  color: #d1d5db;
+}
+
+.importedCount {
+  font-size: 0.6875rem;
+  color: #6b7280;
+}
 </style>

@@ -1,5 +1,5 @@
 {
-  "timestamp": "2026-05-16T23:25:21.690811",
+  "timestamp": "2026-05-19T18:49:17.335334",
   "corpus_root": "C:\\Users\\thepr\\Downloads\\luthiers-toolbox\\Guitar Plans",
   "total_instruments": 10,
   "successful_harvests": 0,
@@ -24,7 +24,8 @@
       "missing_regions": [],
       "classification_match": false,
       "errors": [
-        "Harvest failed: no data extracted"
+        "Harvest failed: no data extracted",
+        "Harvest error: Blueprint extraction error: Submit failed: 404 - {\"status\":\"error\",\"code\":404,\"message\":\"Application not found\",\"request_id\":\"DXaA8-01S9mdokBso3UVLg\"}"
       ],
       "warnings": [],
       "ambiguities": [],
@@ -53,7 +54,8 @@
       "missing_regions": [],
       "classification_match": false,
       "errors": [
-        "Harvest failed: no data extracted"
+        "Harvest failed: no data extracted",
+        "Harvest error: Blueprint extraction error: Submit failed: 404 - {\"status\":\"error\",\"code\":404,\"message\":\"Application not found\",\"request_id\":\"B2ju1a-nRKaMBCEUH4GxDA\"}"
       ],
       "warnings": [],
       "ambiguities": [],
@@ -82,7 +84,8 @@
       "missing_regions": [],
       "classification_match": false,
       "errors": [
-        "Harvest failed: no data extracted"
+        "Harvest failed: no data extracted",
+        "Harvest error: Blueprint extraction error: Submit failed: 404 - {\"status\":\"error\",\"code\":404,\"message\":\"Application not found\",\"request_id\":\"8ffwiJJVS6anc7H_c9o55Q\"}"
       ],
       "warnings": [],
       "ambiguities": [],
@@ -111,7 +114,8 @@
       "missing_regions": [],
       "classification_match": false,
       "errors": [
-        "Harvest failed: no data extracted"
+        "Harvest failed: no data extracted",
+        "Harvest error: Blueprint extraction error: Submit failed: 404 - {\"status\":\"error\",\"code\":404,\"message\":\"Application not found\",\"request_id\":\"KMJRnZdrTX2E910eFFmdQQ\"}"
       ],
       "warnings": [],
       "ambiguities": [],
@@ -141,7 +145,8 @@
       "missing_regions": [],
       "classification_match": false,
       "errors": [
-        "Harvest failed: no data extracted"
+        "Harvest failed: no data extracted",
+        "Harvest error: Blueprint extraction error: Submit failed: 404 - {\"status\":\"error\",\"code\":404,\"message\":\"Application not found\",\"request_id\":\"HmsJ7OBZTNO84nkHAax-fw\"}"
       ],
       "warnings": [],
       "ambiguities": [],
@@ -171,7 +176,8 @@
       "missing_regions": [],
       "classification_match": false,
       "errors": [
-        "Harvest failed: no data extracted"
+        "Harvest failed: no data extracted",
+        "Harvest error: Blueprint extraction error: Submit failed: 404 - {\"status\":\"error\",\"code\":404,\"message\":\"Application not found\",\"request_id\":\"mkZNNbH2SpmBwP_VyCLmYg\"}"
       ],
       "warnings": [],
       "ambiguities": [],
@@ -201,7 +207,8 @@
       "missing_regions": [],
       "classification_match": false,
       "errors": [
-        "Harvest failed: no data extracted"
+        "Harvest failed: no data extracted",
+        "Harvest error: Blueprint extraction error: Submit failed: 404 - {\"status\":\"error\",\"code\":404,\"message\":\"Application not found\",\"request_id\":\"bmArS1_KRri5B3-_woOzXw\"}"
       ],
       "warnings": [],
       "ambiguities": [],
@@ -231,7 +238,8 @@
       "missing_regions": [],
       "classification_match": false,
       "errors": [
-        "Harvest failed: no data extracted"
+        "Harvest failed: no data extracted",
+        "Harvest error: Blueprint extraction error: Submit failed: 404 - {\"status\":\"error\",\"code\":404,\"message\":\"Application not found\",\"request_id\":\"6WWpxqQ2Rg2keUkjyCLmYg\"}"
       ],
       "warnings": [],
       "ambiguities": [],
@@ -261,7 +269,8 @@
       "missing_regions": [],
       "classification_match": false,
       "errors": [
-        "Harvest failed: no data extracted"
+        "Harvest failed: no data extracted",
+        "Harvest error: Blueprint extraction error: Submit failed: 404 - {\"status\":\"error\",\"code\":404,\"message\":\"Application not found\",\"request_id\":\"TmcFTewlRYef-GX0ozsQ6Q\"}"
       ],
       "warnings": [],
       "ambiguities": [],
@@ -291,7 +300,8 @@
       "missing_regions": [],
       "classification_match": false,
       "errors": [
-        "Harvest failed: no data extracted"
+        "Harvest failed: no data extracted",
+        "Harvest error: Blueprint extraction error: Submit failed: 404 - {\"status\":\"error\",\"code\":404,\"message\":\"Application not found\",\"request_id\":\"MOGnenkgQYa1pGRSc9o55Q\"}"
       ],
       "warnings": [],
       "ambiguities": [],

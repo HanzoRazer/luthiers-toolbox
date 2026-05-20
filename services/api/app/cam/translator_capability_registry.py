@@ -34,7 +34,7 @@ from pydantic import BaseModel, Field, model_validator
 # Type Definitions
 # -----------------------------------------------------------------------------
 
-TranslatorOutputClass = Literal["dxf", "gcode", "svg", "toolpath"]
+TranslatorOutputClass = Literal["dxf", "gcode", "svg", "step", "toolpath"]
 
 TranslatorMaturity = Literal[
     "placeholder",
@@ -310,6 +310,28 @@ TRANSLATOR_CAPABILITY_REGISTRY: Dict[str, TranslatorCapability] = {
         description="Placeholder for future GRBL postprocessor",
         notes="7B: Registered for introspection only. No execution capability. "
               "Empty supported_operations communicates no approved operation bindings.",
+    ),
+    # --- MRP-5J: Acoustic STEP prototype translator ---
+    "step_acoustic_prototype": TranslatorCapability(
+        translator_id="step_acoustic_prototype",
+        translator_name="Acoustic STEP Prototype Translator",
+        translator_version="0.1.0",
+        translator_category="translator",
+        output_class="step",
+        output_format_version="STEP_PART21_PROTOTYPE",
+        execution_state="validation_only",
+        maturity="placeholder",
+        execution_supported=False,
+        artifact_generation_supported=False,
+        machine_output_supported=False,
+        authorization_required=True,
+        supported_operations=["acoustic_topology"],
+        supported_geometry_types=["shell", "closed_contour"],
+        supported_units=["mm"],
+        description="MRP-5J prototype acoustic STEP serializer",
+        notes="Consumes CertifiedTopology from topology_validation. "
+              "Produces syntactically valid STEP Part 21 with provenance. "
+              "NOT production B-rep — classification: PROTOTYPE_SERIALIZATION.",
     ),
 }
 
