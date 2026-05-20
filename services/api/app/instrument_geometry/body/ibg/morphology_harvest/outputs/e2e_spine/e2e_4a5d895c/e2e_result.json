@@ -1,0 +1,71 @@
+{
+  "run_id": "e2e_4a5d895c",
+  "source_file": "Fender-Jazzmaster-62-Body.pdf",
+  "source_mode": "pdf",
+  "timestamp": "2026-05-17T06:28:57.669547",
+  "vectorizer_success": true,
+  "artifact_parse_success": true,
+  "body_evidence_created": true,
+  "body_grid_success": true,
+  "morphology_descriptor_created": true,
+  "ibg_reconstruction_attempted": true,
+  "ibg_reconstruction_success": true,
+  "boe_package_created": true,
+  "dimensions": {
+    "lower_bout_width_mm": 323.5,
+    "body_length_mm": 500.0
+  },
+  "body_evidence_summary": {
+    "outline_points_count": 27172,
+    "contour_segments_count": 13586,
+    "landmarks_count": 2,
+    "source_type": "vectorizer_dxf",
+    "bounding_box_mm": [
+      7.375,
+      14.875,
+      315.875,
+      485.25
+    ],
+    "centerline_x_mm": 161.625
+  },
+  "morphology_descriptor": {
+    "morphology_class": "slab_body",
+    "confidence": 0.28,
+    "centerline_x_mm": 161.625,
+    "asymmetry_score": 0.0,
+    "is_symmetric": true,
+    "zone_coverage": {
+      "centerline": 0.1878017052178551,
+      "upper_bout": 0.14269403173750725,
+      "waist": 0.1878017052178551,
+      "lower_bout": 0.04510767348034791,
+      "horn_left": 0.0,
+      "horn_right": 0.0,
+      "cutaway_left": 0.0487931791285796,
+      "cutaway_right": 0.0,
+      "neck_pocket": 0.0,
+      "bridge_region": 0.0,
+      "left_flank": 0.1878017052178551,
+      "right_flank": 0.0,
+      "outer_boundary": 0.0,
+      "butt_end": 0.0,
+      "shoulder": 0.0
+    },
+    "primitives_count": 1
+  },
+  "ibg_result": {
+    "status": "complete",
+    "spec_used": "stratocaster",
+    "confidence": 0.41250000000000003,
+    "outline_points": 0
+  },
+  "svg_artifact_path": "C:\\Users\\thepr\\Downloads\\luthiers-toolbox\\services\\api\\app\\instrument_geometry\\body\\ibg\\morphology_harvest\\outputs\\e2e_spine\\e2e_4a5d895c\\artifact.svg",
+  "dxf_artifact_path": "C:\\Users\\thepr\\Downloads\\luthiers-toolbox\\services\\api\\app\\instrument_geometry\\body\\ibg\\morphology_harvest\\outputs\\e2e_spine\\e2e_4a5d895c\\artifact.dxf",
+  "boe_package_path": "C:\\Users\\thepr\\Downloads\\luthiers-toolbox\\services\\api\\app\\instrument_geometry\\body\\ibg\\morphology_harvest\\outputs\\e2e_spine\\e2e_4a5d895c\\boe_review_package.json",
+  "failures": [],
+  "uncertainties": [
+    "Could not determine instrument spec for reconstruction",
+    "Expected OFFSET_DOUBLE_CUT, got slab_body"
+  ],
+  "review_status": "needs_review"
+}

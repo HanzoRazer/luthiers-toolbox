@@ -1,0 +1,26 @@
+{
+  "run_id": "e2e_8b967eea",
+  "source_file": "Fender-Stratocaster-62.pdf",
+  "source_mode": "pdf",
+  "timestamp": "2026-05-17T06:28:48.437131",
+  "vectorizer_success": true,
+  "artifact_parse_success": false,
+  "body_evidence_created": false,
+  "body_grid_success": false,
+  "morphology_descriptor_created": false,
+  "ibg_reconstruction_attempted": false,
+  "ibg_reconstruction_success": false,
+  "boe_package_created": false,
+  "dimensions": {},
+  "body_evidence_summary": null,
+  "morphology_descriptor": null,
+  "ibg_result": null,
+  "svg_artifact_path": null,
+  "dxf_artifact_path": null,
+  "boe_package_path": null,
+  "failures": [
+    "Artifact parse failed: ['No parseable artifact provided']"
+  ],
+  "uncertainties": [],
+  "review_status": "failed"
+}

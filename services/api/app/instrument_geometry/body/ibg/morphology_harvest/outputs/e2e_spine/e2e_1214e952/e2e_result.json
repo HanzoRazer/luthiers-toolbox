@@ -1,0 +1,29 @@
+{
+  "run_id": "e2e_1214e952",
+  "source_file": "Gibson-Les-Paul-59-Complete.pdf",
+  "source_mode": "pdf",
+  "timestamp": "2026-05-17T06:26:40.190578",
+  "vectorizer_success": true,
+  "artifact_parse_success": false,
+  "body_evidence_created": false,
+  "body_grid_success": false,
+  "morphology_descriptor_created": false,
+  "ibg_reconstruction_attempted": false,
+  "ibg_reconstruction_success": false,
+  "boe_package_created": false,
+  "dimensions": {
+    "lower_bout_width_mm": 318.125,
+    "body_length_mm": 500.0
+  },
+  "body_evidence_summary": null,
+  "morphology_descriptor": null,
+  "ibg_result": null,
+  "svg_artifact_path": null,
+  "dxf_artifact_path": null,
+  "boe_package_path": null,
+  "failures": [
+    "Artifact parse exception: type object 'CoordinateSpace' has no attribute 'MM'"
+  ],
+  "uncertainties": [],
+  "review_status": "failed"
+}

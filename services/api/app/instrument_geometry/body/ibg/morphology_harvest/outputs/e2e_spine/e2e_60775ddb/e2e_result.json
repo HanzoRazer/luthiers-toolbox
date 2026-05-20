@@ -1,0 +1,71 @@
+{
+  "run_id": "e2e_60775ddb",
+  "source_file": "Gibson-335-Dot-Complete.pdf",
+  "source_mode": "pdf",
+  "timestamp": "2026-05-17T06:29:59.124264",
+  "vectorizer_success": true,
+  "artifact_parse_success": true,
+  "body_evidence_created": true,
+  "body_grid_success": true,
+  "morphology_descriptor_created": true,
+  "ibg_reconstruction_attempted": true,
+  "ibg_reconstruction_success": true,
+  "boe_package_created": true,
+  "dimensions": {
+    "lower_bout_width_mm": 646.9622331691297,
+    "body_length_mm": 500.0
+  },
+  "body_evidence_summary": {
+    "outline_points_count": 68284,
+    "contour_segments_count": 34142,
+    "landmarks_count": 2,
+    "source_type": "vectorizer_dxf",
+    "bounding_box_mm": [
+      2.4630541871921183,
+      6.075533661740558,
+      646.1412151067324,
+      494.0886699507389
+    ],
+    "centerline_x_mm": 324.30213464696226
+  },
+  "morphology_descriptor": {
+    "morphology_class": "slab_body",
+    "confidence": 0.281,
+    "centerline_x_mm": 324.30213464696226,
+    "asymmetry_score": 0.0,
+    "is_symmetric": true,
+    "zone_coverage": {
+      "centerline": 0.19667479514548336,
+      "upper_bout": 0.08503657815467511,
+      "waist": 0.19667479514548336,
+      "lower_bout": 0.1116382169908083,
+      "horn_left": 0.0,
+      "horn_right": 0.0,
+      "cutaway_left": 0.0,
+      "cutaway_right": 0.0,
+      "neck_pocket": 0.0,
+      "bridge_region": 0.01330081941806653,
+      "left_flank": 0.0,
+      "right_flank": 0.19667479514548336,
+      "outer_boundary": 0.0,
+      "butt_end": 0.0,
+      "shoulder": 0.0
+    },
+    "primitives_count": 1
+  },
+  "ibg_result": {
+    "status": "complete",
+    "spec_used": "stratocaster",
+    "confidence": 0.41250000000000003,
+    "outline_points": 0
+  },
+  "svg_artifact_path": "C:\\Users\\thepr\\Downloads\\luthiers-toolbox\\services\\api\\app\\instrument_geometry\\body\\ibg\\morphology_harvest\\outputs\\e2e_spine\\e2e_60775ddb\\artifact.svg",
+  "dxf_artifact_path": "C:\\Users\\thepr\\Downloads\\luthiers-toolbox\\services\\api\\app\\instrument_geometry\\body\\ibg\\morphology_harvest\\outputs\\e2e_spine\\e2e_60775ddb\\artifact.dxf",
+  "boe_package_path": "C:\\Users\\thepr\\Downloads\\luthiers-toolbox\\services\\api\\app\\instrument_geometry\\body\\ibg\\morphology_harvest\\outputs\\e2e_spine\\e2e_60775ddb\\boe_review_package.json",
+  "failures": [],
+  "uncertainties": [
+    "Could not determine instrument spec for reconstruction",
+    "Expected ROUNDED_DOUBLE_CUT, got slab_body"
+  ],
+  "review_status": "needs_review"
+}

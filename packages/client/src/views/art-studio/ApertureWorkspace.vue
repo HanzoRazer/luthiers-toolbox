@@ -7,13 +7,16 @@
  * Dev Order 5: Shell only, no logic migration yet.
  * Dev Order 6: Mount SpiralSoundholeDesigner in Spiral tab.
  * Dev Order 9: Clarify canonical/beta provenance.
+ * Dev Order 60: Integrate MeasurementArchiveExchangeSection into Measurement Lab.
+ * Dev Order 62: Add MeasurementArchiveEvidenceIndex for experimental history.
+ * Dev Order 63: Add MeasurementResidualComparisonPanel for pairwise comparison.
  *
  * Tabs:
  *   - Spiral: logarithmic spiral soundhole design (mounted production tool)
  *   - Round/Oval/F-hole: standard aperture types
  *   - Comparison: cross-type area/acoustic comparison
  *   - Inverse Solver: target area → parameter calculation
- *   - Calibration: measurement import and validation
+ *   - Measurement Lab: archive exchange, evidence index, residual comparison
  *
  * The Spiral tab mounts SpiralSoundholeDesigner.vue, the canonical production
  * implementation. The standalone route /calculators/acoustics/spiral-soundhole
@@ -21,7 +24,16 @@
  */
 import { ref, computed, defineAsyncComponent } from 'vue'
 import { GateBadge, SectionLabel, PrerequisiteNotice } from '@/components/shared/workflow'
+import {
+  MeasurementArchiveExchangeSection,
+  MeasurementArchiveEvidenceIndex,
+  MeasurementResidualComparisonPanel,
+} from '@/components/shared/acoustics'
 import type { WorkflowGateLevel } from '@/types/workflow'
+import type {
+  MeasurementArchiveRecord,
+  MeasurementArchiveValidationResult,
+} from '@/types/acoustics/measurementArchive'
 
 const SpiralSoundholeDesigner = defineAsyncComponent(
   () => import('@/components/toolbox/acoustics/SpiralSoundholeDesigner.vue')
@@ -75,9 +87,9 @@ const tabs: Tab[] = [
   },
   {
     id: 'calibration',
-    label: 'Calibration',
+    label: 'Measurement Lab',
     icon: '📐',
-    description: 'Import measurements and validate against specs',
+    description: 'Archive, exchange, and compare observational measurements',
   },
 ]
 
@@ -90,6 +102,29 @@ function setTab(id: TabId) {
 const activeTabData = computed(() => tabs.find((t) => t.id === activeTab.value))
 
 const workspaceGate: WorkflowGateLevel = 'green'
+
+// Dev Order 62/63: Evidence index and comparison state
+const currentArchive = ref<MeasurementArchiveRecord | null>(null)
+const evidenceArchives = ref<MeasurementArchiveRecord[]>([])
+
+function handleArchiveExported(archive: MeasurementArchiveRecord) {
+  if (!evidenceArchives.value.some((a) => a.archiveId === archive.archiveId)) {
+    evidenceArchives.value = [archive, ...evidenceArchives.value]
+  }
+}
+
+function handleArchiveImported(
+  _result: MeasurementArchiveValidationResult,
+  archive: MeasurementArchiveRecord | null
+) {
+  if (archive && !evidenceArchives.value.some((a) => a.archiveId === archive.archiveId)) {
+    evidenceArchives.value = [archive, ...evidenceArchives.value]
+  }
+}
+
+function handleArchiveSelect(archive: MeasurementArchiveRecord) {
+  currentArchive.value = archive
+}
 </script>
 
 <template>
@@ -184,17 +219,27 @@ const workspaceGate: WorkflowGateLevel = 'green'
           </Suspense>
         </div>
 
-        <!-- Calibration Tab -->
+        <!-- Measurement Lab Tab (Dev Order 60, 62, 63) -->
         <div v-else-if="activeTab === 'calibration'" :class="$style.tabContent">
-          <div :class="$style.placeholderCard">
-            <SectionLabel text="Measurement Import" />
-            <div :class="$style.calibrationPlaceholder">
-              <p>Import measured aperture dimensions from physical instruments.</p>
-              <p>Validate against design specs and track deviations.</p>
-            </div>
-          </div>
+          <!-- Archive Exchange Section -->
+          <MeasurementArchiveExchangeSection
+            :archive="currentArchive"
+            @exported="handleArchiveExported"
+            @imported="handleArchiveImported"
+          />
 
-          <PrerequisiteNotice message="Calibration framework deferred. Measurement import will integrate with NECK-A workflow patterns." />
+          <!-- Evidence Index -->
+          <MeasurementArchiveEvidenceIndex
+            :archives="evidenceArchives"
+            @select="handleArchiveSelect"
+          />
+
+          <!-- Residual Comparison Panel -->
+          <MeasurementResidualComparisonPanel
+            :archives="evidenceArchives"
+          />
+
+          <PrerequisiteNotice message="Measurement Lab is observational only. Archives are local — no persistence, calibration, or prediction authority." />
         </div>
       </div>
 

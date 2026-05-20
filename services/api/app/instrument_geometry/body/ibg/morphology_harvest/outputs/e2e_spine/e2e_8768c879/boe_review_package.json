@@ -1,0 +1,65 @@
+{
+  "source_file": "A003-Dreadnought-MM.pdf",
+  "source_mode": "pdf",
+  "run_id": "e2e_8768c879",
+  "timestamp": "2026-05-17T06:29:36.677874",
+  "svg_artifact_path": "C:\\Users\\thepr\\Downloads\\luthiers-toolbox\\services\\api\\app\\instrument_geometry\\body\\ibg\\morphology_harvest\\outputs\\e2e_spine\\e2e_8768c879\\artifact.svg",
+  "dxf_artifact_path": "C:\\Users\\thepr\\Downloads\\luthiers-toolbox\\services\\api\\app\\instrument_geometry\\body\\ibg\\morphology_harvest\\outputs\\e2e_spine\\e2e_8768c879\\artifact.dxf",
+  "body_evidence_summary": {
+    "outline_points_count": 26326,
+    "contour_segments_count": 13163,
+    "landmarks_count": 2,
+    "source_type": "vectorizer_dxf",
+    "bounding_box_mm": [
+      11.488158359844467,
+      10.07423117709438,
+      695.1219512195122,
+      490.10250972074937
+    ],
+    "centerline_x_mm": 353.3050547896783
+  },
+  "body_grid_result": {
+    "success": true,
+    "morphology_class": "slab_body",
+    "confidence": 0.278
+  },
+  "morphology_descriptor": {
+    "morphology_class": "slab_body",
+    "confidence": 0.278,
+    "centerline_x_mm": 353.3050547896783,
+    "asymmetry_score": 0.0,
+    "is_symmetric": true,
+    "zone_coverage": {
+      "centerline": 0.1777627509948126,
+      "upper_bout": 0.1777627509948126,
+      "waist": 0.1777627509948126,
+      "lower_bout": 0.0,
+      "horn_left": 0.0,
+      "horn_right": 0.0,
+      "cutaway_left": 0.0,
+      "cutaway_right": 0.0889489960207497,
+      "neck_pocket": 0.0,
+      "bridge_region": 0.0,
+      "left_flank": 0.0,
+      "right_flank": 0.1777627509948126,
+      "outer_boundary": 0.0,
+      "butt_end": 0.0,
+      "shoulder": 0.0
+    },
+    "primitives_count": 1
+  },
+  "ibg_reconstruction_status": "complete",
+  "ibg_result": {
+    "status": "complete",
+    "spec_used": "stratocaster",
+    "confidence": 0.41250000000000003,
+    "outline_points": 0
+  },
+  "failures": [],
+  "uncertainties": [
+    "Could not determine instrument spec for reconstruction",
+    "Expected ROUNDED_ACOUSTIC, got slab_body"
+  ],
+  "review_notes_placeholder": "",
+  "review_status": "needs_review"
+}

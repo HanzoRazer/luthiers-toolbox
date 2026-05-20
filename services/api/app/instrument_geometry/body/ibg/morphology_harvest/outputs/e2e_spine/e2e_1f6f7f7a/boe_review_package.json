@@ -1,0 +1,64 @@
+{
+  "source_file": "Gibson-Les-Paul-59-Complete.pdf",
+  "source_mode": "pdf",
+  "run_id": "e2e_1f6f7f7a",
+  "timestamp": "2026-05-19T21:57:33.805390",
+  "svg_artifact_path": "C:\\Users\\thepr\\Downloads\\luthiers-toolbox\\services\\api\\app\\instrument_geometry\\body\\ibg\\morphology_harvest\\outputs\\e2e_spine\\e2e_1f6f7f7a\\artifact.svg",
+  "dxf_artifact_path": "C:\\Users\\thepr\\Downloads\\luthiers-toolbox\\services\\api\\app\\instrument_geometry\\body\\ibg\\morphology_harvest\\outputs\\e2e_spine\\e2e_1f6f7f7a\\artifact.dxf",
+  "body_evidence_summary": {
+    "outline_points_count": 24422,
+    "contour_segments_count": 12211,
+    "landmarks_count": 2,
+    "source_type": "vectorizer_dxf",
+    "bounding_box_mm": [
+      68.875,
+      13.75,
+      217.25,
+      407.875
+    ],
+    "centerline_x_mm": 143.0625
+  },
+  "body_grid_result": {
+    "success": true,
+    "morphology_class": "slab_body",
+    "confidence": 0.268
+  },
+  "morphology_descriptor": {
+    "morphology_class": "slab_body",
+    "confidence": 0.268,
+    "centerline_x_mm": 143.0625,
+    "asymmetry_score": 0.0,
+    "is_symmetric": true,
+    "zone_coverage": {
+      "centerline": 0.1378811560515251,
+      "upper_bout": 0.1378811560515251,
+      "waist": 0.1235144506440637,
+      "lower_bout": 0.0,
+      "horn_left": 0.08330728343322402,
+      "horn_right": 0.04165364171661201,
+      "cutaway_left": 0.1378811560515251,
+      "cutaway_right": 0.0,
+      "neck_pocket": 0.0,
+      "bridge_region": 0.0,
+      "left_flank": 0.1378811560515251,
+      "right_flank": 0.0,
+      "outer_boundary": 0.0,
+      "butt_end": 0.0,
+      "shoulder": 0.0
+    },
+    "primitives_count": 1
+  },
+  "ibg_reconstruction_status": "complete",
+  "ibg_result": {
+    "status": "complete",
+    "spec_used": "stratocaster",
+    "confidence": 0.45499999999999996,
+    "outline_points": 0
+  },
+  "failures": [],
+  "uncertainties": [
+    "Could not determine instrument spec for reconstruction"
+  ],
+  "review_notes_placeholder": "",
+  "review_status": "needs_review"
+}

@@ -1,0 +1,676 @@
+{
+  "timestamp": "2026-05-17T06:30:48.604088",
+  "total_instruments": 10,
+  "vectorizer_success": 10,
+  "body_evidence_created": 9,
+  "body_grid_success": 9,
+  "ibg_reconstruction_success": 9,
+  "boe_packages_created": 9,
+  "results": [
+    {
+      "run_id": "e2e_09f4505c",
+      "source_file": "Gibson-Les-Paul-59-Complete.pdf",
+      "source_mode": "pdf",
+      "timestamp": "2026-05-17T06:28:10.996577",
+      "vectorizer_success": true,
+      "artifact_parse_success": true,
+      "body_evidence_created": true,
+      "body_grid_success": true,
+      "morphology_descriptor_created": true,
+      "ibg_reconstruction_attempted": true,
+      "ibg_reconstruction_success": true,
+      "boe_package_created": true,
+      "dimensions": {
+        "lower_bout_width_mm": 318.125,
+        "body_length_mm": 500.0
+      },
+      "body_evidence_summary": {
+        "outline_points_count": 24422,
+        "contour_segments_count": 12211,
+        "landmarks_count": 2,
+        "source_type": "vectorizer_dxf",
+        "bounding_box_mm": [
+          68.875,
+          13.75,
+          217.25,
+          407.875
+        ],
+        "centerline_x_mm": 143.0625
+      },
+      "morphology_descriptor": {
+        "morphology_class": "slab_body",
+        "confidence": 0.268,
+        "centerline_x_mm": 143.0625,
+        "asymmetry_score": 0.0,
+        "is_symmetric": true,
+        "zone_coverage": {
+          "centerline": 0.1378811560515251,
+          "upper_bout": 0.1378811560515251,
+          "waist": 0.1235144506440637,
+          "lower_bout": 0.0,
+          "horn_left": 0.08330728343322402,
+          "horn_right": 0.04165364171661201,
+          "cutaway_left": 0.1378811560515251,
+          "cutaway_right": 0.0,
+          "neck_pocket": 0.0,
+          "bridge_region": 0.0,
+          "left_flank": 0.1378811560515251,
+          "right_flank": 0.0,
+          "outer_boundary": 0.0,
+          "butt_end": 0.0,
+          "shoulder": 0.0
+        },
+        "primitives_count": 1
+      },
+      "ibg_result": {
+        "status": "complete",
+        "spec_used": "stratocaster",
+        "confidence": 0.45499999999999996,
+        "outline_points": 0
+      },
+      "svg_artifact_path": "C:\\Users\\thepr\\Downloads\\luthiers-toolbox\\services\\api\\app\\instrument_geometry\\body\\ibg\\morphology_harvest\\outputs\\e2e_spine\\e2e_09f4505c\\artifact.svg",
+      "dxf_artifact_path": "C:\\Users\\thepr\\Downloads\\luthiers-toolbox\\services\\api\\app\\instrument_geometry\\body\\ibg\\morphology_harvest\\outputs\\e2e_spine\\e2e_09f4505c\\artifact.dxf",
+      "boe_package_path": "C:\\Users\\thepr\\Downloads\\luthiers-toolbox\\services\\api\\app\\instrument_geometry\\body\\ibg\\morphology_harvest\\outputs\\e2e_spine\\e2e_09f4505c\\boe_review_package.json",
+      "failures": [],
+      "uncertainties": [
+        "Could not determine instrument spec for reconstruction",
+        "Expected ROUNDED_SINGLE_CUT, got slab_body"
+      ],
+      "review_status": "needs_review"
+    },
+    {
+      "run_id": "e2e_25fe6cb4",
+      "source_file": "01-Gibson-SG-Complete-Template.pdf",
+      "source_mode": "pdf",
+      "timestamp": "2026-05-17T06:28:24.011708",
+      "vectorizer_success": true,
+      "artifact_parse_success": true,
+      "body_evidence_created": true,
+      "body_grid_success": true,
+      "morphology_descriptor_created": true,
+      "ibg_reconstruction_attempted": true,
+      "ibg_reconstruction_success": true,
+      "boe_package_created": true,
+      "dimensions": {
+        "lower_bout_width_mm": 706.9635913750442,
+        "body_length_mm": 500.0
+      },
+      "body_evidence_summary": {
+        "outline_points_count": 56106,
+        "contour_segments_count": 28053,
+        "landmarks_count": 2,
+        "source_type": "vectorizer_dxf",
+        "bounding_box_mm": [
+          8.30682219865677,
+          7.953340402969247,
+          684.164015553199,
+          498.23259102156237
+        ],
+        "centerline_x_mm": 346.23541887592785
+      },
+      "morphology_descriptor": {
+        "morphology_class": "slab_body",
+        "confidence": 0.266,
+        "centerline_x_mm": 346.23541887592785,
+        "asymmetry_score": 0.0,
+        "is_symmetric": true,
+        "zone_coverage": {
+          "centerline": 0.13656976394595582,
+          "upper_bout": 0.13656976394595582,
+          "waist": 0.10712204932444816,
+          "lower_bout": 0.0,
+          "horn_left": 0.048866298297242844,
+          "horn_right": 0.09773259659448569,
+          "cutaway_left": 0.0,
+          "cutaway_right": 0.13656976394595582,
+          "neck_pocket": 0.0,
+          "bridge_region": 0.0,
+          "left_flank": 0.0,
+          "right_flank": 0.13656976394595582,
+          "outer_boundary": 0.0,
+          "butt_end": 0.0,
+          "shoulder": 0.0
+        },
+        "primitives_count": 1
+      },
+      "ibg_result": {
+        "status": "complete",
+        "spec_used": "stratocaster",
+        "confidence": 0.41250000000000003,
+        "outline_points": 0
+      },
+      "svg_artifact_path": "C:\\Users\\thepr\\Downloads\\luthiers-toolbox\\services\\api\\app\\instrument_geometry\\body\\ibg\\morphology_harvest\\outputs\\e2e_spine\\e2e_25fe6cb4\\artifact.svg",
+      "dxf_artifact_path": "C:\\Users\\thepr\\Downloads\\luthiers-toolbox\\services\\api\\app\\instrument_geometry\\body\\ibg\\morphology_harvest\\outputs\\e2e_spine\\e2e_25fe6cb4\\artifact.dxf",
+      "boe_package_path": "C:\\Users\\thepr\\Downloads\\luthiers-toolbox\\services\\api\\app\\instrument_geometry\\body\\ibg\\morphology_harvest\\outputs\\e2e_spine\\e2e_25fe6cb4\\boe_review_package.json",
+      "failures": [],
+      "uncertainties": [
+        "Could not determine instrument spec for reconstruction",
+        "Expected ROUNDED_DOUBLE_CUT, got slab_body"
+      ],
+      "review_status": "needs_review"
+    },
+    {
+      "run_id": "e2e_8b967eea",
+      "source_file": "Fender-Stratocaster-62.pdf",
+      "source_mode": "pdf",
+      "timestamp": "2026-05-17T06:28:48.437131",
+      "vectorizer_success": true,
+      "artifact_parse_success": false,
+      "body_evidence_created": false,
+      "body_grid_success": false,
+      "morphology_descriptor_created": false,
+      "ibg_reconstruction_attempted": false,
+      "ibg_reconstruction_success": false,
+      "boe_package_created": false,
+      "dimensions": {},
+      "body_evidence_summary": null,
+      "morphology_descriptor": null,
+      "ibg_result": null,
+      "svg_artifact_path": null,
+      "dxf_artifact_path": null,
+      "boe_package_path": null,
+      "failures": [
+        "Artifact parse failed: ['No parseable artifact provided']"
+      ],
+      "uncertainties": [],
+      "review_status": "failed"
+    },
+    {
+      "run_id": "e2e_4a5d895c",
+      "source_file": "Fender-Jazzmaster-62-Body.pdf",
+      "source_mode": "pdf",
+      "timestamp": "2026-05-17T06:28:57.669547",
+      "vectorizer_success": true,
+      "artifact_parse_success": true,
+      "body_evidence_created": true,
+      "body_grid_success": true,
+      "morphology_descriptor_created": true,
+      "ibg_reconstruction_attempted": true,
+      "ibg_reconstruction_success": true,
+      "boe_package_created": true,
+      "dimensions": {
+        "lower_bout_width_mm": 323.5,
+        "body_length_mm": 500.0
+      },
+      "body_evidence_summary": {
+        "outline_points_count": 27172,
+        "contour_segments_count": 13586,
+        "landmarks_count": 2,
+        "source_type": "vectorizer_dxf",
+        "bounding_box_mm": [
+          7.375,
+          14.875,
+          315.875,
+          485.25
+        ],
+        "centerline_x_mm": 161.625
+      },
+      "morphology_descriptor": {
+        "morphology_class": "slab_body",
+        "confidence": 0.28,
+        "centerline_x_mm": 161.625,
+        "asymmetry_score": 0.0,
+        "is_symmetric": true,
+        "zone_coverage": {
+          "centerline": 0.1878017052178551,
+          "upper_bout": 0.14269403173750725,
+          "waist": 0.1878017052178551,
+          "lower_bout": 0.04510767348034791,
+          "horn_left": 0.0,
+          "horn_right": 0.0,
+          "cutaway_left": 0.0487931791285796,
+          "cutaway_right": 0.0,
+          "neck_pocket": 0.0,
+          "bridge_region": 0.0,
+          "left_flank": 0.1878017052178551,
+          "right_flank": 0.0,
+          "outer_boundary": 0.0,
+          "butt_end": 0.0,
+          "shoulder": 0.0
+        },
+        "primitives_count": 1
+      },
+      "ibg_result": {
+        "status": "complete",
+        "spec_used": "stratocaster",
+        "confidence": 0.41250000000000003,
+        "outline_points": 0
+      },
+      "svg_artifact_path": "C:\\Users\\thepr\\Downloads\\luthiers-toolbox\\services\\api\\app\\instrument_geometry\\body\\ibg\\morphology_harvest\\outputs\\e2e_spine\\e2e_4a5d895c\\artifact.svg",
+      "dxf_artifact_path": "C:\\Users\\thepr\\Downloads\\luthiers-toolbox\\services\\api\\app\\instrument_geometry\\body\\ibg\\morphology_harvest\\outputs\\e2e_spine\\e2e_4a5d895c\\artifact.dxf",
+      "boe_package_path": "C:\\Users\\thepr\\Downloads\\luthiers-toolbox\\services\\api\\app\\instrument_geometry\\body\\ibg\\morphology_harvest\\outputs\\e2e_spine\\e2e_4a5d895c\\boe_review_package.json",
+      "failures": [],
+      "uncertainties": [
+        "Could not determine instrument spec for reconstruction",
+        "Expected OFFSET_DOUBLE_CUT, got slab_body"
+      ],
+      "review_status": "needs_review"
+    },
+    {
+      "run_id": "e2e_d1ec5164",
+      "source_file": "Gibson-Explorer-05-Complete-Plans.pdf",
+      "source_mode": "pdf",
+      "timestamp": "2026-05-17T06:29:10.205801",
+      "vectorizer_success": true,
+      "artifact_parse_success": true,
+      "body_evidence_created": true,
+      "body_grid_success": true,
+      "morphology_descriptor_created": true,
+      "ibg_reconstruction_attempted": true,
+      "ibg_reconstruction_success": true,
+      "boe_package_created": true,
+      "dimensions": {
+        "lower_bout_width_mm": 701.2622720897615,
+        "body_length_mm": 500.0
+      },
+      "body_evidence_summary": {
+        "outline_points_count": 61604,
+        "contour_segments_count": 30802,
+        "landmarks_count": 2,
+        "source_type": "vectorizer_dxf",
+        "bounding_box_mm": [
+          18.05750350631136,
+          77.31416549789621,
+          682.6788218793829,
+          333.09957924263676
+        ],
+        "centerline_x_mm": 350.36816269284714
+      },
+      "morphology_descriptor": {
+        "morphology_class": "slab_body",
+        "confidence": 0.28,
+        "centerline_x_mm": 350.36816269284714,
+        "asymmetry_score": 0.0,
+        "is_symmetric": true,
+        "zone_coverage": {
+          "centerline": 0.18975457186544759,
+          "upper_bout": 0.1358589984709335,
+          "waist": 0.18975457186544759,
+          "lower_bout": 0.05389557339451415,
+          "horn_left": 0.0,
+          "horn_right": 0.0,
+          "cutaway_left": 0.040981712538209605,
+          "cutaway_right": 0.0,
+          "neck_pocket": 0.0,
+          "bridge_region": 0.0,
+          "left_flank": 0.18975457186544759,
+          "right_flank": 0.0,
+          "outer_boundary": 0.0,
+          "butt_end": 0.0,
+          "shoulder": 0.0
+        },
+        "primitives_count": 1
+      },
+      "ibg_result": {
+        "status": "complete",
+        "spec_used": "stratocaster",
+        "confidence": 0.40625,
+        "outline_points": 0
+      },
+      "svg_artifact_path": "C:\\Users\\thepr\\Downloads\\luthiers-toolbox\\services\\api\\app\\instrument_geometry\\body\\ibg\\morphology_harvest\\outputs\\e2e_spine\\e2e_d1ec5164\\artifact.svg",
+      "dxf_artifact_path": "C:\\Users\\thepr\\Downloads\\luthiers-toolbox\\services\\api\\app\\instrument_geometry\\body\\ibg\\morphology_harvest\\outputs\\e2e_spine\\e2e_d1ec5164\\artifact.dxf",
+      "boe_package_path": "C:\\Users\\thepr\\Downloads\\luthiers-toolbox\\services\\api\\app\\instrument_geometry\\body\\ibg\\morphology_harvest\\outputs\\e2e_spine\\e2e_d1ec5164\\boe_review_package.json",
+      "failures": [],
+      "uncertainties": [
+        "Could not determine instrument spec for reconstruction",
+        "Expected ANGULAR_WEDGE, got slab_body"
+      ],
+      "review_status": "needs_review"
+    },
+    {
+      "run_id": "e2e_8768c879",
+      "source_file": "A003-Dreadnought-MM.pdf",
+      "source_mode": "pdf",
+      "timestamp": "2026-05-17T06:29:36.677874",
+      "vectorizer_success": true,
+      "artifact_parse_success": true,
+      "body_evidence_created": true,
+      "body_grid_success": true,
+      "morphology_descriptor_created": true,
+      "ibg_reconstruction_attempted": true,
+      "ibg_reconstruction_success": true,
+      "boe_package_created": true,
+      "dimensions": {
+        "lower_bout_width_mm": 706.9635913750442,
+        "body_length_mm": 500.0
+      },
+      "body_evidence_summary": {
+        "outline_points_count": 26326,
+        "contour_segments_count": 13163,
+        "landmarks_count": 2,
+        "source_type": "vectorizer_dxf",
+        "bounding_box_mm": [
+          11.488158359844467,
+          10.07423117709438,
+          695.1219512195122,
+          490.10250972074937
+        ],
+        "centerline_x_mm": 353.3050547896783
+      },
+      "morphology_descriptor": {
+        "morphology_class": "slab_body",
+        "confidence": 0.278,
+        "centerline_x_mm": 353.3050547896783,
+        "asymmetry_score": 0.0,
+        "is_symmetric": true,
+        "zone_coverage": {
+          "centerline": 0.1777627509948126,
+          "upper_bout": 0.1777627509948126,
+          "waist": 0.1777627509948126,
+          "lower_bout": 0.0,
+          "horn_left": 0.0,
+          "horn_right": 0.0,
+          "cutaway_left": 0.0,
+          "cutaway_right": 0.0889489960207497,
+          "neck_pocket": 0.0,
+          "bridge_region": 0.0,
+          "left_flank": 0.0,
+          "right_flank": 0.1777627509948126,
+          "outer_boundary": 0.0,
+          "butt_end": 0.0,
+          "shoulder": 0.0
+        },
+        "primitives_count": 1
+      },
+      "ibg_result": {
+        "status": "complete",
+        "spec_used": "stratocaster",
+        "confidence": 0.41250000000000003,
+        "outline_points": 0
+      },
+      "svg_artifact_path": "C:\\Users\\thepr\\Downloads\\luthiers-toolbox\\services\\api\\app\\instrument_geometry\\body\\ibg\\morphology_harvest\\outputs\\e2e_spine\\e2e_8768c879\\artifact.svg",
+      "dxf_artifact_path": "C:\\Users\\thepr\\Downloads\\luthiers-toolbox\\services\\api\\app\\instrument_geometry\\body\\ibg\\morphology_harvest\\outputs\\e2e_spine\\e2e_8768c879\\artifact.dxf",
+      "boe_package_path": "C:\\Users\\thepr\\Downloads\\luthiers-toolbox\\services\\api\\app\\instrument_geometry\\body\\ibg\\morphology_harvest\\outputs\\e2e_spine\\e2e_8768c879\\boe_review_package.json",
+      "failures": [],
+      "uncertainties": [
+        "Could not determine instrument spec for reconstruction",
+        "Expected ROUNDED_ACOUSTIC, got slab_body"
+      ],
+      "review_status": "needs_review"
+    },
+    {
+      "run_id": "e2e_d07bbd9c",
+      "source_file": "Classical-Santos-Hernandez-MM.pdf",
+      "source_mode": "pdf",
+      "timestamp": "2026-05-17T06:29:49.314326",
+      "vectorizer_success": true,
+      "artifact_parse_success": true,
+      "body_evidence_created": true,
+      "body_grid_success": true,
+      "morphology_descriptor_created": true,
+      "ibg_reconstruction_attempted": true,
+      "ibg_reconstruction_success": true,
+      "boe_package_created": true,
+      "dimensions": {
+        "lower_bout_width_mm": 644.0039318479686,
+        "body_length_mm": 500.00000000000006
+      },
+      "body_evidence_summary": {
+        "outline_points_count": 5452,
+        "contour_segments_count": 2726,
+        "landmarks_count": 2,
+        "source_type": "vectorizer_dxf",
+        "bounding_box_mm": [
+          10.484927916120578,
+          341.5792922673657,
+          110.58322411533422,
+          466.9069462647445
+        ],
+        "centerline_x_mm": 60.5340760157274
+      },
+      "morphology_descriptor": {
+        "morphology_class": "slab_body",
+        "confidence": 0.278,
+        "centerline_x_mm": 60.5340760157274,
+        "asymmetry_score": 0.0,
+        "is_symmetric": true,
+        "zone_coverage": {
+          "centerline": 0.17783802989433994,
+          "upper_bout": 0.1777024626320751,
+          "waist": 0.17783802989433994,
+          "lower_bout": 0.0,
+          "horn_left": 0.0,
+          "horn_right": 0.0,
+          "cutaway_left": 0.0,
+          "cutaway_right": 0.08878344768490504,
+          "neck_pocket": 0.0,
+          "bridge_region": 0.0,
+          "left_flank": 0.0,
+          "right_flank": 0.17783802989433994,
+          "outer_boundary": 0.0,
+          "butt_end": 0.0,
+          "shoulder": 0.0
+        },
+        "primitives_count": 1
+      },
+      "ibg_result": {
+        "status": "complete",
+        "spec_used": "stratocaster",
+        "confidence": 0.41250000000000003,
+        "outline_points": 0
+      },
+      "svg_artifact_path": "C:\\Users\\thepr\\Downloads\\luthiers-toolbox\\services\\api\\app\\instrument_geometry\\body\\ibg\\morphology_harvest\\outputs\\e2e_spine\\e2e_d07bbd9c\\artifact.svg",
+      "dxf_artifact_path": "C:\\Users\\thepr\\Downloads\\luthiers-toolbox\\services\\api\\app\\instrument_geometry\\body\\ibg\\morphology_harvest\\outputs\\e2e_spine\\e2e_d07bbd9c\\artifact.dxf",
+      "boe_package_path": "C:\\Users\\thepr\\Downloads\\luthiers-toolbox\\services\\api\\app\\instrument_geometry\\body\\ibg\\morphology_harvest\\outputs\\e2e_spine\\e2e_d07bbd9c\\boe_review_package.json",
+      "failures": [],
+      "uncertainties": [
+        "Could not determine instrument spec for reconstruction",
+        "Expected CLASSICAL_FIGURE_8, got slab_body"
+      ],
+      "review_status": "needs_review"
+    },
+    {
+      "run_id": "e2e_60775ddb",
+      "source_file": "Gibson-335-Dot-Complete.pdf",
+      "source_mode": "pdf",
+      "timestamp": "2026-05-17T06:29:59.124264",
+      "vectorizer_success": true,
+      "artifact_parse_success": true,
+      "body_evidence_created": true,
+      "body_grid_success": true,
+      "morphology_descriptor_created": true,
+      "ibg_reconstruction_attempted": true,
+      "ibg_reconstruction_success": true,
+      "boe_package_created": true,
+      "dimensions": {
+        "lower_bout_width_mm": 646.9622331691297,
+        "body_length_mm": 500.0
+      },
+      "body_evidence_summary": {
+        "outline_points_count": 68284,
+        "contour_segments_count": 34142,
+        "landmarks_count": 2,
+        "source_type": "vectorizer_dxf",
+        "bounding_box_mm": [
+          2.4630541871921183,
+          6.075533661740558,
+          646.1412151067324,
+          494.0886699507389
+        ],
+        "centerline_x_mm": 324.30213464696226
+      },
+      "morphology_descriptor": {
+        "morphology_class": "slab_body",
+        "confidence": 0.281,
+        "centerline_x_mm": 324.30213464696226,
+        "asymmetry_score": 0.0,
+        "is_symmetric": true,
+        "zone_coverage": {
+          "centerline": 0.19667479514548336,
+          "upper_bout": 0.08503657815467511,
+          "waist": 0.19667479514548336,
+          "lower_bout": 0.1116382169908083,
+          "horn_left": 0.0,
+          "horn_right": 0.0,
+          "cutaway_left": 0.0,
+          "cutaway_right": 0.0,
+          "neck_pocket": 0.0,
+          "bridge_region": 0.01330081941806653,
+          "left_flank": 0.0,
+          "right_flank": 0.19667479514548336,
+          "outer_boundary": 0.0,
+          "butt_end": 0.0,
+          "shoulder": 0.0
+        },
+        "primitives_count": 1
+      },
+      "ibg_result": {
+        "status": "complete",
+        "spec_used": "stratocaster",
+        "confidence": 0.41250000000000003,
+        "outline_points": 0
+      },
+      "svg_artifact_path": "C:\\Users\\thepr\\Downloads\\luthiers-toolbox\\services\\api\\app\\instrument_geometry\\body\\ibg\\morphology_harvest\\outputs\\e2e_spine\\e2e_60775ddb\\artifact.svg",
+      "dxf_artifact_path": "C:\\Users\\thepr\\Downloads\\luthiers-toolbox\\services\\api\\app\\instrument_geometry\\body\\ibg\\morphology_harvest\\outputs\\e2e_spine\\e2e_60775ddb\\artifact.dxf",
+      "boe_package_path": "C:\\Users\\thepr\\Downloads\\luthiers-toolbox\\services\\api\\app\\instrument_geometry\\body\\ibg\\morphology_harvest\\outputs\\e2e_spine\\e2e_60775ddb\\boe_review_package.json",
+      "failures": [],
+      "uncertainties": [
+        "Could not determine instrument spec for reconstruction",
+        "Expected ROUNDED_DOUBLE_CUT, got slab_body"
+      ],
+      "review_status": "needs_review"
+    },
+    {
+      "run_id": "e2e_b9c9d442",
+      "source_file": "Klein-Guitar-Plan.pdf",
+      "source_mode": "pdf",
+      "timestamp": "2026-05-17T06:30:27.784651",
+      "vectorizer_success": true,
+      "artifact_parse_success": true,
+      "body_evidence_created": true,
+      "body_grid_success": true,
+      "morphology_descriptor_created": true,
+      "ibg_reconstruction_attempted": true,
+      "ibg_reconstruction_success": true,
+      "boe_package_created": true,
+      "dimensions": {
+        "lower_bout_width_mm": 707.9646017699115,
+        "body_length_mm": 500.0
+      },
+      "body_evidence_summary": {
+        "outline_points_count": 11086,
+        "contour_segments_count": 5543,
+        "landmarks_count": 2,
+        "source_type": "vectorizer_dxf",
+        "bounding_box_mm": [
+          16.991150442477874,
+          22.123893805309734,
+          315.04424778761063,
+          214.86725663716814
+        ],
+        "centerline_x_mm": 166.01769911504425
+      },
+      "morphology_descriptor": {
+        "morphology_class": "slab_body",
+        "confidence": 0.278,
+        "centerline_x_mm": 166.01769911504425,
+        "asymmetry_score": 0.0,
+        "is_symmetric": true,
+        "zone_coverage": {
+          "centerline": 0.17774215203951788,
+          "upper_bout": 0.17774215203951788,
+          "waist": 0.17774215203951788,
+          "lower_bout": 0.0,
+          "horn_left": 0.0,
+          "horn_right": 0.0,
+          "cutaway_left": 0.0890313918419286,
+          "cutaway_right": 0.0,
+          "neck_pocket": 0.0,
+          "bridge_region": 0.0,
+          "left_flank": 0.17774215203951788,
+          "right_flank": 0.0,
+          "outer_boundary": 0.0,
+          "butt_end": 0.0,
+          "shoulder": 0.0
+        },
+        "primitives_count": 1
+      },
+      "ibg_result": {
+        "status": "complete",
+        "spec_used": "stratocaster",
+        "confidence": 0.41250000000000003,
+        "outline_points": 0
+      },
+      "svg_artifact_path": "C:\\Users\\thepr\\Downloads\\luthiers-toolbox\\services\\api\\app\\instrument_geometry\\body\\ibg\\morphology_harvest\\outputs\\e2e_spine\\e2e_b9c9d442\\artifact.svg",
+      "dxf_artifact_path": "C:\\Users\\thepr\\Downloads\\luthiers-toolbox\\services\\api\\app\\instrument_geometry\\body\\ibg\\morphology_harvest\\outputs\\e2e_spine\\e2e_b9c9d442\\artifact.dxf",
+      "boe_package_path": "C:\\Users\\thepr\\Downloads\\luthiers-toolbox\\services\\api\\app\\instrument_geometry\\body\\ibg\\morphology_harvest\\outputs\\e2e_spine\\e2e_b9c9d442\\boe_review_package.json",
+      "failures": [],
+      "uncertainties": [
+        "Could not determine instrument spec for reconstruction",
+        "Expected HYBRID_FORM, got slab_body"
+      ],
+      "review_status": "needs_review"
+    },
+    {
+      "run_id": "e2e_d947c03d",
+      "source_file": "cuatro puertorique\u00f1o.pdf",
+      "source_mode": "pdf",
+      "timestamp": "2026-05-17T06:30:38.374274",
+      "vectorizer_success": true,
+      "artifact_parse_success": true,
+      "body_evidence_created": true,
+      "body_grid_success": true,
+      "morphology_descriptor_created": true,
+      "ibg_reconstruction_attempted": true,
+      "ibg_reconstruction_success": true,
+      "boe_package_created": true,
+      "dimensions": {
+        "lower_bout_width_mm": 279.0,
+        "body_length_mm": 500.0
+      },
+      "body_evidence_summary": {
+        "outline_points_count": 6906,
+        "contour_segments_count": 3453,
+        "landmarks_count": 2,
+        "source_type": "vectorizer_dxf",
+        "bounding_box_mm": [
+          166.0,
+          343.875,
+          206.625,
+          489.75
+        ],
+        "centerline_x_mm": 186.3125
+      },
+      "morphology_descriptor": {
+        "morphology_class": "slab_body",
+        "confidence": 0.276,
+        "centerline_x_mm": 186.3125,
+        "asymmetry_score": 0.0,
+        "is_symmetric": true,
+        "zone_coverage": {
+          "centerline": 0.1675865270715045,
+          "upper_bout": 0.1675865270715045,
+          "waist": 0.1675865270715045,
+          "lower_bout": 0.0,
+          "horn_left": 0.00917212563564597,
+          "horn_right": 0.01834425127129194,
+          "cutaway_left": 0.0,
+          "cutaway_right": 0.10213751480704408,
+          "neck_pocket": 0.0,
+          "bridge_region": 0.0,
+          "left_flank": 0.0,
+          "right_flank": 0.1675865270715045,
+          "outer_boundary": 0.0,
+          "butt_end": 0.0,
+          "shoulder": 0.0
+        },
+        "primitives_count": 1
+      },
+      "ibg_result": {
+        "status": "complete",
+        "spec_used": "stratocaster",
+        "confidence": 0.41250000000000003,
+        "outline_points": 0
+      },
+      "svg_artifact_path": "C:\\Users\\thepr\\Downloads\\luthiers-toolbox\\services\\api\\app\\instrument_geometry\\body\\ibg\\morphology_harvest\\outputs\\e2e_spine\\e2e_d947c03d\\artifact.svg",
+      "dxf_artifact_path": "C:\\Users\\thepr\\Downloads\\luthiers-toolbox\\services\\api\\app\\instrument_geometry\\body\\ibg\\morphology_harvest\\outputs\\e2e_spine\\e2e_d947c03d\\artifact.dxf",
+      "boe_package_path": "C:\\Users\\thepr\\Downloads\\luthiers-toolbox\\services\\api\\app\\instrument_geometry\\body\\ibg\\morphology_harvest\\outputs\\e2e_spine\\e2e_d947c03d\\boe_review_package.json",
+      "failures": [],
+      "uncertainties": [
+        "Could not determine instrument spec for reconstruction",
+        "Expected ROUNDED_ACOUSTIC, got slab_body"
+      ],
+      "review_status": "needs_review"
+    }
+  ]
+}

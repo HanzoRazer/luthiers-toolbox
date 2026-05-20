@@ -1,0 +1,65 @@
+{
+  "source_file": "Klein-Guitar-Plan.pdf",
+  "source_mode": "pdf",
+  "run_id": "e2e_b9c9d442",
+  "timestamp": "2026-05-17T06:30:27.784651",
+  "svg_artifact_path": "C:\\Users\\thepr\\Downloads\\luthiers-toolbox\\services\\api\\app\\instrument_geometry\\body\\ibg\\morphology_harvest\\outputs\\e2e_spine\\e2e_b9c9d442\\artifact.svg",
+  "dxf_artifact_path": "C:\\Users\\thepr\\Downloads\\luthiers-toolbox\\services\\api\\app\\instrument_geometry\\body\\ibg\\morphology_harvest\\outputs\\e2e_spine\\e2e_b9c9d442\\artifact.dxf",
+  "body_evidence_summary": {
+    "outline_points_count": 11086,
+    "contour_segments_count": 5543,
+    "landmarks_count": 2,
+    "source_type": "vectorizer_dxf",
+    "bounding_box_mm": [
+      16.991150442477874,
+      22.123893805309734,
+      315.04424778761063,
+      214.86725663716814
+    ],
+    "centerline_x_mm": 166.01769911504425
+  },
+  "body_grid_result": {
+    "success": true,
+    "morphology_class": "slab_body",
+    "confidence": 0.278
+  },
+  "morphology_descriptor": {
+    "morphology_class": "slab_body",
+    "confidence": 0.278,
+    "centerline_x_mm": 166.01769911504425,
+    "asymmetry_score": 0.0,
+    "is_symmetric": true,
+    "zone_coverage": {
+      "centerline": 0.17774215203951788,
+      "upper_bout": 0.17774215203951788,
+      "waist": 0.17774215203951788,
+      "lower_bout": 0.0,
+      "horn_left": 0.0,
+      "horn_right": 0.0,
+      "cutaway_left": 0.0890313918419286,
+      "cutaway_right": 0.0,
+      "neck_pocket": 0.0,
+      "bridge_region": 0.0,
+      "left_flank": 0.17774215203951788,
+      "right_flank": 0.0,
+      "outer_boundary": 0.0,
+      "butt_end": 0.0,
+      "shoulder": 0.0
+    },
+    "primitives_count": 1
+  },
+  "ibg_reconstruction_status": "complete",
+  "ibg_result": {
+    "status": "complete",
+    "spec_used": "stratocaster",
+    "confidence": 0.41250000000000003,
+    "outline_points": 0
+  },
+  "failures": [],
+  "uncertainties": [
+    "Could not determine instrument spec for reconstruction",
+    "Expected HYBRID_FORM, got slab_body"
+  ],
+  "review_notes_placeholder": "",
+  "review_status": "needs_review"
+}

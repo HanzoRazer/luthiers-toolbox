@@ -1,0 +1,65 @@
+{
+  "source_file": "cuatro puertorique\u00f1o.pdf",
+  "source_mode": "pdf",
+  "run_id": "e2e_d947c03d",
+  "timestamp": "2026-05-17T06:30:38.374274",
+  "svg_artifact_path": "C:\\Users\\thepr\\Downloads\\luthiers-toolbox\\services\\api\\app\\instrument_geometry\\body\\ibg\\morphology_harvest\\outputs\\e2e_spine\\e2e_d947c03d\\artifact.svg",
+  "dxf_artifact_path": "C:\\Users\\thepr\\Downloads\\luthiers-toolbox\\services\\api\\app\\instrument_geometry\\body\\ibg\\morphology_harvest\\outputs\\e2e_spine\\e2e_d947c03d\\artifact.dxf",
+  "body_evidence_summary": {
+    "outline_points_count": 6906,
+    "contour_segments_count": 3453,
+    "landmarks_count": 2,
+    "source_type": "vectorizer_dxf",
+    "bounding_box_mm": [
+      166.0,
+      343.875,
+      206.625,
+      489.75
+    ],
+    "centerline_x_mm": 186.3125
+  },
+  "body_grid_result": {
+    "success": true,
+    "morphology_class": "slab_body",
+    "confidence": 0.276
+  },
+  "morphology_descriptor": {
+    "morphology_class": "slab_body",
+    "confidence": 0.276,
+    "centerline_x_mm": 186.3125,
+    "asymmetry_score": 0.0,
+    "is_symmetric": true,
+    "zone_coverage": {
+      "centerline": 0.1675865270715045,
+      "upper_bout": 0.1675865270715045,
+      "waist": 0.1675865270715045,
+      "lower_bout": 0.0,
+      "horn_left": 0.00917212563564597,
+      "horn_right": 0.01834425127129194,
+      "cutaway_left": 0.0,
+      "cutaway_right": 0.10213751480704408,
+      "neck_pocket": 0.0,
+      "bridge_region": 0.0,
+      "left_flank": 0.0,
+      "right_flank": 0.1675865270715045,
+      "outer_boundary": 0.0,
+      "butt_end": 0.0,
+      "shoulder": 0.0
+    },
+    "primitives_count": 1
+  },
+  "ibg_reconstruction_status": "complete",
+  "ibg_result": {
+    "status": "complete",
+    "spec_used": "stratocaster",
+    "confidence": 0.41250000000000003,
+    "outline_points": 0
+  },
+  "failures": [],
+  "uncertainties": [
+    "Could not determine instrument spec for reconstruction",
+    "Expected ROUNDED_ACOUSTIC, got slab_body"
+  ],
+  "review_notes_placeholder": "",
+  "review_status": "needs_review"
+}
