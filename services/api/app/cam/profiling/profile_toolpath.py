@@ -222,6 +222,7 @@ class ProfileToolpath:
             warnings=self._warnings,
         )
 
+    @safety_critical
     def generate_gcode(self) -> str:
         """Generate G-code string (convenience method)."""
         return self.generate().gcode
@@ -242,6 +243,7 @@ class ProfileToolpath:
 
         return passes
 
+    @safety_critical
     def _generate_gcode(
         self,
         roughing_path: List[Pt],

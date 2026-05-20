@@ -191,6 +191,7 @@ class PurflingLedge:
             warnings=self._warnings,
         )
 
+    @safety_critical
     def generate_gcode(self) -> str:
         """Generate G-code string (convenience method)."""
         return self.generate().gcode
@@ -208,6 +209,7 @@ class PurflingLedge:
 
         return passes
 
+    @safety_critical
     def _generate_gcode(
         self,
         path: List[Pt],
