@@ -3496,6 +3496,10 @@ Import validation is structural validation only. It does NOT restore, apply, cal
 
 | Date | Change |
 |------|--------|
+| 2026-05-20 | **Dev Order 63 Acoustic Residual Comparison Workspace complete** — MeasurementResidualComparisonPanel for pairwise archive comparison with dynamic property matching, residual magnitude interpretation, and observational narrative generation. Composes ResidualCoherenceCard. Ephemeral comparisons (not persisted). |
+| 2026-05-20 | **Dev Order 62 Measurement Lab Evidence Index complete** — MeasurementArchiveEvidenceIndex with chronological/by-method/by-experiment views, sparse archive detection, experiment tag grouping. Evidence summaries are observational only. |
+| 2026-05-20 | **Dev Order 61 Measurement Archive Hardening complete** — Timezone fix (UTC methods in filename generation), test coverage expanded to 54 tests, boundary discipline verification. |
+| 2026-05-19 | **Dev Order 60 Measurement Archive Integration complete** — MeasurementArchiveExchangeSection with export/import/preview cards mounted in Measurement Lab tab. Schema: measurement-archive.v1. Local-only, observational-only semantics. |
 | 2026-05-14 | **Dev Order 52 Snapshot Exchange Documentation & Architecture Consolidation complete** |
 | 2026-05-14 | **Dev Order 51 Snapshot Exchange Final UX Checkpoint complete** |
 | 2026-05-14 | **Dev Order 50 Snapshot Exchange Information Chunking Refinement complete** |
