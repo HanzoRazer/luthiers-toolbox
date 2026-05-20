@@ -3,8 +3,8 @@
 # Runs governance checks via check_all.py with policy support.
 # Part of Governance Execution Alignment Sprint.
 #
-# Current state: WARN MODE (observational)
-# To promote to blocking: change --mode warn to --mode block
+# Current state: BLOCKING MODE (enforced)
+# Authority chain violations will fail CI
 
 name: Unified Governance
 
@@ -55,7 +55,7 @@ jobs:
         run: |
           python scripts/governance/check_all.py \
             --tier ci \
-            --mode warn \
+            --mode block \
             --policy docs/governance/ontology/ontology_ci_policy.json \
             --strict-policy \
             --fail-on-missing-active-script \
