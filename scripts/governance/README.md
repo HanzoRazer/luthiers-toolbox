@@ -131,3 +131,32 @@ Validate a specific session/batch:
 ```bash
 CONTRACT_SESSION_ID=sess123 CONTRACT_BATCH_LABEL=mybatch python scripts/governance/validate_run_artifact_contract.py
 ```
+
+---
+
+## Semantic sandbox import gate (Phase 0.5)
+
+Script:
+- `scripts/governance/check_semantic_sandbox_imports.py`
+
+Blocks production `services/` imports of Tier A cognition/grid modules (`cognitive_extract*`, `extract_body_grid*`) until they are re-homed to [vectorizer-sandbox](https://github.com/HanzoRazer/vectorizer-sandbox). Enforced in **precommit** tier via `check_all.py`.
+
+```bash
+python scripts/governance/check_semantic_sandbox_imports.py
+```
+
+See `docs/governance/VECTORIZER_SANDBOX_MIGRATION_PLAN.md` (Phase 0.5).
+
+---
+
+## Vectorizer audit ground-truth
+
+PowerShell (from repo root):
+
+```powershell
+.\scripts\governance\verify_vectorizer_audit.ps1
+```
+
+Also runs `check_semantic_sandbox_imports.py` as check 2. Results written to `verify_vectorizer_audit_results.txt` when the script completes.
+
+Lifecycle registry: `docs/governance/VECTORIZER_COMPONENT_LIFECYCLE.md`

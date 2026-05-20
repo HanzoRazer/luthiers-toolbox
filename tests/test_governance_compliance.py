@@ -149,6 +149,26 @@ class TestSemanticLeakageScript:
         assert result.returncode == 0, f"Syntax error: {result.stderr}"
 
 
+class TestSemanticSandboxImportGate:
+    """Phase 0.5: block Tier A cognition/grid imports in services/."""
+
+    def test_script_exists(self):
+        script_path = REPO_ROOT / "scripts" / "governance" / "check_semantic_sandbox_imports.py"
+        assert script_path.exists(), "check_semantic_sandbox_imports.py not found"
+
+    def test_script_runs_clean(self):
+        script_path = REPO_ROOT / "scripts" / "governance" / "check_semantic_sandbox_imports.py"
+        result = subprocess.run(
+            [sys.executable, str(script_path)],
+            capture_output=True,
+            text=True,
+            cwd=str(REPO_ROOT),
+        )
+        assert result.returncode == 0, (
+            f"Semantic sandbox import gate failed:\n{result.stdout}\n{result.stderr}"
+        )
+
+
 class TestCapabilityRegistryScript:
     """Test capability registry validation script."""
 

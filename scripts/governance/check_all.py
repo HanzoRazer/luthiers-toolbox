@@ -75,6 +75,12 @@ GOVERNANCE_CHECKS: List[Tuple[str, str, bool, EnforcementTier]] = [
     ("scripts/check_sprint_namespace.py", "Sprint namespace conventions", False, EnforcementTier.PRECOMMIT),
     ("scripts/check_dxf_compat.py", "DXF compatibility enforcement", True, EnforcementTier.PRECOMMIT),
     ("scripts/governance/check_manifest_index.py", "Manifest index validation", True, EnforcementTier.PRECOMMIT),
+    (
+        "scripts/governance/check_semantic_sandbox_imports.py",
+        "Semantic sandbox import gate (Tier A cognition/grid)",
+        True,
+        EnforcementTier.PRECOMMIT,
+    ),
 
     # === CI TIER — moderate checks, <30s each ===
     ("scripts/check_capability_registry.py", "CAM capability registry", True, EnforcementTier.CI),
