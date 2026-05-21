@@ -1237,20 +1237,38 @@ def _isolate_with_grouping(
 
         if not nodes:
             logger.warning("No hierarchy nodes built, falling back to legacy isolation")
+            no_node_result = GroupSelectionResult(
+                group_count=0,
+                selected_group_index=-1,
+                selected_group_id=-1,
+                selected_group_bbox=(0, 0, 0, 0),
+                selected_group_score=0.0,
+                runner_up_score=0.0,
+                winner_margin=0.0,
+                fallback_used=True,
+                fallback_reason="no_hierarchy_nodes",
+            )
+            try:
+                from grouping_telemetry import record_grouping_fallback
+
+                record_grouping_fallback(
+                    reason=no_node_result.fallback_reason,
+                    group_count=0,
+                    source="edge_to_dxf._isolate_with_grouping",
+                )
+            except ImportError:
+                pass
             return _isolate_body_contours(
                 contours, hierarchy, image_width, image_height,
                 min_area_ratio, max_area_ratio
-            ), None
+            ), no_node_result
 
         # Step 2: Group from eligible roots
         groups = _group_from_roots(nodes, image_width, image_height)
 
         if not groups:
             logger.warning("No contour groups formed, falling back to legacy isolation")
-            return _isolate_body_contours(
-                contours, hierarchy, image_width, image_height,
-                min_area_ratio, max_area_ratio
-            ), GroupSelectionResult(
+            no_groups_result = GroupSelectionResult(
                 group_count=0,
                 selected_group_index=-1,
                 selected_group_id=-1,
@@ -1261,6 +1279,20 @@ def _isolate_with_grouping(
                 fallback_used=True,
                 fallback_reason="no_groups_formed",
             )
+            try:
+                from grouping_telemetry import record_grouping_fallback
+
+                record_grouping_fallback(
+                    reason=no_groups_result.fallback_reason,
+                    group_count=0,
+                    source="edge_to_dxf._isolate_with_grouping",
+                )
+            except ImportError:
+                pass
+            return _isolate_body_contours(
+                contours, hierarchy, image_width, image_height,
+                min_area_ratio, max_area_ratio
+            ), no_groups_result
 
         # Step 3: Score and select winning group
         winning_group, group_result = _select_winning_group(
@@ -1275,6 +1307,16 @@ def _isolate_with_grouping(
             )
             group_result.fallback_used = True
             group_result.fallback_reason = "selection_failed"
+            try:
+                from grouping_telemetry import record_grouping_fallback
+
+                record_grouping_fallback(
+                    reason=group_result.fallback_reason,
+                    group_count=group_result.group_count,
+                    source="edge_to_dxf._isolate_with_grouping",
+                )
+            except ImportError:
+                pass
             return fallback, group_result
 
         # Step 4: Return winning group's contours
@@ -1292,10 +1334,7 @@ def _isolate_with_grouping(
 
     except Exception as e:
         logger.exception(f"Grouping failed with error: {e}, falling back to legacy")
-        return _isolate_body_contours(
-            contours, hierarchy, image_width, image_height,
-            min_area_ratio, max_area_ratio
-        ), GroupSelectionResult(
+        exc_result = GroupSelectionResult(
             group_count=0,
             selected_group_index=-1,
             selected_group_id=-1,
@@ -1306,6 +1345,20 @@ def _isolate_with_grouping(
             fallback_used=True,
             fallback_reason=f"exception: {str(e)[:50]}",
         )
+        try:
+            from grouping_telemetry import record_grouping_fallback
+
+            record_grouping_fallback(
+                reason=exc_result.fallback_reason,
+                group_count=0,
+                source="edge_to_dxf._isolate_with_grouping",
+            )
+        except ImportError:
+            pass
+        return _isolate_body_contours(
+            contours, hierarchy, image_width, image_height,
+            min_area_ratio, max_area_ratio
+        ), exc_result
 
 
 @dataclass
@@ -1595,12 +1648,21 @@ class EdgeToDXF:
                 max_area_ratio=0.95,
             )
 
-            # Log grouping outcome
+            # Log grouping outcome + PR-2 telemetry
             if group_result:
                 if group_result.fallback_used:
-                    logger.warning(
-                        f"Grouping fallback used: {group_result.fallback_reason}"
-                    )
+                    try:
+                        from grouping_telemetry import record_grouping_fallback
+
+                        record_grouping_fallback(
+                            reason=group_result.fallback_reason,
+                            group_count=group_result.group_count,
+                            source="edge_to_dxf.convert",
+                        )
+                    except ImportError:
+                        logger.warning(
+                            f"Grouping fallback used: {group_result.fallback_reason}"
+                        )
                 else:
                     logger.info(
                         f"Group selection: {group_result.group_count} groups, "

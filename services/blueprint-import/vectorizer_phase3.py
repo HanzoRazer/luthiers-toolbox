@@ -21,6 +21,10 @@ Enhanced blueprint vectorizer with:
 
 Author: The Production Shop
 Version: 3.6.0
+
+Lifecycle registry: docs/governance/VECTORIZER_COMPONENT_LIFECYCLE.md
+- FeedbackSystem.submit_correction: DEAD (no production API; Loop 3 not ratified)
+- ExtractionMode.SIMPLE: EXPORT_SAFE after PR-1 (not ACTIVE without commercial gate)
 """
 import logging
 import hashlib
@@ -1215,7 +1219,12 @@ class FeedbackSystem:
         correct_category: str,
         reviewer: str = "user"
     ) -> bool:
-        """Submit a correction for a classification."""
+        """
+        DEAD — lifecycle gate (VECTORIZER_COMPONENT_LIFECYCLE.md).
+
+        Not called from production routers. Do not wire to IBG intake until
+        Loop 3 retraining is ratified. Use governance graduation bridge instead.
+        """
         for record in self.pending_reviews:
             if record["contour_hash"] == contour_hash:
                 record["correct_label"] = correct_category
@@ -2441,7 +2450,7 @@ def export_to_dxf(
     max_per_category: Optional[Dict[ContourCategory, int]] = None,
     dxf_version: DxfVersion = 'R12',
     scale_factor: float = 1.0
-) -> Tuple[float, float]:
+) -> Tuple[float, float, int]:
     """
     Export classified contours to DXF with semantic layers.
 
@@ -2458,13 +2467,13 @@ def export_to_dxf(
         scale_factor: Scale multiplier (from calibration, default 1.0)
 
     Returns:
-        Tuple of (body_width_mm, body_height_mm)
+        Tuple of (body_width_mm, body_height_mm, exported_entity_count)
     """
     if excluded_categories is None:
         excluded_categories = [
             ContourCategory.TEXT,
             ContourCategory.PAGE_BORDER,
-            ContourCategory.UNKNOWN
+            ContourCategory.UNKNOWN,
         ]
 
     if max_per_category is None:
@@ -2524,6 +2533,8 @@ def export_to_dxf(
         'ROSETTE': 2,           # Yellow
         'BRACING': 3,           # Green
         'SMALL_FEATURE': 7,     # White
+        'UNKNOWN': 8,           # Gray — SIMPLE mode exports unclassified contours
+        'UNCLASSIFIED': 8,
     }
 
     # Per-layer simplification tolerances in mm
@@ -2621,7 +2632,7 @@ def export_to_dxf(
     _safe_dxf_save(doc, output_path)
     logger.info(f"Exported {exported_count} contours to {output_path}")
 
-    return body_width, body_height
+    return body_width, body_height, exported_count
 
 
 def export_primitives_to_dxf(
@@ -3567,15 +3578,32 @@ class Phase3Vectorizer:
 
         # Export to DXF
         dxf_version_to_use = getattr(self, 'dxf_version', 'R12')
-        body_w, body_h = export_to_dxf(
+        simple_export_excluded = None
+        if mode == ExtractionMode.SIMPLE:
+            simple_export_excluded = [
+                ContourCategory.TEXT,
+                ContourCategory.PAGE_BORDER,
+                ContourCategory.SMALL_FEATURE,
+            ]
+        body_w, body_h, exported_count = export_to_dxf(
             classified,
             output_path,
             height,
             self.mm_per_px,
             simplify_tolerance=self.simplify_tolerance,
             dxf_version=dxf_version_to_use,
-            scale_factor=scale_factor
+            scale_factor=scale_factor,
+            excluded_categories=simple_export_excluded,
         )
+        simple_export_failed = (
+            mode == ExtractionMode.SIMPLE
+            and exported_count == 0
+            and len(all_contours) > 0
+        )
+        if simple_export_failed:
+            logger.warning(
+                "SIMPLE export produced zero entities — validation_passed=False"
+            )
 
         # Phase 3.7: CAM-ready DXF export (arc fitting, LWPOLYLINE)
         cam_dxf_path = None
@@ -3633,6 +3661,11 @@ class Phase3Vectorizer:
         # Validate dimensions
         warnings = []
         validation_passed = True
+        if simple_export_failed:
+            warnings.append(
+                f"simple_export_empty: {len(all_contours)} contours extracted, 0 exported"
+            )
+            validation_passed = False
         enhanced_validation = None
         if self.enhanced_validator and validate and body_w > 0:
             # Phase 3.7: Enhanced validation — build a minimal result-like object

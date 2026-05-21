@@ -46,8 +46,10 @@ class ExtractionResult:
     error: str = ""
     warnings: list[str] = field(default_factory=list)
     stage_timings: dict[str, float] = field(default_factory=dict)
-    # Primary Object Grouping metadata (debug-only, internal)
+    # Primary Object Grouping metadata (internal)
     grouping: Optional[dict] = None
+    # PR-2: surfaced on API response via orchestrator (not debug-only)
+    topology_provenance: Optional[dict] = None
 
 
 # ─── Guardrail Helpers ───────────────────────────────────────────────────────
@@ -261,6 +263,22 @@ def extract_blueprint_to_dxf(
             isolate_body=isolate_body,
         )
 
+        grouping_meta = getattr(result, 'grouping', None)
+        topology_provenance = None
+        if grouping_meta is not None:
+            try:
+                from grouping_telemetry import build_topology_provenance
+
+                topology_provenance = build_topology_provenance(grouping_meta)
+            except ImportError:
+                topology_provenance = {
+                    "grouping_fallback_used": grouping_meta.get(
+                        "grouping_fallback_used", False
+                    ),
+                    "grouping_fallback_reason": grouping_meta.get("fallback_reason"),
+                    "grouping_algorithm": "primary",
+                }
+
         return ExtractionResult(
             success=True,
             output_path=result.output_path if hasattr(result, 'output_path') else output_path,
@@ -272,7 +290,8 @@ def extract_blueprint_to_dxf(
             processing_time_ms=result.processing_time_ms,
             stage_timings=getattr(result, 'stage_timings', {}),
             warnings=warnings,
-            grouping=getattr(result, 'grouping', None),
+            grouping=grouping_meta,
+            topology_provenance=topology_provenance,
         )
 
     except BlueprintGuardrailError as e:

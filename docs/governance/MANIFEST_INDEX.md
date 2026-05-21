@@ -24,6 +24,9 @@ This index tracks all governance manifests to prevent duplication and establish 
 | rosette_governance_gate_manifest.json | docs/architecture/ | CAM | Rosette governance gates | 1.0.0 | RMOS |
 | regression_corpus/manifest.json | tests/ | MRP | Regression test artifacts | 1.0.0 | MRP |
 | benchmark_manifest.json | root | Vectorizer | Vectorizer benchmarks | 1.0.0 | VECTOR |
+| VECTORIZER_COMPONENT_LIFECYCLE.md | docs/governance/ | VECTOR | Component lifecycle states, ACTIVE promotion, SIMPLE gate | 1.0.0 | VECTOR |
+| SEMANTIC_INCUBATION_ARCHITECTURE.md | docs/governance/ | VECTOR | Two-repo model: runtime spine vs cognition layer; graduation bridge | 1.0.0 | VECTOR |
+| VECTORIZER_SANDBOX_MIGRATION_PLAN.md | docs/governance/ | VECTOR | Re-home Tier A to vectorizer-sandbox; expand cognition repo | 2.0.0 | VECTOR |
 
 ---
 

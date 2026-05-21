@@ -167,6 +167,8 @@ class BlueprintResult:
             "recommendation": self.recommendation.to_dict(),
             "metrics": self.metrics,
         }
+        if self.metrics.get("topology_provenance"):
+            payload["topology_provenance"] = self.metrics["topology_provenance"]
         if include_debug and self.debug:
             payload["debug"] = self.debug
         return payload
@@ -1035,6 +1037,11 @@ class BlueprintOrchestrator:
                         "contours_found": clean_result.contours_found,
                         "chains_found": clean_result.chains_found,
                         "contour_confidence": round(clean_result.best_confidence, 3),
+                        **(
+                            {"topology_provenance": extract_result.topology_provenance}
+                            if extract_result.topology_provenance
+                            else {}
+                        ),
                     },
                     debug=self._build_debug_payload(
                         stage_timings, extract_result, clean_result, debug

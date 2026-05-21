@@ -2,13 +2,16 @@
 
 **Date:** 2026-05-20  
 **Status:** ARCHAEOLOGY_COMPLETE  
-**Sprint:** Vectorizer Technical Debt Archaeology
+**Sprint:** Vectorizer Technical Debt Archaeology  
+**Lifecycle authority:** `docs/governance/VECTORIZER_COMPONENT_LIFECYCLE.md` (component states, ACTIVE promotion, SIMPLE gate)
 
 ---
 
 ## Overview
 
 Structured inventory of technical debt in the vectorizer ecosystem, classified by severity and impact domain.
+
+Non-canonical or unwired systems must use lifecycle states in `VECTORIZER_COMPONENT_LIFECYCLE.md` — **`ACTIVE` requires explicit sign-off**, not export-only fixes.
 
 ---
 
@@ -54,10 +57,10 @@ Structured inventory of technical debt in the vectorizer ecosystem, classified b
 | Debt Item | Location | Domain | Issue | Recommendation |
 |-----------|----------|--------|-------|----------------|
 | Contour hierarchy duplication | edge_to_dxf.py:419 | **maintainability** | Duplicates contour_hierarchy.py | Extract shared module |
-| `cognitive_extractor.py` orphaned | photo-vectorizer/ | **regression_risk** | 1400+ LOC dead code | Archive |
-| `cognitive_extraction_engine.py` orphaned | photo-vectorizer/ | **regression_risk** | 1400+ LOC dead code | Archive |
+| `cognitive_extractor.py` unwired | photo-vectorizer/ | **regression_risk** | 1400+ LOC; **ARCHAEOLOGICAL_RESEARCH** | Freeze; no production import; harvest before delete |
+| `cognitive_extraction_engine.py` unwired | photo-vectorizer/ | **regression_risk** | 1500+ LOC; same | Same |
 | edge_to_dxf grouping fallback silent | edge_to_dxf.py:1294 | **topology** | Falls back to deprecated method on any exception | Add telemetry, fix exceptions |
-| 5 abandoned grid extractors | photo-vectorizer/ | **maintainability** | extract_body_grid_v1-v5 never wired | Archive all |
+| 5 abandoned grid extractors | photo-vectorizer/ | **maintainability** | extract_body_grid_v1-v5 never wired | **ARCHAEOLOGICAL_RESEARCH** — preserve, harvest concepts |
 | Phase 4 standalone | blueprint-import/phase4/ | **semantic** | Complete but not integrated | Integrate or document as future work |
 
 ---
@@ -104,7 +107,7 @@ Structured inventory of technical debt in the vectorizer ecosystem, classified b
 
 | Item | Severity | Location |
 |------|----------|----------|
-| `calibration_integration.py` orphaned | CRITICAL | blueprint-import |
+| `calibration_integration.py` not on main vectorize | MEDIUM | blueprint-import (PARTIAL — calibration API only) |
 | Phase 4 standalone | HIGH | blueprint-import/phase4 |
 | Contour plausibility import fallback | MEDIUM | contour_plausibility.py |
 | Scale detection fragmentation | MEDIUM | Multiple |
@@ -113,17 +116,18 @@ Structured inventory of technical debt in the vectorizer ecosystem, classified b
 
 | Item | Severity | Location |
 |------|----------|----------|
-| `FeedbackSystem` never triggered | CRITICAL | vectorizer_phase3.py |
-| `TrainingDataCollector` never triggered | CRITICAL | vectorizer_phase3.py |
+| `submit_correction()` never called | CRITICAL | vectorizer_phase3.py (DEAD — PR-3 gate) |
+| `TrainingDataCollector` never instantiated | CRITICAL | vectorizer_phase3.py (DEAD) |
+| `record_classification()` narrow use | MEDIUM | vectorizer_phase3.py (PARTIAL) |
 
 ### Maintainability Impact (10 items)
 
 | Item | Severity | Location |
 |------|----------|----------|
 | Contour hierarchy duplication | HIGH | edge_to_dxf.py |
-| cognitive_extractor.py orphaned | HIGH | photo-vectorizer |
-| cognitive_extraction_engine.py orphaned | HIGH | photo-vectorizer |
-| 5 abandoned grid extractors | HIGH | photo-vectorizer |
+| cognitive_extractor.py unwired (archaeological) | MEDIUM | photo-vectorizer |
+| cognitive_extraction_engine.py unwired (archaeological) | MEDIUM | photo-vectorizer |
+| 5 grid extractors v1–v5 (archaeological) | MEDIUM | photo-vectorizer |
 | geometry_coach v1 not deprecated | MEDIUM | photo-vectorizer |
 | photo_vectorizer_v2.py version mismatch | MEDIUM | photo-vectorizer |
 | vectorizer_phase2.py superseded | MEDIUM | blueprint-import |
@@ -135,28 +139,31 @@ Structured inventory of technical debt in the vectorizer ecosystem, classified b
 
 | Item | Severity | Location |
 |------|----------|----------|
-| cognitive_extractor.py orphaned | HIGH | photo-vectorizer |
-| cognitive_extraction_engine.py orphaned | HIGH | photo-vectorizer |
+| cognitive_extractor.py unwired (archaeological) | MEDIUM | photo-vectorizer |
+| cognitive_extraction_engine.py unwired (archaeological) | MEDIUM | photo-vectorizer |
 | light_line_body_extractor.py unknown | MEDIUM | photo-vectorizer |
 | photo_silhouette_extractor.py unknown | MEDIUM | photo-vectorizer |
 
 ---
 
-## Dead Code Inventory
+## Archaeological research inventory (preserve — do not delete in remediation sprint)
+
+| File | LOC | Lifecycle state | Action |
+|------|-----|-----------------|--------|
+| `cognitive_extractor.py` | ~1470 | **ARCHAEOLOGICAL_RESEARCH** | Freeze; document concepts; optional future external repo |
+| `cognitive_extraction_engine.py` | ~1503 | **ARCHAEOLOGICAL_RESEARCH** | Same |
+| `extract_body_grid.py` v1–v5 | ~1,640 total | **ARCHAEOLOGICAL_RESEARCH** | Same |
+| `march_pipeline_restore.py` | ~100 | **ARCHAEOLOGICAL_RESEARCH** | Same |
+
+**Policy:** Unwired ≠ worthless. Harvest semantic/topology ideas before any deletion. See `VECTORIZER_COMPONENT_LIFECYCLE.md`.
+
+## Superseded operational code
 
 | File | LOC | Status | Action |
 |------|-----|--------|--------|
-| `cognitive_extractor.py` | 1455 | Orphan | Archive |
-| `cognitive_extraction_engine.py` | 1492 | Orphan | Archive |
-| `extract_body_grid.py` | ~200 | Abandoned | Archive |
-| `extract_body_grid_v2.py` | ~200 | Abandoned | Archive |
-| `extract_body_grid_v3.py` | ~200 | Abandoned | Archive |
-| `extract_body_grid_v4.py` | ~200 | Abandoned | Archive |
-| `extract_body_grid_v5.py` | ~200 | Abandoned | Archive |
-| `march_pipeline_restore.py` | ~100 | Orphan | Archive |
-| `vectorizer_phase2.py` | 1684 | Superseded | Deprecate |
+| `vectorizer_phase2.py` | 1684 | **ABANDONED** | Deprecate after parity documented; not same as archaeological lineage |
 
-**Total Dead/Superseded Code:** ~5,800+ LOC
+**~5,800 LOC** cognitive/grid: **research artifacts**, not janitorial delete target for PR-1–3.
 
 ---
 
@@ -164,9 +171,10 @@ Structured inventory of technical debt in the vectorizer ecosystem, classified b
 
 | Priority | Severity | Count | Next Action |
 |----------|----------|-------|-------------|
-| P0 | CRITICAL | 4 | Fix `_simple_extraction()`, wire feedback systems |
-| P1 | HIGH | 6 | Archive dead code, fix grouping fallback |
-| P2 | MEDIUM | 8 | Consolidate, deprecate, document |
+| P0-live | HIGH/telemetry | 1 | PR-2 grouping fallback visibility on `refined` path |
+| P0-code | CRITICAL | 3 | PR-1 SIMPLE export; PR-3 gate DEAD feedback paths |
+| P1 | HIGH | 6 | Harvest archaeological lineage; grep-gate imports; optional external repo — **no bulk delete** |
+| P2 | MEDIUM | 8 | Calibration on main vectorize (optional), consolidate scale |
 | P3 | LOW | 5 | Cleanup when convenient |
 
 ---
@@ -177,18 +185,15 @@ Structured inventory of technical debt in the vectorizer ecosystem, classified b
 
 **Assessment:** Yes, with targeted fixes:
 
-1. **Topology reliability:** V2_RAW and PHOTO_V2 modes produce clean output. SIMPLE mode needs fix.
+1. **Topology reliability:** Canonical `refined` path needs grouping fallback telemetry (PR-2). V2_RAW / PHOTO_V2 recovery modes are SANDBOX.
 
-2. **Semantic fidelity:** Feedback loop disconnection is the primary authority risk. Wiring FeedbackSystem would enable learning.
+2. **Semantic fidelity:** `submit_correction` and `TrainingDataCollector` are DEAD — classify and gate (PR-3), do not imply learning. `record_classification` is PARTIAL only.
 
-3. **Hidden fallbacks:** Most fallbacks are logged. edge_to_dxf grouping fallback needs telemetry.
+3. **SIMPLE:** Export fix (PR-1) → **EXPORT_SAFE** only; commercial ACTIVE requires `VECTORIZER_COMPONENT_LIFECYCLE.md` gate + sign-off.
 
-4. **Dead code:** ~5,800 LOC should be archived to reduce surface area.
+4. **Archaeological lineage:** ~5,800 LOC cognitive/grid — **ARCHAEOLOGICAL_RESEARCH**; preserve, extract concepts, optional separate repo; grep CI to prevent production re-import.
 
-**Conclusion:** The vectorizer CAN be trustworthy if:
-- CRITICAL items (4) are addressed
-- HIGH dead code (5,800 LOC) is archived
-- Fallback telemetry is added
+**Conclusion:** Trustworthiness on the **live** path requires PR-2 observability on `refined`, constitutional IBG intake, and golden `refined` stability — not enabling Phase 3 SIMPLE for MVP.
 
 ---
 

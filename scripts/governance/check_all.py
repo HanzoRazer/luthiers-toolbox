@@ -81,6 +81,12 @@ GOVERNANCE_CHECKS: List[Tuple[str, str, bool, EnforcementTier]] = [
         True,
         EnforcementTier.PRECOMMIT,
     ),
+    (
+        "scripts/governance/check_feedback_correction_calls.py",
+        "Feedback submit_correction call gate (DEAD lifecycle)",
+        True,
+        EnforcementTier.PRECOMMIT,
+    ),
 
     # === CI TIER — moderate checks, <30s each ===
     ("scripts/check_capability_registry.py", "CAM capability registry", True, EnforcementTier.CI),

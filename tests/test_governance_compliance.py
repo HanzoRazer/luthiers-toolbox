@@ -149,6 +149,24 @@ class TestSemanticLeakageScript:
         assert result.returncode == 0, f"Syntax error: {result.stderr}"
 
 
+class TestFeedbackCorrectionGate:
+    """PR-3: submit_correction remains DEAD in production services/."""
+
+    def test_feedback_correction_script_exists(self):
+        path = REPO_ROOT / "scripts" / "governance" / "check_feedback_correction_calls.py"
+        assert path.is_file()
+
+    def test_feedback_correction_script_runs_clean(self):
+        path = REPO_ROOT / "scripts" / "governance" / "check_feedback_correction_calls.py"
+        result = subprocess.run(
+            [sys.executable, str(path)],
+            capture_output=True,
+            text=True,
+            cwd=str(REPO_ROOT),
+        )
+        assert result.returncode == 0, result.stderr or result.stdout
+
+
 class TestSemanticSandboxImportGate:
     """Phase 0.5: block Tier A cognition/grid imports in services/."""
 

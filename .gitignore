@@ -490,6 +490,10 @@ artifacts/
 benchmark_*/
 /benchmark_*
 sandbox/
+# Local dev docs only (sibling clones live outside repo — see local/README.md)
+local/*
+!local/README.md
+!local/clone-vectorizer-sandbox.ps1
 production_shop_agent/**/output/
 
 # Services test outputs
