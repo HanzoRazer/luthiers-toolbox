@@ -30,6 +30,8 @@ import tempfile
 import os
 from pathlib import Path
 
+from app.util.dxf_compat import create_document
+
 router = APIRouter(
     prefix="/api/instruments/smart-guitar",
     tags=["instruments", "smart-guitar", "dxf"],
@@ -74,7 +76,8 @@ def generate_smart_guitar_dxf(
     """
     spec = json.loads(SPEC_PATH.read_text(encoding="utf-8"))
 
-    doc = ezdxf.new("R2010")
+    # Create DXF document via governed dxf_compat layer
+    doc = create_document("R2010")
     doc.units = ezdxf.units.MM
     msp = doc.modelspace()
 

@@ -7,13 +7,18 @@
  * Dev Order 5: Shell only, no logic migration yet.
  * Dev Order 6: Mount SpiralSoundholeDesigner in Spiral tab.
  * Dev Order 9: Clarify canonical/beta provenance.
+ * Dev Order 60: Integrate MeasurementArchiveExchangeSection into Measurement Lab.
+ * Dev Order 62: Add MeasurementArchiveEvidenceIndex for experimental history.
+ * Dev Order 63: Add MeasurementResidualComparisonPanel for pairwise comparison.
+ * Dev Order 64: QA stabilization — single source of truth for evidenceArchives.
+ * Dev Order 66: Add Topology Variants section for experimental configuration descriptors.
  *
  * Tabs:
  *   - Spiral: logarithmic spiral soundhole design (mounted production tool)
  *   - Round/Oval/F-hole: standard aperture types
  *   - Comparison: cross-type area/acoustic comparison
  *   - Inverse Solver: target area → parameter calculation
- *   - Calibration: measurement import and validation
+ *   - Measurement Lab: archive exchange, evidence index, residual comparison
  *
  * The Spiral tab mounts SpiralSoundholeDesigner.vue, the canonical production
  * implementation. The standalone route /calculators/acoustics/spiral-soundhole
@@ -21,7 +26,17 @@
  */
 import { ref, computed, defineAsyncComponent } from 'vue'
 import { GateBadge, SectionLabel, PrerequisiteNotice } from '@/components/shared/workflow'
+import MeasurementArchiveExchangeSection from '@/components/shared/acoustics/MeasurementArchiveExchangeSection.vue'
+import MeasurementArchiveEvidenceIndex from '@/components/shared/acoustics/MeasurementArchiveEvidenceIndex.vue'
+import MeasurementResidualComparisonPanel from '@/components/shared/acoustics/MeasurementResidualComparisonPanel.vue'
+import TopologyVariantCard from '@/components/shared/acoustics/TopologyVariantCard.vue'
+import TopologyVariantBuilder from '@/components/shared/acoustics/TopologyVariantBuilder.vue'
 import type { WorkflowGateLevel } from '@/types/workflow'
+import type {
+  MeasurementArchiveRecord,
+  MeasurementArchiveValidationResult,
+} from '@/types/acoustics/measurementArchive'
+import type { TopologyVariant } from '@/types/acoustics/topologyVariant'
 
 const SpiralSoundholeDesigner = defineAsyncComponent(
   () => import('@/components/toolbox/acoustics/SpiralSoundholeDesigner.vue')
@@ -75,9 +90,9 @@ const tabs: Tab[] = [
   },
   {
     id: 'calibration',
-    label: 'Calibration',
+    label: 'Measurement Lab',
     icon: '📐',
-    description: 'Import measurements and validate against specs',
+    description: 'Archive, exchange, and compare observational measurements',
   },
 ]
 
@@ -90,6 +105,59 @@ function setTab(id: TabId) {
 const activeTabData = computed(() => tabs.find((t) => t.id === activeTab.value))
 
 const workspaceGate: WorkflowGateLevel = 'green'
+
+// Dev Order 64: Single source of truth for archives
+// evidenceArchives is the master list; currentArchive is derived/selected
+const evidenceArchives = ref<MeasurementArchiveRecord[]>([])
+
+// Derived: selected archive for preview/export
+const currentArchive = computed<MeasurementArchiveRecord | null>(() =>
+  evidenceArchives.value.length > 0 ? evidenceArchives.value[0] : null
+)
+
+// Dev Order 66: Topology variants (in-memory only)
+const topologyVariants = ref<TopologyVariant[]>([])
+const showVariantBuilder = ref(false)
+const variantSectionExpanded = ref(true)
+
+function handleArchiveExported(archive: MeasurementArchiveRecord) {
+  // Add to evidence list if not already present
+  if (!evidenceArchives.value.some((a) => a.archiveId === archive.archiveId)) {
+    evidenceArchives.value = [archive, ...evidenceArchives.value]
+  }
+}
+
+function handleArchiveImported(
+  _result: MeasurementArchiveValidationResult,
+  archive: MeasurementArchiveRecord | null
+) {
+  // Add valid imports to evidence list
+  if (archive && !evidenceArchives.value.some((a) => a.archiveId === archive.archiveId)) {
+    evidenceArchives.value = [archive, ...evidenceArchives.value]
+  }
+}
+
+function handleArchiveSelect(archive: MeasurementArchiveRecord) {
+  // Move selected archive to front for preview
+  const filtered = evidenceArchives.value.filter((a) => a.archiveId !== archive.archiveId)
+  evidenceArchives.value = [archive, ...filtered]
+}
+
+// Dev Order 66: Topology variant handlers
+function handleVariantCreated(variant: TopologyVariant) {
+  topologyVariants.value = [variant, ...topologyVariants.value]
+  showVariantBuilder.value = false
+}
+
+function handleVariantSelect(variant: TopologyVariant) {
+  // Move selected variant to front (for potential future use)
+  const filtered = topologyVariants.value.filter((v) => v.variantId !== variant.variantId)
+  topologyVariants.value = [variant, ...filtered]
+}
+
+function toggleVariantSection() {
+  variantSectionExpanded.value = !variantSectionExpanded.value
+}
 </script>
 
 <template>
@@ -184,17 +252,74 @@ const workspaceGate: WorkflowGateLevel = 'green'
           </Suspense>
         </div>
 
-        <!-- Calibration Tab -->
+        <!-- Measurement Lab Tab (Dev Order 60, 62, 63, 64) -->
         <div v-else-if="activeTab === 'calibration'" :class="$style.tabContent">
-          <div :class="$style.placeholderCard">
-            <SectionLabel text="Measurement Import" />
-            <div :class="$style.calibrationPlaceholder">
-              <p>Import measured aperture dimensions from physical instruments.</p>
-              <p>Validate against design specs and track deviations.</p>
+          <!-- Archive Exchange Section -->
+          <MeasurementArchiveExchangeSection
+            :archive="currentArchive"
+            :existing-archives="evidenceArchives"
+            @exported="handleArchiveExported"
+            @imported="handleArchiveImported"
+          />
+
+          <!-- Evidence Index -->
+          <MeasurementArchiveEvidenceIndex
+            :archives="evidenceArchives"
+            @select="handleArchiveSelect"
+          />
+
+          <!-- Dev Order 66: Topology Variants Section -->
+          <div :class="$style.collapsibleSection">
+            <button :class="$style.collapsibleHeader" @click="toggleVariantSection">
+              <SectionLabel text="Topology Variants" />
+              <GateBadge gate="yellow" label="Experimental" />
+              <span :class="$style.collapseIcon">{{ variantSectionExpanded ? '▼' : '▶' }}</span>
+            </button>
+
+            <div v-if="variantSectionExpanded" :class="$style.collapsibleContent">
+              <p :class="$style.variantDescription">
+                Topology variants describe experimental acoustic configurations. Archives can reference which variant they were measured under.
+              </p>
+
+              <!-- Variant Builder Toggle -->
+              <button
+                v-if="!showVariantBuilder"
+                :class="$style.addVariantButton"
+                @click="showVariantBuilder = true"
+              >
+                + New Variant
+              </button>
+
+              <!-- Variant Builder -->
+              <TopologyVariantBuilder
+                v-if="showVariantBuilder"
+                @created="handleVariantCreated"
+                @cancel="showVariantBuilder = false"
+              />
+
+              <!-- Variant List -->
+              <div v-if="topologyVariants.length > 0" :class="$style.variantList">
+                <TopologyVariantCard
+                  v-for="variant in topologyVariants"
+                  :key="variant.variantId"
+                  :variant="variant"
+                  @select="handleVariantSelect"
+                />
+              </div>
+
+              <div v-else-if="!showVariantBuilder" :class="$style.emptyVariants">
+                No topology variants defined. Create one to describe an experimental configuration.
+              </div>
             </div>
           </div>
 
-          <PrerequisiteNotice message="Calibration framework deferred. Measurement import will integrate with NECK-A workflow patterns." />
+          <!-- Residual Comparison Panel -->
+          <MeasurementResidualComparisonPanel
+            :archives="evidenceArchives"
+            :topology-variants="topologyVariants"
+          />
+
+          <PrerequisiteNotice message="Measurement Lab is observational only. Archives are local — no persistence, calibration, or prediction authority." />
         </div>
       </div>
 
@@ -440,4 +565,81 @@ const workspaceGate: WorkflowGateLevel = 'green'
 }
 
 /* Dev Order 17: Solver card CSS moved to TargetMatchingPanel.vue */
+
+/* Dev Order 66: Topology Variants section */
+.collapsibleSection {
+  background: #0d1117;
+  border: 1px solid #30363d;
+  border-radius: 0.5rem;
+  overflow: hidden;
+}
+
+.collapsibleHeader {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  width: 100%;
+  padding: 0.75rem 1rem;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  text-align: left;
+}
+
+.collapsibleHeader:hover {
+  background: rgba(99, 102, 241, 0.05);
+}
+
+.collapseIcon {
+  margin-left: auto;
+  font-size: 0.75rem;
+  color: #6b7280;
+}
+
+.collapsibleContent {
+  padding: 1rem;
+  border-top: 1px solid #30363d;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.variantDescription {
+  margin: 0;
+  font-size: 0.75rem;
+  color: #8b949e;
+  line-height: 1.5;
+}
+
+.addVariantButton {
+  padding: 0.5rem 1rem;
+  background: transparent;
+  border: 1px dashed #374151;
+  border-radius: 0.375rem;
+  color: #9ca3af;
+  font-size: 0.8125rem;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.addVariantButton:hover {
+  border-color: #6366f1;
+  color: #f9fafb;
+  background: rgba(99, 102, 241, 0.08);
+}
+
+.variantList {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.emptyVariants {
+  padding: 1rem;
+  background: rgba(107, 114, 128, 0.08);
+  border-radius: 0.25rem;
+  text-align: center;
+  font-size: 0.75rem;
+  color: #6b7280;
+}
 </style>
