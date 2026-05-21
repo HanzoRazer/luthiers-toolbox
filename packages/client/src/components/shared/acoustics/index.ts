@@ -23,6 +23,7 @@
  * Dev Order 62: Added MeasurementArchiveEvidenceIndex for experimental history.
  * Dev Order 63: Added MeasurementResidualComparisonPanel for pairwise archive comparison.
  * Dev Order 66: Added TopologyVariant* components for experimental topology variants.
+ * Dev Order 68: Added ExperimentalCorrelationPanel for computed observational correlations.
  */
 
 export { default as AcousticStateCard } from './AcousticStateCard.vue'
@@ -55,3 +56,6 @@ export { default as MeasurementResidualComparisonPanel } from './MeasurementResi
 // Topology Variant components (Dev Order 66)
 export { default as TopologyVariantCard } from './TopologyVariantCard.vue'
 export { default as TopologyVariantBuilder } from './TopologyVariantBuilder.vue'
+
+// Experimental Correlation components (Dev Order 68)
+export { default as ExperimentalCorrelationPanel } from './ExperimentalCorrelationPanel.vue'
