@@ -2,7 +2,8 @@
 
 **Date:** 2026-05-20  
 **Status:** ARCHAEOLOGY_COMPLETE  
-**Sprint:** Vectorizer Technical Debt Archaeology
+**Sprint:** Vectorizer Technical Debt Archaeology  
+**Lifecycle:** `docs/governance/VECTORIZER_COMPONENT_LIFECYCLE.md`
 
 ---
 
@@ -27,7 +28,7 @@
 | Mode | Method | Behavior | Status |
 |------|--------|----------|--------|
 | `SMART` | `extract()` default | ML classification, OCR | Active |
-| `SIMPLE` | `_simple_extraction()` | All contours, no ML | **BROKEN** (UNKNOWN excluded) |
+| `SIMPLE` | `_simple_extraction()` | All contours, no ML | **BROKEN** (PR-1 → EXPORT_SAFE; not ACTIVE without gate) |
 
 ---
 
@@ -124,7 +125,7 @@
 | `submit_correction()` not wired | User feedback cannot reach learning system | Medium |
 | `_simple_extraction()` broken | Non-guitar instruments fail | High |
 | Phase 4 not integrated | Manual dimension annotation | Low |
-| `cognitive_*` orphaned | Dead code risk | Medium |
+| `cognitive_*` / grid v1–v5 unwired | Archaeological research — not delete-by-default | Medium (governance clarity) |
 
 ---
 

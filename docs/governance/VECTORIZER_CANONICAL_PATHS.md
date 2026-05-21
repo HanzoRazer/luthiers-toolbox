@@ -15,8 +15,9 @@ Paths are classified as:
 - **CANONICAL_RECOVERY** — Protected experimental recovery modes (MRP-1C)
 - **DEVELOPMENT_ONLY** — Dev/staging environment only
 - **DEBUG_TOOL** — Manual debugging, not production
-- **ORPHAN** — Code exists but never wired
-- **ABANDONED** — Superseded or broken
+- **ARCHAEOLOGICAL_RESEARCH** — Unwired; potentially informative semantics/topology lineage (see `VECTORIZER_COMPONENT_LIFECYCLE.md`) — **not** delete-by-default
+- **ORPHAN** — Code exists but never wired; no documented research value
+- **ABANDONED** — Superseded by active implementation
 
 ---
 
@@ -88,7 +89,7 @@ POST /api/vectorizer/extract
 |--------|-------------|----------------|-------|
 | `vectorizer_phase3.py` | `Phase3Vectorizer.extract()` | **CANONICAL** | Primary blueprint extraction |
 | `vectorizer_phase3.py:_raw_extract()` | Line 2838 | **CANONICAL_RECOVERY** | V2_RAW mode source |
-| `vectorizer_phase3.py:_simple_extraction()` | Line 3766 | BROKEN | Exports empty (UNKNOWN excluded) |
+| `vectorizer_phase3.py:_simple_extraction()` | Line 3766 | BROKEN → EXPORT_SAFE (PR-1) | Not ACTIVE until lifecycle gate; see `VECTORIZER_COMPONENT_LIFECYCLE.md` |
 | `vectorizer_phase2.py` | `VectorizerPhase2` | SUPERSEDED | No API wiring |
 | `vectorizer_enhancements.py` | Optional import by phase3 | ACTIVE | Phase 3.7 features |
 | `dxf_compat.py` | All DXF creation | **CANONICAL** | R12/R2000 abstraction |
