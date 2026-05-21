@@ -1,0 +1,1346 @@
+{
+  "document_count": 16,
+  "documents": [
+    {
+      "headings": [
+        {
+          "level": 1,
+          "title": "CAD Kernel Boundary Analysis"
+        },
+        {
+          "level": 2,
+          "title": "Purpose"
+        },
+        {
+          "level": 2,
+          "title": "Core Principle"
+        },
+        {
+          "level": 2,
+          "title": "Kernel Role in Architecture"
+        },
+        {
+          "level": 3,
+          "title": "What Kernels DO"
+        },
+        {
+          "level": 3,
+          "title": "What Kernels DO NOT DO"
+        },
+        {
+          "level": 2,
+          "title": "Candidate Kernels"
+        },
+        {
+          "level": 3,
+          "title": "OpenCASCADE (OCCT)"
+        },
+        {
+          "level": 3,
+          "title": "CadQuery"
+        },
+        {
+          "level": 3,
+          "title": "build123d"
+        },
+        {
+          "level": 3,
+          "title": "Custom Topology Builder"
+        },
+        {
+          "level": 2,
+          "title": "Evaluation Criteria"
+        },
+        {
+          "level": 3,
+          "title": "1. Dependency Weight"
+        },
+        {
+          "level": 3,
+          "title": "2. Windows Deployability"
+        },
+        {
+          "level": 3,
+          "title": "3. Deterministic Output"
+        },
+        {
+          "level": 3,
+          "title": "4. STEP Support"
+        },
+        {
+          "level": 3,
+          "title": "5. Topology Validation"
+        },
+        {
+          "level": 3,
+          "title": "6. Licensing"
+        },
+        {
+          "level": 3,
+          "title": "7. Adapter Isolation"
+        },
+        {
+          "level": 3,
+          "title": "8. Failure Transparency"
+        },
+        {
+          "level": 2,
+          "title": "Evaluation Matrix Template"
+        },
+        {
+          "level": 2,
+          "title": "Adapter Architecture"
+        },
+        {
+          "level": 3,
+          "title": "Interface Definition"
+        },
+        {
+          "level": 3,
+          "title": "Implementation Pattern"
+        },
+        {
+          "level": 3,
+          "title": "Mock Adapter (Testing)"
+        },
+        {
+          "level": 2,
+          "title": "Inside vs Outside Repository"
+        },
+        {
+          "level": 3,
+          "title": "Inside Repository (Required)"
+        },
+        {
+          "level": 3,
+          "title": "Outside Repository (Dependency)"
+        },
+        {
+          "level": 3,
+          "title": "Behind Adapter (Hidden)"
+        },
+        {
+          "level": 2,
+          "title": "Selection Timeline"
+        },
+        {
+          "level": 3,
+          "title": "Selection Decision Point"
+        },
+        {
+          "level": 2,
+          "title": "Related Documents"
+        }
+      ],
+      "internal_links": [],
+      "line_count": 400,
+      "path": "docs/research/CAD_KERNEL_BOUNDARY_ANALYSIS.md"
+    },
+    {
+      "headings": [
+        {
+          "level": 1,
+          "title": "The 1941 Gibson L-37 in The Production Shop Research Canon"
+        },
+        {
+          "level": 2,
+          "title": "Why this instrument matters"
+        },
+        {
+          "level": 2,
+          "title": "What the L-37 specifically is"
+        },
+        {
+          "level": 3,
+          "title": "Why 1941 is the year that matters"
+        },
+        {
+          "level": 2,
+          "title": "What this measurement session adds to the canon"
+        },
+        {
+          "level": 3,
+          "title": "1. A pre-war counterpoint to D'Aquisto"
+        },
+        {
+          "level": 3,
+          "title": "2. Validation data for \u00a743 and \u00a744"
+        },
+        {
+          "level": 3,
+          "title": "3. Stiffness field heat map (`archtop_stiffness_map.py`, future)"
+        },
+        {
+          "level": 3,
+          "title": "4. Brace pattern observation (visible without disassembly)"
+        },
+        {
+          "level": 3,
+          "title": "5. Acoustic ground truth for the \u00a744 hypothesis"
+        },
+        {
+          "level": 2,
+          "title": "What the L-37 tells us about archtop evolution"
+        },
+        {
+          "level": 2,
+          "title": "Research value statement"
+        },
+        {
+          "level": 2,
+          "title": "Reproducibility note"
+        },
+        {
+          "level": 2,
+          "title": "Connection to other parts of the canon"
+        },
+        {
+          "level": 2,
+          "title": "Next steps after the measurement session"
+        },
+        {
+          "level": 2,
+          "title": "Acknowledgement"
+        }
+      ],
+      "internal_links": [
+        {
+          "label": "data/archtop_samples/gibson_l37_1941_measurements.csv",
+          "target": "../../data/archtop_samples/gibson_l37_1941_measurements.csv"
+        },
+        {
+          "label": "data/archtop_samples/gibson_l37_1941_notes.md",
+          "target": "../../data/archtop_samples/gibson_l37_1941_notes.md"
+        },
+        {
+          "label": "`wood_species.json`",
+          "target": "../../services/api/app/data_registry/system/materials/wood_species.json"
+        },
+        {
+          "label": "`daquisto_graduation_measurements.json`",
+          "target": "../../services/api/app/instrument_geometry/models/archtop/daquisto_graduation_measurements.json"
+        },
+        {
+          "label": "LUTHERIE_MATH.md",
+          "target": "../LUTHERIE_MATH.md"
+        },
+        {
+          "label": "LUTHERIE_MATH.md \u00a739\u2013\u00a744",
+          "target": "../LUTHERIE_MATH.md"
+        },
+        {
+          "label": "\u00a743",
+          "target": "../LUTHERIE_MATH.md"
+        },
+        {
+          "label": "\u00a744",
+          "target": "../LUTHERIE_MATH.md"
+        },
+        {
+          "label": "`docs/research/archtop_brace_patterns.md`",
+          "target": "archtop_brace_patterns.md"
+        }
+      ],
+      "line_count": 191,
+      "path": "docs/research/gibson_l37_1941_significance.md"
+    },
+    {
+      "headings": [
+        {
+          "level": 1,
+          "title": "IBG Lineage Map"
+        },
+        {
+          "level": 2,
+          "title": "IBG performance objective (canonical \u2014 ratified 1A)"
+        },
+        {
+          "level": 2,
+          "title": "Lineage diagram"
+        },
+        {
+          "level": 2,
+          "title": "Component lineage"
+        },
+        {
+          "level": 3,
+          "title": "Arc reconstruction"
+        },
+        {
+          "level": 3,
+          "title": "Body grid"
+        },
+        {
+          "level": 3,
+          "title": "Morphology harvest"
+        },
+        {
+          "level": 3,
+          "title": "BodyEvidence \u2192 BodyEvidenceCandidate"
+        },
+        {
+          "level": 3,
+          "title": "IBGIntakeGate"
+        },
+        {
+          "level": 2,
+          "title": "Morphology Harvest vs Workflow 1A"
+        },
+        {
+          "level": 2,
+          "title": "Workflow Pipeline 1A (DEV ORDER 1A-WORKFLOW)"
+        },
+        {
+          "level": 2,
+          "title": "Review package"
+        },
+        {
+          "level": 2,
+          "title": "Separation from vectorizer cognition"
+        },
+        {
+          "level": 2,
+          "title": "Preservation actions (1A)"
+        },
+        {
+          "level": 2,
+          "title": "Related governance (not duplicated here)"
+        }
+      ],
+      "internal_links": [
+        {
+          "label": "RESEARCH_WAVE_INDEX.md",
+          "target": "RESEARCH_WAVE_INDEX.md"
+        }
+      ],
+      "line_count": 191,
+      "path": "docs/research/IBG_LINEAGE_MAP.md"
+    },
+    {
+      "headings": [
+        {
+          "level": 1,
+          "title": "IBG Runtime Position"
+        },
+        {
+          "level": 2,
+          "title": "Position"
+        },
+        {
+          "level": 2,
+          "title": "Runtime boundary (do not collapse)"
+        },
+        {
+          "level": 2,
+          "title": "What belongs elsewhere"
+        },
+        {
+          "level": 2,
+          "title": "Preservation rule"
+        }
+      ],
+      "internal_links": [
+        {
+          "label": "IBG_LINEAGE_MAP.md",
+          "target": "IBG_LINEAGE_MAP.md"
+        },
+        {
+          "label": "RESEARCH_PLATFORM_1A_ALIGNMENT.md",
+          "target": "RESEARCH_PLATFORM_1A_ALIGNMENT.md"
+        },
+        {
+          "label": "RESEARCH_WAVE_INDEX.md",
+          "target": "RESEARCH_WAVE_INDEX.md"
+        }
+      ],
+      "line_count": 57,
+      "path": "docs/research/IBG_RUNTIME_POSITION.md"
+    },
+    {
+      "headings": [
+        {
+          "level": 1,
+          "title": "Morphology Interpretation Boundary"
+        },
+        {
+          "level": 2,
+          "title": "Three-layer split (required)"
+        },
+        {
+          "level": 2,
+          "title": "Evidence types"
+        },
+        {
+          "level": 2,
+          "title": "What morphology currently infers (runtime)"
+        },
+        {
+          "level": 2,
+          "title": "Confidence semantics (dual track)"
+        },
+        {
+          "level": 3,
+          "title": "Runtime confidence (spine)"
+        },
+        {
+          "level": 3,
+          "title": "Sandbox ML confidence (research-only)"
+        },
+        {
+          "level": 2,
+          "title": "Review boundaries"
+        },
+        {
+          "level": 2,
+          "title": "What morphology must NOT do (1B scope)"
+        },
+        {
+          "level": 2,
+          "title": "Cross-links"
+        }
+      ],
+      "internal_links": [
+        {
+          "label": "IBG_LINEAGE_MAP.md",
+          "target": "IBG_LINEAGE_MAP.md"
+        },
+        {
+          "label": "IBG_RUNTIME_POSITION.md",
+          "target": "IBG_RUNTIME_POSITION.md"
+        },
+        {
+          "label": "SEMANTIC_INTERPRETATION_TRACE.md",
+          "target": "SEMANTIC_INTERPRETATION_TRACE.md"
+        },
+        {
+          "label": "SEMANTIC_OBSERVABILITY_MAP.md",
+          "target": "SEMANTIC_OBSERVABILITY_MAP.md"
+        }
+      ],
+      "line_count": 103,
+      "path": "docs/research/MORPHOLOGY_INTERPRETATION_BOUNDARY.md"
+    },
+    {
+      "headings": [
+        {
+          "level": 1,
+          "title": "Primitive Flow Analysis"
+        },
+        {
+          "level": 2,
+          "title": "Flow overview"
+        },
+        {
+          "level": 2,
+          "title": "Spine modules (verified)"
+        },
+        {
+          "level": 2,
+          "title": "Failure: primitive starvation"
+        },
+        {
+          "level": 2,
+          "title": "Failure: slab_body collapse"
+        },
+        {
+          "level": 2,
+          "title": "Failure: grouping fallback ambiguity"
+        },
+        {
+          "level": 2,
+          "title": "Evolving: Les Paul semantic continuity"
+        },
+        {
+          "level": 2,
+          "title": "Evolving: partial contour ownership"
+        },
+        {
+          "level": 2,
+          "title": "Reconstruction survivability"
+        },
+        {
+          "level": 2,
+          "title": "Preservation actions (1B)"
+        }
+      ],
+      "internal_links": [
+        {
+          "label": "SEMANTIC_DISCOVERY_MATRIX.md",
+          "target": "SEMANTIC_DISCOVERY_MATRIX.md"
+        },
+        {
+          "label": "SEMANTIC_DISCOVERY_MATRIX.md",
+          "target": "SEMANTIC_DISCOVERY_MATRIX.md"
+        },
+        {
+          "label": "TOPOLOGY_CONTINUITY_FAILURES.md",
+          "target": "TOPOLOGY_CONTINUITY_FAILURES.md"
+        },
+        {
+          "label": "TOPOLOGY_IDEA_REGISTRY.md",
+          "target": "TOPOLOGY_IDEA_REGISTRY.md"
+        }
+      ],
+      "line_count": 121,
+      "path": "docs/research/PRIMITIVE_FLOW_ANALYSIS.md"
+    },
+    {
+      "headings": [
+        {
+          "level": 1,
+          "title": "Institutional Semantic Memory"
+        },
+        {
+          "level": 2,
+          "title": "What this is"
+        },
+        {
+          "level": 2,
+          "title": "What this is not"
+        },
+        {
+          "level": 2,
+          "title": "Core Wave 1A Spine"
+        },
+        {
+          "level": 2,
+          "title": "Core Wave 1B Spine"
+        },
+        {
+          "level": 2,
+          "title": "Constitutional Alignment / Operating Answers"
+        },
+        {
+          "level": 2,
+          "title": "Supporting Research Notes"
+        },
+        {
+          "level": 2,
+          "title": "Related layers (read in order)"
+        },
+        {
+          "level": 2,
+          "title": "Research waves (summary)"
+        },
+        {
+          "level": 2,
+          "title": "Capability and graduation (pointers)"
+        },
+        {
+          "level": 2,
+          "title": "Machine-readable index"
+        },
+        {
+          "level": 2,
+          "title": "Validation"
+        },
+        {
+          "level": 2,
+          "title": "Wave 1B scope"
+        }
+      ],
+      "internal_links": [
+        {
+          "label": "CAD_KERNEL_BOUNDARY_ANALYSIS.md",
+          "target": "CAD_KERNEL_BOUNDARY_ANALYSIS.md"
+        },
+        {
+          "label": "IBG_LINEAGE_MAP.md",
+          "target": "IBG_LINEAGE_MAP.md"
+        },
+        {
+          "label": "IBG_RUNTIME_POSITION.md",
+          "target": "IBG_RUNTIME_POSITION.md"
+        },
+        {
+          "label": "MORPHOLOGY_INTERPRETATION_BOUNDARY.md",
+          "target": "MORPHOLOGY_INTERPRETATION_BOUNDARY.md"
+        },
+        {
+          "label": "PRIMITIVE_FLOW_ANALYSIS.md",
+          "target": "PRIMITIVE_FLOW_ANALYSIS.md"
+        },
+        {
+          "label": "RESEARCH_PLATFORM_1A_ALIGNMENT.md",
+          "target": "RESEARCH_PLATFORM_1A_ALIGNMENT.md"
+        },
+        {
+          "label": "RESEARCH_PLATFORM_1A_ALIGNMENT.md",
+          "target": "RESEARCH_PLATFORM_1A_ALIGNMENT.md"
+        },
+        {
+          "label": "RESEARCH_PLATFORM_SPINE.md",
+          "target": "RESEARCH_PLATFORM_SPINE.md"
+        },
+        {
+          "label": "RESEARCH_WAVE_INDEX.md",
+          "target": "RESEARCH_WAVE_INDEX.md"
+        },
+        {
+          "label": "RESEARCH_WAVE_INDEX.md",
+          "target": "RESEARCH_WAVE_INDEX.md"
+        },
+        {
+          "label": "SEMANTIC_DISCOVERY_MATRIX.md",
+          "target": "SEMANTIC_DISCOVERY_MATRIX.md"
+        },
+        {
+          "label": "SEMANTIC_INTERPRETATION_TRACE.md",
+          "target": "SEMANTIC_INTERPRETATION_TRACE.md"
+        },
+        {
+          "label": "SEMANTIC_OBSERVABILITY_MAP.md",
+          "target": "SEMANTIC_OBSERVABILITY_MAP.md"
+        },
+        {
+          "label": "TOPOLOGY_CONTINUITY_FAILURES.md",
+          "target": "TOPOLOGY_CONTINUITY_FAILURES.md"
+        },
+        {
+          "label": "TOPOLOGY_IDEA_REGISTRY.md",
+          "target": "TOPOLOGY_IDEA_REGISTRY.md"
+        },
+        {
+          "label": "WAVE_1B_RESEARCH_QUESTIONS.md",
+          "target": "WAVE_1B_RESEARCH_QUESTIONS.md"
+        },
+        {
+          "label": "WAVE_1B_RESEARCH_QUESTIONS.md",
+          "target": "WAVE_1B_RESEARCH_QUESTIONS.md"
+        },
+        {
+          "label": "gibson_l37_1941_significance.md",
+          "target": "gibson_l37_1941_significance.md"
+        }
+      ],
+      "line_count": 153,
+      "path": "docs/research/README.md"
+    },
+    {
+      "headings": [
+        {
+          "level": 1,
+          "title": "Research Platform 1A \u2014 Constitutional Alignment"
+        },
+        {
+          "level": 2,
+          "title": "Transition"
+        },
+        {
+          "level": 2,
+          "title": "Scope and authority"
+        },
+        {
+          "level": 3,
+          "title": "1. Is `docs/research/` the single source of institutional memory?"
+        },
+        {
+          "level": 3,
+          "title": "2. Who may edit research docs?"
+        },
+        {
+          "level": 3,
+          "title": "3. Citation format (tags, not SHAs)"
+        },
+        {
+          "level": 2,
+          "title": "Wave boundaries"
+        },
+        {
+          "level": 3,
+          "title": "4. Wave B evaluation migration"
+        },
+        {
+          "level": 3,
+          "title": "5. Wave 0 \u2014 `ci/ai_sandbox`"
+        },
+        {
+          "level": 3,
+          "title": "6. Wave C graduation (2026)"
+        },
+        {
+          "level": 2,
+          "title": "IBG vs vectorizer"
+        },
+        {
+          "level": 3,
+          "title": "7. Workflow Pipeline 1A"
+        },
+        {
+          "level": 3,
+          "title": "8. Canonical IBG performance objective"
+        },
+        {
+          "level": 3,
+          "title": "9. Morphology Harvest vs Workflow 1A"
+        },
+        {
+          "level": 2,
+          "title": "Topology registry"
+        },
+        {
+          "level": 3,
+          "title": "10. Ownership"
+        },
+        {
+          "level": 3,
+          "title": "11. Link priority"
+        },
+        {
+          "level": 2,
+          "title": "Discovery matrix"
+        },
+        {
+          "level": 3,
+          "title": "12. Risk ratings"
+        },
+        {
+          "level": 3,
+          "title": "13. Canonical failure fixtures"
+        },
+        {
+          "level": 2,
+          "title": "Process and freeze"
+        },
+        {
+          "level": 3,
+          "title": "14\u201315. Freeze 1A before 1B"
+        },
+        {
+          "level": 3,
+          "title": "16. `research_index.json`"
+        },
+        {
+          "level": 3,
+          "title": "17. Stale handoff paths"
+        },
+        {
+          "level": 2,
+          "title": "Non-goals (confirmed)"
+        },
+        {
+          "level": 2,
+          "title": "Wave 1B pointer (scope only)"
+        }
+      ],
+      "internal_links": [
+        {
+          "label": "SEMANTIC_INTERPRETATION_TRACE.md",
+          "target": "SEMANTIC_INTERPRETATION_TRACE.md"
+        },
+        {
+          "label": "WAVE_1B_RESEARCH_QUESTIONS.md",
+          "target": "WAVE_1B_RESEARCH_QUESTIONS.md"
+        }
+      ],
+      "line_count": 227,
+      "path": "docs/research/RESEARCH_PLATFORM_1A_ALIGNMENT.md"
+    },
+    {
+      "headings": [
+        {
+          "level": 1,
+          "title": "Research Platform Spine"
+        },
+        {
+          "level": 2,
+          "title": "Problem statement"
+        },
+        {
+          "level": 2,
+          "title": "Platform layers (bottom \u2192 top)"
+        },
+        {
+          "level": 2,
+          "title": "Layer definitions"
+        },
+        {
+          "level": 3,
+          "title": "Archaeology"
+        },
+        {
+          "level": 3,
+          "title": "Evaluation"
+        },
+        {
+          "level": 3,
+          "title": "Reconstruction"
+        },
+        {
+          "level": 3,
+          "title": "Cognition"
+        },
+        {
+          "level": 3,
+          "title": "Incubation"
+        },
+        {
+          "level": 3,
+          "title": "Graduation"
+        },
+        {
+          "level": 2,
+          "title": "How layers interact"
+        },
+        {
+          "level": 2,
+          "title": "Amnesia failure modes (watch list)"
+        },
+        {
+          "level": 2,
+          "title": "Capability registry pointer"
+        },
+        {
+          "level": 2,
+          "title": "Research Wave 1A scope boundary"
+        }
+      ],
+      "internal_links": [
+        {
+          "label": "IBG_LINEAGE_MAP.md",
+          "target": "IBG_LINEAGE_MAP.md"
+        },
+        {
+          "label": "RESEARCH_PLATFORM_1A_ALIGNMENT.md",
+          "target": "RESEARCH_PLATFORM_1A_ALIGNMENT.md"
+        }
+      ],
+      "line_count": 178,
+      "path": "docs/research/RESEARCH_PLATFORM_SPINE.md"
+    },
+    {
+      "headings": [
+        {
+          "level": 1,
+          "title": "Research Wave Index (Dec 2025 \u2192 May 2026)"
+        },
+        {
+          "level": 2,
+          "title": "Wave 0 \u2014 Pre-Constitutional Boundaries"
+        },
+        {
+          "level": 2,
+          "title": "Wave A \u2014 Reconstruction Intelligence"
+        },
+        {
+          "level": 3,
+          "title": "Wave A artifact map"
+        },
+        {
+          "level": 2,
+          "title": "Wave B \u2014 Evaluation Science"
+        },
+        {
+          "level": 3,
+          "title": "Wave B golden references"
+        },
+        {
+          "level": 2,
+          "title": "Wave C \u2014 Semantic Cognition"
+        },
+        {
+          "level": 2,
+          "title": "Wave D \u2014 Constitutional Runtime"
+        },
+        {
+          "level": 2,
+          "title": "Wave E \u2014 Workflow / IBG Intake"
+        },
+        {
+          "level": 3,
+          "title": "Wave E pipeline stages (reference)"
+        },
+        {
+          "level": 2,
+          "title": "Wave 1B \u2014 Semantic Interpretation Trace (subordinate phase)"
+        },
+        {
+          "level": 2,
+          "title": "Cross-wave timeline"
+        },
+        {
+          "level": 2,
+          "title": "Where to go next"
+        }
+      ],
+      "internal_links": [
+        {
+          "label": "IBG_LINEAGE_MAP.md",
+          "target": "IBG_LINEAGE_MAP.md"
+        },
+        {
+          "label": "IBG_LINEAGE_MAP.md",
+          "target": "IBG_LINEAGE_MAP.md"
+        },
+        {
+          "label": "IBG_RUNTIME_POSITION.md",
+          "target": "IBG_RUNTIME_POSITION.md"
+        },
+        {
+          "label": "RESEARCH_PLATFORM_1A_ALIGNMENT.md",
+          "target": "RESEARCH_PLATFORM_1A_ALIGNMENT.md"
+        },
+        {
+          "label": "RESEARCH_PLATFORM_1A_ALIGNMENT.md",
+          "target": "RESEARCH_PLATFORM_1A_ALIGNMENT.md"
+        },
+        {
+          "label": "RESEARCH_PLATFORM_SPINE.md",
+          "target": "RESEARCH_PLATFORM_SPINE.md"
+        },
+        {
+          "label": "SEMANTIC_DISCOVERY_MATRIX.md",
+          "target": "SEMANTIC_DISCOVERY_MATRIX.md"
+        },
+        {
+          "label": "SEMANTIC_INTERPRETATION_TRACE.md",
+          "target": "SEMANTIC_INTERPRETATION_TRACE.md"
+        },
+        {
+          "label": "SEMANTIC_INTERPRETATION_TRACE.md",
+          "target": "SEMANTIC_INTERPRETATION_TRACE.md"
+        },
+        {
+          "label": "TOPOLOGY_IDEA_REGISTRY.md",
+          "target": "TOPOLOGY_IDEA_REGISTRY.md"
+        },
+        {
+          "label": "TOPOLOGY_IDEA_REGISTRY.md",
+          "target": "TOPOLOGY_IDEA_REGISTRY.md"
+        }
+      ],
+      "line_count": 185,
+      "path": "docs/research/RESEARCH_WAVE_INDEX.md"
+    },
+    {
+      "headings": [
+        {
+          "level": 1,
+          "title": "Semantic Discovery Matrix"
+        },
+        {
+          "level": 2,
+          "title": "Matrix"
+        },
+        {
+          "level": 2,
+          "title": "Sandbox / runtime separation (explicit)"
+        },
+        {
+          "level": 2,
+          "title": "Risk heatmap (summary)"
+        },
+        {
+          "level": 2,
+          "title": "Related registries"
+        }
+      ],
+      "internal_links": [
+        {
+          "label": "IBG_LINEAGE_MAP.md",
+          "target": "IBG_LINEAGE_MAP.md"
+        },
+        {
+          "label": "IBG_LINEAGE_MAP.md",
+          "target": "IBG_LINEAGE_MAP.md"
+        },
+        {
+          "label": "IBG_RUNTIME_POSITION.md",
+          "target": "IBG_RUNTIME_POSITION.md"
+        },
+        {
+          "label": "RESEARCH_PLATFORM_1A_ALIGNMENT.md",
+          "target": "RESEARCH_PLATFORM_1A_ALIGNMENT.md"
+        },
+        {
+          "label": "RESEARCH_PLATFORM_SPINE.md",
+          "target": "RESEARCH_PLATFORM_SPINE.md"
+        },
+        {
+          "label": "RESEARCH_WAVE_INDEX.md",
+          "target": "RESEARCH_WAVE_INDEX.md"
+        },
+        {
+          "label": "TOPOLOGY_IDEA_REGISTRY.md",
+          "target": "TOPOLOGY_IDEA_REGISTRY.md"
+        }
+      ],
+      "line_count": 72,
+      "path": "docs/research/SEMANTIC_DISCOVERY_MATRIX.md"
+    },
+    {
+      "headings": [
+        {
+          "level": 1,
+          "title": "Semantic Interpretation Trace"
+        },
+        {
+          "level": 2,
+          "title": "Purpose"
+        },
+        {
+          "level": 2,
+          "title": "Stage trace"
+        },
+        {
+          "level": 2,
+          "title": "Layer boundaries (1B)"
+        },
+        {
+          "level": 2,
+          "title": "Verified example (grouping fallback)"
+        },
+        {
+          "level": 2,
+          "title": "Related Wave 1B docs"
+        }
+      ],
+      "internal_links": [
+        {
+          "label": "IBG_LINEAGE_MAP.md",
+          "target": "IBG_LINEAGE_MAP.md"
+        },
+        {
+          "label": "IBG_RUNTIME_POSITION.md",
+          "target": "IBG_RUNTIME_POSITION.md"
+        },
+        {
+          "label": "MORPHOLOGY_INTERPRETATION_BOUNDARY.md",
+          "target": "MORPHOLOGY_INTERPRETATION_BOUNDARY.md"
+        },
+        {
+          "label": "MORPHOLOGY_INTERPRETATION_BOUNDARY.md",
+          "target": "MORPHOLOGY_INTERPRETATION_BOUNDARY.md"
+        },
+        {
+          "label": "PRIMITIVE_FLOW_ANALYSIS.md",
+          "target": "PRIMITIVE_FLOW_ANALYSIS.md"
+        },
+        {
+          "label": "PRIMITIVE_FLOW_ANALYSIS.md",
+          "target": "PRIMITIVE_FLOW_ANALYSIS.md"
+        },
+        {
+          "label": "SEMANTIC_DISCOVERY_MATRIX.md",
+          "target": "SEMANTIC_DISCOVERY_MATRIX.md"
+        },
+        {
+          "label": "SEMANTIC_OBSERVABILITY_MAP.md",
+          "target": "SEMANTIC_OBSERVABILITY_MAP.md"
+        },
+        {
+          "label": "SEMANTIC_OBSERVABILITY_MAP.md",
+          "target": "SEMANTIC_OBSERVABILITY_MAP.md"
+        },
+        {
+          "label": "TOPOLOGY_CONTINUITY_FAILURES.md",
+          "target": "TOPOLOGY_CONTINUITY_FAILURES.md"
+        },
+        {
+          "label": "TOPOLOGY_CONTINUITY_FAILURES.md",
+          "target": "TOPOLOGY_CONTINUITY_FAILURES.md"
+        },
+        {
+          "label": "TOPOLOGY_IDEA_REGISTRY.md",
+          "target": "TOPOLOGY_IDEA_REGISTRY.md"
+        },
+        {
+          "label": "WAVE_1B_RESEARCH_QUESTIONS.md",
+          "target": "WAVE_1B_RESEARCH_QUESTIONS.md"
+        }
+      ],
+      "line_count": 79,
+      "path": "docs/research/SEMANTIC_INTERPRETATION_TRACE.md"
+    },
+    {
+      "headings": [
+        {
+          "level": 1,
+          "title": "Semantic Observability Map"
+        },
+        {
+          "level": 2,
+          "title": "Legend"
+        },
+        {
+          "level": 2,
+          "title": "Topology & extraction"
+        },
+        {
+          "level": 2,
+          "title": "Primitives"
+        },
+        {
+          "level": 2,
+          "title": "Morphology"
+        },
+        {
+          "level": 2,
+          "title": "Authority & provenance"
+        },
+        {
+          "level": 2,
+          "title": "Sandbox ML (non-authoritative)"
+        },
+        {
+          "level": 2,
+          "title": "Workflow 1A stages"
+        },
+        {
+          "level": 2,
+          "title": "Cross-links"
+        }
+      ],
+      "internal_links": [
+        {
+          "label": "SEMANTIC_INTERPRETATION_TRACE.md",
+          "target": "SEMANTIC_INTERPRETATION_TRACE.md"
+        },
+        {
+          "label": "TOPOLOGY_CONTINUITY_FAILURES.md",
+          "target": "TOPOLOGY_CONTINUITY_FAILURES.md"
+        },
+        {
+          "label": "WAVE_1B_RESEARCH_QUESTIONS.md",
+          "target": "WAVE_1B_RESEARCH_QUESTIONS.md"
+        }
+      ],
+      "line_count": 95,
+      "path": "docs/research/SEMANTIC_OBSERVABILITY_MAP.md"
+    },
+    {
+      "headings": [
+        {
+          "level": 1,
+          "title": "Topology Continuity Failures"
+        },
+        {
+          "level": 2,
+          "title": "Catalog"
+        },
+        {
+          "level": 3,
+          "title": "1. Primitive starvation"
+        },
+        {
+          "level": 3,
+          "title": "2. slab_body collapse"
+        },
+        {
+          "level": 3,
+          "title": "3. Loop fragmentation"
+        },
+        {
+          "level": 3,
+          "title": "4. False contour ownership"
+        },
+        {
+          "level": 3,
+          "title": "5. Grouping fallback ambiguity"
+        },
+        {
+          "level": 3,
+          "title": "6. Partial body isolation"
+        },
+        {
+          "level": 3,
+          "title": "7. Confidence collapse"
+        },
+        {
+          "level": 2,
+          "title": "Priority fixtures (Wave 1B)"
+        },
+        {
+          "level": 2,
+          "title": "Related"
+        }
+      ],
+      "internal_links": [
+        {
+          "label": "MORPHOLOGY_INTERPRETATION_BOUNDARY.md",
+          "target": "MORPHOLOGY_INTERPRETATION_BOUNDARY.md"
+        },
+        {
+          "label": "PRIMITIVE_FLOW_ANALYSIS.md",
+          "target": "PRIMITIVE_FLOW_ANALYSIS.md"
+        },
+        {
+          "label": "SEMANTIC_DISCOVERY_MATRIX.md",
+          "target": "SEMANTIC_DISCOVERY_MATRIX.md"
+        },
+        {
+          "label": "SEMANTIC_INTERPRETATION_TRACE.md",
+          "target": "SEMANTIC_INTERPRETATION_TRACE.md"
+        },
+        {
+          "label": "TOPOLOGY_IDEA_REGISTRY.md",
+          "target": "TOPOLOGY_IDEA_REGISTRY.md"
+        },
+        {
+          "label": "WAVE_1B_RESEARCH_QUESTIONS.md",
+          "target": "WAVE_1B_RESEARCH_QUESTIONS.md"
+        }
+      ],
+      "line_count": 150,
+      "path": "docs/research/TOPOLOGY_CONTINUITY_FAILURES.md"
+    },
+    {
+      "headings": [
+        {
+          "level": 1,
+          "title": "Topology Idea Registry"
+        },
+        {
+          "level": 2,
+          "title": "How to read entries"
+        },
+        {
+          "level": 3,
+          "title": "Ownership (ratified)"
+        },
+        {
+          "level": 2,
+          "title": "Registry"
+        },
+        {
+          "level": 3,
+          "title": "1. LINE chaining"
+        },
+        {
+          "level": 3,
+          "title": "2. Closed-loop recovery"
+        },
+        {
+          "level": 3,
+          "title": "3. Near-closed loop detection"
+        },
+        {
+          "level": 3,
+          "title": "4. Gap closure (multi-tier)"
+        },
+        {
+          "level": 3,
+          "title": "5. Arc reconstruction"
+        },
+        {
+          "level": 3,
+          "title": "6. Contour ordering"
+        },
+        {
+          "level": 3,
+          "title": "7. Body isolation"
+        },
+        {
+          "level": 3,
+          "title": "8. Centerline estimation"
+        },
+        {
+          "level": 3,
+          "title": "9. Asymmetry preservation"
+        },
+        {
+          "level": 3,
+          "title": "10. Semantic occupancy"
+        },
+        {
+          "level": 3,
+          "title": "11. Primitive extraction"
+        },
+        {
+          "level": 2,
+          "title": "Adding entries"
+        }
+      ],
+      "internal_links": [
+        {
+          "label": "RESEARCH_WAVE_INDEX.md",
+          "target": "RESEARCH_WAVE_INDEX.md"
+        },
+        {
+          "label": "RESEARCH_WAVE_INDEX.md",
+          "target": "RESEARCH_WAVE_INDEX.md"
+        },
+        {
+          "label": "SEMANTIC_DISCOVERY_MATRIX.md",
+          "target": "SEMANTIC_DISCOVERY_MATRIX.md"
+        },
+        {
+          "label": "SEMANTIC_DISCOVERY_MATRIX.md",
+          "target": "SEMANTIC_DISCOVERY_MATRIX.md"
+        }
+      ],
+      "line_count": 184,
+      "path": "docs/research/TOPOLOGY_IDEA_REGISTRY.md"
+    },
+    {
+      "headings": [
+        {
+          "level": 1,
+          "title": "Wave 1B Research Questions"
+        },
+        {
+          "level": 2,
+          "title": "Prerequisites (from 1A freeze \u2014 not blocking 1B docs)"
+        },
+        {
+          "level": 2,
+          "title": "Unresolved semantic questions"
+        },
+        {
+          "level": 2,
+          "title": "Topology unknowns"
+        },
+        {
+          "level": 2,
+          "title": "Morphology ambiguities"
+        },
+        {
+          "level": 2,
+          "title": "Instrumentation gaps (deferred wave)"
+        },
+        {
+          "level": 2,
+          "title": "Constitutional reminders (non-negotiable)"
+        },
+        {
+          "level": 2,
+          "title": "Wave 1B completion criteria (this sprint)"
+        },
+        {
+          "level": 2,
+          "title": "Pointer to Wave 1A alignment"
+        }
+      ],
+      "internal_links": [
+        {
+          "label": "MORPHOLOGY_INTERPRETATION_BOUNDARY.md",
+          "target": "MORPHOLOGY_INTERPRETATION_BOUNDARY.md"
+        },
+        {
+          "label": "PRIMITIVE_FLOW_ANALYSIS.md",
+          "target": "PRIMITIVE_FLOW_ANALYSIS.md"
+        },
+        {
+          "label": "RESEARCH_PLATFORM_1A_ALIGNMENT.md",
+          "target": "RESEARCH_PLATFORM_1A_ALIGNMENT.md"
+        },
+        {
+          "label": "SEMANTIC_INTERPRETATION_TRACE.md",
+          "target": "SEMANTIC_INTERPRETATION_TRACE.md"
+        },
+        {
+          "label": "SEMANTIC_OBSERVABILITY_MAP.md",
+          "target": "SEMANTIC_OBSERVABILITY_MAP.md"
+        },
+        {
+          "label": "TOPOLOGY_CONTINUITY_FAILURES.md",
+          "target": "TOPOLOGY_CONTINUITY_FAILURES.md"
+        }
+      ],
+      "line_count": 86,
+      "path": "docs/research/WAVE_1B_RESEARCH_QUESTIONS.md"
+    }
+  ],
+  "research_dir": "docs/research",
+  "schema_version": 1
+}
