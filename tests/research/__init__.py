@@ -1,1 +1,0 @@
-# Research documentation structure tests

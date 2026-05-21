@@ -8,10 +8,6 @@
 
 ## 2026 Archive
 
-### Active institutional memory (not archived)
-
-- [Research semantic memory](../research/README.md) — Wave 1A spine + Wave 1B trace (`docs/research/`)
-
 ### status/ (15 files)
 Point-in-time snapshots, session states, dated reports.
 - Repository health evaluations
