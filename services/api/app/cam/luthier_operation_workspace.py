@@ -60,6 +60,9 @@ class LuthierOperationWorkspaceV1(BaseModel):
     export_object_ids: List[str] = Field(default_factory=list)
     strategy_ids: List[str] = Field(default_factory=list)
 
+    # 7V: Fixture topology cognition package refs (workspace may reference, not mutate)
+    fixture_package_refs: List[str] = Field(default_factory=list)
+
     status: WorkspaceStatus = "draft"
     review_status: Literal["not_reviewed", "pending_review", "approved", "rejected", "deferred"] = "not_reviewed"
     validation_result: Optional[WorkspaceValidationResult] = None

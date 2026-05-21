@@ -2,13 +2,20 @@
  * Topology Variant Types
  *
  * Dev Order 66: Experimental topology variant framework
+ * Dev Order 67: QA hardening and linkage verification
  *
  * Topology = the experimental acoustic configuration being measured.
  * Includes body family, shell/radius, aperture, bracing, bridge/plate,
  * local contouring, tornavoz/liner treatment.
  *
+ * OBSERVATIONAL ONLY:
+ * - Variants are descriptors, not validated designs
+ * - No geometry synthesis or optimization
+ * - No calibration authority or recommendation semantics
+ * - Archive linkage is descriptive, not causal
+ *
  * Schema: topology-variant.v1
- * Storage: in-memory only (no persistence backend for Dev Order 66)
+ * Storage: in-memory only (no persistence backend)
  */
 
 /**
@@ -28,6 +35,10 @@ export type TopologyVariantCategory =
  *
  * Lightweight descriptor for experimental acoustic configurations.
  * NOT a geometry schema — no numeric dimensions.
+ *
+ * Observational only: variants describe configurations, they do not
+ * validate, optimize, recommend, or confer authority. Sparse variants
+ * (minimal fields populated) are valid and expected during exploration.
  */
 export interface TopologyVariant {
   /** Schema version for future portability */

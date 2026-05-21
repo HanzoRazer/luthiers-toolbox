@@ -114,6 +114,36 @@ from .serialization import (
     verify_hash_match,
 )
 
+# Classification (MRP-5O)
+from .classification import (
+    DivergenceSeverity,
+    RegressionStatus,
+    ReplayExecutionStatus,
+)
+
+# Execution (MRP-5O)
+from .execution import (
+    ReplayExecutionHarness,
+    ReplayExecutionResult,
+    ReproducedArtifact,
+    execute_replay,
+)
+
+# Regression (MRP-5O)
+from .regression import (
+    ArtifactRegressionComparator,
+    ArtifactRegressionReport,
+    DivergenceDetail,
+    compare_regression,
+)
+
+# Fixtures (MRP-5O)
+from .fixtures import (
+    build_minimal_replay_bundle,
+    build_minimal_topology_dict,
+    build_replay_bundle_from_pipeline_outputs,
+)
+
 __all__ = [
     # Contracts
     "AdmissionLineage",
@@ -160,4 +190,22 @@ __all__ = [
     "stable_json_dumps",
     "stable_json_loads",
     "verify_hash_match",
+    # Classification (MRP-5O)
+    "DivergenceSeverity",
+    "RegressionStatus",
+    "ReplayExecutionStatus",
+    # Execution (MRP-5O)
+    "ReplayExecutionHarness",
+    "ReplayExecutionResult",
+    "ReproducedArtifact",
+    "execute_replay",
+    # Regression (MRP-5O)
+    "ArtifactRegressionComparator",
+    "ArtifactRegressionReport",
+    "DivergenceDetail",
+    "compare_regression",
+    # Fixtures (MRP-5O)
+    "build_minimal_replay_bundle",
+    "build_minimal_topology_dict",
+    "build_replay_bundle_from_pipeline_outputs",
 ]

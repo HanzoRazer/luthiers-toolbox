@@ -23,6 +23,7 @@
  * Dev Order 62: Added MeasurementArchiveEvidenceIndex for experimental history.
  * Dev Order 63: Added MeasurementResidualComparisonPanel for pairwise archive comparison.
  * Dev Order 66: Added TopologyVariant* components for experimental topology variants.
+ * Dev Order 67: QA hardening for topology variant linkage.
  */
 
 export { default as AcousticStateCard } from './AcousticStateCard.vue'

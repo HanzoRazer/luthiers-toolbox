@@ -1,6 +1,37 @@
 {
-  "document_count": 16,
+  "document_count": 27,
   "documents": [
+    {
+      "headings": [
+        {
+          "level": 1,
+          "title": "Institutional Semantic Memory"
+        },
+        {
+          "level": 2,
+          "title": "Core Wave 1A Spine"
+        },
+        {
+          "level": 2,
+          "title": "Core Wave 1B Spine"
+        },
+        {
+          "level": 2,
+          "title": "Core Wave 1C Spine"
+        },
+        {
+          "level": 2,
+          "title": "Constitutional Alignment / Operating Answers"
+        },
+        {
+          "level": 2,
+          "title": "Supporting Research Notes"
+        }
+      ],
+      "internal_links": [],
+      "line_count": 25,
+      "path": "docs/research/_README.md"
+    },
     {
       "headings": [
         {
@@ -135,6 +166,58 @@
       "internal_links": [],
       "line_count": 400,
       "path": "docs/research/CAD_KERNEL_BOUNDARY_ANALYSIS.md"
+    },
+    {
+      "headings": [
+        {
+          "level": 1,
+          "title": "Contour Ownership Analysis"
+        },
+        {
+          "level": 2,
+          "title": "Ownership pipeline (verified modules)"
+        },
+        {
+          "level": 2,
+          "title": "Ownership classes"
+        },
+        {
+          "level": 2,
+          "title": "Current heuristics (runtime)"
+        },
+        {
+          "level": 2,
+          "title": "Topology blind spots"
+        },
+        {
+          "level": 2,
+          "title": "Proposed observability (deferred \u2014 docs only)"
+        },
+        {
+          "level": 2,
+          "title": "Cross-links"
+        }
+      ],
+      "internal_links": [
+        {
+          "label": "SEMANTIC_INTERPRETATION_TRACE.md",
+          "target": "SEMANTIC_INTERPRETATION_TRACE.md"
+        },
+        {
+          "label": "SEMANTIC_RANKING_SIGNALS.md",
+          "target": "SEMANTIC_RANKING_SIGNALS.md"
+        },
+        {
+          "label": "TOPOLOGY_CONTINUITY_FAILURES.md",
+          "target": "TOPOLOGY_CONTINUITY_FAILURES.md"
+        },
+        {
+          "label": "WAVE_1C_QUALITY_FIXTURES.md",
+          "target": "WAVE_1C_QUALITY_FIXTURES.md"
+        }
+      ],
+      "line_count": 77,
+      "path": "docs/research/CONTOUR_OWNERSHIP_ANALYSIS.md"
     },
     {
       "headings": [
@@ -360,6 +443,70 @@
       "headings": [
         {
           "level": 1,
+          "title": "Morphology Continuity Evaluation"
+        },
+        {
+          "level": 2,
+          "title": "Evaluation question"
+        },
+        {
+          "level": 2,
+          "title": "Continuity targets"
+        },
+        {
+          "level": 2,
+          "title": "Signals used today (not canonization)"
+        },
+        {
+          "level": 2,
+          "title": "Slab_body collapse (commercial)"
+        },
+        {
+          "level": 2,
+          "title": "Les Paul (do not overstate)"
+        },
+        {
+          "level": 2,
+          "title": "Gibson L-37 (context only)"
+        },
+        {
+          "level": 2,
+          "title": "Improvement direction (docs-only)"
+        }
+      ],
+      "internal_links": [
+        {
+          "label": "MORPHOLOGY_INTERPRETATION_BOUNDARY.md",
+          "target": "MORPHOLOGY_INTERPRETATION_BOUNDARY.md"
+        },
+        {
+          "label": "PRIMITIVE_SURVIVABILITY_ANALYSIS.md",
+          "target": "PRIMITIVE_SURVIVABILITY_ANALYSIS.md"
+        },
+        {
+          "label": "REVIEW_PACKAGE_QUALITY_GUIDE.md",
+          "target": "REVIEW_PACKAGE_QUALITY_GUIDE.md"
+        },
+        {
+          "label": "WAVE_1C_QUALITY_FIXTURES.md",
+          "target": "WAVE_1C_QUALITY_FIXTURES.md"
+        },
+        {
+          "label": "WAVE_1C_QUALITY_FIXTURES.md",
+          "target": "WAVE_1C_QUALITY_FIXTURES.md"
+        },
+        {
+          "label": "gibson_l37_1941_significance.md",
+          "target": "gibson_l37_1941_significance.md"
+        }
+      ],
+      "line_count": 83,
+      "path": "docs/research/MORPHOLOGY_CONTINUITY_EVALUATION.md"
+    },
+    {
+      "headings": [
+        {
+          "level": 1,
           "title": "Morphology Interpretation Boundary"
         },
         {
@@ -483,6 +630,58 @@
       ],
       "line_count": 121,
       "path": "docs/research/PRIMITIVE_FLOW_ANALYSIS.md"
+    },
+    {
+      "headings": [
+        {
+          "level": 1,
+          "title": "Primitive Survivability Analysis"
+        },
+        {
+          "level": 2,
+          "title": "Survivability chain"
+        },
+        {
+          "level": 2,
+          "title": "Morphology features vs survivability"
+        },
+        {
+          "level": 2,
+          "title": "Primitive starvation (1B \u2192 1C)"
+        },
+        {
+          "level": 2,
+          "title": "Slab_body link"
+        },
+        {
+          "level": 2,
+          "title": "Reconstruction survivability"
+        },
+        {
+          "level": 2,
+          "title": "Deferred instrumentation (non-authoritative, sandbox-future)"
+        }
+      ],
+      "internal_links": [
+        {
+          "label": "MORPHOLOGY_CONTINUITY_EVALUATION.md",
+          "target": "MORPHOLOGY_CONTINUITY_EVALUATION.md"
+        },
+        {
+          "label": "PRIMITIVE_FLOW_ANALYSIS.md",
+          "target": "PRIMITIVE_FLOW_ANALYSIS.md"
+        },
+        {
+          "label": "TOPOLOGY_CONTINUITY_FAILURES.md",
+          "target": "TOPOLOGY_CONTINUITY_FAILURES.md"
+        },
+        {
+          "label": "WAVE_1C_QUALITY_FIXTURES.md",
+          "target": "WAVE_1C_QUALITY_FIXTURES.md"
+        }
+      ],
+      "line_count": 71,
+      "path": "docs/research/PRIMITIVE_SURVIVABILITY_ANALYSIS.md"
     },
     {
       "headings": [
@@ -812,6 +1011,22 @@
       "headings": [
         {
           "level": 1,
+          "title": "Research README (Wave index entry)"
+        }
+      ],
+      "internal_links": [
+        {
+          "label": "SEMANTIC_ARTIFACT_QUALITY.md",
+          "target": "SEMANTIC_ARTIFACT_QUALITY.md"
+        }
+      ],
+      "line_count": 5,
+      "path": "docs/research/RESEARCH_README_WAVE_INDEX.md"
+    },
+    {
+      "headings": [
+        {
+          "level": 1,
           "title": "Research Wave Index (Dec 2025 \u2192 May 2026)"
         },
         {
@@ -911,6 +1126,190 @@
       ],
       "line_count": 185,
       "path": "docs/research/RESEARCH_WAVE_INDEX.md"
+    },
+    {
+      "headings": [
+        {
+          "level": 1,
+          "title": "Review Package Quality Guide"
+        },
+        {
+          "level": 2,
+          "title": "Goal"
+        },
+        {
+          "level": 2,
+          "title": "Current runtime visibility"
+        },
+        {
+          "level": 2,
+          "title": "Desired future reviewer visibility (not implemented \u2014 1C documents only)"
+        },
+        {
+          "level": 2,
+          "title": "What reviewers must be able to answer (with current package)"
+        },
+        {
+          "level": 2,
+          "title": "Worked package shape (grounded)"
+        },
+        {
+          "level": 2,
+          "title": "Adapter path vs workflow path"
+        },
+        {
+          "level": 2,
+          "title": "Cross-links"
+        }
+      ],
+      "internal_links": [
+        {
+          "label": "SEMANTIC_ARTIFACT_QUALITY.md",
+          "target": "SEMANTIC_ARTIFACT_QUALITY.md#worked-example--grouping-fallback--review-package-grounded"
+        },
+        {
+          "label": "SEMANTIC_OBSERVABILITY_MAP.md",
+          "target": "SEMANTIC_OBSERVABILITY_MAP.md"
+        },
+        {
+          "label": "SEMANTIC_RANKING_SIGNALS.md",
+          "target": "SEMANTIC_RANKING_SIGNALS.md"
+        },
+        {
+          "label": "WAVE_1C_QUALITY_FIXTURES.md",
+          "target": "WAVE_1C_QUALITY_FIXTURES.md"
+        }
+      ],
+      "line_count": 114,
+      "path": "docs/research/REVIEW_PACKAGE_QUALITY_GUIDE.md"
+    },
+    {
+      "headings": [
+        {
+          "level": 1,
+          "title": "Semantic Artifact Quality"
+        },
+        {
+          "level": 2,
+          "title": "Mission"
+        },
+        {
+          "level": 2,
+          "title": "Commercial objective (1C canonical)"
+        },
+        {
+          "level": 2,
+          "title": "Research philosophy"
+        },
+        {
+          "level": 2,
+          "title": "Quality dimensions"
+        },
+        {
+          "level": 2,
+          "title": "Priority collapse modes (commercial lens)"
+        },
+        {
+          "level": 2,
+          "title": "Worked example \u2014 grouping fallback \u2192 review package (grounded)"
+        },
+        {
+          "level": 2,
+          "title": "Major transition boundary"
+        },
+        {
+          "level": 2,
+          "title": "Wave 1C doc map"
+        },
+        {
+          "level": 2,
+          "title": "Non-goals (1C)"
+        },
+        {
+          "level": 2,
+          "title": "README note"
+        }
+      ],
+      "internal_links": [
+        {
+          "label": "CONTOUR_OWNERSHIP_ANALYSIS.md",
+          "target": "CONTOUR_OWNERSHIP_ANALYSIS.md"
+        },
+        {
+          "label": "CONTOUR_OWNERSHIP_ANALYSIS.md",
+          "target": "CONTOUR_OWNERSHIP_ANALYSIS.md"
+        },
+        {
+          "label": "IBG_RUNTIME_POSITION.md",
+          "target": "IBG_RUNTIME_POSITION.md"
+        },
+        {
+          "label": "MORPHOLOGY_CONTINUITY_EVALUATION.md",
+          "target": "MORPHOLOGY_CONTINUITY_EVALUATION.md"
+        },
+        {
+          "label": "MORPHOLOGY_CONTINUITY_EVALUATION.md",
+          "target": "MORPHOLOGY_CONTINUITY_EVALUATION.md"
+        },
+        {
+          "label": "MORPHOLOGY_INTERPRETATION_BOUNDARY.md",
+          "target": "MORPHOLOGY_INTERPRETATION_BOUNDARY.md"
+        },
+        {
+          "label": "PRIMITIVE_FLOW_ANALYSIS.md",
+          "target": "PRIMITIVE_FLOW_ANALYSIS.md"
+        },
+        {
+          "label": "PRIMITIVE_SURVIVABILITY_ANALYSIS.md",
+          "target": "PRIMITIVE_SURVIVABILITY_ANALYSIS.md"
+        },
+        {
+          "label": "REVIEW_PACKAGE_QUALITY_GUIDE.md",
+          "target": "REVIEW_PACKAGE_QUALITY_GUIDE.md"
+        },
+        {
+          "label": "REVIEW_PACKAGE_QUALITY_GUIDE.md",
+          "target": "REVIEW_PACKAGE_QUALITY_GUIDE.md"
+        },
+        {
+          "label": "SEMANTIC_INTERPRETATION_TRACE.md",
+          "target": "SEMANTIC_INTERPRETATION_TRACE.md"
+        },
+        {
+          "label": "SEMANTIC_OBSERVABILITY_MAP.md",
+          "target": "SEMANTIC_OBSERVABILITY_MAP.md"
+        },
+        {
+          "label": "SEMANTIC_RANKING_SIGNALS.md",
+          "target": "SEMANTIC_RANKING_SIGNALS.md"
+        },
+        {
+          "label": "SEMANTIC_RANKING_SIGNALS.md",
+          "target": "SEMANTIC_RANKING_SIGNALS.md"
+        },
+        {
+          "label": "TOPOLOGY_CONTINUITY_FAILURES.md",
+          "target": "TOPOLOGY_CONTINUITY_FAILURES.md"
+        },
+        {
+          "label": "TOPOLOGY_CONTINUITY_FAILURES.md",
+          "target": "TOPOLOGY_CONTINUITY_FAILURES.md"
+        },
+        {
+          "label": "WAVE_1C_QUALITY_FIXTURES.md",
+          "target": "WAVE_1C_QUALITY_FIXTURES.md"
+        },
+        {
+          "label": "WAVE_1C_QUALITY_FIXTURES.md",
+          "target": "WAVE_1C_QUALITY_FIXTURES.md"
+        },
+        {
+          "label": "_README.md",
+          "target": "_README.md"
+        }
+      ],
+      "line_count": 125,
+      "path": "docs/research/SEMANTIC_ARTIFACT_QUALITY.md"
     },
     {
       "headings": [
@@ -1112,6 +1511,62 @@
       "headings": [
         {
           "level": 1,
+          "title": "Semantic Ranking Signals"
+        },
+        {
+          "level": 2,
+          "title": "Implemented (runtime spine)"
+        },
+        {
+          "level": 2,
+          "title": "Proposed (research backlog \u2014 not implemented)"
+        },
+        {
+          "level": 2,
+          "title": "Research-only (sandbox / non-authoritative)"
+        },
+        {
+          "level": 2,
+          "title": "Signal taxonomy"
+        },
+        {
+          "level": 2,
+          "title": "Commercial quality link"
+        },
+        {
+          "level": 2,
+          "title": "Cross-links"
+        }
+      ],
+      "internal_links": [
+        {
+          "label": "CONTOUR_OWNERSHIP_ANALYSIS.md",
+          "target": "CONTOUR_OWNERSHIP_ANALYSIS.md"
+        },
+        {
+          "label": "MORPHOLOGY_CONTINUITY_EVALUATION.md",
+          "target": "MORPHOLOGY_CONTINUITY_EVALUATION.md"
+        },
+        {
+          "label": "RESEARCH_PLATFORM_1A_ALIGNMENT.md",
+          "target": "RESEARCH_PLATFORM_1A_ALIGNMENT.md"
+        },
+        {
+          "label": "REVIEW_PACKAGE_QUALITY_GUIDE.md",
+          "target": "REVIEW_PACKAGE_QUALITY_GUIDE.md"
+        },
+        {
+          "label": "SEMANTIC_INTERPRETATION_TRACE.md",
+          "target": "SEMANTIC_INTERPRETATION_TRACE.md"
+        }
+      ],
+      "line_count": 78,
+      "path": "docs/research/SEMANTIC_RANKING_SIGNALS.md"
+    },
+    {
+      "headings": [
+        {
+          "level": 1,
           "title": "Topology Continuity Failures"
         },
         {
@@ -1276,6 +1731,28 @@
       "headings": [
         {
           "level": 1,
+          "title": "IBG Runtime Position"
+        }
+      ],
+      "internal_links": [],
+      "line_count": 5,
+      "path": "docs/research/WAVE1A_IBG_RUNTIME_POSITION.md"
+    },
+    {
+      "headings": [
+        {
+          "level": 1,
+          "title": "Semantic Interpretation Trace (Wave 1B)"
+        }
+      ],
+      "internal_links": [],
+      "line_count": 9,
+      "path": "docs/research/WAVE1B_SEMANTIC_INTERPRETATION_TRACE.md"
+    },
+    {
+      "headings": [
+        {
+          "level": 1,
           "title": "Wave 1B Research Questions"
         },
         {
@@ -1339,6 +1816,82 @@
       ],
       "line_count": 86,
       "path": "docs/research/WAVE_1B_RESEARCH_QUESTIONS.md"
+    },
+    {
+      "headings": [
+        {
+          "level": 1,
+          "title": "Wave 1C Quality Fixtures"
+        },
+        {
+          "level": 2,
+          "title": "Registry relationship"
+        },
+        {
+          "level": 2,
+          "title": "Fixtures"
+        },
+        {
+          "level": 3,
+          "title": "1. primitive starvation"
+        },
+        {
+          "level": 3,
+          "title": "2. slab_body collapse"
+        },
+        {
+          "level": 3,
+          "title": "3. grouping fallback ambiguity"
+        },
+        {
+          "level": 3,
+          "title": "4. partial contour ownership"
+        },
+        {
+          "level": 3,
+          "title": "5. Les Paul continuity"
+        },
+        {
+          "level": 3,
+          "title": "6. contour fragmentation (1C addition)"
+        },
+        {
+          "level": 3,
+          "title": "7. low morphology confidence (1C addition)"
+        },
+        {
+          "level": 2,
+          "title": "Sandbox references (non-authoritative)"
+        },
+        {
+          "level": 2,
+          "title": "Cross-links"
+        }
+      ],
+      "internal_links": [
+        {
+          "label": "PRIMITIVE_FLOW_ANALYSIS.md",
+          "target": "PRIMITIVE_FLOW_ANALYSIS.md"
+        },
+        {
+          "label": "SEMANTIC_ARTIFACT_QUALITY.md",
+          "target": "SEMANTIC_ARTIFACT_QUALITY.md"
+        },
+        {
+          "label": "SEMANTIC_INTERPRETATION_TRACE.md",
+          "target": "SEMANTIC_INTERPRETATION_TRACE.md"
+        },
+        {
+          "label": "TOPOLOGY_CONTINUITY_FAILURES.md",
+          "target": "TOPOLOGY_CONTINUITY_FAILURES.md"
+        },
+        {
+          "label": "TOPOLOGY_CONTINUITY_FAILURES.md",
+          "target": "TOPOLOGY_CONTINUITY_FAILURES.md"
+        }
+      ],
+      "line_count": 139,
+      "path": "docs/research/WAVE_1C_QUALITY_FIXTURES.md"
     }
   ],
   "research_dir": "docs/research",

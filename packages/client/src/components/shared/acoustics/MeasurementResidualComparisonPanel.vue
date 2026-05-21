@@ -5,6 +5,7 @@
  * Dev Order 63: Compares two measurement archives and displays residual analysis
  * using existing residual cards. Observational only — no prescriptions or rankings.
  * Dev Order 66: Added topology variant comparison display.
+ * Dev Order 67: QA hardening for variant edge cases.
  *
  * Composes:
  *   - Archive selectors (A and B)
@@ -14,6 +15,7 @@
  *   - Observational narrative
  *
  * Ephemeral comparisons — archives are durable, comparisons are transient.
+ * Variant comparison is observational only — no scoring, ranking, or recommendations.
  */
 import { ref, computed, watch } from 'vue'
 import { GateBadge, SectionLabel } from '@/components/shared/workflow'

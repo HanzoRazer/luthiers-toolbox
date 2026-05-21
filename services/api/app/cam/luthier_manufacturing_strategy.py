@@ -47,6 +47,10 @@ class LuthierManufacturingStrategy(BaseModel):
     tool_assumptions: List[str] = Field(default_factory=list)
     review_notes: List[str] = Field(default_factory=list)
 
+    # 7V: Fixture topology cognition refs (strategy may reference, not mutate)
+    fixture_constraint_refs: List[str] = Field(default_factory=list)
+    topology_evaluation_refs: List[str] = Field(default_factory=list)
+
     review_status: ReviewStatus = "draft"
 
     execution_authorized: bool = Field(default=False)

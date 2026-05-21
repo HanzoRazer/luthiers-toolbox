@@ -2,9 +2,12 @@
  * Topology Variant Utilities
  *
  * Dev Order 66: Experimental topology variant framework
+ * Dev Order 67: QA hardening and linkage verification
  *
  * Observational only — no calibration authority, no prediction systems.
- * In-memory storage for Dev Order 66 (no persistence backend).
+ * In-memory storage (no persistence backend).
+ *
+ * All functions are immutable — they never mutate input arrays or objects.
  */
 
 import type {
@@ -13,6 +16,7 @@ import type {
   TopologyVariantValidationResult,
   TopologyVariantSummary,
 } from '@/types/acoustics/topologyVariant'
+import type { MeasurementArchiveRecord } from '@/types/acoustics/measurementArchive'
 
 /**
  * Generate a topology variant ID with timestamp
@@ -279,4 +283,166 @@ export function getAllExperimentTags(variants: TopologyVariant[]): string[] {
     }
   }
   return Array.from(tags).sort()
+}
+
+// =============================================================================
+// Dev Order 67: Hardening Utilities
+// =============================================================================
+
+/**
+ * Type guard for TopologyVariant
+ * Returns true if data has valid topology-variant.v1 schema structure
+ */
+export function isTopologyVariant(data: unknown): data is TopologyVariant {
+  if (!data || typeof data !== 'object') return false
+  const obj = data as Record<string, unknown>
+  return (
+    obj.schemaVersion === 'topology-variant.v1' &&
+    typeof obj.variantId === 'string' &&
+    obj.variantId.trim() !== '' &&
+    typeof obj.title === 'string' &&
+    typeof obj.createdAtIso === 'string'
+  )
+}
+
+/**
+ * Normalize a topology variant (immutable)
+ * - Trims whitespace from string fields
+ * - Removes empty optional string fields
+ * - Normalizes empty tag arrays to undefined
+ * - Preserves schema version and IDs
+ * - Does NOT fix invalid schema versions
+ */
+export function normalizeTopologyVariant(variant: TopologyVariant): TopologyVariant {
+  const trimOrUndefined = (val: string | undefined): string | undefined => {
+    if (val === undefined) return undefined
+    const trimmed = val.trim()
+    return trimmed === '' ? undefined : trimmed
+  }
+
+  const normalizedTags = variant.experimentTags?.filter(t => t.trim() !== '').map(t => t.trim())
+
+  return {
+    schemaVersion: variant.schemaVersion,
+    variantId: variant.variantId,
+    title: variant.title.trim(),
+    createdAtIso: variant.createdAtIso,
+    description: trimOrUndefined(variant.description),
+    category: variant.category,
+    shellFamily: trimOrUndefined(variant.shellFamily),
+    bodyFamily: trimOrUndefined(variant.bodyFamily),
+    apertureStrategy: trimOrUndefined(variant.apertureStrategy),
+    bracingStrategy: trimOrUndefined(variant.bracingStrategy),
+    bridgeStrategy: trimOrUndefined(variant.bridgeStrategy),
+    localContourStrategy: trimOrUndefined(variant.localContourStrategy),
+    tornavozStrategy: trimOrUndefined(variant.tornavozStrategy),
+    experimentTags: normalizedTags?.length ? normalizedTags : undefined,
+    notes: trimOrUndefined(variant.notes),
+  }
+}
+
+/**
+ * Safely parse topology variant timestamp
+ * Returns Date object or null if invalid
+ */
+export function safeParseTopologyVariantTimestamp(isoString: string | undefined): Date | null {
+  if (!isoString) return null
+  try {
+    const date = new Date(isoString)
+    return isNaN(date.getTime()) ? null : date
+  } catch {
+    return null
+  }
+}
+
+/**
+ * Check if archive has topology variant references
+ */
+export function hasTopologyVariantReferences(archive: MeasurementArchiveRecord): boolean {
+  return Array.isArray(archive.topologyVariantReferences) &&
+    archive.topologyVariantReferences.length > 0
+}
+
+/**
+ * Deduplicate topology variant references (immutable)
+ * Filters out empty strings and duplicates
+ */
+export function dedupeTopologyVariantReferences(refs: string[] | undefined): string[] {
+  if (!refs || refs.length === 0) return []
+  const seen = new Set<string>()
+  const result: string[] = []
+  for (const ref of refs) {
+    const trimmed = ref.trim()
+    if (trimmed !== '' && !seen.has(trimmed)) {
+      seen.add(trimmed)
+      result.push(trimmed)
+    }
+  }
+  return result
+}
+
+/**
+ * Filter archives by topology variant ID (immutable)
+ * Returns archives that reference the given variant ID
+ */
+export function filterArchivesByTopologyVariant(
+  archives: MeasurementArchiveRecord[],
+  variantId: string
+): MeasurementArchiveRecord[] {
+  if (!variantId.trim()) return []
+  return archives.filter(archive =>
+    archive.topologyVariantReferences?.includes(variantId)
+  )
+}
+
+/**
+ * Group archives by topology variant (immutable)
+ * Returns a map of variantId → archives
+ * Archives with no variant refs are grouped under '__none__'
+ * Archives with multiple refs appear in multiple groups
+ */
+export function groupArchivesByTopologyVariant(
+  archives: MeasurementArchiveRecord[]
+): Map<string, MeasurementArchiveRecord[]> {
+  const groups = new Map<string, MeasurementArchiveRecord[]>()
+
+  for (const archive of archives) {
+    const refs = archive.topologyVariantReferences
+    if (!refs || refs.length === 0) {
+      const existing = groups.get('__none__') ?? []
+      groups.set('__none__', [...existing, archive])
+    } else {
+      for (const ref of refs) {
+        const existing = groups.get(ref) ?? []
+        groups.set(ref, [...existing, archive])
+      }
+    }
+  }
+
+  return groups
+}
+
+/**
+ * Validate that a variant ID reference exists in the variants list
+ * Returns true if the reference is valid (exists or is empty)
+ */
+export function isValidVariantReference(
+  variantId: string,
+  variants: TopologyVariant[]
+): boolean {
+  if (!variantId.trim()) return false
+  return variants.some(v => v.variantId === variantId)
+}
+
+/**
+ * Filter out invalid variant references (immutable)
+ * Removes refs that don't exist in the variants list
+ */
+export function filterValidVariantReferences(
+  refs: string[] | undefined,
+  variants: TopologyVariant[]
+): string[] {
+  if (!refs || refs.length === 0) return []
+  const variantIds = new Set(variants.map(v => v.variantId))
+  return refs.filter(ref => variantIds.has(ref))
 }

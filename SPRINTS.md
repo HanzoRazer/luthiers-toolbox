@@ -1,57 +1,95 @@
 # The Production Shop — Sprint Registry
-Last updated: 2026-05-06
+Last updated: 2026-05-21
 Maintained by: Ross Echols (HanzoRazer)
 Maintenance discipline: docs/SPRINTS_MAINTENANCE.md
 
+**Companion docs:** Vectorizer authority → `docs/governance/VECTORIZER_COMPONENT_LIFECYCLE.md`. Session gap log (March) → `docs/SPRINT_BOARD.md` (**historical** — do not use for current sprint status).
+
 ---
 
-## NEXT SESSION OPENS WITH (2026-05-02)
+## NEXT SESSION OPENS WITH (2026-05-21)
 
-**Sprint FRET-CONSOLIDATION-1 complete** — CAM toolpath generation now consumes FretboardEcosphere as canonical source. No more duplicate fret math.
+**Vectorizer program (May 2026) — remediation merged; cognition split complete.**
 
-**Engineer at rest after data integrity and consolidation sprints.** No active work in flight.
+| Deliverable | Status | Reference |
+|-------------|--------|-----------|
+| Safe remediation PR-1/2/3 | **COMPLETE** (#28, `13937525`) | SIMPLE EXPORT_SAFE; grouping telemetry; `submit_correction` DEAD gate |
+| Semantic sandbox import gate | **COMPLETE** (#26, `f1e11d99`) | `check_semantic_sandbox_imports.py` |
+| Tier A re-home to cognition repo | **COMPLETE** (#27, `f53bb479`) | `vectorizer-sandbox` — local clone: `../vectorizer-sandbox/` |
+| Vectorizer governance archaeology | **COMPLETE** (docs) | `VECTORIZER_*` inventory + `verify_vectorizer_audit.ps1` |
+| Three-loop + AGE architecture | **QUEUED** | Approved in `CLAUDE.md` — not production-wired |
+| Sprint 3 DXF generator table | **REFRESHED** (below) | 12/12 governed — BOE endpoint still open |
+| CAM 7T / MRP 5M / 5N runtime | **LOCAL WIP** (`d5033799`) | Not on `origin/main` — push when ready |
 
-**Shop setup is the gating critical path** — clearout target 2026-05-15, lab rig fabrication start ~2026-07.
+**Production vectorizer path (unchanged):** Blueprint Reader → `CleanupMode.REFINED` → `edge_to_dxf.py`.
 
-**CAD work on Smart Guitar in parallel** (romantic route chosen; Fusion 360 license renewed).
+**FRET-CONSOLIDATION-1 complete** — CAM consumes FretboardEcosphere. **17b–17d still queued** (frontend `/frets/positions`, FretSlottingView, playground).
 
-**Completed 2026-04-30 through 2026-05-02:**
-- Sprint M1 wood shrinkage data integrity remediation (commits 37f29bc6, 477758eb)
-- Sprint M2 silent fallback elimination across 6 files (commit 477758eb)
-- Sprint NDS Phase 1+1.5 foundation (commits 9d37f1ea, d72d9744, e260f365, ac96430f)
-- Sprint NDS Phase 2 router and endpoints (commits 4f8a3209, ab1ed8a2, 6b719fc3) — delivered as FRET-A Phase 2
-- Sprint FRET-CONSOLIDATION-1 CAM-consumes-ecosphere (commits e4220537, fa009184)
-- African Padauk wood_species.json entry update (Janka correction, shrinkage values, CITES warning)
-- Data file sync boundary documented (wood_species.json vs luthier_tonewood_reference.json)
-- Sprint M4 queued: MOE data gaps (spruce_sitka, spruce_engelmann, douglas_fir)
-
-**Pending pickup when bandwidth allows:**
+**Still pending when bandwidth allows:**
 - Sprint M2.5 — Deferred silent fallback cleanup (4 items)
 - Sprint M3a — CITES lookup tool
-- Sprint M5 — CIRAD Reference Database API (expose 34K specimens + density data)
-- Sprint M6 — Unfinished Work Audit (BOE, IBG, stale sprints, sandboxed experiments)
-- Active Inventory Species Audit (Padauk as template)
+- Sprint M4 — MOE data gaps (spruce_sitka, spruce_engelmann, douglas_fir)
+- Sprint M5 — CIRAD Reference Database API
+- Sprint M6 — Residual unfinished-work audit (vectorizer archaeology reduced scope; BOE/IBG wiring remain)
+- Sprint 3 — BOE governed DXF export endpoint only
 
-**Strategy update (2026-05-02):** Single-property marketing strategy supersedes standalone-repos-as-moat. All standalone repos except ltb-woodworking-studio collapse back to luthiers-toolbox. Privatization of all standalone repos in flight as separate operational task.
+**Strategy (2026-05-02, amended 2026-05-21):** Single-property marketing; collapse standalone repos **except** `ltb-woodworking-studio`, deployment-driven `blueprint-reader`, and **`vectorizer-sandbox`** (semantic cognition layer per `SEMANTIC_INCUBATION_ARCHITECTURE.md`).
 
 ---
 
-**Sprint 3 — REOPENED (2026-04-26)**
+## VECTOR — Semantic runtime & cognition (2026-05)
 
-Sprint 3 verification audit (docs/audit/sprints_md_verification_2026-04-25.md) found:
-- **2/12 DXF generators actually migrated** — 10 false claims identified
-- **BOE backend endpoint does not exist** — documented but never implemented
-- Sprint 3 "CLOSED" status was based on false completion claims
+**Authority:** `docs/governance/SEMANTIC_INCUBATION_ARCHITECTURE.md`, `VECTORIZER_COMPONENT_LIFECYCLE.md`, `VECTORIZER_SANDBOX_MIGRATION_PLAN.md`  
+**Local workspace:** `local/README.md` — sibling clone at `Downloads/vectorizer-sandbox/`
 
-**Corrections applied:**
-- 10 files marked NOT MIGRATED in DXF Compliance table
-- BOE endpoint marked MISSING — resolution TBD
-- Sprint status changed to REOPENED
-- See docs/audit/sprints_md_verification_2026-04-25.md for full verification
+### VECTOR-REMEDIATION — Safe remediation lane
+**Status:** COMPLETE  
+**last_verified:** 2026-05-21  
+**Merged:** PR #28 (`13937525`)
 
-**Remaining Sprint 3 work:**
-- 10 DXF migrations scheduled in Sprint 3B PR 2B
-- BOE endpoint: implement, remove claim, or identify alternate (decision pending)
+| PR | Outcome | Verification |
+|----|---------|--------------|
+| PR-2 | Grouping fallback telemetry + `topology_provenance` in API | `grouping_telemetry.py`, `test_vectorizer_grouping_telemetry.py` |
+| PR-1 | SIMPLE → EXPORT_SAFE (non-empty DXF, fail-closed) | `test_vectorizer_simple_export.py` |
+| PR-3 | `submit_correction` DEAD; CI gate | `check_feedback_correction_calls.py`, `TestFeedbackCorrectionGate` |
+
+**Does not imply:** SIMPLE commercial ACTIVE; cognitive re-integration; Loop 3 learning enabled.
+
+### VECTOR-SANDBOX-MIGRATION — Tier A re-home
+**Status:** COMPLETE (Phases 0.5–2)  
+**last_verified:** 2026-05-21  
+**Merged:** PR #26 (`f1e11d99`), PR #27 (`f53bb479`)
+
+| Phase | Deliverable |
+|-------|-------------|
+| 0.5 | `check_semantic_sandbox_imports.py` — blocks Tier A imports under `services/` |
+| 2 | Tier A removed from main; stubs + `ARCHAEOLOGY_RELOCATION.md` / `PHASE2_RELOCATION.md` |
+| Cognition repo | `HanzoRazer/vectorizer-sandbox` — `src/semantic/`, `src/archaeology/`, tag `v0.2.0-semantic-lineage-import` |
+
+**Tier B deferred:** `march_pipeline_restore.py` coupling to `photo_vectorizer_v2.py` — extract-before-move.
+
+### VECTOR-ARCHAEOLOGY — Technical debt inventory
+**Status:** COMPLETE (documentation + audit tooling)  
+**last_verified:** 2026-05-21  
+
+- `docs/governance/VECTORIZER_TECHNICAL_DEBT_INVENTORY.md` (2026-05-20)
+- `scripts/governance/verify_vectorizer_audit.ps1`
+- Supersedes in-tree “orphaned cognitive_*” framing — lineage is **RELOCATED_EXTERNAL**, not deleted
+
+### VECTOR-LOOPS-AGE — Three feedback loops + AGE
+**Status:** QUEUED  
+**last_verified:** 2026-05-21  
+**Approved:** `CLAUDE.md` (2026-04-02 architecture decision)
+
+| Priority | Item |
+|----------|------|
+| 1 | Scale validation gate before every `export_to_dxf()` (partial — exists on main phase3) |
+| 2 | Loop 1 intra-frame validation + retry strategies |
+| 3 | Loop 2 cross-image strategy cache |
+| 4 | AGE integration (`VectorizerAGE` pattern from tap_tone_pi) |
+| 5 | Loop 3 — wire `FeedbackSystem` / `TrainingDataCollector` on user correction (blocked on PR-3 DEAD until graduation) |
+
+**Sprint 3 DXF note:** Generator compliance refreshed 2026-05-21 — see Sprint 3 table in ACTIVE section. April audit (`sprints_md_verification_2026-04-25.md`) superseded for the 12-file generator list.
 
 **Next sprint candidates (Ross to direct):**
 1. BOE v3.7 — Refine Curves (scope doc: BOE_v3_7_REFINE_CURVES_SPRINT.md)
@@ -269,9 +307,15 @@ Quality scorecard (3/3 PASS):
 ---
 
 ### Sprint 3 — Remediation and Gap Closure
-**Status:** REOPENED (2026-04-26) — verification audit found 10/12 false migration claims
-**last_verified:** 2026-04-26
-**Branch:** main
+**Status:** PARTIAL — 12/12 DXF generators governed (2026-05-21 re-verify); BOE export endpoint still open  
+**last_verified:** 2026-05-21  
+**Branch:** main  
+**History:** REOPENED 2026-04-26 after `docs/audit/sprints_md_verification_2026-04-25.md` found false completion claims. Generator table below superseded that audit.
+
+**Governed DXF layers (2026-05-21 policy):**
+- **`app/util/dxf_compat.py`** — tiered output: R12 (free) / R2000 LWPOLYLINE (paid); blocks direct `ezdxf.new()` in generators
+- **`app/cam/dxf_writer.py`** — R12 LINE-only (`DxfWriter`); used by spiral_geometry + archtop_floating_bridge
+- **Forbidden:** direct `ezdxf.new()` in production generators (`CLAUDE.md`, governance CI)
 
 **Task list:**
 - [x] Build dxf_writer.py — central DXF writer enforcing R12, sentinel EXTMIN/EXTMAX,
@@ -281,7 +325,7 @@ Quality scorecard (3/3 PASS):
 - [x] Add WeasyPrint dependencies to Docker — PDF export (commit ff958c9a)
 - [x] Migrate spiral_geometry.py to dxf_writer.py (2026-04-16, re-migrated 2026-04-23 — regression fixed)
 - [x] Migrate archtop_floating_bridge.py to dxf_writer.py (2026-04-16, re-migrated 2026-04-23 — regression fixed)
-- [ ] Migrate curve_export_router.py to dxf_writer.py
+- [x] Migrate curve_export_router.py to governed DXF layer (dxf_compat — 2026-05-21 verify)
 - [ ] Fix 13 pre-existing test failures (10 soundhole spiral Python 3.14/ezdxf,
       2 debt gate ratchet, 1 vision integration)
 - [ ] Resolve 8 gaps awaiting physical measurements
@@ -335,7 +379,7 @@ Quality scorecard (3/3 PASS):
 - [x] Phase 3 — Execute cleanup per triage decisions (completed 2026-04-23):
       • Re-migrated spiral_geometry.py and archtop_floating_bridge.py (tech debt fixed)
       • Updated Sprint 2 stale items (flying_v phantom, VECTORIZER_ACCURACY.md marked resolved)
-      • Updated Sprint 3 compliance table (10/12 → 12/12 with re-migration notes)
+      • Sprint 3 compliance table refreshed again 2026-05-21 (see below)
       • Updated Sprint 8 location (docs/instrument_library/ → app/instrument_geometry/models/)
       • Updated Sprint 9 status (PLANNED → IN PROGRESS scaffolded)
       • Updated Archtop Free Tier (noted scripts already exist)
@@ -345,28 +389,34 @@ Quality scorecard (3/3 PASS):
       • Documented recurring audit process (90-day or 800-line trigger)
       • CI enforcement deferred (solo-dev project)
 
-**DXF Compliance status (CORRECTED 2026-04-26 — 2/12 MIGRATED, 10 FALSE CLAIMS):**
+**DXF Compliance status (REFRESHED 2026-05-21 — 12/12 GOVERNED):**
 
-Verification audit: docs/audit/sprints_md_verification_2026-04-25.md
+Supersedes 2026-04-26 table in `docs/audit/sprints_md_verification_2026-04-25.md` for this file list.  
+Verification: `rg 'ezdxf\.new' <file>` → 0 matches in each path below (2026-05-21).
 
-| Priority | File | Format | Status |
-|----------|------|--------|--------|
-| 1 | `soundhole/spiral_geometry.py` | R12 | ✅ Migrated (verified: imports DxfWriter, 0 ezdxf.new calls) |
-| 2 | `bridge/archtop_floating_bridge.py` | R12 | ✅ Migrated (verified: imports DxfWriter, 0 ezdxf.new calls) |
-| 3 | `headstock/dxf_export.py` | R2010 | ❌ NOT MIGRATED — false claim, scheduled Sprint 3B PR 2B |
-| 3 | `blueprint_cam/dxf_preprocessor.py` | R2000 | ❌ NOT MIGRATED — false claim, scheduled Sprint 3B PR 2B |
-| 3 | `blueprint_cam/contour_reconstruction.py` | R2000 | ❌ NOT MIGRATED — false claim, scheduled Sprint 3B PR 2B |
-| 3 | `export/curve_export_router.py` | R2010 | ❌ NOT MIGRATED — false claim, scheduled Sprint 3B PR 2B |
-| 4 | `body/smart_guitar_dxf.py` | R2000 | ❌ NOT MIGRATED — false claim, scheduled Sprint 3B PR 2B |
-| 4 | `neck/headstock_transition_export.py` | R2010 | ❌ NOT MIGRATED — false claim, scheduled Sprint 3B PR 2B |
-| 4 | `neck/neck_profile_export.py` | R2010 | ❌ NOT MIGRATED — false claim, scheduled Sprint 3B PR 2B |
-| 5 | `archtop/archtop_contour_generator.py` | R2010 | ❌ NOT MIGRATED — false claim, scheduled Sprint 3B PR 2B |
-| 5 | `cam/archtop_bridge_generator.py` | R2010 | ❌ NOT MIGRATED — false claim, scheduled Sprint 3B PR 2B |
-| 5 | `cam/archtop_saddle_generator.py` | R2010 | ❌ NOT MIGRATED — false claim, scheduled Sprint 3B PR 2B |
+| Priority | File | Governed via | Status |
+|----------|------|--------------|--------|
+| 1 | `instrument_geometry/soundhole/spiral_geometry.py` | `DxfWriter` (dxf_writer.py) | ✅ R12 LINE — 0 `ezdxf.new` |
+| 2 | `instrument_geometry/bridge/archtop_floating_bridge.py` | `DxfWriter` | ✅ R12 LINE — 0 `ezdxf.new` |
+| 3 | `routers/headstock/dxf_export.py` | `dxf_compat.create_document` | ✅ tiered R12/R2000 — 0 `ezdxf.new` |
+| 3 | `routers/blueprint_cam/dxf_preprocessor.py` | `dxf_compat` | ✅ — 0 `ezdxf.new` |
+| 3 | `routers/blueprint_cam/contour_reconstruction.py` | `dxf_compat` | ✅ — 0 `ezdxf.new` |
+| 3 | `routers/export/curve_export_router.py` | `dxf_compat` | ✅ — 0 `ezdxf.new` |
+| 4 | `instrument_geometry/body/smart_guitar_dxf.py` | `dxf_compat` | ✅ — 0 `ezdxf.new` |
+| 4 | `routers/neck/headstock_transition_export.py` | `dxf_compat` | ✅ — 0 `ezdxf.new` |
+| 4 | `routers/neck/neck_profile_export.py` | `dxf_compat` | ✅ — 0 `ezdxf.new` |
+| 5 | `cam/archtop/archtop_contour_generator.py` | `dxf_compat` | ✅ — 0 `ezdxf.new` |
+| 5 | `cam/archtop_bridge_generator.py` | `dxf_compat` | ✅ — 0 `ezdxf.new` |
+| 5 | `cam/archtop_saddle_generator.py` | `dxf_compat` | ✅ — 0 `ezdxf.new` |
 
-**BOE Backend Endpoint:**
+**Remaining Sprint 3 work:**
+- [ ] BOE DXF Export Compliance — `POST /api/editor/export-dxf` (or equivalent) routing BOE geometry through `dxf_compat` / `dxf_writer` (not Paper.js native LWPOLYLINE)
+- [ ] Text-masking preprocessing pass for blueprint vectorizer (see task above)
+- [ ] Fix pre-existing test failures / physical-measurement gaps (unchanged)
+
+**BOE Backend Endpoint (still open):**
 - Claim: "POST /api/editor/export-dxf" exists and BOE routes through it
-- Reality: **MISSING** — endpoint does not exist in codebase
+- Reality: **MISSING** — endpoint does not exist in codebase (verified 2026-05-21)
 - Resolution: TBD (implement / remove claim / identify alternate)
 
 ---
@@ -1775,9 +1825,8 @@ loop-assembly gap identified in cam_pipeline_r2000_compat 2026-04-29.
 ---
 
 ### ~~Sprint 3 — Remediation and Gap Closure (DXF Consolidation)~~
-**Status:** MOVED BACK TO ACTIVE — see Sprint 3 in ACTIVE section
-**Reason:** Verification audit (2026-04-26) found 10/12 migration claims were false.
-See docs/audit/sprints_md_verification_2026-04-25.md for details.
+**Status:** MOVED BACK TO ACTIVE — see Sprint 3 in ACTIVE section  
+**Note (2026-05-21):** 12/12 generator paths now governed (`dxf_compat` or `DxfWriter`). April audit remains historical record of false claims; current table is in ACTIVE Sprint 3.
 
 ---
 
@@ -1791,8 +1840,8 @@ Commits: 04735bd4, 72bfffc9, 059cf5b0
 
 | Date | Decision | Rationale |
 |------|----------|-----------|
-| 2026-04-04 | R12 (AC1009) is project-wide DXF standard | CAM compatibility, Fusion 360 freeze prevention |
-| 2026-04-04 | dxf_writer.py blocks all new DXF generators | Central enforcement of R12 standards |
+| 2026-04-04 | R12 (AC1009) is project-wide DXF standard | CAM compatibility, Fusion 360 freeze prevention — **amended 2026-05-21:** tiered R12 (free) + R2000 LWPOLYLINE (paid) via `dxf_compat.py` (`CLAUDE.md`) |
+| 2026-04-04 | dxf_writer.py blocks all new DXF generators | Central R12 LINE enforcement — **amended:** new generators use `dxf_compat`; spiral/bridge retain `DxfWriter` |
 | 2026-04-04 | BlueprintAnalyzer uses in-memory PNG from PDF rasterization | No dual upload required |
 | 2026-04-04 | Standalone repos are a moat, not a code split | Free tools protect integrated product |
 | 2026-04-04 | ltb-woodworking-studio is canonical woodworking module | instrument geometry never goes there |
@@ -1815,3 +1864,4 @@ Commits: 04735bd4, 72bfffc9, 059cf5b0
 | 2026-04-30 | FRET-CONSOLIDATION: canonical ecosphere is single source of truth | Three parallel fret pipelines (api_v1/fret_math, cam/fret_slots, FRET-A ecosphere) converge to ecosphere. CAM consumes ecosphere geometry; legacy endpoints deprecated after frontend migration. Prevents "which pipeline did this guitar use" debugging at scale. |
 | 2026-05-02 | Standalone repos as moat strategy superseded by single-property marketing | All previously planned standalone repos except ltb-woodworking-studio (different domain) and blueprint-reader (deployment-driven separation) collapse back to luthiers-toolbox. Production Shop website presents tools as named features regardless of repo organization. SEO and brand authority concentrate on single property. ltb-woodworking-studio retains separate status due to conceptual domain boundary (woodworking ≠ lutherie). |
 | 2026-05-03 | Woodworking-studio operates completely independently from luthiers-toolbox | No HTTP cross-repo dependencies at runtime. Each repo has its own wood data (wood_species.json), its own schema (lutherie needs acoustic properties; woodworking needs machining/joinery properties), its own data integrity work. Furniture makers shouldn't need a luthier's platform running to calculate panel movement. Operational independence matches eventual deployment reality — two products, two failure modes. Sprint M5 CIRAD API is luthiers-toolbox internal only; not designed for cross-repo consumption. Initial woodworking-studio data population: 30-40 species with woodworking-specific schema, ~12-20h work. |
+| 2026-05-21 | Two-repo semantic incubation: runtime spine + cognition sandbox | `luthiers-toolbox` = governed extraction + IBG constitutional runtime. `vectorizer-sandbox` = semantic cognition + Tier A archaeology. Graduation bridge mandatory (`SEMANTIC_INCUBATION_ARCHITECTURE.md`). Supersedes IBG→new standalone repo (2026-04-20) and in-tree cognitive_* preservation. Safe remediation #28 complete; three-loop/AGE still queued. |

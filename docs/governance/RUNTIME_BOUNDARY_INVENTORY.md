@@ -1,8 +1,8 @@
 # Runtime Boundary Inventory
 
 **Sprint**: Runtime Boundary Follow-Through  
-**Date**: 2026-05-20  
-**Status**: INVENTORY COMPLETE — Patch Plan Proposed
+**Date**: 2026-05-21 (Phase 1B)  
+**Status**: PHASE 1B INVENTORY TIGHTENING COMPLETE
 
 ## Purpose
 
@@ -23,6 +23,7 @@ Produce patch plan before changing code.
 | Execution Quarantine | `cam/translator_execution_quarantine.py` | 7H invariants: all execution flags false, all escalation flags true | ENFORCED |
 | Runtime Provenance | `cam/runtime_provenance/contracts.py` | Append-only lineage, deterministic hashing | DEFINED |
 | DXF Compat Layer | `util/dxf_compat.py` | PROTECTED_PRODUCTION_BASELINE, R12-R18 version control | PROTECTED |
+| DxfWriter Class | `cam/dxf_writer.py` | Uses dxf_compat internally | PROTECTED |
 
 ### Authority Chains (from registry)
 
@@ -30,182 +31,225 @@ Produce patch plan before changing code.
 2. **semantic_authority_chain**: Vocabulary Registry → Domain Owner → Operational Implementation → Runtime Consumer
 3. **export_lifecycle_chain**: Export Request → Feasibility Check → Validation → Translation → Authorization Gate → Machine Output
 
----
+### Classification Levels
 
-## Path Classifications
-
-### Category 1: Governed Export Paths (COMPLIANT)
-
-These paths use the governed export lifecycle or dxf_compat layer:
-
-| Path | Uses dxf_compat | Uses Lifecycle Orchestrator | Risk |
-|------|-----------------|----------------------------|------|
-| `art_studio/services/generators/inlay_export.py` | ✓ | — | LOW |
-| `calculators/inlay_calc.py` | ✓ | — | LOW |
-| `cam/dxf_writer.py` | ✓ | — | LOW |
-| `cam/unified_dxf_cleaner.py` | ✓ | — | LOW |
-| `cam/layer_consolidator.py` | ✓ | — | LOW |
-| `cam/dxf_consolidator.py` | ✓ | — | LOW |
-| `cam/archtop_bridge_generator.py` | ✓ | — | LOW |
-| `cam/archtop_saddle_generator.py` | ✓ | — | LOW |
-| `cam/archtop/archtop_contour_generator.py` | ✓ | — | LOW |
-| `cam/archtop/archtop_surface_tools.py` | ✓ | — | LOW |
-| `routers/neck/*.py` (3 files) | ✓ | — | LOW |
-| `routers/headstock/dxf_export.py` | ✓ | — | LOW |
-| `routers/export/curve_export_router.py` | ✓ | — | LOW |
-| `routers/blueprint_cam/contour_reconstruction.py` | ✓ | — | LOW |
-| `routers/blueprint_cam/dxf_preprocessor.py` | ✓ | — | LOW |
-| `services/layered_dxf_writer.py` | ✓ | — | LOW |
-
-### Category 2: Direct ezdxf Bypass (BYPASS RISK)
-
-These paths call `ezdxf.new()` directly, bypassing dxf_compat:
-
-| Path | Line | Version Used | Risk | Issue |
-|------|------|--------------|------|-------|
-| `instrument_geometry/body/smart_guitar_dxf.py` | 297 | R2000 | MEDIUM | Direct ezdxf.new(), no dxf_compat |
-| `routers/instruments/guitar/smart_guitar_dxf_router.py` | 77 | R2010 | MEDIUM | Direct ezdxf.new(), no dxf_compat |
-
-### Category 3: Saveas Without Lifecycle (PROVENANCE GAP)
-
-These paths emit DXF via `.saveas()` without going through governed export lifecycle:
-
-| Path | Classification | Provenance Tracked | Risk |
-|------|----------------|-------------------|------|
-| `generators/bezier_body.py:472` | artifact generation | NO | MEDIUM |
-| `instrument_geometry/soundhole/spiral_geometry.py:311` | artifact generation | NO | LOW (debug output) |
-| `instrument_geometry/body/ibg/body_contour_solver.py:777,808` | IBG output | NO | HIGH |
-| `instrument_geometry/body/ibg/arc_reconstructor.py:1116,1279,1303` | IBG output | NO | HIGH |
-| `routers/dxf_preflight_router.py:301,303` | preflight | NO | LOW (validation only) |
-| `routers/blueprint_cam/dxf_geometry_correction.py:306` | blueprint CAM | NO | MEDIUM |
-| `services/text_reinsertion.py:318` | service | NO | LOW |
-| `cam/line_deduplicator.py:290` | CAM utility | NO | LOW |
-
-### Category 4: CAM Dispatch Paths
-
-| Module | Dispatch Pattern | Governance Integration | Risk |
-|--------|-----------------|----------------------|------|
-| `cam/export_lifecycle_orchestrator.py` | `dispatch_preview()`, `dispatch_export_object()` | FULL | LOW |
-| `cam/cam_operation_registry.py` | registry-driven | FULL | LOW |
-| `cam/routers/toolpath/*.py` | toolpath dispatch | PARTIAL | MEDIUM |
-| `cam/archtop/archtop_pipeline.py` | pipeline dispatch | PARTIAL | MEDIUM |
-
-### Category 5: Runtime Provenance Paths
-
-| Module | Provenance Recording | Risk |
-|--------|---------------------|------|
-| `cam/runtime_provenance/recorder.py` | DEFINED | LOW |
-| `cam/runtime_provenance/contracts.py` | DEFINED | LOW |
-| `instrument_geometry/body/ibg/body_evidence_candidate.py` | DEFINED (authority + provenance) | LOW |
+| Level | Definition | Risk |
+|-------|------------|------|
+| lifecycle-governed | Uses dxf_compat + export_lifecycle_orchestrator | LOW |
+| compat-governed | Uses dxf_compat.create_document() or DxfWriter | LOW-MEDIUM |
+| read-modify-write | Uses ezdxf.readfile(), modifies, saves | LOW-MEDIUM |
+| direct-saveas | Creates doc without dxf_compat, calls saveas | MEDIUM |
+| direct-ezdxf-bypass | Uses ezdxf.new() directly in production | HIGH |
+| blocked_provenance | IBG paths awaiting provenance model ratification | BLOCKED |
+| test_fixture | Test-only, allowed per TEST_FIXTURE_ALLOWED | N/A |
+| blueprint_import | Blueprint/vectorizer import surface | document_only |
+| r_and_d_sandbox | Photo-vectorizer, excluded from enforcement | N/A |
 
 ---
 
-## Bypass Risks Summary
+## Complete DXF Lifecycle Path Inventory
 
-### Risk 1: Direct ezdxf Bypass (2 files)
+### A. Lifecycle-Governed Paths (LOW risk)
 
-**Files**:
-- `instrument_geometry/body/smart_guitar_dxf.py:297`
-- `routers/instruments/guitar/smart_guitar_dxf_router.py:77`
+Only one module uses full export lifecycle orchestration:
 
-**Issue**: Direct `ezdxf.new()` calls bypass the PROTECTED_PRODUCTION_BASELINE dxf_compat layer.
+| File | Line | Pattern | Disposition |
+|------|------|---------|-------------|
+| `routers/cam/export_lifecycle_router.py` | 18+ | imports export_lifecycle_orchestrator | no_action |
 
-**Authority chain violation**: No version validation through dxf_compat.validate_version().
+### B. Compat-Governed Paths (LOW-MEDIUM risk)
 
-**Recommendation**: Replace direct calls with `dxf_compat.create_document()`.
+These use `create_document()` from dxf_compat or DxfWriter class:
 
-### Risk 2: IBG Output Without Provenance (5 saveas calls)
+| File | Line | create_document | saveas | Disposition |
+|------|------|-----------------|--------|-------------|
+| `cam/dxf_writer.py` | 56, 160 | ✓ | ✓ | no_action |
+| `cam/unified_dxf_cleaner.py` | 216, 358, 265, 409 | ✓ | ✓ | no_action |
+| `cam/layer_consolidator.py` | 179, 239 | ✓ | ✓ | no_action |
+| `cam/dxf_consolidator.py` | 243, 273 | ✓ | ✓ | no_action |
+| `cam/archtop_bridge_generator.py` | 55, 111 | ✓ | ✓ | no_action |
+| `cam/archtop_saddle_generator.py` | 61, 137 | ✓ | ✓ | no_action |
+| `cam/archtop/archtop_surface_tools.py` | 147, 156 | ✓ | ✓ | no_action |
+| `cam/archtop/archtop_contour_generator.py` | 135, 139, 171, 175 | ✓ | ✓ | no_action |
+| `cam/dxf_advanced_validation.py` | 576, 604 | ✓ | — | no_action |
+| `routers/neck/neck_profile_export.py` | 248 | ✓ | — | no_action |
+| `routers/neck/headstock_transition_export.py` | 147 | ✓ | — | no_action |
+| `routers/neck/export.py` | 36 | ✓ | — | no_action |
+| `routers/headstock/dxf_export.py` | 274 | ✓ | — | no_action |
+| `routers/export/curve_export_router.py` | 56 | ✓ | — | no_action |
+| `routers/dxf_preflight_router.py` | 284, 301, 303 | ✓ | ✓ | no_action |
+| `routers/blueprint_cam/dxf_preprocessor.py` | 133, 195, 321 | ✓ | ✓ | no_action |
+| `routers/blueprint_cam/contour_reconstruction.py` | 374, 392, 453, 512 | ✓ | ✓ | no_action |
+| `services/layered_dxf_writer.py` | 81, 115 | ✓ | ✓ | no_action |
+| `instrument_geometry/body/smart_guitar_dxf.py` | 298, 595 | ✓ | ✓ | no_action (Phase 1A patched) |
+| `routers/instruments/guitar/smart_guitar_dxf_router.py` | 80, 285 | ✓ | ✓ | no_action (Phase 1A patched) |
+| `art_studio/services/generators/inlay_export.py` | 81 | ✓ | — | no_action |
+| `calculators/inlay_calc.py` | 355, 390 | ✓ | — | no_action |
 
-**Files**:
-- `instrument_geometry/body/ibg/body_contour_solver.py` (2 calls)
-- `instrument_geometry/body/ibg/arc_reconstructor.py` (3 calls)
+**Via DxfWriter class** (internally uses create_document):
 
-**Issue**: IBG geometry outputs bypass the export lifecycle and emit DXF without provenance metadata attachment.
+| File | Line | Uses DxfWriter | saveas | Disposition |
+|------|------|----------------|--------|-------------|
+| `generators/bezier_body.py` | 460, 465, 472 | ✓ | ✓ | no_action |
+| `instrument_geometry/soundhole/spiral_geometry.py` | 287, 296, 311 | ✓ | ✓ | no_action |
 
-**Authority chain violation**: geometry_authority_chain terminates at TopologyBuilder without going through Translation → Authorization Gate.
+### C. Read-Modify-Write Paths (LOW-MEDIUM risk)
 
-**Recommendation**: Wire IBG outputs through export lifecycle OR attach provenance metadata at saveas boundary.
+These read existing DXF, modify, and save — no document creation:
 
-### Risk 3: CAM Toolpath Routers Partial Integration
+| File | Line | Pattern | Disposition |
+|------|------|---------|-------------|
+| `services/text_reinsertion.py` | 296, 318 | ezdxf.readfile() → saveas | document_only |
+| `cam/line_deduplicator.py` | 197, 290 | ezdxf.readfile() → saveas | document_only |
+| `routers/blueprint_cam/dxf_geometry_correction.py` | 87, 293, 306 | ezdxf.readfile() → saveas | document_only |
 
-**Files**: `cam/routers/toolpath/*.py` (multiple)
+### D. IBG Paths — BLOCKED (pending provenance ratification)
 
-**Issue**: Some toolpath routers dispatch directly without full lifecycle orchestration.
+These use DxfWriter (compat-governed) but require provenance attachment:
 
-**Authority chain violation**: export_lifecycle_chain steps may be skipped.
+| File | Line | Pattern | Disposition |
+|------|------|---------|-------------|
+| `instrument_geometry/body/ibg/body_contour_solver.py` | 761, 768, 777, 808 | DxfWriter → saveas | blocked_provenance |
+| `instrument_geometry/body/ibg/arc_reconstructor.py` | 1094, 1102, 1116, 1213, 1215, 1279, 1289, 1291, 1303 | DxfWriter → saveas | blocked_provenance |
 
-**Recommendation**: Audit each router for lifecycle gate compliance.
+**Note**: IBG provenance model ratification required before these can be patched.
 
-### Risk 4: Blueprint CAM Saveas Without Lifecycle
+### E. Scripts (document_only)
 
-**Files**:
-- `routers/blueprint_cam/dxf_geometry_correction.py:306`
-- `routers/blueprint_cam/contour_reconstruction.py:392,512`
+| File | Line | Pattern | Disposition |
+|------|------|---------|-------------|
+| `scripts/generate_smart_guitar_v3_dxf.py` | 83, 254 | ezdxf.new() → saveas | document_only (standalone script) |
 
-**Issue**: Blueprint processing emits DXF without governed export lifecycle.
+### F. Test Fixtures (test_fixture — allowed)
 
-**Authority chain violation**: Export without Feasibility Check or Authorization Gate.
+| File | ezdxf.new() calls | saveas calls | Disposition |
+|------|-------------------|--------------|-------------|
+| `tests/test_dxf_to_grbl_endpoint_smoke.py` | 2 | 2 | test_fixture |
+| `tests/test_dxf_preprocessor.py` | 7 | 7 | test_fixture |
+| `tests/test_dxf_geometry_correction.py` | 2 | 2 | test_fixture |
+| `tests/test_dxf_advanced_validation_smoke.py` | 7 | 0 | test_fixture |
+| `tests/test_contour_reconstruction.py` | 10 | 10 | test_fixture |
+| `tests/test_blueprint_cam_integration.py` | 3 | 3 | test_fixture |
+| `tests/e2e_cam_system.py` | 1 | 1 | test_fixture |
+| `tests/test_dxf_compat_r12_compliance.py` | 0 (uses create_document) | 1 | test_fixture |
+| `tests/test_dxf_writer.py` | 0 | 1 | test_fixture |
 
-**Recommendation**: These are processing utilities, not user-facing exports. Add metadata comments clarifying intent vs. marking as intermediate artifacts.
+### G. Blueprint-Import Surface (blueprint_import)
+
+| File | Line | Pattern | Disposition |
+|------|------|---------|-------------|
+| `blueprint-import/vectorizer_phase3.py` | 2517, 2655, 2875, 110, 119 | create_document → saveas | document_only |
+| `blueprint-import/dxf_compat.py` | 72, 89 | create_document definition | document_only |
+| `blueprint-import/dxf_postprocessor.py` | 307, 386, 435, 526 | create_document → saveas | document_only |
+| `blueprint-import/phase4/annotations/exporter.py` | 265, 332, 390 | create_document → saveas | document_only |
+
+### H. R&D Sandbox — Excluded (r_and_d_sandbox)
+
+| File | ezdxf.new() | saveas | Disposition |
+|------|-------------|--------|-------------|
+| `photo-vectorizer/ai_render_extractor.py` | 1 | 1 | r_and_d_sandbox |
+| `photo-vectorizer/edge_to_dxf.py` | 5 | 5 | r_and_d_sandbox |
+| `photo-vectorizer/march_pipeline_restore.py` | 2 | 2 | r_and_d_sandbox |
+| `photo-vectorizer/light_line_body_extractor.py` | 1 | 1 | r_and_d_sandbox |
+| `photo-vectorizer/generate_carlos_jumbo_dxf.py` | 1 | 1 | r_and_d_sandbox |
+| `photo-vectorizer/generate_carlos_jumbo_dxf_enhanced.py` | 2 | 2 | r_and_d_sandbox |
+| `photo-vectorizer/photo_vectorizer_v2.py` | 1 | 1 | r_and_d_sandbox |
+| `photo-vectorizer/photo_silhouette_extractor.py` | 1 | 1 | r_and_d_sandbox |
+| `photo-vectorizer/multi_view_reconstructor.py` | 0 (uses dxf_create_document) | 0 | r_and_d_sandbox |
 
 ---
 
-## Classification Summary
+## Summary by Classification
 
-| Category | Count | Risk Level |
-|----------|-------|------------|
-| Governed (dxf_compat or lifecycle) | 16+ files | LOW |
-| Direct ezdxf bypass | 2 files | MEDIUM |
-| Saveas without lifecycle | 8+ locations | MEDIUM-HIGH |
-| CAM dispatch partial | 2+ modules | MEDIUM |
-| Provenance defined | 3+ modules | LOW |
-
----
-
-## Patch Plan (Proposed)
-
-### Phase 1: Direct Bypass Remediation (LOW RISK)
-
-1. **smart_guitar_dxf.py:297**
-   - Change: `ezdxf.new("R2000")` → `dxf_compat.create_document("R2000")`
-   - Add import: `from app.util.dxf_compat import create_document`
-   - Test: Run existing smart_guitar tests
-
-2. **smart_guitar_dxf_router.py:77**
-   - Change: `ezdxf.new("R2010")` → `dxf_compat.create_document("R2010")`
-   - Add import: `from app.util.dxf_compat import create_document`
-   - Test: Run router integration tests
-
-### Phase 2: IBG Provenance Attachment (REQUIRES REVIEW)
-
-**Blocked by**: IBG provenance model ratification (per memory: "IBG blocked until provenance model ratified")
-
-1. Define IBG-specific provenance attachment point
-2. Wire IBG outputs through minimal provenance wrapper
-3. Attach authority_state and lineage hash to saveas outputs
-
-### Phase 3: CAM Router Audit (DEFERRED)
-
-1. Inventory all CAM toolpath routers
-2. Classify each as: preview-only, export-ready, or machine-output
-3. Wire export-ready routers through lifecycle orchestrator
-
-### Phase 4: Blueprint CAM Classification (DOCUMENTATION ONLY)
-
-1. Add docstring annotations clarifying artifact type (intermediate vs. final)
-2. No code changes — processing utilities remain as-is
+| Classification | Count | Risk | Action |
+|----------------|-------|------|--------|
+| lifecycle-governed | 1 module | LOW | no_action |
+| compat-governed | 25+ files | LOW-MEDIUM | no_action |
+| read-modify-write | 3 files | LOW-MEDIUM | document_only |
+| direct-ezdxf-bypass (production) | 0 files | — | RESOLVED (Phase 1A) |
+| blocked_provenance (IBG) | 2 files, 5 saveas | BLOCKED | blocked_provenance |
+| scripts | 1 file | — | document_only |
+| test_fixture | 9 files | — | test_fixture |
+| blueprint_import | 4 files | — | document_only |
+| r_and_d_sandbox | 9 files | — | r_and_d_sandbox (excluded) |
 
 ---
 
-## Acceptance Criteria Met
+## Risk Summary
 
-- [x] Boundary inventory complete
-- [x] Bypass risks listed with file:line
-- [x] Patch plan proposed (Phase 1-4)
-- [x] No code changes until reviewed
+### Resolved Risks
+
+| Risk | Status | Resolution |
+|------|--------|------------|
+| Direct ezdxf.new() in production | RESOLVED | Phase 1A patched 2 files |
+
+### Active Risks
+
+| Risk | Files | Status | Disposition |
+|------|-------|--------|-------------|
+| IBG saveas without provenance | 2 files, 5 calls | BLOCKED | Awaiting provenance model ratification |
+| CAM toolpath router partial integration | Multiple | DEFERRED | Phase 3 scope |
+
+### Documented (No Action)
+
+| Category | Files | Disposition |
+|----------|-------|-------------|
+| Read-modify-write pattern | 3 files | document_only |
+| Standalone scripts | 1 file | document_only |
+| Blueprint-import surface | 4 files | document_only |
+| Test fixtures | 9 files | test_fixture |
+| R&D sandbox | 9 files | r_and_d_sandbox |
 
 ---
 
-## Next Action
+## Patch Plan
 
-Await review before implementing Phase 1 (direct bypass remediation).
+### Phase 1A: Direct Bypass Remediation — COMPLETE
+
+**Status**: PATCHED 2026-05-21
+
+- `instrument_geometry/body/smart_guitar_dxf.py:297` → `create_document("R2000")` ✓
+- `routers/instruments/guitar/smart_guitar_dxf_router.py:77` → `create_document("R2010")` ✓
+
+### Phase 1B: Inventory Tightening — COMPLETE
+
+**Status**: COMPLETE 2026-05-21
+
+- All DXF lifecycle paths inventoried with exact file:line
+- Classifications assigned: lifecycle-governed, compat-governed, read-modify-write, blocked_provenance, test_fixture, blueprint_import, r_and_d_sandbox
+- Risk levels assigned
+- Dispositions documented
+
+### Phase 2: IBG Provenance Attachment — BLOCKED
+
+**Blocked by**: IBG provenance model ratification
+
+Files requiring attention:
+- `instrument_geometry/body/ibg/body_contour_solver.py:777,808`
+- `instrument_geometry/body/ibg/arc_reconstructor.py:1116,1279,1303`
+
+### Phase 3: CAM Router Audit — DEFERRED
+
+Scope: Audit CAM toolpath routers for lifecycle gate compliance
+
+### Phase 4: Blueprint CAM Classification — DEFERRED
+
+Scope: Documentation only, no code changes
+
+---
+
+## Acceptance Criteria
+
+### Phase 1A
+- [x] No direct ezdxf.new() in production code (2 files patched)
+- [x] DXF compatibility check passes
+
+### Phase 1B
+- [x] All .saveas() calls inventoried with file:line
+- [x] All ezdxf.new() calls inventoried with file:line  
+- [x] All create_document() calls inventoried with file:line
+- [x] Classifications assigned (lifecycle-governed, compat-governed, etc.)
+- [x] Risk levels assigned (LOW, LOW-MEDIUM, MEDIUM, HIGH, BLOCKED)
+- [x] Dispositions documented (no_action, document_only, blocked_provenance, test_fixture, r_and_d_sandbox)
+- [x] IBG paths clearly marked as blocked pending ratification
+- [x] No behavior changes

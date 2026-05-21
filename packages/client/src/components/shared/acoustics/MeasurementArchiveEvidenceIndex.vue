@@ -4,6 +4,7 @@
  *
  * Dev Order 62: Displays measurement archives as experimental evidence history.
  * Supports chronological, by-method, and by-experiment views.
+ * Dev Order 67: Verified safe with archives containing topology variant references.
  *
  * Evidence summaries are observational only — no ranking, recommendation, or calibration.
  */

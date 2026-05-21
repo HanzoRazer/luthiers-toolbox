@@ -12,6 +12,7 @@
  * Dev Order 63: Add MeasurementResidualComparisonPanel for pairwise comparison.
  * Dev Order 64: QA stabilization — single source of truth for evidenceArchives.
  * Dev Order 66: Add Topology Variants section for experimental configuration descriptors.
+ * Dev Order 67: QA hardening for topology variant linkage and Measurement Lab stability.
  *
  * Tabs:
  *   - Spiral: logarithmic spiral soundhole design (mounted production tool)

@@ -3,7 +3,10 @@
  * TopologyVariantCard — Display a topology variant descriptor
  *
  * Dev Order 66: Experimental topology variant framework
+ * Dev Order 67: QA hardening for sparse/missing metadata
+ *
  * Observational only — no calibration authority.
+ * Handles sparse variants without layout collapse.
  */
 import { computed } from 'vue'
 import { GateBadge, SectionLabel } from '@/components/shared/workflow'
@@ -26,6 +29,8 @@ const emit = defineEmits<{
 const strategySummary = computed(() => getTopologyVariantStrategySummary(props.variant))
 const categoryLabel = computed(() => getCategoryDisplayLabel(props.variant.category))
 const formattedDate = computed(() => formatVariantTimestamp(props.variant.createdAtIso))
+// Dev Order 67: Safe title fallback for edge cases
+const displayTitle = computed(() => props.variant.title?.trim() || props.variant.variantId || 'Unnamed Variant')
 
 function handleSelect() {
   emit('select', props.variant)
@@ -38,7 +43,7 @@ function handleSelect() {
     @click="handleSelect"
   >
     <div :class="$style.header">
-      <SectionLabel :text="variant.title" />
+      <SectionLabel :text="displayTitle" />
       <GateBadge gate="yellow" :label="categoryLabel" />
     </div>
 

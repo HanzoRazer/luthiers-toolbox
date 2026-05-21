@@ -377,4 +377,32 @@ CAM_ROUTERS: List[RouterSpec] = [
         tags=["Export", "Translate", "MRP"],
         category="cam",
     ),
+    # ── CAM Dev Order 7S: Governed Manufacturing Cognition ──
+    RouterSpec(
+        module="app.routers.cam.cam_assist_router",
+        prefix="",
+        tags=["CAM", "Assist", "Cognition"],
+        category="cam",
+    ),
+    # ── CAM Dev Order 7T: Geometry Authority Reference Contracts ──
+    RouterSpec(
+        module="app.routers.cam.geometry_authority_router",
+        prefix="",
+        tags=["CAM", "Geometry", "Authority"],
+        category="cam",
+    ),
+    # ── CAM Dev Order 7U: Strategy/Export Interoperability Contracts ──
+    RouterSpec(
+        module="app.routers.cam.strategy_export_router",
+        prefix="",
+        tags=["CAM", "Strategy", "Export", "Compatibility"],
+        category="cam",
+    ),
+    # ── CAM Dev Order 7V: Fixture & Topology Intelligence Governance ──
+    RouterSpec(
+        module="app.routers.cam.fixture_topology_router",
+        prefix="",
+        tags=["CAM", "Fixture", "Topology", "Governance"],
+        category="cam",
+    ),
 ]

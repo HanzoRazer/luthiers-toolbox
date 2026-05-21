@@ -1,5 +1,7 @@
 # Sprint Board
 
+> **Historical session log (March 2026).** Current sprint registry: [`SPRINTS.md`](../SPRINTS.md) (last updated 2026-05-21). Vectorizer status: `docs/governance/VECTORIZER_COMPONENT_LIFECYCLE.md`.
+
 **Last Updated:** 2026-03-22
 **Backlog (`docs/BACKLOG.md`):** All items resolved (2026-03-22).
 

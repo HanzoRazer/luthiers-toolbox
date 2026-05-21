@@ -64,7 +64,12 @@ export interface MeasurementArchiveRecord {
   context: MeasurementArchiveContext
   sections: MeasurementArchiveSection[]
   snapshot?: DiagnosticSnapshot
-  /** Dev Order 66: Topology variant IDs this archive was measured under */
+  /**
+   * Observational topology descriptors associated with this archive.
+   * Indicates which experimental configuration(s) the archive was measured under.
+   * Descriptive linkage only — not causal, not authoritative, not validated.
+   * Dev Order 66: Added. Dev Order 67: Hardened.
+   */
   topologyVariantReferences?: string[]
 }
 

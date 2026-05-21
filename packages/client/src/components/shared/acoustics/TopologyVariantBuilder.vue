@@ -3,8 +3,11 @@
  * TopologyVariantBuilder — Create new topology variant descriptors
  *
  * Dev Order 66: Experimental topology variant framework
+ * Dev Order 67: QA hardening for input validation
+ *
  * Lightweight structured inputs, no numeric dimensions.
  * Observational only — no calibration authority.
+ * Empty title is rejected (canCreate guard).
  */
 import { ref, computed } from 'vue'
 import { GateBadge, SectionLabel } from '@/components/shared/workflow'
