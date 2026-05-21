@@ -197,15 +197,69 @@ These paths emit DXF via `.saveas()` without going through governed export lifec
 
 ---
 
+## Phase 1 Implementation Status
+
+### Phase 1A: Direct Bypass Remediation — COMPLETE
+
+**Commit**: d5033799
+
+| File | Change | Status |
+|------|--------|--------|
+| `instrument_geometry/body/smart_guitar_dxf.py:297` | `ezdxf.new("R2000")` → `create_document("R2000")` | DONE |
+| `routers/instruments/guitar/smart_guitar_dxf_router.py:77` | `ezdxf.new("R2010")` → `create_document("R2010")` | DONE |
+
+### Phase 1B: Comprehensive DXF Export Inventory — COMPLETE
+
+See: [EXPORT_LIFECYCLE_CLASSIFICATION_MATRIX.md](./EXPORT_LIFECYCLE_CLASSIFICATION_MATRIX.md)
+
+**Findings**:
+- 55+ DXF export paths identified
+- 25+ compat-governed paths (production)
+- 1 lifecycle-governed path (export_lifecycle_router)
+- 5 IBG blocked provenance calls
+- 9 test fixtures (excluded)
+- 13 R&D/script paths (excluded)
+
+### Phase 1C: Classification Matrix Document — COMPLETE
+
+Created canonical classification matrix with:
+- HTML markers for machine parsing
+- Lifecycle Status column for each row
+- Risk level and disposition tracking
+- Cross-reference to this inventory
+
+### Phase 1D: Lifecycle Guard Baseline — COMPLETE
+
+**Created**:
+- `scripts/governance/validate_export_lifecycle_matrix.py` — Matrix validator
+- `tests/governance/test_validate_export_lifecycle_matrix.py` — 24 tests
+
+**Integrated**:
+- Added to `check_all.py` as warning-only check at CI tier
+
+**Validator behavior**:
+- Parses HTML markers first, falls back to headings with warning
+- Validates required sections exist
+- Validates production rows have required columns
+- Validates BLOCKED_PROVENANCE rows not marked LIFECYCLE_GOVERNED
+- Warnings exit 0, structural failures exit 1
+- `--strict` promotes warnings to exit 1
+
+---
+
 ## Acceptance Criteria Met
 
 - [x] Boundary inventory complete
 - [x] Bypass risks listed with file:line
 - [x] Patch plan proposed (Phase 1-4)
 - [x] No code changes until reviewed
+- [x] Phase 1A: Direct bypasses fixed
+- [x] Phase 1B: Comprehensive inventory complete
+- [x] Phase 1C: Classification matrix created
+- [x] Phase 1D: Validator script and tests created, integrated to CI
 
 ---
 
 ## Next Action
 
-Await review before implementing Phase 1 (direct bypass remediation).
+Phase 1 complete. Phase 2 (IBG provenance attachment) blocked pending provenance model ratification.

@@ -93,6 +93,7 @@ GOVERNANCE_CHECKS: List[Tuple[str, str, bool, EnforcementTier]] = [
     ("scripts/check_semantic_leakage.py", "Semantic layer boundaries", False, EnforcementTier.CI),
     ("scripts/governance/check_artifact_linkage_invariants.py", "Artifact linkage invariants", False, EnforcementTier.CI),
     ("scripts/governance/validate_run_artifact_contract.py", "Run artifact contract", False, EnforcementTier.CI),
+    ("scripts/governance/validate_export_lifecycle_matrix.py", "Export lifecycle matrix validation", False, EnforcementTier.CI),
 
     # === NIGHTLY TIER — heavy checks requiring full app initialization ===
     ("scripts/governance/check_routing_truth.py", "Routing truth validation", False, EnforcementTier.NIGHTLY),
