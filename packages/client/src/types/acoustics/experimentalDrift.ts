@@ -191,8 +191,14 @@ export interface DriftComputeResult {
   /** Contexts with insufficient data (<3 archives) */
   insufficientContexts: string[]
 
-  /** Total archives analyzed */
+  /** Total archives analyzed (after filtering) */
   totalArchivesAnalyzed: number
+
+  /** Total archives provided (before filtering) */
+  totalArchivesProvided: number
+
+  /** Warnings from archive validation/filtering */
+  warnings: string[]
 
   /** ISO timestamp when drift was computed */
   computedAtIso: string

@@ -2,18 +2,37 @@
  * Experimental Drift Tests
  *
  * Dev Order 70: Experimental drift timeline workspace
+ * Dev Order 71: QA & observational boundary hardening
  *
  * Tests drift computation, narrative generation, and observational semantics.
- * Target: 18-22 tests including forbidden language audit.
+ *
+ * Required test categories (Dev Order 71):
+ * 1. insufficient data below 3 archives
+ * 2. duplicate archives ignored
+ * 3. invalid archives excluded
+ * 4. sparse archives skipped safely
+ * 5. missing timestamps handled safely
+ * 6. stable drift under 5%
+ * 7. upward drift at/above 5%
+ * 8. downward drift at/above 5%
+ * 9. variable drift with repeated direction changes
+ * 10. dynamic numeric field handling
+ * 11. session grouping by sessionContext
+ * 12. variant grouping by topology reference
+ * 13. narrative avoids forbidden language
+ * 14. computation does not mutate inputs
+ * 15. summary rollup produces stable dominant direction
  */
 
 import { describe, it, expect } from 'vitest'
 import type { MeasurementArchiveRecord } from '../../../types/acoustics/measurementArchive'
-import type { DriftDirection } from '../../../types/acoustics/experimentalDrift'
+import type { DriftDirection, DriftTimelinePoint } from '../../../types/acoustics/experimentalDrift'
 import {
   MINIMUM_DRIFT_SAMPLE_SIZE,
   DRIFT_DIRECTION_THRESHOLD,
   DRIFT_TRACKABLE_FIELDS,
+  DRIFT_VARIABLE_STDEV_THRESHOLD,
+  DRIFT_VARIABLE_REVERSAL_THRESHOLD,
   hasSufficientDriftData,
   sortArchivesChronologically,
   extractComparableFieldSeries,
@@ -26,8 +45,16 @@ import {
   filterDriftsByDirection,
   filterDriftsByField,
   getDriftsForContext,
+  countSignReversals,
+  calculatePercentDeltaStdev,
+  isVariableDrift,
+  filterDriftableArchives,
+  prepareDriftableArchives,
 } from '../experimentalDrift'
 
+/**
+ * Create a mock archive that passes validation
+ */
 function createMockArchive(
   id: string,
   overrides: {
@@ -42,10 +69,12 @@ function createMockArchive(
 ): MeasurementArchiveRecord {
   return {
     archiveId: id,
+    kind: 'measurement-archive',
     schemaVersion: 'measurement-archive.v1',
     status: 'active',
     metadata: {
       createdAtIso: overrides.timestamp ?? new Date().toISOString(),
+      schemaVersion: 'measurement-archive.v1',
     },
     measurements: {
       measuredHelmholtzHz: overrides.helmholtzHz,
@@ -53,10 +82,55 @@ function createMockArchive(
       measuredDampingFactor: overrides.dampingFactor,
       measuredQ: overrides.q,
     },
+    sections: [
+      {
+        measurements: [
+          { field: 'test', value: 1 },
+          { field: 'test2', value: 2 },
+          { field: 'test3', value: 3 },
+        ],
+      },
+    ],
     topologyVariantReferences: overrides.variantRefs,
     context: {
       sessionContext: overrides.sessionContext,
     },
+  } as MeasurementArchiveRecord
+}
+
+/**
+ * Create an invalid archive (missing required fields)
+ */
+function createInvalidArchive(id: string): unknown {
+  return {
+    archiveId: id,
+    // Missing kind, metadata.schemaVersion, sections
+  }
+}
+
+/**
+ * Create a sparse archive (fewer than 3 measurements)
+ */
+function createSparseArchive(id: string, timestamp?: string): MeasurementArchiveRecord {
+  return {
+    archiveId: id,
+    kind: 'measurement-archive',
+    schemaVersion: 'measurement-archive.v1',
+    status: 'active',
+    metadata: {
+      createdAtIso: timestamp ?? new Date().toISOString(),
+      schemaVersion: 'measurement-archive.v1',
+    },
+    measurements: {
+      measuredHelmholtzHz: 100,
+    },
+    sections: [
+      {
+        measurements: [{ field: 'test', value: 1 }],
+      },
+    ],
+    topologyVariantReferences: [],
+    context: {},
   } as MeasurementArchiveRecord
 }
 
@@ -166,6 +240,76 @@ describe('experimentalDrift', () => {
       expect(classifyDriftDirection(-0.1)).toBe('downward')
       expect(classifyDriftDirection(-0.5)).toBe('downward')
     })
+
+    it('should classify as variable with 2+ sign reversals', () => {
+      // Points: 100 -> 120 (+20) -> 100 (-20) -> 130 (+30)
+      // Sign changes: + to -, - to + = 2 reversals
+      const points: DriftTimelinePoint[] = [
+        { archiveId: 'a1', value: 100 },
+        { archiveId: 'a2', value: 120, deltaFromPrevious: 20, percentDeltaFromPrevious: 0.2 },
+        { archiveId: 'a3', value: 100, deltaFromPrevious: -20, percentDeltaFromPrevious: -0.167 },
+        { archiveId: 'a4', value: 130, deltaFromPrevious: 30, percentDeltaFromPrevious: 0.3 },
+      ]
+      expect(classifyDriftDirection(0.3, points)).toBe('variable')
+    })
+
+    it('should classify as variable with high stdev (>10%)', () => {
+      // High variance in percent deltas but net upward
+      const points: DriftTimelinePoint[] = [
+        { archiveId: 'a1', value: 100 },
+        { archiveId: 'a2', value: 150, deltaFromPrevious: 50, percentDeltaFromPrevious: 0.5 },
+        { archiveId: 'a3', value: 160, deltaFromPrevious: 10, percentDeltaFromPrevious: 0.067 },
+      ]
+      expect(classifyDriftDirection(0.6, points)).toBe('variable')
+    })
+  })
+
+  describe('variable drift detection', () => {
+    it('should count sign reversals correctly', () => {
+      const points: DriftTimelinePoint[] = [
+        { archiveId: 'a1', value: 100 },
+        { archiveId: 'a2', value: 110, deltaFromPrevious: 10 },
+        { archiveId: 'a3', value: 100, deltaFromPrevious: -10 },
+        { archiveId: 'a4', value: 120, deltaFromPrevious: 20 },
+      ]
+      expect(countSignReversals(points)).toBe(2)
+    })
+
+    it('should return 0 reversals for monotonic sequence', () => {
+      const points: DriftTimelinePoint[] = [
+        { archiveId: 'a1', value: 100 },
+        { archiveId: 'a2', value: 110, deltaFromPrevious: 10 },
+        { archiveId: 'a3', value: 120, deltaFromPrevious: 10 },
+      ]
+      expect(countSignReversals(points)).toBe(0)
+    })
+
+    it('should calculate stdev of percent deltas', () => {
+      const points: DriftTimelinePoint[] = [
+        { archiveId: 'a1', value: 100 },
+        { archiveId: 'a2', value: 110, percentDeltaFromPrevious: 0.1 },
+        { archiveId: 'a3', value: 120, percentDeltaFromPrevious: 0.09 },
+      ]
+      const stdev = calculatePercentDeltaStdev(points)
+      expect(stdev).toBeLessThan(0.01)
+    })
+
+    it('should detect variable drift with high variance', () => {
+      const points: DriftTimelinePoint[] = [
+        { archiveId: 'a1', value: 100 },
+        { archiveId: 'a2', value: 150, deltaFromPrevious: 50, percentDeltaFromPrevious: 0.5 },
+        { archiveId: 'a3', value: 155, deltaFromPrevious: 5, percentDeltaFromPrevious: 0.033 },
+      ]
+      expect(isVariableDrift(points)).toBe(true)
+    })
+
+    it('should have variable stdev threshold of 10%', () => {
+      expect(DRIFT_VARIABLE_STDEV_THRESHOLD).toBe(0.10)
+    })
+
+    it('should have variable reversal threshold of 2', () => {
+      expect(DRIFT_VARIABLE_REVERSAL_THRESHOLD).toBe(2)
+    })
   })
 
   describe('buildDriftNarrative', () => {
@@ -186,6 +330,11 @@ describe('experimentalDrift', () => {
     it('should generate stable narrative', () => {
       const narrative = buildDriftNarrative('measuredQ', 'stable', 0.02, 3)
       expect(narrative).toBe('measuredQ remained stable (2.0% variation) across 3 sequential observations')
+    })
+
+    it('should generate variable narrative', () => {
+      const narrative = buildDriftNarrative('measuredQ', 'variable', 0.15, 5)
+      expect(narrative).toBe('measuredQ showed variable behavior across 5 sequential observations')
     })
   })
 
@@ -370,6 +519,149 @@ describe('experimentalDrift', () => {
     })
   })
 
+  describe('Dev Order 71: archive validation and filtering', () => {
+    it('should ignore duplicate archives by archiveId', () => {
+      const archives = [
+        createMockArchive('a1', { timestamp: '2026-01-01T00:00:00Z', helmholtzHz: 100 }),
+        createMockArchive('a1', { timestamp: '2026-01-01T00:00:00Z', helmholtzHz: 100 }), // duplicate
+        createMockArchive('a2', { timestamp: '2026-01-02T00:00:00Z', helmholtzHz: 110 }),
+        createMockArchive('a3', { timestamp: '2026-01-03T00:00:00Z', helmholtzHz: 120 }),
+      ]
+
+      const result = computeExperimentalDrift(archives, 'chronological')
+
+      expect(result.totalArchivesProvided).toBe(4)
+      expect(result.totalArchivesAnalyzed).toBe(3)
+    })
+
+    it('should exclude invalid archives', () => {
+      const archives = [
+        createMockArchive('a1', { timestamp: '2026-01-01T00:00:00Z', helmholtzHz: 100 }),
+        createInvalidArchive('invalid') as MeasurementArchiveRecord,
+        createMockArchive('a2', { timestamp: '2026-01-02T00:00:00Z', helmholtzHz: 110 }),
+        createMockArchive('a3', { timestamp: '2026-01-03T00:00:00Z', helmholtzHz: 120 }),
+      ]
+
+      const { valid, warnings } = filterDriftableArchives(archives)
+
+      expect(valid.length).toBe(3)
+      expect(warnings.length).toBeGreaterThan(0)
+      expect(warnings.some((w) => w.includes('invalid'))).toBe(true)
+    })
+
+    it('should flag sparse archives in warnings', () => {
+      const archives = [
+        createMockArchive('a1', { timestamp: '2026-01-01T00:00:00Z', helmholtzHz: 100 }),
+        createSparseArchive('sparse1', '2026-01-02T00:00:00Z'),
+        createMockArchive('a2', { timestamp: '2026-01-03T00:00:00Z', helmholtzHz: 110 }),
+        createMockArchive('a3', { timestamp: '2026-01-04T00:00:00Z', helmholtzHz: 120 }),
+      ]
+
+      const { valid, warnings } = filterDriftableArchives(archives)
+
+      expect(valid.length).toBe(4) // sparse included but flagged
+      expect(warnings.some((w) => w.includes('sparse'))).toBe(true)
+    })
+
+    it('should handle missing timestamps safely', () => {
+      const archives = [
+        createMockArchive('a1', { timestamp: undefined, helmholtzHz: 100 }),
+        createMockArchive('a2', { timestamp: '2026-01-02T00:00:00Z', helmholtzHz: 110 }),
+        createMockArchive('a3', { timestamp: '2026-01-03T00:00:00Z', helmholtzHz: 120 }),
+      ]
+
+      // Should not throw
+      const result = computeExperimentalDrift(archives, 'chronological')
+      expect(result.drifts.length).toBeGreaterThan(0)
+    })
+
+    it('should not mutate input archive array', () => {
+      const archives = [
+        createMockArchive('a3', { timestamp: '2026-01-03T00:00:00Z', helmholtzHz: 120 }),
+        createMockArchive('a1', { timestamp: '2026-01-01T00:00:00Z', helmholtzHz: 100 }),
+        createMockArchive('a2', { timestamp: '2026-01-02T00:00:00Z', helmholtzHz: 110 }),
+      ]
+
+      const originalOrder = archives.map((a) => a.archiveId)
+
+      computeExperimentalDrift(archives, 'chronological')
+
+      const afterOrder = archives.map((a) => a.archiveId)
+      expect(afterOrder).toEqual(originalOrder)
+    })
+
+    it('should return warnings in compute result', () => {
+      const archives = [
+        createMockArchive('a1', { timestamp: '2026-01-01T00:00:00Z', helmholtzHz: 100 }),
+        createMockArchive('a1', { timestamp: '2026-01-01T00:00:00Z', helmholtzHz: 100 }), // duplicate
+        createMockArchive('a2', { timestamp: '2026-01-02T00:00:00Z', helmholtzHz: 110 }),
+        createMockArchive('a3', { timestamp: '2026-01-03T00:00:00Z', helmholtzHz: 120 }),
+      ]
+
+      const result = computeExperimentalDrift(archives, 'chronological')
+
+      expect(result.warnings).toBeDefined()
+      expect(Array.isArray(result.warnings)).toBe(true)
+    })
+  })
+
+  describe('Dev Order 71: dominant direction rollup', () => {
+    it('should produce stable dominant direction for mixed small changes', () => {
+      const archives = [
+        createMockArchive('a1', {
+          timestamp: '2026-01-01T00:00:00Z',
+          helmholtzHz: 100,
+          peakHz: 200,
+          dampingFactor: 0.05,
+          q: 20,
+        }),
+        createMockArchive('a2', {
+          timestamp: '2026-01-02T00:00:00Z',
+          helmholtzHz: 101, // +1%
+          peakHz: 202, // +1%
+          dampingFactor: 0.051, // +2%
+          q: 20.2, // +1%
+        }),
+        createMockArchive('a3', {
+          timestamp: '2026-01-03T00:00:00Z',
+          helmholtzHz: 102, // +1%
+          peakHz: 203, // +0.5%
+          dampingFactor: 0.052, // +2%
+          q: 20.4, // +1%
+        }),
+      ]
+
+      const result = computeExperimentalDrift(archives, 'chronological')
+
+      // All changes < 5%, so all should be stable
+      expect(result.summaries[0].dominantDirection).toBe('stable')
+    })
+
+    it('should produce upward dominant direction when most fields shift up', () => {
+      const archives = [
+        createMockArchive('a1', {
+          timestamp: '2026-01-01T00:00:00Z',
+          helmholtzHz: 100,
+          peakHz: 200,
+        }),
+        createMockArchive('a2', {
+          timestamp: '2026-01-02T00:00:00Z',
+          helmholtzHz: 110,
+          peakHz: 220,
+        }),
+        createMockArchive('a3', {
+          timestamp: '2026-01-03T00:00:00Z',
+          helmholtzHz: 120,
+          peakHz: 240,
+        }),
+      ]
+
+      const result = computeExperimentalDrift(archives, 'chronological')
+
+      expect(result.summaries[0].dominantDirection).toBe('upward')
+    })
+  })
+
   describe('observational language compliance', () => {
     const FORBIDDEN_WORDS = [
       'improve',
@@ -397,6 +689,9 @@ describe('experimentalDrift', () => {
       'causes',
       'caused',
       'causation',
+      'correct',
+      'corrected',
+      'corrects',
     ]
 
     it('should not use forbidden language in upward narrative', () => {
@@ -417,6 +712,14 @@ describe('experimentalDrift', () => {
 
     it('should not use forbidden language in stable narrative', () => {
       const narrative = buildDriftNarrative('measuredQ', 'stable', 0.01, 3)
+
+      for (const word of FORBIDDEN_WORDS) {
+        expect(narrative.toLowerCase()).not.toContain(word)
+      }
+    })
+
+    it('should not use forbidden language in variable narrative', () => {
+      const narrative = buildDriftNarrative('measuredQ', 'variable', 0.15, 5)
 
       for (const word of FORBIDDEN_WORDS) {
         expect(narrative.toLowerCase()).not.toContain(word)
