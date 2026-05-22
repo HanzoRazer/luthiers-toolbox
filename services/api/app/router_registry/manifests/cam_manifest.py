@@ -377,4 +377,18 @@ CAM_ROUTERS: List[RouterSpec] = [
         tags=["Export", "Translate", "MRP"],
         category="cam",
     ),
+    # ── CAM 7W: Manufacturing Replay Intelligence ──
+    RouterSpec(
+        module="app.routers.cam.manufacturing_replay_router",
+        prefix="",
+        tags=["CAM", "Manufacturing", "Replay", "Review"],
+        category="cam",
+    ),
+    # ── CAM 7X: Federated Manufacturing Semantics ──
+    RouterSpec(
+        module="app.routers.cam.federated_semantics_router",
+        prefix="",
+        tags=["CAM", "Federation", "Semantics"],
+        category="cam",
+    ),
 ]
