@@ -398,4 +398,11 @@ CAM_ROUTERS: List[RouterSpec] = [
         tags=["CAM", "Federation", "CI"],
         category="cam",
     ),
+    # ── CAM 7Z: Governance Baseline Freeze & Release Readiness ──
+    RouterSpec(
+        module="app.routers.cam.governance_freeze_router",
+        prefix="",
+        tags=["CAM", "Governance", "Release"],
+        category="cam",
+    ),
 ]
