@@ -20,6 +20,7 @@ from validate_export_lifecycle_matrix import (
     validate_matrix,
     LIFECYCLE_STATUS_LABELS,
     REQUIRED_SECTIONS,
+    VALID_GUARD_STATUSES,
 )
 
 
@@ -115,9 +116,11 @@ class TestValidateProductionRow:
             "Lifecycle Status": "COMPAT_ONLY",
             "Risk": "LOW",
             "Disposition": "no_action",
+            "Guard Status": "GUARD_CANDIDATE",
         }
-        errors = validate_production_row(row, "PRODUCTION_RUNTIME_EXPORTS")
+        errors, warnings = validate_production_row(row, "PRODUCTION_RUNTIME_EXPORTS")
         assert errors == []
+        assert warnings == []
 
     def test_missing_file_fails(self):
         row = {
@@ -125,8 +128,9 @@ class TestValidateProductionRow:
             "Lifecycle Status": "COMPAT_ONLY",
             "Risk": "LOW",
             "Disposition": "no_action",
+            "Guard Status": "GUARD_CANDIDATE",
         }
-        errors = validate_production_row(row, "PRODUCTION_RUNTIME_EXPORTS")
+        errors, warnings = validate_production_row(row, "PRODUCTION_RUNTIME_EXPORTS")
         assert len(errors) == 1
         assert "missing File" in errors[0]
 
@@ -135,8 +139,9 @@ class TestValidateProductionRow:
             "File": "foo.py",
             "Risk": "LOW",
             "Disposition": "no_action",
+            "Guard Status": "GUARD_CANDIDATE",
         }
-        errors = validate_production_row(row, "PRODUCTION_RUNTIME_EXPORTS")
+        errors, warnings = validate_production_row(row, "PRODUCTION_RUNTIME_EXPORTS")
         assert len(errors) == 1
         assert "missing Lifecycle Status" in errors[0]
 
@@ -146,10 +151,51 @@ class TestValidateProductionRow:
             "Lifecycle Status": "INVALID_STATUS",
             "Risk": "LOW",
             "Disposition": "no_action",
+            "Guard Status": "GUARD_CANDIDATE",
         }
-        errors = validate_production_row(row, "PRODUCTION_RUNTIME_EXPORTS")
+        errors, warnings = validate_production_row(row, "PRODUCTION_RUNTIME_EXPORTS")
         assert len(errors) == 1
         assert "unknown Lifecycle Status" in errors[0]
+
+    def test_missing_guard_status_warns(self):
+        row = {
+            "File": "foo.py",
+            "Export Type": "dxf-create-save",
+            "Lifecycle Status": "COMPAT_ONLY",
+            "Risk": "LOW",
+            "Disposition": "no_action",
+        }
+        errors, warnings = validate_production_row(row, "PRODUCTION_RUNTIME_EXPORTS")
+        assert errors == []
+        assert len(warnings) == 1
+        assert "missing Guard Status" in warnings[0]
+
+    def test_invalid_guard_status_warns(self):
+        row = {
+            "File": "foo.py",
+            "Export Type": "dxf-create-save",
+            "Lifecycle Status": "COMPAT_ONLY",
+            "Risk": "LOW",
+            "Disposition": "no_action",
+            "Guard Status": "INVALID_STATUS",
+        }
+        errors, warnings = validate_production_row(row, "PRODUCTION_RUNTIME_EXPORTS")
+        assert errors == []
+        assert len(warnings) == 1
+        assert "unknown Guard Status" in warnings[0]
+
+    def test_guard_added_passes(self):
+        row = {
+            "File": "foo.py",
+            "Export Type": "dxf-create-save",
+            "Lifecycle Status": "COMPAT_ONLY",
+            "Risk": "LOW",
+            "Disposition": "guarded_2a",
+            "Guard Status": "GUARD_ADDED",
+        }
+        errors, warnings = validate_production_row(row, "PRODUCTION_RUNTIME_EXPORTS")
+        assert errors == []
+        assert warnings == []
 
 
 class TestValidateBlockedRow:
@@ -159,24 +205,29 @@ class TestValidateBlockedRow:
         row = {
             "File": "ibg/solver.py",
             "Lifecycle Status": "BLOCKED_PROVENANCE",
+            "Guard Status": "BLOCKED_PROVENANCE",
         }
-        errors = validate_blocked_row(row)
+        errors, warnings = validate_blocked_row(row)
         assert errors == []
+        assert warnings == []
 
     def test_compat_only_allowed(self):
         row = {
             "File": "ibg/solver.py",
             "Lifecycle Status": "COMPAT_ONLY",
+            "Guard Status": "BLOCKED_PROVENANCE",
         }
-        errors = validate_blocked_row(row)
+        errors, warnings = validate_blocked_row(row)
         assert errors == []
+        assert warnings == []
 
     def test_lifecycle_governed_fails(self):
         row = {
             "File": "ibg/solver.py",
             "Lifecycle Status": "LIFECYCLE_GOVERNED",
+            "Guard Status": "BLOCKED_PROVENANCE",
         }
-        errors = validate_blocked_row(row)
+        errors, warnings = validate_blocked_row(row)
         assert len(errors) == 1
         assert "incorrectly marked as LIFECYCLE_GOVERNED" in errors[0]
 
@@ -184,10 +235,21 @@ class TestValidateBlockedRow:
         row = {
             "File": "ibg/solver.py",
             "Lifecycle Status": "TEST_ONLY",
+            "Guard Status": "BLOCKED_PROVENANCE",
         }
-        errors = validate_blocked_row(row)
+        errors, warnings = validate_blocked_row(row)
         assert len(errors) == 1
         assert "unexpected status" in errors[0]
+
+    def test_wrong_guard_status_fails(self):
+        row = {
+            "File": "ibg/solver.py",
+            "Lifecycle Status": "BLOCKED_PROVENANCE",
+            "Guard Status": "GUARD_CANDIDATE",
+        }
+        errors, warnings = validate_blocked_row(row)
+        assert len(errors) == 1
+        assert "should be BLOCKED_PROVENANCE" in errors[0]
 
 
 class TestValidateExcludedRow:
@@ -197,26 +259,43 @@ class TestValidateExcludedRow:
         row = {
             "File": "tests/test_foo.py",
             "Lifecycle Status": "TEST_ONLY",
+            "Guard Status": "NOT_APPLICABLE",
         }
-        warnings = validate_excluded_row(row, "TEST_FIXTURES")
+        errors, warnings = validate_excluded_row(row, "TEST_FIXTURES")
+        assert errors == []
         assert warnings == []
 
     def test_rnd_excluded_passes(self):
         row = {
             "File": "photo-vectorizer/foo.py",
             "Lifecycle Status": "R_AND_D_EXCLUDED",
+            "Guard Status": "NOT_APPLICABLE",
         }
-        warnings = validate_excluded_row(row, "R_AND_D_SANDBOX")
+        errors, warnings = validate_excluded_row(row, "R_AND_D_SANDBOX")
+        assert errors == []
         assert warnings == []
 
     def test_production_status_warns(self):
         row = {
             "File": "tests/test_foo.py",
             "Lifecycle Status": "COMPAT_ONLY",
+            "Guard Status": "NOT_APPLICABLE",
         }
-        warnings = validate_excluded_row(row, "TEST_FIXTURES")
+        errors, warnings = validate_excluded_row(row, "TEST_FIXTURES")
+        assert errors == []
         assert len(warnings) == 1
         assert "should be excluded" in warnings[0]
+
+    def test_wrong_guard_status_warns(self):
+        row = {
+            "File": "tests/test_foo.py",
+            "Lifecycle Status": "TEST_ONLY",
+            "Guard Status": "GUARD_CANDIDATE",
+        }
+        errors, warnings = validate_excluded_row(row, "TEST_FIXTURES")
+        assert errors == []
+        assert len(warnings) == 1
+        assert "should be NOT_APPLICABLE" in warnings[0]
 
 
 class TestValidateMatrix:

@@ -13,6 +13,7 @@ import type {
   TopologyVariantValidationResult,
   TopologyVariantSummary,
 } from '@/types/acoustics/topologyVariant'
+import type { MeasurementArchiveRecord } from '@/types/acoustics/measurementArchive'
 
 /**
  * Generate a topology variant ID with timestamp
@@ -279,4 +280,36 @@ export function getAllExperimentTags(variants: TopologyVariant[]): string[] {
     }
   }
   return Array.from(tags).sort()
+}
+
+/**
+ * Group archives by their topology variant references
+ * Dev Order 67: Archive-variant linkage utility
+ *
+ * Archives with no variant refs go to '__none__' key.
+ * Archives referencing multiple variants appear in multiple groups.
+ */
+export function groupArchivesByTopologyVariant(
+  archives: MeasurementArchiveRecord[]
+): Map<string, MeasurementArchiveRecord[]> {
+  const groups = new Map<string, MeasurementArchiveRecord[]>()
+
+  for (const archive of archives) {
+    const refs = archive.topologyVariantReferences
+
+    if (!refs || refs.length === 0) {
+      const existing = groups.get('__none__') ?? []
+      existing.push(archive)
+      groups.set('__none__', existing)
+      continue
+    }
+
+    for (const variantId of refs) {
+      const existing = groups.get(variantId) ?? []
+      existing.push(archive)
+      groups.set(variantId, existing)
+    }
+  }
+
+  return groups
 }

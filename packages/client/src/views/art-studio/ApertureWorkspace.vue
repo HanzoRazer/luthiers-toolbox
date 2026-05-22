@@ -12,6 +12,8 @@
  * Dev Order 63: Add MeasurementResidualComparisonPanel for pairwise comparison.
  * Dev Order 64: QA stabilization — single source of truth for evidenceArchives.
  * Dev Order 66: Add Topology Variants section for experimental configuration descriptors.
+ * Dev Order 68: Add Experimental Correlations section for computed observational patterns.
+ * Dev Order 70: Add Experimental Drift Timeline section for temporal drift observations.
  *
  * Tabs:
  *   - Spiral: logarithmic spiral soundhole design (mounted production tool)
@@ -31,6 +33,8 @@ import MeasurementArchiveEvidenceIndex from '@/components/shared/acoustics/Measu
 import MeasurementResidualComparisonPanel from '@/components/shared/acoustics/MeasurementResidualComparisonPanel.vue'
 import TopologyVariantCard from '@/components/shared/acoustics/TopologyVariantCard.vue'
 import TopologyVariantBuilder from '@/components/shared/acoustics/TopologyVariantBuilder.vue'
+import ExperimentalCorrelationPanel from '@/components/shared/acoustics/ExperimentalCorrelationPanel.vue'
+import ExperimentalDriftTimelinePanel from '@/components/shared/acoustics/ExperimentalDriftTimelinePanel.vue'
 import type { WorkflowGateLevel } from '@/types/workflow'
 import type {
   MeasurementArchiveRecord,
@@ -317,6 +321,17 @@ function toggleVariantSection() {
           <MeasurementResidualComparisonPanel
             :archives="evidenceArchives"
             :topology-variants="topologyVariants"
+          />
+
+          <!-- Dev Order 68: Experimental Correlations -->
+          <ExperimentalCorrelationPanel
+            :archives="evidenceArchives"
+            :topology-variants="topologyVariants"
+          />
+
+          <!-- Dev Order 70: Experimental Drift Timeline -->
+          <ExperimentalDriftTimelinePanel
+            :archives="evidenceArchives"
           />
 
           <PrerequisiteNotice message="Measurement Lab is observational only. Archives are local — no persistence, calibration, or prediction authority." />

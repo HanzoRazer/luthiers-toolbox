@@ -24,6 +24,7 @@
  * Dev Order 63: Added MeasurementResidualComparisonPanel for pairwise archive comparison.
  * Dev Order 66: Added TopologyVariant* components for experimental topology variants.
  * Dev Order 68: Added ExperimentalCorrelationPanel for computed observational correlations.
+ * Dev Order 70: Added ExperimentalDriftTimelinePanel for drift observation timelines.
  */
 
 export { default as AcousticStateCard } from './AcousticStateCard.vue'
@@ -59,3 +60,6 @@ export { default as TopologyVariantBuilder } from './TopologyVariantBuilder.vue'
 
 // Experimental Correlation components (Dev Order 68)
 export { default as ExperimentalCorrelationPanel } from './ExperimentalCorrelationPanel.vue'
+
+// Experimental Drift Timeline components (Dev Order 70)
+export { default as ExperimentalDriftTimelinePanel } from './ExperimentalDriftTimelinePanel.vue'
