@@ -405,4 +405,11 @@ CAM_ROUTERS: List[RouterSpec] = [
         tags=["CAM", "Governance", "Release"],
         category="cam",
     ),
+    # ── CAM 8A: Post-Freeze Expansion Gate ──
+    RouterSpec(
+        module="app.routers.cam.post_freeze_expansion_router",
+        prefix="",
+        tags=["CAM", "Post-Freeze", "Governance"],
+        category="cam",
+    ),
 ]
