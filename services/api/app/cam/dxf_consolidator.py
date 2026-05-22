@@ -30,6 +30,10 @@ import ezdxf
 from ezdxf.entities import Line
 
 from app.util.dxf_compat import create_document
+from app.util.dxf_lifecycle_guard import (
+    DxfLifecycleContext,
+    assert_dxf_lifecycle_context,
+)
 
 
 @dataclass
@@ -270,6 +274,17 @@ class DxfConsolidator:
                 self._write_polyline(msp, cavity.points, f"CAVITY_{i}", cavity.is_closed)
                 print(f"Cavity {i}: {cavity.width:.0f}x{cavity.height:.0f}mm, {len(cavity.points)} pts")
 
+        assert_dxf_lifecycle_context(
+            DxfLifecycleContext(
+                source_module=__name__,
+                export_type="dxf-create-save",
+                dxf_version="R2000",
+                lifecycle_status="COMPAT_ONLY",
+                runtime_callable="runtime_service",
+                authority_context="pipeline_stage",
+                provenance_status="NO",
+            )
+        )
         doc.saveas(output_path)
         print(f"Saved: {output_path}")
 

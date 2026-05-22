@@ -48,6 +48,10 @@ import ezdxf
 from ezdxf.entities import LWPolyline
 
 from app.util.dxf_compat import create_document
+from app.util.dxf_lifecycle_guard import (
+    DxfLifecycleContext,
+    assert_dxf_lifecycle_context,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -262,6 +266,17 @@ class DXFCleaner:
                 contours_written += 1
 
         output_path.parent.mkdir(parents=True, exist_ok=True)
+        assert_dxf_lifecycle_context(
+            DxfLifecycleContext(
+                source_module=__name__,
+                export_type="dxf-create-save",
+                dxf_version="R12",
+                lifecycle_status="COMPAT_ONLY",
+                runtime_callable="runtime_service",
+                authority_context="pipeline_stage",
+                provenance_status="NO",
+            )
+        )
         newdoc.saveas(str(output_path))
         return contours_written
 
@@ -406,6 +421,17 @@ class DXFCleaner:
 
             # Save output
             output_path.parent.mkdir(parents=True, exist_ok=True)
+            assert_dxf_lifecycle_context(
+                DxfLifecycleContext(
+                    source_module=__name__,
+                    export_type="dxf-create-save",
+                    dxf_version="R12",
+                    lifecycle_status="COMPAT_ONLY",
+                    runtime_callable="runtime_service",
+                    authority_context="pipeline_stage",
+                    provenance_status="NO",
+                )
+            )
             newdoc.saveas(str(output_path))
             result.output_path = output_path
 
