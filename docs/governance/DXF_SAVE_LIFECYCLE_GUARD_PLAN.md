@@ -1,9 +1,9 @@
 # DXF Save/Write Lifecycle Guard Plan
 
 **Sprint**: Runtime Boundary Follow-Through  
-**Phase**: 1E → 2A → 2B  
+**Phase**: 1E → 2A → 2B → 2C  
 **Date**: 2026-05-21  
-**Status**: PHASE 2B COMPLETE — Rollout Readiness
+**Status**: PHASE 2C COMPLETE — Guard Candidate Implementation
 
 **Cross-reference**: [EXPORT_LIFECYCLE_CLASSIFICATION_MATRIX.md](./EXPORT_LIFECYCLE_CLASSIFICATION_MATRIX.md)
 
@@ -16,6 +16,7 @@ Prepare the first safe implementation plan for DXF save/write lifecycle guards.
 - Phase 1E produced the patch plan.
 - Phase 2A implemented the first guard integration.
 - Phase 2B prepared rollout readiness with guard status tracking.
+- Phase 2C implemented guards on next batch of production candidates.
 
 ---
 
@@ -37,6 +38,24 @@ Prepare the first safe implementation plan for DXF save/write lifecycle guards.
 
 ---
 
+## Phase 2C Guard Candidate Implementation
+
+**Completed**: 2026-05-21
+
+Added lifecycle guards to 3 neck router DXF exports:
+
+| File | DXF Version | Callable | Guard Status |
+|------|-------------|----------|--------------|
+| `routers/neck/neck_profile_export.py` | R2010 | router_endpoint | GUARD_ADDED |
+| `routers/neck/headstock_transition_export.py` | R2010 | router_endpoint | GUARD_ADDED |
+| `routers/neck/export.py` | R12 | router_endpoint | GUARD_ADDED |
+
+**Pattern**: Same as Phase 2A — `assert_dxf_lifecycle_context()` called immediately before `doc.write()` or `doc.saveas()`.
+
+**No behavior changes**: Guards remain validation-only. No mutation, no logging, no side effects.
+
+---
+
 ## Phase 2B Rollout Readiness
 
 **Completed**: 2026-05-21
@@ -45,29 +64,29 @@ Prepare the first safe implementation plan for DXF save/write lifecycle guards.
 
 | Group | Description | Count | Guard Status |
 |-------|-------------|-------|--------------|
-| **A** | Already guarded | 1 | GUARD_ADDED |
-| **B** | Next safe production candidates | 17 | GUARD_CANDIDATE |
+| **A** | Already guarded | 4 | GUARD_ADDED |
+| **B** | Next safe production candidates | 14 | GUARD_CANDIDATE |
 | **C** | Later orchestrator candidates | 3 | ORCHESTRATOR_CANDIDATE |
 | **D** | Blocked provenance candidates | 5 | BLOCKED_PROVENANCE |
 | **E** | Excluded (test/R&D/preview) | 28 | NOT_APPLICABLE |
 
-### Group A — Already Guarded (1 path)
+### Group A — Already Guarded (4 paths)
 
-| File | Lifecycle Status | Callable | Guard Status |
-|------|------------------|----------|--------------|
-| `routers/instruments/guitar/smart_guitar_dxf_router.py` | COMPAT_ONLY | router_endpoint | GUARD_ADDED |
+| File | Lifecycle Status | Callable | Phase | Guard Status |
+|------|------------------|----------|-------|--------------|
+| `routers/instruments/guitar/smart_guitar_dxf_router.py` | COMPAT_ONLY | router_endpoint | 2A | GUARD_ADDED |
+| `routers/neck/neck_profile_export.py` | COMPAT_ONLY | router_endpoint | 2C | GUARD_ADDED |
+| `routers/neck/headstock_transition_export.py` | COMPAT_ONLY | router_endpoint | 2C | GUARD_ADDED |
+| `routers/neck/export.py` | COMPAT_ONLY | router_endpoint | 2C | GUARD_ADDED |
 
-### Group B — Next Safe Production Candidates (17 paths)
+### Group B — Next Safe Production Candidates (14 paths)
 
 Priority order per Phase 1E: router endpoints first, then runtime services.
 
-#### B1. Router Endpoints (6 paths)
+#### B1. Router Endpoints (3 paths)
 
 | File | Lifecycle Status | Callable | Risk | Guard Status |
 |------|------------------|----------|------|--------------|
-| `routers/neck/neck_profile_export.py` | COMPAT_ONLY | router_endpoint | LOW-MEDIUM | GUARD_CANDIDATE |
-| `routers/neck/headstock_transition_export.py` | COMPAT_ONLY | router_endpoint | LOW-MEDIUM | GUARD_CANDIDATE |
-| `routers/neck/export.py` | COMPAT_ONLY | router_endpoint | LOW-MEDIUM | GUARD_CANDIDATE |
 | `routers/headstock/dxf_export.py` | COMPAT_ONLY | router_endpoint | LOW-MEDIUM | GUARD_CANDIDATE |
 | `routers/export/curve_export_router.py` | COMPAT_ONLY | router_endpoint | LOW-MEDIUM | GUARD_CANDIDATE |
 | `routers/dxf_preflight_router.py` | COMPAT_ONLY | router_endpoint | LOW-MEDIUM | GUARD_CANDIDATE |

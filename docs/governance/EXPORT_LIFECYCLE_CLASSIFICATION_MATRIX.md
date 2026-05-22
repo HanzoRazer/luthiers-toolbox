@@ -115,9 +115,9 @@ Machine-parseable via HTML markers; human-readable via section headings.
 
 | File | Export Type | Creation | Save | Compat | Lifecycle | Provenance | Callable | Risk | Lifecycle Status | Disposition | Guard Status |
 |------|-------------|----------|------|--------|-----------|------------|----------|------|------------------|-------------|--------------|
-| `routers/neck/neck_profile_export.py` | dxf-create-save | create_document | Y | Y | N | NO | router_endpoint | LOW-MEDIUM | COMPAT_ONLY | no_action | GUARD_CANDIDATE |
-| `routers/neck/headstock_transition_export.py` | dxf-create-save | create_document | Y | Y | N | NO | router_endpoint | LOW-MEDIUM | COMPAT_ONLY | no_action | GUARD_CANDIDATE |
-| `routers/neck/export.py` | dxf-create-save | create_document | Y | Y | N | NO | router_endpoint | LOW-MEDIUM | COMPAT_ONLY | no_action | GUARD_CANDIDATE |
+| `routers/neck/neck_profile_export.py` | dxf-create-save | create_document | Y | Y | GUARD | NO | router_endpoint | LOW-MEDIUM | COMPAT_ONLY | guarded_2c | GUARD_ADDED |
+| `routers/neck/headstock_transition_export.py` | dxf-create-save | create_document | Y | Y | GUARD | NO | router_endpoint | LOW-MEDIUM | COMPAT_ONLY | guarded_2c | GUARD_ADDED |
+| `routers/neck/export.py` | dxf-create-save | create_document | Y | Y | GUARD | NO | router_endpoint | LOW-MEDIUM | COMPAT_ONLY | guarded_2c | GUARD_ADDED |
 | `routers/headstock/dxf_export.py` | dxf-create-save | create_document | Y | Y | N | NO | router_endpoint | LOW-MEDIUM | COMPAT_ONLY | no_action | GUARD_CANDIDATE |
 | `routers/export/curve_export_router.py` | dxf-create-save | create_document | Y | Y | N | NO | router_endpoint | LOW-MEDIUM | COMPAT_ONLY | no_action | GUARD_CANDIDATE |
 | `routers/dxf_preflight_router.py` | dxf-create-save | create_document | Y | Y | N | NO | router_endpoint | LOW-MEDIUM | COMPAT_ONLY | no_action | GUARD_CANDIDATE |

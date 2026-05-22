@@ -12,6 +12,10 @@ from .schemas import NeckParameters, NeckGeometryOut
 try:
     import ezdxf
     from app.util.dxf_compat import create_document
+    from app.util.dxf_lifecycle_guard import (
+        DxfLifecycleContext,
+        assert_dxf_lifecycle_context,
+    )
     EZDXF_AVAILABLE = True
 except ImportError:
     EZDXF_AVAILABLE = False
@@ -110,6 +114,19 @@ def export_neck_dxf(params: NeckParameters, geometry: NeckGeometryOut) -> bytes:
             'height': 0.25 if params.units == "in" else 6.0,
             'insert': (0, -3 if params.units == "in" else -75)
         }
+    )
+
+    # Validate lifecycle context before export
+    assert_dxf_lifecycle_context(
+        DxfLifecycleContext(
+            source_module=__name__,
+            export_type="dxf-create-save",
+            dxf_version="R12",
+            lifecycle_status="COMPAT_ONLY",
+            runtime_callable="router_endpoint",
+            authority_context="user_request",
+            provenance_status="NO",
+        )
     )
 
     # Write to bytes
