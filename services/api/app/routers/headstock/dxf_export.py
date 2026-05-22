@@ -29,6 +29,10 @@ from ezdxf.math import Vec2
 from fastapi import APIRouter, HTTPException
 
 from app.util.dxf_compat import create_document
+from app.util.dxf_lifecycle_guard import (
+    DxfLifecycleContext,
+    assert_dxf_lifecycle_context,
+)
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel, Field
 
@@ -549,6 +553,18 @@ async def export_headstock_dxf(req: ExportRequest):
         doc = build_dxf(req)
     except Exception as e:  # audited: http-500 — ValueError,IOError
         raise HTTPException(422, f"DXF build error: {e}")
+
+    assert_dxf_lifecycle_context(
+        DxfLifecycleContext(
+            source_module=__name__,
+            export_type="dxf-create-save",
+            dxf_version="R2010",
+            lifecycle_status="COMPAT_ONLY",
+            runtime_callable="router_endpoint",
+            authority_context="user_request",
+            provenance_status="NO",
+        )
+    )
 
     # Use StringIO for ASCII DXF, then encode to bytes for response
     text_buf = io.StringIO()

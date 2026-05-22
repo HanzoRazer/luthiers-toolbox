@@ -12,6 +12,10 @@ try:
     import ezdxf
     from ezdxf.document import Drawing
     from app.util.dxf_compat import create_document
+    from app.util.dxf_lifecycle_guard import (
+        DxfLifecycleContext,
+        assert_dxf_lifecycle_context,
+    )
     EZDXF_AVAILABLE = True
 except ImportError:
     EZDXF_AVAILABLE = False
@@ -297,7 +301,18 @@ async def auto_fix_dxf(request: AutoFixRequest):
             except (TypeError, ValueError, AttributeError) as e:  # WP-1: narrowed — R12 copy fallback
                 # If copying fails, at least save as R12 even if empty
                 pass
-            
+
+            assert_dxf_lifecycle_context(
+                DxfLifecycleContext(
+                    source_module=__name__,
+                    export_type="dxf-create-save",
+                    dxf_version="R12",
+                    lifecycle_status="COMPAT_ONLY",
+                    runtime_callable="router_endpoint",
+                    authority_context="user_request",
+                    provenance_status="NO",
+                )
+            )
             r12_doc.saveas(tmp_out_path, encoding='cp1252')
         else:
             doc.saveas(tmp_out_path)

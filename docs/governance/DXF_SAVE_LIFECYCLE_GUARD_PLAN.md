@@ -1,9 +1,9 @@
 # DXF Save/Write Lifecycle Guard Plan
 
 **Sprint**: Runtime Boundary Follow-Through  
-**Phase**: 1E → 2A → 2B → 2C  
+**Phase**: 1E → 2A → 2B → 2C → 2D  
 **Date**: 2026-05-21  
-**Status**: PHASE 2C COMPLETE — Guard Candidate Implementation
+**Status**: PHASE 2D COMPLETE — Router Guard Batch
 
 **Cross-reference**: [EXPORT_LIFECYCLE_CLASSIFICATION_MATRIX.md](./EXPORT_LIFECYCLE_CLASSIFICATION_MATRIX.md)
 
@@ -16,7 +16,8 @@ Prepare the first safe implementation plan for DXF save/write lifecycle guards.
 - Phase 1E produced the patch plan.
 - Phase 2A implemented the first guard integration.
 - Phase 2B prepared rollout readiness with guard status tracking.
-- Phase 2C implemented guards on next batch of production candidates.
+- Phase 2C implemented guards on neck router batch.
+- Phase 2D implemented guards on remaining router endpoints.
 
 ---
 
@@ -56,6 +57,24 @@ Added lifecycle guards to 3 neck router DXF exports:
 
 ---
 
+## Phase 2D Router Guard Batch
+
+**Completed**: 2026-05-21
+
+Added lifecycle guards to remaining router endpoint candidates:
+
+| File | DXF Version | Callable | Guard Status |
+|------|-------------|----------|--------------|
+| `routers/headstock/dxf_export.py` | R2010 | router_endpoint | GUARD_ADDED |
+| `routers/export/curve_export_router.py` | R2010 | router_endpoint | GUARD_ADDED |
+| `routers/dxf_preflight_router.py` | R12 | router_endpoint | GUARD_ADDED |
+
+**Pattern**: Same as Phase 2A/2C — `assert_dxf_lifecycle_context()` called immediately before `doc.write()` or `doc.saveas()`.
+
+**No behavior changes**: Guards remain validation-only. No mutation, no logging, no side effects.
+
+---
+
 ## Phase 2B Rollout Readiness
 
 **Completed**: 2026-05-21
@@ -64,13 +83,13 @@ Added lifecycle guards to 3 neck router DXF exports:
 
 | Group | Description | Count | Guard Status |
 |-------|-------------|-------|--------------|
-| **A** | Already guarded | 4 | GUARD_ADDED |
-| **B** | Next safe production candidates | 14 | GUARD_CANDIDATE |
+| **A** | Already guarded | 7 | GUARD_ADDED |
+| **B** | Next safe production candidates | 11 | GUARD_CANDIDATE |
 | **C** | Later orchestrator candidates | 3 | ORCHESTRATOR_CANDIDATE |
 | **D** | Blocked provenance candidates | 5 | BLOCKED_PROVENANCE |
 | **E** | Excluded (test/R&D/preview) | 28 | NOT_APPLICABLE |
 
-### Group A — Already Guarded (4 paths)
+### Group A — Already Guarded (7 paths)
 
 | File | Lifecycle Status | Callable | Phase | Guard Status |
 |------|------------------|----------|-------|--------------|
@@ -78,20 +97,15 @@ Added lifecycle guards to 3 neck router DXF exports:
 | `routers/neck/neck_profile_export.py` | COMPAT_ONLY | router_endpoint | 2C | GUARD_ADDED |
 | `routers/neck/headstock_transition_export.py` | COMPAT_ONLY | router_endpoint | 2C | GUARD_ADDED |
 | `routers/neck/export.py` | COMPAT_ONLY | router_endpoint | 2C | GUARD_ADDED |
+| `routers/headstock/dxf_export.py` | COMPAT_ONLY | router_endpoint | 2D | GUARD_ADDED |
+| `routers/export/curve_export_router.py` | COMPAT_ONLY | router_endpoint | 2D | GUARD_ADDED |
+| `routers/dxf_preflight_router.py` | COMPAT_ONLY | router_endpoint | 2D | GUARD_ADDED |
 
-### Group B — Next Safe Production Candidates (14 paths)
+### Group B — Next Safe Production Candidates (11 paths)
 
-Priority order per Phase 1E: router endpoints first, then runtime services.
+Priority order per Phase 1E: router endpoints first (all done in 2C/2D), then runtime services.
 
-#### B1. Router Endpoints (3 paths)
-
-| File | Lifecycle Status | Callable | Risk | Guard Status |
-|------|------------------|----------|------|--------------|
-| `routers/headstock/dxf_export.py` | COMPAT_ONLY | router_endpoint | LOW-MEDIUM | GUARD_CANDIDATE |
-| `routers/export/curve_export_router.py` | COMPAT_ONLY | router_endpoint | LOW-MEDIUM | GUARD_CANDIDATE |
-| `routers/dxf_preflight_router.py` | COMPAT_ONLY | router_endpoint | LOW-MEDIUM | GUARD_CANDIDATE |
-
-#### B2. CAM Services (5 paths)
+#### B1. CAM Services (5 paths)
 
 | File | Lifecycle Status | Callable | Risk | Guard Status |
 |------|------------------|----------|------|--------------|
@@ -101,7 +115,7 @@ Priority order per Phase 1E: router endpoints first, then runtime services.
 | `cam/dxf_consolidator.py` | COMPAT_ONLY | runtime_service | LOW-MEDIUM | GUARD_CANDIDATE |
 | `cam/line_deduplicator.py` | DIRECT_SAVE_GAP | runtime_service | LOW-MEDIUM | GUARD_CANDIDATE |
 
-#### B3. CAM Archtop Generators (4 paths)
+#### B2. CAM Archtop Generators (4 paths)
 
 | File | Lifecycle Status | Callable | Risk | Guard Status |
 |------|------------------|----------|------|--------------|
@@ -110,7 +124,7 @@ Priority order per Phase 1E: router endpoints first, then runtime services.
 | `cam/archtop/archtop_surface_tools.py` | COMPAT_ONLY | runtime_service | LOW-MEDIUM | GUARD_CANDIDATE |
 | `cam/archtop/archtop_contour_generator.py` | COMPAT_ONLY | runtime_service | LOW-MEDIUM | GUARD_CANDIDATE |
 
-#### B4. Other Services (2 paths)
+#### B3. Other Services (2 paths)
 
 | File | Lifecycle Status | Callable | Risk | Guard Status |
 |------|------------------|----------|------|--------------|
