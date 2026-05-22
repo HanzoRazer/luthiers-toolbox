@@ -15,7 +15,7 @@ Exit codes:
     0 - All checks pass (or warnings only without --strict)
     1 - Structural failures found
 
-Part of Runtime Boundary Follow-Through Sprint, Phase 1D.
+Part of Runtime Boundary Follow-Through Sprint, Phase 1D/2B.
 """
 
 from __future__ import annotations
@@ -60,6 +60,16 @@ PRODUCTION_REQUIRED_COLUMNS = {
     "Risk",
     "Disposition",
 }
+
+VALID_GUARD_STATUSES = {
+    "GUARD_ADDED",
+    "GUARD_CANDIDATE",
+    "ORCHESTRATOR_CANDIDATE",
+    "BLOCKED_PROVENANCE",
+    "NOT_APPLICABLE",
+}
+
+PRODUCTION_GUARD_STATUSES = {"GUARD_ADDED", "GUARD_CANDIDATE", "ORCHESTRATOR_CANDIDATE", "NOT_APPLICABLE"}
 
 
 @dataclass
@@ -180,9 +190,10 @@ def parse_table_rows(section_content: str) -> List[Dict[str, str]]:
     return rows
 
 
-def validate_production_row(row: Dict[str, str], section_name: str) -> List[str]:
+def validate_production_row(row: Dict[str, str], section_name: str) -> Tuple[List[str], List[str]]:
     """Validate a production export row has required columns."""
     errors: List[str] = []
+    warnings: List[str] = []
 
     file_col = row.get("File", "")
     if not file_col:
@@ -202,38 +213,56 @@ def validate_production_row(row: Dict[str, str], section_name: str) -> List[str]
     if not disposition:
         errors.append(f"Row {file_col} missing Disposition in {section_name}")
 
-    return errors
+    guard_status = row.get("Guard Status", "")
+    if not guard_status:
+        warnings.append(f"Row {file_col} missing Guard Status in {section_name}")
+    elif guard_status not in VALID_GUARD_STATUSES:
+        warnings.append(f"Row {file_col} has unknown Guard Status '{guard_status}' in {section_name}")
+    elif lifecycle_status in {"COMPAT_ONLY", "DIRECT_SAVE_GAP"} and guard_status not in PRODUCTION_GUARD_STATUSES:
+        warnings.append(f"Row {file_col} has lifecycle status {lifecycle_status} but guard status {guard_status}")
+
+    return errors, warnings
 
 
-def validate_blocked_row(row: Dict[str, str]) -> List[str]:
+def validate_blocked_row(row: Dict[str, str]) -> Tuple[List[str], List[str]]:
     """Validate BLOCKED_PROVENANCE row is not marked lifecycle-governed."""
     errors: List[str] = []
+    warnings: List[str] = []
 
     file_col = row.get("File", "")
     lifecycle_status = row.get("Lifecycle Status", "")
+    guard_status = row.get("Guard Status", "")
 
     if lifecycle_status == "LIFECYCLE_GOVERNED":
         errors.append(f"BLOCKED_PROVENANCE row {file_col} incorrectly marked as LIFECYCLE_GOVERNED")
     elif lifecycle_status and lifecycle_status not in {"BLOCKED_PROVENANCE", "COMPAT_ONLY", "DIRECT_SAVE_GAP"}:
         errors.append(f"BLOCKED_PROVENANCE row {file_col} has unexpected status '{lifecycle_status}'")
 
-    return errors
+    if guard_status and guard_status != "BLOCKED_PROVENANCE":
+        errors.append(f"BLOCKED_PROVENANCE row {file_col} has guard status '{guard_status}' but should be BLOCKED_PROVENANCE")
+
+    return errors, warnings
 
 
-def validate_excluded_row(row: Dict[str, str], section_name: str) -> List[str]:
+def validate_excluded_row(row: Dict[str, str], section_name: str) -> Tuple[List[str], List[str]]:
     """Validate TEST/R&D rows are not counted as production gaps."""
+    errors: List[str] = []
     warnings: List[str] = []
 
     file_col = row.get("File", "")
     lifecycle_status = row.get("Lifecycle Status", "")
+    guard_status = row.get("Guard Status", "")
 
     if not file_col:
-        return warnings
+        return errors, warnings
 
     if lifecycle_status in {"LIFECYCLE_GOVERNED", "COMPAT_ONLY", "DIRECT_SAVE_GAP"}:
         warnings.append(f"{section_name} row {file_col} has production status '{lifecycle_status}' but should be excluded")
 
-    return warnings
+    if guard_status and guard_status != "NOT_APPLICABLE":
+        warnings.append(f"{section_name} row {file_col} has guard status '{guard_status}' but should be NOT_APPLICABLE")
+
+    return errors, warnings
 
 
 def validate_matrix(content: str) -> ValidationResult:
@@ -281,16 +310,18 @@ def validate_matrix(content: str) -> ValidationResult:
             continue
         rows = parse_table_rows(sections[section_name])
         for row in rows:
-            errors = validate_production_row(row, section_name)
+            errors, warnings = validate_production_row(row, section_name)
             result.errors.extend(errors)
+            result.warnings.extend(warnings)
             if errors:
                 result.passed = False
 
     if "BLOCKED_PROVENANCE" in sections:
         rows = parse_table_rows(sections["BLOCKED_PROVENANCE"])
         for row in rows:
-            errors = validate_blocked_row(row)
+            errors, warnings = validate_blocked_row(row)
             result.errors.extend(errors)
+            result.warnings.extend(warnings)
             if errors:
                 result.passed = False
 
@@ -299,8 +330,11 @@ def validate_matrix(content: str) -> ValidationResult:
             continue
         rows = parse_table_rows(sections[section_name])
         for row in rows:
-            warnings = validate_excluded_row(row, section_name)
+            errors, warnings = validate_excluded_row(row, section_name)
+            result.errors.extend(errors)
             result.warnings.extend(warnings)
+            if errors:
+                result.passed = False
 
     return result
 
