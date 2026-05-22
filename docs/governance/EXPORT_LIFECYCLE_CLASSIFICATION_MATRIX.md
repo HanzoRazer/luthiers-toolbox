@@ -1,9 +1,9 @@
 # Export Lifecycle Classification Matrix
 
 **Sprint**: Runtime Boundary Follow-Through  
-**Phase**: 1D  
+**Phase**: 2B  
 **Date**: 2026-05-21  
-**Status**: LIFECYCLE GUARD BASELINE
+**Status**: GUARD ROLLOUT READINESS
 
 **Cross-reference**: [RUNTIME_BOUNDARY_INVENTORY.md](./RUNTIME_BOUNDARY_INVENTORY.md)
 
@@ -79,6 +79,16 @@ Machine-parseable via HTML markers; human-readable via section headings.
 | `N` | No lifecycle orchestration |
 | `GUARD` | Uses dxf_lifecycle_guard (Phase 2A+) |
 
+### Guard Status (Phase 2B)
+
+| Code | Meaning |
+|------|---------|
+| `GUARD_ADDED` | Lifecycle guard integrated |
+| `GUARD_CANDIDATE` | Ready for guard integration |
+| `ORCHESTRATOR_CANDIDATE` | Candidate for full orchestrator adoption |
+| `BLOCKED_PROVENANCE` | IBG, awaiting provenance ratification |
+| `NOT_APPLICABLE` | Test/R&D/excluded, no guard needed |
+
 ### Disposition
 
 | Code | Meaning |
@@ -97,29 +107,29 @@ Machine-parseable via HTML markers; human-readable via section headings.
 
 ### 1A. Lifecycle-Governed (Full Orchestration)
 
-| File | Export Type | Creation | Save | Compat | Lifecycle | Provenance | Callable | Risk | Lifecycle Status | Disposition |
-|------|-------------|----------|------|--------|-----------|------------|----------|------|------------------|-------------|
-| `routers/cam/export_lifecycle_router.py` | dxf-preview | — | — | Y | Y | NO | router_endpoint | LOW | LIFECYCLE_GOVERNED | no_action |
+| File | Export Type | Creation | Save | Compat | Lifecycle | Provenance | Callable | Risk | Lifecycle Status | Disposition | Guard Status |
+|------|-------------|----------|------|--------|-----------|------------|----------|------|------------------|-------------|--------------|
+| `routers/cam/export_lifecycle_router.py` | dxf-preview | — | — | Y | Y | NO | router_endpoint | LOW | LIFECYCLE_GOVERNED | no_action | NOT_APPLICABLE |
 
 ### 1B. Compat-Governed Router Endpoints
 
-| File | Export Type | Creation | Save | Compat | Lifecycle | Provenance | Callable | Risk | Lifecycle Status | Disposition |
-|------|-------------|----------|------|--------|-----------|------------|----------|------|------------------|-------------|
-| `routers/neck/neck_profile_export.py` | dxf-create-save | create_document | Y | Y | N | NO | router_endpoint | LOW-MEDIUM | COMPAT_ONLY | no_action |
-| `routers/neck/headstock_transition_export.py` | dxf-create-save | create_document | Y | Y | N | NO | router_endpoint | LOW-MEDIUM | COMPAT_ONLY | no_action |
-| `routers/neck/export.py` | dxf-create-save | create_document | Y | Y | N | NO | router_endpoint | LOW-MEDIUM | COMPAT_ONLY | no_action |
-| `routers/headstock/dxf_export.py` | dxf-create-save | create_document | Y | Y | N | NO | router_endpoint | LOW-MEDIUM | COMPAT_ONLY | no_action |
-| `routers/export/curve_export_router.py` | dxf-create-save | create_document | Y | Y | N | NO | router_endpoint | LOW-MEDIUM | COMPAT_ONLY | no_action |
-| `routers/dxf_preflight_router.py` | dxf-create-save | create_document | Y | Y | N | NO | router_endpoint | LOW-MEDIUM | COMPAT_ONLY | no_action |
-| `routers/instruments/guitar/smart_guitar_dxf_router.py` | dxf-create-save | create_document | Y | Y | GUARD | NO | router_endpoint | LOW | COMPAT_ONLY | guarded_2a |
+| File | Export Type | Creation | Save | Compat | Lifecycle | Provenance | Callable | Risk | Lifecycle Status | Disposition | Guard Status |
+|------|-------------|----------|------|--------|-----------|------------|----------|------|------------------|-------------|--------------|
+| `routers/neck/neck_profile_export.py` | dxf-create-save | create_document | Y | Y | N | NO | router_endpoint | LOW-MEDIUM | COMPAT_ONLY | no_action | GUARD_CANDIDATE |
+| `routers/neck/headstock_transition_export.py` | dxf-create-save | create_document | Y | Y | N | NO | router_endpoint | LOW-MEDIUM | COMPAT_ONLY | no_action | GUARD_CANDIDATE |
+| `routers/neck/export.py` | dxf-create-save | create_document | Y | Y | N | NO | router_endpoint | LOW-MEDIUM | COMPAT_ONLY | no_action | GUARD_CANDIDATE |
+| `routers/headstock/dxf_export.py` | dxf-create-save | create_document | Y | Y | N | NO | router_endpoint | LOW-MEDIUM | COMPAT_ONLY | no_action | GUARD_CANDIDATE |
+| `routers/export/curve_export_router.py` | dxf-create-save | create_document | Y | Y | N | NO | router_endpoint | LOW-MEDIUM | COMPAT_ONLY | no_action | GUARD_CANDIDATE |
+| `routers/dxf_preflight_router.py` | dxf-create-save | create_document | Y | Y | N | NO | router_endpoint | LOW-MEDIUM | COMPAT_ONLY | no_action | GUARD_CANDIDATE |
+| `routers/instruments/guitar/smart_guitar_dxf_router.py` | dxf-create-save | create_document | Y | Y | GUARD | NO | router_endpoint | LOW | COMPAT_ONLY | guarded_2a | GUARD_ADDED |
 
 ### 1C. Compat-Governed Blueprint/CAM Routers
 
-| File | Export Type | Creation | Save | Compat | Lifecycle | Provenance | Callable | Risk | Lifecycle Status | Disposition |
-|------|-------------|----------|------|--------|-----------|------------|----------|------|------------------|-------------|
-| `routers/blueprint_cam/dxf_preprocessor.py` | dxf-create-save | create_document | Y | Y | N | NO | router_endpoint | LOW-MEDIUM | COMPAT_ONLY | no_action |
-| `routers/blueprint_cam/contour_reconstruction.py` | dxf-create-save | create_document | Y | Y | N | NO | router_endpoint | LOW-MEDIUM | COMPAT_ONLY | no_action |
-| `routers/blueprint_cam/dxf_geometry_correction.py` | dxf-read-modify-save | ezdxf.readfile | Y | Y | N | NO | router_endpoint | LOW-MEDIUM | DIRECT_SAVE_GAP | document_only |
+| File | Export Type | Creation | Save | Compat | Lifecycle | Provenance | Callable | Risk | Lifecycle Status | Disposition | Guard Status |
+|------|-------------|----------|------|--------|-----------|------------|----------|------|------------------|-------------|--------------|
+| `routers/blueprint_cam/dxf_preprocessor.py` | dxf-create-save | create_document | Y | Y | N | NO | router_endpoint | LOW-MEDIUM | COMPAT_ONLY | no_action | ORCHESTRATOR_CANDIDATE |
+| `routers/blueprint_cam/contour_reconstruction.py` | dxf-create-save | create_document | Y | Y | N | NO | router_endpoint | LOW-MEDIUM | COMPAT_ONLY | no_action | ORCHESTRATOR_CANDIDATE |
+| `routers/blueprint_cam/dxf_geometry_correction.py` | dxf-read-modify-save | ezdxf.readfile | Y | Y | N | NO | router_endpoint | LOW-MEDIUM | DIRECT_SAVE_GAP | document_only | ORCHESTRATOR_CANDIDATE |
 
 ---
 
@@ -128,45 +138,45 @@ Machine-parseable via HTML markers; human-readable via section headings.
 
 ### 2A. CAM Services (Compat-Governed)
 
-| File | Export Type | Creation | Save | Compat | Lifecycle | Provenance | Callable | Risk | Lifecycle Status | Disposition |
-|------|-------------|----------|------|--------|-----------|------------|----------|------|------------------|-------------|
-| `cam/dxf_writer.py` | dxf-create-save | create_document | Y | Y | N | NO | runtime_service | LOW-MEDIUM | COMPAT_ONLY | no_action |
-| `cam/unified_dxf_cleaner.py` | dxf-create-save | create_document | Y | Y | N | NO | runtime_service | LOW-MEDIUM | COMPAT_ONLY | no_action |
-| `cam/layer_consolidator.py` | dxf-create-save | create_document | Y | Y | N | NO | runtime_service | LOW-MEDIUM | COMPAT_ONLY | no_action |
-| `cam/dxf_consolidator.py` | dxf-create-save | create_document | Y | Y | N | NO | runtime_service | LOW-MEDIUM | COMPAT_ONLY | no_action |
-| `cam/line_deduplicator.py` | dxf-read-modify-save | ezdxf.readfile | Y | Y | N | NO | runtime_service | LOW-MEDIUM | DIRECT_SAVE_GAP | document_only |
-| `cam/dxf_advanced_validation.py` | dxf-preview | create_document | N | Y | N | NO | runtime_service | LOW | COMPAT_ONLY | no_action |
+| File | Export Type | Creation | Save | Compat | Lifecycle | Provenance | Callable | Risk | Lifecycle Status | Disposition | Guard Status |
+|------|-------------|----------|------|--------|-----------|------------|----------|------|------------------|-------------|--------------|
+| `cam/dxf_writer.py` | dxf-create-save | create_document | Y | Y | N | NO | runtime_service | LOW-MEDIUM | COMPAT_ONLY | no_action | GUARD_CANDIDATE |
+| `cam/unified_dxf_cleaner.py` | dxf-create-save | create_document | Y | Y | N | NO | runtime_service | LOW-MEDIUM | COMPAT_ONLY | no_action | GUARD_CANDIDATE |
+| `cam/layer_consolidator.py` | dxf-create-save | create_document | Y | Y | N | NO | runtime_service | LOW-MEDIUM | COMPAT_ONLY | no_action | GUARD_CANDIDATE |
+| `cam/dxf_consolidator.py` | dxf-create-save | create_document | Y | Y | N | NO | runtime_service | LOW-MEDIUM | COMPAT_ONLY | no_action | GUARD_CANDIDATE |
+| `cam/line_deduplicator.py` | dxf-read-modify-save | ezdxf.readfile | Y | Y | N | NO | runtime_service | LOW-MEDIUM | DIRECT_SAVE_GAP | document_only | GUARD_CANDIDATE |
+| `cam/dxf_advanced_validation.py` | dxf-preview | create_document | N | Y | N | NO | runtime_service | LOW | COMPAT_ONLY | no_action | NOT_APPLICABLE |
 
 ### 2B. CAM Archtop Generators
 
-| File | Export Type | Creation | Save | Compat | Lifecycle | Provenance | Callable | Risk | Lifecycle Status | Disposition |
-|------|-------------|----------|------|--------|-----------|------------|----------|------|------------------|-------------|
-| `cam/archtop_bridge_generator.py` | dxf-create-save | create_document | Y | Y | N | NO | runtime_service | LOW-MEDIUM | COMPAT_ONLY | no_action |
-| `cam/archtop_saddle_generator.py` | dxf-create-save | create_document | Y | Y | N | NO | runtime_service | LOW-MEDIUM | COMPAT_ONLY | no_action |
-| `cam/archtop/archtop_surface_tools.py` | dxf-create-save | create_document | Y | Y | N | NO | runtime_service | LOW-MEDIUM | COMPAT_ONLY | no_action |
-| `cam/archtop/archtop_contour_generator.py` | dxf-create-save | create_document | Y | Y | N | NO | runtime_service | LOW-MEDIUM | COMPAT_ONLY | no_action |
+| File | Export Type | Creation | Save | Compat | Lifecycle | Provenance | Callable | Risk | Lifecycle Status | Disposition | Guard Status |
+|------|-------------|----------|------|--------|-----------|------------|----------|------|------------------|-------------|--------------|
+| `cam/archtop_bridge_generator.py` | dxf-create-save | create_document | Y | Y | N | NO | runtime_service | LOW-MEDIUM | COMPAT_ONLY | no_action | GUARD_CANDIDATE |
+| `cam/archtop_saddle_generator.py` | dxf-create-save | create_document | Y | Y | N | NO | runtime_service | LOW-MEDIUM | COMPAT_ONLY | no_action | GUARD_CANDIDATE |
+| `cam/archtop/archtop_surface_tools.py` | dxf-create-save | create_document | Y | Y | N | NO | runtime_service | LOW-MEDIUM | COMPAT_ONLY | no_action | GUARD_CANDIDATE |
+| `cam/archtop/archtop_contour_generator.py` | dxf-create-save | create_document | Y | Y | N | NO | runtime_service | LOW-MEDIUM | COMPAT_ONLY | no_action | GUARD_CANDIDATE |
 
 ### 2C. Instrument Geometry Services
 
-| File | Export Type | Creation | Save | Compat | Lifecycle | Provenance | Callable | Risk | Lifecycle Status | Disposition |
-|------|-------------|----------|------|--------|-----------|------------|----------|------|------------------|-------------|
-| `instrument_geometry/body/smart_guitar_dxf.py` | dxf-create-save | create_document | Y | Y | N | NO | runtime_service | LOW-MEDIUM | COMPAT_ONLY | no_action |
-| `instrument_geometry/soundhole/spiral_geometry.py` | dxf-create-save | DxfWriter | Y | Y | N | NO | runtime_service | LOW-MEDIUM | COMPAT_ONLY | no_action |
-| `generators/bezier_body.py` | dxf-create-save | DxfWriter | Y | Y | N | NO | runtime_service | LOW-MEDIUM | COMPAT_ONLY | no_action |
+| File | Export Type | Creation | Save | Compat | Lifecycle | Provenance | Callable | Risk | Lifecycle Status | Disposition | Guard Status |
+|------|-------------|----------|------|--------|-----------|------------|----------|------|------------------|-------------|--------------|
+| `instrument_geometry/body/smart_guitar_dxf.py` | dxf-create-save | create_document | Y | Y | N | NO | runtime_service | LOW-MEDIUM | COMPAT_ONLY | no_action | GUARD_CANDIDATE |
+| `instrument_geometry/soundhole/spiral_geometry.py` | dxf-create-save | DxfWriter | Y | Y | N | NO | runtime_service | LOW-MEDIUM | COMPAT_ONLY | no_action | GUARD_CANDIDATE |
+| `generators/bezier_body.py` | dxf-create-save | DxfWriter | Y | Y | N | NO | runtime_service | LOW-MEDIUM | COMPAT_ONLY | no_action | GUARD_CANDIDATE |
 
 ### 2D. Art Studio / Inlay Services
 
-| File | Export Type | Creation | Save | Compat | Lifecycle | Provenance | Callable | Risk | Lifecycle Status | Disposition |
-|------|-------------|----------|------|--------|-----------|------------|----------|------|------------------|-------------|
-| `art_studio/services/generators/inlay_export.py` | dxf-create-only | create_document | N | Y | N | NO | runtime_service | LOW | COMPAT_ONLY | no_action |
-| `calculators/inlay_calc.py` | dxf-create-only | create_document | N | Y | N | NO | runtime_service | LOW | COMPAT_ONLY | no_action |
+| File | Export Type | Creation | Save | Compat | Lifecycle | Provenance | Callable | Risk | Lifecycle Status | Disposition | Guard Status |
+|------|-------------|----------|------|--------|-----------|------------|----------|------|------------------|-------------|--------------|
+| `art_studio/services/generators/inlay_export.py` | dxf-create-only | create_document | N | Y | N | NO | runtime_service | LOW | COMPAT_ONLY | no_action | NOT_APPLICABLE |
+| `calculators/inlay_calc.py` | dxf-create-only | create_document | N | Y | N | NO | runtime_service | LOW | COMPAT_ONLY | no_action | NOT_APPLICABLE |
 
 ### 2E. Other Services
 
-| File | Export Type | Creation | Save | Compat | Lifecycle | Provenance | Callable | Risk | Lifecycle Status | Disposition |
-|------|-------------|----------|------|--------|-----------|------------|----------|------|------------------|-------------|
-| `services/layered_dxf_writer.py` | dxf-create-save | create_document | Y | Y | N | NO | runtime_service | LOW-MEDIUM | COMPAT_ONLY | no_action |
-| `services/text_reinsertion.py` | dxf-read-modify-save | ezdxf.readfile | Y | Y | N | NO | runtime_service | LOW-MEDIUM | DIRECT_SAVE_GAP | document_only |
+| File | Export Type | Creation | Save | Compat | Lifecycle | Provenance | Callable | Risk | Lifecycle Status | Disposition | Guard Status |
+|------|-------------|----------|------|--------|-----------|------------|----------|------|------------------|-------------|--------------|
+| `services/layered_dxf_writer.py` | dxf-create-save | create_document | Y | Y | N | NO | runtime_service | LOW-MEDIUM | COMPAT_ONLY | no_action | GUARD_CANDIDATE |
+| `services/text_reinsertion.py` | dxf-read-modify-save | ezdxf.readfile | Y | Y | N | NO | runtime_service | LOW-MEDIUM | DIRECT_SAVE_GAP | document_only | GUARD_CANDIDATE |
 
 ---
 
@@ -175,13 +185,13 @@ Machine-parseable via HTML markers; human-readable via section headings.
 
 These paths use DxfWriter (compat-governed) but are blocked pending provenance model ratification.
 
-| File | Export Type | Creation | Save | Compat | Lifecycle | Provenance | Callable | Risk | Lifecycle Status | Disposition |
-|------|-------------|----------|------|--------|-----------|------------|----------|------|------------------|-------------|
-| `instrument_geometry/body/ibg/body_contour_solver.py:777` | dxf-create-save | DxfWriter | Y | Y | N | BLOCKED | runtime_service | BLOCKED | BLOCKED_PROVENANCE | blocked_provenance |
-| `instrument_geometry/body/ibg/body_contour_solver.py:808` | dxf-create-save | DxfWriter | Y | Y | N | BLOCKED | runtime_service | BLOCKED | BLOCKED_PROVENANCE | blocked_provenance |
-| `instrument_geometry/body/ibg/arc_reconstructor.py:1116` | dxf-create-save | DxfWriter | Y | Y | N | BLOCKED | runtime_service | BLOCKED | BLOCKED_PROVENANCE | blocked_provenance |
-| `instrument_geometry/body/ibg/arc_reconstructor.py:1279` | dxf-create-save | DxfWriter | Y | Y | N | BLOCKED | runtime_service | BLOCKED | BLOCKED_PROVENANCE | blocked_provenance |
-| `instrument_geometry/body/ibg/arc_reconstructor.py:1303` | dxf-create-save | DxfWriter | Y | Y | N | BLOCKED | runtime_service | BLOCKED | BLOCKED_PROVENANCE | blocked_provenance |
+| File | Export Type | Creation | Save | Compat | Lifecycle | Provenance | Callable | Risk | Lifecycle Status | Disposition | Guard Status |
+|------|-------------|----------|------|--------|-----------|------------|----------|------|------------------|-------------|--------------|
+| `instrument_geometry/body/ibg/body_contour_solver.py:777` | dxf-create-save | DxfWriter | Y | Y | N | BLOCKED | runtime_service | BLOCKED | BLOCKED_PROVENANCE | blocked_provenance | BLOCKED_PROVENANCE |
+| `instrument_geometry/body/ibg/body_contour_solver.py:808` | dxf-create-save | DxfWriter | Y | Y | N | BLOCKED | runtime_service | BLOCKED | BLOCKED_PROVENANCE | blocked_provenance | BLOCKED_PROVENANCE |
+| `instrument_geometry/body/ibg/arc_reconstructor.py:1116` | dxf-create-save | DxfWriter | Y | Y | N | BLOCKED | runtime_service | BLOCKED | BLOCKED_PROVENANCE | blocked_provenance | BLOCKED_PROVENANCE |
+| `instrument_geometry/body/ibg/arc_reconstructor.py:1279` | dxf-create-save | DxfWriter | Y | Y | N | BLOCKED | runtime_service | BLOCKED | BLOCKED_PROVENANCE | blocked_provenance | BLOCKED_PROVENANCE |
+| `instrument_geometry/body/ibg/arc_reconstructor.py:1303` | dxf-create-save | DxfWriter | Y | Y | N | BLOCKED | runtime_service | BLOCKED | BLOCKED_PROVENANCE | blocked_provenance | BLOCKED_PROVENANCE |
 
 **Blocking condition**: IBG provenance model ratification required before Phase 2 work can proceed.
 
@@ -190,55 +200,55 @@ These paths use DxfWriter (compat-governed) but are blocked pending provenance m
 <!-- SECTION:TEST_FIXTURES -->
 ## Section 4: Test Fixtures
 
-| File | Export Type | Creation | Compat | Provenance | Callable | Risk | Lifecycle Status | Disposition |
-|------|-------------|----------|--------|------------|----------|------|------------------|-------------|
-| `tests/test_dxf_to_grbl_endpoint_smoke.py` | dxf-create-save | ezdxf.new | N | N/A | test_only | N/A | TEST_ONLY | test_fixture |
-| `tests/test_dxf_preprocessor.py` | dxf-create-save | ezdxf.new | N | N/A | test_only | N/A | TEST_ONLY | test_fixture |
-| `tests/test_dxf_geometry_correction.py` | dxf-create-save | ezdxf.new | N | N/A | test_only | N/A | TEST_ONLY | test_fixture |
-| `tests/test_dxf_advanced_validation_smoke.py` | dxf-create-only | ezdxf.new | N | N/A | test_only | N/A | TEST_ONLY | test_fixture |
-| `tests/test_contour_reconstruction.py` | dxf-create-save | ezdxf.new | N | N/A | test_only | N/A | TEST_ONLY | test_fixture |
-| `tests/test_blueprint_cam_integration.py` | dxf-create-save | ezdxf.new | N | N/A | test_only | N/A | TEST_ONLY | test_fixture |
-| `tests/e2e_cam_system.py` | dxf-create-save | ezdxf.new | N | N/A | test_only | N/A | TEST_ONLY | test_fixture |
-| `tests/test_dxf_compat_r12_compliance.py` | dxf-create-save | create_document | Y | N/A | test_only | N/A | TEST_ONLY | test_fixture |
-| `tests/test_dxf_writer.py` | dxf-write-only | caller | Y | N/A | test_only | N/A | TEST_ONLY | test_fixture |
+| File | Export Type | Creation | Compat | Provenance | Callable | Risk | Lifecycle Status | Disposition | Guard Status |
+|------|-------------|----------|--------|------------|----------|------|------------------|-------------|--------------|
+| `tests/test_dxf_to_grbl_endpoint_smoke.py` | dxf-create-save | ezdxf.new | N | N/A | test_only | N/A | TEST_ONLY | test_fixture | NOT_APPLICABLE |
+| `tests/test_dxf_preprocessor.py` | dxf-create-save | ezdxf.new | N | N/A | test_only | N/A | TEST_ONLY | test_fixture | NOT_APPLICABLE |
+| `tests/test_dxf_geometry_correction.py` | dxf-create-save | ezdxf.new | N | N/A | test_only | N/A | TEST_ONLY | test_fixture | NOT_APPLICABLE |
+| `tests/test_dxf_advanced_validation_smoke.py` | dxf-create-only | ezdxf.new | N | N/A | test_only | N/A | TEST_ONLY | test_fixture | NOT_APPLICABLE |
+| `tests/test_contour_reconstruction.py` | dxf-create-save | ezdxf.new | N | N/A | test_only | N/A | TEST_ONLY | test_fixture | NOT_APPLICABLE |
+| `tests/test_blueprint_cam_integration.py` | dxf-create-save | ezdxf.new | N | N/A | test_only | N/A | TEST_ONLY | test_fixture | NOT_APPLICABLE |
+| `tests/e2e_cam_system.py` | dxf-create-save | ezdxf.new | N | N/A | test_only | N/A | TEST_ONLY | test_fixture | NOT_APPLICABLE |
+| `tests/test_dxf_compat_r12_compliance.py` | dxf-create-save | create_document | Y | N/A | test_only | N/A | TEST_ONLY | test_fixture | NOT_APPLICABLE |
+| `tests/test_dxf_writer.py` | dxf-write-only | caller | Y | N/A | test_only | N/A | TEST_ONLY | test_fixture | NOT_APPLICABLE |
 
 ---
 
 <!-- SECTION:SCRIPTS -->
 ## Section 5: Scripts
 
-| File | Export Type | Creation | Compat | Provenance | Callable | Risk | Lifecycle Status | Disposition |
-|------|-------------|----------|--------|------------|----------|------|------------------|-------------|
-| `scripts/generate_smart_guitar_v3_dxf.py` | dxf-create-save | ezdxf.new | N | N/A | script_only | N/A | R_AND_D_EXCLUDED | document_only |
+| File | Export Type | Creation | Compat | Provenance | Callable | Risk | Lifecycle Status | Disposition | Guard Status |
+|------|-------------|----------|--------|------------|----------|------|------------------|-------------|--------------|
+| `scripts/generate_smart_guitar_v3_dxf.py` | dxf-create-save | ezdxf.new | N | N/A | script_only | N/A | R_AND_D_EXCLUDED | document_only | NOT_APPLICABLE |
 
 ---
 
 <!-- SECTION:BLUEPRINT_IMPORT -->
 ## Section 6: Blueprint-Import Surface
 
-| File | Export Type | Creation | Compat | Provenance | Callable | Risk | Lifecycle Status | Disposition |
-|------|-------------|----------|--------|------------|----------|------|------------------|-------------|
-| `blueprint-import/vectorizer_phase3.py` | dxf-create-save | create_document | Y | N/A | excluded | N/A | R_AND_D_EXCLUDED | document_only |
-| `blueprint-import/dxf_compat.py` | — | — | Y | N/A | excluded | N/A | R_AND_D_EXCLUDED | document_only |
-| `blueprint-import/dxf_postprocessor.py` | dxf-create-save | create_document | Y | N/A | excluded | N/A | R_AND_D_EXCLUDED | document_only |
-| `blueprint-import/phase4/annotations/exporter.py` | dxf-create-save | create_document | Y | N/A | excluded | N/A | R_AND_D_EXCLUDED | document_only |
+| File | Export Type | Creation | Compat | Provenance | Callable | Risk | Lifecycle Status | Disposition | Guard Status |
+|------|-------------|----------|--------|------------|----------|------|------------------|-------------|--------------|
+| `blueprint-import/vectorizer_phase3.py` | dxf-create-save | create_document | Y | N/A | excluded | N/A | R_AND_D_EXCLUDED | document_only | NOT_APPLICABLE |
+| `blueprint-import/dxf_compat.py` | — | — | Y | N/A | excluded | N/A | R_AND_D_EXCLUDED | document_only | NOT_APPLICABLE |
+| `blueprint-import/dxf_postprocessor.py` | dxf-create-save | create_document | Y | N/A | excluded | N/A | R_AND_D_EXCLUDED | document_only | NOT_APPLICABLE |
+| `blueprint-import/phase4/annotations/exporter.py` | dxf-create-save | create_document | Y | N/A | excluded | N/A | R_AND_D_EXCLUDED | document_only | NOT_APPLICABLE |
 
 ---
 
 <!-- SECTION:R_AND_D_SANDBOX -->
 ## Section 7: R&D Sandbox (Photo-Vectorizer)
 
-| File | Export Type | Creation | Compat | Provenance | Callable | Risk | Lifecycle Status | Disposition |
-|------|-------------|----------|--------|------------|----------|------|------------------|-------------|
-| `photo-vectorizer/ai_render_extractor.py` | dxf-create-save | ezdxf.new | N | N/A | excluded | N/A | R_AND_D_EXCLUDED | r_and_d_sandbox |
-| `photo-vectorizer/edge_to_dxf.py` | dxf-create-save | ezdxf.new | N | N/A | excluded | N/A | R_AND_D_EXCLUDED | r_and_d_sandbox |
-| `photo-vectorizer/march_pipeline_restore.py` | dxf-create-save | ezdxf.new | N | N/A | excluded | N/A | R_AND_D_EXCLUDED | r_and_d_sandbox |
-| `photo-vectorizer/light_line_body_extractor.py` | dxf-create-save | ezdxf.new | N | N/A | excluded | N/A | R_AND_D_EXCLUDED | r_and_d_sandbox |
-| `photo-vectorizer/generate_carlos_jumbo_dxf.py` | dxf-create-save | ezdxf.new | N | N/A | excluded | N/A | R_AND_D_EXCLUDED | r_and_d_sandbox |
-| `photo-vectorizer/generate_carlos_jumbo_dxf_enhanced.py` | dxf-create-save | ezdxf.new | N | N/A | excluded | N/A | R_AND_D_EXCLUDED | r_and_d_sandbox |
-| `photo-vectorizer/photo_vectorizer_v2.py` | dxf-create-save | ezdxf.new | N | N/A | excluded | N/A | R_AND_D_EXCLUDED | r_and_d_sandbox |
-| `photo-vectorizer/photo_silhouette_extractor.py` | dxf-create-save | ezdxf.new | N | N/A | excluded | N/A | R_AND_D_EXCLUDED | r_and_d_sandbox |
-| `photo-vectorizer/multi_view_reconstructor.py` | dxf-create-save | create_document | Y | N/A | excluded | N/A | R_AND_D_EXCLUDED | r_and_d_sandbox |
+| File | Export Type | Creation | Compat | Provenance | Callable | Risk | Lifecycle Status | Disposition | Guard Status |
+|------|-------------|----------|--------|------------|----------|------|------------------|-------------|--------------|
+| `photo-vectorizer/ai_render_extractor.py` | dxf-create-save | ezdxf.new | N | N/A | excluded | N/A | R_AND_D_EXCLUDED | r_and_d_sandbox | NOT_APPLICABLE |
+| `photo-vectorizer/edge_to_dxf.py` | dxf-create-save | ezdxf.new | N | N/A | excluded | N/A | R_AND_D_EXCLUDED | r_and_d_sandbox | NOT_APPLICABLE |
+| `photo-vectorizer/march_pipeline_restore.py` | dxf-create-save | ezdxf.new | N | N/A | excluded | N/A | R_AND_D_EXCLUDED | r_and_d_sandbox | NOT_APPLICABLE |
+| `photo-vectorizer/light_line_body_extractor.py` | dxf-create-save | ezdxf.new | N | N/A | excluded | N/A | R_AND_D_EXCLUDED | r_and_d_sandbox | NOT_APPLICABLE |
+| `photo-vectorizer/generate_carlos_jumbo_dxf.py` | dxf-create-save | ezdxf.new | N | N/A | excluded | N/A | R_AND_D_EXCLUDED | r_and_d_sandbox | NOT_APPLICABLE |
+| `photo-vectorizer/generate_carlos_jumbo_dxf_enhanced.py` | dxf-create-save | ezdxf.new | N | N/A | excluded | N/A | R_AND_D_EXCLUDED | r_and_d_sandbox | NOT_APPLICABLE |
+| `photo-vectorizer/photo_vectorizer_v2.py` | dxf-create-save | ezdxf.new | N | N/A | excluded | N/A | R_AND_D_EXCLUDED | r_and_d_sandbox | NOT_APPLICABLE |
+| `photo-vectorizer/photo_silhouette_extractor.py` | dxf-create-save | ezdxf.new | N | N/A | excluded | N/A | R_AND_D_EXCLUDED | r_and_d_sandbox | NOT_APPLICABLE |
+| `photo-vectorizer/multi_view_reconstructor.py` | dxf-create-save | create_document | Y | N/A | excluded | N/A | R_AND_D_EXCLUDED | r_and_d_sandbox | NOT_APPLICABLE |
 
 ---
 

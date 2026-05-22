@@ -1,9 +1,9 @@
 # DXF Save/Write Lifecycle Guard Plan
 
 **Sprint**: Runtime Boundary Follow-Through  
-**Phase**: 1E → 2A  
+**Phase**: 1E → 2A → 2B  
 **Date**: 2026-05-21  
-**Status**: PHASE 2A COMPLETE — First Guard Integrated
+**Status**: PHASE 2B COMPLETE — Rollout Readiness
 
 **Cross-reference**: [EXPORT_LIFECYCLE_CLASSIFICATION_MATRIX.md](./EXPORT_LIFECYCLE_CLASSIFICATION_MATRIX.md)
 
@@ -13,7 +13,9 @@
 
 Prepare the first safe implementation plan for DXF save/write lifecycle guards.
 
-Phase 1E produced the patch plan. Phase 2A implemented the first guard integration.
+- Phase 1E produced the patch plan.
+- Phase 2A implemented the first guard integration.
+- Phase 2B prepared rollout readiness with guard status tracking.
 
 ---
 
@@ -32,6 +34,105 @@ Phase 1E produced the patch plan. Phase 2A implemented the first guard integrati
 | First production integration | `smart_guitar_dxf_router.py` |
 
 **Behavior**: Validation-only, no mutation, no logging, no side effects.
+
+---
+
+## Phase 2B Rollout Readiness
+
+**Completed**: 2026-05-21
+
+### Rollout Groups
+
+| Group | Description | Count | Guard Status |
+|-------|-------------|-------|--------------|
+| **A** | Already guarded | 1 | GUARD_ADDED |
+| **B** | Next safe production candidates | 17 | GUARD_CANDIDATE |
+| **C** | Later orchestrator candidates | 3 | ORCHESTRATOR_CANDIDATE |
+| **D** | Blocked provenance candidates | 5 | BLOCKED_PROVENANCE |
+| **E** | Excluded (test/R&D/preview) | 28 | NOT_APPLICABLE |
+
+### Group A — Already Guarded (1 path)
+
+| File | Lifecycle Status | Callable | Guard Status |
+|------|------------------|----------|--------------|
+| `routers/instruments/guitar/smart_guitar_dxf_router.py` | COMPAT_ONLY | router_endpoint | GUARD_ADDED |
+
+### Group B — Next Safe Production Candidates (17 paths)
+
+Priority order per Phase 1E: router endpoints first, then runtime services.
+
+#### B1. Router Endpoints (6 paths)
+
+| File | Lifecycle Status | Callable | Risk | Guard Status |
+|------|------------------|----------|------|--------------|
+| `routers/neck/neck_profile_export.py` | COMPAT_ONLY | router_endpoint | LOW-MEDIUM | GUARD_CANDIDATE |
+| `routers/neck/headstock_transition_export.py` | COMPAT_ONLY | router_endpoint | LOW-MEDIUM | GUARD_CANDIDATE |
+| `routers/neck/export.py` | COMPAT_ONLY | router_endpoint | LOW-MEDIUM | GUARD_CANDIDATE |
+| `routers/headstock/dxf_export.py` | COMPAT_ONLY | router_endpoint | LOW-MEDIUM | GUARD_CANDIDATE |
+| `routers/export/curve_export_router.py` | COMPAT_ONLY | router_endpoint | LOW-MEDIUM | GUARD_CANDIDATE |
+| `routers/dxf_preflight_router.py` | COMPAT_ONLY | router_endpoint | LOW-MEDIUM | GUARD_CANDIDATE |
+
+#### B2. CAM Services (5 paths)
+
+| File | Lifecycle Status | Callable | Risk | Guard Status |
+|------|------------------|----------|------|--------------|
+| `cam/dxf_writer.py` | COMPAT_ONLY | runtime_service | LOW-MEDIUM | GUARD_CANDIDATE |
+| `cam/unified_dxf_cleaner.py` | COMPAT_ONLY | runtime_service | LOW-MEDIUM | GUARD_CANDIDATE |
+| `cam/layer_consolidator.py` | COMPAT_ONLY | runtime_service | LOW-MEDIUM | GUARD_CANDIDATE |
+| `cam/dxf_consolidator.py` | COMPAT_ONLY | runtime_service | LOW-MEDIUM | GUARD_CANDIDATE |
+| `cam/line_deduplicator.py` | DIRECT_SAVE_GAP | runtime_service | LOW-MEDIUM | GUARD_CANDIDATE |
+
+#### B3. CAM Archtop Generators (4 paths)
+
+| File | Lifecycle Status | Callable | Risk | Guard Status |
+|------|------------------|----------|------|--------------|
+| `cam/archtop_bridge_generator.py` | COMPAT_ONLY | runtime_service | LOW-MEDIUM | GUARD_CANDIDATE |
+| `cam/archtop_saddle_generator.py` | COMPAT_ONLY | runtime_service | LOW-MEDIUM | GUARD_CANDIDATE |
+| `cam/archtop/archtop_surface_tools.py` | COMPAT_ONLY | runtime_service | LOW-MEDIUM | GUARD_CANDIDATE |
+| `cam/archtop/archtop_contour_generator.py` | COMPAT_ONLY | runtime_service | LOW-MEDIUM | GUARD_CANDIDATE |
+
+#### B4. Other Services (2 paths)
+
+| File | Lifecycle Status | Callable | Risk | Guard Status |
+|------|------------------|----------|------|--------------|
+| `instrument_geometry/body/smart_guitar_dxf.py` | COMPAT_ONLY | runtime_service | LOW-MEDIUM | GUARD_CANDIDATE |
+| `instrument_geometry/soundhole/spiral_geometry.py` | COMPAT_ONLY | runtime_service | LOW-MEDIUM | GUARD_CANDIDATE |
+| `generators/bezier_body.py` | COMPAT_ONLY | runtime_service | LOW-MEDIUM | GUARD_CANDIDATE |
+| `services/layered_dxf_writer.py` | COMPAT_ONLY | runtime_service | LOW-MEDIUM | GUARD_CANDIDATE |
+| `services/text_reinsertion.py` | DIRECT_SAVE_GAP | runtime_service | LOW-MEDIUM | GUARD_CANDIDATE |
+
+### Group C — Later Orchestrator Candidates (3 paths)
+
+These paths are candidates for full `export_lifecycle_orchestrator` adoption in a future phase.
+
+| File | Lifecycle Status | Callable | Risk | Guard Status |
+|------|------------------|----------|------|--------------|
+| `routers/blueprint_cam/dxf_preprocessor.py` | COMPAT_ONLY | router_endpoint | LOW-MEDIUM | ORCHESTRATOR_CANDIDATE |
+| `routers/blueprint_cam/contour_reconstruction.py` | COMPAT_ONLY | router_endpoint | LOW-MEDIUM | ORCHESTRATOR_CANDIDATE |
+| `routers/blueprint_cam/dxf_geometry_correction.py` | DIRECT_SAVE_GAP | router_endpoint | LOW-MEDIUM | ORCHESTRATOR_CANDIDATE |
+
+### Group D — Blocked Provenance Candidates (5 paths)
+
+Blocked pending IBG provenance model ratification.
+
+| File | Lifecycle Status | Callable | Risk | Guard Status |
+|------|------------------|----------|------|--------------|
+| `instrument_geometry/body/ibg/body_contour_solver.py:777` | BLOCKED_PROVENANCE | runtime_service | BLOCKED | BLOCKED_PROVENANCE |
+| `instrument_geometry/body/ibg/body_contour_solver.py:808` | BLOCKED_PROVENANCE | runtime_service | BLOCKED | BLOCKED_PROVENANCE |
+| `instrument_geometry/body/ibg/arc_reconstructor.py:1116` | BLOCKED_PROVENANCE | runtime_service | BLOCKED | BLOCKED_PROVENANCE |
+| `instrument_geometry/body/ibg/arc_reconstructor.py:1279` | BLOCKED_PROVENANCE | runtime_service | BLOCKED | BLOCKED_PROVENANCE |
+| `instrument_geometry/body/ibg/arc_reconstructor.py:1303` | BLOCKED_PROVENANCE | runtime_service | BLOCKED | BLOCKED_PROVENANCE |
+
+### Group E — Excluded (28 paths)
+
+| Category | Count | Reason | Guard Status |
+|----------|-------|--------|--------------|
+| Test fixtures | 9 | Test-only | NOT_APPLICABLE |
+| Scripts | 1 | CLI utility | NOT_APPLICABLE |
+| Blueprint-import | 4 | Import surface | NOT_APPLICABLE |
+| Photo-vectorizer | 9 | R&D sandbox | NOT_APPLICABLE |
+| Preview-only | 3 | No save operation | NOT_APPLICABLE |
+| Create-only | 2 | Caller saves | NOT_APPLICABLE |
 
 ---
 
