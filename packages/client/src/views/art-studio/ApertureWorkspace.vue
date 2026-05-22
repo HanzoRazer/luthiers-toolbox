@@ -14,6 +14,7 @@
  * Dev Order 66: Add Topology Variants section for experimental configuration descriptors.
  * Dev Order 68: Add Experimental Correlations section for computed observational patterns.
  * Dev Order 70: Add Experimental Drift Timeline section for temporal drift observations.
+ * Dev Order 72: Add Experimental Drift Synthesis section for session-level synthesis.
  *
  * Tabs:
  *   - Spiral: logarithmic spiral soundhole design (mounted production tool)
@@ -35,6 +36,7 @@ import TopologyVariantCard from '@/components/shared/acoustics/TopologyVariantCa
 import TopologyVariantBuilder from '@/components/shared/acoustics/TopologyVariantBuilder.vue'
 import ExperimentalCorrelationPanel from '@/components/shared/acoustics/ExperimentalCorrelationPanel.vue'
 import ExperimentalDriftTimelinePanel from '@/components/shared/acoustics/ExperimentalDriftTimelinePanel.vue'
+import ExperimentalDriftSynthesisPanel from '@/components/shared/acoustics/ExperimentalDriftSynthesisPanel.vue'
 import type { WorkflowGateLevel } from '@/types/workflow'
 import type {
   MeasurementArchiveRecord,
@@ -331,6 +333,11 @@ function toggleVariantSection() {
 
           <!-- Dev Order 70: Experimental Drift Timeline -->
           <ExperimentalDriftTimelinePanel
+            :archives="evidenceArchives"
+          />
+
+          <!-- Dev Order 72: Experimental Drift Synthesis -->
+          <ExperimentalDriftSynthesisPanel
             :archives="evidenceArchives"
           />
 

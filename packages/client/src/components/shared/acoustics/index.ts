@@ -25,6 +25,7 @@
  * Dev Order 66: Added TopologyVariant* components for experimental topology variants.
  * Dev Order 68: Added ExperimentalCorrelationPanel for computed observational correlations.
  * Dev Order 70: Added ExperimentalDriftTimelinePanel for drift observation timelines.
+ * Dev Order 72: Added ExperimentalDriftSynthesisPanel for session-level drift synthesis.
  */
 
 export { default as AcousticStateCard } from './AcousticStateCard.vue'
@@ -63,3 +64,6 @@ export { default as ExperimentalCorrelationPanel } from './ExperimentalCorrelati
 
 // Experimental Drift Timeline components (Dev Order 70)
 export { default as ExperimentalDriftTimelinePanel } from './ExperimentalDriftTimelinePanel.vue'
+
+// Experimental Drift Synthesis components (Dev Order 72)
+export { default as ExperimentalDriftSynthesisPanel } from './ExperimentalDriftSynthesisPanel.vue'

@@ -18,6 +18,7 @@
  * Dev Order 39: Added diagnostic snapshot import validation.
  * Dev Order 68: Added experimental correlation analysis.
  * Dev Order 70: Added experimental drift timeline analysis.
+ * Dev Order 72: Added experimental drift synthesis utilities.
  */
 
 export * from './acousticState'
@@ -38,3 +39,4 @@ export * from './diagnosticSnapshotImport'
 export * from './topologyVariant'
 export * from './experimentalCorrelation'
 export * from './experimentalDrift'
+export * from './experimentalDriftSynthesis'
