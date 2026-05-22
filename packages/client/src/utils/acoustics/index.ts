@@ -16,6 +16,8 @@
  * Dev Order 36: Added diagnostic session snapshot.
  * Dev Order 38: Added diagnostic snapshot JSON export.
  * Dev Order 39: Added diagnostic snapshot import validation.
+ * Dev Order 68: Added experimental correlation analysis.
+ * Dev Order 70: Added experimental drift timeline analysis.
  */
 
 export * from './acousticState'
@@ -33,3 +35,6 @@ export * from './diagnosticNarrative'
 export * from './diagnosticSnapshot'
 export * from './diagnosticSnapshotExport'
 export * from './diagnosticSnapshotImport'
+export * from './topologyVariant'
+export * from './experimentalCorrelation'
+export * from './experimentalDrift'
