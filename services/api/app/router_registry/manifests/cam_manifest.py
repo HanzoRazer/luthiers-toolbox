@@ -391,4 +391,11 @@ CAM_ROUTERS: List[RouterSpec] = [
         tags=["CAM", "Federation", "Semantics"],
         category="cam",
     ),
+    # ── CAM 7Y: Federation CI Enforcement & Drift Baseline ──
+    RouterSpec(
+        module="app.routers.cam.federation_ci_router",
+        prefix="",
+        tags=["CAM", "Federation", "CI"],
+        category="cam",
+    ),
 ]
