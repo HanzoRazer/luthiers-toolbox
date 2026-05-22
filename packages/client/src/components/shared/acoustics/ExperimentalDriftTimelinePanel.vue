@@ -257,8 +257,7 @@ watch(selectedContextType, () => {
 
     <footer class="drift-footer">
       <p class="drift-disclaimer">
-        Drift observations describe temporal patterns only.
-        No causation, optimization, or design superiority is implied.
+        Drift observations describe measured changes across experimental sequences and do not imply causation, optimization, or design superiority.
       </p>
     </footer>
   </div>
