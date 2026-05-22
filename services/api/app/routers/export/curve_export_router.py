@@ -15,6 +15,10 @@ from ezdxf import units
 from fastapi import APIRouter, HTTPException
 
 from app.util.dxf_compat import create_document
+from app.util.dxf_lifecycle_guard import (
+    DxfLifecycleContext,
+    assert_dxf_lifecycle_context,
+)
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel, Field
 
@@ -81,6 +85,18 @@ def export_curve_dxf(req: CurveExportRequest) -> StreamingResponse:
         doc = build_curve_dxf(req)
     except Exception as e:  # audited: http-500 — ValueError,IOError
         raise HTTPException(status_code=422, detail=f"DXF build error: {e}") from e
+
+    assert_dxf_lifecycle_context(
+        DxfLifecycleContext(
+            source_module=__name__,
+            export_type="dxf-create-save",
+            dxf_version="R2010",
+            lifecycle_status="COMPAT_ONLY",
+            runtime_callable="router_endpoint",
+            authority_context="user_request",
+            provenance_status="NO",
+        )
+    )
 
     text_buf = io.StringIO()
     doc.write(text_buf)
