@@ -41,6 +41,10 @@ from ezdxf.enums import TextEntityAlignment
 from fastapi import APIRouter, HTTPException
 
 from app.util.dxf_compat import create_document
+from app.util.dxf_lifecycle_guard import (
+    DxfLifecycleContext,
+    assert_dxf_lifecycle_context,
+)
 from fastapi.responses import StreamingResponse, PlainTextResponse, JSONResponse
 from pydantic import BaseModel, Field
 
@@ -273,6 +277,19 @@ async def transition_dxf(r: TransitionRequest):
         doc = build_transition_dxf(r)
     except Exception as e:  # audited: http-500 — ValueError,IOError
         raise HTTPException(422, f"DXF error: {e}")
+
+    assert_dxf_lifecycle_context(
+        DxfLifecycleContext(
+            source_module=__name__,
+            export_type="dxf-create-save",
+            dxf_version="R2010",
+            lifecycle_status="COMPAT_ONLY",
+            runtime_callable="router_endpoint",
+            authority_context="user_request",
+            provenance_status="NO",
+        )
+    )
+
     buf = io.BytesIO(); doc.write(buf); buf.seek(0)
     fn = r.label.lower().replace(" ", "-") or "hs-transition"
     return StreamingResponse(buf, media_type="application/dxf",
