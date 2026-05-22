@@ -31,6 +31,10 @@ import os
 from pathlib import Path
 
 from app.util.dxf_compat import create_document
+from app.util.dxf_lifecycle_guard import (
+    DxfLifecycleContext,
+    assert_dxf_lifecycle_context,
+)
 
 router = APIRouter(
     prefix="/api/instruments/smart-guitar",
@@ -277,6 +281,19 @@ def generate_smart_guitar_dxf(
                 d.get("slot_height", 6.5),
                 d.get("slot_width", 12.0),
             )
+
+    # Validate lifecycle context before export (Runtime Boundary Phase 2A)
+    assert_dxf_lifecycle_context(
+        DxfLifecycleContext(
+            source_module=__name__,
+            export_type="dxf-create-save",
+            dxf_version="R2010",
+            lifecycle_status="COMPAT_ONLY",
+            runtime_callable="router_endpoint",
+            authority_context="user_request",
+            provenance_status="NO",
+        )
+    )
 
     # Serialize to bytes via tempfile (ezdxf requires file path)
     with tempfile.NamedTemporaryFile(mode="w", suffix=".dxf", delete=False) as f:

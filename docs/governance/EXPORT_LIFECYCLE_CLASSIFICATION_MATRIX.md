@@ -71,6 +71,14 @@ Machine-parseable via HTML markers; human-readable via section headings.
 | BLOCKED | Awaiting provenance model ratification |
 | N/A | Test/R&D/excluded |
 
+### Lifecycle Column Values
+
+| Code | Meaning |
+|------|---------|
+| `Y` | Uses export_lifecycle_orchestrator |
+| `N` | No lifecycle orchestration |
+| `GUARD` | Uses dxf_lifecycle_guard (Phase 2A+) |
+
 ### Disposition
 
 | Code | Meaning |
@@ -80,6 +88,7 @@ Machine-parseable via HTML markers; human-readable via section headings.
 | `blocked_provenance` | IBG, awaiting ratification |
 | `test_fixture` | Test-only, allowed |
 | `r_and_d_sandbox` | Excluded from enforcement |
+| `guarded_2a` | Lifecycle guard added in Phase 2A |
 
 ---
 
@@ -102,7 +111,7 @@ Machine-parseable via HTML markers; human-readable via section headings.
 | `routers/headstock/dxf_export.py` | dxf-create-save | create_document | Y | Y | N | NO | router_endpoint | LOW-MEDIUM | COMPAT_ONLY | no_action |
 | `routers/export/curve_export_router.py` | dxf-create-save | create_document | Y | Y | N | NO | router_endpoint | LOW-MEDIUM | COMPAT_ONLY | no_action |
 | `routers/dxf_preflight_router.py` | dxf-create-save | create_document | Y | Y | N | NO | router_endpoint | LOW-MEDIUM | COMPAT_ONLY | no_action |
-| `routers/instruments/guitar/smart_guitar_dxf_router.py` | dxf-create-save | create_document | Y | Y | N | NO | router_endpoint | LOW-MEDIUM | COMPAT_ONLY | no_action |
+| `routers/instruments/guitar/smart_guitar_dxf_router.py` | dxf-create-save | create_document | Y | Y | GUARD | NO | router_endpoint | LOW | COMPAT_ONLY | guarded_2a |
 
 ### 1C. Compat-Governed Blueprint/CAM Routers
 
