@@ -391,4 +391,25 @@ CAM_ROUTERS: List[RouterSpec] = [
         tags=["CAM", "Federation", "Semantics"],
         category="cam",
     ),
+    # ── CAM 7Y: Federation CI Enforcement & Drift Baseline ──
+    RouterSpec(
+        module="app.routers.cam.federation_ci_router",
+        prefix="",
+        tags=["CAM", "Federation", "CI"],
+        category="cam",
+    ),
+    # ── CAM 7Z: Governance Baseline Freeze & Release Readiness ──
+    RouterSpec(
+        module="app.routers.cam.governance_freeze_router",
+        prefix="",
+        tags=["CAM", "Governance", "Release"],
+        category="cam",
+    ),
+    # ── CAM 8A: Post-Freeze Expansion Gate ──
+    RouterSpec(
+        module="app.routers.cam.post_freeze_expansion_router",
+        prefix="",
+        tags=["CAM", "Post-Freeze", "Governance"],
+        category="cam",
+    ),
 ]

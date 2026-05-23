@@ -1,9 +1,9 @@
 # DXF Save/Write Lifecycle Guard Plan
 
 **Sprint**: Runtime Boundary Follow-Through  
-**Phase**: 1E → 2A → 2B → 2C → 2D  
-**Date**: 2026-05-21  
-**Status**: PHASE 2D COMPLETE — Router Guard Batch
+**Phase**: 1E → 2A → 2B → 2C → 2D → 2F  
+**Date**: 2026-05-22  
+**Status**: PHASE 2F COMPLETE — Runtime Service Guard Rollout
 
 **Cross-reference**: [EXPORT_LIFECYCLE_CLASSIFICATION_MATRIX.md](./EXPORT_LIFECYCLE_CLASSIFICATION_MATRIX.md)
 
@@ -75,6 +75,26 @@ Added lifecycle guards to remaining router endpoint candidates:
 
 ---
 
+## Phase 2F Runtime Service Guard Rollout
+
+**Completed**: 2026-05-22
+
+Added lifecycle guards to 3 runtime service DXF exports:
+
+| File | DXF Version | Callable | Guard Status |
+|------|-------------|----------|--------------|
+| `cam/unified_dxf_cleaner.py` | R12 | runtime_service | GUARD_ADDED |
+| `cam/layer_consolidator.py` | R2000 | runtime_service | GUARD_ADDED |
+| `cam/dxf_consolidator.py` | R2000 | runtime_service | GUARD_ADDED |
+
+**Pattern**: Same as Phase 2A — `assert_dxf_lifecycle_context()` called immediately before `doc.saveas()`.
+
+**No behavior changes**: Guards remain validation-only. No mutation, no logging, no side effects.
+
+**Deferred**: `cam/dxf_writer.py` (central point, affects 12+ paths) deferred to separate phase after isolated services prove clean.
+
+---
+
 ## Phase 2B Rollout Readiness
 
 **Completed**: 2026-05-21
@@ -83,13 +103,13 @@ Added lifecycle guards to remaining router endpoint candidates:
 
 | Group | Description | Count | Guard Status |
 |-------|-------------|-------|--------------|
-| **A** | Already guarded | 7 | GUARD_ADDED |
-| **B** | Next safe production candidates | 11 | GUARD_CANDIDATE |
+| **A** | Already guarded | 10 | GUARD_ADDED |
+| **B** | Next safe production candidates | 8 | GUARD_CANDIDATE |
 | **C** | Later orchestrator candidates | 3 | ORCHESTRATOR_CANDIDATE |
 | **D** | Blocked provenance candidates | 5 | BLOCKED_PROVENANCE |
 | **E** | Excluded (test/R&D/preview) | 28 | NOT_APPLICABLE |
 
-### Group A — Already Guarded (7 paths)
+### Group A — Already Guarded (10 paths)
 
 | File | Lifecycle Status | Callable | Phase | Guard Status |
 |------|------------------|----------|-------|--------------|
@@ -100,19 +120,19 @@ Added lifecycle guards to remaining router endpoint candidates:
 | `routers/headstock/dxf_export.py` | COMPAT_ONLY | router_endpoint | 2D | GUARD_ADDED |
 | `routers/export/curve_export_router.py` | COMPAT_ONLY | router_endpoint | 2D | GUARD_ADDED |
 | `routers/dxf_preflight_router.py` | COMPAT_ONLY | router_endpoint | 2D | GUARD_ADDED |
+| `cam/unified_dxf_cleaner.py` | COMPAT_ONLY | runtime_service | 2F | GUARD_ADDED |
+| `cam/layer_consolidator.py` | COMPAT_ONLY | runtime_service | 2F | GUARD_ADDED |
+| `cam/dxf_consolidator.py` | COMPAT_ONLY | runtime_service | 2F | GUARD_ADDED |
 
-### Group B — Next Safe Production Candidates (11 paths)
+### Group B — Next Safe Production Candidates (8 paths)
 
 Priority order per Phase 1E: router endpoints first (all done in 2C/2D), then runtime services.
 
-#### B1. CAM Services (5 paths)
+#### B1. CAM Services (2 paths)
 
 | File | Lifecycle Status | Callable | Risk | Guard Status |
 |------|------------------|----------|------|--------------|
 | `cam/dxf_writer.py` | COMPAT_ONLY | runtime_service | LOW-MEDIUM | GUARD_CANDIDATE |
-| `cam/unified_dxf_cleaner.py` | COMPAT_ONLY | runtime_service | LOW-MEDIUM | GUARD_CANDIDATE |
-| `cam/layer_consolidator.py` | COMPAT_ONLY | runtime_service | LOW-MEDIUM | GUARD_CANDIDATE |
-| `cam/dxf_consolidator.py` | COMPAT_ONLY | runtime_service | LOW-MEDIUM | GUARD_CANDIDATE |
 | `cam/line_deduplicator.py` | DIRECT_SAVE_GAP | runtime_service | LOW-MEDIUM | GUARD_CANDIDATE |
 
 #### B2. CAM Archtop Generators (4 paths)

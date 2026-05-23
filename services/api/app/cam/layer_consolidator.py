@@ -22,6 +22,10 @@ from typing import Dict, List, Optional, Tuple
 import ezdxf
 
 from app.util.dxf_compat import create_document
+from app.util.dxf_lifecycle_guard import (
+    DxfLifecycleContext,
+    assert_dxf_lifecycle_context,
+)
 
 
 @dataclass
@@ -236,6 +240,17 @@ class LayerConsolidator:
 
             layer_stats[layer_name] = (len(segments), len(chains))
 
+        assert_dxf_lifecycle_context(
+            DxfLifecycleContext(
+                source_module=__name__,
+                export_type="dxf-create-save",
+                dxf_version="R2000",
+                lifecycle_status="COMPAT_ONLY",
+                runtime_callable="runtime_service",
+                authority_context="pipeline_stage",
+                provenance_status="NO",
+            )
+        )
         out_doc.saveas(output_path)
 
         return LayerConsolidationResult(
