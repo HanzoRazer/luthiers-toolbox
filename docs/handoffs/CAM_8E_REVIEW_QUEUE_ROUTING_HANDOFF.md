@@ -299,10 +299,41 @@ Does NOT deep-query provenance, replay, federation, or topology registries.
 
 ---
 
+## Operational Constraints (8E Scope Boundaries)
+
+### Storage is Ephemeral
+
+- Queue state is **in-memory only**
+- API restart loses all queue items and decision records
+- This is intentional: 8E is a governed review-routing contract layer, not an operational production queue
+- **Persistence deferred** to a later operationalization order
+
+### No Auth/User Integration
+
+- `assigned_role` is a plain string, not linked to user accounts
+- Review routing semantics must stabilize before binding to identity/auth
+- User integration deferred to future order
+
+### Stale Detection is Future-Ready
+
+- `detect_stale_review_items(max_age_days=7)` exists in registry
+- Timestamp-backed stale detection deferred until standard timestamp pattern established
+- Function signature is stable for future implementation
+
+### No Notifications
+
+- Queue changes do not trigger webhooks or events
+- Notifications belong to a later operational workflow order
+- Queue semantics and persistence must settle first
+
+---
+
 ## Future Work
 
 - **8F**: Frontend review dashboard integration
+- Database persistence for queue state
 - User account/role integration for `assigned_role`
+- Timestamp tracking for stale detection
 - Notification system for queue updates
 - Escalation workflows (via explicit future governance order)
 - Direct reassignment endpoint
