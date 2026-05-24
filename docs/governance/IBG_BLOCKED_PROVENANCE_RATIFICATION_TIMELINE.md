@@ -47,21 +47,29 @@ PREDICTED / HEURISTIC — not OBSERVED/DERIVED production authority
 
 ## Ratification phases (proposed)
 
-### Phase R0 — Documentation convergence (complete / in progress)
+### Phase R0 — Documentation convergence (COMPLETE — MRP-6C)
 
 - [x] Lifecycle matrix marks 5 calls `BLOCKED_PROVENANCE`
 - [x] DXF guard plan documents disposition `blocked_provenance`
 - [x] Cross-repo authority crosswalk maps epistemic posture
-- [ ] Governance inventory entry for IBG provenance block (**P1**)
+- [x] Governance inventory entry: [`IBG_PROVENANCE_GOVERNANCE_ENTRY.md`](IBG_PROVENANCE_GOVERNANCE_ENTRY.md)
+- [x] Ratification packet: [`IBG_PROVENANCE_RATIFICATION_PACKET.md`](IBG_PROVENANCE_RATIFICATION_PACKET.md)
+- [x] Field matrix: [`IBG_PROVENANCE_ATTACHMENT_FIELD_MATRIX.md`](IBG_PROVENANCE_ATTACHMENT_FIELD_MATRIX.md)
+- [x] Lifecycle addendum: [`IBG_DXF_LIFECYCLE_MAPPING_ADDENDUM.md`](IBG_DXF_LIFECYCLE_MAPPING_ADDENDUM.md)
 
 ### Phase R1 — Governance ratification (target: next governance sprint)
 
+**Prep materials (MRP-6C):**
+- Ratification packet defines required fields and mapping
+- Field matrix specifies exact save-boundary requirements
+- Lifecycle addendum defines transition rules
+
+**R1 session agenda:**
 1. Ratify `CANONICAL_PROVENANCE_MODEL.md` (or superseding Dev Order)
 2. Ratify `IBG_CONSTITUTIONAL_RUNTIME_FOUNDATION.md` authority tier
-3. Publish IBG-specific provenance attachment spec:
-   - Required fields at DXF save boundary
-   - Mapping: `ProvenanceRecord` → `DxfLifecycleContext`
-   - Epistemic status field (optional, aligned to ADR-0012)
+3. Approve `IBGProvenanceAttachment` schema from ratification packet
+4. Finalize required fields from field matrix
+5. Sign transition rules from lifecycle addendum
 
 **Exit criteria:** Signed governance record; matrix blocking condition updated from "awaiting ratification" to "implementation approved".
 
@@ -137,5 +145,5 @@ See: `docs/schemas/EPISTEMIC_STATUS_SCHEMA_SPEC.md`
 
 ---
 
-*Timeline version: 2026-05-24 (updated)*  
-*Next update: R1 ratification session or governance sprint planning*
+*Timeline version: 2026-05-24 (MRP-6C)*  
+*R0 complete. Next update: R1 ratification session.*
