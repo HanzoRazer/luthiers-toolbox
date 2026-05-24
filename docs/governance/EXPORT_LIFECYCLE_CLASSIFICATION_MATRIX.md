@@ -79,7 +79,7 @@ Machine-parseable via HTML markers; human-readable via section headings.
 | `N` | No lifecycle orchestration |
 | `GUARD` | Uses dxf_lifecycle_guard (Phase 2A+) |
 
-### Guard Status (Phase 2B)
+### Guard Status (Phase 2B+)
 
 | Code | Meaning |
 |------|---------|
@@ -88,6 +88,7 @@ Machine-parseable via HTML markers; human-readable via section headings.
 | `ORCHESTRATOR_CANDIDATE` | Candidate for full orchestrator adoption |
 | `BLOCKED_PROVENANCE` | IBG, awaiting provenance ratification |
 | `NOT_APPLICABLE` | Test/R&D/excluded, no guard needed |
+| `REQUIRES_CALLER_CONTEXT` | Cannot guard internally; callers must supply lifecycle context |
 
 ### Disposition
 
@@ -140,7 +141,7 @@ Machine-parseable via HTML markers; human-readable via section headings.
 
 | File | Export Type | Creation | Save | Compat | Lifecycle | Provenance | Callable | Risk | Lifecycle Status | Disposition | Guard Status |
 |------|-------------|----------|------|--------|-----------|------------|----------|------|------------------|-------------|--------------|
-| `cam/dxf_writer.py` | dxf-create-save | create_document | Y | Y | N | NO | runtime_service | LOW-MEDIUM | COMPAT_ONLY | no_action | GUARD_CANDIDATE |
+| `cam/dxf_writer.py` | dxf-create-save | create_document | Y | Y | N | NO | runtime_service | LOW-MEDIUM | COMPAT_ONLY | requires_caller_context_2g | REQUIRES_CALLER_CONTEXT |
 | `cam/unified_dxf_cleaner.py` | dxf-create-save | create_document | Y | Y | GUARD | NO | runtime_service | LOW-MEDIUM | COMPAT_ONLY | guarded_2f | GUARD_ADDED |
 | `cam/layer_consolidator.py` | dxf-create-save | create_document | Y | Y | GUARD | NO | runtime_service | LOW-MEDIUM | COMPAT_ONLY | guarded_2f | GUARD_ADDED |
 | `cam/dxf_consolidator.py` | dxf-create-save | create_document | Y | Y | GUARD | NO | runtime_service | LOW-MEDIUM | COMPAT_ONLY | guarded_2f | GUARD_ADDED |
