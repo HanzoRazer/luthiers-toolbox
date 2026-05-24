@@ -15,6 +15,8 @@
  * Dev Order 68: Add Experimental Correlations section for computed observational patterns.
  * Dev Order 70: Add Experimental Drift Timeline section for temporal drift observations.
  * Dev Order 72: Add Experimental Drift Synthesis section for session-level synthesis.
+ * Dev Order 74: Add Experiment Notes section for observational annotations.
+ * Dev Order 76: Add Evidence Review Workspace for observational review continuity.
  *
  * Tabs:
  *   - Spiral: logarithmic spiral soundhole design (mounted production tool)
@@ -37,6 +39,8 @@ import TopologyVariantBuilder from '@/components/shared/acoustics/TopologyVarian
 import ExperimentalCorrelationPanel from '@/components/shared/acoustics/ExperimentalCorrelationPanel.vue'
 import ExperimentalDriftTimelinePanel from '@/components/shared/acoustics/ExperimentalDriftTimelinePanel.vue'
 import ExperimentalDriftSynthesisPanel from '@/components/shared/acoustics/ExperimentalDriftSynthesisPanel.vue'
+import ExperimentNotesPanel from '@/components/shared/acoustics/ExperimentNotesPanel.vue'
+import EvidenceReviewPanel from '@/components/shared/acoustics/EvidenceReviewPanel.vue'
 import type { WorkflowGateLevel } from '@/types/workflow'
 import type {
   MeasurementArchiveRecord,
@@ -340,6 +344,12 @@ function toggleVariantSection() {
           <ExperimentalDriftSynthesisPanel
             :archives="evidenceArchives"
           />
+
+          <!-- Dev Order 74: Experiment Notes -->
+          <ExperimentNotesPanel />
+
+          <!-- Dev Order 76: Evidence Review Workspace -->
+          <EvidenceReviewPanel />
 
           <PrerequisiteNotice message="Measurement Lab is observational only. Archives are local — no persistence, calibration, or prediction authority." />
         </div>

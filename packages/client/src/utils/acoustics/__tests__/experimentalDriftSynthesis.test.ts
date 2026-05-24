@@ -418,6 +418,48 @@ describe('experimentalDriftSynthesis', () => {
       expect(result.summary.insufficientSessions).toContain('session-small')
     })
 
+    it('should track insufficient variants requiring 3 records per variant', () => {
+      const records = [
+        createMockDriftRecord('d1', { variantId: 'variant-small' }),
+        createMockDriftRecord('d2', { variantId: 'variant-small' }),
+        createMockDriftRecord('d3', { variantId: 'variant-large' }),
+        createMockDriftRecord('d4', { variantId: 'variant-large' }),
+        createMockDriftRecord('d5', { variantId: 'variant-large' }),
+      ]
+
+      const result = computeExperimentalDriftSynthesis(records)
+
+      expect(result.summary.insufficientVariants).toContain('variant-small')
+      expect(result.summary.insufficientVariants).not.toContain('variant-large')
+      expect(result.summary.variantObservations.length).toBe(1)
+      expect(result.summary.variantObservations[0].variantId).toBe('variant-large')
+    })
+
+    it('should generate synthesis ID with drift-synthesis- prefix', () => {
+      const records = [
+        createMockDriftRecord('d1'),
+        createMockDriftRecord('d2'),
+        createMockDriftRecord('d3'),
+      ]
+
+      const result = computeExperimentalDriftSynthesis(records)
+
+      expect(result.summary.overallSynthesis?.synthesisId).toMatch(/^drift-synthesis-\d{14}$/)
+    })
+
+    it('should deduplicate archive IDs when counting archives', () => {
+      const records = [
+        createMockDriftRecord('d1', { archiveIds: ['a1', 'a2', 'a3'] }),
+        createMockDriftRecord('d2', { archiveIds: ['a2', 'a3', 'a4'] }),
+        createMockDriftRecord('d3', { archiveIds: ['a1', 'a4', 'a5'] }),
+      ]
+
+      const result = computeExperimentalDriftSynthesis(records)
+
+      // Unique archives: a1, a2, a3, a4, a5 = 5
+      expect(result.summary.overallSynthesis?.archiveCount).toBe(5)
+    })
+
     it('should ignore duplicate drift records', () => {
       const records = [
         createMockDriftRecord('d1'),
@@ -530,6 +572,13 @@ describe('experimentalDriftSynthesis', () => {
       'correct',
       'corrected',
       'corrects',
+      'cause',
+      'causes',
+      'caused',
+      'prove',
+      'proves',
+      'proven',
+      'proved',
     ]
 
     it('should not use forbidden language in upward synthesis narrative', () => {

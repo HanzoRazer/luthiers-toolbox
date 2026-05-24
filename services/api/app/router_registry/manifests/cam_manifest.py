@@ -412,4 +412,18 @@ CAM_ROUTERS: List[RouterSpec] = [
         tags=["CAM", "Post-Freeze", "Governance"],
         category="cam",
     ),
+    # ── CAM 8C: Provenance-Aware Review UX ──
+    RouterSpec(
+        module="app.routers.cam.review_ux_router",
+        prefix="",
+        tags=["CAM", "Review", "Provenance"],
+        category="cam",
+    ),
+    # ── CAM 8D: Review UX CI Enforcement ──
+    RouterSpec(
+        module="app.routers.cam.review_ux_ci_router",
+        prefix="",
+        tags=["CAM", "Review", "CI"],
+        category="cam",
+    ),
 ]
