@@ -27,92 +27,23 @@ import pytest
 from typing import List, Optional
 from unittest.mock import MagicMock, patch
 
-# Guard: skip all tests if runtime_capabilities not yet implemented
-pytest_plugins = []
-try:
-    from app.cam.runtime_capabilities import (
-        CapabilityRegistry,
-        CapabilityResolver,
-        CapabilitySource,
-        FederatedCapability,
-        CapabilityNamespace,
-        GovernanceClassification,
-        ResolutionContext,
-        ResolutionStatus,
-        PolicyDecision,
-        make_capability_id,
-        build_capability_manifest,
-        reset_capability_registry,
-        reset_capability_resolver,
-        reset_policy_federation,
-        DuplicateCapabilityError,
-        CapabilityNotFoundError,
-    )
-    RUNTIME_CAPABILITIES_AVAILABLE = True
-except ImportError:
-    RUNTIME_CAPABILITIES_AVAILABLE = False
-    # Provide stubs so module can be parsed when implementation unavailable
-    from enum import Enum, auto
-
-    class CapabilityNamespace(Enum):
-        OPERATION = auto()
-
-    class GovernanceClassification(Enum):
-        PUBLIC_GOVERNED = auto()
-
-    class ResolutionStatus(Enum):
-        NOT_FOUND = auto()
-        DISABLED = auto()
-        REPLAY_UNSAFE = auto()
-        ALLOWED = auto()
-
-    class PolicyDecision(Enum):
-        REJECTED = auto()
-        ALLOWED = auto()
-
-    class CapabilitySource:
-        pass
-
-    class FederatedCapability:
-        def __init__(self, **kwargs):
-            for k, v in kwargs.items():
-                setattr(self, k, v)
-
-    class CapabilityRegistry:
-        pass
-
-    class CapabilityResolver:
-        pass
-
-    class ResolutionContext:
-        def __init__(self, **kwargs):
-            for k, v in kwargs.items():
-                setattr(self, k, v)
-
-    def make_capability_id(ns, local_id):
-        return f"{ns.name.lower()}:{local_id}"
-
-    def build_capability_manifest(registry):
-        return None
-
-    def reset_capability_registry():
-        pass
-
-    def reset_capability_resolver():
-        pass
-
-    def reset_policy_federation():
-        pass
-
-    class DuplicateCapabilityError(Exception):
-        pass
-
-    class CapabilityNotFoundError(Exception):
-        pass
-
-pytestmark = pytest.mark.skipif(
-    not RUNTIME_CAPABILITIES_AVAILABLE,
-    reason="runtime_capabilities module not yet implemented",
+from app.cam.runtime_capabilities import (
+    CapabilityRegistry,
+    CapabilityResolver,
+    CapabilitySource,
+    FederatedCapability,
+    CapabilityNamespace,
+    GovernanceClassification,
+    ResolutionContext,
+    ResolutionStatus,
+    PolicyDecision,
+    make_capability_id,
+    build_capability_manifest,
+    reset_capability_registry,
+    reset_capability_resolver,
+    reset_policy_federation,
+    DuplicateCapabilityError,
+    CapabilityNotFoundError,
 )
 
 
@@ -152,6 +83,8 @@ def _make_capability(
         deterministic=deterministic,
         version="1.0.0",
         source_name="test_source",
+        compatibility_tags=set(),
+        domain_metadata={},
     )
 
 
@@ -321,11 +254,9 @@ class TestManifestStable:
 
         assert manifest1.schema_version == manifest2.schema_version
         assert manifest1.content_hash == manifest2.content_hash
+        # Entries are deterministic (content_hash comparison covers this)
         assert manifest1.total_count == manifest2.total_count
-        # Note: generated_at will differ, so compare entries not full JSON
-        assert len(manifest1.entries) == len(manifest2.entries)
-        for e1, e2 in zip(manifest1.entries, manifest2.entries):
-            assert e1.capability_id == e2.capability_id
+        assert manifest1.enabled_count == manifest2.enabled_count
 
 
 # -----------------------------------------------------------------------------

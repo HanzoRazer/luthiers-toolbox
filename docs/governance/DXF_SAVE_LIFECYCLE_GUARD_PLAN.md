@@ -1,9 +1,9 @@
 # DXF Save/Write Lifecycle Guard Plan
 
 **Sprint**: Runtime Boundary Follow-Through  
-**Phase**: 1E → 2A → 2B → 2C → 2D → 2F  
+**Phase**: 1E → 2A → 2B → 2C → 2D → 2F → 2G  
 **Date**: 2026-05-22  
-**Status**: PHASE 2F COMPLETE — Runtime Service Guard Rollout
+**Status**: PHASE 2G COMPLETE — Central DXF Writer Assessment
 
 **Cross-reference**: [EXPORT_LIFECYCLE_CLASSIFICATION_MATRIX.md](./EXPORT_LIFECYCLE_CLASSIFICATION_MATRIX.md)
 
@@ -95,6 +95,46 @@ Added lifecycle guards to 3 runtime service DXF exports:
 
 ---
 
+## Phase 2G Central DXF Writer Assessment
+
+**Completed**: 2026-05-22
+
+**Decision**: DxfWriter is not internally guard-safe.
+
+**Assessment of save/write paths:**
+
+| Method | DXF Version | Classification |
+|--------|-------------|----------------|
+| `saveas(path)` | `self._version` (R12 default) | REQUIRES_CALLER_CONTEXT |
+| `to_bytes()` | `self._version` (R12 default) | REQUIRES_CALLER_CONTEXT |
+
+**Problem**: DxfWriter does not know:
+- `source_module` — callers include routers, runtime services, IBG paths
+- `runtime_callable` — could be router_endpoint, runtime_service, or blocked IBG
+- `authority_context` — could be user_request or pipeline_stage
+
+**Conclusion**: A guard with unknown/synthetic context values is worse than no guard, because it makes the central writer appear governed when the actual authority boundary is still upstream.
+
+**Resolution**:
+- Lifecycle guard must be supplied by callers or introduced through a future explicit caller contract
+- No fallback context should be synthesized
+- Matrix updated: `cam/dxf_writer.py` → `REQUIRES_CALLER_CONTEXT`
+
+**Callers using DxfWriter (10 files)**:
+- `spiral_geometry.py` — runtime_service
+- `body_contour_solver.py` — IBG (BLOCKED_PROVENANCE)
+- `body_outline_translator.py` — CAM translator
+- `text_reinsertion.py` — runtime_service
+- `archtop_router.py` — router_endpoint
+- `fretboard_ecosphere.py` — runtime_service
+- `archtop_floating_bridge.py` — runtime_service
+- `arc_reconstructor.py` — IBG (BLOCKED_PROVENANCE)
+- `bezier_body.py` — runtime_service
+
+**No code changes in this phase.**
+
+---
+
 ## Phase 2B Rollout Readiness
 
 **Completed**: 2026-05-21
@@ -104,10 +144,11 @@ Added lifecycle guards to 3 runtime service DXF exports:
 | Group | Description | Count | Guard Status |
 |-------|-------------|-------|--------------|
 | **A** | Already guarded | 10 | GUARD_ADDED |
-| **B** | Next safe production candidates | 8 | GUARD_CANDIDATE |
+| **B** | Next safe production candidates | 7 | GUARD_CANDIDATE |
 | **C** | Later orchestrator candidates | 3 | ORCHESTRATOR_CANDIDATE |
 | **D** | Blocked provenance candidates | 5 | BLOCKED_PROVENANCE |
 | **E** | Excluded (test/R&D/preview) | 28 | NOT_APPLICABLE |
+| **F** | Requires caller context | 1 | REQUIRES_CALLER_CONTEXT |
 
 ### Group A — Already Guarded (10 paths)
 
@@ -124,15 +165,14 @@ Added lifecycle guards to 3 runtime service DXF exports:
 | `cam/layer_consolidator.py` | COMPAT_ONLY | runtime_service | 2F | GUARD_ADDED |
 | `cam/dxf_consolidator.py` | COMPAT_ONLY | runtime_service | 2F | GUARD_ADDED |
 
-### Group B — Next Safe Production Candidates (8 paths)
+### Group B — Next Safe Production Candidates (7 paths)
 
 Priority order per Phase 1E: router endpoints first (all done in 2C/2D), then runtime services.
 
-#### B1. CAM Services (2 paths)
+#### B1. CAM Services (1 path)
 
 | File | Lifecycle Status | Callable | Risk | Guard Status |
 |------|------------------|----------|------|--------------|
-| `cam/dxf_writer.py` | COMPAT_ONLY | runtime_service | LOW-MEDIUM | GUARD_CANDIDATE |
 | `cam/line_deduplicator.py` | DIRECT_SAVE_GAP | runtime_service | LOW-MEDIUM | GUARD_CANDIDATE |
 
 #### B2. CAM Archtop Generators (4 paths)
@@ -186,6 +226,16 @@ Blocked pending IBG provenance model ratification.
 | Photo-vectorizer | 9 | R&D sandbox | NOT_APPLICABLE |
 | Preview-only | 3 | No save operation | NOT_APPLICABLE |
 | Create-only | 2 | Caller saves | NOT_APPLICABLE |
+
+### Group F — Requires Caller Context (1 path)
+
+Central modules that cannot be guarded internally because they lack knowledge of caller identity.
+
+| File | Lifecycle Status | Callable | Risk | Guard Status | Phase |
+|------|------------------|----------|------|--------------|-------|
+| `cam/dxf_writer.py` | COMPAT_ONLY | runtime_service | LOW-MEDIUM | REQUIRES_CALLER_CONTEXT | 2G |
+
+**Resolution**: Callers of DxfWriter must supply lifecycle context at their own save boundaries, or a future explicit caller contract must be introduced.
 
 ---
 
