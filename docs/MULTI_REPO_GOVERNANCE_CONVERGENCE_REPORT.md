@@ -207,7 +207,7 @@ Three repositories are evolving as a **distributed manufacturing-intelligence pl
 | tap_tone_pi | ADR series + matrix | Doc tests |
 | CAM-Assist-Blueprint | docs/strategy_packages/* | INDEX.md generators |
 
-**Duplication:** Three documentation constitutions; research layer (`docs/research/`) is **non-authoritative** but essential for vectorizer/IBG—must stay linked from governance inventory.
+**Duplication:** Three documentation constitutions; research layer (`docs/research/`) is **non-authoritative** but essential for vectorizer/IBG—linked via [`RESEARCH_LAYER_GOVERNANCE_ENTRY.md`](governance/RESEARCH_LAYER_GOVERNANCE_ENTRY.md).
 
 ## 4.4 Testing governance
 
@@ -454,7 +454,7 @@ Three repositories are evolving as a **distributed manufacturing-intelligence pl
 | **P1** | Enable tap_tone language guard `--strict` after 13-fix cleanup | tap_tone_pi | Guidance authority |
 | **P2** | CI manifest drift detection | luthiers-toolbox | Capability federation drift |
 | **P2** | Document CAM→luthiers integration as **TBD** with explicit non-goals | all | False integration assumptions |
-| **P2** | Add governance inventory entry for research layer | luthiers-toolbox | Fragmentation |
+| **P2** | ~~Add governance inventory entry for research layer~~ **Done** (2026-05-24) | luthiers-toolbox | Fragmentation |
 
 ---
 
@@ -518,6 +518,8 @@ Three repositories are evolving as a **distributed manufacturing-intelligence pl
 | Junction: CAM-Assist-Blueprint | `docs/audit-sources/CAM-Assist-Blueprint/` |
 | Junction: vectorizer-sandbox | `docs/audit-sources/vectorizer-sandbox/` |
 | Authority crosswalk | `docs/governance/CROSS_REPO_AUTHORITY_CROSSWALK.md` |
+| Research layer governance entry | `docs/governance/RESEARCH_LAYER_GOVERNANCE_ENTRY.md` |
+| Research wave index | `docs/research/RESEARCH_WAVE_INDEX.md` |
 
 ---
 

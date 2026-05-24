@@ -3,7 +3,8 @@
 **Date:** 2026-05-24  
 **Status:** Draft — documentation authority (non-runtime)  
 **Scope:** `luthiers-toolbox`, `tap_tone_pi`, `CAM-Assist-Blueprint`, `vectorizer-sandbox` (reference only)  
-**Companion:** [`MULTI_REPO_GOVERNANCE_CONVERGENCE_REPORT.md`](../MULTI_REPO_GOVERNANCE_CONVERGENCE_REPORT.md), [`MANIFEST.md`](../handoffs/imports/MANIFEST.md)
+**Companion:** [`MULTI_REPO_GOVERNANCE_CONVERGENCE_REPORT.md`](../MULTI_REPO_GOVERNANCE_CONVERGENCE_REPORT.md), [`MANIFEST.md`](../handoffs/imports/MANIFEST.md)  
+**Research context:** [`docs/research/RESEARCH_WAVE_INDEX.md`](../research/RESEARCH_WAVE_INDEX.md) (non-authoritative institutional memory)
 
 **Constitutional source (verbatim):** [`docs/handoffs/imports/constitutional_stabilization_do_77_82/`](../handoffs/imports/constitutional_stabilization_do_77_82/)
 

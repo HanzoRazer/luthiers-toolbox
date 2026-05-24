@@ -3,7 +3,8 @@
 **Date:** 2026-05-24  
 **Status:** **BLOCKED** — export saves intentionally gated pending governance ratification  
 **Authority:** Operational guidance (non-CI-blocking until ratified)  
-**Cross-reference:** [`EXPORT_LIFECYCLE_CLASSIFICATION_MATRIX.md`](EXPORT_LIFECYCLE_CLASSIFICATION_MATRIX.md), [`CANONICAL_PROVENANCE_MODEL.md`](CANONICAL_PROVENANCE_MODEL.md), [`IBG_CONSTITUTIONAL_RUNTIME_FOUNDATION.md`](IBG_CONSTITUTIONAL_RUNTIME_FOUNDATION.md), [`CROSS_REPO_AUTHORITY_CROSSWALK.md`](CROSS_REPO_AUTHORITY_CROSSWALK.md)
+**Cross-reference:** [`EXPORT_LIFECYCLE_CLASSIFICATION_MATRIX.md`](EXPORT_LIFECYCLE_CLASSIFICATION_MATRIX.md), [`CANONICAL_PROVENANCE_MODEL.md`](CANONICAL_PROVENANCE_MODEL.md), [`IBG_CONSTITUTIONAL_RUNTIME_FOUNDATION.md`](IBG_CONSTITUTIONAL_RUNTIME_FOUNDATION.md), [`CROSS_REPO_AUTHORITY_CROSSWALK.md`](CROSS_REPO_AUTHORITY_CROSSWALK.md)  
+**Research lineage:** [`docs/research/IBG_LINEAGE_MAP.md`](../research/IBG_LINEAGE_MAP.md), [`docs/research/RESEARCH_WAVE_INDEX.md`](../research/RESEARCH_WAVE_INDEX.md) (Waves A/D/E)
 
 ---
 
@@ -103,13 +104,38 @@ Re-open constitutional review if:
 
 ## Owner & next action
 
-| Item | Recommendation |
-|------|----------------|
-| **Owner** | luthiers-toolbox platform / governance (unassigned) |
-| **Immediate** | Schedule R1 ratification session for provenance model + IBG foundation |
+| Item | Decision |
+|------|----------|
+| **Owner** | luthiers-toolbox platform / governance owner |
+| **Session format** | Synchronous governance session, NOT async-only PR |
+| **Target** | Next sprint after cleanup (post 2026-05-24) |
+| **Rationale** | R1 decides authority semantics, not just code shape |
 | **Track** | Update `MULTI_REPO_GOVERNANCE_CONVERGENCE_REPORT.md` when R1 completes |
+
+### Downstream consumer policy
+
+No downstream consumer may depend on IBG BLOCKED_PROVENANCE exports until R1 completes. This applies to:
+
+- CAM export paths that would consume IBG body geometry
+- Cross-repo data flows to tap_tone_pi or other systems
+- Production workflows that assume IBG outputs are authoritative
+
+**Enforcement:** IBGIntakeGate rejects all candidates without human review + provenance ratification.
 
 ---
 
-*Timeline version: 2026-05-24*  
-*Next update: R1 ratification or first IBG export wrapper PR*
+## Confidence vocabulary migration (2026-05-24)
+
+As part of cleanup before R1:
+
+- `confidence_value` parameter deprecated in `create_candidate_from_evidence`
+- `candidate_rank` parameter added as replacement
+- `epistemic_status` field added to IBG candidate serialization
+- Documentation updated: rank is sorting relevance only, not approval/correctness
+
+See: `docs/schemas/EPISTEMIC_STATUS_SCHEMA_SPEC.md`
+
+---
+
+*Timeline version: 2026-05-24 (updated)*  
+*Next update: R1 ratification session or governance sprint planning*
