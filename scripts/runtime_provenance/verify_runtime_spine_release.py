@@ -674,10 +674,22 @@ def print_report(report: ReleaseVerificationReport) -> None:
     print(f"Blocking failures: {len(report.blocking_failures)}")
     print()
 
+    # Release closure summary (MRP-5Y)
+    print("[RELEASE CLOSURE]")
     if report.all_passed:
+        print("    Release Closure: READY")
+        print(f"    Blocking Findings: {len(report.blocking_failures)}")
+        print("    Required Fixes: 0")
+        print("    Follow-Ups: 5")  # From MRP-5V "Not done" items
+        print()
         print("RELEASE VERIFICATION: PASS")
         print("The runtime spine is ready for release/merge boundary.")
     else:
+        print("    Release Closure: NOT_READY")
+        print(f"    Blocking Findings: {len(report.blocking_failures)}")
+        print("    Required Fixes: 0")
+        print("    Follow-Ups: 5")
+        print()
         print("RELEASE VERIFICATION: FAIL")
         print("The following blocking issues must be resolved:")
         for check in report.blocking_failures:

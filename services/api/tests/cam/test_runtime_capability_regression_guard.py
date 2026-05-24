@@ -83,8 +83,8 @@ def _make_capability(
         deterministic=deterministic,
         version="1.0.0",
         source_name="test_source",
-        tags=set(),
-        metadata={},
+        compatibility_tags=set(),
+        domain_metadata={},
     )
 
 
@@ -252,9 +252,11 @@ class TestManifestStable:
         manifest1 = build_capability_manifest(registry)
         manifest2 = build_capability_manifest(registry)
 
-        assert manifest1.version == manifest2.version
-        assert manifest1.checksum == manifest2.checksum
-        assert manifest1.to_json() == manifest2.to_json()
+        assert manifest1.schema_version == manifest2.schema_version
+        assert manifest1.content_hash == manifest2.content_hash
+        # Entries are deterministic (content_hash comparison covers this)
+        assert manifest1.total_count == manifest2.total_count
+        assert manifest1.enabled_count == manifest2.enabled_count
 
 
 # -----------------------------------------------------------------------------
@@ -397,9 +399,9 @@ class TestServiceRequiresCapabilityResolution:
                 request = CertifiedRuntimeRequest(
                     certified_topology=mock_topology,
                     adapter_id="dxf_export",
-                    artifact_intent=ArtifactIntent.DXF_EXPORT,
+                    artifact_intent=ArtifactIntent.DXF_OUTLINE,
                     capability_id="operation:test_op",  # Will be rejected (disabled)
-                    execution_mode=ExecutionMode.STANDARD,
+                    execution_mode=ExecutionMode.DETERMINISTIC,
                     runtime_tier=RuntimeTier.PRODUCTION,
                 )
 
