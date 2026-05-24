@@ -211,6 +211,60 @@ MRP-5V: Runtime Capability Federation
 MRP-5X: Runtime Spine Full Verification  <-- YOU ARE HERE
 ```
 
+## Release Verification Status Classifications
+
+### PASS
+
+| Item | Evidence |
+|------|----------|
+| Module imports (6 checks) | All spine modules import successfully |
+| Contract availability (4 checks) | CertifiedTopology, ExecutionAdmissionController, CapabilityResolver, CertifiedRuntimeService |
+| Federation (2 checks) | 8 capabilities registered, 5 enabled; source registries immutable |
+| Determinism (3 checks) | Capability manifest, runtime spine manifest, policy evaluation |
+| Integration (1 check) | Gate order enforced |
+| Provenance (2 checks) | Replay bundle integrity, artifact regression |
+| Version info (1 check) | Runtime spine version 0.1.0 |
+| Regression guard (11 tests) | `services/api/tests/cam/test_runtime_capability_regression_guard.py` |
+
+### OBSERVATION
+
+| Item | Notes |
+|------|-------|
+| Missing handoff: MRP-5C | Not present in docs/handoffs/ |
+| Missing handoff: MRP-5D | Not present in docs/handoffs/ |
+| Missing handoff: MRP-5I | Not present in docs/handoffs/ |
+| Missing handoff: MRP-5J | Not present in docs/handoffs/ |
+| Missing handoff: MRP-5K | Not present in docs/handoffs/ |
+| Missing handoff: MRP-5L | Not present in docs/handoffs/ |
+| Missing handoff: MRP-5U | Explicitly noted as not completed in MRP-5V |
+| Missing handoff: MRP-5W | Not present in docs/handoffs/ |
+| Governance timeout issues | Unrelated to runtime capability regression guard; infrastructure concern |
+
+### FOLLOW_UP
+
+| Item | Source | Notes |
+|------|--------|-------|
+| Deep geometry compatibility | MRP-5V | Currently tag-based only |
+| CI enforcement of manifest changes | MRP-5V | Manifest changes not auto-detected |
+| Service namespace population | MRP-5V | `service:` namespace not yet populated |
+| Replay namespace population | MRP-5V | `replay:` namespace not yet populated |
+| Dynamic capability loading | MRP-5V | All capabilities statically registered |
+| Production version (1.0.0) | MRP-5V | Currently 0.1.0 |
+
+### REQUIRED_FIX
+
+None identified. All blocking issues resolved.
+
+### OUT_OF_SCOPE
+
+| Item | Reason |
+|------|--------|
+| Geometry correctness | Domain-specific, not runtime spine |
+| CAM output correctness | Domain-specific, not runtime spine |
+| DXF parity | Covered by separate DXF lifecycle guards |
+| Full runtime behavioral execution | Integration tests cover contracts, not full execution |
+| Governance timeout remediation | Infrastructure concern, separate from capability federation |
+
 ## Commit Readiness Recommendation
 
 **READY FOR MERGE**
