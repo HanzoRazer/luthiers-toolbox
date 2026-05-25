@@ -13,6 +13,14 @@ Constitutional Runtime Foundation (DEV ORDER 1D):
 - provenance_record: Provenance tracking for semantic objects
 - confidence_declaration: Typed confidence with explicit semantics
 - review_enforcement: Human review requirement protection
+
+Cross-Repository Interoperability (Governed Interoperability Normalization):
+- confidence_envelope: ConfidenceEnvelopeV1 cross-repo semantic compatibility layer
+- provenance_attachment: ProvenanceAttachmentDraft for IBG ratification substrate
+- authority_metadata: AuthorityMetadata for cross-repo normalization
+
+Contract-like governance models currently live flat under app/governance
+pending package normalization.
 """
 
 from .authority_state import (
@@ -63,6 +71,38 @@ from .review_enforcement import (
     create_pre_approved_review_enforcement,
 )
 
+from .confidence_envelope import (
+    ConfidenceEnvelopeV1,
+    SemanticDomain,
+    EpistemicStatus,
+    SourceSystem,
+    CROSS_REPO_NON_IMPLICATIONS,
+    ConfidenceEnvelopeIntegrityError,
+    create_advisory_envelope,
+    create_interpretive_envelope,
+)
+
+from .provenance_attachment import (
+    ProvenanceAttachmentDraft,
+    ProvenanceAttachmentStatus,
+    NON_EXPORTABLE_STATUSES,
+    IBG_DEFAULT_STATUS,
+    ProvenanceAttachmentDraftError,
+    ProvenanceRatificationNotAuthorizedError,
+    create_ibg_provenance_draft,
+)
+
+from .authority_metadata import (
+    AuthorityMetadata,
+    ReviewState,
+    LifecycleState,
+    SourceRepo,
+    AuthorityMetadataError,
+    create_luthiers_authority_metadata,
+    create_vectorizer_authority_metadata,
+    create_ibg_authority_metadata,
+)
+
 __all__ = [
     # Authority State
     "AuthorityState",
@@ -104,4 +144,30 @@ __all__ = [
     "ReviewIncompleteError",
     "create_default_review_enforcement",
     "create_pre_approved_review_enforcement",
+    # Confidence Envelope (Cross-Repo Interoperability)
+    "ConfidenceEnvelopeV1",
+    "SemanticDomain",
+    "EpistemicStatus",
+    "SourceSystem",
+    "CROSS_REPO_NON_IMPLICATIONS",
+    "ConfidenceEnvelopeIntegrityError",
+    "create_advisory_envelope",
+    "create_interpretive_envelope",
+    # Provenance Attachment (IBG Ratification Substrate)
+    "ProvenanceAttachmentDraft",
+    "ProvenanceAttachmentStatus",
+    "NON_EXPORTABLE_STATUSES",
+    "IBG_DEFAULT_STATUS",
+    "ProvenanceAttachmentDraftError",
+    "ProvenanceRatificationNotAuthorizedError",
+    "create_ibg_provenance_draft",
+    # Authority Metadata (Cross-Repo Normalization)
+    "AuthorityMetadata",
+    "ReviewState",
+    "LifecycleState",
+    "SourceRepo",
+    "AuthorityMetadataError",
+    "create_luthiers_authority_metadata",
+    "create_vectorizer_authority_metadata",
+    "create_ibg_authority_metadata",
 ]
