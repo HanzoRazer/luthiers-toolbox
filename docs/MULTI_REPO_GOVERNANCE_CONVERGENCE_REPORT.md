@@ -523,6 +523,31 @@ Three repositories are evolving as a **distributed manufacturing-intelligence pl
 
 ---
 
-*Report generated: 2026-05-24; refreshed with git forensics + DO 77–82 verbatim ingestion*  
+# Appendix D — Dev Order 83 Status (2026-05-24)
+
+**Purpose:** Convergence stabilization cleanup — resolve reconstruction and semantic hazards before runtime integration.
+
+| Item | Status | Notes |
+|------|--------|-------|
+| Constitutional import path cleanup | **Remediated** | Moved to `docs/handoffs/imports/constitutional_stabilization_do_77_82/`; em-dash folder removed |
+| tap_tone push verification | **Skipped** | Audit copy has no `.git` directory; requires manual verification at source repo |
+| Confidence vocabulary migration | **Started** | `candidate_rank` replaces `confidence_value`; compatibility alias retained |
+| Epistemic status field | **Schema spec only** | Added to IBG candidates; broad implementation deferred |
+| IBG R1 ratification | **Still blocked** | Exports remain BLOCKED_PROVENANCE; R1 scheduled for next sprint |
+
+**Files modified:**
+- `services/api/app/instrument_geometry/body/ibg/body_evidence_candidate.py`
+- `services/api/app/instrument_geometry/body/ibg/workflow/ibg_workflow_pipeline.py`
+- `services/api/app/instrument_geometry/body/ibg/morphology_harvest/artifact_body_evidence_adapter.py`
+- `docs/handoffs/imports/MANIFEST.md`
+- `docs/governance/IBG_BLOCKED_PROVENANCE_RATIFICATION_TIMELINE.md`
+- `docs/schemas/EPISTEMIC_STATUS_SCHEMA_SPEC.md` (new)
+- `services/api/tests/test_ibg_candidate_confidence_migration.py` (new)
+
+**Explicit non-goal:** DO 83 does NOT claim IBG provenance is ratified. Export promotion remains blocked until R1.
+
+---
+
+*Report generated: 2026-05-24; refreshed with git forensics + DO 77–82 verbatim ingestion + DO 83 status*  
 *Location: `docs/MULTI_REPO_GOVERNANCE_CONVERGENCE_REPORT.md`*  
-*Next review trigger: first cross-repo integration Dev Order, IBG provenance ratification, or tap_tone push to origin*
+*Next review trigger: first cross-repo integration Dev Order, IBG R1 ratification session, or tap_tone push to origin*

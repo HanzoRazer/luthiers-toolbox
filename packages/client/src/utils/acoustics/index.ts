@@ -19,6 +19,8 @@
  * Dev Order 68: Added experimental correlation analysis.
  * Dev Order 70: Added experimental drift timeline analysis.
  * Dev Order 72: Added experimental drift synthesis utilities.
+ * Dev Order 74: Added experiment note utilities.
+ * Dev Order 76: Added evidence review utilities.
  */
 
 export * from './acousticState'
@@ -40,3 +42,5 @@ export * from './topologyVariant'
 export * from './experimentalCorrelation'
 export * from './experimentalDrift'
 export * from './experimentalDriftSynthesis'
+export * from './experimentNote'
+export * from './evidenceReview'
