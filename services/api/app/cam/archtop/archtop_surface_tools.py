@@ -50,6 +50,10 @@ import matplotlib.pyplot as plt
 import ezdxf
 
 from app.util.dxf_compat import create_document
+from app.util.dxf_lifecycle_guard import (
+    DxfLifecycleContext,
+    assert_dxf_lifecycle_context,
+)
 
 
 # ---------------------------
@@ -153,6 +157,17 @@ def export_contours(X_mm, Y_mm, Z_mm, levels, out_prefix):
             dxfattribs={"closed": True, "layer": "Contours"},
         )
     doc.header["$INSUNITS"] = 4
+    assert_dxf_lifecycle_context(
+        DxfLifecycleContext(
+            source_module=__name__,
+            export_type="dxf-create-save",
+            dxf_version="R2010",
+            lifecycle_status="COMPAT_ONLY",
+            runtime_callable="runtime_service",
+            authority_context="pipeline_stage",
+            provenance_status="NO",
+        )
+    )
     doc.saveas(dxf_path)
 
     svg_path = f"{out_prefix}_Contours.svg"
