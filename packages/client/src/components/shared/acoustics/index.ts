@@ -26,6 +26,8 @@
  * Dev Order 68: Added ExperimentalCorrelationPanel for computed observational correlations.
  * Dev Order 70: Added ExperimentalDriftTimelinePanel for drift observation timelines.
  * Dev Order 72: Added ExperimentalDriftSynthesisPanel for session-level drift synthesis.
+ * Dev Order 74: Added ExperimentNotesPanel for observational experiment notes.
+ * Dev Order 76: Added EvidenceReviewPanel for observational evidence reviews.
  */
 
 export { default as AcousticStateCard } from './AcousticStateCard.vue'
@@ -67,3 +69,9 @@ export { default as ExperimentalDriftTimelinePanel } from './ExperimentalDriftTi
 
 // Experimental Drift Synthesis components (Dev Order 72)
 export { default as ExperimentalDriftSynthesisPanel } from './ExperimentalDriftSynthesisPanel.vue'
+
+// Experiment Notes components (Dev Order 74)
+export { default as ExperimentNotesPanel } from './ExperimentNotesPanel.vue'
+
+// Evidence Review components (Dev Order 76)
+export { default as EvidenceReviewPanel } from './EvidenceReviewPanel.vue'

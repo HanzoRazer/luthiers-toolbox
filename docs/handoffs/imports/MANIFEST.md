@@ -38,7 +38,7 @@ docs/audit-sources/vectorizer-sandbox/
 
 ### Constitutional Stabilization bundle (DO 77–82)
 
-Imported copies (ASCII-safe path; source also at repo root with em-dash folder name):
+Imported copies (ASCII-safe path; em-dash source folder removed 2026-05-24 per DO 83):
 
 ```text
 docs/handoffs/imports/constitutional_stabilization_do_77_82/

@@ -115,6 +115,12 @@ try:
 except ImportError:
     vcarve_production_router = None
 
+# Phase 4.4: Pocketing (8J - L.1 Adaptive Core)
+try:
+    from .pocketing import router as pocketing_router
+except ImportError:
+    pocketing_router = None
+
 
 # =============================================================================
 # AGGREGATOR ROUTER
@@ -165,6 +171,9 @@ if binding_router:
 
 if vcarve_production_router:
     cam_router.include_router(vcarve_production_router, prefix="/vcarve", tags=["CAM V-Carve"])
+
+if pocketing_router:
+    cam_router.include_router(pocketing_router, prefix="/pocketing", tags=["CAM Pocketing"])
 
 
 __all__ = ["cam_router"]

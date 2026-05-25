@@ -692,6 +692,10 @@ describe('experimentalDrift', () => {
       'correct',
       'corrected',
       'corrects',
+      'prove',
+      'proves',
+      'proven',
+      'proved',
     ]
 
     it('should not use forbidden language in upward narrative', () => {

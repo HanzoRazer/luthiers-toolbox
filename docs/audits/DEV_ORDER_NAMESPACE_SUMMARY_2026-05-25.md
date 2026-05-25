@@ -16,6 +16,9 @@
 | IBG | 2B | Instrument Body Geometry | Blocked |
 | NECK_A | Phase 7 | Neck frontend migration | Complete |
 | Cross-Repo | 1A | Governance normalization | Complete |
+| P0 | Triage | Repository state verification | Complete |
+| R | 0–3 | IBG Ratification | Blocked |
+| A | 0–12 | CAM-Assist Strategy Packaging | Complete |
 
 ---
 
@@ -173,6 +176,51 @@
 
 ---
 
+## P0 Namespace (Repository Triage)
+
+| Order | Title | Status |
+|-------|-------|--------|
+| P0-TRIAGE | Repository State Verification | **Complete** |
+
+**Deliverables:**
+- `SPRINT_CONVERGENCE_DEEP_AUDIT_2026-05-24.md`
+- `P0_REPOSITORY_STATE_TRIAGE_REPORT.md`
+- `CROSS_CHANNEL_WORK_COORDINATION_2026-05-24.md`
+
+**Findings:**
+- tap_tone_pi: 3 ahead (27 prior pushed)
+- luthiers-toolbox: 70+ files classified → 10 PR groups
+- CAM-Assist-Blueprint: snapshot only
+
+---
+
+## R Namespace (IBG Ratification)
+
+| Phase | Title | Status |
+|-------|-------|--------|
+| R0 | Documentation convergence | In Progress |
+| R1 | Governance ratification | **BLOCKED** (requires session) |
+| R2 | Minimal export wrapper | Not Started |
+| R3 | Commercial posture | Not Started |
+
+**Blocking:** 5 IBG DXF save points at `BLOCKED_PROVENANCE`
+
+---
+
+## A Namespace (CAM-Assist-Blueprint)
+
+| Order | Title | Status |
+|-------|-------|--------|
+| A0–A3 | Schema foundation | Complete |
+| A4–A6 | Package assembly | Complete |
+| A7–A9 | Review workflow | Complete |
+| A10–A11 | Staging pipeline | Complete |
+| A12 | Review decision record | Complete |
+
+**Totals:** 13 orders, 12 PRs, 236 tests, 11 scripts, 3 schemas
+
+---
+
 ## Sprint Completion Summary
 
 ### This Session (2026-05-20 to 2026-05-25)
@@ -184,8 +232,11 @@
 | Phase 2 | 2A–2G (6) | — |
 | DO | 72, 83 (2) | — |
 | Cross-Repo | 1A (1) | — |
+| P0 | Triage (1) | — |
+| A | A0–A12 (13) | — |
+| R | — | R1–R3 (3) |
 | IBG | — | PROV-001 |
-| **Total** | **30** | **1** |
+| **Total** | **44** | **4** |
 
 ### Merged PRs
 
@@ -210,6 +261,10 @@
 - `IBG-` — Instrument Body Geometry
 - `DO` — Numeric dev orders (cross-cutting)
 - `Phase` — Implementation phases within a track
+- `P0/P1` — Priority triage orders
+- `R` — IBG ratification phases
+- `A` — CAM-Assist-Blueprint orders
+- `Cross-Repo` — Multi-repository normalization
 
 ### Numbering
 - Series (1-9): Major domain area
@@ -225,14 +280,18 @@
 
 ## Next Available Orders
 
-| Namespace | Next Available |
-|-----------|----------------|
-| MRP | 6D |
-| CAM | 8I |
-| Phase 2 | (Complete) |
-| Cross-Repo | 1B |
-| IBG | 3A (after R1) |
+| Namespace | Next Available | Prerequisite |
+|-----------|----------------|--------------|
+| MRP | 6D | — |
+| CAM | 8I | — |
+| Phase 2 | (Complete) | — |
+| Cross-Repo | 1B | — |
+| P0 | P1 | D1-D4 decisions |
+| R | R1 | Governance session |
+| A | A13 | — |
+| IBG | 3A | R1 ratification |
 
 ---
 
-*Dev Order Namespace Summary — 2026-05-25*
+*Dev Order Namespace Summary — 2026-05-25*  
+*Updated: P0, R, A namespaces added*

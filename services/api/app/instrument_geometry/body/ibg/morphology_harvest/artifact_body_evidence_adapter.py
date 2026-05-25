@@ -530,6 +530,7 @@ class ArtifactBodyEvidenceAdapter:
         )
 
         # Create BodyEvidenceCandidate with provenance
+        # Note: candidate_rank is sorting relevance only, NOT approval/correctness
         candidate = create_candidate_from_evidence(
             evidence=basic_result.body_evidence,
             source_artifact=source_file,
@@ -541,8 +542,9 @@ class ArtifactBodyEvidenceAdapter:
                 "entity_count": basic_result.metadata.entity_count if basic_result.metadata else 0,
                 "closed_contours": basic_result.metadata.closed_contours if basic_result.metadata else 0,
             },
-            confidence_value=self._compute_confidence_value(basic_result.parsed_artifact),
+            candidate_rank=self._compute_confidence_value(basic_result.parsed_artifact),
             confidence_origin="artifact_body_evidence_adapter",
+            epistemic_status="heuristic",
         )
 
         # Record topology integrity in provenance

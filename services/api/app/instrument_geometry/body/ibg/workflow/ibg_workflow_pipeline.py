@@ -443,6 +443,7 @@ class IBGWorkflowPipeline:
             evidence = self._contour_to_evidence(scored.contour)
 
             # Create constitutional candidate
+            # Note: candidate_rank is sorting relevance only, NOT approval/correctness
             candidate = create_candidate_from_evidence(
                 evidence=evidence,
                 source_artifact=source_filename,
@@ -454,8 +455,9 @@ class IBGWorkflowPipeline:
                     "is_closed": scored.contour.is_closed,
                     "rejection_flags": scored.rejection_flags,
                 },
-                confidence_value=scored.rank_score,
+                candidate_rank=scored.rank_score,
                 confidence_origin="ibg_workflow_pipeline_scoring",
+                epistemic_status="heuristic",
             )
 
             # Record topology integrity based on closure
