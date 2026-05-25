@@ -2,7 +2,8 @@
 CI Guard: Execution Class Compliance
 
 Rules:
-- All CAM endpoints MUST normalize CamIntentV1
+- OPERATION-lane CamIntentV1 endpoints MUST call normalize_cam_intent_v1
+- Only checks intent_router.py files (canonical OPERATION-lane pattern)
 - Execution Class B (deterministic) endpoints are allowed
   to execute in a single pass without feasibility/advisory logic
 
@@ -22,9 +23,19 @@ DETERMINISTIC_ALLOWLIST = {
 }
 
 
-def is_cam_router(file: Path) -> bool:
-    """Check if file is a CAM router that produces machine output."""
-    return "cam" in file.parts and file.suffix == ".py"
+def is_operation_lane_router(file: Path) -> bool:
+    """
+    Check if file is an OPERATION-lane router that must normalize CamIntentV1.
+
+    Only checks intent_router.py files - the canonical OPERATION-lane pattern
+    established by 8G (V-Carve) and extended by 8H+ migrations.
+
+    Legacy routers with LANE: OPERATION markers predate CamIntentV1 and will
+    be migrated incrementally. This guard enforces compliance for new
+    intent-first endpoints only.
+    """
+    # Check for intent_router.py pattern (canonical OPERATION-lane pattern from 8G)
+    return file.name == "intent_router.py" and "routers" in file.parts
 
 
 def has_intent_normalization(text: str) -> bool:
@@ -41,7 +52,7 @@ def main() -> int:
     violations = []
 
     for py in ROOT.rglob("*.py"):
-        if not is_cam_router(py):
+        if not is_operation_lane_router(py):
             continue
 
         text = py.read_text(encoding="utf-8", errors="ignore")
