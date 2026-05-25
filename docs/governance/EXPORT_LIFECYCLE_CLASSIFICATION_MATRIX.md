@@ -152,10 +152,10 @@ Machine-parseable via HTML markers; human-readable via section headings.
 
 | File | Export Type | Creation | Save | Compat | Lifecycle | Provenance | Callable | Risk | Lifecycle Status | Disposition | Guard Status |
 |------|-------------|----------|------|--------|-----------|------------|----------|------|------------------|-------------|--------------|
-| `cam/archtop_bridge_generator.py` | dxf-create-save | create_document | Y | Y | N | NO | runtime_service | LOW-MEDIUM | COMPAT_ONLY | no_action | GUARD_CANDIDATE |
-| `cam/archtop_saddle_generator.py` | dxf-create-save | create_document | Y | Y | N | NO | runtime_service | LOW-MEDIUM | COMPAT_ONLY | no_action | GUARD_CANDIDATE |
-| `cam/archtop/archtop_surface_tools.py` | dxf-create-save | create_document | Y | Y | N | NO | runtime_service | LOW-MEDIUM | COMPAT_ONLY | no_action | GUARD_CANDIDATE |
-| `cam/archtop/archtop_contour_generator.py` | dxf-create-save | create_document | Y | Y | N | NO | runtime_service | LOW-MEDIUM | COMPAT_ONLY | no_action | GUARD_CANDIDATE |
+| `cam/archtop_bridge_generator.py` | dxf-create-save | create_document | Y | Y | N | NO | runtime_service | LOW-MEDIUM | COMPAT_ONLY | no_action | GUARD_ADDED |
+| `cam/archtop_saddle_generator.py` | dxf-create-save | create_document | Y | Y | N | NO | runtime_service | LOW-MEDIUM | COMPAT_ONLY | no_action | GUARD_ADDED |
+| `cam/archtop/archtop_surface_tools.py` | dxf-create-save | create_document | Y | Y | N | NO | runtime_service | LOW-MEDIUM | COMPAT_ONLY | no_action | GUARD_ADDED |
+| `cam/archtop/archtop_contour_generator.py` | dxf-create-save | create_document | Y | Y | N | NO | runtime_service | LOW-MEDIUM | COMPAT_ONLY | no_action | GUARD_ADDED |
 
 ### 2C. Instrument Geometry Services
 

@@ -11,7 +11,26 @@ import ezdxf
 from shapely.geometry import Polygon, LineString, LinearRing
 
 from app.util.dxf_compat import create_document
+from app.util.dxf_lifecycle_guard import (
+    DxfLifecycleContext,
+    assert_dxf_lifecycle_context,
+)
 import matplotlib.pyplot as plt
+
+
+def _assert_archtop_contour_dxf_create_save() -> None:
+    """Validation-only guard at DXF save boundary (Phase 3A)."""
+    assert_dxf_lifecycle_context(
+        DxfLifecycleContext(
+            source_module=__name__,
+            export_type="dxf-create-save",
+            dxf_version="R2010",
+            lifecycle_status="COMPAT_ONLY",
+            runtime_callable="runtime_service",
+            authority_context="pipeline_stage",
+            provenance_status="NO",
+        )
+    )
 
 def read_csv_points(csv_path):
     import csv
@@ -136,7 +155,9 @@ def mode_csv(args):
     for p in paths:
         msp.add_lwpolyline([(float(x), float(y)) for x, y in p[:-1]], format="xy",
                            dxfattribs={"closed": True, "layer": "Contours"})
-    doc.header["$INSUNITS"] = 4; doc.saveas(dxf_path)
+    doc.header["$INSUNITS"] = 4
+    _assert_archtop_contour_dxf_create_save()
+    doc.saveas(dxf_path)
     svg_path = f"{args.out_prefix}_Contours.svg"; png_path = f"{args.out_prefix}_Contours.png"
     save_svg_polylines(paths, svg_path)
     plt.figure(); 
@@ -172,7 +193,9 @@ def mode_outline(args):
     for i, p in enumerate(scaled, start=1):
         msp.add_lwpolyline([(float(x), float(y)) for x,y in p[:-1]], format="xy",
                            dxfattribs={"closed": True, "layer": f"Contour_{i:02d}"})
-    doc.header["$INSUNITS"] = 4; doc.saveas(dxf_path)
+    doc.header["$INSUNITS"] = 4
+    _assert_archtop_contour_dxf_create_save()
+    doc.saveas(dxf_path)
     svg_path = f"{args.out_prefix}_ScaledRings.svg"; png_path = f"{args.out_prefix}_ScaledRings.png"
     save_svg_polylines(scaled, svg_path)
     plt.figure(); 

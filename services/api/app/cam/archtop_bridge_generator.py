@@ -22,6 +22,10 @@ from typing import Any, Dict, List, Tuple
 try:
     import ezdxf
     from app.util.dxf_compat import create_document
+    from app.util.dxf_lifecycle_guard import (
+        DxfLifecycleContext,
+        assert_dxf_lifecycle_context,
+    )
     EZDXF_AVAILABLE = True
 except ImportError:
     EZDXF_AVAILABLE = False
@@ -108,6 +112,17 @@ def generate_bridge_dxf(
     # Save
     output_path = Path(output_path)
     output_path.parent.mkdir(parents=True, exist_ok=True)
+    assert_dxf_lifecycle_context(
+        DxfLifecycleContext(
+            source_module=__name__,
+            export_type="dxf-create-save",
+            dxf_version="R2010",
+            lifecycle_status="COMPAT_ONLY",
+            runtime_callable="runtime_service",
+            authority_context="pipeline_stage",
+            provenance_status="NO",
+        )
+    )
     doc.saveas(str(output_path))
 
     return {
