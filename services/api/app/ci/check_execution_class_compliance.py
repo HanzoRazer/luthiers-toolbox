@@ -7,6 +7,23 @@ Rules:
 - Execution Class B (deterministic) endpoints are allowed
   to execute in a single pass without feasibility/advisory logic
 
+Scope:
+- This guard checks ONLY intent_router.py files in router directories
+- Legacy routers (production_router.py, profile_router.py, etc.) are
+  exempt pending ADR-003 migration - they predate CamIntentV1
+- Test files, schema files, adapters, and utility modules are not checked
+  because they are not OPERATION-lane endpoints
+
+Reason for scope:
+- Original scope ("cam" in path and .py extension) flagged 411 files
+- Only intent_router.py files are OPERATION-lane endpoints that must
+  consume CamIntentV1 through the normalized contract
+- Legacy routers will be migrated incrementally (8G→8H→8I→8J)
+
+Verified 2026-05-25:
+- Negative test confirms guard catches intent_router.py without normalize_cam_intent_v1
+- V-Carve and Profile intent routers pass at both original and narrowed scope
+
 Reference: docs/OPERATION_EXECUTION_GOVERNANCE_v1.md (Appendix D)
 """
 
