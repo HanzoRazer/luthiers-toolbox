@@ -1,0 +1,326 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://cam-assist.lutherie/schemas/strategy.schema.json",
+  "title": "CAM Assist Strategy Package Schema",
+  "description": "Defines the output strategy package from CAM Assist. Version 1.2 adds operation_intent, material_context, and safety_boundary for semantic contract enforcement.",
+  "type": "object",
+  "required": [
+    "strategy_version",
+    "strategy_id",
+    "units",
+    "coordinate_frame",
+    "provenance",
+    "operation_intent",
+    "material_context",
+    "safety_boundary",
+    "geometry",
+    "operation",
+    "approval_state"
+  ],
+
+  "properties": {
+    "strategy_version": {
+      "type": "string",
+      "const": "1.2",
+      "description": "Schema version for this strategy format"
+    },
+
+    "strategy_id": {
+      "type": "string",
+      "pattern": "^[a-z0-9-]+$",
+      "description": "Unique identifier for this strategy package"
+    },
+
+    "units": {
+      "type": "string",
+      "enum": ["inches", "mm"],
+      "description": "Unit system for all dimensions in this strategy package"
+    },
+
+    "coordinate_frame": {
+      "type": "object",
+      "required": ["origin", "x_axis", "y_axis"],
+      "description": "Coordinate system definition for geometry interpretation",
+      "properties": {
+        "origin": {
+          "type": "string",
+          "description": "Reference point for coordinate origin (e.g., nut_centerline, body_center)"
+        },
+        "x_axis": {
+          "type": "string",
+          "description": "Direction of positive X axis (e.g., along_neck, along_body)"
+        },
+        "y_axis": {
+          "type": "string",
+          "description": "Direction of positive Y axis (e.g., across_fretboard, across_body)"
+        },
+        "z_axis": {
+          "type": "string",
+          "description": "Direction of positive Z axis (e.g., into_material, out_of_material)"
+        },
+        "datum_point": {
+          "type": "object",
+          "properties": {
+            "x": { "type": "number" },
+            "y": { "type": "number" },
+            "z": { "type": "number" }
+          },
+          "description": "Numeric datum coordinates if applicable"
+        }
+      }
+    },
+
+    "provenance": {
+      "type": "object",
+      "required": ["cam_assist_version", "created_at"],
+      "description": "Origin and creation metadata for this strategy package",
+      "properties": {
+        "source_spec_id": {
+          "type": "string",
+          "description": "Reference to source instrument specification"
+        },
+        "source_spec_hash": {
+          "type": "string",
+          "description": "Hash of source spec for change detection"
+        },
+        "cam_assist_version": {
+          "type": "string",
+          "description": "Version of CAM Assist that generated this strategy"
+        },
+        "created_at": {
+          "type": "string",
+          "format": "date-time",
+          "description": "ISO-8601 timestamp of strategy creation"
+        },
+        "created_by": {
+          "type": "string",
+          "description": "Identifier of creator (human or system)"
+        }
+      }
+    },
+
+    "operation_intent": {
+      "type": "object",
+      "required": ["operation_type", "target_feature", "cut_intent", "non_execution_declaration"],
+      "description": "Semantic declaration of what this strategy intends to accomplish",
+      "properties": {
+        "operation_type": {
+          "type": "string",
+          "description": "Type of lutherie operation (fret_slots, pickup_route, neck_pocket, etc.)"
+        },
+        "target_feature": {
+          "type": "string",
+          "description": "The instrument feature this operation targets (fretboard, body, neck, etc.)"
+        },
+        "cut_intent": {
+          "type": "string",
+          "enum": ["slot", "pocket", "profile", "drill", "contour", "channel"],
+          "description": "The geometric intent of the cut operation"
+        },
+        "non_execution_declaration": {
+          "type": "boolean",
+          "const": true,
+          "description": "MUST be true. Declares this package does not execute machine operations."
+        }
+      }
+    },
+
+    "material_context": {
+      "type": "object",
+      "required": ["material_class"],
+      "description": "Material information for parameter recommendations",
+      "properties": {
+        "material_class": {
+          "type": "string",
+          "enum": ["softwood", "hardwood", "exotic", "figured", "laminate", "composite", "unknown"],
+          "description": "General material classification"
+        },
+        "species": {
+          "type": "string",
+          "description": "Specific wood species if known"
+        },
+        "hardness_janka": {
+          "type": "integer",
+          "description": "Janka hardness rating if known"
+        },
+        "grain_direction": {
+          "type": "string",
+          "description": "Grain orientation relative to operation"
+        },
+        "notes": {
+          "type": "string",
+          "description": "Additional material considerations"
+        }
+      }
+    },
+
+    "safety_boundary": {
+      "type": "object",
+      "required": ["non_execution_declaration", "human_review_required"],
+      "description": "Safety declarations and execution boundaries",
+      "properties": {
+        "non_execution_declaration": {
+          "type": "boolean",
+          "const": true,
+          "description": "MUST be true. This package does not generate executable machine code."
+        },
+        "human_review_required": {
+          "type": "boolean",
+          "const": true,
+          "description": "MUST be true. Human review is required before any downstream execution."
+        },
+        "max_depth_inches": {
+          "type": "number",
+          "description": "Maximum cut depth referenced in this strategy"
+        },
+        "tool_diameter_inches": {
+          "type": "number",
+          "description": "Tool diameter referenced in this strategy"
+        },
+        "execution_authority_claim": {
+          "type": "boolean",
+          "const": false,
+          "description": "MUST be false or absent. Strategy packages do not claim execution authority."
+        }
+      }
+    },
+
+    "geometry": {
+      "type": "object",
+      "required": ["dxf_file", "primary_layer"],
+      "description": "DXF geometry file references",
+      "properties": {
+        "dxf_file": {
+          "type": "string",
+          "description": "Filename of DXF geometry file"
+        },
+        "primary_layer": {
+          "type": "string",
+          "description": "DXF layer containing primary operation geometry"
+        },
+        "reference_layers": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Additional reference layers in DXF"
+        }
+      }
+    },
+
+    "operation": {
+      "type": "object",
+      "required": ["type", "tool", "parameters"],
+      "properties": {
+        "type": {
+          "type": "string",
+          "description": "Specific operation type (slot_cut, pocket, drill, etc.)"
+        },
+        "tool": {
+          "type": "object",
+          "properties": {
+            "reference_type": {
+              "type": "string",
+              "enum": ["generic", "dimension_spec", "named"]
+            },
+            "tool_type": { "type": "string" },
+            "diameter": { "type": "number" },
+            "description": { "type": "string" },
+            "required_dimensions": { "type": "object" },
+            "alternatives": {
+              "type": "array",
+              "items": { "type": "string" }
+            }
+          }
+        },
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "depth": { "type": "number" },
+            "depth_per_pass": { "type": "number" },
+            "feed_rate_ipm": { "type": "number" },
+            "spindle_rpm": { "type": "integer" },
+            "recommended": { "type": "object" },
+            "basis": { "type": "string" },
+            "notes": { "type": "string" }
+          }
+        },
+        "sequence": {
+          "type": "string",
+          "description": "Execution order description"
+        }
+      }
+    },
+
+    "positions": {
+      "type": "array",
+      "description": "Array of calculated positions (for positional operations)",
+      "items": {
+        "type": "object",
+        "properties": {
+          "index": { "type": "integer" },
+          "fret": { "type": "integer" },
+          "distance_from_nut": { "type": "number" },
+          "x": { "type": "number" },
+          "y": { "type": "number" }
+        }
+      }
+    },
+
+    "calculation_basis": {
+      "type": "object",
+      "description": "Mathematical basis for calculated values",
+      "properties": {
+        "formula": { "type": "string" },
+        "scale_length": { "type": "number" },
+        "temperament": { "type": "string" },
+        "precision": { "type": "integer" }
+      }
+    },
+
+    "warnings": {
+      "type": "array",
+      "description": "Warnings generated during strategy creation",
+      "items": {
+        "type": "object",
+        "required": ["level", "code", "message"],
+        "properties": {
+          "level": {
+            "type": "string",
+            "enum": ["INFO", "CAUTION", "WARNING", "BLOCK"]
+          },
+          "code": { "type": "string" },
+          "message": { "type": "string" },
+          "acknowledged": { "type": "boolean" },
+          "acknowledgment_note": { "type": "string" }
+        }
+      }
+    },
+
+    "approval_state": {
+      "type": "string",
+      "enum": ["pending", "in_review", "approved", "rejected"],
+      "description": "Current approval workflow state"
+    },
+
+    "approval": {
+      "type": "object",
+      "description": "Approval record (present when approved)",
+      "properties": {
+        "approver": {
+          "type": "object",
+          "properties": {
+            "name": { "type": "string" },
+            "identifier": { "type": "string" }
+          }
+        },
+        "timestamp": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "checklist_completion": {
+          "type": "object"
+        },
+        "notes": { "type": "string" }
+      }
+    }
+  }
+}

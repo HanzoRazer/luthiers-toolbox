@@ -1,0 +1,47 @@
+{
+  "strategy_version": "1.2",
+  "strategy_id": "invalid-execution-authority-claim",
+
+  "units": "inches",
+
+  "coordinate_frame": {
+    "origin": "nut_centerline",
+    "x_axis": "along_neck",
+    "y_axis": "across_fretboard"
+  },
+
+  "provenance": {
+    "cam_assist_version": "0.3.0",
+    "created_at": "2026-05-21T12:00:00Z"
+  },
+
+  "operation_intent": {
+    "operation_type": "fret_slots",
+    "target_feature": "fretboard",
+    "cut_intent": "slot",
+    "non_execution_declaration": false
+  },
+
+  "material_context": {
+    "material_class": "hardwood"
+  },
+
+  "safety_boundary": {
+    "non_execution_declaration": false,
+    "human_review_required": false,
+    "execution_authority_claim": true
+  },
+
+  "geometry": {
+    "dxf_file": "geometry.dxf",
+    "primary_layer": "FRET_SLOTS"
+  },
+
+  "operation": {
+    "type": "slot_cut",
+    "tool": { "tool_type": "slot_cutter" },
+    "parameters": { "depth": 0.060 }
+  },
+
+  "approval_state": "pending"
+}

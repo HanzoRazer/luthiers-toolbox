@@ -1,0 +1,226 @@
+# Fret Slots Strategy Review Packet
+
+**Strategy ID:** `fret-slots-25500-22f-sample`
+**Generated:** 2026-05-25T01:26:29.209958
+
+---
+
+## 1. Non-Execution Notice
+
+
+> **NON-EXECUTION NOTICE**
+>
+> This review packet is advisory only.
+> It does not authorize machine execution.
+> It does not generate G-code.
+> It does not replace operator judgment.
+> Human review and downstream CAM verification are required before machining.
+
+
+---
+
+## 2. Strategy Identity
+
+| Field | Value |
+|-------|-------|
+| Strategy ID | `fret-slots-25500-22f-sample` |
+| Strategy Version | 1.2 |
+| Approval State | pending |
+| Source Spec ID | sample-stratocaster-spec |
+| CAM Assist Version | 0.3.0 |
+| Created At | 2026-05-21T12:00:00Z |
+| Created By | cam-assist-blueprint |
+
+---
+
+## 3. Instrument Context
+
+**Source Specification:** `sample-stratocaster-spec`
+
+---
+
+## 4. Material Context
+
+| Property | Value |
+|----------|-------|
+| Material Class | hardwood |
+| Species | Indian Rosewood |
+| Janka Hardness | 2440 |
+| Grain Direction | along_fretboard_length |
+
+---
+
+## 5. Operation Intent
+
+| Property | Value |
+|----------|-------|
+| Operation Type | fret_slots |
+| Target Feature | fretboard |
+| Cut Intent | slot |
+| Non-Execution Declaration | **True** |
+
+---
+
+## 6. Coordinate Frame
+
+| Axis | Definition |
+|------|------------|
+| Origin | nut_centerline |
+| X-Axis | along_neck_toward_bridge |
+| Y-Axis | across_fretboard_treble_positive |
+| Z-Axis | into_fretboard |
+| Datum Point | (0, 0, 0) |
+
+**Units:** inches
+
+---
+
+## 7. Fret Slot Summary
+
+### Overview
+
+| Property | Value |
+|----------|-------|
+| Fret Count | 22 |
+| Scale Length | 25.5 inches |
+| Temperament | equal_12TET |
+| Slot Width | 0.023 inches |
+| Slot Depth | 0.06 inches |
+
+### Key Positions
+
+| Fret | Distance from Nut |
+|------|-------------------|
+| 1 (first) | 1.4312 inches |
+| 12 (octave) | 12.6181 inches |
+| 22 (last) | 17.7472 inches |
+
+### All Fret Positions
+
+<details>
+<summary>Click to expand full position table</summary>
+
+| Fret | Distance from Nut (inches) |
+|------|---------------------|
+| 1 | 1.4312 |
+| 2 | 2.7814 |
+| 3 | 4.0544 |
+| 4 | 5.254 |
+| 5 | 6.384 |
+| 6 | 7.4479 |
+| 7 | 8.4491 |
+| 8 | 9.3907 |
+| 9 | 10.2756 |
+| 10 | 11.1068 |
+| 11 | 11.8868 |
+| 12 | 12.6181 |
+| 13 | 13.3031 |
+| 14 | 13.9441 |
+| 15 | 14.5434 |
+| 16 | 15.1032 |
+| 17 | 15.6258 |
+| 18 | 16.1131 |
+| 19 | 16.5671 |
+| 20 | 16.9896 |
+| 21 | 17.3824 |
+| 22 | 17.7472 |
+
+</details>
+
+### Calculation Basis
+
+**Formula:** `distance_n = scale_length - (scale_length / 2^(n/12))`
+
+---
+
+## 8. Tool Assumptions
+
+| Property | Value |
+|----------|-------|
+| Tool Type | slot_cutter |
+| Reference Type | dimension_spec |
+| Diameter | 0.023 inches |
+| Description | Fret slot saw blade or end mill |
+
+**Required Dimensions:**
+- width: 0.023
+- min_depth_capacity: 0.08
+
+**Alternative Tools:**
+- Manual fret saw (StewMac #0849)
+- Table saw with fret slotting blade
+- CNC end mill 0.023" diameter
+
+---
+
+## 9. Workholding Assumptions
+
+*Not specified in strategy package.*
+
+> **Operator Note:** Verify adequate workholding before machining.
+> Fretboard stock must be securely clamped to prevent movement during slot cutting.
+
+---
+
+## 10. Safety Boundary
+
+| Property | Value |
+|----------|-------|
+| Non-Execution Declaration | **True** |
+| Human Review Required | **True** |
+| Max Depth | 0.06 inches |
+| Tool Diameter | 0.023 inches |
+| Execution Authority Claim | **False** |
+
+---
+
+## 11. Human Review Requirements
+
+Before proceeding to CAM or machining, the operator must verify:
+
+- [ ] Fret positions match instrument specification
+- [ ] Scale length is correct for target instrument
+- [ ] Slot width matches intended fret wire tang
+- [ ] Slot depth is appropriate for fretboard thickness
+- [ ] Material assumptions match actual workpiece
+- [ ] Tool selection is appropriate and available
+- [ ] Coordinate frame matches machine setup
+- [ ] Workholding is adequate and secure
+- [ ] Safety boundaries are understood
+
+---
+
+## 12. Warnings and Failure Modes
+
+*No warnings in strategy package.*
+
+### Potential Failure Modes
+
+- **Slot too shallow:** Fret wire may not seat properly
+- **Slot too deep:** May intersect truss rod channel or weaken fretboard
+- **Slot too narrow:** Fret wire will not fit
+- **Slot too wide:** Fret wire will be loose, poor sustain
+- **Position error:** Intonation problems, unplayable instrument
+- **Tearout:** Material damage from improper feed/speed or grain direction
+
+---
+
+## 13. Operator Sign-Off
+
+I have reviewed this strategy package and confirm:
+
+- [ ] All parameters match the intended instrument specification
+- [ ] I understand this is advisory only and does not authorize execution
+- [ ] I will perform independent verification before machining
+- [ ] I accept responsibility for downstream CAM and execution decisions
+
+**Operator Name:** _________________________________
+
+**Date:** _________________________________
+
+**Signature:** _________________________________
+
+---
+
+*This review packet was generated by CAM Assist Blueprint.*
+*It is advisory only and does not constitute execution authority.*

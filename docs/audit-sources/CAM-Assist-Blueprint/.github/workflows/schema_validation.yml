@@ -1,0 +1,73 @@
+name: Schema Validation
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'schemas/**'
+      - 'examples/**'
+      - 'scripts/validate_strategy_package.py'
+      - 'tests/test_validate_strategy_package.py'
+  pull_request:
+    branches: [main]
+    paths:
+      - 'schemas/**'
+      - 'examples/**'
+      - 'scripts/validate_strategy_package.py'
+      - 'tests/test_validate_strategy_package.py'
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install pytest
+
+      - name: Validate example files
+        run: |
+          echo "=== Validating valid examples ==="
+          python scripts/validate_strategy_package.py examples/valid/
+
+          echo ""
+          echo "=== Validating invalid examples (expecting failures) ==="
+          # Each invalid file should fail validation
+          for f in examples/invalid/*.json; do
+            echo "Testing $f (should fail)..."
+            if python scripts/validate_strategy_package.py "$f" --quiet; then
+              echo "ERROR: $f should have failed validation but passed"
+              exit 1
+            else
+              echo "OK: $f correctly failed validation"
+            fi
+          done
+
+      - name: Run pytest
+        run: |
+          pytest tests/test_validate_strategy_package.py -v
+
+  lint-schemas:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Validate JSON syntax
+        run: |
+          echo "Checking JSON syntax..."
+          for f in schemas/*.json examples/**/*.json; do
+            if [ -f "$f" ]; then
+              echo "Checking $f"
+              python -m json.tool "$f" > /dev/null || exit 1
+            fi
+          done
+          echo "All JSON files are syntactically valid"

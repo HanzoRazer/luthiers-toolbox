@@ -1,0 +1,147 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://cam-assist.lutherie/schemas/operation.schema.json",
+  "title": "CAM Assist Operation Schema",
+  "description": "Defines a lutherie manufacturing operation request",
+  "type": "object",
+  "required": ["operation_type", "instrument_spec", "parameters"],
+
+  "properties": {
+    "operation_id": {
+      "type": "string",
+      "description": "Unique identifier for this operation request"
+    },
+
+    "operation_type": {
+      "type": "string",
+      "enum": [
+        "fret_slots",
+        "pickup_route",
+        "neck_pocket",
+        "truss_rod_channel",
+        "control_cavity",
+        "bridge_recess",
+        "tuner_holes",
+        "bridge_pin_holes",
+        "body_outline",
+        "headstock_outline",
+        "binding_channel"
+      ],
+      "description": "Type of lutherie operation"
+    },
+
+    "geometry_type": {
+      "type": "string",
+      "enum": ["2D", "2.5D", "3D"],
+      "description": "Complexity class of operation geometry"
+    },
+
+    "precision_class": {
+      "type": "string",
+      "enum": ["I", "II", "III", "IV"],
+      "description": "Required precision class (I=critical, IV=aesthetic)"
+    },
+
+    "instrument_spec": {
+      "type": "object",
+      "description": "Instrument specification relevant to this operation",
+      "properties": {
+        "instrument_type": {
+          "type": "string",
+          "description": "Type of instrument (guitar, bass, mandolin, etc.)"
+        },
+        "scale_length_inches": {
+          "type": "number",
+          "description": "Scale length in inches"
+        },
+        "fret_count": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 36
+        },
+        "nut_width_inches": {
+          "type": "number"
+        },
+        "body_width_inches": {
+          "type": "number"
+        },
+        "fretboard_width_nut_inches": {
+          "type": "number"
+        },
+        "fretboard_width_last_inches": {
+          "type": "number"
+        }
+      }
+    },
+
+    "parameters": {
+      "type": "object",
+      "description": "Operation-specific parameters",
+      "properties": {
+        "depth_inches": {
+          "type": "number",
+          "description": "Cut depth in inches"
+        },
+        "width_inches": {
+          "type": "number",
+          "description": "Cut width in inches (e.g., slot width)"
+        },
+        "extension_beyond_edge_inches": {
+          "type": "number",
+          "description": "How far geometry extends beyond workpiece edge"
+        }
+      }
+    },
+
+    "material_spec": {
+      "type": "object",
+      "description": "Material specification for feed/speed recommendations",
+      "properties": {
+        "material_class": {
+          "type": "string",
+          "enum": ["softwood", "hardwood", "exotic", "figured", "laminate", "composite"]
+        },
+        "species": {
+          "type": "string",
+          "description": "Specific wood species"
+        },
+        "hardness_janka": {
+          "type": "integer",
+          "description": "Janka hardness rating"
+        }
+      }
+    },
+
+    "tool_preference": {
+      "type": "object",
+      "description": "Optional tool preferences",
+      "properties": {
+        "tool_type": {
+          "type": "string"
+        },
+        "tool_id": {
+          "type": "string",
+          "description": "Reference to shop tool library"
+        }
+      }
+    }
+  },
+
+  "allOf": [
+    {
+      "if": {
+        "properties": { "operation_type": { "const": "fret_slots" } }
+      },
+      "then": {
+        "properties": {
+          "instrument_spec": {
+            "required": ["scale_length_inches", "fret_count"]
+          },
+          "parameters": {
+            "required": ["depth_inches", "width_inches"]
+          }
+        }
+      }
+    }
+  ]
+}
