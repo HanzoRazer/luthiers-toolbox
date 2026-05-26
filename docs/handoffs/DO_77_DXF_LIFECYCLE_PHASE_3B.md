@@ -60,7 +60,7 @@ pytest tests/test_dxf_preprocessor.py tests/test_contour_reconstruction.py tests
 
 ## Next
 
-**Next dev orders:** [`DO_78_IBG_PROVENANCE_R_NAMESPACE_HANDOFF.md`](DO_78_IBG_PROVENANCE_R_NAMESPACE_HANDOFF.md) — R1 governance session (DO 78), then R2 export wrapper (DO 79).
+**Next:** [DO_80_IBG_PROVENANCE_R2_ROLLOUT_ANNOTATED_HANDOFF.md](DO_80_IBG_PROVENANCE_R2_ROLLOUT_ANNOTATED_HANDOFF.md) (execution). Spec: [DO_78](DO_78_IBG_PROVENANCE_R_NAMESPACE_HANDOFF.md). R2 may merge before R1; production export waits for R1.
 
 ---
 

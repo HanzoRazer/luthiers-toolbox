@@ -101,9 +101,10 @@ Reason: DxfWriter lacks caller context (`source_module`, `runtime_callable`, `au
 
 ### R Namespace — IBG Provenance (5 paths)
 
-**Priority:** P1 after R1 ratification  
-**Prerequisite:** R1 governance ratification session  
-**Status:** BLOCKED
+**Priority:** P1 — execution via DO 80  
+**Prerequisite:** R1 for **production export**; R2 PR may merge earlier (fail-closed wrapper)  
+**Status:** R2 on branch `feat/ibg-provenance-r2-export-wrapper`; not on `main` until merged  
+**Handoff:** `docs/handoffs/DO_80_IBG_PROVENANCE_R2_ROLLOUT_ANNOTATED_HANDOFF.md`
 
 | File | Line | Status |
 |------|------|--------|
@@ -305,7 +306,8 @@ R2: IBG provenance guards
 | `docs/handoffs/DO_75_DXF_LIFECYCLE_PHASE_3A2.md` | Phase 3A-2 dev order (instrument geometry) |
 | `docs/handoffs/DO_76_DXF_LIFECYCLE_PHASE_3A4.md` | Phase 3A-4 dev order (read-modify-save) |
 | `docs/handoffs/DO_77_DXF_LIFECYCLE_PHASE_3B.md` | Phase 3B dev order (blueprint_cam orchestrator) |
-| `docs/handoffs/DO_78_IBG_PROVENANCE_R_NAMESPACE_HANDOFF.md` | Proposed DO 78 (R1) + DO 79 (R2) IBG provenance |
+| `docs/handoffs/DO_78_IBG_PROVENANCE_R_NAMESPACE_HANDOFF.md` | DO 78 (R1) + DO 79 (R2) IBG provenance spec |
+| `docs/handoffs/DO_80_IBG_PROVENANCE_R2_ROLLOUT_ANNOTATED_HANDOFF.md` | **Dev-ready** R2 rollout + R1 gate + caller bridge (annotated) |
 
 ---
 

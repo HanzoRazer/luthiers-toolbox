@@ -2,37 +2,54 @@
 
 **Sprint:** DXF Lifecycle — IBG blocked paths  
 **Orders:** DO 78 (R1 governance) · DO 79 (R2 implementation)  
-**Status:** R2 IN PROGRESS (wrapper wired; R1 ratification still required for production export)  
-**Date:** 2026-05-19  
+**Status:** R2 code on branch `feat/ibg-provenance-r2-export-wrapper` — **team handoff:** [DO_80](DO_80_IBG_PROVENANCE_R2_ROLLOUT_ANNOTATED_HANDOFF.md)  
+**Date:** 2026-05-19 (reconciled 2026-05-26)  
 **Prerequisite:** Phase 3B merged (PR #44, `main` @ `225b1fd7`)  
-**Parent sprint:** DXF Lifecycle complete for non-IBG paths (DO 75–77)
+**Parent sprint:** DXF Lifecycle complete for non-IBG paths (DO 75–77)  
+**Canonical sequencing:** Aligned with [DO_80](DO_80_IBG_PROVENANCE_R2_ROLLOUT_ANNOTATED_HANDOFF.md) — see § Sequencing (R1 vs R2 merge)
 
 ---
 
 ## Executive Summary
 
-All **non-IBG** DXF lifecycle work is complete (`GUARD_ADDED: 20`, `LIFECYCLE_GOVERNED: 3`, `ORCHESTRATOR_CANDIDATE: 0`). Five IBG save points remain **`BLOCKED_PROVENANCE`** until governance ratifies the provenance attachment model and engineering wires a minimal export wrapper.
+All **non-IBG** DXF lifecycle work is complete (`GUARD_ADDED: 20`, `LIFECYCLE_GOVERNED: 3`, `ORCHESTRATOR_CANDIDATE: 0`). Five IBG save points on **`main`** remain bare `writer.saveas` with matrix **`BLOCKED_PROVENANCE`** until the R2 wrapper merges and R1 ratification unlocks export.
 
 This handoff defines the **only remaining DXF lifecycle dev orders** in two gated phases:
 
 | Phase | Dev order | Type | Outcome |
 |-------|-----------|------|---------|
-| **R1** | DO 78 | Governance session (not a code sprint) | Signed ratification; implementation approved |
-| **R2** | DO 79 | Engineering (isolated branch) | Provenance-aware save wrapper; matrix promotion |
+| **R1** | DO 78 | Governance session (not a code sprint) | Signed ratification; **production export** authorization |
+| **R2** | DO 79 / DO 80 | Engineering (branch → PR) | Provenance-aware save wrapper; guard wiring; matrix guard column |
 
-**Fail-closed rule:** No guards, wrappers, or matrix promotion on IBG paths until R1 exit criteria are met.
+### Sequencing (R1 vs R2 merge) — canonical
+
+| Action | Requires signed R1? | Why |
+|--------|---------------------|-----|
+| Open / merge **R2 PR** (wrapper on branch) | **No** | Wrapper is fail-closed; every save uses blocked draft → `IbgDxfExportBlockedError` until `RATIFIED` |
+| **Production IBG DXF export** (`save_dxf`, API base64) | **Yes** | Needs R1 + Phase D/E (DO 80) |
+| Matrix: `GUARD_ADDED` column | **No** | Documents guard wiring; does not imply export enabled |
+| Matrix: export-enabled / `COMPAT_ONLY` lifecycle | **Yes** | Governance PR after R1 |
+| Phase D caller bridge (`BodyEvidenceCandidate`) | **Yes** | Field contract frozen at R1 |
+
+> **Operational note (post–R2 merge):** `POST /api/body/*` paths that call `gen.save_dxf()` will **fail DXF export by design** until R1 + ratified attachment. This is correct fail-closed posture, not a regression to “fix” by removing the wrapper.
+
+**Fail-closed rule (precise):** No **export authorization** or matrix promotion that implies CAM-ready IBG output until R1 exit criteria are met. **R2 code may land on `main` before R1** because the wrapper blocks all non-`RATIFIED` saves.
 
 ---
 
-## Blocked inventory (verified on disk)
+## Blocked inventory (verified on `main` @ PR #44)
 
-| File | Lines | Callable context | Save API |
-|------|-------|------------------|----------|
-| `instrument_geometry/body/ibg/body_contour_solver.py` | 777, 808 | `export_solved_body_dxf()` (and empty-outline path) | `DxfWriter.saveas` |
-| `instrument_geometry/body/ibg/arc_reconstructor.py` | 1116 | `write_chains_to_dxf()` | `DxfWriter.saveas` |
+Line numbers are a **baseline** — re-verify on your branch with `rg` before editing (see DO 80 Phase A).
+
+| File | Lines (`main`) | Callable context | Save API |
+|------|----------------|------------------|----------|
+| `instrument_geometry/body/ibg/body_contour_solver.py` | 777, 808 | `outline_to_dxf()` — empty-outline path (~777) and full outline (~808) | `DxfWriter.saveas` |
+| `instrument_geometry/body/ibg/arc_reconstructor.py` | 1116 | `chains_to_dxf()` | `DxfWriter.saveas` |
 | `instrument_geometry/body/ibg/arc_reconstructor.py` | 1279, 1303 | `create_visual_test_dxf()`, `create_simple_gap_test_dxf()` | `DxfWriter.saveas` |
 
-**Matrix:** `EXPORT_LIFECYCLE_CLASSIFICATION_MATRIX.md` §3 — all five rows `BLOCKED_PROVENANCE`.
+**Matrix:** `EXPORT_LIFECYCLE_CLASSIFICATION_MATRIX.md` §3 — all five rows `BLOCKED_PROVENANCE` on `main`.
+
+**R2 branch (`feat/ibg-provenance-r2-export-wrapper`):** replaces bare `saveas` with `governed_ibg_writer_saveas` — verify on branch, not visible on `main` until merged.
 
 **Epistemic default until ratified:** `PREDICTED` / `HEURISTIC` — not production OBSERVED/DERIVED authority.
 
@@ -70,7 +87,7 @@ Ratify authority semantics and required fields at the IBG DXF save boundary. R1 
 |-------------|-------|
 | Signed ratification record | Updates matrix blocking condition from “awaiting ratification” → “implementation approved” |
 | `ProvenanceAttachmentStatus.RATIFIED` policy | When `export_authorized` may become true |
-| DO 79 unlocked | Engineering may branch |
+| DO 79 / DO 80 Phase D–E unlocked | Caller bridge + ratified export (not R2 merge itself) |
 
 ### R1 exit criteria
 
@@ -97,9 +114,10 @@ Ratify authority semantics and required fields at the IBG DXF save boundary. R1 
 
 ## DO 79 — Phase R2: Minimal IBG export wrapper (implementation)
 
-**Prerequisite:** DO 78 R1 exit criteria met (signed record).
+**Prerequisite (code merge):** Branch from `main` @ PR #44 — **R1 signature not required to merge R2** (wrapper is inert/fail-closed).  
+**Prerequisite (production export):** DO 78 R1 exit criteria met + DO 80 Phase D–E.
 
-**Branch:** `feat/ibg-provenance-r2-export-wrapper` from current `main`  
+**Branch:** `feat/ibg-provenance-r2-export-wrapper` from current `main` (`918f84d9` on branch)  
 **Estimated effort:** 2–4 days  
 **PR title (suggested):** `feat(ibg): wire provenance-aware DXF save wrapper (R2)`
 
@@ -249,11 +267,11 @@ pytest tests/test_dxf_lifecycle_guard.py tests/test_dxf_lifecycle_ibg_provenance
 
 ## Developer workflow (recommended)
 
-1. **Confirm R1** — Do not branch R2 until signed ratification record exists.
-2. **R2 branch** — `feat/ibg-provenance-r2-export-wrapper` from `main`; stash unrelated WIP.
-3. **Implement wrapper + five call sites** — validation-only; no geometry edits.
-4. **Tests + matrix** — same pattern as DO 75–77.
-5. **PR to `main`** — link R1 decision ID; request governance reviewer.
+1. **R2 branch / PR** — `feat/ibg-provenance-r2-export-wrapper`; run DO 80 Phase A `VERIFY` on **the branch** (not `main` alone).
+2. **Merge R2** — Allowed before R1; PR body must state: *IBG DXF export disabled in production until R1 + Phase D*.
+3. **Schedule R1** — Governance session in parallel; produce signed `IBG_R1_RATIFICATION_RECORD_*.md`.
+4. **Phase D–E** — Caller provenance bridge + ratified export — **only after R1**.
+5. **Matrix** — `GUARD_ADDED` with R2 merge; lifecycle export-enabled promotion only after R1 governance PR.
 
 ---
 
@@ -279,4 +297,4 @@ pytest tests/test_dxf_lifecycle_guard.py tests/test_dxf_lifecycle_ibg_provenance
 
 ---
 
-*DO 78–79 — Proposed dev orders for IBG R namespace. Start with synchronous R1 governance session; implement R2 only after ratification.*
+*DO 78–79 — Spec. Execution checklist: [DO_80_IBG_PROVENANCE_R2_ROLLOUT_ANNOTATED_HANDOFF.md](DO_80_IBG_PROVENANCE_R2_ROLLOUT_ANNOTATED_HANDOFF.md).*
