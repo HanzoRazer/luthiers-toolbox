@@ -1072,6 +1072,7 @@ def chains_to_dxf(
     promote_arcs: bool = False,
     arc_tolerance_mm: float = 1.0,
     arc_max_error_mm: float = 2.5,
+    provenance_attachment=None,
 ) -> dict:
     """
     Write chains to a DXF file.
@@ -1092,6 +1093,15 @@ def chains_to_dxf(
         Dict with entity counts
     """
     from ....cam.dxf_writer import DxfWriter, LayerDef
+    from ....util.ibg_dxf_export_lifecycle import (
+        default_ibg_attachment_for_save,
+        governed_ibg_writer_saveas,
+    )
+
+    attachment = provenance_attachment or default_ibg_attachment_for_save(
+        output_path,
+        transformation_method="chains_to_dxf",
+    )
 
     # Collect unique layers
     layers_seen = set()
@@ -1113,7 +1123,12 @@ def chains_to_dxf(
         counts["line"] += len(points) - 1 + (1 if chain.is_closed else 0)
         counts["straight_segments"] += len(points) - 1 + (1 if chain.is_closed else 0)
 
-    writer.saveas(output_path)
+    governed_ibg_writer_saveas(
+        writer,
+        output_path,
+        attachment=attachment,
+        source_module=__name__,
+    )
     return counts
 
 
@@ -1199,7 +1214,7 @@ if __name__ == "__main__":
 
 # ─── Section H: Test Harness and Entry Point ───────────────────────────────────
 
-def create_visual_test_dxf(output_path: str) -> str:
+def create_visual_test_dxf(output_path: str, provenance_attachment=None) -> str:
     """
     Create a synthetic guitar body outline with deliberate gaps for visual testing.
 
@@ -1211,6 +1226,15 @@ def create_visual_test_dxf(output_path: str) -> str:
     3. Returns path to the created DXF
     """
     from ....cam.dxf_writer import DxfWriter, LayerDef
+    from ....util.ibg_dxf_export_lifecycle import (
+        default_ibg_attachment_for_save,
+        governed_ibg_writer_saveas,
+    )
+
+    attachment = provenance_attachment or default_ibg_attachment_for_save(
+        output_path,
+        transformation_method="create_visual_test_dxf",
+    )
 
     writer = DxfWriter(layers=[LayerDef("BODY")])
 
@@ -1276,17 +1300,31 @@ def create_visual_test_dxf(output_path: str) -> str:
     if len(points_lower_right) >= 2:
         writer.add_polyline("BODY", points_lower_right)
 
-    writer.saveas(output_path)
+    governed_ibg_writer_saveas(
+        writer,
+        output_path,
+        attachment=attachment,
+        source_module=__name__,
+    )
     return output_path
 
 
-def create_simple_gap_test_dxf(output_path: str) -> str:
+def create_simple_gap_test_dxf(output_path: str, provenance_attachment=None) -> str:
     """
     Create a simple circle with a visible gap for clear visual testing.
 
     Uses dxf_writer.py for centralized R12 DXF output (Sprint 3B migration).
     """
     from ....cam.dxf_writer import DxfWriter, LayerDef
+    from ....util.ibg_dxf_export_lifecycle import (
+        default_ibg_attachment_for_save,
+        governed_ibg_writer_saveas,
+    )
+
+    attachment = provenance_attachment or default_ibg_attachment_for_save(
+        output_path,
+        transformation_method="create_simple_gap_test_dxf",
+    )
 
     writer = DxfWriter(layers=[LayerDef("BODY")])
 
@@ -1300,7 +1338,12 @@ def create_simple_gap_test_dxf(output_path: str) -> str:
         points.append((x, y))
 
     writer.add_polyline("BODY", points)
-    writer.saveas(output_path)
+    governed_ibg_writer_saveas(
+        writer,
+        output_path,
+        attachment=attachment,
+        source_module=__name__,
+    )
     return output_path
 
 

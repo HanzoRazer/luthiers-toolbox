@@ -60,7 +60,7 @@ pytest tests/test_dxf_preprocessor.py tests/test_contour_reconstruction.py tests
 
 ## Next
 
-**R1 / R2:** IBG provenance ratification — 5 `BLOCKED_PROVENANCE` save points in `body_contour_solver.py` and `arc_reconstructor.py`.
+**Next:** [DO_80_IBG_PROVENANCE_R2_ROLLOUT_ANNOTATED_HANDOFF.md](DO_80_IBG_PROVENANCE_R2_ROLLOUT_ANNOTATED_HANDOFF.md) (execution). Spec: [DO_78](DO_78_IBG_PROVENANCE_R_NAMESPACE_HANDOFF.md). R2 may merge before R1; production export waits for R1.
 
 ---
 

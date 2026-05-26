@@ -12,6 +12,7 @@ Sprint: Week 1 — API endpoints, JSON output only
 
 import os
 import tempfile
+from unittest.mock import patch
 
 import pytest
 from fastapi.testclient import TestClient
@@ -37,8 +38,15 @@ def dreadnought_fixture_dxf():
     gen = InstrumentBodyGenerator("dreadnought")
     model = gen.generate_from_defaults()
 
+    def _direct_writer_saveas(writer, path, **kwargs):
+        writer.saveas(path)
+
     with tempfile.NamedTemporaryFile(suffix=".dxf", delete=False) as tmp:
-        gen.save_dxf(model, tmp.name)
+        with patch(
+            "app.util.ibg_dxf_export_lifecycle.governed_ibg_writer_saveas",
+            side_effect=_direct_writer_saveas,
+        ):
+            gen.save_dxf(model, tmp.name)
         yield tmp.name
 
     if os.path.exists(tmp.name):

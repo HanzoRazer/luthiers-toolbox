@@ -285,18 +285,50 @@ class InstrumentBodyGenerator:
         solver = BodyContourSolver(self.constraints, family=self.family)
         return solver.solve()
 
-    def save_dxf(self, model: SolvedBodyModel, output_path: str) -> str:
+    def save_dxf(
+        self,
+        model: SolvedBodyModel,
+        output_path: str,
+        evidence_candidate=None,
+    ) -> str:
         """
         Save solved model to R12 DXF.
 
         Args:
             model: SolvedBodyModel to export
             output_path: Path for output DXF
+            evidence_candidate: Optional BodyEvidenceCandidate for provenance bridge
 
         Returns:
             Output file path
+
+        Raises:
+            IbgDxfExportBlockedError: Until R1 ratification supplies RATIFIED attachment
         """
-        return outline_to_dxf(model, output_path, self.spec_name)
+        if evidence_candidate is not None:
+            from app.governance.ibg_export_provenance import (
+                attachment_from_body_evidence_candidate,
+            )
+
+            attachment = attachment_from_body_evidence_candidate(
+                evidence_candidate,
+                export_intent="outline_to_dxf",
+                ibg_run_id=evidence_candidate.candidate_id,
+            )
+        else:
+            from app.governance.provenance_attachment import create_ibg_provenance_draft
+
+            attachment = create_ibg_provenance_draft(
+                attachment_id=f"ibg-export:{self.spec_name}:{output_path}",
+                source_artifact_id=self.spec_name or output_path,
+                transformation_method="outline_to_dxf",
+            )
+        return outline_to_dxf(
+            model,
+            output_path,
+            self.spec_name,
+            provenance_attachment=attachment,
+        )
 
     def export_spec_json(self, model: SolvedBodyModel, output_path: str) -> str:
         """

@@ -1,8 +1,9 @@
 # DXF Lifecycle Sprint — Developer Plan
 
-**Date:** 2026-05-25  
-**Namespace:** Phase 1E → 2A → 2B → 2C → 2D → 2F → 2G → 3A+  
-**Status:** Phase 3B COMPLETE — R1/IBG blocked paths next
+**Date:** 2026-05-25 (reconciled 2026-05-19)  
+**Namespace:** Phase 1E → 2A → 2B → 2C → 2D → 2F → 2G → 3A → 3B → R  
+**Status:** Phases 2A–3B COMPLETE on `main` (PR #40–#44) — next: DO 78 R1 / DO 79 R2 (IBG)  
+**Verified against:** `origin/main` @ `225b1fd7` (merge PR #44)
 
 ---
 
@@ -24,7 +25,8 @@ The DXF Lifecycle Sprint establishes validation-only guards at all DXF save/writ
 | 3A-3 | COMPLETE | `layered_dxf_writer.py` (PR #42) |
 | 3A-4 | COMPLETE | read-modify-save pair (`DO_76`) |
 | 3B | COMPLETE | Blueprint CAM orchestrator adoption (3 paths, DO 77) |
-| R1+ | BLOCKED | IBG provenance ratification (5 paths) |
+| R2 | IN PROGRESS | IBG wrapper on branch; merge + R1 gate (DO 80) |
+| R1+ | BLOCKED | IBG production export until R1 + Phase E |
 
 ---
 
@@ -65,52 +67,45 @@ Reason: DxfWriter lacks caller context (`source_module`, `runtime_callable`, `au
 
 ---
 
+## Completed Work (Phase 3A — Group B guards)
+
+| File | Lifecycle Status | Batch | Merge |
+|------|------------------|-------|-------|
+| `cam/archtop_bridge_generator.py` | COMPAT_ONLY | 3A-1 | PR #40 |
+| `cam/archtop_saddle_generator.py` | COMPAT_ONLY | 3A-1 | PR #40 |
+| `cam/archtop/archtop_surface_tools.py` | COMPAT_ONLY | 3A-1 | PR #40 |
+| `cam/archtop/archtop_contour_generator.py` | COMPAT_ONLY | 3A-1 | PR #40 |
+| `instrument_geometry/body/smart_guitar_dxf.py` | COMPAT_ONLY | 3A-2 | PR #41 |
+| `instrument_geometry/soundhole/spiral_geometry.py` | COMPAT_ONLY | 3A-2 | PR #41 |
+| `generators/bezier_body.py` | COMPAT_ONLY | 3A-2 | PR #41 |
+| `services/layered_dxf_writer.py` | COMPAT_ONLY | 3A-3 | PR #42 |
+| `cam/line_deduplicator.py` | DIRECT_SAVE_GAP | 3A-4 | PR #43 |
+| `services/text_reinsertion.py` | DIRECT_SAVE_GAP | 3A-4 | PR #43 |
+
+**Pattern:** `assert_dxf_lifecycle_context()` immediately before each `saveas` (or DxfWriter `saveas`).
+
+---
+
+## Completed Work (Phase 3B — Blueprint CAM orchestrator)
+
+| File | Target status | Module | Merge |
+|------|---------------|--------|-------|
+| `routers/blueprint_cam/dxf_preprocessor.py` | LIFECYCLE_GOVERNED | `governed_doc_saveas` | PR #44 |
+| `routers/blueprint_cam/contour_reconstruction.py` | LIFECYCLE_GOVERNED | `governed_doc_saveas` | PR #44 |
+| `routers/blueprint_cam/dxf_geometry_correction.py` | LIFECYCLE_GOVERNED | `governed_doc_saveas` | PR #44 |
+
+**Helper:** `app/util/blueprint_dxf_export_lifecycle.py` — not the CAM G-code `export_lifecycle_orchestrator`.
+
+---
+
 ## Remaining Work
-
-### Phase 3A — Group B Guard Candidates (batched)
-
-**Priority:** P2  
-**Prerequisite:** Phase 2G complete  
-**Estimated effort:** 1-2 days total (4 sub-PRs)
-
-| File | Lifecycle Status | Callable | Batch | Status |
-|------|------------------|----------|-------|--------|
-| `cam/archtop_bridge_generator.py` | COMPAT_ONLY | runtime_service | 3A-1 | GUARD_ADDED |
-| `cam/archtop_saddle_generator.py` | COMPAT_ONLY | runtime_service | 3A-1 | GUARD_ADDED |
-| `cam/archtop/archtop_surface_tools.py` | COMPAT_ONLY | runtime_service | 3A-1 | GUARD_ADDED |
-| `cam/archtop/archtop_contour_generator.py` | COMPAT_ONLY | runtime_service | 3A-1 | GUARD_ADDED |
-| `instrument_geometry/body/smart_guitar_dxf.py` | COMPAT_ONLY | runtime_service | 3A-2 | GUARD_ADDED |
-| `instrument_geometry/soundhole/spiral_geometry.py` | COMPAT_ONLY | runtime_service | 3A-2 | GUARD_ADDED |
-| `generators/bezier_body.py` | COMPAT_ONLY | runtime_service | 3A-2 | GUARD_ADDED |
-| `services/layered_dxf_writer.py` | COMPAT_ONLY | runtime_service | 3A-3 | GUARD_ADDED |
-| `cam/line_deduplicator.py` | DIRECT_SAVE_GAP | runtime_service | 3A-4 | GUARD_ADDED |
-| `services/text_reinsertion.py` | DIRECT_SAVE_GAP | runtime_service | 3A-4 | GUARD_ADDED |
-
-**Pattern:** Same as Phase 2A — `assert_dxf_lifecycle_context()` before save.
-
----
-
-### Phase 3B — Orchestrator Candidates (3 paths)
-
-**Priority:** P3  
-**Prerequisite:** Phase 3A complete  
-**Estimated effort:** 2-3 days
-
-| File | Current Status | Target |
-|------|----------------|--------|
-| `routers/blueprint_cam/dxf_preprocessor.py` | COMPAT_ONLY | LIFECYCLE_GOVERNED |
-| `routers/blueprint_cam/contour_reconstruction.py` | COMPAT_ONLY | LIFECYCLE_GOVERNED |
-| `routers/blueprint_cam/dxf_geometry_correction.py` | DIRECT_SAVE_GAP | LIFECYCLE_GOVERNED |
-
-**Scope:** Governed save via `app/util/blueprint_dxf_export_lifecycle.py` (`governed_doc_saveas`) with `LIFECYCLE_GOVERNED` guard context. Not the CAM G-code `export_lifecycle_orchestrator` (no DXF output).
-
----
 
 ### R Namespace — IBG Provenance (5 paths)
 
-**Priority:** P1 after R1 ratification  
-**Prerequisite:** R1 governance ratification session  
-**Status:** BLOCKED
+**Priority:** P1 — execution via DO 80  
+**Prerequisite:** R1 for **production export**; R2 PR may merge earlier (fail-closed wrapper)  
+**Status:** R2 on branch `feat/ibg-provenance-r2-export-wrapper`; not on `main` until merged  
+**Handoff:** `docs/handoffs/DO_80_IBG_PROVENANCE_R2_ROLLOUT_ANNOTATED_HANDOFF.md`
 
 | File | Line | Status |
 |------|------|--------|
@@ -142,7 +137,7 @@ context = DxfLifecycleContext(
     lifecycle_status="COMPAT_ONLY",
     runtime_callable="runtime_service",  # or "router_endpoint"
     authority_context="user_request",    # or "pipeline_stage"
-    provenance_status="NOT_ATTACHED",
+    provenance_status="NO",
 )
 
 # Assert before save
@@ -163,7 +158,7 @@ context = DxfLifecycleContext(
     lifecycle_status="DIRECT_SAVE_GAP",  # Different status
     runtime_callable="runtime_service",
     authority_context="pipeline_stage",
-    provenance_status="NOT_ATTACHED",
+    provenance_status="NO",
 )
 
 assert_dxf_lifecycle_context(context)
@@ -180,7 +175,7 @@ doc.saveas(path)
 | `lifecycle_status` | YES | `LIFECYCLE_GOVERNED`, `COMPAT_ONLY`, `DIRECT_SAVE_GAP` |
 | `runtime_callable` | YES | `router_endpoint`, `runtime_service`, `script_only` |
 | `authority_context` | OPTIONAL | `user_request`, `pipeline_stage`, `batch_operation`, `preview_only` |
-| `provenance_status` | YES | `NOT_ATTACHED`, `BLOCKED`, `ATTACHED` |
+| `provenance_status` | YES | `NO`, `YES`, `BLOCKED`, `N/A` (see `dxf_lifecycle_guard.py`) |
 
 ---
 
@@ -244,31 +239,38 @@ pytest tests/governance/test_dxf_lifecycle_*.py -v
 
 ---
 
+## Repo verification (run before trusting this plan)
+
+From repo root on current `main`:
+
+```bash
+# 20 path-owner modules + 1 orchestrator helper = 21 production files (excludes guard.py, tests)
+rg -l "assert_dxf_lifecycle_context" services/api/app --glob "*.py" \
+  | rg -v "dxf_lifecycle_guard.py|/tests/"
+
+# Phase 3B orchestrator (must exist post–PR #44)
+test -f services/api/app/util/blueprint_dxf_export_lifecycle.py
+rg "governed_doc_saveas" services/api/app/routers/blueprint_cam --glob "*.py"
+
+# IBG still blocked (no guards until R2)
+rg "assert_dxf_lifecycle_context|governed_doc_saveas" \
+  services/api/app/instrument_geometry/body/ibg --glob "*.py"
+# expect: no matches
+```
+
+**Expected counts (2026-05-19):** 21 files with `assert_dxf_lifecycle_context` in `app/`; 3 blueprint_cam routers using `governed_doc_saveas`; 0 IBG guard wiring.
+
+**Before guarding any new path:** open the file and confirm the actual save pattern (`create-save` vs `read-modify-save`) matches `EXPORT_LIFECYCLE_CLASSIFICATION_MATRIX.md` for that row.
+
+---
+
 ## Sprint Execution Order
 
-### Immediate (No Blockers)
+### Complete (merged PR #40–#44)
 
-```
-Phase 3A: Group B guard candidates
-├── cam/line_deduplicator.py
-├── cam/archtop_*.py (4 files)
-├── instrument_geometry/body/smart_guitar_dxf.py
-├── instrument_geometry/soundhole/spiral_geometry.py
-├── generators/bezier_body.py
-├── services/layered_dxf_writer.py
-└── services/text_reinsertion.py
-```
+Phases 3A-1 through 3B — see tables above.
 
-### After Phase 3A
-
-```
-Phase 3B: Orchestrator candidates
-├── routers/blueprint_cam/dxf_preprocessor.py
-├── routers/blueprint_cam/contour_reconstruction.py
-└── routers/blueprint_cam/dxf_geometry_correction.py
-```
-
-### After R1 Ratification
+### Next — after R1 ratification (DO 78)
 
 ```
 R2: IBG provenance guards
@@ -305,6 +307,8 @@ R2: IBG provenance guards
 | `docs/handoffs/DO_75_DXF_LIFECYCLE_PHASE_3A2.md` | Phase 3A-2 dev order (instrument geometry) |
 | `docs/handoffs/DO_76_DXF_LIFECYCLE_PHASE_3A4.md` | Phase 3A-4 dev order (read-modify-save) |
 | `docs/handoffs/DO_77_DXF_LIFECYCLE_PHASE_3B.md` | Phase 3B dev order (blueprint_cam orchestrator) |
+| `docs/handoffs/DO_78_IBG_PROVENANCE_R_NAMESPACE_HANDOFF.md` | DO 78 (R1) + DO 79 (R2) IBG provenance spec |
+| `docs/handoffs/DO_80_IBG_PROVENANCE_R2_ROLLOUT_ANNOTATED_HANDOFF.md` | **Dev-ready** R2 rollout + R1 gate + caller bridge (annotated) |
 
 ---
 
@@ -312,18 +316,18 @@ R2: IBG provenance guards
 
 ### Phase 3A Complete When
 
-- [ ] All 10 Group B candidates have guards
-- [ ] Tests pass for each new guard
-- [ ] Matrix updated with `GUARD_ADDED` status
-- [ ] No behavior changes to DXF output
+- [x] All 10 Group B candidates have guards (PR #40–#43)
+- [x] Tests pass for each new guard (`test_dxf_lifecycle_*_guards.py`)
+- [x] Matrix updated with `GUARD_ADDED` status
+- [x] No behavior changes to DXF output
 
 ### Phase 3B Complete When
 
-- [x] All 3 orchestrator candidates use `blueprint_dxf_export_lifecycle.governed_doc_saveas`
+- [x] All 3 orchestrator candidates use `blueprint_dxf_export_lifecycle.governed_doc_saveas` (PR #44)
 - [x] `LIFECYCLE_GOVERNED` guard context at every blueprint_cam save boundary
 - [x] Matrix updated with `LIFECYCLE_GOVERNED` status
 
-### R2 Complete When
+### R2 Complete When (DO 79 — proposed)
 
 - [ ] R1 ratification approved
 - [ ] All 5 IBG paths have provenance-aware guards
@@ -331,4 +335,4 @@ R2: IBG provenance guards
 
 ---
 
-*Developer Plan version: 2026-05-25*
+*Developer Plan version: 2026-05-25 — reconciled against `main` @ PR #44*
