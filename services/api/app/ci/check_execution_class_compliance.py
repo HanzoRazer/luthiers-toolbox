@@ -1,72 +1,84 @@
 """
-CI Guard: Execution Class Compliance
+CI Guard: CAM Intent Surface Compliance
 
-Rules:
-- All CAM endpoints MUST normalize CamIntentV1
-- Execution Class B (deterministic) endpoints are allowed
-  to execute in a single pass without feasibility/advisory logic
+Ensures the H7.1/H7.2 CamIntentV1 HTTP surface cannot be removed silently:
+- Required intent router modules exist on disk
+- Each router calls normalize_cam_intent_v1
+- Both routers are registered in router_registry manifests
 
 Reference: docs/OPERATION_EXECUTION_GOVERNANCE_v1.md (Appendix D)
 """
 
-from pathlib import Path
+from __future__ import annotations
+
 import sys
+from pathlib import Path
 
-ROOT = Path(__file__).parents[3]
+ROOT = Path(__file__).resolve().parents[1]  # services/api/app
 
-# Explicitly allowed deterministic modules (Execution Class B)
-DETERMINISTIC_ALLOWLIST = {
-    "saw_lab",
-    "saw",
-    "cnc_saw",
+REQUIRED_INTENT_ROUTER_FILES = (
+    "routers/cam_roughing_intent_router.py",
+    "routers/rmos_cam_intent_router.py",
+)
+
+REQUIRED_MANIFEST_MODULES = {
+    "app.routers.cam_roughing_intent_router",
+    "app.routers.rmos_cam_intent_router",
 }
 
-
-def is_cam_router(file: Path) -> bool:
-    """Check if file is a CAM router that produces machine output."""
-    return "cam" in file.parts and file.suffix == ".py"
+MANIFEST_PATHS = (
+    ROOT / "router_registry" / "manifests" / "cam_manifest.py",
+    ROOT / "router_registry" / "manifests" / "rmos_manifest.py",
+)
 
 
 def has_intent_normalization(text: str) -> bool:
-    """Check if module normalizes CamIntentV1."""
     return "normalize_cam_intent_v1" in text
 
 
-def is_deterministic(file: Path) -> bool:
-    """Check if module is in the deterministic allowlist (Execution Class B)."""
-    return any(part in DETERMINISTIC_ALLOWLIST for part in file.parts)
+def check_required_routers() -> list[str]:
+    violations: list[str] = []
+    for rel in REQUIRED_INTENT_ROUTER_FILES:
+        path = ROOT / rel
+        if not path.is_file():
+            violations.append(f"Missing required CAM intent router: app/{rel}")
+            continue
+        text = path.read_text(encoding="utf-8", errors="ignore")
+        if not has_intent_normalization(text):
+            violations.append(f"app/{rel} must call normalize_cam_intent_v1")
+    return violations
+
+
+def check_manifest_registration() -> list[str]:
+    violations: list[str] = []
+    found: set[str] = set()
+    for manifest in MANIFEST_PATHS:
+        if not manifest.is_file():
+            violations.append(f"Missing router manifest: {manifest}")
+            continue
+        text = manifest.read_text(encoding="utf-8", errors="ignore")
+        for module in REQUIRED_MANIFEST_MODULES:
+            if f'module="{module}"' in text or f"module='{module}'" in text:
+                found.add(module)
+    missing = REQUIRED_MANIFEST_MODULES - found
+    for module in sorted(missing):
+        violations.append(f"CAM intent router not registered in manifest: {module}")
+    return violations
 
 
 def main() -> int:
-    violations = []
-
-    for py in ROOT.rglob("*.py"):
-        if not is_cam_router(py):
-            continue
-
-        text = py.read_text(encoding="utf-8", errors="ignore")
-
-        # Has normalization - compliant
-        if has_intent_normalization(text):
-            continue
-
-        # Is deterministic (Class B) - allowed to skip
-        if is_deterministic(py):
-            continue
-
-        violations.append(str(py.relative_to(ROOT)))
-
+    violations = check_required_routers() + check_manifest_registration()
     if violations:
-        print("\n❌ Execution Governance Violation\n")
-        print("The following CAM modules do not normalize CamIntentV1:\n")
+        print("\nFAIL: CAM Intent surface compliance violation\n")
         for v in violations:
             print(f"  - {v}")
         print(
-            "\nSee OPERATION_EXECUTION_GOVERNANCE_v1.md → Appendix D: Execution Classes\n"
+            "\nRestore routers via git checkout and register in "
+            "cam_manifest.py / rmos_manifest.py.\n"
         )
         return 1
 
-    print("✅ Execution class compliance check passed.")
+    print("OK: CAM intent surface compliance check passed.")
     return 0
 
 

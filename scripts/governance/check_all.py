@@ -90,6 +90,12 @@ GOVERNANCE_CHECKS: List[Tuple[str, str, bool, EnforcementTier]] = [
 
     # === CI TIER — moderate checks, <30s each ===
     ("scripts/check_capability_registry.py", "CAM capability registry", True, EnforcementTier.CI),
+    (
+        "services/api/app/ci/check_execution_class_compliance.py",
+        "CAM intent surface compliance (H7 routers + manifest)",
+        True,
+        EnforcementTier.CI,
+    ),
     ("scripts/check_semantic_leakage.py", "Semantic layer boundaries", False, EnforcementTier.CI),
     ("scripts/governance/check_artifact_linkage_invariants.py", "Artifact linkage invariants", False, EnforcementTier.CI),
     ("scripts/governance/validate_run_artifact_contract.py", "Run artifact contract", False, EnforcementTier.CI),

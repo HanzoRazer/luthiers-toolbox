@@ -5,6 +5,13 @@ from typing import List
 from ..models import RouterSpec
 
 RMOS_ROUTERS: List[RouterSpec] = [
+    # H7.1.2: CamIntentV1 normalize (prefix /api + router /rmos/cam → /api/rmos/cam/intent/normalize)
+    RouterSpec(
+        module="app.routers.rmos_cam_intent_router",
+        prefix="/api",
+        tags=["RMOS", "CAM"],
+        category="rmos",
+    ),
     RouterSpec(
         module="app.rmos",
         router_attr="rmos_router",

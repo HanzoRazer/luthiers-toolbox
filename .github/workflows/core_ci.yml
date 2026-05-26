@@ -33,6 +33,10 @@ jobs:
       - name: Viewer Pack v1 Schema Parity Gate
         run: |
           python scripts/validate/check_viewer_pack_schema_parity.py --mode check
+      - name: CAM Intent surface compliance (H7.1/H7.2)
+        run: |
+          cd services/api
+          python -m app.ci.check_execution_class_compliance
       - name: CONTRACTS_GOVERNANCE_SCENARIO_B_GATE
         run: |
           python scripts/ci/check_contracts_governance.py --base-ref origin/main
