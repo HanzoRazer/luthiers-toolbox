@@ -20,6 +20,7 @@ import ezdxf
 from ezdxf.math import Vec2
 
 from app.util.dxf_compat import create_document
+from app.util.blueprint_dxf_export_lifecycle import governed_doc_saveas
 
 
 # =============================================================================
@@ -192,7 +193,13 @@ def normalize_dxf_format(dxf_bytes: bytes) -> Tuple[bytes, str, str, List[str]]:
         with tempfile.NamedTemporaryFile(delete=False, suffix='.dxf', mode='wb') as out_tmp:
             out_path = out_tmp.name
 
-        new_doc.saveas(out_path)
+        governed_doc_saveas(
+            new_doc,
+            out_path,
+            source_module=__name__,
+            export_type="dxf-create-save",
+            dxf_version="AC1015",
+        )
 
         with open(out_path, 'rb') as f:
             normalized_bytes = f.read()
@@ -318,7 +325,12 @@ def densify_dxf(dxf_bytes: bytes,
         with tempfile.NamedTemporaryFile(delete=False, suffix='.dxf', mode='wb') as out_tmp:
             out_path = out_tmp.name
 
-        doc.saveas(out_path)
+        governed_doc_saveas(
+            doc,
+            out_path,
+            source_module=__name__,
+            export_type="dxf-read-modify-save",
+        )
 
         with open(out_path, 'rb') as f:
             densified_bytes = f.read()
