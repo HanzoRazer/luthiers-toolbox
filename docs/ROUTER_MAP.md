@@ -613,18 +613,19 @@ Legacy Routers (Deleted 2026-01-30): 19 routers (~4,000 lines)
 
 H7.2 introduces intent-native CAM endpoints that use the canonical `CamIntentV1` envelope. These endpoints normalize input, validate constraints, and emit Prometheus metrics.
 
-### New Router
+### Routers (router_registry)
 
-- `cam_roughing_intent_router` — Intent-native roughing G-code generation
+- `cam_roughing_intent_router` — Intent-native roughing G-code (`cam_manifest`, prefix `/api`)
+- `rmos_cam_intent_router` — CamIntentV1 normalization (`rmos_manifest`, prefix `/api`)
 
-**Prefix:** `/api/cam`
-**Tags:** `CAM`, `Intent`
+**Tags:** `CAM`, `Intent` / `RMOS`, `CAM`
 
 ### Endpoints
 
 | Method | Endpoint | Query Params | Description |
 |--------|----------|--------------|-------------|
-| POST | `/api/cam/roughing_gcode_intent` | `strict=bool` | Generate roughing G-code from `CamIntentV1` |
+| POST | `/api/cam/roughing/gcode_intent` | `strict=bool` | Generate roughing G-code from `CamIntentV1` |
+| POST | `/api/rmos/cam/intent/normalize` | `strict=bool` | Normalize `CamIntentV1` (H7.1.2) |
 
 ### Strict Mode (H7.2.3)
 
@@ -635,12 +636,12 @@ The `strict` query parameter controls validation behavior:
 
 ```bash
 # Non-strict (default) - tolerates issues
-curl -X POST http://localhost:8000/api/cam/roughing_gcode_intent \
+curl -X POST http://localhost:8000/api/cam/roughing/gcode_intent \
   -H "Content-Type: application/json" \
   -d '{"design": {...}}'
 
 # Strict - rejects on issues
-curl -X POST "http://localhost:8000/api/cam/roughing_gcode_intent?strict=true" \
+curl -X POST "http://localhost:8000/api/cam/roughing/gcode_intent?strict=true" \
   -H "Content-Type: application/json" \
   -d '{"design": {...}}'
 ```
@@ -863,7 +864,7 @@ See `docs/adr/ADR-003-cam-operation-lane-promotion.md` for full implementation d
 - Enhanced `EndpointGovernanceMiddleware` to auto-detect "Legacy" FastAPI tags
 
 **H7.2 CAM Intent:**
-- H7.2.2: Added `roughing_gcode_intent` endpoint with normalization and metrics
+- H7.2.2: Added `/api/cam/roughing/gcode_intent` endpoint with normalization and metrics
 - H7.2.3: Added strict mode (`?strict=true`) for validation enforcement
 - Added `cam_roughing_intent_strict_rejects_total` Prometheus counter
 - Added test coverage for strict mode behavior

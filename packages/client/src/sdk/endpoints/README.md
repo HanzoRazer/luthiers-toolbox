@@ -263,7 +263,7 @@ try {
 | Endpoint | Helper | Return Shape | Notes |
 |----------|--------|--------------|-------|
 | `POST /cam/roughing_gcode` | `cam.roughingGcode()` | `{gcode, summary, requestId}` | Legacy entity-based |
-| `POST /cam/roughing_gcode_intent` | `cam.roughingGcodeIntent()` | `{gcode, summary, requestId}` | Intent-native with strict mode |
+| `POST /cam/roughing/gcode_intent` | `cam.roughingGcodeIntent()` | `{gcode, summary, requestId}` | Intent-native with strict mode |
 | `POST /cam/pipeline/run` | `cam.runPipeline()` | `{result, requestId}` | FormData submission |
 
 ### Header Parsing

@@ -142,7 +142,7 @@ describe("CAM Endpoints (H8.3)", () => {
       await roughingGcodeIntent({ design: {} }, true);
 
       expect(postRawSpy).toHaveBeenCalledWith(
-        "/cam/roughing_gcode_intent?strict=true",
+        "/cam/roughing/gcode_intent?strict=true",
         { design: {} }
       );
     });
@@ -162,7 +162,7 @@ describe("CAM Endpoints (H8.3)", () => {
       await roughingGcodeIntent({ design: {} }, false);
 
       expect(postRawSpy).toHaveBeenCalledWith(
-        "/cam/roughing_gcode_intent",
+        "/cam/roughing/gcode_intent",
         { design: {} }
       );
     });

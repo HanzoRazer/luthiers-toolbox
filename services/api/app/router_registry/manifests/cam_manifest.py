@@ -296,6 +296,15 @@ CAM_ROUTERS: List[RouterSpec] = [
         tags=["CAM Consolidated"],
         category="consolidated",
     ),
+    # H7.2: MUST load after app.cam.routers (consolidated). This router imports
+    # app.cam.routers.toolpath.roughing_router; registering it earlier triggers
+    # "cannot load module more than once per process" and the route never mounts.
+    RouterSpec(
+        module="app.routers.cam_roughing_intent_router",
+        prefix="/api",
+        tags=["CAM", "Intent"],
+        category="cam_core",
+    ),
     RouterSpec(
         module="app.compare.routers",
         router_attr="compare_router",

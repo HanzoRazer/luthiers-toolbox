@@ -3,7 +3,7 @@
  *
  * Typed helpers for roughing G-code generation:
  * - POST /cam/roughing_gcode (legacy entity-based)
- * - POST /cam/roughing_gcode_intent (intent-native)
+ * - POST /cam/roughing/gcode_intent (intent-native)
  *
  * Both return { gcode, summary, requestId }
  * Summary is parsed from X-CAM-Summary header.
@@ -73,8 +73,8 @@ export async function roughingGcodeIntent<TIntent extends Record<string, unknown
   strict = false
 ): Promise<RoughingGcodeResult> {
   const path = strict
-    ? "/cam/roughing_gcode_intent?strict=true"
-    : "/cam/roughing_gcode_intent";
+    ? "/cam/roughing/gcode_intent?strict=true"
+    : "/cam/roughing/gcode_intent";
 
   const { data, response } = await postRaw<string>(path, intent);
 
