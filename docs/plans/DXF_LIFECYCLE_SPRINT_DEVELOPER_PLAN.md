@@ -2,7 +2,7 @@
 
 **Date:** 2026-05-25  
 **Namespace:** Phase 1E → 2A → 2B → 2C → 2D → 2F → 2G → 3A+  
-**Status:** Phase 3A-2 COMPLETE — Phase 3A-3 READY
+**Status:** Phase 3A-3 COMPLETE — Phase 3A-4 READY
 
 ---
 
@@ -81,7 +81,7 @@ Reason: DxfWriter lacks caller context (`source_module`, `runtime_callable`, `au
 | `instrument_geometry/body/smart_guitar_dxf.py` | COMPAT_ONLY | runtime_service | 3A-2 | GUARD_ADDED |
 | `instrument_geometry/soundhole/spiral_geometry.py` | COMPAT_ONLY | runtime_service | 3A-2 | GUARD_ADDED |
 | `generators/bezier_body.py` | COMPAT_ONLY | runtime_service | 3A-2 | GUARD_ADDED |
-| `services/layered_dxf_writer.py` | COMPAT_ONLY | runtime_service | 3A-3 | Pending |
+| `services/layered_dxf_writer.py` | COMPAT_ONLY | runtime_service | 3A-3 | GUARD_ADDED |
 | `cam/line_deduplicator.py` | DIRECT_SAVE_GAP | runtime_service | 3A-4 | Pending |
 | `services/text_reinsertion.py` | DIRECT_SAVE_GAP | runtime_service | 3A-4 | Pending |
 
@@ -279,19 +279,19 @@ R2: IBG provenance guards
 
 ## Metrics
 
-### Current State (after 3A-2)
+### Current State (after 3A-3)
 
 | Status | Count |
 |--------|-------|
-| GUARD_ADDED | 17 |
-| GUARD_CANDIDATE | 3 |
+| GUARD_ADDED | 18 |
+| GUARD_CANDIDATE | 2 |
 | ORCHESTRATOR_CANDIDATE | 3 |
 | BLOCKED_PROVENANCE | 5 |
 | REQUIRES_CALLER_CONTEXT | 1 |
 | NOT_APPLICABLE | 26 |
 | **Total paths** | **55** |
 
-### Target State (After Phase 3A-3 / 3A-4)
+### Target State (After Phase 3A-4)
 
 | Status | Count |
 |--------|-------|
