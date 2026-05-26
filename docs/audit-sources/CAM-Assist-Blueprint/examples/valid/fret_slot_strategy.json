@@ -1,0 +1,115 @@
+{
+  "strategy_version": "1.2",
+  "strategy_id": "fret-slots-25500-22f-sample",
+
+  "units": "inches",
+
+  "coordinate_frame": {
+    "origin": "nut_centerline",
+    "x_axis": "along_neck_toward_bridge",
+    "y_axis": "across_fretboard_treble_positive",
+    "z_axis": "into_fretboard",
+    "datum_point": { "x": 0, "y": 0, "z": 0 }
+  },
+
+  "provenance": {
+    "source_spec_id": "sample-stratocaster-spec",
+    "cam_assist_version": "0.3.0",
+    "created_at": "2026-05-21T12:00:00Z",
+    "created_by": "cam-assist-blueprint"
+  },
+
+  "operation_intent": {
+    "operation_type": "fret_slots",
+    "target_feature": "fretboard",
+    "cut_intent": "slot",
+    "non_execution_declaration": true
+  },
+
+  "material_context": {
+    "material_class": "hardwood",
+    "species": "Indian Rosewood",
+    "hardness_janka": 2440,
+    "grain_direction": "along_fretboard_length"
+  },
+
+  "safety_boundary": {
+    "non_execution_declaration": true,
+    "human_review_required": true,
+    "execution_authority_claim": false,
+    "max_depth_inches": 0.060,
+    "tool_diameter_inches": 0.023
+  },
+
+  "geometry": {
+    "dxf_file": "geometry.dxf",
+    "primary_layer": "FRET_SLOTS",
+    "reference_layers": ["FRETBOARD_OUTLINE", "CENTERLINE"]
+  },
+
+  "operation": {
+    "type": "slot_cut",
+    "tool": {
+      "reference_type": "dimension_spec",
+      "tool_type": "slot_cutter",
+      "diameter": 0.023,
+      "description": "Fret slot saw blade or end mill",
+      "required_dimensions": {
+        "width": 0.023,
+        "min_depth_capacity": 0.080
+      },
+      "alternatives": [
+        "Manual fret saw (StewMac #0849)",
+        "Table saw with fret slotting blade",
+        "CNC end mill 0.023\" diameter"
+      ]
+    },
+    "parameters": {
+      "depth": 0.060,
+      "recommended": {
+        "feed_rate_ipm": 10,
+        "spindle_rpm": 10000,
+        "depth_per_pass": 0.060
+      },
+      "basis": "hardwood_standard",
+      "notes": "Single pass at full depth typical for fret slots. Reduce feed for figured maple."
+    },
+    "sequence": "sequential_from_nut"
+  },
+
+  "positions": [
+    {"fret": 1, "distance_from_nut": 1.4312},
+    {"fret": 2, "distance_from_nut": 2.7814},
+    {"fret": 3, "distance_from_nut": 4.0544},
+    {"fret": 4, "distance_from_nut": 5.2540},
+    {"fret": 5, "distance_from_nut": 6.3840},
+    {"fret": 6, "distance_from_nut": 7.4479},
+    {"fret": 7, "distance_from_nut": 8.4491},
+    {"fret": 8, "distance_from_nut": 9.3907},
+    {"fret": 9, "distance_from_nut": 10.2756},
+    {"fret": 10, "distance_from_nut": 11.1068},
+    {"fret": 11, "distance_from_nut": 11.8868},
+    {"fret": 12, "distance_from_nut": 12.6181},
+    {"fret": 13, "distance_from_nut": 13.3031},
+    {"fret": 14, "distance_from_nut": 13.9441},
+    {"fret": 15, "distance_from_nut": 14.5434},
+    {"fret": 16, "distance_from_nut": 15.1032},
+    {"fret": 17, "distance_from_nut": 15.6258},
+    {"fret": 18, "distance_from_nut": 16.1131},
+    {"fret": 19, "distance_from_nut": 16.5671},
+    {"fret": 20, "distance_from_nut": 16.9896},
+    {"fret": 21, "distance_from_nut": 17.3824},
+    {"fret": 22, "distance_from_nut": 17.7472}
+  ],
+
+  "calculation_basis": {
+    "formula": "distance_n = scale_length - (scale_length / 2^(n/12))",
+    "scale_length": 25.5,
+    "temperament": "equal_12TET",
+    "precision": 4
+  },
+
+  "warnings": [],
+
+  "approval_state": "pending"
+}

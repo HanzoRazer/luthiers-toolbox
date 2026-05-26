@@ -1,0 +1,98 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://cam-assist.lutherie/schemas/review_decision_record.schema.json",
+  "title": "CAM Assist Review Decision Record Schema",
+  "description": "Defines a human review decision record for a staged CAM Assist strategy package. This record does not authorize machine execution.",
+  "type": "object",
+  "required": [
+    "record_type",
+    "record_version",
+    "package_path",
+    "package_manifest_id",
+    "operation_type",
+    "decision",
+    "reviewer",
+    "reviewed_at",
+    "authority"
+  ],
+
+  "properties": {
+    "record_type": {
+      "type": "string",
+      "const": "cam_assist_review_decision",
+      "description": "Must be 'cam_assist_review_decision'"
+    },
+
+    "record_version": {
+      "type": "string",
+      "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$",
+      "description": "Semantic version of the record format"
+    },
+
+    "package_path": {
+      "type": "string",
+      "description": "Path to the reviewed package directory"
+    },
+
+    "package_manifest_id": {
+      "type": "string",
+      "description": "Identifier derived from operation_type:source_spec_id"
+    },
+
+    "operation_type": {
+      "type": "string",
+      "description": "Type of lutherie operation from the package manifest"
+    },
+
+    "decision": {
+      "type": "string",
+      "enum": ["approve_for_downstream_cam", "reject", "needs_revision"],
+      "description": "Human review decision. 'approve_for_downstream_cam' does NOT authorize machine execution."
+    },
+
+    "reviewer": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Name or identifier of the human reviewer"
+    },
+
+    "reviewed_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "ISO-8601 timestamp of the review decision"
+    },
+
+    "notes": {
+      "type": "string",
+      "default": "",
+      "description": "Optional reviewer notes"
+    },
+
+    "authority": {
+      "type": "object",
+      "required": [
+        "does_not_authorize_machine_execution",
+        "requires_downstream_cam_verification",
+        "human_review_recorded"
+      ],
+      "description": "Authority declarations for this decision record",
+      "properties": {
+        "does_not_authorize_machine_execution": {
+          "type": "boolean",
+          "const": true,
+          "description": "MUST be true. This decision does not authorize machine execution."
+        },
+        "requires_downstream_cam_verification": {
+          "type": "boolean",
+          "const": true,
+          "description": "MUST be true. Downstream CAM verification is still required."
+        },
+        "human_review_recorded": {
+          "type": "boolean",
+          "const": true,
+          "description": "MUST be true. Human review has been recorded."
+        }
+      }
+    }
+  }
+}

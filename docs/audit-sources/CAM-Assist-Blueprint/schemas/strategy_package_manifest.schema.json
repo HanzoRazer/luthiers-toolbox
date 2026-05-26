@@ -1,0 +1,110 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://cam-assist.lutherie/schemas/strategy_package_manifest.schema.json",
+  "title": "CAM Assist Strategy Package Manifest Schema",
+  "description": "Defines a portable manifest that bundles strategy JSON, review packet, and geometry references. All paths are relative to manifest location.",
+  "type": "object",
+  "required": [
+    "manifest_version",
+    "package_type",
+    "operation_type",
+    "strategy_file",
+    "review_packet_file",
+    "authority",
+    "created_at"
+  ],
+
+  "properties": {
+    "manifest_version": {
+      "type": "string",
+      "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$",
+      "description": "Semantic version of the manifest format"
+    },
+
+    "package_type": {
+      "type": "string",
+      "const": "cam_assist_strategy_package",
+      "description": "Must be 'cam_assist_strategy_package'"
+    },
+
+    "operation_type": {
+      "type": "string",
+      "description": "Type of lutherie operation (e.g., fret_slot_strategy)"
+    },
+
+    "strategy_file": {
+      "type": "string",
+      "description": "Path to strategy JSON file, relative to manifest location"
+    },
+
+    "review_packet_file": {
+      "type": "string",
+      "description": "Path to review packet Markdown file, relative to manifest location"
+    },
+
+    "source_geometry_files": {
+      "type": "array",
+      "items": { "type": "string" },
+      "default": [],
+      "description": "Paths to source geometry files (DXF, etc.), relative to manifest location"
+    },
+
+    "created_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "ISO-8601 timestamp of manifest creation"
+    },
+
+    "cam_assist_version": {
+      "type": "string",
+      "description": "Version of CAM Assist that created this package"
+    },
+
+    "authority": {
+      "type": "object",
+      "required": ["non_execution_declaration", "execution_authority_claim", "requires_human_review"],
+      "description": "Execution authority declarations",
+      "properties": {
+        "non_execution_declaration": {
+          "type": "boolean",
+          "const": true,
+          "description": "MUST be true. This package does not authorize execution."
+        },
+        "execution_authority_claim": {
+          "type": "boolean",
+          "const": false,
+          "description": "MUST be false. This package does not claim execution authority."
+        },
+        "requires_human_review": {
+          "type": "boolean",
+          "const": true,
+          "description": "MUST be true. Human review is required before downstream use."
+        }
+      }
+    },
+
+    "provenance": {
+      "type": "object",
+      "description": "Origin and derivation metadata",
+      "properties": {
+        "source_spec_id": {
+          "type": "string",
+          "description": "Reference to source instrument specification"
+        },
+        "created_by": {
+          "type": "string",
+          "description": "Identifier of package creator"
+        },
+        "derivation_notes": {
+          "type": "string",
+          "description": "Notes on how this package was derived"
+        }
+      }
+    },
+
+    "notes": {
+      "type": "string",
+      "description": "Additional notes about this package"
+    }
+  }
+}

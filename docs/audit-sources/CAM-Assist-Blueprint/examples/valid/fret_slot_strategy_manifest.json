@@ -1,0 +1,26 @@
+{
+  "manifest_version": "1.0.0",
+  "package_type": "cam_assist_strategy_package",
+  "operation_type": "fret_slot_strategy",
+
+  "strategy_file": "fret_slot_strategy.json",
+  "review_packet_file": "fret_slot_strategy_review_packet.md",
+  "source_geometry_files": [],
+
+  "created_at": "2026-05-21T16:00:00Z",
+  "cam_assist_version": "0.4.0",
+
+  "authority": {
+    "non_execution_declaration": true,
+    "execution_authority_claim": false,
+    "requires_human_review": true
+  },
+
+  "provenance": {
+    "source_spec_id": "sample-stratocaster-spec",
+    "created_by": "cam-assist-blueprint",
+    "derivation_notes": "Example manifest for 25.5\" scale Stratocaster fret slot strategy"
+  },
+
+  "notes": "This manifest bundles a validated fret slot strategy with its review packet. Geometry is referenced in the strategy JSON, not embedded separately."
+}
