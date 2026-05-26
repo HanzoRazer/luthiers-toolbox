@@ -32,6 +32,7 @@ import ezdxf
 from ezdxf.math import Vec2
 
 from app.util.dxf_compat import create_document
+from app.util.blueprint_dxf_export_lifecycle import governed_doc_saveas
 
 
 @dataclass
@@ -389,8 +390,15 @@ def reconstruct_contours(
 
     # Save to bytes
     with tempfile.NamedTemporaryFile(delete=False, suffix=".dxf") as tmp:
-        out_doc.saveas(tmp.name)
         tmp_path = tmp.name
+
+    governed_doc_saveas(
+        out_doc,
+        tmp_path,
+        source_module=__name__,
+        export_type="dxf-create-save",
+        dxf_version="AC1015",
+    )
 
     try:
         with open(tmp_path, "rb") as f:
@@ -509,8 +517,15 @@ def reconstruct_bracing_dxf(
 
     # Save output
     with tempfile.NamedTemporaryFile(delete=False, suffix=".dxf") as tmp:
-        out_doc.saveas(tmp.name)
         tmp_path = tmp.name
+
+    governed_doc_saveas(
+        out_doc,
+        tmp_path,
+        source_module=__name__,
+        export_type="dxf-create-save",
+        dxf_version="AC1015",
+    )
 
     try:
         with open(tmp_path, "rb") as f:

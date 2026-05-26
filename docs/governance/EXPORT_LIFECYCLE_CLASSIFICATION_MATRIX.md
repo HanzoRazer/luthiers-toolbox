@@ -86,6 +86,7 @@ Machine-parseable via HTML markers; human-readable via section headings.
 | `GUARD_ADDED` | Lifecycle guard integrated |
 | `GUARD_CANDIDATE` | Ready for guard integration |
 | `ORCHESTRATOR_CANDIDATE` | Candidate for full orchestrator adoption |
+| `LIFECYCLE_GOVERNED` | Governed save via blueprint/CAM export lifecycle helper (Phase 3B) |
 | `BLOCKED_PROVENANCE` | IBG, awaiting provenance ratification |
 | `NOT_APPLICABLE` | Test/R&D/excluded, no guard needed |
 | `REQUIRES_CALLER_CONTEXT` | Cannot guard internally; callers must supply lifecycle context |
@@ -128,9 +129,9 @@ Machine-parseable via HTML markers; human-readable via section headings.
 
 | File | Export Type | Creation | Save | Compat | Lifecycle | Provenance | Callable | Risk | Lifecycle Status | Disposition | Guard Status |
 |------|-------------|----------|------|--------|-----------|------------|----------|------|------------------|-------------|--------------|
-| `routers/blueprint_cam/dxf_preprocessor.py` | dxf-create-save | create_document | Y | Y | N | NO | router_endpoint | LOW-MEDIUM | COMPAT_ONLY | no_action | ORCHESTRATOR_CANDIDATE |
-| `routers/blueprint_cam/contour_reconstruction.py` | dxf-create-save | create_document | Y | Y | N | NO | router_endpoint | LOW-MEDIUM | COMPAT_ONLY | no_action | ORCHESTRATOR_CANDIDATE |
-| `routers/blueprint_cam/dxf_geometry_correction.py` | dxf-read-modify-save | ezdxf.readfile | Y | Y | N | NO | router_endpoint | LOW-MEDIUM | DIRECT_SAVE_GAP | document_only | ORCHESTRATOR_CANDIDATE |
+| `routers/blueprint_cam/dxf_preprocessor.py` | dxf-create-save | create_document | Y | Y | Y | NO | router_endpoint | LOW | LIFECYCLE_GOVERNED | no_action | LIFECYCLE_GOVERNED |
+| `routers/blueprint_cam/contour_reconstruction.py` | dxf-create-save | create_document | Y | Y | Y | NO | router_endpoint | LOW | LIFECYCLE_GOVERNED | no_action | LIFECYCLE_GOVERNED |
+| `routers/blueprint_cam/dxf_geometry_correction.py` | dxf-read-modify-save | ezdxf.readfile | Y | Y | Y | NO | router_endpoint | LOW | LIFECYCLE_GOVERNED | no_action | LIFECYCLE_GOVERNED |
 
 ---
 
@@ -259,7 +260,7 @@ These paths use DxfWriter (compat-governed) but are blocked pending provenance m
 
 | Governance Level | Description | Count |
 |------------------|-------------|-------|
-| **LIFECYCLE_GOVERNED** | Uses export_lifecycle_orchestrator with full gate validation | 1 module |
+| **LIFECYCLE_GOVERNED** | Uses export lifecycle orchestration with full gate validation | 4 modules |
 | **COMPAT_ONLY** | Uses dxf_compat.create_document() or DxfWriter | 25+ files |
 
 All production DXF document creation now goes through dxf_compat (Phase 1A resolved direct bypasses).
@@ -271,7 +272,7 @@ All production DXF document creation now goes through dxf_compat (Phase 1A resol
 | Router endpoints | 10+ | COMPAT_ONLY |
 | CAM services | 10+ | COMPAT_ONLY |
 | Instrument geometry | 3+ | COMPAT_ONLY |
-| Read-modify-write paths | 3 | DIRECT_SAVE_GAP |
+| Read-modify-write paths | 2 | DIRECT_SAVE_GAP |
 
 These paths use dxf_compat for document creation but do not go through export_lifecycle_orchestrator.
 No provenance metadata is attached at save time.
@@ -315,9 +316,9 @@ Phase 2 scope depends on IBG provenance model ratification and governance escala
 
 | Lifecycle Status | Production | Test | Blueprint | R&D | Total |
 |------------------|------------|------|-----------|-----|-------|
-| LIFECYCLE_GOVERNED | 1 | — | — | — | 1 |
-| COMPAT_ONLY | 22+ | 2 | — | — | 24+ |
-| DIRECT_SAVE_GAP | 3 | — | — | — | 3 |
+| LIFECYCLE_GOVERNED | 4 | — | — | — | 4 |
+| COMPAT_ONLY | 19+ | 2 | — | — | 21+ |
+| DIRECT_SAVE_GAP | 2 | — | — | — | 2 |
 | BLOCKED_PROVENANCE | 5 calls | — | — | — | 5 |
 | TEST_ONLY | — | 9 | — | — | 9 |
 | R_AND_D_EXCLUDED | — | — | 4 | 9 | 13 |

@@ -2,7 +2,7 @@
 
 **Date:** 2026-05-25  
 **Namespace:** Phase 1E → 2A → 2B → 2C → 2D → 2F → 2G → 3A+  
-**Status:** Phase 3A-4 COMPLETE — Phase 3B READY
+**Status:** Phase 3B COMPLETE — R1/IBG blocked paths next
 
 ---
 
@@ -23,7 +23,7 @@ The DXF Lifecycle Sprint establishes validation-only guards at all DXF save/writ
 | 3A-2 | COMPLETE | Instrument geometry batch (3 paths, DO 75) |
 | 3A-3 | COMPLETE | `layered_dxf_writer.py` (PR #42) |
 | 3A-4 | COMPLETE | read-modify-save pair (`DO_76`) |
-| 3B | PENDING | Orchestrator integration candidates (3 paths) |
+| 3B | COMPLETE | Blueprint CAM orchestrator adoption (3 paths, DO 77) |
 | R1+ | BLOCKED | IBG provenance ratification (5 paths) |
 
 ---
@@ -102,7 +102,7 @@ Reason: DxfWriter lacks caller context (`source_module`, `runtime_callable`, `au
 | `routers/blueprint_cam/contour_reconstruction.py` | COMPAT_ONLY | LIFECYCLE_GOVERNED |
 | `routers/blueprint_cam/dxf_geometry_correction.py` | DIRECT_SAVE_GAP | LIFECYCLE_GOVERNED |
 
-**Scope:** Full `export_lifecycle_orchestrator` adoption with gate validation.
+**Scope:** Governed save via `app/util/blueprint_dxf_export_lifecycle.py` (`governed_doc_saveas`) with `LIFECYCLE_GOVERNED` guard context. Not the CAM G-code `export_lifecycle_orchestrator` (no DXF output).
 
 ---
 
@@ -280,28 +280,17 @@ R2: IBG provenance guards
 
 ## Metrics
 
-### Current State (after 3A-4)
-
-| Status | Count |
-|--------|-------|
-| GUARD_ADDED | 20 |
-| GUARD_CANDIDATE | 0 |
-| ORCHESTRATOR_CANDIDATE | 3 |
-| BLOCKED_PROVENANCE | 5 |
-| REQUIRES_CALLER_CONTEXT | 1 |
-| NOT_APPLICABLE | 26 |
-| **Total paths** | **55** |
-
-### Target State (After Phase 3A-4)
+### Current State (after 3B)
 
 | Status | Count |
 |--------|-------|
 | GUARD_ADDED | 20 |
 | LIFECYCLE_GOVERNED | 3 |
-| GUARD_CANDIDATE | 0 |
+| ORCHESTRATOR_CANDIDATE | 0 |
 | BLOCKED_PROVENANCE | 5 |
 | REQUIRES_CALLER_CONTEXT | 1 |
 | NOT_APPLICABLE | 26 |
+| **Total paths** | **55** |
 
 ---
 
@@ -315,6 +304,7 @@ R2: IBG provenance guards
 | `docs/governance/IBG_BLOCKED_PROVENANCE_RATIFICATION_TIMELINE.md` | IBG timeline |
 | `docs/handoffs/DO_75_DXF_LIFECYCLE_PHASE_3A2.md` | Phase 3A-2 dev order (instrument geometry) |
 | `docs/handoffs/DO_76_DXF_LIFECYCLE_PHASE_3A4.md` | Phase 3A-4 dev order (read-modify-save) |
+| `docs/handoffs/DO_77_DXF_LIFECYCLE_PHASE_3B.md` | Phase 3B dev order (blueprint_cam orchestrator) |
 
 ---
 
@@ -329,9 +319,9 @@ R2: IBG provenance guards
 
 ### Phase 3B Complete When
 
-- [ ] All 3 orchestrator candidates use `export_lifecycle_orchestrator`
-- [ ] Full gate validation active
-- [ ] Matrix updated with `LIFECYCLE_GOVERNED` status
+- [x] All 3 orchestrator candidates use `blueprint_dxf_export_lifecycle.governed_doc_saveas`
+- [x] `LIFECYCLE_GOVERNED` guard context at every blueprint_cam save boundary
+- [x] Matrix updated with `LIFECYCLE_GOVERNED` status
 
 ### R2 Complete When
 

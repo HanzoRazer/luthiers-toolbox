@@ -27,6 +27,8 @@ from typing import List, Optional, Tuple
 import ezdxf
 from ezdxf.math import Vec2
 
+from app.util.blueprint_dxf_export_lifecycle import governed_doc_saveas
+
 
 @dataclass
 class GeometryAnalysis:
@@ -303,8 +305,14 @@ def _apply_transformations(
 
     # Save to bytes
     with tempfile.NamedTemporaryFile(delete=False, suffix=".dxf") as tmp:
-        doc.saveas(tmp.name)
         tmp_path = tmp.name
+
+    governed_doc_saveas(
+        doc,
+        tmp_path,
+        source_module=__name__,
+        export_type="dxf-read-modify-save",
+    )
 
     try:
         with open(tmp_path, "rb") as f:
