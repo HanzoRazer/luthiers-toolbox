@@ -36,6 +36,11 @@ import math
 from typing import List, Tuple, Optional
 from dataclasses import dataclass, field
 
+from app.util.dxf_lifecycle_guard import (
+    DxfLifecycleContext,
+    assert_dxf_lifecycle_context,
+)
+
 
 # ── Data structures ────────────────────────────────────────────────────────────
 
@@ -308,6 +313,17 @@ def generate_dxf(dual_spec: DualSpiralSpec, output_path: str) -> str:
     # Brace keepout zones
     _write_brace_keepout(writer)
 
+    assert_dxf_lifecycle_context(
+        DxfLifecycleContext(
+            source_module=__name__,
+            export_type="dxf-create-save",
+            dxf_version="R12",
+            lifecycle_status="COMPAT_ONLY",
+            runtime_callable="runtime_service",
+            authority_context="pipeline_stage",
+            provenance_status="NO",
+        )
+    )
     writer.saveas(output_path)
     return output_path
 

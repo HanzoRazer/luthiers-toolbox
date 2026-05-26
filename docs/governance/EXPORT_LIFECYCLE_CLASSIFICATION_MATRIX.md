@@ -161,9 +161,9 @@ Machine-parseable via HTML markers; human-readable via section headings.
 
 | File | Export Type | Creation | Save | Compat | Lifecycle | Provenance | Callable | Risk | Lifecycle Status | Disposition | Guard Status |
 |------|-------------|----------|------|--------|-----------|------------|----------|------|------------------|-------------|--------------|
-| `instrument_geometry/body/smart_guitar_dxf.py` | dxf-create-save | create_document | Y | Y | N | NO | runtime_service | LOW-MEDIUM | COMPAT_ONLY | no_action | GUARD_CANDIDATE |
-| `instrument_geometry/soundhole/spiral_geometry.py` | dxf-create-save | DxfWriter | Y | Y | N | NO | runtime_service | LOW-MEDIUM | COMPAT_ONLY | no_action | GUARD_CANDIDATE |
-| `generators/bezier_body.py` | dxf-create-save | DxfWriter | Y | Y | N | NO | runtime_service | LOW-MEDIUM | COMPAT_ONLY | no_action | GUARD_CANDIDATE |
+| `instrument_geometry/body/smart_guitar_dxf.py` | dxf-create-save | create_document | Y | Y | N | NO | runtime_service | LOW-MEDIUM | COMPAT_ONLY | no_action | GUARD_ADDED |
+| `instrument_geometry/soundhole/spiral_geometry.py` | dxf-create-save | DxfWriter | Y | Y | N | NO | runtime_service | LOW-MEDIUM | COMPAT_ONLY | no_action | GUARD_ADDED |
+| `generators/bezier_body.py` | dxf-create-save | DxfWriter | Y | Y | N | NO | runtime_service | LOW-MEDIUM | COMPAT_ONLY | no_action | GUARD_ADDED |
 
 ### 2D. Art Studio / Inlay Services
 
