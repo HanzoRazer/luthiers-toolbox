@@ -176,7 +176,7 @@ Machine-parseable via HTML markers; human-readable via section headings.
 
 | File | Export Type | Creation | Save | Compat | Lifecycle | Provenance | Callable | Risk | Lifecycle Status | Disposition | Guard Status |
 |------|-------------|----------|------|--------|-----------|------------|----------|------|------------------|-------------|--------------|
-| `services/layered_dxf_writer.py` | dxf-create-save | create_document | Y | Y | N | NO | runtime_service | LOW-MEDIUM | COMPAT_ONLY | no_action | GUARD_CANDIDATE |
+| `services/layered_dxf_writer.py` | dxf-create-save | create_document | Y | Y | N | NO | runtime_service | LOW-MEDIUM | COMPAT_ONLY | no_action | GUARD_ADDED |
 | `services/text_reinsertion.py` | dxf-read-modify-save | ezdxf.readfile | Y | Y | N | NO | runtime_service | LOW-MEDIUM | DIRECT_SAVE_GAP | document_only | GUARD_CANDIDATE |
 
 ---

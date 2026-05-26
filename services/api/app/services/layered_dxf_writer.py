@@ -24,6 +24,10 @@ from ezdxf.enums import TextEntityAlignment
 import numpy as np
 
 from ..util.dxf_compat import create_document
+from ..util.dxf_lifecycle_guard import (
+    DxfLifecycleContext,
+    assert_dxf_lifecycle_context,
+)
 from .layer_builder import (
     Layer,
     LayeredEntities,
@@ -112,6 +116,17 @@ def write_layered_dxf(
             total_lines += lines_written
 
     # Save
+    assert_dxf_lifecycle_context(
+        DxfLifecycleContext(
+            source_module=__name__,
+            export_type="dxf-create-save",
+            dxf_version="R12",
+            lifecycle_status="COMPAT_ONLY",
+            runtime_callable="runtime_service",
+            authority_context="pipeline_stage",
+            provenance_status="NO",
+        )
+    )
     doc.saveas(output_path)
 
     logger.info(f"Layered DXF written: {output_path}")
