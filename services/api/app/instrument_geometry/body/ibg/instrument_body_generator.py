@@ -296,7 +296,19 @@ class InstrumentBodyGenerator:
         Returns:
             Output file path
         """
-        return outline_to_dxf(model, output_path, self.spec_name)
+        from app.governance.provenance_attachment import create_ibg_provenance_draft
+
+        attachment = create_ibg_provenance_draft(
+            attachment_id=f"ibg-export:{self.spec_name}:{output_path}",
+            source_artifact_id=self.spec_name or output_path,
+            transformation_method="outline_to_dxf",
+        )
+        return outline_to_dxf(
+            model,
+            output_path,
+            self.spec_name,
+            provenance_attachment=attachment,
+        )
 
     def export_spec_json(self, model: SolvedBodyModel, output_path: str) -> str:
         """

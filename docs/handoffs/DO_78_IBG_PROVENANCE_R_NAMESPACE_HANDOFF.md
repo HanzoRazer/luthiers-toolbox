@@ -2,7 +2,7 @@
 
 **Sprint:** DXF Lifecycle — IBG blocked paths  
 **Orders:** DO 78 (R1 governance) · DO 79 (R2 implementation)  
-**Status:** PROPOSED — not started  
+**Status:** R2 IN PROGRESS (wrapper wired; R1 ratification still required for production export)  
 **Date:** 2026-05-19  
 **Prerequisite:** Phase 3B merged (PR #44, `main` @ `225b1fd7`)  
 **Parent sprint:** DXF Lifecycle complete for non-IBG paths (DO 75–77)

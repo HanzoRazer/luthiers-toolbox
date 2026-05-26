@@ -110,14 +110,14 @@ class ProvenanceAttachmentDraft:
                 "export_authorized must be False."
             )
 
-    def is_exportable(self) -> Literal[False]:
+    def is_exportable(self) -> bool:
         """
         Check if this attachment authorizes export.
 
-        Draft attachments are NEVER exportable. This method always
-        returns False as a constitutional safeguard.
+        Only RATIFIED attachments may export. Draft/blocked/pending
+        attachments return False (fail-closed).
         """
-        return False
+        return self.status == ProvenanceAttachmentStatus.RATIFIED
 
     def is_blocked(self) -> bool:
         """Check if this attachment is explicitly blocked."""

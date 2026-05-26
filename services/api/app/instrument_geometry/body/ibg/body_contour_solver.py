@@ -738,7 +738,12 @@ def check_self_intersection(outline: List[Tuple[float, float]]) -> List[Tuple[in
     return intersections
 
 
-def outline_to_dxf(result: SolvedBodyModel, output_path: str, spec_name: str = "") -> str:
+def outline_to_dxf(
+    result: SolvedBodyModel,
+    output_path: str,
+    spec_name: str = "",
+    provenance_attachment=None,
+) -> str:
     """
     Write solved body outline to R12 DXF.
 
@@ -759,6 +764,16 @@ def outline_to_dxf(result: SolvedBodyModel, output_path: str, spec_name: str = "
         Output file path
     """
     from ....cam.dxf_writer import DxfWriter, LayerDef
+    from ....util.ibg_dxf_export_lifecycle import (
+        default_ibg_attachment_for_save,
+        governed_ibg_writer_saveas,
+    )
+
+    attachment = provenance_attachment or default_ibg_attachment_for_save(
+        output_path,
+        transformation_method="outline_to_dxf",
+        source_artifact_id=spec_name or output_path,
+    )
 
     # Define layers
     body_layer = "BODY_SOLVED"
@@ -774,7 +789,12 @@ def outline_to_dxf(result: SolvedBodyModel, output_path: str, spec_name: str = "
     pts = result.outline_points
 
     if not pts:
-        writer.saveas(output_path)
+        governed_ibg_writer_saveas(
+            writer,
+            output_path,
+            attachment=attachment,
+            source_module=__name__,
+        )
         return output_path
 
     # Check for self-intersections before export (prevents bad geometry reaching CAM)
@@ -805,7 +825,12 @@ def outline_to_dxf(result: SolvedBodyModel, output_path: str, spec_name: str = "
             writer.add_line(landmark_layer, (x - cross_size, y), (x + cross_size, y))
             writer.add_line(landmark_layer, (x, y - cross_size), (x, y + cross_size))
 
-    writer.saveas(output_path)
+    governed_ibg_writer_saveas(
+        writer,
+        output_path,
+        attachment=attachment,
+        source_module=__name__,
+    )
     print(f"Saved: {output_path} ({len(pts)} outline points)")
     return output_path
 
