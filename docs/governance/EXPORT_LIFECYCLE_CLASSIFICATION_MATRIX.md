@@ -189,13 +189,13 @@ These paths use DxfWriter (compat-governed) but are blocked pending provenance m
 
 | File | Export Type | Creation | Save | Compat | Lifecycle | Provenance | Callable | Risk | Lifecycle Status | Disposition | Guard Status |
 |------|-------------|----------|------|--------|-----------|------------|----------|------|------------------|-------------|--------------|
-| `instrument_geometry/body/ibg/body_contour_solver.py:777` | dxf-create-save | DxfWriter | Y | Y | N | BLOCKED | runtime_service | BLOCKED | BLOCKED_PROVENANCE | blocked_provenance | BLOCKED_PROVENANCE |
-| `instrument_geometry/body/ibg/body_contour_solver.py:808` | dxf-create-save | DxfWriter | Y | Y | N | BLOCKED | runtime_service | BLOCKED | BLOCKED_PROVENANCE | blocked_provenance | BLOCKED_PROVENANCE |
-| `instrument_geometry/body/ibg/arc_reconstructor.py:1116` | dxf-create-save | DxfWriter | Y | Y | N | BLOCKED | runtime_service | BLOCKED | BLOCKED_PROVENANCE | blocked_provenance | BLOCKED_PROVENANCE |
-| `instrument_geometry/body/ibg/arc_reconstructor.py:1279` | dxf-create-save | DxfWriter | Y | Y | N | BLOCKED | runtime_service | BLOCKED | BLOCKED_PROVENANCE | blocked_provenance | BLOCKED_PROVENANCE |
-| `instrument_geometry/body/ibg/arc_reconstructor.py:1303` | dxf-create-save | DxfWriter | Y | Y | N | BLOCKED | runtime_service | BLOCKED | BLOCKED_PROVENANCE | blocked_provenance | BLOCKED_PROVENANCE |
+| `instrument_geometry/body/ibg/body_contour_solver.py:777` | dxf-create-save | DxfWriter | Y | Y | GUARD | BLOCKED | runtime_service | BLOCKED | BLOCKED_PROVENANCE | blocked_provenance | GUARD_ADDED |
+| `instrument_geometry/body/ibg/body_contour_solver.py:808` | dxf-create-save | DxfWriter | Y | Y | GUARD | BLOCKED | runtime_service | BLOCKED | BLOCKED_PROVENANCE | blocked_provenance | GUARD_ADDED |
+| `instrument_geometry/body/ibg/arc_reconstructor.py:1116` | dxf-create-save | DxfWriter | Y | Y | GUARD | BLOCKED | runtime_service | BLOCKED | BLOCKED_PROVENANCE | blocked_provenance | GUARD_ADDED |
+| `instrument_geometry/body/ibg/arc_reconstructor.py:1279` | dxf-create-save | DxfWriter | Y | Y | GUARD | BLOCKED | runtime_service | BLOCKED | BLOCKED_PROVENANCE | blocked_provenance | GUARD_ADDED |
+| `instrument_geometry/body/ibg/arc_reconstructor.py:1303` | dxf-create-save | DxfWriter | Y | Y | GUARD | BLOCKED | runtime_service | BLOCKED | BLOCKED_PROVENANCE | blocked_provenance | GUARD_ADDED |
 
-**Blocking condition**: IBG provenance model ratification required before Phase 2 work can proceed.
+**Blocking condition**: Save wired via `governed_ibg_writer_saveas` (fail-closed). **Export** remains blocked until R1 ratification + `RATIFIED` attachment (DO 80). Lifecycle status stays `BLOCKED_PROVENANCE` until R1 governance PR promotes export-enabled disposition.
 
 ---
 

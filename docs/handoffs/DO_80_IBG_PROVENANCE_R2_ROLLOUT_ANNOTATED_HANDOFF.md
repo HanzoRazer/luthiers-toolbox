@@ -156,7 +156,9 @@ pytest tests/test_dxf_lifecycle_ibg_provenance_guards.py -q
 | R1 signed record | Missing under `docs/governance/` |
 | `body_solver_router.py` | Calls `save_dxf` without ratified attachment |
 | `instrument_body_generator.save_dxf` | Uses blocked draft only |
-| `ibg_workflow_pipeline` → export | No attachment bridge from `BodyEvidenceCandidate` |
+| `ibg_export_provenance.py` | `[new]` Phase D bridge stub |
+| `body_solver_router` | `[new]` 422 on `IbgDxfExportBlockedError` |
+| `ibg_workflow_pipeline` → export | Not yet wired to `save_dxf` |
 | Ratification API | `ProvenanceRatificationNotAuthorizedError` — no runtime ratify |
 
 ---

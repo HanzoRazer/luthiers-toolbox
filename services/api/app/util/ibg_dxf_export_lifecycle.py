@@ -84,6 +84,7 @@ def assert_ibg_dxf_export_allowed(
             provenance_status="YES",
         )
 
+    # Intentional defense-in-depth if exportable check order changes (DO 80 Phase E).
     return DxfLifecycleContext(
         source_module=source_module,
         export_type="dxf-create-save",

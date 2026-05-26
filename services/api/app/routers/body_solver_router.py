@@ -29,9 +29,22 @@ from app.instrument_geometry.body.ibg import InstrumentBodyGenerator
 from app.instrument_geometry.body.ibg.body_contour_solver import LandmarkPoint
 from app.instrument_geometry.body.ibg.session_store import get_session_store
 from app.middleware.rate_limit import limiter, rate_limit_tier
+from app.util.ibg_dxf_export_lifecycle import IbgDxfExportBlockedError
 
 
 router = APIRouter(prefix="/api/body", tags=["Body Solver"])
+
+
+def _ibg_export_blocked_response(exc: IbgDxfExportBlockedError) -> HTTPException:
+    """Map fail-closed IBG export to HTTP 422."""
+    return HTTPException(
+        status_code=422,
+        detail={
+            "error": "ibg_dxf_export_blocked",
+            "message": str(exc),
+            "r1_required": True,
+        },
+    )
 
 
 # ─── Rate Limit Configuration ────────────────────────────────────────────────
@@ -241,6 +254,8 @@ async def solve_from_dxf(
 
         return JSONResponse(response)
 
+    except IbgDxfExportBlockedError as e:
+        raise _ibg_export_blocked_response(e) from e
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
     except Exception as e:
@@ -298,6 +313,8 @@ async def solve_from_landmarks(
 
         return JSONResponse(response)
 
+    except IbgDxfExportBlockedError as e:
+        raise _ibg_export_blocked_response(e) from e
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
     except Exception as e:

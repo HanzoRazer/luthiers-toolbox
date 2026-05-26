@@ -25,7 +25,8 @@ The DXF Lifecycle Sprint establishes validation-only guards at all DXF save/writ
 | 3A-3 | COMPLETE | `layered_dxf_writer.py` (PR #42) |
 | 3A-4 | COMPLETE | read-modify-save pair (`DO_76`) |
 | 3B | COMPLETE | Blueprint CAM orchestrator adoption (3 paths, DO 77) |
-| R1+ | BLOCKED | IBG provenance ratification (5 paths) |
+| R2 | IN PROGRESS | IBG wrapper on branch; merge + R1 gate (DO 80) |
+| R1+ | BLOCKED | IBG production export until R1 + Phase E |
 
 ---
 
