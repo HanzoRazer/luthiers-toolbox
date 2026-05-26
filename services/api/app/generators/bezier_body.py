@@ -28,6 +28,11 @@ from typing import Literal
 
 import numpy as np
 
+from app.util.dxf_lifecycle_guard import (
+    DxfLifecycleContext,
+    assert_dxf_lifecycle_context,
+)
+
 # Optional DXF export
 try:
     import ezdxf
@@ -469,6 +474,18 @@ class BezierBodyGenerator:
 
         output = Path(output_path)
         output.parent.mkdir(parents=True, exist_ok=True)
+
+        assert_dxf_lifecycle_context(
+            DxfLifecycleContext(
+                source_module=__name__,
+                export_type="dxf-create-save",
+                dxf_version="R12",
+                lifecycle_status="COMPAT_ONLY",
+                runtime_callable="runtime_service",
+                authority_context="pipeline_stage",
+                provenance_status="NO",
+            )
+        )
         writer.saveas(str(output))
 
         return output

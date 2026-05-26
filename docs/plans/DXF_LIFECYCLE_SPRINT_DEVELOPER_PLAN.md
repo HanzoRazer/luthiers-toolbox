@@ -2,7 +2,7 @@
 
 **Date:** 2026-05-25  
 **Namespace:** Phase 1E → 2A → 2B → 2C → 2D → 2F → 2G → 3A+  
-**Status:** Phase 3A-1 COMPLETE (PR #40) — Phase 3A-2 READY (`DO_75`)
+**Status:** Phase 3A-2 COMPLETE — Phase 3A-3 READY
 
 ---
 
@@ -20,7 +20,7 @@ The DXF Lifecycle Sprint establishes validation-only guards at all DXF save/writ
 | 2F | COMPLETE | Runtime service guards (3 paths) |
 | 2G | COMPLETE | DxfWriter assessment (no guard) |
 | 3A-1 | COMPLETE | Archtop CAM batch (4 paths, PR #40) |
-| 3A-2 | READY | Instrument geometry batch — `docs/handoffs/DO_75_DXF_LIFECYCLE_PHASE_3A2.md` |
+| 3A-2 | COMPLETE | Instrument geometry batch (3 paths, DO 75) |
 | 3A-3 / 3A-4 | PENDING | `layered_dxf_writer`; read-modify-save pair |
 | 3B | PENDING | Orchestrator integration candidates (3 paths) |
 | R1+ | BLOCKED | IBG provenance ratification (5 paths) |
@@ -78,9 +78,9 @@ Reason: DxfWriter lacks caller context (`source_module`, `runtime_callable`, `au
 | `cam/archtop_saddle_generator.py` | COMPAT_ONLY | runtime_service | 3A-1 | GUARD_ADDED |
 | `cam/archtop/archtop_surface_tools.py` | COMPAT_ONLY | runtime_service | 3A-1 | GUARD_ADDED |
 | `cam/archtop/archtop_contour_generator.py` | COMPAT_ONLY | runtime_service | 3A-1 | GUARD_ADDED |
-| `instrument_geometry/body/smart_guitar_dxf.py` | COMPAT_ONLY | runtime_service | 3A-2 | DO 75 |
-| `instrument_geometry/soundhole/spiral_geometry.py` | COMPAT_ONLY | runtime_service | 3A-2 | DO 75 |
-| `generators/bezier_body.py` | COMPAT_ONLY | runtime_service | 3A-2 | DO 75 |
+| `instrument_geometry/body/smart_guitar_dxf.py` | COMPAT_ONLY | runtime_service | 3A-2 | GUARD_ADDED |
+| `instrument_geometry/soundhole/spiral_geometry.py` | COMPAT_ONLY | runtime_service | 3A-2 | GUARD_ADDED |
+| `generators/bezier_body.py` | COMPAT_ONLY | runtime_service | 3A-2 | GUARD_ADDED |
 | `services/layered_dxf_writer.py` | COMPAT_ONLY | runtime_service | 3A-3 | Pending |
 | `cam/line_deduplicator.py` | DIRECT_SAVE_GAP | runtime_service | 3A-4 | Pending |
 | `services/text_reinsertion.py` | DIRECT_SAVE_GAP | runtime_service | 3A-4 | Pending |
@@ -279,19 +279,7 @@ R2: IBG provenance guards
 
 ## Metrics
 
-### Current State (after 3A-1, PR #40)
-
-| Status | Count |
-|--------|-------|
-| GUARD_ADDED | 14 |
-| GUARD_CANDIDATE | 6 |
-| ORCHESTRATOR_CANDIDATE | 3 |
-| BLOCKED_PROVENANCE | 5 |
-| REQUIRES_CALLER_CONTEXT | 1 |
-| NOT_APPLICABLE | 26 |
-| **Total paths** | **55** |
-
-### Target State (After Phase 3A-2 — DO 75)
+### Current State (after 3A-2)
 
 | Status | Count |
 |--------|-------|
@@ -301,8 +289,9 @@ R2: IBG provenance guards
 | BLOCKED_PROVENANCE | 5 |
 | REQUIRES_CALLER_CONTEXT | 1 |
 | NOT_APPLICABLE | 26 |
+| **Total paths** | **55** |
 
-### Target State (After Phase 3B)
+### Target State (After Phase 3A-3 / 3A-4)
 
 | Status | Count |
 |--------|-------|

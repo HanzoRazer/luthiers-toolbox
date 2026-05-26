@@ -2,7 +2,7 @@
 
 **Sprint:** DXF Lifecycle — Runtime Boundary Follow-Through  
 **Order:** DO 75 / Phase 3A-2  
-**Status:** READY FOR IMPLEMENTATION  
+**Status:** IMPLEMENTED (Phase 3A-2)  
 **Date:** 2026-05-25  
 **Prerequisite:** Phase 3A-1 merged (PR #40, `da7f10b6`)  
 **Branch:** `feat/dxf-lifecycle-phase-3a-2` from `main`
