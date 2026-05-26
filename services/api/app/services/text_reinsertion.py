@@ -20,6 +20,11 @@ import logging
 from dataclasses import dataclass
 from typing import List, Tuple, Optional, Sequence, Any, TYPE_CHECKING
 
+from app.util.dxf_lifecycle_guard import (
+    DxfLifecycleContext,
+    assert_dxf_lifecycle_context,
+)
+
 if TYPE_CHECKING:
     import numpy as np
 
@@ -315,6 +320,18 @@ def append_text_to_existing_dxf(
         count += 1
 
     # Save back to file
+    dxf_version = getattr(doc, "dxfversion", "R2010")
+    assert_dxf_lifecycle_context(
+        DxfLifecycleContext(
+            source_module=__name__,
+            export_type="dxf-read-modify-save",
+            dxf_version=dxf_version,
+            lifecycle_status="DIRECT_SAVE_GAP",
+            runtime_callable="runtime_service",
+            authority_context="pipeline_stage",
+            provenance_status="NO",
+        )
+    )
     doc.saveas(dxf_path)
     logger.info(f"Appended {count} text entities to {dxf_path}")
     return count
