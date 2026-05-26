@@ -22,6 +22,11 @@ from typing import Dict, List, Optional, Set, Tuple
 
 import ezdxf
 
+from app.util.dxf_lifecycle_guard import (
+    DxfLifecycleContext,
+    assert_dxf_lifecycle_context,
+)
+
 logger = logging.getLogger(__name__)
 
 
@@ -287,6 +292,18 @@ def deduplicate_parallel_lines(
                 logger.warning(f"Failed to remove entity {handle}: {e}")
 
     # Save output
+    dxf_version = getattr(doc, "dxfversion", "R2010")
+    assert_dxf_lifecycle_context(
+        DxfLifecycleContext(
+            source_module=__name__,
+            export_type="dxf-read-modify-save",
+            dxf_version=dxf_version,
+            lifecycle_status="DIRECT_SAVE_GAP",
+            runtime_callable="runtime_service",
+            authority_context="pipeline_stage",
+            provenance_status="NO",
+        )
+    )
     doc.saveas(output_path)
 
     output_lines = input_lines - duplicates_removed

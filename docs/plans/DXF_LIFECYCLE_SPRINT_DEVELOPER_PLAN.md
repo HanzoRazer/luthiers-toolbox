@@ -2,7 +2,7 @@
 
 **Date:** 2026-05-25  
 **Namespace:** Phase 1E → 2A → 2B → 2C → 2D → 2F → 2G → 3A+  
-**Status:** Phase 3A-3 COMPLETE — Phase 3A-4 READY
+**Status:** Phase 3A-4 COMPLETE — Phase 3B READY
 
 ---
 
@@ -21,7 +21,8 @@ The DXF Lifecycle Sprint establishes validation-only guards at all DXF save/writ
 | 2G | COMPLETE | DxfWriter assessment (no guard) |
 | 3A-1 | COMPLETE | Archtop CAM batch (4 paths, PR #40) |
 | 3A-2 | COMPLETE | Instrument geometry batch (3 paths, DO 75) |
-| 3A-3 / 3A-4 | PENDING | `layered_dxf_writer`; read-modify-save pair |
+| 3A-3 | COMPLETE | `layered_dxf_writer.py` (PR #42) |
+| 3A-4 | COMPLETE | read-modify-save pair (`DO_76`) |
 | 3B | PENDING | Orchestrator integration candidates (3 paths) |
 | R1+ | BLOCKED | IBG provenance ratification (5 paths) |
 
@@ -82,8 +83,8 @@ Reason: DxfWriter lacks caller context (`source_module`, `runtime_callable`, `au
 | `instrument_geometry/soundhole/spiral_geometry.py` | COMPAT_ONLY | runtime_service | 3A-2 | GUARD_ADDED |
 | `generators/bezier_body.py` | COMPAT_ONLY | runtime_service | 3A-2 | GUARD_ADDED |
 | `services/layered_dxf_writer.py` | COMPAT_ONLY | runtime_service | 3A-3 | GUARD_ADDED |
-| `cam/line_deduplicator.py` | DIRECT_SAVE_GAP | runtime_service | 3A-4 | Pending |
-| `services/text_reinsertion.py` | DIRECT_SAVE_GAP | runtime_service | 3A-4 | Pending |
+| `cam/line_deduplicator.py` | DIRECT_SAVE_GAP | runtime_service | 3A-4 | GUARD_ADDED |
+| `services/text_reinsertion.py` | DIRECT_SAVE_GAP | runtime_service | 3A-4 | GUARD_ADDED |
 
 **Pattern:** Same as Phase 2A — `assert_dxf_lifecycle_context()` before save.
 
@@ -279,12 +280,12 @@ R2: IBG provenance guards
 
 ## Metrics
 
-### Current State (after 3A-3)
+### Current State (after 3A-4)
 
 | Status | Count |
 |--------|-------|
-| GUARD_ADDED | 18 |
-| GUARD_CANDIDATE | 2 |
+| GUARD_ADDED | 20 |
+| GUARD_CANDIDATE | 0 |
 | ORCHESTRATOR_CANDIDATE | 3 |
 | BLOCKED_PROVENANCE | 5 |
 | REQUIRES_CALLER_CONTEXT | 1 |
@@ -313,6 +314,7 @@ R2: IBG provenance guards
 | `docs/governance/RUNTIME_BOUNDARY_INVENTORY.md` | Boundary inventory |
 | `docs/governance/IBG_BLOCKED_PROVENANCE_RATIFICATION_TIMELINE.md` | IBG timeline |
 | `docs/handoffs/DO_75_DXF_LIFECYCLE_PHASE_3A2.md` | Phase 3A-2 dev order (instrument geometry) |
+| `docs/handoffs/DO_76_DXF_LIFECYCLE_PHASE_3A4.md` | Phase 3A-4 dev order (read-modify-save) |
 
 ---
 
