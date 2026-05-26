@@ -303,6 +303,11 @@ class BodyEvidenceCandidate:
             "review_completed": self.review_completed,
             "approved_for_ibg_memory": self.approved_for_ibg_memory,
             "authority_state": self.authority_state.value,
+            # Epistemic status (schema spec alignment)
+            "epistemic_status": self.confidence.confidence_type.value,
+            # Candidate ranking (explicit non-authority signal)
+            "candidate_rank": self.confidence.value,
+            "_rank_is_heuristic": True,
         }
 
 
@@ -311,8 +316,10 @@ def create_candidate_from_evidence(
     source_artifact: str,
     extraction_method: str,
     extraction_params: Optional[Dict[str, Any]] = None,
-    confidence_value: float = 0.5,
+    candidate_rank: Optional[float] = None,
+    confidence_value: Optional[float] = None,  # DEPRECATED: use candidate_rank
     confidence_origin: str = "body_isolation",
+    epistemic_status: str = "heuristic",
 ) -> BodyEvidenceCandidate:
     """
     Create a BodyEvidenceCandidate from BodyEvidence.
@@ -324,12 +331,33 @@ def create_candidate_from_evidence(
         source_artifact: Path or ID of the source (e.g., DXF file path)
         extraction_method: Method used to extract (e.g., "body_isolation_stage")
         extraction_params: Parameters used in extraction
-        confidence_value: Initial confidence value
-        confidence_origin: What produced the confidence
+        candidate_rank: Sorting relevance score (0.0-1.0). Does NOT imply
+            correctness, confidence, approval, or export authority. This is
+            a heuristic ranking signal only.
+        confidence_value: DEPRECATED — use candidate_rank instead. Kept for
+            backwards compatibility; will be removed in future version.
+        confidence_origin: What produced the ranking score
+        epistemic_status: Epistemic status (default: "heuristic"). Values:
+            "heuristic" — advisory, no authority
+            "observed" — captured measurement
+            "derived" — computed from observations
+            "predicted" — model-generated
 
     Returns:
         BodyEvidenceCandidate with provenance and advisory authority
+
+    Note:
+        candidate_rank is sorting relevance only. It does NOT imply:
+        - correctness
+        - confidence in truth
+        - approval
+        - export authority
+        - IBG memory eligibility
     """
+    # Migration: support both parameters, prefer candidate_rank
+    rank_value = candidate_rank if candidate_rank is not None else (
+        confidence_value if confidence_value is not None else 0.5
+    )
     candidate_id = f"bec_{uuid.uuid4().hex[:12]}"
 
     # Create provenance
@@ -347,11 +375,13 @@ def create_candidate_from_evidence(
         actor="system:body_isolation",
     )
 
-    # Create confidence declaration
+    # Create confidence declaration with explicit epistemic status
+    # Note: rank_value is sorting relevance only, NOT correctness/approval
     confidence = create_heuristic_confidence(
-        value=confidence_value,
+        value=rank_value,
         origin=confidence_origin,
-        interpretation="Heuristic confidence from body isolation scoring",
+        interpretation=f"Candidate ranking score (epistemic_status={epistemic_status}). "
+                       "Does not imply correctness, approval, or export authority.",
     )
 
     # Create candidate with ADVISORY_CANDIDATE authority

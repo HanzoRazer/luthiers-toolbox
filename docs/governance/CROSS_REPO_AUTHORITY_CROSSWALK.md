@@ -232,9 +232,9 @@ Sprint targeted **tap_tone_pi**; luthiers is downstream consumer per handoff.
 
 | ID | Item | Why pending |
 |----|------|-------------|
-| P-001 | CAM `review_decision_record.schema.json` | **Resolved** — exists on `cam-a12-review-decision-record` (`6f8947f`); merge to `main` **PENDING** |
+| P-001 | CAM `review_decision_record.schema.json` | **RESOLVED** — merged to `main` (`6f8947f`) on 2026-05-24 |
 | P-002 | CAM → luthiers 8E runtime wire-up | No verified API/import path |
-| P-003 | tap_tone 27 commits pushed to origin | Local ahead count verified; push not verified |
+| P-003 | tap_tone 27 commits pushed to origin | **RESOLVED** — `main` tracks `origin/main` at `27478d8` |
 | P-004 | IBG BLOCKED_PROVENANCE ratification | **Documented** — `IBG_BLOCKED_PROVENANCE_RATIFICATION_TIMELINE.md` |
 | P-005 | Research Wave 1A/1B spine files | **Restored** 2026-05-24 from `origin/research/wave-1a-semantic-memory` |
 | P-006 | Epistemic status in tap_tone JSON schemas | ADR-0012 doctrine-only; fields in implications memo only |
@@ -245,14 +245,14 @@ Sprint targeted **tap_tone_pi**; luthiers is downstream consumer per handoff.
 
 ## 10. Immediate convergence actions (from crosswalk)
 
-| Priority | Action | Owner repo |
-|----------|--------|------------|
-| P0 | Push tap_tone 27 commits | tap_tone_pi |
-| P0 | Rename or git-add constitutional import path (avoid em-dash root folder) | luthiers-toolbox |
-| P1 | Restore research 1A/1B from `origin/research/wave-1a-semantic-memory` | luthiers-toolbox |
-| P1 | Add epistemic_status optional field to luthiers review artifacts (additive) | luthiers-toolbox |
-| P1 | Restore CAM A12 schema file or update handoff if renamed | CAM-Assist-Blueprint |
-| P2 | Publish shared `review-decision-v1` spec (docs-only) | platform-contracts (future) |
+| Priority | Action | Owner repo | Status |
+|----------|--------|------------|--------|
+| P0 | Push tap_tone 27 commits | tap_tone_pi | **DONE** — synced 2026-05-24 |
+| P0 | Rename or git-add constitutional import path (avoid em-dash root folder) | luthiers-toolbox | Pending |
+| P0 | Merge CAM A12 to main | CAM-Assist-Blueprint | **DONE** — `6f8947f` merged 2026-05-24 |
+| P1 | Restore research 1A/1B from `origin/research/wave-1a-semantic-memory` | luthiers-toolbox | Pending |
+| P1 | Add epistemic_status optional field to luthiers review artifacts (additive) | luthiers-toolbox | Pending |
+| P2 | Publish shared `review-decision-v1` spec (docs-only) | platform-contracts (future) | Deferred |
 
 ---
 

@@ -43,14 +43,31 @@ from .patterns import (
     GridPattern,
     CircularPattern,
 )
+from .intent_schema import DrillingDesignV1, DrillPointV1, validate_drilling_design
+from .intent_adapter import drilling_params_from_intent
+from .feasibility import (
+    DrillingFeasibilityResult,
+    compute_drilling_feasibility,
+    hash_feasibility_result,
+)
 
 __all__ = [
+    # Core drilling
     "PeckDrill",
     "DrillConfig",
     "DrillResult",
     "DrillHole",
+    # Patterns
     "StringThroughPattern",
     "BoltPattern",
     "GridPattern",
     "CircularPattern",
+    # Intent (8I)
+    "DrillingDesignV1",
+    "DrillPointV1",
+    "validate_drilling_design",
+    "drilling_params_from_intent",
+    "DrillingFeasibilityResult",
+    "compute_drilling_feasibility",
+    "hash_feasibility_result",
 ]

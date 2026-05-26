@@ -7,10 +7,10 @@ Scope: `docs/governance/`
 | Category | Count |
 |----------|-------|
 | Enforced | 4 |
-| Consumed | 16 |
-| Advisory | 162 |
-| Orphaned | 8 |
-| **Total** | **190** |
+| Consumed | 18 |
+| Advisory | 169 |
+| Orphaned | 15 |
+| **Total** | **206** |
 
 Documents with broken links: 1
 
@@ -45,9 +45,9 @@ Documents with broken links: 1
 - Path: `docs/governance/ontology/semantic_registry.json`
 - Reason: Loaded by blocking script
 - Referenced by: `docs/governance/coordination/C1_FREEZE_PREPARATION.md`, `docs/governance/coordination/C1_GEOMETRY_TOPOLOGY_INVENTORY.md`, `docs/governance/coordination/C1_GOVERNANCE_INVENTORY.md`, `docs/governance/coordination/C1_INDEX.md`, `docs/governance/coordination/C1_RUNTIME_CAM_INVENTORY.md`
-  - ... and 5 more
+  - ... and 7 more
 
-## Consumed (16)
+## Consumed (18)
 
 ### `ACOUSTIC_TOPOLOGY_READINESS_MATRIX.md`
 - Path: `docs/governance/ACOUSTIC_TOPOLOGY_READINESS_MATRIX.md`
@@ -57,14 +57,14 @@ Documents with broken links: 1
 ### `ARCHITECTURE_INVARIANTS.md`
 - Path: `docs/governance/ARCHITECTURE_INVARIANTS.md`
 - Reason: Referenced by 9 code file(s)
-- Referenced by: `CLAUDE.md`, `docs/CBSP21.md`, `docs/governance/GOVERNANCE_AUTHORITY_HIERARCHY.md`, `docs/governance/GOVERNANCE_TOPOLOGY_MAP.md`, `docs/governance/REPOSITORY_EXPANSION_GUIDANCE_DIRECTIVE.md`
-  - ... and 12 more
+- Referenced by: `CLAUDE.md`, `docs/CBSP21.md`, `docs/audits/SPRINT_DEEP_AUDIT_2026-05-24.md`, `docs/governance/GOVERNANCE_AUTHORITY_HIERARCHY.md`, `docs/governance/GOVERNANCE_TOPOLOGY_MAP.md`
+  - ... and 13 more
 
 ### `BLUEPRINT_READER_PROTECTION_RULES.md`
 - Path: `docs/governance/BLUEPRINT_READER_PROTECTION_RULES.md`
 - Reason: Referenced by 2 code file(s)
-- Referenced by: `CLAUDE.md`, `docs/governance/GOVERNANCE_TOPOLOGY_MAP.md`, `docs/governance/MORPHOLOGY_RECONSTRUCTION_PLATFORM.md`, `docs/governance/governance_manifest.json`, `docs/handoffs/MRP_1A_GOVERNANCE_ENFORCEMENT_HANDOFF.md`
-  - ... and 5 more
+- Referenced by: `CLAUDE.md`, `docs/governance/GOVERNANCE_TOPOLOGY_MAP.md`, `docs/governance/MORPHOLOGY_RECONSTRUCTION_PLATFORM.md`, `docs/governance/SEMANTIC_INCUBATION_ARCHITECTURE.md`, `docs/governance/VECTORIZER_COMPONENT_LIFECYCLE.md`
+  - ... and 8 more
 
 ### `CAM_INTENT_SCHEMA_V1.md`
 - Path: `docs/governance/CAM_INTENT_SCHEMA_V1.md`
@@ -99,8 +99,8 @@ Documents with broken links: 1
 ### `MORPHOLOGY_HARVEST_GOVERNANCE_AUDIT.md`
 - Path: `docs/governance/MORPHOLOGY_HARVEST_GOVERNANCE_AUDIT.md`
 - Reason: Referenced by 10 code file(s)
-- Referenced by: `docs/dev-orders/IBG_SEMANTIC_MORPHOLOGY_HARVEST_PASS_0B.md`, `docs/governance/MORPHOLOGY_HARVEST_STORAGE_AUTHORITY.md`, `docs/governance/ontology/INSTRUMENT_DIMENSION_ONTOLOGY_V1.md`, `reports/governance/governance_inventory.json`, `reports/governance/governance_inventory.md`
-  - ... and 10 more
+- Referenced by: `docs/dev-orders/IBG_SEMANTIC_MORPHOLOGY_HARVEST_PASS_0B.md`, `docs/governance/MORPHOLOGY_HARVEST_STORAGE_AUTHORITY.md`, `docs/governance/ontology/INSTRUMENT_DIMENSION_ONTOLOGY_V1.md`, `docs/research/IBG_LINEAGE_MAP.md`, `reports/governance/governance_inventory.json`
+  - ... and 11 more
 
 ### `MORPHOLOGY_HARVEST_STORAGE_AUTHORITY.md`
 - Path: `docs/governance/MORPHOLOGY_HARVEST_STORAGE_AUTHORITY.md`
@@ -111,8 +111,8 @@ Documents with broken links: 1
 ### `MORPHOLOGY_RECONSTRUCTION_PLATFORM.md`
 - Path: `docs/governance/MORPHOLOGY_RECONSTRUCTION_PLATFORM.md`
 - Reason: Referenced by 2 code file(s)
-- Referenced by: `CLAUDE.md`, `docs/architecture/IBG_BOE_BOUNDARY_MODEL.md`, `docs/governance/GOVERNANCE_TOPOLOGY_MAP.md`, `docs/governance/REPOSITORY_EXPANSION_GUIDANCE_DIRECTIVE.md`, `docs/governance/governance_manifest.json`
-  - ... and 10 more
+- Referenced by: `CLAUDE.md`, `docs/architecture/IBG_BOE_BOUNDARY_MODEL.md`, `docs/audits/SPRINT_DEEP_AUDIT_2026-05-24.md`, `docs/governance/GOVERNANCE_TOPOLOGY_MAP.md`, `docs/governance/REPOSITORY_EXPANSION_GUIDANCE_DIRECTIVE.md`
+  - ... and 11 more
 
 ### `RUN_ARTIFACT_INDEX_QUERY_API_CONTRACT_v1.md`
 - Path: `docs/governance/RUN_ARTIFACT_INDEX_QUERY_API_CONTRACT_v1.md`
@@ -131,6 +131,12 @@ Documents with broken links: 1
 - Reason: Referenced by 1 code file(s)
 - Referenced by: `docs/ROUTER_MAP.md`, `reports/governance/governance_inventory.json`, `reports/governance/governance_inventory.md`, `services/api/app/rmos/api/rmos_runs_router.py`
 
+### `SEMANTIC_INCUBATION_ARCHITECTURE.md`
+- Path: `docs/governance/SEMANTIC_INCUBATION_ARCHITECTURE.md`
+- Reason: Referenced by 1 code file(s)
+- Referenced by: `docs/governance/MANIFEST_INDEX.md`, `docs/governance/VECTORIZER_COMPONENT_LIFECYCLE.md`, `docs/governance/VECTORIZER_SANDBOX_MIGRATION_PLAN.md`, `docs/handoffs/SANDBOX_FOLDER_REMEDIATION_HANDOFF.md`, `docs/research/IBG_LINEAGE_MAP.md`
+  - ... and 7 more
+
 ### `SERVER_SIDE_FEASIBILITY_ENFORCEMENT_CONTRACT_v1.md`
 - Path: `docs/governance/SERVER_SIDE_FEASIBILITY_ENFORCEMENT_CONTRACT_v1.md`
 - Reason: Referenced by 1 code file(s)
@@ -143,7 +149,13 @@ Documents with broken links: 1
 - Referenced by: `docs/architecture/ACOUSTIC_TOPOLOGY_BUILDER_MODEL.md`, `docs/governance/ACOUSTIC_TOPOLOGY_READINESS_MATRIX.md`, `docs/governance/ACOUSTIC_TOPOLOGY_RUNTIME_RULES.md`, `docs/governance/ontology/GOVERNANCE_CLASSIFICATION_MODEL.md`, `docs/governance/ontology/LIFECYCLE_VOCABULARY_STANDARD.md`
   - ... and 7 more
 
-## Advisory (162)
+### `VECTORIZER_COMPONENT_LIFECYCLE.md`
+- Path: `docs/governance/VECTORIZER_COMPONENT_LIFECYCLE.md`
+- Reason: Referenced by 2 code file(s)
+- Referenced by: `Safe Remediation Lane.md`, `docs/governance/MANIFEST_INDEX.md`, `docs/governance/SEMANTIC_INCUBATION_ARCHITECTURE.md`, `docs/governance/VECTORIZER_CANONICAL_PATHS.md`, `docs/governance/VECTORIZER_CAPABILITY_MAP.md`
+  - ... and 11 more
+
+## Advisory (169)
 
 ### `ACOUSTIC_CAD_READINESS_MATRIX.md`
 - Path: `docs/governance/ACOUSTIC_CAD_READINESS_MATRIX.md`
@@ -232,9 +244,15 @@ Documents with broken links: 1
 
 ### `CANONICAL_PROVENANCE_MODEL.md`
 - Path: `docs/governance/CANONICAL_PROVENANCE_MODEL.md`
-- Reason: Referenced by 11 governance doc(s)
-- Referenced by: `docs/governance/REPOSITORY_CONSTITUTION.md`, `docs/governance/arbitration/C2_PACKET_001_TERMINAL_4_PROVENANCE_REVIEW.md`, `docs/governance/inventories/AUTHORITY_INVENTORY_C1.md`, `docs/governance/inventories/C1_GOVERNANCE_INVENTORY.md`, `docs/governance/inventories/C1_INVENTORY_INDEX.md`
-  - ... and 8 more
+- Reason: Referenced by 12 governance doc(s)
+- Referenced by: `docs/governance/IBG_BLOCKED_PROVENANCE_RATIFICATION_TIMELINE.md`, `docs/governance/REPOSITORY_CONSTITUTION.md`, `docs/governance/arbitration/C2_PACKET_001_TERMINAL_4_PROVENANCE_REVIEW.md`, `docs/governance/inventories/AUTHORITY_INVENTORY_C1.md`, `docs/governance/inventories/C1_GOVERNANCE_INVENTORY.md`
+  - ... and 9 more
+
+### `CROSS_REPO_AUTHORITY_CROSSWALK.md`
+- Path: `docs/governance/CROSS_REPO_AUTHORITY_CROSSWALK.md`
+- Reason: Referenced by 1 governance doc(s)
+- Referenced by: `docs/MULTI_REPO_GOVERNANCE_CONVERGENCE_REPORT.md`, `docs/audits/SPRINT_DEEP_AUDIT_2026-05-24.md`, `docs/governance/IBG_BLOCKED_PROVENANCE_RATIFICATION_TIMELINE.md`, `docs/handoffs/imports/MANIFEST.md`, `reports/governance/governance_inventory.json`
+  - ... and 1 more
 
 ### `DXF_TRANSLATOR_SERIALIZATION_POLICY.md`
 - Path: `docs/governance/DXF_TRANSLATOR_SERIALIZATION_POLICY.md`
@@ -246,6 +264,12 @@ Documents with broken links: 1
 - Path: `docs/governance/EXPERIMENTAL_ONTOLOGY_POLICY.md`
 - Reason: Referenced by 8 governance doc(s)
 - Referenced by: `docs/governance/GEOMETRY_AUTHORITY_DECOMPOSITION.md`, `docs/governance/ONTOLOGY_RECONCILIATION_WORKFLOW.md`, `docs/governance/REPOSITORY_CONSTITUTION.md`, `docs/governance/SEMANTIC_FREEZE_POLICY.md`, `docs/governance/inventories/C1_GOVERNANCE_INVENTORY.md`
+  - ... and 5 more
+
+### `EXPORT_LIFECYCLE_CLASSIFICATION_MATRIX.md`
+- Path: `docs/governance/EXPORT_LIFECYCLE_CLASSIFICATION_MATRIX.md`
+- Reason: Referenced by 1 script(s)
+- Referenced by: `docs/SPRINT_ARCHITECTURE_HANDOFF_2026-05-24.md`, `docs/audits/SPRINT_DEEP_AUDIT_2026-05-24.md`, `docs/governance/CROSS_REPO_AUTHORITY_CROSSWALK.md`, `docs/governance/DXF_SAVE_LIFECYCLE_GUARD_PLAN.md`, `docs/governance/IBG_BLOCKED_PROVENANCE_RATIFICATION_TIMELINE.md`
   - ... and 5 more
 
 ### `EXPORT_PATH_MIGRATION_MATRIX.md`
@@ -261,9 +285,9 @@ Documents with broken links: 1
 
 ### `GOVERNANCE_AUTHORITY_HIERARCHY.md`
 - Path: `docs/governance/GOVERNANCE_AUTHORITY_HIERARCHY.md`
-- Reason: Referenced by 21 governance doc(s)
+- Reason: Referenced by 22 governance doc(s)
 - Referenced by: `CLAUDE.md`, `docs/canonical/governance/RMOS_2.0_Specification.md`, `docs/governance/CANONICAL_AUTHORITY_MAP.md`, `docs/governance/CANONICAL_ONTOLOGY_VOCABULARY.md`, `docs/governance/ONTOLOGY_DRIFT_CLASSIFICATIONS.md`
-  - ... and 21 more
+  - ... and 22 more
 
 ### `GOVERNANCE_RATIFICATION_MODEL.md`
 - Path: `docs/governance/GOVERNANCE_RATIFICATION_MODEL.md`
@@ -282,21 +306,28 @@ Documents with broken links: 1
 - Referenced by: `CLAUDE.md`, `docs/governance/inventories/C1_GOVERNANCE_INVENTORY.md`, `docs/governance/inventory/C1_SEMANTIC_INVENTORY_INDEX.md`, `docs/governance/ontology/AUTHORITY_BOUNDARY_REGISTRY_V1.md`, `docs/governance/ontology/GOVERNANCE_STACK_INDEX_V1.md`
   - ... and 3 more
 
+### `IBG_BLOCKED_PROVENANCE_RATIFICATION_TIMELINE.md`
+- Path: `docs/governance/IBG_BLOCKED_PROVENANCE_RATIFICATION_TIMELINE.md`
+- Reason: Referenced by 2 governance doc(s)
+- Referenced by: `docs/audits/SPRINT_DEEP_AUDIT_2026-05-24.md`, `docs/governance/CROSS_REPO_AUTHORITY_CROSSWALK.md`, `docs/governance/RESEARCH_LAYER_GOVERNANCE_ENTRY.md`, `docs/handoffs/imports/MANIFEST.md`, `reports/governance/governance_inventory.json`
+  - ... and 1 more
+
 ### `IBG_CONSTITUTIONAL_RUNTIME_1A_COVERAGE_NOTE.md`
 - Path: `docs/governance/IBG_CONSTITUTIONAL_RUNTIME_1A_COVERAGE_NOTE.md`
 - Reason: Referenced by 2 governance doc(s)
-- Referenced by: `docs/governance/BODY_ISOLATION_ADAPTER_REDESIGN_NOTES.md`, `docs/governance/IBG_CONSTITUTIONAL_RUNTIME_1A_COVERAGE_NOTE.md`, `reports/governance/governance_inventory.json`, `reports/governance/governance_inventory.md`
+- Referenced by: `docs/governance/BODY_ISOLATION_ADAPTER_REDESIGN_NOTES.md`, `docs/governance/IBG_CONSTITUTIONAL_RUNTIME_1A_COVERAGE_NOTE.md`, `docs/research/IBG_LINEAGE_MAP.md`, `reports/governance/governance_inventory.json`, `reports/governance/governance_inventory.md`
 
 ### `IBG_CONSTITUTIONAL_RUNTIME_FOUNDATION.md`
 - Path: `docs/governance/IBG_CONSTITUTIONAL_RUNTIME_FOUNDATION.md`
-- Reason: Referenced by 3 governance doc(s)
-- Referenced by: `docs/governance/BODY_ISOLATION_ADAPTER_REDESIGN_NOTES.md`, `docs/governance/IBG_CONSTITUTIONAL_RUNTIME_1A_COVERAGE_NOTE.md`, `docs/governance/IBG_CONSTITUTIONAL_RUNTIME_FOUNDATION.md`, `reports/governance/governance_inventory.json`, `reports/governance/governance_inventory.md`
+- Reason: Referenced by 4 governance doc(s)
+- Referenced by: `docs/governance/BODY_ISOLATION_ADAPTER_REDESIGN_NOTES.md`, `docs/governance/IBG_BLOCKED_PROVENANCE_RATIFICATION_TIMELINE.md`, `docs/governance/IBG_CONSTITUTIONAL_RUNTIME_1A_COVERAGE_NOTE.md`, `docs/governance/IBG_CONSTITUTIONAL_RUNTIME_FOUNDATION.md`, `docs/research/IBG_LINEAGE_MAP.md`
+  - ... and 2 more
 
 ### `MANIFEST_INDEX.md`
 - Path: `docs/governance/MANIFEST_INDEX.md`
 - Reason: Referenced by 1 script(s)
-- Referenced by: `CLAUDE.md`, `docs/governance/GOVERNANCE_DUPLICATION_AUDIT.md`, `docs/governance/MANIFEST_INDEX.md`, `docs/handoffs/GOVERNANCE_REMEDIATION_IMPLEMENTATION_GUIDE.md`, `reports/governance/governance_inventory.json`
-  - ... and 3 more
+- Referenced by: `CLAUDE.md`, `docs/governance/GOVERNANCE_DUPLICATION_AUDIT.md`, `docs/governance/MANIFEST_INDEX.md`, `docs/governance/VECTORIZER_SANDBOX_MIGRATION_PLAN.md`, `docs/handoffs/GOVERNANCE_REMEDIATION_IMPLEMENTATION_GUIDE.md`
+  - ... and 4 more
 
 ### `MORPHOLOGY_CORPUS_STANDARD.md`
 - Path: `docs/governance/MORPHOLOGY_CORPUS_STANDARD.md`
@@ -339,6 +370,11 @@ Documents with broken links: 1
 - Referenced by: `docs/governance/GOVERNANCE_AUTHORITY_HIERARCHY.md`, `docs/governance/GOVERNANCE_TOPOLOGY_MAP.md`, `docs/governance/REPOSITORY_EXPANSION_GUIDANCE_DIRECTIVE.md`, `docs/governance/ontology/semantic_registry.json`, `reports/governance/governance_inventory.json`
   - ... and 1 more
 
+### `RUNTIME_BOUNDARY_INVENTORY.md`
+- Path: `docs/governance/RUNTIME_BOUNDARY_INVENTORY.md`
+- Reason: Referenced by 2 governance doc(s)
+- Referenced by: `docs/governance/EXPORT_LIFECYCLE_CLASSIFICATION_MATRIX.md`, `docs/governance/IBG_BLOCKED_PROVENANCE_RATIFICATION_TIMELINE.md`, `reports/governance/governance_inventory.json`, `reports/governance/governance_inventory.md`
+
 ### `SECURITY_TRUST_BOUNDARY_CONTRACT_v1.md`
 - Path: `docs/governance/SECURITY_TRUST_BOUNDARY_CONTRACT_v1.md`
 - Reason: Referenced by 2 governance doc(s)
@@ -358,8 +394,8 @@ Documents with broken links: 1
 ### `SPRINT_NAMESPACE_STANDARD.md`
 - Path: `docs/governance/SPRINT_NAMESPACE_STANDARD.md`
 - Reason: Referenced by 1 script(s)
-- Referenced by: `CLAUDE.md`, `docs/governance/GOVERNANCE_DUPLICATION_AUDIT.md`, `docs/governance/GOVERNANCE_TOPOLOGY_MAP.md`, `docs/governance/MORPHOLOGY_RECONSTRUCTION_PLATFORM.md`, `docs/handoffs/GOVERNANCE_REMEDIATION_IMPLEMENTATION_GUIDE.md`
-  - ... and 3 more
+- Referenced by: `CLAUDE.md`, `docs/audits/SPRINT_DEEP_AUDIT_2026-05-24.md`, `docs/governance/GOVERNANCE_DUPLICATION_AUDIT.md`, `docs/governance/GOVERNANCE_TOPOLOGY_MAP.md`, `docs/governance/MORPHOLOGY_RECONSTRUCTION_PLATFORM.md`
+  - ... and 4 more
 
 ### `THICKNESS_HIERARCHY_MODEL.md`
 - Path: `docs/governance/THICKNESS_HIERARCHY_MODEL.md`
@@ -382,6 +418,22 @@ Documents with broken links: 1
 - Path: `docs/governance/TRANSLATOR_ONBOARDING_RULES.md`
 - Reason: Referenced by 2 governance doc(s)
 - Referenced by: `docs/governance/CAD_TRANSLATOR_GOVERNANCE_RULES.md`, `docs/governance/EXPORT_PATH_MIGRATION_MATRIX.md`, `docs/handoffs/MRP_4B_TRANSLATOR_REGISTRY_INTEGRATION_HANDOFF.md`, `reports/governance/governance_inventory.json`, `reports/governance/governance_inventory.md`
+
+### `VECTORIZER_CANONICAL_PATHS.md`
+- Path: `docs/governance/VECTORIZER_CANONICAL_PATHS.md`
+- Reason: Referenced by 2 governance doc(s)
+- Referenced by: `docs/governance/VECTORIZER_COMPONENT_LIFECYCLE.md`, `docs/governance/VECTORIZER_SANDBOX_MIGRATION_PLAN.md`, `reports/governance/governance_inventory.json`, `reports/governance/governance_inventory.md`
+
+### `VECTORIZER_SANDBOX_MIGRATION_PLAN.md`
+- Path: `docs/governance/VECTORIZER_SANDBOX_MIGRATION_PLAN.md`
+- Reason: Referenced by 1 script(s)
+- Referenced by: `docs/governance/MANIFEST_INDEX.md`, `docs/governance/RESEARCH_LAYER_GOVERNANCE_ENTRY.md`, `docs/governance/SEMANTIC_INCUBATION_ARCHITECTURE.md`, `docs/governance/VECTORIZER_COMPONENT_LIFECYCLE.md`, `docs/handoffs/SANDBOX_FOLDER_REMEDIATION_HANDOFF.md`
+  - ... and 5 more
+
+### `VECTORIZER_TECHNICAL_DEBT_INVENTORY.md`
+- Path: `docs/governance/VECTORIZER_TECHNICAL_DEBT_INVENTORY.md`
+- Reason: Referenced by 1 governance doc(s)
+- Referenced by: `Safe Remediation Lane.md`, `docs/governance/VECTORIZER_COMPONENT_LIFECYCLE.md`, `docs/handoffs/SANDBOX_FOLDER_REMEDIATION_HANDOFF.md`, `reports/governance/governance_inventory.json`, `reports/governance/governance_inventory.md`
 
 ### `C2_ARBITRATION_FRAMEWORK.md`
 - Path: `docs/governance/arbitration/C2_ARBITRATION_FRAMEWORK.md`
@@ -1061,7 +1113,7 @@ Documents with broken links: 1
 - Referenced by: `docs/governance/arbitration/C2_GEOMETRY_AUTHORITY_FRAMEWORK.md`, `docs/governance/arbitration/C2_PACKET_001_TERMINAL_4_PROVENANCE_REVIEW.md`, `docs/governance/arbitration/C2_PROVENANCE_BOUNDARY_DECOMPOSITION.md`, `docs/governance/arbitration/C2_PROVENANCE_COLLAPSE_RISKS.md`, `docs/governance/arbitration/packets/C2_GEOMETRY_ARBITRATION_PACKET_001.md`
   - ... and 5 more
 
-## Orphaned (8)
+## Orphaned (15)
 
 ### `CAD_EXTENSION_COMPATIBILITY_POLICY.md`
 - Path: `docs/governance/CAD_EXTENSION_COMPATIBILITY_POLICY.md`
@@ -1071,9 +1123,37 @@ Documents with broken links: 1
 - Path: `docs/governance/CAD_TRANSLATOR_READINESS_MATRIX.md`
 - Referenced by: `docs/handoffs/MRP_5B_CAD_SEMANTIC_EXTENSION_PROPOSAL.md`, `reports/governance/governance_inventory.json`, `reports/governance/governance_inventory.md`
 
+### `DXF_SAVE_LIFECYCLE_GUARD_PLAN.md`
+- Path: `docs/governance/DXF_SAVE_LIFECYCLE_GUARD_PLAN.md`
+- Referenced by: `docs/SPRINT_ARCHITECTURE_HANDOFF_2026-05-24.md`, `reports/governance/governance_inventory.json`, `reports/governance/governance_inventory.md`
+
 ### `GOVERNANCE_DUPLICATION_AUDIT.md`
 - Path: `docs/governance/GOVERNANCE_DUPLICATION_AUDIT.md`
 - Referenced by: `reports/governance/governance_inventory.json`, `reports/governance/governance_inventory.md`, `tests/test_governance_compliance.py`
+
+### `RESEARCH_LAYER_GOVERNANCE_ENTRY.md`
+- Path: `docs/governance/RESEARCH_LAYER_GOVERNANCE_ENTRY.md`
+- Referenced by: `docs/MULTI_REPO_GOVERNANCE_CONVERGENCE_REPORT.md`, `reports/governance/governance_inventory.json`, `reports/governance/governance_inventory.md`
+
+### `RUNTIME_CAPABILITY_REGRESSION_GUARD.md`
+- Path: `docs/governance/RUNTIME_CAPABILITY_REGRESSION_GUARD.md`
+- Referenced by: `docs/SPRINT_ARCHITECTURE_HANDOFF_2026-05-24.md`, `reports/governance/governance_inventory.json`, `reports/governance/governance_inventory.md`
+
+### `RUNTIME_SPINE_CONTRACT_POLICY.md`
+- Path: `docs/governance/RUNTIME_SPINE_CONTRACT_POLICY.md`
+- Referenced by: `docs/handoffs/MRP_5T_RUNTIME_SPINE_CONTRACT_FREEZE.md`, `reports/governance/governance_inventory.json`, `reports/governance/governance_inventory.md`
+
+### `VECTORIZER_CAPABILITY_MAP.md`
+- Path: `docs/governance/VECTORIZER_CAPABILITY_MAP.md`
+- Referenced by: `docs/research/README.md`, `docs/research/RESEARCH_PLATFORM_SPINE.md`, `docs/research/RESEARCH_WAVE_INDEX.md`, `reports/governance/governance_inventory.json`, `reports/governance/governance_inventory.md`
+
+### `VECTORIZER_DUPLICATION_MATRIX.md`
+- Path: `docs/governance/VECTORIZER_DUPLICATION_MATRIX.md`
+- Referenced by: `Safe Remediation Lane.md`, `reports/governance/governance_inventory.json`, `reports/governance/governance_inventory.md`
+
+### `VECTORIZER_FALLBACK_BEHAVIOR_AUDIT.md`
+- Path: `docs/governance/VECTORIZER_FALLBACK_BEHAVIOR_AUDIT.md`
+- Referenced by: `reports/governance/governance_inventory.json`, `reports/governance/governance_inventory.md`
 
 ### `MORPHOLOGY_GOVERNANCE_DOCS_C2_CHECKPOINT_APPROVAL.md`
 - Path: `docs/governance/approvals/MORPHOLOGY_GOVERNANCE_DOCS_C2_CHECKPOINT_APPROVAL.md`
