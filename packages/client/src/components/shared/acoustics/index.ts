@@ -26,6 +26,7 @@
  * Dev Order 68: Added ExperimentalCorrelationPanel for computed observational correlations.
  * Dev Order 70: Added ExperimentalDriftTimelinePanel for drift observation timelines.
  * Dev Order 72: Added ExperimentalDriftSynthesisPanel for session-level drift synthesis.
+ * Dev Order 85: Added ExperimentalSessionPanel for Measurement Lab session continuity.
  */
 
 export { default as AcousticStateCard } from './AcousticStateCard.vue'
@@ -67,3 +68,6 @@ export { default as ExperimentalDriftTimelinePanel } from './ExperimentalDriftTi
 
 // Experimental Drift Synthesis components (Dev Order 72)
 export { default as ExperimentalDriftSynthesisPanel } from './ExperimentalDriftSynthesisPanel.vue'
+
+// Experimental Session components (Dev Order 85)
+export { default as ExperimentalSessionPanel } from '../../acoustics/ExperimentalSessionPanel.vue'
