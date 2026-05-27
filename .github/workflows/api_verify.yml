@@ -7,12 +7,14 @@ on:
       - "packages/client/**"
       - "scripts/**"
       - "Makefile"
+      - ".github/workflows/api_verify.yml"
   pull_request:
     paths:
       - "services/api/**"
       - "packages/client/**"
       - "scripts/**"
       - "Makefile"
+      - ".github/workflows/api_verify.yml"
   workflow_dispatch:
 
 jobs:
@@ -26,6 +28,16 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: "3.11"
+
+      - name: Configure git for private repos
+        env:
+          SG_SPEC_TOKEN: ${{ secrets.SG_SPEC_TOKEN }}
+        run: |
+          if [ -z "$SG_SPEC_TOKEN" ]; then
+            echo "::error::SG_SPEC_TOKEN not configured — cannot clone private sg-spec; api-verify cannot run"
+            exit 1
+          fi
+          git config --global url."https://${SG_SPEC_TOKEN}@github.com/".insteadOf "https://github.com/"
 
       - name: Install API deps
         run: |

@@ -711,7 +711,7 @@ Domain handoffs and governance docs may add detail but **must cite the SPRINTS I
 |----|-------|----------|--------|---------------|
 | ART-STUDIO-DEFER-001 | Design-first-workflow + promotion intent export | API / Art Studio | QUEUED | 2026-05-26 |
 | MAINT-DEFER-001 | SPRINTS.md CI enforcement (pre-commit / PR advisory) | Process | DEFERRED | 2026-04-23 |
-| CI-RED-001 | sg-spec clone auth — api-verify dead | CI / infra | BLOCKED | 2026-05-27 |
+| CI-RED-001 | sg-spec clone auth — api-verify dead | CI / infra | IN_PROGRESS | 2026-05-27 |
 | CI-RED-002 | legacy-usage gate 131/10 | CI / API hygiene | OPEN | 2026-05-27 |
 | CI-RED-003 | debt-gates complexity ratchet (113 violations) | CI / quality | OPEN | 2026-05-27 |
 | CI-RED-004 | Fence Checks frontend boundary violations | CI / boundaries | OPEN | 2026-05-27 |
@@ -765,11 +765,12 @@ Domain handoffs and governance docs may add detail but **must cite the SPRINTS I
 
 ### CI-RED-001 — sg-spec clone auth (api-verify dead)
 
-**Status:** BLOCKED  
+**Status:** IN_PROGRESS  
 **last_verified:** 2026-05-27  
-**Why open:** `pip install` fails cloning private `sg-spec` — `could not read Username for 'https://github.com'`. API contract validation **cannot execute** in CI (not "fails checks" — dead gate).  
-**Evidence:** PR #49 run `26489918342`, post-merge `main`.  
-**Restore trigger:** `SG_SPEC_TOKEN` (or equivalent) available in GitHub Actions secrets **and** api-verify workflow green on a no-op PR.
+**Why open:** `api_verify.yml` did not configure git for `SG_SPEC_TOKEN` before `pip install`, so sg-spec clone failed with `could not read Username for 'https://github.com'`. Gate was dead (install never completed).  
+**Evidence:** main run `26494697442` (post PR #50 merge); `gh secret list` confirms `SG_SPEC_TOKEN` present since 2026-01-19.  
+**Fix in flight:** Wire `api_verify.yml` to same git-config pattern as `api_tests.yml`.  
+**Restore trigger:** `api-verify` job completes install step **and** `make api-verify` green on PR CI run (not local).
 
 ---
 
