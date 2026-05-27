@@ -769,8 +769,8 @@ Domain handoffs and governance docs may add detail but **must cite the SPRINTS I
 **last_verified:** 2026-05-27  
 **Why open:** `api_verify.yml` did not configure git for `SG_SPEC_TOKEN` before `pip install`, so sg-spec clone failed with `could not read Username for 'https://github.com'`. Gate was dead (install never completed).  
 **Evidence:** main run `26494697442` (post PR #50 merge); `gh secret list` confirms `SG_SPEC_TOKEN` present since 2026-01-19.  
-**Fix in flight:** Wire `api_verify.yml` to same git-config pattern as `api_tests.yml`.  
-**Restore trigger:** `api-verify` job completes install step **and** `make api-verify` green on PR CI run (not local).
+**Fix in flight:** PR #51 wired token + gate runs; install still red (`could not read Password`). Probe 4: Dockerfile credential-store pattern (`TOKEN:x-oauth-basic`).  
+**Restore trigger (CI-RED-001):** `Install API deps` step green in CI. `make api-verify` green is a later bar.
 
 ---
 

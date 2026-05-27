@@ -37,7 +37,10 @@ jobs:
             echo "::error::SG_SPEC_TOKEN not configured — cannot clone private sg-spec; api-verify cannot run"
             exit 1
           fi
-          git config --global url."https://${SG_SPEC_TOKEN}@github.com/".insteadOf "https://github.com/"
+          # Match docker/api/Dockerfile — token-only url.insteadOf fails with "could not read Password"
+          git config --global credential.helper store
+          echo "https://${SG_SPEC_TOKEN}:x-oauth-basic@github.com" > ~/.git-credentials
+          chmod 600 ~/.git-credentials
 
       - name: Install API deps
         run: |
