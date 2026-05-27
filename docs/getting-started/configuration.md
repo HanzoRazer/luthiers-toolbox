@@ -157,9 +157,13 @@ For email notifications on CI failures:
 
 ### Creating SG_SPEC_TOKEN
 
+Use a **dedicated** classic or fine-grained PAT — not `gh auth token` (session OAuth expires).
+
 1. Go to GitHub → Settings → Developer settings → Personal access tokens
-2. Create token with `repo` scope (read access to private repos)
+2. Create token with `repo` scope (read access to private repos), or fine-grained read on `HanzoRazer/sg-spec`
 3. Add to repository: Settings → Secrets → Actions → New repository secret
+
+See [SG_SPEC_TOKEN (CI)](../ci/SG_SPEC_TOKEN.md) for rotation and CI preflight behavior.
 
 ---
 
