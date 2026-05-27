@@ -1,12 +1,41 @@
 {
   "schema": "cbsp21_patch_input_v1",
+  "schema_version": "cbsp21_patch_input_v1",
   "coverage_min": 0.95,
-  "patch_id": "DO85_EXPERIMENTAL_SESSION_49",
-  "title": "DO85 ExperimentalSession on main + CBSP21 manifest",
-  "intent": "Declare PR #49 DO85 files in CBSP21 manifest (fixes 0% coverage failure). Follow-up: apiFetch request-id test isolation.",
-  "change_type": "feature",
-  "behavior_change": "compatible",
+  "patch_id": "PR50_CBSP21_MANIFEST_AND_TEST_ISOLATION",
+  "title": "CBSP21 manifest for DO85 + apiFetch test isolation",
+  "intent": "Close PR #49 CBSP21 gap by declaring DO85 paths in files[]. Isolate apiFetch request-id guard from Supabase init. Register CI-RED-* in SPRINTS.",
+  "change_type": "ci",
+  "behavior_change": "none",
   "risk_level": "low",
+  "scope": {
+    "paths_in_scope": [
+      ".cbsp21/",
+      "packages/client/src/sdk/core/__tests__/",
+      "packages/client/src/types/acoustics/",
+      "packages/client/src/utils/acoustics/",
+      "packages/client/src/components/acoustics/",
+      "packages/client/src/views/art-studio/",
+      "packages/client/src/components/shared/acoustics/"
+    ],
+    "files_expected_to_change": [
+      ".cbsp21/patch_input.json",
+      "SPRINTS.md",
+      "packages/client/src/sdk/core/__tests__/apiFetch.requestIdGuard.test.ts"
+    ]
+  },
+  "diff_articulation": {
+    "what_changed": "Merged CBSP21 coverage manifest (files[]) with patch-input gate fields (schema_version, scope, diff_articulation). Added vi.mock('../auth') to requestIdGuard test. Added CI-RED-001..004 to SPRINTS deferred maintenance.",
+    "why_not_redundant": "PR #49 landed DO85 without a valid dual-schema manifest; coverage gate saw 0% declared. This adds both gate schemas and test isolation absent from #49."
+  },
+  "verification": {
+    "commands_run": [
+      "python scripts/ci/check_cbsp21_gate.py --manifest .cbsp21/patch_input.json",
+      "python scripts/ci/check_cbsp21_patch_input.py --base origin/main --head HEAD",
+      "npm test -- src/utils/acoustics/__tests__/experimentalSession.test.ts",
+      "npm test -- src/sdk/core/__tests__/apiFetch.requestIdGuard.test.ts"
+    ]
+  },
   "files": [
     {
       "path": "packages/client/src/types/acoustics/experimentalSession.ts",
