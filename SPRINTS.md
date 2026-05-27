@@ -1,11 +1,27 @@
 # The Production Shop — Sprint Registry
-Last updated: 2026-05-06
+Last updated: 2026-05-26
 Maintained by: Ross Echols (HanzoRazer)
 Maintenance discipline: docs/SPRINTS_MAINTENANCE.md
 
+**Deferred maintenance depository:** Intentional hold-outs (held out of a merge, infra/process deferrals, known-incomplete routes) are registered in **[DEFERRED MAINTENANCE](#deferred-maintenance)** below — not in orphan docs. Held out of a PR is fine; untracked is not.
+
 ---
 
-## NEXT SESSION OPENS WITH (2026-05-02)
+## NEXT SESSION OPENS WITH (2026-05-26)
+
+**PR #45 and #46 merged to `main`.**
+
+**CAM Intent (H7) — CLOSED on `main` (PR #46).** Routers deleted in `545fccad` recovered; frontend 404s on normalize + roughing intent resolved. Blocking CI guard: `check_execution_class_compliance.py`. Live smoke: `python scripts/dev/verify_cam_intent_live.py` (API must be running).
+
+**IBG Provenance R2 — on `main` (PR #45).** Export fail-closed until R1 governance ratification — scheduling question, not engineering.
+
+**MVP bar:** Design → platform → G-code → cut on BCAM 2030CA. No test suite substitutes for this.
+
+**Tracked deferral (not omitted):** `ART-STUDIO-DEFER-001` — see [DEFERRED MAINTENANCE](#deferred-maintenance).
+
+---
+
+## NEXT SESSION OPENS WITH (2026-05-02) — superseded
 
 **Sprint FRET-CONSOLIDATION-1 complete** — CAM toolpath generation now consumes FretboardEcosphere as canonical source. No more duplicate fret math.
 
@@ -675,7 +691,90 @@ Soundhole Generator → Helmholtz Calculator → complete acoustic design
 
 ---
 
+## DEFERRED MAINTENANCE
+
+**Canonical registry** for work that is intentionally not done yet. Engineers log deferrals here at session end (see `docs/SPRINTS_MAINTENANCE.md` Rule 6).
+
+| Field | Required |
+|-------|----------|
+| **ID** | `{DOMAIN}-DEFER-{NNN}` or `MAINT-DEFER-{NNN}` for process/infra |
+| **Status** | `DEFERRED` \| `QUEUED` \| `BLOCKED` |
+| **Why deferred** | One sentence — cause, not symptom |
+| **Restore trigger** | Concrete done-condition |
+| **last_verified** | Date status confirmed against repo |
+
+Domain handoffs and governance docs may add detail but **must cite the SPRINTS ID**.
+
+### Index
+
+| ID | Title | Category | Status | last_verified |
+|----|-------|----------|--------|---------------|
+| ART-STUDIO-DEFER-001 | Design-first-workflow + promotion intent export | API / Art Studio | QUEUED | 2026-05-26 |
+| MAINT-DEFER-001 | SPRINTS.md CI enforcement (pre-commit / PR advisory) | Process | DEFERRED | 2026-04-23 |
+| MAINT-DEFER-002 | Post–PR #46 closure artifacts on `main` | Docs / tooling | OPEN | 2026-05-26 |
+
+---
+
+### ART-STUDIO-DEFER-001 — Design-first-workflow + promotion intent export
+
+**Status:** QUEUED  
+**last_verified:** 2026-05-26  
+**Priority:** LOW — not on CAM Intent / MVP cut-path critical path  
+**Held out of:** PR #46 (CAM Intent H7 restore) — tests would be red on `main`
+
+**Why deferred:** `design_first_workflow_routes` and related art-studio session routes removed in `545fccad` (same orphan batch as CAM intent routers). Routes absent on `main`.
+
+**Symptom:** `test_promotion_intent_export_endpoint.py` fails 8/8 (404 on session start).
+
+**Paths required (minimum):**
+- `POST /api/art/design-first-workflow/sessions/start`
+- `POST /api/art/design-first-workflow/sessions/{session_id}/transition`
+- `GET /api/art/design-first-workflow/sessions/{session_id}/promotion_intent.json`
+- `POST /api/art/design-first-workflow/sessions/{session_id}/promotion_intent_v1`
+
+**Recover via git:**
+- Router: `545fccad^` → `services/api/app/art_studio/api/design_first_workflow_routes.py`
+- Test: `2645b0de^` → `services/api/tests/test_promotion_intent_export_endpoint.py`
+
+**Restore trigger:** Re-mount workflow router in `router_registry`; recover test; 8/8 green.
+
+**Origin:** CAM intent investigation 2026-05-26 — prevents repeat of `545fccad` silent deletion pattern.
+
+---
+
+### MAINT-DEFER-001 — SPRINTS.md CI enforcement
+
+**Status:** DEFERRED  
+**last_verified:** 2026-04-23  
+**Why deferred:** Solo-dev project; implementation cost not justified yet.  
+**Restore trigger:** Second developer on repo, or repeated sprint status drift.  
+**Detail:** `docs/SPRINTS_MAINTENANCE.md` → CI Enforcement section (Options A/B).
+
+---
+
+### MAINT-DEFER-002 — Post–PR #46 closure artifacts on `main`
+
+**Status:** OPEN (verify at next session)  
+**last_verified:** 2026-05-26  
+**Why deferred:** Landed on branch during restore; confirm merged or commit to `main`:
+
+| Artifact | Purpose |
+|----------|---------|
+| `scripts/dev/verify_cam_intent_live.py` | Repeatable live smoke (both H7 endpoints → 200) |
+| `SPRINTS.md` updates | This registry + PR #45/#46 completion notes |
+| `docs/governance/CAM_INTENT_SCHEMA_V1.md` | HTTP surface + smoke script pointer |
+
+**Restore trigger:** Files present on `origin/main`; `python scripts/dev/verify_cam_intent_live.py` passes against local API.
+
+---
+
 ## QUEUED
+
+### ART-STUDIO-DEFER-001
+
+Tracked under [DEFERRED MAINTENANCE](#art-studio-defer-001--design-first-workflow--promotion-intent-export). Schedule when Art Studio promotion path is in scope — not blocking MVP cut.
+
+---
 
 ### Sprint: tap_tone_pi Real-Time Plate Tuning Mode
 **Status:** QUEUED
@@ -1700,6 +1799,38 @@ Systematic audit to identify code that was developed for purposes that may have 
 ---
 
 ## COMPLETED
+
+### CAM Intent H7 HTTP Surface Restore (PR #46)
+
+**Status:** COMPLETE
+**Completed:** 2026-05-26 (merged PR #46)
+**Branch:** `feat/cam-intent-restore` → `main`
+
+**Problem:** `cam_roughing_intent_router` and `rmos_cam_intent_router` deleted in `545fccad` as "orphaned" while `CAMPreview.vue` and SDK still called the endpoints → 404.
+
+**Deliverables:**
+- Routers recovered via `git checkout 545fccad^` (no reimplementation)
+- `router_registry` manifest registration (`prefix=/api`; roughing intent **after** `app.cam.routers` — import-order constraint documented in `cam_manifest.py`)
+- Canonical path: `POST /api/cam/roughing/gcode_intent` (SDK fixed from wrong `roughing_gcode_intent`)
+- 16 H7 pytest files restored; `test_promotion_intent_export_endpoint.py` **excluded** → `ART-STUDIO-DEFER-001`
+- Blocking CI: `services/api/app/ci/check_execution_class_compliance.py` + `core_ci.yml` + `check_all.py` CI tier
+- Live smoke: `scripts/dev/verify_cam_intent_live.py`
+
+**Verification:**
+- `pytest` — 16/16 H7 intent tests
+- Live — normalize + roughing intent → 200; legacy underscore path → 404
+
+---
+
+### IBG Provenance R2 Export Guards (PR #45)
+
+**Status:** COMPLETE (code on `main`; operational export blocked by design until R1)
+**Completed:** 2026-05-26 (merged PR #45)
+**Handoff:** `docs/handoffs/DO_80_IBG_PROVENANCE_R2_ROLLOUT_ANNOTATED_HANDOFF.md`
+
+**Next:** R1 governance ratification session, then Phase E ratified export.
+
+---
 
 ### Sprint A — GRBL Spindle Command Emission
 

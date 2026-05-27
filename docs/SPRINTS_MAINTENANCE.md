@@ -29,6 +29,20 @@ The `last_verified` field gets bumped when:
 
 A typo fix does not bump `last_verified`. A status audit does.
 
+### Rule 6: Deferred maintenance → SPRINTS.md only (added 2026-05-26)
+
+When work is **intentionally held out** of a merge, **deferred** for bandwidth, or **known incomplete** but not scheduled as an active sprint:
+
+1. Add or update an entry in **`SPRINTS.md` → DEFERRED MAINTENANCE** (index row + detail subsection).
+2. Assign an ID: `{DOMAIN}-DEFER-{NNN}` (feature) or `MAINT-DEFER-{NNN}` (process/docs/infra).
+3. Include: why deferred, restore trigger, `last_verified`.
+4. Do **not** rely on orphan docs, PR comments, or chat-only notes as the system of record.
+
+Domain-specific docs may elaborate but must cite the SPRINTS ID.  
+**Anti-pattern:** Held out of a PR with no registry entry (see CAM intent routers, `545fccad`).
+
+---
+
 ### Rule 5: Commit hash requirement for completion claims (added 2026-04-26)
 
 **Every completion claim requires three elements:**
@@ -124,6 +138,7 @@ Either approach fits. Decision deferred until team size warrants the overhead.
 4. **Phantom tech debt** — Marking regressions as fixed without re-verifying
 5. **Five-month drift** — Going multiple months without status audit
 6. **Undocumented completion** — Marking tasks ✅ without commit hash or verification method (added 2026-04-26)
+7. **Untracked deferral** — Holding work out of a merge without a DEFERRED MAINTENANCE entry in SPRINTS.md (added 2026-05-26)
 
 The Sprint 3 audit (2026-04-23) found examples of patterns 1-4.
 

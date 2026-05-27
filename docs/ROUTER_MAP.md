@@ -661,6 +661,17 @@ curl -X POST "http://localhost:8000/api/cam/roughing/gcode_intent?strict=true" \
 - `test_roughing_gcode_intent_metrics.py` — Metrics emission tests
 - `test_cam_intent_strict_reject_logs_request_id.py` — Request ID logging tests
 
+### Live smoke
+
+```bash
+# With API running (e.g. uvicorn on :8000)
+python scripts/dev/verify_cam_intent_live.py
+```
+
+### Deferred (tracked)
+
+Art-studio promotion intent export held out of H7 restore — see `SPRINTS.md` DEFERRED MAINTENANCE (`ART-STUDIO-DEFER-001`).
+
 ---
 
 ## ADR-003 Phase 5: Feedback Loop Infrastructure
