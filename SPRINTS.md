@@ -715,6 +715,7 @@ Domain handoffs and governance docs may add detail but **must cite the SPRINTS I
 | CI-RED-002 | legacy-usage gate 131/10 | CI / API hygiene | OPEN | 2026-05-27 |
 | CI-RED-003 | debt-gates complexity ratchet (113 violations) | CI / quality | OPEN | 2026-05-27 |
 | CI-RED-004 | Fence Checks frontend boundary violations | CI / boundaries | OPEN | 2026-05-27 |
+| CI-RED-005 | Container build swallows sg-spec install failure | CI / containers | OPEN | 2026-05-27 |
 
 ---
 
@@ -767,10 +768,14 @@ Domain handoffs and governance docs may add detail but **must cite the SPRINTS I
 
 **Status:** IN_PROGRESS  
 **last_verified:** 2026-05-27  
-**Why open:** `api_verify.yml` did not configure git for `SG_SPEC_TOKEN` before `pip install`, so sg-spec clone failed with `could not read Username for 'https://github.com'`. Gate was dead (install never completed).  
-**Evidence:** main run `26494697442` (post PR #50 merge); `gh secret list` confirms `SG_SPEC_TOKEN` present since 2026-01-19.  
-**Fix in flight:** Wire `api_verify.yml` to same git-config pattern as `api_tests.yml`.  
-**Restore trigger:** `api-verify` job completes install step **and** `make api-verify` green on PR CI run (not local).
+**Why open:** `api_verify.yml` did not configure git for `SG_SPEC_TOKEN` before `pip install`; gate was dead (install never completed).  
+**Evidence:** main run `26494697442` (post PR #50); `gh secret list` shows `SG_SPEC_TOKEN` present since 2026-01-19 (presence ≠ validity).  
+**Probe sequence (one variable per CI read):**
+- PR #51 — wire token + env-mapped check: gate runs; install red (`could not read Password` with `url.insteadOf`).
+- PR #52 probe 4 — credential-store pattern **before token validity check** (out of order): install red (`Invalid username or token`). **Ambiguous read** — consistent with stale token *or* format mismatch; do **not** conclude credential-store works or that token is dead.
+- **Probe 5 (2026-05-27):** replaced `SG_SPEC_TOKEN` only (no auth-format change). PR #52 run `26526070562`: **Install API deps green**; sg-spec clone `87dc7977`. **Conclusion:** stale secret (listed 2026-01-19); probe 4 neither proves nor disproves credential-store vs `url.insteadOf`.
+- **Post-auth:** `make api-verify` runs and may fail on contract/baseline drift — gate working, not auth dead.
+**Restore trigger (CI-RED-001):** `Install API deps` green in CI on PR run ✅ (run `26526070562`). Full gate green (`make api-verify`) is a later bar / may be separate ledger.
 
 ---
 
@@ -796,7 +801,17 @@ Domain handoffs and governance docs may add detail but **must cite the SPRINTS I
 
 **Status:** OPEN  
 **last_verified:** 2026-05-27  
-**Why open:** `patterns: FAIL` — legacy `/api/rmos/runs` references in client SDK/tests.  
+**Why open:** `patterns: FAIL` — legacy `/api/rmos/runs` references in client SDK/tests.
+
+---
+
+### CI-RED-005 — Container build swallows sg-spec install failure
+
+**Status:** OPEN  
+**last_verified:** 2026-05-27  
+**Why open:** `docker/api/Dockerfile` installs sg-spec in a shell branch that on failure logs `WARNING: sg-spec installation failed, continuing without it` and the image build still goes green. Containers job passes while a declared dependency is missing — same shape as silent deletion (routers, stashed DO85).  
+**Evidence:** PR #52 containers run `26520419625` — same `Authentication failed` as api-verify, then warning, build succeeds.  
+**Restore trigger:** sg-spec install failure fails the container build loudly, or sg-spec is removed from declared deps with an explicit optional path. **Not in CI-RED-001 snail-step.**  
 **Restore trigger:** Fence Checks (Blocking) green on `main`.
 
 **Note:** Permanently red CI camouflages real regressions (CBSP21 on PR #49 nearly filed as "drift"). These items are **old, not acceptable, not closed.**
