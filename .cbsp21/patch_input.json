@@ -11,6 +11,7 @@
   "scope": {
     "paths_in_scope": [
       ".cbsp21/",
+      ".github/workflows/",
       "packages/client/src/sdk/core/__tests__/",
       "packages/client/src/types/acoustics/",
       "packages/client/src/utils/acoustics/",
