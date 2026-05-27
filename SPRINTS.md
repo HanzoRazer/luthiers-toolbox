@@ -711,7 +711,7 @@ Domain handoffs and governance docs may add detail but **must cite the SPRINTS I
 |----|-------|----------|--------|---------------|
 | ART-STUDIO-DEFER-001 | Design-first-workflow + promotion intent export | API / Art Studio | QUEUED | 2026-05-26 |
 | MAINT-DEFER-001 | SPRINTS.md CI enforcement (pre-commit / PR advisory) | Process | DEFERRED | 2026-04-23 |
-| CI-RED-001 | sg-spec clone auth — api-verify dead | CI / infra | IN_PROGRESS | 2026-05-27 |
+| CI-RED-001 | sg-spec clone auth — api-verify dead | CI / infra | CLOSING (#53) | 2026-05-27 |
 | CI-RED-002 | legacy-usage gate 131/10 | CI / API hygiene | OPEN | 2026-05-27 |
 | CI-RED-003 | debt-gates complexity ratchet (113 violations) | CI / quality | OPEN | 2026-05-27 |
 | CI-RED-004 | Fence Checks frontend boundary violations | CI / boundaries | OPEN | 2026-05-27 |
@@ -766,16 +766,15 @@ Domain handoffs and governance docs may add detail but **must cite the SPRINTS I
 
 ### CI-RED-001 — sg-spec clone auth (api-verify dead)
 
-**Status:** IN_PROGRESS  
+**Status:** CLOSING — PR #53 (preflight + `docs/ci/SG_SPEC_TOKEN.md` with expiry log)  
 **last_verified:** 2026-05-27  
-**Why open:** `api_verify.yml` did not configure git for `SG_SPEC_TOKEN` before `pip install`; gate was dead (install never completed).  
-**Evidence:** main run `26494697442` (post PR #50); `gh secret list` shows `SG_SPEC_TOKEN` present since 2026-01-19 (presence ≠ validity).  
-**Probe sequence (one variable per CI read):**
-- PR #51 — wire token + env-mapped check: gate runs; install red (`could not read Password` with `url.insteadOf`).
-- PR #52 probe 4 — credential-store pattern **before token validity check** (out of order): install red (`Invalid username or token`). **Ambiguous read** — consistent with stale token *or* format mismatch; do **not** conclude credential-store works or that token is dead.
-- **Probe 5 (2026-05-27):** replaced `SG_SPEC_TOKEN` only (no auth-format change). PR #52 run `26526070562`: **Install API deps green**; sg-spec clone `87dc7977`. **Conclusion:** stale secret (listed 2026-01-19); probe 4 neither proves nor disproves credential-store vs `url.insteadOf`. Emergency fix used session `gh auth token` — replace with dedicated PAT per `docs/ci/SG_SPEC_TOKEN.md`.
-- **Post-auth:** `make api-verify` runs and may fail on contract/baseline drift — gate working, not auth dead.
-**Restore trigger (CI-RED-001):** `Install API deps` green in CI on PR run ✅ (run `26526070562`). Full gate green (`make api-verify`) is a later bar / may be separate ledger.
+**Original failure:** Gate dead — no git auth before `pip install`; invisible validator.  
+**Closed in three layers:**
+1. **PR #51** — gate parses and runs; token env-mapped.
+2. **PR #52** — credential-store + probe 5 stale-token rotation; **Install API deps** green (`26526070562`).
+3. **PR #53** — dedicated PAT doc, rotation/expiry table, calendar reminder; **Preflight sg-spec token** fails loud before pip.
+**Durability:** `docs/ci/SG_SPEC_TOKEN.md` rotation log + calendar reminder prevents future “dead gate, unknown why.”  
+**Out of scope for CI-RED-001:** `make api-verify` contract/fence reds (gate working); **CI-RED-005** container warning-swallow.
 
 ---
 
