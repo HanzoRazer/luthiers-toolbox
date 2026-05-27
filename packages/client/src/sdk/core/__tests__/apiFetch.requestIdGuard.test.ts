@@ -7,6 +7,15 @@
  */
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 
+// Prevent Supabase auth init from polluting console.warn assertions
+vi.mock("../auth", () => ({
+  getAuthHeader: vi.fn(async () => undefined),
+  shouldSkipAuth: vi.fn((path: string) => {
+    const publicPaths = ["/health", "/api/health", "/metrics", "/api/_meta"];
+    return publicPaths.some((p) => path.startsWith(p));
+  }),
+}));
+
 // We need to mock fetch before importing apiFetch
 const originalFetch = globalThis.fetch;
 

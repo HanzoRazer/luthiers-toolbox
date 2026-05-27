@@ -1,81 +1,164 @@
 {
   "schema": "cbsp21_patch_input_v1",
-  "patch_id": "CI_HYGIENE_DEBT_20",
-  "title": "Fix pre-existing CI hygiene debt gates",
-  "intent": "Fix pre-existing CI failures: CBSP21 schema mismatch and sg-spec credential failures across 16 workflows. Documents CI debt status.",
-  "change_type": "infra",
-  "behavior_change": "compatible",
+  "schema_version": "cbsp21_patch_input_v1",
+  "coverage_min": 0.95,
+  "patch_id": "PR50_CBSP21_MANIFEST_AND_TEST_ISOLATION",
+  "title": "CBSP21 manifest for DO85 + apiFetch test isolation",
+  "intent": "Close PR #49 CBSP21 gap by declaring DO85 paths in files[]. Isolate apiFetch request-id guard from Supabase init. Register CI-RED-* in SPRINTS.",
+  "change_type": "ci",
+  "behavior_change": "none",
   "risk_level": "low",
   "scope": {
     "paths_in_scope": [
       ".cbsp21/",
       ".github/workflows/",
-      "docs/ci/"
+      "packages/client/src/sdk/core/__tests__/",
+      "packages/client/src/types/acoustics/",
+      "packages/client/src/utils/acoustics/",
+      "packages/client/src/components/acoustics/",
+      "packages/client/src/views/art-studio/",
+      "packages/client/src/components/shared/acoustics/"
     ],
     "files_expected_to_change": [
       ".cbsp21/patch_input.json",
-      ".github/workflows/adaptive_pocket.yml",
-      ".github/workflows/api_dxf_tests.yml",
-      ".github/workflows/api_health_and_smoke.yml",
-      ".github/workflows/api_health_check.yml",
-      ".github/workflows/api_tests.yml",
-      ".github/workflows/api_wiring_gate.yml",
-      ".github/workflows/architecture_scan.yml",
-      ".github/workflows/artifact_linkage_gate.yml",
-      ".github/workflows/cam_essentials.yml",
-      ".github/workflows/core_ci.yml",
-      ".github/workflows/geometry_parity.yml",
-      ".github/workflows/governance_unified.yml",
-      ".github/workflows/mvp_golden_gate.yml",
-      ".github/workflows/rmos_ci.yml",
-      ".github/workflows/routing_truth.yml",
-      ".github/workflows/run_artifact_contract_gate.yml",
-      ".github/workflows/sdk_codegen.yml",
-      ".github/workflows/verify-policy.yml",
-      "docs/ci/CI_HYGIENE_DEBT_PATCH_PLAN.md"
+      "SPRINTS.md",
+      "packages/client/src/sdk/core/__tests__/apiFetch.requestIdGuard.test.ts"
     ]
   },
-  "diff_range": {
-    "base": "main",
-    "head": "governance-ontology-consolidation"
-  },
-  "changed_files_count": 20,
-  "changed_files_exact": [
-    ".cbsp21/patch_input.json",
-    ".github/workflows/adaptive_pocket.yml",
-    ".github/workflows/api_dxf_tests.yml",
-    ".github/workflows/api_health_and_smoke.yml",
-    ".github/workflows/api_health_check.yml",
-    ".github/workflows/api_tests.yml",
-    ".github/workflows/api_wiring_gate.yml",
-    ".github/workflows/architecture_scan.yml",
-    ".github/workflows/artifact_linkage_gate.yml",
-    ".github/workflows/cam_essentials.yml",
-    ".github/workflows/core_ci.yml",
-    ".github/workflows/geometry_parity.yml",
-    ".github/workflows/governance_unified.yml",
-    ".github/workflows/mvp_golden_gate.yml",
-    ".github/workflows/rmos_ci.yml",
-    ".github/workflows/routing_truth.yml",
-    ".github/workflows/run_artifact_contract_gate.yml",
-    ".github/workflows/sdk_codegen.yml",
-    ".github/workflows/verify-policy.yml",
-    "docs/ci/CI_HYGIENE_DEBT_PATCH_PLAN.md"
-  ],
   "diff_articulation": {
-    "what_changed": [
-      "Fixed CBSP21 manifest schema key: schema_version → schema",
-      "Added conditional if: ${{ secrets.SG_SPEC_TOKEN != '' }} to 16 workflows",
-      "Created docs/ci/CI_HYGIENE_DEBT_PATCH_PLAN.md documenting CI debt status"
-    ],
-    "why_not_redundant": "Fixes Issue #20 pre-existing CI failures that were blocking all PRs. The sg-spec credential fix allows workflows to skip gracefully when the token is unavailable instead of failing."
+    "what_changed": "Merged CBSP21 coverage manifest (files[]) with patch-input gate fields (schema_version, scope, diff_articulation). Added vi.mock('../auth') to requestIdGuard test. Added CI-RED-001..004 to SPRINTS deferred maintenance.",
+    "why_not_redundant": "PR #49 landed DO85 without a valid dual-schema manifest; coverage gate saw 0% declared. This adds both gate schemas and test isolation absent from #49."
   },
   "verification": {
     "commands_run": [
-      "python scripts/ci/check_cbsp21_gate.py --manifest .cbsp21/patch_input.json --changed-files '' -> PASSED",
-      "python -m app.ci.fence_checker_v2 -> 0 violations",
-      "python -m app.ci.check_complexity --baseline app/ci/complexity_baseline.json -> OK"
+      "python scripts/ci/check_cbsp21_gate.py --manifest .cbsp21/patch_input.json",
+      "python scripts/ci/check_cbsp21_patch_input.py --base origin/main --head HEAD",
+      "npm test -- src/utils/acoustics/__tests__/experimentalSession.test.ts",
+      "npm test -- src/sdk/core/__tests__/apiFetch.requestIdGuard.test.ts"
     ]
   },
-  "file_context_coverage_percent": 100.0
+  "files": [
+    {
+      "path": "packages/client/src/types/acoustics/experimentalSession.ts",
+      "intent": "experimental-session.v1 type definitions (DO85 continuity record).",
+      "scan_targets": [
+        "packages/client/src/types/acoustics/experimentalSession.ts"
+      ],
+      "risk": "low",
+      "behavior_change": "none — observational types only",
+      "verification": [
+        "npm test -- src/utils/acoustics/__tests__/experimentalSession.test.ts"
+      ]
+    },
+    {
+      "path": "packages/client/src/utils/acoustics/experimentalSession.ts",
+      "intent": "Pure session lifecycle utils (createExperimentalSession, buildSessionSummary).",
+      "scan_targets": [
+        "packages/client/src/utils/acoustics/experimentalSession.ts",
+        "packages/client/src/utils/acoustics/__tests__/experimentalSession.test.ts"
+      ],
+      "risk": "low",
+      "behavior_change": "none — in-memory observational helpers",
+      "verification": [
+        "npm test -- src/utils/acoustics/__tests__/experimentalSession.test.ts"
+      ]
+    },
+    {
+      "path": "packages/client/src/utils/acoustics/__tests__/experimentalSession.test.ts",
+      "intent": "DO85 unit tests (23 cases).",
+      "scan_targets": [
+        "packages/client/src/utils/acoustics/__tests__/experimentalSession.test.ts"
+      ],
+      "risk": "low",
+      "behavior_change": "none",
+      "verification": [
+        "npm test -- src/utils/acoustics/__tests__/experimentalSession.test.ts"
+      ]
+    },
+    {
+      "path": "packages/client/src/components/acoustics/ExperimentalSessionPanel.vue",
+      "intent": "Measurement Lab session UI (wired in ApertureWorkspace).",
+      "scan_targets": [
+        "packages/client/src/components/acoustics/ExperimentalSessionPanel.vue",
+        "packages/client/src/views/art-studio/ApertureWorkspace.vue"
+      ],
+      "risk": "low",
+      "behavior_change": "Measurement Lab tab renders Experimental Sessions panel",
+      "verification": [
+        "Manual: Aperture Workspace → Measurement Lab → session create/list UI"
+      ]
+    },
+    {
+      "path": "packages/client/src/views/art-studio/ApertureWorkspace.vue",
+      "intent": "Mount ExperimentalSessionPanel in calibration tab.",
+      "scan_targets": [
+        "packages/client/src/views/art-studio/ApertureWorkspace.vue"
+      ],
+      "risk": "low",
+      "behavior_change": "Panel reachable in Measurement Lab UI",
+      "verification": [
+        "Manual: Aperture Workspace → Measurement Lab"
+      ]
+    },
+    {
+      "path": "packages/client/src/utils/acoustics/index.ts",
+      "intent": "Barrel export for experimentalSession utils.",
+      "scan_targets": [
+        "packages/client/src/utils/acoustics/index.ts"
+      ],
+      "risk": "low",
+      "behavior_change": "none",
+      "verification": [
+        "npm run type-check (client)"
+      ]
+    },
+    {
+      "path": "packages/client/src/components/shared/acoustics/index.ts",
+      "intent": "Barrel re-export for ExperimentalSessionPanel.",
+      "scan_targets": [
+        "packages/client/src/components/shared/acoustics/index.ts"
+      ],
+      "risk": "low",
+      "behavior_change": "none",
+      "verification": [
+        "npm run type-check (client)"
+      ]
+    },
+    {
+      "path": "packages/client/src/sdk/core/__tests__/apiFetch.requestIdGuard.test.ts",
+      "intent": "Isolate request-id guard tests from Supabase auth init warnings.",
+      "scan_targets": [
+        "packages/client/src/sdk/core/__tests__/apiFetch.requestIdGuard.test.ts"
+      ],
+      "risk": "low",
+      "behavior_change": "none — test isolation only",
+      "verification": [
+        "npm test -- src/sdk/core/__tests__/apiFetch.requestIdGuard.test.ts"
+      ]
+    },
+    {
+      "path": "SPRINTS.md",
+      "intent": "Track structurally red CI gates (not normalized as pre-existing).",
+      "scan_targets": [
+        "SPRINTS.md"
+      ],
+      "risk": "low",
+      "behavior_change": "none — registry only",
+      "verification": [
+        "Review DEFERRED MAINTENANCE CI-RED-* entries"
+      ]
+    },
+    {
+      "path": ".github/workflows/cbsp21_patch_input_gate.yml",
+      "intent": "Pass PR base/head SHAs to patch-input validator (fixes unfetchable main ref).",
+      "scan_targets": [
+        ".github/workflows/cbsp21_patch_input_gate.yml"
+      ],
+      "risk": "low",
+      "behavior_change": "none — CI wiring only",
+      "verification": [
+        "CI: cbsp21-patch-input job green on PR"
+      ]
+    }
+  ]
 }
