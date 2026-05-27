@@ -711,7 +711,10 @@ Domain handoffs and governance docs may add detail but **must cite the SPRINTS I
 |----|-------|----------|--------|---------------|
 | ART-STUDIO-DEFER-001 | Design-first-workflow + promotion intent export | API / Art Studio | QUEUED | 2026-05-26 |
 | MAINT-DEFER-001 | SPRINTS.md CI enforcement (pre-commit / PR advisory) | Process | DEFERRED | 2026-04-23 |
-| MAINT-DEFER-002 | Post–PR #46 closure artifacts on `main` | Docs / tooling | OPEN | 2026-05-26 |
+| CI-RED-001 | sg-spec clone auth — api-verify dead | CI / infra | BLOCKED | 2026-05-27 |
+| CI-RED-002 | legacy-usage gate 131/10 | CI / API hygiene | OPEN | 2026-05-27 |
+| CI-RED-003 | debt-gates complexity ratchet (113 violations) | CI / quality | OPEN | 2026-05-27 |
+| CI-RED-004 | Fence Checks frontend boundary violations | CI / boundaries | OPEN | 2026-05-27 |
 
 ---
 
@@ -754,17 +757,48 @@ Domain handoffs and governance docs may add detail but **must cite the SPRINTS I
 
 ### MAINT-DEFER-002 — Post–PR #46 closure artifacts on `main`
 
-**Status:** OPEN (verify at next session)  
-**last_verified:** 2026-05-26  
-**Why deferred:** Landed on branch during restore; confirm merged or commit to `main`:
+**Status:** COMPLETE (2026-05-27)  
+**last_verified:** 2026-05-27  
+**Closed by:** PR #47 (MAINT-DEFER-002), PR #49 (DO85)
 
-| Artifact | Purpose |
-|----------|---------|
-| `scripts/dev/verify_cam_intent_live.py` | Repeatable live smoke (both H7 endpoints → 200) |
-| `SPRINTS.md` updates | This registry + PR #45/#46 completion notes |
-| `docs/governance/CAM_INTENT_SCHEMA_V1.md` | HTTP surface + smoke script pointer |
+---
 
-**Restore trigger:** Files present on `origin/main`; `python scripts/dev/verify_cam_intent_live.py` passes against local API.
+### CI-RED-001 — sg-spec clone auth (api-verify dead)
+
+**Status:** BLOCKED  
+**last_verified:** 2026-05-27  
+**Why open:** `pip install` fails cloning private `sg-spec` — `could not read Username for 'https://github.com'`. API contract validation **cannot execute** in CI (not "fails checks" — dead gate).  
+**Evidence:** PR #49 run `26489918342`, post-merge `main`.  
+**Restore trigger:** `SG_SPEC_TOKEN` (or equivalent) available in GitHub Actions secrets **and** api-verify workflow green on a no-op PR.
+
+---
+
+### CI-RED-002 — legacy-usage gate (131/10)
+
+**Status:** OPEN  
+**last_verified:** 2026-05-27  
+**Why open:** Budget 10; observed 131 legacy endpoint usages. Gate is structurally exceeded — not a drift blip.  
+**Restore trigger:** `legacy-usage` check green on `main`, or budget honestly reset with migration plan.
+
+---
+
+### CI-RED-003 — debt-gates complexity ratchet
+
+**Status:** OPEN  
+**last_verified:** 2026-05-27  
+**Why open:** 113 complexity violations; fails on post-merge `main` (run `26490386636`).  
+**Restore trigger:** `debt-gates` job green on `main`.
+
+---
+
+### CI-RED-004 — Fence Checks frontend boundary
+
+**Status:** OPEN  
+**last_verified:** 2026-05-27  
+**Why open:** `patterns: FAIL` — legacy `/api/rmos/runs` references in client SDK/tests.  
+**Restore trigger:** Fence Checks (Blocking) green on `main`.
+
+**Note:** Permanently red CI camouflages real regressions (CBSP21 on PR #49 nearly filed as "drift"). These items are **old, not acceptable, not closed.**
 
 ---
 
