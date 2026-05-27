@@ -7,12 +7,14 @@ on:
       - "packages/client/**"
       - "scripts/**"
       - "Makefile"
+      - ".github/workflows/api_verify.yml"
   pull_request:
     paths:
       - "services/api/**"
       - "packages/client/**"
       - "scripts/**"
       - "Makefile"
+      - ".github/workflows/api_verify.yml"
   workflow_dispatch:
 
 jobs:
