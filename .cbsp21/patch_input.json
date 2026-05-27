@@ -2,30 +2,23 @@
   "schema": "cbsp21_patch_input_v1",
   "schema_version": "cbsp21_patch_input_v1",
   "coverage_min": 0.95,
-  "patch_id": "SG_SPEC_TOKEN_HARDENING",
-  "title": "SG_SPEC_TOKEN hardening — dedicated PAT doc + CI preflight",
-  "intent": "Stabilize CI-RED-001 auth fix: document dedicated PAT (not gh session token) and fail loud on dead token before pip install.",
+  "patch_id": "CI_RED_001_PREFLIGHT_SAME_STEP",
+  "title": "api-verify: preflight in credential step + install creds",
+  "intent": "Fix #53 preflight false failure: run ls-remote with credentials in same step; re-apply creds before pip install.",
   "change_type": "ci",
   "behavior_change": "none",
   "risk_level": "low",
   "scope": {
-    "paths_in_scope": [
-      ".cbsp21/",
-      ".github/workflows/",
-      "docs/ci/",
-      "docs/getting-started/"
-    ],
+    "paths_in_scope": [".cbsp21/", ".github/workflows/", "docs/ci/"],
     "files_expected_to_change": [
       ".github/workflows/api_verify.yml",
       "docs/ci/SG_SPEC_TOKEN.md",
-      "docs/getting-started/configuration.md",
-      "SPRINTS.md",
       ".cbsp21/patch_input.json"
     ]
   },
   "diff_articulation": {
-    "what_changed": "Add sg-spec git ls-remote preflight in api_verify; document dedicated PAT rotation; warn against gh auth token in configuration.md.",
-    "why_not_redundant": "Probe 5 restored install with an expiring session token — needs stable secret shape and early CI failure before ambiguous pip errors."
+    "what_changed": "Merge preflight into configure step; map SG_SPEC_TOKEN in Install API deps step.",
+    "why_not_redundant": "#53 merged separate preflight step; main red at preflight (26535660007) until credential context is correct per step."
   },
   "verification": {
     "commands_run": [
@@ -36,35 +29,19 @@
   "files": [
     {
       "path": ".github/workflows/api_verify.yml",
-      "intent": "Preflight git ls-remote on sg-spec after credential setup.",
+      "intent": "Preflight + install both use credential store with SG_SPEC_TOKEN env.",
       "scan_targets": [".github/workflows/api_verify.yml"],
       "risk": "low",
       "behavior_change": "none",
-      "verification": ["CI: Preflight sg-spec token + Install API deps green"]
+      "verification": ["CI: Configure/preflight + Install API deps green"]
     },
     {
       "path": "docs/ci/SG_SPEC_TOKEN.md",
-      "intent": "Authoritative PAT requirements and rotation steps.",
+      "intent": "Document same-step preflight behavior.",
       "scan_targets": ["docs/ci/SG_SPEC_TOKEN.md"],
       "risk": "low",
       "behavior_change": "none",
       "verification": ["Review doc"]
-    },
-    {
-      "path": "docs/getting-started/configuration.md",
-      "intent": "Cross-link and anti-pattern for session OAuth token.",
-      "scan_targets": ["docs/getting-started/configuration.md"],
-      "risk": "low",
-      "behavior_change": "none",
-      "verification": ["Review link"]
-    },
-    {
-      "path": "SPRINTS.md",
-      "intent": "CI-RED-001 probe 5 note: replace session token with dedicated PAT.",
-      "scan_targets": ["SPRINTS.md"],
-      "risk": "low",
-      "behavior_change": "none",
-      "verification": ["Review CI-RED-001 entry"]
     }
   ]
 }
