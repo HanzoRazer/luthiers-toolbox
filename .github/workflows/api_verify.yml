@@ -29,7 +29,7 @@ jobs:
         with:
           python-version: "3.11"
 
-      - name: Configure git for private repos
+      - name: Configure git and preflight sg-spec
         env:
           SG_SPEC_TOKEN: ${{ secrets.SG_SPEC_TOKEN }}
         run: |
@@ -37,20 +37,21 @@ jobs:
             echo "::error::SG_SPEC_TOKEN not configured — cannot clone private sg-spec; api-verify cannot run"
             exit 1
           fi
-          # Match docker/api/Dockerfile — token-only url.insteadOf fails with "could not read Password"
           git config --global credential.helper store
           echo "https://${SG_SPEC_TOKEN}:x-oauth-basic@github.com" > ~/.git-credentials
           chmod 600 ~/.git-credentials
-
-      - name: Preflight sg-spec token
-        run: |
           if ! git ls-remote --heads https://github.com/HanzoRazer/sg-spec.git >/dev/null 2>&1; then
-            echo "::error::SG_SPEC_TOKEN cannot read HanzoRazer/sg-spec — use a dedicated classic PAT (repo scope), not a session OAuth token (gh auth token)"
+            echo "::error::SG_SPEC_TOKEN cannot read HanzoRazer/sg-spec — see docs/ci/SG_SPEC_TOKEN.md"
             exit 1
           fi
 
       - name: Install API deps
+        env:
+          SG_SPEC_TOKEN: ${{ secrets.SG_SPEC_TOKEN }}
         run: |
+          git config --global credential.helper store
+          echo "https://${SG_SPEC_TOKEN}:x-oauth-basic@github.com" > ~/.git-credentials
+          chmod 600 ~/.git-credentials
           python -m pip install --upgrade pip
           pip install -r services/api/requirements.txt
 
