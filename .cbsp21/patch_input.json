@@ -147,6 +147,18 @@
       "verification": [
         "Review DEFERRED MAINTENANCE CI-RED-* entries"
       ]
+    },
+    {
+      "path": ".github/workflows/cbsp21_patch_input_gate.yml",
+      "intent": "Pass PR base/head SHAs to patch-input validator (fixes unfetchable main ref).",
+      "scan_targets": [
+        ".github/workflows/cbsp21_patch_input_gate.yml"
+      ],
+      "risk": "low",
+      "behavior_change": "none — CI wiring only",
+      "verification": [
+        "CI: cbsp21-patch-input job green on PR"
+      ]
     }
   ]
 }
