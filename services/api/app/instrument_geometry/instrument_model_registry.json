@@ -642,6 +642,14 @@
       "description": "Gibson Super Jumbo acoustic guitar with ornate pickguard",
       "manufacturer": "Gibson",
       "year_introduced": 1937,
+      "ibg_family": "jumbo",
+      "body_dimensions_mm": {
+        "lower_bout": 432.0,
+        "upper_bout": 305.0,
+        "waist": 254.0,
+        "body_length": 530.0,
+        "source": "IBG FAMILY_DEFAULTS['jumbo']"
+      },
       "assets": [
         "Guitar Plans/Jumbo/J-200 Plans.pdf"
       ],

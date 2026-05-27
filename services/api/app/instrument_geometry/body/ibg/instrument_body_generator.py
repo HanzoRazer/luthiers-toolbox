@@ -106,7 +106,7 @@ INSTRUMENT_SPECS: Dict[str, Dict] = {
         },
     },
     "jumbo": {
-        "family": "dreadnought",  # Uses dreadnought ratios
+        "family": "jumbo",
         "constraints": {
             "back_radius_mm": 7620.0,
             "butt_depth_mm": 127.0,
