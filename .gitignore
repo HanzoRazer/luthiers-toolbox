@@ -9,6 +9,9 @@
 .env
 .env.local
 .env.*.local
+services/api/.env
+packages/client/.env.local
+packages/client/.env.production.local
 
 # ------------------------------------------
 # Build Artifacts & Coverage
