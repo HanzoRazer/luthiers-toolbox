@@ -86,6 +86,17 @@ Copy the output into:
 - **Breaking envelope change** -> new schema version (v2) with parallel support window
 - **Non-breaking doc-only changes** -> update this doc only
 
+## HTTP surface (restored PR #46)
+
+| Endpoint | Router module |
+|----------|----------------|
+| `POST /api/rmos/cam/intent/normalize` | `app.routers.rmos_cam_intent_router` |
+| `POST /api/cam/roughing/gcode_intent` | `app.routers.cam_roughing_intent_router` |
+
+**Live smoke:** `python scripts/dev/verify_cam_intent_live.py` (API must be running).
+
+**Deferred work (tracked, not omitted):** `SPRINTS.md` → DEFERRED MAINTENANCE — `ART-STUDIO-DEFER-001` (promotion intent export / design-first-workflow routes).
+
 ---
 
-*Last updated: 2025-12-26*
+*Last updated: 2026-05-26*
