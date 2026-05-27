@@ -27,6 +27,17 @@ jobs:
         with:
           python-version: "3.11"
 
+      - name: Configure git for private repos
+        if: ${{ secrets.SG_SPEC_TOKEN != '' }}
+        run: |
+          git config --global url."https://${{ secrets.SG_SPEC_TOKEN }}@github.com/".insteadOf "https://github.com/"
+
+      - name: Require SG_SPEC_TOKEN for sg-spec install
+        if: ${{ secrets.SG_SPEC_TOKEN == '' }}
+        run: |
+          echo "::error::SG_SPEC_TOKEN not configured — cannot clone private sg-spec; api-verify cannot run"
+          exit 1
+
       - name: Install API deps
         run: |
           python -m pip install --upgrade pip

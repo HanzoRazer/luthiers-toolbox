@@ -2,162 +2,56 @@
   "schema": "cbsp21_patch_input_v1",
   "schema_version": "cbsp21_patch_input_v1",
   "coverage_min": 0.95,
-  "patch_id": "PR50_CBSP21_MANIFEST_AND_TEST_ISOLATION",
-  "title": "CBSP21 manifest for DO85 + apiFetch test isolation",
-  "intent": "Close PR #49 CBSP21 gap by declaring DO85 paths in files[]. Isolate apiFetch request-id guard from Supabase init. Register CI-RED-* in SPRINTS.",
+  "patch_id": "CI_RED_001_API_VERIFY_SG_SPEC",
+  "title": "Wire SG_SPEC_TOKEN into api-verify workflow",
+  "intent": "Restore dead api-verify gate: configure git before pip install so private sg-spec clone succeeds in CI.",
   "change_type": "ci",
   "behavior_change": "none",
   "risk_level": "low",
   "scope": {
     "paths_in_scope": [
       ".cbsp21/",
-      ".github/workflows/",
-      "packages/client/src/sdk/core/__tests__/",
-      "packages/client/src/types/acoustics/",
-      "packages/client/src/utils/acoustics/",
-      "packages/client/src/components/acoustics/",
-      "packages/client/src/views/art-studio/",
-      "packages/client/src/components/shared/acoustics/"
+      ".github/workflows/"
     ],
     "files_expected_to_change": [
+      ".github/workflows/api_verify.yml",
       ".cbsp21/patch_input.json",
-      "SPRINTS.md",
-      "packages/client/src/sdk/core/__tests__/apiFetch.requestIdGuard.test.ts"
+      "SPRINTS.md"
     ]
   },
   "diff_articulation": {
-    "what_changed": "Merged CBSP21 coverage manifest (files[]) with patch-input gate fields (schema_version, scope, diff_articulation). Added vi.mock('../auth') to requestIdGuard test. Added CI-RED-001..004 to SPRINTS deferred maintenance.",
-    "why_not_redundant": "PR #49 landed DO85 without a valid dual-schema manifest; coverage gate saw 0% declared. This adds both gate schemas and test isolation absent from #49."
+    "what_changed": "Add SG_SPEC_TOKEN git url rewrite to api_verify.yml before requirements install. Mark CI-RED-001 IN_PROGRESS in SPRINTS.",
+    "why_not_redundant": "SG_SPEC_TOKEN secret exists but api_verify.yml was the only API workflow missing git auth — install died before make api-verify could run."
   },
   "verification": {
     "commands_run": [
       "python scripts/ci/check_cbsp21_gate.py --manifest .cbsp21/patch_input.json",
-      "python scripts/ci/check_cbsp21_patch_input.py --base origin/main --head HEAD",
-      "npm test -- src/utils/acoustics/__tests__/experimentalSession.test.ts",
-      "npm test -- src/sdk/core/__tests__/apiFetch.requestIdGuard.test.ts"
+      "python scripts/ci/check_cbsp21_patch_input.py --base origin/main --head HEAD"
     ]
   },
   "files": [
     {
-      "path": "packages/client/src/types/acoustics/experimentalSession.ts",
-      "intent": "experimental-session.v1 type definitions (DO85 continuity record).",
+      "path": ".github/workflows/api_verify.yml",
+      "intent": "Configure git with SG_SPEC_TOKEN before pip install (CI-RED-001).",
       "scan_targets": [
-        "packages/client/src/types/acoustics/experimentalSession.ts"
+        ".github/workflows/api_verify.yml"
       ],
       "risk": "low",
-      "behavior_change": "none — observational types only",
+      "behavior_change": "none — CI wiring only",
       "verification": [
-        "npm test -- src/utils/acoustics/__tests__/experimentalSession.test.ts"
-      ]
-    },
-    {
-      "path": "packages/client/src/utils/acoustics/experimentalSession.ts",
-      "intent": "Pure session lifecycle utils (createExperimentalSession, buildSessionSummary).",
-      "scan_targets": [
-        "packages/client/src/utils/acoustics/experimentalSession.ts",
-        "packages/client/src/utils/acoustics/__tests__/experimentalSession.test.ts"
-      ],
-      "risk": "low",
-      "behavior_change": "none — in-memory observational helpers",
-      "verification": [
-        "npm test -- src/utils/acoustics/__tests__/experimentalSession.test.ts"
-      ]
-    },
-    {
-      "path": "packages/client/src/utils/acoustics/__tests__/experimentalSession.test.ts",
-      "intent": "DO85 unit tests (23 cases).",
-      "scan_targets": [
-        "packages/client/src/utils/acoustics/__tests__/experimentalSession.test.ts"
-      ],
-      "risk": "low",
-      "behavior_change": "none",
-      "verification": [
-        "npm test -- src/utils/acoustics/__tests__/experimentalSession.test.ts"
-      ]
-    },
-    {
-      "path": "packages/client/src/components/acoustics/ExperimentalSessionPanel.vue",
-      "intent": "Measurement Lab session UI (wired in ApertureWorkspace).",
-      "scan_targets": [
-        "packages/client/src/components/acoustics/ExperimentalSessionPanel.vue",
-        "packages/client/src/views/art-studio/ApertureWorkspace.vue"
-      ],
-      "risk": "low",
-      "behavior_change": "Measurement Lab tab renders Experimental Sessions panel",
-      "verification": [
-        "Manual: Aperture Workspace → Measurement Lab → session create/list UI"
-      ]
-    },
-    {
-      "path": "packages/client/src/views/art-studio/ApertureWorkspace.vue",
-      "intent": "Mount ExperimentalSessionPanel in calibration tab.",
-      "scan_targets": [
-        "packages/client/src/views/art-studio/ApertureWorkspace.vue"
-      ],
-      "risk": "low",
-      "behavior_change": "Panel reachable in Measurement Lab UI",
-      "verification": [
-        "Manual: Aperture Workspace → Measurement Lab"
-      ]
-    },
-    {
-      "path": "packages/client/src/utils/acoustics/index.ts",
-      "intent": "Barrel export for experimentalSession utils.",
-      "scan_targets": [
-        "packages/client/src/utils/acoustics/index.ts"
-      ],
-      "risk": "low",
-      "behavior_change": "none",
-      "verification": [
-        "npm run type-check (client)"
-      ]
-    },
-    {
-      "path": "packages/client/src/components/shared/acoustics/index.ts",
-      "intent": "Barrel re-export for ExperimentalSessionPanel.",
-      "scan_targets": [
-        "packages/client/src/components/shared/acoustics/index.ts"
-      ],
-      "risk": "low",
-      "behavior_change": "none",
-      "verification": [
-        "npm run type-check (client)"
-      ]
-    },
-    {
-      "path": "packages/client/src/sdk/core/__tests__/apiFetch.requestIdGuard.test.ts",
-      "intent": "Isolate request-id guard tests from Supabase auth init warnings.",
-      "scan_targets": [
-        "packages/client/src/sdk/core/__tests__/apiFetch.requestIdGuard.test.ts"
-      ],
-      "risk": "low",
-      "behavior_change": "none — test isolation only",
-      "verification": [
-        "npm test -- src/sdk/core/__tests__/apiFetch.requestIdGuard.test.ts"
+        "CI: api-verify Install API deps step succeeds on PR"
       ]
     },
     {
       "path": "SPRINTS.md",
-      "intent": "Track structurally red CI gates (not normalized as pre-existing).",
+      "intent": "CI-RED-001 status IN_PROGRESS until api-verify green in CI.",
       "scan_targets": [
         "SPRINTS.md"
       ],
       "risk": "low",
       "behavior_change": "none — registry only",
       "verification": [
-        "Review DEFERRED MAINTENANCE CI-RED-* entries"
-      ]
-    },
-    {
-      "path": ".github/workflows/cbsp21_patch_input_gate.yml",
-      "intent": "Pass PR base/head SHAs to patch-input validator (fixes unfetchable main ref).",
-      "scan_targets": [
-        ".github/workflows/cbsp21_patch_input_gate.yml"
-      ],
-      "risk": "low",
-      "behavior_change": "none — CI wiring only",
-      "verification": [
-        "CI: cbsp21-patch-input job green on PR"
+        "Review CI-RED-001 entry"
       ]
     }
   ]
