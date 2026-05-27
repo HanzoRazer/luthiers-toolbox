@@ -36,7 +36,7 @@
   "files": [
     {
       "path": ".github/workflows/api_verify.yml",
-      "intent": "Preflight git ls-remote on sg-spec after credential setup.",
+      "intent": "Preflight git ls-remote in same step as credential setup (HOME not shared across steps).",
       "scan_targets": [".github/workflows/api_verify.yml"],
       "risk": "low",
       "behavior_change": "none",
