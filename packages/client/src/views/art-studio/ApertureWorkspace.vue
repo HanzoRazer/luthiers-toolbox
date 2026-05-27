@@ -15,6 +15,7 @@
  * Dev Order 68: Add Experimental Correlations section for computed observational patterns.
  * Dev Order 70: Add Experimental Drift Timeline section for temporal drift observations.
  * Dev Order 72: Add Experimental Drift Synthesis section for session-level synthesis.
+ * Dev Order 85: Add Experimental Sessions panel for archive continuity grouping.
  *
  * Tabs:
  *   - Spiral: logarithmic spiral soundhole design (mounted production tool)
@@ -37,6 +38,7 @@ import TopologyVariantBuilder from '@/components/shared/acoustics/TopologyVarian
 import ExperimentalCorrelationPanel from '@/components/shared/acoustics/ExperimentalCorrelationPanel.vue'
 import ExperimentalDriftTimelinePanel from '@/components/shared/acoustics/ExperimentalDriftTimelinePanel.vue'
 import ExperimentalDriftSynthesisPanel from '@/components/shared/acoustics/ExperimentalDriftSynthesisPanel.vue'
+import ExperimentalSessionPanel from '@/components/acoustics/ExperimentalSessionPanel.vue'
 import type { WorkflowGateLevel } from '@/types/workflow'
 import type {
   MeasurementArchiveRecord,
@@ -258,7 +260,7 @@ function toggleVariantSection() {
           </Suspense>
         </div>
 
-        <!-- Measurement Lab Tab (Dev Order 60, 62, 63, 64) -->
+        <!-- Measurement Lab Tab (Dev Order 60, 62, 63, 64, 85) -->
         <div v-else-if="activeTab === 'calibration'" :class="$style.tabContent">
           <!-- Archive Exchange Section -->
           <MeasurementArchiveExchangeSection
@@ -267,6 +269,9 @@ function toggleVariantSection() {
             @exported="handleArchiveExported"
             @imported="handleArchiveImported"
           />
+
+          <!-- Dev Order 85: Experimental Sessions -->
+          <ExperimentalSessionPanel :archives="evidenceArchivesById" />
 
           <!-- Evidence Index -->
           <MeasurementArchiveEvidenceIndex
