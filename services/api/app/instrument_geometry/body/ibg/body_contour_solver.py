@@ -203,6 +203,20 @@ FAMILY_DEFAULTS = {
         "upper_ratio": 0.937,
         "length_ratio": 1.223,
     },
+    "jumbo": {
+        "lower_bout_mm": 432.0,
+        "upper_bout_mm": 305.0,
+        "waist_mm": 254.0,
+        "waist_y_norm": 0.44,
+        "body_length_mm": 530.0,
+        "back_radius_mm": 7620.0,
+        "butt_depth_mm": 127.0,
+        "shoulder_depth_mm": 108.0,
+        # Ratios (computed from canonical dimensions)
+        "waist_ratio": 0.588,      # 254 / 432
+        "upper_ratio": 0.706,      # 305 / 432
+        "length_ratio": 1.227,     # 530 / 432
+    },
 }
 
 # Required landmarks for full confidence
