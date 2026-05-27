@@ -773,7 +773,7 @@ Domain handoffs and governance docs may add detail but **must cite the SPRINTS I
 **Probe sequence (one variable per CI read):**
 - PR #51 — wire token + env-mapped check: gate runs; install red (`could not read Password` with `url.insteadOf`).
 - PR #52 probe 4 — credential-store pattern **before token validity check** (out of order): install red (`Invalid username or token`). **Ambiguous read** — consistent with stale token *or* format mismatch; do **not** conclude credential-store works or that token is dead.
-- **Probe 5 (2026-05-27):** replaced `SG_SPEC_TOKEN` only (no auth-format change). PR #52 run `26526070562`: **Install API deps green**; sg-spec clone `87dc7977`. **Conclusion:** stale secret (listed 2026-01-19); probe 4 neither proves nor disproves credential-store vs `url.insteadOf`.
+- **Probe 5 (2026-05-27):** replaced `SG_SPEC_TOKEN` only (no auth-format change). PR #52 run `26526070562`: **Install API deps green**; sg-spec clone `87dc7977`. **Conclusion:** stale secret (listed 2026-01-19); probe 4 neither proves nor disproves credential-store vs `url.insteadOf`. Emergency fix used session `gh auth token` — replace with dedicated PAT per `docs/ci/SG_SPEC_TOKEN.md`.
 - **Post-auth:** `make api-verify` runs and may fail on contract/baseline drift — gate working, not auth dead.
 **Restore trigger (CI-RED-001):** `Install API deps` green in CI on PR run ✅ (run `26526070562`). Full gate green (`make api-verify`) is a later bar / may be separate ledger.
 
