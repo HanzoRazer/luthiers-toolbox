@@ -1093,11 +1093,11 @@ Not blocking FRET-A or any current sprint. Triage when DXF hygiene sprint schedu
 - New keys saved to local .env files, verified in VS Code
 
 **Pending follow-through (separate small task):**
-- Add .env entries to .gitignore if not already present
-- Untrack .env and services/api/.env from git history (using `git rm --cached`)
-- Commit and push prevention changes
+- [x] Add `.env` entries to `.gitignore` if not already present (2026-05-26 — added explicit `services/api/.env`, `packages/client/.env.local`, `packages/client/.env.production.local`)
+- [x] Verify `.env` and `services/api/.env` not tracked (confirmed — never in index)
+- [x] Commit prevention changes (feat/repo-remediation-hygiene)
 
-**Status:** Acute exposure closed. Prevention follow-through scheduled within current week.
+**Status:** COMPLETE (2026-05-26). Acute exposure closed; prevention follow-through landed.
 
 ---
 
@@ -1105,24 +1105,17 @@ Not blocking FRET-A or any current sprint. Triage when DXF hygiene sprint schedu
 
 **Priority:** HIGH (low effort, immediate disk reclaim)
 **Effort:** 30 minutes
-**Status:** Queued, ready to execute
+**Status:** COMPLETE (2026-05-26)
 
 **Scope:** Remove timestamped download directories and benchmark output directories at repo root.
 
-**Targets for deletion:**
-- `files - 2026-03-31T002554.594/` (3 files)
-- `files - 2026-04-14T102549.923/` (3 files)
-- `files - 2026-04-16T160551.956/` (3 files)
-- `files - 2026-04-16T161657.416/` (2 files)
-- `files - 2026-04-23T090806.069/` (3 files)
-- `benchmark_dxf_outputs/` (6 files)
-- `benchmark_exports/` (3 files)
-- `benchmark_outputs/` (27 files)
-- `benchmark_results/` (1 file)
+**Executed (2026-05-26):**
+- Timestamped `files - 2026-*` dirs — already absent (gitignore pattern `files - */` in place)
+- Removed local (gitignored) benchmark dirs: `benchmark_exports/`, `benchmark_outputs/`, `benchmark_results/`
+- Removed local gitignored root artifacts: `benchmark_comparison.json`, `benchmark_*.svg`
+- **Kept:** `benchmark_manifest.json` (tracked; used by benchmark scripts)
 
-**Verification before deletion:** Confirm none of these directories are referenced by current code or active tests. Quick grep for directory names in services/api/ and packages/client/ should suffice.
-
-**Single commit per category** — one for the timestamped download dirs, one for the benchmark dirs.
+**Verification:** Grep confirmed no production imports of deleted paths; `dxf_consolidator.py` `__main__` CLI references only (graceful `Not found` if absent).
 
 ---
 
@@ -1168,16 +1161,17 @@ Not blocking FRET-A or any current sprint. Triage when DXF hygiene sprint schedu
 
 **Priority:** HIGH (low effort, low risk)
 **Effort:** 30 minutes
-**Status:** Queued
+**Status:** COMPLETE (2026-05-26)
 
 **Scope:** Several directories appear to be one-time migration artifacts or accidental commits with no current purpose.
 
-**Targets:**
-- `services/api/app/Users/` — accidental directory (unusual location)
-- `services/api/app/router_rewire_report/` — one-time migration artifact
-- `services/api/app/routers/_archived/` — archived pipeline code (likely safe to remove now that it's been archived for some time; verify nothing references)
+**Removed (2026-05-26):**
+- `services/api/app/router_rewire_report/` — one-time migration artifact (2 files)
+- `services/api/app/routers/_archived/` — archived pipeline code (5 files)
 
-**Verification:** grep for each directory name in the codebase before deletion. If references exist, escalate to Ross before removing.
+**Already absent:** `services/api/app/Users/` (accidental directory)
+
+**Verification:** Grep found zero production imports of `_archived` modules; only docs/audit references.
 
 ---
 
