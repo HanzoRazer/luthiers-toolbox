@@ -46,7 +46,7 @@ When you create or rotate the PAT, GitHub shows the expiration date. **Copy it h
 
 ## CI preflight
 
-`api_verify.yml` runs `git ls-remote` on `HanzoRazer/sg-spec` immediately after git credential setup. A stale or wrong token fails in one step with an explicit message — not a silent dead gate mid-`pip install`.
+`api_verify.yml` runs `git ls-remote` on `HanzoRazer/sg-spec` in the **same step** as credential setup, and re-applies credentials before `pip install`.
 
 ## Related
 
