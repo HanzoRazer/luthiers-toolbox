@@ -32,6 +32,7 @@ from pathlib import Path
 from typing import Optional
 
 from fastapi import APIRouter, HTTPException
+from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 
 from ..utils.stage_timer import is_debug_enabled
@@ -154,30 +155,128 @@ class Dimensions(BaseModel):
     confidence: float = 0.0
 
 
+class Selection(BaseModel):
+    """Contour selection diagnostics."""
+    candidate_count: int = 0
+    selected_index: Optional[int] = None
+    selection_score: float = 0.0
+    runner_up_score: float = 0.0
+    winner_margin: float = 0.0
+    reasons: list[str] = []
+
+
+class Recommendation(BaseModel):
+    """Product acceptance recommendation."""
+    action: str = "reject"  # accept | review | reject
+    confidence: float = 0.0
+    reasons: list[str] = []
+
+
 class VectorizeResponse(BaseModel):
-    ok:                 bool
-    stage:              str   = "complete"  # upload, contour_detection, svg_generation, dxf_generation, validation, complete
-    artifacts:          Artifacts = Artifacts()
-    dimensions:         Dimensions = Dimensions()
-    # Legacy fields (deprecated — use artifacts/dimensions instead)
-    svg_path_d:         str   = ""      # combined SVG path for ImportView
-    svg_path:           str   = ""      # DEPRECATED: file path (stateless deploy)
-    dxf_path:           str   = ""      # DEPRECATED: file path (stateless deploy)
-    contour_count:      int   = 0       # for Blueprint workflow compatibility
-    line_count:         int   = 0       # for Blueprint workflow compatibility
-    body_width_mm:      float = 0.0
-    body_height_mm:     float = 0.0
-    body_width_in:      float = 0.0
-    body_height_in:     float = 0.0
-    scale_source:       str   = ""
-    bg_method:          str   = ""
-    perspective_corrected: bool = False
-    warnings:           list[str] = []
-    processing_ms:      float = 0.0
-    export_blocked:     bool  = False
-    export_block_reason:str   = ""
-    error:              str   = ""
-    debug:              Optional[dict] = None  # Ownership diagnostics (requires VECTORIZER_DEBUG=1)
+    """
+    Canonical photo vectorizer response.
+
+    ok = true ONLY when recommendation.action == "accept".
+    processed = true when pipeline completed (transport-level).
+    """
+    ok: bool
+    processed: bool = True
+    stage: str = "complete"
+    error: str = ""
+    warnings: list[str] = []
+    artifacts: Artifacts = Artifacts()
+    dimensions: Dimensions = Dimensions()
+    selection: Selection = Selection()
+    recommendation: Recommendation = Recommendation()
+    metrics: dict = {}
+    debug: Optional[dict] = None
+
+
+# Legacy top-level fields still consumed by ImportView / BlueprintWorkflow.
+# Populated at serialization time only — not part of the canonical contract.
+_LEGACY_WIRE_FIELDS = (
+    "svg_path_d",
+    "svg_path",
+    "dxf_path",
+    "contour_count",
+    "line_count",
+    "body_width_mm",
+    "body_height_mm",
+    "body_width_in",
+    "body_height_in",
+    "scale_source",
+    "bg_method",
+    "perspective_corrected",
+    "processing_ms",
+    "export_blocked",
+    "export_block_reason",
+    "success",  # silhouette workflow still checks this alias
+)
+
+
+def _extract_svg_path_d_from_content(svg_content: str) -> str:
+    """Extract path d= attributes from SVG content for legacy svg_path_d shim."""
+    import xml.etree.ElementTree as ET
+
+    try:
+        root = ET.fromstring(svg_content)
+        parts: list[str] = []
+
+        for elem in root.iter("{http://www.w3.org/2000/svg}path"):
+            d = elem.get("d", "").strip()
+            if d and len(d) > 10:
+                parts.append(d)
+
+        if not parts:
+            for elem in root.iter("path"):
+                d = elem.get("d", "").strip()
+                if d and len(d) > 10:
+                    parts.append(d)
+
+        return " ".join(parts)
+    except Exception:
+        return ""
+
+
+def _legacy_vectorizer_fields(response: VectorizeResponse) -> dict[str, object]:
+    """Deprecation shim: map canonical response → legacy top-level wire fields."""
+    metrics = response.metrics or {}
+    debug = response.debug or {}
+    svg_content = response.artifacts.svg.content if response.artifacts.svg.present else ""
+
+    export_blocked = bool(debug.get("export_blocked", False))
+    export_block_reason = str(debug.get("export_block_reason", "") or "")
+    if not export_blocked and not response.ok and response.recommendation.action == "reject":
+        export_blocked = True
+        export_block_reason = export_block_reason or response.error or (
+            response.recommendation.reasons[0] if response.recommendation.reasons else ""
+        )
+
+    return {
+        "svg_path_d": _extract_svg_path_d_from_content(svg_content),
+        "svg_path": "",
+        "dxf_path": "",
+        "contour_count": response.artifacts.svg.path_count,
+        "line_count": response.artifacts.dxf.entity_count,
+        "body_width_mm": response.dimensions.width_mm,
+        "body_height_mm": response.dimensions.height_mm,
+        "body_width_in": response.dimensions.width_in,
+        "body_height_in": response.dimensions.height_in,
+        "scale_source": metrics.get("scale_source", ""),
+        "bg_method": metrics.get("bg_method", ""),
+        "perspective_corrected": metrics.get("perspective_corrected", False),
+        "processing_ms": metrics.get("processing_ms", 0.0),
+        "export_blocked": export_blocked,
+        "export_block_reason": export_block_reason,
+        "success": response.ok,
+    }
+
+
+def _vectorize_response_payload(response: VectorizeResponse) -> dict[str, object]:
+    """Canonical payload plus legacy wire shim for frontend consumers."""
+    payload = response.model_dump()
+    payload.update(_legacy_vectorizer_fields(response))
+    return payload
 
 
 # ─── Route ────────────────────────────────────────────────────────────────────
@@ -205,7 +304,7 @@ async def vectorizer_status():
     }
 
 
-@router.post("/extract", response_model=VectorizeResponse)
+@router.post("/extract")
 async def extract_from_photo(req: VectorizeRequest):
     """
     Run the Photo Vectorizer v2 pipeline on an uploaded image.
@@ -217,11 +316,13 @@ async def extract_from_photo(req: VectorizeRequest):
     dimension (e.g. a coin or ruler in the photo, or a known guitar
     body width). Without it, scale_source will be "estimated".
 
-    Architecture note: Business logic has been moved to PhotoOrchestrator.
-    This router is now a thin HTTP wrapper that handles:
-    - Request decoding
-    - Input validation
-    - Legacy field mapping
+    Architecture note: Business logic lives in PhotoOrchestrator.
+    This router is a thin HTTP wrapper that handles request decoding,
+    input validation, and canonical response mapping.
+
+    Wire response includes deprecated legacy top-level fields (svg_path_d,
+    body_width_mm, etc.) synthesized from the canonical structure so existing
+    frontend consumers keep working until they migrate to vectorizerArtifacts.ts.
     """
     if not VECTORIZER_AVAILABLE:
         raise HTTPException(
@@ -275,36 +376,6 @@ async def extract_from_photo(req: VectorizeRequest):
 
     processing_ms = round((time.time() - t0) * 1000, 1)
 
-    # ── Extract svg_path_d for legacy compatibility ────────────────────────
-    svg_path_d = ""
-    if result.svg.present and result.svg.content:
-        svg_path_d = _extract_svg_path_d_from_content(result.svg.content)
-
-    # ── Build response with legacy field mapping ───────────────────────────
-    # Canonical fields come from orchestrator result
-    # Legacy fields are mapped for backward compatibility
-    artifacts = Artifacts(
-        svg=SVGArtifact(
-            present=result.svg.present,
-            content=result.svg.content,
-            path_count=result.svg.path_count,
-        ),
-        dxf=DXFArtifact(
-            present=result.dxf.present,
-            base64=result.dxf.base64,
-            entity_count=result.dxf.entity_count,
-            closed_contours=result.dxf.closed_contours,
-        ),
-    )
-    dimensions = Dimensions(
-        width_mm=result.dimensions.width_mm,
-        height_mm=result.dimensions.height_mm,
-        width_in=result.dimensions.width_in,
-        height_in=result.dimensions.height_in,
-        spec_match=result.dimensions.spec_match,
-        confidence=result.dimensions.confidence,  # Now from real scorer
-    )
-
     # Final diagnostics
     mem_final = log_memory("EXTRACT_COMPLETE")
     total_elapsed = time.time() - t0
@@ -312,59 +383,11 @@ async def extract_from_photo(req: VectorizeRequest):
         f"VECTORIZER_RESULT | ok={result.ok} stage={result.stage} elapsed={total_elapsed:.1f}s | "
         f"mem_delta={mem_final - mem_start:.0f}MB | "
         f"body={result.dimensions.width_mm:.0f}x{result.dimensions.height_mm:.0f}mm | "
-        f"confidence={result.dimensions.confidence:.3f}"
+        f"rec={result.recommendation.action.value} confidence={result.recommendation.confidence:.3f}"
     )
 
-    return VectorizeResponse(
-        ok=result.ok,
-        stage=result.stage,
-        artifacts=artifacts,
-        dimensions=dimensions,
-        # Legacy fields for backward compatibility
-        svg_path_d=svg_path_d,
-        svg_path="",  # DEPRECATED: no file paths in stateless deploy
-        dxf_path="",  # DEPRECATED: no file paths in stateless deploy
-        contour_count=result.svg.path_count,
-        line_count=result.dxf.entity_count,
-        body_width_mm=result.dimensions.width_mm,
-        body_height_mm=result.dimensions.height_mm,
-        body_width_in=result.dimensions.width_in,
-        body_height_in=result.dimensions.height_in,
-        scale_source=result.scale_source,
-        bg_method=result.bg_method,
-        perspective_corrected=result.perspective_corrected,
-        warnings=result.warnings,
-        processing_ms=processing_ms,
-        export_blocked=result.export_blocked,
-        export_block_reason=result.export_block_reason,
-        error=result.error,
-        debug=result.debug if include_debug else None,
-    )
-
-
-def _extract_svg_path_d_from_content(svg_content: str) -> str:
-    """
-    Extract path d= attributes from SVG content string.
-    Used for legacy svg_path_d field.
-    """
-    import xml.etree.ElementTree as ET
-    try:
-        root = ET.fromstring(svg_content)
-        parts: list[str] = []
-
-        # Try with namespace
-        for elem in root.iter("{http://www.w3.org/2000/svg}path"):
-            d = elem.get("d", "").strip()
-            if d and len(d) > 10:
-                parts.append(d)
-
-        # Try without namespace if none found
-        if not parts:
-            for elem in root.iter("path"):
-                d = elem.get("d", "").strip()
-                if d and len(d) > 10:
-                    parts.append(d)
-
-        return " ".join(parts)
-    except Exception:
-        return ""
+    response_dict = result.to_response_dict(include_debug=include_debug)
+    if response_dict.get("metrics", {}).get("processing_ms", 0) <= 0:
+        response_dict.setdefault("metrics", {})["processing_ms"] = processing_ms
+    canonical = VectorizeResponse(**response_dict)
+    return JSONResponse(content=_vectorize_response_payload(canonical))

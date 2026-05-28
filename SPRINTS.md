@@ -916,8 +916,8 @@ Domain handoffs and governance docs may add detail but **must cite the SPRINTS I
 
 | Bucket | Tests (approx) | Nature | Action |
 |--------|----------------|--------|--------|
-| **015-A** | `test_text_masking*` (5) + regression (2) | Drift / import path + `Recommendation` API | Fix `photo-vectorizer` path in tests; align with vectorizer bucket |
-| **015-B** | `test_vectorizer_canonical_only*` | Schema drift (live vectorizer work) | Update tests or schema while context is fresh |
+| **015-A** | `test_text_masking*` (5) + regression (2) | Drift / import path + `Recommendation` API | **PR in flight:** `services/photo-vectorizer` path; `Recommendation` dataclass attrs (not `.get`) |
+| **015-B** | `test_vectorizer_canonical_only*` | Schema drift (live vectorizer work) | **PR in flight:** canonical response + legacy wire shim (client migration next) |
 | **015-C** | `test_technical_debt_gates` endpoint ratchet | **Measurement** — 942→1181 vs `debt_history.json` | **Read the +239 first**; then bump ratchet or consolidate (CI-RED-003) |
 | **015-D** | debt-gates complexity / other gates | Overlaps CI-RED-003 | Separate from blind ratchet bump |
 | **015-E** | board_feet, fretboard ecosphere, misc | Small drift clusters | Triage after A–C |
@@ -926,6 +926,8 @@ Domain handoffs and governance docs may add detail but **must cite the SPRINTS I
 **Order:** **015-A → 015-B → 015-C (read first) → rest.**
 
 **015-A note:** `_NoValueType` on CI (numpy 2.2.6 pinned) — not the local Py3.14 skip pattern. `test_text_masking.py` points at `repo_root/photo-vectorizer` (missing); canonical code is `services/photo-vectorizer/`. Regression failures are `Recommendation` object has no `.get` — same vectorizer drift family as 015-B.
+
+**015-B wire shim (safe defer):** `photo_vectorizer_router` keeps canonical `VectorizeResponse` for tests/OpenAPI but emits legacy top-level fields (`svg_path_d`, `body_width_mm`, etc.) at serialization so ImportView keeps working. **Next PR (safe to defer):** migrate `useDxfImport.ts`, `useBlueprintWorkflow.ts`, `BlueprintLab.vue` → `vectorizerArtifacts.ts`; then remove shim.
 
 ---
 
