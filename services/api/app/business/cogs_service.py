@@ -43,6 +43,17 @@ class COGSService:
             LaborCategory.SETUP: 4.0,
             LaborCategory.QA: 2.0,
         },
+        InstrumentType.ACOUSTIC_JUMBO: {
+            LaborCategory.DESIGN: 2.0,
+            LaborCategory.WOOD_PREP: 9.0,
+            LaborCategory.JOINERY: 18.0,
+            LaborCategory.CARVING: 14.0,
+            LaborCategory.FRETTING: 6.0,
+            LaborCategory.FINISHING: 24.0,
+            LaborCategory.ASSEMBLY: 9.0,
+            LaborCategory.SETUP: 4.0,
+            LaborCategory.QA: 2.0,
+        },
         InstrumentType.CLASSICAL: {
             LaborCategory.DESIGN: 2.0,
             LaborCategory.WOOD_PREP: 6.0,

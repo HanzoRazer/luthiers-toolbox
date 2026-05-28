@@ -221,6 +221,7 @@ WBS_ELECTRIC_SOLID: List[WBSTaskTemplate] = [
 
 WBS_TEMPLATES: Dict[InstrumentType, List[WBSTaskTemplate]] = {
     InstrumentType.ACOUSTIC_DREADNOUGHT: WBS_ACOUSTIC_DREADNOUGHT,
+    InstrumentType.ACOUSTIC_JUMBO: WBS_ACOUSTIC_DREADNOUGHT,  # Same structure, larger body
     InstrumentType.ACOUSTIC_OM: WBS_ACOUSTIC_DREADNOUGHT,  # Same as dread, slightly smaller
     InstrumentType.ACOUSTIC_PARLOR: WBS_ACOUSTIC_DREADNOUGHT,  # Same structure
     InstrumentType.CLASSICAL: WBS_CLASSICAL,
