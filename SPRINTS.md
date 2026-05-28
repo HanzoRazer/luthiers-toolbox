@@ -864,8 +864,8 @@ Domain handoffs and governance docs may add detail but **must cite the SPRINTS I
 
 **Status:** CLOSED  
 **last_verified:** 2026-05-28  
-**Closed:** PR — `pytest.ini` `pythonpath = .` plus test imports use `helpers` (pytest collection path).  
-**Was:** `test_adaptive_router`, `test_saw_lab_fixture_compat` collection errors (run `26564053999`, `26565726301`).
+**Closed:** PR — `test_support/` package for helper imports (pytest 9 importlib mode); Makefile `PYTHONPATH=.:tests`.  
+**Was:** `test_adaptive_router`, `test_saw_lab_fixture_compat` collection errors (runs `26564053999`–`26566417730`).
 
 ---
 
