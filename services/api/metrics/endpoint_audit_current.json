@@ -1,0 +1,6779 @@
+{
+  "total": 1181,
+  "baseline": 942,
+  "delta": 239,
+  "by_file": {
+    "routers\\cam\\cam_assist_router.py": 30,
+    "routers\\woodworking_router.py": 23,
+    "routers\\cam\\geometry_authority_router.py": 15,
+    "routers\\cam\\governance_freeze_router.py": 14,
+    "saw_lab\\batch_query_router.py": 12,
+    "routers\\cam\\ontology_reconciliation_router.py": 12,
+    "art_studio\\api\\rosette_designer_routes.py": 12,
+    "routers\\ltb_calculator_router.py": 11,
+    "routers\\instrument_geometry\\nut_fret_router.py": 11,
+    "routers\\instruments\\guitar\\headstock_inlay_router.py": 11,
+    "rmos\\runs_v2\\acoustics_router.py": 11,
+    "rmos\\runs_v2\\api_runs.py": 11,
+    "routers\\machines_consolidated_router.py": 10,
+    "routers\\cam\\federated_semantics_router.py": 10,
+    "routers\\cam\\post_freeze_expansion_router.py": 10,
+    "routers\\cam\\review_ux_ci_router.py": 10,
+    "cam_core\\api\\saw_lab_router.py": 10,
+    "cam\\headstock\\router.py": 10,
+    "routers\\health_router.py": 9,
+    "routers\\posts_consolidated_router.py": 9,
+    "routers\\cam\\review_queue_router.py": 9,
+    "routers\\instrument\\build_workflow_router.py": 9,
+    "routers\\instrument\\fretwork_router.py": 9,
+    "routers\\instrument_geometry\\soundhole_router.py": 9,
+    "rmos\\validation\\router.py": 9,
+    "art_studio\\inlay_router.py": 8,
+    "routers\\learned_overrides_router.py": 8,
+    "routers\\cam\\federation_ci_router.py": 8,
+    "routers\\cam\\review_ux_router.py": 8,
+    "routers\\music\\temperament_router.py": 8,
+    "art_studio\\api\\rosette_snapshot_routes.py": 8,
+    "art_studio\\api\\snapshot_routes.py": 8,
+    "art_studio\\bracing_router.py": 7,
+    "rmos\\rosette_cam_router.py": 7,
+    "routers\\analytics_jobs_router.py": 7,
+    "routers\\bridge_presets_router.py": 7,
+    "saw_lab\\batch_metrics_execution_router.py": 7,
+    "saw_lab\\execution_lifecycle_router.py": 7,
+    "workflow\\sessions\\routes.py": 7,
+    "routers\\cam\\translator_capability_router.py": 7,
+    "routers\\cam\\translator_governance_continuity_router.py": 7,
+    "routers\\cam\\translator_readiness_router.py": 7,
+    "routers\\instrument\\materials_physics_router.py": 7,
+    "rmos\\runs_v2\\api_runs_variants.py": 7,
+    "core\\job_queue\\router.py": 7,
+    "art_studio\\api\\inlay_pattern_routes.py": 7,
+    "art_studio\\api\\rosette_pattern_routes.py": 7,
+    "analyzer\\router.py": 6,
+    "api_v1\\fretboard.py": 6,
+    "api_v1\\jobs.py": 6,
+    "business\\goals_router.py": 6,
+    "routers\\analytics_materials_router.py": 6,
+    "routers\\analytics_patterns_router.py": 6,
+    "routers\\legacy_dxf_exports_router.py": 6,
+    "routers\\registry_router.py": 6,
+    "routers\\string_master_router.py": 6,
+    "saw_lab\\batch_learning_router.py": 6,
+    "saw_lab\\compare_router.py": 6,
+    "routers\\acoustics\\plate_router.py": 6,
+    "routers\\art\\root_art_router.py": 6,
+    "routers\\cam\\cam_workspace_router.py": 6,
+    "routers\\cam\\translator_execution_quarantine_router.py": 6,
+    "routers\\cam\\translator_governance_review_ledger_router.py": 6,
+    "routers\\instrument_geometry\\setup_router.py": 6,
+    "routers\\neck\\guitar_models_router.py": 6,
+    "routers\\instruments\\guitar\\electric_body_router.py": 6,
+    "routers\\instruments\\guitar\\registry_router.py": 6,
+    "routers\\cam\\guitar\\registry_cam_router.py": 6,
+    "rmos\\analytics\\router.py": 6,
+    "cam\\rosette\\photo_batch_router.py": 6,
+    "api_v1\\acoustics.py": 5,
+    "api_v1\\cam_operations.py": 5,
+    "api_v1\\dxf_workflow.py": 5,
+    "api_v1\\machines.py": 5,
+    "api_v1\\rmos_safety.py": 5,
+    "business\\bom_router.py": 5,
+    "business\\estimator_router.py": 5,
+    "projects\\router.py": 5,
+    "routers\\binding_design_router.py": 5,
+    "routers\\instrument_geometry_router.py": 5,
+    "routers\\instrument_router.py": 5,
+    "routers\\neck_router.py": 5,
+    "routers\\project_assets_router.py": 5,
+    "saw_lab\\batch_metrics_decision_router.py": 5,
+    "saw_lab\\batch_router.py": 5,
+    "saw_lab\\toolpaths_router.py": 5,
+    "vision\\generation_router.py": 5,
+    "routers\\blueprint\\calibration_router.py": 5,
+    "routers\\blueprint_cam\\preprocessor_router.py": 5,
+    "routers\\cam\\translation_artifact_router.py": 5,
+    "routers\\cam\\translation_provenance_router.py": 5,
+    "routers\\cam\\translator_governance_dossier_router.py": 5,
+    "routers\\cam\\translator_governance_review_router.py": 5,
+    "routers\\cnc_production\\presets_router.py": 5,
+    "routers\\instrument_geometry\\body_construction_router.py": 5,
+    "routers\\instrument_geometry\\geometry_calculator_router.py": 5,
+    "routers\\neck\\gcode_router.py": 5,
+    "routers\\tooling\\tool_library_router.py": 5,
+    "routers\\cam\\guitar\\acoustic_cam_router.py": 5,
+    "routers\\cam\\guitar\\archtop_cam_router.py": 5,
+    "routers\\cam\\guitar\\body_gcode_router.py": 5,
+    "routers\\cam\\guitar\\flying_v_cam_router.py": 5,
+    "rmos\\runs_v2\\api_runs_attachments.py": 5,
+    "compare\\routers\\baselines\\__init__.py": 5,
+    "compare\\routers\\lab\\__init__.py": 5,
+    "cam\\routers\\job_intelligence_router.py": 5,
+    "art_studio\\api\\pattern_routes.py": 5,
+    "art_studio\\api\\rosette_manufacturing_routes.py": 5,
+    "api_v1\\art_studio.py": 4,
+    "api_v1\\instrument.py": 4,
+    "business\\cogs_router.py": 4,
+    "middleware\\tier_gate.py": 4,
+    "routers\\analytics_advanced_router.py": 4,
+    "routers\\archtop_router.py": 4,
+    "routers\\auth_router.py": 4,
+    "routers\\body_solver_router.py": 4,
+    "routers\\cam_pipeline_preset_run_router.py": 4,
+    "routers\\cam_relief_router.py": 4,
+    "routers\\cam_risk_router.py": 4,
+    "routers\\dxf_preflight_router.py": 4,
+    "routers\\polygon_offset_router.py": 4,
+    "routers\\radius_dish_router.py": 4,
+    "routers\\simulation_consolidated_router.py": 4,
+    "routers\\strip_family_router.py": 4,
+    "saw_lab\\batch_gcode_router.py": 4,
+    "saw_lab\\decision_router.py": 4,
+    "routers\\ai\\assistant_router.py": 4,
+    "routers\\blueprint_cam\\contour_reconstruction_router.py": 4,
+    "routers\\blueprint_cam\\geometry_correction_router.py": 4,
+    "routers\\cam\\lifecycle_capability_router.py": 4,
+    "routers\\export\\translate_router.py": 4,
+    "routers\\instrument\\electronics_router.py": 4,
+    "routers\\instrument_geometry\\construction_router.py": 4,
+    "routers\\instrument_geometry\\electronics_router.py": 4,
+    "routers\\instrument_geometry\\tuning_machine_router.py": 4,
+    "routers\\instrument_geometry\\voicing_router.py": 4,
+    "routers\\neck\\neck_profile_export.py": 4,
+    "routers\\retract\\retract_gcode_router.py": 4,
+    "routers\\instruments\\guitar\\assets_router.py": 4,
+    "routers\\instruments\\guitar\\pickup_calculator_router.py": 4,
+    "routers\\cam\\guitar\\om_cam_router.py": 4,
+    "routers\\cam\\guitar\\stratocaster_cam_router.py": 4,
+    "rmos\\api\\rmos_runs_router.py": 4,
+    "rmos\\operations\\router.py": 4,
+    "rmos\\runs_v2\\advisory_router.py": 4,
+    "cam\\routers\\binding\\binding_router.py": 4,
+    "cam\\routers\\vcarve\\production_router.py": 4,
+    "art_studio\\api\\rosette_compare_routes.py": 4,
+    "art_studio\\api\\rosette_jobs_routes.py": 4,
+    "agentic\\router.py": 3,
+    "api_v1\\fret_math.py": 3,
+    "business\\breakeven_router.py": 3,
+    "business\\cashflow_router.py": 3,
+    "business\\pricing_router.py": 3,
+    "rmos\\api_routes.py": 3,
+    "rmos\\safety_router.py": 3,
+    "routers\\blueprint_async_router.py": 3,
+    "routers\\gcode_consolidated_router.py": 3,
+    "routers\\material_router.py": 3,
+    "saw_lab\\metrics_lookup_consolidated_router.py": 3,
+    "routers\\blueprint\\clean_router.py": 3,
+    "routers\\blueprint\\edge_to_dxf_router.py": 3,
+    "routers\\blueprint\\phase2_router.py": 3,
+    "routers\\blueprint\\phase3_router.py": 3,
+    "routers\\blueprint\\phase4_router.py": 3,
+    "routers\\geometry\\export_router.py": 3,
+    "routers\\geometry\\import_router.py": 3,
+    "routers\\headstock\\dxf_export.py": 3,
+    "routers\\instrument\\soundhole_router.py": 3,
+    "routers\\instrument_geometry\\bridge_router.py": 3,
+    "routers\\instrument_geometry\\string_tension_router.py": 3,
+    "routers\\instrument_geometry\\wood_movement_router.py": 3,
+    "routers\\neck\\headstock_transition_export.py": 3,
+    "routers\\probe\\boss_router.py": 3,
+    "routers\\probe\\corner_router.py": 3,
+    "routers\\probe\\pocket_router.py": 3,
+    "routers\\probe\\surface_z_router.py": 3,
+    "routers\\probe\\vise_square_router.py": 3,
+    "rmos\\acoustics\\router_ingest_audit.py": 3,
+    "rmos\\api\\logs_routes.py": 3,
+    "rmos\\runs_v2\\api_runs_advisory.py": 3,
+    "rmos\\runs_v2\\exports.py": 3,
+    "rmos\\runs_v2\\router_query.py": 3,
+    "compare\\routers\\risk\\__init__.py": 3,
+    "cam\\routers\\profiling\\profile_router.py": 3,
+    "cam\\routers\\utility\\backup_router.py": 3,
+    "cam\\routers\\utility\\benchmark_router.py": 3,
+    "cam\\routers\\utility\\settings_router.py": 3,
+    "ai_context_adapter\\routes.py": 2,
+    "core\\store_registry.py": 2,
+    "governance\\governance_consolidated_router.py": 2,
+    "middleware\\rate_limit.py": 2,
+    "routers\\adaptive_preview_router.py": 2,
+    "routers\\cam_post_v155_router.py": 2,
+    "routers\\dxf_adaptive_consolidated_router.py": 2,
+    "routers\\photo_vectorizer_router.py": 2,
+    "routers\\saddle_compensation_router.py": 2,
+    "vision\\segmentation_router.py": 2,
+    "routers\\adaptive\\plan_router.py": 2,
+    "routers\\ai\\defect_detection_router.py": 2,
+    "routers\\ai\\recommendations_router.py": 2,
+    "routers\\ai\\wood_grading_router.py": 2,
+    "routers\\blueprint\\phase1_router.py": 2,
+    "routers\\cam\\nut_slot_router.py": 2,
+    "routers\\export\\body_export_router.py": 2,
+    "routers\\export\\dxf_translate_router.py": 2,
+    "routers\\geometry\\bundle_router.py": 2,
+    "routers\\instrument_geometry\\build_sequence_router.py": 2,
+    "routers\\probe\\setup_router.py": 2,
+    "routers\\retract\\retract_apply_router.py": 2,
+    "routers\\retract\\retract_info_router.py": 2,
+    "routers\\tooling\\post_processor_router.py": 2,
+    "rmos\\acoustics\\router_import.py": 2,
+    "rmos\\runs_v2\\router_override.py": 2,
+    "instrument_geometry\\neck_taper\\api_router.py": 2,
+    "cam\\routers\\drilling\\drill_modal_router.py": 2,
+    "cam\\routers\\drilling\\drill_pattern_router.py": 2,
+    "cam\\routers\\monitoring\\metrics_thermal.py": 2,
+    "cam\\routers\\rosette\\rosette_jobs_router.py": 2,
+    "cam\\routers\\rosette\\rosette_toolpath_router.py": 2,
+    "cam\\routers\\simulation\\simulation_consolidated_router.py": 2,
+    "cam\\routers\\toolpath\\biarc_router.py": 2,
+    "cam\\routers\\toolpath\\helical_router.py": 2,
+    "cam\\routers\\toolpath\\roughing_router.py": 2,
+    "cam\\routers\\toolpath\\vcarve_router.py": 2,
+    "cam\\routers\\utility\\optimization_router.py": 2,
+    "art_studio\\api\\generator_routes.py": 2,
+    "advisory\\blob_router.py": 1,
+    "blueprint\\save_router.py": 1,
+    "business\\router.py": 1,
+    "cam\\dxf_validation_gate.py": 1,
+    "rmos\\live_monitor_router.py": 1,
+    "rmos\\mvp_router.py": 1,
+    "routers\\cam_learn_router.py": 1,
+    "routers\\cam_roughing_intent_router.py": 1,
+    "routers\\misc_stub_routes.py": 1,
+    "routers\\rmos_cam_intent_router.py": 1,
+    "saw_lab\\batch_metrics_diff_router.py": 1,
+    "vision\\analyze_generated_router.py": 1,
+    "websocket\\router.py": 1,
+    "routers\\adaptive\\batch_router.py": 1,
+    "routers\\adaptive\\dxf_router.py": 1,
+    "routers\\adaptive\\gcode_router.py": 1,
+    "routers\\blueprint\\vectorize_router.py": 1,
+    "routers\\cam\\dxf_translator_router.py": 1,
+    "routers\\cam\\export_lifecycle_router.py": 1,
+    "routers\\cam\\postprocessor_boundary_router.py": 1,
+    "routers\\cam\\translation_artifact_authorization_router.py": 1,
+    "routers\\export\\curve_export_router.py": 1,
+    "routers\\export\\rosette_pdf_router.py": 1,
+    "routers\\instruments\\guitar\\smart_guitar_dxf_router.py": 1,
+    "rmos\\acoustics\\router_zip_export.py": 1,
+    "rmos\\api\\rmos_feasibility_router.py": 1,
+    "rmos\\runs_v2\\api_global_attachments.py": 1,
+    "rmos\\runs_v2\\api_runs_explain.py": 1,
+    "cam\\routers\\bridge_export_router.py": 1,
+    "cam\\routers\\fret_slots_router.py": 1,
+    "cam\\routers\\drilling\\drilling_preview_router.py": 1,
+    "cam\\routers\\toolpath\\relief_export_router.py": 1,
+    "cam\\routers\\utility\\compare_router.py": 1,
+    "cam\\routers\\utility\\polygon_router.py": 1,
+    "art_studio\\api\\preview_routes.py": 1,
+    "api\\deps\\rmos_stores.py": 1,
+    "api\\deps\\__init__.py": 1
+  },
+  "routes": [
+    {
+      "file": "advisory\\blob_router.py",
+      "method": "GET",
+      "path": "/{sha256}/download"
+    },
+    {
+      "file": "agentic\\router.py",
+      "method": "GET",
+      "path": "/status"
+    },
+    {
+      "file": "agentic\\router.py",
+      "method": "POST",
+      "path": "/events"
+    },
+    {
+      "file": "agentic\\router.py",
+      "method": "POST",
+      "path": "/replay"
+    },
+    {
+      "file": "ai_context_adapter\\routes.py",
+      "method": "POST",
+      "path": "/build"
+    },
+    {
+      "file": "analyzer\\router.py",
+      "method": "GET",
+      "path": "/health"
+    },
+    {
+      "file": "analyzer\\router.py",
+      "method": "GET",
+      "path": "/references"
+    },
+    {
+      "file": "analyzer\\router.py",
+      "method": "POST",
+      "path": "/interpret"
+    },
+    {
+      "file": "analyzer\\router.py",
+      "method": "POST",
+      "path": "/interpret/upload"
+    },
+    {
+      "file": "analyzer\\router.py",
+      "method": "POST",
+      "path": "/modes/visualize"
+    },
+    {
+      "file": "analyzer\\router.py",
+      "method": "POST",
+      "path": "/spectrum/display"
+    },
+    {
+      "file": "api\\deps\\__init__.py",
+      "method": "GET",
+      "path": "/patterns"
+    },
+    {
+      "file": "api\\deps\\rmos_stores.py",
+      "method": "GET",
+      "path": "/patterns"
+    },
+    {
+      "file": "api_v1\\acoustics.py",
+      "method": "GET",
+      "path": "/modes"
+    },
+    {
+      "file": "api_v1\\acoustics.py",
+      "method": "GET",
+      "path": "/packs"
+    },
+    {
+      "file": "api_v1\\acoustics.py",
+      "method": "GET",
+      "path": "/packs/{pack_id}"
+    },
+    {
+      "file": "api_v1\\acoustics.py",
+      "method": "POST",
+      "path": "/analyze"
+    },
+    {
+      "file": "api_v1\\acoustics.py",
+      "method": "POST",
+      "path": "/upload"
+    },
+    {
+      "file": "api_v1\\art_studio.py",
+      "method": "GET",
+      "path": "/inlay/presets"
+    },
+    {
+      "file": "api_v1\\art_studio.py",
+      "method": "POST",
+      "path": "/inlay/generate"
+    },
+    {
+      "file": "api_v1\\art_studio.py",
+      "method": "POST",
+      "path": "/preview"
+    },
+    {
+      "file": "api_v1\\art_studio.py",
+      "method": "POST",
+      "path": "/rosette/generate"
+    },
+    {
+      "file": "api_v1\\cam_operations.py",
+      "method": "GET",
+      "path": "/strategies"
+    },
+    {
+      "file": "api_v1\\cam_operations.py",
+      "method": "POST",
+      "path": "/adaptive"
+    },
+    {
+      "file": "api_v1\\cam_operations.py",
+      "method": "POST",
+      "path": "/drilling"
+    },
+    {
+      "file": "api_v1\\cam_operations.py",
+      "method": "POST",
+      "path": "/pocket"
+    },
+    {
+      "file": "api_v1\\cam_operations.py",
+      "method": "POST",
+      "path": "/profile"
+    },
+    {
+      "file": "api_v1\\dxf_workflow.py",
+      "method": "GET",
+      "path": "/cam/posts"
+    },
+    {
+      "file": "api_v1\\dxf_workflow.py",
+      "method": "POST",
+      "path": "/cam/gcode"
+    },
+    {
+      "file": "api_v1\\dxf_workflow.py",
+      "method": "POST",
+      "path": "/cam/plan"
+    },
+    {
+      "file": "api_v1\\dxf_workflow.py",
+      "method": "POST",
+      "path": "/upload"
+    },
+    {
+      "file": "api_v1\\dxf_workflow.py",
+      "method": "POST",
+      "path": "/validate"
+    },
+    {
+      "file": "api_v1\\fret_math.py",
+      "method": "GET",
+      "path": "/temperaments"
+    },
+    {
+      "file": "api_v1\\fret_math.py",
+      "method": "POST",
+      "path": "/positions"
+    },
+    {
+      "file": "api_v1\\fret_math.py",
+      "method": "POST",
+      "path": "/slots"
+    },
+    {
+      "file": "api_v1\\fretboard.py",
+      "method": "GET",
+      "path": "/presets"
+    },
+    {
+      "file": "api_v1\\fretboard.py",
+      "method": "GET",
+      "path": "/presets/{name}"
+    },
+    {
+      "file": "api_v1\\fretboard.py",
+      "method": "GET",
+      "path": "/schema"
+    },
+    {
+      "file": "api_v1\\fretboard.py",
+      "method": "POST",
+      "path": "/compute"
+    },
+    {
+      "file": "api_v1\\fretboard.py",
+      "method": "POST",
+      "path": "/dxf"
+    },
+    {
+      "file": "api_v1\\fretboard.py",
+      "method": "POST",
+      "path": "/scala"
+    },
+    {
+      "file": "api_v1\\instrument.py",
+      "method": "GET",
+      "path": "/scale-lengths"
+    },
+    {
+      "file": "api_v1\\instrument.py",
+      "method": "GET",
+      "path": "/wood-species"
+    },
+    {
+      "file": "api_v1\\instrument.py",
+      "method": "POST",
+      "path": "/body-geometry"
+    },
+    {
+      "file": "api_v1\\instrument.py",
+      "method": "POST",
+      "path": "/neck-profile"
+    },
+    {
+      "file": "api_v1\\jobs.py",
+      "method": "GET",
+      "path": "/list"
+    },
+    {
+      "file": "api_v1\\jobs.py",
+      "method": "GET",
+      "path": "/{job_id}"
+    },
+    {
+      "file": "api_v1\\jobs.py",
+      "method": "GET",
+      "path": "/{job_id}/artifacts"
+    },
+    {
+      "file": "api_v1\\jobs.py",
+      "method": "POST",
+      "path": "/create"
+    },
+    {
+      "file": "api_v1\\jobs.py",
+      "method": "POST",
+      "path": "/{job_id}/complete"
+    },
+    {
+      "file": "api_v1\\jobs.py",
+      "method": "POST",
+      "path": "/{job_id}/start"
+    },
+    {
+      "file": "api_v1\\machines.py",
+      "method": "GET",
+      "path": "/dialects"
+    },
+    {
+      "file": "api_v1\\machines.py",
+      "method": "GET",
+      "path": "/profiles"
+    },
+    {
+      "file": "api_v1\\machines.py",
+      "method": "GET",
+      "path": "/profiles/{profile_id}"
+    },
+    {
+      "file": "api_v1\\machines.py",
+      "method": "POST",
+      "path": "/probe/corner"
+    },
+    {
+      "file": "api_v1\\machines.py",
+      "method": "POST",
+      "path": "/probe/surface"
+    },
+    {
+      "file": "api_v1\\rmos_safety.py",
+      "method": "GET",
+      "path": "/rules"
+    },
+    {
+      "file": "api_v1\\rmos_safety.py",
+      "method": "GET",
+      "path": "/runs/{run_id}"
+    },
+    {
+      "file": "api_v1\\rmos_safety.py",
+      "method": "POST",
+      "path": "/check"
+    },
+    {
+      "file": "api_v1\\rmos_safety.py",
+      "method": "POST",
+      "path": "/runs"
+    },
+    {
+      "file": "api_v1\\rmos_safety.py",
+      "method": "POST",
+      "path": "/runs/{run_id}/approve"
+    },
+    {
+      "file": "art_studio\\api\\generator_routes.py",
+      "method": "POST",
+      "path": "/{generator_key}/generate"
+    },
+    {
+      "file": "art_studio\\api\\inlay_pattern_routes.py",
+      "method": "POST",
+      "path": "/bom"
+    },
+    {
+      "file": "art_studio\\api\\inlay_pattern_routes.py",
+      "method": "POST",
+      "path": "/compose"
+    },
+    {
+      "file": "art_studio\\api\\inlay_pattern_routes.py",
+      "method": "POST",
+      "path": "/export"
+    },
+    {
+      "file": "art_studio\\api\\inlay_pattern_routes.py",
+      "method": "POST",
+      "path": "/generate"
+    },
+    {
+      "file": "art_studio\\api\\inlay_pattern_routes.py",
+      "method": "POST",
+      "path": "/import"
+    },
+    {
+      "file": "art_studio\\api\\inlay_pattern_routes.py",
+      "method": "POST",
+      "path": "/import-from-blueprint"
+    },
+    {
+      "file": "art_studio\\api\\pattern_routes.py",
+      "method": "DELETE",
+      "path": "/{pattern_id}"
+    },
+    {
+      "file": "art_studio\\api\\pattern_routes.py",
+      "method": "GET",
+      "path": "/{pattern_id}"
+    },
+    {
+      "file": "art_studio\\api\\pattern_routes.py",
+      "method": "PUT",
+      "path": "/{pattern_id}"
+    },
+    {
+      "file": "art_studio\\api\\preview_routes.py",
+      "method": "POST",
+      "path": "/svg"
+    },
+    {
+      "file": "art_studio\\api\\rosette_compare_routes.py",
+      "method": "GET",
+      "path": "/compare/export_csv"
+    },
+    {
+      "file": "art_studio\\api\\rosette_compare_routes.py",
+      "method": "GET",
+      "path": "/compare/snapshots"
+    },
+    {
+      "file": "art_studio\\api\\rosette_compare_routes.py",
+      "method": "POST",
+      "path": "/compare"
+    },
+    {
+      "file": "art_studio\\api\\rosette_compare_routes.py",
+      "method": "POST",
+      "path": "/compare/snapshot"
+    },
+    {
+      "file": "art_studio\\api\\rosette_designer_routes.py",
+      "method": "GET",
+      "path": "/catalog"
+    },
+    {
+      "file": "art_studio\\api\\rosette_designer_routes.py",
+      "method": "GET",
+      "path": "/cell-info"
+    },
+    {
+      "file": "art_studio\\api\\rosette_designer_routes.py",
+      "method": "GET",
+      "path": "/recipes"
+    },
+    {
+      "file": "art_studio\\api\\rosette_designer_routes.py",
+      "method": "GET",
+      "path": "/recipes/{recipe_id}"
+    },
+    {
+      "file": "art_studio\\api\\rosette_designer_routes.py",
+      "method": "POST",
+      "path": "/bom"
+    },
+    {
+      "file": "art_studio\\api\\rosette_designer_routes.py",
+      "method": "POST",
+      "path": "/bom/csv"
+    },
+    {
+      "file": "art_studio\\api\\rosette_designer_routes.py",
+      "method": "POST",
+      "path": "/export/svg"
+    },
+    {
+      "file": "art_studio\\api\\rosette_designer_routes.py",
+      "method": "POST",
+      "path": "/mfg-auto-fix"
+    },
+    {
+      "file": "art_studio\\api\\rosette_designer_routes.py",
+      "method": "POST",
+      "path": "/mfg-check"
+    },
+    {
+      "file": "art_studio\\api\\rosette_designer_routes.py",
+      "method": "POST",
+      "path": "/place-tile"
+    },
+    {
+      "file": "art_studio\\api\\rosette_designer_routes.py",
+      "method": "POST",
+      "path": "/preview"
+    },
+    {
+      "file": "art_studio\\api\\rosette_designer_routes.py",
+      "method": "POST",
+      "path": "/sym-cells"
+    },
+    {
+      "file": "art_studio\\api\\rosette_jobs_routes.py",
+      "method": "GET",
+      "path": "/jobs"
+    },
+    {
+      "file": "art_studio\\api\\rosette_jobs_routes.py",
+      "method": "GET",
+      "path": "/presets"
+    },
+    {
+      "file": "art_studio\\api\\rosette_jobs_routes.py",
+      "method": "POST",
+      "path": "/preview"
+    },
+    {
+      "file": "art_studio\\api\\rosette_jobs_routes.py",
+      "method": "POST",
+      "path": "/save"
+    },
+    {
+      "file": "art_studio\\api\\rosette_manufacturing_routes.py",
+      "method": "GET",
+      "path": "/traditional/masters"
+    },
+    {
+      "file": "art_studio\\api\\rosette_manufacturing_routes.py",
+      "method": "GET",
+      "path": "/traditional/patterns/{pattern_id}"
+    },
+    {
+      "file": "art_studio\\api\\rosette_manufacturing_routes.py",
+      "method": "POST",
+      "path": "/manufacturing-plan"
+    },
+    {
+      "file": "art_studio\\api\\rosette_manufacturing_routes.py",
+      "method": "POST",
+      "path": "/project"
+    },
+    {
+      "file": "art_studio\\api\\rosette_manufacturing_routes.py",
+      "method": "POST",
+      "path": "/traditional/project"
+    },
+    {
+      "file": "art_studio\\api\\rosette_pattern_routes.py",
+      "method": "GET",
+      "path": "/patterns"
+    },
+    {
+      "file": "art_studio\\api\\rosette_pattern_routes.py",
+      "method": "GET",
+      "path": "/patterns/{pattern_id}"
+    },
+    {
+      "file": "art_studio\\api\\rosette_pattern_routes.py",
+      "method": "GET",
+      "path": "/status"
+    },
+    {
+      "file": "art_studio\\api\\rosette_pattern_routes.py",
+      "method": "POST",
+      "path": "/export"
+    },
+    {
+      "file": "art_studio\\api\\rosette_pattern_routes.py",
+      "method": "POST",
+      "path": "/generate_modern"
+    },
+    {
+      "file": "art_studio\\api\\rosette_pattern_routes.py",
+      "method": "POST",
+      "path": "/generate_traditional"
+    },
+    {
+      "file": "art_studio\\api\\rosette_pattern_routes.py",
+      "method": "POST",
+      "path": "/simulate-build"
+    },
+    {
+      "file": "art_studio\\api\\rosette_snapshot_routes.py",
+      "method": "DELETE",
+      "path": "/{snapshot_id}"
+    },
+    {
+      "file": "art_studio\\api\\rosette_snapshot_routes.py",
+      "method": "GET",
+      "path": "/"
+    },
+    {
+      "file": "art_studio\\api\\rosette_snapshot_routes.py",
+      "method": "GET",
+      "path": "/baseline"
+    },
+    {
+      "file": "art_studio\\api\\rosette_snapshot_routes.py",
+      "method": "GET",
+      "path": "/{snapshot_id}"
+    },
+    {
+      "file": "art_studio\\api\\rosette_snapshot_routes.py",
+      "method": "POST",
+      "path": "/export"
+    },
+    {
+      "file": "art_studio\\api\\rosette_snapshot_routes.py",
+      "method": "POST",
+      "path": "/import"
+    },
+    {
+      "file": "art_studio\\api\\rosette_snapshot_routes.py",
+      "method": "POST",
+      "path": "/{snapshot_id}/baseline"
+    },
+    {
+      "file": "art_studio\\api\\rosette_snapshot_routes.py",
+      "method": "PUT",
+      "path": "/{snapshot_id}"
+    },
+    {
+      "file": "art_studio\\api\\snapshot_routes.py",
+      "method": "DELETE",
+      "path": "/{snapshot_id}"
+    },
+    {
+      "file": "art_studio\\api\\snapshot_routes.py",
+      "method": "GET",
+      "path": "/recent"
+    },
+    {
+      "file": "art_studio\\api\\snapshot_routes.py",
+      "method": "GET",
+      "path": "/{snapshot_id}"
+    },
+    {
+      "file": "art_studio\\api\\snapshot_routes.py",
+      "method": "GET",
+      "path": "/{snapshot_id}/export"
+    },
+    {
+      "file": "art_studio\\api\\snapshot_routes.py",
+      "method": "GET",
+      "path": "/{snapshot_id}/export/download"
+    },
+    {
+      "file": "art_studio\\api\\snapshot_routes.py",
+      "method": "POST",
+      "path": "/import"
+    },
+    {
+      "file": "art_studio\\api\\snapshot_routes.py",
+      "method": "PUT",
+      "path": "/{snapshot_id}"
+    },
+    {
+      "file": "art_studio\\bracing_router.py",
+      "method": "GET",
+      "path": "/back/body-styles"
+    },
+    {
+      "file": "art_studio\\bracing_router.py",
+      "method": "GET",
+      "path": "/dxf-versions"
+    },
+    {
+      "file": "art_studio\\bracing_router.py",
+      "method": "GET",
+      "path": "/presets"
+    },
+    {
+      "file": "art_studio\\bracing_router.py",
+      "method": "POST",
+      "path": "/back"
+    },
+    {
+      "file": "art_studio\\bracing_router.py",
+      "method": "POST",
+      "path": "/batch"
+    },
+    {
+      "file": "art_studio\\bracing_router.py",
+      "method": "POST",
+      "path": "/export-dxf"
+    },
+    {
+      "file": "art_studio\\bracing_router.py",
+      "method": "POST",
+      "path": "/preview"
+    },
+    {
+      "file": "art_studio\\inlay_router.py",
+      "method": "GET",
+      "path": "/dxf-versions"
+    },
+    {
+      "file": "art_studio\\inlay_router.py",
+      "method": "GET",
+      "path": "/pattern-types"
+    },
+    {
+      "file": "art_studio\\inlay_router.py",
+      "method": "GET",
+      "path": "/presets"
+    },
+    {
+      "file": "art_studio\\inlay_router.py",
+      "method": "GET",
+      "path": "/presets/{preset_name}"
+    },
+    {
+      "file": "art_studio\\inlay_router.py",
+      "method": "POST",
+      "path": "/export-dxf"
+    },
+    {
+      "file": "art_studio\\inlay_router.py",
+      "method": "POST",
+      "path": "/export-gcode"
+    },
+    {
+      "file": "art_studio\\inlay_router.py",
+      "method": "POST",
+      "path": "/preset/{preset_name}/preview"
+    },
+    {
+      "file": "art_studio\\inlay_router.py",
+      "method": "POST",
+      "path": "/preview"
+    },
+    {
+      "file": "blueprint\\save_router.py",
+      "method": "POST",
+      "path": "/save-to-project/{project_id}"
+    },
+    {
+      "file": "business\\bom_router.py",
+      "method": "GET",
+      "path": "/materials"
+    },
+    {
+      "file": "business\\bom_router.py",
+      "method": "GET",
+      "path": "/materials/{material_id}"
+    },
+    {
+      "file": "business\\bom_router.py",
+      "method": "GET",
+      "path": "/templates"
+    },
+    {
+      "file": "business\\bom_router.py",
+      "method": "POST",
+      "path": "/from-template"
+    },
+    {
+      "file": "business\\bom_router.py",
+      "method": "POST",
+      "path": "/materials"
+    },
+    {
+      "file": "business\\breakeven_router.py",
+      "method": "POST",
+      "path": "/calculate"
+    },
+    {
+      "file": "business\\breakeven_router.py",
+      "method": "POST",
+      "path": "/sensitivity"
+    },
+    {
+      "file": "business\\breakeven_router.py",
+      "method": "POST",
+      "path": "/target-profit"
+    },
+    {
+      "file": "business\\cashflow_router.py",
+      "method": "POST",
+      "path": "/project"
+    },
+    {
+      "file": "business\\cashflow_router.py",
+      "method": "POST",
+      "path": "/required-capital"
+    },
+    {
+      "file": "business\\cashflow_router.py",
+      "method": "POST",
+      "path": "/startup"
+    },
+    {
+      "file": "business\\cogs_router.py",
+      "method": "GET",
+      "path": "/labor-rates"
+    },
+    {
+      "file": "business\\cogs_router.py",
+      "method": "GET",
+      "path": "/overhead"
+    },
+    {
+      "file": "business\\cogs_router.py",
+      "method": "POST",
+      "path": "/calculate"
+    },
+    {
+      "file": "business\\cogs_router.py",
+      "method": "PUT",
+      "path": "/labor-rates/{category}"
+    },
+    {
+      "file": "business\\estimator_router.py",
+      "method": "GET",
+      "path": "/factors"
+    },
+    {
+      "file": "business\\estimator_router.py",
+      "method": "GET",
+      "path": "/learning-curve"
+    },
+    {
+      "file": "business\\estimator_router.py",
+      "method": "GET",
+      "path": "/wbs/{instrument_type}"
+    },
+    {
+      "file": "business\\estimator_router.py",
+      "method": "POST",
+      "path": "/parametric"
+    },
+    {
+      "file": "business\\estimator_router.py",
+      "method": "POST",
+      "path": "/quote"
+    },
+    {
+      "file": "business\\goals_router.py",
+      "method": "DELETE",
+      "path": "/{goal_id}"
+    },
+    {
+      "file": "business\\goals_router.py",
+      "method": "GET",
+      "path": "/{goal_id}"
+    },
+    {
+      "file": "business\\goals_router.py",
+      "method": "PATCH",
+      "path": "/{goal_id}"
+    },
+    {
+      "file": "business\\goals_router.py",
+      "method": "POST",
+      "path": "/{goal_id}/link-estimate/{estimate_id}"
+    },
+    {
+      "file": "business\\pricing_router.py",
+      "method": "GET",
+      "path": "/competitors"
+    },
+    {
+      "file": "business\\pricing_router.py",
+      "method": "POST",
+      "path": "/calculate"
+    },
+    {
+      "file": "business\\pricing_router.py",
+      "method": "POST",
+      "path": "/competitors"
+    },
+    {
+      "file": "business\\router.py",
+      "method": "GET",
+      "path": "/health"
+    },
+    {
+      "file": "cam\\dxf_validation_gate.py",
+      "method": "POST",
+      "path": "/plan_from_dxf"
+    },
+    {
+      "file": "cam\\headstock\\router.py",
+      "method": "GET",
+      "path": "/designs/{design_name}"
+    },
+    {
+      "file": "cam\\headstock\\router.py",
+      "method": "GET",
+      "path": "/info"
+    },
+    {
+      "file": "cam\\headstock\\router.py",
+      "method": "GET",
+      "path": "/inlay-templates"
+    },
+    {
+      "file": "cam\\headstock\\router.py",
+      "method": "GET",
+      "path": "/options"
+    },
+    {
+      "file": "cam\\headstock\\router.py",
+      "method": "GET",
+      "path": "/styles/{style_name}"
+    },
+    {
+      "file": "cam\\headstock\\router.py",
+      "method": "GET",
+      "path": "/templates"
+    },
+    {
+      "file": "cam\\headstock\\router.py",
+      "method": "GET",
+      "path": "/templates/{template_name}"
+    },
+    {
+      "file": "cam\\headstock\\router.py",
+      "method": "GET",
+      "path": "/woods"
+    },
+    {
+      "file": "cam\\headstock\\router.py",
+      "method": "POST",
+      "path": "/generate"
+    },
+    {
+      "file": "cam\\headstock\\router.py",
+      "method": "POST",
+      "path": "/generate-inlay"
+    },
+    {
+      "file": "cam\\rosette\\photo_batch_router.py",
+      "method": "DELETE",
+      "path": "/{batch_id}"
+    },
+    {
+      "file": "cam\\rosette\\photo_batch_router.py",
+      "method": "GET",
+      "path": "/"
+    },
+    {
+      "file": "cam\\rosette\\photo_batch_router.py",
+      "method": "GET",
+      "path": "/{batch_id}"
+    },
+    {
+      "file": "cam\\rosette\\photo_batch_router.py",
+      "method": "GET",
+      "path": "/{batch_id}/download"
+    },
+    {
+      "file": "cam\\rosette\\photo_batch_router.py",
+      "method": "POST",
+      "path": "/convert"
+    },
+    {
+      "file": "cam\\rosette\\photo_batch_router.py",
+      "method": "POST",
+      "path": "/convert-urls"
+    },
+    {
+      "file": "cam\\routers\\binding\\binding_router.py",
+      "method": "GET",
+      "path": "/info"
+    },
+    {
+      "file": "cam\\routers\\binding\\binding_router.py",
+      "method": "POST",
+      "path": "/channel/gcode"
+    },
+    {
+      "file": "cam\\routers\\binding\\binding_router.py",
+      "method": "POST",
+      "path": "/preview"
+    },
+    {
+      "file": "cam\\routers\\binding\\binding_router.py",
+      "method": "POST",
+      "path": "/purfling/gcode"
+    },
+    {
+      "file": "cam\\routers\\bridge_export_router.py",
+      "method": "POST",
+      "path": "/bridge/export_dxf"
+    },
+    {
+      "file": "cam\\routers\\drilling\\drill_modal_router.py",
+      "method": "GET",
+      "path": "/info"
+    },
+    {
+      "file": "cam\\routers\\drilling\\drill_modal_router.py",
+      "method": "POST",
+      "path": "/gcode"
+    },
+    {
+      "file": "cam\\routers\\drilling\\drill_pattern_router.py",
+      "method": "GET",
+      "path": "/info"
+    },
+    {
+      "file": "cam\\routers\\drilling\\drill_pattern_router.py",
+      "method": "POST",
+      "path": "/gcode"
+    },
+    {
+      "file": "cam\\routers\\drilling\\drilling_preview_router.py",
+      "method": "POST",
+      "path": "/preview"
+    },
+    {
+      "file": "cam\\routers\\fret_slots_router.py",
+      "method": "POST",
+      "path": "/fret_slots/preview"
+    },
+    {
+      "file": "cam\\routers\\job_intelligence_router.py",
+      "method": "GET",
+      "path": "/job-int/log"
+    },
+    {
+      "file": "cam\\routers\\job_intelligence_router.py",
+      "method": "GET",
+      "path": "/job-int/log/{run_id}"
+    },
+    {
+      "file": "cam\\routers\\job_intelligence_router.py",
+      "method": "GET",
+      "path": "/job_log/insights"
+    },
+    {
+      "file": "cam\\routers\\job_intelligence_router.py",
+      "method": "GET",
+      "path": "/job_log/insights/{insight_id}"
+    },
+    {
+      "file": "cam\\routers\\job_intelligence_router.py",
+      "method": "POST",
+      "path": "/job-int/favorites/{run_id}"
+    },
+    {
+      "file": "cam\\routers\\monitoring\\metrics_thermal.py",
+      "method": "POST",
+      "path": "/thermal_report_bundle"
+    },
+    {
+      "file": "cam\\routers\\monitoring\\metrics_thermal.py",
+      "method": "POST",
+      "path": "/thermal_report_md"
+    },
+    {
+      "file": "cam\\routers\\profiling\\profile_router.py",
+      "method": "GET",
+      "path": "/info"
+    },
+    {
+      "file": "cam\\routers\\profiling\\profile_router.py",
+      "method": "POST",
+      "path": "/gcode"
+    },
+    {
+      "file": "cam\\routers\\profiling\\profile_router.py",
+      "method": "POST",
+      "path": "/preview"
+    },
+    {
+      "file": "cam\\routers\\rosette\\rosette_jobs_router.py",
+      "method": "GET",
+      "path": "/jobs/{job_id}"
+    },
+    {
+      "file": "cam\\routers\\rosette\\rosette_jobs_router.py",
+      "method": "POST",
+      "path": "/jobs"
+    },
+    {
+      "file": "cam\\routers\\rosette\\rosette_toolpath_router.py",
+      "method": "POST",
+      "path": "/plan-toolpath"
+    },
+    {
+      "file": "cam\\routers\\rosette\\rosette_toolpath_router.py",
+      "method": "POST",
+      "path": "/post-gcode"
+    },
+    {
+      "file": "cam\\routers\\simulation\\simulation_consolidated_router.py",
+      "method": "POST",
+      "path": "/simulate_gcode"
+    },
+    {
+      "file": "cam\\routers\\simulation\\simulation_consolidated_router.py",
+      "method": "POST",
+      "path": "/upload"
+    },
+    {
+      "file": "cam\\routers\\toolpath\\biarc_router.py",
+      "method": "GET",
+      "path": "/info"
+    },
+    {
+      "file": "cam\\routers\\toolpath\\biarc_router.py",
+      "method": "POST",
+      "path": "/gcode"
+    },
+    {
+      "file": "cam\\routers\\toolpath\\helical_router.py",
+      "method": "GET",
+      "path": "/helical_health"
+    },
+    {
+      "file": "cam\\routers\\toolpath\\helical_router.py",
+      "method": "POST",
+      "path": "/helical_entry"
+    },
+    {
+      "file": "cam\\routers\\toolpath\\relief_export_router.py",
+      "method": "POST",
+      "path": "/export-dxf"
+    },
+    {
+      "file": "cam\\routers\\toolpath\\roughing_router.py",
+      "method": "GET",
+      "path": "/info"
+    },
+    {
+      "file": "cam\\routers\\toolpath\\roughing_router.py",
+      "method": "POST",
+      "path": "/gcode"
+    },
+    {
+      "file": "cam\\routers\\toolpath\\vcarve_router.py",
+      "method": "POST",
+      "path": "/gcode"
+    },
+    {
+      "file": "cam\\routers\\toolpath\\vcarve_router.py",
+      "method": "POST",
+      "path": "/preview_infill"
+    },
+    {
+      "file": "cam\\routers\\utility\\backup_router.py",
+      "method": "GET",
+      "path": "/download/{name}"
+    },
+    {
+      "file": "cam\\routers\\utility\\backup_router.py",
+      "method": "GET",
+      "path": "/list"
+    },
+    {
+      "file": "cam\\routers\\utility\\backup_router.py",
+      "method": "POST",
+      "path": "/snapshot"
+    },
+    {
+      "file": "cam\\routers\\utility\\benchmark_router.py",
+      "method": "POST",
+      "path": "/bench"
+    },
+    {
+      "file": "cam\\routers\\utility\\benchmark_router.py",
+      "method": "POST",
+      "path": "/offset_spiral.svg"
+    },
+    {
+      "file": "cam\\routers\\utility\\benchmark_router.py",
+      "method": "POST",
+      "path": "/trochoid_corners.svg"
+    },
+    {
+      "file": "cam\\routers\\utility\\compare_router.py",
+      "method": "GET",
+      "path": "/diff"
+    },
+    {
+      "file": "cam\\routers\\utility\\optimization_router.py",
+      "method": "POST",
+      "path": "/feeds-speeds"
+    },
+    {
+      "file": "cam\\routers\\utility\\optimization_router.py",
+      "method": "POST",
+      "path": "/what_if"
+    },
+    {
+      "file": "cam\\routers\\utility\\polygon_router.py",
+      "method": "POST",
+      "path": "/polygon_offset.nc"
+    },
+    {
+      "file": "cam\\routers\\utility\\settings_router.py",
+      "method": "GET",
+      "path": "/export"
+    },
+    {
+      "file": "cam\\routers\\utility\\settings_router.py",
+      "method": "GET",
+      "path": "/summary"
+    },
+    {
+      "file": "cam\\routers\\utility\\settings_router.py",
+      "method": "POST",
+      "path": "/import"
+    },
+    {
+      "file": "cam\\routers\\vcarve\\production_router.py",
+      "method": "GET",
+      "path": "/info"
+    },
+    {
+      "file": "cam\\routers\\vcarve\\production_router.py",
+      "method": "GET",
+      "path": "/materials"
+    },
+    {
+      "file": "cam\\routers\\vcarve\\production_router.py",
+      "method": "POST",
+      "path": "/gcode"
+    },
+    {
+      "file": "cam\\routers\\vcarve\\production_router.py",
+      "method": "POST",
+      "path": "/preview"
+    },
+    {
+      "file": "cam_core\\api\\saw_lab_router.py",
+      "method": "GET",
+      "path": "/runs"
+    },
+    {
+      "file": "cam_core\\api\\saw_lab_router.py",
+      "method": "GET",
+      "path": "/runs/{run_id}"
+    },
+    {
+      "file": "cam_core\\api\\saw_lab_router.py",
+      "method": "GET",
+      "path": "/runs/{run_id}/metrics"
+    },
+    {
+      "file": "cam_core\\api\\saw_lab_router.py",
+      "method": "PATCH",
+      "path": "/runs/{run_id}/status"
+    },
+    {
+      "file": "cam_core\\api\\saw_lab_router.py",
+      "method": "POST",
+      "path": "/learn"
+    },
+    {
+      "file": "cam_core\\api\\saw_lab_router.py",
+      "method": "POST",
+      "path": "/runs"
+    },
+    {
+      "file": "cam_core\\api\\saw_lab_router.py",
+      "method": "POST",
+      "path": "/runs/{run_id}/analyze"
+    },
+    {
+      "file": "cam_core\\api\\saw_lab_router.py",
+      "method": "POST",
+      "path": "/runs/{run_id}/complete"
+    },
+    {
+      "file": "cam_core\\api\\saw_lab_router.py",
+      "method": "POST",
+      "path": "/runs/{run_id}/start"
+    },
+    {
+      "file": "cam_core\\api\\saw_lab_router.py",
+      "method": "POST",
+      "path": "/runs/{run_id}/telemetry"
+    },
+    {
+      "file": "compare\\routers\\baselines\\__init__.py",
+      "method": "GET",
+      "path": "/baselines"
+    },
+    {
+      "file": "compare\\routers\\baselines\\__init__.py",
+      "method": "GET",
+      "path": "/baselines/{baseline_id}"
+    },
+    {
+      "file": "compare\\routers\\baselines\\__init__.py",
+      "method": "GET",
+      "path": "/history"
+    },
+    {
+      "file": "compare\\routers\\baselines\\__init__.py",
+      "method": "POST",
+      "path": "/baselines"
+    },
+    {
+      "file": "compare\\routers\\baselines\\__init__.py",
+      "method": "POST",
+      "path": "/diff"
+    },
+    {
+      "file": "compare\\routers\\lab\\__init__.py",
+      "method": "DELETE",
+      "path": "/baselines/{baseline_id}"
+    },
+    {
+      "file": "compare\\routers\\lab\\__init__.py",
+      "method": "GET",
+      "path": "/baselines"
+    },
+    {
+      "file": "compare\\routers\\lab\\__init__.py",
+      "method": "POST",
+      "path": "/baselines"
+    },
+    {
+      "file": "compare\\routers\\lab\\__init__.py",
+      "method": "POST",
+      "path": "/diff"
+    },
+    {
+      "file": "compare\\routers\\lab\\__init__.py",
+      "method": "POST",
+      "path": "/export"
+    },
+    {
+      "file": "compare\\routers\\risk\\__init__.py",
+      "method": "GET",
+      "path": "/risk_aggregate"
+    },
+    {
+      "file": "compare\\routers\\risk\\__init__.py",
+      "method": "GET",
+      "path": "/risk_bucket_detail"
+    },
+    {
+      "file": "compare\\routers\\risk\\__init__.py",
+      "method": "GET",
+      "path": "/risk_bucket_export"
+    },
+    {
+      "file": "core\\job_queue\\router.py",
+      "method": "GET",
+      "path": "/health"
+    },
+    {
+      "file": "core\\job_queue\\router.py",
+      "method": "GET",
+      "path": "/stats"
+    },
+    {
+      "file": "core\\job_queue\\router.py",
+      "method": "GET",
+      "path": "/{job_id}"
+    },
+    {
+      "file": "core\\job_queue\\router.py",
+      "method": "POST",
+      "path": "/{job_id}/cancel"
+    },
+    {
+      "file": "core\\job_queue\\router.py",
+      "method": "POST",
+      "path": "/{job_id}/retry"
+    },
+    {
+      "file": "core\\store_registry.py",
+      "method": "GET",
+      "path": "/patterns"
+    },
+    {
+      "file": "core\\store_registry.py",
+      "method": "GET",
+      "path": "/patterns"
+    },
+    {
+      "file": "governance\\governance_consolidated_router.py",
+      "method": "GET",
+      "path": "/metrics"
+    },
+    {
+      "file": "governance\\governance_consolidated_router.py",
+      "method": "GET",
+      "path": "/routing-truth"
+    },
+    {
+      "file": "instrument_geometry\\neck_taper\\api_router.py",
+      "method": "POST",
+      "path": "/outline"
+    },
+    {
+      "file": "instrument_geometry\\neck_taper\\api_router.py",
+      "method": "POST",
+      "path": "/outline.dxf"
+    },
+    {
+      "file": "middleware\\rate_limit.py",
+      "method": "POST",
+      "path": "/ai/vision"
+    },
+    {
+      "file": "middleware\\rate_limit.py",
+      "method": "POST",
+      "path": "/generate-gcode"
+    },
+    {
+      "file": "middleware\\tier_gate.py",
+      "method": "GET",
+      "path": "/ai-vision"
+    },
+    {
+      "file": "middleware\\tier_gate.py",
+      "method": "GET",
+      "path": "/pro-dashboard"
+    },
+    {
+      "file": "middleware\\tier_gate.py",
+      "method": "GET",
+      "path": "/pro-dashboard"
+    },
+    {
+      "file": "middleware\\tier_gate.py",
+      "method": "POST",
+      "path": "/batch-process"
+    },
+    {
+      "file": "projects\\router.py",
+      "method": "GET",
+      "path": "/{project_id}"
+    },
+    {
+      "file": "projects\\router.py",
+      "method": "GET",
+      "path": "/{project_id}/design-state"
+    },
+    {
+      "file": "projects\\router.py",
+      "method": "PUT",
+      "path": "/{project_id}/design-state"
+    },
+    {
+      "file": "rmos\\acoustics\\router_import.py",
+      "method": "POST",
+      "path": "/import-path"
+    },
+    {
+      "file": "rmos\\acoustics\\router_import.py",
+      "method": "POST",
+      "path": "/import-zip"
+    },
+    {
+      "file": "rmos\\acoustics\\router_ingest_audit.py",
+      "method": "GET",
+      "path": "/ingest-events"
+    },
+    {
+      "file": "rmos\\acoustics\\router_ingest_audit.py",
+      "method": "GET",
+      "path": "/ingest-events/counts"
+    },
+    {
+      "file": "rmos\\acoustics\\router_ingest_audit.py",
+      "method": "GET",
+      "path": "/ingest-events/{event_id}"
+    },
+    {
+      "file": "rmos\\acoustics\\router_zip_export.py",
+      "method": "POST",
+      "path": "/runs/{run_id}/attachments/zip"
+    },
+    {
+      "file": "rmos\\analytics\\router.py",
+      "method": "GET",
+      "path": "/export"
+    },
+    {
+      "file": "rmos\\analytics\\router.py",
+      "method": "GET",
+      "path": "/lane-analytics"
+    },
+    {
+      "file": "rmos\\analytics\\router.py",
+      "method": "GET",
+      "path": "/risk-timeline"
+    },
+    {
+      "file": "rmos\\analytics\\router.py",
+      "method": "GET",
+      "path": "/risk-timeline/{preset_id}"
+    },
+    {
+      "file": "rmos\\analytics\\router.py",
+      "method": "GET",
+      "path": "/summary"
+    },
+    {
+      "file": "rmos\\analytics\\router.py",
+      "method": "GET",
+      "path": "/trends"
+    },
+    {
+      "file": "rmos\\api\\logs_routes.py",
+      "method": "GET",
+      "path": "/recent"
+    },
+    {
+      "file": "rmos\\api\\logs_routes.py",
+      "method": "GET",
+      "path": "/recent/v2"
+    },
+    {
+      "file": "rmos\\api\\logs_routes.py",
+      "method": "GET",
+      "path": "/{run_id}"
+    },
+    {
+      "file": "rmos\\api\\rmos_feasibility_router.py",
+      "method": "POST",
+      "path": "/feasibility"
+    },
+    {
+      "file": "rmos\\api\\rmos_runs_router.py",
+      "method": "GET",
+      "path": "/diff/{a_id}/{b_id}"
+    },
+    {
+      "file": "rmos\\api\\rmos_runs_router.py",
+      "method": "GET",
+      "path": "/{run_id}"
+    },
+    {
+      "file": "rmos\\api\\rmos_runs_router.py",
+      "method": "GET",
+      "path": "/{run_id}/download"
+    },
+    {
+      "file": "rmos\\api_routes.py",
+      "method": "POST",
+      "path": "/bom"
+    },
+    {
+      "file": "rmos\\api_routes.py",
+      "method": "POST",
+      "path": "/feasibility"
+    },
+    {
+      "file": "rmos\\api_routes.py",
+      "method": "POST",
+      "path": "/toolpaths"
+    },
+    {
+      "file": "rmos\\live_monitor_router.py",
+      "method": "GET",
+      "path": "/live-monitor/{job_id}/drilldown"
+    },
+    {
+      "file": "rmos\\mvp_router.py",
+      "method": "POST",
+      "path": "/wrap/mvp/dxf-to-grbl"
+    },
+    {
+      "file": "rmos\\operations\\router.py",
+      "method": "GET",
+      "path": "/health"
+    },
+    {
+      "file": "rmos\\operations\\router.py",
+      "method": "GET",
+      "path": "/{run_id}/export.zip"
+    },
+    {
+      "file": "rmos\\operations\\router.py",
+      "method": "POST",
+      "path": "/{tool_id}/execute"
+    },
+    {
+      "file": "rmos\\operations\\router.py",
+      "method": "POST",
+      "path": "/{tool_id}/plan"
+    },
+    {
+      "file": "rmos\\rosette_cam_router.py",
+      "method": "GET",
+      "path": "/rosette/cnc-history"
+    },
+    {
+      "file": "rmos\\rosette_cam_router.py",
+      "method": "GET",
+      "path": "/rosette/cnc-job/{job_id}"
+    },
+    {
+      "file": "rmos\\rosette_cam_router.py",
+      "method": "POST",
+      "path": "/rosette/design"
+    },
+    {
+      "file": "rmos\\rosette_cam_router.py",
+      "method": "POST",
+      "path": "/rosette/export-cnc"
+    },
+    {
+      "file": "rmos\\rosette_cam_router.py",
+      "method": "POST",
+      "path": "/rosette/generate-slices"
+    },
+    {
+      "file": "rmos\\rosette_cam_router.py",
+      "method": "POST",
+      "path": "/rosette/preview"
+    },
+    {
+      "file": "rmos\\rosette_cam_router.py",
+      "method": "POST",
+      "path": "/rosette/segment-ring"
+    },
+    {
+      "file": "rmos\\runs_v2\\acoustics_router.py",
+      "method": "GET",
+      "path": "/attachments/{sha256}"
+    },
+    {
+      "file": "rmos\\runs_v2\\acoustics_router.py",
+      "method": "GET",
+      "path": "/index/attachment_meta"
+    },
+    {
+      "file": "rmos\\runs_v2\\acoustics_router.py",
+      "method": "GET",
+      "path": "/index/attachment_meta/facets"
+    },
+    {
+      "file": "rmos\\runs_v2\\acoustics_router.py",
+      "method": "GET",
+      "path": "/index/attachment_meta/recent"
+    },
+    {
+      "file": "rmos\\runs_v2\\acoustics_router.py",
+      "method": "GET",
+      "path": "/index/attachment_meta/{sha256}/exists"
+    },
+    {
+      "file": "rmos\\runs_v2\\acoustics_router.py",
+      "method": "GET",
+      "path": "/ingest/events"
+    },
+    {
+      "file": "rmos\\runs_v2\\acoustics_router.py",
+      "method": "GET",
+      "path": "/ingest/events/{event_id}"
+    },
+    {
+      "file": "rmos\\runs_v2\\acoustics_router.py",
+      "method": "GET",
+      "path": "/runs"
+    },
+    {
+      "file": "rmos\\runs_v2\\acoustics_router.py",
+      "method": "GET",
+      "path": "/runs/{run_id}"
+    },
+    {
+      "file": "rmos\\runs_v2\\acoustics_router.py",
+      "method": "POST",
+      "path": "/import-zip"
+    },
+    {
+      "file": "rmos\\runs_v2\\acoustics_router.py",
+      "method": "POST",
+      "path": "/index/rebuild_attachment_meta"
+    },
+    {
+      "file": "rmos\\runs_v2\\advisory_router.py",
+      "method": "POST",
+      "path": "/{run_id}/advisory/attach"
+    },
+    {
+      "file": "rmos\\runs_v2\\advisory_router.py",
+      "method": "POST",
+      "path": "/{run_id}/advisory/bulk-review"
+    },
+    {
+      "file": "rmos\\runs_v2\\advisory_router.py",
+      "method": "POST",
+      "path": "/{run_id}/advisory/{advisory_id}/promote"
+    },
+    {
+      "file": "rmos\\runs_v2\\advisory_router.py",
+      "method": "POST",
+      "path": "/{run_id}/advisory/{advisory_id}/review"
+    },
+    {
+      "file": "rmos\\runs_v2\\api_global_attachments.py",
+      "method": "GET",
+      "path": "/{sha256}"
+    },
+    {
+      "file": "rmos\\runs_v2\\api_runs.py",
+      "method": "DELETE",
+      "path": "/{run_id}"
+    },
+    {
+      "file": "rmos\\runs_v2\\api_runs.py",
+      "method": "GET",
+      "path": "/diff"
+    },
+    {
+      "file": "rmos\\runs_v2\\api_runs.py",
+      "method": "GET",
+      "path": "/query/recent"
+    },
+    {
+      "file": "rmos\\runs_v2\\api_runs.py",
+      "method": "GET",
+      "path": "/{run_id}"
+    },
+    {
+      "file": "rmos\\runs_v2\\api_runs.py",
+      "method": "GET",
+      "path": "/{run_id}/advisory/blobs"
+    },
+    {
+      "file": "rmos\\runs_v2\\api_runs.py",
+      "method": "GET",
+      "path": "/{run_id}/advisory/blobs/download-all.zip"
+    },
+    {
+      "file": "rmos\\runs_v2\\api_runs.py",
+      "method": "GET",
+      "path": "/{run_id}/advisory/blobs/{sha256}/download"
+    },
+    {
+      "file": "rmos\\runs_v2\\api_runs.py",
+      "method": "GET",
+      "path": "/{run_id}/advisory/blobs/{sha256}/preview/status"
+    },
+    {
+      "file": "rmos\\runs_v2\\api_runs.py",
+      "method": "GET",
+      "path": "/{run_id}/advisory/blobs/{sha256}/preview/svg"
+    },
+    {
+      "file": "rmos\\runs_v2\\api_runs_advisory.py",
+      "method": "GET",
+      "path": "/{run_id}/advisories"
+    },
+    {
+      "file": "rmos\\runs_v2\\api_runs_advisory.py",
+      "method": "POST",
+      "path": "/{run_id}/attach-advisory"
+    },
+    {
+      "file": "rmos\\runs_v2\\api_runs_advisory.py",
+      "method": "POST",
+      "path": "/{run_id}/suggest-and-attach"
+    },
+    {
+      "file": "rmos\\runs_v2\\api_runs_attachments.py",
+      "method": "GET",
+      "path": "/{run_id}/attachments"
+    },
+    {
+      "file": "rmos\\runs_v2\\api_runs_attachments.py",
+      "method": "GET",
+      "path": "/{run_id}/attachments/verify"
+    },
+    {
+      "file": "rmos\\runs_v2\\api_runs_attachments.py",
+      "method": "GET",
+      "path": "/{run_id}/attachments/{sha256}"
+    },
+    {
+      "file": "rmos\\runs_v2\\api_runs_attachments.py",
+      "method": "POST",
+      "path": "/{run_id}/artifacts/bind-art-studio-candidate"
+    },
+    {
+      "file": "rmos\\runs_v2\\api_runs_attachments.py",
+      "method": "POST",
+      "path": "/{run_id}/attachments"
+    },
+    {
+      "file": "rmos\\runs_v2\\api_runs_explain.py",
+      "method": "POST",
+      "path": "/{run_id}/explain"
+    },
+    {
+      "file": "rmos\\runs_v2\\api_runs_variants.py",
+      "method": "GET",
+      "path": "/{run_id}/advisory/variants"
+    },
+    {
+      "file": "rmos\\runs_v2\\api_runs_variants.py",
+      "method": "GET",
+      "path": "/{run_id}/manufacturing/candidates"
+    },
+    {
+      "file": "rmos\\runs_v2\\api_runs_variants.py",
+      "method": "GET",
+      "path": "/{run_id}/manufacturing/candidates/{candidate_id}/download-zip"
+    },
+    {
+      "file": "rmos\\runs_v2\\api_runs_variants.py",
+      "method": "POST",
+      "path": "/{run_id}/advisory/bulk-promote"
+    },
+    {
+      "file": "rmos\\runs_v2\\api_runs_variants.py",
+      "method": "POST",
+      "path": "/{run_id}/advisory/{advisory_id}/reject"
+    },
+    {
+      "file": "rmos\\runs_v2\\api_runs_variants.py",
+      "method": "POST",
+      "path": "/{run_id}/advisory/{advisory_id}/unreject"
+    },
+    {
+      "file": "rmos\\runs_v2\\api_runs_variants.py",
+      "method": "POST",
+      "path": "/{run_id}/manufacturing/candidates/{candidate_id}/decision"
+    },
+    {
+      "file": "rmos\\runs_v2\\exports.py",
+      "method": "GET",
+      "path": "/attachments/{sha256}"
+    },
+    {
+      "file": "rmos\\runs_v2\\exports.py",
+      "method": "GET",
+      "path": "/{run_id}/operator-pack"
+    },
+    {
+      "file": "rmos\\runs_v2\\exports.py",
+      "method": "POST",
+      "path": "/{run_id}/override"
+    },
+    {
+      "file": "rmos\\runs_v2\\router_override.py",
+      "method": "GET",
+      "path": "/{run_id}/override"
+    },
+    {
+      "file": "rmos\\runs_v2\\router_override.py",
+      "method": "POST",
+      "path": "/{run_id}/override"
+    },
+    {
+      "file": "rmos\\runs_v2\\router_query.py",
+      "method": "GET",
+      "path": "/runs_v2"
+    },
+    {
+      "file": "rmos\\runs_v2\\router_query.py",
+      "method": "GET",
+      "path": "/runs_v2/compare/{run_id_a}/{run_id_b}"
+    },
+    {
+      "file": "rmos\\runs_v2\\router_query.py",
+      "method": "GET",
+      "path": "/runs_v2/diff/{run_id_a}/{run_id_b}"
+    },
+    {
+      "file": "rmos\\safety_router.py",
+      "method": "GET",
+      "path": "/safety/mode"
+    },
+    {
+      "file": "rmos\\safety_router.py",
+      "method": "POST",
+      "path": "/safety/create-override"
+    },
+    {
+      "file": "rmos\\safety_router.py",
+      "method": "POST",
+      "path": "/safety/evaluate"
+    },
+    {
+      "file": "rmos\\validation\\router.py",
+      "method": "GET",
+      "path": "/runs"
+    },
+    {
+      "file": "rmos\\validation\\router.py",
+      "method": "GET",
+      "path": "/runs/{run_id}"
+    },
+    {
+      "file": "rmos\\validation\\router.py",
+      "method": "GET",
+      "path": "/scenarios"
+    },
+    {
+      "file": "rmos\\validation\\router.py",
+      "method": "GET",
+      "path": "/sessions"
+    },
+    {
+      "file": "rmos\\validation\\router.py",
+      "method": "GET",
+      "path": "/sessions/{session_id}"
+    },
+    {
+      "file": "rmos\\validation\\router.py",
+      "method": "GET",
+      "path": "/summary"
+    },
+    {
+      "file": "rmos\\validation\\router.py",
+      "method": "POST",
+      "path": "/log"
+    },
+    {
+      "file": "rmos\\validation\\router.py",
+      "method": "POST",
+      "path": "/run"
+    },
+    {
+      "file": "rmos\\validation\\router.py",
+      "method": "POST",
+      "path": "/run-batch"
+    },
+    {
+      "file": "routers\\acoustics\\plate_router.py",
+      "method": "GET",
+      "path": "/body-styles"
+    },
+    {
+      "file": "routers\\acoustics\\plate_router.py",
+      "method": "GET",
+      "path": "/materials"
+    },
+    {
+      "file": "routers\\acoustics\\plate_router.py",
+      "method": "GET",
+      "path": "/status"
+    },
+    {
+      "file": "routers\\acoustics\\plate_router.py",
+      "method": "POST",
+      "path": "/analyze"
+    },
+    {
+      "file": "routers\\acoustics\\plate_router.py",
+      "method": "POST",
+      "path": "/archtop-graduation"
+    },
+    {
+      "file": "routers\\acoustics\\plate_router.py",
+      "method": "POST",
+      "path": "/coupled"
+    },
+    {
+      "file": "routers\\adaptive\\batch_router.py",
+      "method": "POST",
+      "path": "/batch_export"
+    },
+    {
+      "file": "routers\\adaptive\\dxf_router.py",
+      "method": "POST",
+      "path": "/plan_from_dxf"
+    },
+    {
+      "file": "routers\\adaptive\\gcode_router.py",
+      "method": "POST",
+      "path": "/gcode"
+    },
+    {
+      "file": "routers\\adaptive\\plan_router.py",
+      "method": "POST",
+      "path": "/plan"
+    },
+    {
+      "file": "routers\\adaptive\\plan_router.py",
+      "method": "POST",
+      "path": "/sim"
+    },
+    {
+      "file": "routers\\adaptive_preview_router.py",
+      "method": "POST",
+      "path": "/spiral.svg"
+    },
+    {
+      "file": "routers\\adaptive_preview_router.py",
+      "method": "POST",
+      "path": "/trochoid.svg"
+    },
+    {
+      "file": "routers\\ai\\assistant_router.py",
+      "method": "DELETE",
+      "path": "/history"
+    },
+    {
+      "file": "routers\\ai\\assistant_router.py",
+      "method": "GET",
+      "path": "/history"
+    },
+    {
+      "file": "routers\\ai\\assistant_router.py",
+      "method": "GET",
+      "path": "/status"
+    },
+    {
+      "file": "routers\\ai\\assistant_router.py",
+      "method": "POST",
+      "path": "/chat"
+    },
+    {
+      "file": "routers\\ai\\defect_detection_router.py",
+      "method": "GET",
+      "path": "/status"
+    },
+    {
+      "file": "routers\\ai\\defect_detection_router.py",
+      "method": "POST",
+      "path": "/analyze"
+    },
+    {
+      "file": "routers\\ai\\recommendations_router.py",
+      "method": "GET",
+      "path": "/status"
+    },
+    {
+      "file": "routers\\ai\\recommendations_router.py",
+      "method": "POST",
+      "path": "/generate"
+    },
+    {
+      "file": "routers\\ai\\wood_grading_router.py",
+      "method": "GET",
+      "path": "/health"
+    },
+    {
+      "file": "routers\\ai\\wood_grading_router.py",
+      "method": "POST",
+      "path": "/analyze"
+    },
+    {
+      "file": "routers\\analytics_advanced_router.py",
+      "method": "GET",
+      "path": "/advanced/anomalies/durations"
+    },
+    {
+      "file": "routers\\analytics_advanced_router.py",
+      "method": "GET",
+      "path": "/advanced/anomalies/success"
+    },
+    {
+      "file": "routers\\analytics_advanced_router.py",
+      "method": "GET",
+      "path": "/advanced/correlation"
+    },
+    {
+      "file": "routers\\analytics_advanced_router.py",
+      "method": "POST",
+      "path": "/advanced/predict"
+    },
+    {
+      "file": "routers\\analytics_jobs_router.py",
+      "method": "GET",
+      "path": "/analytics/jobs/duration"
+    },
+    {
+      "file": "routers\\analytics_jobs_router.py",
+      "method": "GET",
+      "path": "/analytics/jobs/failures"
+    },
+    {
+      "file": "routers\\analytics_jobs_router.py",
+      "method": "GET",
+      "path": "/analytics/jobs/recent"
+    },
+    {
+      "file": "routers\\analytics_jobs_router.py",
+      "method": "GET",
+      "path": "/analytics/jobs/status"
+    },
+    {
+      "file": "routers\\analytics_jobs_router.py",
+      "method": "GET",
+      "path": "/analytics/jobs/success-trends"
+    },
+    {
+      "file": "routers\\analytics_jobs_router.py",
+      "method": "GET",
+      "path": "/analytics/jobs/throughput"
+    },
+    {
+      "file": "routers\\analytics_jobs_router.py",
+      "method": "GET",
+      "path": "/analytics/jobs/types"
+    },
+    {
+      "file": "routers\\analytics_materials_router.py",
+      "method": "GET",
+      "path": "/materials/consumption"
+    },
+    {
+      "file": "routers\\analytics_materials_router.py",
+      "method": "GET",
+      "path": "/materials/dimensions"
+    },
+    {
+      "file": "routers\\analytics_materials_router.py",
+      "method": "GET",
+      "path": "/materials/distribution"
+    },
+    {
+      "file": "routers\\analytics_materials_router.py",
+      "method": "GET",
+      "path": "/materials/efficiency"
+    },
+    {
+      "file": "routers\\analytics_materials_router.py",
+      "method": "GET",
+      "path": "/materials/inventory"
+    },
+    {
+      "file": "routers\\analytics_materials_router.py",
+      "method": "GET",
+      "path": "/materials/suppliers"
+    },
+    {
+      "file": "routers\\analytics_patterns_router.py",
+      "method": "GET",
+      "path": "/patterns/complexity"
+    },
+    {
+      "file": "routers\\analytics_patterns_router.py",
+      "method": "GET",
+      "path": "/patterns/families"
+    },
+    {
+      "file": "routers\\analytics_patterns_router.py",
+      "method": "GET",
+      "path": "/patterns/geometry"
+    },
+    {
+      "file": "routers\\analytics_patterns_router.py",
+      "method": "GET",
+      "path": "/patterns/popularity"
+    },
+    {
+      "file": "routers\\analytics_patterns_router.py",
+      "method": "GET",
+      "path": "/patterns/rings"
+    },
+    {
+      "file": "routers\\analytics_patterns_router.py",
+      "method": "GET",
+      "path": "/patterns/{pattern_id}/details"
+    },
+    {
+      "file": "routers\\archtop_router.py",
+      "method": "GET",
+      "path": "/health"
+    },
+    {
+      "file": "routers\\archtop_router.py",
+      "method": "POST",
+      "path": "/contours"
+    },
+    {
+      "file": "routers\\archtop_router.py",
+      "method": "POST",
+      "path": "/modal_analysis"
+    },
+    {
+      "file": "routers\\archtop_router.py",
+      "method": "POST",
+      "path": "/stiffness_map"
+    },
+    {
+      "file": "routers\\art\\root_art_router.py",
+      "method": "DELETE",
+      "path": "/presets/{preset_id}"
+    },
+    {
+      "file": "routers\\art\\root_art_router.py",
+      "method": "GET",
+      "path": "/jobs"
+    },
+    {
+      "file": "routers\\art\\root_art_router.py",
+      "method": "GET",
+      "path": "/jobs/{job_id}"
+    },
+    {
+      "file": "routers\\art\\root_art_router.py",
+      "method": "GET",
+      "path": "/presets"
+    },
+    {
+      "file": "routers\\art\\root_art_router.py",
+      "method": "GET",
+      "path": "/presets_aggregate"
+    },
+    {
+      "file": "routers\\art\\root_art_router.py",
+      "method": "POST",
+      "path": "/presets"
+    },
+    {
+      "file": "routers\\auth_router.py",
+      "method": "GET",
+      "path": "/health"
+    },
+    {
+      "file": "routers\\auth_router.py",
+      "method": "GET",
+      "path": "/me"
+    },
+    {
+      "file": "routers\\auth_router.py",
+      "method": "GET",
+      "path": "/tier"
+    },
+    {
+      "file": "routers\\auth_router.py",
+      "method": "PATCH",
+      "path": "/me"
+    },
+    {
+      "file": "routers\\binding_design_router.py",
+      "method": "GET",
+      "path": "/materials"
+    },
+    {
+      "file": "routers\\binding_design_router.py",
+      "method": "GET",
+      "path": "/purfling-patterns"
+    },
+    {
+      "file": "routers\\binding_design_router.py",
+      "method": "GET",
+      "path": "/styles"
+    },
+    {
+      "file": "routers\\binding_design_router.py",
+      "method": "POST",
+      "path": "/design"
+    },
+    {
+      "file": "routers\\binding_design_router.py",
+      "method": "POST",
+      "path": "/strip-length"
+    },
+    {
+      "file": "routers\\blueprint\\calibration_router.py",
+      "method": "GET",
+      "path": "/calibration/{calibration_id}"
+    },
+    {
+      "file": "routers\\blueprint\\calibration_router.py",
+      "method": "GET",
+      "path": "/scale-lengths"
+    },
+    {
+      "file": "routers\\blueprint\\calibration_router.py",
+      "method": "POST",
+      "path": "/calibrate"
+    },
+    {
+      "file": "routers\\blueprint\\calibration_router.py",
+      "method": "POST",
+      "path": "/calibrate/manual"
+    },
+    {
+      "file": "routers\\blueprint\\calibration_router.py",
+      "method": "POST",
+      "path": "/dimensions"
+    },
+    {
+      "file": "routers\\blueprint\\clean_router.py",
+      "method": "GET",
+      "path": "/download/{filename}"
+    },
+    {
+      "file": "routers\\blueprint\\clean_router.py",
+      "method": "GET",
+      "path": "/info"
+    },
+    {
+      "file": "routers\\blueprint\\edge_to_dxf_router.py",
+      "method": "GET",
+      "path": "/status"
+    },
+    {
+      "file": "routers\\blueprint\\edge_to_dxf_router.py",
+      "method": "POST",
+      "path": "/convert"
+    },
+    {
+      "file": "routers\\blueprint\\edge_to_dxf_router.py",
+      "method": "POST",
+      "path": "/enhanced"
+    },
+    {
+      "file": "routers\\blueprint\\phase1_router.py",
+      "method": "POST",
+      "path": "/analyze"
+    },
+    {
+      "file": "routers\\blueprint\\phase1_router.py",
+      "method": "POST",
+      "path": "/to-svg"
+    },
+    {
+      "file": "routers\\blueprint\\phase2_router.py",
+      "method": "GET",
+      "path": "/static/{filename}"
+    },
+    {
+      "file": "routers\\blueprint\\phase2_router.py",
+      "method": "POST",
+      "path": "/to-dxf"
+    },
+    {
+      "file": "routers\\blueprint\\phase2_router.py",
+      "method": "POST",
+      "path": "/vectorize-geometry"
+    },
+    {
+      "file": "routers\\blueprint\\phase3_router.py",
+      "method": "GET",
+      "path": "/info"
+    },
+    {
+      "file": "routers\\blueprint\\phase3_router.py",
+      "method": "POST",
+      "path": "/quick"
+    },
+    {
+      "file": "routers\\blueprint\\phase3_router.py",
+      "method": "POST",
+      "path": "/vectorize"
+    },
+    {
+      "file": "routers\\blueprint\\phase4_router.py",
+      "method": "GET",
+      "path": "/info"
+    },
+    {
+      "file": "routers\\blueprint\\phase4_router.py",
+      "method": "POST",
+      "path": "/link"
+    },
+    {
+      "file": "routers\\blueprint\\phase4_router.py",
+      "method": "POST",
+      "path": "/link-json"
+    },
+    {
+      "file": "routers\\blueprint\\vectorize_router.py",
+      "method": "POST",
+      "path": "/vectorize"
+    },
+    {
+      "file": "routers\\blueprint_async_router.py",
+      "method": "GET",
+      "path": "/vectorize/download/{job_id}"
+    },
+    {
+      "file": "routers\\blueprint_async_router.py",
+      "method": "GET",
+      "path": "/vectorize/status/{job_id}"
+    },
+    {
+      "file": "routers\\blueprint_async_router.py",
+      "method": "POST",
+      "path": "/vectorize/async"
+    },
+    {
+      "file": "routers\\blueprint_cam\\contour_reconstruction_router.py",
+      "method": "GET",
+      "path": "/info"
+    },
+    {
+      "file": "routers\\blueprint_cam\\contour_reconstruction_router.py",
+      "method": "POST",
+      "path": "/reconstruct"
+    },
+    {
+      "file": "routers\\blueprint_cam\\contour_reconstruction_router.py",
+      "method": "POST",
+      "path": "/reconstruct-bracing"
+    },
+    {
+      "file": "routers\\blueprint_cam\\contour_reconstruction_router.py",
+      "method": "POST",
+      "path": "/reconstruct-download"
+    },
+    {
+      "file": "routers\\blueprint_cam\\geometry_correction_router.py",
+      "method": "GET",
+      "path": "/info"
+    },
+    {
+      "file": "routers\\blueprint_cam\\geometry_correction_router.py",
+      "method": "POST",
+      "path": "/analyze"
+    },
+    {
+      "file": "routers\\blueprint_cam\\geometry_correction_router.py",
+      "method": "POST",
+      "path": "/correct"
+    },
+    {
+      "file": "routers\\blueprint_cam\\geometry_correction_router.py",
+      "method": "POST",
+      "path": "/correct-download"
+    },
+    {
+      "file": "routers\\blueprint_cam\\preprocessor_router.py",
+      "method": "GET",
+      "path": "/info"
+    },
+    {
+      "file": "routers\\blueprint_cam\\preprocessor_router.py",
+      "method": "POST",
+      "path": "/densify"
+    },
+    {
+      "file": "routers\\blueprint_cam\\preprocessor_router.py",
+      "method": "POST",
+      "path": "/full"
+    },
+    {
+      "file": "routers\\blueprint_cam\\preprocessor_router.py",
+      "method": "POST",
+      "path": "/normalize"
+    },
+    {
+      "file": "routers\\blueprint_cam\\preprocessor_router.py",
+      "method": "POST",
+      "path": "/validate"
+    },
+    {
+      "file": "routers\\body_solver_router.py",
+      "method": "GET",
+      "path": "/session/{session_id}"
+    },
+    {
+      "file": "routers\\body_solver_router.py",
+      "method": "POST",
+      "path": "/solve-from-dxf"
+    },
+    {
+      "file": "routers\\body_solver_router.py",
+      "method": "POST",
+      "path": "/solve-from-landmarks"
+    },
+    {
+      "file": "routers\\body_solver_router.py",
+      "method": "PUT",
+      "path": "/session/{session_id}/landmarks"
+    },
+    {
+      "file": "routers\\bridge_presets_router.py",
+      "method": "GET",
+      "path": "/electric"
+    },
+    {
+      "file": "routers\\bridge_presets_router.py",
+      "method": "GET",
+      "path": "/electric/{bridge_id_a}/compat/{bridge_id_b}"
+    },
+    {
+      "file": "routers\\bridge_presets_router.py",
+      "method": "GET",
+      "path": "/electric/{bridge_id}"
+    },
+    {
+      "file": "routers\\bridge_presets_router.py",
+      "method": "GET",
+      "path": "/floyd-rose/dimensions"
+    },
+    {
+      "file": "routers\\bridge_presets_router.py",
+      "method": "GET",
+      "path": "/presets"
+    },
+    {
+      "file": "routers\\bridge_presets_router.py",
+      "method": "POST",
+      "path": "/break-angle"
+    },
+    {
+      "file": "routers\\bridge_presets_router.py",
+      "method": "POST",
+      "path": "/floyd-rose"
+    },
+    {
+      "file": "routers\\cam\\cam_assist_router.py",
+      "method": "GET",
+      "path": "/"
+    },
+    {
+      "file": "routers\\cam\\cam_assist_router.py",
+      "method": "GET",
+      "path": "/envelopes"
+    },
+    {
+      "file": "routers\\cam\\cam_assist_router.py",
+      "method": "GET",
+      "path": "/envelopes/{machine_id}"
+    },
+    {
+      "file": "routers\\cam\\cam_assist_router.py",
+      "method": "GET",
+      "path": "/fixtures"
+    },
+    {
+      "file": "routers\\cam\\cam_assist_router.py",
+      "method": "GET",
+      "path": "/fixtures/{fixture_id}"
+    },
+    {
+      "file": "routers\\cam\\cam_assist_router.py",
+      "method": "GET",
+      "path": "/modalities"
+    },
+    {
+      "file": "routers\\cam\\cam_assist_router.py",
+      "method": "GET",
+      "path": "/modalities/family/{cutter_family}"
+    },
+    {
+      "file": "routers\\cam\\cam_assist_router.py",
+      "method": "GET",
+      "path": "/modalities/luthier"
+    },
+    {
+      "file": "routers\\cam\\cam_assist_router.py",
+      "method": "GET",
+      "path": "/modalities/{modality_id}"
+    },
+    {
+      "file": "routers\\cam\\cam_assist_router.py",
+      "method": "GET",
+      "path": "/strategies"
+    },
+    {
+      "file": "routers\\cam\\cam_assist_router.py",
+      "method": "GET",
+      "path": "/strategies/{strategy_id}"
+    },
+    {
+      "file": "routers\\cam\\cam_assist_router.py",
+      "method": "GET",
+      "path": "/strategy-hints/{family}"
+    },
+    {
+      "file": "routers\\cam\\cam_assist_router.py",
+      "method": "GET",
+      "path": "/tasks"
+    },
+    {
+      "file": "routers\\cam\\cam_assist_router.py",
+      "method": "GET",
+      "path": "/tasks/stats"
+    },
+    {
+      "file": "routers\\cam\\cam_assist_router.py",
+      "method": "GET",
+      "path": "/tasks/{task_id}"
+    },
+    {
+      "file": "routers\\cam\\cam_assist_router.py",
+      "method": "GET",
+      "path": "/workspaces"
+    },
+    {
+      "file": "routers\\cam\\cam_assist_router.py",
+      "method": "GET",
+      "path": "/workspaces/{workspace_id}"
+    },
+    {
+      "file": "routers\\cam\\cam_assist_router.py",
+      "method": "POST",
+      "path": "/envelopes/evaluate"
+    },
+    {
+      "file": "routers\\cam\\cam_assist_router.py",
+      "method": "POST",
+      "path": "/fixtures/clearance"
+    },
+    {
+      "file": "routers\\cam\\cam_assist_router.py",
+      "method": "POST",
+      "path": "/fixtures/compatible"
+    },
+    {
+      "file": "routers\\cam\\cam_assist_router.py",
+      "method": "POST",
+      "path": "/strategies"
+    },
+    {
+      "file": "routers\\cam\\cam_assist_router.py",
+      "method": "POST",
+      "path": "/tasks"
+    },
+    {
+      "file": "routers\\cam\\cam_assist_router.py",
+      "method": "POST",
+      "path": "/tasks/{task_id}/cancel"
+    },
+    {
+      "file": "routers\\cam\\cam_assist_router.py",
+      "method": "POST",
+      "path": "/tasks/{task_id}/queue"
+    },
+    {
+      "file": "routers\\cam\\cam_assist_router.py",
+      "method": "POST",
+      "path": "/workspaces"
+    },
+    {
+      "file": "routers\\cam\\cam_assist_router.py",
+      "method": "POST",
+      "path": "/workspaces/{workspace_id}/archive"
+    },
+    {
+      "file": "routers\\cam\\cam_assist_router.py",
+      "method": "POST",
+      "path": "/workspaces/{workspace_id}/geometry"
+    },
+    {
+      "file": "routers\\cam\\cam_assist_router.py",
+      "method": "POST",
+      "path": "/workspaces/{workspace_id}/promote"
+    },
+    {
+      "file": "routers\\cam\\cam_assist_router.py",
+      "method": "POST",
+      "path": "/workspaces/{workspace_id}/strategies/{strategy_id}"
+    },
+    {
+      "file": "routers\\cam\\cam_assist_router.py",
+      "method": "POST",
+      "path": "/workspaces/{workspace_id}/validate"
+    },
+    {
+      "file": "routers\\cam\\cam_workspace_router.py",
+      "method": "GET",
+      "path": "/machines"
+    },
+    {
+      "file": "routers\\cam\\cam_workspace_router.py",
+      "method": "GET",
+      "path": "/neck/operations"
+    },
+    {
+      "file": "routers\\cam\\cam_workspace_router.py",
+      "method": "GET",
+      "path": "/status"
+    },
+    {
+      "file": "routers\\cam\\cam_workspace_router.py",
+      "method": "POST",
+      "path": "/neck/evaluate"
+    },
+    {
+      "file": "routers\\cam\\cam_workspace_router.py",
+      "method": "POST",
+      "path": "/neck/generate-full"
+    },
+    {
+      "file": "routers\\cam\\cam_workspace_router.py",
+      "method": "POST",
+      "path": "/neck/generate/{op}"
+    },
+    {
+      "file": "routers\\cam\\dxf_translator_router.py",
+      "method": "POST",
+      "path": "/validate"
+    },
+    {
+      "file": "routers\\cam\\export_lifecycle_router.py",
+      "method": "POST",
+      "path": "/validate"
+    },
+    {
+      "file": "routers\\cam\\federated_semantics_router.py",
+      "method": "GET",
+      "path": "/ci"
+    },
+    {
+      "file": "routers\\cam\\federated_semantics_router.py",
+      "method": "GET",
+      "path": "/continuity"
+    },
+    {
+      "file": "routers\\cam\\federated_semantics_router.py",
+      "method": "GET",
+      "path": "/continuity/{record_id}"
+    },
+    {
+      "file": "routers\\cam\\federated_semantics_router.py",
+      "method": "GET",
+      "path": "/package/{package_id}"
+    },
+    {
+      "file": "routers\\cam\\federated_semantics_router.py",
+      "method": "GET",
+      "path": "/packages"
+    },
+    {
+      "file": "routers\\cam\\federated_semantics_router.py",
+      "method": "GET",
+      "path": "/references"
+    },
+    {
+      "file": "routers\\cam\\federated_semantics_router.py",
+      "method": "GET",
+      "path": "/references/{ref_id}"
+    },
+    {
+      "file": "routers\\cam\\federated_semantics_router.py",
+      "method": "POST",
+      "path": "/continuity"
+    },
+    {
+      "file": "routers\\cam\\federated_semantics_router.py",
+      "method": "POST",
+      "path": "/package"
+    },
+    {
+      "file": "routers\\cam\\federated_semantics_router.py",
+      "method": "POST",
+      "path": "/references"
+    },
+    {
+      "file": "routers\\cam\\federation_ci_router.py",
+      "method": "GET",
+      "path": "/baselines"
+    },
+    {
+      "file": "routers\\cam\\federation_ci_router.py",
+      "method": "GET",
+      "path": "/baselines/{baseline_id}"
+    },
+    {
+      "file": "routers\\cam\\federation_ci_router.py",
+      "method": "GET",
+      "path": "/status"
+    },
+    {
+      "file": "routers\\cam\\federation_ci_router.py",
+      "method": "GET",
+      "path": "/summaries"
+    },
+    {
+      "file": "routers\\cam\\federation_ci_router.py",
+      "method": "GET",
+      "path": "/summaries/{summary_id}"
+    },
+    {
+      "file": "routers\\cam\\federation_ci_router.py",
+      "method": "GET",
+      "path": "/summary/latest"
+    },
+    {
+      "file": "routers\\cam\\federation_ci_router.py",
+      "method": "POST",
+      "path": "/baselines"
+    },
+    {
+      "file": "routers\\cam\\federation_ci_router.py",
+      "method": "POST",
+      "path": "/evaluate"
+    },
+    {
+      "file": "routers\\cam\\geometry_authority_router.py",
+      "method": "GET",
+      "path": "/"
+    },
+    {
+      "file": "routers\\cam\\geometry_authority_router.py",
+      "method": "GET",
+      "path": "/ci"
+    },
+    {
+      "file": "routers\\cam\\geometry_authority_router.py",
+      "method": "GET",
+      "path": "/layers"
+    },
+    {
+      "file": "routers\\cam\\geometry_authority_router.py",
+      "method": "GET",
+      "path": "/layers/{layer}"
+    },
+    {
+      "file": "routers\\cam\\geometry_authority_router.py",
+      "method": "GET",
+      "path": "/references"
+    },
+    {
+      "file": "routers\\cam\\geometry_authority_router.py",
+      "method": "GET",
+      "path": "/references/by-layer/{layer}"
+    },
+    {
+      "file": "routers\\cam\\geometry_authority_router.py",
+      "method": "GET",
+      "path": "/references/by-source/{source_geometry_id}"
+    },
+    {
+      "file": "routers\\cam\\geometry_authority_router.py",
+      "method": "GET",
+      "path": "/references/{reference_id}"
+    },
+    {
+      "file": "routers\\cam\\geometry_authority_router.py",
+      "method": "GET",
+      "path": "/validations"
+    },
+    {
+      "file": "routers\\cam\\geometry_authority_router.py",
+      "method": "GET",
+      "path": "/validations/for-reference/{reference_id}"
+    },
+    {
+      "file": "routers\\cam\\geometry_authority_router.py",
+      "method": "GET",
+      "path": "/validations/{validation_id}"
+    },
+    {
+      "file": "routers\\cam\\geometry_authority_router.py",
+      "method": "POST",
+      "path": "/references"
+    },
+    {
+      "file": "routers\\cam\\geometry_authority_router.py",
+      "method": "POST",
+      "path": "/references/canonical"
+    },
+    {
+      "file": "routers\\cam\\geometry_authority_router.py",
+      "method": "POST",
+      "path": "/references/derived"
+    },
+    {
+      "file": "routers\\cam\\geometry_authority_router.py",
+      "method": "POST",
+      "path": "/validate/{reference_id}"
+    },
+    {
+      "file": "routers\\cam\\governance_freeze_router.py",
+      "method": "GET",
+      "path": "/evaluations"
+    },
+    {
+      "file": "routers\\cam\\governance_freeze_router.py",
+      "method": "GET",
+      "path": "/evaluations/latest"
+    },
+    {
+      "file": "routers\\cam\\governance_freeze_router.py",
+      "method": "GET",
+      "path": "/evaluations/{evaluation_id}"
+    },
+    {
+      "file": "routers\\cam\\governance_freeze_router.py",
+      "method": "GET",
+      "path": "/freezes"
+    },
+    {
+      "file": "routers\\cam\\governance_freeze_router.py",
+      "method": "GET",
+      "path": "/freezes/latest"
+    },
+    {
+      "file": "routers\\cam\\governance_freeze_router.py",
+      "method": "GET",
+      "path": "/freezes/{freeze_id}"
+    },
+    {
+      "file": "routers\\cam\\governance_freeze_router.py",
+      "method": "GET",
+      "path": "/packages"
+    },
+    {
+      "file": "routers\\cam\\governance_freeze_router.py",
+      "method": "GET",
+      "path": "/packages/latest"
+    },
+    {
+      "file": "routers\\cam\\governance_freeze_router.py",
+      "method": "GET",
+      "path": "/packages/{package_id}"
+    },
+    {
+      "file": "routers\\cam\\governance_freeze_router.py",
+      "method": "GET",
+      "path": "/status"
+    },
+    {
+      "file": "routers\\cam\\governance_freeze_router.py",
+      "method": "PATCH",
+      "path": "/freezes/{freeze_id}/status"
+    },
+    {
+      "file": "routers\\cam\\governance_freeze_router.py",
+      "method": "POST",
+      "path": "/evaluate"
+    },
+    {
+      "file": "routers\\cam\\governance_freeze_router.py",
+      "method": "POST",
+      "path": "/freezes"
+    },
+    {
+      "file": "routers\\cam\\governance_freeze_router.py",
+      "method": "POST",
+      "path": "/packages"
+    },
+    {
+      "file": "routers\\cam\\guitar\\acoustic_cam_router.py",
+      "method": "GET",
+      "path": "/styles"
+    },
+    {
+      "file": "routers\\cam\\guitar\\acoustic_cam_router.py",
+      "method": "POST",
+      "path": "/preview"
+    },
+    {
+      "file": "routers\\cam\\guitar\\acoustic_cam_router.py",
+      "method": "POST",
+      "path": "/{style}/binding/gcode"
+    },
+    {
+      "file": "routers\\cam\\guitar\\acoustic_cam_router.py",
+      "method": "POST",
+      "path": "/{style}/body/gcode"
+    },
+    {
+      "file": "routers\\cam\\guitar\\acoustic_cam_router.py",
+      "method": "POST",
+      "path": "/{style}/soundhole/gcode"
+    },
+    {
+      "file": "routers\\cam\\guitar\\archtop_cam_router.py",
+      "method": "POST",
+      "path": "/bridge"
+    },
+    {
+      "file": "routers\\cam\\guitar\\archtop_cam_router.py",
+      "method": "POST",
+      "path": "/contours/csv"
+    },
+    {
+      "file": "routers\\cam\\guitar\\archtop_cam_router.py",
+      "method": "POST",
+      "path": "/contours/outline"
+    },
+    {
+      "file": "routers\\cam\\guitar\\archtop_cam_router.py",
+      "method": "POST",
+      "path": "/fit"
+    },
+    {
+      "file": "routers\\cam\\guitar\\archtop_cam_router.py",
+      "method": "POST",
+      "path": "/saddle"
+    },
+    {
+      "file": "routers\\cam\\guitar\\body_gcode_router.py",
+      "method": "GET",
+      "path": "/status"
+    },
+    {
+      "file": "routers\\cam\\guitar\\body_gcode_router.py",
+      "method": "POST",
+      "path": "/flying_v/body/gcode"
+    },
+    {
+      "file": "routers\\cam\\guitar\\body_gcode_router.py",
+      "method": "POST",
+      "path": "/les_paul/body/gcode"
+    },
+    {
+      "file": "routers\\cam\\guitar\\body_gcode_router.py",
+      "method": "POST",
+      "path": "/stratocaster/body/gcode"
+    },
+    {
+      "file": "routers\\cam\\guitar\\body_gcode_router.py",
+      "method": "POST",
+      "path": "/{model_id}/neck/gcode"
+    },
+    {
+      "file": "routers\\cam\\guitar\\flying_v_cam_router.py",
+      "method": "GET",
+      "path": "/spec"
+    },
+    {
+      "file": "routers\\cam\\guitar\\flying_v_cam_router.py",
+      "method": "POST",
+      "path": "/toolpath/control_cavity"
+    },
+    {
+      "file": "routers\\cam\\guitar\\flying_v_cam_router.py",
+      "method": "POST",
+      "path": "/toolpath/neck_pocket"
+    },
+    {
+      "file": "routers\\cam\\guitar\\flying_v_cam_router.py",
+      "method": "POST",
+      "path": "/toolpath/pickup"
+    },
+    {
+      "file": "routers\\cam\\guitar\\flying_v_cam_router.py",
+      "method": "POST",
+      "path": "/validate"
+    },
+    {
+      "file": "routers\\cam\\guitar\\om_cam_router.py",
+      "method": "GET",
+      "path": "/download/{file_path:path}"
+    },
+    {
+      "file": "routers\\cam\\guitar\\om_cam_router.py",
+      "method": "GET",
+      "path": "/graduation"
+    },
+    {
+      "file": "routers\\cam\\guitar\\om_cam_router.py",
+      "method": "GET",
+      "path": "/kits"
+    },
+    {
+      "file": "routers\\cam\\guitar\\om_cam_router.py",
+      "method": "GET",
+      "path": "/templates"
+    },
+    {
+      "file": "routers\\cam\\guitar\\registry_cam_router.py",
+      "method": "GET",
+      "path": "/"
+    },
+    {
+      "file": "routers\\cam\\guitar\\registry_cam_router.py",
+      "method": "GET",
+      "path": "/{model_id}/capabilities"
+    },
+    {
+      "file": "routers\\cam\\guitar\\registry_cam_router.py",
+      "method": "GET",
+      "path": "/{model_id}/health"
+    },
+    {
+      "file": "routers\\cam\\guitar\\registry_cam_router.py",
+      "method": "GET",
+      "path": "/{model_id}/templates"
+    },
+    {
+      "file": "routers\\cam\\guitar\\registry_cam_router.py",
+      "method": "POST",
+      "path": "/{model_id}/contours/body"
+    },
+    {
+      "file": "routers\\cam\\guitar\\registry_cam_router.py",
+      "method": "POST",
+      "path": "/{model_id}/toolpaths/pocket"
+    },
+    {
+      "file": "routers\\cam\\guitar\\stratocaster_cam_router.py",
+      "method": "GET",
+      "path": "/bom"
+    },
+    {
+      "file": "routers\\cam\\guitar\\stratocaster_cam_router.py",
+      "method": "GET",
+      "path": "/download/{file_path:path}"
+    },
+    {
+      "file": "routers\\cam\\guitar\\stratocaster_cam_router.py",
+      "method": "GET",
+      "path": "/preview"
+    },
+    {
+      "file": "routers\\cam\\guitar\\stratocaster_cam_router.py",
+      "method": "GET",
+      "path": "/templates"
+    },
+    {
+      "file": "routers\\cam\\lifecycle_capability_router.py",
+      "method": "GET",
+      "path": "/capabilities"
+    },
+    {
+      "file": "routers\\cam\\lifecycle_capability_router.py",
+      "method": "GET",
+      "path": "/capabilities/summary"
+    },
+    {
+      "file": "routers\\cam\\lifecycle_capability_router.py",
+      "method": "GET",
+      "path": "/capabilities/{operation}"
+    },
+    {
+      "file": "routers\\cam\\lifecycle_capability_router.py",
+      "method": "GET",
+      "path": "/supported-operations"
+    },
+    {
+      "file": "routers\\cam\\nut_slot_router.py",
+      "method": "POST",
+      "path": "/export-object"
+    },
+    {
+      "file": "routers\\cam\\nut_slot_router.py",
+      "method": "POST",
+      "path": "/preview"
+    },
+    {
+      "file": "routers\\cam\\ontology_reconciliation_router.py",
+      "method": "GET",
+      "path": "/ci"
+    },
+    {
+      "file": "routers\\cam\\ontology_reconciliation_router.py",
+      "method": "GET",
+      "path": "/conflicts"
+    },
+    {
+      "file": "routers\\cam\\ontology_reconciliation_router.py",
+      "method": "GET",
+      "path": "/domains"
+    },
+    {
+      "file": "routers\\cam\\ontology_reconciliation_router.py",
+      "method": "GET",
+      "path": "/domains/{domain}"
+    },
+    {
+      "file": "routers\\cam\\ontology_reconciliation_router.py",
+      "method": "GET",
+      "path": "/drift/latest"
+    },
+    {
+      "file": "routers\\cam\\ontology_reconciliation_router.py",
+      "method": "GET",
+      "path": "/lifecycles"
+    },
+    {
+      "file": "routers\\cam\\ontology_reconciliation_router.py",
+      "method": "GET",
+      "path": "/policy"
+    },
+    {
+      "file": "routers\\cam\\ontology_reconciliation_router.py",
+      "method": "GET",
+      "path": "/report/latest"
+    },
+    {
+      "file": "routers\\cam\\ontology_reconciliation_router.py",
+      "method": "GET",
+      "path": "/reports"
+    },
+    {
+      "file": "routers\\cam\\ontology_reconciliation_router.py",
+      "method": "GET",
+      "path": "/terms"
+    },
+    {
+      "file": "routers\\cam\\ontology_reconciliation_router.py",
+      "method": "GET",
+      "path": "/terms/{term}"
+    },
+    {
+      "file": "routers\\cam\\ontology_reconciliation_router.py",
+      "method": "POST",
+      "path": "/reconcile"
+    },
+    {
+      "file": "routers\\cam\\post_freeze_expansion_router.py",
+      "method": "GET",
+      "path": "/ci"
+    },
+    {
+      "file": "routers\\cam\\post_freeze_expansion_router.py",
+      "method": "GET",
+      "path": "/proposals"
+    },
+    {
+      "file": "routers\\cam\\post_freeze_expansion_router.py",
+      "method": "GET",
+      "path": "/proposals/latest"
+    },
+    {
+      "file": "routers\\cam\\post_freeze_expansion_router.py",
+      "method": "GET",
+      "path": "/proposals/{proposal_id}"
+    },
+    {
+      "file": "routers\\cam\\post_freeze_expansion_router.py",
+      "method": "GET",
+      "path": "/readiness"
+    },
+    {
+      "file": "routers\\cam\\post_freeze_expansion_router.py",
+      "method": "GET",
+      "path": "/readiness/latest"
+    },
+    {
+      "file": "routers\\cam\\post_freeze_expansion_router.py",
+      "method": "GET",
+      "path": "/readiness/proposal/{proposal_id}"
+    },
+    {
+      "file": "routers\\cam\\post_freeze_expansion_router.py",
+      "method": "GET",
+      "path": "/status"
+    },
+    {
+      "file": "routers\\cam\\post_freeze_expansion_router.py",
+      "method": "POST",
+      "path": "/proposals"
+    },
+    {
+      "file": "routers\\cam\\post_freeze_expansion_router.py",
+      "method": "POST",
+      "path": "/readiness/{proposal_id}"
+    },
+    {
+      "file": "routers\\cam\\postprocessor_boundary_router.py",
+      "method": "POST",
+      "path": "/compatibility"
+    },
+    {
+      "file": "routers\\cam\\review_queue_router.py",
+      "method": "GET",
+      "path": "/by-priority/{priority}"
+    },
+    {
+      "file": "routers\\cam\\review_queue_router.py",
+      "method": "GET",
+      "path": "/by-status/{status}"
+    },
+    {
+      "file": "routers\\cam\\review_queue_router.py",
+      "method": "GET",
+      "path": "/ci"
+    },
+    {
+      "file": "routers\\cam\\review_queue_router.py",
+      "method": "GET",
+      "path": "/items"
+    },
+    {
+      "file": "routers\\cam\\review_queue_router.py",
+      "method": "GET",
+      "path": "/items/{queue_item_id}"
+    },
+    {
+      "file": "routers\\cam\\review_queue_router.py",
+      "method": "GET",
+      "path": "/items/{queue_item_id}/decisions"
+    },
+    {
+      "file": "routers\\cam\\review_queue_router.py",
+      "method": "POST",
+      "path": "/decisions"
+    },
+    {
+      "file": "routers\\cam\\review_queue_router.py",
+      "method": "POST",
+      "path": "/items"
+    },
+    {
+      "file": "routers\\cam\\review_queue_router.py",
+      "method": "POST",
+      "path": "/items/from-panel/{panel_id}"
+    },
+    {
+      "file": "routers\\cam\\review_ux_ci_router.py",
+      "method": "GET",
+      "path": "/baselines"
+    },
+    {
+      "file": "routers\\cam\\review_ux_ci_router.py",
+      "method": "GET",
+      "path": "/baselines/latest"
+    },
+    {
+      "file": "routers\\cam\\review_ux_ci_router.py",
+      "method": "GET",
+      "path": "/baselines/{baseline_id}"
+    },
+    {
+      "file": "routers\\cam\\review_ux_ci_router.py",
+      "method": "GET",
+      "path": "/report"
+    },
+    {
+      "file": "routers\\cam\\review_ux_ci_router.py",
+      "method": "GET",
+      "path": "/status"
+    },
+    {
+      "file": "routers\\cam\\review_ux_ci_router.py",
+      "method": "GET",
+      "path": "/summaries"
+    },
+    {
+      "file": "routers\\cam\\review_ux_ci_router.py",
+      "method": "GET",
+      "path": "/summaries/latest"
+    },
+    {
+      "file": "routers\\cam\\review_ux_ci_router.py",
+      "method": "GET",
+      "path": "/summaries/{summary_id}"
+    },
+    {
+      "file": "routers\\cam\\review_ux_ci_router.py",
+      "method": "POST",
+      "path": "/baselines"
+    },
+    {
+      "file": "routers\\cam\\review_ux_ci_router.py",
+      "method": "POST",
+      "path": "/check"
+    },
+    {
+      "file": "routers\\cam\\review_ux_router.py",
+      "method": "GET",
+      "path": "/explanations"
+    },
+    {
+      "file": "routers\\cam\\review_ux_router.py",
+      "method": "GET",
+      "path": "/panels"
+    },
+    {
+      "file": "routers\\cam\\review_ux_router.py",
+      "method": "GET",
+      "path": "/panels/{panel_id}"
+    },
+    {
+      "file": "routers\\cam\\review_ux_router.py",
+      "method": "GET",
+      "path": "/priorities"
+    },
+    {
+      "file": "routers\\cam\\review_ux_router.py",
+      "method": "GET",
+      "path": "/status"
+    },
+    {
+      "file": "routers\\cam\\review_ux_router.py",
+      "method": "POST",
+      "path": "/explanations"
+    },
+    {
+      "file": "routers\\cam\\review_ux_router.py",
+      "method": "POST",
+      "path": "/panels"
+    },
+    {
+      "file": "routers\\cam\\review_ux_router.py",
+      "method": "POST",
+      "path": "/priorities"
+    },
+    {
+      "file": "routers\\cam\\translation_artifact_authorization_router.py",
+      "method": "POST",
+      "path": "/validate"
+    },
+    {
+      "file": "routers\\cam\\translation_artifact_router.py",
+      "method": "GET",
+      "path": "/by-category/{translator_category}"
+    },
+    {
+      "file": "routers\\cam\\translation_artifact_router.py",
+      "method": "GET",
+      "path": "/by-output/{output_class}"
+    },
+    {
+      "file": "routers\\cam\\translation_artifact_router.py",
+      "method": "GET",
+      "path": "/ids"
+    },
+    {
+      "file": "routers\\cam\\translation_artifact_router.py",
+      "method": "GET",
+      "path": "/{artifact_class_id}"
+    },
+    {
+      "file": "routers\\cam\\translation_provenance_router.py",
+      "method": "GET",
+      "path": "/by-artifact/{artifact_id}"
+    },
+    {
+      "file": "routers\\cam\\translation_provenance_router.py",
+      "method": "GET",
+      "path": "/by-lineage-hash/{lineage_hash}"
+    },
+    {
+      "file": "routers\\cam\\translation_provenance_router.py",
+      "method": "GET",
+      "path": "/summaries"
+    },
+    {
+      "file": "routers\\cam\\translation_provenance_router.py",
+      "method": "GET",
+      "path": "/{provenance_id}"
+    },
+    {
+      "file": "routers\\cam\\translator_capability_router.py",
+      "method": "GET",
+      "path": "/by-category/{category}"
+    },
+    {
+      "file": "routers\\cam\\translator_capability_router.py",
+      "method": "GET",
+      "path": "/by-output/{output_class}"
+    },
+    {
+      "file": "routers\\cam\\translator_capability_router.py",
+      "method": "GET",
+      "path": "/capabilities"
+    },
+    {
+      "file": "routers\\cam\\translator_capability_router.py",
+      "method": "GET",
+      "path": "/capabilities/summary"
+    },
+    {
+      "file": "routers\\cam\\translator_capability_router.py",
+      "method": "GET",
+      "path": "/capabilities/{translator_id}"
+    },
+    {
+      "file": "routers\\cam\\translator_capability_router.py",
+      "method": "GET",
+      "path": "/for-operation/{operation}"
+    },
+    {
+      "file": "routers\\cam\\translator_capability_router.py",
+      "method": "GET",
+      "path": "/ids"
+    },
+    {
+      "file": "routers\\cam\\translator_execution_quarantine_router.py",
+      "method": "GET",
+      "path": "/translators/freeze-manifests"
+    },
+    {
+      "file": "routers\\cam\\translator_execution_quarantine_router.py",
+      "method": "GET",
+      "path": "/translators/freeze-manifests/{manifest_id}"
+    },
+    {
+      "file": "routers\\cam\\translator_execution_quarantine_router.py",
+      "method": "GET",
+      "path": "/translators/quarantine"
+    },
+    {
+      "file": "routers\\cam\\translator_execution_quarantine_router.py",
+      "method": "GET",
+      "path": "/translators/quarantine/policy"
+    },
+    {
+      "file": "routers\\cam\\translator_execution_quarantine_router.py",
+      "method": "GET",
+      "path": "/translators/quarantine/{translator_id}"
+    },
+    {
+      "file": "routers\\cam\\translator_execution_quarantine_router.py",
+      "method": "POST",
+      "path": "/translators/quarantine/evaluate"
+    },
+    {
+      "file": "routers\\cam\\translator_governance_continuity_router.py",
+      "method": "GET",
+      "path": "/by-translator/{translator_id}"
+    },
+    {
+      "file": "routers\\cam\\translator_governance_continuity_router.py",
+      "method": "GET",
+      "path": "/by-translator/{translator_id}/build-or-get"
+    },
+    {
+      "file": "routers\\cam\\translator_governance_continuity_router.py",
+      "method": "GET",
+      "path": "/policy"
+    },
+    {
+      "file": "routers\\cam\\translator_governance_continuity_router.py",
+      "method": "GET",
+      "path": "/{continuity_graph_id}"
+    },
+    {
+      "file": "routers\\cam\\translator_governance_continuity_router.py",
+      "method": "GET",
+      "path": "/{continuity_graph_id}/replay"
+    },
+    {
+      "file": "routers\\cam\\translator_governance_continuity_router.py",
+      "method": "POST",
+      "path": "/build"
+    },
+    {
+      "file": "routers\\cam\\translator_governance_dossier_router.py",
+      "method": "GET",
+      "path": "/translators/governance-dossiers"
+    },
+    {
+      "file": "routers\\cam\\translator_governance_dossier_router.py",
+      "method": "GET",
+      "path": "/translators/governance-dossiers/by-translator/{translator_id}"
+    },
+    {
+      "file": "routers\\cam\\translator_governance_dossier_router.py",
+      "method": "GET",
+      "path": "/translators/governance-dossiers/policy"
+    },
+    {
+      "file": "routers\\cam\\translator_governance_dossier_router.py",
+      "method": "GET",
+      "path": "/translators/governance-dossiers/{dossier_id}"
+    },
+    {
+      "file": "routers\\cam\\translator_governance_dossier_router.py",
+      "method": "POST",
+      "path": "/translators/governance-dossier/build"
+    },
+    {
+      "file": "routers\\cam\\translator_governance_review_ledger_router.py",
+      "method": "GET",
+      "path": "/translators/governance-review-ledger"
+    },
+    {
+      "file": "routers\\cam\\translator_governance_review_ledger_router.py",
+      "method": "GET",
+      "path": "/translators/governance-review-ledger/by-translator/{translator_id}"
+    },
+    {
+      "file": "routers\\cam\\translator_governance_review_ledger_router.py",
+      "method": "GET",
+      "path": "/translators/governance-review-ledger/policy"
+    },
+    {
+      "file": "routers\\cam\\translator_governance_review_ledger_router.py",
+      "method": "GET",
+      "path": "/translators/governance-review-ledger/{ledger_entry_id}"
+    },
+    {
+      "file": "routers\\cam\\translator_governance_review_ledger_router.py",
+      "method": "GET",
+      "path": "/translators/governance-review-ledger/{ledger_entry_id}/lineage"
+    },
+    {
+      "file": "routers\\cam\\translator_governance_review_ledger_router.py",
+      "method": "POST",
+      "path": "/translators/governance-review-ledger/build"
+    },
+    {
+      "file": "routers\\cam\\translator_governance_review_router.py",
+      "method": "GET",
+      "path": "/translators/governance-review"
+    },
+    {
+      "file": "routers\\cam\\translator_governance_review_router.py",
+      "method": "GET",
+      "path": "/translators/governance-review/by-translator/{translator_id}"
+    },
+    {
+      "file": "routers\\cam\\translator_governance_review_router.py",
+      "method": "GET",
+      "path": "/translators/governance-review/policy"
+    },
+    {
+      "file": "routers\\cam\\translator_governance_review_router.py",
+      "method": "GET",
+      "path": "/translators/governance-review/{review_matrix_id}"
+    },
+    {
+      "file": "routers\\cam\\translator_governance_review_router.py",
+      "method": "POST",
+      "path": "/translators/governance-review/evaluate"
+    },
+    {
+      "file": "routers\\cam\\translator_readiness_router.py",
+      "method": "GET",
+      "path": "/levels"
+    },
+    {
+      "file": "routers\\cam\\translator_readiness_router.py",
+      "method": "GET",
+      "path": "/maturity-mapping"
+    },
+    {
+      "file": "routers\\cam\\translator_readiness_router.py",
+      "method": "GET",
+      "path": "/requirements/{level}"
+    },
+    {
+      "file": "routers\\cam\\translator_readiness_router.py",
+      "method": "GET",
+      "path": "/{translator_id}"
+    },
+    {
+      "file": "routers\\cam\\translator_readiness_router.py",
+      "method": "POST",
+      "path": "/can-promote"
+    },
+    {
+      "file": "routers\\cam\\translator_readiness_router.py",
+      "method": "POST",
+      "path": "/evaluate"
+    },
+    {
+      "file": "routers\\cam_learn_router.py",
+      "method": "POST",
+      "path": "/train"
+    },
+    {
+      "file": "routers\\cam_pipeline_preset_run_router.py",
+      "method": "DELETE",
+      "path": "/presets/{preset_id}"
+    },
+    {
+      "file": "routers\\cam_pipeline_preset_run_router.py",
+      "method": "GET",
+      "path": "/presets"
+    },
+    {
+      "file": "routers\\cam_pipeline_preset_run_router.py",
+      "method": "POST",
+      "path": "/presets"
+    },
+    {
+      "file": "routers\\cam_pipeline_preset_run_router.py",
+      "method": "POST",
+      "path": "/presets/{preset_id}/run"
+    },
+    {
+      "file": "routers\\cam_post_v155_router.py",
+      "method": "GET",
+      "path": "/posts_v155"
+    },
+    {
+      "file": "routers\\cam_post_v155_router.py",
+      "method": "POST",
+      "path": "/post_v155"
+    },
+    {
+      "file": "routers\\cam_relief_router.py",
+      "method": "POST",
+      "path": "/finishing"
+    },
+    {
+      "file": "routers\\cam_relief_router.py",
+      "method": "POST",
+      "path": "/map_from_heightfield"
+    },
+    {
+      "file": "routers\\cam_relief_router.py",
+      "method": "POST",
+      "path": "/roughing"
+    },
+    {
+      "file": "routers\\cam_relief_router.py",
+      "method": "POST",
+      "path": "/sim_bridge"
+    },
+    {
+      "file": "routers\\cam_risk_router.py",
+      "method": "GET",
+      "path": "/jobs/recent"
+    },
+    {
+      "file": "routers\\cam_risk_router.py",
+      "method": "GET",
+      "path": "/jobs/{job_id}/risk_timeline"
+    },
+    {
+      "file": "routers\\cam_risk_router.py",
+      "method": "GET",
+      "path": "/risk/reports"
+    },
+    {
+      "file": "routers\\cam_risk_router.py",
+      "method": "POST",
+      "path": "/jobs/risk_report"
+    },
+    {
+      "file": "routers\\cam_roughing_intent_router.py",
+      "method": "POST",
+      "path": "/roughing/gcode_intent"
+    },
+    {
+      "file": "routers\\cnc_production\\presets_router.py",
+      "method": "DELETE",
+      "path": "/{preset_id}"
+    },
+    {
+      "file": "routers\\cnc_production\\presets_router.py",
+      "method": "GET",
+      "path": "/{preset_id}"
+    },
+    {
+      "file": "routers\\cnc_production\\presets_router.py",
+      "method": "PATCH",
+      "path": "/{preset_id}"
+    },
+    {
+      "file": "routers\\dxf_adaptive_consolidated_router.py",
+      "method": "POST",
+      "path": "/dxf_adaptive_plan_run"
+    },
+    {
+      "file": "routers\\dxf_adaptive_consolidated_router.py",
+      "method": "POST",
+      "path": "/plan_from_dxf"
+    },
+    {
+      "file": "routers\\dxf_preflight_router.py",
+      "method": "POST",
+      "path": "/auto_fix"
+    },
+    {
+      "file": "routers\\dxf_preflight_router.py",
+      "method": "POST",
+      "path": "/curve_report"
+    },
+    {
+      "file": "routers\\dxf_preflight_router.py",
+      "method": "POST",
+      "path": "/validate"
+    },
+    {
+      "file": "routers\\dxf_preflight_router.py",
+      "method": "POST",
+      "path": "/validate_base64"
+    },
+    {
+      "file": "routers\\export\\body_export_router.py",
+      "method": "POST",
+      "path": "/body-outline"
+    },
+    {
+      "file": "routers\\export\\body_export_router.py",
+      "method": "POST",
+      "path": "/body-outline/validate"
+    },
+    {
+      "file": "routers\\export\\curve_export_router.py",
+      "method": "POST",
+      "path": "/curve-dxf"
+    },
+    {
+      "file": "routers\\export\\dxf_translate_router.py",
+      "method": "POST",
+      "path": "/dxf"
+    },
+    {
+      "file": "routers\\export\\dxf_translate_router.py",
+      "method": "POST",
+      "path": "/dxf/metadata"
+    },
+    {
+      "file": "routers\\export\\rosette_pdf_router.py",
+      "method": "POST",
+      "path": "/rosette-pdf"
+    },
+    {
+      "file": "routers\\export\\translate_router.py",
+      "method": "GET",
+      "path": "/targets"
+    },
+    {
+      "file": "routers\\export\\translate_router.py",
+      "method": "GET",
+      "path": "/targets/{target}"
+    },
+    {
+      "file": "routers\\export\\translate_router.py",
+      "method": "POST",
+      "path": "/{target}"
+    },
+    {
+      "file": "routers\\export\\translate_router.py",
+      "method": "POST",
+      "path": "/{target}/metadata"
+    },
+    {
+      "file": "routers\\gcode_consolidated_router.py",
+      "method": "POST",
+      "path": "/estimate"
+    },
+    {
+      "file": "routers\\gcode_consolidated_router.py",
+      "method": "POST",
+      "path": "/plot.svg"
+    },
+    {
+      "file": "routers\\gcode_consolidated_router.py",
+      "method": "POST",
+      "path": "/simulate"
+    },
+    {
+      "file": "routers\\geometry\\bundle_router.py",
+      "method": "POST",
+      "path": "/export_bundle"
+    },
+    {
+      "file": "routers\\geometry\\bundle_router.py",
+      "method": "POST",
+      "path": "/export_bundle_multi"
+    },
+    {
+      "file": "routers\\geometry\\export_router.py",
+      "method": "POST",
+      "path": "/export"
+    },
+    {
+      "file": "routers\\geometry\\export_router.py",
+      "method": "POST",
+      "path": "/export_gcode"
+    },
+    {
+      "file": "routers\\geometry\\export_router.py",
+      "method": "POST",
+      "path": "/export_gcode_governed"
+    },
+    {
+      "file": "routers\\geometry\\import_router.py",
+      "method": "POST",
+      "path": "/convert"
+    },
+    {
+      "file": "routers\\geometry\\import_router.py",
+      "method": "POST",
+      "path": "/import"
+    },
+    {
+      "file": "routers\\geometry\\import_router.py",
+      "method": "POST",
+      "path": "/parity"
+    },
+    {
+      "file": "routers\\headstock\\dxf_export.py",
+      "method": "POST",
+      "path": "/headstock-dxf"
+    },
+    {
+      "file": "routers\\headstock\\dxf_export.py",
+      "method": "POST",
+      "path": "/headstock-dxf/cost"
+    },
+    {
+      "file": "routers\\headstock\\dxf_export.py",
+      "method": "POST",
+      "path": "/headstock-dxf/preview"
+    },
+    {
+      "file": "routers\\health_router.py",
+      "method": "GET",
+      "path": "/features"
+    },
+    {
+      "file": "routers\\health_router.py",
+      "method": "GET",
+      "path": "/features/catalog"
+    },
+    {
+      "file": "routers\\health_router.py",
+      "method": "GET",
+      "path": "/health"
+    },
+    {
+      "file": "routers\\health_router.py",
+      "method": "GET",
+      "path": "/health/circuits"
+    },
+    {
+      "file": "routers\\health_router.py",
+      "method": "GET",
+      "path": "/health/detailed"
+    },
+    {
+      "file": "routers\\health_router.py",
+      "method": "GET",
+      "path": "/health/live"
+    },
+    {
+      "file": "routers\\health_router.py",
+      "method": "GET",
+      "path": "/health/modules"
+    },
+    {
+      "file": "routers\\health_router.py",
+      "method": "GET",
+      "path": "/health/ready"
+    },
+    {
+      "file": "routers\\health_router.py",
+      "method": "GET",
+      "path": "/health/routers"
+    },
+    {
+      "file": "routers\\instrument\\build_workflow_router.py",
+      "method": "GET",
+      "path": "/blocks/options"
+    },
+    {
+      "file": "routers\\instrument\\build_workflow_router.py",
+      "method": "GET",
+      "path": "/build-sequence/options"
+    },
+    {
+      "file": "routers\\instrument\\build_workflow_router.py",
+      "method": "GET",
+      "path": "/voicing/stages"
+    },
+    {
+      "file": "routers\\instrument\\build_workflow_router.py",
+      "method": "GET",
+      "path": "/voicing/targets/{body_style}"
+    },
+    {
+      "file": "routers\\instrument\\build_workflow_router.py",
+      "method": "POST",
+      "path": "/blocks"
+    },
+    {
+      "file": "routers\\instrument\\build_workflow_router.py",
+      "method": "POST",
+      "path": "/build-sequence"
+    },
+    {
+      "file": "routers\\instrument\\build_workflow_router.py",
+      "method": "POST",
+      "path": "/setup/evaluate"
+    },
+    {
+      "file": "routers\\instrument\\build_workflow_router.py",
+      "method": "POST",
+      "path": "/voicing/analyze"
+    },
+    {
+      "file": "routers\\instrument\\build_workflow_router.py",
+      "method": "POST",
+      "path": "/voicing/predict"
+    },
+    {
+      "file": "routers\\instrument\\electronics_router.py",
+      "method": "GET",
+      "path": "/electronics-layout/options"
+    },
+    {
+      "file": "routers\\instrument\\electronics_router.py",
+      "method": "POST",
+      "path": "/electronics-layout"
+    },
+    {
+      "file": "routers\\instrument\\electronics_router.py",
+      "method": "POST",
+      "path": "/electronics-layout/control-layout"
+    },
+    {
+      "file": "routers\\instrument\\electronics_router.py",
+      "method": "POST",
+      "path": "/electronics-layout/pickup-cavity"
+    },
+    {
+      "file": "routers\\instrument\\fretwork_router.py",
+      "method": "GET",
+      "path": "/fret-wire/catalog"
+    },
+    {
+      "file": "routers\\instrument\\fretwork_router.py",
+      "method": "GET",
+      "path": "/fret-wire/options"
+    },
+    {
+      "file": "routers\\instrument\\fretwork_router.py",
+      "method": "GET",
+      "path": "/nut-slots/options"
+    },
+    {
+      "file": "routers\\instrument\\fretwork_router.py",
+      "method": "POST",
+      "path": "/fret-leveling"
+    },
+    {
+      "file": "routers\\instrument\\fretwork_router.py",
+      "method": "POST",
+      "path": "/fret-leveling/radius"
+    },
+    {
+      "file": "routers\\instrument\\fretwork_router.py",
+      "method": "POST",
+      "path": "/fret-wire/recommend"
+    },
+    {
+      "file": "routers\\instrument\\fretwork_router.py",
+      "method": "POST",
+      "path": "/nut-compensation"
+    },
+    {
+      "file": "routers\\instrument\\fretwork_router.py",
+      "method": "POST",
+      "path": "/nut-compensation/compare"
+    },
+    {
+      "file": "routers\\instrument\\fretwork_router.py",
+      "method": "POST",
+      "path": "/nut-slots"
+    },
+    {
+      "file": "routers\\instrument\\materials_physics_router.py",
+      "method": "GET",
+      "path": "/side-bending/options"
+    },
+    {
+      "file": "routers\\instrument\\materials_physics_router.py",
+      "method": "GET",
+      "path": "/wood-movement/species"
+    },
+    {
+      "file": "routers\\instrument\\materials_physics_router.py",
+      "method": "POST",
+      "path": "/side-bending"
+    },
+    {
+      "file": "routers\\instrument\\materials_physics_router.py",
+      "method": "POST",
+      "path": "/side-bending/compare"
+    },
+    {
+      "file": "routers\\instrument\\materials_physics_router.py",
+      "method": "POST",
+      "path": "/side-thickness"
+    },
+    {
+      "file": "routers\\instrument\\materials_physics_router.py",
+      "method": "POST",
+      "path": "/wood-movement"
+    },
+    {
+      "file": "routers\\instrument\\materials_physics_router.py",
+      "method": "POST",
+      "path": "/wood-movement/safe-range"
+    },
+    {
+      "file": "routers\\instrument\\soundhole_router.py",
+      "method": "GET",
+      "path": "/soundhole/options"
+    },
+    {
+      "file": "routers\\instrument\\soundhole_router.py",
+      "method": "POST",
+      "path": "/soundhole"
+    },
+    {
+      "file": "routers\\instrument\\soundhole_router.py",
+      "method": "POST",
+      "path": "/soundhole/check-position"
+    },
+    {
+      "file": "routers\\instrument_geometry\\body_construction_router.py",
+      "method": "GET",
+      "path": "/blocks/options"
+    },
+    {
+      "file": "routers\\instrument_geometry\\body_construction_router.py",
+      "method": "GET",
+      "path": "/side-bending/options"
+    },
+    {
+      "file": "routers\\instrument_geometry\\body_construction_router.py",
+      "method": "POST",
+      "path": "/blocks"
+    },
+    {
+      "file": "routers\\instrument_geometry\\body_construction_router.py",
+      "method": "POST",
+      "path": "/side-bending"
+    },
+    {
+      "file": "routers\\instrument_geometry\\body_construction_router.py",
+      "method": "POST",
+      "path": "/side-thickness"
+    },
+    {
+      "file": "routers\\instrument_geometry\\bridge_router.py",
+      "method": "GET",
+      "path": "/bridge/options"
+    },
+    {
+      "file": "routers\\instrument_geometry\\bridge_router.py",
+      "method": "POST",
+      "path": "/bridge"
+    },
+    {
+      "file": "routers\\instrument_geometry\\bridge_router.py",
+      "method": "POST",
+      "path": "/bridge/pin-positions"
+    },
+    {
+      "file": "routers\\instrument_geometry\\build_sequence_router.py",
+      "method": "GET",
+      "path": "/build-sequence/options"
+    },
+    {
+      "file": "routers\\instrument_geometry\\build_sequence_router.py",
+      "method": "POST",
+      "path": "/build-sequence"
+    },
+    {
+      "file": "routers\\instrument_geometry\\construction_router.py",
+      "method": "GET",
+      "path": "/kerfing/types"
+    },
+    {
+      "file": "routers\\instrument_geometry\\construction_router.py",
+      "method": "POST",
+      "path": "/brace-sizing"
+    },
+    {
+      "file": "routers\\instrument_geometry\\construction_router.py",
+      "method": "POST",
+      "path": "/kerfing"
+    },
+    {
+      "file": "routers\\instrument_geometry\\construction_router.py",
+      "method": "POST",
+      "path": "/top-deflection"
+    },
+    {
+      "file": "routers\\instrument_geometry\\electronics_router.py",
+      "method": "GET",
+      "path": "/electronics-layout/options"
+    },
+    {
+      "file": "routers\\instrument_geometry\\electronics_router.py",
+      "method": "POST",
+      "path": "/electronics-layout"
+    },
+    {
+      "file": "routers\\instrument_geometry\\electronics_router.py",
+      "method": "POST",
+      "path": "/electronics-layout/control-layout"
+    },
+    {
+      "file": "routers\\instrument_geometry\\electronics_router.py",
+      "method": "POST",
+      "path": "/electronics-layout/pickup-cavity"
+    },
+    {
+      "file": "routers\\instrument_geometry\\geometry_calculator_router.py",
+      "method": "GET",
+      "path": "/geometry/presets"
+    },
+    {
+      "file": "routers\\instrument_geometry\\geometry_calculator_router.py",
+      "method": "POST",
+      "path": "/geometry/bridge"
+    },
+    {
+      "file": "routers\\instrument_geometry\\geometry_calculator_router.py",
+      "method": "POST",
+      "path": "/geometry/radius-at-position"
+    },
+    {
+      "file": "routers\\instrument_geometry\\geometry_calculator_router.py",
+      "method": "POST",
+      "path": "/geometry/radius-profile"
+    },
+    {
+      "file": "routers\\instrument_geometry\\geometry_calculator_router.py",
+      "method": "POST",
+      "path": "/geometry/standard-guitar"
+    },
+    {
+      "file": "routers\\instrument_geometry\\nut_fret_router.py",
+      "method": "GET",
+      "path": "/fret-wire/catalog"
+    },
+    {
+      "file": "routers\\instrument_geometry\\nut_fret_router.py",
+      "method": "GET",
+      "path": "/fret-wire/options"
+    },
+    {
+      "file": "routers\\instrument_geometry\\nut_fret_router.py",
+      "method": "GET",
+      "path": "/nut-compensation/types"
+    },
+    {
+      "file": "routers\\instrument_geometry\\nut_fret_router.py",
+      "method": "GET",
+      "path": "/nut-slots/options"
+    },
+    {
+      "file": "routers\\instrument_geometry\\nut_fret_router.py",
+      "method": "POST",
+      "path": "/fret-leveling"
+    },
+    {
+      "file": "routers\\instrument_geometry\\nut_fret_router.py",
+      "method": "POST",
+      "path": "/fret-leveling/radius"
+    },
+    {
+      "file": "routers\\instrument_geometry\\nut_fret_router.py",
+      "method": "POST",
+      "path": "/fret-wire/recommend"
+    },
+    {
+      "file": "routers\\instrument_geometry\\nut_fret_router.py",
+      "method": "POST",
+      "path": "/nut-compensation"
+    },
+    {
+      "file": "routers\\instrument_geometry\\nut_fret_router.py",
+      "method": "POST",
+      "path": "/nut-compensation/compare"
+    },
+    {
+      "file": "routers\\instrument_geometry\\nut_fret_router.py",
+      "method": "POST",
+      "path": "/nut-compensation/zero-fret-positions"
+    },
+    {
+      "file": "routers\\instrument_geometry\\nut_fret_router.py",
+      "method": "POST",
+      "path": "/nut-slots"
+    },
+    {
+      "file": "routers\\instrument_geometry\\setup_router.py",
+      "method": "POST",
+      "path": "/setup/evaluate"
+    },
+    {
+      "file": "routers\\instrument_geometry\\setup_router.py",
+      "method": "POST",
+      "path": "/setup/workflow/action/evaluate"
+    },
+    {
+      "file": "routers\\instrument_geometry\\setup_router.py",
+      "method": "POST",
+      "path": "/setup/workflow/combined/evaluate"
+    },
+    {
+      "file": "routers\\instrument_geometry\\setup_router.py",
+      "method": "POST",
+      "path": "/setup/workflow/evaluate"
+    },
+    {
+      "file": "routers\\instrument_geometry\\setup_router.py",
+      "method": "POST",
+      "path": "/setup/workflow/expert/evaluate"
+    },
+    {
+      "file": "routers\\instrument_geometry\\setup_router.py",
+      "method": "POST",
+      "path": "/setup/workflow/nut/evaluate"
+    },
+    {
+      "file": "routers\\instrument_geometry\\soundhole_router.py",
+      "method": "GET",
+      "path": "/soundhole/body-styles"
+    },
+    {
+      "file": "routers\\instrument_geometry\\soundhole_router.py",
+      "method": "GET",
+      "path": "/soundhole/options"
+    },
+    {
+      "file": "routers\\instrument_geometry\\soundhole_router.py",
+      "method": "GET",
+      "path": "/soundhole/spiral/default"
+    },
+    {
+      "file": "routers\\instrument_geometry\\soundhole_router.py",
+      "method": "GET",
+      "path": "/soundhole/types"
+    },
+    {
+      "file": "routers\\instrument_geometry\\soundhole_router.py",
+      "method": "POST",
+      "path": "/soundhole"
+    },
+    {
+      "file": "routers\\instrument_geometry\\soundhole_router.py",
+      "method": "POST",
+      "path": "/soundhole/check-position"
+    },
+    {
+      "file": "routers\\instrument_geometry\\soundhole_router.py",
+      "method": "POST",
+      "path": "/soundhole/spiral/dxf"
+    },
+    {
+      "file": "routers\\instrument_geometry\\soundhole_router.py",
+      "method": "POST",
+      "path": "/soundhole/spiral/geometry"
+    },
+    {
+      "file": "routers\\instrument_geometry\\soundhole_router.py",
+      "method": "POST",
+      "path": "/soundhole/spiral/validate"
+    },
+    {
+      "file": "routers\\instrument_geometry\\string_tension_router.py",
+      "method": "GET",
+      "path": "/string-tension/presets"
+    },
+    {
+      "file": "routers\\instrument_geometry\\string_tension_router.py",
+      "method": "POST",
+      "path": "/saddle-force"
+    },
+    {
+      "file": "routers\\instrument_geometry\\string_tension_router.py",
+      "method": "POST",
+      "path": "/string-tension"
+    },
+    {
+      "file": "routers\\instrument_geometry\\tuning_machine_router.py",
+      "method": "GET",
+      "path": "/post-heights"
+    },
+    {
+      "file": "routers\\instrument_geometry\\tuning_machine_router.py",
+      "method": "GET",
+      "path": "/string-trees"
+    },
+    {
+      "file": "routers\\instrument_geometry\\tuning_machine_router.py",
+      "method": "POST",
+      "path": "/required-height"
+    },
+    {
+      "file": "routers\\instrument_geometry\\voicing_router.py",
+      "method": "GET",
+      "path": "/voicing/stages"
+    },
+    {
+      "file": "routers\\instrument_geometry\\voicing_router.py",
+      "method": "GET",
+      "path": "/voicing/targets/{body_style}"
+    },
+    {
+      "file": "routers\\instrument_geometry\\voicing_router.py",
+      "method": "POST",
+      "path": "/voicing/analyze"
+    },
+    {
+      "file": "routers\\instrument_geometry\\voicing_router.py",
+      "method": "POST",
+      "path": "/voicing/predict"
+    },
+    {
+      "file": "routers\\instrument_geometry\\wood_movement_router.py",
+      "method": "GET",
+      "path": "/wood-movement/species"
+    },
+    {
+      "file": "routers\\instrument_geometry\\wood_movement_router.py",
+      "method": "POST",
+      "path": "/wood-movement"
+    },
+    {
+      "file": "routers\\instrument_geometry\\wood_movement_router.py",
+      "method": "POST",
+      "path": "/wood-movement/safe-range"
+    },
+    {
+      "file": "routers\\instrument_geometry_router.py",
+      "method": "GET",
+      "path": "/bridge/options"
+    },
+    {
+      "file": "routers\\instrument_geometry_router.py",
+      "method": "GET",
+      "path": "/cantilever-armrest/presets"
+    },
+    {
+      "file": "routers\\instrument_geometry_router.py",
+      "method": "POST",
+      "path": "/bridge"
+    },
+    {
+      "file": "routers\\instrument_geometry_router.py",
+      "method": "POST",
+      "path": "/bridge/pin-positions"
+    },
+    {
+      "file": "routers\\instrument_geometry_router.py",
+      "method": "POST",
+      "path": "/cantilever-armrest"
+    },
+    {
+      "file": "routers\\instrument_router.py",
+      "method": "GET",
+      "path": "/soundhole/types"
+    },
+    {
+      "file": "routers\\instrument_router.py",
+      "method": "POST",
+      "path": "/nut-compensation"
+    },
+    {
+      "file": "routers\\instrument_router.py",
+      "method": "POST",
+      "path": "/nut-compensation/compare"
+    },
+    {
+      "file": "routers\\instrument_router.py",
+      "method": "POST",
+      "path": "/soundhole"
+    },
+    {
+      "file": "routers\\instrument_router.py",
+      "method": "POST",
+      "path": "/soundhole/check-position"
+    },
+    {
+      "file": "routers\\instruments\\guitar\\assets_router.py",
+      "method": "GET",
+      "path": "/with-assets"
+    },
+    {
+      "file": "routers\\instruments\\guitar\\assets_router.py",
+      "method": "GET",
+      "path": "/{model_id}/assets"
+    },
+    {
+      "file": "routers\\instruments\\guitar\\assets_router.py",
+      "method": "GET",
+      "path": "/{model_id}/assets/{asset_name}"
+    },
+    {
+      "file": "routers\\instruments\\guitar\\assets_router.py",
+      "method": "GET",
+      "path": "/{model_id}/preview"
+    },
+    {
+      "file": "routers\\instruments\\guitar\\electric_body_router.py",
+      "method": "GET",
+      "path": "/presets/24fret-strat"
+    },
+    {
+      "file": "routers\\instruments\\guitar\\electric_body_router.py",
+      "method": "GET",
+      "path": "/styles"
+    },
+    {
+      "file": "routers\\instruments\\guitar\\electric_body_router.py",
+      "method": "GET",
+      "path": "/styles/{style_id}"
+    },
+    {
+      "file": "routers\\instruments\\guitar\\electric_body_router.py",
+      "method": "GET",
+      "path": "/styles/{style_id}/svg"
+    },
+    {
+      "file": "routers\\instruments\\guitar\\electric_body_router.py",
+      "method": "POST",
+      "path": "/generate"
+    },
+    {
+      "file": "routers\\instruments\\guitar\\electric_body_router.py",
+      "method": "POST",
+      "path": "/generate/strat"
+    },
+    {
+      "file": "routers\\instruments\\guitar\\headstock_inlay_router.py",
+      "method": "GET",
+      "path": "/designs"
+    },
+    {
+      "file": "routers\\instruments\\guitar\\headstock_inlay_router.py",
+      "method": "GET",
+      "path": "/designs/{design_id}"
+    },
+    {
+      "file": "routers\\instruments\\guitar\\headstock_inlay_router.py",
+      "method": "GET",
+      "path": "/inlay-templates"
+    },
+    {
+      "file": "routers\\instruments\\guitar\\headstock_inlay_router.py",
+      "method": "GET",
+      "path": "/materials"
+    },
+    {
+      "file": "routers\\instruments\\guitar\\headstock_inlay_router.py",
+      "method": "GET",
+      "path": "/options"
+    },
+    {
+      "file": "routers\\instruments\\guitar\\headstock_inlay_router.py",
+      "method": "GET",
+      "path": "/styles"
+    },
+    {
+      "file": "routers\\instruments\\guitar\\headstock_inlay_router.py",
+      "method": "GET",
+      "path": "/styles/{style_id}"
+    },
+    {
+      "file": "routers\\instruments\\guitar\\headstock_inlay_router.py",
+      "method": "GET",
+      "path": "/templates"
+    },
+    {
+      "file": "routers\\instruments\\guitar\\headstock_inlay_router.py",
+      "method": "GET",
+      "path": "/templates/{template_id}"
+    },
+    {
+      "file": "routers\\instruments\\guitar\\headstock_inlay_router.py",
+      "method": "POST",
+      "path": "/generate-inlay-prompt"
+    },
+    {
+      "file": "routers\\instruments\\guitar\\headstock_inlay_router.py",
+      "method": "POST",
+      "path": "/generate-prompt"
+    },
+    {
+      "file": "routers\\instruments\\guitar\\pickup_calculator_router.py",
+      "method": "GET",
+      "path": "/configurations"
+    },
+    {
+      "file": "routers\\instruments\\guitar\\pickup_calculator_router.py",
+      "method": "GET",
+      "path": "/presets/24fret-strat"
+    },
+    {
+      "file": "routers\\instruments\\guitar\\pickup_calculator_router.py",
+      "method": "GET",
+      "path": "/scale-lengths"
+    },
+    {
+      "file": "routers\\instruments\\guitar\\pickup_calculator_router.py",
+      "method": "POST",
+      "path": "/calculate"
+    },
+    {
+      "file": "routers\\instruments\\guitar\\registry_router.py",
+      "method": "GET",
+      "path": "/"
+    },
+    {
+      "file": "routers\\instruments\\guitar\\registry_router.py",
+      "method": "GET",
+      "path": "/smart/bundle"
+    },
+    {
+      "file": "routers\\instruments\\guitar\\registry_router.py",
+      "method": "GET",
+      "path": "/{model_id}/geometry"
+    },
+    {
+      "file": "routers\\instruments\\guitar\\registry_router.py",
+      "method": "GET",
+      "path": "/{model_id}/info"
+    },
+    {
+      "file": "routers\\instruments\\guitar\\registry_router.py",
+      "method": "GET",
+      "path": "/{model_id}/spec"
+    },
+    {
+      "file": "routers\\instruments\\guitar\\registry_router.py",
+      "method": "GET",
+      "path": "/{model_id}/templates"
+    },
+    {
+      "file": "routers\\instruments\\guitar\\smart_guitar_dxf_router.py",
+      "method": "GET",
+      "path": "/dxf"
+    },
+    {
+      "file": "routers\\learned_overrides_router.py",
+      "method": "GET",
+      "path": "/audit"
+    },
+    {
+      "file": "routers\\learned_overrides_router.py",
+      "method": "GET",
+      "path": "/lanes"
+    },
+    {
+      "file": "routers\\learned_overrides_router.py",
+      "method": "GET",
+      "path": "/lanes/{tool_id}/{material}/{mode}/{machine_profile}"
+    },
+    {
+      "file": "routers\\learned_overrides_router.py",
+      "method": "GET",
+      "path": "/stats"
+    },
+    {
+      "file": "routers\\learned_overrides_router.py",
+      "method": "POST",
+      "path": "/lane_scale"
+    },
+    {
+      "file": "routers\\learned_overrides_router.py",
+      "method": "POST",
+      "path": "/merge"
+    },
+    {
+      "file": "routers\\learned_overrides_router.py",
+      "method": "POST",
+      "path": "/override"
+    },
+    {
+      "file": "routers\\learned_overrides_router.py",
+      "method": "POST",
+      "path": "/record_run"
+    },
+    {
+      "file": "routers\\legacy_dxf_exports_router.py",
+      "method": "GET",
+      "path": "/dxf/health"
+    },
+    {
+      "file": "routers\\legacy_dxf_exports_router.py",
+      "method": "GET",
+      "path": "/history"
+    },
+    {
+      "file": "routers\\legacy_dxf_exports_router.py",
+      "method": "GET",
+      "path": "/history/{entry_id}"
+    },
+    {
+      "file": "routers\\legacy_dxf_exports_router.py",
+      "method": "GET",
+      "path": "/history/{entry_id}/file/{filename}"
+    },
+    {
+      "file": "routers\\legacy_dxf_exports_router.py",
+      "method": "POST",
+      "path": "/biarc_dxf"
+    },
+    {
+      "file": "routers\\legacy_dxf_exports_router.py",
+      "method": "POST",
+      "path": "/polyline_dxf"
+    },
+    {
+      "file": "routers\\ltb_calculator_router.py",
+      "method": "GET",
+      "path": "/dovetail/{ratio}"
+    },
+    {
+      "file": "routers\\ltb_calculator_router.py",
+      "method": "GET",
+      "path": "/fraction/parse/{text}"
+    },
+    {
+      "file": "routers\\ltb_calculator_router.py",
+      "method": "GET",
+      "path": "/miter/{num_sides}"
+    },
+    {
+      "file": "routers\\ltb_calculator_router.py",
+      "method": "POST",
+      "path": "/board-feet"
+    },
+    {
+      "file": "routers\\ltb_calculator_router.py",
+      "method": "POST",
+      "path": "/evaluate"
+    },
+    {
+      "file": "routers\\ltb_calculator_router.py",
+      "method": "POST",
+      "path": "/fraction/convert"
+    },
+    {
+      "file": "routers\\ltb_calculator_router.py",
+      "method": "POST",
+      "path": "/radius/compound"
+    },
+    {
+      "file": "routers\\ltb_calculator_router.py",
+      "method": "POST",
+      "path": "/radius/from-3-points"
+    },
+    {
+      "file": "routers\\ltb_calculator_router.py",
+      "method": "POST",
+      "path": "/radius/from-chord"
+    },
+    {
+      "file": "routers\\ltb_calculator_router.py",
+      "method": "POST",
+      "path": "/tvm"
+    },
+    {
+      "file": "routers\\ltb_calculator_router.py",
+      "method": "POST",
+      "path": "/wedge/angle"
+    },
+    {
+      "file": "routers\\machines_consolidated_router.py",
+      "method": "DELETE",
+      "path": "/profiles/{pid}"
+    },
+    {
+      "file": "routers\\machines_consolidated_router.py",
+      "method": "DELETE",
+      "path": "/{mid}/tools/{tnum}"
+    },
+    {
+      "file": "routers\\machines_consolidated_router.py",
+      "method": "GET",
+      "path": "/profiles"
+    },
+    {
+      "file": "routers\\machines_consolidated_router.py",
+      "method": "GET",
+      "path": "/profiles/{pid}"
+    },
+    {
+      "file": "routers\\machines_consolidated_router.py",
+      "method": "GET",
+      "path": "/{mid}/tools"
+    },
+    {
+      "file": "routers\\machines_consolidated_router.py",
+      "method": "GET",
+      "path": "/{mid}/tools.csv"
+    },
+    {
+      "file": "routers\\machines_consolidated_router.py",
+      "method": "POST",
+      "path": "/profiles"
+    },
+    {
+      "file": "routers\\machines_consolidated_router.py",
+      "method": "POST",
+      "path": "/profiles/clone/{src_id}"
+    },
+    {
+      "file": "routers\\machines_consolidated_router.py",
+      "method": "POST",
+      "path": "/{mid}/tools/import_csv"
+    },
+    {
+      "file": "routers\\machines_consolidated_router.py",
+      "method": "PUT",
+      "path": "/{mid}/tools"
+    },
+    {
+      "file": "routers\\material_router.py",
+      "method": "GET",
+      "path": "/get/{mid}"
+    },
+    {
+      "file": "routers\\material_router.py",
+      "method": "GET",
+      "path": "/list"
+    },
+    {
+      "file": "routers\\material_router.py",
+      "method": "POST",
+      "path": "/upsert"
+    },
+    {
+      "file": "routers\\misc_stub_routes.py",
+      "method": "POST",
+      "path": "/ai/advisories/request"
+    },
+    {
+      "file": "routers\\music\\temperament_router.py",
+      "method": "GET",
+      "path": "/compare-all"
+    },
+    {
+      "file": "routers\\music\\temperament_router.py",
+      "method": "GET",
+      "path": "/equal-temperament"
+    },
+    {
+      "file": "routers\\music\\temperament_router.py",
+      "method": "GET",
+      "path": "/keys"
+    },
+    {
+      "file": "routers\\music\\temperament_router.py",
+      "method": "GET",
+      "path": "/resolve"
+    },
+    {
+      "file": "routers\\music\\temperament_router.py",
+      "method": "GET",
+      "path": "/systems"
+    },
+    {
+      "file": "routers\\music\\temperament_router.py",
+      "method": "GET",
+      "path": "/tables"
+    },
+    {
+      "file": "routers\\music\\temperament_router.py",
+      "method": "GET",
+      "path": "/tunings"
+    },
+    {
+      "file": "routers\\music\\temperament_router.py",
+      "method": "POST",
+      "path": "/compare"
+    },
+    {
+      "file": "routers\\neck\\gcode_router.py",
+      "method": "GET",
+      "path": "/profiles"
+    },
+    {
+      "file": "routers\\neck\\gcode_router.py",
+      "method": "GET",
+      "path": "/styles"
+    },
+    {
+      "file": "routers\\neck\\gcode_router.py",
+      "method": "GET",
+      "path": "/tools"
+    },
+    {
+      "file": "routers\\neck\\gcode_router.py",
+      "method": "POST",
+      "path": "/download"
+    },
+    {
+      "file": "routers\\neck\\gcode_router.py",
+      "method": "POST",
+      "path": "/generate"
+    },
+    {
+      "file": "routers\\neck\\guitar_models_router.py",
+      "method": "GET",
+      "path": "/prs/presets"
+    },
+    {
+      "file": "routers\\neck\\guitar_models_router.py",
+      "method": "GET",
+      "path": "/stratocaster/presets"
+    },
+    {
+      "file": "routers\\neck\\guitar_models_router.py",
+      "method": "GET",
+      "path": "/telecaster/presets"
+    },
+    {
+      "file": "routers\\neck\\guitar_models_router.py",
+      "method": "POST",
+      "path": "/generate/prs"
+    },
+    {
+      "file": "routers\\neck\\guitar_models_router.py",
+      "method": "POST",
+      "path": "/generate/stratocaster"
+    },
+    {
+      "file": "routers\\neck\\guitar_models_router.py",
+      "method": "POST",
+      "path": "/generate/telecaster"
+    },
+    {
+      "file": "routers\\neck\\headstock_transition_export.py",
+      "method": "POST",
+      "path": "/analysis"
+    },
+    {
+      "file": "routers\\neck\\headstock_transition_export.py",
+      "method": "POST",
+      "path": "/dxf"
+    },
+    {
+      "file": "routers\\neck\\headstock_transition_export.py",
+      "method": "POST",
+      "path": "/gcode"
+    },
+    {
+      "file": "routers\\neck\\neck_profile_export.py",
+      "method": "POST",
+      "path": "/dxf"
+    },
+    {
+      "file": "routers\\neck\\neck_profile_export.py",
+      "method": "POST",
+      "path": "/gcode"
+    },
+    {
+      "file": "routers\\neck\\neck_profile_export.py",
+      "method": "POST",
+      "path": "/pipeline/preview"
+    },
+    {
+      "file": "routers\\neck\\neck_profile_export.py",
+      "method": "POST",
+      "path": "/stations"
+    },
+    {
+      "file": "routers\\neck_router.py",
+      "method": "GET",
+      "path": "/presets"
+    },
+    {
+      "file": "routers\\neck_router.py",
+      "method": "POST",
+      "path": "/angle"
+    },
+    {
+      "file": "routers\\neck_router.py",
+      "method": "POST",
+      "path": "/break-angle"
+    },
+    {
+      "file": "routers\\neck_router.py",
+      "method": "POST",
+      "path": "/export_dxf"
+    },
+    {
+      "file": "routers\\neck_router.py",
+      "method": "POST",
+      "path": "/generate"
+    },
+    {
+      "file": "routers\\photo_vectorizer_router.py",
+      "method": "GET",
+      "path": "/status"
+    },
+    {
+      "file": "routers\\photo_vectorizer_router.py",
+      "method": "POST",
+      "path": "/extract"
+    },
+    {
+      "file": "routers\\polygon_offset_router.py",
+      "method": "POST",
+      "path": "/polygon_offset"
+    },
+    {
+      "file": "routers\\polygon_offset_router.py",
+      "method": "POST",
+      "path": "/polygon_offset.nc"
+    },
+    {
+      "file": "routers\\polygon_offset_router.py",
+      "method": "POST",
+      "path": "/polygon_offset.preview"
+    },
+    {
+      "file": "routers\\polygon_offset_router.py",
+      "method": "POST",
+      "path": "/polygon_offset_governed.nc"
+    },
+    {
+      "file": "routers\\posts_consolidated_router.py",
+      "method": "DELETE",
+      "path": "/{post_id}"
+    },
+    {
+      "file": "routers\\posts_consolidated_router.py",
+      "method": "GET",
+      "path": "/"
+    },
+    {
+      "file": "routers\\posts_consolidated_router.py",
+      "method": "GET",
+      "path": "/all"
+    },
+    {
+      "file": "routers\\posts_consolidated_router.py",
+      "method": "GET",
+      "path": "/tokens/list"
+    },
+    {
+      "file": "routers\\posts_consolidated_router.py",
+      "method": "GET",
+      "path": "/{post_id}"
+    },
+    {
+      "file": "routers\\posts_consolidated_router.py",
+      "method": "POST",
+      "path": "/"
+    },
+    {
+      "file": "routers\\posts_consolidated_router.py",
+      "method": "POST",
+      "path": "/validate"
+    },
+    {
+      "file": "routers\\posts_consolidated_router.py",
+      "method": "PUT",
+      "path": "/replace-all"
+    },
+    {
+      "file": "routers\\posts_consolidated_router.py",
+      "method": "PUT",
+      "path": "/{post_id}"
+    },
+    {
+      "file": "routers\\probe\\boss_router.py",
+      "method": "POST",
+      "path": "/boss/gcode"
+    },
+    {
+      "file": "routers\\probe\\boss_router.py",
+      "method": "POST",
+      "path": "/boss/gcode/download"
+    },
+    {
+      "file": "routers\\probe\\boss_router.py",
+      "method": "POST",
+      "path": "/boss/gcode/download_governed"
+    },
+    {
+      "file": "routers\\probe\\corner_router.py",
+      "method": "POST",
+      "path": "/corner/gcode"
+    },
+    {
+      "file": "routers\\probe\\corner_router.py",
+      "method": "POST",
+      "path": "/corner/gcode/download"
+    },
+    {
+      "file": "routers\\probe\\corner_router.py",
+      "method": "POST",
+      "path": "/corner/gcode/download_governed"
+    },
+    {
+      "file": "routers\\probe\\pocket_router.py",
+      "method": "POST",
+      "path": "/pocket/gcode"
+    },
+    {
+      "file": "routers\\probe\\pocket_router.py",
+      "method": "POST",
+      "path": "/pocket/gcode/download"
+    },
+    {
+      "file": "routers\\probe\\pocket_router.py",
+      "method": "POST",
+      "path": "/pocket/gcode/download_governed"
+    },
+    {
+      "file": "routers\\probe\\setup_router.py",
+      "method": "GET",
+      "path": "/patterns"
+    },
+    {
+      "file": "routers\\probe\\setup_router.py",
+      "method": "POST",
+      "path": "/setup_sheet/svg"
+    },
+    {
+      "file": "routers\\probe\\surface_z_router.py",
+      "method": "POST",
+      "path": "/surface_z/gcode"
+    },
+    {
+      "file": "routers\\probe\\surface_z_router.py",
+      "method": "POST",
+      "path": "/surface_z/gcode/download"
+    },
+    {
+      "file": "routers\\probe\\surface_z_router.py",
+      "method": "POST",
+      "path": "/surface_z/gcode/download_governed"
+    },
+    {
+      "file": "routers\\probe\\vise_square_router.py",
+      "method": "POST",
+      "path": "/vise_square/gcode"
+    },
+    {
+      "file": "routers\\probe\\vise_square_router.py",
+      "method": "POST",
+      "path": "/vise_square/gcode/download"
+    },
+    {
+      "file": "routers\\probe\\vise_square_router.py",
+      "method": "POST",
+      "path": "/vise_square/gcode/download_governed"
+    },
+    {
+      "file": "routers\\project_assets_router.py",
+      "method": "DELETE",
+      "path": "/{project_id}/assets/ai_images/{asset_id}"
+    },
+    {
+      "file": "routers\\project_assets_router.py",
+      "method": "GET",
+      "path": "/{project_id}/assets/ai_images"
+    },
+    {
+      "file": "routers\\project_assets_router.py",
+      "method": "GET",
+      "path": "/{project_id}/assets/ai_images/manifest"
+    },
+    {
+      "file": "routers\\project_assets_router.py",
+      "method": "POST",
+      "path": "/{project_id}/assets/ai_images"
+    },
+    {
+      "file": "routers\\project_assets_router.py",
+      "method": "POST",
+      "path": "/{project_id}/assets/ai_images/{asset_id}"
+    },
+    {
+      "file": "routers\\radius_dish_router.py",
+      "method": "GET",
+      "path": "/common-radii"
+    },
+    {
+      "file": "routers\\radius_dish_router.py",
+      "method": "POST",
+      "path": "/brace-camber"
+    },
+    {
+      "file": "routers\\radius_dish_router.py",
+      "method": "POST",
+      "path": "/calculate"
+    },
+    {
+      "file": "routers\\radius_dish_router.py",
+      "method": "POST",
+      "path": "/generate-gcode"
+    },
+    {
+      "file": "routers\\registry_router.py",
+      "method": "GET",
+      "path": "/empirical_limits"
+    },
+    {
+      "file": "routers\\registry_router.py",
+      "method": "GET",
+      "path": "/empirical_limits/{wood_id}"
+    },
+    {
+      "file": "routers\\registry_router.py",
+      "method": "GET",
+      "path": "/fret_formulas"
+    },
+    {
+      "file": "routers\\registry_router.py",
+      "method": "GET",
+      "path": "/info"
+    },
+    {
+      "file": "routers\\registry_router.py",
+      "method": "GET",
+      "path": "/scale_lengths"
+    },
+    {
+      "file": "routers\\registry_router.py",
+      "method": "GET",
+      "path": "/wood_species"
+    },
+    {
+      "file": "routers\\retract\\retract_apply_router.py",
+      "method": "POST",
+      "path": "/apply"
+    },
+    {
+      "file": "routers\\retract\\retract_apply_router.py",
+      "method": "POST",
+      "path": "/lead_in"
+    },
+    {
+      "file": "routers\\retract\\retract_gcode_router.py",
+      "method": "POST",
+      "path": "/gcode"
+    },
+    {
+      "file": "routers\\retract\\retract_gcode_router.py",
+      "method": "POST",
+      "path": "/gcode/download"
+    },
+    {
+      "file": "routers\\retract\\retract_gcode_router.py",
+      "method": "POST",
+      "path": "/gcode/download_governed"
+    },
+    {
+      "file": "routers\\retract\\retract_gcode_router.py",
+      "method": "POST",
+      "path": "/gcode_governed"
+    },
+    {
+      "file": "routers\\retract\\retract_info_router.py",
+      "method": "GET",
+      "path": "/strategies"
+    },
+    {
+      "file": "routers\\retract\\retract_info_router.py",
+      "method": "POST",
+      "path": "/estimate"
+    },
+    {
+      "file": "routers\\rmos_cam_intent_router.py",
+      "method": "POST",
+      "path": "/intent/normalize"
+    },
+    {
+      "file": "routers\\saddle_compensation_router.py",
+      "method": "POST",
+      "path": "/compensation"
+    },
+    {
+      "file": "routers\\saddle_compensation_router.py",
+      "method": "POST",
+      "path": "/setup"
+    },
+    {
+      "file": "routers\\simulation_consolidated_router.py",
+      "method": "POST",
+      "path": "/gcode"
+    },
+    {
+      "file": "routers\\simulation_consolidated_router.py",
+      "method": "POST",
+      "path": "/metrics"
+    },
+    {
+      "file": "routers\\simulation_consolidated_router.py",
+      "method": "POST",
+      "path": "/simulate_gcode"
+    },
+    {
+      "file": "routers\\simulation_consolidated_router.py",
+      "method": "POST",
+      "path": "/upload"
+    },
+    {
+      "file": "routers\\string_master_router.py",
+      "method": "GET",
+      "path": "/bundles/{clip_id}"
+    },
+    {
+      "file": "routers\\string_master_router.py",
+      "method": "GET",
+      "path": "/exercises"
+    },
+    {
+      "file": "routers\\string_master_router.py",
+      "method": "GET",
+      "path": "/health"
+    },
+    {
+      "file": "routers\\string_master_router.py",
+      "method": "GET",
+      "path": "/tags"
+    },
+    {
+      "file": "routers\\string_master_router.py",
+      "method": "GET",
+      "path": "/zones"
+    },
+    {
+      "file": "routers\\string_master_router.py",
+      "method": "POST",
+      "path": "/generate"
+    },
+    {
+      "file": "routers\\strip_family_router.py",
+      "method": "GET",
+      "path": "/"
+    },
+    {
+      "file": "routers\\strip_family_router.py",
+      "method": "GET",
+      "path": "/templates"
+    },
+    {
+      "file": "routers\\strip_family_router.py",
+      "method": "GET",
+      "path": "/{family_id}"
+    },
+    {
+      "file": "routers\\strip_family_router.py",
+      "method": "POST",
+      "path": "/from-template/{template_id}"
+    },
+    {
+      "file": "routers\\tooling\\post_processor_router.py",
+      "method": "GET",
+      "path": "/posts"
+    },
+    {
+      "file": "routers\\tooling\\post_processor_router.py",
+      "method": "GET",
+      "path": "/posts/{post_id}"
+    },
+    {
+      "file": "routers\\tooling\\tool_library_router.py",
+      "method": "GET",
+      "path": "/library/materials"
+    },
+    {
+      "file": "routers\\tooling\\tool_library_router.py",
+      "method": "GET",
+      "path": "/library/materials/{material_id}"
+    },
+    {
+      "file": "routers\\tooling\\tool_library_router.py",
+      "method": "GET",
+      "path": "/library/tools"
+    },
+    {
+      "file": "routers\\tooling\\tool_library_router.py",
+      "method": "GET",
+      "path": "/library/tools/{tool_id}"
+    },
+    {
+      "file": "routers\\tooling\\tool_library_router.py",
+      "method": "GET",
+      "path": "/library/validate"
+    },
+    {
+      "file": "routers\\woodworking_router.py",
+      "method": "GET",
+      "path": "/bandsaw/blades"
+    },
+    {
+      "file": "routers\\woodworking_router.py",
+      "method": "POST",
+      "path": "/bandsaw/drift"
+    },
+    {
+      "file": "routers\\woodworking_router.py",
+      "method": "POST",
+      "path": "/bandsaw/feed-rate"
+    },
+    {
+      "file": "routers\\woodworking_router.py",
+      "method": "POST",
+      "path": "/bandsaw/plan-curve"
+    },
+    {
+      "file": "routers\\woodworking_router.py",
+      "method": "POST",
+      "path": "/bandsaw/plan-resaw"
+    },
+    {
+      "file": "routers\\woodworking_router.py",
+      "method": "POST",
+      "path": "/bandsaw/resaw-feed-hint"
+    },
+    {
+      "file": "routers\\woodworking_router.py",
+      "method": "POST",
+      "path": "/bandsaw/rim-speed"
+    },
+    {
+      "file": "routers\\woodworking_router.py",
+      "method": "POST",
+      "path": "/bandsaw/tension"
+    },
+    {
+      "file": "routers\\woodworking_router.py",
+      "method": "POST",
+      "path": "/bandsaw/validate-resaw"
+    },
+    {
+      "file": "routers\\woodworking_router.py",
+      "method": "POST",
+      "path": "/floating-bridge/archtop/dxf"
+    },
+    {
+      "file": "routers\\woodworking_router.py",
+      "method": "POST",
+      "path": "/floating-bridge/archtop/geometry"
+    },
+    {
+      "file": "routers\\woodworking_router.py",
+      "method": "POST",
+      "path": "/floating-bridge/break-angle"
+    },
+    {
+      "file": "routers\\woodworking_router.py",
+      "method": "POST",
+      "path": "/floating-bridge/from-12th-action"
+    },
+    {
+      "file": "routers\\woodworking_router.py",
+      "method": "POST",
+      "path": "/joinery/biscuits"
+    },
+    {
+      "file": "routers\\woodworking_router.py",
+      "method": "POST",
+      "path": "/joinery/box-joint"
+    },
+    {
+      "file": "routers\\woodworking_router.py",
+      "method": "POST",
+      "path": "/joinery/dovetail-angle"
+    },
+    {
+      "file": "routers\\woodworking_router.py",
+      "method": "POST",
+      "path": "/joinery/mortise-tenon"
+    },
+    {
+      "file": "routers\\woodworking_router.py",
+      "method": "POST",
+      "path": "/panel/board-feet"
+    },
+    {
+      "file": "routers\\woodworking_router.py",
+      "method": "POST",
+      "path": "/panel/movement-budget"
+    },
+    {
+      "file": "routers\\woodworking_router.py",
+      "method": "POST",
+      "path": "/panels/blank-oversize"
+    },
+    {
+      "file": "routers\\woodworking_router.py",
+      "method": "POST",
+      "path": "/panels/floating-gaps"
+    },
+    {
+      "file": "routers\\woodworking_router.py",
+      "method": "POST",
+      "path": "/soundhole/spiral/dxf"
+    },
+    {
+      "file": "routers\\woodworking_router.py",
+      "method": "POST",
+      "path": "/soundhole/spiral/geometry"
+    },
+    {
+      "file": "saw_lab\\batch_gcode_router.py",
+      "method": "GET",
+      "path": "/executions/job-logs.csv"
+    },
+    {
+      "file": "saw_lab\\batch_gcode_router.py",
+      "method": "GET",
+      "path": "/executions/{batch_execution_artifact_id}/gcode"
+    },
+    {
+      "file": "saw_lab\\batch_gcode_router.py",
+      "method": "GET",
+      "path": "/op-toolpaths/{op_toolpaths_artifact_id}/gcode"
+    },
+    {
+      "file": "saw_lab\\batch_gcode_router.py",
+      "method": "POST",
+      "path": "/executions/retry"
+    },
+    {
+      "file": "saw_lab\\batch_learning_router.py",
+      "method": "GET",
+      "path": "/executions/with-learning"
+    },
+    {
+      "file": "saw_lab\\batch_learning_router.py",
+      "method": "GET",
+      "path": "/learning-events/by-execution"
+    },
+    {
+      "file": "saw_lab\\batch_learning_router.py",
+      "method": "GET",
+      "path": "/learning-overrides/apply/status"
+    },
+    {
+      "file": "saw_lab\\batch_learning_router.py",
+      "method": "GET",
+      "path": "/learning-overrides/resolve"
+    },
+    {
+      "file": "saw_lab\\batch_learning_router.py",
+      "method": "POST",
+      "path": "/learning-events/approve"
+    },
+    {
+      "file": "saw_lab\\batch_learning_router.py",
+      "method": "POST",
+      "path": "/learning-overrides/apply"
+    },
+    {
+      "file": "saw_lab\\batch_metrics_decision_router.py",
+      "method": "GET",
+      "path": "/decisions/execution-rollups.csv"
+    },
+    {
+      "file": "saw_lab\\batch_metrics_decision_router.py",
+      "method": "GET",
+      "path": "/decisions/metrics-rollup/by-decision"
+    },
+    {
+      "file": "saw_lab\\batch_metrics_decision_router.py",
+      "method": "GET",
+      "path": "/decisions/metrics-rollup/latest"
+    },
+    {
+      "file": "saw_lab\\batch_metrics_decision_router.py",
+      "method": "GET",
+      "path": "/decisions/trends"
+    },
+    {
+      "file": "saw_lab\\batch_metrics_decision_router.py",
+      "method": "POST",
+      "path": "/decisions/metrics-rollup/by-decision"
+    },
+    {
+      "file": "saw_lab\\batch_metrics_diff_router.py",
+      "method": "GET",
+      "path": "/rollups/diff"
+    },
+    {
+      "file": "saw_lab\\batch_metrics_execution_router.py",
+      "method": "GET",
+      "path": "/executions/metrics-rollup/by-execution"
+    },
+    {
+      "file": "saw_lab\\batch_metrics_execution_router.py",
+      "method": "GET",
+      "path": "/executions/metrics-rollup/history"
+    },
+    {
+      "file": "saw_lab\\batch_metrics_execution_router.py",
+      "method": "GET",
+      "path": "/executions/metrics-rollup/latest"
+    },
+    {
+      "file": "saw_lab\\batch_metrics_execution_router.py",
+      "method": "GET",
+      "path": "/metrics/rollup/alias"
+    },
+    {
+      "file": "saw_lab\\batch_metrics_execution_router.py",
+      "method": "GET",
+      "path": "/metrics/rollup/by-execution"
+    },
+    {
+      "file": "saw_lab\\batch_metrics_execution_router.py",
+      "method": "POST",
+      "path": "/executions/metrics-rollup/by-execution"
+    },
+    {
+      "file": "saw_lab\\batch_metrics_execution_router.py",
+      "method": "POST",
+      "path": "/metrics/rollup/by-execution"
+    },
+    {
+      "file": "saw_lab\\batch_query_router.py",
+      "method": "GET",
+      "path": "/decisions/by-plan"
+    },
+    {
+      "file": "saw_lab\\batch_query_router.py",
+      "method": "GET",
+      "path": "/decisions/by-spec"
+    },
+    {
+      "file": "saw_lab\\batch_query_router.py",
+      "method": "GET",
+      "path": "/execution"
+    },
+    {
+      "file": "saw_lab\\batch_query_router.py",
+      "method": "GET",
+      "path": "/execution/by-decision"
+    },
+    {
+      "file": "saw_lab\\batch_query_router.py",
+      "method": "GET",
+      "path": "/executions"
+    },
+    {
+      "file": "saw_lab\\batch_query_router.py",
+      "method": "GET",
+      "path": "/executions/by-decision"
+    },
+    {
+      "file": "saw_lab\\batch_query_router.py",
+      "method": "GET",
+      "path": "/executions/by-plan"
+    },
+    {
+      "file": "saw_lab\\batch_query_router.py",
+      "method": "GET",
+      "path": "/executions/by-spec"
+    },
+    {
+      "file": "saw_lab\\batch_query_router.py",
+      "method": "GET",
+      "path": "/links"
+    },
+    {
+      "file": "saw_lab\\batch_query_router.py",
+      "method": "GET",
+      "path": "/op-toolpaths/by-decision"
+    },
+    {
+      "file": "saw_lab\\batch_query_router.py",
+      "method": "GET",
+      "path": "/op-toolpaths/by-execution"
+    },
+    {
+      "file": "saw_lab\\batch_query_router.py",
+      "method": "GET",
+      "path": "/toolpaths/by-decision"
+    },
+    {
+      "file": "saw_lab\\batch_router.py",
+      "method": "POST",
+      "path": "/approve"
+    },
+    {
+      "file": "saw_lab\\batch_router.py",
+      "method": "POST",
+      "path": "/plan"
+    },
+    {
+      "file": "saw_lab\\batch_router.py",
+      "method": "POST",
+      "path": "/plan/choose"
+    },
+    {
+      "file": "saw_lab\\batch_router.py",
+      "method": "POST",
+      "path": "/spec"
+    },
+    {
+      "file": "saw_lab\\batch_router.py",
+      "method": "POST",
+      "path": "/toolpaths/from-decision"
+    },
+    {
+      "file": "saw_lab\\compare_router.py",
+      "method": "GET",
+      "path": "/compare/batches"
+    },
+    {
+      "file": "saw_lab\\compare_router.py",
+      "method": "GET",
+      "path": "/compare/decisions"
+    },
+    {
+      "file": "saw_lab\\compare_router.py",
+      "method": "GET",
+      "path": "/compare/toolpaths"
+    },
+    {
+      "file": "saw_lab\\compare_router.py",
+      "method": "POST",
+      "path": "/compare"
+    },
+    {
+      "file": "saw_lab\\compare_router.py",
+      "method": "POST",
+      "path": "/compare/approve"
+    },
+    {
+      "file": "saw_lab\\compare_router.py",
+      "method": "POST",
+      "path": "/compare/toolpaths"
+    },
+    {
+      "file": "saw_lab\\decision_router.py",
+      "method": "GET",
+      "path": "/latest-approved"
+    },
+    {
+      "file": "saw_lab\\decision_router.py",
+      "method": "GET",
+      "path": "/suggestions"
+    },
+    {
+      "file": "saw_lab\\decision_router.py",
+      "method": "POST",
+      "path": "/approve"
+    },
+    {
+      "file": "saw_lab\\decision_router.py",
+      "method": "POST",
+      "path": "/stamp-plan-link"
+    },
+    {
+      "file": "saw_lab\\execution_lifecycle_router.py",
+      "method": "GET",
+      "path": "/execution/confirmations/latest"
+    },
+    {
+      "file": "saw_lab\\execution_lifecycle_router.py",
+      "method": "GET",
+      "path": "/execution/{batch_execution_artifact_id}/status"
+    },
+    {
+      "file": "saw_lab\\execution_lifecycle_router.py",
+      "method": "POST",
+      "path": "/execution/abort"
+    },
+    {
+      "file": "saw_lab\\execution_lifecycle_router.py",
+      "method": "POST",
+      "path": "/execution/complete"
+    },
+    {
+      "file": "saw_lab\\execution_lifecycle_router.py",
+      "method": "POST",
+      "path": "/execution/confirm"
+    },
+    {
+      "file": "saw_lab\\execution_lifecycle_router.py",
+      "method": "POST",
+      "path": "/execution/metrics/rollup"
+    },
+    {
+      "file": "saw_lab\\execution_lifecycle_router.py",
+      "method": "POST",
+      "path": "/execution/start-from-toolpaths"
+    },
+    {
+      "file": "saw_lab\\metrics_lookup_consolidated_router.py",
+      "method": "GET",
+      "path": "/execution/metrics/latest"
+    },
+    {
+      "file": "saw_lab\\metrics_lookup_consolidated_router.py",
+      "method": "GET",
+      "path": "/execution/metrics/latest-by-batch"
+    },
+    {
+      "file": "saw_lab\\metrics_lookup_consolidated_router.py",
+      "method": "GET",
+      "path": "/execution/metrics/latest-by-decision"
+    },
+    {
+      "file": "saw_lab\\toolpaths_router.py",
+      "method": "GET",
+      "path": "/toolpaths/latest"
+    },
+    {
+      "file": "saw_lab\\toolpaths_router.py",
+      "method": "GET",
+      "path": "/toolpaths/latest-by-batch"
+    },
+    {
+      "file": "saw_lab\\toolpaths_router.py",
+      "method": "GET",
+      "path": "/toolpaths/{toolpaths_artifact_id}/download/gcode"
+    },
+    {
+      "file": "saw_lab\\toolpaths_router.py",
+      "method": "POST",
+      "path": "/toolpaths/lint"
+    },
+    {
+      "file": "saw_lab\\toolpaths_router.py",
+      "method": "POST",
+      "path": "/toolpaths/validate"
+    },
+    {
+      "file": "vision\\analyze_generated_router.py",
+      "method": "POST",
+      "path": "/analyze-generated"
+    },
+    {
+      "file": "vision\\generation_router.py",
+      "method": "GET",
+      "path": "/providers"
+    },
+    {
+      "file": "vision\\generation_router.py",
+      "method": "GET",
+      "path": "/vocabulary"
+    },
+    {
+      "file": "vision\\generation_router.py",
+      "method": "POST",
+      "path": "/feedback"
+    },
+    {
+      "file": "vision\\generation_router.py",
+      "method": "POST",
+      "path": "/generate"
+    },
+    {
+      "file": "vision\\generation_router.py",
+      "method": "POST",
+      "path": "/prompt"
+    },
+    {
+      "file": "vision\\segmentation_router.py",
+      "method": "POST",
+      "path": "/photo-to-gcode"
+    },
+    {
+      "file": "vision\\segmentation_router.py",
+      "method": "POST",
+      "path": "/segment"
+    },
+    {
+      "file": "websocket\\router.py",
+      "method": "GET",
+      "path": "/ws/status"
+    },
+    {
+      "file": "workflow\\sessions\\routes.py",
+      "method": "DELETE",
+      "path": "/{session_id}"
+    },
+    {
+      "file": "workflow\\sessions\\routes.py",
+      "method": "GET",
+      "path": "/{session_id}"
+    },
+    {
+      "file": "workflow\\sessions\\routes.py",
+      "method": "GET",
+      "path": "/{session_id}/advisory-summary"
+    },
+    {
+      "file": "workflow\\sessions\\routes.py",
+      "method": "GET",
+      "path": "/{session_id}/runs"
+    },
+    {
+      "file": "workflow\\sessions\\routes.py",
+      "method": "PATCH",
+      "path": "/{session_id}"
+    }
+  ],
+  "duplicate_keys": {
+    "GET /status": [
+      "agentic\\router.py",
+      "routers\\photo_vectorizer_router.py",
+      "routers\\acoustics\\plate_router.py",
+      "routers\\ai\\assistant_router.py",
+      "routers\\ai\\defect_detection_router.py",
+      "routers\\ai\\recommendations_router.py",
+      "routers\\blueprint\\edge_to_dxf_router.py",
+      "routers\\cam\\cam_workspace_router.py",
+      "routers\\cam\\federation_ci_router.py",
+      "routers\\cam\\governance_freeze_router.py",
+      "routers\\cam\\post_freeze_expansion_router.py",
+      "routers\\cam\\review_ux_ci_router.py",
+      "routers\\cam\\review_ux_router.py",
+      "routers\\cam\\guitar\\body_gcode_router.py",
+      "art_studio\\api\\rosette_pattern_routes.py"
+    ],
+    "GET /info": [
+      "routers\\registry_router.py",
+      "routers\\blueprint\\clean_router.py",
+      "routers\\blueprint\\phase3_router.py",
+      "routers\\blueprint\\phase4_router.py",
+      "routers\\blueprint_cam\\contour_reconstruction_router.py",
+      "routers\\blueprint_cam\\geometry_correction_router.py",
+      "routers\\blueprint_cam\\preprocessor_router.py",
+      "cam\\headstock\\router.py",
+      "cam\\routers\\binding\\binding_router.py",
+      "cam\\routers\\drilling\\drill_modal_router.py",
+      "cam\\routers\\drilling\\drill_pattern_router.py",
+      "cam\\routers\\profiling\\profile_router.py",
+      "cam\\routers\\toolpath\\biarc_router.py",
+      "cam\\routers\\toolpath\\roughing_router.py",
+      "cam\\routers\\vcarve\\production_router.py"
+    ],
+    "POST /gcode": [
+      "routers\\simulation_consolidated_router.py",
+      "routers\\adaptive\\gcode_router.py",
+      "routers\\neck\\headstock_transition_export.py",
+      "routers\\neck\\neck_profile_export.py",
+      "routers\\retract\\retract_gcode_router.py",
+      "cam\\routers\\drilling\\drill_modal_router.py",
+      "cam\\routers\\drilling\\drill_pattern_router.py",
+      "cam\\routers\\profiling\\profile_router.py",
+      "cam\\routers\\toolpath\\biarc_router.py",
+      "cam\\routers\\toolpath\\roughing_router.py",
+      "cam\\routers\\toolpath\\vcarve_router.py",
+      "cam\\routers\\vcarve\\production_router.py"
+    ],
+    "POST /preview": [
+      "api_v1\\art_studio.py",
+      "art_studio\\bracing_router.py",
+      "art_studio\\inlay_router.py",
+      "routers\\cam\\nut_slot_router.py",
+      "routers\\cam\\guitar\\acoustic_cam_router.py",
+      "cam\\routers\\binding\\binding_router.py",
+      "cam\\routers\\drilling\\drilling_preview_router.py",
+      "cam\\routers\\profiling\\profile_router.py",
+      "cam\\routers\\vcarve\\production_router.py",
+      "art_studio\\api\\rosette_designer_routes.py",
+      "art_studio\\api\\rosette_jobs_routes.py"
+    ],
+    "GET /health": [
+      "analyzer\\router.py",
+      "business\\router.py",
+      "routers\\archtop_router.py",
+      "routers\\auth_router.py",
+      "routers\\health_router.py",
+      "routers\\string_master_router.py",
+      "routers\\ai\\wood_grading_router.py",
+      "rmos\\operations\\router.py",
+      "core\\job_queue\\router.py"
+    ],
+    "POST /validate": [
+      "api_v1\\dxf_workflow.py",
+      "routers\\dxf_preflight_router.py",
+      "routers\\posts_consolidated_router.py",
+      "routers\\blueprint_cam\\preprocessor_router.py",
+      "routers\\cam\\dxf_translator_router.py",
+      "routers\\cam\\export_lifecycle_router.py",
+      "routers\\cam\\translation_artifact_authorization_router.py",
+      "routers\\cam\\guitar\\flying_v_cam_router.py"
+    ],
+    "GET /presets": [
+      "api_v1\\fretboard.py",
+      "art_studio\\bracing_router.py",
+      "art_studio\\inlay_router.py",
+      "routers\\bridge_presets_router.py",
+      "routers\\cam_pipeline_preset_run_router.py",
+      "routers\\neck_router.py",
+      "routers\\art\\root_art_router.py",
+      "art_studio\\api\\rosette_jobs_routes.py"
+    ],
+    "POST /generate": [
+      "routers\\neck_router.py",
+      "routers\\string_master_router.py",
+      "vision\\generation_router.py",
+      "routers\\ai\\recommendations_router.py",
+      "routers\\neck\\gcode_router.py",
+      "routers\\instruments\\guitar\\electric_body_router.py",
+      "cam\\headstock\\router.py",
+      "art_studio\\api\\inlay_pattern_routes.py"
+    ],
+    "GET /": [
+      "routers\\posts_consolidated_router.py",
+      "routers\\strip_family_router.py",
+      "routers\\cam\\cam_assist_router.py",
+      "routers\\cam\\geometry_authority_router.py",
+      "routers\\instruments\\guitar\\registry_router.py",
+      "routers\\cam\\guitar\\registry_cam_router.py",
+      "cam\\rosette\\photo_batch_router.py",
+      "art_studio\\api\\rosette_snapshot_routes.py"
+    ],
+    "POST /analyze": [
+      "api_v1\\acoustics.py",
+      "routers\\acoustics\\plate_router.py",
+      "routers\\ai\\defect_detection_router.py",
+      "routers\\ai\\wood_grading_router.py",
+      "routers\\blueprint\\phase1_router.py",
+      "routers\\blueprint_cam\\geometry_correction_router.py"
+    ],
+    "GET /templates": [
+      "business\\bom_router.py",
+      "routers\\strip_family_router.py",
+      "routers\\instruments\\guitar\\headstock_inlay_router.py",
+      "routers\\cam\\guitar\\om_cam_router.py",
+      "routers\\cam\\guitar\\stratocaster_cam_router.py",
+      "cam\\headstock\\router.py"
+    ],
+    "GET /patterns": [
+      "core\\store_registry.py",
+      "core\\store_registry.py",
+      "routers\\probe\\setup_router.py",
+      "art_studio\\api\\rosette_pattern_routes.py",
+      "api\\deps\\rmos_stores.py",
+      "api\\deps\\__init__.py"
+    ],
+    "GET /materials": [
+      "business\\bom_router.py",
+      "routers\\binding_design_router.py",
+      "routers\\acoustics\\plate_router.py",
+      "routers\\instruments\\guitar\\headstock_inlay_router.py",
+      "cam\\routers\\vcarve\\production_router.py"
+    ],
+    "POST /calculate": [
+      "business\\breakeven_router.py",
+      "business\\cogs_router.py",
+      "business\\pricing_router.py",
+      "routers\\radius_dish_router.py",
+      "routers\\instruments\\guitar\\pickup_calculator_router.py"
+    ],
+    "GET /styles": [
+      "routers\\binding_design_router.py",
+      "routers\\neck\\gcode_router.py",
+      "routers\\instruments\\guitar\\electric_body_router.py",
+      "routers\\instruments\\guitar\\headstock_inlay_router.py",
+      "routers\\cam\\guitar\\acoustic_cam_router.py"
+    ],
+    "GET /ci": [
+      "routers\\cam\\federated_semantics_router.py",
+      "routers\\cam\\geometry_authority_router.py",
+      "routers\\cam\\ontology_reconciliation_router.py",
+      "routers\\cam\\post_freeze_expansion_router.py",
+      "routers\\cam\\review_queue_router.py"
+    ],
+    "POST /export": [
+      "routers\\geometry\\export_router.py",
+      "compare\\routers\\lab\\__init__.py",
+      "art_studio\\api\\inlay_pattern_routes.py",
+      "art_studio\\api\\rosette_pattern_routes.py",
+      "art_studio\\api\\rosette_snapshot_routes.py"
+    ],
+    "POST /import": [
+      "routers\\geometry\\import_router.py",
+      "cam\\routers\\utility\\settings_router.py",
+      "art_studio\\api\\inlay_pattern_routes.py",
+      "art_studio\\api\\rosette_snapshot_routes.py",
+      "art_studio\\api\\snapshot_routes.py"
+    ],
+    "POST /upload": [
+      "api_v1\\acoustics.py",
+      "api_v1\\dxf_workflow.py",
+      "routers\\simulation_consolidated_router.py",
+      "cam\\routers\\simulation\\simulation_consolidated_router.py"
+    ],
+    "POST /dxf": [
+      "api_v1\\fretboard.py",
+      "routers\\export\\dxf_translate_router.py",
+      "routers\\neck\\headstock_transition_export.py",
+      "routers\\neck\\neck_profile_export.py"
+    ],
+    "GET /runs/{run_id}": [
+      "api_v1\\rmos_safety.py",
+      "rmos\\runs_v2\\acoustics_router.py",
+      "rmos\\validation\\router.py",
+      "cam_core\\api\\saw_lab_router.py"
+    ],
+    "POST /evaluate": [
+      "routers\\ltb_calculator_router.py",
+      "routers\\cam\\federation_ci_router.py",
+      "routers\\cam\\governance_freeze_router.py",
+      "routers\\cam\\translator_readiness_router.py"
+    ],
+    "POST /baselines": [
+      "routers\\cam\\federation_ci_router.py",
+      "routers\\cam\\review_ux_ci_router.py",
+      "compare\\routers\\baselines\\__init__.py",
+      "compare\\routers\\lab\\__init__.py"
+    ],
+    "GET /baselines": [
+      "routers\\cam\\federation_ci_router.py",
+      "routers\\cam\\review_ux_ci_router.py",
+      "compare\\routers\\baselines\\__init__.py",
+      "compare\\routers\\lab\\__init__.py"
+    ],
+    "GET /references": [
+      "analyzer\\router.py",
+      "routers\\cam\\federated_semantics_router.py",
+      "routers\\cam\\geometry_authority_router.py"
+    ],
+    "GET /strategies": [
+      "api_v1\\cam_operations.py",
+      "routers\\cam\\cam_assist_router.py",
+      "routers\\retract\\retract_info_router.py"
+    ],
+    "GET /scale-lengths": [
+      "api_v1\\instrument.py",
+      "routers\\blueprint\\calibration_router.py",
+      "routers\\instruments\\guitar\\pickup_calculator_router.py"
+    ],
+    "GET /list": [
+      "api_v1\\jobs.py",
+      "routers\\material_router.py",
+      "cam\\routers\\utility\\backup_router.py"
+    ],
+    "GET /profiles": [
+      "api_v1\\machines.py",
+      "routers\\machines_consolidated_router.py",
+      "routers\\neck\\gcode_router.py"
+    ],
+    "POST /export-dxf": [
+      "art_studio\\bracing_router.py",
+      "art_studio\\inlay_router.py",
+      "cam\\routers\\toolpath\\relief_export_router.py"
+    ],
+    "POST /plan_from_dxf": [
+      "cam\\dxf_validation_gate.py",
+      "routers\\dxf_adaptive_consolidated_router.py",
+      "routers\\adaptive\\dxf_router.py"
+    ],
+    "POST /bom": [
+      "rmos\\api_routes.py",
+      "art_studio\\api\\inlay_pattern_routes.py",
+      "art_studio\\api\\rosette_designer_routes.py"
+    ],
+    "POST /bridge": [
+      "routers\\instrument_geometry_router.py",
+      "routers\\instrument_geometry\\bridge_router.py",
+      "routers\\cam\\guitar\\archtop_cam_router.py"
+    ],
+    "POST /nut-compensation": [
+      "routers\\instrument_router.py",
+      "routers\\instrument\\fretwork_router.py",
+      "routers\\instrument_geometry\\nut_fret_router.py"
+    ],
+    "POST /nut-compensation/compare": [
+      "routers\\instrument_router.py",
+      "routers\\instrument\\fretwork_router.py",
+      "routers\\instrument_geometry\\nut_fret_router.py"
+    ],
+    "POST /soundhole": [
+      "routers\\instrument_router.py",
+      "routers\\instrument\\soundhole_router.py",
+      "routers\\instrument_geometry\\soundhole_router.py"
+    ],
+    "POST /soundhole/check-position": [
+      "routers\\instrument_router.py",
+      "routers\\instrument\\soundhole_router.py",
+      "routers\\instrument_geometry\\soundhole_router.py"
+    ],
+    "GET /history": [
+      "routers\\legacy_dxf_exports_router.py",
+      "routers\\ai\\assistant_router.py",
+      "compare\\routers\\baselines\\__init__.py"
+    ],
+    "POST /compare": [
+      "saw_lab\\compare_router.py",
+      "routers\\music\\temperament_router.py",
+      "art_studio\\api\\rosette_compare_routes.py"
+    ],
+    "POST /convert": [
+      "routers\\blueprint\\edge_to_dxf_router.py",
+      "routers\\geometry\\import_router.py",
+      "cam\\rosette\\photo_batch_router.py"
+    ],
+    "GET /baselines/{baseline_id}": [
+      "routers\\cam\\federation_ci_router.py",
+      "routers\\cam\\review_ux_ci_router.py",
+      "compare\\routers\\baselines\\__init__.py"
+    ],
+    "GET /summaries": [
+      "routers\\cam\\federation_ci_router.py",
+      "routers\\cam\\review_ux_ci_router.py",
+      "routers\\cam\\translation_provenance_router.py"
+    ],
+    "GET /summary": [
+      "rmos\\analytics\\router.py",
+      "rmos\\validation\\router.py",
+      "cam\\routers\\utility\\settings_router.py"
+    ],
+    "GET /{run_id}": [
+      "rmos\\api\\logs_routes.py",
+      "rmos\\api\\rmos_runs_router.py",
+      "rmos\\runs_v2\\api_runs.py"
+    ],
+    "GET /runs": [
+      "rmos\\runs_v2\\acoustics_router.py",
+      "rmos\\validation\\router.py",
+      "cam_core\\api\\saw_lab_router.py"
+    ],
+    "POST /build": [
+      "ai_context_adapter\\routes.py",
+      "routers\\cam\\translator_governance_continuity_router.py"
+    ],
+    "GET /{job_id}": [
+      "api_v1\\jobs.py",
+      "core\\job_queue\\router.py"
+    ],
+    "POST /check": [
+      "api_v1\\rmos_safety.py",
+      "routers\\cam\\review_ux_ci_router.py"
+    ],
+    "POST /runs": [
+      "api_v1\\rmos_safety.py",
+      "cam_core\\api\\saw_lab_router.py"
+    ],
+    "GET /dxf-versions": [
+      "art_studio\\bracing_router.py",
+      "art_studio\\inlay_router.py"
+    ],
+    "POST /project": [
+      "business\\cashflow_router.py",
+      "art_studio\\api\\rosette_manufacturing_routes.py"
+    ],
+    "POST /generate-gcode": [
+      "middleware\\rate_limit.py",
+      "routers\\radius_dish_router.py"
+    ],
+    "GET /pro-dashboard": [
+      "middleware\\tier_gate.py",
+      "middleware\\tier_gate.py"
+    ],
+    "POST /feasibility": [
+      "rmos\\api_routes.py",
+      "rmos\\api\\rmos_feasibility_router.py"
+    ],
+    "POST /break-angle": [
+      "routers\\bridge_presets_router.py",
+      "routers\\neck_router.py"
+    ],
+    "POST /presets": [
+      "routers\\cam_pipeline_preset_run_router.py",
+      "routers\\art\\root_art_router.py"
+    ],
+    "DELETE /presets/{preset_id}": [
+      "routers\\cam_pipeline_preset_run_router.py",
+      "routers\\art\\root_art_router.py"
+    ],
+    "POST /estimate": [
+      "routers\\gcode_consolidated_router.py",
+      "routers\\retract\\retract_info_router.py"
+    ],
+    "POST /bridge/pin-positions": [
+      "routers\\instrument_geometry_router.py",
+      "routers\\instrument_geometry\\bridge_router.py"
+    ],
+    "GET /bridge/options": [
+      "routers\\instrument_geometry_router.py",
+      "routers\\instrument_geometry\\bridge_router.py"
+    ],
+    "GET /soundhole/types": [
+      "routers\\instrument_router.py",
+      "routers\\instrument_geometry\\soundhole_router.py"
+    ],
+    "GET /stats": [
+      "routers\\learned_overrides_router.py",
+      "core\\job_queue\\router.py"
+    ],
+    "POST /polygon_offset.nc": [
+      "routers\\polygon_offset_router.py",
+      "cam\\routers\\utility\\polygon_router.py"
+    ],
+    "POST /simulate_gcode": [
+      "routers\\simulation_consolidated_router.py",
+      "cam\\routers\\simulation\\simulation_consolidated_router.py"
+    ],
+    "POST /soundhole/spiral/geometry": [
+      "routers\\woodworking_router.py",
+      "routers\\instrument_geometry\\soundhole_router.py"
+    ],
+    "POST /soundhole/spiral/dxf": [
+      "routers\\woodworking_router.py",
+      "routers\\instrument_geometry\\soundhole_router.py"
+    ],
+    "POST /plan": [
+      "saw_lab\\batch_router.py",
+      "routers\\adaptive\\plan_router.py"
+    ],
+    "POST /approve": [
+      "saw_lab\\batch_router.py",
+      "saw_lab\\decision_router.py"
+    ],
+    "GET /jobs": [
+      "routers\\art\\root_art_router.py",
+      "art_studio\\api\\rosette_jobs_routes.py"
+    ],
+    "GET /jobs/{job_id}": [
+      "routers\\art\\root_art_router.py",
+      "cam\\routers\\rosette\\rosette_jobs_router.py"
+    ],
+    "POST /vectorize": [
+      "routers\\blueprint\\phase3_router.py",
+      "routers\\blueprint\\vectorize_router.py"
+    ],
+    "POST /references": [
+      "routers\\cam\\federated_semantics_router.py",
+      "routers\\cam\\geometry_authority_router.py"
+    ],
+    "GET /packages": [
+      "routers\\cam\\federated_semantics_router.py",
+      "routers\\cam\\governance_freeze_router.py"
+    ],
+    "GET /summaries/{summary_id}": [
+      "routers\\cam\\federation_ci_router.py",
+      "routers\\cam\\review_ux_ci_router.py"
+    ],
+    "GET /capabilities": [
+      "routers\\cam\\lifecycle_capability_router.py",
+      "routers\\cam\\translator_capability_router.py"
+    ],
+    "GET /capabilities/summary": [
+      "routers\\cam\\lifecycle_capability_router.py",
+      "routers\\cam\\translator_capability_router.py"
+    ],
+    "GET /policy": [
+      "routers\\cam\\ontology_reconciliation_router.py",
+      "routers\\cam\\translator_governance_continuity_router.py"
+    ],
+    "GET /ids": [
+      "routers\\cam\\translation_artifact_router.py",
+      "routers\\cam\\translator_capability_router.py"
+    ],
+    "GET /by-output/{output_class}": [
+      "routers\\cam\\translation_artifact_router.py",
+      "routers\\cam\\translator_capability_router.py"
+    ],
+    "POST /setup/evaluate": [
+      "routers\\instrument\\build_workflow_router.py",
+      "routers\\instrument_geometry\\setup_router.py"
+    ],
+    "POST /blocks": [
+      "routers\\instrument\\build_workflow_router.py",
+      "routers\\instrument_geometry\\body_construction_router.py"
+    ],
+    "GET /blocks/options": [
+      "routers\\instrument\\build_workflow_router.py",
+      "routers\\instrument_geometry\\body_construction_router.py"
+    ],
+    "POST /build-sequence": [
+      "routers\\instrument\\build_workflow_router.py",
+      "routers\\instrument_geometry\\build_sequence_router.py"
+    ],
+    "GET /build-sequence/options": [
+      "routers\\instrument\\build_workflow_router.py",
+      "routers\\instrument_geometry\\build_sequence_router.py"
+    ],
+    "POST /voicing/analyze": [
+      "routers\\instrument\\build_workflow_router.py",
+      "routers\\instrument_geometry\\voicing_router.py"
+    ],
+    "POST /voicing/predict": [
+      "routers\\instrument\\build_workflow_router.py",
+      "routers\\instrument_geometry\\voicing_router.py"
+    ],
+    "GET /voicing/targets/{body_style}": [
+      "routers\\instrument\\build_workflow_router.py",
+      "routers\\instrument_geometry\\voicing_router.py"
+    ],
+    "GET /voicing/stages": [
+      "routers\\instrument\\build_workflow_router.py",
+      "routers\\instrument_geometry\\voicing_router.py"
+    ],
+    "POST /electronics-layout": [
+      "routers\\instrument\\electronics_router.py",
+      "routers\\instrument_geometry\\electronics_router.py"
+    ],
+    "POST /electronics-layout/pickup-cavity": [
+      "routers\\instrument\\electronics_router.py",
+      "routers\\instrument_geometry\\electronics_router.py"
+    ],
+    "POST /electronics-layout/control-layout": [
+      "routers\\instrument\\electronics_router.py",
+      "routers\\instrument_geometry\\electronics_router.py"
+    ],
+    "GET /electronics-layout/options": [
+      "routers\\instrument\\electronics_router.py",
+      "routers\\instrument_geometry\\electronics_router.py"
+    ],
+    "POST /nut-slots": [
+      "routers\\instrument\\fretwork_router.py",
+      "routers\\instrument_geometry\\nut_fret_router.py"
+    ],
+    "GET /nut-slots/options": [
+      "routers\\instrument\\fretwork_router.py",
+      "routers\\instrument_geometry\\nut_fret_router.py"
+    ],
+    "POST /fret-leveling": [
+      "routers\\instrument\\fretwork_router.py",
+      "routers\\instrument_geometry\\nut_fret_router.py"
+    ],
+    "POST /fret-leveling/radius": [
+      "routers\\instrument\\fretwork_router.py",
+      "routers\\instrument_geometry\\nut_fret_router.py"
+    ],
+    "POST /fret-wire/recommend": [
+      "routers\\instrument\\fretwork_router.py",
+      "routers\\instrument_geometry\\nut_fret_router.py"
+    ],
+    "GET /fret-wire/catalog": [
+      "routers\\instrument\\fretwork_router.py",
+      "routers\\instrument_geometry\\nut_fret_router.py"
+    ],
+    "GET /fret-wire/options": [
+      "routers\\instrument\\fretwork_router.py",
+      "routers\\instrument_geometry\\nut_fret_router.py"
+    ],
+    "POST /side-bending": [
+      "routers\\instrument\\materials_physics_router.py",
+      "routers\\instrument_geometry\\body_construction_router.py"
+    ],
+    "POST /side-thickness": [
+      "routers\\instrument\\materials_physics_router.py",
+      "routers\\instrument_geometry\\body_construction_router.py"
+    ],
+    "GET /side-bending/options": [
+      "routers\\instrument\\materials_physics_router.py",
+      "routers\\instrument_geometry\\body_construction_router.py"
+    ],
+    "POST /wood-movement": [
+      "routers\\instrument\\materials_physics_router.py",
+      "routers\\instrument_geometry\\wood_movement_router.py"
+    ],
+    "POST /wood-movement/safe-range": [
+      "routers\\instrument\\materials_physics_router.py",
+      "routers\\instrument_geometry\\wood_movement_router.py"
+    ],
+    "GET /wood-movement/species": [
+      "routers\\instrument\\materials_physics_router.py",
+      "routers\\instrument_geometry\\wood_movement_router.py"
+    ],
+    "GET /soundhole/options": [
+      "routers\\instrument\\soundhole_router.py",
+      "routers\\instrument_geometry\\soundhole_router.py"
+    ],
+    "GET /styles/{style_id}": [
+      "routers\\instruments\\guitar\\electric_body_router.py",
+      "routers\\instruments\\guitar\\headstock_inlay_router.py"
+    ],
+    "GET /presets/24fret-strat": [
+      "routers\\instruments\\guitar\\electric_body_router.py",
+      "routers\\instruments\\guitar\\pickup_calculator_router.py"
+    ],
+    "GET /options": [
+      "routers\\instruments\\guitar\\headstock_inlay_router.py",
+      "cam\\headstock\\router.py"
+    ],
+    "GET /inlay-templates": [
+      "routers\\instruments\\guitar\\headstock_inlay_router.py",
+      "cam\\headstock\\router.py"
+    ],
+    "GET /{model_id}/templates": [
+      "routers\\instruments\\guitar\\registry_router.py",
+      "routers\\cam\\guitar\\registry_cam_router.py"
+    ],
+    "GET /download/{file_path:path}": [
+      "routers\\cam\\guitar\\om_cam_router.py",
+      "routers\\cam\\guitar\\stratocaster_cam_router.py"
+    ],
+    "POST /import-zip": [
+      "rmos\\acoustics\\router_import.py",
+      "rmos\\runs_v2\\acoustics_router.py"
+    ],
+    "GET /export": [
+      "rmos\\analytics\\router.py",
+      "cam\\routers\\utility\\settings_router.py"
+    ],
+    "GET /recent": [
+      "rmos\\api\\logs_routes.py",
+      "art_studio\\api\\snapshot_routes.py"
+    ],
+    "GET /attachments/{sha256}": [
+      "rmos\\runs_v2\\acoustics_router.py",
+      "rmos\\runs_v2\\exports.py"
+    ],
+    "GET /diff": [
+      "rmos\\runs_v2\\api_runs.py",
+      "cam\\routers\\utility\\compare_router.py"
+    ],
+    "POST /{run_id}/override": [
+      "rmos\\runs_v2\\exports.py",
+      "rmos\\runs_v2\\router_override.py"
+    ],
+    "POST /diff": [
+      "compare\\routers\\baselines\\__init__.py",
+      "compare\\routers\\lab\\__init__.py"
+    ],
+    "GET /{snapshot_id}": [
+      "art_studio\\api\\rosette_snapshot_routes.py",
+      "art_studio\\api\\snapshot_routes.py"
+    ],
+    "DELETE /{snapshot_id}": [
+      "art_studio\\api\\rosette_snapshot_routes.py",
+      "art_studio\\api\\snapshot_routes.py"
+    ],
+    "PUT /{snapshot_id}": [
+      "art_studio\\api\\rosette_snapshot_routes.py",
+      "art_studio\\api\\snapshot_routes.py"
+    ]
+  },
+  "debug_like": [
+    {
+      "file": "saw_lab\\batch_metrics_decision_router.py",
+      "method": "GET",
+      "path": "/decisions/metrics-rollup/latest"
+    },
+    {
+      "file": "saw_lab\\batch_metrics_execution_router.py",
+      "method": "GET",
+      "path": "/executions/metrics-rollup/latest"
+    },
+    {
+      "file": "saw_lab\\decision_router.py",
+      "method": "GET",
+      "path": "/latest-approved"
+    },
+    {
+      "file": "saw_lab\\execution_lifecycle_router.py",
+      "method": "GET",
+      "path": "/execution/confirmations/latest"
+    },
+    {
+      "file": "saw_lab\\metrics_lookup_consolidated_router.py",
+      "method": "GET",
+      "path": "/execution/metrics/latest-by-decision"
+    },
+    {
+      "file": "saw_lab\\metrics_lookup_consolidated_router.py",
+      "method": "GET",
+      "path": "/execution/metrics/latest-by-batch"
+    },
+    {
+      "file": "saw_lab\\metrics_lookup_consolidated_router.py",
+      "method": "GET",
+      "path": "/execution/metrics/latest"
+    },
+    {
+      "file": "saw_lab\\toolpaths_router.py",
+      "method": "GET",
+      "path": "/toolpaths/latest"
+    },
+    {
+      "file": "saw_lab\\toolpaths_router.py",
+      "method": "GET",
+      "path": "/toolpaths/latest-by-batch"
+    },
+    {
+      "file": "routers\\cam\\federation_ci_router.py",
+      "method": "GET",
+      "path": "/summary/latest"
+    },
+    {
+      "file": "routers\\cam\\governance_freeze_router.py",
+      "method": "GET",
+      "path": "/freezes/latest"
+    },
+    {
+      "file": "routers\\cam\\governance_freeze_router.py",
+      "method": "GET",
+      "path": "/evaluations/latest"
+    },
+    {
+      "file": "routers\\cam\\governance_freeze_router.py",
+      "method": "GET",
+      "path": "/packages/latest"
+    },
+    {
+      "file": "routers\\cam\\ontology_reconciliation_router.py",
+      "method": "GET",
+      "path": "/report/latest"
+    },
+    {
+      "file": "routers\\cam\\ontology_reconciliation_router.py",
+      "method": "GET",
+      "path": "/drift/latest"
+    },
+    {
+      "file": "routers\\cam\\post_freeze_expansion_router.py",
+      "method": "GET",
+      "path": "/proposals/latest"
+    },
+    {
+      "file": "routers\\cam\\post_freeze_expansion_router.py",
+      "method": "GET",
+      "path": "/readiness/latest"
+    },
+    {
+      "file": "routers\\cam\\review_ux_ci_router.py",
+      "method": "GET",
+      "path": "/baselines/latest"
+    },
+    {
+      "file": "routers\\cam\\review_ux_ci_router.py",
+      "method": "GET",
+      "path": "/summaries/latest"
+    }
+  ]
+}
