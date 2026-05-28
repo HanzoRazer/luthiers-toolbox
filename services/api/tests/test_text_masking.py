@@ -13,7 +13,6 @@ import sys
 from pathlib import Path
 from unittest.mock import patch, MagicMock
 
-import numpy as np
 import pytest
 
 # Canonical photo-vectorizer lives under services/ (not repo_root/photo-vectorizer)
@@ -23,32 +22,49 @@ if str(PHOTO_VECTORIZER_PATH) not in sys.path:
     sys.path.insert(0, str(PHOTO_VECTORIZER_PATH))
 
 
+def _photo_numpy():
+    """
+    Numpy bound through edge_to_dxf's import context.
+
+    api-verify runs thousands of tests; ezdxf.math.construct2d re-imports numpy
+    mid-session (see CI warning on construct2d.py:8). A module-level
+    ``import numpy as np`` in this file goes stale, and ndarray.sum() on masks
+    then raises _NoValueType. Import edge_to_dxf first and use its np binding.
+    """
+    import edge_to_dxf
+
+    return edge_to_dxf.np
+
+
 class TestTextMaskingFunctions:
     """Unit tests for text masking helper functions."""
 
     def test_create_text_mask_empty_regions(self):
         """Empty region list produces empty mask."""
+        np = _photo_numpy()
         from edge_to_dxf import create_text_mask
 
         mask = create_text_mask((100, 200), [])
         assert mask.shape == (100, 200)
-        assert mask.sum() == 0
+        assert np.sum(mask) == 0
 
     def test_create_text_mask_single_region(self):
         """Single region is correctly filled."""
+        np = _photo_numpy()
         from edge_to_dxf import create_text_mask
 
         regions = [(10, 20, 30, 40)]  # x, y, w, h
         mask = create_text_mask((100, 200), regions)
 
         # Check that region is filled
-        assert mask[20:60, 10:40].sum() == 255 * 30 * 40
+        assert np.sum(mask[20:60, 10:40]) == 255 * 30 * 40
         # Check that outside region is empty
-        assert mask[0:20, :].sum() == 0
-        assert mask[60:, :].sum() == 0
+        assert np.sum(mask[0:20, :]) == 0
+        assert np.sum(mask[60:, :]) == 0
 
     def test_create_text_mask_multiple_regions(self):
         """Multiple regions are all filled."""
+        np = _photo_numpy()
         from edge_to_dxf import create_text_mask
 
         regions = [
@@ -58,11 +74,12 @@ class TestTextMaskingFunctions:
         mask = create_text_mask((100, 100), regions)
 
         # Both regions should be filled
-        assert mask[10:30, 10:30].sum() > 0
-        assert mask[50:70, 50:70].sum() > 0
+        assert np.sum(mask[10:30, 10:30]) > 0
+        assert np.sum(mask[50:70, 50:70]) > 0
 
     def test_create_text_mask_clips_to_bounds(self):
         """Regions extending beyond image are clipped."""
+        np = _photo_numpy()
         from edge_to_dxf import create_text_mask
 
         # Region extends beyond image bounds
@@ -71,10 +88,11 @@ class TestTextMaskingFunctions:
 
         # Should not crash, mask should be clipped
         assert mask.shape == (100, 100)
-        assert mask[90:100, 90:100].sum() > 0
+        assert np.sum(mask[90:100, 90:100]) > 0
 
     def test_apply_text_mask_to_edges_removes_text(self):
         """Text mask correctly removes edge pixels in text regions."""
+        np = _photo_numpy()
         from edge_to_dxf import apply_text_mask_to_edges
 
         # Create edge image with edges everywhere
@@ -87,14 +105,15 @@ class TestTextMaskingFunctions:
         masked, removed = apply_text_mask_to_edges(edges, text_mask)
 
         # Right half should be masked out
-        assert masked[:, 50:].sum() == 0
+        assert np.sum(masked[:, 50:]) == 0
         # Left half should be preserved
-        assert masked[:, :50].sum() == 255 * 100 * 50
+        assert np.sum(masked[:, :50]) == 255 * 100 * 50
         # Removed count should be the right half
         assert removed == 100 * 50
 
     def test_apply_text_mask_to_edges_handles_none(self):
         """None mask returns edges unchanged."""
+        np = _photo_numpy()
         from edge_to_dxf import apply_text_mask_to_edges
 
         edges = np.ones((100, 100), dtype=np.uint8) * 255
@@ -109,6 +128,7 @@ class TestTextDetection:
 
     def test_detect_text_regions_no_easyocr(self):
         """Returns empty list when EasyOCR unavailable."""
+        np = _photo_numpy()
         from edge_to_dxf import detect_text_regions
 
         # Mock EasyOCR as unavailable
@@ -127,6 +147,7 @@ class TestTextDetection:
 
     def test_detect_text_regions_filters_low_confidence(self):
         """Low-confidence detections are filtered out."""
+        np = _photo_numpy()
         from edge_to_dxf import detect_text_regions, _get_easyocr_reader
 
         # Skip if EasyOCR not available
