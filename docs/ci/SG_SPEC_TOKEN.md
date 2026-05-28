@@ -22,7 +22,7 @@ When you create or rotate the PAT, GitHub shows the expiration date. **Copy it h
 
 | Set date (UTC) | Expires (UTC) | Type | Calendar reminder | Notes |
 |----------------|---------------|------|-------------------|-------|
-| _YYYY-MM-DD_ | _YYYY-MM-DD_ | fine-grained / classic | _expires − 30d_ | e.g. `luthiers-toolbox-ci-sg-spec`, repo `HanzoRazer/sg-spec` read |
+| 2026-05-28 | _(fill from GitHub token page)_ | fine-grained, HanzoRazer org | _(expires − 30d)_ | Actions repo secret; api-verify `26553328753` preflight + install green |
 
 **Calendar (cheap insurance):** Create a recurring or one-shot event titled `SG_SPEC_TOKEN expires — rotate luthiers-toolbox` on the **Expires** date minus 30 days. Link this file in the event description.
 

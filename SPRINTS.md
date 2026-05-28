@@ -711,11 +711,11 @@ Domain handoffs and governance docs may add detail but **must cite the SPRINTS I
 |----|-------|----------|--------|---------------|
 | ART-STUDIO-DEFER-001 | Design-first-workflow + promotion intent export | API / Art Studio | QUEUED | 2026-05-26 |
 | MAINT-DEFER-001 | SPRINTS.md CI enforcement (pre-commit / PR advisory) | Process | DEFERRED | 2026-04-23 |
-| CI-RED-001 | sg-spec clone auth — api-verify dead | CI / infra | CLOSING (#53) | 2026-05-27 |
+| CI-RED-001 | sg-spec clone auth — api-verify dead | CI / infra | CLOSED | 2026-05-28 |
 | CI-RED-002 | legacy-usage gate 131/10 | CI / API hygiene | OPEN | 2026-05-27 |
 | CI-RED-003 | debt-gates complexity ratchet (113 violations) | CI / quality | OPEN | 2026-05-27 |
 | CI-RED-004 | Fence Checks frontend boundary violations | CI / boundaries | OPEN | 2026-05-27 |
-| CI-RED-005 | Container build swallows sg-spec install failure | CI / containers | OPEN | 2026-05-27 |
+| CI-RED-005 | Container build swallows sg-spec install failure | CI / containers | IN_PROGRESS | 2026-05-28 |
 
 ---
 
@@ -766,15 +766,12 @@ Domain handoffs and governance docs may add detail but **must cite the SPRINTS I
 
 ### CI-RED-001 — sg-spec clone auth (api-verify dead)
 
-**Status:** CLOSING — PR #53 (preflight + `docs/ci/SG_SPEC_TOKEN.md` with expiry log)  
-**last_verified:** 2026-05-27  
-**Original failure:** Gate dead — no git auth before `pip install`; invisible validator.  
-**Closed in three layers:**
-1. **PR #51** — gate parses and runs; token env-mapped.
-2. **PR #52** — credential-store + probe 5 stale-token rotation; **Install API deps** green (`26526070562`).
-3. **PR #53** — dedicated PAT doc, rotation/expiry table, calendar reminder; **Preflight sg-spec token** fails loud before pip.
-**Durability:** `docs/ci/SG_SPEC_TOKEN.md` rotation log + calendar reminder prevents future “dead gate, unknown why.”  
-**Out of scope for CI-RED-001:** `make api-verify` contract/fence reds (gate working); **CI-RED-005** container warning-swallow.
+**Status:** CLOSED  
+**last_verified:** 2026-05-28  
+**Closed:** Preflight + **Install API deps** green on `main` (api-verify run `26553328753`) after dedicated PAT in repository secret `SG_SPEC_TOKEN`.  
+**Layers:** PR #51 (gate runs) → #52 (credential-store + token rotation) → #55 (preflight in credential step) → PAT under **HanzoRazer** org fine-grained token in Actions secrets.  
+**Durability:** `docs/ci/SG_SPEC_TOKEN.md` rotation log + preflight in `api_verify.yml`.  
+**Out of scope (separate ledger):** `make api-verify` contract/fence reds; **CI-RED-005** container swallow (next).
 
 ---
 
@@ -806,11 +803,11 @@ Domain handoffs and governance docs may add detail but **must cite the SPRINTS I
 
 ### CI-RED-005 — Container build swallows sg-spec install failure
 
-**Status:** OPEN  
-**last_verified:** 2026-05-27  
-**Why open:** `docker/api/Dockerfile` installs sg-spec in a shell branch that on failure logs `WARNING: sg-spec installation failed, continuing without it` and the image build still goes green. Containers job passes while a declared dependency is missing — same shape as silent deletion (routers, stashed DO85).  
-**Evidence:** PR #52 containers run `26520419625` — same `Authentication failed` as api-verify, then warning, build succeeds.  
-**Restore trigger:** sg-spec install failure fails the container build loudly, or sg-spec is removed from declared deps with an explicit optional path. **Not in CI-RED-001 snail-step.**  
+**Status:** IN_PROGRESS  
+**last_verified:** 2026-05-28  
+**Why open:** `docker/api/Dockerfile` logged `WARNING: sg-spec installation failed, continuing without it` — green container build with missing declared dependency.  
+**Fix in flight:** Fail Docker build when `SG_SPEC_TOKEN` missing or sg-spec pip install fails.  
+**Restore trigger:** Containers (Build + Smoke) green on PR with sg-spec install step succeeding (no warning swallow).  
 **Restore trigger:** Fence Checks (Blocking) green on `main`.
 
 **Note:** Permanently red CI camouflages real regressions (CBSP21 on PR #49 nearly filed as "drift"). These items are **old, not acceptable, not closed.**
