@@ -716,6 +716,9 @@ Domain handoffs and governance docs may add detail but **must cite the SPRINTS I
 | CI-RED-003 | debt-gates complexity ratchet (113 violations) | CI / quality | OPEN | 2026-05-27 |
 | CI-RED-004 | Fence Checks frontend boundary violations | CI / boundaries | OPEN | 2026-05-27 |
 | CI-RED-005 | Container build swallows sg-spec install failure | CI / containers | CLOSED | 2026-05-28 |
+| CI-RED-006 | api-verify: missing `app.ci.domain_boundaries` | CI / api-verify | OPEN | 2026-05-28 |
+| CI-RED-007 | api-verify: missing `app.ci.operation_lane_compliance` | CI / api-verify | OPEN | 2026-05-28 |
+| CI-RED-008 | api-verify: missing `ci/rmos/check_no_direct_runartifact.py` | CI / api-verify | OPEN | 2026-05-28 |
 
 ---
 
@@ -810,6 +813,35 @@ Domain handoffs and governance docs may add detail but **must cite the SPRINTS I
 **Was:** WARNING swallow shipped API images without declared `sg-spec` dependency.
 
 **Note:** Permanently red CI camouflages real regressions (CBSP21 on PR #49 nearly filed as "drift"). Remaining CI-RED items are **old, not acceptable, not closed.**
+
+---
+
+### CI-RED-006 — api-verify: missing `app.ci.domain_boundaries`
+
+**Status:** OPEN  
+**last_verified:** 2026-05-28  
+**Why open:** `make check-boundaries` step [2/7] invokes `python -m app.ci.domain_boundaries --profile rmos_cam`; module never shipped (run `26553328753` — `No module named app.ci.domain_boundaries`).  
+**Restore trigger:** Step [2/7] runs without import error; **CI-RED-006** CLOSED when merged or api-verify green without this gap.
+
+---
+
+### CI-RED-007 — api-verify: missing `app.ci.operation_lane_compliance`
+
+**Status:** OPEN  
+**last_verified:** 2026-05-28  
+**Why open:** Step [3/7] invokes `python -m app.ci.operation_lane_compliance`; module/script absent (run `26553328753`).  
+**Restore trigger:** Step [3/7] runs without import error; **CI-RED-007** CLOSED when merged or api-verify green without this gap.
+
+---
+
+### CI-RED-008 — api-verify: missing `ci/rmos/check_no_direct_runartifact.py`
+
+**Status:** OPEN  
+**last_verified:** 2026-05-28  
+**Why open:** Step [5/7] invokes `python ci/rmos/check_no_direct_runartifact.py`; `ci/rmos/` tree absent (run `26553328753`). Registered in `FENCE_REGISTRY.json` (`artifact_authority`).  
+**Restore trigger:** Step [5/7] runs without file-not-found; **CI-RED-008** CLOSED when merged or api-verify green without this gap.
+
+**Parking lot order:** Clear **CI-RED-006 → 007 → 008** one PR each; structural reds **CI-RED-002–004** remain separate until budgeted.
 
 ---
 
