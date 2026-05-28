@@ -28,28 +28,28 @@ class TestTextMaskingFunctions:
 
     def test_create_text_mask_empty_regions(self):
         """Empty region list produces empty mask."""
-        from edge_to_dxf import create_text_mask
+        from edge_to_dxf import create_text_mask, mask_pixel_sum
 
         mask = create_text_mask((100, 200), [])
         assert mask.shape == (100, 200)
-        assert mask.sum() == 0
+        assert mask_pixel_sum(mask) == 0
 
     def test_create_text_mask_single_region(self):
         """Single region is correctly filled."""
-        from edge_to_dxf import create_text_mask
+        from edge_to_dxf import create_text_mask, mask_pixel_sum
 
         regions = [(10, 20, 30, 40)]  # x, y, w, h
         mask = create_text_mask((100, 200), regions)
 
         # Check that region is filled
-        assert mask[20:60, 10:40].sum() == 255 * 30 * 40
+        assert mask_pixel_sum(mask[20:60, 10:40]) == 255 * 30 * 40
         # Check that outside region is empty
-        assert mask[0:20, :].sum() == 0
-        assert mask[60:, :].sum() == 0
+        assert mask_pixel_sum(mask[0:20, :]) == 0
+        assert mask_pixel_sum(mask[60:, :]) == 0
 
     def test_create_text_mask_multiple_regions(self):
         """Multiple regions are all filled."""
-        from edge_to_dxf import create_text_mask
+        from edge_to_dxf import create_text_mask, mask_pixel_sum
 
         regions = [
             (10, 10, 20, 20),
@@ -58,12 +58,12 @@ class TestTextMaskingFunctions:
         mask = create_text_mask((100, 100), regions)
 
         # Both regions should be filled
-        assert mask[10:30, 10:30].sum() > 0
-        assert mask[50:70, 50:70].sum() > 0
+        assert mask_pixel_sum(mask[10:30, 10:30]) > 0
+        assert mask_pixel_sum(mask[50:70, 50:70]) > 0
 
     def test_create_text_mask_clips_to_bounds(self):
         """Regions extending beyond image are clipped."""
-        from edge_to_dxf import create_text_mask
+        from edge_to_dxf import create_text_mask, mask_pixel_sum
 
         # Region extends beyond image bounds
         regions = [(90, 90, 50, 50)]  # Extends beyond 100x100
@@ -71,11 +71,11 @@ class TestTextMaskingFunctions:
 
         # Should not crash, mask should be clipped
         assert mask.shape == (100, 100)
-        assert mask[90:100, 90:100].sum() > 0
+        assert mask_pixel_sum(mask[90:100, 90:100]) > 0
 
     def test_apply_text_mask_to_edges_removes_text(self):
         """Text mask correctly removes edge pixels in text regions."""
-        from edge_to_dxf import apply_text_mask_to_edges
+        from edge_to_dxf import apply_text_mask_to_edges, mask_pixel_sum
 
         # Create edge image with edges everywhere
         edges = np.ones((100, 100), dtype=np.uint8) * 255
@@ -87,9 +87,9 @@ class TestTextMaskingFunctions:
         masked, removed = apply_text_mask_to_edges(edges, text_mask)
 
         # Right half should be masked out
-        assert masked[:, 50:].sum() == 0
+        assert mask_pixel_sum(masked[:, 50:]) == 0
         # Left half should be preserved
-        assert masked[:, :50].sum() == 255 * 100 * 50
+        assert mask_pixel_sum(masked[:, :50]) == 255 * 100 * 50
         # Removed count should be the right half
         assert removed == 100 * 50
 

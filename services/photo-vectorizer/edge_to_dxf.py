@@ -524,6 +524,19 @@ def detect_text_regions(
         return []
 
 
+def mask_pixel_sum(mask: np.ndarray) -> int:
+    """
+    Sum pixel values for a uint8 text/edge mask without ndarray.sum().
+
+    Text masks use 0/255 fills; cv2.countNonZero * 255 matches total pixel sum
+    and avoids numpy 2.x _NoValueType failures after long pytest sessions where
+    ndarray.sum can cross a reloaded numpy core.
+    """
+    if mask is None or mask.size == 0:
+        return 0
+    return int(cv2.countNonZero(mask)) * 255
+
+
 def create_text_mask(
     image_shape: Tuple[int, int],
     text_regions: list,
@@ -540,7 +553,7 @@ def create_text_mask(
         Use bitwise NOT to get geometry-only mask.
     """
     h, w = image_shape[:2]
-    mask = np.zeros((h, w), dtype=np.uint8)
+    mask = np.zeros((h, w), dtype=np.uint8, order="C")
 
     for (x, y, rw, rh) in text_regions:
         # Clip to image bounds
@@ -552,7 +565,7 @@ def create_text_mask(
         if x2 > x1 and y2 > y1:
             mask[y1:y2, x1:x2] = 255
 
-    return mask
+    return np.ascontiguousarray(mask)
 
 
 def apply_text_mask_to_edges(
