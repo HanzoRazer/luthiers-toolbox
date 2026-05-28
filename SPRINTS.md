@@ -718,7 +718,7 @@ Domain handoffs and governance docs may add detail but **must cite the SPRINTS I
 | CI-RED-005 | Container build swallows sg-spec install failure | CI / containers | CLOSED | 2026-05-28 |
 | CI-RED-006 | api-verify: missing `app.ci.domain_boundaries` | CI / api-verify | CLOSED | 2026-05-28 |
 | CI-RED-007 | api-verify: missing `app.ci.operation_lane_compliance` | CI / api-verify | CLOSED | 2026-05-28 |
-| CI-RED-008 | api-verify: missing `ci/rmos/check_no_direct_runartifact.py` | CI / api-verify | OPEN | 2026-05-28 |
+| CI-RED-008 | api-verify: missing `ci/rmos/check_no_direct_runartifact.py` | CI / api-verify | CLOSED | 2026-05-28 |
 
 ---
 
@@ -836,12 +836,12 @@ Domain handoffs and governance docs may add detail but **must cite the SPRINTS I
 
 ### CI-RED-008 — api-verify: missing `ci/rmos/check_no_direct_runartifact.py`
 
-**Status:** OPEN  
+**Status:** CLOSED  
 **last_verified:** 2026-05-28  
-**Why open:** Step [5/7] invokes `python ci/rmos/check_no_direct_runartifact.py`; `ci/rmos/` tree absent (run `26553328753`). Registered in `FENCE_REGISTRY.json` (`artifact_authority`).  
-**Restore trigger:** Step [5/7] runs without file-not-found; **CI-RED-008** CLOSED when merged or api-verify green without this gap.
+**Closed:** PR — restore `ci/rmos/check_no_direct_runartifact.py` (artifact authority scan with baseline); un-ignore `ci/rmos/**` in `.gitignore` so fence scripts are tracked.  
+**Was:** Step [5/7] file-not-found; entire `/ci/` tree was gitignored (run `26553328753`).
 
-**Parking lot order:** Clear **CI-RED-006 → 007 → 008** one PR each; structural reds **CI-RED-002–004** remain separate until budgeted.
+**Parking lot order:** **CI-RED-006–008** cleared; structural reds **CI-RED-002–004** remain separate until budgeted.
 
 ---
 
