@@ -1,0 +1,16 @@
+{
+  "record_type": "cam_assist_review_decision",
+  "record_version": "1.0.0",
+  "package_path": "staged_packages/fret_slot_strategy_example",
+  "package_manifest_id": "fret_slots_strategy:fret-slots-25500-22f-sample",
+  "operation_type": "fret_slots_strategy",
+  "decision": "approve_for_downstream_cam",
+  "reviewer": "Example Reviewer",
+  "reviewed_at": "2026-05-23T12:00:00Z",
+  "notes": "Reviewed scale length (25.5 inches), fret count (22), kerf assumption (0.023 inches), and coordinate frame orientation. All parameters suitable for downstream CAM processing.",
+  "authority": {
+    "does_not_authorize_machine_execution": true,
+    "requires_downstream_cam_verification": true,
+    "human_review_recorded": true
+  }
+}

@@ -1,0 +1,65 @@
+{
+  "strategy_version": "1.2",
+  "strategy_id": "v_carve-gibson-les-paul-custom-2024",
+  "units": "inches",
+  "coordinate_frame": {
+    "origin": "top_left_corner",
+    "x_axis": "along_neck",
+    "y_axis": "across_fretboard",
+    "z_axis": "into_material",
+    "datum_point": {
+      "x": 0,
+      "y": 0,
+      "z": 0
+    }
+  },
+  "provenance": {
+    "source_spec_id": "gibson-les-paul-custom-2024",
+    "cam_assist_version": "1.0.0",
+    "created_at": "2026-05-26T03:20:55Z",
+    "created_by": "import_ltb_cam_output"
+  },
+  "operation_intent": {
+    "operation_type": "v_carve",
+    "target_feature": "fretboard",
+    "cut_intent": "profile",
+    "non_execution_declaration": true
+  },
+  "material_context": {
+    "material_class": "hardwood",
+    "species": "ebony",
+    "hardness_janka": 3220
+  },
+  "safety_boundary": {
+    "non_execution_declaration": true,
+    "human_review_required": true,
+    "execution_authority_claim": false,
+    "max_depth_inches": 0.098425,
+    "tool_diameter_inches": 0.25
+  },
+  "geometry": {
+    "dxf_file": "vcarve_inlay.dxf",
+    "primary_layer": "INLAY_POCKET",
+    "reference_layers": [
+      "FRETBOARD_OUTLINE",
+      "CENTERLINE"
+    ]
+  },
+  "operation": {
+    "type": "profile",
+    "method": "vcarve",
+    "tool": {
+      "reference_type": "dimension_spec",
+      "tool_type": "vbit",
+      "diameter": 0.25,
+      "angle_deg": 60
+    },
+    "parameters": {
+      "depth": 0.098425,
+      "feed_rate_ipm": 2834.6472000000003,
+      "spindle_rpm": 18000
+    }
+  },
+  "warnings": [],
+  "approval_state": "pending"
+}

@@ -1,0 +1,46 @@
+{
+  "approval_version": "1.0",
+  "strategy_id": "fret-slots-25500-22f-sample",
+  "approval_state": "pending",
+
+  "checklist_state": {
+    "input_verification": {
+      "A1": false,
+      "A2": false,
+      "A3": false,
+      "A4": false
+    },
+    "geometry_verification": {
+      "B1": false,
+      "B2": false,
+      "B3": false,
+      "B4": false,
+      "B5": false,
+      "B6": false
+    },
+    "parameter_verification": {
+      "C1": false,
+      "C2": false,
+      "C3": false,
+      "C4": false,
+      "C5": false
+    },
+    "safety_verification": {
+      "D1": false,
+      "D2": false,
+      "D3": false,
+      "D4": false
+    },
+    "pre_cut_checks": {
+      "E1": false,
+      "E2": false,
+      "E3": false,
+      "E4": false
+    }
+  },
+
+  "approver": null,
+  "timestamp": null,
+  "notes": null,
+  "acknowledged_warnings": []
+}

@@ -1,0 +1,16 @@
+{
+	"folders": [
+		{
+			"path": "../.."
+		},
+		{
+			"path": "../../../CAM-Assist-Blueprint"
+		}
+	],
+	"settings": {
+		"workbench.colorCustomizations": {
+			"editorError.foreground": "#ff0000",
+			"editorWarning.foreground": "#ff8800"
+		}
+	}
+}

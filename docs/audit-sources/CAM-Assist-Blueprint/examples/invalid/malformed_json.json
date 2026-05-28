@@ -1,0 +1,6 @@
+{
+  "strategy_version": "1.1",
+  "strategy_id": "invalid-malformed"
+  "operation_type": "fret_slots",
+  "units": "inches"
+}

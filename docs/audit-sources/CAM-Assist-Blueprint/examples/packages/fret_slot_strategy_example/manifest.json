@@ -1,0 +1,20 @@
+{
+  "manifest_version": "1.0.0",
+  "package_type": "cam_assist_strategy_package",
+  "operation_type": "fret_slots_strategy",
+  "strategy_file": "strategy.json",
+  "review_packet_file": "review_packet.md",
+  "source_geometry_files": [],
+  "created_at": "2026-05-22T01:43:39.824228Z",
+  "cam_assist_version": "0.5.0",
+  "authority": {
+    "non_execution_declaration": true,
+    "execution_authority_claim": false,
+    "requires_human_review": true
+  },
+  "provenance": {
+    "source_spec_id": "fret-slots-25500-22f-sample",
+    "created_by": "cam-assist-assembly",
+    "derivation_notes": "Assembled from fret_slot_strategy.json by CAM-A5 Strategy Package Assembly CLI."
+  }
+}
