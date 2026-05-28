@@ -716,7 +716,7 @@ Domain handoffs and governance docs may add detail but **must cite the SPRINTS I
 | CI-RED-003 | debt-gates complexity ratchet (113 violations) | CI / quality | OPEN | 2026-05-27 |
 | CI-RED-004 | Fence Checks frontend boundary violations | CI / boundaries | OPEN | 2026-05-27 |
 | CI-RED-005 | Container build swallows sg-spec install failure | CI / containers | CLOSED | 2026-05-28 |
-| CI-RED-006 | api-verify: missing `app.ci.domain_boundaries` | CI / api-verify | OPEN | 2026-05-28 |
+| CI-RED-006 | api-verify: missing `app.ci.domain_boundaries` | CI / api-verify | CLOSED | 2026-05-28 |
 | CI-RED-007 | api-verify: missing `app.ci.operation_lane_compliance` | CI / api-verify | OPEN | 2026-05-28 |
 | CI-RED-008 | api-verify: missing `ci/rmos/check_no_direct_runartifact.py` | CI / api-verify | OPEN | 2026-05-28 |
 
@@ -818,10 +818,10 @@ Domain handoffs and governance docs may add detail but **must cite the SPRINTS I
 
 ### CI-RED-006 — api-verify: missing `app.ci.domain_boundaries`
 
-**Status:** OPEN  
+**Status:** CLOSED  
 **last_verified:** 2026-05-28  
-**Why open:** `make check-boundaries` step [2/7] invokes `python -m app.ci.domain_boundaries --profile rmos_cam`; module never shipped (run `26553328753` — `No module named app.ci.domain_boundaries`).  
-**Restore trigger:** Step [2/7] runs without import error; **CI-RED-006** CLOSED when merged or api-verify green without this gap.
+**Closed:** PR — `app.ci.domain_boundaries` shim delegates to `fence_runner` for `rmos_cam_boundary`; Makefile step [2/7] no longer ModuleNotFoundError.  
+**Was:** `make check-boundaries` step [2/7] invoked missing module (run `26553328753`).
 
 ---
 
