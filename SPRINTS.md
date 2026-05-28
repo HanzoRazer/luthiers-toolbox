@@ -715,7 +715,7 @@ Domain handoffs and governance docs may add detail but **must cite the SPRINTS I
 | CI-RED-002 | legacy-usage gate 131/10 | CI / API hygiene | OPEN | 2026-05-27 |
 | CI-RED-003 | debt-gates complexity ratchet (113 violations) | CI / quality | OPEN | 2026-05-27 |
 | CI-RED-004 | Fence Checks frontend boundary violations | CI / boundaries | OPEN | 2026-05-27 |
-| CI-RED-005 | Container build swallows sg-spec install failure | CI / containers | IN_PROGRESS | 2026-05-28 |
+| CI-RED-005 | Container build swallows sg-spec install failure | CI / containers | CLOSED | 2026-05-28 |
 
 ---
 
@@ -797,20 +797,19 @@ Domain handoffs and governance docs may add detail but **must cite the SPRINTS I
 
 **Status:** OPEN  
 **last_verified:** 2026-05-27  
-**Why open:** `patterns: FAIL` — legacy `/api/rmos/runs` references in client SDK/tests.
+**Why open:** `patterns: FAIL` — legacy `/api/rmos/runs` references in client SDK/tests.  
+**Restore trigger:** Fence Checks (Blocking) green on `main`.
 
 ---
 
 ### CI-RED-005 — Container build swallows sg-spec install failure
 
-**Status:** IN_PROGRESS  
+**Status:** CLOSED  
 **last_verified:** 2026-05-28  
-**Why open:** `docker/api/Dockerfile` logged `WARNING: sg-spec installation failed, continuing without it` — green container build with missing declared dependency.  
-**Fix in flight:** Fail Docker build when `SG_SPEC_TOKEN` missing or sg-spec pip install fails.  
-**Restore trigger:** Containers (Build + Smoke) green on PR with sg-spec install step succeeding (no warning swallow).  
-**Restore trigger:** Fence Checks (Blocking) green on `main`.
+**Closed:** PR #57 — `docker/api/Dockerfile` fails build if `SG_SPEC_TOKEN` missing or sg-spec install fails. Containers build-and-test green on PR #57; **reliable-elegance** API deploy green after `SG_SPEC_TOKEN` on Railway env `f7a14a29` (`luthiers-toolbox-production.up.railway.app`, 2026-05-28).  
+**Was:** WARNING swallow shipped API images without declared `sg-spec` dependency.
 
-**Note:** Permanently red CI camouflages real regressions (CBSP21 on PR #49 nearly filed as "drift"). These items are **old, not acceptable, not closed.**
+**Note:** Permanently red CI camouflages real regressions (CBSP21 on PR #49 nearly filed as "drift"). Remaining CI-RED items are **old, not acceptable, not closed.**
 
 ---
 
