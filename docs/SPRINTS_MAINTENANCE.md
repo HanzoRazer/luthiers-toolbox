@@ -43,6 +43,16 @@ Domain-specific docs may elaborate but must cite the SPRINTS ID.
 
 ---
 
+### Rule 7: Governance convergence → SPRINTS.md GOV-CONVERGE (added 2026-05-28)
+
+Work from the **May 2026 governance sprint tail** (R1 IBG ratification, cross-repo vocabulary, IBG→CAM chain, codeowner decisions D1–D4, tap_tone push, etc.) is registered in **`SPRINTS.md` → GOVERNANCE CONVERGENCE (parking lot)** — not in CI-RED entries and not only in audit docs.
+
+1. Assign ID: `GOV-CONVERGE-{NNN}` (umbrella `GOV-CONVERGE-001`).
+2. Cite `docs/audits/SPRINT_COMPLETION_MATRIX_2026-05-24.md` for detail; keep the index current.
+3. **CI failures** discovered during api-verify recovery → `CI-RED-*` under DEFERRED MAINTENANCE, not GOV-CONVERGE.
+
+---
+
 ### Rule 5: Commit hash requirement for completion claims (added 2026-04-26)
 
 **Every completion claim requires three elements:**
