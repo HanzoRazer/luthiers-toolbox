@@ -50,7 +50,7 @@ test-api:
 # Runs the full API test suite (includes Phase 32.0 contract tests in app/tests)
 api-test:
 	@echo "🧪 Running API tests (pytest)"
-	cd services/api && python -m pytest -q tests/ app/tests/
+	cd services/api && PYTHONPATH=. python -m pytest -q tests/ app/tests/
 
 # Alias: api-verify runs all gates (fences + scope + tests)
 api-verify: check-art-studio-scope check-boundaries api-test
