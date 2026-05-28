@@ -46,6 +46,7 @@ class LaborCategory(str, Enum):
 class InstrumentType(str, Enum):
     """Types of instruments for BOM templates."""
     ACOUSTIC_DREADNOUGHT = "acoustic_dreadnought"
+    ACOUSTIC_JUMBO = "acoustic_jumbo"
     ACOUSTIC_OM = "acoustic_om"
     ACOUSTIC_PARLOR = "acoustic_parlor"
     CLASSICAL = "classical"

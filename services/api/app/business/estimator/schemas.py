@@ -13,6 +13,7 @@ from pydantic import BaseModel, Field
 class InstrumentType(str, Enum):
     """Instrument types with WBS templates."""
     ACOUSTIC_DREADNOUGHT = "acoustic_dreadnought"
+    ACOUSTIC_JUMBO = "acoustic_jumbo"
     ACOUSTIC_OM = "acoustic_om"
     ACOUSTIC_PARLOR = "acoustic_parlor"
     CLASSICAL = "classical"
