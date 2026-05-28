@@ -13,10 +13,10 @@ Maintenance discipline: docs/SPRINTS_MAINTENANCE.md
 
 | Track | Index | Next |
 |-------|-------|------|
-| **CI hygiene** | `CI-RED-*` below | **015-D next** — wire-collision audit (PR 1), then gate rewrite (PR 2). One cause class per PR until api-verify green. |
+| **CI hygiene** | `CI-RED-*` below | **015-D-b next** — gate rewrite to wire URLs (after 015-D-a PR lands). Do not bump 108→122 on decorator-only gate. |
 | **Governance tail** | `GOV-CONVERGE-*` below | Blocked on **codeowner decisions (003)** and **R1 schedule (002)**. Not on MVP cut path. |
 
-**015-C:** #72 merged (`727a6105`). **Close marker pending CI** on api-verify run `26600720296` — expect two fewer debt-gate failures (`test_total_endpoints_under_target`, `test_endpoints_not_increasing`).
+**015-C:** **CLOSED** — api-verify run `26600720296`: `test_total_endpoints_under_target` + `test_endpoints_not_increasing` both **PASSED** after #72 ratchet bump.
 
 ---
 
@@ -1042,8 +1042,8 @@ Domain handoffs and governance docs may add detail but **must cite the SPRINTS I
 |--------|----------------|--------|--------|
 | **015-A** | `test_text_masking*` (5) + regression (2) | Drift + numpy reload pollution | **CLOSED** — #70 + #71; CI `26589586906`: 66→61 (−5 = five unit tests); **cause-fixed** (import isolation, not cv2 symptom patch) |
 | **015-B** | `test_vectorizer_canonical_only*` | Schema drift (live vectorizer work) | **CLOSED #70** — canonical response + legacy wire shim; 8/8 green on CI run `26584687684` |
-| **015-C** | `test_technical_debt_gates` endpoint count ratchet | 942→1181 audit; ratchet → 1185 | **#72 merged** — close on CI when run confirms two endpoint gates green (see NEXT SESSION) |
-| **015-D** | duplicate routes + other debt gates | Gate measures decorator suffixes, not wire URLs | **Next.** PR1: wire-collision audit (`audit_endpoints.py`). PR2: rewrite gate. **Do not bump** 108→122 baseline. |
+| **015-C** | `test_technical_debt_gates` endpoint count ratchet | 942→1181 audit; ratchet → 1185 | **CLOSED #72** — CI `26600720296`: endpoint count + ratchet gates green |
+| **015-D** | duplicate routes + other debt gates | Gate measures decorator suffixes, not wire URLs | **015-D-a DONE** — `audit_wire_urls.py` complete; 68 wire collisions, 85 false positives. PR2: rewrite gate. **Do not bump** 108→122 baseline. |
 | **015-E** | board_feet, fretboard ecosphere, misc | Small drift clusters | One cause class per PR after 015-D |
 | **015-F** | remaining | Umbrella tail | One PR each as surfaced |
 
@@ -1053,8 +1053,8 @@ Domain handoffs and governance docs may add detail but **must cite the SPRINTS I
 
 **015-D plan (two PRs — do not conflate diagnosis with remediation):**
 
-1. **015-D-a — Wire-collision audit:** Extend `audit_endpoints.py` with resolved wire URLs (decorator + `APIRouter` prefix + manifest prefix). Report collisions on real URLs. Commits tool + report; **no CI behavior change.**
-2. **015-D-b — Gate rewrite:** If zero wire collisions → rewrite `find_duplicate_routes()` to measure wire URLs (new meaningful baseline). If collisions exist → fix bugs first, then rewrite gate. **Never bump 108→122 on the current decorator-only gate.**
+1. **015-D-a — Wire-collision audit:** ~~Extend `audit_endpoints.py` with resolved wire URLs.~~ **DONE.** Created `scripts/audit_wire_urls.py` (new tool, not extension). Finds **68 actual wire URL collisions** (routing bugs) vs **85 false positives** (same decorator path, different wire URLs). Handoff: `docs/handoffs/CI_RED_015D_WIRE_URL_COLLISION_HANDOFF.md`.
+2. **015-D-b — Gate rewrite:** 68 collisions exist → **fix bugs first**, then rewrite gate. Top collision: `POST /gcode` (11 files). **Never bump 108→122 on the current decorator-only gate.**
 
 **Bar unchanged:** one cause class per PR; no bucket closed without CI confirming predicted failure delta. Target: api-verify green.
 
