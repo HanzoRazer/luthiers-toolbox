@@ -2,30 +2,29 @@
   "schema": "cbsp21_patch_input_v1",
   "schema_version": "cbsp21_patch_input_v1",
   "coverage_min": 0.95,
-  "patch_id": "IBG_JUMBO_FAMILY_GEOMETRY_54",
-  "title": "Correct jumbo family from dreadnought to jumbo (PR #54)",
-  "intent": "Fix IBG jumbo misclassified as dreadnought; add FAMILY_DEFAULTS jumbo and regression tests.",
-  "change_type": "bugfix",
-  "behavior_change": "compatible",
+  "patch_id": "CI_RED_005_CONTAINER_SG_SPEC_FAIL_CLOSED",
+  "title": "Fail Docker build when sg-spec install fails (CI-RED-005)",
+  "intent": "Remove warning-and-continue sg-spec install in docker/api/Dockerfile; close CI-RED-001 in SPRINTS.",
+  "change_type": "ci",
+  "behavior_change": "none",
   "risk_level": "low",
   "scope": {
     "paths_in_scope": [
       ".cbsp21/",
-      "services/api/app/instrument_geometry/body/ibg/",
-      "services/api/app/tests/integration/",
-      "services/api/tests/"
+      "docker/api/",
+      "docs/ci/",
+      "SPRINTS.md"
     ],
     "files_expected_to_change": [
-      "services/api/app/instrument_geometry/body/ibg/body_contour_solver.py",
-      "services/api/app/instrument_geometry/body/ibg/instrument_body_generator.py",
-      "services/api/app/tests/integration/test_fretboard_ecosphere_roundtrip.py",
-      "services/api/tests/test_jumbo_family_regression.py",
+      "docker/api/Dockerfile",
+      "SPRINTS.md",
+      "docs/ci/SG_SPEC_TOKEN.md",
       ".cbsp21/patch_input.json"
     ]
   },
   "diff_articulation": {
-    "what_changed": "Set jumbo family to jumbo; add FAMILY_DEFAULTS jumbo (432mm lower bout); regression tests; Py 3.14 skip on unrelated ezdxf/numpy test.",
-    "why_not_redundant": "Jumbo bodies were generated with dreadnought ratios (381mm vs 432mm lower bout) — incorrect geometry for jumbo instruments."
+    "what_changed": "Dockerfile sg-spec RUN fails closed; SPRINTS CI-RED-001 CLOSED, CI-RED-005 in flight; rotation log example row.",
+    "why_not_redundant": "Container builds passed while sg-spec missing — silent false green same class as deleted routers."
   },
   "verification": {
     "commands_run": [
@@ -35,52 +34,28 @@
   },
   "files": [
     {
-      "path": "services/api/app/instrument_geometry/body/ibg/instrument_body_generator.py",
-      "intent": "Jumbo INSTRUMENT_SPECS family must be jumbo not dreadnought.",
-      "scan_targets": [
-        "services/api/app/instrument_geometry/body/ibg/instrument_body_generator.py"
-      ],
+      "path": "docker/api/Dockerfile",
+      "intent": "Require SG_SPEC_TOKEN and fail build if sg-spec pip install fails.",
+      "scan_targets": ["docker/api/Dockerfile"],
       "risk": "low",
-      "behavior_change": "compatible — jumbo uses correct family ratios",
-      "verification": [
-        "test_jumbo_family_regression.py::test_jumbo_spec_has_correct_family"
-      ]
+      "behavior_change": "none — build honesty only",
+      "verification": ["CI: Containers build-and-test green on PR"]
     },
     {
-      "path": "services/api/app/instrument_geometry/body/ibg/body_contour_solver.py",
-      "intent": "Add FAMILY_DEFAULTS jumbo with canonical dimensions.",
-      "scan_targets": [
-        "services/api/app/instrument_geometry/body/ibg/body_contour_solver.py"
-      ],
+      "path": "SPRINTS.md",
+      "intent": "CI-RED-001 CLOSED; CI-RED-005 IN_PROGRESS.",
+      "scan_targets": ["SPRINTS.md"],
       "risk": "low",
-      "behavior_change": "compatible — jumbo contour solver uses jumbo defaults",
-      "verification": [
-        "test_jumbo_family_regression.py::test_jumbo_defaults_have_correct_dimensions"
-      ]
+      "behavior_change": "none",
+      "verification": ["Review ledger entries"]
     },
     {
-      "path": "services/api/tests/test_jumbo_family_regression.py",
-      "intent": "Regression guard against jumbo/dreadnought family misclassification.",
-      "scan_targets": [
-        "services/api/tests/test_jumbo_family_regression.py"
-      ],
+      "path": "docs/ci/SG_SPEC_TOKEN.md",
+      "intent": "Rotation log example row for 2026-05-28 PAT.",
+      "scan_targets": ["docs/ci/SG_SPEC_TOKEN.md"],
       "risk": "low",
-      "behavior_change": "none — tests only",
-      "verification": [
-        "pytest services/api/tests/test_jumbo_family_regression.py"
-      ]
-    },
-    {
-      "path": "services/api/app/tests/integration/test_fretboard_ecosphere_roundtrip.py",
-      "intent": "Skip R2000 DXF test on Python 3.14 numpy/ezdxf import conflict (env, not jumbo logic).",
-      "scan_targets": [
-        "services/api/app/tests/integration/test_fretboard_ecosphere_roundtrip.py"
-      ],
-      "risk": "low",
-      "behavior_change": "none — skip on unsupported CI Python only",
-      "verification": [
-        "CI lint-build / integration suite"
-      ]
+      "behavior_change": "none",
+      "verification": ["Review rotation log"]
     }
   ]
 }

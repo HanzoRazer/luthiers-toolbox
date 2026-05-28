@@ -31,17 +31,16 @@ COPY services/blueprint-import/requirements.txt ./services/blueprint-import/requ
 RUN pip install --no-cache-dir -r services/blueprint-import/requirements.txt
 
 # Install sg-spec separately (requires SG_SPEC_TOKEN for private repo)
-# Configure git credential store before pip install
-RUN if [ -n "$SG_SPEC_TOKEN" ]; then \
-      git config --global credential.helper store && \
-      echo "https://${SG_SPEC_TOKEN}:x-oauth-basic@github.com" > ~/.git-credentials && \
-      chmod 600 ~/.git-credentials && \
-      pip install --no-cache-dir "sg-spec @ git+https://github.com/HanzoRazer/sg-spec.git" && \
-      rm -f ~/.git-credentials || \
-      echo "WARNING: sg-spec installation failed, continuing without it"; \
-    else \
-      echo "WARNING: SG_SPEC_TOKEN not set, skipping sg-spec installation"; \
-    fi
+# CI-RED-005: fail build if sg-spec cannot install — declared dependency, not optional
+RUN if [ -z "$SG_SPEC_TOKEN" ]; then \
+      echo "ERROR: SG_SPEC_TOKEN required to install declared dependency sg-spec" >&2; \
+      exit 1; \
+    fi && \
+    git config --global credential.helper store && \
+    echo "https://${SG_SPEC_TOKEN}:x-oauth-basic@github.com" > ~/.git-credentials && \
+    chmod 600 ~/.git-credentials && \
+    pip install --no-cache-dir "sg-spec @ git+https://github.com/HanzoRazer/sg-spec.git" && \
+    rm -f ~/.git-credentials
 
 # app
 COPY services/api /app/services/api
