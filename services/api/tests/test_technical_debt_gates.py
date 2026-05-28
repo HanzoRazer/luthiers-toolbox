@@ -24,9 +24,9 @@ APP_ROOT = Path(__file__).parent.parent / "app"
 METRICS_DIR = Path(__file__).parent.parent / "metrics"
 
 # Targets (ratchet down over time)
-# Updated 2026-03-29 — endpoint migration sprint complete
-# 941 actual, 945 = 941 + 4 buffer
-TARGET_MAX_ENDPOINTS = 945
+# Updated 2026-05-28 — CI-RED-015-C endpoint audit (942→1181 verified growth)
+# 1181 actual, 1185 = 1181 + 4 buffer
+TARGET_MAX_ENDPOINTS = 1185
 TARGET_MAX_GOD_OBJECTS = 14  # All reviewed and acceptable
 TARGET_MAX_BARE_EXCEPT = 10  # Actual: 6 (false positives in strings/comments), buffer: +4
 TARGET_MAX_LARGE_FILES = 63  # Actual: 58, buffer: +5 (was 65)

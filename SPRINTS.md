@@ -726,6 +726,7 @@ Domain handoffs and governance docs may add detail but **must cite the SPRINTS I
 | CI-RED-013 | api-verify: missing `app.woodworking.wooden_floating_bridge` | CI / api-verify | CLOSED | 2026-05-28 |
 | CI-RED-014 | api-verify: missing `DXF_R12_TRANSLATOR_ID` registry constants | CI / api-verify | CLOSED | 2026-05-28 |
 | CI-RED-015 | api-verify: test-suite reconciliation (72 failures, ~6 cause classes) | CI / api-verify | OPEN | 2026-05-28 |
+| CI-RED-016 | Endpoint consolidation (1181 routes; CAM governance stack) | CI / quality | OPEN | 2026-05-28 |
 
 ---
 
@@ -916,18 +917,31 @@ Domain handoffs and governance docs may add detail but **must cite the SPRINTS I
 
 | Bucket | Tests (approx) | Nature | Action |
 |--------|----------------|--------|--------|
-| **015-A** | `test_text_masking*` (5) + regression (2) | Drift + numpy reload pollution | **#70 merged:** path + Recommendation; **tail PR:** bind numpy via `edge_to_dxf.np` (ezdxf construct2d reload) |
+| **015-A** | `test_text_masking*` (5) + regression (2) | Drift + numpy reload pollution | **CLOSED** — #70 + #71; CI `26589586906`: 66→61 (−5 = five unit tests); **cause-fixed** (import isolation, not cv2 symptom patch) |
 | **015-B** | `test_vectorizer_canonical_only*` | Schema drift (live vectorizer work) | **CLOSED #70** — canonical response + legacy wire shim; 8/8 green on CI run `26584687684` |
-| **015-C** | `test_technical_debt_gates` endpoint ratchet | **Measurement** — 942→1181 vs `debt_history.json` | **Read the +239 first**; then bump ratchet or consolidate (CI-RED-003) |
+| **015-C** | `test_technical_debt_gates` endpoint ratchet | **Measurement** — 942→1181 vs `debt_history.json` | **PR open** — honest ratchet bump to 1185 after audit; consolidation → **CI-RED-016** |
 | **015-D** | debt-gates complexity / other gates | Overlaps CI-RED-003 | Separate from blind ratchet bump |
 | **015-E** | board_feet, fretboard ecosphere, misc | Small drift clusters | Triage after A–C |
 | **015-F** | remaining | Umbrella tail | One PR each as surfaced |
 
 **Order:** **015-A → 015-B → 015-C (read first) → rest.**
 
-**015-A note:** #70 fixed path drift + `Recommendation` `.get` (regression green on CI `26584687684`). Five unit tests failed: `_NoValueType` in `ndarray.sum()` — ezdxf `construct2d` re-imports numpy mid-suite; stale module-level `import numpy as np` vs `edge_to_dxf` arrays. Tail fix: conftest loads numpy→ezdxf before test collection; `test_text_masking` binds via `edge_to_dxf.np` (cv2 workaround tried, reverted — symptom patch).
+**015-A (CLOSED):** #70 fixed path drift + `Recommendation` `.get`. Five unit tests red on CI `26584687684`: `_NoValueType` in `ndarray.sum()` — root cause was ezdxf `construct2d` re-importing numpy mid-suite (~7000 tests), not numpy 2.2.6 itself. cv2 `countNonZero` workaround was built on wrong diagnosis and **reverted**. #71 fix: conftest loads numpy→ezdxf before collection; `test_text_masking` binds via `edge_to_dxf.np` (PR #50 pollution-isolation pattern). **CI proof:** run `26589586906` — all five `TestTextMaskingFunctions` green; failure count **66→61** (predicted −5 matched actual −5). Mark **cause-fixed**, not symptom-patched.
+
+**015-C audit (942→1181, +239):** Baseline commit `c7347167577f` (2026-03-31 ledger). **39 new files +227**; **4 existing files +12** (`setup_router` +5, `soundhole_router` +5, `phase2_router` +1, `instrument_router` +1). ~195 endpoints = CAM governance/CI/translator stack (manifest-registered, pytest-backed); ~25 = product/export/blueprint; 2 = intent restoration stubs (`cam_roughing_intent`, `rmos_cam_intent`). **Not debug scrap.** Ratchet bump to 1185 (+4 buffer); consolidation tracked separately as **CI-RED-016**. Duplicate route keys (122) → **015-D**, not this PR.
 
 **015-B wire shim (near-term client migration, then remove):** Three consumers confirmed: `useDxfImport.ts`, `useBlueprintWorkflow.ts`, `BlueprintLab.vue` → `vectorizerArtifacts.ts`. Deletion signal: remove `test_legacy_shim_not_on_model_but_available_on_wire` with the shim.
+
+---
+
+### CI-RED-016 — Endpoint consolidation (post-ratchet)
+
+**Status:** OPEN  
+**last_verified:** 2026-05-28  
+**Why open:** 1181 endpoints after verified growth audit (CI-RED-015-C); ~195 in CAM governance/CI/translator routers alone. Intentional and manifest-registered — not debug — but consolidation is genuine future work.  
+**Scope:** CAM governance stack first (`cam_assist`, `geometry_authority`, `governance_freeze`, `ontology_reconciliation`, `federated_semantics`, `post_freeze_expansion`, `review_ux*`, `review_queue`, `federation_ci`, `translator_*`). Tools: `services/api/scripts/audit_endpoints.py`, `diff_endpoints_baseline.py`, `metrics/endpoint_audit_current.json`.  
+**Restore trigger:** Endpoint count reduced with migration plan, or honest sub-budget per domain; overlaps **CI-RED-003** complexity work but tracked separately from endpoint-count ratchet.  
+**Not in scope:** Duplicate route keys (`test_duplicate_routes_under_baseline`) — **015-D**.
 
 ---
 
