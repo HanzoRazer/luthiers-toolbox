@@ -71,8 +71,8 @@ class TestTextMaskingRegression:
         if hasattr(result, 'entity_count'):
             print(f"Entity count: {result.entity_count}")
         if hasattr(result, 'recommendation') and result.recommendation:
-            print(f"Confidence: {result.recommendation.get('confidence', 'N/A')}")
-            print(f"Action: {result.recommendation.get('action', 'N/A')}")
+            print(f"Confidence: {result.recommendation.confidence}")
+            print(f"Action: {result.recommendation.action.value}")
 
     @pytest.mark.slow
     def test_melody_maker_without_text_masking(self, orchestrator):
@@ -96,7 +96,7 @@ class TestTextMaskingRegression:
         print(f"OK: {result.ok}")
         print(f"Stage: {result.stage}")
         if hasattr(result, 'recommendation') and result.recommendation:
-            print(f"Confidence: {result.recommendation.get('confidence', 'N/A')}")
+            print(f"Confidence: {result.recommendation.confidence}")
 
     @pytest.mark.slow
     def test_cuatro_with_text_masking(self, orchestrator):
@@ -127,8 +127,8 @@ class TestTextMaskingRegression:
         if hasattr(result, 'entity_count'):
             print(f"Entity count: {result.entity_count}")
         if hasattr(result, 'recommendation') and result.recommendation:
-            print(f"Confidence: {result.recommendation.get('confidence', 'N/A')}")
-            print(f"Action: {result.recommendation.get('action', 'N/A')}")
+            print(f"Confidence: {result.recommendation.confidence}")
+            print(f"Action: {result.recommendation.action.value}")
 
     @pytest.mark.slow
     def test_cuatro_without_text_masking(self, orchestrator):
@@ -152,7 +152,7 @@ class TestTextMaskingRegression:
         print(f"OK: {result.ok}")
         print(f"Stage: {result.stage}")
         if hasattr(result, 'recommendation') and result.recommendation:
-            print(f"Confidence: {result.recommendation.get('confidence', 'N/A')}")
+            print(f"Confidence: {result.recommendation.confidence}")
 
 
 class TestTextMaskingComparison:

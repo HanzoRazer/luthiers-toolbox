@@ -16,8 +16,9 @@ from unittest.mock import patch, MagicMock
 import numpy as np
 import pytest
 
-# Add photo-vectorizer to path for imports
-PHOTO_VECTORIZER_PATH = Path(__file__).parent.parent.parent.parent / "photo-vectorizer"
+# Canonical photo-vectorizer lives under services/ (not repo_root/photo-vectorizer)
+REPO_ROOT = Path(__file__).resolve().parents[3]
+PHOTO_VECTORIZER_PATH = REPO_ROOT / "services" / "photo-vectorizer"
 if str(PHOTO_VECTORIZER_PATH) not in sys.path:
     sys.path.insert(0, str(PHOTO_VECTORIZER_PATH))
 

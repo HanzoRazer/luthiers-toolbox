@@ -114,6 +114,45 @@ class TestVectorizerCanonicalResponse:
         assert "selection_score" in model_fields
         assert "winner_margin" in model_fields
 
+    def test_legacy_shim_not_on_model_but_available_on_wire(self):
+        """Legacy fields stay off the canonical model; shim adds them at serialization."""
+        from app.routers.photo_vectorizer_router import (
+            Artifacts,
+            Dimensions,
+            Recommendation,
+            Selection,
+            SVGArtifact,
+            VectorizeResponse,
+            _legacy_vectorizer_fields,
+        )
+
+        model_fields = set(VectorizeResponse.model_fields.keys())
+        for legacy_field in FORBIDDEN_LEGACY_FIELDS:
+            assert legacy_field not in model_fields
+
+        response = VectorizeResponse(
+            ok=True,
+            artifacts=Artifacts(
+                svg=SVGArtifact(
+                    present=True,
+                    content=(
+                        '<svg xmlns="http://www.w3.org/2000/svg">'
+                        '<path d="M0 0 L100 0 L100 100 L0 100 Z"/></svg>'
+                    ),
+                    path_count=1,
+                )
+            ),
+            dimensions=Dimensions(width_mm=350.0, height_mm=450.0),
+            selection=Selection(candidate_count=2, selection_score=0.8, winner_margin=0.2),
+            recommendation=Recommendation(action="accept", confidence=0.8),
+            metrics={"processing_ms": 12.5, "scale_source": "spec", "bg_method": "rembg"},
+        )
+        legacy = _legacy_vectorizer_fields(response)
+        assert legacy["svg_path_d"] == "M0 0 L100 0 L100 100 L0 100 Z"
+        assert legacy["body_width_mm"] == 350.0
+        assert legacy["contour_count"] == 1
+        assert legacy["success"] is True
+
 
 class TestPhotoResultCanonical:
     """Ensure PhotoResult dataclass is canonical-only."""
