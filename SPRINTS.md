@@ -3,25 +3,20 @@ Last updated: 2026-05-28
 Maintained by: Ross Echols (HanzoRazer)
 Maintenance discipline: docs/SPRINTS_MAINTENANCE.md
 
-**Two parallel parking lots** (see `docs/SPRINTS_MAINTENANCE.md` Rule 6–7):
-
-1. **[GOVERNANCE CONVERGENCE](#governance-convergence-parking-lot)** — finish the May 2026 four-agent / governance sprint tail (R1, cross-repo vocabulary, IBG unblock chain). **Not CI hygiene.**
-2. **[DEFERRED MAINTENANCE](#deferred-maintenance)** — intentional hold-outs (`*-DEFER-*`) and **CI-RED-*** (api-verify / test reconciliation on `main`). Held out of a merge is fine; untracked is not.
+**SPRINTS.md is the parking lot** — the live index where open work registers at session end (`CI-RED-*`, `GOV-CONVERGE-*`, `*-DEFER-*`). Audit docs and handoffs are detail; entries **close here** when done. The organizing goal remains the **MVP bar** below — not the ledger itself.
 
 ---
 
 ## NEXT SESSION OPENS WITH (2026-05-28)
 
-**Two active programs** — do not collapse into one thread:
+**Organizing goal:** MVP bar — design → platform → G-code → cut on BCAM 2030CA. CI hygiene and governance tail are tracked in this file; neither replaces that goal.
 
-| Program | Registry | Status |
-|---------|----------|--------|
-| **CI hygiene** | [DEFERRED MAINTENANCE](#deferred-maintenance) → `CI-RED-*` | api-verify reconciliation in flight (`CI-RED-015` buckets); structural gates `CI-RED-002–004` still open |
-| **Governance convergence** | [GOVERNANCE CONVERGENCE](#governance-convergence-parking-lot) → `GOV-CONVERGE-*` | Sprint deliverables largely complete; **tail blocked on R1 session + codeowner decisions D1–D4** |
+| Track | Index | Next |
+|-------|-------|------|
+| **CI hygiene** | `CI-RED-*` below | **015-D next** — wire-collision audit (PR 1), then gate rewrite (PR 2). One cause class per PR until api-verify green. |
+| **Governance tail** | `GOV-CONVERGE-*` below | Blocked on **codeowner decisions (003)** and **R1 schedule (002)**. Not on MVP cut path. |
 
-**MVP bar (unchanged):** Design → platform → G-code → cut on BCAM 2030CA. No test suite substitutes for this.
-
-**Source of truth for convergence backlog:** `docs/audits/SPRINT_COMPLETION_MATRIX_2026-05-24.md` + `docs/MULTI_REPO_GOVERNANCE_CONVERGENCE_REPORT.md` (Phases 0–4). This section is the **live index**; audit docs are detail.
+**015-C:** #72 merged (`727a6105`). **Close marker pending CI** on api-verify run `26600720296` — expect two fewer debt-gate failures (`test_total_endpoints_under_target`, `test_endpoints_not_increasing`).
 
 ---
 
@@ -707,149 +702,110 @@ Soundhole Generator → Helmholtz Calculator → complete acoustic design
 
 ---
 
-## GOVERNANCE CONVERGENCE (parking lot)
+## GOVERNANCE CONVERGENCE
 
-**Purpose:** Resume and close the **May 15–24 governance sprint** after four parallel agent tracks diverged post-sprint. Most infrastructure landed (see matrix **COMPLETE**); this registry holds the **tail** so CI hygiene work (`CI-RED-*`) does not replace it.
+**Purpose:** Live index for the **May 2026 governance sprint tail** — not CI hygiene (`CI-RED-*`). Most sprint deliverables are complete; these entries are what remains.
 
-**Authoritative detail:** `docs/audits/SPRINT_COMPLETION_MATRIX_2026-05-24.md`  
-**Roadmap:** `docs/MULTI_REPO_GOVERNANCE_CONVERGENCE_REPORT.md` §9 (Phases 0–4)  
-**Handoff:** `docs/SPRINT_ARCHITECTURE_HANDOFF_2026-05-24.md`
+**Critical path key:** `MVP` = blocks MVP cut · `EXT` = blocks external/customer work · `HYG` = good hygiene, not gating MVP
 
 | Field | Required |
 |-------|----------|
 | **ID** | `GOV-CONVERGE-{NNN}` |
-| **Status** | `OPEN` \| `IN PROGRESS` \| `BLOCKED` \| `QUEUED` \| `CLOSED` |
-| **Why open** | One sentence — cause, not symptom |
+| **Status** | `OPEN` \| `BLOCKED` \| `QUEUED` \| `CLOSED` |
+| **Path** | `MVP` \| `EXT` \| `HYG` |
 | **Restore trigger** | Concrete done-condition |
-| **last_verified** | Date status confirmed against repo |
+| **last_verified** | Date confirmed against repo |
 
-Domain handoffs may elaborate but **must cite the GOV-CONVERGE ID** (or linked `*-DEFER-*` entry).
+Detail: `docs/audits/SPRINT_COMPLETION_MATRIX_2026-05-24.md` (do not let audit docs substitute for closing entries here).
 
 ### Index
 
-| ID | Title | Category | Status | last_verified |
-|----|-------|----------|--------|---------------|
-| GOV-CONVERGE-001 | Governance sprint convergence (umbrella) | Program | OPEN | 2026-05-28 |
-| GOV-CONVERGE-002 | R1 IBG provenance ratification session | Governance | BLOCKED | 2026-05-28 |
-| GOV-CONVERGE-003 | Codeowner decisions D1–D4 (branch / audit / PR grouping) | Process | BLOCKED | 2026-05-28 |
-| GOV-CONVERGE-004 | Art Studio design-first-workflow restore | API / Art Studio | QUEUED | 2026-05-28 |
-| GOV-CONVERGE-005 | Phase 1 vocabulary crosswalk (docs-only) | Docs / governance | IN PROGRESS | 2026-05-28 |
-| GOV-CONVERGE-006 | tap_tone_pi push (27 commits, source verification) | Platform | QUEUED | 2026-05-28 |
-| GOV-CONVERGE-007 | R2 IBG export wrapper | API / IBG | BLOCKED | 2026-05-28 |
-| GOV-CONVERGE-008 | IBG → CAM integration | API / CAM | BLOCKED | 2026-05-28 |
-| GOV-CONVERGE-009 | Package normalization → `contracts/` | Repo structure | QUEUED | 2026-05-28 |
+| ID | Title | Path | Status | last_verified |
+|----|-------|------|--------|---------------|
+| GOV-CONVERGE-001 | Governance sprint tail (umbrella) | HYG | OPEN | 2026-05-28 |
+| GOV-CONVERGE-002 | IBG provenance chain (R1 → R2 → CAM) | EXT | BLOCKED | 2026-05-28 |
+| GOV-CONVERGE-003 | Codeowner decisions pending (D1–D4) | EXT | BLOCKED | 2026-05-28 |
+| GOV-CONVERGE-004 | Art Studio design-first-workflow restore | HYG | QUEUED | 2026-05-28 |
+| GOV-CONVERGE-005 | tap_tone_pi push (27 commits) | HYG | QUEUED | 2026-05-28 |
+| GOV-CONVERGE-006 | Package normalization → `contracts/` | HYG | QUEUED | 2026-05-28 |
 
-**Dependency chain (do not skip):** R1 (`GOV-CONVERGE-002`) → R2 (`GOV-CONVERGE-007`) → IBG→CAM (`GOV-CONVERGE-008`). See completion matrix §Cross-Channel Dependencies.
+**After CI-RED winds down:** next GOV item is **003** (Ross answers D1–D4) unless scheduling **002** (R1 session) — neither blocks MVP cut.
 
-**COMPLETE — do not re-open** (verified 2026-05-24): Constitutional import DO 77–82, DXF lifecycle guards Phase 2A–2G, runtime spine MRP-5M–6A, CAM 7Y–8F (federation CI, baseline freeze, expansion gate, review UX, queue routing), cross-repo normalization PR #38 modules, IBG MRP-6C ratification prep docs.
+**CLOSED (Phase 1 vocabulary):** `docs/governance/CROSS_REPO_AUTHORITY_CROSSWALK.md` + PR #38 confidence envelope — Phase 1 **~90% complete** (2026-05-24). Remaining tail (owner ratification M1, README links from tap_tone/CAM) is **HYG** — not a live workstream; fold when touching those repos.
 
----
-
-### GOV-CONVERGE-001 — Governance sprint convergence (umbrella)
-
-**Status:** OPEN  
-**last_verified:** 2026-05-28  
-**Why open:** Four-agent governance sprint converged most deliverables to `main`, but tail items (R1 session, D1–D4, tap_tone push, art-studio routes, IBG unblock chain) were never registered as a resumable program — only buried in May 24 audit docs. CI recovery (`CI-RED-*`) temporarily occupied SPRINTS; this entry restores the convergence track.  
-**Restore trigger:** All `GOV-CONVERGE-002`–`009` closed or explicitly superseded; matrix **NOT DONE / BLOCKED / PENDING** sections empty.  
-**Close order:** `003` (decisions) → `002` (R1 schedule) → `007`–`008` (IBG chain) in parallel with `004`–`006`–`009` as bandwidth allows.
+**COMPLETE — do not re-open:** Constitutional import DO 77–82, DXF lifecycle guards, runtime spine MRP-5M–6A, CAM 7Y–8F, IBG MRP-6C ratification prep docs, Phase 1 crosswalk draft.
 
 ---
 
-### GOV-CONVERGE-002 — R1 IBG provenance ratification session
+### GOV-CONVERGE-001 — Governance sprint tail (umbrella)
 
-**Status:** BLOCKED  
+**Status:** OPEN · **Path:** HYG  
 **last_verified:** 2026-05-28  
-**Why blocked:** IBG DXF export paths remain `BLOCKED_PROVENANCE` until governance ratifies the provenance model — scheduling/decision work, not implementation. PR #45 landed R2 fail-closed wrapper; R1 is the gate.  
-**Blocked paths (verified):** `body_contour_solver.py:777,808`, `arc_reconstructor.py:1116,1279,1303` — see completion matrix §IBG Blocked Paths.  
-**Restore trigger:** R1 session held; `IBG_PROVENANCE_RATIFICATION_PACKET.md` ratified; lifecycle matrix updated.  
-**Detail:** `docs/governance/IBG_PROVENANCE_RATIFICATION_PACKET.md`, `IBG_BLOCKED_PROVENANCE_RATIFICATION_TIMELINE.md`
+**Why open:** Convergence tail had no live registry until #73.  
+**Restore trigger:** `002`–`006` closed or superseded.  
+**Real workstreams:** two — **codeowner decisions (003)** and **IBG chain (002)**. Rest is HYG queue.
 
 ---
 
-### GOV-CONVERGE-003 — Codeowner decisions D1–D4
+### GOV-CONVERGE-002 — IBG provenance chain (R1 → R2 → CAM)
 
-**Status:** BLOCKED  
+**Status:** BLOCKED · **Path:** EXT  
 **last_verified:** 2026-05-28  
-**Why blocked:** May 24 matrix listed pending decisions that block implementation commits until Ross resolves.  
-**Decisions:**
+**Chain (single item — do not split):**
 
-| ID | Decision | Impact |
-|----|----------|--------|
-| D1 | Branch strategy | Blocks implementation commits |
-| D2 | Audit sources persistence | Blocks audit PR |
-| D4 | PR grouping | Blocks grouped PRs |
+1. **R1** — Schedule governance session; ratify `IBG_PROVENANCE_RATIFICATION_PACKET.md`. PR #45 fail-closed wrapper already on `main`.
+2. **R2** — Export wrapper; unblocks five `BLOCKED_PROVENANCE` paths (`body_contour_solver.py:777,808`, `arc_reconstructor.py:1116,1279,1303`).
+3. **IBG → CAM** — Integration after R2; do not bypass with lifecycle guards.
 
-**Restore trigger:** Ross records decisions in SPRINTS or ADR; channels unblocked per matrix §Channel Assignment.  
-**Source:** `docs/audits/SPRINT_COMPLETION_MATRIX_2026-05-24.md` §PENDING DECISIONS
+**Restore trigger:** R1 held → R2 green → CAM consumes governed IBG geometry.  
+**Blocks:** external work depending on governed IBG export — **not MVP cut** (MVP can use paths that don't require R1).
+
+---
+
+### GOV-CONVERGE-003 — Codeowner decisions pending (D1–D4)
+
+**Status:** BLOCKED · **Path:** EXT  
+**last_verified:** 2026-05-28  
+**Not engineering work** — Ross answers; record decision in SPRINTS or ADR.
+
+| ID | Question for codeowner | Unblocks |
+|----|------------------------|----------|
+| **D1** | Branch strategy for implementation commits post–governance sprint — single trunk, feature branches, or other? | Implementation commits on convergence tail |
+| **D2** | Persist `docs/audit-sources/` (CAM-Assist, tap_tone_pi, vectorizer-sandbox) in repo, gitignore, or submodule? | Audit-source PR |
+| **D4** | PR grouping for remaining convergence work — one PR per domain, one umbrella, or other? | Grouped PRs |
+
+**Restore trigger:** All three answered in writing here or in ADR.
 
 ---
 
 ### GOV-CONVERGE-004 — Art Studio design-first-workflow restore
 
-**Status:** QUEUED  
+**Status:** QUEUED · **Path:** HYG  
 **last_verified:** 2026-05-28  
-**Also tracked as:** `ART-STUDIO-DEFER-001` in [DEFERRED MAINTENANCE](#art-studio-defer-001--design-first-workflow--promotion-intent-export) (held out of PR #46).  
-**Why queued:** Routes removed in `545fccad` same batch as CAM intent; not on MVP cut path.  
-**Restore trigger:** Re-mount workflow router; recover test; 8/8 green on promotion intent export.  
-**Priority:** LOW until Art Studio promotion path in scope.
+**Also:** `ART-STUDIO-DEFER-001`. Held out of PR #46.  
+**Restore trigger:** Router re-mounted; promotion intent test 8/8 green.
 
 ---
 
-### GOV-CONVERGE-005 — Phase 1 vocabulary crosswalk (docs-only)
+### GOV-CONVERGE-005 — tap_tone_pi push (27 commits)
 
-**Status:** IN PROGRESS  
+**Status:** QUEUED · **Path:** HYG  
 **last_verified:** 2026-05-28  
-**Why open:** Convergence report Phase 1 — map epistemic status ↔ lifecycle class ↔ CAM authority ↔ review invariants across repos. Partially delivered (`CROSS_REPO_AUTHORITY_CROSSWALK.md`, confidence envelope PR #38).  
-**Restore trigger:** Crosswalk ratified by owners (convergence report milestone M1); linked from tap_tone + CAM README.  
-**Source:** `docs/MULTI_REPO_GOVERNANCE_CONVERGENCE_REPORT.md` §9 Phase 1
+**Restore trigger:** Manual verification at source; push; luthiers regression guard green.
 
 ---
 
-### GOV-CONVERGE-006 — tap_tone_pi push (27 commits)
+### GOV-CONVERGE-006 — Package normalization → `contracts/`
 
-**Status:** QUEUED  
+**Status:** QUEUED · **Path:** HYG  
 **last_verified:** 2026-05-28  
-**Why queued:** 27 commits at tap_tone_pi source await manual verification before push to remote — platform track, not luthiers-toolbox CI.  
-**Restore trigger:** Local verification complete; commits pushed; luthiers regression guard still green.  
-**Source:** completion matrix §BLOCKED — tap_tone_pi row
-
----
-
-### GOV-CONVERGE-007 — R2 IBG export wrapper
-
-**Status:** BLOCKED  
-**last_verified:** 2026-05-28  
-**Depends on:** `GOV-CONVERGE-002` (R1)  
-**Why blocked:** Export wrapper implementation after provenance ratification — PR #45 established fail-closed; full R2 scope waits on R1.  
-**Restore trigger:** R1 complete; R2 export paths unblocked in lifecycle matrix; tests green.
-
----
-
-### GOV-CONVERGE-008 — IBG → CAM integration
-
-**Status:** BLOCKED  
-**last_verified:** 2026-05-28  
-**Depends on:** `GOV-CONVERGE-007` (R2)  
-**Why blocked:** CAM integration explicitly blocked until IBG export provenance resolved — do not bypass with lifecycle guards.  
-**Restore trigger:** R2 complete; integration spec implemented; CAM consumes governed IBG geometry.
-
----
-
-### GOV-CONVERGE-009 — Package normalization → `contracts/`
-
-**Status:** QUEUED  
-**last_verified:** 2026-05-28  
-**Why queued:** Post PR #38 — move shared contract modules toward `contracts/` layout (matrix P2).  
-**Depends on:** PR #38 merged (done)  
-**Restore trigger:** Normalization PR merged; imports updated; governance tests green.
+**Restore trigger:** Normalization PR merged post PR #38; governance tests green.
 
 ---
 
 ## DEFERRED MAINTENANCE
 
-**Canonical registry** for work intentionally not done yet **and** for **CI hygiene** (`CI-RED-*`). Engineers log deferrals here at session end (see `docs/SPRINTS_MAINTENANCE.md` Rule 6).
-
-**Not governance convergence** — resume convergence via [GOVERNANCE CONVERGENCE](#governance-convergence-parking-lot) above.
+**Same parking lot** — `CI-RED-*` and `*-DEFER-*` entries. Log at session end (`docs/SPRINTS_MAINTENANCE.md` Rule 6).
 
 | Field | Required |
 |-------|----------|
@@ -867,6 +823,7 @@ Domain handoffs and governance docs may add detail but **must cite the SPRINTS I
 |----|-------|----------|--------|---------------|
 | ART-STUDIO-DEFER-001 | Design-first-workflow + promotion intent export | API / Art Studio | QUEUED | 2026-05-26 |
 | MAINT-DEFER-001 | SPRINTS.md CI enforcement (pre-commit / PR advisory) | Process | DEFERRED | 2026-04-23 |
+| MAINT-DEFER-003 | Load-bearing code comments (`DO NOT REMOVE`) | Process | QUEUED | 2026-05-28 |
 | CI-RED-001 | sg-spec clone auth — api-verify dead | CI / infra | CLOSED | 2026-05-28 |
 | CI-RED-002 | legacy-usage gate 131/10 | CI / API hygiene | OPEN | 2026-05-27 |
 | CI-RED-003 | debt-gates complexity ratchet (113 violations) | CI / quality | OPEN | 2026-05-27 |
@@ -931,6 +888,15 @@ Domain handoffs and governance docs may add detail but **must cite the SPRINTS I
 **Closed by:** PR #47 (MAINT-DEFER-002), PR #49 (DO85)
 
 ---
+
+### MAINT-DEFER-003 — Load-bearing code comments
+
+**Status:** QUEUED  
+**last_verified:** 2026-05-28  
+**Schedule:** Separate small MAINT PR when 015-D is quiet — **not** batched into CI work.  
+**Why:** Conftest early ezdxf import, `_photo_numpy()`, manifest registration order, vectorizer wire shim, `check_execution_class_compliance.py` — defenses work because PR history is remembered.  
+**Restore trigger:** One pass: each load-bearing site gets `DO NOT REMOVE — breaks X (CI run Y)` in the file where it lives.  
+**Path:** HYG — insurance before a cleanup terminal touches these.
 
 ### CI-RED-001 — sg-spec clone auth (api-verify dead)
 
@@ -1076,16 +1042,23 @@ Domain handoffs and governance docs may add detail but **must cite the SPRINTS I
 |--------|----------------|--------|--------|
 | **015-A** | `test_text_masking*` (5) + regression (2) | Drift + numpy reload pollution | **CLOSED** — #70 + #71; CI `26589586906`: 66→61 (−5 = five unit tests); **cause-fixed** (import isolation, not cv2 symptom patch) |
 | **015-B** | `test_vectorizer_canonical_only*` | Schema drift (live vectorizer work) | **CLOSED #70** — canonical response + legacy wire shim; 8/8 green on CI run `26584687684` |
-| **015-C** | `test_technical_debt_gates` endpoint ratchet | **Measurement** — 942→1181 vs `debt_history.json` | **PR #72** — honest ratchet bump to 1185 after audit; consolidation → **CI-RED-016** |
-| **015-D** | debt-gates complexity / other gates | Overlaps CI-RED-003 | Separate from blind ratchet bump |
-| **015-E** | board_feet, fretboard ecosphere, misc | Small drift clusters | Triage after A–C |
+| **015-C** | `test_technical_debt_gates` endpoint count ratchet | 942→1181 audit; ratchet → 1185 | **#72 merged** — close on CI when run confirms two endpoint gates green (see NEXT SESSION) |
+| **015-D** | duplicate routes + other debt gates | Gate measures decorator suffixes, not wire URLs | **Next.** PR1: wire-collision audit (`audit_endpoints.py`). PR2: rewrite gate. **Do not bump** 108→122 baseline. |
+| **015-E** | board_feet, fretboard ecosphere, misc | Small drift clusters | One cause class per PR after 015-D |
 | **015-F** | remaining | Umbrella tail | One PR each as surfaced |
 
 **Order:** **015-A → 015-B → 015-C (read first) → rest.**
 
 **015-A (CLOSED):** #70 fixed path drift + `Recommendation` `.get`. Five unit tests red on CI `26584687684`: `_NoValueType` in `ndarray.sum()` — root cause was ezdxf `construct2d` re-importing numpy mid-suite (~7000 tests), not numpy 2.2.6 itself. cv2 `countNonZero` workaround was built on wrong diagnosis and **reverted**. #71 fix: conftest loads numpy→ezdxf before collection; `test_text_masking` binds via `edge_to_dxf.np` (PR #50 pollution-isolation pattern). **CI proof:** run `26589586906` — all five `TestTextMaskingFunctions` green; failure count **66→61** (predicted −5 matched actual −5). Mark **cause-fixed**, not symptom-patched.
 
-**015-C audit (942→1181, +239):** Baseline commit `c7347167577f` (2026-03-31 ledger). **39 new files +227**; **4 existing files +12** (`setup_router` +5, `soundhole_router` +5, `phase2_router` +1, `instrument_router` +1). ~195 endpoints = CAM governance/CI/translator stack (manifest-registered, pytest-backed); ~25 = product/export/blueprint; 2 = intent restoration stubs (`cam_roughing_intent`, `rmos_cam_intent`). **Not debug scrap.** Ratchet bump to 1185 (+4 buffer); consolidation tracked separately as **CI-RED-016**. Duplicate route keys (122) → **015-D**, not this PR.
+**015-D plan (two PRs — do not conflate diagnosis with remediation):**
+
+1. **015-D-a — Wire-collision audit:** Extend `audit_endpoints.py` with resolved wire URLs (decorator + `APIRouter` prefix + manifest prefix). Report collisions on real URLs. Commits tool + report; **no CI behavior change.**
+2. **015-D-b — Gate rewrite:** If zero wire collisions → rewrite `find_duplicate_routes()` to measure wire URLs (new meaningful baseline). If collisions exist → fix bugs first, then rewrite gate. **Never bump 108→122 on the current decorator-only gate.**
+
+**Bar unchanged:** one cause class per PR; no bucket closed without CI confirming predicted failure delta. Target: api-verify green.
+
+**015-C audit (942→1181, +239):** Baseline `c7347167577f`. 39 new files +227; 4 existing +12. ~195 CAM governance stack; ~25 product; 2 intent stubs. Ratchet 1185 in #72. Consolidation → **CI-RED-016** (doc-only until post–MVP cut).
 
 **015-B wire shim (near-term client migration, then remove):** Three consumers confirmed: `useDxfImport.ts`, `useBlueprintWorkflow.ts`, `BlueprintLab.vue` → `vectorizerArtifacts.ts`. Deletion signal: remove `test_legacy_shim_not_on_model_but_available_on_wire` with the shim.
 
@@ -1093,12 +1066,13 @@ Domain handoffs and governance docs may add detail but **must cite the SPRINTS I
 
 ### CI-RED-016 — Endpoint consolidation (post-ratchet)
 
-**Status:** OPEN  
+**Status:** OPEN (documentation only until post–MVP cut)  
 **last_verified:** 2026-05-28  
-**Why open:** 1181 endpoints after verified growth audit (CI-RED-015-C); ~195 in CAM governance/CI/translator routers alone. Intentional and manifest-registered — not debug — but consolidation is genuine future work.  
-**Scope:** CAM governance stack first (`cam_assist`, `geometry_authority`, `governance_freeze`, `ontology_reconciliation`, `federated_semantics`, `post_freeze_expansion`, `review_ux*`, `review_queue`, `federation_ci`, `translator_*`). Tools: `services/api/scripts/audit_endpoints.py`, `diff_endpoints_baseline.py`, `metrics/endpoint_audit_current.json`.  
-**Restore trigger:** Endpoint count reduced with migration plan, or honest sub-budget per domain; overlaps **CI-RED-003** complexity work but tracked separately from endpoint-count ratchet.  
-**Not in scope:** Duplicate route keys (`test_duplicate_routes_under_baseline`) — **015-D**.
+**Path:** EXT — granularity question matters before external work; **not blocking MVP cut.**  
+**Why open:** ~195 CAM governance endpoints are intentional (015-C audit); consolidation is future scoped work, not deletion.  
+**First deliverable (after MVP cut):** Consumer map — which of ~195 are called outside CAM test suite.  
+**Tools:** `services/api/scripts/audit_endpoints.py`, `diff_endpoints_baseline.py`.  
+**Not in scope:** 015-D duplicate-route gate (separate).
 
 ---
 
