@@ -2,60 +2,61 @@
   "schema": "cbsp21_patch_input_v1",
   "schema_version": "cbsp21_patch_input_v1",
   "coverage_min": 0.95,
-  "patch_id": "CI_RED_005_CONTAINER_SG_SPEC_FAIL_CLOSED",
-  "title": "Fail Docker build when sg-spec install fails (CI-RED-005)",
-  "intent": "Remove warning-and-continue sg-spec install in docker/api/Dockerfile; close CI-RED-001 in SPRINTS.",
+  "patch_id": "CI_RED_015_D_A_WIRE_URL_AUDIT",
+  "title": "CI-RED-015-D-a wire URL collision audit (diagnosis only)",
+  "intent": "Add wire-URL resolution audit tool + report. Measures manifest_prefix + router_prefix + decorator_path to separate real wire-URL collisions from decorator-path false positives. No CI gate or runtime behavior change; remediation is a follow-up (015-D-b).",
   "change_type": "ci",
   "behavior_change": "none",
   "risk_level": "low",
   "scope": {
     "paths_in_scope": [
       ".cbsp21/",
-      "docker/api/",
-      "docs/ci/",
-      "SPRINTS.md"
+      "services/api/scripts/",
+      "services/api/metrics/",
+      "docs/handoffs/"
     ],
     "files_expected_to_change": [
-      "docker/api/Dockerfile",
-      "SPRINTS.md",
-      "docs/ci/SG_SPEC_TOKEN.md",
+      "services/api/scripts/audit_wire_urls.py",
+      "services/api/metrics/wire_url_audit.json",
+      "docs/handoffs/CI_RED_015D_WIRE_URL_COLLISION_HANDOFF.md",
       ".cbsp21/patch_input.json"
     ]
   },
   "diff_articulation": {
-    "what_changed": "Dockerfile sg-spec RUN fails closed; SPRINTS CI-RED-001 CLOSED, CI-RED-005 in flight; rotation log example row.",
-    "why_not_redundant": "Container builds passed while sg-spec missing — silent false green same class as deleted routers."
+    "what_changed": "New static-analysis tool scripts/audit_wire_urls.py resolves full wire URLs from manifest + APIRouter + decorator prefixes; writes metrics/wire_url_audit.json; handoff doc records findings. Reproducible: 1181 endpoints, 68 wire-URL collisions, 85 decorator false positives, 143 unmanifested files.",
+    "why_not_redundant": "audit_endpoints.py measures decorator suffixes only and inflates duplicates by 85 false positives. This is the first audit that resolves actual wire URLs, so the 68 collisions are a new, actionable signal the debt gate has never measured."
   },
   "verification": {
     "commands_run": [
-      "python scripts/ci/check_cbsp21_gate.py --manifest .cbsp21/patch_input.json",
+      "cd services/api && python scripts/audit_wire_urls.py",
+      "python scripts/ci/check_cbsp21_gate.py --manifest .cbsp21/patch_input.json --changed-files services/api/scripts/audit_wire_urls.py services/api/metrics/wire_url_audit.json docs/handoffs/CI_RED_015D_WIRE_URL_COLLISION_HANDOFF.md",
       "python scripts/ci/check_cbsp21_patch_input.py --base origin/main --head HEAD"
     ]
   },
   "files": [
     {
-      "path": "docker/api/Dockerfile",
-      "intent": "Require SG_SPEC_TOKEN and fail build if sg-spec pip install fails.",
-      "scan_targets": ["docker/api/Dockerfile"],
+      "path": "services/api/scripts/audit_wire_urls.py",
+      "intent": "Wire-URL resolution audit tool (manifest + router + decorator prefix join).",
+      "scan_targets": ["services/api/scripts/audit_wire_urls.py"],
       "risk": "low",
-      "behavior_change": "none — build honesty only",
-      "verification": ["CI: Containers build-and-test green on PR"]
+      "behavior_change": "none — new diagnostic script, not wired into any gate",
+      "verification": ["cd services/api && python scripts/audit_wire_urls.py reproduces 68 collisions / 85 false positives"]
     },
     {
-      "path": "SPRINTS.md",
-      "intent": "CI-RED-001 CLOSED; CI-RED-005 IN_PROGRESS.",
-      "scan_targets": ["SPRINTS.md"],
+      "path": "services/api/metrics/wire_url_audit.json",
+      "intent": "Full audit output: collisions, false positives, unmanifested routers, all endpoints.",
+      "scan_targets": ["services/api/metrics/wire_url_audit.json"],
       "risk": "low",
-      "behavior_change": "none",
-      "verification": ["Review ledger entries"]
+      "behavior_change": "none — generated data artifact",
+      "verification": ["summary.wire_url_collisions == 68; summary.total_endpoints == 1181"]
     },
     {
-      "path": "docs/ci/SG_SPEC_TOKEN.md",
-      "intent": "Rotation log example row for 2026-05-28 PAT.",
-      "scan_targets": ["docs/ci/SG_SPEC_TOKEN.md"],
+      "path": "docs/handoffs/CI_RED_015D_WIRE_URL_COLLISION_HANDOFF.md",
+      "intent": "Diagnosis handoff: collision report, false-positive analysis, remediation plan for 015-D-b.",
+      "scan_targets": ["docs/handoffs/CI_RED_015D_WIRE_URL_COLLISION_HANDOFF.md"],
       "risk": "low",
-      "behavior_change": "none",
-      "verification": ["Review rotation log"]
+      "behavior_change": "none — documentation",
+      "verification": ["Review collision tables + recommended actions"]
     }
   ]
 }
