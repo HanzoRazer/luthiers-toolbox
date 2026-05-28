@@ -24,14 +24,26 @@ import os
 # Add parent directory to Python path for imports
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
+# Import numpy, then ezdxf, before test modules bind `import numpy as np`.
+# ezdxf.math.construct2d re-imports numpy mid-import; if that happens after a test
+# module captured a stale binding, ndarray ops on cross-context arrays raise
+# _NoValueType (CI: api-verify run 26584687684). Loading both here during
+# conftest import — before collection — keeps one numpy binding suite-wide.
+import numpy as _np  # noqa: F401
+
+try:
+    import ezdxf as _ezdxf  # noqa: F401
+except ImportError:
+    pass
+
 
 # =============================================================================
 # MODULE IMPORT ISOLATION (numpy / ezdxf)
 # =============================================================================
 
-@pytest.fixture(autouse=True, scope="session")
+@pytest.fixture(scope="session", autouse=True)
 def reset_modules():
-    """Prevent numpy/ezdxf double-import errors."""
+    """Document numpy/ezdxf import-order guard (see module-level imports above)."""
     yield
 
 
