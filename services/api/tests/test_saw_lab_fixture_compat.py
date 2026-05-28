@@ -1,7 +1,7 @@
 """Saw Lab Legacy Fixture Compatibility Tests."""
 import pytest
 from pathlib import Path
-from helpers.load_fixtures import load_json, FIXTURES_DIR
+from tests.helpers.load_fixtures import load_json, FIXTURES_DIR
 from app.cnc_production.schemas.saw_lab_compat import SawRunsFileCompat, SawTelemetryFileCompat
 
 LEGACY = FIXTURES_DIR / "cnc_production" / "saw_lab_legacy"
