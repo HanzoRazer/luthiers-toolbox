@@ -1,13 +1,31 @@
 # The Production Shop — Sprint Registry
-Last updated: 2026-05-26
+Last updated: 2026-05-28
 Maintained by: Ross Echols (HanzoRazer)
 Maintenance discipline: docs/SPRINTS_MAINTENANCE.md
 
-**Deferred maintenance depository:** Intentional hold-outs (held out of a merge, infra/process deferrals, known-incomplete routes) are registered in **[DEFERRED MAINTENANCE](#deferred-maintenance)** below — not in orphan docs. Held out of a PR is fine; untracked is not.
+**Two parallel parking lots** (see `docs/SPRINTS_MAINTENANCE.md` Rule 6–7):
+
+1. **[GOVERNANCE CONVERGENCE](#governance-convergence-parking-lot)** — finish the May 2026 four-agent / governance sprint tail (R1, cross-repo vocabulary, IBG unblock chain). **Not CI hygiene.**
+2. **[DEFERRED MAINTENANCE](#deferred-maintenance)** — intentional hold-outs (`*-DEFER-*`) and **CI-RED-*** (api-verify / test reconciliation on `main`). Held out of a merge is fine; untracked is not.
 
 ---
 
-## NEXT SESSION OPENS WITH (2026-05-26)
+## NEXT SESSION OPENS WITH (2026-05-28)
+
+**Two active programs** — do not collapse into one thread:
+
+| Program | Registry | Status |
+|---------|----------|--------|
+| **CI hygiene** | [DEFERRED MAINTENANCE](#deferred-maintenance) → `CI-RED-*` | api-verify reconciliation in flight (`CI-RED-015` buckets); structural gates `CI-RED-002–004` still open |
+| **Governance convergence** | [GOVERNANCE CONVERGENCE](#governance-convergence-parking-lot) → `GOV-CONVERGE-*` | Sprint deliverables largely complete; **tail blocked on R1 session + codeowner decisions D1–D4** |
+
+**MVP bar (unchanged):** Design → platform → G-code → cut on BCAM 2030CA. No test suite substitutes for this.
+
+**Source of truth for convergence backlog:** `docs/audits/SPRINT_COMPLETION_MATRIX_2026-05-24.md` + `docs/MULTI_REPO_GOVERNANCE_CONVERGENCE_REPORT.md` (Phases 0–4). This section is the **live index**; audit docs are detail.
+
+---
+
+## NEXT SESSION OPENS WITH (2026-05-26) — superseded
 
 **PR #45 and #46 merged to `main`.**
 
@@ -15,9 +33,7 @@ Maintenance discipline: docs/SPRINTS_MAINTENANCE.md
 
 **IBG Provenance R2 — on `main` (PR #45).** Export fail-closed until R1 governance ratification — scheduling question, not engineering.
 
-**MVP bar:** Design → platform → G-code → cut on BCAM 2030CA. No test suite substitutes for this.
-
-**Tracked deferral (not omitted):** `ART-STUDIO-DEFER-001` — see [DEFERRED MAINTENANCE](#deferred-maintenance).
+**Tracked deferral (not omitted):** `ART-STUDIO-DEFER-001` — see [DEFERRED MAINTENANCE](#deferred-maintenance) and [GOV-CONVERGE-004](#gov-converge-004--art-studio-design-first-workflow).
 
 ---
 
@@ -691,9 +707,149 @@ Soundhole Generator → Helmholtz Calculator → complete acoustic design
 
 ---
 
+## GOVERNANCE CONVERGENCE (parking lot)
+
+**Purpose:** Resume and close the **May 15–24 governance sprint** after four parallel agent tracks diverged post-sprint. Most infrastructure landed (see matrix **COMPLETE**); this registry holds the **tail** so CI hygiene work (`CI-RED-*`) does not replace it.
+
+**Authoritative detail:** `docs/audits/SPRINT_COMPLETION_MATRIX_2026-05-24.md`  
+**Roadmap:** `docs/MULTI_REPO_GOVERNANCE_CONVERGENCE_REPORT.md` §9 (Phases 0–4)  
+**Handoff:** `docs/SPRINT_ARCHITECTURE_HANDOFF_2026-05-24.md`
+
+| Field | Required |
+|-------|----------|
+| **ID** | `GOV-CONVERGE-{NNN}` |
+| **Status** | `OPEN` \| `IN PROGRESS` \| `BLOCKED` \| `QUEUED` \| `CLOSED` |
+| **Why open** | One sentence — cause, not symptom |
+| **Restore trigger** | Concrete done-condition |
+| **last_verified** | Date status confirmed against repo |
+
+Domain handoffs may elaborate but **must cite the GOV-CONVERGE ID** (or linked `*-DEFER-*` entry).
+
+### Index
+
+| ID | Title | Category | Status | last_verified |
+|----|-------|----------|--------|---------------|
+| GOV-CONVERGE-001 | Governance sprint convergence (umbrella) | Program | OPEN | 2026-05-28 |
+| GOV-CONVERGE-002 | R1 IBG provenance ratification session | Governance | BLOCKED | 2026-05-28 |
+| GOV-CONVERGE-003 | Codeowner decisions D1–D4 (branch / audit / PR grouping) | Process | BLOCKED | 2026-05-28 |
+| GOV-CONVERGE-004 | Art Studio design-first-workflow restore | API / Art Studio | QUEUED | 2026-05-28 |
+| GOV-CONVERGE-005 | Phase 1 vocabulary crosswalk (docs-only) | Docs / governance | IN PROGRESS | 2026-05-28 |
+| GOV-CONVERGE-006 | tap_tone_pi push (27 commits, source verification) | Platform | QUEUED | 2026-05-28 |
+| GOV-CONVERGE-007 | R2 IBG export wrapper | API / IBG | BLOCKED | 2026-05-28 |
+| GOV-CONVERGE-008 | IBG → CAM integration | API / CAM | BLOCKED | 2026-05-28 |
+| GOV-CONVERGE-009 | Package normalization → `contracts/` | Repo structure | QUEUED | 2026-05-28 |
+
+**Dependency chain (do not skip):** R1 (`GOV-CONVERGE-002`) → R2 (`GOV-CONVERGE-007`) → IBG→CAM (`GOV-CONVERGE-008`). See completion matrix §Cross-Channel Dependencies.
+
+**COMPLETE — do not re-open** (verified 2026-05-24): Constitutional import DO 77–82, DXF lifecycle guards Phase 2A–2G, runtime spine MRP-5M–6A, CAM 7Y–8F (federation CI, baseline freeze, expansion gate, review UX, queue routing), cross-repo normalization PR #38 modules, IBG MRP-6C ratification prep docs.
+
+---
+
+### GOV-CONVERGE-001 — Governance sprint convergence (umbrella)
+
+**Status:** OPEN  
+**last_verified:** 2026-05-28  
+**Why open:** Four-agent governance sprint converged most deliverables to `main`, but tail items (R1 session, D1–D4, tap_tone push, art-studio routes, IBG unblock chain) were never registered as a resumable program — only buried in May 24 audit docs. CI recovery (`CI-RED-*`) temporarily occupied SPRINTS; this entry restores the convergence track.  
+**Restore trigger:** All `GOV-CONVERGE-002`–`009` closed or explicitly superseded; matrix **NOT DONE / BLOCKED / PENDING** sections empty.  
+**Close order:** `003` (decisions) → `002` (R1 schedule) → `007`–`008` (IBG chain) in parallel with `004`–`006`–`009` as bandwidth allows.
+
+---
+
+### GOV-CONVERGE-002 — R1 IBG provenance ratification session
+
+**Status:** BLOCKED  
+**last_verified:** 2026-05-28  
+**Why blocked:** IBG DXF export paths remain `BLOCKED_PROVENANCE` until governance ratifies the provenance model — scheduling/decision work, not implementation. PR #45 landed R2 fail-closed wrapper; R1 is the gate.  
+**Blocked paths (verified):** `body_contour_solver.py:777,808`, `arc_reconstructor.py:1116,1279,1303` — see completion matrix §IBG Blocked Paths.  
+**Restore trigger:** R1 session held; `IBG_PROVENANCE_RATIFICATION_PACKET.md` ratified; lifecycle matrix updated.  
+**Detail:** `docs/governance/IBG_PROVENANCE_RATIFICATION_PACKET.md`, `IBG_BLOCKED_PROVENANCE_RATIFICATION_TIMELINE.md`
+
+---
+
+### GOV-CONVERGE-003 — Codeowner decisions D1–D4
+
+**Status:** BLOCKED  
+**last_verified:** 2026-05-28  
+**Why blocked:** May 24 matrix listed pending decisions that block implementation commits until Ross resolves.  
+**Decisions:**
+
+| ID | Decision | Impact |
+|----|----------|--------|
+| D1 | Branch strategy | Blocks implementation commits |
+| D2 | Audit sources persistence | Blocks audit PR |
+| D4 | PR grouping | Blocks grouped PRs |
+
+**Restore trigger:** Ross records decisions in SPRINTS or ADR; channels unblocked per matrix §Channel Assignment.  
+**Source:** `docs/audits/SPRINT_COMPLETION_MATRIX_2026-05-24.md` §PENDING DECISIONS
+
+---
+
+### GOV-CONVERGE-004 — Art Studio design-first-workflow restore
+
+**Status:** QUEUED  
+**last_verified:** 2026-05-28  
+**Also tracked as:** `ART-STUDIO-DEFER-001` in [DEFERRED MAINTENANCE](#art-studio-defer-001--design-first-workflow--promotion-intent-export) (held out of PR #46).  
+**Why queued:** Routes removed in `545fccad` same batch as CAM intent; not on MVP cut path.  
+**Restore trigger:** Re-mount workflow router; recover test; 8/8 green on promotion intent export.  
+**Priority:** LOW until Art Studio promotion path in scope.
+
+---
+
+### GOV-CONVERGE-005 — Phase 1 vocabulary crosswalk (docs-only)
+
+**Status:** IN PROGRESS  
+**last_verified:** 2026-05-28  
+**Why open:** Convergence report Phase 1 — map epistemic status ↔ lifecycle class ↔ CAM authority ↔ review invariants across repos. Partially delivered (`CROSS_REPO_AUTHORITY_CROSSWALK.md`, confidence envelope PR #38).  
+**Restore trigger:** Crosswalk ratified by owners (convergence report milestone M1); linked from tap_tone + CAM README.  
+**Source:** `docs/MULTI_REPO_GOVERNANCE_CONVERGENCE_REPORT.md` §9 Phase 1
+
+---
+
+### GOV-CONVERGE-006 — tap_tone_pi push (27 commits)
+
+**Status:** QUEUED  
+**last_verified:** 2026-05-28  
+**Why queued:** 27 commits at tap_tone_pi source await manual verification before push to remote — platform track, not luthiers-toolbox CI.  
+**Restore trigger:** Local verification complete; commits pushed; luthiers regression guard still green.  
+**Source:** completion matrix §BLOCKED — tap_tone_pi row
+
+---
+
+### GOV-CONVERGE-007 — R2 IBG export wrapper
+
+**Status:** BLOCKED  
+**last_verified:** 2026-05-28  
+**Depends on:** `GOV-CONVERGE-002` (R1)  
+**Why blocked:** Export wrapper implementation after provenance ratification — PR #45 established fail-closed; full R2 scope waits on R1.  
+**Restore trigger:** R1 complete; R2 export paths unblocked in lifecycle matrix; tests green.
+
+---
+
+### GOV-CONVERGE-008 — IBG → CAM integration
+
+**Status:** BLOCKED  
+**last_verified:** 2026-05-28  
+**Depends on:** `GOV-CONVERGE-007` (R2)  
+**Why blocked:** CAM integration explicitly blocked until IBG export provenance resolved — do not bypass with lifecycle guards.  
+**Restore trigger:** R2 complete; integration spec implemented; CAM consumes governed IBG geometry.
+
+---
+
+### GOV-CONVERGE-009 — Package normalization → `contracts/`
+
+**Status:** QUEUED  
+**last_verified:** 2026-05-28  
+**Why queued:** Post PR #38 — move shared contract modules toward `contracts/` layout (matrix P2).  
+**Depends on:** PR #38 merged (done)  
+**Restore trigger:** Normalization PR merged; imports updated; governance tests green.
+
+---
+
 ## DEFERRED MAINTENANCE
 
-**Canonical registry** for work that is intentionally not done yet. Engineers log deferrals here at session end (see `docs/SPRINTS_MAINTENANCE.md` Rule 6).
+**Canonical registry** for work intentionally not done yet **and** for **CI hygiene** (`CI-RED-*`). Engineers log deferrals here at session end (see `docs/SPRINTS_MAINTENANCE.md` Rule 6).
+
+**Not governance convergence** — resume convergence via [GOVERNANCE CONVERGENCE](#governance-convergence-parking-lot) above.
 
 | Field | Required |
 |-------|----------|
@@ -753,7 +909,8 @@ Domain handoffs and governance docs may add detail but **must cite the SPRINTS I
 
 **Restore trigger:** Re-mount workflow router in `router_registry`; recover test; 8/8 green.
 
-**Origin:** CAM intent investigation 2026-05-26 — prevents repeat of `545fccad` silent deletion pattern.
+**Origin:** CAM intent investigation 2026-05-26 — prevents repeat of `545fccad` silent deletion pattern.  
+**Governance program:** [GOV-CONVERGE-004](#gov-converge-004--art-studio-design-first-workflow-restore)
 
 ---
 
@@ -949,7 +1106,7 @@ Domain handoffs and governance docs may add detail but **must cite the SPRINTS I
 
 ### ART-STUDIO-DEFER-001
 
-Tracked under [DEFERRED MAINTENANCE](#art-studio-defer-001--design-first-workflow--promotion-intent-export). Schedule when Art Studio promotion path is in scope — not blocking MVP cut.
+Tracked under [DEFERRED MAINTENANCE](#art-studio-defer-001--design-first-workflow--promotion-intent-export) and [GOV-CONVERGE-004](#gov-converge-004--art-studio-design-first-workflow-restore). Schedule when Art Studio promotion path is in scope — not blocking MVP cut.
 
 ---
 
