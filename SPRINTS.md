@@ -919,7 +919,7 @@ Domain handoffs and governance docs may add detail but **must cite the SPRINTS I
 |--------|----------------|--------|--------|
 | **015-A** | `test_text_masking*` (5) + regression (2) | Drift + numpy reload pollution | **CLOSED** — #70 + #71; CI `26589586906`: 66→61 (−5 = five unit tests); **cause-fixed** (import isolation, not cv2 symptom patch) |
 | **015-B** | `test_vectorizer_canonical_only*` | Schema drift (live vectorizer work) | **CLOSED #70** — canonical response + legacy wire shim; 8/8 green on CI run `26584687684` |
-| **015-C** | `test_technical_debt_gates` endpoint ratchet | **Measurement** — 942→1181 vs `debt_history.json` | **PR open** — honest ratchet bump to 1185 after audit; consolidation → **CI-RED-016** |
+| **015-C** | `test_technical_debt_gates` endpoint ratchet | **Measurement** — 942→1181 vs `debt_history.json` | **PR #72** — honest ratchet bump to 1185 after audit; consolidation → **CI-RED-016** |
 | **015-D** | debt-gates complexity / other gates | Overlaps CI-RED-003 | Separate from blind ratchet bump |
 | **015-E** | board_feet, fretboard ecosphere, misc | Small drift clusters | Triage after A–C |
 | **015-F** | remaining | Umbrella tail | One PR each as surfaced |
