@@ -351,6 +351,11 @@ def list_translator_ids() -> List[str]:
     return list(TRANSLATOR_CAPABILITY_REGISTRY.keys())
 
 
+# Stable IDs referenced by tests and API contracts
+DXF_R12_TRANSLATOR_ID = "dxf_r12"
+DXF_R2000_TRANSLATOR_ID = "dxf_r2000"
+
+
 def list_translators_by_category(
     category: TranslatorCategory,
 ) -> List[TranslatorCapability]:

@@ -4,6 +4,7 @@ pydantic
 jinja2
 python-multipart
 sqlalchemy
+aiosqlite>=0.19.0
 sqlite-utils
 alembic>=1.13.0
 psycopg2-binary>=2.9.0  # Postgres driver (optional, for production)

@@ -719,6 +719,12 @@ Domain handoffs and governance docs may add detail but **must cite the SPRINTS I
 | CI-RED-006 | api-verify: missing `app.ci.domain_boundaries` | CI / api-verify | CLOSED | 2026-05-28 |
 | CI-RED-007 | api-verify: missing `app.ci.operation_lane_compliance` | CI / api-verify | CLOSED | 2026-05-28 |
 | CI-RED-008 | api-verify: missing `ci/rmos/check_no_direct_runartifact.py` | CI / api-verify | CLOSED | 2026-05-28 |
+| CI-RED-009 | api-verify: missing `app.cam.cam_lifecycle_audit_ledger` | CI / api-verify | CLOSED | 2026-05-28 |
+| CI-RED-010 | api-verify: pytest `tests.helpers` import path | CI / api-verify | CLOSED | 2026-05-28 |
+| CI-RED-011 | api-verify: missing `aiosqlite` test dep | CI / api-verify | CLOSED | 2026-05-28 |
+| CI-RED-012 | api-verify: missing `app.calculators.saw` compat shims | CI / api-verify | CLOSED | 2026-05-28 |
+| CI-RED-013 | api-verify: missing `app.woodworking.wooden_floating_bridge` | CI / api-verify | CLOSED | 2026-05-28 |
+| CI-RED-014 | api-verify: missing `DXF_R12_TRANSLATOR_ID` registry constants | CI / api-verify | CLOSED | 2026-05-28 |
 
 ---
 
@@ -842,6 +848,60 @@ Domain handoffs and governance docs may add detail but **must cite the SPRINTS I
 **Was:** Step [5/7] file-not-found; entire `/ci/` tree was gitignored (run `26553328753`).
 
 **Parking lot order:** **CI-RED-006–008** cleared; structural reds **CI-RED-002–004** remain separate until budgeted.
+
+---
+
+### CI-RED-009 — api-verify: missing `app.cam.cam_lifecycle_audit_ledger`
+
+**Status:** CLOSED  
+**last_verified:** 2026-05-28  
+**Closed:** PR — restore `cam_lifecycle_audit_ledger.py` (6K audit snapshots for export lifecycle orchestrator).  
+**Was:** 5 CAM lifecycle tests + export lifecycle router blocked at import (run `26564053999`).
+
+---
+
+### CI-RED-010 — api-verify: pytest `tests.helpers` import path
+
+**Status:** CLOSED  
+**last_verified:** 2026-05-28  
+**Closed:** PR — `pytest.ini` `pythonpath = .` so `from tests.helpers` resolves when collecting `tests/` + `app/tests/`.  
+**Was:** `test_adaptive_router`, `test_saw_lab_fixture_compat` collection errors (run `26564053999`).
+
+---
+
+### CI-RED-011 — api-verify: missing `aiosqlite` test dep
+
+**Status:** CLOSED  
+**last_verified:** 2026-05-28  
+**Closed:** PR — add `aiosqlite` to `services/api/requirements.txt` for `test_pg_pool`.  
+**Was:** `ModuleNotFoundError: aiosqlite` (run `26564053999`).
+
+---
+
+### CI-RED-012 — api-verify: missing `app.calculators.saw` compat shims
+
+**Status:** CLOSED  
+**last_verified:** 2026-05-28  
+**Closed:** PR — `app.calculators.saw.*` re-exports from `saw_adapters` after migration.  
+**Was:** `test_saw_adapters` collection error (run `26564053999`).
+
+---
+
+### CI-RED-013 — api-verify: missing `app.woodworking.wooden_floating_bridge`
+
+**Status:** CLOSED  
+**last_verified:** 2026-05-28  
+**Closed:** PR — restore compat module for `compute_saddle_height_from_twelfth_action` (tests only).  
+**Was:** `test_woodworking_and_bandsaw` collection error (run `26564053999`).
+
+---
+
+### CI-RED-014 — api-verify: missing `DXF_R12_TRANSLATOR_ID` registry constants
+
+**Status:** CLOSED  
+**last_verified:** 2026-05-28  
+**Closed:** PR — export stable translator ID constants from `translator_capability_registry`.  
+**Was:** `test_dxf_translate_endpoint` import error (run `26564053999`).
 
 ---
 
