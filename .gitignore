@@ -235,6 +235,8 @@ services/api/app/main_backup_*.py
 # CI/Local Only
 # ------------------------------------------
 /ci/
+!ci/rmos/
+!ci/rmos/**
 .husky/
 .eslint-rules/
 
