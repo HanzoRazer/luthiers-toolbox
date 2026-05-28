@@ -725,6 +725,7 @@ Domain handoffs and governance docs may add detail but **must cite the SPRINTS I
 | CI-RED-012 | api-verify: missing `app.calculators.saw` compat shims | CI / api-verify | CLOSED | 2026-05-28 |
 | CI-RED-013 | api-verify: missing `app.woodworking.wooden_floating_bridge` | CI / api-verify | CLOSED | 2026-05-28 |
 | CI-RED-014 | api-verify: missing `DXF_R12_TRANSLATOR_ID` registry constants | CI / api-verify | CLOSED | 2026-05-28 |
+| CI-RED-015 | api-verify: test-suite reconciliation (72 failures, ~6 cause classes) | CI / api-verify | OPEN | 2026-05-28 |
 
 ---
 
@@ -902,6 +903,29 @@ Domain handoffs and governance docs may add detail but **must cite the SPRINTS I
 **last_verified:** 2026-05-28  
 **Closed:** PR — export stable translator ID constants from `translator_capability_registry`.  
 **Was:** `test_dxf_translate_endpoint` import error (run `26564053999`).
+
+---
+
+### CI-RED-015 — api-verify: test-suite reconciliation (72 failures)
+
+**Status:** OPEN  
+**last_verified:** 2026-05-28  
+**Bar:** run `26566676830` — **7287 passed / 72 failed (99.0%)**; fences + collection green. Reconciliation work on a working system, not structural repair.
+
+**Cause buckets** (close one PR per bucket, not per test):
+
+| Bucket | Tests (approx) | Nature | Action |
+|--------|----------------|--------|--------|
+| **015-A** | `test_text_masking*` (5) + regression (2) | Drift / import path + `Recommendation` API | Fix `photo-vectorizer` path in tests; align with vectorizer bucket |
+| **015-B** | `test_vectorizer_canonical_only*` | Schema drift (live vectorizer work) | Update tests or schema while context is fresh |
+| **015-C** | `test_technical_debt_gates` endpoint ratchet | **Measurement** — 942→1181 vs `debt_history.json` | **Read the +239 first**; then bump ratchet or consolidate (CI-RED-003) |
+| **015-D** | debt-gates complexity / other gates | Overlaps CI-RED-003 | Separate from blind ratchet bump |
+| **015-E** | board_feet, fretboard ecosphere, misc | Small drift clusters | Triage after A–C |
+| **015-F** | remaining | Umbrella tail | One PR each as surfaced |
+
+**Order:** **015-A → 015-B → 015-C (read first) → rest.**
+
+**015-A note:** `_NoValueType` on CI (numpy 2.2.6 pinned) — not the local Py3.14 skip pattern. `test_text_masking.py` points at `repo_root/photo-vectorizer` (missing); canonical code is `services/photo-vectorizer/`. Regression failures are `Recommendation` object has no `.get` — same vectorizer drift family as 015-B.
 
 ---
 
