@@ -13,7 +13,7 @@ Maintenance discipline: docs/SPRINTS_MAINTENANCE.md
 
 | Track | Index | Next |
 |-------|-------|------|
-| **CI hygiene** | `CI-RED-*` below | **015-D-b next** — gate rewrite to wire URLs (after 015-D-a PR lands). Do not bump 108→122 on decorator-only gate. |
+| **CI hygiene** | `CI-RED-*` below | **015-D MVP-path scoped** — enumerate design→export routes, check only those for collision/wrong-winner, fix MVP-blockers, defer the rest at retirement. Do not bump 108→122; do not manifest the 143. |
 | **Governance tail** | `GOV-CONVERGE-*` below | Blocked on **codeowner decisions (003)** and **R1 schedule (002)**. Not on MVP cut path. |
 
 **015-C:** **CLOSED** — api-verify run `26600720296`: `test_total_endpoints_under_target` + `test_endpoints_not_increasing` both **PASSED** after #72 ratchet bump.
@@ -1043,7 +1043,7 @@ Domain handoffs and governance docs may add detail but **must cite the SPRINTS I
 | **015-A** | `test_text_masking*` (5) + regression (2) | Drift + numpy reload pollution | **CLOSED** — #70 + #71; CI `26589586906`: 66→61 (−5 = five unit tests); **cause-fixed** (import isolation, not cv2 symptom patch) |
 | **015-B** | `test_vectorizer_canonical_only*` | Schema drift (live vectorizer work) | **CLOSED #70** — canonical response + legacy wire shim; 8/8 green on CI run `26584687684` |
 | **015-C** | `test_technical_debt_gates` endpoint count ratchet | 942→1181 audit; ratchet → 1185 | **CLOSED #72** — CI `26600720296`: endpoint count + ratchet gates green |
-| **015-D** | duplicate routes + other debt gates | Gate measures decorator suffixes, not wire URLs | **015-D-a DONE** — `audit_wire_urls.py` complete; 68 wire collisions, 85 false positives. PR2: rewrite gate. **Do not bump** 108→122 baseline. |
+| **015-D** | duplicate routes + other debt gates | Gate measures decorator suffixes, not wire URLs | **SCOPED (MVP-path)** — 015-D-a audit DONE (#75). Static 68 is inflated (audit ignores `include_router` composition). Resolution = MVP-path check only; structural debt deferred at retirement. See block below. |
 | **015-E** | board_feet, fretboard ecosphere, misc | Small drift clusters | One cause class per PR after 015-D |
 | **015-F** | remaining | Umbrella tail | One PR each as surfaced |
 
@@ -1051,12 +1051,24 @@ Domain handoffs and governance docs may add detail but **must cite the SPRINTS I
 
 **015-A (CLOSED):** #70 fixed path drift + `Recommendation` `.get`. Five unit tests red on CI `26584687684`: `_NoValueType` in `ndarray.sum()` — root cause was ezdxf `construct2d` re-importing numpy mid-suite (~7000 tests), not numpy 2.2.6 itself. cv2 `countNonZero` workaround was built on wrong diagnosis and **reverted**. #71 fix: conftest loads numpy→ezdxf before collection; `test_text_masking` binds via `edge_to_dxf.np` (PR #50 pollution-isolation pattern). **CI proof:** run `26589586906` — all five `TestTextMaskingFunctions` green; failure count **66→61** (predicted −5 matched actual −5). Mark **cause-fixed**, not symptom-patched.
 
-**015-D plan (two PRs — do not conflate diagnosis with remediation):**
+**015-D — Wire URL Collision (MVP-path scoped)**
+**Status:** SCOPED, awaiting MVP path confirmation.
 
-1. **015-D-a — Wire-collision audit:** ~~Extend `audit_endpoints.py` with resolved wire URLs.~~ **DONE.** Created `scripts/audit_wire_urls.py` (new tool, not extension). Finds **68 actual wire URL collisions** (routing bugs) vs **85 false positives** (same decorator path, different wire URLs). Handoff: `docs/handoffs/CI_RED_015D_WIRE_URL_COLLISION_HANDOFF.md`.
-2. **015-D-b — Gate rewrite:** 68 collisions exist → **fix bugs first**, then rewrite gate. Top collision: `POST /gcode` (11 files). **Never bump 108→122 on the current decorator-only gate.**
+Original audit found 124 decorator duplicates → 68 wire collisions on **static** analysis. Subsequent discovery: the static audit **ignores `include_router` composition** (e.g., the manifested CAM aggregator `cam_router` @ `/api/cam` in `cam_manifest.py` composes sub-routers with prefixes like `/toolpath`, `/drilling`), so the 68 number is **inflated by an unknown amount** — a `POST /gcode` in `cam/routers/toolpath/` actually serves at `/api/cam/toolpath/gcode`, not bare `/gcode`. A fully corrected static audit would require resolving the composition graph; a live route dump (`app.routes`) is blocked by the api-verify auth issue (CI-RED-001 residual environment).
 
-**Bar unchanged:** one cause class per PR; no bucket closed without CI confirming predicted failure delta. Target: api-verify green.
+**Resolution:** enumerate the routes on the **MVP live path** (design → platform → G-code → export, frontend-traced for each supported family — dreadnought/jumbo/stratocaster/cuatro), check **only those routes** for collision/wrong-winner (tracing their mount chains), fix any MVP-blocker found, defer the remaining 68-minus-MVP-set at retirement.
+
+**Stopping criterion:** every MVP-path route resolves to exactly one, correct, **deterministically-winning** handler. Once true, no further auditing is justified before MVP cut.
+
+**Bucketing (for any collision that does land on the MVP path):** X = wrong handler wins AND path consumed (by *any* caller — frontend, backend service, CLI, job) → MVP-completion, non-deferrable. Y = right handler wins, dead overlap → defer. Z = no consumer → defer. Plus: **non-deterministic winner** (race order varies by import/env) is its own bug class, treated as X.
+
+**Artifacts:**
+- `scripts/audit_wire_urls.py` (merged #75) — static audit with **known composition limitation**.
+- `docs/handoffs/CI_RED_015D_WIRE_URL_COLLISION_HANDOFF.md` — initial findings, partially superseded by the composition discovery (see its 2026-05-28 update note).
+
+**Out of scope (defer at retirement):** gate replacement (no live-path bug ⇒ no gate needed for home stretch); manifesting the 143 unmanifested files (re-architecture, not housekeeping; but note: **49% of the API surface bypassing the manifest discipline is itself a post-MVP platform-trust finding**, not just a deferral); the remaining ~60 non-MVP-path collisions.
+
+**Bar unchanged:** one cause class per PR; no bucket closed without CI confirming predicted delta. **Do not bump 108→122** on the decorator-only gate.
 
 **015-C audit (942→1181, +239):** Baseline `c7347167577f`. 39 new files +227; 4 existing +12. ~195 CAM governance stack; ~25 product; 2 intent stubs. Ratchet 1185 in #72. Consolidation → **CI-RED-016** (doc-only until post–MVP cut).
 
