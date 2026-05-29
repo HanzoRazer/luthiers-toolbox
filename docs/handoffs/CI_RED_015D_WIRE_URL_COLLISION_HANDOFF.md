@@ -5,6 +5,8 @@
 **Audit Tool:** `services/api/scripts/audit_wire_urls.py`  
 **Output:** `services/api/metrics/wire_url_audit.json`
 
+> **Update 2026-05-28:** Subsequent investigation revealed this static audit **ignores `include_router` composition** (e.g. the manifested CAM aggregator `cam_router` @ `/api/cam` composing sub-routers with prefixes such as `/toolpath`). The **68 collision count is inflated by an unknown amount** — many flagged routers (especially the `POST /gcode` cluster) actually mount at distinct `/api/cam/{category}/...` wire URLs. Treat the collision tables and the "manifest the unmanifested" recommendations below as **partially superseded**. The current, scoped resolution is in **`SPRINTS.md` → CI-RED-015-D (MVP-path scoped)**: check only the MVP live-path routes, fix MVP-blockers, defer the rest at retirement. Authoritative wire URLs require the live `app.routes` table, not this static map.
+
 ---
 
 ## Executive Summary

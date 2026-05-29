@@ -2,61 +2,50 @@
   "schema": "cbsp21_patch_input_v1",
   "schema_version": "cbsp21_patch_input_v1",
   "coverage_min": 0.95,
-  "patch_id": "CI_RED_015_D_A_WIRE_URL_AUDIT",
-  "title": "CI-RED-015-D-a wire URL collision audit (diagnosis only)",
-  "intent": "Add wire-URL resolution audit tool + report. Measures manifest_prefix + router_prefix + decorator_path to separate real wire-URL collisions from decorator-path false positives. No CI gate or runtime behavior change; remediation is a follow-up (015-D-b).",
-  "change_type": "ci",
+  "patch_id": "CI_RED_015_D_MVP_PATH_SCOPE",
+  "title": "CI-RED-015-D reframe to MVP-path scope (docs only)",
+  "intent": "Record the MVP-path-scoped resolution for the wire-collision bucket: static 68 is inflated because the audit ignores include_router composition; resolution is to check only MVP live-path routes and defer structural debt at retirement. Adds a superseded-note to the audit handoff. No code or CI behavior change.",
+  "change_type": "docs",
   "behavior_change": "none",
   "risk_level": "low",
   "scope": {
     "paths_in_scope": [
       ".cbsp21/",
-      "services/api/scripts/",
-      "services/api/metrics/",
-      "docs/handoffs/"
+      "docs/handoffs/",
+      "SPRINTS.md"
     ],
     "files_expected_to_change": [
-      "services/api/scripts/audit_wire_urls.py",
-      "services/api/metrics/wire_url_audit.json",
+      "SPRINTS.md",
       "docs/handoffs/CI_RED_015D_WIRE_URL_COLLISION_HANDOFF.md",
       ".cbsp21/patch_input.json"
     ]
   },
   "diff_articulation": {
-    "what_changed": "New static-analysis tool scripts/audit_wire_urls.py resolves full wire URLs from manifest + APIRouter + decorator prefixes; writes metrics/wire_url_audit.json; handoff doc records findings. Reproducible: 1181 endpoints, 68 wire-URL collisions, 85 decorator false positives, 143 unmanifested files.",
-    "why_not_redundant": "audit_endpoints.py measures decorator suffixes only and inflates duplicates by 85 false positives. This is the first audit that resolves actual wire URLs, so the 68 collisions are a new, actionable signal the debt gate has never measured."
+    "what_changed": "SPRINTS.md CI-RED-015-D rewritten from 'two PRs (audit + gate rewrite)' to 'MVP-path scoped' with stopping criterion, X/Y/Z + non-deterministic-winner bucketing, and explicit out-of-scope (gate replacement, manifesting 143, ~60 non-MVP collisions). Handoff doc gets a 2026-05-28 superseded note about the include_router composition limitation.",
+    "why_not_redundant": "The original ledger framed 68 collisions as fix-then-gate-rewrite; that overstated the problem (composition-ignorant static count) and overscoped the work for the home stretch. The reframe is durable institutional knowledge with a concrete stopping criterion."
   },
   "verification": {
     "commands_run": [
-      "cd services/api && python scripts/audit_wire_urls.py",
-      "python scripts/ci/check_cbsp21_gate.py --manifest .cbsp21/patch_input.json --changed-files services/api/scripts/audit_wire_urls.py services/api/metrics/wire_url_audit.json docs/handoffs/CI_RED_015D_WIRE_URL_COLLISION_HANDOFF.md",
+      "python scripts/ci/check_cbsp21_gate.py --manifest .cbsp21/patch_input.json --changed-files SPRINTS.md docs/handoffs/CI_RED_015D_WIRE_URL_COLLISION_HANDOFF.md",
       "python scripts/ci/check_cbsp21_patch_input.py --base origin/main --head HEAD"
     ]
   },
   "files": [
     {
-      "path": "services/api/scripts/audit_wire_urls.py",
-      "intent": "Wire-URL resolution audit tool (manifest + router + decorator prefix join).",
-      "scan_targets": ["services/api/scripts/audit_wire_urls.py"],
+      "path": "SPRINTS.md",
+      "intent": "Rewrite CI-RED-015-D ledger to MVP-path-scoped resolution + stopping criterion; update top Next table.",
+      "scan_targets": ["SPRINTS.md"],
       "risk": "low",
-      "behavior_change": "none — new diagnostic script, not wired into any gate",
-      "verification": ["cd services/api && python scripts/audit_wire_urls.py reproduces 68 collisions / 85 false positives"]
-    },
-    {
-      "path": "services/api/metrics/wire_url_audit.json",
-      "intent": "Full audit output: collisions, false positives, unmanifested routers, all endpoints.",
-      "scan_targets": ["services/api/metrics/wire_url_audit.json"],
-      "risk": "low",
-      "behavior_change": "none — generated data artifact",
-      "verification": ["summary.wire_url_collisions == 68; summary.total_endpoints == 1181"]
+      "behavior_change": "none — ledger/registry only",
+      "verification": ["Review CI-RED-015-D block + Next table"]
     },
     {
       "path": "docs/handoffs/CI_RED_015D_WIRE_URL_COLLISION_HANDOFF.md",
-      "intent": "Diagnosis handoff: collision report, false-positive analysis, remediation plan for 015-D-b.",
+      "intent": "Add 2026-05-28 note: static audit ignores include_router composition; 68 inflated; see SPRINTS for scoped resolution.",
       "scan_targets": ["docs/handoffs/CI_RED_015D_WIRE_URL_COLLISION_HANDOFF.md"],
       "risk": "low",
       "behavior_change": "none — documentation",
-      "verification": ["Review collision tables + recommended actions"]
+      "verification": ["Review superseded-note block at top of handoff"]
     }
   ]
 }
