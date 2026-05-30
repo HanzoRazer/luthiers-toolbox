@@ -2,50 +2,37 @@
   "schema": "cbsp21_patch_input_v1",
   "schema_version": "cbsp21_patch_input_v1",
   "coverage_min": 0.95,
-  "patch_id": "CI_RED_015_D_MVP_PATH_SCOPE",
-  "title": "CI-RED-015-D reframe to MVP-path scope (docs only)",
-  "intent": "Record the MVP-path-scoped resolution for the wire-collision bucket: static 68 is inflated because the audit ignores include_router composition; resolution is to check only MVP live-path routes and defer structural debt at retirement. Adds a superseded-note to the audit handoff. No code or CI behavior change.",
+  "patch_id": "BOE_IBG_FAMILY_CONFLATION_DOC",
+  "title": "BOE/IBG instrument family conflation - mechanism-tier taxonomy (docs only)",
+  "intent": "Document the BOE/IBG instrument-family conflation (Type supplanting Brand+Model) and the long-term target taxonomy: Type = the level at which fabrication fundamentally diverges, surfaced as sound-production mechanism (acoustic/electro-acoustic/electric/bass/ukulele/mandolin/regional-ethnic), a Brand tier between Type and Model, lineage demoted to Model metadata. Records the MVP-scope per-model geometry-resolution check (J-45 first), model tiers, Smart Guitar exclusion, and forthcoming instruments. No code or CI behavior change.",
   "change_type": "docs",
   "behavior_change": "none",
   "risk_level": "low",
   "scope": {
-    "paths_in_scope": [
-      ".cbsp21/",
-      "docs/handoffs/",
-      "SPRINTS.md"
-    ],
+    "paths_in_scope": [".cbsp21/", "docs/architecture/"],
     "files_expected_to_change": [
-      "SPRINTS.md",
-      "docs/handoffs/CI_RED_015D_WIRE_URL_COLLISION_HANDOFF.md",
+      "docs/architecture/BOE_IBG_FAMILY_CONFLATION.md",
       ".cbsp21/patch_input.json"
     ]
   },
   "diff_articulation": {
-    "what_changed": "SPRINTS.md CI-RED-015-D rewritten from 'two PRs (audit + gate rewrite)' to 'MVP-path scoped' with stopping criterion, X/Y/Z + non-deterministic-winner bucketing, and explicit out-of-scope (gate replacement, manifesting 143, ~60 non-MVP collisions). Handoff doc gets a 2026-05-28 superseded note about the include_router composition limitation.",
-    "why_not_redundant": "The original ledger framed 68 collisions as fix-then-gate-rewrite; that overstated the problem (composition-ignorant static count) and overscoped the work for the home stretch. The reframe is durable institutional knowledge with a concrete stopping criterion."
+    "what_changed": "New architecture doc naming the BOE/IBG family conflation; defines Type operationally as the level at which fabrication diverges; proposes mechanism-tier Type taxonomy (adds electro-acoustic and regional/ethnic Types); Carlos Jumbo moved to Tier 2; Smart Guitar excluded (not in public version); forthcoming cello/violin/banjo/mandolin noted; lineage demoted to Model metadata.",
+    "why_not_redundant": "Captures institutional knowledge about the silent Type-family fallback (false-green class) and fixes the deferred re-architecture target; the MVP per-model resolution check is the in-scope correctness item."
   },
   "verification": {
     "commands_run": [
-      "python scripts/ci/check_cbsp21_gate.py --manifest .cbsp21/patch_input.json --changed-files SPRINTS.md docs/handoffs/CI_RED_015D_WIRE_URL_COLLISION_HANDOFF.md",
+      "python scripts/ci/check_cbsp21_gate.py --manifest .cbsp21/patch_input.json --changed-files docs/architecture/BOE_IBG_FAMILY_CONFLATION.md",
       "python scripts/ci/check_cbsp21_patch_input.py --base origin/main --head HEAD"
     ]
   },
   "files": [
     {
-      "path": "SPRINTS.md",
-      "intent": "Rewrite CI-RED-015-D ledger to MVP-path-scoped resolution + stopping criterion; update top Next table.",
-      "scan_targets": ["SPRINTS.md"],
+      "path": "docs/architecture/BOE_IBG_FAMILY_CONFLATION.md",
+      "intent": "New doc: name the conflation, define Type operationally (fabrication divergence) at the mechanism tier, model tiers, MVP-scope check, deferral verdict.",
+      "scan_targets": ["docs/architecture/BOE_IBG_FAMILY_CONFLATION.md"],
       "risk": "low",
-      "behavior_change": "none — ledger/registry only",
-      "verification": ["Review CI-RED-015-D block + Next table"]
-    },
-    {
-      "path": "docs/handoffs/CI_RED_015D_WIRE_URL_COLLISION_HANDOFF.md",
-      "intent": "Add 2026-05-28 note: static audit ignores include_router composition; 68 inflated; see SPRINTS for scoped resolution.",
-      "scan_targets": ["docs/handoffs/CI_RED_015D_WIRE_URL_COLLISION_HANDOFF.md"],
-      "risk": "low",
-      "behavior_change": "none — documentation",
-      "verification": ["Review superseded-note block at top of handoff"]
+      "behavior_change": "none - documentation",
+      "verification": ["Review the doc end to end"]
     }
   ]
 }
