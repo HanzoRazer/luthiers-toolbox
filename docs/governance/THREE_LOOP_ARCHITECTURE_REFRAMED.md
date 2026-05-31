@@ -1,13 +1,26 @@
 # Three-Loop Architecture — Reframed
 
-**Status:** ACTIVE GOVERNANCE  
-**Effective:** 2026-05-11
+**Status:** SUPERSEDED — DEMOTED FROM ACTIVE GOVERNANCE (2026-05-30)
+**Effective:** 2026-05-11 — **demoted 2026-05-30**
+
+> **CONFLATION CORRECTION (2026-05-30).** This document was marked ACTIVE GOVERNANCE on the
+> premise that "the three-loop architecture was approved in CLAUDE.md." Per ground truth from
+> Ross (2026-05-30), that premise is false: the three-loop architecture was **experimental,
+> never approved, and never implemented** in this repo — it has been **sandboxed into
+> `vectorizer-sandbox`**. The CLAUDE.md "APPROVED DESIGN" status and the "approved … across
+> multiple sessions" provenance were unsourced inflation (now corrected at the source). This
+> document therefore cannot derive governance authority from that approval. **It is demoted to
+> historical/superseded and must not be cited as active governance.** See
+> `docs/handoffs/DEV_HANDOFF_2026-05-30_THREE_LOOP_CONFLATION_REMOVAL.md`.
 
 ---
 
 ## Context
 
-The three-loop architecture was approved in CLAUDE.md (2026-04-02) but never fully implemented. This document reframes the architecture within MRP governance constraints.
+The three-loop architecture was labeled "approved in CLAUDE.md (2026-04-02)" — **corrected
+2026-05-30: it was experimental, never approved, sandbox-owned (see banner above).** This
+document reframes the architecture within MRP governance constraints, but holds no active
+authority.
 
 ---
 

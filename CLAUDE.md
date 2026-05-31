@@ -215,14 +215,32 @@ pytest tests/test_governance_compliance.py -v   # Governance test suite
     caused Fusion 360 freeze (specific malformed LWPOLYLINE incident)
   - 2026-04-28: Gate lifted for R2000 after DWG TrueView verification confirmed
     properly-formed LWPOLYLINE imports cleanly. R12 retained for free tier.
-## VECTORIZER ARCHITECTURE DECISION — DO NOT BYPASS
+## VECTORIZER ARCHITECTURE NOTES (three-loop / AGE) — EXPERIMENTAL, SANDBOXED
 
-### Date: 2026-04-02
-### Status: APPROVED DESIGN — awaiting implementation
+### Original date: 2026-04-02
+### Status: EXPERIMENTAL — NOT approved, NOT implemented in this repo. Owned by `vectorizer-sandbox`.
 
----
+> **CONFLATION CORRECTION (2026-05-30).** This entire block was previously titled
+> "VECTORIZER ARCHITECTURE DECISION — DO NOT BYPASS / APPROVED DESIGN." That framing was
+> conflation, corrected per ground truth from Ross (2026-05-30):
+>
+> - The three-loop feedback architecture (+ AGE) is **experimental, was never approved
+>   for use, and was never implemented in this runtime repo.** It has been **sandboxed
+>   into its own repo** (`vectorizer-sandbox`, symlinked at `docs/audit-sources/vectorizer-sandbox`;
+>   the real embodiment is `src/incubation/agentic_supervisor.py`) until further work is done.
+> - "Ross identified the correct solution repeatedly across multiple sessions" was an
+>   **unsourced provenance claim** repeated inside these instructions; it is not a decision
+>   record and must not be treated as a standing mandate.
+> - The runtime **scale-validation gate** (`validate_scale_before_export`, `_safe_dxf_save`
+>   in `vectorizer_phase3.py`) is **real and shipped** — it is NOT part of the experimental
+>   loop architecture. Keep it.
+>
+> The text below is **retained as a candidate design sketch for the sandbox**, not as owed
+> runtime work. Full removal plan, corrected dispositions, and the runtime↔stub safety
+> analysis: `docs/handoffs/DEV_HANDOFF_2026-05-30_THREE_LOOP_CONFLATION_REMOVAL.md`
+> (+ `_CORRECTIONS.md`). Do not re-promote this to "approved" without a real decision record.
 
-## The Problem
+## The Problem (motivation for the sandbox research line)
 
 The blueprint vectorizer (vectorizer_phase3.py) is an open-loop system.
 It extracts, classifies, and exports without knowing whether the output
@@ -230,13 +248,12 @@ is correct. Every session has produced point fixes (epsilon values,
 version strings, cache headers) that address symptoms without addressing
 the architectural gap.
 
-Ross identified the correct solution repeatedly across multiple sessions.
-It was not built because sessions optimized for immediate tactical fixes
-instead of the approved architectural direction.
+This motivated the experimental three-loop research line — now developed in
+`vectorizer-sandbox`, not here. It is not approved runtime work.
 
 ---
 
-## The Approved Architecture: Three Feedback Loops
+## The Candidate Architecture: Three Feedback Loops (EXPERIMENTAL — sandbox-owned, not approved)
 
 ### Loop 1 — Intra-Frame Validation (within one run)
 
@@ -304,20 +321,39 @@ Wire them to fire when a correction is received.
 
 ## The AGE Integration (Agentic Guidance Engine)
 
-Ross requested this in multiple sessions. It was not built.
+> **CONFLATION CORRECTION (2026-05-30).** Two earlier claims in this section
+> were verified against the code and found to be conflation, not fact:
+>
+> 1. **The "mirror tap_tone_pi" framing does not transfer.** `tap_tone_pi`
+>    is a *separate external repo* (symlinked at `docs/audit-sources/tap_tone_pi`),
+>    with no import or data-flow coupling to the vectorizer in either
+>    direction. Its `AnalyzerGuidanceEngine`
+>    (`tap_tone_pi/analyzer/guidance/engine.py` — note: the path cited below
+>    as `tap_tone/analyzer_guidance_engine.py` does NOT exist) is an
+>    **advisory / display-layer** engine whose design contract is "reads
+>    finished data only, never modifies measurements." A vectorizer AGE would
+>    be a **control-layer** component that redirects the extraction pipeline —
+>    the opposite kind of engine. The only shared idea is the generic
+>    "call Claude, fall back silently," which needs no cross-repo canonical
+>    source. Treat any vectorizer AGE as a standalone design, NOT a port.
+> 2. **"Ross requested this in multiple sessions" is unverified provenance.**
+>    It is an unsourced claim repeated inside the instructions themselves and
+>    must not be treated as a standing mandate. Whether a vectorizer AGE is
+>    actually wanted, and at what scope, is an open question for the user —
+>    not a settled decision.
+>
+> The remainder of this section is retained as a *candidate design sketch*,
+> not an approved requirement.
 
-The AGE pattern from tap_tone_pi (stage-aware Claude API calls,
-silent fallback, suppression logic) belongs in the vectorizer pipeline
-as the decision layer above Loop 1.
-
-Instead of heuristic strategy selection, the AGE evaluates extraction
-quality using Claude API and selects the next strategy with reasoning:
+A vectorizer AGE, **if built**, would sit as the decision layer above Loop 1.
+Instead of heuristic strategy selection, it would evaluate extraction
+quality using the Claude API and select the next strategy with reasoning:
 
 ```python
 class VectorizerAGE:
     """
-    Agentic Guidance Engine for the vectorizer.
-    Mirrors the AGE pattern from tap_tone_pi.
+    Agentic Guidance Engine for the vectorizer (candidate design — standalone,
+    NOT a port of tap_tone_pi's advisory-layer engine; see correction above).
     Uses real Claude API calls to evaluate extraction quality
     and select recovery strategy.
     Falls back silently if API unavailable.
@@ -451,12 +487,17 @@ def validate_scale_before_export(self, mm_per_px, scale_factor,
 
 2. DO NOT ship a DXF export without running scale validation first.
 
-3. DO NOT drop the AGE integration from scope again. It was requested
-   by Ross in multiple sessions. It must be built.
+3. The vectorizer AGE is a CANDIDATE design, not an approved requirement.
+   The prior "requested in multiple sessions / must be built" wording rested
+   on unverified provenance and a tap_tone_pi analogy that does not transfer
+   (see CONFLATION CORRECTION in "The AGE Integration"). Do not treat it as a
+   standing mandate; confirm scope with the user before building it.
 
-4. The feedback loop architecture is APPROVED. Point fixes to epsilon
-   values, simplification tolerances, or version strings are NOT
-   substitutes for implementing the approved architecture.
+4. The feedback loop architecture is EXPERIMENTAL and sandbox-owned — NOT approved,
+   NOT owed runtime work (corrected 2026-05-30; see the CONFLATION CORRECTION at the top
+   of this section). It is not a yardstick for judging runtime point-fixes. The real,
+   shipped runtime guardrail is the scale-validation gate — keep that; do not gate it on
+   the unbuilt loops.
 
 5. When a session produces a tactical fix that addresses a symptom,
    the approved architecture entry in CLAUDE.md takes precedence.
@@ -474,16 +515,23 @@ def validate_scale_before_export(self, mm_per_px, scale_factor,
 - phase4/dimension_linker.py — complete but standalone, integrate after
   Loop 1 and Loop 2 are working
 
-## tap_tone_pi AGE Reference
+## tap_tone_pi AGE Reference — RETRACTED (2026-05-30)
 
-The AGE pattern to replicate is in:
-  tap_tone_pi/tap_tone/analyzer_guidance_engine.py
+This section previously cited `tap_tone_pi/tap_tone/analyzer_guidance_engine.py`
+as "the AGE pattern to replicate." Retracted as conflation:
 
-Key patterns to copy:
-  - Stage-aware prompt construction
-  - Silent fallback when API unavailable
-  - Suppression logic (don't repeat guidance already given)
-  - on_full_analysis_complete trigger
+  - **The cited path does not exist.** The real file is
+    `tap_tone_pi/analyzer/guidance/engine.py` (class `AnalyzerGuidanceEngine`),
+    in a SEPARATE external repo with no coupling to this one.
+  - **The pattern does not transfer.** That engine is advisory / display-layer
+    by design contract ("reads finished data only, never modifies
+    measurements") — the opposite of a vectorizer control-layer AGE.
+
+Do not use tap_tone_pi as the reference for any vectorizer work. The only
+reusable idea — "call Claude, fall back silently if the key/API is absent" —
+is already demonstrated in this repo by `services/blueprint-import/analyzer.py`
+(`BlueprintAnalyzer`), which is the local, in-repo precedent if such a
+component is ever scoped.
 
 ---
 
@@ -491,12 +539,19 @@ Key patterns to copy:
 
 Priority: HIGH — closes the 148 open endpoint problem
 
+> **NOTE (2026-05-30):** Sprint B is a **standalone runtime extraction improvement** and is
+> NOT loop-dependent — the prior "(Strategy A in Loop 1)" label was rhetorical bolt-on to
+> the (experimental, sandboxed) loop architecture. The technique is single-pass and needs no
+> loop/AGE machinery; the runtime already produces the `fg_mask` it consumes
+> (`vectorizer_enhancements.py`, behind the rembg/grabcut path). KEEP as runtime work.
+> Code-verified resolution: `DEV_HANDOFF_2026-05-30_THREE_LOOP_CONFLATION_REMOVAL.md` §8a.
+
 Root cause confirmed by gap analysis:
   - 88 gaps <0.5mm (edge detection noise)
   - 34 gaps >5mm (maximum 27.25mm) — genuine blueprint
     discontinuities that edge detection cannot recover
 
-Segmentation approach (Strategy A in Loop 1):
+Segmentation approach (standalone — single-pass, not loop-gated):
   1. Add extract_body_by_segmentation() using
      flood fill from image center point
   2. Add fg_mask priority path — use foreground

@@ -5,6 +5,18 @@
 **Last verified:** 2026-05-07  
 **Supporting evidence:** `docs/audits/ARCHITECTURAL_GOVERNANCE_HANDOFF_2026-05-07.md`
 
+> **CONFLATION CORRECTION (2026-05-30).** This framework treats the three-loop architecture / AGE
+> as "approved design … largely unbuilt" and frames the fork as "build or remove from CLAUDE.md."
+> Per ground truth from Ross (2026-05-30), the answer is **remove-from-runtime / keep-in-sandbox**:
+> the work was **experimental, never approved, never implemented** here, and is now **sandbox-owned**
+> (`vectorizer-sandbox`). Flip any "approved design" references to "experimental, sandboxed." See
+> `docs/handoffs/DEV_HANDOFF_2026-05-30_THREE_LOOP_CONFLATION_REMOVAL.md`.
+>
+> **Live-code carve-out:** "never implemented" means the *named, unified* architecture only.
+> `GeometryCoachV2` (photo-vectorizer) is real, **API-reachable** runtime code — its "Loop 1" name
+> is retrospective labeling, NOT the approved architecture. Do NOT delete or sandbox it; deletion
+> degrades a live endpoint path. See handoff §2 + §9b.
+
 ---
 
 ## Why This Document Exists

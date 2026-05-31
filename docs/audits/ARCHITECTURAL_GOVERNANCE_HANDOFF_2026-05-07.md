@@ -4,6 +4,20 @@
 **Date:** 2026-05-07  
 **Classification:** HIGH-FIDELITY ARCHITECTURAL HANDOFF  
 **Purpose:** Expert review for strategic platform decisions  
+
+> **CONFLATION CORRECTION (2026-05-30).** This assessment repeatedly cites the three-loop / AGE
+> work as "APPROVED DESIGN" and the AGE as "requested by Ross in multiple sessions," and frames
+> tactical fixes as "violating approved architecture." Per ground truth from Ross (2026-05-30):
+> the three-loop architecture + AGE were **experimental, never approved, and never implemented**
+> here — now **sandboxed into `vectorizer-sandbox`**. There is no "approved architecture" being
+> violated; the unsourced provenance is corrected at the source. The shipped scale-validation
+> gate is real and unaffected. See
+> `docs/handoffs/DEV_HANDOFF_2026-05-30_THREE_LOOP_CONFLATION_REMOVAL.md`.
+>
+> **Live-code carve-out:** "never implemented" means the *named, unified* architecture only.
+> `GeometryCoachV2` (photo-vectorizer) is real, **API-reachable** runtime code — its "Loop 1" name
+> is retrospective labeling, NOT the approved architecture. Do NOT delete or sandbox it; deletion
+> degrades a live endpoint path. See handoff §2 + §9b.
 **Prepared for:** Senior engineers, platform architects, CAD/CAM specialists
 
 ---
