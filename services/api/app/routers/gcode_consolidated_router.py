@@ -18,7 +18,7 @@ Architecture:
 """
 from __future__ import annotations
 
-from typing import Any, Dict
+from typing import Any, Dict, List, Optional
 
 from fastapi import APIRouter, Response
 from pydantic import BaseModel, Field
@@ -104,17 +104,39 @@ class SimulateRequest(BaseModel):
         description="Angular step for arc interpolation (degrees). "
                     "Smaller = smoother arcs, more segments.",
     )
+    max_segments: int = Field(
+        500_000,
+        description="Backend safety ceiling on emitted segments (finding Z5). "
+                    "The frontend store does finer-grained downsampling; this only "
+                    "guards server memory on pathological inputs and reports "
+                    "truncation via `warnings`.",
+    )
+    accel_mm_s2: Optional[float] = Field(
+        None,
+        description="Optional acceleration (mm/s^2) for trapezoidal timing. When "
+                    "omitted, constant-velocity timing is used.",
+    )
+    junction_deviation_mm: float = Field(
+        0.05,
+        description="Junction deviation (mm) for cornering speed when accel is set.",
+    )
 
 
 class MoveSegment(BaseModel):
     """One atomic motion segment — linear or arc sub-segment."""
-    type: str = Field(..., description="'rapid' | 'cut' | 'arc_cw' | 'arc_ccw'")
+    type: str = Field(..., description="'rapid' | 'cut' | 'arc_cw' | 'arc_ccw' | 'dwell'")
     from_pos: list = Field(..., description="[x, y, z] start position in mm")
     to_pos: list = Field(..., description="[x, y, z] end position in mm")
     feed: float = Field(..., description="Feed rate for this move (mm/min)")
     duration_ms: float = Field(..., description="Real-time duration of this move (ms)")
     line_number: int = Field(..., description="1-based source G-code line index")
     line_text: str = Field(..., description="Raw G-code text for HUD display")
+    # Per-segment metadata the engine computes (finding Z4 — don't discard).
+    tool_number: int = Field(1, description="Active tool number")
+    spindle_rpm: float = Field(0.0, description="Spindle speed (RPM)")
+    spindle_on: bool = Field(False, description="Spindle running")
+    is_cycle: bool = Field(False, description="Part of an expanded canned cycle")
+    cycle_kind: str = Field("", description="Canned cycle code, e.g. 'G83'")
 
 
 class SimulateBounds(BaseModel):
@@ -135,11 +157,33 @@ class SimulateTotals(BaseModel):
     segment_count: int
 
 
+class SimulateTools(BaseModel):
+    """Multi-tool tracking surfaced to the frontend (finding Z4)."""
+    used: List[int] = Field(default_factory=list)
+    count: int = 0
+    changes: List[dict] = Field(default_factory=list)
+
+
+class SimulateWarnings(BaseModel):
+    """Fidelity warnings so the player can show a 'limited simulation' banner
+    instead of silently mis-rendering (finding Z1)."""
+    unsupported_g: List[int] = Field(default_factory=list)
+    unsupported_m: List[int] = Field(default_factory=list)
+    ignored_offsets: List[int] = Field(default_factory=list)
+    approx_cycles: List[int] = Field(default_factory=list)
+    non_xy_arcs: int = 0
+    degenerate_arcs: int = 0
+    truncated: bool = False
+    dropped_segments: int = 0
+
+
 class SimulateResponse(BaseModel):
     """Full simulation response — segments + metadata."""
     segments: list[MoveSegment]
     bounds: SimulateBounds
     totals: SimulateTotals
+    tools: SimulateTools = Field(default_factory=SimulateTools)
+    warnings: SimulateWarnings = Field(default_factory=SimulateWarnings)
 
 
 # ===========================================================================
@@ -161,12 +205,17 @@ def simulate_gcode(req: SimulateRequest) -> SimulateResponse:
         default_feed_mm_min=req.default_feed_mm_min,
         units=req.units,
         arc_resolution_deg=req.arc_resolution_deg,
+        max_segments=req.max_segments,
+        accel_mm_s2=req.accel_mm_s2,
+        junction_deviation_mm=req.junction_deviation_mm,
     )
 
     return SimulateResponse(
         segments=[MoveSegment(**s) for s in result["segments"]],
         bounds=SimulateBounds(**result["bounds"]),
         totals=SimulateTotals(**result["totals"]),
+        tools=SimulateTools(**result["tools"]),
+        warnings=SimulateWarnings(**result["warnings"]),
     )
 
 

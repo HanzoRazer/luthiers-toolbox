@@ -83,8 +83,10 @@ def arc_center_from_r(
     chord = math.hypot(dx, dy)
 
     if chord < 1e-6:
-        # Full circle: offset perpendicular to an arbitrary direction
-        return (sx + abs(r), sy)
+        # R-notation cannot legally express a full circle (start == end gives an
+        # ambiguous/arbitrary center). Reject so the caller can fall back rather
+        # than drawing a bogus circle in an arbitrary location. (finding Y3)
+        return None
 
     half_chord = chord / 2.0
     if abs(r) < half_chord - 1e-6:
@@ -163,5 +165,82 @@ def interpolate_arc_points(
         wy = cy + r * math.sin(angle)
         wz = sz + (ez - sz) * t
         points.append((wx, wy, wz))
+
+    return points
+
+
+# Map G17/G18/G19 to the two in-plane axis indices (a, b) and the linear
+# (helical / out-of-plane) axis index. X=0, Y=1, Z=2.
+_PLANE_AXES = {
+    17: (0, 1, 2),  # XY plane, Z is the helical axis
+    18: (0, 2, 1),  # XZ plane, Y is the helical axis
+    19: (1, 2, 0),  # YZ plane, X is the helical axis
+}
+
+
+def interpolate_arc(
+    from_pos: Tuple[float, float, float],
+    to_pos: Tuple[float, float, float],
+    center2: Tuple[float, float],
+    cw: bool,
+    plane: int = 17,
+    arc_resolution_deg: float = 5.0,
+) -> List[Tuple[float, float, float]]:
+    """Interpolate a G2/G3 arc in the active plane (G17/G18/G19) into 3D waypoints.
+
+    Generalises :func:`interpolate_arc_points` (which is XY-only) so arcs in the
+    XZ (G18) and YZ (G19) planes are supported instead of silently dropped.
+    (finding Y2)
+
+    Args:
+        from_pos / to_pos: 3D start/end points.
+        center2: arc center expressed in the plane's two axes (a, b).
+        cw: True for G2 (clockwise), False for G3.
+        plane: 17, 18, or 19. Falls back to 17 for unknown values.
+        arc_resolution_deg: angular step for sub-segments.
+
+    Returns:
+        List of 3D waypoints from the first step through the endpoint. The
+        out-of-plane axis is linearly interpolated across the sweep (helical).
+    """
+    a, b, lin = _PLANE_AXES.get(plane, _PLANE_AXES[17])
+
+    sa, sb, slin = from_pos[a], from_pos[b], from_pos[lin]
+    ea, eb, elin = to_pos[a], to_pos[b], to_pos[lin]
+    ca, cb = center2
+
+    r = math.hypot(sa - ca, sb - cb)
+    if r < 1e-6:
+        return [tuple(to_pos)]
+
+    a_start = math.atan2(sb - cb, sa - ca)
+    a_end = math.atan2(eb - cb, ea - ca)
+
+    is_full_circle = math.hypot(ea - sa, eb - sb) < 1e-6 and r > 1e-6
+    if is_full_circle:
+        sweep = -(2 * math.pi) if cw else (2 * math.pi)
+    else:
+        sweep = a_end - a_start
+        if cw:
+            if sweep > 0:
+                sweep -= 2 * math.pi
+        else:
+            if sweep < 0:
+                sweep += 2 * math.pi
+
+    num_steps = max(1, int(abs(math.degrees(sweep)) / max(0.1, arc_resolution_deg)))
+
+    points: List[Tuple[float, float, float]] = []
+    for k in range(1, num_steps + 1):
+        t = k / num_steps
+        angle = a_start + sweep * t
+        pa = ca + r * math.cos(angle)
+        pb = cb + r * math.sin(angle)
+        plin = slin + (elin - slin) * t
+        p = [0.0, 0.0, 0.0]
+        p[a] = pa
+        p[b] = pb
+        p[lin] = plin
+        points.append((p[0], p[1], p[2]))
 
     return points
