@@ -50,6 +50,8 @@ import ToolpathCanvas3D from "./ToolpathCanvas3D.vue";
 // ---------------------------------------------------------------------------
 interface Props {
   gcode?: string;
+  /** Input units of the G-code program (F-Y1). Defaults to mm. */
+  units?: "mm" | "inch";
   showHud?: boolean;
   showControls?: boolean;
   autoPlay?: boolean;
@@ -67,6 +69,7 @@ interface Props {
 
 const props = withDefaults(defineProps<Props>(), {
   gcode: undefined,
+  units: "mm",
   showHud: true,
   showControls: true,
   autoPlay: false,
@@ -177,6 +180,7 @@ const {
 // ---------------------------------------------------------------------------
 const lifecycle = useToolpathLifecycle({
   gcode: props.gcode,
+  units: props.units,
   autoPlay: props.autoPlay,
   enableCollisionDetection: props.enableCollisionDetection,
   enableOptimization: props.enableOptimization,

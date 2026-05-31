@@ -87,6 +87,7 @@ const viewOffY = ref(0);
 // LOD state
 // ---------------------------------------------------------------------------
 let _baseScale = 1; // scale at fitToView — used to derive zoom ratio
+let _dpr = 1; // devicePixelRatio applied to the backing store (F-Z7)
 
 // ---------------------------------------------------------------------------
 // Coordinate helpers
@@ -115,13 +116,17 @@ function fitToView(): void {
   const rangeX = Math.max(b.x_max - b.x_min, 1);
   const rangeY = Math.max(b.y_max - b.y_min, 1);
 
-  const scaleX = (el.width * padFactor) / rangeX;
-  const scaleY = (el.height * padFactor) / rangeY;
+  // Logical (CSS-pixel) dimensions; the backing store is inflated by _dpr and
+  // the draw context is scaled to match, so all geometry stays in CSS px.
+  const lw = el.offsetWidth;
+  const lh = el.offsetHeight;
+  const scaleX = (lw * padFactor) / rangeX;
+  const scaleY = (lh * padFactor) / rangeY;
   viewScale.value = Math.min(scaleX, scaleY);
   _baseScale = viewScale.value;
 
-  viewOffX.value = (el.width - rangeX * viewScale.value) / 2;
-  viewOffY.value = (el.height - rangeY * viewScale.value) / 2;
+  viewOffX.value = (lw - rangeX * viewScale.value) / 2;
+  viewOffY.value = (lh - rangeY * viewScale.value) / 2;
 }
 
 // ---------------------------------------------------------------------------
@@ -422,12 +427,15 @@ function drawFrame(): void {
   const ctx = el?.getContext("2d");
   if (!el || !ctx || !store.bounds) return;
 
-  const W = el.width;
-  const H = el.height;
+  // Work in logical CSS pixels; scale the device-pixel backing store by _dpr
+  // so the render is crisp on high-DPI displays without distorting geometry. (F-Z7)
+  const W = el.offsetWidth;
+  const H = el.offsetHeight;
   const segs = store.segments;
   const currentIdx = store.currentSegmentIndex;
   const zRange = Math.max(store.bounds.z_max - store.bounds.z_min, 0.001);
 
+  ctx.setTransform(_dpr, 0, 0, _dpr, 0, 0);
   ctx.fillStyle = "#1E1E2E";
   ctx.fillRect(0, 0, W, H);
 
@@ -570,7 +578,7 @@ function onWheel(e: WheelEvent): void {
   const worldX =
     (mouseX - viewOffX.value) / viewScale.value + store.bounds.x_min;
   const worldY =
-    (canvasEl.value!.height - mouseY - viewOffY.value) / viewScale.value +
+    (canvasEl.value!.offsetHeight - mouseY - viewOffY.value) / viewScale.value +
     store.bounds.y_min;
 
   const factor = e.deltaY < 0 ? 1.1 : 0.9;
@@ -579,7 +587,7 @@ function onWheel(e: WheelEvent): void {
   // Adjust pan so world point stays under mouse
   viewOffX.value = mouseX - (worldX - store.bounds.x_min) * newScale;
   viewOffY.value =
-    canvasEl.value!.height - mouseY - (worldY - store.bounds.y_min) * newScale;
+    canvasEl.value!.offsetHeight - mouseY - (worldY - store.bounds.y_min) * newScale;
 
   viewScale.value = newScale;
   requestAnimationFrame(drawFrame);
@@ -701,7 +709,7 @@ function onClick(e: MouseEvent): void {
   const screenX = e.clientX - rect.left;
   const screenY = e.clientY - rect.top;
 
-  const [worldX, worldY] = screenToWorld(screenX, screenY, el.height);
+  const [worldX, worldY] = screenToWorld(screenX, screenY, el.offsetHeight);
 
   // P5: Handle measure mode
   if (store.measureMode) {
@@ -754,15 +762,17 @@ onMounted(() => {
   if (!el) return;
 
   resizeObserver = new ResizeObserver(() => {
-    el.width = el.offsetWidth;
-    el.height = el.offsetHeight;
+    _dpr = Math.min(window.devicePixelRatio || 1, 2);
+    el.width = el.offsetWidth * _dpr;
+    el.height = el.offsetHeight * _dpr;
     fitToView();
     requestAnimationFrame(drawFrame);
   });
   resizeObserver.observe(el);
 
-  el.width = el.offsetWidth;
-  el.height = el.offsetHeight;
+  _dpr = Math.min(window.devicePixelRatio || 1, 2);
+  el.width = el.offsetWidth * _dpr;
+  el.height = el.offsetHeight * _dpr;
 });
 
 onUnmounted(() => {

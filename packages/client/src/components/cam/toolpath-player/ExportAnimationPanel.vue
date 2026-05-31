@@ -43,10 +43,9 @@ function updateConfig<K extends keyof ExportConfig>(key: K, value: ExportConfig[
         <select
           :value="config.format"
           class="export-select"
-          @change="updateConfig('format', ($event.target as HTMLSelectElement).value as 'webm' | 'gif')"
+          @change="updateConfig('format', ($event.target as HTMLSelectElement).value as 'webm')"
         >
           <option value="webm">WebM Video</option>
-          <option value="gif">GIF Animation</option>
         </select>
       </div>
       <div class="export-row">
@@ -92,11 +91,9 @@ function updateConfig<K extends keyof ExportConfig>(key: K, value: ExportConfig[
         </div>
       </div>
       <div class="export-info">
-        <span v-if="config.format === 'webm'">
-          📼 WebM: High quality, smaller file, plays in browsers
-        </span>
-        <span v-else>
-          🎞️ GIF: Universal support, larger file, limited colors
+        <span>
+          📼 WebM: High quality, smaller file, plays in browsers.
+          (Browser recording cannot emit GIF.)
         </span>
       </div>
       <button

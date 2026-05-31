@@ -20,6 +20,52 @@ Maintenance discipline: docs/SPRINTS_MAINTENANCE.md
 
 ---
 
+## CAM-TPA-001 — Toolpath Animation: deferred follow-ups (registered 2026-05-30)
+
+✅ **RESOLVED 2026-05-30** · Sprint namespace: CAM · Owner: codeowner
+
+Backend engine remediated (X1–Z5) and the frontend F-series + the four deferred
+items below were all addressed in the same session. Verification: backend
+`pytest` **57 green** (incl. the accel model); frontend store unit tests **9
+green** (`src/stores/__tests__/useToolpathPlayerStore.test.ts`); `vue-tsc` clean
+for every touched file. Full map: `docs/audit/TOOLPATH_ANIMATION_AUDIT_2026-05-30.md`.
+
+Resolution:
+
+- ✅ **Limited-simulation banner + tool legend.** SDK type gained `SimulateWarnings`
+  + `is_cycle`/`cycle_kind`; store keeps `warnings`/`tools` and exposes
+  `hasFidelityWarnings`; `OverlaysLayer.vue` renders a warnings banner + tool
+  legend. (F-Z1/F-Z2)
+- ✅ **Render perf / scrub correctness.** `ToolpathCanvas3D` builds the line set
+  once and updates an O(Δ) progress boundary instead of rebuilding every tick
+  (F-X1); cumulative-time search + step/seek/jump made consistent (F-X2);
+  downsampling conserves total time (F-X3); store unit tests pin F-X2/F-X3.
+  Live 100k/export GPU verification still wants a manual dev-server pass.
+- ✅ **`units` threaded** view → `ToolpathPlayer` prop → `useToolpathLifecycle`
+  → `store.loadGcode` → `/simulate`. (F-Y1)
+- ✅ **Acceleration/deceleration model.** Opt-in trapezoidal planner with
+  Grbl-style junction speeds in `simulate_segments(accel_mm_s2=…)`, wired through
+  router + SDK; default off (constant velocity); 4 backend tests.
+
+Also fixed in pass: F-Y2 (versioned cache key), F-Y3 (export GIF option removed —
+browsers can't MediaRecorder-emit GIF), F-Z3 (tool cylinder resizes from an
+optional `toolTable`), F-Z4 (camera fits on every load), F-Z5 (error message
+preserved), F-Z6 (LRU cache eviction), F-Z7 (2D canvas devicePixelRatio).
+
+**⚠️ Process note — verify edits independently this session.** The tooling was
+glitchy during the CAM-TPA-001 work: delayed, merged, and cancelled tool-call
+batches. One `ToolpathPlayer.vue` Props edit **silently no-matched** (the
+`old_string` didn't match the real interface) while a dependent edit landed —
+which would have shipped a runtime-undefined `props.units`. It was caught only
+because the delayed `vue-tsc` output surfaced the type error, and the real Props
+interface was then corrected. Takeaway for the next session: **do not trust an
+edit's apparent success when the harness is dropping/merging output** — confirm
+with an independent re-read or a type-check/test run before treating it as done.
+Ground truth for this work is the final clean `vue-tsc` (0 errors in touched
+files) + the green test runs above, not the individual edit confirmations.
+
+---
+
 ## NEXT SESSION OPENS WITH (2026-05-26) — superseded
 
 **PR #45 and #46 merged to `main`.**
