@@ -4,6 +4,21 @@
 **Author:** Claude Code Session  
 **Status:** REGRESSION IDENTIFIED — restoration path documented
 
+> **RECONCILE NOTE (2026-05-30).** This handoff's git-anchored timeline is **correct evidence and
+> is retained** — `FeedbackSystem`/`TrainingDataCollector` (2026-03-04), `GeometryCoachV2`
+> (2026-03-15), and `validate_scale_before_export` (2026-04-03) really were committed, so its
+> line-94 flag that CLAUDE.md "incorrectly states loops 'never implemented'" **has a point** about
+> those individual components.
+>
+> Reconciliation with the 2026-05-30 conflation correction: the **unified, named** three-loop/AGE
+> architecture CLAUDE.md called "APPROVED DESIGN" (`ValidatedExtractor`/`AdaptiveExtractor`/
+> `VectorizerAGE`) was never approved or built — that's the conflation being removed. The
+> components this timeline lists are **independent, organically-built code**; labeling them
+> "Loop 1 / Loop 3" is a **retrospective name**, not evidence the approved architecture shipped
+> (same keep-the-code-question-the-label shape as Sprint B). `GeometryCoachV2` is **live and
+> API-reachable — keep it**; the scale gate is shipped — keep it; the feedback scaffolding is
+> dormant. See `docs/handoffs/DEV_HANDOFF_2026-05-30_THREE_LOOP_CONFLATION_REMOVAL.md` §2 + §9b.
+
 ---
 
 ## Executive Summary

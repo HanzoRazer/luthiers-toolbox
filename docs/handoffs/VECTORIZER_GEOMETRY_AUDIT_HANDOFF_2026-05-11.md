@@ -4,6 +4,19 @@
 **Audit Scope:** Vectorizer pipeline, geometry generators, DXF compliance  
 **Status:** AUDIT COMPLETE — Remediation Required
 
+> **CONFLATION CORRECTION (2026-05-30).** This audit quotes the CLAUDE.md three-loop / AGE
+> mandate ("requested by Ross in multiple sessions… must be built"; "APPROVED DESIGN") as if it
+> were owed runtime work. Per ground truth from Ross (2026-05-30), that mandate was conflation:
+> the three-loop architecture + AGE were **experimental, never approved, and never implemented**
+> here — now **sandboxed into `vectorizer-sandbox`**. Treat any "approved/owed" framing in this
+> doc as superseded. The shipped **scale-validation gate** is real and unaffected. See
+> `docs/handoffs/DEV_HANDOFF_2026-05-30_THREE_LOOP_CONFLATION_REMOVAL.md` (+ `_CORRECTIONS.md`).
+>
+> **Live-code carve-out:** "never implemented" means the *named, unified* architecture only.
+> `GeometryCoachV2` (photo-vectorizer) is real, **API-reachable** runtime code — its "Loop 1" name
+> is retrospective labeling, NOT the approved architecture. Do NOT delete or sandbox it; deletion
+> degrades a live endpoint path. See handoff §2 + §9b.
+
 ---
 
 ## Executive Summary

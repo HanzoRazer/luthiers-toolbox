@@ -4,6 +4,17 @@
 **Status:** COMMERCIALLY VIABLE — Development Frozen  
 **Classification:** Production Baseline
 
+> **CONFLATION CORRECTION (2026-05-30).** Where this doc lists "CLAUDE.md-approved features
+> [that] were never built" (three loops, AGE), note per ground truth from Ross (2026-05-30):
+> those were **experimental and never approved** — "never built" is the expected state, not an
+> unmet commitment. The work is **sandbox-owned** (`vectorizer-sandbox`). See
+> `docs/handoffs/DEV_HANDOFF_2026-05-30_THREE_LOOP_CONFLATION_REMOVAL.md`.
+>
+> **Live-code carve-out:** "never built" means the *named, unified* architecture only.
+> `GeometryCoachV2` (photo-vectorizer) is real, **API-reachable** runtime code — its "Loop 1" name
+> is retrospective labeling, NOT the approved architecture. Do NOT delete or sandbox it; deletion
+> degrades a live endpoint path. See handoff §2 + §9b.
+
 ---
 
 ## Executive Summary

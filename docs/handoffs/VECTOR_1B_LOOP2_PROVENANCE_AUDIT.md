@@ -4,6 +4,18 @@
 **Status:** AUDIT COMPLETE  
 **Scope:** Determine whether Loop 2 cross-image learning was relocated, abandoned, or never implemented
 
+> **CONFLATION CORRECTION (2026-05-30).** This audit treats Loop 2 as "approved in CLAUDE.md but
+> never built." Per ground truth from Ross (2026-05-30): the entire three-loop architecture
+> (incl. Loop 2) was **experimental and never approved** — its absence from the runtime is
+> expected, not a remediation gap. The work is **sandbox-owned** (`vectorizer-sandbox`). The
+> "approved in CLAUDE.md" premise is corrected at the source. See
+> `docs/handoffs/DEV_HANDOFF_2026-05-30_THREE_LOOP_CONFLATION_REMOVAL.md`.
+>
+> **Live-code carve-out:** Loop 2 specifically (`strategy_cache` cross-image learning) is genuinely
+> absent. But "never implemented" across the loops means the *named, unified* architecture only —
+> `GeometryCoachV2` (photo-vectorizer, retro-labeled "Loop 1") is real, **API-reachable** runtime
+> code. Do NOT delete or sandbox it; deletion degrades a live endpoint path. See handoff §2 + §9b.
+
 ---
 
 ## Classification
