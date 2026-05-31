@@ -14,6 +14,16 @@ This script:
 5. Reports actual wire-URL collisions (which would be real routing bugs)
 
 Output: metrics/wire_url_audit.json
+
+LIMITATIONS (read before trusting the collision count):
+- Composition is NOT resolved. Routers composed into an aggregator via
+  `parent.include_router(child, prefix=...)` (e.g. the CAM aggregator in
+  app/cam/routers/aggregator.py, which mounts toolpath/drilling/profiling/...
+  under /api/cam/<category>) are seen here as UNMANIFESTED with no prefix, so
+  their wire URLs are under-resolved (e.g. bare `/gcode` instead of
+  `/api/cam/toolpath/gcode`). This over-counts collisions by an unknown amount.
+  The authoritative wire-URL set is the live FastAPI `app.routes` table, not
+  this static map. Use this script for triage, not for a hard gate.
 """
 import ast
 import json
@@ -60,40 +70,49 @@ class EndpointInfo:
     manifest_module: Optional[str] = None
 
 
+_MODULE_RE = re.compile(r'module\s*=\s*["\']([^"\']+)["\']')
+_PREFIX_RE = re.compile(r'prefix\s*=\s*["\']([^"\']*)["\']')
+_ATTR_RE = re.compile(r'router_attr\s*=\s*["\']([^"\']*)["\']')
+_CATEGORY_RE = re.compile(r'category\s*=\s*["\']([^"\']*)["\']')
+
+
 def load_manifest_entries() -> list[ManifestEntry]:
-    """Load all RouterSpec entries from manifests."""
+    """Load all RouterSpec entries from manifests.
+
+    Each RouterSpec(...) block is parsed independently so that field ORDER
+    does not matter and the manifest prefix is captured reliably.
+
+    Previously a single combined regex used lazy ``[^)]*?`` separators around
+    the *optional* prefix group; the engine skipped that group, so every entry
+    came back with prefix="" and wire URLs were computed WITHOUT their manifest
+    prefix (e.g. api_runs resolved to ``/runs`` instead of ``/api/rmos/runs``).
+    Splitting on the literal ``RouterSpec(`` yields exactly one chunk per spec
+    (``tags=[...]`` never contains that literal), and each field is then matched
+    on its own.
+    """
     entries = []
     manifest_dir = APP_ROOT / "router_registry" / "manifests"
 
     for manifest_file in manifest_dir.glob("*_manifest.py"):
         try:
             content = manifest_file.read_text(encoding="utf-8")
-            # Extract RouterSpec(...) blocks
-            # Simple regex approach since AST parsing of dataclass calls is complex
-            spec_pattern = re.compile(
-                r'RouterSpec\s*\(\s*'
-                r'module\s*=\s*["\']([^"\']+)["\']'
-                r'[^)]*?'
-                r'(?:prefix\s*=\s*["\']([^"\']*)["\'])?'
-                r'[^)]*?'
-                r'(?:router_attr\s*=\s*["\']([^"\']*)["\'])?'
-                r'[^)]*?'
-                r'(?:category\s*=\s*["\']([^"\']*)["\'])?',
-                re.DOTALL
-            )
-            for match in spec_pattern.finditer(content):
-                module = match.group(1)
-                prefix = match.group(2) or ""
-                router_attr = match.group(3) or "router"
-                category = match.group(4) or "misc"
-                entries.append(ManifestEntry(
-                    module=module,
-                    prefix=prefix,
-                    router_attr=router_attr,
-                    category=category,
-                ))
         except Exception as e:
-            print(f"Warning: Could not parse {manifest_file}: {e}", file=sys.stderr)
+            print(f"Warning: Could not read {manifest_file}: {e}", file=sys.stderr)
+            continue
+
+        for block in content.split("RouterSpec(")[1:]:
+            m = _MODULE_RE.search(block)
+            if not m:
+                continue
+            pfx = _PREFIX_RE.search(block)
+            attr = _ATTR_RE.search(block)
+            cat = _CATEGORY_RE.search(block)
+            entries.append(ManifestEntry(
+                module=m.group(1),
+                prefix=pfx.group(1) if pfx else "",
+                router_attr=attr.group(1) if attr else "router",
+                category=cat.group(1) if cat else "misc",
+            ))
 
     return entries
 
