@@ -1,5 +1,14 @@
 /**
  * Composable for pricing strategy calculations.
+ *
+ * Uses TARGET GROSS MARGIN formula:
+ *   price = cost / (1 - targetMargin / 100)
+ *
+ * Example: $1000 cost @ 30% target margin = $1428.57 price
+ *   Actual margin: ($1428.57 - $1000) / $1428.57 = 30%
+ *
+ * This differs from MARKUP formula which would give:
+ *   $1000 * 1.30 = $1300 (only 23.08% actual margin)
  */
 import { ref, computed, type Ref, type ComputedRef } from 'vue'
 
@@ -9,13 +18,14 @@ import { ref, computed, type Ref, type ComputedRef } from 'vue'
 
 export interface PricingData {
   buildCost: number
-  margin: number
+  targetGrossMargin: number
 }
 
 export interface PricingCalculatorState {
   pricing: Ref<PricingData>
   sellingPrice: ComputedRef<number>
   profit: ComputedRef<number>
+  actualMarginPct: ComputedRef<number>
   breakEvenUnits: ComputedRef<number>
 }
 
@@ -28,16 +38,24 @@ export function usePricingCalculator(
 ): PricingCalculatorState {
   const pricing = ref<PricingData>({
     buildCost: 3500,
-    margin: 50
+    targetGrossMargin: 50
   })
 
-  const sellingPrice = computed(() =>
-    pricing.value.buildCost * (1 + pricing.value.margin / 100)
-  )
+  const sellingPrice = computed(() => {
+    const margin = pricing.value.targetGrossMargin
+    if (margin >= 100) return Infinity
+    if (margin < 0) return pricing.value.buildCost
+    return Math.round((pricing.value.buildCost / (1 - margin / 100)) * 100) / 100
+  })
 
   const profit = computed(() =>
     sellingPrice.value - pricing.value.buildCost
   )
+
+  const actualMarginPct = computed(() => {
+    if (sellingPrice.value <= 0) return 0
+    return Math.round(((sellingPrice.value - pricing.value.buildCost) / sellingPrice.value) * 10000) / 100
+  })
 
   const breakEvenUnits = computed(() =>
     Math.ceil(firstYearCost.value / profit.value)
@@ -47,6 +65,7 @@ export function usePricingCalculator(
     pricing,
     sellingPrice,
     profit,
+    actualMarginPct,
     breakEvenUnits
   }
 }

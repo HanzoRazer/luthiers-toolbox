@@ -194,8 +194,15 @@ class PricingStrategy(BaseModel):
     cogs: float
 
     # Different pricing approaches
-    cost_plus_price: float = Field(..., description="COGS + markup")
-    cost_plus_markup_pct: float = 50.0
+    cost_plus_price: float = Field(..., description="Price calculated from cost + margin/markup")
+    cost_plus_target_margin_pct: float = Field(
+        ...,
+        description="Actual gross margin percentage. Canonical field."
+    )
+    cost_plus_markup_pct: Optional[float] = Field(
+        None,
+        description="DEPRECATED. Equivalent markup percentage for legacy compatibility."
+    )
 
     market_based_price: Optional[float] = None
     market_position: Optional[str] = None  # "below", "at", "above"

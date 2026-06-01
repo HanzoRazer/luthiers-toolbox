@@ -233,10 +233,18 @@ class COGSService:
         self,
         cogs: float,
     ) -> List[Dict[str, float]]:
-        """Calculate margins at various price points."""
+        """
+        Calculate margins at various markup levels.
+
+        NOTE: This uses MARKUP formula (price = cost * (1 + markup%)).
+        The resulting gross_margin_pct shows what margin you actually achieve.
+        For target-margin pricing, use PricingService with target_margin_pct.
+
+        Example: 30% markup on $1000 = $1300, which is 23.08% gross margin.
+        """
         scenarios = []
 
-        # Standard markup percentages
+        # Standard markup percentages (not target margins)
         for markup_pct in [25, 50, 75, 100, 150, 200]:
             price = cogs * (1 + markup_pct / 100)
             margin = price - cogs

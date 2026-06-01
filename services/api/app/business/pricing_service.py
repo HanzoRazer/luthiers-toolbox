@@ -11,6 +11,13 @@ from .schemas import (
     CompetitorPrice,
     COGSBreakdown,
 )
+from app.calculators.business.margin_math import (
+    price_from_target_margin,
+    price_from_markup,
+    gross_margin_pct,
+    markup_pct_to_margin_pct,
+    margin_pct_to_markup_pct,
+)
 
 
 class PricingService:
@@ -91,7 +98,7 @@ class PricingService:
     def __init__(
         self,
         competitors: Optional[List[CompetitorPrice]] = None,
-        default_markup_pct: float = 100.0,
+        default_target_margin_pct: float = 50.0,
         minimum_margin_pct: float = 30.0,
     ):
         """
@@ -99,11 +106,11 @@ class PricingService:
 
         Args:
             competitors: Competitor pricing data
-            default_markup_pct: Default markup over COGS
-            minimum_margin_pct: Minimum acceptable margin
+            default_target_margin_pct: Default target gross margin (e.g., 50.0 = 50%)
+            minimum_margin_pct: Minimum acceptable gross margin (e.g., 30.0 = 30%)
         """
         self.competitors = competitors or self.DEFAULT_COMPETITORS
-        self.default_markup_pct = default_markup_pct
+        self.default_target_margin_pct = default_target_margin_pct
         self.minimum_margin_pct = minimum_margin_pct
 
     def calculate_pricing(
@@ -112,6 +119,7 @@ class PricingService:
         instrument_name: str,
         instrument_type: str = "acoustic_dreadnought",
         target_tier: str = "custom",
+        custom_target_margin_pct: Optional[float] = None,
         custom_markup_pct: Optional[float] = None,
     ) -> PricingStrategy:
         """
@@ -122,16 +130,30 @@ class PricingService:
             instrument_name: Name of the instrument
             instrument_type: Type for competitor comparison
             target_tier: Quality tier to compete in
-            custom_markup_pct: Override default markup
+            custom_target_margin_pct: Target gross margin (canonical). E.g., 30.0 = 30%
+            custom_markup_pct: DEPRECATED. Legacy markup percentage.
+                If provided without target_margin_pct, preserves legacy behavior.
 
         Returns:
             Complete PricingStrategy
         """
-        markup_pct = custom_markup_pct or self.default_markup_pct
         notes: List[str] = []
 
-        # Cost-plus pricing
-        cost_plus_price = cogs * (1 + markup_pct / 100)
+        # Determine pricing method: target margin (canonical) or markup (legacy)
+        using_legacy_markup = False
+        if custom_target_margin_pct is not None:
+            target_margin_pct = custom_target_margin_pct
+            cost_plus_price = price_from_target_margin(cogs, target_margin_pct)
+            equivalent_markup_pct = margin_pct_to_markup_pct(target_margin_pct)
+        elif custom_markup_pct is not None:
+            using_legacy_markup = True
+            cost_plus_price = price_from_markup(cogs, custom_markup_pct)
+            target_margin_pct = gross_margin_pct(cost_plus_price, cogs)
+            equivalent_markup_pct = custom_markup_pct
+        else:
+            target_margin_pct = self.default_target_margin_pct
+            cost_plus_price = price_from_target_margin(cogs, target_margin_pct)
+            equivalent_markup_pct = margin_pct_to_markup_pct(target_margin_pct)
 
         # Market-based pricing
         market_data = self._analyze_market(instrument_type, target_tier)
@@ -190,7 +212,8 @@ class PricingService:
             instrument_name=instrument_name,
             cogs=cogs,
             cost_plus_price=round(cost_plus_price, 2),
-            cost_plus_markup_pct=markup_pct,
+            cost_plus_target_margin_pct=round(target_margin_pct, 2),
+            cost_plus_markup_pct=round(equivalent_markup_pct, 2),
             market_based_price=round(market_based_price, 2) if market_based_price else None,
             market_position=market_position,
             value_based_price=round(value_based_price, 2) if value_based_price else None,
@@ -280,11 +303,11 @@ class PricingService:
         Recommend optimal price based on all inputs.
 
         Logic:
-        1. Never go below cost_plus (protect margin)
+        1. Never go below minimum margin floor (protect margin)
         2. For custom tier, lean toward value_based
         3. For other tiers, balance cost_plus and market
         """
-        minimum_price = cogs * (1 + self.minimum_margin_pct / 100)
+        minimum_price = price_from_target_margin(cogs, self.minimum_margin_pct)
 
         if target_tier == "custom" and value_based:
             # Custom: go for value pricing
