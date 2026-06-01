@@ -31,19 +31,34 @@ async def calculate_pricing(
     instrument_name: str = Query(..., min_length=1),
     instrument_type: str = "acoustic_dreadnought",
     target_tier: str = "custom",
-    markup_pct: Optional[float] = None,
+    target_margin_pct: Optional[float] = Query(
+        None,
+        ge=0,
+        lt=100,
+        description="Target gross margin percentage (canonical). E.g., 30 = 30% margin."
+    ),
+    markup_pct: Optional[float] = Query(
+        None,
+        ge=0,
+        description="DEPRECATED. Legacy markup percentage. Use target_margin_pct instead."
+    ),
 ) -> PricingStrategy:
     """
     Calculate pricing strategy for an instrument.
 
     Returns cost-plus, market-based, and value-based pricing
     with a recommended price.
+
+    Pricing parameters:
+    - target_margin_pct (canonical): Target gross margin. 30% margin on $1000 = $1428.57
+    - markup_pct (deprecated): Legacy markup. 30% markup on $1000 = $1300.00
     """
     return pricing_service.calculate_pricing(
         cogs=cogs,
         instrument_name=instrument_name,
         instrument_type=instrument_type,
         target_tier=target_tier,
+        custom_target_margin_pct=target_margin_pct,
         custom_markup_pct=markup_pct,
     )
 
