@@ -10,7 +10,11 @@ Primary use:
   - Keep migration measurable with a budget (default 10).
 
 Defaults:
-  - Scans: packages/client/src, packages/client/tests, packages/sdk, services/api
+  - Scans: packages/client/src, packages/client/tests, packages/sdk
+    (the frontend SDK/client — the gate's stated purpose. Server-side route
+    *definitions*, the truth file itself, generated specs/metrics, and
+    deprecation tests are not "usage" and inflated the count when services/api
+    was scanned; see CI-RED-002.)
   - Budget: 10 (env LEGACY_USAGE_BUDGET)
   - Truth file: services/api/app/data/endpoint_truth.json
 
@@ -42,7 +46,6 @@ DEFAULT_SCAN_PATHS = [
     "packages/client/src",
     "packages/client/tests",
     "packages/sdk",
-    "services/api",
 ]
 
 
@@ -149,6 +152,13 @@ def _scan_file(path: Path, legacy: List[Tuple[str, Optional[str]]]) -> List[Hit]
 
 
 def main() -> int:
+    # Avoid UnicodeEncodeError on the ✅/❌ status glyphs under a non-UTF-8
+    # console (e.g. Windows cp1252); CI on Linux already defaults to UTF-8.
+    try:
+        sys.stdout.reconfigure(encoding="utf-8")
+    except Exception:
+        pass
+
     truth_file = Path(os.getenv("ENDPOINT_TRUTH_FILE", "services/api/app/data/endpoint_truth.json"))
     budget = _int("LEGACY_USAGE_BUDGET", 10)
     scan_paths = _csv("LEGACY_SCAN_PATHS", DEFAULT_SCAN_PATHS)
@@ -161,6 +171,13 @@ def main() -> int:
             "**/build/**",
             "**/.venv/**",
             "**/__pycache__/**",
+            # Generated artifacts + self-referential data — never "usage".
+            # Defense-in-depth for when LEGACY_SCAN_PATHS is widened to services/api.
+            "**/htmlcov/**",
+            "**/openapi.json",
+            "**/coverage.json",
+            "**/metrics/**",
+            "**/endpoint_truth.json",
         ],
     )
 
