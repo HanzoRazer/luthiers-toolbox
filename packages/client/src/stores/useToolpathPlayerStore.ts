@@ -7,12 +7,28 @@
  * P1 enhancements: Memory management, progress tracking, downsampling
  * P2 enhancements: Caching layer for repeated simulations
  * P3 enhancements: M-code tracking in segments
+ *
+ * 2026-05-30 fidelity fixes (TOOLPATH_ANIMATION_AUDIT):
+ * - F-X2: cumulative-time search is a strict lower bound; step/seek/jump land
+ *   on segment starts consistently.
+ * - F-X3: downsampling conserves total cycle time (merges runs instead of
+ *   dropping durations).
+ * - F-Y1: loadGcode forwards `units` to the backend.
+ * - F-Y2: cache key carries a version tag so a backend change invalidates
+ *   stale sessionStorage entries.
+ * - F-Z1/F-Z2: `warnings` and `tools` from the response are kept and exposed.
+ * - F-Z6: cache eviction is least-recently-written, not arbitrary.
  */
 
 import { defineStore } from "pinia";
 import { ref, computed } from "vue";
 import { simulate } from "@/sdk/endpoints/cam/simulate";
-import type { MoveSegment, SimulateBounds } from "@/sdk/endpoints/cam/simulate";
+import type {
+  MoveSegment,
+  SimulateBounds,
+  SimulateWarnings,
+  ToolsInfo,
+} from "@/sdk/endpoints/cam/simulate";
 import { MeasurementTool, type Measurement, type Point3D } from "@/util/measurementTool";
 
 // ---------------------------------------------------------------------------
@@ -22,6 +38,8 @@ const MAX_SEGMENTS = 100_000;
 const WARNING_THRESHOLD = 75_000;
 const CACHE_PREFIX = "gcode-sim-";
 const MAX_CACHE_ENTRIES = 20;
+/** Bump when backend simulation semantics change, to invalidate stale caches. */
+const SIM_VERSION = "2026-05-30";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -37,6 +55,15 @@ export interface MemoryInfo {
 export interface ParseProgress {
   percent: number;
   stage: "idle" | "uploading" | "simulating" | "complete";
+}
+
+export interface LoadOptions {
+  units?: "mm" | "inch";
+  rapid_mm_min?: number;
+  default_feed_mm_min?: number;
+  arc_resolution_deg?: number;
+  accel_mm_s2?: number;
+  junction_deviation_mm?: number;
 }
 
 // ---------------------------------------------------------------------------
@@ -55,37 +82,63 @@ function lerp3(
   ];
 }
 
-function binarySearchCumulative(cumulative: number[], timeMs: number): number {
+/**
+ * Strict lower-bound search over the cumulative end-time array.
+ * Returns the index of the segment active at `timeMs`, where segment i owns the
+ * half-open interval [cumulative[i-1], cumulative[i]). At an exact boundary the
+ * search returns the *next* segment (its start), which is what step/seek/jump
+ * rely on. (F-X2)
+ */
+export function binarySearchCumulative(cumulative: number[], timeMs: number): number {
   if (cumulative.length === 0) return -1;
   let lo = 0;
   let hi = cumulative.length - 1;
   while (lo < hi) {
     const mid = (lo + hi) >>> 1;
-    if (cumulative[mid] < timeMs) lo = mid + 1;
+    if (cumulative[mid] <= timeMs) lo = mid + 1;
     else hi = mid;
   }
   return lo;
 }
 
-/** Adaptive downsample: keeps all rapids & arc endpoints, thins straight cuts. */
-function downsampleSegments(
+/**
+ * Adaptive downsample for very large programs. Rapids and dwells are kept whole
+ * (they carry distinct timing/styling); runs of consecutive cut/arc segments are
+ * merged into one segment whose duration is the *sum* of the run and whose
+ * endpoint is the run's last point. This conserves total cycle time and path
+ * endpoints — the previous modulo-stride version silently dropped durations. (F-X3)
+ */
+export function downsampleSegments(
   segments: MoveSegment[],
   target: number,
 ): MoveSegment[] {
-  if (segments.length <= target) return segments;
+  if (segments.length <= target || target <= 0) return segments;
+  const n = segments.length;
+  const step = Math.max(2, Math.ceil(n / target));
   const result: MoveSegment[] = [];
-  const step = Math.max(1, Math.floor(segments.length / target));
-  for (let i = 0; i < segments.length; i++) {
+  let i = 0;
+  while (i < n) {
     const seg = segments[i];
-    // Always keep rapids and first/last of arc runs
-    if (
-      seg.type === "rapid" ||
-      i === 0 ||
-      i === segments.length - 1 ||
-      i % step === 0
-    ) {
+    if (seg.type === "rapid" || seg.type === "dwell") {
       result.push(seg);
+      i++;
+      continue;
     }
+    let j = i;
+    let dur = 0;
+    let lastIdx = i;
+    while (
+      j < n &&
+      j - i < step &&
+      segments[j].type !== "rapid" &&
+      segments[j].type !== "dwell"
+    ) {
+      dur += segments[j].duration_ms;
+      lastIdx = j;
+      j++;
+    }
+    result.push({ ...seg, to_pos: segments[lastIdx].to_pos, duration_ms: dur });
+    i = j;
   }
   return result;
 }
@@ -112,6 +165,23 @@ export const useToolpathPlayerStore = defineStore("toolpathPlayer", () => {
   const bounds = ref<SimulateBounds | null>(null);
   const loading = ref(false);
   const error = ref<string | null>(null);
+
+  // ── Fidelity signals from the backend (F-Z1 / F-Z2) ──────────────────────
+  const warnings = ref<SimulateWarnings | null>(null);
+  const tools = ref<ToolsInfo | null>(null);
+
+  /** True when the simulation could not faithfully model part of the program. */
+  const hasFidelityWarnings = computed<boolean>(() => {
+    const w = warnings.value;
+    if (!w) return false;
+    return (
+      w.unsupported_g.length > 0 ||
+      w.unsupported_m.length > 0 ||
+      w.approx_cycles.length > 0 ||
+      w.degenerate_arcs > 0 ||
+      w.truncated
+    );
+  });
 
   // ── Progress tracking (P1) ───────────────────────────────────────────────
   const parseProgress = ref<ParseProgress>({ percent: 0, stage: "idle" });
@@ -157,6 +227,11 @@ export const useToolpathPlayerStore = defineStore("toolpathPlayer", () => {
     }
   }
 
+  /** Start time of segment `idx` (0 for the first). */
+  function _segmentStart(idx: number): number {
+    return idx > 0 ? (_cumulativeMs[idx - 1] ?? 0) : 0;
+  }
+
   // ── Computed ──────────────────────────────────────────────────────────────
 
   const totalDurationMs = computed<number>(() =>
@@ -179,13 +254,13 @@ export const useToolpathPlayerStore = defineStore("toolpathPlayer", () => {
     if (idx < 0 || segments.value.length === 0) return [0, 0, 0];
 
     const seg = segments.value[idx];
-    const segStart = idx > 0 ? _cumulativeMs[idx - 1] : 0;
+    const segStart = _segmentStart(idx);
     const segDuration = seg.duration_ms;
 
     const t =
       segDuration > 0
-        ? Math.min((currentTimeMs.value - segStart) / segDuration, 1)
-        : 1;
+        ? Math.min(Math.max((currentTimeMs.value - segStart) / segDuration, 0), 1)
+        : 0;
 
     return lerp3(
       seg.from_pos as [number, number, number],
@@ -210,16 +285,15 @@ export const useToolpathPlayerStore = defineStore("toolpathPlayer", () => {
     const seg = selectedSegment.value;
     if (!seg || !sourceGcode.value) return null;
 
-    // MoveSegment may have line_number from simulation
     const lineNum = (seg as MoveSegment & { line_number?: number }).line_number;
     if (lineNum === undefined) return null;
 
-    const lines = sourceGcode.value.split('\n');
+    const lines = sourceGcode.value.split("\n");
     if (lineNum < 1 || lineNum > lines.length) return null;
 
     return {
       lineNumber: lineNum,
-      text: lines[lineNum - 1] || '',
+      text: lines[lineNum - 1] || "",
     };
   });
 
@@ -229,7 +303,8 @@ export const useToolpathPlayerStore = defineStore("toolpathPlayer", () => {
     if (playState.value !== "playing") return;
 
     if (_lastTimestamp > 0) {
-      const wallDelta = timestamp - _lastTimestamp;
+      // Clamp wall delta so an NTP correction / tab-resume can't skip the path.
+      const wallDelta = Math.min(timestamp - _lastTimestamp, 250);
       const simDelta = wallDelta * speed.value;
       const next = currentTimeMs.value + simDelta;
 
@@ -249,14 +324,15 @@ export const useToolpathPlayerStore = defineStore("toolpathPlayer", () => {
   // ── Cache helpers (P2) ────────────────────────────────────────────────────
 
   function _cacheKey(gcode: string, opts?: Record<string, unknown>): string {
-    return CACHE_PREFIX + fnv1a(gcode + JSON.stringify(opts ?? {}));
+    return CACHE_PREFIX + SIM_VERSION + "-" + fnv1a(gcode + JSON.stringify(opts ?? {}));
   }
 
-  function _readCache(key: string) {
+  function _readCache(key: string): unknown {
     try {
       const raw = sessionStorage.getItem(key);
       if (!raw) return null;
-      return JSON.parse(raw);
+      const parsed = JSON.parse(raw) as { _t?: number; data?: unknown };
+      return parsed?.data ?? null;
     } catch {
       return null;
     }
@@ -268,40 +344,49 @@ export const useToolpathPlayerStore = defineStore("toolpathPlayer", () => {
         k.startsWith(CACHE_PREFIX),
       );
       if (keys.length >= MAX_CACHE_ENTRIES) {
-        sessionStorage.removeItem(keys[0]);
+        // Evict least-recently-written (F-Z6), not an arbitrary key.
+        let oldestKey = keys[0];
+        let oldestT = Infinity;
+        for (const k of keys) {
+          let t = 0;
+          try {
+            t = (JSON.parse(sessionStorage.getItem(k) || "{}")._t as number) ?? 0;
+          } catch {
+            t = 0;
+          }
+          if (t < oldestT) {
+            oldestT = t;
+            oldestKey = k;
+          }
+        }
+        sessionStorage.removeItem(oldestKey);
       }
-      sessionStorage.setItem(key, JSON.stringify(data));
+      sessionStorage.setItem(key, JSON.stringify({ _t: Date.now(), data }));
     } catch {
-      // sessionStorage full — silently skip
+      // sessionStorage full — silently skip (cache is best-effort).
     }
   }
 
   // ── Actions ───────────────────────────────────────────────────────────────
 
-  async function loadGcode(
-    gcode: string,
-    options?: {
-      rapid_mm_min?: number;
-      default_feed_mm_min?: number;
-      arc_resolution_deg?: number;
-    },
-  ): Promise<void> {
+  async function loadGcode(gcode: string, options?: LoadOptions): Promise<void> {
     _stopRaf();
     playState.value = "idle";
     currentTimeMs.value = 0;
     loading.value = true;
     error.value = null;
+    warnings.value = null;
+    tools.value = null;
     parseProgress.value = { percent: 10, stage: "uploading" };
 
     try {
-      // P5: Store source G-code for line sync
       sourceGcode.value = gcode;
       selectedSegmentIndex.value = null;
 
       const cacheKey = _cacheKey(gcode, options as Record<string, unknown>);
-      const cached = _readCache(cacheKey);
+      const cached = _readCache(cacheKey) as Awaited<ReturnType<typeof simulate>> | null;
 
-      let result;
+      let result: Awaited<ReturnType<typeof simulate>>;
       if (cached) {
         result = cached;
         parseProgress.value = { percent: 80, stage: "simulating" };
@@ -313,9 +398,11 @@ export const useToolpathPlayerStore = defineStore("toolpathPlayer", () => {
 
       parseProgress.value = { percent: 90, stage: "simulating" };
 
-      // Store full resolution, then downsample if needed
+      // Keep full resolution, then downsample for rendering if needed.
       fullSegments.value = result.segments;
       bounds.value = result.bounds;
+      warnings.value = result.warnings ?? null;
+      tools.value = result.tools ?? null;
 
       if (result.segments.length > MAX_SEGMENTS) {
         segments.value = downsampleSegments(result.segments, MAX_SEGMENTS);
@@ -326,10 +413,14 @@ export const useToolpathPlayerStore = defineStore("toolpathPlayer", () => {
       _rebuildCumulative();
       parseProgress.value = { percent: 100, stage: "complete" };
     } catch (e) {
+      // Preserve the backend's message (e.g. ApiError carries status + detail)
+      // rather than collapsing every failure to a generic string. (F-Z5)
       error.value = e instanceof Error ? e.message : "Simulation failed";
       segments.value = [];
       fullSegments.value = [];
       bounds.value = null;
+      warnings.value = null;
+      tools.value = null;
       _cumulativeMs = [];
     } finally {
       loading.value = false;
@@ -382,11 +473,10 @@ export const useToolpathPlayerStore = defineStore("toolpathPlayer", () => {
     selectedSegmentIndex.value = null;
   }
 
-  /** Jump playback to selected segment */
+  /** Jump playback to the *start* of the selected segment. (F-X2) */
   function jumpToSelected(): void {
     if (selectedSegmentIndex.value === null) return;
-    const idx = selectedSegmentIndex.value;
-    currentTimeMs.value = idx > 0 ? _cumulativeMs[idx - 1] ?? 0 : 0;
+    currentTimeMs.value = _segmentStart(selectedSegmentIndex.value);
   }
 
   // ── P5: Measurement actions ───────────────────────────────────────────────
@@ -431,23 +521,27 @@ export const useToolpathPlayerStore = defineStore("toolpathPlayer", () => {
     pendingMeasureStart.value = null;
   }
 
+  /** Step to the start of the next segment. (F-X2) */
   function stepForward(): void {
-    const next = currentSegmentIndex.value + 1;
-    if (next < segments.value.length) {
-      currentTimeMs.value = _cumulativeMs[next - 1] ?? 0;
-    }
+    const target = Math.min(currentSegmentIndex.value + 1, segments.value.length - 1);
+    if (target < 0) return;
+    currentTimeMs.value = _segmentStart(target);
   }
 
+  /** Step to the start of the previous segment. (F-X2) */
   function stepBackward(): void {
-    const prev = currentSegmentIndex.value - 1;
-    currentTimeMs.value = prev >= 0 ? (_cumulativeMs[prev - 1] ?? 0) : 0;
+    const target = Math.max(currentSegmentIndex.value - 1, 0);
+    currentTimeMs.value = _segmentStart(target);
   }
 
   /** Manually set rendering resolution (percent 10–100 of full segments). */
   function setResolution(pct: number): void {
     const clamped = Math.max(10, Math.min(100, pct));
     const target = Math.floor((clamped / 100) * fullSegments.value.length);
-    segments.value = downsampleSegments(fullSegments.value, target);
+    segments.value =
+      target >= fullSegments.value.length
+        ? fullSegments.value
+        : downsampleSegments(fullSegments.value, target);
     _rebuildCumulative();
   }
 
@@ -472,6 +566,9 @@ export const useToolpathPlayerStore = defineStore("toolpathPlayer", () => {
     bounds,
     loading,
     error,
+    warnings,
+    tools,
+    hasFidelityWarnings,
     playState,
     currentTimeMs,
     speed,

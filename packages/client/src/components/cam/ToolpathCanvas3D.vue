@@ -40,6 +40,8 @@ interface Props {
   backgroundColor?: string;
   /** P5: Enable heatmap mode */
   showHeatmap?: boolean;
+  /** Optional per-tool dimensions keyed by tool number (F-Z3). */
+  toolTable?: Record<number, { diameter: number; length?: number }>;
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -72,9 +74,11 @@ let controls: OrbitControls;
 let animationFrameId: number;
 
 // Toolpath objects
-let completedLines: THREE.Group;
-let upcomingLines: THREE.Group;
+let pathGroup: THREE.Group;
 let toolMesh: THREE.Mesh;
+let _lastProgressIdx = -1;
+let _currentToolNumber = -1;
+let _currentToolLength = 0;
 let stockMesh: THREE.Mesh;
 let gridHelper: THREE.GridHelper;
 let selectedLine: THREE.Line | null = null;
@@ -158,14 +162,10 @@ function initThree(): void {
   directionalLight.position.set(100, 200, 100);
   scene.add(directionalLight);
 
-  // Groups for toolpath
-  completedLines = new THREE.Group();
-  completedLines.name = "completed";
-  scene.add(completedLines);
-
-  upcomingLines = new THREE.Group();
-  upcomingLines.name = "upcoming";
-  scene.add(upcomingLines);
+  // Single group: one line per segment, built once per toolpath load (F-X1).
+  pathGroup = new THREE.Group();
+  pathGroup.name = "path";
+  scene.add(pathGroup);
 
   // Tool
   createTool();
@@ -183,6 +183,7 @@ function initThree(): void {
 }
 
 function createTool(): void {
+  _currentToolLength = props.toolLength;
   const geometry = new THREE.CylinderGeometry(
     props.toolDiameter / 2,
     props.toolDiameter / 2,
@@ -245,10 +246,9 @@ function createStock(): void {
 // Toolpath Rendering
 // ---------------------------------------------------------------------------
 
-function buildToolpath(): void {
-  // Clear existing
-  clearGroup(completedLines);
-  clearGroup(upcomingLines);
+function buildAllLines(): void {
+  clearGroup(pathGroup);
+  _lastProgressIdx = -1;
 
   if (store.segments.length === 0) return;
 
@@ -257,87 +257,83 @@ function buildToolpath(): void {
     updateEngagement();
   }
 
-  const currentIdx = store.currentSegmentIndex;
-
-  // Build completed segments
-  for (let i = 0; i <= currentIdx && i < store.segments.length; i++) {
-    const line = createSegmentLine(store.segments[i], false, i);
-    if (line) completedLines.add(line);
+  // Build one line per segment ONCE (baseline = faded/upcoming). Playback then
+  // only flips opacity on segments that cross the progress boundary, instead of
+  // tearing down and rebuilding the whole scene every tick. (F-X1)
+  for (let i = 0; i < store.segments.length; i++) {
+    const line = createSegmentLine(store.segments[i], i);
+    if (line) pathGroup.add(line);
   }
 
-  // Build upcoming segments (faded)
-  for (let i = currentIdx + 1; i < store.segments.length; i++) {
-    const line = createSegmentLine(store.segments[i], true, i);
-    if (line) upcomingLines.add(line);
-  }
-
-  // P5: Highlight selected segment
   updateSelectedSegment();
-
-  // Update tool position
+  maybeRebuildTool();
   updateToolPosition();
-
-  // Create/update stock
   createStock();
+  fitCameraToScene(); // fit on every load, not only at index 0 (F-Z4)
 
-  // Fit camera to scene on first load
-  if (currentIdx === 0) {
-    fitCameraToScene();
-  }
+  applyProgress(store.currentSegmentIndex);
 }
 
-// Store segment index in line userData for raycasting
-function createSegmentLine(segment: MoveSegment, isUpcoming: boolean, segmentIndex: number): THREE.Line | null {
+/** O(Δ) progress update: only re-opacity the segments that crossed the boundary. */
+function applyProgress(idx: number): void {
+  const children = pathGroup.children;
+  if (children.length === 0) return;
+  const clamped = Math.max(-1, Math.min(idx, children.length - 1));
+
+  if (clamped > _lastProgressIdx) {
+    for (let i = _lastProgressIdx + 1; i <= clamped; i++) {
+      setLineCompleted(children[i] as THREE.Line, true);
+    }
+  } else if (clamped < _lastProgressIdx) {
+    for (let i = clamped + 1; i <= _lastProgressIdx; i++) {
+      setLineCompleted(children[i] as THREE.Line, false);
+    }
+  }
+  _lastProgressIdx = clamped;
+}
+
+function setLineCompleted(line: THREE.Line | undefined, completed: boolean): void {
+  if (!line) return;
+  const mat = line.material as THREE.Material & { opacity: number };
+  const ud = line.userData as { completedOpacity?: number };
+  mat.opacity = completed ? ud.completedOpacity ?? 0.9 : 0.15;
+}
+
+// One line per segment, baseline opacity = upcoming/faded. Segment index is
+// stored in userData for raycasting; the "completed" opacity is stashed there
+// so applyProgress() can flip it cheaply.
+function createSegmentLine(segment: MoveSegment, segmentIndex: number): THREE.Line | null {
   const points = [
     new THREE.Vector3(segment.from_pos[0], segment.from_pos[1], segment.from_pos[2]),
     new THREE.Vector3(segment.to_pos[0], segment.to_pos[1], segment.to_pos[2]),
   ];
-
   const geometry = new THREE.BufferGeometry().setFromPoints(points);
+  const isRapid = segment.type === "rapid";
+  const completedOpacity = isRapid ? 0.5 : 0.9;
 
-  // P5: Heatmap mode - color by engagement
+  // P5: Heatmap mode — color by engagement
   if (props.showHeatmap && engagementReport) {
     const engData = engagementReport.segments[segmentIndex];
     const heatColor = engData
       ? EngagementAnalyzer.getColorInterpolatedHex(engData.engagement)
       : 0x333333;
-
     const material = new THREE.LineBasicMaterial({
       color: heatColor,
       transparent: true,
-      opacity: isUpcoming ? 0.15 : segment.type === "rapid" ? 0.3 : 0.9,
+      opacity: 0.15,
       linewidth: 1,
     });
-
-    // For rapids in heatmap mode
-    if (segment.type === "rapid" && !isUpcoming) {
-      const dashedMaterial = new THREE.LineDashedMaterial({
-        color: 0x333333,
-        dashSize: 2,
-        gapSize: 1,
-        transparent: true,
-        opacity: 0.3,
-      });
-      const line = new THREE.Line(geometry, dashedMaterial);
-      line.computeLineDistances();
-      line.userData.segmentIndex = segmentIndex;
-      return line;
-    }
-
     const line = new THREE.Line(geometry, material);
     line.userData.segmentIndex = segmentIndex;
+    line.userData.completedOpacity = isRapid ? 0.3 : 0.9;
     return line;
   }
 
-  // Normal mode: Color based on move type
+  // Normal mode: color by move type
   let color: number;
-  if (segment.type === "rapid") {
-    color = COLORS.rapid;
-  } else if (segment.type.includes("arc")) {
-    color = COLORS.arc;
-  } else {
-    color = COLORS.cut;
-  }
+  if (isRapid) color = COLORS.rapid;
+  else if (segment.type.includes("arc")) color = COLORS.arc;
+  else color = COLORS.cut;
 
   // Depth-based intensity (deeper = brighter)
   const zNorm = store.bounds
@@ -345,38 +341,71 @@ function createSegmentLine(segment: MoveSegment, isUpcoming: boolean, segmentInd
     : 0.5;
   const intensity = 0.5 + (1 - zNorm) * 0.5;
 
-  const material = new THREE.LineBasicMaterial({
-    color: new THREE.Color(color).multiplyScalar(intensity),
-    transparent: true,
-    opacity: isUpcoming ? 0.15 : segment.type === "rapid" ? 0.5 : 0.9,
-    linewidth: 1, // Note: linewidth > 1 only works on some platforms
-  });
-
-  // For rapids, use dashed line
-  if (segment.type === "rapid" && !isUpcoming) {
+  if (isRapid) {
     const dashedMaterial = new THREE.LineDashedMaterial({
-      color: color,
+      color,
       dashSize: 2,
       gapSize: 1,
       transparent: true,
-      opacity: 0.5,
+      opacity: 0.15,
     });
     const line = new THREE.Line(geometry, dashedMaterial);
     line.computeLineDistances();
-    line.userData.segmentIndex = segmentIndex; // P5: Store for raycasting
+    line.userData.segmentIndex = segmentIndex;
+    line.userData.completedOpacity = completedOpacity;
     return line;
   }
 
+  const material = new THREE.LineBasicMaterial({
+    color: new THREE.Color(color).multiplyScalar(intensity),
+    transparent: true,
+    opacity: 0.15,
+    linewidth: 1, // Note: linewidth > 1 only works on some platforms
+  });
   const line = new THREE.Line(geometry, material);
-  line.userData.segmentIndex = segmentIndex; // P5: Store for raycasting
+  line.userData.segmentIndex = segmentIndex;
+  line.userData.completedOpacity = completedOpacity;
   return line;
+}
+
+/** Resize the cutter cylinder when the active tool changes (F-Z3). */
+function maybeRebuildTool(): void {
+  const toolNum = store.currentSegment?.tool_number ?? 1;
+  if (toolNum === _currentToolNumber) return;
+  _currentToolNumber = toolNum;
+
+  const dims = props.toolTable?.[toolNum];
+  if (!dims) return; // no tool table → keep the default cylinder
+
+  if (toolMesh) {
+    scene.remove(toolMesh);
+    toolMesh.geometry.dispose();
+    (toolMesh.material as THREE.Material).dispose();
+  }
+  _currentToolLength = dims.length ?? props.toolLength;
+  const geometry = new THREE.CylinderGeometry(
+    dims.diameter / 2,
+    dims.diameter / 2,
+    _currentToolLength,
+    16,
+  );
+  const material = new THREE.MeshPhongMaterial({
+    color: COLORS.tool,
+    shininess: 80,
+    transparent: true,
+    opacity: 0.9,
+  });
+  toolMesh = new THREE.Mesh(geometry, material);
+  toolMesh.name = "tool";
+  toolMesh.rotation.x = Math.PI / 2;
+  scene.add(toolMesh);
 }
 
 function updateToolPosition(): void {
   if (!toolMesh) return;
 
   const pos = store.toolPosition;
-  toolMesh.position.set(pos[0], pos[1], pos[2] + props.toolLength / 2);
+  toolMesh.position.set(pos[0], pos[1], pos[2] + _currentToolLength / 2);
 }
 
 // ---------------------------------------------------------------------------
@@ -423,9 +452,8 @@ function onCanvasClick(event: MouseEvent): void {
 
   raycaster.setFromCamera(mouse, camera);
 
-  // Check intersections with both groups
-  const allLines = [...completedLines.children, ...upcomingLines.children];
-  const intersects = raycaster.intersectObjects(allLines, false);
+  // Raycast against the single path group (one line per segment).
+  const intersects = raycaster.intersectObjects(pathGroup.children, false);
 
   // P5: Handle measure mode
   if (store.measureMode) {
@@ -729,7 +757,7 @@ onMounted(() => {
 
   // Build initial toolpath if segments exist
   if (store.segments.length > 0) {
-    buildToolpath();
+    buildAllLines();
   }
 });
 
@@ -744,23 +772,31 @@ onUnmounted(() => {
   if (controls) {
     controls.dispose();
   }
-  clearGroup(completedLines);
-  clearGroup(upcomingLines);
+  clearGroup(pathGroup);
 });
 
-// Watch for segment changes
+// Watch playback position — O(Δ) progress update, NOT a scene rebuild (F-X1)
 watch(
   () => store.currentSegmentIndex,
-  () => {
-    buildToolpath();
+  (idx) => {
+    applyProgress(idx);
   }
 );
 
-// Watch for new toolpath loaded
+// Watch for a new toolpath loaded — rebuild the line set once
 watch(
   () => store.segments.length,
   () => {
-    buildToolpath();
+    buildAllLines();
+  }
+);
+
+// Watch tool changes — resize the cutter if a tool table is provided (F-Z3)
+watch(
+  () => store.currentSegment?.tool_number,
+  () => {
+    maybeRebuildTool();
+    updateToolPosition();
   }
 );
 
@@ -788,7 +824,7 @@ watch(
     if (show) {
       updateEngagement();
     }
-    buildToolpath();
+    buildAllLines();
   }
 );
 

@@ -14,6 +14,7 @@ import type { useToolpathMachine } from './useToolpathMachine';
 
 export interface LifecycleConfig {
   gcode: string | undefined;
+  units?: 'mm' | 'inch';
   autoPlay: boolean;
   enableCollisionDetection: boolean;
   enableOptimization: boolean;
@@ -41,7 +42,10 @@ export function useToolpathLifecycle(config: LifecycleConfig): ToolpathLifecycle
   async function doLoad(): Promise<void> {
     if (!config.gcode) return;
 
-    await config.store.loadGcode(config.gcode, { arc_resolution_deg: 5 });
+    await config.store.loadGcode(config.gcode, {
+      units: config.units,
+      arc_resolution_deg: 5,
+    });
     config.machine.buildStates(config.store.segments);
 
     // Initialize annotations for this G-code

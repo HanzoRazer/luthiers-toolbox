@@ -13,10 +13,56 @@ Maintenance discipline: docs/SPRINTS_MAINTENANCE.md
 
 | Track | Index | Next |
 |-------|-------|------|
-| **CI hygiene** | `CI-RED-*` below | **015-D MVP-path scoped** — enumerate design→export routes, check only those for collision/wrong-winner, fix MVP-blockers, defer the rest at retirement. Do not bump 108→122; do not manifest the 143. |
+| **CI hygiene** | `CI-RED-*` below | **015-D CLOSED (2026-05-30)** — MVP-path verified collision-free via live `app.routes` dump (`metrics/live_routes.json`). 11 non-MVP collisions (instrument_router shadow) deferred to CI-RED-016. Do not bump 108→122; do not manifest the 143. |
 | **Governance tail** | `GOV-CONVERGE-*` below | Blocked on **codeowner decisions (003)** and **R1 schedule (002)**. Not on MVP cut path. |
 
 **015-C:** **CLOSED** — api-verify run `26600720296`: `test_total_endpoints_under_target` + `test_endpoints_not_increasing` both **PASSED** after #72 ratchet bump.
+
+---
+
+## CAM-TPA-001 — Toolpath Animation: deferred follow-ups (registered 2026-05-30)
+
+✅ **RESOLVED 2026-05-30** · Sprint namespace: CAM · Owner: codeowner
+
+Backend engine remediated (X1–Z5) and the frontend F-series + the four deferred
+items below were all addressed in the same session. Verification: backend
+`pytest` **57 green** (incl. the accel model); frontend store unit tests **9
+green** (`src/stores/__tests__/useToolpathPlayerStore.test.ts`); `vue-tsc` clean
+for every touched file. Full map: `docs/audit/TOOLPATH_ANIMATION_AUDIT_2026-05-30.md`.
+
+Resolution:
+
+- ✅ **Limited-simulation banner + tool legend.** SDK type gained `SimulateWarnings`
+  + `is_cycle`/`cycle_kind`; store keeps `warnings`/`tools` and exposes
+  `hasFidelityWarnings`; `OverlaysLayer.vue` renders a warnings banner + tool
+  legend. (F-Z1/F-Z2)
+- ✅ **Render perf / scrub correctness.** `ToolpathCanvas3D` builds the line set
+  once and updates an O(Δ) progress boundary instead of rebuilding every tick
+  (F-X1); cumulative-time search + step/seek/jump made consistent (F-X2);
+  downsampling conserves total time (F-X3); store unit tests pin F-X2/F-X3.
+  Live 100k/export GPU verification still wants a manual dev-server pass.
+- ✅ **`units` threaded** view → `ToolpathPlayer` prop → `useToolpathLifecycle`
+  → `store.loadGcode` → `/simulate`. (F-Y1)
+- ✅ **Acceleration/deceleration model.** Opt-in trapezoidal planner with
+  Grbl-style junction speeds in `simulate_segments(accel_mm_s2=…)`, wired through
+  router + SDK; default off (constant velocity); 4 backend tests.
+
+Also fixed in pass: F-Y2 (versioned cache key), F-Y3 (export GIF option removed —
+browsers can't MediaRecorder-emit GIF), F-Z3 (tool cylinder resizes from an
+optional `toolTable`), F-Z4 (camera fits on every load), F-Z5 (error message
+preserved), F-Z6 (LRU cache eviction), F-Z7 (2D canvas devicePixelRatio).
+
+**⚠️ Process note — verify edits independently this session.** The tooling was
+glitchy during the CAM-TPA-001 work: delayed, merged, and cancelled tool-call
+batches. One `ToolpathPlayer.vue` Props edit **silently no-matched** (the
+`old_string` didn't match the real interface) while a dependent edit landed —
+which would have shipped a runtime-undefined `props.units`. It was caught only
+because the delayed `vue-tsc` output surfaced the type error, and the real Props
+interface was then corrected. Takeaway for the next session: **do not trust an
+edit's apparent success when the harness is dropping/merging output** — confirm
+with an independent re-read or a type-check/test run before treating it as done.
+Ground truth for this work is the final clean `vue-tsc` (0 errors in touched
+files) + the green test runs above, not the individual edit confirmations.
 
 ---
 
@@ -1043,7 +1089,7 @@ Domain handoffs and governance docs may add detail but **must cite the SPRINTS I
 | **015-A** | `test_text_masking*` (5) + regression (2) | Drift + numpy reload pollution | **CLOSED** — #70 + #71; CI `26589586906`: 66→61 (−5 = five unit tests); **cause-fixed** (import isolation, not cv2 symptom patch) |
 | **015-B** | `test_vectorizer_canonical_only*` | Schema drift (live vectorizer work) | **CLOSED #70** — canonical response + legacy wire shim; 8/8 green on CI run `26584687684` |
 | **015-C** | `test_technical_debt_gates` endpoint count ratchet | 942→1181 audit; ratchet → 1185 | **CLOSED #72** — CI `26600720296`: endpoint count + ratchet gates green |
-| **015-D** | duplicate routes + other debt gates | Gate measures decorator suffixes, not wire URLs | **SCOPED (MVP-path)** — 015-D-a audit DONE (#75). Static 68 is inflated (audit ignores `include_router` composition). Resolution = MVP-path check only; structural debt deferred at retirement. See block below. |
+| **015-D** | duplicate routes + other debt gates | Gate measures decorator suffixes, not wire URLs | **MVP-PATH AUDITED (2026-05-30) — no blocker.** 015-D-a audit DONE (#75); scope reframe (#77). Static 68 doubly inflated (audit dropped manifest prefix [fixed] + ignores `include_router` composition). MVP cut path resolves to unique prefixed URLs. Closure pending one live `app.routes` dump. Structural debt deferred at retirement. See block below. |
 | **015-E** | board_feet, fretboard ecosphere, misc | Small drift clusters | One cause class per PR after 015-D |
 | **015-F** | remaining | Umbrella tail | One PR each as surfaced |
 
@@ -1052,7 +1098,21 @@ Domain handoffs and governance docs may add detail but **must cite the SPRINTS I
 **015-A (CLOSED):** #70 fixed path drift + `Recommendation` `.get`. Five unit tests red on CI `26584687684`: `_NoValueType` in `ndarray.sum()` — root cause was ezdxf `construct2d` re-importing numpy mid-suite (~7000 tests), not numpy 2.2.6 itself. cv2 `countNonZero` workaround was built on wrong diagnosis and **reverted**. #71 fix: conftest loads numpy→ezdxf before collection; `test_text_masking` binds via `edge_to_dxf.np` (PR #50 pollution-isolation pattern). **CI proof:** run `26589586906` — all five `TestTextMaskingFunctions` green; failure count **66→61** (predicted −5 matched actual −5). Mark **cause-fixed**, not symptom-patched.
 
 **015-D — Wire URL Collision (MVP-path scoped)**
-**Status:** SCOPED, awaiting MVP path confirmation.
+**Status:** **CLOSED (2026-05-30)** — MVP-path verified collision-free via live `app.routes` dump (`metrics/live_routes.json`). Exit 0, `mvp_problems: []`, 11 non-MVP collisions (instrument_router shadow) confirmed off-path. Structural debt (143 unmanifested, non-MVP overlaps) deferred to CI-RED-016.
+
+**MVP-path trace finding (2026-05-30):** The MVP cut path resolves to unique, prefixed wire URLs — none of the 68 reported collisions land on it:
+- **Export/cut:** `POST /api/rmos/wrap/mvp/dxf-to-grbl` (manifested `/api/rmos`; generates G-code inline and calls `app.routers.adaptive.plan_router.plan` via direct import — no HTTP `/gcode` hop). Unique; not in the collision set.
+- **Run mgmt:** `/api/rmos/runs`, `/api/rmos/runs/{run_id}`, operator pack — served by manifested `api_runs`/`runs_v2.exports` under `/api/rmos`.
+- **Design/DXF:** `/api/v1/fretboard/dxf` (via `api_v1_router`), `/api/export/*`.
+
+**The 68 count is doubly inflated (neither defect is MVP-relevant):**
+1. `audit_wire_urls.py` **dropped the manifest prefix** (regex bug; all entries recorded `manifest_prefix=""`). `GET /runs` "collision" is really `/api/rmos/runs` (api_runs) vs `/api/rmos/acoustics/runs` (acoustics_router). **Fixed 2026-05-30**; `metrics/wire_url_audit.json` stale until re-run.
+2. It **ignores `include_router` composition** (known). The 11-way `POST /gcode` is really `/api/cam/{toolpath,drilling,profiling,vcarve,...}/gcode` via `cam/routers/aggregator.py` — all distinct.
+3. `main.py` mounts **manifest-only** + `api_v1_router` + `cam_router`; any `UNMANIFESTED:` router not composed into an aggregator is **not mounted** → cannot collide at runtime.
+
+**X/Y/Z:** No X (wrong-winner on a consumed MVP route) found. Real non-MVP overlaps + 143 unmanifested → deferred at retirement / CI-RED-016.
+
+**Closure check (do once api-verify auth restored):** dump `app.routes`, assert each MVP-path URL above appears exactly once, then close 015-D.
 
 Original audit found 124 decorator duplicates → 68 wire collisions on **static** analysis. Subsequent discovery: the static audit **ignores `include_router` composition** (e.g., the manifested CAM aggregator `cam_router` @ `/api/cam` in `cam_manifest.py` composes sub-routers with prefixes like `/toolpath`, `/drilling`), so the 68 number is **inflated by an unknown amount** — a `POST /gcode` in `cam/routers/toolpath/` actually serves at `/api/cam/toolpath/gcode`, not bare `/gcode`. A fully corrected static audit would require resolving the composition graph; a live route dump (`app.routes`) is blocked by the api-verify auth issue (CI-RED-001 residual environment).
 
