@@ -871,7 +871,7 @@ Domain handoffs and governance docs may add detail but **must cite the SPRINTS I
 | MAINT-DEFER-001 | SPRINTS.md CI enforcement (pre-commit / PR advisory) | Process | DEFERRED | 2026-04-23 |
 | MAINT-DEFER-003 | Load-bearing code comments (`DO NOT REMOVE`) | Process | QUEUED | 2026-05-28 |
 | CI-RED-001 | sg-spec clone auth — api-verify dead | CI / infra | CLOSED | 2026-05-28 |
-| CI-RED-002 | legacy-usage gate 131/10 | CI / API hygiene | OPEN | 2026-05-27 |
+| CI-RED-002 | legacy-usage gate 131/10 | CI / API hygiene | CLOSED | 2026-05-31 |
 | CI-RED-003 | debt-gates complexity ratchet (113 violations) | CI / quality | OPEN | 2026-05-27 |
 | CI-RED-004 | Fence Checks frontend boundary violations | CI / boundaries | OPEN | 2026-05-27 |
 | CI-RED-005 | Container build swallows sg-spec install failure | CI / containers | CLOSED | 2026-05-28 |
@@ -957,10 +957,22 @@ Domain handoffs and governance docs may add detail but **must cite the SPRINTS I
 
 ### CI-RED-002 — legacy-usage gate (131/10)
 
-**Status:** OPEN  
-**last_verified:** 2026-05-27  
-**Why open:** Budget 10; observed 131 legacy endpoint usages. Gate is structurally exceeded — not a drift blip.  
-**Restore trigger:** `legacy-usage` check green on `main`, or budget honestly reset with migration plan.
+**Status:** CLOSED  
+**last_verified:** 2026-05-31  
+**Closed:** Diagnosis — not a migration problem; the gate was **mis-scoped**. The
+frontend (the gate's stated target: client/SDK) has **0** legacy usages — already
+migrated. The 131 (locally 201) was entirely `services/api` noise: generated
+artifacts (`openapi.json`, `metrics/*.json`, `htmlcov/`), the `endpoint_truth.json`
+self-definition, server-side route *definitions*/docstrings, and deprecation tests
+that intentionally exercise the legacy paths — none of which are "usage creeping
+into the client."
+**Fix (`scripts/governance/check_legacy_endpoint_usage.py`):** default scan scope
+narrowed to `packages/client/{src,tests}` + `packages/sdk` (its documented purpose);
+generated/self-referential ignore globs added as defense-in-depth; fixed a
+`UnicodeEncodeError` on the ✅/❌ glyphs under Windows cp1252. Gate now PASS at 0/10.
+**Note:** an uninvoked stale duplicate exists at
+`services/api/scripts/governance/check_legacy_endpoint_usage.py` (budget 100, not run
+by any workflow) — left untouched; candidate for deletion in separate hygiene work.
 
 ---
 
