@@ -517,3 +517,10 @@ services/photo-vectorizer/integration_test/
 # Local Claude Code settings
 .claude/
 .baseline/
+
+# Local-only cross-repo audit junctions (recreate via docs/audit-sources/README.md)
+docs/audit-sources/*
+!docs/audit-sources/README.md
+
+# Scratch test I/O
+services/api/test_temp/
