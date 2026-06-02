@@ -29,6 +29,8 @@ Usage:
 from .toolpath import VCarveToolpath, VCarveConfig, VCarveResult
 from .chipload import calculate_chipload, ChiploadParams, MATERIAL_CHIPLOAD
 from .geometry import vbit_depth_for_width, vbit_width_at_depth
+from .intent_schema import VCarveDesignV1, VCarvePathV1, PathPoint, validate_vcarve_design
+from .intent_adapter import vcarve_params_from_intent
 
 __all__ = [
     "VCarveToolpath",
@@ -39,4 +41,10 @@ __all__ = [
     "MATERIAL_CHIPLOAD",
     "vbit_depth_for_width",
     "vbit_width_at_depth",
+    # Intent migration (CamIntentV1 support)
+    "VCarveDesignV1",
+    "VCarvePathV1",
+    "PathPoint",
+    "validate_vcarve_design",
+    "vcarve_params_from_intent",
 ]
