@@ -2,6 +2,8 @@
 
 **Created:** 2026-06-04
 **Status:** READY — execute as the first task of a fresh session on a confirmed shell.
+**Self-contained:** this doc carries the spec, the sites, the traps, *and* the ordered execution runbook
+(see "Execution sequence" below) — it is the complete handoff; no companion doc required.
 **Repo:** `luthiers-toolbox`
 **Branch:** off `origin/main` (NOT `feat/cam-intent-8g-vcarve`, which carries mixed untracked streams)
 **Landing discipline:** stage by explicit path only; **hold at push for the codeowner's hand.**
@@ -58,8 +60,11 @@ R12 (AC1009) is the documented safe default. This dev order restores it for the 
 
 2. **`services/api/app/cam/dxf_consolidator.py:247`**
    `doc = create_document(version="R2000")` → `version="R12"`
-   **Assess `:281` (`dxf_version="R2000"`) separately** — revert only if it is the same ungated path.
-   If `:281` is a legitimately tier-gated call, leave it. State the determination in the PR.
+   **`:281` (`dxf_version="R2000"`) is a STOP-AND-ASK, not a judgment call.** Revert it only if it is
+   *unambiguously* the same ungated path. If its gating status is not unambiguous from reading the
+   code, **escalate to the codeowner** — do not decide gated-vs-ungated under execution. (Same
+   principle as the downstream-consumer fork: interpretation escalates, it does not improvise.)
+   State the determination, or the escalation, in the PR.
 
 ---
 
@@ -100,6 +105,39 @@ R12 (AC1009) is the documented safe default. This dev order restores it for the 
      executing session resolves alone. This is the single most decision-laden line in this order.
 
 3. **Hold at push** for the codeowner's hand. Branch + PR, explicit-path. No force, no `--no-verify`.
+
+---
+
+## Execution sequence — the runbook (ordered; each arrow is a gate)
+
+**Single-stream session:** this executes the bucket-② revert and *nothing else*. Bundling the queued
+vitest closeouts, 8H recovery, or Surface D would be scope drift — each is its own session.
+
+**Step 0 — shell gate (decides whether the session runs at all).** `echo ok` then a native-exit probe
+(`git --version; "exit=$LASTEXITCODE"` → must print `exit=0`). If the exit code doesn't return clean,
+**abort before touching source** — no degrading to "edit and assume." (Detail: Pre-flight §1.)
+
+**Entry checklist (before editing):** read this dev order (spec + runbook); confirm the working repo is
+on `main`, current, clean tree; branch off `origin/main`, explicit-path staging only.
+
+Then, in order — each step gated:
+1. **Re-ground** — run the bucket-② grep (Pre-flight §3); catch any drifted or additional ungated site.
+2. **Edit the two sites** — `dxf_exporter.py:46`, `dxf_consolidator.py:247` (Scope §1–2).
+3. **`:281` → STOP-AND-ASK if ambiguous.** If `:281`'s gating status is not unambiguous from reading,
+   escalate; do not make the gated-vs-ungated call under execution. (Scope §2.)
+4. **Flip the manufactured-evidence test** — `test_dxf_exporter_versions.py:85-86` to expect R12/AC1009;
+   a conscious overrule, documented in the PR (top warning + Verification §1).
+5. **Downstream-consumer audit → STOP-AND-ASK if a consumer depends on R2000** — first caller to check
+   `relief_export_router.py:195` (Verification §2).
+6. **Verify** — targeted tests collect + pass.
+7. **Hold at push** for the codeowner (Verification §3).
+
+**The only two escalation points are steps 3 and 5** — both are *interpretation, not verification*, so
+they escalate rather than improvise. Everything else the session completes autonomously up to the push hold.
+
+**Definition of done:** branch pushed-ready (held), PR drafted, two sites reverted, the pinning test
+flipped, downstream audit clean-or-escalated, `:281` resolved-or-escalated. **Not done** = any
+stop-and-ask still open, or tests not run.
 
 ---
 
