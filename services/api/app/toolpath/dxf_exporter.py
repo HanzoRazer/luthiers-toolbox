@@ -5,10 +5,12 @@ Version-Aware DXF Exporter
 
 Provides DXF export with version control (R12, R14, R2000, R18).
 
-VINE-12: Default changed from R12 to R2000
-- R2000 (AC1015) supports splines, ellipses, and arcs natively
-- R12 (AC1009) is AutoCAD 1992 — too old for modern CAM
-- R2000 is widely compatible while supporting modern geometry
+Default version: R12 (AC1009).
+- R12 (AC1009) is the documented safe free-tier default (CLAUDE.md BLOCKING INFRASTRUCTURE).
+- A prior off-state/rogue session ("VINE-12") flipped this default to R2000 without
+  authorization; that drift is reverted here. Tier-gated R2000 remains available by passing
+  an explicit version — this only restores the *default*.
+- R14/R2000/R18 remain selectable explicitly for callers that need richer geometry.
 
 Features:
 - Minimal DXF header with correct $ACADVER
@@ -34,7 +36,7 @@ class DXFVersion(str, Enum):
 
     R12 = "R12"      # AutoCAD 1992 - legacy compatibility
     R14 = "R14"      # AutoCAD 14
-    R2000 = "R2000"  # AutoCAD 2000 - splines, ellipses, arcs (VINE-12 default)
+    R2000 = "R2000"  # AutoCAD 2000 - splines, ellipses, arcs (selectable, not default)
     R18 = "R18"      # AutoCAD 2004
 
 
@@ -43,14 +45,14 @@ class DXFExportOptions:
 
     def __init__(
         self,
-        dxf_version: DXFVersion = DXFVersion.R2000,  # VINE-12: R2000 default
+        dxf_version: DXFVersion = DXFVersion.R12,  # R12 safe default (VINE-12 R2000 drift reverted)
         prefer_lwpolyline: bool | None = None,
     ) -> None:
         """
         Initialize export options.
 
         Args:
-            dxf_version: Target DXF version (R12, R14, R2000, R18). Default: R2000
+            dxf_version: Target DXF version (R12, R14, R2000, R18). Default: R12
             prefer_lwpolyline: If True and version >= R14, use LWPOLYLINE
         """
         self.dxf_version = dxf_version
@@ -114,7 +116,7 @@ def _write_header(stream: TextIO, options: DXFExportOptions) -> None:
     acadver = {
         DXFVersion.R12: "AC1009",   # R12 (AutoCAD 1992)
         DXFVersion.R14: "AC1014",   # R14 (AutoCAD 14)
-        DXFVersion.R2000: "AC1015", # R2000 (AutoCAD 2000) - VINE-12 default
+        DXFVersion.R2000: "AC1015", # R2000 (AutoCAD 2000) - selectable, not default
         DXFVersion.R18: "AC1018",   # R18 (AutoCAD 2004)
     }[options.dxf_version]
 

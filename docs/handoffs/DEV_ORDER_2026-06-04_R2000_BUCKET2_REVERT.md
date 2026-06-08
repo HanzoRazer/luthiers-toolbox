@@ -58,13 +58,25 @@ R12 (AC1009) is the documented safe default. This dev order restores it for the 
    Also update the VINE-12 docstring/comments (`:8`, `:37`, `:117`) to state the R12 default is
    restored as an off-state revert (do not leave "VINE-12 default" text implying R2000 is intended).
 
-2. **`services/api/app/cam/dxf_consolidator.py:247`**
-   `doc = create_document(version="R2000")` → `version="R12"`
-   **`:281` (`dxf_version="R2000"`) is a STOP-AND-ASK, not a judgment call.** Revert it only if it is
-   *unambiguously* the same ungated path. If its gating status is not unambiguous from reading the
-   code, **escalate to the codeowner** — do not decide gated-vs-ungated under execution. (Same
-   principle as the downstream-consumer fork: interpretation escalates, it does not improvise.)
-   State the determination, or the escalation, in the PR.
+2. **`services/api/app/cam/dxf_consolidator.py:247` — ESCALATE, do NOT revert as written.**
+   > **SPEC CORRECTION (2026-06-07, applied during execution).** This item was originally written as
+   > a mechanical revert (`version="R2000"` → `version="R12"`) with `:281` as the only conditional
+   > stop-and-ask. Code reading during execution showed that assumption is **inverted**: `_write_output`
+   > calls `add_lwpolyline()` **unconditionally** (`:306`), and ezdxf cannot place LWPOLYLINE in an R12
+   > document — so a literal R12 revert here **breaks the consolidator at runtime** and re-creates the
+   > R12+LWPOLYLINE malformed-entity class that CLAUDE.md's R12 gate exists to prevent. The consolidator
+   > *is itself* the "consumer that depends on R2000/LWPOLYLINE output" that Verification §2 says is a
+   > STOP-AND-ASK. Making it R12-safe requires adding version-adaptive LINE-fallback logic — that is
+   > **new work, not a revert**, and the order forbids improvising a fix under execution.
+   >
+   > **Disposition:** `:247` and the coupled lifecycle assertion `:281` (`dxf_version="R2000"`, which
+   > merely declares what `:247` builds) are **both escalated, not executed.** They become their own
+   > scoped dev order: *"make `dxf_consolidator` R12-safe via LINE fallback, OR formally sanction its
+   > R2000 dependency as legitimate (bucket ①)."* Two real options, codeowner's call — not absorbed
+   > into the revert session.
+   >
+   > Net effect: the executable scope of THIS order is **Scope #1 only** (`dxf_exporter.py`), which
+   > *is* a clean version-adaptive default flip.
 
 ---
 
@@ -140,6 +152,29 @@ flipped, downstream audit clean-or-escalated, `:281` resolved-or-escalated. **No
 stop-and-ask still open, or tests not run.
 
 ---
+
+## Re-ground findings (2026-06-07) — sites caught that were NOT in the original inventory
+
+The Pre-flight §3 re-ground (run in `luthiers-toolbox`) surfaced three ungated-R2000 sites in
+neither Scope nor Excluded. Per discipline they are **reported, not folded into this session** — each
+needs its own disposition (likely future dev orders), and two carry the same LWPOLYLINE-dependency
+wall as `:247`:
+
+1. **`cam/layer_consolidator.py:183, :247` — twin of the consolidator the cross-repo inventory missed.**
+   Same unconditional-LWPOLYLINE pattern (`create_document(version="R2000")` when source is R12, for
+   LWPOLYLINE output). Hits the identical can't-cleanly-revert wall as `dxf_consolidator.py:247`.
+   Belongs with the consolidator's future "R12-safe-or-sanction" dev order, not this revert.
+2. **`routers/blueprint_cam/contour_reconstruction.py:375, :461` — needs an explicit in/out call.**
+   LWPOLYLINE contour output, R2000 functionally required. Lives in `routers/blueprint_cam/`, which is
+   **adjacent to but NOT** the Excluded Surface-D path (`services/blueprint-import/`). Whether it falls
+   under the blueprint-path exclusion is a scope determination for the codeowner.
+3. **`cam/translator_capability_registry.py:240, :280` — probably bucket ① by association, unconfirmed.**
+   Adjacent to the Excluded `translators/base/registry.py` paid-tier registration. Likely sanctioned
+   tier-gated R2000; confirm before any action.
+
+A note on tooling: the first re-ground pass returned only 4 of 18 matches (a truncated ripgrep result;
+the file was never gitignored — `git check-ignore` exits 1). A single rg pass on this repo is not a
+trustworthy re-ground; reconcile against named sites and re-run to a stable count.
 
 ## Context pointers (for the fresh session)
 
