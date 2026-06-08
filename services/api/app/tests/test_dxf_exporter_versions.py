@@ -82,6 +82,9 @@ def test_dxf_exporter_default_options():
     export_mlpaths_to_dxf(paths, buf)
     txt = buf.getvalue()
 
-    # VINE-12: Should default to R2000 (AC1015) for native spline/arc support
-    assert "AC1015" in txt
+    # R12 (AC1009) is the documented safe default. A prior off-state "VINE-12" session
+    # flipped this to R2000 (AC1015) without authorization AND pinned it here as truth;
+    # this assertion is the conscious overrule of that manufactured evidence, restoring
+    # the R12 default (see docs/handoffs/DEV_ORDER_2026-06-04_R2000_BUCKET2_REVERT.md).
+    assert "AC1009" in txt
     assert "EOF" in txt
