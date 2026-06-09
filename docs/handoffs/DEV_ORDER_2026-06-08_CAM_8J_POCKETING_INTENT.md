@@ -1,9 +1,9 @@
 # CAM Dev Order 8J — Pocketing CamIntentV1 Migration (RECONSTRUCT from bytecode)
 
 **Created:** 2026-06-08
-**Status:** DRAFT — **BLOCKED behind 8I**, and is a **RECONSTRUCTION from recovered bytecode**, not a
-build-from-spec. Do not execute until 8I is rebuilt (8I is itself a rebuild — see
-`DEV_ORDER_2026-06-08_CAM_8I_DRILLING_INTENT.md`).
+**Status:** READY — **UNBLOCKED** (8G+8H+8I all merged to main as of 2026-06-09; 8I = squash
+`a9409305`). A **RECONSTRUCTION from recovered bytecode**, not a build-from-spec. Branch off current
+main (which has 8G+8H+8I — the correct base for the fourth lane).
 **Repo:** `luthiers-toolbox`
 **Branch (when executed):** off `origin/main`. Explicit-path staging. **Push the moment built+verified.**
 **Source of truth:** `docs/handoffs/RECOVERY_8J_POCKETING_BYTECODE_2026-06-08.md` — the disassembly of
