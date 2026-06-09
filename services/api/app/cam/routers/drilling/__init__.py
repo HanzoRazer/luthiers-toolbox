@@ -11,8 +11,10 @@ Sub-modules:
 
 Total: 5 routes under /api/cam/drilling
 """
+from fastapi import APIRouter
+
 from .drilling_consolidated_router import (
-    router,
+    router as _consolidated_router,
     drill_router,
     pattern_router,
     preview_router,
@@ -25,6 +27,14 @@ from .drilling_consolidated_router import (
     Pattern,
     DrillParams,
 )
+from .intent_router import router as intent_router
+
+# Aggregate legacy consolidated drilling routes + the CamIntentV1 intent lane (8I).
+# Mounted by the CAM aggregator at prefix /api/cam/drilling; intent_router defines
+# its own /intent-gcode path -> POST /api/cam/drilling/intent-gcode.
+router = APIRouter()
+router.include_router(_consolidated_router)
+router.include_router(intent_router)
 
 __all__ = [
     # Main router
