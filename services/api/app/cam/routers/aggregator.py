@@ -103,6 +103,12 @@ try:
 except ImportError:
     profiling_router = None
 
+# Dev Order 8J: Pocketing (adaptive clearing via L.1 / CamIntentV1)
+try:
+    from .pocketing import router as pocketing_router
+except ImportError:
+    pocketing_router = None
+
 # Phase 4.2: Binding/Purfling
 try:
     from .binding import router as binding_router
@@ -159,6 +165,9 @@ if utility_router:
 
 if profiling_router:
     cam_router.include_router(profiling_router, prefix="/profiling", tags=["CAM Profiling"])
+
+if pocketing_router:
+    cam_router.include_router(pocketing_router, prefix="/pocketing", tags=["CAM Pocketing"])
 
 if binding_router:
     cam_router.include_router(binding_router, prefix="/binding", tags=["CAM Binding"])
