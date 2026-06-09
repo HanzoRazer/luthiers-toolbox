@@ -206,7 +206,10 @@ pytest tests/test_governance_compliance.py -v   # Governance test suite
 
 **Common requirements (both formats):**
   - All DXF generators must use dxf_compat — direct ezdxf.new() calls forbidden
-  - No EXTMIN/EXTMAX population (use sentinel values 1e+20)
+  - EXTMIN/EXTMAX: let ezdxf compute extents from actual geometry. Do NOT write
+    1e+20 sentinel values — they break CAD viewer zoom-to-fit (blank-canvas bug,
+    fixed 2026-04-25 / `2aaff13f`; see History). Populating extents from geometry
+    (e.g. blueprint-import `set_document_bounds`) is correct, not a violation.
   - Coordinate precision ≤ 3dp
   - Layer naming follows ContourCategory.value.upper() convention
 
@@ -215,6 +218,14 @@ pytest tests/test_governance_compliance.py -v   # Governance test suite
     caused Fusion 360 freeze (specific malformed LWPOLYLINE incident)
   - 2026-04-28: Gate lifted for R2000 after DWG TrueView verification confirmed
     properly-formed LWPOLYLINE imports cleanly. R12 retained for free tier.
+  - 2026-04-25: EXTMIN/EXTMAX sentinel (1e+20) REMOVED — `2aaff13f` found inverted
+    sentinels broke CAD viewer zoom-to-fit (valid LINE entities displayed as blank
+    canvas); switched to ezdxf computing extents from geometry. This is a SEPARATE
+    incident from the LWPOLYLINE freeze above — header-extents, not entity type.
+  - 2026-06-09: provenance correction (Surface-D audit). The former "use sentinel
+    1e+20" rule was conflated with the 2026-04-02 LWPOLYLINE freeze; it is not — it
+    traces to the 2026-04-25 inverted-extents fix, and the sentinel it mandated is
+    the exact behavior that fix removed. Rule corrected above.
 ## VECTORIZER ARCHITECTURE NOTES (three-loop / AGE) — EXPERIMENTAL, SANDBOXED
 
 ### Original date: 2026-04-02
