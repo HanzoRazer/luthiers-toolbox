@@ -46,10 +46,7 @@ except ImportError:  # pragma: no cover - pyclipper unavailable
     HAS_L1_CORE = False
 
 from app.rmos.runs_v2 import (
-    RunArtifact,
-    RunDecision,
-    Hashes,
-    persist_run,
+    validate_and_persist,
     create_run_id,
     sha256_of_obj,
     sha256_of_text,
@@ -220,17 +217,18 @@ async def generate_pocketing_intent_gcode(intent: CamIntentV1) -> PocketingInten
     # Step 6: Block if infeasible
     if not feasibility.feasible:
         run_id = create_run_id()
-        persist_run(RunArtifact(
-            run_id=run_id, created_at_utc=now, tool_id=tool_id, mode="pocketing_intent",
-            event_type="pocketing_intent_gcode_blocked", status="BLOCKED",
+        validate_and_persist(
+            run_id=run_id,
+            mode="pocketing_intent",
+            tool_id=tool_id,
+            status="BLOCKED",
+            request_summary={"event_type": "pocketing_intent_gcode_blocked"},
             feasibility=feasibility.to_dict(),
-            decision=RunDecision(
-                risk_level=feasibility.risk_level,
-                block_reason=f"Blocked by feasibility check: {', '.join(feasibility.issues)}",
-            ),
-            hashes=Hashes(feasibility_sha256=feas_hash),
-            notes=f"Feasibility issues: {', '.join(feasibility.issues)}",
-        ))
+            feasibility_sha256=feas_hash,
+            risk_level=feasibility.risk_level,
+            block_reason=f"Blocked by feasibility check: {', '.join(feasibility.issues)}",
+            meta={"notes": f"Feasibility issues: {', '.join(feasibility.issues)}"},
+        )
         raise HTTPException(
             status_code=409,
             detail={
@@ -284,14 +282,17 @@ async def generate_pocketing_intent_gcode(intent: CamIntentV1) -> PocketingInten
     except ValueError as e:
         logger.error("L.1 toolpath generation failed: %s", e, exc_info=True)
         run_id = create_run_id()
-        persist_run(RunArtifact(
-            run_id=run_id, created_at_utc=now, tool_id=tool_id, mode="pocketing_intent",
-            event_type="pocketing_intent_gcode_execution", status="ERROR",
+        validate_and_persist(
+            run_id=run_id,
+            mode="pocketing_intent",
+            tool_id=tool_id,
+            status="ERROR",
+            request_summary={"event_type": "pocketing_intent_gcode_execution"},
             feasibility=feasibility.to_dict(),
-            decision=RunDecision(risk_level=feasibility.risk_level),
-            hashes=Hashes(feasibility_sha256=feas_hash),
-            errors=[f"{type(e).__name__}: {str(e)}"],
-        ))
+            feasibility_sha256=feas_hash,
+            risk_level=feasibility.risk_level,
+            meta={"errors": [f"{type(e).__name__}: {str(e)}"]},
+        )
         raise HTTPException(
             status_code=400,
             detail={
@@ -304,13 +305,17 @@ async def generate_pocketing_intent_gcode(intent: CamIntentV1) -> PocketingInten
     # Step 8: Persist
     gcode_hash = sha256_of_text(gcode)
     run_id = create_run_id()
-    persist_run(RunArtifact(
-        run_id=run_id, created_at_utc=now, tool_id=tool_id, mode="pocketing_intent",
-        event_type="pocketing_intent_gcode_execution", status="OK",
+    validate_and_persist(
+        run_id=run_id,
+        mode="pocketing_intent",
+        tool_id=tool_id,
+        status="OK",
+        request_summary={"event_type": "pocketing_intent_gcode_execution"},
         feasibility=feasibility.to_dict(),
-        decision=RunDecision(risk_level=feasibility.risk_level),
-        hashes=Hashes(feasibility_sha256=feas_hash, gcode_sha256=gcode_hash),
-    ))
+        feasibility_sha256=feas_hash,
+        risk_level=feasibility.risk_level,
+        gcode_sha256=gcode_hash,
+    )
 
     # Step 9: Respond
     return PocketingIntentResponse(
