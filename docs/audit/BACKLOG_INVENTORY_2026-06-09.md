@@ -138,4 +138,43 @@ checked** (mostly legitimate timers); **residual gap = whether any operation/gen
 `views/cam/` also fakes its output** — worth a targeted pass before the MVP tag, but the verified
 MVP-blocking fakes are the five named in item 1. No other source categories outstanding.
 
-*Read-only pass complete. No repository state modified except this inventory doc. No action taken on any item.*
+---
+
+## Gate-quality / tooling debt — `api_contract_check` blind spot (addendum 2026-06-11)
+
+**Finding (from the contract-gate classification pass, 2026-06-11):** the
+`api_contract_check` CI gate (`scripts/validate_api_contracts.py`) **cannot distinguish a
+stale-contract from a fake-frontend on its own.** It only matches frontend `/api/...` string
+literals against entries in `contracts/api_endpoints.json`; it **never consults the backend**
+(`BACKEND_DIR` is defined but unused). So a violation means *"a frontend call has no contract
+entry,"* never *"the route is missing."* Consequences:
+
+1. **The gate can be satisfied by blessing a void.** Adding a non-existent route to the contract
+   greens the gate while certifying a 404. This is not hypothetical — of the 16 NEW violations
+   classified this pass, **3** (`/api/rmos/acoustics/ingest-events`, `/counts`, `/{event_id}`) are
+   routes *declared* in `router_ingest_audit.py` but **never `include_router`'d** (unreachable). A
+   prior auto-patch proposed adding them to the contract; that would have institutionalized three
+   404s. Telling real from void required a **human-run live-route-table pass** (booting
+   `app.main:app`, enumerating mounted routes) — the gate does not do this.
+2. **Blind to variable-url calls.** The regex only sees inline `/api/...` literals, so
+   `fetch(url, …)` clients (`src/api/drilling.ts`, `pocketing.ts`) are invisible to the gate.
+3. **The baseline grandfathers fakes.** `--write-baseline` snapshots *all* current frontend calls
+   as accepted, so any fake predating the baseline (e.g. the already-baselined `/api/v1/dxf/cam/gcode`)
+   is **permanently green**.
+
+**Recorded improvements (not done — toward an honest MVP tag):**
+- **Make the validator mount-aware** — have it consult the live mounted route table (the
+  defined-but-unused `BACKEND_DIR`) so mount-gap voids are caught automatically instead of by a
+  human pass each time.
+- **Audit the baseline set** (`contracts/api_calls_baseline.json`) for grandfathered fake-frontend
+  calls; verify baselined calls at the live-route bar, not just NEW ones.
+
+**Resolved this pass (for context):** 13 of the 16 NEW were verified real/mounted and added to the
+contract (#102, `69e9ec59`); the gate now shows exactly the 3 acoustics-void violations above, which
+are a **mount-or-gate product decision** (mount `router_ingest_audit.py` then contract, OR honest-gate
+the frontend calls — NOT a contract add). The frontend also calls `/{eventId}` (camelCase) vs the
+declared `/{event_id}` — reconcile if mounting.
+
+---
+
+*Read-only pass complete (original 2026-06-09 section). No repository state modified except this inventory doc. No action taken on any item.*
