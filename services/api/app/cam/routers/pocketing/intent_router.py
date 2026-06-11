@@ -16,7 +16,7 @@ from __future__ import annotations
 
 import logging
 import math
-from datetime import datetime, timezone
+
 from typing import Any, Dict, List
 
 from fastapi import APIRouter, HTTPException
@@ -154,7 +154,6 @@ async def generate_pocketing_intent_gcode(intent: CamIntentV1) -> PocketingInten
             },
         )
 
-    now = datetime.now(timezone.utc).isoformat()
     request_hash = sha256_of_obj(intent.model_dump())
     tool_id = intent.tool_id or "pocketing:intent"
 

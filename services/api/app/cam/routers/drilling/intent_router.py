@@ -15,7 +15,7 @@ artifact, returns provenance hashes.
 from __future__ import annotations
 
 import logging
-from datetime import datetime, timezone
+
 from typing import Dict, List
 
 from fastapi import APIRouter, HTTPException
@@ -101,7 +101,6 @@ async def generate_drilling_intent_gcode(intent: CamIntentV1) -> DrillingIntentR
     Flow: normalize -> validate mode -> validate design -> adapt -> feasibility ->
     block-if-infeasible -> generate -> persist -> respond.
     """
-    now = datetime.now(timezone.utc).isoformat()  # noqa: F841 — kept for future audit fields
     request_hash = sha256_of_obj(intent.model_dump())
     tool_id = intent.tool_id or "drill:intent"
 

@@ -16,7 +16,7 @@ persists RMOS artifact, writes audit trail.
 from __future__ import annotations
 
 import logging
-from datetime import datetime, timezone
+
 from typing import Any, Dict, List, Optional
 
 from fastapi import APIRouter, HTTPException
@@ -106,7 +106,6 @@ async def generate_vcarve_intent_gcode(intent: CamIntentV1) -> VCarveIntentRespo
         HTTPException 422: Invalid mode or design
         HTTPException 409: Blocked by safety policy
     """
-    now = datetime.now(timezone.utc).isoformat()
     request_hash = sha256_of_obj(intent.model_dump())
     tool_id = intent.tool_id or "vcarve:intent"
 
