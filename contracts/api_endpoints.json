@@ -4,6 +4,71 @@
   "description": "API endpoint contract - single source of truth for frontend-backend integration",
   "generated": "2026-03-09",
   "endpoints": {
+    "/api/ai/assistant/chat": {
+      "methods": ["POST"],
+      "description": "AI design assistant chat turn",
+      "category": "ai"
+    },
+    "/api/ai/assistant/history": {
+      "methods": ["GET", "DELETE"],
+      "description": "AI assistant conversation history (list / clear)",
+      "category": "ai"
+    },
+    "/api/ai/assistant/status": {
+      "methods": ["GET"],
+      "description": "AI assistant availability status",
+      "category": "ai"
+    },
+    "/api/ai/defects/analyze": {
+      "methods": ["POST"],
+      "description": "Analyze wood/build defects from an image",
+      "category": "ai"
+    },
+    "/api/ai/recommendations/generate": {
+      "methods": ["POST"],
+      "description": "Generate AI design and material recommendations",
+      "category": "ai"
+    },
+    "/api/ai/wood-grading/analyze": {
+      "methods": ["POST"],
+      "description": "AI wood grading analysis",
+      "category": "ai"
+    },
+    "/api/cam-workspace/machines": {
+      "methods": ["GET"],
+      "description": "List CAM workspace machine profiles",
+      "category": "cam"
+    },
+    "/api/cam-workspace/neck/evaluate": {
+      "methods": ["POST"],
+      "description": "Evaluate neck CAM workspace gates without generating G-code",
+      "category": "cam"
+    },
+    "/api/cam-workspace/neck/generate-full": {
+      "methods": ["POST"],
+      "description": "Generate full neck CAM workspace G-code",
+      "category": "cam"
+    },
+    "/api/cam-workspace/neck/generate/{op}": {
+      "methods": ["POST"],
+      "description": "Generate G-code for a single neck CAM workspace operation",
+      "category": "cam"
+    },
+    "/api/ltb/calculator/evaluate": {
+      "methods": ["POST"],
+      "description": "Evaluate a luthier calculator request",
+      "category": "calculator"
+    },
+    "/api/vectorizer/extract": {
+      "methods": ["POST"],
+      "description": "Extract vector geometry from a blueprint image",
+      "category": "vectorizer"
+    },
+    "/api/vectorizer/status": {
+      "methods": ["GET"],
+      "description": "Vectorizer service/job status",
+      "category": "vectorizer"
+    },
     "/api/health": {
       "methods": ["GET"],
       "description": "API health check",
