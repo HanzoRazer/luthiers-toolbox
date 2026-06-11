@@ -16,7 +16,7 @@ persists RMOS artifact, writes audit trail.
 from __future__ import annotations
 
 import logging
-from datetime import datetime, timezone
+
 from typing import Any, Dict, List, Optional
 
 from fastapi import APIRouter, HTTPException
@@ -34,10 +34,7 @@ from app.cam.vcarve import (
     validate_vcarve_design,
 )
 from app.rmos.runs_v2 import (
-    RunArtifact,
-    RunDecision,
-    Hashes,
-    persist_run,
+    validate_and_persist,
     create_run_id,
     sha256_of_obj,
     sha256_of_text,
@@ -109,7 +106,6 @@ async def generate_vcarve_intent_gcode(intent: CamIntentV1) -> VCarveIntentRespo
         HTTPException 422: Invalid mode or design
         HTTPException 409: Blocked by safety policy
     """
-    now = datetime.now(timezone.utc).isoformat()
     request_hash = sha256_of_obj(intent.model_dump())
     tool_id = intent.tool_id or "vcarve:intent"
 
@@ -181,22 +177,18 @@ async def generate_vcarve_intent_gcode(intent: CamIntentV1) -> VCarveIntentRespo
     # Block if safety policy requires
     if SafetyPolicy.should_block(decision.risk_level):
         run_id = create_run_id()
-        artifact = RunArtifact(
+        validate_and_persist(
             run_id=run_id,
-            created_at_utc=now,
-            tool_id=tool_id,
             mode="vcarve_intent",
-            event_type="vcarve_intent_gcode_blocked",
+            tool_id=tool_id,
             status="BLOCKED",
+            request_summary={"event_type": "vcarve_intent_gcode_blocked"},
             feasibility=feasibility,
-            decision=RunDecision(
-                risk_level=risk_level,
-                block_reason=f"Blocked by safety policy: {risk_level}",
-            ),
-            hashes=Hashes(feasibility_sha256=feas_hash),
-            notes=f"Blocked by safety policy: {risk_level}",
+            feasibility_sha256=feas_hash,
+            risk_level=risk_level,
+            block_reason=f"Blocked by safety policy: {risk_level}",
+            meta={"notes": f"Blocked by safety policy: {risk_level}"},
         )
-        persist_run(artifact)
 
         raise HTTPException(
             status_code=409,
@@ -221,19 +213,17 @@ async def generate_vcarve_intent_gcode(intent: CamIntentV1) -> VCarveIntentRespo
     except Exception as e:
         logger.error("V-Carve toolpath generation failed: %s", e, exc_info=True)
         run_id = create_run_id()
-        artifact = RunArtifact(
+        validate_and_persist(
             run_id=run_id,
-            created_at_utc=now,
-            tool_id=tool_id,
             mode="vcarve_intent",
-            event_type="vcarve_intent_gcode_execution",
+            tool_id=tool_id,
             status="ERROR",
+            request_summary={"event_type": "vcarve_intent_gcode_execution"},
             feasibility=feasibility,
-            decision=RunDecision(risk_level=risk_level),
-            hashes=Hashes(feasibility_sha256=feas_hash),
-            errors=[f"{type(e).__name__}: {str(e)}"],
+            feasibility_sha256=feas_hash,
+            risk_level=risk_level,
+            meta={"errors": [f"{type(e).__name__}: {str(e)}"]},
         )
-        persist_run(artifact)
 
         raise HTTPException(
             status_code=400,
@@ -247,21 +237,17 @@ async def generate_vcarve_intent_gcode(intent: CamIntentV1) -> VCarveIntentRespo
     # Step 7: Persist RMOS artifact
     gcode_hash = sha256_of_text(gcode)
     run_id = create_run_id()
-    artifact = RunArtifact(
+    validate_and_persist(
         run_id=run_id,
-        created_at_utc=now,
-        tool_id=tool_id,
         mode="vcarve_intent",
-        event_type="vcarve_intent_gcode_execution",
+        tool_id=tool_id,
         status="OK",
+        request_summary={"event_type": "vcarve_intent_gcode_execution"},
         feasibility=feasibility,
-        decision=RunDecision(risk_level=risk_level),
-        hashes=Hashes(
-            feasibility_sha256=feas_hash,
-            gcode_sha256=gcode_hash,
-        ),
+        feasibility_sha256=feas_hash,
+        risk_level=risk_level,
+        gcode_sha256=gcode_hash,
     )
-    persist_run(artifact)
 
     # Step 8: Return response
     return VCarveIntentResponse(

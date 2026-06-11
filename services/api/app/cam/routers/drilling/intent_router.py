@@ -15,7 +15,7 @@ artifact, returns provenance hashes.
 from __future__ import annotations
 
 import logging
-from datetime import datetime, timezone
+
 from typing import Dict, List
 
 from fastapi import APIRouter, HTTPException
@@ -35,10 +35,7 @@ from app.cam.drilling.feasibility import (
     hash_feasibility_result,
 )
 from app.rmos.runs_v2 import (
-    RunArtifact,
-    RunDecision,
-    Hashes,
-    persist_run,
+    validate_and_persist,
     create_run_id,
     sha256_of_obj,
     sha256_of_text,
@@ -104,7 +101,6 @@ async def generate_drilling_intent_gcode(intent: CamIntentV1) -> DrillingIntentR
     Flow: normalize -> validate mode -> validate design -> adapt -> feasibility ->
     block-if-infeasible -> generate -> persist -> respond.
     """
-    now = datetime.now(timezone.utc).isoformat()
     request_hash = sha256_of_obj(intent.model_dump())
     tool_id = intent.tool_id or "drill:intent"
 
@@ -168,22 +164,18 @@ async def generate_drilling_intent_gcode(intent: CamIntentV1) -> DrillingIntentR
     # Step 6: Block if infeasible
     if not feasibility.feasible:
         run_id = create_run_id()
-        artifact = RunArtifact(
+        validate_and_persist(
             run_id=run_id,
-            created_at_utc=now,
-            tool_id=tool_id,
             mode="drilling_intent",
-            event_type="drilling_intent_gcode_blocked",
+            tool_id=tool_id,
             status="BLOCKED",
+            request_summary={"event_type": "drilling_intent_gcode_blocked"},
             feasibility=feasibility.to_dict(),
-            decision=RunDecision(
-                risk_level=feasibility.risk_level,
-                block_reason=f"Blocked by feasibility check: {', '.join(feasibility.issues)}",
-            ),
-            hashes=Hashes(feasibility_sha256=feas_hash),
-            notes=f"Feasibility issues: {', '.join(feasibility.issues)}",
+            feasibility_sha256=feas_hash,
+            risk_level=feasibility.risk_level,
+            block_reason=f"Blocked by feasibility check: {', '.join(feasibility.issues)}",
+            meta={"notes": f"Feasibility issues: {', '.join(feasibility.issues)}"},
         )
-        persist_run(artifact)
         raise HTTPException(
             status_code=409,
             detail={
@@ -203,19 +195,17 @@ async def generate_drilling_intent_gcode(intent: CamIntentV1) -> DrillingIntentR
     except Exception as e:
         logger.error("Drilling toolpath generation failed: %s", e, exc_info=True)
         run_id = create_run_id()
-        artifact = RunArtifact(
+        validate_and_persist(
             run_id=run_id,
-            created_at_utc=now,
-            tool_id=tool_id,
             mode="drilling_intent",
-            event_type="drilling_intent_gcode_execution",
+            tool_id=tool_id,
             status="ERROR",
+            request_summary={"event_type": "drilling_intent_gcode_execution"},
             feasibility=feasibility.to_dict(),
-            decision=RunDecision(risk_level=feasibility.risk_level),
-            hashes=Hashes(feasibility_sha256=feas_hash),
-            errors=[f"{type(e).__name__}: {str(e)}"],
+            feasibility_sha256=feas_hash,
+            risk_level=feasibility.risk_level,
+            meta={"errors": [f"{type(e).__name__}: {str(e)}"]},
         )
-        persist_run(artifact)
         raise HTTPException(
             status_code=400,
             detail={
@@ -228,18 +218,17 @@ async def generate_drilling_intent_gcode(intent: CamIntentV1) -> DrillingIntentR
     # Step 8: Persist RMOS artifact
     gcode_hash = sha256_of_text(gcode)
     run_id = create_run_id()
-    artifact = RunArtifact(
+    validate_and_persist(
         run_id=run_id,
-        created_at_utc=now,
-        tool_id=tool_id,
         mode="drilling_intent",
-        event_type="drilling_intent_gcode_execution",
+        tool_id=tool_id,
         status="OK",
+        request_summary={"event_type": "drilling_intent_gcode_execution"},
         feasibility=feasibility.to_dict(),
-        decision=RunDecision(risk_level=feasibility.risk_level),
-        hashes=Hashes(feasibility_sha256=feas_hash, gcode_sha256=gcode_hash),
+        feasibility_sha256=feas_hash,
+        risk_level=feasibility.risk_level,
+        gcode_sha256=gcode_hash,
     )
-    persist_run(artifact)
 
     # Step 9: Return response
     return DrillingIntentResponse(
