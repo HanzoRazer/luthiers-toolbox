@@ -2,37 +2,44 @@
   "schema": "cbsp21_patch_input_v1",
   "schema_version": "cbsp21_patch_input_v1",
   "coverage_min": 0.95,
-  "patch_id": "BOE_IBG_FAMILY_CONFLATION_DOC",
-  "title": "BOE/IBG instrument family conflation - mechanism-tier taxonomy (docs only)",
-  "intent": "Document the BOE/IBG instrument-family conflation (Type supplanting Brand+Model) and the long-term target taxonomy: Type = the level at which fabrication fundamentally diverges, surfaced as sound-production mechanism (acoustic/electro-acoustic/electric/bass/ukulele/mandolin/regional-ethnic), a Brand tier between Type and Model, lineage demoted to Model metadata. Records the MVP-scope per-model geometry-resolution check (J-45 first), model tiers, Smart Guitar exclusion, and forthcoming instruments. No code or CI behavior change.",
+  "patch_id": "AUDIT_INVENTORY_API_CONTRACT_GATE_QUALITY_NOTE",
+  "title": "Audit inventory addendum for api_contract_check gate-quality blind spot",
+  "intent": "Document in the audit inventory that api_contract_check is contract-only, backend-blind, and can be satisfied by blessing unreachable or fake frontend routes unless validated against the live mounted route table.",
   "change_type": "docs",
   "behavior_change": "none",
   "risk_level": "low",
   "scope": {
-    "paths_in_scope": [".cbsp21/", "docs/architecture/"],
+    "paths_in_scope": [
+      ".cbsp21/",
+      "docs/audit/"
+    ],
     "files_expected_to_change": [
-      "docs/architecture/BOE_IBG_FAMILY_CONFLATION.md",
+      "docs/audit/BACKLOG_INVENTORY_2026-06-09.md",
       ".cbsp21/patch_input.json"
     ]
   },
   "diff_articulation": {
-    "what_changed": "New architecture doc naming the BOE/IBG family conflation; defines Type operationally as the level at which fabrication diverges; proposes mechanism-tier Type taxonomy (adds electro-acoustic and regional/ethnic Types); Carlos Jumbo moved to Tier 2; Smart Guitar excluded (not in public version); forthcoming cello/violin/banjo/mandolin noted; lineage demoted to Model metadata.",
-    "why_not_redundant": "Captures institutional knowledge about the silent Type-family fallback (false-green class) and fixes the deferred re-architecture target; the MVP per-model resolution check is the in-scope correctness item."
+    "what_changed": "Appends a dated addendum to the backlog inventory documenting the api_contract_check gate-quality blind spot discovered during the 2026-06-11 classification pass.",
+    "why_not_redundant": "Preserves a structural CI-gate finding in the inventory used for MVP-tag audit work, separate from the already-merged contract additions."
   },
   "verification": {
     "commands_run": [
-      "python scripts/ci/check_cbsp21_gate.py --manifest .cbsp21/patch_input.json --changed-files docs/architecture/BOE_IBG_FAMILY_CONFLATION.md",
+      "python scripts/ci/check_cbsp21_gate.py --manifest .cbsp21/patch_input.json --changed-files docs/audit/BACKLOG_INVENTORY_2026-06-09.md",
       "python scripts/ci/check_cbsp21_patch_input.py --base origin/main --head HEAD"
     ]
   },
   "files": [
     {
-      "path": "docs/architecture/BOE_IBG_FAMILY_CONFLATION.md",
-      "intent": "New doc: name the conflation, define Type operationally (fabrication divergence) at the mechanism tier, model tiers, MVP-scope check, deferral verdict.",
-      "scan_targets": ["docs/architecture/BOE_IBG_FAMILY_CONFLATION.md"],
+      "path": "docs/audit/BACKLOG_INVENTORY_2026-06-09.md",
+      "intent": "Append a dated audit addendum documenting the api_contract_check backend-blind / bless-the-void failure mode and the recorded-not-done improvements.",
+      "scan_targets": [
+        "docs/audit/BACKLOG_INVENTORY_2026-06-09.md"
+      ],
       "risk": "low",
       "behavior_change": "none - documentation",
-      "verification": ["Review the doc end to end"]
+      "verification": [
+        "Review the appended addendum end to end"
+      ]
     }
   ]
 }
