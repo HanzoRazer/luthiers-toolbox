@@ -2,44 +2,51 @@
   "schema": "cbsp21_patch_input_v1",
   "schema_version": "cbsp21_patch_input_v1",
   "coverage_min": 0.95,
-  "patch_id": "AUDIT_INVENTORY_API_CONTRACT_GATE_QUALITY_NOTE",
-  "title": "Audit inventory addendum for api_contract_check gate-quality blind spot",
-  "intent": "Document in the audit inventory that api_contract_check is contract-only, backend-blind, and can be satisfied by blessing unreachable or fake frontend routes unless validated against the live mounted route table.",
-  "change_type": "docs",
-  "behavior_change": "none",
+  "patch_id": "CAM_CONTOUR_PROFILING_ROBUSTNESS",
+  "title": "Wire ContourCuttingView to profiling endpoint with full robustness (20 fixes)",
+  "intent": "Replace setTimeout fake with real /api/cam/profiling/intent-gcode call, adding comprehensive client-side validation, response validation, request normalization, abort support, network error handling, accessible controls, and honest gates for unsupported features.",
+  "change_type": "feature",
+  "behavior_change": "frontend",
   "risk_level": "low",
   "scope": {
     "paths_in_scope": [
       ".cbsp21/",
-      "docs/audit/"
+      "packages/client/src/api/",
+      "packages/client/src/views/cam/"
     ],
     "files_expected_to_change": [
-      "docs/audit/BACKLOG_INVENTORY_2026-06-09.md",
+      "packages/client/src/api/profiling.ts",
+      "packages/client/src/views/cam/ContourCuttingView.vue",
       ".cbsp21/patch_input.json"
     ]
   },
   "diff_articulation": {
-    "what_changed": "Appends a dated addendum to the backlog inventory documenting the api_contract_check gate-quality blind spot discovered during the 2026-06-11 classification pass.",
-    "why_not_redundant": "Preserves a structural CI-gate finding in the inventory used for MVP-tag audit work, separate from the already-merged contract additions."
+    "what_changed": "profiling.ts: AbortController support, network error handling, response type guard, Object.setPrototypeOf for Error, any->unknown. ContourCuttingView.vue: validateRequest() preflight with polygon sanity checks, normalized buildRequest(), computed canGenerate, defensive result rendering, exposed retract_z/climb_milling, fixed blocked.issues type coercion, filename sanitization, ARIA attributes, inputmode for mobile, mode-note UX clarity.",
+    "why_not_redundant": "Original PR #107 (reverted) lacked client-side validation, trusted backend responses blindly, leaked stale dependent values, had instanceof fragility, and missing accessibility. This PR addresses all 20 identified issues."
   },
   "verification": {
     "commands_run": [
-      "python scripts/ci/check_cbsp21_gate.py --manifest .cbsp21/patch_input.json --changed-files docs/audit/BACKLOG_INVENTORY_2026-06-09.md",
-      "python scripts/ci/check_cbsp21_patch_input.py --base origin/main --head HEAD"
+      "npm run typecheck",
+      "npm run lint",
+      "python scripts/ci/check_cbsp21_gate.py --manifest .cbsp21/patch_input.json --changed-files packages/client/src/api/profiling.ts packages/client/src/views/cam/ContourCuttingView.vue"
     ]
   },
   "files": [
     {
-      "path": "docs/audit/BACKLOG_INVENTORY_2026-06-09.md",
-      "intent": "Append a dated audit addendum documenting the api_contract_check backend-blind / bless-the-void failure mode and the recorded-not-done improvements.",
-      "scan_targets": [
-        "docs/audit/BACKLOG_INVENTORY_2026-06-09.md"
-      ],
+      "path": "packages/client/src/api/profiling.ts",
+      "intent": "Typed API client with AbortController, network error handling, response validation type guard, Object.setPrototypeOf for reliable instanceof, any->unknown typing.",
+      "scan_targets": ["packages/client/src/api/profiling.ts"],
       "risk": "low",
-      "behavior_change": "none - documentation",
-      "verification": [
-        "Review the appended addendum end to end"
-      ]
+      "behavior_change": "none - new file with robustness improvements",
+      "verification": ["Verify AbortError handled, network errors surface clearly, invalid response shape throws"]
+    },
+    {
+      "path": "packages/client/src/views/cam/ContourCuttingView.vue",
+      "intent": "Wire to real endpoint with validateRequest() preflight (polygon area, duplicate points, tab_height < cut_depth, finite positive values), normalized buildRequest() (zero dependent fields when feature off), computed canGenerate, defensive resultSummary, exposed retract_z/climb_milling, fixed blocked.issues coercion, sanitized filename, ARIA roles/labels, inputmode for mobile, UX mode-note.",
+      "scan_targets": ["packages/client/src/views/cam/ContourCuttingView.vue"],
+      "risk": "low",
+      "behavior_change": "frontend - view now validates before calling backend, handles all error states",
+      "verification": ["Live test: invalid inputs show inline errors, valid inputs generate toolpath, 409 shows issues, download works"]
     }
   ]
 }
