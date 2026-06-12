@@ -1,12 +1,14 @@
 <script setup lang="ts">
 /**
- * FretSlottingView - Fret Slot Cutting Toolpath Generator
- * Generate precision fret slot cutting toolpaths based on scale length
+ * FretSlottingView - Fret Slot Cutting
  *
- * Connected to API endpoints:
- *   POST /api/cam/fret-slots/preview
- *   POST /api/cam/fret-slots/generate
- *   POST /api/v1/fretboard/dxf (DXF export via ecosphere)
+ * SPLIT real/gated (per the CAM wire-vs-gate triage, live-route-table classified):
+ *  - "Export DXF" is REAL — wired via useFretboardEcosphere to the mounted
+ *    /api/v1/fretboard/dxf (and /api/v1/fretboard/compute). Left untouched.
+ *  - "Generate Toolpath" (G-code) is HONESTLY GATED — there is no fret-slot
+ *    intent-gcode lane (the former /api/cam/fret-slots/{preview,generate} were
+ *    never built; /api/cam/fret_slots/preview is preview-only, no G-code). Rather
+ *    than fake it with a setTimeout, the button is disabled "coming soon".
  */
 import { ref, computed } from 'vue'
 import { useFretboardEcosphere } from '@/design-utilities/lutherie/neck/useFretboardEcosphere'
@@ -32,8 +34,6 @@ const {
   downloadDxf,
 } = useFretboardEcosphere()
 
-const loading = ref(false)
-
 const currentRequest = computed(() => ({
   scaleLengthMm: scaleLength.value,
   fretCount: fretCount.value,
@@ -50,12 +50,6 @@ const fretPositions = computed(() => {
   }
   return positions
 })
-
-async function generateToolpath() {
-  loading.value = true
-  await new Promise(resolve => setTimeout(resolve, 500))
-  loading.value = false
-}
 
 async function exportDxf() {
   try {
@@ -141,16 +135,16 @@ async function exportDxf() {
       <div class="panel preview-panel">
         <h3>Preview</h3>
         <div class="preview-container">
-          <div v-if="loading" class="loading">Generating...</div>
-          <div v-else class="placeholder">
+          <div class="placeholder">
             <span class="icon">🎸</span>
             <p>{{ fretCount }} fret slots</p>
             <p class="detail">Scale: {{ scaleLength }}mm • {{ slotWidth }}mm × {{ slotDepth }}mm</p>
           </div>
         </div>
         <div class="action-buttons">
-          <button class="btn btn-primary" @click="generateToolpath" :disabled="loading">
+          <button class="btn btn-primary" disabled title="No fret-slot toolpath backend yet">
             Generate Toolpath
+            <span class="soon-tag">coming soon</span>
           </button>
           <button class="btn btn-secondary" @click="exportDxf" :disabled="dxfLoading">
             {{ dxfLoading ? 'Generating...' : 'Export DXF' }}
@@ -164,7 +158,8 @@ async function exportDxf() {
     </div>
 
     <div class="coming-soon-notice">
-      <p>Full fret slotting with multi-scale and custom temperament support coming soon.</p>
+      <p>DXF export is live. G-code toolpath generation isn't wired yet — there is no
+      fret-slot toolpath backend. Multi-scale and custom temperament support also coming soon.</p>
     </div>
   </div>
 </template>
@@ -200,7 +195,8 @@ async function exportDxf() {
 .action-buttons { display: flex; gap: 0.75rem; align-items: center; }
 .btn { flex: 1; padding: 0.75rem; border-radius: 0.5rem; font-weight: 600; cursor: pointer; border: none; }
 .btn-primary { background: #2563eb; color: #fff; }
-.btn-primary:disabled { background: #333; color: #666; }
+.btn-primary:disabled { background: #333; color: #888; cursor: not-allowed; }
+.soon-tag { display: inline-block; margin-left: 0.4rem; font-size: 0.62rem; text-transform: uppercase; letter-spacing: 0.04em; background: #3a3a1a; color: #d4c468; padding: 0.1rem 0.35rem; border-radius: 0.25rem; }
 .btn-secondary { background: #262626; color: #e5e5e5; border: 1px solid #333; }
 .btn-secondary:disabled { background: #1a1a1a; color: #555; cursor: wait; }
 
