@@ -1,11 +1,14 @@
 <script setup lang="ts">
 /**
  * SurfacingView - Surface Flattening Toolpath Generator
- * Generate toolpaths for flattening/facing operations
  *
- * Connected to API endpoints:
- *   POST /api/cam/surfacing/preview
- *   POST /api/cam/surfacing/generate
+ * HONESTLY GATED (no backend lane): there is no surfacing/facing toolpath endpoint.
+ * The only "surface" routes are machine Z-probing (/api/probe/surface_z/*), a
+ * different operation (finding where the surface is, not generating a facing pass).
+ * The former `/api/cam/surfacing/{preview,generate}` endpoints in this docstring
+ * were never built. Rather than fake the output with a setTimeout, the generate/
+ * download actions are disabled with a "coming soon" affordance; the parameters
+ * below stand as a preview of the planned operation.
  */
 import { ref } from 'vue'
 
@@ -17,14 +20,6 @@ const stepover = ref(60)
 const feedRate = ref(2000)
 const spindleSpeed = ref(12000)
 const pattern = ref('zigzag')  // zigzag, spiral, raster
-
-const loading = ref(false)
-
-async function generateToolpath() {
-  loading.value = true
-  await new Promise(resolve => setTimeout(resolve, 1000))
-  loading.value = false
-}
 </script>
 
 <template>
@@ -87,24 +82,27 @@ async function generateToolpath() {
       <div class="panel preview-panel">
         <h3>Preview</h3>
         <div class="preview-container">
-          <div v-if="loading" class="loading">Generating...</div>
-          <div v-else class="placeholder">
+          <div class="placeholder">
             <span class="icon">🔳</span>
             <p>{{ surfaceWidth }} × {{ surfaceLength }} mm surface</p>
             <p class="detail">{{ stockRemoval }}mm removal with {{ toolDiameter }}mm tool</p>
           </div>
         </div>
         <div class="action-buttons">
-          <button class="btn btn-primary" @click="generateToolpath" :disabled="loading">
+          <button class="btn btn-primary" disabled title="No surfacing toolpath backend yet">
             Generate Toolpath
+            <span class="soon-tag">coming soon</span>
           </button>
-          <button class="btn btn-secondary">Download G-code</button>
+          <button class="btn btn-secondary" disabled title="No surfacing toolpath backend yet">
+            Download G-code
+          </button>
         </div>
       </div>
     </div>
 
     <div class="coming-soon-notice">
-      <p>Full surfacing with automatic tramming compensation coming soon.</p>
+      <p>Surfacing toolpath generation isn't available yet — there is no surfacing
+      backend lane. The parameters above are a preview of the planned operation.</p>
     </div>
   </div>
 </template>
@@ -137,8 +135,11 @@ async function generateToolpath() {
 .action-buttons { display: flex; gap: 0.75rem; }
 .btn { flex: 1; padding: 0.75rem; border-radius: 0.5rem; font-weight: 600; cursor: pointer; border: none; }
 .btn-primary { background: #2563eb; color: #fff; }
-.btn-primary:disabled { background: #333; color: #666; }
+.btn:disabled { cursor: not-allowed; opacity: 0.6; }
+.btn-primary:disabled { background: #333; color: #888; }
 .btn-secondary { background: #262626; color: #e5e5e5; border: 1px solid #333; }
+.btn-secondary:disabled { color: #555; }
+.soon-tag { display: inline-block; margin-left: 0.4rem; font-size: 0.62rem; text-transform: uppercase; letter-spacing: 0.04em; background: #3a3a1a; color: #d4c468; padding: 0.1rem 0.35rem; border-radius: 0.25rem; }
 
 .coming-soon-notice { max-width: 1200px; margin: 2rem auto 0; padding: 1rem; background: #1e3a5f; border-radius: 0.5rem; text-align: center; color: #60a5fa; }
 
