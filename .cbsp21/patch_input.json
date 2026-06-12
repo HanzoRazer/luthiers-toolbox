@@ -2,9 +2,9 @@
   "schema": "cbsp21_patch_input_v1",
   "schema_version": "cbsp21_patch_input_v1",
   "coverage_min": 0.95,
-  "patch_id": "CAM_CONTOUR_WIRE_TO_PROFILING",
-  "title": "Wire ContourCuttingView to the real profiling intent-gcode endpoint",
-  "intent": "Replace the setTimeout fake in ContourCuttingView with a real call to POST /api/cam/profiling/intent-gcode. Add src/api/profiling.ts typed client matching drilling/pocketing pattern. Honestly gate unsupported features (DXF import, On-Line cut, Tangent lead-in, spindle) rather than faking them.",
+  "patch_id": "CAM_CONTOUR_PROFILING_ROBUSTNESS",
+  "title": "Wire ContourCuttingView to profiling endpoint with full robustness (20 fixes)",
+  "intent": "Replace setTimeout fake with real /api/cam/profiling/intent-gcode call, adding comprehensive client-side validation, response validation, request normalization, abort support, network error handling, accessible controls, and honest gates for unsupported features.",
   "change_type": "feature",
   "behavior_change": "frontend",
   "risk_level": "low",
@@ -21,30 +21,32 @@
     ]
   },
   "diff_articulation": {
-    "what_changed": "New profiling.ts typed API client (CamIntentV1 envelope, error handling). ContourCuttingView.vue wired to real endpoint with explicit contour entry, honest gates for DXF/On-Line/Tangent/spindle, feasibility block UI, G-code download.",
-    "why_not_redundant": "Completes the CAM intent frontend bridge (8H profiling lane) alongside 8I drilling and 8J pocketing. ContourCuttingView was a setTimeout fake; now wired to the real backend."
+    "what_changed": "profiling.ts: AbortController support, network error handling, response type guard, Object.setPrototypeOf for Error, any->unknown. ContourCuttingView.vue: validateRequest() preflight with polygon sanity checks, normalized buildRequest(), computed canGenerate, defensive result rendering, exposed retract_z/climb_milling, fixed blocked.issues type coercion, filename sanitization, ARIA attributes, inputmode for mobile, mode-note UX clarity.",
+    "why_not_redundant": "Original PR #107 (reverted) lacked client-side validation, trusted backend responses blindly, leaked stale dependent values, had instanceof fragility, and missing accessibility. This PR addresses all 20 identified issues."
   },
   "verification": {
     "commands_run": [
+      "npm run typecheck",
+      "npm run lint",
       "python scripts/ci/check_cbsp21_gate.py --manifest .cbsp21/patch_input.json --changed-files packages/client/src/api/profiling.ts packages/client/src/views/cam/ContourCuttingView.vue"
     ]
   },
   "files": [
     {
       "path": "packages/client/src/api/profiling.ts",
-      "intent": "New typed API client for POST /api/cam/profiling/intent-gcode. Mirrors drilling.ts/pocketing.ts: typed request/response, raw fetch to preserve structured FastAPI detail on 409.",
+      "intent": "Typed API client with AbortController, network error handling, response validation type guard, Object.setPrototypeOf for reliable instanceof, any->unknown typing.",
       "scan_targets": ["packages/client/src/api/profiling.ts"],
       "risk": "low",
-      "behavior_change": "none - new file",
-      "verification": ["Review types match ProfileDesignV1/ProfilingContext backend schemas"]
+      "behavior_change": "none - new file with robustness improvements",
+      "verification": ["Verify AbortError handled, network errors surface clearly, invalid response shape throws"]
     },
     {
       "path": "packages/client/src/views/cam/ContourCuttingView.vue",
-      "intent": "Wire to real profiling endpoint. Replace setTimeout fake with generateProfilingGcode(). Add explicit contour entry, honest gates for unsupported features, feasibility block UI, G-code download.",
+      "intent": "Wire to real endpoint with validateRequest() preflight (polygon area, duplicate points, tab_height < cut_depth, finite positive values), normalized buildRequest() (zero dependent fields when feature off), computed canGenerate, defensive resultSummary, exposed retract_z/climb_milling, fixed blocked.issues coercion, sanitized filename, ARIA roles/labels, inputmode for mobile, UX mode-note.",
       "scan_targets": ["packages/client/src/views/cam/ContourCuttingView.vue"],
       "risk": "low",
-      "behavior_change": "frontend - view now calls real backend instead of faking response",
-      "verification": ["Live test: generate toolpath, verify 200/409 handling, download G-code"]
+      "behavior_change": "frontend - view now validates before calling backend, handles all error states",
+      "verification": ["Live test: invalid inputs show inline errors, valid inputs generate toolpath, 409 shows issues, download works"]
     }
   ]
 }

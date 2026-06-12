@@ -18,7 +18,7 @@
 // points), not a DXF/SVG file — the view enters contour points directly, as
 // DrillingView/PocketClearingView do for their geometry.
 
-const API_BASE = (import.meta as any).env?.VITE_API_BASE || "/api";
+const API_BASE = (import.meta as Record<string, unknown>).env?.VITE_API_BASE as string || "/api";
 
 // ---- Request envelope (CamIntentV1) ----
 
@@ -104,14 +104,14 @@ export class ProfilingIntentError extends Error {
   /** Backend error code, e.g. FEASIBILITY_BLOCKED, INVALID_DESIGN. */
   code: string;
   /** Feasibility report on a 409 block (issues, risk_level, ...). */
-  feasibility?: Record<string, any>;
+  feasibility?: Record<string, unknown>;
   run_id?: string;
 
   constructor(
     status: number,
     code: string,
     message: string,
-    opts?: { feasibility?: Record<string, any>; run_id?: string }
+    opts?: { feasibility?: Record<string, unknown>; run_id?: string }
   ) {
     super(message);
     this.name = "ProfilingIntentError";
@@ -119,7 +119,34 @@ export class ProfilingIntentError extends Error {
     this.code = code;
     this.feasibility = opts?.feasibility;
     this.run_id = opts?.run_id;
+    // Fix prototype chain for instanceof to work reliably across transpilation targets
+    Object.setPrototypeOf(this, ProfilingIntentError.prototype);
   }
+}
+
+// ---- Response validation ----
+
+function isProfilingIntentMetadata(v: unknown): v is ProfilingIntentMetadata {
+  if (!v || typeof v !== 'object') return false;
+  const m = v as Record<string, unknown>;
+  return (
+    typeof m.pass_count === 'number' &&
+    typeof m.tab_count === 'number' &&
+    typeof m.total_length_mm === 'number' &&
+    typeof m.estimated_time_seconds === 'number'
+  );
+}
+
+function isProfilingIntentResponse(value: unknown): value is ProfilingIntentResponse {
+  if (!value || typeof value !== 'object') return false;
+  const v = value as Record<string, unknown>;
+  return (
+    typeof v.gcode === 'string' &&
+    typeof v.run_id === 'string' &&
+    Array.isArray(v.issues) &&
+    typeof v.hashes === 'object' &&
+    isProfilingIntentMetadata(v.metadata)
+  );
 }
 
 /**
@@ -128,16 +155,35 @@ export class ProfilingIntentError extends Error {
  *
  * Raw fetch (not fetchJson) so the structured FastAPI `detail` — especially the
  * 409 feasibility report — reaches the UI instead of a generic status string.
+ *
+ * @param request - The profiling intent request
+ * @param signal - Optional AbortSignal for request cancellation
  */
 export async function generateProfilingGcode(
-  request: ProfilingIntentRequest
+  request: ProfilingIntentRequest,
+  signal?: AbortSignal
 ): Promise<ProfilingIntentResponse> {
   const url = `${API_BASE}/cam/profiling/intent-gcode`;
-  const res = await fetch(url, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(request),
-  });
+
+  let res: Response;
+  try {
+    res = await fetch(url, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(request),
+      signal,
+    });
+  } catch (err) {
+    // Network error (offline, DNS failure, CORS, aborted)
+    if (err instanceof Error && err.name === 'AbortError') {
+      throw new ProfilingIntentError(0, 'ABORTED', 'Request was cancelled');
+    }
+    throw new ProfilingIntentError(
+      0,
+      'NETWORK_ERROR',
+      err instanceof Error ? `Network error: ${err.message}` : 'Network error: unable to reach server'
+    );
+  }
 
   if (!res.ok) {
     const detail = await parseErrorDetail(res);
@@ -149,25 +195,36 @@ export async function generateProfilingGcode(
     );
   }
 
-  return (await res.json()) as ProfilingIntentResponse;
+  const body: unknown = await res.json();
+
+  if (!isProfilingIntentResponse(body)) {
+    throw new ProfilingIntentError(
+      res.status,
+      'INVALID_RESPONSE',
+      'Server returned an unexpected response format'
+    );
+  }
+
+  return body;
 }
 
 /** Pull the structured FastAPI `detail` out of an error response, with fallbacks. */
 async function parseErrorDetail(res: Response): Promise<{
   code: string;
   message: string;
-  feasibility?: Record<string, any>;
+  feasibility?: Record<string, unknown>;
   run_id?: string;
 }> {
   try {
-    const body = await res.json();
-    const d = body?.detail ?? body;
+    const body: unknown = await res.json();
+    const wrapper = body as Record<string, unknown> | null;
+    const d = (wrapper?.detail ?? wrapper) as Record<string, unknown> | null;
     if (d && typeof d === "object") {
       return {
-        code: d.error || `HTTP_${res.status}`,
-        message: d.message || res.statusText,
-        feasibility: d.feasibility,
-        run_id: d.run_id,
+        code: (typeof d.error === 'string' ? d.error : null) || `HTTP_${res.status}`,
+        message: (typeof d.message === 'string' ? d.message : null) || res.statusText,
+        feasibility: typeof d.feasibility === 'object' ? d.feasibility as Record<string, unknown> : undefined,
+        run_id: typeof d.run_id === 'string' ? d.run_id : undefined,
       };
     }
     return { code: `HTTP_${res.status}`, message: String(d ?? res.statusText) };
