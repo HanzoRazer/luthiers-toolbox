@@ -337,7 +337,12 @@ async function generateToolpath() {
 
 function sanitizeFilename(name: string): string {
   // Remove characters that are illegal in filenames on Windows/Mac/Linux
-  return name.replace(/[<>:"/\\|?*\x00-\x1f]/g, '_').slice(0, 200)
+  return name
+    .replace(/[<>:"/\\|?*]/g, '_')
+    .split('')
+    .map((char) => (char.charCodeAt(0) < 32 ? '_' : char))
+    .join('')
+    .slice(0, 200)
 }
 
 function downloadGcode() {
