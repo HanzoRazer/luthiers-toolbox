@@ -10,12 +10,13 @@
  */
 import { computed } from "vue";
 import { useRouter } from "vue-router";
-import { downloadRun, type RunArtifactDetail } from "@/api/rmosRuns";
+import { downloadRun } from "@/api/rmosRuns";
+import { type RunArtifact } from "@/sdk/rmos/runs";
 import { useRmosRunsStore } from "@/stores/rmosRunsStore";
 import AdvisoryBlobBrowser from "@/components/rmos/AdvisoryBlobBrowser.vue";
 
 const props = defineProps<{
-  artifact: RunArtifactDetail;
+  artifact: RunArtifact;
 }>();
 
 const router = useRouter();
@@ -104,11 +105,11 @@ function formatDate(iso: string): string {
       <h4>Run Info</h4>
       <div class="info-grid">
         <div><strong>Created:</strong> {{ formatDate(artifact.created_at_utc) }}</div>
-        <div><strong>Mode:</strong> {{ artifact.workflow_mode || "—" }}</div>
-        <div><strong>Machine:</strong> {{ artifact.machine_id || "—" }}</div>
-        <div><strong>Material:</strong> {{ artifact.material_id || "—" }}</div>
+        <div><strong>Mode:</strong> {{ (artifact as any).workflow_mode || "—" }}</div>
+        <div><strong>Machine:</strong> {{ (artifact as any).machine_id || "—" }}</div>
+        <div><strong>Material:</strong> {{ (artifact as any).material_id || "—" }}</div>
         <div><strong>Session:</strong> {{ artifact.workflow_session_id?.slice(0, 12) || "—" }}</div>
-        <div><strong>Parent:</strong> {{ artifact.parent_run_id?.slice(0, 12) || "—" }}</div>
+        <div><strong>Parent:</strong> {{ (artifact as any).parent_run_id?.slice(0, 12) || "—" }}</div>
       </div>
     </section>
 
@@ -116,25 +117,25 @@ function formatDate(iso: string): string {
     <section class="info-section">
       <h4>Hashes</h4>
       <div class="hash-list">
-        <div v-if="artifact.request_hash">
-          <strong>Request:</strong>
-          <code>{{ artifact.request_hash.slice(0, 16) }}…</code>
+        <div v-if="artifact.hashes?.feasibility_sha256">
+          <strong>Feasibility:</strong>
+          <code>{{ artifact.hashes.feasibility_sha256.slice(0, 16) }}…</code>
         </div>
-        <div v-if="artifact.toolpaths_hash">
+        <div v-if="artifact.hashes?.toolpaths_sha256">
           <strong>Toolpaths:</strong>
-          <code>{{ artifact.toolpaths_hash.slice(0, 16) }}…</code>
+          <code>{{ artifact.hashes.toolpaths_sha256.slice(0, 16) }}…</code>
         </div>
-        <div v-if="artifact.gcode_hash">
+        <div v-if="artifact.hashes?.gcode_sha256">
           <strong>G-code:</strong>
-          <code>{{ artifact.gcode_hash.slice(0, 16) }}…</code>
+          <code>{{ artifact.hashes.gcode_sha256.slice(0, 16) }}…</code>
         </div>
-        <div v-if="artifact.geometry_hash">
+        <div v-if="(artifact as any).geometry_hash">
           <strong>Geometry:</strong>
-          <code>{{ artifact.geometry_hash.slice(0, 16) }}…</code>
+          <code>{{ (artifact as any).geometry_hash.slice(0, 16) }}…</code>
         </div>
-        <div v-if="artifact.config_fingerprint">
+        <div v-if="(artifact as any).config_fingerprint">
           <strong>Config:</strong>
-          <code>{{ artifact.config_fingerprint.slice(0, 16) }}…</code>
+          <code>{{ (artifact as any).config_fingerprint.slice(0, 16) }}…</code>
         </div>
       </div>
     </section>
@@ -150,24 +151,24 @@ function formatDate(iso: string): string {
 
     <!-- Drift -->
     <section
-      v-if="artifact.drift_detected"
+      v-if="(artifact as any).drift_detected"
       class="info-section drift-warning"
     >
-      <h4>⚠️ Drift Detected</h4>
-      <p>{{ artifact.drift_summary || "Configuration drift detected from parent run." }}</p>
+      <h4>Drift Detected</h4>
+      <p>{{ (artifact as any).drift_summary || "Configuration drift detected from parent run." }}</p>
     </section>
 
     <!-- Gate Decision -->
     <section
-      v-if="artifact.gate_decision"
+      v-if="(artifact as any).gate_decision"
       class="info-section"
     >
       <h4>Gate Decision</h4>
       <div
         class="gate-badge"
-        :class="artifact.gate_decision.toLowerCase()"
+        :class="(artifact as any).gate_decision.toLowerCase()"
       >
-        {{ artifact.gate_decision }}
+        {{ (artifact as any).gate_decision }}
       </div>
     </section>
 
@@ -179,12 +180,12 @@ function formatDate(iso: string): string {
       <h4>Attachments ({{ artifact.attachments.length }})</h4>
       <ul class="attachment-list">
         <li
-          v-for="att in artifact.attachments"
-          :key="att.sha256"
+          v-for="att in (artifact.attachments as any[])"
+          :key="(att as any).sha256"
         >
-          <span class="att-kind">{{ att.kind }}</span>
-          <span class="att-name">{{ att.filename }}</span>
-          <span class="att-size">{{ (att.size_bytes / 1024).toFixed(1) }} KB</span>
+          <span class="att-kind">{{ (att as any).kind }}</span>
+          <span class="att-name">{{ (att as any).filename }}</span>
+          <span class="att-size">{{ ((att as any).size_bytes / 1024).toFixed(1) }} KB</span>
         </li>
       </ul>
     </section>
@@ -199,21 +200,21 @@ function formatDate(iso: string): string {
 
     <!-- Notes / Errors -->
     <section
-      v-if="artifact.notes"
+      v-if="(artifact as any).notes"
       class="info-section"
     >
       <h4>Notes</h4>
-      <p>{{ artifact.notes }}</p>
+      <p>{{ (artifact as any).notes }}</p>
     </section>
 
     <section
-      v-if="artifact.errors?.length"
+      v-if="(artifact as any).errors?.length"
       class="info-section error-section"
     >
       <h4>Errors</h4>
       <ul>
         <li
-          v-for="(err, i) in artifact.errors"
+          v-for="(err, i) in (artifact as any).errors"
           :key="i"
         >
           {{ err }}

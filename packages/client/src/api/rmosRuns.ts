@@ -10,6 +10,7 @@
  */
 
 import { api } from '@/services/apiBase';
+import { getRun } from '@/sdk/rmos/runs';
 
 const BASE_URL = "/api/rmos/runs";
 
@@ -139,20 +140,6 @@ export async function fetchRuns(params: FetchRunsParams = {}): Promise<RunIndexI
 }
 
 /**
- * Get full details of a single run artifact.
- */
-export async function fetchRun(runId: string): Promise<RunArtifactDetail> {
-  const response = await fetch(`${BASE_URL}/${runId}`);
-  if (!response.ok) {
-    if (response.status === 404) {
-      throw new Error(`Run ${runId} not found`);
-    }
-    throw new Error(`Failed to fetch run: ${response.statusText}`);
-  }
-  return response.json();
-}
-
-/**
  * Compute diff between two run artifacts.
  * Calls the runs_v2 diff endpoint and transforms to UI-friendly format.
  */
@@ -236,7 +223,7 @@ export async function fetchRunDiff(runIdA: string, runIdB: string): Promise<RunD
  * Download run artifact as JSON file.
  */
 export async function downloadRun(runId: string): Promise<void> {
-  const run = await fetchRun(runId);
+  const run = await getRun(runId);
   const blob = new Blob([JSON.stringify(run, null, 2)], { type: "application/json" });
   const url = URL.createObjectURL(blob);
   const a = document.createElement("a");

@@ -11,7 +11,8 @@
  */
 
 import { defineStore } from "pinia";
-import { fetchRuns, fetchRun, type RunIndexItem } from "@/api/rmosRuns";
+import { fetchRuns, type RunIndexItem } from "@/api/rmosRuns";
+import { getRun, type RunArtifact } from "@/sdk/rmos/runs";
 
 export interface RmosRunsFilters {
   status: string;
@@ -24,7 +25,7 @@ export interface RmosRunsState {
   items: RunIndexItem[];
   nextCursor: string | null;
   loading: boolean;
-  selected: any | null;
+  selected: RunArtifact | null;
   lastSelectedRunId: string | null;
   filters: RmosRunsFilters;
 }
@@ -98,7 +99,7 @@ export const useRmosRunsStore = defineStore("rmosRuns", {
       if (this.selected?.run_id && this.selected.run_id !== runId) {
         this.lastSelectedRunId = this.selected.run_id;
       }
-      this.selected = await fetchRun(runId);
+      this.selected = await getRun(runId);
     },
 
     /**

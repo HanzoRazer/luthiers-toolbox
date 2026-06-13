@@ -9,12 +9,13 @@
  */
 
 import { defineStore } from "pinia";
-import { fetchRuns, fetchRun, type RunIndexItem, type RunArtifactDetail, type FetchRunsParams } from "@/api/rmosRuns";
+import { fetchRuns, type RunIndexItem, type FetchRunsParams } from "@/api/rmosRuns";
+import { getRun, type RunArtifact } from "@/sdk/rmos/runs";
 
 export interface RmosRunsState {
   items: RunIndexItem[];
   loading: boolean;
-  selected: RunArtifactDetail | null;
+  selected: RunArtifact | null;
   lastSelectedRunId: string | null;
   filters: {
     status: string;
@@ -89,7 +90,7 @@ export const useRmosRunsStore = defineStore("rmosRuns", {
 
       this.error = null;
       try {
-        this.selected = await fetchRun(runId);
+        this.selected = await getRun(runId);
       } catch (err: any) {
         this.error = err.message || "Failed to fetch run detail";
         console.error("[rmosRunsStore] select error:", err);
