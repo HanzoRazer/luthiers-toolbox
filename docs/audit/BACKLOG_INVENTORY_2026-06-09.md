@@ -36,7 +36,7 @@ evidence that single passes under-report here.
 | 4 | CI-RED-004 — legacy `/api/rmos/runs` frontend refs | SPRINTS.md:876 | **VERIFIED still open** | STALE-FIX/GRIND | MVP-ADJACENT | Grep: **22 refs / 9 files** in `packages/client/src` | Mechanical reference cleanup; fence-test gated |
 | 5 | CI-RED-015-E — `board_feet` + `fretboard` calc drift | TRIAGE:114 | OBSERVED (not re-run) | DECISION→maybe BUILD | **MVP-BLOCKING?** | triage: calc-kernel drift; api-verify not run this pass | **VERIFY FIRST** (run the two suites); if real, fix — calc errors are user-facing |
 | 6 | CI-RED-016 — endpoint consolidation (1181 routes) | TRIAGE:115 | OBSERVED | GRIND | POST-MVP | "documentation only until post-MVP cut" | Deferred by design |
-| 7 | CI-RED 001/002/005–014/015-A–D — CLOSED | SPRINTS.md:873-886 | OBSERVED (markers; **not independently re-run**) | ALREADY-DONE (claimed) | n/a | markers CLOSED w/ PR refs | Spot-check highest-risk before trusting (015-D, 002) |
+| 7 | CI-RED 001/002/005–014/015-A–D — CLOSED | SPRINTS.md:873-886 | **VERIFIED** (5 spot-checked 2026-06-12, all hold) | ALREADY-DONE (confirmed) | n/a | 015-D/002/008/006/014 re-checked vs main — artifacts present, no false-closure; 015-D "never executed" was a STALE inventory claim (dump exists) | Closures trustworthy; full re-verify unnecessary |
 | 8 | Consolidator A-task — `contour_reconstruction` R12-safe fallback | [[project_cam_8i...]]/audit | **VERIFIED decided** | BUILD | MVP-ADJACENT | free-tier ungated endpoint ships R2000 (Surface-D audit) | Version-adaptive R12-legal output; POLYLINE-vs-LINE call |
 | 9 | Consolidator B-sanctions (`dxf_consolidator` dead code; `layer_consolidator` internal-temp) | audit 2026-06-09 | **VERIFIED decided** | STALE-FIX (doc) | POST-MVP | dxf=no callers (2nd-pass empty); layer=internal IBG temp | Sanction docs + dxf deprecation flag |
 | 10 | 6 untracked audit/handoff docs never committed | `git status` | **VERIFIED** | STALE-FIX | POST-MVP | `??` PRE_GOVERNANCE_FORENSIC, PROVENANCE_LEDGER, SANDBOX_DRIFT, SCALE_VALIDATION_VERIFY, **TRIAGE_INVENTORY_2026-06-02** (prior triage!), CAM_INTENT_RUN_PERSISTENCE_HARDENING | Commit-or-delete decision per doc |
@@ -75,9 +75,15 @@ Ordered by MVP relevance:
 
 1. **CI-RED-015-E verification (item 5)** — run `board_feet` + `fretboard` api-verify suites; the result
    decides whether it's MVP-blocking. Read-only run → decision. *Do this first.*
-2. **CLOSED CI-RED spot-check (item 7)** — given the repo's false-completion history, independently
-   re-verify the 2 highest-risk CLOSED entries (**015-D** "pending one live app.routes dump — never
-   executed"; **002** legacy-usage gate) before trusting the closed-count. Read-only.
+2. **CLOSED CI-RED spot-check (item 7) — DONE 2026-06-12; closures HOLD.** Spot-checked 5 closed entries
+   against main (read-only): **015-D** — the earlier "pending one live app.routes dump — never executed"
+   claim was **STALE/FALSE**; the dump exists (`services/api/metrics/live_routes.json`, a real ~200KB route
+   dump), so 015-D is genuinely closed. **002** legacy-usage gate — credibly closed (gate was mis-scoped on
+   server-side noise; rescoped to `packages/client`+`sdk`, PASS 0/10). **008** (`ci/rmos/check_no_direct_runartifact.py`),
+   **006** (`app/ci/domain_boundaries.py`), **014** (`DXF_R12_TRANSLATOR_ID` registry constant) — all claimed
+   fix-artifacts present on main. **No false-closure found** → the closed-count is trustworthy; the full
+   ~14-entry re-verification is unnecessary. (Source of truth = `SPRINTS.md` ledger, not this inventory's
+   characterization, which carried the stale 015-D claim.)
 3. **Untracked-doc disposition (item 10)** — decide commit-or-delete for the 6 orphans; note the **prior
    triage (TRIAGE_INVENTORY_2026-06-02) is itself untracked**, so its CI-RED status claims aren't on
    main. Trivially reversible.
