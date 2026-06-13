@@ -2,7 +2,7 @@
 
 **Date:** 2026-05-17
 **Sprint:** IBG Corpus Ingestion & Morphology Validation 1B
-**Status:** ACTIVE — Updated during validation
+**Status:** ACTIVE â€” Updated during validation
 
 ---
 
@@ -72,7 +72,7 @@ These categories should be tracked during morphology validation:
 
 ## Remediation Priority
 
-1. **Critical** — Blocks further processing, must fix
-2. **Major** — Significant impact on morphology quality
-3. **Minor** — Affects accuracy but doesn't block
-4. **Observation** — Noted for future improvement
+1. **Critical** â€” Blocks further processing, must fix
+2. **Major** â€” Significant impact on morphology quality
+3. **Minor** â€” Affects accuracy but doesn't block
+4. **Observation** â€” Noted for future improvement
