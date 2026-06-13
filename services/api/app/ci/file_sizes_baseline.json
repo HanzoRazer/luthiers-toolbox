@@ -1,16 +1,96 @@
 {
   "threshold": 500,
-  "violation_count": 39,
+  "violation_count": 146,
   "violations": [
     {
-      "file": "tests/test_inlay_patterns.py",
-      "lines": 1454,
-      "over_by": 954
+      "file": "app/instrument_geometry/body/ibg/arc_reconstructor.py",
+      "lines": 1614,
+      "over_by": 1114
     },
     {
-      "file": "app/cam/rosette/prototypes/herringbone_embedded_quads.py",
-      "lines": 1241,
-      "over_by": 741
+      "file": "tests/test_inlay_patterns.py",
+      "lines": 1453,
+      "over_by": 953
+    },
+    {
+      "file": "tests/cam/test_federated_semantics.py",
+      "lines": 1370,
+      "over_by": 870
+    },
+    {
+      "file": "app/services/blueprint_clean.py",
+      "lines": 1293,
+      "over_by": 793
+    },
+    {
+      "file": "app/services/contour_scoring.py",
+      "lines": 1227,
+      "over_by": 727
+    },
+    {
+      "file": "app/cam/rosette/prototypes/herringbone_quads_data.py",
+      "lines": 1223,
+      "over_by": 723
+    },
+    {
+      "file": "tests/cam/test_federation_ci_enforcement.py",
+      "lines": 1214,
+      "over_by": 714
+    },
+    {
+      "file": "tests/cam/test_post_freeze_expansion_gate.py",
+      "lines": 1209,
+      "over_by": 709
+    },
+    {
+      "file": "tests/cam/test_governance_baseline_freeze.py",
+      "lines": 1153,
+      "over_by": 653
+    },
+    {
+      "file": "app/services/blueprint_orchestrator.py",
+      "lines": 1124,
+      "over_by": 624
+    },
+    {
+      "file": "app/calculators/plate_design/thickness_calculator.py",
+      "lines": 1096,
+      "over_by": 596
+    },
+    {
+      "file": "app/calculators/side_bending_calc.py",
+      "lines": 1073,
+      "over_by": 573
+    },
+    {
+      "file": "app/calculators/headstock_break_angle_calc.py",
+      "lines": 1054,
+      "over_by": 554
+    },
+    {
+      "file": "app/calculators/acoustic_bridge_calc.py",
+      "lines": 972,
+      "over_by": 472
+    },
+    {
+      "file": "tests/cam/test_geometry_authority_references.py",
+      "lines": 967,
+      "over_by": 467
+    },
+    {
+      "file": "app/instrument_geometry/body/ibg/body_contour_solver.py",
+      "lines": 952,
+      "over_by": 452
+    },
+    {
+      "file": "app/cam/translator_governance_continuity_graph.py",
+      "lines": 902,
+      "over_by": 402
+    },
+    {
+      "file": "app/calculators/kerfing_geometry_engine.py",
+      "lines": 893,
+      "over_by": 393
     },
     {
       "file": "tests/test_architecture_scan.py",
@@ -18,9 +98,59 @@
       "over_by": 391
     },
     {
+      "file": "tests/cam/test_review_ux_ci_enforcement.py",
+      "lines": 886,
+      "over_by": 386
+    },
+    {
+      "file": "tests/cam/test_translator_governance_review_matrix.py",
+      "lines": 857,
+      "over_by": 357
+    },
+    {
+      "file": "app/instrument_geometry/neck/setup_workflow.py",
+      "lines": 855,
+      "over_by": 355
+    },
+    {
       "file": "tests/test_saw_lab_endpoint_smoke.py",
       "lines": 852,
       "over_by": 352
+    },
+    {
+      "file": "tests/cam/test_translator_governance_review_ledger.py",
+      "lines": 851,
+      "over_by": 351
+    },
+    {
+      "file": "tests/mrp_spine_verification/test_morphology_spine_e2e.py",
+      "lines": 843,
+      "over_by": 343
+    },
+    {
+      "file": "app/calculators/back_brace_calc.py",
+      "lines": 836,
+      "over_by": 336
+    },
+    {
+      "file": "app/calculators/binding_geometry.py",
+      "lines": 829,
+      "over_by": 329
+    },
+    {
+      "file": "app/instrument_geometry/neck/fretboard_ecosphere.py",
+      "lines": 821,
+      "over_by": 321
+    },
+    {
+      "file": "tests/test_instrument_geometry_router_smoke.py",
+      "lines": 810,
+      "over_by": 310
+    },
+    {
+      "file": "tests/test_body_export_bridge.py",
+      "lines": 803,
+      "over_by": 303
     },
     {
       "file": "tests/test_retract_endpoint_smoke.py",
@@ -28,9 +158,79 @@
       "over_by": 299
     },
     {
-      "file": "tests/test_remaining_routers_endpoint_smoke.py",
-      "lines": 749,
-      "over_by": 249
+      "file": "tests/cam/test_review_queue_routing.py",
+      "lines": 795,
+      "over_by": 295
+    },
+    {
+      "file": "tests/cam/test_translator_governance_continuity_graph.py",
+      "lines": 773,
+      "over_by": 273
+    },
+    {
+      "file": "app/instrument_geometry/body/ibg/morphology_harvest/artifact_body_evidence_adapter.py",
+      "lines": 768,
+      "over_by": 268
+    },
+    {
+      "file": "app/cam/translator_governance_review_matrix.py",
+      "lines": 761,
+      "over_by": 261
+    },
+    {
+      "file": "tests/conftest.py",
+      "lines": 759,
+      "over_by": 259
+    },
+    {
+      "file": "app/cam/translator_governance_review_ledger.py",
+      "lines": 754,
+      "over_by": 254
+    },
+    {
+      "file": "app/calculators/saddle_compensation_calc.py",
+      "lines": 748,
+      "over_by": 248
+    },
+    {
+      "file": "app/calculators/neck_block_physics.py",
+      "lines": 741,
+      "over_by": 241
+    },
+    {
+      "file": "app/schemas/instrument_project.py",
+      "lines": 740,
+      "over_by": 240
+    },
+    {
+      "file": "app/generators/acoustic_body_generator.py",
+      "lines": 732,
+      "over_by": 232
+    },
+    {
+      "file": "app/calculators/plate_design/inverse_solver.py",
+      "lines": 731,
+      "over_by": 231
+    },
+    {
+      "file": "app/calculators/d0_calibrator.py",
+      "lines": 727,
+      "over_by": 227
+    },
+    {
+      "file": "app/routers/headstock/dxf_export.py",
+      "lines": 726,
+      "over_by": 226
+    },
+    {
+      "file": "app/services/body_geometry_repair.py",
+      "lines": 725,
+      "over_by": 225
+    },
+    {
+      "file": "tests/cam/test_ontology_reconciliation.py",
+      "lines": 720,
+      "over_by": 220
     },
     {
       "file": "tests/test_business_endpoint_smoke.py",
@@ -38,9 +238,49 @@
       "over_by": 217
     },
     {
-      "file": "app/router_registry/manifest.py",
-      "lines": 698,
-      "over_by": 198
+      "file": "app/services/blueprint_extract.py",
+      "lines": 709,
+      "over_by": 209
+    },
+    {
+      "file": "app/calculators/cavity_position_validator.py",
+      "lines": 705,
+      "over_by": 205
+    },
+    {
+      "file": "app/util/gcode/simulator.py",
+      "lines": 705,
+      "over_by": 205
+    },
+    {
+      "file": "tests/test_carving_pipeline.py",
+      "lines": 705,
+      "over_by": 205
+    },
+    {
+      "file": "app/cam/translator_execution_quarantine.py",
+      "lines": 704,
+      "over_by": 204
+    },
+    {
+      "file": "app/calculators/fret_wire_physics.py",
+      "lines": 695,
+      "over_by": 195
+    },
+    {
+      "file": "tests/test_coordinate_system.py",
+      "lines": 694,
+      "over_by": 194
+    },
+    {
+      "file": "tests/cam/test_translator_governance_dossier.py",
+      "lines": 694,
+      "over_by": 194
+    },
+    {
+      "file": "app/calculators/plate_design/rayleigh_ritz.py",
+      "lines": 692,
+      "over_by": 192
     },
     {
       "file": "tests/test_rmos_endpoint_smoke.py",
@@ -48,24 +288,59 @@
       "over_by": 188
     },
     {
-      "file": "app/cam/rosette/modern_pattern_generator.py",
-      "lines": 682,
-      "over_by": 182
+      "file": "app/calculators/saddle_compensation.py",
+      "lines": 685,
+      "over_by": 185
     },
     {
-      "file": "app/cam/rosette/prototypes/__archived__/generative_explorer_viewer.py",
-      "lines": 674,
-      "over_by": 174
+      "file": "app/cam/ontology_reconciliation_engine.py",
+      "lines": 680,
+      "over_by": 180
     },
     {
-      "file": "app/generators/neck_headstock_config.py",
-      "lines": 661,
-      "over_by": 161
+      "file": "app/routers/woodworking_router.py",
+      "lines": 675,
+      "over_by": 175
     },
     {
-      "file": "tests/conftest.py",
-      "lines": 658,
-      "over_by": 158
+      "file": "app/cam/translator_governance_dossier.py",
+      "lines": 671,
+      "over_by": 171
+    },
+    {
+      "file": "app/calculators/fret_slots_cam.py",
+      "lines": 670,
+      "over_by": 170
+    },
+    {
+      "file": "app/cam/nut_slot_cam.py",
+      "lines": 669,
+      "over_by": 169
+    },
+    {
+      "file": "tests/cam/test_nut_slot_cam.py",
+      "lines": 668,
+      "over_by": 168
+    },
+    {
+      "file": "app/services/curvature_profiler.py",
+      "lines": 665,
+      "over_by": 165
+    },
+    {
+      "file": "app/cam/translator_readiness_matrix.py",
+      "lines": 662,
+      "over_by": 162
+    },
+    {
+      "file": "app/cam/canonical_ontology_registry.py",
+      "lines": 659,
+      "over_by": 159
+    },
+    {
+      "file": "tests/cam/test_runtime_provenance_replay.py",
+      "lines": 656,
+      "over_by": 156
     },
     {
       "file": "tests/e2e_cam_system.py",
@@ -73,9 +348,34 @@
       "over_by": 155
     },
     {
-      "file": "app/core/job_queue/queue.py",
+      "file": "scripts/validate_1b_representatives.py",
+      "lines": 654,
+      "over_by": 154
+    },
+    {
+      "file": "app/routers/cam/cam_workspace_router.py",
+      "lines": 636,
+      "over_by": 136
+    },
+    {
+      "file": "app/cam/export_lifecycle_orchestrator.py",
+      "lines": 635,
+      "over_by": 135
+    },
+    {
+      "file": "app/generators/stratocaster_body_generator.py",
+      "lines": 632,
+      "over_by": 132
+    },
+    {
+      "file": "tests/cam/test_runtime_capability_integration.py",
       "lines": 631,
       "over_by": 131
+    },
+    {
+      "file": "app/instrument_geometry/coordinate_system.py",
+      "lines": 629,
+      "over_by": 129
     },
     {
       "file": "tests/test_dxf_preflight_endpoint_smoke.py",
@@ -83,9 +383,44 @@
       "over_by": 129
     },
     {
+      "file": "app/instrument_geometry/body/smart_guitar_dxf.py",
+      "lines": 628,
+      "over_by": 128
+    },
+    {
+      "file": "tests/cam/test_translation_artifact.py",
+      "lines": 626,
+      "over_by": 126
+    },
+    {
       "file": "app/art_studio/services/generators/inlay_patterns.py",
       "lines": 625,
       "over_by": 125
+    },
+    {
+      "file": "app/calculators/plate_design/alpha_beta.py",
+      "lines": 623,
+      "over_by": 123
+    },
+    {
+      "file": "app/cam/dxf_advanced_validation.py",
+      "lines": 620,
+      "over_by": 120
+    },
+    {
+      "file": "app/instrument_geometry/bridge/electric_bridges.py",
+      "lines": 619,
+      "over_by": 119
+    },
+    {
+      "file": "tests/cam/test_translation_artifact_provenance.py",
+      "lines": 617,
+      "over_by": 117
+    },
+    {
+      "file": "app/cam/unified_dxf_cleaner.py",
+      "lines": 613,
+      "over_by": 113
     },
     {
       "file": "tests/test_workflow_sessions_endpoint_smoke.py",
@@ -94,8 +429,33 @@
     },
     {
       "file": "app/generators/bezier_body.py",
-      "lines": 595,
-      "over_by": 95
+      "lines": 602,
+      "over_by": 102
+    },
+    {
+      "file": "tests/cam/test_runtime_service_governance.py",
+      "lines": 594,
+      "over_by": 94
+    },
+    {
+      "file": "tests/cam/test_runtime_spine_contracts.py",
+      "lines": 592,
+      "over_by": 92
+    },
+    {
+      "file": "app/calculators/plate_design/calibration.py",
+      "lines": 590,
+      "over_by": 90
+    },
+    {
+      "file": "app/instrument_geometry/bridge/floyd_rose_tremolo.py",
+      "lines": 589,
+      "over_by": 89
+    },
+    {
+      "file": "app/routers/binding_design_router.py",
+      "lines": 589,
+      "over_by": 89
     },
     {
       "file": "tests/test_rosette_designer.py",
@@ -108,12 +468,37 @@
       "over_by": 87
     },
     {
-      "file": "app/cam/rosette/presets.py",
+      "file": "tests/cam/test_certified_runtime_service_integration.py",
+      "lines": 584,
+      "over_by": 84
+    },
+    {
+      "file": "app/calculators/alternative_temperaments.py",
+      "lines": 581,
+      "over_by": 81
+    },
+    {
+      "file": "app/cam/rosette/preset_definitions.py",
+      "lines": 580,
+      "over_by": 80
+    },
+    {
+      "file": "tests/cam/test_runtime_spine_full_verification.py",
+      "lines": 579,
+      "over_by": 79
+    },
+    {
+      "file": "tests/test_preflight_gate.py",
       "lines": 578,
       "over_by": 78
     },
     {
-      "file": "app/generators/stratocaster_body_generator.py",
+      "file": "app/instrument_geometry/body/ibg/morphology_harvest/e2e_spine_runner.py",
+      "lines": 573,
+      "over_by": 73
+    },
+    {
+      "file": "tests/test_saddle_compensation.py",
       "lines": 572,
       "over_by": 72
     },
@@ -123,9 +508,24 @@
       "over_by": 68
     },
     {
+      "file": "tests/cam/test_fret_slots_from_ecosphere.py",
+      "lines": 564,
+      "over_by": 64
+    },
+    {
       "file": "app/calculators/unified_canvas.py",
       "lines": 561,
       "over_by": 61
+    },
+    {
+      "file": "tests/test_body_geometry_repair.py",
+      "lines": 561,
+      "over_by": 61
+    },
+    {
+      "file": "app/calculators/soundhole_calc.py",
+      "lines": 560,
+      "over_by": 60
     },
     {
       "file": "tests/rmos/test_acoustics_hardening.py",
@@ -133,14 +533,44 @@
       "over_by": 59
     },
     {
+      "file": "app/cam/rosette/tile_segmentation.py",
+      "lines": 558,
+      "over_by": 58
+    },
+    {
+      "file": "app/instrument_geometry/body/ibg/morphology_harvest/pdf_inventory.py",
+      "lines": 558,
+      "over_by": 58
+    },
+    {
+      "file": "tests/cam/test_translation_artifact_authorization.py",
+      "lines": 557,
+      "over_by": 57
+    },
+    {
       "file": "app/cam/rosette/prototypes/herringbone_parametric.py",
       "lines": 555,
       "over_by": 55
     },
     {
-      "file": "app/cam/rosette/prototypes/__archived__/diamond_chevron_viewer.py",
+      "file": "app/calculators/nut_compensation_calc.py",
+      "lines": 552,
+      "over_by": 52
+    },
+    {
+      "file": "app/calculators/nut_compensation_physics.py",
+      "lines": 551,
+      "over_by": 51
+    },
+    {
+      "file": "tests/mrp_spine_verification/standalone_spine_verify.py",
       "lines": 549,
       "over_by": 49
+    },
+    {
+      "file": "app/routers/cam/governance_freeze_router.py",
+      "lines": 548,
+      "over_by": 48
     },
     {
       "file": "tests/test_art_studio_api_endpoint_smoke.py",
@@ -148,9 +578,79 @@
       "over_by": 47
     },
     {
+      "file": "app/art_studio/bracing_router.py",
+      "lines": 546,
+      "over_by": 46
+    },
+    {
+      "file": "app/instrument_geometry/neck/fret_math.py",
+      "lines": 546,
+      "over_by": 46
+    },
+    {
+      "file": "tests/cam/test_runtime_spine_integration.py",
+      "lines": 546,
+      "over_by": 46
+    },
+    {
       "file": "app/cam/profiling/profile_toolpath.py",
-      "lines": 542,
-      "over_by": 42
+      "lines": 544,
+      "over_by": 44
+    },
+    {
+      "file": "app/calculators/electronics_layout_calc.py",
+      "lines": 543,
+      "over_by": 43
+    },
+    {
+      "file": "app/routers/blueprint_cam/contour_reconstruction.py",
+      "lines": 543,
+      "over_by": 43
+    },
+    {
+      "file": "tests/cam/test_translator_capability_registry.py",
+      "lines": 543,
+      "over_by": 43
+    },
+    {
+      "file": "app/cam/post_processor.py",
+      "lines": 539,
+      "over_by": 39
+    },
+    {
+      "file": "app/export/cad_semantics.py",
+      "lines": 537,
+      "over_by": 37
+    },
+    {
+      "file": "app/instrument_geometry/body/ibg/workflow/ibg_workflow_pipeline.py",
+      "lines": 537,
+      "over_by": 37
+    },
+    {
+      "file": "app/cam/archtop/archtop_modal_analysis.py",
+      "lines": 536,
+      "over_by": 36
+    },
+    {
+      "file": "app/tests/calculators/test_binding_geometry.py",
+      "lines": 536,
+      "over_by": 36
+    },
+    {
+      "file": "tests/cam/test_runtime_admission.py",
+      "lines": 536,
+      "over_by": 36
+    },
+    {
+      "file": "app/calculators/plate_design/coupled_2osc.py",
+      "lines": 535,
+      "over_by": 35
+    },
+    {
+      "file": "app/cam/cam_lifecycle_policy_engine.py",
+      "lines": 533,
+      "over_by": 33
     },
     {
       "file": "tests/test_contour_reconstruction.py",
@@ -158,19 +658,34 @@
       "over_by": 32
     },
     {
-      "file": "app/routers/blueprint_cam/contour_reconstruction.py",
-      "lines": 526,
-      "over_by": 26
+      "file": "app/governance/confidence_envelope.py",
+      "lines": 524,
+      "over_by": 24
     },
     {
-      "file": "app/cam/rosette/tile_segmentation.py",
-      "lines": 525,
-      "over_by": 25
+      "file": "app/routers/blueprint_cam/dxf_preprocessor.py",
+      "lines": 523,
+      "over_by": 23
     },
     {
       "file": "tests/test_adaptive_router.py",
       "lines": 523,
       "over_by": 23
+    },
+    {
+      "file": "app/cam/flying_v/depth_validator.py",
+      "lines": 522,
+      "over_by": 22
+    },
+    {
+      "file": "tests/test_ai_routers_smoke.py",
+      "lines": 522,
+      "over_by": 22
+    },
+    {
+      "file": "tests/test_governance_constitutional_runtime.py",
+      "lines": 522,
+      "over_by": 22
     },
     {
       "file": "app/routers/cam_post_v155_router.py",
@@ -183,19 +698,39 @@
       "over_by": 16
     },
     {
-      "file": "app/cam/rosette/prototypes/__archived__/rosette_studio_viewer.py",
+      "file": "tests/test_store_filter.py",
+      "lines": 516,
+      "over_by": 16
+    },
+    {
+      "file": "app/cam/carving/surface_carving.py",
+      "lines": 515,
+      "over_by": 15
+    },
+    {
+      "file": "app/instrument_geometry/body/ibg/instrument_body_generator.py",
       "lines": 512,
       "over_by": 12
     },
     {
-      "file": "app/routers/blueprint_cam/dxf_preprocessor.py",
-      "lines": 509,
-      "over_by": 9
+      "file": "app/routers/instrument/fretwork_router.py",
+      "lines": 508,
+      "over_by": 8
+    },
+    {
+      "file": "app/routers/instrument_geometry/soundhole_router.py",
+      "lines": 506,
+      "over_by": 6
     },
     {
       "file": "app/tests/test_e2e_workflow_integration.py",
       "lines": 504,
       "over_by": 4
+    },
+    {
+      "file": "app/routers/blueprint/calibration_router.py",
+      "lines": 502,
+      "over_by": 2
     }
   ]
 }
