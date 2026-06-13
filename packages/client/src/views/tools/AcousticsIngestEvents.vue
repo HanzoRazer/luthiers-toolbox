@@ -208,6 +208,9 @@ import type {
 import styles from "./AcousticsIngestEvents.module.css";
 import EventDetailModal from "./acoustics_ingest/EventDetailModal.vue";
 
+// Hard gate: backend lane unmounted, prevent any programmatic reactivation
+const AUDIT_LOG_ENABLED = false;
+
 // State
 const events = ref<IngestEventSummary[]>([]);
 const loading = ref(false);
@@ -226,6 +229,7 @@ const outcomes = [
 
 // Load events
 async function loadEvents() {
+  if (!AUDIT_LOG_ENABLED) return;
   loading.value = true;
   error.value = null;
   try {
@@ -244,6 +248,7 @@ async function loadEvents() {
 
 // Load more
 async function loadMore() {
+  if (!AUDIT_LOG_ENABLED) return;
   if (!nextCursor.value) return;
   loadingMore.value = true;
   try {
@@ -263,6 +268,7 @@ async function loadMore() {
 
 // Show detail
 async function showDetail(evt: IngestEventSummary) {
+  if (!AUDIT_LOG_ENABLED) return;
   try {
     detailEvent.value = await getIngestEvent(evt.event_id);
   } catch (e) {
