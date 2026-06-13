@@ -2,51 +2,50 @@
   "schema": "cbsp21_patch_input_v1",
   "schema_version": "cbsp21_patch_input_v1",
   "coverage_min": 0.95,
-  "patch_id": "CAM_CONTOUR_PROFILING_ROBUSTNESS",
-  "title": "Wire ContourCuttingView to profiling endpoint with full robustness (20 fixes)",
-  "intent": "Replace setTimeout fake with real /api/cam/profiling/intent-gcode call, adding comprehensive client-side validation, response validation, request normalization, abort support, network error handling, accessible controls, and honest gates for unsupported features.",
-  "change_type": "feature",
-  "behavior_change": "frontend",
+  "patch_id": "DOCS_UTF8_PAGES_BUILD_FIX",
+  "title": "Repair invalid UTF-8 em-dashes breaking the Pages build gate",
+  "intent": "Replace 5 Windows-1252 0x97 bytes (invalid in UTF-8) with proper em-dash characters, and rename mislabeled binary .docx to correct extension, to unblock the GitHub Pages kramdown build.",
+  "change_type": "fix",
+  "behavior_change": "none",
   "risk_level": "low",
   "scope": {
     "paths_in_scope": [
       ".cbsp21/",
-      "packages/client/src/api/",
-      "packages/client/src/views/cam/"
+      "docs/"
     ],
     "files_expected_to_change": [
-      "packages/client/src/api/profiling.ts",
-      "packages/client/src/views/cam/ContourCuttingView.vue",
+      "docs/governance/MORPHOLOGY_FAILURE_TAXONOMY.md",
+      "docs/soundhole_calculator_user_guide.md",
+      "docs/soundhole_calculator_user_guide.docx",
       ".cbsp21/patch_input.json"
     ]
   },
   "diff_articulation": {
-    "what_changed": "profiling.ts: AbortController support, network error handling, response type guard, Object.setPrototypeOf for Error, any->unknown. ContourCuttingView.vue: validateRequest() preflight with polygon sanity checks, normalized buildRequest(), computed canGenerate, defensive result rendering, exposed retract_z/climb_milling, fixed blocked.issues type coercion, filename sanitization, ARIA attributes, inputmode for mobile, mode-note UX clarity.",
-    "why_not_redundant": "Original PR #107 (reverted) lacked client-side validation, trusted backend responses blindly, leaked stale dependent values, had instanceof fragility, and missing accessibility. This PR addresses all 20 identified issues."
+    "what_changed": "Replaced 5 invalid 0x97 bytes with UTF-8 em-dash U+2014 in MORPHOLOGY_FAILURE_TAXONOMY.md. Renamed soundhole_calculator_user_guide.md to .docx (was a mislabeled Word document causing non-fatal Pages warnings).",
+    "why_not_redundant": "The Pages build was failing fatally with 'invalid characters for UTF-8'. The binary file rename prevents future confusion and build warnings."
   },
   "verification": {
     "commands_run": [
-      "npm run typecheck",
-      "npm run lint",
-      "python scripts/ci/check_cbsp21_gate.py --manifest .cbsp21/patch_input.json --changed-files packages/client/src/api/profiling.ts packages/client/src/views/cam/ContourCuttingView.vue"
+      "python -c \"open('docs/governance/MORPHOLOGY_FAILURE_TAXONOMY.md', encoding='utf-8').read()\"",
+      "file docs/governance/MORPHOLOGY_FAILURE_TAXONOMY.md"
     ]
   },
   "files": [
     {
-      "path": "packages/client/src/api/profiling.ts",
-      "intent": "Typed API client with AbortController, network error handling, response validation type guard, Object.setPrototypeOf for reliable instanceof, any->unknown typing.",
-      "scan_targets": ["packages/client/src/api/profiling.ts"],
+      "path": "docs/governance/MORPHOLOGY_FAILURE_TAXONOMY.md",
+      "intent": "Replace invalid Windows-1252 em-dash bytes with UTF-8 em-dash to fix kramdown parse failure.",
+      "scan_targets": ["docs/governance/MORPHOLOGY_FAILURE_TAXONOMY.md"],
       "risk": "low",
-      "behavior_change": "none - new file with robustness improvements",
-      "verification": ["Verify AbortError handled, network errors surface clearly, invalid response shape throws"]
+      "behavior_change": "none - encoding fix only, no content change",
+      "verification": ["File decodes as valid UTF-8"]
     },
     {
-      "path": "packages/client/src/views/cam/ContourCuttingView.vue",
-      "intent": "Wire to real endpoint with validateRequest() preflight (polygon area, duplicate points, tab_height < cut_depth, finite positive values), normalized buildRequest() (zero dependent fields when feature off), computed canGenerate, defensive resultSummary, exposed retract_z/climb_milling, fixed blocked.issues coercion, sanitized filename, ARIA roles/labels, inputmode for mobile, UX mode-note.",
-      "scan_targets": ["packages/client/src/views/cam/ContourCuttingView.vue"],
+      "path": "docs/soundhole_calculator_user_guide.docx",
+      "intent": "Rename from .md to .docx - file is a Word document, not markdown.",
+      "scan_targets": ["docs/soundhole_calculator_user_guide.docx"],
       "risk": "low",
-      "behavior_change": "frontend - view now validates before calling backend, handles all error states",
-      "verification": ["Live test: invalid inputs show inline errors, valid inputs generate toolpath, 409 shows issues, download works"]
+      "behavior_change": "none - file rename only",
+      "verification": ["File extension matches content type"]
     }
   ]
 }
