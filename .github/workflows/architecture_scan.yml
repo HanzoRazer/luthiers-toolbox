@@ -1,6 +1,20 @@
 name: Architecture Scan (Non-Blocking)
 
 on:
+  # Run on push to main so the blocking "Fence Checks" verdict is recorded on
+  # the merge commit itself — not just on PRs. (A red fence reached main once
+  # because this workflow was pull_request-only; the push trigger closes that
+  # gap. Scoped to main: feature-branch pushes are already covered by the
+  # pull_request trigger below, so this avoids redundant double-runs.)
+  push:
+    branches: [main]
+    paths:
+      - "services/api/**"
+      - "packages/client/**"
+      - "contracts/**"
+      - "docker/**"
+      - "scripts/**"
+      - ".github/workflows/**"
   pull_request:
     paths:
       # Backend API
