@@ -10,12 +10,13 @@
  */
 import { computed } from "vue";
 import { useRouter } from "vue-router";
-import { downloadRun, type RunArtifactDetail } from "@/api/rmosRuns";
+import { downloadRun } from "@/api/rmosRuns";
+import { type RunArtifact } from "@/sdk/rmos/runs";
 import { useRmosRunsStore } from "@/stores/rmosRunsStore";
 import AdvisoryBlobBrowser from "@/components/rmos/AdvisoryBlobBrowser.vue";
 
 const props = defineProps<{
-  artifact: RunArtifactDetail;
+  artifact: RunArtifact;
 }>();
 
 const router = useRouter();
@@ -116,17 +117,17 @@ function formatDate(iso: string): string {
     <section class="info-section">
       <h4>Hashes</h4>
       <div class="hash-list">
-        <div v-if="artifact.request_hash">
-          <strong>Request:</strong>
-          <code>{{ artifact.request_hash.slice(0, 16) }}…</code>
+        <div v-if="artifact.hashes?.feasibility_sha256">
+          <strong>Feasibility:</strong>
+          <code>{{ artifact.hashes.feasibility_sha256.slice(0, 16) }}…</code>
         </div>
-        <div v-if="artifact.toolpaths_hash">
+        <div v-if="artifact.hashes?.toolpaths_sha256">
           <strong>Toolpaths:</strong>
-          <code>{{ artifact.toolpaths_hash.slice(0, 16) }}…</code>
+          <code>{{ artifact.hashes.toolpaths_sha256.slice(0, 16) }}…</code>
         </div>
-        <div v-if="artifact.gcode_hash">
+        <div v-if="artifact.hashes?.gcode_sha256">
           <strong>G-code:</strong>
-          <code>{{ artifact.gcode_hash.slice(0, 16) }}…</code>
+          <code>{{ artifact.hashes.gcode_sha256.slice(0, 16) }}…</code>
         </div>
         <div v-if="artifact.geometry_hash">
           <strong>Geometry:</strong>

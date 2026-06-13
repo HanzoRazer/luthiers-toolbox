@@ -71,8 +71,8 @@ FRONTEND_SDK_PATHS: Tuple[str, ...] = (
 
 FRONTEND_SDK_FORBIDDEN_PATTERNS: List[Tuple[str, str]] = [
     # (regex, reason)
-    (r"/api/rmos/runs\b", "Frontend must use runs_v2 endpoints, not legacy runs"),
-    (r"fetchRun\(", "Use fetchRunV2() instead of deprecated fetchRun()"),
+    (r"/api/rmos/runs\b", "Frontend must use runs_v2 SDK (getRun from @/sdk/rmos/runs), not legacy /api/rmos/runs"),
+    (r"fetchRun\(", "Use getRun() from @/sdk/rmos/runs instead of deprecated fetchRun()"),
 ]
 
 

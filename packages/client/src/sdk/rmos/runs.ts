@@ -20,16 +20,65 @@ export type RunArtifactLite = Timestamped & IndexedEntity & {
   mode?: string;
 };
 
-/** Full run artifact with all fields */
+/**
+ * Inline attachment summary as embedded in the GET /rmos/runs/{id} payload.
+ * This is the lighter inline shape (sha256/kind/mime/filename/size_bytes)
+ * returned by `read_run` — NOT the richer `RunAttachment` returned by the
+ * dedicated /attachments endpoints.
+ */
+export type RunArtifactAttachment = {
+  sha256: string;
+  kind: string;
+  mime?: string | null;
+  filename: string;
+  size_bytes: number;
+  created_at_utc?: string;
+};
+
+/**
+ * Full run artifact as returned by GET /rmos/runs/{id} (`read_run`).
+ *
+ * The endpoint returns a HYBRID shape: content hashes, the decision, and
+ * outputs are nested objects; everything else (context, geometry, drift,
+ * gating, versions, notes) is flat. Optional fields mirror the backend
+ * serializer in services/api/app/rmos/runs_v2/api_runs.py::read_run.
+ */
 export type RunArtifact = RunArtifactLite & {
+  // Context (flat)
+  tool_id?: string | null;
+  material_id?: string | null;
+  machine_id?: string | null;
+  workflow_mode?: string | null;
+  toolchain_id?: string | null;
+  post_processor_id?: string | null;
+  // Geometry (flat)
+  geometry_ref?: string | null;
+  geometry_hash?: string | null;
+  // Summaries
   request_summary?: Record<string, unknown>;
-  feasibility?: Record<string, unknown>;
+  feasibility?: Record<string, unknown> | null;
+  // Nested v2 models
   decision?: RunDecision;
   hashes?: RunHashes;
   outputs?: RunOutputs;
   provenance?: RunProvenance;
-  meta?: Record<string, unknown>;
-  attachments?: unknown[];
+  meta?: Record<string, unknown> | null;
+  // Drift / lineage (flat)
+  parent_run_id?: string | null;
+  drift_detected?: boolean;
+  drift_summary?: string | null;
+  // Gating (flat)
+  gate_policy_id?: string | null;
+  gate_decision?: string | null;
+  // Versions / fingerprint (flat)
+  engine_version?: string | null;
+  toolchain_version?: string | null;
+  config_fingerprint?: string | null;
+  // Notes / errors (flat)
+  notes?: string | null;
+  errors?: string[] | null;
+  // Attachments (inline summaries)
+  attachments?: RunArtifactAttachment[];
 };
 
 export type RunDecision = {

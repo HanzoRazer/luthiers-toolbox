@@ -2,50 +2,88 @@
   "schema": "cbsp21_patch_input_v1",
   "schema_version": "cbsp21_patch_input_v1",
   "coverage_min": 0.95,
-  "patch_id": "DOCS_UTF8_PAGES_BUILD_FIX",
-  "title": "Repair invalid UTF-8 em-dashes breaking the Pages build gate",
-  "intent": "Replace 5 Windows-1252 0x97 bytes (invalid in UTF-8) with proper em-dash characters, and rename mislabeled binary .docx to correct extension, to unblock the GitHub Pages kramdown build.",
+  "patch_id": "CI_RED_004_RUNS_V2_MIGRATION",
+  "title": "Migrate fetchRun consumers to getRun SDK + fix hash-defect in RunArtifactDetail",
+  "intent": "Clear CI-RED-004 by migrating 3 fetchRun() consumers to getRun() from SDK, fixing a latent 3-field hash-display defect in RunArtifactDetail.vue, deleting deprecated fetchRun, and correcting the fence's fictional fetchRunV2 message.",
   "change_type": "fix",
-  "behavior_change": "none",
-  "risk_level": "low",
+  "behavior_change": "frontend",
+  "risk_level": "medium",
   "scope": {
     "paths_in_scope": [
       ".cbsp21/",
-      "docs/"
+      "packages/client/src/api/",
+      "packages/client/src/components/rmos/",
+      "packages/client/src/stores/",
+      "services/api/app/ci/"
     ],
     "files_expected_to_change": [
-      "docs/governance/MORPHOLOGY_FAILURE_TAXONOMY.md",
-      "docs/soundhole_calculator_user_guide.md",
-      "docs/soundhole_calculator_user_guide.docx",
+      "packages/client/src/api/rmosRuns.ts",
+      "packages/client/src/components/rmos/RunArtifactDetail.vue",
+      "packages/client/src/components/rmos/RunDiffViewer.vue",
+      "packages/client/src/stores/rmosRunsStore.ts",
+      "packages/client/src/stores/useRmosRunsStore.ts",
+      "services/api/app/ci/check_boundary_patterns.py",
       ".cbsp21/patch_input.json"
     ]
   },
   "diff_articulation": {
-    "what_changed": "Replaced 5 invalid 0x97 bytes with UTF-8 em-dash U+2014 in MORPHOLOGY_FAILURE_TAXONOMY.md. Renamed soundhole_calculator_user_guide.md to .docx (was a mislabeled Word document causing non-fatal Pages warnings).",
-    "why_not_redundant": "The Pages build was failing fatally with 'invalid characters for UTF-8'. The binary file rename prevents future confusion and build warnings."
+    "what_changed": "Stores migrated from fetchRun to getRun (SDK). RunDiffViewer migrated to getRun. RunArtifactDetail.vue prop type changed to RunArtifact, hash reads fixed to use nested hashes.{gcode_sha256,toolpaths_sha256,feasibility_sha256}. Flat fields not in SDK type get (as any) casts. fetchRun deleted from legacy API. Fence message corrected from fictional fetchRunV2 to actual getRun.",
+    "why_not_redundant": "Backend returns hybrid shape (flat for most fields, nested for hashes). Legacy RunArtifactDetail type was partially wrong - gcode_hash/toolpaths_hash/request_hash were flat but backend returns them nested. This caused silent undefined reads in the detail view. Migration to SDK's nested RunArtifact + fixing the reads fixes the latent defect."
   },
   "verification": {
     "commands_run": [
-      "python -c \"open('docs/governance/MORPHOLOGY_FAILURE_TAXONOMY.md', encoding='utf-8').read()\"",
-      "file docs/governance/MORPHOLOGY_FAILURE_TAXONOMY.md"
+      "npm run type-check (pre-existing errors unrelated to this change)",
+      "git diff --stat"
     ]
   },
   "files": [
     {
-      "path": "docs/governance/MORPHOLOGY_FAILURE_TAXONOMY.md",
-      "intent": "Replace invalid Windows-1252 em-dash bytes with UTF-8 em-dash to fix kramdown parse failure.",
-      "scan_targets": ["docs/governance/MORPHOLOGY_FAILURE_TAXONOMY.md"],
+      "path": "packages/client/src/api/rmosRuns.ts",
+      "intent": "Delete fetchRun, add getRun import from SDK, update downloadRun to use getRun",
+      "scan_targets": ["packages/client/src/api/rmosRuns.ts"],
       "risk": "low",
-      "behavior_change": "none - encoding fix only, no content change",
-      "verification": ["File decodes as valid UTF-8"]
+      "behavior_change": "none - internal refactor",
+      "verification": ["No more fetchRun export"]
     },
     {
-      "path": "docs/soundhole_calculator_user_guide.docx",
-      "intent": "Rename from .md to .docx - file is a Word document, not markdown.",
-      "scan_targets": ["docs/soundhole_calculator_user_guide.docx"],
+      "path": "packages/client/src/stores/rmosRunsStore.ts",
+      "intent": "Import getRun from SDK, change selected type to RunArtifact, use getRun in select()",
+      "scan_targets": ["packages/client/src/stores/rmosRunsStore.ts"],
       "risk": "low",
-      "behavior_change": "none - file rename only",
-      "verification": ["File extension matches content type"]
+      "behavior_change": "none - same endpoint, typed correctly now",
+      "verification": ["Store compiles, selected uses RunArtifact type"]
+    },
+    {
+      "path": "packages/client/src/stores/useRmosRunsStore.ts",
+      "intent": "Import getRun from SDK, change selected type to RunArtifact, use getRun in select()",
+      "scan_targets": ["packages/client/src/stores/useRmosRunsStore.ts"],
+      "risk": "low",
+      "behavior_change": "none - same endpoint, typed correctly now",
+      "verification": ["Store compiles, selected uses RunArtifact type"]
+    },
+    {
+      "path": "packages/client/src/components/rmos/RunDiffViewer.vue",
+      "intent": "Import getRun from SDK, change runA/runB refs to RunArtifact, use getRun in load()",
+      "scan_targets": ["packages/client/src/components/rmos/RunDiffViewer.vue"],
+      "risk": "low",
+      "behavior_change": "none - same endpoint",
+      "verification": ["Component compiles"]
+    },
+    {
+      "path": "packages/client/src/components/rmos/RunArtifactDetail.vue",
+      "intent": "Change prop type to RunArtifact, fix hash reads to use nested hashes.{gcode_sha256,toolpaths_sha256,feasibility_sha256}, cast flat fields not in SDK type",
+      "scan_targets": ["packages/client/src/components/rmos/RunArtifactDetail.vue"],
+      "risk": "medium",
+      "behavior_change": "frontend - fixes silent hash-display defect",
+      "verification": ["Hash fields now render correctly (they were undefined before)"]
+    },
+    {
+      "path": "services/api/app/ci/check_boundary_patterns.py",
+      "intent": "Fix fence message from fictional fetchRunV2() to actual getRun() from SDK",
+      "scan_targets": ["services/api/app/ci/check_boundary_patterns.py"],
+      "risk": "low",
+      "behavior_change": "none - error message correction",
+      "verification": ["Message now points to real function"]
     }
   ]
 }

@@ -8,14 +8,15 @@
  */
 import { ref, watch, computed } from "vue";
 import { useRoute } from "vue-router";
-import { fetchRun, fetchRunDiff, type RunArtifactDetail, type RunDiffResult, type DiffEntry } from "@/api/rmosRuns";
+import { fetchRunDiff, type RunDiffResult, type DiffEntry } from "@/api/rmosRuns";
+import { getRun, type RunArtifact } from "@/sdk/rmos/runs";
 
 const route = useRoute();
 
 const runAId = ref<string>("");
 const runBId = ref<string>("");
-const runA = ref<RunArtifactDetail | null>(null);
-const runB = ref<RunArtifactDetail | null>(null);
+const runA = ref<RunArtifact | null>(null);
+const runB = ref<RunArtifact | null>(null);
 const diffResult = ref<RunDiffResult | null>(null);
 const loading = ref(false);
 const error = ref<string | null>(null);
@@ -48,8 +49,8 @@ async function load() {
   try {
     // Fetch both runs and diff in parallel
     const [a, b, diff] = await Promise.all([
-      fetchRun(runAId.value),
-      fetchRun(runBId.value),
+      getRun(runAId.value),
+      getRun(runBId.value),
       fetchRunDiff(runAId.value, runBId.value),
     ]);
 
