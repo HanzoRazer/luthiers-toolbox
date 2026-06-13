@@ -7,6 +7,17 @@
       </p>
     </header>
 
+    <!-- HONESTLY GATED: the ingest-events backend lane is not mounted, so the live
+         browse call 404s. Rather than fake the log, browsing is disabled with a
+         "coming soon" affordance until the lane is built and reconciled. -->
+    <section :class="styles.card">
+      <h2>Coming soon</h2>
+      <p :class="styles.sub">
+        The ingest audit log isn't available yet — the events backend lane isn't
+        mounted. Browsing is disabled rather than showing faked or partial data.
+      </p>
+    </section>
+
     <!-- Outcome Filter -->
     <section :class="styles.card">
       <h2>Filter by Outcome</h2>
@@ -14,6 +25,8 @@
         <button
           v-for="o in outcomes"
           :key="o.value"
+          disabled
+          title="Audit log browsing is coming soon"
           :class="[
             styles.outcomeChip,
             outcomeFilter === o.value && styles.outcomeChipActive,
@@ -28,6 +41,8 @@
         </button>
         <button
           v-if="outcomeFilter"
+          disabled
+          title="Audit log browsing is coming soon"
           :class="styles.btnClear"
           @click="outcomeFilter = null"
         >
@@ -46,10 +61,11 @@
         </span>
         <button
           :class="styles.btn"
-          :disabled="loading"
+          disabled
+          title="Audit log browsing is coming soon"
           @click="loadEvents"
         >
-          {{ loading ? "Loading..." : "Refresh" }}
+          Refresh
         </button>
       </div>
 
@@ -69,7 +85,7 @@
         v-else-if="!events.length"
         :class="styles.muted"
       >
-        No events found. Import a viewer_pack to create events.
+        Audit log browsing is coming soon — the events backend lane isn't available yet.
       </div>
 
       <table
@@ -178,7 +194,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch, onMounted } from "vue";
+import { ref } from "vue";
 import {
   browseIngestEvents,
   getIngestEvent,
@@ -191,6 +207,9 @@ import type {
 } from "@/types/rmosAcousticsIngest";
 import styles from "./AcousticsIngestEvents.module.css";
 import EventDetailModal from "./acoustics_ingest/EventDetailModal.vue";
+
+// Hard gate: backend lane unmounted, prevent any programmatic reactivation
+const AUDIT_LOG_ENABLED = false;
 
 // State
 const events = ref<IngestEventSummary[]>([]);
@@ -210,6 +229,7 @@ const outcomes = [
 
 // Load events
 async function loadEvents() {
+  if (!AUDIT_LOG_ENABLED) return;
   loading.value = true;
   error.value = null;
   try {
@@ -228,6 +248,7 @@ async function loadEvents() {
 
 // Load more
 async function loadMore() {
+  if (!AUDIT_LOG_ENABLED) return;
   if (!nextCursor.value) return;
   loadingMore.value = true;
   try {
@@ -247,6 +268,7 @@ async function loadMore() {
 
 // Show detail
 async function showDetail(evt: IngestEventSummary) {
+  if (!AUDIT_LOG_ENABLED) return;
   try {
     detailEvent.value = await getIngestEvent(evt.event_id);
   } catch (e) {
@@ -320,13 +342,7 @@ function getOutcomeBadgeClass(outcome: string): string {
   }
 }
 
-// Watch filter changes
-watch(outcomeFilter, () => {
-  loadEvents();
-});
-
-// Initial load
-onMounted(() => {
-  loadEvents();
-});
+// GATED: no auto-load and no filter-triggered fetch — the ingest-events backend
+// lane is unmounted, so any live call 404s. Browse handlers remain wired to the
+// (now disabled) controls but never fire until the lane is built.
 </script>
