@@ -118,7 +118,7 @@ function formatDate(iso: string): string {
       <h4>Hashes</h4>
       <div class="hash-list">
         <div v-if="artifact.hashes?.feasibility_sha256">
-          <strong>Feasibility:</strong>
+          <strong>Request:</strong>
           <code>{{ artifact.hashes.feasibility_sha256.slice(0, 16) }}…</code>
         </div>
         <div v-if="artifact.hashes?.toolpaths_sha256">
