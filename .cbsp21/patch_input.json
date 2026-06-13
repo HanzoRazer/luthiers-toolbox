@@ -2,88 +2,49 @@
   "schema": "cbsp21_patch_input_v1",
   "schema_version": "cbsp21_patch_input_v1",
   "coverage_min": 0.95,
-  "patch_id": "CI_RED_004_RUNS_V2_MIGRATION",
-  "title": "Migrate fetchRun consumers to getRun SDK + fix hash-defect in RunArtifactDetail",
-  "intent": "Clear CI-RED-004 by migrating 3 fetchRun() consumers to getRun() from SDK, fixing a latent 3-field hash-display defect in RunArtifactDetail.vue, deleting deprecated fetchRun, and correcting the fence's fictional fetchRunV2 message.",
+  "patch_id": "FENCE_BASELINE_RATCHET_FIX",
+  "title": "Fix frontend_sdk_boundary baseline ratchet + honest resync (CI-RED-004 clearable)",
+  "intent": "Repair two structural bugs in the fence baseline ratchet: (1) path normalization keyed on pyproject.toml instead of .git, causing sibling paths to never match; (2) reason-text in identity key caused message edits to re-flag all violations. Regenerate baseline with correct keys.",
   "change_type": "fix",
-  "behavior_change": "frontend",
-  "risk_level": "medium",
+  "behavior_change": "ci",
+  "risk_level": "low",
   "scope": {
     "paths_in_scope": [
       ".cbsp21/",
-      "packages/client/src/api/",
-      "packages/client/src/components/rmos/",
-      "packages/client/src/stores/",
       "services/api/app/ci/"
     ],
     "files_expected_to_change": [
-      "packages/client/src/api/rmosRuns.ts",
-      "packages/client/src/components/rmos/RunArtifactDetail.vue",
-      "packages/client/src/components/rmos/RunDiffViewer.vue",
-      "packages/client/src/stores/rmosRunsStore.ts",
-      "packages/client/src/stores/useRmosRunsStore.ts",
       "services/api/app/ci/check_boundary_patterns.py",
+      "services/api/app/ci/fence_patterns_baseline.json",
       ".cbsp21/patch_input.json"
     ]
   },
   "diff_articulation": {
-    "what_changed": "Stores migrated from fetchRun to getRun (SDK). RunDiffViewer migrated to getRun. RunArtifactDetail.vue prop type changed to RunArtifact, hash reads fixed to use nested hashes.{gcode_sha256,toolpaths_sha256,feasibility_sha256}. Flat fields not in SDK type get (as any) casts. fetchRun deleted from legacy API. Fence message corrected from fictional fetchRunV2 to actual getRun.",
-    "why_not_redundant": "Backend returns hybrid shape (flat for most fields, nested for hashes). Legacy RunArtifactDetail type was partially wrong - gcode_hash/toolpaths_hash/request_hash were flat but backend returns them nested. This caused silent undefined reads in the detail view. Migration to SDK's nested RunArtifact + fixing the reads fixes the latent defect."
+    "what_changed": "check_boundary_patterns.py: _true_repo_root() now prefers .git over pyproject.toml; _relpath() resolves paths before relativizing; _violation_key() drops reason field from identity. fence_patterns_baseline.json: regenerated with correct keys (removals + one line-shift, zero new debt blessed).",
+    "why_not_redundant": "Gate was structurally non-functional - every violation re-registered as new because keys never matched. This makes CI-RED-004 genuinely clearable."
   },
   "verification": {
     "commands_run": [
-      "npm run type-check (pre-existing errors unrelated to this change)",
-      "git diff --stat"
+      "python -m app.ci.check_all_fences (exit 0, imports PASS, patterns PASS)",
+      "identity diff of baseline (removals + line-shift only)"
     ]
   },
   "files": [
     {
-      "path": "packages/client/src/api/rmosRuns.ts",
-      "intent": "Delete fetchRun, add getRun import from SDK, update downloadRun to use getRun",
-      "scan_targets": ["packages/client/src/api/rmosRuns.ts"],
-      "risk": "low",
-      "behavior_change": "none - internal refactor",
-      "verification": ["No more fetchRun export"]
-    },
-    {
-      "path": "packages/client/src/stores/rmosRunsStore.ts",
-      "intent": "Import getRun from SDK, change selected type to RunArtifact, use getRun in select()",
-      "scan_targets": ["packages/client/src/stores/rmosRunsStore.ts"],
-      "risk": "low",
-      "behavior_change": "none - same endpoint, typed correctly now",
-      "verification": ["Store compiles, selected uses RunArtifact type"]
-    },
-    {
-      "path": "packages/client/src/stores/useRmosRunsStore.ts",
-      "intent": "Import getRun from SDK, change selected type to RunArtifact, use getRun in select()",
-      "scan_targets": ["packages/client/src/stores/useRmosRunsStore.ts"],
-      "risk": "low",
-      "behavior_change": "none - same endpoint, typed correctly now",
-      "verification": ["Store compiles, selected uses RunArtifact type"]
-    },
-    {
-      "path": "packages/client/src/components/rmos/RunDiffViewer.vue",
-      "intent": "Import getRun from SDK, change runA/runB refs to RunArtifact, use getRun in load()",
-      "scan_targets": ["packages/client/src/components/rmos/RunDiffViewer.vue"],
-      "risk": "low",
-      "behavior_change": "none - same endpoint",
-      "verification": ["Component compiles"]
-    },
-    {
-      "path": "packages/client/src/components/rmos/RunArtifactDetail.vue",
-      "intent": "Change prop type to RunArtifact, fix hash reads to use nested hashes.{gcode_sha256,toolpaths_sha256,feasibility_sha256}, cast flat fields not in SDK type",
-      "scan_targets": ["packages/client/src/components/rmos/RunArtifactDetail.vue"],
-      "risk": "medium",
-      "behavior_change": "frontend - fixes silent hash-display defect",
-      "verification": ["Hash fields now render correctly (they were undefined before)"]
-    },
-    {
       "path": "services/api/app/ci/check_boundary_patterns.py",
-      "intent": "Fix fence message from fictional fetchRunV2() to actual getRun() from SDK",
+      "intent": "Fix _true_repo_root to prefer .git, _relpath to resolve before relativize, _violation_key to drop reason from identity",
       "scan_targets": ["services/api/app/ci/check_boundary_patterns.py"],
       "risk": "low",
-      "behavior_change": "none - error message correction",
-      "verification": ["Message now points to real function"]
+      "behavior_change": "ci - fence now correctly matches baseline keys",
+      "verification": ["Fence passes locally with real exit code"]
+    },
+    {
+      "path": "services/api/app/ci/fence_patterns_baseline.json",
+      "intent": "Regenerate with correct identity keys (fence|path|line|pattern, no reason)",
+      "scan_targets": ["services/api/app/ci/fence_patterns_baseline.json"],
+      "risk": "low",
+      "behavior_change": "ci - baseline reflects actual state",
+      "verification": ["Identity diff shows removals + line-shift, no new additions"]
     }
   ]
 }

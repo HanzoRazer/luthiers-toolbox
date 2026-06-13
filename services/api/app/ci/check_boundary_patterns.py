@@ -122,26 +122,57 @@ def _repo_root_from_cwd() -> Path:
 
 
 def _true_repo_root() -> Path:
-    """Find the actual repository root (where .git or pyproject.toml is)."""
+    """Find the actual repository root.
+
+    Prefer the ``.git`` marker, which exists ONLY at the true repo root. A
+    ``pyproject.toml`` is NOT a reliable root marker here: subprojects carry
+    their own (e.g. ``services/api/pyproject.toml``). Keying off the first
+    ``pyproject.toml`` walking up from ``services/api`` returns ``services/api``
+    as the "root", so sibling trees reached via ``../../packages/client`` cannot
+    be relativized — ``_relpath`` then falls back to an absolute path with
+    unresolved ``..`` segments that NEVER match the committed baseline keys
+    (which are repo-root-relative, e.g. ``packages/client/src/...``). That makes
+    the baseline ratchet structurally non-functional: every violation reads as
+    "new". So: ``.git`` first, ``pyproject.toml`` only as a fallback and only
+    the OUTERMOST one (so a subproject pyproject does not shadow the real root).
+    """
     cwd = Path.cwd().resolve()
-    for p in [cwd] + list(cwd.parents):
-        if (p / ".git").exists() or (p / "pyproject.toml").exists():
+    candidates = [cwd] + list(cwd.parents)
+    # First choice: the directory containing .git (the canonical repo root).
+    for p in candidates:
+        if (p / ".git").exists():
             return p
-    # Fallback: assume services/api is two levels deep
+    # Fallback: outermost pyproject.toml (topmost wins, so a subproject's
+    # pyproject does not shadow the real root).
+    for p in reversed(candidates):
+        if (p / "pyproject.toml").exists():
+            return p
+    # Final fallback: assume services/api is two levels deep.
     return _repo_root_from_cwd().parent.parent
 
 
 def _relpath(path: Path) -> str:
-    """Convert path to stable relative string for baseline keys.
+    """Convert path to a stable repo-root-relative POSIX string for baseline keys.
 
-    Uses the TRUE repo root (not services/api) as the base so that
-    paths like packages/client/... are properly relativized.
+    Uses the TRUE repo root (not services/api) as the base so that paths like
+    ``packages/client/...`` are properly relativized. The path is resolved
+    first so embedded ``..`` segments (the scan dirs are built as
+    ``services/api/../../packages/client/src``) collapse before relativization.
     """
-    root = _true_repo_root()
+    resolved = path.resolve()
+    root = _true_repo_root().resolve()
     try:
-        return str(path.resolve().relative_to(root.resolve())).replace("\\", "/")
+        return str(resolved.relative_to(root)).replace("\\", "/")
     except ValueError:  # WP-1: narrowed from except Exception
-        return str(path).replace("\\", "/")
+        # Defensive fallback: never emit an unresolved "../.." path (it would
+        # not match the baseline). Anchor on a known top-level segment if one
+        # is present in the resolved path; otherwise use the resolved absolute.
+        s = str(resolved).replace("\\", "/")
+        for anchor in ("/packages/", "/services/", "/scripts/", "/contracts/"):
+            idx = s.find(anchor)
+            if idx != -1:
+                return s[idx + 1:]
+        return s
 
 
 def _match_skip(path: Path) -> bool:
@@ -267,8 +298,16 @@ def scan_legacy_deprecation(repo_root: Path) -> Tuple[List[PatternViolation], in
 # --- Baseline Support ------------------------------------------------------
 
 def _violation_key(v: PatternViolation) -> str:
-    """Stable key for pattern violation."""
-    return f"{v.fence}|{_relpath(v.file)}|{v.line}|{v.pattern}|{v.reason}"
+    """Stable identity key for a pattern violation.
+
+    Identity is ``fence|path|line|pattern`` ONLY. The ``reason`` is a
+    human-readable description, NOT part of a violation's identity — including
+    it meant that editing a fence's message text re-flagged every baselined
+    violation as "new" (the gate would lie on any message improvement; this is
+    exactly what happened when PR #114 reworded the messages without
+    regenerating the baseline). Keys are stable against message edits now.
+    """
+    return f"{v.fence}|{_relpath(v.file)}|{v.line}|{v.pattern}"
 
 
 def _serialize(violations: List[PatternViolation]) -> dict:
