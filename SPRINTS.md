@@ -886,6 +886,8 @@ Domain handoffs and governance docs may add detail but **must cite the SPRINTS I
 | CI-RED-014 | api-verify: missing `DXF_R12_TRANSLATOR_ID` registry constants | CI / api-verify | CLOSED | 2026-05-28 |
 | CI-RED-015 | api-verify: test-suite reconciliation (72 failures, ~6 cause classes) | CI / api-verify | OPEN | 2026-05-28 |
 | CI-RED-016 | Endpoint consolidation (1181 routes; CAM governance stack) | CI / quality | OPEN | 2026-05-28 |
+| CI-RED-017 | check-sunsets: status:removed vs file-existence mismatch | CI / gates | PARKED | 2026-06-13 |
+| CI-RED-018 | router-count baseline stale (172→252 files, +448 decorators) | CI / gates | PARKED | 2026-06-13 |
 
 ---
 
@@ -1157,6 +1159,82 @@ Original audit found 124 decorator duplicates → 68 wire collisions on **static
 **First deliverable (after MVP cut):** Consumer map — which of ~195 are called outside CAM test suite.  
 **Tools:** `services/api/scripts/audit_endpoints.py`, `diff_endpoints_baseline.py`.  
 **Not in scope:** 015-D duplicate-route gate (separate).
+
+---
+
+### CI-RED-017 — check-sunsets: status:removed vs file-existence mismatch
+
+**Status:** PARKED  
+**last_verified:** 2026-06-13  
+**Path:** HYG — not blocking MVP cut  
+**Branch:** `fix/debt-gates-bare-except` (stashed as "CI-RED-017-018 parked work")
+
+**Root cause identified:** The `check_deprecation_sunset.py` gate checks **file existence** before checking the registry's `status` field. When `status: "removed"` but the module file is intentionally retained for canonical paths (e.g., compat-geometry/compat-material entries), the gate throws false-positives.
+
+**Fix written (not committed):** Added status check before file-existence check in `services/api/app/ci/check_deprecation_sunset.py:73-80`:
+```python
+status = route.get("status", "")
+if status == "removed":
+    removed.append(route)
+    continue
+```
+
+**Verification pending before commit:**
+1. Confirm fix still catches *genuine* overdue-unmarked sunsets (not just that false-positives stopped)
+2. Test case: a module past sunset date, WITHOUT `status:"removed"`, file EXISTS → should flag as OVERDUE
+
+**Discipline note:** A gate-logic fix verified only to "stop the false-positive" is the bless-the-void trap. Verified to "stop the false-positive AND still catch the true-positive" is honest.
+
+**Resume instructions:** 
+1. Run `git stash pop` on branch `fix/debt-gates-bare-except` (or apply stash "CI-RED-017-018 parked work")
+2. Edit already applied to `check_deprecation_sunset.py`
+3. Verify gate still catches genuine violations before committing
+4. Then proceed with commit + PR
+
+---
+
+### CI-RED-018 — router-count baseline stale (172→252 files)
+
+**Status:** PARKED (diff-verification required)  
+**last_verified:** 2026-06-13  
+**Path:** HYG — not blocking MVP cut  
+**Branch:** `fix/debt-gates-bare-except` (stashed as "CI-RED-017-018 parked work")
+
+**Surface symptom:** `router_count_gate.py` fails — baseline was 172 files / 740 decorators, current is 252 files / 1188 decorators.
+
+**Regeneration done but HELD:** Ran `python ci/router_count_gate.py --update` which produced new baseline. **Not committed** pending diff-verification.
+
+**The concern (from session discipline):** The router-count gate exists to catch router proliferation (CI-RED-016 concern). A baseline regen that jumps +80 files / +448 decorators might be:
+- **Legitimate growth** (CAM lanes built, real features) → baseline honestly
+- **Accumulated debt** the gate was supposed to catch → a CI-RED-016 finding, not a baseline regen
+
+**Diff analysis started:**
+
+Previous baseline (commit `242b343a`):
+- `routers: 32`, `routers\\cam\\guitar: 5`, no `routers\\cam` directory
+- 172 files / 740 decorators
+
+Current (regenerated):
+- `routers: 43` (+11), `routers\\cam: 26` (NEW), `routers\\cam\\guitar: 8` (+3)
+- `routers\\instrument_geometry: 13` (NEW), `routers\\ai: 4` (NEW), `routers\\export: 5` (NEW)
+- 252 files / 1188 decorators
+
+**Preliminary assessment:** The +26 files in `routers\\cam` and +13 in `routers\\instrument_geometry` appear to be legitimate feature growth (CAM intent work, instrument geometry features). But the +448 decorator jump needs enumeration to confirm it's real routes vs proliferation.
+
+**Verification required before commit:**
+1. Enumerate what the 80 new files contain — are they real features or stubs?
+2. Confirm the +448 decorators are legitimate routes, not duplicate/redundant endpoints
+3. If legitimate growth → commit baseline honestly
+4. If proliferation → that's a CI-RED-016 finding, not a baseline regen
+
+**Resume instructions:**
+1. Diff old vs new baseline by_directory
+2. Spot-check largest growth directories (routers\\cam, routers\\instrument_geometry)
+3. Confirm routes are real, mounted, non-duplicate
+4. Only then commit the regenerated baseline
+5. Stage with `git add -f ci/router_count_baseline.json` (ci/ is gitignored)
+
+**Discipline note:** "Regenerate to current and call the old one stale" is exactly the `--write-baseline`-blesses-voids move unless you've confirmed the delta is legitimate growth, not accumulated debt the gate was supposed to be catching.
 
 ---
 
