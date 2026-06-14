@@ -196,7 +196,7 @@ def solve_modes(grid_data, rho, h, num_modes=6, boundary='clamped'):
         warnings.simplefilter("ignore")
         try:
             eigenvalues, eigenvectors = eigs(A, k=num_modes, M=M, sigma=0, which='LM')
-        except:
+        except Exception:
             # Fallback to regular eigenvalue solver
             eigenvalues, eigenvectors = eigs(A, k=num_modes, M=M, which='SM')
     

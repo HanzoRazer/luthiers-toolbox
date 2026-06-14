@@ -155,7 +155,7 @@ class TestIBGIntakeGateRejection:
         for _ in range(3):
             try:
                 sample_candidate.review.set_review_required(False, "system:bot", "bypass")
-            except:
+            except Exception:
                 pass
 
         gate = create_default_intake_gate()
@@ -273,7 +273,7 @@ class TestIBGIntakeGateConfiguration:
         for _ in range(2):
             try:
                 sample_candidate.review.set_review_required(False, "system:bot", "bypass")
-            except:
+            except Exception:
                 pass
 
         # Default gate rejects
