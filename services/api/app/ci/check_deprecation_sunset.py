@@ -70,6 +70,14 @@ def check_sunsets(registry: Dict[str, Any], warn_days: int = 0) -> tuple[List[Di
 
         sunset_date = datetime.strptime(sunset_str, "%Y-%m-%d").date()
         module = route.get("module", "")
+        status = route.get("status", "")
+
+        # If registry explicitly marks it as removed, trust that (covers cases where
+        # the compat mount is removed but the module file is intentionally retained
+        # for canonical paths, e.g. "compat-geometry" entries)
+        if status == "removed":
+            removed.append(route)
+            continue
 
         # Check if the module still exists
         if not check_module_exists(module):
