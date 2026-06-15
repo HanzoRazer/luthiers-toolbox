@@ -7,6 +7,9 @@ on:
       - "scripts/governance/**"
       - ".github/workflows/artifact_linkage_gate.yml"
 
+env:
+  SG_SPEC_TOKEN: ${{ secrets.SG_SPEC_TOKEN }}
+
 jobs:
   artifact-linkage:
     runs-on: ubuntu-latest
@@ -42,7 +45,7 @@ jobs:
 
 
       - name: Configure git for private repos
-        if: ${{ secrets.SG_SPEC_TOKEN != '' }}
+        if: ${{ env.SG_SPEC_TOKEN != '' }}
         run: |
           git config --global url."https://${{ secrets.SG_SPEC_TOKEN }}@github.com/".insteadOf "https://github.com/"
 
