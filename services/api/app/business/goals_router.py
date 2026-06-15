@@ -17,7 +17,7 @@ from fastapi import APIRouter, HTTPException
 from .schemas import GoalCreateRequest, GoalUpdateRequest
 from .goals_service import goals_store
 
-router = APIRouter(tags=["Goals", "Business"])
+router = APIRouter(prefix="/goals", tags=["Goals", "Business"])
 
 
 @router.get("", summary="List pricing goals")

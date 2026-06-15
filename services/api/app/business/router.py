@@ -78,7 +78,7 @@ router.include_router(pricing_router, prefix="/pricing", tags=["Pricing"])
 router.include_router(breakeven_router, prefix="/breakeven", tags=["Break-Even"])
 router.include_router(cashflow_router, prefix="/cashflow", tags=["Cash Flow"])
 router.include_router(estimator_router, prefix="/estimate", tags=["Estimator"])
-router.include_router(goals_router, prefix="/goals", tags=["Goals"])
+router.include_router(goals_router, tags=["Goals"])
 
 
 # ============================================================================
