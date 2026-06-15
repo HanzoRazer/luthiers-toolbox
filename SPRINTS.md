@@ -884,10 +884,12 @@ Domain handoffs and governance docs may add detail but **must cite the SPRINTS I
 | CI-RED-012 | api-verify: missing `app.calculators.saw` compat shims | CI / api-verify | CLOSED | 2026-05-28 |
 | CI-RED-013 | api-verify: missing `app.woodworking.wooden_floating_bridge` | CI / api-verify | CLOSED | 2026-05-28 |
 | CI-RED-014 | api-verify: missing `DXF_R12_TRANSLATOR_ID` registry constants | CI / api-verify | CLOSED | 2026-05-28 |
-| CI-RED-015 | api-verify: test-suite reconciliation (72 failures, ~6 cause classes) | CI / api-verify | OPEN | 2026-05-28 |
+| CI-RED-015 | api-verify/API Tests: test-suite reconciliation — **56 failed** (API Tests run 2026-06-15; superseding the stale "72"), ~6 classes spread: body-solver/IBG (11), RMOS-persistence (11), geometry-authority (10), body-geometry-repair (4), lifecycle-policy (4), morphology-spine (3) + singletons. **Uncharacterized — stale-test vs real-regression not yet established per cluster (do NOT assume stale-because-015-E-was).** | CI / api-verify | OPEN | 2026-06-15 |
 | CI-RED-016 | Endpoint consolidation (1181 routes; CAM governance stack) | CI / quality | OPEN | 2026-05-28 |
 | CI-RED-017 | check-sunsets: status:removed vs file-existence mismatch | CI / gates | CLOSED | 2026-06-15 |
 | CI-RED-018 | router-count baseline stale (172→252 files, +448 decorators) | CI / gates | CLOSED | 2026-06-15 |
+| CI-RED-019 | routing-truth masked by setuptools editable-build failure — **cause known/fixable (Unit 2, see detail); real route-truth verdict UNKNOWN until unmasked** | CI / gates | OPEN | 2026-06-15 |
+| CI-RED-020 | api-smoke: server reachable-check fails on `main` (`curl 127.0.0.1:8000` refused; app loads 141 routers then HTTP never becomes ready). Distinct from 019 — the app DOES start (019 dies at `pip install -e`). Cause TBD; fold into 019 only if proven same-cause | CI / gates | OPEN | 2026-06-15 |
 
 ---
 
@@ -989,10 +991,11 @@ by any workflow) — left untouched; candidate for deletion in separate hygiene 
 
 ### CI-RED-004 — Fence Checks frontend boundary
 
-**Status:** OPEN  
-**last_verified:** 2026-05-27  
-**Why open:** `patterns: FAIL` — legacy `/api/rmos/runs` references in client SDK/tests.  
-**Restore trigger:** Fence Checks (Blocking) green on `main`.
+**Status:** OPEN — code cleared, pending ENFORCEMENT (not broken code)  
+**last_verified:** 2026-06-15  
+**Code state:** Fence repaired + merged (#115 `36c8c052`, #116 `f0ea86dc`); Architecture Scan / Fence Checks **GREEN on `main`**. The original `/api/rmos/runs` boundary violations are resolved and the ratchet is honest.  
+**Why still OPEN:** the protective gap that *caused this saga* remains — #114 auto-merged a RED fence onto main precisely because "Fence Checks (Blocking)" is **not a required status check** under branch protection. Until the fence is set required, a red fence could merge again. Fixed-and-green is not the close; fixed-green-**and-enforced** is.  
+**Closes when:** the fence is set as a **required status check** in branch-protection settings — **USER ACTION** (repo setting, cannot be done from a terminal). Code work is done; only enforcement remains.
 
 ---
 
@@ -1104,7 +1107,7 @@ by any workflow) — left untouched; candidate for deletion in separate hygiene 
 | **015-B** | `test_vectorizer_canonical_only*` | Schema drift (live vectorizer work) | **CLOSED #70** — canonical response + legacy wire shim; 8/8 green on CI run `26584687684` |
 | **015-C** | `test_technical_debt_gates` endpoint count ratchet | 942→1181 audit; ratchet → 1185 | **CLOSED #72** — CI `26600720296`: endpoint count + ratchet gates green |
 | **015-D** | duplicate routes + other debt gates | Gate measures decorator suffixes, not wire URLs | **MVP-PATH AUDITED (2026-05-30) — no blocker.** 015-D-a audit DONE (#75); scope reframe (#77). Static 68 doubly inflated (audit dropped manifest prefix [fixed] + ignores `include_router` composition). MVP cut path resolves to unique prefixed URLs. Closure pending one live `app.routes` dump. Structural debt deferred at retirement. See block below. |
-| **015-E** | board_feet, fretboard ecosphere, misc | Small drift clusters | One cause class per PR after 015-D |
+| **015-E** | `board_feet` (species canon `maple`→`maple_hard`) + `fretboard ecosphere` (gcode `{inline,text}` envelope) | **Stale tests — kernels correct** (verified 2026-06-10) | Fix = update the 2 test assertions to canonical behavior, **NOT the kernels**. Tracked as Unit 1. **NOTE (2026-06-15): the kernels-correct characterization stands; the "now visible via api_tests/core_ci" surfacing claim is UNVERIFIED — neither test appears in the current API Tests (56-fail) nor Core CI failing sets. Re-ground where these two actually surface before relying on it. 015-E is a 2-test sub-cluster, distinct from the 56-fail CI-RED-015 surface above.** |
 | **015-F** | remaining | Umbrella tail | One PR each as surfaced |
 
 **Order:** **015-A → 015-B → 015-C (read first) → rest.**
@@ -1189,6 +1192,27 @@ Original audit found 124 decorator duplicates → 68 wire collisions on **static
 - Growth is legitimate merged work, not stubs or proliferation
 
 **Fix:** Re-pegged baseline to 252 files / 1188 decorators. Ratchet now enforces against future growth beyond 252. Consolidation work remains owned by CI-RED-016 (OPEN).
+
+---
+
+### CI-RED-019 — routing-truth masked by setuptools editable-build failure (real verdict UNKNOWN)
+
+**Status:** OPEN — **MASK, not a verdict**  
+**last_verified:** 2026-06-15  
+**Discovered:** post-#120 unmask. #120 cleared the *parse* mask (secrets-in-if), so routing-truth now STARTS — but a **second mask sits under it**.
+
+**This is a MASK, not a verdict — routing-truth's real route-truth verdict is UNKNOWN.** The gate dies at *setup*, before it runs:
+
+```
+error: Multiple top-level packages discovered in a flat-layout:
+       ['app', 'data', 'metrics', 'test_support']. setuptools will not proceed.
+```
+
+`pip install -e services/api` fails because `services/api/pyproject.toml` doesn't tell setuptools which package to build. The printed `ROUTING_TRUTH_FAIL_LANES: CORE,META,OPERATION,RMOS` lines are **config echo, NOT the verdict**.
+
+**Fix (Unit 2 — held for its own turn):** add explicit `[tool.setuptools.packages.find]` to `services/api/pyproject.toml` (include `app*`, exclude `data*`/`metrics*`/`test_support*`). Likely affects **every** workflow using editable install, not just routing-truth.
+
+**Consequence — fixing this UNMASKS, it does NOT CLOSE:** once the editable build works, routing-truth reports its real route-truth verdict *for the first time*. That verdict is a fresh unknown (Phase-2b) needing its own grounding. Do **not** treat "packaging fixed" as "routing-truth cleared" — same mask-peel discipline as #120.
 
 ---
 
