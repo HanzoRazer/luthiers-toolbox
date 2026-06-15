@@ -884,11 +884,12 @@ Domain handoffs and governance docs may add detail but **must cite the SPRINTS I
 | CI-RED-012 | api-verify: missing `app.calculators.saw` compat shims | CI / api-verify | CLOSED | 2026-05-28 |
 | CI-RED-013 | api-verify: missing `app.woodworking.wooden_floating_bridge` | CI / api-verify | CLOSED | 2026-05-28 |
 | CI-RED-014 | api-verify: missing `DXF_R12_TRANSLATOR_ID` registry constants | CI / api-verify | CLOSED | 2026-05-28 |
-| CI-RED-015 | api-verify: test-suite reconciliation (72 failures, ~6 cause classes) | CI / api-verify | OPEN | 2026-05-28 |
+| CI-RED-015 | api-verify/API Tests: test-suite reconciliation — **56 failed** (API Tests run 2026-06-15; superseding the stale "72"), ~6 classes spread: body-solver/IBG (11), RMOS-persistence (11), geometry-authority (10), body-geometry-repair (4), lifecycle-policy (4), morphology-spine (3) + singletons. **Uncharacterized — stale-test vs real-regression not yet established per cluster (do NOT assume stale-because-015-E-was).** | CI / api-verify | OPEN | 2026-06-15 |
 | CI-RED-016 | Endpoint consolidation (1181 routes; CAM governance stack) | CI / quality | OPEN | 2026-05-28 |
 | CI-RED-017 | check-sunsets: status:removed vs file-existence mismatch | CI / gates | CLOSED | 2026-06-15 |
 | CI-RED-018 | router-count baseline stale (172→252 files, +448 decorators) | CI / gates | CLOSED | 2026-06-15 |
-| CI-RED-019 | routing-truth masked by setuptools editable-build failure (real verdict UNKNOWN) | CI / gates | OPEN | 2026-06-15 |
+| CI-RED-019 | routing-truth masked by setuptools editable-build failure — **cause known/fixable (Unit 2, see detail); real route-truth verdict UNKNOWN until unmasked** | CI / gates | OPEN | 2026-06-15 |
+| CI-RED-020 | api-smoke: server reachable-check fails on `main` (`curl 127.0.0.1:8000` refused; app loads 141 routers then HTTP never becomes ready). Distinct from 019 — the app DOES start (019 dies at `pip install -e`). Cause TBD; fold into 019 only if proven same-cause | CI / gates | OPEN | 2026-06-15 |
 
 ---
 
@@ -1106,7 +1107,7 @@ by any workflow) — left untouched; candidate for deletion in separate hygiene 
 | **015-B** | `test_vectorizer_canonical_only*` | Schema drift (live vectorizer work) | **CLOSED #70** — canonical response + legacy wire shim; 8/8 green on CI run `26584687684` |
 | **015-C** | `test_technical_debt_gates` endpoint count ratchet | 942→1181 audit; ratchet → 1185 | **CLOSED #72** — CI `26600720296`: endpoint count + ratchet gates green |
 | **015-D** | duplicate routes + other debt gates | Gate measures decorator suffixes, not wire URLs | **MVP-PATH AUDITED (2026-05-30) — no blocker.** 015-D-a audit DONE (#75); scope reframe (#77). Static 68 doubly inflated (audit dropped manifest prefix [fixed] + ignores `include_router` composition). MVP cut path resolves to unique prefixed URLs. Closure pending one live `app.routes` dump. Structural debt deferred at retirement. See block below. |
-| **015-E** | `board_feet` (species canon `maple`→`maple_hard`) + `fretboard ecosphere` (gcode `{inline,text}` envelope) | **Stale tests — kernels correct** (verified 2026-06-10) | **NOW blocking-visible** via api_tests/core_ci after the #120 unmask (parse mask cleared → these two surfaced). Fix = update the 2 test assertions to canonical behavior, **NOT the kernels**. Tracked as Unit 1. |
+| **015-E** | `board_feet` (species canon `maple`→`maple_hard`) + `fretboard ecosphere` (gcode `{inline,text}` envelope) | **Stale tests — kernels correct** (verified 2026-06-10) | Fix = update the 2 test assertions to canonical behavior, **NOT the kernels**. Tracked as Unit 1. **NOTE (2026-06-15): the kernels-correct characterization stands; the "now visible via api_tests/core_ci" surfacing claim is UNVERIFIED — neither test appears in the current API Tests (56-fail) nor Core CI failing sets. Re-ground where these two actually surface before relying on it. 015-E is a 2-test sub-cluster, distinct from the 56-fail CI-RED-015 surface above.** |
 | **015-F** | remaining | Umbrella tail | One PR each as surfaced |
 
 **Order:** **015-A → 015-B → 015-C (read first) → rest.**
