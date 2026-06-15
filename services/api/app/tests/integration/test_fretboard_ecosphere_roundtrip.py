@@ -210,7 +210,11 @@ class TestGrblPipelineIntegration:
 
         body = resp.json()
         gcode = body.get("gcode") or body.get("data", {}).get("gcode") or ""
-        line_count = gcode.count("\n")
+        # gcode is returned as an {"inline": bool, "text": str} envelope
+        # (CI-RED-015-E F2: the test was stale, the kernel/endpoint is right);
+        # extract the text before counting lines.
+        gcode_text = gcode["text"] if isinstance(gcode, dict) else gcode
+        line_count = gcode_text.count("\n")
 
         assert line_count >= 100, (
             f"GRBL pipeline produced {line_count} lines from R2000 fret slots. "
