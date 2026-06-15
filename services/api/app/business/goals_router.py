@@ -1,12 +1,17 @@
 """Goals Router — Endpoints for pricing goals management.
 
-Provides:
-- GET / - List pricing goals
-- POST / - Create pricing goal
-- GET /{goal_id} - Get goal by ID
-- PATCH /{goal_id} - Update goal
-- DELETE /{goal_id} - Delete goal
-- POST /{goal_id}/link-estimate/{estimate_id} - Link estimate to goal
+Router prefix: /goals (mounted under the business aggregator at /api/business,
+so the final public paths are /api/business/goals...). The prefix lives on this
+router's own APIRouter rather than the parent include so that no route declares
+an empty path under an empty include prefix (rejected by FastAPI >= 0.137).
+
+Provides (final paths):
+- GET    /api/business/goals - List pricing goals
+- POST   /api/business/goals - Create pricing goal
+- GET    /api/business/goals/{goal_id} - Get goal by ID
+- PATCH  /api/business/goals/{goal_id} - Update goal
+- DELETE /api/business/goals/{goal_id} - Delete goal
+- POST   /api/business/goals/{goal_id}/link-estimate/{estimate_id} - Link estimate to goal
 
 LANE: UTILITY (business planning operations)
 """
@@ -17,7 +22,7 @@ from fastapi import APIRouter, HTTPException
 from .schemas import GoalCreateRequest, GoalUpdateRequest
 from .goals_service import goals_store
 
-router = APIRouter(tags=["Goals", "Business"])
+router = APIRouter(prefix="/goals", tags=["Goals", "Business"])
 
 
 @router.get("", summary="List pricing goals")
