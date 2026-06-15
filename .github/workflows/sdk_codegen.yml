@@ -4,6 +4,9 @@ on:
   push:
     paths:
       - 'services/api/**'
+env:
+  SG_SPEC_TOKEN: ${{ secrets.SG_SPEC_TOKEN }}
+
 jobs:
   codegen:
     runs-on: ubuntu-latest
@@ -14,7 +17,7 @@ jobs:
           python-version: '3.11'
 
       - name: Configure git for private repos
-        if: ${{ secrets.SG_SPEC_TOKEN != '' }}
+        if: ${{ env.SG_SPEC_TOKEN != '' }}
         run: |
           git config --global url."https://${{ secrets.SG_SPEC_TOKEN }}@github.com/".insteadOf "https://github.com/"
 

@@ -22,6 +22,9 @@ on:
       - 'services/api/tests/testdata/mvp_rect_with_island.dxf'
       - '.github/workflows/mvp_golden_gate.yml'
 
+env:
+  SG_SPEC_TOKEN: ${{ secrets.SG_SPEC_TOKEN }}
+
 jobs:
   mvp-golden-gate:
     name: MVP DXF → GRBL Golden Snapshot
@@ -39,7 +42,7 @@ jobs:
           python-version: '3.11'
 
       - name: Configure git for private repos
-        if: ${{ secrets.SG_SPEC_TOKEN != '' }}
+        if: ${{ env.SG_SPEC_TOKEN != '' }}
         run: |
           git config --global url."https://${{ secrets.SG_SPEC_TOKEN }}@github.com/".insteadOf "https://github.com/"
 

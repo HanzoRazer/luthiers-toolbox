@@ -5,6 +5,9 @@ on:
     - cron: '0 5 * * *'   # 05:00 UTC daily
   workflow_dispatch:
 
+env:
+  SG_SPEC_TOKEN: ${{ secrets.SG_SPEC_TOKEN }}
+
 jobs:
   test-cam-essentials:
     runs-on: ubuntu-latest
@@ -24,7 +27,7 @@ jobs:
 
 
       - name: Configure git for private repos
-        if: ${{ secrets.SG_SPEC_TOKEN != '' }}
+        if: ${{ env.SG_SPEC_TOKEN != '' }}
         run: |
           git config --global url."https://${{ secrets.SG_SPEC_TOKEN }}@github.com/".insteadOf "https://github.com/"
 
