@@ -20,7 +20,10 @@ def test_board_feet_one_board():
 def test_seasonal_movement_wraps():
     r = seasonal_movement(400.0, "maple", 40.0, 55.0, "tangential")
     assert "movement_mm" in r
-    assert r["species"] == "maple"
+    # The kernel canonicalizes the species key ("maple" -> "maple_hard"); assert
+    # the canonical value the kernel correctly returns (CI-RED-015-E F1: the test
+    # was stale, the kernel is right).
+    assert r["species"] == "maple_hard"
 
 
 def test_movement_budget_coefficient():
