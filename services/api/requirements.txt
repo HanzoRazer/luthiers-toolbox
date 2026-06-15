@@ -1,4 +1,4 @@
-fastapi
+fastapi>=0.137.0,<0.138.0  # cap the minor: 0.137 added the "Prefix and path cannot be both empty" check; unpinned drift broke container builds (see goals_router fix)
 uvicorn[standard]
 pydantic
 jinja2
