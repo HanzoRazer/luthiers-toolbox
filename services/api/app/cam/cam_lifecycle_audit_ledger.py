@@ -44,6 +44,11 @@ class LifecycleAuditSnapshot(BaseModel):
     blocking_issue_count: int = 0
     warning_count: int = 0
     stage_snapshots: List[str] = Field(default_factory=list)
+    # Populated by run_governed_export_lifecycle when the export is persisted to RMOS
+    # ({persisted, run_id, artifact_count, artifact_kinds}). Declared here so the
+    # orchestrator's `audit_snapshot.rmos_summary = {...}` assignment is valid — without
+    # it pydantic raises ValueError on the persist-true path (CI-RED-015 RMOS-persistence).
+    rmos_summary: Optional[Dict[str, Any]] = None
 
 
 def _stable_hash(payload: Dict[str, Any]) -> str:
