@@ -48,6 +48,9 @@ class LifecycleAuditSnapshot(BaseModel):
     # ({persisted, run_id, artifact_count, artifact_kinds}). Declared here so the
     # orchestrator's `audit_snapshot.rmos_summary = {...}` assignment is valid — without
     # it pydantic raises ValueError on the persist-true path (CI-RED-015 RMOS-persistence).
+    # NOTE: intentionally EXCLUDED from deterministic_hash (see hash_payload below) —
+    # it carries a non-deterministic run_id; it is persistence metadata, not audited
+    # content. Do NOT add it to the hash, or audit determinism breaks.
     rmos_summary: Optional[Dict[str, Any]] = None
 
 
