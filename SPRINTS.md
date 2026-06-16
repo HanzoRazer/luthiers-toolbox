@@ -1475,6 +1475,18 @@ The generic DXF→GRBL pocket planner (`compute_plan`, strategies `["Spiral","La
 
 **Scope:** R2000/pro-tier CAM only — R12/free inputs fail earlier at parse (LINE not read). Reuse existing slot generator; small-to-medium.
 
+### Audit ledger: type the `rmos_summary` contract (optional)
+**Priority:** LOW — quality, not correctness. From the #132 review.
+**Location:** `app/cam/cam_lifecycle_audit_ledger.py` (`LifecycleAuditSnapshot.rmos_summary`)
+
+#132 declared `rmos_summary: Optional[Dict[str, Any]]` to unbreak the persist path. The shape is stable (`{persisted, run_id, artifact_count, artifact_kinds}`), so a typed `RMOSSummary` submodel would make the audit-artifact contract explicit and catch orchestrator drift at assignment time. **Deferred because it partly duplicates the already-typed `report.rmos`** (`rmos_summary` is a denormalized summary of it), so the dict is defensible. Apply only if drift-catching is wanted; verified safe (no consumer reads `rmos_summary`, `model_dump` yields identical JSON).
+
+### Audit determinism: enforce `rmos_summary`-excluded-from-hash with a TEST (not just a comment)
+**Priority:** LOW–MED — the property is load-bearing; the current guard is advisory.
+**Location:** `app/cam/cam_lifecycle_audit_ledger.py` (`_stable_hash` / `hash_payload`)
+
+`rmos_summary` carries a non-deterministic `run_id` and is intentionally excluded from `deterministic_hash`. #132 added a `DO NOT add to the hash` **comment** — but a comment guards-by-persuasion (a future maintainer must read+heed it), the same advisory-only weakness as the toothless gates (CI-RED-021) and the pre-write-proof POS protocols. The **enforced** guard is a test that fails if `rmos_summary` (or any non-deterministic field) is folded into the hash — caught at CI, not on-read. Add if audit determinism is genuinely relied upon.
+
 
 ### ~~Orphaned curvature test file~~
 
