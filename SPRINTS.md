@@ -890,6 +890,7 @@ Domain handoffs and governance docs may add detail but **must cite the SPRINTS I
 | CI-RED-018 | router-count baseline stale (172→252 files, +448 decorators) | CI / gates | CLOSED | 2026-06-15 |
 | CI-RED-019 | routing-truth masked by setuptools editable-build failure — **cause known/fixable (Unit 2, see detail); real route-truth verdict UNKNOWN until unmasked** | CI / gates | OPEN | 2026-06-15 |
 | CI-RED-020 | api-smoke: server reachable-check fails on `main` (`curl 127.0.0.1:8000` refused; app loads 141 routers then HTTP never becomes ready). Distinct from 019 — the app DOES start (019 dies at `pip install -e`). Cause TBD; fold into 019 only if proven same-cause | CI / gates | OPEN | 2026-06-15 |
+| CI-RED-021 | **ENFORCEMENT GAP (systemic) — `main` has ZERO required status checks.** Verified 2026-06-16: classic branch protection `404` (not protected), active rules on `main` ref `[]`, the one ruleset (`May 2 2026`) `enforcement: disabled`. So **every gate is advisory** — Core CI / API Tests (reporting **56** real failures, see CI-RED-015), the repaired fence (CI-RED-004), contract checks, etc. — they **report but none block merge**. This is the **structural root of #114** (a RED fence auto-merged onto `main`): not an accident that slipped enforcement, but the **default state — there was no required check to slip past**. **Generalizes CI-RED-004** from "the fence needs to be required" to "**no gate on `main` is required**." **FIX = set required status checks on `main`** (repo Settings → Branches / Rulesets) — **USER ACTION; a terminal cannot do this.** Highest-leverage governance item: it is what turns every honest gate from an *instrument* (reports truth) into a *guard* (blocks on red). | governance / enforcement | OPEN | 2026-06-16 |
 
 ---
 
@@ -996,6 +997,8 @@ by any workflow) — left untouched; candidate for deletion in separate hygiene 
 **Code state:** Fence repaired + merged (#115 `36c8c052`, #116 `f0ea86dc`); Architecture Scan / Fence Checks **GREEN on `main`**. The original `/api/rmos/runs` boundary violations are resolved and the ratchet is honest.  
 **Why still OPEN:** the protective gap that *caused this saga* remains — #114 auto-merged a RED fence onto main precisely because "Fence Checks (Blocking)" is **not a required status check** under branch protection. Until the fence is set required, a red fence could merge again. Fixed-and-green is not the close; fixed-green-**and-enforced** is.  
 **Closes when:** the fence is set as a **required status check** in branch-protection settings — **USER ACTION** (repo setting, cannot be done from a terminal). Code work is done; only enforcement remains.
+
+> **This is one instance of [CI-RED-021](#) — `main` has NO required status checks at all**, so the fence is not specially unenforced; *every* gate is. Setting required checks closes 004 and 021 together. Verified 2026-06-16: classic protection 404, active rules `[]`, ruleset disabled.
 
 ---
 
