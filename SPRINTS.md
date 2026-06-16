@@ -890,6 +890,7 @@ Domain handoffs and governance docs may add detail but **must cite the SPRINTS I
 | CI-RED-018 | router-count baseline stale (172→252 files, +448 decorators) | CI / gates | CLOSED | 2026-06-15 |
 | CI-RED-019 | routing-truth masked by setuptools editable-build failure — **cause known/fixable (Unit 2, see detail); real route-truth verdict UNKNOWN until unmasked** | CI / gates | OPEN | 2026-06-15 |
 | CI-RED-020 | api-smoke: server reachable-check fails on `main` (`curl 127.0.0.1:8000` refused; app loads 141 routers then HTTP never becomes ready). Distinct from 019 — the app DOES start (019 dies at `pip install -e`). Cause TBD; fold into 019 only if proven same-cause | CI / gates | OPEN | 2026-06-15 |
+| CI-RED-021 | **ENFORCEMENT GAP (systemic) — `main` has NO branch protection at all.** Verified 2026-06-16: classic protection `404`, active rules on the `main` ref `[]`, the one ruleset (`May 2 2026`) `enforcement: disabled`. So **nothing gates merge** — not **required status checks** (Core CI / API Tests [the failure surface, see CI-RED-015], the repaired fence/CI-RED-004, contract checks — all advisory; they report, none block) **and not required reviews**: `.github/CODEOWNERS` assigns `@toolbox-governance` over the CI/fence code (`services/api/app/ci/**`, fence baselines) but is **inert** with no protection to enforce code-owner review. **Structural enabler of #114** (a RED fence auto-merged onto governance-owned code) — the default state, not an accident: there was no required check *or* review to block it. **Generalizes CI-RED-004** from "the fence needs enforcement" to "nothing on `main` is enforced." **FIX = enable branch protection (required status checks + code-owner review)** — repo Settings → Branches / Rulesets — **USER ACTION; a terminal cannot do this.** Turns every honest gate from an *instrument* (reports truth) into a *guard* (blocks on red). _Governance/enforcement meta-finding — **NOT a failing CI run; exclude from CI-red failure counts.**_ | governance / meta | OPEN | 2026-06-16 |
 
 ---
 
@@ -996,6 +997,8 @@ by any workflow) — left untouched; candidate for deletion in separate hygiene 
 **Code state:** Fence repaired + merged (#115 `36c8c052`, #116 `f0ea86dc`); Architecture Scan / Fence Checks **GREEN on `main`**. The original `/api/rmos/runs` boundary violations are resolved and the ratchet is honest.  
 **Why still OPEN:** the protective gap that *caused this saga* remains — #114 auto-merged a RED fence onto main precisely because "Fence Checks (Blocking)" is **not a required status check** under branch protection. Until the fence is set required, a red fence could merge again. Fixed-and-green is not the close; fixed-green-**and-enforced** is.  
 **Closes when:** the fence is set as a **required status check** in branch-protection settings — **USER ACTION** (repo setting, cannot be done from a terminal). Code work is done; only enforcement remains.
+
+> **This is one instance of `CI-RED-021` — `main` has NO branch protection at all**, so the fence is not specially unenforced; *every* gate and code-owner review is. Setting required status checks + code-owner review closes 004 and 021 together. Verified 2026-06-16: classic protection 404, active rules `[]`, ruleset disabled, CODEOWNERS inert.
 
 ---
 
