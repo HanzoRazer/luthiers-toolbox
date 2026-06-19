@@ -167,6 +167,13 @@ class ConstraintExtractor:
 
         landmarks = []
 
+        # Landmarks below are tagged source='vectorizer_extracted' — the canonical
+        # LandmarkPoint.source value for geometry recovered from a vectorized/DXF
+        # outline (weight 1.0 in BodyContourSolver._compute_confidence). Do NOT use
+        # an off-vocabulary string like 'dxf' here: it is absent from both the
+        # source vocabulary and the confidence weights dict, so it silently falls to
+        # the 0.50 unknown-source default and halves reported solve confidence.
+
         # Find Y extents
         min_y = min(p[1] for p in points)
         max_y = max(p[1] for p in points)
@@ -191,7 +198,7 @@ class ConstraintExtractor:
                 label='butt_center',
                 x_mm=butt_x_avg,
                 y_mm=min_y,
-                source='dxf',
+                source='vectorizer_extracted',
                 confidence=0.95,
             ))
 
@@ -203,7 +210,7 @@ class ConstraintExtractor:
                 label='neck_center',
                 x_mm=neck_x_avg,
                 y_mm=max_y,
-                source='dxf',
+                source='vectorizer_extracted',
                 confidence=0.95,
             ))
 
@@ -216,7 +223,7 @@ class ConstraintExtractor:
                     label='lower_bout_max',
                     x_mm=lb_pt[0],
                     y_mm=lb_pt[1],
-                    source='dxf',
+                    source='vectorizer_extracted',
                     confidence=0.90,
                 ))
 
@@ -242,7 +249,7 @@ class ConstraintExtractor:
                     label='waist_min',
                     x_mm=waist_pt[0],
                     y_mm=waist_pt[1],
-                    source='dxf',
+                    source='vectorizer_extracted',
                     confidence=0.85,
                 ))
 
@@ -258,7 +265,7 @@ class ConstraintExtractor:
                         label='upper_bout_max',
                         x_mm=ub_pt[0],
                         y_mm=ub_pt[1],
-                        source='dxf',
+                        source='vectorizer_extracted',
                         confidence=0.90,
                     ))
 
