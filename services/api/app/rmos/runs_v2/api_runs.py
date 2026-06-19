@@ -21,6 +21,7 @@ from .store import (
 )
 from .diff import build_diff
 from .hashing import summarize_request, compute_feasibility_hash
+from .index_meta import extract_and_normalize_from_artifact
 from app.rmos.api.response_utils import runs_list_response
 
 logger = logging.getLogger(__name__)
@@ -56,6 +57,9 @@ from .advisory_blob_service import (
 class RunArtifactSummary(BaseModel):
     """Summary view of a run artifact for list endpoints."""
     run_id: str
+    id: str
+    artifact_id: str
+    kind: str
     created_at_utc: str
     event_type: str
     status: str
@@ -70,21 +74,26 @@ class RunArtifactSummary(BaseModel):
     gcode_sha256: Optional[str] = None
     explanation_status: Optional[str] = None
     advisory_count: int = 0
+    index_meta: Dict[str, Any] = Field(default_factory=dict)
+    meta: Dict[str, Any] = Field(default_factory=dict)
 
 def _to_summary(r: RunArtifact) -> RunArtifactSummary:
     """Convert RunArtifact to summary view."""
     created_at = r.created_at_utc
     if hasattr(created_at, "isoformat"):
         created_at = created_at.isoformat()
+    index_meta = extract_and_normalize_from_artifact(r)
 
     return RunArtifactSummary(
-        run_id=r.run_id, created_at_utc=created_at, event_type=r.event_type, status=r.status,
+        run_id=r.run_id, id=r.run_id, artifact_id=r.run_id, kind=r.event_type,
+        created_at_utc=created_at, event_type=r.event_type, status=r.status,
         mode=r.mode, tool_id=r.tool_id, material_id=r.material_id, machine_id=r.machine_id,
         workflow_session_id=r.workflow_session_id, risk_level=r.decision.risk_level if r.decision else None,
         feasibility_sha256=r.hashes.feasibility_sha256 if r.hashes else None,
         toolpaths_sha256=r.hashes.toolpaths_sha256 if r.hashes else None,
         gcode_sha256=r.hashes.gcode_sha256 if r.hashes else None,
         explanation_status=r.explanation_status, advisory_count=len(r.advisory_inputs) if r.advisory_inputs else 0,
+        index_meta=index_meta, meta=index_meta,
     )
 
 # --- Request Models ---
@@ -492,4 +501,3 @@ def delete_run_endpoint(
     except ValueError as e:
         # Invalid input (e.g., empty reason) - shouldn't happen due to Query validation
         raise HTTPException(status_code=400, detail=str(e))
-
