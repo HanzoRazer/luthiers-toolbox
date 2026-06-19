@@ -319,3 +319,56 @@ if not any(getattr(route, "path", None) == "/api/_meta/routing-truth" for route 
         name="routing_truth",
         tags=["Meta", "Governance"],
     )
+
+
+def _has_route(path: str, method: str) -> bool:
+    return any(
+        getattr(route, "path", None) == path
+        and method.upper() in (getattr(route, "methods", set()) or set())
+        for route in app.routes
+    )
+
+
+if not all(
+    _has_route(path, "POST")
+    for path in (
+        "/api/saw/batch/spec",
+        "/api/saw/batch/plan",
+        "/api/saw/batch/approve",
+    )
+):
+    from .saw_lab.batch_router import (
+        approve_batch_plan,
+        create_batch_plan,
+        create_batch_spec,
+    )
+    from .saw_lab.batch_router_schemas import (
+        BatchApproveResponse,
+        BatchPlanResponse,
+        BatchSpecResponse,
+    )
+
+    if not _has_route("/api/saw/batch/spec", "POST"):
+        app.add_api_route(
+            "/api/saw/batch/spec",
+            create_batch_spec,
+            methods=["POST"],
+            response_model=BatchSpecResponse,
+            tags=["saw", "batch"],
+        )
+    if not _has_route("/api/saw/batch/plan", "POST"):
+        app.add_api_route(
+            "/api/saw/batch/plan",
+            create_batch_plan,
+            methods=["POST"],
+            response_model=BatchPlanResponse,
+            tags=["saw", "batch"],
+        )
+    if not _has_route("/api/saw/batch/approve", "POST"):
+        app.add_api_route(
+            "/api/saw/batch/approve",
+            approve_batch_plan,
+            methods=["POST"],
+            response_model=BatchApproveResponse,
+            tags=["saw", "batch"],
+        )
