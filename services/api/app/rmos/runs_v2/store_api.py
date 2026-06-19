@@ -1,4 +1,4 @@
-"""RMOS Run Store v2 — module-level convenience API."""
+"""RMOS Run Store v2 - module-level convenience API."""
 
 from __future__ import annotations
 
@@ -43,25 +43,24 @@ def persist_run_artifact(
 ) -> Dict[str, Any]:
     """
     Persist a run artifact with the given kind and payload.
-    
+
     This is the interface expected by decision_intelligence_service.
     Returns a dict with 'id' or 'artifact_id' key.
     """
     from .schemas import RunArtifact, RunDecision, Hashes, utc_now
     from .hashing import sha256_of_obj
-    
+
     run_id = create_run_id()
     meta = dict(index_meta or {})
     if parent_artifact_id:
         meta["parent_artifact_id"] = parent_artifact_id
-    
-    # Compute hash for feasibility (required by Hashes)
+
     feasibility_data = payload.get("feasibility", {})
     feasibility_sha = sha256_of_obj(feasibility_data) if feasibility_data else "0" * 64
-    
+
     artifact = RunArtifact(
         run_id=run_id,
-        mode=payload.get("mode") or kind,  # Use kind as fallback
+        mode=payload.get("mode") or kind,
         tool_id=payload.get("tool_id") or "unknown",
         event_type=kind,
         status="OK",
@@ -80,30 +79,106 @@ def persist_run_artifact(
     return {"id": run_id, "artifact_id": run_id, "run_id": run_id}
 
 
+def _status_risk(status: str) -> str:
+    if status == "ERROR":
+        return "ERROR"
+    if status == "BLOCKED":
+        return "YELLOW"
+    return "GREEN"
+
+
+def _add_lineage_meta(
+    meta: Dict[str, Any],
+    *,
+    kind: str,
+    payload: Dict[str, Any],
+    parent_id: Optional[str],
+) -> None:
+    if parent_id:
+        meta.setdefault("parent_id", parent_id)
+        meta.setdefault("parent_artifact_id", parent_id)
+
+    spec_id = payload.get("batch_spec_artifact_id")
+    plan_id = payload.get("batch_plan_artifact_id")
+    decision_id = (
+        payload.get("batch_decision_artifact_id")
+        or payload.get("decision_artifact_id")
+    )
+    toolpaths_id = payload.get("toolpaths_artifact_id")
+    execution_id = payload.get("batch_execution_artifact_id")
+
+    if spec_id:
+        meta.setdefault("parent_batch_spec_artifact_id", str(spec_id))
+    if plan_id:
+        meta.setdefault("parent_batch_plan_artifact_id", str(plan_id))
+    if decision_id:
+        meta.setdefault("parent_batch_decision_artifact_id", str(decision_id))
+    if toolpaths_id:
+        meta.setdefault("parent_batch_toolpaths_artifact_id", str(toolpaths_id))
+    if execution_id:
+        meta.setdefault("parent_batch_execution_artifact_id", str(execution_id))
+
+    if parent_id:
+        if kind == "saw_batch_plan":
+            meta.setdefault("parent_batch_spec_artifact_id", parent_id)
+        elif kind in {"saw_batch_decision", "saw_batch_plan_choose"}:
+            meta.setdefault("parent_batch_plan_artifact_id", parent_id)
+        elif "toolpaths" in kind:
+            meta.setdefault("parent_batch_decision_artifact_id", parent_id)
+        elif "execution" in kind:
+            meta.setdefault("parent_batch_decision_artifact_id", parent_id)
+        elif "job_log" in kind:
+            meta.setdefault("parent_batch_execution_artifact_id", parent_id)
+
+
 def store_artifact(
     *,
     kind: str,
     payload: Dict[str, Any],
-    parent_id: str,
-    session_id: str,
+    parent_id: Optional[str] = None,
+    session_id: Optional[str] = None,
+    batch_label: Optional[str] = None,
+    tool_kind: str = "saw",
+    tool_id: Optional[str] = None,
+    index_meta: Optional[Dict[str, Any]] = None,
+    status: str = "OK",
 ) -> str:
     """
-    Helper to create and persist a run artifact with minimal boilerplate.
+    Helper to create and persist a governed run artifact with queryable index metadata.
     Returns the generated run_id.
     """
-    from .schemas import RunArtifact, utc_now
+    from .schemas import RunArtifact, RunDecision, Hashes, utc_now
 
     run_id = create_run_id()
+    safe_status = status if status in {"OK", "BLOCKED", "ERROR"} else "OK"
+    meta = dict(index_meta or {})
+
+    if session_id:
+        meta.setdefault("session_id", session_id)
+    if batch_label:
+        meta.setdefault("batch_label", batch_label)
+    if tool_kind:
+        meta.setdefault("tool_kind", tool_kind)
+    meta.setdefault("kind", kind)
+    meta.setdefault("event_type", kind)
+    _add_lineage_meta(meta, kind=kind, payload=payload, parent_id=parent_id)
+
     artifact = RunArtifact(
         run_id=run_id,
         event_type=kind,
-        status="OK",
+        status=safe_status,
         created_at_utc=utc_now(),
+        mode=payload.get("mode") or tool_kind or kind,
+        tool_id=payload.get("tool_id") or tool_id or tool_kind or "unknown",
+        request_summary={},
+        feasibility={},
         payload=payload,
-        meta={
-            "parent_id": parent_id,
-            "session_id": session_id,
-        },
+        meta=meta,
+        decision=RunDecision(
+            risk_level=_status_risk(safe_status),
+            warnings=[],
+        ),
+        hashes=Hashes(feasibility_sha256="0" * 64),
     )
     persist_run(artifact)
     return run_id
@@ -127,17 +202,17 @@ def list_runs_filtered(
     limit: int = 50,
     offset: int = 0,
     event_type: Optional[str] = None,
-    kind: Optional[str] = None,  # Alias for event_type
+    kind: Optional[str] = None,
     status: Optional[str] = None,
     tool_id: Optional[str] = None,
     mode: Optional[str] = None,
     workflow_session_id: Optional[str] = None,
     batch_label: Optional[str] = None,
     session_id: Optional[str] = None,
-    parent_plan_run_id: Optional[str] = None,  # Bundle 10: lineage filtering
+    parent_plan_run_id: Optional[str] = None,
     parent_batch_plan_artifact_id: Optional[str] = None,
     parent_batch_spec_artifact_id: Optional[str] = None,
-    parent_artifact_id: Optional[str] = None,  # Generic parent lookup
+    parent_artifact_id: Optional[str] = None,
 ) -> List[RunArtifact]:
     """List runs with optional filtering from the default store."""
     store = _get_default_store()
@@ -227,8 +302,6 @@ def delete_run(
     )
 
 
-
-
 def _norm(s: Any) -> str:
     """Normalize a value to lowercase string for comparison."""
     return str(s or "").strip().lower()
@@ -254,7 +327,6 @@ def _extract_sort_key(run: Dict[str, Any]) -> tuple:
         or _get_nested(run, "request_summary.created_at_utc")
         or ""
     )
-    # Handle datetime objects
     if hasattr(ts, 'isoformat'):
         ts = ts.isoformat()
     rid = str(run.get("run_id") or "")
@@ -300,22 +372,18 @@ def query_recent(
     store = _get_default_store()
     limit = max(1, min(int(limit or 50), 500))
 
-    # Over-fetch to allow for filtering
     fetch_n = limit * 8
 
-    # Get runs as dicts
     runs = store.list_runs(limit=fetch_n)
     items = [r.model_dump() for r in runs]
 
-    # Sort newest first using (ts, run_id)
     items.sort(key=_extract_sort_key, reverse=True)
 
-    # Parse cursor
     cursor_ts = cursor_id = None
     if cursor:
         try:
             cursor_ts, cursor_id = cursor.split("|", 1)
-        except (ValueError, TypeError) as e:  # WP-1: narrowed from except Exception
+        except (ValueError, TypeError) as e:
             logger.warning("Invalid cursor format: %s", e)
             cursor_ts, cursor_id = None, None
 
@@ -323,7 +391,6 @@ def query_recent(
         if not cursor_ts:
             return True
         ts, rid = _extract_sort_key(r)
-        # strictly older than cursor
         if ts < cursor_ts:
             return True
         if ts == cursor_ts and rid < (cursor_id or ""):
@@ -359,20 +426,19 @@ def query_recent(
 
         return True
 
-    out: List[Dict[str, Any]] = []
+    page: List[Dict[str, Any]] = []
     for r in items:
         if not is_older_than_cursor(r):
             continue
         if not match(r):
             continue
-        out.append(r)
-        if len(out) >= limit:
+        page.append(r)
+        if len(page) >= limit:
             break
 
     next_cursor = None
-    if out:
-        ts, rid = _extract_sort_key(out[-1])
-        if ts and rid:
-            next_cursor = f"{ts}|{rid}"
+    if len(page) == limit:
+        ts, rid = _extract_sort_key(page[-1])
+        next_cursor = f"{ts}|{rid}"
 
-    return {"items": out, "next_cursor": next_cursor}
+    return {"items": page, "next_cursor": next_cursor, "limit": limit}
