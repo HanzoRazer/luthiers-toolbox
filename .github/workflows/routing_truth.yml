@@ -75,9 +75,10 @@ jobs:
         run: |
           python - <<'PY'
           from pathlib import Path
+          import os
           import traceback
 
-          witness = Path("../routing_truth_route_witness.txt")
+          witness = Path(os.environ["GITHUB_WORKSPACE"]) / "routing_truth_route_witness.txt"
           expected = "/api/_meta/routing-truth"
 
           try:
@@ -121,8 +122,9 @@ jobs:
         run: |
           python - <<'PY'
           from pathlib import Path
+          import os
 
-          text = Path("../routing_truth_route_witness.txt").read_text(encoding="utf-8")
+          text = (Path(os.environ["GITHUB_WORKSPACE"]) / "routing_truth_route_witness.txt").read_text(encoding="utf-8")
           print(text)
           if not text.startswith("status=MOUNTED\n"):
               raise SystemExit("routing-truth route is not mounted; see routing-truth-route-witness artifact")
