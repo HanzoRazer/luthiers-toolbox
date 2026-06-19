@@ -118,7 +118,7 @@ jobs:
           name: routing-truth-route-witness
           path: routing_truth_route_witness.txt
 
-      - name: Assert routing-truth route is mounted
+      - name: Fail if app import blocks route-table witness
         run: |
           python - <<'PY'
           from pathlib import Path
@@ -126,8 +126,22 @@ jobs:
 
           text = (Path(os.environ["GITHUB_WORKSPACE"]) / "routing_truth_route_witness.txt").read_text(encoding="utf-8")
           print(text)
+          if text.startswith("status=IMPORT_ERROR\n"):
+              raise SystemExit("app.main import failed before route-table witness could run")
+          PY
+
+      - name: Fail if routing-truth route is not mounted
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import os
+
+          text = (Path(os.environ["GITHUB_WORKSPACE"]) / "routing_truth_route_witness.txt").read_text(encoding="utf-8")
+          print(text)
+          if text.startswith("status=NOT_MOUNTED\n"):
+              raise SystemExit("/api/_meta/routing-truth is absent from app.routes")
           if not text.startswith("status=MOUNTED\n"):
-              raise SystemExit("routing-truth route is not mounted; see routing-truth-route-witness artifact")
+              raise SystemExit("unknown routing-truth route witness status")
           PY
 
       - name: Start API (background)
