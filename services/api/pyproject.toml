@@ -5,8 +5,8 @@ requires-python = ">=3.11,<3.14"
 
 [tool.setuptools.packages.find]
 where = ["."]
-include = ["app*"]
-exclude = ["data*", "metrics*", "test_support*"]
+include = ["app", "app.*"]
+exclude = ["data", "data.*", "metrics", "metrics.*", "test_support", "test_support.*"]
 
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
