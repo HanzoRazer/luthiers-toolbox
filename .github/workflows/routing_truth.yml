@@ -62,7 +62,6 @@ jobs:
             echo "Using PIP_INSTALL_CMD override: $PIP_INSTALL_CMD"
             eval "$PIP_INSTALL_CMD"
           else
-            # Install requirements.txt FIRST (has all deps), then editable package
             if [ -f requirements.txt ]; then
               pip install -r requirements.txt
             fi
@@ -73,7 +72,7 @@ jobs:
               exit 1
             fi
           fi
-          # uvicorn is in requirements.txt as uvicorn[standard] - no separate install needed
+          pip install uvicorn
 
       - name: Capture routing-truth route witness
         run: |
