@@ -71,6 +71,27 @@ jobs:
           fi
           pip install uvicorn
 
+      - name: Assert routing-truth route is mounted
+        run: |
+          python - <<'PY'
+          from fastapi.routing import APIRoute
+          from app.main import app
+
+          routes = sorted(
+              route.path
+              for route in app.routes
+              if isinstance(route, APIRoute)
+          )
+          expected = "/api/_meta/routing-truth"
+          meta_routes = [path for path in routes if "routing" in path or path.startswith("/api/_meta")]
+          print("routing/meta routes:")
+          for path in meta_routes:
+              print(" -", path)
+          if expected not in routes:
+              raise SystemExit(f"{expected} is not mounted")
+          print(f"OK: {expected} is mounted")
+          PY
+
       - name: Start API (background)
         run: |
           mkdir -p "$RMOS_RUN_ATTACHMENTS_DIR" "$RMOS_ARTIFACT_ROOT"
