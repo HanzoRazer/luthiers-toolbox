@@ -232,8 +232,13 @@ for router, prefix, tags in load_all_routers():
     else:
         app.include_router(router, tags=tags)
 
-# NOTE: governance_router removed from here - now loaded via system_manifest.py
-# (was causing duplicate /api/_meta/* routes)
+# The registry should mount governance_consolidated_router through
+# system_manifest.py. Keep a guarded fallback so routing-truth remains executable
+# if manifest composition changes or a packaging/install mode misses the router.
+if not any(getattr(route, "path", None) == "/api/_meta/routing-truth" for route in app.routes):
+    from .governance.governance_consolidated_router import router as governance_meta_router
+
+    app.include_router(governance_meta_router)
 
 # Route analytics endpoints - for router consolidation analysis (only if enabled)
 # Access: /api/_analytics/summary, /api/_analytics/export, /api/_analytics/reset
