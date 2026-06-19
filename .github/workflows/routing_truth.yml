@@ -71,25 +71,61 @@ jobs:
           fi
           pip install uvicorn
 
+      - name: Capture routing-truth route witness
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import traceback
+
+          witness = Path("../routing_truth_route_witness.txt")
+          expected = "/api/_meta/routing-truth"
+
+          try:
+              from fastapi.routing import APIRoute
+              from app.main import app
+
+              routes = sorted(
+                  route.path
+                  for route in app.routes
+                  if isinstance(route, APIRoute)
+              )
+              meta_routes = [path for path in routes if "routing" in path or path.startswith("/api/_meta")]
+              status = "MOUNTED" if expected in routes else "NOT_MOUNTED"
+              lines = [
+                  f"status={status}",
+                  f"expected={expected}",
+                  "routing_or_meta_routes:",
+                  *[f"- {path}" for path in meta_routes],
+                  f"total_routes={len(routes)}",
+              ]
+          except Exception:
+              lines = [
+                  "status=IMPORT_ERROR",
+                  f"expected={expected}",
+                  "traceback:",
+                  traceback.format_exc(),
+              ]
+
+          text = "\n".join(lines) + "\n"
+          witness.write_text(text, encoding="utf-8")
+          print(text)
+          PY
+
+      - name: Upload routing-truth route witness
+        uses: actions/upload-artifact@v4
+        with:
+          name: routing-truth-route-witness
+          path: routing_truth_route_witness.txt
+
       - name: Assert routing-truth route is mounted
         run: |
           python - <<'PY'
-          from fastapi.routing import APIRoute
-          from app.main import app
+          from pathlib import Path
 
-          routes = sorted(
-              route.path
-              for route in app.routes
-              if isinstance(route, APIRoute)
-          )
-          expected = "/api/_meta/routing-truth"
-          meta_routes = [path for path in routes if "routing" in path or path.startswith("/api/_meta")]
-          print("routing/meta routes:")
-          for path in meta_routes:
-              print(" -", path)
-          if expected not in routes:
-              raise SystemExit(f"{expected} is not mounted")
-          print(f"OK: {expected} is mounted")
+          text = Path("../routing_truth_route_witness.txt").read_text(encoding="utf-8")
+          print(text)
+          if not text.startswith("status=MOUNTED\n"):
+              raise SystemExit("routing-truth route is not mounted; see routing-truth-route-witness artifact")
           PY
 
       - name: Start API (background)
