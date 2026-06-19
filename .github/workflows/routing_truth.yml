@@ -61,13 +61,16 @@ jobs:
           if [ -n "${PIP_INSTALL_CMD:-}" ]; then
             echo "Using PIP_INSTALL_CMD override: $PIP_INSTALL_CMD"
             eval "$PIP_INSTALL_CMD"
-          elif [ -f pyproject.toml ]; then
-            pip install -e .
-          elif [ -f requirements.txt ]; then
-            pip install -r requirements.txt
           else
-            echo "No pyproject.toml or requirements.txt found in services/api; adjust workflow."
-            exit 1
+            if [ -f requirements.txt ]; then
+              pip install -r requirements.txt
+            fi
+            if [ -f pyproject.toml ]; then
+              pip install -e .
+            elif [ ! -f requirements.txt ]; then
+              echo "No pyproject.toml or requirements.txt found in services/api; adjust workflow."
+              exit 1
+            fi
           fi
           pip install uvicorn
 
