@@ -2,41 +2,87 @@
   "schema": "cbsp21_patch_input_v1",
   "schema_version": "cbsp21_patch_input_v1",
   "coverage_min": 0.95,
-  "patch_id": "ROUTER_COUNT_BASELINE_REPEG",
-  "title": "Re-peg stale router-count baseline 172->252 (unparks CI-RED-018)",
-  "intent": "Update router-count ratchet baseline to reflect 3 months of merged feature work (last pegged 2026-03-14). Restores gate enforcement going forward.",
-  "change_type": "chore",
-  "behavior_change": "ci",
-  "risk_level": "low",
+  "patch_id": "CI_RED_020_ARTIFACT_GATES_INSTALL_AND_LINKAGE",
+  "title": "Peel artifact governance gate dependency masks and restore linkage witnesses",
+  "intent": "Propagate the requirements-first API install pattern to artifact governance gates, then repair the real artifact-linkage verdict exposed after the dependency mask was removed.",
+  "change_type": "fix",
+  "behavior_change": "ci, api",
+  "risk_level": "medium",
   "scope": {
     "paths_in_scope": [
+      ".github/workflows/",
       ".cbsp21/",
-      "ci/"
+      "scripts/governance/",
+      "services/api/app/rmos/runs_v2/",
+      "services/api/app/saw_lab/"
     ],
     "files_expected_to_change": [
-      "ci/router_count_baseline.json",
-      ".cbsp21/patch_input.json"
+      ".github/workflows/run_artifact_contract_gate.yml",
+      ".github/workflows/artifact_linkage_gate.yml",
+      ".cbsp21/patch_input.json",
+      "services/api/app/rmos/runs_v2/store_api.py",
+      "services/api/app/rmos/runs_v2/api_runs.py",
+      "services/api/app/saw_lab/batch_router.py"
     ]
   },
   "diff_articulation": {
-    "what_changed": "router_count_baseline.json: 172->252 files, 740->1188 decorators. Growth reflects 3 months of merged work across cam (26 files), instrument_geometry (13 files), export (5 files), ai (4 files), and incremental additions to existing directories. _experimental routers (3 files) graduated to proper locations (cam_core via a24cc63d, analytics via 5f00bb2b).",
-    "why_not_redundant": "Baseline was 3 months stale (2026-03-14). All 252 files exist on merged main — every counted file is reviewed-and-landed work. Gate was failing on accumulated growth, not proliferation."
+    "what_changed": "Both artifact governance workflows now install requirements.txt before editable package install when PIP_INSTALL_CMD is not overridden. The artifact-linkage witness routes declared in endpoint truth are restored and write governed RMOS artifacts with queryable index metadata. RMOS run summaries now expose kind/id/index_meta so governance scripts can validate lineage through /api/rmos/runs.",
+    "why_not_redundant": "The first CI run after the install-order patch proved the dependency mask was peeled: run-artifact-contract-gate passed, while artifact-linkage-gate failed on missing POST /api/saw/batch/toolpaths. This patch addresses that newly visible contract mismatch instead of claiming the install fix closed the gate."
   },
   "verification": {
     "commands_run": [
-      "python ci/router_count_gate.py (OK within baseline, exit 0)",
-      "git log showing _experimental graduation commits (a24cc63d, 5f00bb2b)",
-      "grep @router showing 229 decorators in routers/cam (33 files), 63 in routers/instrument_geometry (13 files)"
+      "GitHub Actions run-artifact-contract-gate on PR #140 head 4eafdc8 passed after install-order patch",
+      "GitHub Actions artifact-linkage-gate on PR #140 head 4eafdc8 reached /api/health then failed on POST /api/saw/batch/toolpaths 404, proving dependency mask was removed"
+    ],
+    "pending": [
+      "Rerun artifact-linkage-gate after route/linkage repair",
+      "Rerun CBSP21 Gate after declaring updated scope"
     ]
   },
   "files": [
     {
-      "path": "ci/router_count_baseline.json",
-      "intent": "Re-peg baseline to current router count after 3 months of feature work",
-      "scan_targets": ["ci/router_count_baseline.json"],
+      "path": ".github/workflows/run_artifact_contract_gate.yml",
+      "intent": "Install API requirements before editable package install while preserving PIP_INSTALL_CMD override",
+      "scan_targets": [".github/workflows/run_artifact_contract_gate.yml"],
       "risk": "low",
-      "behavior_change": "ci - accepts current router count as baseline, restores ratchet enforcement",
-      "verification": ["Gate passes with 252 files / 1188 decorators", "Growth is real routes not stubs (verified via @router grep)"]
+      "behavior_change": "ci",
+      "verification": ["workflow job reached and passed contract validator"]
+    },
+    {
+      "path": ".github/workflows/artifact_linkage_gate.yml",
+      "intent": "Install API requirements before editable package install while preserving PIP_INSTALL_CMD override",
+      "scan_targets": [".github/workflows/artifact_linkage_gate.yml"],
+      "risk": "low",
+      "behavior_change": "ci",
+      "verification": ["workflow job reached artifact linkage validator after /api/health readiness"]
+    },
+    {
+      "path": "services/api/app/rmos/runs_v2/store_api.py",
+      "intent": "Persist governed RMOS artifacts with batch/session/tool metadata and typed parent links",
+      "scan_targets": ["services/api/app/rmos/runs_v2/store_api.py"],
+      "risk": "medium",
+      "behavior_change": "api - artifact metadata becomes queryable for governance filters"
+    },
+    {
+      "path": "services/api/app/rmos/runs_v2/api_runs.py",
+      "intent": "Expose id/kind/index_meta in run summaries used by governance scripts",
+      "scan_targets": ["services/api/app/rmos/runs_v2/api_runs.py"],
+      "risk": "medium",
+      "behavior_change": "api - widens /api/rmos/runs summary response"
+    },
+    {
+      "path": "services/api/app/saw_lab/batch_router.py",
+      "intent": "Restore route-truth artifact linkage witnesses for toolpaths and job-log with governed RMOS lineage artifacts",
+      "scan_targets": ["services/api/app/saw_lab/batch_router.py"],
+      "risk": "medium",
+      "behavior_change": "api - restores legacy route-truth endpoints as governed witnesses"
+    },
+    {
+      "path": ".cbsp21/patch_input.json",
+      "intent": "Declare CI-RED-020 scope for CBSP21 review",
+      "scan_targets": [".cbsp21/patch_input.json"],
+      "risk": "low",
+      "behavior_change": "governance metadata"
     }
   ]
 }
