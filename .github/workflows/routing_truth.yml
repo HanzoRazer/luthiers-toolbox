@@ -3,6 +3,7 @@ name: routing-truth
 on:
   pull_request:
     paths:
+      - "services/api/pyproject.toml"
       - "services/api/app/**"
       - "services/api/app/data/endpoint_truth.json"
       - "scripts/governance/check_routing_truth.py"
@@ -60,15 +61,91 @@ jobs:
           if [ -n "${PIP_INSTALL_CMD:-}" ]; then
             echo "Using PIP_INSTALL_CMD override: $PIP_INSTALL_CMD"
             eval "$PIP_INSTALL_CMD"
-          elif [ -f pyproject.toml ]; then
-            pip install -e .
-          elif [ -f requirements.txt ]; then
-            pip install -r requirements.txt
           else
-            echo "No pyproject.toml or requirements.txt found in services/api; adjust workflow."
-            exit 1
+            if [ -f requirements.txt ]; then
+              pip install -r requirements.txt
+            fi
+            if [ -f pyproject.toml ]; then
+              pip install -e .
+            elif [ ! -f requirements.txt ]; then
+              echo "No pyproject.toml or requirements.txt found in services/api; adjust workflow."
+              exit 1
+            fi
           fi
           pip install uvicorn
+
+      - name: Capture routing-truth route witness
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import os
+          import traceback
+
+          witness = Path(os.environ["GITHUB_WORKSPACE"]) / "routing_truth_route_witness.txt"
+          expected = "/api/_meta/routing-truth"
+
+          try:
+              from fastapi.routing import APIRoute
+              from app.main import app
+
+              routes = sorted(
+                  route.path
+                  for route in app.routes
+                  if isinstance(route, APIRoute)
+              )
+              meta_routes = [path for path in routes if "routing" in path or path.startswith("/api/_meta")]
+              status = "MOUNTED" if expected in routes else "NOT_MOUNTED"
+              lines = [
+                  f"status={status}",
+                  f"expected={expected}",
+                  "routing_or_meta_routes:",
+                  *[f"- {path}" for path in meta_routes],
+                  f"total_routes={len(routes)}",
+              ]
+          except Exception:
+              lines = [
+                  "status=IMPORT_ERROR",
+                  f"expected={expected}",
+                  "traceback:",
+                  traceback.format_exc(),
+              ]
+
+          text = "\n".join(lines) + "\n"
+          witness.write_text(text, encoding="utf-8")
+          print(text)
+          PY
+
+      - name: Upload routing-truth route witness
+        uses: actions/upload-artifact@v4
+        with:
+          name: routing-truth-route-witness
+          path: routing_truth_route_witness.txt
+
+      - name: Fail if app import blocks route-table witness
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import os
+
+          text = (Path(os.environ["GITHUB_WORKSPACE"]) / "routing_truth_route_witness.txt").read_text(encoding="utf-8")
+          print(text)
+          if text.startswith("status=IMPORT_ERROR\n"):
+              raise SystemExit("app.main import failed before route-table witness could run")
+          PY
+
+      - name: Fail if routing-truth route is not mounted
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import os
+
+          text = (Path(os.environ["GITHUB_WORKSPACE"]) / "routing_truth_route_witness.txt").read_text(encoding="utf-8")
+          print(text)
+          if text.startswith("status=NOT_MOUNTED\n"):
+              raise SystemExit("/api/_meta/routing-truth is absent from app.routes")
+          if not text.startswith("status=MOUNTED\n"):
+              raise SystemExit("unknown routing-truth route witness status")
+          PY
 
       - name: Start API (background)
         run: |

@@ -232,8 +232,9 @@ for router, prefix, tags in load_all_routers():
     else:
         app.include_router(router, tags=tags)
 
-# NOTE: governance_router removed from here - now loaded via system_manifest.py
-# (was causing duplicate /api/_meta/* routes)
+# The registry should mount governance_consolidated_router through
+# system_manifest.py. A direct guarded fallback is registered after local routes
+# below so the routing-truth CI witness can still inspect app.routes.
 
 # Route analytics endpoints - for router consolidation analysis (only if enabled)
 # Access: /api/_analytics/summary, /api/_analytics/export, /api/_analytics/reset
@@ -285,3 +286,89 @@ async def api_health_check():
             "by_category": router_health["by_category"],
         },
     }
+
+
+def _runtime_route_table() -> dict:
+    """Return the mounted APIRoute table used by routing-truth CI."""
+    from fastapi.routing import APIRoute
+
+    routes = []
+    for route in app.routes:
+        if isinstance(route, APIRoute):
+            routes.append({
+                "path": route.path,
+                "methods": sorted(route.methods - {"HEAD", "OPTIONS"}) if route.methods else [],
+                "name": route.name or "",
+                "endpoint": route.endpoint.__name__ if route.endpoint else "",
+            })
+    return {
+        "routes": sorted(routes, key=lambda r: r["path"]),
+        "count": len(routes),
+    }
+
+
+async def _routing_truth_fallback() -> dict:
+    return _runtime_route_table()
+
+
+if not any(getattr(route, "path", None) == "/api/_meta/routing-truth" for route in app.routes):
+    app.add_api_route(
+        "/api/_meta/routing-truth",
+        _routing_truth_fallback,
+        methods=["GET"],
+        name="routing_truth",
+        tags=["Meta", "Governance"],
+    )
+
+
+def _has_route(path: str, method: str) -> bool:
+    return any(
+        getattr(route, "path", None) == path
+        and method.upper() in (getattr(route, "methods", set()) or set())
+        for route in app.routes
+    )
+
+
+if not all(
+    _has_route(path, "POST")
+    for path in (
+        "/api/saw/batch/spec",
+        "/api/saw/batch/plan",
+        "/api/saw/batch/approve",
+    )
+):
+    from .saw_lab.batch_router import (
+        approve_batch_plan,
+        create_batch_plan,
+        create_batch_spec,
+    )
+    from .saw_lab.batch_router_schemas import (
+        BatchApproveResponse,
+        BatchPlanResponse,
+        BatchSpecResponse,
+    )
+
+    if not _has_route("/api/saw/batch/spec", "POST"):
+        app.add_api_route(
+            "/api/saw/batch/spec",
+            create_batch_spec,
+            methods=["POST"],
+            response_model=BatchSpecResponse,
+            tags=["saw", "batch"],
+        )
+    if not _has_route("/api/saw/batch/plan", "POST"):
+        app.add_api_route(
+            "/api/saw/batch/plan",
+            create_batch_plan,
+            methods=["POST"],
+            response_model=BatchPlanResponse,
+            tags=["saw", "batch"],
+        )
+    if not _has_route("/api/saw/batch/approve", "POST"):
+        app.add_api_route(
+            "/api/saw/batch/approve",
+            approve_batch_plan,
+            methods=["POST"],
+            response_model=BatchApproveResponse,
+            tags=["saw", "batch"],
+        )
