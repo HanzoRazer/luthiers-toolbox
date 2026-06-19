@@ -3,6 +3,7 @@ name: routing-truth
 on:
   pull_request:
     paths:
+      - "services/api/pyproject.toml"
       - "services/api/app/**"
       - "services/api/app/data/endpoint_truth.json"
       - "scripts/governance/check_routing_truth.py"
