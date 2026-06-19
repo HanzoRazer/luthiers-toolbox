@@ -233,12 +233,8 @@ for router, prefix, tags in load_all_routers():
         app.include_router(router, tags=tags)
 
 # The registry should mount governance_consolidated_router through
-# system_manifest.py. Keep a guarded fallback so routing-truth remains executable
-# if manifest composition changes or a packaging/install mode misses the router.
-if not any(getattr(route, "path", None) == "/api/_meta/routing-truth" for route in app.routes):
-    from .governance.governance_consolidated_router import router as governance_meta_router
-
-    app.include_router(governance_meta_router)
+# system_manifest.py. A direct guarded fallback is registered after local routes
+# below so the routing-truth CI witness can still inspect app.routes.
 
 # Route analytics endpoints - for router consolidation analysis (only if enabled)
 # Access: /api/_analytics/summary, /api/_analytics/export, /api/_analytics/reset
@@ -290,3 +286,36 @@ async def api_health_check():
             "by_category": router_health["by_category"],
         },
     }
+
+
+def _runtime_route_table() -> dict:
+    """Return the mounted APIRoute table used by routing-truth CI."""
+    from fastapi.routing import APIRoute
+
+    routes = []
+    for route in app.routes:
+        if isinstance(route, APIRoute):
+            routes.append({
+                "path": route.path,
+                "methods": sorted(route.methods - {"HEAD", "OPTIONS"}) if route.methods else [],
+                "name": route.name or "",
+                "endpoint": route.endpoint.__name__ if route.endpoint else "",
+            })
+    return {
+        "routes": sorted(routes, key=lambda r: r["path"]),
+        "count": len(routes),
+    }
+
+
+async def _routing_truth_fallback() -> dict:
+    return _runtime_route_table()
+
+
+if not any(getattr(route, "path", None) == "/api/_meta/routing-truth" for route in app.routes):
+    app.add_api_route(
+        "/api/_meta/routing-truth",
+        _routing_truth_fallback,
+        methods=["GET"],
+        name="routing_truth",
+        tags=["Meta", "Governance"],
+    )
