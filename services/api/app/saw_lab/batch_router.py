@@ -174,6 +174,7 @@ def create_batch_plan(req: BatchPlanRequest) -> BatchPlanResponse:
                 decision_intel_advisory = find_latest_approved_tuning_decision(
                     session_id=session_id,
                     batch_label=batch_label,
+                    tool_kind="saw",
                 )
 
             plan_auto_suggest = {
