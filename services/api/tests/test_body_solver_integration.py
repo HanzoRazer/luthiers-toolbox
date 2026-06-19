@@ -26,6 +26,18 @@ def api_client():
 
 
 @pytest.fixture
+def auth_header():
+    """Paid-tier auth header (AUTH_MODE=header dev path).
+
+    solve-from-landmarks and the landmark-override PUT are paid-tier endpoints
+    (IBG-2B added ``Depends(get_current_principal)``). These headers exercise the
+    real auth path via ``_principal_from_headers`` — authenticating as an operator
+    principal, not bypassing auth with a dependency override.
+    """
+    return {"x-user-role": "operator", "x-user-id": "test_user_123"}
+
+
+@pytest.fixture
 def dreadnought_fixture_dxf():
     """
     Generate a dreadnought DXF fixture using IBG defaults.
@@ -106,7 +118,7 @@ class TestSolveFromDXF:
 class TestSolveFromLandmarks:
     """Test POST /api/body/solve-from-landmarks endpoint."""
 
-    def test_solve_from_landmarks_returns_valid_model(self, api_client):
+    def test_solve_from_landmarks_returns_valid_model(self, api_client, auth_header):
         """Solve from user-provided landmarks."""
         response = api_client.post(
             "/api/body/solve-from-landmarks",
@@ -119,6 +131,7 @@ class TestSolveFromLandmarks:
                 ],
                 "options": {"return_json": True},
             },
+            headers=auth_header,
         )
 
         assert response.status_code == 200
@@ -129,7 +142,7 @@ class TestSolveFromLandmarks:
         assert "outline_points" in data
         assert len(data["outline_points"]) > 50
 
-    def test_solve_from_landmarks_unknown_spec_returns_400(self, api_client):
+    def test_solve_from_landmarks_unknown_spec_returns_400(self, api_client, auth_header):
         """Unknown instrument spec returns 400 error."""
         response = api_client.post(
             "/api/body/solve-from-landmarks",
@@ -139,6 +152,7 @@ class TestSolveFromLandmarks:
                     {"label": "lower_bout_max", "x_mm": 190.5, "y_mm": 80.0},
                 ],
             },
+            headers=auth_header,
         )
 
         assert response.status_code == 400
@@ -147,7 +161,7 @@ class TestSolveFromLandmarks:
 class TestSessionRetrieval:
     """Test GET /api/body/session/{session_id} endpoint."""
 
-    def test_retrieve_session_after_solve(self, api_client):
+    def test_retrieve_session_after_solve(self, api_client, auth_header):
         """Retrieve a session that was just created."""
         create_response = api_client.post(
             "/api/body/solve-from-landmarks",
@@ -158,6 +172,7 @@ class TestSessionRetrieval:
                     {"label": "butt_center", "x_mm": 0, "y_mm": 0},
                 ],
             },
+            headers=auth_header,
         )
 
         assert create_response.status_code == 200
@@ -183,7 +198,7 @@ class TestSessionRetrieval:
 class TestLandmarkOverride:
     """Test PUT /api/body/session/{session_id}/landmarks endpoint."""
 
-    def test_override_landmark_re_solves_model(self, api_client):
+    def test_override_landmark_re_solves_model(self, api_client, auth_header):
         """Override a landmark and verify model is re-solved."""
         create_response = api_client.post(
             "/api/body/solve-from-landmarks",
@@ -194,6 +209,7 @@ class TestLandmarkOverride:
                     {"label": "waist_min", "x_mm": 120.0, "y_mm": 228.0},
                 ],
             },
+            headers=auth_header,
         )
 
         assert create_response.status_code == 200
@@ -207,13 +223,14 @@ class TestLandmarkOverride:
                     {"label": "waist_min", "x_mm": 110.0, "y_mm": 228.0},
                 ],
             },
+            headers=auth_header,
         )
 
         assert override_response.status_code == 200
         data = override_response.json()
         assert data["session_id"] == session_id
 
-    def test_add_landmark_to_session(self, api_client):
+    def test_add_landmark_to_session(self, api_client, auth_header):
         """Add a new landmark to existing session."""
         create_response = api_client.post(
             "/api/body/solve-from-landmarks",
@@ -223,6 +240,7 @@ class TestLandmarkOverride:
                     {"label": "lower_bout_max", "x_mm": 190.5, "y_mm": 80.0},
                 ],
             },
+            headers=auth_header,
         )
 
         assert create_response.status_code == 200
@@ -235,15 +253,17 @@ class TestLandmarkOverride:
                     {"label": "upper_bout_max", "x_mm": 146.0, "y_mm": 390.0},
                 ],
             },
+            headers=auth_header,
         )
 
         assert add_response.status_code == 200
 
-    def test_override_nonexistent_session_returns_404(self, api_client):
+    def test_override_nonexistent_session_returns_404(self, api_client, auth_header):
         """Override on nonexistent session returns 404."""
         response = api_client.put(
             "/api/body/session/nonexistent_id/landmarks",
             json={"override_landmarks": []},
+            headers=auth_header,
         )
         assert response.status_code == 404
 
@@ -255,7 +275,7 @@ class TestInstrumentSpecs:
         "spec_name",
         ["dreadnought", "cuatro_venezolano", "stratocaster", "jumbo"],
     )
-    def test_solve_all_supported_specs(self, api_client, spec_name):
+    def test_solve_all_supported_specs(self, api_client, spec_name, auth_header):
         """All supported specs should solve successfully."""
         response = api_client.post(
             "/api/body/solve-from-landmarks",
@@ -265,6 +285,7 @@ class TestInstrumentSpecs:
                     {"label": "lower_bout_max", "x_mm": 150.0, "y_mm": 80.0},
                 ],
             },
+            headers=auth_header,
         )
 
         assert response.status_code == 200
