@@ -2,84 +2,65 @@
   "schema": "cbsp21_patch_input_v1",
   "schema_version": "cbsp21_patch_input_v1",
   "coverage_min": 0.95,
-  "patch_id": "CI_RED_020_ARTIFACT_GATES_INSTALL_AND_LINKAGE",
-  "title": "Peel artifact governance gate dependency masks and restore linkage witnesses",
-  "intent": "Propagate the requirements-first API install pattern to artifact governance gates, then repair the real artifact-linkage verdict exposed after the dependency mask was removed.",
-  "change_type": "fix",
-  "behavior_change": "ci, api",
-  "risk_level": "medium",
+  "patch_id": "CI_RED_022_RESTORATION_RATCHETS",
+  "title": "Re-peg governance ratchets for PR #140 artifact linkage restoration",
+  "intent": "Update three CI baseline files to reflect PR #140's artifact linkage restoration: router count +2, file size thresholds for 2 files, and fence line number adjustments.",
+  "change_type": "chore",
+  "behavior_change": "ci",
+  "risk_level": "low",
   "scope": {
     "paths_in_scope": [
-      ".github/workflows/",
       ".cbsp21/",
-      "scripts/governance/",
-      "services/api/app/rmos/runs_v2/",
-      "services/api/app/saw_lab/"
+      "ci/",
+      "services/api/app/ci/"
     ],
     "files_expected_to_change": [
-      ".github/workflows/run_artifact_contract_gate.yml",
-      ".github/workflows/artifact_linkage_gate.yml",
-      ".cbsp21/patch_input.json",
-      "services/api/app/rmos/runs_v2/store_api.py",
-      "services/api/app/rmos/runs_v2/api_runs.py",
-      "services/api/app/saw_lab/batch_router.py"
+      "ci/router_count_baseline.json",
+      "ci/file_size_baseline.json",
+      "services/api/app/ci/fence_baseline.json",
+      ".cbsp21/patch_input.json"
     ]
   },
   "diff_articulation": {
-    "what_changed": "Both artifact governance workflows now install requirements.txt before editable package install when PIP_INSTALL_CMD is not overridden. The artifact-linkage witness routes declared in endpoint truth are restored and write governed RMOS artifacts with queryable index metadata. RMOS run summaries now expose kind/id/index_meta so governance scripts can validate lineage through /api/rmos/runs.",
-    "why_not_redundant": "The first CI run after the install-order patch proved the dependency mask was peeled: run-artifact-contract-gate passed, while artifact-linkage-gate failed on missing POST /api/saw/batch/toolpaths. This patch addresses that newly visible contract mismatch instead of claiming the install fix closed the gate."
+    "what_changed": "Three baseline files updated to match PR #140 merged state: (1) router_count_baseline.json route_decorators 1188->1190 for POST /api/saw/batch/toolpaths and POST /api/saw/batch/job-log; (2) file_size_baseline.json adds batch_router.py:550 and api_runs.py:503; (3) fence_baseline.json updates 4 RunArtifact line numbers in runs_v2/.",
+    "why_not_redundant": "PR #140 restored artifact linkage contract and expanded two files past the 500-line threshold. The baseline updates legitimize these already-merged changes."
   },
   "verification": {
     "commands_run": [
-      "GitHub Actions run-artifact-contract-gate on PR #140 head 4eafdc8 passed after install-order patch",
-      "GitHub Actions artifact-linkage-gate on PR #140 head 4eafdc8 reached /api/health then failed on POST /api/saw/batch/toolpaths 404, proving dependency mask was removed"
-    ],
-    "pending": [
-      "Rerun artifact-linkage-gate after route/linkage repair",
-      "Rerun CBSP21 Gate after declaring updated scope"
+      "git show origin/main:services/api/app/saw_lab/batch_router.py | grep -n @router. (verified 2 new routes)",
+      "git show origin/main:services/api/app/saw_lab/batch_router.py | wc -l (550 lines)",
+      "git show origin/main:services/api/app/rmos/runs_v2/api_runs.py | wc -l (503 lines)",
+      "git show origin/main:services/api/app/rmos/runs_v2/*.py | grep -n RunArtifact (verified line numbers)"
     ]
   },
   "files": [
     {
-      "path": ".github/workflows/run_artifact_contract_gate.yml",
-      "intent": "Install API requirements before editable package install while preserving PIP_INSTALL_CMD override",
-      "scan_targets": [".github/workflows/run_artifact_contract_gate.yml"],
+      "path": "ci/router_count_baseline.json",
+      "intent": "Accept +2 routes from PR #140 batch_router.py additions",
+      "scan_targets": ["ci/router_count_baseline.json"],
       "risk": "low",
-      "behavior_change": "ci",
-      "verification": ["workflow job reached and passed contract validator"]
+      "behavior_change": "ci - restores ratchet enforcement with new baseline",
+      "verification": ["Route decorators verified: /toolpaths and /job-log added in PR #140"]
     },
     {
-      "path": ".github/workflows/artifact_linkage_gate.yml",
-      "intent": "Install API requirements before editable package install while preserving PIP_INSTALL_CMD override",
-      "scan_targets": [".github/workflows/artifact_linkage_gate.yml"],
+      "path": "ci/file_size_baseline.json",
+      "intent": "Accept 2 files over 500-line threshold after PR #140",
+      "scan_targets": ["ci/file_size_baseline.json"],
       "risk": "low",
-      "behavior_change": "ci",
-      "verification": ["workflow job reached artifact linkage validator after /api/health readiness"]
+      "behavior_change": "ci - whitelists batch_router.py (550) and api_runs.py (503)",
+      "verification": ["Line counts verified via wc -l on origin/main"]
     },
     {
-      "path": "services/api/app/rmos/runs_v2/store_api.py",
-      "intent": "Persist governed RMOS artifacts with batch/session/tool metadata and typed parent links",
-      "scan_targets": ["services/api/app/rmos/runs_v2/store_api.py"],
-      "risk": "medium",
-      "behavior_change": "api - artifact metadata becomes queryable for governance filters"
-    },
-    {
-      "path": "services/api/app/rmos/runs_v2/api_runs.py",
-      "intent": "Expose id/kind/index_meta in run summaries used by governance scripts",
-      "scan_targets": ["services/api/app/rmos/runs_v2/api_runs.py"],
-      "risk": "medium",
-      "behavior_change": "api - widens /api/rmos/runs summary response"
-    },
-    {
-      "path": "services/api/app/saw_lab/batch_router.py",
-      "intent": "Restore route-truth artifact linkage witnesses for toolpaths and job-log with governed RMOS lineage artifacts",
-      "scan_targets": ["services/api/app/saw_lab/batch_router.py"],
-      "risk": "medium",
-      "behavior_change": "api - restores legacy route-truth endpoints as governed witnesses"
+      "path": "services/api/app/ci/fence_baseline.json",
+      "intent": "Update 4 RunArtifact fence entries to new line numbers after PR #140 refactoring",
+      "scan_targets": ["services/api/app/ci/fence_baseline.json"],
+      "risk": "low",
+      "behavior_change": "ci - accepts moved symbols, no new policy violations",
+      "verification": ["All 4 line numbers verified via grep -n RunArtifact on origin/main"]
     },
     {
       "path": ".cbsp21/patch_input.json",
-      "intent": "Declare CI-RED-020 scope for CBSP21 review",
+      "intent": "Declare CI-RED-022 scope for CBSP21 review",
       "scan_targets": [".cbsp21/patch_input.json"],
       "risk": "low",
       "behavior_change": "governance metadata"
