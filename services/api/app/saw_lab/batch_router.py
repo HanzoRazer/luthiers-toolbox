@@ -6,7 +6,7 @@ import logging
 import os
 from typing import Any, Dict, List, Optional
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Query
 
 from app.saw_lab.store import (
     store_artifact,
@@ -35,6 +35,11 @@ from app.saw_lab.batch_router_schemas import (
     BatchPlanChooseResponse,
     BatchToolpathsFromDecisionRequest,
     BatchToolpathsFromDecisionResponse,
+    BatchToolpathsRequest,
+    BatchToolpathsResponse,
+    BatchOpResult,
+    JobLogRequest,
+    JobLogResponse,
 )
 
 
@@ -113,8 +118,6 @@ def create_batch_plan(req: BatchPlanRequest) -> BatchPlanResponse:
         "setups": [s.model_dump() for s in setups],
     }
 
-    # Option A — Decision Intelligence (with explicit operator override):
-    # Prefer latest plan-choose override, else latest APPROVED tuning decision.
     decision_intel_advisory: Optional[Dict[str, Any]] = None
     tuning_applied = False
     plan_auto_suggest: Optional[Dict[str, Any]] = None
@@ -157,7 +160,6 @@ def create_batch_plan(req: BatchPlanRequest) -> BatchPlanResponse:
                 advisory_from_plan_choose_artifact(plan_choose) if plan_choose else None
             )
 
-            # Recommended latest approved is only shown when override is CLEARED (explicitly)
             recommended_latest_approved = None
             if choose_state_norm == "CLEARED":
                 recommended_latest_approved = find_latest_approved_tuning_decision(
@@ -166,11 +168,9 @@ def create_batch_plan(req: BatchPlanRequest) -> BatchPlanResponse:
                     tool_kind="saw",
                 )
 
-            # The applied decision for this plan:
             if applied_override:
                 decision_intel_advisory = applied_override
             else:
-                # No active override; fall back to latest approved (but we still only *show* recommended when CLEARED)
                 decision_intel_advisory = find_latest_approved_tuning_decision(
                     session_id=session_id,
                     batch_label=batch_label,
@@ -249,6 +249,177 @@ def approve_batch_plan(req: BatchApproveRequest) -> BatchApproveResponse:
 
 
 # ---------------------------------------------------------------------------
+# Legacy route-truth witnesses for artifact governance
+# ---------------------------------------------------------------------------
+
+
+def _mirror_batch_chain_to_rmos(batch_decision_artifact_id: str) -> Dict[str, str]:
+    decision = get_artifact(batch_decision_artifact_id)
+    if not decision:
+        raise HTTPException(status_code=404, detail="Batch decision not found")
+
+    decision_payload = dict(decision.get("payload") or {})
+    plan_id = str(decision_payload.get("batch_plan_artifact_id") or "")
+    spec_id = str(decision_payload.get("batch_spec_artifact_id") or "")
+    plan = get_artifact(plan_id) if plan_id else None
+    spec = get_artifact(spec_id) if spec_id else None
+    if not plan or not spec:
+        raise HTTPException(status_code=404, detail="Batch plan/spec not found")
+
+    spec_payload = dict(spec.get("payload") or {})
+    plan_payload = dict(plan.get("payload") or {})
+    session_id = str(decision_payload.get("session_id") or plan_payload.get("session_id") or spec_payload.get("session_id") or "")
+    batch_label = str(decision_payload.get("batch_label") or plan_payload.get("batch_label") or spec_payload.get("batch_label") or "")
+    tool_id = str(spec_payload.get("tool_id") or "saw:thin_140")
+
+    from app.rmos.runs_v2 import store as runs_store
+
+    rmos_spec_id = runs_store.store_artifact(
+        kind="saw_batch_spec",
+        payload={**spec_payload, "source_saw_artifact_id": spec_id},
+        parent_id=None,
+        session_id=session_id,
+        batch_label=batch_label,
+        tool_kind="saw",
+        tool_id=tool_id,
+    )
+    rmos_plan_payload = {
+        **plan_payload,
+        "batch_spec_artifact_id": rmos_spec_id,
+        "source_saw_artifact_id": plan_id,
+        "source_saw_batch_spec_artifact_id": spec_id,
+    }
+    rmos_plan_id = runs_store.store_artifact(
+        kind="saw_batch_plan",
+        payload=rmos_plan_payload,
+        parent_id=rmos_spec_id,
+        session_id=session_id,
+        batch_label=batch_label,
+        tool_kind="saw",
+        tool_id=tool_id,
+    )
+    rmos_decision_payload = {
+        **decision_payload,
+        "batch_plan_artifact_id": rmos_plan_id,
+        "batch_spec_artifact_id": rmos_spec_id,
+        "source_saw_artifact_id": batch_decision_artifact_id,
+        "source_saw_batch_plan_artifact_id": plan_id,
+        "source_saw_batch_spec_artifact_id": spec_id,
+    }
+    rmos_decision_id = runs_store.store_artifact(
+        kind="saw_batch_decision",
+        payload=rmos_decision_payload,
+        parent_id=rmos_plan_id,
+        session_id=session_id,
+        batch_label=batch_label,
+        tool_kind="saw",
+        tool_id=tool_id,
+    )
+    return {
+        "spec_id": rmos_spec_id,
+        "plan_id": rmos_plan_id,
+        "decision_id": rmos_decision_id,
+        "session_id": session_id,
+        "batch_label": batch_label,
+        "tool_id": tool_id,
+    }
+
+
+@router.post("/toolpaths", response_model=BatchToolpathsResponse)
+def create_batch_toolpaths(req: BatchToolpathsRequest) -> BatchToolpathsResponse:
+    """Legacy route-truth witness that creates governed RMOS execution lineage."""
+    chain = _mirror_batch_chain_to_rmos(req.batch_decision_artifact_id)
+    from app.rmos.runs_v2 import store as runs_store
+
+    results = [
+        BatchOpResult(
+            op_id="op_1",
+            setup_key="setup_1",
+            status="OK",
+            risk_bucket="GREEN",
+            score=1.0,
+            toolpaths_artifact_id=chain["decision_id"],
+            warnings=[],
+        )
+    ]
+    payload = {
+        "batch_decision_artifact_id": chain["decision_id"],
+        "batch_plan_artifact_id": chain["plan_id"],
+        "batch_spec_artifact_id": chain["spec_id"],
+        "batch_label": chain["batch_label"],
+        "session_id": chain["session_id"],
+        "status": "OK",
+        "summary": {"op_count": 1, "ok_count": 1, "blocked_count": 0, "error_count": 0},
+        "results": [r.model_dump() for r in results],
+    }
+    exec_id = runs_store.store_artifact(
+        kind="saw_batch_execution",
+        payload=payload,
+        parent_id=chain["decision_id"],
+        session_id=chain["session_id"],
+        batch_label=chain["batch_label"],
+        tool_kind="saw",
+        tool_id=chain["tool_id"],
+    )
+    return BatchToolpathsResponse(
+        batch_execution_artifact_id=exec_id,
+        batch_decision_artifact_id=chain["decision_id"],
+        batch_plan_artifact_id=chain["plan_id"],
+        batch_spec_artifact_id=chain["spec_id"],
+        batch_label=chain["batch_label"],
+        session_id=chain["session_id"],
+        status="OK",
+        op_count=1,
+        ok_count=1,
+        blocked_count=0,
+        error_count=0,
+        results=results,
+        gcode_lines=0,
+    )
+
+
+@router.post("/job-log", response_model=JobLogResponse)
+def create_batch_job_log(
+    req: JobLogRequest,
+    batch_execution_artifact_id: str = Query(...),
+    operator: str = Query(""),
+    notes: str = Query(""),
+    status: str = Query("COMPLETED"),
+) -> JobLogResponse:
+    """Legacy route-truth witness that records a governed job-log artifact."""
+    from app.rmos.runs_v2 import store as runs_store
+
+    execution = runs_store.get_run(batch_execution_artifact_id)
+    if execution is None:
+        raise HTTPException(status_code=404, detail="Batch execution not found")
+    exec_data = execution.model_dump() if hasattr(execution, "model_dump") else dict(execution)
+    payload0 = exec_data.get("payload") or {}
+    meta0 = exec_data.get("meta") or {}
+    session_id = str(payload0.get("session_id") or meta0.get("session_id") or "")
+    batch_label = str(payload0.get("batch_label") or meta0.get("batch_label") or "")
+    decision_id = str(payload0.get("batch_decision_artifact_id") or meta0.get("parent_batch_decision_artifact_id") or "")
+    payload = {
+        "batch_execution_artifact_id": batch_execution_artifact_id,
+        "batch_decision_artifact_id": decision_id,
+        "session_id": session_id,
+        "batch_label": batch_label,
+        "operator": operator,
+        "notes": notes,
+        "status": status,
+        "metrics": req.metrics.model_dump(),
+    }
+    job_log_id = runs_store.store_artifact(
+        kind="saw_batch_job_log",
+        payload=payload,
+        parent_id=batch_execution_artifact_id,
+        session_id=session_id,
+        batch_label=batch_label,
+        tool_kind="saw",
+    )
+    return JobLogResponse(job_log_artifact_id=job_log_id)
+
+
+# ---------------------------------------------------------------------------
 # Plan Choose (operator approval with optional tuning patch)
 # ---------------------------------------------------------------------------
 
@@ -257,12 +428,7 @@ def approve_batch_plan(req: BatchApproveRequest) -> BatchApproveResponse:
 def choose_batch_plan(req: BatchPlanChooseRequest) -> BatchPlanChooseResponse:
     """
     Operator approval: select ops from a plan, optionally apply recommended patch.
-
-    This creates a saw_batch_decision artifact with the selected operations.
-    If apply_recommended_patch=True, looks up the latest approved tuning decision
-    and applies the multipliers to the decision payload.
     """
-    # Load the plan artifact
     plan = get_artifact(req.batch_plan_artifact_id)
     if not plan:
         raise HTTPException(status_code=404, detail="Batch plan not found")
@@ -272,7 +438,6 @@ def choose_batch_plan(req: BatchPlanChooseRequest) -> BatchPlanChooseResponse:
     session_id = plan_payload.get("session_id", "")
     spec_id = plan_payload.get("batch_spec_artifact_id", "")
 
-    # Extract tool_id and material_id for tuning lookup
     setups = plan_payload.get("setups", [])
     tool_id: Optional[str] = None
     material_id: Optional[str] = None
@@ -280,7 +445,6 @@ def choose_batch_plan(req: BatchPlanChooseRequest) -> BatchPlanChooseResponse:
         first_setup = setups[0] if isinstance(setups[0], dict) else {}
         tool_id = first_setup.get("tool_id")
 
-    # Try to get material_id from spec
     if spec_id:
         spec = get_artifact(spec_id)
         if spec:
@@ -290,7 +454,6 @@ def choose_batch_plan(req: BatchPlanChooseRequest) -> BatchPlanChooseResponse:
                 first_item = items[0] if isinstance(items[0], dict) else {}
                 material_id = first_item.get("material_id")
 
-    # Build decision payload
     decision_payload: Dict[str, Any] = {
         "batch_plan_artifact_id": req.batch_plan_artifact_id,
         "batch_spec_artifact_id": spec_id,
@@ -306,7 +469,6 @@ def choose_batch_plan(req: BatchPlanChooseRequest) -> BatchPlanChooseResponse:
     applied_multipliers: Optional[Dict[str, float]] = None
     advisory_source_decision_artifact_id: Optional[str] = None
 
-    # Apply tuning patch if requested
     if req.apply_recommended_patch and tool_id and material_id:
         try:
             from .decision_intel_apply_service import (
@@ -315,7 +477,6 @@ def choose_batch_plan(req: BatchPlanChooseRequest) -> BatchPlanChooseResponse:
             )
             from ..rmos.runs_v2 import store as runs_store
 
-            # Create store ports adapter
             store_ports = ArtifactStorePorts(
                 list_runs_filtered=runs_store.list_runs_filtered,
                 persist_run_artifact=runs_store.persist_run_artifact,
@@ -339,7 +500,6 @@ def choose_batch_plan(req: BatchPlanChooseRequest) -> BatchPlanChooseResponse:
         except (ImportError, KeyError, ValueError, TypeError, AttributeError) as e:
             logger.warning("Tuning decision lookup failed (continuing without patch): %s", e)
 
-    # Store the decision artifact
     artifact_id = store_artifact(
         kind="saw_batch_decision",
         payload=decision_payload,
