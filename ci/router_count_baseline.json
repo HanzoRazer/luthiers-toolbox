@@ -40,7 +40,7 @@
     "routers\\art": 1,
     "routers\\blueprint": 8,
     "routers\\blueprint_cam": 4,
-    "routers\\cam": 26,
+    "routers\\cam": 27,
     "routers\\cam\\guitar": 8,
     "routers\\cnc_production": 1,
     "routers\\export": 5,
