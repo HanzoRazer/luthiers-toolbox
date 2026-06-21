@@ -254,12 +254,6 @@ CAM_ROUTERS: List[RouterSpec] = [
         category="cam",
     ),
     RouterSpec(
-        module="app.routers.cam.lifecycle_promotion_router",
-        prefix="",
-        tags=["CAM", "Lifecycle", "Promotion"],
-        category="cam",
-    ),
-    RouterSpec(
         module="app.cam.rosette.photo_batch_router",
         prefix="",
         tags=["CAM", "Rosette", "Batch"],
