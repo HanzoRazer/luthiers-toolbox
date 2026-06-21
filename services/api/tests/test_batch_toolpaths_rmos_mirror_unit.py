@@ -1,5 +1,8 @@
 from __future__ import annotations
 
+import pytest
+from fastapi import HTTPException
+
 
 class BatchToolpathsMirrorStubs:
     def __init__(self):
@@ -112,3 +115,45 @@ def test_batch_toolpaths_mirrors_saw_chain_into_rmos(monkeypatch):
     _assert_toolpaths_response(response)
     _assert_store_call_shape(stubs.stored)
     _assert_mirrored_payloads(stubs.stored)
+
+
+def test_batch_toolpaths_mirror_missing_decision_raises_404(monkeypatch):
+    from app.saw_lab import batch_router_helpers
+
+    monkeypatch.setattr(batch_router_helpers, "get_artifact", lambda _artifact_id: None)
+
+    with pytest.raises(HTTPException) as exc_info:
+        batch_router_helpers._mirror_batch_chain_to_rmos("missing-decision")
+
+    assert exc_info.value.status_code == 404
+    assert exc_info.value.detail == "Batch decision not found"
+
+
+def test_batch_toolpaths_mirror_missing_plan_or_spec_raises_404(monkeypatch):
+    from app.saw_lab import batch_router_helpers
+
+    stubs = BatchToolpathsMirrorStubs()
+    del stubs.saw_artifacts["plan-saw"]
+    monkeypatch.setattr(batch_router_helpers, "get_artifact", stubs.get_artifact)
+
+    with pytest.raises(HTTPException) as exc_info:
+        batch_router_helpers._mirror_batch_chain_to_rmos("decision-saw")
+
+    assert exc_info.value.status_code == 404
+    assert exc_info.value.detail == "Batch plan/spec not found"
+
+
+def test_saw_batch_chain_context_falls_back_to_plan_spec_and_default_tool():
+    from app.saw_lab.batch_router_helpers import _saw_batch_chain_context
+
+    context = _saw_batch_chain_context(
+        {},
+        {"session_id": "session-plan"},
+        {"batch_label": "batch-spec"},
+    )
+
+    assert context == {
+        "session_id": "session-plan",
+        "batch_label": "batch-spec",
+        "tool_id": "saw:thin_140",
+    }
