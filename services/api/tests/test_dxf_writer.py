@@ -27,28 +27,42 @@ def _make_writer_with_square(*, closed: bool = True) -> DxfWriter:
 
 
 # =============================================================================
-# test_sentinel_extents_preserved
+# test_extents_policy_uses_geometry_not_sentinels
 # =============================================================================
 
-def test_sentinel_extents_preserved():
-    """EXTMIN/EXTMAX must remain at sentinel values — never recomputed.
+def test_extents_policy_uses_geometry_not_sentinels():
+    """DXF extents policy is geometry-driven, not sentinel-preserving.
 
-    Fusion 360 chokes when EXTMIN/EXTMAX are set to non-sentinel values
-    on AC1015 files.
+    The canonical writer must not reintroduce the retired 1e+20/-1e+20
+    sentinel headers that caused CAD viewer zoom-to-fit failures. The finite
+    geometry itself is the positive witness for downstream extent calculation.
     """
     w = _make_writer_with_square()
-    doc = w.doc
+    raw = w.to_bytes().decode("utf-8")
 
-    extmin = doc.header.get("$EXTMIN", None)
-    extmax = doc.header.get("$EXTMAX", None)
+    assert "1e+20" not in raw
+    assert "-1e+20" not in raw
+    assert "1E+20" not in raw
+    assert "-1E+20" not in raw
 
-    # ezdxf AC1015 default sentinel is (1e20, 1e20, 1e20) / (-1e20, …)
-    # We just verify the writer hasn't overwritten them with real bounds.
-    if extmin is not None:
-        # Should NOT match actual geometry bounds (0, 0) — (100, 100)
-        assert extmin[0] != 0.0 or extmin[1] != 0.0, (
-            "EXTMIN was recomputed from geometry — must stay sentinel"
-        )
+    doc = ezdxf.read(io.StringIO(raw))
+    points = []
+    for entity in doc.modelspace():
+        if entity.dxftype() == "LINE":
+            points.append((
+                round(entity.dxf.start[0], 3),
+                round(entity.dxf.start[1], 3),
+            ))
+            points.append((
+                round(entity.dxf.end[0], 3),
+                round(entity.dxf.end[1], 3),
+            ))
+
+    assert points
+    assert min(x for x, _ in points) == 0.0
+    assert min(y for _, y in points) == 0.0
+    assert max(x for x, _ in points) == 100.0
+    assert max(y for _, y in points) == 100.0
 
 
 # =============================================================================
