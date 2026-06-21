@@ -2,80 +2,47 @@
   "schema": "cbsp21_patch_input_v1",
   "schema_version": "cbsp21_patch_input_v1",
   "coverage_min": 0.95,
-  "patch_id": "CI_RED_003_SAW_BATCH_COMPLEXITY_TAIL",
-  "title": "Close CI-RED-003 saw batch complexity tail",
-  "intent": "Repair the stale complexity baseline line keys for saw_lab/batch_router.py and extract the RMOS mirror path into tested helper functions so debt-gates can evaluate the current SAW batch surface instead of the stale CI-RED-003 tail.",
-  "change_type": "fix",
-  "behavior_change": "refactor",
-  "risk_level": "medium",
+  "patch_id": "CI_RED_022_PLURAL_FILE_SIZE_REPEG",
+  "title": "Complete #143 re-peg: add recovered files to the PLURAL file-size baseline (debt-gates)",
+  "intent": "Finish PR #143's re-peg. #143 updated ci/file_size_baseline.json (root, used by the standalone file-size-check job) but NOT app/ci/file_sizes_baseline.json (plural, used by the debt-gates file-size sub-gate). debt-gates has therefore been red on main since #143. Peg the four oversized recovered/pre-existing files into the plural baseline.",
+  "change_type": "chore",
+  "behavior_change": "ci",
+  "risk_level": "low",
   "scope": {
     "paths_in_scope": [
       ".cbsp21/",
-      "SPRINTS.md",
-      "services/api/app/ci/",
-      "services/api/app/saw_lab/",
-      "services/api/tests/"
+      "services/api/app/ci/"
     ],
     "files_expected_to_change": [
-      "SPRINTS.md",
-      "services/api/app/ci/complexity_baseline.json",
-      "services/api/app/saw_lab/batch_router.py",
-      "services/api/app/saw_lab/batch_router_helpers.py",
-      "services/api/tests/test_batch_toolpaths_rmos_mirror_unit.py",
+      "services/api/app/ci/file_sizes_baseline.json",
       ".cbsp21/patch_input.json"
     ]
   },
   "diff_articulation": {
-    "what_changed": "batch_router.py now delegates the SAW batch RMOS mirror path to batch_router_helpers.py. complexity_baseline.json receives line-number-only repairs for the two still-accepted batch_router findings, without accepting new complexity debt. test_batch_toolpaths_rmos_mirror_unit.py characterizes the happy path plus missing-artifact and fallback-context behavior. SPRINTS.md records the CI-RED-003 current verdict.",
-    "why_not_redundant": "The complexity gate narrowed from the stale 113-violation ledger to a current SAW batch tail: two stale line-key entries and the mirror helper exceeding the complexity threshold. The helper extraction preserves the route behavior while moving the high-complexity mirror chain out of the router function, and the baseline edit only re-anchors existing accepted findings to their current lines."
+    "what_changed": "app/ci/file_sizes_baseline.json: add four entries (violation_count 146->150), inserted in line-descending order: tests/cam/test_manufacturing_replay_intelligence.py (1154), app/cam/manufacturing_replay_registry.py (771), app/routers/cam/manufacturing_replay_router.py (612), app/rmos/runs_v2/api_runs.py (503). These are the files debt-gates' file-size sub-gate flagged after CI-RED-003 (#144) cleared the complexity red that was masking this file-size red.",
+    "why_not_redundant": "These files were pegged into the ROOT baseline by #143 but never into the PLURAL baseline that debt-gates uses, so the gates drifted apart. This finishes the re-peg. Each size was verified real, not blessed blindly: the 1154-line test is 100 lean tests (~11 lines/test) across 11 component classes, dead-center of the repo's established tests/cam/ distribution (siblings at 1370/1214/1209/1153 already baselined) — peg, not split; the registry (771) is 33 register/get/list+filter functions backing the 33-route API; the router (612) is the 33 verified-distinct endpoints; api_runs (503) is real RMOS-runs API, barely over threshold."
   },
   "verification": {
     "commands_run": [
-      "Complexity gate witness from PR #144: batch_router complexity tail cleared; remaining debt-gates red is the separate plural file-size baseline handled by PR #145",
-      "Characterization test covers create_batch_toolpaths RMOS mirror chain and generated artifact lineage",
-      "Additional edge witnesses cover missing decision 404, missing plan/spec 404, and session/batch/tool fallback context",
-      "CBSP21 manifest now declares all changed files in the PR scope"
+      "debt-gates file-size step on #144 flagged exactly these four files (1154/771/612/503) after the complexity red was cleared",
+      "1154-test verified LEAN not god-object: 100 test fns, 157 asserts, 11 classes 1:1 with the bundle surface (~11 lines/test); matches repo precedent (52 test files baselined, several >1154)",
+      "registry 771 verified real: 33 functions (register/get/list + filters for 4 resource families), single registry class",
+      "api_runs 503 verified real file size; the #141 leftover is a misplaced ROOT-baseline ENTRY position, independent of this file's size and the plural baseline",
+      "batch_router.py deliberately NOT pegged: CI-RED-003 (#144) relocates it to 484 (<500) rather than blessing growth"
     ]
   },
   "files": [
     {
-      "path": "SPRINTS.md",
-      "intent": "Record the current CI-RED-003 verdict and remove stale 113-violation framing",
-      "scan_targets": ["SPRINTS.md"],
+      "path": "services/api/app/ci/file_sizes_baseline.json",
+      "intent": "Peg the four verified-real oversized files into the plural baseline debt-gates uses",
+      "scan_targets": ["services/api/app/ci/file_sizes_baseline.json"],
       "risk": "low",
-      "behavior_change": "documentation"
-    },
-    {
-      "path": "services/api/app/ci/complexity_baseline.json",
-      "intent": "Repair stale line keys for existing accepted batch_router complexity findings without changing accepted complexity values",
-      "scan_targets": ["services/api/app/ci/complexity_baseline.json"],
-      "risk": "low",
-      "behavior_change": "ci"
-    },
-    {
-      "path": "services/api/app/saw_lab/batch_router.py",
-      "intent": "Delegate RMOS mirror work to helper module so router complexity falls under the gate threshold",
-      "scan_targets": ["services/api/app/saw_lab/batch_router.py"],
-      "risk": "medium",
-      "behavior_change": "refactor"
-    },
-    {
-      "path": "services/api/app/saw_lab/batch_router_helpers.py",
-      "intent": "Host the extracted SAW batch RMOS mirror helper chain",
-      "scan_targets": ["services/api/app/saw_lab/batch_router_helpers.py"],
-      "risk": "medium",
-      "behavior_change": "refactor"
-    },
-    {
-      "path": "services/api/tests/test_batch_toolpaths_rmos_mirror_unit.py",
-      "intent": "Characterize RMOS mirror behavior across happy path, missing-artifact errors, and fallback context",
-      "scan_targets": ["services/api/tests/test_batch_toolpaths_rmos_mirror_unit.py"],
-      "risk": "low",
-      "behavior_change": "test"
+      "behavior_change": "ci - re-pegs the debt-gates file-size sub-gate to the verified-real recovered surface",
+      "verification": ["each size verified real (test lean / registry+router real / api_runs real); none a god-object to split"]
     },
     {
       "path": ".cbsp21/patch_input.json",
-      "intent": "Declare CI-RED-003 patch scope for CBSP21 review",
+      "intent": "Declare the plural file-size re-peg scope for CBSP21 review",
       "scan_targets": [".cbsp21/patch_input.json"],
       "risk": "low",
       "behavior_change": "governance metadata"
