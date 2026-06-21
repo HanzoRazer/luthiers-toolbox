@@ -2,65 +2,56 @@
   "schema": "cbsp21_patch_input_v1",
   "schema_version": "cbsp21_patch_input_v1",
   "coverage_min": 0.95,
-  "patch_id": "CI_RED_022_RESTORATION_RATCHETS",
-  "title": "Re-peg governance ratchets for PR #140 artifact linkage restoration",
-  "intent": "Update three CI baseline files to reflect PR #140's artifact linkage restoration: router count +2, file size thresholds for 2 files, and fence line number adjustments.",
+  "patch_id": "CI_RED_023_RECOVERY_RATCHETS",
+  "title": "Re-peg governance ratchets for #142 manufacturing replay recovery",
+  "intent": "Update two CI baseline files to reflect PR #142's manufacturing replay router recovery: router count +33 routes / +1 router file, and file-size thresholds for 2 restored files over the 500-line limit.",
   "change_type": "chore",
   "behavior_change": "ci",
   "risk_level": "low",
   "scope": {
     "paths_in_scope": [
       ".cbsp21/",
-      "ci/",
-      "services/api/app/ci/"
+      "ci/"
     ],
     "files_expected_to_change": [
       "ci/router_count_baseline.json",
       "ci/file_size_baseline.json",
-      "services/api/app/ci/fence_baseline.json",
       ".cbsp21/patch_input.json"
     ]
   },
   "diff_articulation": {
-    "what_changed": "Three baseline files updated to match PR #140 merged state: (1) router_count_baseline.json route_decorators 1188->1190 for POST /api/saw/batch/toolpaths and POST /api/saw/batch/job-log; (2) file_size_baseline.json adds batch_router.py:550 and api_runs.py:503; (3) fence_baseline.json updates 4 RunArtifact line numbers in runs_v2/.",
-    "why_not_redundant": "PR #140 restored artifact linkage contract and expanded two files past the 500-line threshold. The baseline updates legitimize these already-merged changes."
+    "what_changed": "Two baseline files re-pegged for PR #142's recovery: (1) router_count_baseline.json route_decorators 1190->1223 and router_files 252->253 for the restored manufacturing_replay_router.py; (2) file_size_baseline.json adds manufacturing_replay_registry.py:771 and routers/cam/manufacturing_replay_router.py:612, inserted in alphabetical order. No fence_baseline.json change: the recovery added zero RunArtifact violations (Fence Checks passed on #142).",
+    "why_not_redundant": "PR #142 restored the manufacturing replay bundle (router + registry + companions), legitimately adding 33 distinct routes and two files over the 500-line threshold. These ratchets fire on that real growth; the re-peg accepts the verified-real surface so the gates enforce against the new, correct baseline."
   },
   "verification": {
     "commands_run": [
-      "git show origin/main:services/api/app/saw_lab/batch_router.py | grep -n @router. (verified 2 new routes)",
-      "git show origin/main:services/api/app/saw_lab/batch_router.py | wc -l (550 lines)",
-      "git show origin/main:services/api/app/rmos/runs_v2/api_runs.py | wc -l (503 lines)",
-      "git show origin/main:services/api/app/rmos/runs_v2/*.py | grep -n RunArtifact (verified line numbers)"
+      "#142 Core CI router-count gate reported '1223 > 1190' and '253 > 252' (the exact deltas pegged here)",
+      "+33 routes confirmed REAL not duplication: 33 distinct method+path decorators in manufacturing_replay_router.py (4 resource families: observations/sessions/timelines/packages + meta/ci), 0 routes in the 3 companion files",
+      "file sizes verified on #142: manufacturing_replay_registry.py 771, routers/cam/manufacturing_replay_router.py 612 (file-size gate REGRESSION lines)",
+      "#142 Fence Checks (Blocking) passed -> no new RunArtifact violations -> no fence_baseline change needed",
+      "file_size_baseline.json sort invariant preserved: both new entries inserted in alphabetical position"
     ]
   },
   "files": [
     {
       "path": "ci/router_count_baseline.json",
-      "intent": "Accept +2 routes from PR #140 batch_router.py additions",
+      "intent": "Accept +33 routes and +1 router file from PR #142 manufacturing_replay_router.py recovery",
       "scan_targets": ["ci/router_count_baseline.json"],
       "risk": "low",
-      "behavior_change": "ci - restores ratchet enforcement with new baseline",
-      "verification": ["Route decorators verified: /toolpaths and /job-log added in PR #140"]
+      "behavior_change": "ci - re-pegs ratchet to the recovered route surface (1223 / 253)",
+      "verification": ["+33 confirmed distinct endpoints, not registration duplication; verified against #142 router-count gate output"]
     },
     {
       "path": "ci/file_size_baseline.json",
-      "intent": "Accept 2 files over 500-line threshold after PR #140",
+      "intent": "Accept 2 restored files over the 500-line threshold after PR #142",
       "scan_targets": ["ci/file_size_baseline.json"],
       "risk": "low",
-      "behavior_change": "ci - whitelists batch_router.py (550) and api_runs.py (503)",
-      "verification": ["Line counts verified via wc -l on origin/main"]
-    },
-    {
-      "path": "services/api/app/ci/fence_baseline.json",
-      "intent": "Update 4 RunArtifact fence entries to new line numbers after PR #140 refactoring",
-      "scan_targets": ["services/api/app/ci/fence_baseline.json"],
-      "risk": "low",
-      "behavior_change": "ci - accepts moved symbols, no new policy violations",
-      "verification": ["All 4 line numbers verified via grep -n RunArtifact on origin/main"]
+      "behavior_change": "ci - whitelists manufacturing_replay_registry.py (771) and manufacturing_replay_router.py (612), inserted in sorted order",
+      "verification": ["Line counts verified via #142 file-size gate REGRESSION output; sort invariant preserved"]
     },
     {
       "path": ".cbsp21/patch_input.json",
-      "intent": "Declare CI-RED-022 scope for CBSP21 review",
+      "intent": "Declare CI-RED-023 ratchet re-peg scope for CBSP21 review",
       "scan_targets": [".cbsp21/patch_input.json"],
       "risk": "low",
       "behavior_change": "governance metadata"
