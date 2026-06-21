@@ -96,10 +96,13 @@ def _assert_mirrored_payloads(stored):
 def test_batch_toolpaths_mirrors_saw_chain_into_rmos(monkeypatch):
     from app.rmos.runs_v2 import store as runs_store
     from app.saw_lab import batch_router
+    from app.saw_lab import batch_router_helpers
     from app.saw_lab.batch_router import BatchToolpathsRequest
 
     stubs = BatchToolpathsMirrorStubs()
-    monkeypatch.setattr(batch_router, "get_artifact", stubs.get_artifact)
+    # _load_saw_batch_chain now lives in batch_router_helpers, so patch get_artifact
+    # there (where the mirror path resolves it), not in batch_router.
+    monkeypatch.setattr(batch_router_helpers, "get_artifact", stubs.get_artifact)
     monkeypatch.setattr(runs_store, "store_artifact", stubs.store_artifact)
 
     response = batch_router.create_batch_toolpaths(
