@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import logging
 import os
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Tuple
 
 from fastapi import APIRouter, HTTPException, Query
 
@@ -253,7 +253,9 @@ def approve_batch_plan(req: BatchApproveRequest) -> BatchApproveResponse:
 # ---------------------------------------------------------------------------
 
 
-def _mirror_batch_chain_to_rmos(batch_decision_artifact_id: str) -> Dict[str, str]:
+def _load_saw_batch_chain(
+    batch_decision_artifact_id: str,
+) -> Tuple[Dict[str, Any], Dict[str, Any], Dict[str, Any], str, str]:
     decision = get_artifact(batch_decision_artifact_id)
     if not decision:
         raise HTTPException(status_code=404, detail="Batch decision not found")
@@ -266,22 +268,56 @@ def _mirror_batch_chain_to_rmos(batch_decision_artifact_id: str) -> Dict[str, st
     if not plan or not spec:
         raise HTTPException(status_code=404, detail="Batch plan/spec not found")
 
-    spec_payload = dict(spec.get("payload") or {})
-    plan_payload = dict(plan.get("payload") or {})
-    session_id = str(decision_payload.get("session_id") or plan_payload.get("session_id") or spec_payload.get("session_id") or "")
-    batch_label = str(decision_payload.get("batch_label") or plan_payload.get("batch_label") or spec_payload.get("batch_label") or "")
-    tool_id = str(spec_payload.get("tool_id") or "saw:thin_140")
+    return (
+        decision_payload,
+        dict(plan.get("payload") or {}),
+        dict(spec.get("payload") or {}),
+        plan_id,
+        spec_id,
+    )
 
-    from app.rmos.runs_v2 import store as runs_store
 
+def _saw_batch_chain_context(
+    decision_payload: Dict[str, Any],
+    plan_payload: Dict[str, Any],
+    spec_payload: Dict[str, Any],
+) -> Dict[str, str]:
+    return {
+        "session_id": str(
+            decision_payload.get("session_id")
+            or plan_payload.get("session_id")
+            or spec_payload.get("session_id")
+            or ""
+        ),
+        "batch_label": str(
+            decision_payload.get("batch_label")
+            or plan_payload.get("batch_label")
+            or spec_payload.get("batch_label")
+            or ""
+        ),
+        "tool_id": str(spec_payload.get("tool_id") or "saw:thin_140"),
+    }
+
+
+def _store_rmos_batch_chain(
+    runs_store: Any,
+    *,
+    batch_decision_artifact_id: str,
+    decision_payload: Dict[str, Any],
+    plan_payload: Dict[str, Any],
+    spec_payload: Dict[str, Any],
+    plan_id: str,
+    spec_id: str,
+    context: Dict[str, str],
+) -> Dict[str, str]:
     rmos_spec_id = runs_store.store_artifact(
         kind="saw_batch_spec",
         payload={**spec_payload, "source_saw_artifact_id": spec_id},
         parent_id=None,
-        session_id=session_id,
-        batch_label=batch_label,
+        session_id=context["session_id"],
+        batch_label=context["batch_label"],
         tool_kind="saw",
-        tool_id=tool_id,
+        tool_id=context["tool_id"],
     )
     rmos_plan_payload = {
         **plan_payload,
@@ -293,10 +329,10 @@ def _mirror_batch_chain_to_rmos(batch_decision_artifact_id: str) -> Dict[str, st
         kind="saw_batch_plan",
         payload=rmos_plan_payload,
         parent_id=rmos_spec_id,
-        session_id=session_id,
-        batch_label=batch_label,
+        session_id=context["session_id"],
+        batch_label=context["batch_label"],
         tool_kind="saw",
-        tool_id=tool_id,
+        tool_id=context["tool_id"],
     )
     rmos_decision_payload = {
         **decision_payload,
@@ -310,19 +346,37 @@ def _mirror_batch_chain_to_rmos(batch_decision_artifact_id: str) -> Dict[str, st
         kind="saw_batch_decision",
         payload=rmos_decision_payload,
         parent_id=rmos_plan_id,
-        session_id=session_id,
-        batch_label=batch_label,
+        session_id=context["session_id"],
+        batch_label=context["batch_label"],
         tool_kind="saw",
-        tool_id=tool_id,
+        tool_id=context["tool_id"],
     )
     return {
         "spec_id": rmos_spec_id,
         "plan_id": rmos_plan_id,
         "decision_id": rmos_decision_id,
-        "session_id": session_id,
-        "batch_label": batch_label,
-        "tool_id": tool_id,
+        **context,
     }
+
+
+def _mirror_batch_chain_to_rmos(batch_decision_artifact_id: str) -> Dict[str, str]:
+    decision_payload, plan_payload, spec_payload, plan_id, spec_id = _load_saw_batch_chain(
+        batch_decision_artifact_id
+    )
+    context = _saw_batch_chain_context(decision_payload, plan_payload, spec_payload)
+
+    from app.rmos.runs_v2 import store as runs_store
+
+    return _store_rmos_batch_chain(
+        runs_store,
+        batch_decision_artifact_id=batch_decision_artifact_id,
+        decision_payload=decision_payload,
+        plan_payload=plan_payload,
+        spec_payload=spec_payload,
+        plan_id=plan_id,
+        spec_id=spec_id,
+        context=context,
+    )
 
 
 @router.post("/toolpaths", response_model=BatchToolpathsResponse)

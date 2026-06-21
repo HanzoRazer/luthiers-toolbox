@@ -405,7 +405,7 @@
       "file": "app/saw_lab/batch_router.py",
       "function": "create_batch_plan",
       "complexity": 25,
-      "line": 64,
+      "line": 69,
       "letter": "F"
     },
     {
@@ -1385,7 +1385,7 @@
       "file": "app/saw_lab/batch_router.py",
       "function": "choose_batch_plan",
       "complexity": 18,
-      "line": 257,
+      "line": 482,
       "letter": "F"
     },
     {
