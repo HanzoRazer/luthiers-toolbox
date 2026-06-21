@@ -41,6 +41,12 @@ from app.saw_lab.batch_router_schemas import (
     JobLogRequest,
     JobLogResponse,
 )
+from app.saw_lab.batch_router_helpers import (
+    _load_saw_batch_chain,
+    _saw_batch_chain_context,
+    _store_rmos_batch_chain,
+    _mirror_batch_chain_to_rmos,
+)
 
 
 # ---------------------------------------------------------------------------
@@ -251,78 +257,6 @@ def approve_batch_plan(req: BatchApproveRequest) -> BatchApproveResponse:
 # ---------------------------------------------------------------------------
 # Legacy route-truth witnesses for artifact governance
 # ---------------------------------------------------------------------------
-
-
-def _mirror_batch_chain_to_rmos(batch_decision_artifact_id: str) -> Dict[str, str]:
-    decision = get_artifact(batch_decision_artifact_id)
-    if not decision:
-        raise HTTPException(status_code=404, detail="Batch decision not found")
-
-    decision_payload = dict(decision.get("payload") or {})
-    plan_id = str(decision_payload.get("batch_plan_artifact_id") or "")
-    spec_id = str(decision_payload.get("batch_spec_artifact_id") or "")
-    plan = get_artifact(plan_id) if plan_id else None
-    spec = get_artifact(spec_id) if spec_id else None
-    if not plan or not spec:
-        raise HTTPException(status_code=404, detail="Batch plan/spec not found")
-
-    spec_payload = dict(spec.get("payload") or {})
-    plan_payload = dict(plan.get("payload") or {})
-    session_id = str(decision_payload.get("session_id") or plan_payload.get("session_id") or spec_payload.get("session_id") or "")
-    batch_label = str(decision_payload.get("batch_label") or plan_payload.get("batch_label") or spec_payload.get("batch_label") or "")
-    tool_id = str(spec_payload.get("tool_id") or "saw:thin_140")
-
-    from app.rmos.runs_v2 import store as runs_store
-
-    rmos_spec_id = runs_store.store_artifact(
-        kind="saw_batch_spec",
-        payload={**spec_payload, "source_saw_artifact_id": spec_id},
-        parent_id=None,
-        session_id=session_id,
-        batch_label=batch_label,
-        tool_kind="saw",
-        tool_id=tool_id,
-    )
-    rmos_plan_payload = {
-        **plan_payload,
-        "batch_spec_artifact_id": rmos_spec_id,
-        "source_saw_artifact_id": plan_id,
-        "source_saw_batch_spec_artifact_id": spec_id,
-    }
-    rmos_plan_id = runs_store.store_artifact(
-        kind="saw_batch_plan",
-        payload=rmos_plan_payload,
-        parent_id=rmos_spec_id,
-        session_id=session_id,
-        batch_label=batch_label,
-        tool_kind="saw",
-        tool_id=tool_id,
-    )
-    rmos_decision_payload = {
-        **decision_payload,
-        "batch_plan_artifact_id": rmos_plan_id,
-        "batch_spec_artifact_id": rmos_spec_id,
-        "source_saw_artifact_id": batch_decision_artifact_id,
-        "source_saw_batch_plan_artifact_id": plan_id,
-        "source_saw_batch_spec_artifact_id": spec_id,
-    }
-    rmos_decision_id = runs_store.store_artifact(
-        kind="saw_batch_decision",
-        payload=rmos_decision_payload,
-        parent_id=rmos_plan_id,
-        session_id=session_id,
-        batch_label=batch_label,
-        tool_kind="saw",
-        tool_id=tool_id,
-    )
-    return {
-        "spec_id": rmos_spec_id,
-        "plan_id": rmos_plan_id,
-        "decision_id": rmos_decision_id,
-        "session_id": session_id,
-        "batch_label": batch_label,
-        "tool_id": tool_id,
-    }
 
 
 @router.post("/toolpaths", response_model=BatchToolpathsResponse)
