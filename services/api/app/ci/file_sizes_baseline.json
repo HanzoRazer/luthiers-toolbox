@@ -1,6 +1,6 @@
 {
   "threshold": 500,
-  "violation_count": 146,
+  "violation_count": 150,
   "violations": [
     {
       "file": "app/instrument_geometry/body/ibg/arc_reconstructor.py",
@@ -41,6 +41,11 @@
       "file": "tests/cam/test_post_freeze_expansion_gate.py",
       "lines": 1209,
       "over_by": 709
+    },
+    {
+      "file": "tests/cam/test_manufacturing_replay_intelligence.py",
+      "lines": 1154,
+      "over_by": 654
     },
     {
       "file": "tests/cam/test_governance_baseline_freeze.py",
@@ -166,6 +171,11 @@
       "file": "tests/cam/test_translator_governance_continuity_graph.py",
       "lines": 773,
       "over_by": 273
+    },
+    {
+      "file": "app/cam/manufacturing_replay_registry.py",
+      "lines": 771,
+      "over_by": 271
     },
     {
       "file": "app/instrument_geometry/body/ibg/morphology_harvest/artifact_body_evidence_adapter.py",
@@ -421,6 +431,11 @@
       "file": "app/cam/unified_dxf_cleaner.py",
       "lines": 613,
       "over_by": 113
+    },
+    {
+      "file": "app/routers/cam/manufacturing_replay_router.py",
+      "lines": 612,
+      "over_by": 112
     },
     {
       "file": "tests/test_workflow_sessions_endpoint_smoke.py",
@@ -726,6 +741,11 @@
       "file": "app/tests/test_e2e_workflow_integration.py",
       "lines": 504,
       "over_by": 4
+    },
+    {
+      "file": "app/rmos/runs_v2/api_runs.py",
+      "lines": 503,
+      "over_by": 3
     },
     {
       "file": "app/routers/blueprint/calibration_router.py",

@@ -2,57 +2,47 @@
   "schema": "cbsp21_patch_input_v1",
   "schema_version": "cbsp21_patch_input_v1",
   "coverage_min": 0.95,
-  "patch_id": "CI_RED_023_RECOVERY_RATCHETS",
-  "title": "Re-peg governance ratchets for #142 manufacturing replay recovery",
-  "intent": "Update two CI baseline files to reflect PR #142's manufacturing replay router recovery: router count +33 routes / +1 router file, routers\\cam directory count +1, and file-size thresholds for 2 restored files over the 500-line limit.",
+  "patch_id": "CI_RED_022_PLURAL_FILE_SIZE_REPEG",
+  "title": "Complete #143 re-peg: add recovered files to the PLURAL file-size baseline (debt-gates)",
+  "intent": "Finish PR #143's re-peg. #143 updated ci/file_size_baseline.json (root, used by the standalone file-size-check job) but NOT app/ci/file_sizes_baseline.json (plural, used by the debt-gates file-size sub-gate). debt-gates has therefore been red on main since #143. Peg the four oversized recovered/pre-existing files into the plural baseline.",
   "change_type": "chore",
   "behavior_change": "ci",
   "risk_level": "low",
   "scope": {
     "paths_in_scope": [
       ".cbsp21/",
-      "ci/"
+      "services/api/app/ci/"
     ],
     "files_expected_to_change": [
-      "ci/router_count_baseline.json",
-      "ci/file_size_baseline.json",
+      "services/api/app/ci/file_sizes_baseline.json",
       ".cbsp21/patch_input.json"
     ]
   },
   "diff_articulation": {
-    "what_changed": "Two baseline files re-pegged for PR #142's recovery: (1) router_count_baseline.json route_decorators 1190->1223, router_files 252->253, and by_directory routers\\cam 26->27 for the restored manufacturing_replay_router.py; (2) file_size_baseline.json adds manufacturing_replay_registry.py:771 and routers/cam/manufacturing_replay_router.py:612, inserted in alphabetical order. No fence_baseline.json change: the recovery added zero RunArtifact violations (Fence Checks passed on #142).",
-    "why_not_redundant": "PR #142 restored the manufacturing replay bundle (router + registry + companions), legitimately adding 33 distinct routes, one routers/cam router file, and two files over the 500-line threshold. These ratchets fire on that real growth; the re-peg accepts the verified-real surface so the gates enforce against the new, correct baseline."
+    "what_changed": "app/ci/file_sizes_baseline.json: add four entries (violation_count 146->150), inserted in line-descending order: tests/cam/test_manufacturing_replay_intelligence.py (1154), app/cam/manufacturing_replay_registry.py (771), app/routers/cam/manufacturing_replay_router.py (612), app/rmos/runs_v2/api_runs.py (503). These are the files debt-gates' file-size sub-gate flagged after CI-RED-003 (#144) cleared the complexity red that was masking this file-size red.",
+    "why_not_redundant": "These files were pegged into the ROOT baseline by #143 but never into the PLURAL baseline that debt-gates uses, so the gates drifted apart. This finishes the re-peg. Each size was verified real, not blessed blindly: the 1154-line test is 100 lean tests (~11 lines/test) across 11 component classes, dead-center of the repo's established tests/cam/ distribution (siblings at 1370/1214/1209/1153 already baselined) — peg, not split; the registry (771) is 33 register/get/list+filter functions backing the 33-route API; the router (612) is the 33 verified-distinct endpoints; api_runs (503) is real RMOS-runs API, barely over threshold."
   },
   "verification": {
     "commands_run": [
-      "#142 Core CI router-count gate reported '1223 > 1190' and '253 > 252' (the exact total deltas pegged here)",
-      "+33 routes confirmed REAL not duplication: 33 distinct method+path decorators in manufacturing_replay_router.py (4 resource families: observations/sessions/timelines/packages + meta/ci), 0 routes in the 3 companion files",
-      "router_count_baseline.json by_directory updated for the restored router location: routers\\cam 26->27",
-      "file sizes verified on #142: manufacturing_replay_registry.py 771, routers/cam/manufacturing_replay_router.py 612 (file-size gate REGRESSION lines)",
-      "#142 Fence Checks (Blocking) passed -> no new RunArtifact violations -> no fence_baseline change needed",
-      "file_size_baseline.json sort invariant preserved: both new entries inserted in alphabetical position"
+      "debt-gates file-size step on #144 flagged exactly these four files (1154/771/612/503) after the complexity red was cleared",
+      "1154-test verified LEAN not god-object: 100 test fns, 157 asserts, 11 classes 1:1 with the bundle surface (~11 lines/test); matches repo precedent (52 test files baselined, several >1154)",
+      "registry 771 verified real: 33 functions (register/get/list + filters for 4 resource families), single registry class",
+      "api_runs 503 verified real file size; the #141 leftover is a misplaced ROOT-baseline ENTRY position, independent of this file's size and the plural baseline",
+      "batch_router.py deliberately NOT pegged: CI-RED-003 (#144) relocates it to 484 (<500) rather than blessing growth"
     ]
   },
   "files": [
     {
-      "path": "ci/router_count_baseline.json",
-      "intent": "Accept +33 routes, +1 router file, and routers/cam +1 from PR #142 manufacturing_replay_router.py recovery",
-      "scan_targets": ["ci/router_count_baseline.json"],
+      "path": "services/api/app/ci/file_sizes_baseline.json",
+      "intent": "Peg the four verified-real oversized files into the plural baseline debt-gates uses",
+      "scan_targets": ["services/api/app/ci/file_sizes_baseline.json"],
       "risk": "low",
-      "behavior_change": "ci - re-pegs ratchet to the recovered route surface (1223 / 253 / routers\\cam 27)",
-      "verification": ["+33 confirmed distinct endpoints, not registration duplication; by_directory updated for restored routers/cam file"]
-    },
-    {
-      "path": "ci/file_size_baseline.json",
-      "intent": "Accept 2 restored files over the 500-line threshold after PR #142",
-      "scan_targets": ["ci/file_size_baseline.json"],
-      "risk": "low",
-      "behavior_change": "ci - whitelists manufacturing_replay_registry.py (771) and manufacturing_replay_router.py (612), inserted in sorted order",
-      "verification": ["Line counts verified via #142 file-size gate REGRESSION output; sort invariant preserved"]
+      "behavior_change": "ci - re-pegs the debt-gates file-size sub-gate to the verified-real recovered surface",
+      "verification": ["each size verified real (test lean / registry+router real / api_runs real); none a god-object to split"]
     },
     {
       "path": ".cbsp21/patch_input.json",
-      "intent": "Declare CI-RED-023 ratchet re-peg scope for CBSP21 review",
+      "intent": "Declare the plural file-size re-peg scope for CBSP21 review",
       "scan_targets": [".cbsp21/patch_input.json"],
       "risk": "low",
       "behavior_change": "governance metadata"
