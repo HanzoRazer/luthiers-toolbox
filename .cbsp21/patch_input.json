@@ -2,57 +2,80 @@
   "schema": "cbsp21_patch_input_v1",
   "schema_version": "cbsp21_patch_input_v1",
   "coverage_min": 0.95,
-  "patch_id": "CI_RED_023_RECOVERY_RATCHETS",
-  "title": "Re-peg governance ratchets for #142 manufacturing replay recovery",
-  "intent": "Update two CI baseline files to reflect PR #142's manufacturing replay router recovery: router count +33 routes / +1 router file, routers\\cam directory count +1, and file-size thresholds for 2 restored files over the 500-line limit.",
-  "change_type": "chore",
-  "behavior_change": "ci",
-  "risk_level": "low",
+  "patch_id": "CI_RED_003_SAW_BATCH_COMPLEXITY_TAIL",
+  "title": "Close CI-RED-003 saw batch complexity tail",
+  "intent": "Repair the stale complexity baseline line keys for saw_lab/batch_router.py and extract the RMOS mirror path into tested helper functions so debt-gates can evaluate the current SAW batch surface instead of the stale CI-RED-003 tail.",
+  "change_type": "fix",
+  "behavior_change": "refactor",
+  "risk_level": "medium",
   "scope": {
     "paths_in_scope": [
       ".cbsp21/",
-      "ci/"
+      "SPRINTS.md",
+      "services/api/app/ci/",
+      "services/api/app/saw_lab/",
+      "services/api/tests/"
     ],
     "files_expected_to_change": [
-      "ci/router_count_baseline.json",
-      "ci/file_size_baseline.json",
+      "SPRINTS.md",
+      "services/api/app/ci/complexity_baseline.json",
+      "services/api/app/saw_lab/batch_router.py",
+      "services/api/app/saw_lab/batch_router_helpers.py",
+      "services/api/tests/test_batch_toolpaths_rmos_mirror_unit.py",
       ".cbsp21/patch_input.json"
     ]
   },
   "diff_articulation": {
-    "what_changed": "Two baseline files re-pegged for PR #142's recovery: (1) router_count_baseline.json route_decorators 1190->1223, router_files 252->253, and by_directory routers\\cam 26->27 for the restored manufacturing_replay_router.py; (2) file_size_baseline.json adds manufacturing_replay_registry.py:771 and routers/cam/manufacturing_replay_router.py:612, inserted in alphabetical order. No fence_baseline.json change: the recovery added zero RunArtifact violations (Fence Checks passed on #142).",
-    "why_not_redundant": "PR #142 restored the manufacturing replay bundle (router + registry + companions), legitimately adding 33 distinct routes, one routers/cam router file, and two files over the 500-line threshold. These ratchets fire on that real growth; the re-peg accepts the verified-real surface so the gates enforce against the new, correct baseline."
+    "what_changed": "batch_router.py now delegates the SAW batch RMOS mirror path to batch_router_helpers.py. complexity_baseline.json receives line-number-only repairs for the two still-accepted batch_router findings, without accepting new complexity debt. test_batch_toolpaths_rmos_mirror_unit.py characterizes the happy path plus missing-artifact and fallback-context behavior. SPRINTS.md records the CI-RED-003 current verdict.",
+    "why_not_redundant": "The complexity gate narrowed from the stale 113-violation ledger to a current SAW batch tail: two stale line-key entries and the mirror helper exceeding the complexity threshold. The helper extraction preserves the route behavior while moving the high-complexity mirror chain out of the router function, and the baseline edit only re-anchors existing accepted findings to their current lines."
   },
   "verification": {
     "commands_run": [
-      "#142 Core CI router-count gate reported '1223 > 1190' and '253 > 252' (the exact total deltas pegged here)",
-      "+33 routes confirmed REAL not duplication: 33 distinct method+path decorators in manufacturing_replay_router.py (4 resource families: observations/sessions/timelines/packages + meta/ci), 0 routes in the 3 companion files",
-      "router_count_baseline.json by_directory updated for the restored router location: routers\\cam 26->27",
-      "file sizes verified on #142: manufacturing_replay_registry.py 771, routers/cam/manufacturing_replay_router.py 612 (file-size gate REGRESSION lines)",
-      "#142 Fence Checks (Blocking) passed -> no new RunArtifact violations -> no fence_baseline change needed",
-      "file_size_baseline.json sort invariant preserved: both new entries inserted in alphabetical position"
+      "Complexity gate witness from PR #144: batch_router complexity tail cleared; remaining debt-gates red is the separate plural file-size baseline handled by PR #145",
+      "Characterization test covers create_batch_toolpaths RMOS mirror chain and generated artifact lineage",
+      "Additional edge witnesses cover missing decision 404, missing plan/spec 404, and session/batch/tool fallback context",
+      "CBSP21 manifest now declares all changed files in the PR scope"
     ]
   },
   "files": [
     {
-      "path": "ci/router_count_baseline.json",
-      "intent": "Accept +33 routes, +1 router file, and routers/cam +1 from PR #142 manufacturing_replay_router.py recovery",
-      "scan_targets": ["ci/router_count_baseline.json"],
+      "path": "SPRINTS.md",
+      "intent": "Record the current CI-RED-003 verdict and remove stale 113-violation framing",
+      "scan_targets": ["SPRINTS.md"],
       "risk": "low",
-      "behavior_change": "ci - re-pegs ratchet to the recovered route surface (1223 / 253 / routers\\cam 27)",
-      "verification": ["+33 confirmed distinct endpoints, not registration duplication; by_directory updated for restored routers/cam file"]
+      "behavior_change": "documentation"
     },
     {
-      "path": "ci/file_size_baseline.json",
-      "intent": "Accept 2 restored files over the 500-line threshold after PR #142",
-      "scan_targets": ["ci/file_size_baseline.json"],
+      "path": "services/api/app/ci/complexity_baseline.json",
+      "intent": "Repair stale line keys for existing accepted batch_router complexity findings without changing accepted complexity values",
+      "scan_targets": ["services/api/app/ci/complexity_baseline.json"],
       "risk": "low",
-      "behavior_change": "ci - whitelists manufacturing_replay_registry.py (771) and manufacturing_replay_router.py (612), inserted in sorted order",
-      "verification": ["Line counts verified via #142 file-size gate REGRESSION output; sort invariant preserved"]
+      "behavior_change": "ci"
+    },
+    {
+      "path": "services/api/app/saw_lab/batch_router.py",
+      "intent": "Delegate RMOS mirror work to helper module so router complexity falls under the gate threshold",
+      "scan_targets": ["services/api/app/saw_lab/batch_router.py"],
+      "risk": "medium",
+      "behavior_change": "refactor"
+    },
+    {
+      "path": "services/api/app/saw_lab/batch_router_helpers.py",
+      "intent": "Host the extracted SAW batch RMOS mirror helper chain",
+      "scan_targets": ["services/api/app/saw_lab/batch_router_helpers.py"],
+      "risk": "medium",
+      "behavior_change": "refactor"
+    },
+    {
+      "path": "services/api/tests/test_batch_toolpaths_rmos_mirror_unit.py",
+      "intent": "Characterize RMOS mirror behavior across happy path, missing-artifact errors, and fallback context",
+      "scan_targets": ["services/api/tests/test_batch_toolpaths_rmos_mirror_unit.py"],
+      "risk": "low",
+      "behavior_change": "test"
     },
     {
       "path": ".cbsp21/patch_input.json",
-      "intent": "Declare CI-RED-023 ratchet re-peg scope for CBSP21 review",
+      "intent": "Declare CI-RED-003 patch scope for CBSP21 review",
       "scan_targets": [".cbsp21/patch_input.json"],
       "risk": "low",
       "behavior_change": "governance metadata"

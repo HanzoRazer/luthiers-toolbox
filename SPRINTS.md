@@ -872,7 +872,7 @@ Domain handoffs and governance docs may add detail but **must cite the SPRINTS I
 | MAINT-DEFER-003 | Load-bearing code comments (`DO NOT REMOVE`) | Process | QUEUED | 2026-05-28 |
 | CI-RED-001 | sg-spec clone auth — api-verify dead | CI / infra | CLOSED | 2026-05-28 |
 | CI-RED-002 | legacy-usage gate 131/10 | CI / API hygiene | CLOSED | 2026-05-31 |
-| CI-RED-003 | debt-gates complexity ratchet (113 violations) | CI / quality | OPEN | 2026-05-27 |
+| CI-RED-003 | debt-gates complexity ratchet (current SAW batch tail) | CI / quality | OPEN | 2026-06-21 |
 | CI-RED-004 | Fence Checks frontend boundary violations | CI / boundaries | OPEN | 2026-05-27 |
 | CI-RED-005 | Container build swallows sg-spec install failure | CI / containers | CLOSED | 2026-05-28 |
 | CI-RED-006 | api-verify: missing `app.ci.domain_boundaries` | CI / api-verify | CLOSED | 2026-05-28 |
@@ -984,8 +984,8 @@ by any workflow) — left untouched; candidate for deletion in separate hygiene 
 ### CI-RED-003 — debt-gates complexity ratchet
 
 **Status:** OPEN  
-**last_verified:** 2026-05-27  
-**Why open:** 113 complexity violations; fails on post-merge `main` (run `26490386636`).  
+**last_verified:** 2026-06-21  
+**Why open:** Current post-#143 `debt-gates` failure has narrowed from the stale May count of 113 to 3 live findings in `services/api/app/saw_lab/batch_router.py`: two stale baseline line keys (`create_batch_plan`, `choose_batch_plan`) and one newly restored #140 RMOS mirror helper (`_mirror_batch_chain_to_rmos`).  
 **Restore trigger:** `debt-gates` job green on `main`.
 
 ---
