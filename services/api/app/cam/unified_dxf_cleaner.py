@@ -576,6 +576,446 @@ class DXFCleaner:
 </svg>'''
 
 
+# ---------------------------------------------------------------------------
+# Geometry deduplication (Pass 1: utility only, NOT wired into the pipeline)
+# ---------------------------------------------------------------------------
+#
+# Post-selection, pre-export cleanup that removes duplicate / near-duplicate
+# geometry from already-selected chains. This is a cleanup layer ONLY:
+#   - it does not score, select, or own chains
+#   - it does not change the Chain / Point public boundary
+#   - it does not change DXF export policy (R12 + LINE entities only)
+#
+# The dedup pass works on an internal flat `Segment` model (a single LINE with
+# a layer label and two endpoints), dedupes at the segment level, then rebuilds
+# chains from the survivors. Chains in this codebase carry no layer attribute,
+# so chain-derived segments are layer-agnostic (a single bucket). The `layer`
+# field on Segment / SegmentKey is exercised directly by the synthetic
+# segment-level tests and is forward-looking for a future layered pipeline.
+
+
+@dataclass(frozen=True)
+class SegmentKey:
+    """Quantized, layer-aware identity for a line segment.
+
+    Endpoints are pre-canonicalized by the producer so that A->B and B->A map
+    to the same key (the lexicographically smaller endpoint is stored first).
+    """
+    layer: str
+    ax: int
+    ay: int
+    bx: int
+    by: int
+
+
+@dataclass
+class Segment:
+    """Internal flat representation of a single LINE for the dedup pass.
+
+    Distinct from :class:`LineSegment` (the extraction-time primitive): this one
+    carries a layer label and an optional debug `category` so the duplicate
+    overlay can colour-code why a segment was removed. Not part of the public
+    Chain/Point boundary.
+    """
+    layer: str
+    start: Point
+    end: Point
+    # Debug-only classification, set during deduplication:
+    # "retained" | "exact" | "reversed" | "near" | "overlap"
+    category: str = "retained"
+
+    def length(self) -> float:
+        return self.start.distance_to(self.end)
+
+    def as_tuples(self) -> Tuple[Tuple[float, float], Tuple[float, float]]:
+        return (self.start.as_tuple(), self.end.as_tuple())
+
+
+@dataclass
+class DeduplicationStats:
+    """Per-category accounting for a deduplication pass."""
+    input_segments: int
+    output_segments: int
+    exact_duplicates_removed: int
+    reversed_duplicates_removed: int
+    near_duplicates_removed: int
+    overlap_duplicates_removed: int
+
+
+def _quantize(value: float, tol: float) -> int:
+    """Snap a coordinate to an integer grid of size `tol`."""
+    return round(value / tol)
+
+
+def _exact_q(value: float) -> int:
+    """High-precision quantization used for exact/reverse detection.
+
+    Fine enough (1e-6 mm) to treat only coordinate-identical points as equal,
+    so genuine near-duplicates fall through to the tolerance-based pass.
+    """
+    return round(value / 1e-6)
+
+
+def _directed_key(
+    seg: Segment, qfn: Callable[[float], int], include_layer: bool
+) -> Tuple:
+    """Direction-preserving key (start then end, no canonical ordering)."""
+    layer = seg.layer if include_layer else ""
+    return (layer, qfn(seg.start.x), qfn(seg.start.y), qfn(seg.end.x), qfn(seg.end.y))
+
+
+def _canonical_key(
+    seg: Segment, qfn: Callable[[float], int], include_layer: bool
+) -> SegmentKey:
+    """Order-independent key: A->B and B->A collapse to the same SegmentKey."""
+    layer = seg.layer if include_layer else ""
+    a = (qfn(seg.start.x), qfn(seg.start.y))
+    b = (qfn(seg.end.x), qfn(seg.end.y))
+    if b < a:
+        a, b = b, a
+    return SegmentKey(layer=layer, ax=a[0], ay=a[1], bx=b[0], by=b[1])
+
+
+def _is_zero_length(seg: Segment, tol: float) -> bool:
+    return _quantize(seg.start.x, tol) == _quantize(seg.end.x, tol) and \
+        _quantize(seg.start.y, tol) == _quantize(seg.end.y, tol)
+
+
+def _dedupe_segments(
+    segments: List[Segment],
+    *,
+    endpoint_tol_mm: float,
+    overlap_tol_mm: float,
+    angle_tol_deg: float,
+    preserve_layers: bool,
+) -> Tuple[List[Segment], DeduplicationStats]:
+    """Core segment-level dedup. Detection order matches the handoff spec:
+
+    1. zero-length removal
+    2. exact duplicate removal
+    3. reverse duplicate removal
+    4. near-duplicate (tolerance) removal
+    5. collinear overlap removal
+    6. (chain reconstruction happens in the caller)
+    """
+    input_count = len(segments)
+    stats = DeduplicationStats(
+        input_segments=input_count,
+        output_segments=0,
+        exact_duplicates_removed=0,
+        reversed_duplicates_removed=0,
+        near_duplicates_removed=0,
+        overlap_duplicates_removed=0,
+    )
+
+    # 1. zero-length removal (degenerate; not a duplicate category)
+    work = [s for s in segments if not _is_zero_length(s, endpoint_tol_mm)]
+
+    # 2 + 3. exact / reverse on a near-exact grid.
+    # First occurrence of a canonical key wins; later ones are exact (same
+    # direction as the winner) or reversed (opposite direction).
+    rep_directed: Dict[SegmentKey, Tuple] = {}
+    after_exact: List[Segment] = []
+    for seg in work:
+        ckey = _canonical_key(seg, _exact_q, preserve_layers)
+        dkey = _directed_key(seg, _exact_q, preserve_layers)
+        if ckey not in rep_directed:
+            rep_directed[ckey] = dkey
+            after_exact.append(seg)
+            continue
+        if dkey == rep_directed[ckey]:
+            seg.category = "exact"
+            stats.exact_duplicates_removed += 1
+        else:
+            seg.category = "reversed"
+            stats.reversed_duplicates_removed += 1
+
+    # 4. near-duplicate removal on the tolerance grid (survivors only).
+    seen_near: Set[SegmentKey] = set()
+    after_near: List[Segment] = []
+    for seg in after_exact:
+        nkey = _canonical_key(seg, lambda v: _quantize(v, endpoint_tol_mm), preserve_layers)
+        if nkey in seen_near:
+            seg.category = "near"
+            stats.near_duplicates_removed += 1
+            continue
+        seen_near.add(nkey)
+        after_near.append(seg)
+
+    # 5. collinear overlap removal. Bucket by (layer, orientation, offset) so
+    # only plausibly-collinear segments are compared, then drop any segment
+    # fully covered by a longer collinear neighbour.
+    after_overlap = _remove_collinear_overlaps(
+        after_near,
+        overlap_tol_mm=overlap_tol_mm,
+        angle_tol_deg=angle_tol_deg,
+        preserve_layers=preserve_layers,
+        stats=stats,
+    )
+
+    stats.output_segments = len(after_overlap)
+    return after_overlap, stats
+
+
+def _remove_collinear_overlaps(
+    segments: List[Segment],
+    *,
+    overlap_tol_mm: float,
+    angle_tol_deg: float,
+    preserve_layers: bool,
+    stats: DeduplicationStats,
+) -> List[Segment]:
+    """Remove segments fully contained within a longer collinear neighbour.
+
+    Conservative on purpose: only *full containment* (within overlap_tol_mm) is
+    removed. Partial overlaps and merely-collinear-but-separate segments
+    (handoff test "non-overlap collinear") are preserved so no real geometry is
+    lost. O(n) per collinearity bucket rather than O(n^2) overall.
+    """
+    angle_tol_rad = math.radians(angle_tol_deg)
+
+    buckets: Dict[Tuple, List[int]] = defaultdict(list)
+    for idx, seg in enumerate(segments):
+        dx = seg.end.x - seg.start.x
+        dy = seg.end.y - seg.start.y
+        theta = math.atan2(dy, dx) % math.pi
+        ux, uy = math.cos(theta), math.sin(theta)
+        nx, ny = -uy, ux
+        offset = seg.start.x * nx + seg.start.y * ny
+        layer = seg.layer if preserve_layers else ""
+        # Quantize orientation and perpendicular offset into a collinearity cell.
+        angle_bin = round(theta / max(angle_tol_rad, 1e-9))
+        offset_bin = round(offset / overlap_tol_mm)
+        buckets[(layer, angle_bin, offset_bin)].append(idx)
+
+    removed: Set[int] = set()
+    for idxs in buckets.values():
+        if len(idxs) < 2:
+            continue
+        for i in range(len(idxs)):
+            ai = idxs[i]
+            if ai in removed:
+                continue
+            sa = segments[ai]
+            for j in range(len(idxs)):
+                if i == j:
+                    continue
+                bi = idxs[j]
+                if bi in removed:
+                    continue
+                sb = segments[bi]
+                # Drop sb if it lies fully on top of sa (sa at least as long).
+                if sa.length() + 1e-9 >= sb.length() and _covers(sa, sb, overlap_tol_mm):
+                    sb.category = "overlap"
+                    removed.add(bi)
+                    stats.overlap_duplicates_removed += 1
+
+    return [s for i, s in enumerate(segments) if i not in removed]
+
+
+def _covers(host: Segment, other: Segment, tol: float) -> bool:
+    """True if both endpoints of `other` lie on `host` (within tol), i.e. the
+    `other` segment is geometrically contained in `host`."""
+    return _point_on_segment(host, other.start, tol) and \
+        _point_on_segment(host, other.end, tol)
+
+
+def _point_on_segment(seg: Segment, p: Point, tol: float) -> bool:
+    """Perpendicular distance to the segment's line < tol AND the projection
+    falls within the segment's extent (inclusive of a tol margin)."""
+    ax, ay = seg.start.x, seg.start.y
+    bx, by = seg.end.x, seg.end.y
+    dx, dy = bx - ax, by - ay
+    seg_len_sq = dx * dx + dy * dy
+    if seg_len_sq < 1e-12:
+        return p.distance_to(seg.start) < tol
+    t = ((p.x - ax) * dx + (p.y - ay) * dy) / seg_len_sq
+    if t < -tol / math.sqrt(seg_len_sq) or t > 1 + tol / math.sqrt(seg_len_sq):
+        return False
+    # Closest point on the infinite line.
+    cx, cy = ax + t * dx, ay + t * dy
+    perp = math.sqrt((p.x - cx) ** 2 + (p.y - cy) ** 2)
+    return perp < tol
+
+
+def _chain_to_segments(chain: Chain, layer: str, closure_tol: float) -> List[Segment]:
+    """Explode a Chain into flat Segments, including the closing edge if the
+    chain is closed (mirrors what write_selected_chains emits)."""
+    pts = chain.points
+    segs: List[Segment] = []
+    for i in range(len(pts) - 1):
+        segs.append(Segment(layer=layer, start=pts[i], end=pts[i + 1]))
+    if chain.is_closed(closure_tol) and len(pts) > 2:
+        segs.append(Segment(layer=layer, start=pts[-1], end=pts[0]))
+    return segs
+
+
+def _reconstruct_chains(segments: List[Segment], tol: float) -> List[Chain]:
+    """Rebuild chains from surviving segments via endpoint adjacency.
+
+    Mirrors DXFCleaner._chain_lines but uses the dedup tolerance for the grid so
+    behaviour is consistent with the dedup pass. Distinct features that do not
+    share endpoints stay distinct; a closed loop reconstructs with
+    points[0] ~= points[-1] so Chain.is_closed stays true.
+    """
+    if not segments:
+        return []
+
+    grid = max(tol, 1e-9)
+
+    def pkey(p: Point) -> Tuple[int, int]:
+        return (round(p.x / grid), round(p.y / grid))
+
+    point_to_segs: Dict[Tuple[int, int], List[int]] = defaultdict(list)
+    for i, seg in enumerate(segments):
+        point_to_segs[pkey(seg.start)].append(i)
+        point_to_segs[pkey(seg.end)].append(i)
+
+    def other_end(seg: Segment, p: Point) -> Point:
+        if pkey(seg.start) == pkey(p):
+            return seg.end
+        return seg.start
+
+    visited: Set[int] = set()
+    chains: List[Chain] = []
+    for start_idx in range(len(segments)):
+        if start_idx in visited:
+            continue
+        seg = segments[start_idx]
+        visited.add(start_idx)
+        chain = Chain()
+        chain.points.append(seg.start)
+        chain.points.append(seg.end)
+
+        current = seg.end
+        while True:
+            neighbors = [i for i in point_to_segs[pkey(current)] if i not in visited]
+            if not neighbors:
+                break
+            nxt = neighbors[0]
+            visited.add(nxt)
+            current = other_end(segments[nxt], current)
+            chain.points.append(current)
+
+        current = seg.start
+        while True:
+            neighbors = [i for i in point_to_segs[pkey(current)] if i not in visited]
+            if not neighbors:
+                break
+            nxt = neighbors[0]
+            visited.add(nxt)
+            current = other_end(segments[nxt], current)
+            chain.points.insert(0, current)
+
+        if len(chain.points) >= 2:
+            chains.append(chain)
+
+    return chains
+
+
+def deduplicate_chains(
+    chains: List[Chain],
+    *,
+    endpoint_tol_mm: float = 0.05,
+    overlap_tol_mm: float = 0.05,
+    angle_tol_deg: float = 1.0,
+    preserve_layers: bool = True,
+    debug: bool = False,
+) -> Tuple[List[Chain], DeduplicationStats]:
+    """Remove duplicate / near-duplicate geometry from selected chains.
+
+    Post-selection, pre-export cleanup. Explodes chains into flat segments,
+    removes exact / reversed / near / collinear-overlap duplicates, then rebuilds
+    chains from the survivors. Output is multiple valid chains (BODY_OUTLINE,
+    NECK_POCKET, ... stay separate); it is NOT collapsed to a single contour.
+
+    Chains carry no layer attribute in this codebase, so chain-derived segments
+    are layer-agnostic. `preserve_layers` is threaded into the keys for the
+    synthetic segment-level path and a future layered pipeline.
+
+    Returns (deduplicated_chains, stats).
+    """
+    closure_tol = 1.0  # matches DXFCleaner default closure_tolerance
+    segments: List[Segment] = []
+    for chain in chains:
+        if len(chain.points) < 2:
+            continue
+        segments.extend(_chain_to_segments(chain, layer="", closure_tol=closure_tol))
+
+    kept, stats = _dedupe_segments(
+        segments,
+        endpoint_tol_mm=endpoint_tol_mm,
+        overlap_tol_mm=overlap_tol_mm,
+        angle_tol_deg=angle_tol_deg,
+        preserve_layers=preserve_layers,
+    )
+
+    rebuilt = _reconstruct_chains(kept, endpoint_tol_mm)
+
+    if debug:
+        logger.debug(
+            "deduplicate_chains: %d->%d segments "
+            "(exact=%d reversed=%d near=%d overlap=%d), %d chains -> %d chains",
+            stats.input_segments, stats.output_segments,
+            stats.exact_duplicates_removed, stats.reversed_duplicates_removed,
+            stats.near_duplicates_removed, stats.overlap_duplicates_removed,
+            len(chains), len(rebuilt),
+        )
+
+    return rebuilt, stats
+
+
+def build_duplicate_debug_svg(
+    original_segments: List[Segment],
+    duplicate_segments: List[Segment],
+    *,
+    width_mm: float,
+    height_mm: float,
+) -> str:
+    """Debug-only SVG overlay marking retained vs duplicate geometry.
+
+    Colour convention:
+        black  = retained geometry
+        red    = exact / reversed duplicate
+        orange = near duplicate
+        purple = collinear overlap duplicate
+
+    Duplicate colour is chosen from each segment's `.category`. Y is flipped so
+    the overlay reads in the same orientation as the DXF (y-up).
+    """
+    category_color = {
+        "retained": "#000000",
+        "exact": "#e11d48",     # red
+        "reversed": "#e11d48",  # red
+        "near": "#f97316",      # orange
+        "overlap": "#a21caf",   # purple
+    }
+
+    def line_el(seg: Segment, color: str) -> str:
+        (x1, y1), (x2, y2) = seg.as_tuples()
+        return (
+            f'<line x1="{x1:.4f}" y1="{y1:.4f}" x2="{x2:.4f}" y2="{y2:.4f}" '
+            f'stroke="{color}" stroke-width="0.2" />'
+        )
+
+    parts: List[str] = []
+    for seg in original_segments:
+        parts.append(line_el(seg, category_color["retained"]))
+    for seg in duplicate_segments:
+        parts.append(line_el(seg, category_color.get(seg.category, "#e11d48")))
+
+    return (
+        f'<svg xmlns="http://www.w3.org/2000/svg" '
+        f'width="{width_mm:.4f}mm" height="{height_mm:.4f}mm" '
+        f'viewBox="0 0 {width_mm:.4f} {height_mm:.4f}">\n'
+        f'  <rect width="100%" height="100%" fill="#f8fafc"/>\n'
+        f'  <g transform="translate(0,{height_mm:.4f}) scale(1,-1)">\n'
+        f'    {"".join(parts)}\n'
+        f'  </g>\n'
+        f'</svg>'
+    )
+
+
 def main():
     """CLI entry point."""
     ap = argparse.ArgumentParser(description="Unified DXF Cleaner for Guitar Projects")
