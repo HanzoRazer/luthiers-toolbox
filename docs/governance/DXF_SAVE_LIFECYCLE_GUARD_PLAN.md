@@ -85,7 +85,7 @@ Added lifecycle guards to 3 runtime service DXF exports:
 |------|-------------|----------|--------------|
 | `cam/unified_dxf_cleaner.py` | R12 | runtime_service | GUARD_ADDED |
 | `cam/layer_consolidator.py` | R2000 | runtime_service | GUARD_ADDED |
-| `cam/dxf_consolidator.py` | R2000 | runtime_service | GUARD_ADDED |
+| `cam/dxf_consolidator.py` | R2000 | runtime_service | GUARD_ADDED → RETIRED (dead, superseded by `layer_consolidator`; BACKLOG item 9) |
 
 **Pattern**: Same as Phase 2A — `assert_dxf_lifecycle_context()` called immediately before `doc.saveas()`.
 
@@ -163,7 +163,7 @@ Added lifecycle guards to 3 runtime service DXF exports:
 | `routers/dxf_preflight_router.py` | COMPAT_ONLY | router_endpoint | 2D | GUARD_ADDED |
 | `cam/unified_dxf_cleaner.py` | COMPAT_ONLY | runtime_service | 2F | GUARD_ADDED |
 | `cam/layer_consolidator.py` | COMPAT_ONLY | runtime_service | 2F | GUARD_ADDED |
-| `cam/dxf_consolidator.py` | COMPAT_ONLY | runtime_service | 2F | GUARD_ADDED |
+| `cam/dxf_consolidator.py` | COMPAT_ONLY | runtime_service | 2F | GUARD_ADDED → RETIRED (dead; BACKLOG item 9) |
 
 ### Group B — Next Safe Production Candidates (7 paths)
 
@@ -418,7 +418,7 @@ These paths use DxfWriter and will inherit guards from 2.1:
 |---|------|----------|------------|-------------|
 | 2 | `cam/unified_dxf_cleaner.py` | create_document | DxfWriter guard | no_action |
 | 3 | `cam/layer_consolidator.py` | create_document | DxfWriter guard | no_action |
-| 4 | `cam/dxf_consolidator.py` | create_document | DxfWriter guard | no_action |
+| 4 | `cam/dxf_consolidator.py` | create_document | DxfWriter guard | RETIRED (dead, superseded by `layer_consolidator`; BACKLOG item 9) |
 | 5 | `cam/dxf_advanced_validation.py` | create_document | N/A (preview only) | no_action |
 | 6 | `cam/archtop_bridge_generator.py` | create_document | DxfWriter guard | no_action |
 | 7 | `cam/archtop_saddle_generator.py` | create_document | DxfWriter guard | no_action |
