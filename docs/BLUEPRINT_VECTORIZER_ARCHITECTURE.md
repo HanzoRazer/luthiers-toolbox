@@ -391,12 +391,10 @@ Per `CLAUDE.md` blocking infrastructure note:
 | Format | R12 (AC1009) |
 | Entities | LINE only (no LWPOLYLINE) |
 | Coordinates | ≤3 decimal places |
-| EXTMIN/EXTMAX | Geometry-derived or ezdxf-managed extents; do not write sentinel values (1e+20/-1e+20) |
+| EXTMIN/EXTMAX | Sentinel values (1e+20) |
 | Units | INSUNITS=4 (mm), MEASUREMENT=1 (metric) |
 
-**Rationale:** Free-tier R12 LINE entities have broad CAM compatibility. The former
-EXTMIN/EXTMAX sentinel rule was retired after it caused CAD viewer zoom-to-fit
-failures; current DXF output must not reintroduce sentinel extents.
+**Rationale:** LWPOLYLINE causes Fusion 360 to freeze. R12 LINE entities have universal CAM compatibility.
 
 ---
 
