@@ -27,28 +27,75 @@ def _make_writer_with_square(*, closed: bool = True) -> DxfWriter:
 
 
 # =============================================================================
-# test_sentinel_extents_preserved
+# test_extents_policy_uses_geometry_not_sentinels
 # =============================================================================
 
-def test_sentinel_extents_preserved():
-    """EXTMIN/EXTMAX must remain at sentinel values — never recomputed.
+def test_extents_policy_uses_geometry_not_sentinels():
+    """DXF extents policy is geometry-driven, not sentinel-preserving.
 
-    Fusion 360 chokes when EXTMIN/EXTMAX are set to non-sentinel values
-    on AC1015 files.
+    The canonical writer must not reintroduce the retired 1e+20/-1e+20
+    sentinel headers that caused CAD viewer zoom-to-fit failures. The finite
+    geometry itself is the positive witness for downstream extent calculation.
     """
     w = _make_writer_with_square()
-    doc = w.doc
+    raw = w.to_bytes().decode("utf-8")
 
-    extmin = doc.header.get("$EXTMIN", None)
-    extmax = doc.header.get("$EXTMAX", None)
+    # Part 1 — no retired sentinel extents anywhere in the serialized output.
+    assert "1e+20" not in raw
+    assert "-1e+20" not in raw
+    assert "1E+20" not in raw
+    assert "-1E+20" not in raw
 
-    # ezdxf AC1015 default sentinel is (1e20, 1e20, 1e20) / (-1e20, …)
-    # We just verify the writer hasn't overwritten them with real bounds.
-    if extmin is not None:
-        # Should NOT match actual geometry bounds (0, 0) — (100, 100)
-        assert extmin[0] != 0.0 or extmin[1] != 0.0, (
-            "EXTMIN was recomputed from geometry — must stay sentinel"
-        )
+    doc = ezdxf.read(io.StringIO(raw))
+    points = []
+    for entity in doc.modelspace():
+        if entity.dxftype() == "LINE":
+            points.append((
+                round(entity.dxf.start[0], 3),
+                round(entity.dxf.start[1], 3),
+            ))
+            points.append((
+                round(entity.dxf.end[0], 3),
+                round(entity.dxf.end[1], 3),
+            ))
+
+    assert points
+    assert min(x for x, _ in points) == 0.0
+    assert min(y for _, y in points) == 0.0
+    assert max(x for x, _ in points) == 100.0
+    assert max(y for _, y in points) == 100.0
+
+    # Part 2 — extents must be CORRECT finite values that bound the geometry,
+    # not merely "not sentinels". A fix that wrote wrong finite extents would
+    # pass Part 1 while still breaking zoom-to-fit; this catches that.
+    extmin = doc.header.get("$EXTMIN")
+    extmax = doc.header.get("$EXTMAX")
+    assert extmin is not None and extmax is not None
+    assert round(extmin[0], 3) == 0.0 and round(extmin[1], 3) == 0.0
+    assert round(extmax[0], 3) == 100.0 and round(extmax[1], 3) == 100.0
+
+
+def test_extents_empty_document_is_finite_not_sentinel():
+    """An empty document must still ship finite extents, never the ±1e20 sentinels.
+
+    The writer derives extents from geometry; with no geometry it must fall back
+    to a finite degenerate box at the origin rather than reintroducing the
+    uninitialized ezdxf sentinel headers.
+    """
+    w = DxfWriter(layers=[LayerDef("BODY_OUTLINE", 7)])
+    raw = w.to_bytes().decode("utf-8")
+
+    assert "1e+20" not in raw
+    assert "-1e+20" not in raw
+    assert "1E+20" not in raw
+    assert "-1E+20" not in raw
+
+    doc = ezdxf.read(io.StringIO(raw))
+    extmin = doc.header.get("$EXTMIN")
+    extmax = doc.header.get("$EXTMAX")
+    assert extmin is not None and extmax is not None
+    assert abs(extmin[0]) < 1e6 and abs(extmin[1]) < 1e6
+    assert abs(extmax[0]) < 1e6 and abs(extmax[1]) < 1e6
 
 
 # =============================================================================
