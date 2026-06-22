@@ -46,7 +46,7 @@ Inventory of all DXF/SVG/G-code export paths with classification and migration s
 | `app.cam.archtop_bridge_generator` | bridge export | DXF | **COMPLIANT** | P2 |
 | `app.cam.archtop_saddle_generator` | saddle export | DXF | **COMPLIANT** | P2 |
 | `app.cam.dxf_advanced_validation` | validation | DXF | **COMPLIANT** | N/A (validation only) |
-| `app.cam.dxf_consolidator` | consolidation | DXF | **COMPLIANT** | N/A (utility) |
+| `app.cam.dxf_consolidator` | consolidation | DXF | **RETIRED** | dead, prefer `layer_consolidator`, parity not asserted (BACKLOG item 9) |
 | `app.cam.layer_consolidator` | layer ops | DXF | **COMPLIANT** | N/A (utility) |
 | `app.cam.unified_dxf_cleaner` | cleanup | DXF | **COMPLIANT** | N/A (utility) |
 | `app.routers.dxf_preflight_router` | preflight check | DXF | **COMPLIANT** | N/A (validation) |

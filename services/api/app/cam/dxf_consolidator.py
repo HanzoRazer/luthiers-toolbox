@@ -1,6 +1,21 @@
 #!/usr/bin/env python3
+# GOVERNANCE:
+# SYSTEM: DXF_COMPAT_LAYER
+# STATUS: RETIRED / SANCTIONED  (dead code — zero callers, verified repo-wide)
+# PREFERRED_REPLACEMENT: app/cam/layer_consolidator.py (LINE->LWPOLYLINE path).
+#   Parity is NOT asserted (FEATURE_PARITY_MIGRATION_POLICY) — prefer, do not
+#   assume equivalence; this is a sanction/deprecation, not a parity-verified supersession.
+# DISPOSITION: executes the decided disposition in
+#   docs/audit/BACKLOG_INVENTORY_2026-06-09.md item 9 ("VERIFIED decided:
+#   sanction docs + dxf deprecation flag"); ref
+#   docs/handoffs/DEV_ORDER_2026-06-08_DXF_CONSOLIDATOR_R2000_FALLBACK_OR_SANCTION.md.
+# RULE: Do NOT add new callers. Any future LINE->LWPOLYLINE consolidation routes
+#   through layer_consolidator; if it ever becomes user-facing/shipping it must go
+#   through the canonical DxfWriter path, not this module.
 """
-DXF Consolidator — Convert raw vectorizer LINE dumps to clean LWPOLYLINE output
+DXF Consolidator — [RETIRED — dead code; prefer layer_consolidator (parity not asserted)]
+
+Convert raw vectorizer LINE dumps to clean LWPOLYLINE output
 
 Problem: Vectorizer outputs 300K-600K LINE entities across hundreds of numbered
 layers (contour_0, contour_1, ...). Each contour should be ONE closed LWPOLYLINE,
@@ -22,6 +37,7 @@ Sprint: 9 — InstrumentBodyGenerator
 from __future__ import annotations
 
 import os
+import warnings
 from collections import defaultdict
 from dataclasses import dataclass, field
 from typing import Dict, List, Optional, Tuple
@@ -34,6 +50,21 @@ from app.util.dxf_lifecycle_guard import (
     DxfLifecycleContext,
     assert_dxf_lifecycle_context,
 )
+
+# RETIRED module (zero callers). Importing it is sanctioned-legacy; new use is not.
+# Warn on USE, not on import — the module retains CLI/convenience entry points and
+# strict warning environments (filterwarnings=error) must not break on import/discovery.
+_RETIRED_WARNING = (
+    "app.cam.dxf_consolidator is RETIRED (dead code). Prefer "
+    "app.cam.layer_consolidator for future consolidation work; parity is not "
+    "asserted. Do not add new callers. "
+    "See BACKLOG_INVENTORY_2026-06-09 item 9."
+)
+
+
+def _warn_retired_use() -> None:
+    """Warn when the retired consolidator is used, not when it is imported."""
+    warnings.warn(_RETIRED_WARNING, DeprecationWarning, stacklevel=3)
 
 
 @dataclass
@@ -95,6 +126,7 @@ class DxfConsolidator:
             min_area_mm2: Minimum bounding box area to keep a contour
             cavity_min_area_mm2: Minimum area for cavity classification
         """
+        _warn_retired_use()
         self.min_area_mm2 = min_area_mm2
         self.cavity_min_area_mm2 = cavity_min_area_mm2
 
