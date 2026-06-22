@@ -145,7 +145,7 @@ Machine-parseable via HTML markers; human-readable via section headings.
 | `cam/dxf_writer.py` | dxf-create-save | create_document | Y | Y | N | NO | runtime_service | LOW-MEDIUM | COMPAT_ONLY | requires_caller_context_2g | REQUIRES_CALLER_CONTEXT |
 | `cam/unified_dxf_cleaner.py` | dxf-create-save | create_document | Y | Y | GUARD | NO | runtime_service | LOW-MEDIUM | COMPAT_ONLY | guarded_2f | GUARD_ADDED |
 | `cam/layer_consolidator.py` | dxf-create-save | create_document | Y | Y | GUARD | NO | runtime_service | LOW-MEDIUM | COMPAT_ONLY | guarded_2f | GUARD_ADDED |
-| `cam/dxf_consolidator.py` | dxf-create-save | create_document | Y | Y | GUARD | NO | runtime_service | LOW-MEDIUM | COMPAT_ONLY | guarded_2f | GUARD_ADDED → RETIRED (dead, superseded by `layer_consolidator`; BACKLOG item 9) |
+| `cam/dxf_consolidator.py` | dxf-create-save | create_document | Y | Y | GUARD | NO | runtime_service | LOW-MEDIUM | COMPAT_ONLY | guarded_2f | GUARD_ADDED → RETIRED (dead, prefer `layer_consolidator`, parity not asserted; BACKLOG item 9) |
 | `cam/line_deduplicator.py` | dxf-read-modify-save | ezdxf.readfile | Y | Y | N | NO | runtime_service | LOW-MEDIUM | DIRECT_SAVE_GAP | document_only | GUARD_ADDED |
 | `cam/dxf_advanced_validation.py` | dxf-preview | create_document | N | Y | N | NO | runtime_service | LOW | COMPAT_ONLY | no_action | NOT_APPLICABLE |
 

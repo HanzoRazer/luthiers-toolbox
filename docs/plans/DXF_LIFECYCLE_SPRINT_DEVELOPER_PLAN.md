@@ -55,7 +55,7 @@ The DXF Lifecycle Sprint establishes validation-only guards at all DXF save/writ
 | 2D | `routers/dxf_preflight_router.py` | router_endpoint |
 | 2F | `cam/unified_dxf_cleaner.py` | runtime_service |
 | 2F | `cam/layer_consolidator.py` | runtime_service |
-| 2F | `cam/dxf_consolidator.py` | runtime_service — RETIRED (dead, superseded by `layer_consolidator`; BACKLOG item 9) |
+| 2F | `cam/dxf_consolidator.py` | runtime_service — RETIRED (dead, prefer `layer_consolidator`, parity not asserted; BACKLOG item 9) |
 
 ### Phase 2G Decision
 

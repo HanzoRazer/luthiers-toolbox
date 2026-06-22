@@ -9,7 +9,12 @@ These tests inspect the source so they can run even when local ezdxf is absent.
 from __future__ import annotations
 
 import ast
+import importlib
+import sys
+import warnings
 from pathlib import Path
+
+import pytest
 
 
 MODULE_PATH = (
@@ -18,6 +23,7 @@ MODULE_PATH = (
     / "cam"
     / "dxf_consolidator.py"
 )
+MODULE_NAME = "app.cam.dxf_consolidator"
 
 
 def _tree() -> ast.Module:
@@ -67,3 +73,33 @@ def test_retired_dxf_consolidator_warns_on_constructor_use():
     )
 
     assert calls_retired_warning
+
+
+def test_retired_dxf_consolidator_runtime_warning_behavior():
+    pytest.importorskip("ezdxf")
+    sys.modules.pop(MODULE_NAME, None)
+
+    with warnings.catch_warnings(record=True) as import_warnings:
+        warnings.simplefilter("always", DeprecationWarning)
+        module = importlib.import_module(MODULE_NAME)
+
+    assert [
+        warning
+        for warning in import_warnings
+        if issubclass(warning.category, DeprecationWarning)
+    ] == []
+
+    with warnings.catch_warnings(record=True) as use_warnings:
+        warnings.simplefilter("always", DeprecationWarning)
+        module.DxfConsolidator()
+
+    deprecation_warnings = [
+        warning
+        for warning in use_warnings
+        if issubclass(warning.category, DeprecationWarning)
+    ]
+
+    assert len(deprecation_warnings) == 1
+    assert "app.cam.dxf_consolidator is RETIRED" in str(
+        deprecation_warnings[0].message
+    )

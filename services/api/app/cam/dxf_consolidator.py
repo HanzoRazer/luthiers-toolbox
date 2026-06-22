@@ -2,7 +2,9 @@
 # GOVERNANCE:
 # SYSTEM: DXF_COMPAT_LAYER
 # STATUS: RETIRED / SANCTIONED  (dead code — zero callers, verified repo-wide)
-# SUPERSEDED_BY: app/cam/layer_consolidator.py (preferred LINE->LWPOLYLINE path)
+# PREFERRED_REPLACEMENT: app/cam/layer_consolidator.py (LINE->LWPOLYLINE path).
+#   Parity is NOT asserted (FEATURE_PARITY_MIGRATION_POLICY) — prefer, do not
+#   assume equivalence; this is a sanction/deprecation, not a parity-verified supersession.
 # DISPOSITION: executes the decided disposition in
 #   docs/audit/BACKLOG_INVENTORY_2026-06-09.md item 9 ("VERIFIED decided:
 #   sanction docs + dxf deprecation flag"); ref
@@ -11,7 +13,7 @@
 #   through layer_consolidator; if it ever becomes user-facing/shipping it must go
 #   through the canonical DxfWriter path, not this module.
 """
-DXF Consolidator — [RETIRED — dead code, superseded by layer_consolidator]
+DXF Consolidator — [RETIRED — dead code; prefer layer_consolidator (parity not asserted)]
 
 Convert raw vectorizer LINE dumps to clean LWPOLYLINE output
 
@@ -53,8 +55,9 @@ from app.util.dxf_lifecycle_guard import (
 # Warn on USE, not on import — the module retains CLI/convenience entry points and
 # strict warning environments (filterwarnings=error) must not break on import/discovery.
 _RETIRED_WARNING = (
-    "app.cam.dxf_consolidator is RETIRED (dead code, superseded by "
-    "app.cam.layer_consolidator). Do not add new callers. "
+    "app.cam.dxf_consolidator is RETIRED (dead code). Prefer "
+    "app.cam.layer_consolidator for future consolidation work; parity is not "
+    "asserted. Do not add new callers. "
     "See BACKLOG_INVENTORY_2026-06-09 item 9."
 )
 

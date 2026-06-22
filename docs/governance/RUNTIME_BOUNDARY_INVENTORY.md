@@ -45,7 +45,7 @@ These paths use the governed export lifecycle or dxf_compat layer:
 | `cam/dxf_writer.py` | ✓ | — | LOW |
 | `cam/unified_dxf_cleaner.py` | ✓ | — | LOW |
 | `cam/layer_consolidator.py` | ✓ | — | LOW |
-| `cam/dxf_consolidator.py` | ✓ | RETIRED (dead, superseded by `layer_consolidator`; BACKLOG item 9) | LOW |
+| `cam/dxf_consolidator.py` | ✓ | RETIRED (dead, prefer `layer_consolidator`, parity not asserted; BACKLOG item 9) | LOW |
 | `cam/archtop_bridge_generator.py` | ✓ | — | LOW |
 | `cam/archtop_saddle_generator.py` | ✓ | — | LOW |
 | `cam/archtop/archtop_contour_generator.py` | ✓ | — | LOW |
