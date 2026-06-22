@@ -50,13 +50,18 @@ from app.util.dxf_lifecycle_guard import (
 )
 
 # RETIRED module (zero callers). Importing it is sanctioned-legacy; new use is not.
-warnings.warn(
+# Warn on USE, not on import — the module retains CLI/convenience entry points and
+# strict warning environments (filterwarnings=error) must not break on import/discovery.
+_RETIRED_WARNING = (
     "app.cam.dxf_consolidator is RETIRED (dead code, superseded by "
     "app.cam.layer_consolidator). Do not add new callers. "
-    "See BACKLOG_INVENTORY_2026-06-09 item 9.",
-    DeprecationWarning,
-    stacklevel=2,
+    "See BACKLOG_INVENTORY_2026-06-09 item 9."
 )
+
+
+def _warn_retired_use() -> None:
+    """Warn when the retired consolidator is used, not when it is imported."""
+    warnings.warn(_RETIRED_WARNING, DeprecationWarning, stacklevel=3)
 
 
 @dataclass
@@ -118,6 +123,7 @@ class DxfConsolidator:
             min_area_mm2: Minimum bounding box area to keep a contour
             cavity_min_area_mm2: Minimum area for cavity classification
         """
+        _warn_retired_use()
         self.min_area_mm2 = min_area_mm2
         self.cavity_min_area_mm2 = cavity_min_area_mm2
 
