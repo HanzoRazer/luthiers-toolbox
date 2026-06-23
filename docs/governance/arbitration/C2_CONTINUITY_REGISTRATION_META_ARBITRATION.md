@@ -2,9 +2,15 @@
 
 **Packet type:** Meta-arbitration (reconciles an internal contradiction between C2-B and C2-C/C2-D)
 **Phase:** C2 (Semantic Reconciliation) — propose-not-decide
-**State:** `ARBITRATION_READY` — **awaiting human ratification (Terminal 1 / sole authority)**
+**State:** `RATIFIED` — **Option C (document-only) ratified 2026-06-23. The continuity decision dissolved.**
 **Date:** 2026-06-23
-**Depends on:** nothing upstream — this *precedes* the continuity A/B/C choice and may dissolve it.
+**Depends on:** nothing upstream — this *precedes* the continuity A/B/C choice and, as ratified, dissolved it.
+
+> **RESOLVED 2026-06-23 — Option C (document-only).** The C2-B↔C2-C/C2-D contradiction is resolved toward
+> the document-only posture: "continuity" requires **no canonical registration**, C2-C/C2-D were **never
+> truly blocked**, and the only continuity follow-up is lightweight warning comments (the namespace-conflation
+> *guard* remains constitutionally deferred to C3). C2's remaining loose end reduces to **the single
+> geometry-origin decision.**
 
 > **Why this packet exists.** Before "ratify continuity Option A/B/C" can be a coherent ask, the corpus
 > contradicts itself about whether a decision exists at all. This packet surfaces that meta-question,
@@ -122,13 +128,18 @@ This is **your call** (Terminal 1 / sole authority). The recommendation prepares
 
 ## 7. Ratification
 
-> **DECISION (to be set by the human authority):** ______________________________
+> **DECISION (ratified by the human authority):** **Option C — document-only.**
 >
 > - [ ] **A** — register all three, no rename
 > - [ ] **B** — register manufacturing + governance; rename `continuity_score`→`smoothness_score`
-> - [ ] **C** — document-only (decision dissolves; no registration)
+> - [x] **C** — document-only (decision dissolves; no registration)
 >
-> Ratified by: ____________  Date: ____________
+> Ratified by: Ross (Terminal 1 / sole authority)  Date: 2026-06-23
+>
+> **Rationale on record:** the three meanings are already operationally separated (NO DIRECT PATH); the
+> risk is latent, not active; namespace-conflation enforcement is constitutionally C3's job. Warning
+> comments are the enactment; the guard is deferred to C3. The continuity decision therefore **dissolves** —
+> no canonical registration is owed, and C2-C/C2-D were never truly blocked.
 
 ---
 
