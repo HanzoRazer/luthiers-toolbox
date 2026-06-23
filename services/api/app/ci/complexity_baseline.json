@@ -1139,7 +1139,7 @@
     {
       "file": "app/routers/blueprint_cam/contour_reconstruction.py",
       "function": "reconstruct_contours",
-      "complexity": 19,
+      "complexity": 20,
       "line": 308,
       "letter": "F"
     },
@@ -1363,8 +1363,8 @@
     {
       "file": "app/routers/blueprint_cam/contour_reconstruction.py",
       "function": "reconstruct_bracing_dxf",
-      "complexity": 18,
-      "line": 440,
+      "complexity": 19,
+      "line": 441,
       "letter": "F"
     },
     {

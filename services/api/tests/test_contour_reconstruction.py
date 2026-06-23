@@ -471,6 +471,21 @@ def test_bracing_explicit_r2000_is_ac1015(bracing_like_dxf_bytes):
     assert b"AC1015" in result.dxf_bytes
 
 
+def test_output_layer_default_0_does_not_crash(line_square_dxf_bytes):
+    """output_layer='0' (a default layer) must not crash with DXFTableEntryError.
+
+    Defensive layer creation: skip add if layer already exists. Covers edge case
+    where user passes a pre-existing layer name like '0' or 'Defpoints'.
+    """
+    from app.routers.blueprint_cam.contour_reconstruction import reconstruct_contours
+
+    # Should not raise DXFTableEntryError: LAYER '0' already exists!
+    result = reconstruct_contours(line_square_dxf_bytes, tolerance_mm=0.5, output_layer="0")
+
+    assert result.success is True
+    assert result.closed_contours == 1
+
+
 def test_governed_saveas_records_actual_emitted_version(line_square_dxf_bytes):
     """governed_doc_saveas must receive the ACTUAL emitted version, not a stale
     hardcoded AC1015. Witnesses the lifecycle dxf_version for both defaults."""

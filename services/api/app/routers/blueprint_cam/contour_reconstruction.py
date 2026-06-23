@@ -399,8 +399,9 @@ def reconstruct_contours(
     out_doc = create_document(version=validated_version)
     out_msp = out_doc.modelspace()
 
-    # Add layer
-    out_doc.layers.add(output_layer)
+    # Add layer (defensive: skip if already exists, e.g. "0" or "Defpoints")
+    if output_layer not in out_doc.layers:
+        out_doc.layers.add(output_layer)
 
     for contour in valid_contours:
         if len(contour.points) < 3:
@@ -525,9 +526,10 @@ def reconstruct_bracing_dxf(
         # Chain entities
         contours = _chain_entities(entities, tolerance_mm)
 
-        # Add output layer
+        # Add output layer (defensive: skip if already exists)
         output_layer = f"{layer}_CONTOURS"
-        out_doc.layers.add(output_layer)
+        if output_layer not in out_doc.layers:
+            out_doc.layers.add(output_layer)
 
         for contour in contours:
             if len(contour.points) < 3:
