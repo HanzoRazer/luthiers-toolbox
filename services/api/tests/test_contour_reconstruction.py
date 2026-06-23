@@ -419,6 +419,36 @@ def test_explicit_r2000_output_is_ac1015_with_lwpolyline(line_square_dxf_bytes):
     assert polylines[0].closed is True
 
 
+def test_arc_contour_default_r12_produces_closed_line_chain(arc_circle_dxf_bytes):
+    """Arc-based contours (non-trivial geometry) produce closed LINE chains in R12.
+
+    This tests the full pipeline: ARC discretization via _arc_to_points() -> point
+    chain -> dxf_compat.add_polyline -> closed LINE segments. Ensures curved
+    contours work correctly, not just 4-segment squares.
+    """
+    from app.routers.blueprint_cam.contour_reconstruction import reconstruct_contours
+
+    result = reconstruct_contours(arc_circle_dxf_bytes, tolerance_mm=0.5)
+
+    assert result.success is True
+    # Byte-level witness: R12 (AC1009), no LWPOLYLINE.
+    assert b"AC1009" in result.dxf_bytes
+    assert b"LWPOLYLINE" not in result.dxf_bytes
+
+    # Structural witness: closed LINE chain.
+    _doc, entities = _load_output(result.dxf_bytes)
+    lines = [e for e in entities if e.dxftype() == "LINE"]
+
+    # Arc circle discretized: 4 arcs * 16 segments = 64 LINE segments (approx).
+    # May vary slightly due to duplicate-point merging at arc joins.
+    assert len(lines) >= 60  # Conservative lower bound
+
+    # Witness closure: every start is some segment's end (closed loop).
+    starts = {(round(e.dxf.start.x, 2), round(e.dxf.start.y, 2)) for e in lines}
+    ends = {(round(e.dxf.end.x, 2), round(e.dxf.end.y, 2)) for e in lines}
+    assert starts == ends
+
+
 def test_bracing_default_output_is_r12_no_lwpolyline(bracing_like_dxf_bytes):
     """Bracing reconstruction is R12-safe by default, symmetric with contours."""
     from app.routers.blueprint_cam.contour_reconstruction import reconstruct_bracing_dxf
