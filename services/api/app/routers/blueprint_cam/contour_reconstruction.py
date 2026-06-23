@@ -31,8 +31,25 @@ from typing import Dict, List, Optional, Set, Tuple
 import ezdxf
 from ezdxf.math import Vec2
 
-from app.util.dxf_compat import create_document
+from app.util.dxf_compat import (
+    create_document,
+    add_polyline as compat_add_polyline,
+    validate_version,
+    DXF_VERSIONS,
+)
 from app.util.blueprint_dxf_export_lifecycle import governed_doc_saveas
+
+# DXF version-selection convergence (2026-06-22): default output is R12-safe
+# (AC1009, LINE chains) for free-tier / maximum CAM compatibility. R2000
+# (AC1015, LWPOLYLINE) is an explicit, justified opt-in — never the silent
+# default. Entity emission routes through the canonical dxf_compat version-aware
+# helper rather than calling add_lwpolyline directly.
+#
+# NOTE (class fix open): direct create_document(version=...) calls remain
+# distributed across ~25 emitters in services/api/app. This module is one
+# convergence step toward R12-safe defaults; centralizing/negotiating DXF
+# version selection repo-wide is deferred to the DXF consolidation sprint.
+DEFAULT_DXF_VERSION = "R12"
 
 
 @dataclass
@@ -294,6 +311,7 @@ def reconstruct_contours(
     tolerance_mm: float = 0.5,
     min_points: int = 3,
     output_layer: str = "CONTOURS",
+    dxf_version: str = DEFAULT_DXF_VERSION,
 ) -> ReconstructionResult:
     """
     Reconstruct closed contours from LINE/ARC entities.
@@ -303,7 +321,10 @@ def reconstruct_contours(
         layer_name: Layer to process (None = all layers with LINE/ARC)
         tolerance_mm: Maximum gap between endpoints to consider connected
         min_points: Minimum points required for a valid contour
-        output_layer: Layer name for output LWPOLYLINE entities
+        output_layer: Layer name for output contour entities
+        dxf_version: Output DXF version. Default "R12" (AC1009) emits closed
+            LINE chains for free-tier / CAM compatibility. "R2000" (AC1015) is
+            an explicit opt-in emitting closed LWPOLYLINE entities.
 
     Returns:
         ReconstructionResult with reconstructed DXF bytes and stats
@@ -371,21 +392,27 @@ def reconstruct_contours(
             f"{result.open_chains} chains are not closed (may need larger tolerance)"
         )
 
-    # Create output DXF with LWPOLYLINE contours
-    out_doc = create_document(version="R2000")  # R2000 for LWPOLYLINE support
+    # Create output DXF. Version-aware: R12 -> closed LINE chains, R2000+ ->
+    # closed LWPOLYLINE. Entity emission routes through the canonical dxf_compat
+    # helper instead of calling add_lwpolyline directly.
+    validated_version = validate_version(dxf_version)
+    out_doc = create_document(version=validated_version)
     out_msp = out_doc.modelspace()
 
-    # Add layer
-    out_doc.layers.add(output_layer)
+    # Add layer (defensive: skip if already exists, e.g. "0" or "Defpoints")
+    if output_layer not in out_doc.layers:
+        out_doc.layers.add(output_layer)
 
-    for i, contour in enumerate(valid_contours):
+    for contour in valid_contours:
         if len(contour.points) < 3:
             continue
 
-        out_msp.add_lwpolyline(
+        compat_add_polyline(
+            out_msp,
             contour.points,
-            close=contour.is_closed,
-            dxfattribs={"layer": output_layer},
+            layer=output_layer,
+            closed=contour.is_closed,
+            version=validated_version,
         )
 
     # Save to bytes
@@ -397,7 +424,7 @@ def reconstruct_contours(
         tmp_path,
         source_module=__name__,
         export_type="dxf-create-save",
-        dxf_version="AC1015",
+        dxf_version=DXF_VERSIONS[validated_version],  # actual emitted version
     )
 
     try:
@@ -414,15 +441,24 @@ def reconstruct_contours(
 def reconstruct_bracing_dxf(
     dxf_bytes: bytes,
     tolerance_mm: float = 1.0,
+    dxf_version: str = DEFAULT_DXF_VERSION,
 ) -> ReconstructionResult:
     """
     Specialized reconstruction for bracing DXF files.
 
     Processes multiple bracing layers and outputs named contours.
 
+    Output bytes are user-download-only (returned via the router's return_dxf
+    Response); there is no in-repo CAM consumer that requires LWPOLYLINE from
+    this output (the CAM pocketing path uses the separate
+    app.cam.contour_reconstructor on geometry loops, not these DXF bytes). So
+    the R12-safe default applies symmetrically with reconstruct_contours.
+
     Args:
         dxf_bytes: Input bracing DXF file
         tolerance_mm: Endpoint connection tolerance
+        dxf_version: Output DXF version. Default "R12" (AC1009) emits closed
+            LINE chains; "R2000" (AC1015) is an explicit opt-in for LWPOLYLINE.
 
     Returns:
         ReconstructionResult with all bracing contours
@@ -457,8 +493,10 @@ def reconstruct_bracing_dxf(
         result.success = True
         return result
 
-    # Create output DXF
-    out_doc = create_document(version="R2000")
+    # Create output DXF. Version-aware: R12 -> closed LINE chains (default),
+    # R2000+ -> closed LWPOLYLINE (explicit opt-in).
+    validated_version = validate_version(dxf_version)
+    out_doc = create_document(version=validated_version)
     out_msp = out_doc.modelspace()
 
     total_contours = 0
@@ -488,9 +526,10 @@ def reconstruct_bracing_dxf(
         # Chain entities
         contours = _chain_entities(entities, tolerance_mm)
 
-        # Add output layer
+        # Add output layer (defensive: skip if already exists)
         output_layer = f"{layer}_CONTOURS"
-        out_doc.layers.add(output_layer)
+        if output_layer not in out_doc.layers:
+            out_doc.layers.add(output_layer)
 
         for contour in contours:
             if len(contour.points) < 3:
@@ -501,10 +540,12 @@ def reconstruct_bracing_dxf(
             if contour.is_closed:
                 total_closed += 1
 
-            out_msp.add_lwpolyline(
+            compat_add_polyline(
+                out_msp,
                 contour.points,
-                close=contour.is_closed,
-                dxfattribs={"layer": output_layer},
+                layer=output_layer,
+                closed=contour.is_closed,
+                version=validated_version,
             )
 
         result.entities_used += sum(1 for e in entities if e.used)
@@ -524,7 +565,7 @@ def reconstruct_bracing_dxf(
         tmp_path,
         source_module=__name__,
         export_type="dxf-create-save",
-        dxf_version="AC1015",
+        dxf_version=DXF_VERSIONS[validated_version],  # actual emitted version
     )
 
     try:

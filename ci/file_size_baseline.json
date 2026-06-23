@@ -82,7 +82,7 @@
   "services/api/app/instrument_geometry/neck/setup_workflow.py": 855,
   "services/api/app/routers/binding_design_router.py": 589,
   "services/api/app/routers/blueprint/calibration_router.py": 502,
-  "services/api/app/routers/blueprint_cam/contour_reconstruction.py": 543,
+  "services/api/app/routers/blueprint_cam/contour_reconstruction.py": 582,
   "services/api/app/routers/blueprint_cam/dxf_preprocessor.py": 523,
   "services/api/app/routers/cam/cam_workspace_router.py": 636,
   "services/api/app/routers/cam/governance_freeze_router.py": 548,
