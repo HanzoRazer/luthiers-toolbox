@@ -77,8 +77,10 @@ C1 does not normalize, ratify, enforce, or migrate semantics.
 
 ## C2 — Semantic Reconciliation
 
-**Status:** Not Started  
-**Prerequisite:** C1 Completion
+**Status:** Decomposition-complete (propose-not-decide); partial closure in progress — **see
+`C2_STATUS_RECONCILIATION_2026-06-23.md` for authoritative current state.** ("Not Started" was stale.)
+Continuity collision RESOLVED document-only (2026-06-23); sole remaining live gate = geometry-origin.  
+**Prerequisite:** C1 Completion (satisfied)
 
 C2 operates downstream of C1.
 
