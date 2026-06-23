@@ -25,6 +25,10 @@ artifacts; no production code was edited.
 | Seam status — **UNKNOWN** | 3 |
 | Seam status — **DEAD** | 6 |
 
+> **Before acting on this matrix, read "Confidence & method limits" below.** The OK/DEAD verdicts
+> that rest on "no consumer found" tier by evidence basis; the grep-absence-only ones must be
+> data-flow-confirmed before CLEAN retires them. UNKNOWN seams are grounded first.
+
 ### Three emission stacks coexist
 1. **`dxf_compat`** (`util/dxf_compat.py`, PROTECTED) — the version-aware layer. `create_document(version)`
    + `add_polyline(...,version)` which emits **LINE-chains for R12, LWPOLYLINE for R13+**.
@@ -198,6 +202,43 @@ One-line leads for the CLEAN stream and others; the audit did **not** act on the
 | **T5 — Declared-vs-emitted check run.** | **PASS.** Producer rows carry version + entity class; mismatches in Appendix B. `dxf_inspect_file.py` performs the file-level check and was validated on real artifacts. |
 | **T6 — Motivating seam resolved.** | **PASS.** `reconstruct_bracing_dxf` → **no internal consumer**; ships to end-user CAD (tolerant). Status **OK**. The feared internal LWPOLYLINE-CAM seam does not exist; the real risk is the inverse (R12 producers → strict consumers, seams #6/#27/#28/#29). |
 | **T7 — Summary header populated.** | **PASS.** Counts, three-stack finding, decentralization finding, concentration analysis, and CLEAN/CONSOLIDATE size estimate are above. |
+
+---
+
+## Confidence & method limits — READ BEFORE CLEAN ACTS
+
+Pass C (seam tracing) was fanned out across **6 parallel static-trace agents**; statuses were
+synthesized from their returns. That covers ~60 files but introduces uneven tracing depth, and one
+class of verdict is intrinsically weaker: **"no consumer found" is absence-of-evidence.** The
+motivating-seam case proved the rule — a grep that "finds no consumer" needed a *data-flow* trace to
+be trustworthy (name collisions, manifest-vs-grep, positive-twin discovery all changed the answer).
+So before CLEAN takes any **irreversible** action (retiring a DEAD producer) or **behavior-changing**
+action (converging an OK one), confirm the verdict's *evidence basis*, not just its label.
+
+**The "no consumer" verdicts are NOT uniform — they tier by evidence:**
+
+| Evidence basis | Trust | Rows |
+|---|---|---|
+| **Record-confirmed** (retirement/sanction record) | High | `dxf_consolidator` (#149 + sanction guard) |
+| **Positive-twin / data-flow-confirmed** (found the *live* path that supersedes it, or proved the live consumer bypasses it) | High | `smart_guitar_dxf` body module (live inline twin found); `arc_reconstructor` (IBG uses `ConstraintExtractor`, not `ArcReconstructor`); `dxf_loader`/`dxf_registry` chain (`context_adapter` bypasses the registry) |
+| **Manifest-confirmed** (absent from `router_registry`, not merely from grep) | High | `neck_profile_export` (unmounted) |
+| **Logic-confirmed** (unreachable by construction) | High | `inlay_calc._generate_basic_r12_dxf` (import-fallback only) |
+| **Grep-absence only** — ⚠️ **CLEAN must data-flow-confirm before retiring** | **Medium** | `cam/body_region_selector.py`; `cam/line_deduplicator.py`; `generators/bezier_body.py:to_dxf`; `art_studio/services/generators/inlay_export.py:geometry_to_dxf` (agent self-flagged: "grep outside the file needed to fully clear") |
+
+**The OK rows are better-founded than the DEAD class:** most OK seams rest on a *positive* trace — a
+route that ships `application/dxf` to a tolerant end-user CAD (presence of a tolerant consumer), or a
+traced internal match (e.g. R12-LINE producer → LINE-consuming `DXFCleaner`). They are not
+absence-of-evidence. The exception worth a glance: the two internal OK rows (#24 `layered_dxf_writer`,
+#26 IBG consume chain) were traced but not behaviorally witnessed — fine for a read-only audit, but
+CLEAN should keep that in mind if it touches them.
+
+**Handoff to CLEAN — start order:**
+1. **The 3 UNKNOWN seams first** (#31 `core/dxf_geometry` LINE+CIRCLE-only feeder; `cam/contour_reconstructor` LINE+SPLINE feeder class; `archtop read_single_outline` input class). UNKNOWN = "don't know what breaks" — changing a producer near a blind consumer is changing something blind. These are grounded *first*, not last.
+2. **Confirm the 4 grep-absence DEAD rows** are data-flow-traced-absent (not just grep-absent) **before retiring** them.
+3. **The 9 RISK seams** (R12/LINE producer meets strict LWPOLYLINE consumer across the user re-upload boundary) are the core cleaning work.
+
+This caveat is a known limit of parallel *static* tracing, not a flaw in a finding — it scopes which
+rows CLEAN can act on directly vs which need a confirmation trace first.
 
 ---
 
