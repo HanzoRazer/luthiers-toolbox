@@ -250,13 +250,22 @@ C2-B must establish namespace separation BEFORE C2-C provenance decomposition ca
 
 ## Decision Required
 
+> **RESOLVED 2026-06-23 — Option C (document-only), ratified.** See
+> `arbitration/C2_CONTINUITY_REGISTRATION_META_ARBITRATION.md`. A meta-arbitration first established that
+> this corpus contradicted itself about whether a decision existed (C2-B "register" here vs C2-C/C2-D
+> "ratification not required"); the human authority resolved it toward **document-only**. The three
+> meanings are already operationally separated (NO DIRECT PATH); the risk is latent, not active;
+> the conflation guard is deferred to C3. **No canonical registration is owed, and C2-C/C2-D were never
+> truly blocked.** The options below are retained as the original analysis; Option B is **superseded** by
+> the ratified Option C.
+
 | Option | Description | Risk |
 |--------|-------------|------|
 | **A. Register all three** | Add manufacturing, governance, contour continuity to ontology | Low risk, high governance overhead |
 | **B. Register two, rename one** | Register manufacturing + governance, rename `continuity_score` to `smoothness_score` | Medium risk, cleaner |
 | **C. Document without registration** | Add warning comments, defer registration | Higher drift risk |
 
-**Recommended**: Option B — Register manufacturing and governance continuity canonically, rename vectorizer `continuity_score` to `smoothness_score` to eliminate collision.
+**Recommended (original Terminal-2 analysis; SUPERSEDED by ratified Option C, 2026-06-23)**: Option B — Register manufacturing and governance continuity canonically, rename vectorizer `continuity_score` to `smoothness_score` to eliminate collision.
 
 ---
 
