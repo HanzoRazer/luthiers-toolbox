@@ -337,29 +337,124 @@ def test_tolerance_large_bridges_gaps():
 # =============================================================================
 
 
-def test_output_contains_lwpolyline(line_square_dxf_bytes):
-    """Output DXF contains LWPOLYLINE entities."""
+def _load_output(dxf_bytes):
+    """Write output bytes to a temp file and return (doc, msp)."""
+    with tempfile.NamedTemporaryFile(delete=False, suffix=".dxf", mode="wb") as tmp:
+        tmp.write(dxf_bytes)
+        tmp_path = tmp.name
+    try:
+        doc = ezdxf.readfile(tmp_path)
+        return doc, list(doc.modelspace())
+    finally:
+        os.unlink(tmp_path)
+
+
+# -----------------------------------------------------------------------------
+# DXF version-selection convergence (2026-06-22): default output must be
+# R12-safe (AC1009, LINE chains, no LWPOLYLINE); R2000 (AC1015, LWPOLYLINE) is
+# an explicit opt-in. Witness the byte/file structure directly, not rendering.
+# -----------------------------------------------------------------------------
+
+
+def test_default_output_is_r12_ac1009(line_square_dxf_bytes):
+    """Default reconstruction output is R12 (AC1009) at the byte level."""
     from app.routers.blueprint_cam.contour_reconstruction import reconstruct_contours
 
     result = reconstruct_contours(line_square_dxf_bytes, tolerance_mm=0.5)
 
     assert result.success is True
     assert len(result.dxf_bytes) > 0
+    # Byte-level witness: the header DXF version code is AC1009 (R12).
+    assert b"AC1009" in result.dxf_bytes
+    assert b"AC1015" not in result.dxf_bytes
 
-    # Load output DXF and verify contents
-    with tempfile.NamedTemporaryFile(delete=False, suffix=".dxf", mode="wb") as tmp:
-        tmp.write(result.dxf_bytes)
-        tmp_path = tmp.name
 
-    try:
-        doc = ezdxf.readfile(tmp_path)
-        msp = doc.modelspace()
+def test_default_output_has_no_lwpolyline(line_square_dxf_bytes):
+    """Default (R12) output must NOT emit LWPOLYLINE (R12 does not support it)."""
+    from app.routers.blueprint_cam.contour_reconstruction import reconstruct_contours
 
-        polylines = [e for e in msp if e.dxftype() == "LWPOLYLINE"]
-        assert len(polylines) == 1
-        assert polylines[0].closed is True
-    finally:
-        os.unlink(tmp_path)
+    result = reconstruct_contours(line_square_dxf_bytes, tolerance_mm=0.5)
+
+    # Byte-level witness.
+    assert b"LWPOLYLINE" not in result.dxf_bytes
+    # Structural witness via ezdxf.
+    _doc, entities = _load_output(result.dxf_bytes)
+    assert not [e for e in entities if e.dxftype() == "LWPOLYLINE"]
+
+
+def test_default_output_preserves_contour_as_closed_line_chain(line_square_dxf_bytes):
+    """Default output represents the closed contour as a closed LINE chain.
+
+    The deliberate R12-legal representation is LINE segments (the repo's
+    R12 LINE-only convention via dxf_compat.add_polyline). A closed 4-side
+    square -> 4 LINE entities whose chain returns to the start point.
+    """
+    from app.routers.blueprint_cam.contour_reconstruction import reconstruct_contours
+
+    result = reconstruct_contours(line_square_dxf_bytes, tolerance_mm=0.5)
+
+    _doc, entities = _load_output(result.dxf_bytes)
+    lines = [e for e in entities if e.dxftype() == "LINE"]
+    # Closed 100x100 square reconstructed as 4 closing LINE segments.
+    assert len(lines) == 4
+
+    # Witness closure: the chain of endpoints returns to its origin.
+    starts = [(round(e.dxf.start.x, 3), round(e.dxf.start.y, 3)) for e in lines]
+    ends = [(round(e.dxf.end.x, 3), round(e.dxf.end.y, 3)) for e in lines]
+    # Every start point is also an end point of some segment (a closed loop).
+    assert set(starts) == set(ends)
+
+
+def test_explicit_r2000_output_is_ac1015_with_lwpolyline(line_square_dxf_bytes):
+    """Explicit R2000 opt-in emits AC1015 and may use LWPOLYLINE."""
+    from app.routers.blueprint_cam.contour_reconstruction import reconstruct_contours
+
+    result = reconstruct_contours(line_square_dxf_bytes, tolerance_mm=0.5, dxf_version="R2000")
+
+    assert result.success is True
+    assert b"AC1015" in result.dxf_bytes
+    _doc, entities = _load_output(result.dxf_bytes)
+    polylines = [e for e in entities if e.dxftype() == "LWPOLYLINE"]
+    assert len(polylines) == 1
+    assert polylines[0].closed is True
+
+
+def test_bracing_default_output_is_r12_no_lwpolyline(bracing_like_dxf_bytes):
+    """Bracing reconstruction is R12-safe by default, symmetric with contours."""
+    from app.routers.blueprint_cam.contour_reconstruction import reconstruct_bracing_dxf
+
+    result = reconstruct_bracing_dxf(bracing_like_dxf_bytes, tolerance_mm=0.5)
+
+    assert result.success is True
+    assert b"AC1009" in result.dxf_bytes
+    assert b"AC1015" not in result.dxf_bytes
+    assert b"LWPOLYLINE" not in result.dxf_bytes
+
+
+def test_bracing_explicit_r2000_is_ac1015(bracing_like_dxf_bytes):
+    """Bracing explicit R2000 opt-in emits AC1015."""
+    from app.routers.blueprint_cam.contour_reconstruction import reconstruct_bracing_dxf
+
+    result = reconstruct_bracing_dxf(bracing_like_dxf_bytes, tolerance_mm=0.5, dxf_version="R2000")
+
+    assert result.success is True
+    assert b"AC1015" in result.dxf_bytes
+
+
+def test_governed_saveas_records_actual_emitted_version(line_square_dxf_bytes):
+    """governed_doc_saveas must receive the ACTUAL emitted version, not a stale
+    hardcoded AC1015. Witnesses the lifecycle dxf_version for both defaults."""
+    from unittest.mock import patch
+    from app.routers.blueprint_cam import contour_reconstruction as mod
+
+    LIFECYCLE = "app.util.blueprint_dxf_export_lifecycle.assert_dxf_lifecycle_context"
+
+    recorded = []
+    with patch(LIFECYCLE, side_effect=lambda ctx: recorded.append(ctx)):
+        mod.reconstruct_contours(line_square_dxf_bytes, tolerance_mm=0.5)
+        mod.reconstruct_contours(line_square_dxf_bytes, tolerance_mm=0.5, dxf_version="R2000")
+
+    assert [c.dxf_version for c in recorded] == ["AC1009", "AC1015"]
 
 
 def test_output_preserves_geometry_bounds(line_square_dxf_bytes):
@@ -530,3 +625,83 @@ def test_reconstruct_bracing_endpoint(bracing_like_dxf_bytes):
     result = response.json()
     assert result["success"] is True
     assert result["contours_found"] == 3  # 2 TOP_BRACING + 1 BACK_BRACING
+
+
+# =============================================================================
+# Router path: same version behavior as the library function
+# =============================================================================
+
+
+def test_reconstruct_download_default_is_r12(line_square_dxf_bytes):
+    """Router download path defaults to R12 (AC1009, no LWPOLYLINE) — same as lib."""
+    from fastapi.testclient import TestClient
+    from app.main import app
+    import io
+
+    client = TestClient(app)
+    files = {"file": ("test.dxf", io.BytesIO(line_square_dxf_bytes), "application/dxf")}
+    response = client.post(
+        "/api/cam/blueprint/contour-reconstruction/reconstruct-download",
+        files=files,
+        data={"tolerance_mm": "0.5"},
+    )
+
+    assert response.status_code == 200
+    assert response.headers["content-type"] == "application/dxf"
+    assert b"AC1009" in response.content
+    assert b"AC1015" not in response.content
+    assert b"LWPOLYLINE" not in response.content
+
+
+def test_reconstruct_download_explicit_r2000(line_square_dxf_bytes):
+    """Router download path honors explicit R2000 opt-in (AC1015) — same as lib."""
+    from fastapi.testclient import TestClient
+    from app.main import app
+    import io
+
+    client = TestClient(app)
+    files = {"file": ("test.dxf", io.BytesIO(line_square_dxf_bytes), "application/dxf")}
+    response = client.post(
+        "/api/cam/blueprint/contour-reconstruction/reconstruct-download",
+        files=files,
+        data={"tolerance_mm": "0.5", "dxf_version": "R2000"},
+    )
+
+    assert response.status_code == 200
+    assert b"AC1015" in response.content
+
+
+def test_reconstruct_return_dxf_default_is_r12(line_square_dxf_bytes):
+    """return_dxf=True on /reconstruct defaults to R12 bytes."""
+    from fastapi.testclient import TestClient
+    from app.main import app
+    import io
+
+    client = TestClient(app)
+    files = {"file": ("test.dxf", io.BytesIO(line_square_dxf_bytes), "application/dxf")}
+    response = client.post(
+        "/api/cam/blueprint/contour-reconstruction/reconstruct",
+        files=files,
+        data={"tolerance_mm": "0.5", "return_dxf": "true"},
+    )
+
+    assert response.status_code == 200
+    assert b"AC1009" in response.content
+    assert b"LWPOLYLINE" not in response.content
+
+
+def test_reconstruct_rejects_invalid_dxf_version(line_square_dxf_bytes):
+    """Unsupported dxf_version is rejected with 400 (not silently coerced)."""
+    from fastapi.testclient import TestClient
+    from app.main import app
+    import io
+
+    client = TestClient(app)
+    files = {"file": ("test.dxf", io.BytesIO(line_square_dxf_bytes), "application/dxf")}
+    response = client.post(
+        "/api/cam/blueprint/contour-reconstruction/reconstruct-download",
+        files=files,
+        data={"tolerance_mm": "0.5", "dxf_version": "R2010"},
+    )
+
+    assert response.status_code == 400

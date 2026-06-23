@@ -23,6 +23,20 @@ from .contour_reconstruction import (
 
 router = APIRouter(prefix="/contour-reconstruction", tags=["Contour Reconstruction"])
 
+# Dual-format tier policy (CLAUDE.md): free tier R12 (AC1009, LINE chains),
+# paid tier R2000 (AC1015, LWPOLYLINE). Default R12-safe; R2000 explicit opt-in.
+_ALLOWED_DXF_VERSIONS = ("R12", "R2000")
+
+
+def _validate_dxf_version(dxf_version: str) -> str:
+    if dxf_version not in _ALLOWED_DXF_VERSIONS:
+        raise HTTPException(
+            400,
+            f"dxf_version must be one of {list(_ALLOWED_DXF_VERSIONS)} "
+            f"(default R12 LINE-chain; R2000 is an explicit LWPOLYLINE opt-in)",
+        )
+    return dxf_version
+
 
 class ContourInfo(BaseModel):
     """Info about a single reconstructed contour."""
@@ -91,17 +105,21 @@ async def reconstruct(
     min_points: int = Form(3, ge=2, description="Minimum points for valid contour"),
     output_layer: str = Form("CONTOURS", description="Output layer name"),
     return_dxf: bool = Form(False, description="Return reconstructed DXF file"),
+    dxf_version: str = Form("R12", description="Output DXF version: R12 (LINE chains, default) or R2000 (LWPOLYLINE)"),
 ):
     """
     Reconstruct closed contours from LINE/ARC entities.
 
-    Chains entities by endpoint proximity to form closed loops,
-    then converts each loop to a closed LWPOLYLINE.
+    Chains entities by endpoint proximity to form closed loops, then emits each
+    loop as a closed contour. Default output is R12 (AC1009, LINE chains);
+    R2000 (AC1015, LWPOLYLINE) is an explicit opt-in via dxf_version.
     """
     content = await file.read()
 
     if len(content) == 0:
         raise HTTPException(400, "Empty file")
+
+    dxf_version = _validate_dxf_version(dxf_version)
 
     result = reconstruct_contours(
         dxf_bytes=content,
@@ -109,6 +127,7 @@ async def reconstruct(
         tolerance_mm=tolerance_mm,
         min_points=min_points,
         output_layer=output_layer,
+        dxf_version=dxf_version,
     )
 
     if not result.success:
@@ -145,16 +164,20 @@ async def reconstruct_and_download(
     tolerance_mm: float = Form(0.5),
     min_points: int = Form(3),
     output_layer: str = Form("CONTOURS"),
+    dxf_version: str = Form("R12", description="Output DXF version: R12 (LINE chains, default) or R2000 (LWPOLYLINE)"),
 ):
     """
     Reconstruct contours and return the DXF file.
 
-    Convenience endpoint that always returns the reconstructed DXF.
+    Convenience endpoint that always returns the reconstructed DXF. Default
+    output is R12 (LINE chains); R2000 (LWPOLYLINE) is an explicit opt-in.
     """
     content = await file.read()
 
     if len(content) == 0:
         raise HTTPException(400, "Empty file")
+
+    dxf_version = _validate_dxf_version(dxf_version)
 
     result = reconstruct_contours(
         dxf_bytes=content,
@@ -162,6 +185,7 @@ async def reconstruct_and_download(
         tolerance_mm=tolerance_mm,
         min_points=min_points,
         output_layer=output_layer,
+        dxf_version=dxf_version,
     )
 
     if not result.success:
@@ -189,6 +213,7 @@ async def reconstruct_bracing(
     file: UploadFile = File(..., description="Bracing DXF file"),
     tolerance_mm: float = Form(1.0, ge=0.01, le=10.0, description="Endpoint connection tolerance"),
     return_dxf: bool = Form(False, description="Return reconstructed DXF file"),
+    dxf_version: str = Form("R12", description="Output DXF version: R12 (LINE chains, default) or R2000 (LWPOLYLINE)"),
 ):
     """
     Reconstruct contours from bracing DXF files.
@@ -197,15 +222,20 @@ async def reconstruct_bracing(
     - Automatically finds layers containing 'BRAC' in name
     - Processes each bracing layer separately
     - Outputs contours to named layers (e.g., TOP_BRACING_CONTOURS)
+
+    Default output is R12 (LINE chains); R2000 (LWPOLYLINE) is an explicit opt-in.
     """
     content = await file.read()
 
     if len(content) == 0:
         raise HTTPException(400, "Empty file")
 
+    dxf_version = _validate_dxf_version(dxf_version)
+
     result = reconstruct_bracing_dxf(
         dxf_bytes=content,
         tolerance_mm=tolerance_mm,
+        dxf_version=dxf_version,
     )
 
     if not result.success:
