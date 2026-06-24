@@ -43,11 +43,27 @@ Read-only data-flow traces. Resolution: **UNKNOWN → {DEAD, RISK, DEAD}** — l
 
 ---
 
+## Done — 4 grep-absence DEAD seams data-flow-confirmed (2026-06-24)
+
+Per the grep-absence-vs-positive-trace discipline, each was traced across **all** of `services/api`
+(app + tests + manifests/registries), not by call-by-name. Result: **of 4 grep-flagged DEAD, only 1 is
+retire-safe; 2 are NOT dead (live/tested consumers the by-name grep missed); 1 is test-coupled.**
+
+| Candidate | Verdict | Evidence |
+|---|---|---|
+| `cam/body_region_selector.py` (`BodyRegionSelector`/`select_*`) | **DEAD — RETIRED** | Zero importers anywhere (`import body_region_selector` / `from …import` = none); all refs self-internal; not `PROTECTED`. File deleted; **witnessed**: cam suite collects (2199 tests, no import error). |
+| `cam/line_deduplicator.py:deduplicate_parallel_lines` | **runtime-DEAD, test-coupled — DEFERRED** | Only caller is the lifecycle-guard test `test_dxf_lifecycle_read_modify_save_guards.py`. No production path. Retiring = also remove its guard test; judgment call (intended utility?) — left in place. |
+| `generators/bezier_body.py:BezierBodyGenerator` | **NOT DEAD — REFUTED** | Re-exported in `app.generators.__all__` (`__init__.py:70,136`); full suite `test_bezier_body_generator.py` + guard test. Tested public-API library (no HTTP route ≠ dead). Do **not** retire. |
+| `art_studio/services/generators/inlay_export.py:geometry_to_dxf_bytes` | **NOT DEAD — REFUTED** | **Live**: called by `art_studio/api/inlay_pattern_routes.py:133`, which is **mounted** via `router_registry/manifests/art_studio_manifest.py:81`. Do **not** retire. |
+
+**Discipline payoff:** retiring all 4 on grep-absence would have deleted a **live mounted-route dependency**
+(`geometry_to_dxf_bytes`) and a **tested public-API class** (`BezierBodyGenerator`). Matrix Appendix-A
+should drop those two from the DEAD list. The 2 newly-DEAD from UNKNOWN-grounding
+(`load_dxf_geometries`, `read_single_outline`/broken-route) still pending the same data-flow pass.
+
 ## Next (CLEAN, per matrix start-order)
 
-1. Confirm the **4 grep-absence DEAD** rows are data-flow-traced-absent before retiring
-   (`body_region_selector`, `line_deduplicator`, `bezier_body.to_dxf`, `inlay_export.geometry_to_dxf`)
-   — plus the 2 newly-DEAD here (`load_dxf_geometries`, `read_single_outline`/broken-route).
+1. Data-flow-confirm the 2 newly-DEAD (`load_dxf_geometries`, `read_single_outline`/broken-route) before retiring.
 2. Work the **RISK seams** — the R12/LINE-producer-meets-strict-LWPOLYLINE-consumer cases at the
    user-upload boundary, now including `#2 contour_reconstructor` (inverse: LINE/SPLINE-consumer fed
    LWPOLYLINE).
