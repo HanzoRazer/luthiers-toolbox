@@ -10,6 +10,7 @@ Environment variables:
     BLUEPRINT_MAX_MEGAPIXELS: Max total megapixels (default: 12)
     BLUEPRINT_MAX_PDF_DPI: Max PDF render DPI (default: 150)
     BLUEPRINT_MIN_DOWNSCALED_DIM_PX: Minimum dimension after downscale (default: 1200)
+    BLUEPRINT_ENABLE_GEOMETRY_DEDUPE: Enable post-selection geometry dedupe (default: false)
 
 Author: Production Shop
 """
@@ -28,6 +29,18 @@ def _get_int(name: str, default: int) -> int:
         return default
 
 
+def _env_bool(name: str, default: bool = False) -> bool:
+    """Get boolean from env var with fallback to default.
+
+    Truthy values (case-insensitive): "1", "true", "yes", "on".
+    Anything else (including unset) resolves to ``default``.
+    """
+    value = os.getenv(name)
+    if value is None:
+        return default
+    return value.strip().lower() in {"1", "true", "yes", "on"}
+
+
 @dataclass(frozen=True)
 class BlueprintLimits:
     """
@@ -40,6 +53,9 @@ class BlueprintLimits:
     max_megapixels: int = _get_int("BLUEPRINT_MAX_MEGAPIXELS", 12)
     max_pdf_dpi: int = _get_int("BLUEPRINT_MAX_PDF_DPI", 200)
     min_downscaled_dim_px: int = _get_int("BLUEPRINT_MIN_DOWNSCALED_DIM_PX", 1200)
+    # Feature flag: post-selection / pre-export geometry deduplication.
+    # Default OFF — no behavior change unless explicitly enabled.
+    enable_geometry_dedupe: bool = _env_bool("BLUEPRINT_ENABLE_GEOMETRY_DEDUPE", False)
 
     @property
     def max_upload_bytes(self) -> int:
