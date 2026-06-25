@@ -43,11 +43,32 @@ Read-only data-flow traces. Resolution: **UNKNOWN → {DEAD, RISK, DEAD}** — l
 
 ---
 
+## Done — 4 grep-absence DEAD seams data-flow-confirmed (2026-06-24)
+
+Per the grep-absence-vs-positive-trace discipline, each was traced across **all** of `services/api`
+(app + tests + manifests/registries), not by call-by-name. Result: **of 4 grep-flagged DEAD, ZERO were
+safe-and-right to retire now — 2 are live/tested (refuted), 2 are runtime-dead-but-intended-utility (deferred).**
+
+| Candidate | Verdict | Evidence |
+|---|---|---|
+| `cam/body_region_selector.py` (`BodyRegionSelector`/`select_*`) | **runtime-DEAD, intended-utility — DEFERRED** | Zero importers anywhere — verified beyond grep: no dynamic import / `__all__` re-export / router-manifest entry (only non-self ref is `complexity_baseline.json`). BUT it is a coherent **Sprint-3 body-isolation feature** (446 lines, auto body-outline detection from blueprint sheets) in an **active area** (IBG / blueprint-reader / morphology); the matrix said "retire **or wire**". By the same intended-utility standard applied to `line_deduplicator`, **deferred pending an explicit wire-or-abandon decision** rather than retired. File **retained**; its `complexity_baseline.json` entry is **intentionally kept** — the file still exists, so it is not an orphan. |
+| `cam/line_deduplicator.py:deduplicate_parallel_lines` | **runtime-DEAD, test-coupled — DEFERRED** | Only caller is the lifecycle-guard test `test_dxf_lifecycle_read_modify_save_guards.py`. No production path. Retiring = also remove its guard test; judgment call (intended utility?) — left in place. |
+| `generators/bezier_body.py:BezierBodyGenerator` | **NOT DEAD — REFUTED** | Re-exported in `app.generators.__all__` (`__init__.py:70,136`); full suite `test_bezier_body_generator.py` + guard test. Tested public-API library (no HTTP route ≠ dead). Do **not** retire. |
+| `art_studio/services/generators/inlay_export.py:geometry_to_dxf_bytes` | **NOT DEAD — REFUTED** | **Live**: called by `art_studio/api/inlay_pattern_routes.py:133`, which is **mounted** via `router_registry/manifests/art_studio_manifest.py:81`. Do **not** retire. |
+
+**Discipline payoff (stronger than first written):** of the 4 grep-absence DEAD candidates, **none were
+safe-and-right to retire outright.** 2 are live → **refuted** (a mounted-route dependency `geometry_to_dxf_bytes`;
+a tested public-API class `BezierBodyGenerator`); 2 are runtime-dead-but-intended-utility → **deferred**
+(`line_deduplicator` test-coupled; `body_region_selector` a Sprint-3 feature in an active area). **This pass:
+0 retired, 2 deferred, 2 refuted.** The trace didn't just catch 2 false-deads — it caught that even the one
+genuinely import-dead module wasn't *right* to delete yet (intended-utility; git-recoverable but
+undiscoverable once deleted). Matrix Appendix-A (frozen — fold in at next matrix revision) should drop the
+2 refuted from the DEAD list and move the 2 deferred to a deferred-pending-decision bucket. The 2 newly-DEAD
+from UNKNOWN-grounding (`load_dxf_geometries`, `read_single_outline`/broken-route) still pending the same pass.
+
 ## Next (CLEAN, per matrix start-order)
 
-1. Confirm the **4 grep-absence DEAD** rows are data-flow-traced-absent before retiring
-   (`body_region_selector`, `line_deduplicator`, `bezier_body.to_dxf`, `inlay_export.geometry_to_dxf`)
-   — plus the 2 newly-DEAD here (`load_dxf_geometries`, `read_single_outline`/broken-route).
+1. Data-flow-confirm the 2 newly-DEAD (`load_dxf_geometries`, `read_single_outline`/broken-route) before retiring.
 2. Work the **RISK seams** — the R12/LINE-producer-meets-strict-LWPOLYLINE-consumer cases at the
    user-upload boundary, now including `#2 contour_reconstructor` (inverse: LINE/SPLINE-consumer fed
    LWPOLYLINE).
