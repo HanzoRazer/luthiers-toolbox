@@ -410,6 +410,19 @@ def run_governed_export_lifecycle(
 
         # Persist audit if RMOS was persisted
         if early_rmos and early_rmos.persisted:
+            # Mirror the normal persisted path: populate the non-hash RMOS
+            # summary before writing the audit ledger so RED persisted ledgers
+            # have parity with non-RED ones. artifact_count/kinds describe the
+            # RMOS artifacts present BEFORE the audit ledger is appended (the
+            # audit ledger must not count itself). For a RED unsupported op this
+            # is just the lifecycle report. (CI-RED-024 / C24-C)
+            audit_snapshot.rmos_summary = {
+                "persisted": True,
+                "run_id": early_rmos.run_id,
+                "artifact_count": len(early_rmos.artifacts),
+                "artifact_kinds": [a.kind for a in early_rmos.artifacts],
+            }
+
             audit_ref = persist_audit_ledger_artifact(
                 audit_ledger=audit_snapshot.model_dump(mode="json"),
                 run_id=early_rmos.run_id,
