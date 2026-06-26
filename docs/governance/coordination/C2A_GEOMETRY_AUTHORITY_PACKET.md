@@ -17,7 +17,7 @@
 | Title | Geometry Authority Decomposition |
 | Phase | C2 (Constitutional Arbitration) |
 | Date Created | 2026-05-18 |
-| Status | DRAFT |
+| Status | RATIFIED (narrow authority decisions §18.3, 2026-05-18); geometry-origin OPEN — see `../C2_STATUS_RECONCILIATION_2026-06-23.md` (authoritative). Stale creation-time `DRAFT` corrected per CI-RED-015-H. |
 | Primary Owner | Terminal 3 |
 | Required Reviewers | T1, T2, T4, T5 |
 | Prerequisite | C1 frozen |

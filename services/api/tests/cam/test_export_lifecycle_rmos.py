@@ -24,6 +24,7 @@ from app.cam.export_rmos_artifacts import (
     RMOSArtifactRef,
     EXPORT_OBJECT_KIND,
     LIFECYCLE_REPORT_KIND,
+    AUDIT_LEDGER_KIND,
     generate_export_run_id,
     persist_export_lifecycle_artifacts,
     create_empty_persistence_result,
@@ -294,6 +295,45 @@ class TestRedLifecyclePersistence:
         artifact_kinds = [a.kind for a in report.rmos.artifacts]
         assert LIFECYCLE_REPORT_KIND in artifact_kinds
         assert EXPORT_OBJECT_KIND not in artifact_kinds
+
+    @patch("app.cam.export_rmos_artifacts.put_json_attachment")
+    def test_red_lifecycle_persisted_audit_includes_rmos_summary(self, mock_put):
+        """RED persisted audit ledger carries rmos_summary parity (CI-RED-024 / C24-C).
+
+        The persisted non-RED audit ledger sets audit_snapshot.rmos_summary
+        before writing the audit JSON. The early RED policy branch must do the
+        same so persisted audit artifacts have parity across lifecycle outcomes.
+        artifact_count/kinds describe the RMOS artifacts present BEFORE the audit
+        ledger is appended (the audit ledger must not count itself) — for a RED
+        unsupported op that is just the lifecycle report.
+        """
+        mock_put.return_value = (
+            MagicMock(size_bytes=500),
+            "/fake/path",
+            "def456" + "0" * 58,
+        )
+
+        request = create_lifecycle_request(persist=True)
+        request.preview_request.operation = "unsupported_op"
+
+        report = run_governed_export_lifecycle(request)
+
+        # Inspect the audit-ledger persistence call specifically.
+        audit_calls = [
+            call for call in mock_put.call_args_list
+            if call.kwargs["kind"] == AUDIT_LEDGER_KIND
+        ]
+        assert len(audit_calls) == 1
+
+        audit_payload = audit_calls[0].kwargs["obj"]
+        summary = audit_payload["rmos_summary"]
+
+        assert summary["persisted"] is True
+        assert summary["run_id"] == report.rmos.run_id
+        # Pre-audit artifact set: lifecycle report only (audit ledger excluded).
+        assert summary["artifact_count"] == 1
+        assert summary["artifact_kinds"] == [LIFECYCLE_REPORT_KIND]
+        assert EXPORT_OBJECT_KIND not in summary["artifact_kinds"]
 
 
 # -----------------------------------------------------------------------------

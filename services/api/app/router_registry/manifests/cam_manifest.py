@@ -254,6 +254,14 @@ CAM_ROUTERS: List[RouterSpec] = [
         category="cam",
     ),
     RouterSpec(
+        # CI-RED-015-H: mount ratified C2-A / CAM 7T geometry-authority router.
+        # Router declares its full "/api/cam/geometry-authority" prefix internally.
+        module="app.routers.cam.geometry_authority_router",
+        prefix="",
+        tags=["CAM", "Geometry", "Authority"],
+        category="cam",
+    ),
+    RouterSpec(
         module="app.cam.rosette.photo_batch_router",
         prefix="",
         tags=["CAM", "Rosette", "Batch"],
