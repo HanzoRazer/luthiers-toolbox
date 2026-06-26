@@ -143,10 +143,17 @@ class TestContourRunDetection:
 
     def test_straight_line_single_run(self):
         """Straight line detected as single contour run."""
+        # 10 points over 100mm => ~11.11mm adjacent spacing. dist_tol_mm is the
+        # max allowed adjacent-point distance (a gap detector — see the sibling
+        # test_distance_break, which relies on dist > tol breaking a run). The
+        # prior fixture used dist_tol_mm=5.0 < 11.11mm spacing, which (correctly,
+        # per that locked contract) split the line into runs. Use a tolerance
+        # generous enough for this sampling so a genuinely continuous straight
+        # line stays one run.
         points = make_line_points(0, 0, 100, 0, n=10)
         chain = make_chain(points)
 
-        runs = detect_contour_runs(chain, dist_tol_mm=5.0, angle_tol_deg=15.0)
+        runs = detect_contour_runs(chain, dist_tol_mm=15.0, angle_tol_deg=15.0)
 
         assert len(runs) == 1
         assert runs[0].point_count == 10
@@ -275,14 +282,25 @@ class TestArcFitting:
 
     def test_fit_arc_noisy_points(self):
         """Noisy arc points may exceed tolerance."""
-        # Perfect arc
+        # Perfect arc centered at the origin, so distance-from-origin == radius.
         points = make_arc_points(0, 0, 50, 0, 90, n=10)
-        # Add noise
-        noisy_points = [(x + 5, y + 5) for x, y in points]
+        # Add REAL radial noise: push each point alternately in/out by 1mm
+        # along its radius. (A previous fixture translated by (5, 5), which is
+        # not noise — translation preserves a perfect arc, so the fit stayed
+        # valid and this assertion failed.) Deterministic, no RNG.
+        noisy_points = []
+        for i, (x, y) in enumerate(points):
+            r = math.hypot(x, y)
+            if r < 1e-9:
+                noisy_points.append((x, y))
+                continue
+            sign = 1.0 if i % 2 == 0 else -1.0
+            scale = (r + sign * 1.0) / r
+            noisy_points.append((x * scale, y * scale))
 
         candidate = fit_arc_to_segment(noisy_points, mean_tol_mm=0.5, max_tol_mm=1.0)
 
-        # With noise, should fail strict tolerance
+        # With real radial noise the single-circle fit degrades past tolerance.
         assert not candidate.valid or candidate.mean_error_mm > 0.5
 
 
@@ -356,7 +374,10 @@ class TestRepairBodyGeometry:
         result = repair_body_geometry(layered)
 
         assert result.applied
-        assert result.phase == "6A_validation"
+        # Restored Phase 6A module names the active phase "6A_analysis"
+        # consistently (dataclass default, log, return). "6A_validation" was
+        # stale terminology in this fixture; no app/ consumer requires it.
+        assert result.phase == "6A_analysis"
         assert result.metrics.contour_count == 1
         assert result.metrics.total_points == 4
         assert result.metrics.chain_conversion_ok
