@@ -18,6 +18,11 @@
       "over_by": 870
     },
     {
+      "file": "tests/cam/test_export_lifecycle_rmos.py",
+      "lines": 513,
+      "over_by": 13
+    },
+    {
       "file": "app/services/blueprint_clean.py",
       "lines": 1293,
       "over_by": 793

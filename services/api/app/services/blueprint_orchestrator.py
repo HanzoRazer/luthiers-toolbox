@@ -1120,5 +1120,9 @@ class BlueprintOrchestrator:
             debug_payload["fallback_is_page_border"] = clean_result.fallback_is_page_border
             debug_payload["winner_margin"] = round(clean_result.winner_margin, 3)
             debug_payload["runner_up_score"] = round(clean_result.runner_up_score, 3)
+            # Geometry dedupe stats are diagnostic-only and present only when the
+            # BLUEPRINT_ENABLE_GEOMETRY_DEDUPE flag is on and dedupe actually ran.
+            if clean_result.geometry_deduplication is not None:
+                debug_payload["geometry_deduplication"] = clean_result.geometry_deduplication
 
         return debug_payload

@@ -33,14 +33,15 @@ Author: Production Shop
 from __future__ import annotations
 
 import logging
-from dataclasses import dataclass, field
+from dataclasses import asdict, dataclass, field
 from enum import Enum
 from pathlib import Path
-from typing import List, Optional, Tuple
+from typing import Any, List, Optional, Tuple
 
 import cv2
 import numpy as np
 
+from .blueprint_limits import LIMITS
 from .contour_scoring import score_contours, ContourSelectionResult
 
 logger = logging.getLogger(__name__)
@@ -145,6 +146,8 @@ class CleanResult:
     fallback_reason: str = ""
     fallback_reject_reason: str = ""
     fallback_is_page_border: bool = False
+    # Geometry deduplication diagnostics (debug-only; None unless flag enabled and run)
+    geometry_deduplication: Optional[dict[str, Any]] = None
 
 
 # ─── Ownership Adapter ───────────────────────────────────────────────────────
@@ -550,7 +553,12 @@ def _clean_blueprint_refined(
     warnings: List[str] = []
 
     try:
-        from ..cam.unified_dxf_cleaner import DXFCleaner, Chain, Point
+        from ..cam.unified_dxf_cleaner import (
+            DXFCleaner,
+            Chain,
+            Point,
+            deduplicate_chains,
+        )
 
         cleaner = DXFCleaner(
             min_contour_length_mm=0.0,  # Don't filter by length yet
@@ -752,6 +760,32 @@ def _clean_blueprint_refined(
         final_chains = [c for c, _ in selected_chains]
         contours_written = 0
 
+        # Optional post-selection / pre-export geometry deduplication (flag-gated).
+        # Default OFF: when disabled the chains pass through untouched, so output is
+        # byte-identical to prior behavior. When enabled, removes duplicate LINE
+        # segments only; export remains R12 LINE-only. Diagnostic-only (debug).
+        geometry_dedupe_stats: Optional[dict[str, Any]] = None
+        if final_chains and LIMITS.enable_geometry_dedupe:
+            final_chains, _dedupe_stats = deduplicate_chains(
+                final_chains,
+                endpoint_tol_mm=0.05,
+                overlap_tol_mm=0.05,
+                angle_tol_deg=1.0,
+                preserve_layers=False,
+                debug=False,
+            )
+            geometry_dedupe_stats = asdict(_dedupe_stats)
+            logger.info(
+                "BLUEPRINT_CLEAN | geometry dedupe: %d->%d segments "
+                "(exact=%d reversed=%d near=%d overlap=%d)",
+                _dedupe_stats.input_segments,
+                _dedupe_stats.output_segments,
+                _dedupe_stats.exact_duplicates_removed,
+                _dedupe_stats.reversed_duplicates_removed,
+                _dedupe_stats.near_duplicates_removed,
+                _dedupe_stats.overlap_duplicates_removed,
+            )
+
         if final_chains:
             contours_written = cleaner.write_selected_chains(
                 Path(output_path),
@@ -773,6 +807,7 @@ def _clean_blueprint_refined(
         return CleanResult(
             success=True,
             svg_preview=svg_preview,
+            geometry_deduplication=geometry_dedupe_stats,
             dxf_path=output_path,
             original_entity_count=original_count,
             cleaned_entity_count=contours_written,
@@ -832,7 +867,12 @@ def _clean_blueprint_baseline(
     warnings.append("Using BASELINE cleanup mode (pre-grouping behavior)")
 
     try:
-        from ..cam.unified_dxf_cleaner import DXFCleaner, Chain, Point
+        from ..cam.unified_dxf_cleaner import (
+            DXFCleaner,
+            Chain,
+            Point,
+            deduplicate_chains,
+        )
 
         cleaner = DXFCleaner(
             min_contour_length_mm=0.0,
@@ -961,6 +1001,32 @@ def _clean_blueprint_baseline(
         final_chains = [c for c, _ in selected_chains]
         contours_written = 0
 
+        # Optional post-selection / pre-export geometry deduplication (flag-gated).
+        # Default OFF: when disabled the chains pass through untouched, so output is
+        # byte-identical to prior behavior. When enabled, removes duplicate LINE
+        # segments only; export remains R12 LINE-only. Diagnostic-only (debug).
+        geometry_dedupe_stats: Optional[dict[str, Any]] = None
+        if final_chains and LIMITS.enable_geometry_dedupe:
+            final_chains, _dedupe_stats = deduplicate_chains(
+                final_chains,
+                endpoint_tol_mm=0.05,
+                overlap_tol_mm=0.05,
+                angle_tol_deg=1.0,
+                preserve_layers=False,
+                debug=False,
+            )
+            geometry_dedupe_stats = asdict(_dedupe_stats)
+            logger.info(
+                "BLUEPRINT_CLEAN | geometry dedupe: %d->%d segments "
+                "(exact=%d reversed=%d near=%d overlap=%d)",
+                _dedupe_stats.input_segments,
+                _dedupe_stats.output_segments,
+                _dedupe_stats.exact_duplicates_removed,
+                _dedupe_stats.reversed_duplicates_removed,
+                _dedupe_stats.near_duplicates_removed,
+                _dedupe_stats.overlap_duplicates_removed,
+            )
+
         if final_chains:
             contours_written = cleaner.write_selected_chains(
                 Path(output_path),
@@ -982,6 +1048,7 @@ def _clean_blueprint_baseline(
         return CleanResult(
             success=True,
             svg_preview=svg_preview,
+            geometry_deduplication=geometry_dedupe_stats,
             dxf_path=output_path,
             original_entity_count=original_count,
             cleaned_entity_count=contours_written,
@@ -1050,7 +1117,12 @@ def _clean_blueprint_restored_baseline(
     warnings.append("Using RESTORED_BASELINE mode (historical 86c49526 behavior)")
 
     try:
-        from ..cam.unified_dxf_cleaner import DXFCleaner, Chain, Point
+        from ..cam.unified_dxf_cleaner import (
+            DXFCleaner,
+            Chain,
+            Point,
+            deduplicate_chains,
+        )
 
         cleaner = DXFCleaner(
             min_contour_length_mm=0.0,
@@ -1156,6 +1228,32 @@ def _clean_blueprint_restored_baseline(
         final_chains = [c for c, _ in selected_chains]
         contours_written = 0
 
+        # Optional post-selection / pre-export geometry deduplication (flag-gated).
+        # Default OFF: when disabled the chains pass through untouched, so output is
+        # byte-identical to prior behavior. When enabled, removes duplicate LINE
+        # segments only; export remains R12 LINE-only. Diagnostic-only (debug).
+        geometry_dedupe_stats: Optional[dict[str, Any]] = None
+        if final_chains and LIMITS.enable_geometry_dedupe:
+            final_chains, _dedupe_stats = deduplicate_chains(
+                final_chains,
+                endpoint_tol_mm=0.05,
+                overlap_tol_mm=0.05,
+                angle_tol_deg=1.0,
+                preserve_layers=False,
+                debug=False,
+            )
+            geometry_dedupe_stats = asdict(_dedupe_stats)
+            logger.info(
+                "BLUEPRINT_CLEAN | geometry dedupe: %d->%d segments "
+                "(exact=%d reversed=%d near=%d overlap=%d)",
+                _dedupe_stats.input_segments,
+                _dedupe_stats.output_segments,
+                _dedupe_stats.exact_duplicates_removed,
+                _dedupe_stats.reversed_duplicates_removed,
+                _dedupe_stats.near_duplicates_removed,
+                _dedupe_stats.overlap_duplicates_removed,
+            )
+
         if final_chains:
             contours_written = cleaner.write_selected_chains(
                 Path(output_path),
@@ -1177,6 +1275,7 @@ def _clean_blueprint_restored_baseline(
         return CleanResult(
             success=True,
             svg_preview=svg_preview,
+            geometry_deduplication=geometry_dedupe_stats,
             dxf_path=output_path,
             original_entity_count=original_count,
             cleaned_entity_count=contours_written,
