@@ -2,53 +2,138 @@
   "schema": "cbsp21_patch_input_v1",
   "schema_version": "cbsp21_patch_input_v1",
   "coverage_min": 0.95,
-  "patch_id": "CI_RED_015H_GEOMETRY_AUTHORITY_ROUTER",
-  "title": "Mount geometry authority router (CI-RED-015-H)",
-  "intent": "Close CI-RED-015-H: register the ratified C2-A / CAM 7T geometry-authority router in the CAM router manifest so the characterized /api/cam/geometry-authority/* route tests stop 404'ing. Implementation-phase wiring of a ratified narrow-authority surface; no new authority decision.",
-  "change_type": "fix",
-  "behavior_change": "runtime",
+  "patch_id": "BLUEPRINT_GEOMETRY_DEDUPE_159",
+  "title": "Flag-gated blueprint geometry deduplication (PR #159)",
+  "intent": "Add a post-selection / pre-export geometry deduplication utility and wire it into all three blueprint cleanup paths behind BLUEPRINT_ENABLE_GEOMETRY_DEDUPE (default OFF). No default production behavior change: with the flag off the chains pass through untouched and export stays R12 + LINE-only. Adds DXF-stage fixture regression CI and xfail junction/topology specs documenting the known _reconstruct_chains enablement blocker. Does not enable the flag and does not change the dedupe algorithm.",
+  "change_type": "feature",
+  "behavior_change": "none-by-default",
   "risk_level": "low",
   "scope": {
     "paths_in_scope": [
       ".cbsp21/",
-      "services/api/app/router_registry/manifests/",
-      "docs/governance/coordination/"
+      "services/api/app/cam/",
+      "services/api/app/services/",
+      "services/api/scripts/",
+      "services/api/tests/",
+      ".github/workflows/",
+      "ci/",
+      "services/api/app/ci/"
     ],
     "files_expected_to_change": [
-      "services/api/app/router_registry/manifests/cam_manifest.py",
-      "docs/governance/coordination/C2A_GEOMETRY_AUTHORITY_PACKET.md",
+      "services/api/app/cam/unified_dxf_cleaner.py",
+      "services/api/app/services/blueprint_clean.py",
+      "services/api/app/services/blueprint_limits.py",
+      "services/api/app/services/blueprint_orchestrator.py",
+      "services/api/scripts/run_blueprint_dedupe_fixture_regression.py",
+      "services/api/tests/test_geometry_deduplication.py",
+      "services/api/tests/test_blueprint_geometry_dedupe_wiring.py",
+      "services/api/tests/test_geometry_deduplication_junctions.py",
+      ".github/workflows/blueprint-dedupe-regression.yml",
+      "ci/file_size_baseline.json",
+      "services/api/app/ci/complexity_baseline.json",
+      "services/api/app/ci/file_sizes_baseline.json",
       ".cbsp21/patch_input.json"
     ]
   },
   "diff_articulation": {
-    "what_changed": "cam_manifest.py: add one RouterSpec for app.routers.cam.geometry_authority_router with prefix=\"\" (the router declares its full /api/cam/geometry-authority prefix internally), tags [CAM, Geometry, Authority], category cam. C2A_GEOMETRY_AUTHORITY_PACKET.md: correct the stale creation-time Packet-Identity 'Status | DRAFT' field to the accurate partial-ratification status (narrow authority decisions RATIFIED per §18.3; geometry-origin OPEN) with a pointer to the authoritative C2_STATUS_RECONCILIATION_2026-06-23.md.",
-    "why_not_redundant": "The router module, its endpoints, and its test suite already existed but the router was never registered in any manifest, so all 10 TestGeometryAuthorityRouter HTTP routes 404'd. This single RouterSpec is the only thing that mounts them; without it the route witness cannot exercise the contract surface. The packet edit is not cosmetic either: it removes a real internal contradiction (header RATIFIED vs identity-table DRAFT) that has existed unchanged since the file's only commit (c597c8a7, 2026-05-18), aligning the packet with the governing reconciliation snapshot."
+    "what_changed": "Pass 1 (unified_dxf_cleaner.py): deduplicate_chains(), DeduplicationStats, internal Segment/SegmentKey, build_duplicate_debug_svg() + helpers. Pass 2: BLUEPRINT_ENABLE_GEOMETRY_DEDUPE flag in blueprint_limits.py (default False); flag-gated dedupe wired into _clean_blueprint_refined/_baseline/_restored_baseline in blueprint_clean.py; CleanResult.geometry_deduplication diagnostic field surfaced only under debug.geometry_deduplication in blueprint_orchestrator.py. Pass 3: DXF-stage fixture regression script + .github workflow. Tests: utility/flag/export-invariant tests, plus xfail junction/topology specs documenting the _reconstruct_chains degree>2 enablement blocker. The three *baseline.json files are a debt-baseline resync brought in via the main merge (not authored by the dedupe change).",
+    "why_not_redundant": "The dedupe utility did not exist on the live default path; the wiring is the only thing that connects it, and it is gated off by default so the merge is behavior-neutral. The xfail specs are the only executable coverage of the >2-degree junction reconstruction defect (the existing suite feeds no junction). The CI script is the only repeatable artifact proving R12 + LINE-only export survives dedupe on real fixtures."
   },
   "verification": {
     "commands_run": [
-      "services/api .venv pytest tests/cam/test_geometry_authority_references.py -q -> 100 passed (the 10 TestGeometryAuthorityRouter HTTP tests flip 404->green; no downstream validate_reference KeyError, so no broadening per AC#3)",
-      "confirmed pytest imported the worktree manifest via cam_manifest.__file__",
-      "governance gate grounded against docs/governance/C2_STATUS_RECONCILIATION_2026-06-23.md: C2-A narrow authority RATIFIED (§18.3); geometry-origin OPEN; router mounts ratified surface and does not decide geometry origin"
+      "direct-exec tests/test_geometry_deduplication.py -> 14 passed (pytest blocked locally by Python 3.14/numpy conftest)",
+      "direct-exec tests/test_blueprint_geometry_dedupe_wiring.py -> 10 passed",
+      "direct-exec tests/test_geometry_deduplication_junctions.py -> 4 fail-as-expected (legitimate xfail; assert correct future topology)",
+      "CI 'Geometry Dedupe Fixture Regression' (Python 3.11) -> PASS: gibson_explorer/melody_maker/el_cuatro flag-off vs flag-on, R12 + LINE-only, no LWPOLYLINE"
     ]
   },
   "files": [
     {
-      "path": "services/api/app/router_registry/manifests/cam_manifest.py",
-      "intent": "Register the ratified geometry-authority router so its /api/cam/geometry-authority routes mount",
-      "scan_targets": [
-        "services/api/app/router_registry/manifests/cam_manifest.py",
-        "services/api/app/routers/cam/geometry_authority_router.py"
-      ],
+      "path": "services/api/app/cam/unified_dxf_cleaner.py",
+      "intent": "Pass 1 dedupe utility: deduplicate_chains/DeduplicationStats/Segment/SegmentKey/build_duplicate_debug_svg",
+      "scan_targets": ["services/api/app/cam/unified_dxf_cleaner.py"],
       "risk": "low",
-      "behavior_change": "runtime - 10 previously-404 /api/cam/geometry-authority routes now serve; no execution or machine-output authorized (router- and model-level invariants enforced)",
-      "verification": ["tests/cam/test_geometry_authority_references.py: 100 passed"]
+      "behavior_change": "none by default - new utility, only invoked when BLUEPRINT_ENABLE_GEOMETRY_DEDUPE is enabled",
+      "verification": ["tests/test_geometry_deduplication.py: 14 passed (direct-exec)"]
     },
     {
-      "path": "docs/governance/coordination/C2A_GEOMETRY_AUTHORITY_PACKET.md",
-      "intent": "Correct stale DRAFT identity field to accurate partial-ratification status per the authoritative reconciliation",
-      "scan_targets": ["docs/governance/coordination/C2A_GEOMETRY_AUTHORITY_PACKET.md"],
+      "path": "services/api/app/services/blueprint_clean.py",
+      "intent": "Wire flag-gated dedupe post-selection/pre-export into all three cleanup paths; add CleanResult.geometry_deduplication diagnostic",
+      "scan_targets": ["services/api/app/services/blueprint_clean.py"],
       "risk": "low",
-      "behavior_change": "none - documentation status correction only"
+      "behavior_change": "none by default - dedupe runs only when BLUEPRINT_ENABLE_GEOMETRY_DEDUPE=true; flag off = byte-identical export (R12 + LINE-only preserved)",
+      "verification": ["tests/test_blueprint_geometry_dedupe_wiring.py: 10 passed (direct-exec)"]
+    },
+    {
+      "path": "services/api/app/services/blueprint_limits.py",
+      "intent": "Add BLUEPRINT_ENABLE_GEOMETRY_DEDUPE feature flag (default False) via _env_bool",
+      "scan_targets": ["services/api/app/services/blueprint_limits.py"],
+      "risk": "low",
+      "behavior_change": "none by default - new env flag defaults to disabled",
+      "verification": ["tests/test_blueprint_geometry_dedupe_wiring.py flag tests: passed"]
+    },
+    {
+      "path": "services/api/app/services/blueprint_orchestrator.py",
+      "intent": "Surface dedupe stats only under debug.geometry_deduplication when present",
+      "scan_targets": ["services/api/app/services/blueprint_orchestrator.py"],
+      "risk": "low",
+      "behavior_change": "none by default - debug-only payload addition, gated on include_debug and non-null stats"
+    },
+    {
+      "path": "services/api/scripts/run_blueprint_dedupe_fixture_regression.py",
+      "intent": "DXF-stage fixture regression driver (flag-off vs flag-on structural invariants)",
+      "scan_targets": ["services/api/scripts/run_blueprint_dedupe_fixture_regression.py"],
+      "risk": "low",
+      "behavior_change": "none - CI/validation tooling only"
+    },
+    {
+      "path": "services/api/tests/test_geometry_deduplication.py",
+      "intent": "Pass 1 unit tests for the dedupe utility",
+      "scan_targets": ["services/api/tests/test_geometry_deduplication.py"],
+      "risk": "low",
+      "behavior_change": "none - tests"
+    },
+    {
+      "path": "services/api/tests/test_blueprint_geometry_dedupe_wiring.py",
+      "intent": "Pass 2 flag-gating + export-invariant tests",
+      "scan_targets": ["services/api/tests/test_blueprint_geometry_dedupe_wiring.py"],
+      "risk": "low",
+      "behavior_change": "none - tests"
+    },
+    {
+      "path": "services/api/tests/test_geometry_deduplication_junctions.py",
+      "intent": "xfail junction/topology specs documenting the _reconstruct_chains degree>2 enablement blocker",
+      "scan_targets": ["services/api/tests/test_geometry_deduplication_junctions.py"],
+      "risk": "low",
+      "behavior_change": "none - xfail documentation specs; assert correct future topology"
+    },
+    {
+      "path": ".github/workflows/blueprint-dedupe-regression.yml",
+      "intent": "PR-only CI job running the DXF-stage fixture regression on Python 3.11",
+      "scan_targets": [".github/workflows/blueprint-dedupe-regression.yml"],
+      "risk": "low",
+      "behavior_change": "none - CI configuration"
+    },
+    {
+      "path": "ci/file_size_baseline.json",
+      "intent": "Debt-baseline resync brought in via the main merge (not authored by the dedupe change)",
+      "scan_targets": ["ci/file_size_baseline.json"],
+      "risk": "low",
+      "behavior_change": "none - CI baseline data"
+    },
+    {
+      "path": "services/api/app/ci/complexity_baseline.json",
+      "intent": "Debt-baseline resync brought in via the main merge (not authored by the dedupe change)",
+      "scan_targets": ["services/api/app/ci/complexity_baseline.json"],
+      "risk": "low",
+      "behavior_change": "none - CI baseline data"
+    },
+    {
+      "path": "services/api/app/ci/file_sizes_baseline.json",
+      "intent": "Debt-baseline resync brought in via the main merge (not authored by the dedupe change)",
+      "scan_targets": ["services/api/app/ci/file_sizes_baseline.json"],
+      "risk": "low",
+      "behavior_change": "none - CI baseline data"
     }
   ]
 }
