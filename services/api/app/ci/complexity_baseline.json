@@ -1,6 +1,6 @@
 {
   "threshold": 15,
-  "violation_count": 273,
+  "violation_count": 274,
   "violations": [
     {
       "file": "app/services/blueprint_orchestrator.py",
@@ -159,8 +159,15 @@
     {
       "file": "app/services/blueprint_clean.py",
       "function": "_clean_blueprint_refined",
-      "complexity": 31,
-      "line": 535,
+      "complexity": 33,
+      "line": 538,
+      "letter": "F"
+    },
+    {
+      "file": "scripts/run_blueprint_dedupe_fixture_regression.py",
+      "function": "_main",
+      "complexity": 32,
+      "line": 178,
       "letter": "F"
     },
     {
@@ -180,8 +187,8 @@
     {
       "file": "app/services/blueprint_clean.py",
       "function": "_clean_blueprint_baseline",
-      "complexity": 30,
-      "line": 804,
+      "complexity": 32,
+      "line": 839,
       "letter": "F"
     },
     {
@@ -978,8 +985,8 @@
     {
       "file": "app/services/blueprint_clean.py",
       "function": "_clean_blueprint_restored_baseline",
-      "complexity": 20,
-      "line": 1023,
+      "complexity": 22,
+      "line": 1090,
       "letter": "F"
     },
     {
