@@ -2,53 +2,53 @@
   "schema": "cbsp21_patch_input_v1",
   "schema_version": "cbsp21_patch_input_v1",
   "coverage_min": 0.95,
-  "patch_id": "CI_RED_015H_GEOMETRY_AUTHORITY_ROUTER",
-  "title": "Mount geometry authority router (CI-RED-015-H)",
-  "intent": "Close CI-RED-015-H: register the ratified C2-A / CAM 7T geometry-authority router in the CAM router manifest so the characterized /api/cam/geometry-authority/* route tests stop 404'ing. Implementation-phase wiring of a ratified narrow-authority surface; no new authority decision.",
+  "patch_id": "CI_RED_015I_BODY_GEOMETRY_REPAIR",
+  "title": "Reconcile Phase 6A body-geometry-repair tests (CI-RED-015-I)",
+  "intent": "Close the body-geometry-repair tail of CI-RED-015: correct 3 stale Phase 6A test fixtures and fix the arc-candidate detector so a clean curved chain produces a valid candidate. Phase 6A stays metrics-only: no DXF emission change, no Phase 6B output, no extraction-path change.",
   "change_type": "fix",
-  "behavior_change": "runtime",
+  "behavior_change": "metrics_only",
   "risk_level": "low",
   "scope": {
     "paths_in_scope": [
       ".cbsp21/",
-      "services/api/app/router_registry/manifests/",
-      "docs/governance/coordination/"
+      "services/api/app/services/",
+      "services/api/tests/"
     ],
     "files_expected_to_change": [
-      "services/api/app/router_registry/manifests/cam_manifest.py",
-      "docs/governance/coordination/C2A_GEOMETRY_AUTHORITY_PACKET.md",
+      "services/api/tests/test_body_geometry_repair.py",
+      "services/api/app/services/body_geometry_repair.py",
       ".cbsp21/patch_input.json"
     ]
   },
   "diff_articulation": {
-    "what_changed": "cam_manifest.py: add one RouterSpec for app.routers.cam.geometry_authority_router with prefix=\"\" (the router declares its full /api/cam/geometry-authority prefix internally), tags [CAM, Geometry, Authority], category cam. C2A_GEOMETRY_AUTHORITY_PACKET.md: correct the stale creation-time Packet-Identity 'Status | DRAFT' field to the accurate partial-ratification status (narrow authority decisions RATIFIED per §18.3; geometry-origin OPEN) with a pointer to the authoritative C2_STATUS_RECONCILIATION_2026-06-23.md.",
-    "why_not_redundant": "The router module, its endpoints, and its test suite already existed but the router was never registered in any manifest, so all 10 TestGeometryAuthorityRouter HTTP routes 404'd. This single RouterSpec is the only thing that mounts them; without it the route witness cannot exercise the contract surface. The packet edit is not cosmetic either: it removes a real internal contradiction (header RATIFIED vs identity-table DRAFT) that has existed unchanged since the file's only commit (c597c8a7, 2026-05-18), aligning the packet with the governing reconciliation snapshot."
+    "what_changed": "Commit 1 (test-only): test_fit_arc_noisy_points replaces a (5,5) translation (not noise) with deterministic radial jitter; test_enabled_with_contours expects phase 6A_analysis (not stale 6A_validation); test_straight_line_single_run raises dist_tol_mm so a continuous line stays one run. Commit 2 (production): detect_arc_candidates() now slides its own fixed-size window instead of segmenting via detect_contour_runs() (a straight-run detector that breaks curves on angle_tol_deg=12 and dist_tol_mm=0.75), leaving detect_contour_runs untouched.",
+    "why_not_redundant": "The arc fix is a category error fix, not a tolerance tweak: detect_contour_runs breaks an arc on the 12-degree angle deviation regardless of distance tolerance, so a clean 180-degree arc previously yielded zero candidates. Sliding an own window is the only change that makes detect_arc_candidates do what its docstring claims. The test edits are not cosmetic: they correct fixtures that contradicted the internally-consistent restored Phase 6A contract (translation-is-not-noise, 6A_analysis phase name, gap-tolerance vs sampling spacing)."
   },
   "verification": {
     "commands_run": [
-      "services/api .venv pytest tests/cam/test_geometry_authority_references.py -q -> 100 passed (the 10 TestGeometryAuthorityRouter HTTP tests flip 404->green; no downstream validate_reference KeyError, so no broadening per AC#3)",
-      "confirmed pytest imported the worktree manifest via cam_manifest.__file__",
-      "governance gate grounded against docs/governance/C2_STATUS_RECONCILIATION_2026-06-23.md: C2-A narrow authority RATIFIED (§18.3); geometry-origin OPEN; router mounts ratified surface and does not decide geometry origin"
+      "services/api .venv pytest tests/test_body_geometry_repair.py tests/test_body_solver_integration.py -> 49 passed (was 4 failed / 32 passed)",
+      "AC#7 both halves: test_detect_arc_in_curved_chain PASSED (arc detected+valid), test_no_arc_in_straight_chain PASSED (straight -> no valid arc)",
+      "sibling lock: test_distance_break PASSED (detect_contour_runs untouched, so the contract that locks the straight-line decision is preserved)",
+      "containment: repair_body_geometry has no app/ caller; arc candidates double-flagged default-off; metrics-only; cannot reach DXF"
     ]
   },
   "files": [
     {
-      "path": "services/api/app/router_registry/manifests/cam_manifest.py",
-      "intent": "Register the ratified geometry-authority router so its /api/cam/geometry-authority routes mount",
-      "scan_targets": [
-        "services/api/app/router_registry/manifests/cam_manifest.py",
-        "services/api/app/routers/cam/geometry_authority_router.py"
-      ],
+      "path": "services/api/tests/test_body_geometry_repair.py",
+      "intent": "Correct 3 stale Phase 6A fixtures (noisy-arc translation, phase name, straight-line tolerance)",
+      "scan_targets": ["services/api/tests/test_body_geometry_repair.py"],
       "risk": "low",
-      "behavior_change": "runtime - 10 previously-404 /api/cam/geometry-authority routes now serve; no execution or machine-output authorized (router- and model-level invariants enforced)",
-      "verification": ["tests/cam/test_geometry_authority_references.py: 100 passed"]
+      "behavior_change": "none - test-side only"
     },
     {
-      "path": "docs/governance/coordination/C2A_GEOMETRY_AUTHORITY_PACKET.md",
-      "intent": "Correct stale DRAFT identity field to accurate partial-ratification status per the authoritative reconciliation",
-      "scan_targets": ["docs/governance/coordination/C2A_GEOMETRY_AUTHORITY_PACKET.md"],
+      "path": "services/api/app/services/body_geometry_repair.py",
+      "intent": "detect_arc_candidates slides its own window; detect_contour_runs untouched",
+      "scan_targets": [
+        "services/api/app/services/body_geometry_repair.py",
+        "services/api/tests/test_body_geometry_repair.py"
+      ],
       "risk": "low",
-      "behavior_change": "none - documentation status correction only"
+      "behavior_change": "metrics_only - arc-candidate detection changes; double-flagged default-off; no app/ caller; zero DXF effect"
     }
   ]
 }
