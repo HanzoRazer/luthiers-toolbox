@@ -567,37 +567,35 @@ def detect_arc_candidates(
     max_tol_mm: float = 1.5,
 ) -> List[ArcCandidate]:
     """
-    Detect potential arcs in a chain.
+    Detect potential arcs in a chain (metrics only — never emitted to DXF).
 
-    Slides a window across the chain and tests each segment for arc fitness.
+    Slides a fixed-size window across the chain and fits each segment. It does
+    NOT segment via ``detect_contour_runs`` — that is a *straight-run* detector
+    which breaks on angular deviation (``angle_tol_deg``=12°), so it fragments
+    any curve regardless of distance tolerance and a clean arc would never reach
+    ``min_points``. A straight chain still yields only collinear (invalid)
+    candidates. (See commit / CI-RED-015-I for the full rationale.)
 
-    Args:
-        chain: Input chain in mm coordinates
-        min_points: Minimum points in a segment to test
-        mean_tol_mm: Maximum mean deviation for valid arc
-        max_tol_mm: Maximum single-point deviation
-
-    Returns:
-        List of arc candidates (valid and invalid for metrics)
+    Returns arc candidates (valid and invalid) for metrics.
     """
     points = [(p.x, p.y) for p in chain.points]
-
-    if len(points) < min_points:
+    n = len(points)
+    if n < min_points:
         return []
 
-    candidates = []
+    win = max(min_points, min(n, n // 2))
+    step = max(1, win // 2)
 
-    # Use contour runs as natural segmentation
-    runs = detect_contour_runs(chain)
-
-    for run in runs:
-        if run.point_count >= min_points:
-            candidate = fit_arc_to_segment(
-                run.points,
-                mean_tol_mm=mean_tol_mm,
-                max_tol_mm=max_tol_mm,
-            )
-            candidates.append(candidate)
+    candidates: List[ArcCandidate] = []
+    i = 0
+    while i + win <= n:
+        segment = points[i:i + win]
+        candidates.append(
+            fit_arc_to_segment(segment, mean_tol_mm=mean_tol_mm, max_tol_mm=max_tol_mm)
+        )
+        if i + win >= n:
+            break
+        i += step
 
     return candidates
 
