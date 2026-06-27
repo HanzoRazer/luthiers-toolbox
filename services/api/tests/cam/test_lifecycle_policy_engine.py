@@ -26,6 +26,7 @@ from app.cam.export_lifecycle_orchestrator import (
 )
 from app.cam.dxf_translator_boundary import DXFTranslatorProfile
 from app.cam.postprocessor_boundary import MachineProfileValidationOnly
+from app.cam.translator_capability_registry import DXF_R12_TRANSLATOR_ID
 
 
 # -----------------------------------------------------------------------------
@@ -35,6 +36,7 @@ from app.cam.postprocessor_boundary import MachineProfileValidationOnly
 def create_lifecycle_request(
     operation: str = "nut_slot",
     persist_to_rmos: bool = False,
+    translator_id: str = DXF_R12_TRANSLATOR_ID,
 ) -> GovernedExportLifecycleRequest:
     """Create a test lifecycle request."""
     if operation == "nut_slot":
@@ -74,7 +76,7 @@ def create_lifecycle_request(
             work_envelope_mm={"x": 300, "y": 300, "z": 50},
         ),
         translator_profile=DXFTranslatorProfile(
-            translator_id="test_translator",
+            translator_id=translator_id,
             supported_geometry_types=["line", "polyline", "circle", "arc"],
             supports_layers=True,
             units="mm",
@@ -293,6 +295,36 @@ class TestOrchestratorIntegration:
 
         # Policy evaluation should be present
         assert report.policy_evaluation is not None
+
+    def test_unknown_translator_returns_red_through_lifecycle(self):
+        """Unknown translator IDs still fail the governed lifecycle.
+
+        Distinct from operation-level RED (test_policy_red_stops_lifecycle):
+        the operation here is valid, so the RED must originate from the
+        registry-gated translator validation and propagate into the
+        lifecycle gate. Preserves the load-bearing production behavior.
+        """
+        request = create_lifecycle_request(
+            "nut_slot",
+            translator_id="unknown_test_translator",
+        )
+        report = run_governed_export_lifecycle(request)
+
+        # Operation/export stages succeeded — proves the RED is translator-origin,
+        # not a masked operation-level RED (guards the docstring's claim).
+        assert report.export_object_summary is not None
+
+        assert report.lifecycle_gate == "red"
+        assert report.translator_validation_gate == "red"
+        assert report.translator_validation_compatible is False
+        assert any(
+            "[Translator]" in issue and "not found" in issue
+            for issue in report.blocking_issues
+        )
+
+        # RED path must still generate no output (safety invariant).
+        assert report.machine_output_generated is False
+        assert report.translator_output_generated is False
 
 
 # -----------------------------------------------------------------------------
