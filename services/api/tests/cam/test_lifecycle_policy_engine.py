@@ -310,6 +310,10 @@ class TestOrchestratorIntegration:
         )
         report = run_governed_export_lifecycle(request)
 
+        # Operation/export stages succeeded — proves the RED is translator-origin,
+        # not a masked operation-level RED (guards the docstring's claim).
+        assert report.export_object_summary is not None
+
         assert report.lifecycle_gate == "red"
         assert report.translator_validation_gate == "red"
         assert report.translator_validation_compatible is False
@@ -317,6 +321,10 @@ class TestOrchestratorIntegration:
             "[Translator]" in issue and "not found" in issue
             for issue in report.blocking_issues
         )
+
+        # RED path must still generate no output (safety invariant).
+        assert report.machine_output_generated is False
+        assert report.translator_output_generated is False
 
 
 # -----------------------------------------------------------------------------
