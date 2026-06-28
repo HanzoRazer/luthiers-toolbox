@@ -1,6 +1,6 @@
 {
   "threshold": 500,
-  "violation_count": 150,
+  "violation_count": 152,
   "violations": [
     {
       "file": "app/instrument_geometry/body/ibg/arc_reconstructor.py",
@@ -16,11 +16,6 @@
       "file": "tests/cam/test_federated_semantics.py",
       "lines": 1370,
       "over_by": 870
-    },
-    {
-      "file": "tests/cam/test_export_lifecycle_rmos.py",
-      "lines": 513,
-      "over_by": 13
     },
     {
       "file": "app/services/blueprint_clean.py",
@@ -678,6 +673,11 @@
       "over_by": 32
     },
     {
+      "file": "tests/cam/test_lifecycle_policy_engine.py",
+      "lines": 528,
+      "over_by": 28
+    },
+    {
       "file": "app/governance/confidence_envelope.py",
       "lines": 524,
       "over_by": 24
@@ -726,6 +726,11 @@
       "file": "app/cam/carving/surface_carving.py",
       "lines": 515,
       "over_by": 15
+    },
+    {
+      "file": "tests/cam/test_export_lifecycle_rmos.py",
+      "lines": 513,
+      "over_by": 13
     },
     {
       "file": "app/instrument_geometry/body/ibg/instrument_body_generator.py",

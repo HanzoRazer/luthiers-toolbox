@@ -73,7 +73,13 @@ def check_complexity(
         for v in baseline.get("violations", []):
             # Normalize paths for cross-platform comparison (Windows vs Linux CI)
             normalized_file = _normalize_path(v['file'])
-            key = f"{normalized_file}:{v['function']}:{v['line']}"
+            # Identity key is file:function only — NOT line. Including the line
+            # number made the baseline brittle: any edit above a baselined function
+            # shifts its line and the gate re-reports it as a "new" violation even
+            # though its complexity is unchanged (e.g. repair_body_geometry moved
+            # 607->605 after an unrelated merge). Keying by file:function tracks the
+            # function across moves; the stored line field is retained for display.
+            key = f"{normalized_file}:{v['function']}"
             baseline_set.add(key)
 
     for pyfile in _find_python_files(root):
@@ -85,7 +91,8 @@ def check_complexity(
                 if block.complexity > threshold:
                     # Always use forward slashes for consistency
                     rel_path = _normalize_path(str(pyfile.relative_to(root)))
-                    key = f"{rel_path}:{block.name}:{block.lineno}"
+                    # Match the baseline by file:function only (see note above).
+                    key = f"{rel_path}:{block.name}"
 
                     if key in baseline_set:
                         continue  # Skip baselined violations
