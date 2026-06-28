@@ -224,6 +224,7 @@ Based on C1 findings, the following require C2 reconciliation:
 ### C2 Arbitration
 - `docs/handoffs/C2_CONSTITUTIONAL_FEDERALISM_HANDOFF.md`
 - `docs/governance/coordination/C2A_GEOMETRY_AUTHORITY_PACKET.md` — **RATIFIED**
+- `docs/governance/coordination/GAMS_GEOMETRY_AUTHORITY_MAPPING_SPEC.md` — coordination spec mapping C2 geometry authority distinctions to implementation roles; does not decide geometry-origin authority
 - `docs/governance/coordination/GEOMETRY_OWNERSHIP_TOPOLOGY.md` (T1)
 - `docs/governance/coordination/RUNTIME_GEOMETRY_BOUNDARY_MAP.md` (T2)
 - `docs/governance/coordination/EXPORT_GEOMETRY_AUTHORITY_REVIEW.md` (T5)
