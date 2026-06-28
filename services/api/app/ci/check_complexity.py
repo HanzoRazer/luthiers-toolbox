@@ -73,7 +73,14 @@ def check_complexity(
         for v in baseline.get("violations", []):
             # Normalize paths for cross-platform comparison (Windows vs Linux CI)
             normalized_file = _normalize_path(v['file'])
-            key = f"{normalized_file}:{v['function']}:{v['line']}"
+            # Identity key is file:qualified-name — NOT line. Including the line made
+            # the baseline brittle (any edit above a baselined function shifted its
+            # line and re-reported it as "new"). We key by radon's fullname, i.e.
+            # ClassName.method for methods and the bare name for module functions, so
+            # the key (a) is stable across line moves and (b) distinguishes same-named
+            # methods in different classes within one file — a bare name would collide
+            # and silently suppress a second violation. The stored line is display-only.
+            key = f"{normalized_file}:{v['function']}"
             baseline_set.add(key)
 
     for pyfile in _find_python_files(root):
@@ -85,14 +92,15 @@ def check_complexity(
                 if block.complexity > threshold:
                     # Always use forward slashes for consistency
                     rel_path = _normalize_path(str(pyfile.relative_to(root)))
-                    key = f"{rel_path}:{block.name}:{block.lineno}"
+                    # Match the baseline by file:qualified-name (see note above).
+                    key = f"{rel_path}:{block.fullname}"
 
                     if key in baseline_set:
                         continue  # Skip baselined violations
 
                     violations.append({
                         "file": rel_path,
-                        "function": block.name,
+                        "function": block.fullname,
                         "complexity": block.complexity,
                         "line": block.lineno,
                         "letter": block.letter,  # A-F grade

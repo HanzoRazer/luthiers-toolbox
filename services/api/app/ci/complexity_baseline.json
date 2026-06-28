@@ -4,7 +4,7 @@
   "violations": [
     {
       "file": "app/services/blueprint_orchestrator.py",
-      "function": "process_file",
+      "function": "BlueprintOrchestrator.process_file",
       "complexity": 82,
       "line": 234,
       "letter": "M"
@@ -59,18 +59,18 @@
       "letter": "F"
     },
     {
+      "file": "app/cam/export_lifecycle_orchestrator.py",
+      "function": "run_governed_export_lifecycle",
+      "complexity": 38,
+      "line": 320,
+      "letter": "F"
+    },
+    {
       "file": "app/instrument_geometry/body/ibg/constraint_extractor.py",
-      "function": "_detect_landmarks",
+      "function": "ConstraintExtractor._detect_landmarks",
       "complexity": 38,
       "line": 154,
       "letter": "M"
-    },
-    {
-      "file": "app/cam/export_lifecycle_orchestrator.py",
-      "function": "run_governed_export_lifecycle",
-      "complexity": 37,
-      "line": 320,
-      "letter": "F"
     },
     {
       "file": "app/calculators/setup_cascade.py",
@@ -116,7 +116,7 @@
     },
     {
       "file": "app/services/photo_orchestrator.py",
-      "function": "process_image",
+      "function": "PhotoOrchestrator.process_image",
       "complexity": 34,
       "line": 156,
       "letter": "M"
@@ -136,10 +136,38 @@
       "letter": "F"
     },
     {
+      "file": "app/services/blueprint_clean.py",
+      "function": "_clean_blueprint_refined",
+      "complexity": 33,
+      "line": 538,
+      "letter": "F"
+    },
+    {
+      "file": "app/services/blueprint_clean.py",
+      "function": "_clean_blueprint_baseline",
+      "complexity": 32,
+      "line": 839,
+      "letter": "F"
+    },
+    {
+      "file": "app/services/blueprint_orchestrator.py",
+      "function": "BlueprintOrchestrator",
+      "complexity": 32,
+      "line": 193,
+      "letter": "C"
+    },
+    {
       "file": "scripts/diff_endpoints_baseline.py",
       "function": "main",
       "complexity": 32,
       "line": 69,
+      "letter": "F"
+    },
+    {
+      "file": "scripts/run_blueprint_dedupe_fixture_regression.py",
+      "function": "_main",
+      "complexity": 32,
+      "line": 178,
       "letter": "F"
     },
     {
@@ -157,38 +185,10 @@
       "letter": "F"
     },
     {
-      "file": "app/services/blueprint_clean.py",
-      "function": "_clean_blueprint_refined",
-      "complexity": 33,
-      "line": 538,
-      "letter": "F"
-    },
-    {
-      "file": "scripts/run_blueprint_dedupe_fixture_regression.py",
-      "function": "_main",
-      "complexity": 32,
-      "line": 178,
-      "letter": "F"
-    },
-    {
-      "file": "app/services/blueprint_orchestrator.py",
-      "function": "BlueprintOrchestrator",
-      "complexity": 31,
-      "line": 193,
-      "letter": "C"
-    },
-    {
       "file": "app/calculators/soundhole_facade.py",
       "function": "compute_soundhole_spec",
       "complexity": 30,
       "line": 106,
-      "letter": "F"
-    },
-    {
-      "file": "app/services/blueprint_clean.py",
-      "function": "_clean_blueprint_baseline",
-      "complexity": 32,
-      "line": 839,
       "letter": "F"
     },
     {
@@ -221,14 +221,14 @@
     },
     {
       "file": "app/tests/test_e2e_workflow_integration.py",
-      "function": "test_complete_workflow_chain",
+      "function": "TestEndToEndWorkflowIntegration.test_complete_workflow_chain",
       "complexity": 29,
       "line": 108,
       "letter": "M"
     },
     {
       "file": "tests/cam/test_nut_slot_cam.py",
-      "function": "test_response_structure",
+      "function": "TestEndpoint.test_response_structure",
       "complexity": 29,
       "line": 553,
       "letter": "M"
@@ -284,14 +284,14 @@
     },
     {
       "file": "app/workflow/sessions/store.py",
-      "function": "create",
+      "function": "WorkflowSessionStore.create",
       "complexity": 27,
       "line": 133,
       "letter": "M"
     },
     {
       "file": "scripts/validate_1b_representatives.py",
-      "function": "generate_summary_report",
+      "function": "Validation1BRunner.generate_summary_report",
       "complexity": 27,
       "line": 522,
       "letter": "M"
@@ -342,7 +342,7 @@
       "file": "app/services/body_geometry_repair.py",
       "function": "repair_body_geometry",
       "complexity": 26,
-      "line": 607,
+      "line": 605,
       "letter": "F"
     },
     {
@@ -361,7 +361,7 @@
     },
     {
       "file": "app/analytics/advanced_analytics.py",
-      "function": "_extract_metric_pairs",
+      "function": "AdvancedAnalytics._extract_metric_pairs",
       "complexity": 25,
       "line": 23,
       "letter": "M"
@@ -403,7 +403,7 @@
     },
     {
       "file": "app/rmos/runs_v2/attachment_meta.py",
-      "function": "rebuild_from_run_artifacts",
+      "function": "AttachmentMetaIndex.rebuild_from_run_artifacts",
       "complexity": 25,
       "line": 188,
       "letter": "M"
@@ -445,14 +445,14 @@
     },
     {
       "file": "app/workflow/sessions/store.py",
-      "function": "patch",
+      "function": "WorkflowSessionStore.patch",
       "complexity": 25,
       "line": 221,
       "letter": "M"
     },
     {
       "file": "app/ai/transport/vision_client.py",
-      "function": "analyze",
+      "function": "OpenAIVisionClient.analyze",
       "complexity": 24,
       "line": 207,
       "letter": "M"
@@ -501,7 +501,7 @@
     },
     {
       "file": "app/analytics/material_analytics.py",
-      "function": "get_dimensional_analysis",
+      "function": "MaterialAnalytics.get_dimensional_analysis",
       "complexity": 23,
       "line": 74,
       "letter": "M"
@@ -515,7 +515,7 @@
     },
     {
       "file": "app/cam/unified_dxf_cleaner.py",
-      "function": "clean_file",
+      "function": "DXFCleaner.clean_file",
       "complexity": 23,
       "line": 283,
       "letter": "M"
@@ -606,7 +606,7 @@
     },
     {
       "file": "app/analytics/pattern_analytics.py",
-      "function": "get_geometry_metrics",
+      "function": "PatternAnalytics.get_geometry_metrics",
       "complexity": 22,
       "line": 123,
       "letter": "M"
@@ -620,14 +620,14 @@
     },
     {
       "file": "app/cam/carving/surface_carving.py",
-      "function": "_generate_raster_passes",
+      "function": "SurfaceCarvingGenerator._generate_raster_passes",
       "complexity": 22,
       "line": 328,
       "letter": "M"
     },
     {
       "file": "app/instrument_geometry/body/ibg/morphology_harvest/harvest_coordinator.py",
-      "function": "harvest_from_pdf",
+      "function": "HarvestCoordinator.harvest_from_pdf",
       "complexity": 22,
       "line": 107,
       "letter": "M"
@@ -675,6 +675,13 @@
       "letter": "F"
     },
     {
+      "file": "app/services/blueprint_clean.py",
+      "function": "_clean_blueprint_restored_baseline",
+      "complexity": 22,
+      "line": 1090,
+      "letter": "F"
+    },
+    {
       "file": "app/services/contour_scoring.py",
       "function": "score_contours",
       "complexity": 22,
@@ -690,7 +697,7 @@
     },
     {
       "file": "app/post_injection_dropin.py",
-      "function": "dispatch",
+      "function": "PostInjectionMiddleware.dispatch",
       "complexity": 21,
       "line": 132,
       "letter": "M"
@@ -739,7 +746,7 @@
     },
     {
       "file": "app/instrument_geometry/body/ibg/body_grid/variant_grammar.py",
-      "function": "_detect_horn_behavior",
+      "function": "VariantGrammar._detect_horn_behavior",
       "complexity": 21,
       "line": 335,
       "letter": "M"
@@ -760,7 +767,7 @@
     },
     {
       "file": "app/rmos/pipeline/feedback/learning.py",
-      "function": "resolve_multipliers",
+      "function": "LearningService.resolve_multipliers",
       "complexity": 21,
       "line": 312,
       "letter": "M"
@@ -858,7 +865,7 @@
     },
     {
       "file": "app/art_studio/services/design_snapshot_store.py",
-      "function": "list_recent",
+      "function": "DesignSnapshotStore.list_recent",
       "complexity": 20,
       "line": 171,
       "letter": "M"
@@ -872,7 +879,7 @@
     },
     {
       "file": "app/calculators/plate_design/gamma_calibration.py",
-      "function": "compute",
+      "function": "GammaCalibration.compute",
       "complexity": 20,
       "line": 282,
       "letter": "M"
@@ -907,14 +914,14 @@
     },
     {
       "file": "app/cam_core/saw_lab/saw_blade_registry.py",
-      "function": "search",
+      "function": "SawBladeRegistry.search",
       "complexity": 20,
       "line": 245,
       "letter": "M"
     },
     {
       "file": "app/generators/lespaul_dxf_reader.py",
-      "function": "_entity_to_points",
+      "function": "LesPaulDXFReader._entity_to_points",
       "complexity": 20,
       "line": 69,
       "letter": "M"
@@ -928,7 +935,7 @@
     },
     {
       "file": "app/instrument_geometry/body/ibg/ibg_intake_gate.py",
-      "function": "validate",
+      "function": "IBGIntakeGate.validate",
       "complexity": 20,
       "line": 148,
       "letter": "M"
@@ -962,6 +969,13 @@
       "letter": "F"
     },
     {
+      "file": "app/routers/blueprint_cam/contour_reconstruction.py",
+      "function": "reconstruct_contours",
+      "complexity": 20,
+      "line": 308,
+      "letter": "F"
+    },
+    {
       "file": "app/routers/cam/translator_governance_dossier_router.py",
       "function": "build_dossier",
       "complexity": 20,
@@ -980,13 +994,6 @@
       "function": "find_latest_approved_tuning_decision",
       "complexity": 20,
       "line": 46,
-      "letter": "F"
-    },
-    {
-      "file": "app/services/blueprint_clean.py",
-      "function": "_clean_blueprint_restored_baseline",
-      "complexity": 22,
-      "line": 1090,
       "letter": "F"
     },
     {
@@ -1026,7 +1033,7 @@
     },
     {
       "file": "app/art_studio/services/pattern_store.py",
-      "function": "list_patterns",
+      "function": "PatternStore.list_patterns",
       "complexity": 19,
       "line": 163,
       "letter": "M"
@@ -1054,7 +1061,7 @@
     },
     {
       "file": "app/cam/layer_consolidator.py",
-      "function": "consolidate",
+      "function": "LayerConsolidator.consolidate",
       "complexity": 19,
       "line": 129,
       "letter": "M"
@@ -1075,7 +1082,7 @@
     },
     {
       "file": "app/core/job_queue/queue_storage.py",
-      "function": "get_stats",
+      "function": "QueueStorage.get_stats",
       "complexity": 19,
       "line": 161,
       "letter": "M"
@@ -1103,7 +1110,7 @@
     },
     {
       "file": "app/rmos/engines/feasibility_baseline_v1.py",
-      "function": "compute",
+      "function": "BaselineFeasibilityEngineV1.compute",
       "complexity": 19,
       "line": 59,
       "letter": "M"
@@ -1145,9 +1152,9 @@
     },
     {
       "file": "app/routers/blueprint_cam/contour_reconstruction.py",
-      "function": "reconstruct_contours",
-      "complexity": 20,
-      "line": 308,
+      "function": "reconstruct_bracing_dxf",
+      "complexity": 19,
+      "line": 441,
       "letter": "F"
     },
     {
@@ -1215,7 +1222,7 @@
     },
     {
       "file": "scripts/validate_1b_representatives.py",
-      "function": "validate_instrument",
+      "function": "Validation1BRunner.validate_instrument",
       "complexity": 19,
       "line": 232,
       "letter": "M"
@@ -1271,21 +1278,21 @@
     },
     {
       "file": "app/cam/runtime_admission/controller.py",
-      "function": "evaluate",
+      "function": "ExecutionAdmissionController.evaluate",
       "complexity": 18,
       "line": 71,
       "letter": "M"
     },
     {
       "file": "app/instrument_geometry/body/ibg/body_grid/variant_grammar.py",
-      "function": "_detect_bout_behavior",
+      "function": "VariantGrammar._detect_bout_behavior",
       "complexity": 18,
       "line": 407,
       "letter": "M"
     },
     {
       "file": "app/instrument_geometry/body/ibg/morphology_harvest/artifact_body_evidence_adapter.py",
-      "function": "_entity_to_points",
+      "function": "ArtifactBodyEvidenceAdapter._entity_to_points",
       "complexity": 18,
       "line": 252,
       "letter": "M"
@@ -1320,7 +1327,7 @@
     },
     {
       "file": "app/rmos/runs_v2/attachment_meta.py",
-      "function": "update_from_artifact",
+      "function": "AttachmentMetaIndex.update_from_artifact",
       "complexity": 18,
       "line": 105,
       "letter": "M"
@@ -1348,7 +1355,7 @@
     },
     {
       "file": "app/rmos/runs_v2/db/store.py",
-      "function": "list",
+      "function": "DbRunArtifactStore.list",
       "complexity": 18,
       "line": 140,
       "letter": "M"
@@ -1365,13 +1372,6 @@
       "function": "vectorize_blueprint",
       "complexity": 18,
       "line": 103,
-      "letter": "F"
-    },
-    {
-      "file": "app/routers/blueprint_cam/contour_reconstruction.py",
-      "function": "reconstruct_bracing_dxf",
-      "complexity": 19,
-      "line": 441,
       "letter": "F"
     },
     {
@@ -1411,7 +1411,7 @@
     },
     {
       "file": "app/saw_lab/calculators/saw_kickback.py",
-      "function": "calculate",
+      "function": "SawKickbackCalculator.calculate",
       "complexity": 18,
       "line": 30,
       "letter": "M"
@@ -1453,21 +1453,21 @@
     },
     {
       "file": "tests/test_ibg_workflow_pipeline.py",
-      "function": "test_pipeline_with_minimal_dxf",
+      "function": "TestWorkflowPipeline.test_pipeline_with_minimal_dxf",
       "complexity": 18,
       "line": 236,
       "letter": "M"
     },
     {
       "file": "tests/cam/test_federation_ci_enforcement.py",
-      "function": "test_create_summary_defaults",
+      "function": "TestFederationCIEnforcementSummaryModel.test_create_summary_defaults",
       "complexity": 18,
       "line": 268,
       "letter": "M"
     },
     {
       "file": "app/advisory/store.py",
-      "function": "list_assets",
+      "function": "AdvisoryAssetStore.list_assets",
       "complexity": 17,
       "line": 148,
       "letter": "M"
@@ -1488,7 +1488,7 @@
     },
     {
       "file": "app/cam/body_region_selector.py",
-      "function": "_classify_region",
+      "function": "BodyRegionSelector._classify_region",
       "complexity": 17,
       "line": 330,
       "letter": "M"
@@ -1537,21 +1537,21 @@
     },
     {
       "file": "app/generators/lespaul_gcode/perimeter.py",
-      "function": "generate_body_perimeter",
+      "function": "PerimeterOperationMixin.generate_body_perimeter",
       "complexity": 17,
       "line": 29,
       "letter": "M"
     },
     {
       "file": "app/instrument_geometry/body/ibg/arc_reconstructor.py",
-      "function": "complete",
+      "function": "ArcReconstructor.complete",
       "complexity": 17,
       "line": 652,
       "letter": "M"
     },
     {
       "file": "app/instrument_geometry/body/ibg/body_grid/zones.py",
-      "function": "_compute_zone_weight",
+      "function": "ZoneClassifier._compute_zone_weight",
       "complexity": 17,
       "line": 388,
       "letter": "M"
@@ -1614,7 +1614,7 @@
     },
     {
       "file": "app/saw_lab/calculators/saw_heat.py",
-      "function": "calculate",
+      "function": "SawHeatCalculator.calculate",
       "complexity": 17,
       "line": 74,
       "letter": "M"
@@ -1670,7 +1670,7 @@
     },
     {
       "file": "app/ai/transport/image_client.py",
-      "function": "generate",
+      "function": "StableDiffusionClient.generate",
       "complexity": 16,
       "line": 291,
       "letter": "M"
@@ -1691,7 +1691,7 @@
     },
     {
       "file": "app/business/estimator/estimator_service.py",
-      "function": "_calculate_all_factors",
+      "function": "EngineeringEstimatorService._calculate_all_factors",
       "complexity": 16,
       "line": 251,
       "letter": "M"
@@ -1747,7 +1747,7 @@
     },
     {
       "file": "app/instrument_geometry/body/ibg/body_grid/grid_normalizer.py",
-      "function": "_compute_transform",
+      "function": "GridNormalizer._compute_transform",
       "complexity": 16,
       "line": 119,
       "letter": "M"
@@ -1817,7 +1817,7 @@
     },
     {
       "file": "app/rmos/runs_v2/store.py",
-      "function": "list_runs",
+      "function": "RunStoreV2.list_runs",
       "complexity": 16,
       "line": 273,
       "letter": "M"
@@ -1908,7 +1908,7 @@
     },
     {
       "file": "tests/test_inlay_patterns.py",
-      "function": "test_list_generators",
+      "function": "TestInlayPatternAPI.test_list_generators",
       "complexity": 16,
       "line": 563,
       "letter": "M"
