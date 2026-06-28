@@ -1,9 +1,18 @@
-# Session Handoff — Triage Complete, Cleanup Deferred
+# Session Handoff — Triage Complete, Cleanup Mostly Resolved
 
 **Date:** 2026-06-28
 **Main HEAD at handoff:** `9c9406f6`
-**Open PRs:** none (all three this session's PRs merged)
-**Status:** This session's work + footprint are fully landed and clean. Remaining cleanup is pre-existing accumulation, deferred to a dedicated pass and/or the owning sprint.
+**Pushed handoff branch:** `origin/docs/session-handoff-2026-06-28-cleanup-deferred`
+**Status:** This session's work + footprint are landed and clean. A correction pass
+(below) updates the cleanup section: the baseline-resync cleanup that was originally
+"deferred to the sprint" is now **resolved**. The only remaining deferred work is the
+broad branch-sprawl prune.
+
+> **Correction note (2026-06-28).** The original handoff said baseline-resync cleanup was
+> still deferred to the sprint. Re-verified state shows it is done: `C:/tmp/ltb-baseline-resync`,
+> local `chore/main-baseline-resync`, and `origin/chore/main-baseline-resync` are all gone.
+> Also corrected: GAMS #162 merge SHA (`1d37f82d`), and added the pushed-handoff observation.
+> Counts in §3a are a snapshot — re-count before acting.
 
 ---
 
@@ -11,76 +20,85 @@
 
 | Work | PR | Merge | Notes |
 |---|---|---|---|
-| CI-RED-015-J — lifecycle-policy translator fixture (use registered `dxf_r12`, not `test_translator`) | #161 | `9ee58181` | test-only; paired witness (3 reds→green + gate not weakened); 132 passed |
-| GAMS role × authority matrix spec (governance coordination doc) | #162 | (squash) | docs-only; two-axis matrix canonical, hard-scoped Instrument-Spec row, `C1_INDEX.md` pointer |
-| PR #163 triage + independent-review fix — complexity key `file:name` → `file:fullname` (collision-proof) | #163 | `9c9406f6` | reviewer applied the fix (separation-of-duties; author stood down); CI-green incl. `debt-gates` + both CBSP21 gates |
+| CI-RED-015-J — lifecycle-policy translator fixture (registered `dxf_r12`, not `test_translator`) | #161 | `9ee58181` | test-only; paired witness kept the translator gate honest (3 reds→green + gate not weakened); 132 passed |
+| GAMS role × authority matrix spec | #162 | `1d37f82d` | docs-only; separates operational role from authority state; hard-scoped Instrument-Spec row; `C1_INDEX.md` pointer |
+| PR #163 review fix — complexity key `file:name` → `file:fullname` (collision-proof) | #163 | `9c9406f6` | independent-review fix (separation-of-duties; author stood down); CI-green incl. `debt-gates` + both CBSP21 gates |
 
-Key technical artifact from #163, now also in memory
-(`reference_complexity_baseline_regen_footgun`): the debt-baseline `--write-baseline`
-flag is **dual-purpose** (input filter AND output path), so regenerating in place writes
-only the DELTA — regenerate from an empty/aside baseline to capture all violations.
+Key technical artifact from #163, now in memory
+(`reference_complexity_baseline_regen_footgun`): the debt-baseline `--write-baseline` flag
+is **dual-purpose** (input filter AND output path), so regenerating in place writes only
+the DELTA — regenerate from an empty/aside baseline to capture all violations.
 
-## 2. Cleanup already DONE (this session's footprint)
+## 2. Cleanup already DONE
 
+This session's own footprint is clean:
 - Worktrees removed (own-path, no global prune): `C:/tmp/ltb-163-verify`, `C:/tmp/ltb-gams`.
 - Branches deleted: `verify/ci-163-fullname-key`, `docs/gams-role-authority-matrix`.
 - Local `main` synced to `9c9406f6`.
 - Memory updated + one-line index pointer added.
 
-**Nothing of this session's is outstanding.**
+Additional cleanup observed complete after the original handoff:
+- Handoff branch pushed: `origin/docs/session-handoff-2026-06-28-cleanup-deferred`.
+- Local handoff worktree `C:/tmp/ltb-handoff` removed; duplicate untracked handoff file
+  removed from the shared `main` checkout.
+- **Baseline-resync (#163) cleanup resolved** — no `C:/tmp/ltb-baseline-resync`, no local
+  `chore/main-baseline-resync`, no `origin/chore/main-baseline-resync`. No action needed.
 
-## 3. Deferred cleanup (the report)
+## 3. Deferred cleanup still remaining
 
-### 3a. Sprint's `chore/main-baseline-resync` (#163) — OWNER: the baseline-resync sprint, not this session
-- Remote branch **still on origin at `e91b2d6c`** — NOT auto-deleted on the #163 merge
-  (unlike #161/#162). Merged/stale; safe to delete, but it's the sprint's branch.
-- Worktree **`C:/tmp/ltb-baseline-resync`** (sprint's, on that merged branch) — stale; sprint's call.
-- Action: the sprint deletes its own remote branch + worktree. A live parallel sprint
-  means this session should not touch them.
+### 3a. Branch sprawl — DEFERRED, needs its own careful pass
+The original handoff reported, as a **snapshot** (re-count before acting):
+118 local / 125 remote branches; 9 local branches with unpushed commits; ~32 local-only.
 
-### 3b. Branch sprawl — 118 local / 125 remote — DEFERRED, needs a dedicated careful pass
-Previously flagged (`project_deferred_dependency_advisories`, ~85 stale). **Not a bulk op.**
-- **9 local branches carry UNPUSHED commits (`[ahead]`) — content-verify before ANY delete:**
-  `docs/ci-red-015-d-mvp-scope`, `feat/acoustic-jumbo-business-layer (+4)`,
-  `feat/confidence-envelope-interoperability (+8)`, `feat/dxf-lifecycle-phase-3a-3`,
-  `feat/dxf-lifecycle-phase-3b (+2)`, `feat/tier-a-relocation-removal (+2)`,
-  `fix/ci-red-018-router-count-baseline (+1/-2)`, `fix/debt-gates-bare-except`,
-  `runtime-boundary-phase-2f-runtime-service-guards`.
-- **~32 local-only branches (no upstream):** intentional backups to KEEP until confirmed
-  spent (`salvage/*` ×8, `backup-sdk-h8-2-1`); likely-disposable gh-checkout leftovers
-  (`pr-119`, `pr-136`); Pages infra to KEEP (`gh-pages`,
-  `https/hanzorazer.github.io/...`).
-- Remote-tracking refs are clean (`git remote prune origin --dry-run` empty).
-- Discipline for the prune pass: verify content-not-ancestry per branch (squash merges
-  show as "not merged"); back up single-ref unpushed work with a tag before deleting;
-  remove only by explicit name, no global prune while sprints are live.
+**Local branches with unpushed work — content-verify before ANY delete** (squash merges
+make ancestry misleading; do not bulk-delete on merge ancestry alone):
+```
+docs/ci-red-015-d-mvp-scope
+feat/acoustic-jumbo-business-layer
+feat/confidence-envelope-interoperability
+feat/dxf-lifecycle-phase-3a-3
+feat/dxf-lifecycle-phase-3b
+feat/tier-a-relocation-removal
+fix/ci-red-018-router-count-baseline
+fix/debt-gates-bare-except
+runtime-boundary-phase-2f-runtime-service-guards
+```
 
-### 3c. Other sprints' worktrees — LEAVE
-- `ltb-dxf-clean` (`clean/dxf-retire-dead-seams`) — active DXF CLEAN track.
-- `ltb-p0-collision` (`fix/vectorizer-syspath-collision-proofing`) — active.
+### 3b. Local `gh pr checkout` aliases — local-alias cleanup ONLY
+```
+pr-119   # commit also on origin/fix/ci-red-018-router-count-baseline
+pr-136   # commit also on origin/codex/ci-red-019-setuptools-package-discovery
+```
+Neither is an ancestor of `main`, so deleting the **local alias** is not the same as
+declaring the work merged. Safe action: delete only the local aliases `pr-119` / `pr-136`
+after confirming the same commits remain reachable via their remote-tracking refs. **Do
+not** delete the corresponding remote branches as part of this quick win.
+
+### 3c. Other sprints' worktrees — LEAVE (read-only unless explicitly handed off)
+```
+C:/tmp/ltb-dxf-clean       clean/dxf-retire-dead-seams
+C:/tmp/ltb-p0-collision    fix/vectorizer-syspath-collision-proofing
+```
 
 ### 3d. MEMORY.md oversize
-- ~28 KB vs the 24.4 KB index limit; some entries already don't load. Trim/consolidate:
-  shorten the longest lines, push detail into topic files.
+Separate task if still applicable — verify current location and size before editing.
 
-## 4. Safe quick wins (offered, not yet taken — awaiting go)
-1. Delete disposable local-only `gh pr checkout` leftovers `pr-119`, `pr-136`
-   (after confirming each has no unique commits).
-2. MEMORY.md index trim.
+## 4. Safe quick wins (low-risk, from an authorized writable checkout)
+1. Delete local-only alias branches `pr-119`, `pr-136` (only after confirming the commits
+   remain reachable via remote-tracking refs).
+2. Trim/consolidate `MEMORY.md` if it still exceeds the index limit.
 
-## 5. Coordination notes / discipline (carry forward)
-- **Single operator, multiple concurrent sessions.** A parallel "sprint" = the operator's
-  other session(s). Treat their worktrees/branches as read-only.
-- **Separation-of-duties** worked well on #163: the PR author's session stood down; an
-  independent session applied the correction and graded it. Keep that split for review-fixes.
-- **Shared Downloads checkout** can be moved by a parallel sprint — re-verify `HEAD` and
-  open PRs at the start of any session and right before any commit/push.
-- **Worktree hygiene:** own worktrees only, explicit path, NEVER `git worktree prune`/global
-  ops while another sprint is live (caused a prior incident).
+Do **not** touch `docs/tonewood/*` — unrelated untracked files in the shared checkout.
+
+## 5. Coordination discipline (carry forward)
+- Single operator, multiple concurrent sessions; treat other active sprint worktrees as read-only.
+- No global `git worktree prune` while other sprints are live; remove only your own worktrees by explicit path.
+- Don't commit from the shared checkout with unrelated untracked files present; use dedicated branches/worktrees for handoffs.
+- Re-verify `HEAD` and the open-PR board at session start and right before any commit/push (the shared checkout can be moved by a parallel sprint).
+- For review fixes, preserve separation of duties: the PR author's session stands down; an independent session applies/verifies the correction.
 
 ## 6. Re-entry checklist
-1. `git -C <main> fetch origin && git rev-parse --short main` — confirm HEAD (was `9c9406f6`).
-2. `gh pr list --state open` — confirm board (was empty).
-3. `git worktree list` — expect main + sprints' (`ltb-baseline-resync` may be gone if the
-   sprint cleaned it; `ltb-dxf-clean`, `ltb-p0-collision` if still active).
-4. If picking up cleanup: start with §4 quick wins; the §3b prune is its own scoped pass.
+1. `git -C <main> fetch origin && git -C <main> rev-parse --short main` — expect `9c9406f6` or newer.
+2. `gh pr list --state open` — confirm the board.
+3. `git -C <main> worktree list` — expect: `main`, `C:/tmp/ltb-dxf-clean`, `C:/tmp/ltb-p0-collision`.
+4. If picking up cleanup: start with §4 (the `pr-119`/`pr-136` aliases); treat branch sprawl as its own scoped pass; leave active sprint worktrees alone.
