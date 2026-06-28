@@ -3,8 +3,8 @@
   "schema_version": "cbsp21_patch_input_v1",
   "coverage_min": 0.95,
   "patch_id": "MAIN_DEBT_BASELINE_RESYNC",
-  "title": "Resync debt baselines to main; fix complexity line-keying",
-  "intent": "Three technical-debt gates were red on main independent of any PR, taxing every PR's red-classification. Resync the ratchet baselines to current main and fix the complexity gate's brittle line-based identity key so the false positive does not recur. CI/governance plumbing only; no product behavior change, no runtime path touched.",
+  "title": "Resync debt baselines to main; fix complexity identity key (line-stable + collision-proof)",
+  "intent": "Three technical-debt gates were red on main independent of any PR, taxing every PR's red-classification. Resync the ratchet baselines to current main and fix the complexity gate's brittle line-based identity key so the false positive does not recur. The key is now file:qualified-name (radon fullname = ClassName.method for methods, bare name for module functions): line-independent (the original fix) AND collision-proof (an independent-review correction, see below). CI/governance plumbing only; no product behavior change, no runtime path touched.",
   "change_type": "chore",
   "behavior_change": "none",
   "risk_level": "low",
@@ -16,29 +16,40 @@
     ],
     "files_expected_to_change": [
       "services/api/app/ci/check_complexity.py",
+      "services/api/app/ci/complexity_baseline.json",
       "services/api/app/ci/file_sizes_baseline.json",
       "services/api/tests/test_technical_debt_gates.py",
+      "services/api/tests/test_complexity_key_collision.py",
       ".cbsp21/patch_input.json"
     ]
   },
   "diff_articulation": {
-    "what_changed": "(1) check_complexity.py: the baseline-match identity key drops the line component (file:function:line -> file:function). repair_body_geometry shifted 607->605 after an unrelated merge and the line-keyed baseline re-reported it as a new cc=26 violation though its complexity is unchanged. (2) file_sizes_baseline.json: add tests/cam/test_lifecycle_policy_engine.py (528 LOC, grew via #161); the re-sort also corrected a pre-existing mis-ordering and the stale violation_count (150->152). (3) test_technical_debt_gates.py: bump TARGET_MAX_LARGE_FILES 96->99 (actual app/ count; 3 large files added since the 2026-06-13 baseline).",
-    "why_not_redundant": "The complexity change is a keying fix, not a one-shot line bump: a line bump would re-break on the next edit above the function, whereas keying by file:function tracks the function across moves. The two baseline updates accept current merged reality as the ratchet floor — the gates' designed maintenance path when main itself has drifted red."
+    "what_changed": "(1) check_complexity.py: the baseline identity key drops the line component AND uses radon's qualified name (file:function:line -> file:fullname). The line-drop fixes brittleness (repair_body_geometry shifted 607->605 after an unrelated merge and the line-keyed baseline re-reported it as a new cc=26 violation though its complexity is unchanged). The name->fullname change fixes a collision the bare name introduced: radon enumerates methods as flat blocks sharing a bare name, so two same-named methods in different classes in one file would collapse to one key and silently suppress the second violation. fullname (ClassName.method) keeps them distinct. (2) complexity_baseline.json: regenerated under the fullname key (274 entries; 48 method entries gain a Class. prefix; count unchanged; repair_body_geometry display line refreshed 607->605). (3) file_sizes_baseline.json: add tests/cam/test_lifecycle_policy_engine.py (528 LOC, grew via #161); the re-sort also corrected a pre-existing mis-ordering and the stale violation_count (150->152). (4) test_technical_debt_gates.py: bump TARGET_MAX_LARGE_FILES 96->99 (actual app/ count; 3 large files added since the 2026-06-13 baseline). (5) test_complexity_key_collision.py: new guard test locking the identity semantics (same-named methods keyed distinctly; baselining one does not suppress the other).",
+    "why_not_redundant": "The complexity change is a keying fix, not a one-shot line bump: a line bump would re-break on the next edit above the function, whereas keying by file:fullname tracks the function across moves. Dropping the line alone (bare-name key) was insufficient because the line had been the only disambiguator between same-named methods; fullname restores that disambiguation without reintroducing line brittleness, and is verified collision-free across the current 274-entry baseline. The two baseline updates accept current merged reality as the ratchet floor — the gates' designed maintenance path when main itself has drifted red."
   },
   "verification": {
     "commands_run": [
-      "services/api .venv: python -m app.ci.check_complexity --baseline app/ci/complexity_baseline.json -> OK (exit 0), was 1 violation",
-      "services/api .venv: python -m app.ci.check_file_sizes --baseline app/ci/file_sizes_baseline.json -> OK (exit 0), was 1 violation",
-      "services/api .venv: pytest tests/test_technical_debt_gates.py::TestCodeQuality::test_large_files_count -> PASSED (was 99>96 fail)"
+      "services/api .venv: regenerate from empty then gate -> python -m app.ci.check_complexity --baseline app/ci/complexity_baseline.json --write-baseline --threshold 15 (Wrote 274 violations) ; re-run without --write-baseline -> OK: No functions exceed complexity 15 (exit 0)",
+      "services/api .venv: python -m app.ci.check_file_sizes --baseline app/ci/file_sizes_baseline.json -> OK (exit 0)",
+      "services/api .venv: pytest tests/test_complexity_key_collision.py -> 2 passed (distinct keys; baselining one does not suppress the other)",
+      "services/api .venv: pytest tests/test_technical_debt_gates.py::TestCodeQuality::test_large_files_count -> PASSED (99 confirmed)",
+      "regen integrity: 274 entries, 48 qualified, 0 collisions under file:fullname; only block delta vs prior baseline is repair_body_geometry line 607->605 (same fn, cc=26)"
     ]
   },
   "files": [
     {
       "path": "services/api/app/ci/check_complexity.py",
-      "intent": "Drop the brittle line component from the complexity baseline identity key (file:function:line -> file:function) so a function that moves lines is not re-flagged as new",
+      "intent": "Identity key = file:fullname (radon qualified name): line-independent (no re-flag on line moves) and collision-proof (same-named methods in different classes stay distinct)",
       "scan_targets": ["services/api/app/ci/check_complexity.py"],
       "risk": "low",
       "behavior_change": "none - CI gate matching only; detection power for complexity-increase is unchanged (the gate never compared complexity magnitude); no product/runtime path"
+    },
+    {
+      "path": "services/api/app/ci/complexity_baseline.json",
+      "intent": "Regenerate under the fullname key (274 entries; 48 method entries gain Class. prefix; count unchanged)",
+      "scan_targets": ["services/api/app/ci/complexity_baseline.json"],
+      "risk": "low",
+      "behavior_change": "none - ratchet baseline data only"
     },
     {
       "path": "services/api/app/ci/file_sizes_baseline.json",
@@ -53,6 +64,13 @@
       "scan_targets": ["services/api/tests/test_technical_debt_gates.py"],
       "risk": "low",
       "behavior_change": "none - debt-gate target constant only"
+    },
+    {
+      "path": "services/api/tests/test_complexity_key_collision.py",
+      "intent": "New guard test: same-named methods in different classes are keyed distinctly, and baselining one does not suppress the other",
+      "scan_targets": ["services/api/tests/test_complexity_key_collision.py"],
+      "risk": "low",
+      "behavior_change": "none - test-only"
     }
   ]
 }

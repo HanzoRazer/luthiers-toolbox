@@ -73,12 +73,13 @@ def check_complexity(
         for v in baseline.get("violations", []):
             # Normalize paths for cross-platform comparison (Windows vs Linux CI)
             normalized_file = _normalize_path(v['file'])
-            # Identity key is file:function only — NOT line. Including the line
-            # number made the baseline brittle: any edit above a baselined function
-            # shifts its line and the gate re-reports it as a "new" violation even
-            # though its complexity is unchanged (e.g. repair_body_geometry moved
-            # 607->605 after an unrelated merge). Keying by file:function tracks the
-            # function across moves; the stored line field is retained for display.
+            # Identity key is file:qualified-name — NOT line. Including the line made
+            # the baseline brittle (any edit above a baselined function shifted its
+            # line and re-reported it as "new"). We key by radon's fullname, i.e.
+            # ClassName.method for methods and the bare name for module functions, so
+            # the key (a) is stable across line moves and (b) distinguishes same-named
+            # methods in different classes within one file — a bare name would collide
+            # and silently suppress a second violation. The stored line is display-only.
             key = f"{normalized_file}:{v['function']}"
             baseline_set.add(key)
 
@@ -91,15 +92,15 @@ def check_complexity(
                 if block.complexity > threshold:
                     # Always use forward slashes for consistency
                     rel_path = _normalize_path(str(pyfile.relative_to(root)))
-                    # Match the baseline by file:function only (see note above).
-                    key = f"{rel_path}:{block.name}"
+                    # Match the baseline by file:qualified-name (see note above).
+                    key = f"{rel_path}:{block.fullname}"
 
                     if key in baseline_set:
                         continue  # Skip baselined violations
 
                     violations.append({
                         "file": rel_path,
-                        "function": block.name,
+                        "function": block.fullname,
                         "complexity": block.complexity,
                         "line": block.lineno,
                         "letter": block.letter,  # A-F grade
