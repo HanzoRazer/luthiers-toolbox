@@ -26,9 +26,22 @@ jobs:
       - name: Boot API
         run: |
           cd services/api
-          uvicorn app.main:app --host 127.0.0.1 --port 8000 &
-          for i in $(seq 1 30); do curl -sSf $API_BASE/health >/dev/null && exit 0 || sleep 1; done
-          echo "server not up"; exit 1
+          python -m uvicorn app.main:app --host 127.0.0.1 --port 8000 --log-level info > /tmp/uvicorn.log 2>&1 &
+          echo $! > /tmp/uvicorn.pid
+          cd ../..
+          python scripts/ci/wait_for_api_ready.py \
+            --base-url "$API_BASE" \
+            --paths /health,/api/health \
+            --timeout-seconds 60 \
+            --pid-file /tmp/uvicorn.pid \
+            --log-file /tmp/uvicorn.log
+      - name: Upload uvicorn log on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: uvicorn-log-api-tests
+          path: /tmp/uvicorn.log
+          if-no-files-found: ignore
       - name: Simulate sample
         run: |
           python - <<'PY'

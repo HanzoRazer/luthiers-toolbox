@@ -81,6 +81,14 @@ jobs:
           path: smoke_posts.json
           if-no-files-found: warn
 
+      - name: Upload uvicorn log on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: uvicorn-log-health-smoke
+          path: uvicorn.log
+          if-no-files-found: ignore
+
       # ---------- Baseline fetch for size regression ----------
       - name: Fetch last green smoke_posts.json (baseline)
         id: fetch-baseline

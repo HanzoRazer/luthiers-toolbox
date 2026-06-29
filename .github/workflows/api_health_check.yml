@@ -56,9 +56,16 @@ jobs:
         id: health
         run: |
           . .venv311/bin/activate
-          python -m uvicorn app.main:app --port 8088 --log-level warning &
-          SERVER_PID=$!
-          sleep 3
+          python -m uvicorn app.main:app --port 8088 --log-level info > uvicorn.log 2>&1 &
+          echo $! > uvicorn.pid
+          # Readiness gate FIRST (diagnostic on failure: paths + uvicorn log tail).
+          # A POST smoke failure below is endpoint behavior, NOT a readiness failure.
+          python ../scripts/ci/wait_for_api_ready.py \
+            --base-url http://127.0.0.1:8088 \
+            --paths /api/health,/health \
+            --timeout-seconds 60 \
+            --pid-file uvicorn.pid \
+            --log-file uvicorn.log
           # Call endpoint, capture HTTP status and body separately
           HTTP_CODE=$(curl -s -o api_health.json -w "%{http_code}" \
             -X POST "http://127.0.0.1:8088/api/cam_vcarve/preview_infill" \
@@ -67,16 +74,24 @@ jobs:
           echo "http_code=$HTTP_CODE" >> $GITHUB_OUTPUT
           # Validate JSON structure (must parse; optionally require ok==true)
           if ! jq . api_health.json >/dev/null 2>&1; then
-            echo "Malformed JSON response"; kill $SERVER_PID || true; exit 1
+            echo "Malformed JSON response"; kill "$(cat uvicorn.pid)" 2>/dev/null || true; exit 1
           fi
           if ! jq -e '.ok == true' api_health.json >/dev/null 2>&1; then
-            echo "Endpoint returned ok!=true"; kill $SERVER_PID || true; exit 1
+            echo "Endpoint returned ok!=true"; kill "$(cat uvicorn.pid)" 2>/dev/null || true; exit 1
           fi
-          kill $SERVER_PID || true
+          kill "$(cat uvicorn.pid)" 2>/dev/null || true
           # Trim preview in logs
           head -c 400 api_health.json || true
           echo
         shell: bash
+
+      - name: Upload uvicorn log on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: uvicorn-log-api-health
+          path: services/api/uvicorn.log
+          if-no-files-found: ignore
 
       - name: Upload health JSON artifact
         if: always()
