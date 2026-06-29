@@ -11,6 +11,13 @@ Run: services/api/.venv pytest tests/test_complexity_key_collision.py -q
 """
 import textwrap
 
+import pytest
+
+# The complexity gate depends on radon, a CI-only dep absent from the API Tests
+# job. Skip cleanly there instead of failing collection. (Belt-and-suspenders:
+# check_complexity is also now import-safe when radon is missing.)
+pytest.importorskip("radon")
+
 from app.ci.check_complexity import check_complexity
 
 
