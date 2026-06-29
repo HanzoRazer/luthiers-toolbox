@@ -11,7 +11,16 @@ Run: services/api/.venv pytest tests/test_complexity_key_collision.py -q
 """
 import textwrap
 
-from app.ci.check_complexity import check_complexity
+import pytest
+
+# check_complexity calls sys.exit(2) at IMPORT time when radon is missing.
+# radon is a dev-only dependency installed for the debt-gate job but not for the
+# general pytest environments (api-verify, Core CI). Importing the module there
+# would abort pytest collection with an INTERNALERROR and red the whole suite,
+# so skip this module cleanly when radon is unavailable.
+pytest.importorskip("radon")
+
+from app.ci.check_complexity import check_complexity  # noqa: E402
 
 
 # Two classes, each with a same-named method whose complexity clears threshold=1.

@@ -1,92 +1,31 @@
 {
   "schema": "cbsp21_patch_input_v1",
   "schema_version": "cbsp21_patch_input_v1",
-  "coverage_min": 0.95,
-  "patch_id": "CI_RED_020A_API_READINESS_SMOKE",
-  "title": "CI-RED-020-A: shared API readiness harness + diagnostic boot witness",
-  "intent": "CI smoke/server-readiness boot loops ended in a bare 'connection refused'/'server not up', masking the real startup cause and making failures look like flakes. Add a stdlib-only readiness utility (poll health paths, fail fast on uvicorn early-exit, print attempted paths + uvicorn log tail) and route the primary smoke workflows through it. CI/governance plumbing only; no product behavior change, no runtime path or endpoint semantics touched. Does not weaken startup validation and does not set RMOS_STRICT_STARTUP=0.",
-  "change_type": "chore",
+  "patch_id": "CBSP21_RADON_IMPORTORSKIP_HOTFIX",
+  "title": "Hotfix: guard test_complexity_key_collision import behind radon (un-red main)",
+  "intent": "PR #164 added tests/test_complexity_key_collision.py, which imports app.ci.check_complexity at module top. That module calls sys.exit(2) at import time when radon is missing. radon is installed only for the debt-gate job, not for the general pytest environments (api-verify, Core CI), so importing it during pytest collection aborts the whole session with an INTERNALERROR. This greened the debt gates but red'd api-verify and Core CI on main. Fix: pytest.importorskip('radon') before the import so the module is skipped where radon is absent and runs where it is present. Test-only; no product behavior change, no runtime path touched.",
+  "change_type": "fix",
   "behavior_change": "none",
   "risk_level": "low",
   "scope": {
     "paths_in_scope": [
-      ".cbsp21/",
-      "scripts/ci/",
-      "scripts/smoke/",
-      ".github/workflows/"
+      "services/api/tests/",
+      ".cbsp21/"
     ],
     "files_expected_to_change": [
-      "scripts/ci/wait_for_api_ready.py",
-      "scripts/ci/test_wait_for_api_ready.py",
-      "scripts/smoke/run_api_smoke_posts.sh",
-      ".github/workflows/api_tests.yml",
-      ".github/workflows/core_ci.yml",
-      ".github/workflows/api_health_check.yml",
-      ".github/workflows/api_health_and_smoke.yml",
+      "services/api/tests/test_complexity_key_collision.py",
       ".cbsp21/patch_input.json"
     ]
   },
   "diff_articulation": {
-    "what_changed": "(1) scripts/ci/wait_for_api_ready.py (new): stdlib-only readiness probe. Polls comma-separated health paths until one returns HTTP 200; if a uvicorn PID file is supplied and the process exits, fails immediately instead of waiting out the timeout; on failure prints attempted URLs, last status/exception per path, and the uvicorn log tail; reports which path became ready. (2) scripts/ci/test_wait_for_api_ready.py (new): stdlib-only unit tests (real http.server + monkeypatch) covering success, multi-path fallback (404 and connection failure), timeout, dead-PID fail-fast, failure-output-with-log-tail, exit codes, and no-third-party-imports. (3) scripts/smoke/run_api_smoke_posts.sh: capture uvicorn stdout/stderr to uvicorn.log, write a PID file, replace fixed sleep 4 with the readiness utility, add trap-based cleanup on success AND failure; readiness and POST-smoke are now separate. (4) api_tests.yml / core_ci.yml (both Boot API jobs) / api_health_check.yml: replace inline boot loops / sleep 3 with the shared utility, with log capture + PID + uvicorn-log upload on failure; readiness checked before endpoint behavior. (5) api_health_and_smoke.yml: keep make api-smoke-posts (inherits the updated script) + upload uvicorn.log on failure.",
-    "why_not_redundant": "This replaces fixed sleeps and bespoke per-workflow curl loops with one shared, tested utility that turns an opaque 'connection refused' into a named startup witness (uvicorn exit + log tail visible in job logs/artifacts). It is not a cosmetic refactor: the diagnostic + fail-fast behavior is new, and standardizing the boot step across workflows is the point. Startup validation is unchanged and not weakened."
+    "what_changed": "test_complexity_key_collision.py: add `import pytest; pytest.importorskip('radon')` immediately before `from app.ci.check_complexity import check_complexity` (now `# noqa: E402`). When radon is installed (debt-gate job, local services/api/.venv) the test runs exactly as before; when radon is absent (api-verify, Core CI) the module is skipped at collection instead of crashing pytest with the module-level sys.exit(2) in check_complexity.py.",
+    "why_not_redundant": "Without this guard the suite cannot even be collected in any environment that lacks the dev-only radon dependency: check_complexity.py performs `try: from radon.complexity import cc_visit; except ImportError: sys.exit(2)` at import time, and the new test is the only collection-time importer of that module. importorskip converts the hard collection abort into a clean per-module skip, restoring api-verify and Core CI to green while preserving the collision-guard assertion wherever radon exists."
   },
   "verification": {
     "commands_run": [
-      "python scripts/ci/test_wait_for_api_ready.py -> 9 passed (success, 404 fallback, connection-fail fallback, timeout, dead-PID fail-fast, failure-output+log-tail, no-3rd-party-imports, main exit 0/1)",
-      "yaml.safe_load of the 4 touched workflows -> all parse OK",
-      "bash -n scripts/smoke/run_api_smoke_posts.sh -> OK",
-      "note: full real-app boot witness is on Ubuntu CI (local Windows venv app import exceeds 2 min); utility logic is witnessed locally against a real stdlib http.server"
+      "services/api/.venv: pytest tests/test_complexity_key_collision.py -q -> 2 passed (radon present; behavior unchanged)",
+      "reasoning: with radon absent, module-level pytest.importorskip('radon') raises Skipped at collection, so the subsequent check_complexity import never executes and the suite collects cleanly",
+      "python scripts/ci/check_cbsp21_patch_input.py --base origin/main --head HEAD -> PASS (changed files declared in scope)"
     ]
-  },
-  "files": [
-    {
-      "path": "scripts/ci/wait_for_api_ready.py",
-      "intent": "New stdlib-only readiness probe with diagnostic witness and uvicorn early-exit detection",
-      "scan_targets": ["scripts/ci/wait_for_api_ready.py"],
-      "risk": "low",
-      "behavior_change": "none - CI tooling only; no product/runtime path"
-    },
-    {
-      "path": "scripts/ci/test_wait_for_api_ready.py",
-      "intent": "Stdlib-only unit tests for the readiness utility (no FastAPI/uvicorn deps)",
-      "scan_targets": ["scripts/ci/test_wait_for_api_ready.py"],
-      "risk": "low",
-      "behavior_change": "none - test-only"
-    },
-    {
-      "path": "scripts/smoke/run_api_smoke_posts.sh",
-      "intent": "Readiness-gated smoke: log capture, PID, trap cleanup, utility instead of sleep 4",
-      "scan_targets": ["scripts/smoke/run_api_smoke_posts.sh"],
-      "risk": "low",
-      "behavior_change": "none - CI smoke harness only"
-    },
-    {
-      "path": ".github/workflows/api_tests.yml",
-      "intent": "Boot API via the shared utility (paths /health,/api/health) + log upload on failure",
-      "scan_targets": [".github/workflows/api_tests.yml"],
-      "risk": "low",
-      "behavior_change": "none - CI workflow only"
-    },
-    {
-      "path": ".github/workflows/core_ci.yml",
-      "intent": "Both Boot API loops -> shared utility + per-job uvicorn-log upload on failure",
-      "scan_targets": [".github/workflows/core_ci.yml"],
-      "risk": "low",
-      "behavior_change": "none - CI workflow only"
-    },
-    {
-      "path": ".github/workflows/api_health_check.yml",
-      "intent": "Readiness gate before the POST smoke (separate readiness vs endpoint behavior) + uvicorn-log upload",
-      "scan_targets": [".github/workflows/api_health_check.yml"],
-      "risk": "low",
-      "behavior_change": "none - CI workflow only"
-    },
-    {
-      "path": ".github/workflows/api_health_and_smoke.yml",
-      "intent": "Inherit readiness via make api-smoke-posts + upload uvicorn.log on failure",
-      "scan_targets": [".github/workflows/api_health_and_smoke.yml"],
-      "risk": "low",
-      "behavior_change": "none - CI workflow only"
-    }
-  ]
+  }
 }
