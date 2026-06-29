@@ -135,26 +135,31 @@ def wait_for_ready(
     on dead-process or timeout. clock/sleep are injectable for tests."""
     base = base_url.rstrip("/")
     pid = read_pid(pid_file)
-    per_probe_timeout = max(1.0, min(5.0, interval_seconds * 4))
+    max_probe_timeout = max(1.0, min(5.0, interval_seconds * 4))
     last: Dict[str, ProbeResult] = {p: (None, "not attempted") for p in paths}
     deadline = clock() + timeout_seconds
 
     while True:
         for path in paths:
-            status, err = probe(base + path, timeout=per_probe_timeout)
+            now = clock()
+            # Honor the overall deadline between paths, and never let a single
+            # probe block past it — otherwise a hung server with N paths could
+            # overshoot the timeout by N * max_probe_timeout.
+            if now >= deadline:
+                raise ReadinessError(
+                    f"timed out after {timeout_seconds}s waiting for readiness", last
+                )
+            probe_timeout = max(0.1, min(max_probe_timeout, deadline - now))
+            status, err = probe(base + path, timeout=probe_timeout)
             last[path] = (status, err)
             if status == 200:
                 return path
 
-        # Fail fast if the server process is already gone.
-        if pid is not None and not process_alive(pid):
-            raise ReadinessError(
-                f"uvicorn process (pid {pid}) exited before readiness", last
-            )
-        if clock() >= deadline:
-            raise ReadinessError(
-                f"timed out after {timeout_seconds}s waiting for readiness", last
-            )
+            # Fail fast if the server process is already gone.
+            if pid is not None and not process_alive(pid):
+                raise ReadinessError(
+                    f"uvicorn process (pid {pid}) exited before readiness", last
+                )
         sleep(interval_seconds)
 
 

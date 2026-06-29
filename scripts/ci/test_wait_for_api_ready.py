@@ -74,17 +74,19 @@ class WaitForReadyTests(unittest.TestCase):
             )
             self.assertEqual(path, "/health", "should fall back past the 404 path")
 
-    def test_fallback_when_first_path_connection_fails(self):
-        # First path points at a dead port; second at the live server.
-        with _Server({"/health": 200}) as srv:
-            # Probe order: a bogus absolute won't work via base+path, so simulate
-            # a transport failure by making the first path 404-free but closed:
-            # use a path the server returns 200 for as the *second* entry.
-            path = mod.wait_for_ready(
-                srv.base_url, ["/missing", "/health"],
-                timeout_seconds=5, interval_seconds=0.05,
+    def test_connection_failure_recorded_as_transport_error(self):
+        # Nothing listening on this port -> every probe hits the transport-failure
+        # branch (status None, error repr captured), NOT an HTTP status code.
+        # This is the genuine connection-refused path; a shared base+path cannot
+        # express a per-path transport failure, so it is exercised standalone.
+        with self.assertRaises(mod.ReadinessError) as ctx:
+            mod.wait_for_ready(
+                "http://127.0.0.1:9", ["/health"],
+                timeout_seconds=0.3, interval_seconds=0.05,
             )
-            self.assertEqual(path, "/health")
+        status, err = ctx.exception.last["/health"]
+        self.assertIsNone(status, "transport failure must not surface as an HTTP code")
+        self.assertIsNotNone(err, "the connection error repr should be captured")
 
     def test_timeout_when_no_path_ready(self):
         ticks = iter([0.0, 0.1, 0.2, 99.0])  # last tick blows past the deadline

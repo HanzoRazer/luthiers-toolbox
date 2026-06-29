@@ -27,18 +27,23 @@ cleanup() {
 }
 trap cleanup EXIT
 
+# Readiness timeout is overridable per caller (slow CI cold starts); default 60s.
+API_READY_TIMEOUT="${API_READY_TIMEOUT:-60}"
+
 echo "Starting API server on ${API_HOST}:${API_PORT} (log: ${UVICORN_LOG})..."
-cd "$REPO_ROOT/services/api"
+# Guard the cd: with `set -e` dropped, an unguarded cd failure would otherwise
+# boot uvicorn from the wrong directory and silently fail the import.
+cd "$REPO_ROOT/services/api" || { echo "FATAL: cannot cd to services/api" >&2; exit 1; }
 python -m uvicorn app.main:app --host "$API_HOST" --port "$API_PORT" --log-level info \
   > "$UVICORN_LOG" 2>&1 &
 echo $! > "$UVICORN_PID_FILE"
-cd "$REPO_ROOT"
+cd "$REPO_ROOT" || { echo "FATAL: cannot cd to repo root" >&2; exit 1; }
 
 # Readiness gate (diagnostic on failure: attempted paths + uvicorn log tail).
 if ! python "$REPO_ROOT/scripts/ci/wait_for_api_ready.py" \
       --base-url "$API_BASE" \
       --paths /api/health,/health \
-      --timeout-seconds 60 \
+      --timeout-seconds "$API_READY_TIMEOUT" \
       --pid-file "$UVICORN_PID_FILE" \
       --log-file "$UVICORN_LOG"; then
   echo "API did not become ready; aborting smoke (see uvicorn log tail above)." >&2
