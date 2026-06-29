@@ -2,75 +2,91 @@
   "schema": "cbsp21_patch_input_v1",
   "schema_version": "cbsp21_patch_input_v1",
   "coverage_min": 0.95,
-  "patch_id": "MAIN_DEBT_BASELINE_RESYNC",
-  "title": "Resync debt baselines to main; fix complexity identity key (line-stable + collision-proof)",
-  "intent": "Three technical-debt gates were red on main independent of any PR, taxing every PR's red-classification. Resync the ratchet baselines to current main and fix the complexity gate's brittle line-based identity key so the false positive does not recur. The key is now file:qualified-name (radon fullname = ClassName.method for methods, bare name for module functions): line-independent (the original fix) AND collision-proof (an independent-review correction, see below). CI/governance plumbing only; no product behavior change, no runtime path touched.",
+  "patch_id": "CI_RED_020A_API_READINESS_SMOKE",
+  "title": "CI-RED-020-A: shared API readiness harness + diagnostic boot witness",
+  "intent": "CI smoke/server-readiness boot loops ended in a bare 'connection refused'/'server not up', masking the real startup cause and making failures look like flakes. Add a stdlib-only readiness utility (poll health paths, fail fast on uvicorn early-exit, print attempted paths + uvicorn log tail) and route the primary smoke workflows through it. CI/governance plumbing only; no product behavior change, no runtime path or endpoint semantics touched. Does not weaken startup validation and does not set RMOS_STRICT_STARTUP=0.",
   "change_type": "chore",
   "behavior_change": "none",
   "risk_level": "low",
   "scope": {
     "paths_in_scope": [
       ".cbsp21/",
-      "services/api/app/ci/",
-      "services/api/tests/"
+      "scripts/ci/",
+      "scripts/smoke/",
+      ".github/workflows/"
     ],
     "files_expected_to_change": [
-      "services/api/app/ci/check_complexity.py",
-      "services/api/app/ci/complexity_baseline.json",
-      "services/api/app/ci/file_sizes_baseline.json",
-      "services/api/tests/test_technical_debt_gates.py",
-      "services/api/tests/test_complexity_key_collision.py",
+      "scripts/ci/wait_for_api_ready.py",
+      "scripts/ci/test_wait_for_api_ready.py",
+      "scripts/smoke/run_api_smoke_posts.sh",
+      ".github/workflows/api_tests.yml",
+      ".github/workflows/core_ci.yml",
+      ".github/workflows/api_health_check.yml",
+      ".github/workflows/api_health_and_smoke.yml",
       ".cbsp21/patch_input.json"
     ]
   },
   "diff_articulation": {
-    "what_changed": "(1) check_complexity.py: the baseline identity key drops the line component AND uses radon's qualified name (file:function:line -> file:fullname). The line-drop fixes brittleness (repair_body_geometry shifted 607->605 after an unrelated merge and the line-keyed baseline re-reported it as a new cc=26 violation though its complexity is unchanged). The name->fullname change fixes a collision the bare name introduced: radon enumerates methods as flat blocks sharing a bare name, so two same-named methods in different classes in one file would collapse to one key and silently suppress the second violation. fullname (ClassName.method) keeps them distinct. (2) complexity_baseline.json: regenerated under the fullname key (274 entries; 48 method entries gain a Class. prefix; count unchanged; repair_body_geometry display line refreshed 607->605). (3) file_sizes_baseline.json: add tests/cam/test_lifecycle_policy_engine.py (528 LOC, grew via #161); the re-sort also corrected a pre-existing mis-ordering and the stale violation_count (150->152). (4) test_technical_debt_gates.py: bump TARGET_MAX_LARGE_FILES 96->99 (actual app/ count; 3 large files added since the 2026-06-13 baseline). (5) test_complexity_key_collision.py: new guard test locking the identity semantics (same-named methods keyed distinctly; baselining one does not suppress the other).",
-    "why_not_redundant": "The complexity change is a keying fix, not a one-shot line bump: a line bump would re-break on the next edit above the function, whereas keying by file:fullname tracks the function across moves. Dropping the line alone (bare-name key) was insufficient because the line had been the only disambiguator between same-named methods; fullname restores that disambiguation without reintroducing line brittleness, and is verified collision-free across the current 274-entry baseline. The two baseline updates accept current merged reality as the ratchet floor — the gates' designed maintenance path when main itself has drifted red."
+    "what_changed": "(1) scripts/ci/wait_for_api_ready.py (new): stdlib-only readiness probe. Polls comma-separated health paths until one returns HTTP 200; if a uvicorn PID file is supplied and the process exits, fails immediately instead of waiting out the timeout; on failure prints attempted URLs, last status/exception per path, and the uvicorn log tail; reports which path became ready. (2) scripts/ci/test_wait_for_api_ready.py (new): stdlib-only unit tests (real http.server + monkeypatch) covering success, multi-path fallback (404 and connection failure), timeout, dead-PID fail-fast, failure-output-with-log-tail, exit codes, and no-third-party-imports. (3) scripts/smoke/run_api_smoke_posts.sh: capture uvicorn stdout/stderr to uvicorn.log, write a PID file, replace fixed sleep 4 with the readiness utility, add trap-based cleanup on success AND failure; readiness and POST-smoke are now separate. (4) api_tests.yml / core_ci.yml (both Boot API jobs) / api_health_check.yml: replace inline boot loops / sleep 3 with the shared utility, with log capture + PID + uvicorn-log upload on failure; readiness checked before endpoint behavior. (5) api_health_and_smoke.yml: keep make api-smoke-posts (inherits the updated script) + upload uvicorn.log on failure.",
+    "why_not_redundant": "This replaces fixed sleeps and bespoke per-workflow curl loops with one shared, tested utility that turns an opaque 'connection refused' into a named startup witness (uvicorn exit + log tail visible in job logs/artifacts). It is not a cosmetic refactor: the diagnostic + fail-fast behavior is new, and standardizing the boot step across workflows is the point. Startup validation is unchanged and not weakened."
   },
   "verification": {
     "commands_run": [
-      "services/api .venv: regenerate from empty then gate -> python -m app.ci.check_complexity --baseline app/ci/complexity_baseline.json --write-baseline --threshold 15 (Wrote 274 violations) ; re-run without --write-baseline -> OK: No functions exceed complexity 15 (exit 0)",
-      "services/api .venv: python -m app.ci.check_file_sizes --baseline app/ci/file_sizes_baseline.json -> OK (exit 0)",
-      "services/api .venv: pytest tests/test_complexity_key_collision.py -> 2 passed (distinct keys; baselining one does not suppress the other)",
-      "services/api .venv: pytest tests/test_technical_debt_gates.py::TestCodeQuality::test_large_files_count -> PASSED (99 confirmed)",
-      "regen integrity: 274 entries, 48 qualified, 0 collisions under file:fullname; only block delta vs prior baseline is repair_body_geometry line 607->605 (same fn, cc=26)"
+      "python scripts/ci/test_wait_for_api_ready.py -> 9 passed (success, 404 fallback, connection-fail fallback, timeout, dead-PID fail-fast, failure-output+log-tail, no-3rd-party-imports, main exit 0/1)",
+      "yaml.safe_load of the 4 touched workflows -> all parse OK",
+      "bash -n scripts/smoke/run_api_smoke_posts.sh -> OK",
+      "note: full real-app boot witness is on Ubuntu CI (local Windows venv app import exceeds 2 min); utility logic is witnessed locally against a real stdlib http.server"
     ]
   },
   "files": [
     {
-      "path": "services/api/app/ci/check_complexity.py",
-      "intent": "Identity key = file:fullname (radon qualified name): line-independent (no re-flag on line moves) and collision-proof (same-named methods in different classes stay distinct)",
-      "scan_targets": ["services/api/app/ci/check_complexity.py"],
+      "path": "scripts/ci/wait_for_api_ready.py",
+      "intent": "New stdlib-only readiness probe with diagnostic witness and uvicorn early-exit detection",
+      "scan_targets": ["scripts/ci/wait_for_api_ready.py"],
       "risk": "low",
-      "behavior_change": "none - CI gate matching only; detection power for complexity-increase is unchanged (the gate never compared complexity magnitude); no product/runtime path"
+      "behavior_change": "none - CI tooling only; no product/runtime path"
     },
     {
-      "path": "services/api/app/ci/complexity_baseline.json",
-      "intent": "Regenerate under the fullname key (274 entries; 48 method entries gain Class. prefix; count unchanged)",
-      "scan_targets": ["services/api/app/ci/complexity_baseline.json"],
-      "risk": "low",
-      "behavior_change": "none - ratchet baseline data only"
-    },
-    {
-      "path": "services/api/app/ci/file_sizes_baseline.json",
-      "intent": "Add tests/cam/test_lifecycle_policy_engine.py (528 LOC) to the plural file-size baseline; correct stale violation_count and ordering",
-      "scan_targets": ["services/api/app/ci/file_sizes_baseline.json"],
-      "risk": "low",
-      "behavior_change": "none - ratchet baseline data only"
-    },
-    {
-      "path": "services/api/tests/test_technical_debt_gates.py",
-      "intent": "Bump TARGET_MAX_LARGE_FILES 96->99 to the actual current app/ large-file count",
-      "scan_targets": ["services/api/tests/test_technical_debt_gates.py"],
-      "risk": "low",
-      "behavior_change": "none - debt-gate target constant only"
-    },
-    {
-      "path": "services/api/tests/test_complexity_key_collision.py",
-      "intent": "New guard test: same-named methods in different classes are keyed distinctly, and baselining one does not suppress the other",
-      "scan_targets": ["services/api/tests/test_complexity_key_collision.py"],
+      "path": "scripts/ci/test_wait_for_api_ready.py",
+      "intent": "Stdlib-only unit tests for the readiness utility (no FastAPI/uvicorn deps)",
+      "scan_targets": ["scripts/ci/test_wait_for_api_ready.py"],
       "risk": "low",
       "behavior_change": "none - test-only"
+    },
+    {
+      "path": "scripts/smoke/run_api_smoke_posts.sh",
+      "intent": "Readiness-gated smoke: log capture, PID, trap cleanup, utility instead of sleep 4",
+      "scan_targets": ["scripts/smoke/run_api_smoke_posts.sh"],
+      "risk": "low",
+      "behavior_change": "none - CI smoke harness only"
+    },
+    {
+      "path": ".github/workflows/api_tests.yml",
+      "intent": "Boot API via the shared utility (paths /health,/api/health) + log upload on failure",
+      "scan_targets": [".github/workflows/api_tests.yml"],
+      "risk": "low",
+      "behavior_change": "none - CI workflow only"
+    },
+    {
+      "path": ".github/workflows/core_ci.yml",
+      "intent": "Both Boot API loops -> shared utility + per-job uvicorn-log upload on failure",
+      "scan_targets": [".github/workflows/core_ci.yml"],
+      "risk": "low",
+      "behavior_change": "none - CI workflow only"
+    },
+    {
+      "path": ".github/workflows/api_health_check.yml",
+      "intent": "Readiness gate before the POST smoke (separate readiness vs endpoint behavior) + uvicorn-log upload",
+      "scan_targets": [".github/workflows/api_health_check.yml"],
+      "risk": "low",
+      "behavior_change": "none - CI workflow only"
+    },
+    {
+      "path": ".github/workflows/api_health_and_smoke.yml",
+      "intent": "Inherit readiness via make api-smoke-posts + upload uvicorn.log on failure",
+      "scan_targets": [".github/workflows/api_health_and_smoke.yml"],
+      "risk": "low",
+      "behavior_change": "none - CI workflow only"
     }
   ]
 }
