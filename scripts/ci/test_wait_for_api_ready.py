@@ -23,13 +23,14 @@ import wait_for_api_ready as mod  # noqa: E402
 
 
 class _Handler(BaseHTTPRequestHandler):
-    # Map path -> status code, set per-test on the server.
+    # Map path -> status code, and (optionally) path -> JSON body, per server.
     def do_GET(self):  # noqa: N802
         code = self.server.path_status.get(self.path, 404)  # type: ignore[attr-defined]
+        body = self.server.path_body.get(self.path, '{"status":"ok"}')  # type: ignore[attr-defined]
         self.send_response(code)
         self.send_header("Content-Type", "application/json")
         self.end_headers()
-        self.wfile.write(b'{"status":"ok"}')
+        self.wfile.write(body.encode("utf-8"))
 
     def log_message(self, *args):  # silence
         pass
@@ -38,9 +39,10 @@ class _Handler(BaseHTTPRequestHandler):
 class _Server:
     """Context-managed throwaway HTTP server on an ephemeral port."""
 
-    def __init__(self, path_status):
+    def __init__(self, path_status, path_body=None):
         self.httpd = HTTPServer(("127.0.0.1", 0), _Handler)
         self.httpd.path_status = path_status  # type: ignore[attr-defined]
+        self.httpd.path_body = path_body or {}  # type: ignore[attr-defined]
         self.port = self.httpd.server_address[1]
 
     def __enter__(self):
@@ -159,6 +161,73 @@ class WaitForReadyTests(unittest.TestCase):
             rc = mod.main(["--base-url", srv.base_url, "--paths", "/health",
                            "--timeout-seconds", "0.2", "--interval-seconds", "0.05"])
             self.assertEqual(rc, 1)
+
+
+class RequirementTests(unittest.TestCase):
+    """--require body assertion (issue #165: 200 is not enough on degraded boot)."""
+
+    def test_parse_requirement_variants(self):
+        self.assertIsNone(mod.parse_requirement(None))
+        self.assertIsNone(mod.parse_requirement(""))
+        self.assertEqual(mod.parse_requirement("routers.loaded>0"), ("routers.loaded", ">", 0))
+        self.assertEqual(mod.parse_requirement("routers.failed==0"), ("routers.failed", "==", 0))
+        self.assertEqual(mod.parse_requirement("status=='healthy'"), ("status", "==", "healthy"))
+        self.assertEqual(mod.parse_requirement("x>=1.5"), ("x", ">=", 1.5))
+        with self.assertRaises(ValueError):
+            mod.parse_requirement("routers.loaded")  # no operator
+        with self.assertRaises(ValueError):
+            mod.parse_requirement(">0")  # no key
+
+    def test_compare_numeric_and_string(self):
+        self.assertTrue(mod._compare(5, ">", 0))
+        self.assertFalse(mod._compare(0, ">", 0))
+        self.assertTrue(mod._compare(0, "==", 0))
+        self.assertTrue(mod._compare("0", "==", 0))         # numeric-coerced equality
+        self.assertTrue(mod._compare("healthy", "==", "healthy"))
+        self.assertTrue(mod._compare("degraded", "!=", "healthy"))
+        self.assertFalse(mod._compare("healthy", ">", 0))    # non-numeric ordering -> False
+
+    def test_check_requirement_cases(self):
+        ok, _ = mod.check_requirement('{"routers":{"loaded":50}}', ("routers.loaded", ">", 0))
+        self.assertTrue(ok)
+        ok, detail = mod.check_requirement('{"routers":{"loaded":0}}', ("routers.loaded", ">", 0))
+        self.assertFalse(ok); self.assertIn("got 0", detail)
+        ok, detail = mod.check_requirement('{"routers":{}}', ("routers.loaded", ">", 0))
+        self.assertFalse(ok); self.assertIn("missing", detail)
+        ok, detail = mod.check_requirement("not json", ("routers.loaded", ">", 0))
+        self.assertFalse(ok); self.assertIn("not JSON", detail)
+        # No requirement -> always ok.
+        self.assertEqual(mod.check_requirement('{"x":1}', None), (True, ""))
+
+    def test_require_gates_degraded_boot(self):
+        # 200 but routers.loaded==0 (degraded boot) must NOT be treated as ready.
+        with _Server({"/api/health": 200},
+                     {"/api/health": '{"status":"degraded","routers":{"loaded":0,"failed":7}}'}) as srv:
+            with self.assertRaises(mod.ReadinessError) as ctx:
+                mod.wait_for_ready(
+                    srv.base_url, ["/api/health"],
+                    timeout_seconds=0.3, interval_seconds=0.05,
+                    requirement=("routers.loaded", ">", 0),
+                )
+            status, note = ctx.exception.last["/api/health"]
+            self.assertEqual(status, 200)            # got a 200...
+            self.assertIn("routers.loaded>0", note)  # ...but the body gate failed
+
+    def test_require_passes_on_healthy_boot(self):
+        with _Server({"/api/health": 200},
+                     {"/api/health": '{"status":"healthy","routers":{"loaded":120,"failed":0}}'}) as srv:
+            path = mod.wait_for_ready(
+                srv.base_url, ["/api/health"],
+                timeout_seconds=5, interval_seconds=0.05,
+                requirement=("routers.loaded", ">", 0),
+            )
+            self.assertEqual(path, "/api/health")
+
+    def test_degraded_failure_output_names_the_gate(self):
+        last = {"/api/health": (200, "require routers.loaded>0: got 0")}
+        err = mod.ReadinessError("timed out after 1s waiting for readiness", last)
+        out = mod._format_failure("http://127.0.0.1:8000", err, None)
+        self.assertIn("HTTP 200 — require routers.loaded>0: got 0", out)
 
 
 if __name__ == "__main__":

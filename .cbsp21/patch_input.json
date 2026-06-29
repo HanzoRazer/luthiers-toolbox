@@ -2,10 +2,10 @@
   "schema": "cbsp21_patch_input_v1",
   "schema_version": "cbsp21_patch_input_v1",
   "coverage_min": 0.95,
-  "patch_id": "CI_RED_020A_API_READINESS_SMOKE",
-  "title": "CI-RED-020-A: shared API readiness harness + diagnostic boot witness",
-  "intent": "CI smoke/server-readiness boot loops ended in a bare 'connection refused'/'server not up', masking the real startup cause and making failures look like flakes. Add a stdlib-only readiness utility (poll health paths, fail fast on uvicorn early-exit, print attempted paths + uvicorn log tail) and route the primary smoke workflows through it. CI/governance plumbing only; no product behavior change, no runtime path or endpoint semantics touched. Does not weaken startup validation and does not set RMOS_STRICT_STARTUP=0.",
-  "change_type": "chore",
+  "patch_id": "ISSUE_165_READINESS_DEGRADED_BOOT",
+  "title": "Readiness probe gates on router-load, not just HTTP 200 (issue #165)",
+  "intent": "Issue #165: the readiness harness lied on a degraded boot. /health returns HTTP 200 with zero checks, and /api/health returns HTTP 200 even when routers fail to load (degradation is only a body field). So an HTTP-200-only readiness check passed on a boot where routers did not load, and api_tests probed /health first (a do-nothing 200) which short-circuited any router signal. Add an optional --require JSON body assertion to the shared utility and gate the router-dependent jobs on /api/health with routers.loaded>0. CI/governance plumbing only; no product behavior change, no endpoint semantics changed, no startup validation weakened.",
+  "change_type": "fix",
   "behavior_change": "none",
   "risk_level": "low",
   "scope": {
@@ -22,69 +22,62 @@
       ".github/workflows/api_tests.yml",
       ".github/workflows/core_ci.yml",
       ".github/workflows/api_health_check.yml",
-      ".github/workflows/api_health_and_smoke.yml",
       ".cbsp21/patch_input.json"
     ]
   },
   "diff_articulation": {
-    "what_changed": "(1) scripts/ci/wait_for_api_ready.py (new): stdlib-only readiness probe. Polls comma-separated health paths until one returns HTTP 200; if a uvicorn PID file is supplied and the process exits, fails immediately instead of waiting out the timeout; on failure prints attempted URLs, last status/exception per path, and the uvicorn log tail; reports which path became ready. (2) scripts/ci/test_wait_for_api_ready.py (new): stdlib-only unit tests (real http.server + monkeypatch) covering success, multi-path fallback (404 and connection failure), timeout, dead-PID fail-fast, failure-output-with-log-tail, exit codes, and no-third-party-imports. (3) scripts/smoke/run_api_smoke_posts.sh: capture uvicorn stdout/stderr to uvicorn.log, write a PID file, replace fixed sleep 4 with the readiness utility, add trap-based cleanup on success AND failure; readiness and POST-smoke are now separate. (4) api_tests.yml / core_ci.yml (both Boot API jobs) / api_health_check.yml: replace inline boot loops / sleep 3 with the shared utility, with log capture + PID + uvicorn-log upload on failure; readiness checked before endpoint behavior. (5) api_health_and_smoke.yml: keep make api-smoke-posts (inherits the updated script) + upload uvicorn.log on failure.",
-    "why_not_redundant": "This replaces fixed sleeps and bespoke per-workflow curl loops with one shared, tested utility that turns an opaque 'connection refused' into a named startup witness (uvicorn exit + log tail visible in job logs/artifacts). It is not a cosmetic refactor: the diagnostic + fail-fast behavior is new, and standardizing the boot step across workflows is the point. Startup validation is unchanged and not weakened."
+    "what_changed": "(1) wait_for_api_ready.py: probe() now also returns the response body; new optional --require 'dotted.key OP value' (ops ==,!=,>=,<=,>,<) is parsed (parse_requirement) and evaluated against the JSON body (check_requirement) so a 200 only counts as ready if the body assertion also holds; the failure witness now prints the failed-gate reason alongside the 200 (e.g. 'HTTP 200 - require routers.loaded>0: got 0'). Backward compatible: with no --require, behavior is unchanged (200 = ready). (2) test_wait_for_api_ready.py: +6 tests (parse variants, _compare numeric/string, check_requirement cases, degraded-boot gated NOT ready, healthy boot ready, failure-output names the gate) — 15 total, stdlib-only. (3) run_api_smoke_posts.sh + api_tests.yml + core_ci.yml (both Boot API jobs) + api_health_check.yml: probe /api/health with --require 'routers.loaded>0' (quoted so the shell does not treat > as redirection) and drop the /health-first ordering that let the zero-check endpoint short-circuit router gating.",
+    "why_not_redundant": "An HTTP-200-only readiness check is structurally blind to a degraded boot: neither /health nor /api/health returns a non-200 when routers fail. This makes 'ready' mean 'routers actually loaded', not merely 'ASGI app serving'. routers.loaded>0 is the false-negative-proof floor (a normal multi-router CI boot has loaded>0, proven by #164's router-dependent jobs passing; a total router-load collapse has loaded==0) and catches the #165 catastrophic case; the utility's --require is general so tightening to routers.failed==0 is a one-line change once a clean-boot failed count is confirmed on CI. Endpoint semantics are untouched (Option C, per the dev order's guardrail against changing health endpoints)."
   },
   "verification": {
     "commands_run": [
-      "python scripts/ci/test_wait_for_api_ready.py -> 9 passed (success, 404 fallback, connection-fail fallback, timeout, dead-PID fail-fast, failure-output+log-tail, no-3rd-party-imports, main exit 0/1)",
-      "yaml.safe_load of the 4 touched workflows -> all parse OK",
-      "bash -n scripts/smoke/run_api_smoke_posts.sh -> OK",
-      "note: full real-app boot witness is on Ubuntu CI (local Windows venv app import exceeds 2 min); utility logic is witnessed locally against a real stdlib http.server"
+      "python scripts/ci/test_wait_for_api_ready.py -> 15 passed (9 prior + 6 new require tests incl. degraded-boot gated NOT ready, healthy boot ready)",
+      "yaml.safe_load of api_tests/core_ci/api_health_check workflows -> parse OK",
+      "bash -n scripts/smoke/run_api_smoke_posts.sh -> OK; --require value single-quoted so > is not shell redirection",
+      "parse_requirement('routers.loaded>0') -> ('routers.loaded','>',0)",
+      "note: real-app degraded-vs-healthy boot is an Ubuntu-CI witness (local Windows app import exceeds 2 min); the gate logic is witnessed locally against a stdlib http.server returning degraded/healthy bodies"
     ]
   },
   "files": [
     {
       "path": "scripts/ci/wait_for_api_ready.py",
-      "intent": "New stdlib-only readiness probe with diagnostic witness and uvicorn early-exit detection",
+      "intent": "Add optional --require JSON body assertion so a 200 on a degraded boot (routers.loaded==0) is not treated as ready; backward compatible without it",
       "scan_targets": ["scripts/ci/wait_for_api_ready.py"],
       "risk": "low",
-      "behavior_change": "none - CI tooling only; no product/runtime path"
+      "behavior_change": "none - CI tooling only; default behavior unchanged when --require absent"
     },
     {
       "path": "scripts/ci/test_wait_for_api_ready.py",
-      "intent": "Stdlib-only unit tests for the readiness utility (no FastAPI/uvicorn deps)",
+      "intent": "Cover --require parsing/comparison/evaluation and the degraded-boot gating",
       "scan_targets": ["scripts/ci/test_wait_for_api_ready.py"],
       "risk": "low",
       "behavior_change": "none - test-only"
     },
     {
       "path": "scripts/smoke/run_api_smoke_posts.sh",
-      "intent": "Readiness-gated smoke: log capture, PID, trap cleanup, utility instead of sleep 4",
+      "intent": "Gate readiness on /api/health routers.loaded>0",
       "scan_targets": ["scripts/smoke/run_api_smoke_posts.sh"],
       "risk": "low",
       "behavior_change": "none - CI smoke harness only"
     },
     {
       "path": ".github/workflows/api_tests.yml",
-      "intent": "Boot API via the shared utility (paths /health,/api/health) + log upload on failure",
+      "intent": "Probe /api/health with routers.loaded>0; drop /health-first short-circuit",
       "scan_targets": [".github/workflows/api_tests.yml"],
       "risk": "low",
       "behavior_change": "none - CI workflow only"
     },
     {
       "path": ".github/workflows/core_ci.yml",
-      "intent": "Both Boot API loops -> shared utility + per-job uvicorn-log upload on failure",
+      "intent": "Both Boot API jobs gate on /api/health routers.loaded>0",
       "scan_targets": [".github/workflows/core_ci.yml"],
       "risk": "low",
       "behavior_change": "none - CI workflow only"
     },
     {
       "path": ".github/workflows/api_health_check.yml",
-      "intent": "Readiness gate before the POST smoke (separate readiness vs endpoint behavior) + uvicorn-log upload",
+      "intent": "Readiness gate on /api/health routers.loaded>0 before the POST smoke",
       "scan_targets": [".github/workflows/api_health_check.yml"],
-      "risk": "low",
-      "behavior_change": "none - CI workflow only"
-    },
-    {
-      "path": ".github/workflows/api_health_and_smoke.yml",
-      "intent": "Inherit readiness via make api-smoke-posts + upload uvicorn.log on failure",
-      "scan_targets": [".github/workflows/api_health_and_smoke.yml"],
       "risk": "low",
       "behavior_change": "none - CI workflow only"
     }

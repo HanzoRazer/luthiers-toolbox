@@ -33,6 +33,7 @@ Exit codes:
 from __future__ import annotations
 
 import argparse
+import json
 import os
 import sys
 import time
@@ -40,7 +41,9 @@ import urllib.error
 import urllib.request
 from typing import Callable, Dict, List, Optional, Tuple
 
-# (status_code, error_repr) — exactly one is non-None per probe.
+# Recorded per path in ReadinessError.last: (status_code, note). For a transport
+# failure status is None and note is the error repr; for a 200 that fails an
+# optional body requirement, status is 200 and note explains the failed check.
 ProbeResult = Tuple[Optional[int], Optional[str]]
 
 
@@ -53,17 +56,93 @@ class ReadinessError(Exception):
         self.last = last
 
 
-def probe(url: str, timeout: float) -> ProbeResult:
-    """Return (status_code, None) on any HTTP response, or (None, error) on a
-    transport failure (e.g. connection refused). A non-200 status is returned as
-    a code, not an error, so the caller can keep trying other paths."""
+def probe(url: str, timeout: float) -> Tuple[Optional[int], Optional[str], Optional[str]]:
+    """Return (status_code, error_repr, body_text). On any HTTP response, status
+    and body are set (error None); on a transport failure (connection refused,
+    timeout) status/body are None and error is the exception repr. A non-200
+    status is returned as a code, not an error, so the caller can keep trying."""
     try:
         with urllib.request.urlopen(url, timeout=timeout) as resp:  # noqa: S310 (local CI URL)
-            return getattr(resp, "status", resp.getcode()), None
+            status = getattr(resp, "status", resp.getcode())
+            body = resp.read(65536).decode("utf-8", "replace")
+            return status, None, body
     except urllib.error.HTTPError as exc:
-        return exc.code, None
+        return exc.code, None, None
     except Exception as exc:  # URLError, socket.timeout, etc.
-        return None, repr(exc)
+        return None, repr(exc), None
+
+
+# --- optional JSON body requirement ("200 is not enough") --------------------
+# A 200 only proves the ASGI app is serving; e.g. /health returns 200 with no
+# checks at all, and /api/health returns 200 even on a degraded boot where
+# routers failed to load. An optional requirement lets readiness also assert a
+# field in the JSON body (e.g. routers.loaded>0) before counting a path ready.
+
+_OPS = ("==", "!=", ">=", "<=", ">", "<")
+
+
+def _coerce(value: str):
+    value = value.strip()
+    for caster in (int, float):
+        try:
+            return caster(value)
+        except ValueError:
+            pass
+    if len(value) >= 2 and value[0] == value[-1] and value[0] in "\"'":
+        return value[1:-1]
+    return value
+
+
+def parse_requirement(spec: Optional[str]):
+    """Parse 'dotted.key OP value' (e.g. 'routers.loaded>0') -> (key, op, value).
+    Returns None for a falsy spec; raises ValueError on a malformed spec."""
+    if not spec:
+        return None
+    for op in _OPS:
+        idx = spec.find(op)
+        if idx != -1:
+            key = spec[:idx].strip()
+            if not key:
+                raise ValueError(f"--require missing key in {spec!r}")
+            return (key, op, _coerce(spec[idx + len(op):]))
+    raise ValueError(f"--require must contain one of {_OPS}: {spec!r}")
+
+
+def _compare(actual, op: str, expected) -> bool:
+    def num(x):
+        if isinstance(x, bool):
+            return None  # don't coerce bools into numbers
+        try:
+            return float(x)
+        except (TypeError, ValueError):
+            return None
+
+    an, en = num(actual), num(expected)
+    if op in (">", "<", ">=", "<="):
+        if an is None or en is None:
+            return False
+        return {">": an > en, "<": an < en, ">=": an >= en, "<=": an <= en}[op]
+    equal = (an == en) if (an is not None and en is not None) else (str(actual) == str(expected))
+    return equal if op == "==" else not equal
+
+
+def check_requirement(body_text: Optional[str], requirement) -> Tuple[bool, str]:
+    """Evaluate a parsed requirement against a JSON body -> (ok, detail)."""
+    if requirement is None:
+        return True, ""
+    key, op, expected = requirement
+    try:
+        data = json.loads(body_text) if body_text else None
+    except (ValueError, TypeError):
+        return False, f"require {key}{op}{expected}: body is not JSON"
+    cur = data
+    for part in key.split("."):
+        if not isinstance(cur, dict) or part not in cur:
+            return False, f"require {key}{op}{expected}: key '{key}' missing"
+        cur = cur[part]
+    if _compare(cur, op, expected):
+        return True, ""
+    return False, f"require {key}{op}{expected}: got {cur!r}"
 
 
 def read_pid(pid_file: Optional[str]) -> Optional[int]:
@@ -127,12 +206,14 @@ def wait_for_ready(
     timeout_seconds: float,
     interval_seconds: float,
     pid_file: Optional[str] = None,
+    requirement=None,
     *,
     clock: Callable[[], float] = time.monotonic,
     sleep: Callable[[float], None] = time.sleep,
 ) -> str:
-    """Poll paths until one returns 200; return that path. Raise ReadinessError
-    on dead-process or timeout. clock/sleep are injectable for tests."""
+    """Poll paths until one returns 200 (and satisfies the optional body
+    requirement); return that path. Raise ReadinessError on dead-process or
+    timeout. clock/sleep are injectable for tests."""
     base = base_url.rstrip("/")
     pid = read_pid(pid_file)
     max_probe_timeout = max(1.0, min(5.0, interval_seconds * 4))
@@ -150,10 +231,14 @@ def wait_for_ready(
                     f"timed out after {timeout_seconds}s waiting for readiness", last
                 )
             probe_timeout = max(0.1, min(max_probe_timeout, deadline - now))
-            status, err = probe(base + path, timeout=probe_timeout)
-            last[path] = (status, err)
+            status, err, body = probe(base + path, timeout=probe_timeout)
             if status == 200:
-                return path
+                ok, detail = check_requirement(body, requirement)
+                last[path] = (status, None if ok else detail)
+                if ok:
+                    return path
+            else:
+                last[path] = (status, err)
 
             # Fail fast if the server process is already gone.
             if pid is not None and not process_alive(pid):
@@ -167,7 +252,10 @@ def _format_failure(base_url: str, err: ReadinessError, log_file: Optional[str])
     base = base_url.rstrip("/")
     lines = [f"API READINESS FAILED: {err.reason}", "Attempted paths:"]
     for path, (status, error) in err.last.items():
-        detail = f"HTTP {status}" if status is not None else f"error {error}"
+        if status is not None:
+            detail = f"HTTP {status}" + (f" — {error}" if error else "")
+        else:
+            detail = f"error {error}"
         lines.append(f"  {base + path} -> {detail}")
     lines.append("--- uvicorn log tail ---")
     lines.append(tail_file(log_file))
@@ -187,11 +275,24 @@ def main(argv: Optional[List[str]] = None) -> int:
     parser.add_argument("--interval-seconds", type=float, default=0.5)
     parser.add_argument("--pid-file", default=None)
     parser.add_argument("--log-file", default=None)
+    parser.add_argument(
+        "--require",
+        default=None,
+        help="Optional JSON body assertion a 200 must also satisfy to count as "
+        "ready, e.g. 'routers.loaded>0'. A 200 that fails the assertion (e.g. a "
+        "degraded boot where routers did not load) is treated as not-ready.",
+    )
     args = parser.parse_args(argv)
 
     paths = [p.strip() for p in args.paths.split(",") if p.strip()]
     if not paths:
         print("ERROR: --paths produced no usable paths", file=sys.stderr)
+        return 2
+
+    try:
+        requirement = parse_requirement(args.require)
+    except ValueError as exc:
+        print(f"ERROR: {exc}", file=sys.stderr)
         return 2
 
     try:
@@ -201,12 +302,14 @@ def main(argv: Optional[List[str]] = None) -> int:
             args.timeout_seconds,
             args.interval_seconds,
             pid_file=args.pid_file,
+            requirement=requirement,
         )
     except ReadinessError as err:
         print(_format_failure(args.base_url, err, args.log_file), file=sys.stderr)
         return 1
 
-    print(f"API ready: {args.base_url.rstrip('/') + ready_path} returned HTTP 200")
+    suffix = f" satisfying {args.require}" if args.require else ""
+    print(f"API ready: {args.base_url.rstrip('/') + ready_path} returned HTTP 200{suffix}")
     return 0
 
 
