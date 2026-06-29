@@ -2,91 +2,79 @@
   "schema": "cbsp21_patch_input_v1",
   "schema_version": "cbsp21_patch_input_v1",
   "coverage_min": 0.95,
-  "patch_id": "CI_RED_020A_API_READINESS_SMOKE",
-  "title": "CI-RED-020-A: shared API readiness harness + diagnostic boot witness",
-  "intent": "CI smoke/server-readiness boot loops ended in a bare 'connection refused'/'server not up', masking the real startup cause and making failures look like flakes. Add a stdlib-only readiness utility (poll health paths, fail fast on uvicorn early-exit, print attempted paths + uvicorn log tail) and route the primary smoke workflows through it. CI/governance plumbing only; no product behavior change, no runtime path or endpoint semantics touched. Does not weaken startup validation and does not set RMOS_STRICT_STARTUP=0.",
-  "change_type": "chore",
+  "patch_id": "CI_RED_015K_ENDPOINT_RATCHET_REBASELINE",
+  "title": "Rebaseline endpoint/duplicate-route ratchets + fix API Tests collection abort (CI-RED-015-K)",
+  "intent": "Two CI/test-bookkeeping fixes, both surfaced while rebaselining the CI-RED-015 tail (branched off 9c9406f6, merged up to current main fcf10905). (1) Endpoint/duplicate-route debt ratchets in test_technical_debt_gates.py drifted red on main independent of any PR (router-consolidation merges); re-declare at exact current count. (2) #163 made app/ci/check_complexity.py sys.exit(2) at import when radon is absent, and added a test importing it; the API Tests job has no radon, so collection aborted with INTERNALERROR (whole job red since #163, confirmed by base-comparison). Make the module import-safe, skip the guard test when radon is absent, and install radon in the api-tests job so the guard actually runs. No production runtime code, no routes. (CI-RED-015-K body-solver/IBG slice is already green via #158/#160/#161/#163 — no fix needed there.)",
+  "change_type": "fix",
   "behavior_change": "none",
   "risk_level": "low",
   "scope": {
     "paths_in_scope": [
       ".cbsp21/",
-      "scripts/ci/",
-      "scripts/smoke/",
-      ".github/workflows/"
+      ".github/workflows/",
+      "services/api/app/ci/",
+      "services/api/tests/",
+      "services/api/metrics/"
     ],
     "files_expected_to_change": [
-      "scripts/ci/wait_for_api_ready.py",
-      "scripts/ci/test_wait_for_api_ready.py",
-      "scripts/smoke/run_api_smoke_posts.sh",
-      ".github/workflows/api_tests.yml",
+      "services/api/tests/test_technical_debt_gates.py",
+      "services/api/metrics/debt_history.json",
+      "services/api/app/ci/check_complexity.py",
+      "services/api/tests/test_complexity_key_collision.py",
       ".github/workflows/core_ci.yml",
-      ".github/workflows/api_health_check.yml",
-      ".github/workflows/api_health_and_smoke.yml",
       ".cbsp21/patch_input.json"
     ]
   },
   "diff_articulation": {
-    "what_changed": "(1) scripts/ci/wait_for_api_ready.py (new): stdlib-only readiness probe. Polls comma-separated health paths until one returns HTTP 200; if a uvicorn PID file is supplied and the process exits, fails immediately instead of waiting out the timeout; on failure prints attempted URLs, last status/exception per path, and the uvicorn log tail; reports which path became ready. (2) scripts/ci/test_wait_for_api_ready.py (new): stdlib-only unit tests (real http.server + monkeypatch) covering success, multi-path fallback (404 and connection failure), timeout, dead-PID fail-fast, failure-output-with-log-tail, exit codes, and no-third-party-imports. (3) scripts/smoke/run_api_smoke_posts.sh: capture uvicorn stdout/stderr to uvicorn.log, write a PID file, replace fixed sleep 4 with the readiness utility, add trap-based cleanup on success AND failure; readiness and POST-smoke are now separate. (4) api_tests.yml / core_ci.yml (both Boot API jobs) / api_health_check.yml: replace inline boot loops / sleep 3 with the shared utility, with log capture + PID + uvicorn-log upload on failure; readiness checked before endpoint behavior. (5) api_health_and_smoke.yml: keep make api-smoke-posts (inherits the updated script) + upload uvicorn.log on failure.",
-    "why_not_redundant": "This replaces fixed sleeps and bespoke per-workflow curl loops with one shared, tested utility that turns an opaque 'connection refused' into a named startup witness (uvicorn exit + log tail visible in job logs/artifacts). It is not a cosmetic refactor: the diagnostic + fail-fast behavior is new, and standardizing the boot step across workflows is the point. Startup validation is unchanged and not weakened."
+    "what_changed": "(1) test_technical_debt_gates.py: TARGET_MAX_ENDPOINTS 1185->1220, TARGET_MAX_DUPLICATE_ROUTES 123->128 (exact measured current counts). (2) metrics/debt_history.json: append a current-counts snapshot so test_endpoints_not_increasing re-baselines off current reality. (3) app/ci/check_complexity.py: on radon ImportError set cc_visit=None instead of sys.exit(2), so importing the module never exits; defer the missing-radon failure to check_complexity()/main() (raise / return 2). (4) test_complexity_key_collision.py: pytest.importorskip('radon') before importing the gate (defense if radon is ever absent). (5) core_ci.yml: install radon in the api-tests job so that guard test actually runs in CI (radon stays out of requirements.txt to keep the deployed image lean; the geometry-parity job runs no pytest and is unchanged). NOTE: merged current main (fcf10905, #164/CI-RED-020-A) in; core_ci.yml auto-merged so this radon install coexists with 020-A's readiness boot step.",
+    "why_not_redundant": "The ratchet reds and the INTERNALERROR are both pre-existing main-state drift/regressions (this branch makes no app/route change); confirmed via base-comparison that main's API Tests aborts identically. Re-baselining is the gate's designed maintenance path. The import-safety fix is root-cause: a CI-script module must never sys.exit at import or any importer (here a test) kills the whole pytest collection in an environment lacking radon. Overlaps the still-open #167 (importorskip-only); this PR supersedes it by also installing radon so the guard runs rather than silently skipping."
   },
   "verification": {
     "commands_run": [
-      "python scripts/ci/test_wait_for_api_ready.py -> 9 passed (success, 404 fallback, connection-fail fallback, timeout, dead-PID fail-fast, failure-output+log-tail, no-3rd-party-imports, main exit 0/1)",
-      "yaml.safe_load of the 4 touched workflows -> all parse OK",
-      "bash -n scripts/smoke/run_api_smoke_posts.sh -> OK",
-      "note: full real-app boot witness is on Ubuntu CI (local Windows venv app import exceeds 2 min); utility logic is witnessed locally against a real stdlib http.server"
+      "narrow body-solver/IBG witness (dev-order primary target): 15 passed -> slice already green, no fix needed",
+      "body-solver route-mount witness: all four /api/body/... routes mounted",
+      "measured current debt counts: endpoints=1220, duplicate=128, large_files=99, god_objects=15, bare_except=6",
+      "radon-absent simulation: import OK (cc_visit=None), main() returns 2 (no SystemExit at import)",
+      "test_complexity_key_collision.py with radon present: 2 passed; complexity gate: OK exit 0",
+      "base-comparison: main 9c9406f6/fcf10905 API Tests INTERNALERROR identical (check_complexity.py radon import) -> pre-existing regression from #163; import-safety clears the abort (15 failed / 7393 passed on the branch, vs total collection abort on main)",
+      "full suite witnessed by CI (7484 serial tests impractical locally)"
     ]
   },
   "files": [
     {
-      "path": "scripts/ci/wait_for_api_ready.py",
-      "intent": "New stdlib-only readiness probe with diagnostic witness and uvicorn early-exit detection",
-      "scan_targets": ["scripts/ci/wait_for_api_ready.py"],
+      "path": "services/api/tests/test_technical_debt_gates.py",
+      "intent": "Rebaseline TARGET_MAX_ENDPOINTS 1185->1220 and TARGET_MAX_DUPLICATE_ROUTES 123->128 to current measured counts",
+      "scan_targets": ["services/api/tests/test_technical_debt_gates.py"],
       "risk": "low",
-      "behavior_change": "none - CI tooling only; no product/runtime path"
+      "behavior_change": "none - debt-gate target constants only"
     },
     {
-      "path": "scripts/ci/test_wait_for_api_ready.py",
-      "intent": "Stdlib-only unit tests for the readiness utility (no FastAPI/uvicorn deps)",
-      "scan_targets": ["scripts/ci/test_wait_for_api_ready.py"],
+      "path": "services/api/metrics/debt_history.json",
+      "intent": "Append current-counts snapshot so the no-increase ratchet re-baselines off current reality",
+      "scan_targets": ["services/api/metrics/debt_history.json"],
       "risk": "low",
-      "behavior_change": "none - test-only"
+      "behavior_change": "none - metrics history data only"
     },
     {
-      "path": "scripts/smoke/run_api_smoke_posts.sh",
-      "intent": "Readiness-gated smoke: log capture, PID, trap cleanup, utility instead of sleep 4",
-      "scan_targets": ["scripts/smoke/run_api_smoke_posts.sh"],
+      "path": "services/api/app/ci/check_complexity.py",
+      "intent": "Make the module import-safe when radon is absent (cc_visit=None) instead of sys.exit(2) at import; defer the failure to use",
+      "scan_targets": ["services/api/app/ci/check_complexity.py", "services/api/tests/test_complexity_key_collision.py"],
       "risk": "low",
-      "behavior_change": "none - CI smoke harness only"
+      "behavior_change": "none - CLI/gate behavior with radon present is unchanged; only the no-radon import path changes from process-exit to graceful deferral"
     },
     {
-      "path": ".github/workflows/api_tests.yml",
-      "intent": "Boot API via the shared utility (paths /health,/api/health) + log upload on failure",
-      "scan_targets": [".github/workflows/api_tests.yml"],
+      "path": "services/api/tests/test_complexity_key_collision.py",
+      "intent": "Skip the guard test when radon is absent (pytest.importorskip) so the API Tests job collects",
+      "scan_targets": ["services/api/tests/test_complexity_key_collision.py"],
       "risk": "low",
-      "behavior_change": "none - CI workflow only"
+      "behavior_change": "none - test-only skip guard"
     },
     {
       "path": ".github/workflows/core_ci.yml",
-      "intent": "Both Boot API loops -> shared utility + per-job uvicorn-log upload on failure",
+      "intent": "Install radon in the api-tests job so the complexity-key collision guard test actually runs in CI (radon kept out of requirements.txt to keep the deployed image lean)",
       "scan_targets": [".github/workflows/core_ci.yml"],
       "risk": "low",
-      "behavior_change": "none - CI workflow only"
-    },
-    {
-      "path": ".github/workflows/api_health_check.yml",
-      "intent": "Readiness gate before the POST smoke (separate readiness vs endpoint behavior) + uvicorn-log upload",
-      "scan_targets": [".github/workflows/api_health_check.yml"],
-      "risk": "low",
-      "behavior_change": "none - CI workflow only"
-    },
-    {
-      "path": ".github/workflows/api_health_and_smoke.yml",
-      "intent": "Inherit readiness via make api-smoke-posts + upload uvicorn.log on failure",
-      "scan_targets": [".github/workflows/api_health_and_smoke.yml"],
-      "risk": "low",
-      "behavior_change": "none - CI workflow only"
+      "behavior_change": "none - CI dependency install only (api-tests job; geometry-parity job unaffected, it runs no pytest)"
     }
   ]
 }

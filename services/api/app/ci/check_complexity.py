@@ -24,8 +24,12 @@ from typing import Any, Dict, List
 try:
     from radon.complexity import cc_visit
 except ImportError:
-    print("ERROR: radon not installed. Run: pip install radon")
-    sys.exit(2)
+    # radon is a CI-only dependency (installed by the debt-gates job, not in
+    # requirements.txt). Importing this module must NEVER exit the interpreter:
+    # doing so previously aborted the whole pytest collection in the API Tests
+    # job (which has no radon) the moment any test imported this module. Defer
+    # the missing-radon failure to actual use (check_complexity / main).
+    cc_visit = None
 
 
 def _repo_root() -> Path:
@@ -66,6 +70,9 @@ def check_complexity(
 
     Returns list of violations (empty if OK).
     """
+    if cc_visit is None:
+        raise RuntimeError("radon is required to run the complexity gate (pip install radon)")
+
     violations = []
     baseline_set = set()
 
@@ -116,6 +123,10 @@ def check_complexity(
 
 
 def main():
+    if cc_visit is None:
+        print("ERROR: radon not installed. Run: pip install radon")
+        return 2
+
     parser = argparse.ArgumentParser(description="Check cyclomatic complexity")
     parser.add_argument("--threshold", type=int, default=15, help="Max allowed complexity")
     parser.add_argument("--baseline", type=str, help="Baseline JSON file (ratchet mode)")
