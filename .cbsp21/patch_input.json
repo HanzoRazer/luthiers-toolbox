@@ -2,79 +2,84 @@
   "schema": "cbsp21_patch_input_v1",
   "schema_version": "cbsp21_patch_input_v1",
   "coverage_min": 0.95,
-  "patch_id": "CI_RED_015K_ENDPOINT_RATCHET_REBASELINE",
-  "title": "Rebaseline endpoint/duplicate-route ratchets + fix API Tests collection abort (CI-RED-015-K)",
-  "intent": "Two CI/test-bookkeeping fixes, both surfaced while rebaselining the CI-RED-015 tail (branched off 9c9406f6, merged up to current main fcf10905). (1) Endpoint/duplicate-route debt ratchets in test_technical_debt_gates.py drifted red on main independent of any PR (router-consolidation merges); re-declare at exact current count. (2) #163 made app/ci/check_complexity.py sys.exit(2) at import when radon is absent, and added a test importing it; the API Tests job has no radon, so collection aborted with INTERNALERROR (whole job red since #163, confirmed by base-comparison). Make the module import-safe, skip the guard test when radon is absent, and install radon in the api-tests job so the guard actually runs. No production runtime code, no routes. (CI-RED-015-K body-solver/IBG slice is already green via #158/#160/#161/#163 — no fix needed there.)",
+  "patch_id": "ISSUE_165_READINESS_DEGRADED_BOOT",
+  "title": "Readiness probe gates on router-load, not just HTTP 200 (issue #165)",
+  "intent": "Issue #165: the readiness harness lied on a degraded boot. /health returns HTTP 200 with zero checks, and /api/health returns HTTP 200 even when routers fail to load (degradation is only a body field). So an HTTP-200-only readiness check passed on a boot where routers did not load, and api_tests probed /health first (a do-nothing 200) which short-circuited any router signal. Add an optional --require JSON body assertion to the shared utility and gate the router-dependent jobs on /api/health with router_count>0. CI/governance plumbing only; no product behavior change, no endpoint semantics changed, no startup validation weakened.",
   "change_type": "fix",
   "behavior_change": "none",
   "risk_level": "low",
   "scope": {
     "paths_in_scope": [
       ".cbsp21/",
-      ".github/workflows/",
-      "services/api/app/ci/",
-      "services/api/tests/",
-      "services/api/metrics/"
+      "scripts/ci/",
+      "scripts/smoke/",
+      ".github/workflows/"
     ],
     "files_expected_to_change": [
-      "services/api/tests/test_technical_debt_gates.py",
-      "services/api/metrics/debt_history.json",
-      "services/api/app/ci/check_complexity.py",
-      "services/api/tests/test_complexity_key_collision.py",
+      "scripts/ci/wait_for_api_ready.py",
+      "scripts/ci/test_wait_for_api_ready.py",
+      "scripts/smoke/run_api_smoke_posts.sh",
+      ".github/workflows/api_tests.yml",
       ".github/workflows/core_ci.yml",
+      ".github/workflows/api_health_check.yml",
       ".cbsp21/patch_input.json"
     ]
   },
   "diff_articulation": {
-    "what_changed": "(1) test_technical_debt_gates.py: TARGET_MAX_ENDPOINTS 1185->1220, TARGET_MAX_DUPLICATE_ROUTES 123->128 (exact measured current counts). (2) metrics/debt_history.json: append a current-counts snapshot so test_endpoints_not_increasing re-baselines off current reality. (3) app/ci/check_complexity.py: on radon ImportError set cc_visit=None instead of sys.exit(2), so importing the module never exits; defer the missing-radon failure to check_complexity()/main() (raise / return 2). (4) test_complexity_key_collision.py: pytest.importorskip('radon') before importing the gate (defense if radon is ever absent). (5) core_ci.yml: install radon in the api-tests job so that guard test actually runs in CI (radon stays out of requirements.txt to keep the deployed image lean; the geometry-parity job runs no pytest and is unchanged). NOTE: merged current main (fcf10905, #164/CI-RED-020-A) in; core_ci.yml auto-merged so this radon install coexists with 020-A's readiness boot step.",
-    "why_not_redundant": "The ratchet reds and the INTERNALERROR are both pre-existing main-state drift/regressions (this branch makes no app/route change); confirmed via base-comparison that main's API Tests aborts identically. Re-baselining is the gate's designed maintenance path. The import-safety fix is root-cause: a CI-script module must never sys.exit at import or any importer (here a test) kills the whole pytest collection in an environment lacking radon. Overlaps the still-open #167 (importorskip-only); this PR supersedes it by also installing radon so the guard runs rather than silently skipping."
+    "what_changed": "(1) wait_for_api_ready.py: probe() now also returns the response body; new optional --require 'dotted.key OP value' (ops ==,!=,>=,<=,>,<) is parsed (parse_requirement) and evaluated against the JSON body (check_requirement) so a 200 only counts as ready if the body assertion also holds; the failure witness now prints the failed-gate reason alongside the 200 (e.g. 'HTTP 200 - require router_count>0: got 0'). Backward compatible: with no --require, behavior is unchanged (200 = ready). (2) test_wait_for_api_ready.py: +6 tests (parse variants, _compare numeric/string, check_requirement cases, degraded-boot gated NOT ready, healthy boot ready, failure-output names the gate) — 15 total, stdlib-only. (3) run_api_smoke_posts.sh + api_tests.yml + core_ci.yml (both Boot API jobs) + api_health_check.yml: probe /api/health with --require 'router_count>0' (quoted so the shell does not treat > as redirection) and drop the /health-first ordering that let the zero-check endpoint short-circuit router gating.",
+    "why_not_redundant": "An HTTP-200-only readiness check is structurally blind to a degraded boot: neither /health nor /api/health returns a non-200 when routers fail. This makes 'ready' mean 'routers actually loaded', not merely 'ASGI app serving'. The real /api/health is health_router's handler (mounted at prefix /api, shadowing main.py's), whose body exposes the loaded-router count as top-level router_count (plus router_errors). router_count>0 is the false-negative-proof floor (a normal multi-router CI boot has router_count>0, proven by #164's router-dependent jobs passing; a total router-load collapse has router_count==0) and catches the #165 catastrophic case; the utility's --require is general so a stricter gate is a one-line change once the clean-boot body is confirmed on CI. Endpoint semantics are untouched (Option C, per the dev order's guardrail against changing health endpoints)."
   },
   "verification": {
     "commands_run": [
-      "narrow body-solver/IBG witness (dev-order primary target): 15 passed -> slice already green, no fix needed",
-      "body-solver route-mount witness: all four /api/body/... routes mounted",
-      "measured current debt counts: endpoints=1220, duplicate=128, large_files=99, god_objects=15, bare_except=6",
-      "radon-absent simulation: import OK (cc_visit=None), main() returns 2 (no SystemExit at import)",
-      "test_complexity_key_collision.py with radon present: 2 passed; complexity gate: OK exit 0",
-      "base-comparison: main 9c9406f6/fcf10905 API Tests INTERNALERROR identical (check_complexity.py radon import) -> pre-existing regression from #163; import-safety clears the abort (15 failed / 7393 passed on the branch, vs total collection abort on main)",
-      "full suite witnessed by CI (7484 serial tests impractical locally)"
+      "python scripts/ci/test_wait_for_api_ready.py -> 15 passed (9 prior + 6 new require tests incl. degraded-boot gated NOT ready, healthy boot ready)",
+      "yaml.safe_load of api_tests/core_ci/api_health_check workflows -> parse OK",
+      "bash -n scripts/smoke/run_api_smoke_posts.sh -> OK; --require value single-quoted so > is not shell redirection",
+      "parse_requirement('router_count>0') -> ('router_count','>',0)",
+      "note: real-app degraded-vs-healthy boot is an Ubuntu-CI witness (local Windows app import exceeds 2 min); the gate logic is witnessed locally against a stdlib http.server returning degraded/healthy bodies"
     ]
   },
   "files": [
     {
-      "path": "services/api/tests/test_technical_debt_gates.py",
-      "intent": "Rebaseline TARGET_MAX_ENDPOINTS 1185->1220 and TARGET_MAX_DUPLICATE_ROUTES 123->128 to current measured counts",
-      "scan_targets": ["services/api/tests/test_technical_debt_gates.py"],
+      "path": "scripts/ci/wait_for_api_ready.py",
+      "intent": "Add optional --require JSON body assertion so a 200 on a degraded boot (router_count==0) is not treated as ready; backward compatible without it",
+      "scan_targets": ["scripts/ci/wait_for_api_ready.py"],
       "risk": "low",
-      "behavior_change": "none - debt-gate target constants only"
+      "behavior_change": "none - CI tooling only; default behavior unchanged when --require absent"
     },
     {
-      "path": "services/api/metrics/debt_history.json",
-      "intent": "Append current-counts snapshot so the no-increase ratchet re-baselines off current reality",
-      "scan_targets": ["services/api/metrics/debt_history.json"],
+      "path": "scripts/ci/test_wait_for_api_ready.py",
+      "intent": "Cover --require parsing/comparison/evaluation and the degraded-boot gating",
+      "scan_targets": ["scripts/ci/test_wait_for_api_ready.py"],
       "risk": "low",
-      "behavior_change": "none - metrics history data only"
+      "behavior_change": "none - test-only"
     },
     {
-      "path": "services/api/app/ci/check_complexity.py",
-      "intent": "Make the module import-safe when radon is absent (cc_visit=None) instead of sys.exit(2) at import; defer the failure to use",
-      "scan_targets": ["services/api/app/ci/check_complexity.py", "services/api/tests/test_complexity_key_collision.py"],
+      "path": "scripts/smoke/run_api_smoke_posts.sh",
+      "intent": "Gate readiness on /api/health router_count>0",
+      "scan_targets": ["scripts/smoke/run_api_smoke_posts.sh"],
       "risk": "low",
-      "behavior_change": "none - CLI/gate behavior with radon present is unchanged; only the no-radon import path changes from process-exit to graceful deferral"
+      "behavior_change": "none - CI smoke harness only"
     },
     {
-      "path": "services/api/tests/test_complexity_key_collision.py",
-      "intent": "Skip the guard test when radon is absent (pytest.importorskip) so the API Tests job collects",
-      "scan_targets": ["services/api/tests/test_complexity_key_collision.py"],
+      "path": ".github/workflows/api_tests.yml",
+      "intent": "Probe /api/health with router_count>0; drop /health-first short-circuit",
+      "scan_targets": [".github/workflows/api_tests.yml"],
       "risk": "low",
-      "behavior_change": "none - test-only skip guard"
+      "behavior_change": "none - CI workflow only"
     },
     {
       "path": ".github/workflows/core_ci.yml",
-      "intent": "Install radon in the api-tests job so the complexity-key collision guard test actually runs in CI (radon kept out of requirements.txt to keep the deployed image lean)",
+      "intent": "Both Boot API jobs gate on /api/health router_count>0",
       "scan_targets": [".github/workflows/core_ci.yml"],
       "risk": "low",
-      "behavior_change": "none - CI dependency install only (api-tests job; geometry-parity job unaffected, it runs no pytest)"
+      "behavior_change": "none - CI workflow only"
+    },
+    {
+      "path": ".github/workflows/api_health_check.yml",
+      "intent": "Readiness gate on /api/health router_count>0 before the POST smoke",
+      "scan_targets": [".github/workflows/api_health_check.yml"],
+      "risk": "low",
+      "behavior_change": "none - CI workflow only"
     }
   ]
 }

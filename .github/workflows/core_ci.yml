@@ -60,7 +60,8 @@ jobs:
           cd ../..
           python scripts/ci/wait_for_api_ready.py \
             --base-url http://127.0.0.1:8000 \
-            --paths /api/health,/health \
+            --paths /api/health \
+            --require 'router_count>0' \
             --timeout-seconds 60 \
             --pid-file /tmp/uvicorn.pid \
             --log-file /tmp/uvicorn.log
@@ -100,7 +101,8 @@ jobs:
           cd ../..
           python scripts/ci/wait_for_api_ready.py \
             --base-url http://127.0.0.1:8000 \
-            --paths /api/health,/health \
+            --paths /api/health \
+            --require 'router_count>0' \
             --timeout-seconds 60 \
             --pid-file /tmp/uvicorn.pid \
             --log-file /tmp/uvicorn.log
