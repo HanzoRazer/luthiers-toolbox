@@ -3,37 +3,47 @@
   "schema_version": "cbsp21_patch_input_v1",
   "coverage_min": 0.95,
   "patch_id": "CBSP21_RADON_IMPORTORSKIP_HOTFIX",
-  "title": "Hotfix: guard test_complexity_key_collision import behind radon (un-red main)",
-  "intent": "PR #164 added tests/test_complexity_key_collision.py, which imports app.ci.check_complexity at module top. That module calls sys.exit(2) at import time when radon is missing. radon is installed only for the debt-gate job, not for the general pytest environments (api-verify, Core CI), so importing it during pytest collection aborts the whole session with an INTERNALERROR. This greened the debt gates but red'd api-verify and Core CI on main. Fix: pytest.importorskip('radon') before the import so the module is skipped where radon is absent and runs where it is present. Test-only; no product behavior change, no runtime path touched.",
+  "title": "Hotfix: make check_complexity import-safe without radon (un-crash pytest collection)",
+  "intent": "test_complexity_key_collision.py (added in #163) imports app.ci.check_complexity at module top. That module did `try: from radon.complexity import cc_visit; except ImportError: sys.exit(2)` AT IMPORT time. radon is installed only for the debt-gate job, not for the general pytest environments (api-verify, Core CI), so importing it during pytest collection aborted the whole session with INTERNALERROR SystemExit:2 -- masking the entire suite. Root-cause fix: check_complexity imports radon LAZILY (inside check_complexity(), via _load_cc_visit), so importing the module never exits; the CLI main() maps the missing dependency to exit code 2 as before. The test additionally guards its bodies with pytest.importorskip('radon.complexity'). CI tooling only; no product/runtime path touched; CLI exit-code semantics preserved.",
   "change_type": "fix",
   "behavior_change": "none",
   "risk_level": "low",
   "scope": {
     "paths_in_scope": [
+      "services/api/app/ci/",
       "services/api/tests/",
       ".cbsp21/"
     ],
     "files_expected_to_change": [
+      "services/api/app/ci/check_complexity.py",
       "services/api/tests/test_complexity_key_collision.py",
       ".cbsp21/patch_input.json"
     ]
   },
   "diff_articulation": {
-    "what_changed": "test_complexity_key_collision.py: add `import pytest; pytest.importorskip('radon')` immediately before `from app.ci.check_complexity import check_complexity` (now `# noqa: E402`). When radon is installed (debt-gate job, local services/api/.venv) the test runs exactly as before; when radon is absent (api-verify, Core CI) the module is skipped at collection instead of crashing pytest with the module-level sys.exit(2) in check_complexity.py.",
-    "why_not_redundant": "Without this guard the suite cannot even be collected in any environment that lacks the dev-only radon dependency: check_complexity.py performs `try: from radon.complexity import cc_visit; except ImportError: sys.exit(2)` at import time, and the new test is the only collection-time importer of that module. importorskip converts the hard collection abort into a clean per-module skip, restoring api-verify and Core CI to green while preserving the collision-guard assertion wherever radon exists."
+    "what_changed": "check_complexity.py: replace the module-level `try: from radon.complexity import cc_visit; except ImportError: sys.exit(2)` with a lazy `_load_cc_visit()` (raises `_RadonMissing` if radon is absent) called inside check_complexity(); main() catches `_RadonMissing` and returns exit code 2. Importing the module no longer runs radon's import or sys.exit, so it is safe to import during pytest collection in any environment. test_complexity_key_collision.py: add `pytest.importorskip('radon.complexity')` before importing check_complexity (now `# noqa: E402`) to skip the radon-dependent test bodies where radon is absent. CLI behavior (exit 0 OK / 1 violations / 2 runtime error) is unchanged where radon is present.",
+    "why_not_redundant": "A module that calls sys.exit() at import time is collection-hostile: ANY importer lacking the dev-only radon dependency crashes the whole pytest session, not just this test. Guarding only the one test (an earlier iteration) would leave the trap armed for the next importer; moving the radon import to call time removes the trap at the source while preserving the CLI's exit-code contract. The importorskip guard remains because the test bodies genuinely exercise the radon-backed complexity walk."
   },
   "verification": {
     "commands_run": [
-      "services/api/.venv: pytest tests/test_complexity_key_collision.py -q -> 2 passed (radon present; behavior unchanged)",
-      "reasoning: with radon absent, module-level pytest.importorskip('radon') raises Skipped at collection, so the subsequent check_complexity import never executes and the suite collects cleanly",
-      "python scripts/ci/check_cbsp21_patch_input.py --base origin/main --head HEAD -> PASS (changed files declared in scope)",
-      "python scripts/ci/check_cbsp21_gate.py --manifest .cbsp21/patch_input.json --changed-files .cbsp21/patch_input.json services/api/tests/test_complexity_key_collision.py -> PASS (.cbsp21/ exempt; test file declared; coverage 100% >= 95%)"
+      "import check_complexity with radon forced absent -> imports cleanly, no SystemExit (collection-safe); _load_cc_visit and check_complexity present",
+      "services/api/.venv: pytest tests/test_complexity_key_collision.py -q -> 2 passed (radon present)",
+      "services/api/.venv: python -m app.ci.check_complexity --baseline app/ci/complexity_baseline.json --threshold 15 -> OK: No functions exceed complexity 15 (exit 0) -- CLI gate path unchanged",
+      "python scripts/ci/check_cbsp21_patch_input.py --base origin/main --head HEAD -> PASS",
+      "python scripts/ci/check_cbsp21_gate.py --manifest .cbsp21/patch_input.json --changed-files <changed> -> PASS (.cbsp21/ exempt; 2 code files declared; coverage 100% >= 95%)"
     ]
   },
   "files": [
     {
+      "path": "services/api/app/ci/check_complexity.py",
+      "intent": "Import radon lazily so importing the module never sys.exit()s; CLI maps missing radon to exit 2",
+      "scan_targets": ["services/api/app/ci/check_complexity.py"],
+      "risk": "low",
+      "behavior_change": "none"
+    },
+    {
       "path": "services/api/tests/test_complexity_key_collision.py",
-      "intent": "Guard the test import behind pytest.importorskip('radon') so collection does not crash where radon is absent",
+      "intent": "Guard the radon-dependent test bodies with pytest.importorskip('radon.complexity')",
       "scan_targets": ["services/api/tests/test_complexity_key_collision.py"],
       "risk": "low",
       "behavior_change": "none"

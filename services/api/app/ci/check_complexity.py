@@ -21,11 +21,28 @@ import sys
 from pathlib import Path
 from typing import Any, Dict, List
 
-try:
-    from radon.complexity import cc_visit
-except ImportError:
-    print("ERROR: radon not installed. Run: pip install radon")
-    sys.exit(2)
+class _RadonMissing(RuntimeError):
+    """radon (a dev-only dependency) is not installed in this environment."""
+
+
+def _load_cc_visit():
+    """Lazily import radon's cc_visit.
+
+    radon is a dev-only dependency installed for the debt-gate job but absent
+    from the general pytest environments (api-verify, Core CI). Import it at
+    call time, not module-import time, so that importing this module never
+    aborts the process — a top-level ``sys.exit(2)`` on ImportError used to
+    crash pytest collection for any importer that lacked radon. Callers that
+    actually need complexity analysis surface the failure via _RadonMissing;
+    the CLI ``main()`` maps that to exit code 2 (runtime error).
+    """
+    try:
+        from radon.complexity import cc_visit
+    except ImportError as exc:  # pragma: no cover - exercised only without radon
+        raise _RadonMissing(
+            "radon not installed. Run: pip install radon"
+        ) from exc
+    return cc_visit
 
 
 def _repo_root() -> Path:
@@ -66,6 +83,8 @@ def check_complexity(
 
     Returns list of violations (empty if OK).
     """
+    cc_visit = _load_cc_visit()
+
     violations = []
     baseline_set = set()
 
@@ -136,7 +155,11 @@ def main():
     if args.baseline and Path(args.baseline).exists():
         baseline = json.loads(Path(args.baseline).read_text())
 
-    violations = check_complexity(app_root.parent, args.threshold, baseline)
+    try:
+        violations = check_complexity(app_root.parent, args.threshold, baseline)
+    except _RadonMissing as exc:
+        print(f"ERROR: {exc}", file=sys.stderr)
+        return 2
 
     if args.write_baseline:
         baseline_data = {

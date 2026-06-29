@@ -13,12 +13,15 @@ import textwrap
 
 import pytest
 
-# check_complexity calls sys.exit(2) at IMPORT time when radon is missing.
-# radon is a dev-only dependency installed for the debt-gate job but not for the
-# general pytest environments (api-verify, Core CI). Importing the module there
-# would abort pytest collection with an INTERNALERROR and red the whole suite,
-# so skip this module cleanly when radon is unavailable.
-pytest.importorskip("radon")
+# These tests exercise the real radon-backed complexity walk, so they need radon
+# (a dev-only dependency installed for the debt-gate job but absent from the
+# general pytest environments: api-verify, Core CI). Skip the module cleanly when
+# it is unavailable. We guard on radon.complexity — the exact submodule
+# check_complexity imports — so a partial radon install can't pass a bare "radon"
+# check and then fail inside the test. check_complexity itself imports radon
+# lazily and no longer exits at import time, so this guard protects the test
+# bodies, not module collection.
+pytest.importorskip("radon.complexity")
 
 from app.ci.check_complexity import check_complexity  # noqa: E402
 
