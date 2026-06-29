@@ -11,6 +11,7 @@
   "scope": {
     "paths_in_scope": [
       ".cbsp21/",
+      ".github/workflows/",
       "services/api/app/ci/",
       "services/api/tests/",
       "services/api/metrics/"
@@ -20,11 +21,12 @@
       "services/api/metrics/debt_history.json",
       "services/api/app/ci/check_complexity.py",
       "services/api/tests/test_complexity_key_collision.py",
+      ".github/workflows/core_ci.yml",
       ".cbsp21/patch_input.json"
     ]
   },
   "diff_articulation": {
-    "what_changed": "(1) test_technical_debt_gates.py: TARGET_MAX_ENDPOINTS 1185->1220, TARGET_MAX_DUPLICATE_ROUTES 123->128 (exact measured current counts). (2) metrics/debt_history.json: append a current-counts snapshot so test_endpoints_not_increasing re-baselines off current reality. (3) app/ci/check_complexity.py: on radon ImportError set cc_visit=None instead of sys.exit(2), so importing the module never exits; defer the missing-radon failure to check_complexity()/main() (raise / return 2). (4) test_complexity_key_collision.py: pytest.importorskip('radon') before importing the gate, so the API Tests job (no radon) skips it cleanly.",
+    "what_changed": "(1) test_technical_debt_gates.py: TARGET_MAX_ENDPOINTS 1185->1220, TARGET_MAX_DUPLICATE_ROUTES 123->128 (exact measured current counts). (2) metrics/debt_history.json: append a current-counts snapshot so test_endpoints_not_increasing re-baselines off current reality. (3) app/ci/check_complexity.py: on radon ImportError set cc_visit=None instead of sys.exit(2), so importing the module never exits; defer the missing-radon failure to check_complexity()/main() (raise / return 2). (4) test_complexity_key_collision.py: pytest.importorskip('radon') before importing the gate (defense if radon is ever absent). (5) core_ci.yml: install radon in the api-tests job so that guard test actually runs in CI (radon stays out of requirements.txt to keep the deployed image lean; the geometry-parity job runs no pytest and is unchanged).",
     "why_not_redundant": "The ratchet reds and the INTERNALERROR are both pre-existing main-state drift/regressions (this branch makes no app/route change); confirmed via base-comparison that main's API Tests aborts identically. Re-baselining is the gate's designed maintenance path. The import-safety fix is root-cause: a CI-script module must never sys.exit at import or any importer (here a test) kills the whole pytest collection in an environment lacking radon."
   },
   "verification": {
@@ -66,6 +68,13 @@
       "scan_targets": ["services/api/tests/test_complexity_key_collision.py"],
       "risk": "low",
       "behavior_change": "none - test-only skip guard"
+    },
+    {
+      "path": ".github/workflows/core_ci.yml",
+      "intent": "Install radon in the api-tests job so the complexity-key collision guard test actually runs in CI (radon kept out of requirements.txt to keep the deployed image lean)",
+      "scan_targets": [".github/workflows/core_ci.yml"],
+      "risk": "low",
+      "behavior_change": "none - CI dependency install only (api-tests job; geometry-parity job unaffected, it runs no pytest)"
     }
   ]
 }
