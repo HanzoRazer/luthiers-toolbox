@@ -1,6 +1,7 @@
 {
   "schema": "cbsp21_patch_input_v1",
   "schema_version": "cbsp21_patch_input_v1",
+  "coverage_min": 0.95,
   "patch_id": "CBSP21_RADON_IMPORTORSKIP_HOTFIX",
   "title": "Hotfix: guard test_complexity_key_collision import behind radon (un-red main)",
   "intent": "PR #164 added tests/test_complexity_key_collision.py, which imports app.ci.check_complexity at module top. That module calls sys.exit(2) at import time when radon is missing. radon is installed only for the debt-gate job, not for the general pytest environments (api-verify, Core CI), so importing it during pytest collection aborts the whole session with an INTERNALERROR. This greened the debt gates but red'd api-verify and Core CI on main. Fix: pytest.importorskip('radon') before the import so the module is skipped where radon is absent and runs where it is present. Test-only; no product behavior change, no runtime path touched.",
@@ -25,7 +26,17 @@
     "commands_run": [
       "services/api/.venv: pytest tests/test_complexity_key_collision.py -q -> 2 passed (radon present; behavior unchanged)",
       "reasoning: with radon absent, module-level pytest.importorskip('radon') raises Skipped at collection, so the subsequent check_complexity import never executes and the suite collects cleanly",
-      "python scripts/ci/check_cbsp21_patch_input.py --base origin/main --head HEAD -> PASS (changed files declared in scope)"
+      "python scripts/ci/check_cbsp21_patch_input.py --base origin/main --head HEAD -> PASS (changed files declared in scope)",
+      "python scripts/ci/check_cbsp21_gate.py --manifest .cbsp21/patch_input.json --changed-files .cbsp21/patch_input.json services/api/tests/test_complexity_key_collision.py -> PASS (.cbsp21/ exempt; test file declared; coverage 100% >= 95%)"
     ]
-  }
+  },
+  "files": [
+    {
+      "path": "services/api/tests/test_complexity_key_collision.py",
+      "intent": "Guard the test import behind pytest.importorskip('radon') so collection does not crash where radon is absent",
+      "scan_targets": ["services/api/tests/test_complexity_key_collision.py"],
+      "risk": "low",
+      "behavior_change": "none"
+    }
+  ]
 }
