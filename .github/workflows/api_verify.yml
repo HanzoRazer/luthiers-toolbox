@@ -54,6 +54,10 @@ jobs:
           chmod 600 ~/.git-credentials
           python -m pip install --upgrade pip
           pip install -r services/api/requirements.txt
+          # radon is a CI-only dep (not in requirements.txt). The api-verify suite
+          # includes the complexity-key collision guard (test_complexity_key_collision.py),
+          # which importorskips radon; install it so the guard actually runs here.
+          pip install radon
 
       - name: Run api-verify
         run: make api-verify

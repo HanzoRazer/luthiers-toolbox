@@ -4,7 +4,7 @@
   "coverage_min": 0.95,
   "patch_id": "CBSP21_RADON_IMPORTORSKIP_HOTFIX",
   "title": "Hotfix: make check_complexity import-safe without radon (un-crash pytest collection)",
-  "intent": "test_complexity_key_collision.py (added in #163) imports app.ci.check_complexity at module top. That module did `try: from radon.complexity import cc_visit; except ImportError: sys.exit(2)` AT IMPORT time. radon is installed only for the debt-gate job, not for the general pytest environments (api-verify, Core CI), so importing it during pytest collection aborted the whole session with INTERNALERROR SystemExit:2 -- masking the entire suite. Root-cause fix: check_complexity imports radon LAZILY (inside check_complexity(), via _load_cc_visit), so importing the module never exits; the CLI main() maps the missing dependency to exit code 2 as before. The test additionally guards its bodies with pytest.importorskip('radon.complexity'). CI tooling only; no product/runtime path touched; CLI exit-code semantics preserved.",
+  "intent": "test_complexity_key_collision.py (added in #163) imports app.ci.check_complexity at module top. That module did `try: from radon.complexity import cc_visit; except ImportError: sys.exit(2)` AT IMPORT time. radon is installed only for the debt-gate job, not for the general pytest environments (api-verify, Core CI), so importing it during pytest collection aborted the whole session with INTERNALERROR SystemExit:2 -- masking the entire suite. Root-cause fix: check_complexity imports radon LAZILY (inside check_complexity(), via _load_cc_visit), so importing the module never exits; the CLI main() maps the missing dependency to exit code 2 as before. The test additionally guards its bodies with pytest.importorskip('radon.complexity'). To close the coverage gap (the guard otherwise importorskips and never runs in CI), radon is installed in the api-tests job (core_ci.yml) and the api-verify job (api_verify.yml) where the full suite runs. CI tooling only; no product/runtime path touched; CLI exit-code semantics preserved.",
   "change_type": "fix",
   "behavior_change": "none",
   "risk_level": "low",
@@ -12,11 +12,14 @@
     "paths_in_scope": [
       "services/api/app/ci/",
       "services/api/tests/",
+      ".github/workflows/",
       ".cbsp21/"
     ],
     "files_expected_to_change": [
       "services/api/app/ci/check_complexity.py",
       "services/api/tests/test_complexity_key_collision.py",
+      ".github/workflows/core_ci.yml",
+      ".github/workflows/api_verify.yml",
       ".cbsp21/patch_input.json"
     ]
   },
@@ -45,6 +48,20 @@
       "path": "services/api/tests/test_complexity_key_collision.py",
       "intent": "Guard the radon-dependent test bodies with pytest.importorskip('radon.complexity')",
       "scan_targets": ["services/api/tests/test_complexity_key_collision.py"],
+      "risk": "low",
+      "behavior_change": "none"
+    },
+    {
+      "path": ".github/workflows/core_ci.yml",
+      "intent": "Install radon in the api-tests job so the collision guard test runs in CI instead of importorskipping",
+      "scan_targets": [".github/workflows/core_ci.yml"],
+      "risk": "low",
+      "behavior_change": "none"
+    },
+    {
+      "path": ".github/workflows/api_verify.yml",
+      "intent": "Install radon in the api-verify job so the collision guard test runs in CI instead of importorskipping",
+      "scan_targets": [".github/workflows/api_verify.yml"],
       "risk": "low",
       "behavior_change": "none"
     }

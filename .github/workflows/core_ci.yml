@@ -28,6 +28,10 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           python -m pip install -r services/api/requirements.txt
+          # radon is a CI-only dep (not in requirements.txt). The pytest suite
+          # includes the complexity-key collision guard (test_complexity_key_collision.py),
+          # which importorskips radon; install it so the guard actually runs here.
+          python -m pip install radon
       - name: Art Studio Scope Gate
         run: |
           python scripts/ci/check_art_studio_scope.py --repo-root .
