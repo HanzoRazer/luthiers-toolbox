@@ -43,7 +43,7 @@ cd "$REPO_ROOT" || { echo "FATAL: cannot cd to repo root" >&2; exit 1; }
 if ! python "$REPO_ROOT/scripts/ci/wait_for_api_ready.py" \
       --base-url "$API_BASE" \
       --paths /api/health \
-      --require 'routers.loaded>0' \
+      --require 'router_count>0' \
       --timeout-seconds "$API_READY_TIMEOUT" \
       --pid-file "$UVICORN_PID_FILE" \
       --log-file "$UVICORN_LOG"; then
