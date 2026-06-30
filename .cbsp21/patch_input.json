@@ -80,6 +80,13 @@
       "scan_targets": [".github/workflows/api_health_check.yml"],
       "risk": "low",
       "behavior_change": "none - CI workflow only"
+    },
+    {
+      "path": "docs/investigations/api_verify_standing_failures_triage_2026-06-29.md",
+      "intent": "Triage document: 15 standing api-verify failures categorised with fix plans",
+      "scan_targets": ["docs/investigations/api_verify_standing_failures_triage_2026-06-29.md"],
+      "risk": "low",
+      "behavior_change": "none - documentation only"
     }
   ]
 }
