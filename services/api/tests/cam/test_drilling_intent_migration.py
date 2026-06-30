@@ -17,6 +17,23 @@ from app.cam.drilling.feasibility import (
 )
 
 
+def _route_paths(app) -> set:
+    """All mounted route paths, robust to FastAPI route wrappers that don't
+    expose ``.path`` directly (e.g. ``_IncludedRouter`` in fastapi>=0.137).
+    Walks nested ``.routes`` so flattened or nested routes are both captured."""
+    paths: set = set()
+    stack = list(app.routes)
+    while stack:
+        route = stack.pop()
+        path = getattr(route, "path", None)
+        if isinstance(path, str):
+            paths.add(path)
+        sub = getattr(route, "routes", None)
+        if sub:
+            stack.extend(sub)
+    return paths
+
+
 def _valid_design() -> dict:
     return {
         "holes": [{"x": 0, "y": 0}, {"x": 10.5, "y": 0, "label": "s2"}],
@@ -197,7 +214,7 @@ class TestDrillingIntentRouterIntegration:
 
     def test_legacy_routes_unchanged(self, client):
         # parity: the intent lane did not displace legacy drilling routes
-        paths = {r.path for r in client.app.routes}
+        paths = _route_paths(client.app)
         assert "/api/cam/drilling/intent-gcode" in paths
         assert "/api/cam/drilling/gcode" in paths
         assert "/api/cam/drilling/pattern/gcode" in paths

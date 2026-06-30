@@ -16,6 +16,23 @@ from app.cam.pocketing.feasibility import compute_pocket_feasibility, hash_feasi
 warnings.filterwarnings("ignore")  # silence L.1 island-subtraction UserWarning
 
 
+def _route_paths(app) -> set:
+    """All mounted route paths, robust to FastAPI route wrappers that don't
+    expose ``.path`` directly (e.g. ``_IncludedRouter`` in fastapi>=0.137).
+    Walks nested ``.routes`` so flattened or nested routes are both captured."""
+    paths: set = set()
+    stack = list(app.routes)
+    while stack:
+        route = stack.pop()
+        path = getattr(route, "path", None)
+        if isinstance(path, str):
+            paths.add(path)
+        sub = getattr(route, "routes", None)
+        if sub:
+            stack.extend(sub)
+    return paths
+
+
 def _square(s=100.0):
     return [{"x": 0, "y": 0}, {"x": s, "y": 0}, {"x": s, "y": s}, {"x": 0, "y": s}]
 
@@ -179,7 +196,7 @@ class TestPocketingIntentRouterIntegration:
         assert resp.status_code == 422
 
     def test_registration_and_parity(self, client):
-        paths = {r.path for r in client.app.routes}
+        paths = _route_paths(client.app)
         assert "/api/cam/pocketing/intent-gcode" in paths
         # sibling lanes still present (no displacement)
         assert "/api/cam/drilling/intent-gcode" in paths
