@@ -6,12 +6,23 @@
 
 **Context:** these 15 were masked for ~8 commits by the `#163` pytest-collection crash (radon `sys.exit` at import). After `#166` fixed collection and rebaselined the endpoint ratchets, and `#168` fixed degraded-boot readiness, these are the residual standing reds. None are caused by the CI-plumbing chain (#163/#164/#166/#168); all predate it.
 
+> **⚠️ Point-in-time snapshot — not evergreen truth.** This triage reflects `main` at `0daeab14`
+> on 2026-06-29. Counts and diagnoses drift as fixes land: **re-verify each row against current
+> `main` + CI before implementing it**, and treat every "Root cause → fix" as triage, not
+> adjudication. In particular the two open **Decision** items (#7, #12) narrow the option space but
+> do not settle it — confirm product/governance intent first.
+>
+> **Update (2026-07-01):** items **#1, #2, #10** shipped in PR #169 (`597f0a22`, CI-verified on
+> `api-verify` run `28484345941`: `14→12 failed`). The **#1/#2 diagnosis below was found wrong and
+> corrected** — the fix is a route *reachability probe*, not the `isinstance(APIRoute)` route-tree
+> guard originally proposed here (see those rows and footnote **\*\***). Remaining open: 12.
+
 ## Matrix
 
 | # | Test | Class | Effort | Root cause → fix |
 |---|------|-------|--------|------------------|
-| 1 | `cam/test_drilling_intent_migration::test_legacy_routes_unchanged` | Stale-test | Quick | `{r.path for r in app.routes}` hits FastAPI 0.137 `_IncludedRouter` wrappers (no `.path`) → add `isinstance(r, APIRoute)` guard (the `app/main.py` convention) |
-| 2 | `cam/test_pocketing_intent_migration::test_registration_and_parity` | Stale-test | Quick | Same as #1 → same guard |
+| 1 | `cam/test_drilling_intent_migration::test_legacy_routes_unchanged` | Stale-test | Quick\*\* | `{r.path for r in app.routes}` raises `AttributeError` on FastAPI 0.137 `_IncludedRouter` wrappers — **but guarding the AttributeError is not enough**: nested `include_router` keeps those wrappers with *relative* child paths, so the assembled `/api/cam/drilling/intent-gcode` never appears as a string in `app.routes`. The route **is** mounted+serving (the live-200/409/422 tests in the same class pass) → **probe reachability** (`POST → status not in {404, 405}` = mounted AND speaks POST), not route-tree introspection. **Shipped #169 (`597f0a22`)** |
+| 2 | `cam/test_pocketing_intent_migration::test_registration_and_parity` | Stale-test | Quick\*\* | Same as #1 → reachability probe (not an `isinstance(APIRoute)` guard). **Shipped #169 (`597f0a22`)** |
 | 3 | `mrp_spine_verification/test_morphology_spine_e2e::test_dreadnought_ibg_defaults_spine_flow` | Stale-test | Quick | `/api/body/solve-from-landmarks` gained mandatory `Depends(get_current_principal)` in IBG-2B (`70a0d3ee`); unauth `TestClient` → 401 → send `x-user-role`/`x-user-id` headers |
 | 4 | `…::test_landmark_only_solve_spine_flow` | Stale-test | Quick | Same 401 → same |
 | 5 | `…::test_ibg_metadata_does_not_override_boe_edits` | Stale-test | Quick | Same 401, no status-guard → `KeyError: outline_points` → auth headers + add `== 200` guard |
@@ -27,6 +38,8 @@
 | 15 | `test_body_export_bridge::test_export_without_ibg_context` | Hygiene | Quick | `POST /api/export/body-outline` is `@limiter.limit("10/hour")` (in-memory singleton keyed by IP; `TestClient` = fixed IP, never reset between tests). This is the 11th `/body-outline` POST in the session → real `429` → reset limiter between tests / `RATE_LIMIT_ENABLED=0` in test env |
 
 \* **#11** is a small change but affects convex arcs too — verify against the whole arc-reconstruction test set.
+
+\*\* **#1/#2** corrected 2026-07-01. The original "add an `isinstance(r, APIRoute)` guard" fix is **insufficient**: it only suppresses the `AttributeError` while the assertion still fails, because under FastAPI ≥0.137 nested `include_router` keeps `_IncludedRouter` wrappers whose children carry *relative* paths — so a 3-level-nested path (`/api/cam/{drilling,pocketing,profiling}/intent-gcode`) is never present as a single string in `app.routes`. Root cause verified: the endpoints are mounted and serving (the live 200/409/422 tests in the same classes pass on CI; only path-string introspection could not see them). The parity check must test **reachability**, not `app.routes` structure. Fix landed in #169 as `_route_registered(client, path)` → `POST` probe asserting `status not in {404, 405}` (mounted AND POST). This remains a *test-only* change (no product behavior change), so the "Stale-test / Quick" classification holds; only the proposed fix was wrong.
 
 ## Classification summary
 - **7 stale-test + 3 hygiene = 10 test-only fixes** (no product behavior change).
