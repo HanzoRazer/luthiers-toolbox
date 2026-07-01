@@ -16,7 +16,10 @@ Operational role and authority state are independent dimensions.
 
 This is the formulation currently used by GAMS v1.
 
-## Candidate refinement
+## Candidate discussion formulation (non-adopted)
+
+This candidate formulation is archived for future design discussion and must not
+be cited as adopted governance; alternative formulations remain open.
 
 Authority state is invariant under representation, serialization, routing,
 storage location, namespace, and operational role.

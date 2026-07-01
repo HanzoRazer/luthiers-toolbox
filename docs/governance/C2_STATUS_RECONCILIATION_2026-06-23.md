@@ -55,7 +55,8 @@ Related implementation coordination artifact:
 `docs/governance/coordination/GAMS_GEOMETRY_AUTHORITY_MAPPING_SPEC.md`
 
 GAMS maps existing C2 distinctions onto implementation roles and representation
-boundaries. It does not resolve authoritative geometry origin.
+boundaries. It does not resolve authoritative geometry origin. For implementation
+coordination only; not part of the authoritative C2 status determination.
 
 ---
 
