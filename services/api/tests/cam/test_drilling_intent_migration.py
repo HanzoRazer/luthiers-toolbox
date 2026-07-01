@@ -17,26 +17,6 @@ from app.cam.drilling.feasibility import (
 )
 
 
-def _route_registered(client, path: str) -> bool:
-    """True iff ``path`` is mounted AND accepts POST — the parity property these
-    tests care about (the intent/legacy CAM lanes are all POST endpoints, and the
-    check is that they were not displaced). A probe POST with an empty body yields
-    404 when the path is unmounted, 405 when the path exists only under a different
-    method (i.e. NOT the expected POST lane), and 200/409/422 when the POST route
-    is present (request validation / feasibility — never the handler's real work).
-    Requiring ``not in (404, 405)`` rejects both a missing route and a wrong-method
-    mount, closing the "something answered here" gap of a bare ``!= 404`` probe.
-
-    Deliberately NOT ``{r.path for r in app.routes}`` introspection: under the
-    repo's fastapi>=0.137 pin, nested ``include_router`` keeps ``_IncludedRouter``
-    wrappers whose children carry *relative* paths, so an assembled path such as
-    ``/api/cam/drilling/intent-gcode`` never appears as a single string in
-    ``app.routes`` (and the wrappers themselves have no ``.path``). The endpoints
-    resolve and serve — the live-200 tests in this class prove it; only naive
-    path-string introspection could not see them."""
-    return client.post(path, json={}).status_code not in (404, 405)
-
-
 def _valid_design() -> dict:
     return {
         "holes": [{"x": 0, "y": 0}, {"x": 10.5, "y": 0, "label": "s2"}],
@@ -215,11 +195,11 @@ class TestDrillingIntentRouterIntegration:
         resp = client.post("/api/cam/drilling/intent-gcode", json=bad)
         assert resp.status_code == 422
 
-    def test_legacy_routes_unchanged(self, client):
+    def test_legacy_routes_unchanged(self, client, route_registered):
         # parity: the intent lane did not displace legacy drilling routes
         for path in (
             "/api/cam/drilling/intent-gcode",
             "/api/cam/drilling/gcode",
             "/api/cam/drilling/pattern/gcode",
         ):
-            assert _route_registered(client, path), f"route not mounted: {path}"
+            assert route_registered(client, path), f"route not mounted: {path}"
