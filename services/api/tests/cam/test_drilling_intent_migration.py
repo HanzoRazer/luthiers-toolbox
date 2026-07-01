@@ -18,9 +18,14 @@ from app.cam.drilling.feasibility import (
 
 
 def _route_registered(client, path: str) -> bool:
-    """True iff ``path`` is a mounted route, independent of HTTP method or
-    FastAPI's internal route-tree shape. An unmounted path yields 404; a mounted
-    one yields 200/405/409/422 for a probe POST.
+    """True iff ``path`` is mounted AND accepts POST — the parity property these
+    tests care about (the intent/legacy CAM lanes are all POST endpoints, and the
+    check is that they were not displaced). A probe POST with an empty body yields
+    404 when the path is unmounted, 405 when the path exists only under a different
+    method (i.e. NOT the expected POST lane), and 200/409/422 when the POST route
+    is present (request validation / feasibility — never the handler's real work).
+    Requiring ``not in (404, 405)`` rejects both a missing route and a wrong-method
+    mount, closing the "something answered here" gap of a bare ``!= 404`` probe.
 
     Deliberately NOT ``{r.path for r in app.routes}`` introspection: under the
     repo's fastapi>=0.137 pin, nested ``include_router`` keeps ``_IncludedRouter``
@@ -28,10 +33,8 @@ def _route_registered(client, path: str) -> bool:
     ``/api/cam/drilling/intent-gcode`` never appears as a single string in
     ``app.routes`` (and the wrappers themselves have no ``.path``). The endpoints
     resolve and serve — the live-200 tests in this class prove it; only naive
-    path-string introspection could not see them. Probing reachability tests the
-    property the parity check actually cares about and is robust to fastapi
-    internals."""
-    return client.post(path, json={}).status_code != 404
+    path-string introspection could not see them."""
+    return client.post(path, json={}).status_code not in (404, 405)
 
 
 def _valid_design() -> dict:
