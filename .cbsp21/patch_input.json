@@ -4,7 +4,7 @@
   "coverage_min": 0.95,
   "patch_id": "STANDING_FAILURES_AB_QUICKWINS",
   "title": "Clear 3 standing test failures: route-introspection + leaked Windows cwd (triage bucket A)",
-  "intent": "Triage of the standing API-test failures (first visible after #166 cleared the radon collection crash) found a batch of pure test-side defects. Fix 3: (A1) two CAM intent-migration tests crash on fastapi>=0.137's _IncludedRouter route wrapper (no .path); (A2) a saddle-compensation CLI test hard-codes a Windows absolute cwd that does not exist on Ubuntu CI. Test-only; no production code, no routes, no behavior change. (Triage bucket B — a get_blueprint_adapter ImportError — was reclassified during grounding as a PRODUCTION regression in e2e_spine_runner.py and is NOT in this batch.)",
+  "intent": "Triage of the standing API-test failures (first visible after #166 cleared the radon collection crash) found a batch of pure test-side defects. Fix 3: (A1) two CAM intent-migration parity tests broke on fastapi>=0.137's nested-include_router representation; (A2) a saddle-compensation CLI test hard-codes a Windows absolute cwd that does not exist on Ubuntu CI. Test-only; no production code, no routes, no behavior change. (Triage bucket B — a get_blueprint_adapter ImportError — was reclassified during grounding as a PRODUCTION regression in e2e_spine_runner.py and is NOT in this batch.) NOTE: an earlier revision of this patch tried to fix A1 with a defensive `_route_paths` collector; that only suppressed the original AttributeError and the assertions still failed, because under fastapi>=0.137 nested include_router keeps _IncludedRouter wrappers whose children carry *relative* paths — so an assembled path like /api/cam/drilling/intent-gcode never appears as a single string in app.routes. Root-cause verified: the endpoints are mounted and serve (the live-200/409/422 tests in the same classes pass); only the app.routes path-string introspection could not see them. Corrected approach: assert reachability instead of introspecting the private route tree.",
   "change_type": "fix",
   "behavior_change": "none",
   "risk_level": "low",
@@ -21,28 +21,29 @@
     ]
   },
   "diff_articulation": {
-    "what_changed": "(1) test_drilling_intent_migration.py + test_pocketing_intent_migration.py: replace `{r.path for r in client.app.routes}` (which raised AttributeError: '_IncludedRouter' object has no attribute 'path' under fastapi>=0.137, the CI pin) with a `_route_paths(app)` helper that walks routes defensively — collects `.path` where present and recurses into nested `.routes`, skipping path-less wrappers. The asserted legacy CAM routes are real APIRoutes and are still captured. (2) test_saddle_compensation.py::test_cli_write_example_csv: replace a hard-coded `cwd=\"C:/Users/thepr/Downloads/luthiers-toolbox/services/api\"` (a leaked Windows dev path; FileNotFoundError on Ubuntu CI) with `cwd=str(Path(__file__).resolve().parents[1])` (the services/api dir relative to the test file); add `from pathlib import Path`.",
-    "why_not_redundant": "These are real standing failures on main (15 surfaced after #166 fixed the collection crash), not flakes. Both are environment/version defects in the TESTS, not the product: the route-introspection breaks on the CI's fastapi version (local 0.136 lacks _IncludedRouter so it could not be reproduced locally — the recursive collector is correct by construction and is unit-proven against flat+nested+path-less route objects); the leaked Windows cwd can never resolve on a Linux runner. Fixing them shrinks the standing-red baseline with zero product risk and de-taxes future base-comparisons."
+    "what_changed": "(1) test_drilling_intent_migration.py + test_pocketing_intent_migration.py: replace `{r.path for r in client.app.routes}` route-tree introspection (which under fastapi>=0.137 raised AttributeError on _IncludedRouter wrappers, and — once that was worked around — still asserted-false because nested children carry relative paths) with a `_route_registered(client, path)` helper that probes reachability: `client.post(path, json={}).status_code != 404`. An unmounted path yields 404; a mounted one yields 200/405/409/422. This tests the property the parity check actually cares about (the lane is mounted and not displaced) and is immune to fastapi's internal route-tree representation. The asserted legacy/sibling CAM routes are all confirmed present in code (drilling/pocketing/profiling intent_router POST /intent-gcode, mounted via the CAM aggregator). (2) test_saddle_compensation.py::test_cli_write_example_csv: replace a hard-coded `cwd=\"C:/Users/thepr/Downloads/luthiers-toolbox/services/api\"` (a leaked Windows dev path; FileNotFoundError on Ubuntu CI) with `cwd=str(Path(__file__).resolve().parents[1])` (the services/api dir relative to the test file); add `from pathlib import Path`.",
+    "why_not_redundant": "These are real standing failures on main (surfaced after #166 fixed the collection crash), not flakes, and both are defects in the TESTS, not the product. Root cause of A1 was verified, not assumed: the drilling/pocketing intent endpoints are mounted and serve — the live 200/409/422 tests in the very same test classes pass on CI; only the app.routes path-string introspection could not reconstruct the assembled path under fastapi>=0.137's nested _IncludedRouter wrappers (relative child paths + path-less wrappers). Reachability probing sidesteps that entirely. A2's leaked Windows cwd can never resolve on a Linux runner. Fixing them shrinks the standing-red baseline with zero product risk and de-taxes future base-comparisons."
   },
   "verification": {
     "commands_run": [
       "services/api .venv: pytest tests/test_saddle_compensation.py::TestCsvRoundTrip::test_cli_write_example_csv -> 1 passed (102s; portable cwd works)",
-      "_route_paths unit-proven against synthetic routes: collects flat + nested(.routes) paths, skips path-less _IncludedRouter-like wrappers -> {drilling intent/gcode, pocketing intent} as expected",
+      "root cause verified on PR #169's own CI run (28460040141): live 200/409/422 tests in TestDrillingIntentRouterIntegration / TestPocketingIntentRouterIntegration PASS (endpoints mounted+serving); only the two path-introspection tests FAIL with AssertionError '/api/cam/.../intent-gcode' not in {app.routes paths} -> the assembled path is genuinely absent as a string under fastapi>=0.137 nested include_router, NOT a missing route",
+      "code-confirmed all three asserted routes exist: drilling/pocketing/profiling intent_router define POST /intent-gcode, mounted via cam aggregator include_router(prefix=/api/cam -> /drilling|/pocketing|/profiling)",
       "py_compile of all 3 edited test files -> OK",
-      "note: the two CAM migration tests use a full-app TestClient (local app import >2 min) so they are an Ubuntu-CI witness; the fix logic is witnessed locally"
+      "note: the two CAM migration tests use a full-app TestClient (local app import >2 min, and this .venv is fastapi 0.121.1 not the 0.137 CI pin) so they are an Ubuntu-CI witness; the reachability logic (404 iff unmounted) is version-independent"
     ]
   },
   "files": [
     {
       "path": "services/api/tests/cam/test_drilling_intent_migration.py",
-      "intent": "Robust route-path collection (_route_paths) tolerant of fastapi>=0.137 _IncludedRouter wrappers",
+      "intent": "Parity check by route reachability (_route_registered: 404 iff unmounted), replacing app.routes path-string introspection that fails under fastapi>=0.137 nested _IncludedRouter wrappers",
       "scan_targets": ["services/api/tests/cam/test_drilling_intent_migration.py"],
       "risk": "low",
       "behavior_change": "none - test-only"
     },
     {
       "path": "services/api/tests/cam/test_pocketing_intent_migration.py",
-      "intent": "Same robust route-path collection",
+      "intent": "Same reachability-based parity check (_route_registered)",
       "scan_targets": ["services/api/tests/cam/test_pocketing_intent_migration.py"],
       "risk": "low",
       "behavior_change": "none - test-only"

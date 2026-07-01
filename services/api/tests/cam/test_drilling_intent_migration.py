@@ -17,21 +17,21 @@ from app.cam.drilling.feasibility import (
 )
 
 
-def _route_paths(app) -> set:
-    """All mounted route paths, robust to FastAPI route wrappers that don't
-    expose ``.path`` directly (e.g. ``_IncludedRouter`` in fastapi>=0.137).
-    Walks nested ``.routes`` so flattened or nested routes are both captured."""
-    paths: set = set()
-    stack = list(app.routes)
-    while stack:
-        route = stack.pop()
-        path = getattr(route, "path", None)
-        if isinstance(path, str):
-            paths.add(path)
-        sub = getattr(route, "routes", None)
-        if sub:
-            stack.extend(sub)
-    return paths
+def _route_registered(client, path: str) -> bool:
+    """True iff ``path`` is a mounted route, independent of HTTP method or
+    FastAPI's internal route-tree shape. An unmounted path yields 404; a mounted
+    one yields 200/405/409/422 for a probe POST.
+
+    Deliberately NOT ``{r.path for r in app.routes}`` introspection: under the
+    repo's fastapi>=0.137 pin, nested ``include_router`` keeps ``_IncludedRouter``
+    wrappers whose children carry *relative* paths, so an assembled path such as
+    ``/api/cam/drilling/intent-gcode`` never appears as a single string in
+    ``app.routes`` (and the wrappers themselves have no ``.path``). The endpoints
+    resolve and serve — the live-200 tests in this class prove it; only naive
+    path-string introspection could not see them. Probing reachability tests the
+    property the parity check actually cares about and is robust to fastapi
+    internals."""
+    return client.post(path, json={}).status_code != 404
 
 
 def _valid_design() -> dict:
@@ -214,7 +214,9 @@ class TestDrillingIntentRouterIntegration:
 
     def test_legacy_routes_unchanged(self, client):
         # parity: the intent lane did not displace legacy drilling routes
-        paths = _route_paths(client.app)
-        assert "/api/cam/drilling/intent-gcode" in paths
-        assert "/api/cam/drilling/gcode" in paths
-        assert "/api/cam/drilling/pattern/gcode" in paths
+        for path in (
+            "/api/cam/drilling/intent-gcode",
+            "/api/cam/drilling/gcode",
+            "/api/cam/drilling/pattern/gcode",
+        ):
+            assert _route_registered(client, path), f"route not mounted: {path}"
