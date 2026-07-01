@@ -178,9 +178,11 @@ class TestPocketingIntentRouterIntegration:
         resp = client.post("/api/cam/pocketing/intent-gcode", json=bad)
         assert resp.status_code == 422
 
-    def test_registration_and_parity(self, client):
-        paths = {r.path for r in client.app.routes}
-        assert "/api/cam/pocketing/intent-gcode" in paths
-        # sibling lanes still present (no displacement)
-        assert "/api/cam/drilling/intent-gcode" in paths
-        assert "/api/cam/profiling/intent-gcode" in paths
+    def test_registration_and_parity(self, client, route_registered):
+        # the pocketing intent lane and sibling lanes are all mounted (no displacement)
+        for path in (
+            "/api/cam/pocketing/intent-gcode",
+            "/api/cam/drilling/intent-gcode",
+            "/api/cam/profiling/intent-gcode",
+        ):
+            assert route_registered(client, path), f"route not mounted: {path}"
