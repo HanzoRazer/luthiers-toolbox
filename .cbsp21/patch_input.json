@@ -2,91 +2,42 @@
   "schema": "cbsp21_patch_input_v1",
   "schema_version": "cbsp21_patch_input_v1",
   "coverage_min": 0.95,
-  "patch_id": "ISSUE_165_READINESS_DEGRADED_BOOT",
-  "title": "Readiness probe gates on router-load, not just HTTP 200 (issue #165)",
-  "intent": "Issue #165: the readiness harness lied on a degraded boot. /health returns HTTP 200 with zero checks, and /api/health returns HTTP 200 even when routers fail to load (degradation is only a body field). So an HTTP-200-only readiness check passed on a boot where routers did not load, and api_tests probed /health first (a do-nothing 200) which short-circuited any router signal. Add an optional --require JSON body assertion to the shared utility and gate the router-dependent jobs on /api/health with router_count>0. CI/governance plumbing only; no product behavior change, no endpoint semantics changed, no startup validation weakened.",
+  "patch_id": "STANDING_FAILURES_BATCH_B_TEST_ISOLATION",
+  "title": "Fix 2 standing failures caused by leaked module-level singletons (#13, #15 — triage bucket B)",
+  "intent": "Batch B of the api-verify standing-failures triage. Two residual reds are pure test-ISOLATION defects: module-level singletons not reset between tests, so state leaks across the session and the test fails only in the full suite (passes in isolation). #13 the RMOS runs store; #15 the slowapi rate limiter. Both fixed in the single existing autouse fixture in services/api/tests/conftest.py. Test-only; no production code touched, no behavior change.",
   "change_type": "fix",
   "behavior_change": "none",
   "risk_level": "low",
   "scope": {
     "paths_in_scope": [
       ".cbsp21/",
-      "scripts/ci/",
-      "scripts/smoke/",
-      ".github/workflows/"
+      "services/api/tests/"
     ],
     "files_expected_to_change": [
-      "scripts/ci/wait_for_api_ready.py",
-      "scripts/ci/test_wait_for_api_ready.py",
-      "scripts/smoke/run_api_smoke_posts.sh",
-      ".github/workflows/api_tests.yml",
-      ".github/workflows/core_ci.yml",
-      ".github/workflows/api_health_check.yml",
+      "services/api/tests/conftest.py",
       ".cbsp21/patch_input.json"
     ]
   },
   "diff_articulation": {
-    "what_changed": "(1) wait_for_api_ready.py: probe() now also returns the response body; new optional --require 'dotted.key OP value' (ops ==,!=,>=,<=,>,<) is parsed (parse_requirement) and evaluated against the JSON body (check_requirement) so a 200 only counts as ready if the body assertion also holds; the failure witness now prints the failed-gate reason alongside the 200 (e.g. 'HTTP 200 - require router_count>0: got 0'). Backward compatible: with no --require, behavior is unchanged (200 = ready). (2) test_wait_for_api_ready.py: +6 tests (parse variants, _compare numeric/string, check_requirement cases, degraded-boot gated NOT ready, healthy boot ready, failure-output names the gate) — 15 total, stdlib-only. (3) run_api_smoke_posts.sh + api_tests.yml + core_ci.yml (both Boot API jobs) + api_health_check.yml: probe /api/health with --require 'router_count>0' (quoted so the shell does not treat > as redirection) and drop the /health-first ordering that let the zero-check endpoint short-circuit router gating.",
-    "why_not_redundant": "An HTTP-200-only readiness check is structurally blind to a degraded boot: neither /health nor /api/health returns a non-200 when routers fail. This makes 'ready' mean 'routers actually loaded', not merely 'ASGI app serving'. The real /api/health is health_router's handler (mounted at prefix /api, shadowing main.py's), whose body exposes the loaded-router count as top-level router_count (plus router_errors). router_count>0 is the false-negative-proof floor (a normal multi-router CI boot has router_count>0, proven by #164's router-dependent jobs passing; a total router-load collapse has router_count==0) and catches the #165 catastrophic case; the utility's --require is general so a stricter gate is a one-line change once the clean-boot body is confirmed on CI. Endpoint semantics are untouched (Option C, per the dev order's guardrail against changing health endpoints)."
+    "what_changed": "Both edits are in the autouse `rmos_global_test_isolation` fixture in services/api/tests/conftest.py. (#13) The store reset targeted `app.rmos.runs_v2.store._default_store`, but that name is only a STALE re-export (bound at import time) of the real singleton `app.rmos.runs_v2.store_api._default_store`, which the runs endpoints actually read via _get_default_store(). Resetting the re-export was a no-op, so RunStoreV2 pinned the first test's RMOS_RUNS_DIR and runs persisted by earlier tests leaked into test_runs_index_with_filters (counted 3 where it created 1). Changed the reset to `store_api._default_store = None`. (#15) Added rate-limiter isolation: the slowapi `limiter` is a module-level singleton with in-memory, IP-keyed storage; TestClient uses a fixed IP so per-endpoint caps (body-outline 10/hour) accumulate across the whole session and eventually 429. `enabled` is captured from env at import time, so setting RATE_LIMIT_ENABLED in a fixture is too late; instead `monkeypatch.setattr(limiter, 'enabled', False)` disables the constructed singleton per-test (monkeypatch auto-restores it, so no manual teardown).",
+    "why_not_redundant": "Both hypotheses were re-grounded against current code. #13: confirmed store.py:396-398 re-exports the name from store_api while the endpoints (api_runs.py) read store_api's global via _get_default_store; the fixture (and the two per-test fixtures) reset the wrong module. #15: confirmed the limiter's `enabled` is baked in at construction (rate_limit.py:150-154) from an import-time env read, so only a runtime attribute toggle works; verified no test enforces a real 429 through the app (the only assert-429 calls the handler directly with a mocked exception; test_limiter_is_enabled_by_default asserts the module constant, not the .enabled attribute; a smoke test already tolerates 429). Both are the SAME class (un-reset module singleton) and share the one autouse fixture."
   },
   "verification": {
     "commands_run": [
-      "python scripts/ci/test_wait_for_api_ready.py -> 15 passed (9 prior + 6 new require tests incl. degraded-boot gated NOT ready, healthy boot ready)",
-      "yaml.safe_load of api_tests/core_ci/api_health_check workflows -> parse OK",
-      "bash -n scripts/smoke/run_api_smoke_posts.sh -> OK; --require value single-quoted so > is not shell redirection",
-      "parse_requirement('router_count>0') -> ('router_count','>',0)",
-      "note: real-app degraded-vs-healthy boot is an Ubuntu-CI witness (local Windows app import exceeds 2 min); the gate logic is witnessed locally against a stdlib http.server returning degraded/healthy bodies"
+      "services/api venv: pytest tests/test_rmos_runs_e2e.py -> 6 passed (#13; the intra-file run leak that made test_runs_index_with_filters see 3-not-1 is reset via the correct store_api singleton)",
+      "pytest tests/test_jumbo_dimension_consistency.py tests/test_body_export_bridge.py -> 39 passed, 1 skipped (#15; many body-outline POSTs in one process no longer 429 with the limiter disabled)",
+      "pytest tests/test_body_export_bridge.py::TestBodyExportEndpoint::test_export_without_ibg_context -> 1 passed (the previously-429ing un-guarded test)",
+      "py_compile tests/conftest.py -> OK",
+      "note: full api-verify is an Ubuntu-CI witness (fastapi 0.137 pin); local venv is fastapi 0.121.1"
     ]
   },
   "files": [
     {
-      "path": "scripts/ci/wait_for_api_ready.py",
-      "intent": "Add optional --require JSON body assertion so a 200 on a degraded boot (router_count==0) is not treated as ready; backward compatible without it",
-      "scan_targets": ["scripts/ci/wait_for_api_ready.py"],
+      "path": "services/api/tests/conftest.py",
+      "intent": "#13 reset the LIVE store singleton (store_api, not the stale store re-export); #15 disable the slowapi limiter per-test via monkeypatch.setattr (auto-restored)",
+      "scan_targets": ["services/api/tests/conftest.py"],
       "risk": "low",
-      "behavior_change": "none - CI tooling only; default behavior unchanged when --require absent"
-    },
-    {
-      "path": "scripts/ci/test_wait_for_api_ready.py",
-      "intent": "Cover --require parsing/comparison/evaluation and the degraded-boot gating",
-      "scan_targets": ["scripts/ci/test_wait_for_api_ready.py"],
-      "risk": "low",
-      "behavior_change": "none - test-only"
-    },
-    {
-      "path": "scripts/smoke/run_api_smoke_posts.sh",
-      "intent": "Gate readiness on /api/health router_count>0",
-      "scan_targets": ["scripts/smoke/run_api_smoke_posts.sh"],
-      "risk": "low",
-      "behavior_change": "none - CI smoke harness only"
-    },
-    {
-      "path": ".github/workflows/api_tests.yml",
-      "intent": "Probe /api/health with router_count>0; drop /health-first short-circuit",
-      "scan_targets": [".github/workflows/api_tests.yml"],
-      "risk": "low",
-      "behavior_change": "none - CI workflow only"
-    },
-    {
-      "path": ".github/workflows/core_ci.yml",
-      "intent": "Both Boot API jobs gate on /api/health router_count>0",
-      "scan_targets": [".github/workflows/core_ci.yml"],
-      "risk": "low",
-      "behavior_change": "none - CI workflow only"
-    },
-    {
-      "path": ".github/workflows/api_health_check.yml",
-      "intent": "Readiness gate on /api/health router_count>0 before the POST smoke",
-      "scan_targets": [".github/workflows/api_health_check.yml"],
-      "risk": "low",
-      "behavior_change": "none - CI workflow only"
-    },
-    {
-      "path": "docs/investigations/api_verify_standing_failures_triage_2026-06-29.md",
-      "intent": "Triage document: 15 standing api-verify failures categorised with fix plans",
-      "scan_targets": ["docs/investigations/api_verify_standing_failures_triage_2026-06-29.md"],
-      "risk": "low",
-      "behavior_change": "none - documentation only"
+      "behavior_change": "none - test-isolation only; no production code touched"
     }
   ]
 }
