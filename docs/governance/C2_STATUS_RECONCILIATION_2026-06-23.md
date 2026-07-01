@@ -49,6 +49,15 @@ The 2026-05-18 `MORPHOLOGY_GOVERNANCE_DOCS` checkpoint approved the **documents,
 3. **C3 enforcement** — strictly **deferred** (not owed now): the continuity conflation guard, provenance
    enforcement, schema/CI. C3 has not begun.
 
+## Related implementation coordination
+
+Related implementation coordination artifact:
+`docs/governance/coordination/GAMS_GEOMETRY_AUTHORITY_MAPPING_SPEC.md`
+
+GAMS maps existing C2 distinctions onto implementation roles and representation
+boundaries. It does not resolve authoritative geometry origin. For implementation
+coordination only; not part of the authoritative C2 status determination.
+
 ---
 
 *C2 Status Reconciliation 2026-06-23 — authoritative snapshot. Reconciles corpus contradictions per the
