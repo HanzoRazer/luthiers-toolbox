@@ -195,9 +195,11 @@ class TestDrillingIntentRouterIntegration:
         resp = client.post("/api/cam/drilling/intent-gcode", json=bad)
         assert resp.status_code == 422
 
-    def test_legacy_routes_unchanged(self, client):
+    def test_legacy_routes_unchanged(self, client, route_registered):
         # parity: the intent lane did not displace legacy drilling routes
-        paths = {r.path for r in client.app.routes}
-        assert "/api/cam/drilling/intent-gcode" in paths
-        assert "/api/cam/drilling/gcode" in paths
-        assert "/api/cam/drilling/pattern/gcode" in paths
+        for path in (
+            "/api/cam/drilling/intent-gcode",
+            "/api/cam/drilling/gcode",
+            "/api/cam/drilling/pattern/gcode",
+        ):
+            assert route_registered(client, path), f"route not mounted: {path}"

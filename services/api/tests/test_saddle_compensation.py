@@ -4,6 +4,7 @@ Tests for Bridge Saddle Compensation Calculator.
 Tests both Design Mode (estimate from specs) and Setup Mode (adjust from measurements).
 """
 import math
+from pathlib import Path
 import pytest
 from fastapi.testclient import TestClient
 
@@ -556,7 +557,9 @@ class TestCsvRoundTrip:
                 "python", "-m", "app.calculators.saddle_compensation",
                 "--write-example-csv", str(template_path)
             ],
-            cwd="C:/Users/thepr/Downloads/luthiers-toolbox/services/api",
+            # services/api dir (this file is services/api/tests/...); must not be a
+            # hard-coded absolute path — it was a leaked Windows path that failed on CI.
+            cwd=str(Path(__file__).resolve().parents[1]),
             capture_output=True,
             text=True,
         )
