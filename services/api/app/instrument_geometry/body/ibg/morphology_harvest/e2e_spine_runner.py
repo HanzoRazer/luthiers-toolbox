@@ -24,7 +24,7 @@ from pathlib import Path
 from typing import List, Optional, Dict, Any
 from uuid import uuid4
 
-from .adapters import get_blueprint_adapter, get_photo_adapter
+from .adapters import get_phase4_adapter as get_blueprint_adapter
 from .artifact_body_evidence_adapter import (
     ArtifactBodyEvidenceAdapter,
     ArtifactMetadata,

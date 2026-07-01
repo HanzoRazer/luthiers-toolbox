@@ -358,13 +358,14 @@ class OutlineReconstructor:
         a2 = math.atan2(p2.y - cy, p2.x - cx)
         sweep = a2 - a1
 
-        # Normalize sweep to match arc direction
-        if gap.concave:
-            if sweep > 0:
-                sweep -= 2 * math.pi
-        else:
-            if sweep < 0:
-                sweep += 2 * math.pi
+        # Select the arc that passes through arc_mid — always the MINOR arc, since
+        # sagitta = R - sqrt(R^2 - half_chord^2) <= R places arc_mid on the minor
+        # side. Deriving the sweep from geometry (not the `concave` flag) fixes both
+        # concave and convex gaps previously traversing the wrong (major) arc.
+        while sweep > math.pi:
+            sweep -= 2 * math.pi
+        while sweep <= -math.pi:
+            sweep += 2 * math.pi
 
         arc_length = abs(sweep) * R
         n_points = max(3, int(arc_length / self.spacing))
