@@ -2,42 +2,84 @@
   "schema": "cbsp21_patch_input_v1",
   "schema_version": "cbsp21_patch_input_v1",
   "coverage_min": 0.95,
-  "patch_id": "STANDING_FAILURES_BATCH_B_TEST_ISOLATION",
-  "title": "Fix 2 standing failures caused by leaked module-level singletons (#13, #15 — triage bucket B)",
-  "intent": "Batch B of the api-verify standing-failures triage. Two residual reds are pure test-ISOLATION defects: module-level singletons not reset between tests, so state leaks across the session and the test fails only in the full suite (passes in isolation). #13 the RMOS runs store; #15 the slowapi rate limiter. Both fixed in the single existing autouse fixture in services/api/tests/conftest.py. Test-only; no production code touched, no behavior change.",
+  "patch_id": "CI_RED_016A_MANIFEST_DISCIPLINE_BLEED_STOP",
+  "title": "CI-RED-016-A: manifest-discipline bleed-stop wired into Core CI",
+  "intent": "CI-RED-016-A is the small enforcement slice of CI-RED-016: stop net-new router files from bypassing router_registry discipline while the larger endpoint consolidation stays deferred. It is a ratchet, not a cleanup migration - it does not manifest the grandfathered routers, resolve endpoint ownership, reorder precedence, change live endpoint winners, or close CI-RED-016. It wires check_manifest_discipline.py into Core CI (before API boot/full pytest) with --require-baseline --fail-on-healed, replaces the regex-only route detector with an AST-first detector (regex fallback only on SyntaxError), and tightens the committed baseline to the accurate unmanifested set. Baseline 108->103: remove the healed routers/cam/geometry_authority_router (manifested by CI-RED-015-H) plus 6 regex false-positives that only ever matched @router examples inside docstrings/strings (api/deps/__init__, api/deps/rmos_stores, cam/dxf_validation_gate, core/store_registry, middleware/rate_limit, middleware/tier_gate), and ADD 2 genuine routers the @router.-only regex was blind to because they use descriptive receiver names (middleware/route_analytics_middleware via @analytics_router, routers/blueprint_cam/blueprint_cam_core_router via @contour_router/@preflight_router/etc). app/main.py's root-app @app endpoints are correctly NOT counted (mounted by construction).",
   "change_type": "fix",
   "behavior_change": "none",
   "risk_level": "low",
   "scope": {
     "paths_in_scope": [
       ".cbsp21/",
-      "services/api/tests/"
+      ".github/workflows/",
+      "services/api/scripts/",
+      "services/api/tests/",
+      "docs/handoffs/"
     ],
     "files_expected_to_change": [
-      "services/api/tests/conftest.py",
+      "services/api/scripts/manifest_discipline_baseline.txt",
+      "services/api/scripts/check_manifest_discipline.py",
+      "services/api/tests/test_manifest_discipline.py",
+      ".github/workflows/core_ci.yml",
+      "docs/handoffs/CI_RED_015D_OPEN_DECISIONS.md",
+      "SPRINTS.md",
       ".cbsp21/patch_input.json"
     ]
   },
   "diff_articulation": {
-    "what_changed": "Both edits are in the autouse `rmos_global_test_isolation` fixture in services/api/tests/conftest.py. (#13) The store reset targeted `app.rmos.runs_v2.store._default_store`, but that name is only a STALE re-export (bound at import time) of the real singleton `app.rmos.runs_v2.store_api._default_store`, which the runs endpoints actually read via _get_default_store(). Resetting the re-export was a no-op, so RunStoreV2 pinned the first test's RMOS_RUNS_DIR and runs persisted by earlier tests leaked into test_runs_index_with_filters (counted 3 where it created 1). Changed the reset to `store_api._default_store = None`. (#15) Added rate-limiter isolation: the slowapi `limiter` is a module-level singleton with in-memory, IP-keyed storage; TestClient uses a fixed IP so per-endpoint caps (body-outline 10/hour) accumulate across the whole session and eventually 429. `enabled` is captured from env at import time, so setting RATE_LIMIT_ENABLED in a fixture is too late; instead `monkeypatch.setattr(limiter, 'enabled', False)` disables the constructed singleton per-test (monkeypatch auto-restores it, so no manual teardown).",
-    "why_not_redundant": "Both hypotheses were re-grounded against current code. #13: confirmed store.py:396-398 re-exports the name from store_api while the endpoints (api_runs.py) read store_api's global via _get_default_store; the fixture (and the two per-test fixtures) reset the wrong module. #15: confirmed the limiter's `enabled` is baked in at construction (rate_limit.py:150-154) from an import-time env read, so only a runtime attribute toggle works; verified no test enforces a real 429 through the app (the only assert-429 calls the handler directly with a mocked exception; test_limiter_is_enabled_by_default asserts the module constant, not the .enabled attribute; a smoke test already tolerates 429). Both are the SAME class (un-reset module singleton) and share the one autouse fixture."
+    "what_changed": "(1) check_manifest_discipline.py: DETECTION rebuilt on the Python AST (ast.parse + ast.walk). Route declarations are found only in real code, so route decorators/registrations that appear only in docstrings/strings/comments no longer false-positive (the old regex did - see removed baseline entries). Detection now covers BOTH decorator forms (@<recv>.get/post/put/patch/delete/head/options/trace/websocket/api_route) and programmatic forms (<recv>.add_api_route/add_api_websocket_route/add_route/websocket_route) on ANY router-like receiver, EXCLUDING the composition-root app (receiver named app/application, e.g. app/main.py) which is mounted by construction and needs no RouterSpec. A regex fallback (same router-scope rule, negative-lookahead on app/application) is used only when a file fails to parse. Added --fail-on-healed and ratchet-not-certification language to the OK/STATUS/DETECTION text. --require-baseline retained. (2) manifest_discipline_baseline.txt: tightened 108->103. Witnessed by set difference: healed = {routers/cam/geometry_authority_router + 6 docstring false-positives}; added = {middleware/route_analytics_middleware, routers/blueprint_cam/blueprint_cam_core_router} (real routers with non-`router` receiver names the old regex missed); app/main is NOT added (root-app exclusion). (3) tests/test_manifest_discipline.py: grew 18->29. New: AST ignores docstring/string/comment route examples; programmatic add_api_route/add_api_websocket_route detection; non-`router` receiver-name detection; root-app (@app / app.add_api_route) exclusion end-to-end; regex fallback on SyntaxError (router matches, app excluded); --fail-on-healed hard-fail (exit 1, asks for --update-baseline) and pass-when-current; --require-baseline resolved-missing-path; aggregator-prefix narrowness. Real-tree guards (checker output == committed baseline; geometry_authority_router covered; KNOWN_AGGREGATOR_PKGS pinned) retained. (4) core_ci.yml: the 'Manifest discipline bleed-stop' step (api-tests, before Boot API/full pytest) now runs --require-baseline --fail-on-healed. (5) CI_RED_015D_OPEN_DECISIONS.md / SPRINTS.md: CI-RED-016-A recorded as a bleed-stop only; CI-RED-016 endpoint consolidation stays OPEN.",
+    "why_not_redundant": "No prior workflow invoked check_manifest_discipline.py, so the ratchet was inert - a net-new unmanifested route file could land silently. This PR makes it a CI witness step, fixes a real detector accuracy bug (6 phantom docstring entries were grandfathered in the committed baseline; 2 genuine routers with descriptive receiver names were invisible to the @router.-only regex), and hardens missing/stale baselines into hard CI failures. Endpoint consolidation (CI-RED-016) is untouched and remains open."
   },
   "verification": {
     "commands_run": [
-      "services/api venv: pytest tests/test_rmos_runs_e2e.py -> 6 passed (#13; the intra-file run leak that made test_runs_index_with_filters see 3-not-1 is reset via the correct store_api singleton)",
-      "pytest tests/test_jumbo_dimension_consistency.py tests/test_body_export_bridge.py -> 39 passed, 1 skipped (#15; many body-outline POSTs in one process no longer 429 with the limiter disabled)",
-      "pytest tests/test_body_export_bridge.py::TestBodyExportEndpoint::test_export_without_ibg_context -> 1 passed (the previously-429ing un-guarded test)",
-      "py_compile tests/conftest.py -> OK",
-      "note: full api-verify is an Ubuntu-CI witness (fastapi 0.137 pin); local venv is fastapi 0.121.1"
+      "cd services/api && python scripts/check_manifest_discipline.py --require-baseline --fail-on-healed -> OK: no net-new unmanifested router files (baseline holds 103). bleed-stop ratchet, not full certification",
+      "AST-vs-regex real-tree witness: regex 269 router files (6 docstring false-positives, 3 descriptive-receiver misses) vs AST 269 (drops the 6 FPs, catches the misses, excludes app/main root endpoints); unmanifested 107->103 = -1 healed(geometry) -6 docstring-FP +2 genuine",
+      "cd services/api && python -m pytest tests/test_manifest_discipline.py -q -> 29 passed (api venv), incl. AST docstring-ignore, programmatic/non-router-receiver detection, root-app exclusion, regex fallback, --fail-on-healed, real-tree checker==baseline",
+      "yaml parse core_ci.yml OK; 'Manifest discipline bleed-stop' step runs --require-baseline --fail-on-healed before 'Boot API'"
     ]
   },
   "files": [
     {
-      "path": "services/api/tests/conftest.py",
-      "intent": "#13 reset the LIVE store singleton (store_api, not the stale store re-export); #15 disable the slowapi limiter per-test via monkeypatch.setattr (auto-restored)",
-      "scan_targets": ["services/api/tests/conftest.py"],
+      "path": "services/api/scripts/manifest_discipline_baseline.txt",
+      "intent": "Tighten baseline 108->103 to the accurate unmanifested set (drop 1 healed + 6 docstring false-positives, add 2 genuine descriptive-receiver routers)",
+      "scan_targets": ["services/api/scripts/manifest_discipline_baseline.txt"],
       "risk": "low",
-      "behavior_change": "none - test-isolation only; no production code touched"
+      "behavior_change": "none - frozen-set ratchet data, resynced to the corrected detector output"
+    },
+    {
+      "path": "services/api/scripts/check_manifest_discipline.py",
+      "intent": "AST-first route detection (regex fallback on SyntaxError); detect decorator+programmatic forms on any router-like receiver, exclude the root app; add --fail-on-healed; ratchet-not-certification language",
+      "scan_targets": ["services/api/scripts/check_manifest_discipline.py"],
+      "risk": "low",
+      "behavior_change": "more accurate detection (drops docstring false-positives, catches descriptive-receiver routers, excludes root app) + CI-only fail-hard on missing/stale baseline; ratchet semantics otherwise unchanged"
+    },
+    {
+      "path": "services/api/tests/test_manifest_discipline.py",
+      "intent": "29 unit tests (miniature tmp_path + AST behavior + --fail-on-healed + real-tree guards)",
+      "scan_targets": ["services/api/tests/test_manifest_discipline.py"],
+      "risk": "low",
+      "behavior_change": "none - test-only"
+    },
+    {
+      "path": ".github/workflows/core_ci.yml",
+      "intent": "Run the manifest-discipline check with --require-baseline --fail-on-healed in api-tests before API boot/full pytest",
+      "scan_targets": [".github/workflows/core_ci.yml"],
+      "risk": "low",
+      "behavior_change": "none - CI workflow only"
+    },
+    {
+      "path": "docs/handoffs/CI_RED_015D_OPEN_DECISIONS.md",
+      "intent": "Annotate stale uncommitted/untracked/unrun language as historical; preserve 015-D closure logic",
+      "scan_targets": ["docs/handoffs/CI_RED_015D_OPEN_DECISIONS.md"],
+      "risk": "low",
+      "behavior_change": "none - documentation only"
+    },
+    {
+      "path": "SPRINTS.md",
+      "intent": "Record CI-RED-016-A as a bleed-stop only under CI-RED-016",
+      "scan_targets": ["SPRINTS.md"],
+      "risk": "low",
+      "behavior_change": "none - documentation only"
     }
   ]
 }

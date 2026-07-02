@@ -12,7 +12,7 @@ PROBLEM
     after a deletion: freeze the known set, block regressions.
 
 HOW
-    1. Find every app/**/*.py containing `@router.<verb>(`.
+    1. Find every app/**/*.py that declares a route (see DETECTION below).
     2. Resolve the set of manifested module files (RouterSpec(module=...)).
     3. Treat files reachable via a known aggregator as mounted (best-effort;
        see KNOWN_AGGREGATOR_PKGS — composition is not statically resolved, so
@@ -27,12 +27,40 @@ BASELINE BOOTSTRAP
     accept new unmanifested files later, re-run with --update-baseline.
 
 STATUS
-    UNRUN as of 2026-05-30 (authored without a working shell this session).
+    Materialized and baseline-backed. CI-RED-016-A (2026-07-01) wires this into
+    Core CI (api-tests job, before API boot / full pytest) as a bleed-stop.
+    The known unmanifested set is grandfathered by
+    scripts/manifest_discipline_baseline.txt; only NET-NEW unmanifested router
+    files fail. This does NOT close CI-RED-016 endpoint consolidation.
+
+    This is a RATCHET / bleed-stop, NOT a full proof of runtime route
+    composition. A green result means "no net-new unmanifested router files",
+    not "every router is disciplined".
 
 RUN
     cd services/api && python scripts/check_manifest_discipline.py
     cd services/api && python scripts/check_manifest_discipline.py --update-baseline
+    # CI: fail hard instead of re-bootstrapping if the baseline is missing
+    cd services/api && python scripts/check_manifest_discipline.py --require-baseline
+    # CI: also fail when the baseline has gone stale (entries healed) so debt
+    # reduction is a witnessed --update-baseline action, not a silent drift
+    cd services/api && python scripts/check_manifest_discipline.py --require-baseline --fail-on-healed
+
+DETECTION
+    Route declarations are found via the Python AST (comments and string/docstring
+    examples are correctly ignored — a plain regex false-positives on those). Both
+    decorator and programmatic forms are detected on ANY router-like receiver:
+      - decorators:   @<recv>.get/post/put/patch/delete/head/options/trace/
+                      websocket/api_route(...)
+      - programmatic: <recv>.add_api_route / add_api_websocket_route / add_route /
+                      websocket_route(...)
+    Endpoints declared directly on the composition-root app (receiver named `app`
+    or `application`, e.g. app/main.py) are EXCLUDED: they are mounted by
+    construction and need no RouterSpec. If a file cannot be parsed (SyntaxError),
+    a regex fallback approximates the same rule. This still does NOT prove that a
+    router is actually mounted at runtime (see KNOWN_AGGREGATOR_PKGS).
 """
+import ast
 import re
 import sys
 from pathlib import Path
@@ -43,8 +71,67 @@ APP_ROOT = API_ROOT / "app"
 MANIFEST_DIR = APP_ROOT / "router_registry" / "manifests"
 BASELINE_PATH = SCRIPT_DIR / "manifest_discipline_baseline.txt"
 
-_ROUTER_DECORATOR = re.compile(r"@router\.(get|post|put|patch|delete)\(", re.IGNORECASE)
+# FastAPI/Starlette route-declaration method names.
+ROUTE_DECORATOR_METHODS = frozenset(
+    {"get", "post", "put", "patch", "delete", "head", "options", "trace", "websocket", "api_route"}
+)
+PROGRAMMATIC_ROUTE_METHODS = frozenset(
+    {"add_api_route", "add_api_websocket_route", "add_route", "websocket_route"}
+)
+# Receivers that are the composition-root FastAPI() app (e.g. app/main.py), NOT a
+# sub-router that needs a RouterSpec. Endpoints registered directly on the app are
+# mounted by construction, so they must not count as unmanifested routers.
+ROOT_APP_RECEIVERS = frozenset({"app", "application"})
+
+# Regex fallback, used ONLY when a file fails to parse (SyntaxError). Approximates
+# the AST rule: a route decorator/registration on any receiver except the root app.
+# Best-effort — a broken file is already a problem; the AST path is authoritative.
+_VERB_ALT = "|".join(sorted(ROUTE_DECORATOR_METHODS))
+_PROG_ALT = "|".join(sorted(PROGRAMMATIC_ROUTE_METHODS))
+_ROUTE_DECORATOR_RE = re.compile(
+    r"@\s*(?!app\b|application\b)[A-Za-z_]\w*\s*\.\s*(" + _VERB_ALT + r")\s*\(",
+    re.IGNORECASE | re.MULTILINE,
+)
+_PROGRAMMATIC_ROUTE_RE = re.compile(
+    r"(?<![\w.])(?!app\b|application\b)[A-Za-z_]\w*\s*\.\s*(" + _PROG_ALT + r")\s*\(",
+    re.IGNORECASE,
+)
 _MODULE_RE = re.compile(r"module\s*=\s*[\"']([^\"']+)[\"']")
+
+
+def _receiver_name(attr: ast.Attribute) -> str | None:
+    """Immediate receiver identifier for `<name>.<attr>` (None if not a bare name)."""
+    return attr.value.id if isinstance(attr.value, ast.Name) else None
+
+
+def _is_route_attr(node: ast.AST, methods: frozenset) -> bool:
+    """True if `node` is a `<recv>.<method>` attribute with method in `methods`
+    and the receiver is not the composition-root app."""
+    target = node.func if isinstance(node, ast.Call) else node
+    if not isinstance(target, ast.Attribute) or target.attr not in methods:
+        return False
+    return _receiver_name(target) not in ROOT_APP_RECEIVERS
+
+
+def _declares_route_ast(text: str) -> bool:
+    """Detect route declarations through the AST, ignoring comments/strings."""
+    tree = ast.parse(text)
+    for node in ast.walk(tree):
+        if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):
+            for decorator in node.decorator_list:
+                if isinstance(decorator, ast.Call) and _is_route_attr(decorator, ROUTE_DECORATOR_METHODS):
+                    return True
+        elif isinstance(node, ast.Call) and _is_route_attr(node, PROGRAMMATIC_ROUTE_METHODS):
+            return True
+    return False
+
+
+def declares_route(text: str) -> bool:
+    """Detect decorator and programmatic route declarations (AST-first)."""
+    try:
+        return _declares_route_ast(text)
+    except SyntaxError:
+        return bool(_ROUTE_DECORATOR_RE.search(text) or _PROGRAMMATIC_ROUTE_RE.search(text))
 
 # Packages whose sub-routers are composed via include_router(...) into a mounted
 # aggregator. Files under these are treated as reachable (best-effort allowlist,
@@ -64,18 +151,16 @@ def module_to_relpath(module: str) -> str:
 
 
 def find_router_files() -> set[str]:
-    """Relative-to-app posix paths (no extension) of files with @router decorators."""
+    """Relative-to-app posix paths (no extension) of files that declare routes."""
     found = set()
     for py in APP_ROOT.rglob("*.py"):
-        if py.name == "__init__.py":
-            # __init__ files can compose routers but rarely declare endpoints;
-            # include them only if they actually carry a decorator.
-            pass
+        # Every .py (incl. __init__.py, which can compose routers) is scanned and
+        # counted only if it actually declares a route (see declares_route).
         try:
             text = py.read_text(encoding="utf-8")
         except Exception:
             continue
-        if _ROUTER_DECORATOR.search(text):
+        if declares_route(text):
             rel = py.relative_to(APP_ROOT).with_suffix("")
             found.add(rel.as_posix())
     return found
@@ -137,14 +222,31 @@ def write_baseline(items: set[str]) -> None:
 
 def main(argv: list[str]) -> int:
     update = "--update-baseline" in argv
+    require_baseline = "--require-baseline" in argv
+    fail_on_healed = "--fail-on-healed" in argv
     current = compute_unmanifested()
 
-    if update or not BASELINE_PATH.exists():
+    if update:
         write_baseline(current)
-        action = "Updated" if update else "Bootstrapped"
-        print(f"{action} baseline with {len(current)} unmanifested router file(s): {BASELINE_PATH}")
-        if not update:
-            print("First-run bootstrap — commit this baseline; future runs ratchet against it.")
+        print(f"Updated baseline with {len(current)} unmanifested router file(s): {BASELINE_PATH}")
+        return 0
+
+    if not BASELINE_PATH.exists():
+        # Bootstrap is convenient locally but dangerous in CI: a missing baseline
+        # (bad checkout, path mistake, refactor) would silently re-bootstrap and
+        # PASS, masking the ratchet entirely. --require-baseline makes that a hard
+        # failure so CI never green-lights a check that isn't really running.
+        if require_baseline:
+            print(
+                f"FAIL: baseline file missing at {BASELINE_PATH} and --require-baseline "
+                "is set (CI must not silently re-bootstrap). Restore the committed "
+                "baseline, or regenerate intentionally with --update-baseline.",
+                file=sys.stderr,
+            )
+            return 2
+        write_baseline(current)
+        print(f"Bootstrapped baseline with {len(current)} unmanifested router file(s): {BASELINE_PATH}")
+        print("First-run bootstrap — commit this baseline; future runs ratchet against it.")
         return 0
 
     baseline = load_baseline()
@@ -155,7 +257,15 @@ def main(argv: list[str]) -> int:
         print(f"NOTE: {len(healed)} file(s) left the unmanifested set (manifested or removed):")
         for rel in healed:
             print(f"  - {rel}")
-        print("Consider --update-baseline to tighten the ratchet.\n")
+        print("Tighten the ratchet with --update-baseline (review the baseline diff).\n")
+        if fail_on_healed:
+            print(
+                "FAIL: manifest-discipline baseline is stale (healed entries above). "
+                "Run `python scripts/check_manifest_discipline.py --update-baseline` and "
+                "commit the tightened baseline so debt reduction is witnessed, not silent.",
+                file=sys.stderr,
+            )
+            return 1
 
     if new_bleed:
         print("FAIL: net-new unmanifested router file(s) detected:", file=sys.stderr)
@@ -168,7 +278,10 @@ def main(argv: list[str]) -> int:
         )
         return 1
 
-    print(f"OK: no net-new unmanifested router files (baseline holds {len(baseline)}).")
+    print(
+        f"OK: no net-new unmanifested router files (baseline holds {len(baseline)}). "
+        "This is a bleed-stop ratchet, not full manifest/route-composition certification."
+    )
     return 0
 
 
