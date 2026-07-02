@@ -210,6 +210,64 @@ def test_concave_arc_direction():
     assert arc[mid_idx].y < 0
 
 
+def test_convex_arc_direction():
+    """Convex arcs should curve outward (symmetric counterpart to concave).
+
+    Triage flagged convex as sharing the arc-direction defect that #11 fixed;
+    this makes "fixed by construction" an explicit contract instead of relying
+    on the concave case alone.
+    """
+    r = OutlineReconstructor("dreadnought")
+    from app.services.outline_reconstructor import Gap
+    gap = Gap(
+        chain_idx=0,
+        start=Point(0, 0),
+        end=Point(20, 0),
+        distance_mm=20.0,
+        zone=GapZone.LOWER_BOUT,
+        radius_mm=22.0,
+        concave=False,
+    )
+    arc = r._generate_arc(gap)
+    assert arc is not None
+    mid_idx = len(arc) // 2
+    # Convex (concave=False) places arc_mid on +Y; the arc must follow it.
+    assert arc[mid_idx].y > 0
+
+
+def test_arc_sweep_follows_constructed_midpoint_across_angle_boundary():
+    """The chosen sweep must contain the constructed midpoint angle, even when
+    that means the *long* arc.
+
+    Same endpoints (a1=0, a2=0.6π): depending only on the midpoint angle, the
+    correct sweep is either the short CCW arc (+0.6π) or the long CW arc
+    (-1.4π). The old ``normalize (a2-a1) to (-π, π]`` logic would always return
+    +0.6π, silently traversing the wrong arc whenever the midpoint sits on the
+    CW side. This guards that hidden regression class.
+    """
+    sweep = OutlineReconstructor._sweep_through_midpoint
+
+    a1 = 0.0
+    a2 = 0.6 * math.pi
+
+    # Midpoint on the CCW side → short positive sweep.
+    s_short = sweep(a1, a2, 0.3 * math.pi)
+    assert s_short > 0
+    assert math.isclose(s_short, 0.6 * math.pi, rel_tol=1e-9)
+
+    # Same endpoints, midpoint on the CW side → long negative sweep.
+    s_long = sweep(a1, a2, -0.7 * math.pi)  # equivalently 1.3π, outside CCW span
+    assert s_long < 0
+    assert math.isclose(s_long, 0.6 * math.pi - 2 * math.pi, rel_tol=1e-9)
+
+    # The traversed arc must actually reach the midpoint angle in both cases.
+    for s, a_mid in ((s_short, 0.3 * math.pi), (s_long, -0.7 * math.pi)):
+        # a_mid is between a1 and a1+s along the chosen direction.
+        frac = ((a_mid - a1) % (2 * math.pi)) / (s % (2 * math.pi)) if s > 0 \
+            else ((a1 - a_mid) % (2 * math.pi)) / ((-s) % (2 * math.pi))
+        assert 0.0 <= frac <= 1.0
+
+
 # ── Integration tests ─────────────────────────────────────────────────────────
 
 def test_complete_closes_open_chain():

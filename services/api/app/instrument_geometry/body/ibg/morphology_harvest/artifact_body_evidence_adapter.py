@@ -558,7 +558,12 @@ class ArtifactBodyEvidenceAdapter:
 
         # Downgrade to sandbox_experimental if topology is poor
         if topology_integrity < 0.5:
-            candidate.authority._current_state = AuthorityState.SANDBOX_EXPERIMENTAL
+            candidate.authority.transition(
+                AuthorityState.SANDBOX_EXPERIMENTAL,
+                actor="system:artifact_body_evidence_adapter",
+                reason="poor_topology_integrity",
+                derivation_context={"topology_integrity": topology_integrity},
+            )
             if candidate.provenance:
                 candidate.provenance.add_transformation(
                     stage=TransformationStage.SEMANTIC_CLASSIFICATION,

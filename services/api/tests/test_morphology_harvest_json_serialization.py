@@ -56,6 +56,36 @@ class TestJsonSafeImport:
         from app.instrument_geometry.body.ibg.morphology_harvest.json_utils import SafeJSONEncoder
         assert issubclass(SafeJSONEncoder, json.JSONEncoder)
 
+    def test_import_e2e_spine_runner_uses_phase4_dimension_adapter(self, tmp_path, monkeypatch):
+        """E2ESpineRunner imports cleanly and wires the Phase 4 dimension adapter.
+
+        Witnesses the #9 fix: the module previously imported adapter symbols that
+        did not exist (dead-on-import). It now imports get_phase4_adapter and
+        stores it under its semantic name, ``dimension_adapter``. OUTPUT_DIR is
+        redirected to tmp_path so construction does not touch the repo tree.
+        """
+        from app.instrument_geometry.body.ibg.morphology_harvest import (
+            e2e_spine_runner as mod,
+        )
+
+        monkeypatch.setattr(mod, "OUTPUT_DIR", tmp_path / "e2e_spine")
+
+        runner = mod.E2ESpineRunner(corpus_root=str(tmp_path))
+
+        # The adapter is the Phase 4 dimension-association adapter, exposed under
+        # a role-accurate name (not aliased as a generic blueprint adapter).
+        assert runner.dimension_adapter.name == "Phase4DimensionAssociation"
+        assert callable(runner.dimension_adapter.extract_dimension_values)
+
+    def test_e2e_spine_runner_requires_corpus_root(self):
+        """corpus_root is required — no leaked hardcoded default path (#10 class)."""
+        from app.instrument_geometry.body.ibg.morphology_harvest.e2e_spine_runner import (
+            E2ESpineRunner,
+        )
+
+        with pytest.raises(ValueError):
+            E2ESpineRunner()
+
 
 class TestEnumSerialization:
     """Test ContourCategory enum serialization."""
