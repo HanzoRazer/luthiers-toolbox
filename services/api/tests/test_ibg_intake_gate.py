@@ -273,11 +273,20 @@ class TestIBGIntakeGateConfiguration:
             except Exception:
                 pass
 
+        # Assert the intermediate state directly: each machine bypass is rejected
+        # (ReviewBypassAttemptError) and counted, and the review flag is untouched.
+        assert sample_candidate.review.bypass_attempt_count == 2
+        assert sample_candidate.review.review_required is True
+
         # Then complete human approval.
         sample_candidate.record_review(
             "human:reviewer",
             ReviewDecision.APPROVE,
         )
+
+        # Human approval clears the flag but does not erase the bypass history.
+        assert sample_candidate.review.review_required is False
+        assert sample_candidate.review.bypass_attempt_count == 2
 
         # Default gate rejects
         default_gate = create_default_intake_gate()
