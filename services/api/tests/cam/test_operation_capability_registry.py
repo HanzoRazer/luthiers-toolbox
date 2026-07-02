@@ -27,9 +27,39 @@ from app.cam.export_lifecycle_orchestrator import (
 )
 from app.cam.dxf_translator_boundary import DXFTranslatorProfile
 from app.cam.postprocessor_boundary import MachineProfileValidationOnly
+from app.cam.translator_capability_registry import (
+    list_translators_for_operation,
+    list_translators_by_output_class,
+)
+from app.cam.export_object_to_dxf_adapter import validate_translator_registry
 
 
 client = TestClient(app)
+
+
+def _registered_translator_id_for(operation: str) -> str:
+    """Resolve a real, registry-valid translator id for a lifecycle request.
+
+    7C ``validate_translator_registry`` rejects unregistered ids, so a synthetic
+    ``"test_translator"`` fails the lifecycle's translator stage on identity
+    rather than exercising the operation. Resolve from the capability registry
+    instead of hardcoding one id: prefer a translator that declares ``operation``,
+    else fall back to any registry-valid DXF translator (so operation-agnostic
+    cases like an unregistered operation still construct a valid request and RED
+    for the right reason). This keeps the test resilient to registry churn — a
+    rename/disable of any single translator no longer breaks it, because it
+    asserts the lifecycle reflects the operation, not one hardcoded identity.
+    """
+    candidates = list(list_translators_for_operation(operation)) or list(
+        list_translators_by_output_class("dxf")
+    )
+    for cap in candidates:
+        _, issues = validate_translator_registry(cap.translator_id)
+        if not issues:
+            return cap.translator_id
+    pytest.skip(
+        f"No registry-valid DXF translator available for operation '{operation}'"
+    )
 
 
 # -----------------------------------------------------------------------------
@@ -290,7 +320,12 @@ class TestLifecycleDispatcherIntegration:
                 work_envelope_mm={"x": 300, "y": 300, "z": 50},
             ),
             translator_profile=DXFTranslatorProfile(
-                translator_id="test_translator",
+                # 7C validate_translator_registry rejects unregistered ids. Resolve
+                # a real registered translator from the capability registry (not a
+                # hardcoded id) so the lifecycle's translator stage passes and the
+                # gate reflects the operation, not a synthetic-id rejection or a
+                # single translator's identity. See _registered_translator_id_for.
+                translator_id=_registered_translator_id_for(operation),
                 supported_geometry_types=["line", "polyline", "circle", "arc"],
                 supports_layers=True,
                 units="mm",

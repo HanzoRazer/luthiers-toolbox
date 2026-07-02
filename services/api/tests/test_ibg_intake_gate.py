@@ -263,18 +263,30 @@ class TestIBGIntakeGateConfiguration:
 
     def test_permissive_gate_tolerates_bypass_attempts(self, sample_candidate):
         """Permissive gate tolerates some bypass attempts."""
-        # Approve the candidate first
-        sample_candidate.record_review(
-            "human:reviewer",
-            ReviewDecision.APPROVE,
-        )
-
-        # Add some bypass attempts
+        # Attempt the bypasses FIRST, while review is still required: a machine
+        # actor clearing review_required increments _bypass_attempt_count only when
+        # the flag is still set. (Approving first clears the flag, so the attempts
+        # would no-op and the counter would stay 0.)
         for _ in range(2):
             try:
                 sample_candidate.review.set_review_required(False, "system:bot", "bypass")
             except Exception:
                 pass
+
+        # Assert the intermediate state directly: each machine bypass is rejected
+        # (ReviewBypassAttemptError) and counted, and the review flag is untouched.
+        assert sample_candidate.review.bypass_attempt_count == 2
+        assert sample_candidate.review.review_required is True
+
+        # Then complete human approval.
+        sample_candidate.record_review(
+            "human:reviewer",
+            ReviewDecision.APPROVE,
+        )
+
+        # Human approval clears the flag but does not erase the bypass history.
+        assert sample_candidate.review.review_required is False
+        assert sample_candidate.review.bypass_attempt_count == 2
 
         # Default gate rejects
         default_gate = create_default_intake_gate()

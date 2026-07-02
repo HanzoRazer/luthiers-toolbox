@@ -65,6 +65,24 @@ def verification_output_dir():
     return output_dir
 
 
+@pytest.fixture
+def auth_headers():
+    """Paid-tier operator auth headers for IBG endpoints.
+
+    The IBG paid-tier endpoints (solve-from-landmarks, landmark PUT) gained
+    ``Depends(get_current_principal)`` in IBG-2B, so an unauthenticated
+    TestClient request now 401s. These headers exercise the real header-auth
+    path (``_principal_from_headers``) as an operator principal — the same
+    convention as ``test_body_solver_integration.py``'s ``auth_header``.
+
+    Kept as an explicit ``headers=auth_headers`` argument at each IBG call site
+    (rather than baked into an authenticated client fixture) on purpose: the auth
+    dependency stays visible at the call, so a future auth-model migration surfaces
+    here loudly instead of silently passing through a pre-authenticated client.
+    """
+    return {"x-user-role": "operator", "x-user-id": "test_user_123"}
+
+
 # ─── Helper Functions ────────────────────────────────────────────────────────
 
 
@@ -210,7 +228,7 @@ class TestMorphologySpineFlow:
     """End-to-end spine flow verification tests."""
 
     def test_dreadnought_ibg_defaults_spine_flow(
-        self, api_client, verification_output_dir
+        self, api_client, verification_output_dir, auth_headers
     ):
         """
         Verify spine flow with IBG-generated dreadnought defaults.
@@ -235,6 +253,7 @@ class TestMorphologySpineFlow:
                 "landmarks": landmarks,
                 "options": {"return_json": True, "return_side_heights": True},
             },
+            headers=auth_headers,
         )
 
         if solve_response.status_code == 404:
@@ -506,7 +525,7 @@ class TestMorphologySpineFlow:
         )
 
     def test_landmark_only_solve_spine_flow(
-        self, api_client, verification_output_dir
+        self, api_client, verification_output_dir, auth_headers
     ):
         """
         Verify spine flow with landmark-only IBG solve (no DXF input).
@@ -535,6 +554,7 @@ class TestMorphologySpineFlow:
                     "return_zone_radii": True,
                 },
             },
+            headers=auth_headers,
         )
 
         if ibg_response.status_code == 404:
@@ -613,7 +633,7 @@ class TestAuthorityBoundaries:
     """Verify authority boundaries are maintained through spine flow."""
 
     def test_ibg_metadata_does_not_override_boe_edits(
-        self, api_client, verification_output_dir
+        self, api_client, verification_output_dir, auth_headers
     ):
         """
         Verify that IBG metadata is advisory only -
@@ -633,10 +653,13 @@ class TestAuthorityBoundaries:
                 "landmarks": landmarks,
                 "options": {"return_json": True},
             },
+            headers=auth_headers,
         )
 
         if solve_response.status_code == 404:
             pytest.skip("Body solver router not loaded")
+
+        assert solve_response.status_code == 200, f"IBG solve failed: {solve_response.text}"
 
         ibg_data = solve_response.json()
         original_points = ibg_data["outline_points"]
