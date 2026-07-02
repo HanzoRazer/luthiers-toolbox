@@ -356,15 +356,15 @@ class OutlineReconstructor:
         # Arc angles
         a1 = math.atan2(p1.y - cy, p1.x - cx)
         a2 = math.atan2(p2.y - cy, p2.x - cx)
-        sweep = a2 - a1
+        a_mid = math.atan2(arc_mid.y - cy, arc_mid.x - cx)
 
-        # Normalize sweep to match arc direction
-        if gap.concave:
-            if sweep > 0:
-                sweep -= 2 * math.pi
-        else:
-            if sweep < 0:
-                sweep += 2 * math.pi
+        # Choose the signed sweep whose arc actually passes through the
+        # constructed arc_mid — derived from geometry, not the `concave` flag.
+        # arc_mid sits on the minor side (minor sagitta), so in the common case
+        # this reduces to the minor arc; but at the |sweep| ≈ π boundary,
+        # normalizing (a2 - a1) to (-π, π] forces +π (CCW) regardless of which
+        # semicircle arc_mid is on. Selecting through arc_mid stays correct there.
+        sweep = self._sweep_through_midpoint(a1, a2, a_mid)
 
         arc_length = abs(sweep) * R
         n_points = max(3, int(arc_length / self.spacing))
@@ -379,6 +379,40 @@ class OutlineReconstructor:
             ))
 
         return points
+
+    @staticmethod
+    def _sweep_through_midpoint(a1: float, a2: float, a_mid: float) -> float:
+        """
+        Signed sweep from angle ``a1`` to ``a2`` whose arc passes through the
+        constructed midpoint angle ``a_mid``.
+
+        Two arcs connect a1 and a2: the CCW arc (positive sweep in (0, 2π)) and
+        the CW arc (negative sweep in (-2π, 0)). We return whichever one contains
+        a_mid. This is geometry-driven and, unlike normalizing (a2 - a1) to
+        (-π, π], is correct at the |sweep| ≈ π boundary — where the sign of the
+        chosen semicircle would otherwise be decided by rounding rather than by
+        where arc_mid actually lies.
+
+        Defensive fallback: if the endpoints are angularly coincident (a
+        degenerate, near-zero or near-full separation where "which arc" is
+        ill-defined), fall back to the (-π, π]-normalized delta.
+        """
+        tau = 2 * math.pi
+        ccw = (a2 - a1) % tau  # CCW sweep in [0, 2π)
+
+        # Degenerate angular separation — arc selection is ill-defined.
+        eps = 1e-9
+        if ccw < eps or ccw > tau - eps:
+            norm = (a2 - a1) % tau
+            if norm > math.pi:
+                norm -= tau
+            return norm
+
+        # CCW distance from a1 to the midpoint angle, in [0, 2π).
+        to_mid = (a_mid - a1) % tau
+        if to_mid <= ccw:
+            return ccw          # midpoint on the CCW arc
+        return ccw - tau        # midpoint on the CW arc (negative sweep)
 
     @staticmethod
     def _circle_center(

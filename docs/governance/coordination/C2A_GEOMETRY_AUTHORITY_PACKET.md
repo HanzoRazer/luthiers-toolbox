@@ -681,6 +681,17 @@ This caveat is essential to prevent misinterpretation of ratification as permiss
 
 ---
 
+## 18.5 Implementation-Facing Role Mapping (GAMS)
+
+Implementation-facing role mapping is captured in
+`GAMS_GEOMETRY_AUTHORITY_MAPPING_SPEC.md`.
+
+GAMS records implementation-facing role mapping for C2-A geometry-authority
+distinctions, for implementation review only. It does not decide the still-open
+authoritative geometry-origin question.
+
+---
+
 ## 19. Ratification Preconditions
 
 ### 19.1 Before This Packet Can Be Ratified
