@@ -36,6 +36,13 @@ STATUS
 RUN
     cd services/api && python scripts/check_manifest_discipline.py
     cd services/api && python scripts/check_manifest_discipline.py --update-baseline
+    # CI: fail hard instead of re-bootstrapping if the baseline is missing
+    cd services/api && python scripts/check_manifest_discipline.py --require-baseline
+
+DETECTION
+    @router.<verb>( where verb is any FastAPI route method incl. websocket/api_route.
+    Programmatic registration (add_api_route / app.websocket) is NOT detected — a
+    known limitation; such routers must still be routed via router_registry.
 """
 import re
 import sys
@@ -47,7 +54,10 @@ APP_ROOT = API_ROOT / "app"
 MANIFEST_DIR = APP_ROOT / "router_registry" / "manifests"
 BASELINE_PATH = SCRIPT_DIR / "manifest_discipline_baseline.txt"
 
-_ROUTER_DECORATOR = re.compile(r"@router\.(get|post|put|patch|delete)\(", re.IGNORECASE)
+_ROUTER_DECORATOR = re.compile(
+    r"@router\.(get|post|put|patch|delete|head|options|trace|websocket|api_route)\(",
+    re.IGNORECASE,
+)
 _MODULE_RE = re.compile(r"module\s*=\s*[\"']([^\"']+)[\"']")
 
 # Packages whose sub-routers are composed via include_router(...) into a mounted
@@ -71,10 +81,8 @@ def find_router_files() -> set[str]:
     """Relative-to-app posix paths (no extension) of files with @router decorators."""
     found = set()
     for py in APP_ROOT.rglob("*.py"):
-        if py.name == "__init__.py":
-            # __init__ files can compose routers but rarely declare endpoints;
-            # include them only if they actually carry a decorator.
-            pass
+        # Every .py (incl. __init__.py, which can compose routers) is scanned and
+        # counted only if it actually carries an @router endpoint decorator.
         try:
             text = py.read_text(encoding="utf-8")
         except Exception:
@@ -141,14 +149,30 @@ def write_baseline(items: set[str]) -> None:
 
 def main(argv: list[str]) -> int:
     update = "--update-baseline" in argv
+    require_baseline = "--require-baseline" in argv
     current = compute_unmanifested()
 
-    if update or not BASELINE_PATH.exists():
+    if update:
         write_baseline(current)
-        action = "Updated" if update else "Bootstrapped"
-        print(f"{action} baseline with {len(current)} unmanifested router file(s): {BASELINE_PATH}")
-        if not update:
-            print("First-run bootstrap — commit this baseline; future runs ratchet against it.")
+        print(f"Updated baseline with {len(current)} unmanifested router file(s): {BASELINE_PATH}")
+        return 0
+
+    if not BASELINE_PATH.exists():
+        # Bootstrap is convenient locally but dangerous in CI: a missing baseline
+        # (bad checkout, path mistake, refactor) would silently re-bootstrap and
+        # PASS, masking the ratchet entirely. --require-baseline makes that a hard
+        # failure so CI never green-lights a check that isn't really running.
+        if require_baseline:
+            print(
+                f"FAIL: baseline file missing at {BASELINE_PATH} and --require-baseline "
+                "is set (CI must not silently re-bootstrap). Restore the committed "
+                "baseline, or regenerate intentionally with --update-baseline.",
+                file=sys.stderr,
+            )
+            return 2
+        write_baseline(current)
+        print(f"Bootstrapped baseline with {len(current)} unmanifested router file(s): {BASELINE_PATH}")
+        print("First-run bootstrap — commit this baseline; future runs ratchet against it.")
         return 0
 
     baseline = load_baseline()

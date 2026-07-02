@@ -164,3 +164,61 @@ def test_missing_baseline_bootstraps(tree, capsys):
     assert "Bootstrapped baseline" in out
     assert tree.baseline.exists()
     assert _baseline_entries(tree.baseline) == ["routers/foo"]
+
+
+# --- broadened decorator detection (websocket / api_route) -------------------
+
+def test_router_decorator_detects_websocket_and_api_route(tree):
+    # A websocket-only or api_route-only router file must still be counted — the
+    # narrow (get|post|put|patch|delete) regex would have missed these.
+    _write_router(tree.app_root, "routers/ws_only", verb="websocket")
+    _write_router(tree.app_root, "routers/generic", verb="api_route")
+    found = tree.mod.find_router_files()
+    assert "routers/ws_only" in found
+    assert "routers/generic" in found
+
+
+# --- --require-baseline hard-fail (no silent CI re-bootstrap) -----------------
+
+def test_require_baseline_fails_hard_when_missing(tree, capsys):
+    assert not tree.baseline.exists()
+    _write_router(tree.app_root, "routers/foo", verb="get")
+    rc = tree.mod.main(["--require-baseline"])
+    err = capsys.readouterr().err
+    assert rc == 2
+    assert "baseline file missing" in err
+    assert not tree.baseline.exists()  # must NOT silently re-bootstrap in CI
+
+
+def test_require_baseline_ratchets_normally_when_present(tree, capsys):
+    _write_router(tree.app_root, "routers/foo", verb="get")
+    tree.mod.write_baseline({"routers/foo"})
+    rc = tree.mod.main(["--require-baseline"])
+    assert rc == 0
+    assert "OK: no net-new unmanifested router files" in capsys.readouterr().out
+
+
+# --- representative checks against the REAL repo tree (not tmp_path) ----------
+# These use the fresh module with its real path globals, so they exercise the
+# actual app/ tree + committed baseline — catching drift the miniature tests can't.
+
+def test_real_repo_checker_matches_committed_baseline(mod):
+    # The checker's live output must equal the committed baseline: if a real
+    # unmanifested router lands (or one heals) without a baseline update, this
+    # fails alongside the CI step — a representative integration guard.
+    assert mod.compute_unmanifested() == mod.load_baseline()
+
+
+def test_geometry_authority_router_is_covered_in_real_tree(mod):
+    # The baseline was tightened 108->107 by removing this entry; assert it is
+    # genuinely covered (manifested by CI-RED-015-H), not prematurely dropped.
+    assert "routers/cam/geometry_authority_router" not in mod.compute_unmanifested()
+
+
+def test_known_aggregator_pkgs_are_pinned(mod):
+    # The prefix allowlist is an explicit trust boundary (not a proof of runtime
+    # composition); pin it so it cannot silently grow without a reviewed test change.
+    assert mod.KNOWN_AGGREGATOR_PKGS == (
+        "app.cam.routers",
+        "app.routers.instrument_geometry",
+    )

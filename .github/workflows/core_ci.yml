@@ -55,7 +55,7 @@ jobs:
       - name: Manifest discipline bleed-stop
         run: |
           cd services/api
-          python scripts/check_manifest_discipline.py
+          python scripts/check_manifest_discipline.py --require-baseline
       - name: Boot API
         run: |
           cd services/api
