@@ -562,6 +562,7 @@ class ArtifactBodyEvidenceAdapter:
                 AuthorityState.SANDBOX_EXPERIMENTAL,
                 actor="system:artifact_body_evidence_adapter",
                 reason="poor_topology_integrity",
+                derivation_context={"topology_integrity": topology_integrity},
             )
             if candidate.provenance:
                 candidate.provenance.add_transformation(

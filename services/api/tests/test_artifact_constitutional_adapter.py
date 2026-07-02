@@ -270,20 +270,38 @@ class TestTopologyIntegrity:
         assert 0.0 <= result.topology_integrity <= 1.0
 
     def test_poor_topology_downgrades_to_sandbox(self, adapter):
-        """Poor topology degrades authority to sandbox_experimental."""
-        # Create adapter result with no content (will have poor topology)
+        """Poor topology degrades authority to sandbox_experimental.
+
+        This test IS the poor-topology case, so the preconditions are asserted
+        unconditionally (not guarded behind `if`) — a guarded version would pass
+        vacuously if the fixture ever stopped producing a poor-topology
+        candidate. The empty SVG parses to a body with zero topology integrity.
+        """
         result = adapter.from_vectorizer_response_constitutional(
             dxf_base64=None,
-            svg_content="<svg></svg>",  # Will fail to parse
+            svg_content="<svg></svg>",  # parses to an empty, zero-integrity body
             source_file="/blueprints/empty.svg",
             source_mode="pdf",
         )
 
-        # If parsing failed entirely, success should be False
-        # If partial success with poor topology, authority should be sandbox
-        if result.success and result.candidate:
-            if result.topology_integrity < 0.5:
-                assert result.candidate.authority_state == AuthorityState.SANDBOX_EXPERIMENTAL
+        # Preconditions the downgrade depends on — asserted, not guarded.
+        assert result.success is True
+        assert result.candidate is not None
+        assert result.topology_integrity < 0.5
+
+        # The candidate must end up downgraded.
+        assert result.candidate.authority_state == AuthorityState.SANDBOX_EXPERIMENTAL
+
+        # And the downgrade must be an auditable, inspectable transition: the
+        # last recorded transition is the poor-topology downgrade, carrying the
+        # topology score in its derivation context.
+        downgrade = result.candidate.authority.transition_history[-1]
+        assert downgrade.from_state == AuthorityState.ADVISORY_CANDIDATE
+        assert downgrade.to_state == AuthorityState.SANDBOX_EXPERIMENTAL
+        assert downgrade.actor == "system:artifact_body_evidence_adapter"
+        assert downgrade.reason == "poor_topology_integrity"
+        assert downgrade.derivation_context is not None
+        assert downgrade.derivation_context["topology_integrity"] == result.topology_integrity
 
 
 # =============================================================================
