@@ -65,6 +65,12 @@ def verification_output_dir():
     return output_dir
 
 
+# Paid-tier IBG endpoints (solve-from-landmarks, landmark PUT) gained
+# Depends(get_current_principal) in IBG-2B; TestClient must send legacy
+# header-auth to reach them (same convention as test_body_solver_integration.py).
+_AUTH_HEADERS = {"x-user-role": "operator", "x-user-id": "test_user_123"}
+
+
 # ─── Helper Functions ────────────────────────────────────────────────────────
 
 
@@ -235,6 +241,7 @@ class TestMorphologySpineFlow:
                 "landmarks": landmarks,
                 "options": {"return_json": True, "return_side_heights": True},
             },
+            headers=_AUTH_HEADERS,
         )
 
         if solve_response.status_code == 404:
@@ -535,6 +542,7 @@ class TestMorphologySpineFlow:
                     "return_zone_radii": True,
                 },
             },
+            headers=_AUTH_HEADERS,
         )
 
         if ibg_response.status_code == 404:
@@ -633,10 +641,13 @@ class TestAuthorityBoundaries:
                 "landmarks": landmarks,
                 "options": {"return_json": True},
             },
+            headers=_AUTH_HEADERS,
         )
 
         if solve_response.status_code == 404:
             pytest.skip("Body solver router not loaded")
+
+        assert solve_response.status_code == 200, f"IBG solve failed: {solve_response.text}"
 
         ibg_data = solve_response.json()
         original_points = ibg_data["outline_points"]

@@ -290,7 +290,12 @@ class TestLifecycleDispatcherIntegration:
                 work_envelope_mm={"x": 300, "y": 300, "z": 50},
             ),
             translator_profile=DXFTranslatorProfile(
-                translator_id="test_translator",
+                # 7C validate_translator_registry rejects unregistered ids; use a
+                # real registered translator (dxf_r12: category=translator,
+                # output_class=dxf, supports nut_slot/drilling) so the lifecycle's
+                # translator stage passes and the gate reflects the operation, not
+                # a synthetic-id rejection.
+                translator_id="dxf_r12",
                 supported_geometry_types=["line", "polyline", "circle", "arc"],
                 supports_layers=True,
                 units="mm",

@@ -2,9 +2,9 @@
   "schema": "cbsp21_patch_input_v1",
   "schema_version": "cbsp21_patch_input_v1",
   "coverage_min": 0.95,
-  "patch_id": "STANDING_FAILURES_BATCH_B_TEST_ISOLATION",
-  "title": "Fix 2 standing failures caused by leaked module-level singletons (#13, #15 — triage bucket B)",
-  "intent": "Batch B of the api-verify standing-failures triage. Two residual reds are pure test-ISOLATION defects: module-level singletons not reset between tests, so state leaks across the session and the test fails only in the full suite (passes in isolation). #13 the RMOS runs store; #15 the slowapi rate limiter. Both fixed in the single existing autouse fixture in services/api/tests/conftest.py. Test-only; no production code touched, no behavior change.",
+  "patch_id": "STANDING_FAILURES_BATCH_A_STALE_SWEEP",
+  "title": "Fix 5 standing failures that are stale tests (#3, #4, #5, #8, #14 — triage bucket A)",
+  "intent": "Batch A of the api-verify standing-failures triage. Five residual reds are STALE TESTS — the product moved and the tests didn't. #3/#4/#5 the IBG solve-from-landmarks endpoint gained Depends(get_current_principal) in IBG-2B, so unauthenticated TestClient POSTs now 401; #8 a permissive-gate test approves before attempting bypass, so the bypass counter never increments; #14 a lifecycle fixture used a synthetic translator_id that 7C's registry validation rejects. Each was re-grounded against current code before fixing. Test-only; no production code touched, no behavior change.",
   "change_type": "fix",
   "behavior_change": "none",
   "risk_level": "low",
@@ -14,30 +14,45 @@
       "services/api/tests/"
     ],
     "files_expected_to_change": [
-      "services/api/tests/conftest.py",
+      "services/api/tests/mrp_spine_verification/test_morphology_spine_e2e.py",
+      "services/api/tests/test_ibg_intake_gate.py",
+      "services/api/tests/cam/test_operation_capability_registry.py",
       ".cbsp21/patch_input.json"
     ]
   },
   "diff_articulation": {
-    "what_changed": "Both edits are in the autouse `rmos_global_test_isolation` fixture in services/api/tests/conftest.py. (#13) The store reset targeted `app.rmos.runs_v2.store._default_store`, but that name is only a STALE re-export (bound at import time) of the real singleton `app.rmos.runs_v2.store_api._default_store`, which the runs endpoints actually read via _get_default_store(). Resetting the re-export was a no-op, so RunStoreV2 pinned the first test's RMOS_RUNS_DIR and runs persisted by earlier tests leaked into test_runs_index_with_filters (counted 3 where it created 1). Changed the reset to `store_api._default_store = None`. (#15) Added rate-limiter isolation: the slowapi `limiter` is a module-level singleton with in-memory, IP-keyed storage; TestClient uses a fixed IP so per-endpoint caps (body-outline 10/hour) accumulate across the whole session and eventually 429. `enabled` is captured from env at import time, so setting RATE_LIMIT_ENABLED in a fixture is too late; instead `monkeypatch.setattr(limiter, 'enabled', False)` disables the constructed singleton per-test (monkeypatch auto-restores it, so no manual teardown).",
-    "why_not_redundant": "Both hypotheses were re-grounded against current code. #13: confirmed store.py:396-398 re-exports the name from store_api while the endpoints (api_runs.py) read store_api's global via _get_default_store; the fixture (and the two per-test fixtures) reset the wrong module. #15: confirmed the limiter's `enabled` is baked in at construction (rate_limit.py:150-154) from an import-time env read, so only a runtime attribute toggle works; verified no test enforces a real 429 through the app (the only assert-429 calls the handler directly with a mocked exception; test_limiter_is_enabled_by_default asserts the module constant, not the .enabled attribute; a smoke test already tolerates 429). Both are the SAME class (un-reset module singleton) and share the one autouse fixture."
+    "what_changed": "(#3/#4/#5) test_morphology_spine_e2e.py: the three failing tests POST to /api/body/solve-from-landmarks (a paid-tier endpoint that gained Depends(get_current_principal) in IBG-2B) without auth, so TestClient got 401. Added a module-level _AUTH_HEADERS = {'x-user-role':'operator','x-user-id':'test_user_123'} (the same legacy header-auth convention the passing test_body_solver_integration.py uses) and passed headers=_AUTH_HEADERS to the three solve POSTs. #5 additionally had NO status guard before ibg_data['outline_points'] (so the 401 body caused KeyError, not a clear failure); added the assert solve_response.status_code == 200 guard the sibling tests already have. (#8) test_ibg_intake_gate.py::test_permissive_gate_tolerates_bypass_attempts: reordered so the two machine bypass attempts (set_review_required(False,'system:bot')) run BEFORE the human approval. set_review_required only increments _bypass_attempt_count when _review_required is still True; approving first cleared the flag, so the attempts no-op'd and the counter stayed 0 (REVIEW_BYPASS_DETECTED never fired). Attempting pre-approval makes the counter reach 2, so the default gate rejects and the permissive gate (allow=2) accepts. (#14) test_operation_capability_registry.py: the shared _create_lifecycle_request helper hardcoded translator_id='test_translator', which 7C validate_translator_registry rejects (not in TRANSLATOR_CAPABILITY_REGISTRY) -> translator stage RED. Changed to 'dxf_r12' (category=translator, output_class=dxf, execution_state=validation_only not disabled, supported_operations include nut_slot/drilling) so test_registered_operation_works gets green/yellow.",
+    "why_not_redundant": "All five hypotheses were re-verified against current code (the earlier #1/#2 diagnosis had proven wrong, so no triage row was trusted). #3/#4/#5 share one root cause (the IBG-2B auth gate, commit 70a0d3ee) and the exact header convention was copied from a PASSING test, not guessed. #8's reorder was validated against the set_review_required increment guard (`if self._review_required and not required`). #14's replacement id was confirmed present and valid in TRANSLATOR_CAPABILITY_REGISTRY, and no sibling test depends on 'test_translator' being rejected (test_unregistered_operation_returns_red is red because of the OPERATION, not the translator). All test-only; zero product behavior change."
   },
   "verification": {
     "commands_run": [
-      "services/api venv: pytest tests/test_rmos_runs_e2e.py -> 6 passed (#13; the intra-file run leak that made test_runs_index_with_filters see 3-not-1 is reset via the correct store_api singleton)",
-      "pytest tests/test_jumbo_dimension_consistency.py tests/test_body_export_bridge.py -> 39 passed, 1 skipped (#15; many body-outline POSTs in one process no longer 429 with the limiter disabled)",
-      "pytest tests/test_body_export_bridge.py::TestBodyExportEndpoint::test_export_without_ibg_context -> 1 passed (the previously-429ing un-guarded test)",
-      "py_compile tests/conftest.py -> OK",
+      "services/api venv: pytest tests/mrp_spine_verification/test_morphology_spine_e2e.py -> 10 passed, 1 skipped (#3/#4/#5 now authenticate and 200; the skip is a real-artifact test with no PDF present; sibling tests unaffected)",
+      "pytest tests/test_ibg_intake_gate.py tests/cam/test_operation_capability_registry.py -> 48 passed (#8 reorder + #14 dxf_r12; every sibling in both files still green)",
+      "py_compile of all 3 edited test files -> OK",
       "note: full api-verify is an Ubuntu-CI witness (fastapi 0.137 pin); local venv is fastapi 0.121.1"
     ]
   },
   "files": [
     {
-      "path": "services/api/tests/conftest.py",
-      "intent": "#13 reset the LIVE store singleton (store_api, not the stale store re-export); #15 disable the slowapi limiter per-test via monkeypatch.setattr (auto-restored)",
-      "scan_targets": ["services/api/tests/conftest.py"],
+      "path": "services/api/tests/mrp_spine_verification/test_morphology_spine_e2e.py",
+      "intent": "#3/#4/#5: send IBG-2B header-auth on the three solve-from-landmarks POSTs; add #5's missing 200 status guard",
+      "scan_targets": ["services/api/tests/mrp_spine_verification/test_morphology_spine_e2e.py"],
       "risk": "low",
-      "behavior_change": "none - test-isolation only; no production code touched"
+      "behavior_change": "none - test-only"
+    },
+    {
+      "path": "services/api/tests/test_ibg_intake_gate.py",
+      "intent": "#8: attempt bypasses before approval so the bypass counter actually increments",
+      "scan_targets": ["services/api/tests/test_ibg_intake_gate.py"],
+      "risk": "low",
+      "behavior_change": "none - test-only"
+    },
+    {
+      "path": "services/api/tests/cam/test_operation_capability_registry.py",
+      "intent": "#14: use a registered translator id (dxf_r12) instead of the synthetic test_translator the registry rejects",
+      "scan_targets": ["services/api/tests/cam/test_operation_capability_registry.py"],
+      "risk": "low",
+      "behavior_change": "none - test-only"
     }
   ]
 }
