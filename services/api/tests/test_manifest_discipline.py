@@ -178,6 +178,79 @@ def test_router_decorator_detects_websocket_and_api_route(tree):
     assert "routers/generic" in found
 
 
+# --- AST detection: strings/comments, programmatic forms, receiver scope ------
+
+def test_declares_route_ignores_comments_and_strings(mod):
+    # AST parse must NOT count route decorators that appear only inside a
+    # docstring/string or a comment (the old regex false-positived on these —
+    # 6 such phantom entries were in the committed baseline before CI-RED-016-A).
+    text = '''"""Usage example:
+
+    @router.get("/patterns")
+    def list_patterns():
+        ...
+"""
+# router.add_api_route("/commented", handler)
+ROUTE_SNIPPET = "@router.post('/from-a-string')"
+
+def helper():
+    return 1
+'''
+    assert mod.declares_route(text) is False
+
+
+def test_declares_route_detects_programmatic_add_api_route(mod):
+    text = (
+        "from fastapi import APIRouter\n"
+        "router = APIRouter()\n"
+        "def handler():\n    return {'ok': True}\n"
+        "router.add_api_route('/x', handler, methods=['GET'])\n"
+    )
+    assert mod.declares_route(text) is True
+
+
+def test_declares_route_detects_programmatic_websocket_route(mod):
+    text = (
+        "router = APIRouter()\n"
+        "async def ws(websocket):\n    await websocket.accept()\n"
+        "router.add_api_websocket_route('/ws', ws)\n"
+    )
+    assert mod.declares_route(text) is True
+
+
+def test_declares_route_detects_non_router_receiver_name(mod):
+    # Real routers are often named descriptively (analytics_router, contour_router).
+    # The old `@router.` regex was blind to these — a genuine bleed hole.
+    text = "@analytics_router.get('/summary')\ndef summary():\n    return []\n"
+    assert mod.declares_route(text) is True
+
+
+def test_declares_route_excludes_root_app_endpoints(mod):
+    # Endpoints declared directly on the composition-root app (app/main.py) are
+    # mounted by construction and must NOT be flagged as unmanifested routers.
+    decorator = "@app.get('/health')\ndef health():\n    return {'ok': True}\n"
+    programmatic = "def h():\n    return 1\napp.add_api_route('/x', h, methods=['GET'])\n"
+    assert mod.declares_route(decorator) is False
+    assert mod.declares_route(programmatic) is False
+
+
+def test_declares_route_regex_fallback_on_syntax_error(mod):
+    # Unparseable files fall back to regex, which still applies the router-scope
+    # rule: a non-app receiver matches, the root app does not.
+    broken_router = "def (:\n    pass\n@feature_router.post('/x')\ndef h():\n    pass\n"
+    broken_app = "def (:\n    pass\n@app.post('/x')\ndef h():\n    pass\n"
+    assert mod.declares_route(broken_router) is True
+    assert mod.declares_route(broken_app) is False
+
+
+def test_root_app_receiver_file_not_counted_in_tree(tree):
+    # End-to-end through find_router_files: a main-like file with only @app routes
+    # is not a manifested-router candidate.
+    p = tree.app_root / "main.py"
+    p.write_text("@app.get('/health')\ndef health():\n    return {}\n", encoding="utf-8")
+    assert "main" not in tree.mod.find_router_files()
+
+
 # --- --require-baseline hard-fail (no silent CI re-bootstrap) -----------------
 
 def test_require_baseline_fails_hard_when_missing(tree, capsys):
@@ -196,6 +269,50 @@ def test_require_baseline_ratchets_normally_when_present(tree, capsys):
     rc = tree.mod.main(["--require-baseline"])
     assert rc == 0
     assert "OK: no net-new unmanifested router files" in capsys.readouterr().out
+
+
+def test_require_baseline_reports_resolved_missing_path(tree, capsys):
+    # A missing baseline in CI must fail with the RESOLVED path so path/cwd
+    # mistakes are triageable, not a bare filename.
+    assert not tree.baseline.exists()
+    rc = tree.mod.main(["--require-baseline"])
+    err = capsys.readouterr().err
+    assert rc == 2
+    assert str(tree.baseline) in err
+
+
+# --- --fail-on-healed (stale baseline is a hard, witnessed failure) -----------
+
+def test_fail_on_healed_returns_error_and_asks_for_update(tree, capsys):
+    # One baseline entry no longer exists in the tree -> stale. Without the flag
+    # this only NOTEs; with it, CI must fail so the tightening is witnessed.
+    _write_router(tree.app_root, "routers/still_here", verb="get")
+    tree.mod.write_baseline({"routers/still_here", "routers/now_healed"})
+    rc = tree.mod.main(["--require-baseline", "--fail-on-healed"])
+    captured = capsys.readouterr()
+    assert rc == 1
+    assert "baseline is stale" in captured.err
+    assert "--update-baseline" in captured.err
+
+
+def test_fail_on_healed_passes_when_baseline_current(tree, capsys):
+    _write_router(tree.app_root, "routers/foo", verb="get")
+    tree.mod.write_baseline({"routers/foo"})
+    rc = tree.mod.main(["--require-baseline", "--fail-on-healed"])
+    assert rc == 0
+    assert "bleed-stop ratchet" in capsys.readouterr().out
+
+
+# --- aggregator allowlist stays narrow ---------------------------------------
+
+def test_known_aggregator_prefixes_remain_narrow(mod):
+    # The prefix allowlist is a trust boundary, not a proof of composition. Beyond
+    # pinning the exact tuple elsewhere, assert it stays app-scoped and never
+    # widens to a whole package root (which would blanket-exempt too much).
+    assert mod.KNOWN_AGGREGATOR_PKGS
+    for prefix in mod.KNOWN_AGGREGATOR_PKGS:
+        assert prefix.startswith("app.")
+        assert prefix not in {"app", "app.routers", "app.cam"}
 
 
 # --- representative checks against the REAL repo tree (not tmp_path) ----------

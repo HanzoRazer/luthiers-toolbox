@@ -12,7 +12,7 @@ PROBLEM
     after a deletion: freeze the known set, block regressions.
 
 HOW
-    1. Find every app/**/*.py containing `@router.<verb>(`.
+    1. Find every app/**/*.py that declares a route (see DETECTION below).
     2. Resolve the set of manifested module files (RouterSpec(module=...)).
     3. Treat files reachable via a known aggregator as mounted (best-effort;
        see KNOWN_AGGREGATOR_PKGS — composition is not statically resolved, so
@@ -33,17 +33,34 @@ STATUS
     scripts/manifest_discipline_baseline.txt; only NET-NEW unmanifested router
     files fail. This does NOT close CI-RED-016 endpoint consolidation.
 
+    This is a RATCHET / bleed-stop, NOT a full proof of runtime route
+    composition. A green result means "no net-new unmanifested router files",
+    not "every router is disciplined".
+
 RUN
     cd services/api && python scripts/check_manifest_discipline.py
     cd services/api && python scripts/check_manifest_discipline.py --update-baseline
     # CI: fail hard instead of re-bootstrapping if the baseline is missing
     cd services/api && python scripts/check_manifest_discipline.py --require-baseline
+    # CI: also fail when the baseline has gone stale (entries healed) so debt
+    # reduction is a witnessed --update-baseline action, not a silent drift
+    cd services/api && python scripts/check_manifest_discipline.py --require-baseline --fail-on-healed
 
 DETECTION
-    @router.<verb>( where verb is any FastAPI route method incl. websocket/api_route.
-    Programmatic registration (add_api_route / app.websocket) is NOT detected — a
-    known limitation; such routers must still be routed via router_registry.
+    Route declarations are found via the Python AST (comments and string/docstring
+    examples are correctly ignored — a plain regex false-positives on those). Both
+    decorator and programmatic forms are detected on ANY router-like receiver:
+      - decorators:   @<recv>.get/post/put/patch/delete/head/options/trace/
+                      websocket/api_route(...)
+      - programmatic: <recv>.add_api_route / add_api_websocket_route / add_route /
+                      websocket_route(...)
+    Endpoints declared directly on the composition-root app (receiver named `app`
+    or `application`, e.g. app/main.py) are EXCLUDED: they are mounted by
+    construction and need no RouterSpec. If a file cannot be parsed (SyntaxError),
+    a regex fallback approximates the same rule. This still does NOT prove that a
+    router is actually mounted at runtime (see KNOWN_AGGREGATOR_PKGS).
 """
+import ast
 import re
 import sys
 from pathlib import Path
@@ -54,11 +71,67 @@ APP_ROOT = API_ROOT / "app"
 MANIFEST_DIR = APP_ROOT / "router_registry" / "manifests"
 BASELINE_PATH = SCRIPT_DIR / "manifest_discipline_baseline.txt"
 
-_ROUTER_DECORATOR = re.compile(
-    r"@router\.(get|post|put|patch|delete|head|options|trace|websocket|api_route)\(",
+# FastAPI/Starlette route-declaration method names.
+ROUTE_DECORATOR_METHODS = frozenset(
+    {"get", "post", "put", "patch", "delete", "head", "options", "trace", "websocket", "api_route"}
+)
+PROGRAMMATIC_ROUTE_METHODS = frozenset(
+    {"add_api_route", "add_api_websocket_route", "add_route", "websocket_route"}
+)
+# Receivers that are the composition-root FastAPI() app (e.g. app/main.py), NOT a
+# sub-router that needs a RouterSpec. Endpoints registered directly on the app are
+# mounted by construction, so they must not count as unmanifested routers.
+ROOT_APP_RECEIVERS = frozenset({"app", "application"})
+
+# Regex fallback, used ONLY when a file fails to parse (SyntaxError). Approximates
+# the AST rule: a route decorator/registration on any receiver except the root app.
+# Best-effort — a broken file is already a problem; the AST path is authoritative.
+_VERB_ALT = "|".join(sorted(ROUTE_DECORATOR_METHODS))
+_PROG_ALT = "|".join(sorted(PROGRAMMATIC_ROUTE_METHODS))
+_ROUTE_DECORATOR_RE = re.compile(
+    r"@\s*(?!app\b|application\b)[A-Za-z_]\w*\s*\.\s*(" + _VERB_ALT + r")\s*\(",
+    re.IGNORECASE | re.MULTILINE,
+)
+_PROGRAMMATIC_ROUTE_RE = re.compile(
+    r"(?<![\w.])(?!app\b|application\b)[A-Za-z_]\w*\s*\.\s*(" + _PROG_ALT + r")\s*\(",
     re.IGNORECASE,
 )
 _MODULE_RE = re.compile(r"module\s*=\s*[\"']([^\"']+)[\"']")
+
+
+def _receiver_name(attr: ast.Attribute) -> str | None:
+    """Immediate receiver identifier for `<name>.<attr>` (None if not a bare name)."""
+    return attr.value.id if isinstance(attr.value, ast.Name) else None
+
+
+def _is_route_attr(node: ast.AST, methods: frozenset) -> bool:
+    """True if `node` is a `<recv>.<method>` attribute with method in `methods`
+    and the receiver is not the composition-root app."""
+    target = node.func if isinstance(node, ast.Call) else node
+    if not isinstance(target, ast.Attribute) or target.attr not in methods:
+        return False
+    return _receiver_name(target) not in ROOT_APP_RECEIVERS
+
+
+def _declares_route_ast(text: str) -> bool:
+    """Detect route declarations through the AST, ignoring comments/strings."""
+    tree = ast.parse(text)
+    for node in ast.walk(tree):
+        if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):
+            for decorator in node.decorator_list:
+                if isinstance(decorator, ast.Call) and _is_route_attr(decorator, ROUTE_DECORATOR_METHODS):
+                    return True
+        elif isinstance(node, ast.Call) and _is_route_attr(node, PROGRAMMATIC_ROUTE_METHODS):
+            return True
+    return False
+
+
+def declares_route(text: str) -> bool:
+    """Detect decorator and programmatic route declarations (AST-first)."""
+    try:
+        return _declares_route_ast(text)
+    except SyntaxError:
+        return bool(_ROUTE_DECORATOR_RE.search(text) or _PROGRAMMATIC_ROUTE_RE.search(text))
 
 # Packages whose sub-routers are composed via include_router(...) into a mounted
 # aggregator. Files under these are treated as reachable (best-effort allowlist,
@@ -78,16 +151,16 @@ def module_to_relpath(module: str) -> str:
 
 
 def find_router_files() -> set[str]:
-    """Relative-to-app posix paths (no extension) of files with @router decorators."""
+    """Relative-to-app posix paths (no extension) of files that declare routes."""
     found = set()
     for py in APP_ROOT.rglob("*.py"):
         # Every .py (incl. __init__.py, which can compose routers) is scanned and
-        # counted only if it actually carries an @router endpoint decorator.
+        # counted only if it actually declares a route (see declares_route).
         try:
             text = py.read_text(encoding="utf-8")
         except Exception:
             continue
-        if _ROUTER_DECORATOR.search(text):
+        if declares_route(text):
             rel = py.relative_to(APP_ROOT).with_suffix("")
             found.add(rel.as_posix())
     return found
@@ -150,6 +223,7 @@ def write_baseline(items: set[str]) -> None:
 def main(argv: list[str]) -> int:
     update = "--update-baseline" in argv
     require_baseline = "--require-baseline" in argv
+    fail_on_healed = "--fail-on-healed" in argv
     current = compute_unmanifested()
 
     if update:
@@ -183,7 +257,15 @@ def main(argv: list[str]) -> int:
         print(f"NOTE: {len(healed)} file(s) left the unmanifested set (manifested or removed):")
         for rel in healed:
             print(f"  - {rel}")
-        print("Consider --update-baseline to tighten the ratchet.\n")
+        print("Tighten the ratchet with --update-baseline (review the baseline diff).\n")
+        if fail_on_healed:
+            print(
+                "FAIL: manifest-discipline baseline is stale (healed entries above). "
+                "Run `python scripts/check_manifest_discipline.py --update-baseline` and "
+                "commit the tightened baseline so debt reduction is witnessed, not silent.",
+                file=sys.stderr,
+            )
+            return 1
 
     if new_bleed:
         print("FAIL: net-new unmanifested router file(s) detected:", file=sys.stderr)
@@ -196,7 +278,10 @@ def main(argv: list[str]) -> int:
         )
         return 1
 
-    print(f"OK: no net-new unmanifested router files (baseline holds {len(baseline)}).")
+    print(
+        f"OK: no net-new unmanifested router files (baseline holds {len(baseline)}). "
+        "This is a bleed-stop ratchet, not full manifest/route-composition certification."
+    )
     return 0
 
 

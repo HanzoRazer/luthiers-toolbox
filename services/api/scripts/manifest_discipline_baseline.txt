@@ -2,8 +2,6 @@
 # Router files that define @router endpoints but are NOT manifested.
 # This freezes the KNOWN unmanifested set; CI fails on net-new additions.
 # Regenerate intentionally with: python scripts/check_manifest_discipline.py --update-baseline
-api/deps/__init__
-api/deps/rmos_stores
 api_v1/acoustics
 api_v1/art_studio
 api_v1/cam_operations
@@ -21,14 +19,11 @@ business/cogs_router
 business/estimator_router
 business/goals_router
 business/pricing_router
-cam/dxf_validation_gate
 cam_core/api/saw_lab_router
 compare/routers/baselines/__init__
 compare/routers/lab/__init__
 compare/routers/risk/__init__
-core/store_registry
-middleware/rate_limit
-middleware/tier_gate
+middleware/route_analytics_middleware
 rmos/acoustics/router_import
 rmos/acoustics/router_ingest_audit
 rmos/acoustics/router_zip_export
@@ -57,6 +52,7 @@ routers/blueprint/phase2_router
 routers/blueprint/phase3_router
 routers/blueprint/phase4_router
 routers/blueprint/vectorize_router
+routers/blueprint_cam/blueprint_cam_core_router
 routers/blueprint_cam/contour_reconstruction_router
 routers/blueprint_cam/geometry_correction_router
 routers/blueprint_cam/preprocessor_router
