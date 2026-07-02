@@ -24,7 +24,7 @@ from pathlib import Path
 from typing import List, Optional, Dict, Any
 from uuid import uuid4
 
-from .adapters import get_blueprint_adapter, get_photo_adapter
+from .adapters import get_phase4_adapter
 from .artifact_body_evidence_adapter import (
     ArtifactBodyEvidenceAdapter,
     ArtifactMetadata,
@@ -142,8 +142,18 @@ class E2ESpineRunner:
     ]
 
     def __init__(self, corpus_root: Optional[str] = None):
-        self.corpus_root = Path(corpus_root) if corpus_root else Path(r"C:\Users\thepr\Downloads\luthiers-toolbox\Guitar Plans")
-        self.blueprint_adapter = get_blueprint_adapter()
+        # corpus_root is required — no hardcoded default. A leaked absolute
+        # Windows path here was a Linux-CI landmine (same class killed in the
+        # #10 stale-path sweep); fail loudly instead of silently defaulting.
+        if not corpus_root:
+            raise ValueError(
+                "E2ESpineRunner requires corpus_root (path to the blueprint "
+                "corpus directory); no default is provided."
+            )
+        self.corpus_root = Path(corpus_root)
+        # Phase 4 dimension-association adapter — named for its semantic role,
+        # not aliased as a generic "blueprint adapter" it is not.
+        self.dimension_adapter = get_phase4_adapter()
         self.artifact_adapter = ArtifactBodyEvidenceAdapter()
 
         # Ensure output directory exists
@@ -207,7 +217,7 @@ class E2ESpineRunner:
         logger.info(f"[{result.run_id}] Stage 1: Canonical Vectorizer")
 
         try:
-            extraction = self.blueprint_adapter.extract_dimension_values(pdf_path)
+            extraction = self.dimension_adapter.extract_dimension_values(pdf_path)
 
             if "error" in extraction and extraction.get("error"):
                 result.failures.append(f"Vectorizer error: {extraction['error']}")
@@ -554,7 +564,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="IBG E-2-E Functional Spine Runner")
     parser.add_argument("--pdf", help="Single PDF to process")
     parser.add_argument("--all", action="store_true", help="Run all 10 representative instruments")
-    parser.add_argument("--corpus", help="Corpus root directory")
+    parser.add_argument("--corpus", required=True, help="Corpus root directory (required)")
 
     args = parser.parse_args()
 
