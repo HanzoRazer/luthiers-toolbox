@@ -27,7 +27,11 @@ BASELINE BOOTSTRAP
     accept new unmanifested files later, re-run with --update-baseline.
 
 STATUS
-    UNRUN as of 2026-05-30 (authored without a working shell this session).
+    Materialized and baseline-backed. CI-RED-016-A (2026-07-01) wires this into
+    Core CI (api-tests job, before API boot / full pytest) as a bleed-stop.
+    The known unmanifested set is grandfathered by
+    scripts/manifest_discipline_baseline.txt; only NET-NEW unmanifested router
+    files fail. This does NOT close CI-RED-016 endpoint consolidation.
 
 RUN
     cd services/api && python scripts/check_manifest_discipline.py

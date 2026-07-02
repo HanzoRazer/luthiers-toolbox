@@ -4,6 +4,15 @@
 **Status:** **CLOSED (2026-05-30)** — MVP-path verified collision-free via live `app.routes` dump. `dump_and_assert_routes.py` RAN, exit 0, `mvp_problems: []`; `audit_wire_urls.py` regex fix RAN. Live dump committed as `metrics/live_routes.json`. Shadow verdict = **Y (deferrable)**, 11 non-MVP collisions confirmed off-path. Structural debt deferred to CI-RED-016.
 **Branch note:** Closure committed on `fix/ci-red-015-d-closure` (off `origin/main 88d24f4`). Shell recovered 2026-05-30; gate ran, exit 0.
 
+> **STATUS UPDATE (CI-RED-016-A, 2026-07-01).** CI-RED-016-A materializes Appendix C as a
+> baseline-backed bleed-stop only. It does not reopen CI-RED-015-D and does not complete
+> CI-RED-016 consolidation. The manifest-discipline check
+> (`services/api/scripts/check_manifest_discipline.py`) is now **committed, run, and wired
+> into Core CI** (api-tests job, before API boot / full pytest); the baseline was tightened
+> 108→107 after `routers/cam/geometry_authority_router` healed (manifested by CI-RED-015-H).
+> Present-tense "uncommitted/untracked/unrun/must stay untracked" language below is
+> **historical** — preserved as the original recovery runbook, no longer the live status.
+
 ---
 
 ## 0. Working-copy vs. snapshot discrepancy — RESOLVED (no conflict)
@@ -171,7 +180,7 @@ STOP on: Gate 0 fetch-refspec >1; Step 2 exit 1 (persist evidence, halt); stash-
 
 ## Remaining follow-ons (separate branches; AFTER 015-D closes)
 **A.** **[READY — diff + sweep DONE]** File the shadow as a **continuation of the March `INSTRUMENT_ROUTER_MIGRATION_MAP.md` reconciliation** (draft entry: Appendix D), with `DRIFT-AUDIT-001` as the pattern wrapper. Sequence: reconcile schemas → pick canonical contract → THEN correct ownership inversion (Appendix B). Note the dead third definition (R2) and the deceptive geometry test (Test cleanup) in the ticket.
-**B.** **[READY — authored, own branch]** Commit the manifest-discipline bleed-stop check `services/api/scripts/check_manifest_discipline.py` (currently uncommitted/untracked; **must not** ride the 015-D commit — see DEV ORDER Step 4). Leave the 143 triage deferred.
+**B.** **[DONE — CI-RED-016-A, 2026-07-01]** ~~[READY — authored, own branch]~~ Commit the manifest-discipline bleed-stop check `services/api/scripts/check_manifest_discipline.py` (~~currently uncommitted/untracked~~ **now committed + CI-wired on its own branch**, did not ride the 015-D commit). The 143 triage remains deferred to CI-RED-016.
 
 > The live-dump asserter `services/api/scripts/dump_and_assert_routes.py` is **not** a follow-on — it is the close tool, run as the gate in DEV ORDER Step 2 and committed with the 015-D closure.
 

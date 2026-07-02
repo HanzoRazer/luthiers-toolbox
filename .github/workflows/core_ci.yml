@@ -52,6 +52,10 @@ jobs:
         run: |
           cd services/api
           python -m pytest tests/test_cost_attribution_mapper_unit.py -v
+      - name: Manifest discipline bleed-stop
+        run: |
+          cd services/api
+          python scripts/check_manifest_discipline.py
       - name: Boot API
         run: |
           cd services/api

@@ -61,7 +61,6 @@ routers/blueprint_cam/contour_reconstruction_router
 routers/blueprint_cam/geometry_correction_router
 routers/blueprint_cam/preprocessor_router
 routers/cam/cam_assist_router
-routers/cam/geometry_authority_router
 routers/cam/guitar/acoustic_cam_router
 routers/cam/guitar/archtop_cam_router
 routers/cam/guitar/body_gcode_router
