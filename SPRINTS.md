@@ -1169,6 +1169,8 @@ Original audit found 124 decorator duplicates → 68 wire collisions on **static
 **Tools:** `services/api/scripts/audit_endpoints.py`, `diff_endpoints_baseline.py`.  
 **Not in scope:** 015-D duplicate-route gate (separate).
 
+**CI-RED-016-A (2026-07-01):** manifest-discipline bleed-stop wired into CI. The known unmanifested router set remains grandfathered by baseline; net-new unmanifested router files now fail. Baseline tightened 108→107 after `routers/cam/geometry_authority_router` healed (manifested by CI-RED-015-H). Full endpoint consolidation remains open/deferred.
+
 ---
 
 ### CI-RED-017 — check-sunsets: status:removed vs file-existence mismatch
