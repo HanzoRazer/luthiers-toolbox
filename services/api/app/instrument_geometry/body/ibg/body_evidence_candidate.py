@@ -242,6 +242,12 @@ class BodyEvidenceCandidate:
         Record a human review decision.
 
         If approved, transitions authority to HUMAN_REVIEWED.
+        If rejected by a human, transitions authority to the terminal REJECTED
+        state so the candidate cannot be resurrected (activates the intake gate's
+        rejection-status check / CANDIDATE_REJECTED). REJECTED is symmetric with
+        the APPROVE→HUMAN_REVIEWED transition; only a human decision propagates
+        to authority (machine APPROVE/REJECT is already blocked upstream by
+        ReviewEnforcement.record_review).
 
         Args:
             reviewer_id: ID of the reviewer
@@ -250,13 +256,23 @@ class BodyEvidenceCandidate:
         """
         self.review.record_review(reviewer_id, decision, notes)
 
-        # If approved by human, transition authority
-        if decision == ReviewDecision.APPROVE and reviewer_id.startswith("human:"):
-            if self.authority.can_transition_to(AuthorityState.HUMAN_REVIEWED):
+        # A human decision propagates to authority state.
+        if reviewer_id.startswith("human:"):
+            if decision == ReviewDecision.APPROVE and self.authority.can_transition_to(
+                AuthorityState.HUMAN_REVIEWED
+            ):
                 self.transition_authority(
                     AuthorityState.HUMAN_REVIEWED,
                     reviewer_id,
                     f"Approved via human review: {notes or 'no notes'}",
+                )
+            elif decision == ReviewDecision.REJECT and self.authority.can_transition_to(
+                AuthorityState.REJECTED
+            ):
+                self.transition_authority(
+                    AuthorityState.REJECTED,
+                    reviewer_id,
+                    f"Rejected via human review: {notes or 'no notes'}",
                 )
 
     def set_confidence(

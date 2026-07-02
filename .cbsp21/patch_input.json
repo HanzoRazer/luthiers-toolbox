@@ -2,55 +2,47 @@
   "schema": "cbsp21_patch_input_v1",
   "schema_version": "cbsp21_patch_input_v1",
   "coverage_min": 0.95,
-  "patch_id": "STANDING_FAILURES_BATCH_A_STALE_SWEEP",
-  "title": "Fix 5 standing failures that are stale tests (#3, #4, #5, #8, #14 — triage bucket A)",
-  "intent": "Batch A of the api-verify standing-failures triage. Five residual reds are STALE TESTS — the product moved and the tests didn't. #3/#4/#5 the IBG solve-from-landmarks endpoint gained Depends(get_current_principal) in IBG-2B, so unauthenticated TestClient POSTs now 401; #8 a permissive-gate test approves before attempting bypass, so the bypass counter never increments; #14 a lifecycle fixture used a synthetic translator_id that 7C's registry validation rejects. Each was re-grounded against current code before fixing. Test-only; no production code touched, no behavior change.",
+  "patch_id": "STANDING_FAILURES_DECISIONS_7_AND_12",
+  "title": "Close final 2 standing failures: #7 wire human REJECT->REJECTED, #12 relax zone test to argmax",
+  "intent": "The last 2 api-verify/Core CI standing failures were held as product decisions; the user chose #7=OptionA (wire) and #12=OptionB (relax). Both live in IBG/morphology code governance-classified BLOCKED_PROVENANCE (non-authoritative, no user-facing path). #7: BodyEvidenceCandidate.record_review transitioned authority on APPROVE (->HUMAN_REVIEWED) but had no symmetric REJECT branch, so a human REJECT never moved authority to the terminal REJECTED state and the intake gate's rejection-status check (Gate 8 / CANDIDATE_REJECTED) never fired -> test_rejected_candidate_stays_blocked failed on the missing reason. #12: the zone classifier sum-normalizes weights across all matching zones, and body-spanning zones (centerline, left_flank) plus overlapping bridge_region tie with lower_bout for the test point, so no positional zone can exceed 0.5; primary_zone (argmax) is already correct, only the absolute >0.5 assertion was wrong. Closes standing failures 2->0.",
   "change_type": "fix",
-  "behavior_change": "none",
+  "behavior_change": "IBG-only: a human REJECT now transitions candidate authority to the terminal REJECTED state (BLOCKED_PROVENANCE R&D code, no user-facing/live consumer). #12 is test-only.",
   "risk_level": "low",
   "scope": {
     "paths_in_scope": [
       ".cbsp21/",
+      "services/api/app/instrument_geometry/body/ibg/",
       "services/api/tests/"
     ],
     "files_expected_to_change": [
-      "services/api/tests/mrp_spine_verification/test_morphology_spine_e2e.py",
-      "services/api/tests/test_ibg_intake_gate.py",
-      "services/api/tests/cam/test_operation_capability_registry.py",
+      "services/api/app/instrument_geometry/body/ibg/body_evidence_candidate.py",
+      "services/api/tests/test_ibg_morphology_primitives.py",
       ".cbsp21/patch_input.json"
     ]
   },
   "diff_articulation": {
-    "what_changed": "(#3/#4/#5) test_morphology_spine_e2e.py: the three failing tests POST to /api/body/solve-from-landmarks (a paid-tier endpoint that gained Depends(get_current_principal) in IBG-2B) without auth, so TestClient got 401. Added a module-level _AUTH_HEADERS = {'x-user-role':'operator','x-user-id':'test_user_123'} (the same legacy header-auth convention the passing test_body_solver_integration.py uses) and passed headers=_AUTH_HEADERS to the three solve POSTs. #5 additionally had NO status guard before ibg_data['outline_points'] (so the 401 body caused KeyError, not a clear failure); added the assert solve_response.status_code == 200 guard the sibling tests already have. (#8) test_ibg_intake_gate.py::test_permissive_gate_tolerates_bypass_attempts: reordered so the two machine bypass attempts (set_review_required(False,'system:bot')) run BEFORE the human approval. set_review_required only increments _bypass_attempt_count when _review_required is still True; approving first cleared the flag, so the attempts no-op'd and the counter stayed 0 (REVIEW_BYPASS_DETECTED never fired). Attempting pre-approval makes the counter reach 2, so the default gate rejects and the permissive gate (allow=2) accepts. (#14) test_operation_capability_registry.py: the shared _create_lifecycle_request helper hardcoded translator_id='test_translator', which 7C validate_translator_registry rejects (not in TRANSLATOR_CAPABILITY_REGISTRY) -> translator stage RED. Changed to 'dxf_r12' (category=translator, output_class=dxf, execution_state=validation_only not disabled, supported_operations include nut_slot/drilling) so test_registered_operation_works gets green/yellow. REVIEW HARDENING (2026-07-02, addressing a risk review of this PR): (a) test_morphology_spine_e2e.py — promoted the ad-hoc module-level _AUTH_HEADERS constant to a documented `auth_headers` pytest fixture (matching test_body_solver_integration.py's `auth_header`), threaded through the three test signatures and call sites; kept headers explicit at each call (not baked into an authenticated client) so a future auth-model migration surfaces loudly instead of passing silently. (b) test_operation_capability_registry.py — replaced the hardcoded translator_id='dxf_r12' with _registered_translator_id_for(operation), which resolves from the capability registry (list_translators_for_operation, else any registry-valid DXF translator via list_translators_by_output_class + validate_translator_registry); resilient to rename/disable of any single translator. (c) test_ibg_intake_gate.py — added explicit assertions on the intermediate/final review state (bypass_attempt_count==2 and review_required True before approval / False after) so failures pinpoint the state transition rather than only surfacing via gate-rejection results. Verified free-tier /api/body/solve-from-dxf has no get_current_principal, so the untouched real-artifact spine tests correctly need no auth headers.",
-    "why_not_redundant": "All five hypotheses were re-verified against current code (the earlier #1/#2 diagnosis had proven wrong, so no triage row was trusted). #3/#4/#5 share one root cause (the IBG-2B auth gate, commit 70a0d3ee) and the exact header convention was copied from a PASSING test, not guessed. #8's reorder was validated against the set_review_required increment guard (`if self._review_required and not required`). #14's replacement id was confirmed present and valid in TRANSLATOR_CAPABILITY_REGISTRY, and no sibling test depends on 'test_translator' being rejected (test_unregistered_operation_returns_red is red because of the OPERATION, not the translator). All test-only; zero product behavior change."
+    "what_changed": "(#7, Option A) services/api/app/instrument_geometry/body/ibg/body_evidence_candidate.py::record_review — added a symmetric human-REJECT branch mirroring the existing human-APPROVE branch: for reviewer_id.startswith('human:'), APPROVE transitions authority to HUMAN_REVIEWED (unchanged) and REJECT now transitions to AuthorityState.REJECTED (guarded by can_transition_to, valid from ADVISORY_CANDIDATE/HUMAN_REVIEWED/SANDBOX_EXPERIMENTAL). This activates the intake gate's already-built Gate 8 (_check_rejection_status -> CANDIDATE_REJECTED) and the REJECTED terminal-state resurrection guards (FORBIDDEN_TRANSITIONS), which previously had no production trigger. Machine REJECT is unaffected (ReviewEnforcement.record_review already raises ReviewBypassAttemptError for system actors before this branch). (#12, Option B) services/api/tests/test_ibg_morphology_primitives.py::test_classify_lower_bout_point — replaced the absolute assert zone_weights['lower_bout'] > 0.5 with assert zone_weights['lower_bout'] == max(zone_weights.values()), matching the classifier's de-facto argmax contract (classify_point sum-normalizes across all matching zones; centerline/left_flank/bridge_region tie with lower_bout so no positional zone can exceed 0.5). primary_zone assertion unchanged; no production code touched for #12.",
+    "why_not_redundant": "#7 fixes a real wiring asymmetry (APPROVE propagated to authority, REJECT did not), turning the documented 'REJECTED is terminal / cannot be resurrected' invariant from production-dead (previously reachable only via test-only manual transitions) into an enforced path; no currently-passing test asserted REJECT leaves authority unchanged (verified). #12's >0.5 assertion is asserted by this one test only and is contradicted by the classifier's own normalization; every sibling test and both primary_zone consumers (variant_grammar) already rely on argmax, so relaxing to argmax matches the real contract rather than weakening it."
   },
   "verification": {
     "commands_run": [
-      "services/api venv (py3.11.9): pytest tests/cam/test_operation_capability_registry.py tests/test_ibg_intake_gate.py tests/mrp_spine_verification/test_morphology_spine_e2e.py -> 58 passed, 1 skipped in 57s (post review-hardening: auth_headers fixture, registry-driven translator id, explicit bypass-state asserts; the 1 skip is a real-artifact spine test with no DXF present)",
-      "registry lookup confirmed: list_translators_for_operation('nut_slot'/'drilling') -> dxf_r12/dxf_r2000, both pass validate_translator_registry (category=translator, output=dxf, not disabled); unregistered_op falls back to a valid DXF translator so the RED still comes from the operation, not the translator id",
-      "auth scoping confirmed: body_solver_router.py — solve-from-landmarks + landmark PUT use Depends(get_current_principal); solve-from-dxf is free-tier (no principal), so the untouched melody_maker/cuatro tests need no headers",
-      "note: full api-verify is an Ubuntu-CI witness (fastapi 0.137 pin); local venv is fastapi 0.121.1"
+      "services/api venv (py3.11.9): pytest tests/test_ibg_constitutional_integration.py tests/test_ibg_intake_gate.py tests/test_ibg_morphology_primitives.py tests/test_governance_constitutional_runtime.py -q -> see PR body (all green; #7 + #12 targets pass, siblings unaffected)",
+      "#7 root cause + blast radius mapped by read-only investigation: record_review had no REJECT->authority branch; AuthorityState.REJECTED valid from ADVISORY_CANDIDATE (authority_state.py); Gate 8 reads authority==REJECTED (ibg_intake_gate.py:296); no test asserts REJECT leaves authority ADVISORY_CANDIDATE",
+      "#12 math confirmed: point (-0.5,0.25) ties lower_bout/bridge_region/left_flank/centerline at 1.0 pre-normalization -> 0.25 each; >0.5 unachievable; argmax (=primary_zone) correct; >0.5 asserted only by this test"
     ]
   },
   "files": [
     {
-      "path": "services/api/tests/mrp_spine_verification/test_morphology_spine_e2e.py",
-      "intent": "#3/#4/#5: authenticate the three solve-from-landmarks POSTs via a shared documented `auth_headers` fixture (was ad-hoc _AUTH_HEADERS const); #5's 200 guard; headers kept explicit at call sites",
-      "scan_targets": ["services/api/tests/mrp_spine_verification/test_morphology_spine_e2e.py"],
+      "path": "services/api/app/instrument_geometry/body/ibg/body_evidence_candidate.py",
+      "intent": "#7 Option A: symmetric human-REJECT branch -> authority REJECTED (activates Gate 8 / CANDIDATE_REJECTED)",
+      "scan_targets": ["services/api/app/instrument_geometry/body/ibg/body_evidence_candidate.py"],
       "risk": "low",
-      "behavior_change": "none - test-only"
+      "behavior_change": "IBG BLOCKED_PROVENANCE R&D only; human REJECT now terminal, no live consumer"
     },
     {
-      "path": "services/api/tests/test_ibg_intake_gate.py",
-      "intent": "#8: attempt bypasses before approval so the counter increments; assert bypass_attempt_count/review_required intermediate+final state directly",
-      "scan_targets": ["services/api/tests/test_ibg_intake_gate.py"],
-      "risk": "low",
-      "behavior_change": "none - test-only"
-    },
-    {
-      "path": "services/api/tests/cam/test_operation_capability_registry.py",
-      "intent": "#14: resolve a registry-valid translator id via _registered_translator_id_for(operation) (was hardcoded dxf_r12, before that synthetic test_translator) — resilient to registry churn",
-      "scan_targets": ["services/api/tests/cam/test_operation_capability_registry.py"],
+      "path": "services/api/tests/test_ibg_morphology_primitives.py",
+      "intent": "#12 Option B: relax lower_bout weight assertion from >0.5 to == max (argmax contract)",
+      "scan_targets": ["services/api/tests/test_ibg_morphology_primitives.py"],
       "risk": "low",
       "behavior_change": "none - test-only"
     }
