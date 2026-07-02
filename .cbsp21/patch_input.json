@@ -11,26 +11,33 @@
   "scope": {
     "paths_in_scope": [
       ".cbsp21/",
-      "services/api/app/"
+      "services/api/app/",
+      "services/api/tests/",
+      "ci/"
     ],
     "files_expected_to_change": [
       "services/api/app/instrument_geometry/body/ibg/morphology_harvest/artifact_body_evidence_adapter.py",
       "services/api/app/instrument_geometry/body/ibg/morphology_harvest/e2e_spine_runner.py",
       "services/api/app/services/outline_reconstructor.py",
-      ".cbsp21/patch_input.json"
+      "services/api/tests/test_artifact_constitutional_adapter.py",
+      "services/api/tests/test_morphology_harvest_json_serialization.py",
+      "services/api/tests/test_outline_reconstructor.py",
+      ".cbsp21/patch_input.json",
+      "ci/file_size_baseline.json"
     ]
   },
   "diff_articulation": {
-    "what_changed": "(#6) artifact_body_evidence_adapter.py:561 — the poor-topology downgrade wrote `candidate.authority._current_state = SANDBOX_EXPERIMENTAL`, but `_current_state` is a phantom attribute (the real field is `current_state`; the candidate's authority_state property reads `current_state`), so the downgrade silently no-op'd and the candidate stayed ADVISORY_CANDIDATE. Replaced with the real API `candidate.authority.transition(SANDBOX_EXPERIMENTAL, actor='system:artifact_body_evidence_adapter', reason='poor_topology_integrity')`; ADVISORY_CANDIDATE -> SANDBOX_EXPERIMENTAL is a VALID (non-forbidden) transition, and the existing provenance record on the following lines is unchanged. (#9) e2e_spine_runner.py:27 — imported `get_blueprint_adapter, get_photo_adapter` from .adapters, but neither symbol exists (adapters.py defines get_phase4_adapter/get_calibration_adapter/get_body_grid_adapter) -> ImportError made the module dead-on-import. Replaced with `from .adapters import get_phase4_adapter as get_blueprint_adapter` (get_blueprint_adapter is used at :146/:210 and get_phase4_adapter's Phase4DimensionAssociationAdapter exposes extract_dimension_values, so the alias is sound); dropped the unused get_photo_adapter. (#11) outline_reconstructor.py:361-367 — the arc sweep was normalized from the `concave` boolean flag, forcing the MAJOR arc even though the center is already computed from arc_mid (placed on the correct side by `sign`). Replaced with geometry-derived minor-arc selection (normalize sweep into (-pi, pi]); `sign` is retained for arc_mid placement. Fixes both concave and convex gaps (convex was latently wrong too, masked by weak != 0 asserts).",
+    "what_changed": "(#6) artifact_body_evidence_adapter.py:561 — the poor-topology downgrade wrote `candidate.authority._current_state = SANDBOX_EXPERIMENTAL`, but `_current_state` is a phantom attribute (the real field is `current_state`; the candidate's authority_state property reads `current_state`), so the downgrade silently no-op'd and the candidate stayed ADVISORY_CANDIDATE. Replaced with the real API `candidate.authority.transition(SANDBOX_EXPERIMENTAL, actor='system:artifact_body_evidence_adapter', reason='poor_topology_integrity')`; ADVISORY_CANDIDATE -> SANDBOX_EXPERIMENTAL is a VALID (non-forbidden) transition, and the existing provenance record on the following lines is unchanged. (#9) e2e_spine_runner.py:27 — imported `get_blueprint_adapter, get_photo_adapter` from .adapters, but neither symbol exists (adapters.py defines get_phase4_adapter/get_calibration_adapter/get_body_grid_adapter) -> ImportError made the module dead-on-import. Replaced with `from .adapters import get_phase4_adapter as get_blueprint_adapter` (get_blueprint_adapter is used at :146/:210 and get_phase4_adapter's Phase4DimensionAssociationAdapter exposes extract_dimension_values, so the alias is sound); dropped the unused get_photo_adapter. (#11) outline_reconstructor.py:361-367 — the arc sweep was normalized from the `concave` boolean flag, forcing the MAJOR arc even though the center is already computed from arc_mid (placed on the correct side by `sign`). Replaced with geometry-derived minor-arc selection (normalize sweep into (-pi, pi]); `sign` is retained for arc_mid placement. Fixes both concave and convex gaps (convex was latently wrong too, masked by weak != 0 asserts). HARDENING FOLLOW-UP (commit 167e5474, review response — supersedes the specifics above where they differ): (#6) the transition now records derivation_context={'topology_integrity': score} so the downgrade side effect is auditable; test_poor_topology_downgrades_to_sandbox rewritten from guarded ifs (vacuous-pass risk) to unconditional preconditions + a full assertion on the last transition record. (#9) the misleading `get_phase4_adapter as get_blueprint_adapter` alias was REMOVED — the runner now imports get_phase4_adapter and stores it as self.dimension_adapter (role-accurate); corpus_root is now REQUIRED (no hardcoded absolute Windows-path default — same leaked-path class killed in the #10 sweep) and CLI --corpus is required. (#11) the 'always MINOR arc / normalize to (-pi,pi]' loop was REPLACED with _sweep_through_midpoint(a1,a2,a_mid), which selects the signed sweep whose arc actually contains the constructed arc_mid — correct at the |sweep|≈pi boundary where normalization forces +pi (CCW) regardless of which semicircle arc_mid is on; defensive fallback for degenerate angular separation. New tests: angle-boundary sweep guard, convex-arc direction, and E2ESpineRunner import/init + requires-corpus witnesses.",
     "why_not_redundant": "All three hypotheses were re-verified against current code (the triage's #1/#2 diagnosis had earlier proven wrong, so each row was re-grounded, not trusted). #6/#11 are production code that was mis-implemented; #9 is a broken production import. None is a stale test. No user-facing behavior change: #6 is IBG artifact-adapter R&D (BLOCKED_PROVENANCE), #9's module was unreachable (dead-on-import), #11 is behind the default-OFF ENABLE_OUTLINE_RECONSTRUCTION flag. The triage's suggestion to also touch tests/test_ibg_intake_gate.py:69 for #6 was checked and REJECTED — that test is not failing and the same phantom-attr poke is harmless there (it only asserts AUTHORITY_INSUFFICIENT, which both states trigger); it is intentionally left untouched."
   },
   "verification": {
     "commands_run": [
-      "services/api venv (fastapi 0.121.1): pytest tests/test_artifact_constitutional_adapter.py::TestTopologyIntegrity::test_poor_topology_downgrades_to_sandbox -> 1 passed (#6)",
-      "pytest tests/test_morphology_harvest_json_serialization.py::TestE2EResultSerialization::test_e2e_result_to_dict_serializes -> 1 passed (#9)",
-      "pytest tests/test_outline_reconstructor.py -> 27 passed (#11 concave test now green; all sibling arc tests — closes-gap, points-on-circle, degenerate-radius, integration chains — stay green, so the geometry change has no regression)",
-      "py_compile of all 3 edited production files -> OK",
-      "note: the full api-verify suite is an Ubuntu-CI witness (fastapi 0.137 pin); the targeted-test passes above were run against the same source on the local venv"
+      "services/api venv (ezdxf 1.4.3, pytest 9.0.3): py_compile of all 6 edited files -> OK",
+      "pytest tests/test_outline_reconstructor.py -> 29 passed (#11: adds angle-boundary sweep guard + convex-arc direction; all sibling arc/integration tests stay green)",
+      "pytest tests/test_outline_reconstructor.py tests/test_artifact_constitutional_adapter.py tests/test_morphology_harvest_json_serialization.py -> 66 passed (all three touched files)",
+      "6 named targeted tests (poor_topology downgrade, e2e phase4-adapter wiring, requires-corpus, angle-boundary sweep, convex+concave arc direction) -> 6 passed",
+      "vacuous-pass probe: standalone run confirmed the poor-topology fixture yields success=True, topology_integrity=0.0, derivation_context={'topology_integrity': 0.0} — the strengthened assertions execute against real values",
+      "note: the full api-verify suite is an Ubuntu-CI witness (fastapi 0.137 pin); the passes above were run against the same source on the local venv (ezdxf 1.4.3)"
     ]
   },
   "files": [
@@ -50,10 +57,38 @@
     },
     {
       "path": "services/api/app/services/outline_reconstructor.py",
-      "intent": "#11: derive arc sweep from geometry (minor arc through arc_mid) instead of the concave flag; fixes concave and convex gaps",
+      "intent": "#11: derive arc sweep from geometry via _sweep_through_midpoint (arc through arc_mid) instead of the concave flag or a normalize-to-(-pi,pi] claim; correct at the |sweep|≈pi boundary",
       "scan_targets": ["services/api/app/services/outline_reconstructor.py"],
       "risk": "low",
       "behavior_change": "corrects reconstructed-arc geometry; behind the default-OFF ENABLE_OUTLINE_RECONSTRUCTION flag"
+    },
+    {
+      "path": "services/api/tests/test_artifact_constitutional_adapter.py",
+      "intent": "#6 hardening: strengthen test_poor_topology_downgrades_to_sandbox from guarded ifs (vacuous-pass risk) to unconditional preconditions + full assertion on the downgrade transition record incl. derivation_context",
+      "scan_targets": ["services/api/tests/test_artifact_constitutional_adapter.py"],
+      "risk": "low",
+      "behavior_change": "test-only"
+    },
+    {
+      "path": "services/api/tests/test_morphology_harvest_json_serialization.py",
+      "intent": "#9 hardening: add E2ESpineRunner import/init witness (wires Phase4DimensionAssociation as dimension_adapter, OUTPUT_DIR redirected to tmp_path) and a requires-corpus_root witness",
+      "scan_targets": ["services/api/tests/test_morphology_harvest_json_serialization.py"],
+      "risk": "low",
+      "behavior_change": "test-only"
+    },
+    {
+      "path": "services/api/tests/test_outline_reconstructor.py",
+      "intent": "#11 hardening: add angle-boundary sweep guard (short-CCW vs long-CW by midpoint angle) and convex-arc direction test symmetric to the existing concave test",
+      "scan_targets": ["services/api/tests/test_outline_reconstructor.py"],
+      "risk": "low",
+      "behavior_change": "test-only"
+    },
+    {
+      "path": "ci/file_size_baseline.json",
+      "intent": "ratchet bump for the two prod files grown by the hardening commit: artifact_body_evidence_adapter.py 768->773, e2e_spine_runner.py 573->583 (surgical edit, not a full --update sweep)",
+      "scan_targets": ["ci/file_size_baseline.json"],
+      "risk": "low",
+      "behavior_change": "ci-config only"
     }
   ]
 }
