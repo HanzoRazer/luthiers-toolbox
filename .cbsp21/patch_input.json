@@ -2,93 +2,42 @@
   "schema": "cbsp21_patch_input_v1",
   "schema_version": "cbsp21_patch_input_v1",
   "coverage_min": 0.95,
-  "patch_id": "STANDING_FAILURES_BATCH_C_REAL_BUGS",
-  "title": "Fix 3 standing failures that are real production defects (#6, #9, #11 — triage bucket C)",
-  "intent": "Batch C of the api-verify standing-failures triage (docs/investigations/api_verify_standing_failures_triage_2026-06-29.md). Three of the residual reds are genuine production mis-implementations (not stale tests): #6 an authority downgrade written to a phantom attribute (silent no-op), #9 a broken import that makes a module dead-on-import, #11 an arc-reconstruction sweep derived from a flag instead of geometry (wrong/major arc). Each was independently re-grounded against current code before fixing. Test-suite honesty fixes; no user-facing product behavior change (the affected paths are IBG/morphology R&D under BLOCKED_PROVENANCE or behind the default-OFF ENABLE_OUTLINE_RECONSTRUCTION flag).",
+  "patch_id": "STANDING_FAILURES_BATCH_B_TEST_ISOLATION",
+  "title": "Fix 2 standing failures caused by leaked module-level singletons (#13, #15 — triage bucket B)",
+  "intent": "Batch B of the api-verify standing-failures triage. Two residual reds are pure test-ISOLATION defects: module-level singletons not reset between tests, so state leaks across the session and the test fails only in the full suite (passes in isolation). #13 the RMOS runs store; #15 the slowapi rate limiter. Both fixed in the single existing autouse fixture in services/api/tests/conftest.py. Test-only; no production code touched, no behavior change.",
   "change_type": "fix",
   "behavior_change": "none",
   "risk_level": "low",
   "scope": {
     "paths_in_scope": [
       ".cbsp21/",
-      "services/api/app/",
-      "services/api/tests/",
-      "ci/"
+      "services/api/tests/"
     ],
     "files_expected_to_change": [
-      "services/api/app/instrument_geometry/body/ibg/morphology_harvest/artifact_body_evidence_adapter.py",
-      "services/api/app/instrument_geometry/body/ibg/morphology_harvest/e2e_spine_runner.py",
-      "services/api/app/services/outline_reconstructor.py",
-      "services/api/tests/test_artifact_constitutional_adapter.py",
-      "services/api/tests/test_morphology_harvest_json_serialization.py",
-      "services/api/tests/test_outline_reconstructor.py",
-      ".cbsp21/patch_input.json",
-      "ci/file_size_baseline.json"
+      "services/api/tests/conftest.py",
+      ".cbsp21/patch_input.json"
     ]
   },
   "diff_articulation": {
-    "what_changed": "(#6) artifact_body_evidence_adapter.py:561 — the poor-topology downgrade wrote `candidate.authority._current_state = SANDBOX_EXPERIMENTAL`, but `_current_state` is a phantom attribute (the real field is `current_state`; the candidate's authority_state property reads `current_state`), so the downgrade silently no-op'd and the candidate stayed ADVISORY_CANDIDATE. Replaced with the real API `candidate.authority.transition(SANDBOX_EXPERIMENTAL, actor='system:artifact_body_evidence_adapter', reason='poor_topology_integrity')`; ADVISORY_CANDIDATE -> SANDBOX_EXPERIMENTAL is a VALID (non-forbidden) transition, and the existing provenance record on the following lines is unchanged. (#9) e2e_spine_runner.py:27 — imported `get_blueprint_adapter, get_photo_adapter` from .adapters, but neither symbol exists (adapters.py defines get_phase4_adapter/get_calibration_adapter/get_body_grid_adapter) -> ImportError made the module dead-on-import. Replaced with `from .adapters import get_phase4_adapter as get_blueprint_adapter` (get_blueprint_adapter is used at :146/:210 and get_phase4_adapter's Phase4DimensionAssociationAdapter exposes extract_dimension_values, so the alias is sound); dropped the unused get_photo_adapter. (#11) outline_reconstructor.py:361-367 — the arc sweep was normalized from the `concave` boolean flag, forcing the MAJOR arc even though the center is already computed from arc_mid (placed on the correct side by `sign`). Replaced with geometry-derived minor-arc selection (normalize sweep into (-pi, pi]); `sign` is retained for arc_mid placement. Fixes both concave and convex gaps (convex was latently wrong too, masked by weak != 0 asserts). HARDENING FOLLOW-UP (commit 167e5474, review response — supersedes the specifics above where they differ): (#6) the transition now records derivation_context={'topology_integrity': score} so the downgrade side effect is auditable; test_poor_topology_downgrades_to_sandbox rewritten from guarded ifs (vacuous-pass risk) to unconditional preconditions + a full assertion on the last transition record. (#9) the misleading `get_phase4_adapter as get_blueprint_adapter` alias was REMOVED — the runner now imports get_phase4_adapter and stores it as self.dimension_adapter (role-accurate); corpus_root is now REQUIRED (no hardcoded absolute Windows-path default — same leaked-path class killed in the #10 sweep) and CLI --corpus is required. (#11) the 'always MINOR arc / normalize to (-pi,pi]' loop was REPLACED with _sweep_through_midpoint(a1,a2,a_mid), which selects the signed sweep whose arc actually contains the constructed arc_mid — correct at the |sweep|≈pi boundary where normalization forces +pi (CCW) regardless of which semicircle arc_mid is on; defensive fallback for degenerate angular separation. New tests: angle-boundary sweep guard, convex-arc direction, and E2ESpineRunner import/init + requires-corpus witnesses.",
-    "why_not_redundant": "All three hypotheses were re-verified against current code (the triage's #1/#2 diagnosis had earlier proven wrong, so each row was re-grounded, not trusted). #6/#11 are production code that was mis-implemented; #9 is a broken production import. None is a stale test. No user-facing behavior change: #6 is IBG artifact-adapter R&D (BLOCKED_PROVENANCE), #9's module was unreachable (dead-on-import), #11 is behind the default-OFF ENABLE_OUTLINE_RECONSTRUCTION flag. The triage's suggestion to also touch tests/test_ibg_intake_gate.py:69 for #6 was checked and REJECTED — that test is not failing and the same phantom-attr poke is harmless there (it only asserts AUTHORITY_INSUFFICIENT, which both states trigger); it is intentionally left untouched."
+    "what_changed": "Both edits are in the autouse `rmos_global_test_isolation` fixture in services/api/tests/conftest.py. (#13) The store reset targeted `app.rmos.runs_v2.store._default_store`, but that name is only a STALE re-export (bound at import time) of the real singleton `app.rmos.runs_v2.store_api._default_store`, which the runs endpoints actually read via _get_default_store(). Resetting the re-export was a no-op, so RunStoreV2 pinned the first test's RMOS_RUNS_DIR and runs persisted by earlier tests leaked into test_runs_index_with_filters (counted 3 where it created 1). Changed the reset to `store_api._default_store = None`. (#15) Added rate-limiter isolation: the slowapi `limiter` is a module-level singleton with in-memory, IP-keyed storage; TestClient uses a fixed IP so per-endpoint caps (body-outline 10/hour) accumulate across the whole session and eventually 429. `enabled` is captured from env at import time, so setting RATE_LIMIT_ENABLED in a fixture is too late; instead `monkeypatch.setattr(limiter, 'enabled', False)` disables the constructed singleton per-test (monkeypatch auto-restores it, so no manual teardown).",
+    "why_not_redundant": "Both hypotheses were re-grounded against current code. #13: confirmed store.py:396-398 re-exports the name from store_api while the endpoints (api_runs.py) read store_api's global via _get_default_store; the fixture (and the two per-test fixtures) reset the wrong module. #15: confirmed the limiter's `enabled` is baked in at construction (rate_limit.py:150-154) from an import-time env read, so only a runtime attribute toggle works; verified no test enforces a real 429 through the app (the only assert-429 calls the handler directly with a mocked exception; test_limiter_is_enabled_by_default asserts the module constant, not the .enabled attribute; a smoke test already tolerates 429). Both are the SAME class (un-reset module singleton) and share the one autouse fixture."
   },
   "verification": {
     "commands_run": [
-      "services/api venv (ezdxf 1.4.3, pytest 9.0.3): py_compile of all 6 edited files -> OK",
-      "pytest tests/test_outline_reconstructor.py -> 29 passed (#11: adds angle-boundary sweep guard + convex-arc direction; all sibling arc/integration tests stay green)",
-      "pytest tests/test_outline_reconstructor.py tests/test_artifact_constitutional_adapter.py tests/test_morphology_harvest_json_serialization.py -> 66 passed (all three touched files)",
-      "6 named targeted tests (poor_topology downgrade, e2e phase4-adapter wiring, requires-corpus, angle-boundary sweep, convex+concave arc direction) -> 6 passed",
-      "vacuous-pass probe: standalone run confirmed the poor-topology fixture yields success=True, topology_integrity=0.0, derivation_context={'topology_integrity': 0.0} — the strengthened assertions execute against real values",
-      "note: the full api-verify suite is an Ubuntu-CI witness (fastapi 0.137 pin); the passes above were run against the same source on the local venv (ezdxf 1.4.3)"
+      "services/api venv: pytest tests/test_rmos_runs_e2e.py -> 6 passed (#13; the intra-file run leak that made test_runs_index_with_filters see 3-not-1 is reset via the correct store_api singleton)",
+      "pytest tests/test_jumbo_dimension_consistency.py tests/test_body_export_bridge.py -> 39 passed, 1 skipped (#15; many body-outline POSTs in one process no longer 429 with the limiter disabled)",
+      "pytest tests/test_body_export_bridge.py::TestBodyExportEndpoint::test_export_without_ibg_context -> 1 passed (the previously-429ing un-guarded test)",
+      "py_compile tests/conftest.py -> OK",
+      "note: full api-verify is an Ubuntu-CI witness (fastapi 0.137 pin); local venv is fastapi 0.121.1"
     ]
   },
   "files": [
     {
-      "path": "services/api/app/instrument_geometry/body/ibg/morphology_harvest/artifact_body_evidence_adapter.py",
-      "intent": "#6: downgrade poor-topology candidate via the real authority.transition() API instead of a phantom _current_state attribute (silent no-op)",
-      "scan_targets": ["services/api/app/instrument_geometry/body/ibg/morphology_harvest/artifact_body_evidence_adapter.py"],
+      "path": "services/api/tests/conftest.py",
+      "intent": "#13 reset the LIVE store singleton (store_api, not the stale store re-export); #15 disable the slowapi limiter per-test via monkeypatch.setattr (auto-restored)",
+      "scan_targets": ["services/api/tests/conftest.py"],
       "risk": "low",
-      "behavior_change": "corrects a no-op: the sandbox downgrade now actually takes effect (IBG R&D, BLOCKED_PROVENANCE)"
-    },
-    {
-      "path": "services/api/app/instrument_geometry/body/ibg/morphology_harvest/e2e_spine_runner.py",
-      "intent": "#9: fix broken import (get_phase4_adapter aliased as get_blueprint_adapter; drop nonexistent get_photo_adapter) so the module is importable",
-      "scan_targets": ["services/api/app/instrument_geometry/body/ibg/morphology_harvest/e2e_spine_runner.py"],
-      "risk": "low",
-      "behavior_change": "none - module was dead-on-import; now importable"
-    },
-    {
-      "path": "services/api/app/services/outline_reconstructor.py",
-      "intent": "#11: derive arc sweep from geometry via _sweep_through_midpoint (arc through arc_mid) instead of the concave flag or a normalize-to-(-pi,pi] claim; correct at the |sweep|≈pi boundary",
-      "scan_targets": ["services/api/app/services/outline_reconstructor.py"],
-      "risk": "low",
-      "behavior_change": "corrects reconstructed-arc geometry; behind the default-OFF ENABLE_OUTLINE_RECONSTRUCTION flag"
-    },
-    {
-      "path": "services/api/tests/test_artifact_constitutional_adapter.py",
-      "intent": "#6 hardening: strengthen test_poor_topology_downgrades_to_sandbox from guarded ifs (vacuous-pass risk) to unconditional preconditions + full assertion on the downgrade transition record incl. derivation_context",
-      "scan_targets": ["services/api/tests/test_artifact_constitutional_adapter.py"],
-      "risk": "low",
-      "behavior_change": "test-only"
-    },
-    {
-      "path": "services/api/tests/test_morphology_harvest_json_serialization.py",
-      "intent": "#9 hardening: add E2ESpineRunner import/init witness (wires Phase4DimensionAssociation as dimension_adapter, OUTPUT_DIR redirected to tmp_path) and a requires-corpus_root witness",
-      "scan_targets": ["services/api/tests/test_morphology_harvest_json_serialization.py"],
-      "risk": "low",
-      "behavior_change": "test-only"
-    },
-    {
-      "path": "services/api/tests/test_outline_reconstructor.py",
-      "intent": "#11 hardening: add angle-boundary sweep guard (short-CCW vs long-CW by midpoint angle) and convex-arc direction test symmetric to the existing concave test",
-      "scan_targets": ["services/api/tests/test_outline_reconstructor.py"],
-      "risk": "low",
-      "behavior_change": "test-only"
-    },
-    {
-      "path": "ci/file_size_baseline.json",
-      "intent": "ratchet bump for the two prod files grown by the hardening commit: artifact_body_evidence_adapter.py 768->773, e2e_spine_runner.py 573->583 (surgical edit, not a full --update sweep)",
-      "scan_targets": ["ci/file_size_baseline.json"],
-      "risk": "low",
-      "behavior_change": "ci-config only"
+      "behavior_change": "none - test-isolation only; no production code touched"
     }
   ]
 }

@@ -147,12 +147,28 @@ def rmos_global_test_isolation(tmp_path: Path, monkeypatch: pytest.MonkeyPatch):
     # Seed empty index for the split-store
     (runs_dir / "_index.json").write_text("{}", encoding="utf-8")
 
-    # Reset the store singleton to pick up new path for this test
+    # Reset the LIVE store singleton to pick up the new path for this test.
+    # store_api owns _default_store; store.py only RE-EXPORTS a stale copy of the
+    # name (bound at import time), so resetting store._default_store is a no-op for
+    # the endpoints (they read store_api._default_store) and lets runs leak across
+    # tests. Reset the real one.
     try:
-        from app.rmos.runs_v2 import store as runs_v2_store
-        runs_v2_store._default_store = None
+        from app.rmos.runs_v2 import store_api as runs_v2_store_api
+        runs_v2_store_api._default_store = None
     except ImportError:
         pass  # runs_v2 module not available in all test contexts
+
+    # Rate limiter isolation. slowapi's limiter is a module-level singleton with
+    # in-memory, IP-keyed storage; TestClient uses a fixed IP, so per-endpoint caps
+    # (e.g. the body-outline 10/hour limit) accumulate across the whole session ->
+    # spurious 429s. `enabled` is captured from env at import time, so setting
+    # RATE_LIMIT_ENABLED now is too late; disable the constructed singleton directly
+    # (monkeypatch auto-restores it after the test).
+    try:
+        from app.middleware.rate_limit import limiter as _rate_limiter
+        monkeypatch.setattr(_rate_limiter, "enabled", False)
+    except Exception:
+        pass  # rate_limit module not available in all test contexts
 
     # --- 2) Learned overrides isolation (Saw Lab) ---
     # If the overrides hook is enabled, it will read this file.
