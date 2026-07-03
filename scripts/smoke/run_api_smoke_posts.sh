@@ -19,11 +19,28 @@ REPO_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
 UVICORN_LOG="${REPO_ROOT}/uvicorn.log"
 UVICORN_PID_FILE="${REPO_ROOT}/uvicorn.pid"
 
+# CI-RED-020-B: the EXIT trap already preserved the smoke exit code implicitly
+# (no `exit` in the body). Adding deterministic TERM->wait->escalate->reap makes
+# that fragile, so preservation is now EXPLICIT: capture rc first, restore it last.
+# Every signal/reap is `|| true` so a cleanup failure can never flip a real
+# smoke/readiness result. See docs/handoffs/CI_RED_020B_addendum.md item 2.
 cleanup() {
+  rc=$?
   if [ -f "$UVICORN_PID_FILE" ]; then
-    kill "$(cat "$UVICORN_PID_FILE")" 2>/dev/null || true
+    pid="$(cat "$UVICORN_PID_FILE" 2>/dev/null || true)"
+    if [ -n "${pid:-}" ]; then
+      kill -TERM "$pid" 2>/dev/null || true
+      # Wait briefly (~5s) for graceful exit before escalating.
+      for _ in 1 2 3 4 5 6 7 8 9 10; do
+        kill -0 "$pid" 2>/dev/null || break
+        sleep 0.5
+      done
+      kill -0 "$pid" 2>/dev/null && kill -KILL "$pid" 2>/dev/null || true
+      wait "$pid" 2>/dev/null || true
+    fi
     rm -f "$UVICORN_PID_FILE"
   fi
+  exit "$rc"
 }
 trap cleanup EXIT
 
