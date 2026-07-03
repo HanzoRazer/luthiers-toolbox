@@ -2,49 +2,146 @@
   "schema": "cbsp21_patch_input_v1",
   "schema_version": "cbsp21_patch_input_v1",
   "coverage_min": 0.95,
-  "patch_id": "STANDING_FAILURES_DECISIONS_7_AND_12",
-  "title": "Close final 2 standing failures: #7 wire human REJECT->REJECTED, #12 relax zone test to argmax",
-  "intent": "The last 2 api-verify/Core CI standing failures were held as product decisions; the user chose #7=OptionA (wire) and #12=OptionB (relax). Both live in IBG/morphology code governance-classified BLOCKED_PROVENANCE (non-authoritative, no user-facing path). #7: BodyEvidenceCandidate.record_review transitioned authority on APPROVE (->HUMAN_REVIEWED) but had no symmetric REJECT branch, so a human REJECT never moved authority to the terminal REJECTED state and the intake gate's rejection-status check (Gate 8 / CANDIDATE_REJECTED) never fired -> test_rejected_candidate_stays_blocked failed on the missing reason. #12: the zone classifier sum-normalizes weights across all matching zones, and body-spanning zones (centerline, left_flank) plus overlapping bridge_region tie with lower_bout for the test point, so no positional zone can exceed 0.5; primary_zone (argmax) is already correct, only the absolute >0.5 assertion was wrong. Closes standing failures 2->0.",
-  "change_type": "fix",
-  "behavior_change": "IBG-only: a human REJECT now transitions candidate authority to the terminal REJECTED state (BLOCKED_PROVENANCE R&D code, no user-facing/live consumer). #12 is test-only.",
-  "risk_level": "low",
+  "patch_id": "CI_RED_015L_IBG_SANDBOX_LANDMARK_INTAKE",
+  "title": "IBG sandbox landmark candidate intake bridge",
+  "intent": "Connect vectorizer-sandbox ibg-landmark-candidate.v1 facts to luthiers as governed BodyEvidenceCandidate inputs while preserving provenance, coordinate caveats, confidence labels, and fail-closed review posture. This is a connection/readiness bridge only; it does not promote authoritative geometry, calibrate pixels to millimeters, run the solver, approve IBG memory, or resolve C2 human-approval decisions.",
+  "change_type": "feature",
+  "behavior_change": "Adds a new IBG-only intake adapter and evidence source for sandbox landmark candidate records. Imported records remain advisory, review-required, blocked by the existing IBG intake gate, and unavailable for solver/export use. Also aligns a stale provenance draft test with the current R2 behavior where RATIFIED attachments are exportable while export_authorized remains false.",
+  "risk_level": "medium",
   "scope": {
     "paths_in_scope": [
       ".cbsp21/",
       "services/api/app/instrument_geometry/body/ibg/",
-      "services/api/tests/"
+      "services/api/tests/fixtures/ibg_sandbox_landmarks/",
+      "services/api/tests/test_ibg_sandbox_landmark_candidate_adapter.py",
+      "tests/governance/test_provenance_attachment_draft.py"
     ],
     "files_expected_to_change": [
-      "services/api/app/instrument_geometry/body/ibg/body_evidence_candidate.py",
-      "services/api/tests/test_ibg_morphology_primitives.py",
-      ".cbsp21/patch_input.json"
+      ".cbsp21/patch_input.json",
+      "services/api/app/instrument_geometry/body/ibg/body_grid/body_grid_schema.py",
+      "services/api/app/instrument_geometry/body/ibg/morphology_harvest/sandbox_landmark_candidate_adapter.py",
+      "services/api/tests/fixtures/ibg_sandbox_landmarks/jazzmaster62_body.landmarks.json",
+      "services/api/tests/fixtures/ibg_sandbox_landmarks/melody_maker_body.landmarks.json",
+      "services/api/tests/test_ibg_sandbox_landmark_candidate_adapter.py",
+      "tests/governance/test_provenance_attachment_draft.py"
     ]
   },
   "diff_articulation": {
-    "what_changed": "(#7, Option A) services/api/app/instrument_geometry/body/ibg/body_evidence_candidate.py::record_review — added a symmetric human-REJECT branch mirroring the existing human-APPROVE branch: for reviewer_id.startswith('human:'), APPROVE transitions authority to HUMAN_REVIEWED (unchanged) and REJECT now transitions to AuthorityState.REJECTED (guarded by can_transition_to, valid from ADVISORY_CANDIDATE/HUMAN_REVIEWED/SANDBOX_EXPERIMENTAL). This activates the intake gate's already-built Gate 8 (_check_rejection_status -> CANDIDATE_REJECTED) and the REJECTED terminal-state resurrection guards (FORBIDDEN_TRANSITIONS), which previously had no production trigger. Machine REJECT is unaffected (ReviewEnforcement.record_review already raises ReviewBypassAttemptError for system actors before this branch). (#12, Option B) services/api/tests/test_ibg_morphology_primitives.py::test_classify_lower_bout_point — replaced the absolute assert zone_weights['lower_bout'] > 0.5 with assert zone_weights['lower_bout'] == max(zone_weights.values()), matching the classifier's de-facto argmax contract (classify_point sum-normalizes across all matching zones; centerline/left_flank/bridge_region tie with lower_bout so no positional zone can exceed 0.5). primary_zone assertion unchanged; no production code touched for #12.",
-    "why_not_redundant": "#7 fixes a real wiring asymmetry (APPROVE propagated to authority, REJECT did not), turning the documented 'REJECTED is terminal / cannot be resurrected' invariant from production-dead (previously reachable only via test-only manual transitions) into an enforced path; no currently-passing test asserted REJECT leaves authority unchanged (verified). #12's >0.5 assertion is asserted by this one test only and is contradicted by the classifier's own normalization; every sibling test and both primary_zone consumers (variant_grammar) already rely on argmax, so relaxing to argmax matches the real contract rather than weakening it."
+    "what_changed": "Added EvidenceSource.IBG_SANDBOX_LANDMARK_CANDIDATE and a new sandbox_landmark_candidate_adapter that validates self-contained ibg-landmark-candidate.v1 records, maps their three bout landmarks to centerline-only RAW_PIXEL NormalizedPoint evidence, preserves widths and admissibility facts in candidate metadata, stamps confidence as HEURISTIC using high=0.8 medium=0.5 low=0.3, attaches complete provenance, and runs the existing default IBG intake gate. The solver conversion helper intentionally raises CalibrationRequiredError even when a scale is supplied, keeping pixel facts out of millimeter solver paths until a calibrated follow-up exists. Two number-only sandbox fixture records and focused tests cover success, fail-closed gate posture, provenance preservation, coordinate caveats, offset-body caveats, invalid schema rejection, and review JSON. The provenance draft test was corrected to match the existing R2 wrapper contract for RATIFIED attachments.",
+    "why_not_redundant": "No existing luthiers path accepted vectorizer-sandbox landmark candidate records as governed IBG evidence while preserving their sandbox caveats and preventing accidental authority promotion. This bridge gives CI-RED-015 a concrete connection point to evaluate IBG facts without treating a DXF/export format, sandbox extractor, or file location as authoritative geometry. The stale provenance test correction is required because current production tests and R2 wrapper behavior already rely on RATIFIED attachments being exportable while export_authorized remains false."
   },
   "verification": {
     "commands_run": [
-      "services/api venv (py3.11.9): pytest tests/test_ibg_constitutional_integration.py tests/test_ibg_intake_gate.py tests/test_ibg_morphology_primitives.py tests/test_governance_constitutional_runtime.py -q -> see PR body (all green; #7 + #12 targets pass, siblings unaffected)",
-      "#7 root cause + blast radius mapped by read-only investigation: record_review had no REJECT->authority branch; AuthorityState.REJECTED valid from ADVISORY_CANDIDATE (authority_state.py); Gate 8 reads authority==REJECTED (ibg_intake_gate.py:296); no test asserts REJECT leaves authority ADVISORY_CANDIDATE",
-      "#12 math confirmed: point (-0.5,0.25) ties lower_bout/bridge_region/left_flank/centerline at 1.0 pre-normalization -> 0.25 each; >0.5 unachievable; argmax (=primary_zone) correct; >0.5 asserted only by this test"
+      "PYTHONPATH=services/api py -3.11 -m pytest services/api/tests/test_ibg_sandbox_landmark_candidate_adapter.py services/api/tests/test_ibg_intake_gate.py services/api/tests/test_ibg_constitutional_integration.py tests/governance/test_provenance_attachment_draft.py tests/test_ibg_provenance_ratification_docs.py services/api/tests/test_dxf_lifecycle_ibg_provenance_guards.py services/api/tests/test_ibg_export_provenance.py -q -> 91 passed, 2 existing NumPy reload warnings",
+      "git diff --cached --check -> clean before first commit",
+      "GitHub PR checks initially showed CBSP21 manifest stale and one new test over the complexity threshold; this follow-up updates the manifest and splits the test witness."
     ]
   },
   "files": [
     {
-      "path": "services/api/app/instrument_geometry/body/ibg/body_evidence_candidate.py",
-      "intent": "#7 Option A: symmetric human-REJECT branch -> authority REJECTED (activates Gate 8 / CANDIDATE_REJECTED)",
-      "scan_targets": ["services/api/app/instrument_geometry/body/ibg/body_evidence_candidate.py"],
+      "path": "services/api/app/instrument_geometry/body/ibg/body_grid/body_grid_schema.py",
+      "intent": "Register the sandbox landmark candidate as an explicit IBG evidence source.",
+      "scan_targets": [
+        "services/api/app/instrument_geometry/body/ibg/body_grid/body_grid_schema.py"
+      ],
       "risk": "low",
-      "behavior_change": "IBG BLOCKED_PROVENANCE R&D only; human REJECT now terminal, no live consumer"
+      "behavior_change": "Adds a new enum value only; no existing evidence source behavior changes.",
+      "verification": [
+        "services/api/tests/test_ibg_sandbox_landmark_candidate_adapter.py"
+      ]
     },
     {
-      "path": "services/api/tests/test_ibg_morphology_primitives.py",
-      "intent": "#12 Option B: relax lower_bout weight assertion from >0.5 to == max (argmax contract)",
-      "scan_targets": ["services/api/tests/test_ibg_morphology_primitives.py"],
+      "path": "services/api/app/instrument_geometry/body/ibg/morphology_harvest/sandbox_landmark_candidate_adapter.py",
+      "intent": "Adapt vectorizer-sandbox landmark candidate records into review-required BodyEvidenceCandidate objects with provenance and fail-closed gate results.",
+      "scan_targets": [
+        "services/api/app/instrument_geometry/body/ibg/morphology_harvest/sandbox_landmark_candidate_adapter.py",
+        "services/api/app/instrument_geometry/body/ibg/body_evidence_candidate.py",
+        "services/api/app/instrument_geometry/body/ibg/ibg_intake_gate.py"
+      ],
+      "risk": "medium",
+      "behavior_change": "Adds an opt-in adapter path. Imported sandbox records remain advisory, review-required, not approved for IBG memory, and blocked from solver/export paths.",
+      "verification": [
+        "services/api/tests/test_ibg_sandbox_landmark_candidate_adapter.py",
+        "services/api/tests/test_ibg_intake_gate.py",
+        "services/api/tests/test_ibg_constitutional_integration.py"
+      ]
+    },
+    {
+      "path": "services/api/tests/fixtures/ibg_sandbox_landmarks/jazzmaster62_body.landmarks.json",
+      "intent": "Provide a number-only sandbox fixture with offset-body ordering caveats preserved.",
+      "scan_targets": [
+        "services/api/tests/fixtures/ibg_sandbox_landmarks/jazzmaster62_body.landmarks.json"
+      ],
       "risk": "low",
-      "behavior_change": "none - test-only"
+      "behavior_change": "none - test fixture only",
+      "verification": [
+        "services/api/tests/test_ibg_sandbox_landmark_candidate_adapter.py"
+      ]
+    },
+    {
+      "path": "services/api/tests/fixtures/ibg_sandbox_landmarks/melody_maker_body.landmarks.json",
+      "intent": "Provide a number-only sandbox fixture for the canonical admissible landmark candidate path.",
+      "scan_targets": [
+        "services/api/tests/fixtures/ibg_sandbox_landmarks/melody_maker_body.landmarks.json"
+      ],
+      "risk": "low",
+      "behavior_change": "none - test fixture only",
+      "verification": [
+        "services/api/tests/test_ibg_sandbox_landmark_candidate_adapter.py"
+      ]
+    },
+    {
+      "path": "services/api/tests/test_ibg_sandbox_landmark_candidate_adapter.py",
+      "intent": "Cover the sandbox intake bridge, fail-closed posture, provenance preservation, pixel-only coordinate boundary, offset caveats, invalid schema rejection, and review JSON.",
+      "scan_targets": [
+        "services/api/tests/test_ibg_sandbox_landmark_candidate_adapter.py"
+      ],
+      "risk": "low",
+      "behavior_change": "none - test-only",
+      "verification": [
+        "services/api/tests/test_ibg_sandbox_landmark_candidate_adapter.py"
+      ]
+    },
+    {
+      "path": "tests/governance/test_provenance_attachment_draft.py",
+      "intent": "Align stale governance draft test expectations with current R2 ratified-export behavior while preserving export_authorized=false.",
+      "scan_targets": [
+        "tests/governance/test_provenance_attachment_draft.py",
+        "services/api/tests/test_dxf_lifecycle_ibg_provenance_guards.py",
+        "services/api/tests/test_ibg_export_provenance.py"
+      ],
+      "risk": "low",
+      "behavior_change": "none - test expectation alignment with existing behavior",
+      "verification": [
+        "tests/governance/test_provenance_attachment_draft.py",
+        "services/api/tests/test_dxf_lifecycle_ibg_provenance_guards.py",
+        "services/api/tests/test_ibg_export_provenance.py"
+      ]
+    },
+    {
+      "path": ".cbsp21/patch_input.json",
+      "intent": "Declare the CI-RED-015-L patch scope for CBSP21 manifest gates.",
+      "scan_targets": [
+        ".cbsp21/patch_input.json"
+      ],
+      "risk": "low",
+      "behavior_change": "none - CI/review metadata only",
+      "verification": [
+        "scripts/ci/check_cbsp21_patch_input.py",
+        "scripts/ci/check_cbsp21_gate.py"
+      ]
     }
-  ]
+  ],
+  "architecture_scan": {
+    "scan_id": "AS-2026-07-03-015L",
+    "risk_summary": {
+      "critical": 0,
+      "high": 0,
+      "medium": 0,
+      "low": 0
+    },
+    "findings": [],
+    "acknowledged": false,
+    "acknowledgement_notes": ""
+  }
 }

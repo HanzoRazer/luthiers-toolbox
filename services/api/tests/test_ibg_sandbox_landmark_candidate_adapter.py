@@ -37,16 +37,19 @@ def _fixture(name: str) -> dict:
     return json.loads((FIXTURE_DIR / name).read_text(encoding="utf-8"))
 
 
-def test_melody_maker_adapts_as_review_required_evidence():
+def _adapt_melody_maker():
     record = load_sandbox_landmark_candidate(
         FIXTURE_DIR / "melody_maker_body.landmarks.json"
     )
-
     result = adapt_sandbox_landmark_candidate(record)
 
     assert result.success is True
     assert result.candidate is not None
-    candidate = result.candidate
+    return result, result.candidate
+
+
+def test_melody_maker_candidate_is_review_required_evidence():
+    _result, candidate = _adapt_melody_maker()
 
     assert candidate.has_provenance()
     assert candidate.review_required is True
@@ -54,6 +57,10 @@ def test_melody_maker_adapts_as_review_required_evidence():
     assert candidate.authority_state.value == "advisory_candidate"
     assert candidate.confidence.confidence_type == ConfidenceType.HEURISTIC
     assert candidate.confidence.value == 0.8
+
+
+def test_melody_maker_gate_preserves_authority_labels():
+    result, candidate = _adapt_melody_maker()
 
     assert result.gate_result is not None
     assert result.gate_result.is_valid is False
