@@ -1,0 +1,84 @@
+{
+  "schema_version": "ibg-landmark-candidate.v1",
+  "spec_id": "melody_maker_body.landmarks",
+  "order": "IBG-KB-004 (geometry harvest)",
+  "status": "landmark_candidate",
+  "subject": {
+    "id": "melody_maker_body",
+    "level": "instrument",
+    "kb_ref": "KB-003-A"
+  },
+  "generator": "create_body_isolation_result_from_mask -> build_body_model_from_isolation -> extract_landmarks_from_profile (src/archaeology/arc_reconstructor; promoted, untouched)",
+  "landmark_vocabulary_ref": "governance/ibg_observation/landmark_mapping_schema.json",
+  "coordinate_space": "pixel-space; body-relative norms included. NO landmarks_uv, NO mm (no mm_per_px calibration available \u2014 KB-004 phase-1 scope).",
+  "provenance": {
+    "source_filename": "Gibson-Melody-Maker.png",
+    "source_sha256": "1501eb61d1247e32e6bada02ce511382059ddfb423bfeacbe5ff1619fa8ec104",
+    "dpi": 200,
+    "acquisition": "extract_ink -> select_dominant_region -> junction_cut -> completeness",
+    "admissibility_gate": "POS-003 dry_run (admissible)"
+  },
+  "admissibility": {
+    "verdict": "ADMISSIBLE",
+    "P1_P5": {
+      "P1_outline_separable": true,
+      "P2_dominant_region_ratio": 0.9999508055589719,
+      "P3_structure_count": 2,
+      "P4_contamination": 0.05416506225131562,
+      "P5_no_full_page_field": true,
+      "ink_fraction": 0.0051432532347504625,
+      "total_enclosed_area": 81310,
+      "largest_enclosed_area": 81306,
+      "dominant_region_solidity": 0.5862426995457495,
+      "ink_spans_page": false
+    }
+  },
+  "body_bbox_px_xywh": [
+    571,
+    1522,
+    2568,
+    2562
+  ],
+  "landmarks": [
+    {
+      "name": "upper_bout",
+      "presence": true,
+      "y_px": 2408,
+      "width_px": 2032.6,
+      "y_norm": 0.3458
+    },
+    {
+      "name": "waist",
+      "presence": true,
+      "y_px": 3314,
+      "width_px": 919.0,
+      "y_norm": 0.6995
+    },
+    {
+      "name": "lower_bout",
+      "presence": true,
+      "y_px": 3570,
+      "width_px": 2381.4,
+      "y_norm": 0.7994
+    }
+  ],
+  "body_metrics_px": {
+    "centerline_x_px": 1855.0,
+    "body_top_y_px": 1522,
+    "body_bottom_y_px": 4084,
+    "body_length_px": 2562.0,
+    "body_max_width_px": 2381.4,
+    "waist_to_lower_ratio": 0.3859,
+    "upper_to_lower_ratio": 0.8535,
+    "width_to_length_ratio": 0.9295
+  },
+  "ordering_rule": "canonical (non-offset): waist strictly narrowest AND lower_bout_width >= upper_bout_width",
+  "ordering_ok": true,
+  "bout_ordering_lower_ge_upper": true,
+  "width_structure_resolved": true,
+  "non_degenerate": true,
+  "manual_review_required": false,
+  "extraction_confidence": "high",
+  "diagnostics": {},
+  "scope_note": "IBG-KB-004 phase 1: admissible body -> promoted extractor -> landmark CANDIDATE (px + ratios). NO ObservationRecord, NO landmarks_uv, NO mm, NO interior features."
+}

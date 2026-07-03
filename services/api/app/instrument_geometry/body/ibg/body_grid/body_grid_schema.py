@@ -34,6 +34,7 @@ class EvidenceSource(Enum):
     VECTORIZER_DXF = "vectorizer_dxf"
     CONSTRAINT_EXTRACTOR = "constraint_extractor"
     PHOTO_EXTRACTION = "photo_extraction"
+    IBG_SANDBOX_LANDMARK_CANDIDATE = "ibg_sandbox_landmark_candidate"
     USER_INPUT = "user_input"
     SPEC_DEFAULT = "spec_default"
 
