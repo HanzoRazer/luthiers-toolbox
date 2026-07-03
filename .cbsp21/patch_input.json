@@ -2,39 +2,39 @@
   "schema": "cbsp21_patch_input_v1",
   "schema_version": "cbsp21_patch_input_v1",
   "coverage_min": 0.95,
-  "patch_id": "DOCS_SPRINTS_CI_RED_020B_LEDGER_RECONCILE",
-  "title": "docs(sprints): CI-RED-020 ledger reconcile — 020-A logged, 020-B (PR #177) recorded/merged",
-  "intent": "SPRINTS.md ledger-only update to the CI-RED-020 index row. The row was stale (2026-06-15, pre-remediation): it did not record 020-A (shared readiness harness + diagnostic boot witness, MERGED #164 `fcf10905`; degraded-boot-200 follow-up closed via #168 `0daeab14`) and had no 020-B entry. This patch reconciles the row to the shipped lane state — 020-A logged, 020-B (restore the scheduled API Health + Smoke nightly witness) recorded and marked MERGED (PR #177, squash `b8ebc552`) — and reduces the remaining closure bar to the next scheduled `main` run being terminal-green. Documentation only; no product/application/CI-behavior change. This manifest itself is scoped to a docs branch off `main` (it replaces the inherited code manifest, which is not applicable to a ledger-only diff).",
+  "patch_id": "DOCS_HANDOFF_PR177_CI_RED_020B_MERGE_INSTABILITY",
+  "title": "docs(handoffs): PR #177 (CI-RED-020-B) merge-instability handoff",
+  "intent": "Add a durable dev handoff explaining why PR #177 read `mergeStateStatus: UNSTABLE` while MERGEABLE — a transient pending-window on non-required Core CI jobs, rooted in CI-RED-021 (no branch protection: nothing is required, so `UNSTABLE` is the default steady state, never `CLEAN` while a slow/advisory job is pending or red), NOT a defect in #177. Records the UNSTABLE-vs-BLOCKED distinction, the merge decision guidance, the 020-B closure bar, and the systemic 'read status per-check' takeaway. Documentation only; no product/application/CI-behavior change. This manifest replaces the inherited code manifest (not applicable to a docs-only diff) so the CBSP21 gates cover this PR.",
   "change_type": "docs",
   "behavior_change": "none",
   "risk_level": "low",
   "scope": {
     "paths_in_scope": [
-      "SPRINTS.md",
+      "docs/handoffs/",
       ".cbsp21/"
     ],
     "files_expected_to_change": [
-      "SPRINTS.md",
+      "docs/handoffs/PR_177_CI_RED_020B_MERGE_INSTABILITY_HANDOFF.md",
       ".cbsp21/patch_input.json"
     ]
   },
   "diff_articulation": {
-    "what_changed": "SPRINTS.md: the single CI-RED-020 index row is expanded from the stale 2026-06-15 stub to the reconciled lane state — (a) 020-A shared readiness harness + diagnostic boot witness logged as MERGED #164 (`fcf10905`), with the degraded-boot-200 follow-up closed via #168 (`0daeab14`); (b) 020-B (remove the `make api-verify` detour that starved the smoke step, split Pages into a downstream main-only `pages-deploy` job, step-timeout `cancelled`->named `failure`) recorded and marked MERGED (PR #177, squash `b8ebc552`), branch-witnessed pre-merge (dispatch runs `28648970970`/`28649149183`); (c) review follow-ups `6a3ba413` (witness gate parses `smoke_posts.json` + requires `ok`; `.nojekyll` guarantees a non-empty badges artifact so `pages-deploy` can't hard-fail) and `9414af45` (CBSP21 manifest reconciled to the shipped 3-min timeout) noted; (d) cross-link to the merge-instability handoff `docs/handoffs/PR_177_CI_RED_020B_MERGE_INSTABILITY_HANDOFF.md` (PR #181). Row stays OPEN: remaining closure bar = the next scheduled `main` run of API Health + Smoke must be terminal-green (a cancel after smoke succeeds is a Pages/env follow-up, not a 020-B relabel). .cbsp21/patch_input.json: replaced the inherited code manifest with this docs-ledger manifest declaring the ledger diff (SPRINTS.md), so the CBSP21 scope + coverage gates cover this PR.",
+    "what_changed": "Added docs/handoffs/PR_177_CI_RED_020B_MERGE_INSTABILITY_HANDOFF.md — a standalone dev handoff: (1) the GitHub merge-state model (CLEAN/UNSTABLE/BLOCKED/DIRTY) and why UNSTABLE-vs-BLOCKED turns on whether a check is *required*; (2) this repo has no branch protection (CI-RED-021) so nothing is required, making UNSTABLE the default steady state; (3) on #177 the instability was a transient pending-window on 3 non-required Core CI jobs (API Tests x2, api-verify) whose outcomes are independent of #177's CI-only diff and reflect main's (green, post-#176) state; (4) the fixed workflow triggers on schedule/dispatch only, so it is not a PR check — its proof is out-of-band (branch dispatch runs + the post-merge scheduled run); (5) merge decision guidance and the 020-B closure bar; (6) a same-day status note that the window resolved green -> CLEAN -> #177 merged (`b8ebc552`). Also replaced .cbsp21/patch_input.json with this docs-handoff manifest declaring the added file so the CBSP21 scope + coverage gates cover this PR.",
     "why_not_redundant": "N/A — behavior_change is none (documentation only)."
   },
   "verification": {
     "commands_run": [
-      "Markdown table row integrity: CI-RED-020 row has 6 pipes / 5 columns (ID|Title|Category|Status|last_verified); status stays OPEN.",
-      "local: python scripts/ci/check_cbsp21_patch_input.py --base origin/main --head HEAD -> PASS (SPRINTS.md now declared in scope)."
+      "local: python scripts/ci/check_cbsp21_patch_input.py --base origin/main --head HEAD -> PASS (handoff file declared in scope).",
+      "local: python scripts/ci/check_cbsp21_gate.py --manifest .cbsp21/patch_input.json --changed-files <handoff> .cbsp21/patch_input.json -> 100% coverage PASS."
     ]
   },
   "files": [
     {
-      "path": "SPRINTS.md",
-      "intent": "Reconcile the CI-RED-020 index row: log 020-A (MERGED #164), record 020-B (PR #177 MERGED `b8ebc552`), remaining closure bar = next scheduled main run terminal-green; cross-link the #181 merge-instability handoff.",
-      "scan_targets": ["SPRINTS.md"],
+      "path": "docs/handoffs/PR_177_CI_RED_020B_MERGE_INSTABILITY_HANDOFF.md",
+      "intent": "Durable handoff explaining PR #177's UNSTABLE merge state (transient pending Core CI; root cause CI-RED-021 no branch protection) and how to read/merge such PRs.",
+      "scan_targets": ["docs/handoffs/PR_177_CI_RED_020B_MERGE_INSTABILITY_HANDOFF.md"],
       "risk": "low",
-      "behavior_change": "none - documentation / ledger only"
+      "behavior_change": "none - documentation only"
     }
   ]
 }
