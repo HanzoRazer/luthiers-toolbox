@@ -51,20 +51,32 @@ jobs:
           pip install -r services/api/requirements.txt
           pip install requests  # For smoke test script
 
-      # (Optional) Reuse your existing health target; doesn't fail the build if missing
-      - name: Run API health (best-effort)
+      # CI-RED-020-B: cheap preflight ONLY. The full `api-verify` target
+      # (check-art-studio-scope + check-boundaries + the broad api-test suite)
+      # belongs to Core CI and the push/PR checks, NOT to this nightly witness.
+      # Front-loading it here consumed the whole 20-minute job window and cancelled
+      # the job before the smoke step ever ran. Do not reintroduce it (guarded by
+      # scripts/ci/test_api_health_and_smoke_workflow.py).
+      - name: Preflight (smoke entry points exist)
         shell: bash
-        continue-on-error: true
         run: |
-          if [ -f Makefile ] && make -n api-verify >/dev/null 2>&1; then
-            make api-verify
-          else
-            echo "No 'api-verify' target found; skipping."
-          fi
+          echo "API Health + Smoke: nightly readiness + POST smoke witness (NOT full api-verify)."
+          test -f Makefile || { echo "::error::Makefile missing"; exit 1; }
+          make -n api-smoke-posts >/dev/null 2>&1 || { echo "::error::Makefile target 'api-smoke-posts' missing"; exit 1; }
+          test -f scripts/smoke/run_api_smoke_posts.sh || { echo "::error::scripts/smoke/run_api_smoke_posts.sh missing"; exit 1; }
 
-      # Official v15.5 smoke test (fails job on error/empty)
+      # Official v15.5 smoke test — the behavior-bearing witness. Boots uvicorn,
+      # waits for /api/health with router_count>0, runs the POST smoke.
+      #
+      # timeout-minutes is the CI-RED-020-B deliverable: a STEP-level timeout
+      # converts a hung smoke from an ambiguous `cancelled` into a named `failure`.
+      # The value 12 is PROVISIONAL — it exists only to let a workflow_dispatch run
+      # reach a green smoke so its real wall-time can be measured; replace it with
+      # ~2x that observed green duration (record both numbers in the PR). See
+      # docs/handoffs/CI_RED_020B_addendum.md item 1.
       - name: Run v15.5 smoke (all presets)
         shell: bash
+        timeout-minutes: 12
         run: |
           if [ -f Makefile ] && make -n api-smoke-posts >/dev/null 2>&1; then
             make api-smoke-posts
@@ -72,6 +84,21 @@ jobs:
             echo "Missing Makefile or 'api-smoke-posts' target."
             exit 1
           fi
+
+      # CI-RED-020-B: witness-presence hard-fail INSIDE the downstream `if: always()`
+      # blanket. Every step below (badge build, Pages deploy) runs `if: always()`, so
+      # without this a run that produced NO smoke_posts.json could still deploy a
+      # green-looking badge and mask the missing witness. Skipped only on cancellation,
+      # where we genuinely cannot witness.
+      - name: Assert smoke witness present
+        if: ${{ !cancelled() }}
+        shell: bash
+        run: |
+          if [ ! -f smoke_posts.json ]; then
+            echo "::error::smoke_posts.json missing after smoke step — no witness produced."
+            exit 1
+          fi
+          echo "Smoke witness present: smoke_posts.json ($(wc -c < smoke_posts.json) bytes)."
 
       - name: Upload smoke_posts.json artifact
         if: always()

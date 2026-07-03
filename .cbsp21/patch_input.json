@@ -2,49 +2,76 @@
   "schema": "cbsp21_patch_input_v1",
   "schema_version": "cbsp21_patch_input_v1",
   "coverage_min": 0.95,
-  "patch_id": "STANDING_FAILURES_DECISIONS_7_AND_12",
-  "title": "Close final 2 standing failures: #7 wire human REJECT->REJECTED, #12 relax zone test to argmax",
-  "intent": "The last 2 api-verify/Core CI standing failures were held as product decisions; the user chose #7=OptionA (wire) and #12=OptionB (relax). Both live in IBG/morphology code governance-classified BLOCKED_PROVENANCE (non-authoritative, no user-facing path). #7: BodyEvidenceCandidate.record_review transitioned authority on APPROVE (->HUMAN_REVIEWED) but had no symmetric REJECT branch, so a human REJECT never moved authority to the terminal REJECTED state and the intake gate's rejection-status check (Gate 8 / CANDIDATE_REJECTED) never fired -> test_rejected_candidate_stays_blocked failed on the missing reason. #12: the zone classifier sum-normalizes weights across all matching zones, and body-spanning zones (centerline, left_flank) plus overlapping bridge_region tie with lower_bout for the test point, so no positional zone can exceed 0.5; primary_zone (argmax) is already correct, only the absolute >0.5 assertion was wrong. Closes standing failures 2->0.",
+  "patch_id": "CI_RED_020B_API_HEALTH_SMOKE_NIGHTLY_WITNESS",
+  "title": "CI-RED-020-B: restore the API Health + Smoke nightly witness (remove api-verify detour)",
+  "intent": "The scheduled 'API Health + Smoke' workflow has produced no successful witness for many days (persistently cancelled). Root cause is a SCOPE bug, not a timing bug: the workflow named Health + Smoke front-loaded the full `make api-verify` target (check-art-studio-scope + check-boundaries + the broad api-test suite) in a best-effort step, which consumed the entire 20-minute job window and starved the actual smoke witness before it ran. Fix: remove the api-verify detour, make the dedicated smoke harness the behavior-bearing check, and make cancellation impossible-by-construction where it was masking. CI-only; no product/application behavior changes. Follows the tracked dev order + Addendum A in docs/handoffs/.",
   "change_type": "fix",
-  "behavior_change": "IBG-only: a human REJECT now transitions candidate authority to the terminal REJECTED state (BLOCKED_PROVENANCE R&D code, no user-facing/live consumer). #12 is test-only.",
+  "behavior_change": "none",
   "risk_level": "low",
   "scope": {
     "paths_in_scope": [
       ".cbsp21/",
-      "services/api/app/instrument_geometry/body/ibg/",
-      "services/api/tests/"
+      ".github/workflows/",
+      "scripts/smoke/",
+      "scripts/ci/",
+      "docs/handoffs/"
     ],
     "files_expected_to_change": [
-      "services/api/app/instrument_geometry/body/ibg/body_evidence_candidate.py",
-      "services/api/tests/test_ibg_morphology_primitives.py",
+      ".github/workflows/api_health_and_smoke.yml",
+      "scripts/smoke/run_api_smoke_posts.sh",
+      "scripts/ci/test_api_health_and_smoke_workflow.py",
+      "docs/handoffs/CI_RED_020B_dev_order.md",
+      "docs/handoffs/CI_RED_020B_addendum.md",
       ".cbsp21/patch_input.json"
     ]
   },
   "diff_articulation": {
-    "what_changed": "(#7, Option A) services/api/app/instrument_geometry/body/ibg/body_evidence_candidate.py::record_review — added a symmetric human-REJECT branch mirroring the existing human-APPROVE branch: for reviewer_id.startswith('human:'), APPROVE transitions authority to HUMAN_REVIEWED (unchanged) and REJECT now transitions to AuthorityState.REJECTED (guarded by can_transition_to, valid from ADVISORY_CANDIDATE/HUMAN_REVIEWED/SANDBOX_EXPERIMENTAL). This activates the intake gate's already-built Gate 8 (_check_rejection_status -> CANDIDATE_REJECTED) and the REJECTED terminal-state resurrection guards (FORBIDDEN_TRANSITIONS), which previously had no production trigger. Machine REJECT is unaffected (ReviewEnforcement.record_review already raises ReviewBypassAttemptError for system actors before this branch). (#12, Option B) services/api/tests/test_ibg_morphology_primitives.py::test_classify_lower_bout_point — replaced the absolute assert zone_weights['lower_bout'] > 0.5 with assert zone_weights['lower_bout'] == max(zone_weights.values()), matching the classifier's de-facto argmax contract (classify_point sum-normalizes across all matching zones; centerline/left_flank/bridge_region tie with lower_bout so no positional zone can exceed 0.5). primary_zone assertion unchanged; no production code touched for #12.",
-    "why_not_redundant": "#7 fixes a real wiring asymmetry (APPROVE propagated to authority, REJECT did not), turning the documented 'REJECTED is terminal / cannot be resurrected' invariant from production-dead (previously reachable only via test-only manual transitions) into an enforced path; no currently-passing test asserted REJECT leaves authority unchanged (verified). #12's >0.5 assertion is asserted by this one test only and is contradicted by the classifier's own normalization; every sibling test and both primary_zone consumers (variant_grammar) already rely on argmax, so relaxing to argmax matches the real contract rather than weakening it."
+    "what_changed": "(1) .github/workflows/api_health_and_smoke.yml: REMOVED the `Run API health (best-effort)` step that ran `make api-verify` (the full-verification detour). Added a cheap `Preflight (smoke entry points exist)` step (Makefile + api-smoke-posts target + run_api_smoke_posts.sh present). Added a STEP-level `timeout-minutes: 12` to `Run v15.5 smoke (all presets)` — PROVISIONAL, to be replaced by ~2x a measured green-smoke wall-time from a workflow_dispatch run (Addendum item 1); a step timeout converts a hung smoke from ambiguous `cancelled` into a named `failure`. Added an `Assert smoke witness present` step gated `if: !cancelled()` that hard-fails when smoke_posts.json is missing after the smoke step — because every downstream step (badge build, Pages deploy) is `if: always()`, this prevents a missing witness from being masked by a green-looking badge/Pages deploy. (2) scripts/smoke/run_api_smoke_posts.sh: hardened the EXISTING `cleanup` EXIT trap. It already preserved the smoke exit code implicitly (no `exit` in body); adding deterministic TERM->wait(~5s)->KILL->reap makes that fragile, so preservation is now EXPLICIT (`rc=$?` first line, `exit \"$rc\"` last) with every signal/reap `|| true` so cleanup can never flip a real smoke/readiness result. Readiness semantics (router_count>0), endpoint coverage, and Windows guarding are unchanged. (3) scripts/ci/test_api_health_and_smoke_workflow.py (NEW, required guard): text-level policy ratchet asserting no `make api-verify`, still invokes the smoke entry point, still uploads smoke_posts.json, still has a scheduled trigger, AND the smoke step carries a step-level timeout-minutes. (4) docs/handoffs/CI_RED_020B_dev_order.md + CI_RED_020B_addendum.md: tracked dev order + addendum (durable, previously pasted only).",
+    "why_not_redundant": "No prior guard prevented the full api-verify suite from being front-loaded into a witness workflow, and no step-level timeout existed to make a hung smoke a named failure — so the nightly witness silently degraded to `cancelled` for many days. This removes the detour, converts the failure class cancelled->failure via a measured step timeout, closes the always()-masking hole with an explicit witness-presence gate, and installs a required text-level ratchet so the exact regression (re-adding api-verify or dropping the step timeout) fails CI. The api-verify path itself is untouched where it belongs (Core CI / push+PR)."
   },
   "verification": {
     "commands_run": [
-      "services/api venv (py3.11.9): pytest tests/test_ibg_constitutional_integration.py tests/test_ibg_intake_gate.py tests/test_ibg_morphology_primitives.py tests/test_governance_constitutional_runtime.py -q -> see PR body (all green; #7 + #12 targets pass, siblings unaffected)",
-      "#7 root cause + blast radius mapped by read-only investigation: record_review had no REJECT->authority branch; AuthorityState.REJECTED valid from ADVISORY_CANDIDATE (authority_state.py); Gate 8 reads authority==REJECTED (ibg_intake_gate.py:296); no test asserts REJECT leaves authority ADVISORY_CANDIDATE",
-      "#12 math confirmed: point (-0.5,0.25) ties lower_bout/bridge_region/left_flank/centerline at 1.0 pre-normalization -> 0.25 each; >0.5 unachievable; argmax (=primary_zone) correct; >0.5 asserted only by this test"
+      "yaml.safe_load(api_health_and_smoke.yml) OK; step order Preflight -> Run v15.5 smoke (timeout-minutes=12) -> Assert smoke witness present (if !cancelled) -> Upload; grep confirms NO `make api-verify` invocation",
+      "bash -n scripts/smoke/run_api_smoke_posts.sh -> OK (hardened trap: rc=$? first, exit \"$rc\" last, TERM/KILL/reap all `|| true`)",
+      "services/api venv (py3.11.9): pytest scripts/ci/test_api_health_and_smoke_workflow.py scripts/ci/test_wait_for_api_ready.py -> 21 passed (6 new guard + 15 readiness regression)",
+      "PENDING (pre-merge, on the Ubuntu runner): workflow_dispatch on the branch reaches the smoke step, uploads smoke_posts.json, returns terminal (success/failure) NOT cancelled; measure green-smoke wall-time and replace provisional timeout-minutes with ~2x observed (both numbers recorded in PR)."
     ]
   },
   "files": [
     {
-      "path": "services/api/app/instrument_geometry/body/ibg/body_evidence_candidate.py",
-      "intent": "#7 Option A: symmetric human-REJECT branch -> authority REJECTED (activates Gate 8 / CANDIDATE_REJECTED)",
-      "scan_targets": ["services/api/app/instrument_geometry/body/ibg/body_evidence_candidate.py"],
+      "path": ".github/workflows/api_health_and_smoke.yml",
+      "intent": "Remove the api-verify detour; make the smoke harness the witness; provisional step-timeout (measured pre-merge); witness-presence gate surviving the always() blanket",
+      "scan_targets": [".github/workflows/api_health_and_smoke.yml"],
       "risk": "low",
-      "behavior_change": "IBG BLOCKED_PROVENANCE R&D only; human REJECT now terminal, no live consumer"
+      "behavior_change": "none - CI workflow scope/shape only"
     },
     {
-      "path": "services/api/tests/test_ibg_morphology_primitives.py",
-      "intent": "#12 Option B: relax lower_bout weight assertion from >0.5 to == max (argmax contract)",
-      "scan_targets": ["services/api/tests/test_ibg_morphology_primitives.py"],
+      "path": "scripts/smoke/run_api_smoke_posts.sh",
+      "intent": "Harden the existing EXIT trap: explicit exit-code preservation + deterministic TERM->wait->KILL->reap; no readiness/coverage change",
+      "scan_targets": ["scripts/smoke/run_api_smoke_posts.sh"],
+      "risk": "low",
+      "behavior_change": "none - CI smoke harness cleanup only; smoke/readiness result preserved"
+    },
+    {
+      "path": "scripts/ci/test_api_health_and_smoke_workflow.py",
+      "intent": "Required text-level ratchet: no api-verify, smoke entry present, artifact uploaded, scheduled trigger, smoke step has step-timeout",
+      "scan_targets": ["scripts/ci/test_api_health_and_smoke_workflow.py"],
       "risk": "low",
       "behavior_change": "none - test-only"
+    },
+    {
+      "path": "docs/handoffs/CI_RED_020B_dev_order.md",
+      "intent": "Durable tracked copy of the 020-B dev order (previously pasted only)",
+      "scan_targets": ["docs/handoffs/CI_RED_020B_dev_order.md"],
+      "risk": "low",
+      "behavior_change": "none - documentation only"
+    },
+    {
+      "path": "docs/handoffs/CI_RED_020B_addendum.md",
+      "intent": "Addendum A: four pick-up-and-run sharpenings amending the dev order",
+      "scan_targets": ["docs/handoffs/CI_RED_020B_addendum.md"],
+      "risk": "low",
+      "behavior_change": "none - documentation only"
     }
   ]
 }
