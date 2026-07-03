@@ -39,12 +39,36 @@ from app.cam.geometry_authority_reference import (
     GeometryAuthorityReference,
     GeometryUse,
     create_canonical_geometry_reference,
+    create_process_approved_canonical_geometry_reference,
     create_derived_geometry_reference,
     create_manufacturing_geometry_reference,
     create_cognition_geometry_reference,
     create_export_geometry_reference,
     create_visualization_geometry_reference,
 )
+from app.cam.canonical_geometry_process_approval import (
+    create_canonical_process_approval_record,
+    PROPOSED_CANONICAL_PROCESS_ID,
+    PROPOSED_CANONICAL_PROCESS_VERSION,
+    PROPOSED_APPROVAL_RULE_ID,
+)
+
+
+def _process_approved_canonical_reference(owning_domain="boe"):
+    """Build a C2 process-approved canonical reference (green under the ruling)."""
+    record = create_canonical_process_approval_record(
+        canonical_process_id=PROPOSED_CANONICAL_PROCESS_ID,
+        canonical_process_version=PROPOSED_CANONICAL_PROCESS_VERSION,
+        governed_approval_event_id="event-test",
+        approval_rule_id=PROPOSED_APPROVAL_RULE_ID,
+        source_geometry_id="geo-src-test",
+        provenance_hash="prov-test",
+        process_inputs_hash="inputs-test",
+        approver_id="human:tester",
+    )
+    return create_process_approved_canonical_geometry_reference(
+        approval_record=record, owning_domain=owning_domain
+    )
 from app.cam.geometry_authority_validation import (
     GeometryAuthorityValidationResult,
     ValidationGate,
@@ -524,15 +548,32 @@ class TestValidation:
     """Tests for geometry authority validation."""
 
     def test_validate_canonical_reference_green(self):
-        """Valid canonical reference gets GREEN gate."""
+        """Valid (process-approved) canonical reference gets GREEN gate.
+
+        Under the C2 process-exclusive ruling, a *valid* canonical reference is
+        one produced by the approved canonical process following a governed
+        approval event.
+        """
+        ref = _process_approved_canonical_reference(owning_domain="ibg")
+        result = validate_geometry_authority_reference(ref)
+        assert result.gate == "green"
+        assert result.authority_collapse_detected is False
+        assert result.blocking_issues == []
+
+    def test_validate_legacy_canonical_reference_warns_not_red(self):
+        """Legacy canonical reference (no process approval) WARNS, not RED.
+
+        Transition mode (PR 1): a canonical reference lacking process-approval
+        metadata is a compatibility warning (yellow), never a blocking RED.
+        """
         ref = create_canonical_geometry_reference(
             owning_domain="ibg",
             source_authority="ibg_body",
         )
         result = validate_geometry_authority_reference(ref)
-        assert result.gate == "green"
-        assert result.authority_collapse_detected is False
+        assert result.gate != "red"
         assert result.blocking_issues == []
+        assert any("process-approval metadata" in w for w in result.warnings)
 
     def test_validate_derived_with_source_green(self):
         """Derived reference with proper source gets GREEN gate."""
@@ -801,8 +842,8 @@ class TestCISummary:
         assert summary["unvalidated_reference_count"] == 1
 
     def test_ci_summary_status_pass(self):
-        """CI summary status is pass when all green."""
-        ref = create_canonical_geometry_reference("ibg", "test")
+        """CI summary status is pass when all green (process-approved canonical)."""
+        ref = _process_approved_canonical_reference()
         register_geometry_authority_reference(ref)
         summary = get_ci_summary()
         assert summary["status"] == "pass"

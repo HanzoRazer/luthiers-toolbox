@@ -103,7 +103,10 @@ GEOMETRY_AUTHORITY_LAYER_DEFINITIONS: Dict[GeometryAuthorityLayer, GeometryAutho
     "canonical_geometry": GeometryAuthorityLayerDefinition(
         layer="canonical_geometry",
         display_name="Canonical Geometry",
-        description="Authoritative design truth owned by IBG/BOE",
+        description=(
+            "Authoritative design truth produced by the approved canonical "
+            "process following a governed approval event"
+        ),
         owns_design_truth=True,
         derived_layer=False,
         may_define_canonical_geometry=True,

@@ -192,6 +192,15 @@ def validate_geometry_authority_reference(
     if not provenance_present and reference.authority_layer != "canonical_geometry":
         warnings.append("Provenance hash not present for derived geometry")
 
+    # C2 process-exclusive canonical authority (PROPOSED, transition mode).
+    # A canonical reference not backed by a governed process-approval record is
+    # a transition-state WARNING in this PR — never a RED gate. PR 4 may flip
+    # this to RED once all canonical creators have migrated.
+    if is_canonical_layer(reference.authority_layer):
+        canonical_ok, canonical_reason = validate_canonical_process_authority(reference)
+        if not canonical_ok and canonical_reason:
+            warnings.append(canonical_reason)
+
     allowed_use_valid = True
     for use in reference.allowed_uses:
         if not is_use_allowed(reference.authority_layer, use):
@@ -293,6 +302,52 @@ def validate_geometry_authority_reference(
     result.deterministic_validation_hash = result.compute_hash()
 
     return result
+
+
+def validate_canonical_process_authority(
+    reference: GeometryAuthorityReference,
+) -> tuple[bool, Optional[str]]:
+    """
+    Validate that a canonical reference is backed by a governed process-approval
+    record (C2 process-exclusive ruling — PROPOSED).
+
+    Returns ``(is_valid, reason)``.
+
+    Rules:
+      - Only applies to ``canonical_geometry`` references (derived layers return
+        ``(True, None)`` — not applicable).
+      - ``canonical_process_id``, ``canonical_process_version``,
+        ``governed_approval_event_id``, and ``process_approval_record_hash`` must
+        all be present.
+      - Authority cannot be inferred from format, route, serializer, registry
+        location, IBG/vectorizer/template origin, or individual reviewer
+        identity — only from the presence of the process-approval metadata.
+
+    A missing-metadata result is a TRANSITION-STATE signal. Callers in this PR
+    surface it as a warning, not a RED gate.
+    """
+    if not is_canonical_layer(reference.authority_layer):
+        return True, None
+
+    required = {
+        "canonical_process_id": reference.canonical_process_id,
+        "canonical_process_version": reference.canonical_process_version,
+        "governed_approval_event_id": reference.governed_approval_event_id,
+        "process_approval_record_hash": reference.process_approval_record_hash,
+    }
+    missing = [name for name, value in required.items() if not value]
+    if missing:
+        return False, (
+            "Canonical reference lacks process-approval metadata "
+            f"({', '.join(missing)}); under the C2 process-exclusive ruling "
+            "canonical authority is created only by the approved canonical process "
+            "following a governed approval event. Authority cannot be inferred from "
+            "format, route, serializer, registry location, IBG/vectorizer/template "
+            "origin, or individual reviewer identity. Use "
+            "create_process_approved_canonical_geometry_reference(). "
+            "(transition-state warning; not a RED gate in this PR)"
+        )
+    return True, None
 
 
 def detect_authority_collapse(reference: GeometryAuthorityReference) -> bool:
