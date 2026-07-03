@@ -2,49 +2,39 @@
   "schema": "cbsp21_patch_input_v1",
   "schema_version": "cbsp21_patch_input_v1",
   "coverage_min": 0.95,
-  "patch_id": "STANDING_FAILURES_DECISIONS_7_AND_12",
-  "title": "Close final 2 standing failures: #7 wire human REJECT->REJECTED, #12 relax zone test to argmax",
-  "intent": "The last 2 api-verify/Core CI standing failures were held as product decisions; the user chose #7=OptionA (wire) and #12=OptionB (relax). Both live in IBG/morphology code governance-classified BLOCKED_PROVENANCE (non-authoritative, no user-facing path). #7: BodyEvidenceCandidate.record_review transitioned authority on APPROVE (->HUMAN_REVIEWED) but had no symmetric REJECT branch, so a human REJECT never moved authority to the terminal REJECTED state and the intake gate's rejection-status check (Gate 8 / CANDIDATE_REJECTED) never fired -> test_rejected_candidate_stays_blocked failed on the missing reason. #12: the zone classifier sum-normalizes weights across all matching zones, and body-spanning zones (centerline, left_flank) plus overlapping bridge_region tie with lower_bout for the test point, so no positional zone can exceed 0.5; primary_zone (argmax) is already correct, only the absolute >0.5 assertion was wrong. Closes standing failures 2->0.",
-  "change_type": "fix",
-  "behavior_change": "IBG-only: a human REJECT now transitions candidate authority to the terminal REJECTED state (BLOCKED_PROVENANCE R&D code, no user-facing/live consumer). #12 is test-only.",
+  "patch_id": "DOCS_SPRINTS_CI_RED_020B_LEDGER_RECONCILE",
+  "title": "docs(sprints): CI-RED-020 ledger reconcile — 020-A logged, 020-B (PR #177) recorded/merged",
+  "intent": "SPRINTS.md ledger-only update to the CI-RED-020 index row. The row was stale (2026-06-15, pre-remediation): it did not record 020-A (shared readiness harness + diagnostic boot witness, MERGED #164 `fcf10905`; degraded-boot-200 follow-up closed via #168 `0daeab14`) and had no 020-B entry. This patch reconciles the row to the shipped lane state — 020-A logged, 020-B (restore the scheduled API Health + Smoke nightly witness) recorded and marked MERGED (PR #177, squash `b8ebc552`) — and reduces the remaining closure bar to the next scheduled `main` run being terminal-green. Documentation only; no product/application/CI-behavior change. This manifest itself is scoped to a docs branch off `main` (it replaces the inherited code manifest, which is not applicable to a ledger-only diff).",
+  "change_type": "docs",
+  "behavior_change": "none",
   "risk_level": "low",
   "scope": {
     "paths_in_scope": [
-      ".cbsp21/",
-      "services/api/app/instrument_geometry/body/ibg/",
-      "services/api/tests/"
+      "SPRINTS.md",
+      ".cbsp21/"
     ],
     "files_expected_to_change": [
-      "services/api/app/instrument_geometry/body/ibg/body_evidence_candidate.py",
-      "services/api/tests/test_ibg_morphology_primitives.py",
+      "SPRINTS.md",
       ".cbsp21/patch_input.json"
     ]
   },
   "diff_articulation": {
-    "what_changed": "(#7, Option A) services/api/app/instrument_geometry/body/ibg/body_evidence_candidate.py::record_review — added a symmetric human-REJECT branch mirroring the existing human-APPROVE branch: for reviewer_id.startswith('human:'), APPROVE transitions authority to HUMAN_REVIEWED (unchanged) and REJECT now transitions to AuthorityState.REJECTED (guarded by can_transition_to, valid from ADVISORY_CANDIDATE/HUMAN_REVIEWED/SANDBOX_EXPERIMENTAL). This activates the intake gate's already-built Gate 8 (_check_rejection_status -> CANDIDATE_REJECTED) and the REJECTED terminal-state resurrection guards (FORBIDDEN_TRANSITIONS), which previously had no production trigger. Machine REJECT is unaffected (ReviewEnforcement.record_review already raises ReviewBypassAttemptError for system actors before this branch). (#12, Option B) services/api/tests/test_ibg_morphology_primitives.py::test_classify_lower_bout_point — replaced the absolute assert zone_weights['lower_bout'] > 0.5 with assert zone_weights['lower_bout'] == max(zone_weights.values()), matching the classifier's de-facto argmax contract (classify_point sum-normalizes across all matching zones; centerline/left_flank/bridge_region tie with lower_bout so no positional zone can exceed 0.5). primary_zone assertion unchanged; no production code touched for #12.",
-    "why_not_redundant": "#7 fixes a real wiring asymmetry (APPROVE propagated to authority, REJECT did not), turning the documented 'REJECTED is terminal / cannot be resurrected' invariant from production-dead (previously reachable only via test-only manual transitions) into an enforced path; no currently-passing test asserted REJECT leaves authority unchanged (verified). #12's >0.5 assertion is asserted by this one test only and is contradicted by the classifier's own normalization; every sibling test and both primary_zone consumers (variant_grammar) already rely on argmax, so relaxing to argmax matches the real contract rather than weakening it."
+    "what_changed": "SPRINTS.md: the single CI-RED-020 index row is expanded from the stale 2026-06-15 stub to the reconciled lane state — (a) 020-A shared readiness harness + diagnostic boot witness logged as MERGED #164 (`fcf10905`), with the degraded-boot-200 follow-up closed via #168 (`0daeab14`); (b) 020-B (remove the `make api-verify` detour that starved the smoke step, split Pages into a downstream main-only `pages-deploy` job, step-timeout `cancelled`->named `failure`) recorded and marked MERGED (PR #177, squash `b8ebc552`), branch-witnessed pre-merge (dispatch runs `28648970970`/`28649149183`); (c) review follow-ups `6a3ba413` (witness gate parses `smoke_posts.json` + requires `ok`; `.nojekyll` guarantees a non-empty badges artifact so `pages-deploy` can't hard-fail) and `9414af45` (CBSP21 manifest reconciled to the shipped 3-min timeout) noted; (d) cross-link to the merge-instability handoff `docs/handoffs/PR_177_CI_RED_020B_MERGE_INSTABILITY_HANDOFF.md` (PR #181). Row stays OPEN: remaining closure bar = the next scheduled `main` run of API Health + Smoke must be terminal-green (a cancel after smoke succeeds is a Pages/env follow-up, not a 020-B relabel). .cbsp21/patch_input.json: replaced the inherited code manifest with this docs-ledger manifest declaring the ledger diff (SPRINTS.md), so the CBSP21 scope + coverage gates cover this PR.",
+    "why_not_redundant": "N/A — behavior_change is none (documentation only)."
   },
   "verification": {
     "commands_run": [
-      "services/api venv (py3.11.9): pytest tests/test_ibg_constitutional_integration.py tests/test_ibg_intake_gate.py tests/test_ibg_morphology_primitives.py tests/test_governance_constitutional_runtime.py -q -> see PR body (all green; #7 + #12 targets pass, siblings unaffected)",
-      "#7 root cause + blast radius mapped by read-only investigation: record_review had no REJECT->authority branch; AuthorityState.REJECTED valid from ADVISORY_CANDIDATE (authority_state.py); Gate 8 reads authority==REJECTED (ibg_intake_gate.py:296); no test asserts REJECT leaves authority ADVISORY_CANDIDATE",
-      "#12 math confirmed: point (-0.5,0.25) ties lower_bout/bridge_region/left_flank/centerline at 1.0 pre-normalization -> 0.25 each; >0.5 unachievable; argmax (=primary_zone) correct; >0.5 asserted only by this test"
+      "Markdown table row integrity: CI-RED-020 row has 6 pipes / 5 columns (ID|Title|Category|Status|last_verified); status stays OPEN.",
+      "local: python scripts/ci/check_cbsp21_patch_input.py --base origin/main --head HEAD -> PASS (SPRINTS.md now declared in scope)."
     ]
   },
   "files": [
     {
-      "path": "services/api/app/instrument_geometry/body/ibg/body_evidence_candidate.py",
-      "intent": "#7 Option A: symmetric human-REJECT branch -> authority REJECTED (activates Gate 8 / CANDIDATE_REJECTED)",
-      "scan_targets": ["services/api/app/instrument_geometry/body/ibg/body_evidence_candidate.py"],
+      "path": "SPRINTS.md",
+      "intent": "Reconcile the CI-RED-020 index row: log 020-A (MERGED #164), record 020-B (PR #177 MERGED `b8ebc552`), remaining closure bar = next scheduled main run terminal-green; cross-link the #181 merge-instability handoff.",
+      "scan_targets": ["SPRINTS.md"],
       "risk": "low",
-      "behavior_change": "IBG BLOCKED_PROVENANCE R&D only; human REJECT now terminal, no live consumer"
-    },
-    {
-      "path": "services/api/tests/test_ibg_morphology_primitives.py",
-      "intent": "#12 Option B: relax lower_bout weight assertion from >0.5 to == max (argmax contract)",
-      "scan_targets": ["services/api/tests/test_ibg_morphology_primitives.py"],
-      "risk": "low",
-      "behavior_change": "none - test-only"
+      "behavior_change": "none - documentation / ledger only"
     }
   ]
 }
