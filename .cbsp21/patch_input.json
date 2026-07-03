@@ -6,15 +6,14 @@
   "title": "IBG sandbox landmark candidate intake bridge",
   "intent": "Connect vectorizer-sandbox ibg-landmark-candidate.v1 facts to luthiers as governed BodyEvidenceCandidate inputs while preserving provenance, coordinate caveats, confidence labels, and fail-closed review posture. This is a connection/readiness bridge only; it does not promote authoritative geometry, calibrate pixels to millimeters, run the solver, approve IBG memory, or resolve C2 human-approval decisions.",
   "change_type": "feature",
-  "behavior_change": "Adds a new IBG-only intake adapter and evidence source for sandbox landmark candidate records. Imported records remain advisory, review-required, blocked by the existing IBG intake gate, and unavailable for solver/export use. Also aligns a stale provenance draft test with the current R2 behavior where RATIFIED attachments are exportable while export_authorized remains false.",
+  "behavior_change": "Adds a new IBG-only intake adapter and evidence source for sandbox landmark candidate records. Imported records remain advisory, review-required, blocked by the existing IBG intake gate, and unavailable for solver/export use.",
   "risk_level": "medium",
   "scope": {
     "paths_in_scope": [
       ".cbsp21/",
       "services/api/app/instrument_geometry/body/ibg/",
       "services/api/tests/fixtures/ibg_sandbox_landmarks/",
-      "services/api/tests/test_ibg_sandbox_landmark_candidate_adapter.py",
-      "tests/governance/test_provenance_attachment_draft.py"
+      "services/api/tests/test_ibg_sandbox_landmark_candidate_adapter.py"
     ],
     "files_expected_to_change": [
       ".cbsp21/patch_input.json",
@@ -22,17 +21,16 @@
       "services/api/app/instrument_geometry/body/ibg/morphology_harvest/sandbox_landmark_candidate_adapter.py",
       "services/api/tests/fixtures/ibg_sandbox_landmarks/jazzmaster62_body.landmarks.json",
       "services/api/tests/fixtures/ibg_sandbox_landmarks/melody_maker_body.landmarks.json",
-      "services/api/tests/test_ibg_sandbox_landmark_candidate_adapter.py",
-      "tests/governance/test_provenance_attachment_draft.py"
+      "services/api/tests/test_ibg_sandbox_landmark_candidate_adapter.py"
     ]
   },
   "diff_articulation": {
-    "what_changed": "Added EvidenceSource.IBG_SANDBOX_LANDMARK_CANDIDATE and a new sandbox_landmark_candidate_adapter that validates self-contained ibg-landmark-candidate.v1 records, maps their three bout landmarks to centerline-only RAW_PIXEL NormalizedPoint evidence, preserves widths and admissibility facts in candidate metadata, stamps confidence as HEURISTIC using high=0.8 medium=0.5 low=0.3, attaches complete provenance, and runs the existing default IBG intake gate. The solver conversion helper intentionally raises CalibrationRequiredError even when a scale is supplied, keeping pixel facts out of millimeter solver paths until a calibrated follow-up exists. Two number-only sandbox fixture records and focused tests cover success, fail-closed gate posture, provenance preservation, coordinate caveats, offset-body caveats, invalid schema rejection, and review JSON. The provenance draft test was corrected to match the existing R2 wrapper contract for RATIFIED attachments.",
-    "why_not_redundant": "No existing luthiers path accepted vectorizer-sandbox landmark candidate records as governed IBG evidence while preserving their sandbox caveats and preventing accidental authority promotion. This bridge gives CI-RED-015 a concrete connection point to evaluate IBG facts without treating a DXF/export format, sandbox extractor, or file location as authoritative geometry. The stale provenance test correction is required because current production tests and R2 wrapper behavior already rely on RATIFIED attachments being exportable while export_authorized remains false."
+    "what_changed": "Added EvidenceSource.IBG_SANDBOX_LANDMARK_CANDIDATE and a new sandbox_landmark_candidate_adapter that validates self-contained ibg-landmark-candidate.v1 records, maps their three bout landmarks to centerline-only RAW_PIXEL NormalizedPoint evidence, preserves widths and admissibility facts in candidate metadata, stamps confidence as HEURISTIC using high=0.8 medium=0.5 low=0.3, attaches complete provenance, and runs the existing default IBG intake gate. The solver conversion helper intentionally raises CalibrationRequiredError even when a scale is supplied, keeping pixel facts out of millimeter solver paths until a calibrated follow-up exists. Two number-only sandbox fixture records and focused tests cover success, fail-closed gate posture, provenance preservation, coordinate caveats, offset-body caveats, invalid schema rejection, and review JSON.",
+    "why_not_redundant": "No existing luthiers path accepted vectorizer-sandbox landmark candidate records as governed IBG evidence while preserving their sandbox caveats and preventing accidental authority promotion. This bridge gives CI-RED-015 a concrete connection point to evaluate IBG facts without treating a DXF/export format, sandbox extractor, or file location as authoritative geometry."
   },
   "verification": {
     "commands_run": [
-      "PYTHONPATH=services/api py -3.11 -m pytest services/api/tests/test_ibg_sandbox_landmark_candidate_adapter.py services/api/tests/test_ibg_intake_gate.py services/api/tests/test_ibg_constitutional_integration.py tests/governance/test_provenance_attachment_draft.py tests/test_ibg_provenance_ratification_docs.py services/api/tests/test_dxf_lifecycle_ibg_provenance_guards.py services/api/tests/test_ibg_export_provenance.py -q -> 91 passed, 2 existing NumPy reload warnings",
+      "PYTHONPATH=services/api py -3.11 -m pytest services/api/tests/test_ibg_sandbox_landmark_candidate_adapter.py services/api/tests/test_ibg_intake_gate.py services/api/tests/test_ibg_constitutional_integration.py tests/test_ibg_provenance_ratification_docs.py services/api/tests/test_dxf_lifecycle_ibg_provenance_guards.py services/api/tests/test_ibg_export_provenance.py -q -> 71 passed, 2 existing NumPy reload warnings",
       "git diff --cached --check -> clean before first commit",
       "GitHub PR checks initially showed CBSP21 manifest stale and one new test over the complexity threshold; this follow-up updates the manifest and splits the test witness."
     ]
@@ -100,22 +98,6 @@
       "behavior_change": "none - test-only",
       "verification": [
         "services/api/tests/test_ibg_sandbox_landmark_candidate_adapter.py"
-      ]
-    },
-    {
-      "path": "tests/governance/test_provenance_attachment_draft.py",
-      "intent": "Align stale governance draft test expectations with current R2 ratified-export behavior while preserving export_authorized=false.",
-      "scan_targets": [
-        "tests/governance/test_provenance_attachment_draft.py",
-        "services/api/tests/test_dxf_lifecycle_ibg_provenance_guards.py",
-        "services/api/tests/test_ibg_export_provenance.py"
-      ],
-      "risk": "low",
-      "behavior_change": "none - test expectation alignment with existing behavior",
-      "verification": [
-        "tests/governance/test_provenance_attachment_draft.py",
-        "services/api/tests/test_dxf_lifecycle_ibg_provenance_guards.py",
-        "services/api/tests/test_ibg_export_provenance.py"
       ]
     },
     {

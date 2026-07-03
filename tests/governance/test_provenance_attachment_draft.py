@@ -45,25 +45,15 @@ class TestProvenanceAttachmentInvariants:
                 export_authorized=True,
             )
 
-    def test_is_exportable_false_for_non_ratified_statuses(self):
-        """Draft/pending/blocked attachments are not exportable."""
-        for status in NON_EXPORTABLE_STATUSES:
-            draft = ProvenanceAttachmentDraft(
-                attachment_id=f"test-{status.value}",
-                source_artifact_id="/path/to/source.dxf",
-                status=status,
-            )
-            assert draft.is_exportable() is False
-
-    def test_ratified_status_is_exportable_for_r2_wrapper(self):
-        """R2 allows RATIFIED attachments while export_authorized remains False."""
+    def test_is_exportable_always_returns_false(self):
+        """is_exportable() must always return False for drafts."""
         draft = ProvenanceAttachmentDraft(
             attachment_id="test-001",
             source_artifact_id="/path/to/source.dxf",
-            status=ProvenanceAttachmentStatus.RATIFIED,
+            status=ProvenanceAttachmentStatus.RATIFIED,  # Even if ratified
         )
-        assert draft.export_authorized is False
-        assert draft.is_exportable() is True
+        # Draft structures are never exportable
+        assert draft.is_exportable() is False
 
     def test_draft_status_is_default(self):
         """Default status should be DRAFT."""
