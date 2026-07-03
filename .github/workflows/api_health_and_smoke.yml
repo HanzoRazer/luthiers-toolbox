@@ -18,10 +18,12 @@ jobs:
   health-smoke:
     runs-on: ubuntu-latest
     timeout-minutes: 20
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
-
+    # CI-RED-020-B: NO `environment:` on the witness job. The github-pages
+    # environment's deployment-branch policy rejects non-main branches at job start
+    # (before any step runs), which made the branch-dispatch smoke witness
+    # impossible. Pages deployment now lives in the separate downstream
+    # `pages-deploy` job (main only) so the witness runs on any branch/dispatch and
+    # is never held hostage by Pages eligibility.
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -430,18 +432,47 @@ jobs:
               json.dump(index, f, indent=2)
           PY
 
-      # ---------- GitHub Pages deployment ----------
-      - name: Configure Pages
+      # ---------- Hand badges to the pages-deploy job ----------
+      - name: Upload badges artifact (for pages-deploy)
         if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: public_badges
+          path: public_badges
+          if-no-files-found: warn
+
+  # ---------- GitHub Pages deployment (secondary to the witness) ----------
+  # CI-RED-020-B: split out of health-smoke so the smoke witness is never gated by
+  # the github-pages environment. Runs only on main, only after the witness, and
+  # cannot block or cancel it. `if: always()` so a failure badge still deploys even
+  # when smoke failed; a Pages block/failure here is classified separately (the
+  # witness has already reported its own terminal result).
+  pages-deploy:
+    needs: health-smoke
+    if: ${{ always() && github.ref == 'refs/heads/main' }}
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
+    steps:
+      - name: Download badges artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: public_badges
+          path: public_badges
+
+      - name: Configure Pages
         uses: actions/configure-pages@v5
 
       - name: Upload Pages artifact (badges)
-        if: always()
         uses: actions/upload-pages-artifact@v3
         with:
           path: public_badges
 
       - name: Deploy to GitHub Pages
-        if: always()
         id: deployment
         uses: actions/deploy-pages@v4
