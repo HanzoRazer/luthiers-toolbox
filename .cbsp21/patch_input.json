@@ -34,7 +34,7 @@
       "yaml.safe_load(api_health_and_smoke.yml) OK; step order Preflight -> Run v15.5 smoke (timeout-minutes=12) -> Assert smoke witness present (if !cancelled) -> Upload; grep confirms NO `make api-verify` invocation",
       "bash -n scripts/smoke/run_api_smoke_posts.sh -> OK (hardened trap: rc=$? first, exit \"$rc\" last, TERM/KILL/reap all `|| true`)",
       "services/api venv (py3.11.9): pytest scripts/ci/test_api_health_and_smoke_workflow.py scripts/ci/test_wait_for_api_ready.py -> 21 passed (6 new guard + 15 readiness regression)",
-      "PENDING (pre-merge, on the Ubuntu runner): workflow_dispatch on the branch reaches the smoke step, uploads smoke_posts.json, returns terminal (success/failure) NOT cancelled; measure green-smoke wall-time and replace provisional timeout-minutes with ~2x observed (both numbers recorded in PR)."
+      "Ubuntu-runner witness (branch dispatch run 28648970970): health-smoke SUCCESS, all steps ran, smoke step 08:40:01->08:40:11 = ~10s green, 'Assert smoke witness present' passed, smoke_posts.json uploaded, pages-deploy SKIPPED (ref!=main). Terminal success, NOT cancelled — the branch-dispatch witness now runs (was rejected in 2s pre-split). Step timeout set to 3 min = ~2x the readiness-bounded healthy CEILING (~70s: wait_for_api_ready --timeout-seconds 60 + boot + posts), NOT 2x the lucky 10s fast path (which would spurious-red a slow-but-healthy cold boot)."
     ]
   },
   "files": [

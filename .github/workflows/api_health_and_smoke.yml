@@ -72,13 +72,16 @@ jobs:
       #
       # timeout-minutes is the CI-RED-020-B deliverable: a STEP-level timeout
       # converts a hung smoke from an ambiguous `cancelled` into a named `failure`.
-      # The value 12 is PROVISIONAL — it exists only to let a workflow_dispatch run
-      # reach a green smoke so its real wall-time can be measured; replace it with
-      # ~2x that observed green duration (record both numbers in the PR). See
-      # docs/handoffs/CI_RED_020B_addendum.md item 1.
+      # MEASURED on the Ubuntu runner (branch dispatch run 28648970970): the healthy
+      # fast path is ~10s, BUT the readiness gate (wait_for_api_ready
+      # --timeout-seconds 60) lets a slow-but-healthy cold boot use up to ~60s, so
+      # the healthy CEILING is ~70s. 3 minutes (~2.5x that ceiling) turns a genuine
+      # hang into a failure well before the 20-min job timeout, without false-failing
+      # a slow-but-healthy boot. (Not 2x the lucky 10s — that would spurious-red the
+      # slow-but-healthy case.) See docs/handoffs/CI_RED_020B_addendum.md item 1.
       - name: Run v15.5 smoke (all presets)
         shell: bash
-        timeout-minutes: 12
+        timeout-minutes: 3
         run: |
           if [ -f Makefile ] && make -n api-smoke-posts >/dev/null 2>&1; then
             make api-smoke-posts
