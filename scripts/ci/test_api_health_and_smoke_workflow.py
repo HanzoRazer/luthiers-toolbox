@@ -60,9 +60,15 @@ def test_keeps_scheduled_trigger():
 
 
 def _smoke_step_block() -> str:
-    """Text of the 'Run v15.5 smoke' step up to the next '- name:' step."""
+    """Text of the 'Run v<N> smoke' step up to the next '- name:' step.
+
+    Anchored on `Run v<version> smoke` rather than a hard-coded `v15.5`, so a
+    smoke-suite version bump does not spuriously break this ratchet. A full step
+    rename (dropping the 'Run v… smoke' shape) still trips it — that is the
+    intended strictness, since the step-timeout it guards is load-bearing.
+    """
     m = re.search(
-        r"-\s*name:\s*Run v15\.5 smoke.*?(?=\n\s*-\s*name:)",
+        r"-\s*name:\s*Run v[\d.]+ smoke.*?(?=\n\s*-\s*name:)",
         _text(),
         re.DOTALL,
     )
@@ -71,8 +77,26 @@ def _smoke_step_block() -> str:
 
 def test_smoke_step_has_step_level_timeout():
     block = _smoke_step_block()
-    assert block, "could not locate the 'Run v15.5 smoke (all presets)' step."
+    assert block, "could not locate the 'Run v<N> smoke (all presets)' step."
     assert re.search(r"^\s*timeout-minutes\s*:", block, re.MULTILINE), (
         "the smoke step must carry a STEP-level `timeout-minutes` — this is what "
         "converts a hung smoke from `cancelled` into a named `failure` (CI-RED-020-B)."
+    )
+
+
+def test_asserts_witness_is_valid_json_not_just_present():
+    # CI-RED-020-B hardening: the witness gate must verify smoke_posts.json PARSES
+    # and carries the `ok` verdict, not merely that the file exists — otherwise a
+    # truncated/empty witness could mask a degraded run behind a green badge.
+    text = _text()
+    m = re.search(
+        r"-\s*name:\s*Assert smoke witness present.*?(?=\n\s*-\s*name:)",
+        text,
+        re.DOTALL,
+    )
+    block = m.group(0) if m else ""
+    assert block, "could not locate the 'Assert smoke witness present' step."
+    assert "json.load" in block and re.search(r"['\"]ok['\"]", block), (
+        "the witness gate must parse smoke_posts.json as JSON and require the 'ok' "
+        "key — existence alone is not a valid witness (CI-RED-020-B)."
     )

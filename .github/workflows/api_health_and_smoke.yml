@@ -103,7 +103,27 @@ jobs:
             echo "::error::smoke_posts.json missing after smoke step — no witness produced."
             exit 1
           fi
-          echo "Smoke witness present: smoke_posts.json ($(wc -c < smoke_posts.json) bytes)."
+          # CI-RED-020-B: existence alone is not a witness. A truncated, empty, or
+          # non-JSON smoke_posts.json would still satisfy `-f` and let the downstream
+          # size-gate/badge steps (both `.get()`-tolerant) silently degrade a
+          # green-looking badge. Require it to PARSE as a JSON object carrying the
+          # `ok` verdict the whole witness exists to report, so a corrupt witness
+          # fails HERE, named, instead of masquerading as success.
+          python - <<'PY'
+          import json, sys
+          try:
+              with open("smoke_posts.json", encoding="utf-8") as fh:
+                  data = json.load(fh)
+          except (OSError, ValueError) as exc:
+              print(f"::error::smoke_posts.json is not valid JSON: {exc}")
+              sys.exit(1)
+          if not isinstance(data, dict) or "ok" not in data:
+              print("::error::smoke_posts.json is malformed — expected a JSON object "
+                    "with an 'ok' key (the smoke verdict).")
+              sys.exit(1)
+          print(f"Smoke witness valid: ok={data['ok']}, "
+                f"presets={len(data.get('results', {}))}.")
+          PY
 
       - name: Upload smoke_posts.json artifact
         if: always()
@@ -368,6 +388,14 @@ jobs:
           SIZE_GUARD_OUTCOME: ${{ steps.size_guard.outcome }}
         run: |
           mkdir -p public_badges
+          # CI-RED-020-B: guarantee the artifact is never empty. If badge generation
+          # crashes early (e.g. Python heredoc errors), an empty dir + upload's
+          # `if-no-files-found: warn` would produce NO `public_badges` artifact, and
+          # the downstream pages-deploy `download-artifact` would then hard-fail on
+          # main with a misleading "artifact not found" — a Pages-plane red masking
+          # the real upstream failure. A guaranteed `.nojekyll` marker (also correct
+          # for a raw-JSON Pages site) keeps the handoff deterministic.
+          touch public_badges/.nojekyll
           python - <<'PY'
           import json, os, math, pathlib
 
