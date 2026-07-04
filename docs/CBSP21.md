@@ -87,6 +87,53 @@ The `.cbsp21/patch_input.json` manifest follows this schema:
 
 ---
 
+## Per-PR Manifests
+
+New PRs should use a dedicated manifest under:
+
+```text
+.cbsp21/patches/<patch-id>.json
+```
+
+The legacy `.cbsp21/patch_input.json` path is still honored for older in-flight
+work, but new work should not edit that shared file. The CI gates discover all
+candidate manifests, then select the one that best covers the current diff:
+
+1. Most changed files covered, excluding `.cbsp21/` internals from the coverage signal.
+2. Fewest declared files/prefixes, so the most specific manifest wins.
+3. If two manifests are equally plausible, the gate fails and the PR must narrow
+   its manifest scope.
+
+This is selection, not union. A stale manifest on `main` should not make an
+unrelated PR pass; the selected manifest must be the one that actually describes
+the current patch.
+
+### Merged Manifest Cleanup
+
+Per-PR manifests are required while a PR is open, but they are not meant to
+accumulate forever on `main`. After a PR merges and its compliance record is
+available in the PR itself, a later housekeeping PR may delete that merged PR's
+manifest from `.cbsp21/patches/`.
+
+Cleanup rules:
+
+- Never delete the manifest for an open PR.
+- Do not delete a merged manifest in the same PR that first introduced it; let it
+  serve as that PR's compliance witness through merge.
+- Prefer a small cleanup-only PR when several merged manifests have accumulated.
+- If a follow-up PR touches the same files as a recently merged PR, make the new
+  manifest more specific than the merged one, or include deletion of the
+  superseded merged manifest as explicit cleanup.
+- Cleanup PRs should not change runtime code. They should touch only stale
+  `.cbsp21/patches/*.json` files and any documentation explaining the cleanup.
+
+The purpose is to avoid a slow return of the old shared-manifest footgun: merged
+manifests that cover broad paths can collide with follow-up PRs touching the same
+files. Specificity tie-breaks are a safeguard, not a substitute for routine
+manifest hygiene.
+
+---
+
 ## Coverage Check
 
 The coverage check ensures that scanned content represents at least 95% of the original:

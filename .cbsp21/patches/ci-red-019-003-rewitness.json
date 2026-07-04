@@ -3,26 +3,28 @@
   "schema_version": "cbsp21_patch_input_v1",
   "coverage_min": 0.95,
   "patch_id": "CI_RED_019_003_REWITNESS_FOLLOWUP",
-  "title": "docs(ci): strengthen CI-RED-019/003 closures with current-main re-witness + fix handoff typos",
-  "intent": "Docs-only follow-up to #187 (merged bed827ab). #187 closed CI-RED-003 and CI-RED-019 in SPRINTS.md pinned to run witnesses @ e1310768. This PR (1) adds the current-main re-witness (both gates green on the later main tip 8c5244d2 — technical_debt run 28700637324, routing_truth run 28700637339, 2026-07-04) to the 003/019 detail sections and the handoff witness tables, so the closures demonstrably hold past the pinned SHA; and (2) fixes 'CL-RED' -> 'CI-RED' typos in the reconciliation handoff. No product code, no workflow files, no status changes (016/021 stay OPEN, 020 CLOSED, C2/PR-182/PR-185 untouched); #187's own merged manifest is left as its historical compliance record.",
+  "title": "docs(ci): strengthen CI-RED-019/003 closures and document CBSP21 manifest cleanup",
+  "intent": "Docs-only follow-up to #187 (merged bed827ab). #187 closed CI-RED-003 and CI-RED-019 in SPRINTS.md pinned to run witnesses @ e1310768. This PR (1) adds the current-main re-witness (both gates green on the later main tip 8c5244d2 — technical_debt run 28700637324, routing_truth run 28700637339, 2026-07-04) to the 003/019 detail sections and the handoff witness tables, so the closures demonstrably hold past the pinned SHA; (2) fixes 'CL-RED' -> 'CI-RED' typos in the reconciliation handoff; and (3) documents the cleanup policy for merged per-PR CBSP21 manifests so stale broad manifests do not accumulate into future selection friction. No product code, no workflow files, no status changes (016/021 stay OPEN, 020 CLOSED, C2/PR-182/PR-185 untouched); #187's own merged manifest is left as its historical compliance record.",
   "change_type": "docs",
   "behavior_change": "none",
   "risk_level": "low",
   "scope": {
     "paths_in_scope": [
       "SPRINTS.md",
+      "docs/CBSP21.md",
       "docs/handoffs/",
       ".cbsp21/patches/"
     ],
     "files_expected_to_change": [
       "SPRINTS.md",
+      "docs/CBSP21.md",
       "docs/handoffs/CI_RED_019_003_LEDGER_RECONCILIATION_HANDOFF.md",
       ".cbsp21/patches/ci-red-019-003-rewitness.json"
     ]
   },
   "diff_articulation": {
-    "what_changed": "(1) SPRINTS.md CI-RED-003 + CI-RED-019 detail sections: append a current-main re-witness clause to each closure — both enforced gates are still green on the later main tip 8c5244d2 (technical_debt run 28700637324, routing_truth run 28700637339, both push, 2026-07-04), so each closure holds past the pinned e1310768. Closure scope/wording otherwise unchanged (003 = enforced debt-gates gate, not raw complexity landscape; 019 = mask-peel, any future routing-truth red is a NEW verdict). (2) docs/handoffs/CI_RED_019_003_LEDGER_RECONCILIATION_HANDOFF.md: correct two 'CL-RED' typos to 'CI-RED', and prepend the 8c5244d2 witness row to the routing_truth and technical_debt witness tables. (3) this per-PR CBSP21 manifest.",
-    "why_not_redundant": "The pre-existing ledger rows pin their witnesses to e1310768, which main has since moved past (8c5244d2, then bed827ab). Adding the verified current-main re-witness closes the stale-witness gap (a closure could otherwise read as true only at a superseded SHA), and the typo fix keeps the audit-of-record handoff accurate/searchable. Bookkeeping only; no code, workflow, or status change."
+    "what_changed": "(1) SPRINTS.md CI-RED-003 + CI-RED-019 detail sections: append a current-main re-witness clause to each closure — both enforced gates are still green on the later main tip 8c5244d2 (technical_debt run 28700637324, routing_truth run 28700637339, both push, 2026-07-04), so each closure holds past the pinned e1310768. Closure scope/wording otherwise unchanged (003 = enforced debt-gates gate, not raw complexity landscape; 019 = mask-peel, any future routing-truth red is a NEW verdict). (2) docs/handoffs/CI_RED_019_003_LEDGER_RECONCILIATION_HANDOFF.md: correct two 'CL-RED' typos to 'CI-RED', and prepend the 8c5244d2 witness row to the routing_truth and technical_debt witness tables. (3) docs/CBSP21.md: document per-PR manifest selection and the cleanup policy for merged manifests. (4) this per-PR CBSP21 manifest.",
+    "why_not_redundant": "The pre-existing ledger rows pin their witnesses to e1310768, which main has since moved past (8c5244d2, then bed827ab). Adding the verified current-main re-witness closes the stale-witness gap (a closure could otherwise read as true only at a superseded SHA), and the typo fix keeps the audit-of-record handoff accurate/searchable. The CBSP21 cleanup note addresses the real friction found in this follow-up: merged manifests are historical witnesses, but if they accumulate indefinitely they can collide with later PRs touching the same files. Bookkeeping only; no code, workflow, or status change."
   },
   "verification": {
     "commands_run": [
@@ -31,7 +33,8 @@
       "local: py -3.11 -m app.ci.check_complexity --baseline app/ci/complexity_baseline.json -> OK: No functions exceed complexity 15",
       "local: python scripts/ci/check_cbsp21_patch_input.py --base origin/main --head HEAD -> PASS",
       "local: python scripts/ci/check_cbsp21_gate.py --changed-files <diff> -> 100% coverage PASS",
-      "grep CL-RED across changed docs -> 0 remaining; markdown tables keep column counts"
+      "grep CL-RED across changed docs -> 0 remaining; markdown tables keep column counts",
+      "docs/CBSP21.md updated with merged-manifest cleanup policy; no gate/script behavior changed"
     ]
   },
   "files": [
@@ -48,6 +51,13 @@
       "scan_targets": ["docs/handoffs/CI_RED_019_003_LEDGER_RECONCILIATION_HANDOFF.md"],
       "risk": "low",
       "behavior_change": "none - documentation only"
+    },
+    {
+      "path": "docs/CBSP21.md",
+      "intent": "Document per-PR manifest selection and merged-manifest cleanup policy.",
+      "scan_targets": ["docs/CBSP21.md"],
+      "risk": "low",
+      "behavior_change": "none - documentation / process guidance only"
     },
     {
       "path": ".cbsp21/patches/ci-red-019-003-rewitness.json",
