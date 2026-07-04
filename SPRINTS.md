@@ -872,7 +872,7 @@ Domain handoffs and governance docs may add detail but **must cite the SPRINTS I
 | MAINT-DEFER-003 | Load-bearing code comments (`DO NOT REMOVE`) | Process | QUEUED | 2026-05-28 |
 | CI-RED-001 | sg-spec clone auth — api-verify dead | CI / infra | CLOSED | 2026-05-28 |
 | CI-RED-002 | legacy-usage gate 131/10 | CI / API hygiene | CLOSED | 2026-05-31 |
-| CI-RED-003 | debt-gates complexity ratchet (current SAW batch tail) | CI / quality | OPEN | 2026-06-21 |
+| CI-RED-003 | debt-gates complexity ratchet (current SAW batch tail) — **CLOSED by witness:** `technical_debt.yml` green on `main` (run `28693530077` @ `e1310768`, 2026-07-04); the `batch_router.py` complexity tail no longer trips the ratcheted `debt-gates` baseline. | CI / quality | CLOSED | 2026-07-04 |
 | CI-RED-004 | Fence Checks frontend boundary violations | CI / boundaries | OPEN | 2026-05-27 |
 | CI-RED-005 | Container build swallows sg-spec install failure | CI / containers | CLOSED | 2026-05-28 |
 | CI-RED-006 | api-verify: missing `app.ci.domain_boundaries` | CI / api-verify | CLOSED | 2026-05-28 |
@@ -888,7 +888,7 @@ Domain handoffs and governance docs may add detail but **must cite the SPRINTS I
 | CI-RED-016 | Endpoint consolidation (1181 routes; CAM governance stack) | CI / quality | OPEN | 2026-05-28 |
 | CI-RED-017 | check-sunsets: status:removed vs file-existence mismatch | CI / gates | CLOSED | 2026-06-15 |
 | CI-RED-018 | router-count baseline stale (172→252 files, +448 decorators) | CI / gates | CLOSED | 2026-06-15 |
-| CI-RED-019 | routing-truth masked by setuptools editable-build failure — **cause known/fixable (Unit 2, see detail); real route-truth verdict UNKNOWN until unmasked** | CI / gates | OPEN | 2026-06-15 |
+| CI-RED-019 | routing-truth masked by setuptools editable-build failure — **CLOSED by witness:** the editable-install mask is removed (`services/api/pyproject.toml` now carries explicit `[tool.setuptools.packages.find]`, `app*` only) and `routing_truth.yml` is green on `main` (run `28693530110` @ `e1310768`, 2026-07-04). Mask-peel: the old `pip install -e` setup failure is closed; any *future* routing-truth red is a new route-truth verdict, not this mask. | CI / gates | CLOSED | 2026-07-04 |
 | CI-RED-020 | api-smoke / nightly **API Health + Smoke**: app loads routers but the witness never reports ready/green (reachable-check `curl 127.0.0.1:8000` refused; the scheduled workflow persistently `cancelled` for many days). Distinct from 019 — the app DOES start (019 dies at `pip install -e`). **Decomposed & largely remediated:** **020-A** shared readiness harness + diagnostic boot witness **MERGED #164** (`fcf10905`) — the blind reachable-check is replaced by `wait_for_api_ready --require router_count>0` (readiness gates on router-load, not bare HTTP 200); the degraded-boot-200 gap that surfaced next closed via **#168** (`0daeab14`). **020-B** restore the scheduled nightly witness (root cause = SCOPE bug: a `make api-verify` detour front-loaded the full verify suite and starved the smoke step inside the 20-min job window; also a structural blocker where `environment: github-pages` rejected the whole job at start on non-main branches) → remove the detour, split Pages into a downstream main-only `pages-deploy` job so the witness runs on any branch, and add a step-level `timeout-minutes: 3` that converts a hung smoke from ambiguous `cancelled` into a named `failure` — **PR #177 MERGED** (squash `b8ebc552`, 2026-07-03), branch-witnessed pre-merge (dispatch runs `28648970970`/`28649149183`: `health-smoke` **success**, smoke green ~10s, witness gate passed, `pages-deploy` skipped off-`main`; terminal, NOT cancelled). Review follow-ups on #177: `6a3ba413` (witness gate now PARSES `smoke_posts.json` + requires the `ok` key so a corrupt witness can't mask a green badge; badge-gen guarantees non-empty `public_badges/.nojekyll` so the `pages-deploy` artifact handoff can't hard-fail; version-agnostic guard-test anchor) + `9414af45` (CBSP21 manifest reconciled to the shipped 3-min timeout); the `UNSTABLE` merge-state of #177 (transient, pending Core CI; root cause CI-RED-021 no branch protection) is documented in `docs/handoffs/PR_177_CI_RED_020B_MERGE_INSTABILITY_HANDOFF.md` (PR #181). **Closure witness (2026-07-04):** run `28688610338` — the first terminal-**green** run of the merged workflow on `main` (`event=workflow_dispatch`, `ref=main`, conclusion `success`, NOT cancelled). Both jobs green: `health-smoke` (Preflight → smoke → `Assert smoke witness present` → badge upload all ✅) and `pages-deploy` (Configure/Upload/Deploy to GitHub Pages all ✅) — the latter is the main-only path that carries the former `github-pages` structural block, branch-skipped in the pre-merge witnesses. On `main`, `workflow_dispatch` and `schedule` run the identical job graph on the identical ref (the workflow never branches on `event_name`), so this is the functional equivalent of the scheduled witness; USER accepted it as sufficient in lieu of waiting for the ~10:20 UTC cron. **CLOSED.** | CI / gates | CLOSED | 2026-07-04 |
 | CI-RED-021 | **ENFORCEMENT GAP (systemic) — `main` has NO branch protection at all.** Verified 2026-06-16: classic protection `404`, active rules on the `main` ref `[]`, the one ruleset (`May 2 2026`) `enforcement: disabled`. So **nothing gates merge** — not **required status checks** (Core CI / API Tests [the failure surface, see CI-RED-015], the repaired fence/CI-RED-004, contract checks — all advisory; they report, none block) **and not required reviews**: `.github/CODEOWNERS` assigns `@toolbox-governance` over the CI/fence code (`services/api/app/ci/**`, fence baselines) but is **inert** with no protection to enforce code-owner review. **Structural enabler of #114** (a RED fence auto-merged onto governance-owned code) — the default state, not an accident: there was no required check *or* review to block it. **Generalizes CI-RED-004** from "the fence needs enforcement" to "nothing on `main` is enforced." **FIX = enable branch protection (required status checks + code-owner review)** — repo Settings → Branches / Rulesets — **USER ACTION; a terminal cannot do this.** Turns every honest gate from an *instrument* (reports truth) into a *guard* (blocks on red). _Governance/enforcement meta-finding — **NOT a failing CI run; exclude from CI-red failure counts.**_ | governance / meta | OPEN | 2026-06-16 |
 
@@ -983,10 +983,12 @@ by any workflow) — left untouched; candidate for deletion in separate hygiene 
 
 ### CI-RED-003 — debt-gates complexity ratchet
 
-**Status:** OPEN  
-**last_verified:** 2026-06-21  
-**Why open:** Current post-#143 `debt-gates` failure has narrowed from the stale May count of 113 to 3 live findings in `services/api/app/saw_lab/batch_router.py`: two stale baseline line keys (`create_batch_plan`, `choose_batch_plan`) and one newly restored #140 RMOS mirror helper (`_mirror_batch_chain_to_rmos`).  
-**Restore trigger:** `debt-gates` job green on `main`.
+**Status:** **CLOSED**  
+**last_verified:** 2026-07-04  
+**Closed:** the restore trigger is met — the `technical_debt.yml` / `debt-gates` workflow is **green on `main`** (run `28693530077` @ `e13107683f26c7c8bd6773602d54d05b356a8916`, `event=push`, 2026-07-04; the two prior main pushes `28692937026` / `28690640982` are also green). Local re-witness against the current tree: `py -3.11 -m app.ci.check_complexity --baseline app/ci/complexity_baseline.json` → `OK: No functions exceed complexity 15`.  
+**Closure detail:** the former `services/api/app/saw_lab/batch_router.py` tail (two stale baseline line keys `create_batch_plan` / `choose_batch_plan` + the #140 RMOS mirror helper `_mirror_batch_chain_to_rmos`) no longer appears under the ratcheted `debt-gates` baseline gate. This closure is for the **enforced baseline gate** (`debt-gates`), not a claim that the raw complexity landscape is empty.  
+**Was (OPEN, 2026-06-21):** post-#143 `debt-gates` failure had narrowed from the stale May count of 113 to 3 live findings in `batch_router.py`.  
+**Restore trigger (met):** `debt-gates` job green on `main`.
 
 ---
 
@@ -1203,24 +1205,24 @@ Original audit found 124 decorator duplicates → 68 wire collisions on **static
 
 ---
 
-### CI-RED-019 — routing-truth masked by setuptools editable-build failure (real verdict UNKNOWN)
+### CI-RED-019 — routing-truth masked by setuptools editable-build failure (mask removed; verdict now witnessed green)
 
-**Status:** OPEN — **MASK, not a verdict**  
-**last_verified:** 2026-06-15  
-**Discovered:** post-#120 unmask. #120 cleared the *parse* mask (secrets-in-if), so routing-truth now STARTS — but a **second mask sits under it**.
+**Status:** **CLOSED**  
+**last_verified:** 2026-07-04  
+**Closed:** the editable-install **mask is removed** and the real route-truth verdict has now been **witnessed green on `main`**. `services/api/pyproject.toml` explicitly limits setuptools package discovery to `app` / `app.*` and excludes `data`, `metrics`, `test_support`:
 
-**This is a MASK, not a verdict — routing-truth's real route-truth verdict is UNKNOWN.** The gate dies at *setup*, before it runs:
-
+```toml
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["app", "app.*"]
+exclude = ["data", "data.*", "metrics", "metrics.*", "test_support", "test_support.*"]
 ```
-error: Multiple top-level packages discovered in a flat-layout:
-       ['app', 'data', 'metrics', 'test_support']. setuptools will not proceed.
-```
 
-`pip install -e services/api` fails because `services/api/pyproject.toml` doesn't tell setuptools which package to build. The printed `ROUTING_TRUTH_FAIL_LANES: CORE,META,OPERATION,RMOS` lines are **config echo, NOT the verdict**.
+`routing_truth.yml` is **green on `main`** (run `28693530110` @ `e13107683f26c7c8bd6773602d54d05b356a8916`, `event=push`, 2026-07-04; the two prior main pushes `28692937055` / `28690640965` are also green).
 
-**Fix (Unit 2 — held for its own turn):** add explicit `[tool.setuptools.packages.find]` to `services/api/pyproject.toml` (include `app*`, exclude `data*`/`metrics*`/`test_support*`). Likely affects **every** workflow using editable install, not just routing-truth.
+**Mask-peel discipline (kept):** this was a MASK-peel item, closed **by witness, not by inference**. Fixing the packaging did **not** by itself prove routing-truth green — the later green `routing_truth.yml` run is the closure witness. The old `pip install -e` setup failure is closed; **any future routing-truth red is a NEW route-truth verdict** and must be triaged on its own evidence, not reinterpreted as this setup mask.
 
-**Consequence — fixing this UNMASKS, it does NOT CLOSE:** once the editable build works, routing-truth reports its real route-truth verdict *for the first time*. That verdict is a fresh unknown (Phase-2b) needing its own grounding. Do **not** treat "packaging fixed" as "routing-truth cleared" — same mask-peel discipline as #120.
+**Was (OPEN, 2026-06-15):** post-#120 the *parse* mask (secrets-in-if) was cleared so routing-truth STARTED, but a second mask sat under it — the gate died at *setup* (`error: Multiple top-level packages discovered in a flat-layout: ['app', 'data', 'metrics', 'test_support']`) before it could report a verdict; the printed `ROUTING_TRUTH_FAIL_LANES: CORE,META,OPERATION,RMOS` lines were config echo, not the verdict. Unit-2 fix = add the explicit `[tool.setuptools.packages.find]` above.
 
 ---
 

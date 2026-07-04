@@ -1,0 +1,92 @@
+{
+  "schema": "cbsp21_patch_input_v1",
+  "schema_version": "cbsp21_patch_input_v1",
+  "coverage_min": 0.95,
+  "patch_id": "CI_RED_019_003_LEDGER_RECONCILIATION",
+  "title": "Close CI-RED-019 and CI-RED-003 in SPRINTS.md by current-main witness (+ handoff doc)",
+  "intent": "Docs-only ledger reconciliation. Mark two stale-open CL-RED rows CLOSED in SPRINTS.md using live main CI witnesses: CI-RED-003 (debt-gates complexity ratchet — technical_debt.yml green on main) and CI-RED-019 (routing-truth editable-install mask removed + routing_truth.yml green on main). Lands together with the scoping handoff doc. No production code, no workflow files, no pyproject changes (the setuptools package finder is already on main). CI-RED-016 and CI-RED-021 remain OPEN; CI-RED-020 remains CLOSED; no C2/PR-182/PR-185 status touched.",
+  "change_type": "docs",
+  "behavior_change": "none",
+  "risk_level": "low",
+  "scope": {
+    "paths_in_scope": [
+      "SPRINTS.md",
+      "docs/handoffs/",
+      ".cbsp21/patches/"
+    ],
+    "files_expected_to_change": [
+      "SPRINTS.md",
+      "docs/handoffs/CI_RED_019_003_LEDGER_RECONCILIATION_HANDOFF.md",
+      ".cbsp21/patches/ci-red-019-003-ledger-reconciliation.json"
+    ]
+  },
+  "diff_articulation": {
+    "what_changed": "(1) SPRINTS.md: CI-RED-003 summary row + detail section changed OPEN->CLOSED (2026-07-04), citing the green technical_debt.yml/debt-gates run 28693530077 @ e1310768 and the local complexity re-witness (OK: No functions exceed complexity 15); notes the batch_router.py tail no longer trips the ratcheted baseline and that closure is for the enforced debt-gates gate, not the raw complexity landscape. (2) SPRINTS.md: CI-RED-019 summary row + detail section changed OPEN->CLOSED (2026-07-04), recording that services/api/pyproject.toml now carries the explicit [tool.setuptools.packages.find] (app* only, excludes data/metrics/test_support) and that routing_truth.yml is green on main (run 28693530110 @ e1310768); keeps the mask-peel discipline explicit (closed by witness not inference; any future routing-truth red is a NEW verdict, not this setup mask). (3) docs/handoffs/CI_RED_019_003_LEDGER_RECONCILIATION_HANDOFF.md: the scoping handoff for this change. (4) this per-PR CBSP21 manifest.",
+    "why_not_redundant": "SPRINTS.md still listed CI-RED-019 and CI-RED-003 as OPEN while current main evidence shows their restore triggers are met — stale-open ledger rows drive unnecessary engineering. The closures cite concrete 2026-07-04 main witnesses (routing_truth 28693530110, technical_debt 28693530077, both @ e1310768). This is bookkeeping only: no code, workflow, or pyproject change, and CI-RED-016 (endpoint consolidation) and CI-RED-021 (branch protection) remain open by design."
+  },
+  "verification": {
+    "commands_run": [
+      "gh run list --workflow routing_truth.yml --branch main --limit 3 -> latest three runs success (28693530110 @ e1310768 push)",
+      "gh run list --workflow technical_debt.yml --branch main --limit 3 -> latest three runs success (28693530077 @ e1310768 push)",
+      "grep [tool.setuptools.packages.find] services/api/pyproject.toml (origin/main tree) -> present (app* only)",
+      "py -3.11 -m app.ci.check_complexity --baseline app/ci/complexity_baseline.json -> OK: No functions exceed complexity 15",
+      "py -3.11 scripts/ci/check_cbsp21_patch_input.py --base origin/main --head HEAD -> PASS",
+      "py -3.11 scripts/ci/check_cbsp21_gate.py -> PASS"
+    ]
+  },
+  "files": [
+    {
+      "path": "SPRINTS.md",
+      "intent": "Close CI-RED-003 and CI-RED-019 (summary rows + detail sections) by current-main CI witness; leave CI-RED-016/021 open and CI-RED-020 closed.",
+      "scan_targets": [
+        "SPRINTS.md",
+        ".github/workflows/routing_truth.yml",
+        ".github/workflows/technical_debt.yml",
+        "services/api/pyproject.toml"
+      ],
+      "risk": "low",
+      "behavior_change": "none - ledger bookkeeping only",
+      "verification": [
+        "markdown review",
+        "GitHub workflow history checks (routing_truth 28693530110, technical_debt 28693530077 @ e1310768)"
+      ]
+    },
+    {
+      "path": "docs/handoffs/CI_RED_019_003_LEDGER_RECONCILIATION_HANDOFF.md",
+      "intent": "Dev-ready scoping handoff for the CI-RED-019 / CI-RED-003 ledger closure.",
+      "scan_targets": [
+        "docs/handoffs/CI_RED_019_003_LEDGER_RECONCILIATION_HANDOFF.md"
+      ],
+      "risk": "low",
+      "behavior_change": "none - documentation only",
+      "verification": [
+        "markdown review"
+      ]
+    },
+    {
+      "path": ".cbsp21/patches/ci-red-019-003-ledger-reconciliation.json",
+      "intent": "Per-PR CBSP21 manifest declaring this docs-only ledger reconciliation.",
+      "scan_targets": [
+        ".cbsp21/patches/ci-red-019-003-ledger-reconciliation.json"
+      ],
+      "risk": "low",
+      "behavior_change": "none - CI/review metadata only",
+      "verification": [
+        "scripts/ci/check_cbsp21_patch_input.py",
+        "scripts/ci/check_cbsp21_gate.py"
+      ]
+    }
+  ],
+  "architecture_scan": {
+    "scan_id": "AS-2026-07-04-CI-RED-019-003-LEDGER",
+    "risk_summary": {
+      "critical": 0,
+      "high": 0,
+      "medium": 0,
+      "low": 0
+    },
+    "findings": [],
+    "acknowledged": false,
+    "acknowledgement_notes": ""
+  }
+}
