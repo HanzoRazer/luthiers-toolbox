@@ -2,9 +2,9 @@
   "schema": "cbsp21_patch_input_v1",
   "schema_version": "cbsp21_patch_input_v1",
   "coverage_min": 0.95,
-  "patch_id": "CLOSE_CI_RED_015L",
+  "patch_id": "CLOSE_CI_RED_015_L_LEDGER_RECONCILIATION",
   "title": "docs(sprints): close CI-RED-015-L — IBG sandbox landmark intake bridge",
-  "intent": "SPRINTS.md ledger-only update: add a CLOSED row for CI-RED-015-L to the CI-RED-015 bucket table. 015-L is the additive IBG sandbox landmark candidate intake bridge (dev-ready scope, not a failing-test cluster), shipped and merged as #178 (869384c2). Documentation only; no product/application/CI-behavior change. First per-PR manifest authored under .cbsp21/patches/ per the #184 mechanism.",
+  "intent": "SPRINTS.md ledger-only update: add a CLOSED row for the CI-RED-015-L sub-bucket only. 015-L is the additive IBG sandbox landmark candidate intake bridge (dev-ready scope, not a failing-test cluster), shipped and merged as #178 (869384c2). Documentation only; no product/application/CI-behavior change; this PR records the status of the already-merged implementation and does not itself enforce adapter behavior. Uses the per-PR manifest convention documented in .cbsp21/patches/README.md (#184).",
   "change_type": "docs",
   "behavior_change": "none",
   "risk_level": "low",
@@ -19,22 +19,25 @@
     ]
   },
   "diff_articulation": {
-    "what_changed": "SPRINTS.md: insert one row into the CI-RED-015 bucket table (between 015-H and the 015-F umbrella tail) recording 015-L as CLOSED by #178 (869384c2). The row documents that the sandbox landmark candidate adapter imports vectorizer-sandbox ibg-landmark-candidate.v1 records as review-required, fail-closed BodyEvidenceCandidates (evidence geometry, not authority: no mm calibration, no solver landmarks, no IBG-memory, no export authority), the default intake gate rejects them as intended (AUTHORITY_INSUFFICIENT + REVIEW_REQUIRED), and the in-PR review hardening (ba16d594: authority_state->geometry_authority_class metadata rename, namespaced sandbox review flag, semantic validation). CI-RED-015 top-line status is unchanged (stays OPEN; other buckets remain open).",
-    "why_not_redundant": "N/A - behavior_change is none (documentation / ledger only)."
+    "what_changed": "SPRINTS.md: insert one row into the CI-RED-015 bucket table (between 015-H and the 015-F umbrella tail) recording 015-L as CLOSED by #178 (869384c2). The row now explicitly scopes the closure to the 015-L sub-bucket, not the broader CI-RED-015 umbrella, and identifies #178's implementation files/tests as the behavioral source of truth. The row documents the #178-witnessed behavior: sandbox landmark candidate records are imported as review-required, fail-closed BodyEvidenceCandidates (evidence geometry, not authority: no mm calibration, no solver landmarks, no IBG-memory, no export authority); the default intake gate rejects them (AUTHORITY_INSUFFICIENT + REVIEW_REQUIRED); and in-PR review hardening landed in ba16d594 (authority_state->geometry_authority_class metadata rename, namespaced sandbox review flag, semantic validation). CI-RED-015 top-line status is unchanged (stays OPEN; other buckets remain open).",
+    "why_not_redundant": "This ledger row prevents stale-open tracking for a merged sub-bucket while also preventing false umbrella closure: it says where the real implementation/test witness lives, and it says this docs PR is not a behavior-enforcement change."
   },
   "verification": {
     "commands_run": [
       "local: python scripts/ci/check_cbsp21_patch_input.py --base origin/main --head HEAD -> PASS (selects this manifest)",
       "local: python scripts/ci/check_cbsp21_gate.py --changed-files SPRINTS.md .cbsp21/patches/close-ci-red-015l.json -> 100% coverage PASS (auto-discovered)",
+      "grounding: gh pr view 178 -> MERGED, mergeCommit 869384c23c35022c6daf3a6a35804e5b9d6743fc, mergedAt 2026-07-04T01:23:05Z",
+      "grounding: gh pr checks 178 -> required checks pass, including API Tests and api-verify; only trending is skipped",
+      "grounding: git show --name-only 869384c2 -> adapter, fixtures, body_grid_schema enum, and test file match the ledger source-of-truth references",
       "Markdown table integrity: new 015-L row keeps 4 columns / 5 pipes, matching sibling bucket rows."
     ]
   },
   "files": [
     {
       "path": "SPRINTS.md",
-      "intent": "Add CLOSED row for CI-RED-015-L (IBG sandbox landmark intake bridge) to the CI-RED-015 bucket table, citing #178.",
+      "intent": "Add CLOSED row for the CI-RED-015-L sub-bucket (IBG sandbox landmark intake bridge) to the CI-RED-015 bucket table, citing #178 as the implementation/test source of truth while leaving the broader CI-RED-015 umbrella open.",
       "scan_targets": ["SPRINTS.md"],
-      "risk": "low",
+      "risk": "low runtime; low-to-medium process/traceability if the ledger is later edited without checking #178",
       "behavior_change": "none - documentation / ledger only"
     }
   ]
