@@ -1017,7 +1017,7 @@ by any workflow) — left untouched; candidate for deletion in separate hygiene 
 
 **Status:** **CLOSED**  
 **last_verified:** 2026-07-04  
-**Closed:** the restore trigger is met — the `technical_debt.yml` / `debt-gates` workflow is **green on `main`** (run `28693530077` @ `e13107683f26c7c8bd6773602d54d05b356a8916`, `event=push`, 2026-07-04; the two prior main pushes `28692937026` / `28690640982` are also green). Local re-witness against the current tree: `py -3.11 -m app.ci.check_complexity --baseline app/ci/complexity_baseline.json` → `OK: No functions exceed complexity 15`.  
+**Closed:** the restore trigger is met — the `technical_debt.yml` / `debt-gates` workflow is **green on `main`** (run `28693530077` @ `e13107683f26c7c8bd6773602d54d05b356a8916`, `event=push`, 2026-07-04; the two prior main pushes `28692937026` / `28690640982` are also green; **re-witnessed still green on the later `main` tip `8c5244d2`** — run `28700637324`, 2026-07-04, so the closure holds past the pinned `e1310768`). Local re-witness against the current tree: `py -3.11 -m app.ci.check_complexity --baseline app/ci/complexity_baseline.json` → `OK: No functions exceed complexity 15`.
 **Closure detail:** the former `services/api/app/saw_lab/batch_router.py` tail (two stale baseline line keys `create_batch_plan` / `choose_batch_plan` + the #140 RMOS mirror helper `_mirror_batch_chain_to_rmos`) no longer appears under the ratcheted `debt-gates` baseline gate. This closure is for the **enforced baseline gate** (`debt-gates`), not a claim that the raw complexity landscape is empty.  
 **Was (OPEN, 2026-06-21):** post-#143 `debt-gates` failure had narrowed from the stale May count of 113 to 3 live findings in `batch_router.py`.  
 **Restore trigger (met):** `debt-gates` job green on `main`.
@@ -1251,7 +1251,7 @@ include = ["app", "app.*"]
 exclude = ["data", "data.*", "metrics", "metrics.*", "test_support", "test_support.*"]
 ```
 
-`routing_truth.yml` is **green on `main`** (run `28693530110` @ `e13107683f26c7c8bd6773602d54d05b356a8916`, `event=push`, 2026-07-04; the two prior main pushes `28692937055` / `28690640965` are also green).
+`routing_truth.yml` is **green on `main`** (run `28693530110` @ `e13107683f26c7c8bd6773602d54d05b356a8916`, `event=push`, 2026-07-04; the two prior main pushes `28692937055` / `28690640965` are also green; **re-witnessed still green on the later `main` tip `8c5244d2`** — run `28700637339`, 2026-07-04, so the closure holds past the pinned `e1310768`).
 
 **Mask-peel discipline (kept):** this was a MASK-peel item, closed **by witness, not by inference**. Fixing the packaging did **not** by itself prove routing-truth green — the later green `routing_truth.yml` run is the closure witness. The old `pip install -e` setup failure is closed; **any future routing-truth red is a NEW route-truth verdict** and must be triaged on its own evidence, not reinterpreted as this setup mask.
 
