@@ -27,6 +27,7 @@
       "services/api/app/cam/geometry_authority_taxonomy.py",
       "services/api/app/routers/cam/geometry_authority_router.py",
       "services/api/tests/cam/test_canonical_geometry_process_approval.py",
+      "services/api/tests/cam/test_canonical_geometry_process_boundaries.py",
       "services/api/tests/cam/test_geometry_authority_references.py",
       "services/api/tests/test_technical_debt_gates.py",
       "ci/router_count_baseline.json",
@@ -36,7 +37,7 @@
     ]
   },
   "diff_articulation": {
-    "what_changed": "Adds process-approved canonical geometry authority primitives, validation, router support, tests, taxonomy wording, and ledger safety-net tracking. PR #185 hardening closes stale-field, deterministic-event-id, forged-record, hash-binding, unsupported-authentication, and endpoint-ratchet gaps. The merge resolution moves the PR manifest from the legacy shared .cbsp21/patch_input.json path into a per-PR file under .cbsp21/patches/ so it coexists with #184's manifest-discovery model.",
+    "what_changed": "Adds process-approved canonical geometry authority primitives, validation, router support, tests, taxonomy wording, and ledger safety-net tracking. PR #185 hardening closes stale-field, deterministic-event-id, forged-record, hash-binding, unsupported-authentication, and endpoint-ratchet gaps. The merge resolution moves the PR manifest from the legacy shared .cbsp21/patch_input.json path into a per-PR file under .cbsp21/patches/ so it coexists with #184's manifest-discovery model. The closeout split the oversized canonical process approval test file into approval-record tests plus boundary/regression tests so CI's file-size ratchet remains green without raising the threshold.",
     "why_not_redundant": "This is the first code expression of the C2 process-exclusive canonical geometry authority ruling. Existing geometry authority references did not encode human-approved process promotion, and existing validation did not distinguish missing transition metadata from forged or invalid process metadata. The per-PR manifest is required because origin/main retired the shared-manifest workflow for concurrent PRs."
   },
   "verification": {
@@ -97,6 +98,13 @@
       "path": "services/api/tests/cam/test_canonical_geometry_process_approval.py",
       "intent": "Coverage for approval-record policy, authenticity hardening, deterministic event id, and router behavior.",
       "scan_targets": ["services/api/tests/cam/test_canonical_geometry_process_approval.py"],
+      "risk": "low",
+      "behavior_change": "test-only"
+    },
+    {
+      "path": "services/api/tests/cam/test_canonical_geometry_process_boundaries.py",
+      "intent": "Boundary/regression coverage split out of the approval-record test file to satisfy the file-size ratchet.",
+      "scan_targets": ["services/api/tests/cam/test_canonical_geometry_process_boundaries.py"],
       "risk": "low",
       "behavior_change": "test-only"
     },
