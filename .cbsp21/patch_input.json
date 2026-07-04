@@ -3,36 +3,56 @@
   "schema_version": "cbsp21_patch_input_v1",
   "coverage_min": 0.95,
   "patch_id": "PROVENANCE_RATIFIED_EXPORTABLE_STALE_GUARD",
-  "title": "Align provenance draft guard with ratified exportability contract",
-  "intent": "Correct a stale governance test that asserted ProvenanceAttachmentDraft.is_exportable() is always false even for RATIFIED attachments. Production code and the R2 governed-save wrapper already define RATIFIED as the only exportable provenance attachment state while export_authorized remains false on the draft structure.",
-  "change_type": "test",
-  "behavior_change": "none - test-only correction. No production code changes; the test now matches the existing ProvenanceAttachmentDraft.is_exportable() implementation and R2 wrapper behavior.",
+  "title": "Align provenance draft guard with ratified exportability contract + document the two-notion export contract",
+  "intent": "Correct a stale governance test that asserted ProvenanceAttachmentDraft.is_exportable() is always false even for RATIFIED attachments, AND document the intentional two-notion export contract in the production model so the alignment is not mistaken for an inconsistency and 'reconciled' incorrectly later. Production code and the R2 governed-save wrapper already define RATIFIED as the only exportable provenance attachment status (is_exportable()), while export_authorized is a separate structural field that is always False and is not consulted by any export gate.",
+  "change_type": "test+docs",
+  "behavior_change": "none - test correction plus docstring/comment-only clarification in provenance_attachment.py. No executable production behavior changes; is_exportable() still returns True exactly when status == RATIFIED and export_authorized remains always False.",
   "risk_level": "medium",
   "scope": {
     "paths_in_scope": [
       ".cbsp21/",
-      "tests/governance/test_provenance_attachment_draft.py"
+      "tests/governance/test_provenance_attachment_draft.py",
+      "services/api/app/governance/provenance_attachment.py"
     ],
     "files_expected_to_change": [
       ".cbsp21/patch_input.json",
-      "tests/governance/test_provenance_attachment_draft.py"
+      "tests/governance/test_provenance_attachment_draft.py",
+      "services/api/app/governance/provenance_attachment.py"
     ]
   },
   "diff_articulation": {
-    "what_changed": "Split the stale RATIFIED exportability assertion into two focused invariants: non-ratified statuses in NON_EXPORTABLE_STATUSES remain non-exportable, and a RATIFIED ProvenanceAttachmentDraft returns is_exportable() True while export_authorized remains False. This preserves the blocked/draft/pending guard while aligning the RATIFIED case with production behavior.",
-    "why_not_redundant": "The old assertion contradicted services/api/app/governance/provenance_attachment.py::ProvenanceAttachmentDraft.is_exportable(), which returns True exactly when status == RATIFIED. Existing R2 export provenance tests also rely on ratified attachments building a compatible governed-save context. This PR does not authorize blocked drafts or alter export_authorized; it only repairs the stale test expectation."
+    "what_changed": "(1) tests/governance/test_provenance_attachment_draft.py: split the stale RATIFIED exportability assertion into two focused invariants (non-ratified statuses in NON_EXPORTABLE_STATUSES remain non-exportable; a RATIFIED attachment returns is_exportable() True while export_authorized remains False), plus a contract-lock docstring on the divergence test and module docstring. (2) services/api/app/governance/provenance_attachment.py: docstring/comment-only clarification naming the intentional two-notion export contract — export_authorized is an always-False structural field (fail-closed guard + serialization/schema field, NOT an export gate), while is_exportable()/status==RATIFIED is the canonical gate the governed save boundary (app.util.ibg_dxf_export_lifecycle) consults. Also corrects the module-level 'Do NOT wire to DXF export' constraint, which was the R1 posture superseded by DO 79 / R2, and notes the type spans DRAFT->RATIFIED despite its historical 'Draft' name. No executable statements changed.",
+    "why_not_redundant": "The old test assertion contradicted services/api/app/governance/provenance_attachment.py::ProvenanceAttachmentDraft.is_exportable(), which returns True exactly when status == RATIFIED. Existing R2 export provenance tests (test_dxf_lifecycle_ibg_provenance_guards.py) rely on ratified attachments building a COMPAT_ONLY governed-save context. The added docstrings remove the standing contradiction between the class docstring ('draft structures do not wire to DXF export' / 'export_authorized ALWAYS False until ratification') and is_exportable(), which the review flagged as inviting an incompatible future 'cleanup'. This PR does not authorize blocked drafts or alter export_authorized; it repairs the stale test expectation and documents existing behavior."
   },
   "verification": {
     "commands_run": [
       "PYTHONPATH=services/api py -3.11 -m pytest tests/governance/test_provenance_attachment_draft.py services/api/tests/test_dxf_lifecycle_ibg_provenance_guards.py services/api/tests/test_ibg_export_provenance.py -q -> 29 passed, 3 existing NumPy reload warnings",
+      "PYTHONPATH=services/api py -3.11 -c import-and-construct RATIFIED draft -> is_exportable True, export_authorized False (behavior unchanged)",
+      "py -3.11 scripts/ci/check_cbsp21_patch_input.py --base origin/main --head HEAD -> pass",
       "py -3.11 scripts/ci/check_cbsp21_gate.py --manifest .cbsp21/patch_input.json --changed-files <final PR file set> -> pass, 100% manifest coverage",
+      "py -3.11 -m app.ci.check_file_sizes (services/api) -> provenance_attachment.py ~348 lines, under 500 threshold",
       "py -3.11 -m app.ci.check_complexity --baseline app/ci/complexity_baseline.json -> pass, no functions exceed complexity 15"
     ]
   },
   "files": [
     {
+      "path": "services/api/app/governance/provenance_attachment.py",
+      "intent": "Docstring/comment-only: name the intentional two-notion export contract (always-False export_authorized field vs is_exportable()/status gate); correct the superseded R1 'do not wire to DXF export' note per DO 79 / R2; note DRAFT->RATIFIED lifecycle naming.",
+      "scan_targets": [
+        "services/api/app/governance/provenance_attachment.py",
+        "services/api/app/util/ibg_dxf_export_lifecycle.py"
+      ],
+      "risk": "low",
+      "behavior_change": "none - docstring/comment-only; no executable statements changed",
+      "verification": [
+        "tests/governance/test_provenance_attachment_draft.py",
+        "services/api/tests/test_dxf_lifecycle_ibg_provenance_guards.py",
+        "services/api/tests/test_ibg_export_provenance.py"
+      ]
+    },
+    {
       "path": "tests/governance/test_provenance_attachment_draft.py",
-      "intent": "Align RATIFIED is_exportable() expectations with current production/R2 contract while preserving non-ratified non-exportability.",
+      "intent": "Align RATIFIED is_exportable() expectations with current production/R2 contract while preserving non-ratified non-exportability; add a contract-lock docstring for the intentional divergence.",
       "scan_targets": [
         "tests/governance/test_provenance_attachment_draft.py",
         "services/api/app/governance/provenance_attachment.py",
@@ -49,7 +69,7 @@
     },
     {
       "path": ".cbsp21/patch_input.json",
-      "intent": "Declare the stale guard-test correction for CBSP21 manifest gates.",
+      "intent": "Declare the stale guard-test correction and the docstring-only production clarification for CBSP21 manifest gates.",
       "scan_targets": [
         ".cbsp21/patch_input.json"
       ],

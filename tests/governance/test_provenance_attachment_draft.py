@@ -6,7 +6,11 @@ Cross-Repo Governance Normalization 1A (2026-05-24)
 
 These tests validate that ProvenanceAttachmentDraft maintains
 constitutional invariants:
-    - export_authorized is ALWAYS False
+    - export_authorized is ALWAYS False (structural field, not an export gate)
+    - is_exportable() (status == RATIFIED) is the canonical export gate, and is
+      intentionally decoupled from export_authorized — the two-notion contract
+      documented on ProvenanceAttachmentDraft. A RATIFIED attachment therefore
+      has is_exportable() True while export_authorized stays False.
     - IBG drafts default to BLOCKED status
     - Drafts cannot be ratified by this code path
     - Serialization round-trip works correctly
@@ -56,7 +60,14 @@ class TestProvenanceAttachmentInvariants:
             assert draft.is_exportable() is False
 
     def test_ratified_status_is_exportable_for_r2_wrapper(self):
-        """R2 allows RATIFIED attachments while export_authorized remains False."""
+        """R2 allows RATIFIED attachments while export_authorized remains False.
+
+        Contract lock for the intentional two-notion divergence: is_exportable()
+        gates on status, export_authorized is a separate always-False field. This
+        fails loudly if a future refactor tries to "reconcile" them by making
+        is_exportable() read export_authorized (would flip True->False) or by
+        forcing is_exportable() back to always-False.
+        """
         draft = ProvenanceAttachmentDraft(
             attachment_id="test-001",
             source_artifact_id="/path/to/source.dxf",
