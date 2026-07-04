@@ -115,11 +115,16 @@ class CreateCanonicalReferenceRequest(BaseModel):
 
 
 class CreateCanonicalProcessApprovalRequest(BaseModel):
-    """Request body for a governed canonical-process approval record."""
+    """Request body for a governed canonical-process approval record.
+
+    NOTE: ``governed_approval_event_id`` is intentionally NOT a field here. The
+    event id is derived SERVER-SIDE from a governed ReviewEnforcement human-APPROVE
+    review (C2 PR-1 gap-1 lock) — a caller cannot supply or influence it. Any
+    ``governed_approval_event_id`` present in the request body is ignored.
+    """
 
     canonical_process_id: str
     canonical_process_version: str
-    governed_approval_event_id: str
     approval_rule_id: str
     source_geometry_id: str
     provenance_hash: str
@@ -199,7 +204,6 @@ async def create_process_approved_canonical_reference(
         approval_record = create_canonical_process_approval_record(
             canonical_process_id=request.approval_record.canonical_process_id,
             canonical_process_version=request.approval_record.canonical_process_version,
-            governed_approval_event_id=request.approval_record.governed_approval_event_id,
             approval_rule_id=request.approval_record.approval_rule_id,
             source_geometry_id=request.approval_record.source_geometry_id,
             provenance_hash=request.approval_record.provenance_hash,

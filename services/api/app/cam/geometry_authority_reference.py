@@ -40,6 +40,7 @@ from app.cam.geometry_authority_taxonomy import (
 )
 from app.cam.canonical_geometry_process_approval import (
     CanonicalProcessApprovalRecord,
+    UNVERIFIED_PENDING_GOVERNANCE,
     validate_canonical_process_approval_record,
 )
 
@@ -133,6 +134,16 @@ class GeometryAuthorityReference(BaseModel):
     process_source_geometry_id: Optional[str] = Field(
         default=None,
         description="ID of the source/evidence geometry that entered the process"
+    )
+    authentication: str = Field(
+        default=UNVERIFIED_PENDING_GOVERNANCE,
+        description=(
+            "Authenticity status inherited from the backing process-approval "
+            "record. Fail-safe default: 'unverified_pending_governance'. In PR-1 "
+            "nothing can carry a verified status (the authorized-approver anchor "
+            "is the PR-2 hard prerequisite); a caller must never treat this "
+            "reference as authenticated canonical authority while it is unverified."
+        )
     )
 
     allowed_uses: List[GeometryUse] = Field(
@@ -348,6 +359,7 @@ def create_process_approved_canonical_geometry_reference(
         canonical_process_version=approval_record.canonical_process_version,
         governed_approval_event_id=approval_record.governed_approval_event_id,
         process_source_geometry_id=approval_record.source_geometry_id,
+        authentication=approval_record.authentication,
     )
     ref.deterministic_reference_hash = ref.compute_hash()
     return ref
