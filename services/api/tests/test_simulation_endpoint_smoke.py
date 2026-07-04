@@ -4,6 +4,8 @@ import io
 import pytest
 from fastapi.testclient import TestClient
 
+from app.routers.simulation_consolidated_router import MAX_UPLOAD_MOVES_PREVIEW
+
 
 @pytest.fixture
 def client():
@@ -251,6 +253,23 @@ def test_upload_decimates_large_path(client):
     data2 = resp2.json()
     assert data2["moves_decimated"] is False
     assert len(data2["moves"]) == 20000
+
+
+def test_upload_preview_max_moves_is_server_capped(client):
+    """A caller cannot bypass preview decimation with a huge max_moves value."""
+    big = "G21\n" + "".join(f"G1 X{i % 100} Y{i // 100} F200\n" for i in range(20000)) + "M2\n"
+    files = {"file": ("big.nc", io.BytesIO(big.encode()), "text/plain")}
+
+    resp = client.post(
+        "/api/cam/sim/upload",
+        files=files,
+        data={"max_moves": MAX_UPLOAD_MOVES_PREVIEW * 10},
+    )
+    data = resp.json()
+    assert data["move_count"] == 20000
+    assert data["moves_decimated"] is True
+    assert len(data["moves"]) <= MAX_UPLOAD_MOVES_PREVIEW
+    assert data["moves_returned"] == len(data["moves"])
 
 
 def test_upload_small_path_not_decimated(client, minimal_gcode):

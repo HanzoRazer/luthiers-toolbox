@@ -6,6 +6,7 @@ Provides:
 """
 from __future__ import annotations
 
+import os
 from typing import Any, Dict, List, Optional
 
 from fastapi import APIRouter, HTTPException
@@ -19,12 +20,67 @@ from ....core.safety import safety_critical
 
 router = APIRouter(prefix="/opt")
 
-# Upper bound on each what-if grid axis. optimize_feed_stepover() clones the
-# full moves list and re-runs the cycle-time estimate once PER GRID CELL, so
-# cost is O(grid[0] * grid[1] * len(moves)). An uncapped grid (e.g. 20x20)
-# on a multi-thousand-move toolpath runs for ~10s on the request thread.
-# 12x12 = 144 cells keeps the default 6x6 untouched while bounding worst case.
-MAX_WHATIF_GRID_AXIS = 12
+# optimize_feed_stepover() clones the full moves list and re-runs the cycle-time
+# estimate once per grid cell. Guard both the grid shape and the actual
+# cells*moves workload; rectangular grids like 16x4 can be cheap, while 12x12
+# can still be too expensive on a very large move list.
+DEFAULT_WHATIF_MAX_GRID_CELLS = 144
+DEFAULT_WHATIF_MAX_WORK_UNITS = 500_000
+WHATIF_MAX_GRID_CELLS_ENV = "LTB_WHATIF_MAX_GRID_CELLS"
+WHATIF_MAX_WORK_UNITS_ENV = "LTB_WHATIF_MAX_WORK_UNITS"
+
+
+def _env_int(name: str, default: int) -> int:
+    raw = os.getenv(name, "").strip()
+    if not raw:
+        return default
+    try:
+        return max(1, int(raw))
+    except ValueError:
+        return default
+
+
+def _whatif_limits() -> tuple[int, int]:
+    return (
+        _env_int(WHATIF_MAX_GRID_CELLS_ENV, DEFAULT_WHATIF_MAX_GRID_CELLS),
+        _env_int(WHATIF_MAX_WORK_UNITS_ENV, DEFAULT_WHATIF_MAX_WORK_UNITS),
+    )
+
+
+def _validate_whatif_grid(grid: List[int], move_count: int) -> tuple[int, int]:
+    if len(grid) != 2:
+        raise HTTPException(
+            400,
+            "grid must contain exactly two positive integers: "
+            "[feed_steps, stepover_steps].",
+        )
+
+    feed_steps, stepover_steps = grid
+    if feed_steps < 1 or stepover_steps < 1:
+        raise HTTPException(
+            400,
+            "grid values must be positive integers: [feed_steps, stepover_steps].",
+        )
+
+    max_cells, max_work_units = _whatif_limits()
+    cells = feed_steps * stepover_steps
+    if cells > max_cells:
+        raise HTTPException(
+            400,
+            f"grid has {cells} cells; maximum is {max_cells}. "
+            "Reduce feed/stepover steps or split the analysis into smaller runs.",
+        )
+
+    work_units = cells * move_count
+    if work_units > max_work_units:
+        raise HTTPException(
+            400,
+            f"grid would evaluate {work_units} move-cells "
+            f"({cells} cells x {move_count} moves); maximum is {max_work_units}. "
+            "Reduce grid steps or optimize a smaller toolpath segment.",
+        )
+
+    return feed_steps, stepover_steps
 
 
 class LoopIn(BaseModel):
@@ -42,7 +98,15 @@ class OptIn(BaseModel):
         default={"feed": [600, 9000], "stepover": [0.25, 0.85], "rpm": [8000, 24000]}
     )
     tool: Dict[str, Any] = Field(default={"flutes": 2, "chipload_target_mm": 0.05})
-    grid: List[int] = Field(default=[6, 6])
+    grid: List[int] = Field(
+        default_factory=lambda: [6, 6],
+        description=(
+            "Two positive integers [feed_steps, stepover_steps]. Default [6, 6]. "
+            f"The API enforces {DEFAULT_WHATIF_MAX_GRID_CELLS} total grid cells "
+            f"and {DEFAULT_WHATIF_MAX_WORK_UNITS} move-cells by default; tune with "
+            f"{WHATIF_MAX_GRID_CELLS_ENV} and {WHATIF_MAX_WORK_UNITS_ENV}."
+        ),
+    )
 
 
 @router.post("/what_if")
@@ -52,14 +116,7 @@ def what_if_opt(body: OptIn) -> Dict[str, Any]:
     if body.moves is None:
         raise HTTPException(400, "M.2 expects prebuilt moves; call /plan first.")
 
-    if len(body.grid) != 2 or any(g < 1 for g in body.grid):
-        raise HTTPException(400, "grid must be [axis_feed, axis_stepover] with each >= 1.")
-    if any(g > MAX_WHATIF_GRID_AXIS for g in body.grid):
-        raise HTTPException(
-            400,
-            f"grid axis exceeds cap {MAX_WHATIF_GRID_AXIS} "
-            f"(cost is O(grid[0]*grid[1]*len(moves)); refine bounds instead of the grid).",
-        )
+    grid = _validate_whatif_grid(body.grid, len(body.moves))
 
     res = optimize_feed_stepover(
         body.moves,
@@ -69,7 +126,7 @@ def what_if_opt(body: OptIn) -> Dict[str, Any]:
         safe_z=body.safe_z,
         bounds={k: tuple(v) for k, v in body.bounds.items()},
         tool=body.tool,
-        grid=tuple(body.grid),
+        grid=grid,
     )
     baseline = estimate_cycle_time_v2(
         body.moves, profile, z_total=body.z_total, stepdown=body.stepdown, safe_z=body.safe_z
@@ -120,6 +177,8 @@ __all__ = [
     "router",
     "LoopIn",
     "OptIn",
+    "DEFAULT_WHATIF_MAX_GRID_CELLS",
+    "DEFAULT_WHATIF_MAX_WORK_UNITS",
     "FeedsSpeedsRequest",
     "FeedsSpeedsResponse",
 ]

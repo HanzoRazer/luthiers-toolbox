@@ -180,7 +180,8 @@ def simulate_gcode_json(body: SimGcodeInput) -> Response:
 # produced ~7-70 MB responses. We always report the true move_count and compute
 # stats over the FULL path, but decimate the returned `moves` preview to this
 # cap unless the caller opts into full fidelity via include_moves=true.
-DEFAULT_MAX_UPLOAD_MOVES = 5000
+MAX_UPLOAD_MOVES_PREVIEW = 5000
+DEFAULT_MAX_UPLOAD_MOVES = MAX_UPLOAD_MOVES_PREVIEW
 
 
 @router.post("/upload", response_model=SimUploadResponse)
@@ -188,15 +189,18 @@ async def simulate_gcode_upload(
     file: UploadFile = File(...),
     units: str = Form("mm"),
     include_moves: bool = Form(False),
-    max_moves: int = Form(DEFAULT_MAX_UPLOAD_MOVES),
+    max_moves: int = Form(
+        DEFAULT_MAX_UPLOAD_MOVES,
+        description=f"Maximum returned preview moves, capped at {MAX_UPLOAD_MOVES_PREVIEW}.",
+    ),
 ) -> SimUploadResponse:
     """
     Simulate G-code from file upload.
 
     Parses basic motion commands and calculates path statistics. The returned
     `moves` preview is uniformly decimated to `max_moves` for large programs
-    (`move_count` and stats reflect the full path); pass `include_moves=true`
-    to receive every move.
+    (`move_count` and stats reflect the full path). `max_moves` is capped at
+    the server preview limit; pass `include_moves=true` to receive every move.
     """
     try:
         text = (await file.read()).decode("utf-8", errors="ignore")
@@ -220,7 +224,7 @@ async def simulate_gcode_upload(
         last = m
 
     total = len(moves)
-    cap = max(1, max_moves)
+    cap = min(MAX_UPLOAD_MOVES_PREVIEW, max(1, max_moves))
     if include_moves or total <= cap:
         out_moves = moves
         decimated = False

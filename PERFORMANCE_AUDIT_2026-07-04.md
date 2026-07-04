@@ -16,7 +16,7 @@ Ranked by **likelihood × impact × how-cheap-to-fix**. "Domain" = runtime (affe
 | # | Bottleneck | Domain | Evidence | Fix cost |
 |---|---|---|---|---|
 | 1 | **CI governance scan: 2 scripts `rglob` the whole tree incl. `.venv`** — 4m39s CI tier, two 120s timeouts | dev/CI | **Measured** 279s; 7,423 of 9,624 `.py` scanned are venv | **Trivial** (~10 lines; fix pattern already in repo) |
-| 2 | **`POST /api/cam/opt/what_if` grid search** — uncapped, synchronous | runtime | **Measured** 0.5s (default) → 10.6s (large grid) | **Cheap** (server-side grid clamp) |
+| 2 | **`POST /api/cam/opt/what_if` grid search** — uncapped, synchronous | runtime | **Measured** 0.5s (default) → 10.6s (large grid) | **Cheap** (server-side grid/workload clamp) |
 | 3 | **`POST /api/cam/.../simulate/upload` echoes unbounded `moves[]`** | runtime | **Verified** unbounded; ~7–70 MB JSON on real programs | **Cheap** (`move_count` already returned; decimate/opt-in) |
 | 4 | **Frontend 3D playback rebuilds whole scene per tick (F-X1)** | frontend | Doc-audit "single largest frontend defect"; code confirmed | Medium (incremental update) |
 | 5 | **API startup ~18s warm / ~105s cold import** | runtime/boot | **Measured** 17.7–18.9s warm; explains CI-RED-020 flapping | Medium (lazy heavy imports recover ~3–4s) |
@@ -171,7 +171,7 @@ These are plausible but I could **not** confirm without real volumes or a runnin
 Each is a *separate, scoped PR after this audit* — this document changes no code. Ordered by value-per-minute.
 
 1. **Prune `.venv`/`node_modules`/`__pycache__` in the two governance scanners** (`check_semantic_sandbox_imports.py:72`, `check_feedback_correction_calls.py:18`). Copy the existing `PRUNE_DIRS` + in-place `os.walk` prune from `scripts/check_dxf_compat.py:55`. **~240 s → ~4 s of CI time, every run.** (Lead #6)
-2. **Clamp the `/what_if` grid server-side** (`whatif_opt.py` / `optimization_router.py`) — reject or cap `grid` above e.g. (12,12); optionally stop deep-copying `moves` per cell. Kills the 10 s tail. (Lead #3)
+2. **Clamp the `/what_if` grid workload server-side** (`whatif_opt.py` / `optimization_router.py`) — reject or cap excessive total cells and `cells × moves`; optionally stop deep-copying `moves` per cell. Kills the 10 s tail while allowing cheap rectangular grids. (Lead #3)
 3. **Decimate / make opt-in the `moves[]` in `simulate_gcode_upload`** (`simulation_consolidated_router.py:137`) — `move_count` is already returned; gate the full array behind a query param or downsample. Kills the 7–70 MB payload. (Lead #7)
 4. **Cap `useLiveMonitorStore.events`** to a ring buffer (`useLiveMonitorStore.ts:43`). Stops the long-session growth. (Finding N4/#8)
 5. **Point the live rosette routers at the existing `SQLiteArtJobsStore`** instead of the JSON functions (`rosette_jobs_router.py:79,112`, `rmos/rosette_cam_router.py:415`, `pipeline_ops_rosette.py:77`). The SQLite store + indexes already exist — this finishes a half-done migration and removes the 22 ms parse + full rewrite. (Finding N1/#9)
