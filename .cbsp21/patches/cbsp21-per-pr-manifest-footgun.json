@@ -1,0 +1,74 @@
+{
+  "schema": "cbsp21_patch_input_v1",
+  "schema_version": "cbsp21_patch_input_v1",
+  "coverage_min": 0.95,
+  "patch_id": "CBSP21_PER_PR_MANIFEST_FOOTGUN",
+  "title": "ci(cbsp21): per-PR patch manifests to end the shared-file merge footgun",
+  "intent": "Concurrent PRs used to conflict on the single fixed manifest path .cbsp21/patch_input.json because every PR overwrote the same file; every second PR to merge had to hand-resolve it (keep-ours). This moves patch manifests to per-PR files under .cbsp21/patches/<patch-id>.json (distinct filenames never conflict) and teaches both gates to auto-discover all manifests and validate the diff against the single best-covering one. The legacy single-file path is still honored so in-flight PRs keep passing. This manifest itself lives in the new location, dogfooding the mechanism.",
+  "change_type": "ci",
+  "behavior_change": "ci-gate-resolution",
+  "risk_level": "medium",
+  "scope": {
+    "paths_in_scope": [
+      "scripts/ci/",
+      ".github/workflows/",
+      ".cbsp21/"
+    ],
+    "files_expected_to_change": [
+      "scripts/ci/cbsp21_manifest_discovery.py",
+      "scripts/ci/check_cbsp21_patch_input.py",
+      "scripts/ci/check_cbsp21_gate.py",
+      "scripts/ci/test_cbsp21_manifest_discovery.py",
+      ".github/workflows/cbsp21_gate.yml"
+    ]
+  },
+  "diff_articulation": {
+    "what_changed": "New scripts/ci/cbsp21_manifest_discovery.py provides pure discover/select helpers: discover_manifest_paths (.cbsp21/patches/*.json sorted, then legacy patch_input.json), load_candidates, and select_manifest (ranks by files-covered, then fewest-declared-tokens, then path). check_cbsp21_patch_input.py: removed the hardcoded MANIFEST_PATH read; computes the diff first, discovers candidates (or an explicit --manifest override), selects the best-covering manifest, and validates it; the undeclared-files ignore now covers the whole .cbsp21/ prefix. check_cbsp21_gate.py: --manifest is now optional; resolve_manifest() auto-discovers and selects, then applies the existing schema/coverage/behavior/architecture checks unchanged. cbsp21_gate.yml drops the hardcoded --manifest flag and lists discovered manifests in the summary. Added a per-PR manifest here plus a patches/README.md convention doc and unit tests.",
+    "why_not_redundant": "This changes how the CBSP21 gates locate their manifest: from one fixed path to per-PR discovery with best-coverage selection. It is not a cosmetic refactor — it removes a recurring merge-conflict class and preserves the 1:1 PR<->manifest binding that coverage_min / behavior_change / architecture_scan checks depend on, with legacy back-compat so open PRs do not break."
+  },
+  "verification": {
+    "commands_run": [
+      "pytest scripts/ci/test_cbsp21_manifest_discovery.py -q -> all pass (discovery order, best-coverage selection, stale-legacy not shadowing, tie-break specificity, invalid-json loud fail)",
+      "python scripts/ci/check_cbsp21_patch_input.py --base origin/main --head HEAD -> PASS (selects this manifest)",
+      "python scripts/ci/check_cbsp21_gate.py --changed-files <this diff> -> 100% coverage PASS (auto-discovered, no --manifest)",
+      "back-compat: python scripts/ci/check_cbsp21_gate.py --manifest .cbsp21/patch_input.json ... still works"
+    ]
+  },
+  "files": [
+    {
+      "path": "scripts/ci/cbsp21_manifest_discovery.py",
+      "intent": "New shared, pure discover/select helper for per-PR manifests.",
+      "scan_targets": ["scripts/ci/cbsp21_manifest_discovery.py"],
+      "risk": "medium",
+      "behavior_change": "New module: defines how manifests are discovered and which one a diff is validated against."
+    },
+    {
+      "path": "scripts/ci/check_cbsp21_patch_input.py",
+      "intent": "Discover+select instead of reading one fixed manifest path.",
+      "scan_targets": ["scripts/ci/check_cbsp21_patch_input.py"],
+      "risk": "medium",
+      "behavior_change": "Manifest is now selected by diff coverage across .cbsp21/patches/*.json + legacy; ignore broadened to the .cbsp21/ prefix."
+    },
+    {
+      "path": "scripts/ci/check_cbsp21_gate.py",
+      "intent": "Make --manifest optional; auto-discover + select best-covering manifest.",
+      "scan_targets": ["scripts/ci/check_cbsp21_gate.py"],
+      "risk": "medium",
+      "behavior_change": "Coverage gate resolves its manifest via discovery when --manifest is omitted; explicit path still honored."
+    },
+    {
+      "path": "scripts/ci/test_cbsp21_manifest_discovery.py",
+      "intent": "Unit tests locking in discovery + selection behavior.",
+      "scan_targets": ["scripts/ci/test_cbsp21_manifest_discovery.py"],
+      "risk": "low",
+      "behavior_change": "none - tests only"
+    },
+    {
+      "path": ".github/workflows/cbsp21_gate.yml",
+      "intent": "Drop hardcoded --manifest; summarize discovered manifests.",
+      "scan_targets": [".github/workflows/cbsp21_gate.yml"],
+      "risk": "medium",
+      "behavior_change": "Gate job no longer pins .cbsp21/patch_input.json; relies on script auto-discovery."
+    }
+  ]
+}

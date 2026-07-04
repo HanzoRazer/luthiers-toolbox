@@ -26,6 +26,13 @@ import sys
 from pathlib import Path
 from typing import List, Set, Tuple, Optional
 
+# scripts/ci is on sys.path[0] when invoked as `python scripts/ci/check_...py`.
+from cbsp21_manifest_discovery import (
+    AmbiguousManifestSelection,
+    load_candidates,
+    select_manifest,
+)
+
 # Ensure UTF-8 output on Windows (only when running as main, not when imported)
 def _setup_utf8_output():
     if sys.platform == "win32":
@@ -67,6 +74,43 @@ def get_declared_files(manifest: dict) -> Set[str]:
         for target in file_entry.get("scan_targets", []):
             declared.add(target)
     return declared
+
+
+def resolve_manifest(manifest_arg: Optional[str], changed_files: List[str]) -> Tuple[str, dict]:
+    """Resolve the manifest to validate against.
+
+    If an explicit --manifest is given, use it (back-compat / local override).
+    Otherwise auto-discover .cbsp21/patches/*.json (+ legacy patch_input.json)
+    and select the one that best covers the changed files, using the SHARED
+    default matcher so this gate and the patch-input gate always agree on which
+    manifest a diff maps to. Validates schema.
+    """
+    if manifest_arg:
+        return manifest_arg, load_manifest(manifest_arg)
+
+    candidates, malformed = load_candidates()
+    # Skip malformed siblings with a warning rather than failing this PR.
+    for path, err in malformed:
+        print(f"⚠️  Skipping malformed manifest {path}: {err}")
+
+    if not candidates:
+        print("❌ CBSP21 FAIL: No valid manifest found.")
+        print()
+        print("Add one under .cbsp21/patches/<patch-id>.json (preferred) or "
+              ".cbsp21/patch_input.json (legacy).")
+        sys.exit(1)
+
+    try:
+        selected = select_manifest(candidates, changed_files)
+    except AmbiguousManifestSelection as e:
+        print(f"❌ CBSP21 FAIL: {e}")
+        sys.exit(1)
+    path, manifest = selected  # non-None when candidates exist
+    if manifest.get("schema") != "cbsp21_patch_input_v1":
+        print(f"❌ CBSP21 FAIL: Invalid schema in selected manifest {path}. "
+              f"Expected 'cbsp21_patch_input_v1', got '{manifest.get('schema')}'")
+        sys.exit(1)
+    return str(path), manifest
 
 
 def check_coverage(changed_files: List[str], declared_files: Set[str], coverage_min: float) -> tuple:
@@ -251,7 +295,14 @@ def main():
     _setup_utf8_output()
 
     parser = argparse.ArgumentParser(description="CBSP21 Gate Check")
-    parser.add_argument("--manifest", required=True, help="Path to patch_input.json manifest")
+    parser.add_argument(
+        "--manifest",
+        default=None,
+        help=(
+            "Explicit manifest path. Default: auto-discover .cbsp21/patches/*.json "
+            "(+ legacy .cbsp21/patch_input.json) and select the best-covering one."
+        ),
+    )
     parser.add_argument("--changed-files", nargs="*", default=[], help="List of changed files")
     parser.add_argument("--verbose", "-v", action="store_true", help="Verbose output")
     args = parser.parse_args()
@@ -261,12 +312,12 @@ def main():
     print("=" * 60)
     print()
 
-    # Load manifest
-    manifest = load_manifest(args.manifest)
+    # Resolve + load manifest (auto-discover per-PR manifests when not given)
+    manifest_path, manifest = resolve_manifest(args.manifest, args.changed_files)
     coverage_min = manifest.get("coverage_min", 0.95)
     declared_files = get_declared_files(manifest)
 
-    print(f"📋 Manifest: {args.manifest}")
+    print(f"📋 Manifest: {manifest_path}")
     print(f"📊 Coverage minimum: {coverage_min * 100:.0f}%")
     print(f"📁 Declared files: {len(declared_files)}")
     print()
