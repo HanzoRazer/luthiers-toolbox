@@ -39,8 +39,9 @@ jobs:
         env:
           CHANGED_FILES: ${{ steps.changed.outputs.files }}
         run: |
+          # No --manifest: the gate auto-discovers .cbsp21/patches/*.json (+ the
+          # legacy .cbsp21/patch_input.json) and selects the best-covering one.
           python scripts/ci/check_cbsp21_gate.py \
-            --manifest .cbsp21/patch_input.json \
             --changed-files $CHANGED_FILES
 
       - name: CBSP21 Gate Summary
@@ -48,15 +49,14 @@ jobs:
         run: |
           echo "## CBSP21 Gate Results" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          if [ -f .cbsp21/patch_input.json ]; then
-            echo "✅ Manifest found: \`.cbsp21/patch_input.json\`" >> $GITHUB_STEP_SUMMARY
-            echo "" >> $GITHUB_STEP_SUMMARY
-            echo "### Files declared in manifest:" >> $GITHUB_STEP_SUMMARY
-            echo '```json' >> $GITHUB_STEP_SUMMARY
-            python -c "import json; m=json.load(open('.cbsp21/patch_input.json')); print('\n'.join(f['path'] for f in m.get('files',[])))" >> $GITHUB_STEP_SUMMARY
+          MANIFESTS=$(ls .cbsp21/patches/*.json .cbsp21/patch_input.json 2>/dev/null || true)
+          if [ -n "$MANIFESTS" ]; then
+            echo "### Candidate manifests discovered:" >> $GITHUB_STEP_SUMMARY
+            echo '```' >> $GITHUB_STEP_SUMMARY
+            echo "$MANIFESTS" >> $GITHUB_STEP_SUMMARY
             echo '```' >> $GITHUB_STEP_SUMMARY
           else
-            echo "❌ Manifest missing: \`.cbsp21/patch_input.json\`" >> $GITHUB_STEP_SUMMARY
+            echo "❌ No manifest found under \`.cbsp21/patches/\` or \`.cbsp21/patch_input.json\`" >> $GITHUB_STEP_SUMMARY
             echo "" >> $GITHUB_STEP_SUMMARY
-            echo "Create a manifest using \`.cbsp21/patch_input.json.example\` as a template." >> $GITHUB_STEP_SUMMARY
+            echo "Create one under \`.cbsp21/patches/<patch-id>.json\` using \`.cbsp21/patch_input.json.example\` as a template." >> $GITHUB_STEP_SUMMARY
           fi
