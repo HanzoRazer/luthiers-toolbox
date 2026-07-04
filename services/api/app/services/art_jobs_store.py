@@ -132,16 +132,16 @@ def _get_store() -> SQLiteArtJobsStore:
 
 
 def _insert_legacy_row(
-    r: Any,
+    row: Any,
     seen_ids: set,
     store: SQLiteArtJobsStore,
     db: Any,
     cursor: Any,
 ) -> tuple:
     """Validate and insert a single legacy row. Returns (imported, skipped, duplicates) deltas."""
-    if not isinstance(r, dict) or "job_type" not in r:
+    if not isinstance(row, dict) or "job_type" not in row:
         return 0, 1, 0  # singular-shaped rows owned by art_job_store — skip silently
-    row_id = r.get("id")
+    row_id = row.get("id")
     if not row_id:
         logger.warning("Skipping legacy plural art job row without id")
         return 0, 1, 0
@@ -149,7 +149,7 @@ def _insert_legacy_row(
         logger.warning("Skipping duplicate legacy plural art job id %r", row_id)
         return 0, 0, 1
     seen_ids.add(row_id)
-    row_data = store._dict_to_row_data(_row_payload_from_legacy(r))
+    row_data = store._dict_to_row_data(_row_payload_from_legacy(row))
     fields = list(row_data.keys())
     placeholders = ",".join(["?"] * len(fields))
     _execute(
@@ -191,10 +191,10 @@ def _migrate_from_json(store: SQLiteArtJobsStore, identity: Optional[str] = None
     with db.get_connection() as conn:
         cursor = conn.cursor()
         for r in rows:
-            di, ds, dd = _insert_legacy_row(r, seen_ids, store, db, cursor)
-            imported += di
-            skipped += ds
-            duplicates += dd
+            delta_imported, delta_skipped, delta_duplicates = _insert_legacy_row(r, seen_ids, store, db, cursor)
+            imported += delta_imported
+            skipped += delta_skipped
+            duplicates += delta_duplicates
     _migrated = True
     _migrated_for = identity
     if imported or skipped or duplicates:
