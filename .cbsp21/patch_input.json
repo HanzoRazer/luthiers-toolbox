@@ -4,7 +4,7 @@
   "coverage_min": 0.95,
   "patch_id": "C2_PROCESS_EXCLUSIVE_CANONICAL_AUTHORITY_PR1",
   "title": "C2 process-exclusive canonical geometry authority - PR 1 merge hardening",
-  "intent": "Operationalize the C2 geometry-origin keystone ruling (PROPOSED / ratification-ready) as additive code: canonical geometry authority is process-derived, not artifact-derived. Canonical body geometry exists only as the output of the approved canonical process following a governed approval event. This PR adds the CanonicalProcessApprovalRecord model, an additive process-approved canonical-reference factory, a process-approved router path, raw-registration guards against fabricated process metadata, and a transition-mode validation WARNING (never RED) for legacy canonical references that lack process-approval metadata. The PR #185 hardening also rejects stale client-supplied server-owned approval fields, derives governed approval event ids deterministically from approval content rather than runtime timestamps, binds process/authentication metadata into reference hashes, and rejects fabricated manual approval records at construction/validation boundaries. It does NOT mark C2 closed, does NOT reconcile governance docs, and does NOT flip missing-metadata warnings to strict RED. Process id/version/approval-rule literals are PROPOSED placeholders awaiting repo-owner ratification.",
+  "intent": "Operationalize the C2 geometry-origin keystone ruling (PROPOSED / ratification-ready) as additive code: canonical geometry authority is process-derived, not artifact-derived. Canonical body geometry exists only as the output of the approved canonical process following a governed approval event. This PR adds the CanonicalProcessApprovalRecord model, process-policy helper module, additive process-approved canonical-reference factory, process-approved router path, raw-registration guards against fabricated process metadata, and a transition-mode validation WARNING (never RED) for legacy canonical references that lack process-approval metadata. The PR #185 hardening also rejects stale client-supplied server-owned approval fields, derives governed approval event ids deterministically from approval content rather than runtime timestamps, binds process/authentication metadata into reference hashes, and rejects fabricated manual approval records at construction/validation boundaries. It does NOT mark C2 closed, does NOT reconcile governance docs, and does NOT flip missing-metadata warnings to strict RED. Process id/version/approval-rule literals are PROPOSED placeholders awaiting repo-owner ratification.",
   "change_type": "feature",
   "behavior_change": "additive-transition-warning",
   "risk_level": "low",
@@ -20,6 +20,7 @@
     ],
     "files_expected_to_change": [
       "services/api/app/cam/canonical_geometry_process_approval.py",
+      "services/api/app/cam/canonical_geometry_process_policy.py",
       "services/api/app/cam/geometry_authority_reference.py",
       "services/api/app/cam/geometry_authority_validation.py",
       "services/api/app/cam/geometry_authority_taxonomy.py",
@@ -33,13 +34,14 @@
     ]
   },
   "diff_articulation": {
-    "what_changed": "(1) NEW canonical_geometry_process_approval.py: CanonicalProcessApprovalRecord with structural invariants; system approvers, missing process identity/provenance, source roles claiming authority, and format/route/storage/representation-derived authority states are rejected, including embedded tokens such as derived_from_dxf and upstream_svg. PR #185 hardening now also rejects fabricated governed_approval_event_id values and stale deterministic_approval_hash values at model/validation boundaries, while deriving governed approval event ids deterministically from approval content rather than runtime timestamps. (2) geometry_authority_reference.py: process-approved canonical factory revalidates approval-record policy, so manually constructed records cannot bypass process coverage; process/authentication metadata is now bound into reference hashes. (3) geometry_authority_validation.py: missing process metadata on canonical references remains a transition warning, but present-and-invalid process metadata or unsupported authentication is blocking. (4) geometry_authority_taxonomy.py: canonical layer description is process-output language. (5) geometry_authority_router.py: adds /references/canonical/process-approved, rejects raw /references registration carrying process-looking canonical metadata that the endpoint cannot verify, and rejects stale client-supplied server-owned approval fields instead of silently ignoring them. (6) ci/router_count_baseline.json accepts the one intentional route-decorator increase for the new process-approved API path; router file count remains unchanged. (7) SPRINTS.md records GOV-CONVERGE-007 so the legacy canonical migration and strict-RED decision stay in the live project parking lot. (8) Tests cover the merge-fix bypasses, authenticity hardening, and router boundary. (9) CAM 7T handoff now teaches the process-approved canonical path and API rejection behavior.",
+    "what_changed": "(1) NEW canonical_geometry_process_approval.py: CanonicalProcessApprovalRecord with structural invariants; system approvers, missing process identity/provenance, source roles claiming authority, and format/route/storage/representation-derived authority states are rejected, including embedded tokens such as derived_from_dxf and upstream_svg. PR #185 hardening now also rejects fabricated governed_approval_event_id values and stale deterministic_approval_hash values at model/validation boundaries, while deriving governed approval event ids deterministically from approval content rather than runtime timestamps. (2) NEW canonical_geometry_process_policy.py: proposed process vocabulary, coverage registry, representation-token detection, and deterministic event-id helper split out to keep the approval model below the file-size gate. (3) geometry_authority_reference.py: process-approved canonical factory revalidates approval-record policy, so manually constructed records cannot bypass process coverage; process/authentication metadata is now bound into reference hashes. (4) geometry_authority_validation.py: missing process metadata on canonical references remains a transition warning, but present-and-invalid process metadata or unsupported authentication is blocking. (5) geometry_authority_taxonomy.py: canonical layer description is process-output language. (6) geometry_authority_router.py: adds /references/canonical/process-approved, rejects raw /references registration carrying process-looking canonical metadata that the endpoint cannot verify, and rejects stale client-supplied server-owned approval fields instead of silently ignoring them. (7) ci/router_count_baseline.json accepts the one intentional route-decorator increase for the new process-approved API path; router file count remains unchanged. (8) SPRINTS.md records GOV-CONVERGE-007 so the legacy canonical migration and strict-RED decision stay in the live project parking lot. (9) Tests cover the merge-fix bypasses, authenticity hardening, and router boundary. (10) CAM 7T handoff now teaches the process-approved canonical path and API rejection behavior.",
     "why_not_redundant": "This is the first code expression of the C2 geometry-origin ruling; no existing primitive encodes process-derived authority. The merge hardening closes the remaining split-brain/bypass surfaces found in review without turning missing legacy metadata into strict RED. Existing 7T behavior for derived-source requirements, non-canonical authority-collapse RED gates, and execution/machine-output invariants remains unchanged."
   },
   "verification": {
     "commands_run": [
       "py -3.11 -m pytest services/api/tests/cam/test_canonical_geometry_process_approval.py -q -> 49 passed, 2 known NumPy reload warnings",
       "py -3.11 -m pytest services/api/tests/cam/test_geometry_authority_references.py -q -> 110 passed, 5 known warnings",
+      "py -3.11 ci/file_size_gate.py -> PASS; canonical_geometry_process_approval.py 465 lines, canonical_geometry_process_policy.py 134 lines",
       "py -3.11 -m json.tool .cbsp21/patch_input.json -> PASS",
       "py -3.11 ci/router_count_gate.py -> PASS after justified one-route baseline update; router_files remained 253, route_decorators moved 1223 -> 1224",
       "SPRINTS.md updated with GOV-CONVERGE-007 safety-net entry for deferred legacy canonical migration",
@@ -54,6 +56,13 @@
       "scan_targets": ["services/api/app/cam/canonical_geometry_process_approval.py"],
       "risk": "low",
       "behavior_change": "additive - new model/factory; no runtime export/solver/CAM behavior changed"
+    },
+    {
+      "path": "services/api/app/cam/canonical_geometry_process_policy.py",
+      "intent": "Proposed process vocabulary, coverage registry, representation-derived authority detection, and deterministic governed approval event id helper split from approval model",
+      "scan_targets": ["services/api/app/cam/canonical_geometry_process_policy.py"],
+      "risk": "low",
+      "behavior_change": "none - internal helper split preserving public imports through canonical_geometry_process_approval.py"
     },
     {
       "path": "services/api/app/cam/geometry_authority_reference.py",

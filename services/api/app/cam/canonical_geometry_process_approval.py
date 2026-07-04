@@ -48,13 +48,24 @@ from __future__ import annotations
 
 import hashlib
 import json
-import re
 from datetime import datetime, timezone
 from typing import Any, Dict, Literal, Optional, Tuple
 from uuid import uuid4
 
 from pydantic import BaseModel, Field, model_validator
 
+from app.cam.canonical_geometry_process_policy import (
+    ALLOWED_AUTHENTICATION_STATES,
+    PROPOSED_APPROVAL_RULE_ID,
+    PROPOSED_CANONICAL_PROCESS_ID,
+    PROPOSED_CANONICAL_PROCESS_VERSION,
+    UNVERIFIED_PENDING_GOVERNANCE,
+    authority_state_is_representation_derived,
+    compute_governed_approval_event_id,
+    is_registered_canonical_process,
+    is_system_actor,
+    process_covers_source_case,
+)
 from app.governance.review_enforcement import (
     ReviewBypassAttemptError,
     ReviewDecision,
@@ -62,69 +73,8 @@ from app.governance.review_enforcement import (
 )
 
 
-# ---------------------------------------------------------------------------
-# Proposed placeholder vocabulary (RATIFICATION PENDING — do not treat as final)
-# ---------------------------------------------------------------------------
-
-PROPOSED_CANONICAL_PROCESS_ID = "body-geometry-canonicalization"
-PROPOSED_CANONICAL_PROCESS_VERSION = "v1"
-PROPOSED_APPROVAL_RULE_ID = "c2-process-exclusive-canonical-authority-v1"
-
-# ---------------------------------------------------------------------------
-# Authenticity status (C2 PR 1 — gap-1 "authenticity labeling" closure)
-# ---------------------------------------------------------------------------
-#
-# An approval record minted through this module carries an authenticity status
-# so nothing downstream can mistake an *unverified* approval for a *verified*
-# one. In PR 1 there is exactly ONE legal value and it is the fail-safe default:
-# UNVERIFIED_PENDING_GOVERNANCE. Verifying that an approver is actually
-# *authorized* to approve canonical geometry requires an authorization anchor
-# (AUTHORIZED_CANONICAL_APPROVERS) that does not exist yet — it is the PR-2 HARD
-# PREREQUISITE. Until it lands, every approval produced here is unverified, and
-# the record model REFUSES to be constructed with any other status (fail-safe:
-# a missing/failed check can never yield "verified"). See
-# docs/handoffs/CAM_7T_GEOMETRY_AUTHORITY_REFERENCES_HANDOFF.md (sequencing).
-UNVERIFIED_PENDING_GOVERNANCE = "unverified_pending_governance"
-_ALLOWED_AUTHENTICATION_STATES = frozenset({UNVERIFIED_PENDING_GOVERNANCE})
-
-# Registry of approved canonical processes -> the source-geometry roles that
-# each process/version is approved to cover. A record whose (process_id,
-# version) pair is absent here, or whose source_geometry_role is not covered by
-# that process, is NOT an artifact exception to be blessed one-off: it is a
-# "process extension required" case that must go back to governance.
-#
-# This registry is deliberately small and PROPOSED. It is the code seam through
-# which governance later ratifies additional processes/roles.
-APPROVED_CANONICAL_PROCESSES: Dict[Tuple[str, str], frozenset] = {
-    (PROPOSED_CANONICAL_PROCESS_ID, PROPOSED_CANONICAL_PROCESS_VERSION): frozenset(
-        {
-            "evidence",
-            "candidate",
-            "governed_evidence_candidate",
-            "human_reviewed_candidate",
-            "existing_canonical",
-        }
-    ),
-}
-
-# Tokens that describe a *representation / format / route / storage location*.
-# Authority may never be inferred from these — a source_authority_state must
-# describe a governed authority state, not the file format or where it was
-# stored or which route carried it.
-_FORBIDDEN_SOURCE_AUTHORITY_STATE_TOKENS = (
-    "dxf",
-    "svg",
-    "step",
-    "stp",
-    "route",
-    "storage",
-    "filename",
-    "format",
-    "path",
-    "representation",
-)
-
-
+# Proposed vocabulary, process coverage, representation-token detection, and
+# PR-1 authenticity constants live in canonical_geometry_process_policy.py.
 class CanonicalProcessApprovalError(Exception):
     """
     Raised when a canonical process approval record cannot be created or is
@@ -132,36 +82,6 @@ class CanonicalProcessApprovalError(Exception):
     uncovered source cases must be resolved by *process extension*, never by an
     artifact-specific exception.
     """
-
-
-def _is_system_actor(actor_id: str) -> bool:
-    """
-    A system actor is a machine actor. Repo convention (see
-    ``governance/review_enforcement.py`` / ``authority_state.py``):
-    ``system:<component>`` is machine, ``human:<id>`` / ``governance:<rule>``
-    are not. A system actor id alone may never confer canonical authority.
-    """
-    return actor_id.strip().lower().startswith("system:")
-
-
-def _authority_state_is_representation_derived(state: str) -> bool:
-    """
-    True if ``source_authority_state`` looks inferred from a format / route /
-    storage location rather than a governed authority state.
-    """
-    normalized = state.strip().lower()
-    parts = {
-        part
-        for part in re.split(r"[^a-z0-9]+", normalized.replace("_", " "))
-        if part
-    }
-    return any(
-        normalized == token
-        or normalized.startswith(f"{token}:")
-        or normalized.startswith(f"{token}/")
-        or token in parts
-        for token in _FORBIDDEN_SOURCE_AUTHORITY_STATE_TOKENS
-    )
 
 
 class CanonicalProcessApprovalRecord(BaseModel):
@@ -180,18 +100,10 @@ class CanonicalProcessApprovalRecord(BaseModel):
         description="Unique approval record identifier",
     )
 
-    canonical_process_id: str = Field(
-        ..., description="ID of the approved canonical process that produced the output"
-    )
-    canonical_process_version: str = Field(
-        ..., description="Version of the approved canonical process"
-    )
-    governed_approval_event_id: str = Field(
-        ..., description="ID of the governed approval event"
-    )
-    approval_rule_id: str = Field(
-        ..., description="ID of the approval rule the event satisfied"
-    )
+    canonical_process_id: str = Field(..., description="Approved canonical process ID")
+    canonical_process_version: str = Field(..., description="Canonical process version")
+    governed_approval_event_id: str = Field(..., description="Governed approval event ID")
+    approval_rule_id: str = Field(..., description="Approval rule ID")
 
     source_geometry_id: str = Field(
         ..., description="ID of the source/evidence/candidate geometry entering the process"
@@ -208,23 +120,14 @@ class CanonicalProcessApprovalRecord(BaseModel):
         ),
     )
 
-    output_geometry_id: Optional[str] = Field(
-        default=None,
-        description="ID of the process-output geometry that becomes canonical",
-    )
+    output_geometry_id: Optional[str] = Field(default=None, description="Process-output geometry ID")
 
-    decision: Literal["approve"] = Field(
-        default="approve",
-        description="Only 'approve' produces canonical authority",
-    )
+    decision: Literal["approve"] = Field(default="approve", description="Approval decision")
 
     approver_id: str = Field(
         ..., description="Actor who participated in the governed approval (human:<id>)"
     )
-    approver_role: str = Field(
-        default="reviewer",
-        description="Role of the approver within the process",
-    )
+    approver_role: str = Field(default="reviewer", description="Approver process role")
 
     provenance_hash: str = Field(
         ..., description="Hash tying the output to its actual upstream geometry source"
@@ -251,10 +154,7 @@ class CanonicalProcessApprovalRecord(BaseModel):
         ),
     )
 
-    deterministic_approval_hash: str = Field(
-        default="",
-        description="Deterministic hash of the approval record (excludes timestamp)",
-    )
+    deterministic_approval_hash: str = Field(default="", description="Approval content hash")
 
     @model_validator(mode="after")
     def enforce_process_approval_invariants(self) -> "CanonicalProcessApprovalRecord":
@@ -287,13 +187,13 @@ class CanonicalProcessApprovalRecord(BaseModel):
                 "only a governed approve event produces canonical authority"
             )
 
-        if _is_system_actor(self.approver_id):
+        if is_system_actor(self.approver_id):
             raise ValueError(
                 f"System actor '{self.approver_id}' may not approve process output — "
                 "a machine actor id alone never confers canonical authority"
             )
 
-        if _authority_state_is_representation_derived(self.source_authority_state):
+        if authority_state_is_representation_derived(self.source_authority_state):
             raise ValueError(
                 f"source_authority_state '{self.source_authority_state}' looks inferred "
                 "from a format / route / storage location; authority may not be "
@@ -311,7 +211,7 @@ class CanonicalProcessApprovalRecord(BaseModel):
         # be constructed as verified — a missing/failed authorization check
         # therefore cannot yield verified authority. PR-2 relaxes this when
         # AUTHORIZED_CANONICAL_APPROVERS lands.
-        if self.authentication not in _ALLOWED_AUTHENTICATION_STATES:
+        if self.authentication not in ALLOWED_AUTHENTICATION_STATES:
             raise ValueError(
                 f"authentication '{self.authentication}' is not permitted in PR-1; "
                 f"the only legal value is '{UNVERIFIED_PENDING_GOVERNANCE}'. No "
@@ -370,67 +270,6 @@ class CanonicalProcessApprovalRecord(BaseModel):
         }
         canonical = json.dumps(hash_input, sort_keys=True, separators=(",", ":"))
         return hashlib.sha256(canonical.encode()).hexdigest()
-
-
-def process_covers_source_case(
-    canonical_process_id: str,
-    canonical_process_version: str,
-    source_geometry_role: str,
-) -> bool:
-    """
-    True if the given approved canonical process/version is registered as
-    covering the given source-geometry role.
-    """
-    covered = APPROVED_CANONICAL_PROCESSES.get(
-        (canonical_process_id, canonical_process_version)
-    )
-    if covered is None:
-        return False
-    return source_geometry_role.strip().lower() in covered
-
-
-def is_registered_canonical_process(
-    canonical_process_id: str,
-    canonical_process_version: str,
-) -> bool:
-    """True when the process id/version pair exists in the approved registry."""
-    return (
-        canonical_process_id.strip(),
-        canonical_process_version.strip(),
-    ) in APPROVED_CANONICAL_PROCESSES
-
-
-def compute_governed_approval_event_id(
-    *,
-    approver_id: str,
-    canonical_process_id: str,
-    canonical_process_version: str,
-    approval_rule_id: str,
-    source_geometry_id: str,
-    provenance_hash: str,
-    process_inputs_hash: str,
-    decision: str = "approve",
-) -> str:
-    """
-    Deterministic event id for a logical canonical-process approval.
-
-    The event id deliberately excludes runtime timestamp and storage identity:
-    retries of the same logical approval request must reconcile to the same
-    event id, while changes to the approver, process identity, source geometry,
-    provenance, or process inputs must produce a different id.
-    """
-    seed_payload = {
-        "approver_id": approver_id,
-        "decision": decision,
-        "canonical_process_id": canonical_process_id,
-        "canonical_process_version": canonical_process_version,
-        "approval_rule_id": approval_rule_id,
-        "source_geometry_id": source_geometry_id,
-        "provenance_hash": provenance_hash,
-        "process_inputs_hash": process_inputs_hash,
-    }
-    canonical = json.dumps(seed_payload, sort_keys=True, separators=(",", ":"))
-    return "gae-" + hashlib.sha256(canonical.encode()).hexdigest()[:16]
 
 
 def validate_canonical_process_approval_record(
