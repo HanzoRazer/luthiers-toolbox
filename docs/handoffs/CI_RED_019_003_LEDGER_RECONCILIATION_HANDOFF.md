@@ -4,11 +4,11 @@ Status: Dev-ready handoff
 Created: 2026-07-04
 Baseline: origin/main at e1310768 (#184 merged)
 Recommended branch: docs/ci-red-019-003-ledger-reconciliation
-Owner lane: CI / CL-RED ledger hygiene
+Owner lane: CI / CI-RED ledger hygiene
 
 ## Purpose
 
-Close two stale-open CL-RED ledger rows in `SPRINTS.md` using current main
+Close two stale-open CI-RED ledger rows in `SPRINTS.md` using current main
 evidence:
 
 - `CI-RED-019`: the setuptools editable-install mask has already been removed,
@@ -35,6 +35,7 @@ Latest routing-truth main witnesses:
 
 | Workflow | Run | Head SHA | Event | Result |
 | --- | ---: | --- | --- | --- |
+| `routing_truth.yml` | `28700637339` | `8c5244d2b1b8828f19e6f31ce574ed531e58252f` | push | success |
 | `routing_truth.yml` | `28693530110` | `e13107683f26c7c8bd6773602d54d05b356a8916` | push | success |
 | `routing_truth.yml` | `28692937055` | `d40c050fc1e970f5159f1cee8bc62aaad9d20e98` | push | success |
 | `routing_truth.yml` | `28690640965` | `869384c23c35022c6daf3a6a35804e5b9d6743fc` | push | success |
@@ -43,6 +44,7 @@ Latest technical-debt main witnesses:
 
 | Workflow | Run | Head SHA | Event | Result |
 | --- | ---: | --- | --- | --- |
+| `technical_debt.yml` | `28700637324` | `8c5244d2b1b8828f19e6f31ce574ed531e58252f` | push | success |
 | `technical_debt.yml` | `28693530077` | `e13107683f26c7c8bd6773602d54d05b356a8916` | push | success |
 | `technical_debt.yml` | `28692937026` | `d40c050fc1e970f5159f1cee8bc62aaad9d20e98` | push | success |
 | `technical_debt.yml` | `28690640982` | `869384c23c35022c6daf3a6a35804e5b9d6743fc` | push | success |
