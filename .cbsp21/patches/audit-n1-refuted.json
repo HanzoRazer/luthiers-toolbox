@@ -1,0 +1,40 @@
+{
+  "schema": "cbsp21_patch_input_v1",
+  "schema_version": "cbsp21_patch_input_v1",
+  "coverage_min": 0.95,
+  "patch_id": "AUDIT_N1_REFUTED",
+  "title": "docs(perf): reclassify audit finding N1 (art-jobs store) as refuted",
+  "intent": "Corrects PERFORMANCE_AUDIT_2026-07-04.md: finding N1 (JSON art-jobs store, 22ms/parse) was over-classified as a confirmed bottleneck (#9). The store is dormant — 43 records, all created in a 32-day window (Jan-Feb 2026), no writes in ~5 months — so by the same tiny-n logic that refuted leads #1/#2 it is not a bottleneck. Reclassify to refuted and remove the unsupported 'grows unbounded' growth-frontier framing.",
+  "change_type": "docs",
+  "behavior_change": "none",
+  "risk_level": "low",
+  "scope": {
+    "paths_in_scope": ["PERFORMANCE_AUDIT_2026-07-04.md"],
+    "files_expected_to_change": ["PERFORMANCE_AUDIT_2026-07-04.md"]
+  },
+  "diff_articulation": {
+    "what_changed": "N1 reclassified VERIFIED/#9 -> REFUTED with the dormancy evidence (43 records, 32-day creation window, ~5 months idle); added to the §2 refuted table; struck from the §0 summary table and the §5 one-hour fix list; removed the §4/§6 'art-jobs growth trajectory' production-data frontier row (unsupported hook). Notes that the store consolidation is proposed in the still-open PR #189 as correctness cleanup, not a perf fix.",
+    "why_not_redundant": "Documentation-only correction of a mis-ranked finding; aligns the audit's classification with its own tiny-n refutation logic and removes a manufactured growth narrative."
+  },
+  "verification": {
+    "commands_run": [
+      "grep review: no remaining reference treats N1/#9 as confirmed; §0/§2/§3/§4/§5/§6 internally consistent"
+    ]
+  },
+  "files": [
+    {
+      "path": "PERFORMANCE_AUDIT_2026-07-04.md",
+      "intent": "Reclassify finding N1 (art-jobs store) as refuted; remove the growth-frontier hook.",
+      "scan_targets": ["PERFORMANCE_AUDIT_2026-07-04.md"],
+      "risk": "low",
+      "behavior_change": "none - documentation only"
+    }
+  ],
+  "architecture_scan": {
+    "scan_id": "AS-2026-07-04-003",
+    "risk_summary": { "critical": 0, "high": 0, "medium": 0, "low": 1 },
+    "findings": [],
+    "acknowledged": true,
+    "acknowledgement_notes": "Docs-only classification correction; no code or runtime change."
+  }
+}
