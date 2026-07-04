@@ -246,12 +246,18 @@ def test_upload_decimates_large_path(client):
     assert data["moves_decimated"] is True
     assert len(data["moves"]) <= 5000
     assert data["moves_returned"] == len(data["moves"])
+    assert data["preview_stride"] > 1
+    assert data["moves"][0]["x"] == 0.0
+    assert data["moves"][0]["y"] == 0.0
+    assert data["moves"][-1]["x"] == 99.0
+    assert data["moves"][-1]["y"] == 199.0
 
     # Opt-in full fidelity
     files2 = {"file": ("big.nc", io.BytesIO(big.encode()), "text/plain")}
     resp2 = client.post("/api/cam/sim/upload", files=files2, data={"include_moves": "true"})
     data2 = resp2.json()
     assert data2["moves_decimated"] is False
+    assert data2["preview_stride"] == 1
     assert len(data2["moves"]) == 20000
 
 
@@ -270,6 +276,7 @@ def test_upload_preview_max_moves_is_server_capped(client):
     assert data["moves_decimated"] is True
     assert len(data["moves"]) <= MAX_UPLOAD_MOVES_PREVIEW
     assert data["moves_returned"] == len(data["moves"])
+    assert data["preview_stride"] > 1
 
 
 def test_upload_small_path_not_decimated(client, minimal_gcode):
@@ -278,6 +285,7 @@ def test_upload_small_path_not_decimated(client, minimal_gcode):
     data = client.post("/api/cam/sim/upload", files=files).json()
     assert data["moves_decimated"] is False
     assert data["moves_returned"] == data["move_count"]
+    assert data["preview_stride"] == 1
 
 
 def test_upload_with_units_mm(client, minimal_gcode):

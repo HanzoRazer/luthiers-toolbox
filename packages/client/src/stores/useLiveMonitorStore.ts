@@ -48,7 +48,7 @@ export const useLiveMonitorStore = defineStore('liveMonitor', () => {
   // Actions
   function addEvent(event: LiveMonitorEvent) {
     events.value.push(event)
-    // Bound retained events (ring buffer): drop oldest beyond MAX_EVENTS.
+    // Bound retained display events: drop oldest beyond MAX_EVENTS.
     if (events.value.length > MAX_EVENTS) {
       events.value.splice(0, events.value.length - MAX_EVENTS)
     }

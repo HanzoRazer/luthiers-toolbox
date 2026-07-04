@@ -22,7 +22,7 @@ Ranked by **likelihood × impact × how-cheap-to-fix**. "Domain" = runtime (affe
 | 5 | **API startup ~18s warm / ~105s cold import** | runtime/boot | **Measured** 17.7–18.9s warm; explains CI-RED-020 flapping | Medium (lazy heavy imports recover ~3–4s) |
 | 6 | **Toolpath Pinia store holds 2× up-to-100k deep-reactive arrays** | frontend | **Verified** ~20 MB × 2, plain `ref` not `shallowRef` | Cheap–medium (`shallowRef` + input cap) |
 | 7 | **Sync CPU compute in 3 `async def` handlers blocks the event loop** | runtime | **Verified** (vectorizer/vision); correct offload pattern exists in repo | Medium (`run_in_executor`) |
-| 8 | **`useLiveMonitorStore.events` grows unbounded** (no ring buffer) | frontend | **Verified** `push` per WS event, only manual clear | Trivial (cap array) |
+| 8 | **LiveMonitor event lists grow unbounded** (no retained-event cap) | frontend | **Verified** `push` per WS event, only manual clear | Trivial (cap arrays) |
 | 9 | **JSON art-jobs store: full 730 KB parse + full rewrite per op** | runtime | **Measured** 22 ms/parse; live; append-only unbounded | Cheap (finish the already-built SQLite migration) |
 
 **One-hour fix list** (confirmed *and* cheap) is in §5. Items 1, 3, 8, 9 and the two preventive index additions are all ≲1 hour each; item 2 is a small clamp.
@@ -141,7 +141,7 @@ Offload primitives (`run_in_executor`/`BackgroundTasks`/`to_thread`) exist in on
 
 ### N4. Frontend reactive state size → **VERIFIED, ranked #6 and #8**
 - **#6 — `packages/client/src/stores/useToolpathPlayerStore.ts:163-164`** holds **two** deep-reactive arrays of up to 100k `MoveSegment` objects each (`segments`, `fullSegments`; cap `MAX_SEGMENTS=100_000` `:37`, ~200 B/segment `:192` → ~20 MB × 2), plus the full G-code string `:208`. Plain `ref` (deep Vue proxy) not `shallowRef`, app-wide in Pinia. This is the same array set F-X1 rebuilds per tick — the dominant reactivity/memory cost.
-- **#8 — `stores/useLiveMonitorStore.ts:16,43`** `events = ref([])` with `push` on every WebSocket event, **no cap / ring buffer** — an unbounded growth (effective leak) over a long monitoring session; only manual `clearEvents()` frees it.
+- **#8 — LiveMonitor event buffers** (`stores/useLiveMonitorStore.ts`, `components/rmos/LiveMonitor.vue`) keep appending WebSocket events with no retained-event cap — an unbounded growth (effective leak) over a long monitoring session; only manual `clearEvents()` frees it.
 - Lower: `toolpath-player/useToolpathLoader.ts:39` `machineStates` (1:1 per segment), `ToolpathComparePanel.vue:180` (2nd full toolpath). `stores/geometry.ts` is explicitly capped — fine.
 
 ### C. Algorithmic / concurrency notes (Part C)
@@ -173,7 +173,7 @@ Each is a *separate, scoped PR after this audit* — this document changes no co
 1. **Prune `.venv`/`node_modules`/`__pycache__` in the two governance scanners** (`check_semantic_sandbox_imports.py:72`, `check_feedback_correction_calls.py:18`). Copy the existing `PRUNE_DIRS` + in-place `os.walk` prune from `scripts/check_dxf_compat.py:55`. **~240 s → ~4 s of CI time, every run.** (Lead #6)
 2. **Clamp the `/what_if` grid workload server-side** (`whatif_opt.py` / `optimization_router.py`) — reject or cap excessive total cells and `cells × moves`; optionally stop deep-copying `moves` per cell. Kills the 10 s tail while allowing cheap rectangular grids. (Lead #3)
 3. **Decimate / make opt-in the `moves[]` in `simulate_gcode_upload`** (`simulation_consolidated_router.py:137`) — `move_count` is already returned; gate the full array behind a query param or downsample. Kills the 7–70 MB payload. (Lead #7)
-4. **Cap `useLiveMonitorStore.events`** to a ring buffer (`useLiveMonitorStore.ts:43`). Stops the long-session growth. (Finding N4/#8)
+4. **Cap LiveMonitor retained events** in both the store and visible component. Stops the long-session growth. (Finding N4/#8)
 5. **Point the live rosette routers at the existing `SQLiteArtJobsStore`** instead of the JSON functions (`rosette_jobs_router.py:79,112`, `rmos/rosette_cam_router.py:415`, `pipeline_ops_rosette.py:77`). The SQLite store + indexes already exist — this finishes a half-done migration and removes the 22 ms parse + full rewrite. (Finding N1/#9)
 6. **Preventive DB indexes** (`rmos_db.py`): add `strip_families(material_type)`, `strip_families(strip_width_mm)`, and composite `(<filter>, created_at DESC)` indexes on the list tables. Near-free; hedges Leads #1/#2 against future growth.
 

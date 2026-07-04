@@ -60,6 +60,7 @@ class SimUploadResponse(BaseModel):
     issues: List[str]
     moves_returned: int = 0       # len(moves) actually returned
     moves_decimated: bool = False
+    preview_stride: int = Field(1, description="Approximate preview sampling stride; 1 means full fidelity")
 
 
 # ============================================================================
@@ -184,6 +185,22 @@ MAX_UPLOAD_MOVES_PREVIEW = 5000
 DEFAULT_MAX_UPLOAD_MOVES = MAX_UPLOAD_MOVES_PREVIEW
 
 
+def _decimate_moves_preview(
+    moves: List[Dict[str, Any]],
+    cap: int,
+) -> tuple[List[Dict[str, Any]], bool, int]:
+    total = len(moves)
+    if total <= cap:
+        return moves, False, 1
+    if cap <= 1:
+        return [moves[0]], True, total
+
+    step = (total - 1) / (cap - 1)
+    indexes = [round(i * step) for i in range(cap)]
+    preview = [moves[index] for index in indexes]
+    return preview, True, max(1, round(step))
+
+
 @router.post("/upload", response_model=SimUploadResponse)
 async def simulate_gcode_upload(
     file: UploadFile = File(...),
@@ -225,13 +242,12 @@ async def simulate_gcode_upload(
 
     total = len(moves)
     cap = min(MAX_UPLOAD_MOVES_PREVIEW, max(1, max_moves))
-    if include_moves or total <= cap:
+    if include_moves:
         out_moves = moves
         decimated = False
+        preview_stride = 1
     else:
-        stride = (total + cap - 1) // cap  # ceil(total / cap)
-        out_moves = moves[::stride]
-        decimated = True
+        out_moves, decimated, preview_stride = _decimate_moves_preview(moves, cap)
 
     return SimUploadResponse(
         ok=True,
@@ -243,6 +259,7 @@ async def simulate_gcode_upload(
         issues=[],
         moves_returned=len(out_moves),
         moves_decimated=decimated,
+        preview_stride=preview_stride,
     )
 
 
