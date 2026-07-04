@@ -956,8 +956,8 @@ class TestGeometryAuthorityRouter:
         assert data["governed_approval_event_id"].startswith("gae-")
         assert data["authentication"] == "unverified_pending_governance"
 
-    def test_process_approved_endpoint_ignores_client_supplied_event_id(self):
-        """A client-supplied governed_approval_event_id is ignored, not honored."""
+    def test_process_approved_endpoint_rejects_client_supplied_event_id(self):
+        """A client-supplied governed_approval_event_id is rejected, not ignored."""
         response = client.post(
             "/api/cam/geometry-authority/references/canonical/process-approved",
             json={
@@ -974,10 +974,95 @@ class TestGeometryAuthorityRouter:
                 },
             },
         )
-        assert response.status_code == 200
-        data = response.json()
-        assert data["governed_approval_event_id"] != "event-attacker-picked"
-        assert data["governed_approval_event_id"].startswith("gae-")
+        assert response.status_code == 400
+        assert "server-derived" in response.text
+        assert "governed_approval_event_id" in response.text
+
+    def test_process_approved_endpoint_rejects_top_level_client_supplied_event_id(self):
+        """A stale top-level governed_approval_event_id is also rejected."""
+        response = client.post(
+            "/api/cam/geometry-authority/references/canonical/process-approved",
+            json={
+                "owning_domain": "boe",
+                "governed_approval_event_id": "event-attacker-picked",
+                "approval_record": {
+                    "canonical_process_id": PROPOSED_CANONICAL_PROCESS_ID,
+                    "canonical_process_version": PROPOSED_CANONICAL_PROCESS_VERSION,
+                    "approval_rule_id": PROPOSED_APPROVAL_RULE_ID,
+                    "source_geometry_id": "geo-router-source",
+                    "provenance_hash": "prov-router",
+                    "process_inputs_hash": "inputs-router",
+                    "approver_id": "human:router-test",
+                },
+            },
+        )
+        assert response.status_code == 400
+        assert "server-derived" in response.text
+        assert "governed_approval_event_id" in response.text
+
+    def test_process_approved_endpoint_rejects_client_supplied_authentication(self):
+        """A client cannot stamp authentication onto the approval request."""
+        response = client.post(
+            "/api/cam/geometry-authority/references/canonical/process-approved",
+            json={
+                "owning_domain": "boe",
+                "approval_record": {
+                    "canonical_process_id": PROPOSED_CANONICAL_PROCESS_ID,
+                    "canonical_process_version": PROPOSED_CANONICAL_PROCESS_VERSION,
+                    "approval_rule_id": PROPOSED_APPROVAL_RULE_ID,
+                    "source_geometry_id": "geo-router-source",
+                    "provenance_hash": "prov-router",
+                    "process_inputs_hash": "inputs-router",
+                    "approver_id": "human:router-test",
+                    "authentication": "verified",
+                },
+            },
+        )
+        assert response.status_code == 400
+        assert "server-derived" in response.text
+        assert "authentication" in response.text
+
+    def test_process_approved_endpoint_rejects_unknown_approval_field(self):
+        """Approval request extras are rejected instead of silently ignored."""
+        response = client.post(
+            "/api/cam/geometry-authority/references/canonical/process-approved",
+            json={
+                "owning_domain": "boe",
+                "approval_record": {
+                    "canonical_process_id": PROPOSED_CANONICAL_PROCESS_ID,
+                    "canonical_process_version": PROPOSED_CANONICAL_PROCESS_VERSION,
+                    "approval_rule_id": PROPOSED_APPROVAL_RULE_ID,
+                    "source_geometry_id": "geo-router-source",
+                    "provenance_hash": "prov-router",
+                    "process_inputs_hash": "inputs-router",
+                    "approver_id": "human:router-test",
+                    "unexpected_field": "not accepted",
+                },
+            },
+        )
+        assert response.status_code == 400
+        assert "Unsupported approval_record field" in response.text
+
+    def test_process_approved_endpoint_rejects_unknown_top_level_field(self):
+        """Process-approved request extras are rejected instead of ignored."""
+        response = client.post(
+            "/api/cam/geometry-authority/references/canonical/process-approved",
+            json={
+                "owning_domain": "boe",
+                "unexpected_top_level": "not accepted",
+                "approval_record": {
+                    "canonical_process_id": PROPOSED_CANONICAL_PROCESS_ID,
+                    "canonical_process_version": PROPOSED_CANONICAL_PROCESS_VERSION,
+                    "approval_rule_id": PROPOSED_APPROVAL_RULE_ID,
+                    "source_geometry_id": "geo-router-source",
+                    "provenance_hash": "prov-router",
+                    "process_inputs_hash": "inputs-router",
+                    "approver_id": "human:router-test",
+                },
+            },
+        )
+        assert response.status_code == 400
+        assert "Unsupported process-approved reference field" in response.text
 
     def test_process_approved_endpoint_rejects_system_actor(self):
         """A system: approver cannot produce a governed approval event -> 400."""

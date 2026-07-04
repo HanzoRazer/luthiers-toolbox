@@ -319,6 +319,34 @@ class CanonicalProcessApprovalRecord(BaseModel):
                 "is the PR-2 hard prerequisite); nothing may claim verified authority."
             )
 
+        expected_event_id = compute_governed_approval_event_id(
+            approver_id=self.approver_id,
+            canonical_process_id=self.canonical_process_id,
+            canonical_process_version=self.canonical_process_version,
+            approval_rule_id=self.approval_rule_id,
+            source_geometry_id=self.source_geometry_id,
+            provenance_hash=self.provenance_hash,
+            process_inputs_hash=self.process_inputs_hash,
+            decision=self.decision,
+        )
+        if self.governed_approval_event_id != expected_event_id:
+            raise ValueError(
+                "governed_approval_event_id must match the deterministic "
+                "server-derived approval identity; direct construction is allowed "
+                "only for rehydrating records whose id matches their process, "
+                "source, provenance, inputs, approver, and decision."
+            )
+
+        if (
+            self.deterministic_approval_hash
+            and self.deterministic_approval_hash != self.compute_hash()
+        ):
+            raise ValueError(
+                "deterministic_approval_hash must match approval record content; "
+                "stale or caller-supplied approval hashes cannot back canonical "
+                "authority."
+            )
+
         return self
 
     def compute_hash(self) -> str:
@@ -372,6 +400,39 @@ def is_registered_canonical_process(
     ) in APPROVED_CANONICAL_PROCESSES
 
 
+def compute_governed_approval_event_id(
+    *,
+    approver_id: str,
+    canonical_process_id: str,
+    canonical_process_version: str,
+    approval_rule_id: str,
+    source_geometry_id: str,
+    provenance_hash: str,
+    process_inputs_hash: str,
+    decision: str = "approve",
+) -> str:
+    """
+    Deterministic event id for a logical canonical-process approval.
+
+    The event id deliberately excludes runtime timestamp and storage identity:
+    retries of the same logical approval request must reconcile to the same
+    event id, while changes to the approver, process identity, source geometry,
+    provenance, or process inputs must produce a different id.
+    """
+    seed_payload = {
+        "approver_id": approver_id,
+        "decision": decision,
+        "canonical_process_id": canonical_process_id,
+        "canonical_process_version": canonical_process_version,
+        "approval_rule_id": approval_rule_id,
+        "source_geometry_id": source_geometry_id,
+        "provenance_hash": provenance_hash,
+        "process_inputs_hash": process_inputs_hash,
+    }
+    canonical = json.dumps(seed_payload, sort_keys=True, separators=(",", ":"))
+    return "gae-" + hashlib.sha256(canonical.encode()).hexdigest()[:16]
+
+
 def validate_canonical_process_approval_record(
     record: CanonicalProcessApprovalRecord,
 ) -> Tuple[bool, Optional[str]]:
@@ -395,13 +456,44 @@ def validate_canonical_process_approval_record(
             f"role '{record.source_geometry_role}'. Extend and re-approve the "
             "canonical process; do not grant an artifact-specific exception."
         )
+    expected_event_id = compute_governed_approval_event_id(
+        approver_id=record.approver_id,
+        canonical_process_id=record.canonical_process_id,
+        canonical_process_version=record.canonical_process_version,
+        approval_rule_id=record.approval_rule_id,
+        source_geometry_id=record.source_geometry_id,
+        provenance_hash=record.provenance_hash,
+        process_inputs_hash=record.process_inputs_hash,
+        decision=record.decision,
+    )
+    if record.governed_approval_event_id != expected_event_id:
+        return False, (
+            "governed approval event id does not match the deterministic "
+            "server-derived approval identity; construct new approval records "
+            "through create_canonical_process_approval_record() or rehydrate only "
+            "records whose governed_approval_event_id matches their process, "
+            "source, provenance, inputs, approver, and decision."
+        )
+    expected_hash = record.compute_hash()
+    if (
+        record.deterministic_approval_hash
+        and record.deterministic_approval_hash != expected_hash
+    ):
+        return False, (
+            "deterministic approval hash does not match approval record content; "
+            "stale or caller-supplied approval hashes cannot back canonical "
+            "authority."
+        )
     return True, None
 
 
 def derive_governed_approval_event_id(
     approver_id: str,
     canonical_process_id: str,
+    canonical_process_version: str,
+    approval_rule_id: str,
     source_geometry_id: str,
+    provenance_hash: str,
     process_inputs_hash: str,
 ) -> str:
     """
@@ -412,9 +504,10 @@ def derive_governed_approval_event_id(
     through ``record_review(..., APPROVE)``, which REFUSES a ``system:`` actor
     (raising ``ReviewBypassAttemptError``) — so no machine actor can manufacture
     a governed approval event, and no caller can assert a pre-chosen event id.
-    The id is the sha256 of the resulting human-APPROVE ``ReviewRecord`` bound to
-    the process/source/inputs, so it cannot be forged or replayed with different
-    content.
+    The id is deterministic over the logical approval identity (approver,
+    process id/version, rule, source, provenance, and process inputs), so retries
+    of the same request reconcile to the same id while changed content cannot
+    replay the id.
 
     NOTE (PR-1 scope): this closes the *fabrication* vector (an id can no longer
     be supplied). It does NOT verify the approver is *authorized* to approve
@@ -450,17 +543,16 @@ def derive_governed_approval_event_id(
             f"approver '{approver_id}' did not produce one"
         )
 
-    seed = "|".join(
-        [
-            review.reviewer_id,
-            review.decision.value,
-            review.timestamp.isoformat(),
-            canonical_process_id,
-            source_geometry_id,
-            process_inputs_hash,
-        ]
+    return compute_governed_approval_event_id(
+        approver_id=review.reviewer_id,
+        canonical_process_id=canonical_process_id,
+        canonical_process_version=canonical_process_version,
+        approval_rule_id=approval_rule_id,
+        source_geometry_id=source_geometry_id,
+        provenance_hash=provenance_hash,
+        process_inputs_hash=process_inputs_hash,
+        decision=review.decision.value,
     )
-    return "gae-" + hashlib.sha256(seed.encode()).hexdigest()[:16]
 
 
 def create_canonical_process_approval_record(
@@ -497,7 +589,10 @@ def create_canonical_process_approval_record(
     governed_approval_event_id = derive_governed_approval_event_id(
         approver_id=approver_id,
         canonical_process_id=canonical_process_id,
+        canonical_process_version=canonical_process_version,
+        approval_rule_id=approval_rule_id,
         source_geometry_id=source_geometry_id,
+        provenance_hash=provenance_hash,
         process_inputs_hash=process_inputs_hash,
     )
 
