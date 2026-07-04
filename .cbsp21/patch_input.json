@@ -2,40 +2,128 @@
   "schema": "cbsp21_patch_input_v1",
   "schema_version": "cbsp21_patch_input_v1",
   "coverage_min": 0.95,
-  "patch_id": "DOCS_SPRINTS_CI_RED_020B_CLOSE",
-  "title": "docs(sprints): close CI-RED-020-B — main-green witness run 28688610338",
-  "intent": "SPRINTS.md ledger-only update: flip the CI-RED-020 row from OPEN to CLOSED. The closure bar (the merged API Health + Smoke workflow producing a terminal-green run on `main`) is met by run 28688610338 — the first terminal-green run of the merged workflow on `main` (workflow_dispatch on ref=main, conclusion success, not cancelled), with both `health-smoke` and the main-only `pages-deploy` jobs green. On `main`, workflow_dispatch and schedule run the identical job graph on the identical ref, so this is the functional equivalent of the scheduled witness; the user accepted it as sufficient in lieu of waiting for the ~10:20 UTC cron. Documentation only; no product/application/CI-behavior change. This manifest replaces the inherited docs manifest (from #181) so the CBSP21 gates cover this ledger diff.",
-  "change_type": "docs",
-  "behavior_change": "none",
-  "risk_level": "low",
+  "patch_id": "CI_RED_015L_IBG_SANDBOX_LANDMARK_INTAKE",
+  "title": "IBG sandbox landmark candidate intake bridge",
+  "intent": "Connect vectorizer-sandbox ibg-landmark-candidate.v1 facts to luthiers as governed BodyEvidenceCandidate inputs while preserving provenance, coordinate caveats, confidence labels, and fail-closed review posture. This is a connection/readiness bridge only; it does not promote authoritative geometry, calibrate pixels to millimeters, run the solver, approve IBG memory, or resolve C2 human-approval decisions.",
+  "change_type": "feature",
+  "behavior_change": "Adds a new IBG-only intake adapter and evidence source for sandbox landmark candidate records. Imported records remain advisory, review-required, blocked by the existing IBG intake gate, and unavailable for solver/export use.",
+  "risk_level": "medium",
   "scope": {
     "paths_in_scope": [
-      "SPRINTS.md",
-      ".cbsp21/"
+      ".cbsp21/",
+      "services/api/app/instrument_geometry/body/ibg/",
+      "services/api/tests/fixtures/ibg_sandbox_landmarks/",
+      "services/api/tests/test_ibg_sandbox_landmark_candidate_adapter.py"
     ],
     "files_expected_to_change": [
-      "SPRINTS.md",
-      ".cbsp21/patch_input.json"
+      ".cbsp21/patch_input.json",
+      "services/api/app/instrument_geometry/body/ibg/body_grid/body_grid_schema.py",
+      "services/api/app/instrument_geometry/body/ibg/morphology_harvest/sandbox_landmark_candidate_adapter.py",
+      "services/api/tests/fixtures/ibg_sandbox_landmarks/jazzmaster62_body.landmarks.json",
+      "services/api/tests/fixtures/ibg_sandbox_landmarks/melody_maker_body.landmarks.json",
+      "services/api/tests/test_ibg_sandbox_landmark_candidate_adapter.py"
     ]
   },
   "diff_articulation": {
-    "what_changed": "SPRINTS.md: the CI-RED-020 index row status changes OPEN -> CLOSED and last_verified 2026-07-03 -> 2026-07-04. The former 'Remaining closure bar' sentence is replaced by a 'Closure witness (2026-07-04)' note citing run 28688610338 — the first terminal-green run of the merged workflow on `main`: event=workflow_dispatch, ref=main, conclusion success, NOT cancelled; health-smoke green (Preflight -> smoke -> Assert smoke witness present -> badge upload) and pages-deploy green (Configure/Upload/Deploy to GitHub Pages), the latter being the main-only path carrying the former github-pages structural block that was branch-skipped in the pre-merge witnesses. Records that on `main` workflow_dispatch and schedule run the identical job graph (the workflow never branches on event_name) so this is the functional equivalent of the scheduled witness, accepted by the user as sufficient. .cbsp21/patch_input.json: replaced the inherited docs manifest with this ledger-close manifest declaring the diff (SPRINTS.md) so the CBSP21 scope + coverage gates cover this PR.",
-    "why_not_redundant": "N/A — behavior_change is none (documentation only)."
+    "what_changed": "Added EvidenceSource.IBG_SANDBOX_LANDMARK_CANDIDATE and a new sandbox_landmark_candidate_adapter that validates self-contained ibg-landmark-candidate.v1 records, maps their three bout landmarks to centerline-only RAW_PIXEL NormalizedPoint evidence, preserves widths and admissibility facts in candidate metadata, stamps confidence as HEURISTIC using high=0.8 medium=0.5 low=0.3, attaches complete provenance, and runs the existing default IBG intake gate. The solver conversion helper intentionally raises CalibrationRequiredError even when a scale is supplied, keeping pixel facts out of millimeter solver paths until a calibrated follow-up exists. Two number-only sandbox fixture records and focused tests cover success, fail-closed gate posture, provenance preservation, coordinate caveats, offset-body caveats, invalid schema rejection, and review JSON.",
+    "why_not_redundant": "No existing luthiers path accepted vectorizer-sandbox landmark candidate records as governed IBG evidence while preserving their sandbox caveats and preventing accidental authority promotion. This bridge gives CI-RED-015 a concrete connection point to evaluate IBG facts without treating a DXF/export format, sandbox extractor, or file location as authoritative geometry."
   },
   "verification": {
     "commands_run": [
-      "Witness: gh run view 28688610338 -> conclusion success; jobs health-smoke=success, pages-deploy=success; load-bearing steps (smoke, Assert smoke witness present, Deploy to GitHub Pages) all success.",
-      "local: python scripts/ci/check_cbsp21_patch_input.py --base origin/main --head HEAD -> PASS; check_cbsp21_gate.py -> 100% coverage PASS.",
-      "Markdown row integrity: CI-RED-020 row keeps 6 pipes / 5 columns; status column now CLOSED."
+      "PYTHONPATH=services/api py -3.11 -m pytest services/api/tests/test_ibg_sandbox_landmark_candidate_adapter.py services/api/tests/test_ibg_intake_gate.py services/api/tests/test_ibg_constitutional_integration.py tests/test_ibg_provenance_ratification_docs.py services/api/tests/test_dxf_lifecycle_ibg_provenance_guards.py services/api/tests/test_ibg_export_provenance.py -q -> 71 passed, 2 existing NumPy reload warnings",
+      "git diff --cached --check -> clean before first commit",
+      "GitHub PR checks initially showed CBSP21 manifest stale and one new test over the complexity threshold; this follow-up updates the manifest and splits the test witness."
     ]
   },
   "files": [
     {
-      "path": "SPRINTS.md",
-      "intent": "Close CI-RED-020-B: status OPEN -> CLOSED, cite main-green witness run 28688610338 (workflow_dispatch on ref=main, functional equivalent of the scheduled run), last_verified 2026-07-04.",
-      "scan_targets": ["SPRINTS.md"],
+      "path": "services/api/app/instrument_geometry/body/ibg/body_grid/body_grid_schema.py",
+      "intent": "Register the sandbox landmark candidate as an explicit IBG evidence source.",
+      "scan_targets": [
+        "services/api/app/instrument_geometry/body/ibg/body_grid/body_grid_schema.py"
+      ],
       "risk": "low",
-      "behavior_change": "none - documentation / ledger only"
+      "behavior_change": "Adds a new enum value only; no existing evidence source behavior changes.",
+      "verification": [
+        "services/api/tests/test_ibg_sandbox_landmark_candidate_adapter.py"
+      ]
+    },
+    {
+      "path": "services/api/app/instrument_geometry/body/ibg/morphology_harvest/sandbox_landmark_candidate_adapter.py",
+      "intent": "Adapt vectorizer-sandbox landmark candidate records into review-required BodyEvidenceCandidate objects with provenance and fail-closed gate results.",
+      "scan_targets": [
+        "services/api/app/instrument_geometry/body/ibg/morphology_harvest/sandbox_landmark_candidate_adapter.py",
+        "services/api/app/instrument_geometry/body/ibg/body_evidence_candidate.py",
+        "services/api/app/instrument_geometry/body/ibg/ibg_intake_gate.py"
+      ],
+      "risk": "medium",
+      "behavior_change": "Adds an opt-in adapter path. Imported sandbox records remain advisory, review-required, not approved for IBG memory, and blocked from solver/export paths.",
+      "verification": [
+        "services/api/tests/test_ibg_sandbox_landmark_candidate_adapter.py",
+        "services/api/tests/test_ibg_intake_gate.py",
+        "services/api/tests/test_ibg_constitutional_integration.py"
+      ]
+    },
+    {
+      "path": "services/api/tests/fixtures/ibg_sandbox_landmarks/jazzmaster62_body.landmarks.json",
+      "intent": "Provide a number-only sandbox fixture with offset-body ordering caveats preserved.",
+      "scan_targets": [
+        "services/api/tests/fixtures/ibg_sandbox_landmarks/jazzmaster62_body.landmarks.json"
+      ],
+      "risk": "low",
+      "behavior_change": "none - test fixture only",
+      "verification": [
+        "services/api/tests/test_ibg_sandbox_landmark_candidate_adapter.py"
+      ]
+    },
+    {
+      "path": "services/api/tests/fixtures/ibg_sandbox_landmarks/melody_maker_body.landmarks.json",
+      "intent": "Provide a number-only sandbox fixture for the canonical admissible landmark candidate path.",
+      "scan_targets": [
+        "services/api/tests/fixtures/ibg_sandbox_landmarks/melody_maker_body.landmarks.json"
+      ],
+      "risk": "low",
+      "behavior_change": "none - test fixture only",
+      "verification": [
+        "services/api/tests/test_ibg_sandbox_landmark_candidate_adapter.py"
+      ]
+    },
+    {
+      "path": "services/api/tests/test_ibg_sandbox_landmark_candidate_adapter.py",
+      "intent": "Cover the sandbox intake bridge, fail-closed posture, provenance preservation, pixel-only coordinate boundary, offset caveats, invalid schema rejection, and review JSON.",
+      "scan_targets": [
+        "services/api/tests/test_ibg_sandbox_landmark_candidate_adapter.py"
+      ],
+      "risk": "low",
+      "behavior_change": "none - test-only",
+      "verification": [
+        "services/api/tests/test_ibg_sandbox_landmark_candidate_adapter.py"
+      ]
+    },
+    {
+      "path": ".cbsp21/patch_input.json",
+      "intent": "Declare the CI-RED-015-L patch scope for CBSP21 manifest gates.",
+      "scan_targets": [
+        ".cbsp21/patch_input.json"
+      ],
+      "risk": "low",
+      "behavior_change": "none - CI/review metadata only",
+      "verification": [
+        "scripts/ci/check_cbsp21_patch_input.py",
+        "scripts/ci/check_cbsp21_gate.py"
+      ]
     }
-  ]
+  ],
+  "architecture_scan": {
+    "scan_id": "AS-2026-07-03-015L",
+    "risk_summary": {
+      "critical": 0,
+      "high": 0,
+      "medium": 0,
+      "low": 0
+    },
+    "findings": [],
+    "acknowledged": false,
+    "acknowledgement_notes": ""
+  }
 }
