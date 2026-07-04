@@ -4,14 +4,24 @@ Provenance Attachment Draft — Cross-Repository Governance Contracts
 
 SPRINT: Cross-Repo Governance Normalization 1A (2026-05-24)
 
-Defines preparation-only structures for provenance attachment.
-These are DRAFT structures pending R1 ratification.
+Defines provenance-attachment structures spanning the DRAFT -> RATIFIED
+lifecycle. The type is named ``...Draft`` for historical/serialization
+reasons; it is retained across the whole lifecycle, not only the DRAFT phase.
 
-Key constraints:
+Key constraints (as originally authored, 2026-05-24):
     - Do NOT wire to DXF export
     - Do NOT unblock IBG
     - Do NOT change lifecycle classification
     - IBG default status is BLOCKED or PENDING_RATIFICATION
+
+Lifecycle update (DO 79 / R2, superseding the first constraint above):
+    A RATIFIED attachment IS eligible for export through the governed save
+    boundary ``app.util.ibg_dxf_export_lifecycle.assert_ibg_dxf_export_allowed``.
+    That boundary — not this module — is where an export is authorized, and it
+    gates on ``status`` / ``is_exportable()`` (see the two-notion contract on
+    ``ProvenanceAttachmentDraft`` below). Non-ratified statuses remain
+    fail-closed. The "Do NOT wire to DXF export" line is preserved as the R1
+    posture; it does not describe post-R2 behavior.
 
 Contract-like governance models currently live flat under app/governance
 pending package normalization.
@@ -58,16 +68,33 @@ IBG_DEFAULT_STATUS = ProvenanceAttachmentStatus.BLOCKED
 @dataclass
 class ProvenanceAttachmentDraft:
     """
-    Draft provenance attachment pending ratification.
+    Provenance attachment across the DRAFT -> RATIFIED lifecycle.
 
-    This structure captures provenance metadata WITHOUT authorizing
-    export or lifecycle promotion. It is a preparation-only artifact.
+    This structure captures provenance metadata. It does NOT itself authorize
+    export: authorization is decided by the governed save boundary
+    (``app.util.ibg_dxf_export_lifecycle``), which reads this attachment's
+    ``status`` / ``is_exportable()``.
+
+    TWO-NOTION EXPORT CONTRACT (intentional; do NOT "reconcile" the two):
+        - ``export_authorized`` (field) is a STRUCTURAL invariant that is
+          ALWAYS False. An attachment record never self-authorizes its own
+          export; constructing one with ``export_authorized=True`` raises.
+          It is a fail-closed guard + serialization/cross-repo schema field,
+          and is NOT consulted by any export gate.
+        - ``is_exportable()`` / ``status == RATIFIED`` is the ACTUAL gate the
+          governed save boundary consults.
+        Consequently, a RATIFIED attachment has ``is_exportable() is True``
+        while ``export_authorized is False``. This divergence is load-bearing.
+        A future maintainer must NOT "fix" it by forcing ``is_exportable()``
+        back to always-False (breaks R2 export) or by setting
+        ``export_authorized=True`` for ratified records (changes the contract
+        and trips the ``__post_init__`` guard).
 
     Key invariants:
-        - status defaults to BLOCKED for IBG origins
+        - status defaults to DRAFT (BLOCKED for IBG origins)
         - ratified status requires explicit governance action
-        - draft structures do not wire to DXF export
-        - export_authorized is ALWAYS False until ratification
+        - non-ratified statuses are fail-closed at the save boundary
+        - export_authorized is ALWAYS False, independent of status
 
     Attributes:
         attachment_id: Unique identifier for this draft
@@ -78,8 +105,9 @@ class ProvenanceAttachmentDraft:
         transformation_params: Parameters used in transformation
         authority_state: Current authority state (from AuthorityState enum)
         epistemic_status: Epistemic posture (from EpistemicStatus enum)
-        status: Attachment ratification status
-        export_authorized: ALWAYS False for drafts
+        status: Attachment ratification status (the real export gate)
+        export_authorized: STRUCTURAL invariant, ALWAYS False; not an export
+            gate (see the two-notion contract above)
         blocking_reason: Why attachment is blocked (if applicable)
         ratification_requirements: What's needed for ratification
         created_at: Draft creation timestamp
@@ -103,7 +131,13 @@ class ProvenanceAttachmentDraft:
     metadata: Dict[str, Any] = field(default_factory=dict)
 
     def __post_init__(self):
-        """Validate draft invariants."""
+        """Validate invariants.
+
+        ``export_authorized`` is fail-closed regardless of ``status``: even a
+        RATIFIED attachment must not self-declare export authority on the
+        record. Export is authorized by the governed save boundary via
+        ``is_exportable()``, not by this field.
+        """
         if self.export_authorized is not False:
             raise ValueError(
                 "Draft provenance attachments cannot authorize export. "
@@ -112,10 +146,13 @@ class ProvenanceAttachmentDraft:
 
     def is_exportable(self) -> bool:
         """
-        Check if this attachment authorizes export.
+        Canonical export gate: is this attachment in an exportable status?
 
-        Only RATIFIED attachments may export. Draft/blocked/pending
-        attachments return False (fail-closed).
+        Returns True exactly when status == RATIFIED. Draft/blocked/pending
+        attachments return False (fail-closed). This is the method the governed
+        save boundary consults; it is intentionally decoupled from the
+        always-False ``export_authorized`` field (see the class docstring's
+        two-notion contract). Do not collapse the two.
         """
         return self.status == ProvenanceAttachmentStatus.RATIFIED
 

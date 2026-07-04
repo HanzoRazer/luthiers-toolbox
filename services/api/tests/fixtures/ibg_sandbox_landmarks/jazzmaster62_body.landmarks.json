@@ -1,0 +1,84 @@
+{
+  "schema_version": "ibg-landmark-candidate.v1",
+  "spec_id": "jazzmaster62_body.landmarks",
+  "order": "IBG-KB-004 (geometry harvest)",
+  "status": "landmark_candidate",
+  "subject": {
+    "id": "jazzmaster62_body",
+    "level": "instrument",
+    "kb_ref": "KB-003-C"
+  },
+  "generator": "create_body_isolation_result_from_mask -> build_body_model_from_isolation -> extract_landmarks_from_profile (src/archaeology/arc_reconstructor; promoted, untouched)",
+  "landmark_vocabulary_ref": "governance/ibg_observation/landmark_mapping_schema.json",
+  "coordinate_space": "pixel-space; body-relative norms included. NO landmarks_uv, NO mm (no mm_per_px calibration available \u2014 KB-004 phase-1 scope).",
+  "provenance": {
+    "source_filename": "Fender-Jazzmaster-62-Body.pdf",
+    "source_sha256": "9df8320bc98153457291e8e55dc82848c02a0fd90040d88ed346cf9b9923bb83",
+    "dpi": 200,
+    "acquisition": "extract_ink -> select_dominant_region -> junction_cut -> completeness",
+    "admissibility_gate": "POS-003 dry_run (admissible)"
+  },
+  "admissibility": {
+    "verdict": "ADMISSIBLE",
+    "P1_P5": {
+      "P1_outline_separable": true,
+      "P2_dominant_region_ratio": 1.0,
+      "P3_structure_count": 1,
+      "P4_contamination": 0.0,
+      "P5_no_full_page_field": true,
+      "ink_fraction": 0.004882822814893055,
+      "total_enclosed_area": 642203,
+      "largest_enclosed_area": 642203,
+      "dominant_region_solidity": 0.7560408227173784,
+      "ink_spans_page": false
+    }
+  },
+  "body_bbox_px_xywh": [
+    1330,
+    1133,
+    2763,
+    3077
+  ],
+  "landmarks": [
+    {
+      "name": "upper_bout",
+      "presence": true,
+      "y_px": 2008,
+      "width_px": 2694.0,
+      "y_norm": 0.2844
+    },
+    {
+      "name": "waist",
+      "presence": true,
+      "y_px": 3285,
+      "width_px": 2027.0,
+      "y_norm": 0.6994
+    },
+    {
+      "name": "lower_bout",
+      "presence": true,
+      "y_px": 2671,
+      "width_px": 2289.6,
+      "y_norm": 0.4998
+    }
+  ],
+  "body_metrics_px": {
+    "centerline_x_px": 2711.5,
+    "body_top_y_px": 1133,
+    "body_bottom_y_px": 4210,
+    "body_length_px": 3077.0,
+    "body_max_width_px": 2694.0,
+    "waist_to_lower_ratio": 0.8853,
+    "upper_to_lower_ratio": 1.1766,
+    "width_to_length_ratio": 0.7441
+  },
+  "ordering_rule": "canonical (non-offset): waist strictly narrowest AND lower_bout_width >= upper_bout_width",
+  "ordering_ok": false,
+  "bout_ordering_lower_ge_upper": false,
+  "width_structure_resolved": true,
+  "non_degenerate": true,
+  "manual_review_required": false,
+  "extraction_confidence": "medium",
+  "diagnostics": {},
+  "scope_note": "IBG-KB-004 phase 1: admissible body -> promoted extractor -> landmark CANDIDATE (px + ratios). NO ObservationRecord, NO landmarks_uv, NO mm, NO interior features."
+}

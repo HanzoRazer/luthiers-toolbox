@@ -16,15 +16,20 @@ Designed to be safe in CI and usable locally.
 from __future__ import annotations
 
 import argparse
-import json
 import os
 import subprocess
 import sys
 from pathlib import Path
 from typing import Any, Dict, List, Tuple
 
-
-MANIFEST_PATH = Path(".cbsp21") / "patch_input.json"
+# scripts/ci is on sys.path[0] when invoked as `python scripts/ci/check_...py`.
+from cbsp21_manifest_discovery import (
+    AmbiguousManifestSelection,
+    is_cbsp21_internal,
+    load_candidates,
+    load_manifest,
+    select_manifest,
+)
 
 
 def _fail(msg: str) -> int:
@@ -48,15 +53,6 @@ def _git_changed_files(base: str, head: str) -> List[str]:
     files = [line.strip() for line in out.splitlines() if line.strip()]
     # Ignore deletions? keep them — reviewers still need to know.
     return files
-
-
-def _read_manifest() -> Dict[str, Any]:
-    if not MANIFEST_PATH.exists():
-        raise FileNotFoundError(str(MANIFEST_PATH))
-    try:
-        return json.loads(MANIFEST_PATH.read_text(encoding="utf-8"))
-    except Exception as e:
-        raise ValueError(f"Invalid JSON in {MANIFEST_PATH}: {e}")
 
 
 def _get(d: Dict[str, Any], path: str) -> Any:
@@ -100,14 +96,54 @@ def main() -> int:
         default=os.getenv("CBSP21_HEAD_REF") or os.getenv("GITHUB_SHA") or "HEAD",
         help="git head ref (default: env CBSP21_HEAD_REF / GITHUB_SHA / HEAD)",
     )
+    ap.add_argument(
+        "--manifest",
+        default=None,
+        help=(
+            "Optional explicit manifest path. Default: auto-discover "
+            ".cbsp21/patches/*.json (+ legacy .cbsp21/patch_input.json) and "
+            "select the one that best covers the diff."
+        ),
+    )
     args = ap.parse_args()
 
+    # Compute the diff first — the manifest is selected to match it.
     try:
-        manifest = _read_manifest()
+        changed = _git_changed_files(args.base, args.head)
+    except Exception as e:
+        return _fail(f"Could not compute git diff changed files: {e}")
+
+    try:
+        if args.manifest:
+            candidates = [(Path(args.manifest), load_manifest(args.manifest))]
+        else:
+            candidates, malformed = load_candidates()
+            # A malformed *sibling* manifest is skipped with a warning rather
+            # than failing this PR; the PR whose OWN manifest is broken still
+            # fails below (no valid manifest will cover its diff).
+            for path, err in malformed:
+                _ok(f"WARNING: skipping malformed manifest {path}: {err}")
     except FileNotFoundError:
-        return _fail("Missing .cbsp21/patch_input.json (required by CBSP21).")
+        return _fail(f"Missing manifest: {args.manifest}")
     except Exception as e:
         return _fail(str(e))
+
+    if not candidates:
+        return _fail(
+            "No valid CBSP21 manifest found. Add one under "
+            ".cbsp21/patches/<patch-id>.json (preferred) or .cbsp21/patch_input.json "
+            "(legacy)."
+        )
+
+    # Unified selection (default matcher) so this gate and the coverage gate
+    # always pick the same manifest for a given diff.
+    try:
+        selected = select_manifest(candidates, changed)
+    except AmbiguousManifestSelection as e:
+        return _fail(str(e))
+    if selected is None:  # unreachable given the guard above, defensive
+        return _fail("No CBSP21 manifest could be selected for this diff.")
+    manifest_path, manifest = selected
 
     # Required top-level fields
     required = [
@@ -140,18 +176,13 @@ def main() -> int:
     paths_in_scope = _as_list(_get(manifest, "scope.paths_in_scope"))
     expected_files = set(_as_list(_get(manifest, "scope.files_expected_to_change")))
 
-    try:
-        changed = _git_changed_files(args.base, args.head)
-    except Exception as e:
-        return _fail(f"Could not compute git diff changed files: {e}")
-
-    # Ignore the manifest itself and common noise.
+    # Ignore all .cbsp21/ manifests (legacy + patches) and git internals — a PR
+    # never has to declare its own manifest file as in-scope work.
     ignore_prefixes = (".git/",)
-    ignore_exact = {".cbsp21/patch_input.json"}
 
     undeclared: List[str] = []
     for f in changed:
-        if f in ignore_exact:
+        if is_cbsp21_internal(f):
             continue
         if f.startswith(ignore_prefixes):
             continue
@@ -162,12 +193,15 @@ def main() -> int:
     if undeclared:
         lines = "\n".join([f"  - {x}" for x in undeclared[:50]])
         return _fail(
-            "Changed files not declared in patch_input scope (add to files_expected_to_change or paths_in_scope):\n"
-            + lines
+            f"Changed files not declared in the selected manifest ({manifest_path}) "
+            "scope (add to files_expected_to_change or paths_in_scope):\n" + lines
         )
 
     _ok("PASS")
-    _ok(f"base={args.base} head={args.head} changed_files={len(changed)}")
+    _ok(
+        f"manifest={manifest_path} base={args.base} head={args.head} "
+        f"changed_files={len(changed)}"
+    )
     return 0
 
 

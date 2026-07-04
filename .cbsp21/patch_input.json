@@ -2,139 +2,95 @@
   "schema": "cbsp21_patch_input_v1",
   "schema_version": "cbsp21_patch_input_v1",
   "coverage_min": 0.95,
-  "patch_id": "C2_PROCESS_EXCLUSIVE_CANONICAL_AUTHORITY_PR1",
-  "title": "C2 process-exclusive canonical geometry authority - PR 1 merge hardening",
-  "intent": "Operationalize the C2 geometry-origin keystone ruling (PROPOSED / ratification-ready) as additive code: canonical geometry authority is process-derived, not artifact-derived. Canonical body geometry exists only as the output of the approved canonical process following a governed approval event. This PR adds the CanonicalProcessApprovalRecord model, process-policy helper module, additive process-approved canonical-reference factory, process-approved router path, raw-registration guards against fabricated process metadata, and a transition-mode validation WARNING (never RED) for legacy canonical references that lack process-approval metadata. The PR #185 hardening also rejects stale client-supplied server-owned approval fields, derives governed approval event ids deterministically from approval content rather than runtime timestamps, binds process/authentication metadata into reference hashes, and rejects fabricated manual approval records at construction/validation boundaries. It also carries the explicit endpoint debt-ratchet counterpart for the one governed process-approved endpoint introduced by the stack: TARGET_MAX_ENDPOINTS 1220 -> 1221. It does NOT mark C2 closed, does NOT reconcile governance docs, and does NOT flip missing-metadata warnings to strict RED. Process id/version/approval-rule literals are PROPOSED placeholders awaiting repo-owner ratification.",
-  "change_type": "feature",
-  "behavior_change": "additive-transition-warning",
-  "risk_level": "low",
+  "patch_id": "PROVENANCE_RATIFIED_EXPORTABLE_STALE_GUARD",
+  "title": "Align provenance draft guard with ratified exportability contract + document the two-notion export contract",
+  "intent": "Correct a stale governance test that asserted ProvenanceAttachmentDraft.is_exportable() is always false even for RATIFIED attachments, AND document the intentional two-notion export contract in the production model so the alignment is not mistaken for an inconsistency and 'reconciled' incorrectly later. Production code and the R2 governed-save wrapper already define RATIFIED as the only exportable provenance attachment status (is_exportable()), while export_authorized is a separate structural field that is always False and is not consulted by any export gate.",
+  "change_type": "test+docs",
+  "behavior_change": "none - test correction plus docstring/comment-only clarification in provenance_attachment.py. No executable production behavior changes; is_exportable() still returns True exactly when status == RATIFIED and export_authorized remains always False.",
+  "risk_level": "medium",
   "scope": {
     "paths_in_scope": [
-      "services/api/app/cam/",
-      "services/api/app/routers/cam/",
-      "services/api/tests/cam/",
-      "ci/",
-      "docs/handoffs/",
-      "SPRINTS.md",
-      ".cbsp21/"
+      ".cbsp21/",
+      "tests/governance/test_provenance_attachment_draft.py",
+      "services/api/app/governance/provenance_attachment.py"
     ],
     "files_expected_to_change": [
-      "services/api/app/cam/canonical_geometry_process_approval.py",
-      "services/api/app/cam/canonical_geometry_process_policy.py",
-      "services/api/app/cam/geometry_authority_reference.py",
-      "services/api/app/cam/geometry_authority_validation.py",
-      "services/api/app/cam/geometry_authority_taxonomy.py",
-      "services/api/app/routers/cam/geometry_authority_router.py",
-      "services/api/tests/cam/test_canonical_geometry_process_approval.py",
-      "services/api/tests/cam/test_geometry_authority_references.py",
-      "services/api/tests/test_technical_debt_gates.py",
-      "ci/router_count_baseline.json",
-      "docs/handoffs/CAM_7T_GEOMETRY_AUTHORITY_REFERENCES_HANDOFF.md",
-      "SPRINTS.md",
-      ".cbsp21/patch_input.json"
+      ".cbsp21/patch_input.json",
+      "tests/governance/test_provenance_attachment_draft.py",
+      "services/api/app/governance/provenance_attachment.py"
     ]
   },
   "diff_articulation": {
-    "what_changed": "(1) NEW canonical_geometry_process_approval.py: CanonicalProcessApprovalRecord with structural invariants; system approvers, missing process identity/provenance, source roles claiming authority, and format/route/storage/representation-derived authority states are rejected, including embedded tokens such as derived_from_dxf and upstream_svg. PR #185 hardening now also rejects fabricated governed_approval_event_id values and stale deterministic_approval_hash values at model/validation boundaries, while deriving governed approval event ids deterministically from approval content rather than runtime timestamps. (2) NEW canonical_geometry_process_policy.py: proposed process vocabulary, coverage registry, representation-token detection, and deterministic event-id helper split out to keep the approval model below the file-size gate. (3) geometry_authority_reference.py: process-approved canonical factory revalidates approval-record policy, so manually constructed records cannot bypass process coverage; process/authentication metadata is now bound into reference hashes. (4) geometry_authority_validation.py: missing process metadata on canonical references remains a transition warning, but present-and-invalid process metadata or unsupported authentication is blocking. (5) geometry_authority_taxonomy.py: canonical layer description is process-output language. (6) geometry_authority_router.py: adds /references/canonical/process-approved, rejects raw /references registration carrying process-looking canonical metadata that the endpoint cannot verify, and rejects stale client-supplied server-owned approval fields instead of silently ignoring them. (7) ci/router_count_baseline.json accepts the one intentional route-decorator increase for the new process-approved API path; router file count remains unchanged. (8) test_technical_debt_gates.py explicitly moves TARGET_MAX_ENDPOINTS 1220 -> 1221 as the matching endpoint-count ratchet for that governed, non-executing process-approved endpoint. (9) SPRINTS.md records GOV-CONVERGE-007 so the legacy canonical migration and strict-RED decision stay in the live project parking lot. (10) Tests cover the merge-fix bypasses, authenticity hardening, router boundary, and endpoint debt gate. (11) CAM 7T handoff now teaches the process-approved canonical path and API rejection behavior.",
-    "why_not_redundant": "This is the first code expression of the C2 geometry-origin ruling; no existing primitive encodes process-derived authority. The merge hardening closes the remaining split-brain/bypass surfaces found in review without turning missing legacy metadata into strict RED. Existing 7T behavior for derived-source requirements, non-canonical authority-collapse RED gates, and execution/machine-output invariants remains unchanged."
+    "what_changed": "(1) tests/governance/test_provenance_attachment_draft.py: split the stale RATIFIED exportability assertion into two focused invariants (non-ratified statuses in NON_EXPORTABLE_STATUSES remain non-exportable; a RATIFIED attachment returns is_exportable() True while export_authorized remains False), plus a contract-lock docstring on the divergence test and module docstring. (2) services/api/app/governance/provenance_attachment.py: docstring/comment-only clarification naming the intentional two-notion export contract — export_authorized is an always-False structural field (fail-closed guard + serialization/schema field, NOT an export gate), while is_exportable()/status==RATIFIED is the canonical gate the governed save boundary (app.util.ibg_dxf_export_lifecycle) consults. Also corrects the module-level 'Do NOT wire to DXF export' constraint, which was the R1 posture superseded by DO 79 / R2, and notes the type spans DRAFT->RATIFIED despite its historical 'Draft' name. No executable statements changed.",
+    "why_not_redundant": "The old test assertion contradicted services/api/app/governance/provenance_attachment.py::ProvenanceAttachmentDraft.is_exportable(), which returns True exactly when status == RATIFIED. Existing R2 export provenance tests (test_dxf_lifecycle_ibg_provenance_guards.py) rely on ratified attachments building a COMPAT_ONLY governed-save context. The added docstrings remove the standing contradiction between the class docstring ('draft structures do not wire to DXF export' / 'export_authorized ALWAYS False until ratification') and is_exportable(), which the review flagged as inviting an incompatible future 'cleanup'. This PR does not authorize blocked drafts or alter export_authorized; it repairs the stale test expectation and documents existing behavior."
   },
   "verification": {
     "commands_run": [
-      "py -3.11 -m pytest services/api/tests/cam/test_canonical_geometry_process_approval.py -q -> 49 passed, 2 known NumPy reload warnings",
-      "py -3.11 -m pytest services/api/tests/cam/test_geometry_authority_references.py -q -> 110 passed, 5 known warnings",
-      "py -3.11 -m pytest services/api/tests/test_technical_debt_gates.py::TestEndpointConsolidation::test_total_endpoints_under_target -q -> PASS",
-      "py -3.11 ci/file_size_gate.py -> PASS; canonical_geometry_process_approval.py 465 lines, canonical_geometry_process_policy.py 134 lines",
-      "py -3.11 -m json.tool .cbsp21/patch_input.json -> PASS",
-      "py -3.11 ci/router_count_gate.py -> PASS after justified one-route baseline update; router_files remained 253, route_decorators moved 1223 -> 1224",
-      "SPRINTS.md updated with GOV-CONVERGE-007 safety-net entry for deferred legacy canonical migration",
-      "py -3.11 scripts/ci/check_cbsp21_patch_input.py --base origin/c2-process-exclusive-canonical-authority-pr1 --head HEAD -> PASS",
-      "py -3.11 scripts/ci/check_cbsp21_gate.py --manifest .cbsp21/patch_input.json --changed-files $(git diff --name-only) -> PASS, coverage 100.0%"
+      "PYTHONPATH=services/api py -3.11 -m pytest tests/governance/test_provenance_attachment_draft.py services/api/tests/test_dxf_lifecycle_ibg_provenance_guards.py services/api/tests/test_ibg_export_provenance.py -q -> 29 passed, 3 existing NumPy reload warnings",
+      "PYTHONPATH=services/api py -3.11 -c import-and-construct RATIFIED draft -> is_exportable True, export_authorized False (behavior unchanged)",
+      "py -3.11 scripts/ci/check_cbsp21_patch_input.py --base origin/main --head HEAD -> pass",
+      "py -3.11 scripts/ci/check_cbsp21_gate.py --manifest .cbsp21/patch_input.json --changed-files <final PR file set> -> pass, 100% manifest coverage",
+      "py -3.11 -m app.ci.check_file_sizes (services/api) -> provenance_attachment.py ~348 lines, under 500 threshold",
+      "py -3.11 -m app.ci.check_complexity --baseline app/ci/complexity_baseline.json -> pass, no functions exceed complexity 15"
     ]
   },
   "files": [
     {
-      "path": "services/api/app/cam/canonical_geometry_process_approval.py",
-      "intent": "CanonicalProcessApprovalRecord model + factory/validation encoding process-exclusive canonical authority and stricter representation-token detection",
-      "scan_targets": ["services/api/app/cam/canonical_geometry_process_approval.py"],
+      "path": "services/api/app/governance/provenance_attachment.py",
+      "intent": "Docstring/comment-only: name the intentional two-notion export contract (always-False export_authorized field vs is_exportable()/status gate); correct the superseded R1 'do not wire to DXF export' note per DO 79 / R2; note DRAFT->RATIFIED lifecycle naming.",
+      "scan_targets": [
+        "services/api/app/governance/provenance_attachment.py",
+        "services/api/app/util/ibg_dxf_export_lifecycle.py"
+      ],
       "risk": "low",
-      "behavior_change": "additive - new model/factory; no runtime export/solver/CAM behavior changed"
+      "behavior_change": "none - docstring/comment-only; no executable statements changed",
+      "verification": [
+        "tests/governance/test_provenance_attachment_draft.py",
+        "services/api/tests/test_dxf_lifecycle_ibg_provenance_guards.py",
+        "services/api/tests/test_ibg_export_provenance.py"
+      ]
     },
     {
-      "path": "services/api/app/cam/canonical_geometry_process_policy.py",
-      "intent": "Proposed process vocabulary, coverage registry, representation-derived authority detection, and deterministic governed approval event id helper split from approval model",
-      "scan_targets": ["services/api/app/cam/canonical_geometry_process_policy.py"],
-      "risk": "low",
-      "behavior_change": "none - internal helper split preserving public imports through canonical_geometry_process_approval.py"
+      "path": "tests/governance/test_provenance_attachment_draft.py",
+      "intent": "Align RATIFIED is_exportable() expectations with current production/R2 contract while preserving non-ratified non-exportability; add a contract-lock docstring for the intentional divergence.",
+      "scan_targets": [
+        "tests/governance/test_provenance_attachment_draft.py",
+        "services/api/app/governance/provenance_attachment.py",
+        "services/api/tests/test_dxf_lifecycle_ibg_provenance_guards.py",
+        "services/api/tests/test_ibg_export_provenance.py"
+      ],
+      "risk": "medium",
+      "behavior_change": "none - test-only correction for existing behavior",
+      "verification": [
+        "tests/governance/test_provenance_attachment_draft.py",
+        "services/api/tests/test_dxf_lifecycle_ibg_provenance_guards.py",
+        "services/api/tests/test_ibg_export_provenance.py"
+      ]
     },
     {
-      "path": "services/api/app/cam/geometry_authority_reference.py",
-      "intent": "Additive process-approval metadata fields + process-approved factory that revalidates approval-record policy",
-      "scan_targets": ["services/api/app/cam/geometry_authority_reference.py"],
+      "path": ".cbsp21/patch_input.json",
+      "intent": "Declare the stale guard-test correction and the docstring-only production clarification for CBSP21 manifest gates.",
+      "scan_targets": [
+        ".cbsp21/patch_input.json"
+      ],
       "risk": "low",
-      "behavior_change": "additive - new fields default None; legacy/derived reference hashes preserved"
-    },
-    {
-      "path": "services/api/app/cam/geometry_authority_validation.py",
-      "intent": "Canonical process authority validation with warning-only missing metadata and blocking invalid process metadata",
-      "scan_targets": ["services/api/app/cam/geometry_authority_validation.py"],
-      "risk": "low",
-      "behavior_change": "additive-transition-warning - legacy missing metadata still warns; forged/partial process metadata blocks"
-    },
-    {
-      "path": "services/api/app/cam/geometry_authority_taxonomy.py",
-      "intent": "Canonical layer description uses approved-canonical-process output wording",
-      "scan_targets": ["services/api/app/cam/geometry_authority_taxonomy.py"],
-      "risk": "low",
-      "behavior_change": "none - description string only"
-    },
-    {
-      "path": "services/api/app/routers/cam/geometry_authority_router.py",
-      "intent": "Expose process-approved canonical creation and reject unverifiable raw process metadata",
-      "scan_targets": ["services/api/app/routers/cam/geometry_authority_router.py"],
-      "risk": "low",
-      "behavior_change": "additive route plus stricter rejection for unverifiable process-looking canonical metadata"
-    },
-    {
-      "path": "services/api/tests/cam/test_canonical_geometry_process_approval.py",
-      "intent": "Tests proving artifacts/formats/routes/registries/individual reviewers cannot self-create canonical authority and bypasses are closed",
-      "scan_targets": ["services/api/tests/cam/test_canonical_geometry_process_approval.py"],
-      "risk": "low",
-      "behavior_change": "none - test-only"
-    },
-    {
-      "path": "services/api/tests/cam/test_geometry_authority_references.py",
-      "intent": "Router and registry tests for process-approved canonical creation and raw-registration rejection",
-      "scan_targets": ["services/api/tests/cam/test_geometry_authority_references.py"],
-      "risk": "low",
-      "behavior_change": "none - test-only"
-    },
-    {
-      "path": "services/api/tests/test_technical_debt_gates.py",
-      "intent": "Explicit endpoint-count ratchet bump for the intentional governed process-approved canonical-reference endpoint added by the C2 process-authority stack",
-      "scan_targets": ["services/api/tests/test_technical_debt_gates.py"],
-      "risk": "low",
-      "behavior_change": "test-ratchet baseline update - TARGET_MAX_ENDPOINTS 1220 -> 1221; no runtime behavior change"
-    },
-    {
-      "path": "ci/router_count_baseline.json",
-      "intent": "Accept the single intentional route-decorator increase for the process-approved canonical-reference endpoint while keeping router file count unchanged",
-      "scan_targets": ["ci/router_count_baseline.json"],
-      "risk": "low",
-      "behavior_change": "ci-baseline update - route_decorators 1223 -> 1224; router_files remains 253"
-    },
-    {
-      "path": "SPRINTS.md",
-      "intent": "Track GOV-CONVERGE-007 so PR #182 transition debt cannot fall out of the live governance parking lot",
-      "scan_targets": ["SPRINTS.md"],
-      "risk": "low",
-      "behavior_change": "none - ledger only"
-    },
-    {
-      "path": "docs/handoffs/CAM_7T_GEOMETRY_AUTHORITY_REFERENCES_HANDOFF.md",
-      "intent": "Update legacy 7T example text so it teaches process-approved canonical authority instead of IBG/BOE ownership",
-      "scan_targets": ["docs/handoffs/CAM_7T_GEOMETRY_AUTHORITY_REFERENCES_HANDOFF.md"],
-      "risk": "low",
-      "behavior_change": "none - documentation only"
+      "behavior_change": "none - CI/review metadata only",
+      "verification": [
+        "scripts/ci/check_cbsp21_patch_input.py",
+        "scripts/ci/check_cbsp21_gate.py"
+      ]
     }
-  ]
+  ],
+  "architecture_scan": {
+    "scan_id": "AS-2026-07-03-PROVENANCE-RATIFIED-GUARD",
+    "risk_summary": {
+      "critical": 0,
+      "high": 0,
+      "medium": 0,
+      "low": 0
+    },
+    "findings": [],
+    "acknowledged": false,
+    "acknowledgement_notes": ""
+  }
 }
