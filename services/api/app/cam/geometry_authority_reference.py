@@ -38,6 +38,11 @@ from app.cam.geometry_authority_taxonomy import (
     layer_may_define_canonical,
     layer_requires_source,
 )
+from app.cam.canonical_geometry_process_approval import (
+    CanonicalProcessApprovalRecord,
+    UNVERIFIED_PENDING_GOVERNANCE,
+    validate_canonical_process_approval_record,
+)
 
 
 GeometryUse = Literal[
@@ -99,6 +104,46 @@ class GeometryAuthorityReference(BaseModel):
     provenance_hash: Optional[str] = Field(
         default=None,
         description="Hash of the source geometry for provenance tracking"
+    )
+
+    # --- C2 process-exclusive canonical authority (PROPOSED / additive) ---
+    # These fields are populated only for canonical references that were
+    # produced by the approved canonical process following a governed approval
+    # event. Their ABSENCE on a canonical reference is a transition-state
+    # signal (warning), not — in this PR — a RED gate.
+    process_approval_record_id: Optional[str] = Field(
+        default=None,
+        description="ID of the CanonicalProcessApprovalRecord backing this reference"
+    )
+    process_approval_record_hash: Optional[str] = Field(
+        default=None,
+        description="Deterministic hash of the backing process approval record"
+    )
+    canonical_process_id: Optional[str] = Field(
+        default=None,
+        description="ID of the approved canonical process that produced this geometry"
+    )
+    canonical_process_version: Optional[str] = Field(
+        default=None,
+        description="Version of the approved canonical process"
+    )
+    governed_approval_event_id: Optional[str] = Field(
+        default=None,
+        description="ID of the governed approval event that created authority"
+    )
+    process_source_geometry_id: Optional[str] = Field(
+        default=None,
+        description="ID of the source/evidence geometry that entered the process"
+    )
+    authentication: str = Field(
+        default=UNVERIFIED_PENDING_GOVERNANCE,
+        description=(
+            "Authenticity status inherited from the backing process-approval "
+            "record. Fail-safe default: 'unverified_pending_governance'. In PR-1 "
+            "nothing can carry a verified status (the authorized-approver anchor "
+            "is the PR-2 hard prerequisite); a caller must never treat this "
+            "reference as authenticated canonical authority while it is unverified."
+        )
     )
 
     allowed_uses: List[GeometryUse] = Field(
@@ -199,6 +244,14 @@ class GeometryAuthorityReference(BaseModel):
                     f"source_geometry_id or derived_from to be set"
                 )
 
+        if self.authentication != UNVERIFIED_PENDING_GOVERNANCE:
+            raise ValueError(
+                f"authentication '{self.authentication}' is not permitted in PR-1; "
+                f"the only legal value is '{UNVERIFIED_PENDING_GOVERNANCE}'. "
+                "No authorized-approver anchor exists yet, so references cannot "
+                "claim verified canonical authority."
+            )
+
         return self
 
     def compute_hash(self) -> str:
@@ -212,6 +265,20 @@ class GeometryAuthorityReference(BaseModel):
             "provenance_hash": self.provenance_hash,
             "allowed_uses": sorted(self.allowed_uses),
         }
+        # Process-approved canonical references bind their identity to the
+        # governed approval record. Omitted (None) for legacy/derived
+        # references, preserving their existing hashes.
+        process_metadata = {
+            "process_approval_record_id": self.process_approval_record_id,
+            "process_approval_record_hash": self.process_approval_record_hash,
+            "canonical_process_id": self.canonical_process_id,
+            "canonical_process_version": self.canonical_process_version,
+            "governed_approval_event_id": self.governed_approval_event_id,
+            "process_source_geometry_id": self.process_source_geometry_id,
+            "authentication": self.authentication,
+        }
+        if any(process_metadata.values()):
+            hash_input["process_approval"] = process_metadata
         canonical = json.dumps(hash_input, sort_keys=True, separators=(",", ":"))
         return hashlib.sha256(canonical.encode()).hexdigest()
 
@@ -224,9 +291,19 @@ def create_canonical_geometry_reference(
     metadata: Optional[Dict[str, Any]] = None,
 ) -> GeometryAuthorityReference:
     """
-    Create a canonical geometry reference.
+    LEGACY / UNAPPROVED canonical reference.
 
-    Canonical references own design truth and do not require source references.
+    Creates a canonical reference WITHOUT a process-approval record. Under the
+    C2 process-exclusive ruling (PROPOSED), canonical authority is created only
+    by the approved canonical process following a governed approval event — so a
+    reference from this factory carries NO process-approval metadata and will
+    raise a transition-state *warning* during validation (not, in this PR, a RED
+    gate).
+
+    Use ``create_process_approved_canonical_geometry_reference()`` for C2
+    geometry-origin-compliant body geometry. This factory is retained for
+    compatibility with existing call sites and 7T tests until they migrate;
+    deprecation / hard blocking is a follow-up (PR 4), not this pass.
     """
     layer_def = get_layer_definition("canonical_geometry")
 
@@ -239,6 +316,63 @@ def create_canonical_geometry_reference(
         may_define_canonical_geometry=True,
         description=description,
         metadata=metadata or {"layer": "canonical"},
+    )
+    ref.deterministic_reference_hash = ref.compute_hash()
+    return ref
+
+
+def create_process_approved_canonical_geometry_reference(
+    approval_record: CanonicalProcessApprovalRecord,
+    owning_domain: str,
+    source_authority: str = "canonical_process",
+    description: str = "",
+    metadata: Optional[Dict[str, Any]] = None,
+) -> GeometryAuthorityReference:
+    """
+    Create a canonical geometry reference backed by a governed process-approval
+    record (C2 process-exclusive ruling — PROPOSED).
+
+    The reference's canonical authority is evidenced by the approval record, not
+    by its owning domain, format, route, or storage location. Representation-only
+    source claims are not accepted: the approval record's ``provenance_hash``
+    must point at the actual upstream geometry source.
+
+    Behaviour:
+      - Produces ``authority_layer="canonical_geometry"``.
+      - Sets ``may_define_canonical_geometry=True``.
+      - Copies process-approval metadata onto the reference.
+      - Carries ``provenance_hash`` from the approval record.
+      - Does NOT authorize execution or machine output (7T invariants hold).
+    """
+    approval_valid, approval_reason = validate_canonical_process_approval_record(
+        approval_record
+    )
+    if not approval_valid:
+        raise ValueError(
+            "Invalid canonical process approval record: "
+            f"{approval_reason or 'unknown validation failure'}"
+        )
+
+    record_hash = approval_record.compute_hash()
+
+    layer_def = get_layer_definition("canonical_geometry")
+
+    ref = GeometryAuthorityReference(
+        authority_layer="canonical_geometry",
+        owning_domain=owning_domain,
+        source_authority=source_authority,
+        provenance_hash=approval_record.provenance_hash,
+        allowed_uses=layer_def.allowed_uses,  # type: ignore
+        may_define_canonical_geometry=True,
+        description=description,
+        metadata=metadata or {"layer": "canonical", "authority_origin": "process_approved"},
+        process_approval_record_id=approval_record.approval_record_id,
+        process_approval_record_hash=record_hash,
+        canonical_process_id=approval_record.canonical_process_id,
+        canonical_process_version=approval_record.canonical_process_version,
+        governed_approval_event_id=approval_record.governed_approval_event_id,
+        process_source_geometry_id=approval_record.source_geometry_id,
+        authentication=approval_record.authentication,
     )
     ref.deterministic_reference_hash = ref.compute_hash()
     return ref
@@ -262,7 +396,7 @@ def create_derived_geometry_reference(
     if is_canonical_layer(authority_layer):
         raise ValueError(
             "Cannot create derived reference for canonical_geometry layer — "
-            "use create_canonical_geometry_reference instead"
+            "use create_process_approved_canonical_geometry_reference instead"
         )
 
     layer_def = get_layer_definition(authority_layer)

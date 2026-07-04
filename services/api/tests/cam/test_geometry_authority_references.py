@@ -39,12 +39,35 @@ from app.cam.geometry_authority_reference import (
     GeometryAuthorityReference,
     GeometryUse,
     create_canonical_geometry_reference,
+    create_process_approved_canonical_geometry_reference,
     create_derived_geometry_reference,
     create_manufacturing_geometry_reference,
     create_cognition_geometry_reference,
     create_export_geometry_reference,
     create_visualization_geometry_reference,
 )
+from app.cam.canonical_geometry_process_approval import (
+    create_canonical_process_approval_record,
+    PROPOSED_CANONICAL_PROCESS_ID,
+    PROPOSED_CANONICAL_PROCESS_VERSION,
+    PROPOSED_APPROVAL_RULE_ID,
+)
+
+
+def _process_approved_canonical_reference(owning_domain="boe"):
+    """Build a C2 process-approved canonical reference (green under the ruling)."""
+    record = create_canonical_process_approval_record(
+        canonical_process_id=PROPOSED_CANONICAL_PROCESS_ID,
+        canonical_process_version=PROPOSED_CANONICAL_PROCESS_VERSION,
+        approval_rule_id=PROPOSED_APPROVAL_RULE_ID,
+        source_geometry_id="geo-src-test",
+        provenance_hash="prov-test",
+        process_inputs_hash="inputs-test",
+        approver_id="human:tester",
+    )
+    return create_process_approved_canonical_geometry_reference(
+        approval_record=record, owning_domain=owning_domain
+    )
 from app.cam.geometry_authority_validation import (
     GeometryAuthorityValidationResult,
     ValidationGate,
@@ -524,15 +547,32 @@ class TestValidation:
     """Tests for geometry authority validation."""
 
     def test_validate_canonical_reference_green(self):
-        """Valid canonical reference gets GREEN gate."""
+        """Valid (process-approved) canonical reference gets GREEN gate.
+
+        Under the C2 process-exclusive ruling, a *valid* canonical reference is
+        one produced by the approved canonical process following a governed
+        approval event.
+        """
+        ref = _process_approved_canonical_reference(owning_domain="ibg")
+        result = validate_geometry_authority_reference(ref)
+        assert result.gate == "green"
+        assert result.authority_collapse_detected is False
+        assert result.blocking_issues == []
+
+    def test_validate_legacy_canonical_reference_warns_not_red(self):
+        """Legacy canonical reference (no process approval) WARNS, not RED.
+
+        Transition mode (PR 1): a canonical reference lacking process-approval
+        metadata is a compatibility warning (yellow), never a blocking RED.
+        """
         ref = create_canonical_geometry_reference(
             owning_domain="ibg",
             source_authority="ibg_body",
         )
         result = validate_geometry_authority_reference(ref)
-        assert result.gate == "green"
-        assert result.authority_collapse_detected is False
+        assert result.gate != "red"
         assert result.blocking_issues == []
+        assert any("process-approval metadata" in w for w in result.warnings)
 
     def test_validate_derived_with_source_green(self):
         """Derived reference with proper source gets GREEN gate."""
@@ -801,8 +841,8 @@ class TestCISummary:
         assert summary["unvalidated_reference_count"] == 1
 
     def test_ci_summary_status_pass(self):
-        """CI summary status is pass when all green."""
-        ref = create_canonical_geometry_reference("ibg", "test")
+        """CI summary status is pass when all green (process-approved canonical)."""
+        ref = _process_approved_canonical_reference()
         register_geometry_authority_reference(ref)
         summary = get_ci_summary()
         assert summary["status"] == "pass"
@@ -881,6 +921,208 @@ class TestGeometryAuthorityRouter:
         data = response.json()
         assert data["authority_layer"] == "canonical_geometry"
         assert data["may_define_canonical_geometry"] is True
+
+    def test_create_process_approved_canonical_reference(self):
+        """POST /references/canonical/process-approved creates approved reference.
+
+        The endpoint stays additive (200, still mints a ref), but the governed
+        approval event id is derived SERVER-SIDE and the ref is stamped
+        unverified (C2 PR-1 gap-1): no client event id, no verified authority.
+        """
+        response = client.post(
+            "/api/cam/geometry-authority/references/canonical/process-approved",
+            json={
+                "owning_domain": "boe",
+                "approval_record": {
+                    "canonical_process_id": PROPOSED_CANONICAL_PROCESS_ID,
+                    "canonical_process_version": PROPOSED_CANONICAL_PROCESS_VERSION,
+                    "approval_rule_id": PROPOSED_APPROVAL_RULE_ID,
+                    "source_geometry_id": "geo-router-source",
+                    "provenance_hash": "prov-router",
+                    "process_inputs_hash": "inputs-router",
+                    "approver_id": "human:router-test",
+                },
+                "description": "Process-approved canonical reference",
+            },
+        )
+        assert response.status_code == 200
+        data = response.json()
+        assert data["authority_layer"] == "canonical_geometry"
+        assert data["process_approval_record_id"]
+        assert data["process_approval_record_hash"]
+        assert data["canonical_process_id"] == PROPOSED_CANONICAL_PROCESS_ID
+        assert data["process_source_geometry_id"] == "geo-router-source"
+        # Server-derived event id + fail-safe unverified stamp.
+        assert data["governed_approval_event_id"].startswith("gae-")
+        assert data["authentication"] == "unverified_pending_governance"
+
+    def test_process_approved_endpoint_rejects_client_supplied_event_id(self):
+        """A client-supplied governed_approval_event_id is rejected, not ignored."""
+        response = client.post(
+            "/api/cam/geometry-authority/references/canonical/process-approved",
+            json={
+                "owning_domain": "boe",
+                "approval_record": {
+                    "canonical_process_id": PROPOSED_CANONICAL_PROCESS_ID,
+                    "canonical_process_version": PROPOSED_CANONICAL_PROCESS_VERSION,
+                    "governed_approval_event_id": "event-attacker-picked",
+                    "approval_rule_id": PROPOSED_APPROVAL_RULE_ID,
+                    "source_geometry_id": "geo-router-source",
+                    "provenance_hash": "prov-router",
+                    "process_inputs_hash": "inputs-router",
+                    "approver_id": "human:router-test",
+                },
+            },
+        )
+        assert response.status_code == 400
+        assert "server-derived" in response.text
+        assert "governed_approval_event_id" in response.text
+
+    def test_process_approved_endpoint_rejects_top_level_client_supplied_event_id(self):
+        """A stale top-level governed_approval_event_id is also rejected."""
+        response = client.post(
+            "/api/cam/geometry-authority/references/canonical/process-approved",
+            json={
+                "owning_domain": "boe",
+                "governed_approval_event_id": "event-attacker-picked",
+                "approval_record": {
+                    "canonical_process_id": PROPOSED_CANONICAL_PROCESS_ID,
+                    "canonical_process_version": PROPOSED_CANONICAL_PROCESS_VERSION,
+                    "approval_rule_id": PROPOSED_APPROVAL_RULE_ID,
+                    "source_geometry_id": "geo-router-source",
+                    "provenance_hash": "prov-router",
+                    "process_inputs_hash": "inputs-router",
+                    "approver_id": "human:router-test",
+                },
+            },
+        )
+        assert response.status_code == 400
+        assert "server-derived" in response.text
+        assert "governed_approval_event_id" in response.text
+
+    def test_process_approved_endpoint_rejects_client_supplied_authentication(self):
+        """A client cannot stamp authentication onto the approval request."""
+        response = client.post(
+            "/api/cam/geometry-authority/references/canonical/process-approved",
+            json={
+                "owning_domain": "boe",
+                "approval_record": {
+                    "canonical_process_id": PROPOSED_CANONICAL_PROCESS_ID,
+                    "canonical_process_version": PROPOSED_CANONICAL_PROCESS_VERSION,
+                    "approval_rule_id": PROPOSED_APPROVAL_RULE_ID,
+                    "source_geometry_id": "geo-router-source",
+                    "provenance_hash": "prov-router",
+                    "process_inputs_hash": "inputs-router",
+                    "approver_id": "human:router-test",
+                    "authentication": "verified",
+                },
+            },
+        )
+        assert response.status_code == 400
+        assert "server-derived" in response.text
+        assert "authentication" in response.text
+
+    def test_process_approved_endpoint_rejects_unknown_approval_field(self):
+        """Approval request extras are rejected instead of silently ignored."""
+        response = client.post(
+            "/api/cam/geometry-authority/references/canonical/process-approved",
+            json={
+                "owning_domain": "boe",
+                "approval_record": {
+                    "canonical_process_id": PROPOSED_CANONICAL_PROCESS_ID,
+                    "canonical_process_version": PROPOSED_CANONICAL_PROCESS_VERSION,
+                    "approval_rule_id": PROPOSED_APPROVAL_RULE_ID,
+                    "source_geometry_id": "geo-router-source",
+                    "provenance_hash": "prov-router",
+                    "process_inputs_hash": "inputs-router",
+                    "approver_id": "human:router-test",
+                    "unexpected_field": "not accepted",
+                },
+            },
+        )
+        assert response.status_code == 400
+        assert "Unsupported approval_record field" in response.text
+
+    def test_process_approved_endpoint_rejects_unknown_top_level_field(self):
+        """Process-approved request extras are rejected instead of ignored."""
+        response = client.post(
+            "/api/cam/geometry-authority/references/canonical/process-approved",
+            json={
+                "owning_domain": "boe",
+                "unexpected_top_level": "not accepted",
+                "approval_record": {
+                    "canonical_process_id": PROPOSED_CANONICAL_PROCESS_ID,
+                    "canonical_process_version": PROPOSED_CANONICAL_PROCESS_VERSION,
+                    "approval_rule_id": PROPOSED_APPROVAL_RULE_ID,
+                    "source_geometry_id": "geo-router-source",
+                    "provenance_hash": "prov-router",
+                    "process_inputs_hash": "inputs-router",
+                    "approver_id": "human:router-test",
+                },
+            },
+        )
+        assert response.status_code == 400
+        assert "Unsupported process-approved reference field" in response.text
+
+    def test_process_approved_endpoint_rejects_system_actor(self):
+        """A system: approver cannot produce a governed approval event -> 400."""
+        response = client.post(
+            "/api/cam/geometry-authority/references/canonical/process-approved",
+            json={
+                "owning_domain": "boe",
+                "approval_record": {
+                    "canonical_process_id": PROPOSED_CANONICAL_PROCESS_ID,
+                    "canonical_process_version": PROPOSED_CANONICAL_PROCESS_VERSION,
+                    "approval_rule_id": PROPOSED_APPROVAL_RULE_ID,
+                    "source_geometry_id": "geo-router-source",
+                    "provenance_hash": "prov-router",
+                    "process_inputs_hash": "inputs-router",
+                    "approver_id": "system:auto-approver",
+                },
+            },
+        )
+        assert response.status_code == 400
+        assert "system" in response.text.lower()
+
+    def test_generic_registration_rejects_fabricated_process_metadata(self):
+        """POST /references cannot smuggle fake process-approved canonical refs."""
+        response = client.post(
+            "/api/cam/geometry-authority/references",
+            json={
+                "authority_layer": "canonical_geometry",
+                "owning_domain": "boe",
+                "may_define_canonical_geometry": True,
+                "process_approval_record_id": "approval-fake",
+                "process_approval_record_hash": "hash-fake",
+                "canonical_process_id": "unknown-process",
+                "canonical_process_version": "v9",
+                "governed_approval_event_id": "event-fake",
+                "process_source_geometry_id": "geo-fake",
+                "provenance_hash": "prov-fake",
+            },
+        )
+        assert response.status_code == 400
+        assert "unregistered canonical process" in response.text
+
+    def test_generic_registration_rejects_valid_looking_process_metadata(self):
+        """Generic registration cannot verify even known process metadata."""
+        response = client.post(
+            "/api/cam/geometry-authority/references",
+            json={
+                "authority_layer": "canonical_geometry",
+                "owning_domain": "boe",
+                "may_define_canonical_geometry": True,
+                "process_approval_record_id": "approval-looking",
+                "process_approval_record_hash": "hash-looking",
+                "canonical_process_id": PROPOSED_CANONICAL_PROCESS_ID,
+                "canonical_process_version": PROPOSED_CANONICAL_PROCESS_VERSION,
+                "governed_approval_event_id": "event-looking",
+                "process_source_geometry_id": "geo-looking",
+                "provenance_hash": "prov-looking",
+            },
+        )
+        assert response.status_code == 400
+        assert "Generic registration cannot verify" in response.text
 
     def test_create_derived_reference(self):
         """POST /api/cam/geometry-authority/references/derived creates reference."""

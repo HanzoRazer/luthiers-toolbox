@@ -1,5 +1,5 @@
 # The Production Shop — Sprint Registry
-Last updated: 2026-05-28
+Last updated: 2026-07-04
 Maintained by: Ross Echols (HanzoRazer)
 Maintenance discipline: docs/SPRINTS_MAINTENANCE.md
 
@@ -774,6 +774,7 @@ Detail: `docs/audits/SPRINT_COMPLETION_MATRIX_2026-05-24.md` (do not let audit d
 | GOV-CONVERGE-004 | Art Studio design-first-workflow restore | HYG | QUEUED | 2026-05-28 |
 | GOV-CONVERGE-005 | tap_tone_pi push (27 commits) | HYG | QUEUED | 2026-05-28 |
 | GOV-CONVERGE-006 | Package normalization → `contracts/` | HYG | QUEUED | 2026-05-28 |
+| GOV-CONVERGE-007 | C2 canonical geometry authority migration safety net | EXT | OPEN | 2026-07-04 |
 
 **After CI-RED winds down:** next GOV item is **003** (Ross answers D1–D4) unless scheduling **002** (R1 session) — neither blocks MVP cut.
 
@@ -846,6 +847,37 @@ Detail: `docs/audits/SPRINT_COMPLETION_MATRIX_2026-05-24.md` (do not let audit d
 **Status:** QUEUED · **Path:** HYG  
 **last_verified:** 2026-05-28  
 **Restore trigger:** Normalization PR merged post PR #38; governance tests green.
+
+---
+
+### GOV-CONVERGE-007 — C2 canonical geometry authority migration safety net
+
+**Status:** OPEN · **Path:** EXT
+**last_verified:** 2026-07-04
+**Origin:** PR #182 follow-up safety net for process-exclusive canonical authority.
+
+**Why open:** PR #182 adds the process-approved canonical path and blocks fabricated
+or invalid process metadata, but it intentionally leaves legacy canonical creation in
+transition mode. Missing process-approval metadata remains warning-only, not RED.
+
+**Do not close C2 on PR #182 alone.** Full closure still requires:
+
+1. Migrate or retire legacy `POST /api/cam/geometry-authority/references/canonical`.
+2. Reduce remaining `create_canonical_geometry_reference` test fixtures to the
+   explicit legacy-transition cluster only.
+3. Record the human decision for when legacy missing process metadata flips from
+   warning-only to strict RED.
+4. Ratify or replace the proposed process literals:
+   `body-geometry-canonicalization`, `v1`,
+   `c2-process-exclusive-canonical-authority-v1`.
+5. Scope or implement persistent approval-record authenticity lookup when the
+   registry/storage layer is ready.
+
+**Restore trigger:** Legacy canonical creation is removed, hard-deprecated, or
+fenced behind an explicitly approved transition path; green-path tests use the
+process-approved factory/endpoint; strict-RED timing and process literals are
+recorded in SPRINTS or ADR; approval-record authenticity is either implemented or
+explicitly deferred with a named follow-up.
 
 ---
 
