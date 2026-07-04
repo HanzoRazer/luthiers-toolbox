@@ -1,0 +1,41 @@
+{
+  "schema": "cbsp21_patch_input_v1",
+  "schema_version": "cbsp21_patch_input_v1",
+  "coverage_min": 0.95,
+  "patch_id": "CLOSE_CI_RED_015L",
+  "title": "docs(sprints): close CI-RED-015-L — IBG sandbox landmark intake bridge",
+  "intent": "SPRINTS.md ledger-only update: add a CLOSED row for CI-RED-015-L to the CI-RED-015 bucket table. 015-L is the additive IBG sandbox landmark candidate intake bridge (dev-ready scope, not a failing-test cluster), shipped and merged as #178 (869384c2). Documentation only; no product/application/CI-behavior change. First per-PR manifest authored under .cbsp21/patches/ per the #184 mechanism.",
+  "change_type": "docs",
+  "behavior_change": "none",
+  "risk_level": "low",
+  "scope": {
+    "paths_in_scope": [
+      "SPRINTS.md",
+      ".cbsp21/"
+    ],
+    "files_expected_to_change": [
+      "SPRINTS.md",
+      ".cbsp21/patches/close-ci-red-015l.json"
+    ]
+  },
+  "diff_articulation": {
+    "what_changed": "SPRINTS.md: insert one row into the CI-RED-015 bucket table (between 015-H and the 015-F umbrella tail) recording 015-L as CLOSED by #178 (869384c2). The row documents that the sandbox landmark candidate adapter imports vectorizer-sandbox ibg-landmark-candidate.v1 records as review-required, fail-closed BodyEvidenceCandidates (evidence geometry, not authority: no mm calibration, no solver landmarks, no IBG-memory, no export authority), the default intake gate rejects them as intended (AUTHORITY_INSUFFICIENT + REVIEW_REQUIRED), and the in-PR review hardening (ba16d594: authority_state->geometry_authority_class metadata rename, namespaced sandbox review flag, semantic validation). CI-RED-015 top-line status is unchanged (stays OPEN; other buckets remain open).",
+    "why_not_redundant": "N/A - behavior_change is none (documentation / ledger only)."
+  },
+  "verification": {
+    "commands_run": [
+      "local: python scripts/ci/check_cbsp21_patch_input.py --base origin/main --head HEAD -> PASS (selects this manifest)",
+      "local: python scripts/ci/check_cbsp21_gate.py --changed-files SPRINTS.md .cbsp21/patches/close-ci-red-015l.json -> 100% coverage PASS (auto-discovered)",
+      "Markdown table integrity: new 015-L row keeps 4 columns / 5 pipes, matching sibling bucket rows."
+    ]
+  },
+  "files": [
+    {
+      "path": "SPRINTS.md",
+      "intent": "Add CLOSED row for CI-RED-015-L (IBG sandbox landmark intake bridge) to the CI-RED-015 bucket table, citing #178.",
+      "scan_targets": ["SPRINTS.md"],
+      "risk": "low",
+      "behavior_change": "none - documentation / ledger only"
+    }
+  ]
+}
