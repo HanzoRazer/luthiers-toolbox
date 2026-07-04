@@ -20,6 +20,11 @@ from pathlib import Path
 from typing import Any, Dict, List, Optional
 
 
+COMPLEXITY_BASELINE = Path("app/ci/complexity_baseline.json")
+FILE_SIZES_BASELINE = Path("app/ci/file_sizes_baseline.json")
+DUPLICATION_THRESHOLD = "100"
+
+
 def _repo_root() -> Path:
     """Find repo root."""
     p = Path(__file__).resolve()
@@ -29,34 +34,53 @@ def _repo_root() -> Path:
     return Path.cwd()
 
 
-def _api_dir() -> Path:
+def _api_dir(start: Optional[Path] = None) -> Path:
     """Directory that contains the importable ``app`` package (services/api).
 
-    This module lives at ``services/api/app/ci/generate_debt_report.py``, so the
-    ``services/api`` dir is exactly ``parents[2]``. Deriving it directly avoids
-    the ``_repo_root()`` ambiguity: ``_repo_root()`` walks up and matches the
-    NESTED ``services/api/pyproject.toml`` first, so it returns ``services/api``
-    (not the true repo root) — appending ``/services/api`` to that yielded a
-    non-existent ``services/api/services/api`` cwd, which made every ``run_check``
-    subprocess raise and render a spurious ``ERROR`` row in the summary.
+    Walk upward from this module and select the nearest directory that looks
+    like the API package root. This avoids the old ``_repo_root()/services/api``
+    ambiguity and fails loudly if the script is moved outside an API checkout.
     """
-    return Path(__file__).resolve().parents[2]
+    p = (start or Path(__file__)).resolve()
+    first = p if p.is_dir() else p.parent
+    for parent in [first] + list(first.parents):
+        if (parent / "app" / "ci").is_dir() and (parent / "pyproject.toml").is_file():
+            return parent
+    raise FileNotFoundError(f"Could not locate services/api package root from {p}")
 
 
-def run_check(module: str, extra_args: List[str] = None) -> Dict[str, Any]:
+def run_check(
+    module: str,
+    extra_args: List[str] = None,
+    required_paths: List[Path] = None,
+) -> Dict[str, Any]:
     """Run a check module (as the debt-gates step does) and capture JSON output."""
     args = [sys.executable, "-m", module, "--json"] + (extra_args or [])
     try:
+        api_dir = _api_dir()
+        missing = [
+            str(path)
+            for path in (required_paths or [])
+            if not (api_dir / path).exists()
+        ]
+        if missing:
+            return {
+                "error": "Required debt-gates file(s) missing: " + ", ".join(missing),
+                "exit_code": -1,
+            }
         result = subprocess.run(
             args,
             capture_output=True,
             text=True,
-            cwd=str(_api_dir()),
+            cwd=str(api_dir),
             timeout=120,
         )
         if result.stdout.strip():
             return json.loads(result.stdout)
-        return {"error": result.stderr or "No output", "exit_code": result.returncode}
+        return {
+            "error": result.stderr.strip() or "No output",
+            "exit_code": result.returncode,
+        }
     except subprocess.TimeoutExpired:
         return {"error": "Timeout", "exit_code": -1}
     except json.JSONDecodeError as e:
@@ -111,7 +135,8 @@ def generate_report() -> str:
     # ratchet output is the new-violation delta, so an empty list == PASS.
     complexity = run_check(
         "app.ci.check_complexity",
-        ["--baseline", "app/ci/complexity_baseline.json"],
+        ["--baseline", str(COMPLEXITY_BASELINE)],
+        required_paths=[COMPLEXITY_BASELINE],
     )
     if "error" not in complexity:
         new_count = len(complexity) if isinstance(complexity, list) else complexity.get("violation_count", 0)
@@ -124,7 +149,8 @@ def generate_report() -> str:
     # File sizes (ratchet mode — mirrors the debt-gates step)
     file_sizes = run_check(
         "app.ci.check_file_sizes",
-        ["--baseline", "app/ci/file_sizes_baseline.json"],
+        ["--baseline", str(FILE_SIZES_BASELINE)],
+        required_paths=[FILE_SIZES_BASELINE],
     )
     if "error" not in file_sizes:
         new_count = len(file_sizes) if isinstance(file_sizes, list) else file_sizes.get("violation_count", 0)
@@ -155,13 +181,13 @@ def generate_report() -> str:
         lines.append(f"| Safety fences | ERROR | - | - |")
 
     # Duplication
-    duplication = run_check("app.ci.check_duplication")
+    duplication = run_check("app.ci.check_duplication", ["--threshold", DUPLICATION_THRESHOLD])
     if "error" not in duplication:
         stats = duplication.get("stats", {})
         count = stats.get("clone_groups", 0)
         dup_lines = stats.get("duplicate_lines", 0)
         status = "PASS" if duplication.get("passed", True) else f"WARN ({count} clones)"
-        lines.append(f"| Duplication | {status} | {dup_lines} lines | 50 groups |")
+        lines.append(f"| Duplication | {status} | {dup_lines} lines | {DUPLICATION_THRESHOLD} groups |")
         checks.append(("duplication", duplication))
     else:
         lines.append(f"| Duplication | ERROR | - | - |")
