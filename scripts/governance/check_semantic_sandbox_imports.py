@@ -16,13 +16,28 @@ Exit codes:
 
 from __future__ import annotations
 
+import os
 import re
 import sys
 from pathlib import Path
-from typing import Iterable, List, Tuple
+from typing import Iterable, Iterator, List, Tuple
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 SERVICES_ROOT = REPO_ROOT / "services"
+
+# Directory names to prune during traversal (dependencies / caches / VCS).
+# Without this the scan descends into services/api/.venv/site-packages
+# (thousands of third-party .py files) and times out on Windows CI.
+PRUNE_DIRS = {".venv", "venv", "node_modules", "__pycache__", ".git"}
+
+
+def _iter_py_files(root: Path) -> Iterator[Path]:
+    """Yield *.py under root, pruning PRUNE_DIRS in-place (never descends into them)."""
+    for dirpath, dirnames, filenames in os.walk(root):
+        dirnames[:] = [d for d in dirnames if d not in PRUNE_DIRS]
+        for f in filenames:
+            if f.endswith(".py"):
+                yield Path(dirpath) / f
 
 # Tier A modules (basename). Imports of these from other services/ files are forbidden.
 FORBIDDEN_MODULE_PREFIXES: Tuple[str, ...] = (
@@ -69,7 +84,7 @@ def scan_services() -> List[Tuple[str, int, str]]:
     if not SERVICES_ROOT.is_dir():
         return [("services/", 0, "services/ directory missing")]
 
-    for py_file in sorted(SERVICES_ROOT.rglob("*.py")):
+    for py_file in sorted(_iter_py_files(SERVICES_ROOT)):
         rel = _normalize_rel(py_file)
         if rel in allow:
             continue
