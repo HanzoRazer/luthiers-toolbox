@@ -1,0 +1,63 @@
+{
+  "schema": "cbsp21_patch_input_v1",
+  "schema_version": "cbsp21_patch_input_v1",
+  "coverage_min": 0.95,
+  "patch_id": "ART_JOBS_SQLITE_MIGRATION",
+  "title": "perf(art): back art-job stores with SQLite (drop full-file parse+rewrite)",
+  "intent": "Finishes item 5 of PERFORMANCE_AUDIT_2026-07-04.md. The two file-based art-job stores parsed and rewrote the entire ~730KB data/art_jobs.json on every create/read (measured 22ms/parse, unbounded append-only growth) and accidentally shared one file with two incompatible record shapes. Each store now uses its own dedicated SQLite table with a one-time shape-filtered migration; public signatures are unchanged so no router call site is touched.",
+  "change_type": "perf",
+  "behavior_change": "storage-backend",
+  "risk_level": "medium",
+  "scope": {
+    "paths_in_scope": [
+      "services/api/app/services/"
+    ],
+    "files_expected_to_change": [
+      "services/api/app/services/art_job_store.py",
+      "services/api/app/services/art_jobs_store.py",
+      "services/api/tests/test_art_job_stores_migration.py"
+    ]
+  },
+  "diff_articulation": {
+    "what_changed": "art_job_store.py (singular: id/lane/payload) now reads/writes a dedicated art_studio_jobs SQLite table via get_rmos_db().execute_query/execute_update, with a one-time migration that imports only lane/payload-shaped rows from the legacy JSON; create is an upsert (delete-then-insert) preserving the old append-and-latest-wins semantics. art_jobs_store.py (plural: id/job_type/rings/...) now delegates to the existing SQLiteArtJobsStore (art_jobs table), migrating only job_type-shaped legacy rows once when the table is empty. Both keep their ArtJob dataclasses and function signatures (create_art_job / get_job / get_art_job / _load / _load_jobs), so rosette_jobs_routes, root_art_router, rosette_jobs_router, rmos rosette_cam_router, and pipeline_ops_rosette are unchanged. The legacy data/art_jobs.json is retained as the migration source.",
+    "why_not_redundant": "Removes a measured per-request full-file parse+rewrite on live rosette job create/read paths and untangles two record shapes that shared one file (the plural typed reader crashed on singular rows and vice versa). Not cosmetic: it changes the persistence backend while preserving the public contract, with a shape-filtered one-time data migration and new tests."
+  },
+  "verification": {
+    "commands_run": [
+      "pytest tests/test_art_job_stores_migration.py -q -> 5 passed (round-trip, upsert-no-dup, shape-filtered migration, decoupling, migrate-once)",
+      "pytest tests/test_art_job_detail.py tests/test_cam_pipeline_rosette_op.py tests/test_rmos_rosette_cnc_smoke.py tests/test_art_studio_api_endpoint_smoke.py tests/test_rosette_cnc_export_endpoint_smoke.py -q -> 85 passed",
+      "pytest tests/test_sqlite_art_stores.py -q -> 18 passed",
+      "manual: create/get/_load round-trips for both stores against a temp rmos.db + temp legacy JSON, decoupling confirmed"
+    ]
+  },
+  "files": [
+    {
+      "path": "services/api/app/services/art_job_store.py",
+      "intent": "Singular art-job store: SQLite-backed art_studio_jobs table + one-time JSON migration; upsert create.",
+      "scan_targets": ["services/api/app/services/art_job_store.py"],
+      "risk": "medium",
+      "behavior_change": "Reads/writes SQLite instead of rewriting the whole JSON file; one-time migration of lane/payload rows; create is now an upsert. Public signatures unchanged."
+    },
+    {
+      "path": "services/api/app/services/art_jobs_store.py",
+      "intent": "Plural art-job store: delegate to SQLiteArtJobsStore + one-time JSON migration of job_type-shaped rows.",
+      "scan_targets": ["services/api/app/services/art_jobs_store.py"],
+      "risk": "medium",
+      "behavior_change": "Reads/writes SQLite via SQLiteArtJobsStore; created_at now an ISO string (was float epoch); public signatures unchanged."
+    },
+    {
+      "path": "services/api/tests/test_art_job_stores_migration.py",
+      "intent": "Cover round-trip, upsert, shape-filtered migration, decoupling, and migrate-once.",
+      "scan_targets": ["services/api/tests/test_art_job_stores_migration.py"],
+      "risk": "low",
+      "behavior_change": "none - tests only"
+    }
+  ],
+  "architecture_scan": {
+    "scan_id": "AS-2026-07-04-002",
+    "risk_summary": { "critical": 0, "high": 0, "medium": 2, "low": 1 },
+    "findings": [],
+    "acknowledged": true,
+    "acknowledgement_notes": "Storage-backend change with preserved public contract and a one-time, shape-filtered, idempotent data migration; legacy JSON retained as source. Verified by 108 existing + 5 new tests."
+  }
+}
