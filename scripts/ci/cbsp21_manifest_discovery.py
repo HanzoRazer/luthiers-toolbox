@@ -24,6 +24,21 @@ per-manifest checks (coverage_min, behavior_change/why_not_redundant,
 architecture_scan) depend on. Stale manifests from previously-merged PRs declare
 files that are not in the current diff, so they lose the selection automatically.
 
+Two design guarantees added after review
+-----------------------------------------
+1. **Both gates select identically.** Selection uses ONE shared matcher
+   (``default_declared_matcher``, the union of ``files[]`` and ``scope.*``), so
+   the coverage gate and the patch-input gate can never validate against
+   different manifests for the same diff. Each gate still applies its own
+   *validation* rules afterwards.
+2. **Genuine ambiguity fails loudly.** If two manifests are truly
+   indistinguishable for a diff (same coverage AND same specificity), selection
+   raises ``AmbiguousManifestSelection`` rather than silently picking by
+   filename. A malformed *non-selected* manifest is skipped with a warning (via
+   ``load_candidates``) so one bad file in the shared directory cannot fail every
+   other PR — but the PR whose OWN manifest is broken still fails, because no
+   valid manifest will cover its diff.
+
 These functions are intentionally pure (given a repo root) so they can be unit
 tested without git or CI.
 """
@@ -40,12 +55,30 @@ LEGACY_MANIFEST_NAME = "patch_input.json"
 
 Manifest = Dict[str, object]
 Candidate = Tuple[Path, Manifest]
+Malformed = Tuple[Path, str]
 # A matcher decides whether one changed file is declared by a given manifest.
 DeclaredMatcher = Callable[[Manifest], Callable[[str], bool]]
 
 
+class AmbiguousManifestSelection(Exception):
+    """Raised when >1 manifest is equally plausible for a diff.
+
+    Deliberately fails the gate: silently resolving by filename would make CI
+    depend on manifest naming conventions. The author should make one manifest's
+    scope specific to its PR.
+    """
+
+
 def _norm(path: str) -> str:
     return path.replace("\\", "/").strip()
+
+
+def _as_list(value: object) -> List[str]:
+    if value is None:
+        return []
+    if isinstance(value, list):
+        return [str(v) for v in value]
+    return [str(value)]
 
 
 def is_cbsp21_internal(path: str) -> bool:
@@ -81,20 +114,60 @@ def load_manifest(path: Path | str) -> Manifest:
     return json.loads(Path(path).read_text(encoding="utf-8"))
 
 
-def load_candidates(root: Path | str = ".") -> List[Candidate]:
+def load_candidates(root: Path | str = ".") -> Tuple[List[Candidate], List[Malformed]]:
     """Discover and parse every candidate manifest.
 
-    Raises ValueError (with the offending path) if any manifest is invalid JSON,
-    so a malformed sibling manifest fails loudly rather than being silently
-    skipped.
+    Returns ``(candidates, malformed)``. Malformed manifests (invalid JSON) are
+    collected — NOT raised — so one bad sibling file cannot fail an unrelated
+    PR's gate. Callers should surface ``malformed`` as a warning; the PR whose
+    own manifest is the broken one still fails downstream because no valid
+    manifest will cover its diff.
     """
     candidates: List[Candidate] = []
+    malformed: List[Malformed] = []
     for path in discover_manifest_paths(root):
         try:
             candidates.append((path, load_manifest(path)))
-        except Exception as exc:  # noqa: BLE001 — re-raise with context
-            raise ValueError(f"Invalid JSON in {path}: {exc}") from exc
-    return candidates
+        except Exception as exc:  # noqa: BLE001 — capture, don't abort discovery
+            malformed.append((path, str(exc)))
+    return candidates, malformed
+
+
+def default_declared_matcher(manifest: Manifest) -> Callable[[str], bool]:
+    """The shared selection matcher: union of ``files[]`` and ``scope.*``.
+
+    A changed file is "declared" by this manifest if it is named in
+    ``files[].path``/``files[].scan_targets`` or ``scope.files_expected_to_change``
+    (exact), or falls under a ``scope.paths_in_scope`` prefix. Using one matcher
+    for BOTH gates guarantees they select the same manifest for a given diff.
+    """
+    exact: set[str] = set()
+    prefixes: List[str] = []
+
+    scope = manifest.get("scope")
+    if isinstance(scope, dict):
+        exact.update(_norm(v) for v in _as_list(scope.get("files_expected_to_change")))
+        prefixes.extend(_norm(p) for p in _as_list(scope.get("paths_in_scope")))
+
+    files = manifest.get("files")
+    if isinstance(files, list):
+        for entry in files:
+            if isinstance(entry, dict):
+                if entry.get("path"):
+                    exact.add(_norm(str(entry["path"])))
+                exact.update(_norm(t) for t in _as_list(entry.get("scan_targets")))
+
+    def is_declared(file_path: str) -> bool:
+        f = _norm(file_path)
+        if f in exact:
+            return True
+        for p in prefixes:
+            p = p.rstrip("/")
+            if p and (f == p or f.startswith(p + "/")):
+                return True
+        return False
+
+    return is_declared
 
 
 def _declared_size(manifest: Manifest) -> int:
@@ -107,25 +180,21 @@ def _declared_size(manifest: Manifest) -> int:
     scope = manifest.get("scope")
     if isinstance(scope, dict):
         for key in ("files_expected_to_change", "paths_in_scope"):
-            val = scope.get(key)
-            if isinstance(val, list):
-                tokens.update(str(v) for v in val)
+            tokens.update(_as_list(scope.get(key)))
     files = manifest.get("files")
     if isinstance(files, list):
         for entry in files:
             if isinstance(entry, dict):
                 if entry.get("path"):
                     tokens.add(str(entry["path"]))
-                targets = entry.get("scan_targets")
-                if isinstance(targets, list):
-                    tokens.update(str(t) for t in targets)
+                tokens.update(_as_list(entry.get("scan_targets")))
     return len(tokens)
 
 
 def select_manifest(
     candidates: List[Candidate],
     changed_files: List[str],
-    declared_matcher: DeclaredMatcher,
+    declared_matcher: Optional[DeclaredMatcher] = None,
 ) -> Optional[Candidate]:
     """Pick the candidate that best covers the current diff.
 
@@ -133,19 +202,43 @@ def select_manifest(
       1. most changed files covered (excluding ``.cbsp21/`` internals from the
          signal),
       2. then fewest declared tokens (most specific),
-      3. then lexicographically smallest path.
+      3. then lexicographically smallest path (stable ordering only).
+
+    Selection uses ``default_declared_matcher`` unless a matcher is injected
+    (tests). Both production gates use the default, so they always agree.
+
+    Raises:
+        AmbiguousManifestSelection: if >1 manifest ties on (coverage>0,
+            specificity) — a real ambiguity that naming order must not resolve.
 
     Returns None only when there are no candidates at all.
     """
     if not candidates:
         return None
 
+    matcher_factory = declared_matcher or default_declared_matcher
     signal = [f for f in changed_files if not is_cbsp21_internal(f)]
 
-    def rank_key(item: Candidate):
-        path, manifest = item
-        matcher = declared_matcher(manifest)
+    scored: List[Tuple[int, int, str, Candidate]] = []
+    for path, manifest in candidates:
+        matcher = matcher_factory(manifest)
         covered = sum(1 for f in signal if matcher(_norm(f)))
-        return (-covered, _declared_size(manifest), str(path))
+        scored.append((covered, _declared_size(manifest), str(path), (path, manifest)))
 
-    return sorted(candidates, key=rank_key)[0]
+    scored.sort(key=lambda s: (-s[0], s[1], s[2]))
+    top = scored[0]
+
+    # Only a tie among manifests that actually cover the diff is ambiguous;
+    # when nothing covers it (covered == 0) there is no meaningful selection to
+    # get wrong, so fall through and let downstream coverage checks fail.
+    if top[0] > 0:
+        ties = [s for s in scored if s[0] == top[0] and s[1] == top[1]]
+        if len(ties) > 1:
+            raise AmbiguousManifestSelection(
+                f"{len(ties)} manifests are equally plausible for this diff "
+                f"(covered={top[0]} files, specificity={top[1]}): "
+                + ", ".join(s[2] for s in ties)
+                + ". Make one manifest's scope specific to its PR."
+            )
+
+    return top[3]

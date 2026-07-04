@@ -24,10 +24,14 @@ import argparse
 import json
 import sys
 from pathlib import Path
-from typing import Callable, List, Set, Tuple, Optional
+from typing import List, Set, Tuple, Optional
 
 # scripts/ci is on sys.path[0] when invoked as `python scripts/ci/check_...py`.
-from cbsp21_manifest_discovery import load_candidates, select_manifest
+from cbsp21_manifest_discovery import (
+    AmbiguousManifestSelection,
+    load_candidates,
+    select_manifest,
+)
 
 # Ensure UTF-8 output on Windows (only when running as main, not when imported)
 def _setup_utf8_output():
@@ -72,41 +76,36 @@ def get_declared_files(manifest: dict) -> Set[str]:
     return declared
 
 
-def _declared_matcher(manifest: dict) -> Callable[[str], bool]:
-    """Whether a changed file is declared by this manifest's files[] block."""
-    declared = {f.strip() for f in get_declared_files(manifest) if f and f.strip()}
-
-    def is_declared(file_path: str) -> bool:
-        return file_path.strip() in declared
-
-    return is_declared
-
-
 def resolve_manifest(manifest_arg: Optional[str], changed_files: List[str]) -> Tuple[str, dict]:
     """Resolve the manifest to validate against.
 
     If an explicit --manifest is given, use it (back-compat / local override).
     Otherwise auto-discover .cbsp21/patches/*.json (+ legacy patch_input.json)
-    and select the one that best covers the changed files. Validates schema.
+    and select the one that best covers the changed files, using the SHARED
+    default matcher so this gate and the patch-input gate always agree on which
+    manifest a diff maps to. Validates schema.
     """
     if manifest_arg:
         return manifest_arg, load_manifest(manifest_arg)
 
-    try:
-        candidates = load_candidates()
-    except Exception as e:  # noqa: BLE001
-        print(f"❌ CBSP21 ERROR: {e}")
-        sys.exit(2)
+    candidates, malformed = load_candidates()
+    # Skip malformed siblings with a warning rather than failing this PR.
+    for path, err in malformed:
+        print(f"⚠️  Skipping malformed manifest {path}: {err}")
 
     if not candidates:
-        print("❌ CBSP21 FAIL: No manifest found.")
+        print("❌ CBSP21 FAIL: No valid manifest found.")
         print()
         print("Add one under .cbsp21/patches/<patch-id>.json (preferred) or "
               ".cbsp21/patch_input.json (legacy).")
         sys.exit(1)
 
-    selected = select_manifest(candidates, changed_files, _declared_matcher)
-    path, manifest = selected  # select_manifest returns non-None when candidates exist
+    try:
+        selected = select_manifest(candidates, changed_files)
+    except AmbiguousManifestSelection as e:
+        print(f"❌ CBSP21 FAIL: {e}")
+        sys.exit(1)
+    path, manifest = selected  # non-None when candidates exist
     if manifest.get("schema") != "cbsp21_patch_input_v1":
         print(f"❌ CBSP21 FAIL: Invalid schema in selected manifest {path}. "
               f"Expected 'cbsp21_patch_input_v1', got '{manifest.get('schema')}'")

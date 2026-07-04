@@ -49,7 +49,8 @@ jobs:
         run: |
           echo "## CBSP21 Gate Results" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          MANIFESTS=$(ls .cbsp21/patches/*.json .cbsp21/patch_input.json 2>/dev/null || true)
+          # Use the same discovery the gate uses, rather than shell globbing.
+          MANIFESTS=$(python -c "import sys; sys.path.insert(0, 'scripts/ci'); from cbsp21_manifest_discovery import discover_manifest_paths; print('\n'.join(str(p) for p in discover_manifest_paths()))")
           if [ -n "$MANIFESTS" ]; then
             echo "### Candidate manifests discovered:" >> $GITHUB_STEP_SUMMARY
             echo '```' >> $GITHUB_STEP_SUMMARY

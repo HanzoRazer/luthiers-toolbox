@@ -20,10 +20,11 @@ import os
 import subprocess
 import sys
 from pathlib import Path
-from typing import Any, Callable, Dict, List, Tuple
+from typing import Any, Dict, List, Tuple
 
 # scripts/ci is on sys.path[0] when invoked as `python scripts/ci/check_...py`.
 from cbsp21_manifest_discovery import (
+    AmbiguousManifestSelection,
     is_cbsp21_internal,
     load_candidates,
     load_manifest,
@@ -83,17 +84,6 @@ def _in_scope(file_path: str, paths_in_scope: List[str]) -> bool:
     return False
 
 
-def _declared_matcher(manifest: Dict[str, Any]) -> Callable[[str], bool]:
-    """Whether a changed file is declared by this manifest's scope."""
-    expected = set(_as_list(_get(manifest, "scope.files_expected_to_change")))
-    paths_in_scope = _as_list(_get(manifest, "scope.paths_in_scope"))
-
-    def is_declared(file_path: str) -> bool:
-        return file_path in expected or _in_scope(file_path, paths_in_scope)
-
-    return is_declared
-
-
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument(
@@ -127,7 +117,12 @@ def main() -> int:
         if args.manifest:
             candidates = [(Path(args.manifest), load_manifest(args.manifest))]
         else:
-            candidates = load_candidates()
+            candidates, malformed = load_candidates()
+            # A malformed *sibling* manifest is skipped with a warning rather
+            # than failing this PR; the PR whose OWN manifest is broken still
+            # fails below (no valid manifest will cover its diff).
+            for path, err in malformed:
+                _ok(f"WARNING: skipping malformed manifest {path}: {err}")
     except FileNotFoundError:
         return _fail(f"Missing manifest: {args.manifest}")
     except Exception as e:
@@ -135,11 +130,17 @@ def main() -> int:
 
     if not candidates:
         return _fail(
-            "No CBSP21 manifest found. Add one under .cbsp21/patches/<patch-id>.json "
-            "(preferred) or .cbsp21/patch_input.json (legacy)."
+            "No valid CBSP21 manifest found. Add one under "
+            ".cbsp21/patches/<patch-id>.json (preferred) or .cbsp21/patch_input.json "
+            "(legacy)."
         )
 
-    selected = select_manifest(candidates, changed, _declared_matcher)
+    # Unified selection (default matcher) so this gate and the coverage gate
+    # always pick the same manifest for a given diff.
+    try:
+        selected = select_manifest(candidates, changed)
+    except AmbiguousManifestSelection as e:
+        return _fail(str(e))
     if selected is None:  # unreachable given the guard above, defensive
         return _fail("No CBSP21 manifest could be selected for this diff.")
     manifest_path, manifest = selected
