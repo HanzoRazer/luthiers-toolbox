@@ -68,6 +68,60 @@ def _process_approved_canonical_reference(owning_domain="boe"):
     return create_process_approved_canonical_geometry_reference(
         approval_record=record, owning_domain=owning_domain
     )
+
+
+def _canonical_ref(
+    owning_domain="ibg",
+    source_authority="test",
+    provenance_hash=None,
+    description="",
+    metadata=None,
+):
+    """Green-path canonical reference for ordinary fixtures (GOV-CONVERGE-007-A).
+
+    Normal tests use a PROCESS-APPROVED canonical reference — the only supported
+    creation path now that the legacy HTTP creator is retired (410). Legacy-only
+    args are accepted for call-site compatibility and folded into the governed
+    approval so distinct calls yield distinct references. Use
+    ``create_canonical_geometry_reference`` directly ONLY in explicit
+    legacy-transition tests.
+    """
+    record = create_canonical_process_approval_record(
+        canonical_process_id=PROPOSED_CANONICAL_PROCESS_ID,
+        canonical_process_version=PROPOSED_CANONICAL_PROCESS_VERSION,
+        approval_rule_id=PROPOSED_APPROVAL_RULE_ID,
+        source_geometry_id=f"geo-{owning_domain}-{source_authority}",
+        provenance_hash=provenance_hash or f"prov-{source_authority}",
+        process_inputs_hash=f"inputs-{source_authority}",
+        approver_id="human:tester",
+    )
+    return create_process_approved_canonical_geometry_reference(
+        approval_record=record,
+        owning_domain=owning_domain,
+        description=description,
+        metadata=metadata,
+    )
+
+
+def _process_approved_canonical_payload(owning_domain="ibg", source_authority="test"):
+    """Request body for POST /references/canonical/process-approved (green path).
+
+    GOV-CONVERGE-007-A: router tests that just need a canonical ref set up through
+    the process-approved endpoint, not the retired legacy creator.
+    """
+    return {
+        "owning_domain": owning_domain,
+        "approval_record": {
+            "canonical_process_id": PROPOSED_CANONICAL_PROCESS_ID,
+            "canonical_process_version": PROPOSED_CANONICAL_PROCESS_VERSION,
+            "approval_rule_id": PROPOSED_APPROVAL_RULE_ID,
+            "source_geometry_id": f"geo-{source_authority}",
+            "provenance_hash": f"prov-{source_authority}",
+            "process_inputs_hash": f"inputs-{source_authority}",
+            "approver_id": "human:router-test",
+        },
+        "description": "process-approved canonical",
+    }
 from app.cam.geometry_authority_validation import (
     GeometryAuthorityValidationResult,
     ValidationGate,
@@ -310,7 +364,7 @@ class TestReferenceCreation:
 
     def test_create_canonical_reference(self):
         """Create canonical geometry reference."""
-        ref = create_canonical_geometry_reference(
+        ref = _canonical_ref(
             owning_domain="ibg",
             source_authority="ibg_body_outline",
             description="Test canonical",
@@ -321,7 +375,7 @@ class TestReferenceCreation:
 
     def test_canonical_reference_no_source_required(self):
         """Canonical reference does not require source."""
-        ref = create_canonical_geometry_reference(
+        ref = _canonical_ref(
             owning_domain="ibg",
             source_authority="ibg_soundhole",
         )
@@ -384,19 +438,19 @@ class TestReferenceCreation:
 
     def test_reference_has_unique_id(self):
         """Each reference has a unique ID."""
-        ref1 = create_canonical_geometry_reference("ibg", "test1")
-        ref2 = create_canonical_geometry_reference("ibg", "test2")
+        ref1 = _canonical_ref("ibg", "test1")
+        ref2 = _canonical_ref("ibg", "test2")
         assert ref1.geometry_reference_id != ref2.geometry_reference_id
 
     def test_reference_has_timestamp(self):
         """Reference has creation timestamp."""
-        ref = create_canonical_geometry_reference("ibg", "test")
+        ref = _canonical_ref("ibg", "test")
         assert ref.created_at is not None
         assert isinstance(ref.created_at, datetime)
 
     def test_reference_computes_hash(self):
         """Reference has deterministic hash."""
-        ref = create_canonical_geometry_reference(
+        ref = _canonical_ref(
             owning_domain="ibg",
             source_authority="test",
         )
@@ -493,7 +547,7 @@ class TestInvariants:
 
     def test_canonical_reference_may_define_canonical(self):
         """Canonical reference may have may_define_canonical_geometry=True."""
-        ref = create_canonical_geometry_reference("ibg", "test")
+        ref = _canonical_ref("ibg", "test")
         assert ref.may_define_canonical_geometry is True
 
     def test_derived_reference_invariants_enforced(self):
@@ -530,7 +584,7 @@ class TestInvariants:
 
     def test_provenance_tracking_present(self):
         """References support provenance hash tracking."""
-        ref = create_canonical_geometry_reference(
+        ref = _canonical_ref(
             owning_domain="ibg",
             source_authority="test",
             provenance_hash="abc123def456",
@@ -628,7 +682,7 @@ class TestValidation:
 
     def test_validate_source_reference_required_canonical(self):
         """Canonical layer does not require source reference."""
-        ref = create_canonical_geometry_reference("ibg", "test")
+        ref = _canonical_ref("ibg", "test")
         is_valid, error = validate_source_reference_required(ref)
         assert is_valid is True
         assert error is None
@@ -641,7 +695,7 @@ class TestValidation:
 
     def test_validate_allowed_use_permitted(self):
         """validate_allowed_use returns True for permitted use."""
-        ref = create_canonical_geometry_reference("ibg", "test")
+        ref = _canonical_ref("ibg", "test")
         is_allowed, error = validate_allowed_use(ref, "strategy")
         assert is_allowed is True
 
@@ -654,19 +708,19 @@ class TestValidation:
 
     def test_validation_result_has_timestamp(self):
         """Validation result has timestamp."""
-        ref = create_canonical_geometry_reference("ibg", "test")
+        ref = _canonical_ref("ibg", "test")
         result = validate_geometry_authority_reference(ref)
         assert result.validated_at is not None
 
     def test_validation_result_has_hash(self):
         """Validation result has deterministic hash."""
-        ref = create_canonical_geometry_reference("ibg", "test")
+        ref = _canonical_ref("ibg", "test")
         result = validate_geometry_authority_reference(ref)
         assert result.deterministic_validation_hash != ""
 
     def test_validation_blocking_issues_cause_red(self):
         """Blocking issues result in RED gate."""
-        ref = create_canonical_geometry_reference("ibg", "test")
+        ref = _canonical_ref("ibg", "test")
         result = validate_geometry_authority_reference(ref)
         # Valid canonical should have no blocking issues
         if result.blocking_issues:
@@ -684,7 +738,7 @@ class TestValidation:
 
     def test_validation_no_issues_green(self):
         """No issues or warnings results in GREEN gate."""
-        ref = create_canonical_geometry_reference(
+        ref = _canonical_ref(
             owning_domain="ibg",
             source_authority="ibg_body",
         )
@@ -703,7 +757,7 @@ class TestRegistry:
 
     def test_register_and_retrieve_reference(self):
         """Register and retrieve a reference."""
-        ref = create_canonical_geometry_reference("ibg", "test")
+        ref = _canonical_ref("ibg", "test")
         registered = register_geometry_authority_reference(ref)
         retrieved = get_geometry_authority_reference(ref.geometry_reference_id)
         assert retrieved is not None
@@ -711,7 +765,7 @@ class TestRegistry:
 
     def test_list_references(self):
         """List all registered references."""
-        ref1 = create_canonical_geometry_reference("ibg", "test1")
+        ref1 = _canonical_ref("ibg", "test1")
         ref2 = create_manufacturing_geometry_reference("geo-123", "cam")
         register_geometry_authority_reference(ref1)
         register_geometry_authority_reference(ref2)
@@ -720,8 +774,8 @@ class TestRegistry:
 
     def test_list_references_by_layer(self):
         """List references by layer."""
-        ref1 = create_canonical_geometry_reference("ibg", "test1")
-        ref2 = create_canonical_geometry_reference("ibg", "test2")
+        ref1 = _canonical_ref("ibg", "test1")
+        ref2 = _canonical_ref("ibg", "test2")
         ref3 = create_manufacturing_geometry_reference("geo-123", "cam")
         register_geometry_authority_reference(ref1)
         register_geometry_authority_reference(ref2)
@@ -733,7 +787,7 @@ class TestRegistry:
 
     def test_list_references_by_source(self):
         """List references by source geometry."""
-        canonical = create_canonical_geometry_reference("ibg", "test")
+        canonical = _canonical_ref("ibg", "test")
         register_geometry_authority_reference(canonical)
         derived1 = create_manufacturing_geometry_reference(
             source_geometry_id=canonical.geometry_reference_id,
@@ -750,7 +804,7 @@ class TestRegistry:
 
     def test_validate_reference_stores_result(self):
         """Validating a reference stores the result."""
-        ref = create_canonical_geometry_reference("ibg", "test")
+        ref = _canonical_ref("ibg", "test")
         register_geometry_authority_reference(ref, validate_on_register=False)
         result = validate_reference(ref.geometry_reference_id)
         assert result is not None
@@ -759,8 +813,8 @@ class TestRegistry:
 
     def test_get_unvalidated_references(self):
         """Get references that haven't been validated."""
-        ref1 = create_canonical_geometry_reference("ibg", "test1")
-        ref2 = create_canonical_geometry_reference("ibg", "test2")
+        ref1 = _canonical_ref("ibg", "test1")
+        ref2 = _canonical_ref("ibg", "test2")
         register_geometry_authority_reference(ref1, validate_on_register=True)
         register_geometry_authority_reference(ref2, validate_on_register=False)
         unvalidated = get_unvalidated_references()
@@ -769,7 +823,7 @@ class TestRegistry:
 
     def test_clear_indexes(self):
         """clear_geometry_authority_indexes clears all indexes."""
-        ref = create_canonical_geometry_reference("ibg", "test")
+        ref = _canonical_ref("ibg", "test")
         register_geometry_authority_reference(ref)
         assert len(list_geometry_authority_references()) == 1
         clear_geometry_authority_indexes()
@@ -777,21 +831,21 @@ class TestRegistry:
 
     def test_register_validates_by_default(self):
         """register_geometry_authority_reference validates by default."""
-        ref = create_canonical_geometry_reference("ibg", "test")
+        ref = _canonical_ref("ibg", "test")
         register_geometry_authority_reference(ref)
         validations = list_validations()
         assert len(validations) == 1
 
     def test_register_can_skip_validation(self):
         """register_geometry_authority_reference can skip validation."""
-        ref = create_canonical_geometry_reference("ibg", "test")
+        ref = _canonical_ref("ibg", "test")
         register_geometry_authority_reference(ref, validate_on_register=False)
         validations = list_validations()
         assert len(validations) == 0
 
     def test_source_index_updated(self):
         """Source index is updated on registration."""
-        canonical = create_canonical_geometry_reference("ibg", "test")
+        canonical = _canonical_ref("ibg", "test")
         register_geometry_authority_reference(canonical)
         derived = create_manufacturing_geometry_reference(
             source_geometry_id=canonical.geometry_reference_id,
@@ -818,7 +872,7 @@ class TestCISummary:
     def test_ci_summary_counts_references(self):
         """CI summary counts total references."""
         for i in range(3):
-            ref = create_canonical_geometry_reference("ibg", f"test{i}")
+            ref = _canonical_ref("ibg", f"test{i}")
             register_geometry_authority_reference(ref)
         summary = get_ci_summary()
         assert summary["total_references"] == 3
@@ -826,15 +880,15 @@ class TestCISummary:
     def test_ci_summary_counts_validations(self):
         """CI summary counts total validations."""
         for i in range(2):
-            ref = create_canonical_geometry_reference("ibg", f"test{i}")
+            ref = _canonical_ref("ibg", f"test{i}")
             register_geometry_authority_reference(ref, validate_on_register=True)
         summary = get_ci_summary()
         assert summary["total_validations"] == 2
 
     def test_ci_summary_counts_unvalidated(self):
         """CI summary counts unvalidated references."""
-        ref1 = create_canonical_geometry_reference("ibg", "test1")
-        ref2 = create_canonical_geometry_reference("ibg", "test2")
+        ref1 = _canonical_ref("ibg", "test1")
+        ref2 = _canonical_ref("ibg", "test2")
         register_geometry_authority_reference(ref1, validate_on_register=True)
         register_geometry_authority_reference(ref2, validate_on_register=False)
         summary = get_ci_summary()
@@ -849,14 +903,14 @@ class TestCISummary:
 
     def test_ci_summary_status_warn_unvalidated(self):
         """CI summary status is warn when unvalidated refs exist."""
-        ref = create_canonical_geometry_reference("ibg", "test")
+        ref = _canonical_ref("ibg", "test")
         register_geometry_authority_reference(ref, validate_on_register=False)
         summary = get_ci_summary()
         assert summary["status"] == "warn"
 
     def test_ci_summary_includes_layer_breakdown(self):
         """CI summary includes references by layer."""
-        ref1 = create_canonical_geometry_reference("ibg", "test1")
+        ref1 = _canonical_ref("ibg", "test1")
         ref2 = create_manufacturing_geometry_reference("geo-123", "cam")
         register_geometry_authority_reference(ref1)
         register_geometry_authority_reference(ref2)
@@ -867,7 +921,7 @@ class TestCISummary:
 
     def test_ci_summary_tracks_green_yellow_red(self):
         """CI summary tracks green/yellow/red counts."""
-        ref = create_canonical_geometry_reference("ibg", "test")
+        ref = _canonical_ref("ibg", "test")
         register_geometry_authority_reference(ref)
         summary = get_ci_summary()
         assert "green_count" in summary
@@ -907,8 +961,13 @@ class TestGeometryAuthorityRouter:
         assert data["layer"] == "canonical_geometry"
         assert data["owns_design_truth"] is True
 
-    def test_create_canonical_reference(self):
-        """POST /api/cam/geometry-authority/references/canonical creates reference."""
+    def test_legacy_canonical_endpoint_is_retired(self):
+        """POST /references/canonical is RETIRED (410) under GOV-CONVERGE-007-A.
+
+        The legacy unapproved-canonical HTTP creator no longer creates refs; it
+        returns 410 pointing at the process-approved endpoint, and registers
+        nothing as a side effect.
+        """
         response = client.post(
             "/api/cam/geometry-authority/references/canonical",
             json={
@@ -917,10 +976,12 @@ class TestGeometryAuthorityRouter:
                 "description": "Test canonical",
             },
         )
-        assert response.status_code == 200
-        data = response.json()
-        assert data["authority_layer"] == "canonical_geometry"
-        assert data["may_define_canonical_geometry"] is True
+        assert response.status_code == 410
+        assert "process-approved" in response.text
+        # No reference registered as a side effect of the retired path.
+        listing = client.get("/api/cam/geometry-authority/references")
+        assert listing.status_code == 200
+        assert listing.json() == []
 
     def test_create_process_approved_canonical_reference(self):
         """POST /references/canonical/process-approved creates approved reference.
@@ -1154,8 +1215,8 @@ class TestGeometryAuthorityRouter:
     def test_list_references(self):
         """GET /api/cam/geometry-authority/references lists all references."""
         client.post(
-            "/api/cam/geometry-authority/references/canonical",
-            json={"owning_domain": "ibg", "source_authority": "test"},
+            "/api/cam/geometry-authority/references/canonical/process-approved",
+            json=_process_approved_canonical_payload(),
         )
         response = client.get("/api/cam/geometry-authority/references")
         assert response.status_code == 200
@@ -1165,8 +1226,8 @@ class TestGeometryAuthorityRouter:
     def test_validate_reference(self):
         """POST /api/cam/geometry-authority/validate/{reference_id} validates reference."""
         create_resp = client.post(
-            "/api/cam/geometry-authority/references/canonical",
-            json={"owning_domain": "ibg", "source_authority": "test"},
+            "/api/cam/geometry-authority/references/canonical/process-approved",
+            json=_process_approved_canonical_payload(),
         )
         ref_id = create_resp.json()["geometry_reference_id"]
         validate_resp = client.post(f"/api/cam/geometry-authority/validate/{ref_id}")
@@ -1178,8 +1239,8 @@ class TestGeometryAuthorityRouter:
     def test_get_ci_summary(self):
         """GET /api/cam/geometry-authority/ci returns CI summary."""
         client.post(
-            "/api/cam/geometry-authority/references/canonical",
-            json={"owning_domain": "ibg", "source_authority": "test"},
+            "/api/cam/geometry-authority/references/canonical/process-approved",
+            json=_process_approved_canonical_payload(),
         )
         response = client.get("/api/cam/geometry-authority/ci")
         assert response.status_code == 200
@@ -1191,8 +1252,8 @@ class TestGeometryAuthorityRouter:
     def test_references_by_layer(self):
         """GET /api/cam/geometry-authority/references/by-layer/{layer} filters by layer."""
         client.post(
-            "/api/cam/geometry-authority/references/canonical",
-            json={"owning_domain": "ibg", "source_authority": "test1"},
+            "/api/cam/geometry-authority/references/canonical/process-approved",
+            json=_process_approved_canonical_payload(source_authority="test1"),
         )
         client.post(
             "/api/cam/geometry-authority/references/derived",

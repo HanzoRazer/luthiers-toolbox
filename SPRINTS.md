@@ -873,6 +873,21 @@ transition mode. Missing process-approval metadata remains warning-only, not RED
 5. Scope or implement persistent approval-record authenticity lookup when the
    registry/storage layer is ready.
 
+**GOV-CONVERGE-007-A progress (2026-07-04) — items 1 & 2 CLOSED, umbrella stays OPEN:**
+- **Item 1 DONE:** legacy `POST /api/cam/geometry-authority/references/canonical`
+  **retired → 410 Gone** (route stays mounted for a deliberate migration signal;
+  registers nothing; points at `/references/canonical/process-approved`). No
+  endpoint-count change; no warning→RED flip.
+- **Item 2 DONE:** `create_canonical_geometry_reference` reduced to **2 explicit
+  legacy-transition tests** (`test_validate_legacy_canonical_reference_warns_not_red`,
+  `test_all_factory_functions_enforce_invariants`); all green-path fixtures now use
+  a process-approved helper/endpoint.
+- **Item 4 already satisfied:** C2 vocabulary **RATIFIED 2026-07-04** (see
+  `canonical_geometry_process_policy.py`); `PROPOSED_*` identifier rename is optional follow-up.
+- **Still OPEN → umbrella stays OPEN:** item 3 (warning→RED timing = human/governance
+  decision) and item 5 (persistent approval-record authenticity / event store,
+  deferred with the PR-2 authorization anchor). Warning-not-RED preserved this pass.
+
 **Restore trigger:** Legacy canonical creation is removed, hard-deprecated, or
 fenced behind an explicitly approved transition path; green-path tests use the
 process-approved factory/endpoint; strict-RED timing and process literals are

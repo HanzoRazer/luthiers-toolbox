@@ -291,19 +291,20 @@ def create_canonical_geometry_reference(
     metadata: Optional[Dict[str, Any]] = None,
 ) -> GeometryAuthorityReference:
     """
-    LEGACY / UNAPPROVED canonical reference.
+    LEGACY / UNAPPROVED canonical reference — NOT a normal creation path.
 
     Creates a canonical reference WITHOUT a process-approval record. Under the
-    C2 process-exclusive ruling (PROPOSED), canonical authority is created only
-    by the approved canonical process following a governed approval event — so a
-    reference from this factory carries NO process-approval metadata and will
-    raise a transition-state *warning* during validation (not, in this PR, a RED
-    gate).
+    C2 process-exclusive ruling (RATIFIED 2026-07-04), canonical authority is
+    created only by the approved canonical process following a governed approval
+    event — so a reference from this factory carries NO process-approval metadata
+    and will raise a transition-state *warning* during validation (still not a RED
+    gate; the strict RED flip remains deferred).
 
-    Use ``create_process_approved_canonical_geometry_reference()`` for C2
-    geometry-origin-compliant body geometry. This factory is retained for
-    compatibility with existing call sites and 7T tests until they migrate;
-    deprecation / hard blocking is a follow-up (PR 4), not this pass.
+    RETIRED for runtime/API creation (GOV-CONVERGE-007-A): the HTTP path
+    ``POST /references/canonical`` now returns 410 and does not call this factory.
+    Use ``create_process_approved_canonical_geometry_reference()`` for any real
+    canonical geometry. This factory is retained ONLY for explicit legacy /
+    transition-warning tests; do NOT use it as a normal fixture path.
     """
     layer_def = get_layer_definition("canonical_geometry")
 

@@ -28,7 +28,6 @@ from app.cam.geometry_authority_taxonomy import (
 from app.cam.geometry_authority_reference import (
     GeometryAuthorityReference,
     GeometryUse,
-    create_canonical_geometry_reference,
     create_process_approved_canonical_geometry_reference,
     create_cognition_geometry_reference,
     create_derived_geometry_reference,
@@ -250,15 +249,22 @@ def _reject_unsupported_process_approved_request_fields(
 async def create_canonical_reference(
     request: CreateCanonicalReferenceRequest,
 ) -> GeometryAuthorityReference:
-    """Create and register a legacy/unapproved canonical geometry reference."""
-    ref = create_canonical_geometry_reference(
-        owning_domain=request.owning_domain,
-        source_authority=request.source_authority,
-        provenance_hash=request.provenance_hash,
-        description=request.description,
-        metadata=request.metadata,
+    """RETIRED (GOV-CONVERGE-007-A) — legacy unapproved canonical creation.
+
+    Creating canonical geometry without a governed process-approval record is
+    retired at the API boundary. The route stays mounted and returns 410 (not
+    404) so clients get a deliberate migration signal to the process-approved
+    path; no reference is registered. The request body is retained only for
+    OpenAPI compatibility. See /references/canonical/process-approved.
+    """
+    raise HTTPException(
+        status_code=410,
+        detail=(
+            "Legacy canonical reference creation is retired under GOV-CONVERGE-007-A. "
+            "Use /api/cam/geometry-authority/references/canonical/process-approved "
+            "with a governed approval record."
+        ),
     )
-    return register_geometry_authority_reference(ref)
 
 
 @router.post(

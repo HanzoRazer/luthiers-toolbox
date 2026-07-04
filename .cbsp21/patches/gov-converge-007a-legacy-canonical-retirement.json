@@ -1,0 +1,104 @@
+{
+  "schema": "cbsp21_patch_input_v1",
+  "schema_version": "cbsp21_patch_input_v1",
+  "coverage_min": 0.95,
+  "patch_id": "GOV_CONVERGE_007A_LEGACY_CANONICAL_RETIREMENT",
+  "title": "GOV-CONVERGE-007-A: retire the legacy canonical creation path (410) + migrate normal tests to process-approved",
+  "intent": "Follow-up safety net to C2 PR-1 (#182/#185). Retire the remaining normal path for creating canonical geometry WITHOUT process-approval metadata so the process-approved path is the only green-path creator. The legacy HTTP creator POST /api/cam/geometry-authority/references/canonical now returns 410 Gone (route stays mounted for a deliberate migration signal to /references/canonical/process-approved; registers nothing). Normal green-path tests migrate to a process-approved helper/endpoint; only two explicit legacy-transition tests keep the old create_canonical_geometry_reference factory. Warning-not-RED transition behavior is preserved; no authorization anchor, no persistent authenticity lookup, no solver/CAM/export/IBG change. Closes GOV-CONVERGE-007 items 1 and 2; items 3 (warning->RED timing) and 5 (persistent authenticity) stay open, so the umbrella stays OPEN.",
+  "change_type": "fix",
+  "behavior_change": "yes - legacy POST /references/canonical now returns 410 Gone instead of creating a reference (client-facing API contract change); no reference is registered. The process-approved endpoint and warning-not-RED validation are unchanged; no endpoint-count change (route stays mounted).",
+  "risk_level": "low",
+  "scope": {
+    "paths_in_scope": [
+      "services/api/app/routers/cam/",
+      "services/api/app/cam/",
+      "services/api/tests/cam/",
+      "docs/handoffs/",
+      "SPRINTS.md",
+      ".cbsp21/patches/"
+    ],
+    "files_expected_to_change": [
+      "services/api/app/routers/cam/geometry_authority_router.py",
+      "services/api/app/cam/geometry_authority_reference.py",
+      "services/api/tests/cam/test_geometry_authority_references.py",
+      "docs/handoffs/GOV_CONVERGE_007A_LEGACY_CANONICAL_CREATION_RETIREMENT_HANDOFF.md",
+      "SPRINTS.md",
+      ".cbsp21/patches/gov-converge-007a-legacy-canonical-retirement.json"
+    ]
+  },
+  "diff_articulation": {
+    "what_changed": "(1) geometry_authority_router.py: create_canonical_reference (POST /references/canonical) now raises HTTPException(410) pointing at /references/canonical/process-approved, and no longer imports/calls create_canonical_geometry_reference or registers a reference; the route + CreateCanonicalReferenceRequest stay mounted (OpenAPI + deliberate migration signal, no endpoint-count churn). (2) geometry_authority_reference.py: create_canonical_geometry_reference docstring updated — RETIRED for runtime/API creation, retained only for explicit legacy-transition tests; ratified-status wording (still warning-not-RED). (3) test_geometry_authority_references.py: added _canonical_ref (process-approved green-path fixture, legacy-compatible signature) and _process_approved_canonical_payload (router body); migrated 33 green-path create_canonical_geometry_reference calls + 4 legacy /references/canonical router setup calls to the process-approved helper/endpoint; the old router test now asserts 410 (test_legacy_canonical_endpoint_is_retired, no side-effect registration); only 2 explicit legacy-transition tests keep the legacy factory (test_validate_legacy_canonical_reference_warns_not_red, test_all_factory_functions_enforce_invariants). (4) SPRINTS.md: GOV-CONVERGE-007-A progress — items 1 & 2 CLOSED, items 3 & 5 stay OPEN, umbrella OPEN. (5) this per-PR CBSP21 manifest.",
+    "why_not_redundant": "Before this change a client (or a test fixture) could still create canonical geometry with NO governed process-approval metadata via a normal 200 endpoint and factory, re-opening the exact bypass C2 PR-1 closed at the fabrication layer. Retiring the legacy creator at the API boundary (410) and moving all green-path tests to the process-approved path makes process-approval the only supported canonical creator, materially reducing the blast radius before a later strict-RED decision. Warning-not-RED is deliberately preserved; the strict flip and persistent authenticity remain tracked-open follow-ups."
+  },
+  "verification": {
+    "commands_run": [
+      "pytest tests/cam/test_geometry_authority_references.py -> 110 passed",
+      "pytest tests/cam/test_canonical_geometry_process_approval.py tests/cam/test_canonical_geometry_process_boundaries.py -> 49 passed",
+      "grep create_canonical_geometry_reference( in test_geometry_authority_references.py -> 2 (both explicit legacy-transition tests)",
+      "grep bare POST /references/canonical in test file -> 1 (the retirement 410 test only)",
+      "py_compile router + reference module + test file -> OK",
+      "py -3.11 scripts/ci/check_cbsp21_patch_input.py --base origin/main --head HEAD -> PASS",
+      "py -3.11 scripts/ci/check_cbsp21_gate.py --changed-files <origin/main...HEAD> -> PASS"
+    ]
+  },
+  "files": [
+    {
+      "path": "services/api/app/routers/cam/geometry_authority_router.py",
+      "intent": "Retire the legacy canonical creator: POST /references/canonical -> 410 Gone pointing at the process-approved endpoint; drop the now-unused create_canonical_geometry_reference import; register nothing.",
+      "scan_targets": ["services/api/app/routers/cam/geometry_authority_router.py"],
+      "risk": "low",
+      "behavior_change": "yes - legacy endpoint returns 410 instead of 200; no reference registered; route stays mounted (no endpoint-count change)",
+      "verification": [
+        "tests/cam/test_geometry_authority_references.py::TestGeometryAuthorityRouter::test_legacy_canonical_endpoint_is_retired",
+        "process-approved endpoint still 200 (test_create_process_approved_canonical_reference)"
+      ]
+    },
+    {
+      "path": "services/api/app/cam/geometry_authority_reference.py",
+      "intent": "Docstring-only: mark create_canonical_geometry_reference RETIRED for runtime/API creation, retained only for explicit legacy-transition tests; ratified-status wording.",
+      "scan_targets": ["services/api/app/cam/geometry_authority_reference.py"],
+      "risk": "low",
+      "behavior_change": "none - docstring only, no model/logic change",
+      "verification": ["pytest tests/cam/ green; no behavior assertions changed"]
+    },
+    {
+      "path": "services/api/tests/cam/test_geometry_authority_references.py",
+      "intent": "Migrate green-path fixtures to process-approved (helper + payload); assert legacy endpoint 410; keep 2 explicit legacy-transition tests on the old factory.",
+      "scan_targets": ["services/api/tests/cam/test_geometry_authority_references.py"],
+      "risk": "low",
+      "behavior_change": "none - test-only",
+      "verification": ["pytest tests/cam/test_geometry_authority_references.py -> 110 passed"]
+    },
+    {
+      "path": "docs/handoffs/GOV_CONVERGE_007A_LEGACY_CANONICAL_CREATION_RETIREMENT_HANDOFF.md",
+      "intent": "Dev-order handoff for this lane: 410 retirement decision, test-migration plan, decisions/out-of-scope, and the item 3/5 deferrals.",
+      "scan_targets": ["docs/handoffs/GOV_CONVERGE_007A_LEGACY_CANONICAL_CREATION_RETIREMENT_HANDOFF.md"],
+      "risk": "low",
+      "behavior_change": "none - documentation only",
+      "verification": ["markdown review"]
+    },
+    {
+      "path": "SPRINTS.md",
+      "intent": "Record GOV-CONVERGE-007-A progress: items 1 & 2 CLOSED (410 retirement + fixture migration); items 3 & 5 stay OPEN; umbrella stays OPEN.",
+      "scan_targets": ["SPRINTS.md"],
+      "risk": "low",
+      "behavior_change": "none - ledger bookkeeping only",
+      "verification": ["markdown review"]
+    },
+    {
+      "path": ".cbsp21/patches/gov-converge-007a-legacy-canonical-retirement.json",
+      "intent": "Per-PR CBSP21 manifest declaring this legacy-canonical-retirement change.",
+      "scan_targets": [".cbsp21/patches/gov-converge-007a-legacy-canonical-retirement.json"],
+      "risk": "low",
+      "behavior_change": "none - CI/review metadata only",
+      "verification": ["scripts/ci/check_cbsp21_patch_input.py", "scripts/ci/check_cbsp21_gate.py"]
+    }
+  ],
+  "architecture_scan": {
+    "scan_id": "AS-2026-07-04-GOV-CONVERGE-007A",
+    "risk_summary": { "critical": 0, "high": 0, "medium": 0, "low": 0 },
+    "findings": [],
+    "acknowledged": false,
+    "acknowledgement_notes": ""
+  }
+}
