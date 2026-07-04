@@ -68,10 +68,38 @@ def test_melody_maker_gate_preserves_authority_labels():
     assert IntakeRejectionReason.REVIEW_REQUIRED in result.gate_result.rejections
 
     assert candidate.metadata["geometry_role"] == "evidence"
-    assert candidate.metadata["authority_state"] == "governed_evidence_candidate"
+    assert candidate.metadata["geometry_authority_class"] == "governed_evidence_candidate"
     assert candidate.metadata["authority_source"] == "vectorizer_sandbox:ibg_geo_acquisition"
     assert candidate.metadata["source_repo"] == "vectorizer_sandbox"
     assert candidate.metadata["calibration_status"] == "absent_no_mm_conversion_allowed"
+
+
+def test_metadata_does_not_shadow_canonical_authority_or_review_fields():
+    """The adapter's descriptive labels must not collide with reserved keys.
+
+    ``metadata["authority_state"]`` is a governance-layer convention that holds
+    the canonical AuthorityState string (see ibg_export_provenance); the adapter
+    must not overwrite it with a non-AuthorityState label. Likewise the sandbox's
+    advisory ``manual_review_required`` must not shadow enforced review state.
+    """
+    _result, candidate = _adapt_melody_maker()
+
+    # No collision with the reserved canonical-authority metadata key.
+    assert "authority_state" not in candidate.metadata
+    assert candidate.metadata["geometry_authority_class"] == "governed_evidence_candidate"
+    assert candidate.authority_state.value == "advisory_candidate"
+
+    # Sandbox advisory flag is namespaced and cannot be read as enforced review.
+    assert "manual_review_required" not in candidate.metadata
+    assert candidate.metadata["sandbox_manual_review_required"] is False
+    assert candidate.review_required is True
+
+    # Presence caveat is preserved for reviewers.
+    assert candidate.metadata["landmark_presence"] == {
+        "upper_bout": True,
+        "waist": True,
+        "lower_bout": True,
+    }
 
 
 def test_provenance_and_sandbox_facts_are_preserved():
@@ -150,6 +178,15 @@ def test_jazzmaster_offset_caveat_survives_intake():
         (lambda r: r["landmarks"].pop(), "expected exactly 3 landmarks"),
         (lambda r: r.update({"extraction_confidence": "certain"}), "extraction_confidence"),
         (lambda r: r.pop("coordinate_space"), "coordinate_space"),
+        # Well-shaped-but-junk values must be rejected, not passed to review.
+        (
+            lambda r: r["provenance"].update({"source_sha256": "z" * 64}),
+            "source_sha256",
+        ),
+        (lambda r: r["landmarks"][0].update({"y_norm": 1.5}), "y_norm"),
+        (lambda r: r["landmarks"][0].update({"width_px": -1.0}), "width_px"),
+        (lambda r: r["body_metrics_px"].update({"body_length_px": 0}), "body_length_px"),
+        (lambda r: r.update({"body_bbox_px_xywh": [1, 2, 0, 4]}), "width/height"),
     ],
 )
 def test_malformed_schema_fails_loudly(mutate, expected):

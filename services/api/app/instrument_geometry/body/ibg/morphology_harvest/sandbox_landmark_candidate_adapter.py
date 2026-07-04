@@ -43,9 +43,16 @@ CONFIDENCE_VALUES = {
     "medium": 0.5,
     "low": 0.3,
 }
+# NOTE: the key is deliberately NOT ``authority_state``. Across the governance
+# layer (e.g. ``ibg_export_provenance.attachment_from_body_evidence_candidate``)
+# ``metadata["authority_state"]`` is a reserved convention that holds the
+# *canonical* ``candidate.authority.current_state.value`` (a real AuthorityState
+# string such as ``advisory_candidate``). "governed_evidence_candidate" is a
+# descriptive geometry-authority CLASS label, not an AuthorityState value, so it
+# lives under its own key to avoid shadowing/contradicting the canonical field.
 GEOMETRY_AUTHORITY_LABELS = {
     "geometry_role": "evidence",
-    "authority_state": "governed_evidence_candidate",
+    "geometry_authority_class": "governed_evidence_candidate",
     "authority_source": "vectorizer_sandbox:ibg_geo_acquisition",
     "promotion_mechanism": "human_review_and_governance_ratification",
     "export_format_authority": "none",
@@ -157,7 +164,9 @@ def validate_sandbox_landmark_candidate(record: Mapping[str, Any]) -> None:
         _require(key in provenance, f"provenance.{key} missing")
     source_sha = provenance["source_sha256"]
     _require(
-        isinstance(source_sha, str) and len(source_sha) == 64,
+        isinstance(source_sha, str)
+        and len(source_sha) == 64
+        and all(c in "0123456789abcdefABCDEF" for c in source_sha),
         "provenance.source_sha256 must be a 64-character hex digest",
     )
 
@@ -167,6 +176,11 @@ def validate_sandbox_landmark_candidate(record: Mapping[str, Any]) -> None:
 
     bbox = record["body_bbox_px_xywh"]
     _require(len(bbox) == 4, "body_bbox_px_xywh must contain [x,y,w,h]")
+    _require(
+        all(_is_number(v) for v in bbox),
+        "body_bbox_px_xywh entries must be numeric",
+    )
+    _require(bbox[2] > 0 and bbox[3] > 0, "body_bbox_px_xywh width/height must be > 0")
 
     metrics = record["body_metrics_px"]
     for key in (
@@ -179,6 +193,16 @@ def validate_sandbox_landmark_candidate(record: Mapping[str, Any]) -> None:
     ):
         _require(key in metrics, f"body_metrics_px.{key} missing")
         _require(_is_number(metrics[key]), f"body_metrics_px.{key} must be numeric")
+    # A real, non-degenerate body must have positive extent and scale.
+    _require(metrics["body_length_px"] > 0, "body_metrics_px.body_length_px must be > 0")
+    _require(
+        metrics["body_max_width_px"] > 0,
+        "body_metrics_px.body_max_width_px must be > 0",
+    )
+    _require(
+        metrics["centerline_x_px"] >= 0,
+        "body_metrics_px.centerline_x_px must be >= 0",
+    )
 
     landmarks = record["landmarks"]
     _require(len(landmarks) == 3, "expected exactly 3 landmarks")
@@ -188,8 +212,14 @@ def validate_sandbox_landmark_candidate(record: Mapping[str, Any]) -> None:
         name = landmark.get("name", "<unknown>")
         _require(isinstance(landmark.get("presence"), bool), f"{name}.presence must be bool")
         _require(isinstance(landmark.get("y_px"), int), f"{name}.y_px must be int")
+        _require(landmark["y_px"] >= 0, f"{name}.y_px must be >= 0")
         for key in ("width_px", "y_norm"):
             _require(_is_number(landmark.get(key)), f"{name}.{key} must be numeric")
+        _require(landmark["width_px"] >= 0, f"{name}.width_px must be >= 0")
+        _require(
+            0.0 <= landmark["y_norm"] <= 1.0,
+            f"{name}.y_norm must be within [0.0, 1.0]",
+        )
 
     _require(
         record["ordering_ok"]
@@ -357,12 +387,22 @@ def _candidate_metadata(record: Mapping[str, Any]) -> Dict[str, Any]:
             landmark["name"]: landmark["y_norm"]
             for landmark in record["landmarks"]
         },
+        # Preserve the per-bout presence caveat for reviewers: a sandbox record
+        # may flag a bout as not-actually-present, and that fact must survive
+        # intake rather than being silently flattened into an emitted landmark.
+        "landmark_presence": {
+            landmark["name"]: landmark["presence"]
+            for landmark in record["landmarks"]
+        },
         "ordering_rule": record.get("ordering_rule"),
         "ordering_ok": record["ordering_ok"],
         "bout_ordering_lower_ge_upper": record["bout_ordering_lower_ge_upper"],
         "width_structure_resolved": record["width_structure_resolved"],
         "non_degenerate": record["non_degenerate"],
-        "manual_review_required": record["manual_review_required"],
+        # The sandbox's own advisory flag — informational provenance only. It is
+        # namespaced ``sandbox_*`` so it can never be mistaken for luthiers'
+        # enforced review state (``candidate.review_required``, always True here).
+        "sandbox_manual_review_required": record["manual_review_required"],
         "extraction_confidence": record["extraction_confidence"],
         "diagnostics": dict(record.get("diagnostics", {})),
         "scope_note": record["scope_note"],
