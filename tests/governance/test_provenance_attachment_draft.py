@@ -6,7 +6,11 @@ Cross-Repo Governance Normalization 1A (2026-05-24)
 
 These tests validate that ProvenanceAttachmentDraft maintains
 constitutional invariants:
-    - export_authorized is ALWAYS False
+    - export_authorized is ALWAYS False (structural field, not an export gate)
+    - is_exportable() (status == RATIFIED) is the canonical export gate, and is
+      intentionally decoupled from export_authorized — the two-notion contract
+      documented on ProvenanceAttachmentDraft. A RATIFIED attachment therefore
+      has is_exportable() True while export_authorized stays False.
     - IBG drafts default to BLOCKED status
     - Drafts cannot be ratified by this code path
     - Serialization round-trip works correctly
@@ -45,15 +49,32 @@ class TestProvenanceAttachmentInvariants:
                 export_authorized=True,
             )
 
-    def test_is_exportable_always_returns_false(self):
-        """is_exportable() must always return False for drafts."""
+    def test_is_exportable_false_for_non_ratified_statuses(self):
+        """Draft/pending/blocked attachments are not exportable."""
+        for status in NON_EXPORTABLE_STATUSES:
+            draft = ProvenanceAttachmentDraft(
+                attachment_id=f"test-{status.value}",
+                source_artifact_id="/path/to/source.dxf",
+                status=status,
+            )
+            assert draft.is_exportable() is False
+
+    def test_ratified_status_is_exportable_for_r2_wrapper(self):
+        """R2 allows RATIFIED attachments while export_authorized remains False.
+
+        Contract lock for the intentional two-notion divergence: is_exportable()
+        gates on status, export_authorized is a separate always-False field. This
+        fails loudly if a future refactor tries to "reconcile" them by making
+        is_exportable() read export_authorized (would flip True->False) or by
+        forcing is_exportable() back to always-False.
+        """
         draft = ProvenanceAttachmentDraft(
             attachment_id="test-001",
             source_artifact_id="/path/to/source.dxf",
-            status=ProvenanceAttachmentStatus.RATIFIED,  # Even if ratified
+            status=ProvenanceAttachmentStatus.RATIFIED,
         )
-        # Draft structures are never exportable
-        assert draft.is_exportable() is False
+        assert draft.export_authorized is False
+        assert draft.is_exportable() is True
 
     def test_draft_status_is_default(self):
         """Default status should be DRAFT."""

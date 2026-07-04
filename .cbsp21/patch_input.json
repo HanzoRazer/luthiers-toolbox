@@ -2,107 +2,74 @@
   "schema": "cbsp21_patch_input_v1",
   "schema_version": "cbsp21_patch_input_v1",
   "coverage_min": 0.95,
-  "patch_id": "CI_RED_015L_IBG_SANDBOX_LANDMARK_INTAKE",
-  "title": "IBG sandbox landmark candidate intake bridge",
-  "intent": "Connect vectorizer-sandbox ibg-landmark-candidate.v1 facts to luthiers as governed BodyEvidenceCandidate inputs while preserving provenance, coordinate caveats, confidence labels, and fail-closed review posture. This is a connection/readiness bridge only; it does not promote authoritative geometry, calibrate pixels to millimeters, run the solver, approve IBG memory, or resolve C2 human-approval decisions.",
-  "change_type": "feature",
-  "behavior_change": "Adds a new IBG-only intake adapter and evidence source for sandbox landmark candidate records. Imported records remain advisory, review-required, blocked by the existing IBG intake gate, and unavailable for solver/export use.",
+  "patch_id": "PROVENANCE_RATIFIED_EXPORTABLE_STALE_GUARD",
+  "title": "Align provenance draft guard with ratified exportability contract + document the two-notion export contract",
+  "intent": "Correct a stale governance test that asserted ProvenanceAttachmentDraft.is_exportable() is always false even for RATIFIED attachments, AND document the intentional two-notion export contract in the production model so the alignment is not mistaken for an inconsistency and 'reconciled' incorrectly later. Production code and the R2 governed-save wrapper already define RATIFIED as the only exportable provenance attachment status (is_exportable()), while export_authorized is a separate structural field that is always False and is not consulted by any export gate.",
+  "change_type": "test+docs",
+  "behavior_change": "none - test correction plus docstring/comment-only clarification in provenance_attachment.py. No executable production behavior changes; is_exportable() still returns True exactly when status == RATIFIED and export_authorized remains always False.",
   "risk_level": "medium",
   "scope": {
     "paths_in_scope": [
       ".cbsp21/",
-      "services/api/app/instrument_geometry/body/ibg/",
-      "services/api/tests/fixtures/ibg_sandbox_landmarks/",
-      "services/api/tests/test_ibg_sandbox_landmark_candidate_adapter.py"
+      "tests/governance/test_provenance_attachment_draft.py",
+      "services/api/app/governance/provenance_attachment.py"
     ],
     "files_expected_to_change": [
       ".cbsp21/patch_input.json",
-      "services/api/app/instrument_geometry/body/ibg/body_grid/body_grid_schema.py",
-      "services/api/app/instrument_geometry/body/ibg/morphology_harvest/sandbox_landmark_candidate_adapter.py",
-      "services/api/tests/fixtures/ibg_sandbox_landmarks/jazzmaster62_body.landmarks.json",
-      "services/api/tests/fixtures/ibg_sandbox_landmarks/melody_maker_body.landmarks.json",
-      "services/api/tests/test_ibg_sandbox_landmark_candidate_adapter.py"
+      "tests/governance/test_provenance_attachment_draft.py",
+      "services/api/app/governance/provenance_attachment.py"
     ]
   },
   "diff_articulation": {
-    "what_changed": "Added EvidenceSource.IBG_SANDBOX_LANDMARK_CANDIDATE and a new sandbox_landmark_candidate_adapter that validates self-contained ibg-landmark-candidate.v1 records, maps their three bout landmarks to centerline-only RAW_PIXEL NormalizedPoint evidence, preserves widths and admissibility facts in candidate metadata, stamps confidence as HEURISTIC using high=0.8 medium=0.5 low=0.3, attaches complete provenance, and runs the existing default IBG intake gate. The solver conversion helper intentionally raises CalibrationRequiredError even when a scale is supplied, keeping pixel facts out of millimeter solver paths until a calibrated follow-up exists. Two number-only sandbox fixture records and focused tests cover success, fail-closed gate posture, provenance preservation, coordinate caveats, offset-body caveats, invalid schema rejection, and review JSON.",
-    "why_not_redundant": "No existing luthiers path accepted vectorizer-sandbox landmark candidate records as governed IBG evidence while preserving their sandbox caveats and preventing accidental authority promotion. This bridge gives CI-RED-015 a concrete connection point to evaluate IBG facts without treating a DXF/export format, sandbox extractor, or file location as authoritative geometry."
+    "what_changed": "(1) tests/governance/test_provenance_attachment_draft.py: split the stale RATIFIED exportability assertion into two focused invariants (non-ratified statuses in NON_EXPORTABLE_STATUSES remain non-exportable; a RATIFIED attachment returns is_exportable() True while export_authorized remains False), plus a contract-lock docstring on the divergence test and module docstring. (2) services/api/app/governance/provenance_attachment.py: docstring/comment-only clarification naming the intentional two-notion export contract — export_authorized is an always-False structural field (fail-closed guard + serialization/schema field, NOT an export gate), while is_exportable()/status==RATIFIED is the canonical gate the governed save boundary (app.util.ibg_dxf_export_lifecycle) consults. Also corrects the module-level 'Do NOT wire to DXF export' constraint, which was the R1 posture superseded by DO 79 / R2, and notes the type spans DRAFT->RATIFIED despite its historical 'Draft' name. No executable statements changed.",
+    "why_not_redundant": "The old test assertion contradicted services/api/app/governance/provenance_attachment.py::ProvenanceAttachmentDraft.is_exportable(), which returns True exactly when status == RATIFIED. Existing R2 export provenance tests (test_dxf_lifecycle_ibg_provenance_guards.py) rely on ratified attachments building a COMPAT_ONLY governed-save context. The added docstrings remove the standing contradiction between the class docstring ('draft structures do not wire to DXF export' / 'export_authorized ALWAYS False until ratification') and is_exportable(), which the review flagged as inviting an incompatible future 'cleanup'. This PR does not authorize blocked drafts or alter export_authorized; it repairs the stale test expectation and documents existing behavior."
   },
   "verification": {
     "commands_run": [
-      "PYTHONPATH=services/api py -3.11 -m pytest services/api/tests/test_ibg_sandbox_landmark_candidate_adapter.py services/api/tests/test_ibg_intake_gate.py services/api/tests/test_ibg_constitutional_integration.py tests/test_ibg_provenance_ratification_docs.py services/api/tests/test_dxf_lifecycle_ibg_provenance_guards.py services/api/tests/test_ibg_export_provenance.py -q -> 71 passed, 2 existing NumPy reload warnings",
-      "git diff --cached --check -> clean before first commit",
-      "GitHub PR checks initially showed CBSP21 manifest stale and one new test over the complexity threshold; this follow-up updates the manifest and splits the test witness."
+      "PYTHONPATH=services/api py -3.11 -m pytest tests/governance/test_provenance_attachment_draft.py services/api/tests/test_dxf_lifecycle_ibg_provenance_guards.py services/api/tests/test_ibg_export_provenance.py -q -> 29 passed, 3 existing NumPy reload warnings",
+      "PYTHONPATH=services/api py -3.11 -c import-and-construct RATIFIED draft -> is_exportable True, export_authorized False (behavior unchanged)",
+      "py -3.11 scripts/ci/check_cbsp21_patch_input.py --base origin/main --head HEAD -> pass",
+      "py -3.11 scripts/ci/check_cbsp21_gate.py --manifest .cbsp21/patch_input.json --changed-files <final PR file set> -> pass, 100% manifest coverage",
+      "py -3.11 -m app.ci.check_file_sizes (services/api) -> provenance_attachment.py ~348 lines, under 500 threshold",
+      "py -3.11 -m app.ci.check_complexity --baseline app/ci/complexity_baseline.json -> pass, no functions exceed complexity 15"
     ]
   },
   "files": [
     {
-      "path": "services/api/app/instrument_geometry/body/ibg/body_grid/body_grid_schema.py",
-      "intent": "Register the sandbox landmark candidate as an explicit IBG evidence source.",
+      "path": "services/api/app/governance/provenance_attachment.py",
+      "intent": "Docstring/comment-only: name the intentional two-notion export contract (always-False export_authorized field vs is_exportable()/status gate); correct the superseded R1 'do not wire to DXF export' note per DO 79 / R2; note DRAFT->RATIFIED lifecycle naming.",
       "scan_targets": [
-        "services/api/app/instrument_geometry/body/ibg/body_grid/body_grid_schema.py"
+        "services/api/app/governance/provenance_attachment.py",
+        "services/api/app/util/ibg_dxf_export_lifecycle.py"
       ],
       "risk": "low",
-      "behavior_change": "Adds a new enum value only; no existing evidence source behavior changes.",
+      "behavior_change": "none - docstring/comment-only; no executable statements changed",
       "verification": [
-        "services/api/tests/test_ibg_sandbox_landmark_candidate_adapter.py"
+        "tests/governance/test_provenance_attachment_draft.py",
+        "services/api/tests/test_dxf_lifecycle_ibg_provenance_guards.py",
+        "services/api/tests/test_ibg_export_provenance.py"
       ]
     },
     {
-      "path": "services/api/app/instrument_geometry/body/ibg/morphology_harvest/sandbox_landmark_candidate_adapter.py",
-      "intent": "Adapt vectorizer-sandbox landmark candidate records into review-required BodyEvidenceCandidate objects with provenance and fail-closed gate results.",
+      "path": "tests/governance/test_provenance_attachment_draft.py",
+      "intent": "Align RATIFIED is_exportable() expectations with current production/R2 contract while preserving non-ratified non-exportability; add a contract-lock docstring for the intentional divergence.",
       "scan_targets": [
-        "services/api/app/instrument_geometry/body/ibg/morphology_harvest/sandbox_landmark_candidate_adapter.py",
-        "services/api/app/instrument_geometry/body/ibg/body_evidence_candidate.py",
-        "services/api/app/instrument_geometry/body/ibg/ibg_intake_gate.py"
+        "tests/governance/test_provenance_attachment_draft.py",
+        "services/api/app/governance/provenance_attachment.py",
+        "services/api/tests/test_dxf_lifecycle_ibg_provenance_guards.py",
+        "services/api/tests/test_ibg_export_provenance.py"
       ],
       "risk": "medium",
-      "behavior_change": "Adds an opt-in adapter path. Imported sandbox records remain advisory, review-required, not approved for IBG memory, and blocked from solver/export paths.",
+      "behavior_change": "none - test-only correction for existing behavior",
       "verification": [
-        "services/api/tests/test_ibg_sandbox_landmark_candidate_adapter.py",
-        "services/api/tests/test_ibg_intake_gate.py",
-        "services/api/tests/test_ibg_constitutional_integration.py"
-      ]
-    },
-    {
-      "path": "services/api/tests/fixtures/ibg_sandbox_landmarks/jazzmaster62_body.landmarks.json",
-      "intent": "Provide a number-only sandbox fixture with offset-body ordering caveats preserved.",
-      "scan_targets": [
-        "services/api/tests/fixtures/ibg_sandbox_landmarks/jazzmaster62_body.landmarks.json"
-      ],
-      "risk": "low",
-      "behavior_change": "none - test fixture only",
-      "verification": [
-        "services/api/tests/test_ibg_sandbox_landmark_candidate_adapter.py"
-      ]
-    },
-    {
-      "path": "services/api/tests/fixtures/ibg_sandbox_landmarks/melody_maker_body.landmarks.json",
-      "intent": "Provide a number-only sandbox fixture for the canonical admissible landmark candidate path.",
-      "scan_targets": [
-        "services/api/tests/fixtures/ibg_sandbox_landmarks/melody_maker_body.landmarks.json"
-      ],
-      "risk": "low",
-      "behavior_change": "none - test fixture only",
-      "verification": [
-        "services/api/tests/test_ibg_sandbox_landmark_candidate_adapter.py"
-      ]
-    },
-    {
-      "path": "services/api/tests/test_ibg_sandbox_landmark_candidate_adapter.py",
-      "intent": "Cover the sandbox intake bridge, fail-closed posture, provenance preservation, pixel-only coordinate boundary, offset caveats, invalid schema rejection, and review JSON.",
-      "scan_targets": [
-        "services/api/tests/test_ibg_sandbox_landmark_candidate_adapter.py"
-      ],
-      "risk": "low",
-      "behavior_change": "none - test-only",
-      "verification": [
-        "services/api/tests/test_ibg_sandbox_landmark_candidate_adapter.py"
+        "tests/governance/test_provenance_attachment_draft.py",
+        "services/api/tests/test_dxf_lifecycle_ibg_provenance_guards.py",
+        "services/api/tests/test_ibg_export_provenance.py"
       ]
     },
     {
       "path": ".cbsp21/patch_input.json",
-      "intent": "Declare the CI-RED-015-L patch scope for CBSP21 manifest gates.",
+      "intent": "Declare the stale guard-test correction and the docstring-only production clarification for CBSP21 manifest gates.",
       "scan_targets": [
         ".cbsp21/patch_input.json"
       ],
@@ -115,7 +82,7 @@
     }
   ],
   "architecture_scan": {
-    "scan_id": "AS-2026-07-03-015L",
+    "scan_id": "AS-2026-07-03-PROVENANCE-RATIFIED-GUARD",
     "risk_summary": {
       "critical": 0,
       "high": 0,
