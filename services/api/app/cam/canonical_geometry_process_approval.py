@@ -3,7 +3,7 @@ Canonical Geometry Process Approval
 
 C2 geometry-origin closure (PR 1 of the process-exclusive dev order).
 
-Keystone ruling being operationalized (PROPOSED — see ratification note below):
+Keystone ruling being operationalized (RATIFIED 2026-07-04 — see ratification note below):
 
     Canonical geometry authority is process-derived, not artifact-derived.
     Source geometry may propose, evidence may support, and representation may
@@ -29,18 +29,25 @@ extend and re-approve the process (a "process extension"). The fix is never to
 grant authority to one individual artifact as an exception.
 
 ------------------------------------------------------------------------------
-RATIFICATION STATUS: PROPOSED / RATIFICATION-READY.
+RATIFICATION STATUS: RATIFIED by the repo owner (Ross Echols / HanzoRazer),
+2026-07-04.
 
-This is additive bridge infrastructure that makes the ruling *implementable*.
-It does NOT mark C2 geometry-origin closed and does NOT encode the packet as
-final constitutional truth. The process id / version / approval-rule literals
-below are PROPOSED PLACEHOLDERS awaiting repo-owner / governance ratification:
+The keystone ruling wording above and the canonical-process vocabulary below are
+hereby ratified as the governing C2 process-exclusive canonical-authority wording:
 
     canonical_process_id      = "body-geometry-canonicalization"
     canonical_process_version = "v1"
     approval_rule_id          = "c2-process-exclusive-canonical-authority-v1"
 
-Do not treat these constants, or the presence of this module, as ratification.
+SCOPE OF THIS RATIFICATION — READ BEFORE EXTENDING. This ratifies the RULING and
+its vocabulary as the working canonical identifiers. It does NOT create the
+authorization anchor (AUTHORIZED_CANONICAL_APPROVERS — *who* may approve), which
+remains the PR-2 HARD PREREQUISITE. Therefore the ``authentication`` fail-safe is
+UNCHANGED and MUST stay so until PR-2: every approval minted here remains
+``unverified_pending_governance``. Ratifying the wording is not authorizing
+approvers, and this module still mints nothing that may be treated as verified
+canonical authority. (Constant identifiers retain the ``PROPOSED_`` prefix for
+now; dropping it is optional follow-up, not required by ratification.)
 ------------------------------------------------------------------------------
 """
 

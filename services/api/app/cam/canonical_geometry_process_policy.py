@@ -3,7 +3,7 @@ Canonical geometry process policy helpers.
 
 C2 PR-1 keeps the process vocabulary, coverage registry, and governed approval
 event identity separate from the approval-record model so the model module stays
-small and the proposed governance vocabulary is easy to ratify or replace.
+small and the ratified governance vocabulary is easy to extend or supersede.
 """
 
 from __future__ import annotations
@@ -14,7 +14,9 @@ import re
 from typing import Dict, Tuple
 
 
-# Proposed placeholder vocabulary (RATIFICATION PENDING - do not treat as final)
+# Ratified vocabulary (repo owner, 2026-07-04) — governing C2 canonical-process
+# names. Identifier names retain the PROPOSED_ prefix for now; dropping it is
+# optional follow-up, not required by ratification.
 PROPOSED_CANONICAL_PROCESS_ID = "body-geometry-canonicalization"
 PROPOSED_CANONICAL_PROCESS_VERSION = "v1"
 PROPOSED_APPROVAL_RULE_ID = "c2-process-exclusive-canonical-authority-v1"
@@ -27,7 +29,7 @@ ALLOWED_AUTHENTICATION_STATES = frozenset({UNVERIFIED_PENDING_GOVERNANCE})
 
 # Registry of approved canonical processes -> the source-geometry roles that
 # each process/version is approved to cover. This registry is deliberately small
-# and PROPOSED; legitimate uncovered cases require process extension.
+# and RATIFIED (2026-07-04); legitimate uncovered cases require process extension.
 APPROVED_CANONICAL_PROCESSES: Dict[Tuple[str, str], frozenset] = {
     (PROPOSED_CANONICAL_PROCESS_ID, PROPOSED_CANONICAL_PROCESS_VERSION): frozenset(
         {
