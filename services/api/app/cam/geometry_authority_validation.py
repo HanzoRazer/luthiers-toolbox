@@ -38,6 +38,7 @@ from app.cam.geometry_authority_taxonomy import (
 )
 from app.cam.geometry_authority_reference import GeometryAuthorityReference
 from app.cam.canonical_geometry_process_approval import (
+    UNVERIFIED_PENDING_GOVERNANCE,
     is_registered_canonical_process,
 )
 
@@ -381,6 +382,13 @@ def validate_canonical_process_authority(
             f"'{reference.canonical_process_version}'; process extension "
             "and repo-owner/governance ratification are required before this "
             "metadata can back canonical authority."
+        )
+    if reference.authentication != UNVERIFIED_PENDING_GOVERNANCE:
+        return False, (
+            "Canonical reference carries unsupported authentication status "
+            f"'{reference.authentication}'; PR-1 permits only "
+            f"'{UNVERIFIED_PENDING_GOVERNANCE}' until the authorized-approver "
+            "anchor is ratified and implemented."
         )
     return True, None
 

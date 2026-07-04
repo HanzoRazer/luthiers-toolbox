@@ -23,6 +23,7 @@ from app.cam.canonical_geometry_process_approval import (
     PROPOSED_CANONICAL_PROCESS_ID,
     PROPOSED_CANONICAL_PROCESS_VERSION,
     PROPOSED_APPROVAL_RULE_ID,
+    compute_governed_approval_event_id,
     create_canonical_process_approval_record,
     validate_canonical_process_approval_record,
     process_covers_source_case,
@@ -64,8 +65,21 @@ def _valid_kwargs(**overrides):
 def _valid_model_kwargs(**overrides):
     """Baseline kwargs for constructing the RECORD MODEL directly (event id
     supplied, as it would be when a record is rehydrated/inspected)."""
-    kwargs = dict(_valid_kwargs(), governed_approval_event_id="event-abc123")
+    event_id = overrides.pop("governed_approval_event_id", None)
+    kwargs = dict(_valid_kwargs())
     kwargs.update(overrides)
+    if event_id is None:
+        event_id = compute_governed_approval_event_id(
+            approver_id=kwargs["approver_id"],
+            canonical_process_id=kwargs["canonical_process_id"],
+            canonical_process_version=kwargs["canonical_process_version"],
+            approval_rule_id=kwargs["approval_rule_id"],
+            source_geometry_id=kwargs["source_geometry_id"],
+            provenance_hash=kwargs["provenance_hash"],
+            process_inputs_hash=kwargs["process_inputs_hash"],
+            decision=kwargs.get("decision", "approve"),
+        )
+    kwargs["governed_approval_event_id"] = event_id
     return kwargs
 
 
@@ -91,11 +105,11 @@ def test_approval_hash_is_deterministic_and_excludes_timestamp():
     # identical content -> identical hash.
     r1 = CanonicalProcessApprovalRecord(
         approval_record_id="rec-stable",
-        **_valid_model_kwargs(governed_approval_event_id="event-stable"),
+        **_valid_model_kwargs(),
     )
     r2 = CanonicalProcessApprovalRecord(
         approval_record_id="rec-stable",
-        **_valid_model_kwargs(governed_approval_event_id="event-stable"),
+        **_valid_model_kwargs(),
     )
     assert r1.compute_hash() == r2.compute_hash()
 
@@ -110,6 +124,22 @@ def test_governed_approval_event_id_is_server_derived_not_client_supplied():
     record = create_canonical_process_approval_record(**_valid_kwargs())
     assert record.governed_approval_event_id.startswith("gae-")
     assert record.governed_approval_event_id != "event-i-picked"
+
+
+def test_governed_approval_event_id_is_stable_for_same_logical_approval():
+    first = create_canonical_process_approval_record(**_valid_kwargs())
+    second = create_canonical_process_approval_record(**_valid_kwargs())
+
+    assert first.governed_approval_event_id == second.governed_approval_event_id
+
+
+def test_governed_approval_event_id_changes_when_inputs_change():
+    baseline = create_canonical_process_approval_record(**_valid_kwargs())
+    changed = create_canonical_process_approval_record(
+        **_valid_kwargs(process_inputs_hash="inputs-hash-different")
+    )
+
+    assert baseline.governed_approval_event_id != changed.governed_approval_event_id
 
 
 def test_api_minted_approval_is_unverified_by_default():
@@ -219,6 +249,10 @@ def test_approval_identity_is_bound_into_reference_hash():
         owning_domain="boe",
         may_define_canonical_geometry=True,
         process_approval_record_id="rec-1",
+        canonical_process_id=PROPOSED_CANONICAL_PROCESS_ID,
+        canonical_process_version=PROPOSED_CANONICAL_PROCESS_VERSION,
+        governed_approval_event_id="gae-fixed",
+        process_source_geometry_id="geo-src-fixed",
     )
     a = GeometryAuthorityReference(**base, process_approval_record_hash="hash-A")
     b = GeometryAuthorityReference(**base, process_approval_record_hash="hash-B")
@@ -236,6 +270,47 @@ def test_approval_identity_is_bound_into_reference_hash():
     assert legacy.compute_hash() != a.compute_hash()
 
 
+def test_process_approved_reference_hash_binds_authentication_if_mutated():
+    record = create_canonical_process_approval_record(**_valid_kwargs())
+    ref = create_process_approved_canonical_geometry_reference(
+        approval_record=record,
+        owning_domain="boe",
+    )
+    original_hash = ref.compute_hash()
+
+    ref.authentication = "verified"
+
+    assert ref.compute_hash() != original_hash
+
+
+def test_reference_model_rejects_verified_authentication_in_pr1():
+    with pytest.raises(ValueError, match="authentication"):
+        GeometryAuthorityReference(
+            authority_layer="canonical_geometry",
+            owning_domain="boe",
+            may_define_canonical_geometry=True,
+            authentication="verified",
+        )
+
+
+def test_mutated_verified_authentication_is_blocking_not_warning():
+    record = create_canonical_process_approval_record(**_valid_kwargs())
+    ref = create_process_approved_canonical_geometry_reference(
+        approval_record=record,
+        owning_domain="boe",
+    )
+    ref.authentication = "verified"
+
+    ok, reason = validate_canonical_process_authority(ref)
+    assert ok is False
+    assert reason is not None
+    assert "authentication" in reason
+
+    result = validate_geometry_authority_reference(ref)
+    assert result.gate == "red"
+    assert any("authentication" in issue for issue in result.blocking_issues)
+
+
 def test_process_approved_canonical_reference_validates_green():
     record = create_canonical_process_approval_record(**_valid_kwargs())
     ref = create_process_approved_canonical_geometry_reference(
@@ -251,10 +326,19 @@ def test_process_approved_canonical_reference_validates_green():
 
 
 def test_process_approved_factory_rejects_unapproved_manual_record():
+    event_id = compute_governed_approval_event_id(
+        approver_id="human:tester",
+        canonical_process_id="unknown-process",
+        canonical_process_version="v9",
+        approval_rule_id=PROPOSED_APPROVAL_RULE_ID,
+        source_geometry_id="geo-src-manual",
+        provenance_hash="prov-hash-manual",
+        process_inputs_hash="inputs-hash-manual",
+    )
     record = CanonicalProcessApprovalRecord(
         canonical_process_id="unknown-process",
         canonical_process_version="v9",
-        governed_approval_event_id="event-manual",
+        governed_approval_event_id=event_id,
         approval_rule_id=PROPOSED_APPROVAL_RULE_ID,
         source_geometry_id="geo-src-manual",
         provenance_hash="prov-hash-manual",
@@ -267,6 +351,56 @@ def test_process_approved_factory_rejects_unapproved_manual_record():
             approval_record=record,
             owning_domain="boe",
         )
+
+
+def test_approval_record_model_rejects_fabricated_event_id():
+    with pytest.raises(ValueError, match="governed_approval_event_id"):
+        CanonicalProcessApprovalRecord(
+            canonical_process_id=PROPOSED_CANONICAL_PROCESS_ID,
+            canonical_process_version=PROPOSED_CANONICAL_PROCESS_VERSION,
+            governed_approval_event_id="event-manual",
+            approval_rule_id=PROPOSED_APPROVAL_RULE_ID,
+            source_geometry_id="geo-src-manual",
+            provenance_hash="prov-hash-manual",
+            process_inputs_hash="inputs-hash-manual",
+            approver_id="human:tester",
+        )
+
+
+def test_process_approved_factory_rejects_stale_manual_approval_hash():
+    record = create_canonical_process_approval_record(**_valid_kwargs())
+    record.deterministic_approval_hash = "hash-stale"
+
+    with pytest.raises(ValueError, match="deterministic approval hash"):
+        create_process_approved_canonical_geometry_reference(
+            approval_record=record,
+            owning_domain="boe",
+        )
+
+
+def test_approval_record_model_rejects_stale_manual_approval_hash():
+    with pytest.raises(ValueError, match="deterministic_approval_hash"):
+        CanonicalProcessApprovalRecord(
+            **_valid_model_kwargs(deterministic_approval_hash="hash-stale")
+        )
+
+
+def test_rehydrated_manual_record_with_matching_event_id_validates():
+    event_id = compute_governed_approval_event_id(
+        approver_id="human:luthier-ross",
+        canonical_process_id=PROPOSED_CANONICAL_PROCESS_ID,
+        canonical_process_version=PROPOSED_CANONICAL_PROCESS_VERSION,
+        approval_rule_id=PROPOSED_APPROVAL_RULE_ID,
+        source_geometry_id="geo-src-001",
+        provenance_hash="prov-hash-deadbeef",
+        process_inputs_hash="inputs-hash-cafe",
+    )
+    record = CanonicalProcessApprovalRecord(
+        **_valid_model_kwargs(governed_approval_event_id=event_id)
+    )
+
+    is_valid, reason = validate_canonical_process_approval_record(record)
+    assert is_valid, reason
 
 
 def test_fabricated_process_metadata_is_blocking_not_warning():

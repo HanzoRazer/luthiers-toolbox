@@ -244,6 +244,14 @@ class GeometryAuthorityReference(BaseModel):
                     f"source_geometry_id or derived_from to be set"
                 )
 
+        if self.authentication != UNVERIFIED_PENDING_GOVERNANCE:
+            raise ValueError(
+                f"authentication '{self.authentication}' is not permitted in PR-1; "
+                f"the only legal value is '{UNVERIFIED_PENDING_GOVERNANCE}'. "
+                "No authorized-approver anchor exists yet, so references cannot "
+                "claim verified canonical authority."
+            )
+
         return self
 
     def compute_hash(self) -> str:
@@ -260,9 +268,17 @@ class GeometryAuthorityReference(BaseModel):
         # Process-approved canonical references bind their identity to the
         # governed approval record. Omitted (None) for legacy/derived
         # references, preserving their existing hashes.
-        if self.process_approval_record_id or self.process_approval_record_hash:
-            hash_input["process_approval_record_id"] = self.process_approval_record_id
-            hash_input["process_approval_record_hash"] = self.process_approval_record_hash
+        process_metadata = {
+            "process_approval_record_id": self.process_approval_record_id,
+            "process_approval_record_hash": self.process_approval_record_hash,
+            "canonical_process_id": self.canonical_process_id,
+            "canonical_process_version": self.canonical_process_version,
+            "governed_approval_event_id": self.governed_approval_event_id,
+            "process_source_geometry_id": self.process_source_geometry_id,
+            "authentication": self.authentication,
+        }
+        if any(process_metadata.values()):
+            hash_input["process_approval"] = process_metadata
         canonical = json.dumps(hash_input, sort_keys=True, separators=(",", ":"))
         return hashlib.sha256(canonical.encode()).hexdigest()
 
@@ -337,10 +353,7 @@ def create_process_approved_canonical_geometry_reference(
             f"{approval_reason or 'unknown validation failure'}"
         )
 
-    if approval_record.deterministic_approval_hash:
-        record_hash = approval_record.deterministic_approval_hash
-    else:
-        record_hash = approval_record.compute_hash()
+    record_hash = approval_record.compute_hash()
 
     layer_def = get_layer_definition("canonical_geometry")
 

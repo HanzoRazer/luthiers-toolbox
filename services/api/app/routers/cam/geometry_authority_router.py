@@ -17,7 +17,7 @@ Provides endpoints for:
 from typing import Any, Dict, List, Optional
 
 from fastapi import APIRouter, HTTPException
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 
 from app.cam.geometry_authority_taxonomy import (
     GeometryAuthorityLayer,
@@ -120,8 +120,11 @@ class CreateCanonicalProcessApprovalRequest(BaseModel):
     NOTE: ``governed_approval_event_id`` is intentionally NOT a field here. The
     event id is derived SERVER-SIDE from a governed ReviewEnforcement human-APPROVE
     review (C2 PR-1 gap-1 lock) — a caller cannot supply or influence it. Any
-    ``governed_approval_event_id`` present in the request body is ignored.
+    server-owned approval field present in the request body is rejected at the
+    endpoint boundary rather than silently ignored.
     """
+
+    model_config = ConfigDict(extra="allow")
 
     canonical_process_id: str
     canonical_process_version: str
@@ -138,8 +141,22 @@ class CreateCanonicalProcessApprovalRequest(BaseModel):
     metadata: Optional[Dict[str, Any]] = None
 
 
+_SERVER_OWNED_APPROVAL_REQUEST_FIELDS = frozenset(
+    {
+        "approval_record_id",
+        "governed_approval_event_id",
+        "approved_at",
+        "authentication",
+        "deterministic_approval_hash",
+        "decision",
+    }
+)
+
+
 class CreateProcessApprovedCanonicalReferenceRequest(BaseModel):
     """Request to create a process-approved canonical geometry reference."""
+
+    model_config = ConfigDict(extra="allow")
 
     owning_domain: str = Field(..., description="Domain that owns this geometry")
     source_authority: str = "canonical_process"
@@ -177,6 +194,58 @@ def _has_process_approval_metadata(reference: GeometryAuthorityReference) -> boo
     )
 
 
+def _reject_unsupported_approval_request_fields(
+    approval_record: CreateCanonicalProcessApprovalRequest,
+) -> None:
+    """Reject stale or unsupported approval-record request fields with 400."""
+    extra_fields = sorted((approval_record.model_extra or {}).keys())
+    if not extra_fields:
+        return
+
+    server_owned = [
+        field
+        for field in extra_fields
+        if field in _SERVER_OWNED_APPROVAL_REQUEST_FIELDS
+    ]
+    if server_owned:
+        raise HTTPException(
+            400,
+            "Approval record field(s) are server-derived and may not be supplied: "
+            + ", ".join(server_owned),
+        )
+
+    raise HTTPException(
+        400,
+        "Unsupported approval_record field(s): " + ", ".join(extra_fields),
+    )
+
+
+def _reject_unsupported_process_approved_request_fields(
+    request: CreateProcessApprovedCanonicalReferenceRequest,
+) -> None:
+    """Reject stale or unsupported process-approved request fields with 400."""
+    extra_fields = sorted((request.model_extra or {}).keys())
+    if not extra_fields:
+        return
+
+    server_owned = [
+        field
+        for field in extra_fields
+        if field in _SERVER_OWNED_APPROVAL_REQUEST_FIELDS
+    ]
+    if server_owned:
+        raise HTTPException(
+            400,
+            "Process-approved reference field(s) are server-derived and may not "
+            "be supplied: " + ", ".join(server_owned),
+        )
+
+    raise HTTPException(
+        400,
+        "Unsupported process-approved reference field(s): " + ", ".join(extra_fields),
+    )
+
+
 @router.post("/references/canonical", response_model=GeometryAuthorityReference)
 async def create_canonical_reference(
     request: CreateCanonicalReferenceRequest,
@@ -200,6 +269,9 @@ async def create_process_approved_canonical_reference(
     request: CreateProcessApprovedCanonicalReferenceRequest,
 ) -> GeometryAuthorityReference:
     """Create and register a process-approved canonical geometry reference."""
+    _reject_unsupported_process_approved_request_fields(request)
+    _reject_unsupported_approval_request_fields(request.approval_record)
+
     try:
         approval_record = create_canonical_process_approval_record(
             canonical_process_id=request.approval_record.canonical_process_id,

@@ -263,7 +263,7 @@ authenticity hole PR-1 closed.
      human-APPROVE review that the server runs (a `system:` actor is refused,
      raising `ReviewBypassAttemptError`). A caller can neither supply nor
      influence the id; any `governed_approval_event_id` in a request body is
-     ignored.
+     rejected rather than ignored.
   2. **Fail-safe unverified stamp (the honesty).** Every record and reference
      carries `authentication`, whose **only** legal PR-1 value is
      `"unverified_pending_governance"`. The model **refuses construction** with
@@ -292,11 +292,13 @@ authenticity hole PR-1 closed.
 > is ratified and implemented. Doing any of these on top of an unauthenticated
 > event re-opens Gap 2 as a live exploit.
 
-The interim guarantee is the label, not a hard gate: PR-1 stays additive
-(the endpoint still responds, warning-not-RED, no behavior break), while the
-*authority claim* fails closed (nothing is verified without the anchor). The
-`authentication` field is the interim safety; the anchor is the eventual
-closure. This constraint is enforced in code today by the model validator that
-rejects any non-unverified `authentication` — a future "verified" path cannot be
-added without deliberately editing that guard, which is the signal that the PR-2
-anchor work has begun.
+The interim guarantee is the label, not a hard gate: PR-1 stays additive for
+valid process-approved requests (warning-not-RED, no strict legacy flip), while
+the *authority claim* fails closed (nothing is verified without the anchor).
+Server-owned request fields such as `governed_approval_event_id`,
+`authentication`, and `deterministic_approval_hash` are rejected at the API
+boundary rather than silently ignored. The `authentication` field is the interim
+safety; the anchor is the eventual closure. This constraint is enforced in code
+today by the model validator that rejects any non-unverified `authentication` —
+a future "verified" path cannot be added without deliberately editing that
+guard, which is the signal that the PR-2 anchor work has begun.
