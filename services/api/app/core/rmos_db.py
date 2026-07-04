@@ -14,7 +14,7 @@ import logging
 
 logger = logging.getLogger(__name__)
 DEFAULT_DB_PATH = Path(__file__).parent.parent.parent / "data" / "rmos.db"
-SCHEMA_VERSION = 3  # Added art_jobs, art_presets tables
+SCHEMA_VERSION = 4  # v4: preventive indexes (strip_families + composite created_at)
 
 
 def _is_postgresql_url(url: str) -> bool:
@@ -118,6 +118,19 @@ class RMOSDatabase:
             c.execute("CREATE INDEX IF NOT EXISTS idx_art_jobs_created ON art_jobs(created_at DESC)")
             c.execute("CREATE INDEX IF NOT EXISTS idx_art_presets_lane ON art_presets(lane)")
             c.execute("CREATE INDEX IF NOT EXISTS idx_art_presets_name ON art_presets(name)")
+            # v4 preventive indexes (perf audit 2026-07-04). strip_families had no
+            # secondary indexes (every filter/list full-scanned); composite
+            # (filter, created_at DESC) indexes let the store's list queries
+            # avoid a TEMP B-TREE sort. Idempotent; applied to existing DBs too.
+            c.execute("CREATE INDEX IF NOT EXISTS idx_strip_families_material ON strip_families(material_type)")
+            c.execute("CREATE INDEX IF NOT EXISTS idx_strip_families_width ON strip_families(strip_width_mm)")
+            c.execute("CREATE INDEX IF NOT EXISTS idx_strip_families_created ON strip_families(created_at DESC)")
+            c.execute("CREATE INDEX IF NOT EXISTS idx_patterns_created ON patterns(created_at DESC)")
+            c.execute("CREATE INDEX IF NOT EXISTS idx_patterns_type_created ON patterns(pattern_type, created_at DESC)")
+            c.execute("CREATE INDEX IF NOT EXISTS idx_patterns_family_created ON patterns(strip_family_id, created_at DESC)")
+            c.execute("CREATE INDEX IF NOT EXISTS idx_joblogs_pattern_created ON joblogs(pattern_id, created_at DESC)")
+            c.execute("CREATE INDEX IF NOT EXISTS idx_art_jobs_type_created ON art_jobs(job_type, created_at DESC)")
+            c.execute("CREATE INDEX IF NOT EXISTS idx_art_presets_lane_created ON art_presets(lane, created_at DESC)")
             c.execute("INSERT OR IGNORE INTO schema_version (version) VALUES (?)", (SCHEMA_VERSION,))
             conn.commit()
 
@@ -141,6 +154,16 @@ class RMOSDatabase:
             c.execute("CREATE INDEX IF NOT EXISTS idx_art_jobs_created ON art_jobs(created_at DESC)")
             c.execute("CREATE INDEX IF NOT EXISTS idx_art_presets_lane ON art_presets(lane)")
             c.execute("CREATE INDEX IF NOT EXISTS idx_art_presets_name ON art_presets(name)")
+            # v4 preventive indexes (perf audit 2026-07-04) — see SQLite block above.
+            c.execute("CREATE INDEX IF NOT EXISTS idx_strip_families_material ON strip_families(material_type)")
+            c.execute("CREATE INDEX IF NOT EXISTS idx_strip_families_width ON strip_families(strip_width_mm)")
+            c.execute("CREATE INDEX IF NOT EXISTS idx_strip_families_created ON strip_families(created_at DESC)")
+            c.execute("CREATE INDEX IF NOT EXISTS idx_patterns_created ON patterns(created_at DESC)")
+            c.execute("CREATE INDEX IF NOT EXISTS idx_patterns_type_created ON patterns(pattern_type, created_at DESC)")
+            c.execute("CREATE INDEX IF NOT EXISTS idx_patterns_family_created ON patterns(strip_family_id, created_at DESC)")
+            c.execute("CREATE INDEX IF NOT EXISTS idx_joblogs_pattern_created ON joblogs(pattern_id, created_at DESC)")
+            c.execute("CREATE INDEX IF NOT EXISTS idx_art_jobs_type_created ON art_jobs(job_type, created_at DESC)")
+            c.execute("CREATE INDEX IF NOT EXISTS idx_art_presets_lane_created ON art_presets(lane, created_at DESC)")
             c.execute("INSERT INTO schema_version (version) VALUES (%s) ON CONFLICT (version) DO NOTHING", (SCHEMA_VERSION,))
             conn.commit()
 
