@@ -1,0 +1,117 @@
+{
+  "schema": "cbsp21_patch_input_v1",
+  "schema_version": "cbsp21_patch_input_v1",
+  "coverage_min": 0.95,
+  "patch_id": "PERF_AUDIT_QUICK_WINS",
+  "title": "perf: audit quick-wins (CI scan prune, what_if grid cap, upload decimation, DB indexes, live-monitor cap)",
+  "intent": "Implements the confirmed+cheap subset of the read-only PERFORMANCE_AUDIT_2026-07-04.md one-hour fix list. Each change is bounded and backed by a measurement in the audit report. Item 5 (rosette JSON->SQLite store migration) is intentionally deferred to a separate PR due to data-continuity risk.",
+  "change_type": "perf",
+  "behavior_change": "runtime-and-ci-perf",
+  "risk_level": "low",
+  "scope": {
+    "paths_in_scope": [
+      "scripts/governance/",
+      "services/api/app/cam/routers/utility/",
+      "services/api/app/routers/",
+      "services/api/app/core/",
+      "packages/client/src/stores/"
+    ],
+    "files_expected_to_change": [
+      "scripts/governance/check_feedback_correction_calls.py",
+      "scripts/governance/check_semantic_sandbox_imports.py",
+      "services/api/app/cam/routers/utility/optimization_router.py",
+      "services/api/app/core/rmos_db.py",
+      "services/api/app/routers/simulation_consolidated_router.py",
+      "packages/client/src/stores/useLiveMonitorStore.ts",
+      "services/api/tests/test_cam_what_if_smoke.py",
+      "services/api/tests/test_simulation_endpoint_smoke.py",
+      "PERFORMANCE_AUDIT_2026-07-04.md"
+    ]
+  },
+  "diff_articulation": {
+    "what_changed": "(1) Two governance tree scanners switched from unpruned SERVICES.rglob('*.py') to an os.walk with in-place PRUNE_DIRS pruning (mirrors scripts/check_dxf_compat.py:iter_python_files), so they no longer descend into services/api/.venv/site-packages; each went from a 120s CI timeout to ~1.5-2.5s. (2) /api/cam/opt/what_if rejects grid axes above MAX_WHATIF_GRID_AXIS=12 with a 400, bounding the O(grid*moves) optimizer that ran ~10s at 20x20. (3) /api/cam/sim/upload decimates its returned moves preview to max_moves (default 5000) unless include_moves=true, bounding the previously-unbounded ~7-70 MB payload; move_count and stats still reflect the full path. (4) rmos_db adds preventive strip_families + composite (filter, created_at DESC) indexes (SQLite + PG), SCHEMA_VERSION 3->4, all idempotent CREATE INDEX IF NOT EXISTS. (5) useLiveMonitorStore caps the events array to a 500-entry ring buffer. Tests added for the grid cap and upload decimation.",
+    "why_not_redundant": "Each item removes a distinct, measured cost path (CI wall-clock, request-thread latency, response payload size, unbounded frontend memory) documented in PERFORMANCE_AUDIT_2026-07-04.md. None is a cosmetic refactor; the two API changes are backward-compatible (default grid unchanged; small uploads return every move) and covered by new tests."
+  },
+  "verification": {
+    "commands_run": [
+      "python scripts/governance/check_feedback_correction_calls.py -> PASS in ~2.5s (was 120s timeout)",
+      "python scripts/governance/check_semantic_sandbox_imports.py -> PASS in ~1.5s (was 120s timeout)",
+      "pytest tests/test_cam_what_if_smoke.py -q -> 4 passed (incl. oversized-grid rejection)",
+      "pytest tests/test_simulation_endpoint_smoke.py -q -> 30 passed, 8 xfailed (incl. decimation + full-fidelity opt-in)",
+      "pytest -k 'store or rmos_db or sqlite' -q -> 154 passed",
+      "EXPLAIN QUERY PLAN on a v4 DB: strip_families filters index-backed; get_all/filtered-list queries no longer TEMP B-TREE sort"
+    ]
+  },
+  "files": [
+    {
+      "path": "scripts/governance/check_feedback_correction_calls.py",
+      "intent": "Prune .venv/node_modules/etc during the services/ scan.",
+      "scan_targets": ["scripts/governance/check_feedback_correction_calls.py"],
+      "risk": "low",
+      "behavior_change": "Scanner no longer descends into dependency dirs; scans same real repo source, ~50x faster. No change to violations reported."
+    },
+    {
+      "path": "scripts/governance/check_semantic_sandbox_imports.py",
+      "intent": "Prune .venv/node_modules/etc during the services/ scan.",
+      "scan_targets": ["scripts/governance/check_semantic_sandbox_imports.py"],
+      "risk": "low",
+      "behavior_change": "Scanner no longer descends into dependency dirs; scans same real repo source, ~80x faster. No change to violations reported."
+    },
+    {
+      "path": "services/api/app/cam/routers/utility/optimization_router.py",
+      "intent": "Cap the /opt/what_if grid axis to bound optimizer cost.",
+      "scan_targets": ["services/api/app/cam/routers/utility/optimization_router.py"],
+      "risk": "low",
+      "behavior_change": "grid axis > 12 now returns 400; default 6x6 and all valid grids unchanged."
+    },
+    {
+      "path": "services/api/app/core/rmos_db.py",
+      "intent": "Add preventive strip_families + composite created_at indexes; bump SCHEMA_VERSION to 4.",
+      "scan_targets": ["services/api/app/core/rmos_db.py"],
+      "risk": "low",
+      "behavior_change": "Additive idempotent indexes on SQLite and PG init; applied to existing DBs on next open; no data migration, no query change."
+    },
+    {
+      "path": "services/api/app/routers/simulation_consolidated_router.py",
+      "intent": "Decimate the /api/cam/sim/upload moves preview to bound payload.",
+      "scan_targets": ["services/api/app/routers/simulation_consolidated_router.py"],
+      "risk": "low",
+      "behavior_change": "Large uploads return a decimated moves preview + moves_returned/moves_decimated fields; include_moves=true restores full fidelity; small uploads and move_count/stats unchanged."
+    },
+    {
+      "path": "packages/client/src/stores/useLiveMonitorStore.ts",
+      "intent": "Bound the LiveMonitor event buffer to a 500-entry ring buffer.",
+      "scan_targets": ["packages/client/src/stores/useLiveMonitorStore.ts"],
+      "risk": "low",
+      "behavior_change": "events[] retains only the most recent 500; eventCounts remain true cumulative totals."
+    },
+    {
+      "path": "services/api/tests/test_cam_what_if_smoke.py",
+      "intent": "Cover the oversized-grid rejection.",
+      "scan_targets": ["services/api/tests/test_cam_what_if_smoke.py"],
+      "risk": "low",
+      "behavior_change": "none - tests only"
+    },
+    {
+      "path": "services/api/tests/test_simulation_endpoint_smoke.py",
+      "intent": "Cover upload decimation + full-fidelity opt-in + small-path passthrough.",
+      "scan_targets": ["services/api/tests/test_simulation_endpoint_smoke.py"],
+      "risk": "low",
+      "behavior_change": "none - tests only"
+    },
+    {
+      "path": "PERFORMANCE_AUDIT_2026-07-04.md",
+      "intent": "The read-only audit report that motivates and measures these fixes.",
+      "scan_targets": ["PERFORMANCE_AUDIT_2026-07-04.md"],
+      "risk": "low",
+      "behavior_change": "none - documentation only"
+    }
+  ],
+  "architecture_scan": {
+    "scan_id": "AS-2026-07-04-001",
+    "risk_summary": { "critical": 0, "high": 0, "medium": 0, "low": 5 },
+    "findings": [],
+    "acknowledged": true,
+    "acknowledgement_notes": "All changes bounded, measured, and backward-compatible. Item 5 (rosette store migration) deferred to a separate PR for data-continuity review."
+  }
+}
