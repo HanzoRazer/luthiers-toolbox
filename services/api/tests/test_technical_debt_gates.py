@@ -31,7 +31,10 @@ METRICS_DIR = Path(__file__).parent.parent / "metrics"
 # ANY increase. Existing endpoint count is migration debt, not a bug; route consolidation
 # (CI-RED-015-C) remains a separate forward initiative that tightens this number as it lands.
 # Prior: 1185 (= 1181 + 4 buffer, 2026-05-28).
-TARGET_MAX_ENDPOINTS = 1220  # Actual: 1220 standing endpoint count (2026-06-28 rebaseline); was 1185.
+# C2 process-exclusive canonical authority adds one governed, non-executing
+# process-approved canonical-reference endpoint. This is the matching explicit
+# ratchet update for the intentional route already reflected in router_count.
+TARGET_MAX_ENDPOINTS = 1221  # Actual: 1221 after C2 process-approved endpoint; was 1220.
 # Baselines declared at current pre-existing level (B-scoped CI clearing 2026-06-13).
 # These are standing debt that predates the MVP-tag work; declared at the exact current
 # count (no buffer) so the gate stops failing on known-debt but still catches ANY increase.
