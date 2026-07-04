@@ -59,7 +59,6 @@ def _process_approved_canonical_reference(owning_domain="boe"):
     record = create_canonical_process_approval_record(
         canonical_process_id=PROPOSED_CANONICAL_PROCESS_ID,
         canonical_process_version=PROPOSED_CANONICAL_PROCESS_VERSION,
-        governed_approval_event_id="event-test",
         approval_rule_id=PROPOSED_APPROVAL_RULE_ID,
         source_geometry_id="geo-src-test",
         provenance_hash="prov-test",
@@ -924,7 +923,12 @@ class TestGeometryAuthorityRouter:
         assert data["may_define_canonical_geometry"] is True
 
     def test_create_process_approved_canonical_reference(self):
-        """POST /references/canonical/process-approved creates approved reference."""
+        """POST /references/canonical/process-approved creates approved reference.
+
+        The endpoint stays additive (200, still mints a ref), but the governed
+        approval event id is derived SERVER-SIDE and the ref is stamped
+        unverified (C2 PR-1 gap-1): no client event id, no verified authority.
+        """
         response = client.post(
             "/api/cam/geometry-authority/references/canonical/process-approved",
             json={
@@ -932,7 +936,6 @@ class TestGeometryAuthorityRouter:
                 "approval_record": {
                     "canonical_process_id": PROPOSED_CANONICAL_PROCESS_ID,
                     "canonical_process_version": PROPOSED_CANONICAL_PROCESS_VERSION,
-                    "governed_approval_event_id": "event-router",
                     "approval_rule_id": PROPOSED_APPROVAL_RULE_ID,
                     "source_geometry_id": "geo-router-source",
                     "provenance_hash": "prov-router",
@@ -949,6 +952,52 @@ class TestGeometryAuthorityRouter:
         assert data["process_approval_record_hash"]
         assert data["canonical_process_id"] == PROPOSED_CANONICAL_PROCESS_ID
         assert data["process_source_geometry_id"] == "geo-router-source"
+        # Server-derived event id + fail-safe unverified stamp.
+        assert data["governed_approval_event_id"].startswith("gae-")
+        assert data["authentication"] == "unverified_pending_governance"
+
+    def test_process_approved_endpoint_ignores_client_supplied_event_id(self):
+        """A client-supplied governed_approval_event_id is ignored, not honored."""
+        response = client.post(
+            "/api/cam/geometry-authority/references/canonical/process-approved",
+            json={
+                "owning_domain": "boe",
+                "approval_record": {
+                    "canonical_process_id": PROPOSED_CANONICAL_PROCESS_ID,
+                    "canonical_process_version": PROPOSED_CANONICAL_PROCESS_VERSION,
+                    "governed_approval_event_id": "event-attacker-picked",
+                    "approval_rule_id": PROPOSED_APPROVAL_RULE_ID,
+                    "source_geometry_id": "geo-router-source",
+                    "provenance_hash": "prov-router",
+                    "process_inputs_hash": "inputs-router",
+                    "approver_id": "human:router-test",
+                },
+            },
+        )
+        assert response.status_code == 200
+        data = response.json()
+        assert data["governed_approval_event_id"] != "event-attacker-picked"
+        assert data["governed_approval_event_id"].startswith("gae-")
+
+    def test_process_approved_endpoint_rejects_system_actor(self):
+        """A system: approver cannot produce a governed approval event -> 400."""
+        response = client.post(
+            "/api/cam/geometry-authority/references/canonical/process-approved",
+            json={
+                "owning_domain": "boe",
+                "approval_record": {
+                    "canonical_process_id": PROPOSED_CANONICAL_PROCESS_ID,
+                    "canonical_process_version": PROPOSED_CANONICAL_PROCESS_VERSION,
+                    "approval_rule_id": PROPOSED_APPROVAL_RULE_ID,
+                    "source_geometry_id": "geo-router-source",
+                    "provenance_hash": "prov-router",
+                    "process_inputs_hash": "inputs-router",
+                    "approver_id": "system:auto-approver",
+                },
+            },
+        )
+        assert response.status_code == 400
+        assert "system" in response.text.lower()
 
     def test_generic_registration_rejects_fabricated_process_metadata(self):
         """POST /references cannot smuggle fake process-approved canonical refs."""

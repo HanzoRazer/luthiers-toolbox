@@ -41,11 +41,14 @@ from app.cam.geometry_authority_validation import (
 
 
 def _valid_kwargs(**overrides):
-    """Baseline kwargs for a governed, in-process approval record."""
+    """Baseline kwargs for the governed approval FACTORY.
+
+    NOTE: no ``governed_approval_event_id`` — under the C2 PR-1 gap-1 lock the
+    event id is derived SERVER-SIDE and the factory does not accept it.
+    """
     kwargs = dict(
         canonical_process_id=PROPOSED_CANONICAL_PROCESS_ID,
         canonical_process_version=PROPOSED_CANONICAL_PROCESS_VERSION,
-        governed_approval_event_id="event-abc123",
         approval_rule_id=PROPOSED_APPROVAL_RULE_ID,
         source_geometry_id="geo-src-001",
         provenance_hash="prov-hash-deadbeef",
@@ -54,6 +57,14 @@ def _valid_kwargs(**overrides):
         source_geometry_role="evidence",
         source_authority_state="governed_evidence_candidate",
     )
+    kwargs.update(overrides)
+    return kwargs
+
+
+def _valid_model_kwargs(**overrides):
+    """Baseline kwargs for constructing the RECORD MODEL directly (event id
+    supplied, as it would be when a record is rehydrated/inspected)."""
+    kwargs = dict(_valid_kwargs(), governed_approval_event_id="event-abc123")
     kwargs.update(overrides)
     return kwargs
 
@@ -75,15 +86,44 @@ def test_governed_process_approval_creates_record():
 
 
 def test_approval_hash_is_deterministic_and_excludes_timestamp():
-    r1 = create_canonical_process_approval_record(
-        **_valid_kwargs(governed_approval_event_id="event-stable")
+    # compute_hash() is over record CONTENT (incl. the server-set event id and
+    # authentication status), excluding the auto timestamp. Two models with
+    # identical content -> identical hash.
+    r1 = CanonicalProcessApprovalRecord(
+        approval_record_id="rec-stable",
+        **_valid_model_kwargs(governed_approval_event_id="event-stable"),
     )
     r2 = CanonicalProcessApprovalRecord(
-        approval_record_id=r1.approval_record_id,
-        **_valid_kwargs(governed_approval_event_id="event-stable"),
+        approval_record_id="rec-stable",
+        **_valid_model_kwargs(governed_approval_event_id="event-stable"),
     )
-    # Different approved_at (auto), same content -> same hash.
     assert r1.compute_hash() == r2.compute_hash()
+
+
+def test_governed_approval_event_id_is_server_derived_not_client_supplied():
+    # The factory does not accept a caller-supplied event id (gap-1 lock).
+    with pytest.raises(TypeError):
+        create_canonical_process_approval_record(
+            **_valid_kwargs(), governed_approval_event_id="event-i-picked"
+        )
+    # And what it DOES produce is a server-derived id (not any client string).
+    record = create_canonical_process_approval_record(**_valid_kwargs())
+    assert record.governed_approval_event_id.startswith("gae-")
+    assert record.governed_approval_event_id != "event-i-picked"
+
+
+def test_api_minted_approval_is_unverified_by_default():
+    # Fail-safe: every factory-minted approval is unverified in PR-1.
+    record = create_canonical_process_approval_record(**_valid_kwargs())
+    assert record.authentication == "unverified_pending_governance"
+
+
+def test_authentication_cannot_be_constructed_verified():
+    # No path to a verified record exists in PR-1 — the model refuses it.
+    with pytest.raises(ValueError, match="authentication"):
+        CanonicalProcessApprovalRecord(
+            **_valid_model_kwargs(authentication="verified")
+        )
 
 
 # ---------------------------------------------------------------------------
@@ -122,12 +162,13 @@ def test_human_actor_alone_is_not_authority_but_is_permitted_participation():
     [
         "canonical_process_id",
         "canonical_process_version",
-        "governed_approval_event_id",
         "approval_rule_id",
         "source_geometry_id",
     ],
 )
 def test_missing_process_identity_blocks_approval_record(field):
+    # governed_approval_event_id is intentionally NOT here — it is server-derived
+    # and can never be empty/caller-blank (see the dedicated derivation test).
     with pytest.raises(CanonicalProcessApprovalError):
         create_canonical_process_approval_record(**_valid_kwargs(**{field: ""}))
 
@@ -158,8 +199,12 @@ def test_process_approved_canonical_reference_includes_approval_hash():
     assert ref.process_approval_record_hash == record.deterministic_approval_hash
     assert ref.canonical_process_id == PROPOSED_CANONICAL_PROCESS_ID
     assert ref.canonical_process_version == PROPOSED_CANONICAL_PROCESS_VERSION
-    assert ref.governed_approval_event_id == "event-abc123"
+    # Event id is server-derived, and carried onto the reference verbatim.
+    assert ref.governed_approval_event_id.startswith("gae-")
+    assert ref.governed_approval_event_id == record.governed_approval_event_id
     assert ref.provenance_hash == "prov-hash-deadbeef"
+    # Authenticity status propagates (fail-safe: unverified in PR-1).
+    assert ref.authentication == "unverified_pending_governance"
     # 7T invariants still hold.
     assert ref.execution_authorized is False
     assert ref.machine_output_allowed is False
