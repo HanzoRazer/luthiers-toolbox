@@ -16,7 +16,7 @@ from typing import Dict, List, Tuple, Any, Optional
 from datetime import datetime
 
 from ..stores.rmos_stores import get_rmos_stores
-from ..core.rmos_db import get_rmos_db
+from ..core.rmos_db import SCHEMA_VERSION, get_rmos_db
 
 logger = logging.getLogger(__name__)
 
@@ -95,9 +95,9 @@ class RMOSMigrationAuditor:
                     self.errors.append("Schema version table empty")
                     self.stats['checks_failed'] += 1
                 else:
-                    version = row[0]
-                    if version != 1:
-                        self.warnings.append(f"Schema version is {version}, expected 1")
+                    version = row.get("version") if isinstance(row, dict) else row[0]
+                    if version != SCHEMA_VERSION:
+                        self.warnings.append(f"Schema version is {version}, expected {SCHEMA_VERSION}")
                     self.stats['checks_passed'] += 1
                     logger.debug(f"Schema version: {version}")
         except (OSError, KeyError, TypeError) as e:  # WP-1: narrowed from except Exception

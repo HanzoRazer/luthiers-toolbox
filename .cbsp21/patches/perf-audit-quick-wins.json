@@ -1,0 +1,147 @@
+{
+  "schema": "cbsp21_patch_input_v1",
+  "schema_version": "cbsp21_patch_input_v1",
+  "coverage_min": 0.95,
+  "patch_id": "PERF_AUDIT_QUICK_WINS",
+  "title": "perf: audit quick-wins (CI scan prune, what_if grid cap, upload decimation, DB indexes, live-monitor cap)",
+  "intent": "Implements the confirmed+cheap subset of the read-only PERFORMANCE_AUDIT_2026-07-04.md one-hour fix list. Each change is bounded and backed by a measurement in the audit report. Item 5 (rosette JSON->SQLite store migration) is intentionally deferred to a separate PR due to data-continuity risk.",
+  "change_type": "perf",
+  "behavior_change": "runtime-and-ci-perf",
+  "risk_level": "low-to-medium",
+  "scope": {
+    "paths_in_scope": [
+      "scripts/governance/",
+      "services/api/app/cam/routers/utility/",
+      "services/api/app/routers/",
+      "services/api/app/core/",
+      "services/api/app/tools/",
+      "packages/client/src/stores/",
+      "packages/client/src/components/rmos/"
+    ],
+    "files_expected_to_change": [
+      "scripts/governance/check_feedback_correction_calls.py",
+      "scripts/governance/check_semantic_sandbox_imports.py",
+      "services/api/app/cam/routers/utility/optimization_router.py",
+      "services/api/app/core/rmos_db.py",
+      "services/api/app/tools/rmos_migration_audit.py",
+      "services/api/app/routers/simulation_consolidated_router.py",
+      "packages/client/src/stores/useLiveMonitorStore.ts",
+      "packages/client/src/components/rmos/LiveMonitor.vue",
+      "services/api/tests/test_cam_what_if_smoke.py",
+      "services/api/tests/test_simulation_endpoint_smoke.py",
+      "services/api/tests/test_sqlite_art_stores.py",
+      "PERFORMANCE_AUDIT_2026-07-04.md"
+    ]
+  },
+  "diff_articulation": {
+    "what_changed": "(1) Two governance tree scanners switched from unpruned SERVICES.rglob('*.py') to an os.walk with in-place PRUNE_DIRS pruning (mirrors scripts/check_dxf_compat.py:iter_python_files), so they no longer descend into services/api/.venv/site-packages; each went from a 120s CI timeout to ~1.5-2.5s. (2) /api/cam/opt/what_if now validates grid as exactly two positive integers and rejects requests above configurable total-cell / cells*moves workload limits, bounding the O(grid*moves) optimizer that ran ~10s at 20x20 without rejecting cheap rectangular grids solely because one axis exceeds 12. (3) /api/cam/sim/upload decimates its returned moves preview to max_moves (default/server cap 5000) unless include_moves=true, reports preview_stride, and preserves first/last preview moves; move_count and stats still reflect the full path. (4) rmos_db adds preventive strip_families + composite (filter, created_at DESC) indexes (SQLite + PG), SCHEMA_VERSION 3->4, and applies v4 indexes as a version-gated migration before recording v4; the migration audit now reads SCHEMA_VERSION instead of a stale hard-coded 1. (5) useLiveMonitorStore and the visible LiveMonitor component both cap retained display events to 500. Tests added for the what_if workload guard, request-schema visibility, upload decimation, and RMOS schema/index migration.",
+    "why_not_redundant": "Each item removes a distinct, measured cost path (CI wall-clock, request-thread latency, response payload size, unbounded frontend memory) documented in PERFORMANCE_AUDIT_2026-07-04.md. None is a cosmetic refactor. The API changes preserve defaults and small-request behavior, but they intentionally tighten acceptance for oversized/expensive requests and are covered by new tests."
+  },
+  "verification": {
+    "commands_run": [
+      "python scripts/governance/check_feedback_correction_calls.py -> PASS in ~2.5s (was 120s timeout)",
+      "python scripts/governance/check_semantic_sandbox_imports.py -> PASS in ~1.5s (was 120s timeout)",
+      "pytest tests/test_cam_what_if_smoke.py -q -> 8 passed (incl. malformed-grid rejection, workload cap, rectangular-grid compatibility, schema text)",
+      "pytest tests/test_simulation_endpoint_smoke.py -q -> 31 passed, 8 xfailed (incl. decimation + first/last preview preservation + full-fidelity opt-in + max_moves cap)",
+      "pytest tests/test_sqlite_art_stores.py -q -> 21 passed (incl. current schema version + v3->v4 index migration)",
+      "python -m py_compile services/api/app/core/rmos_db.py services/api/app/tools/rmos_migration_audit.py services/api/app/routers/simulation_consolidated_router.py -> PASS",
+      "scripts/ci/check_cbsp21_patch_input.py --base origin/main --head HEAD -> PASS",
+      "scripts/ci/check_cbsp21_gate.py --changed-files <origin/main...HEAD files> -> PASS, 100% declared-file coverage",
+      "git ls-files | rg '(^|/)(\\.venv|venv|node_modules|__pycache__|\\.git)/.*\\.py$' -> no checked-in Python under pruned dependency/cache dirs",
+      "manifest JSON parse -> PASS"
+    ]
+  },
+  "files": [
+    {
+      "path": "scripts/governance/check_feedback_correction_calls.py",
+      "intent": "Prune .venv/node_modules/etc during the services/ scan.",
+      "scan_targets": ["scripts/governance/check_feedback_correction_calls.py"],
+      "risk": "low",
+      "behavior_change": "Scanner no longer descends into dependency dirs; scans same real repo source, ~50x faster. No change to violations reported."
+    },
+    {
+      "path": "scripts/governance/check_semantic_sandbox_imports.py",
+      "intent": "Prune .venv/node_modules/etc during the services/ scan.",
+      "scan_targets": ["scripts/governance/check_semantic_sandbox_imports.py"],
+      "risk": "low",
+      "behavior_change": "Scanner no longer descends into dependency dirs; scans same real repo source, ~80x faster. No change to violations reported."
+    },
+    {
+      "path": "services/api/app/cam/routers/utility/optimization_router.py",
+      "intent": "Cap the /opt/what_if total grid cells and cells*moves workload to bound optimizer cost.",
+      "scan_targets": ["services/api/app/cam/routers/utility/optimization_router.py"],
+      "risk": "medium compatibility; low correctness",
+      "behavior_change": "Expensive grids now return 400 with a user-facing remediation. Defaults are unchanged; cheap rectangular grids such as 16x4 remain valid; limits are configurable via LTB_WHATIF_MAX_GRID_CELLS and LTB_WHATIF_MAX_WORK_UNITS and documented in the request schema."
+    },
+    {
+      "path": "services/api/app/core/rmos_db.py",
+      "intent": "Add preventive strip_families + composite created_at indexes; bump SCHEMA_VERSION to 4.",
+      "scan_targets": ["services/api/app/core/rmos_db.py"],
+      "risk": "low-to-medium operational",
+      "behavior_change": "Additive indexes on SQLite and PG init; v4 preventive indexes are applied as a version-gated migration before schema v4 is recorded. No data migration, no query result change."
+    },
+    {
+      "path": "services/api/app/tools/rmos_migration_audit.py",
+      "intent": "Keep RMOS migration audit aligned with the declared SCHEMA_VERSION.",
+      "scan_targets": ["services/api/app/tools/rmos_migration_audit.py"],
+      "risk": "low",
+      "behavior_change": "Audit no longer warns against stale expected schema version 1 after the DB moves to v4."
+    },
+    {
+      "path": "services/api/app/routers/simulation_consolidated_router.py",
+      "intent": "Decimate the /api/cam/sim/upload moves preview to bound payload.",
+      "scan_targets": ["services/api/app/routers/simulation_consolidated_router.py"],
+      "risk": "low-to-medium compatibility; low correctness",
+      "behavior_change": "Large uploads return a decimated moves preview + moves_returned/moves_decimated/preview_stride fields; max_moves is capped at the server preview limit unless include_moves=true; small uploads and move_count/stats unchanged. The sampled preview preserves first and last moves."
+    },
+    {
+      "path": "packages/client/src/stores/useLiveMonitorStore.ts",
+      "intent": "Bound the LiveMonitor store event buffer to 500 retained display events.",
+      "scan_targets": ["packages/client/src/stores/useLiveMonitorStore.ts"],
+      "risk": "low",
+      "behavior_change": "events[] retains only the most recent 500; eventCounts remain true cumulative totals."
+    },
+    {
+      "path": "packages/client/src/components/rmos/LiveMonitor.vue",
+      "intent": "Apply the same 500-event cap to the visible LiveMonitor component's local event list.",
+      "scan_targets": ["packages/client/src/components/rmos/LiveMonitor.vue"],
+      "risk": "low",
+      "behavior_change": "The visible event stream retains only the most recent 500 events; category counts remain cumulative."
+    },
+    {
+      "path": "services/api/tests/test_cam_what_if_smoke.py",
+      "intent": "Cover malformed grid rejection, workload cap rejection, rectangular-grid compatibility, and request-schema visibility.",
+      "scan_targets": ["services/api/tests/test_cam_what_if_smoke.py"],
+      "risk": "low",
+      "behavior_change": "none - tests only"
+    },
+    {
+      "path": "services/api/tests/test_simulation_endpoint_smoke.py",
+      "intent": "Cover upload decimation + first/last preview preservation + full-fidelity opt-in + small-path passthrough + server cap on max_moves preview.",
+      "scan_targets": ["services/api/tests/test_simulation_endpoint_smoke.py"],
+      "risk": "low",
+      "behavior_change": "none - tests only"
+    },
+    {
+      "path": "services/api/tests/test_sqlite_art_stores.py",
+      "intent": "Cover RMOS schema version and v4 index migration behavior.",
+      "scan_targets": ["services/api/tests/test_sqlite_art_stores.py"],
+      "risk": "low",
+      "behavior_change": "none - tests only"
+    },
+    {
+      "path": "PERFORMANCE_AUDIT_2026-07-04.md",
+      "intent": "The read-only audit report that motivates and measures these fixes.",
+      "scan_targets": ["PERFORMANCE_AUDIT_2026-07-04.md"],
+      "risk": "low",
+      "behavior_change": "none - documentation only"
+    }
+  ],
+  "architecture_scan": {
+    "scan_id": "AS-2026-07-04-001",
+    "risk_summary": { "critical": 0, "high": 0, "medium": 3, "low": 5 },
+    "findings": [],
+    "acknowledged": true,
+    "acknowledgement_notes": "All changes bounded and measured. Defaults/small requests remain compatible, but the two API guards intentionally reject or decimate expensive caller-controlled requests. Item 5 (rosette store migration) deferred to a separate PR for data-continuity review."
+  }
+}

@@ -11,6 +11,7 @@ import pytest
 from pathlib import Path
 import tempfile
 import os
+import sqlite3
 
 
 # =============================================================================
@@ -47,6 +48,79 @@ def art_presets_store(temp_db):
 
     db = RMOSDatabase(temp_db)
     return SQLiteArtPresetsStore(db)
+
+
+def _index_names(db_path: Path) -> set[str]:
+    conn = sqlite3.connect(str(db_path))
+    try:
+        cursor = conn.execute(
+            "SELECT name FROM sqlite_master WHERE type='index' AND name NOT LIKE 'sqlite_%'"
+        )
+        try:
+            rows = cursor.fetchall()
+        finally:
+            cursor.close()
+    finally:
+        conn.close()
+    return {row[0] for row in rows}
+
+
+# =============================================================================
+# RMOS SCHEMA TESTS
+# =============================================================================
+
+
+class TestRMOSDatabaseSchema:
+    """Tests for schema versioning and preventive indexes."""
+
+    @pytest.mark.unit
+    def test_schema_version_records_current_version(self, temp_db):
+        """A fresh RMOS DB records the current schema version."""
+        from app.core.rmos_db import RMOSDatabase, SCHEMA_VERSION
+
+        db = RMOSDatabase(temp_db)
+
+        assert db.get_schema_version() == SCHEMA_VERSION
+
+    @pytest.mark.unit
+    def test_v4_indexes_created_for_fresh_db(self, temp_db):
+        """Fresh DBs receive the v4 preventive indexes."""
+        from app.core.rmos_db import RMOSDatabase
+
+        RMOSDatabase(temp_db)
+
+        indexes = _index_names(temp_db)
+        assert {
+            "idx_strip_families_material",
+            "idx_patterns_type_created",
+            "idx_patterns_family_created",
+            "idx_joblogs_pattern_created",
+            "idx_joblogs_strip_family",
+            "idx_art_jobs_type_created",
+            "idx_art_presets_lane_created",
+        } <= indexes
+
+    @pytest.mark.unit
+    def test_v3_database_upgrades_to_v4_indexes(self, temp_db):
+        """Existing v3 DBs apply v4 indexes before recording schema v4."""
+        from app.core.rmos_db import RMOSDatabase, SCHEMA_VERSION
+
+        conn = sqlite3.connect(str(temp_db))
+        try:
+            conn.execute(
+                "CREATE TABLE schema_version "
+                "(version INTEGER PRIMARY KEY, applied_at TEXT DEFAULT CURRENT_TIMESTAMP)"
+            )
+            conn.execute("INSERT INTO schema_version (version) VALUES (3)")
+            conn.commit()
+        finally:
+            conn.close()
+
+        db = RMOSDatabase(temp_db)
+
+        assert db.get_schema_version() == SCHEMA_VERSION
+        assert "idx_strip_families_created" in _index_names(temp_db)
+        assert "idx_joblogs_pattern_created" in _index_names(temp_db)
 
 
 # =============================================================================

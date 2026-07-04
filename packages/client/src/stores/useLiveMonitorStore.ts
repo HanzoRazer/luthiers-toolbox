@@ -11,6 +11,13 @@ import type { DrilldownResponse } from '@/models/live_monitor_drilldown'
 import { api } from '@/services/apiBase';
 import { useAsyncAction } from '@/composables/useAsyncAction'
 
+// Cap on retained events. addEvent() pushes one entry per WebSocket message
+// with no bound; over a long monitoring session events[] grows without limit
+// (an effective memory leak) since only clearEvents() ever frees it. We keep
+// the most recent MAX_EVENTS for display; eventCounts stays a true cumulative
+// total independent of this trim.
+const MAX_EVENTS = 500
+
 export const useLiveMonitorStore = defineStore('liveMonitor', () => {
   // Event stream state
   const events = ref<LiveMonitorEvent[]>([])
@@ -41,6 +48,10 @@ export const useLiveMonitorStore = defineStore('liveMonitor', () => {
   // Actions
   function addEvent(event: LiveMonitorEvent) {
     events.value.push(event)
+    // Bound retained display events: drop oldest beyond MAX_EVENTS.
+    if (events.value.length > MAX_EVENTS) {
+      events.value.splice(0, events.value.length - MAX_EVENTS)
+    }
 
     // Update counts
     const [category] = event.type.split(':')
