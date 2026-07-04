@@ -33,6 +33,15 @@ def _is_postgresql_url(url: str) -> bool:
     return url.startswith("postgresql://") or url.startswith("postgres://")
 
 
+def _schema_version_from_row(row: Any) -> int:
+    """Parse a MAX(version) cursor row from either SQLite or PostgreSQL."""
+    if not row:
+        return 0
+    if isinstance(row, dict):
+        return int(row.get("max") or row.get("version") or 0)
+    return int(row[0] or 0)
+
+
 class RMOSDatabase:
     """Database manager supporting SQLite and PostgreSQL."""
 
@@ -104,17 +113,9 @@ class RMOSDatabase:
         else:
             self._init_sqlite()
 
-    @staticmethod
-    def _schema_version_from_row(row: Any) -> int:
-        if not row:
-            return 0
-        if isinstance(row, dict):
-            return int(row.get("max") or row.get("version") or 0)
-        return int(row[0] or 0)
-
     def _current_schema_version(self, cursor: Any) -> int:
         cursor.execute("SELECT MAX(version) FROM schema_version")
-        return self._schema_version_from_row(cursor.fetchone())
+        return _schema_version_from_row(cursor.fetchone())
 
     def _apply_v4_preventive_indexes(self, cursor: Any) -> None:
         for index_name, table_columns in V4_PREVENTIVE_INDEXES:
@@ -185,7 +186,7 @@ class RMOSDatabase:
         with self.get_connection() as conn:
             c = conn.cursor()
             c.execute("SELECT MAX(version) FROM schema_version")
-            return self._schema_version_from_row(c.fetchone())
+            return _schema_version_from_row(c.fetchone())
 
     def execute_query(self, query: str, params: tuple = ()) -> list:
         if self._is_postgres:
