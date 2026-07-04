@@ -1,0 +1,41 @@
+{
+  "schema": "cbsp21_patch_input_v1",
+  "schema_version": "cbsp21_patch_input_v1",
+  "coverage_min": 0.95,
+  "patch_id": "AUDIT_N1_REFUTED",
+  "title": "docs(perf): reclassify audit finding N1 as time-bounded current-bottleneck refutation",
+  "intent": "Corrects PERFORMANCE_AUDIT_2026-07-04.md: finding N1 (JSON art-jobs store, 22ms/parse) was over-classified as a confirmed bottleneck (#9). The pre-migration store was dormant on 2026-07-04 — 43 records, all created in a 32-day window (Jan-Feb 2026), no writes in ~5 months — so by the same tiny-n logic that refuted leads #1/#2 it was not a current bottleneck. Reclassify to a time-bounded current-bottleneck refutation while preserving that the old full-file parse/rewrite design was structurally inefficient and still justified correctness/maintenance cleanup.",
+  "change_type": "docs",
+  "behavior_change": "none",
+  "risk_level": "low",
+  "scope": {
+    "paths_in_scope": ["PERFORMANCE_AUDIT_2026-07-04.md"],
+    "files_expected_to_change": ["PERFORMANCE_AUDIT_2026-07-04.md"]
+  },
+  "diff_articulation": {
+    "what_changed": "N1 reclassified VERIFIED/#9 -> REFUTED AS A CURRENT BOTTLENECK with the dormancy evidence (43 records, 32-day creation window, ~5 months idle); added to the §2 refuted table; struck from the §0 summary table and the §5 one-hour perf fix list; restores a time-bounded §4/§6 frontier note for pre-#189 or reverted JSON paths; records that PR #189 has now merged as correctness/maintenance cleanup, not proof that N1 was an observed perf bottleneck.",
+    "why_not_redundant": "Documentation-only correction of a mis-ranked finding; aligns the audit's classification with its own tiny-n refutation logic without erasing the structural inefficiency or turning a point-in-time dormancy observation into a permanent guarantee."
+  },
+  "verification": {
+    "commands_run": [
+      "grep review: no remaining reference treats N1/#9 as a confirmed current bottleneck; §0/§2/§3/§4/§5/§6 distinguish current perf refutation from structural cleanup",
+      "PR #189 state checked via gh: MERGED 2026-07-04; audit updated from 'open at time of writing' to merged correctness/maintenance cleanup"
+    ]
+  },
+  "files": [
+    {
+      "path": "PERFORMANCE_AUDIT_2026-07-04.md",
+      "intent": "Reclassify finding N1 (art-jobs store) as a time-bounded current-bottleneck refutation while preserving the structural-maintenance concern.",
+      "scan_targets": ["PERFORMANCE_AUDIT_2026-07-04.md"],
+      "risk": "low",
+      "behavior_change": "none - documentation only"
+    }
+  ],
+  "architecture_scan": {
+    "scan_id": "AS-2026-07-04-003",
+    "risk_summary": { "critical": 0, "high": 0, "medium": 0, "low": 1 },
+    "findings": [],
+    "acknowledged": true,
+    "acknowledgement_notes": "Docs-only classification correction; no code or runtime change. The revised wording explicitly preserves the old structural inefficiency, records PR #189 as merged cleanup, and keeps the dormancy conclusion time-bounded to the 2026-07-04 audit evidence."
+  }
+}

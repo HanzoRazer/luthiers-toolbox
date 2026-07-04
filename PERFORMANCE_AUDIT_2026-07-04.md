@@ -23,9 +23,9 @@ Ranked by **likelihood × impact × how-cheap-to-fix**. "Domain" = runtime (affe
 | 6 | **Toolpath Pinia store holds 2× up-to-100k deep-reactive arrays** | frontend | **Verified** ~20 MB × 2, plain `ref` not `shallowRef` | Cheap–medium (`shallowRef` + input cap) |
 | 7 | **Sync CPU compute in 3 `async def` handlers blocks the event loop** | runtime | **Verified** (vectorizer/vision); correct offload pattern exists in repo | Medium (`run_in_executor`) |
 | 8 | **LiveMonitor event lists grow unbounded** (no retained-event cap) | frontend | **Verified** `push` per WS event, only manual clear | Trivial (cap arrays) |
-| 9 | **JSON art-jobs store: full 730 KB parse + full rewrite per op** | runtime | **Measured** 22 ms/parse; live; append-only unbounded | Cheap (finish the already-built SQLite migration) |
+| ~~9~~ | ~~JSON art-jobs store~~ → **REFUTED AS A CURRENT BOTTLENECK** (time-bounded correction, 2026-07-04) — the pre-migration store was dormant (43 records, no writes ~5mo), so 22 ms/op was not driving observed latency. The full-file parse/rewrite design was still structurally inefficient; see §2 / §3 N1. | — | — | — |
 
-**One-hour fix list** (confirmed *and* cheap) is in §5. Items 1, 3, 8, 9 and the two preventive index additions are all ≲1 hour each; item 2 is a small clamp.
+**One-hour fix list** (confirmed *and* cheap) is in §5. Items 1, 3, 8 and the two preventive index additions are all ≲1 hour each; item 2 is a small clamp. (Former item 9 / N1 dropped as a current perf bottleneck, not as a maintenance concern; see §3.)
 
 ---
 
@@ -108,18 +108,23 @@ All 19 candidate sites are benign single extra O(n) passes: tonewood filters (`m
 | #5 DXF contour reconstructor | Current code is O(n) + 30s timeout + hard limits; **measured linear** to 10k edges. O(n²) twins are dead. |
 | #8 second-pass materialization | All sites are benign single O(n) passes. |
 | N+1 queries (Part B) | **None on any live request path** — the only store-call-in-loop sites are offline migration/audit tools (`tools/rmos_migration_audit.py:290+`, `tools/rmos_migrate_json_to_sqlite.py:99+`). Bulk import (`utility/settings_router.py:190`) fetches ids once, uses O(1) in-memory dict stores. |
+| N1 JSON art-jobs store (§3) — *corrected 2026-07-04* | 22 ms/op is real and the pre-migration JSON design was structurally inefficient, but it was **not a current bottleneck as observed on 2026-07-04**: 43 records, all created in a 32-day window (Jan–Feb 2026), no writes in ~5 months. Same tiny-static-`n` logic as #1/#2. The "grows unbounded → future bottleneck" framing was unsupported by the point-in-time data, not disproven for all future usage. |
 
 ---
 
 ## 3. Part B / C — new findings the capped search missed
 
-### N1. JSON art-jobs store: full-file parse + full rewrite per operation → **VERIFIED (measured), ranked #9**
-`services/api/app/services/art_jobs_store.py` (and near-twin `art_job_store.py`) back rosette CAM jobs with `data/art_jobs.json` (**730 KB, 43 records**):
-- `get_art_job()` calls `_load_jobs()` (full parse) then linear-scans (`:82-88`).
-- `create_art_job()` does `_load_jobs()` → append → `_save_jobs()` **rewrites the entire file** (`json.dump(indent=2)`, `:45-49,75-77`).
-- **Measured:** `json.load` = **22 ms per call** (20-run avg, 730 KB).
-- **Reachability — LIVE:** `cam/routers/rosette/rosette_jobs_router.py:79` (create), `:112` (get); `rmos/rosette_cam_router.py:415`; `pipeline_ops_rosette.py:77`; `art_studio/api/rosette_jobs_routes.py:239`.
-- **Migration is half-done:** `core/store_registry.py:152-154` canonically wires `ART_JOBS → SQLiteArtJobsStore` ("migrated from JSON file stores"), and the SQLite `art_jobs` table + indexes exist — but the live rosette routers still call the JSON functions directly, bypassing the registry. Append-only, **never pruned → grows unbounded**; the 22 ms parse and the full rewrite both scale with file size. Fix = point those routers at the existing SQLite store.
+### N1. JSON art-jobs store: full-file parse + full rewrite per operation → **REFUTED AS CURRENT BOTTLENECK** (corrected 2026-07-04)
+
+> **Correction.** This finding was originally logged as *VERIFIED (measured), ranked #9*. That was an over-classification for the audit's perf-priority list: the per-op cost is real, but the store was far too small and static on 2026-07-04 to be a current bottleneck. Reclassified to **refuted as a current bottleneck** by the same tiny-`n` logic that refuted leads #1/#2. This does **not** mean the JSON implementation was efficient, fixed, or safe to ignore if usage resumes. (See git history for the original wording.)
+
+`services/api/app/services/art_jobs_store.py` (and near-twin `art_job_store.py`) back rosette CAM jobs with `data/art_jobs.json` and re-parse + rewrite the whole file per op:
+- `get_art_job()` → `_load_jobs()` (full parse) + linear scan (`:82-88`); `create_art_job()` → load → append → `_save_jobs()` full rewrite (`:45-49,75-77`).
+- **Measured per-op cost:** `json.load` = **22 ms** (20-run avg, 730 KB). Live via the rosette routers (`rosette_jobs_router.py:79,112`, `rmos/rosette_cam_router.py:415`, `pipeline_ops_rosette.py:77`, `art_studio/api/rosette_jobs_routes.py:239`).
+
+**Why refuted:** the store was **tiny and dormant at audit time.** All **43 records were created in a single 32-day window (2026-01-04 … 2026-02-05); nothing had been written since (~5 months idle).** 22 ms on 43 static records, single operator, was not a bottleneck — exactly the reason the SQLite list-query leads (#1/#2) were refuted. The original "append-only → grows unbounded → future bottleneck" framing was **not supported by the observed data**: the file was not growing, and at the peak observed rate (~1.35 jobs/day, then zero) any size where 22 ms became user-visible was years away. This is a time-bounded audit conclusion, not a permanent guarantee; if the JSON path exists on a future branch and writes resume, re-check record count, newest write, and create/get latency.
+
+**Consolidation note (not evidence of a perf bottleneck):** the two stores also accidentally shared one file with two incompatible record shapes. The SQLite migration that decouples them **landed in PR #189 on 2026-07-04** as a consolidation / correctness cleanup. Read that migration as removing the structural full-file parse/rewrite design and shape-collision risk, not as proof that N1 was an observed perf bottleneck.
 
 ### N2. Synchronous CPU compute inside request handlers → **VERIFIED, ranked #7**
 Offload primitives (`run_in_executor`/`BackgroundTasks`/`to_thread`) exist in only 10 files, and **none of the heavy vision/geometry routers use them** (the correct-pattern contrast: `body_solver_router.py`, `blueprint_async_router.py` *do* offload).
@@ -158,7 +163,7 @@ These are plausible but I could **not** confirm without real volumes or a runnin
 |---|---|---|
 | Lead #3 real-world severity | Measured on synthetic toolpaths; real call frequency + typical user grid sizes unknown | Log `grid` size + `moves` count on live `/what_if` calls; sample p95 latency |
 | `preview_infill` (vcarve) worst case | Needs pyclipper+shapely fixture with a large region + 0.1 mm stepover | Profile with a real V-carve infill request at min stepover |
-| JSON art-jobs growth trajectory | 43 records today; parse/rewrite cost scales with file size | Measure `art_jobs.json` size + `/what_if`… `create_art_job` latency after N months of production jobs |
+| N1 dormancy assumption (pre-#189 / reverted JSON path only) | The refutation depends on point-in-time evidence from 2026-07-04: 43 records and ~5 months of no writes. The old full-file parse/rewrite design remains structurally inefficient if that JSON path exists and write volume resumes. | If reviewing a pre-#189 branch or a future revert, check `art_jobs.json` record count, newest write time, write frequency, and create/get latency before relying on this refutation. On current main after PR #189, confirm the SQLite-backed stores remain in place instead. |
 | F-X1 3D playback freeze | Structurally clear from code + doc; dev server not run | Load a 50k–100k-segment program in the client, record FPS during playback |
 | SQLite at scale | rmos.db near-empty; the missing `strip_families`/composite indexes only bite at large `n` | Seed `strip_families`/`patterns` to 10k rows, re-run `EXPLAIN QUERY PLAN` + `timeit` |
 | Startup on fresh Railway container | Measured locally; cold `.pyc` behaviour on the real deploy image unknown | Time first-request-ready on a clean container deploy (no warm `__pycache__`) |
@@ -174,7 +179,7 @@ Each is a *separate, scoped PR after this audit* — this document changes no co
 2. **Clamp the `/what_if` grid workload server-side** (`whatif_opt.py` / `optimization_router.py`) — reject or cap excessive total cells and `cells × moves`; optionally stop deep-copying `moves` per cell. Kills the 10 s tail while allowing cheap rectangular grids. (Lead #3)
 3. **Decimate / make opt-in the `moves[]` in `simulate_gcode_upload`** (`simulation_consolidated_router.py:137`) — `move_count` is already returned; gate the full array behind a query param or downsample. Kills the 7–70 MB payload. (Lead #7)
 4. **Cap LiveMonitor retained events** in both the store and visible component. Stops the long-session growth. (Finding N4/#8)
-5. **Point the live rosette routers at the existing `SQLiteArtJobsStore`** instead of the JSON functions (`rosette_jobs_router.py:79,112`, `rmos/rosette_cam_router.py:415`, `pipeline_ops_rosette.py:77`). The SQLite store + indexes already exist — this finishes a half-done migration and removes the 22 ms parse + full rewrite. (Finding N1/#9)
+5. ~~Point the live rosette routers at `SQLiteArtJobsStore`.~~ **Dropped from the one-hour perf list (2026-07-04):** finding N1 is refuted as a current bottleneck (§3), not declared harmless. The separate store consolidation subsequently landed in PR #189 as correctness/maintenance cleanup.
 6. **Preventive DB indexes** (`rmos_db.py`): add `strip_families(material_type)`, `strip_families(strip_width_mm)`, and composite `(<filter>, created_at DESC)` indexes on the list tables. Near-free; hedges Leads #1/#2 against future growth.
 
 **Deliberately *not* in the one-hour list** (real but not cheap): F-X1 3D playback rebuild (#4 — needs incremental scene diffing), startup import time (#5 — structural, ~3–4 s recoverable via lazy imports but no single win), sync-compute offload (#7 — needs `run_in_executor` plumbing per handler). And two **correctness** side-findings for separate tickets: the 500-vertex depth-fuse silently dropping large contours (`graph_algorithms.py:173`), and the `whatif_opt` docstring perf claims being 50–100× optimistic.
@@ -183,4 +188,4 @@ Each is a *separate, scoped PR after this audit* — this document changes no co
 
 ## 6. What I'd measure next with production data
 
-The audit's honest open frontier (mirrors §4): instrument live `/what_if` grid/move sizes; track `art_jobs.json` size + rosette-create latency over time; FPS-profile a 100k-segment playback in the real client; time first-ready on a cold Railway deploy; and seed the RMOS stores to 10k rows to confirm the index hedges before committing them. None of these block the §5 fixes — they tell you whether items #3/#5/#9's *severity* is climbing, so you fix in the right order rather than on inference.
+The audit's honest open frontier (mirrors §4): instrument live `/what_if` grid/move sizes; if looking at a pre-#189 or reverted branch, re-check N1's JSON-store record count/write recency before relying on the dormancy refutation; FPS-profile a 100k-segment playback in the real client; time first-ready on a cold Railway deploy; and seed the RMOS stores to 10k rows to confirm the index hedges before committing them. None of these block the §5 fixes — they tell you whether the confirmed items' *severity* is climbing, so you fix in the right order rather than on inference.
