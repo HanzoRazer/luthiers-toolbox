@@ -53,6 +53,24 @@ def test_what_if_with_moves(client):
     assert "opt" in data
 
 
+def test_what_if_rejects_oversized_grid(client):
+    """POST /api/cam/opt/what_if returns 400 when grid axis exceeds the cap.
+
+    Guards the O(grid[0]*grid[1]*len(moves)) cost: an uncapped grid on a large
+    toolpath ran for ~10s on the request thread. Default 6x6 stays valid.
+    """
+    response = client.post(
+        "/api/cam/opt/what_if",
+        json={
+            "moves": [{"type": "rapid", "x": 0, "y": 0, "z": 5}],
+            "machine_profile_id": "GRBL_3018_Default",
+            "grid": [20, 20],
+        },
+    )
+    assert response.status_code == 400
+    assert "grid" in response.json()["detail"].lower()
+
+
 def test_what_if_invalid_profile(client):
     """POST /api/cam/opt/what_if returns 404 for invalid profile."""
     response = client.post(

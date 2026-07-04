@@ -19,6 +19,13 @@ from ....core.safety import safety_critical
 
 router = APIRouter(prefix="/opt")
 
+# Upper bound on each what-if grid axis. optimize_feed_stepover() clones the
+# full moves list and re-runs the cycle-time estimate once PER GRID CELL, so
+# cost is O(grid[0] * grid[1] * len(moves)). An uncapped grid (e.g. 20x20)
+# on a multi-thousand-move toolpath runs for ~10s on the request thread.
+# 12x12 = 144 cells keeps the default 6x6 untouched while bounding worst case.
+MAX_WHATIF_GRID_AXIS = 12
+
 
 class LoopIn(BaseModel):
     pts: List[List[float]]
@@ -44,6 +51,15 @@ def what_if_opt(body: OptIn) -> Dict[str, Any]:
     profile = get_profile(body.machine_profile_id)
     if body.moves is None:
         raise HTTPException(400, "M.2 expects prebuilt moves; call /plan first.")
+
+    if len(body.grid) != 2 or any(g < 1 for g in body.grid):
+        raise HTTPException(400, "grid must be [axis_feed, axis_stepover] with each >= 1.")
+    if any(g > MAX_WHATIF_GRID_AXIS for g in body.grid):
+        raise HTTPException(
+            400,
+            f"grid axis exceeds cap {MAX_WHATIF_GRID_AXIS} "
+            f"(cost is O(grid[0]*grid[1]*len(moves)); refine bounds instead of the grid).",
+        )
 
     res = optimize_feed_stepover(
         body.moves,
