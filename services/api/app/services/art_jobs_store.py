@@ -131,6 +131,37 @@ def _get_store() -> SQLiteArtJobsStore:
         return _store
 
 
+def _insert_legacy_row(
+    r: Any,
+    seen_ids: set,
+    store: SQLiteArtJobsStore,
+    db: Any,
+    cursor: Any,
+) -> tuple:
+    """Validate and insert a single legacy row. Returns (imported, skipped, duplicates) deltas."""
+    if not isinstance(r, dict) or "job_type" not in r:
+        return 0, 1, 0  # singular-shaped rows owned by art_job_store — skip silently
+    row_id = r.get("id")
+    if not row_id:
+        logger.warning("Skipping legacy plural art job row without id")
+        return 0, 1, 0
+    if row_id in seen_ids:
+        logger.warning("Skipping duplicate legacy plural art job id %r", row_id)
+        return 0, 0, 1
+    seen_ids.add(row_id)
+    row_data = store._dict_to_row_data(_row_payload_from_legacy(r))
+    fields = list(row_data.keys())
+    placeholders = ",".join(["?"] * len(fields))
+    _execute(
+        db,
+        cursor,
+        f"INSERT INTO {store.table_name} ({','.join(fields)}) VALUES ({placeholders}) "
+        f"ON CONFLICT({store.id_field}) DO NOTHING",
+        tuple(row_data.values()),
+    )
+    return 1, 0, 0
+
+
 def _migrate_from_json(store: SQLiteArtJobsStore, identity: Optional[str] = None) -> None:
     """One-time import of legacy plural-shaped rows (id/job_type/...) if the table is empty.
 
@@ -160,30 +191,10 @@ def _migrate_from_json(store: SQLiteArtJobsStore, identity: Optional[str] = None
     with db.get_connection() as conn:
         cursor = conn.cursor()
         for r in rows:
-            if not isinstance(r, dict) or "job_type" not in r:
-                skipped += 1
-                continue  # skip singular-shaped rows (owned by art_job_store)
-            row_id = r.get("id")
-            if not row_id:
-                skipped += 1
-                logger.warning("Skipping legacy plural art job row without id")
-                continue
-            if row_id in seen_ids:
-                duplicates += 1
-                logger.warning("Skipping duplicate legacy plural art job id %r", row_id)
-                continue
-            seen_ids.add(row_id)
-            row_data = store._dict_to_row_data(_row_payload_from_legacy(r))
-            fields = list(row_data.keys())
-            placeholders = ",".join(["?"] * len(fields))
-            _execute(
-                db,
-                cursor,
-                f"INSERT INTO {store.table_name} ({','.join(fields)}) VALUES ({placeholders}) "
-                f"ON CONFLICT({store.id_field}) DO NOTHING",
-                tuple(row_data.values()),
-            )
-            imported += 1
+            di, ds, dd = _insert_legacy_row(r, seen_ids, store, db, cursor)
+            imported += di
+            skipped += ds
+            duplicates += dd
     _migrated = True
     _migrated_for = identity
     if imported or skipped or duplicates:
