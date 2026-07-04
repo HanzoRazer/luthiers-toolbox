@@ -1,0 +1,66 @@
+{
+  "schema": "cbsp21_patch_input_v1",
+  "schema_version": "cbsp21_patch_input_v1",
+  "coverage_min": 0.95,
+  "patch_id": "FIX_DEBT_REPORT_SUMMARY_STATUS",
+  "title": "debt_report.md summary reflects real per-gate step conclusions (fix spurious ERROR rows)",
+  "intent": "Fix app.ci.generate_debt_report so its Summary table reflects the actual debt-gates step conclusions instead of rendering a spurious '| <check> | ERROR | - | - |' row for every check. Root cause: run_check ran each check subprocess with cwd=_repo_root()/services/api, but _repo_root() already resolves to services/api (it matches the nested services/api/pyproject.toml first), so the cwd became services/api/services/api (non-existent) and every subprocess raised -> ERROR. This misled a reviewer into reading a green debt-gates job as red. Fix cwd via a direct _api_dir() helper, and run the ratchet checks (complexity, file size) with their baselines so status = PASS/FAIL mirrors the gate step. No workflow, product, or gate-threshold change.",
+  "change_type": "fix",
+  "behavior_change": "report-output-only",
+  "risk_level": "low",
+  "scope": {
+    "paths_in_scope": [
+      "services/api/app/ci/",
+      "services/api/tests/",
+      ".cbsp21/patches/"
+    ],
+    "files_expected_to_change": [
+      "services/api/app/ci/generate_debt_report.py",
+      "services/api/tests/test_generate_debt_report.py",
+      ".cbsp21/patches/fix-debt-report-summary-status.json"
+    ]
+  },
+  "diff_articulation": {
+    "what_changed": "(1) generate_debt_report.py: added _api_dir() = Path(__file__).resolve().parents[2] (the services/api dir that contains the importable app package) and pointed run_check's subprocess cwd at it, replacing the broken _repo_root()/services/api (== services/api/services/api) that made every check subprocess raise and render ERROR. (2) The complexity and file-size summary rows now run in ratchet mode (pass --baseline app/ci/complexity_baseline.json / file_sizes_baseline.json), matching the debt-gates workflow step; the --json ratchet output is the NEW-violation delta, so status = PASS when 0 new (mirrors the step's success) and FAIL (N new) otherwise. Detail headers renamed 'Worst Complexity'/'Large Files' -> 'New Complexity Violations'/'New Large Files' to match the ratchet data. Added a note under the summary explaining that status mirrors the debt-gates conclusions and ERROR means the check could not be run, not that the gate failed. bare_except/fence/duplication rows unchanged (already reflect their step semantics; duplication is advisory/continue-on-error and reports WARN honestly). (3) NEW tests/test_generate_debt_report.py: locks _api_dir() shape, that run_check returns real data (not error) for a fast check, and that the summary has no spurious '| ERROR |' rows with ratchet checks showing PASS on a clean tree.",
+    "why_not_redundant": "The summary rendered ERROR for all five checks on both main and PRs even when the debt-gates job passed (every gate STEP concluded success). That directly misled a reviewer into nearly blocking a valid closure (PR #187). No existing test covered the report generator, so the cwd bug shipped silently. This makes the debt-gates report faithful to the gate it reports on and adds a regression lock."
+  },
+  "verification": {
+    "commands_run": [
+      "python -m app.ci.generate_debt_report -> Summary now shows Complexity/File size/Bare except/Safety fences = PASS, Duplication = WARN (advisory); no '| ERROR |' rows",
+      "pytest tests/test_generate_debt_report.py -q -> 3 passed",
+      "python -m app.ci.check_complexity --baseline app/ci/complexity_baseline.json -> OK (no new violations)",
+      "python -m app.ci.check_file_sizes --baseline app/ci/file_sizes_baseline.json -> OK (no new violations)",
+      "scripts/ci/check_cbsp21_patch_input.py + check_cbsp21_gate.py -> PASS"
+    ]
+  },
+  "files": [
+    {
+      "path": "services/api/app/ci/generate_debt_report.py",
+      "intent": "Fix run_check cwd (_api_dir) + run ratchet checks with baselines so the summary status mirrors the debt-gates step conclusions instead of spurious ERROR.",
+      "scan_targets": ["services/api/app/ci/generate_debt_report.py"],
+      "risk": "low",
+      "behavior_change": "report-output-only - debt_report.md summary now shows real per-check status; no gate threshold or workflow change"
+    },
+    {
+      "path": "services/api/tests/test_generate_debt_report.py",
+      "intent": "Regression lock: _api_dir shape, run_check returns data (cwd fix), summary has no spurious ERROR rows.",
+      "scan_targets": ["services/api/tests/test_generate_debt_report.py"],
+      "risk": "low",
+      "behavior_change": "none - test-only"
+    },
+    {
+      "path": ".cbsp21/patches/fix-debt-report-summary-status.json",
+      "intent": "Per-PR CBSP21 manifest for this fix.",
+      "scan_targets": [".cbsp21/patches/fix-debt-report-summary-status.json"],
+      "risk": "low",
+      "behavior_change": "none - CI/review metadata only"
+    }
+  ],
+  "architecture_scan": {
+    "scan_id": "AS-2026-07-04-DEBT-REPORT-SUMMARY",
+    "risk_summary": { "critical": 0, "high": 0, "medium": 0, "low": 0 },
+    "findings": [],
+    "acknowledged": false,
+    "acknowledgement_notes": ""
+  }
+}

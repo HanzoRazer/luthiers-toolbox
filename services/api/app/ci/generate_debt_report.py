@@ -29,15 +29,29 @@ def _repo_root() -> Path:
     return Path.cwd()
 
 
+def _api_dir() -> Path:
+    """Directory that contains the importable ``app`` package (services/api).
+
+    This module lives at ``services/api/app/ci/generate_debt_report.py``, so the
+    ``services/api`` dir is exactly ``parents[2]``. Deriving it directly avoids
+    the ``_repo_root()`` ambiguity: ``_repo_root()`` walks up and matches the
+    NESTED ``services/api/pyproject.toml`` first, so it returns ``services/api``
+    (not the true repo root) — appending ``/services/api`` to that yielded a
+    non-existent ``services/api/services/api`` cwd, which made every ``run_check``
+    subprocess raise and render a spurious ``ERROR`` row in the summary.
+    """
+    return Path(__file__).resolve().parents[2]
+
+
 def run_check(module: str, extra_args: List[str] = None) -> Dict[str, Any]:
-    """Run a check module and capture JSON output."""
+    """Run a check module (as the debt-gates step does) and capture JSON output."""
     args = [sys.executable, "-m", module, "--json"] + (extra_args or [])
     try:
         result = subprocess.run(
             args,
             capture_output=True,
             text=True,
-            cwd=str(_repo_root() / "services" / "api"),
+            cwd=str(_api_dir()),
             timeout=120,
         )
         if result.stdout.strip():
@@ -92,22 +106,30 @@ def generate_report() -> str:
 
     checks = []
 
-    # Complexity
-    complexity = run_check("app.ci.check_complexity")
+    # Complexity (ratchet mode — mirrors the debt-gates step, which passes iff
+    # there are no NEW violations beyond the committed baseline). The --json
+    # ratchet output is the new-violation delta, so an empty list == PASS.
+    complexity = run_check(
+        "app.ci.check_complexity",
+        ["--baseline", "app/ci/complexity_baseline.json"],
+    )
     if "error" not in complexity:
-        count = len(complexity) if isinstance(complexity, list) else complexity.get("violation_count", 0)
-        status = "PASS" if count == 0 else f"WARN ({count} baselined)"
-        lines.append(f"| Complexity (>15) | {status} | {count} | 15 |")
+        new_count = len(complexity) if isinstance(complexity, list) else complexity.get("violation_count", 0)
+        status = "PASS" if new_count == 0 else f"FAIL ({new_count} new)"
+        lines.append(f"| Complexity (>15) | {status} | {new_count} new | 15 |")
         checks.append(("complexity", complexity))
     else:
         lines.append(f"| Complexity | ERROR | - | - |")
 
-    # File sizes
-    file_sizes = run_check("app.ci.check_file_sizes")
+    # File sizes (ratchet mode — mirrors the debt-gates step)
+    file_sizes = run_check(
+        "app.ci.check_file_sizes",
+        ["--baseline", "app/ci/file_sizes_baseline.json"],
+    )
     if "error" not in file_sizes:
-        count = len(file_sizes) if isinstance(file_sizes, list) else file_sizes.get("violation_count", 0)
-        status = "PASS" if count == 0 else f"WARN ({count} baselined)"
-        lines.append(f"| File size (>500) | {status} | {count} | 500 |")
+        new_count = len(file_sizes) if isinstance(file_sizes, list) else file_sizes.get("violation_count", 0)
+        status = "PASS" if new_count == 0 else f"FAIL ({new_count} new)"
+        lines.append(f"| File size (>500) | {status} | {new_count} new | 500 |")
         checks.append(("file_sizes", file_sizes))
     else:
         lines.append(f"| File size | ERROR | - | - |")
@@ -145,6 +167,13 @@ def generate_report() -> str:
         lines.append(f"| Duplication | ERROR | - | - |")
 
     lines.append("")
+    lines.append(
+        "*Status mirrors the `debt-gates` step conclusions: ratchet checks "
+        "(complexity, file size) report PASS when there are no NEW violations "
+        "beyond the committed baseline; `ERROR` means the check could not be "
+        "run, not that the gate failed.*"
+    )
+    lines.append("")
 
     # Detailed sections
     lines.append("## Details")
@@ -154,7 +183,7 @@ def generate_report() -> str:
     if checks:
         for name, data in checks:
             if name == "complexity" and isinstance(data, list) and data:
-                lines.append("### Worst Complexity")
+                lines.append("### New Complexity Violations")
                 lines.append("")
                 lines.append("| Function | Score | File |")
                 lines.append("|----------|-------|------|")
@@ -163,7 +192,7 @@ def generate_report() -> str:
                 lines.append("")
 
             if name == "file_sizes" and isinstance(data, list) and data:
-                lines.append("### Large Files")
+                lines.append("### New Large Files")
                 lines.append("")
                 lines.append("| File | Lines | Over By |")
                 lines.append("|------|-------|---------|")
