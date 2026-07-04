@@ -22,7 +22,7 @@
 
 ### Layer Definitions
 
-1. **canonical_geometry** — Authoritative design truth owned by IBG/BOE. Only this layer may define canonical geometry. Does not require source reference.
+1. **canonical_geometry** — Authoritative design truth produced by the approved canonical process following a governed approval event. Only this layer may define canonical geometry. Does not require source reference.
 
 2. **manufacturing_geometry** — Derived manufacturing interpretation consumed by CAM. Must reference upstream canonical source.
 
@@ -91,7 +91,8 @@ tests/cam/test_geometry_authority_references.py  # 100 tests
 | GET | /api/cam/geometry-authority/ | API metadata |
 | GET | /api/cam/geometry-authority/layers | List all layers |
 | GET | /api/cam/geometry-authority/layers/{layer} | Get layer definition |
-| POST | /api/cam/geometry-authority/references/canonical | Create canonical reference |
+| POST | /api/cam/geometry-authority/references/canonical | Create legacy/unapproved canonical reference |
+| POST | /api/cam/geometry-authority/references/canonical/process-approved | Create process-approved canonical reference |
 | POST | /api/cam/geometry-authority/references/derived | Create derived reference |
 | GET | /api/cam/geometry-authority/references | List all references |
 | GET | /api/cam/geometry-authority/references/{id} | Get reference by ID |
@@ -151,8 +152,14 @@ These fields allow workspaces and strategies to reference validated geometry aut
 
 ```python
 from app.cam.geometry_authority_reference import (
-    create_canonical_geometry_reference,
+    create_process_approved_canonical_geometry_reference,
     create_manufacturing_geometry_reference,
+)
+from app.cam.canonical_geometry_process_approval import (
+    PROPOSED_APPROVAL_RULE_ID,
+    PROPOSED_CANONICAL_PROCESS_ID,
+    PROPOSED_CANONICAL_PROCESS_VERSION,
+    create_canonical_process_approval_record,
 )
 from app.cam.geometry_authority_registry import (
     register_geometry_authority_reference,
@@ -160,11 +167,20 @@ from app.cam.geometry_authority_registry import (
     get_ci_summary,
 )
 
-# Create canonical reference (IBG owns design truth)
-canonical = create_canonical_geometry_reference(
-    owning_domain="ibg",
-    source_authority="ibg_body_outline",
+# Create process-approved canonical reference
+approval_record = create_canonical_process_approval_record(
+    canonical_process_id=PROPOSED_CANONICAL_PROCESS_ID,
+    canonical_process_version=PROPOSED_CANONICAL_PROCESS_VERSION,
+    governed_approval_event_id="event-body-outline-approval",
+    approval_rule_id=PROPOSED_APPROVAL_RULE_ID,
+    source_geometry_id="ibg-body-outline-source",
     provenance_hash="sha256:abc123...",
+    process_inputs_hash="sha256:inputs123...",
+    approver_id="human:reviewer",
+)
+canonical = create_process_approved_canonical_geometry_reference(
+    approval_record=approval_record,
+    owning_domain="boe",
     description="Martin D-28 body outline",
 )
 registered = register_geometry_authority_reference(canonical)

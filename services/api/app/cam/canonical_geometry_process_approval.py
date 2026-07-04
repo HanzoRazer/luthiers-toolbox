@@ -48,6 +48,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import re
 from datetime import datetime, timezone
 from typing import Any, Dict, Literal, Optional, Tuple
 from uuid import uuid4
@@ -97,6 +98,7 @@ _FORBIDDEN_SOURCE_AUTHORITY_STATE_TOKENS = (
     "filename",
     "format",
     "path",
+    "representation",
 )
 
 
@@ -125,8 +127,16 @@ def _authority_state_is_representation_derived(state: str) -> bool:
     storage location rather than a governed authority state.
     """
     normalized = state.strip().lower()
+    parts = {
+        part
+        for part in re.split(r"[^a-z0-9]+", normalized.replace("_", " "))
+        if part
+    }
     return any(
-        normalized == token or normalized.startswith(token)
+        normalized == token
+        or normalized.startswith(f"{token}:")
+        or normalized.startswith(f"{token}/")
+        or token in parts
         for token in _FORBIDDEN_SOURCE_AUTHORITY_STATE_TOKENS
     )
 
@@ -302,6 +312,17 @@ def process_covers_source_case(
     if covered is None:
         return False
     return source_geometry_role.strip().lower() in covered
+
+
+def is_registered_canonical_process(
+    canonical_process_id: str,
+    canonical_process_version: str,
+) -> bool:
+    """True when the process id/version pair exists in the approved registry."""
+    return (
+        canonical_process_id.strip(),
+        canonical_process_version.strip(),
+    ) in APPROVED_CANONICAL_PROCESSES
 
 
 def validate_canonical_process_approval_record(

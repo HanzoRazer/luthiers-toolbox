@@ -29,14 +29,20 @@ from app.cam.geometry_authority_reference import (
     GeometryAuthorityReference,
     GeometryUse,
     create_canonical_geometry_reference,
+    create_process_approved_canonical_geometry_reference,
     create_cognition_geometry_reference,
     create_derived_geometry_reference,
     create_export_geometry_reference,
     create_manufacturing_geometry_reference,
     create_visualization_geometry_reference,
 )
+from app.cam.canonical_geometry_process_approval import (
+    CanonicalProcessApprovalError,
+    create_canonical_process_approval_record,
+)
 from app.cam.geometry_authority_validation import (
     GeometryAuthorityValidationResult,
+    validate_canonical_process_authority,
 )
 from app.cam.geometry_authority_registry import (
     get_ci_summary,
@@ -99,11 +105,40 @@ async def get_layer(layer: GeometryAuthorityLayer) -> GeometryAuthorityLayerDefi
 
 
 class CreateCanonicalReferenceRequest(BaseModel):
-    """Request to create a canonical geometry reference."""
+    """Request to create a legacy/unapproved canonical geometry reference."""
 
     owning_domain: str = Field(..., description="Domain that owns this geometry")
     source_authority: str = Field(..., description="Authority that defined the geometry")
     provenance_hash: Optional[str] = None
+    description: str = ""
+    metadata: Optional[Dict[str, Any]] = None
+
+
+class CreateCanonicalProcessApprovalRequest(BaseModel):
+    """Request body for a governed canonical-process approval record."""
+
+    canonical_process_id: str
+    canonical_process_version: str
+    governed_approval_event_id: str
+    approval_rule_id: str
+    source_geometry_id: str
+    provenance_hash: str
+    process_inputs_hash: str
+    approver_id: str
+    source_geometry_role: str = "evidence"
+    source_authority_state: str = "governed_evidence_candidate"
+    approver_role: str = "reviewer"
+    output_geometry_id: Optional[str] = None
+    notes: str = ""
+    metadata: Optional[Dict[str, Any]] = None
+
+
+class CreateProcessApprovedCanonicalReferenceRequest(BaseModel):
+    """Request to create a process-approved canonical geometry reference."""
+
+    owning_domain: str = Field(..., description="Domain that owns this geometry")
+    source_authority: str = "canonical_process"
+    approval_record: CreateCanonicalProcessApprovalRequest
     description: str = ""
     metadata: Optional[Dict[str, Any]] = None
 
@@ -123,11 +158,25 @@ class CreateDerivedReferenceRequest(BaseModel):
     metadata: Optional[Dict[str, Any]] = None
 
 
+def _has_process_approval_metadata(reference: GeometryAuthorityReference) -> bool:
+    """True when raw reference payload carries process-approval fields."""
+    return any(
+        [
+            reference.process_approval_record_id,
+            reference.process_approval_record_hash,
+            reference.canonical_process_id,
+            reference.canonical_process_version,
+            reference.governed_approval_event_id,
+            reference.process_source_geometry_id,
+        ]
+    )
+
+
 @router.post("/references/canonical", response_model=GeometryAuthorityReference)
 async def create_canonical_reference(
     request: CreateCanonicalReferenceRequest,
 ) -> GeometryAuthorityReference:
-    """Create and register a canonical geometry reference."""
+    """Create and register a legacy/unapproved canonical geometry reference."""
     ref = create_canonical_geometry_reference(
         owning_domain=request.owning_domain,
         source_authority=request.source_authority,
@@ -135,6 +184,44 @@ async def create_canonical_reference(
         description=request.description,
         metadata=request.metadata,
     )
+    return register_geometry_authority_reference(ref)
+
+
+@router.post(
+    "/references/canonical/process-approved",
+    response_model=GeometryAuthorityReference,
+)
+async def create_process_approved_canonical_reference(
+    request: CreateProcessApprovedCanonicalReferenceRequest,
+) -> GeometryAuthorityReference:
+    """Create and register a process-approved canonical geometry reference."""
+    try:
+        approval_record = create_canonical_process_approval_record(
+            canonical_process_id=request.approval_record.canonical_process_id,
+            canonical_process_version=request.approval_record.canonical_process_version,
+            governed_approval_event_id=request.approval_record.governed_approval_event_id,
+            approval_rule_id=request.approval_record.approval_rule_id,
+            source_geometry_id=request.approval_record.source_geometry_id,
+            provenance_hash=request.approval_record.provenance_hash,
+            process_inputs_hash=request.approval_record.process_inputs_hash,
+            approver_id=request.approval_record.approver_id,
+            source_geometry_role=request.approval_record.source_geometry_role,
+            source_authority_state=request.approval_record.source_authority_state,
+            approver_role=request.approval_record.approver_role,
+            output_geometry_id=request.approval_record.output_geometry_id,
+            notes=request.approval_record.notes,
+            metadata=request.approval_record.metadata,
+        )
+        ref = create_process_approved_canonical_geometry_reference(
+            approval_record=approval_record,
+            owning_domain=request.owning_domain,
+            source_authority=request.source_authority,
+            description=request.description,
+            metadata=request.metadata,
+        )
+    except (CanonicalProcessApprovalError, ValueError) as exc:
+        raise HTTPException(400, str(exc)) from exc
+
     return register_geometry_authority_reference(ref)
 
 
@@ -147,7 +234,7 @@ async def create_derived_reference(
         raise HTTPException(
             400,
             "Cannot create canonical reference via derived endpoint — "
-            "use /references/canonical instead"
+            "use /references/canonical/process-approved instead"
         )
 
     ref = create_derived_geometry_reference(
@@ -168,6 +255,18 @@ async def register_reference(
     reference: GeometryAuthorityReference,
 ) -> GeometryAuthorityReference:
     """Register a geometry authority reference directly."""
+    if reference.authority_layer == "canonical_geometry" and _has_process_approval_metadata(
+        reference
+    ):
+        canonical_ok, canonical_reason = validate_canonical_process_authority(reference)
+        if not canonical_ok:
+            raise HTTPException(400, canonical_reason)
+        raise HTTPException(
+            400,
+            "Generic registration cannot verify a canonical process approval record; "
+            "use /references/canonical/process-approved so the approval record is "
+            "created and validated at the API boundary.",
+        )
     return register_geometry_authority_reference(reference)
 
 

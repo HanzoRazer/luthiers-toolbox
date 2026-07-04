@@ -37,9 +37,26 @@ from app.cam.geometry_authority_taxonomy import (
     layer_requires_source,
 )
 from app.cam.geometry_authority_reference import GeometryAuthorityReference
+from app.cam.canonical_geometry_process_approval import (
+    is_registered_canonical_process,
+)
 
 
 ValidationGate = Literal["green", "yellow", "red"]
+
+
+def _has_process_approval_metadata(reference: GeometryAuthorityReference) -> bool:
+    """True when any process-approval metadata field is populated."""
+    return any(
+        [
+            reference.process_approval_record_id,
+            reference.process_approval_record_hash,
+            reference.canonical_process_id,
+            reference.canonical_process_version,
+            reference.governed_approval_event_id,
+            reference.process_source_geometry_id,
+        ]
+    )
 
 
 class GeometryAuthorityValidationResult(BaseModel):
@@ -192,6 +209,9 @@ def validate_geometry_authority_reference(
     if not provenance_present and reference.authority_layer != "canonical_geometry":
         warnings.append("Provenance hash not present for derived geometry")
 
+    canonical_authority_respected = True
+    authority_collapse_detected = False
+
     # C2 process-exclusive canonical authority (PROPOSED, transition mode).
     # A canonical reference not backed by a governed process-approval record is
     # a transition-state WARNING in this PR — never a RED gate. PR 4 may flip
@@ -199,7 +219,11 @@ def validate_geometry_authority_reference(
     if is_canonical_layer(reference.authority_layer):
         canonical_ok, canonical_reason = validate_canonical_process_authority(reference)
         if not canonical_ok and canonical_reason:
-            warnings.append(canonical_reason)
+            if _has_process_approval_metadata(reference):
+                blocking_issues.append(canonical_reason)
+                canonical_authority_respected = False
+            else:
+                warnings.append(canonical_reason)
 
     allowed_use_valid = True
     for use in reference.allowed_uses:
@@ -208,9 +232,6 @@ def validate_geometry_authority_reference(
                 f"Use '{use}' is not allowed for layer '{reference.authority_layer}'"
             )
             allowed_use_valid = False
-
-    canonical_authority_respected = True
-    authority_collapse_detected = False
 
     if not is_canonical_layer(reference.authority_layer):
         if reference.may_define_canonical_geometry:
@@ -330,10 +351,13 @@ def validate_canonical_process_authority(
         return True, None
 
     required = {
+        "process_approval_record_id": reference.process_approval_record_id,
+        "process_approval_record_hash": reference.process_approval_record_hash,
         "canonical_process_id": reference.canonical_process_id,
         "canonical_process_version": reference.canonical_process_version,
         "governed_approval_event_id": reference.governed_approval_event_id,
-        "process_approval_record_hash": reference.process_approval_record_hash,
+        "process_source_geometry_id": reference.process_source_geometry_id,
+        "provenance_hash": reference.provenance_hash,
     }
     missing = [name for name, value in required.items() if not value]
     if missing:
@@ -346,6 +370,17 @@ def validate_canonical_process_authority(
             "origin, or individual reviewer identity. Use "
             "create_process_approved_canonical_geometry_reference(). "
             "(transition-state warning; not a RED gate in this PR)"
+        )
+    if not is_registered_canonical_process(
+        reference.canonical_process_id or "",
+        reference.canonical_process_version or "",
+    ):
+        return False, (
+            "Canonical reference names an unregistered canonical process "
+            f"'{reference.canonical_process_id}' version "
+            f"'{reference.canonical_process_version}'; process extension "
+            "and repo-owner/governance ratification are required before this "
+            "metadata can back canonical authority."
         )
     return True, None
 

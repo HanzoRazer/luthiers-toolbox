@@ -40,6 +40,7 @@ from app.cam.geometry_authority_taxonomy import (
 )
 from app.cam.canonical_geometry_process_approval import (
     CanonicalProcessApprovalRecord,
+    validate_canonical_process_approval_record,
 )
 
 
@@ -316,6 +317,15 @@ def create_process_approved_canonical_geometry_reference(
       - Carries ``provenance_hash`` from the approval record.
       - Does NOT authorize execution or machine output (7T invariants hold).
     """
+    approval_valid, approval_reason = validate_canonical_process_approval_record(
+        approval_record
+    )
+    if not approval_valid:
+        raise ValueError(
+            "Invalid canonical process approval record: "
+            f"{approval_reason or 'unknown validation failure'}"
+        )
+
     if approval_record.deterministic_approval_hash:
         record_hash = approval_record.deterministic_approval_hash
     else:
@@ -361,7 +371,7 @@ def create_derived_geometry_reference(
     if is_canonical_layer(authority_layer):
         raise ValueError(
             "Cannot create derived reference for canonical_geometry layer — "
-            "use create_canonical_geometry_reference instead"
+            "use create_process_approved_canonical_geometry_reference instead"
         )
 
     layer_def = get_layer_definition(authority_layer)

@@ -28,6 +28,7 @@ from app.cam.canonical_geometry_process_approval import (
     process_covers_source_case,
 )
 from app.cam.geometry_authority_reference import (
+    GeometryAuthorityReference,
     create_canonical_geometry_reference,
     create_process_approved_canonical_geometry_reference,
     create_derived_geometry_reference,
@@ -204,6 +205,50 @@ def test_process_approved_canonical_reference_validates_green():
     assert result.authority_collapse_detected is False
 
 
+def test_process_approved_factory_rejects_unapproved_manual_record():
+    record = CanonicalProcessApprovalRecord(
+        canonical_process_id="unknown-process",
+        canonical_process_version="v9",
+        governed_approval_event_id="event-manual",
+        approval_rule_id=PROPOSED_APPROVAL_RULE_ID,
+        source_geometry_id="geo-src-manual",
+        provenance_hash="prov-hash-manual",
+        process_inputs_hash="inputs-hash-manual",
+        approver_id="human:tester",
+    )
+
+    with pytest.raises(ValueError, match="process extension required"):
+        create_process_approved_canonical_geometry_reference(
+            approval_record=record,
+            owning_domain="boe",
+        )
+
+
+def test_fabricated_process_metadata_is_blocking_not_warning():
+    ref = GeometryAuthorityReference(
+        authority_layer="canonical_geometry",
+        owning_domain="boe",
+        may_define_canonical_geometry=True,
+        process_approval_record_id="approval-fake",
+        process_approval_record_hash="hash-fake",
+        canonical_process_id="unknown-process",
+        canonical_process_version="v9",
+        governed_approval_event_id="event-fake",
+        process_source_geometry_id="geo-fake",
+        provenance_hash="prov-fake",
+    )
+
+    ok, reason = validate_canonical_process_authority(ref)
+    assert ok is False
+    assert reason is not None
+    assert "unregistered canonical process" in reason
+
+    result = validate_geometry_authority_reference(ref)
+    assert result.gate == "red"
+    assert result.blocking_issues
+    assert not any("process-approval metadata" in w for w in result.warnings)
+
+
 # ---------------------------------------------------------------------------
 # 6. Legacy canonical reference without process approval WARNS, not RED
 # ---------------------------------------------------------------------------
@@ -231,7 +276,19 @@ def test_canonical_reference_without_process_approval_warns_in_transition_mode()
 
 @pytest.mark.parametrize(
     "bad_state",
-    ["dxf", "DXF", "svg", "step", "route", "storage_location", "filename", "path/to/x"],
+    [
+        "dxf",
+        "DXF",
+        "svg",
+        "step",
+        "route",
+        "storage_location",
+        "filename",
+        "path/to/x",
+        "derived_from_dxf",
+        "representation:dxf",
+        "upstream_svg",
+    ],
 )
 def test_export_representation_cannot_self_promote_to_canonical(bad_state):
     with pytest.raises(CanonicalProcessApprovalError) as exc:

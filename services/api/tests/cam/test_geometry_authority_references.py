@@ -923,6 +923,73 @@ class TestGeometryAuthorityRouter:
         assert data["authority_layer"] == "canonical_geometry"
         assert data["may_define_canonical_geometry"] is True
 
+    def test_create_process_approved_canonical_reference(self):
+        """POST /references/canonical/process-approved creates approved reference."""
+        response = client.post(
+            "/api/cam/geometry-authority/references/canonical/process-approved",
+            json={
+                "owning_domain": "boe",
+                "approval_record": {
+                    "canonical_process_id": PROPOSED_CANONICAL_PROCESS_ID,
+                    "canonical_process_version": PROPOSED_CANONICAL_PROCESS_VERSION,
+                    "governed_approval_event_id": "event-router",
+                    "approval_rule_id": PROPOSED_APPROVAL_RULE_ID,
+                    "source_geometry_id": "geo-router-source",
+                    "provenance_hash": "prov-router",
+                    "process_inputs_hash": "inputs-router",
+                    "approver_id": "human:router-test",
+                },
+                "description": "Process-approved canonical reference",
+            },
+        )
+        assert response.status_code == 200
+        data = response.json()
+        assert data["authority_layer"] == "canonical_geometry"
+        assert data["process_approval_record_id"]
+        assert data["process_approval_record_hash"]
+        assert data["canonical_process_id"] == PROPOSED_CANONICAL_PROCESS_ID
+        assert data["process_source_geometry_id"] == "geo-router-source"
+
+    def test_generic_registration_rejects_fabricated_process_metadata(self):
+        """POST /references cannot smuggle fake process-approved canonical refs."""
+        response = client.post(
+            "/api/cam/geometry-authority/references",
+            json={
+                "authority_layer": "canonical_geometry",
+                "owning_domain": "boe",
+                "may_define_canonical_geometry": True,
+                "process_approval_record_id": "approval-fake",
+                "process_approval_record_hash": "hash-fake",
+                "canonical_process_id": "unknown-process",
+                "canonical_process_version": "v9",
+                "governed_approval_event_id": "event-fake",
+                "process_source_geometry_id": "geo-fake",
+                "provenance_hash": "prov-fake",
+            },
+        )
+        assert response.status_code == 400
+        assert "unregistered canonical process" in response.text
+
+    def test_generic_registration_rejects_valid_looking_process_metadata(self):
+        """Generic registration cannot verify even known process metadata."""
+        response = client.post(
+            "/api/cam/geometry-authority/references",
+            json={
+                "authority_layer": "canonical_geometry",
+                "owning_domain": "boe",
+                "may_define_canonical_geometry": True,
+                "process_approval_record_id": "approval-looking",
+                "process_approval_record_hash": "hash-looking",
+                "canonical_process_id": PROPOSED_CANONICAL_PROCESS_ID,
+                "canonical_process_version": PROPOSED_CANONICAL_PROCESS_VERSION,
+                "governed_approval_event_id": "event-looking",
+                "process_source_geometry_id": "geo-looking",
+                "provenance_hash": "prov-looking",
+            },
+        )
+        assert response.status_code == 400
+        assert "Generic registration cannot verify" in response.text
+
     def test_create_derived_reference(self):
         """POST /api/cam/geometry-authority/references/derived creates reference."""
         response = client.post(
