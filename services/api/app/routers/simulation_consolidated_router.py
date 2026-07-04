@@ -53,11 +53,13 @@ class SimUploadResponse(BaseModel):
     """Response for file upload simulation."""
     ok: bool
     units: str
-    move_count: int
+    move_count: int          # true total moves in the file
     length_mm: float
     time_s: float
-    moves: List[Dict[str, Any]]
+    moves: List[Dict[str, Any]]   # decimated preview unless include_moves=true
     issues: List[str]
+    moves_returned: int = 0       # len(moves) actually returned
+    moves_decimated: bool = False
 
 
 # ============================================================================
@@ -173,15 +175,28 @@ def simulate_gcode_json(body: SimGcodeInput) -> Response:
     )
 
 
+# Default decimation target for the returned move preview. A 3D relief/pocket
+# program is 10^5-10^6 motion lines; echoing every parsed move as a JSON dict
+# produced ~7-70 MB responses. We always report the true move_count and compute
+# stats over the FULL path, but decimate the returned `moves` preview to this
+# cap unless the caller opts into full fidelity via include_moves=true.
+DEFAULT_MAX_UPLOAD_MOVES = 5000
+
+
 @router.post("/upload", response_model=SimUploadResponse)
 async def simulate_gcode_upload(
     file: UploadFile = File(...),
-    units: str = Form("mm")
+    units: str = Form("mm"),
+    include_moves: bool = Form(False),
+    max_moves: int = Form(DEFAULT_MAX_UPLOAD_MOVES),
 ) -> SimUploadResponse:
     """
     Simulate G-code from file upload.
 
-    Parses basic motion commands and calculates path statistics.
+    Parses basic motion commands and calculates path statistics. The returned
+    `moves` preview is uniformly decimated to `max_moves` for large programs
+    (`move_count` and stats reflect the full path); pass `include_moves=true`
+    to receive every move.
     """
     try:
         text = (await file.read()).decode("utf-8", errors="ignore")
@@ -194,7 +209,7 @@ async def simulate_gcode_upload(
     if not moves:
         raise HTTPException(status_code=400, detail="No motion commands found in file")
 
-    # Calculate path length
+    # Calculate path length — always over the FULL path.
     length_mm = 0.0
     last = None
     for m in moves:
@@ -204,14 +219,26 @@ async def simulate_gcode_upload(
             length_mm += (dx ** 2 + dy ** 2) ** 0.5
         last = m
 
+    total = len(moves)
+    cap = max(1, max_moves)
+    if include_moves or total <= cap:
+        out_moves = moves
+        decimated = False
+    else:
+        stride = (total + cap - 1) // cap  # ceil(total / cap)
+        out_moves = moves[::stride]
+        decimated = True
+
     return SimUploadResponse(
         ok=True,
         units=units,
-        move_count=len(moves),
+        move_count=total,
         length_mm=length_mm,
         time_s=round(length_mm / 100.0, 2),  # Naive 100 mm/s estimate
-        moves=moves,
-        issues=[]
+        moves=out_moves,
+        issues=[],
+        moves_returned=len(out_moves),
+        moves_decimated=decimated,
     )
 
 
