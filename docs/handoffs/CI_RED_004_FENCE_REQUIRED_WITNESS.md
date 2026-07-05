@@ -33,12 +33,19 @@ Neither path was in the pre-#194 `paths:` filter
 
 ## Witness record
 
-Fill in after this PR's CI settles:
+Observed 2026-07-05 on this PR:
 
-- Witness PR: `#____`
-- `Architecture Scan (Non-Blocking)` started on the docs-only diff: `[ ] yes`
-- `architecture-scan` job: `____` — run URL: `____`
-- `Fence Checks (Blocking)` job: `____` — run URL: `____`
+- Witness PR: **#195**
+- `Architecture Scan (Non-Blocking)` started on the docs-only diff: **yes**
+  (run `28739849213`, 19s) — this workflow would have been **skipped** under the
+  pre-#194 path filter.
+- `architecture-scan` job: **success** —
+  https://github.com/HanzoRazer/luthiers-toolbox/actions/runs/28739849213/job/85220557656
+- `Fence Checks (Blocking)` job: **success** (14s) —
+  https://github.com/HanzoRazer/luthiers-toolbox/actions/runs/28739849213/job/85220557669
+
+Witness satisfied: a docs-only PR triggers the workflow and the blocking fence
+reports green. Requiring the check will not brick docs-only PRs.
 
 ---
 
