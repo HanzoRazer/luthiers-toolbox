@@ -1,0 +1,63 @@
+{
+  "schema": "cbsp21_patch_input_v1",
+  "schema_version": "cbsp21_patch_input_v1",
+  "coverage_min": 0.95,
+  "patch_id": "CI_RED_004_FENCE_RUNS_EVERY_PR",
+  "title": "CI-RED-004 prep: run architecture_scan (Fence Checks (Blocking)) on every PR so the fence can be required without bricking docs-only PRs",
+  "intent": "Branch-protection enforcement prep. CI-RED-004 closes by making the 'Fence Checks (Blocking)' status check REQUIRED on main. A GitHub required check must report on every PR, or the PR sits permanently 'Expected — waiting' and can never merge. architecture_scan.yml was path-filtered to code paths, so it skipped docs-only PRs (SPRINTS/ledger/handoff updates are frequent), which would silently brick those merges once the fence is required. This removes the pull_request/push path filters so the fence job runs on every PR (and every push to main). The fence job is self-contained (re-verifies committed baselines in ratchet mode independent of the diff), so on a docs-only PR it runs and passes cheaply. Operational hardening for the wider trigger surface: read-only token permissions, 10-minute job timeouts, and PR-only stale-run cancellation. This does NOT by itself require the fence or close CI-RED-004 — the fence is added to required checks only after this merges and is witnessed green on a docs-only PR.",
+  "change_type": "ci",
+  "behavior_change": "yes - CI trigger scope: architecture_scan.yml (jobs architecture-scan + Fence Checks (Blocking)) now runs on every pull_request and every push to main, instead of only when code paths change. No fence/check logic change. Slightly more CI runs on docs-only PRs; the fence passes on them (ratchet against unchanged code). The workflow now explicitly uses read-only permissions, finite 10-minute job timeouts, and cancels stale in-progress pull_request runs for the same PR.",
+  "risk_level": "low",
+  "scope": {
+    "paths_in_scope": [
+      ".github/workflows/",
+      ".cbsp21/patches/"
+    ],
+    "files_expected_to_change": [
+      ".github/workflows/architecture_scan.yml",
+      ".cbsp21/patches/fence-runs-every-pr-cired004.json"
+    ]
+  },
+  "diff_articulation": {
+    "what_changed": "(1) .github/workflows/architecture_scan.yml: removed the pull_request 'paths:' filter and the push 'paths:' filter (push stays scoped to branches:[main]); added a comment explaining the required-check rationale. Both jobs (architecture-scan [continue-on-error], fence-checks / 'Fence Checks (Blocking)') now run on every PR and every push to main. Added read-only workflow permissions, 10-minute job timeouts, and PR-only stale-run cancellation to reduce the cost/blast radius of the wider trigger surface without canceling push-to-main verdicts. (2) this per-PR CBSP21 manifest.",
+    "why_not_redundant": "A required status check that is path-filtered is a self-DoS: on any PR that does not touch the filtered paths (e.g. a docs-only SPRINTS/ledger PR) the workflow never runs, the required check never reports, and the PR is blocked forever on 'Expected — waiting'. Removing the filter is the prerequisite that lets the fence be required at all. It also records the blocking fence verdict on every merge commit to main (the original reason the push trigger exists), including docs-only merges that the old push filter skipped."
+  },
+  "verification": {
+    "commands_run": [
+      "PowerShell structural workflow check -> pull_request trigger present, permissions=contents:read, concurrency configured, both jobs timeout-minutes=10, Fence Checks (Blocking) job present",
+      "python -m app.ci.check_all_fences -> Boundary import check OK; Boundary pattern check OK; all fence checks passed",
+      "scripts/ci/check_cbsp21_patch_input.py --base origin/main --head HEAD -> PASS",
+      "scripts/ci/check_cbsp21_gate.py --changed-files <origin/main...HEAD files> -> PASS, coverage 100%",
+      "PR #194 re-run after this hardening commit: required before merge",
+      "witness pending: 'Fence Checks (Blocking)' green on a docs-only PR before adding it to required checks"
+    ]
+  },
+  "files": [
+    {
+      "path": ".github/workflows/architecture_scan.yml",
+      "intent": "Remove pull_request/push path filters so 'Fence Checks (Blocking)' runs on every PR and every push to main; the fence can then be a required check without bricking docs-only PRs.",
+      "scan_targets": [".github/workflows/architecture_scan.yml"],
+      "risk": "low",
+      "behavior_change": "yes - CI trigger scope only; fence + architecture-scan now run on every PR and push to main. No fence/check logic change; adds read-only permissions, finite job timeouts, and stale PR-run cancellation.",
+      "verification": [
+        "PR #194 Fence Checks (Blocking) -> pass",
+        "docs-only PR witness (fence runs + passes) before requiring the check"
+      ]
+    },
+    {
+      "path": ".cbsp21/patches/fence-runs-every-pr-cired004.json",
+      "intent": "Per-PR CBSP21 manifest declaring this fence-trigger change.",
+      "scan_targets": [".cbsp21/patches/fence-runs-every-pr-cired004.json"],
+      "risk": "low",
+      "behavior_change": "none - CI/review metadata only",
+      "verification": ["scripts/ci/check_cbsp21_patch_input.py", "scripts/ci/check_cbsp21_gate.py"]
+    }
+  ],
+  "architecture_scan": {
+    "scan_id": "AS-2026-07-05-CI-RED-004-FENCE",
+    "risk_summary": { "critical": 0, "high": 0, "medium": 0, "low": 0 },
+    "findings": [],
+    "acknowledged": false,
+    "acknowledgement_notes": ""
+  }
+}
