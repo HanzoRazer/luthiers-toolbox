@@ -1,0 +1,67 @@
+{
+  "schema": "cbsp21_patch_input_v1",
+  "schema_version": "cbsp21_patch_input_v1",
+  "coverage_min": 0.95,
+  "patch_id": "CI_RED_004_021_ENFORCEMENT_WITNESS",
+  "title": "docs(ci): record fence enforcement witness and CI-RED-021 partial verification",
+  "intent": "Record the post-settings enforcement witness. CI-RED-004 closes because Fence Checks (Blocking) is now required on the default branch and was witnessed on PR #197. CI-RED-021 remains open but moves from settings-missing to partially verified because PR-required + required fence + no ruleset bypass actors are active, while CODEOWNER review is intentionally not required yet under the solo-owner topology.",
+  "change_type": "docs",
+  "behavior_change": "none",
+  "risk_level": "low",
+  "scope": {
+    "paths_in_scope": [
+      "SPRINTS.md",
+      "docs/handoffs/",
+      ".cbsp21/patches/"
+    ],
+    "files_expected_to_change": [
+      "SPRINTS.md",
+      "docs/handoffs/CI_RED_004_021_ENFORCEMENT_WITNESS.md",
+      ".cbsp21/patches/ci-red-004-021-enforcement-witness.json"
+    ]
+  },
+  "diff_articulation": {
+    "what_changed": "(1) SPRINTS.md: mark CI-RED-004 closed by enforcement witness and update CI-RED-021 to partially verified/open. (2) docs/handoffs/CI_RED_004_021_ENFORCEMENT_WITNESS.md: record the ruleset, CODEOWNERS, PR #197, and fence run evidence. (3) this per-PR CBSP21 manifest.",
+    "why_not_redundant": "The settings change happened outside source code and needs an audit trail in the repo. Without this witness, the ledger would still say main has no active ruleset even though CI-RED-004's close condition has been met. The document also prevents overclosing CI-RED-021 by preserving the CODEOWNER-review/solo-owner blocker."
+  },
+  "verification": {
+    "commands_run": [
+      "gh api repos/HanzoRazer/luthiers-toolbox/rules/branches/main -> active rules include pull_request and required_status_checks for Fence Checks (Blocking)",
+      "gh api repos/HanzoRazer/luthiers-toolbox/codeowners/errors -> {\"errors\":[]}",
+      "PR #197 Architecture Scan run 28748985584: Fence Checks (Blocking) job 85244687853 success in 13s",
+      "python -m json.tool .cbsp21/patches/ci-red-004-021-enforcement-witness.json",
+      "python scripts/ci/check_cbsp21_patch_input.py --base origin/main --head HEAD",
+      "python scripts/ci/check_cbsp21_gate.py --changed-files <changed-files-list>"
+    ]
+  },
+  "files": [
+    {
+      "path": "SPRINTS.md",
+      "intent": "Close CI-RED-004 and update CI-RED-021 to partially verified/open based on live ruleset evidence.",
+      "scan_targets": ["SPRINTS.md"],
+      "risk": "low",
+      "behavior_change": "none - ledger only"
+    },
+    {
+      "path": "docs/handoffs/CI_RED_004_021_ENFORCEMENT_WITNESS.md",
+      "intent": "Durable witness for the branch/ruleset enforcement state and remaining CI-RED-021 blocker.",
+      "scan_targets": ["docs/handoffs/CI_RED_004_021_ENFORCEMENT_WITNESS.md"],
+      "risk": "low",
+      "behavior_change": "none - documentation only"
+    },
+    {
+      "path": ".cbsp21/patches/ci-red-004-021-enforcement-witness.json",
+      "intent": "Per-PR CBSP21 manifest declaring the enforcement witness ledger patch.",
+      "scan_targets": [".cbsp21/patches/ci-red-004-021-enforcement-witness.json"],
+      "risk": "low",
+      "behavior_change": "none - CI/review metadata only"
+    }
+  ],
+  "architecture_scan": {
+    "scan_id": "AS-2026-07-05-CI-RED-004-021-WITNESS",
+    "risk_summary": { "critical": 0, "high": 0, "medium": 0, "low": 0 },
+    "findings": [],
+    "acknowledged": false,
+    "acknowledgement_notes": ""
+  }
+}
