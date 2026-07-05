@@ -16,10 +16,18 @@ on:
   pull_request:
   workflow_dispatch:
 
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.sha }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
 jobs:
   architecture-scan:
     runs-on: ubuntu-latest
     continue-on-error: true
+    timeout-minutes: 10
 
     steps:
       - name: Checkout
@@ -46,6 +54,7 @@ jobs:
     name: Fence Checks (Blocking)
     runs-on: ubuntu-latest
     continue-on-error: false
+    timeout-minutes: 10
 
     steps:
       - name: Checkout
