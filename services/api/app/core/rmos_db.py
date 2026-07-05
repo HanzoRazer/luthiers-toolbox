@@ -14,11 +14,32 @@ import logging
 
 logger = logging.getLogger(__name__)
 DEFAULT_DB_PATH = Path(__file__).parent.parent.parent / "data" / "rmos.db"
-SCHEMA_VERSION = 3  # Added art_jobs, art_presets tables
+SCHEMA_VERSION = 4  # v4: preventive indexes (strip_families + composite created_at)
+
+V4_PREVENTIVE_INDEXES = (
+    ("idx_strip_families_material", "strip_families(material_type)"),
+    ("idx_strip_families_width", "strip_families(strip_width_mm)"),
+    ("idx_strip_families_created", "strip_families(created_at DESC)"),
+    ("idx_patterns_created", "patterns(created_at DESC)"),
+    ("idx_patterns_type_created", "patterns(pattern_type, created_at DESC)"),
+    ("idx_patterns_family_created", "patterns(strip_family_id, created_at DESC)"),
+    ("idx_joblogs_pattern_created", "joblogs(pattern_id, created_at DESC)"),
+    ("idx_art_jobs_type_created", "art_jobs(job_type, created_at DESC)"),
+    ("idx_art_presets_lane_created", "art_presets(lane, created_at DESC)"),
+)
 
 
 def _is_postgresql_url(url: str) -> bool:
     return url.startswith("postgresql://") or url.startswith("postgres://")
+
+
+def _schema_version_from_row(row: Any) -> int:
+    """Parse a MAX(version) cursor row from either SQLite or PostgreSQL."""
+    if not row:
+        return 0
+    if isinstance(row, dict):
+        return int(row.get("max") or row.get("version") or 0)
+    return int(row[0] or 0)
 
 
 class RMOSDatabase:
@@ -92,6 +113,14 @@ class RMOSDatabase:
         else:
             self._init_sqlite()
 
+    def _current_schema_version(self, cursor: Any) -> int:
+        cursor.execute("SELECT MAX(version) FROM schema_version")
+        return _schema_version_from_row(cursor.fetchone())
+
+    def _apply_v4_preventive_indexes(self, cursor: Any) -> None:
+        for index_name, table_columns in V4_PREVENTIVE_INDEXES:
+            cursor.execute(f"CREATE INDEX IF NOT EXISTS {index_name} ON {table_columns}")
+
     def _init_sqlite(self):
         with self.get_connection(row_factory=False) as conn:
             c = conn.cursor()
@@ -109,6 +138,7 @@ class RMOSDatabase:
             if 'rosette_geometry' not in cols:
                 c.execute("ALTER TABLE patterns ADD COLUMN rosette_geometry TEXT")
             c.execute("CREATE INDEX IF NOT EXISTS idx_joblogs_pattern ON joblogs(pattern_id)")
+            c.execute("CREATE INDEX IF NOT EXISTS idx_joblogs_strip_family ON joblogs(strip_family_id)")
             c.execute("CREATE INDEX IF NOT EXISTS idx_joblogs_status ON joblogs(status)")
             c.execute("CREATE INDEX IF NOT EXISTS idx_joblogs_created ON joblogs(created_at DESC)")
             # Art Studio tables (v3)
@@ -118,7 +148,11 @@ class RMOSDatabase:
             c.execute("CREATE INDEX IF NOT EXISTS idx_art_jobs_created ON art_jobs(created_at DESC)")
             c.execute("CREATE INDEX IF NOT EXISTS idx_art_presets_lane ON art_presets(lane)")
             c.execute("CREATE INDEX IF NOT EXISTS idx_art_presets_name ON art_presets(name)")
-            c.execute("INSERT OR IGNORE INTO schema_version (version) VALUES (?)", (SCHEMA_VERSION,))
+            if self._current_schema_version(c) < 4:
+                # v4 preventive indexes (perf audit 2026-07-04). Apply once and
+                # record v4 only after the full index set succeeds.
+                self._apply_v4_preventive_indexes(c)
+                c.execute("INSERT OR IGNORE INTO schema_version (version) VALUES (?)", (SCHEMA_VERSION,))
             conn.commit()
 
     def _init_pg(self):
@@ -132,6 +166,7 @@ class RMOSDatabase:
             c.execute("CREATE INDEX IF NOT EXISTS idx_patterns_strip_family ON patterns(strip_family_id)")
             c.execute("CREATE INDEX IF NOT EXISTS idx_patterns_pattern_type ON patterns(pattern_type)")
             c.execute("CREATE INDEX IF NOT EXISTS idx_joblogs_pattern ON joblogs(pattern_id)")
+            c.execute("CREATE INDEX IF NOT EXISTS idx_joblogs_strip_family ON joblogs(strip_family_id)")
             c.execute("CREATE INDEX IF NOT EXISTS idx_joblogs_status ON joblogs(status)")
             c.execute("CREATE INDEX IF NOT EXISTS idx_joblogs_created ON joblogs(created_at DESC)")
             # Art Studio tables (v3)
@@ -141,19 +176,17 @@ class RMOSDatabase:
             c.execute("CREATE INDEX IF NOT EXISTS idx_art_jobs_created ON art_jobs(created_at DESC)")
             c.execute("CREATE INDEX IF NOT EXISTS idx_art_presets_lane ON art_presets(lane)")
             c.execute("CREATE INDEX IF NOT EXISTS idx_art_presets_name ON art_presets(name)")
-            c.execute("INSERT INTO schema_version (version) VALUES (%s) ON CONFLICT (version) DO NOTHING", (SCHEMA_VERSION,))
+            # v4 preventive indexes (perf audit 2026-07-04); see SQLite block above.
+            if self._current_schema_version(c) < 4:
+                self._apply_v4_preventive_indexes(c)
+                c.execute("INSERT INTO schema_version (version) VALUES (%s) ON CONFLICT (version) DO NOTHING", (SCHEMA_VERSION,))
             conn.commit()
 
     def get_schema_version(self) -> int:
         with self.get_connection() as conn:
             c = conn.cursor()
             c.execute("SELECT MAX(version) FROM schema_version")
-            r = c.fetchone()
-            if r is None:
-                return 0
-            if isinstance(r, dict):
-                return r.get('max', 0) or 0
-            return r[0] if r[0] else 0
+            return _schema_version_from_row(c.fetchone())
 
     def execute_query(self, query: str, params: tuple = ()) -> list:
         if self._is_postgres:

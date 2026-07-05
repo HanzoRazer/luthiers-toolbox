@@ -159,6 +159,7 @@ const eventCounts = reactive({
 })
 
 let unsubscribe: (() => void) | null = null
+const MAX_DISPLAY_EVENTS = 500
 
 const toggleConnection = async () => {
   if (isConnected.value) {
@@ -192,6 +193,9 @@ const updateFilters = () => {
   // Subscribe with new filters
   unsubscribe = subscribe(activeFilters, (event) => {
     events.value.push(event)
+    if (events.value.length > MAX_DISPLAY_EVENTS) {
+      events.value.splice(0, events.value.length - MAX_DISPLAY_EVENTS)
+    }
 
     // Update counts
     const [category] = event.type.split(':')

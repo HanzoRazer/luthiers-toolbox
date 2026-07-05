@@ -4,6 +4,8 @@ import io
 import pytest
 from fastapi.testclient import TestClient
 
+from app.routers.simulation_consolidated_router import MAX_UPLOAD_MOVES_PREVIEW
+
 
 @pytest.fixture
 def client():
@@ -226,6 +228,64 @@ def test_upload_response_has_time_s(client, minimal_gcode):
     response = client.post("/api/cam/sim/upload", files=files)
     data = response.json()
     assert "time_s" in data
+
+
+def test_upload_decimates_large_path(client):
+    """Upload decimates the returned moves preview for large programs.
+
+    move_count reflects the true total; the returned `moves` preview is capped
+    (bounds the multi-MB payload) unless include_moves=true.
+    """
+    big = "G21\n" + "".join(f"G1 X{i % 100} Y{i // 100} F200\n" for i in range(20000)) + "M2\n"
+    files = {"file": ("big.nc", io.BytesIO(big.encode()), "text/plain")}
+
+    # Default: decimated
+    resp = client.post("/api/cam/sim/upload", files=files, data={"max_moves": 5000})
+    data = resp.json()
+    assert data["move_count"] == 20000
+    assert data["moves_decimated"] is True
+    assert len(data["moves"]) <= 5000
+    assert data["moves_returned"] == len(data["moves"])
+    assert data["preview_stride"] > 1
+    assert data["moves"][0]["x"] == 0.0
+    assert data["moves"][0]["y"] == 0.0
+    assert data["moves"][-1]["x"] == 99.0
+    assert data["moves"][-1]["y"] == 199.0
+
+    # Opt-in full fidelity
+    files2 = {"file": ("big.nc", io.BytesIO(big.encode()), "text/plain")}
+    resp2 = client.post("/api/cam/sim/upload", files=files2, data={"include_moves": "true"})
+    data2 = resp2.json()
+    assert data2["moves_decimated"] is False
+    assert data2["preview_stride"] == 1
+    assert len(data2["moves"]) == 20000
+
+
+def test_upload_preview_max_moves_is_server_capped(client):
+    """A caller cannot bypass preview decimation with a huge max_moves value."""
+    big = "G21\n" + "".join(f"G1 X{i % 100} Y{i // 100} F200\n" for i in range(20000)) + "M2\n"
+    files = {"file": ("big.nc", io.BytesIO(big.encode()), "text/plain")}
+
+    resp = client.post(
+        "/api/cam/sim/upload",
+        files=files,
+        data={"max_moves": MAX_UPLOAD_MOVES_PREVIEW * 10},
+    )
+    data = resp.json()
+    assert data["move_count"] == 20000
+    assert data["moves_decimated"] is True
+    assert len(data["moves"]) <= MAX_UPLOAD_MOVES_PREVIEW
+    assert data["moves_returned"] == len(data["moves"])
+    assert data["preview_stride"] > 1
+
+
+def test_upload_small_path_not_decimated(client, minimal_gcode):
+    """Small programs return every move (backward compatible)."""
+    files = {"file": ("test.nc", io.BytesIO(minimal_gcode.encode()), "text/plain")}
+    data = client.post("/api/cam/sim/upload", files=files).json()
+    assert data["moves_decimated"] is False
+    assert data["moves_returned"] == data["move_count"]
+    assert data["preview_stride"] == 1
 
 
 def test_upload_with_units_mm(client, minimal_gcode):

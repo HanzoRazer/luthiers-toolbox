@@ -3,19 +3,35 @@
 
 from __future__ import annotations
 
+import os
 import re
 import sys
 from pathlib import Path
+from typing import Iterator
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 SERVICES = REPO_ROOT / "services"
 
 CALL_PATTERN = re.compile(r"\bsubmit_correction\s*\(")
 
+# Directory names to prune during traversal (dependencies / caches / VCS).
+# Without this the scan descends into services/api/.venv/site-packages
+# (thousands of third-party .py files) and times out on Windows CI.
+PRUNE_DIRS = {".venv", "venv", "node_modules", "__pycache__", ".git"}
+
+
+def _iter_py_files(root: Path) -> Iterator[Path]:
+    """Yield *.py under root, pruning PRUNE_DIRS in-place (never descends into them)."""
+    for dirpath, dirnames, filenames in os.walk(root):
+        dirnames[:] = [d for d in dirnames if d not in PRUNE_DIRS]
+        for f in filenames:
+            if f.endswith(".py"):
+                yield Path(dirpath) / f
+
 
 def main() -> int:
     violations: list[str] = []
-    for py in SERVICES.rglob("*.py"):
+    for py in _iter_py_files(SERVICES):
         rel = py.relative_to(REPO_ROOT).as_posix()
         try:
             lines = py.read_text(encoding="utf-8", errors="replace").splitlines()
