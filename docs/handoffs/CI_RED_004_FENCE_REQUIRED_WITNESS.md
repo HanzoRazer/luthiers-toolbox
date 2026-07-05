@@ -3,6 +3,8 @@
 **Date:** 2026-07-05
 **Lane:** CI-RED-004 / CI-RED-021 branch-protection enforcement prep
 **Prereq merged:** PR #194 (`fa18d72a`) — all-PR fence trigger + hardening
+**Witness scope:** time-bound proof for this workflow/commit shape; not a
+permanent branch-protection audit.
 
 ---
 
@@ -29,6 +31,12 @@ Neither path was in the pre-#194 `paths:` filter
 (`services/api`, `packages/client`, `contracts`, `docker`, `scripts`,
 `.github/workflows`), so a green fence here proves the filter removal works.
 
+This witness proves only that this docs/metadata-only PR shape triggered and
+passed the exact check named `Fence Checks (Blocking)` on 2026-07-05. If
+`.github/workflows/architecture_scan.yml` or the job name changes later,
+re-run a docs-only witness before relying on this record for branch-protection
+settings.
+
 ---
 
 ## Witness record
@@ -44,8 +52,10 @@ Observed 2026-07-05 on this PR:
 - `Fence Checks (Blocking)` job: **success** (14s) —
   https://github.com/HanzoRazer/luthiers-toolbox/actions/runs/28739849213/job/85220557669
 
-Witness satisfied: a docs-only PR triggers the workflow and the blocking fence
-reports green. Requiring the check will not brick docs-only PRs.
+Witness satisfied for PR #195: this docs-only PR triggered the workflow and the
+blocking fence reported green. This removes the known "required check never
+reports on docs-only PRs" blocker for requiring the exact check name
+`Fence Checks (Blocking)`.
 
 ---
 
@@ -54,6 +64,18 @@ reports green. Requiring the check will not brick docs-only PRs.
 1. Add `Fence Checks (Blocking)` to the required status checks on `main`
    (repo branch-protection settings — human/admin action; the check name must
    match **exactly** `Fence Checks (Blocking)`).
-2. Then, and only then, CI-RED-004 / CI-RED-021 close in `SPRINTS.md`.
+2. Verify branch protection/ruleset state after the setting is live. Do not use
+   this document as the source of truth for current enforcement state.
+3. `CI-RED-004` may close once `Fence Checks (Blocking)` is green and required.
+4. `CI-RED-021` closes only when the wider enforcement bar is also verified:
+   active `main` protection/ruleset, required checks, CODEOWNERS review, and no
+   routine bypass/direct-push path.
 
 Do **not** require the check until this witness is green.
+
+## What this does not prove
+
+- It does not enable or verify branch protection.
+- It does not prove future workflow revisions still report on docs-only PRs.
+- It does not prove every low-touch PR shape behaves identically.
+- It does not close CI-RED-004 or CI-RED-021 by itself.
