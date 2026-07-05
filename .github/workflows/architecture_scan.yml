@@ -1,34 +1,19 @@
 name: Architecture Scan (Non-Blocking)
 
 on:
-  # Run on push to main so the blocking "Fence Checks" verdict is recorded on
-  # the merge commit itself — not just on PRs. (A red fence reached main once
-  # because this workflow was pull_request-only; the push trigger closes that
-  # gap. Scoped to main: feature-branch pushes are already covered by the
-  # pull_request trigger below, so this avoids redundant double-runs.)
+  # NO path filter — intentional (CI-RED-004). The "Fence Checks (Blocking)" job
+  # below is a REQUIRED status check on main. A required check must report a
+  # result on EVERY pull request, or GitHub leaves it permanently "Expected —
+  # waiting" and the PR can never merge. A path filter would skip the workflow on
+  # docs-only PRs (SPRINTS/ledger/handoff updates are frequent here), silently
+  # bricking those merges. The fence job is self-contained — it re-verifies the
+  # committed baselines in ratchet mode regardless of which files a PR touches —
+  # so on a docs-only PR it runs and passes cheaply. Running on every push to
+  # main also records the blocking verdict on every merge commit (the original
+  # reason a red fence once reached main under a pull_request-only trigger).
   push:
     branches: [main]
-    paths:
-      - "services/api/**"
-      - "packages/client/**"
-      - "contracts/**"
-      - "docker/**"
-      - "scripts/**"
-      - ".github/workflows/**"
   pull_request:
-    paths:
-      # Backend API
-      - "services/api/**"
-      # Frontend (canonical)
-      - "packages/client/**"
-      # Shared contracts / schemas
-      - "contracts/**"
-      # Docker (deployment/runtime shape)
-      - "docker/**"
-      # Utilities and governance scripts
-      - "scripts/**"
-      # Workflow changes should always re-run
-      - ".github/workflows/**"
   workflow_dispatch:
 
 jobs:
