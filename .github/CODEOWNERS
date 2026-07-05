@@ -6,6 +6,10 @@
 services/api/app/ci/fence_baseline.json         @HanzoRazer
 services/api/app/ci/fence_patterns_baseline.json @HanzoRazer
 
+# Enforcement plumbing for CI-RED-004 / CI-RED-021
+.github/CODEOWNERS                              @HanzoRazer
+.github/workflows/architecture_scan.yml         @HanzoRazer
+
 # Architecture / boundary enforcement scripts
 services/api/app/ci/**                          @HanzoRazer
 scripts/architecture/**                         @HanzoRazer
