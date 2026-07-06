@@ -1,0 +1,134 @@
+from __future__ import annotations
+
+from types import SimpleNamespace
+
+from scripts import build_endpoint_consumer_map as builder
+
+
+class _IncludedRouter:
+    def __init__(self, original_router, prefix: str, tags: list[str]):
+        self.original_router = original_router
+        self.include_context = SimpleNamespace(prefix=prefix, tags=tags)
+
+
+def _endpoint(module: str = "app.routers.cam.geometry_authority_router"):
+    def handler():
+        return None
+
+    handler.__module__ = module
+    return handler
+
+
+def test_extract_endpoint_literals_from_js_and_python_strings():
+    text = """
+    fetch("/api/cam/jobs/123");
+    const url = `/api/rmos/runs/${runId}`;
+    client.get('/health');
+    """
+
+    assert builder.extract_endpoint_literals(text) == [
+        "/api/cam/jobs/123",
+        "/api/rmos/runs/${runId}",
+        "/health",
+    ]
+
+
+def test_parameterized_endpoint_matches_static_consumer_prefix():
+    assert builder.reference_matches_endpoint(
+        "/api/cam/jobs/123",
+        "/api/cam/jobs/{job_id}",
+    )
+    assert not builder.reference_matches_endpoint(
+        "/api/cam/job-history/123",
+        "/api/cam/jobs/{job_id}",
+    )
+
+
+def test_consumer_file_classification_by_root():
+    root = builder.repo_root()
+
+    assert builder.classify_consumer_file(
+        root / "packages/client/src/sdk/endpoints/cam.ts"
+    ) == "frontend_sdk"
+    assert builder.classify_consumer_file(
+        root / "packages/client/src/components/CamPanel.tsx"
+    ) == "frontend_product"
+    assert builder.classify_consumer_file(
+        root / "services/api/tests/test_cam.py"
+    ) == "test_only"
+    assert builder.classify_consumer_file(
+        root / "services/api/app/ci/fence.py"
+    ) == "ci_governance"
+
+
+def test_included_router_flattening_preserves_prefix_tags_and_module():
+    route = SimpleNamespace(
+        path="/references/canonical/process-approved",
+        methods={"POST"},
+        endpoint=_endpoint(),
+        name="create_process_approved_reference",
+        tags=["Authority"],
+    )
+    app = SimpleNamespace(
+        routes=[
+            _IncludedRouter(
+                SimpleNamespace(routes=[route]),
+                prefix="/api/cam/geometry-authority",
+                tags=["CAM"],
+            )
+        ]
+    )
+
+    entries = list(builder.iter_http_routes_from_app(app))
+
+    assert entries == [
+        {
+            "method": "POST",
+            "path": "/api/cam/geometry-authority/references/canonical/process-approved",
+            "route_name": "create_process_approved_reference",
+            "router_module": "app.routers.cam.geometry_authority_router",
+            "router_file": "services/api/app/routers/cam/geometry_authority_router.py",
+            "tags": ("CAM", "Authority"),
+        }
+    ]
+
+
+def test_lane_classifier_keeps_authority_and_governance_distinct():
+    assert builder.classify_lane(
+        "/api/cam/geometry-authority/references",
+        ["app.routers.cam.geometry_authority_router"],
+        ["CAM"],
+    ) == "authority_reference"
+    assert builder.classify_lane(
+        "/api/cam/translator-governance/reviews",
+        ["app.routers.cam.translator_governance_review_router"],
+        ["CAM"],
+    ) == "cam_governance"
+    assert builder.classify_lane(
+        "/api/blueprint/vectorize",
+        ["app.routers.blueprint.phase3_router"],
+        ["Blueprint"],
+    ) == "blueprint_vectorizer"
+    assert builder.classify_lane(
+        "/api/woodworking/bandsaw/kerf",
+        ["app.routers.woodworking_router"],
+        ["Woodworking"],
+    ) == "woodworking_instrument_design"
+
+
+def test_no_consumer_note_is_protective_for_governance_lanes():
+    endpoint = builder.EndpointRecord(
+        method="POST",
+        path="/api/cam/geometry-authority/references",
+        operation_id="create_reference",
+        route_names=("create_reference",),
+        router_modules=("app.routers.cam.geometry_authority_router",),
+        router_files=("services/api/app/routers/cam/geometry_authority_router.py",),
+        tags=("CAM",),
+        lane="authority_reference",
+    )
+
+    item = builder.EndpointWithConsumers(endpoint=endpoint)
+
+    assert item.primary_consumer_class == "no_first_party_consumer_found"
+    assert "not deletion evidence" in item.notes[0]

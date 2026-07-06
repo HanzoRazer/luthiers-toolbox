@@ -932,7 +932,7 @@ Domain handoffs and governance docs may add detail but **must cite the SPRINTS I
 | CI-RED-013 | api-verify: missing `app.woodworking.wooden_floating_bridge` | CI / api-verify | CLOSED | 2026-05-28 |
 | CI-RED-014 | api-verify: missing `DXF_R12_TRANSLATOR_ID` registry constants | CI / api-verify | CLOSED | 2026-05-28 |
 | CI-RED-015 | api-verify/API Tests: test-suite reconciliation — **CLOSED by re-witness 2026-07-05 (main `13aabe4f`).** The recorded 43 failures were closed piecemeal since the snapshot (#132/#138/#160/#161/#169/#172/#175/#176/#182/#193); all 43 recovered from the stale run's own failed-job log **run and pass** on `13aabe4f` (targeted 17-file re-run: 464 passed / 1 unrelated env-skip / 0 failed; every method present — none deleted/skipped/xfail'd, anti-suppression checked per cluster), and aggregate `Core CI (Consolidated)` run `28755048990` + `API Tests` run `28755048968` are green on `13aabe4f`. Per-cluster trace + evidence: `docs/handoffs/CI_RED_015_REWITNESS_CLOSURE.md`. **Residuals routed OUT (not absorbed):** endpoint consolidation → **CI-RED-016**; canonical-authority migration → **GOV-CONVERGE-007**. Historical snapshot below. **43 failed** (Core CI run `27630309072` @ `c41fc656`, 2026-06-16; was 56 — **witnessed, not subtracted**). Remaining clusters: body-solver/IBG (11), geometry-authority (10), body-geometry-repair (4), morphology-spine (3), lifecycle-policy (3), + singletons. **Characterized:** RMOS-persistence (11) = REAL-REGRESSION → **CLOSED #132** (see 015-G; also cleared 2 orchestrator-overlap tests, incl. 1 lifecycle-policy → 4→3); geometry-authority (10) = NEVER-WIRED router → **015-H** (governance call pending). Rest **uncharacterized — stale vs real not established (do NOT assume stale-because-015-E-was).** Approach: `docs/sprints/SPRINT_SCOPE_CI-RED-015_characterization.md`. | CI / api-verify | CLOSED | 2026-07-05 |
-| CI-RED-016 | Endpoint consolidation (1181 routes; CAM governance stack) | CI / quality | OPEN | 2026-05-28 |
+| CI-RED-016 | Endpoint consolidation (1181 static decorators; consumer map materialized by 016-B, consolidation still open) | CI / quality | OPEN | 2026-07-05 |
 | CI-RED-017 | check-sunsets: status:removed vs file-existence mismatch | CI / gates | CLOSED | 2026-06-15 |
 | CI-RED-018 | router-count baseline stale (172→252 files, +448 decorators) | CI / gates | CLOSED | 2026-06-15 |
 | CI-RED-019 | routing-truth masked by setuptools editable-build failure — **CLOSED by witness:** the editable-install mask is removed (`services/api/pyproject.toml` now carries explicit `[tool.setuptools.packages.find]`, `app*` only) and `routing_truth.yml` is green on `main` (run `28693530110` @ `e1310768`, 2026-07-04). Mask-peel: the old `pip install -e` setup failure is closed; any *future* routing-truth red is a new route-truth verdict, not this mask. | CI / gates | CLOSED | 2026-07-04 |
@@ -1210,14 +1210,16 @@ Original audit found 124 decorator duplicates → 68 wire collisions on **static
 ### CI-RED-016 — Endpoint consolidation (post-ratchet)
 
 **Status:** OPEN (documentation only until post–MVP cut)  
-**last_verified:** 2026-05-28  
+**last_verified:** 2026-07-05  
 **Path:** EXT — granularity question matters before external work; **not blocking MVP cut.**  
 **Why open:** ~195 CAM governance endpoints are intentional (015-C audit); consolidation is future scoped work, not deletion.  
-**First deliverable (after MVP cut):** Consumer map — which of ~195 are called outside CAM test suite.  
-**Tools:** `services/api/scripts/audit_endpoints.py`, `diff_endpoints_baseline.py`.  
+**First deliverable:** Consumer map — which endpoint families have first-party consumers outside narrow smoke/test coverage.  
+**Tools:** `services/api/scripts/audit_endpoints.py`, `diff_endpoints_baseline.py`, `build_endpoint_consumer_map.py`.  
 **Not in scope:** 015-D duplicate-route gate (separate).
 
 **CI-RED-016-A (2026-07-01):** manifest-discipline bleed-stop wired into CI. The known unmanifested router set remains grandfathered by baseline; net-new unmanifested router files now fail. Baseline tightened 108→107 after `routers/cam/geometry_authority_router` healed (manifested by CI-RED-015-H). Full endpoint consolidation remains open/deferred.
+
+**CI-RED-016-B (2026-07-05):** endpoint consumer map materialized. `services/api/scripts/build_endpoint_consumer_map.py` builds a deterministic audit from the live mounted FastAPI surface and first-party string-reference scan, with generated artifacts at `services/api/metrics/endpoint_consumer_map.json` and `docs/audit/CI_RED_016_ENDPOINT_CONSUMER_MAP.md`. Current map: 1132 mounted endpoint operations, 1181 static decorators, mounted-vs-static gap 49, and 293 endpoints with no first-party string consumer found. The map explicitly marks that absence of a consumer is not deletion evidence, especially for governance/audit/authority/provenance/review lanes. CI-RED-016 remains OPEN; next work should choose a narrow CI-RED-016-C candidate from the map rather than doing broad route churn.
 
 ---
 
