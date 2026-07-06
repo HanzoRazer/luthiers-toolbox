@@ -1,0 +1,1603 @@
+{
+  "conflicts": [
+    {
+      "delta": 12,
+      "field": "body_length_mm",
+      "model": "dreadnought",
+      "note": "differing values across sources — reported, not resolved",
+      "values": {
+        "body_dimension_reference": 520,
+        "body_templates": 508
+      }
+    },
+    {
+      "delta": 50,
+      "field": "body_length_mm",
+      "model": "gibson_sg",
+      "note": "differing values across sources — reported, not resolved",
+      "values": {
+        "body_dimension_reference": 444,
+        "body_templates": 394
+      }
+    },
+    {
+      "delta": 1.2,
+      "field": "body_length_mm",
+      "model": "j_45",
+      "note": "differing values across sources — reported, not resolved",
+      "values": {
+        "body_dimension_reference": 506,
+        "body_templates": 504.8
+      }
+    },
+    {
+      "delta": 12,
+      "field": "body_length_mm",
+      "model": "jumbo_j200",
+      "note": "differing values across sources — reported, not resolved",
+      "values": {
+        "body_dimension_reference": 521,
+        "body_templates": 533
+      }
+    },
+    {
+      "delta": 2.54,
+      "field": "scale_length_mm",
+      "model": "jumbo_j200",
+      "note": "differing values across sources — reported, not resolved",
+      "values": {
+        "body_templates": 647.7,
+        "instrument_model_registry": 645.16
+      }
+    },
+    {
+      "delta": 6,
+      "field": "body_length_mm",
+      "model": "les_paul",
+      "note": "differing values across sources — reported, not resolved",
+      "values": {
+        "body_dimension_reference": 450,
+        "body_templates": 444
+      }
+    },
+    {
+      "delta": 10,
+      "field": "body_length_mm",
+      "model": "stratocaster",
+      "note": "differing values across sources — reported, not resolved",
+      "values": {
+        "body_dimension_reference": 406,
+        "body_templates": 396
+      }
+    },
+    {
+      "delta": 0.3,
+      "field": "scale_length_mm",
+      "model": "stratocaster",
+      "note": "differing values across sources — reported, not resolved",
+      "values": {
+        "body_templates": 647.7,
+        "instrument_model_registry": 648.0
+      }
+    },
+    {
+      "delta": 10,
+      "field": "body_length_mm",
+      "model": "telecaster",
+      "note": "differing values across sources — reported, not resolved",
+      "values": {
+        "body_dimension_reference": 406,
+        "body_templates": 396
+      }
+    },
+    {
+      "delta": 0.3,
+      "field": "scale_length_mm",
+      "model": "telecaster",
+      "note": "differing values across sources — reported, not resolved",
+      "values": {
+        "body_templates": 647.7,
+        "instrument_model_registry": 648.0
+      }
+    }
+  ],
+  "generated_at": "2026-07-06T00:00:00+00:00",
+  "missing_by_source": {
+    "body_catalog": [
+      "archtop",
+      "bass_4string",
+      "benedetto_17",
+      "es_335",
+      "firebird",
+      "gibson_sg",
+      "jazz_bass",
+      "jumbo_archtop",
+      "klein",
+      "moderne",
+      "prs",
+      "smart_guitar",
+      "telecaster"
+    ],
+    "body_dimension_reference": [
+      "archtop",
+      "carlos_jumbo",
+      "cuatro",
+      "explorer",
+      "firebird",
+      "gibson_l_00",
+      "harmony_h44",
+      "jaguar",
+      "jazz_bass",
+      "jazzmaster",
+      "js1000",
+      "klein",
+      "mandolin",
+      "martin_d28",
+      "melody_maker",
+      "moderne",
+      "mustang",
+      "octave_mandolin",
+      "prs",
+      "ukulele"
+    ],
+    "body_templates": [
+      "archtop",
+      "bass_4string",
+      "benedetto_17",
+      "carlos_jumbo",
+      "classical",
+      "cuatro",
+      "es_335",
+      "explorer",
+      "firebird",
+      "flying_v",
+      "gibson_l_00",
+      "harmony_h44",
+      "jaguar",
+      "jazz_bass",
+      "jazzmaster",
+      "js1000",
+      "jumbo_archtop",
+      "klein",
+      "mandolin",
+      "martin_d28",
+      "melody_maker",
+      "moderne",
+      "mustang",
+      "octave_mandolin",
+      "om_000",
+      "prs",
+      "smart_guitar",
+      "ukulele"
+    ],
+    "instrument_model_registry": [
+      "bass_4string",
+      "benedetto_17",
+      "harmony_h44",
+      "jaguar",
+      "jazzmaster",
+      "js1000",
+      "mandolin",
+      "martin_d28",
+      "mustang",
+      "octave_mandolin"
+    ],
+    "model_specs": [
+      "bass_4string",
+      "benedetto_17",
+      "carlos_jumbo",
+      "cuatro",
+      "harmony_h44",
+      "jaguar",
+      "jazzmaster",
+      "js1000",
+      "jumbo_archtop",
+      "klein",
+      "mandolin",
+      "martin_d28",
+      "melody_maker",
+      "mustang",
+      "octave_mandolin",
+      "smart_guitar"
+    ]
+  },
+  "model_index": {
+    "archtop": {
+      "conflicts": [],
+      "field_roles": {
+        "assets": [
+          "instrument_model_registry"
+        ],
+        "cam_capability": [
+          "instrument_model_registry"
+        ],
+        "metadata": [
+          "instrument_model_registry"
+        ],
+        "physical_dimensions": [
+          "instrument_model_registry"
+        ],
+        "runtime_spec": [
+          "model_specs"
+        ]
+      },
+      "normalized_id": "archtop",
+      "notes": [],
+      "presence": {
+        "body_catalog": false,
+        "body_dimension_reference": false,
+        "body_templates": false,
+        "instrument_model_registry": true,
+        "model_specs": true
+      },
+      "present_in_count": 2,
+      "source_ids": {
+        "instrument_model_registry": "archtop",
+        "model_specs": "archtop"
+      }
+    },
+    "bass_4string": {
+      "conflicts": [],
+      "field_roles": {
+        "physical_dimensions": [
+          "body_dimension_reference"
+        ]
+      },
+      "normalized_id": "bass_4string",
+      "notes": [],
+      "presence": {
+        "body_catalog": false,
+        "body_dimension_reference": true,
+        "body_templates": false,
+        "instrument_model_registry": false,
+        "model_specs": false
+      },
+      "present_in_count": 1,
+      "source_ids": {
+        "body_dimension_reference": "bass_4string"
+      }
+    },
+    "benedetto_17": {
+      "conflicts": [],
+      "field_roles": {
+        "physical_dimensions": [
+          "body_dimension_reference"
+        ]
+      },
+      "normalized_id": "benedetto_17",
+      "notes": [],
+      "presence": {
+        "body_catalog": false,
+        "body_dimension_reference": true,
+        "body_templates": false,
+        "instrument_model_registry": false,
+        "model_specs": false
+      },
+      "present_in_count": 1,
+      "source_ids": {
+        "body_dimension_reference": "benedetto_17"
+      }
+    },
+    "carlos_jumbo": {
+      "conflicts": [],
+      "field_roles": {
+        "assets": [
+          "body_catalog",
+          "instrument_model_registry"
+        ],
+        "body_catalog": [
+          "body_catalog"
+        ],
+        "cam_capability": [
+          "instrument_model_registry"
+        ],
+        "metadata": [
+          "instrument_model_registry"
+        ],
+        "physical_dimensions": [
+          "instrument_model_registry"
+        ]
+      },
+      "normalized_id": "carlos_jumbo",
+      "notes": [],
+      "presence": {
+        "body_catalog": true,
+        "body_dimension_reference": false,
+        "body_templates": false,
+        "instrument_model_registry": true,
+        "model_specs": false
+      },
+      "present_in_count": 2,
+      "source_ids": {
+        "body_catalog": "carlos_jumbo",
+        "instrument_model_registry": "carlos_jumbo"
+      }
+    },
+    "classical": {
+      "conflicts": [],
+      "field_roles": {
+        "assets": [
+          "body_catalog",
+          "instrument_model_registry"
+        ],
+        "body_catalog": [
+          "body_catalog"
+        ],
+        "cam_capability": [
+          "instrument_model_registry"
+        ],
+        "metadata": [
+          "instrument_model_registry"
+        ],
+        "physical_dimensions": [
+          "body_dimension_reference",
+          "instrument_model_registry"
+        ],
+        "runtime_spec": [
+          "model_specs"
+        ]
+      },
+      "normalized_id": "classical",
+      "notes": [],
+      "presence": {
+        "body_catalog": true,
+        "body_dimension_reference": true,
+        "body_templates": false,
+        "instrument_model_registry": true,
+        "model_specs": true
+      },
+      "present_in_count": 4,
+      "source_ids": {
+        "body_catalog": "classical",
+        "body_dimension_reference": "classical",
+        "instrument_model_registry": "classical",
+        "model_specs": "classical"
+      }
+    },
+    "cuatro": {
+      "conflicts": [],
+      "field_roles": {
+        "assets": [
+          "body_catalog",
+          "instrument_model_registry"
+        ],
+        "body_catalog": [
+          "body_catalog"
+        ],
+        "cam_capability": [
+          "instrument_model_registry"
+        ],
+        "metadata": [
+          "instrument_model_registry"
+        ],
+        "physical_dimensions": [
+          "instrument_model_registry"
+        ]
+      },
+      "normalized_id": "cuatro",
+      "notes": [
+        "appears under multiple original ids: ['cuatro', 'cuatro_venezolano'] (folded via explicit alias map / normalization)"
+      ],
+      "presence": {
+        "body_catalog": true,
+        "body_dimension_reference": false,
+        "body_templates": false,
+        "instrument_model_registry": true,
+        "model_specs": false
+      },
+      "present_in_count": 2,
+      "source_ids": {
+        "body_catalog": "cuatro_venezolano",
+        "instrument_model_registry": "cuatro"
+      }
+    },
+    "dreadnought": {
+      "conflicts": [
+        {
+          "delta": 12,
+          "field": "body_length_mm",
+          "model": "dreadnought",
+          "note": "differing values across sources — reported, not resolved",
+          "values": {
+            "body_dimension_reference": 520,
+            "body_templates": 508
+          }
+        }
+      ],
+      "field_roles": {
+        "assets": [
+          "body_catalog",
+          "instrument_model_registry"
+        ],
+        "body_catalog": [
+          "body_catalog"
+        ],
+        "body_template": [
+          "body_templates"
+        ],
+        "cam_capability": [
+          "instrument_model_registry"
+        ],
+        "metadata": [
+          "instrument_model_registry"
+        ],
+        "physical_dimensions": [
+          "body_dimension_reference",
+          "body_templates",
+          "instrument_model_registry"
+        ],
+        "runtime_spec": [
+          "model_specs"
+        ]
+      },
+      "normalized_id": "dreadnought",
+      "notes": [],
+      "presence": {
+        "body_catalog": true,
+        "body_dimension_reference": true,
+        "body_templates": true,
+        "instrument_model_registry": true,
+        "model_specs": true
+      },
+      "present_in_count": 5,
+      "source_ids": {
+        "body_catalog": "dreadnought",
+        "body_dimension_reference": "dreadnought",
+        "body_templates": "dreadnought",
+        "instrument_model_registry": "dreadnought",
+        "model_specs": "dreadnought"
+      }
+    },
+    "es_335": {
+      "conflicts": [],
+      "field_roles": {
+        "assets": [
+          "instrument_model_registry"
+        ],
+        "cam_capability": [
+          "instrument_model_registry"
+        ],
+        "metadata": [
+          "instrument_model_registry"
+        ],
+        "physical_dimensions": [
+          "body_dimension_reference",
+          "instrument_model_registry"
+        ],
+        "runtime_spec": [
+          "model_specs"
+        ]
+      },
+      "normalized_id": "es_335",
+      "notes": [
+        "appears under multiple original ids: ['es335', 'es_335'] (folded via explicit alias map / normalization)"
+      ],
+      "presence": {
+        "body_catalog": false,
+        "body_dimension_reference": true,
+        "body_templates": false,
+        "instrument_model_registry": true,
+        "model_specs": true
+      },
+      "present_in_count": 3,
+      "source_ids": {
+        "body_dimension_reference": "es335",
+        "instrument_model_registry": "es_335",
+        "model_specs": "es_335"
+      }
+    },
+    "explorer": {
+      "conflicts": [],
+      "field_roles": {
+        "assets": [
+          "body_catalog",
+          "instrument_model_registry"
+        ],
+        "body_catalog": [
+          "body_catalog"
+        ],
+        "cam_capability": [
+          "instrument_model_registry"
+        ],
+        "metadata": [
+          "instrument_model_registry"
+        ],
+        "physical_dimensions": [
+          "instrument_model_registry"
+        ],
+        "runtime_spec": [
+          "model_specs"
+        ]
+      },
+      "normalized_id": "explorer",
+      "notes": [
+        "appears under multiple original ids: ['explorer', 'gibson_explorer'] (folded via explicit alias map / normalization)"
+      ],
+      "presence": {
+        "body_catalog": true,
+        "body_dimension_reference": false,
+        "body_templates": false,
+        "instrument_model_registry": true,
+        "model_specs": true
+      },
+      "present_in_count": 3,
+      "source_ids": {
+        "body_catalog": "gibson_explorer",
+        "instrument_model_registry": "explorer",
+        "model_specs": "explorer"
+      }
+    },
+    "firebird": {
+      "conflicts": [],
+      "field_roles": {
+        "assets": [
+          "instrument_model_registry"
+        ],
+        "cam_capability": [
+          "instrument_model_registry"
+        ],
+        "metadata": [
+          "instrument_model_registry"
+        ],
+        "physical_dimensions": [
+          "instrument_model_registry"
+        ],
+        "runtime_spec": [
+          "model_specs"
+        ]
+      },
+      "normalized_id": "firebird",
+      "notes": [],
+      "presence": {
+        "body_catalog": false,
+        "body_dimension_reference": false,
+        "body_templates": false,
+        "instrument_model_registry": true,
+        "model_specs": true
+      },
+      "present_in_count": 2,
+      "source_ids": {
+        "instrument_model_registry": "firebird",
+        "model_specs": "firebird"
+      }
+    },
+    "flying_v": {
+      "conflicts": [],
+      "field_roles": {
+        "assets": [
+          "body_catalog",
+          "instrument_model_registry"
+        ],
+        "body_catalog": [
+          "body_catalog"
+        ],
+        "cam_capability": [
+          "instrument_model_registry"
+        ],
+        "metadata": [
+          "instrument_model_registry"
+        ],
+        "physical_dimensions": [
+          "body_dimension_reference",
+          "instrument_model_registry"
+        ],
+        "runtime_spec": [
+          "model_specs"
+        ]
+      },
+      "normalized_id": "flying_v",
+      "notes": [],
+      "presence": {
+        "body_catalog": true,
+        "body_dimension_reference": true,
+        "body_templates": false,
+        "instrument_model_registry": true,
+        "model_specs": true
+      },
+      "present_in_count": 4,
+      "source_ids": {
+        "body_catalog": "flying_v",
+        "body_dimension_reference": "flying_v",
+        "instrument_model_registry": "flying_v",
+        "model_specs": "flying_v"
+      }
+    },
+    "gibson_l_00": {
+      "conflicts": [],
+      "field_roles": {
+        "assets": [
+          "body_catalog",
+          "instrument_model_registry"
+        ],
+        "body_catalog": [
+          "body_catalog"
+        ],
+        "cam_capability": [
+          "instrument_model_registry"
+        ],
+        "metadata": [
+          "instrument_model_registry"
+        ],
+        "physical_dimensions": [
+          "instrument_model_registry"
+        ],
+        "runtime_spec": [
+          "model_specs"
+        ]
+      },
+      "normalized_id": "gibson_l_00",
+      "notes": [],
+      "presence": {
+        "body_catalog": true,
+        "body_dimension_reference": false,
+        "body_templates": false,
+        "instrument_model_registry": true,
+        "model_specs": true
+      },
+      "present_in_count": 3,
+      "source_ids": {
+        "body_catalog": "gibson_l_00",
+        "instrument_model_registry": "gibson_l_00",
+        "model_specs": "gibson_l_00"
+      }
+    },
+    "gibson_sg": {
+      "conflicts": [
+        {
+          "delta": 50,
+          "field": "body_length_mm",
+          "model": "gibson_sg",
+          "note": "differing values across sources — reported, not resolved",
+          "values": {
+            "body_dimension_reference": 444,
+            "body_templates": 394
+          }
+        }
+      ],
+      "field_roles": {
+        "assets": [
+          "instrument_model_registry"
+        ],
+        "body_template": [
+          "body_templates"
+        ],
+        "cam_capability": [
+          "instrument_model_registry"
+        ],
+        "metadata": [
+          "instrument_model_registry"
+        ],
+        "physical_dimensions": [
+          "body_dimension_reference",
+          "body_templates",
+          "instrument_model_registry"
+        ],
+        "runtime_spec": [
+          "model_specs"
+        ]
+      },
+      "normalized_id": "gibson_sg",
+      "notes": [
+        "appears under multiple original ids: ['gibson_sg', 'sg'] (folded via explicit alias map / normalization)"
+      ],
+      "presence": {
+        "body_catalog": false,
+        "body_dimension_reference": true,
+        "body_templates": true,
+        "instrument_model_registry": true,
+        "model_specs": true
+      },
+      "present_in_count": 4,
+      "source_ids": {
+        "body_dimension_reference": "gibson_sg",
+        "body_templates": "sg",
+        "instrument_model_registry": "sg",
+        "model_specs": "sg"
+      }
+    },
+    "harmony_h44": {
+      "conflicts": [],
+      "field_roles": {
+        "assets": [
+          "body_catalog"
+        ],
+        "body_catalog": [
+          "body_catalog"
+        ]
+      },
+      "normalized_id": "harmony_h44",
+      "notes": [],
+      "presence": {
+        "body_catalog": true,
+        "body_dimension_reference": false,
+        "body_templates": false,
+        "instrument_model_registry": false,
+        "model_specs": false
+      },
+      "present_in_count": 1,
+      "source_ids": {
+        "body_catalog": "harmony_h44"
+      }
+    },
+    "j_45": {
+      "conflicts": [
+        {
+          "delta": 1.2,
+          "field": "body_length_mm",
+          "model": "j_45",
+          "note": "differing values across sources — reported, not resolved",
+          "values": {
+            "body_dimension_reference": 506,
+            "body_templates": 504.8
+          }
+        }
+      ],
+      "field_roles": {
+        "assets": [
+          "body_catalog",
+          "instrument_model_registry"
+        ],
+        "body_catalog": [
+          "body_catalog"
+        ],
+        "body_template": [
+          "body_templates"
+        ],
+        "cam_capability": [
+          "instrument_model_registry"
+        ],
+        "metadata": [
+          "instrument_model_registry"
+        ],
+        "physical_dimensions": [
+          "body_dimension_reference",
+          "body_templates",
+          "instrument_model_registry"
+        ],
+        "runtime_spec": [
+          "model_specs"
+        ]
+      },
+      "normalized_id": "j_45",
+      "notes": [
+        "appears under multiple original ids: ['gibson_j45', 'j45', 'j_45'] (folded via explicit alias map / normalization)"
+      ],
+      "presence": {
+        "body_catalog": true,
+        "body_dimension_reference": true,
+        "body_templates": true,
+        "instrument_model_registry": true,
+        "model_specs": true
+      },
+      "present_in_count": 5,
+      "source_ids": {
+        "body_catalog": "j45",
+        "body_dimension_reference": "j45",
+        "body_templates": "gibson_j45",
+        "instrument_model_registry": "j_45",
+        "model_specs": "j_45"
+      }
+    },
+    "jaguar": {
+      "conflicts": [],
+      "field_roles": {
+        "assets": [
+          "body_catalog"
+        ],
+        "body_catalog": [
+          "body_catalog"
+        ]
+      },
+      "normalized_id": "jaguar",
+      "notes": [],
+      "presence": {
+        "body_catalog": true,
+        "body_dimension_reference": false,
+        "body_templates": false,
+        "instrument_model_registry": false,
+        "model_specs": false
+      },
+      "present_in_count": 1,
+      "source_ids": {
+        "body_catalog": "jaguar"
+      }
+    },
+    "jazz_bass": {
+      "conflicts": [],
+      "field_roles": {
+        "assets": [
+          "instrument_model_registry"
+        ],
+        "cam_capability": [
+          "instrument_model_registry"
+        ],
+        "metadata": [
+          "instrument_model_registry"
+        ],
+        "physical_dimensions": [
+          "instrument_model_registry"
+        ],
+        "runtime_spec": [
+          "model_specs"
+        ]
+      },
+      "normalized_id": "jazz_bass",
+      "notes": [],
+      "presence": {
+        "body_catalog": false,
+        "body_dimension_reference": false,
+        "body_templates": false,
+        "instrument_model_registry": true,
+        "model_specs": true
+      },
+      "present_in_count": 2,
+      "source_ids": {
+        "instrument_model_registry": "jazz_bass",
+        "model_specs": "jazz_bass"
+      }
+    },
+    "jazzmaster": {
+      "conflicts": [],
+      "field_roles": {
+        "assets": [
+          "body_catalog"
+        ],
+        "body_catalog": [
+          "body_catalog"
+        ]
+      },
+      "normalized_id": "jazzmaster",
+      "notes": [],
+      "presence": {
+        "body_catalog": true,
+        "body_dimension_reference": false,
+        "body_templates": false,
+        "instrument_model_registry": false,
+        "model_specs": false
+      },
+      "present_in_count": 1,
+      "source_ids": {
+        "body_catalog": "jazzmaster"
+      }
+    },
+    "js1000": {
+      "conflicts": [],
+      "field_roles": {
+        "assets": [
+          "body_catalog"
+        ],
+        "body_catalog": [
+          "body_catalog"
+        ]
+      },
+      "normalized_id": "js1000",
+      "notes": [],
+      "presence": {
+        "body_catalog": true,
+        "body_dimension_reference": false,
+        "body_templates": false,
+        "instrument_model_registry": false,
+        "model_specs": false
+      },
+      "present_in_count": 1,
+      "source_ids": {
+        "body_catalog": "js1000"
+      }
+    },
+    "jumbo_archtop": {
+      "conflicts": [],
+      "field_roles": {
+        "assets": [
+          "instrument_model_registry"
+        ],
+        "cam_capability": [
+          "instrument_model_registry"
+        ],
+        "metadata": [
+          "instrument_model_registry"
+        ],
+        "physical_dimensions": [
+          "body_dimension_reference",
+          "instrument_model_registry"
+        ]
+      },
+      "normalized_id": "jumbo_archtop",
+      "notes": [],
+      "presence": {
+        "body_catalog": false,
+        "body_dimension_reference": true,
+        "body_templates": false,
+        "instrument_model_registry": true,
+        "model_specs": false
+      },
+      "present_in_count": 2,
+      "source_ids": {
+        "body_dimension_reference": "jumbo_archtop",
+        "instrument_model_registry": "jumbo_archtop"
+      }
+    },
+    "jumbo_j200": {
+      "conflicts": [
+        {
+          "delta": 2.54,
+          "field": "scale_length_mm",
+          "model": "jumbo_j200",
+          "note": "differing values across sources — reported, not resolved",
+          "values": {
+            "body_templates": 647.7,
+            "instrument_model_registry": 645.16
+          }
+        },
+        {
+          "delta": 12,
+          "field": "body_length_mm",
+          "model": "jumbo_j200",
+          "note": "differing values across sources — reported, not resolved",
+          "values": {
+            "body_dimension_reference": 521,
+            "body_templates": 533
+          }
+        }
+      ],
+      "field_roles": {
+        "assets": [
+          "body_catalog",
+          "instrument_model_registry"
+        ],
+        "body_catalog": [
+          "body_catalog"
+        ],
+        "body_template": [
+          "body_templates"
+        ],
+        "cam_capability": [
+          "instrument_model_registry"
+        ],
+        "metadata": [
+          "instrument_model_registry"
+        ],
+        "physical_dimensions": [
+          "body_dimension_reference",
+          "body_templates",
+          "instrument_model_registry"
+        ],
+        "runtime_spec": [
+          "model_specs"
+        ]
+      },
+      "normalized_id": "jumbo_j200",
+      "notes": [
+        "appears under multiple original ids: ['jumbo', 'jumbo_j200'] (folded via explicit alias map / normalization)"
+      ],
+      "presence": {
+        "body_catalog": true,
+        "body_dimension_reference": true,
+        "body_templates": true,
+        "instrument_model_registry": true,
+        "model_specs": true
+      },
+      "present_in_count": 5,
+      "source_ids": {
+        "body_catalog": "jumbo",
+        "body_dimension_reference": "jumbo",
+        "body_templates": "jumbo",
+        "instrument_model_registry": "jumbo_j200",
+        "model_specs": "jumbo_j200"
+      }
+    },
+    "klein": {
+      "conflicts": [],
+      "field_roles": {
+        "assets": [
+          "instrument_model_registry"
+        ],
+        "cam_capability": [
+          "instrument_model_registry"
+        ],
+        "metadata": [
+          "instrument_model_registry"
+        ],
+        "physical_dimensions": [
+          "instrument_model_registry"
+        ]
+      },
+      "normalized_id": "klein",
+      "notes": [],
+      "presence": {
+        "body_catalog": false,
+        "body_dimension_reference": false,
+        "body_templates": false,
+        "instrument_model_registry": true,
+        "model_specs": false
+      },
+      "present_in_count": 1,
+      "source_ids": {
+        "instrument_model_registry": "klein"
+      }
+    },
+    "les_paul": {
+      "conflicts": [
+        {
+          "delta": 6,
+          "field": "body_length_mm",
+          "model": "les_paul",
+          "note": "differing values across sources — reported, not resolved",
+          "values": {
+            "body_dimension_reference": 450,
+            "body_templates": 444
+          }
+        }
+      ],
+      "field_roles": {
+        "assets": [
+          "body_catalog",
+          "instrument_model_registry"
+        ],
+        "body_catalog": [
+          "body_catalog"
+        ],
+        "body_template": [
+          "body_templates"
+        ],
+        "cam_capability": [
+          "instrument_model_registry"
+        ],
+        "metadata": [
+          "instrument_model_registry"
+        ],
+        "physical_dimensions": [
+          "body_dimension_reference",
+          "body_templates",
+          "instrument_model_registry"
+        ],
+        "runtime_spec": [
+          "model_specs"
+        ]
+      },
+      "normalized_id": "les_paul",
+      "notes": [],
+      "presence": {
+        "body_catalog": true,
+        "body_dimension_reference": true,
+        "body_templates": true,
+        "instrument_model_registry": true,
+        "model_specs": true
+      },
+      "present_in_count": 5,
+      "source_ids": {
+        "body_catalog": "les_paul",
+        "body_dimension_reference": "les_paul",
+        "body_templates": "les_paul",
+        "instrument_model_registry": "les_paul",
+        "model_specs": "les_paul"
+      }
+    },
+    "mandolin": {
+      "conflicts": [],
+      "field_roles": {
+        "assets": [
+          "body_catalog"
+        ],
+        "body_catalog": [
+          "body_catalog"
+        ]
+      },
+      "normalized_id": "mandolin",
+      "notes": [],
+      "presence": {
+        "body_catalog": true,
+        "body_dimension_reference": false,
+        "body_templates": false,
+        "instrument_model_registry": false,
+        "model_specs": false
+      },
+      "present_in_count": 1,
+      "source_ids": {
+        "body_catalog": "mandolin"
+      }
+    },
+    "martin_d28": {
+      "conflicts": [],
+      "field_roles": {
+        "body_catalog": [
+          "body_catalog"
+        ]
+      },
+      "normalized_id": "martin_d28",
+      "notes": [],
+      "presence": {
+        "body_catalog": true,
+        "body_dimension_reference": false,
+        "body_templates": false,
+        "instrument_model_registry": false,
+        "model_specs": false
+      },
+      "present_in_count": 1,
+      "source_ids": {
+        "body_catalog": "martin_d28"
+      }
+    },
+    "melody_maker": {
+      "conflicts": [],
+      "field_roles": {
+        "assets": [
+          "body_catalog",
+          "instrument_model_registry"
+        ],
+        "body_catalog": [
+          "body_catalog"
+        ],
+        "cam_capability": [
+          "instrument_model_registry"
+        ],
+        "metadata": [
+          "instrument_model_registry"
+        ],
+        "physical_dimensions": [
+          "instrument_model_registry"
+        ]
+      },
+      "normalized_id": "melody_maker",
+      "notes": [],
+      "presence": {
+        "body_catalog": true,
+        "body_dimension_reference": false,
+        "body_templates": false,
+        "instrument_model_registry": true,
+        "model_specs": false
+      },
+      "present_in_count": 2,
+      "source_ids": {
+        "body_catalog": "melody_maker",
+        "instrument_model_registry": "melody_maker"
+      }
+    },
+    "moderne": {
+      "conflicts": [],
+      "field_roles": {
+        "assets": [
+          "instrument_model_registry"
+        ],
+        "cam_capability": [
+          "instrument_model_registry"
+        ],
+        "metadata": [
+          "instrument_model_registry"
+        ],
+        "physical_dimensions": [
+          "instrument_model_registry"
+        ],
+        "runtime_spec": [
+          "model_specs"
+        ]
+      },
+      "normalized_id": "moderne",
+      "notes": [],
+      "presence": {
+        "body_catalog": false,
+        "body_dimension_reference": false,
+        "body_templates": false,
+        "instrument_model_registry": true,
+        "model_specs": true
+      },
+      "present_in_count": 2,
+      "source_ids": {
+        "instrument_model_registry": "moderne",
+        "model_specs": "moderne"
+      }
+    },
+    "mustang": {
+      "conflicts": [],
+      "field_roles": {
+        "assets": [
+          "body_catalog"
+        ],
+        "body_catalog": [
+          "body_catalog"
+        ]
+      },
+      "normalized_id": "mustang",
+      "notes": [],
+      "presence": {
+        "body_catalog": true,
+        "body_dimension_reference": false,
+        "body_templates": false,
+        "instrument_model_registry": false,
+        "model_specs": false
+      },
+      "present_in_count": 1,
+      "source_ids": {
+        "body_catalog": "mustang"
+      }
+    },
+    "octave_mandolin": {
+      "conflicts": [],
+      "field_roles": {
+        "assets": [
+          "body_catalog"
+        ],
+        "body_catalog": [
+          "body_catalog"
+        ]
+      },
+      "normalized_id": "octave_mandolin",
+      "notes": [],
+      "presence": {
+        "body_catalog": true,
+        "body_dimension_reference": false,
+        "body_templates": false,
+        "instrument_model_registry": false,
+        "model_specs": false
+      },
+      "present_in_count": 1,
+      "source_ids": {
+        "body_catalog": "octave_mandolin"
+      }
+    },
+    "om_000": {
+      "conflicts": [],
+      "field_roles": {
+        "assets": [
+          "body_catalog",
+          "instrument_model_registry"
+        ],
+        "body_catalog": [
+          "body_catalog"
+        ],
+        "cam_capability": [
+          "instrument_model_registry"
+        ],
+        "metadata": [
+          "instrument_model_registry"
+        ],
+        "physical_dimensions": [
+          "body_dimension_reference",
+          "instrument_model_registry"
+        ],
+        "runtime_spec": [
+          "model_specs"
+        ]
+      },
+      "normalized_id": "om_000",
+      "notes": [],
+      "presence": {
+        "body_catalog": true,
+        "body_dimension_reference": true,
+        "body_templates": false,
+        "instrument_model_registry": true,
+        "model_specs": true
+      },
+      "present_in_count": 4,
+      "source_ids": {
+        "body_catalog": "om_000",
+        "body_dimension_reference": "om_000",
+        "instrument_model_registry": "om_000",
+        "model_specs": "om_000"
+      }
+    },
+    "prs": {
+      "conflicts": [],
+      "field_roles": {
+        "assets": [
+          "instrument_model_registry"
+        ],
+        "cam_capability": [
+          "instrument_model_registry"
+        ],
+        "metadata": [
+          "instrument_model_registry"
+        ],
+        "physical_dimensions": [
+          "instrument_model_registry"
+        ],
+        "runtime_spec": [
+          "model_specs"
+        ]
+      },
+      "normalized_id": "prs",
+      "notes": [],
+      "presence": {
+        "body_catalog": false,
+        "body_dimension_reference": false,
+        "body_templates": false,
+        "instrument_model_registry": true,
+        "model_specs": true
+      },
+      "present_in_count": 2,
+      "source_ids": {
+        "instrument_model_registry": "prs",
+        "model_specs": "prs"
+      }
+    },
+    "smart_guitar": {
+      "conflicts": [],
+      "field_roles": {
+        "assets": [
+          "instrument_model_registry"
+        ],
+        "cam_capability": [
+          "instrument_model_registry"
+        ],
+        "metadata": [
+          "instrument_model_registry"
+        ],
+        "physical_dimensions": [
+          "body_dimension_reference",
+          "instrument_model_registry"
+        ]
+      },
+      "normalized_id": "smart_guitar",
+      "notes": [],
+      "presence": {
+        "body_catalog": false,
+        "body_dimension_reference": true,
+        "body_templates": false,
+        "instrument_model_registry": true,
+        "model_specs": false
+      },
+      "present_in_count": 2,
+      "source_ids": {
+        "body_dimension_reference": "smart_guitar",
+        "instrument_model_registry": "smart_guitar"
+      }
+    },
+    "stratocaster": {
+      "conflicts": [
+        {
+          "delta": 0.3,
+          "field": "scale_length_mm",
+          "model": "stratocaster",
+          "note": "differing values across sources — reported, not resolved",
+          "values": {
+            "body_templates": 647.7,
+            "instrument_model_registry": 648.0
+          }
+        },
+        {
+          "delta": 10,
+          "field": "body_length_mm",
+          "model": "stratocaster",
+          "note": "differing values across sources — reported, not resolved",
+          "values": {
+            "body_dimension_reference": 406,
+            "body_templates": 396
+          }
+        }
+      ],
+      "field_roles": {
+        "assets": [
+          "body_catalog",
+          "instrument_model_registry"
+        ],
+        "body_catalog": [
+          "body_catalog"
+        ],
+        "body_template": [
+          "body_templates"
+        ],
+        "cam_capability": [
+          "instrument_model_registry"
+        ],
+        "metadata": [
+          "instrument_model_registry"
+        ],
+        "physical_dimensions": [
+          "body_dimension_reference",
+          "body_templates",
+          "instrument_model_registry"
+        ],
+        "runtime_spec": [
+          "model_specs"
+        ]
+      },
+      "normalized_id": "stratocaster",
+      "notes": [],
+      "presence": {
+        "body_catalog": true,
+        "body_dimension_reference": true,
+        "body_templates": true,
+        "instrument_model_registry": true,
+        "model_specs": true
+      },
+      "present_in_count": 5,
+      "source_ids": {
+        "body_catalog": "stratocaster",
+        "body_dimension_reference": "stratocaster",
+        "body_templates": "stratocaster",
+        "instrument_model_registry": "stratocaster",
+        "model_specs": "stratocaster"
+      }
+    },
+    "telecaster": {
+      "conflicts": [
+        {
+          "delta": 0.3,
+          "field": "scale_length_mm",
+          "model": "telecaster",
+          "note": "differing values across sources — reported, not resolved",
+          "values": {
+            "body_templates": 647.7,
+            "instrument_model_registry": 648.0
+          }
+        },
+        {
+          "delta": 10,
+          "field": "body_length_mm",
+          "model": "telecaster",
+          "note": "differing values across sources — reported, not resolved",
+          "values": {
+            "body_dimension_reference": 406,
+            "body_templates": 396
+          }
+        }
+      ],
+      "field_roles": {
+        "assets": [
+          "instrument_model_registry"
+        ],
+        "body_template": [
+          "body_templates"
+        ],
+        "cam_capability": [
+          "instrument_model_registry"
+        ],
+        "metadata": [
+          "instrument_model_registry"
+        ],
+        "physical_dimensions": [
+          "body_dimension_reference",
+          "body_templates",
+          "instrument_model_registry"
+        ],
+        "runtime_spec": [
+          "model_specs"
+        ]
+      },
+      "normalized_id": "telecaster",
+      "notes": [],
+      "presence": {
+        "body_catalog": false,
+        "body_dimension_reference": true,
+        "body_templates": true,
+        "instrument_model_registry": true,
+        "model_specs": true
+      },
+      "present_in_count": 4,
+      "source_ids": {
+        "body_dimension_reference": "telecaster",
+        "body_templates": "telecaster",
+        "instrument_model_registry": "telecaster",
+        "model_specs": "telecaster"
+      }
+    },
+    "ukulele": {
+      "conflicts": [],
+      "field_roles": {
+        "assets": [
+          "body_catalog",
+          "instrument_model_registry"
+        ],
+        "body_catalog": [
+          "body_catalog"
+        ],
+        "cam_capability": [
+          "instrument_model_registry"
+        ],
+        "metadata": [
+          "instrument_model_registry"
+        ],
+        "physical_dimensions": [
+          "instrument_model_registry"
+        ],
+        "runtime_spec": [
+          "model_specs"
+        ]
+      },
+      "normalized_id": "ukulele",
+      "notes": [
+        "appears under multiple original ids: ['soprano_ukulele', 'ukulele'] (folded via explicit alias map / normalization)"
+      ],
+      "presence": {
+        "body_catalog": true,
+        "body_dimension_reference": false,
+        "body_templates": false,
+        "instrument_model_registry": true,
+        "model_specs": true
+      },
+      "present_in_count": 3,
+      "source_ids": {
+        "body_catalog": "soprano_ukulele",
+        "instrument_model_registry": "ukulele",
+        "model_specs": "ukulele"
+      }
+    }
+  },
+  "schema_proposal": {
+    "families": {
+      "<family>": {
+        "models": {
+          "<model_id>": {
+            "assets": [],
+            "body_catalog": {
+              "dimensions_mm": {},
+              "dxf": null,
+              "points": null,
+              "source": null
+            },
+            "body_template": {
+              "features": {},
+              "neck_pocket": {},
+              "outline_available": null,
+              "type": null
+            },
+            "cam_capability": {
+              "cam_capable": null,
+              "cam_operations": []
+            },
+            "display_name": "<str>",
+            "id": "<model_id>",
+            "metadata": {
+              "category": null,
+              "description": null,
+              "fret_count": null,
+              "manufacturer": null,
+              "scale_length_mm": null,
+              "status": null,
+              "string_count": null,
+              "year_introduced": null
+            },
+            "physical_dimensions": {
+              "body_length_mm": null,
+              "depth_mm": null,
+              "lower_bout_width_mm": null,
+              "thickness_mm": null,
+              "upper_bout_width_mm": null,
+              "vectorizer_scale_priors": {},
+              "waist_width_mm": null
+            },
+            "runtime_spec": {
+              "factory_exists": false,
+              "factory_ref": null
+            },
+            "source_provenance": {
+              "__doc__": "field_group -> {source, source_id, path} recording origin"
+            },
+            "variants": {}
+          }
+        }
+      }
+    },
+    "note": "PROPOSAL ONLY — not used by runtime code. Field-role based; distinguishes metadata, physical dimensions, body template conventions, body catalog data, runtime factory availability, assets, and CAM capability. Every field group carries source_provenance so a later migration can say where each value came from.",
+    "version": "0.1.0"
+  },
+  "source_counts": {
+    "body_catalog": 23,
+    "body_dimension_reference": 15,
+    "body_templates": 7,
+    "instrument_model_registry": 25,
+    "model_specs": 19
+  },
+  "source_snapshot": {
+    "body_catalog": {
+      "count": 23,
+      "path": "services/api/app/instrument_geometry/body/catalog.json"
+    },
+    "body_dimension_reference": {
+      "count": 15,
+      "path": "services/photo-vectorizer/body_dimension_reference.json"
+    },
+    "body_templates": {
+      "count": 7,
+      "path": "services/api/app/data_registry/system/instruments/body_templates.json"
+    },
+    "instrument_model_registry": {
+      "count": 25,
+      "path": "services/api/app/instrument_geometry/instrument_model_registry.json"
+    },
+    "model_specs": {
+      "count": 19,
+      "path": "services/api/app/instrument_geometry/guitars/__init__.py"
+    }
+  },
+  "total_distinct_models": 35
+}

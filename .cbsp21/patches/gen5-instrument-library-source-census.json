@@ -1,0 +1,104 @@
+{
+  "schema": "cbsp21_patch_input_v1",
+  "schema_version": "cbsp21_patch_input_v1",
+  "coverage_min": 0.95,
+  "patch_id": "GEN5_INSTRUMENT_LIBRARY_SOURCE_CENSUS",
+  "title": "GEN-5-A: instrument library source census + canonical schema proposal",
+  "intent": "Bounded first slice of GEN-5. Add a stdlib-only, read-only census utility that inspects the five legacy instrument-library sources (no app.* imports) and emits a deterministic JSON census + human audit + canonical schema proposal. Conflicts are reported, not resolved. No runtime consumer, router, service, registry, model, or vectorizer behavior changes; no legacy source is modified. GEN-5 remains open.",
+  "change_type": "feature",
+  "behavior_change": "none",
+  "risk_level": "low",
+  "scope": {
+    "paths_in_scope": [
+      "services/api/scripts/build_instrument_library_census.py",
+      "services/api/metrics/gen5_instrument_library_census.json",
+      "services/api/tests/test_gen5_instrument_library_census.py",
+      "docs/audit/GEN5_INSTRUMENT_LIBRARY_SOURCE_CENSUS.md",
+      "docs/handoffs/GEN5_DATA_CONSOLIDATION_SOURCE_CENSUS_DEV_ORDER.md",
+      "SPRINTS.md",
+      ".cbsp21/patches/gen5-instrument-library-source-census.json"
+    ],
+    "files_expected_to_change": [
+      "services/api/scripts/build_instrument_library_census.py",
+      "services/api/metrics/gen5_instrument_library_census.json",
+      "services/api/tests/test_gen5_instrument_library_census.py",
+      "docs/audit/GEN5_INSTRUMENT_LIBRARY_SOURCE_CENSUS.md",
+      "docs/handoffs/GEN5_DATA_CONSOLIDATION_SOURCE_CENSUS_DEV_ORDER.md",
+      "SPRINTS.md",
+      ".cbsp21/patches/gen5-instrument-library-source-census.json"
+    ]
+  },
+  "diff_articulation": {
+    "what_changed": "(1) build_instrument_library_census.py: new stdlib-only utility (json/ast/argparse/os/sys/datetime/pathlib) that loads 4 JSON sources + AST-parses guitars/__init__.py and models.py for MODEL_SPECS/MODEL_INFOS keys without importing app.*; normalizes IDs (explicit alias map only), classifies field roles, emits same-semantic conflicts, missing-by-source, and a schema proposal; deterministic (generated_at excluded from --check). (2) generated census JSON. (3) census test suite. (4) human-readable audit report. (5) the dev-order handoff. (6) SPRINTS.md GEN-5-A progress note (no closure; census JSON is the current-count authority). (7) this manifest.",
+    "why_not_redundant": "GEN-5's five sources currently have no single map of coverage/conflicts. This census is the evidence artifact a later migration needs; it introduces no runtime authority and cannot regress behavior because nothing imports it and no legacy source is touched."
+  },
+  "verification": {
+    "commands_run": [
+      "python -m pytest services/api/tests/test_gen5_instrument_library_census.py -q -> 14 passed",
+      "python services/api/scripts/build_instrument_library_census.py --check -> exit 0 (artifacts match sources)",
+      "ast scan of the utility -> imports only stdlib (json/ast/argparse/os/sys/datetime/pathlib); zero app.* imports",
+      "determinism: two --write runs differ only in generated_at (JSON); Markdown identical",
+      "git diff --name-only origin/main... -> no router/service/registry/model/vectorizer/legacy-source files",
+      "python scripts/ci/check_cbsp21_patch_input.py --base origin/main --head HEAD",
+      "python scripts/ci/check_cbsp21_gate.py --changed-files <changed-files>"
+    ]
+  },
+  "files": [
+    {
+      "path": "services/api/scripts/build_instrument_library_census.py",
+      "intent": "Stdlib-only read-only census utility; no app.* imports; deterministic artifacts.",
+      "scan_targets": ["services/api/scripts/build_instrument_library_census.py"],
+      "risk": "low",
+      "behavior_change": "none - standalone script, not imported by any router/service"
+    },
+    {
+      "path": "services/api/metrics/gen5_instrument_library_census.json",
+      "intent": "Generated deterministic census artifact (current-count authority for GEN-5).",
+      "scan_targets": ["services/api/metrics/gen5_instrument_library_census.json"],
+      "risk": "low",
+      "behavior_change": "none - generated data artifact"
+    },
+    {
+      "path": "services/api/tests/test_gen5_instrument_library_census.py",
+      "intent": "Focused tests for the census utility and artifact shape.",
+      "scan_targets": ["services/api/tests/test_gen5_instrument_library_census.py"],
+      "risk": "low",
+      "behavior_change": "none - tests only"
+    },
+    {
+      "path": "docs/audit/GEN5_INSTRUMENT_LIBRARY_SOURCE_CENSUS.md",
+      "intent": "Human-readable audit with conflicts, alias notes, and the canonical schema proposal.",
+      "scan_targets": ["docs/audit/GEN5_INSTRUMENT_LIBRARY_SOURCE_CENSUS.md"],
+      "risk": "low",
+      "behavior_change": "none - documentation only"
+    },
+    {
+      "path": "docs/handoffs/GEN5_DATA_CONSOLIDATION_SOURCE_CENSUS_DEV_ORDER.md",
+      "intent": "Dev-order / implementation guide for GEN-5-A.",
+      "scan_targets": ["docs/handoffs/GEN5_DATA_CONSOLIDATION_SOURCE_CENSUS_DEV_ORDER.md"],
+      "risk": "low",
+      "behavior_change": "none - documentation only"
+    },
+    {
+      "path": "SPRINTS.md",
+      "intent": "Add GEN-5-A progress note; do not close GEN-5; point counts to the census JSON.",
+      "scan_targets": ["SPRINTS.md"],
+      "risk": "low",
+      "behavior_change": "none - ledger only"
+    },
+    {
+      "path": ".cbsp21/patches/gen5-instrument-library-source-census.json",
+      "intent": "Per-PR CBSP21 manifest for this slice.",
+      "scan_targets": [".cbsp21/patches/gen5-instrument-library-source-census.json"],
+      "risk": "low",
+      "behavior_change": "none - CI/review metadata only"
+    }
+  ],
+  "architecture_scan": {
+    "scan_id": "AS-2026-07-06-GEN5-A-CENSUS",
+    "risk_summary": { "critical": 0, "high": 0, "medium": 0, "low": 0 },
+    "findings": [],
+    "acknowledged": false,
+    "acknowledgement_notes": ""
+  }
+}
