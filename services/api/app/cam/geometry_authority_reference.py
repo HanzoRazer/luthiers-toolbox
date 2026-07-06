@@ -39,6 +39,7 @@ from app.cam.geometry_authority_taxonomy import (
     layer_requires_source,
 )
 from app.cam.canonical_geometry_process_approval import (
+    ALLOWED_AUTHENTICATION_STATES,
     CanonicalProcessApprovalRecord,
     UNVERIFIED_PENDING_GOVERNANCE,
     validate_canonical_process_approval_record,
@@ -244,12 +245,13 @@ class GeometryAuthorityReference(BaseModel):
                     f"source_geometry_id or derived_from to be set"
                 )
 
-        if self.authentication != UNVERIFIED_PENDING_GOVERNANCE:
+        if self.authentication not in ALLOWED_AUTHENTICATION_STATES:
             raise ValueError(
-                f"authentication '{self.authentication}' is not permitted in PR-1; "
-                f"the only legal value is '{UNVERIFIED_PENDING_GOVERNANCE}'. "
-                "No authorized-approver anchor exists yet, so references cannot "
-                "claim verified canonical authority."
+                f"authentication '{self.authentication}' is not a permitted "
+                "authenticity state; legal values are "
+                f"{sorted(ALLOWED_AUTHENTICATION_STATES)}. The verified state is "
+                "minted only by the authorization anchor at approval-record "
+                "creation and inherited here; references cannot assert it directly."
             )
 
         return self

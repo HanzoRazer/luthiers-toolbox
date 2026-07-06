@@ -38,7 +38,7 @@ from app.cam.geometry_authority_taxonomy import (
 )
 from app.cam.geometry_authority_reference import GeometryAuthorityReference
 from app.cam.canonical_geometry_process_approval import (
-    UNVERIFIED_PENDING_GOVERNANCE,
+    ALLOWED_AUTHENTICATION_STATES,
     is_registered_canonical_process,
 )
 
@@ -383,13 +383,16 @@ def validate_canonical_process_authority(
             "and repo-owner/governance ratification are required before this "
             "metadata can back canonical authority."
         )
-    if reference.authentication != UNVERIFIED_PENDING_GOVERNANCE:
+    if reference.authentication not in ALLOWED_AUTHENTICATION_STATES:
         return False, (
             "Canonical reference carries unsupported authentication status "
-            f"'{reference.authentication}'; PR-1 permits only "
-            f"'{UNVERIFIED_PENDING_GOVERNANCE}' until the authorized-approver "
-            "anchor is ratified and implemented."
+            f"'{reference.authentication}'; permitted authenticity states are "
+            f"{sorted(ALLOWED_AUTHENTICATION_STATES)}. The verified state is minted "
+            "only by the authorization anchor at approval-record creation."
         )
+    # NOTE: both permitted states validate the same here. 'verified_governed_process'
+    # and the 'unverified_pending_governance' baseline are BOTH green — the baseline
+    # is the intentional fail-safe and is not downgraded to a warning in this PR.
     return True, None
 
 
