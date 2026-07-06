@@ -1,0 +1,93 @@
+{
+  "schema": "cbsp21_patch_input_v1",
+  "schema_version": "cbsp21_patch_input_v1",
+  "coverage_min": 0.95,
+  "patch_id": "CI_RED_016B_ENDPOINT_CONSUMER_MAP",
+  "title": "CI-RED-016-B: materialize endpoint consumer map",
+  "intent": "Turn CI-RED-016 from a raw 1181 static-router-decorator concern into a structured, reviewable consumer map. The change adds a deterministic utility that inventories the live mounted FastAPI surface, scans first-party consumer references, classifies endpoint lanes, and commits JSON/Markdown audit artifacts. It does not delete, rename, consolidate, add, remove, or re-baseline any endpoint.",
+  "change_type": "docs-tooling",
+  "behavior_change": "none - audit/tooling/docs only; runtime API behavior and CI ratchets are unchanged",
+  "risk_level": "low",
+  "scope": {
+    "paths_in_scope": [
+      ".cbsp21/patches/",
+      "SPRINTS.md",
+      "docs/audit/",
+      "docs/handoffs/",
+      "services/api/metrics/",
+      "services/api/scripts/",
+      "services/api/tests/"
+    ],
+    "files_expected_to_change": [
+      ".cbsp21/patches/ci-red-016b-endpoint-consumer-map.json",
+      "SPRINTS.md",
+      "docs/audit/CI_RED_016_ENDPOINT_CONSUMER_MAP.md",
+      "docs/handoffs/CI_RED_016B_ENDPOINT_CONSUMER_MAP_HANDOFF.md",
+      "services/api/metrics/endpoint_consumer_map.json",
+      "services/api/scripts/build_endpoint_consumer_map.py",
+      "services/api/tests/test_endpoint_consumer_map_builder.py"
+    ]
+  },
+  "diff_articulation": {
+    "what_changed": "Adds build_endpoint_consumer_map.py, focused unit tests, a generated machine-readable endpoint_consumer_map.json, a generated Markdown audit summary, and SPRINTS bookkeeping for CI-RED-016-B. The utility flattens FastAPI 0.137 _IncludedRouter route objects, cross-checks against app.openapi() operations, scans first-party text references, and classifies endpoint lanes plus primary consumer classes.",
+    "why_not_redundant": "Existing endpoint utilities only count decorators or compare static baseline drift. They do not answer which mounted endpoints have frontend, SDK, backend, test, CI, docs, or no first-party consumer evidence. CI-RED-016 needs that consumer map before any consolidation target can be chosen without broad route churn."
+  },
+  "verification": {
+    "commands_run": [
+      "python -m venv .venv using Python 3.11; pip install -r requirements.txt -r requirements-dev.txt",
+      "python scripts/build_endpoint_consumer_map.py -> mounted endpoint operations 1132, static decorator count 1181",
+      "pytest tests/test_endpoint_consumer_map_builder.py -q -> 6 passed"
+    ]
+  },
+  "files": [
+    {
+      "path": "services/api/scripts/build_endpoint_consumer_map.py",
+      "intent": "Deterministic endpoint consumer-map builder: live mounted endpoint inventory, first-party consumer scan, lane classification, JSON/Markdown output.",
+      "scan_targets": ["services/api/scripts/build_endpoint_consumer_map.py"],
+      "risk": "low",
+      "behavior_change": "none - standalone audit utility"
+    },
+    {
+      "path": "services/api/tests/test_endpoint_consumer_map_builder.py",
+      "intent": "Unit tests for endpoint literal extraction, parameterized path matching, consumer-file classification, _IncludedRouter flattening, lane classification, and protective no-consumer notes.",
+      "scan_targets": ["services/api/tests/test_endpoint_consumer_map_builder.py"],
+      "risk": "low",
+      "behavior_change": "none - tests only"
+    },
+    {
+      "path": "services/api/metrics/endpoint_consumer_map.json",
+      "intent": "Generated machine-readable CI-RED-016-B endpoint consumer map.",
+      "scan_targets": ["services/api/metrics/endpoint_consumer_map.json"],
+      "risk": "low",
+      "behavior_change": "none - generated audit artifact"
+    },
+    {
+      "path": "docs/audit/CI_RED_016_ENDPOINT_CONSUMER_MAP.md",
+      "intent": "Generated human-readable summary of endpoint lanes, consumer classes, mounted/static gap, and next-step guidance.",
+      "scan_targets": ["docs/audit/CI_RED_016_ENDPOINT_CONSUMER_MAP.md"],
+      "risk": "low",
+      "behavior_change": "none - documentation only"
+    },
+    {
+      "path": "SPRINTS.md",
+      "intent": "Record CI-RED-016-B completion while keeping CI-RED-016 open for future consolidation work.",
+      "scan_targets": ["SPRINTS.md"],
+      "risk": "low",
+      "behavior_change": "none - ledger only"
+    },
+    {
+      "path": "docs/handoffs/CI_RED_016B_ENDPOINT_CONSUMER_MAP_HANDOFF.md",
+      "intent": "Dev-ready handoff that scoped the endpoint consumer-map pass and its boundaries.",
+      "scan_targets": ["docs/handoffs/CI_RED_016B_ENDPOINT_CONSUMER_MAP_HANDOFF.md"],
+      "risk": "low",
+      "behavior_change": "none - handoff only"
+    }
+  ],
+  "architecture_scan": {
+    "scan_id": "AS-2026-07-05-CI-RED-016B-ENDPOINT-CONSUMER-MAP",
+    "risk_summary": { "critical": 0, "high": 0, "medium": 0, "low": 0 },
+    "findings": [],
+    "acknowledged": false,
+    "acknowledgement_notes": ""
+  }
+}
