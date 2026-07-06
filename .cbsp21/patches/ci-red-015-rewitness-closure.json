@@ -1,0 +1,69 @@
+{
+  "schema": "cbsp21_patch_input_v1",
+  "schema_version": "cbsp21_patch_input_v1",
+  "coverage_min": 0.95,
+  "patch_id": "CI_RED_015_REWITNESS_CLOSURE",
+  "title": "docs(ci): CI-RED-015 re-witness closure — 43 stale failures proven resolved on main",
+  "intent": "Reconcile the CI-RED-015 ledger to reality. The row recorded 43 failing tests from a 2026-06-16 snapshot; the clusters were closed piecemeal since. Re-witness (not re-implement): recover the exact 43 from the stale run's failed-job log, prove each runs and passes on main 13aabe4f with per-cluster anti-suppression checks, and close 015 + 015-H. Route endpoint-consolidation debt to CI-RED-016 and canonical-authority migration to GOV-CONVERGE-007. No production code changes.",
+  "change_type": "docs",
+  "behavior_change": "none",
+  "risk_level": "low",
+  "scope": {
+    "paths_in_scope": [
+      "SPRINTS.md",
+      "docs/handoffs/CI_RED_015_REWITNESS_CLOSURE.md",
+      ".cbsp21/patches/ci-red-015-rewitness-closure.json"
+    ],
+    "files_expected_to_change": [
+      "SPRINTS.md",
+      "docs/handoffs/CI_RED_015_REWITNESS_CLOSURE.md",
+      ".cbsp21/patches/ci-red-015-rewitness-closure.json"
+    ]
+  },
+  "diff_articulation": {
+    "what_changed": "(1) SPRINTS.md: CI-RED-015 top row OPEN->CLOSED with the re-witness evidence and residual routing; 015-H sub-row OPEN->CLOSED with the geometry-authority resolution and the C2 caveat marked resolved. (2) docs/handoffs/CI_RED_015_REWITNESS_CLOSURE.md: full per-cluster resolution table, CI + local evidence pinned to SHA 13aabe4f, and the anti-suppression proof. (3) this per-PR CBSP21 manifest.",
+    "why_not_redundant": "The ledger said 43 failed while CI shows green; without this reconciliation the largest stale red stays on the board. Closure is witnessed per cluster (each of the 43 runs and passes, none deleted/skipped/xfail'd) rather than inferred from suite-green, so it cannot be reopened by a hidden suppression."
+  },
+  "verification": {
+    "commands_run": [
+      "gh run view 27630309072 --log-failed -> recovered exactly 43 FAILED node IDs @ c41fc656",
+      "clean worktree off origin/main (13aabe4f): pytest <17 files> -rsxX -v -> 464 passed, 1 unrelated env-skip, 0 failed, 0 errors",
+      "all 43 method defs present in current source (0 renamed-away); test_solve_all_supported_specs still parametrized over 4 specs; test_registered_operation_works PASSED (conditional skip did not fire)",
+      "static diff c41fc656..13aabe4f of all 17 test files: no deletions, no new blanket suppression",
+      "aggregate CI on 13aabe4f: Core CI (Consolidated) run 28755048990 success + API Tests run 28755048968 success",
+      "python -m json.tool .cbsp21/patches/ci-red-015-rewitness-closure.json",
+      "python scripts/ci/check_cbsp21_patch_input.py --base origin/main --head HEAD",
+      "python scripts/ci/check_cbsp21_gate.py --changed-files SPRINTS.md docs/handoffs/CI_RED_015_REWITNESS_CLOSURE.md .cbsp21/patches/ci-red-015-rewitness-closure.json"
+    ]
+  },
+  "files": [
+    {
+      "path": "SPRINTS.md",
+      "intent": "Close CI-RED-015 and 015-H by re-witness; route residuals to 016 and GOV-CONVERGE-007.",
+      "scan_targets": ["SPRINTS.md"],
+      "risk": "low",
+      "behavior_change": "none - ledger only"
+    },
+    {
+      "path": "docs/handoffs/CI_RED_015_REWITNESS_CLOSURE.md",
+      "intent": "Durable per-cluster witness with SHA-pinned CI + local evidence and anti-suppression proof.",
+      "scan_targets": ["docs/handoffs/CI_RED_015_REWITNESS_CLOSURE.md"],
+      "risk": "low",
+      "behavior_change": "none - documentation only"
+    },
+    {
+      "path": ".cbsp21/patches/ci-red-015-rewitness-closure.json",
+      "intent": "Per-PR CBSP21 manifest declaring the ledger-closure patch.",
+      "scan_targets": [".cbsp21/patches/ci-red-015-rewitness-closure.json"],
+      "risk": "low",
+      "behavior_change": "none - CI/review metadata only"
+    }
+  ],
+  "architecture_scan": {
+    "scan_id": "AS-2026-07-05-CI-RED-015-REWITNESS",
+    "risk_summary": { "critical": 0, "high": 0, "medium": 0, "low": 0 },
+    "findings": [],
+    "acknowledged": false,
+    "acknowledgement_notes": ""
+  }
+}
