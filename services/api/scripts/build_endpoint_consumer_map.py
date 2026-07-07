@@ -30,8 +30,31 @@ DEFAULT_JSON_OUT = Path("metrics/endpoint_consumer_map.json")
 DEFAULT_MARKDOWN_OUT = Path("../../docs/audit/CI_RED_016_ENDPOINT_CONSUMER_MAP.md")
 STATIC_AUDIT_PATH = Path("metrics/endpoint_audit_current.json")
 
+# Mounted API roots recognized as endpoint references. `/exports` is the legacy
+# DXF compatibility surface (app.routers.legacy_dxf_exports_router); it is mounted
+# without an `/api` prefix, so it must be listed explicitly or its consumers stay
+# invisible to the scan (CI-RED-016-C).
+ENDPOINT_ROOTS = ("api", "health", "ws", "instrument", "exports")
+_ENDPOINT_ROOTS_ALT = "|".join(ENDPOINT_ROOTS)
+
+# Root-relative literal: the path immediately follows the opening quote, e.g.
+#   "/api/cam/jobs/123"   `/api/rmos/runs/${runId}`   '/health'   "/exports/polyline_dxf"
 ENDPOINT_LITERAL_RE = re.compile(
-    r"""(?P<quote>["'`])(?P<path>/(?:api|health|ws|instrument)[^"'`\s)]*)(?P=quote)"""
+    rf"""(?P<quote>["'`])(?P<path>/(?:{_ENDPOINT_ROOTS_ALT})[^"'`\s)]*)(?P=quote)"""
+)
+
+# Template-base suffix: a static path that follows an interpolated base inside a
+# template literal, e.g. `${API_BASE}/exports/polyline_dxf`. Only the static suffix
+# is captured; matching stops before any further interpolation (`$`) or the closing
+# quote, so a variable base URL still counts as first-party consumer evidence.
+#
+# CI-RED-016-C deliberately scopes this to the legacy `/exports` surface only. The
+# same template-base blind spot exists for `/api` routes, but recognizing those here
+# would reclassify ~13 unrelated `/api` endpoints (real, but off-topic) and widen this
+# calibration PR beyond the legacy export cluster. Generalizing to all ENDPOINT_ROOTS
+# is a tracked follow-up (CI-RED-016 consumer-map improvement), not this slice.
+ENDPOINT_TEMPLATE_SUFFIX_RE = re.compile(
+    r"""\}(?P<path>/exports[^"'`\s)$]*)"""
 )
 
 CONSUMER_ROOTS = (
@@ -327,7 +350,9 @@ def collect_endpoint_records(app: Any) -> tuple[list[EndpointRecord], dict[str, 
 
 
 def extract_endpoint_literals(text: str) -> list[str]:
-    return sorted({match.group("path").rstrip(",.;") for match in ENDPOINT_LITERAL_RE.finditer(text)})
+    literals = {match.group("path").rstrip(",.;") for match in ENDPOINT_LITERAL_RE.finditer(text)}
+    literals |= {match.group("path").rstrip(",.;") for match in ENDPOINT_TEMPLATE_SUFFIX_RE.finditer(text)}
+    return sorted(literals)
 
 
 def classify_consumer_file(path: Path) -> str:
@@ -475,8 +500,15 @@ def build_payload(records: list[EndpointRecord], stats: dict[str, int]) -> dict[
         "methodology": {
             "source_of_truth": "FastAPI app.routes _IncludedRouter flattening, cross-checked against app.openapi() operations",
             "consumer_scan_roots": [path.as_posix() for path in CONSUMER_ROOTS],
+            "endpoint_reference_roots": ["/" + root for root in ENDPOINT_ROOTS],
             "consumer_scan_limitations": [
-                "String literal and parameter-prefix matching only; runtime analytics and generated clients are not inferred.",
+                "String-literal and parameter-prefix matching over the mounted API roots "
+                + ", ".join("/" + root for root in ENDPOINT_ROOTS)
+                + ". Root-relative literals (\"/exports/polyline_dxf\") are recognized for all "
+                "of these roots; template-base suffixes behind an interpolated base "
+                "(`${API_BASE}/exports/polyline_dxf`) are recognized for the legacy /exports "
+                "surface only (CI-RED-016-C). Generalizing template-base matching to /api routes "
+                "is a tracked follow-up. Runtime analytics and generated clients are not inferred.",
                 "No first-party consumer found is not a deletion verdict.",
             ],
         },
@@ -584,6 +616,7 @@ def render_markdown(payload: dict[str, Any]) -> str:
             "- Source of truth is the live mounted FastAPI surface. The utility flattens FastAPI 0.137 `_IncludedRouter` route objects and cross-checks the result against `app.openapi()` operations.",
             "- Static decorator count is retained as debt context only. It can differ from mounted behavior because it does not resolve router inclusion and generated schema behavior.",
             "- Consumer detection is a first-party string-literal and parameter-prefix scan. It is useful triage evidence, not runtime telemetry.",
+            "- Endpoint references are matched over the mounted API roots `/api`, `/health`, `/ws`, `/instrument`, and `/exports`. Root-relative literals (`\"/exports/polyline_dxf\"`) count as evidence for all of these roots. Template-base suffixes behind an interpolated base (`` `${API_BASE}/exports/polyline_dxf` ``) are recognized for the legacy `/exports` surface only — that compatibility surface was previously invisible to the scan (CI-RED-016-C). Generalizing template-base matching to `/api` routes is a tracked follow-up.",
             "- `no_first_party_consumer_found` is not a deletion verdict. Governance, audit, authority, provenance, and review endpoints are explicitly protected from being interpreted as dead just because they lack a frontend caller.",
             "",
             "## Endpoint Lanes",

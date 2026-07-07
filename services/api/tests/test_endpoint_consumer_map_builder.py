@@ -33,6 +33,47 @@ def test_extract_endpoint_literals_from_js_and_python_strings():
     ]
 
 
+def test_extract_legacy_exports_root_literal():
+    # CI-RED-016-C: the legacy DXF export surface is mounted without an /api
+    # prefix; a plain quoted literal must be recognized as an endpoint reference.
+    text = 'await fetch("/exports/polyline_dxf", { method: "POST" });'
+    assert builder.extract_endpoint_literals(text) == ["/exports/polyline_dxf"]
+
+
+def test_extract_template_base_exports_suffix():
+    # The frontend DXF helper (packages/client/src/utils/curvemath_dxf.ts) calls
+    # `${API_BASE}/exports/...`; the static suffix must be normalized to the mounted
+    # path, dropping the interpolated base expression, so a variable base URL still
+    # counts as first-party consumer evidence.
+    text = "\n".join(
+        [
+            "fetch(`${API_BASE}/exports/polyline_dxf`, { method: 'POST' });",
+            "fetch(`${API_BASE}/exports/biarc_dxf`, opts);",
+            "fetch(`${API_BASE}/exports/dxf/health`);",
+        ]
+    )
+    assert builder.extract_endpoint_literals(text) == [
+        "/exports/biarc_dxf",
+        "/exports/dxf/health",
+        "/exports/polyline_dxf",
+    ]
+
+
+def test_extract_template_base_scoped_to_exports_only():
+    # CI-RED-016-C scopes the template-base form to the legacy /exports surface.
+    # A template-base /api reference is intentionally NOT recognized here (that
+    # generalization is a separate follow-up), so this PR does not reclassify
+    # unrelated /api endpoints.
+    text = "fetch(`${API_BASE}/api/tooling/library/materials`);"
+    assert builder.extract_endpoint_literals(text) == []
+
+
+def test_extract_ignores_non_endpoint_root_assets():
+    # Conservative extractor: only mounted API roots count, not arbitrary assets.
+    text = 'const logo = "/assets/logo.svg"; const css = `${BASE}/static/app.css`;'
+    assert builder.extract_endpoint_literals(text) == []
+
+
 def test_parameterized_endpoint_matches_static_consumer_prefix():
     assert builder.reference_matches_endpoint(
         "/api/cam/jobs/123",

@@ -1,5 +1,5 @@
 {
-  "base_commit": "706f910cb6c8c62e897ee56557ca52fe5d9c4df6",
+  "base_commit": "ba3c8565035b1cb35ec988c89d0e9157381f0a0a",
   "endpoints": [
     {
       "consumers": [
@@ -1099,6 +1099,12 @@
         {
           "consumer_class": "ci_governance",
           "evidence": "string_literal_or_parameter_prefix",
+          "file": "services/api/scripts/build_endpoint_consumer_map.py",
+          "literal": "/api/rmos/runs/${runId}"
+        },
+        {
+          "consumer_class": "ci_governance",
+          "evidence": "string_literal_or_parameter_prefix",
           "file": "services/api/scripts/dump_and_assert_routes.py",
           "literal": "/api/rmos/runs"
         },
@@ -1605,7 +1611,7 @@
           "literal": "/api/_meta/routing-truth"
         }
       ],
-      "duplicate_route_count": 2,
+      "duplicate_route_count": 1,
       "key": "GET /api/_meta/routing-truth",
       "lane": "health_meta",
       "method": "GET",
@@ -1617,12 +1623,10 @@
         "routing_truth"
       ],
       "router_files": [
-        "services/api/app/governance/governance_consolidated_router.py",
-        "services/api/app/main.py"
+        "services/api/app/governance/governance_consolidated_router.py"
       ],
       "router_modules": [
-        "app.governance.governance_consolidated_router",
-        "app.main"
+        "app.governance.governance_consolidated_router"
       ],
       "tags": [
         "Governance",
@@ -8346,6 +8350,12 @@
           "evidence": "string_literal_or_parameter_prefix",
           "file": "packages/client/src/views/cam/risk_timeline_relief/composables/useRiskTimelineActions.ts",
           "literal": "/api/cam/jobs/risk_report"
+        },
+        {
+          "consumer_class": "ci_governance",
+          "evidence": "string_literal_or_parameter_prefix",
+          "file": "services/api/scripts/build_endpoint_consumer_map.py",
+          "literal": "/api/cam/jobs/123"
         },
         {
           "consumer_class": "test_only",
@@ -20416,6 +20426,12 @@
         {
           "consumer_class": "ci_governance",
           "evidence": "string_literal_or_parameter_prefix",
+          "file": "services/api/scripts/build_endpoint_consumer_map.py",
+          "literal": "/api/rmos/runs/${runId}"
+        },
+        {
+          "consumer_class": "ci_governance",
+          "evidence": "string_literal_or_parameter_prefix",
           "file": "services/api/scripts/dump_and_assert_routes.py",
           "literal": "/api/rmos/runs"
         },
@@ -21061,6 +21077,12 @@
         {
           "consumer_class": "ci_governance",
           "evidence": "string_literal_or_parameter_prefix",
+          "file": "services/api/scripts/build_endpoint_consumer_map.py",
+          "literal": "/api/rmos/runs/${runId}"
+        },
+        {
+          "consumer_class": "ci_governance",
+          "evidence": "string_literal_or_parameter_prefix",
           "file": "services/api/scripts/dump_and_assert_routes.py",
           "literal": "/api/rmos/runs"
         },
@@ -21473,6 +21495,12 @@
           "evidence": "string_literal_or_parameter_prefix",
           "file": "services/api/scripts/audit_wire_urls.py",
           "literal": "/api/rmos/runs"
+        },
+        {
+          "consumer_class": "ci_governance",
+          "evidence": "string_literal_or_parameter_prefix",
+          "file": "services/api/scripts/build_endpoint_consumer_map.py",
+          "literal": "/api/rmos/runs/${runId}"
         },
         {
           "consumer_class": "ci_governance",
@@ -21893,6 +21921,12 @@
         {
           "consumer_class": "ci_governance",
           "evidence": "string_literal_or_parameter_prefix",
+          "file": "services/api/scripts/build_endpoint_consumer_map.py",
+          "literal": "/api/rmos/runs/${runId}"
+        },
+        {
+          "consumer_class": "ci_governance",
+          "evidence": "string_literal_or_parameter_prefix",
           "file": "services/api/scripts/dump_and_assert_routes.py",
           "literal": "/api/rmos/runs"
         },
@@ -22305,6 +22339,12 @@
           "evidence": "string_literal_or_parameter_prefix",
           "file": "services/api/scripts/audit_wire_urls.py",
           "literal": "/api/rmos/runs"
+        },
+        {
+          "consumer_class": "ci_governance",
+          "evidence": "string_literal_or_parameter_prefix",
+          "file": "services/api/scripts/build_endpoint_consumer_map.py",
+          "literal": "/api/rmos/runs/${runId}"
         },
         {
           "consumer_class": "ci_governance",
@@ -22725,6 +22765,12 @@
         {
           "consumer_class": "ci_governance",
           "evidence": "string_literal_or_parameter_prefix",
+          "file": "services/api/scripts/build_endpoint_consumer_map.py",
+          "literal": "/api/rmos/runs/${runId}"
+        },
+        {
+          "consumer_class": "ci_governance",
+          "evidence": "string_literal_or_parameter_prefix",
           "file": "services/api/scripts/dump_and_assert_routes.py",
           "literal": "/api/rmos/runs"
         },
@@ -23137,6 +23183,12 @@
           "evidence": "string_literal_or_parameter_prefix",
           "file": "services/api/scripts/audit_wire_urls.py",
           "literal": "/api/rmos/runs"
+        },
+        {
+          "consumer_class": "ci_governance",
+          "evidence": "string_literal_or_parameter_prefix",
+          "file": "services/api/scripts/build_endpoint_consumer_map.py",
+          "literal": "/api/rmos/runs/${runId}"
         },
         {
           "consumer_class": "ci_governance",
@@ -23557,6 +23609,12 @@
         {
           "consumer_class": "ci_governance",
           "evidence": "string_literal_or_parameter_prefix",
+          "file": "services/api/scripts/build_endpoint_consumer_map.py",
+          "literal": "/api/rmos/runs/${runId}"
+        },
+        {
+          "consumer_class": "ci_governance",
+          "evidence": "string_literal_or_parameter_prefix",
           "file": "services/api/scripts/dump_and_assert_routes.py",
           "literal": "/api/rmos/runs"
         },
@@ -23969,6 +24027,12 @@
           "evidence": "string_literal_or_parameter_prefix",
           "file": "services/api/scripts/audit_wire_urls.py",
           "literal": "/api/rmos/runs"
+        },
+        {
+          "consumer_class": "ci_governance",
+          "evidence": "string_literal_or_parameter_prefix",
+          "file": "services/api/scripts/build_endpoint_consumer_map.py",
+          "literal": "/api/rmos/runs/${runId}"
         },
         {
           "consumer_class": "ci_governance",
@@ -24389,6 +24453,12 @@
         {
           "consumer_class": "ci_governance",
           "evidence": "string_literal_or_parameter_prefix",
+          "file": "services/api/scripts/build_endpoint_consumer_map.py",
+          "literal": "/api/rmos/runs/${runId}"
+        },
+        {
+          "consumer_class": "ci_governance",
+          "evidence": "string_literal_or_parameter_prefix",
           "file": "services/api/scripts/dump_and_assert_routes.py",
           "literal": "/api/rmos/runs"
         },
@@ -24801,6 +24871,12 @@
           "evidence": "string_literal_or_parameter_prefix",
           "file": "services/api/scripts/audit_wire_urls.py",
           "literal": "/api/rmos/runs"
+        },
+        {
+          "consumer_class": "ci_governance",
+          "evidence": "string_literal_or_parameter_prefix",
+          "file": "services/api/scripts/build_endpoint_consumer_map.py",
+          "literal": "/api/rmos/runs/${runId}"
         },
         {
           "consumer_class": "ci_governance",
@@ -25221,6 +25297,12 @@
         {
           "consumer_class": "ci_governance",
           "evidence": "string_literal_or_parameter_prefix",
+          "file": "services/api/scripts/build_endpoint_consumer_map.py",
+          "literal": "/api/rmos/runs/${runId}"
+        },
+        {
+          "consumer_class": "ci_governance",
+          "evidence": "string_literal_or_parameter_prefix",
           "file": "services/api/scripts/dump_and_assert_routes.py",
           "literal": "/api/rmos/runs"
         },
@@ -25633,6 +25715,12 @@
           "evidence": "string_literal_or_parameter_prefix",
           "file": "services/api/scripts/audit_wire_urls.py",
           "literal": "/api/rmos/runs"
+        },
+        {
+          "consumer_class": "ci_governance",
+          "evidence": "string_literal_or_parameter_prefix",
+          "file": "services/api/scripts/build_endpoint_consumer_map.py",
+          "literal": "/api/rmos/runs/${runId}"
         },
         {
           "consumer_class": "ci_governance",
@@ -26053,6 +26141,12 @@
         {
           "consumer_class": "ci_governance",
           "evidence": "string_literal_or_parameter_prefix",
+          "file": "services/api/scripts/build_endpoint_consumer_map.py",
+          "literal": "/api/rmos/runs/${runId}"
+        },
+        {
+          "consumer_class": "ci_governance",
+          "evidence": "string_literal_or_parameter_prefix",
           "file": "services/api/scripts/dump_and_assert_routes.py",
           "literal": "/api/rmos/runs"
         },
@@ -26465,6 +26559,12 @@
           "evidence": "string_literal_or_parameter_prefix",
           "file": "services/api/scripts/audit_wire_urls.py",
           "literal": "/api/rmos/runs"
+        },
+        {
+          "consumer_class": "ci_governance",
+          "evidence": "string_literal_or_parameter_prefix",
+          "file": "services/api/scripts/build_endpoint_consumer_map.py",
+          "literal": "/api/rmos/runs/${runId}"
         },
         {
           "consumer_class": "ci_governance",
@@ -30859,17 +30959,28 @@
       ]
     },
     {
-      "consumers": [],
+      "consumers": [
+        {
+          "consumer_class": "frontend_product",
+          "evidence": "string_literal_or_parameter_prefix",
+          "file": "packages/client/src/utils/curvemath_dxf.ts",
+          "literal": "/exports/dxf/health"
+        },
+        {
+          "consumer_class": "test_only",
+          "evidence": "string_literal_or_parameter_prefix",
+          "file": "services/api/tests/test_endpoint_consumer_map_builder.py",
+          "literal": "/exports/dxf/health"
+        }
+      ],
       "duplicate_route_count": 1,
       "key": "GET /exports/dxf/health",
       "lane": "legacy_migration",
       "method": "GET",
-      "notes": [
-        "No first-party string consumer was found by this heuristic scan; this is a review target, not a deletion verdict."
-      ],
+      "notes": [],
       "operation_id": "dxf_health_exports_dxf_health_get",
       "path": "/exports/dxf/health",
-      "primary_consumer_class": "no_first_party_consumer_found",
+      "primary_consumer_class": "frontend_product",
       "route_names": [
         "dxf_health"
       ],
@@ -30986,6 +31097,12 @@
           "evidence": "string_literal_or_parameter_prefix",
           "file": "docs/archive/2026/status/2026-03-28_REPOSITORY_HEALTH_EVALUATION.md",
           "literal": "/health/ready"
+        },
+        {
+          "consumer_class": "docs_only",
+          "evidence": "string_literal_or_parameter_prefix",
+          "file": "docs/audit/CI_RED_016_ENDPOINT_CONSUMER_MAP.md",
+          "literal": "/health"
         },
         {
           "consumer_class": "docs_only",
@@ -48196,6 +48313,12 @@
         {
           "consumer_class": "ci_governance",
           "evidence": "string_literal_or_parameter_prefix",
+          "file": "services/api/scripts/build_endpoint_consumer_map.py",
+          "literal": "/api/rmos/runs/${runId}"
+        },
+        {
+          "consumer_class": "ci_governance",
+          "evidence": "string_literal_or_parameter_prefix",
           "file": "services/api/scripts/dump_and_assert_routes.py",
           "literal": "/api/rmos/runs"
         },
@@ -48612,6 +48735,12 @@
         {
           "consumer_class": "ci_governance",
           "evidence": "string_literal_or_parameter_prefix",
+          "file": "services/api/scripts/build_endpoint_consumer_map.py",
+          "literal": "/api/rmos/runs/${runId}"
+        },
+        {
+          "consumer_class": "ci_governance",
+          "evidence": "string_literal_or_parameter_prefix",
           "file": "services/api/scripts/dump_and_assert_routes.py",
           "literal": "/api/rmos/runs"
         },
@@ -49023,6 +49152,12 @@
           "evidence": "string_literal_or_parameter_prefix",
           "file": "services/api/scripts/audit_wire_urls.py",
           "literal": "/api/rmos/runs"
+        },
+        {
+          "consumer_class": "ci_governance",
+          "evidence": "string_literal_or_parameter_prefix",
+          "file": "services/api/scripts/build_endpoint_consumer_map.py",
+          "literal": "/api/rmos/runs/${runId}"
         },
         {
           "consumer_class": "ci_governance",
@@ -49443,6 +49578,12 @@
         {
           "consumer_class": "ci_governance",
           "evidence": "string_literal_or_parameter_prefix",
+          "file": "services/api/scripts/build_endpoint_consumer_map.py",
+          "literal": "/api/rmos/runs/${runId}"
+        },
+        {
+          "consumer_class": "ci_governance",
+          "evidence": "string_literal_or_parameter_prefix",
           "file": "services/api/scripts/dump_and_assert_routes.py",
           "literal": "/api/rmos/runs"
         },
@@ -49858,6 +49999,12 @@
         {
           "consumer_class": "ci_governance",
           "evidence": "string_literal_or_parameter_prefix",
+          "file": "services/api/scripts/build_endpoint_consumer_map.py",
+          "literal": "/api/rmos/runs/${runId}"
+        },
+        {
+          "consumer_class": "ci_governance",
+          "evidence": "string_literal_or_parameter_prefix",
           "file": "services/api/scripts/dump_and_assert_routes.py",
           "literal": "/api/rmos/runs"
         },
@@ -50269,6 +50416,12 @@
           "evidence": "string_literal_or_parameter_prefix",
           "file": "services/api/scripts/audit_wire_urls.py",
           "literal": "/api/rmos/runs"
+        },
+        {
+          "consumer_class": "ci_governance",
+          "evidence": "string_literal_or_parameter_prefix",
+          "file": "services/api/scripts/build_endpoint_consumer_map.py",
+          "literal": "/api/rmos/runs/${runId}"
         },
         {
           "consumer_class": "ci_governance",
@@ -50689,6 +50842,12 @@
         {
           "consumer_class": "ci_governance",
           "evidence": "string_literal_or_parameter_prefix",
+          "file": "services/api/scripts/build_endpoint_consumer_map.py",
+          "literal": "/api/rmos/runs/${runId}"
+        },
+        {
+          "consumer_class": "ci_governance",
+          "evidence": "string_literal_or_parameter_prefix",
           "file": "services/api/scripts/dump_and_assert_routes.py",
           "literal": "/api/rmos/runs"
         },
@@ -51100,6 +51259,12 @@
           "evidence": "string_literal_or_parameter_prefix",
           "file": "services/api/scripts/audit_wire_urls.py",
           "literal": "/api/rmos/runs"
+        },
+        {
+          "consumer_class": "ci_governance",
+          "evidence": "string_literal_or_parameter_prefix",
+          "file": "services/api/scripts/build_endpoint_consumer_map.py",
+          "literal": "/api/rmos/runs/${runId}"
         },
         {
           "consumer_class": "ci_governance",
@@ -51520,6 +51685,12 @@
         {
           "consumer_class": "ci_governance",
           "evidence": "string_literal_or_parameter_prefix",
+          "file": "services/api/scripts/build_endpoint_consumer_map.py",
+          "literal": "/api/rmos/runs/${runId}"
+        },
+        {
+          "consumer_class": "ci_governance",
+          "evidence": "string_literal_or_parameter_prefix",
           "file": "services/api/scripts/dump_and_assert_routes.py",
           "literal": "/api/rmos/runs"
         },
@@ -51932,6 +52103,12 @@
           "evidence": "string_literal_or_parameter_prefix",
           "file": "services/api/scripts/audit_wire_urls.py",
           "literal": "/api/rmos/runs"
+        },
+        {
+          "consumer_class": "ci_governance",
+          "evidence": "string_literal_or_parameter_prefix",
+          "file": "services/api/scripts/build_endpoint_consumer_map.py",
+          "literal": "/api/rmos/runs/${runId}"
         },
         {
           "consumer_class": "ci_governance",
@@ -52352,6 +52529,12 @@
         {
           "consumer_class": "ci_governance",
           "evidence": "string_literal_or_parameter_prefix",
+          "file": "services/api/scripts/build_endpoint_consumer_map.py",
+          "literal": "/api/rmos/runs/${runId}"
+        },
+        {
+          "consumer_class": "ci_governance",
+          "evidence": "string_literal_or_parameter_prefix",
           "file": "services/api/scripts/dump_and_assert_routes.py",
           "literal": "/api/rmos/runs"
         },
@@ -52764,6 +52947,12 @@
           "evidence": "string_literal_or_parameter_prefix",
           "file": "services/api/scripts/audit_wire_urls.py",
           "literal": "/api/rmos/runs"
+        },
+        {
+          "consumer_class": "ci_governance",
+          "evidence": "string_literal_or_parameter_prefix",
+          "file": "services/api/scripts/build_endpoint_consumer_map.py",
+          "literal": "/api/rmos/runs/${runId}"
         },
         {
           "consumer_class": "ci_governance",
@@ -53184,6 +53373,12 @@
         {
           "consumer_class": "ci_governance",
           "evidence": "string_literal_or_parameter_prefix",
+          "file": "services/api/scripts/build_endpoint_consumer_map.py",
+          "literal": "/api/rmos/runs/${runId}"
+        },
+        {
+          "consumer_class": "ci_governance",
+          "evidence": "string_literal_or_parameter_prefix",
           "file": "services/api/scripts/dump_and_assert_routes.py",
           "literal": "/api/rmos/runs"
         },
@@ -53596,6 +53791,12 @@
           "evidence": "string_literal_or_parameter_prefix",
           "file": "services/api/scripts/audit_wire_urls.py",
           "literal": "/api/rmos/runs"
+        },
+        {
+          "consumer_class": "ci_governance",
+          "evidence": "string_literal_or_parameter_prefix",
+          "file": "services/api/scripts/build_endpoint_consumer_map.py",
+          "literal": "/api/rmos/runs/${runId}"
         },
         {
           "consumer_class": "ci_governance",
@@ -54013,6 +54214,12 @@
           "evidence": "string_literal_or_parameter_prefix",
           "file": "services/api/scripts/audit_wire_urls.py",
           "literal": "/api/rmos/runs"
+        },
+        {
+          "consumer_class": "ci_governance",
+          "evidence": "string_literal_or_parameter_prefix",
+          "file": "services/api/scripts/build_endpoint_consumer_map.py",
+          "literal": "/api/rmos/runs/${runId}"
         },
         {
           "consumer_class": "ci_governance",
@@ -54845,7 +55052,7 @@
           "literal": "/api/saw/batch/approve"
         }
       ],
-      "duplicate_route_count": 2,
+      "duplicate_route_count": 1,
       "key": "POST /api/saw/batch/approve",
       "lane": "saw_lab",
       "method": "POST",
@@ -55334,7 +55541,7 @@
           "literal": "/api/saw/batch/plan"
         }
       ],
-      "duplicate_route_count": 2,
+      "duplicate_route_count": 1,
       "key": "POST /api/saw/batch/plan",
       "lane": "saw_lab",
       "method": "POST",
@@ -55395,7 +55602,7 @@
           "literal": "/api/saw/batch/spec"
         }
       ],
-      "duplicate_route_count": 2,
+      "duplicate_route_count": 1,
       "key": "POST /api/saw/batch/spec",
       "lane": "saw_lab",
       "method": "POST",
@@ -57522,17 +57729,34 @@
       ]
     },
     {
-      "consumers": [],
+      "consumers": [
+        {
+          "consumer_class": "docs_only",
+          "evidence": "string_literal_or_parameter_prefix",
+          "file": "docs/governance/EXPORT_PATH_MIGRATION_MATRIX.md",
+          "literal": "/exports/biarc_dxf"
+        },
+        {
+          "consumer_class": "frontend_product",
+          "evidence": "string_literal_or_parameter_prefix",
+          "file": "packages/client/src/utils/curvemath_dxf.ts",
+          "literal": "/exports/biarc_dxf"
+        },
+        {
+          "consumer_class": "test_only",
+          "evidence": "string_literal_or_parameter_prefix",
+          "file": "services/api/tests/test_endpoint_consumer_map_builder.py",
+          "literal": "/exports/biarc_dxf"
+        }
+      ],
       "duplicate_route_count": 1,
       "key": "POST /exports/biarc_dxf",
       "lane": "legacy_migration",
       "method": "POST",
-      "notes": [
-        "No first-party string consumer was found by this heuristic scan; this is a review target, not a deletion verdict."
-      ],
+      "notes": [],
       "operation_id": "export_biarc_dxf_exports_biarc_dxf_post",
       "path": "/exports/biarc_dxf",
-      "primary_consumer_class": "no_first_party_consumer_found",
+      "primary_consumer_class": "frontend_product",
       "route_names": [
         "export_biarc_dxf"
       ],
@@ -57549,17 +57773,46 @@
       ]
     },
     {
-      "consumers": [],
+      "consumers": [
+        {
+          "consumer_class": "docs_only",
+          "evidence": "string_literal_or_parameter_prefix",
+          "file": "docs/audit/CI_RED_016_ENDPOINT_CONSUMER_MAP.md",
+          "literal": "/exports/polyline_dxf"
+        },
+        {
+          "consumer_class": "docs_only",
+          "evidence": "string_literal_or_parameter_prefix",
+          "file": "docs/governance/EXPORT_PATH_MIGRATION_MATRIX.md",
+          "literal": "/exports/polyline_dxf"
+        },
+        {
+          "consumer_class": "frontend_product",
+          "evidence": "string_literal_or_parameter_prefix",
+          "file": "packages/client/src/utils/curvemath_dxf.ts",
+          "literal": "/exports/polyline_dxf"
+        },
+        {
+          "consumer_class": "ci_governance",
+          "evidence": "string_literal_or_parameter_prefix",
+          "file": "services/api/scripts/build_endpoint_consumer_map.py",
+          "literal": "/exports/polyline_dxf"
+        },
+        {
+          "consumer_class": "test_only",
+          "evidence": "string_literal_or_parameter_prefix",
+          "file": "services/api/tests/test_endpoint_consumer_map_builder.py",
+          "literal": "/exports/polyline_dxf"
+        }
+      ],
       "duplicate_route_count": 1,
       "key": "POST /exports/polyline_dxf",
       "lane": "legacy_migration",
       "method": "POST",
-      "notes": [
-        "No first-party string consumer was found by this heuristic scan; this is a review target, not a deletion verdict."
-      ],
+      "notes": [],
       "operation_id": "export_polyline_dxf_exports_polyline_dxf_post",
       "path": "/exports/polyline_dxf",
-      "primary_consumer_class": "no_first_party_consumer_found",
+      "primary_consumer_class": "frontend_product",
       "route_names": [
         "export_polyline_dxf"
       ],
@@ -58345,10 +58598,10 @@
       ]
     }
   ],
-  "generated_at_utc": "2026-07-06T04:06:10.301764Z",
+  "generated_at_utc": "2026-07-07T08:27:03.259321Z",
   "methodology": {
     "consumer_scan_limitations": [
-      "String literal and parameter-prefix matching only; runtime analytics and generated clients are not inferred.",
+      "String-literal and parameter-prefix matching over the mounted API roots /api, /health, /ws, /instrument, /exports. Root-relative literals (\"/exports/polyline_dxf\") are recognized for all of these roots; template-base suffixes behind an interpolated base (`${API_BASE}/exports/polyline_dxf`) are recognized for the legacy /exports surface only (CI-RED-016-C). Generalizing template-base matching to /api routes is a tracked follow-up. Runtime analytics and generated clients are not inferred.",
       "No first-party consumer found is not a deletion verdict."
     ],
     "consumer_scan_roots": [
@@ -58358,6 +58611,13 @@
       "app/ci",
       "../../docs",
       "../../.github/workflows"
+    ],
+    "endpoint_reference_roots": [
+      "/api",
+      "/health",
+      "/ws",
+      "/instrument",
+      "/exports"
     ],
     "source_of_truth": "FastAPI app.routes _IncludedRouter flattening, cross-checked against app.openapi() operations"
   },
@@ -58373,9 +58633,9 @@
     "consumer_class_counts": {
       "ci_governance": 10,
       "docs_only": 36,
-      "frontend_product": 175,
+      "frontend_product": 178,
       "frontend_sdk": 4,
-      "no_first_party_consumer_found": 293,
+      "no_first_party_consumer_found": 290,
       "test_only": 614
     },
     "lane_counts": {
@@ -58412,10 +58672,10 @@
     "openapi_missing_from_route_objects": 2,
     "openapi_operation_count": 1132,
     "openapi_path_count": 1073,
-    "route_object_entry_count": 1153,
+    "route_object_entry_count": 1149,
     "route_object_missing_from_openapi": 8,
     "route_object_unique_endpoint_count": 1138,
-    "unmatched_consumer_literal_count": 555
+    "unmatched_consumer_literal_count": 568
   },
   "unmatched_consumer_literals": [
     {
@@ -59555,6 +59815,11 @@
     },
     {
       "consumer_class": "docs_only",
+      "file": "docs/archive/recovered/__RECOVERED__/I_experimental/jig_exports.py",
+      "literal": "/exports"
+    },
+    {
+      "consumer_class": "docs_only",
       "file": "docs/archive/recovered/__RECOVERED__/J_reference_archive_samples/rmos_ai_constraint_profiles.yaml",
       "literal": "/api"
     },
@@ -59592,6 +59857,26 @@
       "consumer_class": "docs_only",
       "file": "docs/audit/BACKLOG_INVENTORY_2026-06-09.md",
       "literal": "/api/rmos/acoustics/ingest-events"
+    },
+    {
+      "consumer_class": "docs_only",
+      "file": "docs/audit/CI_RED_016_ENDPOINT_CONSUMER_MAP.md",
+      "literal": "/api"
+    },
+    {
+      "consumer_class": "docs_only",
+      "file": "docs/audit/CI_RED_016_ENDPOINT_CONSUMER_MAP.md",
+      "literal": "/exports"
+    },
+    {
+      "consumer_class": "docs_only",
+      "file": "docs/audit/CI_RED_016_ENDPOINT_CONSUMER_MAP.md",
+      "literal": "/instrument"
+    },
+    {
+      "consumer_class": "docs_only",
+      "file": "docs/audit/CI_RED_016_ENDPOINT_CONSUMER_MAP.md",
+      "literal": "/ws"
     },
     {
       "consumer_class": "docs_only",
@@ -59757,6 +60042,11 @@
       "consumer_class": "docs_only",
       "file": "docs/governance/FENCE_ARCHITECTURE.md",
       "literal": "/api/saw/batch/*"
+    },
+    {
+      "consumer_class": "docs_only",
+      "file": "docs/governance/LEGACY_EXPORT_EXEMPTION_POLICY.md",
+      "literal": "/exports/*"
     },
     {
       "consumer_class": "docs_only",
@@ -60600,6 +60890,16 @@
     },
     {
       "consumer_class": "frontend_product",
+      "file": "packages/client/src/utils/api.ts",
+      "literal": "/exports/${exportId}/downloaded"
+    },
+    {
+      "consumer_class": "frontend_product",
+      "file": "packages/client/src/utils/api.ts",
+      "literal": "/exports/list"
+    },
+    {
+      "consumer_class": "frontend_product",
       "file": "packages/client/src/utils/curvemath.ts",
       "literal": "/api"
     },
@@ -60776,6 +61076,11 @@
     {
       "consumer_class": "ci_governance",
       "file": "services/api/scripts/build_endpoint_consumer_map.py",
+      "literal": "/api"
+    },
+    {
+      "consumer_class": "ci_governance",
+      "file": "services/api/scripts/build_endpoint_consumer_map.py",
       "literal": "/api/_meta"
     },
     {
@@ -60821,7 +61126,22 @@
     {
       "consumer_class": "ci_governance",
       "file": "services/api/scripts/build_endpoint_consumer_map.py",
+      "literal": "/exports"
+    },
+    {
+      "consumer_class": "ci_governance",
+      "file": "services/api/scripts/build_endpoint_consumer_map.py",
+      "literal": "/exports/polyline_dxf\\"
+    },
+    {
+      "consumer_class": "ci_governance",
+      "file": "services/api/scripts/build_endpoint_consumer_map.py",
       "literal": "/instrument"
+    },
+    {
+      "consumer_class": "ci_governance",
+      "file": "services/api/scripts/build_endpoint_consumer_map.py",
+      "literal": "/ws"
     },
     {
       "consumer_class": "ci_governance",
@@ -61057,6 +61377,11 @@
       "consumer_class": "test_only",
       "file": "services/api/tests/test_endpoint_consumer_map_builder.py",
       "literal": "/api/woodworking/bandsaw/kerf"
+    },
+    {
+      "consumer_class": "test_only",
+      "file": "services/api/tests/test_endpoint_consumer_map_builder.py",
+      "literal": "/exports/"
     },
     {
       "consumer_class": "test_only",
