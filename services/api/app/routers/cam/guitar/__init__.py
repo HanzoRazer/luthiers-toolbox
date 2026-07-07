@@ -57,7 +57,9 @@ from .body_gcode_router import router as body_gcode_router
 from .acoustic_cam_router import router as acoustic_cam_router
 
 # Dynamic registry router (all 19 models)
-from .registry_cam_router import router as registry_router
+# WP-001: aliased with a domain-specific name to disambiguate from the instruments
+# registry router (was `registry_router`, which collided across packages on import).
+from .registry_cam_router import router as cam_registry_router
 
 router = APIRouter(tags=["Guitar", "CAM"])
 
@@ -72,6 +74,6 @@ router.include_router(acoustic_cam_router, prefix="/acoustic", tags=["Acoustic",
 
 # Mount registry router LAST — catches all other {model_id} patterns.
 # This serves CAM stubs for ANY model in the instrument registry.
-router.include_router(registry_router, tags=["Registry", "CAM"])
+router.include_router(cam_registry_router, tags=["Registry", "CAM"])
 
 __all__ = ["router", "archtop_router", "om_router", "stratocaster_router", "flying_v_router", "body_gcode_router", "acoustic_cam_router"]

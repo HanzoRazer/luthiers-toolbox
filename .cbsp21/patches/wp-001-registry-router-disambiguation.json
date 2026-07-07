@@ -1,0 +1,57 @@
+{
+  "schema": "cbsp21_patch_input_v1",
+  "schema_version": "cbsp21_patch_input_v1",
+  "coverage_min": 0.95,
+  "patch_id": "WP_001_REGISTRY_ROUTER_DISAMBIGUATION",
+  "title": "routing: disambiguate registry_router symbols",
+  "intent": "WP-001 (from the Consolidation Lab router-authority characterization): two distinct registry routers were each imported under the same symbol name `registry_router` in different packages (routers/cam/guitar/__init__.py and routers/instruments/guitar/__init__.py), creating cross-package import/consumer ambiguity where a maintainer could wire or trace the wrong router. This patch aliases each import with a domain-specific name (cam_registry_router, instrument_registry_router) and updates the two include_router call sites. Naming clarity only: the routers own different namespaces already; no endpoint, prefix, tag, or behavior is changed and the router count is unchanged.",
+  "change_type": "refactor+test",
+  "behavior_change": "none - symbol/alias rename at two import sites plus a new route-mount regression test. No route added/removed/moved; no prefix or response/request model change; is_* endpoints and mounted paths are identical before and after.",
+  "risk_level": "low",
+  "scope": {
+    "paths_in_scope": [
+      ".cbsp21/",
+      "services/api/app/routers/cam/guitar/",
+      "services/api/app/routers/instruments/guitar/",
+      "services/api/tests/"
+    ],
+    "files_expected_to_change": [
+      "services/api/app/routers/cam/guitar/__init__.py",
+      "services/api/app/routers/instruments/guitar/__init__.py",
+      "services/api/tests/test_wp001_registry_router_disambiguation.py"
+    ]
+  },
+  "diff_articulation": {
+    "what_changed": "(1) services/api/app/routers/cam/guitar/__init__.py: `from .registry_cam_router import router as registry_router` -> `as cam_registry_router`, and the single `router.include_router(registry_router, tags=[\"Registry\", \"CAM\"])` call updated to `cam_registry_router`. (2) services/api/app/routers/instruments/guitar/__init__.py: `from .registry_router import router as registry_router` -> `as instrument_registry_router`, and its `router.include_router(registry_router, tags=[\"Registry\"])` call updated to `instrument_registry_router`. Both aliases are module-local (not in __all__, not imported elsewhere), so the change is fully contained. (3) services/api/tests/test_wp001_registry_router_disambiguation.py (new): asserts the instruments guitar router still exposes /smart/bundle, / and /{model_id}/spec, the CAM guitar router still exposes /{model_id}/health and /{model_id}/capabilities, and guards that neither package binds an APIRouter under the ambiguous `registry_router` name (the instruments submodule `registry_router.py` legitimately remains).",
+    "why_not_redundant": "Removes a real cross-package footgun: two different registry routers imported under one symbol name invite wrong-router wiring and make import/trace/log/ownership analysis ambiguous. It is not cosmetic churn - it disambiguates the symbols and adds a regression guard so the shared alias cannot silently return. No route consolidation, retirement, or behavior change is performed; those remain out of scope per WP-001."
+  },
+  "verification": {
+    "commands_run": [
+      "grep -rn 'as registry_router' services/api/app --include=*.py -> 0 remaining",
+      "PYTHONPATH=. py -3.11 -m pytest tests/test_wp001_registry_router_disambiguation.py -q -> 3 passed",
+      "PYTHONPATH=. py -3.11 -m pytest tests/test_registry_endpoint_smoke.py tests/test_wp001_registry_router_disambiguation.py -q -> 38 passed",
+      "py -3.11 scripts/ci/check_cbsp21_patch_input.py --base origin/main --head HEAD -> (recorded at commit)",
+      "py -3.11 scripts/ci/check_cbsp21_gate.py --changed-files <PR file set> -> (recorded at commit)"
+    ]
+  },
+  "files": [
+    {
+      "path": "services/api/app/routers/cam/guitar/__init__.py",
+      "intent": "Alias the CAM guitar registry router import as cam_registry_router (was registry_router) and update its include_router call. Symbol rename only; routes/tags unchanged.",
+      "risk": "low",
+      "behavior_change": "none"
+    },
+    {
+      "path": "services/api/app/routers/instruments/guitar/__init__.py",
+      "intent": "Alias the instruments guitar registry router import as instrument_registry_router (was registry_router) and update its include_router call. Symbol rename only; routes/tags unchanged.",
+      "risk": "low",
+      "behavior_change": "none"
+    },
+    {
+      "path": "services/api/tests/test_wp001_registry_router_disambiguation.py",
+      "intent": "New route-mount regression test proving both registry routers still mount their distinctive endpoints, plus a guard against re-introducing the ambiguous shared `registry_router` router symbol.",
+      "risk": "low",
+      "behavior_change": "none"
+    }
+  ]
+}
