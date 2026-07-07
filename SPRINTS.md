@@ -1409,6 +1409,16 @@ All five registries read from this single source.
 
 **Blocking:** All instrument library JSON work from Sprint 8 needs a home.
 
+**GEN-5-A (2026-07-06):** source census + canonical schema proposal materialized; no
+runtime consumer migrated; consolidation remains open. Current source counts are generated
+in `services/api/metrics/gen5_instrument_library_census.json` (19/25/15/7/23) — the
+**historical counts above are no longer authoritative**; the census artifact is the
+current-count home. Read-only utility `services/api/scripts/build_instrument_library_census.py`
+(stdlib-only, no `app.*` imports); audit `docs/audit/GEN5_INSTRUMENT_LIBRARY_SOURCE_CENSUS.md`;
+dev order `docs/handoffs/GEN5_DATA_CONSOLIDATION_SOURCE_CENSUS_DEV_ORDER.md`. Census found 35
+distinct normalized models + 10 cross-source dimension conflicts (reported, not resolved).
+**GEN-5 remains OPEN** for later migration slices (GEN-5-B…E).
+
 ---
 
 ### Sprint: GEN-1 Project Seeding
