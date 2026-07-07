@@ -397,13 +397,20 @@ def endpoint_static_prefix(path: str) -> str:
     return prefix if len(prefix) >= 6 else ""
 
 
+def reference_path(literal: str) -> str:
+    return literal.split("?", 1)[0].split("#", 1)[0]
+
+
 def reference_matches_endpoint(literal: str, endpoint_path: str) -> bool:
-    if literal == endpoint_path:
+    path = reference_path(literal)
+    if path == endpoint_path:
         return True
     prefix = endpoint_static_prefix(endpoint_path)
-    if prefix and (literal == prefix or literal.startswith(prefix + "/") or literal.startswith(prefix + "?")):
-        return True
-    return False
+    if not prefix or (path != prefix and not path.startswith(prefix + "/")):
+        return False
+    if "{" not in endpoint_path and endpoint_path.startswith("/exports/"):
+        return False
+    return True
 
 
 def iter_consumer_files() -> Iterable[Path]:

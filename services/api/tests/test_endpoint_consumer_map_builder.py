@@ -101,6 +101,29 @@ def test_parameterized_endpoint_matches_static_consumer_prefix():
     )
 
 
+def test_exact_endpoint_matches_query_but_not_child_paths():
+    assert builder.reference_matches_endpoint(
+        "/exports/polyline_dxf?download=1",
+        "/exports/polyline_dxf",
+    )
+    assert not builder.reference_matches_endpoint(
+        "/exports/polyline_dxf/extra",
+        "/exports/polyline_dxf",
+    )
+
+
+def test_template_base_extra_interpolation_does_not_match_exact_endpoint():
+    literals = builder.extract_endpoint_literals(
+        "fetch(`${API_BASE}/exports/polyline_dxf/${kind}`, opts);"
+    )
+
+    assert literals == ["/exports/polyline_dxf/"]
+    assert not builder.reference_matches_endpoint(
+        literals[0],
+        "/exports/polyline_dxf",
+    )
+
+
 def test_consumer_file_classification_by_root():
     root = builder.repo_root()
 
