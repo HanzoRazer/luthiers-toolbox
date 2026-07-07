@@ -22,7 +22,9 @@ Wave 20: Option C API Restructuring - Consolidated to single registry router
 from fastapi import APIRouter
 
 # Dynamic registry router handles ALL models including archtop, om, stratocaster, smart
-from .registry_router import router as registry_router
+# WP-001: aliased with a domain-specific name to disambiguate from the CAM guitar
+# registry router (was `registry_router`, which collided across packages on import).
+from .registry_router import router as instrument_registry_router
 from .assets_router import router as assets_router
 from .smart_guitar_dxf_router import router as smart_guitar_dxf_router
 
@@ -30,7 +32,7 @@ router = APIRouter(tags=["Guitar", "Instruments"])
 
 # Registry router handles all models dynamically
 # /smart/bundle is defined BEFORE /{model_id}/... routes in registry_router.py
-router.include_router(registry_router, tags=["Registry"])
+router.include_router(instrument_registry_router, tags=["Registry"])
 
 # Assets router for e2e file serving
 router.include_router(assets_router, tags=["Assets"])
