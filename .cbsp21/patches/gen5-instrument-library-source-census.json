@@ -29,12 +29,12 @@
     ]
   },
   "diff_articulation": {
-    "what_changed": "(1) build_instrument_library_census.py: new stdlib-only utility (json/ast/argparse/os/sys/datetime/pathlib) that loads 4 JSON sources + AST-parses guitars/__init__.py and models.py for MODEL_SPECS/MODEL_INFOS keys without importing app.*; normalizes IDs (explicit alias map only), classifies field roles, emits same-semantic conflicts, missing-by-source, and a schema proposal; deterministic (generated_at excluded from --check). (2) generated census JSON. (3) census test suite. (4) human-readable audit report. (5) the dev-order handoff. (6) SPRINTS.md GEN-5-A progress note (no closure; census JSON is the current-count authority). (7) this manifest.",
+    "what_changed": "(1) build_instrument_library_census.py: new stdlib-only utility (json/ast/argparse/os/sys/datetime/pathlib) that loads 4 JSON sources + AST-parses guitars/__init__.py and models.py for MODEL_SPECS/MODEL_INFOS keys without importing app.*; normalizes IDs (explicit alias map only), classifies field roles, emits same-semantic conflicts, missing-by-source, and a schema proposal; deterministic (generated_at excluded from --check). Post-review hardening: conflict detection uses a numeric-equality key (_conflict_key) so 648 vs 648.0 is not a false conflict and bool never collapses into its int value; --json-out/--md-out overrides resolve against repo_root (_resolve_out), not the process CWD. --check still exit 0 (artifacts unchanged by the logic fixes). (2) generated census JSON. (3) census test suite (+4 regression guards: MODEL_SPECS undercount floor, enum-value resolution, conflict-key equality, repo-root path resolution). (4) human-readable audit report. (5) the dev-order handoff. (6) SPRINTS.md GEN-5-A progress note (no closure; census JSON is the current-count authority). (7) this manifest.",
     "why_not_redundant": "GEN-5's five sources currently have no single map of coverage/conflicts. This census is the evidence artifact a later migration needs; it introduces no runtime authority and cannot regress behavior because nothing imports it and no legacy source is touched."
   },
   "verification": {
     "commands_run": [
-      "python -m pytest services/api/tests/test_gen5_instrument_library_census.py -q -> 14 passed",
+      "python -m pytest services/api/tests/test_gen5_instrument_library_census.py -q -> 18 passed",
       "python services/api/scripts/build_instrument_library_census.py --check -> exit 0 (artifacts match sources)",
       "ast scan of the utility -> imports only stdlib (json/ast/argparse/os/sys/datetime/pathlib); zero app.* imports",
       "determinism: two --write runs differ only in generated_at (JSON); Markdown identical",

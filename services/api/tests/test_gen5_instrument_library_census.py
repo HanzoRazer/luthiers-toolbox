@@ -151,3 +151,53 @@ def test_schema_proposal_is_field_role_based(census):
     for role in ["metadata", "physical_dimensions", "body_template", "body_catalog",
                  "runtime_spec", "assets", "cam_capability", "source_provenance"]:
         assert role in model, f"schema proposal missing field-role group: {role}"
+
+
+# --------------------------------------------------------------------------- #
+# Regression guards for AST-parse brittleness (silent undercount) and the two
+# edge-case fixes: numeric conflict-key and relative output-path resolution.
+# --------------------------------------------------------------------------- #
+def test_model_specs_count_floor(census):
+    # AST extraction of MODEL_SPECS/enum is structurally narrow. If a harmless
+    # refactor of guitars/__init__.py or models.py breaks parsing, the count
+    # collapses silently and --check still passes (stale artifact == stale
+    # recompute). A floor makes that break fail loudly here instead.
+    assert census["source_counts"]["model_specs"] >= 15, (
+        "model_specs undercount — AST parse of MODEL_SPECS/InstrumentModelId "
+        "likely broke after a source refactor; expand the parser or this floor"
+    )
+    assert census["total_distinct_models"] >= 30, "distinct-model count collapsed"
+
+
+def test_enum_derived_model_specs_ids_resolved(census):
+    # Proves enum members are resolved to their string values (not left as
+    # ENUM_MEMBER names). These are stable, known InstrumentModelId values that
+    # live in MODEL_SPECS; if the enum value-map parse regresses they vanish.
+    for mid in ("stratocaster", "telecaster", "les_paul", "dreadnought"):
+        assert mid in census["model_index"], f"{mid} missing from census"
+        assert census["model_index"][mid]["presence"]["model_specs"] is True, (
+            f"{mid} lost its model_specs presence — enum value resolution regressed"
+        )
+
+
+def test_conflict_key_treats_int_and_float_as_equal():
+    mod = _load_module()
+    # 648 and 648.0 are the same measurement — must not manufacture a conflict.
+    assert mod._conflict_key(648) == mod._conflict_key(648.0)
+    # genuine numeric difference stays distinct
+    assert mod._conflict_key(648.0) != mod._conflict_key(647.7)
+    # bool must never collapse into its int value
+    assert mod._conflict_key(True) != mod._conflict_key(1)
+
+
+def test_relative_output_override_resolves_against_repo_root():
+    mod = _load_module()
+    root = Path("/some/repo/root").resolve()
+    rel = mod._resolve_out("metrics/out.json", "default/rel.json", root)
+    # a relative override joins repo_root, NOT the process CWD
+    assert rel == root / "metrics/out.json"
+    # default (no override) also joins repo_root
+    assert mod._resolve_out(None, "default/rel.json", root) == root / "default/rel.json"
+    # an absolute override is honored as-is
+    abs_path = (root / "elsewhere/out.json").resolve()
+    assert mod._resolve_out(str(abs_path), "default/rel.json", root) == abs_path

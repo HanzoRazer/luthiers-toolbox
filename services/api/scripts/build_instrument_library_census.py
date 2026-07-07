@@ -296,10 +296,21 @@ def entry_roles(source: str, entry) -> list:
 
 
 def _numeric_delta(values):
-    nums = [v for v in values if isinstance(v, (int, float))]
+    nums = [v for v in values if isinstance(v, (int, float)) and not isinstance(v, bool)]
     if len(nums) >= 2:
         return round(max(nums) - min(nums), 4)
     return None
+
+
+def _conflict_key(v):
+    """Distinctness key for conflict detection. Numerically-equal ints/floats
+    (e.g. 648 vs 648.0) must NOT read as a conflict, so numbers collapse to a
+    single float key; bool is kept textual so True never equals 1."""
+    if isinstance(v, bool):
+        return ("json", json.dumps(v))
+    if isinstance(v, (int, float)):
+        return ("num", float(v))
+    return ("json", json.dumps(v, sort_keys=True))
 
 
 # --------------------------------------------------------------------------- #
@@ -344,7 +355,7 @@ def build_census(repo_root: Path, now_iso: str) -> dict:
                     val = _dig(entries[source].get(src_ids[source]), path)
                     if val is not None:
                         values[source] = val
-            distinct = {json.dumps(v, sort_keys=True) for v in values.values()}
+            distinct = {_conflict_key(v) for v in values.values()}
             if len(values) >= 2 and len(distinct) >= 2:
                 rec = {
                     "model": norm,
@@ -558,6 +569,20 @@ def _strip_generated_at(obj):
     return obj
 
 
+def _resolve_out(arg, default_rel, repo_root):
+    """Resolve an output path against ``repo_root``, not the process CWD.
+
+    Default paths are repo-root-relative; an explicit ``--json-out``/``--md-out``
+    override follows the same rule so a relative override (e.g. from a test
+    fixture invoked out of another directory) lands beside the defaults instead
+    of silently reading/writing under the shell's CWD. Absolute overrides are
+    honored as-is."""
+    if not arg:
+        return repo_root / default_rel
+    p = Path(arg)
+    return p if p.is_absolute() else (repo_root / p)
+
+
 def main(argv=None) -> int:
     ap = argparse.ArgumentParser(description="GEN-5-A instrument library source census")
     mode = ap.add_mutually_exclusive_group()
@@ -576,8 +601,8 @@ def main(argv=None) -> int:
     else:
         repo_root = Path(__file__).resolve().parents[3]
 
-    json_out = Path(args.json_out) if args.json_out else repo_root / DEFAULT_JSON_OUT
-    md_out = Path(args.md_out) if args.md_out else repo_root / DEFAULT_MD_OUT
+    json_out = _resolve_out(args.json_out, DEFAULT_JSON_OUT, repo_root)
+    md_out = _resolve_out(args.md_out, DEFAULT_MD_OUT, repo_root)
 
     census = build_census(repo_root, _resolve_now(args.now))
     json_text = _stable_json(census)
