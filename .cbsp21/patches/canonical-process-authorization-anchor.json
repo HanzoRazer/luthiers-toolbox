@@ -1,0 +1,105 @@
+{
+  "schema": "cbsp21_patch_input_v1",
+  "schema_version": "cbsp21_patch_input_v1",
+  "coverage_min": 0.95,
+  "patch_id": "CANONICAL_PROCESS_AUTHORIZATION_ANCHOR",
+  "title": "C2 canonical process authorization anchor (PR-2) + verified-state provenance lock",
+  "intent": "Supply the AUTHORIZED_CANONICAL_APPROVERS authorization anchor that PR-1 (#182) named as the PR-2 hard prerequisite — the seam deciding WHO may turn a governed process approval into verified_governed_process canonical authority. The anchor ships EMPTY and FAIL-CLOSED (allowed process/version/rule and roles declared, zero approver ids), so runtime behavior is unchanged: every governed approval still resolves to unverified_pending_governance until a separate repo-owner-ratified commit seeds the first approver id. Post-review hardening provenance-locks the verified state at BOTH the approval-record model validator and the reference boundary so a directly-constructed or rehydrated record cannot assert verified authority the anchor would not grant, routed through the same is_authorized_canonical_approver helper the factory uses to mint (mint-time and validation-time semantics cannot diverge). The oversized approval module is split — the governed-event derivation (derive_governed_approval_event_id) and CanonicalProcessApprovalError move to a sibling module and are re-exported — to hold the file-size ratchet green without raising the threshold.",
+  "change_type": "feature",
+  "behavior_change": "additive-fail-closed-behavior-preserving",
+  "risk_level": "medium",
+  "scope": {
+    "files_expected_to_change": [
+      "services/api/app/cam/canonical_geometry_process_policy.py",
+      "services/api/app/cam/canonical_geometry_process_approval.py",
+      "services/api/app/cam/canonical_geometry_process_approval_event.py",
+      "services/api/app/cam/geometry_authority_reference.py",
+      "services/api/app/cam/geometry_authority_reference_factories.py",
+      "services/api/app/cam/geometry_authority_validation.py",
+      "services/api/tests/cam/test_canonical_process_authorization.py",
+      ".cbsp21/patches/canonical-process-authorization-anchor.json"
+    ]
+  },
+  "diff_articulation": {
+    "what_changed": "Adds VERIFIED_GOVERNED_PROCESS to the allowed authentication states, the fail-closed AUTHORIZED_CANONICAL_APPROVERS anchor keyed on the ratified process/version/rule constants, and is_authorized_canonical_approver() (id AND role, system-actor-safe). Authentication is decided once in create_canonical_process_approval_record; the reference inherits it. Post-review hardening adds a provenance re-check of the verified state in the approval-record model validator and (defense-in-depth) in validate_canonical_process_approval_record, and rejects a directly-constructed GeometryAuthorityReference that claims a verified state it did not legitimately inherit. The approval module is split under the 500-line file-size ratchet: derive_governed_approval_event_id and CanonicalProcessApprovalError move to canonical_geometry_process_approval_event.py and are re-exported from the approval module (import identity preserved), so the router and test importers are unaffected.",
+    "why_not_redundant": "PR-1 deliberately deferred the authorization anchor and stamped every approval unverified_pending_governance as a fail-safe; nothing before this makes the verified path reachable, and nothing before this provenance-locks the verified state against direct construction / rehydration. The module split is required because the anchor plus hardening pushed canonical_geometry_process_approval.py past the 500-line ratchet (502 at the anchor commit, higher with the hardening); the split holds the ratchet green without raising the threshold."
+  },
+  "verification": {
+    "commands_run": [
+      "python -m pytest tests/cam/test_canonical_process_authorization.py tests/cam/test_canonical_geometry_process_approval.py -q -> 45 passed",
+      "python -m pytest tests/cam/test_canonical_process_authorization.py tests/cam/test_canonical_geometry_process_approval.py tests/cam/test_canonical_geometry_process_boundaries.py tests/cam/test_geometry_authority_references.py tests/test_technical_debt_gates.py::TestCodeQuality::test_large_files_count -q -> green",
+      "wc -l canonical_geometry_process_approval.py -> 489 (< 500 limit); canonical_geometry_process_approval_event.py -> 103",
+      "import identity check -> approval module re-exports CanonicalProcessApprovalError and derive_governed_approval_event_id (is-identity preserved)"
+    ]
+  },
+  "files": [
+    {
+      "path": "services/api/app/cam/canonical_geometry_process_policy.py",
+      "intent": "Add VERIFIED_GOVERNED_PROCESS to ALLOWED_AUTHENTICATION_STATES; add the fail-closed AUTHORIZED_CANONICAL_APPROVERS anchor and is_authorized_canonical_approver() (id+role, fail-closed, system-actor-safe).",
+      "scan_targets": ["services/api/app/cam/canonical_geometry_process_policy.py"],
+      "risk": "medium",
+      "behavior_change": "additive; anchor ships empty so no verified state is minted"
+    },
+    {
+      "path": "services/api/app/cam/canonical_geometry_process_approval.py",
+      "intent": "Decide authentication once via the anchor; provenance-lock the verified state in the model validator and policy gate; slim the module under the 500-line ratchet by re-exporting the extracted event/error symbols.",
+      "scan_targets": ["services/api/app/cam/canonical_geometry_process_approval.py"],
+      "risk": "medium",
+      "behavior_change": "additive-fail-closed; verified state provenance-locked"
+    },
+    {
+      "path": "services/api/app/cam/canonical_geometry_process_approval_event.py",
+      "intent": "Extracted sibling module: server-side governed-event derivation (derive_governed_approval_event_id) and CanonicalProcessApprovalError, re-exported from the approval module. Splits the oversized file to hold the file-size ratchet green.",
+      "scan_targets": ["services/api/app/cam/canonical_geometry_process_approval_event.py"],
+      "risk": "low",
+      "behavior_change": "code move only; import identity preserved via re-export"
+    },
+    {
+      "path": "services/api/app/cam/geometry_authority_reference.py",
+      "intent": "Centralize the authentication guard on ALLOWED_AUTHENTICATION_STATES and reject a directly-constructed reference claiming a verified state it did not legitimately inherit; split the reference factories out to hold the file-size ratchet (re-exported at the module bottom).",
+      "scan_targets": ["services/api/app/cam/geometry_authority_reference.py"],
+      "risk": "medium",
+      "behavior_change": "additive guard; inherits authentication from the record; factory re-export keeps public API stable"
+    },
+    {
+      "path": "services/api/app/cam/geometry_authority_reference_factories.py",
+      "intent": "Extracted reference-construction factories (create_*_geometry_reference), re-exported from geometry_authority_reference. Splits the oversized reference module under the 500-line ratchet; the model is imported lazily inside the constructing factories so the re-export cycle is import-safe in any order.",
+      "scan_targets": ["services/api/app/cam/geometry_authority_reference_factories.py"],
+      "risk": "low",
+      "behavior_change": "code move only; import identity preserved via re-export"
+    },
+    {
+      "path": "services/api/app/cam/geometry_authority_validation.py",
+      "intent": "Centralize the canonical-process-authority guard on ALLOWED_AUTHENTICATION_STATES; both permitted states validate green (baseline intentionally not warned to preserve ratified green tests).",
+      "scan_targets": ["services/api/app/cam/geometry_authority_validation.py"],
+      "risk": "low",
+      "behavior_change": "additive; baseline stays green"
+    },
+    {
+      "path": "services/api/tests/cam/test_canonical_process_authorization.py",
+      "intent": "Authorization + provenance-lock coverage: authorized->verified, unauthorized->unverified/green, system rejected, forged verified record rejected, forged reference rejected, verified round-trip happy path.",
+      "scan_targets": ["services/api/tests/cam/test_canonical_process_authorization.py"],
+      "risk": "low",
+      "behavior_change": "test-only"
+    },
+    {
+      "path": ".cbsp21/patches/canonical-process-authorization-anchor.json",
+      "intent": "Per-PR CBSP21 manifest for this PR (#202) under the #184 per-PR manifest-discovery model.",
+      "scan_targets": [".cbsp21/patches/canonical-process-authorization-anchor.json"],
+      "risk": "low",
+      "behavior_change": "CI/review metadata only"
+    }
+  ],
+  "architecture_scan": {
+    "scan_id": "AS-2026-07-07-CANONICAL-PROCESS-AUTHORIZATION-ANCHOR",
+    "risk_summary": {
+      "critical": 0,
+      "high": 0,
+      "medium": 0,
+      "low": 0
+    },
+    "findings": [],
+    "acknowledged": false,
+    "acknowledgement_notes": ""
+  }
+}
