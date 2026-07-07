@@ -12,7 +12,23 @@ endpoints, and guard against the ambiguous shared symbol returning.
 
 
 def _paths(router):
-    return {getattr(r, "path", None) for r in router.routes}
+    paths = set()
+    for route in router.routes:
+        path = getattr(route, "path", None)
+        if isinstance(path, str):
+            paths.add(path)
+            continue
+
+        # FastAPI >=0.120 stores include_router() entries as _IncludedRouter
+        # wrappers; recurse into the included router to collect concrete paths.
+        included_router = getattr(route, "original_router", None)
+        include_context = getattr(route, "include_context", None)
+        include_prefix = getattr(include_context, "prefix", "") if include_context else ""
+        if included_router is not None:
+            for sub_path in _paths(included_router):
+                paths.add(f"{include_prefix}{sub_path}")
+
+    return paths
 
 
 def test_instruments_guitar_registry_router_still_mounts():
