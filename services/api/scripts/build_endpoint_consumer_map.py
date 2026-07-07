@@ -66,6 +66,20 @@ CONSUMER_ROOTS = (
     Path("../../.github/workflows"),
 )
 
+# These files document or test the consumer-map scanner itself. New `/exports`
+# examples in these files should not become consumer evidence for the legacy
+# export cluster; their unmatched examples are also omitted from the unmatched
+# literal list to keep the generated artifact observational rather than
+# self-referential.
+SELF_OBSERVATION_PATHS = frozenset(
+    {
+        "services/api/scripts/build_endpoint_consumer_map.py",
+        "services/api/tests/test_endpoint_consumer_map_builder.py",
+        "docs/audit/CI_RED_016_ENDPOINT_CONSUMER_MAP.md",
+        "docs/audit/CI_RED_016C_LEGACY_EXPORT_CLUSTER_DISPOSITION.md",
+    }
+)
+
 TEXT_EXTENSIONS = {
     ".css",
     ".json",
@@ -372,6 +386,10 @@ def classify_consumer_file(path: Path) -> str:
     return "external_or_unknown"
 
 
+def is_self_observation_noise(rel_path: str, literal: str) -> bool:
+    return rel_path in SELF_OBSERVATION_PATHS and literal.startswith("/exports")
+
+
 def endpoint_static_prefix(path: str) -> str:
     if "{" not in path:
         return path
@@ -421,6 +439,8 @@ def scan_consumers(records: list[EndpointRecord]) -> tuple[dict[str, list[Consum
         rel = file_path.relative_to(repo_root()).as_posix()
         consumer_class = classify_consumer_file(file_path)
         for literal in literals:
+            if is_self_observation_noise(rel, literal):
+                continue
             matched = False
             for record in records:
                 if reference_matches_endpoint(literal, record.path):
@@ -433,7 +453,7 @@ def scan_consumers(records: list[EndpointRecord]) -> tuple[dict[str, list[Consum
                         )
                     )
                     matched = True
-            if not matched:
+            if not matched and rel not in SELF_OBSERVATION_PATHS:
                 unmatched_literals[(rel, literal)] = consumer_class
 
     for key, items in evidence_by_key.items():
@@ -500,6 +520,7 @@ def build_payload(records: list[EndpointRecord], stats: dict[str, int]) -> dict[
         "methodology": {
             "source_of_truth": "FastAPI app.routes _IncludedRouter flattening, cross-checked against app.openapi() operations",
             "consumer_scan_roots": [path.as_posix() for path in CONSUMER_ROOTS],
+            "self_observation_paths": sorted(SELF_OBSERVATION_PATHS),
             "endpoint_reference_roots": ["/" + root for root in ENDPOINT_ROOTS],
             "consumer_scan_limitations": [
                 "String-literal and parameter-prefix matching over the mounted API roots "
@@ -509,6 +530,7 @@ def build_payload(records: list[EndpointRecord], stats: dict[str, int]) -> dict[
                 "(`${API_BASE}/exports/polyline_dxf`) are recognized for the legacy /exports "
                 "surface only (CI-RED-016-C). Generalizing template-base matching to /api routes "
                 "is a tracked follow-up. Runtime analytics and generated clients are not inferred.",
+                "Scanner implementation files, scanner unit tests, and generated CI-RED-016 audit reports do not count as /exports consumer evidence, and their unmatched literals are omitted to avoid self-referential audit noise.",
                 "No first-party consumer found is not a deletion verdict.",
             ],
         },
@@ -616,6 +638,7 @@ def render_markdown(payload: dict[str, Any]) -> str:
             "- Source of truth is the live mounted FastAPI surface. The utility flattens FastAPI 0.137 `_IncludedRouter` route objects and cross-checks the result against `app.openapi()` operations.",
             "- Static decorator count is retained as debt context only. It can differ from mounted behavior because it does not resolve router inclusion and generated schema behavior.",
             "- Consumer detection is a first-party string-literal and parameter-prefix scan. It is useful triage evidence, not runtime telemetry.",
+            "- Scanner implementation files, scanner unit tests, and generated CI-RED-016 audit reports do not count as `/exports` consumer evidence, and their unmatched literals are omitted so examples do not self-register as callers.",
             "- Endpoint references are matched over the mounted API roots `/api`, `/health`, `/ws`, `/instrument`, and `/exports`. Root-relative literals (`\"/exports/polyline_dxf\"`) count as evidence for all of these roots. Template-base suffixes behind an interpolated base (`` `${API_BASE}/exports/polyline_dxf` ``) are recognized for the legacy `/exports` surface only — that compatibility surface was previously invisible to the scan (CI-RED-016-C). Generalizing template-base matching to `/api` routes is a tracked follow-up.",
             "- `no_first_party_consumer_found` is not a deletion verdict. Governance, audit, authority, provenance, and review endpoints are explicitly protected from being interpreted as dead just because they lack a frontend caller.",
             "",

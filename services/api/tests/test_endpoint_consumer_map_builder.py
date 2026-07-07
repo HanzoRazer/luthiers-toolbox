@@ -59,6 +59,13 @@ def test_extract_template_base_exports_suffix():
     ]
 
 
+def test_extract_template_base_exports_suffix_with_query_string():
+    text = "fetch(`${API_BASE}/exports/polyline_dxf?download=1`, opts);"
+    assert builder.extract_endpoint_literals(text) == [
+        "/exports/polyline_dxf?download=1"
+    ]
+
+
 def test_extract_template_base_scoped_to_exports_only():
     # CI-RED-016-C scopes the template-base form to the legacy /exports surface.
     # A template-base /api reference is intentionally NOT recognized here (that
@@ -72,6 +79,15 @@ def test_extract_ignores_non_endpoint_root_assets():
     # Conservative extractor: only mounted API roots count, not arbitrary assets.
     text = 'const logo = "/assets/logo.svg"; const css = `${BASE}/static/app.css`;'
     assert builder.extract_endpoint_literals(text) == []
+
+
+def test_frontend_curvemath_dxf_exports_consumers_are_detected():
+    path = builder.repo_root() / "packages/client/src/utils/curvemath_dxf.ts"
+    literals = builder.extract_endpoint_literals(path.read_text(encoding="utf-8"))
+
+    assert "/exports/polyline_dxf" in literals
+    assert "/exports/biarc_dxf" in literals
+    assert "/exports/dxf/health" in literals
 
 
 def test_parameterized_endpoint_matches_static_consumer_prefix():
@@ -100,6 +116,27 @@ def test_consumer_file_classification_by_root():
     assert builder.classify_consumer_file(
         root / "services/api/app/ci/fence.py"
     ) == "ci_governance"
+
+
+def test_consumer_scan_treats_exports_examples_in_scanner_artifacts_as_noise():
+    self_paths = [
+        "services/api/scripts/build_endpoint_consumer_map.py",
+        "services/api/tests/test_endpoint_consumer_map_builder.py",
+        "docs/audit/CI_RED_016_ENDPOINT_CONSUMER_MAP.md",
+        "docs/audit/CI_RED_016C_LEGACY_EXPORT_CLUSTER_DISPOSITION.md",
+    ]
+
+    for rel in self_paths:
+        assert builder.is_self_observation_noise(rel, "/exports/polyline_dxf")
+
+    assert not builder.is_self_observation_noise(
+        "packages/client/src/utils/curvemath_dxf.ts",
+        "/exports/polyline_dxf",
+    )
+    assert not builder.is_self_observation_noise(
+        "services/api/scripts/build_endpoint_consumer_map.py",
+        "/api/jobs",
+    )
 
 
 def test_included_router_flattening_preserves_prefix_tags_and_module():

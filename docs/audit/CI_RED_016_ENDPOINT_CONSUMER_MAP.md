@@ -1,7 +1,7 @@
 # CI-RED-016 Endpoint Consumer Map
 
-Generated: `2026-07-07T08:27:03.259321Z`
-Base commit: `ba3c8565035b1cb35ec988c89d0e9157381f0a0a`
+Generated: `2026-07-07T15:12:10.801310Z`
+Base commit: `d88bc953addfd1e9f38770a26177d2ea0f268dd8`
 
 ## Purpose
 
@@ -19,13 +19,14 @@ This document turns CI-RED-016 from a raw route-count concern into a structured 
 | Static baseline | 942 |
 | Static delta | 239 |
 | Mounted-vs-static gap | 49 |
-| Unmatched consumer literals | 568 |
+| Unmatched consumer literals | 545 |
 
 ## Methodology Notes
 
 - Source of truth is the live mounted FastAPI surface. The utility flattens FastAPI 0.137 `_IncludedRouter` route objects and cross-checks the result against `app.openapi()` operations.
 - Static decorator count is retained as debt context only. It can differ from mounted behavior because it does not resolve router inclusion and generated schema behavior.
 - Consumer detection is a first-party string-literal and parameter-prefix scan. It is useful triage evidence, not runtime telemetry.
+- Scanner implementation files, scanner unit tests, and generated CI-RED-016 audit reports do not count as `/exports` consumer evidence, and their unmatched literals are omitted so examples do not self-register as callers.
 - Endpoint references are matched over the mounted API roots `/api`, `/health`, `/ws`, `/instrument`, and `/exports`. Root-relative literals (`"/exports/polyline_dxf"`) count as evidence for all of these roots. Template-base suffixes behind an interpolated base (`` `${API_BASE}/exports/polyline_dxf` ``) are recognized for the legacy `/exports` surface only — that compatibility surface was previously invisible to the scan (CI-RED-016-C). Generalizing template-base matching to `/api` routes is a tracked follow-up.
 - `no_first_party_consumer_found` is not a deletion verdict. Governance, audit, authority, provenance, and review endpoints are explicitly protected from being interpreted as dead just because they lack a frontend caller.
 

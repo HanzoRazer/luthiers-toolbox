@@ -1,5 +1,5 @@
 {
-  "base_commit": "ba3c8565035b1cb35ec988c89d0e9157381f0a0a",
+  "base_commit": "d88bc953addfd1e9f38770a26177d2ea0f268dd8",
   "endpoints": [
     {
       "consumers": [
@@ -16595,6 +16595,12 @@
         {
           "consumer_class": "test_only",
           "evidence": "string_literal_or_parameter_prefix",
+          "file": "services/api/tests/test_endpoint_consumer_map_builder.py",
+          "literal": "/api/jobs"
+        },
+        {
+          "consumer_class": "test_only",
+          "evidence": "string_literal_or_parameter_prefix",
           "file": "services/api/tests/test_job_queue.py",
           "literal": "/api/jobs"
         },
@@ -16725,6 +16731,12 @@
           "consumer_class": "ci_governance",
           "evidence": "string_literal_or_parameter_prefix",
           "file": "services/api/scripts/build_endpoint_consumer_map.py",
+          "literal": "/api/jobs"
+        },
+        {
+          "consumer_class": "test_only",
+          "evidence": "string_literal_or_parameter_prefix",
+          "file": "services/api/tests/test_endpoint_consumer_map_builder.py",
           "literal": "/api/jobs"
         },
         {
@@ -30965,12 +30977,6 @@
           "evidence": "string_literal_or_parameter_prefix",
           "file": "packages/client/src/utils/curvemath_dxf.ts",
           "literal": "/exports/dxf/health"
-        },
-        {
-          "consumer_class": "test_only",
-          "evidence": "string_literal_or_parameter_prefix",
-          "file": "services/api/tests/test_endpoint_consumer_map_builder.py",
-          "literal": "/exports/dxf/health"
         }
       ],
       "duplicate_route_count": 1,
@@ -31097,6 +31103,12 @@
           "evidence": "string_literal_or_parameter_prefix",
           "file": "docs/archive/2026/status/2026-03-28_REPOSITORY_HEALTH_EVALUATION.md",
           "literal": "/health/ready"
+        },
+        {
+          "consumer_class": "docs_only",
+          "evidence": "string_literal_or_parameter_prefix",
+          "file": "docs/audit/CI_RED_016C_LEGACY_EXPORT_CLUSTER_DISPOSITION.md",
+          "literal": "/health"
         },
         {
           "consumer_class": "docs_only",
@@ -45609,6 +45621,12 @@
         {
           "consumer_class": "test_only",
           "evidence": "string_literal_or_parameter_prefix",
+          "file": "services/api/tests/test_endpoint_consumer_map_builder.py",
+          "literal": "/api/jobs"
+        },
+        {
+          "consumer_class": "test_only",
+          "evidence": "string_literal_or_parameter_prefix",
           "file": "services/api/tests/test_job_queue.py",
           "literal": "/api/jobs"
         },
@@ -45682,6 +45700,12 @@
         {
           "consumer_class": "test_only",
           "evidence": "string_literal_or_parameter_prefix",
+          "file": "services/api/tests/test_endpoint_consumer_map_builder.py",
+          "literal": "/api/jobs"
+        },
+        {
+          "consumer_class": "test_only",
+          "evidence": "string_literal_or_parameter_prefix",
           "file": "services/api/tests/test_job_queue.py",
           "literal": "/api/jobs"
         },
@@ -45750,6 +45774,12 @@
           "consumer_class": "ci_governance",
           "evidence": "string_literal_or_parameter_prefix",
           "file": "services/api/scripts/build_endpoint_consumer_map.py",
+          "literal": "/api/jobs"
+        },
+        {
+          "consumer_class": "test_only",
+          "evidence": "string_literal_or_parameter_prefix",
+          "file": "services/api/tests/test_endpoint_consumer_map_builder.py",
           "literal": "/api/jobs"
         },
         {
@@ -57741,12 +57771,6 @@
           "evidence": "string_literal_or_parameter_prefix",
           "file": "packages/client/src/utils/curvemath_dxf.ts",
           "literal": "/exports/biarc_dxf"
-        },
-        {
-          "consumer_class": "test_only",
-          "evidence": "string_literal_or_parameter_prefix",
-          "file": "services/api/tests/test_endpoint_consumer_map_builder.py",
-          "literal": "/exports/biarc_dxf"
         }
       ],
       "duplicate_route_count": 1,
@@ -57777,12 +57801,6 @@
         {
           "consumer_class": "docs_only",
           "evidence": "string_literal_or_parameter_prefix",
-          "file": "docs/audit/CI_RED_016_ENDPOINT_CONSUMER_MAP.md",
-          "literal": "/exports/polyline_dxf"
-        },
-        {
-          "consumer_class": "docs_only",
-          "evidence": "string_literal_or_parameter_prefix",
           "file": "docs/governance/EXPORT_PATH_MIGRATION_MATRIX.md",
           "literal": "/exports/polyline_dxf"
         },
@@ -57790,18 +57808,6 @@
           "consumer_class": "frontend_product",
           "evidence": "string_literal_or_parameter_prefix",
           "file": "packages/client/src/utils/curvemath_dxf.ts",
-          "literal": "/exports/polyline_dxf"
-        },
-        {
-          "consumer_class": "ci_governance",
-          "evidence": "string_literal_or_parameter_prefix",
-          "file": "services/api/scripts/build_endpoint_consumer_map.py",
-          "literal": "/exports/polyline_dxf"
-        },
-        {
-          "consumer_class": "test_only",
-          "evidence": "string_literal_or_parameter_prefix",
-          "file": "services/api/tests/test_endpoint_consumer_map_builder.py",
           "literal": "/exports/polyline_dxf"
         }
       ],
@@ -58598,10 +58604,11 @@
       ]
     }
   ],
-  "generated_at_utc": "2026-07-07T08:27:03.259321Z",
+  "generated_at_utc": "2026-07-07T15:12:10.801310Z",
   "methodology": {
     "consumer_scan_limitations": [
       "String-literal and parameter-prefix matching over the mounted API roots /api, /health, /ws, /instrument, /exports. Root-relative literals (\"/exports/polyline_dxf\") are recognized for all of these roots; template-base suffixes behind an interpolated base (`${API_BASE}/exports/polyline_dxf`) are recognized for the legacy /exports surface only (CI-RED-016-C). Generalizing template-base matching to /api routes is a tracked follow-up. Runtime analytics and generated clients are not inferred.",
+      "Scanner implementation files, scanner unit tests, and generated CI-RED-016 audit reports do not count as /exports consumer evidence, and their unmatched literals are omitted to avoid self-referential audit noise.",
       "No first-party consumer found is not a deletion verdict."
     ],
     "consumer_scan_roots": [
@@ -58618,6 +58625,12 @@
       "/ws",
       "/instrument",
       "/exports"
+    ],
+    "self_observation_paths": [
+      "docs/audit/CI_RED_016C_LEGACY_EXPORT_CLUSTER_DISPOSITION.md",
+      "docs/audit/CI_RED_016_ENDPOINT_CONSUMER_MAP.md",
+      "services/api/scripts/build_endpoint_consumer_map.py",
+      "services/api/tests/test_endpoint_consumer_map_builder.py"
     ],
     "source_of_truth": "FastAPI app.routes _IncludedRouter flattening, cross-checked against app.openapi() operations"
   },
@@ -58675,7 +58688,7 @@
     "route_object_entry_count": 1149,
     "route_object_missing_from_openapi": 8,
     "route_object_unique_endpoint_count": 1138,
-    "unmatched_consumer_literal_count": 568
+    "unmatched_consumer_literal_count": 545
   },
   "unmatched_consumer_literals": [
     {
@@ -59857,26 +59870,6 @@
       "consumer_class": "docs_only",
       "file": "docs/audit/BACKLOG_INVENTORY_2026-06-09.md",
       "literal": "/api/rmos/acoustics/ingest-events"
-    },
-    {
-      "consumer_class": "docs_only",
-      "file": "docs/audit/CI_RED_016_ENDPOINT_CONSUMER_MAP.md",
-      "literal": "/api"
-    },
-    {
-      "consumer_class": "docs_only",
-      "file": "docs/audit/CI_RED_016_ENDPOINT_CONSUMER_MAP.md",
-      "literal": "/exports"
-    },
-    {
-      "consumer_class": "docs_only",
-      "file": "docs/audit/CI_RED_016_ENDPOINT_CONSUMER_MAP.md",
-      "literal": "/instrument"
-    },
-    {
-      "consumer_class": "docs_only",
-      "file": "docs/audit/CI_RED_016_ENDPOINT_CONSUMER_MAP.md",
-      "literal": "/ws"
     },
     {
       "consumer_class": "docs_only",
@@ -61075,76 +61068,6 @@
     },
     {
       "consumer_class": "ci_governance",
-      "file": "services/api/scripts/build_endpoint_consumer_map.py",
-      "literal": "/api"
-    },
-    {
-      "consumer_class": "ci_governance",
-      "file": "services/api/scripts/build_endpoint_consumer_map.py",
-      "literal": "/api/_meta"
-    },
-    {
-      "consumer_class": "ci_governance",
-      "file": "services/api/scripts/build_endpoint_consumer_map.py",
-      "literal": "/api/ai"
-    },
-    {
-      "consumer_class": "ci_governance",
-      "file": "services/api/scripts/build_endpoint_consumer_map.py",
-      "literal": "/api/blueprint"
-    },
-    {
-      "consumer_class": "ci_governance",
-      "file": "services/api/scripts/build_endpoint_consumer_map.py",
-      "literal": "/api/business"
-    },
-    {
-      "consumer_class": "ci_governance",
-      "file": "services/api/scripts/build_endpoint_consumer_map.py",
-      "literal": "/api/cam"
-    },
-    {
-      "consumer_class": "ci_governance",
-      "file": "services/api/scripts/build_endpoint_consumer_map.py",
-      "literal": "/api/compare"
-    },
-    {
-      "consumer_class": "ci_governance",
-      "file": "services/api/scripts/build_endpoint_consumer_map.py",
-      "literal": "/api/rmos"
-    },
-    {
-      "consumer_class": "ci_governance",
-      "file": "services/api/scripts/build_endpoint_consumer_map.py",
-      "literal": "/api/saw"
-    },
-    {
-      "consumer_class": "ci_governance",
-      "file": "services/api/scripts/build_endpoint_consumer_map.py",
-      "literal": "/api/v1"
-    },
-    {
-      "consumer_class": "ci_governance",
-      "file": "services/api/scripts/build_endpoint_consumer_map.py",
-      "literal": "/exports"
-    },
-    {
-      "consumer_class": "ci_governance",
-      "file": "services/api/scripts/build_endpoint_consumer_map.py",
-      "literal": "/exports/polyline_dxf\\"
-    },
-    {
-      "consumer_class": "ci_governance",
-      "file": "services/api/scripts/build_endpoint_consumer_map.py",
-      "literal": "/instrument"
-    },
-    {
-      "consumer_class": "ci_governance",
-      "file": "services/api/scripts/build_endpoint_consumer_map.py",
-      "literal": "/ws"
-    },
-    {
-      "consumer_class": "ci_governance",
       "file": "services/api/scripts/check_routing_truth.py",
       "literal": "/api/meta/router-truth"
     },
@@ -61357,31 +61280,6 @@
       "consumer_class": "test_only",
       "file": "services/api/tests/test_deprecation_budget_ci.py",
       "literal": "/api/old"
-    },
-    {
-      "consumer_class": "test_only",
-      "file": "services/api/tests/test_endpoint_consumer_map_builder.py",
-      "literal": "/api/cam/geometry-authority"
-    },
-    {
-      "consumer_class": "test_only",
-      "file": "services/api/tests/test_endpoint_consumer_map_builder.py",
-      "literal": "/api/cam/job-history/123"
-    },
-    {
-      "consumer_class": "test_only",
-      "file": "services/api/tests/test_endpoint_consumer_map_builder.py",
-      "literal": "/api/cam/translator-governance/reviews"
-    },
-    {
-      "consumer_class": "test_only",
-      "file": "services/api/tests/test_endpoint_consumer_map_builder.py",
-      "literal": "/api/woodworking/bandsaw/kerf"
-    },
-    {
-      "consumer_class": "test_only",
-      "file": "services/api/tests/test_endpoint_consumer_map_builder.py",
-      "literal": "/exports/"
     },
     {
       "consumer_class": "test_only",

@@ -2,7 +2,7 @@
 
 **Date:** 2026-07-07
 **Lane:** CI-RED-016 endpoint consolidation
-**Base commit:** `ba3c8565` (current `origin/main`)
+**Map source:** regenerated in CI-RED-016-C
 **Status of CI-RED-016:** OPEN (this slice calibrates the map and records a disposition; it does not close the lane)
 
 ---
@@ -62,7 +62,7 @@ this PR stays surgical.
 
 ---
 
-## Consumer evidence (regenerated map, base `ba3c8565`)
+## Consumer evidence (regenerated map)
 
 ### Product-used routes — real frontend consumers
 
@@ -72,9 +72,10 @@ this PR stays surgical.
 | `POST /exports/biarc_dxf` | `frontend_product` | `packages/client/src/utils/curvemath_dxf.ts` (`downloadBiarcDXF`) |
 | `GET /exports/dxf/health` | `frontend_product` | `packages/client/src/utils/curvemath_dxf.ts` (`checkDXFHealth`) |
 
-These three are corroborated by additional `docs_only` / `ci_governance` / `test_only`
-references (governance matrix, the map artifacts themselves, and the builder's regression
-test), but the **decisive** evidence is the first-party frontend helper.
+The `polyline_dxf` and `biarc_dxf` routes are also referenced by the governance
+migration matrix, but the **decisive** evidence is the first-party frontend helper.
+Scanner implementation files, scanner unit tests, and generated CI-RED-016 reports are
+filtered out as `/exports` consumer evidence so examples do not self-register as callers.
 
 ### History routes — no first-party product/runtime consumer found
 

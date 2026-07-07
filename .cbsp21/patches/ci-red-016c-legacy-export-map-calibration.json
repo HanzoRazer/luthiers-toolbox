@@ -27,19 +27,20 @@
     ]
   },
   "diff_articulation": {
-    "what_changed": "(1) build_endpoint_consumer_map.py: added ENDPOINT_ROOTS=(api,health,ws,instrument,exports) and rebuilt the endpoint-literal regex from it, so root-relative /exports literals are recognized; added a second, /exports-scoped regex (ENDPOINT_TEMPLATE_SUFFIX_RE) that captures the static suffix behind an interpolated base (`${API_BASE}/exports/polyline_dxf` -> /exports/polyline_dxf); extract_endpoint_literals now unions both matchers; JSON + Markdown methodology text updated to name /exports and describe the root-relative-vs-template-base coverage. (2) test_endpoint_consumer_map_builder.py: added regression tests for /exports root-relative literal, /exports template-base normalization for polyline_dxf/biarc_dxf/dxf/health, the intentional non-match of /api template-base (scope proof), and asset-path rejection; existing /api and /health extraction tests unchanged. (3) Regenerated endpoint_consumer_map.json + CI_RED_016_ENDPOINT_CONSUMER_MAP.md on base ba3c8565. (4) Added CI_RED_016C_LEGACY_EXPORT_CLUSTER_DISPOSITION.md and a CI-RED-016-C note in SPRINTS.md (CI-RED-016 stays OPEN).",
+    "what_changed": "(1) build_endpoint_consumer_map.py: added ENDPOINT_ROOTS=(api,health,ws,instrument,exports) and rebuilt the endpoint-literal regex from it, so root-relative /exports literals are recognized; added a second, /exports-scoped regex (ENDPOINT_TEMPLATE_SUFFIX_RE) that captures the static suffix behind an interpolated base (`${API_BASE}/exports/polyline_dxf` -> /exports/polyline_dxf); extract_endpoint_literals now unions both matchers; JSON + Markdown methodology text updated to name /exports and describe the root-relative-vs-template-base coverage. The scanner also treats its own implementation file, unit test, and generated CI-RED-016 audit reports as self-observation paths for /exports evidence, and omits their unmatched literals to keep examples from self-registering as consumers. (2) test_endpoint_consumer_map_builder.py: added regression tests for /exports root-relative literal, /exports template-base normalization for polyline_dxf/biarc_dxf/dxf/health, query-string suffix handling, the real frontend curvemath_dxf.ts witness, the intentional non-match of /api template-base (scope proof), asset-path rejection, and self-observation filtering; existing /api and /health extraction tests unchanged. (3) Regenerated endpoint_consumer_map.json + CI_RED_016_ENDPOINT_CONSUMER_MAP.md. (4) Added CI_RED_016C_LEGACY_EXPORT_CLUSTER_DISPOSITION.md and a CI-RED-016-C note in SPRINTS.md (CI-RED-016 stays OPEN).",
     "why_not_redundant": "The scanner is an observation instrument that was miscalibrated: it had a namespace blind spot (/exports was not in the recognized roots) and a reference-form blind spot (template-base calls behind an interpolated base). Both produced false 'no_first_party_consumer_found' readings for six live endpoints, three of which have a real frontend consumer. This is not a cosmetic refactor: it changes what the audit artifact reports (three /exports routes move from no-consumer to frontend_product) and thereby changes which endpoints are eligible consolidation candidates. Isolating the scanner change from base drift confirms exactly three primary_consumer_class changes, all under /exports, zero outside; mounted/openapi stay 1132, static 1181, gap 49. The parallel /api template-base improvement is intentionally NOT taken here (it would reclassify ~13 unrelated /api endpoints) and is recorded as a follow-up so this PR stays scoped to the legacy export cluster."
   },
   "verification": {
     "commands_run": [
-      "pytest tests/test_endpoint_consumer_map_builder.py -q -> 10 passed (6 pre-existing + 4 new /exports regression tests)",
+      "pytest tests/test_endpoint_consumer_map_builder.py -q -> 13 passed (6 pre-existing + 7 new /exports/self-observation regression tests)",
       "python scripts/build_endpoint_consumer_map.py -> regenerated JSON+MD, exit 0, Mounted endpoint operations: 1132 / Static decorator count: 1181",
       "isolate scanner effect (unmodified@ba3c8565 vs modified@ba3c8565): exactly 3 primary_consumer_class changes, all /exports -> frontend_product, 0 changes outside /exports",
       "witness layer-two closure: POST /exports/polyline_dxf, POST /exports/biarc_dxf, GET /exports/dxf/health all show frontend_product evidence from packages/client/src/utils/curvemath_dxf.ts; the three /exports/history* routes remain no_first_party_consumer_found (true zero, no first-party literal or template caller)",
+      "self-observation check: services/api/scripts/build_endpoint_consumer_map.py, services/api/tests/test_endpoint_consumer_map_builder.py, and generated CI-RED-016 audit reports do not contribute /exports consumer evidence; their unmatched literals are omitted",
       "namespace-coverage check: top-level segments of all 1132 mounted endpoints {api:1122, exports:6, instrument:2, health:1, ws:1} are all recognized by ENDPOINT_ROOTS post-fix; 0 unrecognized namespaces",
-      "summary counts unchanged: mounted_endpoint_count=1132, openapi_operation_count=1132, static total=1181, mounted_vs_static_gap=49",
-      "python scripts/ci/check_cbsp21_patch_input.py --base origin/main --head HEAD -> (run at commit time)",
-      "python scripts/ci/check_cbsp21_gate.py --changed-files <origin/main...HEAD> -> (run at commit time)"
+      "route-surface counts unchanged: mounted_endpoint_count=1132, openapi_operation_count=1132, static total=1181, mounted_vs_static_gap=49; unmatched literal count drops 555 -> 545 after omitting self-observation unmatched literals",
+      "python scripts/ci/check_cbsp21_patch_input.py --base origin/main --head HEAD -> PASS",
+      "python scripts/ci/check_cbsp21_gate.py --changed-files <origin/main...HEAD> -> PASS"
     ]
   },
   "files": [
@@ -48,11 +49,11 @@
       "intent": "Recognize the /exports namespace and its template-base call form so the legacy export surface is no longer invisible to the consumer scan.",
       "scan_targets": ["services/api/scripts/build_endpoint_consumer_map.py"],
       "risk": "medium",
-      "behavior_change": "The audit scanner now recognizes /exports root-relative literals (all roots) and /exports template-base suffixes (`${BASE}/exports/...`). This changes generated audit classifications for the /exports cluster only; it does not touch any runtime endpoint. Template-base matching is deliberately scoped to /exports to avoid reclassifying unrelated /api endpoints in this PR."
+      "behavior_change": "The audit scanner now recognizes /exports root-relative literals (all roots) and /exports template-base suffixes (`${BASE}/exports/...`). It also prevents scanner/test/generated-report /exports examples from self-registering as consumer evidence. This changes generated audit classifications for the /exports cluster only; it does not touch any runtime endpoint. Template-base matching is deliberately scoped to /exports to avoid reclassifying unrelated /api endpoints in this PR."
     },
     {
       "path": "services/api/tests/test_endpoint_consumer_map_builder.py",
-      "intent": "Lock in /exports root-relative + template-base extraction, the intentional /api template-base non-match, and asset rejection.",
+      "intent": "Lock in /exports root-relative + template-base extraction, query-string suffixes, the real frontend curvemath_dxf.ts witness, the intentional /api template-base non-match, asset rejection, and self-observation filtering.",
       "scan_targets": ["services/api/tests/test_endpoint_consumer_map_builder.py"],
       "risk": "low",
       "behavior_change": "none - tests only"
@@ -62,7 +63,7 @@
       "intent": "Regenerated machine-readable map with corrected /exports consumer evidence (base ba3c8565).",
       "scan_targets": ["services/api/metrics/endpoint_consumer_map.json"],
       "risk": "low",
-      "behavior_change": "Generated audit artifact: three /exports routes move no-consumer -> frontend_product; base_commit + pre-existing base-drift lines (duplicate_route_count, route_object_entry_count) update from regenerating on current main. No route/router count change."
+      "behavior_change": "Generated audit artifact: three /exports routes move no-consumer -> frontend_product; self-observation unmatched literals are omitted; base_commit + pre-existing base-drift lines (duplicate_route_count, route_object_entry_count) update from regenerating on current main. No route/router count change."
     },
     {
       "path": "docs/audit/CI_RED_016_ENDPOINT_CONSUMER_MAP.md",
