@@ -77,22 +77,24 @@ from app.cam.canonical_geometry_process_policy import (
     is_system_actor,
     process_covers_source_case,
 )
-from app.governance.review_enforcement import (
-    ReviewBypassAttemptError,
-    ReviewDecision,
-    ReviewEnforcement,
+
+# The governed-event derivation and the CanonicalProcessApprovalError are split
+# into a sibling module to keep this file within the file-size budget; they are
+# re-exported here so importers of this module are unaffected. (Proposed
+# vocabulary, process coverage, representation-token detection, and PR-1
+# authenticity constants live in canonical_geometry_process_policy.py.)
+from app.cam.canonical_geometry_process_approval_event import (
+    CanonicalProcessApprovalError,
+    derive_governed_approval_event_id,
 )
 
-
-# Proposed vocabulary, process coverage, representation-token detection, and
-# PR-1 authenticity constants live in canonical_geometry_process_policy.py.
-class CanonicalProcessApprovalError(Exception):
-    """
-    Raised when a canonical process approval record cannot be created or is
-    invalid. The message names the required corrective path — in particular,
-    uncovered source cases must be resolved by *process extension*, never by an
-    artifact-specific exception.
-    """
+__all__ = [
+    "CanonicalProcessApprovalError",
+    "CanonicalProcessApprovalRecord",
+    "derive_governed_approval_event_id",
+    "validate_canonical_process_approval_record",
+    "create_canonical_process_approval_record",
+]
 
 
 class CanonicalProcessApprovalRecord(BaseModel):
@@ -158,10 +160,13 @@ class CanonicalProcessApprovalRecord(BaseModel):
     authentication: str = Field(
         default=UNVERIFIED_PENDING_GOVERNANCE,
         description=(
-            "Authenticity status of this approval. PR-1: ALWAYS "
-            "'unverified_pending_governance' — there is no authorized-approver "
-            "anchor yet (AUTHORIZED_CANONICAL_APPROVERS is the PR-2 hard "
-            "prerequisite). Fail-safe default: nothing may claim verified authority."
+            "Authenticity status of this approval. Fail-safe default: "
+            "'unverified_pending_governance'. 'verified_governed_process' is legal "
+            "ONLY when this record's approver clears the AUTHORIZED_CANONICAL_APPROVERS "
+            "anchor — the model validator re-checks authorization for the verified "
+            "state, so it can neither be hand-set nor rehydrated for an unauthorized "
+            "approver. The anchor ships EMPTY (fail-closed), so absent a ratified "
+            "approver id every record still resolves to unverified_pending_governance."
         ),
     )
 
@@ -230,6 +235,35 @@ class CanonicalProcessApprovalRecord(BaseModel):
                 "minted only by AUTHORIZED_CANONICAL_APPROVERS at record creation; "
                 "nothing else may claim verified authority."
             )
+
+        # Provenance-lock the verified state. Membership in the allowed set is not
+        # enough: 'verified_governed_process' is legal ONLY when this record's own
+        # approver/process/version/rule/role actually clears the authorization
+        # anchor. The check is routed through the SAME helper the factory uses to
+        # mint, so mint-time and validation-time semantics can never diverge. This
+        # binds the strong state to recomputable provenance, so a directly-
+        # constructed or rehydrated record cannot assert verified authority the
+        # anchor would not grant (fail-closed: an unknown, unmatched, or later-
+        # revoked approver is refused rather than trusted).
+        if self.authentication == VERIFIED_GOVERNED_PROCESS:
+            authorized, authorization_reason = is_authorized_canonical_approver(
+                canonical_process_id=self.canonical_process_id,
+                canonical_process_version=self.canonical_process_version,
+                approval_rule_id=self.approval_rule_id,
+                approver_id=self.approver_id,
+                approver_role=self.approver_role,
+            )
+            if not authorized:
+                detail = authorization_reason or (
+                    "approver is not on the ratified authorization anchor"
+                )
+                raise ValueError(
+                    "authentication 'verified_governed_process' is not authorized "
+                    f"for this record: {detail}. The verified state is minted solely "
+                    "for an allowlisted approver via AUTHORIZED_CANONICAL_APPROVERS; "
+                    "it cannot be hand-set on, or rehydrated into, a record whose "
+                    "approver is not authorized."
+                )
 
         expected_event_id = compute_governed_approval_event_id(
             approver_id=self.approver_id,
@@ -335,76 +369,29 @@ def validate_canonical_process_approval_record(
             "stale or caller-supplied approval hashes cannot back canonical "
             "authority."
         )
+    # Defense-in-depth: the model validator already provenance-locks the verified
+    # state at construction, so a record in hand cannot legally carry an
+    # unauthorized 'verified_governed_process'. Re-assert it here so the reference-
+    # creation gate (create_process_approved_canonical_geometry_reference calls
+    # this) stays correct even if the model validator is ever weakened.
+    if record.authentication == VERIFIED_GOVERNED_PROCESS:
+        authorized, authorization_reason = is_authorized_canonical_approver(
+            canonical_process_id=record.canonical_process_id,
+            canonical_process_version=record.canonical_process_version,
+            approval_rule_id=record.approval_rule_id,
+            approver_id=record.approver_id,
+            approver_role=record.approver_role,
+        )
+        if not authorized:
+            detail = authorization_reason or (
+                "approver is not on the ratified authorization anchor"
+            )
+            return False, (
+                "verified_governed_process authentication is not authorized for this "
+                f"record: {detail}; only an allowlisted approver via "
+                "AUTHORIZED_CANONICAL_APPROVERS may back verified canonical authority."
+            )
     return True, None
-
-
-def derive_governed_approval_event_id(
-    approver_id: str,
-    canonical_process_id: str,
-    canonical_process_version: str,
-    approval_rule_id: str,
-    source_geometry_id: str,
-    provenance_hash: str,
-    process_inputs_hash: str,
-) -> str:
-    """
-    Produce a governed approval event id SERVER-SIDE (C2 PR 1 — gap-1 lock).
-
-    The event id is NOT accepted from the caller. It is derived from a governed
-    ``ReviewEnforcement`` review that this function runs: the approval is routed
-    through ``record_review(..., APPROVE)``, which REFUSES a ``system:`` actor
-    (raising ``ReviewBypassAttemptError``) — so no machine actor can manufacture
-    a governed approval event, and no caller can assert a pre-chosen event id.
-    The id is deterministic over the logical approval identity (approver,
-    process id/version, rule, source, provenance, and process inputs), so retries
-    of the same request reconcile to the same id while changed content cannot
-    replay the id.
-
-    NOTE: this closes the *fabrication* vector (an id can no longer be supplied)
-    and rejects ``system:`` actors, but it does NOT itself decide whether the
-    approver is *authorized*. Authorization is applied ONCE by
-    ``create_canonical_process_approval_record`` via
-    ``is_authorized_canonical_approver`` (the AUTHORIZED_CANONICAL_APPROVERS
-    anchor), which stamps ``verified_governed_process`` only for an allowlisted
-    approver and otherwise preserves the ``unverified_pending_governance`` baseline.
-    """
-    enforcement = ReviewEnforcement()
-    try:
-        review = enforcement.record_review(
-            reviewer_id=approver_id,
-            decision=ReviewDecision.APPROVE,
-            review_context={
-                "canonical_process_id": canonical_process_id,
-                "source_geometry_id": source_geometry_id,
-            },
-        )
-    except ReviewBypassAttemptError as exc:
-        # system: actor tried to APPROVE — cannot produce a governed event.
-        raise CanonicalProcessApprovalError(
-            f"governed approval event cannot be produced for approver "
-            f"'{approver_id}': {exc}"
-        ) from exc
-
-    if not (
-        enforcement.review_completed
-        and enforcement.review_decision == ReviewDecision.APPROVE
-        and review.is_human()
-    ):
-        raise CanonicalProcessApprovalError(
-            "governed approval event requires a completed human APPROVE review; "
-            f"approver '{approver_id}' did not produce one"
-        )
-
-    return compute_governed_approval_event_id(
-        approver_id=review.reviewer_id,
-        canonical_process_id=canonical_process_id,
-        canonical_process_version=canonical_process_version,
-        approval_rule_id=approval_rule_id,
-        source_geometry_id=source_geometry_id,
-        provenance_hash=provenance_hash,
-        process_inputs_hash=process_inputs_hash,
-        decision=review.decision.value,
-    )
 
 
 def create_canonical_process_approval_record(

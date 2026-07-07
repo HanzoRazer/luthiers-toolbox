@@ -25,7 +25,9 @@ from app.cam.canonical_geometry_process_policy import (
 from app.cam.canonical_geometry_process_approval import (
     CanonicalProcessApprovalError,
     CanonicalProcessApprovalRecord,
+    compute_governed_approval_event_id,
     create_canonical_process_approval_record,
+    validate_canonical_process_approval_record,
 )
 from app.cam.geometry_authority_reference import (
     create_canonical_geometry_reference,
@@ -262,3 +264,100 @@ def test_shipped_anchor_is_fail_closed():
         (PROPOSED_CANONICAL_PROCESS_ID, PROPOSED_CANONICAL_PROCESS_VERSION)
     ][PROPOSED_APPROVAL_RULE_ID]
     assert entry["approvers"] == frozenset()
+
+
+# ---------------------------------------------------------------------------
+# Provenance-lock: the verified state cannot be forged by direct construction
+# ---------------------------------------------------------------------------
+
+def _computed_event_id(**overrides):
+    kwargs = _valid_kwargs(**overrides)
+    return compute_governed_approval_event_id(
+        approver_id=kwargs["approver_id"],
+        canonical_process_id=kwargs["canonical_process_id"],
+        canonical_process_version=kwargs["canonical_process_version"],
+        approval_rule_id=kwargs["approval_rule_id"],
+        source_geometry_id=kwargs["source_geometry_id"],
+        provenance_hash=kwargs["provenance_hash"],
+        process_inputs_hash=kwargs["process_inputs_hash"],
+        decision="approve",
+    )
+
+
+def test_forged_verified_record_rejected_at_construction():
+    """A caller who computes a valid event id CANNOT hand-set verified authority:
+    with the shipped (empty) anchor the approver is not authorized, so the model
+    validator refuses the verified state even though every other field is valid."""
+    event_id = _computed_event_id()
+    with pytest.raises(ValueError, match="verified_governed_process.*not authorized"):
+        CanonicalProcessApprovalRecord(
+            **_valid_kwargs(),
+            governed_approval_event_id=event_id,
+            authentication=VERIFIED_GOVERNED_PROCESS,
+        )
+
+
+def test_forged_verified_record_rejected_by_policy_gate():
+    """Defense-in-depth: the policy gate independently refuses an unauthorized
+    verified record. model_construct() genuinely skips the model validator (unlike
+    monkeypatching a compiled pydantic validator), so this exercises the policy
+    gate on a record that otherwise looks internally consistent."""
+    event_id = _computed_event_id()
+    forged = CanonicalProcessApprovalRecord.model_construct(
+        **_valid_kwargs(),
+        governed_approval_event_id=event_id,
+        authentication=VERIFIED_GOVERNED_PROCESS,
+    )
+    is_valid, reason = validate_canonical_process_approval_record(forged)
+    assert is_valid is False
+    assert "not authorized" in (reason or "")
+
+
+def test_authorized_verified_record_rehydration_still_valid(seed_authorized_approver):
+    """A genuinely verified record (approver on the anchor) round-trips: direct
+    reconstruction with matching event id + verified authentication is accepted by
+    BOTH the model validator (construction succeeds) and the policy gate."""
+    event_id = _computed_event_id()
+    record = CanonicalProcessApprovalRecord(
+        **_valid_kwargs(),
+        governed_approval_event_id=event_id,
+        authentication=VERIFIED_GOVERNED_PROCESS,
+    )
+    assert record.authentication == VERIFIED_GOVERNED_PROCESS
+    is_valid, reason = validate_canonical_process_approval_record(record)
+    assert is_valid, reason
+
+
+# ---------------------------------------------------------------------------
+# Provenance-lock: reference boundary (naked forged ref refused; real one passes)
+# ---------------------------------------------------------------------------
+
+def test_naked_verified_reference_rejected():
+    """A directly-constructed canonical reference cannot claim verified authority
+    without the complete backing process-approval metadata."""
+    from app.cam.geometry_authority_reference import GeometryAuthorityReference
+
+    with pytest.raises(ValueError, match="requires complete backing process-approval"):
+        GeometryAuthorityReference(
+            authority_layer="canonical_geometry",
+            owning_domain="boe",
+            may_define_canonical_geometry=True,
+            authentication=VERIFIED_GOVERNED_PROCESS,
+        )
+
+
+def test_verified_reference_with_backing_metadata_roundtrips(seed_authorized_approver):
+    """End-to-end: an authorized approver mints a verified record, the reference
+    factory inherits verified authentication AND carries the full backing metadata,
+    so the reference-boundary lock passes and validation is green."""
+    record = create_canonical_process_approval_record(**_valid_kwargs())
+    assert record.authentication == VERIFIED_GOVERNED_PROCESS
+
+    ref = create_process_approved_canonical_geometry_reference(
+        approval_record=record, owning_domain="boe",
+    )
+    assert ref.authentication == VERIFIED_GOVERNED_PROCESS
+    # Reference-boundary lock is satisfied by the inherited backing metadata.
+    result = validate_geometry_authority_reference(ref)
+    assert result.gate == "green"
+    assert result.blocking_issues == []

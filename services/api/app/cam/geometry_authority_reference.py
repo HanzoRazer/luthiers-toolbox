@@ -42,6 +42,7 @@ from app.cam.canonical_geometry_process_approval import (
     ALLOWED_AUTHENTICATION_STATES,
     CanonicalProcessApprovalRecord,
     UNVERIFIED_PENDING_GOVERNANCE,
+    VERIFIED_GOVERNED_PROCESS,
     validate_canonical_process_approval_record,
 )
 
@@ -139,11 +140,15 @@ class GeometryAuthorityReference(BaseModel):
     authentication: str = Field(
         default=UNVERIFIED_PENDING_GOVERNANCE,
         description=(
-            "Authenticity status inherited from the backing process-approval "
-            "record. Fail-safe default: 'unverified_pending_governance'. In PR-1 "
-            "nothing can carry a verified status (the authorized-approver anchor "
-            "is the PR-2 hard prerequisite); a caller must never treat this "
-            "reference as authenticated canonical authority while it is unverified."
+            "Authenticity status INHERITED from the backing process-approval "
+            "record. Fail-safe default: 'unverified_pending_governance'. "
+            "'verified_governed_process' is only ever set by inheritance from a "
+            "governed CanonicalProcessApprovalRecord whose approver cleared the "
+            "authorization anchor; the model validator refuses a verified reference "
+            "that lacks complete backing process-approval metadata, so it cannot be "
+            "asserted directly. The anchor ships EMPTY (fail-closed), so today no "
+            "reference carries verified; a caller must never treat an unverified "
+            "reference as authenticated canonical authority."
         )
     )
 
@@ -254,6 +259,33 @@ class GeometryAuthorityReference(BaseModel):
                 "creation and inherited here; references cannot assert it directly."
             )
 
+        # A verified reference must be a genuine inheritance from a governed
+        # approval record, not a naked hand-set flag. The reference does not carry
+        # approver identity, so it cannot re-run the authorization anchor itself
+        # (that lock lives on CanonicalProcessApprovalRecord, the only mint path);
+        # what it CAN require is that the complete backing process-approval
+        # metadata is present. This refuses a directly-constructed reference that
+        # claims 'verified_governed_process' with no record behind it.
+        if self.authentication == VERIFIED_GOVERNED_PROCESS:
+            required_backing = {
+                "process_approval_record_id": self.process_approval_record_id,
+                "process_approval_record_hash": self.process_approval_record_hash,
+                "canonical_process_id": self.canonical_process_id,
+                "canonical_process_version": self.canonical_process_version,
+                "governed_approval_event_id": self.governed_approval_event_id,
+                "process_source_geometry_id": self.process_source_geometry_id,
+            }
+            missing = sorted(name for name, value in required_backing.items() if not value)
+            if missing:
+                raise ValueError(
+                    "authentication 'verified_governed_process' requires complete "
+                    f"backing process-approval metadata; missing {missing}. A verified "
+                    "reference must inherit its authentication from a governed "
+                    "CanonicalProcessApprovalRecord via "
+                    "create_process_approved_canonical_geometry_reference(); it cannot "
+                    "be asserted directly on a reference."
+                )
+
         return self
 
     def compute_hash(self) -> str:
@@ -285,209 +317,31 @@ class GeometryAuthorityReference(BaseModel):
         return hashlib.sha256(canonical.encode()).hexdigest()
 
 
-def create_canonical_geometry_reference(
-    owning_domain: str,
-    source_authority: str,
-    provenance_hash: Optional[str] = None,
-    description: str = "",
-    metadata: Optional[Dict[str, Any]] = None,
-) -> GeometryAuthorityReference:
-    """
-    LEGACY / UNAPPROVED canonical reference — NOT a normal creation path.
+# --- Reference factories -----------------------------------------------------
+# The reference-construction factories are split into
+# ``geometry_authority_reference_factories.py`` to keep this module within the
+# file-size budget, and re-exported here so importers of this module are
+# unaffected. This import MUST stay at the bottom: the factories module imports
+# ``GeometryAuthorityReference`` (defined above), so the cycle resolves only when
+# entry happens through this module — which is the sole supported import path.
+from app.cam.geometry_authority_reference_factories import (  # noqa: E402
+    create_canonical_geometry_reference,
+    create_process_approved_canonical_geometry_reference,
+    create_derived_geometry_reference,
+    create_manufacturing_geometry_reference,
+    create_cognition_geometry_reference,
+    create_export_geometry_reference,
+    create_visualization_geometry_reference,
+)
 
-    Creates a canonical reference WITHOUT a process-approval record. Under the
-    C2 process-exclusive ruling (RATIFIED 2026-07-04), canonical authority is
-    created only by the approved canonical process following a governed approval
-    event — so a reference from this factory carries NO process-approval metadata
-    and will raise a transition-state *warning* during validation (still not a RED
-    gate; the strict RED flip remains deferred).
-
-    RETIRED for runtime/API creation (GOV-CONVERGE-007-A): the HTTP path
-    ``POST /references/canonical`` now returns 410 and does not call this factory.
-    Use ``create_process_approved_canonical_geometry_reference()`` for any real
-    canonical geometry. This factory is retained ONLY for explicit legacy /
-    transition-warning tests; do NOT use it as a normal fixture path.
-    """
-    layer_def = get_layer_definition("canonical_geometry")
-
-    ref = GeometryAuthorityReference(
-        authority_layer="canonical_geometry",
-        owning_domain=owning_domain,
-        source_authority=source_authority,
-        provenance_hash=provenance_hash,
-        allowed_uses=layer_def.allowed_uses,  # type: ignore
-        may_define_canonical_geometry=True,
-        description=description,
-        metadata=metadata or {"layer": "canonical"},
-    )
-    ref.deterministic_reference_hash = ref.compute_hash()
-    return ref
-
-
-def create_process_approved_canonical_geometry_reference(
-    approval_record: CanonicalProcessApprovalRecord,
-    owning_domain: str,
-    source_authority: str = "canonical_process",
-    description: str = "",
-    metadata: Optional[Dict[str, Any]] = None,
-) -> GeometryAuthorityReference:
-    """
-    Create a canonical geometry reference backed by a governed process-approval
-    record (C2 process-exclusive ruling — PROPOSED).
-
-    The reference's canonical authority is evidenced by the approval record, not
-    by its owning domain, format, route, or storage location. Representation-only
-    source claims are not accepted: the approval record's ``provenance_hash``
-    must point at the actual upstream geometry source.
-
-    Behaviour:
-      - Produces ``authority_layer="canonical_geometry"``.
-      - Sets ``may_define_canonical_geometry=True``.
-      - Copies process-approval metadata onto the reference.
-      - Carries ``provenance_hash`` from the approval record.
-      - Does NOT authorize execution or machine output (7T invariants hold).
-    """
-    approval_valid, approval_reason = validate_canonical_process_approval_record(
-        approval_record
-    )
-    if not approval_valid:
-        raise ValueError(
-            "Invalid canonical process approval record: "
-            f"{approval_reason or 'unknown validation failure'}"
-        )
-
-    record_hash = approval_record.compute_hash()
-
-    layer_def = get_layer_definition("canonical_geometry")
-
-    ref = GeometryAuthorityReference(
-        authority_layer="canonical_geometry",
-        owning_domain=owning_domain,
-        source_authority=source_authority,
-        provenance_hash=approval_record.provenance_hash,
-        allowed_uses=layer_def.allowed_uses,  # type: ignore
-        may_define_canonical_geometry=True,
-        description=description,
-        metadata=metadata or {"layer": "canonical", "authority_origin": "process_approved"},
-        process_approval_record_id=approval_record.approval_record_id,
-        process_approval_record_hash=record_hash,
-        canonical_process_id=approval_record.canonical_process_id,
-        canonical_process_version=approval_record.canonical_process_version,
-        governed_approval_event_id=approval_record.governed_approval_event_id,
-        process_source_geometry_id=approval_record.source_geometry_id,
-        authentication=approval_record.authentication,
-    )
-    ref.deterministic_reference_hash = ref.compute_hash()
-    return ref
-
-
-def create_derived_geometry_reference(
-    authority_layer: GeometryAuthorityLayer,
-    source_geometry_id: str,
-    owning_domain: str,
-    source_authority: Optional[str] = None,
-    derived_from: Optional[List[str]] = None,
-    provenance_hash: Optional[str] = None,
-    description: str = "",
-    metadata: Optional[Dict[str, Any]] = None,
-) -> GeometryAuthorityReference:
-    """
-    Create a derived geometry reference.
-
-    Derived references require source references and cannot define canonical truth.
-    """
-    if is_canonical_layer(authority_layer):
-        raise ValueError(
-            "Cannot create derived reference for canonical_geometry layer — "
-            "use create_process_approved_canonical_geometry_reference instead"
-        )
-
-    layer_def = get_layer_definition(authority_layer)
-
-    ref = GeometryAuthorityReference(
-        authority_layer=authority_layer,
-        source_geometry_id=source_geometry_id,
-        derived_from=derived_from or [],
-        owning_domain=owning_domain,
-        source_authority=source_authority,
-        provenance_hash=provenance_hash,
-        allowed_uses=layer_def.allowed_uses,  # type: ignore
-        prohibited_uses=layer_def.prohibited_uses,
-        may_define_canonical_geometry=False,
-        description=description,
-        metadata=metadata or {"layer": authority_layer},
-    )
-    ref.deterministic_reference_hash = ref.compute_hash()
-    return ref
-
-
-def create_manufacturing_geometry_reference(
-    source_geometry_id: str,
-    owning_domain: str = "cam",
-    source_authority: Optional[str] = None,
-    provenance_hash: Optional[str] = None,
-    description: str = "",
-) -> GeometryAuthorityReference:
-    """Create a manufacturing geometry reference."""
-    return create_derived_geometry_reference(
-        authority_layer="manufacturing_geometry",
-        source_geometry_id=source_geometry_id,
-        owning_domain=owning_domain,
-        source_authority=source_authority,
-        provenance_hash=provenance_hash,
-        description=description,
-    )
-
-
-def create_cognition_geometry_reference(
-    source_geometry_id: str,
-    owning_domain: str = "cam",
-    source_authority: Optional[str] = None,
-    provenance_hash: Optional[str] = None,
-    description: str = "",
-) -> GeometryAuthorityReference:
-    """Create a cognition geometry reference for 7S strategy/workspace use."""
-    return create_derived_geometry_reference(
-        authority_layer="cognition_geometry",
-        source_geometry_id=source_geometry_id,
-        owning_domain=owning_domain,
-        source_authority=source_authority,
-        provenance_hash=provenance_hash,
-        description=description,
-    )
-
-
-def create_export_geometry_reference(
-    source_geometry_id: str,
-    owning_domain: str = "export",
-    source_authority: Optional[str] = None,
-    provenance_hash: Optional[str] = None,
-    description: str = "",
-) -> GeometryAuthorityReference:
-    """Create an export geometry reference."""
-    return create_derived_geometry_reference(
-        authority_layer="export_geometry",
-        source_geometry_id=source_geometry_id,
-        owning_domain=owning_domain,
-        source_authority=source_authority,
-        provenance_hash=provenance_hash,
-        description=description,
-    )
-
-
-def create_visualization_geometry_reference(
-    source_geometry_id: str,
-    owning_domain: str = "ui",
-    source_authority: Optional[str] = None,
-    provenance_hash: Optional[str] = None,
-    description: str = "",
-) -> GeometryAuthorityReference:
-    """Create a visualization geometry reference."""
-    return create_derived_geometry_reference(
-        authority_layer="visualization_geometry",
-        source_geometry_id=source_geometry_id,
-        owning_domain=owning_domain,
-        source_authority=source_authority,
-        provenance_hash=provenance_hash,
-        description=description,
-    )
+__all__ = [
+    "GeometryUse",
+    "GeometryAuthorityReference",
+    "create_canonical_geometry_reference",
+    "create_process_approved_canonical_geometry_reference",
+    "create_derived_geometry_reference",
+    "create_manufacturing_geometry_reference",
+    "create_cognition_geometry_reference",
+    "create_export_geometry_reference",
+    "create_visualization_geometry_reference",
+]
