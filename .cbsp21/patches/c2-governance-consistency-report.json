@@ -1,0 +1,46 @@
+{
+  "schema": "cbsp21_patch_input_v1",
+  "schema_version": "cbsp21_patch_input_v1",
+  "coverage_min": 0.95,
+  "patch_id": "C2_GOVERNANCE_CONSISTENCY_REPORT",
+  "title": "docs(governance): add C2 governance consistency report (M4 audit)",
+  "intent": "M4 governance consistency audit grounded in origin/main at c06ecae4 (PR #206 merged). Verifies that the C2 canonical-authority implementation faithfully reflects the ratified governance from PR #202 (authorization anchor) through PR #206 (approver ratification framework). Confirms the governance corpus is internally consistent, the runtime matches governance, geometry-origin remains OPEN, and the anchor is empty/fail-closed with no back door. Deferred items catalogued; no contradictions found. No authority granted, no approver seeded, no runtime or GAMS change, C2 not reopened.",
+  "change_type": "docs",
+  "behavior_change": "none",
+  "risk_level": "low",
+  "scope": {
+    "paths_in_scope": [
+      "docs/governance/coordination/"
+    ],
+    "files_expected_to_change": [
+      "docs/governance/coordination/C2_GOVERNANCE_CONSISTENCY_REPORT.md"
+    ]
+  },
+  "diff_articulation": {
+    "what_changed": "Adds C2_GOVERNANCE_CONSISTENCY_REPORT.md: the M4 capstone audit document confirming that M1-M3 governance implementation and published governance docs are mutually consistent. Documents milestone status, executive summary, per-dimension consistency findings, deferred items, and explicit non-actions.",
+    "why_not_redundant": "This is the first M4 audit document — a read-only consolidation pass over the M1-M3 outputs. It does not duplicate any of the prior governance documents (authorization anchor, approver ratification framework, etc.); it cross-references them to confirm consistency."
+  },
+  "verification": {
+    "commands_run": [
+      "git show --stat HEAD -- docs/governance/coordination/C2_GOVERNANCE_CONSISTENCY_REPORT.md -> 1 file changed, 134 insertions(+)"
+    ]
+  },
+  "files": [
+    {
+      "path": "docs/governance/coordination/C2_GOVERNANCE_CONSISTENCY_REPORT.md",
+      "intent": "M4 governance consistency audit: confirms C2 canonical-authority governance (M1-M3) is internally consistent and faithfully implemented. Read-only — no authority granted, no approver seeded, no runtime change.",
+      "scan_targets": [
+        "docs/governance/coordination/C2_GOVERNANCE_CONSISTENCY_REPORT.md"
+      ],
+      "risk": "low",
+      "behavior_change": "none - documentation only"
+    }
+  ],
+  "architecture_scan": {
+    "scan_id": "AS-2026-07-08-C2-GOVERNANCE-CONSISTENCY-REPORT",
+    "risk_summary": { "critical": 0, "high": 0, "medium": 0, "low": 0 },
+    "findings": [],
+    "acknowledged": true,
+    "acknowledgement_notes": "Documentation-only audit report. No code, runtime, or governance authority change. Read-only consolidation pass confirming M1-M3 consistency."
+  }
+}
