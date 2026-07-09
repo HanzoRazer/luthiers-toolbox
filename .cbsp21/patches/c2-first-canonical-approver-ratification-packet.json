@@ -1,0 +1,43 @@
+{
+  "schema": "cbsp21_patch_input_v1",
+  "schema_version": "cbsp21_patch_input_v1",
+  "coverage_min": 0.95,
+  "patch_id": "C2_FIRST_CANONICAL_APPROVER_RATIFICATION_PACKET",
+  "title": "docs(governance): add C2 first canonical approver ratification packet (M5)",
+  "intent": "Adds the M5 decision-instance packet that prepares the single owner decision required to mint the first verified canonical approver for AUTHORIZED_CANONICAL_APPROVERS. Documentation only — does not name an approver, does not seed the allowlist, and does not change runtime behavior. Instantiates framework §4.1 step 1 (Proposal) and drives framework §5 (Ratification checklist) from C2_CANONICAL_APPROVER_RATIFICATION.md (PR #206). Read-only preparation document; any actual approver seeding requires a separate, isolated commit.",
+  "change_type": "docs",
+  "behavior_change": "none",
+  "risk_level": "low",
+  "scope": {
+    "files_expected_to_change": [
+      "docs/governance/coordination/C2_FIRST_CANONICAL_APPROVER_RATIFICATION_PACKET.md"
+    ]
+  },
+  "diff_articulation": {
+    "what_changed": "Adds C2_FIRST_CANONICAL_APPROVER_RATIFICATION_PACKET.md: the M5 decision-instance packet for the first canonical approver ratification. Contains the ratification checklist, approver proposal, and owner decision record — all in DRAFT status awaiting owner action.",
+    "why_not_redundant": "C2_CANONICAL_APPROVER_RATIFICATION.md (PR #206) is the general framework document defining the process. This packet is the concrete M5 decision instance that instantiates that framework for the first approver. It does not duplicate the framework; it fills in the first instance of it."
+  },
+  "verification": {
+    "commands_run": [
+      "git show --stat HEAD -- docs/governance/coordination/C2_FIRST_CANONICAL_APPROVER_RATIFICATION_PACKET.md -> 1 file changed, new file"
+    ]
+  },
+  "files": [
+    {
+      "path": "docs/governance/coordination/C2_FIRST_CANONICAL_APPROVER_RATIFICATION_PACKET.md",
+      "intent": "M5 first canonical approver ratification packet: decision-instance document preparing the owner ratification decision for AUTHORIZED_CANONICAL_APPROVERS. DRAFT — no approver named, no allowlist seeded, no runtime change.",
+      "scan_targets": [
+        "docs/governance/coordination/C2_FIRST_CANONICAL_APPROVER_RATIFICATION_PACKET.md"
+      ],
+      "risk": "low",
+      "behavior_change": "none - documentation only"
+    }
+  ],
+  "architecture_scan": {
+    "scan_id": "AS-2026-07-09-C2-FIRST-CANONICAL-APPROVER-RATIFICATION-PACKET",
+    "risk_summary": { "critical": 0, "high": 0, "medium": 0, "low": 0 },
+    "findings": [],
+    "acknowledged": true,
+    "acknowledgement_notes": "Documentation-only M5 decision-instance packet. No code, runtime, or governance authority change. Approver allowlist remains empty and fail-closed."
+  }
+}
