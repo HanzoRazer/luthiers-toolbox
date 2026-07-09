@@ -9,6 +9,9 @@
   "behavior_change": "none",
   "risk_level": "low",
   "scope": {
+    "paths_in_scope": [
+      "docs/governance/coordination/C2_FIRST_CANONICAL_APPROVER_RATIFICATION_PACKET.md"
+    ],
     "files_expected_to_change": [
       "docs/governance/coordination/C2_FIRST_CANONICAL_APPROVER_RATIFICATION_PACKET.md"
     ]
