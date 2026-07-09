@@ -1,0 +1,42 @@
+{
+  "schema": "cbsp21_patch_input_v1",
+  "schema_version": "cbsp21_patch_input_v1",
+  "coverage_min": 0.95,
+  "patch_id": "WP_002_A_SHIM_RECONFIRMATION",
+  "title": "WP-002-A: reconfirm deprecated consolidation shims on live main",
+  "intent": "Read-only evidence audit (docs only). Reconfirms the Consolidation Lab Investigation 007 snapshot census of deprecated router consolidation shims against current live main (fc95cfc1), as required by the WP-002 adjudication record's no-retirement-before-import-census guard. Records current facts (which *_consolidated_router.py are deprecated shims, importer counts, runtime mounting, replacement modules, replacement test coverage) so the WP-002 adjudication can later decide per shim. No source, no routes, no retirement, no disposition.",
+  "change_type": "docs",
+  "behavior_change": "none - adds a single audit document under docs/audit/. No executable code changed; no route added/removed/moved.",
+  "risk_level": "low",
+  "scope": {
+    "paths_in_scope": [
+      ".cbsp21/",
+      "docs/audit/"
+    ],
+    "files_expected_to_change": [
+      "docs/audit/WP_002_SHIM_RECONFIRMATION.md"
+    ]
+  },
+  "diff_articulation": {
+    "what_changed": "Adds docs/audit/WP_002_SHIM_RECONFIRMATION.md: a live-main (fc95cfc1) reconfirmation of the Investigation 007 deprecated-shim census. Findings: 15 *_consolidated_router.py total (unchanged); 3 explicit DEPRECATED compatibility shims (drilling, probe, retract), each imported by exactly one file (its package __init__) and runtime-reachable, with named replacement sub-modules present; classification identical to the snapshot (no drift). Replacement test coverage is partial (domain tests exist; per-replacement endpoint coverage still to be confirmed). Focused read-only pytest recorded 82 passed / 15 failed, where all 15 failures are pre-existing baseline in test_cam_consolidated_endpoint_smoke.py for unrelated toolpath/photo_batch endpoints (not shim domains, worktree unmodified).",
+    "why_not_redundant": "Investigation 007 counts were snapshot evidence; the WP-002 adjudication guard requires re-confirmation against current main before any retirement. This audit supplies that current evidence and surfaces the remaining gate (per-replacement coverage). It authorizes no retirement and makes no disposition."
+  },
+  "verification": {
+    "commands_run": [
+      "find services/api/app -name '*_consolidated_router.py' | wc -l -> 15 (matches snapshot)",
+      "grep -ci deprecated <each> -> DEPRECATED in exactly 3 (drilling, probe, retract)",
+      "grep -rl <shim_module> services/api/app --include=*.py -> 1 importer each (its package __init__)",
+      "PYTHONPATH=. py -3.11 -m pytest tests/test_probe_router.py tests/test_cam_consolidated_endpoint_smoke.py tests/cam/test_drilling_intent_migration.py -q -> 82 passed, 15 failed (15 failures = pre-existing non-shim toolpath/photo_batch baseline)",
+      "py -3.11 scripts/ci/check_cbsp21_patch_input.py --base origin/main --head HEAD -> (recorded at commit)",
+      "py -3.11 scripts/ci/check_cbsp21_gate.py --changed-files <PR file set> -> (recorded at commit)"
+    ]
+  },
+  "files": [
+    {
+      "path": "docs/audit/WP_002_SHIM_RECONFIRMATION.md",
+      "intent": "New read-only audit reconfirming the Investigation 007 deprecated-shim census against live main; records current facts for the WP-002 adjudication. No disposition, no retirement.",
+      "risk": "low",
+      "behavior_change": "none"
+    }
+  ]
+}
