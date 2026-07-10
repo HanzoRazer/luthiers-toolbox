@@ -24,7 +24,7 @@
   },
   "verification": {
     "commands_run": [
-      "git diff --name-only origin/main HEAD -> showed false base-only files (.cbsp21/patches/wp-002-b-replacement-coverage.json, docs/audit/WP_002_REPLACEMENT_COVERAGE.md) plus the real PR file",
+      "git diff --name-only origin/main HEAD -> outputs false base-only files (.cbsp21/patches/wp-002-b-replacement-coverage.json, docs/audit/WP_002_REPLACEMENT_COVERAGE.md) plus the real PR file",
       "MERGE_BASE=$(git merge-base origin/main HEAD) && git diff --name-only \"$MERGE_BASE\" HEAD -> docs/governance/coordination/C2_M6_READINESS_AUDIT.md before the workflow edit; after the workflow edit, the PR also includes .github/workflows/cbsp21_gate.yml",
       "python scripts/ci/check_cbsp21_patch_input.py --base origin/main --head HEAD",
       "python scripts/ci/check_cbsp21_gate.py --changed-files $(git diff --name-only \"$(git merge-base origin/main HEAD)\" HEAD)"
