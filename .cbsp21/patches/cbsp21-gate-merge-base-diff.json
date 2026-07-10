@@ -6,8 +6,8 @@
   "title": "ci(cbsp21): diff PR changes from merge-base and declare the M6 audit doc",
   "intent": "Fix the CBSP21 Patch Manifest Gate false failure on stale PR branches by computing changed files from the PR merge-base instead of diffing the base tip tree directly. Also declare the C2 M6 readiness audit document that this branch adds so the selected manifest matches the real PR scope.",
   "change_type": "ci",
-  "behavior_change": "The CBSP21 Gate workflow now computes pull request changed files from merge-base..HEAD, so files added only on main no longer appear as PR changes. The PR's own manifest now explicitly covers the gate workflow file and the C2 M6 readiness audit document.",
-  "risk_level": "medium",
+  "behavior_change": "The CBSP21 Gate workflow now computes pull request changed files from merge-base..HEAD, so files added only on main no longer appear as PR changes.",
+  "risk_level": "low",
   "scope": {
     "paths_in_scope": [
       ".github/workflows/cbsp21_gate.yml",
@@ -34,7 +34,7 @@
     {
       "path": ".github/workflows/cbsp21_gate.yml",
       "intent": "Compute pull_request changed files from the PR merge-base so CBSP21 manifest selection ignores files added only on main.",
-      "risk": "medium",
+      "risk": "low",
       "behavior_change": "CBSP21 Gate now diffs merge-base..HEAD for pull_request events instead of base-tip..HEAD."
     },
     {
