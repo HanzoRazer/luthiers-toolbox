@@ -32,7 +32,10 @@ jobs:
           fi
           
           if [ "${{ github.event_name }}" == "pull_request" ]; then
-            MERGE_BASE=$(git merge-base "$BASE" "$HEAD")
+            if ! MERGE_BASE=$(git merge-base "$BASE" "$HEAD"); then
+              echo "Failed to determine merge-base for $BASE and $HEAD" >&2
+              exit 1
+            fi
             CHANGED=$(git diff --name-only "$MERGE_BASE" "$HEAD" | tr '\n' ' ')
           else
             CHANGED=$(git diff --name-only "$BASE" "$HEAD" | tr '\n' ' ')
