@@ -20,7 +20,7 @@
   },
   "diff_articulation": {
     "what_changed": "Updates .github/workflows/cbsp21_gate.yml so pull_request runs diff from the merge-base to HEAD before passing changed files into the gate, avoiding false deletions from a stale branch vs newer main. Adds this per-PR manifest covering the workflow change and the existing C2_M6_READINESS_AUDIT.md document on the branch.",
-    "why_not_redundant": "This is not another documentation-only C2 governance report. It changes the CI gate's changed-file computation to match real PR scope and adds the corresponding per-PR CBSP21 manifest so the branch validates against its own declared files instead of colliding with unrelated manifests from main."
+    "why_not_redundant": "Modifies the CI gate's changed-file computation to use the PR merge-base so manifest validation matches actual PR scope instead of including unrelated main-branch changes, and adds the corresponding per-PR CBSP21 manifest for this branch."
   },
   "verification": {
     "commands_run": [

@@ -33,7 +33,7 @@ jobs:
           
           if [ "${{ github.event_name }}" == "pull_request" ]; then
             if ! MERGE_BASE=$(git merge-base "$BASE" "$HEAD"); then
-              echo "Failed to determine merge-base for $BASE and $HEAD. The pull request may have no common ancestor with the base branch, or one of the refs may be invalid." >&2
+              echo "Failed to determine merge-base for $BASE and $HEAD. The pull request may have no common ancestor with the base branch, or one of the refs may be invalid. Consider rebasing the branch or verifying that both refs exist and share history." >&2
               exit 1
             fi
             CHANGED=$(git diff --name-only "$MERGE_BASE" "$HEAD" | tr '\n' ' ')
