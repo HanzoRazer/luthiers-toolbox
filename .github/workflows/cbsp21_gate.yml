@@ -31,7 +31,15 @@ jobs:
             HEAD="HEAD"
           fi
           
-          CHANGED=$(git diff --name-only "$BASE" "$HEAD" | tr '\n' ' ')
+          if [ "${{ github.event_name }}" == "pull_request" ]; then
+            if ! MERGE_BASE=$(git merge-base "$BASE" "$HEAD"); then
+              echo "Failed to determine merge-base for $BASE and $HEAD. Ensure both refs exist and share history; this usually means the branch needs rebasing or the histories are unrelated." >&2
+              exit 1
+            fi
+            CHANGED=$(git diff --name-only "$MERGE_BASE" "$HEAD" | tr '\n' ' ')
+          else
+            CHANGED=$(git diff --name-only "$BASE" "$HEAD" | tr '\n' ' ')
+          fi
           echo "files=$CHANGED" >> $GITHUB_OUTPUT
           echo "Changed files: $CHANGED"
 
