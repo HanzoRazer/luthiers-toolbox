@@ -159,6 +159,10 @@ That is the correct and intended state; it is a reserved governance act, not deb
 
 ## Exit condition
 
-Once this audit is merged, the C2 **engineering** program is complete. No further engineering,
-documentation, or implementation work is required or authorized. Future work begins only if and
-when the repository owner initiates M6 by ratifying the first canonical approver.
+As of `d133a054` (2026-07-10), this audit found the C2 **engineering** program complete: no
+outstanding engineering, documentation, or implementation work was identified. This is an
+**engineering observation, not a governance directive** — it neither forbids nor authorizes future
+work, which remains at the repository owner's discretion. If the C2 stack is modified after this
+SHA, re-audit; this finding is anchored to the commit above and does not carry forward
+automatically. Owner-initiated M6 (ratifying the first canonical approver) remains the sole
+outstanding item, and it is a governance act, not an engineering task.
