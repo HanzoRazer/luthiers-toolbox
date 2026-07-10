@@ -1,0 +1,54 @@
+{
+  "schema": "cbsp21_patch_input_v1",
+  "schema_version": "cbsp21_patch_input_v1",
+  "coverage_min": 0.95,
+  "patch_id": "CBSP21_GATE_MERGE_BASE_DIFF",
+  "title": "ci(cbsp21): diff PR changes from merge-base and declare the M6 audit doc",
+  "intent": "Fix the CBSP21 Patch Manifest Gate false failure on stale PR branches by computing changed files from the PR merge-base instead of diffing the base tip tree directly. Also declare the C2 M6 readiness audit document that this branch adds so the selected manifest matches the real PR scope.",
+  "change_type": "ci",
+  "behavior_change": "The CBSP21 Gate workflow now computes pull_request changed files from merge-base..HEAD, so files added only on main no longer appear as PR changes. The PR's own manifest now explicitly covers the gate workflow file and the C2 M6 readiness audit document.",
+  "risk_level": "medium",
+  "scope": {
+    "paths_in_scope": [
+      ".github/workflows/cbsp21_gate.yml",
+      "docs/governance/coordination/C2_M6_READINESS_AUDIT.md"
+    ],
+    "files_expected_to_change": [
+      ".github/workflows/cbsp21_gate.yml",
+      "docs/governance/coordination/C2_M6_READINESS_AUDIT.md"
+    ]
+  },
+  "diff_articulation": {
+    "what_changed": "Updates .github/workflows/cbsp21_gate.yml so pull_request runs diff from the merge-base to HEAD before passing changed files into the gate, avoiding false deletions from a stale branch vs newer main. Adds this per-PR manifest covering the workflow change and the existing C2_M6_READINESS_AUDIT.md document on the branch.",
+    "why_not_redundant": "This is not another documentation-only C2 governance report. It changes the CI gate's changed-file computation to match real PR scope and adds the corresponding per-PR CBSP21 manifest so the branch validates against its own declared files instead of colliding with unrelated manifests from main."
+  },
+  "verification": {
+    "commands_run": [
+      "git diff --name-only origin/main HEAD -> showed false base-only files (.cbsp21/patches/wp-002-b-replacement-coverage.json, docs/audit/WP_002_REPLACEMENT_COVERAGE.md) plus the real PR file",
+      "MERGE_BASE=$(git merge-base origin/main HEAD) && git diff --name-only \"$MERGE_BASE\" HEAD -> docs/governance/coordination/C2_M6_READINESS_AUDIT.md before the workflow edit; after the workflow edit, the PR also includes .github/workflows/cbsp21_gate.yml",
+      "python scripts/ci/check_cbsp21_patch_input.py --base origin/main --head HEAD",
+      "python scripts/ci/check_cbsp21_gate.py --changed-files $(git diff --name-only \"$(git merge-base origin/main HEAD)\" HEAD)"
+    ]
+  },
+  "files": [
+    {
+      "path": ".github/workflows/cbsp21_gate.yml",
+      "intent": "Compute pull_request changed files from the PR merge-base so CBSP21 manifest selection ignores files added only on main.",
+      "risk": "medium",
+      "behavior_change": "CBSP21 Gate now diffs merge-base..HEAD for pull_request events instead of base-tip..HEAD."
+    },
+    {
+      "path": "docs/governance/coordination/C2_M6_READINESS_AUDIT.md",
+      "intent": "Add the C2 M6 readiness audit document already present on this branch.",
+      "risk": "low",
+      "behavior_change": "none"
+    }
+  ],
+  "architecture_scan": {
+    "scan_id": "AS-2026-07-10-CBSP21-GATE-MERGE-BASE-DIFF",
+    "risk_summary": { "critical": 0, "high": 0, "medium": 0, "low": 0 },
+    "findings": [],
+    "acknowledged": true,
+    "acknowledgement_notes": "Scoped CI workflow fix plus PR-local manifest declaration. No runtime application code changed."
+  }
+}
