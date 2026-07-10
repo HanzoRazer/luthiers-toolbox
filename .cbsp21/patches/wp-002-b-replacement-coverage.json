@@ -1,0 +1,41 @@
+{
+  "schema": "cbsp21_patch_input_v1",
+  "schema_version": "cbsp21_patch_input_v1",
+  "coverage_min": 0.95,
+  "patch_id": "WP_002_B_REPLACEMENT_COVERAGE",
+  "title": "WP-002-B: confirm deprecated shim replacement coverage on live main",
+  "intent": "Read-only evidence audit (docs only). Closes the one remaining WP-002 evidence gate — replacement test coverage — by mapping each deprecated shim's replacement-module endpoints (drilling, probe, retract) to tests and running them on live main (d133a054). Records coverage facts, gaps, and a per-shim evidence verdict so the WP-002 adjudication can decide per shim. No source, no routes, no retirement, no disposition.",
+  "change_type": "docs",
+  "behavior_change": "none - adds a single audit document under docs/audit/. No executable code changed; no route added/removed/moved.",
+  "risk_level": "low",
+  "scope": {
+    "paths_in_scope": [
+      ".cbsp21/patches/wp-002-b-replacement-coverage.json",
+      "docs/audit/WP_002_REPLACEMENT_COVERAGE.md"
+    ],
+    "files_expected_to_change": [
+      "docs/audit/WP_002_REPLACEMENT_COVERAGE.md"
+    ]
+  },
+  "diff_articulation": {
+    "what_changed": "Adds docs/audit/WP_002_REPLACEMENT_COVERAGE.md: a per-endpoint replacement-coverage matrix for the three deprecated consolidation shims. Findings: probe 15/15 endpoints covered (test_probe_router.py, all five sub-routers incl. governed downloads); retract 8/8 covered incl. gcode_governed / download_governed (test_retract_endpoint_smoke.py); drilling 3/4 covered (drill_modal /gcode /info via test_cam_drilling_smoke.py; drill_pattern /pattern/gcode via test_drilling_intent_migration.py + e2e; only /pattern/info metadata GET lacks an explicit assertion). Focused pytest of the three direct tests: 99 passed, 0 failed. Per-shim evidence verdict: all three Sufficient (drilling with one trivial noted gap).",
+    "why_not_redundant": "The WP-002 adjudication guard requires replacement test coverage evidence before any shim retirement. This audit supplies that final evidence item with a per-endpoint matrix and passing test runs, and identifies the single trivial residual gap. It authorizes no retirement and selects no disposition."
+  },
+  "verification": {
+    "commands_run": [
+      "grep route decorators for drill_modal/drill_pattern, probe boss/corner/pocket/surface_z/vise_square, retract info/apply/gcode -> endpoint inventory",
+      "map endpoints -> tests (test_cam_drilling_smoke, test_probe_router, test_retract_endpoint_smoke; + test_drilling_intent_migration, e2e for /pattern/gcode)",
+      "PYTHONPATH=. py -3.11 -m pytest tests/test_cam_drilling_smoke.py tests/test_probe_router.py tests/test_retract_endpoint_smoke.py -q -> 99 passed, 0 failed (152s)",
+      "py -3.11 scripts/ci/check_cbsp21_patch_input.py --base origin/main --head HEAD -> (recorded at commit)",
+      "py -3.11 scripts/ci/check_cbsp21_gate.py --changed-files <PR file set> -> (recorded at commit)"
+    ]
+  },
+  "files": [
+    {
+      "path": "docs/audit/WP_002_REPLACEMENT_COVERAGE.md",
+      "intent": "New read-only audit: per-endpoint replacement-coverage matrix + per-shim evidence verdict for the WP-002 adjudication. No disposition, no retirement.",
+      "risk": "low",
+      "behavior_change": "none"
+    }
+  ]
+}
