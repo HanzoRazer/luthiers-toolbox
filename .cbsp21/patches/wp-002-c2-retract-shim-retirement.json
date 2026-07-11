@@ -1,0 +1,56 @@
+{
+  "schema": "cbsp21_patch_input_v1",
+  "schema_version": "cbsp21_patch_input_v1",
+  "coverage_min": 0.95,
+  "patch_id": "WP_002_C2_RETRACT_SHIM_RETIREMENT",
+  "title": "WP-002-C2: retire deprecated retract consolidation shim from runtime wiring",
+  "intent": "Owner-authorized (Complete Sprint) retirement of the deprecated retract_consolidated_router from runtime/package wiring. Repoint routers/retract/__init__.py to build the aggregate router from the three focused sub-routers directly (info, apply, gcode) and re-export the models from those sub-routers, instead of importing everything through the shim. The compatibility module remains importable with a DeprecationWarning so downstream branches/scripts do not break at import time while migrating. The retired runtime shim was a pure pass-through that only re-exported these same include_router() calls, so all retract endpoint paths and behavior are unchanged. Follows the WP-002-C1 (probe) facade-retention precedent. Evidence: Investigation 007 + PR #209 (single package importer) + PR #210 (replacement coverage 8/8). Independent PR; probe/drilling untouched.",
+  "change_type": "refactor",
+  "behavior_change": "none - runtime wiring/symbol change only. All 8 retract endpoints (/strategies, /estimate, /apply, /lead_in, /gcode, /gcode/download, /gcode_governed, /gcode/download_governed) resolve at identical paths under /api/cam/retract with identical responses. No route added/removed/moved; no request/response model change. Direct imports of the deprecated compatibility module remain available with DeprecationWarning.",
+  "risk_level": "low",
+  "scope": {
+    "paths_in_scope": [
+      ".cbsp21/patches/wp-002-c2-retract-shim-retirement.json",
+      "services/api/app/routers/retract/__init__.py",
+      "services/api/app/routers/retract/retract_consolidated_router.py",
+      "services/api/tests/test_retract_shim_retirement_invariant.py"
+    ],
+    "files_expected_to_change": [
+      "services/api/app/routers/retract/__init__.py",
+      "services/api/app/routers/retract/retract_consolidated_router.py",
+      "services/api/tests/test_retract_shim_retirement_invariant.py"
+    ]
+  },
+  "diff_articulation": {
+    "what_changed": "(1) services/api/app/routers/retract/__init__.py: removed the aggregate import `from .retract_consolidated_router import (router, info_router, apply_router, gcode_router, ...models...)`; replaced with direct imports of the three focused sub-routers (retract_info_router, retract_apply_router, retract_gcode_router) and the models from those sub-routers, then builds `router = APIRouter(tags=['Retract'])` and mounts the three sub-routers with the exact include_router() calls the shim made internally. Point3DModel and __all__ are unchanged. (2) services/api/app/routers/retract/retract_consolidated_router.py remains as a deprecated import-compatible facade emitting DeprecationWarning on import, but is no longer used by package runtime wiring. (3) services/api/tests/test_retract_shim_retirement_invariant.py asserts all 8 retract endpoint suffixes remain mounted with methods and the Retract tag, the shim module remains import-compatible with DeprecationWarning, and the package no longer imports the retired shim.",
+    "why_not_redundant": "Retires an unfinished-migration compatibility shim (adjudicated Complete Sprint) from runtime wiring while preserving a safe downstream import bridge, per the C1 precedent. Not cosmetic: removes the deprecated indirection layer from app registration and adds route/import invariant guards, with zero endpoint/behavior change. Probe and drilling shims are intentionally NOT touched (separate PRs WP-002-C1 shipped / WP-002-C3 pending)."
+  },
+  "verification": {
+    "commands_run": [
+      "git grep -n retract_consolidated_router -- 'services/api/app/**/*.py' -> only routers/retract/__init__.py imported it (single package importer); reconfirmed on origin/main",
+      "PYTHONPATH=. py -3.11 -m pytest tests/test_retract_endpoint_smoke.py tests/test_retract_shim_retirement_invariant.py -q -> (recorded at commit)",
+      "py -3.11 scripts/ci/check_cbsp21_patch_input.py --base origin/main --head HEAD -> (recorded at commit)",
+      "py -3.11 scripts/ci/check_cbsp21_gate.py --changed-files <PR file set> -> (recorded at commit)"
+    ]
+  },
+  "files": [
+    {
+      "path": "services/api/app/routers/retract/__init__.py",
+      "intent": "Repoint: build the aggregate router from the three focused sub-routers directly and re-export models from them (was: via the deprecated retract_consolidated_router aggregate). Endpoint paths/behavior unchanged.",
+      "risk": "low",
+      "behavior_change": "none"
+    },
+    {
+      "path": "services/api/app/routers/retract/retract_consolidated_router.py",
+      "intent": "Retain an import-compatible deprecated facade while removing it from package runtime wiring; downstream direct imports receive DeprecationWarning instead of ModuleNotFoundError.",
+      "risk": "low",
+      "behavior_change": "none for registered API routes; compatibility behavior preserved for direct imports"
+    },
+    {
+      "path": "services/api/tests/test_retract_shim_retirement_invariant.py",
+      "intent": "Route/import invariant guard: all 8 retract endpoints remain mounted with methods/Retract tag; shim module remains import-compatible with DeprecationWarning; package no longer imports the retired shim.",
+      "risk": "low",
+      "behavior_change": "none"
+    }
+  ]
+}
