@@ -1,0 +1,61 @@
+{
+  "schema": "cbsp21_patch_input_v1",
+  "schema_version": "cbsp21_patch_input_v1",
+  "coverage_min": 0.95,
+  "patch_id": "IBG_REPOSITORY_PROPOSAL_CONTRACTS",
+  "title": "feat(ibg-repository): repository change proposal contracts (IBG-1 PR A)",
+  "intent": "Add the ibg_repository package with deterministic, content-addressed repository change proposal contracts: ProposalTargetBinding (constitutional adapter over the existing BodyEvidenceCandidate), a CBSP21 patch-packet adapter, RepositoryChangeProposal, and a RepositoryProposalReviewPackage wrapper over the existing IBG ReviewPackage. Contracts only — no git execution, no router, no filesystem or network I/O, no canonical authority. Includes the IBG-1 archaeology inventory that grounded this design.",
+  "change_type": "feat",
+  "behavior_change": "Adds new additive contract modules under a new package (services/api/app/ibg_repository/). No existing runtime path imports them yet; no existing behavior changes.",
+  "risk_level": "low",
+  "scope": {
+    "paths_in_scope": [
+      "services/api/app/ibg_repository/",
+      "services/api/tests/ibg_repository/",
+      "docs/handoffs/IBG_1_ARCHAEOLOGY_INVENTORY.md"
+    ],
+    "files_expected_to_change": [
+      "docs/handoffs/IBG_1_ARCHAEOLOGY_INVENTORY.md",
+      "services/api/app/ibg_repository/__init__.py",
+      "services/api/app/ibg_repository/proposal_target.py",
+      "services/api/app/ibg_repository/cbsp21_patch_adapter.py",
+      "services/api/app/ibg_repository/repository_change_proposal.py",
+      "services/api/app/ibg_repository/repository_review_package.py",
+      "services/api/tests/ibg_repository/conftest.py",
+      "services/api/tests/ibg_repository/test_proposal_target.py",
+      "services/api/tests/ibg_repository/test_cbsp21_patch_adapter.py",
+      "services/api/tests/ibg_repository/test_repository_change_proposal.py",
+      "services/api/tests/ibg_repository/test_repository_review_package.py"
+    ]
+  },
+  "diff_articulation": {
+    "what_changed": "Creates services/api/app/ibg_repository/ (proposal_target, cbsp21_patch_adapter, repository_change_proposal, repository_review_package, __init__) plus its test suite, and adds docs/handoffs/IBG_1_ARCHAEOLOGY_INVENTORY.md. Contracts derive evidence-owned fields from a governed BodyEvidenceCandidate, emit the existing cbsp21_patch_input_v1 shape via an adapter, and content-address proposals with wall-clock time excluded from the canonical hash and serialization.",
+    "why_not_redundant": "No repository change proposal / patch-adapter / repository review-package contracts existed; the only prior review package is body-geometry-scoped (instrument_geometry/body/ibg/workflow/review_package.py) and is reused (wrapped), not duplicated. This adds a new, distinct capability boundary (repository proposal automation) that did not previously exist in the tree."
+  },
+  "verification": {
+    "commands_run": [
+      "python -m pytest tests/ibg_repository/ -q  ->  39 passed",
+      "python scripts/ci/check_cbsp21_patch_input.py --base origin/main --head HEAD"
+    ]
+  },
+  "files": [
+    { "path": "docs/handoffs/IBG_1_ARCHAEOLOGY_INVENTORY.md", "intent": "Record the read-only archaeology inventory that grounded PR A.", "risk": "low", "behavior_change": "none" },
+    { "path": "services/api/app/ibg_repository/__init__.py", "intent": "Package init re-exporting the public contract API.", "risk": "low", "behavior_change": "none" },
+    { "path": "services/api/app/ibg_repository/proposal_target.py", "intent": "ProposalTargetBinding constitutional adapter over BodyEvidenceCandidate.", "risk": "low", "behavior_change": "none" },
+    { "path": "services/api/app/ibg_repository/cbsp21_patch_adapter.py", "intent": "Adapter emitting/validating the existing cbsp21_patch_input_v1 packet shape.", "risk": "low", "behavior_change": "none" },
+    { "path": "services/api/app/ibg_repository/repository_change_proposal.py", "intent": "Deterministic, content-addressed RepositoryChangeProposal.", "risk": "low", "behavior_change": "none" },
+    { "path": "services/api/app/ibg_repository/repository_review_package.py", "intent": "RepositoryProposalReviewPackage wrapper over the existing IBG ReviewPackage.", "risk": "low", "behavior_change": "none" },
+    { "path": "services/api/tests/ibg_repository/conftest.py", "intent": "Shared factory fixtures building a real governed candidate and CBSP21 packet.", "risk": "low", "behavior_change": "none" },
+    { "path": "services/api/tests/ibg_repository/test_proposal_target.py", "intent": "ProposalTargetBinding invariants.", "risk": "low", "behavior_change": "none" },
+    { "path": "services/api/tests/ibg_repository/test_cbsp21_patch_adapter.py", "intent": "CBSP21 adapter emit/validate invariants.", "risk": "low", "behavior_change": "none" },
+    { "path": "services/api/tests/ibg_repository/test_repository_change_proposal.py", "intent": "Proposal determinism and no-authority invariants.", "risk": "low", "behavior_change": "none" },
+    { "path": "services/api/tests/ibg_repository/test_repository_review_package.py", "intent": "Review package wrap-not-fork invariants.", "risk": "low", "behavior_change": "none" }
+  ],
+  "architecture_scan": {
+    "scan_id": "AS-2026-07-10-IBG-REPOSITORY-PROPOSAL-CONTRACTS",
+    "risk_summary": { "critical": 0, "high": 0, "medium": 0, "low": 0 },
+    "findings": [],
+    "acknowledged": true,
+    "acknowledgement_notes": "Additive contract-only package. No git/filesystem/network execution, no router wiring, no canonical authority. Worktree builder and draft-PR metadata are deferred to PR B and PR C."
+  }
+}
