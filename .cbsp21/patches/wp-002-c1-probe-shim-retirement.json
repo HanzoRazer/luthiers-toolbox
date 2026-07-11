@@ -1,0 +1,55 @@
+{
+  "schema": "cbsp21_patch_input_v1",
+  "schema_version": "cbsp21_patch_input_v1",
+  "coverage_min": 0.95,
+  "patch_id": "WP_002_C1_PROBE_SHIM_RETIREMENT",
+  "title": "WP-002-C1: retire deprecated probe consolidation shim",
+  "intent": "Owner-authorized (Complete Sprint) retirement of the deprecated probe_consolidated_router compatibility wrapper. Repoint routers/probe/__init__.py to mount the six focused sub-routers directly (boss, corner, pocket, surface_z, vise_square, setup) and delete the shim. The shim was a pure pass-through that only re-exported these same include_router() calls, so all probe endpoint paths and behavior are unchanged. Evidence: Investigation 007 + PR #209 (single importer: the package __init__) + PR #210 (replacement coverage). Independent PR; retract/drilling untouched.",
+  "change_type": "refactor",
+  "behavior_change": "none - wiring/symbol change only. All 17 probe endpoints (/boss|/corner|/pocket|/surface_z|/vise_square x /gcode,/gcode/download,/gcode/download_governed; plus /setup_sheet/svg, /patterns) resolve at identical paths with identical responses. No route added/removed/moved; no request/response model change.",
+  "risk_level": "low",
+  "scope": {
+    "paths_in_scope": [
+      ".cbsp21/",
+      "services/api/app/routers/probe/",
+      "services/api/tests/"
+    ],
+    "files_expected_to_change": [
+      "services/api/app/routers/probe/__init__.py",
+      "services/api/app/routers/probe/probe_consolidated_router.py",
+      "services/api/tests/test_probe_shim_retirement_invariant.py"
+    ]
+  },
+  "diff_articulation": {
+    "what_changed": "(1) services/api/app/routers/probe/__init__.py: removed the import of the deprecated aggregate (`from .probe_consolidated_router import router as probe_router`) and the `router.include_router(probe_router)` call; replaced with direct `router.include_router(...)` of the six focused sub-routers already imported in the module (boss, corner, pocket, surface_z, vise_square, setup) — the exact calls the shim made internally. Removed the backward-compat `probe_router` entry from __all__ (no external importer of it exists). (2) Deleted services/api/app/routers/probe/probe_consolidated_router.py (the shim). (3) Added services/api/tests/test_probe_shim_retirement_invariant.py: asserts all 17 probe endpoint suffixes remain mounted, the shim module no longer imports, and the aggregate re-export is gone.",
+    "why_not_redundant": "Retires an unfinished-migration compatibility shim (adjudicated Complete Sprint) whose sole consumer was its own package __init__. Not cosmetic: removes a deprecated indirection layer and adds a route-invariant guard, with zero endpoint/behavior change. Retract and drilling shims are intentionally NOT touched (separate PRs WP-002-C2 / C3)."
+  },
+  "verification": {
+    "commands_run": [
+      "grep -rn probe_consolidated_router services/api/app --include=*.py -> only the package __init__ (pre-change); 0 functional refs after",
+      "PYTHONPATH=. py -3.11 -m pytest tests/test_probe_shim_retirement_invariant.py tests/test_probe_router.py tests/test_cam_probe_setup_smoke.py -q -> 24 passed, 0 failed (190s)",
+      "py -3.11 scripts/ci/check_cbsp21_patch_input.py --base origin/main --head HEAD -> (recorded at commit)",
+      "py -3.11 scripts/ci/check_cbsp21_gate.py --changed-files <PR file set> -> (recorded at commit)"
+    ]
+  },
+  "files": [
+    {
+      "path": "services/api/app/routers/probe/__init__.py",
+      "intent": "Repoint: mount the six focused sub-routers directly (was: via the deprecated probe_consolidated_router aggregate); drop the shim import and its __all__ re-export. Endpoint paths/behavior unchanged.",
+      "risk": "low",
+      "behavior_change": "none"
+    },
+    {
+      "path": "services/api/app/routers/probe/probe_consolidated_router.py",
+      "intent": "Delete the deprecated compatibility shim (pure pass-through aggregate; sole importer was the package __init__, now repointed).",
+      "risk": "low",
+      "behavior_change": "none"
+    },
+    {
+      "path": "services/api/tests/test_probe_shim_retirement_invariant.py",
+      "intent": "New route-invariant guard: all 17 probe endpoints remain mounted; shim module gone; aggregate re-export removed.",
+      "risk": "low",
+      "behavior_change": "none"
+    }
+  ]
+}
