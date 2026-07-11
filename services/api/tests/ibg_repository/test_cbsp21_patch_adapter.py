@@ -2,6 +2,9 @@
 
 from __future__ import annotations
 
+import ast
+from pathlib import Path
+
 import pytest
 
 from app.ibg_repository import (
@@ -14,6 +17,33 @@ from app.ibg_repository import (
     compute_packet_hash,
     validate_cbsp21_patch_packet,
 )
+
+# Repo root: .../services/api/tests/ibg_repository/<this file>
+_GATE_PATH = (
+    Path(__file__).resolve().parents[4] / "scripts" / "ci" / "check_cbsp21_patch_input.py"
+)
+
+
+def _gate_required_fields() -> tuple[str, ...]:
+    """Extract the gate's `required = [...]` list from its actual source (no execution).
+
+    Binds the drift test to the real implementation rather than a duplicated literal, so a
+    change to the gate's required-field list fails this test instead of silently desyncing.
+    """
+    tree = ast.parse(_GATE_PATH.read_text(encoding="utf-8"))
+    found: list[tuple[str, ...]] = []
+    for node in ast.walk(tree):
+        if not isinstance(node, ast.Assign):
+            continue
+        names = {t.id for t in node.targets if isinstance(t, ast.Name)}
+        if "required" not in {n.lower() for n in names}:
+            continue
+        if isinstance(node.value, ast.List) and all(
+            isinstance(el, ast.Constant) and isinstance(el.value, str)
+            for el in node.value.elts
+        ):
+            found.append(tuple(el.value for el in node.value.elts))
+    return found[0] if len(found) == 1 else ()
 
 
 def _kwargs(**over):
@@ -42,21 +72,13 @@ def test_build_validates_and_sorts_paths():
 
 
 def test_required_fields_match_gate_contract():
-    # Must stay in lockstep with scripts/ci/check_cbsp21_patch_input.py `required`.
-    assert REQUIRED_FIELDS == (
-        "schema_version",
-        "patch_id",
-        "title",
-        "intent",
-        "change_type",
-        "behavior_change",
-        "risk_level",
-        "scope.paths_in_scope",
-        "scope.files_expected_to_change",
-        "diff_articulation.what_changed",
-        "diff_articulation.why_not_redundant",
-        "verification.commands_run",
-    )
+    # Bind to the ACTUAL gate source, not a duplicated literal: if the gate's required-field
+    # list changes, this fails and forces REQUIRED_FIELDS to be re-synced.
+    if not _GATE_PATH.exists():
+        pytest.skip(f"CBSP21 gate not found at {_GATE_PATH}")
+    gate_required = _gate_required_fields()
+    assert gate_required, "could not extract a unique `required` list from the gate source"
+    assert REQUIRED_FIELDS == gate_required
 
 
 def test_validate_catches_missing_field():
@@ -83,6 +105,15 @@ def test_behavior_change_requires_long_why_not():
 def test_empty_path_list_rejected():
     with pytest.raises(CBSP21PacketError):
         build_cbsp21_patch_packet(**_kwargs(paths_in_scope=[]))
+
+
+@pytest.mark.parametrize("bad", ["/etc/passwd", "C:/win", "../escape", "a/../b"])
+def test_packet_rejects_unsafe_paths(bad):
+    # Path safety is symmetric with ProposalTargetBinding: manifest scope is repo-relative.
+    with pytest.raises(CBSP21PacketError):
+        build_cbsp21_patch_packet(**_kwargs(paths_in_scope=[bad]))
+    with pytest.raises(CBSP21PacketError):
+        build_cbsp21_patch_packet(**_kwargs(files_expected_to_change=[bad]))
 
 
 def test_deterministic_serialization_and_hash():

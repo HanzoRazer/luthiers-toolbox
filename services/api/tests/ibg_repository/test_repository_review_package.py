@@ -18,7 +18,7 @@ def _proposal(make_candidate, make_packet):
         make_candidate(),
         repository_id="luthiers-toolbox",
         base_revision="ac5a2d35",
-        authorized_target_paths=["services/api/app/ibg_repository/x.py"],
+        authorized_target_paths=["services/api/app/ibg_repository/"],
         change_intent="add",
     )
     return build_repository_change_proposal(

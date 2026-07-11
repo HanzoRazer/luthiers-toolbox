@@ -29,12 +29,12 @@
     ]
   },
   "diff_articulation": {
-    "what_changed": "Creates services/api/app/ibg_repository/ (proposal_target, cbsp21_patch_adapter, repository_change_proposal, repository_review_package, __init__) plus its test suite, and adds docs/handoffs/IBG_1_ARCHAEOLOGY_INVENTORY.md. Contracts derive evidence-owned fields from a governed BodyEvidenceCandidate, emit the existing cbsp21_patch_input_v1 shape via an adapter, and content-address proposals with wall-clock time excluded from the canonical hash and serialization.",
+    "what_changed": "Creates services/api/app/ibg_repository/ (proposal_target, cbsp21_patch_adapter, repository_change_proposal, repository_review_package, __init__) plus its test suite, and adds docs/handoffs/IBG_1_ARCHAEOLOGY_INVENTORY.md. Contracts derive evidence-owned fields from a governed BodyEvidenceCandidate, emit the existing cbsp21_patch_input_v1 shape via an adapter, and content-address proposals with wall-clock time excluded from the canonical hash and serialization. Fail-closed invariants added in review: (1) the CBSP21 packet adapter rejects absolute/traversal paths symmetrically with ProposalTargetBinding; (2) build_repository_change_proposal enforces that every declared files_expected_to_change entry falls within the binding's authorized_target_paths (prefix-aware, mirroring the gate's scope semantics); (3) proposed_branch is validated as a plausible git ref. The required-fields drift test now binds to the real gate source (scripts/ci/check_cbsp21_patch_input.py) via AST rather than a duplicated literal.",
     "why_not_redundant": "No repository change proposal / patch-adapter / repository review-package contracts existed; the only prior review package is body-geometry-scoped (instrument_geometry/body/ibg/workflow/review_package.py) and is reused (wrapped), not duplicated. This adds a new, distinct capability boundary (repository proposal automation) that did not previously exist in the tree."
   },
   "verification": {
     "commands_run": [
-      "python -m pytest tests/ibg_repository/ -q  ->  39 passed",
+      "python -m pytest tests/ibg_repository/ -q  ->  all passed (expanded with drift/consistency/path-safety/branch invariants)",
       "python scripts/ci/check_cbsp21_patch_input.py --base origin/main --head HEAD"
     ]
   },

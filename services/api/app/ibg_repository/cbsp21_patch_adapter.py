@@ -12,10 +12,13 @@ from __future__ import annotations
 
 import hashlib
 import json
+import re
 from dataclasses import dataclass
 from typing import Any, Dict, List, Optional, Sequence, Tuple
 
 CBSP21_SCHEMA = "cbsp21_patch_input_v1"
+
+_WINDOWS_DRIVE_RE = re.compile(r"^[A-Za-z]:")
 
 # Mirrors the `required` list in scripts/ci/check_cbsp21_patch_input.py. Kept in lockstep;
 # a drift test asserts this equals the documented gate contract.
@@ -44,7 +47,15 @@ def _sorted_unique_paths(items: Sequence[str]) -> List[str]:
     for item in items:
         if not isinstance(item, str) or not item.strip():
             raise CBSP21PacketError(f"invalid path entry: {item!r}")
-        out.add(item.strip().replace("\\", "/"))
+        candidate = item.strip().replace("\\", "/")
+        # Path safety mirrors ProposalTargetBinding: manifest scope is always
+        # repo-relative, so absolute paths and traversal segments are forbidden.
+        if candidate.startswith("/") or _WINDOWS_DRIVE_RE.match(candidate):
+            raise CBSP21PacketError(f"absolute path entry is forbidden: {item!r}")
+        if ".." in candidate.split("/"):
+            raise CBSP21PacketError(f"path traversal is forbidden: {item!r}")
+        out.add(candidate.strip("/"))
+    out.discard("")
     if not out:
         raise CBSP21PacketError("path list must be non-empty")
     return sorted(out)

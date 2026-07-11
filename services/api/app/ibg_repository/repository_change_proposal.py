@@ -10,20 +10,31 @@ the id, the content hash, and the canonical serialization; an optional informati
 Constitutional boundary: a proposal carries no canonical authority. It never promotes or relabels
 the evidence authority state — it only *carries* the state observed on the binding. The
 classification is fixed to proposal-only.
+
+Identity semantics: the id is content-addressed over the *canonical* content (JSON with sorted
+keys), so it is independent of dict key insertion order and byte-level packet formatting; two
+semantically identical proposals share an id. It is NOT independent of list ordering or of extra
+optional fields — those are treated as material content.
 """
 
 from __future__ import annotations
 
 import hashlib
 import json
+import re
 from dataclasses import dataclass
 from datetime import datetime
-from typing import Any, Dict, Optional, Tuple
+from typing import Any, Dict, List, Optional, Tuple
 
 from .cbsp21_patch_adapter import validate_cbsp21_patch_packet
 from .proposal_target import ProposalTargetBinding
 
 PROPOSAL_CONSTITUTIONAL_CLASSIFICATION = "proposal_only__no_canonical_authority"
+
+# git check-ref-format forbids these in a branch name (subset sufficient for a
+# repo-relative feature branch): whitespace/control chars, the sequences below,
+# a leading '-', and a trailing '/' or '.lock'.
+_BRANCH_FORBIDDEN_SUBSTR = ("..", "~", "^", ":", "?", "*", "[", "\\", "@{", "//")
 
 
 class RepositoryChangeProposalError(Exception):
@@ -33,6 +44,51 @@ class RepositoryChangeProposalError(Exception):
 def _hash_content(content: Dict[str, Any]) -> str:
     canonical = json.dumps(content, sort_keys=True, separators=(",", ":"))
     return hashlib.sha256(canonical.encode()).hexdigest()[:16]
+
+
+def _as_list(value: Any) -> List[str]:
+    """Coerce a scope field to a list of strings (a bare string is one entry, not chars)."""
+    if value is None:
+        return []
+    if isinstance(value, (list, tuple)):
+        return [str(v) for v in value]
+    return [str(value)]
+
+
+def _validate_branch_name(branch: str) -> str:
+    """Fail-closed check that ``proposed_branch`` is a plausible git branch ref."""
+    if not isinstance(branch, str) or not branch.strip():
+        raise RepositoryChangeProposalError("proposed_branch is required")
+    b = branch.strip()
+    if b != branch:
+        raise RepositoryChangeProposalError(
+            f"proposed_branch must not have leading/trailing whitespace: {branch!r}"
+        )
+    if any(ch.isspace() or ord(ch) < 0x20 for ch in b):
+        raise RepositoryChangeProposalError(
+            f"proposed_branch contains whitespace/control characters: {branch!r}"
+        )
+    if b.startswith("-") or b.startswith("/") or b.endswith("/") or b.endswith(".lock"):
+        raise RepositoryChangeProposalError(f"invalid proposed_branch: {branch!r}")
+    if any(bad in b for bad in _BRANCH_FORBIDDEN_SUBSTR):
+        raise RepositoryChangeProposalError(f"invalid proposed_branch: {branch!r}")
+    return b
+
+
+def _file_within_authorized(file_path: str, authorized: Tuple[str, ...]) -> bool:
+    """True if ``file_path`` is exactly an authorized entry or under one as a directory prefix.
+
+    Mirrors the CBSP21 gate's ``_in_scope`` directory-prefix semantics so the authorized
+    boundary is interpreted the same way here as at the gate.
+    """
+    f = file_path.strip().replace("\\", "/").strip("/")
+    for entry in authorized:
+        e = entry.strip("/")
+        if not e:
+            continue
+        if f == e or f.startswith(e + "/"):
+            return True
+    return False
 
 
 @dataclass(frozen=True)
@@ -85,22 +141,40 @@ def build_repository_change_proposal(
     Build a deterministic RepositoryChangeProposal.
 
     Validates the CBSP21 packet (rejecting a malformed one), derives the changed-file summary
-    from the packet's declared scope, and content-addresses the proposal id. Does not upgrade
+    from the packet's declared scope, enforces that every declared file falls within the
+    binding's authorized target paths, and content-addresses the proposal id. Does not upgrade
     the evidence authority state — it is carried from the binding unchanged.
+
+    Fail-closed: a malformed packet, an invalid branch, or a declared changed file outside the
+    authorized boundary raises rather than producing a proposal.
     """
     if not isinstance(target, ProposalTargetBinding):
         raise RepositoryChangeProposalError("target must be a ProposalTargetBinding")
     validate_cbsp21_patch_packet(cbsp21_packet)
-    if not isinstance(proposed_branch, str) or not proposed_branch.strip():
-        raise RepositoryChangeProposalError("proposed_branch is required")
+    branch = _validate_branch_name(proposed_branch)
 
-    declared = cbsp21_packet.get("scope", {}).get("files_expected_to_change", [])
-    changed_file_summary = tuple(sorted({str(f) for f in declared}))
+    declared_raw = _as_list(
+        cbsp21_packet.get("scope", {}).get("files_expected_to_change", [])
+    )
+    # Constitutional boundary: a proposal may not declare changes it is not authorized to make.
+    outside = sorted(
+        {
+            f
+            for f in declared_raw
+            if not _file_within_authorized(f, target.authorized_target_paths)
+        }
+    )
+    if outside:
+        raise RepositoryChangeProposalError(
+            "declared files_expected_to_change fall outside authorized_target_paths "
+            f"{list(target.authorized_target_paths)}: {outside}"
+        )
+    changed_file_summary = tuple(sorted({str(f) for f in declared_raw}))
 
     content = {
         "target": target.to_canonical_dict(),
         "cbsp21_packet": cbsp21_packet,
-        "proposed_branch": proposed_branch.strip(),
+        "proposed_branch": branch,
         "changed_file_summary": list(changed_file_summary),
         "constitutional_classification": PROPOSAL_CONSTITUTIONAL_CLASSIFICATION,
     }
@@ -110,7 +184,7 @@ def build_repository_change_proposal(
         proposal_id=proposal_id,
         target=target,
         cbsp21_packet=cbsp21_packet,
-        proposed_branch=proposed_branch.strip(),
+        proposed_branch=branch,
         changed_file_summary=changed_file_summary,
         constitutional_classification=PROPOSAL_CONSTITUTIONAL_CLASSIFICATION,
         created_at=created_at,
