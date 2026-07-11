@@ -43,6 +43,38 @@ from .repository_review_package import (
     RepositoryReviewPackageError,
     build_repository_proposal_review_package,
 )
+from .worktree_state import RepositoryWorktreeState
+from .worktree_spec import (
+    RepositoryWorktreeSpec,
+    WorktreeSpecError,
+    derive_workspace_id,
+    derive_branch_name,
+    normalize_allowed_paths,
+)
+from .git_runner import (
+    GitRunner,
+    GitRunnerError,
+    GitCommandError,
+    GitRunnerConfigError,
+    LocalGitRunner,
+    CommandResult,
+)
+from .worktree_validator import (
+    WorktreeValidationError,
+    verify_temp_root,
+    verify_repository_root,
+    normalize_repository_path,
+    normalize_workspace_path,
+    validate_workspace_path,
+    validate_repository,
+    validate_branch,
+    validate_deterministic_naming,
+    validate_worktree,
+)
+from .worktree_builder import (
+    RepositoryWorktreeBuilder,
+    WorktreeBuildError,
+)
 
 __all__ = [
     "ProposalTargetBinding",
@@ -66,4 +98,29 @@ __all__ = [
     "RepositoryProposalReviewPackage",
     "RepositoryReviewPackageError",
     "build_repository_proposal_review_package",
+    # --- PR B: repository worktree isolation & proposal workspace ---
+    "RepositoryWorktreeState",
+    "RepositoryWorktreeSpec",
+    "WorktreeSpecError",
+    "derive_workspace_id",
+    "derive_branch_name",
+    "normalize_allowed_paths",
+    "GitRunner",
+    "GitRunnerError",
+    "GitCommandError",
+    "GitRunnerConfigError",
+    "LocalGitRunner",
+    "CommandResult",
+    "WorktreeValidationError",
+    "verify_temp_root",
+    "verify_repository_root",
+    "normalize_repository_path",
+    "normalize_workspace_path",
+    "validate_workspace_path",
+    "validate_repository",
+    "validate_branch",
+    "validate_deterministic_naming",
+    "validate_worktree",
+    "RepositoryWorktreeBuilder",
+    "WorktreeBuildError",
 ]
