@@ -1,0 +1,70 @@
+{
+  "schema": "cbsp21_patch_input_v1",
+  "schema_version": "cbsp21_patch_input_v1",
+  "coverage_min": 0.95,
+  "patch_id": "IBG_REPOSITORY_WORKTREE_INFRASTRUCTURE",
+  "title": "feat(ibg-repository): repository worktree isolation & proposal workspace (IBG-1 PR B)",
+  "intent": "Add the isolated repository workspace layer so IBG-generated repository proposals can be assembled inside disposable, verified worktrees WITHOUT granting IBG authority to mutate the canonical repository. Introduces RepositoryWorktreeState (lifecycle), RepositoryWorktreeSpec (deterministic descriptive metadata, workspace id/branch derived from the content-addressed proposal id, never a timestamp), a narrow GitRunner seam plus a fail-closed LocalGitRunner real adapter (temp-root required, explicit argv, no shell) limited to six sanctioned operations, a fail-closed worktree validator (path confinement, deterministic-naming, branch/worktree/dirty checks), and RepositoryWorktreeBuilder which materializes exactly one worktree per proposal and enforces an ownership interlock on disposal. No commit, push, merge, checkout, branch deletion, GitHub, or network capability exists anywhere in the layer; the only sanctioned mutation is controlled worktree add/remove confined beneath the configured temp root.",
+  "change_type": "feat",
+  "behavior_change": "Adds a new additive package layer under services/api/app/ibg_repository/ (worktree_state, worktree_spec, git_runner, worktree_validator, worktree_builder) plus its test suite. No existing runtime path imports the new modules; no existing behavior, public API, schema, authority, or governance changes. The only runtime side effect the layer can produce is a confined git worktree add/remove, and only through an explicitly injected, temp-root-scoped runner.",
+  "risk_level": "low",
+  "scope": {
+    "paths_in_scope": [
+      "services/api/app/ibg_repository/",
+      "services/api/tests/ibg_repository/",
+      "docs/handoffs/IBG_PR_B_WORKTREE_ISOLATION_RESULT.md",
+      ".cbsp21/patches/ibg-worktree-infrastructure.json"
+    ],
+    "files_expected_to_change": [
+      "services/api/app/ibg_repository/__init__.py",
+      "services/api/app/ibg_repository/worktree_state.py",
+      "services/api/app/ibg_repository/worktree_spec.py",
+      "services/api/app/ibg_repository/git_runner.py",
+      "services/api/app/ibg_repository/worktree_validator.py",
+      "services/api/app/ibg_repository/worktree_builder.py",
+      "services/api/tests/ibg_repository/fake_git_runner.py",
+      "services/api/tests/ibg_repository/test_worktree_spec.py",
+      "services/api/tests/ibg_repository/test_worktree_validator.py",
+      "services/api/tests/ibg_repository/test_git_runner.py",
+      "services/api/tests/ibg_repository/test_worktree_builder.py",
+      "services/api/tests/ibg_repository/test_worktree_guards.py",
+      "docs/handoffs/IBG_PR_B_WORKTREE_ISOLATION_RESULT.md",
+      ".cbsp21/patches/ibg-worktree-infrastructure.json"
+    ]
+  },
+  "diff_articulation": {
+    "what_changed": "Creates the worktree isolation layer inside the existing ibg_repository package: worktree_state.py (RepositoryWorktreeState forward-only lifecycle enum), worktree_spec.py (RepositoryWorktreeSpec frozen dataclass + derive_workspace_id/derive_branch_name/normalize_allowed_paths, deterministic from the rcp- proposal id with no wall-clock component), git_runner.py (GitRunner protocol + LocalGitRunner real adapter that requires an explicit repository root AND temp root, runs git through an injected command seam with explicit argv lists and no shell, and confines every worktree path beneath temp_root; exactly six operations — list_worktrees, branch_exists, repository_clean, current_revision, create_worktree, remove_worktree — with no commit/push/reset/clean/checkout/branch-delete/network verb), worktree_validator.py (fail-closed gate: deterministic-naming, temp-root path confinement, repository reachability, branch well-formed-and-absent, no existing worktree, clean-tree unless explicitly overridden), and worktree_builder.py (RepositoryWorktreeBuilder: plan_from_proposal derives a spec purely, create validates then materializes one worktree and records ownership, dispose removes only a worktree this builder instance owns). __init__.py additively re-exports the new public API. The test suite (spec, validator, git_runner incl. one bounded real-git tmp_path integration test, builder, guards) plus an in-memory FakeGitRunner reaches 98% coverage of the new modules; PR A's contract tests remain green.",
+    "why_not_redundant": "No repository worktree / workspace-isolation layer existed. PR A added proposal CONTRACTS only and explicitly deferred worktree execution to PR B; nothing before this can prepare an isolated execution environment, and nothing before this enforces temp-root confinement, deterministic workspace naming, or a disposal ownership interlock. The layer is stacked on PR A (branch feature/ibg-repository-proposal-contracts) because the ibg_repository package and RepositoryChangeProposal it builds on are not yet on main."
+  },
+  "verification": {
+    "commands_run": [
+      "python -m pytest tests/ibg_repository/ -q  ->  all passed (PR A contracts + PR B worktree layer)",
+      "python -m pytest tests/ibg_repository/ --cov=app.ibg_repository.worktree_spec --cov=app.ibg_repository.worktree_state --cov=app.ibg_repository.git_runner --cov=app.ibg_repository.worktree_validator --cov=app.ibg_repository.worktree_builder  ->  98% new-package coverage",
+      "python scripts/ci/check_cbsp21_patch_input.py --base origin/feature/ibg-repository-proposal-contracts --head HEAD",
+      "python scripts/ci/check_cbsp21_gate.py --base origin/feature/ibg-repository-proposal-contracts --head HEAD"
+    ]
+  },
+  "files": [
+    { "path": "services/api/app/ibg_repository/__init__.py", "intent": "Additively re-export the PR B worktree public API.", "risk": "low", "behavior_change": "none" },
+    { "path": "services/api/app/ibg_repository/worktree_state.py", "intent": "RepositoryWorktreeState forward-only lifecycle enum (descriptive, not authority).", "risk": "low", "behavior_change": "none" },
+    { "path": "services/api/app/ibg_repository/worktree_spec.py", "intent": "RepositoryWorktreeSpec + deterministic id/branch/allowed-path derivations.", "risk": "low", "behavior_change": "none" },
+    { "path": "services/api/app/ibg_repository/git_runner.py", "intent": "GitRunner seam + fail-closed LocalGitRunner real adapter (six sanctioned ops, temp-root-confined, argv-only).", "risk": "low", "behavior_change": "additive; only sanctioned mutation is confined worktree add/remove" },
+    { "path": "services/api/app/ibg_repository/worktree_validator.py", "intent": "Fail-closed pre-flight validation gate before any worktree may be created.", "risk": "low", "behavior_change": "none" },
+    { "path": "services/api/app/ibg_repository/worktree_builder.py", "intent": "RepositoryWorktreeBuilder lifecycle + ownership interlock.", "risk": "low", "behavior_change": "additive; materializes one confined worktree per proposal" },
+    { "path": "services/api/tests/ibg_repository/fake_git_runner.py", "intent": "In-memory GitRunner fake for hermetic builder/validator tests.", "risk": "low", "behavior_change": "test-only" },
+    { "path": "services/api/tests/ibg_repository/test_worktree_spec.py", "intent": "Spec + deterministic-derivation invariants.", "risk": "low", "behavior_change": "test-only" },
+    { "path": "services/api/tests/ibg_repository/test_worktree_validator.py", "intent": "Fail-closed validation-gate coverage.", "risk": "low", "behavior_change": "test-only" },
+    { "path": "services/api/tests/ibg_repository/test_git_runner.py", "intent": "GitRunner seam, argv/no-shell assertions, one bounded real-git tmp_path integration test.", "risk": "low", "behavior_change": "test-only" },
+    { "path": "services/api/tests/ibg_repository/test_worktree_builder.py", "intent": "Builder lifecycle, ownership interlock, proposal-unchanged regression.", "risk": "low", "behavior_change": "test-only" },
+    { "path": "services/api/tests/ibg_repository/test_worktree_guards.py", "intent": "Fast guard-clause coverage to exceed the 95% new-package target.", "risk": "low", "behavior_change": "test-only" },
+    { "path": "docs/handoffs/IBG_PR_B_WORKTREE_ISOLATION_RESULT.md", "intent": "PR B result/handoff record.", "risk": "low", "behavior_change": "none" },
+    { "path": ".cbsp21/patches/ibg-worktree-infrastructure.json", "intent": "Per-PR CBSP21 manifest for PR B under the per-PR manifest-discovery model.", "risk": "low", "behavior_change": "CI/review metadata only" }
+  ],
+  "architecture_scan": {
+    "scan_id": "AS-2026-07-11-IBG-REPOSITORY-WORKTREE-INFRASTRUCTURE",
+    "risk_summary": { "critical": 0, "high": 0, "medium": 0, "low": 0 },
+    "findings": [],
+    "acknowledged": true,
+    "acknowledgement_notes": "Additive isolation layer. No commit/push/merge/checkout/branch-deletion/GitHub/network capability; only sanctioned mutation is temp-root-confined worktree add/remove through an injected runner. No router wiring, no canonical authority. Draft-PR metadata and router remain deferred to PR C."
+  }
+}
