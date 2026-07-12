@@ -13,7 +13,11 @@ from app.instrument_geometry.body.ibg.body_grid.body_grid_schema import BodyEvid
 from app.instrument_geometry.body.ibg.body_evidence_candidate import (
     create_candidate_from_evidence,
 )
-from app.ibg_repository import build_cbsp21_patch_packet
+from app.ibg_repository import (
+    build_cbsp21_patch_packet,
+    build_proposal_target_binding,
+    build_repository_change_proposal,
+)
 
 
 @pytest.fixture
@@ -46,6 +50,32 @@ def make_packet():
             what_changed="adds a module",
             why_not_redundant="n/a",
             verification_commands=["pytest"],
+        )
+
+    return _make
+
+
+@pytest.fixture
+def make_proposal(make_candidate, make_packet):
+    """Build a real, governed RepositoryChangeProposal (used by PR C review-package tests)."""
+
+    def _make(
+        files=("services/api/app/ibg_repository/proposal_target.py",),
+        *,
+        proposed_branch="feature/ibg-proposal",
+        change_intent="assemble a repository proposal",
+    ):
+        binding = build_proposal_target_binding(
+            make_candidate(),
+            repository_id="luthiers-toolbox",
+            base_revision="a708259d",
+            authorized_target_paths=list(files),
+            change_intent=change_intent,
+        )
+        return build_repository_change_proposal(
+            target=binding,
+            cbsp21_packet=make_packet(files=files),
+            proposed_branch=proposed_branch,
         )
 
     return _make
