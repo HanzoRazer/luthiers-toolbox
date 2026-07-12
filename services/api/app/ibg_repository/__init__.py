@@ -43,6 +43,35 @@ from .repository_review_package import (
     RepositoryReviewPackageError,
     build_repository_proposal_review_package,
 )
+from .review_summary_builder import (
+    ReviewSummaryError,
+    normalize_review_sections,
+    build_review_title,
+    build_changed_file_summary,
+    build_review_summary,
+)
+from .draft_pull_request_package import (
+    DraftPullRequestPackage,
+    DraftPullRequestPackageError,
+    DRAFT_PR_CONSTITUTIONAL_CLASSIFICATION,
+    build_draft_pull_request_package,
+)
+from .repository_review_bundle import (
+    RepositoryReviewBundle,
+    RepositoryReviewBundleError,
+    REVIEW_BUNDLE_SCHEMA_VERSION,
+    REVIEW_BUNDLE_CONSTITUTIONAL_CLASSIFICATION,
+    normalize_workspace_metadata,
+    build_review_bundle,
+)
+from .repository_review_export import (
+    to_dict,
+    to_json,
+    to_markdown,
+    build_review_json,
+    build_review_markdown,
+    stable_review_hash,
+)
 
 __all__ = [
     "ProposalTargetBinding",
@@ -66,4 +95,26 @@ __all__ = [
     "RepositoryProposalReviewPackage",
     "RepositoryReviewPackageError",
     "build_repository_proposal_review_package",
+    # --- PR C: review package, draft-PR metadata, deterministic exports ---
+    "ReviewSummaryError",
+    "normalize_review_sections",
+    "build_review_title",
+    "build_changed_file_summary",
+    "build_review_summary",
+    "DraftPullRequestPackage",
+    "DraftPullRequestPackageError",
+    "DRAFT_PR_CONSTITUTIONAL_CLASSIFICATION",
+    "build_draft_pull_request_package",
+    "RepositoryReviewBundle",
+    "RepositoryReviewBundleError",
+    "REVIEW_BUNDLE_SCHEMA_VERSION",
+    "REVIEW_BUNDLE_CONSTITUTIONAL_CLASSIFICATION",
+    "normalize_workspace_metadata",
+    "build_review_bundle",
+    "to_dict",
+    "to_json",
+    "to_markdown",
+    "build_review_json",
+    "build_review_markdown",
+    "stable_review_hash",
 ]
