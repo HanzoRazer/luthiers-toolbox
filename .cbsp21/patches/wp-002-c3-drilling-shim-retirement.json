@@ -22,13 +22,13 @@
     ]
   },
   "diff_articulation": {
-    "what_changed": "(1) services/api/app/cam/routers/drilling/__init__.py: removed the aggregate import `from .drilling_consolidated_router import (router as _consolidated_router, drill_router, pattern_router, preview_router, ...models...)`; replaced with direct imports of the three focused sub-routers (drill_modal_router, drill_pattern_router, drilling_preview_router) and the models from those sub-routers, then reproduces the shim's exact object graph inline - an intermediate `APIRouter(tags=['CAM','Drilling'])` including the three sub-routers - and mounts that plus intent_router into the package router. intent_router wiring and __all__ are unchanged. (2) services/api/app/cam/routers/drilling/drilling_consolidated_router.py remains as a deprecated import-compatible facade emitting DeprecationWarning on import, but is no longer used by package runtime wiring; its stale docstring (which claimed two sub-modules / four routes) is corrected to reflect the three sub-routers it actually aggregates. (3) services/api/tests/test_drilling_shim_retirement_invariant.py asserts all 6 drilling endpoint suffixes remain mounted with methods and drilling tags, the shim module remains import-compatible with DeprecationWarning, and the package no longer imports the retired shim.",
+    "what_changed": "(1) services/api/app/cam/routers/drilling/__init__.py: removed the aggregate import `from .drilling_consolidated_router import (router as _consolidated_router, drill_router, pattern_router, preview_router, ...models...)`; replaced with direct imports of the three focused sub-routers (drill_modal_router, drill_pattern_router, drilling_preview_router) and the models from those sub-routers, then reproduces the shim's exact object graph inline - an intermediate `APIRouter(tags=['CAM','Drilling'])` including the three sub-routers - and mounts that plus intent_router into the package router. intent_router wiring and __all__ are unchanged. (2) services/api/app/cam/routers/drilling/drilling_consolidated_router.py remains as a deprecated import-compatible facade emitting DeprecationWarning on import, but is no longer used by package runtime wiring; its stale docstring (which claimed two sub-modules / four routes) is corrected to reflect the three sub-routers it actually aggregates. (3) services/api/tests/test_drilling_shim_retirement_invariant.py asserts all 6 drilling endpoint suffixes remain mounted with methods and drilling tags, the shim module remains import-compatible with DeprecationWarning, and the package no longer imports the retired shim. It additionally asserts exact structural parity (path/method/tag tuples) between the package's inline _drilling_router aggregate and the retained deprecated shim aggregate, guarding the duplicated composition against silent divergence.",
     "why_not_redundant": "Retires an unfinished-migration compatibility shim (adjudicated Complete Sprint) from runtime wiring while preserving a safe downstream import bridge, per the C1/C2 precedent. Not cosmetic: removes the deprecated indirection layer from app registration and adds route/import invariant guards, with zero endpoint/behavior change. Probe and retract shims are intentionally NOT touched (already shipped as separate PRs #212 / #214)."
   },
   "verification": {
     "commands_run": [
       "git grep -n drilling_consolidated_router -- 'services/api/**/*.py' -> only cam/routers/drilling/__init__.py imported it (single package importer); reconfirmed on origin/main a708259d",
-      "PYTHONPATH=. py -3.11 -m pytest tests/test_cam_drilling_smoke.py tests/test_drilling_shim_retirement_invariant.py -q -> (recorded at commit)",
+      "PYTHONPATH=. py -3.11 -m pytest tests/test_cam_drilling_smoke.py tests/test_drilling_shim_retirement_invariant.py -q -> (recorded at commit; invariant file now 4 tests incl. inline/shim exact-parity, all pass)",
       "py -3.11 scripts/ci/check_cbsp21_patch_input.py --base origin/main --head HEAD -> (recorded at commit)",
       "py -3.11 scripts/ci/check_cbsp21_gate.py --changed-files <PR file set> -> (recorded at commit)"
     ]
@@ -48,7 +48,7 @@
     },
     {
       "path": "services/api/tests/test_drilling_shim_retirement_invariant.py",
-      "intent": "Route/import invariant guard: all 6 drilling endpoints remain mounted with methods/drilling tags; shim module remains import-compatible with DeprecationWarning; package no longer imports the retired shim.",
+      "intent": "Route/import invariant guard: all 6 drilling endpoints remain mounted with methods/drilling tags; shim module remains import-compatible with DeprecationWarning; package no longer imports the retired shim; and the inline _drilling_router aggregate stays exactly structurally identical (path/method/tag) to the retained deprecated shim aggregate (guarded-duplication parity).",
       "risk": "low",
       "behavior_change": "none"
     }

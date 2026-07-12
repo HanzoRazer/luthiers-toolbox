@@ -10,6 +10,10 @@ The compatibility module remains importable with a deprecation warning so downst
 branches/scripts do not fail at import time while they migrate; it must not be
 reintroduced into package wiring.
 
+Because the retirement duplicates the shim's aggregate composition inline in the package
+``__init__`` (rather than importing it), an exact-parity guard asserts the inline
+``_drilling_router`` and the retained shim aggregate never silently diverge.
+
 Note: the package exposes SIX endpoints. The retired shim aggregated three sub-routers
 (five routes); intent_router (/intent-gcode) is mounted directly by the package and was
 never part of the shim.
@@ -54,6 +58,32 @@ def _paths(router):
     return paths
 
 
+def _normalized_routes(router):
+    """Order-independent (path, methods, tags) tuples for exact-parity comparison.
+
+    Drops framework-injected HEAD/OPTIONS and normalizes tag order/case so the comparison
+    reflects the declared composition, not incidental traversal/order differences.
+    """
+    out = set()
+    for path, metadata in _paths(router).items():
+        methods = frozenset(
+            m for m in metadata["methods"] if m not in {"HEAD", "OPTIONS"}
+        )
+        tags = tuple(sorted(t.lower() for t in metadata["tags"]))
+        out.add((path, methods, tags))
+    return out
+
+
+def _import_shim():
+    """Import the deprecated facade under a warnings guard (safe even under -W error)."""
+    sys.modules.pop("app.cam.routers.drilling.drilling_consolidated_router", None)
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore", DeprecationWarning)
+        return importlib.import_module(
+            "app.cam.routers.drilling.drilling_consolidated_router"
+        )
+
+
 def test_drilling_package_still_mounts_all_6_endpoints():
     from app.cam.routers.drilling import router as drilling_pkg_router
 
@@ -73,6 +103,36 @@ def test_drilling_package_still_mounts_all_6_endpoints():
         if tag is not None:
             tags_lower = {t.lower() for t in matched[0]["tags"]}
             assert tag in tags_lower, f"{suffix}: missing '{tag}' tag (got {matched[0]['tags']})"
+
+
+def test_inline_drilling_aggregate_matches_deprecated_shim_exactly():
+    """Guarded duplication: the package's inline ``_drilling_router`` must stay structurally
+    identical to the retained deprecated shim aggregate.
+
+    The retirement duplicates the shim's composition inline in the package ``__init__`` while
+    keeping the shim as an import bridge. This asserts the two never silently diverge: if a
+    future change adds/removes/retags a sub-router in one place but not the other, this fails.
+    Both aggregates exclude the separately-mounted ``intent_router`` by construction, so no
+    ``/intent-gcode`` filtering is needed.
+    """
+    from app.cam.routers.drilling import _drilling_router
+
+    shim = _import_shim()
+
+    inline = _normalized_routes(_drilling_router)
+    shim_routes = _normalized_routes(shim.router)
+
+    assert inline == shim_routes, (
+        "inline _drilling_router and deprecated shim aggregate diverged:\n"
+        f"  only in inline package aggregate: {sorted(inline - shim_routes)}\n"
+        f"  only in deprecated shim aggregate: {sorted(shim_routes - inline)}"
+    )
+    # Neither aggregate carries the separately-mounted intent lane.
+    assert not any(path.endswith("/intent-gcode") for path, _m, _t in inline), (
+        "the drilling aggregate must not include the /intent-gcode lane"
+    )
+    # Sanity: the aggregate is the five consolidated drilling routes (intent mounted separately).
+    assert len(inline) == 5, f"expected 5 consolidated drilling routes, got {len(inline)}"
 
 
 def test_deprecated_drilling_shim_module_remains_import_compatible():
