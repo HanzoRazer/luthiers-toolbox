@@ -31,8 +31,6 @@ from ..schemas.instrument_project import (
     DesignStateResponse,
     InstrumentProjectData,
 )
-from ._model_defaults import create_design_state_from_model_id  # noqa: F401 – re-exported
-
 # ---------------------------------------------------------------------------
 # Migration-safe defaults
 # When reading an old project whose data field predates a schema field,

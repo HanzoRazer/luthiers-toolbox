@@ -17,7 +17,6 @@
       "services/api/app/projects/service.py",
       "services/api/app/projects/router.py",
       "services/api/app/projects/model_seeding.py",
-      "services/api/app/projects/_model_defaults.py",
       "services/api/tests/test_analyzer_project_observation.py",
       "docs/adr/ADR-002-instrument-project-graph.md",
       "docs/audit/SPINE_002_ANALYZER_ADOPTION.md"
@@ -29,7 +28,6 @@
       "services/api/app/projects/service.py",
       "services/api/app/projects/router.py",
       "services/api/app/projects/model_seeding.py",
-      "services/api/app/projects/_model_defaults.py",
       "services/api/tests/test_analyzer_project_observation.py",
       "docs/adr/ADR-002-instrument-project-graph.md",
       "docs/audit/SPINE_002_ANALYZER_ADOPTION.md"
@@ -79,13 +77,7 @@
     },
     {
       "path": "services/api/app/projects/model_seeding.py",
-      "intent": "New module extracted from service.py to keep service.py under the 500-line gate: contains create_design_state_from_model_id and _build_body_config_from_model (GEN-1/GEN-2 model-seeding helpers). No behavior change; projects/router.py is updated to import create_design_state_from_model_id from here.",
-      "risk": "low",
-      "behavior_change": "none (pure extraction, identical logic)"
-    },
-    {
-      "path": "services/api/app/projects/_model_defaults.py",
-      "intent": "Companion module to model_seeding.py, also extracted from service.py as part of the file-size gate fix. Contains the same model-defaults logic with cleaner top-level imports.",
+      "intent": "New module extracted from service.py to keep service.py under the 500-line gate: contains create_design_state_from_model_id and _build_body_config_from_model (GEN-1/GEN-2 model-seeding helpers). No behavior change; projects/router.py imports create_design_state_from_model_id from here.",
       "risk": "low",
       "behavior_change": "none (pure extraction, identical logic)"
     },
