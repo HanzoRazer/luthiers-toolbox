@@ -29,11 +29,11 @@ from ..schemas.instrument_project import (
     DesignStatePutRequest,
     InstrumentProjectData,
 )
+from .model_seeding import create_design_state_from_model_id
 from .service import (
     apply_design_state_to_project,
     build_design_state_response,
     create_default_design_state,
-    create_design_state_from_model_id,
     lock_project_row_for_update,
     merge_analyzer_observations,
     parse_design_state,
