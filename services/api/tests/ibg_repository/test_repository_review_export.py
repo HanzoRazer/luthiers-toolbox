@@ -10,6 +10,7 @@ import pytest
 import app.ibg_repository as ibg_repo
 from app.ibg_repository import (
     build_review_bundle,
+    build_review_markdown,
     stable_review_hash,
     to_dict,
     to_json,
@@ -95,6 +96,54 @@ def test_stable_review_hash_deterministic(make_proposal):
     assert stable_review_hash(build_review_bundle(proposal=p)) == stable_review_hash(
         build_review_bundle(proposal=p)
     )
+
+
+def test_stable_review_hash_handles_non_ascii(make_proposal):
+    # Pinned UTF-8 encoding: non-ASCII content hashes deterministically and stays a 16-hex digest.
+    p = make_proposal(change_intent="café résumé — naïve ✓")
+    h1 = stable_review_hash(build_review_bundle(proposal=p))
+    h2 = stable_review_hash(build_review_bundle(proposal=p))
+    assert h1 == h2
+    assert len(h1) == 16 and all(c in "0123456789abcdef" for c in h1)
+
+
+# --- markdown injection is neutralized (advisory artifact stays well-formed) ---
+
+def test_markdown_sanitizes_body_heading_and_code_injection(make_proposal):
+    p = make_proposal(change_intent="# pwned `rm -rf /`\n## injected section")
+    m = to_markdown(build_review_bundle(proposal=p))
+    # The injected ATX headings in the Objective body are escaped, not rendered as real headings.
+    assert "\n## injected section" not in m
+    assert "\\## injected section" in m
+    assert "\\# pwned" in m
+    # Backticks in body content cannot open an inline code span.
+    assert "\\`rm -rf /\\`" in m
+    # The document's own section headers survive intact.
+    assert "## Review sections" in m
+
+
+def test_markdown_inline_slot_collapses_newlines():
+    # A title carrying a newline must not split the H1 into extra markdown blocks.
+    canonical = {
+        "proposal_id": "rcp-1",
+        "constitutional_classification": "c",
+        "provenance_reference": {},
+        "provenance_lineage_embedded": False,
+        "workspace_metadata": None,
+        "draft_pull_request": {
+            "title": "line one\nline two",
+            "summary": "s",
+            "branch_name": "feature/x",
+            "target_branch": "main",
+            "review_sections": [{"heading": "H\nX", "body": "b"}],
+            "changed_file_summary": [],
+            "cbsp21_patch_id": "P",
+            "cbsp21_packet_hash": "h",
+        },
+    }
+    m = build_review_markdown(canonical)
+    assert "# line one line two" in m  # single H1 line
+    assert "### H X" in m  # single H3 heading
 
 
 def test_stable_review_hash_changes_with_proposal(make_proposal):

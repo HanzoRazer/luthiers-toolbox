@@ -17,7 +17,7 @@ from dataclasses import dataclass
 from typing import Any, Dict, Iterable, Optional, Tuple
 
 from .cbsp21_patch_adapter import compute_packet_hash
-from .repository_change_proposal import RepositoryChangeProposal
+from .repository_change_proposal import RepositoryChangeProposal, validate_branch_ref
 from .review_summary_builder import (
     build_changed_file_summary,
     build_review_summary,
@@ -27,36 +27,19 @@ from .review_summary_builder import (
 
 DRAFT_PR_CONSTITUTIONAL_CLASSIFICATION = "draft_pr_metadata_only__no_github_action"
 
-# Same forbidden substrings PR A's proposed_branch validation uses (git check-ref-format subset).
-_BRANCH_FORBIDDEN_SUBSTR = ("..", "~", "^", ":", "?", "*", "[", "\\", "@{", "//")
-
 
 class DraftPullRequestPackageError(Exception):
     """Raised when draft PR metadata cannot be constructed."""
 
 
 def _validate_branch_ref(branch: str, field: str) -> str:
-    """Fail-closed ref-shape validation. Never queries git; never creates the branch."""
-    if not isinstance(branch, str) or not branch.strip():
-        raise DraftPullRequestPackageError(f"{field} is required")
-    if branch != branch.strip():
-        raise DraftPullRequestPackageError(
-            f"{field} must not have leading/trailing whitespace: {branch!r}"
-        )
-    if any(ch.isspace() or ord(ch) < 0x20 for ch in branch):
-        raise DraftPullRequestPackageError(
-            f"{field} contains whitespace/control characters: {branch!r}"
-        )
-    if (
-        branch.startswith("-")
-        or branch.startswith("/")
-        or branch.endswith("/")
-        or branch.endswith(".lock")
-    ):
-        raise DraftPullRequestPackageError(f"invalid {field}: {branch!r}")
-    if any(bad in branch for bad in _BRANCH_FORBIDDEN_SUBSTR):
-        raise DraftPullRequestPackageError(f"invalid {field}: {branch!r}")
-    return branch
+    """Fail-closed ref-shape validation via the shared ibg_repository validator.
+
+    Delegates to ``repository_change_proposal.validate_branch_ref`` so the accepted/rejected ref
+    shape stays mechanically identical to PR A's ``proposed_branch`` rules (no local copy to drift).
+    Never queries git; never creates the branch.
+    """
+    return validate_branch_ref(branch, field=field, error_cls=DraftPullRequestPackageError)
 
 
 def _build_summary(proposal: RepositoryChangeProposal) -> str:

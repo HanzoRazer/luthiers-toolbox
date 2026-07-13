@@ -37,6 +37,7 @@ from .repository_change_proposal import (
     RepositoryChangeProposalError,
     PROPOSAL_CONSTITUTIONAL_CLASSIFICATION,
     build_repository_change_proposal,
+    validate_branch_ref,
 )
 from .repository_review_package import (
     RepositoryProposalReviewPackage,
@@ -92,6 +93,7 @@ __all__ = [
     "RepositoryChangeProposalError",
     "PROPOSAL_CONSTITUTIONAL_CLASSIFICATION",
     "build_repository_change_proposal",
+    "validate_branch_ref",
     "RepositoryProposalReviewPackage",
     "RepositoryReviewPackageError",
     "build_repository_proposal_review_package",

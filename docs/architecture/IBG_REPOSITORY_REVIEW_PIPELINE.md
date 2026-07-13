@@ -33,7 +33,7 @@ re-modeling constitutional facts into independently editable fields.
 | Module | Produces | Notes |
 |---|---|---|
 | `review_summary_builder` | ordered `(heading, body)` review sections | fixed section order; duplicate headings rejected; bodies built only from canonical proposal facts |
-| `draft_pull_request_package` | `DraftPullRequestPackage` | advisory PR metadata; `branch_name = proposal.proposed_branch`, `target_branch` caller-supplied (default `main`); both ref-validated **without** git; never asserts a branch exists |
+| `draft_pull_request_package` | `DraftPullRequestPackage` | advisory PR metadata; `branch_name = proposal.proposed_branch`, `target_branch` caller-supplied (default `main`); both ref-validated **without** git via the **shared** `repository_change_proposal.validate_branch_ref` (single source of truth — draft-PR and proposal ref rules cannot drift); never asserts a branch exists |
 | `repository_review_bundle` | `RepositoryReviewBundle` | single derived artifact embedding proposal + draft-PR + optional review package + optional workspace metadata + provenance |
 | `repository_review_export` | dict / JSON / markdown + stable hash | all rendered from one canonical dict, byte-stable |
 
@@ -46,10 +46,18 @@ re-modeling constitutional facts into independently editable fields.
 - an object exposing `to_canonical_dict()` (e.g. a PR-B `RepositoryWorktreeSpec`).
 
 It **rejects** any other object, non-string keys, and unrecognized fields; **drops** the
-environment-specific `worktree_path` from the canonical form (determinism); and deterministically
-sorts nested collections. This is the only coupling to PR B, and it is serialization-only — no
-import, no git. After PR B merges, a compatibility test can confirm a real `RepositoryWorktreeSpec`
-passes through unchanged.
+environment-specific `worktree_path` from the canonical form (determinism). Canonicalization sorts
+mapping **keys** and sorts the set-like `allowed_paths` field, but **preserves the order of every
+other sequence** — a list already carries a deterministic order, and reordering one whose position
+could be semantic (e.g. an embedded review-package or provenance sequence) would silently corrupt it.
+
+`build_review_bundle` additionally enforces **cross-field consistency**: if the workspace metadata
+supplies `proposal_id`, `repository_id`, or `base_revision`, each must match the bundle's proposal —
+a contradicting workspace is rejected fail-closed rather than embedded as an inconsistent "canonical"
+fact. Fields the workspace omits are not invented against.
+
+This is the only coupling to PR B, and it is serialization-only — no import, no git. After PR B
+merges, a compatibility test can confirm a real `RepositoryWorktreeSpec` passes through unchanged.
 
 ## Provenance
 
@@ -69,7 +77,14 @@ which is distinct from *missing* or *invalid*.
 Canonical serialization excludes: timestamps, environment paths, current working directory, runtime
 object reprs, unordered mappings/sets, network-derived values, and GitHub state. Markdown is rendered
 from the same canonical structure as the JSON, so the two never diverge; identical inputs yield
-byte-stable output and a stable content hash (`stable_review_hash`).
+byte-stable output and a stable content hash (`stable_review_hash`, whose bytes are pinned to
+UTF-8 / `ensure_ascii=False` so non-Python consumers reproduce the same digest).
+
+Markdown export **sanitizes** interpolated content so an embedded value cannot restructure the
+advisory document: single-line slots (title, headings, `- key: value` lines) collapse newlines and
+escape backticks; multi-line section bodies escape backticks and line-leading `#` so embedded text
+cannot inject code fences or ATX headings. The escape targets never appear in this layer's own body
+formatting, so intended layout is preserved verbatim.
 
 ## What this layer is NOT
 

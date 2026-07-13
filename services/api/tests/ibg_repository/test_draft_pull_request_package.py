@@ -61,6 +61,60 @@ def test_rejects_non_proposal():
         build_draft_pull_request_package({"proposal_id": "rcp-1"})
 
 
+# --- anti-drift: draft target_branch rules == PR A proposed_branch rules ---
+
+_SHARED_BRANCH_REFS = [
+    "feature/ok",
+    "release",
+    "",
+    "  ",
+    " x",
+    "x ",
+    "a b",
+    "-x",
+    "/x",
+    "x/",
+    "a..b",
+    "a~b",
+    "a^b",
+    "a:b",
+    "a?b",
+    "a*b",
+    "a[b",
+    "a\\b",
+    "a@{b",
+    "a//b",
+    "x.lock",
+]
+
+
+@pytest.mark.parametrize("ref", _SHARED_BRANCH_REFS)
+def test_proposal_and_draft_agree_on_branch_refs(make_proposal, ref):
+    """The two user-facing entry points must accept/reject the SAME ref shapes (no validator drift)."""
+    try:
+        make_proposal(proposed_branch=ref)
+        proposal_accepts = True
+    except Exception:
+        proposal_accepts = False
+    try:
+        build_draft_pull_request_package(make_proposal(), target_branch=ref)
+        draft_accepts = True
+    except Exception:
+        draft_accepts = False
+    assert proposal_accepts == draft_accepts, ref
+
+
+def test_shared_validator_uses_caller_error_type():
+    from app.ibg_repository import validate_branch_ref
+
+    assert (
+        validate_branch_ref("feature/ok", field="target_branch", error_cls=DraftPullRequestPackageError)
+        == "feature/ok"
+    )
+    with pytest.raises(DraftPullRequestPackageError):
+        validate_branch_ref("a..b", field="target_branch", error_cls=DraftPullRequestPackageError)
+
+
 def test_custom_review_sections_used(make_proposal):
     pkg = build_draft_pull_request_package(
         make_proposal(), review_sections=[("Only", "one section")]

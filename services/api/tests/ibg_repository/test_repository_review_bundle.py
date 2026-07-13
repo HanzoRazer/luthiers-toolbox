@@ -166,6 +166,57 @@ def test_bundle_with_workspace(make_proposal):
     assert b.workspace_metadata["workspace_id"] == "wt-abc123"
 
 
+# --- cross-field consistency: workspace metadata must agree with the proposal ---
+
+def test_bundle_rejects_workspace_wrong_proposal_id(make_proposal):
+    p = make_proposal()
+    ws = _FakeSpec(p.proposal_id).to_canonical_dict()
+    ws["proposal_id"] = "rcp-someone-else"
+    with pytest.raises(RepositoryReviewBundleError):
+        build_review_bundle(proposal=p, workspace_metadata=ws)
+
+
+def test_bundle_rejects_workspace_wrong_repository(make_proposal):
+    p = make_proposal()
+    ws = _FakeSpec(p.proposal_id).to_canonical_dict()
+    ws["repository_id"] = "some-other-repo"
+    with pytest.raises(RepositoryReviewBundleError):
+        build_review_bundle(proposal=p, workspace_metadata=ws)
+
+
+def test_bundle_rejects_workspace_wrong_base_revision(make_proposal):
+    p = make_proposal()
+    ws = _FakeSpec(p.proposal_id).to_canonical_dict()
+    ws["base_revision"] = "ffffffff"
+    with pytest.raises(RepositoryReviewBundleError):
+        build_review_bundle(proposal=p, workspace_metadata=ws)
+
+
+def test_bundle_allows_workspace_omitting_identity_fields(make_proposal):
+    # Only SUPPLIED overlapping fields are checked; a partial workspace is not invented against.
+    p = make_proposal()
+    b = build_review_bundle(proposal=p, workspace_metadata={"workspace_id": "wt-1", "state": "ready"})
+    assert b.workspace_metadata == {"state": "ready", "workspace_id": "wt-1"}
+
+
+# --- canonicalization preserves list order (only set-like allowed_paths is sorted) ---
+
+def test_embedded_list_order_preserved(make_proposal):
+    # An embedded review-package string list keeps caller order — it is NOT silently sorted.
+    b = build_review_bundle(
+        proposal=make_proposal(), review_package={"steps": ["zebra", "alpha", "mike"]}
+    )
+    assert b.review_package["steps"] == ["zebra", "alpha", "mike"]
+
+
+def test_workspace_allowed_paths_sorted_but_other_lists_not(make_proposal):
+    p = make_proposal()
+    ws = _FakeSpec(p.proposal_id).to_canonical_dict()
+    ws["allowed_paths"] = ["b/z.py", "a/y.py"]
+    out = normalize_workspace_metadata(ws)
+    assert out["allowed_paths"] == ["a/y.py", "b/z.py"]  # set-like -> sorted
+
+
 def test_bundle_accepts_prebuilt_draft(make_proposal):
     p = make_proposal()
     draft = build_draft_pull_request_package(p, target_branch="release")

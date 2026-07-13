@@ -41,6 +41,33 @@ class RepositoryChangeProposalError(Exception):
     """Raised when a repository change proposal cannot be constructed."""
 
 
+def validate_branch_ref(
+    branch: str,
+    *,
+    field: str = "branch",
+    error_cls: type = RepositoryChangeProposalError,
+) -> str:
+    """Fail-closed check that ``branch`` is a plausible git branch ref (git check-ref-format subset).
+
+    Single source of truth for branch-ref shape validation across ``ibg_repository`` — both this
+    module's ``proposed_branch`` check and the draft-PR package's ``target_branch``/``branch_name``
+    checks delegate here so the accepted/rejected ref shape can never drift between them. Never
+    queries git; never creates the branch. ``field`` names the offending input in error messages;
+    ``error_cls`` selects the exception type the caller's contract expects.
+    """
+    if not isinstance(branch, str) or not branch.strip():
+        raise error_cls(f"{field} is required")
+    if branch != branch.strip():
+        raise error_cls(f"{field} must not have leading/trailing whitespace: {branch!r}")
+    if any(ch.isspace() or ord(ch) < 0x20 for ch in branch):
+        raise error_cls(f"{field} contains whitespace/control characters: {branch!r}")
+    if branch.startswith("-") or branch.startswith("/") or branch.endswith("/") or branch.endswith(".lock"):
+        raise error_cls(f"invalid {field}: {branch!r}")
+    if any(bad in branch for bad in _BRANCH_FORBIDDEN_SUBSTR):
+        raise error_cls(f"invalid {field}: {branch!r}")
+    return branch
+
+
 def _hash_content(content: Dict[str, Any]) -> str:
     canonical = json.dumps(content, sort_keys=True, separators=(",", ":"))
     return hashlib.sha256(canonical.encode()).hexdigest()[:16]
@@ -57,22 +84,9 @@ def _as_list(value: Any) -> List[str]:
 
 def _validate_branch_name(branch: str) -> str:
     """Fail-closed check that ``proposed_branch`` is a plausible git branch ref."""
-    if not isinstance(branch, str) or not branch.strip():
-        raise RepositoryChangeProposalError("proposed_branch is required")
-    b = branch.strip()
-    if b != branch:
-        raise RepositoryChangeProposalError(
-            f"proposed_branch must not have leading/trailing whitespace: {branch!r}"
-        )
-    if any(ch.isspace() or ord(ch) < 0x20 for ch in b):
-        raise RepositoryChangeProposalError(
-            f"proposed_branch contains whitespace/control characters: {branch!r}"
-        )
-    if b.startswith("-") or b.startswith("/") or b.endswith("/") or b.endswith(".lock"):
-        raise RepositoryChangeProposalError(f"invalid proposed_branch: {branch!r}")
-    if any(bad in b for bad in _BRANCH_FORBIDDEN_SUBSTR):
-        raise RepositoryChangeProposalError(f"invalid proposed_branch: {branch!r}")
-    return b
+    return validate_branch_ref(
+        branch, field="proposed_branch", error_cls=RepositoryChangeProposalError
+    )
 
 
 def _file_within_authorized(file_path: str, authorized: Tuple[str, ...]) -> bool:

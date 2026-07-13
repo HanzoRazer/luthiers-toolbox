@@ -47,6 +47,10 @@ _RECOGNIZED_WORKSPACE_FIELDS = frozenset(
     }
 )
 _ENVIRONMENT_WORKSPACE_FIELDS = frozenset({"worktree_path"})
+# Recognized workspace fields whose list value is a SET (order carries no meaning) and is therefore
+# sorted for determinism. Every other list is left in caller order — canonicalization must not
+# silently reorder a sequence whose position could be semantic (see _canonicalize).
+_SORTED_LIST_WORKSPACE_FIELDS = frozenset({"allowed_paths"})
 
 
 class RepositoryReviewBundleError(Exception):
@@ -54,7 +58,14 @@ class RepositoryReviewBundleError(Exception):
 
 
 def _canonicalize(value: Any) -> Any:
-    """Recursively produce a deterministic, JSON-safe value (sorted maps; sorted scalar lists)."""
+    """Recursively produce a deterministic, JSON-safe value.
+
+    Mapping keys are sorted (dict insertion order is not semantic). List/tuple ORDER IS PRESERVED —
+    a list already carries a deterministic order from its input, and reordering it could silently
+    destroy a sequence whose position is meaningful (e.g. an ordered lineage or fallback list inside
+    an embedded review package or provenance payload). Fields that are genuinely set-like are sorted
+    explicitly by their caller (see ``_SORTED_LIST_WORKSPACE_FIELDS``), not here.
+    """
     if isinstance(value, Mapping):
         items = {}
         for k, v in value.items():
@@ -63,10 +74,7 @@ def _canonicalize(value: Any) -> Any:
             items[k] = _canonicalize(v)
         return {k: items[k] for k in sorted(items)}
     if isinstance(value, (list, tuple)):
-        elems = [_canonicalize(v) for v in value]
-        if all(isinstance(e, str) for e in elems):
-            return sorted(elems)
-        return elems
+        return [_canonicalize(v) for v in value]
     if isinstance(value, (str, int, float, bool)) or value is None:
         return value
     raise RepositoryReviewBundleError(
@@ -110,8 +118,41 @@ def normalize_workspace_metadata(value: Any) -> Optional[Dict[str, Any]]:
             raise RepositoryReviewBundleError(f"unrecognized workspace metadata field: {key!r}")
         if key in _ENVIRONMENT_WORKSPACE_FIELDS:
             continue  # environment-specific; excluded from the deterministic canonical form
-        normalized[key] = _canonicalize(val)
+        canon = _canonicalize(val)
+        if key in _SORTED_LIST_WORKSPACE_FIELDS and isinstance(canon, list):
+            if not all(isinstance(e, str) for e in canon):
+                raise RepositoryReviewBundleError(
+                    f"workspace field {key!r} must be a list of strings"
+                )
+            canon = sorted(canon)  # set-like field: order is not semantic
+        normalized[key] = canon
     return {k: normalized[k] for k in sorted(normalized)}
+
+
+def _assert_workspace_consistent(
+    workspace: Optional[Dict[str, Any]], proposal: RepositoryChangeProposal
+) -> None:
+    """Fail-closed if workspace metadata contradicts the proposal it is bundled with.
+
+    Workspace metadata is an independently-produced input (a serialized PR B ``RepositoryWorktreeSpec``
+    or a plain mapping). The overlapping identity fields — ``proposal_id``, ``repository_id``,
+    ``base_revision`` — must name the SAME proposal/repository/base as this bundle's proposal, or the
+    bundle would present internally inconsistent "canonical" facts. Fields the workspace omits are not
+    invented; only supplied fields are checked.
+    """
+    if not workspace:
+        return
+    expected = {
+        "proposal_id": proposal.proposal_id,
+        "repository_id": proposal.target.repository_id,
+        "base_revision": proposal.target.base_revision,
+    }
+    for field, want in expected.items():
+        got = workspace.get(field)
+        if got is not None and got != want:
+            raise RepositoryReviewBundleError(
+                f"workspace metadata {field!r} ({got!r}) does not match the proposal ({want!r})"
+            )
 
 
 def _embed_review_package(review_package: Any) -> Optional[Dict[str, Any]]:
@@ -227,6 +268,9 @@ def build_review_bundle(
             )
         draft = draft_pull_request
 
+    normalized_workspace = normalize_workspace_metadata(workspace_metadata)
+    _assert_workspace_consistent(normalized_workspace, proposal)
+
     reference = _provenance_reference(proposal)
     if provenance is None:
         lineage: Optional[Dict[str, Any]] = None
@@ -243,7 +287,7 @@ def build_review_bundle(
         proposal=proposal.to_canonical_dict(),
         draft_pull_request=draft.to_canonical_dict(),
         review_package=_embed_review_package(review_package),
-        workspace_metadata=normalize_workspace_metadata(workspace_metadata),
+        workspace_metadata=normalized_workspace,
         provenance_reference=reference,
         provenance_lineage=lineage,
         provenance_lineage_embedded=embedded,
