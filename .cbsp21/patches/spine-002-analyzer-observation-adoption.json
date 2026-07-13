@@ -19,6 +19,7 @@
       "services/api/app/projects/router.py",
       "services/api/app/projects/model_seeding.py",
       "services/api/tests/test_analyzer_project_observation.py",
+      "services/api/tests/test_technical_debt_gates.py",
       "docs/adr/ADR-002-instrument-project-graph.md",
       "docs/audit/SPINE_002_ANALYZER_ADOPTION.md"
     ],
@@ -30,6 +31,7 @@
       "services/api/app/projects/router.py",
       "services/api/app/projects/model_seeding.py",
       "services/api/tests/test_analyzer_project_observation.py",
+      "services/api/tests/test_technical_debt_gates.py",
       "docs/adr/ADR-002-instrument-project-graph.md",
       "docs/audit/SPINE_002_ANALYZER_ADOPTION.md"
     ]
@@ -87,6 +89,12 @@
       "intent": "Unit + router-integration coverage of the new edge, including idempotency, the 400/403/404/422 paths, and an advisory-boundary regression (no non-observation field mutated).",
       "risk": "low",
       "behavior_change": "additive (new tests)"
+    },
+    {
+      "path": "services/api/tests/test_technical_debt_gates.py",
+      "intent": "Ratchet the endpoint count ceiling to 1222 to reflect the one new analyzer observations endpoint added in this patch.",
+      "risk": "low",
+      "behavior_change": "none (CI ratchet update)"
     },
     {
       "path": "docs/adr/ADR-002-instrument-project-graph.md",
