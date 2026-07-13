@@ -53,9 +53,9 @@ PIPELINE_CONSTITUTIONAL_CLASSIFICATION = (
     "proposal_pipeline__composes_only__terminates_at_human_review"
 )
 
-
-class RepositoryProposalPipelineError(Exception):
-    """Raised when the pipeline cannot compose a result (delegated fail-closed errors propagate)."""
+# NOTE: the pipeline deliberately defines NO pipeline-specific exception. The ratified
+# contract is that each stage's own fail-closed error propagates UNWRAPPED (the pipeline
+# "adds no logic"); a bespoke wrapper error would misrepresent that contract, so none exists.
 
 
 @dataclass(frozen=True)
@@ -110,7 +110,7 @@ class RepositoryProposalPipeline:
         change_intent: str,
         proposed_branch: str,
         cbsp21_packet: Dict[str, Any],
-        target_branch: str = "main",
+        target_branch: str,
         review_package: Any = None,
         workspace_metadata: Any = None,
         provenance: Any = None,
@@ -121,6 +121,10 @@ class RepositoryProposalPipeline:
         Every stage is an existing, owning builder; this method adds no validation or serialization
         of its own. Fail-closed behaviour is inherited: any builder that rejects its input raises,
         and the pipeline lets that error propagate rather than degrading to a partial result.
+
+        ``target_branch`` (the intended PR base) is REQUIRED — the canonical entry point forces the
+        caller to state it rather than silently assuming ``"main"``, which would emit wrong draft-PR
+        review metadata for a repository whose default branch is not ``main``.
         """
         binding = build_proposal_target_binding(
             candidate,
@@ -153,7 +157,7 @@ def run_repository_proposal_pipeline(
     change_intent: str,
     proposed_branch: str,
     cbsp21_packet: Dict[str, Any],
-    target_branch: str = "main",
+    target_branch: str,
     review_package: Any = None,
     workspace_metadata: Any = None,
     provenance: Any = None,

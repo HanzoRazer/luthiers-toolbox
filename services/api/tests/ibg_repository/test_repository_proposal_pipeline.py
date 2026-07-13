@@ -8,6 +8,7 @@ GitHub / network mutation. It is orchestration-only — it must not duplicate co
 
 from __future__ import annotations
 
+from dataclasses import FrozenInstanceError
 from pathlib import Path
 
 import pytest
@@ -16,10 +17,13 @@ import app.ibg_repository as ibg_repo
 from app.ibg_repository import (
     CANONICAL_PIPELINE_MISSION,
     PIPELINE_TERMINAL_STAGE,
+    EvidenceContractError,
     RepositoryChangeProposal,
+    RepositoryChangeProposalError,
     RepositoryProposalPipeline,
     RepositoryProposalPipelineResult,
     RepositoryReviewBundle,
+    RepositoryReviewBundleError,
     build_proposal_target_binding,
     build_repository_change_proposal,
     run_repository_proposal_pipeline,
@@ -36,6 +40,7 @@ def _run(make_candidate, make_packet, candidate=None, **over):
         change_intent="compose the canonical pipeline",
         proposed_branch="feature/ibg-x",
         cbsp21_packet=make_packet(files=files),
+        target_branch="main",
     )
     kwargs.update(over)
     return run_repository_proposal_pipeline(**kwargs)
@@ -86,6 +91,7 @@ def test_convenience_matches_class(make_candidate, make_packet):
         change_intent="x",
         proposed_branch="feature/ibg-x",
         cbsp21_packet=packet,
+        target_branch="main",
     )
     a = run_repository_proposal_pipeline(**common).to_canonical_dict()
     b = RepositoryProposalPipeline().run(**common).to_canonical_dict()
@@ -129,7 +135,7 @@ def test_provenance_mismatch_propagates(make_candidate, make_packet):
         def to_dict(self):
             return {}
 
-    with pytest.raises(Exception):
+    with pytest.raises(RepositoryReviewBundleError):
         _run(make_candidate, make_packet, provenance=_BadProv())
 
 
@@ -160,7 +166,7 @@ def test_pipeline_exposes_only_run_no_execution_verb():
 
 def test_result_is_frozen(make_candidate, make_packet):
     r = _run(make_candidate, make_packet)
-    with pytest.raises(Exception):
+    with pytest.raises(FrozenInstanceError):
         r.terminates_at = "execute"  # type: ignore[misc]
 
 
@@ -177,13 +183,41 @@ def test_deterministic_output(make_candidate, make_packet):
 # --- fail-closed propagation (pipeline adds no catch) ------------------
 
 def test_bad_candidate_propagates(make_candidate, make_packet):
-    with pytest.raises(Exception):
+    # The PR-A binding builder's own fail-closed error propagates UNWRAPPED (no pipeline error).
+    with pytest.raises(EvidenceContractError):
         _run(make_candidate, make_packet, candidate={"not": "a candidate"})
 
 
 def test_unsafe_proposed_branch_propagates(make_candidate, make_packet):
-    with pytest.raises(Exception):
+    with pytest.raises(RepositoryChangeProposalError):
         _run(make_candidate, make_packet, proposed_branch="bad..branch")
+
+
+def test_malformed_review_package_propagates(make_candidate, make_packet):
+    # Optional-but-malformed input (not None) fails closed via the bundle builder, unwrapped.
+    with pytest.raises(RepositoryReviewBundleError):
+        _run(make_candidate, make_packet, review_package=object())
+
+
+def test_malformed_workspace_metadata_propagates(make_candidate, make_packet):
+    with pytest.raises(RepositoryReviewBundleError):
+        _run(make_candidate, make_packet, workspace_metadata={"unrecognized_field": 1})
+
+
+def test_target_branch_is_required(make_candidate, make_packet):
+    # The canonical entry point must not silently assume "main": omitting target_branch is a
+    # TypeError, forcing the caller to state the intended PR base.
+    files = ("services/api/app/ibg_repository/proposal_target.py",)
+    with pytest.raises(TypeError):
+        run_repository_proposal_pipeline(
+            candidate=make_candidate(),
+            repository_id="luthiers-toolbox",
+            base_revision="b396284c",
+            authorized_target_paths=list(files),
+            change_intent="x",
+            proposed_branch="feature/ibg-x",
+            cbsp21_packet=make_packet(files=files),
+        )
 
 
 # --- constitutional invariant: no git/network/GitHub in the module -----

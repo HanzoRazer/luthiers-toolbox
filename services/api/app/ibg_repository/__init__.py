@@ -113,7 +113,6 @@ from .repository_proposal_pipeline import (
     PIPELINE_CONSTITUTIONAL_CLASSIFICATION,
     RepositoryProposalPipeline,
     RepositoryProposalPipelineResult,
-    RepositoryProposalPipelineError,
     run_repository_proposal_pipeline,
 )
 
@@ -193,6 +192,5 @@ __all__ = [
     "PIPELINE_CONSTITUTIONAL_CLASSIFICATION",
     "RepositoryProposalPipeline",
     "RepositoryProposalPipelineResult",
-    "RepositoryProposalPipelineError",
     "run_repository_proposal_pipeline",
 ]
