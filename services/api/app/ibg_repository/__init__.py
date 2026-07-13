@@ -107,6 +107,15 @@ from .repository_review_export import (
     build_review_markdown,
     stable_review_hash,
 )
+from .repository_proposal_pipeline import (
+    CANONICAL_PIPELINE_MISSION,
+    PIPELINE_TERMINAL_STAGE,
+    PIPELINE_CONSTITUTIONAL_CLASSIFICATION,
+    RepositoryProposalPipeline,
+    RepositoryProposalPipelineResult,
+    RepositoryProposalPipelineError,
+    run_repository_proposal_pipeline,
+)
 
 __all__ = [
     "ProposalTargetBinding",
@@ -178,4 +187,12 @@ __all__ = [
     "build_review_json",
     "build_review_markdown",
     "stable_review_hash",
+    # --- PR D: canonical repository proposal pipeline (orchestration-only) ---
+    "CANONICAL_PIPELINE_MISSION",
+    "PIPELINE_TERMINAL_STAGE",
+    "PIPELINE_CONSTITUTIONAL_CLASSIFICATION",
+    "RepositoryProposalPipeline",
+    "RepositoryProposalPipelineResult",
+    "RepositoryProposalPipelineError",
+    "run_repository_proposal_pipeline",
 ]
