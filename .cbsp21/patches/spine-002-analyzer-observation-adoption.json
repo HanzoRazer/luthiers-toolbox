@@ -11,6 +11,7 @@
   "scope": {
     "paths_in_scope": [
       ".cbsp21/patches/spine-002-analyzer-observation-adoption.json",
+      "ci/router_count_baseline.json",
       "services/api/app/analyzer/project_observation.py",
       "services/api/app/analyzer/router.py",
       "services/api/app/analyzer/schemas.py",
@@ -98,6 +99,12 @@
       "intent": "Audit record: rationale, boundaries honored, endpoint contract, non-goals, verification.",
       "risk": "low",
       "behavior_change": "none (docs)"
+    },
+    {
+      "path": "ci/router_count_baseline.json",
+      "intent": "Update router-count baseline to reflect the one new analyzer observations endpoint added in this patch.",
+      "risk": "low",
+      "behavior_change": "none (CI baseline data)"
     }
   ]
 }
