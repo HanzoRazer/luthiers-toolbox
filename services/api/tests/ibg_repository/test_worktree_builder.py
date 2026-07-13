@@ -173,6 +173,22 @@ def test_create_is_idempotent_guard(env, make_proposal):
         builder.create(spec)
 
 
+def test_create_cleans_up_registered_worktree_after_partial_failure(env, make_proposal):
+    repo, troot = env
+    runner = FakeGitRunner(temp_root=troot, fail_create_after_add=True)
+    builder = RepositoryWorktreeBuilder(runner, repository_root=repo, temp_root=troot)
+    spec = builder.plan_from_proposal(make_proposal())
+
+    with pytest.raises(WorktreeBuildError) as err:
+        builder.create(spec)
+
+    assert err.value.spec.state is RepositoryWorktreeState.FAILED
+    assert runner.created == [spec.worktree_path]
+    assert runner.removed == [spec.worktree_path]
+    assert builder.owned_workspaces() == ()
+    assert spec.worktree_path not in runner.list_worktrees()
+
+
 def test_build_from_proposal_convenience(env, make_proposal):
     builder = _builder(env)
     ready = builder.build_from_proposal(make_proposal())

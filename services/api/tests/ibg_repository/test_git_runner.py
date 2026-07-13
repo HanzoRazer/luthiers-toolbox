@@ -24,7 +24,10 @@ from app.ibg_repository import (
     GitRunnerConfigError,
     LocalGitRunner,
 )
-from app.ibg_repository.git_runner import _default_command_seam  # noqa: F401 (documented seam)
+from app.ibg_repository.git_runner import (
+    DEFAULT_GIT_TIMEOUT_SECONDS,
+    _default_command_seam,
+)
 
 from fake_git_runner import FakeGitRunner
 
@@ -45,6 +48,16 @@ def test_fake_create_and_remove_roundtrip(tmp_path):
     assert any(Path(p) == Path(wt) for p in fake.list_worktrees())
     fake.remove_worktree(wt)
     assert wt in fake.removed
+
+
+def test_fake_resolves_known_revision_prefix(tmp_path):
+    fake = FakeGitRunner(
+        temp_root=str(tmp_path),
+        revision="a832d6e3a832d6e3a832d6e3a832d6e3a832d6e3",
+    )
+    assert fake.resolve_revision("a832d6e3").startswith("a832d6e3")
+    with pytest.raises(GitCommandError):
+        fake.resolve_revision("deadbeef")
 
 
 def test_fake_rejects_path_outside_temp_root(tmp_path):
@@ -128,10 +141,27 @@ def test_create_worktree_confined_to_temp_root(fake_repo):
     assert seam.calls == []  # rejected before any command was issued
 
 
-def test_branch_exists_returns_false_on_nonzero(fake_repo):
+def test_branch_exists_returns_false_when_branch_missing(fake_repo):
     repo, troot = fake_repo
     runner = LocalGitRunner(repo, troot, command_seam=RecordingSeam(CommandResult(1)))
     assert runner.branch_exists("whatever") is False
+
+
+def test_branch_exists_raises_on_unexpected_git_error(fake_repo):
+    repo, troot = fake_repo
+    runner = LocalGitRunner(repo, troot, command_seam=RecordingSeam(CommandResult(128, "", "broken")))
+    with pytest.raises(GitCommandError):
+        runner.branch_exists("whatever")
+
+
+def test_resolve_revision_uses_commitish_verification(fake_repo):
+    repo, troot = fake_repo
+    seam = RecordingSeam(CommandResult(0, "a832d6e3\n", ""))
+    runner = LocalGitRunner(repo, troot, command_seam=seam)
+    assert runner.resolve_revision("a832d6e3") == "a832d6e3"
+    assert seam.calls == [
+        ["git", "-C", repo, "rev-parse", "--verify", "a832d6e3^{commit}"]
+    ]
 
 
 def test_repository_clean_reflects_porcelain(fake_repo):
@@ -147,6 +177,25 @@ def test_checked_command_raises_on_failure(fake_repo):
     runner = LocalGitRunner(repo, troot, command_seam=RecordingSeam(CommandResult(128, "", "boom")))
     with pytest.raises(GitCommandError):
         runner.current_revision()
+
+
+def test_default_command_seam_returns_timeout_result(monkeypatch):
+    calls = {}
+
+    def _timeout(*args, **kwargs):
+        calls["timeout"] = kwargs.get("timeout")
+        raise subprocess.TimeoutExpired(
+            cmd=args[0],
+            timeout=kwargs.get("timeout"),
+            output="stdout-before-timeout",
+            stderr="stderr-before-timeout",
+        )
+
+    monkeypatch.setattr(subprocess, "run", _timeout)
+    result = _default_command_seam(["git", "status"])
+    assert calls["timeout"] == DEFAULT_GIT_TIMEOUT_SECONDS
+    assert result.returncode == 124
+    assert "timed out" in result.stderr
 
 
 # --- layer 3: one bounded real-git integration test ---------------------
@@ -176,6 +225,7 @@ def test_local_runner_real_worktree_bounded(tmp_path):
     assert runner.repository_clean() is True
     rev = runner.current_revision()
     assert len(rev) >= 7
+    assert runner.resolve_revision(rev) == rev
     assert runner.branch_exists("ibg-worktree/wt-real01") is False
 
     wt = str(troot / "wt-real01")

@@ -164,3 +164,13 @@ def test_validate_worktree_rejects_repo_without_revision(env):
     runner = FakeGitRunner(temp_root=troot, revision="")
     with pytest.raises(WorktreeValidationError):
         validate_worktree(_spec(troot), runner, temp_root=troot)
+
+
+def test_validate_worktree_rejects_unresolvable_base_revision(env):
+    _, troot = env
+    runner = FakeGitRunner(
+        temp_root=troot,
+        known_revisions=("1111111111111111111111111111111111111111",),
+    )
+    with pytest.raises(WorktreeValidationError, match="base_revision"):
+        validate_worktree(_spec(troot, base_revision="deadbeef"), runner, temp_root=troot)

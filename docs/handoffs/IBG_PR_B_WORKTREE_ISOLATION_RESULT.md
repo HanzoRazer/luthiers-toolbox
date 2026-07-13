@@ -2,19 +2,17 @@
 
 > **What this is:** the isolated repository workspace layer for IBG repository proposals. It lets a
 > governed proposal be assembled inside a disposable, verified worktree **without** granting IBG any
-> authority to mutate the canonical repository. Stacked on PR A.
+> authority to mutate the canonical repository.
 
 ---
 
-## Stacking / provenance (state witness — verify, do not assume)
+## Provenance (state witness — verify, do not assume)
 
 ```
-BASE (PR A):  feature/ibg-repository-proposal-contracts  @ a832d6e3  (PR #213, OPEN, not merged)
+BASE:         main
 THIS (PR B):  feature/ibg-repository-worktree-isolation
-WHY STACKED:  the ibg_repository package + RepositoryChangeProposal this layer builds on exist
-              ONLY on the PR A branch, not on origin/main. PR B cannot build against main until
-              PR A merges. If PR A changes in review, rebase/refresh PR B before final review.
-VERIFY:       git -C <luthiers> merge-base --is-ancestor origin/feature/ibg-repository-proposal-contracts HEAD
+PR A:         repository proposal contracts merged via #213 (03e68a7c)
+VERIFY:       gh pr view 216 --json baseRefName,headRefName
 ```
 
 ## Constitutional boundary (what this layer may and may NOT do)
@@ -35,9 +33,9 @@ issued only through an explicitly injected, temp-root-scoped runner.
 |---|---|
 | `worktree_state.py` | `RepositoryWorktreeState` forward-only lifecycle: NEW→CREATED→READY / FAILED / DISPOSED (descriptive metadata, never authority) |
 | `worktree_spec.py` | `RepositoryWorktreeSpec` (frozen) + `derive_workspace_id` / `derive_branch_name` / `normalize_allowed_paths`. Workspace id/branch derived from the content-addressed `rcp-` proposal id — **never a timestamp** |
-| `git_runner.py` | `GitRunner` protocol (six sanctioned ops only) + `LocalGitRunner` real adapter: explicit repository root **and** temp root required, git run through an injected command seam with **explicit argv (no shell)**, every worktree path confined beneath temp root, fail-closed on non-zero exit |
-| `worktree_validator.py` | Fail-closed pre-flight gate: deterministic-naming, temp-root path confinement, repository reachable, branch well-formed & absent, no existing worktree, clean tree (override explicit) |
-| `worktree_builder.py` | `RepositoryWorktreeBuilder`: `plan_from_proposal` (pure), `create` (validate → materialize one worktree → record ownership), `dispose` (removes **only** a worktree this builder instance owns) |
+| `git_runner.py` | `GitRunner` protocol (seven sanctioned read/worktree ops only) + `LocalGitRunner` real adapter: explicit repository root **and** temp root required, git run through an injected command seam with **explicit argv (no shell)**, every worktree path confined beneath temp root, fail-closed on non-zero exit |
+| `worktree_validator.py` | Fail-closed pre-flight gate: deterministic-naming, temp-root path confinement, repository reachable, base revision resolves, branch well-formed & absent, no existing worktree, clean tree (override explicit) |
+| `worktree_builder.py` | `RepositoryWorktreeBuilder`: `plan_from_proposal` (pure), `create` (validate → materialize one worktree → record ownership; partial create failure attempts registered-worktree cleanup), `dispose` (removes **only** a worktree this builder instance owns) |
 
 Deterministic naming: `rcp-8123ab91` → workspace `wt-8123ab91` → branch `ibg-worktree/wt-8123ab91`.
 Worktree path = `<temp_root>/wt-8123ab91`.
@@ -57,8 +55,8 @@ Worktree path = `<temp_root>/wt-8123ab91`.
 ## Verification (witnessed at PR B tip on branch `feature/ibg-repository-worktree-isolation`)
 
 ```
-python -m pytest tests/ibg_repository/ -o addopts=""            -> 88 passed
-  (PR A contract tests 54 + PR B worktree tests 34, run together, all green)
+python -m pytest tests/ibg_repository/ -q -o addopts=""         -> 148 passed
+  (PR A contracts + PR B worktree layer, run together, all green)
 new-package coverage (worktree_state/spec/git_runner/validator/builder) -> 98%
   (remaining lines are defensive/unreachable guards; target was >95%)
 one bounded real-git integration test (tmp_path init→add→list→remove) -> passed
@@ -81,5 +79,5 @@ belong to PR C and later IBG proposal-pipeline sprints.
 > proposals **without** gaining the ability to modify the canonical repository?
 
 Yes — the builder materializes exactly one disposable, temp-root-confined worktree per governed
-proposal through a six-operation git seam that has no commit/push/merge/authority capability, and the
+proposal through a seven-operation git seam that has no commit/push/merge/authority capability, and the
 disposal ownership interlock ensures it can only ever tear down what it itself created.

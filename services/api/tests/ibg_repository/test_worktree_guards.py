@@ -52,8 +52,8 @@ def test_validate_repository_direct_ok(env):
     _, troot = env
     runner = FakeGitRunner(temp_root=troot)
 
-    class _Spec:  # only current_revision() is consulted
-        pass
+    class _Spec:
+        base_revision = "a832d6e3"
 
     validate_repository(_Spec(), runner)  # revision non-empty -> ok
 

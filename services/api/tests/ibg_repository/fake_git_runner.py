@@ -9,13 +9,13 @@ confinement so tests exercise the same fail-closed boundary the real adapter enf
 from __future__ import annotations
 
 import os
-from typing import Dict, List, Optional, Tuple
+from typing import List, Optional, Tuple
 
 from app.ibg_repository.git_runner import GitCommandError
 
 
 def _norm(path: str) -> str:
-    return os.path.normcase(os.path.normpath(os.path.abspath(path)))
+    return os.path.normcase(os.path.normpath(os.path.realpath(os.path.abspath(path))))
 
 
 class FakeGitRunner:
@@ -29,12 +29,16 @@ class FakeGitRunner:
         clean: bool = True,
         existing_branches: Optional[Tuple[str, ...]] = None,
         existing_worktrees: Optional[Tuple[str, ...]] = None,
+        known_revisions: Optional[Tuple[str, ...]] = None,
+        fail_create_after_add: bool = False,
     ) -> None:
         self._temp_root = temp_root
         self._revision = revision
         self._clean = clean
         self._branches = set(existing_branches or ())
         self._worktrees: List[str] = list(existing_worktrees or ())
+        self._known_revisions = set(known_revisions or (revision, "a832d6e3"))
+        self._fail_create_after_add = fail_create_after_add
         self.calls: List[Tuple[str, tuple]] = []
 
     # --- introspection helpers for assertions ---------------------------
@@ -66,6 +70,16 @@ class FakeGitRunner:
         self.calls.append(("current_revision", ()))
         return self._revision
 
+    def resolve_revision(self, revision: str) -> str:
+        self.calls.append(("resolve_revision", (revision,)))
+        if not isinstance(revision, str) or not revision.strip():
+            raise GitCommandError("revision is required")
+        requested = revision.strip()
+        for known in self._known_revisions:
+            if known == requested or known.startswith(requested):
+                return known
+        raise GitCommandError(f"unknown revision: {revision!r}")
+
     def create_worktree(self, worktree_path: str, branch: str, base_revision: str) -> None:
         self.calls.append(("create_worktree", (worktree_path, branch, base_revision)))
         if not _within(worktree_path, self._temp_root):
@@ -76,6 +90,8 @@ class FakeGitRunner:
             raise GitCommandError(f"branch already exists: {branch!r}")
         self._worktrees.append(worktree_path)
         self._branches.add(branch)
+        if self._fail_create_after_add:
+            raise GitCommandError("simulated failure after worktree add")
 
     def remove_worktree(self, worktree_path: str) -> None:
         self.calls.append(("remove_worktree", (worktree_path,)))

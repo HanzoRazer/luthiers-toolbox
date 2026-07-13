@@ -2,7 +2,7 @@
 Git execution abstraction for the repository worktree layer.
 
 ``GitRunner`` is the ONLY seam through which this subsystem may touch git. It is deliberately
-narrow: it exposes exactly the six read/worktree operations needed to prepare a disposable
+narrow: it exposes exactly the read/worktree operations needed to prepare a disposable
 workspace and nothing else. There is no ``commit``, ``push``, ``reset``, ``clean``, ``checkout``,
 ``fetch``, branch deletion, or GitHub/network operation anywhere in this interface — those
 capabilities are constitutionally out of scope for this sprint and cannot be reached through it.
@@ -26,6 +26,9 @@ import os
 import subprocess
 from pathlib import Path
 from typing import Callable, List, Protocol, Sequence, Tuple, runtime_checkable
+
+
+DEFAULT_GIT_TIMEOUT_SECONDS = 30
 
 
 class GitRunnerError(Exception):
@@ -56,6 +59,9 @@ class GitRunner(Protocol):
     def current_revision(self) -> str:
         """Return the current HEAD revision (full sha)."""
 
+    def resolve_revision(self, revision: str) -> str:
+        """Resolve ``revision`` to a commit sha or raise if it cannot be used as a base."""
+
     def create_worktree(self, worktree_path: str, branch: str, base_revision: str) -> None:
         """Create a new worktree at ``worktree_path`` on a NEW ``branch`` from ``base_revision``."""
 
@@ -81,18 +87,25 @@ class CommandResult:
 
 def _default_command_seam(argv: Sequence[str]) -> CommandResult:
     """Real command seam: run git with an explicit argv list, no shell, capture output."""
-    completed = subprocess.run(  # noqa: S603 - explicit argv, shell=False, fixed executable
-        list(argv),
-        capture_output=True,
-        text=True,
-        shell=False,
-    )
+    try:
+        completed = subprocess.run(  # noqa: S603 - explicit argv, shell=False, fixed executable
+            list(argv),
+            capture_output=True,
+            text=True,
+            shell=False,
+            timeout=DEFAULT_GIT_TIMEOUT_SECONDS,
+        )
+    except subprocess.TimeoutExpired as exc:
+        stdout = exc.stdout if isinstance(exc.stdout, str) else ""
+        stderr = exc.stderr if isinstance(exc.stderr, str) else ""
+        timeout_msg = f"git command timed out after {DEFAULT_GIT_TIMEOUT_SECONDS}s"
+        return CommandResult(124, stdout, (stderr + "\n" + timeout_msg).strip())
     return CommandResult(completed.returncode, completed.stdout, completed.stderr)
 
 
 def _norm(path: str) -> str:
-    """Absolute, normalized, case-folded path for containment comparison."""
-    return os.path.normcase(os.path.normpath(os.path.abspath(path)))
+    """Resolved, absolute, normalized, case-folded path for containment comparison."""
+    return os.path.normcase(os.path.normpath(os.path.realpath(os.path.abspath(path))))
 
 
 def _is_within(child: str, root: str) -> bool:
@@ -107,7 +120,7 @@ class LocalGitRunner:
     """
     Real ``GitRunner`` over local git. Confines all worktree paths beneath ``temp_root``.
 
-    Only the six sanctioned operations are implemented; there is intentionally no method that
+    Only the sanctioned read/worktree operations are implemented; there is intentionally no method that
     commits, pushes, resets, cleans, checks out the active tree, deletes a branch, or talks to a
     remote. ``create_worktree``/``remove_worktree`` refuse any path outside ``temp_root``.
     """
@@ -182,7 +195,14 @@ class LocalGitRunner:
         if not isinstance(branch, str) or not branch.strip():
             raise GitCommandError("branch is required")
         result = self._run("show-ref", "--verify", "--quiet", f"refs/heads/{branch}")
-        return result.returncode == 0
+        if result.returncode == 0:
+            return True
+        if result.returncode == 1:
+            return False
+        raise GitCommandError(
+            f"git show-ref failed while checking branch {branch!r} "
+            f"({result.returncode}): {result.stderr.strip()}"
+        )
 
     def repository_clean(self) -> bool:
         result = self._run_checked("status", "--porcelain")
@@ -190,6 +210,15 @@ class LocalGitRunner:
 
     def current_revision(self) -> str:
         return self._run_checked("rev-parse", "HEAD").stdout.strip()
+
+    def resolve_revision(self, revision: str) -> str:
+        if not isinstance(revision, str) or not revision.strip():
+            raise GitCommandError("revision is required")
+        return self._run_checked(
+            "rev-parse",
+            "--verify",
+            f"{revision.strip()}^{{commit}}",
+        ).stdout.strip()
 
     # --- worktree mutations (the only sanctioned writes) -----------------
 

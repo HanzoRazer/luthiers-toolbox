@@ -28,7 +28,7 @@ class WorktreeValidationError(Exception):
 
 
 def _norm(path: str) -> str:
-    return os.path.normcase(os.path.normpath(os.path.abspath(path)))
+    return os.path.normcase(os.path.normpath(os.path.realpath(os.path.abspath(path))))
 
 
 def _is_within(child: str, root: str) -> bool:
@@ -90,13 +90,30 @@ def validate_repository(spec: RepositoryWorktreeSpec, runner: GitRunner) -> None
     """
     Confirm the base revision the spec pins actually resolves in the repository.
 
-    Fail-closed: if the runner cannot report a current revision the spec cannot be trusted. This
-    does not require the base revision to equal HEAD (a worktree legitimately branches from an
-    older revision); it only proves the repository is real and reachable through the runner.
+    Fail-closed: if the runner cannot report a current revision or cannot resolve the spec's
+    pinned base revision to a commit, the spec cannot be trusted. The base revision does not need
+    to equal HEAD (a worktree legitimately branches from an older revision); it only needs to be a
+    real commit-ish in the repository.
     """
-    rev = runner.current_revision()
+    try:
+        rev = runner.current_revision()
+    except Exception as exc:
+        raise WorktreeValidationError("repository did not report a current revision") from exc
     if not isinstance(rev, str) or not rev.strip():
         raise WorktreeValidationError("repository did not report a current revision")
+    base_revision = getattr(spec, "base_revision", None)
+    if not isinstance(base_revision, str) or not base_revision.strip():
+        raise WorktreeValidationError("base_revision is required")
+    try:
+        resolved = runner.resolve_revision(base_revision.strip())
+    except Exception as exc:
+        raise WorktreeValidationError(
+            f"base_revision does not resolve to a commit: {base_revision!r}"
+        ) from exc
+    if not isinstance(resolved, str) or not resolved.strip():
+        raise WorktreeValidationError(
+            f"base_revision did not resolve to a commit: {base_revision!r}"
+        )
 
 
 def validate_branch(spec: RepositoryWorktreeSpec, runner: GitRunner) -> None:

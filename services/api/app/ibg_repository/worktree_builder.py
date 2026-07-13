@@ -38,6 +38,15 @@ from .worktree_validator import (
 class WorktreeBuildError(Exception):
     """Raised when a worktree cannot be planned, created, or disposed safely."""
 
+    def __init__(
+        self,
+        message: str,
+        *,
+        spec: Optional[RepositoryWorktreeSpec] = None,
+    ) -> None:
+        super().__init__(message)
+        self.spec = spec
+
 
 def _owner_key(worktree_path: str) -> str:
     import os
@@ -156,10 +165,42 @@ class RepositoryWorktreeBuilder:
                 f"builder already owns a worktree at {spec.worktree_path!r}"
             )
 
-        self._runner.create_worktree(spec.worktree_path, spec.branch, spec.base_revision)
-        ready = spec.with_state(RepositoryWorktreeState.READY)
+        created = spec.with_state(RepositoryWorktreeState.CREATED)
+        try:
+            self._runner.create_worktree(spec.worktree_path, spec.branch, spec.base_revision)
+        except Exception as exc:
+            failed = created.with_state(RepositoryWorktreeState.FAILED)
+            cleanup_error = self._cleanup_partial_create(spec.worktree_path, key)
+            if cleanup_error is not None:
+                raise WorktreeBuildError(
+                    "worktree creation failed and partial-create cleanup failed: "
+                    f"{exc}; cleanup: {cleanup_error}",
+                    spec=failed,
+                ) from exc
+            raise WorktreeBuildError(
+                f"worktree creation failed: {exc}",
+                spec=failed,
+            ) from exc
+
+        ready = created.with_state(RepositoryWorktreeState.READY)
         self._owned[key] = ready
         return ready
+
+    def _cleanup_partial_create(self, worktree_path: str, key: str) -> Optional[Exception]:
+        """
+        Best-effort cleanup for a create failure that left a registered worktree behind.
+
+        Branch deletion remains intentionally out of scope for this layer; if git created the
+        branch before failing, the caller receives a FAILED spec and the branch stays visible for
+        operator review.
+        """
+        try:
+            existing = tuple(self._runner.list_worktrees())
+            if any(_owner_key(path) == key for path in existing):
+                self._runner.remove_worktree(worktree_path)
+        except Exception as exc:  # pragma: no cover - exercised through caller behavior
+            return exc
+        return None
 
     def build_from_proposal(
         self, proposal: RepositoryChangeProposal

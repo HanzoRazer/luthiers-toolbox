@@ -10,9 +10,9 @@ on a ``RepositoryWorktreeSpec``. The states form a deliberately small, forward-o
     (any created state) -> DISPOSED
 
 ``NEW``      planned/validated spec; nothing exists on disk yet.
-``CREATED``  the worktree directory was created by the builder (transient).
+``CREATED``  creation has begun and may have left a worktree behind (transient).
 ``READY``    the worktree is created and usable for proposal assembly.
-``FAILED``   creation was attempted and did not complete cleanly.
+``FAILED``   creation was attempted, did not complete cleanly, and may need operator review.
 ``DISPOSED`` the worktree was removed; the spec is a tombstone.
 """
 
