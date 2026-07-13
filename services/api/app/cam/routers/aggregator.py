@@ -121,6 +121,12 @@ try:
 except ImportError:
     vcarve_production_router = None
 
+# SPINE-003: Project Spine -> CAM adoption (validated read path)
+try:
+    from .project_execution import router as project_execution_router
+except ImportError:
+    project_execution_router = None
+
 
 # =============================================================================
 # AGGREGATOR ROUTER
@@ -174,6 +180,9 @@ if binding_router:
 
 if vcarve_production_router:
     cam_router.include_router(vcarve_production_router, prefix="/vcarve", tags=["CAM V-Carve"])
+
+if project_execution_router:
+    cam_router.include_router(project_execution_router, prefix="/projects", tags=["CAM Project Spine"])
 
 
 __all__ = ["cam_router"]

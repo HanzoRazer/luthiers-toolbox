@@ -1,0 +1,103 @@
+{
+  "schema": "cbsp21_patch_input_v1",
+  "schema_version": "cbsp21_patch_input_v1",
+  "coverage_min": 0.95,
+  "patch_id": "SPINE_003_PROJECT_CAM_ADOPTION",
+  "title": "SPINE-003: drive one governed CAM operation from validated project state (ADR-002 read path)",
+  "intent": "Implement the first governed CAM adoption edge of the existing ADR-002 Instrument Project Graph: let ONE existing canonical CAM operation derive its execution inputs from validated InstrumentProjectData instead of a hand-assembled geometry payload. Adds POST /api/cam/projects/{project_id}/adaptive-plan, which loads the project's canonical design state, validates it, translates the canonical body outline (blueprint_geometry.body_outline_mm) into the EXISTING adaptive-clearing request model (PlanIn), and executes through the EXISTING governed adaptive.plan router function (which owns feasibility enforcement -> HTTP 409 and RMOS run persistence). The operation adopted is adaptive/plan because it uniquely satisfies all selection criteria at once: governed, machine-ready, already RMOS-integrated, and its only required geometry (loops) maps directly from body_outline_mm with zero invented values; profiling/gcode is the better semantic fit for a perimeter cut but is NOT RMOS-integrated, so adopting it would require out-of-scope RMOS wiring. Uses the existing Project Spine only: no ProjectSpineV2 / ProjectExecutionModel / duplicate loader and no project-schema change. Translation happens exactly once (app/cam/project_adapter.py). No authority promotion: loading a project approves no manufacturing/execution, bypasses no feasibility/safety, and does not touch manufacturing_state. Explicit project_id required (no inference); machining parameters (tool_d, feeds) are caller-supplied (not design state) and never fabricated. Provenance (project id/revision + RMOS run id) is preserved via response headers with NO CAM/RMOS/project schema modification. Read-only against project state.",
+  "change_type": "feature",
+  "behavior_change": "additive - one new endpoint POST /api/cam/projects/{project_id}/adaptive-plan (owner-authenticated) that derives the adaptive-clearing PlanIn from the project's canonical body outline and executes it through the existing adaptive.plan path, returning the existing PlanOut shape plus X-Project-Id / X-Project-Revision / X-Run-Id provenance headers. Existing endpoints are unchanged: POST /api/cam/pocket/adaptive/plan keeps identical path/method/request/response (regression-tested). No new execution model; feasibility (409) and RMOS run persistence are inherited from adaptive.plan, not re-implemented. No CAM/RMOS/project schema change; no authority added or promoted; execution is read-only against project state.",
+  "risk_level": "low",
+  "scope": {
+    "paths_in_scope": [
+      ".cbsp21/patches/spine-003-project-cam-adoption.json",
+      "services/api/app/cam/project_adapter.py",
+      "services/api/app/cam/routers/project_execution.py",
+      "services/api/app/cam/routers/aggregator.py",
+      "services/api/app/projects/service.py",
+      "services/api/tests/cam/test_project_cam_execution.py",
+      "docs/adr/ADR-002-instrument-project-graph.md",
+      "docs/audit/SPINE_003_CAM_ADOPTION.md",
+      "ci/router_count_baseline.json",
+      "services/api/tests/test_technical_debt_gates.py"
+    ],
+    "files_expected_to_change": [
+      "services/api/app/cam/project_adapter.py",
+      "services/api/app/cam/routers/project_execution.py",
+      "services/api/app/cam/routers/aggregator.py",
+      "services/api/app/projects/service.py",
+      "services/api/tests/cam/test_project_cam_execution.py",
+      "docs/adr/ADR-002-instrument-project-graph.md",
+      "docs/audit/SPINE_003_CAM_ADOPTION.md",
+      "ci/router_count_baseline.json",
+      "services/api/tests/test_technical_debt_gates.py"
+    ]
+  },
+  "diff_articulation": {
+    "what_changed": "(1) NEW services/api/app/cam/project_adapter.py: the single canonical Project->CAM translation. validate_project_cam_inputs (requires blueprint_geometry.body_outline_mm to be a closed boundary of >=3 finite (x,y) points; raises ValueError otherwise) and build_cam_request_from_project (maps body_outline_mm -> PlanIn.loops[0]; applies caller machining overrides restricted to a known set of PlanIn fields; any omitted parameter keeps its PlanIn default). No execution, no persistence, read-only. (2) services/api/app/projects/service.py: add load_project_for_cam(project) - parses canonical InstrumentProjectData and gates on is_ready_for_cam() (spec + instrument_type); read-only; raises ValueError if no CAM-ready state. (3) NEW services/api/app/cam/routers/project_execution.py: ProjectAdaptivePlanRequest (tool_d required + optional machining overrides; unset fields not forwarded) and POST /{project_id}/adaptive-plan which authorizes via projects._get_project_or_404, loads+translates (ValueError -> 422), calls the existing adaptive.plan (400/409 propagate), and sets X-Project-Id / X-Project-Revision / X-Run-Id headers; returns the existing PlanOut. (4) services/api/app/cam/routers/aggregator.py: import and include_router the new sub-router under prefix /projects (the existing cam_router is mounted at /api/cam). (5) NEW tests/cam/test_project_cam_execution.py: unit (validation + translation + parity), service (load_project_for_cam), and API tests (200 execution, provenance headers, read-only no-mutation, 404 unknown, 403 foreign, 422 not-ready, 422 no-outline, 422 missing tool_d) plus a regression that the existing /api/cam/pocket/adaptive/plan still works. (6) docs: ADR-002 non-normative implementation-status note (appended at end-of-file to stay conflict-free with the independent SPINE-002 ADR edit) + docs/audit/SPINE_003_CAM_ADOPTION.md.",
+    "why_not_redundant": "Builds the first Project Spine -> CAM read path that LAB-021 (WP-PS-4) identified as unbuilt: the spine held canonical geometry but no CAM operation consumed it. It reuses the existing governed operation and its feasibility/RMOS machinery rather than adding a parallel execution model, and centralizes Project->CAM translation in one adapter so future CAM adoption cannot diverge. Additive and read-only: no existing endpoint, schema, or authority changes, so it adds a real adoption edge without touching CAM computational authority or RMOS manufacturing authority."
+  },
+  "verification": {
+    "commands_run": [
+      "py -3.11 -m pytest tests/cam/test_project_cam_execution.py -q -> (recorded at commit)",
+      "py -3.11 scripts/ci/check_cbsp21_patch_input.py --base origin/main --head HEAD -> (recorded at commit)",
+      "py -3.11 scripts/ci/check_cbsp21_gate.py --changed-files <PR file set> -> (recorded at commit)"
+    ]
+  },
+  "files": [
+    {
+      "path": "services/api/app/cam/project_adapter.py",
+      "intent": "New single canonical Project->CAM translation (validate + build PlanIn from body_outline_mm). No execution, no persistence, read-only, no fabricated geometry.",
+      "risk": "low",
+      "behavior_change": "additive (new module)"
+    },
+    {
+      "path": "services/api/app/projects/service.py",
+      "intent": "Add load_project_for_cam - read-only project-level CAM readiness gate returning canonical InstrumentProjectData.",
+      "risk": "low",
+      "behavior_change": "additive (new service function)"
+    },
+    {
+      "path": "services/api/app/cam/routers/project_execution.py",
+      "intent": "New additive endpoint POST /api/cam/projects/{project_id}/adaptive-plan; delegates to the adapter and the existing adaptive.plan; provenance via response headers.",
+      "risk": "low",
+      "behavior_change": "additive (new endpoint)"
+    },
+    {
+      "path": "services/api/app/cam/routers/aggregator.py",
+      "intent": "Register the new project-execution sub-router under /projects via the existing cam_router aggregator; no existing route changed.",
+      "risk": "low",
+      "behavior_change": "additive (one router registration)"
+    },
+    {
+      "path": "services/api/tests/cam/test_project_cam_execution.py",
+      "intent": "Unit + service + API + parity + provenance + read-only + regression coverage of the new edge.",
+      "risk": "low",
+      "behavior_change": "additive (new tests)"
+    },
+    {
+      "path": "docs/adr/ADR-002-instrument-project-graph.md",
+      "intent": "Non-normative implementation-status note recording the Project->CAM edge is wired; locked decisions unchanged.",
+      "risk": "low",
+      "behavior_change": "none (docs)"
+    },
+    {
+      "path": "docs/audit/SPINE_003_CAM_ADOPTION.md",
+      "intent": "Audit record: adopted operation + rationale, boundaries honored, endpoint contract, parity verification, remaining work.",
+      "risk": "low",
+      "behavior_change": "none (docs)"
+    },
+    {
+      "path": "ci/router_count_baseline.json",
+      "intent": "Ratchet router count baseline to include the one new governed endpoint added by SPINE-003; tightens the CI gate to the new expected count.",
+      "risk": "low",
+      "behavior_change": "none (CI baseline ratchet)"
+    },
+    {
+      "path": "services/api/tests/test_technical_debt_gates.py",
+      "intent": "Bump TARGET_MAX_ENDPOINTS ratchet to 1222 to account for the one new endpoint introduced by SPINE-003; prevents future unintended endpoint inflation.",
+      "risk": "low",
+      "behavior_change": "none (test ratchet update)"
+    }
+  ]
+}

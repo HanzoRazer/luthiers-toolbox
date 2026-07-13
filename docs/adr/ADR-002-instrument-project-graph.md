@@ -118,3 +118,21 @@ Phases 1–4 must execute sequentially. Phases 5–7 can partially overlap once 
 - `/calculators` under Business nav — **superseded by Utilities under Design nav**
 - Router-first reorganization — **superseded by schema-first approach (Phase 7 is last, not first)**
 - Separate acoustic/electric/violin hubs — **superseded by single Instrument Hub covering all instruments**
+
+---
+
+## Implementation status — adoption edges (non-normative)
+
+> Records *what is actually wired*, not new decisions. Locked decisions above remain
+> authoritative. (Appended per-edge to keep independent adoption PRs conflict-free.)
+
+- **Project → CAM execution edge — wired (SPINE-003).**
+  `POST /api/cam/projects/{project_id}/adaptive-plan` derives the existing governed
+  adaptive-clearing request (`PlanIn`) from validated `InstrumentProjectData` (the
+  canonical `blueprint_geometry.body_outline_mm` boundary) and executes it through the
+  existing `adaptive.plan` CAM/RMOS path. Translation is single-sourced in
+  `app/cam/project_adapter.py`; project readiness is gated by
+  `projects.service.load_project_for_cam`. **Read-only** against project state — confers
+  no manufacturing approval, promotes no authority, and bypasses no feasibility/safety
+  policy. CAM keeps computational authority; RMOS keeps manufacturing authority. No CAM /
+  RMOS / project schema change. See `docs/audit/SPINE_003_CAM_ADOPTION.md`.
