@@ -37,12 +37,14 @@ from .repository_change_proposal import (
     RepositoryChangeProposalError,
     PROPOSAL_CONSTITUTIONAL_CLASSIFICATION,
     build_repository_change_proposal,
+    validate_branch_ref,
 )
 from .repository_review_package import (
     RepositoryProposalReviewPackage,
     RepositoryReviewPackageError,
     build_repository_proposal_review_package,
 )
+# --- PR B: repository worktree isolation & proposal workspace ---
 from .worktree_state import RepositoryWorktreeState
 from .worktree_spec import (
     RepositoryWorktreeSpec,
@@ -75,6 +77,36 @@ from .worktree_builder import (
     RepositoryWorktreeBuilder,
     WorktreeBuildError,
 )
+# --- PR C: review package, draft-PR metadata, deterministic exports ---
+from .review_summary_builder import (
+    ReviewSummaryError,
+    normalize_review_sections,
+    build_review_title,
+    build_changed_file_summary,
+    build_review_summary,
+)
+from .draft_pull_request_package import (
+    DraftPullRequestPackage,
+    DraftPullRequestPackageError,
+    DRAFT_PR_CONSTITUTIONAL_CLASSIFICATION,
+    build_draft_pull_request_package,
+)
+from .repository_review_bundle import (
+    RepositoryReviewBundle,
+    RepositoryReviewBundleError,
+    REVIEW_BUNDLE_SCHEMA_VERSION,
+    REVIEW_BUNDLE_CONSTITUTIONAL_CLASSIFICATION,
+    normalize_workspace_metadata,
+    build_review_bundle,
+)
+from .repository_review_export import (
+    to_dict,
+    to_json,
+    to_markdown,
+    build_review_json,
+    build_review_markdown,
+    stable_review_hash,
+)
 
 __all__ = [
     "ProposalTargetBinding",
@@ -95,6 +127,7 @@ __all__ = [
     "RepositoryChangeProposalError",
     "PROPOSAL_CONSTITUTIONAL_CLASSIFICATION",
     "build_repository_change_proposal",
+    "validate_branch_ref",
     "RepositoryProposalReviewPackage",
     "RepositoryReviewPackageError",
     "build_repository_proposal_review_package",
@@ -123,4 +156,26 @@ __all__ = [
     "validate_worktree",
     "RepositoryWorktreeBuilder",
     "WorktreeBuildError",
+    # --- PR C: review package, draft-PR metadata, deterministic exports ---
+    "ReviewSummaryError",
+    "normalize_review_sections",
+    "build_review_title",
+    "build_changed_file_summary",
+    "build_review_summary",
+    "DraftPullRequestPackage",
+    "DraftPullRequestPackageError",
+    "DRAFT_PR_CONSTITUTIONAL_CLASSIFICATION",
+    "build_draft_pull_request_package",
+    "RepositoryReviewBundle",
+    "RepositoryReviewBundleError",
+    "REVIEW_BUNDLE_SCHEMA_VERSION",
+    "REVIEW_BUNDLE_CONSTITUTIONAL_CLASSIFICATION",
+    "normalize_workspace_metadata",
+    "build_review_bundle",
+    "to_dict",
+    "to_json",
+    "to_markdown",
+    "build_review_json",
+    "build_review_markdown",
+    "stable_review_hash",
 ]

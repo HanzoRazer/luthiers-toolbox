@@ -1,0 +1,68 @@
+{
+  "schema": "cbsp21_patch_input_v1",
+  "schema_version": "cbsp21_patch_input_v1",
+  "coverage_min": 0.95,
+  "patch_id": "IBG_REPOSITORY_REVIEW_PACKAGE",
+  "title": "feat(ibg-repository): repository proposal review package & draft-PR metadata (IBG-1 PR C)",
+  "intent": "Add the capability for IBG to transform a validated RepositoryChangeProposal into a complete, deterministic, human-reviewable package: a review summary builder (ordered structured sections from canonical proposal facts), a DraftPullRequestPackage (advisory PR metadata — branch_name = proposal.proposed_branch, caller-supplied target_branch defaulting to main, ref-shape validated WITHOUT touching git), a RepositoryReviewBundle (a derived artifact embedding canonical serializations of the proposal, draft-PR metadata, an optional IBG ReviewPackage, optional normalized workspace metadata, and a provenance reference plus optional VERIFIED full lineage), and a deterministic export layer (dict/JSON/markdown + stable hash). Review artifacts only — no GitHub, no git execution, no repository mutation, no authority. Independently mergeable: PR B is a SOFT, serialization-only dependency (workspace metadata accepted as None, a validated Mapping, or an object exposing to_canonical_dict()); nothing here imports PR B.",
+  "change_type": "feat",
+  "behavior_change": "Adds additive review-packaging modules under the existing services/api/app/ibg_repository/ package plus their tests. No existing runtime path imports them; no existing behavior, public API surface, schema, authority, or governance changes. Pure packaging/serialization: no git, no network, no filesystem writes, no GitHub.",
+  "risk_level": "low",
+  "scope": {
+    "paths_in_scope": [
+      "services/api/app/ibg_repository/",
+      "services/api/tests/ibg_repository/",
+      "docs/architecture/IBG_REPOSITORY_REVIEW_PIPELINE.md",
+      ".cbsp21/patches/ibg-review-package.json"
+    ],
+    "files_expected_to_change": [
+      "services/api/app/ibg_repository/__init__.py",
+      "services/api/app/ibg_repository/repository_change_proposal.py",
+      "services/api/app/ibg_repository/review_summary_builder.py",
+      "services/api/app/ibg_repository/draft_pull_request_package.py",
+      "services/api/app/ibg_repository/repository_review_bundle.py",
+      "services/api/app/ibg_repository/repository_review_export.py",
+      "services/api/tests/ibg_repository/conftest.py",
+      "services/api/tests/ibg_repository/test_review_summary_builder.py",
+      "services/api/tests/ibg_repository/test_draft_pull_request_package.py",
+      "services/api/tests/ibg_repository/test_repository_review_bundle.py",
+      "services/api/tests/ibg_repository/test_repository_review_export.py",
+      "docs/architecture/IBG_REPOSITORY_REVIEW_PIPELINE.md",
+      ".cbsp21/patches/ibg-review-package.json"
+    ]
+  },
+  "diff_articulation": {
+    "what_changed": "Creates review_summary_builder.py (normalize_review_sections rejecting duplicate headings; build_review_summary emitting fixed ordered sections from canonical proposal facts; build_review_title/build_changed_file_summary), draft_pull_request_package.py (DraftPullRequestPackage advisory metadata; branch_name pinned to proposal.proposed_branch, caller target_branch default main, both ref-validated without git; CBSP21 packet reference by patch_id + hash), repository_review_bundle.py (RepositoryReviewBundle derived artifact; normalize_workspace_metadata adapter accepting None/Mapping/to_canonical_dict-object, rejecting other objects/non-string/unrecognized keys, dropping the environment-specific worktree_path, deterministically sorting nested collections; provenance reference always preserved and full lineage embedded ONLY when a governed provenance object is supplied AND its computed hash matches evidence_provenance_hash, fail-closed on mismatch), and repository_review_export.py (deterministic to_dict/to_json/to_markdown + stable_review_hash rendered from the single canonical dict). __init__ additively re-exports the new API; conftest gains a make_proposal fixture. A constitutional-invariant test asserts the new modules reference no subprocess/network/GitHub and do not import PR B's git_runner/worktree_builder. Review-hardening (post-review): branch-ref validation is unified into a shared repository_change_proposal.validate_branch_ref (single source of truth; proposed_branch + draft-PR target_branch/branch_name all delegate, no local copy to drift); list canonicalization preserves caller order (only the set-like allowed_paths field is sorted, explicitly) so embedded review-package/provenance sequences are never silently reordered; build_review_bundle now fail-closed rejects workspace metadata whose proposal_id/repository_id/base_revision contradict the proposal; stable_review_hash pins UTF-8/ensure_ascii=False encoding; and markdown export sanitizes single-line slots (title/headings/kv) and section bodies so embedded content cannot inject headings/code-fences or split blocks.",
+    "why_not_redundant": "No review-package / draft-PR-metadata / review-bundle / deterministic-export capability existed. PR A added proposal contracts and PR B added worktree isolation; neither packages a proposal into a human-reviewable artifact. The existing body-geometry ReviewPackage is REUSED (embedded via to_dict()), not duplicated. This is a new, distinct capability boundary (review packaging) that did not previously exist, and it is deliberately built without a hard dependency on PR B so it can merge independently while PR B #216 is under review."
+  },
+  "verification": {
+    "commands_run": [
+      "python -m pytest tests/ibg_repository/ -q  ->  all passed (PR A + PR C together)",
+      "python -m pytest tests/ibg_repository/ --cov=app.ibg_repository.review_summary_builder --cov=app.ibg_repository.draft_pull_request_package --cov=app.ibg_repository.repository_review_bundle --cov=app.ibg_repository.repository_review_export  ->  >=98% per new module",
+      "python scripts/ci/check_cbsp21_patch_input.py --base origin/main --head HEAD",
+      "python scripts/ci/check_cbsp21_gate.py --changed-files <diff>"
+    ]
+  },
+  "files": [
+    { "path": "services/api/app/ibg_repository/__init__.py", "intent": "Additively re-export the PR C review-package public API + the shared validate_branch_ref.", "risk": "low", "behavior_change": "none" },
+    { "path": "services/api/app/ibg_repository/repository_change_proposal.py", "intent": "Extract shared validate_branch_ref (single source of truth); proposed_branch validation delegates to it — behavior-preserving refactor so PR C's draft-PR ref checks cannot drift from PR A's.", "risk": "low", "behavior_change": "none" },
+    { "path": "services/api/app/ibg_repository/review_summary_builder.py", "intent": "Deterministic structured review sections from a proposal.", "risk": "low", "behavior_change": "none" },
+    { "path": "services/api/app/ibg_repository/draft_pull_request_package.py", "intent": "Advisory draft-PR metadata (no git/GitHub/network).", "risk": "low", "behavior_change": "none" },
+    { "path": "services/api/app/ibg_repository/repository_review_bundle.py", "intent": "Derived review bundle + workspace-metadata adapter + provenance handling.", "risk": "low", "behavior_change": "none" },
+    { "path": "services/api/app/ibg_repository/repository_review_export.py", "intent": "Deterministic dict/JSON/markdown exports + stable hash.", "risk": "low", "behavior_change": "none" },
+    { "path": "services/api/tests/ibg_repository/conftest.py", "intent": "Add a shared make_proposal fixture for PR C tests.", "risk": "low", "behavior_change": "test-only" },
+    { "path": "services/api/tests/ibg_repository/test_review_summary_builder.py", "intent": "Summary/section-normalization invariants.", "risk": "low", "behavior_change": "test-only" },
+    { "path": "services/api/tests/ibg_repository/test_draft_pull_request_package.py", "intent": "Draft-PR metadata + branch-semantics invariants.", "risk": "low", "behavior_change": "test-only" },
+    { "path": "services/api/tests/ibg_repository/test_repository_review_bundle.py", "intent": "Bundle assembly, workspace adapter, provenance verification, no-authority regression.", "risk": "low", "behavior_change": "test-only" },
+    { "path": "services/api/tests/ibg_repository/test_repository_review_export.py", "intent": "Deterministic exports + constitutional no-git/no-network invariant.", "risk": "low", "behavior_change": "test-only" },
+    { "path": "docs/architecture/IBG_REPOSITORY_REVIEW_PIPELINE.md", "intent": "Document the complete review artifact pipeline.", "risk": "low", "behavior_change": "none" },
+    { "path": ".cbsp21/patches/ibg-review-package.json", "intent": "Per-PR CBSP21 manifest for PR C.", "risk": "low", "behavior_change": "CI/review metadata only" }
+  ],
+  "architecture_scan": {
+    "scan_id": "AS-2026-07-12-IBG-REPOSITORY-REVIEW-PACKAGE",
+    "risk_summary": { "critical": 0, "high": 0, "medium": 0, "low": 0 },
+    "findings": [],
+    "acknowledged": true,
+    "acknowledgement_notes": "Additive, pure packaging/serialization. No git/GitHub/network/filesystem-write/authority. Soft (serialization-only) dependency on PR B; no PR B import. Read-only inspection API is deferred to PR D."
+  }
+}
