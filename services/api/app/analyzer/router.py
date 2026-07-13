@@ -14,8 +14,11 @@ from ..db.session import get_db
 from ..schemas.instrument_project import DesignStateResponse
 from ..projects.router import _get_project_or_404
 from ..projects.service import (
+    ObservationConflictError,
+    ProjectStateUninitializedError,
     append_analyzer_observation,
     build_design_state_response,
+    lock_project_row_for_update,
 )
 from .schemas import (
     ViewerPackV1,
@@ -120,7 +123,20 @@ async def append_project_observation(
     except ValueError as exc:
         raise HTTPException(status_code=400, detail=str(exc))
 
-    new_state = append_analyzer_observation(project, [observation])
+    # Serialize the read-modify-write of Project.data against concurrent writers.
+    lock_project_row_for_update(db, project)
+    try:
+        new_state = append_analyzer_observation(project, [observation])
+    except ObservationConflictError as exc:
+        raise HTTPException(status_code=409, detail=str(exc))
+    except ProjectStateUninitializedError as exc:
+        raise HTTPException(status_code=409, detail=str(exc))
+    except ValueError as exc:
+        # Existing project.data is unparseable — controlled 409, not an uncaught 500.
+        raise HTTPException(
+            status_code=409, detail=f"existing project state cannot be read: {exc}"
+        )
+
     db.commit()
     db.refresh(project)
     return build_design_state_response(project, new_state)

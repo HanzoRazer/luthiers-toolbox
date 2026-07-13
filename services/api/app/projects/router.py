@@ -34,6 +34,7 @@ from .service import (
     build_design_state_response,
     create_default_design_state,
     create_design_state_from_model_id,
+    lock_project_row_for_update,
     merge_analyzer_observations,
     parse_design_state,
     serialize_design_state,
@@ -181,6 +182,9 @@ def put_design_state(
     project = _get_project_or_404(project_id, principal, db)
     new_state = body.design_state
 
+    # Serialize the read-modify-write of Project.data against concurrent writers
+    # (this endpoint and the analyzer observation edge both rewrite the whole blob).
+    lock_project_row_for_update(db, project)
     existing_state = parse_design_state(project.data)
     if existing_state and existing_state.analyzer_observations:
         # Append-only by run_id — canonical single implementation in the service, so

@@ -37,6 +37,8 @@ from app.projects.service import (
     create_default_design_state,
     serialize_design_state,
     parse_design_state,
+    ObservationConflictError,
+    ProjectStateUninitializedError,
 )
 from app.schemas.instrument_project import AnalyzerObservation
 
@@ -263,6 +265,30 @@ class TestAppendService:
         assert new_state.instrument_type.value == "electric_guitar"
         assert [o.run_id for o in new_state.analyzer_observations] == ["run-1"]
 
+    def test_no_state_and_no_instrument_type_fails_loudly_not_fabricated(self):
+        # "never fabricated": no design state + no declared type must raise, not
+        # invent an "acoustic_guitar" default.
+        project = _seed_project(design_state=None, instrument_type=None)
+        with pytest.raises(ProjectStateUninitializedError):
+            append_analyzer_observation(project, [_obs("run-1")])
+
+    def test_same_run_id_different_payload_raises_conflict(self):
+        state = create_default_design_state("acoustic_guitar")
+        project = _seed_project(design_state=state)
+        append_analyzer_observation(project, [_obs("run-1")])
+        conflicting = AnalyzerObservation(
+            run_id="run-1", specimen_id="s", observed_at="t", wsi=0.9
+        )
+        with pytest.raises(ObservationConflictError):
+            append_analyzer_observation(project, [conflicting])
+
+    def test_same_run_id_identical_payload_is_idempotent_not_conflict(self):
+        state = create_default_design_state("acoustic_guitar")
+        project = _seed_project(design_state=state)
+        append_analyzer_observation(project, [_obs("run-1")])
+        new_state = append_analyzer_observation(project, [_obs("run-1")])
+        assert len(new_state.analyzer_observations) == 1
+
     def test_advisory_only_does_not_touch_spec_or_manufacturing(self):
         state = create_default_design_state("acoustic_guitar")
         project = _seed_project(design_state=state)
@@ -362,6 +388,32 @@ class TestObservationRoute:
             f"/api/analyzer/projects/{project.id}/observations", json=self._payload()
         )
         assert resp.status_code == 403
+
+    def test_conflicting_run_id_is_409(self, client, project):
+        url = f"/api/analyzer/projects/{project.id}/observations"
+        assert client.post(url, json=self._payload("run-1")).status_code == 200
+        # Same run_id, different payload (wsi 0.3 -> 0.9) must conflict, not silently drop.
+        conflicting = self._payload("run-1")
+        conflicting["wsi"] = 0.9
+        resp = client.post(url, json=conflicting)
+        assert resp.status_code == 409
+
+    def test_uninitialized_project_no_type_is_409(self, client, project):
+        # No design state and no declared instrument_type -> fail loudly, no fabrication.
+        project.data = {}
+        project.instrument_type = None
+        resp = client.post(
+            f"/api/analyzer/projects/{project.id}/observations", json=self._payload()
+        )
+        assert resp.status_code == 409
+
+    def test_unparseable_existing_state_is_409_not_500(self, client, project):
+        # Corrupt/incompatible existing blob -> controlled 409, never an uncaught 500.
+        project.data = {"analyzer_observations": "not-a-list"}
+        resp = client.post(
+            f"/api/analyzer/projects/{project.id}/observations", json=self._payload()
+        )
+        assert resp.status_code == 409
 
     def test_missing_project_is_404(self, client):
         from app.auth.deps import get_current_principal
