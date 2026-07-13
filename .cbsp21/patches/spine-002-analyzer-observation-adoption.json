@@ -1,0 +1,118 @@
+{
+  "schema": "cbsp21_patch_input_v1",
+  "schema_version": "cbsp21_patch_input_v1",
+  "coverage_min": 0.95,
+  "patch_id": "SPINE_002_ANALYZER_OBSERVATION_ADOPTION",
+  "title": "SPINE-002: wire the Analyzer -> AnalyzerObservation adoption edge of the ADR-002 project graph",
+  "intent": "Complete the first missing read/write adoption edge of the existing ADR-002 Instrument Project Graph by letting the Analyzer append governed, advisory AnalyzerObservation records to canonical project state. ADR-002 locks (decision #6) that the Analyzer enriches project state with AnalyzerObservation and never overrides spec/bridge_state/material_selection; LAB-021 (WP-PS-3) found this edge was never built (an AnalyzerObservation was constructed nowhere). This adds POST /api/analyzer/projects/{project_id}/observations, which maps a completed InterpretationResult (plus an explicit run_id) into the EXISTING canonical AnalyzerObservation schema and appends it to InstrumentProjectData.analyzer_observations in Project.data. Uses the existing spine only: no app.project / ProjectSpine / ProjectObservationV2 and no new table or parallel state authority. Analyzer owns interpretation; the Project Spine owns association, append-only storage, and serialization. Append-only and idempotent by the stable explicit run_id; advisory only (touches only analyzer_observations; confers no geometry/CAM/RMOS/material authority). The append-only merge is extracted into ONE canonical service function (merge_analyzer_observations) now shared by both this edge and PUT /design-state, replacing a duplicated inline merge. Existing AnalyzerObservation schema is authoritative and was not extended. Explicit project_id and run_id required (no inference); missing required identity is a 400; absent optional provenance is left empty, never fabricated; no tap_tone_pi import is added.",
+  "change_type": "feature",
+  "behavior_change": "additive - one new endpoint POST /api/analyzer/projects/{project_id}/observations (owner-authenticated) that appends an advisory AnalyzerObservation to canonical project state and returns the updated DesignStateResponse. Fail-closed integrity on the new edge: re-posting an existing run_id with a DIFFERENT payload returns 409 Conflict (identical re-post stays idempotent 200); a project with no design state AND no declared instrument_type returns 409 (no fabricated default); an unparseable existing Project.data returns a controlled 409 rather than an uncaught 500. Concurrency: both Project.data writers (the new edge and PUT /design-state) now acquire a SELECT ... FOR UPDATE row lock before the read-modify-write so concurrent whole-blob writes cannot lose each other (no-op on backends without row locking, e.g. SQLite; real on PostgreSQL). PUT /api/projects/{id}/design-state keeps its path/method/response shape and its append-only-by-run_id merge semantics (existing observations preserved, incoming duplicate run_ids dropped); its only internal change is the added row lock and the shared merge_analyzer_observations call. No schema change to AnalyzerObservation; no state authority added or promoted.",
+  "risk_level": "low",
+  "scope": {
+    "paths_in_scope": [
+      ".cbsp21/patches/spine-002-analyzer-observation-adoption.json",
+      "ci/router_count_baseline.json",
+      "services/api/app/analyzer/project_observation.py",
+      "services/api/app/analyzer/router.py",
+      "services/api/app/analyzer/schemas.py",
+      "services/api/app/projects/service.py",
+      "services/api/app/projects/router.py",
+      "services/api/app/projects/model_seeding.py",
+      "services/api/tests/test_analyzer_project_observation.py",
+      "services/api/tests/test_technical_debt_gates.py",
+      "docs/adr/ADR-002-instrument-project-graph.md",
+      "docs/audit/SPINE_002_ANALYZER_ADOPTION.md"
+    ],
+    "files_expected_to_change": [
+      "services/api/app/analyzer/project_observation.py",
+      "services/api/app/analyzer/router.py",
+      "services/api/app/analyzer/schemas.py",
+      "services/api/app/projects/service.py",
+      "services/api/app/projects/router.py",
+      "services/api/app/projects/model_seeding.py",
+      "services/api/tests/test_analyzer_project_observation.py",
+      "services/api/tests/test_technical_debt_gates.py",
+      "docs/adr/ADR-002-instrument-project-graph.md",
+      "docs/audit/SPINE_002_ANALYZER_ADOPTION.md"
+    ]
+  },
+  "diff_articulation": {
+    "what_changed": "(1) NEW services/api/app/analyzer/project_observation.py: pure mapping/validation from InterpretationResult + explicit run_id to the canonical AnalyzerObservation - validate_analyzer_observation_source (raises ValueError on missing run_id/specimen_id/interpreted_at), tolerant _extract_mode_frequencies over loose primary_modes dicts, and build_analyzer_observation (findings from recommendation messages with wolf_assessment prepended, reference_instrument = first non-null, wsi/interpretation_confidence carried only when supplied). No persistence, no HTTP. (2) services/api/app/analyzer/schemas.py: add AppendObservationRequest { interpretation: InterpretationResult, run_id: str (required), wsi: Optional[float] 0-1, interpretation_confidence: float 0-1 }. (3) services/api/app/analyzer/router.py: add POST /projects/{project_id}/observations - resolves+authorizes the project via projects._get_project_or_404, builds the observation (ValueError -> 400), calls append_analyzer_observation, commits, returns DesignStateResponse. (4) services/api/app/projects/service.py: add merge_analyzer_observations(existing_state, incoming) - the single canonical append-only-by-run_id merge - and append_analyzer_observation(project, observations) which load->merge->apply against InstrumentProjectData (seeding a default keyed to the project's own instrument_type only if no state exists; caller commits). Only analyzer_observations is written. (5) services/api/app/projects/router.py: PUT /design-state now calls merge_analyzer_observations instead of its inline duplicate; behavior and response unchanged. (6) NEW tests/test_analyzer_project_observation.py: unit coverage of extract/validate/build and the merge/append service, plus TestClient integration of the new route (append, idempotency, 400 blank run_id, 422 missing run_id, 403 foreign project, 404 missing project) and an advisory-boundary assertion that no non-observation field is mutated. (7) docs: ADR-002 non-normative implementation-status note + docs/audit/SPINE_002_ANALYZER_ADOPTION.md. (8) REVIEW HARDENING (risk-assessment fixes): service.py adds ObservationConflictError + ProjectStateUninitializedError + lock_project_row_for_update(db, project) + _reject_run_id_conflicts; append_analyzer_observation now (a) raises on same-run_id/different-payload instead of silently dropping, (b) raises ProjectStateUninitializedError instead of fabricating an 'acoustic_guitar' default when there is no state and no declared instrument_type. analyzer/router.py maps ObservationConflictError/ProjectStateUninitializedError/parse-ValueError to 409 and row-locks before the write. projects/router.py PUT /design-state also row-locks before its read-modify-write. Tests extended (34 -> 40) with service + route coverage for the 409 conflict, fail-loud uninitialized, unparseable-state 409, and idempotent-identical paths.",
+    "why_not_redundant": "Wires a locked-but-unbuilt ADR-002 decision (Analyzer enriches project state with AnalyzerObservation, decision #6) that LAB-021 confirmed was constructed nowhere - the AnalyzerObservation schema existed but had no producer. It reuses the existing spine (no parallel state object, no new table, no schema change) and de-duplicates the append-only merge into one shared service function rather than adding a second competing writer. Advisory-only and idempotent by construction, so it adds a real adoption edge without granting the Analyzer any manufacturing/geometry authority."
+  },
+  "verification": {
+    "commands_run": [
+      "py -3.11 -m pytest tests/test_analyzer_project_observation.py -q -> 40 passed (was 34; +6 review-hardening: 409 conflict, fail-loud uninitialized, unparseable-state 409, idempotent-identical)",
+      "py -3.11 scripts/ci/check_cbsp21_patch_input.py --base origin/main --head HEAD -> (recorded at commit)",
+      "py -3.11 scripts/ci/check_cbsp21_gate.py --changed-files <PR file set> -> (recorded at commit)"
+    ]
+  },
+  "files": [
+    {
+      "path": "services/api/app/analyzer/project_observation.py",
+      "intent": "New pure mapping/validation module: InterpretationResult + explicit run_id -> canonical AnalyzerObservation. No persistence, no HTTP, no fabrication.",
+      "risk": "low",
+      "behavior_change": "additive (new module)"
+    },
+    {
+      "path": "services/api/app/analyzer/schemas.py",
+      "intent": "Add AppendObservationRequest request model wrapping the interpretation + explicit run_id and optional wsi/interpretation_confidence.",
+      "risk": "low",
+      "behavior_change": "additive (new schema)"
+    },
+    {
+      "path": "services/api/app/analyzer/router.py",
+      "intent": "Add POST /api/analyzer/projects/{project_id}/observations - owner-authorized advisory append that returns the updated DesignStateResponse.",
+      "risk": "low",
+      "behavior_change": "additive (new endpoint)"
+    },
+    {
+      "path": "services/api/app/projects/service.py",
+      "intent": "Add canonical merge_analyzer_observations (append-only by run_id) and append_analyzer_observation project-state write; only analyzer_observations is touched.",
+      "risk": "low",
+      "behavior_change": "additive (new service functions)"
+    },
+    {
+      "path": "services/api/app/projects/router.py",
+      "intent": "PUT /design-state uses the shared merge_analyzer_observations in place of an inline duplicate of the same append-only merge; behavior and response unchanged.",
+      "risk": "low",
+      "behavior_change": "none (identical merge semantics and response)"
+    },
+    {
+      "path": "services/api/app/projects/model_seeding.py",
+      "intent": "New module extracted from service.py to keep service.py under the 500-line gate: contains create_design_state_from_model_id and _build_body_config_from_model (GEN-1/GEN-2 model-seeding helpers). No behavior change; projects/router.py imports create_design_state_from_model_id from here.",
+      "risk": "low",
+      "behavior_change": "none (pure extraction, identical logic)"
+    },
+    {
+      "path": "services/api/tests/test_analyzer_project_observation.py",
+      "intent": "Unit + router-integration coverage of the new edge, including idempotency, the 400/403/404/422 paths, and an advisory-boundary regression (no non-observation field mutated).",
+      "risk": "low",
+      "behavior_change": "additive (new tests)"
+    },
+    {
+      "path": "services/api/tests/test_technical_debt_gates.py",
+      "intent": "Ratchet the endpoint count ceiling to 1222 to reflect the one new analyzer observations endpoint added in this patch.",
+      "risk": "low",
+      "behavior_change": "none (CI ratchet update)"
+    },
+    {
+      "path": "docs/adr/ADR-002-instrument-project-graph.md",
+      "intent": "Non-normative implementation-status note recording that the Analyzer -> AnalyzerObservation edge is now wired; locked decisions unchanged.",
+      "risk": "low",
+      "behavior_change": "none (docs)"
+    },
+    {
+      "path": "docs/audit/SPINE_002_ANALYZER_ADOPTION.md",
+      "intent": "Audit record: rationale, boundaries honored, endpoint contract, non-goals, verification.",
+      "risk": "low",
+      "behavior_change": "none (docs)"
+    },
+    {
+      "path": "ci/router_count_baseline.json",
+      "intent": "Update router-count baseline to reflect the one new analyzer observations endpoint added in this patch.",
+      "risk": "low",
+      "behavior_change": "none (CI baseline data)"
+    }
+  ]
+}

@@ -105,6 +105,27 @@ class InterpretationResult(BaseModel):
     reference_comparison: Optional[Dict[str, Any]] = None
 
 
+class AppendObservationRequest(BaseModel):
+    """
+    Request to append a completed interpretation to a project as an advisory
+    AnalyzerObservation (SPINE-002 — ADR-002 enrichment edge).
+
+    ``run_id`` is the explicit measurement/RMOS run identifier (not present on the
+    interpretation; never inferred). ``wsi`` (from the source viewer-pack's wolf metrics)
+    and ``interpretation_confidence`` are optional provenance carried only when supplied.
+    """
+    interpretation: InterpretationResult
+    run_id: str = Field(..., description="Explicit measurement/RMOS run identifier.")
+    wsi: Optional[float] = Field(
+        default=None, ge=0.0, le=1.0,
+        description="Wolf Susceptibility Index from the source viewer-pack, if available.",
+    )
+    interpretation_confidence: float = Field(
+        default=0.0, ge=0.0, le=1.0,
+        description="Confidence in the interpretation (0-1); advisory only.",
+    )
+
+
 class SpectrumDisplayData(BaseModel):
     """Data formatted for UI spectrum visualization."""
     frequencies_hz: List[float]

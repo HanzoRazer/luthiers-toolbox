@@ -34,7 +34,7 @@ METRICS_DIR = Path(__file__).parent.parent / "metrics"
 # C2 process-exclusive canonical authority adds one governed, non-executing
 # process-approved canonical-reference endpoint. This is the matching explicit
 # ratchet update for the intentional route already reflected in router_count.
-TARGET_MAX_ENDPOINTS = 1221  # Actual: 1221 after C2 process-approved endpoint; was 1220.
+TARGET_MAX_ENDPOINTS = 1222  # Actual: 1222 after SPINE-002 analyzer observation endpoint; was 1221.
 # Baselines declared at current pre-existing level (B-scoped CI clearing 2026-06-13).
 # These are standing debt that predates the MVP-tag work; declared at the exact current
 # count (no buffer) so the gate stops failing on known-debt but still catches ANY increase.

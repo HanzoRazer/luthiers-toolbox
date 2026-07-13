@@ -29,11 +29,13 @@ from ..schemas.instrument_project import (
     DesignStatePutRequest,
     InstrumentProjectData,
 )
+from .model_seeding import create_design_state_from_model_id
 from .service import (
     apply_design_state_to_project,
     build_design_state_response,
     create_default_design_state,
-    create_design_state_from_model_id,
+    lock_project_row_for_update,
+    merge_analyzer_observations,
     parse_design_state,
     serialize_design_state,
 )
@@ -180,13 +182,14 @@ def put_design_state(
     project = _get_project_or_404(project_id, principal, db)
     new_state = body.design_state
 
+    # Serialize the read-modify-write of Project.data against concurrent writers
+    # (this endpoint and the analyzer observation edge both rewrite the whole blob).
+    lock_project_row_for_update(db, project)
     existing_state = parse_design_state(project.data)
     if existing_state and existing_state.analyzer_observations:
-        existing_ids = {obs.run_id for obs in existing_state.analyzer_observations}
-        merged = existing_state.analyzer_observations + [
-            obs for obs in new_state.analyzer_observations
-            if obs.run_id not in existing_ids
-        ]
+        # Append-only by run_id — canonical single implementation in the service, so
+        # this writer and the Analyzer enrichment edge (SPINE-002) behave identically.
+        merged = merge_analyzer_observations(existing_state, new_state.analyzer_observations)
         new_state = new_state.model_copy(update={"analyzer_observations": merged})
 
     apply_design_state_to_project(project, new_state)
