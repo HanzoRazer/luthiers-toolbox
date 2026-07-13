@@ -34,6 +34,7 @@ from .service import (
     build_design_state_response,
     create_default_design_state,
     create_design_state_from_model_id,
+    merge_analyzer_observations,
     parse_design_state,
     serialize_design_state,
 )
@@ -182,11 +183,9 @@ def put_design_state(
 
     existing_state = parse_design_state(project.data)
     if existing_state and existing_state.analyzer_observations:
-        existing_ids = {obs.run_id for obs in existing_state.analyzer_observations}
-        merged = existing_state.analyzer_observations + [
-            obs for obs in new_state.analyzer_observations
-            if obs.run_id not in existing_ids
-        ]
+        # Append-only by run_id — canonical single implementation in the service, so
+        # this writer and the Analyzer enrichment edge (SPINE-002) behave identically.
+        merged = merge_analyzer_observations(existing_state, new_state.analyzer_observations)
         new_state = new_state.model_copy(update={"analyzer_observations": merged})
 
     apply_design_state_to_project(project, new_state)

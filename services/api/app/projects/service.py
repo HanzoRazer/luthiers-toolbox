@@ -28,6 +28,7 @@ from typing import Any, Dict, Optional
 from pydantic import ValidationError
 
 from ..schemas.instrument_project import (
+    AnalyzerObservation,
     BodyConfig,
     CURRENT_SCHEMA_VERSION,
     DesignStateResponse,
@@ -109,6 +110,50 @@ def build_design_state_response(
         created_at=created_at,
         updated_at=updated_at,
     )
+
+
+def merge_analyzer_observations(
+    existing_state: Optional[InstrumentProjectData],
+    incoming: list[AnalyzerObservation],
+) -> list[AnalyzerObservation]:
+    """
+    Append-only merge of analyzer observations, deduplicated by stable ``run_id``.
+
+    Canonical single implementation of the ADR-002 append-only observation rule — used
+    by both ``put_design_state`` (full-state write) and ``append_analyzer_observation``
+    (targeted enrichment) so all writers behave identically. Existing observations are
+    never mutated or replaced; an incoming observation whose ``run_id`` already exists is
+    dropped (idempotent), preventing data loss.
+    """
+    existing = list(existing_state.analyzer_observations) if existing_state else []
+    existing_ids = {obs.run_id for obs in existing}
+    return existing + [obs for obs in incoming if obs.run_id not in existing_ids]
+
+
+def append_analyzer_observation(
+    project: Any,
+    observations: list[AnalyzerObservation],
+) -> InstrumentProjectData:
+    """
+    Append advisory ``AnalyzerObservation`` records to a project's canonical state,
+    through the existing project-state serialization (ADR-002 Layer-0).
+
+    Append-only + deduplicated by ``run_id`` (see :func:`merge_analyzer_observations`).
+    Only ``analyzer_observations`` is touched — spec / geometry / bridge / neck /
+    material / manufacturing state are preserved unchanged. Confers no manufacturing or
+    geometry authority. If the project has no design state yet, a default is created
+    (keyed to the project's own declared ``instrument_type`` — read, never fabricated)
+    so the observation has a canonical home. Caller is responsible for ``session.commit()``.
+    """
+    existing_state = parse_design_state(project.data)
+    if existing_state is None:
+        existing_state = create_default_design_state(
+            instrument_type=project.instrument_type or "acoustic_guitar",
+        )
+    merged = merge_analyzer_observations(existing_state, observations)
+    new_state = existing_state.model_copy(update={"analyzer_observations": merged})
+    apply_design_state_to_project(project, new_state)
+    return new_state
 
 
 def apply_design_state_to_project(

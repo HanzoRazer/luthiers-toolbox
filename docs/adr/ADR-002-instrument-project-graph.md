@@ -75,6 +75,25 @@ Phase 7 — Router and folder structural consolidation
 
 Phases 1–4 must execute sequentially. Phases 5–7 can partially overlap once Phase 1 is complete.
 
+### Implementation status — adoption edges (non-normative)
+
+> This section records *what is actually wired*, not new decisions. The locked
+> decisions above remain authoritative.
+
+- **Phases 1–5** — `InstrumentProjectData` schema, project-state API (`GET`/`PUT
+  /api/projects/{id}/design-state`), and persistence are **built** (the design-intake
+  vertical). The Lab recovery [LAB-021] characterized the spine as a *built-but-partly-
+  unadopted island*: the schema exists and is persisted, but several subsystems that the
+  ADR assumes will read/write it were not yet connected.
+- **Analyzer → `AnalyzerObservation` edge (locked decision #6)** — **wired (SPINE-002).**
+  `POST /api/analyzer/projects/{project_id}/observations` maps a completed
+  `InterpretationResult` into a canonical `AnalyzerObservation` and appends it to project
+  state. Append-only by explicit `run_id` (idempotent); advisory-only — it touches only
+  `analyzer_observations` and never `spec` / `bridge_state` / `material_selection` /
+  `manufacturing_state`. The append-only merge is a single canonical service function
+  (`merge_analyzer_observations`) shared by this edge and `PUT /design-state`.
+  See `docs/audit/SPINE_002_ANALYZER_ADOPTION.md`.
+
 ---
 
 ## Consequences
