@@ -66,6 +66,31 @@ def parse_design_state(raw_data: Optional[Dict[str, Any]]) -> Optional[Instrumen
         ) from exc
 
 
+def load_project_for_cam(project: Any) -> InstrumentProjectData:
+    """
+    Load and validate a project's canonical design state for a CAM read path (SPINE-003).
+
+    Project-level readiness gate for the Project Spine -> CAM adoption edge: parses the
+    canonical ``InstrumentProjectData`` from ``project.data`` and requires it to be
+    CAM-ready (``is_ready_for_cam()`` — spec + instrument_type present). CAM-operation-
+    specific input validation (e.g. body-outline geometry) is the CAM adapter's concern.
+
+    Read-only: does NOT mutate project state, manufacturing status, or authority. Loading
+    a project confers no manufacturing/execution approval and bypasses no feasibility or
+    safety policy. Raises ``ValueError`` if the project has no CAM-ready design state.
+    """
+    design_state = parse_design_state(project.data)
+    if design_state is None:
+        raise ValueError(
+            "Project has no design state; nothing to build a CAM request from."
+        )
+    if not design_state.is_ready_for_cam():
+        raise ValueError(
+            "Project is not ready for CAM: spec and instrument_type are required."
+        )
+    return design_state
+
+
 def serialize_design_state(state: InstrumentProjectData) -> Dict[str, Any]:
     """
     Serialize InstrumentProjectData to a JSONB-safe dict.
