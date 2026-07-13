@@ -17,7 +17,7 @@ import uuid
 from typing import Optional
 
 from fastapi import APIRouter, Depends, HTTPException, status
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from sqlalchemy.orm import Session
 
 from ..auth.principal import Principal
@@ -31,6 +31,7 @@ from ..schemas.instrument_project import (
 )
 from .model_seeding import create_design_state_from_model_id
 from .service import (
+    ProjectStateUninitializedError,
     apply_design_state_to_project,
     build_design_state_response,
     create_default_design_state,
@@ -38,6 +39,13 @@ from .service import (
     merge_analyzer_observations,
     parse_design_state,
     serialize_design_state,
+)
+from .project_artifact_service import (
+    ArtifactAssociationConflictError,
+    ArtifactNotFoundError,
+    ArtifactProvenanceMismatchError,
+    associate_artifact_with_project,
+    merge_artifact_refs,
 )
 
 router = APIRouter(prefix="/api/projects", tags=["Projects", "Layer0"])
@@ -191,8 +199,70 @@ def put_design_state(
         # this writer and the Analyzer enrichment edge (SPINE-002) behave identically.
         merged = merge_analyzer_observations(existing_state, new_state.analyzer_observations)
         new_state = new_state.model_copy(update={"analyzer_observations": merged})
+    if existing_state and existing_state.manufacturing_artifacts:
+        # Append-only by run_id — same canonical merge as the artifact association edge
+        # (SPINE-004), so a full-state PUT cannot drop existing artifact associations.
+        merged_artifacts = merge_artifact_refs(existing_state, new_state.manufacturing_artifacts)
+        new_state = new_state.model_copy(update={"manufacturing_artifacts": merged_artifacts})
 
     apply_design_state_to_project(project, new_state)
+    db.commit()
+    db.refresh(project)
+    return build_design_state_response(project, new_state)
+
+
+class AssociateArtifactRequest(BaseModel):
+    """Associate an existing RMOS manufacturing run artifact with this project.
+
+    Only ``run_id`` is required — every provenance field of the recorded reference is read
+    from the actual persisted artifact, never from the caller. The optional ``expected_*``
+    fields let a caller assert which artifact it means; a mismatch is rejected (422)."""
+    run_id: str = Field(..., description="RMOS run id of the artifact to associate.")
+    expected_tool_id: Optional[str] = Field(
+        default=None, description="If set, must match the artifact's tool_id or the request is rejected."
+    )
+    expected_feasibility_sha256: Optional[str] = Field(
+        default=None, description="If set, must match the artifact's feasibility hash or the request is rejected."
+    )
+
+
+@router.post("/{project_id}/artifacts", response_model=DesignStateResponse,
+             summary="Associate an RMOS manufacturing artifact with a project (ADR-002)")
+def associate_project_artifact(
+    project_id: str,
+    body: AssociateArtifactRequest,
+    principal: Principal = Depends(get_current_principal),
+    db: Session = Depends(get_db),
+) -> DesignStateResponse:
+    """
+    Record a reference to an existing RMOS manufacturing run artifact on the project's
+    canonical engineering record — the first Project ↔ Manufacturing-artifact edge
+    (SPINE-004). Append-only + idempotent by ``run_id``.
+
+    Association only: RMOS keeps sole ownership of the artifact payload and CAM keeps sole
+    ownership of planning; the project stores a reference (built from the real artifact),
+    never a copy. Read-only against the artifact; no authority promoted. A missing artifact
+    is 404; a provenance mismatch or an uninitialized project (no state, no instrument_type)
+    is 422; a genuine provenance conflict on an existing run_id is 409.
+    """
+    project = _get_project_or_404(project_id, principal, db)
+
+    # Serialize the read-modify-write of Project.data against concurrent writers.
+    lock_project_row_for_update(db, project)
+    try:
+        new_state = associate_artifact_with_project(
+            project,
+            body.run_id,
+            expected_tool_id=body.expected_tool_id,
+            expected_feasibility_sha256=body.expected_feasibility_sha256,
+        )
+    except ArtifactNotFoundError as exc:
+        raise HTTPException(status_code=404, detail=str(exc))
+    except ArtifactAssociationConflictError as exc:
+        raise HTTPException(status_code=409, detail=str(exc))
+    except (ArtifactProvenanceMismatchError, ProjectStateUninitializedError, ValueError) as exc:
+        raise HTTPException(status_code=422, detail=str(exc))
+
     db.commit()
     db.refresh(project)
     return build_design_state_response(project, new_state)

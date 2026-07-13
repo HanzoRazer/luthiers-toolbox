@@ -592,6 +592,71 @@ class ManufacturingState(BaseModel):
     )
 
 
+# ---------------------------------------------------------------------------
+# ProjectArtifactRef — reference to an RMOS manufacturing run artifact
+# ---------------------------------------------------------------------------
+
+class ProjectArtifactRef(BaseModel):
+    """
+    A reference (not a copy) to a manufacturing planning artifact — an RMOS run —
+    that belongs to this instrument's engineering record (SPINE-004).
+
+    The Project Spine records the ASSOCIATION only. RMOS remains the sole owner of the
+    artifact payload (toolpaths, feasibility, decision); CAM remains the sole owner of
+    the planning computation. Every field here is a stable identifier or integrity anchor
+    read from the actual persisted ``RunArtifact`` (never fabricated) — no toolpath or
+    payload data is duplicated into the project.
+
+    ``run_id`` is the RMOS run identity and the stable dedup key: associations are
+    append-only and idempotent by ``run_id`` (mirrors ``AnalyzerObservation``).
+    """
+    run_id: str = Field(
+        ...,
+        description="RMOS run identity of the referenced artifact (stable dedup key).",
+    )
+    tool_id: Optional[str] = Field(
+        default=None,
+        description="Originating CAM operation (e.g. 'adaptive:plan'). Read from the artifact.",
+    )
+    mode: Optional[str] = Field(
+        default=None,
+        description="RMOS run mode (e.g. 'adaptive'). Read from the artifact.",
+    )
+    event_type: Optional[str] = Field(
+        default=None,
+        description="RMOS event type (e.g. 'adaptive_plan_execution'). Read from the artifact.",
+    )
+    status: Optional[str] = Field(
+        default=None,
+        description="Run status (OK / BLOCKED / ERROR). Read from the artifact.",
+    )
+    risk_level: Optional[str] = Field(
+        default=None,
+        description="Feasibility decision risk level. Read from the artifact.",
+    )
+    artifact_created_at: Optional[str] = Field(
+        default=None,
+        description="ISO timestamp the artifact was created (RMOS created_at_utc).",
+    )
+    feasibility_sha256: Optional[str] = Field(
+        default=None,
+        description="Feasibility content hash — integrity anchor. Read from the artifact.",
+    )
+    toolpaths_sha256: Optional[str] = Field(
+        default=None,
+        description="Toolpaths content hash — integrity anchor. Read from the artifact.",
+    )
+    # Association provenance (project side)
+    associated_at: str = Field(
+        ...,
+        description="ISO timestamp the artifact was associated with the project.",
+    )
+    project_revision: Optional[str] = Field(
+        default=None,
+        description="Project revision (project.updated_at) at association time.",
+    )
+
+
 # =============================================================================
 # ROOT SCHEMA — InstrumentProjectData
 # This is what lives in Project.data (JSONB)
@@ -677,6 +742,16 @@ class InstrumentProjectData(BaseModel):
     manufacturing_state: Optional[ManufacturingState] = Field(
         default=None,
         description="CAM approval and production status. Set by production workflow.",
+    )
+
+    # --- Manufacturing artifact references (append-only associations) ---
+    manufacturing_artifacts: List[ProjectArtifactRef] = Field(
+        default_factory=list,
+        description=(
+            "References to RMOS manufacturing run artifacts associated with this project "
+            "(SPINE-004). Append-only by run_id. References only — RMOS owns the payload; "
+            "never duplicates toolpaths or feasibility data."
+        ),
     )
 
     # --- Freeform extension area (use sparingly) ---

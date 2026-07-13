@@ -136,3 +136,13 @@ Phases 1–4 must execute sequentially. Phases 5–7 can partially overlap once 
   no manufacturing approval, promotes no authority, and bypasses no feasibility/safety
   policy. CAM keeps computational authority; RMOS keeps manufacturing authority. No CAM /
   RMOS / project schema change. See `docs/audit/SPINE_003_CAM_ADOPTION.md`.
+- **Project ↔ Manufacturing-artifact association edge — wired (SPINE-004).**
+  `POST /api/projects/{project_id}/artifacts` records a reference (`ProjectArtifactRef`)
+  to an existing RMOS run artifact on the canonical project record — making manufacturing
+  planning artifacts first-class members of the instrument's engineering record. The
+  reference is built from the *actual* persisted artifact (`rmos.runs_v2.get_run`), never
+  a copy of the payload: RMOS keeps sole ownership of artifacts, CAM of planning. A new
+  additive append-only field `manufacturing_artifacts: List[ProjectArtifactRef]` holds the
+  references; association is idempotent by `run_id` and single-sourced in
+  `projects.project_artifact_service`. Records association only — promotes no authority.
+  See `docs/audit/SPINE_004_PROJECT_ARTIFACTS.md`.
