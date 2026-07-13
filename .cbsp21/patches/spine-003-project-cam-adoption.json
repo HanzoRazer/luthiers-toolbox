@@ -17,7 +17,9 @@
       "services/api/app/projects/service.py",
       "services/api/tests/cam/test_project_cam_execution.py",
       "docs/adr/ADR-002-instrument-project-graph.md",
-      "docs/audit/SPINE_003_CAM_ADOPTION.md"
+      "docs/audit/SPINE_003_CAM_ADOPTION.md",
+      "ci/router_count_baseline.json",
+      "services/api/tests/test_technical_debt_gates.py"
     ],
     "files_expected_to_change": [
       "services/api/app/cam/project_adapter.py",
@@ -26,7 +28,9 @@
       "services/api/app/projects/service.py",
       "services/api/tests/cam/test_project_cam_execution.py",
       "docs/adr/ADR-002-instrument-project-graph.md",
-      "docs/audit/SPINE_003_CAM_ADOPTION.md"
+      "docs/audit/SPINE_003_CAM_ADOPTION.md",
+      "ci/router_count_baseline.json",
+      "services/api/tests/test_technical_debt_gates.py"
     ]
   },
   "diff_articulation": {
@@ -82,6 +86,18 @@
       "intent": "Audit record: adopted operation + rationale, boundaries honored, endpoint contract, parity verification, remaining work.",
       "risk": "low",
       "behavior_change": "none (docs)"
+    },
+    {
+      "path": "ci/router_count_baseline.json",
+      "intent": "Ratchet router count baseline to include the one new governed endpoint added by SPINE-003; tightens the CI gate to the new expected count.",
+      "risk": "low",
+      "behavior_change": "none (CI baseline ratchet)"
+    },
+    {
+      "path": "services/api/tests/test_technical_debt_gates.py",
+      "intent": "Bump TARGET_MAX_ENDPOINTS ratchet to 1222 to account for the one new endpoint introduced by SPINE-003; prevents future unintended endpoint inflation.",
+      "risk": "low",
+      "behavior_change": "none (test ratchet update)"
     }
   ]
 }
