@@ -1,0 +1,52 @@
+{
+  "schema": "cbsp21_patch_input_v1",
+  "schema_version": "cbsp21_patch_input_v1",
+  "coverage_min": 0.95,
+  "patch_id": "IBG_REPOSITORY_PROPOSAL_PIPELINE",
+  "title": "feat(ibg-repository): canonical repository proposal pipeline contract (IBG-1 PR D)",
+  "intent": "Introduce the canonical, orchestration-only RepositoryProposalPipeline that composes the existing (already-merged) proposal contracts into one deterministic entry point: build_proposal_target_binding (PR A) -> build_repository_change_proposal (PR A) -> build_review_bundle (PR C), terminating at the human-review boundary. The pipeline is deliberately thin: it owns no new validation, no new serialization, and no new authority; it only fixes the canonical composition order and the explicit terminal marker. It reuses existing contracts, preserves provenance, never upgrades authority, and performs no git/filesystem/GitHub/network operation. Ships with the owner-ratified contract document and invariant tests that bind these properties. This is a contract-definition sprint, not a feature layer; DraftPullRequestPackage and RepositoryReviewBundle (PR C) are reused, never re-created.",
+  "change_type": "feat",
+  "behavior_change": "Adds one additive orchestration module (repository_proposal_pipeline.py) plus its invariant tests under the existing services/api/app/ibg_repository/ package. No existing runtime path imports it; no existing behavior, public API surface, schema, authority, or governance changes. The module composes existing builders only — no git, no network, no filesystem, no GitHub, no authority mutation.",
+  "risk_level": "low",
+  "scope": {
+    "paths_in_scope": [
+      "services/api/app/ibg_repository/",
+      "services/api/tests/ibg_repository/",
+      "docs/architecture/IBG_REPOSITORY_PROPOSAL_PIPELINE_CONTRACT.md",
+      ".cbsp21/patches/ibg-repository-proposal-pipeline.json"
+    ],
+    "files_expected_to_change": [
+      "services/api/app/ibg_repository/__init__.py",
+      "services/api/app/ibg_repository/repository_proposal_pipeline.py",
+      "services/api/tests/ibg_repository/test_repository_proposal_pipeline.py",
+      "docs/architecture/IBG_REPOSITORY_PROPOSAL_PIPELINE_CONTRACT.md",
+      ".cbsp21/patches/ibg-repository-proposal-pipeline.json"
+    ]
+  },
+  "diff_articulation": {
+    "what_changed": "Creates repository_proposal_pipeline.py: RepositoryProposalPipeline (a frozen, stateless orchestrator with a single run() operation), RepositoryProposalPipelineResult (frozen; carries the proposal + review bundle, a terminal human-review marker, and a to_canonical_dict that embeds the bundle's canonical form without duplicating the proposal), the ratified CANONICAL_PIPELINE_MISSION constant, and a run_repository_proposal_pipeline convenience. run() composes build_proposal_target_binding -> build_repository_change_proposal -> build_review_bundle and returns at the human-review boundary; it adds no logic and lets each builder's fail-closed errors propagate. __init__ additively re-exports the pipeline API. Invariant tests bind: reuses existing contracts (pipeline result equals direct composition; bundle embeds the proposal's own canonical dict), preserves provenance (reference always; verified lineage flows through; mismatch propagates), does not upgrade authority (candidate unmutated; state carried not promoted), terminates at human review (only run() is public; no execute/commit/push/PR verb; result frozen), deterministic output, and an AST-precise invariant that the module imports no subprocess/requests/httpx/urllib/socket/http/os/pygithub and does not import PR-B git_runner. The owner-ratified contract doc is added under docs/architecture.",
+    "why_not_redundant": "No canonical composition entry point existed; PR A/B/C shipped the individual contracts but nothing fixed the canonical order or the explicit terminal boundary, and nothing bound the cross-contract invariants (provenance preserved end-to-end, authority never upgraded, no execution) in one place. The pipeline composes and does not duplicate: DraftPullRequestPackage and RepositoryReviewBundle are reused via build_review_bundle, not re-created. This is the ratified architectural spine that future IBG repository work must obey."
+  },
+  "verification": {
+    "commands_run": [
+      "python -m pytest tests/ibg_repository/ -q  ->  all passed (PR A + PR B + PR C + PR D together)",
+      "python -m pytest tests/ibg_repository/test_repository_proposal_pipeline.py --cov=app.ibg_repository.repository_proposal_pipeline  ->  100%",
+      "python scripts/ci/check_cbsp21_patch_input.py --base origin/main --head HEAD",
+      "python scripts/ci/check_cbsp21_gate.py --changed-files <diff>"
+    ]
+  },
+  "files": [
+    { "path": "services/api/app/ibg_repository/__init__.py", "intent": "Additively re-export the PR D pipeline API.", "risk": "low", "behavior_change": "none" },
+    { "path": "services/api/app/ibg_repository/repository_proposal_pipeline.py", "intent": "Thin canonical orchestrator composing existing builders; terminates at human review.", "risk": "low", "behavior_change": "none" },
+    { "path": "services/api/tests/ibg_repository/test_repository_proposal_pipeline.py", "intent": "Invariant tests binding the ratified mission.", "risk": "low", "behavior_change": "test-only" },
+    { "path": "docs/architecture/IBG_REPOSITORY_PROPOSAL_PIPELINE_CONTRACT.md", "intent": "Owner-ratified canonical pipeline contract document.", "risk": "low", "behavior_change": "none" },
+    { "path": ".cbsp21/patches/ibg-repository-proposal-pipeline.json", "intent": "Per-PR CBSP21 manifest for PR D.", "risk": "low", "behavior_change": "CI/review metadata only" }
+  ],
+  "architecture_scan": {
+    "scan_id": "AS-2026-07-13-IBG-REPOSITORY-PROPOSAL-PIPELINE",
+    "risk_summary": { "critical": 0, "high": 0, "medium": 0, "low": 0 },
+    "findings": [],
+    "acknowledged": true,
+    "acknowledgement_notes": "Additive, orchestration-only. Composes existing merged contracts (PR A/B/C); no logic/contract duplication. No git/filesystem/GitHub/network/authority. Terminates at the human-review boundary. Execution planning (PR E, descriptive) and any execution engine (PR F) are out of scope."
+  }
+}
