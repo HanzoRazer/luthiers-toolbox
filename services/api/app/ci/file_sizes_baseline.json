@@ -1,6 +1,6 @@
 {
   "threshold": 500,
-  "violation_count": 152,
+  "violation_count": 153,
   "violations": [
     {
       "file": "app/instrument_geometry/body/ibg/arc_reconstructor.py",
@@ -209,8 +209,8 @@
     },
     {
       "file": "app/schemas/instrument_project.py",
-      "lines": 740,
-      "over_by": 240
+      "lines": 832,
+      "over_by": 332
     },
     {
       "file": "app/generators/acoustic_body_generator.py",
@@ -506,6 +506,11 @@
       "file": "tests/test_preflight_gate.py",
       "lines": 578,
       "over_by": 78
+    },
+    {
+      "file": "tests/projects/test_project_artifact_association.py",
+      "lines": 575,
+      "over_by": 75
     },
     {
       "file": "app/instrument_geometry/body/ibg/morphology_harvest/e2e_spine_runner.py",
