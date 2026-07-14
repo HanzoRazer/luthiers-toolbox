@@ -655,6 +655,23 @@ class ProjectArtifactRef(BaseModel):
         default=None,
         description="Project revision (project.updated_at) at association time.",
     )
+    source_project_id: Optional[str] = Field(
+        default=None,
+        description=(
+            "Project ID the artifact was originally created for (caller-asserted). "
+            "If provided at association time, must match the target project — prevents "
+            "cross-project misassociation. RMOS artifacts don't carry project linkage, "
+            "so this is the only guard against associating another project's artifact."
+        ),
+    )
+    removed_at: Optional[str] = Field(
+        default=None,
+        description=(
+            "ISO timestamp the association was soft-removed. A non-null value means the "
+            "reference is logically deleted (excluded from active queries) but retained "
+            "for audit. Supports the removal/correction path for bad associations."
+        ),
+    )
 
 
 # =============================================================================

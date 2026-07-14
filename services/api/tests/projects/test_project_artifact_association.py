@@ -347,3 +347,229 @@ class TestAssociateRoute:
         assert resp.status_code == 200, resp.text
         arts = resp.json()["design_state"]["manufacturing_artifacts"]
         assert [a["run_id"] for a in arts] == [RUN_ID]
+
+
+# =============================================================================
+# SPINE-004 Hardening Tests — Cross-project guard, cap, and removal path
+# =============================================================================
+
+
+class TestCrossProjectGuard:
+    """Cross-project misassociation is rejected when source_project_id doesn't match."""
+
+    def test_source_project_id_mismatch_rejected(self):
+        """If source_project_id is provided and doesn't match, 422."""
+        from app.projects.project_artifact_service import (
+            CrossProjectAssociationError,
+            associate_artifact_with_project,
+        )
+
+        proj = _project(_state(), itype="acoustic_guitar")
+        wrong_project_id = str(uuid.uuid4())  # Different from proj.id
+
+        with patch.object(pas, "get_run", return_value=_fake_run()):
+            with pytest.raises(CrossProjectAssociationError) as exc_info:
+                associate_artifact_with_project(
+                    proj,
+                    RUN_ID,
+                    source_project_id=wrong_project_id,
+                )
+        assert "does not match target project" in str(exc_info.value)
+
+    def test_source_project_id_matching_accepted(self):
+        """If source_project_id matches the target project, association proceeds."""
+        from app.projects.project_artifact_service import associate_artifact_with_project
+
+        proj = _project(_state(), itype="acoustic_guitar")
+        correct_project_id = str(proj.id)
+
+        with patch.object(pas, "get_run", return_value=_fake_run()):
+            new_state = associate_artifact_with_project(
+                proj,
+                RUN_ID,
+                source_project_id=correct_project_id,
+            )
+        assert len(new_state.manufacturing_artifacts) == 1
+        assert new_state.manufacturing_artifacts[0].source_project_id == correct_project_id
+
+    def test_source_project_id_none_allowed(self):
+        """If source_project_id is not provided, no cross-project check is performed."""
+        from app.projects.project_artifact_service import associate_artifact_with_project
+
+        proj = _project(_state(), itype="acoustic_guitar")
+
+        with patch.object(pas, "get_run", return_value=_fake_run()):
+            new_state = associate_artifact_with_project(proj, RUN_ID)
+        assert len(new_state.manufacturing_artifacts) == 1
+        assert new_state.manufacturing_artifacts[0].source_project_id is None
+
+
+class TestArtifactCap:
+    """Artifact cap prevents unbounded growth."""
+
+    def test_cap_exceeded_rejected(self):
+        """Associating beyond MAX_MANUFACTURING_ARTIFACTS raises ArtifactCapExceededError."""
+        from app.projects.project_artifact_service import (
+            ArtifactCapExceededError,
+            MAX_MANUFACTURING_ARTIFACTS,
+            associate_artifact_with_project,
+        )
+
+        # Seed state with MAX artifacts already
+        refs = [_ref(f"run_{i}") for i in range(MAX_MANUFACTURING_ARTIFACTS)]
+        proj = _project(_state(artifacts=refs), itype="acoustic_guitar")
+
+        with patch.object(pas, "get_run", return_value=_fake_run(run_id="run_new")):
+            with pytest.raises(ArtifactCapExceededError) as exc_info:
+                associate_artifact_with_project(proj, "run_new")
+        assert "limit of" in str(exc_info.value)
+
+    def test_idempotent_reassociation_bypasses_cap(self):
+        """Re-associating an existing run_id doesn't count against the cap."""
+        from app.projects.project_artifact_service import (
+            MAX_MANUFACTURING_ARTIFACTS,
+            associate_artifact_with_project,
+            build_artifact_ref_from_run,
+        )
+
+        # Build a proper ref from the fake run (same provenance as what will be re-associated)
+        fake_artifact = _fake_run(run_id=RUN_ID)
+        existing_ref = build_artifact_ref_from_run(fake_artifact, associated_at="2026-07-01T00:00:00Z")
+
+        # Seed state with MAX artifacts including one we'll re-associate
+        refs = [_ref(f"run_{i}") for i in range(MAX_MANUFACTURING_ARTIFACTS - 1)]
+        refs.insert(0, existing_ref)  # Add the existing ref built from the same artifact
+        proj = _project(_state(artifacts=refs), itype="acoustic_guitar")
+
+        # Re-associating the same run_id is idempotent, not a new association
+        with patch.object(pas, "get_run", return_value=fake_artifact):
+            new_state = associate_artifact_with_project(proj, RUN_ID)
+        # Should succeed (idempotent), count unchanged
+        assert len(new_state.manufacturing_artifacts) == MAX_MANUFACTURING_ARTIFACTS
+
+
+class TestDissociateArtifact:
+    """Soft-removal of artifact associations."""
+
+    def test_dissociate_sets_removed_at(self):
+        """Dissociating sets removed_at timestamp on the reference."""
+        from app.projects.project_artifact_service import dissociate_artifact_from_project
+
+        proj = _project(_state(artifacts=[_ref(RUN_ID)]), itype="acoustic_guitar")
+        new_state = dissociate_artifact_from_project(proj, RUN_ID)
+
+        ref = new_state.manufacturing_artifacts[0]
+        assert ref.run_id == RUN_ID
+        assert ref.removed_at is not None
+
+    def test_dissociate_nonexistent_404(self):
+        """Dissociating a non-existent run_id raises ArtifactNotFoundError."""
+        from app.projects.project_artifact_service import (
+            ArtifactNotFoundError,
+            dissociate_artifact_from_project,
+        )
+
+        proj = _project(_state(artifacts=[]), itype="acoustic_guitar")
+        with pytest.raises(ArtifactNotFoundError):
+            dissociate_artifact_from_project(proj, "nonexistent_run")
+
+    def test_dissociate_already_removed_404(self):
+        """Dissociating an already-removed association raises ArtifactNotFoundError."""
+        from app.projects.project_artifact_service import (
+            ArtifactNotFoundError,
+            dissociate_artifact_from_project,
+        )
+
+        removed_ref = _ref(RUN_ID)
+        removed_ref = removed_ref.model_copy(update={"removed_at": "2026-07-14T00:00:00Z"})
+        proj = _project(_state(artifacts=[removed_ref]), itype="acoustic_guitar")
+
+        with pytest.raises(ArtifactNotFoundError) as exc_info:
+            dissociate_artifact_from_project(proj, RUN_ID)
+        assert "already removed" in str(exc_info.value)
+
+    def test_retrieve_excludes_removed_by_default(self):
+        """retrieve_project_artifacts excludes removed associations by default."""
+        from app.projects.project_artifact_service import retrieve_project_artifacts
+
+        active_ref = _ref("active_run")
+        removed_ref = _ref("removed_run")
+        removed_ref = removed_ref.model_copy(update={"removed_at": "2026-07-14T00:00:00Z"})
+        proj = _project(_state(artifacts=[active_ref, removed_ref]), itype="acoustic_guitar")
+
+        result = retrieve_project_artifacts(proj)
+        assert len(result) == 1
+        assert result[0].run_id == "active_run"
+
+    def test_retrieve_includes_removed_when_requested(self):
+        """retrieve_project_artifacts includes removed associations when include_removed=True."""
+        from app.projects.project_artifact_service import retrieve_project_artifacts
+
+        active_ref = _ref("active_run")
+        removed_ref = _ref("removed_run")
+        removed_ref = removed_ref.model_copy(update={"removed_at": "2026-07-14T00:00:00Z"})
+        proj = _project(_state(artifacts=[active_ref, removed_ref]), itype="acoustic_guitar")
+
+        result = retrieve_project_artifacts(proj, include_removed=True)
+        assert len(result) == 2
+
+
+class TestDissociateRoute:
+    """DELETE /api/projects/{project_id}/artifacts/{run_id} router tests."""
+
+    @pytest.fixture
+    def client(self, principal):
+        from fastapi.testclient import TestClient
+        from app.main import app
+        from app.auth.deps import get_current_principal
+
+        app.dependency_overrides[get_current_principal] = lambda: principal
+        return TestClient(app)
+
+    @pytest.fixture
+    def principal(self):
+        return MagicMock(user_id=uuid.uuid4())
+
+    @pytest.fixture
+    def project(self, principal):
+        return _project(_state(artifacts=[_ref(RUN_ID)]), owner_id=principal.user_id)
+
+    def _url(self, project, run_id):
+        return f"/api/projects/{project.id}/artifacts/{run_id}"
+
+    def test_dissociate_200(self, client, project):
+        from app.main import app
+        from app.db.session import get_db
+
+        db = MagicMock()
+        db.get.return_value = project
+        app.dependency_overrides[get_db] = lambda: db
+
+        resp = client.delete(self._url(project, RUN_ID))
+        assert resp.status_code == 200
+        arts = resp.json()["design_state"]["manufacturing_artifacts"]
+        assert len(arts) == 1
+        assert arts[0]["removed_at"] is not None
+
+    def test_dissociate_nonexistent_404(self, client, project):
+        from app.main import app
+        from app.db.session import get_db
+
+        db = MagicMock()
+        db.get.return_value = project
+        app.dependency_overrides[get_db] = lambda: db
+
+        resp = client.delete(self._url(project, "nonexistent_run"))
+        assert resp.status_code == 404
+
+    def test_dissociate_foreign_project_403(self, client, project):
+        project.owner_id = uuid.uuid4()  # Different owner
+        from app.main import app
+        from app.db.session import get_db
+
+        db = MagicMock()
+        db.get.return_value = project
+        app.dependency_overrides[get_db] = lambda: db
+
+        resp = client.delete(self._url(project, RUN_ID))
+        assert resp.status_code == 403

@@ -37,9 +37,10 @@ METRICS_DIR = Path(__file__).parent.parent / "metrics"
 # SPINE-002 added one governed analyzer-observation endpoint (1221 -> 1222).
 # SPINE-003 adds one process-approved governed CAM adoption endpoint
 # (POST /api/cam/projects/{project_id}/adaptive-plan) ON TOP of SPINE-002 (1222 -> 1223).
-# SPINE-004 adds one process-approved Project↔Manufacturing-artifact association endpoint
-# (POST /api/projects/{project_id}/artifacts) ON TOP of SPINE-003 (1223 -> 1224).
-TARGET_MAX_ENDPOINTS = 1224  # Actual: 1224 after SPINE-002 + SPINE-003 + SPINE-004 governed endpoints; was 1223.
+# SPINE-004 adds two process-approved Project↔Manufacturing-artifact endpoints ON TOP of SPINE-003:
+# POST /api/projects/{project_id}/artifacts (associate) and DELETE .../artifacts/{run_id} (dissociate).
+# The DELETE endpoint provides the correction/removal path for bad associations (1224 -> 1225).
+TARGET_MAX_ENDPOINTS = 1225  # Actual: 1225 after SPINE-004 hardening (was 1224 for POST only).
 # Baselines declared at current pre-existing level (B-scoped CI clearing 2026-06-13).
 # These are standing debt that predates the MVP-tag work; declared at the exact current
 # count (no buffer) so the gate stops failing on known-debt but still catches ANY increase.

@@ -42,9 +42,12 @@ from .service import (
 )
 from .project_artifact_service import (
     ArtifactAssociationConflictError,
+    ArtifactCapExceededError,
     ArtifactNotFoundError,
     ArtifactProvenanceMismatchError,
+    CrossProjectAssociationError,
     associate_artifact_with_project,
+    dissociate_artifact_from_project,
     merge_artifact_refs,
 )
 
@@ -216,13 +219,25 @@ class AssociateArtifactRequest(BaseModel):
 
     Only ``run_id`` is required — every provenance field of the recorded reference is read
     from the actual persisted artifact, never from the caller. The optional ``expected_*``
-    fields let a caller assert which artifact it means; a mismatch is rejected (422)."""
+    fields let a caller assert which artifact it means; a mismatch is rejected (422).
+
+    ``source_project_id`` guards against cross-project misassociation: if provided, it must
+    match the target project's ID or the request is rejected (422). RMOS artifacts don't
+    carry project linkage, so this caller-asserted field is the only guard."""
     run_id: str = Field(..., description="RMOS run id of the artifact to associate.")
     expected_tool_id: Optional[str] = Field(
         default=None, description="If set, must match the artifact's tool_id or the request is rejected."
     )
     expected_feasibility_sha256: Optional[str] = Field(
         default=None, description="If set, must match the artifact's feasibility hash or the request is rejected."
+    )
+    source_project_id: Optional[str] = Field(
+        default=None,
+        description=(
+            "Project ID the artifact was created for (cross-project guard). If set, must match "
+            "the target project or the request is rejected — prevents associating another "
+            "project's artifact."
+        ),
     )
 
 
@@ -241,9 +256,13 @@ def associate_project_artifact(
 
     Association only: RMOS keeps sole ownership of the artifact payload and CAM keeps sole
     ownership of planning; the project stores a reference (built from the real artifact),
-    never a copy. Read-only against the artifact; no authority promoted. A missing artifact
-    is 404; a provenance mismatch or an uninitialized project (no state, no instrument_type)
-    is 422; a genuine provenance conflict on an existing run_id is 409.
+    never a copy. Read-only against the artifact; no authority promoted.
+
+    Cross-project guard: if ``source_project_id`` is provided, it must match the target
+    project or the request is rejected (422).
+
+    Errors: 404 = artifact not found; 409 = provenance conflict on existing run_id;
+    422 = provenance mismatch, cross-project mismatch, uninitialized project, or cap exceeded.
     """
     project = _get_project_or_404(project_id, principal, db)
 
@@ -255,13 +274,50 @@ def associate_project_artifact(
             body.run_id,
             expected_tool_id=body.expected_tool_id,
             expected_feasibility_sha256=body.expected_feasibility_sha256,
+            source_project_id=body.source_project_id,
         )
     except ArtifactNotFoundError as exc:
         raise HTTPException(status_code=404, detail=str(exc))
     except ArtifactAssociationConflictError as exc:
         raise HTTPException(status_code=409, detail=str(exc))
-    except (ArtifactProvenanceMismatchError, ProjectStateUninitializedError, ValueError) as exc:
+    except (
+        ArtifactProvenanceMismatchError,
+        CrossProjectAssociationError,
+        ArtifactCapExceededError,
+        ProjectStateUninitializedError,
+        ValueError,
+    ) as exc:
         raise HTTPException(status_code=422, detail=str(exc))
+
+    db.commit()
+    db.refresh(project)
+    return build_design_state_response(project, new_state)
+
+
+@router.delete("/{project_id}/artifacts/{run_id}", response_model=DesignStateResponse,
+               summary="Remove an artifact association from a project (soft-delete)")
+def dissociate_project_artifact(
+    project_id: str,
+    run_id: str,
+    principal: Principal = Depends(get_current_principal),
+    db: Session = Depends(get_db),
+) -> DesignStateResponse:
+    """
+    Soft-remove an artifact association from the project's canonical record.
+
+    The reference is NOT deleted (audit trail preserved); instead, ``removed_at`` is set
+    and the association is excluded from active queries. This is the correction path for
+    bad associations (e.g., cross-project misassociation before the guard was in place).
+
+    Errors: 404 = no association for run_id or already removed; 403 = not project owner.
+    """
+    project = _get_project_or_404(project_id, principal, db)
+
+    lock_project_row_for_update(db, project)
+    try:
+        new_state = dissociate_artifact_from_project(project, run_id)
+    except ArtifactNotFoundError as exc:
+        raise HTTPException(status_code=404, detail=str(exc))
 
     db.commit()
     db.refresh(project)
