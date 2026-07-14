@@ -1,0 +1,121 @@
+{
+  "schema": "cbsp21_patch_input_v1",
+  "schema_version": "cbsp21_patch_input_v1",
+  "coverage_min": 0.95,
+  "patch_id": "SPINE_004_PROJECT_ARTIFACTS",
+  "title": "SPINE-004: associate RMOS manufacturing run artifacts with the canonical project record (ADR-002)",
+  "intent": "Complete the next adoption edge of the existing Project Spine by associating manufacturing planning artifacts (RMOS run artifacts) with the canonical project record, making them first-class members of an instrument's engineering history. After SPINE-003 CAM can consume a project, but the RMOS run artifacts it produces had no link back to the project (a RunArtifact carries no project_id; the only project->run reference was analyzer-only). Adds POST /api/projects/{project_id}/artifacts, which validates that a referenced RMOS run exists (rmos.runs_v2.store_api.get_run) and records a ProjectArtifactRef built from the ACTUAL persisted artifact into a new additive append-only field InstrumentProjectData.manufacturing_artifacts. Association ONLY: RMOS remains sole owner of artifact generation/persistence; CAM sole owner of planning; the project stores a reference (run_id + tool_id/mode/event_type/status/risk_level/created_at/feasibility_sha256/toolpaths_sha256 + association metadata), never a copy of the toolpath/feasibility payload. Single canonical association service (project_artifact_service.associate_artifact_with_project / merge_artifact_refs); PUT /design-state reuses the same append-only merge so a full-state write cannot drop associations. Append-only + idempotent by run_id; the reference is derived from the immutable artifact so re-association is a no-op and a genuine provenance divergence surfaces as 409. Fail-closed: missing artifact -> 404; provenance mismatch or uninitialized project (no state + no instrument_type, no fabricated default) -> 422. Explicit project_id (no inference); no authority promotion (manufacturing_state untouched). Concurrency-safe: row-locked (SELECT ... FOR UPDATE) read-modify-write of Project.data, matching the SPINE-002 hardening. Additive migration-safe schema (default [], extra=allow, schema_version unchanged); no CAM/RMOS/artifact schema redesign.",
+  "change_type": "feature",
+  "behavior_change": "additive - one new endpoint POST /api/projects/{project_id}/artifacts (owner-authenticated, row-locked) that records a reference to an existing RMOS run artifact on the project and returns the updated DesignStateResponse. New additive append-only field InstrumentProjectData.manufacturing_artifacts (default []), and new ProjectArtifactRef sub-schema; migration-safe (old projects read back with [] via extra=allow; CURRENT_SCHEMA_VERSION unchanged). PUT /api/projects/{id}/design-state keeps its path/method/response shape; its only change is an added append-only merge of manufacturing_artifacts (same pattern as analyzer_observations) so a full-state PUT cannot drop existing associations, plus the pre-existing row lock. No CAM/RMOS/artifact schema change; no manufacturing authority added or promoted; association is read-only against the artifact (never mutates or duplicates it). Router-count ratchet updated for the single new endpoint (route_decorators 1226->1227; TARGET_MAX_ENDPOINTS 1223->1224; no new router file).",
+  "risk_level": "low",
+  "scope": {
+    "paths_in_scope": [
+      ".cbsp21/patches/spine-004-project-artifacts.json",
+      "services/api/app/schemas/instrument_project.py",
+      "services/api/app/projects/project_artifact_service.py",
+      "services/api/app/projects/router.py",
+      "services/api/tests/projects/__init__.py",
+      "services/api/tests/projects/test_project_artifact_association.py",
+      "ci/router_count_baseline.json",
+      "ci/file_size_baseline.json",
+      "services/api/app/ci/file_sizes_baseline.json",
+      "services/api/tests/test_technical_debt_gates.py",
+      "docs/adr/ADR-002-instrument-project-graph.md",
+      "docs/audit/SPINE_004_PROJECT_ARTIFACTS.md"
+    ],
+    "files_expected_to_change": [
+      "services/api/app/schemas/instrument_project.py",
+      "services/api/app/projects/project_artifact_service.py",
+      "services/api/app/projects/router.py",
+      "services/api/tests/projects/__init__.py",
+      "services/api/tests/projects/test_project_artifact_association.py",
+      "ci/router_count_baseline.json",
+      "ci/file_size_baseline.json",
+      "services/api/app/ci/file_sizes_baseline.json",
+      "services/api/tests/test_technical_debt_gates.py",
+      "docs/adr/ADR-002-instrument-project-graph.md",
+      "docs/audit/SPINE_004_PROJECT_ARTIFACTS.md"
+    ]
+  },
+  "diff_articulation": {
+    "what_changed": "(1) services/api/app/schemas/instrument_project.py: add ProjectArtifactRef sub-schema (run_id + tool_id/mode/event_type/status/risk_level/artifact_created_at/feasibility_sha256/toolpaths_sha256 + associated_at/project_revision) and an additive append-only field InstrumentProjectData.manufacturing_artifacts: List[ProjectArtifactRef] = default []. No existing field changed. (2) NEW services/api/app/projects/project_artifact_service.py: the single canonical association service - validate_project_artifact (get_run existence check + optional expected_tool_id/expected_feasibility_sha256 assertions -> ArtifactNotFoundError / ArtifactProvenanceMismatchError), build_artifact_ref_from_run (maps the real RunArtifact -> ProjectArtifactRef; never fabricated), merge_artifact_refs (append-only dedup by run_id), _reject_artifact_conflicts (409 on same run_id/different provenance, ignoring association metadata so re-association is idempotent), associate_artifact_with_project (validate -> parse state -> fail-loud seed when no state (ProjectStateUninitializedError, no fabricated type) -> reject conflicts -> merge -> apply; caller commits), retrieve_project_artifacts (read-only). (3) services/api/app/projects/router.py: add POST /{project_id}/artifacts (owner auth via _get_project_or_404, lock_project_row_for_update, associate, commit; ArtifactNotFoundError->404, ArtifactAssociationConflictError->409, ArtifactProvenanceMismatchError/ProjectStateUninitializedError/ValueError->422) and AssociateArtifactRequest; PUT /design-state also append-merges manufacturing_artifacts (data-loss guard mirroring analyzer_observations). (4) NEW tests/projects/test_project_artifact_association.py (+ package __init__): unit (build/validate/merge/conflict), service (associate/idempotent/uninitialized/seed/boundary/retrieve), and API (200/404/403/409/422, missing run_id, read-only-against-artifact, PUT preserves artifacts). (5) ci/router_count_baseline.json: route_decorators 1226->1227 for the one new endpoint (no new router file). (6) tests/test_technical_debt_gates.py: TARGET_MAX_ENDPOINTS 1223->1224 with SPINE-004 note. (7) docs: ADR-002 implementation-status bullet + docs/audit/SPINE_004_PROJECT_ARTIFACTS.md.",
+    "why_not_redundant": "Builds the missing project<-artifact back-reference: RMOS run artifacts carried no project linkage and were invisible from the project record. It records references only (RMOS keeps artifact ownership, CAM keeps planning), reuses the existing spine + the SPINE-002 append-only/row-lock hardening rather than adding a parallel store, and centralizes association in one service so future artifact adoption cannot diverge. Additive and read-only against the artifact: no CAM/RMOS/artifact schema or authority change."
+  },
+  "verification": {
+    "commands_run": [
+      "py -3.11 -m pytest tests/projects/test_project_artifact_association.py -q -> (recorded at commit)",
+      "py -3.11 -m pytest tests/test_analyzer_project_observation.py tests/cam/test_project_cam_execution.py -q -> regression green (recorded at commit)",
+      "py -3.11 ci/router_count_gate.py -> PASS (recorded at commit)",
+      "py -3.11 scripts/ci/check_cbsp21_patch_input.py --base origin/main --head HEAD -> (recorded at commit)",
+      "py -3.11 scripts/ci/check_cbsp21_gate.py --changed-files <PR file set> -> (recorded at commit)"
+    ]
+  },
+  "files": [
+    {
+      "path": "services/api/app/schemas/instrument_project.py",
+      "intent": "Additive: ProjectArtifactRef sub-schema + append-only manufacturing_artifacts field. Migration-safe (default []); no existing field changed.",
+      "risk": "low",
+      "behavior_change": "additive (schema field)"
+    },
+    {
+      "path": "services/api/app/projects/project_artifact_service.py",
+      "intent": "New single canonical Project<->artifact association service; references only, built from the real artifact; append-only + idempotent; fail-closed.",
+      "risk": "low",
+      "behavior_change": "additive (new module)"
+    },
+    {
+      "path": "services/api/app/projects/router.py",
+      "intent": "Add POST /api/projects/{project_id}/artifacts (row-locked, owner-auth); PUT /design-state append-merges manufacturing_artifacts to prevent loss. No existing route path/method/response changed.",
+      "risk": "low",
+      "behavior_change": "additive (one new endpoint; PUT gains a data-loss guard, response unchanged)"
+    },
+    {
+      "path": "ci/router_count_baseline.json",
+      "intent": "Ratchet baseline for the one new endpoint (route_decorators 1226->1227; no new router file).",
+      "risk": "low",
+      "behavior_change": "none (CI baseline)"
+    },
+    {
+      "path": "ci/file_size_baseline.json",
+      "intent": "Ratchet baseline for file size changes from new project_artifact_service module.",
+      "risk": "low",
+      "behavior_change": "none (CI baseline)"
+    },
+    {
+      "path": "services/api/app/ci/file_sizes_baseline.json",
+      "intent": "Ratchet baseline for file size changes from project_artifact_service and router additions.",
+      "risk": "low",
+      "behavior_change": "none (CI baseline)"
+    },
+    {
+      "path": "services/api/tests/test_technical_debt_gates.py",
+      "intent": "Raise TARGET_MAX_ENDPOINTS 1223->1224 for the one new governed endpoint, with SPINE-004 justification.",
+      "risk": "low",
+      "behavior_change": "none (test threshold)"
+    },
+    {
+      "path": "services/api/tests/projects/__init__.py",
+      "intent": "New empty test package marker for tests/projects/ (no executable code).",
+      "risk": "low",
+      "behavior_change": "none (test package marker)"
+    },
+    {
+      "path": "services/api/tests/projects/test_project_artifact_association.py",
+      "intent": "Unit + service + API + boundary + negative-path coverage of the association edge.",
+      "risk": "low",
+      "behavior_change": "additive (new tests)"
+    },
+    {
+      "path": "docs/adr/ADR-002-instrument-project-graph.md",
+      "intent": "Non-normative implementation-status bullet for the Project<->artifact edge; locked decisions unchanged.",
+      "risk": "low",
+      "behavior_change": "none (docs)"
+    },
+    {
+      "path": "docs/audit/SPINE_004_PROJECT_ARTIFACTS.md",
+      "intent": "Audit record: gap closed, boundaries, artifact ownership, endpoint contract, remaining edges.",
+      "risk": "low",
+      "behavior_change": "none (docs)"
+    }
+  ]
+}
