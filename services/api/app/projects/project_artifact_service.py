@@ -24,9 +24,10 @@ Concurrency: ``associate_artifact_with_project`` is a read-modify-write of the w
 """
 from __future__ import annotations
 
-from typing import Any, Optional
+from typing import TYPE_CHECKING, Any, Optional
 
-from ..rmos.runs_v2.schemas import RunArtifact
+if TYPE_CHECKING:
+    from ..rmos.runs_v2.schemas import RunArtifact
 from ..rmos.runs_v2.store_api import get_run
 from ..schemas.instrument_project import InstrumentProjectData, ProjectArtifactRef
 from .service import (
