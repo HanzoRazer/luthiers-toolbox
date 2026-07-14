@@ -40,7 +40,7 @@ METRICS_DIR = Path(__file__).parent.parent / "metrics"
 # SPINE-004 adds two process-approved Project↔Manufacturing-artifact endpoints ON TOP of SPINE-003:
 # POST /api/projects/{project_id}/artifacts (associate) and DELETE .../artifacts/{run_id} (dissociate).
 # The DELETE endpoint provides the correction/removal path for bad associations (1224 -> 1225).
-TARGET_MAX_ENDPOINTS = 1225  # Actual: 1225 after SPINE-004 hardening (was 1224 for POST only).
+TARGET_MAX_ENDPOINTS = 1225  # Actual: 1225 after SPINE-004 hardening (1223 SPINE-003 → 1224 POST added → 1225 DELETE added).
 # Baselines declared at current pre-existing level (B-scoped CI clearing 2026-06-13).
 # These are standing debt that predates the MVP-tag work; declared at the exact current
 # count (no buffer) so the gate stops failing on known-debt but still catches ANY increase.
