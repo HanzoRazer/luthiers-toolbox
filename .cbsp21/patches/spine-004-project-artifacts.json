@@ -17,6 +17,8 @@
       "services/api/tests/projects/__init__.py",
       "services/api/tests/projects/test_project_artifact_association.py",
       "ci/router_count_baseline.json",
+      "ci/file_size_baseline.json",
+      "services/api/app/ci/file_sizes_baseline.json",
       "services/api/tests/test_technical_debt_gates.py",
       "docs/adr/ADR-002-instrument-project-graph.md",
       "docs/audit/SPINE_004_PROJECT_ARTIFACTS.md"
@@ -28,6 +30,8 @@
       "services/api/tests/projects/__init__.py",
       "services/api/tests/projects/test_project_artifact_association.py",
       "ci/router_count_baseline.json",
+      "ci/file_size_baseline.json",
+      "services/api/app/ci/file_sizes_baseline.json",
       "services/api/tests/test_technical_debt_gates.py",
       "docs/adr/ADR-002-instrument-project-graph.md",
       "docs/audit/SPINE_004_PROJECT_ARTIFACTS.md"
@@ -68,6 +72,18 @@
     {
       "path": "ci/router_count_baseline.json",
       "intent": "Ratchet baseline for the one new endpoint (route_decorators 1226->1227; no new router file).",
+      "risk": "low",
+      "behavior_change": "none (CI baseline)"
+    },
+    {
+      "path": "ci/file_size_baseline.json",
+      "intent": "Ratchet baseline for file size changes from new project_artifact_service module.",
+      "risk": "low",
+      "behavior_change": "none (CI baseline)"
+    },
+    {
+      "path": "services/api/app/ci/file_sizes_baseline.json",
+      "intent": "Ratchet baseline for file size changes from project_artifact_service and router additions.",
       "risk": "low",
       "behavior_change": "none (CI baseline)"
     },
