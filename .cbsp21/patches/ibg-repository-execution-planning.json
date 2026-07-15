@@ -1,0 +1,57 @@
+{
+  "schema": "cbsp21_patch_input_v1",
+  "schema_version": "cbsp21_patch_input_v1",
+  "coverage_min": 0.95,
+  "patch_id": "IBG_REPOSITORY_EXECUTION_PLANNING",
+  "title": "feat(ibg-repository): descriptive repository execution planning (IBG-1 PR E)",
+  "intent": "Introduce a deterministic, DESCRIPTIVE execution-planning layer that transforms an approved RepositoryChangeProposal into a RepositoryExecutionPlan describing how a human engineer could organize the work. Every field is derived from data the proposal and its CBSP21 packet already declare (verification commands, declared files, authorized target paths, declared risk, provenance); nothing is invented. The plan is content-addressed (rep- id), byte-stable for identical proposals, and preserves the proposal's provenance exactly. It is a SEPARATE downstream consumer of the merged proposal contract: it does not modify, wrap, or attach to the PR-D RepositoryProposalPipeline. It terminates at the same human-review boundary and performs no git/filesystem/GitHub/network operation and exercises no repository or canonical authority.",
+  "change_type": "feat",
+  "behavior_change": "Adds two additive modules (repository_execution_plan.py contract + execution_planner.py builder) plus their tests under the existing services/api/app/ibg_repository/ package, and additively re-exports the PR-E API from __init__.py. No existing runtime path imports the planner; no existing behavior, schema, authority, or governance changes. The planner derives every field mechanically: recommended_validation_sequence is copied verbatim from the packet's verification.commands_run; recommended_commit_sequence / recommended_review_order / structural_dependency_groups are deterministic groupings of declared files by authorized target-path prefix (labelled declared_path_grouping, never a proven dependency edge); estimated_complexity is a documented table over declared counts + declared risk_level; provenance_reference preserves the four evidence-owned fields exactly; planning_summary is a fact-only template. Fail-closed on non-proposal input, empty proposal id, empty/boundary-violating changed files, CBSP21-scope/summary disagreement, missing provenance, or unsupported risk level. An AST-precise test forbids the modules from importing subprocess/os/shutil/tempfile/network/GitHub clients or the PR-B git_runner and worktree machinery.",
+  "risk_level": "low",
+  "scope": {
+    "paths_in_scope": [
+      "services/api/app/ibg_repository/",
+      "services/api/tests/ibg_repository/",
+      "docs/architecture/IBG_EXECUTION_PLANNING.md",
+      ".cbsp21/patches/ibg-repository-execution-planning.json"
+    ],
+    "files_expected_to_change": [
+      "services/api/app/ibg_repository/__init__.py",
+      "services/api/app/ibg_repository/repository_execution_plan.py",
+      "services/api/app/ibg_repository/execution_planner.py",
+      "services/api/tests/ibg_repository/test_execution_planner.py",
+      "services/api/tests/ibg_repository/test_repository_execution_plan.py",
+      "docs/architecture/IBG_EXECUTION_PLANNING.md",
+      ".cbsp21/patches/ibg-repository-execution-planning.json"
+    ]
+  },
+  "diff_articulation": {
+    "what_changed": "Creates repository_execution_plan.py: the frozen, content-addressed RepositoryExecutionPlan dataclass plus its typed frozen child records (ExecutionGroup, DependencyGroup, ComplexitySummary, ProvenanceReference), with to_canonical_dict()/to_audit_dict()/compute_plan_hash() and an execution_plan_id derived as 'rep-' + sha256(canonical_content)[:16] (created_at excluded from identity and canonical form). Creates execution_planner.py: build_execution_plan(proposal), the stateless ExecutionPlanner (single 'plan' operation), execution_plan_builder() factory, validate_execution_plan(), the documented complexity table, and the SUPPORTED_RISK_LEVELS set. __init__ additively re-exports the PR-E API. Two test modules bind: stable/byte-identical id + serialization, audit-timestamp exclusion, provenance preserved exactly, source authority unchanged, proposal object unmutated, validation sequence copied without invention, deterministic path grouping (most-specific prefix wins), no synthetic dependency edges (declared_path_grouping only; no dependency_graph attribute), deterministic complexity classification across the documented table, all fail-closed rejects, validate_execution_plan checks, and an AST-precise invariant that neither module imports subprocess/os/shutil/tempfile/requests/httpx/urllib/socket/http/github or the PR-B git_runner/worktree_* machinery. New-module coverage is 100%. The descriptive architecture doc is added under docs/architecture.",
+    "why_not_redundant": "No descriptive execution-planning layer existed. PR A-D shipped the proposal, worktree, review-bundle, and thin orchestration contracts, terminating at the human-review boundary with a review artifact; nothing described how an approved proposal could be organized for a human to execute. This layer composes the existing merged proposal contract and derives only structure the proposal already declares — it invents no ordering, dependency edges, or effort, duplicates no proposal/review logic, and does not modify or attach to the PR-D pipeline. It preserves provenance and the human-review boundary, adding a distinct downstream capability rather than re-implementing an existing one."
+  },
+  "verification": {
+    "commands_run": [
+      "python -m pytest tests/ibg_repository/test_execution_planner.py tests/ibg_repository/test_repository_execution_plan.py --no-cov -q  ->  58 passed",
+      "python -m coverage run -m pytest tests/ibg_repository/test_execution_planner.py tests/ibg_repository/test_repository_execution_plan.py --no-cov -q  &&  coverage report --include=*/ibg_repository/execution_planner.py,*/ibg_repository/repository_execution_plan.py  ->  100% both modules",
+      "python -m pytest tests/ibg_repository/ --no-cov -q  ->  331 passed (PR A + B + C + D + E together, no regressions)",
+      "python scripts/ci/check_cbsp21_patch_input.py --base origin/main --head HEAD",
+      "python scripts/ci/check_cbsp21_gate.py --changed-files <diff>"
+    ]
+  },
+  "files": [
+    { "path": "services/api/app/ibg_repository/__init__.py", "intent": "Additively re-export the PR-E execution-planning API.", "risk": "low", "behavior_change": "none" },
+    { "path": "services/api/app/ibg_repository/repository_execution_plan.py", "intent": "Frozen, content-addressed RepositoryExecutionPlan contract + typed child records.", "risk": "low", "behavior_change": "none" },
+    { "path": "services/api/app/ibg_repository/execution_planner.py", "intent": "Deterministic, descriptive planner: RepositoryChangeProposal -> RepositoryExecutionPlan.", "risk": "low", "behavior_change": "none" },
+    { "path": "services/api/tests/ibg_repository/test_execution_planner.py", "intent": "Planner invariant + boundary tests.", "risk": "low", "behavior_change": "test-only" },
+    { "path": "services/api/tests/ibg_repository/test_repository_execution_plan.py", "intent": "Contract serialization + determinism tests.", "risk": "low", "behavior_change": "test-only" },
+    { "path": "docs/architecture/IBG_EXECUTION_PLANNING.md", "intent": "Descriptive execution-planning architecture document.", "risk": "low", "behavior_change": "none" },
+    { "path": ".cbsp21/patches/ibg-repository-execution-planning.json", "intent": "Per-PR CBSP21 manifest for PR E.", "risk": "low", "behavior_change": "CI/review metadata only" }
+  ],
+  "architecture_scan": {
+    "scan_id": "AS-2026-07-15-IBG-REPOSITORY-EXECUTION-PLANNING",
+    "risk_summary": { "critical": 0, "high": 0, "medium": 0, "low": 0 },
+    "findings": [],
+    "acknowledged": true,
+    "acknowledgement_notes": "Additive, descriptive-only. Derives every field from the already-merged proposal + CBSP21 packet; invents no ordering/dependency/effort. Separate downstream consumer — does not modify or attach to the PR-D pipeline. No git/filesystem/GitHub/network/authority. Terminates at the human-review boundary. Any execution engine (PR F) remains out of scope."
+  }
+}
