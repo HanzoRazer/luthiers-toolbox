@@ -28,9 +28,9 @@ Complexity label table (documented, auditable — see ``_complexity_label``):
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from datetime import datetime
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, FrozenSet, Iterable, List, Optional, Tuple
 
 from .repository_change_proposal import RepositoryChangeProposal
 from .repository_execution_plan import (
@@ -41,7 +41,6 @@ from .repository_execution_plan import (
     ProvenanceReference,
     RepositoryExecutionPlan,
     STRUCTURAL_GROUPING_RELATIONSHIP,
-    _hash_content,
 )
 
 # Supported declared risk levels. The CBSP21 packet does not enum-constrain risk_level (it only
@@ -64,19 +63,42 @@ def _require_str(value: Any, field: str) -> str:
     return value
 
 
+def _normalize_path(path: Any) -> str:
+    """One repo-relative posix normalization: trim, ``\\`` -> ``/``, drop leading/trailing ``/``."""
+    return str(path).strip().replace("\\", "/").strip("/")
+
+
+def _normalize_declared_files(declared: Any) -> Tuple[str, ...]:
+    """Normalize a declared-file collection to the canonical sorted, unique, posix form.
+
+    The SINGLE normalization applied to BOTH sides of the scope-agreement check below. It mirrors
+    the CBSP21 adapter's ``_sorted_unique_paths`` and the proposal builder's
+    ``_file_within_authorized`` containment semantics.
+
+    Why both sides: PR-A's ``build_repository_change_proposal`` derives ``changed_file_summary``
+    with ``sorted({str(f) ...})`` — it does NOT normalize (only its *boundary check* normalizes).
+    A packet built by ``build_cbsp21_patch_packet`` is already normalized, so the two agree; but a
+    packet supplied as a raw dict (the shape ``RepositoryProposalPipeline`` accepts, and the shape
+    a ``.cbsp21/patches/*.json`` file loads as) keeps its author's formatting. Comparing a raw
+    summary to a normalized scope would then reject a proposal that agrees on the file *set* and
+    differs only in formatting. Normalizing both sides removes that false negative while preserving
+    the real check: two different file sets still compare unequal.
+    """
+    if declared is None:
+        raw: List[Any] = []
+    elif isinstance(declared, (list, tuple)):
+        raw = list(declared)
+    else:
+        raw = [declared]
+    return tuple(sorted({_normalize_path(f) for f in raw if str(f).strip()}))
+
+
 def _packet_scope_files(packet: Dict[str, Any]) -> Tuple[str, ...]:
-    """The packet's declared changed files, normalized the same way the proposal derived them."""
+    """The packet's declared changed files in canonical normalized form."""
     scope = packet.get("scope") if isinstance(packet, dict) else None
     if not isinstance(scope, dict):
         raise ExecutionPlanningError("CBSP21 packet is missing a scope object")
-    declared = scope.get("files_expected_to_change", [])
-    if isinstance(declared, (list, tuple)):
-        raw = [str(f) for f in declared]
-    elif declared is None:
-        raw = []
-    else:
-        raw = [str(declared)]
-    return tuple(sorted({f.strip().replace("\\", "/").strip("/") for f in raw if str(f).strip()}))
+    return _normalize_declared_files(scope.get("files_expected_to_change", []))
 
 
 def _validation_sequence(packet: Dict[str, Any]) -> Tuple[str, ...]:
@@ -106,7 +128,7 @@ def _most_specific_prefix(file_path: str, authorized: Tuple[str, ...]) -> Option
     agrees with the boundary the proposal already enforced. Longest match wins so a file under a
     nested authorized path is assigned to the most specific group, deterministically.
     """
-    f = file_path.strip().replace("\\", "/").strip("/")
+    f = _normalize_path(file_path)
     best: Optional[str] = None
     for entry in authorized:
         e = entry.strip("/")
@@ -207,7 +229,9 @@ def build_execution_plan(
     if not isinstance(packet, dict):
         raise ExecutionPlanningError("proposal.cbsp21_packet must be a dict")
 
-    changed_files = tuple(proposal.changed_file_summary)
+    # Normalized on both sides: the comparison below is about the declared file SET, not its
+    # formatting (see ``_normalize_declared_files``). The plan carries the normalized form.
+    changed_files = _normalize_declared_files(proposal.changed_file_summary)
     if not changed_files:
         raise ExecutionPlanningError("proposal declares no changed files")
 
@@ -271,21 +295,13 @@ def build_execution_plan(
         risk_level=risk_level,
     )
 
-    content = {
-        "proposal_id": proposal.proposal_id,
-        "recommended_commit_sequence": [g.to_canonical_dict() for g in commit_sequence],
-        "recommended_validation_sequence": list(validation_sequence),
-        "recommended_review_order": [g.to_canonical_dict() for g in review_order],
-        "structural_dependency_groups": [d.to_canonical_dict() for d in structural_dependency_groups],
-        "estimated_complexity": complexity.to_canonical_dict(),
-        "provenance_reference": provenance.to_canonical_dict(),
-        "planning_summary": summary,
-        "constitutional_classification": EXECUTION_PLAN_CONSTITUTIONAL_CLASSIFICATION,
-    }
-    execution_plan_id = "rep-" + _hash_content(content)
-
-    return RepositoryExecutionPlan(
-        execution_plan_id=execution_plan_id,
+    # Content-address the plan from its OWN canonical form rather than a hand-assembled copy of it.
+    # ``execution_plan_id`` is excluded from ``_canonical_content()``, so the placeholder below does
+    # not perturb the hash. This keeps ONE definition of "the plan's canonical content" (the
+    # contract's), so the builder and ``compute_plan_hash()`` cannot drift apart and emit a freshly
+    # built plan whose id fails its own ``validate_execution_plan``.
+    draft = RepositoryExecutionPlan(
+        execution_plan_id="",
         proposal_id=proposal.proposal_id,
         recommended_commit_sequence=commit_sequence,
         recommended_validation_sequence=validation_sequence,
@@ -296,14 +312,66 @@ def build_execution_plan(
         planning_summary=summary,
         created_at=created_at,
     )
+    return replace(draft, execution_plan_id="rep-" + draft.compute_plan_hash())
+
+
+def _validate_group_collection(groups: Iterable[Any], field: str) -> FrozenSet[str]:
+    """Fail-closed check of one group collection; returns the file set it declares.
+
+    A collection is a *partition* of the declared files by authorized path prefix (see
+    ``_grouped``): every group is non-empty and well-formed, group ids are unique, each file sits
+    under its own group's prefix, and no file is claimed by two groups.
+    """
+    materialized = list(groups)
+    if not materialized:
+        raise ExecutionPlanningError(f"{field} is empty")
+    seen_ids: set = set()
+    files: set = set()
+    for group in materialized:
+        _require_str(group.group_id, f"{field}.group_id")
+        _require_str(group.path_prefix, f"{field}.path_prefix")
+        if group.group_id in seen_ids:
+            raise ExecutionPlanningError(f"{field} has a duplicate group_id {group.group_id!r}")
+        seen_ids.add(group.group_id)
+        if not group.files:
+            raise ExecutionPlanningError(f"{field} group {group.group_id} declares no files")
+        for f in group.files:
+            _require_str(f, f"{field}.files entry")
+            prefix = _normalize_path(group.path_prefix)
+            if _normalize_path(f) != prefix and not _normalize_path(f).startswith(prefix + "/"):
+                raise ExecutionPlanningError(
+                    f"{field} group {group.group_id} lists file {f!r} outside its "
+                    f"path_prefix {group.path_prefix!r}"
+                )
+            if f in files:
+                raise ExecutionPlanningError(
+                    f"{field} claims file {f!r} in more than one group (grouping must partition)"
+                )
+            files.add(f)
+    return frozenset(files)
 
 
 def validate_execution_plan(plan: RepositoryExecutionPlan) -> RepositoryExecutionPlan:
     """
     Fail-closed structural check of an already-built plan (used by tests and downstream consumers).
 
-    Verifies the content-addressed id matches the plan's own canonical content, that provenance
-    fields are present, and that no group references a file outside the plan's declared file set.
+    Every plan ``build_execution_plan`` produces satisfies this by construction; the check exists
+    for plans that arrive from ELSEWHERE — hand-constructed via the public frozen dataclasses, or
+    revived from a serialized ``to_canonical_dict()``. For those, the content hash alone proves
+    nothing about honesty: ``compute_plan_hash()`` is derived FROM the plan, so any self-consistent
+    plan matches its own id. The hash detects tampering AFTER construction; the invariants below are
+    what actually bind a plan to the PR-E boundary. So this verifies:
+
+        * the content-addressed id matches the plan's own canonical content (anti-tamper), and
+        * the constitutional classification is unchanged — a plan may not self-declare authority,
+        * every structural group is honestly labelled ``declared_path_grouping`` — never a
+          synthesized dependency edge the proposal has no evidence for,
+        * commit/review/dependency collections partition the SAME declared file set (a plan cannot
+          silently drop review or dependency coverage for a declared file),
+        * provenance/summary/validation commands are present — CBSP21 requires at least one
+          declared command, so a real plan always carries one,
+        * the complexity label still equals the documented table over its own declared inputs.
+
     Never invokes git, the filesystem, or the network. Returns the plan unchanged on success.
     """
     if not isinstance(plan, RepositoryExecutionPlan):
@@ -316,6 +384,16 @@ def validate_execution_plan(plan: RepositoryExecutionPlan) -> RepositoryExecutio
             f"execution_plan_id {plan.execution_plan_id!r} does not match content hash {expected_id!r}"
         )
     _require_str(plan.proposal_id, "proposal_id")
+    _require_str(plan.planning_summary, "planning_summary")
+
+    # Constitutional boundary: descriptive-only. A plan may not relabel itself into authority.
+    if plan.constitutional_classification != EXECUTION_PLAN_CONSTITUTIONAL_CLASSIFICATION:
+        raise ExecutionPlanningError(
+            "constitutional_classification must be "
+            f"{EXECUTION_PLAN_CONSTITUTIONAL_CLASSIFICATION!r}, not "
+            f"{plan.constitutional_classification!r}"
+        )
+
     for field in (
         "evidence_candidate_id",
         "evidence_provenance_hash",
@@ -324,14 +402,52 @@ def validate_execution_plan(plan: RepositoryExecutionPlan) -> RepositoryExecutio
     ):
         _require_str(getattr(plan.provenance_reference, field), f"provenance_reference.{field}")
 
-    declared = {f for g in plan.recommended_commit_sequence for f in g.files}
-    for collection in (plan.recommended_review_order, plan.structural_dependency_groups):
-        for group in collection:
-            for f in group.files:
-                if f not in declared:
-                    raise ExecutionPlanningError(
-                        f"group {group.group_id} references file {f!r} not in the commit sequence"
-                    )
+    if not plan.recommended_validation_sequence:
+        raise ExecutionPlanningError("recommended_validation_sequence is empty")
+    for command in plan.recommended_validation_sequence:
+        _require_str(command, "recommended_validation_sequence entry")
+
+    declared = _validate_group_collection(
+        plan.recommended_commit_sequence, "recommended_commit_sequence"
+    )
+    for field, collection in (
+        ("recommended_review_order", plan.recommended_review_order),
+        ("structural_dependency_groups", plan.structural_dependency_groups),
+    ):
+        if _validate_group_collection(collection, field) != declared:
+            raise ExecutionPlanningError(
+                f"{field} does not cover the same declared files as recommended_commit_sequence"
+            )
+
+    # Honesty of the structural grouping: never a claimed dependency edge.
+    for group in plan.structural_dependency_groups:
+        if group.relationship != STRUCTURAL_GROUPING_RELATIONSHIP:
+            raise ExecutionPlanningError(
+                f"structural_dependency_groups group {group.group_id} declares relationship "
+                f"{group.relationship!r}; only {STRUCTURAL_GROUPING_RELATIONSHIP!r} is derivable "
+                "(the proposal declares no inter-file dependency evidence)"
+            )
+
+    complexity = plan.estimated_complexity
+    if complexity.declared_risk_level not in _RISK_TIER:
+        raise ExecutionPlanningError(
+            f"unsupported declared risk_level {complexity.declared_risk_level!r}; "
+            f"supported: {list(SUPPORTED_RISK_LEVELS)}"
+        )
+    if complexity.changed_file_count != len(declared):
+        raise ExecutionPlanningError(
+            f"estimated_complexity.changed_file_count {complexity.changed_file_count} disagrees "
+            f"with the {len(declared)} declared file(s)"
+        )
+    if complexity.authorized_path_count < 1:
+        raise ExecutionPlanningError("estimated_complexity.authorized_path_count must be >= 1")
+    expected_label = _complexity_label(complexity.changed_file_count, complexity.declared_risk_level)
+    if complexity.label != expected_label:
+        raise ExecutionPlanningError(
+            f"estimated_complexity.label {complexity.label!r} disagrees with the documented table "
+            f"({expected_label!r} for {complexity.changed_file_count} file(s) at risk "
+            f"{complexity.declared_risk_level!r})"
+        )
     return plan
 
 

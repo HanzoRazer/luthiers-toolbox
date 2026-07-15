@@ -81,6 +81,38 @@ then enforcing only PR-E invariants) when:
 * the declared `risk_level` is unsupported;
 * a canonical (deterministic) serialization cannot be produced.
 
+### Scope agreement compares the file set, not its spelling
+
+Both sides of that comparison are normalized first (trim, `\` → `/`, no leading/trailing `/`, deduped,
+sorted), and the plan carries the normalized form. This matters because the two inputs are not
+normalized the same way at their source: `build_cbsp21_patch_packet` normalizes its scope, but
+`build_repository_change_proposal` derives `changed_file_summary` with `sorted({str(f) ...})` and
+keeps the packet's raw spelling — only its *boundary check* normalizes. A packet supplied as a raw
+dict (the shape `RepositoryProposalPipeline` accepts, and the shape a `.cbsp21/patches/*.json` file
+loads as) therefore reaches the planner with the author's formatting intact. Comparing a raw summary
+to a normalized scope would reject a proposal that agrees on *what changes* and differs only in how a
+path is written. Normalizing both sides removes that false negative; two genuinely different file
+sets still disagree and still fail closed.
+
+## Validating a plan built elsewhere
+
+`validate_execution_plan` is not a restatement of the builder's preconditions — every plan
+`build_execution_plan` produces satisfies it by construction. It exists for plans that arrive from
+*elsewhere*: hand-constructed via the public frozen dataclasses, or revived from a serialized
+`to_canonical_dict()`. For those, the content hash alone proves nothing: `compute_plan_hash()` is
+derived *from* the plan, so any self-consistent plan matches its own id. The hash detects tampering
+**after** construction; it cannot detect a dishonest construction. So the validator also enforces:
+
+* `constitutional_classification` is unchanged — a plan may not self-declare authority;
+* every structural group is labelled `declared_path_grouping` — never a synthesized dependency edge
+  the proposal has no evidence for;
+* commit / review / dependency collections partition the **same** declared file set — a plan cannot
+  silently drop review or dependency coverage for a declared file, nor claim a file in two groups,
+  nor list a file outside its own `path_prefix`;
+* `planning_summary`, provenance fields, and at least one validation command are present (CBSP21
+  requires a non-empty `verification.commands_run`, so a real plan always carries one);
+* `estimated_complexity` still agrees with the documented table over its own declared inputs.
+
 ## Authority boundary — what planning is NOT
 
 Planning is **descriptive**. It does not commit, push, merge, create a pull request, mutate a
