@@ -115,6 +115,24 @@ from .repository_proposal_pipeline import (
     RepositoryProposalPipelineResult,
     run_repository_proposal_pipeline,
 )
+# --- PR E: descriptive repository execution planning (downstream of the merged proposal) ---
+from .repository_execution_plan import (
+    EXECUTION_PLAN_CONSTITUTIONAL_CLASSIFICATION,
+    STRUCTURAL_GROUPING_RELATIONSHIP,
+    ExecutionGroup,
+    DependencyGroup,
+    ComplexitySummary,
+    ProvenanceReference,
+    RepositoryExecutionPlan,
+)
+from .execution_planner import (
+    ExecutionPlanningError,
+    SUPPORTED_RISK_LEVELS,
+    ExecutionPlanner,
+    build_execution_plan,
+    execution_plan_builder,
+    validate_execution_plan,
+)
 
 __all__ = [
     "ProposalTargetBinding",
@@ -193,4 +211,18 @@ __all__ = [
     "RepositoryProposalPipeline",
     "RepositoryProposalPipelineResult",
     "run_repository_proposal_pipeline",
+    # --- PR E: descriptive repository execution planning ---
+    "EXECUTION_PLAN_CONSTITUTIONAL_CLASSIFICATION",
+    "STRUCTURAL_GROUPING_RELATIONSHIP",
+    "ExecutionGroup",
+    "DependencyGroup",
+    "ComplexitySummary",
+    "ProvenanceReference",
+    "RepositoryExecutionPlan",
+    "ExecutionPlanningError",
+    "SUPPORTED_RISK_LEVELS",
+    "ExecutionPlanner",
+    "build_execution_plan",
+    "execution_plan_builder",
+    "validate_execution_plan",
 ]
