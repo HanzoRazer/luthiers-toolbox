@@ -130,24 +130,36 @@ part of the public return; `_loadGen` likewise. No public export or method signa
 
 ## 8. Tests and verification
 
-Focused colocated tests (32 total, all green):
+Focused colocated tests (37 total, all green):
 
 | Spec | Count | Covers |
 | --- | --- | --- |
 | `router/index.spec.ts` | 11 | canonical route + name, explicit `projectId` prop, named build, required-param rejection, bare redirect w/ query+hash, `project_id`≠identity, unchanged legacy route |
-| `shared-state/useInstrumentProject.spec.ts` | 11 | both A→B response orders, failed-B isolation, superseded-error suppression, single-flight refusal, cross-Project save isolation, commit request shape, interface stability, `clearProject` determinism |
+| `shared-state/useInstrumentProject.spec.ts` | 14 | both A→B response orders, repeated same-id determinism, failed-B isolation, superseded-error suppression, single-flight refusal, stuck-saving regression, cross-Project save success + failure isolation, commit request shape, interface stability, `clearProject` determinism |
 | `hub/InstrumentHubShell.spec.ts` | 6 | explicit-id load, prop A→B reload, controlled error w/ no stale content, retry binds to current prop, no auto-commit, explicit Apply delegates to the composable |
-| `views/AppDashboardView.spec.ts` | 5 | named route from explicit query, legacy fallback for absent/empty query, no singleton fallback, truthful labels |
+| `views/AppDashboardView.spec.ts` | 6 | named route from explicit query, legacy fallback for absent/empty/array query, no singleton fallback, truthful labels |
 
 Suite / gate results at implementation:
 
-- **Full frontend suite:** 748 passed, 17 todo, 1 file skipped, **0 failed** (42 files).
+- **Full frontend suite:** 752 passed, 17 todo, 1 file skipped, **0 failed** (42 files).
 - **Type-check (`vue-tsc --noEmit`):** 150 pre-existing errors, **0 introduced**. Baseline on
   pristine `origin/main` was 154; the 4 resolved are the Hub's own import/type errors closed by
   the import correction.
 - **Build (`vite build`):** succeeded (the >500 kB chunk-size note is a pre-existing advisory
   warning, not an error).
 - **CBSP21 patch-input and gate checks:** pass against the `origin/main...HEAD` file set.
+
+### Independent review correction
+
+Independent review of the held draft PR (three fresh reviewers across the eight review
+dimensions) returned READY / READY-WITH-REQUIRED-CORRECTIONS. One confirmed required
+correction was applied: `_commit` set the reactive `_isSaving` display flag unconditionally
+but cleared it only inside the identity/generation-gated apply branches, so a same-id
+`loadProject` that superseded an in-flight save left a stuck "Saving…" indicator (display
+only; no data-safety or single-flight-guard impact). The reset moved into the `finally`,
+where single-flight guarantees exactly one save owns the flag. Four §9-named test cases that
+lacked a standalone witness were added (stuck-saving regression, cross-Project save-failure
+isolation, repeated same-id determinism, array-form query fallback).
 
 ---
 
