@@ -347,7 +347,7 @@
 
 <script setup lang="ts">
 import { ref, computed, watch, onMounted } from 'vue'
-import { useInstrumentProject } from './shared-state/useInstrumentProject'
+import { useInstrumentProject } from '../shared-state/useInstrumentProject'
 import {
   getApplicableStages,
   getStageCompletion,
@@ -355,7 +355,7 @@ import {
   getInstrumentLabel,
   INSTRUMENT_LABELS,
   type HubStageId,
-} from './shared-state/project-types'
+} from '../shared-state/project-types'
 import type {
   InstrumentSpec,
   MaterialSelection,

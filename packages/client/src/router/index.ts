@@ -7,7 +7,7 @@ const RosettePipelineView = () => import("@/views/RosettePipelineView.vue");
 // Import route guards
 import { requireGuest, requireAuth, requireTier, initAuthGuard } from "./guards";
 
-const routes: RouteRecordRaw[] = [
+export const routes: RouteRecordRaw[] = [
   // ============================================================================
   // AUTH ROUTES
   // ============================================================================
@@ -446,9 +446,26 @@ const routes: RouteRecordRaw[] = [
   // Waves 15-16 — Instrument Geometry Designer (Fretboard CAM)
   {
     path: "/instrument-geometry",
-    alias: "/instrument-hub",
     name: "InstrumentGeometry",
     component: () => import("@/views/InstrumentGeometryView.vue"),
+  },
+
+  // SPINE-005 — Project-scoped Instrument Hub (ADR-002 Instrument Project Graph)
+  // Bare path is a compatibility fallback for callers that hold no Project identity.
+  // A Project is never inferred here: query is forwarded untouched, not read.
+  {
+    path: "/instrument-hub",
+    redirect: (to) => ({
+      path: "/instrument-geometry",
+      query: to.query,
+      hash: to.hash,
+    }),
+  },
+  {
+    path: "/instrument-hub/:projectId",
+    name: "InstrumentHub",
+    component: () => import("@/instrument-workspace/hub/InstrumentHubShell.vue"),
+    props: true,
   },
 
   // Guitar Body Dimensions (Parametric Designer from Blueprint Lab)
