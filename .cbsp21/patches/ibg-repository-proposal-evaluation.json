@@ -21,6 +21,7 @@
       "services/api/app/ibg_repository/repository_proposal_evaluation.py",
       "services/api/app/ibg_repository/proposal_evaluator.py",
       "services/api/tests/ibg_repository/conftest.py",
+      "services/api/tests/ibg_repository/test_cbsp21_patch_adapter.py",
       "services/api/tests/ibg_repository/test_proposal_evaluator.py",
       "services/api/tests/ibg_repository/test_repository_proposal_evaluation.py",
       "docs/architecture/IBG_PROPOSAL_EVALUATION.md",
@@ -34,6 +35,7 @@
   "verification": {
     "commands_run": [
       "python -m pytest tests/ibg_repository/test_proposal_evaluator.py tests/ibg_repository/test_repository_proposal_evaluation.py --no-cov -q  ->  107 passed",
+      "python -m pytest tests/ibg_repository/test_cbsp21_patch_adapter.py --no-cov -q  ->  15 passed (adds the gate-threshold AST drift guard binding WHY_NOT_REDUNDANT_MIN_CHARS to the gate, and the 19/20/21 articulation boundary case; the extracted rule and its whole-packet caller agree at the boundary)",
       "python -m coverage run -m pytest tests/ibg_repository/test_proposal_evaluator.py tests/ibg_repository/test_repository_proposal_evaluation.py --no-cov -q  &&  coverage report --include=*/ibg_repository/proposal_evaluator.py,*/ibg_repository/repository_proposal_evaluation.py  ->  99% (contract 100%, evaluator 99%)",
       "python -m pytest tests/ibg_repository/ --no-cov -q  ->  465 passed (PR A + B + C + D + E + F together, no regressions). Rebase evidence: this branch was rebased onto the squash-merged PR-E (origin/main @ 3d23c667) with 'git rebase --onto origin/main 094c4b85', replaying only F's six commits; a plain rebase would have replayed E's five pre-squash commits, whose patch-ids a squash merge does not preserve. Measured baseline: origin/main collects 358 tests in tests/ibg_repository/; this branch collects 465; net +107, exactly F's own two test modules and no others. F's six commits and every F-owned file (proposal_evaluator.py, repository_proposal_evaluation.py, their two test modules, and the __init__/conftest/cbsp21_patch_adapter edits, plus the architecture doc) are byte-identical through the rebase, verified with 'git diff pre-rebase-f-backup HEAD -- <those paths>' returning empty. This manifest is the sole deliberate exception: its verification evidence was refreshed AFTER the rebase to replace the now-superseded pre-rebase counts, so it alone differs from pre-rebase-f-backup, and that difference is this evidence block. E-owned files (execution_planner.py, its tests, IBG_EXECUTION_PLANNING.md, the execution-planning manifest) changed ONLY because F previously sat on a pre-review E and now sits on the reviewed, squash-merged E implementation; F's work did not change and its 107 tests pass unmodified against that upgraded substrate. The superseded pre-rebase count was 438 against the older E.",
       "python scripts/ci/check_cbsp21_patch_input.py --base origin/main --head HEAD",
@@ -46,6 +48,7 @@
     { "path": "services/api/app/ibg_repository/repository_proposal_evaluation.py", "intent": "Frozen, content-addressed RepositoryProposalEvaluation contract + EvaluationFinding, vocabularies, and the auditable decimal completeness score.", "risk": "low", "behavior_change": "none" },
     { "path": "services/api/app/ibg_repository/proposal_evaluator.py", "intent": "Deterministic, observational evaluator: (RepositoryChangeProposal, RepositoryExecutionPlan) -> RepositoryProposalEvaluation.", "risk": "low", "behavior_change": "none" },
     { "path": "services/api/tests/ibg_repository/conftest.py", "intent": "Add make_plan/evaluation_of fixtures over the real governed contracts.", "risk": "low", "behavior_change": "test-only" },
+    { "path": "services/api/tests/ibg_repository/test_cbsp21_patch_adapter.py", "intent": "Bind WHY_NOT_REDUNDANT_MIN_CHARS to the gate's articulation threshold via AST (drift guard) and add the 19/20/21 boundary case for the extracted rule.", "risk": "low", "behavior_change": "test-only" },
     { "path": "services/api/tests/ibg_repository/test_proposal_evaluator.py", "intent": "Evaluator invariant, error/finding-split, and boundary tests.", "risk": "low", "behavior_change": "test-only" },
     { "path": "services/api/tests/ibg_repository/test_repository_proposal_evaluation.py", "intent": "Contract serialization, determinism, score, and vocabulary tests.", "risk": "low", "behavior_change": "test-only" },
     { "path": "docs/architecture/IBG_PROPOSAL_EVALUATION.md", "intent": "Observational proposal-evaluation architecture document.", "risk": "low", "behavior_change": "none" },

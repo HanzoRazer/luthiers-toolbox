@@ -143,7 +143,9 @@ def validate_cbsp21_patch_packet(packet: Dict[str, Any]) -> None:
 
     Mirrors ``scripts/ci/check_cbsp21_patch_input.py``: required fields present and non-empty,
     and if ``behavior_change`` is not ``"none"`` then ``diff_articulation.why_not_redundant``
-    must be at least 20 characters. Raises ``CBSP21PacketError`` on any violation.
+    must be at least ``WHY_NOT_REDUNDANT_MIN_CHARS`` characters — the single articulation rule,
+    delegated to ``validate_behavior_change_articulation`` rather than restated here. Raises
+    ``CBSP21PacketError`` on any violation.
     """
     if not isinstance(packet, dict):
         raise CBSP21PacketError("packet must be a dict")
