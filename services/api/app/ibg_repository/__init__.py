@@ -158,6 +158,21 @@ from .proposal_evaluator import (
     proposal_evaluator,
     validate_repository_proposal_evaluation,
 )
+# --- PR G: repository readiness report (aggregation of the proposal + plan + evaluation) ---
+from .repository_readiness_report import (
+    READINESS_REPORT_CONSTITUTIONAL_CLASSIFICATION,
+    READINESS_REPORT_ID_PREFIX,
+    REPORT_SECTION_ORDER,
+    ReadinessReportError,
+    RepositoryGovernanceSummary,
+    RepositoryReadinessReport,
+    RepositoryReadinessSection,
+    validate_readiness_summary,
+)
+from .readiness_report_builder import (
+    build_repository_readiness_report,
+    validate_repository_readiness_report,
+)
 
 __all__ = [
     "ProposalTargetBinding",
@@ -271,4 +286,15 @@ __all__ = [
     "evaluate_repository_proposal",
     "proposal_evaluator",
     "validate_repository_proposal_evaluation",
+    # --- PR G: repository readiness report ---
+    "READINESS_REPORT_CONSTITUTIONAL_CLASSIFICATION",
+    "READINESS_REPORT_ID_PREFIX",
+    "REPORT_SECTION_ORDER",
+    "ReadinessReportError",
+    "RepositoryGovernanceSummary",
+    "RepositoryReadinessReport",
+    "RepositoryReadinessSection",
+    "validate_readiness_summary",
+    "build_repository_readiness_report",
+    "validate_repository_readiness_report",
 ]
