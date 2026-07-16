@@ -391,3 +391,68 @@ describe("SPINE-005 preserves the public composable interface", () => {
     expect(hub.isLoaded.value).toBe(false);
   });
 });
+
+// --- higher-order interleaving witnesses (§4.4, §5.4) ----------------------
+
+describe("SPINE-005 higher-order request interleaving", () => {
+  it("publishes only the latest of A1 -> A2 -> B -> A3 under mixed resolution order (§4.4)", async () => {
+    const hub = useInstrumentProject();
+    const d1 = deferred<DesignStateResponse>();
+    const d2 = deferred<DesignStateResponse>();
+    const d3 = deferred<DesignStateResponse>();
+    const d4 = deferred<DesignStateResponse>();
+    mockGet
+      .mockReturnValueOnce(d1.promise) // A1
+      .mockReturnValueOnce(d2.promise) // A2
+      .mockReturnValueOnce(d3.promise) // B
+      .mockReturnValueOnce(d4.promise); // A3 (latest generation)
+
+    const l1 = hub.loadProject("A");
+    const l2 = hub.loadProject("A");
+    const l3 = hub.loadProject("B");
+    const l4 = hub.loadProject("A");
+
+    // Settle in a deliberately scrambled order; only the last-issued request may win.
+    d2.resolve(response("A", "gen2"));
+    d4.resolve(response("A", "gen4"));
+    d1.resolve(response("A", "gen1"));
+    d3.resolve(response("B", "genB"));
+    await Promise.all([l1, l2, l3, l4]);
+
+    expect(hub.projectId.value).toBe("A"); // final state = last requested Project
+    expect(hub.lastSavedAt.value).toBe("gen4"); // no stale generation repopulated state
+    expect(hub.loadError.value).toBeNull();
+    expect(hub.isLoading.value).toBe(false);
+  });
+
+  it("discards an in-flight save that resolves after clearProject and frees the guard (§5.4)", async () => {
+    const hub = useInstrumentProject();
+    mockGet.mockResolvedValueOnce(response("A"));
+    await hub.loadProject("A");
+
+    const put = deferred<DesignStateResponse>();
+    mockPut.mockReturnValueOnce(put.promise);
+    const saving = hub.commitSpec({ ...SPEC, scale_length_mm: 700 });
+
+    hub.clearProject(); // clear while the save is still in flight
+    put.resolve(response("A", "after-clear")); // server write stood, but must not repopulate
+    const ok = await saving;
+
+    expect(ok).toBe(true); // the server write itself succeeded
+    expect(hub.projectId.value).toBeNull(); // cleared state is NOT repopulated
+    expect(hub.spec.value).toBeNull();
+    expect(hub.isSaving.value).toBe(false); // display flag released
+    expect(hub.lastSavedAt.value).toBeNull(); // no stale save metadata under a cleared hub
+
+    // The single-flight guard was released: a later Project can load and commit.
+    mockGet.mockResolvedValueOnce(response("B"));
+    await hub.loadProject("B");
+    const put2 = deferred<DesignStateResponse>();
+    mockPut.mockReturnValueOnce(put2.promise);
+    const saving2 = hub.commitSpec({ ...SPEC, scale_length_mm: 660 });
+    put2.resolve(response("B", "b-saved"));
+
+    expect(await saving2).toBe(true);
+    expect(hub.lastSavedAt.value).toBe("b-saved");
+  });
+});

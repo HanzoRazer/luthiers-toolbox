@@ -130,18 +130,18 @@ part of the public return; `_loadGen` likewise. No public export or method signa
 
 ## 8. Tests and verification
 
-Focused colocated tests (37 total, all green):
+Focused colocated tests (41 total, all green — 4 added by the §12 risk-closure pass):
 
 | Spec | Count | Covers |
 | --- | --- | --- |
 | `router/index.spec.ts` | 11 | canonical route + name, explicit `projectId` prop, named build, required-param rejection, bare redirect w/ query+hash, `project_id`≠identity, unchanged legacy route |
-| `shared-state/useInstrumentProject.spec.ts` | 14 | both A→B response orders, repeated same-id determinism, failed-B isolation, superseded-error suppression, single-flight refusal, stuck-saving regression, cross-Project save success + failure isolation, commit request shape, interface stability, `clearProject` determinism |
-| `hub/InstrumentHubShell.spec.ts` | 6 | explicit-id load, prop A→B reload, controlled error w/ no stale content, retry binds to current prop, no auto-commit, explicit Apply delegates to the composable |
+| `shared-state/useInstrumentProject.spec.ts` | 16 | both A→B response orders, repeated same-id determinism, failed-B isolation, superseded-error suppression, single-flight refusal, stuck-saving regression, cross-Project save success + failure isolation, commit request shape, interface stability, `clearProject` determinism; **+ A1→A2→B→A3 mixed-order latest-wins (§4.4); + clearProject-during-save discard & guard release (§5.4)** |
+| `hub/InstrumentHubShell.spec.ts` | 8 | explicit-id load, prop A→B reload, controlled error w/ no stale content, retry binds to current prop, no auto-commit, explicit Apply delegates to the composable; **+ no spec-draft leak into a spec-less destination Project (§5.1); + Apply disabled while a commit is in flight (§4.1)** |
 | `views/AppDashboardView.spec.ts` | 6 | named route from explicit query, legacy fallback for absent/empty/array query, no singleton fallback, truthful labels |
 
-Suite / gate results at implementation:
+Suite / gate results (after the §12 risk-closure pass):
 
-- **Full frontend suite:** 752 passed, 17 todo, 1 file skipped, **0 failed** (42 files).
+- **Full frontend suite:** 756 passed, 17 todo, 1 file skipped, **0 failed** (42 files).
 - **Type-check (`vue-tsc --noEmit`):** 150 pre-existing errors, **0 introduced**. Baseline on
   pristine `origin/main` was 154; the 4 resolved are the Hub's own import/type errors closed by
   the import correction.
@@ -198,3 +198,68 @@ LAB-024) is implied by this work.
 > frontend authority, or a broader migration?
 
 **Yes**, as delivered and tested above.
+
+---
+
+## 12. Risk-closure review (SPINE-005R)
+
+**Method.** A commit-by-commit and line-by-line re-review of all six PR commits and the eleven
+changed files against the PR head, plus a repository-wide sweep of every `useInstrumentProject`
+consumer, `commit*` caller, and `/instrument-hub` reference. Each cited risk was reproduced
+against current code, not accepted from prior prose. Fixes were limited to reproduced,
+in-scope defects — no Project authority, backend contract, or implicit-write path was added.
+
+**Commit-by-commit result.** No commit introduced a correctness defect. Commit 1 (route + Hub
+compile activation) fixes the Hub's previously broken relative imports; the bare `/instrument-hub`
+redirect forwards query/hash verbatim and never infers a Project. Commit 2 rewrites `loadProject`
+to latest-request-wins and sets the requested identity immediately while quarantining prior state
+— a net-safer transition than the prior "old project fully rendered until the new one resolves".
+Commit 3's navigation is Project-addressed only on an explicit URL `project_id`. Commits 4–6 are
+governance evidence and the stuck-saving-flag correction, all sound.
+
+**Confirmed fix (§5.1 — the one reproduced defect).** `InstrumentHubShell.vue` synced its local
+edit buffers (`localSpec` / `localType` / `localMaterials`) forward-on-truthy only and never reset
+them on absent state. Because `isLoaded` is true whenever `design_state` is non-null even if `spec`
+is null, switching from a Project with a committed spec to one that has an instrument type but no
+committed spec yet left the prior Project's uncommitted draft rendered — and committable via
+**Apply** — under the new Project's identity. The buffer sync now resets each section to its empty
+baseline when the loaded Project lacks it. Regression witness: `InstrumentHubShell.spec.ts` "does
+not carry an edited spec draft into a Project that has no committed spec (§5.1)".
+
+**Refuted by evidence.**
+
+- **§4.1 busy-save ambiguity** — the Hub's **Apply to Project** buttons are already
+  `:disabled="isSaving || !isDirty"`, so a second commit can never be issued from the UI while one
+  is in flight. Witnessed by a new disabled-during-commit test; the discriminated-result API
+  remains a follow-up, not an in-PR refactor.
+- **§5.8 non-Hub singleton consumers** — every consumer (`CadSidebar`, `AppDashboardView`,
+  `AssistantView`, `BridgeLabPanel`, `useBridgeWorkspace`, `BlueprintSavePanel`,
+  `InstrumentMaterialSelector`) either gates on `isLoaded` / null-safe computeds or uses
+  `projectId` purely as an identifier string. None assumes `projectId` implies loaded state, so the
+  new `projectId=new, state=null` transition window breaks no consumer.
+- **§5.3 same-id reload during save** — already covered: the save's captured generation vs
+  `_loadGen` discards a superseded response and the `finally` always releases the display flag.
+
+**Higher-order witnesses added (§4.4, §5.4).** `useInstrumentProject.spec.ts` now proves an
+A1→A2→B→A3 chain publishes only the latest generation under scrambled resolution order, and that a
+save in flight when `clearProject()` runs is discarded (no cleared state repopulated, no stale
+metadata) while the single-flight guard is released so a later Project can still load and commit.
+
+**Deferred as follow-ups (out of scope per §9 stop conditions).**
+
+- **§4.2 stale-operation diagnostics** — discarded late load/save failures are silently dropped.
+  No canonical non-user-facing client logger exists; introducing one is telemetry infrastructure
+  and is deferred rather than built here.
+- **§4.3 `AiAssistantProject` unregistered route** — pre-existing; this PR does not touch
+  `assistantTo`. Resolving the AI Assistant route architecture is an explicit stop condition. Noted
+  additionally: the PR's `AppDashboardView` test fixture registers a mock route of that name, which
+  masks the production gap — the follow-up should reconcile the two.
+- **§5.2 full-state overwrite / two-commit partial persist** — `_commit` sends the full merged
+  design state (last-write-wins) and the Body **Apply** flow issues two sequential commits. Both
+  are pre-existing backend-contract properties, not PR-induced; characterized, not redesigned.
+- **§5.6 bare-route caller** — `SmartGuitarShell.vue` intentionally keeps `to="/instrument-hub"`
+  as the compatibility redirect; retained by design.
+
+**Verdict: READY WITH REQUIRED CORRECTIONS** — the §5.1 leak fix is required and applied; the
+remaining items are refuted or deferred with evidence. Full focused + full-suite verification green
+(41 focused, 756 total, 0 failed). The PR remains open for owner decision.

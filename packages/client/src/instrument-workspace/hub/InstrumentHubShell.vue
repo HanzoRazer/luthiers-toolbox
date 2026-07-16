@@ -396,33 +396,37 @@ const localType = ref<InstrumentCategory>('electric_guitar')
 const localSpec = ref<Partial<InstrumentSpec>>({})
 const localMaterials = ref<Record<string, string>>({})
 
-// Sync local buffers from project state when loaded
-watch(isLoaded, (loaded) => {
-  if (loaded) syncFromProject()
-}, { immediate: true })
+// Sync local edit buffers from the active Project's committed state. These RESET the
+// buffers (not merely populate them): a sub-section that is absent clears its buffer to
+// the empty baseline instead of leaving the previously loaded Project's value in place.
+// Without this, switching from a Project that has a committed spec/materials to one whose
+// corresponding section is null (e.g. a freshly created Project, or one with an instrument
+// type but no spec yet) would leave the prior Project's uncommitted draft rendered — and
+// committable — under the new Project's identity.
+watch(isLoaded, () => syncFromProject(), { immediate: true })
 
-watch(instrumentType, (t) => { if (t) localType.value = t })
-watch(spec, (s) => { if (s) syncSpecBuffer(s) })
-watch(materialSelection, (m) => { if (m) syncMaterialsBuffer(m) })
+watch(instrumentType, (t) => { localType.value = t ?? 'electric_guitar' })
+watch(spec, (s) => syncSpecBuffer(s))
+watch(materialSelection, (m) => syncMaterialsBuffer(m))
 
 function syncFromProject() {
-  if (instrumentType.value) localType.value = instrumentType.value
-  if (spec.value) syncSpecBuffer(spec.value)
-  if (materialSelection.value) syncMaterialsBuffer(materialSelection.value)
+  localType.value = instrumentType.value ?? 'electric_guitar'
+  syncSpecBuffer(spec.value)
+  syncMaterialsBuffer(materialSelection.value)
 }
 
-function syncSpecBuffer(s: InstrumentSpec) {
-  localSpec.value = { ...s }
+function syncSpecBuffer(s: InstrumentSpec | null) {
+  localSpec.value = s ? { ...s } : {}
 }
 
-function syncMaterialsBuffer(m: MaterialSelection) {
+function syncMaterialsBuffer(m: MaterialSelection | null) {
   localMaterials.value = {
-    top: m.top ?? '',
-    back_sides: m.back_sides ?? '',
-    neck: m.neck ?? '',
-    fretboard: m.fretboard ?? '',
-    bridge: m.bridge ?? '',
-    brace_stock: m.brace_stock ?? '',
+    top: m?.top ?? '',
+    back_sides: m?.back_sides ?? '',
+    neck: m?.neck ?? '',
+    fretboard: m?.fretboard ?? '',
+    bridge: m?.bridge ?? '',
+    brace_stock: m?.brace_stock ?? '',
   }
 }
 

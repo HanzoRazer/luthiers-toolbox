@@ -41,8 +41,8 @@
   },
   "verification": {
     "commands_run": [
-      "cd packages/client && npx vitest run src/router/index.spec.ts src/instrument-workspace/hub/InstrumentHubShell.spec.ts src/instrument-workspace/shared-state/useInstrumentProject.spec.ts src/views/AppDashboardView.spec.ts -> PASS (32 focused tests; recorded at commit)",
-      "cd packages/client && npx vitest run -> full frontend suite, no new failures vs origin/main baseline (recorded at commit)",
+      "cd packages/client && npx vitest run src/router/index.spec.ts src/instrument-workspace/hub/InstrumentHubShell.spec.ts src/instrument-workspace/shared-state/useInstrumentProject.spec.ts src/views/AppDashboardView.spec.ts -> PASS (41 focused tests; +4 added by the SPINE-005R risk-closure pass for §5.1/§4.1/§4.4/§5.4)",
+      "cd packages/client && npx vitest run -> full frontend suite 756 passed, 17 todo, 1 file skipped, 0 failed (42 files) after the risk-closure pass",
       "cd packages/client && npx vue-tsc --noEmit -> 150 pre-existing errors, 0 introduced by SPINE-005 (baseline 154; the 4 resolved are the Hub's own import/type errors) (recorded at commit)",
       "cd packages/client && npx vite build -> PASS (recorded at commit)",
       "py -3.11 scripts/ci/check_cbsp21_patch_input.py --base origin/main --head HEAD --manifest .cbsp21/patches/spine-005-instrument-hub-adoption.json -> (recorded at commit)",
