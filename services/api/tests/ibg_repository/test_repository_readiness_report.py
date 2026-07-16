@@ -82,7 +82,11 @@ def test_report_id_is_stable_across_independent_builds(make_proposal):
 
 def test_report_id_changes_when_a_semantic_field_changes(make_proposal):
     report = _report(make_proposal)
-    mutated = dataclasses.replace(report, readiness_summary="incomplete")
+    # Flip to the OTHER valid readiness label so the mutation is guaranteed to differ from the
+    # built value whatever the chain evaluates to. Hardcoding "incomplete" is a silent no-op (and
+    # thus a false pass) whenever the fixture already evaluates to "incomplete".
+    other = "incomplete" if report.readiness_summary == "complete" else "complete"
+    mutated = dataclasses.replace(report, readiness_summary=other)
     # A different semantic field must change the recomputed hash.
     assert mutated.compute_report_hash() != report.compute_report_hash()
 
