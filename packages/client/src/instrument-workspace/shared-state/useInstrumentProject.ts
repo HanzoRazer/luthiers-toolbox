@@ -212,17 +212,22 @@ export function useInstrumentProject() {
         _state.value = response.design_state
         _isDirty.value = false
         _lastSavedAt.value = response.updated_at
-        _isSaving.value = false
       }
       // The commit succeeded on the server regardless of the current active Project.
       return true
     } catch (err) {
       if (_projectId.value === targetId && genAtSave === _loadGen) {
         _saveError.value = err instanceof Error ? err.message : 'Save failed'
-        _isSaving.value = false
       }
       return false
     } finally {
+      // Single-flight guarantees exactly one save owns _isSaving at a time, so the
+      // completing save always clears the display flag here — even when its response was
+      // discarded for a superseded Project (otherwise the "Saving…" indicator could stick
+      // true after a same-id reload superseded the save). A newer save cannot have started
+      // yet, since its guard is released on the next line, so this never clears another
+      // save's indicator.
+      _isSaving.value = false
       // Always release the request-lifecycle guard, even when the response was discarded
       // for a superseded Project — otherwise no future save could ever start.
       _saveInFlight = false

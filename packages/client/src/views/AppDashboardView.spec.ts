@@ -72,6 +72,14 @@ describe("SPINE-005 Dashboard Instrument Hub navigation", () => {
     expect(link!.attributes("href")).toBe("/instrument-geometry");
   });
 
+  it("falls back when the Project query is an array without a usable value", async () => {
+    // §9: array-without-value query falls back. Repeated empty keys → ['', ''] → q[0] falsy.
+    const wrapper = await mountAt("/?project_id=&project_id=");
+    const link = hubLink(wrapper);
+    expect(link!.text()).toContain("Instrument Geometry");
+    expect(link!.attributes("href")).toBe("/instrument-geometry");
+  });
+
   it("does not use the singleton Project ID as an implicit Hub-link fallback", async () => {
     // The singleton is mocked to a loaded Project; with no query, the link must still
     // be the legacy route, never /instrument-hub/SINGLETON-ID.

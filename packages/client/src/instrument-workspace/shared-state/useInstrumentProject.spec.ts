@@ -136,6 +136,26 @@ describe("SPINE-005 latest-request-wins loading", () => {
     expect(hub.isLoading.value).toBe(false);
   });
 
+  it("is deterministic under repeated same-id navigation with out-of-order responses", async () => {
+    // §9: repeated same-ID behavior is deterministic; the latest request still wins.
+    const hub = useInstrumentProject();
+    const first = deferred<DesignStateResponse>();
+    const second = deferred<DesignStateResponse>();
+    mockGet.mockReturnValueOnce(first.promise).mockReturnValueOnce(second.promise);
+
+    const loadA1 = hub.loadProject("A");
+    const loadA2 = hub.loadProject("A");
+
+    second.resolve(response("A", "second"));
+    await loadA2;
+    first.resolve(response("A", "first")); // stale, superseded — must be discarded
+    await loadA1;
+
+    expect(hub.projectId.value).toBe("A");
+    expect(hub.lastSavedAt.value).toBe("second"); // newest request wins, not the late one
+    expect(hub.isLoading.value).toBe(false);
+  });
+
   it("does not let a superseded load error surface under the newer Project", async () => {
     const hub = useInstrumentProject();
     const a = deferred<DesignStateResponse>();
@@ -184,6 +204,29 @@ describe("SPINE-005 single-flight explicit commits", () => {
     expect(hub.isSaving.value).toBe(false);
   });
 
+  it("clears the saving indicator when a same-id reload supersedes an in-flight save", async () => {
+    // Regression: the completing save must clear _isSaving even when its response is
+    // discarded because a same-id loadProject bumped the generation past it.
+    const hub = useInstrumentProject();
+    mockGet.mockResolvedValueOnce(response("A"));
+    await hub.loadProject("A");
+
+    const put = deferred<DesignStateResponse>();
+    mockPut.mockReturnValueOnce(put.promise);
+    const commit = hub.commitSpec(SPEC); // in flight
+    expect(hub.isSaving.value).toBe(true);
+
+    // Same-id reload supersedes the save's generation without quarantining (not a switch).
+    mockGet.mockResolvedValueOnce(response("A"));
+    await hub.loadProject("A");
+
+    put.resolve(response("A", "discarded")); // response is discarded (superseded)
+    await commit;
+
+    expect(hub.isSaving.value).toBe(false); // no stuck "Saving…" indicator
+    expect(hub.saveError.value).toBeNull();
+  });
+
   it("preserves existing commit request shape and target authority", async () => {
     const hub = useInstrumentProject();
     mockGet.mockResolvedValueOnce(response("A"));
@@ -227,6 +270,28 @@ describe("SPINE-005 stale save response isolation", () => {
     expect(hub.lastSavedAt.value).not.toBe("late-A-save");
     expect(hub.isSaving.value).toBe(false);
     expect(hub.saveError.value).toBeNull();
+  });
+
+  it("does not publish an A-commit failure under B after navigation", async () => {
+    // §9: save/load errors remain attributable to the correct Project operation.
+    const hub = useInstrumentProject();
+    mockGet.mockResolvedValueOnce(response("A"));
+    await hub.loadProject("A");
+
+    const put = deferred<DesignStateResponse>();
+    mockPut.mockReturnValueOnce(put.promise);
+    const commitA = hub.commitSpec(SPEC); // targets A, in flight
+
+    mockGet.mockResolvedValueOnce(response("B"));
+    await hub.loadProject("B");
+    expect(hub.projectId.value).toBe("B");
+
+    put.reject(new Error("A save failed late"));
+    await expect(commitA).resolves.toBe(false);
+
+    expect(hub.saveError.value).toBeNull(); // A's error is not shown under B
+    expect(hub.isSaving.value).toBe(false);
+    expect(hub.projectName.value).toBe("name-B");
   });
 
   it("lets a fresh commit succeed on B after a superseded A save settles", async () => {
