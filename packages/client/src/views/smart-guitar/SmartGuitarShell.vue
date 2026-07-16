@@ -58,10 +58,10 @@ function setTab(id: TabId) {
       >
         <div class="panel-content link-card">
           <p class="panel-text">
-            Start from Instrument Hub with Smart Guitar model selected.
+            Start from Instrument Geometry with Smart Guitar model selected.
           </p>
           <RouterLink to="/instrument-hub" class="action-btn">
-            Open Instrument Hub →
+            Open Instrument Geometry →
           </RouterLink>
         </div>
 

@@ -45,7 +45,7 @@
               <template v-if="domain.links.length">
                 <RouterLink
                   v-for="link in domain.links"
-                  :key="link.to"
+                  :key="typeof link.to === 'string' ? link.to : link.label"
                   :to="link.to"
                   class="dropdown-link"
                   @click="closeAllMenus"
@@ -224,8 +224,29 @@ const assistantTo = computed(() => {
 
 const activeMenu = ref<string | null>(null)
 
+// SPINE-005: the Design-module Instrument Hub link is Project-addressed only when the
+// route query explicitly names a Project. There is no implicit fallback to the
+// useInstrumentProject singleton — a Project identity must be present in the URL. When
+// absent, the link stays on the unchanged legacy Instrument Geometry route, and the
+// label follows the destination so one label never names two different workflows.
+const instrumentHubLink = computed(() => {
+  const q = route.query.project_id
+  const projectId =
+    typeof q === 'string' && q
+      ? q
+      : Array.isArray(q) && q[0]
+        ? String(q[0])
+        : ''
+  return projectId
+    ? {
+        to: { name: 'InstrumentHub' as const, params: { projectId } },
+        label: 'Instrument Hub',
+      }
+    : { to: '/instrument-geometry', label: 'Instrument Geometry' }
+})
+
 // Nav reorganized into 5 modules (routes unchanged)
-const domains = [
+const domains = computed(() => [
   // MODULE 1 — DESIGN
   {
     id: 'design',
@@ -234,7 +255,7 @@ const domains = [
     description: 'New project, instrument hub, blueprint lab',
     links: [
       { icon: '📁', label: 'New Project',     to: '/design-hub' },
-      { icon: '🎸', label: 'Instrument Hub',   to: '/instrument-geometry' },
+      { icon: '🎸', label: instrumentHubLink.value.label, to: instrumentHubLink.value.to },
       { icon: '📋', label: 'Blueprint Lab',    to: '/blueprint' },
     ],
   },
@@ -290,7 +311,7 @@ const domains = [
       { icon: '🎸', label: 'Smart Guitar', to: '/smart-guitar' },
     ],
   },
-]
+])
 
 function openMenu(id: string) {
   activeMenu.value = id
