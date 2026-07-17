@@ -17,12 +17,9 @@ from typing import Any, List, Optional, Tuple
 
 from app.governance.authority_state import AuthorityState
 
-from .cbsp21_patch_adapter import (
-    CBSP21PacketError,
-    validate_behavior_change_articulation,
-    validate_cbsp21_patch_packet,
-)
+from .cbsp21_patch_adapter import CBSP21PacketError, validate_cbsp21_patch_packet
 from .execution_planner import SUPPORTED_RISK_LEVELS
+from .proposal_check_governance_helpers import behavior_change_finding, declared_risk_finding
 from .repository_change_proposal import (
     PROPOSAL_CONSTITUTIONAL_CLASSIFICATION,
     RepositoryChangeProposal,
@@ -229,39 +226,10 @@ def governance_findings(proposal: RepositoryChangeProposal) -> Tuple[EvaluationF
         add("governance.cbsp21_packet_valid", FINDING_STATUS_PASS, "CBSP21 packet validates")
 
     # Reuses PR-E's supported set so the two layers can never disagree about a classifiable risk.
-    if not packet_readable:
-        add(
-            "governance.declared_risk_supported",
-            FINDING_STATUS_FAIL,
-            "cbsp21_packet is not readable, so declared risk_level cannot be read",
-        )
-    else:
-        declared_risk = str(packet.get("risk_level", "")).strip().lower()
-        add(
-            "governance.declared_risk_supported",
-            FINDING_STATUS_PASS if declared_risk in SUPPORTED_RISK_LEVELS else FINDING_STATUS_FAIL,
-            f"declared risk_level={packet.get('risk_level')!r}; "
-            f"supported={list(SUPPORTED_RISK_LEVELS)}",
-        )
+    out.append(declared_risk_finding(packet, packet_readable))
 
     # Delegates to the single extracted articulation rule rather than restating the threshold.
-    if not packet_readable:
-        add(
-            "governance.behavior_change_articulated",
-            FINDING_STATUS_NOT_APPLICABLE,
-            "cbsp21_packet is not readable, so the articulation rule cannot be evaluated",
-        )
-    else:
-        try:
-            validate_behavior_change_articulation(packet)
-        except CBSP21PacketError as exc:
-            add("governance.behavior_change_articulated", FINDING_STATUS_FAIL, str(exc))
-        else:
-            add(
-                "governance.behavior_change_articulated",
-                FINDING_STATUS_PASS,
-                f"behavior_change={packet.get('behavior_change')!r} is articulated per the CBSP21 rule",
-            )
+    out.append(behavior_change_finding(packet, packet_readable))
 
     # Reuses the proposal builder's containment semantics so the boundary is read identically here.
     authorized = tuple(_as_tuple(proposal.target.authorized_target_paths))
