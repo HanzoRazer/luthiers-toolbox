@@ -59,6 +59,18 @@ const _saveError = ref<string | null>(null)
 const _lastSavedAt = ref<string | null>(null)
 const _isDirty = ref(false)   // local edits not yet committed
 
+// SPINE-005 concurrency control (non-reactive, private to this module).
+// `_loadGen` is a monotonic counter: every loadProject() and clearProject() bumps it,
+// and any load may write shared state only while its captured generation is still the
+// latest. This makes a superseded load a silent no-op — it can never publish another
+// Project's data, error, or loading flag (latest-request-wins).
+let _loadGen = 0
+// `_saveInFlight` is the request-lifecycle single-flight guard for explicit commits. It
+// is deliberately NOT a ref and NOT reset by loads, so no two commit requests are ever
+// in flight in the same session, even across a Project switch. The reactive `_isSaving`
+// flag above is the *display* signal and tracks only the active Project.
+let _saveInFlight = false
+
 // ---------------------------------------------------------------------------
 // Public composable
 // ---------------------------------------------------------------------------
@@ -107,23 +119,43 @@ export function useInstrumentProject() {
   /**
    * Load a project's design state from the server.
    * Call on mount or when the active project changes.
+   *
+   * Latest-request-wins: concurrent or rapid loads (e.g. route A -> B) are serialized by
+   * generation, not dropped. Only the newest request may write shared state; an older
+   * request that resolves later is discarded without touching any flag. Switching to a
+   * different Project quarantines the prior visible state first, so a failed load never
+   * leaves the previous Project renderable under the new Project's identity.
    */
   async function loadProject(id: string): Promise<void> {
-    if (_isLoading.value) return
+    const gen = ++_loadGen
+    const switchingProject = _projectId.value !== id
+
+    // The requested identity becomes active immediately (latest-request-wins for observers).
+    _projectId.value = id
+    if (switchingProject) {
+      // Quarantine the previous Project so it cannot render under the new identity.
+      _projectName.value = ''
+      _state.value = null
+      _isDirty.value = false
+      _saveError.value = null
+      _lastSavedAt.value = null
+      _isSaving.value = false   // display only; the in-flight save's own guard still holds
+    }
     _isLoading.value = true
     _loadError.value = null
 
     try {
       const response = await getDesignState(id)
-      _projectId.value = id
+      if (gen !== _loadGen) return   // superseded by a newer load — discard silently
       _projectName.value = response.name
       _state.value = response.design_state
       _isDirty.value = false
       _lastSavedAt.value = response.updated_at
     } catch (err) {
+      if (gen !== _loadGen) return   // superseded — do not publish this error under another Project
       _loadError.value = err instanceof Error ? err.message : 'Failed to load project'
     } finally {
-      _isLoading.value = false
+      if (gen === _loadGen) _isLoading.value = false
     }
   }
 
@@ -132,10 +164,14 @@ export function useInstrumentProject() {
    * Call when navigating away from instrument context.
    */
   function clearProject(): void {
+    // Bump the load generation so any in-flight load cannot repopulate state after clear.
+    _loadGen++
     _projectId.value = null
     _projectName.value = ''
     _state.value = null
     _isDirty.value = false
+    _isLoading.value = false
+    _isSaving.value = false
     _loadError.value = null
     _saveError.value = null
     _lastSavedAt.value = null
@@ -155,21 +191,46 @@ export function useInstrumentProject() {
       _saveError.value = 'No active project to commit to.'
       return false
     }
+    // Single-flight: a second explicit commit while one is pending issues no request,
+    // returns false, and leaves the caller's draft and the active save's metadata intact.
+    if (_saveInFlight) return false
+
+    // Capture the Project this write targets and the load generation at submit time.
+    // The server write always stands; we only refuse to apply its response to client
+    // state if the active Project has since changed (navigation A -> B mid-save).
+    const targetId = _projectId.value
+    const genAtSave = _loadGen
+
+    _saveInFlight = true
     _isSaving.value = true
     _saveError.value = null
 
     try {
       const merged: InstrumentProjectData = { ..._state.value, ...patch }
-      const response = await putDesignState(_projectId.value, merged, message)
-      _state.value = response.design_state
-      _isDirty.value = false
-      _lastSavedAt.value = response.updated_at
+      const response = await putDesignState(targetId, merged, message)
+      if (_projectId.value === targetId && genAtSave === _loadGen) {
+        _state.value = response.design_state
+        _isDirty.value = false
+        _lastSavedAt.value = response.updated_at
+      }
+      // The commit succeeded on the server regardless of the current active Project.
       return true
     } catch (err) {
-      _saveError.value = err instanceof Error ? err.message : 'Save failed'
+      if (_projectId.value === targetId && genAtSave === _loadGen) {
+        _saveError.value = err instanceof Error ? err.message : 'Save failed'
+      }
       return false
     } finally {
+      // Single-flight guarantees exactly one save owns _isSaving at a time, so the
+      // completing save always clears the display flag here — even when its response was
+      // discarded for a superseded Project (otherwise the "Saving…" indicator could stick
+      // true after a same-id reload superseded the save). A newer save cannot have started
+      // yet, since its guard is released on the next line, so this never clears another
+      // save's indicator.
       _isSaving.value = false
+      // Always release the request-lifecycle guard, even when the response was discarded
+      // for a superseded Project — otherwise no future save could ever start.
+      _saveInFlight = false
     }
   }
 

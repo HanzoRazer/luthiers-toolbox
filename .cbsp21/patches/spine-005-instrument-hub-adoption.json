@@ -1,0 +1,120 @@
+{
+  "schema": "cbsp21_patch_input_v1",
+  "schema_version": "cbsp21_patch_input_v1",
+  "coverage_min": 0.95,
+  "patch_id": "SPINE_005_INSTRUMENT_HUB_ADOPTION",
+  "title": "SPINE-005: activate the existing Project-backed Instrument Hub at /instrument-hub/:projectId (ADR-002)",
+  "intent": "Activate the existing, already-built InstrumentHubShell as the first live, explicitly Project-scoped frontend entry point for the Instrument Project Graph, per LAB-023 evidence (revalidated against origin/main: the /instrument-hub alias, the Hub's broken ./shared-state imports, and the load-drop/stale-state hazards in useInstrumentProject all still held). Register /instrument-hub/:projectId named `InstrumentHub` (props: true) rendering the existing Hub; remove the /instrument-hub alias from the InstrumentGeometry route and replace it with a bare /instrument-hub redirect to /instrument-geometry that forwards query and hash verbatim and never infers Project identity; leave /instrument-geometry behaviorally unchanged. Correct the Hub's two ./shared-state imports to ../shared-state so the existing component compiles (this also resolved two downstream type errors on the instrument-type selector). Make the useInstrumentProject module singleton safe for route-driven Project changes without a new abstraction: latest-request-wins loading via a monotonic generation, quarantine of prior visible state on a Project switch, generation-gated success/error/finally mutations, single-flight explicit commits (a second commit returns false and issues no request), and capture-and-gate of each commit's target Project so an A-save resolving after navigation to B cannot replace B's state or metadata. Add one Project-aware navigation path (AppDashboardView Instrument Hub link uses the named route only when route.query.project_id explicitly names a Project, else stays on legacy Instrument Geometry, with a label that follows the destination and no singleton fallback) and correct the one known bare-route caller's copy (SmartGuitarShell, copy-only; the bare link still routes through the approved redirect). Preserve existing explicit Apply-to-Project commits; add no automatic writes, no new store/loader/write path, no Project-selection UI, no backend or schema change, and no downstream neck/nut/body/CAM/RMOS migration.",
+  "change_type": "routing-integration",
+  "behavior_change": "user-visible-routing-only",
+  "risk_level": "medium",
+  "scope": {
+    "paths_in_scope": [
+      ".cbsp21/patches/spine-005-instrument-hub-adoption.json",
+      "packages/client/src/router/index.ts",
+      "packages/client/src/router/index.spec.ts",
+      "packages/client/src/instrument-workspace/hub/InstrumentHubShell.vue",
+      "packages/client/src/instrument-workspace/hub/InstrumentHubShell.spec.ts",
+      "packages/client/src/instrument-workspace/shared-state/useInstrumentProject.ts",
+      "packages/client/src/instrument-workspace/shared-state/useInstrumentProject.spec.ts",
+      "packages/client/src/views/AppDashboardView.vue",
+      "packages/client/src/views/AppDashboardView.spec.ts",
+      "packages/client/src/views/smart-guitar/SmartGuitarShell.vue",
+      "docs/audit/SPINE_005_INSTRUMENT_HUB_ADOPTION.md"
+    ],
+    "files_expected_to_change": [
+      "packages/client/src/router/index.ts",
+      "packages/client/src/router/index.spec.ts",
+      "packages/client/src/instrument-workspace/hub/InstrumentHubShell.vue",
+      "packages/client/src/instrument-workspace/hub/InstrumentHubShell.spec.ts",
+      "packages/client/src/instrument-workspace/shared-state/useInstrumentProject.ts",
+      "packages/client/src/instrument-workspace/shared-state/useInstrumentProject.spec.ts",
+      "packages/client/src/views/AppDashboardView.vue",
+      "packages/client/src/views/AppDashboardView.spec.ts",
+      "packages/client/src/views/smart-guitar/SmartGuitarShell.vue",
+      "docs/audit/SPINE_005_INSTRUMENT_HUB_ADOPTION.md"
+    ]
+  },
+  "diff_articulation": {
+    "what_changed": "(1) packages/client/src/router/index.ts: remove `alias: \"/instrument-hub\"` from the InstrumentGeometry route (path/name/component otherwise unchanged); add a bare `/instrument-hub` route whose redirect returns { path: \"/instrument-geometry\", query: to.query, hash: to.hash } (compatibility fallback, never reads project_id as identity); add `/instrument-hub/:projectId` named `InstrumentHub` lazy-loading the existing InstrumentHubShell with props: true; export the `routes` array so tests can build a memory-history router without the auth guard (behavior-neutral). (2) packages/client/src/instrument-workspace/hub/InstrumentHubShell.vue: correct the two imports `./shared-state/useInstrumentProject` and `./shared-state/project-types` to `../shared-state/...` (the shared-state directory is a sibling of hub/). No template, prop, commit, stage, or feature change; the existing required `projectId: string` prop, onMounted load, props.projectId reload watcher, and explicit Apply-to-Project handlers are untouched. (3) packages/client/src/instrument-workspace/shared-state/useInstrumentProject.ts: add a private non-reactive monotonic `_loadGen` and a private non-reactive `_saveInFlight` guard; rewrite loadProject to latest-request-wins (capture gen, quarantine prior visible state on a Project switch, gate every post-await mutation and the finally on gen === _loadGen); rewrite _commit to single-flight (refuse a second in-flight commit with return false, no request, draft preserved) and capture the target projectId + gen so the server write always stands but its response is applied to client state only while that Project is still active; clearProject bumps _loadGen so an in-flight load cannot repopulate after clear. All public exports, method signatures, and write authority preserved. (4) packages/client/src/views/AppDashboardView.vue: add an `instrumentHubLink` computed derived only from route.query.project_id (no useInstrumentProject fallback) that yields { name: 'InstrumentHub', params: { projectId } } + label 'Instrument Hub' when a Project is named, else { to: '/instrument-geometry', label: 'Instrument Geometry' }; make `domains` a computed so only this link reacts; key the dropdown links by `typeof link.to === 'string' ? link.to : link.label`. AI Assistant navigation untouched. (5) packages/client/src/views/smart-guitar/SmartGuitarShell.vue: copy-only — 'Start from Instrument Hub' -> 'Start from Instrument Geometry' and 'Open Instrument Hub' -> 'Open Instrument Geometry'; the `to=\"/instrument-hub\"` bare link (approved redirect) is preserved. (6-9) colocated Vitest specs: router (canonical route, explicit projectId prop, named build, required-param rejection, bare redirect with query/hash preservation, project_id-is-not-identity, unchanged legacy route), composable (both A->B response orders, failed-B isolation, superseded-error suppression, single-flight refusal, cross-Project save isolation, commit request shape, interface stability, clearProject determinism), Hub (mount loads the supplied id, prop A->B reload, controlled error with no stale content, retry binds to current prop, no auto-commit, explicit Apply delegates to the composable), and dashboard navigation (named route from explicit query, legacy fallback for absent/empty query, no singleton fallback, truthful labels). (10) docs/audit/SPINE_005_INSTRUMENT_HUB_ADOPTION.md: the delivered-behavior audit.",
+    "why_not_redundant": "InstrumentHubShell and useInstrumentProject already exist but no live route rendered the Hub or called loadProject; the /instrument-hub alias pointed the canonical name at the legacy store-backed Instrument Geometry surface, and the Hub's shared-state imports did not resolve from its directory so it could not compile. This patch closes that wiring gap and the activation-blocking compile defect, and hardens the now route-driven singleton against Project-change races, without adding a second Project store, loader, or write path and without expanding write authority or migrating any legacy geometry/CAM/RMOS store."
+  },
+  "verification": {
+    "commands_run": [
+      "cd packages/client && npx vitest run src/router/index.spec.ts src/instrument-workspace/hub/InstrumentHubShell.spec.ts src/instrument-workspace/shared-state/useInstrumentProject.spec.ts src/views/AppDashboardView.spec.ts -> PASS (41 focused tests; +4 added by the SPINE-005R risk-closure pass for §5.1/§4.1/§4.4/§5.4)",
+      "cd packages/client && npx vitest run -> full frontend suite 756 passed, 17 todo, 1 file skipped, 0 failed (42 files) after the risk-closure pass",
+      "cd packages/client && npx vue-tsc --noEmit -> 150 pre-existing errors, 0 introduced by SPINE-005 (baseline 154; the 4 resolved are the Hub's own import/type errors) (recorded at commit)",
+      "cd packages/client && npx vite build -> PASS (recorded at commit)",
+      "py -3.11 scripts/ci/check_cbsp21_patch_input.py --base origin/main --head HEAD --manifest .cbsp21/patches/spine-005-instrument-hub-adoption.json -> (recorded at commit)",
+      "py -3.11 scripts/ci/check_cbsp21_gate.py --manifest .cbsp21/patches/spine-005-instrument-hub-adoption.json --changed-files <origin/main...HEAD file set> -> (recorded at commit)"
+    ]
+  },
+  "files": [
+    {
+      "path": "packages/client/src/router/index.ts",
+      "intent": "Remove the /instrument-hub alias; add the bare redirect and the named /instrument-hub/:projectId route to the existing Hub (props: true); export routes for tests. /instrument-geometry unchanged.",
+      "risk": "medium",
+      "behavior_change": "user-visible-routing-only (one new Project route, one compatibility redirect; legacy route preserved)"
+    },
+    {
+      "path": "packages/client/src/router/index.spec.ts",
+      "intent": "Colocated router contract tests for the canonical route, redirect, and unchanged legacy route.",
+      "risk": "low",
+      "behavior_change": "none (tests)"
+    },
+    {
+      "path": "packages/client/src/instrument-workspace/hub/InstrumentHubShell.vue",
+      "intent": "Correct the two shared-state import paths so the existing Hub compiles. No behavior or feature change.",
+      "risk": "low",
+      "behavior_change": "none (import path fix; enables activation)"
+    },
+    {
+      "path": "packages/client/src/instrument-workspace/hub/InstrumentHubShell.spec.ts",
+      "intent": "Colocated Hub activation tests: explicit-id load, prop reload, controlled error, retry, no auto-write, explicit commit delegation.",
+      "risk": "low",
+      "behavior_change": "none (tests)"
+    },
+    {
+      "path": "packages/client/src/instrument-workspace/shared-state/useInstrumentProject.ts",
+      "intent": "Latest-request-wins loading, stale load/save response isolation, and single-flight commits for the route-driven singleton. Public interface and write authority preserved; no new store or write path.",
+      "risk": "medium",
+      "behavior_change": "internal concurrency hardening; existing public methods and explicit commit authority unchanged"
+    },
+    {
+      "path": "packages/client/src/instrument-workspace/shared-state/useInstrumentProject.spec.ts",
+      "intent": "Colocated concurrency tests asserting public state and API call shape only.",
+      "risk": "low",
+      "behavior_change": "none (tests)"
+    },
+    {
+      "path": "packages/client/src/views/AppDashboardView.vue",
+      "intent": "One Project-aware Instrument Hub link driven only by route.query.project_id, with truthful labels and no singleton fallback. AI Assistant link unchanged.",
+      "risk": "low",
+      "behavior_change": "user-visible-routing-only (one dashboard link destination/label becomes Project-addressed when a Project is in the query)"
+    },
+    {
+      "path": "packages/client/src/views/AppDashboardView.spec.ts",
+      "intent": "Colocated navigation tests for the Project route, legacy fallback, no singleton fallback, and truthful labels.",
+      "risk": "low",
+      "behavior_change": "none (tests)"
+    },
+    {
+      "path": "packages/client/src/views/smart-guitar/SmartGuitarShell.vue",
+      "intent": "Copy-only correction so the bare-route link truthfully names Instrument Geometry; the approved redirect target is preserved.",
+      "risk": "low",
+      "behavior_change": "copy-only (link text; route target unchanged)"
+    },
+    {
+      "path": "docs/audit/SPINE_005_INSTRUMENT_HUB_ADOPTION.md",
+      "intent": "Audit of delivered behavior: route topology, Project identity flow, mutation boundary, compatibility, tests, limitations, deferred migrations.",
+      "risk": "low",
+      "behavior_change": "none (documentation)"
+    }
+  ],
+  "no_backend_no_schema": "No backend API, route, Project schema, or persistence change. All changes are under packages/client/src plus docs and this manifest. No new frontend Project store, loader, or write path; no automatic Project writes; no downstream neck/nut/body/CAM/RMOS migration.",
+  "owner_approval": {
+    "reviewed_by": "",
+    "approved_by": "",
+    "approved_at": ""
+  }
+}
