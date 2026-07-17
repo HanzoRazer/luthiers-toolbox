@@ -844,31 +844,34 @@ def test_evaluator_modules_perform_no_git_filesystem_github_or_network_operation
 
 
 def test_evaluator_does_not_attach_to_the_pipeline_or_the_planner():
-    """PR F is a separate downstream consumer: it must not modify or wrap the upstream stages."""
+    """PR F is a separate downstream consumer: it must not modify or wrap the upstream stages.
+
+    The evaluation layer is two files — ``proposal_evaluator.py`` (orchestration + public API) and
+    ``proposal_checks.py`` (the 25 check builders) — so the invariant is asserted over BOTH: neither
+    may import the pipeline/review-bundle or any plan/pipeline BUILDER, or call one.
+    """
     import ast
     from pathlib import Path
 
-    src = (Path(ibg_repo.__file__).parent / "proposal_evaluator.py").read_text(encoding="utf-8")
-    tree = ast.parse(src)
-
+    layer = Path(ibg_repo.__file__).parent
     imported_names: set[str] = set()
-    for node in ast.walk(tree):
-        if isinstance(node, ast.ImportFrom) and node.module:
-            assert "repository_proposal_pipeline" not in node.module
-            assert "repository_review_bundle" not in node.module
-            imported_names.update(alias.name for alias in node.names)
+    called: set[str] = set()
+    for module_file in ("proposal_evaluator.py", "proposal_checks.py"):
+        tree = ast.parse((layer / module_file).read_text(encoding="utf-8"))
+        for node in ast.walk(tree):
+            if isinstance(node, ast.ImportFrom) and node.module:
+                assert "repository_proposal_pipeline" not in node.module, module_file
+                assert "repository_review_bundle" not in node.module, module_file
+                imported_names.update(alias.name for alias in node.names)
+            elif isinstance(node, ast.Call) and isinstance(node.func, ast.Name):
+                called.add(node.func.id)
 
-    # It reuses the planner's supported-risk set, but imports no plan/pipeline BUILDER...
+    # The layer reuses the planner's supported-risk set, but imports no plan/pipeline BUILDER...
     assert "SUPPORTED_RISK_LEVELS" in imported_names
     for builder in ("build_execution_plan", "ExecutionPlanner", "run_repository_proposal_pipeline"):
-        assert builder not in imported_names, f"evaluator must not import {builder}"
+        assert builder not in imported_names, f"evaluation layer must not import {builder}"
 
-    # ...and calls none of them anywhere in its body (AST-precise: prose in a docstring is not a call).
-    called = {
-        node.func.id
-        for node in ast.walk(tree)
-        if isinstance(node, ast.Call) and isinstance(node.func, ast.Name)
-    }
+    # ...and calls none of them anywhere (AST-precise: prose in a docstring is not a call).
     assert not called & {"build_execution_plan", "ExecutionPlanner", "build_review_bundle"}
 
 

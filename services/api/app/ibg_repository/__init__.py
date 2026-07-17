@@ -150,8 +150,8 @@ from .repository_proposal_evaluation import (
     sort_findings,
     summarize_findings,
 )
+from .proposal_checks import GOVERNED_PROVENANCE_FIELDS
 from .proposal_evaluator import (
-    GOVERNED_PROVENANCE_FIELDS,
     ProposalEvaluator,
     evaluate_execution_plan,
     evaluate_repository_proposal,
