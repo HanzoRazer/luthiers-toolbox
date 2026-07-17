@@ -37,6 +37,10 @@ REQUIRED_FIELDS: Tuple[str, ...] = (
     "verification.commands_run",
 )
 
+# The gate's articulation threshold: when behavior_change != "none", why_not_redundant must be at
+# least this long. Named so a consumer can reuse the rule instead of duplicating the literal.
+WHY_NOT_REDUNDANT_MIN_CHARS = 20
+
 
 class CBSP21PacketError(Exception):
     """Raised when a CBSP21 patch packet is malformed or fails validation."""
@@ -113,13 +117,35 @@ def build_cbsp21_patch_packet(
     return packet
 
 
+def validate_behavior_change_articulation(packet: Dict[str, Any]) -> None:
+    """
+    Validate the gate's behavior-change articulation rule in isolation.
+
+    The rule: if ``behavior_change`` is not ``"none"`` then ``diff_articulation.why_not_redundant``
+    must be at least ``WHY_NOT_REDUNDANT_MIN_CHARS`` characters. Raises ``CBSP21PacketError``.
+
+    Extracted as its own entry point (and called by ``validate_cbsp21_patch_packet``, which remains
+    the whole-packet authority) so a consumer that must report this single rule as a discrete result
+    can reuse it rather than re-implementing the threshold. One rule, one implementation.
+    """
+    behavior_change = str(_get(packet, "behavior_change") or "").strip().lower()
+    why_not = str(_get(packet, "diff_articulation.why_not_redundant") or "").strip()
+    if behavior_change != "none" and len(why_not) < WHY_NOT_REDUNDANT_MIN_CHARS:
+        raise CBSP21PacketError(
+            "behavior_change is not 'none' but diff_articulation.why_not_redundant "
+            f"is too short (need >= {WHY_NOT_REDUNDANT_MIN_CHARS} chars)"
+        )
+
+
 def validate_cbsp21_patch_packet(packet: Dict[str, Any]) -> None:
     """
     Validate a packet against the gate's required-field contract.
 
     Mirrors ``scripts/ci/check_cbsp21_patch_input.py``: required fields present and non-empty,
     and if ``behavior_change`` is not ``"none"`` then ``diff_articulation.why_not_redundant``
-    must be at least 20 characters. Raises ``CBSP21PacketError`` on any violation.
+    must be at least ``WHY_NOT_REDUNDANT_MIN_CHARS`` characters — the single articulation rule,
+    delegated to ``validate_behavior_change_articulation`` rather than restated here. Raises
+    ``CBSP21PacketError`` on any violation.
     """
     if not isinstance(packet, dict):
         raise CBSP21PacketError("packet must be a dict")
@@ -131,13 +157,7 @@ def validate_cbsp21_patch_packet(packet: Dict[str, Any]) -> None:
             or (isinstance(value, list) and len(value) == 0)
         ):
             raise CBSP21PacketError(f"missing/empty required field: {key}")
-    behavior_change = str(_get(packet, "behavior_change") or "").strip().lower()
-    why_not = str(_get(packet, "diff_articulation.why_not_redundant") or "").strip()
-    if behavior_change != "none" and len(why_not) < 20:
-        raise CBSP21PacketError(
-            "behavior_change is not 'none' but diff_articulation.why_not_redundant "
-            "is too short (need >= 20 chars)"
-        )
+    validate_behavior_change_articulation(packet)
 
 
 def canonical_packet_json(packet: Dict[str, Any]) -> str:

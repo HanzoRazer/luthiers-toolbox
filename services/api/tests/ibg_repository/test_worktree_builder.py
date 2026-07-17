@@ -15,7 +15,7 @@ from app.ibg_repository import (
     derive_workspace_id,
 )
 
-from fake_git_runner import FakeGitRunner
+from .fake_git_runner import FakeGitRunner
 
 
 @pytest.fixture

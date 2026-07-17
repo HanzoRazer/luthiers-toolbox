@@ -15,8 +15,10 @@ from app.instrument_geometry.body.ibg.body_evidence_candidate import (
 )
 from app.ibg_repository import (
     build_cbsp21_patch_packet,
+    build_execution_plan,
     build_proposal_target_binding,
     build_repository_change_proposal,
+    evaluate_repository_proposal,
 )
 
 
@@ -76,6 +78,35 @@ def make_proposal(make_candidate, make_packet):
             target=binding,
             cbsp21_packet=make_packet(files=files),
             proposed_branch=proposed_branch,
+        )
+
+    return _make
+
+
+@pytest.fixture
+def make_plan(make_proposal):
+    """Build a real, governed RepositoryExecutionPlan from a real proposal (PR E + F tests)."""
+
+    def _make(**kwargs):
+        return build_execution_plan(make_proposal(**kwargs))
+
+    return _make
+
+
+@pytest.fixture
+def evaluation_of(make_proposal):
+    """Build a real, governed RepositoryProposalEvaluation from a real proposal + plan (PR F tests).
+
+    Pass an explicit ``proposal`` to evaluate the SAME artifact more than once: each ``make_proposal``
+    call mints a fresh evidence candidate, so two default calls describe two different proposals and
+    are legitimately expected to differ.
+    """
+
+    def _make(proposal=None, created_at=None, **kwargs):
+        if proposal is None:
+            proposal = make_proposal(**kwargs)
+        return evaluate_repository_proposal(
+            proposal, build_execution_plan(proposal), created_at=created_at
         )
 
     return _make

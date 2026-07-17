@@ -27,7 +27,9 @@ from .cbsp21_patch_adapter import (
     REQUIRED_FIELDS,
     CBSP21PacketError,
     CBSP21PatchPacketAdapter,
+    WHY_NOT_REDUNDANT_MIN_CHARS,
     build_cbsp21_patch_packet,
+    validate_behavior_change_articulation,
     validate_cbsp21_patch_packet,
     canonical_packet_json,
     compute_packet_hash,
@@ -133,6 +135,29 @@ from .execution_planner import (
     execution_plan_builder,
     validate_execution_plan,
 )
+# --- PR F: observational repository proposal evaluation (downstream of the proposal + plan) ---
+from .repository_proposal_evaluation import (
+    EVALUATION_CONSTITUTIONAL_CLASSIFICATION,
+    FINDING_CATEGORIES,
+    FINDING_STATUSES,
+    READINESS_COMPLETE,
+    READINESS_INCOMPLETE,
+    READINESS_SUMMARIES,
+    EvaluationFinding,
+    ProposalEvaluationError,
+    RepositoryProposalEvaluation,
+    compute_completeness_score,
+    sort_findings,
+    summarize_findings,
+)
+from .proposal_checks import GOVERNED_PROVENANCE_FIELDS
+from .proposal_evaluator import (
+    ProposalEvaluator,
+    evaluate_execution_plan,
+    evaluate_repository_proposal,
+    proposal_evaluator,
+    validate_repository_proposal_evaluation,
+)
 
 __all__ = [
     "ProposalTargetBinding",
@@ -146,6 +171,8 @@ __all__ = [
     "CBSP21PacketError",
     "CBSP21PatchPacketAdapter",
     "build_cbsp21_patch_packet",
+    "WHY_NOT_REDUNDANT_MIN_CHARS",
+    "validate_behavior_change_articulation",
     "validate_cbsp21_patch_packet",
     "canonical_packet_json",
     "compute_packet_hash",
@@ -225,4 +252,23 @@ __all__ = [
     "build_execution_plan",
     "execution_plan_builder",
     "validate_execution_plan",
+    # --- PR F: observational repository proposal evaluation ---
+    "EVALUATION_CONSTITUTIONAL_CLASSIFICATION",
+    "FINDING_CATEGORIES",
+    "FINDING_STATUSES",
+    "READINESS_COMPLETE",
+    "READINESS_INCOMPLETE",
+    "READINESS_SUMMARIES",
+    "EvaluationFinding",
+    "ProposalEvaluationError",
+    "RepositoryProposalEvaluation",
+    "compute_completeness_score",
+    "sort_findings",
+    "summarize_findings",
+    "GOVERNED_PROVENANCE_FIELDS",
+    "ProposalEvaluator",
+    "evaluate_execution_plan",
+    "evaluate_repository_proposal",
+    "proposal_evaluator",
+    "validate_repository_proposal_evaluation",
 ]
