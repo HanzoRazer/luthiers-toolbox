@@ -17,7 +17,7 @@ from app.ibg_repository import (
     verify_repository_root,
 )
 
-from fake_git_runner import FakeGitRunner
+from .fake_git_runner import FakeGitRunner
 
 
 @pytest.fixture

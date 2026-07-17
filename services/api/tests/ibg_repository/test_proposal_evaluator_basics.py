@@ -18,7 +18,7 @@ from app.ibg_repository import (
     proposal_evaluator,
     validate_repository_proposal_evaluation,
 )
-from proposal_evaluator_helpers import _finding, _reseal_plan, _status
+from .proposal_evaluator_helpers import _finding, _reseal_plan, _status
 
 # --- happy path ------------------------------------------------------------------------------------
 

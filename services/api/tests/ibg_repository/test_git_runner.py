@@ -29,7 +29,7 @@ from app.ibg_repository.git_runner import (
     _default_command_seam,
 )
 
-from fake_git_runner import FakeGitRunner
+from .fake_git_runner import FakeGitRunner
 
 
 # --- layer 1: fake conforms to the protocol -----------------------------

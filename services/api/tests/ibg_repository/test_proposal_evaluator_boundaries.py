@@ -14,7 +14,7 @@ from app.ibg_repository import (
     evaluate_repository_proposal,
     validate_repository_proposal_evaluation,
 )
-from proposal_evaluator_helpers import (
+from .proposal_evaluator_helpers import (
     FILES,
     _reseal_plan,
     _reseal_proposal,
