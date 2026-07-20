@@ -87,6 +87,13 @@ luthiers-toolbox/
 
 ---
 
+## Maintenance
+
+- **Remediation program (BR-001)**: [docs/remediation/](remediation/README.md) — the current,
+  evidence-backed remediation queue (what production work remains valid and in what order).
+
+---
+
 ## License
 
 Open source under the MIT License.
