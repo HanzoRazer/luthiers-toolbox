@@ -33,3 +33,27 @@
 BR-001 reconstructs and orders; it does not fix. Governance is not expanded. WF-A01 and Investigation
 024 stay parked ([DEFERRED_AND_NONPRODUCTION_WORK.md](DEFERRED_AND_NONPRODUCTION_WORK.md)). All artifacts
 are additive documentation; no production behavior changes.
+
+## Closeout validation (2026-07-20)
+
+Validated against `origin/main` `d716d16`:
+
+- **Links:** all internal remediation links resolve; the `../../workflow-authority` / governance
+  references resolve. (0 broken.)
+- **Identifiers:** 31 distinct backlog IDs `BR-001`..`BR-031`, no collisions.
+- **Vocabulary:** every disposition used is within the approved 13-value set.
+- **Traceability:** every queued item has an adjudication-ledger record; every confirmed defect has a
+  current reproduction basis.
+- **Boundary:** deferred/Lab work (WF-A01, Investigation 024, WF-001) does not appear in the active
+  queue; artifacts contain no feature designs, governance expansion, book extraction, harvesting, or
+  canonical guitar workflow.
+- **Production neutrality:** the BR-001 diff touches **only `docs/`** (12 files, additive) — no code,
+  schema, API, route, or build change. Existing production tests/build/governance checks are therefore
+  unaffected by construction; a full `services/api` pytest re-run vs `d716d16` is the recommended
+  **Wave 0** refresh (not executed this pass, per the targeted-inspection instruction).
+
+**Integrity utility decision:** no `scripts/remediation/check_backlog_integrity.py` was created this
+pass. The ledger is human-readable prose (not a structured data format), so a markdown parser would be
+brittle; the invariants were validated inline instead. A machine validator is **deferred** until/unless
+the ledger moves to a structured format — recorded here per the Dev Order's "document that no new
+utility was required."
