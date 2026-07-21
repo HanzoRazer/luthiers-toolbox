@@ -15,7 +15,7 @@ Not code fixes — the gates that must clear before/around execution.
 
 | Item | Action | Why Wave 0 |
 | ---- | ------ | ---------- |
-| **Current-red re-verification** | run full `services/api` pytest against `d716d16`; reconcile vs the 2026-06-29 triage (~12 reds on older `0daeab14`) | ranking of test-state items (BR-003, BR-013, BR-020) is not fully trustworthy until the live red count on current `main` is known; **not done this pass** |
+| **Current-red re-verification** | ✅ **RUN 2026-07-20** — full `services/api` pytest vs `d716d16`: **21 failed / 8155 passed / 19 xfailed / 1 xpassed**. See [WAVE_0_VERIFICATION.md](WAVE_0_VERIFICATION.md). **Caveat:** local Py3.14 toolchain, not CI's 3.11 — not directly comparable to the triage's ~12; definitive count needs the CI stack. Surfaced **BR-032** (body-solver cluster, 17), **BR-033** (openapi build), **BR-034** (stale xfail). | done (with toolchain caveat) |
 | BR-018 | owner resolves R2000 fork (sanction vs R12-safe) | unblocks all R2000/DXF work |
 | BR-014 | owner merge decision on SPINE-002/003/004 | unblocks the adoption cluster |
 | BR-019 | owner rules whether a user/auth system is in scope | unblocks (or closes) the auth-stub item |
@@ -25,9 +25,11 @@ Not code fixes — the gates that must clear before/around execution.
 | Rank | Item | Disposition | Bound |
 | ---- | ---- | ----------- | ----- |
 | 1 | **BR-001 + BR-002 + BR-004** — saw_lab/rmos store-layer kwarg TypeErrors | CONFIRMED_DEFECT | small (2–3 functions + callers; 3 xfail tests as acceptance) → **the next candidate** |
-| 2 | BR-006 — CAM 8J pocketing reconstruction (source `.py` lost) | UNFINISHED_SPRINT_WORK | data-loss urgency; medium |
-| 3 | BR-003 — simulation metrics router/schema mismatch (8 xfails) | CONFIRMED_DEFECT | small–medium |
-| 4 | BR-013 — wire RMOS workflow `approve` route | UNFINISHED_SPRINT_WORK | small |
+| 2 | **BR-032** — body-solver failure cluster (17 Wave-0 reds) | CONFIRMED_DEFECT | large/unbounded — **first confirm on CI stack + check unmerged 015i/015k branches** before authoring a Dev Order |
+| 3 | BR-006 — CAM 8J pocketing reconstruction (source `.py` lost) | UNFINISHED_SPRINT_WORK | data-loss urgency; medium |
+| 4 | BR-033 — `app.openapi()` build failure / `validate` field shadow | CONFIRMED_DEFECT | small (rename field) — confirm on CI stack |
+| 5 | BR-003 — simulation metrics router/schema mismatch (8 xfails) | CONFIRMED_DEFECT | small–medium |
+| 6 | BR-013 — wire RMOS workflow `approve` route | UNFINISHED_SPRINT_WORK | small |
 
 ## Wave 2 — Contract & topology / migration
 

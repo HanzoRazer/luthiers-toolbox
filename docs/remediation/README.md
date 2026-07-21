@@ -47,10 +47,15 @@ Validated against `origin/main` `d716d16`:
 - **Boundary:** deferred/Lab work (WF-A01, Investigation 024, WF-001) does not appear in the active
   queue; artifacts contain no feature designs, governance expansion, book extraction, harvesting, or
   canonical guitar workflow.
-- **Production neutrality:** the BR-001 diff touches **only `docs/`** (12 files, additive) — no code,
-  schema, API, route, or build change. Existing production tests/build/governance checks are therefore
-  unaffected by construction; a full `services/api` pytest re-run vs `d716d16` is the recommended
-  **Wave 0** refresh (not executed this pass, per the targeted-inspection instruction).
+- **Production neutrality:** the BR-001 diff touches **only `docs/`** (additive) — no code, schema,
+  API, route, or build change. Existing production tests/build/governance checks are therefore
+  unaffected by construction.
+- **Wave 0 baseline (done):** full `services/api` pytest vs `d716d16` ran 2026-07-20 — **21 failed /
+  8155 passed / 19 xfailed / 1 xpassed** — see [WAVE_0_VERIFICATION.md](WAVE_0_VERIFICATION.md).
+  **Toolchain caveat:** local Python 3.14, not CI's 3.11, so the count is directional, not the
+  authoritative CI baseline. Surfaced BR-032 (body-solver cluster), BR-033 (openapi build), BR-034
+  (stale xfail). The next candidate (saw_lab/rmos kwarg fix) is unaffected — those tests are xfailed,
+  not among the 21.
 
 **Integrity utility decision:** no `scripts/remediation/check_backlog_integrity.py` was created this
 pass. The ledger is human-readable prose (not a structured data format), so a markdown parser would be

@@ -79,6 +79,9 @@ this pass). Tier A/B items only are queue-eligible; Tier C is inventoried in agg
 | BR-029 | 52 high-risk formulas awaiting manual verification | calculators | audit `math_formula_catalog_2026-04-30.md` | B | OWNER_DECISION_REQUIRED | doc-validated | med | needs-owner | evidence-integrity; owner verification plan |
 | BR-030 | Instrument model coverage: 24 models, only 2 complete end-to-end | instrument models | audit `instrument_model_coverage_2026-04-26.md` | B | ENHANCEMENT | doc-validated | low | n/a | capability expansion, not defect |
 | BR-031 | Salvage/backup branches (7 `salvage/*` stashes, `backup/*`) | git hygiene | branch inventory | C | STALE_OR_NOT_REPRODUCIBLE | code-inspection | — | n/a | archive; not queue work |
+| BR-032 | Body-solver failure cluster (17 reds: body_solver_integration/morphology_spine/ibg_export + 3 cam feeds/speeds) | body_solver / cam | Wave 0 run; unmerged `fix/ci-red-015{i,k}-*` | A | CONFIRMED_DEFECT | wave0-local-run (CI-stack unconfirmed) | high | needs-CI-confirm | reproduce on CI 3.11; check if 015i/015k resolve; then bound |
+| BR-033 | `app.openapi()` fails to build; field `validate` shadows `BaseModel.validate` | api/schema | Wave 0 `test_openapi.py`; pydantic UserWarnings | A | CONFIRMED_DEFECT | wave0-local-run (toolchain-amplified) | med | needs-CI-confirm | rename shadowing field; confirm openapi builds on CI stack |
+| BR-034 | Stale xfail marker now XPASSes (1) | tests | Wave 0 (1 xpassed) | B | MAINTAINABILITY_DEBT | test-encoded | low | ready | identify + remove the obsolete xfail marker |
 
 ## Verification coverage
 
