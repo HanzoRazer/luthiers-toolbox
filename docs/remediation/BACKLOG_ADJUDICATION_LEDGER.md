@@ -1,7 +1,7 @@
 # BR-001 — Backlog Adjudication Ledger
 
 > The canonical item-level ledger. **No item may appear in the execution queue without a corresponding
-> adjudication record here.** Populated in Commit 3 from the discovery sweep; each record carries its
+> adjudication record here.** Populated from the discovery sweep; each record carries its
 > evidence tier and current verification state so coverage is never overstated.
 
 ## Record schema
@@ -42,9 +42,11 @@ Notes
 
 Adjudicated set from the 2026-07-20 sweep against `origin/main` `d716d16`. **Verification method** is
 recorded per item: `code-inspection` (deterministic grep/read — a valid current reproduction basis per
-charter §4.6), `test-encoded` (a committed xfail/skip test asserts the behavior now), `doc-validated`
-(Tier B — checked against current tree, not run), `pending-live-run` (needs suite execution — not done
-this pass). Tier A/B items only are queue-eligible; Tier C is inventoried in aggregate (see below).
+charter §4 · Disposition discipline), `test-encoded` (a committed xfail/skip test asserts the behavior now), `doc-validated`
+(Tier B — checked against current tree, not run), `wave0-local-run` (surfaced by the Wave 0 pytest on a
+local non-CI toolchain — directional, CI-stack confirmation pending), `pending-CI-run` (needs the
+authoritative CI-stack run). Tier A/B items only are queue-eligible; Tier C is inventoried in aggregate
+(see below).
 
 | BR ID | Title | Subsystem | Source ref | Tier | Disposition | Verify | Sev | Readiness | Recommended action |
 | ----- | ----- | --------- | ---------- | ---- | ----------- | ------ | --- | --------- | ------------------ |
@@ -67,7 +69,7 @@ this pass). Tier A/B items only are queue-eligible; Tier C is inventoried in agg
 | BR-017 | IBG PR #224 readiness-report content stranded off `main` (squash-order race) | ibg_repository | PR #224 `e7e84b4`; branch `feature/ibg-repository-proposal-evaluation` | A | MIGRATION_GAP | code-inspection | med | ready | re-land #224 content to main |
 | BR-018 | DXF consolidator R2000 fallback: sanction vs make R12-safe (unmade fork) | dxf | `docs/handoffs/DEV_ORDER_2026-06-08_DXF_CONSOLIDATOR_R2000_*` (DRAFT) | A | OWNER_DECISION_REQUIRED | doc-validated | med | needs-owner | resolve Option A/B fork before execution |
 | BR-019 | Auth + DB-session are stubs in API deps | api/deps | `app/api/deps/__init__.py:84,100` TODO | A | OWNER_DECISION_REQUIRED | code-inspection | high? | needs-owner | is a user/auth system in scope? safety-adjacent |
-| BR-020 | Standing residual reds #7 (REJECT→authority lock), #12 (zone x-gating) | rmos/geometry | triage doc 2026-06-29 | A | OWNER_DECISION_REQUIRED | pending-live-run | med | needs-owner | product decisions block auto-fix |
+| BR-020 | Standing residual reds #7 (REJECT→authority lock), #12 (zone x-gating) | rmos/geometry | triage doc 2026-06-29 | A | OWNER_DECISION_REQUIRED | pending-CI-run | med | needs-owner | product decisions block auto-fix |
 | BR-021 | CI gates suppressed: `client_lint_build` continue-on-error (400+ TS errors); vue_decomposition non-blocking | ci/client | `.github/workflows/client_lint_build.yml:42`, `vue_decomposition_gate.yml:79` | A | MAINTAINABILITY_DEBT | code-inspection | med | ready | burn down TS errors → re-block gate |
 | BR-022 | SG_SPEC_TOKEN private-repo failures across ~21 workflows (partially guarded) | ci | `docs/ci/CI_HYGIENE_DEBT_PATCH_PLAN.md` (issue #20) | B | MAINTAINABILITY_DEBT | doc-validated | low | ready | complete env-guard rollout |
 | BR-023 | Art-studio UI surfaces wired to non-existent API (Soundhole/Binding "coming soon") | client/art-studio | `SoundholeRosetteShell.vue:94-114`, `BindingDesignerView.vue:53-66` | B | ENHANCEMENT | code-inspection | low | needs-owner | backend never approved — enhancement, not defect |
@@ -85,17 +87,23 @@ this pass). Tier A/B items only are queue-eligible; Tier C is inventoried in agg
 
 ## Verification coverage
 
-- **Tier A items:** 20 (BR-001..007, 010, 012..021). Verified this pass: **code-inspection** — BR-001,
-  002, 015, 017, 019, 021, 024, 031; **test-encoded** — BR-003, 004, 013, 016; **doc-validated** —
-  BR-005, 006, 007, 010, 012, 014, 018; **pending-live-run** — BR-020 (and the full current-red count).
-- **Tier B items:** 11 (BR-008, 009, 011, 022, 023, 025..030). Validated against current tree; not run.
-- **Tier C:** inventoried in aggregate — ~7 `salvage/*` stash branches, `backup/*`, declared-complete
-  handoff clusters (CAM_7x, MRP_5x), and superseded docs. Not individually revalidated; not queue-eligible.
+34 items total: **Tier A 20 · Tier B 13 · Tier C 1**.
+
+- **Tier A items:** 20 (BR-001..007, 010, 012..021, 032, 033). Verified — **code-inspection**: BR-001,
+  002, 015, 017, 019, 021 (also BR-024 Tier B, 031 Tier C by inspection); **test-encoded**: BR-003, 004,
+  013, 016; **doc-validated**: BR-005, 006, 007, 010, 012, 014, 018; **wave0-local-run**: BR-032, 033;
+  **pending-CI-run**: BR-020.
+- **Tier B items:** 13 (BR-008, 009, 011, 022, 023, 024, 025..030, 034). Validated against current tree;
+  not run.
+- **Tier C:** 1 (BR-031), plus the aggregate inventory — ~7 `salvage/*` stash branches, `backup/*`,
+  declared-complete handoff clusters (CAM_7x, MRP_5x), and superseded docs. Not individually revalidated;
+  not queue-eligible.
 - **Owner-decision items:** BR-014, 018, 019, 020, 029 (5).
 - **Not exhaustive:** this is the adjudicated *material* set. The ~166 handoffs / 157 branches / 40
   audits are catalogued in [BACKLOG_SOURCE_INVENTORY.md](BACKLOG_SOURCE_INVENTORY.md); items not
   surfacing a current signal remain Tier C (inventoried, not revalidated) per charter §3.
-- **Pending live run:** a full `services/api` pytest against `d716d16` to reconfirm the current red
-  count (triage reported ~12 on the older `0daeab14`) was **not executed this pass** (verification done
-  by targeted code inspection per owner instruction). Recorded as the one open verification in
-  [REMEDIATION_EXECUTION_QUEUE.md](REMEDIATION_EXECUTION_QUEUE.md) Wave 0.
+- **Wave 0 live run — DONE (2026-07-20):** full `services/api` pytest vs `d716d16` — **21 failed / 8155
+  passed / 19 xfailed / 1 xpassed** on a local Python 3.14 toolchain (**directional, not the authoritative
+  CI count**; triage reported ~12 on the older `0daeab14`). Surfaced BR-032/033/034. Full record +
+  caveat: [WAVE_0_VERIFICATION.md](WAVE_0_VERIFICATION.md). The authoritative **CI-stack (3.11)** run
+  remains the recommended confirmation.

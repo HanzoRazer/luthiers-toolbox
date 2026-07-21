@@ -1,7 +1,7 @@
 # BR-001 — Wave 0 Verification Record
 
 > The current-state test baseline that Wave 0 of the [execution queue](REMEDIATION_EXECUTION_QUEUE.md)
-> called for. Turns the ledger's "pending-live-run" note into a recorded result — **with an explicit
+> called for. Turns the ledger's pending live-run note into a recorded result — **with an explicit
 > toolchain caveat**.
 
 ## Run

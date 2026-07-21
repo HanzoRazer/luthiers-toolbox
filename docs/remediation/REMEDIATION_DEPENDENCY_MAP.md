@@ -15,7 +15,7 @@
 | BR-019 (auth/DB stubs) | **owner scope decision** (is a user/auth system in scope?) | blocked-open |
 | BR-029 (52 high-risk formulas) | **owner verification plan** | blocked-open (evidence-integrity) |
 | BR-007 (CI-RED-020B execution) | verify PR #177 merge-instability resolved | soft prerequisite (reportedly resolved same-day) |
-| Confident ranking of test-state items (BR-003, BR-013, BR-020) | **Wave-0 current-red pytest run** | prerequisite — the live red count on `d716d16` is unverified this pass |
+| Confident ranking of test-state items (BR-003, BR-013, BR-020) | **Wave-0 current-red pytest run** | prerequisite — **run 2026-07-20** (21 failed/8155 passed, local toolchain; see [WAVE_0_VERIFICATION.md](WAVE_0_VERIFICATION.md)). CI-stack (3.11) confirmation still recommended. Does **not** gate the next candidate (BR-001/002/004), whose evidence is self-contained. |
 
 ## Shared root causes
 

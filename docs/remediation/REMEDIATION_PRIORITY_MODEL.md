@@ -1,7 +1,7 @@
 # BR-001 — Remediation Priority Model
 
 > How retained items are ordered. The ranking is **advisory**; owner adjudication remains authoritative.
-> Priority is a function of **consequence and dependency — never issue count or age alone** (charter §4.5).
+> Priority is a function of **consequence and dependency — never issue count or age alone** (charter §4 · Disposition discipline).
 
 ## Inputs (per item, from the [adjudication ledger](BACKLOG_ADJUDICATION_LEDGER.md))
 

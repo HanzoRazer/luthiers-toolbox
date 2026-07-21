@@ -17,7 +17,7 @@
 | [DEFERRED_AND_NONPRODUCTION_WORK.md](DEFERRED_AND_NONPRODUCTION_WORK.md) | parked Lab / research / external work — excluded from the queue |
 | [REMEDIATION_DEPENDENCY_MAP.md](REMEDIATION_DEPENDENCY_MAP.md) | blockers, prerequisites, shared root causes, clusters |
 | [REMEDIATION_PRIORITY_MODEL.md](REMEDIATION_PRIORITY_MODEL.md) | how ordering is derived (advisory; owner adjudicates) |
-| [REMEDIATION_EXECUTION_QUEUE.md](REMEDIATION_EXECUTION_QUEUE.md) | the approved ordering, in evidence-derived waves |
+| [REMEDIATION_EXECUTION_QUEUE.md](REMEDIATION_EXECUTION_QUEUE.md) | the proposed ordering (advisory; owner adjudication authoritative), in evidence-derived waves |
 | [NEXT_REMEDIATION_CANDIDATE.md](NEXT_REMEDIATION_CANDIDATE.md) | the one bounded next remediation target |
 
 ## How to use it
@@ -40,16 +40,19 @@ Validated against `origin/main` `d716d16`:
 
 - **Links:** all internal remediation links resolve; the `../../workflow-authority` / governance
   references resolve. (0 broken.)
-- **Identifiers:** 31 distinct backlog IDs `BR-001`..`BR-031`, no collisions.
+- **Identifiers:** 34 distinct backlog IDs `BR-001`..`BR-034`, no collisions.
 - **Vocabulary:** every disposition used is within the approved 13-value set.
 - **Traceability:** every queued item has an adjudication-ledger record; every confirmed defect has a
-  current reproduction basis.
+  current reproduction basis (code-inspection or a committed xfail test). The two Wave-0 items
+  **BR-032/BR-033** carry a *directional local-run* basis explicitly pending CI-stack confirmation —
+  labeled as such, not as authoritative CI reds.
 - **Boundary:** deferred/Lab work (WF-A01, Investigation 024, WF-001) does not appear in the active
   queue; artifacts contain no feature designs, governance expansion, book extraction, harvesting, or
   canonical guitar workflow.
-- **Production neutrality:** the BR-001 diff touches **only `docs/`** (additive) — no code, schema,
-  API, route, or build change. Existing production tests/build/governance checks are therefore
-  unaffected by construction.
+- **Production neutrality:** the BR-001 diff touches **only `docs/` plus the required
+  `.cbsp21/patches/` governance manifest** (additive) — no production code, schema, API, route, or
+  build change. Existing production tests/build/governance checks are therefore unaffected by
+  construction.
 - **Wave 0 baseline (done):** full `services/api` pytest vs `d716d16` ran 2026-07-20 — **21 failed /
   8155 passed / 19 xfailed / 1 xpassed** — see [WAVE_0_VERIFICATION.md](WAVE_0_VERIFICATION.md).
   **Toolchain caveat:** local Python 3.14, not CI's 3.11, so the count is directional, not the

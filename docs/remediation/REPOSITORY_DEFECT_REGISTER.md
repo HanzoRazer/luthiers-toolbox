@@ -2,7 +2,7 @@
 
 > **Only currently verified defects.** No enhancements, no speculative concerns, no unavailable
 > research. Every entry links to its [adjudication ledger](BACKLOG_ADJUDICATION_LEDGER.md) record and
-> carries current reproduction evidence (charter §4.6). Populated in Commit 3.
+> carries current reproduction evidence (charter §4 · Disposition discipline).
 
 ## What qualifies as a defect here
 

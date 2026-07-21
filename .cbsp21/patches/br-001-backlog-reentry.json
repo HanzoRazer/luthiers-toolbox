@@ -1,0 +1,77 @@
+{
+  "schema": "cbsp21_patch_input_v1",
+  "schema_version": "cbsp21_patch_input_v1",
+  "coverage_min": 0.95,
+  "patch_id": "BR_001_BACKLOG_REENTRY",
+  "title": "BR-001: Backlog re-entry — evidence-backed remediation queue (docs-only)",
+  "intent": "Reconstruct a current, evidence-backed, dependency-aware production remediation queue from the existing backlog (handoffs, Dev Orders, audits, branches, PRs, TODO/FIXME, tests) at the origin/main d716d16 baseline. Establish the remediation program under docs/remediation/: a charter (tiered A/B/C adjudication, 13 dispositions, living-ledger burn-down), a source inventory, a per-item adjudication ledger (34 items BR-001..BR-034), unfinished-sprint / defect / deferred registers, a dependency map, an advisory priority model, an execution queue in evidence-derived waves, a Wave 0 verification record (full services/api pytest vs d716d16: 21 failed / 8155 passed on a local Python 3.14 toolchain, recorded as directional not authoritative), and a single bounded next-candidate packet (saw_lab/rmos store-layer keyword-argument wiring). Determine what production work remains valid and in what order; do NOT remediate any defect, expand governance, or continue WF-A01 / Investigation 024. Documentation plus this governance manifest only; no production code, schema, route, or build change.",
+  "change_type": "documentation",
+  "behavior_change": "none",
+  "risk_level": "low",
+  "scope": {
+    "paths_in_scope": [
+      ".cbsp21/patches/br-001-backlog-reentry.json",
+      "docs/index.md",
+      "docs/remediation/BACKLOG_REENTRY_CHARTER.md",
+      "docs/remediation/BACKLOG_SOURCE_INVENTORY.md",
+      "docs/remediation/BACKLOG_ADJUDICATION_LEDGER.md",
+      "docs/remediation/UNFINISHED_SPRINT_REGISTER.md",
+      "docs/remediation/REPOSITORY_DEFECT_REGISTER.md",
+      "docs/remediation/DEFERRED_AND_NONPRODUCTION_WORK.md",
+      "docs/remediation/REMEDIATION_DEPENDENCY_MAP.md",
+      "docs/remediation/REMEDIATION_PRIORITY_MODEL.md",
+      "docs/remediation/REMEDIATION_EXECUTION_QUEUE.md",
+      "docs/remediation/NEXT_REMEDIATION_CANDIDATE.md",
+      "docs/remediation/WAVE_0_VERIFICATION.md",
+      "docs/remediation/README.md"
+    ],
+    "files_expected_to_change": [
+      "docs/index.md",
+      "docs/remediation/BACKLOG_REENTRY_CHARTER.md",
+      "docs/remediation/BACKLOG_SOURCE_INVENTORY.md",
+      "docs/remediation/BACKLOG_ADJUDICATION_LEDGER.md",
+      "docs/remediation/UNFINISHED_SPRINT_REGISTER.md",
+      "docs/remediation/REPOSITORY_DEFECT_REGISTER.md",
+      "docs/remediation/DEFERRED_AND_NONPRODUCTION_WORK.md",
+      "docs/remediation/REMEDIATION_DEPENDENCY_MAP.md",
+      "docs/remediation/REMEDIATION_PRIORITY_MODEL.md",
+      "docs/remediation/REMEDIATION_EXECUTION_QUEUE.md",
+      "docs/remediation/NEXT_REMEDIATION_CANDIDATE.md",
+      "docs/remediation/WAVE_0_VERIFICATION.md",
+      "docs/remediation/README.md"
+    ]
+  },
+  "diff_articulation": {
+    "what_changed": "Adds docs/remediation/ (the BR-001 remediation program) and a one-line link from docs/index.md, plus this CBSP21 manifest. No source, schema, route, or build file is touched. The remediation program is documentation: a charter, source inventory, adjudication ledger (34 items), unfinished-sprint/defect/deferred registers, dependency map, priority model, execution queue, Wave 0 verification record, and next-candidate packet.",
+    "why_not_redundant": "No prior docs/remediation/ program existed; the repo's backlog was scattered across ~166 handoffs, 40 audits, 157 branches, and PR history with no current, evidence-backed, single ordering. This reconstructs and orders that backlog without duplicating it (concise evidence references, not copied reports) and without fixing anything."
+  },
+  "verification": {
+    "commands_run": [
+      "git diff --name-only origin/main..HEAD -> only docs/ plus .cbsp21/patches/br-001-backlog-reentry.json (production-neutral)",
+      "docs/remediation link + identifier + disposition-vocabulary + queue<->ledger validation -> pass (see docs/remediation/README.md closeout)",
+      "cd services/api && python -m pytest --no-cov --continue-on-collection-errors -> 21 failed / 8155 passed / 19 xfailed / 1 xpassed on local Python 3.14 (directional; CI 3.11 stack is authoritative) -> docs/remediation/WAVE_0_VERIFICATION.md"
+    ]
+  },
+  "files": [
+    { "path": ".cbsp21/patches/br-001-backlog-reentry.json", "intent": "This CBSP21 patch manifest declaring the docs-only BR-001 change set.", "risk": "low", "behavior_change": "none (governance manifest)" },
+    { "path": "docs/index.md", "intent": "Add a Maintenance link to the remediation program.", "risk": "low", "behavior_change": "none (documentation)" },
+    { "path": "docs/remediation/BACKLOG_REENTRY_CHARTER.md", "intent": "Program charter: tiers, dispositions, boundaries, living-ledger design.", "risk": "low", "behavior_change": "none (documentation)" },
+    { "path": "docs/remediation/BACKLOG_SOURCE_INVENTORY.md", "intent": "Every backlog source examined with review status.", "risk": "low", "behavior_change": "none (documentation)" },
+    { "path": "docs/remediation/BACKLOG_ADJUDICATION_LEDGER.md", "intent": "Per-item adjudication ledger (34 items, one disposition each).", "risk": "low", "behavior_change": "none (documentation)" },
+    { "path": "docs/remediation/UNFINISHED_SPRINT_REGISTER.md", "intent": "Authorized-but-incomplete work, kept distinct from debt.", "risk": "low", "behavior_change": "none (documentation)" },
+    { "path": "docs/remediation/REPOSITORY_DEFECT_REGISTER.md", "intent": "Only currently-verified reproducible defects.", "risk": "low", "behavior_change": "none (documentation)" },
+    { "path": "docs/remediation/DEFERRED_AND_NONPRODUCTION_WORK.md", "intent": "Parked Lab/research/external work excluded from the queue.", "risk": "low", "behavior_change": "none (documentation)" },
+    { "path": "docs/remediation/REMEDIATION_DEPENDENCY_MAP.md", "intent": "Blockers, prerequisites, shared roots, clusters.", "risk": "low", "behavior_change": "none (documentation)" },
+    { "path": "docs/remediation/REMEDIATION_PRIORITY_MODEL.md", "intent": "Advisory scoring method (consequence + dependency).", "risk": "low", "behavior_change": "none (documentation)" },
+    { "path": "docs/remediation/REMEDIATION_EXECUTION_QUEUE.md", "intent": "Proposed ordering in evidence-derived waves (advisory).", "risk": "low", "behavior_change": "none (documentation)" },
+    { "path": "docs/remediation/NEXT_REMEDIATION_CANDIDATE.md", "intent": "The one bounded next remediation target packet.", "risk": "low", "behavior_change": "none (documentation)" },
+    { "path": "docs/remediation/WAVE_0_VERIFICATION.md", "intent": "Wave 0 pytest baseline with the toolchain caveat.", "risk": "low", "behavior_change": "none (documentation)" },
+    { "path": "docs/remediation/README.md", "intent": "Local remediation index + closeout validation record.", "risk": "low", "behavior_change": "none (documentation)" }
+  ],
+  "no_backend_no_schema": "No backend API, route, schema, persistence, or build change. All changes are documentation under docs/ plus this CBSP21 governance manifest under .cbsp21/patches/. No production code is touched.",
+  "owner_approval": {
+    "reviewed_by": "",
+    "approved_by": "",
+    "approved_at": ""
+  }
+}

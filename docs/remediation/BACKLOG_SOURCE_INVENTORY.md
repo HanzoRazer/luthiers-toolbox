@@ -28,14 +28,15 @@ Baseline `origin/main` = `d716d16`. Sweep date 2026-07-20. Counts are what disco
 | 12 | Deferred migration work | R2000 DXF cluster, `gov-converge-*` branches, `strict=False` markers | R2000 cluster + rmos runs_v2 | `EXAMINED` | `MIGRATION_GAP` candidates |
 | 13 | CI workflows / gates | `.github/workflows/` | **58 workflows** | `EXAMINED` | governance/ratchet gates; 2 gates currently non-blocking/`continue-on-error` |
 
-## Current-state red picture (to be re-verified in Commit 3)
+## Current-state red picture (re-verified in the Wave 0 run)
 
 Most recent triage (`docs/investigations/api_verify_standing_failures_triage_2026-06-29.md`) reported
 **~12 residual `api-verify` reds on main `0daeab14`** (down from 15), targeting **2 residual** after
-planned PRs, both parked on product decisions; **~5 real product bugs**. That triage predates current
-`origin/main` (`d716d16`) and **must be re-verified against the current tree** — see
-[BACKLOG_ADJUDICATION_LEDGER.md](BACKLOG_ADJUDICATION_LEDGER.md) verification notes. The April
-"40 failures" handoff is **superseded** (ratchets rebaselined: `TARGET_MAX_ENDPOINTS` 945→1225).
+planned PRs, both parked on product decisions; **~5 real product bugs**. That triage predated current
+`origin/main` (`d716d16`), so BR-001 **re-verified against the current tree** in the Wave 0 run:
+**21 failed / 8155 passed** on a local Python 3.14 toolchain — **directional, not the authoritative CI
+count** (see [WAVE_0_VERIFICATION.md](WAVE_0_VERIFICATION.md)). The April "40 failures" handoff is
+**superseded** (ratchets rebaselined: `TARGET_MAX_ENDPOINTS` 945→1225).
 
 ## Method
 

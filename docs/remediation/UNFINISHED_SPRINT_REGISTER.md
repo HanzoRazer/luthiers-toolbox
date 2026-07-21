@@ -2,7 +2,7 @@
 
 > Work previously authorized by a valid Dev Order / sprint but only **partially implemented**. Kept
 > distinct from generic technical debt (charter §4). Each entry links to its
-> [adjudication ledger](BACKLOG_ADJUDICATION_LEDGER.md) record. Populated in Commit 3.
+> [adjudication ledger](BACKLOG_ADJUDICATION_LEDGER.md) record.
 
 ## Record schema
 

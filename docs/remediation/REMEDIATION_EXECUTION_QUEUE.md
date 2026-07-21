@@ -1,6 +1,6 @@
 # BR-001 — Remediation Execution Queue
 
-> The approved ordering. Built **exclusively from Tier A items and Tier B items that survived
+> The **proposed** ordering (advisory; owner adjudication remains authoritative). Built **exclusively from Tier A items and Tier B items that survived
 > validation** (charter §3). Waves are derived from the [dependency map](REMEDIATION_DEPENDENCY_MAP.md)
 > and [priority model](REMEDIATION_PRIORITY_MODEL.md) — not copied from a template. Ranking is advisory;
 > owner adjudication is authoritative. Each item links to its
