@@ -74,7 +74,8 @@ they do not appear among the Wave 0 failures.)
   with BR-001** (`store_artifact` kwarg handling) — dedup to be confirmed when the fix is scoped.
 - **Severity:** medium · **Readiness:** ready (verify duplicate relationship first).
 
-> Not listed here (correctly excluded): BR-024 (R2000 `ezdxf.new` regression — **re-verified resolved**,
-> now `STALE_OR_NOT_REPRODUCIBLE`); disconnected UI surfaces BR-023/BR-030 (`ENHANCEMENT`, never
+> Not listed here (correctly excluded): BR-024 (R2000 `ezdxf.new` literal call refactored into
+> `dxf_compat` — **`SUPERSEDED` into BR-018**, which owns the open R2000 policy question; not a
+> currently-reproducible defect and not claimed "resolved"); disconnected UI surfaces BR-023/BR-030 (`ENHANCEMENT`, never
 > approved); BR-019 auth/DB stubs (`OWNER_DECISION_REQUIRED` — scope question, not yet a contract-broken
 > defect). Full reasoning in the [adjudication ledger](BACKLOG_ADJUDICATION_LEDGER.md).

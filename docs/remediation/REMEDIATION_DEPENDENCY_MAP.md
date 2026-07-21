@@ -34,12 +34,15 @@
 | CI-RED remediation lane | BR-007, BR-008, BR-009, BR-022 | same governance/CI lane; sequence behind consumer map where noted |
 | Project-Spine adoption | BR-014 (SPINE-002/003/004) | one owner merge decision covers the cluster |
 | CAM translation tail | BR-005 (7D/E/F) | "pending tests+commit" for one authorized feature set |
-| DXF / R2000 | BR-018, (BR-024 resolved) | gated on the owner fork |
+| DXF / R2000 | BR-018, BR-024 (superseded into BR-018) | gated on the owner fork |
 
 ## Obsolescence / already-resolved
 
-- **BR-024** (R2000 `ezdxf.new` regression) — made obsolete by prior fixes; re-verified resolved. Any
-  new R2000 work is the *policy* item BR-018, not this regression.
+- **BR-024** (R2000 `ezdxf.new` regression) — **superseded by BR-018**, not resolved. The specific
+  hardcoded `ezdxf.new("R2000")` call the audit cited was refactored into the version-parameterized
+  `app/util/dxf_compat.py`, but R2000 remains a supported DXF output (~29 `app/` files, incl. the
+  audited `archtop_floating_bridge.py`). Whether R2000 is still emitted / should be sanctioned is the
+  open BR-018 fork; grep-absence of the literal string does not settle it.
 - **BR-025** (40-failure baseline) — obsoleted by ratchet rebaselining.
 - **BR-026** — closed 2026-05-30.
 

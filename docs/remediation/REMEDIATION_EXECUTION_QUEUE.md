@@ -64,7 +64,8 @@ Not code fixes — the gates that must clear before/around execution.
 
 ## Excluded from the queue
 
-- **COMPLETE / SUPERSEDED / STALE:** BR-024 (R2000 `ezdxf.new` regression — re-verified resolved),
+- **COMPLETE / SUPERSEDED / STALE:** BR-024 (R2000 `ezdxf.new` literal call refactored into
+  `dxf_compat` — **superseded into BR-018**, which owns the open R2000 policy question; not "resolved"),
   BR-025 (baseline-40-failures handoff — superseded by ratchet rebaselining), BR-026 (CI-RED-015D
   wire-URL collision — closed 2026-05-30), BR-027 (CAM_7x governance + MRP_5x runtime-spine clusters —
   complete). Each maps 1:1 to its [adjudication ledger](BACKLOG_ADJUDICATION_LEDGER.md) row.

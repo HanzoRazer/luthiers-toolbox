@@ -16,7 +16,7 @@ Baseline `origin/main` = `d716d16`. Sweep date 2026-07-20. Counts are what disco
 | - | ------ | -------- | ------------- | ------------- | ----- |
 | 1 | Dev Orders & handoffs | `docs/handoffs/` (142), `docs/handoff/` (1), `docs/specs/`, `docs/audits/`, root, `docs/archive/**` | **~166 md docs**; 7 explicit `*DEV_ORDER*` | `EXAMINED` (subset ~45 inspected) | primary source of unfinished-sprint work; "Dev-ready handoff"/`*_dev_order` = strongest open-work signal |
 | 2 | Audit reports | `docs/audit/` (30), `docs/audits/` (10), `docs/audit-sources/` | **~40 audit docs** | `EXAMINED` (~34 headers read) | three overlapping audit dirs = a maintainability signal in itself |
-| 3 | Branches (unmerged/abandoned) | `git branch -r` | **157 branches** (51 merged, **107 unmerged**) | `EXAMINED` | ~24 `ci-red-*` remediation branches dominate open work; SPINE-002/003/004 + governance/C2 tracks stalled |
+| 3 | Branches (unmerged/abandoned) | `git branch -r` | **157 branches, 107 unmerged** (the ~50 merged include `main`/`gh-pages`/publishing refs; raw `branch -r` also lists the `origin/HEAD` symref) | `EXAMINED` | ~24 `ci-red-*` remediation branches dominate open work; SPINE-002/003/004 + governance/C2 tracks stalled |
 | 4 | CI-RED / standing-failure threads | `docs/ci/`, `docs/audit/CI_RED*`, `docs/handoffs/CI_RED*` | **11 CI-RED docs** + ~24 branches | `EXAMINED` | open remediation family; July 2026 cohort is freshest |
 | 5 | GitHub Issues | `gh issue list` | **0 open; 2 ever (both closed)**: #165, #20 | `EXAMINED` | repo effectively **does not use Issues**; backlog lives in `docs/` + PRs |
 | 6 | GitHub PRs | `gh pr list` | **223 total; 0 open** | `EXAMINED` | work tracked via PRs; recent merges #221–#225 |
