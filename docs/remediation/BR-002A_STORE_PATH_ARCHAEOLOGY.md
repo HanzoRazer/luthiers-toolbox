@@ -78,7 +78,25 @@ research question remains.
 
 ## BR-002B — Additive store & filter repair (NOT authorized yet)
 
-Authorized **only after** the BR-002A proof packet is green. Outline:
+### BR-002B may begin only when ALL are true
+
+```text
+[ ] BR-002A proof packet (BR-002A_PROOF.md) exists and answers all seven §3 questions with citations
+[ ] the module-level dispatch of store.list_runs_filtered is resolved (exact target named)
+[ ] the full caller census for list_runs_filtered + matches_index_meta is enumerated
+[ ] the canonical tool_kind field + the correct filtering layer are decided and justified
+[ ] the batch_label persistence contract (where readers expect it) is pinned to file:line
+[ ] the BR-004 dedup verdict is recorded
+[ ] the BR-002B patch plan is concrete (files + functions + per-file additive change) with a named
+    saw_lab + rmos/runs_v2 regression set
+[ ] owner authorization for BR-002B is recorded
+```
+
+Any unchecked box → BR-002B is not authorized; return to BR-002A.
+
+### Outline
+
+Authorized **only after** the checklist above is fully satisfied. Then:
 
 - add `batch_label` (and `tool_kind` if the proof requires) to the saw_lab artifact storage path, in the
   representation §3.6 established;

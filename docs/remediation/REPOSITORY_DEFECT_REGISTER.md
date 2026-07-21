@@ -52,18 +52,21 @@ they do not appear among the Wave 0 failures.)
   caller). · **Readiness:** ready.
 
 ### BR-002 · `list_runs_filtered()` rejects `tool_kind`
-- **Subsystem:** rmos/runs_v2
-- **Scope correction (2026-07-21):** the reproduction path is `app/saw_lab/executions_list_service.py:62`
-  → `app.rmos.runs_v2.store.list_runs_filtered(tool_kind=…)` — the **central** runs_v2 store, plus the
-  shared filter `store_filter.matches_index_meta` (which has no `tool_kind` param). The earlier
-  `store_api.py:200` citation was wrong. Broad `runs_v2` blast radius → resolved via BR-002A/002B, not a
-  small isolated edit.
-- **Reproduction basis:** `app/rmos/runs_v2/store_api.py:200` — `list_runs_filtered()` accepts many
-  filters but **not `tool_kind`** (a *different* function at `:141` does); committed xfail
-  `tests/test_saw_lab_endpoint_smoke.py:24` reason = *"list_runs_filtered() got unexpected keyword
-  argument 'tool_kind'"*.
-- **Observed vs expected:** saw_lab listing passing `tool_kind=` raises `TypeError` vs. should filter by
-  tool kind. · **Severity:** high · **Fix size:** small · **Readiness:** ready.
+- **Subsystem:** rmos/runs_v2 (+ saw_lab caller)
+- **Reproduction basis (corrected 2026-07-21):** `app/saw_lab/executions_list_service.py:62` →
+  `app.rmos.runs_v2.store.list_runs_filtered(tool_kind=…)`. The target `list_runs_filtered` and the
+  **shared** filter it delegates to, `store_filter.matches_index_meta`, accept **no `tool_kind`**
+  parameter. Committed xfail `tests/test_saw_lab_endpoint_smoke.py:24` reason = *"list_runs_filtered()
+  got unexpected keyword argument 'tool_kind'"*.
+- **Prior mis-scope (historical, not the basis):** the original packet cited
+  `app/rmos/runs_v2/store_api.py:200` — that is a **different** `list_runs_filtered` and is **not** the
+  failing call path; the citation was wrong and is retained here only as correction context.
+- **Observed vs expected:** saw_lab listing passing `tool_kind=` raises `TypeError` (HTTP 500) vs. should
+  filter by tool kind.
+- **Severity:** high · **Fix size:** **NOT small** — central `runs_v2` store + shared filter, broad
+  consumer blast radius · **Readiness:** **`SCOPE CORRECTION REQUIRED`** — resolved via BR-002A
+  (archaeology) → BR-002B (repair). Authoritative scoping record:
+  [BR-002A_STORE_PATH_ARCHAEOLOGY.md](BR-002A_STORE_PATH_ARCHAEOLOGY.md).
 
 ### BR-003 · Simulation metrics router/schema mismatch
 - **Subsystem:** simulation

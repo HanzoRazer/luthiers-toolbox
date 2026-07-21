@@ -75,4 +75,7 @@ Not code fixes — the gates that must clear before/around execution.
 
 ## The next bounded candidate
 
-**Wave 1, Rank 1 → [NEXT_REMEDIATION_CANDIDATE.md](NEXT_REMEDIATION_CANDIDATE.md).**
+Wave 1, Rank 1 (ledger items BR-001/BR-002/BR-004) is **`SCOPE CORRECTION REQUIRED`**. The actual next
+Dev Order is the bounded, read-only **BR-002A** →
+[BR-002A_STORE_PATH_ARCHAEOLOGY.md](BR-002A_STORE_PATH_ARCHAEOLOGY.md); its proof packet then authorizes
+BR-002B (repair). Background: [NEXT_REMEDIATION_CANDIDATE.md](NEXT_REMEDIATION_CANDIDATE.md).
