@@ -6,8 +6,9 @@
 > order — it does not remediate defects.**
 
 Baseline: `origin/main` (BR-001 treats `origin/main` as the production baseline; local `main` is not
-reconciled first). All BR-001 artifacts are additive documentation under `docs/remediation/`. No
-production code, interface, schema, or behavior changes.
+reconciled first). All BR-001 artifacts are additive documentation under `docs/remediation/`, plus the
+one required CBSP21 governance manifest at `.cbsp21/patches/br-001-backlog-reentry.json`. No production
+code, interface, schema, or behavior changes.
 
 ---
 

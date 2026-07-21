@@ -33,9 +33,12 @@ Readiness
 
 ## Register
 
-Verified against `origin/main` `d716d16` (2026-07-20). Each carries a current reproduction basis; live
-suite execution was **not** performed this pass (owner instruction — targeted code inspection), so the
-basis is code-inspection and/or a committed xfail test that asserts the bug.
+Verified against `origin/main` `d716d16` (2026-07-20). These entries (BR-001..BR-004) are grounded in
+**code inspection and/or committed xfail tests** that assert the bug — the store-layer signatures and
+their tests are the reproduction basis. The Wave 0 full-suite run was **subsequently performed** and
+separately recorded ([WAVE_0_VERIFICATION.md](WAVE_0_VERIFICATION.md), 2026-07-20); it surfaced
+additional items (BR-032/033/034) and did not invalidate these four. (BR-001..004 are xfail-marked, so
+they do not appear among the Wave 0 failures.)
 
 ### BR-001 · `store_artifact()` rejects `batch_label`
 - **Subsystem:** saw_lab

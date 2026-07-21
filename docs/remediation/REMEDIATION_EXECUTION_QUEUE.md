@@ -64,8 +64,10 @@ Not code fixes — the gates that must clear before/around execution.
 
 ## Excluded from the queue
 
-- **COMPLETE / SUPERSEDED / STALE:** BR-024 (R2000 regression — resolved), BR-025 (superseded), BR-026,
-  BR-027 (CAM_7x / MRP_5x complete).
+- **COMPLETE / SUPERSEDED / STALE:** BR-024 (R2000 `ezdxf.new` regression — re-verified resolved),
+  BR-025 (baseline-40-failures handoff — superseded by ratchet rebaselining), BR-026 (CI-RED-015D
+  wire-URL collision — closed 2026-05-30), BR-027 (CAM_7x governance + MRP_5x runtime-spine clusters —
+  complete). Each maps 1:1 to its [adjudication ledger](BACKLOG_ADJUDICATION_LEDGER.md) row.
 - **Tier C:** BR-031 salvage/backup branches and other historical/abandoned artifacts — archive.
 - **Deferred / non-production:** WF-A01, Investigation 024 — see
   [DEFERRED_AND_NONPRODUCTION_WORK.md](DEFERRED_AND_NONPRODUCTION_WORK.md).

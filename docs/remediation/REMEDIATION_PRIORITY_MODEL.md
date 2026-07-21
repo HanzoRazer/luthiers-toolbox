@@ -34,10 +34,15 @@ regardless of how many reports exist. **Count and age are not inputs.**
 ## Gating rules (override the raw score)
 
 1. **No unverified items.** An item without current evidence (per its tier) is not rankable and does not
-   enter the queue — it stays in the ledger as `STALE_OR_NOT_REPRODUCIBLE` or `OWNER_DECISION_REQUIRED`.
+   enter the **ranked** waves (1–3) — it stays `STALE_OR_NOT_REPRODUCIBLE` in the ledger. An item that
+   *has* evidence but is blocked on a decision is `OWNER_DECISION_REQUIRED` and is parked in an un-ranked
+   holding wave per rule 3, not given an execution rank.
 2. **Blockers first.** An item that blocks others is scheduled no later than what it blocks, even if its
    own raw score is lower (see [REMEDIATION_DEPENDENCY_MAP.md](REMEDIATION_DEPENDENCY_MAP.md)).
-3. **Owner-decision items are parked**, not ranked, until the decision is made.
+3. **Owner-decision items are parked, not given an executable rank**, until the decision is made. They
+   still *appear* in the queue's un-ranked holding waves — Wave 0 (owner forks that unblock downstream)
+   and Wave 4 (owner-gated) — flagged `needs-owner`, so the pending decision is visible; they are not
+   assigned a Wave 1–3 execution rank until the owner resolves them.
 4. **Readiness gates the next candidate.** The single next candidate must be bounded and decision-free
    (charter §6) — a higher-scoring but unbounded/undecided item cannot be the next candidate.
 
