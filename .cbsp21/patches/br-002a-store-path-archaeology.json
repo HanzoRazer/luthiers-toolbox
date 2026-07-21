@@ -1,0 +1,56 @@
+{
+  "schema": "cbsp21_patch_input_v1",
+  "schema_version": "cbsp21_patch_input_v1",
+  "coverage_min": 0.95,
+  "patch_id": "BR_002A_STORE_PATH_ARCHAEOLOGY",
+  "title": "BR-002A: re-scope the saw_lab/rmos store-layer kwarg candidate + issue the archaeology Dev Order (docs-only)",
+  "intent": "Correct the BR-001 living-remediation artifacts after BR-002 execution invalidated two load-bearing assumptions in the next-candidate packet: the failing path is app/saw_lab/executions_list_service.py:62 -> app.rmos.runs_v2.store.list_runs_filtered(tool_kind=...) (not store_api.py:200), and the fix crosses the shared store_filter.matches_index_meta boundary used by all runs_v2 consumers (module-level dispatch unresolved). Record the corrected call path and the wrong prior citation; mark the candidate SCOPE CORRECTION REQUIRED across ledger, defect register, dependency map, and queue; and issue BR-002A (store-path archaeology / contract proof, no production mutation) as the next Dev Order, with BR-002B (additive repair) authorized only after 002A is green. Documentation plus this governance manifest only; no production code, schema, route, or build change.",
+  "change_type": "documentation",
+  "behavior_change": "none",
+  "risk_level": "low",
+  "scope": {
+    "paths_in_scope": [
+      ".cbsp21/patches/br-002a-store-path-archaeology.json",
+      "docs/remediation/BACKLOG_ADJUDICATION_LEDGER.md",
+      "docs/remediation/REPOSITORY_DEFECT_REGISTER.md",
+      "docs/remediation/REMEDIATION_DEPENDENCY_MAP.md",
+      "docs/remediation/REMEDIATION_EXECUTION_QUEUE.md",
+      "docs/remediation/NEXT_REMEDIATION_CANDIDATE.md",
+      "docs/remediation/BR-002A_STORE_PATH_ARCHAEOLOGY.md"
+    ],
+    "files_expected_to_change": [
+      "docs/remediation/BACKLOG_ADJUDICATION_LEDGER.md",
+      "docs/remediation/REPOSITORY_DEFECT_REGISTER.md",
+      "docs/remediation/REMEDIATION_DEPENDENCY_MAP.md",
+      "docs/remediation/REMEDIATION_EXECUTION_QUEUE.md",
+      "docs/remediation/NEXT_REMEDIATION_CANDIDATE.md",
+      "docs/remediation/BR-002A_STORE_PATH_ARCHAEOLOGY.md"
+    ]
+  },
+  "diff_articulation": {
+    "what_changed": "Corrects the next-candidate scope in the remediation program docs and adds the BR-002A archaeology Dev Order. No source, schema, route, or test file is touched.",
+    "why_not_redundant": "The prior candidate packet cited the wrong RMOS file and under-scoped a central-store + shared-filter change; leaving it uncorrected would make a future implementation outrun its authorization. This records the corrected scope and issues the bounded archaeology tranche."
+  },
+  "verification": {
+    "commands_run": [
+      "git diff --name-only origin/main..HEAD -> only docs/remediation/ plus this manifest (production-neutral)",
+      "docs/remediation link check -> 0 broken",
+      "traced app/saw_lab/executions_list_service.py:62 -> app.rmos.runs_v2.store.list_runs_filtered; store_filter.matches_index_meta has no tool_kind param (evidence for the scope correction)"
+    ]
+  },
+  "files": [
+    { "path": ".cbsp21/patches/br-002a-store-path-archaeology.json", "intent": "This CBSP21 manifest for the docs-only re-scope change set.", "risk": "low", "behavior_change": "none (governance manifest)" },
+    { "path": "docs/remediation/BACKLOG_ADJUDICATION_LEDGER.md", "intent": "BR-002 row: correct file citation + mark SCOPE CORRECTION REQUIRED.", "risk": "low", "behavior_change": "none (documentation)" },
+    { "path": "docs/remediation/REPOSITORY_DEFECT_REGISTER.md", "intent": "BR-002 reproduction basis corrected to store.py + shared filter.", "risk": "low", "behavior_change": "none (documentation)" },
+    { "path": "docs/remediation/REMEDIATION_DEPENDENCY_MAP.md", "intent": "store-layer cluster re-scoped (not one isolated pass).", "risk": "low", "behavior_change": "none (documentation)" },
+    { "path": "docs/remediation/REMEDIATION_EXECUTION_QUEUE.md", "intent": "Wave 1 Rank 1 split into BR-002A -> BR-002B.", "risk": "low", "behavior_change": "none (documentation)" },
+    { "path": "docs/remediation/NEXT_REMEDIATION_CANDIDATE.md", "intent": "Replace the mis-scoped packet: SCOPE CORRECTION REQUIRED, redirect to BR-002A.", "risk": "low", "behavior_change": "none (documentation)" },
+    { "path": "docs/remediation/BR-002A_STORE_PATH_ARCHAEOLOGY.md", "intent": "The BR-002A archaeology / contract-proof Dev Order (no production mutation).", "risk": "low", "behavior_change": "none (documentation)" }
+  ],
+  "no_backend_no_schema": "No backend API, route, schema, persistence, or build change. All changes are documentation under docs/remediation/ plus this CBSP21 governance manifest. No production code is touched.",
+  "owner_approval": {
+    "reviewed_by": "",
+    "approved_by": "",
+    "approved_at": ""
+  }
+}

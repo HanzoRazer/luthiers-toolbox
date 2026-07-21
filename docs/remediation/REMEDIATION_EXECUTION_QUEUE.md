@@ -24,7 +24,7 @@ Not code fixes — the gates that must clear before/around execution.
 
 | Rank | Item | Disposition | Bound |
 | ---- | ---- | ----------- | ----- |
-| 1 | **BR-001 + BR-002 + BR-004** — saw_lab/rmos store-layer kwarg TypeErrors | CONFIRMED_DEFECT | small (2–3 functions + callers; 3 xfail tests as acceptance) → **the next candidate** |
+| 1 | **BR-001 + BR-002 + BR-004** — saw_lab/rmos store-layer kwarg TypeErrors | CONFIRMED_DEFECT | **SCOPE CORRECTION REQUIRED** — BR-002 execution proved the fix crosses the central `runs_v2` store + shared `store_filter.matches_index_meta` (broad blast radius), not the "2–3 functions" first estimated. Split into **BR-002A** (store-path archaeology / contract proof — next Dev Order) → **BR-002B** (additive repair, only after 002A green). See [NEXT_REMEDIATION_CANDIDATE.md](NEXT_REMEDIATION_CANDIDATE.md) + [BR-002A_STORE_PATH_ARCHAEOLOGY.md](BR-002A_STORE_PATH_ARCHAEOLOGY.md). |
 | 2 | **BR-032** — body-solver failure cluster (17 Wave-0 reds) | CONFIRMED_DEFECT | large/unbounded — **first confirm on CI stack + check unmerged 015i/015k branches** before authoring a Dev Order |
 | 3 | BR-006 — CAM 8J pocketing reconstruction (source `.py` lost) | UNFINISHED_SPRINT_WORK | data-loss urgency; medium |
 | 4 | BR-033 — `app.openapi()` build failure / `validate` field shadow | CONFIRMED_DEFECT | small (rename field) — confirm on CI stack |
@@ -75,4 +75,7 @@ Not code fixes — the gates that must clear before/around execution.
 
 ## The next bounded candidate
 
-**Wave 1, Rank 1 → [NEXT_REMEDIATION_CANDIDATE.md](NEXT_REMEDIATION_CANDIDATE.md).**
+Wave 1, Rank 1 (ledger items BR-001/BR-002/BR-004) is **`SCOPE CORRECTION REQUIRED`**. The actual next
+Dev Order is the bounded, read-only **BR-002A** →
+[BR-002A_STORE_PATH_ARCHAEOLOGY.md](BR-002A_STORE_PATH_ARCHAEOLOGY.md); its proof packet then authorizes
+BR-002B (repair). Background: [NEXT_REMEDIATION_CANDIDATE.md](NEXT_REMEDIATION_CANDIDATE.md).

@@ -15,7 +15,7 @@
 | BR-019 (auth/DB stubs) | **owner scope decision** (is a user/auth system in scope?) | blocked-open |
 | BR-029 (52 high-risk formulas) | **owner verification plan** | blocked-open (evidence-integrity) |
 | BR-007 (CI-RED-020B execution) | verify PR #177 merge-instability resolved | soft prerequisite (reportedly resolved same-day) |
-| Confident ranking of test-state items (BR-003, BR-013, BR-020) | **Wave-0 current-red pytest run** | prerequisite — **run 2026-07-20** (21 failed/8155 passed, local toolchain; see [WAVE_0_VERIFICATION.md](WAVE_0_VERIFICATION.md)). CI-stack (3.11) confirmation still recommended. Does **not** gate the next candidate (BR-001/002/004), whose evidence is self-contained. |
+| Confident ranking of test-state items (BR-003, BR-013, BR-020) | **Wave-0 current-red pytest run** | prerequisite — **run 2026-07-20** (21 failed/8155 passed, local toolchain; see [WAVE_0_VERIFICATION.md](WAVE_0_VERIFICATION.md)). CI-stack (3.11) confirmation still recommended. Does **not** gate BR-002A (the current next Dev Order), which is read-only archaeology. |
 
 ## Shared root causes
 
@@ -30,7 +30,7 @@
 
 | Cluster | Items | Rationale |
 | ------- | ----- | --------- |
-| **saw_lab / rmos store-layer kwargs** | BR-001, BR-002, BR-004 | one store-layer signature-wiring pass; xfail tests are built-in acceptance |
+| **saw_lab / rmos store-layer kwargs** | BR-001, BR-002, BR-004 | **NOT a single isolated pass** (scope-corrected 2026-07-21): BR-002 crosses the central `runs_v2` store + shared `store_filter.matches_index_meta`; sequenced as BR-002A (archaeology) → BR-002B (repair). xfail tests are acceptance for 002B. |
 | CI-RED remediation lane | BR-007, BR-008, BR-009, BR-022 | same governance/CI lane; sequence behind consumer map where noted |
 | Project-Spine adoption | BR-014 (SPINE-002/003/004) | one owner merge decision covers the cluster |
 | CAM translation tail | BR-005 (7D/E/F) | "pending tests+commit" for one authorized feature set |
