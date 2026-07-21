@@ -1,78 +1,49 @@
 # BR-001 — Next Remediation Candidate
 
-> The single recommended next implementation target. **This is the evidence packet from which the next
-> implementation Dev Order will be written — it is not itself that Dev Order.** Selection follows
-> charter §6: verified defect, clear ownership, bounded file impact, known acceptance, no unresolved
-> constitutional question, no dependency on unavailable research.
+> **Status: SCOPE CORRECTION REQUIRED (2026-07-21).** The originally-selected candidate below
+> (saw_lab/rmos store-layer kwarg wiring, resolving ledger items BR-001/BR-002/BR-004) was marked
+> `READY` on the strength of a code-inspection that mis-scoped it. BR-002 execution archaeology proved
+> two load-bearing assumptions wrong. The candidate is **not abandoned** (the defect is reproduced and
+> production-affecting); it is **re-scoped** and split into two bounded Dev Orders:
+> **BR-002A** (store-path archaeology / contract proof — the actual next Dev Order) →
+> **BR-002B** (additive repair, authorized only after 002A is green). See
+> [BR-002A_STORE_PATH_ARCHAEOLOGY.md](BR-002A_STORE_PATH_ARCHAEOLOGY.md).
 
-## Candidate: saw_lab / rmos store-layer keyword-argument wiring
+## What the original packet got wrong
 
-Resolves adjudication items **BR-001, BR-002, BR-004** (Wave 1, Rank 1).
+| Original claim | Corrected finding |
+| -------------- | ----------------- |
+| `list_runs_filtered` is at `app/rmos/runs_v2/store_api.py:200` | **Wrong file.** The failing path is `app/saw_lab/executions_list_service.py:62` → `app.rmos.runs_v2.store.list_runs_filtered(tool_kind=…)` — the **central** `runs_v2` store, not `store_api.py`. |
+| "Bounded file impact… 2–3 functions… single-subsystem" | The fix crosses a **shared filter boundary**: `list_runs_filtered` forwards filters via `**fkw` to `store_filter.matches_index_meta`, **which has no `tool_kind` parameter**. Adding `tool_kind` touches the filter used by **every `runs_v2` consumer**, not just saw_lab. |
+| "decision-free, flip 3 xfails, no research dependency" | The module-level dispatch of `store.list_runs_filtered` is **not yet resolved** (no `^def list_runs_filtered` / obvious singleton binding in `store.py`); how the module attribute resolves must be established before editing. This is the research BR-002A performs. |
 
-### Problem statement
+## What still holds
 
-Three saw_lab/rmos API smoke tests are marked `xfail` because the endpoint layer calls store-layer
-functions with keyword arguments those functions do not accept, raising `TypeError` (HTTP 500) at
-runtime:
+- The **defect is real and reproduced**: `store_artifact(batch_label=…)` (`app/saw_lab/store.py:16`, no
+  such param) and `list_runs_filtered(tool_kind=…)` both raise `TypeError` (HTTP 500) via the saw_lab
+  endpoints; three committed xfail tests assert it (`test_saw_lab_endpoint_smoke.py:24,30`,
+  `test_rmos_endpoint_smoke.py:21`).
+- It remains the **next** remediation target — larger-than-expected scope is a reason to tighten
+  authorization, not to switch items and leave a verified production defect parked.
+- Acceptance for the eventual repair is still built in (flip the three xfail markers), plus a broad
+  `runs_v2` regression added by the correction.
 
-1. `store_artifact(..., batch_label=…)` → `app/saw_lab/store.py:16` `store_artifact()` has no
-   `batch_label` parameter. (`tests/test_saw_lab_endpoint_smoke.py:30`)
-2. `list_runs_filtered(..., tool_kind=…)` → `app/rmos/runs_v2/store_api.py:200` `list_runs_filtered()`
-   has no `tool_kind` parameter (a sibling function at `:141` does). (`tests/test_saw_lab_endpoint_smoke.py:24`)
-3. RMOS endpoint `store_artifact` bug (`tests/test_rmos_endpoint_smoke.py:21`) — **likely the same root
-   as (1)**; confirm and dedup during scoping.
+## The corrected sequence
 
-### Why it is next
+```text
+BR-002A  Store-path archaeology + contract proof   (no production mutation)  ← next Dev Order
+    ↓ (only when 002A proof packet is green)
+BR-002B  Additive store + filter repair             (mutates saw_lab store + runs_v2 filter)
+    ↓
+resolves ledger items BR-001, BR-002, BR-004; removes the 3 xfails; updates the living ledgers
+```
 
-- **Verified now** by code inspection (missing parameters on current `main` `d716d16`) *and* committed
-  xfail tests that assert the exact `TypeError` messages — the strongest evidence class available.
-- **Bounded file impact:** `app/saw_lab/store.py`, `app/rmos/runs_v2/store_api.py`, and the endpoint
-  callers that pass the kwargs. Small, single-subsystem cluster (store-layer signatures).
-- **Known acceptance, built in:** the fix flips three `xfail` markers to passing (or `xpass` → remove
-  the markers). No new test design required to prove success.
-- **No unresolved constitutional question, no owner decision, no research dependency** — pure defect
-  wiring. (Contrast the parked owner-forks BR-018/BR-014/BR-019.)
-- **User-facing severity:** each is a 500 on a live endpoint.
+Ledger items **BR-001 / BR-002 / BR-004** stay `CONFIRMED_DEFECT`; their **readiness is now
+`SCOPE CORRECTION REQUIRED`** pending BR-002A. The BR-002A Dev Order is
+[BR-002A_STORE_PATH_ARCHAEOLOGY.md](BR-002A_STORE_PATH_ARCHAEOLOGY.md).
 
-### Current evidence
+## Note on identifiers
 
-| Bug | Code (current `main`) | Test (xfail) |
-| --- | --------------------- | ------------ |
-| batch_label | `app/saw_lab/store.py:16` — params: `kind, payload, parent_id, session_id, index_meta, status` (no `batch_label`) | `tests/test_saw_lab_endpoint_smoke.py:30` |
-| tool_kind | `app/rmos/runs_v2/store_api.py:200` — no `tool_kind`; sibling at `:141` has it | `tests/test_saw_lab_endpoint_smoke.py:24` |
-| rmos store | (confirm shared root with batch_label) | `tests/test_rmos_endpoint_smoke.py:21` |
-
-### Affected subsystem
-
-`saw_lab` + `rmos/runs_v2` store layer and their FastAPI endpoint callers.
-
-### Expected patch boundary
-
-Accept and thread the missing kwargs (`batch_label` into the artifact `payload`/`index_meta` where the
-`query_*_by_label` functions already read it; `tool_kind` into the `list_runs_filtered` filter set,
-mirroring the sibling function), then flip/remove the three xfail markers. No schema, contract, or route
-changes expected. Estimated small (a few functions + call sites).
-
-### Acceptance basis
-
-- `tests/test_saw_lab_endpoint_smoke.py::…` (the two xfail cases) pass without the `xfail` marker.
-- `tests/test_rmos_endpoint_smoke.py:21` passes (or is confirmed a duplicate and closed with BR-001).
-- No regression in the surrounding saw_lab/rmos smoke suites.
-- Router-count / endpoint-truth gates unaffected (no route surface change).
-
-### Unresolved decisions
-
-**None.** This is a decision-free bug fix. (If scoping reveals BR-004 is *not* a duplicate of BR-001,
-it remains in-scope as the same bug class in the same pass.)
-
-### Not included
-
-The simulation metrics mismatch (BR-003) and RMOS approve-route wiring (BR-013) are adjacent Wave-1
-items but different subsystems/bug classes — they are **not** bundled here, to keep this candidate
-bounded.
-
----
-
-> Handing this to a bounded remediation Dev Order does **not** require the Wave-0 full-suite red-run
-> first: this candidate's evidence is self-contained (code inspection + its own xfail tests). The
-> Wave-0 run remains recommended to refresh the broader current-red picture.
+"BR-001/002/004" are **ledger defect items**. "BR-002A/BR-002B" are the **Dev Order tranches** that
+will fix them. (The reused "BR-002" number is an artifact of the original packet naming; the ledger
+item BR-002 = the `tool_kind` defect, and Dev Order BR-002A = its archaeology tranche.)

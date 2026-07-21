@@ -53,6 +53,11 @@ they do not appear among the Wave 0 failures.)
 
 ### BR-002 · `list_runs_filtered()` rejects `tool_kind`
 - **Subsystem:** rmos/runs_v2
+- **Scope correction (2026-07-21):** the reproduction path is `app/saw_lab/executions_list_service.py:62`
+  → `app.rmos.runs_v2.store.list_runs_filtered(tool_kind=…)` — the **central** runs_v2 store, plus the
+  shared filter `store_filter.matches_index_meta` (which has no `tool_kind` param). The earlier
+  `store_api.py:200` citation was wrong. Broad `runs_v2` blast radius → resolved via BR-002A/002B, not a
+  small isolated edit.
 - **Reproduction basis:** `app/rmos/runs_v2/store_api.py:200` — `list_runs_filtered()` accepts many
   filters but **not `tool_kind`** (a *different* function at `:141` does); committed xfail
   `tests/test_saw_lab_endpoint_smoke.py:24` reason = *"list_runs_filtered() got unexpected keyword

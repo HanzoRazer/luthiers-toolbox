@@ -30,7 +30,7 @@
 
 | Cluster | Items | Rationale |
 | ------- | ----- | --------- |
-| **saw_lab / rmos store-layer kwargs** | BR-001, BR-002, BR-004 | one store-layer signature-wiring pass; xfail tests are built-in acceptance |
+| **saw_lab / rmos store-layer kwargs** | BR-001, BR-002, BR-004 | **NOT a single isolated pass** (scope-corrected 2026-07-21): BR-002 crosses the central `runs_v2` store + shared `store_filter.matches_index_meta`; sequenced as BR-002A (archaeology) → BR-002B (repair). xfail tests are acceptance for 002B. |
 | CI-RED remediation lane | BR-007, BR-008, BR-009, BR-022 | same governance/CI lane; sequence behind consumer map where noted |
 | Project-Spine adoption | BR-014 (SPINE-002/003/004) | one owner merge decision covers the cluster |
 | CAM translation tail | BR-005 (7D/E/F) | "pending tests+commit" for one authorized feature set |
