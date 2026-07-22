@@ -51,7 +51,7 @@ authoritative CI-stack run). Tier A/B items only are queue-eligible; Tier C is i
 | BR ID | Title | Subsystem | Source ref | Tier | Disposition | Verify | Sev | Readiness | Recommended action |
 | ----- | ----- | --------- | ---------- | ---- | ----------- | ------ | --- | --------- | ------------------ |
 | BR-001 | `store_artifact()` rejects `batch_label` (TypeError) | saw_lab | `app/saw_lab/store.py:16`; `tests/test_saw_lab_endpoint_smoke.py:30` xfail | A | CONFIRMED_DEFECT | code-inspection + test-encoded | high | ready | thread `batch_label` into store layer; flip xfail |
-| BR-002 | `list_runs_filtered()` rejects `tool_kind` (TypeError) | rmos/runs_v2 | 3-layer chain (per [BR-002A_PROOF](BR-002A_PROOF.md) Q1): `store_api.py:200` raise-site (re-exported as `store.list_runs_filtered` via `store.py:396`), then `store.py:294` class method, then `store_filter.matches_index_meta` (only 2 internal callers); `tests/test_saw_lab_endpoint_smoke.py:24` xfail | A | CONFIRMED_DEFECT | code-inspection + test-encoded | high | **BR-002B-ready** (owner auth pending) | proof green — apply the [BR-002A_PROOF](BR-002A_PROOF.md) patch plan as **BR-002B** |
+| BR-002 | `list_runs_filtered()` rejects `tool_kind` (TypeError) | rmos/runs_v2 | 3-layer chain (per [BR-002A_PROOF](BR-002A_PROOF.md) Q1): `store_api.py:200` raise-site (re-exported as `store.list_runs_filtered` via `store.py:396`), then `store.py:294` class method, then `store_filter.matches_index_meta` (2 production callers + 33 test assertions; one `saw`/`saw_lab` value decision for BR-002B); `tests/test_saw_lab_endpoint_smoke.py:24` xfail | A | CONFIRMED_DEFECT | code-inspection + test-encoded | high | **BR-002B-ready** (owner auth pending) | proof green — apply the [BR-002A_PROOF](BR-002A_PROOF.md) patch plan as **BR-002B** |
 | BR-003 | Simulation metrics router/schema mismatch (8 xfails) | simulation | `tests/test_simulation_endpoint_smoke.py:28` | A | CONFIRMED_DEFECT | test-encoded | med | ready | reconcile metrics router vs schema |
 | BR-004 | `list_runs_filtered()` kwarg bug (was mislabeled "store_artifact") | rmos | `tests/test_rmos_endpoint_smoke.py:21` xfail (`strict=False`) | A | CONFIRMED_DEFECT | test-encoded | med | dedup → BR-002 | **same `list_runs_filtered` root as BR-002** (per [BR-002A_PROOF](BR-002A_PROOF.md) Q7); fixed by BR-002B |
 | BR-005 | CAM 7D/7E/7F translation-artifact: "impl complete, pending tests+commit" | cam/translation | `docs/handoffs/CAM_7{D,E,F}_*.md` | A | UNFINISHED_SPRINT_WORK | doc-validated | med | ready | complete tests + commit the authorized work |
@@ -84,10 +84,11 @@ authoritative CI-stack run). Tier A/B items only are queue-eligible; Tier C is i
 | BR-032 | Body-solver failure cluster (17 reds: body_solver_integration/morphology_spine/ibg_export + 3 cam feeds/speeds) | body_solver / cam | Wave 0 run; unmerged `fix/ci-red-015{i,k}-*` | A | CONFIRMED_DEFECT | wave0-local-run (CI-stack unconfirmed) | high | needs-CI-confirm | reproduce on CI 3.11; check if 015i/015k resolve; then bound |
 | BR-033 | `app.openapi()` fails to build; field `validate` shadows `BaseModel.validate` | api/schema | Wave 0 `test_openapi.py`; pydantic UserWarnings | A | CONFIRMED_DEFECT | wave0-local-run (toolchain-amplified) | med | needs-CI-confirm | rename shadowing field; confirm openapi builds on CI stack |
 | BR-034 | Stale xfail marker now XPASSes (1) | tests | Wave 0 (1 xpassed) | B | MAINTAINABILITY_DEBT | test-encoded | low | ready | identify + remove the obsolete xfail marker |
+| BR-035 | `batch_tree` `tool_kind` exact-match silently under-returns mixed/old batches (live) | rmos/runs_v2 | `app/rmos/runs_v2/batch_tree.py:51,122` `== tool_kind`; 3 stored states (`saw`/`saw_lab` persisted + missing) per [BR-002A_PROOF](BR-002A_PROOF.md) Q3 | A | CONFIRMED_DEFECT | code-inspection | med | ready | route through the canonical `tool_kind_matches()` helper (fix **with** BR-002B, step 4) — related, not blocked |
 
 ## Verification coverage
 
-34 items total: **Tier A 20 · Tier B 13 · Tier C 1**.
+35 items total: **Tier A 21 · Tier B 13 · Tier C 1** (BR-035 added on BR-002A verification).
 
 - **Tier A items:** 20 (BR-001..007, 010, 012..021, 032, 033). Verified — **code-inspection**: BR-001,
   002, 015, 017, 019, 021 (also BR-024 Tier B, 031 Tier C by inspection); **test-encoded**: BR-003, 004,

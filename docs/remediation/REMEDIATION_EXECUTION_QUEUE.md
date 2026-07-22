@@ -76,8 +76,9 @@ Not code fixes — the gates that must clear before/around execution.
 ## The next bounded candidate
 
 Wave 1, Rank 1 (ledger items BR-001/BR-002/BR-004). **BR-002A archaeology is complete** →
-[BR-002A_PROOF.md](BR-002A_PROOF.md) (dispatch resolved, blast radius contained, BR-004 dedups into
-BR-002, concrete BR-002B patch plan ready). The next action is **BR-002B** (the additive repair),
+[BR-002A_PROOF.md](BR-002A_PROOF.md) (dispatch resolved; production blast radius contained; one
+`"saw"`/`"saw_lab"` value decision for BR-002B; BR-004 dedups into BR-002; concrete patch plan ready).
+The next action is **BR-002B** (the additive repair),
 gated only on **owner authorization** (see the BR-002B checklist in
 [BR-002A_STORE_PATH_ARCHAEOLOGY.md](BR-002A_STORE_PATH_ARCHAEOLOGY.md)). Background:
 [NEXT_REMEDIATION_CANDIDATE.md](NEXT_REMEDIATION_CANDIDATE.md).
