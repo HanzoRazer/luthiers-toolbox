@@ -190,8 +190,18 @@ to post-filter `list`). Also review `app/rmos/runs_v2/batch_timeline.py`'s in-me
 [x] batch_label persistence contract pinned (payload["batch_label"]; store.py:111/156/359)
 [x] BR-004 dedup verdict recorded (= BR-002, list_runs_filtered)
 [x] BR-002B patch plan concrete + named regression set (incl. test_store_filter.py + a new saw/saw_lab test)
+[ ] tool_kind GROUND-TRUTH check (empirical gate, tool_kind-scoped): enumerate the DISTINCT persisted
+    tool_kind values in a real/representative store or fixture — OBSERVED, not code-read — and confirm
+    the {"saw","saw_lab",missing} model before the filter is written. (Both prior mis-scopes here were
+    code-reading errors a data check catches in seconds.)
 [ ] owner authorization for BR-002B recorded   ← the one remaining gate
 ```
 
 > **Net:** the archaeology is complete and BR-002B is authorizable, but with **one explicit design
-> decision** (the `"saw"`/`"saw_lab"` value handling) — so BR-002B is *bounded*, not *decision-free*.
+> decision** (the `tool_kind` lenient/synonym value handling) — so BR-002B is *bounded*, not *decision-free*.
+
+> **Verification note (scoped to `tool_kind`, not a general rule):** this area has now mis-stated its own
+> mechanism twice (value count; persisted-vs-response tagging), both caught only by going to source/data.
+> For `tool_kind` specifically, load-bearing claims must be verified against **ground-truth data**, not
+> code-reading, before *and* after the BR-002B mutation. This is not a new governance gate for other
+> items — the archaeology tranche already covers the general case.
