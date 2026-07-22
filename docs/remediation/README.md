@@ -40,7 +40,7 @@ Validated against `origin/main` `d716d16`:
 
 - **Links:** all internal remediation links resolve; the `../../workflow-authority` / governance
   references resolve. (0 broken.)
-- **Identifiers:** 34 distinct backlog IDs `BR-001`..`BR-034`, no collisions.
+- **Identifiers:** 35 distinct backlog IDs `BR-001`..`BR-035`, no collisions.
 - **Vocabulary:** every disposition used is within the approved 13-value set.
 - **Traceability:** every queued item has an adjudication-ledger record; every confirmed defect has a
   current reproduction basis (code-inspection or a committed xfail test). The two Wave-0 items

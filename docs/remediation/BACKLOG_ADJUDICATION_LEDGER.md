@@ -84,10 +84,11 @@ authoritative CI-stack run). Tier A/B items only are queue-eligible; Tier C is i
 | BR-032 | Body-solver failure cluster (17 reds: body_solver_integration/morphology_spine/ibg_export + 3 cam feeds/speeds) | body_solver / cam | Wave 0 run; unmerged `fix/ci-red-015{i,k}-*` | A | CONFIRMED_DEFECT | wave0-local-run (CI-stack unconfirmed) | high | needs-CI-confirm | reproduce on CI 3.11; check if 015i/015k resolve; then bound |
 | BR-033 | `app.openapi()` fails to build; field `validate` shadows `BaseModel.validate` | api/schema | Wave 0 `test_openapi.py`; pydantic UserWarnings | A | CONFIRMED_DEFECT | wave0-local-run (toolchain-amplified) | med | needs-CI-confirm | rename shadowing field; confirm openapi builds on CI stack |
 | BR-034 | Stale xfail marker now XPASSes (1) | tests | Wave 0 (1 xpassed) | B | MAINTAINABILITY_DEBT | test-encoded | low | ready | identify + remove the obsolete xfail marker |
+| BR-035 | `batch_tree` `tool_kind` exact-match silently under-returns mixed/old batches (live) | rmos/runs_v2 | `app/rmos/runs_v2/batch_tree.py:51,122` `== tool_kind`; 3 stored states (`saw`/`saw_lab` persisted + missing) per [BR-002A_PROOF](BR-002A_PROOF.md) Q3 | A | CONFIRMED_DEFECT | code-inspection | med | ready | route through the canonical `tool_kind_matches()` helper (fix **with** BR-002B, step 4) — related, not blocked |
 
 ## Verification coverage
 
-34 items total: **Tier A 20 · Tier B 13 · Tier C 1**.
+35 items total: **Tier A 21 · Tier B 13 · Tier C 1** (BR-035 added on BR-002A verification).
 
 - **Tier A items:** 20 (BR-001..007, 010, 012..021, 032, 033). Verified — **code-inspection**: BR-001,
   002, 015, 017, 019, 021 (also BR-024 Tier B, 031 Tier C by inspection); **test-encoded**: BR-003, 004,

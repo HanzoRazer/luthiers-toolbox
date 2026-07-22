@@ -54,28 +54,47 @@ Yes, `tool_kind` is an established `index_meta` field, and **filtering on it alr
 `str((a.get("index_meta") or {}).get("tool_kind") or "") == tool_kind`. Do **not** alias to `tool_id`
 (`tool_id` is a specific tool identifier; `tool_kind` is the tool class).
 
-> **⚠ Value inconsistency (found on verification — a BR-002B design point):** the field is written with
-> **two different values**. `app/saw_lab/batch_query_router.py:78,110,144,178,212,246` sets
-> `index_meta.setdefault("tool_kind", "saw_lab")`, while `app/saw_lab/decision_router.py:86,128` sets
-> `"saw"`, and the query callers pass `tool_kind="saw"` (e.g. `executions_list_service.py:40` default).
-> An **exact-match** filter (`== tool_kind`) with `tool_kind="saw"` would therefore **silently miss any
-> `"saw_lab"`-tagged artifact** — the existing `batch_tree` filter has the same latent exposure. So
-> BR-002B is **not** purely decision-free: it must resolve this (normalize the values, match a set, or
-> confirm the store/query paths always agree). See Q4.
+> **⚠ Three stored `tool_kind` states (verified — the core BR-002B design point):**
+> - **`"saw"`** — persisted by the writers: `execution_confirmation_service.py:14,64`,
+>   `execution_metrics_rollup_service.py`, `decision_router.py:86,128` (all default/set `"saw"`).
+> - **`"saw_lab"`** — **persisted** by `app/services/saw_lab_compare_service.py:154`
+>   (`index_meta["tool_kind"]="saw_lab"` → `_write_run_artifact_safely` → `persist_run`) for
+>   saw-feasibility comparison artifacts.
+> - **missing/empty** — older artifacts predating the field.
+>
+> (The `"saw_lab"` in `batch_query_router.py:78,110,…` is **not** a stored value — it is a
+> `setdefault` **response fallback for older artifacts lacking `tool_kind`**, returned not persisted:
+> the code comment says *"setdefault fallbacks for older artifacts"* and the function `return`s the dict.)
+>
+> Query callers pass `tool_kind="saw"`. So an **exact `== "saw"` match drops BOTH the persisted
+> `"saw_lab"` compare artifacts AND every missing-`tool_kind` (older) artifact** → silent under-return.
+> BR-002B is therefore **not decision-free**: it must define lenient/synonym read semantics. See Q4.
 
 ## Q4 — Correct filtering layer ✅
 
 Add `tool_kind` matching to **`matches_index_meta`** and thread the param through the two wrapper layers
 so it reaches `fkw`. Because `matches_index_meta` has only the 2 production callers, this changes no other
-production consumer (33 `test_store_filter.py` assertions are unaffected by an optional param).
+production consumer, and it gives **`list_runs_filtered` / `count_runs_filtered` parity for free** (both
+use the shared filter — do **not** implement the match as a post-filter in `list` only, or count diverges).
 
-**Open BR-002B design decision (from Q3's value inconsistency):** the match cannot be a naive
-`== "saw"` exact-match, or it drops `"saw_lab"`-tagged artifacts. BR-002B must choose one of:
-(a) **normalize** `"saw_lab"` → `"saw"` at write and/or compare time; (b) **membership** match against a
-known synonym set (`{"saw","saw_lab"}`); or (c) prove the queried batch artifacts are *always* tagged
-consistently so exact-match is safe. This decision (and whether the pre-existing `batch_tree` filter is
-already under-returning) is a **required BR-002B input**, not a decided one — so the "decision-free"
-claim from the original packet does not fully hold.
+**BR-002B design decision (required, from Q3's three states):** an exact `== "saw"` match is **wrong** —
+it drops persisted `"saw_lab"` compare artifacts *and* all missing-`tool_kind` older artifacts. The
+recommended semantics: **lenient + synonym** — match when the stored value is **empty/missing OR** in the
+requested synonym set (treat `{"saw","saw_lab"}` as aliases). Document the exact rule; a
+`"saw"`/`"saw_lab"` distinction is not currently meaningful to the callers (all pass `"saw"`).
+
+> **Two filter sites — centralize, or they drift (verified):** the store filter is **not** the only
+> place `tool_kind` is matched. `app/rmos/runs_v2/batch_tree.py:51-55` (`resolve_batch_root`) and
+> `:122-123` (`list_batch_tree`) already do a **live local exact-match**
+> `str((a...).get("tool_kind") or "") == tool_kind`. So even after `matches_index_meta` is made lenient,
+> `batch_tree` would re-drop `"saw_lab"`/missing nodes — splitting semantics (tree/root/summary/export
+> under-return while the flat list is correct). **BR-002B must route both sites through one canonical
+> `tool_kind_matches(stored, requested)` helper.** Also review the in-memory filter in
+> `app/rmos/runs_v2/batch_timeline.py` and any `FakeStore`/test filters that do raw `== tool_kind`.
+>
+> **Additional live defect surfaced:** `batch_tree`'s exact-match is **already** under-returning today
+> for any caller that passes `tool_kind` against a mixed/old batch (independent of the BR-002 TypeError).
+> Logged as **BR-035** (see ledger) — related to, but not blocked by, BR-002B.
 
 ## Q5 — Pagination & ordering ✅
 
@@ -104,17 +123,21 @@ harmlessly once fixed.)
 ## BR-002B patch plan (implementation-ready)
 
 Additive param signatures (each new param defaults to `None`/absent, so existing callers are untouched)
-**plus one design decision** — the `tool_kind` value normalization in step 3 (see Q3/Q4).
+**plus one design decision** (the `tool_kind` lenient/synonym semantics, step 3) applied through **one
+canonical helper at two filter sites** (steps 3 & 4), so store and tree filtering cannot drift.
 
 | # | File · function | Change |
 | - | --------------- | ------ |
 | 1 | `app/rmos/runs_v2/store_api.py:200` `list_runs_filtered` | add `tool_kind: Optional[str] = None`; forward `tool_kind=tool_kind` in the delegated call |
 | 2 | `app/rmos/runs_v2/store.py:294` `RunStoreV2.list_runs_filtered` | add `tool_kind: Optional[str] = None`; add `tool_kind=tool_kind` to the `fkw` dict |
-| 3 | `app/rmos/runs_v2/store_filter.py:9` `matches_index_meta` | add `tool_kind: Optional[str] = None` + a match on `index_meta["tool_kind"]`, wired into an existing sub-matcher. **Design decision (Q3/Q4): must handle the `"saw"` vs `"saw_lab"` value inconsistency** — normalize, membership-match a synonym set, or prove consistent tagging; a naive `== "saw"` exact-match drops `"saw_lab"` artifacts. |
-| 4 | `app/saw_lab/store.py:16` `store_artifact` | add `batch_label: Optional[str] = None`, `tool_kind: Optional[str] = None`; if `batch_label` set → `payload["batch_label"] = batch_label` (Q6); if `tool_kind` set → `index_meta = {**(index_meta or {}), "tool_kind": tool_kind}` |
+| 3 | `app/rmos/runs_v2/store_filter.py:9` `matches_index_meta` | add `tool_kind: Optional[str] = None`; match via a **new canonical helper `tool_kind_matches(stored, requested)`** with **lenient + synonym** semantics: match when `stored` is empty/missing **or** in the synonym set (`{"saw","saw_lab"}`). **Not** a naive `== "saw"` (drops persisted `"saw_lab"` compare artifacts + missing-`tool_kind` old artifacts — Q3). |
+| 4 | `app/rmos/runs_v2/batch_tree.py:51,122` `resolve_batch_root` / `list_batch_tree` | replace the two **live local exact-match** filters (`... == tool_kind`) with the **same** `tool_kind_matches()` helper, so tree/root/summary/export cannot drift from the store filter. |
+| 5 | `app/saw_lab/store.py:16` `store_artifact` | add `batch_label: Optional[str] = None`, `tool_kind: Optional[str] = None`; if `batch_label` set → `payload["batch_label"] = batch_label` (Q6); if `tool_kind` set → `index_meta = {**(index_meta or {}), "tool_kind": tool_kind}` |
 
-Optional consistency: `count_runs_filtered` (`store.py:~360`) need not change — its callers don't pass
-`tool_kind`; `matches_index_meta`'s new param defaults `None` so `count` is unaffected.
+`count_runs_filtered` (`store.py:~360`) requires **no separate change** — it shares `matches_index_meta`,
+so it stays in **parity** with `list` automatically (that parity is a reason to fix the shared filter, not
+to post-filter `list`). Also review `app/rmos/runs_v2/batch_timeline.py`'s in-memory filter + any
+`FakeStore`/test raw `== tool_kind` for the same helper.
 
 ## BR-002B test matrix
 
@@ -125,8 +148,17 @@ Optional consistency: `count_runs_filtered` (`store.py:~360`) need not change �
   `tests/test_rmos_endpoint_smoke.py`, `tests/test_rmos_workflow_e2e.py`, and any other `runs_v2`
   store/filter tests (`tests/**/*runs*`, `*store*`, `*batch_tree*`, `*batch_summary*`) — because
   `list_runs_filtered` / `matches_index_meta` are shared.
-- **New coverage BR-002B must add:** a `matches_index_meta` test for the `tool_kind` filter **including
-  the `"saw"`/`"saw_lab"` case** decided in step 3, so the value-normalization choice is pinned by a test.
+- **New coverage BR-002B must add** (pin the chosen semantics with tests):
+  1. `matches_index_meta(tool_kind="saw")` matches stored `"saw"`, stored `"saw_lab"`, **and
+     missing/empty** — and does not match an unrelated value.
+  2. `list_runs_filtered(session_id, batch_label, tool_kind="saw")` returns a **mixed** batch
+     (artifacts tagged `"saw"`, `"saw_lab"`, and missing) with none dropped.
+  3. `list_batch_tree(..., tool_kind="saw")` and `resolve_batch_root(..., tool_kind="saw")` include the
+     `"saw_lab"`/missing nodes in a mixed-tag batch (the batch_tree parity that step 4 fixes).
+  4. **count/list parity:** `count_runs_filtered(tool_kind="saw")` == the length of the matching
+     `list_runs_filtered` result on the same fixture.
+  5. Execution-lookup path: `list_executions_for_decision(..., tool_kind="saw")` finds executions when
+     the stored artifacts are `"saw_lab"`/missing.
 - **Broad regression:** the saw_lab + rmos suites in full (not just smoke).
 
 ## Corrections this packet makes to the PR #227 scope docs (to fold into the BR-002B ledger update)
@@ -137,9 +169,15 @@ Optional consistency: `count_runs_filtered` (`store.py:~360`) need not change �
    scope) — *not* a broad shared surface. (Precise: 35 total call sites = 2 production + 33
    `test_store_filter.py` assertions; the additive param doesn't disturb the tests but they must run.)
 3. **BR-004 is a `list_runs_filtered` bug** (dedups into BR-002), not a `store_artifact` bug.
-4. **`tool_kind` value inconsistency (`"saw"` vs `"saw_lab"`)** means BR-002B is **not fully
-   decision-free** — the filter must resolve value normalization (Q3/Q4). This was missed on the first
-   archaeology pass and surfaced on count-verification; it is the reason to keep the owner gate.
+4. **Three stored `tool_kind` states** (`"saw"` writers · `"saw_lab"` *persisted* by
+   `saw_lab_compare_service.py:154` · missing/older) mean a naive `== "saw"` filter silently
+   under-returns. BR-002B is **not decision-free**: use lenient+synonym semantics (Q3/Q4). The
+   `batch_query_router` `"saw_lab"` is a **response-only fallback**, not stored (an earlier draft and an
+   external trace both mis-stated this). Corrected on verification — the reason to keep the owner gate.
+5. **Two filter sites** need one canonical helper (`matches_index_meta` **and** `batch_tree.py:51,122`),
+   else tree/summary/export drift from the flat list.
+6. **New live defect BR-035:** `batch_tree`'s existing exact-match already under-returns mixed/old
+   batches today — logged separately (related to, not blocked by, BR-002B).
 
 ## BR-002B authorization checklist (from the Dev Order) — status
 
@@ -147,8 +185,8 @@ Optional consistency: `count_runs_filtered` (`store.py:~360`) need not change �
 [x] proof packet exists, all seven §3 questions answered with citations
 [x] module-level dispatch resolved (store.py:396 re-export from store_api.py:200 → store.py:294 → store_filter)
 [x] caller census enumerated (list_runs_filtered 32/23 app/ · 43/36 incl tests; matches_index_meta 2 prod + 33 test)
-[~] filtering LAYER decided (matches_index_meta); tool_kind VALUE normalization ("saw"/"saw_lab") is an
-    open, documented BR-002B design decision (Q3/Q4) — carry into BR-002B, not decided here
+[~] filtering LAYER decided (matches_index_meta + batch_tree via ONE canonical helper); tool_kind VALUE
+    semantics (lenient+synonym for 3 stored states) is a documented BR-002B design decision (Q3/Q4)
 [x] batch_label persistence contract pinned (payload["batch_label"]; store.py:111/156/359)
 [x] BR-004 dedup verdict recorded (= BR-002, list_runs_filtered)
 [x] BR-002B patch plan concrete + named regression set (incl. test_store_filter.py + a new saw/saw_lab test)
