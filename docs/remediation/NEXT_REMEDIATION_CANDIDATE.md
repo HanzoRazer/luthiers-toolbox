@@ -13,7 +13,7 @@
 
 | Original claim | Corrected finding |
 | -------------- | ----------------- |
-| `list_runs_filtered` is at `app/rmos/runs_v2/store_api.py:200` | **Wrong file.** The failing path is `app/saw_lab/executions_list_service.py:62` → `app.rmos.runs_v2.store.list_runs_filtered(tool_kind=…)` — the **central** `runs_v2` store, not `store_api.py`. |
+| `list_runs_filtered` is at `app/rmos/runs_v2/store_api.py:200` (as a small isolated fix) | **Under-scoped, not wrong-file.** [BR-002A_PROOF](BR-002A_PROOF.md) Q1: `store_api.py:200` *is* the `TypeError` raise-site (re-exported as `store.list_runs_filtered`), but the fix spans a **3-layer chain** — `store_api.py:200` → `store.py:294` class method → `store_filter.matches_index_meta`. |
 | "Bounded file impact… 2–3 functions… single-subsystem" | The fix crosses a **shared filter boundary**: `list_runs_filtered` forwards filters via `**fkw` to `store_filter.matches_index_meta`, **which has no `tool_kind` parameter**. Adding `tool_kind` touches the filter used by **every `runs_v2` consumer**, not just saw_lab. |
 | "decision-free, flip 3 xfails, no research dependency" | The module-level dispatch of `store.list_runs_filtered` is **not yet resolved** (no `^def list_runs_filtered` / obvious singleton binding in `store.py`); how the module attribute resolves must be established before editing. This is the research BR-002A performs. |
 
