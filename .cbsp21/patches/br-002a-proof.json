@@ -1,0 +1,56 @@
+{
+  "schema": "cbsp21_patch_input_v1",
+  "schema_version": "cbsp21_patch_input_v1",
+  "coverage_min": 0.95,
+  "patch_id": "BR_002A_PROOF",
+  "title": "BR-002A execution: store-path proof packet + align scope docs (docs-only)",
+  "intent": "Execute the BR-002A archaeology Dev Order (read-only) and deliver BR-002A_PROOF.md, answering all seven contract-proof questions with cited evidence: the dispatch resolves store.list_runs_filtered as a re-export of store_api.py:200 (the TypeError raise-site) delegating to store.py:294 then store_filter.matches_index_meta; matches_index_meta has only 2 internal callers (contained blast radius); tool_kind is an established index_meta field (batch_tree already filters on it); batch_label must land in payload (query_*_by_label readers); BR-004 is a list_runs_filtered bug that dedups into BR-002. Fold the resulting corrections into the ledger, defect register, and next-candidate so the scope docs match the proof, and mark BR-002B ready pending owner authorization. No production code changed.",
+  "change_type": "documentation",
+  "behavior_change": "none",
+  "risk_level": "low",
+  "scope": {
+    "paths_in_scope": [
+      ".cbsp21/patches/br-002a-proof.json",
+      "docs/remediation/BR-002A_PROOF.md",
+      "docs/remediation/BR-002A_STORE_PATH_ARCHAEOLOGY.md",
+      "docs/remediation/BACKLOG_ADJUDICATION_LEDGER.md",
+      "docs/remediation/REPOSITORY_DEFECT_REGISTER.md",
+      "docs/remediation/NEXT_REMEDIATION_CANDIDATE.md",
+      "docs/remediation/REMEDIATION_EXECUTION_QUEUE.md"
+    ],
+    "files_expected_to_change": [
+      "docs/remediation/BR-002A_PROOF.md",
+      "docs/remediation/BR-002A_STORE_PATH_ARCHAEOLOGY.md",
+      "docs/remediation/BACKLOG_ADJUDICATION_LEDGER.md",
+      "docs/remediation/REPOSITORY_DEFECT_REGISTER.md",
+      "docs/remediation/NEXT_REMEDIATION_CANDIDATE.md",
+      "docs/remediation/REMEDIATION_EXECUTION_QUEUE.md"
+    ]
+  },
+  "diff_articulation": {
+    "what_changed": "Adds the BR-002A proof packet and aligns the ledger/defect-register/next-candidate/queue to its findings. No source, schema, route, or test file touched.",
+    "why_not_redundant": "The proof packet is the archaeology deliverable that unblocks (or re-scopes) BR-002B; the doc alignments remove a live proof-vs-ledger contradiction (store_api.py:200 raise-site, contained blast radius, BR-004 dedup)."
+  },
+  "verification": {
+    "commands_run": [
+      "git diff --name-only origin/main..HEAD -> only docs/remediation/ plus this manifest",
+      "docs/remediation link check -> 0 broken",
+      "read-only trace: store.py:396 re-export from store_api.py:200; matches_index_meta callers = list_runs_filtered + count_runs_filtered only; batch_tree.py filters index_meta.tool_kind; query_*_by_label read payload.batch_label; test_rmos_endpoint_smoke.py:21 = list_runs_filtered_bug"
+    ]
+  },
+  "files": [
+    { "path": ".cbsp21/patches/br-002a-proof.json", "intent": "CBSP21 manifest for the docs-only proof-packet change set.", "risk": "low", "behavior_change": "none (governance manifest)" },
+    { "path": "docs/remediation/BR-002A_PROOF.md", "intent": "The BR-002A proof packet (archaeology deliverable, no mutation).", "risk": "low", "behavior_change": "none (documentation)" },
+    { "path": "docs/remediation/BR-002A_STORE_PATH_ARCHAEOLOGY.md", "intent": "Mark deliverable produced; BR-002B gated on owner auth.", "risk": "low", "behavior_change": "none (documentation)" },
+    { "path": "docs/remediation/BACKLOG_ADJUDICATION_LEDGER.md", "intent": "BR-002 3-layer chain + BR-002B-ready; BR-004 relabeled list_runs_filtered, dedup into BR-002.", "risk": "low", "behavior_change": "none (documentation)" },
+    { "path": "docs/remediation/REPOSITORY_DEFECT_REGISTER.md", "intent": "BR-002 aligned to the proof (store_api.py:200 raise-site; contained blast radius).", "risk": "low", "behavior_change": "none (documentation)" },
+    { "path": "docs/remediation/NEXT_REMEDIATION_CANDIDATE.md", "intent": "under-scoped-not-wrong-file correction.", "risk": "low", "behavior_change": "none (documentation)" },
+    { "path": "docs/remediation/REMEDIATION_EXECUTION_QUEUE.md", "intent": "BR-002A complete; next action BR-002B gated on owner auth.", "risk": "low", "behavior_change": "none (documentation)" }
+  ],
+  "no_backend_no_schema": "No backend API, route, schema, persistence, or build change. All changes are documentation under docs/remediation/ plus this CBSP21 governance manifest. No production code is touched.",
+  "owner_approval": {
+    "reviewed_by": "",
+    "approved_by": "",
+    "approved_at": ""
+  }
+}

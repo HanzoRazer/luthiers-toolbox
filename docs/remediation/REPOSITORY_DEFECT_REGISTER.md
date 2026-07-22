@@ -58,13 +58,15 @@ they do not appear among the Wave 0 failures.)
   **shared** filter it delegates to, `store_filter.matches_index_meta`, accept **no `tool_kind`**
   parameter. Committed xfail `tests/test_saw_lab_endpoint_smoke.py:24` reason = *"list_runs_filtered()
   got unexpected keyword argument 'tool_kind'"*.
-- **Prior mis-scope (historical, not the basis):** the original packet cited
-  `app/rmos/runs_v2/store_api.py:200` — that is a **different** `list_runs_filtered` and is **not** the
-  failing call path; the citation was wrong and is retained here only as correction context.
+- **Exact dispatch ([BR-002A_PROOF](BR-002A_PROOF.md) Q1):** `store.list_runs_filtered` is **re-exported
+  from `store_api.py:200`** (via `store.py:396`) — so `store_api.py:200` **is** the raise-site (the
+  original packet was right about the location; it was *under-scoped*, not wrong-file). The fix spans the
+  3-layer chain: `store_api.py:200` → `store.py:294` class method → `store_filter.matches_index_meta`.
 - **Observed vs expected:** saw_lab listing passing `tool_kind=` raises `TypeError` (HTTP 500) vs. should
   filter by tool kind.
-- **Severity:** high · **Fix size:** **NOT small** — central `runs_v2` store + shared filter, broad
-  consumer blast radius · **Readiness:** **`SCOPE CORRECTION REQUIRED`** — resolved via BR-002A
+- **Severity:** high · **Fix size:** small–moderate — 3 additive params + one filter match; blast radius
+  is **contained** (`matches_index_meta` has only 2 internal callers, both in scope) · **Readiness:**
+  **BR-002B-ready** (proof green; owner authorization pending) — resolved via BR-002A
   (archaeology) → BR-002B (repair). Authoritative scoping record:
   [BR-002A_STORE_PATH_ARCHAEOLOGY.md](BR-002A_STORE_PATH_ARCHAEOLOGY.md).
 

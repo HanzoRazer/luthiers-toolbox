@@ -52,6 +52,11 @@ without this proof risks breaking every `runs_v2` list consumer.
 
 ## 4. Deliverable — the proof packet
 
+> **STATUS: PRODUCED 2026-07-21 → [BR-002A_PROOF.md](BR-002A_PROOF.md).** All seven §3 questions answered
+> with citations; dispatch resolved (`store_api.py:200` re-exported → `store.py:294` → `matches_index_meta`);
+> blast radius found **contained** (2 internal `matches_index_meta` callers); BR-004 dedups into BR-002;
+> concrete BR-002B patch plan + test matrix ready. **Only remaining gate: owner authorization for BR-002B.**
+
 A single document (`BR-002A_PROOF.md`, produced by executing this order) containing:
 
 - the resolved dispatch mechanism (with line citations);
