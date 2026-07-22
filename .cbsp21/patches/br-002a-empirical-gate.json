@@ -1,0 +1,41 @@
+{
+  "schema": "cbsp21_patch_input_v1",
+  "schema_version": "cbsp21_patch_input_v1",
+  "coverage_min": 0.95,
+  "patch_id": "BR_002A_EMPIRICAL_GATE",
+  "title": "BR-002A: execute the tool_kind empirical gate; record results + fix patch-plan step 3 (docs-only)",
+  "intent": "Run the tool_kind ground-truth check the BR-002A proof called for (read-only, temp RMOS_RUNS_DIR): persist 3 artifacts via the real store_api.store_artifact and observe the actual persisted structure. Findings: the three-state model (meta.tool_kind in {saw, saw_lab, missing}) is confirmed by observation; but tool_kind is NOT a top-level index field (_extract_index_meta omits it) - it lives in m['meta']['tool_kind'] and leaks into mode/tool_id, so a filter reading m['tool_kind'] literally matches 0/3 and would drop every artifact. Record the results, mark the empirical-gate checklist item executed, and correct BR-002B patch-plan step 3 to read meta.tool_kind (or hoist it into _extract_index_meta with an index rebuild). Documentation plus this governance manifest only; no production code, schema, route, or build change.",
+  "change_type": "documentation",
+  "behavior_change": "none",
+  "risk_level": "low",
+  "scope": {
+    "paths_in_scope": [
+      ".cbsp21/patches/br-002a-empirical-gate.json",
+      "docs/remediation/BR-002A_PROOF.md"
+    ],
+    "files_expected_to_change": [
+      "docs/remediation/BR-002A_PROOF.md"
+    ]
+  },
+  "diff_articulation": {
+    "what_changed": "Adds the empirical-gate results section to BR-002A_PROOF.md, marks the gate checklist item executed, and corrects patch-plan step 3 (read meta.tool_kind, not top-level). No source, schema, route, or test file touched.",
+    "why_not_redundant": "The empirical check caught a catastrophic literal-implementation bug (a top-level tool_kind filter drops everything) that three prior code-reading passes missed; recording it prevents BR-002B from shipping it."
+  },
+  "verification": {
+    "commands_run": [
+      "python probe with temp RMOS_RUNS_DIR: store_api.store_artifact x3 (saw / saw_lab / empty) -> rebuild_index -> read index",
+      "observed: tool_kind absent at top level; present in meta.tool_kind in {saw, saw_lab, missing}; leaks to mode/tool_id",
+      "m.get('tool_kind')==req matched 0/3; m['meta']['tool_kind']==req matched 1/3; list_runs_filtered(tool_kind=) raised TypeError"
+    ]
+  },
+  "files": [
+    { "path": ".cbsp21/patches/br-002a-empirical-gate.json", "intent": "CBSP21 manifest for the empirical-gate docs change.", "risk": "low", "behavior_change": "none (governance manifest)" },
+    { "path": "docs/remediation/BR-002A_PROOF.md", "intent": "record empirical-gate results; mark gate executed; fix patch-plan step 3 (read meta.tool_kind).", "risk": "low", "behavior_change": "none (documentation)" }
+  ],
+  "no_backend_no_schema": "No backend API, route, schema, persistence, or build change. All changes are documentation under docs/remediation/ plus this CBSP21 governance manifest. No production code is touched (the empirical probe ran read-only against a throwaway temp store and changed no tracked file).",
+  "owner_approval": {
+    "reviewed_by": "",
+    "approved_by": "",
+    "approved_at": ""
+  }
+}
