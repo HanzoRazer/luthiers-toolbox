@@ -64,9 +64,11 @@ they do not appear among the Wave 0 failures.)
   3-layer chain: `store_api.py:200` → `store.py:294` class method → `store_filter.matches_index_meta`.
 - **Observed vs expected:** saw_lab listing passing `tool_kind=` raises `TypeError` (HTTP 500) vs. should
   filter by tool kind.
-- **Severity:** high · **Fix size:** small–moderate — 3 additive params + one filter match; blast radius
-  is **contained** (`matches_index_meta` has only 2 internal callers, both in scope) · **Readiness:**
-  **BR-002B-ready** (proof green; owner authorization pending) — resolved via BR-002A
+- **Severity:** high · **Fix size:** small–moderate — 3 additive params + one filter match, **plus a
+  `"saw"`/`"saw_lab"` value-normalization decision** (Q3/Q4); production blast radius **contained**
+  (`matches_index_meta` has 2 production callers, both in scope; +33 `test_store_filter.py` assertions to
+  run) · **Readiness:** **BR-002B-ready** (bounded, one design decision; owner authorization pending) —
+  resolved via BR-002A
   (archaeology) → BR-002B (repair). Authoritative scoping record:
   [BR-002A_STORE_PATH_ARCHAEOLOGY.md](BR-002A_STORE_PATH_ARCHAEOLOGY.md).
 

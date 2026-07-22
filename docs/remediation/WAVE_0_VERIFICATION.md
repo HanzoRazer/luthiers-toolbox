@@ -45,7 +45,8 @@ around with `--no-cov`). Therefore:
 ## Effect on the queue
 
 - **Next candidate unchanged.** The saw_lab/rmos kwarg fix (BR-001/002/004) is **xfailed** (in the 19),
-  not among the 21 failures — it remains a bounded, verified, decision-free next target.
+  not among the 21 failures — it remains a bounded, verified next target. (BR-002A archaeology later
+  surfaced one `"saw"`/`"saw_lab"` filter-value decision for the repair; see BR-002A_PROOF.md.)
 - **New Wave-1 item BR-032** (body-solver failure cluster) added — but its first action is to **confirm
   on the CI stack** and **check whether the unmerged 015i/015k branches already resolve it**, before
   authoring a fresh Dev Order. It is *not* a cleaner next candidate than the saw_lab fix (larger,

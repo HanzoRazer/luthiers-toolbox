@@ -16,7 +16,8 @@
       "docs/remediation/BACKLOG_ADJUDICATION_LEDGER.md",
       "docs/remediation/REPOSITORY_DEFECT_REGISTER.md",
       "docs/remediation/NEXT_REMEDIATION_CANDIDATE.md",
-      "docs/remediation/REMEDIATION_EXECUTION_QUEUE.md"
+      "docs/remediation/REMEDIATION_EXECUTION_QUEUE.md",
+      "docs/remediation/WAVE_0_VERIFICATION.md"
     ],
     "files_expected_to_change": [
       "docs/remediation/BR-002A_PROOF.md",
@@ -24,7 +25,8 @@
       "docs/remediation/BACKLOG_ADJUDICATION_LEDGER.md",
       "docs/remediation/REPOSITORY_DEFECT_REGISTER.md",
       "docs/remediation/NEXT_REMEDIATION_CANDIDATE.md",
-      "docs/remediation/REMEDIATION_EXECUTION_QUEUE.md"
+      "docs/remediation/REMEDIATION_EXECUTION_QUEUE.md",
+      "docs/remediation/WAVE_0_VERIFICATION.md"
     ]
   },
   "diff_articulation": {
@@ -45,7 +47,8 @@
     { "path": "docs/remediation/BACKLOG_ADJUDICATION_LEDGER.md", "intent": "BR-002 3-layer chain + BR-002B-ready; BR-004 relabeled list_runs_filtered, dedup into BR-002.", "risk": "low", "behavior_change": "none (documentation)" },
     { "path": "docs/remediation/REPOSITORY_DEFECT_REGISTER.md", "intent": "BR-002 aligned to the proof (store_api.py:200 raise-site; contained blast radius).", "risk": "low", "behavior_change": "none (documentation)" },
     { "path": "docs/remediation/NEXT_REMEDIATION_CANDIDATE.md", "intent": "under-scoped-not-wrong-file correction.", "risk": "low", "behavior_change": "none (documentation)" },
-    { "path": "docs/remediation/REMEDIATION_EXECUTION_QUEUE.md", "intent": "BR-002A complete; next action BR-002B gated on owner auth.", "risk": "low", "behavior_change": "none (documentation)" }
+    { "path": "docs/remediation/REMEDIATION_EXECUTION_QUEUE.md", "intent": "BR-002A complete; next action BR-002B gated on owner auth.", "risk": "low", "behavior_change": "none (documentation)" },
+    { "path": "docs/remediation/WAVE_0_VERIFICATION.md", "intent": "drop stale 'decision-free' claim about the candidate (BR-002A found a saw/saw_lab filter-value decision).", "risk": "low", "behavior_change": "none (documentation)" }
   ],
   "no_backend_no_schema": "No backend API, route, schema, persistence, or build change. All changes are documentation under docs/remediation/ plus this CBSP21 governance manifest. No production code is touched.",
   "owner_approval": {
