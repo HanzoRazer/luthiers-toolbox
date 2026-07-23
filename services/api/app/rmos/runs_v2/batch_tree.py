@@ -10,6 +10,7 @@ from .artifact_helpers import (
     get_created as _created,
     pick_parent_id as _pick_parent_id,
 )
+from .store_filter import tool_kind_matches, index_tool_kind  # BR-002B/BR-035: shared matcher
 
 
 def _root_score(kind: str) -> int:
@@ -52,7 +53,7 @@ def resolve_batch_root(
         items = [
             a for a in items
             if isinstance(a, dict)
-            and str((a.get("index_meta") or {}).get("tool_kind") or "") == tool_kind
+            and tool_kind_matches(index_tool_kind(a), tool_kind)
         ]
     if not items:
         return None
@@ -120,7 +121,7 @@ def list_batch_tree(
     res = list_runs_filtered(session_id=session_id, batch_label=batch_label, limit=limit)
     items = [a for a in _as_items(res) if isinstance(a, dict)]
     if tool_kind:
-        items = [a for a in items if str((a.get("index_meta") or {}).get("tool_kind") or "") == tool_kind]
+        items = [a for a in items if tool_kind_matches(index_tool_kind(a), tool_kind)]
 
     # Index nodes
     nodes: Dict[str, Dict[str, Any]] = {}

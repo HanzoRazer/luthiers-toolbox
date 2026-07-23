@@ -1,0 +1,129 @@
+{
+  "schema": "cbsp21_patch_input_v1",
+  "schema_version": "cbsp21_patch_input_v1",
+  "coverage_min": 0.95,
+  "patch_id": "BR_002B_TOOL_KIND_FIX",
+  "title": "BR-002B: repair saw_lab/rmos store-layer tool_kind + batch_label TypeErrors (BR-001/002/004/035)",
+  "intent": "First owner-authorized code remediation under the BR-001 program. Fix the production 500s in which saw_lab/rmos endpoints raised TypeError because the runs_v2 store layer rejected the `tool_kind` and `batch_label` keyword arguments its own callers pass. Threads `tool_kind` additively through the full dispatch chain (store_api wrappers -> RunStoreV2.list_runs_filtered/count_runs_filtered -> shared store_filter.matches_index_meta) and adds `batch_label`/`tool_kind` to saw_lab store_artifact. All tool_kind comparisons (store + batch_tree, BR-035) route through a single canonical `tool_kind_matches()` helper that (a) reads the nested `meta.tool_kind` the store actually persists - not a top-level field - and (b) treats `saw`/`saw_lab` as synonyms and missing/empty as lenient, per the empirical BR-002A ground-truth gate that ran first. Resolves ledger items BR-001, BR-002, BR-004 (shared store-layer root) and BR-035 (batch_tree exact-match). A deeper batch_tree shape defect found during this work (RunArtifact vs dict) is deliberately held out of scope and filed as BR-036.",
+  "change_type": "bugfix",
+  "behavior_change": "Fixes 500 TypeErrors -> 200 with correct filtering. saw_lab executions listing (tool_kind=) and saw_lab store_artifact (batch_label=/tool_kind=) no longer raise. tool_kind filtering is now lenient+synonym-aware: requested `saw` OR `saw_lab` matches persisted `saw`, `saw_lab`, and missing/empty; `cnc` (or any unrelated kind) is excluded. Unfiltered calls (no tool_kind) are unchanged. list_runs_filtered and count_runs_filtered agree under the same filter. No route added/removed/moved; new parameters are optional and default to None (backward compatible). The previously-xfailed smoke tests now pass as normal tests.",
+  "risk_level": "medium",
+  "scope": {
+    "paths_in_scope": [
+      ".cbsp21/patches/br-002b-tool-kind-fix.json",
+      "services/api/app/rmos/runs_v2/store_filter.py",
+      "services/api/app/rmos/runs_v2/store.py",
+      "services/api/app/rmos/runs_v2/store_api.py",
+      "services/api/app/rmos/runs_v2/batch_tree.py",
+      "services/api/app/saw_lab/store.py",
+      "services/api/tests/test_tool_kind_filter.py",
+      "services/api/tests/test_saw_lab_endpoint_smoke.py",
+      "services/api/tests/test_rmos_endpoint_smoke.py",
+      "docs/remediation/BACKLOG_ADJUDICATION_LEDGER.md",
+      "docs/remediation/REPOSITORY_DEFECT_REGISTER.md",
+      "docs/remediation/REMEDIATION_EXECUTION_QUEUE.md",
+      "docs/remediation/README.md"
+    ],
+    "files_expected_to_change": [
+      "services/api/app/rmos/runs_v2/store_filter.py",
+      "services/api/app/rmos/runs_v2/store.py",
+      "services/api/app/rmos/runs_v2/store_api.py",
+      "services/api/app/rmos/runs_v2/batch_tree.py",
+      "services/api/app/saw_lab/store.py",
+      "services/api/tests/test_tool_kind_filter.py",
+      "services/api/tests/test_saw_lab_endpoint_smoke.py",
+      "services/api/tests/test_rmos_endpoint_smoke.py",
+      "docs/remediation/BACKLOG_ADJUDICATION_LEDGER.md",
+      "docs/remediation/REPOSITORY_DEFECT_REGISTER.md",
+      "docs/remediation/REMEDIATION_EXECUTION_QUEUE.md",
+      "docs/remediation/README.md"
+    ]
+  },
+  "diff_articulation": {
+    "what_changed": "(1) store_filter.py: added canonical `tool_kind_matches(stored, requested)` (empty/missing requested -> match; empty stored -> lenient match; exact match; else saw/saw_lab synonym set) and `index_tool_kind(m)` (reads m['meta']['tool_kind'] or m['index_meta']['tool_kind'], falling back to top-level - matching how the store actually persists tool_kind, which the BR-002A empirical gate proved is NOT a top-level index field). Added optional `tool_kind` param to `matches_index_meta`; when set it excludes only rows whose tool_kind is present AND unrelated. (2) store.py: added optional `tool_kind` param to RunStoreV2.list_runs_filtered and count_runs_filtered, forwarded into the shared filter kwargs so list/count stay in parity. (3) store_api.py: added `tool_kind` param + forwarding to both the list_runs_filtered and count_runs_filtered module wrappers (the re-exported raise-sites). (4) batch_tree.py: imported the shared helpers and replaced both exact-match tool_kind filters (resolve_batch_root, list_batch_tree) with `tool_kind_matches(index_tool_kind(a), tool_kind)` (BR-035). (5) saw_lab/store.py: store_artifact now accepts `batch_label` and `tool_kind`; batch_label lands in the stored payload where readers look (payload.setdefault('batch_label', ...)), tool_kind in index_meta (BR-001). (6) test_tool_kind_filter.py: new 16-test regression (matcher contract, nested-meta read, meta-not-top-level, mixed-tag no-drop, list/count parity, BR-001 batch_label round-trip, batch_tree lenient/synonym). (7) test_saw_lab_endpoint_smoke.py / test_rmos_endpoint_smoke.py: removed the now-obsolete xfail markers (3 defs + 8 usages) for the fixed 500s. (8) docs/remediation/*: living-ledger burn-down - BR-001/002/004/035 -> COMPLETE/FIXED, BR-036 added, counts updated.",
+    "why_not_redundant": "Repairs live production 500s (TypeError on documented keyword arguments the callers already pass), not cosmetic. Consolidates all tool_kind comparison logic into one helper to prevent the exact drift the empirical gate caught (three prior locations disagreed on where tool_kind lives and whether saw/saw_lab are the same kind). The fix is strictly additive at every signature (new optional params default None), so unfiltered behavior is unchanged. Deliberately bounded: does not touch the wider RMOS persistence layer; the deeper batch_tree RunArtifact-vs-dict shape defect is filed as BR-036 rather than fixed here."
+  },
+  "verification": {
+    "commands_run": [
+      "BR-002A empirical tool_kind ground-truth gate ran first: confirmed 3 stored states (saw / saw_lab / missing) and that tool_kind survives only in nested meta.tool_kind, not a top-level index field - the fix encodes this reality.",
+      "py -3.14 -m pytest tests/test_tool_kind_filter.py --no-cov -q -> 16 passed",
+      "py -3.14 -m pytest tests/test_saw_lab_endpoint_smoke.py tests/test_rmos_endpoint_smoke.py tests/test_store_filter.py -k 'saw_lab or rmos or runs_v2 or filter' --no-cov -> 259 passed, 1 skipped, 0 failed, 0 xpassed (formerly-xfail tests now pass as normal)",
+      "py -3.11 scripts/ci/check_cbsp21_patch_input.py --base origin/main --head HEAD -> to run in CI",
+      "py -3.11 scripts/ci/check_cbsp21_gate.py --changed-files <PR file set> -> to run in CI"
+    ]
+  },
+  "files": [
+    {
+      "path": "services/api/app/rmos/runs_v2/store_filter.py",
+      "intent": "Add canonical tool_kind_matches() (lenient + saw/saw_lab synonym) and index_tool_kind() (reads nested meta.tool_kind); add optional tool_kind filter to matches_index_meta.",
+      "risk": "medium",
+      "behavior_change": "New optional tool_kind filter; when unset, matching is unchanged. When set, excludes only rows whose tool_kind is present and unrelated."
+    },
+    {
+      "path": "services/api/app/rmos/runs_v2/store.py",
+      "intent": "Thread optional tool_kind through RunStoreV2.list_runs_filtered and count_runs_filtered into the shared filter, preserving list/count parity.",
+      "risk": "medium",
+      "behavior_change": "New optional param defaulting None; unfiltered calls unchanged."
+    },
+    {
+      "path": "services/api/app/rmos/runs_v2/store_api.py",
+      "intent": "Add tool_kind param + forwarding to the re-exported list_runs_filtered / count_runs_filtered wrappers (the TypeError raise-sites).",
+      "risk": "medium",
+      "behavior_change": "Fixes the 500 TypeError; new param optional, defaults None."
+    },
+    {
+      "path": "services/api/app/rmos/runs_v2/batch_tree.py",
+      "intent": "Route both tool_kind filters through the shared lenient/synonym helper (BR-035) instead of exact string equality.",
+      "risk": "low",
+      "behavior_change": "Mixed-tag / older batches (saw_lab, missing) are no longer silently dropped; unrelated kinds still excluded."
+    },
+    {
+      "path": "services/api/app/saw_lab/store.py",
+      "intent": "store_artifact accepts batch_label (into payload where readers look) and tool_kind (into index_meta) - BR-001.",
+      "risk": "low",
+      "behavior_change": "Fixes the 500 TypeError on batch_label=; new params optional."
+    },
+    {
+      "path": "services/api/tests/test_tool_kind_filter.py",
+      "intent": "New 16-test regression pinning the behavioral contract from the empirical gate.",
+      "risk": "low",
+      "behavior_change": "none (test-only)"
+    },
+    {
+      "path": "services/api/tests/test_saw_lab_endpoint_smoke.py",
+      "intent": "Remove obsolete xfail markers now that the saw_lab 500s are fixed; tests run as normal.",
+      "risk": "low",
+      "behavior_change": "none (test-only; formerly-xfail tests now assert green)"
+    },
+    {
+      "path": "services/api/tests/test_rmos_endpoint_smoke.py",
+      "intent": "Remove obsolete xfail marker for the fixed rmos store_artifact 500 (BR-004).",
+      "risk": "low",
+      "behavior_change": "none (test-only)"
+    },
+    {
+      "path": "docs/remediation/BACKLOG_ADJUDICATION_LEDGER.md",
+      "intent": "Living-ledger burn-down: BR-001/002/004/035 -> COMPLETE/FIXED; add BR-036; update counts.",
+      "risk": "low",
+      "behavior_change": "none (docs)"
+    },
+    {
+      "path": "docs/remediation/REPOSITORY_DEFECT_REGISTER.md",
+      "intent": "Mark BR-001/002/004 resolved with per-entry Resolved lines; note BR-036.",
+      "risk": "low",
+      "behavior_change": "none (docs)"
+    },
+    {
+      "path": "docs/remediation/REMEDIATION_EXECUTION_QUEUE.md",
+      "intent": "Wave 1 Rank 1 -> DONE (BR-002B); next candidate now BR-036.",
+      "risk": "low",
+      "behavior_change": "none (docs)"
+    },
+    {
+      "path": "docs/remediation/README.md",
+      "intent": "Identifier count 35 -> 36 (BR-036 added).",
+      "risk": "low",
+      "behavior_change": "none (docs)"
+    }
+  ]
+}

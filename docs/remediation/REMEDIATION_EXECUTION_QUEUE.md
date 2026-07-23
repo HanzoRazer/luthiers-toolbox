@@ -24,7 +24,7 @@ Not code fixes — the gates that must clear before/around execution.
 
 | Rank | Item | Disposition | Bound |
 | ---- | ---- | ----------- | ----- |
-| 1 | **BR-001 + BR-002 + BR-004** — saw_lab/rmos store-layer kwarg TypeErrors | CONFIRMED_DEFECT | **SCOPE CORRECTION REQUIRED** — BR-002 execution proved the fix crosses the central `runs_v2` store + shared `store_filter.matches_index_meta` (broad blast radius), not the "2–3 functions" first estimated. Split into **BR-002A** (store-path archaeology / contract proof — next Dev Order) → **BR-002B** (additive repair, only after 002A green). See [NEXT_REMEDIATION_CANDIDATE.md](NEXT_REMEDIATION_CANDIDATE.md) + [BR-002A_STORE_PATH_ARCHAEOLOGY.md](BR-002A_STORE_PATH_ARCHAEOLOGY.md). |
+| 1 | **BR-001 + BR-002 + BR-004** — saw_lab/rmos store-layer kwarg TypeErrors | ~~CONFIRMED_DEFECT~~ **FIXED (BR-002B)** | ✅ **DONE** — `tool_kind`/`batch_label` threaded through the store layer; `matches_index_meta` reads nested `meta.tool_kind` via canonical `tool_kind_matches()` (lenient+synonym); **BR-035 fixed alongside**. 8 formerly-xfail tests pass; +16 regression; 259 saw_lab/runs_v2 tests green. Deeper batch_tree shape defect surfaced as **BR-036** (out of scope). |
 | 2 | **BR-032** — body-solver failure cluster (17 Wave-0 reds) | CONFIRMED_DEFECT | large/unbounded — **first confirm on CI stack + check unmerged 015i/015k branches** before authoring a Dev Order |
 | 3 | BR-006 — CAM 8J pocketing reconstruction (source `.py` lost) | UNFINISHED_SPRINT_WORK | data-loss urgency; medium |
 | 4 | BR-033 — `app.openapi()` build failure / `validate` field shadow | CONFIRMED_DEFECT | small (rename field) — confirm on CI stack |
@@ -75,10 +75,14 @@ Not code fixes — the gates that must clear before/around execution.
 
 ## The next bounded candidate
 
-Wave 1, Rank 1 (ledger items BR-001/BR-002/BR-004). **BR-002A archaeology is complete** →
-[BR-002A_PROOF.md](BR-002A_PROOF.md) (dispatch resolved; production blast radius contained; one
-`"saw"`/`"saw_lab"` value decision for BR-002B; BR-004 dedups into BR-002; concrete patch plan ready).
-The next action is **BR-002B** (the additive repair),
-gated only on **owner authorization** (see the BR-002B checklist in
-[BR-002A_STORE_PATH_ARCHAEOLOGY.md](BR-002A_STORE_PATH_ARCHAEOLOGY.md)). Background:
-[NEXT_REMEDIATION_CANDIDATE.md](NEXT_REMEDIATION_CANDIDATE.md).
+Wave 1, Rank 1 (ledger items BR-001/BR-002/BR-004) is **DONE** — executed as **BR-002B**, the first
+authorized code remediation under this program. The empirical `tool_kind` ground-truth gate ran first
+(3 stored states: `saw`, `saw_lab`, missing — `tool_kind` survives only in nested `meta.tool_kind`),
+then the additive repair threaded `tool_kind`/`batch_label` through the store layer and routed all
+`tool_kind` comparisons (store + `batch_tree`, BR-035) through the canonical lenient/synonym
+`tool_kind_matches()` helper. See [BR-002A_PROOF.md](BR-002A_PROOF.md) for the archaeology.
+
+**The next bounded candidate is now BR-036** — the deeper `batch_tree` shape defect surfaced during
+BR-002B (`isinstance(a, dict)` guards exclude the `RunArtifact` objects `as_items` actually returns
+from the real store → empty trees). It was held out of BR-002B per the owner's scope boundary and
+needs its own bounded Dev Order.

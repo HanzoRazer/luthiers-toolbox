@@ -21,9 +21,25 @@ def store_artifact(
     session_id: Optional[str] = None,
     index_meta: Optional[Dict[str, Any]] = None,
     status: str = "OK",
+    batch_label: Optional[str] = None,
+    tool_kind: Optional[str] = None,
 ) -> str:
-    """Store an artifact and return its ID."""
+    """Store an artifact and return its ID.
+
+    BR-002B: accept ``batch_label`` and ``tool_kind`` (the saw-lab routers pass both).
+    ``batch_label`` is landed in ``payload`` so the ``query_*_by_label`` readers, which
+    read ``payload.get("batch_label")``, can find it; ``tool_kind`` is recorded in the
+    canonical ``index_meta`` path. Existing callers (no new kwargs) are unaffected.
+    """
     artifact_id = f"{kind}_{uuid.uuid4().hex[:12]}"
+    stored_payload = dict(payload)
+    if batch_label is not None:
+        stored_payload.setdefault("batch_label", batch_label)
+    meta = dict(index_meta or {})
+    if tool_kind is not None:
+        meta.setdefault("tool_kind", tool_kind)
+    if batch_label is not None:
+        meta.setdefault("batch_label", batch_label)
     _batch_artifacts[artifact_id] = {
         "artifact_id": artifact_id,
         "kind": kind,
@@ -31,8 +47,8 @@ def store_artifact(
         "created_utc": datetime.now(timezone.utc).isoformat(),
         "parent_id": parent_id,
         "session_id": session_id,
-        "index_meta": index_meta or {},
-        "payload": payload,
+        "index_meta": meta,
+        "payload": stored_payload,
     }
     return artifact_id
 

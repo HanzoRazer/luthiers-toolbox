@@ -205,6 +205,7 @@ def list_runs_filtered(
     kind: Optional[str] = None,
     status: Optional[str] = None,
     tool_id: Optional[str] = None,
+    tool_kind: Optional[str] = None,
     mode: Optional[str] = None,
     workflow_session_id: Optional[str] = None,
     batch_label: Optional[str] = None,
@@ -223,6 +224,7 @@ def list_runs_filtered(
         kind=kind,
         status=status,
         tool_id=tool_id,
+        tool_kind=tool_kind,
         mode=mode,
         workflow_session_id=workflow_session_id,
         batch_label=batch_label,
@@ -239,6 +241,7 @@ def count_runs_filtered(
     event_type: Optional[str] = None,
     status: Optional[str] = None,
     tool_id: Optional[str] = None,
+    tool_kind: Optional[str] = None,
     mode: Optional[str] = None,
     workflow_session_id: Optional[str] = None,
 ) -> int:
@@ -248,6 +251,7 @@ def count_runs_filtered(
         event_type=event_type,
         status=status,
         tool_id=tool_id,
+        tool_kind=tool_kind,
         mode=mode,
         workflow_session_id=workflow_session_id,
     )

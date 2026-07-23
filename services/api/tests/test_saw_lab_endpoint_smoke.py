@@ -21,17 +21,7 @@ from fastapi.testclient import TestClient
 # =============================================================================
 # These endpoints have production bugs with function signature mismatches
 
-list_runs_filtered_bug = pytest.mark.xfail(
-    reason="Production bug: list_runs_filtered() got unexpected keyword argument 'tool_kind'",
-    raises=TypeError,
-    strict=False
-)
 
-store_artifact_bug = pytest.mark.xfail(
-    reason="Production bug: store_artifact() got unexpected keyword argument 'batch_label'",
-    raises=TypeError,
-    strict=False
-)
 
 
 @pytest.fixture
@@ -484,7 +474,6 @@ def test_execution_confirm_endpoint_exists(client):
     assert response.status_code != 404
 
 
-@list_runs_filtered_bug
 def test_execution_confirmations_latest_endpoint_exists(client):
     """GET /api/saw/batch/execution/confirmations/latest endpoint exists."""
     response = client.get(
@@ -523,7 +512,6 @@ def test_execution_status_endpoint_exists(client):
 # Toolpaths Router - Latest, Validate, Lint, Download
 # =============================================================================
 
-@list_runs_filtered_bug
 def test_toolpaths_latest_endpoint_exists(client):
     """GET /api/saw/batch/toolpaths/latest endpoint exists."""
     response = client.get(
@@ -534,7 +522,6 @@ def test_toolpaths_latest_endpoint_exists(client):
     assert response.status_code in [200, 404, 422, 500]
 
 
-@list_runs_filtered_bug
 def test_toolpaths_latest_by_batch_endpoint_exists(client):
     """GET /api/saw/batch/toolpaths/latest-by-batch endpoint exists."""
     response = client.get(
@@ -553,7 +540,6 @@ def test_toolpaths_validate_endpoint_exists(client):
     assert response.status_code != 404
 
 
-@store_artifact_bug
 def test_toolpaths_lint_endpoint_exists(client):
     """POST /api/saw/batch/toolpaths/lint endpoint exists."""
     response = client.post("/api/saw/batch/toolpaths/lint", json={
@@ -574,7 +560,6 @@ def test_toolpaths_download_gcode_endpoint_exists(client):
 # Metrics Lookup Consolidated Router - Lookup by Key
 # =============================================================================
 
-@list_runs_filtered_bug
 def test_metrics_latest_by_decision_endpoint_exists(client):
     """GET /api/saw/batch/execution/metrics/latest-by-decision endpoint exists."""
     response = client.get(
@@ -585,7 +570,6 @@ def test_metrics_latest_by_decision_endpoint_exists(client):
     assert response.status_code in [200, 404, 422, 500]
 
 
-@list_runs_filtered_bug
 def test_metrics_latest_by_batch_endpoint_exists(client):
     """GET /api/saw/batch/execution/metrics/latest-by-batch endpoint exists."""
     response = client.get(
@@ -596,7 +580,6 @@ def test_metrics_latest_by_batch_endpoint_exists(client):
     assert response.status_code in [200, 404, 422, 500]
 
 
-@list_runs_filtered_bug
 def test_metrics_latest_by_execution_endpoint_exists(client):
     """GET /api/saw/batch/execution/metrics/latest endpoint exists."""
     response = client.get(
@@ -838,7 +821,6 @@ def test_all_saw_lab_metrics_endpoints_exist(client):
         assert response.status_code in [200, 404, 422, 500], f"{path} returned unexpected {response.status_code}"
 
 
-@list_runs_filtered_bug
 def test_all_saw_lab_metrics_lookup_endpoints_exist(client):
     """All metrics lookup consolidated endpoints exist (valid response)."""
     endpoints = [
