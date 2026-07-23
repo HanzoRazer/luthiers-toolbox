@@ -130,7 +130,7 @@ canonical helper at two filter sites** (steps 3 & 4), so store and tree filterin
 | - | --------------- | ------ |
 | 1 | `app/rmos/runs_v2/store_api.py:200` `list_runs_filtered` | add `tool_kind: Optional[str] = None`; forward `tool_kind=tool_kind` in the delegated call |
 | 2 | `app/rmos/runs_v2/store.py:294` `RunStoreV2.list_runs_filtered` | add `tool_kind: Optional[str] = None`; add `tool_kind=tool_kind` to the `fkw` dict |
-| 3 | `app/rmos/runs_v2/store_filter.py:9` `matches_index_meta` | add `tool_kind: Optional[str] = None`; match via a **new canonical helper `tool_kind_matches(stored, requested)`** with **lenient + synonym** semantics: match when `stored` is empty/missing **or** in the synonym set (`{"saw","saw_lab"}`). **Not** a naive `== "saw"` (drops persisted `"saw_lab"` compare artifacts + missing-`tool_kind` old artifacts — Q3). |
+| 3 | `app/rmos/runs_v2/store_filter.py:9` `matches_index_meta` (+ maybe `store.py:58` `_extract_index_meta`) | add `tool_kind: Optional[str] = None`; match via a **new canonical helper `tool_kind_matches(stored, requested)`** with **lenient + synonym** semantics (match when `stored` is empty/missing **or** in `{"saw","saw_lab"}`). **⚠ Read the stored value from the RIGHT place — the empirical gate proved `tool_kind` is NOT a top-level index field: `_extract_index_meta` omits it, so it lives in `m["meta"]["tool_kind"]` (nested).** A literal `m.get("tool_kind")` match returns **0/3 — drops everything.** BR-002B must read `m["meta"]["tool_kind"]` in the filter **or** hoist `tool_kind` into `_extract_index_meta` (top-level; requires an index rebuild for existing data). |
 | 4 | `app/rmos/runs_v2/batch_tree.py:51,122` `resolve_batch_root` / `list_batch_tree` | replace the two **live local exact-match** filters (`... == tool_kind`) with the **same** `tool_kind_matches()` helper, so tree/root/summary/export cannot drift from the store filter. |
 | 5 | `app/saw_lab/store.py:16` `store_artifact` | add `batch_label: Optional[str] = None`, `tool_kind: Optional[str] = None`; if `batch_label` set → `payload["batch_label"] = batch_label` (Q6); if `tool_kind` set → `index_meta = {**(index_meta or {}), "tool_kind": tool_kind}` |
 
@@ -190,15 +190,34 @@ to post-filter `list`). Also review `app/rmos/runs_v2/batch_timeline.py`'s in-me
 [x] batch_label persistence contract pinned (payload["batch_label"]; store.py:111/156/359)
 [x] BR-004 dedup verdict recorded (= BR-002, list_runs_filtered)
 [x] BR-002B patch plan concrete + named regression set (incl. test_store_filter.py + a new saw/saw_lab test)
-[ ] tool_kind GROUND-TRUTH check (empirical gate, tool_kind-scoped): enumerate the DISTINCT persisted
-    tool_kind values in a real/representative store or fixture — OBSERVED, not code-read — and confirm
-    the {"saw","saw_lab",missing} model before the filter is written. (Both prior mis-scopes here were
-    code-reading errors a data check catches in seconds.)
+[x] tool_kind GROUND-TRUTH check (empirical gate) — EXECUTED 2026-07-22 (see "Empirical gate results")
 [ ] owner authorization for BR-002B recorded   ← the one remaining gate
 ```
 
+## Empirical gate results (executed 2026-07-22 — read-only, temp `RMOS_RUNS_DIR`)
+
+Persisted 3 artifacts through the **real** `store_api.store_artifact` (default → `saw`; `tool_kind="saw_lab"`;
+`tool_kind=""` → missing), rebuilt the index, and **observed** the actual persisted structure:
+
+| write | top-level `tool_kind` | `meta.tool_kind` | `mode` | `tool_id` |
+| ----- | --------------------- | ---------------- | ------ | --------- |
+| default | *(none)* | **saw** | saw | saw |
+| `="saw_lab"` | *(none)* | **saw_lab** | saw_lab | saw_lab |
+| `=""` (legacy) | *(none)* | *(none)* | legacy | unknown |
+
+- ✅ **Three-state model confirmed by observation:** `meta.tool_kind ∈ {saw, saw_lab, missing}`.
+- 🔴 **New finding — `tool_kind` is NOT a top-level index field.** `_extract_index_meta` (`store.py:58`)
+  omits it; it survives only in `m["meta"]["tool_kind"]`, and leaks into `mode`/`tool_id`. A filter reading
+  `m.get("tool_kind")` (literal patch-plan step 3) matched **0/3 — it would drop every artifact.** Reading
+  `m["meta"]["tool_kind"]` matched 1/3 per value, as expected. Patch-plan step 3 corrected accordingly.
+- ✅ **BR-002 TypeError reproduced** empirically: `list_runs_filtered(tool_kind="saw")` →
+  *"unexpected keyword argument 'tool_kind'"*.
+- ⚠ **Carry into BR-002B:** verify `batch_tree`'s item shape too — it reads `a["index_meta"]["tool_kind"]`,
+  a *different* structure than the store index's `meta`, so it may already be reading the wrong place (BR-035).
+
 > **Net:** the archaeology is complete and BR-002B is authorizable, but with **one explicit design
-> decision** (the `tool_kind` lenient/synonym value handling) — so BR-002B is *bounded*, not *decision-free*.
+> decision** (the `tool_kind` lenient/synonym value handling) **and one concrete implementation
+> constraint** (read `meta.tool_kind`, not top-level) — so BR-002B is *bounded*, not *decision-free*.
 
 > **Verification note (scoped to `tool_kind`, not a general rule):** this area has now mis-stated its own
 > mechanism twice (value count; persisted-vs-response tagging), both caught only by going to source/data.
