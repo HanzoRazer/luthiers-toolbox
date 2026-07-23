@@ -300,6 +300,7 @@ class RunStoreV2:
         kind: Optional[str] = None,  # Alias for event_type
         status: Optional[str] = None,
         tool_id: Optional[str] = None,
+        tool_kind: Optional[str] = None,
         mode: Optional[str] = None,
         workflow_session_id: Optional[str] = None,
         batch_label: Optional[str] = None,
@@ -321,6 +322,7 @@ class RunStoreV2:
 
         fkw = dict(
             event_type=event_type, kind=kind, status=status, tool_id=tool_id,
+            tool_kind=tool_kind,
             mode=mode, workflow_session_id=workflow_session_id,
             batch_label=batch_label, session_id=session_id,
             parent_plan_run_id=parent_plan_run_id,
@@ -370,7 +372,8 @@ class RunStoreV2:
         return results
 
     def count_runs_filtered(self, *, event_type: Optional[str] = None, status: Optional[str] = None,
-                            tool_id: Optional[str] = None, mode: Optional[str] = None,
+                            tool_id: Optional[str] = None, tool_kind: Optional[str] = None,
+                            mode: Optional[str] = None,
                             workflow_session_id: Optional[str] = None, date_from: Optional[datetime] = None,
                             date_to: Optional[datetime] = None) -> int:
         """Count runs matching filters using the index (fast)."""
@@ -383,6 +386,7 @@ class RunStoreV2:
 
         fkw = dict(
             event_type=event_type, status=status, tool_id=tool_id,
+            tool_kind=tool_kind,
             mode=mode, workflow_session_id=workflow_session_id,
             date_from=date_from, date_to=date_to,
         )

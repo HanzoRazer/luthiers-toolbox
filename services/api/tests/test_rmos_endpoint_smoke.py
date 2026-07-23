@@ -18,11 +18,6 @@ def client():
 # Mark tests that expose known production bugs with xfail
 # These help document issues without blocking CI
 
-list_runs_filtered_bug = pytest.mark.xfail(
-    reason="Production bug: list_runs_filtered() may have unexpected keyword arguments",
-    raises=TypeError,
-    strict=False
-)
 
 # =============================================================================
 # RMOS Core Routes (/api/rmos/*)

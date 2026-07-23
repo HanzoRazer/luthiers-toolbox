@@ -5,6 +5,52 @@ from __future__ import annotations
 from datetime import datetime
 from typing import Any, Dict, Optional
 
+# BR-002B: canonical tool_kind matcher, shared by matches_index_meta and batch_tree so
+# store and tree filtering cannot drift. Values proven by the empirical gate: persisted
+# tool_kind is one of {"saw", "saw_lab", missing}; "saw"/"saw_lab" are aliases; unrelated
+# values (e.g. "cnc") must NOT match. Missing/empty stays visible (lenient policy).
+_TOOL_KIND_SYNONYMS = frozenset({"saw", "saw_lab"})
+
+
+def tool_kind_matches(stored: Any, requested: Any) -> bool:
+    """Return True if a persisted tool_kind *stored* satisfies a *requested* filter.
+
+    - no requested filter -> match everything
+    - missing/empty stored -> match (lenient: legacy artifacts stay visible)
+    - exact match -> match (case-insensitive)
+    - saw <-> saw_lab -> match (proven synonym relationship)
+    - any other distinct value -> no match
+
+    BR-002B review fix: comparison is case-folded. The synonym set is lower-case, so a
+    persisted "Saw"/"SAW_LAB" previously matched neither the exact branch nor the
+    synonym branch and was silently excluded — the one way a *tagged* artifact could
+    vanish from a filtered result under this otherwise-lenient policy.
+    """
+    if not requested:
+        return True
+    s = str(stored or "").strip().lower()
+    if not s:
+        return True
+    r = str(requested).strip().lower()
+    if s == r:
+        return True
+    return s in _TOOL_KIND_SYNONYMS and r in _TOOL_KIND_SYNONYMS
+
+
+def index_tool_kind(m: Dict[str, Any]) -> Any:
+    """Read the persisted tool_kind from an index entry.
+
+    The empirical gate proved tool_kind is NOT a top-level index field
+    (_extract_index_meta omits it); it lives in m["meta"]["tool_kind"]. Fall back to a
+    top-level key and to an "index_meta" shape for robustness across callers.
+    """
+    if not isinstance(m, dict):
+        return None
+    meta = m.get("meta") or m.get("index_meta") or {}
+    if isinstance(meta, dict) and meta.get("tool_kind"):
+        return meta.get("tool_kind")
+    return m.get("tool_kind")
+
 
 def matches_index_meta(
     m: Dict[str, Any],
@@ -13,6 +59,7 @@ def matches_index_meta(
     kind: Optional[str] = None,
     status: Optional[str] = None,
     tool_id: Optional[str] = None,
+    tool_kind: Optional[str] = None,
     mode: Optional[str] = None,
     workflow_session_id: Optional[str] = None,
     batch_label: Optional[str] = None,
@@ -28,6 +75,8 @@ def matches_index_meta(
     if not _matches_date_range(m, date_from, date_to):
         return False
     if not _matches_simple_fields(m, event_type, kind, status, tool_id, mode, workflow_session_id):
+        return False
+    if tool_kind and not tool_kind_matches(index_tool_kind(m), tool_kind):
         return False
     if not _matches_session_labels(m, batch_label, session_id):
         return False

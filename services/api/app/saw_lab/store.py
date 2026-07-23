@@ -21,9 +21,41 @@ def store_artifact(
     session_id: Optional[str] = None,
     index_meta: Optional[Dict[str, Any]] = None,
     status: str = "OK",
+    batch_label: Optional[str] = None,
+    tool_kind: Optional[str] = None,
 ) -> str:
-    """Store an artifact and return its ID."""
+    """Store an artifact and return its ID.
+
+    BR-002B: accept ``batch_label`` and ``tool_kind`` (the saw-lab routers pass both).
+    ``batch_label`` is landed in ``payload`` so the ``query_*_by_label`` readers, which
+    read ``payload.get("batch_label")``, can find it; ``tool_kind`` is recorded in the
+    canonical ``index_meta`` path. Existing callers (no new kwargs) are unaffected.
+
+    BR-002B review fix: a caller-supplied ``payload["batch_label"]`` and the
+    ``batch_label=`` kwarg could previously disagree and both be persisted — payload
+    won for readers while ``index_meta`` kept the kwarg, so a label-based reader and a
+    meta-based filter would silently resolve the same artifact differently. The
+    *effective* value is now resolved once and mirrored to both locations, so the two
+    can never drift. Precedence is unchanged (an explicit payload value still wins,
+    which is what the ``query_*_by_label`` readers already observed).
+    """
     artifact_id = f"{kind}_{uuid.uuid4().hex[:12]}"
+    stored_payload = dict(payload)
+    meta = dict(index_meta or {})
+
+    # Resolve once, then mirror — payload and index_meta must not disagree.
+    effective_label = stored_payload.get("batch_label")
+    if effective_label is None:
+        effective_label = batch_label
+    if effective_label is not None:
+        stored_payload["batch_label"] = effective_label
+        meta["batch_label"] = effective_label
+
+    effective_tool_kind = meta.get("tool_kind")
+    if effective_tool_kind is None:
+        effective_tool_kind = tool_kind
+    if effective_tool_kind is not None:
+        meta["tool_kind"] = effective_tool_kind
     _batch_artifacts[artifact_id] = {
         "artifact_id": artifact_id,
         "kind": kind,
@@ -31,8 +63,8 @@ def store_artifact(
         "created_utc": datetime.now(timezone.utc).isoformat(),
         "parent_id": parent_id,
         "session_id": session_id,
-        "index_meta": index_meta or {},
-        "payload": payload,
+        "index_meta": meta,
+        "payload": stored_payload,
     }
     return artifact_id
 

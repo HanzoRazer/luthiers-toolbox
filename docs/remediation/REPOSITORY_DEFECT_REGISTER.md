@@ -40,6 +40,13 @@ separately recorded ([WAVE_0_VERIFICATION.md](WAVE_0_VERIFICATION.md), 2026-07-2
 additional items (BR-032/033/034) and did not invalidate these four. (BR-001..004 are xfail-marked, so
 they do not appear among the Wave 0 failures.)
 
+> ✅ **RESOLVED 2026-07-22 by BR-002B** (first executed code remediation): **BR-001, BR-002, BR-004**
+> are fixed and no longer reproduce — the store layer now accepts `batch_label`/`tool_kind`, the xfail
+> markers are removed, and the formerly-failing smoke tests pass. **BR-003** remains open. The
+> per-defect entries below are retained as the historical reproduction record; each fixed entry carries
+> a **Resolved** line. BR-035 (batch_tree exact-match) was fixed in the same tranche; a deeper
+> batch_tree shape defect was found and filed as **BR-036** (out of BR-002B scope).
+
 ### BR-001 · `store_artifact()` rejects `batch_label`
 - **Subsystem:** saw_lab
 - **Reproduction basis:** `app/saw_lab/store.py:16` — `store_artifact(*, kind, payload, parent_id,
@@ -50,6 +57,28 @@ they do not appear among the Wave 0 failures.)
   store/index the batch label (the value is used by `query_*_by_label` functions in the same module).
 - **Severity:** high (endpoint 500) · **Regression risk:** low · **Fix size:** small (one function +
   caller). · **Readiness:** ready.
+- ✅ **Resolved (BR-002B):** `app/saw_lab/store.py` `store_artifact` now accepts `batch_label`/`tool_kind`.
+  The effective value is resolved once and mirrored into **both** `payload` (where the
+  `query_*_by_label` readers look) and `index_meta`, so the two cannot disagree; an explicit
+  caller-supplied `payload["batch_label"]` still takes precedence. Regression:
+  `test_saw_lab_store_artifact_batch_label_roundtrip`,
+  `test_saw_lab_batch_label_payload_and_meta_cannot_disagree`.
+- ⚠️ **Evidence correction (2026-07-22, BR-002B review) — this entry overstates a live 500.**
+  The reproduction basis is misattributed. The xfail that named this defect
+  (`store_artifact() got unexpected keyword argument 'batch_label'`) was attached to
+  `test_toolpaths_lint_endpoint_exists`, and that endpoint's service
+  (`app/saw_lab/toolpaths_lint_service.py:49`) imports `store_artifact` from
+  **`app.rmos.runs_v2.store`**, not from `app/saw_lab/store.py`. On `origin/main` the RMOS
+  `store_artifact` (`store_api.py:134-144`) **already accepted** `batch_label` and `tool_kind`,
+  so that endpoint could not have raised this `TypeError`; the marker was stale (and
+  `strict=False`, so it XPASSed silently rather than failing).
+  A repo-wide caller trace finds **no caller** passing `batch_label=`/`tool_kind=` to the
+  saw_lab `store_artifact` — every such call site resolves to the RMOS store. The BR-002B
+  change to `app/saw_lab/store.py` is therefore **forward-compatibility hardening, exercised
+  only by its own tests**, not the repair of a reachable production 500. It is harmless and
+  worth keeping; the *severity* claim ("high — endpoint 500") is what is unsupported.
+  BR-002 and BR-004 are unaffected by this correction — those are the real, reachable
+  `tool_kind` defects in the RMOS filter chain.
 
 ### BR-002 · `list_runs_filtered()` rejects `tool_kind`
 - **Subsystem:** rmos/runs_v2 (+ saw_lab caller)
@@ -71,6 +100,12 @@ they do not appear among the Wave 0 failures.)
   resolved via BR-002A
   (archaeology) → BR-002B (repair). Authoritative scoping record:
   [BR-002A_STORE_PATH_ARCHAEOLOGY.md](BR-002A_STORE_PATH_ARCHAEOLOGY.md).
+- ✅ **Resolved (BR-002B):** `tool_kind` threaded through the full chain (`store_api` wrappers →
+  `RunStoreV2.list_runs_filtered`/`count_runs_filtered` → `matches_index_meta`). The
+  `"saw"`/`"saw_lab"` value decision was settled by the empirical gate (both are synonyms; missing is
+  lenient) and encoded in the canonical `tool_kind_matches()` helper, which also reads the nested
+  `meta.tool_kind` the store actually persists. List/count parity held. Regression:
+  `test_tool_kind_filter.py` (16 tests).
 
 ### BR-003 · Simulation metrics router/schema mismatch
 - **Subsystem:** simulation
@@ -85,6 +120,8 @@ they do not appear among the Wave 0 failures.)
 - **Reproduction basis:** committed xfail `tests/test_rmos_endpoint_smoke.py:21`. **Possible shared root
   with BR-001** (`store_artifact` kwarg handling) — dedup to be confirmed when the fix is scoped.
 - **Severity:** medium · **Readiness:** ready (verify duplicate relationship first).
+- ✅ **Resolved (BR-002B):** confirmed the **same `store_artifact`/store-layer root as BR-001/BR-002** and
+  fixed in the same tranche; xfail removed, `test_rmos_endpoint_smoke.py` passes.
 
 > Not listed here (correctly excluded): BR-024 (R2000 `ezdxf.new` literal call refactored into
 > `dxf_compat` — **`SUPERSEDED` into BR-018**, which owns the open R2000 policy question; not a

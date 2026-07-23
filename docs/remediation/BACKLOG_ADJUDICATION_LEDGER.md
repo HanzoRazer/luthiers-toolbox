@@ -50,10 +50,10 @@ authoritative CI-stack run). Tier A/B items only are queue-eligible; Tier C is i
 
 | BR ID | Title | Subsystem | Source ref | Tier | Disposition | Verify | Sev | Readiness | Recommended action |
 | ----- | ----- | --------- | ---------- | ---- | ----------- | ------ | --- | --------- | ------------------ |
-| BR-001 | `store_artifact()` rejects `batch_label` (TypeError) | saw_lab | `app/saw_lab/store.py:16`; `tests/test_saw_lab_endpoint_smoke.py:30` xfail | A | CONFIRMED_DEFECT | code-inspection + test-encoded | high | ready | thread `batch_label` into store layer; flip xfail |
-| BR-002 | `list_runs_filtered()` rejects `tool_kind` (TypeError) | rmos/runs_v2 | 3-layer chain (per [BR-002A_PROOF](BR-002A_PROOF.md) Q1): `store_api.py:200` raise-site (re-exported as `store.list_runs_filtered` via `store.py:396`), then `store.py:294` class method, then `store_filter.matches_index_meta` (2 production callers + 33 test assertions; one `saw`/`saw_lab` value decision for BR-002B); `tests/test_saw_lab_endpoint_smoke.py:24` xfail | A | CONFIRMED_DEFECT | code-inspection + test-encoded | high | **BR-002B-ready** (owner auth pending) | proof green — apply the [BR-002A_PROOF](BR-002A_PROOF.md) patch plan as **BR-002B** |
+| BR-001 | `store_artifact()` rejects `batch_label` (TypeError) | saw_lab | `app/saw_lab/store.py:16` | A | COMPLETE | test-verified | high | **FIXED (BR-002B)** | `store_artifact` now accepts `batch_label`/`tool_kind` (batch_label→payload); xfail removed, test passes |
+| BR-002 | `list_runs_filtered()` rejects `tool_kind` (TypeError) | rmos/runs_v2 | 3-layer chain: `store_api.py` + `store.py` + `store_filter.matches_index_meta` | A | COMPLETE | test-verified | high | **FIXED (BR-002B)** | `tool_kind` threaded through all 3 layers; `matches_index_meta` reads nested `meta.tool_kind` via canonical `tool_kind_matches()` (lenient+synonym); list/count parity; xfail removed |
 | BR-003 | Simulation metrics router/schema mismatch (8 xfails) | simulation | `tests/test_simulation_endpoint_smoke.py:28` | A | CONFIRMED_DEFECT | test-encoded | med | ready | reconcile metrics router vs schema |
-| BR-004 | `list_runs_filtered()` kwarg bug (was mislabeled "store_artifact") | rmos | `tests/test_rmos_endpoint_smoke.py:21` xfail (`strict=False`) | A | CONFIRMED_DEFECT | test-encoded | med | dedup → BR-002 | **same `list_runs_filtered` root as BR-002** (per [BR-002A_PROOF](BR-002A_PROOF.md) Q7); fixed by BR-002B |
+| BR-004 | `list_runs_filtered()` kwarg bug (was mislabeled "store_artifact") | rmos | `tests/test_rmos_endpoint_smoke.py:21` | A | COMPLETE | test-verified | med | **FIXED (BR-002B)** | same root as BR-002; fixed together; xfail removed, test passes |
 | BR-005 | CAM 7D/7E/7F translation-artifact: "impl complete, pending tests+commit" | cam/translation | `docs/handoffs/CAM_7{D,E,F}_*.md` | A | UNFINISHED_SPRINT_WORK | doc-validated | med | ready | complete tests + commit the authorized work |
 | BR-006 | CAM 8J pocketing-intent reconstruction (source `.py` lost, `.pyc` only) | cam/pocketing | `docs/handoffs/DEV_ORDER_2026-06-08_CAM_8J_POCKETING_INTENT.md`, `RECOVERY_8J_*` | A | UNFINISHED_SPRINT_WORK | doc-validated | high | ready | reconstruct lane (data-loss risk) |
 | BR-007 | CI-RED-020B API health+smoke nightly witness recovery | ci | `docs/handoffs/CI_RED_020B_dev_order.md` (+addendum) | A | UNFINISHED_SPRINT_WORK | doc-validated | med | ready | execute dev-ready handoff |
@@ -84,11 +84,43 @@ authoritative CI-stack run). Tier A/B items only are queue-eligible; Tier C is i
 | BR-032 | Body-solver failure cluster (17 reds: body_solver_integration/morphology_spine/ibg_export + 3 cam feeds/speeds) | body_solver / cam | Wave 0 run; unmerged `fix/ci-red-015{i,k}-*` | A | CONFIRMED_DEFECT | wave0-local-run (CI-stack unconfirmed) | high | needs-CI-confirm | reproduce on CI 3.11; check if 015i/015k resolve; then bound |
 | BR-033 | `app.openapi()` fails to build; field `validate` shadows `BaseModel.validate` | api/schema | Wave 0 `test_openapi.py`; pydantic UserWarnings | A | CONFIRMED_DEFECT | wave0-local-run (toolchain-amplified) | med | needs-CI-confirm | rename shadowing field; confirm openapi builds on CI stack |
 | BR-034 | Stale xfail marker now XPASSes (1) | tests | Wave 0 (1 xpassed) | B | MAINTAINABILITY_DEBT | test-encoded | low | ready | identify + remove the obsolete xfail marker |
-| BR-035 | `batch_tree` `tool_kind` exact-match silently under-returns mixed/old batches (live) | rmos/runs_v2 | `app/rmos/runs_v2/batch_tree.py:51,122` `== tool_kind`; 3 stored states (`saw`/`saw_lab` persisted + missing) per [BR-002A_PROOF](BR-002A_PROOF.md) Q3 | A | CONFIRMED_DEFECT | code-inspection | med | ready | route through the canonical `tool_kind_matches()` helper (fix **with** BR-002B, step 4) — related, not blocked |
+| BR-035 | `batch_tree` `tool_kind` exact-match silently under-returns mixed/old batches | rmos/runs_v2 | `app/rmos/runs_v2/batch_tree.py:51,122` | A | COMPLETE | test-verified | med | **FIXED (BR-002B)** | both filters now use the canonical `tool_kind_matches()` helper (lenient+synonym); regression `test_batch_tree_tool_kind_lenient` |
+| BR-036 | `batch_tree` `isinstance(a, dict)` guard excludes `RunArtifact` results from `list_runs_filtered` (via `as_items`) → **empty trees** for the real store output | rmos/runs_v2 | `app/rmos/runs_v2/batch_tree.py:51,122` + `artifact_helpers.as_items`; found empirically during BR-002B | A | CONFIRMED_DEFECT | **code-traced + reproduced** | **high** | ready | **out of BR-002B scope** (per owner boundary — shape/persistence, not the `tool_kind` repair); own bounded Dev Order — needs a shape adapter, not a cast (see severity note below) |
+
+> **BR-036 severity raised med → high (2026-07-22, BR-002B review).** Three findings, each
+> code-traced on the PR head and reproduced:
+>
+> 1. **It is live, not potential.** `RunStoreV2.list_runs_filtered` is annotated
+>    `-> List[RunArtifact]` and appends `RunArtifact.model_validate(...)`; the
+>    `store_api.list_runs_filtered` wrapper returns that list **without dict conversion**.
+>    So `as_items()` — whose docstring promises "list of artifact **dicts**" — returns
+>    pydantic models, and `list_batch_tree` drops every one at `isinstance(a, dict)`.
+>    Production trees are **empty (`node_count: 0`)**, not merely incomplete.
+> 2. **Second failure mode: a crash, not just an empty result.** `resolve_batch_root`
+>    applied its `isinstance` filter only inside the `if tool_kind:` branch, so the
+>    *unfiltered* call reached `_get_id(a)` → `a.get(...)` → **`AttributeError` (HTTP 500)`**,
+>    while the same input with `tool_kind` set returned `None`. Reproduced directly.
+>    BR-002B makes this path *graceful* (filter hoisted, pinned by
+>    `test_resolve_batch_root_non_dict_items_does_not_crash_without_tool_kind`) but does
+>    **not** fix the shape defect — trees stay empty until BR-036 lands.
+> 3. **Consequence for BR-035.** Because every item is dropped upstream, the BR-035
+>    `tool_kind` filter inside `batch_tree` **never executes against real store output**.
+>    BR-035 is correct and regression-pinned, but is exercised only by dict-shaped test
+>    doubles; its production benefit is gated on BR-036.
+>
+> **Fix is a shape adapter, not a cast.** A plain `model_dump()` is insufficient — the
+> helpers and `RunArtifact` use different vocabularies:
+> `id`/`artifact_id`→`run_id`, `created_utc`→`created_at_utc` (and `str`→`datetime`),
+> `index_meta`→`meta`, `kind`→`event_type`. Only `index_tool_kind()` already reads `meta`.
+> `batch_timeline.py:111` consumes `as_items` identically and carries the same defect, so
+> the adapter belongs in `artifact_helpers.as_items` (restoring its documented contract),
+> which fixes both call sites at once. This sizing confirms the BR-002B scope boundary was
+> correct: it is a bounded Dev Order, not a line-edit.
 
 ## Verification coverage
 
-35 items total: **Tier A 21 · Tier B 13 · Tier C 1** (BR-035 added on BR-002A verification).
+36 items total: **Tier A 22 · Tier B 13 · Tier C 1**. **BR-001/002/004/035 FIXED by BR-002B** (first
+executed code remediation); BR-036 added (deeper batch_tree shape defect, out of BR-002B scope).
 
 - **Tier A items:** 20 (BR-001..007, 010, 012..021, 032, 033). Verified — **code-inspection**: BR-001,
   002, 015, 017, 019, 021 (also BR-024 Tier B, 031 Tier C by inspection); **test-encoded**: BR-003, 004,
