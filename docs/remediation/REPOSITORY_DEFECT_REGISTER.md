@@ -57,9 +57,28 @@ they do not appear among the Wave 0 failures.)
   store/index the batch label (the value is used by `query_*_by_label` functions in the same module).
 - **Severity:** high (endpoint 500) · **Regression risk:** low · **Fix size:** small (one function +
   caller). · **Readiness:** ready.
-- ✅ **Resolved (BR-002B):** `app/saw_lab/store.py` `store_artifact` now accepts `batch_label`/`tool_kind`;
-  batch_label lands in the payload (`payload.setdefault("batch_label", …)`, where readers look), tool_kind
-  in index_meta. Regression: `test_saw_lab_store_artifact_batch_label_roundtrip`.
+- ✅ **Resolved (BR-002B):** `app/saw_lab/store.py` `store_artifact` now accepts `batch_label`/`tool_kind`.
+  The effective value is resolved once and mirrored into **both** `payload` (where the
+  `query_*_by_label` readers look) and `index_meta`, so the two cannot disagree; an explicit
+  caller-supplied `payload["batch_label"]` still takes precedence. Regression:
+  `test_saw_lab_store_artifact_batch_label_roundtrip`,
+  `test_saw_lab_batch_label_payload_and_meta_cannot_disagree`.
+- ⚠️ **Evidence correction (2026-07-22, BR-002B review) — this entry overstates a live 500.**
+  The reproduction basis is misattributed. The xfail that named this defect
+  (`store_artifact() got unexpected keyword argument 'batch_label'`) was attached to
+  `test_toolpaths_lint_endpoint_exists`, and that endpoint's service
+  (`app/saw_lab/toolpaths_lint_service.py:49`) imports `store_artifact` from
+  **`app.rmos.runs_v2.store`**, not from `app/saw_lab/store.py`. On `origin/main` the RMOS
+  `store_artifact` (`store_api.py:134-144`) **already accepted** `batch_label` and `tool_kind`,
+  so that endpoint could not have raised this `TypeError`; the marker was stale (and
+  `strict=False`, so it XPASSed silently rather than failing).
+  A repo-wide caller trace finds **no caller** passing `batch_label=`/`tool_kind=` to the
+  saw_lab `store_artifact` — every such call site resolves to the RMOS store. The BR-002B
+  change to `app/saw_lab/store.py` is therefore **forward-compatibility hardening, exercised
+  only by its own tests**, not the repair of a reachable production 500. It is harmless and
+  worth keeping; the *severity* claim ("high — endpoint 500") is what is unsupported.
+  BR-002 and BR-004 are unaffected by this correction — those are the real, reachable
+  `tool_kind` defects in the RMOS filter chain.
 
 ### BR-002 · `list_runs_filtered()` rejects `tool_kind`
 - **Subsystem:** rmos/runs_v2 (+ saw_lab caller)

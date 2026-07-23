@@ -17,16 +17,21 @@ def tool_kind_matches(stored: Any, requested: Any) -> bool:
 
     - no requested filter -> match everything
     - missing/empty stored -> match (lenient: legacy artifacts stay visible)
-    - exact match -> match
+    - exact match -> match (case-insensitive)
     - saw <-> saw_lab -> match (proven synonym relationship)
     - any other distinct value -> no match
+
+    BR-002B review fix: comparison is case-folded. The synonym set is lower-case, so a
+    persisted "Saw"/"SAW_LAB" previously matched neither the exact branch nor the
+    synonym branch and was silently excluded — the one way a *tagged* artifact could
+    vanish from a filtered result under this otherwise-lenient policy.
     """
     if not requested:
         return True
-    s = str(stored or "").strip()
+    s = str(stored or "").strip().lower()
     if not s:
         return True
-    r = str(requested).strip()
+    r = str(requested).strip().lower()
     if s == r:
         return True
     return s in _TOOL_KIND_SYNONYMS and r in _TOOL_KIND_SYNONYMS

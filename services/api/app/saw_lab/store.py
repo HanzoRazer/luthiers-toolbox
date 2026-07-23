@@ -30,16 +30,32 @@ def store_artifact(
     ``batch_label`` is landed in ``payload`` so the ``query_*_by_label`` readers, which
     read ``payload.get("batch_label")``, can find it; ``tool_kind`` is recorded in the
     canonical ``index_meta`` path. Existing callers (no new kwargs) are unaffected.
+
+    BR-002B review fix: a caller-supplied ``payload["batch_label"]`` and the
+    ``batch_label=`` kwarg could previously disagree and both be persisted — payload
+    won for readers while ``index_meta`` kept the kwarg, so a label-based reader and a
+    meta-based filter would silently resolve the same artifact differently. The
+    *effective* value is now resolved once and mirrored to both locations, so the two
+    can never drift. Precedence is unchanged (an explicit payload value still wins,
+    which is what the ``query_*_by_label`` readers already observed).
     """
     artifact_id = f"{kind}_{uuid.uuid4().hex[:12]}"
     stored_payload = dict(payload)
-    if batch_label is not None:
-        stored_payload.setdefault("batch_label", batch_label)
     meta = dict(index_meta or {})
-    if tool_kind is not None:
-        meta.setdefault("tool_kind", tool_kind)
-    if batch_label is not None:
-        meta.setdefault("batch_label", batch_label)
+
+    # Resolve once, then mirror — payload and index_meta must not disagree.
+    effective_label = stored_payload.get("batch_label")
+    if effective_label is None:
+        effective_label = batch_label
+    if effective_label is not None:
+        stored_payload["batch_label"] = effective_label
+        meta["batch_label"] = effective_label
+
+    effective_tool_kind = meta.get("tool_kind")
+    if effective_tool_kind is None:
+        effective_tool_kind = tool_kind
+    if effective_tool_kind is not None:
+        meta["tool_kind"] = effective_tool_kind
     _batch_artifacts[artifact_id] = {
         "artifact_id": artifact_id,
         "kind": kind,

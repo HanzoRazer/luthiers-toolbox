@@ -48,13 +48,17 @@ def resolve_batch_root(
     Prefers *batch_spec* kinds. Falls back to the artifact with no parent inside the batch.
     """
     res = list_runs_filtered(session_id=session_id, batch_label=batch_label, limit=limit)
-    items = _as_items(res)
+    # BR-002B review fix: drop non-dict artifacts unconditionally, matching
+    # list_batch_tree. Previously this filter applied only inside the `if tool_kind`
+    # branch, so an unfiltered call left non-dict items in `items` and the helpers
+    # below (_get_id / _pick_parent_id, which call a.get(...)) raised AttributeError ->
+    # HTTP 500. With tool_kind set the same input returned None instead. Same input,
+    # two different outcomes depending on an unrelated argument.
+    # NOTE: this makes the failure *graceful*, not fixed — the underlying
+    # RunArtifact-vs-dict shape defect is BR-036 and remains out of scope here.
+    items = [a for a in _as_items(res) if isinstance(a, dict)]
     if tool_kind:
-        items = [
-            a for a in items
-            if isinstance(a, dict)
-            and tool_kind_matches(index_tool_kind(a), tool_kind)
-        ]
+        items = [a for a in items if tool_kind_matches(index_tool_kind(a), tool_kind)]
     if not items:
         return None
 

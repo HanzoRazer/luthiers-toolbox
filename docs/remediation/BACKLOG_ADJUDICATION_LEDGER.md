@@ -85,7 +85,37 @@ authoritative CI-stack run). Tier A/B items only are queue-eligible; Tier C is i
 | BR-033 | `app.openapi()` fails to build; field `validate` shadows `BaseModel.validate` | api/schema | Wave 0 `test_openapi.py`; pydantic UserWarnings | A | CONFIRMED_DEFECT | wave0-local-run (toolchain-amplified) | med | needs-CI-confirm | rename shadowing field; confirm openapi builds on CI stack |
 | BR-034 | Stale xfail marker now XPASSes (1) | tests | Wave 0 (1 xpassed) | B | MAINTAINABILITY_DEBT | test-encoded | low | ready | identify + remove the obsolete xfail marker |
 | BR-035 | `batch_tree` `tool_kind` exact-match silently under-returns mixed/old batches | rmos/runs_v2 | `app/rmos/runs_v2/batch_tree.py:51,122` | A | COMPLETE | test-verified | med | **FIXED (BR-002B)** | both filters now use the canonical `tool_kind_matches()` helper (lenient+synonym); regression `test_batch_tree_tool_kind_lenient` |
-| BR-036 | `batch_tree` `isinstance(a, dict)` guard excludes `RunArtifact` results from `list_runs_filtered` (via `as_items`) → **empty trees** for the real store output | rmos/runs_v2 | `app/rmos/runs_v2/batch_tree.py:51,122` + `artifact_helpers.as_items`; found empirically during BR-002B | A | CONFIRMED_DEFECT | test-observed | med | ready | **out of BR-002B scope** (per owner boundary — shape/persistence, not the `tool_kind` repair); own bounded Dev Order — convert results to dicts or handle RunArtifact shape |
+| BR-036 | `batch_tree` `isinstance(a, dict)` guard excludes `RunArtifact` results from `list_runs_filtered` (via `as_items`) → **empty trees** for the real store output | rmos/runs_v2 | `app/rmos/runs_v2/batch_tree.py:51,122` + `artifact_helpers.as_items`; found empirically during BR-002B | A | CONFIRMED_DEFECT | **code-traced + reproduced** | **high** | ready | **out of BR-002B scope** (per owner boundary — shape/persistence, not the `tool_kind` repair); own bounded Dev Order — needs a shape adapter, not a cast (see severity note below) |
+
+> **BR-036 severity raised med → high (2026-07-22, BR-002B review).** Three findings, each
+> code-traced on the PR head and reproduced:
+>
+> 1. **It is live, not potential.** `RunStoreV2.list_runs_filtered` is annotated
+>    `-> List[RunArtifact]` and appends `RunArtifact.model_validate(...)`; the
+>    `store_api.list_runs_filtered` wrapper returns that list **without dict conversion**.
+>    So `as_items()` — whose docstring promises "list of artifact **dicts**" — returns
+>    pydantic models, and `list_batch_tree` drops every one at `isinstance(a, dict)`.
+>    Production trees are **empty (`node_count: 0`)**, not merely incomplete.
+> 2. **Second failure mode: a crash, not just an empty result.** `resolve_batch_root`
+>    applied its `isinstance` filter only inside the `if tool_kind:` branch, so the
+>    *unfiltered* call reached `_get_id(a)` → `a.get(...)` → **`AttributeError` (HTTP 500)`**,
+>    while the same input with `tool_kind` set returned `None`. Reproduced directly.
+>    BR-002B makes this path *graceful* (filter hoisted, pinned by
+>    `test_resolve_batch_root_non_dict_items_does_not_crash_without_tool_kind`) but does
+>    **not** fix the shape defect — trees stay empty until BR-036 lands.
+> 3. **Consequence for BR-035.** Because every item is dropped upstream, the BR-035
+>    `tool_kind` filter inside `batch_tree` **never executes against real store output**.
+>    BR-035 is correct and regression-pinned, but is exercised only by dict-shaped test
+>    doubles; its production benefit is gated on BR-036.
+>
+> **Fix is a shape adapter, not a cast.** A plain `model_dump()` is insufficient — the
+> helpers and `RunArtifact` use different vocabularies:
+> `id`/`artifact_id`→`run_id`, `created_utc`→`created_at_utc` (and `str`→`datetime`),
+> `index_meta`→`meta`, `kind`→`event_type`. Only `index_tool_kind()` already reads `meta`.
+> `batch_timeline.py:111` consumes `as_items` identically and carries the same defect, so
+> the adapter belongs in `artifact_helpers.as_items` (restoring its documented contract),
+> which fixes both call sites at once. This sizing confirms the BR-002B scope boundary was
+> correct: it is a bounded Dev Order, not a line-edit.
 
 ## Verification coverage
 
