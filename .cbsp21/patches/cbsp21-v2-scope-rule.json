@@ -1,0 +1,41 @@
+{
+  "schema": "cbsp21_patch_input_v1",
+  "schema_version": "cbsp21_patch_input_v1",
+  "coverage_min": 0.95,
+  "patch_id": "CBSP21_V2_SCOPE_RULE",
+  "title": "Governance: promote the CBSP21 v2 SCOPE stamp from convention to a prompt-level rule (CLAUDE.md)",
+  "intent": "Give the reinstated CBSP21 v2 read-scope fence structural teeth. The response-level SCOPE stamp adopted in the RPMCC24/CBSP21 charter is currently a convention — a fence that depends on the responder choosing to run it, which is the exact social-contract failure mode that killed CBSP21 v1. This promotes it to prompt-level: a light rule in CLAUDE.md so the scope declaration is structurally expected, not optional. Deliberately kept to the weight of the one-line SCOPE stamp to avoid the over-specification failure mode (a heavy declaration ritual gets gamed/routed-around).",
+  "change_type": "docs",
+  "behavior_change": "None (project-instruction addition). Adds a light expectation that answers drawn from a document/upload carry a one-line scope declaration. No code, no gate, no CI change.",
+  "risk_level": "low",
+  "scope": {
+    "paths_in_scope": [
+      ".cbsp21/patches/cbsp21-v2-scope-rule.json",
+      "CLAUDE.md"
+    ],
+    "files_expected_to_change": [
+      "CLAUDE.md"
+    ]
+  },
+  "diff_articulation": {
+    "what_changed": "CLAUDE.md: added a short 'Scope declaration (CBSP21 v2)' section after Overview — one rule line (state what was read, how much of the whole, what was not read; never present a partial read as complete; a one-line SCOPE: stamp suffices) plus a pointer to docs/governance/CBSP21_v2.md.",
+    "why_not_redundant": "Converts the CBSP21 v2 scope fence from an ignorable convention into a structurally-expected rule — the durable enforcement level named in the charter, and the fix for the original 2025 note's failure (it was optional, so it was ignored). Kept intentionally light: the charter warns that a heavy scope-declaration ritual is the over-specification failure mode, so this codifies the SCOPE one-liner weight and nothing more.",
+    "ordering_note": "References docs/governance/CBSP21_v2.md, which lands with the charter branch docs/rpmcc24-cbsp21-charter (23ddf98e). Merge that charter PR first so the pointer resolves on main; this PR is the durable-follow-up named in that charter."
+  },
+  "verification": {
+    "commands_run": [
+      "Docs/instruction-only change; no test suite affected.",
+      "Weight check: rule is 1 line + pointer, matching the SCOPE one-liner the charter prescribes (avoids over-specification).",
+      "py -3.11 scripts/ci/check_cbsp21_patch_input.py --base origin/main --head HEAD -> to run in CI",
+      "py -3.11 scripts/ci/check_cbsp21_gate.py --changed-files <PR file set> -> to run in CI"
+    ]
+  },
+  "files": [
+    {
+      "path": "CLAUDE.md",
+      "intent": "Add a light 'Scope declaration (CBSP21 v2)' rule promoting the SCOPE stamp from convention to prompt-level expectation; points at docs/governance/CBSP21_v2.md.",
+      "risk": "low",
+      "behavior_change": "None (project-instruction addition)."
+    }
+  ]
+}

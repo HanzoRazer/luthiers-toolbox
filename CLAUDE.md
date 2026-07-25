@@ -3,6 +3,11 @@
 ## Overview
 Luthiers Toolbox — CAD/CAM platform for guitar builders. FastAPI backend + Vue.js frontend.
 
+## Scope declaration (CBSP21 v2)
+When answering from a provided document, file, or upload, state what you read, how much of
+the whole it represents, and what you did NOT read — never present a partial read as
+complete. A one-line `SCOPE:` stamp is enough. See `docs/governance/CBSP21_v2.md`.
+
 ## Code Style
 - Python: PEP 8, type hints, dataclasses for data models
 - Vue: Composition API, TypeScript
