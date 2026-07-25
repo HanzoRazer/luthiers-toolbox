@@ -1,0 +1,57 @@
+{
+  "schema": "cbsp21_patch_input_v1",
+  "schema_version": "cbsp21_patch_input_v1",
+  "coverage_min": 0.95,
+  "patch_id": "RPMCC24_CBSP21_CHARTER",
+  "title": "Governance: name + govern the patch-manifest apparatus as RPMCC24; reinstate CBSP21 v2 read-scope gate (docs-only, name-only)",
+  "intent": "Adopt two governance charter documents that split the overloaded 'CBSP21' name into two honestly-named fences. RPMCC24 (Repository Patch Manifest Control Center) is the existing per-PR patch-manifest + coverage apparatus, now named, owned (Ross/HanzoRazer), and governed. CBSP21 v2 (Computer Bot Scoping Protocol) reinstates CBSP21's original 2025-12-21 anti-under-scoping-of-reads intent as a documented scope-declaration convention. Reconciles a provenance conflict discovered against repo ground truth: docs/CBSP21.md documents the apparatus under the name it acquired during its drift ('Code Batch Submission Protocol'), which is a post-drift back-projection, not the origin. Rather than pick a winner or delete history, the charter records the full lineage (origin -> drift -> charter) and marks docs/CBSP21.md superseded (retained, not deleted).",
+  "change_type": "docs",
+  "behavior_change": "None. Documentation only. The rename is NAME-ONLY: the on-disk apparatus (.cbsp21/ directory, cbsp21_* gate scripts, schema $id 'cbsp21_patch_input_v1', .cbsp21/patches/*.json manifests) is UNCHANGED and remains authoritative. No code, path, schema, or gate-script change. No CI behavior change. No manifest identifiers renamed, so no existing or historical manifest is broken.",
+  "risk_level": "low",
+  "scope": {
+    "paths_in_scope": [
+      ".cbsp21/patches/rpmcc24-cbsp21-charter.json",
+      "docs/governance/RPMCC24_CHARTER.md",
+      "docs/governance/CBSP21_v2.md",
+      "docs/CBSP21.md"
+    ],
+    "files_expected_to_change": [
+      "docs/governance/RPMCC24_CHARTER.md",
+      "docs/governance/CBSP21_v2.md",
+      "docs/CBSP21.md"
+    ]
+  },
+  "diff_articulation": {
+    "what_changed": "(1) docs/governance/RPMCC24_CHARTER.md (new): charter for the patch-manifest apparatus under the name RPMCC24 - identity, ownership, honest current spec, the base-sensitivity/#193/#211 scars, and a governance protocol (owner-gated schema/threshold/gate-script changes, provenance-required changelog, no silent coverage_min moves). Adds a full-lineage reconciliation table (origin 2025-12-21 'Computer Bot Scoping Protocol' -> drift 2026-01+ 'Code Batch Submission Protocol' -> charter 2026-07-24 RPMCC24) and a name-only mapping note stating the .cbsp21//cbsp21_* identifiers are retained for continuity. (2) docs/governance/CBSP21_v2.md (new): reinstates CBSP21's original anti-under-scoping read-scope intent as a documented convention; adopts the response-level SCOPE: stamp now, names prompt-level as the durable follow-up, defers the artifact-level gate. (3) docs/CBSP21.md (modified): adds a SUPERSEDED banner pointing at the charter, clarifying that its name reflects the drifted state (not the origin) and that the rename is name-only; the mechanics on the page remain accurate and in force. Content retained, not deleted or overwritten.",
+    "why_not_redundant": "Resolves a live name-vs-behavior divergence in the very tool that exists to catch such divergences: the merge-governing gate was named for a job it no longer does. Names it honestly, assigns ownership, and puts the governor under the same discipline it imposes. Deliberately docs-only and name-only: a literal rename of the .cbsp21/ paths/scripts/schema would break every existing and historical manifest (including recently-merged PR manifests) for zero functional benefit, so the name lives in the charter and docs while the machinery keeps its stable identifiers (extend-don't-break). Reconciles the provenance conflict by recording the full lineage rather than erasing either era."
+  },
+  "verification": {
+    "commands_run": [
+      "Provenance reconciliation grounded against repo ground truth: docs/CBSP21.md ('Code Batch Submission Protocol') identified as the post-drift record; origin ('Computer Bot Scoping Protocol', 2025-12-21) recorded from owner-stated history. Both eras recorded; no era deleted.",
+      "Name-only decision verified against blast radius: a literal rename would break .cbsp21/patches/*.json manifests including merged PR #231's; identifiers retained instead.",
+      "Docs-only change; no test suite affected. Markdown cross-links between the two charters and docs/CBSP21.md verified relative-correct.",
+      "py -3.11 scripts/ci/check_cbsp21_patch_input.py --base origin/main --head HEAD -> to run in CI",
+      "py -3.11 scripts/ci/check_cbsp21_gate.py --changed-files <PR file set> -> to run in CI"
+    ]
+  },
+  "files": [
+    {
+      "path": "docs/governance/RPMCC24_CHARTER.md",
+      "intent": "New charter naming, owning, and governing the patch-manifest apparatus as RPMCC24; records full lineage and the name-only mapping.",
+      "risk": "low",
+      "behavior_change": "None (new documentation)."
+    },
+    {
+      "path": "docs/governance/CBSP21_v2.md",
+      "intent": "New doc reinstating CBSP21's original anti-under-scoping read-scope intent as a documented convention (response-level SCOPE stamp now; prompt-level named; artifact-gate deferred).",
+      "risk": "low",
+      "behavior_change": "None (new documentation)."
+    },
+    {
+      "path": "docs/CBSP21.md",
+      "intent": "Mark superseded by the RPMCC24 charter and point to it; clarify the name reflects the drifted state and the rename is name-only. Content retained.",
+      "risk": "low",
+      "behavior_change": "None (banner + status line added; mechanics unchanged)."
+    }
+  ]
+}

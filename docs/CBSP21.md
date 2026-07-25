@@ -1,6 +1,25 @@
 # CBSP21: Code Batch Submission Protocol v2.1
 
-**Status:** Active
+> **⚠️ SUPERSEDED (2026-07-24) — retained as a dated artifact, not deleted.**
+> This document describes the patch-manifest + coverage apparatus under the name it
+> acquired *during its drift* ("Code Batch Submission Protocol"). That apparatus is now
+> honestly named and governed as **RPMCC24** — see
+> [governance/RPMCC24_CHARTER.md](governance/RPMCC24_CHARTER.md), which is authoritative
+> for the manifest gate and records the **full lineage** this page back-projects.
+>
+> Two clarifications the charter makes and this page does not:
+> 1. **The name here reflects the drifted state, not the origin.** CBSP21 began (2025-12-21)
+>    as the *Computer Bot Scoping Protocol* — a ~100-word anti-under-scoping note about
+>    document *reads* — and drifted into this patch apparatus. The original read-scope job is
+>    reinstated separately as [governance/CBSP21_v2.md](governance/CBSP21_v2.md).
+> 2. **The rename is name-only.** The on-disk machinery below (`.cbsp21/`, `cbsp21_*`
+>    scripts, schema `$id` `cbsp21_patch_input_v1`, `patches/*.json`) is **unchanged** and
+>    still authoritative — renaming it would break every existing and historical manifest.
+>
+> The mechanics on this page (schema, per-PR manifests, coverage, cleanup rules) remain
+> accurate and in force. Only the framing/name is superseded.
+
+**Status:** Superseded by [RPMCC24](governance/RPMCC24_CHARTER.md) (mechanics still in force)
 **Version:** 2.1
 **Purpose:** Structured code patch submission with coverage verification
 
