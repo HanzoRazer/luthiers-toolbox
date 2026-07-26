@@ -137,17 +137,58 @@ Source: [`docs/audit/LUTHIERS_TOOLBOX_SCAN_ac3c96df.md`](../audit/LUTHIERS_TOOLB
 Entered as **CANDIDATES — NOT ADJUDICATED**. A detector produces leads; these have not been through
 the adjudication ledger and none is authorized for fix.
 
-### BR-037 · Text-detection failure silently vectorizes text into the DXF
+**Confidence vocabulary (added 2026-07-26 after BR-037 was mislabelled).** A read and a run prove
+different things, and this register must not blur them:
+
+| Label | Means | What a code read can establish |
+|---|---|---|
+| `CANDIDATE` | a detector flagged it; nothing verified | — |
+| `STATIC-FACT CONFIRMED` | the *code says so* — two writers exist, a default is unguarded | ✅ yes |
+| `CONFIRMED` | the *symptom was reproduced* at runtime | ❌ never |
+
+Reading a producer→consumer chain and inferring a symptom is a **hypothesis**, however convincing the
+chain. BR-037 was filed as `CONFIRMED by producer->consumer read` and that was wrong; it became
+genuinely confirmed only when the symptom was reproduced (1475 entities vs a 0 control). Do not
+promote a hypothesis to `CONFIRMED` without a run.
+
+### BR-037 · Text-detection failure silently vectorizes text into the DXF — ✅ RESOLVED
 - **Subsystem:** photo-vectorizer / DXF pipeline
-- **Reproduction basis:** code chain, read directly. `detect_text_regions()`
-  (`services/photo-vectorizer/edge_to_dxf.py:470-524`) returns `[]` from a bare
-  `except Exception` at `:522`; the consumer at `:1951` guards with `if text_regions:`, so an empty
-  list skips text masking entirely and the 7x7 morphological close then bridges text glyph strokes —
-  the exact outcome the code comment says masking prevents.
-- **Observed vs expected:** OCR failure yields a *successful* DXF containing text as body geometry,
-  with no error and no `TEXT_MASK` log line. Expected: fail loud, or a sentinel the caller checks.
-- **Severity:** high (silent wrong output) · **Fix size:** small · **Readiness:** ready.
-- **Confidence:** CONFIRMED by producer->consumer read. Not yet reproduced at runtime.
+- **Mechanism:** `detect_text_regions()`
+  (`services/photo-vectorizer/edge_to_dxf.py:470-524`) returned `[]` from a bare
+  `except Exception` at `:522`, collapsing three distinct states — OCR unavailable, no text found,
+  and OCR crashed — into one falsy value. The consumer at `:1951` guards with `if text_regions:`, so
+  the crash state skipped text masking entirely, leaving glyph edges in `combined_edges` for
+  `findContours` to trace into the DXF as body geometry.
+- **Observed vs expected:** OCR failure yielded a *successful* DXF containing text as body geometry,
+  with no error and no `TEXT_MASK` log line. Expected: the output must not claim clean success.
+
+#### Epistemic history — how this entry earned the word "confirmed"
+This is recorded in full because the original wording overstated the evidence, and the register's
+credibility depends on `CONFIRMED` meaning *reproduced*, not *reasoned*.
+
+| Stage | Basis | Correct label at the time |
+|---|---|---|
+| 2026-07-26 (initial intake) | producer→consumer chain read statically | **HYPOTHESIS** — was wrongly filed as `CONFIRMED by producer->consumer read` |
+| 2026-07-26 (challenged) | asked whether a bad DXF had actually been observed; it had not | hypothesis, explicitly unreproduced |
+| 2026-07-26 (reproduction) | rendered text + body shape, forced the OCR reader to raise, converted, counted DXF entities inside the text bbox: **A (text present) = 1475 entities · B (no-text control) = 0**, while the result still reported `SUCCESS` | **CONFIRMED** |
+
+> **Calibration note.** Reading a producer→consumer chain and inferring a symptom is a *hypothesis*.
+> A register that prints `CONFIRMED` for a read teaches its readers to trust reads as proof — the
+> same error that nearly shipped the wrong fix here. In this register, `CONFIRMED` means the symptom
+> was reproduced. Anything else is `HYPOTHESIS` or `CANDIDATE`.
+
+- **Resolution:** fixed in **`09818eee`** on `fix/br-037-text-detection-silent-skip`.
+  `[]` now means only "nothing to mask"; the crash path raises `TextDetectionError`; the caller still
+  emits but marks the result `ConversionStatus.DEGRADED` with `text_detection_failed=True` and an
+  explicit summary warning. 3 regression tests added (14 passed, 1 skipped).
+- **Fix-shape history (also evidence-corrected):** the first implementation *refused* to emit on OCR
+  failure. The **no-text control run rejected that** — it failed images with no text at all, trading
+  silent corruption for silent false-refusal, because a failed OCR pass cannot know whether the image
+  contained text. Emit-and-flag replaced it. *The control run, not the positive run, caught the bad fix.*
+- **Known residual (accepted):** a no-text image that hits an OCR failure is still marked `DEGRADED`.
+  Unavoidable — the information needed to rule it out is precisely what the failure destroyed. Honest
+  uncertainty, but a real cost if OCR is flaky.
+- **Severity:** high (silent wrong output) · **Fix size:** small · **Status:** RESOLVED, awaiting merge.
 
 ### BR-038 · Two store modules write the same `data/art_jobs.json`
 - **Subsystem:** art_studio / services
@@ -157,7 +198,8 @@ the adjudication ledger and none is authorized for fix.
 - **Observed vs expected:** two uncoordinated writers to one JSON file; last-writer-wins. Expected:
   one writer, or a declared canonical owner.
 - **Severity:** medium · **Fix size:** small-medium (must confirm consumers first) · **Readiness:** ready.
-- **Confidence:** CONFIRMED by direct read.
+- **Confidence:** **STATIC-FACT CONFIRMED** — both writers exist and both write; verified by read.
+  The *runtime collision* (interleaved writes losing data) is **NOT reproduced**.
 
 ### BR-039 · Three parallel preset stores with no declared canonical
 - **Subsystem:** services / util
@@ -166,7 +208,8 @@ the adjudication ledger and none is authorized for fix.
   `data/presets.json`. Three modules, three files, all written.
 - **Severity:** medium · **Readiness:** `OWNER_DECISION_REQUIRED` — which store is canonical is a
   scope question, not a defect to fix unilaterally.
-- **Confidence:** CONFIRMED as a fact; the *defect* framing needs owner adjudication.
+- **Confidence:** **STATIC-FACT CONFIRMED** — three stores, three paths, all written; verified by
+  read. Whether this is a *defect* rather than intentional separation needs owner adjudication.
 
 ### BR-040 · Silent domain-default fallback on closed-domain lookups (10 sites)
 - **Subsystem:** instrument_geometry, calculators, analyzer, workflow
@@ -178,7 +221,8 @@ the adjudication ledger and none is authorized for fix.
   unrecognized species silently yields default material properties.
 - **Severity:** medium-high *if* any key space is open · **Readiness:** needs triage — confirm per
   site whether the key is enum-validated upstream. Where closed, harmless; where open, wrong output.
-- **Confidence:** CANDIDATE. Sites confirmed; exhaustiveness of each key space is NOT.
+- **Confidence:** **STATIC-FACT CONFIRMED** for the 10 sites (the fallbacks are there in code);
+  **CANDIDATE** as a defect — no site has been shown to receive an out-of-domain key at runtime.
 
 ### BR-041 · 447 production silent-swallow exception handlers (bulk lead, not a single defect)
 - **Reproduction basis:** AST scan; 637 total, minus 106 `ImportError` optional-dep guards and 84
