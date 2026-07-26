@@ -128,3 +128,66 @@ they do not appear among the Wave 0 failures.)
 > currently-reproducible defect and not claimed "resolved"); disconnected UI surfaces BR-023/BR-030 (`ENHANCEMENT`, never
 > approved); BR-019 auth/DB stubs (`OWNER_DECISION_REQUIRED` — scope question, not yet a contract-broken
 > defect). Full reasoning in the [adjudication ledger](BACKLOG_ADJUDICATION_LEDGER.md).
+
+---
+
+## Scan intake — 16-detector scan @ `ac3c96df` (2026-07-26)
+
+Source: [`docs/audit/LUTHIERS_TOOLBOX_SCAN_ac3c96df.md`](../audit/LUTHIERS_TOOLBOX_SCAN_ac3c96df.md).
+Entered as **CANDIDATES — NOT ADJUDICATED**. A detector produces leads; these have not been through
+the adjudication ledger and none is authorized for fix.
+
+### BR-037 · Text-detection failure silently vectorizes text into the DXF
+- **Subsystem:** photo-vectorizer / DXF pipeline
+- **Reproduction basis:** code chain, read directly. `detect_text_regions()`
+  (`services/photo-vectorizer/edge_to_dxf.py:470-524`) returns `[]` from a bare
+  `except Exception` at `:522`; the consumer at `:1951` guards with `if text_regions:`, so an empty
+  list skips text masking entirely and the 7x7 morphological close then bridges text glyph strokes —
+  the exact outcome the code comment says masking prevents.
+- **Observed vs expected:** OCR failure yields a *successful* DXF containing text as body geometry,
+  with no error and no `TEXT_MASK` log line. Expected: fail loud, or a sentinel the caller checks.
+- **Severity:** high (silent wrong output) · **Fix size:** small · **Readiness:** ready.
+- **Confidence:** CONFIRMED by producer->consumer read. Not yet reproduced at runtime.
+
+### BR-038 · Two store modules write the same `data/art_jobs.json`
+- **Subsystem:** art_studio / services
+- **Reproduction basis:** `services/api/app/services/art_job_store.py:17` and
+  `services/api/app/services/art_jobs_store.py:20` (singular/plural twins) both declare
+  `JOBS_PATH = Path("data/art_jobs.json")` and both write it.
+- **Observed vs expected:** two uncoordinated writers to one JSON file; last-writer-wins. Expected:
+  one writer, or a declared canonical owner.
+- **Severity:** medium · **Fix size:** small-medium (must confirm consumers first) · **Readiness:** ready.
+- **Confidence:** CONFIRMED by direct read.
+
+### BR-039 · Three parallel preset stores with no declared canonical
+- **Subsystem:** services / util
+- **Reproduction basis:** `services/art_presets_store.py:9` -> `data/art_presets.json`;
+  `services/preset_store.py:14` -> `data/presets/presets.json`; `util/presets_store.py:23` ->
+  `data/presets.json`. Three modules, three files, all written.
+- **Severity:** medium · **Readiness:** `OWNER_DECISION_REQUIRED` — which store is canonical is a
+  scope question, not a defect to fix unilaterally.
+- **Confidence:** CONFIRMED as a fact; the *defect* framing needs owner adjudication.
+
+### BR-040 · Silent domain-default fallback on closed-domain lookups (10 sites)
+- **Subsystem:** instrument_geometry, calculators, analyzer, workflow
+- **Reproduction basis:** 10 sites of `X.get(key, X[DEFAULT])`, incl.
+  `body_contour_solver.py:250` (`FAMILY_DEFAULTS.get(family, FAMILY_DEFAULTS["dreadnought"])`),
+  `neck_block_calc.py:202,246`, `viewer_pack_bridge.py:176,199,346,352,357,362`,
+  `directional_workflow.py:187`.
+- **Observed vs expected:** an unrecognized body family silently yields dreadnought geometry; an
+  unrecognized species silently yields default material properties.
+- **Severity:** medium-high *if* any key space is open · **Readiness:** needs triage — confirm per
+  site whether the key is enum-validated upstream. Where closed, harmless; where open, wrong output.
+- **Confidence:** CANDIDATE. Sites confirmed; exhaustiveness of each key space is NOT.
+
+### BR-041 · 447 production silent-swallow exception handlers (bulk lead, not a single defect)
+- **Reproduction basis:** AST scan; 637 total, minus 106 `ImportError` optional-dep guards and 84
+  archive/test = 447 production. The 146 `empty-return` + `log-then-empty-return` handlers share
+  BR-037's shape and are the priority subset.
+- **Severity:** unknown in bulk · **Readiness:** NOT ready as one item — must be split per subsystem.
+- **Confidence:** CANDIDATE SET, explicitly not 447 bugs.
+
+> **Refuted by the same scan — do not open work on these:** duplicate-filename drift
+> (`store.py`x12 etc.) is a naming convention, not copy-paste — AST-hashing found exactly **one**
+> cross-file clone group; and the router-count baseline is **not** stale (`ci/router_count_gate.py`
+> reports 253/1228 = baseline exactly).
