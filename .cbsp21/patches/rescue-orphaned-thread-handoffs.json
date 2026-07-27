@@ -1,0 +1,71 @@
+{
+  "schema": "cbsp21_patch_input_v1",
+  "schema_version": "cbsp21_patch_input_v1",
+  "coverage_min": 0.95,
+  "patch_id": "RESCUE_ORPHANED_THREAD_HANDOFFS",
+  "title": "Rescue five orphaned open-thread handoffs",
+  "intent": "Commit five dev orders / handoffs, each the input document to a thread that was started but never merged. None had been committed to any branch in any repository - git log --all returned nothing for all five - so each was the sole copy of an input to live, unfinished work. Content is byte-identical; nothing is edited.",
+  "change_type": "docs",
+  "behavior_change": "None. Documentation only. Preserves the inputs and makes no claim about the status or disposition of the five threads, which remain open on unmerged branches.",
+  "risk_level": "low",
+  "scope": {
+    "paths_in_scope": [
+      ".cbsp21/patches/rescue-orphaned-thread-handoffs.json",
+      "docs/handoffs/C2_CANONICAL_GEOMETRY_PROMOTION_AUTHORITY_DEV_ORDER.md",
+      "docs/handoffs/CI_RED_015L_IBG_SANDBOX_LANDMARK_INTAKE_HANDOFF.md",
+      "docs/handoffs/CI_RED_016C_LEGACY_EXPORT_CONSUMER_MAP_CALIBRATION_DEV_ORDER.md",
+      "docs/handoffs/CI_RED_020B_API_HEALTH_SMOKE_NIGHTLY_WITNESS_RECOVERY_HANDOFF.md",
+      "docs/handoffs/PERF_AUDIT_QUICK_WINS_DEV_HANDOFF.md"
+    ],
+    "files_expected_to_change": [
+      "docs/handoffs/C2_CANONICAL_GEOMETRY_PROMOTION_AUTHORITY_DEV_ORDER.md",
+      "docs/handoffs/CI_RED_015L_IBG_SANDBOX_LANDMARK_INTAKE_HANDOFF.md",
+      "docs/handoffs/CI_RED_016C_LEGACY_EXPORT_CONSUMER_MAP_CALIBRATION_DEV_ORDER.md",
+      "docs/handoffs/CI_RED_020B_API_HEALTH_SMOKE_NIGHTLY_WITNESS_RECOVERY_HANDOFF.md",
+      "docs/handoffs/PERF_AUDIT_QUICK_WINS_DEV_HANDOFF.md"
+    ]
+  },
+  "diff_articulation": {
+    "what_changed": "Adds 5 previously-uncommitted document(s) at their native path(s), verbatim.",
+    "why_not_redundant": "These files existed nowhere in git. Verified with `git log --all --oneline -- <path>`, which returned nothing for every one. Without this commit each is one disk failure from being lost."
+  },
+  "verification": {
+    "commands_run": [
+      "git log --all --oneline -- <path> -> no output for every file in this patch, confirming it was committed nowhere.",
+      "Byte-identity confirmed with diff against the rescued source before committing.",
+      "check_cbsp21_patch_input.py and check_cbsp21_gate.py run locally -> PASS."
+    ]
+  },
+  "files": [
+    {
+      "path": "docs/handoffs/C2_CANONICAL_GEOMETRY_PROMOTION_AUTHORITY_DEV_ORDER.md",
+      "intent": "Rescue a document that was committed nowhere in git.",
+      "risk": "low",
+      "behavior_change": "None - documentation only."
+    },
+    {
+      "path": "docs/handoffs/CI_RED_015L_IBG_SANDBOX_LANDMARK_INTAKE_HANDOFF.md",
+      "intent": "Rescue a document that was committed nowhere in git.",
+      "risk": "low",
+      "behavior_change": "None - documentation only."
+    },
+    {
+      "path": "docs/handoffs/CI_RED_016C_LEGACY_EXPORT_CONSUMER_MAP_CALIBRATION_DEV_ORDER.md",
+      "intent": "Rescue a document that was committed nowhere in git.",
+      "risk": "low",
+      "behavior_change": "None - documentation only."
+    },
+    {
+      "path": "docs/handoffs/CI_RED_020B_API_HEALTH_SMOKE_NIGHTLY_WITNESS_RECOVERY_HANDOFF.md",
+      "intent": "Rescue a document that was committed nowhere in git.",
+      "risk": "low",
+      "behavior_change": "None - documentation only."
+    },
+    {
+      "path": "docs/handoffs/PERF_AUDIT_QUICK_WINS_DEV_HANDOFF.md",
+      "intent": "Rescue a document that was committed nowhere in git.",
+      "risk": "low",
+      "behavior_change": "None - documentation only."
+    }
+  ]
+}
