@@ -1,0 +1,41 @@
+{
+  "schema": "cbsp21_patch_input_v1",
+  "schema_version": "cbsp21_patch_input_v1",
+  "coverage_min": 0.95,
+  "patch_id": "MYPY_PHOTO_VECTORIZER_PACKAGE_NAME",
+  "title": "Remove stray __init__.py that crashes the photo-vectorizer mypy gate",
+  "intent": "The photo-vectorizer typecheck job fails with 'photo-vectorizer contains __init__.py but is not a valid Python package name' (exit code 2) - a hard mypy error that aborts before any analysis runs, so the gate has been reporting failure without ever checking a single type. The marker file is inert: 'import photo-vectorizer' is a SyntaxError, no importlib/pkgutil reference targets it, every consumer imports these modules as top-level modules via sys.path, and its whole content is one comment line. Deleting it lets mypy actually run. Pre-existing since ffecf39f (rebrand); latent because the workflow is path-filtered, and surfaced only when PR #232 became the first PR since to touch that directory.",
+  "change_type": "bugfix",
+  "behavior_change": "No runtime behavior change - the deleted file is a single comment and cannot function as a package marker under a hyphenated directory name. CI behavior changes materially: the mypy job stops aborting at exit code 2 and now performs real analysis. That analysis reports 168 pre-existing type errors across 15 files, which were previously masked by the crash. This patch does NOT fix those errors and does not make the job green; it makes the job truthful. See known_residual.",
+  "risk_level": "low",
+  "scope": {
+    "paths_in_scope": [
+      ".cbsp21/patches/mypy-photo-vectorizer-package-name.json",
+      "services/photo-vectorizer/__init__.py"
+    ],
+    "files_expected_to_change": [
+      "services/photo-vectorizer/__init__.py"
+    ]
+  },
+  "diff_articulation": {
+    "what_changed": "Deleted services/photo-vectorizer/__init__.py (one comment line).",
+    "why_not_redundant": "Without it the mypy gate cannot run at all. Verified inert before deletion: the directory name contains a hyphen so it can never be imported as a package; no importlib/pkgutil/find_spec reference targets it; and the real import sites (edge_to_dxf_router.py, blueprint_extract.py) use top-level `from edge_to_dxf import ...` via sys.path, not package member access."
+  },
+  "verification": {
+    "commands_run": [
+      "python -c \"import ast; ast.parse('import photo-vectorizer')\" -> SyntaxError, confirming the directory can never be a package.",
+      "git grep for importlib/pkgutil/import_module/find_spec against photo-vectorizer -> no references.",
+      "git grep for actual import sites -> 'from edge_to_dxf import ...' top-level imports only.",
+      "mypy NOT run locally: mypy is not installed in the available environment. CI is the check. CI confirms the error changed from exit code 2 (crash, nothing analysed) to exit code 1 with 168 real errors, which is the intended effect of this change."
+    ],
+    "known_residual": "The mypy job is still RED after this change, and deliberately so. It now reports 168 pre-existing type errors in 15 files (photo_vectorizer_v2.py 70, test_extract_coach_integration.py 41, march_pipeline_restore.py 16, photo_silhouette_extractor.py 10, geometry_coach_v2.py 8, and others). None are introduced here. Going green requires an owner decision: pay the debt, or adopt an error-count baseline ratchet consistent with the existing ci/file_size_baseline.json and ci/router_count_baseline.json pattern. Filed rather than hidden."
+  },
+  "files": [
+    {
+      "path": "services/photo-vectorizer/__init__.py",
+      "intent": "Delete an inert package marker in a hyphenated directory that makes mypy abort with a hard error before analysing anything.",
+      "risk": "low",
+      "behavior_change": "No runtime effect - the file is a single comment and the directory can never be imported as a package. CI effect: the mypy job stops crashing and begins real analysis."
+    }
+  ]
+}
