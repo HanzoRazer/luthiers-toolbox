@@ -1,0 +1,40 @@
+{
+  "schema": "cbsp21_patch_input_v1",
+  "schema_version": "cbsp21_patch_input_v1",
+  "coverage_min": 0.95,
+  "patch_id": "BR_038_REFUTED",
+  "title": "BR-038 refuted — the two art-job stores do not write the same file",
+  "intent": "Correct a defect-register entry that asserted verification it did not have, and invited a harmful change. BR-038 claimed two modules both write data/art_jobs.json with no coordination, marked STATIC-FACT CONFIRMED and Readiness: ready. Investigation shows neither module writes that file: both only read_text() it once for legacy migration into their own separate SQLite tables, and the row shapes are explicitly coordinated. Acting on the entry would have consolidated two intentionally-separate stores that have different schemas, distinct live consumers, and a passing regression suite.",
+  "change_type": "docs",
+  "behavior_change": "None. Documentation only - one defect-register entry is relabelled from STATIC-FACT CONFIRMED / ready to REFUTED, with the evidence and the detector's false-positive mode recorded so a future scan does not re-file it.",
+  "risk_level": "low",
+  "scope": {
+    "paths_in_scope": [
+      ".cbsp21/patches/br-038-refuted.json",
+      "docs/remediation/REPOSITORY_DEFECT_REGISTER.md"
+    ],
+    "files_expected_to_change": ["docs/remediation/REPOSITORY_DEFECT_REGISTER.md"]
+  },
+  "diff_articulation": {
+    "what_changed": "BR-038 relabelled REFUTED with the evidence, plus a note on why it was mis-filed and what check BR-039/BR-040 still need.",
+    "why_not_redundant": "The entry did not merely record an unverified lead - it claimed 'verified by read' and 'Readiness: ready'. Left standing it invites consolidating two separate stores and regressing working code. This is the smallest change that removes that invitation."
+  },
+  "verification": {
+    "commands_run": [
+      "git grep for every JOBS_PATH use in both modules -> read_text() and .exists() only; no write in either.",
+      "Repo-wide grep for art_jobs.json -> no write site anywhere in the codebase.",
+      "art_job_store.py:113 carries `continue  # skip plural-shaped rows (owned by art_jobs_store)` - the shapes are explicitly coordinated, not colliding.",
+      "Consumers confirmed distinct and live: singular -> rosette_jobs_routes.py, root_art_router.py; plural -> rosette_jobs_router.py, rosette_cam_router.py, pipeline_ops_rosette.py.",
+      "pytest tests/test_art_job_stores_migration.py -> 11 passed."
+    ],
+    "known_residual": "BR-039 (three preset stores) and BR-040 (10 domain-default sites) came from the same detector pass and carry the same class of label. They are honestly marked CANDIDATE so they are not corrected here, but they need the same check - read the write site, not the declaration - before anyone acts on them."
+  },
+  "files": [
+    {
+      "path": "docs/remediation/REPOSITORY_DEFECT_REGISTER.md",
+      "intent": "Relabel BR-038 as REFUTED with evidence, and record the detector false-positive mode.",
+      "risk": "low",
+      "behavior_change": "None - documentation. Removes a 'ready' flag that would have led to a regression."
+    }
+  ]
+}

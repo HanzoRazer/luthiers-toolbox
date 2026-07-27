@@ -201,16 +201,17 @@ credibility depends on `CONFIRMED` meaning *reproduced*, not *reasoned*.
   also revealed that gate had **never passed once** in its history and, in the course of making it
   pass, corrected two genuine unguarded `None` dereferences at `body_isolation_stage.py:387-388`.
 
-### BR-038 · Two store modules write the same `data/art_jobs.json`
-- **Subsystem:** art_studio / services
-- **Reproduction basis:** `services/api/app/services/art_job_store.py:17` and
-  `services/api/app/services/art_jobs_store.py:20` (singular/plural twins) both declare
-  `JOBS_PATH = Path("data/art_jobs.json")` and both write it.
-- **Observed vs expected:** two uncoordinated writers to one JSON file; last-writer-wins. Expected:
-  one writer, or a declared canonical owner.
-- **Severity:** medium · **Fix size:** small-medium (must confirm consumers first) · **Readiness:** ready.
-- **Confidence:** **STATIC-FACT CONFIRMED** — both writers exist and both write; verified by read.
-  The *runtime collision* (interleaved writes losing data) is **NOT reproduced**.
+### BR-038 · ~~Two store modules write the same `data/art_jobs.json`~~ — ❌ REFUTED, NOT A DEFECT
+- **Confidence:** **REFUTED 2026-07-27.** *Neither module writes that file* — both only `read_text()`
+  it once for legacy migration into their own separate SQLite tables, and the shapes are explicitly
+  coordinated (`art_job_store.py:113` skips plural-shaped rows as "owned by art_jobs_store"). No code
+  in the repo writes `art_jobs.json`; already remediated by the art-jobs SQLite migration (#189).
+  `tests/test_art_job_stores_migration.py` covers the split: **11 passed**. Do not consolidate these —
+  they have different schemas and distinct live consumers.
+- **Why it was mis-filed:** the D10 detector associated `JOBS_PATH` with modules containing write
+  hints *somewhere in the file*, without checking the symbol's own use; the entry then claimed
+  "verified by read" when only the **declarations** had been read, not the write sites. Read the write
+  site, not the declaration — the same check BR-039/BR-040 still need.
 
 ### BR-039 · Three parallel preset stores with no declared canonical
 - **Subsystem:** services / util
