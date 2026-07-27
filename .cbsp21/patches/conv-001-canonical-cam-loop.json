@@ -1,0 +1,131 @@
+{
+  "schema": "cbsp21_patch_input_v1",
+  "schema_version": "cbsp21_patch_input_v1",
+  "patch_id": "conv-001-canonical-cam-loop",
+  "title": "CONV-001: consolidate three duplicate CAM Loop definitions onto one canonical type",
+  "intent": "Replace three copy-pasted Loop(BaseModel) definitions with a single canonical definition in app/schemas/cam_geometry.py, imported or re-exported by all three historical owners so every access path resolves to one class object. Promotes Consolidation Lab investigation LAB-013 work package WP-GEOM-3 (mechanical A1 duplication, B1 drift risk) into a bounded, behavior-invariant production change.",
+  "change_type": "refactor",
+  "behavior_change": "none",
+  "risk_level": "low",
+  "coverage_min": 0.95,
+  "source_authority": {
+    "investigation": "LAB-013 — Geometry Generation Architecture",
+    "work_package": "WP-GEOM-3",
+    "dev_order": "CONV-001",
+    "note": "Consolidation Lab evidence/decision/proposal records live in the separate Lab repository and are deliberately NOT committed here; a closure packet is carried back to the Lab after merge."
+  },
+  "scope": {
+    "paths_in_scope": [
+      "services/api/app/schemas/",
+      "services/api/app/routers/",
+      "services/api/app/cam/",
+      "services/api/tests/cam/"
+    ],
+    "files_expected_to_change": [
+      "services/api/app/schemas/cam_geometry.py",
+      "services/api/app/schemas/adaptive_schemas.py",
+      "services/api/app/routers/blueprint_cam_bridge_schemas.py",
+      "services/api/app/cam/contour_reconstructor.py",
+      "services/api/tests/cam/test_loop_canonicalization.py"
+    ],
+    "out_of_scope": [
+      "LoopGeometry (services/api/app/api_v1/cam_operations.py) — surveyed and excluded",
+      "LoopIn (services/api/app/cam/routers/utility/optimization_router.py) — surveyed and excluded",
+      "Any change to DXF output, coordinate precision, router paths, persistence formats, or frontend geometry types",
+      "Any broader geometry-contract unification or DXF-as-IR vs canonical-document decision"
+    ]
+  },
+  "diff_range": "ac3c96dfd5f751fc870b5ea218fefc6b1cabe775..HEAD",
+  "changed_files_count": 5,
+  "file_context_coverage_percent": 100,
+  "diff_articulation": {
+    "what_changed": "Adds services/api/app/schemas/cam_geometry.py owning the single canonical Loop (pts: List[Tuple[float, float]]). Removes the three duplicate class Loop(BaseModel) definitions: adaptive_schemas.py:50 and blueprint_cam_bridge_schemas.py:14 become compatibility re-exports of the canonical type, and contour_reconstructor.py:52 becomes a direct import. Drops the now-unused Tuple import from the two schema modules. Drops 'class Config: arbitrary_types_allowed = True', which existed only on the contour_reconstructor copy. Adds tests/cam/test_loop_canonicalization.py (50 tests) asserting single class identity, constructor/validation/coercion/serialization parity against verbatim replicas of both pre-change definitions, geometry parity, live downstream CAM parity, and an AST guard that exactly one 'class Loop' definition exists across app/cam, app/schemas and app/routers.",
+    "why_not_redundant": "This is not a formatting or no-op change: it removes three independently-editable definitions of the same wire contract and collapses them to one class object, eliminating the drift risk LAB-013 classified as B1. Structural identity is part of the delta — before this patch, isinstance/identity checks across the adaptive, blueprint-bridge and contour-reconstruction paths compared three distinct classes; after it they compare one. The AST guard is new enforcement that prevents a fourth copy reappearing in the authorized scope.",
+    "behavior_invariance_evidence": "behavior_change is 'none' and is proven, not asserted. The test module holds verbatim replicas of both pre-change definitions (the plain one, and the arbitrary_types_allowed variant) and asserts the canonical class matches them on: field set and annotation, required-ness, int-to-float coercion, list-to-tuple coercion, malformed-point and nonnumeric rejection including pydantic error codes, empty-loop acceptance, mutability, equality, model_dump, model_dump_json, JSON round-trip, and JSON schema. arbitrary_types_allowed was configuration residue — the model declares no arbitrary field types — and dropping it changed no accepted input, rejected input, or serialized output."
+  },
+  "files": [
+    {
+      "path": "services/api/app/schemas/cam_geometry.py",
+      "intent": "New canonical owner of the shared CAM Loop contract. Placed in app/schemas/ because it is a leaf package (imports only from itself and sg_spec), so app/cam/ and app/routers/ can both consume it without an import cycle.",
+      "risk": "low",
+      "behavior_change": "none",
+      "scan_targets": ["services/api/app/schemas/cam_geometry.py"],
+      "verification": [
+        "tests/cam/test_loop_canonicalization.py::TestOwnership",
+        "tests/cam/test_loop_canonicalization.py::TestConstructorParity",
+        "tests/cam/test_loop_canonicalization.py::TestSerializationParity"
+      ]
+    },
+    {
+      "path": "services/api/app/schemas/adaptive_schemas.py",
+      "intent": "Duplicate Loop definition removed; becomes a compatibility re-export of the canonical type. Loop remains in __all__ so existing star-imports and the four downstream consumers (project_adapter, adaptive/dxf_router, rmos/mvp_router, vision/segmentation_router) are unaffected. Unused Tuple import dropped.",
+      "risk": "low",
+      "behavior_change": "none",
+      "scan_targets": ["services/api/app/schemas/adaptive_schemas.py"],
+      "verification": [
+        "tests/test_adaptive_router.py",
+        "tests/test_adaptive_preview_endpoint_smoke.py",
+        "tests/cam/test_project_cam_execution.py",
+        "tests/cam/test_loop_canonicalization.py::TestOwnership::test_compatibility_reexport_stays_in_dunder_all"
+      ]
+    },
+    {
+      "path": "services/api/app/routers/blueprint_cam_bridge_schemas.py",
+      "intent": "Duplicate Loop definition removed; becomes a compatibility re-export because routers/blueprint_cam/extraction.py imports Loop from this module. No __all__ is added — the module never declared one, and a restrictive __all__ would hide its other public schemas from star-imports. Unused Tuple import dropped.",
+      "risk": "low",
+      "behavior_change": "none",
+      "scan_targets": ["services/api/app/routers/blueprint_cam_bridge_schemas.py"],
+      "verification": [
+        "tests/test_blueprint_cam_integration.py",
+        "tests/test_blueprint_endpoint_smoke.py",
+        "tests/cam/test_loop_canonicalization.py::TestGeometryParity::test_blueprint_bridge_response_accepts_canonical_loops"
+      ]
+    },
+    {
+      "path": "services/api/app/cam/contour_reconstructor.py",
+      "intent": "Duplicate Loop definition removed; direct import of the canonical type. This was the only copy carrying 'class Config: arbitrary_types_allowed = True', which is not propagated — see diff_articulation.behavior_invariance_evidence. ReconstructionResult.loops and the loop-building path at line ~388 now consume the canonical class.",
+      "risk": "low",
+      "behavior_change": "none",
+      "scan_targets": ["services/api/app/cam/contour_reconstructor.py"],
+      "verification": [
+        "tests/test_contour_reconstruction.py",
+        "tests/cam/test_loop_canonicalization.py::TestGeometryParity::test_contour_reconstructor_returns_canonical_loops",
+        "tests/cam/test_loop_canonicalization.py::TestGeometryParity::test_reconstruction_result_accepts_canonical_loops"
+      ]
+    },
+    {
+      "path": "services/api/tests/cam/test_loop_canonicalization.py",
+      "intent": "New. 50 tests: ownership/AST duplicate guard, class identity across all three historical paths plus four downstream consumers, import-cycle smoke, constructor and validation parity against verbatim replicas of both pre-change definitions, serialization and round-trip parity, geometry parity (vertex order, closure, orientation, bounds) over three fixtures, and live downstream CAM parity through two real DXF entry points.",
+      "risk": "low",
+      "behavior_change": "none",
+      "scan_targets": ["services/api/tests/cam/test_loop_canonicalization.py"],
+      "verification": [
+        "py -3.11 -m pytest tests/cam/test_loop_canonicalization.py -q --no-cov"
+      ]
+    }
+  ],
+  "verification": {
+    "commands_run": [
+      "PYTHONPATH=. py -3.11 -m pytest tests/cam/test_loop_canonicalization.py -q --no-cov  =>  50 passed",
+      "PYTHONPATH=. py -3.11 -m pytest tests/cam/test_loop_canonicalization.py tests/test_adaptive_router.py tests/test_adaptive_preview_endpoint_smoke.py tests/test_cam_adaptive2_smoke.py tests/test_contour_reconstruction.py tests/test_blueprint_cam_integration.py tests/test_blueprint_endpoint_smoke.py tests/test_vision_segmentation.py tests/test_rmos_toolpaths.py tests/cam/test_project_cam_execution.py -q --no-cov  =>  255 passed",
+      "PYTHONPATH=. py -3.11 -m pytest tests/cam/ -q --no-cov  =>  4 failed, 2344 passed, 3 skipped (branch)",
+      "PYTHONPATH=. py -3.11 -m pytest tests/cam/ -q --no-cov  =>  4 failed, 2294 passed, 3 skipped (clean baseline worktree at ac3c96df)",
+      "PYTHONPATH=. py -3.11 -c \"from app.schemas.cam_geometry import Loop as C; from app.schemas.adaptive_schemas import Loop as A; from app.routers.blueprint_cam_bridge_schemas import Loop as B; from app.cam.contour_reconstructor import Loop as R; assert A is C and B is C and R is C\"  =>  identity OK",
+      "PYTHONPATH=. py -3.11 -c \"import importlib; [importlib.import_module(m) for m in ('app.schemas.cam_geometry','app.schemas.adaptive_schemas','app.routers.blueprint_cam_bridge_schemas','app.cam.contour_reconstructor','app.cam.project_adapter','app.routers.blueprint_cam.extraction','app.routers.adaptive.dxf_router','app.rmos.mvp_router','app.vision.segmentation_router')]\"  =>  import smoke OK, no cycle"
+    ],
+    "regression_baseline": {
+      "method": "Full tests/cam/ run on a clean detached worktree at origin/main ac3c96df, compared against the same run on this branch.",
+      "baseline": "4 failed, 2294 passed, 3 skipped",
+      "branch": "4 failed, 2344 passed, 3 skipped",
+      "delta": "+50 passed (exactly the new test module); zero regressions",
+      "pre_existing_failures": [
+        "tests/cam/test_translator_execution_quarantine.py::TestQuarantineIndex::test_get_latest_quarantine",
+        "tests/cam/test_translator_governance_dossier.py::TestDossierIndex::test_get_latest_dossier_for_translator",
+        "tests/cam/test_translator_governance_review_ledger.py::TestParentDetection::test_lineage_chain_traversal",
+        "tests/cam/test_translator_governance_review_ledger.py::TestIndexOperations::test_get_latest_for_translator"
+      ],
+      "pre_existing_failure_note": "All four fail identically on the clean baseline and none touches Loop. Three also fail when their files are run in isolation; test_lineage_chain_traversal is order-dependent (passes in a 3-file run, fails in a full-directory run) on BOTH baseline and branch. Not addressed here — out of scope for CONV-001."
+    },
+    "static_checks": "No repo-standard lint/type gate covers services/api/app — the CI mypy/pyright scope (photo_vectorizer_typecheck.yml) is the photo-vectorizer contract surface only, and the repo has no ruff/flake8/black configuration. Verification for this patch is the identity tests, the 50-test parity module, and the 9-module import smoke."
+  }
+}
