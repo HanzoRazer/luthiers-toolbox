@@ -1,0 +1,48 @@
+{
+  "schema": "cbsp21_patch_input_v1",
+  "schema_version": "cbsp21_patch_input_v1",
+  "coverage_min": 0.95,
+  "patch_id": "CBSP21_PREFIX_SCOPE_OUTRANKS_PER_PR",
+  "title": "CBSP21 selection: a directory-prefix manifest must not outrank a per-PR manifest",
+  "intent": "Fix a defect in CBSP21 manifest auto-selection that made multi-file PRs unpassable. select_manifest ranks by (most changed files covered, then fewest declared tokens, then path). _declared_size counted a directory-prefix declaration such as 'docs/handoffs/' as ONE token even though it matches an unbounded subtree, so a broad accumulator scored as MORE specific than a per-PR manifest that named its files explicitly. The accumulator won selection and then failed coverage, because its own files[] did not list the PR's files. The affected PR could not be fixed by declaring its work correctly: covering five files requires at least five tokens, and the accumulator cost four.",
+  "change_type": "bugfix",
+  "behavior_change": "Directory-prefix tokens (those ending in '/') now count as 1000 rather than 1 when measuring manifest specificity. This affects TIE-BREAKS ONLY - coverage count is still the primary ranking key, so a prefix manifest still wins whenever it alone covers the diff. Net effect: a per-PR manifest that names its files now beats an accumulator that merely contains them, which is what the function's docstring already promised.",
+  "risk_level": "medium",
+  "scope": {
+    "paths_in_scope": [
+      ".cbsp21/patches/cbsp21-prefix-scope-outranks-per-pr.json",
+      "scripts/ci/cbsp21_manifest_discovery.py",
+      "scripts/ci/test_cbsp21_manifest_discovery.py"
+    ],
+    "files_expected_to_change": [
+      "scripts/ci/cbsp21_manifest_discovery.py",
+      "scripts/ci/test_cbsp21_manifest_discovery.py"
+    ]
+  },
+  "diff_articulation": {
+    "what_changed": "Added _PREFIX_TOKEN_WEIGHT and _is_prefix_token; _declared_size now sums weighted tokens instead of returning len(tokens). Added two regression tests: one reproducing the real PR #235 hijack (broad prefix accumulator vs per-PR manifest naming five files -> the per-PR manifest must win), and one asserting a prefix manifest still wins when it alone covers the diff, so the weighting cannot strand PRs that legitimately declare by prefix.",
+    "why_not_redundant": "This is shared CI touched by every PR, so it is deliberately the smallest change that restores the documented intent: only the tie-break metric moves, and the primary coverage ranking is untouched. 27 of 48 manifests on main declare by directory prefix and at least four claim docs/handoffs/, so narrowing any single offending manifest would only hand selection to the next one."
+  },
+  "verification": {
+    "commands_run": [
+      "pytest scripts/ci/test_cbsp21_manifest_discovery.py -> 15 passed (13 pre-existing unchanged + 2 new). No existing test needed modification.",
+      "Real-data check with auto-discovery (no --manifest, exactly as CI invokes it): PR #235's six changed files now select .cbsp21/patches/rescue-orphaned-thread-handoffs.json at 100% coverage, PASSED - previously fence-docs-witness-cired004.json was selected and the gate FAILED.",
+      "Same for PR #236's five changed files -> rescue-ci-red-021-handoffs.json, 100%, PASSED."
+    ],
+    "known_residual": "The weight is a constant (1000) rather than the true breadth of each prefix, which would require walking the tree at selection time. It is far above any plausible explicit-file count, so ordering is correct in practice; two prefix manifests covering the same diff still tie and still raise AmbiguousManifestSelection, which is the existing and intended behaviour."
+  },
+  "files": [
+    {
+      "path": "scripts/ci/cbsp21_manifest_discovery.py",
+      "intent": "Weight directory-prefix tokens by _PREFIX_TOKEN_WEIGHT in _declared_size so a subtree claim is not scored as more specific than an explicit file list.",
+      "risk": "medium",
+      "behavior_change": "Tie-break ordering only. Coverage ranking, the ambiguity guard, and the matcher are unchanged."
+    },
+    {
+      "path": "scripts/ci/test_cbsp21_manifest_discovery.py",
+      "intent": "Regression tests: the PR #235 hijack must not recur, and a prefix manifest must still win when it alone covers the diff.",
+      "risk": "low",
+      "behavior_change": "Test-only."
+    }
+  ]
+}

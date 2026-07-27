@@ -170,11 +170,31 @@ def default_declared_matcher(manifest: Manifest) -> Callable[[str], bool]:
     return is_declared
 
 
+# A directory-prefix declaration ("docs/handoffs/") matches an unbounded number of
+# files while costing a single token. Counting it as 1 made broad accumulators score
+# as MORE specific than a per-PR manifest that lists its files explicitly — the exact
+# inverse of the intent below. Weighting prefixes past any plausible explicit-file
+# count restores the intended ordering. The value only ever affects tie-breaks.
+_PREFIX_TOKEN_WEIGHT = 1000
+
+
+def _is_prefix_token(token: str) -> bool:
+    """A declaration that matches by directory prefix rather than naming a file."""
+    return token.endswith("/")
+
+
 def _declared_size(manifest: Manifest) -> int:
     """Rough specificity measure across all declaration fields (for tie-breaks).
 
     Smaller = more specific = preferred, so a tight per-PR manifest beats a broad
     accumulator when both cover the same number of changed files.
+
+    A directory-prefix token counts as ``_PREFIX_TOKEN_WEIGHT`` rather than 1,
+    because it claims a whole subtree. Without that weighting a manifest declaring
+    ``paths_in_scope: ["docs/handoffs/"]`` (4 tokens) outranked a per-PR manifest
+    naming five files explicitly (6 tokens), won selection, and then failed coverage
+    because its own ``files[]`` did not contain those five files — blocking a PR that
+    had declared its work correctly.
     """
     tokens: set[str] = set()
     scope = manifest.get("scope")
@@ -188,7 +208,7 @@ def _declared_size(manifest: Manifest) -> int:
                 if entry.get("path"):
                     tokens.add(str(entry["path"]))
                 tokens.update(_as_list(entry.get("scan_targets")))
-    return len(tokens)
+    return sum(_PREFIX_TOKEN_WEIGHT if _is_prefix_token(t) else 1 for t in tokens)
 
 
 def select_manifest(
