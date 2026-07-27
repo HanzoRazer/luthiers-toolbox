@@ -55,6 +55,10 @@ class ConversionStatus(Enum):
     SUCCESS = "SUCCESS"
     CAP_EXCEEDED = "CAP_EXCEEDED"
     ERROR = "ERROR"
+    # BR-037: output was produced, but a requested preprocessing step could not
+    # run, so the geometry may contain artefacts it was meant to exclude. NOT a
+    # success — callers that gate on SUCCESS must not treat this as clean.
+    DEGRADED = "DEGRADED"
 
 try:
     import ezdxf
@@ -442,6 +446,19 @@ _EASYOCR_READER = None
 _EASYOCR_AVAILABLE = None
 
 
+class TextDetectionError(RuntimeError):
+    """OCR text detection failed — masking could not be performed.
+
+    BR-037. Distinct from "no text present". ``detect_text_regions`` previously
+    returned ``[]`` for three different states — OCR unavailable, no text found,
+    and OCR crashed — so the caller's ``if text_regions:`` guard could not tell
+    "nothing to mask" from "masking failed". Masking was then skipped silently and
+    the glyph edges stayed in ``combined_edges``, where ``findContours`` traced
+    them into the DXF as body geometry. Raising here keeps ``[]`` meaning only
+    "no text present", which is a genuine and common result.
+    """
+
+
 def _get_easyocr_reader():
     """Lazy-load EasyOCR reader (singleton pattern)."""
     global _EASYOCR_READER, _EASYOCR_AVAILABLE
@@ -482,7 +499,13 @@ def detect_text_regions(
 
     Returns:
         List of (x, y, w, h) bounding boxes for detected text regions.
-        Returns empty list if EasyOCR unavailable or no text found.
+        Returns an empty list when EasyOCR is unavailable, or when OCR ran
+        successfully and found no text — both mean "there is nothing to mask".
+
+    Raises:
+        TextDetectionError: OCR was available but failed. This is NOT the same as
+            an empty result: masking was required and could not be performed, so
+            the caller must not proceed as though there were no text (BR-037).
     """
     reader = _get_easyocr_reader()
     if reader is None:
@@ -520,8 +543,11 @@ def detect_text_regions(
         return regions
 
     except Exception as e:
-        logger.warning(f"Text detection failed: {e}")
-        return []
+        # BR-037: do NOT return [] here. An empty list means "no text to mask",
+        # and the caller acts on it by skipping masking entirely — which leaves
+        # the glyph edges in the edge image to be traced into the DXF.
+        logger.error(f"Text detection failed: {e}")
+        raise TextDetectionError(f"OCR text detection failed: {e}") from e
 
 
 def create_text_mask(
@@ -1383,6 +1409,10 @@ class EdgeToDXFResult:
     contours_processed: Optional[int] = None
     entities_at_failure: Optional[int] = None
     error_message: Optional[str] = None
+    # BR-037: True when mask_text was requested but OCR failed, so text edges
+    # could not be removed and may appear in the geometry. Pairs with
+    # status == DEGRADED.
+    text_detection_failed: bool = False
 
     def summary(self) -> str:
         """Human-readable summary."""
@@ -1412,8 +1442,18 @@ class EdgeToDXFResult:
                 f"  Time: {self.processing_time_ms:.0f} ms"
             )
         else:
+            banner = (
+                "Edge-to-DXF Conversion Complete"
+                if not self.text_detection_failed
+                else (
+                    "Edge-to-DXF Conversion DEGRADED\n"
+                    "  WARNING: text masking was requested but OCR failed. Any text\n"
+                    "  in the source image has been vectorised as body geometry and\n"
+                    "  must be removed before this DXF is used for machining."
+                )
+            )
             return (
-                f"Edge-to-DXF Conversion Complete\n"
+                f"{banner}\n"
                 f"  Source: {self.source_path}\n"
                 f"  Output: {self.output_path}\n"
                 f"  Image: {self.image_size_px[0]} x {self.image_size_px[1]} px\n"
@@ -1947,8 +1987,30 @@ class EdgeToDXF:
         # Text masking: remove text edges BEFORE morphological closing
         # This prevents the 7×7 kernel from bridging text glyph strokes
         text_removed_count = 0
+        text_detection_failed = False  # BR-037
         if mask_text:
-            text_regions = detect_text_regions(img, min_confidence=0.3, padding_px=5)
+            # BR-037: mask_text=True is an explicit caller request. If OCR fails we
+            # cannot honour it, and the glyph edges are already in combined_edges —
+            # findContours below traces them into the DXF as body geometry
+            # (reproduced: 1475 entities inside the text bbox, 0 in a no-text
+            # control). We still emit, because a failed OCR pass cannot tell us
+            # whether the image even had text — refusing would reject the many
+            # images that have none. Instead the result is marked DEGRADED so it
+            # cannot be mistaken for a clean conversion.
+            #
+            # Note: suppressing the morphological close was considered and does NOT
+            # help — it only turns text from bridged blobs into thin outlines; the
+            # text still ships. Only masking removes it, and masking needs OCR.
+            try:
+                text_regions = detect_text_regions(img, min_confidence=0.3, padding_px=5)
+            except TextDetectionError as e:
+                logger.error(
+                    "TEXT_MASK_FAILED | mask_text=True but OCR failed (%s). Emitting "
+                    "DEGRADED output: any text in this image is vectorised as body "
+                    "geometry.", e,
+                )
+                text_detection_failed = True
+                text_regions = []
             if text_regions:
                 text_mask = create_text_mask((h, w), text_regions)
                 combined_edges, text_removed_count = apply_text_mask_to_edges(
@@ -2071,6 +2133,13 @@ class EdgeToDXF:
             mm_per_px=mm_per_px,
             processing_time_ms=processing_time,
             file_size_bytes=file_size,
+            # BR-037: an unmasked-text run must not report clean success.
+            status=(
+                ConversionStatus.DEGRADED
+                if text_detection_failed
+                else ConversionStatus.SUCCESS
+            ),
+            text_detection_failed=text_detection_failed,
         )
 
     def convert_batch(
