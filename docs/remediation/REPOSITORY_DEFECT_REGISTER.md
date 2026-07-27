@@ -128,3 +128,121 @@ they do not appear among the Wave 0 failures.)
 > currently-reproducible defect and not claimed "resolved"); disconnected UI surfaces BR-023/BR-030 (`ENHANCEMENT`, never
 > approved); BR-019 auth/DB stubs (`OWNER_DECISION_REQUIRED` — scope question, not yet a contract-broken
 > defect). Full reasoning in the [adjudication ledger](BACKLOG_ADJUDICATION_LEDGER.md).
+
+---
+
+## Scan intake — 16-detector scan @ `ac3c96df` (2026-07-26)
+
+Source: [`docs/audit/LUTHIERS_TOOLBOX_SCAN_ac3c96df.md`](../audit/LUTHIERS_TOOLBOX_SCAN_ac3c96df.md).
+Entered as **CANDIDATES — NOT ADJUDICATED**. A detector produces leads; these have not been through
+the adjudication ledger and none is authorized for fix.
+
+**Confidence vocabulary (added 2026-07-26 after BR-037 was mislabelled).** A read and a run prove
+different things, and this register must not blur them:
+
+| Label | Means | What a code read can establish |
+|---|---|---|
+| `CANDIDATE` | a detector flagged it; nothing verified | — |
+| `STATIC-FACT CONFIRMED` | the *code says so* — two writers exist, a default is unguarded | ✅ yes |
+| `CONFIRMED` | the *symptom was reproduced* at runtime | ❌ never |
+
+Reading a producer→consumer chain and inferring a symptom is a **hypothesis**, however convincing the
+chain. BR-037 was filed as `CONFIRMED by producer->consumer read` and that was wrong; it became
+genuinely confirmed only when the symptom was reproduced (1475 entities vs a 0 control). Do not
+promote a hypothesis to `CONFIRMED` without a run.
+
+### BR-037 · Text-detection failure silently vectorizes text into the DXF — ✅ RESOLVED ON `main`
+- **Subsystem:** photo-vectorizer / DXF pipeline
+- **Mechanism:** `detect_text_regions()`
+  (`services/photo-vectorizer/edge_to_dxf.py:470-524`) returned `[]` from a bare
+  `except Exception` at `:522`, collapsing three distinct states — OCR unavailable, no text found,
+  and OCR crashed — into one falsy value. The consumer at `:1951` guards with `if text_regions:`, so
+  the crash state skipped text masking entirely, leaving glyph edges in `combined_edges` for
+  `findContours` to trace into the DXF as body geometry.
+- **Observed vs expected:** OCR failure yielded a *successful* DXF containing text as body geometry,
+  with no error and no `TEXT_MASK` log line. Expected: the output must not claim clean success.
+
+#### Epistemic history — how this entry earned the word "confirmed"
+This is recorded in full because the original wording overstated the evidence, and the register's
+credibility depends on `CONFIRMED` meaning *reproduced*, not *reasoned*.
+
+| Stage | Basis | Correct label at the time |
+|---|---|---|
+| 2026-07-26 (initial intake) | producer→consumer chain read statically | **HYPOTHESIS** — was wrongly filed as `CONFIRMED by producer->consumer read` |
+| 2026-07-26 (challenged) | asked whether a bad DXF had actually been observed; it had not | hypothesis, explicitly unreproduced |
+| 2026-07-26 (reproduction) | rendered text + body shape, forced the OCR reader to raise, converted, counted DXF entities inside the text bbox: **A (text present) = 1475 entities · B (no-text control) = 0**, while the result still reported `SUCCESS` | **CONFIRMED** |
+
+> **Calibration note.** Reading a producer→consumer chain and inferring a symptom is a *hypothesis*.
+> A register that prints `CONFIRMED` for a read teaches its readers to trust reads as proof — the
+> same error that nearly shipped the wrong fix here. In this register, `CONFIRMED` means the symptom
+> was reproduced. Anything else is `HYPOTHESIS` or `CANDIDATE`.
+
+- **Resolution:** **merged to `main` 2026-07-27 as `97460755`** (PR #232,
+  `fix/br-037-text-detection-silent-skip`). Verified present on `main` after merge, not just
+  assumed from the merge event. During review this entry cited branch SHA `09818eee`, which went
+  stale within the hour when a required CBSP21 manifest moved the head to `3e6a8a4e` — hence the
+  merge commit is recorded here rather than any branch SHA.
+  `[]` now means only "nothing to mask"; the crash path raises `TextDetectionError`; the caller still
+  emits but marks the result `ConversionStatus.DEGRADED` with `text_detection_failed=True` and an
+  explicit summary warning. 3 regression tests added (14 passed, 1 skipped).
+- **Fix-shape history (also evidence-corrected):** the first implementation *refused* to emit on OCR
+  failure. The **no-text control run rejected that** — it failed images with no text at all, trading
+  silent corruption for silent false-refusal, because a failed OCR pass cannot know whether the image
+  contained text. Emit-and-flag replaced it. *The control run, not the positive run, caught the bad fix.*
+- **Known residual (accepted):** a no-text image that hits an OCR failure is still marked `DEGRADED`.
+  Unavoidable — the information needed to rule it out is precisely what the failure destroyed. Honest
+  uncertainty, but a real cost if OCR is flaky.
+- **Severity:** high (silent wrong output) · **Fix size:** small
+- **Status:** **RESOLVED — on `main`.** Merged 2026-07-27 with 44 checks passing, 1 skipped.
+- **Blocker cleared en route:** #232 was held red by a `mypy` failure that was **pre-existing and
+  unrelated** — `photo-vectorizer contains __init__.py but is not a valid Python package name`,
+  introduced by `ffecf39f` and latent because that workflow is path-filtered, so #232 was simply
+  the first PR since to touch that directory. Fixed separately in **PR #238** (`c07c917e`), which
+  also revealed that gate had **never passed once** in its history and, in the course of making it
+  pass, corrected two genuine unguarded `None` dereferences at `body_isolation_stage.py:387-388`.
+
+### BR-038 · Two store modules write the same `data/art_jobs.json`
+- **Subsystem:** art_studio / services
+- **Reproduction basis:** `services/api/app/services/art_job_store.py:17` and
+  `services/api/app/services/art_jobs_store.py:20` (singular/plural twins) both declare
+  `JOBS_PATH = Path("data/art_jobs.json")` and both write it.
+- **Observed vs expected:** two uncoordinated writers to one JSON file; last-writer-wins. Expected:
+  one writer, or a declared canonical owner.
+- **Severity:** medium · **Fix size:** small-medium (must confirm consumers first) · **Readiness:** ready.
+- **Confidence:** **STATIC-FACT CONFIRMED** — both writers exist and both write; verified by read.
+  The *runtime collision* (interleaved writes losing data) is **NOT reproduced**.
+
+### BR-039 · Three parallel preset stores with no declared canonical
+- **Subsystem:** services / util
+- **Reproduction basis:** `services/art_presets_store.py:9` -> `data/art_presets.json`;
+  `services/preset_store.py:14` -> `data/presets/presets.json`; `util/presets_store.py:23` ->
+  `data/presets.json`. Three modules, three files, all written.
+- **Severity:** medium · **Readiness:** `OWNER_DECISION_REQUIRED` — which store is canonical is a
+  scope question, not a defect to fix unilaterally.
+- **Confidence:** **STATIC-FACT CONFIRMED** — three stores, three paths, all written; verified by
+  read. Whether this is a *defect* rather than intentional separation needs owner adjudication.
+
+### BR-040 · Silent domain-default fallback on closed-domain lookups (10 sites)
+- **Subsystem:** instrument_geometry, calculators, analyzer, workflow
+- **Reproduction basis:** 10 sites of `X.get(key, X[DEFAULT])`, incl.
+  `body_contour_solver.py:250` (`FAMILY_DEFAULTS.get(family, FAMILY_DEFAULTS["dreadnought"])`),
+  `neck_block_calc.py:202,246`, `viewer_pack_bridge.py:176,199,346,352,357,362`,
+  `directional_workflow.py:187`.
+- **Observed vs expected:** an unrecognized body family silently yields dreadnought geometry; an
+  unrecognized species silently yields default material properties.
+- **Severity:** medium-high *if* any key space is open · **Readiness:** needs triage — confirm per
+  site whether the key is enum-validated upstream. Where closed, harmless; where open, wrong output.
+- **Confidence:** **STATIC-FACT CONFIRMED** for the 10 sites (the fallbacks are there in code);
+  **CANDIDATE** as a defect — no site has been shown to receive an out-of-domain key at runtime.
+
+### BR-041 · 447 production silent-swallow exception handlers (bulk lead, not a single defect)
+- **Reproduction basis:** AST scan; 637 total, minus 106 `ImportError` optional-dep guards and 84
+  archive/test = 447 production. The 146 `empty-return` + `log-then-empty-return` handlers share
+  BR-037's shape and are the priority subset.
+- **Severity:** unknown in bulk · **Readiness:** NOT ready as one item — must be split per subsystem.
+- **Confidence:** CANDIDATE SET, explicitly not 447 bugs.
+
+> **Refuted by the same scan — do not open work on these:** duplicate-filename drift
+> (`store.py`x12 etc.) is a naming convention, not copy-paste — AST-hashing found exactly **one**
+> cross-file clone group; and the router-count baseline is **not** stale (`ci/router_count_gate.py`
+> reports 253/1228 = baseline exactly).

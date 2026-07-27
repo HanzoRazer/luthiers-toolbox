@@ -1,0 +1,50 @@
+{
+  "schema": "cbsp21_patch_input_v1",
+  "schema_version": "cbsp21_patch_input_v1",
+  "coverage_min": 0.95,
+  "patch_id": "SCAN_AC3C96DF_DETECTOR_SWEEP",
+  "title": "16-detector scan @ ac3c96df: findings report + BR-037..041 intake",
+  "intent": "Record a read-only 16-detector scan of origin/main at ac3c96df and route its findings into the BR remediation queue as candidates. Produces evidence and a punch list; changes no code. Two defects are reported (BR-037 text-detection silent skip, reproduced; BR-038 two store modules writing one JSON path) and two prior hypotheses are explicitly REFUTED so no work opens on them: duplicate-filename drift is a naming convention rather than copy-paste (AST-hashing the store.py/registry.py/geometry.py/schemas.py shortlist found exactly one cross-file clone group), and the router-count baseline is not stale (the gate's own counter reports 253/1228 = baseline exactly).",
+  "change_type": "docs",
+  "behavior_change": "None. Documentation only - one new audit report and an append to the defect register. No code, schema, route, gate threshold, or runtime behaviour is touched. Also calibrates the register's confidence vocabulary (CANDIDATE / STATIC-FACT CONFIRMED / CONFIRMED) after BR-037 was initially mislabelled CONFIRMED on the strength of a code read rather than a reproduction; BR-038/039/040 are relabelled to match, which lowers their stated confidence without changing any finding.",
+  "risk_level": "low",
+  "scope": {
+    "paths_in_scope": [
+      ".cbsp21/patches/scan-ac3c96df-detector-sweep.json",
+      "docs/audit/LUTHIERS_TOOLBOX_SCAN_ac3c96df.md",
+      "docs/remediation/REPOSITORY_DEFECT_REGISTER.md"
+    ],
+    "files_expected_to_change": [
+      "docs/audit/LUTHIERS_TOOLBOX_SCAN_ac3c96df.md",
+      "docs/remediation/REPOSITORY_DEFECT_REGISTER.md"
+    ]
+  },
+  "diff_articulation": {
+    "what_changed": "Adds docs/audit/LUTHIERS_TOOLBOX_SCAN_ac3c96df.md (the scan report, including the confidence vocabulary and the two refutations) and appends a scan-intake section to docs/remediation/REPOSITORY_DEFECT_REGISTER.md carrying BR-037..BR-041 as candidates plus the vocabulary definition.",
+    "why_not_redundant": "The scan measures current main rather than the stale July-15 snapshot the prior pass used, and it corrects that snapshot on several counts (bare except: 14 -> 2, routers 278 -> 253). Its refutations are the load-bearing part: they redirect effort away from two consolidation efforts that would have been wasted."
+  },
+  "verification": {
+    "commands_run": [
+      "Read-only scan executed against a clean detached worktree at ac3c96df using git ls-files, so no node_modules/.venv/dist/htmlcov/__pycache__ output is counted.",
+      "BR-037 reproduced before being labelled CONFIRMED: text image + forced OCR failure -> 1475 DXF entities inside the text bounding box, against 0 in a no-text control.",
+      "Duplicate-drift refutation: AST-hashed every function across store.py x12, registry.py x7, geometry.py x6, schemas.py x19 with names/docstrings/literals normalised -> exactly one cross-file clone group.",
+      "Baseline refutation: ci/router_count_gate.py -> 'OK: Router counts within baseline' (253/1228).",
+      "check_cbsp21_patch_input.py and check_cbsp21_gate.py run locally -> PASS."
+    ],
+    "known_residual": "Detectors D11 (order-dependent resolution) and D13 (files with no covering test) are marked BLOCKED-NEEDS-RUNTIME with the exact commands, rather than reporting numbers that cannot be stood behind. The silent-swallow count (447 production) differs from the snapshot's 199 largely by definition, not drift."
+  },
+  "files": [
+    {
+      "path": "docs/audit/LUTHIERS_TOOLBOX_SCAN_ac3c96df.md",
+      "intent": "The scan report: delta table vs the July-15 snapshot, ranked findings, the two refutations, the one-hour subset, and the blocked detectors.",
+      "risk": "low",
+      "behavior_change": "None - new documentation file."
+    },
+    {
+      "path": "docs/remediation/REPOSITORY_DEFECT_REGISTER.md",
+      "intent": "Append BR-037..BR-041 as candidates and define the confidence vocabulary so CONFIRMED means reproduced, not reasoned.",
+      "risk": "low",
+      "behavior_change": "None - documentation. Lowers the stated confidence of BR-038/039/040 to match the evidence actually held."
+    }
+  ]
+}
