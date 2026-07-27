@@ -1,0 +1,39 @@
+{
+  "schema": "cbsp21_patch_input_v1",
+  "schema_version": "cbsp21_patch_input_v1",
+  "coverage_min": 0.95,
+  "patch_id": "RESCUE_CAM_BUILD_WORKFLOW_DISCOVERY",
+  "title": "Rescue the CAM build-workflow discovery handoff (WF-001 primary input)",
+  "intent": "Commit a document that had never been committed to any branch in any repository. It is the primary repository-evidence input to the WF-001 canonical electric-body workflow program (its section 7 is the 24-question decision docket), and it existed only as an untracked file in a stale working tree forked 2026-07-04 and 41 commits behind main. Content is byte-identical to the rescued file; nothing is edited.",
+  "change_type": "docs",
+  "behavior_change": "None. Documentation only - adds a file at its native path. No code, schema, route, or runtime behaviour is touched. Makes no claim about WF-001's status or scheduling.",
+  "risk_level": "low",
+  "scope": {
+    "paths_in_scope": [
+      ".cbsp21/patches/rescue-cam-build-workflow-discovery.json",
+      "docs/handoffs/CAM_BUILD_WORKFLOW_DISCOVERY_DEV_HANDOFF.md"
+    ],
+    "files_expected_to_change": [
+      "docs/handoffs/CAM_BUILD_WORKFLOW_DISCOVERY_DEV_HANDOFF.md"
+    ]
+  },
+  "diff_articulation": {
+    "what_changed": "Adds 1 previously-uncommitted document(s) at their native path(s), verbatim.",
+    "why_not_redundant": "These files existed nowhere in git. Verified with `git log --all --oneline -- <path>`, which returned nothing for every one. Without this commit each is one disk failure from being lost."
+  },
+  "verification": {
+    "commands_run": [
+      "git log --all --oneline -- <path> -> no output for every file in this patch, confirming it was committed nowhere.",
+      "Byte-identity confirmed with diff against the rescued source before committing.",
+      "check_cbsp21_patch_input.py and check_cbsp21_gate.py run locally -> PASS."
+    ]
+  },
+  "files": [
+    {
+      "path": "docs/handoffs/CAM_BUILD_WORKFLOW_DISCOVERY_DEV_HANDOFF.md",
+      "intent": "Rescue a document that was committed nowhere in git.",
+      "risk": "low",
+      "behavior_change": "None - documentation only."
+    }
+  ]
+}
