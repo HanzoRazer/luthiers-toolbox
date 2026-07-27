@@ -1,0 +1,63 @@
+{
+  "schema": "cbsp21_patch_input_v1",
+  "schema_version": "cbsp21_patch_input_v1",
+  "coverage_min": 0.95,
+  "patch_id": "RESCUE_CI_RED_021_HANDOFFS",
+  "title": "Rescue four orphaned CI-RED-021 handoffs from worktrees",
+  "intent": "Commit four dev orders / handoffs never committed to any branch in any repository. Unlike the earlier rescue batch these were not in the stale checkout - they were untracked files inside two long-lived worktrees under C:\tmp, one level further out of sight, and surfaced only during a worktree cleanup audit. Content is byte-identical; nothing is edited.",
+  "change_type": "docs",
+  "behavior_change": "None. Documentation only. The CI-RED-021 enforcement thread itself remains open on unmerged branches.",
+  "risk_level": "low",
+  "scope": {
+    "paths_in_scope": [
+      ".cbsp21/patches/rescue-ci-red-021-handoffs.json",
+      "docs/handoffs/CI_RED_004_021_BRANCH_PROTECTION_ENFORCEMENT_HANDOFF.md",
+      "docs/handoffs/CI_RED_004_021_ENFORCEMENT_VERIFICATION_HANDOFF.md",
+      "docs/handoffs/CI_RED_021B_REQUIRED_CHECK_POLICY_FOLLOWUP.md",
+      "docs/handoffs/PR_194_FENCE_TRIGGER_HARDENING_DEV_ORDER.md"
+    ],
+    "files_expected_to_change": [
+      "docs/handoffs/CI_RED_004_021_BRANCH_PROTECTION_ENFORCEMENT_HANDOFF.md",
+      "docs/handoffs/CI_RED_004_021_ENFORCEMENT_VERIFICATION_HANDOFF.md",
+      "docs/handoffs/CI_RED_021B_REQUIRED_CHECK_POLICY_FOLLOWUP.md",
+      "docs/handoffs/PR_194_FENCE_TRIGGER_HARDENING_DEV_ORDER.md"
+    ]
+  },
+  "diff_articulation": {
+    "what_changed": "Adds 4 previously-uncommitted document(s) at their native path(s), verbatim.",
+    "why_not_redundant": "These files existed nowhere in git. Verified with `git log --all --oneline -- <path>`, which returned nothing for every one. Without this commit each is one disk failure from being lost."
+  },
+  "verification": {
+    "commands_run": [
+      "git log --all --oneline -- <path> -> no output for every file in this patch, confirming it was committed nowhere.",
+      "Byte-identity confirmed with diff against the rescued source before committing.",
+      "check_cbsp21_patch_input.py and check_cbsp21_gate.py run locally -> PASS."
+    ]
+  },
+  "files": [
+    {
+      "path": "docs/handoffs/CI_RED_004_021_BRANCH_PROTECTION_ENFORCEMENT_HANDOFF.md",
+      "intent": "Rescue a document that was committed nowhere in git.",
+      "risk": "low",
+      "behavior_change": "None - documentation only."
+    },
+    {
+      "path": "docs/handoffs/CI_RED_004_021_ENFORCEMENT_VERIFICATION_HANDOFF.md",
+      "intent": "Rescue a document that was committed nowhere in git.",
+      "risk": "low",
+      "behavior_change": "None - documentation only."
+    },
+    {
+      "path": "docs/handoffs/CI_RED_021B_REQUIRED_CHECK_POLICY_FOLLOWUP.md",
+      "intent": "Rescue a document that was committed nowhere in git.",
+      "risk": "low",
+      "behavior_change": "None - documentation only."
+    },
+    {
+      "path": "docs/handoffs/PR_194_FENCE_TRIGGER_HARDENING_DEV_ORDER.md",
+      "intent": "Rescue a document that was committed nowhere in git.",
+      "risk": "low",
+      "behavior_change": "None - documentation only."
+    }
+  ]
+}
