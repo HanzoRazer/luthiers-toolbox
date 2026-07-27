@@ -151,7 +151,7 @@ chain. BR-037 was filed as `CONFIRMED by producer->consumer read` and that was w
 genuinely confirmed only when the symptom was reproduced (1475 entities vs a 0 control). Do not
 promote a hypothesis to `CONFIRMED` without a run.
 
-### BR-037 · Text-detection failure silently vectorizes text into the DXF — ✅ RESOLVED
+### BR-037 · Text-detection failure silently vectorizes text into the DXF — ✅ FIXED ON BRANCH (PR #232), NOT YET ON `main`
 - **Subsystem:** photo-vectorizer / DXF pipeline
 - **Mechanism:** `detect_text_regions()`
   (`services/photo-vectorizer/edge_to_dxf.py:470-524`) returned `[]` from a bare
@@ -177,7 +177,9 @@ credibility depends on `CONFIRMED` meaning *reproduced*, not *reasoned*.
 > same error that nearly shipped the wrong fix here. In this register, `CONFIRMED` means the symptom
 > was reproduced. Anything else is `HYPOTHESIS` or `CANDIDATE`.
 
-- **Resolution:** fixed in **`09818eee`** on `fix/br-037-text-detection-silent-skip`.
+- **Resolution:** fixed in **PR #232** (`fix/br-037-text-detection-silent-skip`). Referenced by PR
+  rather than commit SHA deliberately: the branch head moved (`09818eee` -> `3e6a8a4e`) when a
+  required CBSP21 patch manifest was added, and a pinned SHA would already be stale.
   `[]` now means only "nothing to mask"; the crash path raises `TextDetectionError`; the caller still
   emits but marks the result `ConversionStatus.DEGRADED` with `text_detection_failed=True` and an
   explicit summary warning. 3 regression tests added (14 passed, 1 skipped).
@@ -188,7 +190,13 @@ credibility depends on `CONFIRMED` meaning *reproduced*, not *reasoned*.
 - **Known residual (accepted):** a no-text image that hits an OCR failure is still marked `DEGRADED`.
   Unavoidable — the information needed to rule it out is precisely what the failure destroyed. Honest
   uncertainty, but a real cost if OCR is flaky.
-- **Severity:** high (silent wrong output) · **Fix size:** small · **Status:** RESOLVED, awaiting merge.
+- **Severity:** high (silent wrong output) · **Fix size:** small
+- **Status:** **FIXED ON BRANCH — pending CI and merge.** Not on `main`. Do not read this entry as
+  meaning production is repaired. As of 2026-07-26 PR #232 has no approvals, `API Tests` still
+  running, and a known-unrelated `mypy` red (`photo-vectorizer contains __init__.py but is not a
+  valid Python package name`) that is **pre-existing on `main`** — introduced by `ffecf39f`, latent
+  because that workflow is path-filtered, and surfaced only because this is the first PR since to
+  touch that directory. Tracked separately; it is not caused by this fix.
 
 ### BR-038 · Two store modules write the same `data/art_jobs.json`
 - **Subsystem:** art_studio / services

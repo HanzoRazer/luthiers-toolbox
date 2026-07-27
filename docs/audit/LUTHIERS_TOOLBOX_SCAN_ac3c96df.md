@@ -4,7 +4,21 @@
 2026-07-26; unchanged since #231 merged 2026-07-23).
 **Method:** read-only. Clean detached worktree, tracked files only (`git ls-files`), so no
 `node_modules`, `.venv`, `dist`, `htmlcov`, `__pycache__`, or build output is counted.
-**Status:** every entry below is a **lead**, not a verdict. Confirmed items say so explicitly.
+**Status:** every entry below is a **lead**, not a verdict.
+
+**Confidence vocabulary** (shared with
+[`REPOSITORY_DEFECT_REGISTER.md`](../remediation/REPOSITORY_DEFECT_REGISTER.md) — the two documents
+must not drift):
+
+| Label | Means | Can a code read establish it? |
+|---|---|---|
+| `CANDIDATE` | a detector flagged it; nothing verified | — |
+| `STATIC-FACT CONFIRMED` | the *code says so* — two writers exist, a default is unguarded | ✅ yes |
+| `CONFIRMED` | the *symptom was reproduced* at runtime | ❌ never |
+
+Reading a producer→consumer chain and inferring a symptom is a **hypothesis**, however convincing the
+chain. F-1 below was originally labelled `CONFIRMED` on a read alone; that was an overclaim, and it is
+annotated in place rather than quietly rewritten.
 
 > **Grounding note.** The prior pass ran against a July-15 *file snapshot*. This ran against current
 > `main`. Where the two disagree, **these numbers are the real ones** — but several disagreements are
@@ -42,7 +56,7 @@ not move at all.
 
 ## 2. Ranked findings — by (severity × confidence × cheapness to confirm)
 
-### 🔴 F-1 · CONFIRMED · `detect_text_regions()` returns `[]` on any failure → text is silently vectorized into the DXF
+### 🔴 F-1 · CONFIRMED (reproduced) · `detect_text_regions()` returns `[]` on any failure → text is silently vectorized into the DXF
 `services/photo-vectorizer/edge_to_dxf.py:522` (function `detect_text_regions`, 470–524)
 consumed at `edge_to_dxf.py:1951`.
 
@@ -62,13 +76,20 @@ comment says text masking exists to prevent: *"This prevents the 7×7 kernel fro
 strokes."* The DXF is produced **successfully**, silently containing text strokes as body geometry.
 The `TEXT_MASK | Removed …` log line never prints, so nothing distinguishes *"no text in this image"*
 from *"text detection crashed."* Textbook failure-mimics-success.
-**Confidence:** confirmed by reading the full producer→consumer chain. **Fix size:** small.
+**Confidence: CONFIRMED — reproduced.** *(This label was initially `CONFIRMED by producer→consumer
+read`, which was an overclaim: a chain read is a hypothesis, not a confirmation. It was later
+reproduced — an image with text plus a body shape, OCR forced to raise, produced **1475 DXF entities
+inside the text bounding box against 0 in a no-text control**, while the result still reported
+`SUCCESS`. That run is what earned the word.)* **Fix size:** small. **Fixed in PR #232.**
 
-### 🟠 F-2 · CONFIRMED · Two store modules write the same JSON file
+### 🟠 F-2 · STATIC-FACT CONFIRMED · Two store modules write the same JSON file
 `services/api/app/services/art_job_store.py:17` and
 `services/api/app/services/art_jobs_store.py:20` — **singular/plural twins** — both declare
 `JOBS_PATH = Path("data/art_jobs.json")` and both write it. Two writers, one file, no coordination.
-This is exactly the art-jobs shared-JSON class. **Confidence:** confirmed by direct read.
+This is exactly the art-jobs shared-JSON class.
+**Confidence: STATIC-FACT CONFIRMED** — that both writers exist and both write is established by
+read. The *runtime* consequence (interleaved writes losing data) is **not reproduced**, so this is
+not `CONFIRMED` in the sense F-1 now is.
 
 ### 🟠 F-3 · CANDIDATE · Three parallel preset stores, three different files
 `art_presets_store.py:9` → `data/art_presets.json` · `preset_store.py:14` →
@@ -129,9 +150,13 @@ constants, none return `[]`/`0` on breach).
 
 ## 4. The one-hour subset — confirmed and cheap
 
-1. **F-1** — make `detect_text_regions` distinguish "no text" from "detection failed". Raise, or
-   return a sentinel the caller checks. ~20 min + a regression test that forces OCR to raise and
-   asserts the DXF does not gain text geometry.
+1. ~~**F-1** — make `detect_text_regions` distinguish "no text" from "detection failed".~~
+   ✅ **DONE — PR #232.** Reproduced first (1475 entities vs a 0 control), then fixed. The shipped fix
+   is *emit-and-flag*, not the "raise" suggested here: raising was implemented and then **rejected by
+   the no-text control run**, which showed it also refuses images containing no text at all — a failed
+   OCR pass cannot know whether the image had any. The result is now marked
+   `ConversionStatus.DEGRADED` instead. Estimate was ~20 min; actual was considerably longer, because
+   the first two candidate fixes were wrong and only running them showed it.
 2. **F-2** — collapse `art_job_store` / `art_jobs_store` to one writer, or make one delegate. ~30 min;
    the risk is which is canonical, so confirm consumers first.
 
