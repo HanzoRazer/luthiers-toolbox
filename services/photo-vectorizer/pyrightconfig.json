@@ -1,10 +1,7 @@
 {
   "include": [
     "body_isolation_result.py",
-    "body_isolation_stage.py",
-    "photo_vectorizer_v2.py",
-    "test_extract_coach_integration.py",
-    "test_geometry_coach_v2_real_routing.py"
+    "body_isolation_stage.py"
   ],
   "typeCheckingMode": "basic",
   "reportMissingImports": false,

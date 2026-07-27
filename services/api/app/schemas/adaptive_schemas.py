@@ -6,9 +6,14 @@ Supports L.1, L.2, L.3, and M.1/M.4 feature sets.
 See ADAPTIVE_POCKETING_MODULE_L.md for algorithm details.
 """
 
-from typing import Any, Dict, List, Literal, Optional, Tuple
+from typing import Any, Dict, List, Literal, Optional
 
 from pydantic import BaseModel, Field
+
+# Canonical CAM geometry contract (CONV-001 / LAB-013 WP-GEOM-3).
+# Re-exported here because existing consumers import ``Loop`` from this module;
+# see ``app.schemas.cam_geometry`` for the single definition.
+from app.schemas.cam_geometry import Loop
 
 
 class AdaptiveFeedOverride(BaseModel):
@@ -45,24 +50,6 @@ class AdaptiveFeedOverride(BaseModel):
     inline_min_f: Optional[float] = None
     mcode_start: Optional[str] = None
     mcode_end: Optional[str] = None
-
-
-class Loop(BaseModel):
-    """
-    Closed polygon representing boundary or island.
-
-    First loop in request is outer boundary (CCW orientation).
-    Subsequent loops are islands/holes (CW orientation).
-
-    Attributes:
-        pts: List of (x, y) tuples forming closed polygon
-             First and last point automatically connected if different
-
-    Example:
-        >>> outer = Loop(pts=[(0,0), (100,0), (100,60), (0,60)])
-        >>> island = Loop(pts=[(30,15), (70,15), (70,45), (30,45)])
-    """
-    pts: List[Tuple[float, float]]
 
 
 class PlanIn(BaseModel):

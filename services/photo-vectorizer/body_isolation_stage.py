@@ -384,8 +384,12 @@ class BodyIsolationStage:
             profile = geometry_authority.get_expected_body_profile(fam_name)
             if profile:
                 h_min, h_max, w_min, w_max = profile
-                est_h_mm = result.body_region.height_mm
-                est_w_mm = result.body_region.width_mm
+                # body_region is genuinely optional (from_payload can yield None).
+                # Reading .height_mm/.width_mm unguarded was a latent AttributeError;
+                # the annotation used to hide it. Downstream already handles None.
+                _region = result.body_region
+                est_h_mm = _region.height_mm if _region is not None else None
+                est_w_mm = _region.width_mm if _region is not None else None
 
                 if est_h_mm is not None and h_max > h_min:
                     if est_h_mm < h_min:
@@ -542,7 +546,11 @@ class BodyIsolationStage:
         if params.allow_lower_bout_growth:
             roi_fg = self._recover_lower_bout(roi_fg, bbox)
 
-        return np.maximum(mask, roi_fg)
+        # Typed local rather than cast(): mypy's warn_return_any rejects returning
+        # np.maximum(...) directly, while pyright's reportUnnecessaryCast rejects a
+        # cast here. Binding to an annotated local satisfies both.
+        merged: np.ndarray = np.maximum(mask, roi_fg)
+        return merged
 
     @staticmethod
     def _recover_vertical_continuity(

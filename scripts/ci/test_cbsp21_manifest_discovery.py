@@ -177,3 +177,55 @@ def test_only_malformed_yields_no_candidates(tmp_path: Path):
 
 if __name__ == "__main__":
     raise SystemExit(pytest.main([__file__, "-q"]))
+
+
+# --------------------------------------------------------------------------- #
+# specificity — directory prefixes must not outrank explicit file declarations
+# --------------------------------------------------------------------------- #
+
+def test_directory_prefix_does_not_outrank_explicit_per_pr_manifest(tmp_path: Path):
+    """Regression: a broad prefix manifest used to hijack multi-file PRs.
+
+    Reproduces the real failure on PR #235. `fence-docs-witness-cired004.json`
+    declares paths_in_scope ["docs/handoffs/", ".cbsp21/"] and one file, totalling
+    4 tokens. A per-PR manifest naming its five rescued handoffs explicitly totalled
+    6 tokens. Both covered all five changed files, so the tie-break on "fewest
+    tokens" picked the BROAD manifest, which then failed coverage because its
+    files[] did not list those five documents. The PR could not be made to pass by
+    declaring its work correctly -- covering five files needs at least five tokens.
+    """
+    _write(
+        tmp_path / ".cbsp21" / "patches" / "broad-accumulator.json", "BROAD",
+        scope_paths=["docs/handoffs/", ".cbsp21/"],
+        files=["docs/handoffs/SOMETHING_ELSE.md"],
+    )
+    rescued = [
+        "docs/handoffs/A.md", "docs/handoffs/B.md", "docs/handoffs/C.md",
+        "docs/handoffs/D.md", "docs/handoffs/E.md",
+    ]
+    _write(tmp_path / ".cbsp21" / "patches" / "per-pr.json", "PERPR", files=rescued)
+
+    candidates, _ = load_candidates(tmp_path)
+    _path, manifest = select_manifest(candidates, rescued)
+    assert manifest["patch_id"] == "PERPR", (
+        "the per-PR manifest that names its files must win over a directory-prefix "
+        "accumulator that merely contains them"
+    )
+
+
+def test_prefix_manifest_still_wins_when_it_alone_covers_the_diff(tmp_path: Path):
+    """The weighting must only affect tie-breaks, never coverage ranking.
+
+    A prefix manifest is still the correct answer when nothing else covers the diff;
+    otherwise this change would strand every PR that legitimately declares by prefix.
+    """
+    _write(tmp_path / ".cbsp21" / "patches" / "prefix.json", "PREFIX",
+           scope_paths=["services/api/app/ibg_repository/"])
+    _write(tmp_path / ".cbsp21" / "patches" / "elsewhere.json", "ELSEWHERE",
+           files=["totally/unrelated.py"])
+
+    candidates, _ = load_candidates(tmp_path)
+    _path, manifest = select_manifest(
+        candidates, ["services/api/app/ibg_repository/x.py",
+                     "services/api/app/ibg_repository/y.py"])
+    assert manifest["patch_id"] == "PREFIX"
