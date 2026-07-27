@@ -80,7 +80,7 @@ from *"text detection crashed."* Textbook failure-mimics-success.
 read`, which was an overclaim: a chain read is a hypothesis, not a confirmation. It was later
 reproduced — an image with text plus a body shape, OCR forced to raise, produced **1475 DXF entities
 inside the text bounding box against 0 in a no-text control**, while the result still reported
-`SUCCESS`. That run is what earned the word.)* **Fix size:** small. **Fixed in PR #232.**
+`SUCCESS`. That run is what earned the word.)* **Fix size:** small. **Fixed and merged to `main` 2026-07-27 (`97460755`, PR #232).**
 
 ### 🟠 F-2 · STATIC-FACT CONFIRMED · Two store modules write the same JSON file
 `services/api/app/services/art_job_store.py:17` and

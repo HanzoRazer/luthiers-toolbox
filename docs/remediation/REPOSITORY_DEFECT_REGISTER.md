@@ -151,7 +151,7 @@ chain. BR-037 was filed as `CONFIRMED by producer->consumer read` and that was w
 genuinely confirmed only when the symptom was reproduced (1475 entities vs a 0 control). Do not
 promote a hypothesis to `CONFIRMED` without a run.
 
-### BR-037 · Text-detection failure silently vectorizes text into the DXF — ✅ FIXED ON BRANCH (PR #232), NOT YET ON `main`
+### BR-037 · Text-detection failure silently vectorizes text into the DXF — ✅ RESOLVED ON `main`
 - **Subsystem:** photo-vectorizer / DXF pipeline
 - **Mechanism:** `detect_text_regions()`
   (`services/photo-vectorizer/edge_to_dxf.py:470-524`) returned `[]` from a bare
@@ -177,9 +177,11 @@ credibility depends on `CONFIRMED` meaning *reproduced*, not *reasoned*.
 > same error that nearly shipped the wrong fix here. In this register, `CONFIRMED` means the symptom
 > was reproduced. Anything else is `HYPOTHESIS` or `CANDIDATE`.
 
-- **Resolution:** fixed in **PR #232** (`fix/br-037-text-detection-silent-skip`). Referenced by PR
-  rather than commit SHA deliberately: the branch head moved (`09818eee` -> `3e6a8a4e`) when a
-  required CBSP21 patch manifest was added, and a pinned SHA would already be stale.
+- **Resolution:** **merged to `main` 2026-07-27 as `97460755`** (PR #232,
+  `fix/br-037-text-detection-silent-skip`). Verified present on `main` after merge, not just
+  assumed from the merge event. During review this entry cited branch SHA `09818eee`, which went
+  stale within the hour when a required CBSP21 manifest moved the head to `3e6a8a4e` — hence the
+  merge commit is recorded here rather than any branch SHA.
   `[]` now means only "nothing to mask"; the crash path raises `TextDetectionError`; the caller still
   emits but marks the result `ConversionStatus.DEGRADED` with `text_detection_failed=True` and an
   explicit summary warning. 3 regression tests added (14 passed, 1 skipped).
@@ -191,12 +193,13 @@ credibility depends on `CONFIRMED` meaning *reproduced*, not *reasoned*.
   Unavoidable — the information needed to rule it out is precisely what the failure destroyed. Honest
   uncertainty, but a real cost if OCR is flaky.
 - **Severity:** high (silent wrong output) · **Fix size:** small
-- **Status:** **FIXED ON BRANCH — pending CI and merge.** Not on `main`. Do not read this entry as
-  meaning production is repaired. As of 2026-07-26 PR #232 has no approvals, `API Tests` still
-  running, and a known-unrelated `mypy` red (`photo-vectorizer contains __init__.py but is not a
-  valid Python package name`) that is **pre-existing on `main`** — introduced by `ffecf39f`, latent
-  because that workflow is path-filtered, and surfaced only because this is the first PR since to
-  touch that directory. Tracked separately; it is not caused by this fix.
+- **Status:** **RESOLVED — on `main`.** Merged 2026-07-27 with 44 checks passing, 1 skipped.
+- **Blocker cleared en route:** #232 was held red by a `mypy` failure that was **pre-existing and
+  unrelated** — `photo-vectorizer contains __init__.py but is not a valid Python package name`,
+  introduced by `ffecf39f` and latent because that workflow is path-filtered, so #232 was simply
+  the first PR since to touch that directory. Fixed separately in **PR #238** (`c07c917e`), which
+  also revealed that gate had **never passed once** in its history and, in the course of making it
+  pass, corrected two genuine unguarded `None` dereferences at `body_isolation_stage.py:387-388`.
 
 ### BR-038 · Two store modules write the same `data/art_jobs.json`
 - **Subsystem:** art_studio / services
