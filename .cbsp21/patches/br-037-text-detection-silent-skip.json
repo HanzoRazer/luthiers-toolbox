@@ -1,0 +1,49 @@
+{
+  "schema": "cbsp21_patch_input_v1",
+  "schema_version": "cbsp21_patch_input_v1",
+  "coverage_min": 0.95,
+  "patch_id": "BR_037_TEXT_DETECTION_SILENT_SKIP",
+  "title": "BR-037: OCR failure no longer reports a clean DXF (text shipped as body geometry)",
+  "intent": "Repair a reproduced silent-wrong-output defect in the photo-vectorizer DXF path. detect_text_regions() returned [] for three distinct states - EasyOCR unavailable, no text found, and OCR crashed - so the caller's `if text_regions:` guard could not tell 'nothing to mask' from 'masking failed'. On a crash, masking was skipped, the glyph edges stayed in combined_edges, and findContours traced them into the DXF as body geometry while the result still reported SUCCESS. Reproduced before fixing: an image with text plus a body shape, with the OCR reader forced to raise, produced 1475 DXF entities inside the text bounding box against 0 in a no-text control. Found by the 16-detector scan at ac3c96df and filed as BR-037.",
+  "change_type": "bugfix",
+  "behavior_change": "An OCR crash now raises TextDetectionError from detect_text_regions() instead of returning []. convert_enhanced() catches it, STILL emits the DXF, and marks the result ConversionStatus.DEGRADED with text_detection_failed=True; summary() prints an explicit warning that text may be present as geometry and must be removed before machining. Empty-list semantics are narrowed to their true meaning - 'there is nothing to mask' (EasyOCR unavailable, or a clean run that found no text) - and that path is unchanged. No route added/removed. New enum member (DEGRADED) and new result field (text_detection_failed, defaults False) are additive; existing SUCCESS/CAP_EXCEEDED/ERROR handling is untouched. Callers that gate on `status == SUCCESS` will now correctly stop treating an unmasked-text run as clean.",
+  "risk_level": "medium",
+  "scope": {
+    "paths_in_scope": [
+      ".cbsp21/patches/br-037-text-detection-silent-skip.json",
+      "services/photo-vectorizer/edge_to_dxf.py",
+      "services/api/tests/test_text_masking.py"
+    ],
+    "files_expected_to_change": [
+      "services/photo-vectorizer/edge_to_dxf.py",
+      "services/api/tests/test_text_masking.py"
+    ]
+  },
+  "diff_articulation": {
+    "what_changed": "(1) edge_to_dxf.py: added TextDetectionError(RuntimeError) with a docstring recording why [] was ambiguous. (2) The bare `except Exception -> logger.warning -> return []` at the end of detect_text_regions() now logs at error level and raises TextDetectionError from the original exception; the `reader is None` early return and the clean no-text return are deliberately left returning [] so the tested contract and the common case are unchanged. (3) The docstring now documents the narrowed Returns contract and the new Raises clause. (4) ConversionStatus gained DEGRADED, documented as 'output produced but a requested preprocessing step could not run - NOT a success'. (5) EdgeToDXFResult gained text_detection_failed: bool = False. (6) convert_enhanced() initialises text_detection_failed=False, wraps the detect_text_regions() call, and on TextDetectionError logs a TEXT_MASK_FAILED error, sets the flag, and continues with text_regions=[]. (7) Its result construction sets status=DEGRADED when the flag is set, else SUCCESS. (8) summary() prints a DEGRADED banner with an explicit remove-text-before-machining warning. (9) test_text_masking.py: three regressions - the crash path raises, the clean-empty path still returns [], and convert_enhanced yields DEGRADED with the file still written and 'DEGRADED' present in summary().",
+    "why_not_redundant": "Repairs a reproduced silent-corruption path feeding CAM, not a cosmetic concern - the pre-fix run put 1475 lettering entities into the DXF with a SUCCESS status. Two alternative fixes were implemented or considered and rejected on evidence: (a) failing loud and refusing to emit was implemented first, and the no-text control run rejected it - it also failed images containing no text at all, because a failed OCR pass cannot know whether the image had any, trading silent corruption for silent false-refusal; (b) suppressing the 7x7 morphological close on failure does not stop the corruption at all - masking is the only step that removes text edges from combined_edges, the close merely bridges what is already there, so text still ships while the body contour additionally fragments from unbridged gaps. Emit-and-flag is the only option that both preserves valid conversions and removes the false claim of success."
+  },
+  "verification": {
+    "commands_run": [
+      "Reproduction BEFORE the fix (pre-fix code, OCR reader forced to raise): image WITH text -> DXF written, status=SUCCESS, 1475 entities inside the text bounding box; no-text CONTROL -> 0 entities. Confirms the entities are the lettering.",
+      "Reproduction AFTER the fix: image WITH text -> DXF written, status=DEGRADED, text_detection_failed=True, 1475 entities (expected under emit-and-flag); no-text CONTROL -> DXF written, status=DEGRADED, 0 entities, i.e. no false refusal.",
+      ".venv/Scripts/python.exe -m pytest tests/test_text_masking.py -q -p no:cacheprovider -> 14 passed, 1 skipped",
+      "Pre-existing test_detect_text_regions_no_easyocr (asserts []) left untouched and still passing, confirming the narrowed contract did not break the unavailable path."
+    ],
+    "known_residual": "A no-text image that hits an OCR failure is still marked DEGRADED. This is unavoidable: the information needed to rule out the presence of text is exactly what the OCR failure destroyed. Accepted as honest uncertainty over a false clean status, but it is a real cost if OCR is flaky."
+  },
+  "files": [
+    {
+      "path": "services/photo-vectorizer/edge_to_dxf.py",
+      "intent": "Add TextDetectionError; raise it from the OCR-crash handler instead of returning [] so 'detection failed' stops masquerading as 'no text present'. Add ConversionStatus.DEGRADED and EdgeToDXFResult.text_detection_failed; convert_enhanced() catches the error, still emits, and marks the result DEGRADED; summary() prints an explicit remove-text-before-machining warning.",
+      "risk": "medium",
+      "behavior_change": "OCR crash: previously [] -> masking silently skipped -> text traced into the DXF with status SUCCESS. Now the run is marked DEGRADED with text_detection_failed=True and the output is labelled, not silently clean. The 'EasyOCR unavailable' and 'clean run, no text found' paths still return [] and are unchanged."
+    },
+    {
+      "path": "services/api/tests/test_text_masking.py",
+      "intent": "Add three regressions covering the gap that let this survive: the crash path raises TextDetectionError, the clean-empty path still returns [], and convert_enhanced yields DEGRADED with the file still written.",
+      "risk": "low",
+      "behavior_change": "Test-only. The pre-existing test_detect_text_regions_no_easyocr (asserts []) is untouched and still passes."
+    }
+  ]
+}

@@ -212,3 +212,97 @@ class TestOrchestratorIntegration:
 
 if __name__ == "__main__":
     pytest.main([__file__, "-v"])
+
+
+class TestTextDetectionFailureIsNotSilent:
+    """BR-037: OCR failure must not masquerade as 'no text present'.
+
+    Before the fix, `detect_text_regions` returned [] on any exception. The caller
+    guards with `if text_regions:`, so masking was skipped, the glyph edges stayed
+    in the edge image, and findContours traced them into the DXF as body geometry —
+    in an output that still reported success.
+    """
+
+    def test_ocr_failure_raises_instead_of_returning_empty(self):
+        """An OCR crash raises TextDetectionError; it does not return []."""
+        np = _photo_numpy()
+        import edge_to_dxf
+        from edge_to_dxf import detect_text_regions, TextDetectionError
+
+        class _BoomReader:
+            def readtext(self, image):
+                raise RuntimeError("simulated OCR engine failure")
+
+        original = edge_to_dxf._EASYOCR_READER
+        original_avail = edge_to_dxf._EASYOCR_AVAILABLE
+        edge_to_dxf._EASYOCR_READER = _BoomReader()
+        edge_to_dxf._EASYOCR_AVAILABLE = True
+        try:
+            image = np.zeros((100, 100, 3), dtype=np.uint8)
+            with pytest.raises(TextDetectionError):
+                detect_text_regions(image)
+        finally:
+            edge_to_dxf._EASYOCR_READER = original
+            edge_to_dxf._EASYOCR_AVAILABLE = original_avail
+
+    def test_clean_empty_result_is_still_a_plain_empty_list(self):
+        """'No text present' stays [] — the legitimate, common case is unchanged."""
+        np = _photo_numpy()
+        import edge_to_dxf
+        from edge_to_dxf import detect_text_regions
+
+        class _EmptyReader:
+            def readtext(self, image):
+                return []
+
+        original = edge_to_dxf._EASYOCR_READER
+        original_avail = edge_to_dxf._EASYOCR_AVAILABLE
+        edge_to_dxf._EASYOCR_READER = _EmptyReader()
+        edge_to_dxf._EASYOCR_AVAILABLE = True
+        try:
+            image = np.zeros((100, 100, 3), dtype=np.uint8)
+            assert detect_text_regions(image) == []
+        finally:
+            edge_to_dxf._EASYOCR_READER = original
+            edge_to_dxf._EASYOCR_AVAILABLE = original_avail
+
+    def test_convert_marks_result_degraded_when_ocr_fails(self, tmp_path):
+        """BR-037: OCR failure yields DEGRADED output, not clean SUCCESS.
+
+        Reproduced pre-fix: 1475 DXF entities landed inside the text bounding box
+        (0 in a no-text control) while the result still reported SUCCESS. The fix
+        keeps emitting -- a failed OCR pass cannot know whether the image had any
+        text, so refusing would reject the many images that have none -- but the
+        result must no longer claim a clean conversion.
+        """
+        np = _photo_numpy()
+        cv2 = pytest.importorskip("cv2")
+        import edge_to_dxf
+        from edge_to_dxf import EdgeToDXF, ConversionStatus
+
+        class _BoomReader:
+            def readtext(self, image):
+                raise RuntimeError("simulated OCR engine failure")
+
+        img = np.full((300, 400, 3), 255, np.uint8)
+        cv2.ellipse(img, (200, 200), (120, 70), 0, 0, 360, (30, 30, 30), -1)
+        src = tmp_path / "src.png"
+        out = tmp_path / "out.dxf"
+        cv2.imwrite(str(src), img)
+
+        original, original_avail = edge_to_dxf._EASYOCR_READER, edge_to_dxf._EASYOCR_AVAILABLE
+        edge_to_dxf._EASYOCR_READER = _BoomReader()
+        edge_to_dxf._EASYOCR_AVAILABLE = True
+        try:
+            result = EdgeToDXF().convert_enhanced(
+                str(src), str(out), target_height_mm=200.0, mask_text=True
+            )
+        finally:
+            edge_to_dxf._EASYOCR_READER = original
+            edge_to_dxf._EASYOCR_AVAILABLE = original_avail
+
+        assert result.text_detection_failed is True
+        assert result.status is ConversionStatus.DEGRADED
+        assert result.status is not ConversionStatus.SUCCESS
+        assert out.exists(), "output must still be produced, not refused"
+        assert "DEGRADED" in result.summary()

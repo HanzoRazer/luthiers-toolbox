@@ -6,14 +6,15 @@ Contains schemas for Blueprint → CAM integration endpoints.
 """
 from __future__ import annotations
 
-from typing import Any, Dict, List, Tuple
+from typing import Any, Dict, List
 
 from pydantic import BaseModel, Field
 
-
-class Loop(BaseModel):
-    """Polygon loop (closed path) - matches adaptive_router.py"""
-    pts: List[Tuple[float, float]]
+# Canonical CAM geometry contract (CONV-001 / LAB-013 WP-GEOM-3).
+# Re-exported here because ``routers/blueprint_cam/extraction.py`` imports
+# ``Loop`` from this module; see ``app.schemas.cam_geometry`` for the single
+# definition.
+from app.schemas.cam_geometry import Loop
 
 
 class BlueprintToAdaptiveRequest(BaseModel):

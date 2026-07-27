@@ -6,6 +6,11 @@ from collections import defaultdict
 import ezdxf
 from pydantic import BaseModel
 
+# Canonical CAM geometry contract (CONV-001 / LAB-013 WP-GEOM-3).
+# ``ReconstructionResult.loops`` and the loop-building code below consume this
+# type; see ``app.schemas.cam_geometry`` for the single definition.
+from app.schemas.cam_geometry import Loop
+
 
 # =============================================================================
 # DATA STRUCTURES (POINT, EDGE, LOOP MODELS)
@@ -47,14 +52,6 @@ class Edge:
     
     def __repr__(self):
         return f"Edge({self.start} -> {self.end}, {self.entity_type})"
-
-
-class Loop(BaseModel):
-    """Closed polygon loop (matches adaptive_router.py format)"""
-    pts: List[Tuple[float, float]]
-    
-    class Config:
-        arbitrary_types_allowed = True
 
 
 class ReconstructionResult(BaseModel):
