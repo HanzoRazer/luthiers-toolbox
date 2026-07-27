@@ -142,7 +142,11 @@ class BodyIsolationResult:
     """
     # Primary geometry
     body_bbox_px: BBoxPx
-    body_region: BodyRegionLike
+    # Optional in practice: from_payload() builds this via
+    # ReplayBodyRegion.from_payload(), which returns None for an absent payload,
+    # and to_payload() already guards with `if self.body_region is not None`.
+    # The annotation previously claimed non-Optional, which is what mypy caught.
+    body_region: Optional[BodyRegionLike]
     isolation_mask: Optional[np.ndarray] = None
 
     # Raw profiles / diagnostics
