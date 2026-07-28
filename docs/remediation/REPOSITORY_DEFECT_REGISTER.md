@@ -3,6 +3,14 @@
 > **Only currently verified defects.** No enhancements, no speculative concerns, no unavailable
 > research. Every entry links to its [adjudication ledger](BACKLOG_ADJUDICATION_LEDGER.md) record and
 > carries current reproduction evidence (charter §4 · Disposition discipline).
+>
+> **Exception — the scan-intake section (BR-037+).** Entries below the *"Scan intake"* heading are
+> **detector leads under adjudication**, not verified defects, and they are admitted here so the queue
+> that adjudicates them is the same queue that ships fixes. They are labelled `CANDIDATE` or
+> `STATIC-FACT CONFIRMED` and are **not** authorized for work. This exception was introduced by the
+> 2026-07-26 scan intake and is stated explicitly because it otherwise contradicts the rule above —
+> BR-038 is the standing example of why it matters: a lead admitted here read as a ready defect and
+> would have caused a regression had anyone acted on it.
 
 ## What qualifies as a defect here
 
@@ -201,38 +209,58 @@ credibility depends on `CONFIRMED` meaning *reproduced*, not *reasoned*.
   also revealed that gate had **never passed once** in its history and, in the course of making it
   pass, corrected two genuine unguarded `None` dereferences at `body_isolation_stage.py:387-388`.
 
-### BR-038 · ~~Two store modules write the same `data/art_jobs.json`~~ — ❌ REFUTED, NOT A DEFECT
-- **Confidence:** **REFUTED 2026-07-27.** *Neither module writes that file* — both only `read_text()`
-  it once for legacy migration into their own separate SQLite tables, and the shapes are explicitly
-  coordinated (`art_job_store.py:113` skips plural-shaped rows as "owned by art_jobs_store"). No code
-  in the repo writes `art_jobs.json`; already remediated by the art-jobs SQLite migration (#189).
-  `tests/test_art_job_stores_migration.py` covers the split: **11 passed**. Do not consolidate these —
-  they have different schemas and distinct live consumers.
-- **Why it was mis-filed:** the D10 detector associated `JOBS_PATH` with modules containing write
-  hints *somewhere in the file*, without checking the symbol's own use; the entry then claimed
-  "verified by read" when only the **declarations** had been read, not the write sites. Read the write
-  site, not the declaration — the same check BR-039/BR-040 still need.
+### BR-038 · ~~Two store modules write the same `data/art_jobs.json`~~ — ❌ REFUTED (claimed shared-write defect is not present)
+- **Subsystem:** art_studio / services
+- **Reproduction basis (original claim):** `art_job_store.py:17` and `art_jobs_store.py:20` both
+  declare `JOBS_PATH = Path("data/art_jobs.json")`.
+- **Why it does not reproduce:** in the current code **neither module writes that file**. Both use it
+  as a **read-only legacy migration source** (`read_text()` plus existence checks), migrating into
+  **separate SQLite tables**, and the migration logic explicitly distinguishes the row shapes —
+  `art_job_store.py:113` skips plural-shaped rows as *"owned by art_jobs_store"*. **A repo-wide search
+  found no write site for `art_jobs.json`.** The current design routes through the SQLite-backed
+  migration introduced in #189. `tests/test_art_job_stores_migration.py` exercises this split:
+  **11 passed**.
+- **Bearing on consolidation:** *this evidence does not justify consolidating these stores* — they
+  currently have different schemas and distinct in-repo consumers. That is a statement about what this
+  evidence supports, **not** a permanent architectural prohibition; a future design may justify
+  consolidation on other grounds.
+- **Why it was mis-filed:** the mis-file **appears** to have come from the D10 detector associating
+  `JOBS_PATH` with modules containing write hints *elsewhere in the file*, without checking that
+  symbol's own use. The entry then claimed *"verified by read"* when only the **declarations** had
+  been read, not the write sites — the same overclaim this register's confidence vocabulary exists to
+  prevent, committed under that vocabulary.
+- **Severity:** n/a (no defect) · **Fix size:** n/a · **Readiness:** **CLOSED — REFUTED.** Do not open
+  work from this entry.
+- **Confidence:** **REFUTED 2026-07-27**, by source-level inspection of the write sites.
+- **Applies to siblings:** BR-039 and BR-040 came from the same detector pass and still need the same
+  **source-level verification — inspect the actual write/use sites, not the declarations.**
 
-### BR-039 · Three parallel preset stores with no declared canonical
+### BR-039 · Three preset-store modules with separate persistence paths
 - **Subsystem:** services / util
-- **Reproduction basis:** `services/art_presets_store.py:9` -> `data/art_presets.json`;
+- **Reproduction basis:** the current code shows three modules with separate preset-file paths:
+  `services/art_presets_store.py:9` -> `data/art_presets.json`;
   `services/preset_store.py:14` -> `data/presets/presets.json`; `util/presets_store.py:23` ->
-  `data/presets.json`. Three modules, three files, all written.
-- **Severity:** medium · **Readiness:** `OWNER_DECISION_REQUIRED` — which store is canonical is a
-  scope question, not a defect to fix unilaterally.
-- **Confidence:** **STATIC-FACT CONFIRMED** — three stores, three paths, all written; verified by
-  read. Whether this is a *defect* rather than intentional separation needs owner adjudication.
+  `data/presets.json`.
+- **Potential impact:** **unknown pending owner adjudication.** No drift, duplication, or inconsistent
+  read/write has been demonstrated — only multiplicity. Severity is deliberately not asserted.
+- **Readiness:** `OWNER_DECISION_REQUIRED` — whether a canonical store should be declared is a scope
+  question, not a defect to fix unilaterally.
+- **Confidence:** **STATIC-FACT CONFIRMED**, narrowly: three preset-store modules with distinct file
+  paths exist. Whether this is a *defect* rather than intentional separation is **not** established.
+  Per BR-038, the write behaviour was read from declarations and still needs source-level
+  verification at the actual write sites.
 
-### BR-040 · Silent domain-default fallback on closed-domain lookups (10 sites)
+### BR-040 · Potential silent domain-default fallback on key lookups (10 sites)
 - **Subsystem:** instrument_geometry, calculators, analyzer, workflow
 - **Reproduction basis:** 10 sites of `X.get(key, X[DEFAULT])`, incl.
   `body_contour_solver.py:250` (`FAMILY_DEFAULTS.get(family, FAMILY_DEFAULTS["dreadnought"])`),
   `neck_block_calc.py:202,246`, `viewer_pack_bridge.py:176,199,346,352,357,362`,
   `directional_workflow.py:187`.
-- **Observed vs expected:** an unrecognized body family silently yields dreadnought geometry; an
-  unrecognized species silently yields default material properties.
-- **Severity:** medium-high *if* any key space is open · **Readiness:** needs triage — confirm per
-  site whether the key is enum-validated upstream. Where closed, harmless; where open, wrong output.
+- **Behaviour the pattern would produce (not observed at runtime):** *if* an unrecognized body family
+  reaches these sites it would silently yield dreadnought geometry; *if* an unrecognized species
+  reaches them it would silently yield default material properties. No such call has been witnessed.
+- **Potential impact:** medium-high where the key space is open; none where upstream validation closes
+  it · **Readiness:** needs triage — confirm per site whether the key is enum-validated upstream.
 - **Confidence:** **STATIC-FACT CONFIRMED** for the 10 sites (the fallbacks are there in code);
   **CANDIDATE** as a defect — no site has been shown to receive an out-of-domain key at runtime.
 
