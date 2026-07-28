@@ -275,3 +275,50 @@ credibility depends on `CONFIRMED` meaning *reproduced*, not *reasoned*.
 > (`store.py`x12 etc.) is a naming convention, not copy-paste — AST-hashing found exactly **one**
 > cross-file clone group; and the router-count baseline is **not** stale (`ci/router_count_gate.py`
 > reports 253/1228 = baseline exactly).
+
+---
+
+## Stranded-work intake — Tier D recovery (2026-07-28)
+
+Source: `DEV_ORDER_CONV-002_TIER_D_STRANDED_BRANCH_DISPOSITION.md` (2026-07-27), a branch-audit
+disposition order held in the Consolidation Lab as a historical source artifact. Only its TD-1 work
+package is a demonstrable production defect and enters here; TD-2/TD-3/TD-4 are decision and archival
+work and are handled Lab-side under Investigation 025.
+
+### BR-042 · Ingest-audit browse lane is half-landed — router shipped but mounted nowhere
+- **Subsystem:** rmos/acoustics (backend) + client tools view (frontend)
+- **Confidence:** **CONFIRMED — re-witnessed against `origin/main` `9d22aa61` on 2026-07-28**, not
+  inherited from the source document. Probes used `git ls-tree`/`git grep` on refs, never
+  `git show <ref>:<path>`, which silently produces false-absent results under Git Bash on Windows.
+- **Observed vs expected:** `main` ships a complete, working router that **no code mounts**, and a
+  frontend view that is deliberately disabled *because* it is unmounted. The feature is unreachable
+  in production while both halves of it exist in the repository.
+
+| Fact | Evidence on `9d22aa61` |
+|---|---|
+| Router exists | `services/api/app/rmos/acoustics/router_ingest_audit.py`, 3 endpoints |
+| Router is unmounted | **Zero mount sites.** All 5 references are docs/metrics; `metrics/wire_url_audit.json` tags it `UNMANIFESTED:` |
+| UI honestly gated | `packages/client/src/views/tools/AcousticsIngestEvents.vue` lines 10, 345 — gating comments name the unmounted lane as the reason |
+| Missing half is recoverable | `salvage/other-stash8-ingest-audit-binaries` @ `f102380d` (2026-05-14): carries the mount (`main.py:1186-1194`, `prefix="/api/rmos/acoustics"`) and a 717-line `IngestEventsView.vue` |
+| **Contracts still align** | salvage view calls `/api/rmos/acoustics/ingest-events`, `…/counts`, `…/{eventId}` — router declares `/ingest-events`, `/ingest-events/counts`, `/ingest-events/{event_id}`. **All three match.** Prefix convention matches siblings `router_import.py` / `router_zip_export.py` ("prefix set once in main.py") |
+
+- ⚠️ **CONFLICTS WITH A STANDING GOVERNANCE RULING — owner confirmation required before execution.**
+  `docs/governance/audits/SYSTEM_CONFLATION_AUDIT_2026-06-21.md:123` rules this exact pair
+  **"RETIRE / broken pair ✅"**, on the stated basis that *"FE fetches `/acoustics_ingest/` … paths
+  diverge"*. **That basis could not be reproduced on current `main`:**
+  `AcousticsIngestEvents.vue:209` is a Vue component import
+  (`import EventDetailModal from "./acoustics_ingest/EventDetailModal.vue"`), not a fetch URL, and the
+  gated view contains **no API calls or endpoint strings at all**. The divergence claim appears to be
+  either a misread import path or a description of a pre-gating state. Executing BR-042 **reverses a
+  RETIRE decision**; that is an owner call, not a maintainer call.
+- **Scope when authorized** (bounded — do NOT merge the salvage branch wholesale):
+  1. mount the existing router using the current registration convention;
+  2. verify all three endpoints through the assembled app;
+  3. reconcile the salvage view against the gated view — **retain one view and one route**;
+  4. remove gating only after the live contract is proven;
+  5. add focused backend + frontend coverage.
+- **Severity:** medium (feature unreachable; no data loss, no wrong output) · **Fix size:** medium
+- **Readiness:** **QUEUED / NOT STARTED — blocked on the owner ruling above.** Not authorized by this
+  intake; this entry defines scope only.
+- **Recovery record:** if `salvage/other-stash8-ingest-audit-binaries` is ever deleted, its content is
+  recoverable at `f102380d` until garbage collection.
