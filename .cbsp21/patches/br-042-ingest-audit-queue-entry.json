@@ -1,0 +1,42 @@
+{
+  "schema": "cbsp21_patch_input_v1",
+  "schema_version": "cbsp21_patch_input_v1",
+  "coverage_min": 0.95,
+  "patch_id": "BR_042_INGEST_AUDIT_QUEUE_ENTRY",
+  "title": "BR-042 intake — ingest-audit browse lane is half-landed (queue entry only, no code change)",
+  "intent": "Register one bounded maintenance defect discovered by a Tier D stranded-branch audit. main ships services/api/app/rmos/acoustics/router_ingest_audit.py with three working endpoints that NO code mounts, plus a frontend view deliberately gated because that lane is unmounted. The missing half - the mount and a full 717-line view - survives on salvage/other-stash8-ingest-audit-binaries at f102380d. Every claim was re-witnessed against origin/main 9d22aa61 rather than inherited from the source Dev Order. This patch adds the queue entry and defines scope; it authorizes no implementation.",
+  "change_type": "docs",
+  "behavior_change": "None. Documentation only - one defect-register entry. No code, route, schema, or runtime behaviour changes. The defect it describes remains unfixed and explicitly unauthorized, blocked on an owner ruling.",
+  "risk_level": "low",
+  "scope": {
+    "paths_in_scope": [
+      ".cbsp21/patches/br-042-ingest-audit-queue-entry.json",
+      "docs/remediation/REPOSITORY_DEFECT_REGISTER.md"
+    ],
+    "files_expected_to_change": ["docs/remediation/REPOSITORY_DEFECT_REGISTER.md"]
+  },
+  "diff_articulation": {
+    "what_changed": "Adds a Tier D intake section and BR-042, with the per-fact evidence table, the bounded scope, and an explicit blocking flag for the governance conflict.",
+    "why_not_redundant": "The feature is unreachable in production while both halves exist in the repository, and the recoverable half sits on a local-only salvage branch that would be lost if that branch were pruned. The entry also records the recovery SHA so the work survives branch deletion."
+  },
+  "verification": {
+    "commands_run": [
+      "git ls-tree -r --name-only origin/main | grep router_ingest_audit -> router present at services/api/app/rmos/acoustics/router_ingest_audit.py.",
+      "git grep router_ingest_audit origin/main -> 5 references, ALL docs/metrics; zero include_router mount sites. metrics/wire_url_audit.json tags it 'UNMANIFESTED:'.",
+      "git grep on the gated view -> gating comments at lines 10 and 345; no API calls and no endpoint strings present.",
+      "git grep on f102380d -> mount at main.py:1186-1194 with prefix=/api/rmos/acoustics; IngestEventsView.vue fetches /api/rmos/acoustics/ingest-events, /counts and /{eventId}.",
+      "Router declares /ingest-events, /ingest-events/counts, /ingest-events/{event_id} -> all three align with the salvage view.",
+      "Prefix convention cross-checked against router_import.py and router_zip_export.py, both 'prefix set once in main.py'.",
+      "Probes deliberately avoided `git show <ref>:<path>` / `git cat-file -e <ref>:<path>`, which silently yield false-absent results under Git Bash on Windows via MSYS path conversion."
+    ],
+    "known_residual": "BR-042 CONFLICTS with a standing governance ruling. SYSTEM_CONFLATION_AUDIT_2026-06-21.md:123 rules this pair 'RETIRE / broken pair' because 'FE fetches /acoustics_ingest/ ... paths diverge'. That basis could not be reproduced: line 209 of the gated view is a Vue component import from a directory named acoustics_ingest/, not a fetch URL, and the view has no API calls at all. Executing BR-042 would reverse a RETIRE decision, so the entry is filed QUEUED and blocked on an owner ruling rather than presented as a straightforward defect."
+  },
+  "files": [
+    {
+      "path": "docs/remediation/REPOSITORY_DEFECT_REGISTER.md",
+      "intent": "Add BR-042 with re-witnessed evidence, bounded scope, the recovery SHA, and an explicit owner-ruling blocker for the conflicting RETIRE decision.",
+      "risk": "low",
+      "behavior_change": "None - documentation. Authorizes no implementation."
+    }
+  ]
+}
