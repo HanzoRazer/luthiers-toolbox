@@ -51,8 +51,9 @@ and are separate on purpose.
 | `app/cam/translator_governance_review_matrix.py` (CAM 7J) | governance **evidence** | Is translator evidence complete enough for human review? |
 
 **None of the three authorizes implementation, execution, or machine output.** Each enforces
-that with model validators; the readiness report follows the 8E invariant pattern already
-established by `ReviewQueueCISummary`.
+that in code: `ReviewQueueCISummary` and the 7J matrix with Pydantic validators, the readiness
+report with `__post_init__` on a frozen dataclass. The *semantics* are the 8E pattern in all
+three; only readiness differs in mechanism, for the dependency reason above.
 
 The distinction that matters most: **`review_queue_ci` looks at what is *in* the queue;
 readiness looks at what the queue *is*.** A queue can be perfectly healthy by CI measures
