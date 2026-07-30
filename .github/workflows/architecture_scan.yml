@@ -74,3 +74,23 @@ jobs:
         working-directory: services/api
         run: |
           python -m app.ci.check_all_fences
+
+      # Review-queue architecture readiness — REPORT-ONLY during rollout.
+      #
+      # Deliberately hosted inside Fence Checks (Blocking) rather than in its own
+      # workflow. Fence Checks is the sole required status check on this repository and
+      # runs on EVERY pull request with no path filter (see the CI-RED-004 note at the top
+      # of this file). A separate readiness workflow with path filters would be absent on
+      # docs-only PRs, leaving a required check permanently at "Expected — waiting" and
+      # bricking those merges — the exact failure mode TD-3 would have reintroduced.
+      #
+      # --report-only means known readiness gaps do NOT fail this required check. Three of
+      # the four ratified requirements are unmet today; enforcing them here would block
+      # every merge in the repository, including the PR that adds this step. The report
+      # still states NOT_READY truthfully — only enforcement is deferred.
+      #
+      # An EVALUATOR ERROR still fails: exit code 2 is not suppressed by --report-only.
+      # Promotion to enforcement requires a separate owner ruling.
+      - name: Review queue readiness (report-only)
+        run: |
+          python scripts/ci/check_review_queue_readiness.py --report-only --format text

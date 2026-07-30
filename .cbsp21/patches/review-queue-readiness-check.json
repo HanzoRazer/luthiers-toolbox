@@ -1,0 +1,144 @@
+{
+  "schema": "cbsp21_patch_input_v1",
+  "schema_version": "cbsp21_patch_input_v1",
+  "coverage_min": 0.95,
+  "patch_id": "REVIEW_QUEUE_READINESS_CHECK",
+  "title": "Review queue architecture readiness check (report-only CI rollout)",
+  "intent": "Implement the valid question behind TD-2 without its historical architecture. The repository can now answer whether the declared operational prerequisites of the review-queue subsystem are present, derived deterministically from repository evidence rather than asserted by a caller. Replaces the historical POST /readiness endpoint and in-memory assessment registry, which are deliberately NOT carried forward. Requirement set ratified by owner ruling from the historical 8F assessment; structural precedent is CAM 7J.",
+  "change_type": "feature",
+  "behavior_change": "Adds a CLI and a report-only CI step. No runtime route is added. No production behaviour changes: the evaluator is read-only, mutates nothing, and executes no workflow. The CI step runs inside the existing Fence Checks (Blocking) job with --report-only, so known readiness gaps do NOT fail the sole required check during rollout; an evaluator error still fails. Report content is truthful (currently NOT_READY) - only enforcement is deferred, and severities were not weakened to obtain a green check. Readiness contracts use stdlib dataclasses rather than Pydantic because they execute inside the dependency-free required check; the evidence adapter inspects declarations with ast instead of importing the Pydantic models it assesses. This is a runtime-boundary exception, not a competing domain-model convention: the serialized schema and behavioural invariants are unchanged.",
+  "risk_level": "medium",
+  "scope": {
+    "paths_in_scope": [
+      ".cbsp21/patches/review-queue-readiness-check.json",
+      "services/api/app/cam/review_queue_readiness.py",
+      "services/api/app/cam/review_queue_readiness_requirements.py",
+      "services/api/app/cam/review_queue_readiness_evaluator.py",
+      "services/api/app/cam/review_queue_readiness_evidence.py",
+      "scripts/ci/check_review_queue_readiness.py",
+      ".github/workflows/architecture_scan.yml",
+      "docs/cam/REVIEW_QUEUE_READINESS.md",
+      "services/api/tests/cam/test_review_queue_readiness_models.py",
+      "services/api/tests/cam/test_review_queue_readiness_evaluator.py",
+      "services/api/tests/cam/test_review_queue_readiness_evidence.py",
+      "services/api/tests/cam/test_review_queue_readiness_cli.py",
+      "services/api/tests/cam/test_review_queue_readiness_ci_topology.py",
+      "services/api/tests/cam/test_review_queue_readiness_dependency_free.py"
+    ],
+    "files_expected_to_change": [
+      "services/api/app/cam/review_queue_readiness.py",
+      "services/api/app/cam/review_queue_readiness_requirements.py",
+      "services/api/app/cam/review_queue_readiness_evaluator.py",
+      "services/api/app/cam/review_queue_readiness_evidence.py",
+      "scripts/ci/check_review_queue_readiness.py",
+      ".github/workflows/architecture_scan.yml",
+      "docs/cam/REVIEW_QUEUE_READINESS.md",
+      "services/api/tests/cam/test_review_queue_readiness_models.py",
+      "services/api/tests/cam/test_review_queue_readiness_evaluator.py",
+      "services/api/tests/cam/test_review_queue_readiness_evidence.py",
+      "services/api/tests/cam/test_review_queue_readiness_cli.py",
+      "services/api/tests/cam/test_review_queue_readiness_ci_topology.py",
+      "services/api/tests/cam/test_review_queue_readiness_dependency_free.py"
+    ]
+  },
+  "diff_articulation": {
+    "what_changed": "Four new modules under services/api/app/cam (contracts, ratified requirements, pure evaluator, evidence adapter), one CLI under scripts/ci, a report-only step added to the existing Fence Checks (Blocking) job, five test modules, and subsystem documentation.",
+    "why_not_redundant": "main has no architecture-readiness evaluator. review_queue_ci.py assesses queue CONTENTS (item counts, blocking issues); this assesses subsystem ARCHITECTURE (persistence, identity, timestamps, notification). CAM 7J assesses governance EVIDENCE readiness. The three subjects are distinct and the documentation states the separation explicitly to prevent future conflation."
+  },
+  "verification": {
+    "commands_run": [
+      "pytest tests/cam/ -k readiness -> 136 passed",
+      "pytest tests/cam/ -k 'review_queue and not readiness' -> 62 passed (no regression in existing review-queue tests)",
+      "CLI enforcement mode -> exit 1 (NOT_READY, truthful: 3 of 4 ratified requirements unmet)",
+      "CLI --report-only -> exit 0 with NOT_READY still printed",
+      "JSON output byte-identical across consecutive runs (determinism)",
+      "architecture_scan.yml still contains zero 'paths:' filters; required check name unchanged",
+      "pytest tests/cam -k 'readiness and not cli' -> 132 passed",
+      "pytest tests/cam/test_review_queue_readiness_dependency_free.py -> 9 passed, incl. byte-identical output with and without pydantic",
+      "pytest tests/cam -k 'review_queue and not readiness' -> 62 passed, no regression",
+      "python -m app.ci.check_all_fences -> All fence checks passed (the actual required-check command)",
+      "check_complexity / check_file_sizes / check_bare_except -> all OK"
+    ],
+    "known_residual": "The check is REPORT-ONLY and does not gate merges. Promotion to enforcement requires a separate owner ruling. RQR-002-IDENTITY evaluates UNRESOLVED_RUNTIME_VALIDATION_REQUIRED by design: a reviewer_ref declaration is visible statically, but whether authentication is enforced on the request path is a runtime property this check cannot and does not claim to settle."
+  },
+  "files": [
+    {
+      "path": "services/api/app/cam/review_queue_readiness.py",
+      "intent": "Typed contracts: statuses, severities, verification modes, requirement/evidence/finding/context/report models, and the anti-authorization invariants following the 8E pattern already in ReviewQueueCISummary.",
+      "risk": "medium",
+      "behavior_change": "New module. No runtime surface. Report has no caller-settable ready field."
+    },
+    {
+      "path": "services/api/app/cam/review_queue_readiness_requirements.py",
+      "intent": "The four ratified requirements with authority_source recorded on each.",
+      "risk": "medium",
+      "behavior_change": "New module. Frozen module constant; requirements are policy, not configuration."
+    },
+    {
+      "path": "services/api/app/cam/review_queue_readiness_evaluator.py",
+      "intent": "Pure evaluator: per-requirement evaluation, aggregation, deterministic ordering, typed evaluator errors.",
+      "risk": "medium",
+      "behavior_change": "New module. Pure function over typed inputs; no filesystem or framework coupling."
+    },
+    {
+      "path": "services/api/app/cam/review_queue_readiness_evidence.py",
+      "intent": "Evidence adapter reading current declarations; never infers behaviour from names; distinguishes confirmed absence from unverifiability.",
+      "risk": "medium",
+      "behavior_change": "New module. Read-only; mutates nothing and executes no production workflow."
+    },
+    {
+      "path": "scripts/ci/check_review_queue_readiness.py",
+      "intent": "CLI with text/json rendering, --output, and --report-only rollout mode.",
+      "risk": "medium",
+      "behavior_change": "New CLI. No flag can assert readiness. Exit codes separate a real failure from a truthful NOT_READY."
+    },
+    {
+      "path": ".github/workflows/architecture_scan.yml",
+      "intent": "Adds a report-only readiness step inside the existing Fence Checks (Blocking) job.",
+      "risk": "medium",
+      "behavior_change": "CI only. No path filter added; required check name unchanged; known gaps do not fail the required check during rollout."
+    },
+    {
+      "path": "docs/cam/REVIEW_QUEUE_READINESS.md",
+      "intent": "Documents the three distinct readiness mechanisms, requirement authority, static vs runtime, statuses, CI behaviour, and why the historical shape was retired.",
+      "risk": "low",
+      "behavior_change": "Documentation only."
+    },
+    {
+      "path": "services/api/tests/cam/test_review_queue_readiness_models.py",
+      "intent": "Contract and invariant tests.",
+      "risk": "low",
+      "behavior_change": "Test-only."
+    },
+    {
+      "path": "services/api/tests/cam/test_review_queue_readiness_evaluator.py",
+      "intent": "Evaluator policy and determinism tests.",
+      "risk": "low",
+      "behavior_change": "Test-only."
+    },
+    {
+      "path": "services/api/tests/cam/test_review_queue_readiness_evidence.py",
+      "intent": "Evidence and historical-gap regression tests.",
+      "risk": "low",
+      "behavior_change": "Test-only."
+    },
+    {
+      "path": "services/api/tests/cam/test_review_queue_readiness_cli.py",
+      "intent": "CLI exit-code, format, determinism and safety tests.",
+      "risk": "low",
+      "behavior_change": "Test-only."
+    },
+    {
+      "path": "services/api/tests/cam/test_review_queue_readiness_ci_topology.py",
+      "intent": "Static workflow-policy assertions preventing a path filter from stranding the required check.",
+      "risk": "low",
+      "behavior_change": "Test-only."
+    },
+    {
+      "path": "services/api/tests/cam/test_review_queue_readiness_dependency_free.py",
+      "intent": "Subprocess proof that the CLI runs with pydantic genuinely unimportable \u2014 the regression test for the PR #242 required-check failure.",
+      "risk": "low",
+      "behavior_change": "Test-only."
+    }
+  ]
+}
